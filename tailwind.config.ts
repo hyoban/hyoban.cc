@@ -9,7 +9,7 @@ const config = {
   content: [
     './app/**/*.{ts,tsx}',
     './components/**/*.{ts,tsx}',
-    './src/platforms.ts',
+    './node_modules/sakuin/output/index.js',
   ],
   future: {
     hoverOnlyWhenSupported: true,
