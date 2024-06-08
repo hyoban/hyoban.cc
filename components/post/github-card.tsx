@@ -121,9 +121,7 @@ export async function GitHubCard({ repo }: { repo: string }) {
 
       <CardFooter>
         <p className="flex items-center gap-1">
-          <span className="i-lucide-code text-xs" />
-          {data.language}
-          <span className="i-lucide-star text-xs ml-2" />
+          <span className="i-lucide-star text-xs" />
           {data.stargazers_count}
           <span className="ml-2">
             Updated
