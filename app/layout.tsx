@@ -5,6 +5,7 @@ import 'remark-github-alerts/styles/github-colors-light.css'
 import './globals.css'
 
 import localFont from 'next/font/local'
+import NextTopLoader from 'nextjs-toploader'
 import Balancer from 'react-wrap-balancer'
 
 import { env } from '../env'
@@ -158,6 +159,7 @@ export default async function RootLayout({
               '!function(){var e=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,t=localStorage.getItem("use-dark")||\'"system"\';(\'"dark"\'===t||e&&\'"light"\'!==t)&&document.documentElement.classList.toggle("dark",!0)}();',
           }}
         />
+        <NextTopLoader />
         <Providers>{children}</Providers>
         {footer && (
           <footer className="mx-6 flex flex-col gap-4 items-center opacity-80 text-sm mb-6 text-center">
