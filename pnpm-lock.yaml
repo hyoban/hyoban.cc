@@ -84,8 +84,8 @@ importers:
         specifier: ^1.0.0
         version: 1.0.0(jotai@2.8.3(@types/react@18.3.3)(react@18.3.1))
       knip:
-        specifier: ^5.18.0
-        version: 5.18.0(@types/node@20.14.2)(typescript@5.4.5)
+        specifier: ^5.18.1
+        version: 5.18.1(@types/node@20.14.2)(typescript@5.4.5)
       lucide-react:
         specifier: ^0.390.0
         version: 0.390.0(react@18.3.1)
@@ -126,8 +126,8 @@ importers:
         specifier: ^11.0.0
         version: 11.0.0
       sakuin:
-        specifier: ^0.2.7
-        version: 0.2.7(graphql@16.8.1)(typescript@5.4.5)(zod@3.23.8)
+        specifier: ^0.2.8
+        version: 0.2.8(graphql@16.8.1)(typescript@5.4.5)(zod@3.23.8)
       tailwind-merge:
         specifier: ^2.3.0
         version: 2.3.0
@@ -2241,10 +2241,6 @@ packages:
     resolution: {integrity: sha512-N3yCS/NegsOBokc8GAdM8UcmfsKiSS8cipheD/nivzr700H+nsMOxJjQnvwOcRYVuFkdH0wGUvW2WbXGmrZGbQ==}
     engines: {node: '>=14'}
 
-  jiti@1.21.0:
-    resolution: {integrity: sha512-gFqAIbuKyyso/3G2qhiO2OM6shY6EPP/R0+mkDbyspxKazh8BXDC5FiFsUjlczgdNz/vfra0da2y+aHrusLG/Q==}
-    hasBin: true
-
   jiti@1.21.3:
     resolution: {integrity: sha512-uy2bNX5zQ+tESe+TiC7ilGRz8AtRGmnJH55NC5S0nSUjvvvM2hJHmefHErugGXN4pNv4Qx7vLsnNw9qJ9mtIsw==}
     hasBin: true
@@ -2335,8 +2331,8 @@ packages:
   keyv@4.5.4:
     resolution: {integrity: sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==}
 
-  knip@5.18.0:
-    resolution: {integrity: sha512-V+iJz2490zJQ11J0XCf7FggbiqY4L9HpmwSWS3BvwrH7W+bep9drx+Wj2dCU+8uSUijvwPB2unLbQKFCTuvT5g==}
+  knip@5.18.1:
+    resolution: {integrity: sha512-+EKgZVhlLGPj9tHtRMeW8oVy1tEUelmJ/1xfQyqdzmCYOd03MJA+8GXAtSZ9me4dxj/3qcPcunQhpZOeJ5wpNg==}
     engines: {node: '>=18.6.0'}
     hasBin: true
     peerDependencies:
@@ -3059,8 +3055,8 @@ packages:
     resolution: {integrity: sha512-e2bDA2WJT0wxseVd4lsDP4+3ONX6HpMXQa1ZhFQ7SU+GjvORCmShbCMltrtIDfkYhVHrOcPtj+KhmDBdPdZD1g==}
     engines: {node: '>=10'}
 
-  sakuin@0.2.7:
-    resolution: {integrity: sha512-dzjnIIVJ80dFSTpggCWBo+5ztEHmTXoZSXSnBswGOt3Py6NBba9HsWqBW52kcMRp6iYbZGhXzPujQN/T99+Byg==}
+  sakuin@0.2.8:
+    resolution: {integrity: sha512-MG84XPD/nDELzL/G64Zfg7r9haKNOZVX653TdhDc7Y0e1jRqJEbt1V8Yco6/kYukMTx4mQhphoa12Ul4LWWxig==}
 
   scheduler@0.23.2:
     resolution: {integrity: sha512-UOShsPwz7NrMUqhR6t0hWjFduvOzbtv7toDH1/hIrfRNIDBnnBWd0CwJTGvTpngVlmwGCdP9/Zl/tVrDqcuYzQ==}
@@ -5985,8 +5981,6 @@ snapshots:
     optionalDependencies:
       '@pkgjs/parseargs': 0.11.0
 
-  jiti@1.21.0: {}
-
   jiti@1.21.3: {}
 
   jotai-dark@0.3.1(jotai-effect@1.0.0(jotai@2.8.3(@types/react@18.3.3)(react@18.3.1)))(jotai@2.8.3(@types/react@18.3.3)(react@18.3.1))(react@18.3.1):
@@ -6041,7 +6035,7 @@ snapshots:
     dependencies:
       json-buffer: 3.0.1
 
-  knip@5.18.0(@types/node@20.14.2)(typescript@5.4.5):
+  knip@5.18.1(@types/node@20.14.2)(typescript@5.4.5):
     dependencies:
       '@ericcornelissen/bash-parser': 0.5.2
       '@nodelib/fs.walk': 2.0.0
@@ -6050,7 +6044,7 @@ snapshots:
       easy-table: 1.2.0
       fast-glob: 3.3.2
       file-entry-cache: 8.0.0
-      jiti: 1.21.0
+      jiti: 1.21.3
       js-yaml: 4.1.0
       minimist: 1.2.8
       picocolors: 1.0.0
@@ -7047,7 +7041,7 @@ snapshots:
 
   safe-stable-stringify@2.4.3: {}
 
-  sakuin@0.2.7(graphql@16.8.1)(typescript@5.4.5)(zod@3.23.8):
+  sakuin@0.2.8(graphql@16.8.1)(typescript@5.4.5)(zod@3.23.8):
     dependencies:
       '@urql/core': 5.0.4(graphql@16.8.1)
       crossbell: 1.11.9(typescript@5.4.5)(zod@3.23.8)
