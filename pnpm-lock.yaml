@@ -126,8 +126,8 @@ importers:
         specifier: ^11.0.0
         version: 11.0.0
       sakuin:
-        specifier: ^0.2.8
-        version: 0.2.8(graphql@16.8.1)(typescript@5.4.5)(zod@3.23.8)
+        specifier: ^0.2.9
+        version: 0.2.9(graphql@16.8.1)(typescript@5.4.5)(zod@3.23.8)
       tailwind-merge:
         specifier: ^2.3.0
         version: 2.3.0
@@ -3055,8 +3055,8 @@ packages:
     resolution: {integrity: sha512-e2bDA2WJT0wxseVd4lsDP4+3ONX6HpMXQa1ZhFQ7SU+GjvORCmShbCMltrtIDfkYhVHrOcPtj+KhmDBdPdZD1g==}
     engines: {node: '>=10'}
 
-  sakuin@0.2.8:
-    resolution: {integrity: sha512-MG84XPD/nDELzL/G64Zfg7r9haKNOZVX653TdhDc7Y0e1jRqJEbt1V8Yco6/kYukMTx4mQhphoa12Ul4LWWxig==}
+  sakuin@0.2.9:
+    resolution: {integrity: sha512-pFMsT+ygDvtZF1fX2qZTMBe9dOn8i1LQTZZoul0VDRWCxDtqBl4ChC2c8TDeMKiOZdKOKDNHkMRcDEewOmLhOg==}
 
   scheduler@0.23.2:
     resolution: {integrity: sha512-UOShsPwz7NrMUqhR6t0hWjFduvOzbtv7toDH1/hIrfRNIDBnnBWd0CwJTGvTpngVlmwGCdP9/Zl/tVrDqcuYzQ==}
@@ -7041,7 +7041,7 @@ snapshots:
 
   safe-stable-stringify@2.4.3: {}
 
-  sakuin@0.2.8(graphql@16.8.1)(typescript@5.4.5)(zod@3.23.8):
+  sakuin@0.2.9(graphql@16.8.1)(typescript@5.4.5)(zod@3.23.8):
     dependencies:
       '@urql/core': 5.0.4(graphql@16.8.1)
       crossbell: 1.11.9(typescript@5.4.5)(zod@3.23.8)
