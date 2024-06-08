@@ -1,0 +1,18 @@
+{
+  "[javascript][javascriptreact][typescript][typescriptreact][json][jsonc]": {
+    "editor.formatOnSave": false,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "explicit"
+    }
+  },
+
+  "eslint.codeActionsOnSave.rules": [
+    "!prefer-const",
+    "!unused-imports/no-unused-imports",
+    "!@stylistic/jsx-self-closing-comp",
+    "*"
+  ],
+
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true
+}
