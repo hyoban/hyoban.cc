@@ -10,6 +10,7 @@ import remarkParse from 'remark-parse'
 
 import { AppLink } from '../../app/external-link'
 import { getImageDimensionByUri } from '../../app/utils'
+import { GitHubCard } from './github-card'
 import { rehypeEmbed, transformers } from './rehype-embed'
 
 export function Markdown({ content }: { content: string }) {
@@ -39,14 +40,7 @@ export function Markdown({ content }: { content: string }) {
           </div>
         ),
         'github-repo': ({ repo }: { repo: string }) => (
-          <AppLink href={`https://github.com/${repo}`}>
-            <Image
-              src={`https://socialify.git.ci/${repo}/image?description=1&forks=1&issues=1&language=1&name=1&owner=1&pattern=Circuit%20Board&pulls=1&stargazers=1&theme=Auto`}
-              alt={`Social preview for ${repo}`}
-              width="1280"
-              height="640"
-            />
-          </AppLink>
+          <GitHubCard repo={repo} />
         ),
       }}
       options={{

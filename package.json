@@ -30,6 +30,7 @@
     "autoprefixer": "^10.4.19",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
+    "date-fns": "^3.6.0",
     "eslint": "^9.4.0",
     "eslint-config-hyoban": "3.0.0-beta.16",
     "hast-util-from-html": "^2.0.1",

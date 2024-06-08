@@ -13,7 +13,6 @@ const nextConfig = {
   // output: 'export',
   // images: { unoptimized: true },
   images: {
-    dangerouslyAllowSVG: true,
     remotePatterns: [
       {
         protocol: 'https',
