@@ -1,4 +1,3 @@
-import clsx from 'clsx'
 import Image from 'next/image'
 import type { Post } from 'sakuin'
 
@@ -17,13 +16,7 @@ export function PostItem({ post }: PostItemProps) {
     return (
       <AppLink
         href={`post/${post.slug}`}
-        className={
-          isLoading => clsx(
-            'not-prose my-6 p-4 flex flex-col rounded-md overflow-hidden bg-neutral-50 dark:bg-neutral-800',
-            isLoading && 'animate-pulse',
-          )
-        }
-        transition
+        className="not-prose my-6 p-4 flex flex-col rounded-md overflow-hidden bg-neutral-50 dark:bg-neutral-800"
       >
         <PostDetail post={post} fullSummary />
       </AppLink>
@@ -33,13 +26,7 @@ export function PostItem({ post }: PostItemProps) {
   return (
     <AppLink
       href={`post/${post.slug}`}
-      transition
-      className={
-        isLoading => clsx(
-          'not-prose my-6 flex flex-col rounded-md overflow-hidden bg-neutral-50 dark:bg-neutral-800',
-          isLoading && 'animate-pulse',
-        )
-      }
+      className="not-prose my-6 flex flex-col rounded-md overflow-hidden bg-neutral-50 dark:bg-neutral-800"
     >
       <Image
         src={post.cover}
