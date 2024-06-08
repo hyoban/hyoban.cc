@@ -4,6 +4,7 @@ import { z } from 'zod'
 export const env = createEnv({
   server: {
     HANDLE: z.string().default('hyoban'),
+    GITHUB_TOKEN: z.string(),
     SITE_URL: z.string().optional(),
   },
   client: {},

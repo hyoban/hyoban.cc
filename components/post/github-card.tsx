@@ -1,6 +1,7 @@
 import { formatDistance } from 'date-fns'
 
 import { AppLink } from '~/app/external-link'
+import { env } from '~/env'
 
 import { Button } from '../ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/card'
@@ -86,9 +87,14 @@ export interface GitHubRepo {
 }
 
 export async function GitHubCard({ repo }: { repo: string }) {
-  const res = await fetch(`https://api.github.com/repos/${repo}`, { headers: {
-    Authorization: 'Bearer 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',
-  } })
+  const res = await fetch(
+    `https://api.github.com/repos/${repo}`,
+    {
+      headers: {
+        Authorization: `Bearer ${env.GITHUB_TOKEN}`,
+      },
+    },
+  )
   const data = await res.json() as GitHubRepo
   return (
     <Card className="not-prose">
