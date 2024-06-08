@@ -20,7 +20,6 @@
     "types": ["react/experimental", "node"],
     "jsx": "preserve",
     "paths": {
-      "sakuin": ["./src/index.ts"],
       "~/*": ["./*"]
     },
     "incremental": false,

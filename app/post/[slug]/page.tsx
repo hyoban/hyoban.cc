@@ -2,11 +2,11 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
-import { Comment } from '../../../components/post/comment'
-import { Markdown } from '../../../components/post/markdown'
-import { PageMeta, PostMeta } from '../../../components/post/meta'
-import { env } from '../../../env'
-import { client } from '../../../lib/client'
+import { Comment } from '~/components/post/comment'
+import { Markdown } from '~/components/post/markdown'
+import { PageMeta, PostMeta } from '~/components/post/meta'
+import { env } from '~/env'
+import { client } from '~/lib/client'
 
 export async function generateStaticParams() {
   const { list: posts } = await client.post.getMany(env.HANDLE)

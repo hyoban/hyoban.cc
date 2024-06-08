@@ -1,7 +1,8 @@
 import { Suspense } from 'react'
 
-import { env } from '../../env'
-import { client } from '../../lib/client'
+import { env } from '~/env'
+import { client } from '~/lib/client'
+
 import { CommentListClient } from './comment-client'
 
 export function Comment({ noteId }: { noteId: number }) {

@@ -1,5 +1,6 @@
-import { env } from '../../env'
-import { client } from '../../lib/client'
+import { env } from '~/env'
+import { client } from '~/lib/client'
+
 import { getImageDimensionByUri } from '../utils'
 import { PostList } from './post-list'
 

@@ -8,8 +8,9 @@ import remarkGfm from 'remark-gfm'
 import remarkGithubAlerts from 'remark-github-alerts'
 import remarkParse from 'remark-parse'
 
-import { AppLink } from '../../app/external-link'
-import { getImageDimensionByUri } from '../../app/utils'
+import { AppLink } from '~/app/external-link'
+import { getImageDimensionByUri } from '~/app/utils'
+
 import { GitHubCard } from './github-card'
 import { rehypeEmbed, transformers } from './rehype-embed'
 

@@ -1,10 +1,10 @@
 import Image from 'next/image'
 import type { Short } from 'sakuin'
 
-import { env } from '../../../env'
-import { client } from '../../../lib/client'
-import { AppLink } from '../../external-link'
-import { getImageDimensionByUri } from '../../utils'
+import { AppLink } from '~/app/external-link'
+import { getImageDimensionByUri } from '~/app/utils'
+import { env } from '~/env'
+import { client } from '~/lib/client'
 
 export default async function ShortPage() {
   const { list: shorts } = await client.short.getMany(env.HANDLE)

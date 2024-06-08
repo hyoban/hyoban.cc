@@ -33,6 +33,7 @@
     "date-fns": "^3.6.0",
     "eslint": "^9.4.0",
     "eslint-config-hyoban": "3.0.0-beta.16",
+    "get-tsconfig": "^4.7.5",
     "hast-util-from-html": "^2.0.1",
     "image-size": "^1.1.1",
     "jiti": "^1.21.3",
