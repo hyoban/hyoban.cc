@@ -107,11 +107,38 @@ export default defineConfig(
               }
             },
           },
+          'no-import-js-extension': {
+            meta: {
+              fixable: true,
+            },
+            create(context) {
+              return {
+                ImportDeclaration(node) {
+                  const a = tsconfig.config.compilerOptions.moduleResolution
+                  if (a !== 'Bundler')
+                    return
+
+                  const importSource = String(node.source.value)
+                  if (!importSource.endsWith('.js'))
+                    return
+
+                  context.report({
+                    node,
+                    message: `Use import path without '.js' extension`,
+                    fix(fixer) {
+                      return fixer.replaceText(node.source, `'${importSource.slice(0, -3)}'`)
+                    },
+                  })
+                },
+              }
+            },
+          },
         },
       },
     },
     rules: {
       'custom/no-complex-relative-import': 'error',
+      'custom/no-import-js-extension': 'error',
     },
   },
 )
