@@ -24,6 +24,7 @@ interface Link {
   icon?: string
 }
 
+// eslint-disable-next-line max-params
 export function getUniverseLinks(
   connectedAccounts: SocialPlatform[] = [],
   navigationList: Navigation[] = [],

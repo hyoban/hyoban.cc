@@ -11,7 +11,7 @@ export default async function HomeLayout({ children }: React.PropsWithChildren) 
   const { characterName, description, socialPlatforms, navigation, xlogUrl }
     = await client.site.getInfo(HANDLE)
   const pages = await client.page.getAll(HANDLE)
-  const navigations = pages.map(page => ({
+  const navigationLinks = pages.map(page => ({
     href: `/${page.slug}`,
     label: page.title,
   }))
@@ -47,7 +47,7 @@ export default async function HomeLayout({ children }: React.PropsWithChildren) 
           </section>
         )}
       </section>
-      <Navigation additionalNavigation={navigations} />
+      <Navigation additionalNavigation={navigationLinks} />
       {children}
     </main>
   )

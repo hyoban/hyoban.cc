@@ -1,3 +1,4 @@
+// eslint-disable-next-line @cspell/spellchecker
 /* eslint-disable @eslint-react/dom/no-dangerously-set-innerhtml */
 import 'remark-github-alerts/styles/github-base.css'
 import 'remark-github-alerts/styles/github-colors-dark-class.css'

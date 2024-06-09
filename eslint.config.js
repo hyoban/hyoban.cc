@@ -23,6 +23,11 @@ function getAlias() {
 export default defineConfig(
   {
     react: 'next',
+    fileCase: 'kebabCase',
+    cspell: true,
+    tailwindCSS: { order: false },
+    strict: true,
+    typeChecked: true,
   },
   {
     plugins: {

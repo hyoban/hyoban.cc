@@ -76,7 +76,6 @@ interface GitHubRepo {
   open_issues_count: number
   allow_forking: boolean
   is_template: boolean
-  web_commit_signoff_required: boolean
   visibility: string
   forks: number
   open_issues: number

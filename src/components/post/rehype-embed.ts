@@ -65,7 +65,7 @@ export const rehypeEmbed: Plugin<
           || !('tagName' in parent)
           || parent.tagName !== 'p'
           || parent.children.length > 1
-          // @ts-expect-error FIXME:
+          // @ts-expect-error FIXME: do not know why now
           || node.children[0]?.value !== node.properties.href
         ) {
           return
