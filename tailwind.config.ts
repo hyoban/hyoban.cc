@@ -23,7 +23,6 @@ const config = {
     },
     extend: {
       fontFamily: {
-        sans: ['var(--font-sans)', ...defaultTheme.fontFamily.sans],
         mono: [
           'Monolisa Variable',
           'Monolisa',

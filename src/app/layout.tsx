@@ -4,7 +4,6 @@ import 'remark-github-alerts/styles/github-colors-dark-class.css'
 import 'remark-github-alerts/styles/github-colors-light.css'
 import './globals.css'
 
-import localFont from 'next/font/local'
 import NextTopLoader from 'nextjs-toploader'
 import Balancer from 'react-wrap-balancer'
 
@@ -12,73 +11,6 @@ import { client } from '~/lib/client'
 import { env } from '~/lib/env'
 
 import Providers from './providers'
-
-const snPro = localFont({
-  variable: '--font-sans',
-  preload: false,
-  src: [
-    {
-      path: '../font/SNPro-Thin.otf',
-      weight: '100',
-      style: 'normal',
-    },
-    {
-      path: '../font/SNPro-ThinItalic.otf',
-      weight: '100',
-      style: 'italic',
-    },
-    {
-      path: '../font/SNPro-Light.otf',
-      weight: '300',
-      style: 'normal',
-    },
-    {
-      path: '../font/SNPro-LightItalic.otf',
-      weight: '300',
-      style: 'italic',
-    },
-    {
-      path: '../font/SNPro-Regular.otf',
-      weight: '400',
-      style: 'normal',
-    },
-    {
-      path: '../font/SNPro-RegularItalic.otf',
-      weight: '400',
-      style: 'italic',
-    },
-    {
-      path: '../font/SNPro-Medium.otf',
-      weight: '500',
-      style: 'normal',
-    },
-    {
-      path: '../font/SNPro-MediumItalic.otf',
-      weight: '500',
-      style: 'italic',
-    },
-    {
-      path: '../font/SNPro-Semibold.otf',
-      weight: '600',
-      style: 'normal',
-    },
-    {
-      path: '../font/SNPro-SemiboldItalic.otf',
-      weight: '600',
-      style: 'italic',
-    },
-    {
-      path: '../font/SNPro-Bold.otf',
-      weight: '700',
-      style: 'normal',
-    },
-    {
-      path: '../font/SNPro-BoldItalic.otf',
-      weight: '700',
-      style: 'italic',
-    },
-  ],
-})
 
 export default async function RootLayout({
   children,
@@ -97,7 +29,7 @@ export default async function RootLayout({
 
   return (
     <html
-      className={`dark:bg-neutral-900 dark:text-white ${snPro.variable}`}
+      className="dark:bg-neutral-900 dark:text-white"
       lang="en"
       suppressHydrationWarning
     >
