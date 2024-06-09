@@ -5,8 +5,8 @@ import { notFound } from 'next/navigation'
 import { Comment } from '~/components/post/comment'
 import { Markdown } from '~/components/post/markdown'
 import { PageMeta, PostMeta } from '~/components/post/meta'
-import { env } from '~/lib/env'
 import { client } from '~/lib/client'
+import { env } from '~/lib/env'
 
 export async function generateStaticParams() {
   const { list: posts } = await client.post.getMany(env.HANDLE)

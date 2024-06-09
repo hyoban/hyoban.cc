@@ -3,8 +3,8 @@ import type { Short } from 'sakuin'
 
 import { AppLink } from '~/app/external-link'
 import { getImageDimensionByUri } from '~/app/utils'
-import { env } from '~/lib/env'
 import { client } from '~/lib/client'
+import { env } from '~/lib/env'
 
 export default async function ShortPage() {
   const { list: shorts } = await client.short.getMany(env.HANDLE)

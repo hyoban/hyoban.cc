@@ -1,6 +1,6 @@
 import { AppLink } from '~/app/external-link'
-import { env } from '~/lib/env'
 import { client } from '~/lib/client'
+import { env } from '~/lib/env'
 
 import { AppearanceSwitch } from '../appearance-switch'
 import { InteractionView } from './interaction'

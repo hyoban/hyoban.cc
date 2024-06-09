@@ -1,7 +1,7 @@
 import { Suspense } from 'react'
 
-import { env } from '~/lib/env'
 import { client } from '~/lib/client'
+import { env } from '~/lib/env'
 
 import { CommentListClient } from './comment-client'
 
