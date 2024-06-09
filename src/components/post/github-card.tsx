@@ -6,7 +6,7 @@ import { env } from '~/lib/env'
 import { Button } from '../ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/card'
 
-export interface GitHubRepo {
+interface GitHubRepo {
   id: number
   node_id: string
   name: string
