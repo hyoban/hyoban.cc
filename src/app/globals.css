@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-html.dark {
+html[data-theme="dark"] {
   color-scheme: dark;
 }
 
@@ -16,7 +16,7 @@ html.dark {
     );
   }
 
-  html.dark {
+  html[data-theme="dark"] {
     background-size: 30px 30px;
     background-image: radial-gradient(
       circle,
@@ -26,8 +26,8 @@ html.dark {
   }
 }
 
-html.dark .shiki,
-html.dark .shiki span {
+html[data-theme="dark"] .shiki,
+html[data-theme="dark"] .shiki span {
   color: var(--shiki-dark) !important;
   background-color: var(--shiki-dark-bg) !important;
   /* Optional, if you also want font styles */

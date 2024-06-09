@@ -4,6 +4,9 @@ import { atomDark } from 'jotai-dark'
 const isDarkAtom = atomDark({
   disableTransition: true,
   disableTransitionExclude: ['.i-lucide-sun', '.i-lucide-moon'],
+  applyDarkMode(isDark) {
+    document.documentElement.dataset.theme = isDark ? 'dark' : 'light'
+  },
 })
 
 export function useDark(): {
