@@ -24,7 +24,7 @@ export async function PostMeta({
     return null
 
   return (
-    <div className="flex flex-wrap gap-4 items-center">
+    <div className="flex flex-wrap gap-4 items-center mb-6">
       <span
         title={new Date(post.publishedAt).toLocaleString()}
       >

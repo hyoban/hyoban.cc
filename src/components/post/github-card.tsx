@@ -96,7 +96,7 @@ export async function GitHubCard({ repo }: { repo: string }) {
   )
   const data = await res.json() as GitHubRepo
   return (
-    <Card className="not-prose">
+    <Card>
       <CardHeader>
         <CardTitle>{data.full_name}</CardTitle>
         <CardDescription>{data.description}</CardDescription>
@@ -117,7 +117,6 @@ export async function GitHubCard({ repo }: { repo: string }) {
           </AppLink>
         </div>
       </CardContent>
-
       <CardFooter>
         <p className="flex items-center gap-1">
           <span className="i-lucide-star text-xs" />
