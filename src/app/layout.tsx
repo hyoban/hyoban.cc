@@ -8,8 +8,9 @@ import localFont from 'next/font/local'
 import NextTopLoader from 'nextjs-toploader'
 import Balancer from 'react-wrap-balancer'
 
-import { env } from '../env'
-import { client } from '../lib/client'
+import { client } from '~/lib/client'
+import { env } from '~/lib/env'
+
 import Providers from './providers'
 
 const snPro = localFont({

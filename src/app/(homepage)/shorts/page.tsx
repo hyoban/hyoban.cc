@@ -3,7 +3,7 @@ import type { Short } from 'sakuin'
 
 import { AppLink } from '~/app/external-link'
 import { getImageDimensionByUri } from '~/app/utils'
-import { env } from '~/env'
+import { env } from '~/lib/env'
 import { client } from '~/lib/client'
 
 export default async function ShortPage() {

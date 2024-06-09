@@ -1,4 +1,4 @@
-import { env } from '~/env'
+import { env } from '~/lib/env'
 import { client } from '~/lib/client'
 
 import { getImageDimensionByUri } from '../utils'

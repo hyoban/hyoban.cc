@@ -1,7 +1,7 @@
 import { formatDistance } from 'date-fns'
 
 import { AppLink } from '~/app/external-link'
-import { env } from '~/env'
+import { env } from '~/lib/env'
 
 import { Button } from '../ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/card'
