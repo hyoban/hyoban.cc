@@ -9,6 +9,7 @@
     "dev": "next dev",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
+    "prepare": "simple-git-hooks",
     "start": "next start",
     "typecheck": "tsc"
   },
@@ -40,6 +41,7 @@
     "jotai-dark": "^0.3.1",
     "jotai-effect": "^1.0.0",
     "knip": "^5.18.1",
+    "lint-staged": "^15.2.5",
     "lucide-react": "^0.390.0",
     "next": "15.0.0-canary.20",
     "next-mdx-remote": "^5.0.0",
@@ -55,6 +57,7 @@
     "remark-github-alerts": "^0.1.0-beta.3",
     "remark-parse": "^11.0.0",
     "sakuin": "^0.2.10",
+    "simple-git-hooks": "^2.11.1",
     "tailwind-merge": "^2.3.0",
     "tailwindcss": "^3.4.4",
     "tailwindcss-animate": "^1.0.7",
@@ -62,5 +65,11 @@
     "unified": "^11.0.4",
     "unist-util-visit": "^5.0.0",
     "zod": "^3.23.8"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "pnpm lint-staged"
+  },
+  "lint-staged": {
+    "*": "eslint --fix"
   }
 }
