@@ -1,9 +1,13 @@
 'use client'
 
-import { useDark } from '~/hooks/use-dark'
+import { useDark } from 'jotai-dark/react'
 
 export function AppearanceSwitch({ className = '' }: { className?: string }) {
-  const { toggleDark } = useDark()
+  const { toggleDark } = useDark({
+    disableTransition: true,
+    disableTransitionExclude: ['.i-lucide-sun', '.i-lucide-moon'],
+    mode: 'data-theme',
+  })
 
   return (
     <button

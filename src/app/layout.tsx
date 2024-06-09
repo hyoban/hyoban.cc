@@ -8,10 +8,9 @@ import './globals.css'
 import NextTopLoader from 'nextjs-toploader'
 import Balancer from 'react-wrap-balancer'
 
+import { AppearanceSwitch } from '~/components/appearance-switch'
 import { client } from '~/lib/client'
 import { env } from '~/lib/env'
-
-import Providers from './providers'
 
 export default async function RootLayout({
   children,
@@ -100,12 +99,13 @@ export default async function RootLayout({
           }}
         />
         <NextTopLoader />
-        <Providers>{children}</Providers>
+        {children}
         {footer && (
           <footer className="mx-6 flex flex-col gap-4 items-center opacity-80 text-sm mb-6 text-center">
             <Balancer className="max-w-[670px]">{footer}</Balancer>
           </footer>
         )}
+        <AppearanceSwitch className="hidden" />
       </body>
     </html>
   )

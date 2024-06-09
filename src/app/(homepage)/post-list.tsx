@@ -1,14 +1,10 @@
 'use client'
-import { atom, useAtom } from 'jotai'
-import { useHydrateAtoms } from 'jotai/utils'
-import { useTransition } from 'react'
+
+import { useState, useTransition } from 'react'
 import type { Post } from 'sakuin'
 
 import { fetchMorePost } from './action'
 import { PostItem } from './post-item'
-
-const currentPostsAtom = atom<Post[]>([])
-const currentCursorAtom = atom<string | null>(null)
 
 export function PostList({
   posts,
@@ -17,10 +13,8 @@ export function PostList({
   posts: Post[]
   cursor: string | null
 }) {
-  useHydrateAtoms([[currentPostsAtom, posts]])
-  useHydrateAtoms([[currentCursorAtom, cursor]])
-  const [currentPosts, setCurrentPosts] = useAtom(currentPostsAtom)
-  const [currentCursor, setCurrentCursor] = useAtom(currentCursorAtom)
+  const [currentPosts, setCurrentPosts] = useState(posts)
+  const [currentCursor, setCurrentCursor] = useState(cursor)
   const [isLoadMorePending, startLoadMoreTransition] = useTransition()
 
   return (

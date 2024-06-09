@@ -4,7 +4,6 @@ import { AppLink } from '~/app/external-link'
 import { client } from '~/lib/client'
 import { env } from '~/lib/env'
 
-import { AppearanceSwitch } from '../appearance-switch'
 import { TagList } from './tag-list'
 
 export async function PostMeta({
@@ -37,7 +36,6 @@ export async function PostMeta({
       </span>
       <TagList tags={post.tags} />
       <AppLink href={`${site.xlogUrl}/${slug}`}>View on xLog</AppLink>
-      <AppearanceSwitch className="hidden" />
     </div>
   )
 }
