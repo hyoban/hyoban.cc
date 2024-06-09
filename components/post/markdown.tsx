@@ -19,15 +19,19 @@ export function Markdown({ content }: { content: string }) {
     <MDXRemote
       source={content}
       components={{
+        // @ts-expect-error types are not up-to-date with React 19
         'a': AppLink,
+        // @ts-expect-error types are not up-to-date with React 19
         'img': async (props) => {
           if (!props.src)
             return null
 
           const size = await getImageDimensionByUri(props.src)
           if (!size)
+            // @ts-expect-error types are not up-to-date with React 19
             return <img {...props} />
           return (
+            // @ts-expect-error types are not up-to-date with React 19
             <Image
               width={size.width}
               height={size.height}
