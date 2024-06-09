@@ -31,7 +31,6 @@ export function Markdown({ content }: { content: string }) {
             // @ts-expect-error types are not up-to-date with React 19
             return <img {...props} />
           return (
-            // @ts-expect-error types are not up-to-date with React 19
             <Image
               width={size.width}
               height={size.height}
