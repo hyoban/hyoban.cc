@@ -1,44 +1,22 @@
-import Image from 'next/image'
+import { formatDistance } from 'date-fns'
 import type { Post } from 'sakuin'
+
+import { InteractionView } from '~/components/post/interaction'
+import { TagList } from '~/components/post/tag-list'
 
 import { AppLink } from '../external-link'
 
-export type PostWithCoverInfo = Post & {
-  coverSize: { width: number, height: number } | null
-  priority?: boolean
-}
 interface PostItemProps {
-  post: PostWithCoverInfo
+  post: Post
 }
 
 export function PostItem({ post }: PostItemProps) {
-  if (!post.cover) {
-    return (
-      <AppLink
-        href={`post/${post.slug}`}
-        className="not-prose my-6 p-4 flex flex-col rounded-md overflow-hidden bg-neutral-50 dark:bg-neutral-800"
-      >
-        <PostDetail post={post} fullSummary />
-      </AppLink>
-    )
-  }
-
   return (
     <AppLink
       href={`post/${post.slug}`}
-      className="not-prose my-6 flex flex-col rounded-md overflow-hidden bg-neutral-50 dark:bg-neutral-800"
+      className="not-prose group my-6 flex flex-col"
     >
-      <Image
-        src={post.cover}
-        alt={post.title}
-        width={post.coverSize?.width}
-        height={post.coverSize?.height}
-        className="object-cover w-full h-32 sm:h-48"
-        priority={post.priority}
-      />
-      <div className="px-4 pb-4">
-        <PostDetail post={post} />
-      </div>
+      <PostDetail post={post} fullSummary />
     </AppLink>
   )
 }
@@ -52,39 +30,28 @@ function PostDetail({
 }) {
   return (
     <>
-      <h2 className="text-2xl font-medium my-4">{post.title}</h2>
-      <p className="opacity-90 text-[0.9rem]">
+      <section className="text-2xl font-medium my-4 flex items-center gap-2">
+        <h2>{post.title}</h2>
+        <span className="i-lucide-arrow-right text-sm hidden group-hover:inline" />
+      </section>
+      <p className="opacity-90 text-[0.9rem] tracking-wide">
         {post.summary.length > 100 && !fullSummary
           ? `${post.summary.slice(0, 100)}...`
           : post.summary}
       </p>
-      <p className="opacity-80 mt-4 text-sm space-x-2">
-        <span>{post.publishedAt.slice(0, 10)}</span>
-        {post.tags.map(tag => (
-          <span key={tag}>{tag}</span>
-        ))}
-        {post.views > 0 && (
-          <span>
-            {post.views}
-            {' '}
-            views
-          </span>
-        )}
-        {post.likes > 0 && (
-          <span>
-            {post.likes}
-            {' '}
-            likes
-          </span>
-        )}
-        {post.comments > 0 && (
-          <span>
-            {post.comments}
-            {' '}
-            comments
-          </span>
-        )}
-      </p>
+      <div className="opacity-80 mt-4 text-sm flex gap-3 items-center">
+        <span
+          title={new Date(post.publishedAt).toLocaleString()}
+        >
+          {formatDistance(
+            new Date(post.publishedAt),
+            new Date(),
+            { addSuffix: true },
+          )}
+        </span>
+        <TagList tags={post.tags} />
+        <InteractionView interaction={post} className="text-sm" />
+      </div>
     </>
   )
 }

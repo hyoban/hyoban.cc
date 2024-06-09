@@ -1,9 +1,11 @@
+import { formatDistance } from 'date-fns'
+
 import { AppLink } from '~/app/external-link'
 import { client } from '~/lib/client'
 import { env } from '~/lib/env'
 
 import { AppearanceSwitch } from '../appearance-switch'
-import { InteractionView } from './interaction'
+import { TagList } from './tag-list'
 
 export async function PostMeta({
   slug,
@@ -23,18 +25,17 @@ export async function PostMeta({
     return null
 
   return (
-    <div className="flex flex-wrap gap-4 items-center mb-6">
-      <InteractionView
-        interaction={{
-          views: post.views,
-          likes: post.likes,
-          comments: post.comments,
-          tips: post.tips,
-        }}
-      />
-      {post.tags.map(tag => (
-        <span key={tag}>{`# ${tag}`}</span>
-      ))}
+    <div className="flex flex-wrap gap-4 items-center">
+      <span
+        title={new Date(post.publishedAt).toLocaleString()}
+      >
+        {formatDistance(
+          new Date(post.publishedAt),
+          new Date(),
+          { addSuffix: true },
+        )}
+      </span>
+      <TagList tags={post.tags} />
       <AppLink href={`${site.xlogUrl}/${slug}`}>View on xLog</AppLink>
       <AppearanceSwitch className="hidden" />
     </div>

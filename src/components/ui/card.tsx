@@ -2,16 +2,9 @@ import * as React from 'react'
 
 import { cn } from '~/lib/utils'
 
-function Card({
-  ref,
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement> & {
-  ref?: React.RefObject<HTMLDivElement>
-}) {
+function Card({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
-      ref={ref}
       className={cn(
         'rounded-lg border bg-card text-card-foreground shadow-sm',
         className,
@@ -22,16 +15,9 @@ function Card({
 }
 Card.displayName = 'Card'
 
-function CardHeader({
-  ref,
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement> & {
-  ref?: React.RefObject<HTMLDivElement>
-}) {
+function CardHeader({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
-      ref={ref}
       className={cn('flex flex-col space-y-1.5 p-6', className)}
       {...props}
     />
@@ -39,16 +25,9 @@ function CardHeader({
 }
 CardHeader.displayName = 'CardHeader'
 
-function CardTitle({
-  ref,
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLHeadingElement> & {
-  ref?: React.RefObject<HTMLParagraphElement>
-}) {
+function CardTitle({ className, ...props }: React.ComponentProps<'h3'>) {
   return (
     <h3
-      ref={ref}
       className={cn(
         'text-2xl font-semibold leading-none tracking-tight',
         className,
@@ -59,16 +38,9 @@ function CardTitle({
 }
 CardTitle.displayName = 'CardTitle'
 
-function CardDescription({
-  ref,
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLParagraphElement> & {
-  ref?: React.RefObject<HTMLParagraphElement>
-}) {
+function CardDescription({ className, ...props }: React.ComponentProps<'p'>) {
   return (
     <p
-      ref={ref}
       className={cn('text-sm text-muted-foreground', className)}
       {...props}
     />
@@ -76,27 +48,14 @@ function CardDescription({
 }
 CardDescription.displayName = 'CardDescription'
 
-function CardContent({
-  ref,
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement> & {
-  ref?: React.RefObject<HTMLDivElement>
-}) {
-  return <div ref={ref} className={cn('p-6 pt-0', className)} {...props} />
+function CardContent({ className, ...props }: React.ComponentProps<'div'>) {
+  return <div className={cn('p-6 pt-0', className)} {...props} />
 }
 CardContent.displayName = 'CardContent'
 
-function CardFooter({
-  ref,
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement> & {
-  ref?: React.RefObject<HTMLDivElement>
-}) {
+function CardFooter({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
-      ref={ref}
       className={cn('flex items-center p-6 pt-0', className)}
       {...props}
     />

@@ -1,28 +1,40 @@
 import type { InteractionCount } from 'sakuin'
 
+import { cn } from '~/lib/utils'
+
 export function InteractionView({
   interaction,
+  className,
 }: {
   interaction: InteractionCount
+  className?: string
 }) {
   return (
-    <div className="flex gap-4">
-      <span className="flex gap-2 items-center">
-        <span className="i-lucide-eye text-sm" />
-        <span className="text-lg">{interaction.views}</span>
-      </span>
-      <span className="flex gap-2 items-center">
-        <span className="i-lucide-thumbs-up text-sm" />
-        <span className="text-lg">{interaction.likes}</span>
-      </span>
-      <span className="flex gap-2 items-center">
-        <span className="i-lucide-circle-dollar-sign text-sm" />
-        <span className="text-lg">{interaction.tips}</span>
-      </span>
-      <span className="flex gap-2 items-center">
-        <span className="i-lucide-message-circle text-sm" />
-        <span className="text-lg">{interaction.comments}</span>
-      </span>
-    </div>
+    <section className={cn('flex gap-3', className)}>
+      {interaction.views > 0 && (
+        <span className="flex gap-1 items-center">
+          <span className="i-lucide-bar-chart text-sm" />
+          <span>{interaction.views}</span>
+        </span>
+      )}
+      {interaction.likes > 0 && (
+        <span className="flex gap-1 items-center">
+          <span className="i-lucide-thumbs-up text-sm" />
+          <span>{interaction.likes}</span>
+        </span>
+      )}
+      {interaction.tips > 0 && (
+        <span className="flex gap-1 items-center">
+          <span className="i-lucide-circle-dollar-sign text-sm" />
+          <span>{interaction.tips}</span>
+        </span>
+      )}
+      {interaction.comments > 0 && (
+        <span className="flex gap-1 items-center">
+          <span className="i-lucide-message-circle text-sm" />
+          <span>{interaction.comments}</span>
+        </span>
+      )}
+    </section>
   )
 }
