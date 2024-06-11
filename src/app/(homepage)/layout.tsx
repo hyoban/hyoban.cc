@@ -1,8 +1,8 @@
+import { AppLink } from '~/components/app-link'
 import { AppearanceSwitch } from '~/components/appearance-switch'
 import { client } from '~/lib/client'
 import { env } from '~/lib/env'
 
-import { AppLink } from '../external-link'
 import { Navigation } from '../navigation'
 import { getUniverseLinks } from '../utils'
 
@@ -29,7 +29,6 @@ export default async function HomeLayout({ children }: React.PropsWithChildren) 
         <h2 className="flex items-center gap-3">
           {characterName}
           <AppearanceSwitch className="scale-75" />
-
         </h2>
         <p>{description}</p>
         {links.length > 0 && (

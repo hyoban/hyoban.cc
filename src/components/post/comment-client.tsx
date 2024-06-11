@@ -2,7 +2,7 @@
 import { useOptimistic, useRef } from 'react'
 import type { Comment } from 'sakuin'
 
-import { AppLink } from '~/app/external-link'
+import { AppLink } from '~/components/app-link'
 
 import { Input } from '../ui/input'
 import { Label } from '../ui/label'

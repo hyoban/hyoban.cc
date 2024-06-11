@@ -1,6 +1,6 @@
 import { formatDistance } from 'date-fns'
 
-import { AppLink } from '~/app/external-link'
+import { AppLink } from '~/components/app-link'
 import { client } from '~/lib/client'
 import { env } from '~/lib/env'
 
