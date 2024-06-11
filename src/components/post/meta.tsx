@@ -1,9 +1,8 @@
-import { formatDistance } from 'date-fns'
-
 import { AppLink } from '~/components/app-link'
 import { client } from '~/lib/client'
 import { env } from '~/lib/env'
 
+import { RelativeDate } from './relative-date'
 import { TagList } from './tag-list'
 
 export async function PostMeta({
@@ -24,19 +23,11 @@ export async function PostMeta({
     return null
 
   return (
-    <div className="flex flex-wrap gap-4 items-center mb-6">
-      <span
-        title={new Date(post.publishedAt).toLocaleString()}
-      >
-        {formatDistance(
-          new Date(post.publishedAt),
-          new Date(),
-          { addSuffix: true },
-        )}
-      </span>
+    <section className="flex flex-wrap gap-4 items-center my-6">
+      <RelativeDate date={post.updatedAt} />
       <TagList tags={post.tags} />
       <AppLink href={`${site.xlogUrl}/${slug}`}>View on xLog</AppLink>
-    </div>
+    </section>
   )
 }
 

@@ -85,6 +85,39 @@ const config = {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
       },
+      typography: {
+        DEFAULT: {
+          css: {
+            'pre': {
+              'border-width': '1px',
+            },
+            'img': {
+              'border-radius': '.375rem',
+            },
+            'code ::before': {
+              content: '""',
+            },
+            'code ::after': {
+              content: '""',
+            },
+            'code': {
+              'border-radius': '.375rem',
+              'border-width': '1px',
+              'background-color': 'hsl(var(--card))',
+              'color': 'hsl(var(--card-foreground))',
+              'padding': '2px 3.6px',
+              'font-size': '.8571429em',
+            },
+            'a': {
+              'text-decoration': 'underline',
+              'text-underline-position': 'from-font',
+              'text-decoration-thickness': '1px',
+              'font-weight': '400',
+              'color': 'unset',
+            },
+          },
+        },
+      },
     },
   },
   plugins: [animate, typography(), iconsPlugin({ scale: 1.3 })],
