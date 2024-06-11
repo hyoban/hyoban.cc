@@ -28,7 +28,7 @@ export default async function PostPage({
     notFound()
 
   return (
-    <main className="mx-auto max-w-[692px] px-6 my-6 sm:my-16 antialiased prose prose-neutral dark:prose-invert break-all">
+    <main className="mx-auto max-w-[692px] px-6 my-6 sm:my-16 antialiased prose prose-neutral dark:prose-invert break-all prose-pre:rounded-lg prose-pre:border prose-pre:shadow-sm">
       <PageMeta slug={params.slug} isPost />
       <article>
         <h1 className="flex justify-between items-center h-10">
