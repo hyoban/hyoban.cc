@@ -27,7 +27,7 @@ export default async function PostPage({
     <main
       className={cn(
         'mx-auto max-w-[692px] px-6 my-6 sm:my-16',
-        'antialiased prose prose-neutral dark:prose-invert break-all prose-pre:shadow-sm prose-img:shadow-sm',
+        'antialiased prose prose-neutral dark:prose-invert break-words prose-pre:shadow-sm prose-img:shadow-sm',
       )}
     >
       <PageMeta slug={params.slug} isPost />
