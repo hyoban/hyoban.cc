@@ -98,7 +98,7 @@ export default async function RootLayout({
             `,
           }}
         />
-        <NextTopLoader />
+        <NextTopLoader color="#888" height={2} showSpinner={false} />
         {children}
         {footer && (
           <footer className="mx-6 flex flex-col gap-4 items-center opacity-80 text-sm mb-6 text-center">
