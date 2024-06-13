@@ -49,14 +49,15 @@ export function Markdown({ content }: { content: string }) {
       }}
       options={{
         mdxOptions: {
-          remarkPlugins: [remarkParse, remarkGithubAlerts, remarkGfm],
+          remarkPlugins: [
+            remarkParse,
+            remarkGithubAlerts,
+            remarkGfm,
+          ],
           rehypePlugins: [
             rehypeRaw,
             [rehypeEmbed, { transformers }],
-            [
-              rehypeShiki,
-              { themes: { light: 'vitesse-light', dark: 'vitesse-dark' } },
-            ],
+            [rehypeShiki, { themes: { light: 'solarized-light', dark: 'tokyo-night' } }],
           ],
           format: 'md',
         },
