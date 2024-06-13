@@ -18,7 +18,7 @@ export function PostItem({ post }: { post: Post }) {
         {post.summary}
       </p>
       <div className="opacity-70 mt-4 flex gap-3 items-center">
-        <RelativeDate date={post.updatedAt} />
+        <RelativeDate date={post.publishedAt} />
         <TagList tags={post.tags} />
       </div>
     </AppLink>

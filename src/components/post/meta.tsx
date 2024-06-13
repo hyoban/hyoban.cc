@@ -24,7 +24,7 @@ export async function PostMeta({
 
   return (
     <section className="flex flex-wrap gap-4 items-center my-6">
-      <RelativeDate date={post.updatedAt} />
+      <RelativeDate date={post.publishedAt} />
       <TagList tags={post.tags} />
       <AppLink href={`${site.xlogUrl}/${slug}`}>xLog</AppLink>
       <AppLink href="/">Back</AppLink>
