@@ -12,7 +12,7 @@ export function PostItem({ post }: { post: Post }) {
     >
       <section className="my-4 flex items-center gap-2">
         <h2 className="font-medium">{post.title}</h2>
-        <span className="i-lucide-arrow-right text-sm hidden group-hover:inline" />
+        <span className="i-lucide-arrow-right text-sm opacity-0 -translate-x-full group-hover:opacity-100 group-hover:translate-x-0 transition-transform" />
       </section>
       <p className="text-gray-11 line-clamp-3">
         {post.summary}
