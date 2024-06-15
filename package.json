@@ -60,8 +60,6 @@
     "typescript": "^5.4.5",
     "unified": "^11.0.4",
     "unist-util-visit": "^5.0.0",
-    "windy-radix-palette": "2.0.0-beta.7",
-    "windy-radix-typography": "1.0.0-beta.0",
     "zod": "^3.23.8"
   },
   "simple-git-hooks": {

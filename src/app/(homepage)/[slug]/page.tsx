@@ -23,7 +23,7 @@ export default async function PagePage({
     notFound()
 
   return (
-    <main className="antialiased prose prose-gray dark:prose-invert break-words prose-pre:shadow-sm prose-img:shadow-sm">
+    <main className="antialiased prose dark:prose-invert break-words prose-pre:shadow-sm prose-img:shadow-sm">
       <PageMeta slug={params.slug} />
       <article>
         <PostMeta slug={params.slug} />

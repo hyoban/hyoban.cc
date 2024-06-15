@@ -24,7 +24,7 @@ export default async function HomeLayout({ children }: React.PropsWithChildren) 
   )
 
   return (
-    <main className="mx-auto max-w-[692px] px-6 my-6 sm:my-16 antialiased prose prose-gray dark:prose-invert">
+    <main className="mx-auto max-w-[692px] px-6 my-6 sm:my-16 antialiased prose dark:prose-invert">
       <section>
         <h2 className="flex items-center gap-3">
           {characterName}

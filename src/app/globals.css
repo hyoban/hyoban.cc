@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+@import "@radix-ui/colors/gray.css";
+@import "@radix-ui/colors/gray-dark.css";
+
 html.dark {
   color-scheme: dark;
 }
