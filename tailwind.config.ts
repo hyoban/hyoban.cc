@@ -1,11 +1,27 @@
 import { iconsPlugin } from '@egoist/tailwindcss-icons'
+import * as radixColors from '@radix-ui/colors'
 import typography from '@tailwindcss/typography'
 import type { Config } from 'tailwindcss'
 import defaultTheme from 'tailwindcss/defaultTheme'
 import animate from 'tailwindcss-animate'
+import { createPlugin } from 'windy-radix-palette'
+import windyRadixTypography from 'windy-radix-typography'
+
+const colors = createPlugin({
+  colors: {
+    gray: radixColors.gray,
+    grayA: radixColors.grayA,
+    grayP3: radixColors.grayP3,
+    grayP3A: radixColors.grayP3A,
+    grayDark: radixColors.grayDark,
+    grayDarkA: radixColors.grayDarkA,
+    grayDarkP3: radixColors.grayDarkP3,
+    grassDarkP3A: radixColors.grassDarkP3A,
+  },
+})
 
 const config = {
-  darkMode: 'selector',
+  darkMode: 'class',
   content: [
     './src/**/*.{ts,tsx}',
     './node_modules/sakuin/output/index.js',
@@ -120,7 +136,15 @@ const config = {
       },
     },
   },
-  plugins: [animate, typography(), iconsPlugin({ scale: 1.3 })],
+  plugins: [
+    colors.plugin,
+    animate,
+    typography(),
+    iconsPlugin({ scale: 1.3 }),
+  ],
+  presets: [
+    windyRadixTypography,
+  ],
 } satisfies Config
 
 export default config

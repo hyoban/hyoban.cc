@@ -17,6 +17,7 @@
     "@egoist/tailwindcss-icons": "^1.8.1",
     "@iconify-json/lucide": "^1.1.191",
     "@iconify-json/simple-icons": "^1.1.105",
+    "@radix-ui/colors": "^3.0.0",
     "@radix-ui/react-label": "^2.0.2",
     "@radix-ui/react-slot": "^1.0.2",
     "@shikijs/rehype": "^1.6.4",
@@ -59,6 +60,8 @@
     "typescript": "^5.4.5",
     "unified": "^11.0.4",
     "unist-util-visit": "^5.0.0",
+    "windy-radix-palette": "2.0.0-beta.7",
+    "windy-radix-typography": "1.0.0-beta.0",
     "zod": "^3.23.8"
   },
   "simple-git-hooks": {
