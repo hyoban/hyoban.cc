@@ -1,8 +1,8 @@
 // eslint-disable-next-line @cspell/spellchecker
 /* eslint-disable @eslint-react/dom/no-dangerously-set-innerhtml */
 import 'remark-github-alerts/styles/github-base.css'
-import 'remark-github-alerts/styles/github-colors-dark-class.css'
 import 'remark-github-alerts/styles/github-colors-light.css'
+import 'remark-github-alerts/styles/github-colors-dark-class.css'
 import './globals.css'
 
 import NextTopLoader from 'nextjs-toploader'
@@ -93,7 +93,8 @@ export default async function RootLayout({
                 var e = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches,
                   t = localStorage.getItem('use-dark') || '"system"',
                   n = '"dark"' === t || (e && '"light"' !== t);
-                document.documentElement.dataset.theme = n ? 'dark' : 'light';
+                document.documentElement.classList.toggle("dark", n);
+                document.documentElement.classList.toggle("light", !n);
               })()
             `,
           }}

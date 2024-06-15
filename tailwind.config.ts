@@ -5,7 +5,7 @@ import defaultTheme from 'tailwindcss/defaultTheme'
 import animate from 'tailwindcss-animate'
 
 const config = {
-  darkMode: ['class', '[data-theme="dark"]'],
+  darkMode: 'selector',
   content: [
     './src/**/*.{ts,tsx}',
     './node_modules/sakuin/output/index.js',
