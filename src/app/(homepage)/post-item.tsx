@@ -14,10 +14,10 @@ export function PostItem({ post }: { post: Post }) {
         <h2 className="font-medium">{post.title}</h2>
         <span className="i-lucide-arrow-right text-sm hidden group-hover:inline" />
       </section>
-      <p className="opacity-70 line-clamp-3">
+      <p className="text-gray-11 line-clamp-3">
         {post.summary}
       </p>
-      <div className="opacity-70 mt-4 flex gap-3 items-center">
+      <div className="text-gray-11 mt-4 flex gap-3 items-center">
         <RelativeDate date={post.publishedAt} />
         <TagList tags={post.tags} />
       </div>

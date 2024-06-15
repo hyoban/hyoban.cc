@@ -33,7 +33,7 @@ export function PostList({
             })
           }}
           disabled={isLoadMorePending}
-          className="px-2 py-1 rounded-full hover:bg-neutral-100 disabled:hover:bg-inherit dark:hover:bg-neutral-800 opacity-60 hover:opacity-100 disabled:opacity-20"
+          className="px-2 py-1 rounded-full hover:bg-gray-1 disabled:hover:bg-inherit opacity-60 hover:opacity-100 disabled:opacity-20"
         >
           {isLoadMorePending
             ? <span className="ml-2 i-lucide-loader-2 animate-spin" />

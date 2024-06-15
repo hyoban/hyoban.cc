@@ -3,6 +3,7 @@ import * as radixColors from '@radix-ui/colors'
 import typography from '@tailwindcss/typography'
 import type { Config } from 'tailwindcss'
 import defaultTheme from 'tailwindcss/defaultTheme'
+import plugin from 'tailwindcss/plugin'
 import animate from 'tailwindcss-animate'
 import { createPlugin } from 'windy-radix-palette'
 import windyRadixTypography from 'windy-radix-typography'
@@ -20,6 +21,18 @@ const colors = createPlugin({
   },
 })
 
+/**
+ * Composite utility classes using `@apply`.
+ *
+ * @see https://github.com/tailwindlabs/tailwindcss/discussions/2049
+ */
+function apply(...classes: string[]) {
+  const processedClasses = classes
+    .filter(className => className !== '')
+    .map(className => className.replaceAll(' ', '_'))
+  return { [`@apply ${processedClasses.join(' ')}`]: {} }
+}
+
 const config = {
   darkMode: 'class',
   content: [
@@ -30,12 +43,10 @@ const config = {
     hoverOnlyWhenSupported: true,
   },
   theme: {
-    container: {
-      center: true,
-      padding: '2rem',
-      screens: {
-        '2xl': '1400px',
-      },
+    colors: {
+      transparent: 'transparent',
+      current: 'currentColor',
+      inherit: 'inherit',
     },
     extend: {
       fontFamily: {
@@ -47,65 +58,12 @@ const config = {
           ...defaultTheme.fontFamily.mono,
         ],
       },
-      colors: {
-        border: 'hsl(var(--border))',
-        input: 'hsl(var(--input))',
-        ring: 'hsl(var(--ring))',
-        background: 'hsl(var(--background))',
-        foreground: 'hsl(var(--foreground))',
-        primary: {
-          DEFAULT: 'hsl(var(--primary))',
-          foreground: 'hsl(var(--primary-foreground))',
-        },
-        secondary: {
-          DEFAULT: 'hsl(var(--secondary))',
-          foreground: 'hsl(var(--secondary-foreground))',
-        },
-        destructive: {
-          DEFAULT: 'hsl(var(--destructive))',
-          foreground: 'hsl(var(--destructive-foreground))',
-        },
-        muted: {
-          DEFAULT: 'hsl(var(--muted))',
-          foreground: 'hsl(var(--muted-foreground))',
-        },
-        accent: {
-          DEFAULT: 'hsl(var(--accent))',
-          foreground: 'hsl(var(--accent-foreground))',
-        },
-        popover: {
-          DEFAULT: 'hsl(var(--popover))',
-          foreground: 'hsl(var(--popover-foreground))',
-        },
-        card: {
-          DEFAULT: 'hsl(var(--card))',
-          foreground: 'hsl(var(--card-foreground))',
-        },
-      },
-      borderRadius: {
-        lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)',
-      },
-      keyframes: {
-        'accordion-down': {
-          from: { height: '0' },
-          to: { height: 'var(--radix-accordion-content-height)' },
-        },
-        'accordion-up': {
-          from: { height: 'var(--radix-accordion-content-height)' },
-          to: { height: '0' },
-        },
-      },
-      animation: {
-        'accordion-down': 'accordion-down 0.2s ease-out',
-        'accordion-up': 'accordion-up 0.2s ease-out',
-      },
       typography: {
         DEFAULT: {
           css: {
             'pre': {
               'border-width': '1px',
+              'border-color': 'var(--gray6)',
             },
             'img': {
               'border-radius': '.375rem',
@@ -119,8 +77,8 @@ const config = {
             'code': {
               'border-radius': '.375rem',
               'border-width': '1px',
-              'background-color': 'hsl(var(--card))',
-              'color': 'hsl(var(--card-foreground))',
+              'background-color': 'var(--gray2)',
+              'border-color': 'var(--gray6)',
               'padding': '2px 3.6px',
               'font-size': '.8571429em',
             },
@@ -138,6 +96,32 @@ const config = {
   },
   plugins: [
     colors.plugin,
+    plugin(({ addComponents, theme }) => {
+      const palette = theme('colors')
+      if (!palette)
+        return
+
+      for (const [colorName, color] of Object.entries(palette)) {
+        if (typeof color === 'string')
+          continue
+
+        addComponents({
+          [`.bg-${colorName}-app`]: apply(`bg-${colorName}-1`),
+          [`.bg-${colorName}-subtle`]: apply(`bg-${colorName}-2`),
+          [`.bg-${colorName}-ui`]: apply(`bg-${colorName}-3`, `hover:bg-${colorName}-4`, `active:bg-${colorName}-5`),
+          [`.bg-${colorName}-ghost`]: apply(`bg-transparent`, `hover:bg-${colorName}-4`, `active:bg-${colorName}-5`),
+          [`.bg-${colorName}-action`]: apply(`bg-${colorName}-4`, `hover:bg-${colorName}-5`, `active:bg-${colorName}-6`),
+          // shouldApplyForeground ? `text-${foregroundColorName}-12` : '',
+          [`.bg-${colorName}-solid`]: apply(`bg-${colorName}-9`, `hover:bg-${colorName}-10`),
+          [`.border-${colorName}-dim`]: apply(`border-${colorName}-6`),
+          [`.border-${colorName}-normal`]: apply(`border-${colorName}-7`, `hover:border-${colorName}-8`),
+          [`.divide-${colorName}-dim`]: apply(`divide-${colorName}-6`),
+          [`.divide-${colorName}-normal`]: apply(`divide-${colorName}-7`, `hover:divide-${colorName}-8`),
+          [`.text-${colorName}-dim`]: apply(`text-${colorName}-11`),
+          [`.text-${colorName}-normal`]: apply(`text-${colorName}-12`),
+        })
+      }
+    }),
     animate,
     typography(),
     iconsPlugin({ scale: 1.3 }),

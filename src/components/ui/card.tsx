@@ -6,7 +6,7 @@ function Card({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
       className={cn(
-        'not-prose rounded-lg border bg-card text-card-foreground shadow-sm',
+        'not-prose rounded-lg border border-gray-6 bg-gray-2 shadow-sm',
         className,
       )}
       {...props}
@@ -41,7 +41,7 @@ CardTitle.displayName = 'CardTitle'
 function CardDescription({ className, ...props }: React.ComponentProps<'p'>) {
   return (
     <p
-      className={cn('text-sm text-muted-foreground', className)}
+      className={cn('text-sm', className)}
       {...props}
     />
   )

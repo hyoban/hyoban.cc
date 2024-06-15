@@ -29,7 +29,7 @@ export default async function RootLayout({
 
   return (
     <html
-      className="dark:bg-neutral-900 dark:text-white"
+      className="bg-gray-1 text-gray-12"
       lang="en"
       suppressHydrationWarning
     >
