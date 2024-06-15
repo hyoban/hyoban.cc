@@ -6,7 +6,10 @@ import plugin from 'tailwindcss/plugin'
 import animate from 'tailwindcss-animate'
 
 function radixColors(color: string) {
-  const scale = Array.from({ length: 12 }, (_, i) => [`${i + 1}`, `var(--${color}-${i + 1})`])
+  const scale = Array.from({ length: 12 }, (_, i) => [
+    [`${i + 1}`, `var(--${color}-${i + 1})`],
+    [`a${i + 1}`, `var(--${color}-a${i + 1})`],
+  ]).flat()
   return Object.fromEntries(scale) as Record<string, string>
 }
 
