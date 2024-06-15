@@ -6,10 +6,7 @@ export function AppearanceSwitch({ className = '' }: { className?: string }) {
   const { toggleDark } = useDark({
     disableTransition: true,
     disableTransitionExclude: ['.i-lucide-sun', '.i-lucide-moon'],
-    applyDarkMode(isDark) {
-      document.documentElement.classList.toggle('dark', isDark)
-      document.documentElement.classList.toggle('light', !isDark)
-    },
+    mode: 'class',
   })
 
   return (
