@@ -1,18 +1,13 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import "@radix-ui/colors/gray.css";
-@import "@radix-ui/colors/gray-alpha.css";
-@import "@radix-ui/colors/gray-dark.css";
-@import "@radix-ui/colors/gray-dark-alpha.css";
-
 html.dark {
   color-scheme: dark;
 }
 
 @media screen and (min-width: 1150px) {
-  html {
+  html,
+  .radix-themes {
     background-size: 30px 30px;
     background-image: radial-gradient(
       circle,
@@ -21,7 +16,8 @@ html.dark {
     );
   }
 
-  html.dark {
+  html.dark,
+  html.dark .radix-themes {
     background-size: 30px 30px;
     background-image: radial-gradient(
       circle,

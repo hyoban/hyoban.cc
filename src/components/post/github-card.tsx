@@ -1,10 +1,9 @@
-import { formatDistance } from 'date-fns'
+import { Button, Card, Text } from '@radix-ui/themes'
 
 import { AppLink } from '~/components/app-link'
 import { env } from '~/lib/env'
 
-import { Button } from '../ui/button'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/card'
+import { RelativeDate } from './relative-date'
 
 interface GitHubRepo {
   id: number
@@ -96,42 +95,40 @@ export async function GitHubCard({ repo }: { repo: string }) {
   )
   const data = await res.json() as GitHubRepo
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{data.full_name}</CardTitle>
-        <CardDescription>{data.description}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="flex items-center gap-2">
-          {data.homepage && (
-            <AppLink href={data.homepage}>
-              <Button size="sm">
-                Live
-              </Button>
-            </AppLink>
-          )}
-          <AppLink href={data.html_url}>
-            <Button variant="outline" size="sm">
-              GitHub
+    <Card className="not-prose space-y-6">
+      <section>
+        <Text as="p" weight="bold" size="7" className="mb-2">
+          {data.full_name}
+        </Text>
+        <Text as="p">
+          {data.description}
+        </Text>
+      </section>
+
+      <section className="flex items-center gap-2">
+        {data.homepage && (
+          <AppLink href={data.homepage}>
+            <Button>
+              Live
             </Button>
           </AppLink>
-        </div>
-      </CardContent>
-      <CardFooter>
-        <p className="flex items-center gap-1">
-          <span className="i-lucide-star text-xs" />
-          {data.stargazers_count}
-          <span className="ml-2">
-            Updated
-            {' '}
-            {formatDistance(
-              new Date(data.updated_at),
-              new Date(),
-              { addSuffix: true },
-            )}
-          </span>
-        </p>
-      </CardFooter>
+        )}
+        <AppLink href={data.html_url}>
+          <Button variant="outline">
+            GitHub
+          </Button>
+        </AppLink>
+      </section>
+
+      <p className="flex items-center gap-1">
+        <span className="i-lucide-star text-xs" />
+        {data.stargazers_count}
+        <span className="ml-2">
+          Updated
+          {' '}
+          <RelativeDate date={data.pushed_at} />
+        </span>
+      </p>
     </Card>
   )
 }

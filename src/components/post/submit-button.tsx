@@ -1,8 +1,7 @@
 'use client'
 
+import { Button } from '@radix-ui/themes'
 import { useFormStatus } from 'react-dom'
-
-import { Button } from '../ui/button'
 
 export function SubmitButton() {
   const { pending } = useFormStatus()
@@ -10,8 +9,6 @@ export function SubmitButton() {
   return (
     <Button
       type="submit"
-      variant="secondary"
-      size="sm"
       disabled={pending}
       aria-disabled={pending}
     >

@@ -2,28 +2,8 @@ import { iconsPlugin } from '@egoist/tailwindcss-icons'
 import typography from '@tailwindcss/typography'
 import type { Config } from 'tailwindcss'
 import defaultTheme from 'tailwindcss/defaultTheme'
-import plugin from 'tailwindcss/plugin'
-import animate from 'tailwindcss-animate'
 
-function radixColors(color: string) {
-  const scale = Array.from({ length: 12 }, (_, i) => [
-    [`${i + 1}`, `var(--${color}-${i + 1})`],
-    [`a${i + 1}`, `var(--${color}-a${i + 1})`],
-  ]).flat()
-  return Object.fromEntries(scale) as Record<string, string>
-}
-
-/**
- * Composite utility classes using `@apply`.
- *
- * @see https://github.com/tailwindlabs/tailwindcss/discussions/2049
- */
-function apply(...classes: string[]) {
-  const processedClasses = classes
-    .filter(className => className !== '')
-    .map(className => className.replaceAll(' ', '_'))
-  return { [`@apply ${processedClasses.join(' ')}`]: {} }
-}
+import { radixThemesPlugin } from './radix-themes-tailwind'
 
 const config = {
   darkMode: 'class',
@@ -35,12 +15,6 @@ const config = {
     hoverOnlyWhenSupported: true,
   },
   theme: {
-    colors: {
-      transparent: 'transparent',
-      current: 'currentColor',
-      inherit: 'inherit',
-      gray: radixColors('gray'),
-    },
     extend: {
       fontFamily: {
         mono: [
@@ -120,37 +94,10 @@ const config = {
     },
   },
   plugins: [
-    plugin(({ addComponents, theme }) => {
-      const palette = theme('colors')
-      if (!palette)
-        return
-
-      for (const [colorName, color] of Object.entries(palette)) {
-        if (typeof color === 'string')
-          continue
-
-        addComponents({
-          [`.bg-${colorName}-app`]: apply(`bg-${colorName}-1`),
-          [`.bg-${colorName}-subtle`]: apply(`bg-${colorName}-2`),
-          [`.bg-${colorName}-ui`]: apply(`bg-${colorName}-3`, `hover:bg-${colorName}-4`, `active:bg-${colorName}-5`),
-          [`.bg-${colorName}-ghost`]: apply(`bg-transparent`, `hover:bg-${colorName}-4`, `active:bg-${colorName}-5`),
-          [`.bg-${colorName}-action`]: apply(`bg-${colorName}-4`, `hover:bg-${colorName}-5`, `active:bg-${colorName}-6`),
-          // shouldApplyForeground ? `text-${foregroundColorName}-12` : '',
-          [`.bg-${colorName}-solid`]: apply(`bg-${colorName}-9`, `hover:bg-${colorName}-10`),
-          [`.border-${colorName}-dim`]: apply(`border-${colorName}-6`),
-          [`.border-${colorName}-normal`]: apply(`border-${colorName}-7`, `hover:border-${colorName}-8`),
-          [`.divide-${colorName}-dim`]: apply(`divide-${colorName}-6`),
-          [`.divide-${colorName}-normal`]: apply(`divide-${colorName}-7`, `hover:divide-${colorName}-8`),
-          [`.text-${colorName}-dim`]: apply(`text-${colorName}-11`),
-          [`.text-${colorName}-normal`]: apply(`text-${colorName}-12`),
-        })
-      }
-    }),
-    animate,
+    radixThemesPlugin({}),
     typography(),
     iconsPlugin({ scale: 1.3 }),
   ],
-
 } satisfies Config
 
 export default config

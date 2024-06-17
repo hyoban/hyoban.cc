@@ -2,31 +2,20 @@
 
 import Link from 'next/link'
 
-type AppLinkProps = React.AnchorHTMLAttributes<HTMLAnchorElement>
-
-export function AppLink({
-  href,
-  children,
-  ...props
-}: AppLinkProps) {
+export function AppLink({ href, children, ...rest }: React.ComponentProps<'a'>) {
   if (!href)
     return <>{children}</>
 
   if (href.startsWith('http')) {
     return (
-      <a
-        {...props}
-        target="_blank"
-        rel="noreferrer noopener"
-        href={href}
-      >
+      <a href={href} target="_blank" rel="noreferrer noopener" {...rest}>
         {children}
       </a>
     )
   }
 
   return (
-    <Link {...props} href={href}>
+    <Link href={href} {...rest}>
       {children}
     </Link>
   )

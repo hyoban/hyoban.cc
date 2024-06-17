@@ -1,12 +1,11 @@
 'use client'
+import { TextArea, TextField } from '@radix-ui/themes'
 import { useOptimistic, useRef } from 'react'
 import type { Comment } from 'sakuin'
 
 import { AppLink } from '~/components/app-link'
 
-import { Input } from '../ui/input'
 import { Label } from '../ui/label'
-import { Textarea } from '../ui/textarea'
 import { createComment } from './comment-action'
 import { SubmitButton } from './submit-button'
 
@@ -115,19 +114,19 @@ function CommentForm({
         <section className="flex flex-wrap gap-4">
           <section>
             <Label htmlFor="name">Name</Label>
-            <Input id="name" name="name" required />
+            <TextField.Root id="name" name="name" required />
           </section>
           <section>
             <Label htmlFor="email">Email</Label>
-            <Input id="email" name="email" type="email" required />
+            <TextField.Root id="email" name="email" type="email" required />
           </section>
           <section>
             <Label htmlFor="url">Website</Label>
-            <Input id="url" name="url" type="url" />
+            <TextField.Root id="url" name="url" type="url" />
           </section>
         </section>
         <Label htmlFor="content">Comment</Label>
-        <Textarea id="content" name="content" required />
+        <TextArea id="content" name="content" required />
         <SubmitButton />
       </form>
     </>
