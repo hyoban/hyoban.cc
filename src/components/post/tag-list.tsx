@@ -8,7 +8,7 @@ export function TagList({
       {tags.map(tag => (
         <span
           key={tag}
-          className="border border-gray-400 rounded-md px-1 py-0.5 text-sm"
+          className="border border-gray-4 rounded-md px-1 py-0.5 text-sm"
         >
           {tag}
         </span>

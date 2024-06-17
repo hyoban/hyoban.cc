@@ -1,63 +1,20 @@
 /* eslint-disable @cspell/spellchecker */
-import type { accentColors } from '@radix-ui/themes/props'
-import { grayColors } from '@radix-ui/themes/props'
+import { accentColors, grayColors } from '@radix-ui/themes/props'
 import { withOptions } from 'tailwindcss/plugin'
-/*
-  Exposes internal Radix tokens to Tailwind
-  Based on the deprecated radix-ui-themes-with-tailwind@1.2.6, which was made for Radix Themes V2, here refactored for V3.
-/*
-/*
-  Radix unfortunately does not export these values
-*/
-const colorsRegular = [
-  'tomato',
-  'red',
-  'ruby',
-  'crimson',
-  'pink',
-  'plum',
-  'purple',
-  'violet',
-  'iris',
-  'indigo',
-  'blue',
-  'cyan',
-  'teal',
-  'jade',
-  'green',
-  'grass',
-  'brown',
-  'orange',
-] as const
-const colorsBright = ['sky', 'mint', 'lime', 'yellow', 'amber'] as const
-const colorsMetal = ['gold', 'bronze'] as const
-const accentColorsGrouped = [
-  { label: 'Regulars', values: colorsRegular },
-  { label: 'Brights', values: colorsBright },
-  { label: 'Metals', values: colorsMetal },
-  { label: 'Gray', values: ['gray'] as const },
-]
 
-const accentColorNames: string[] = []
-const grayColorNames: string[] = []
 const radixColorScales = 12
 type RadixColorScales = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12
 
-accentColorsGrouped.forEach((group) => {
-  accentColorNames.push(...group.values.filter(color => color !== 'gray'))
-})
-grayColors.forEach((color) => {
-  if (color !== 'auto') {
-    grayColorNames.push(color)
-  }
-})
+interface TokenOptions {
+  number: RadixColorScales
+  useTailwindColorNames?: boolean
+  alpha?: boolean
+}
 
-function getColorTokenName(
-  number: RadixColorScales,
-  useTailwindColorNames?: boolean,
-  alpha?: boolean,
-): number | string {
-  const map: Record<number, number> = {
+function getColorTokenName(options: TokenOptions): number | string {
+  const { number, useTailwindColorNames, alpha } = options
+
+  const map = {
     1: 25,
     2: 50,
     3: 100,
@@ -73,35 +30,44 @@ function getColorTokenName(
   } as const
 
   if (!useTailwindColorNames) {
-    return alpha ? `${number}A` : number
+    return alpha ? `a${number}` : number
   }
 
-  return alpha ? (`${map[number]}A`) : (map[number]!)
+  return alpha ? (`a${map[number]}`) : (map[number])
 }
 
-function getColorDefinitions(color: string, alpha?: boolean, useTailwindColorNames?: boolean) {
-  const colors = Array.from(Array.from({ length: radixColorScales }).keys()).reduce<Record<string, string>>(
-    (acc, _, i) => {
-      acc[
-        getColorTokenName(
-          (i + 1) as RadixColorScales,
-          useTailwindColorNames,
-          alpha,
-        )
-      ] = `var(--${color}-${alpha ? 'a' : ''}${i + 1})`
-      return acc
-    },
-    {},
-  )
+interface ColorOptions {
+  color: string
+  useTailwindColorNames?: boolean
+  alpha?: boolean
+}
+
+function getColorDefinitions(options: ColorOptions) {
+  const { color, alpha, useTailwindColorNames } = options
+
+  const colors = Array
+    .from(Array.from({ length: radixColorScales }).keys())
+    .reduce<Record<string, string>>(
+      (acc, _, i) => {
+        acc[
+          getColorTokenName(
+            {
+              number: i + 1 as RadixColorScales,
+              useTailwindColorNames,
+              alpha,
+            },
+          )
+        ] = `var(--${color}-${alpha ? 'a' : ''}${i + 1})`
+        return acc
+      },
+      {},
+    )
 
   if (!alpha) {
-    colors[`${getColorTokenName(9, useTailwindColorNames, alpha)}-contrast`]
-      = `var(--${color}-9-contrast)`
     colors.surface = `var(--${color}-surface)`
-    colors.DEFAULT = `var(--${color}-9)`
-    if (color === 'accent') {
-      colors.surface = 'var(--color-surface-accent)'
-    }
+    colors.indicator = `var(--${color}-indicator)`
+    colors.track = `var(--${color}-track)`
+    colors.contrast = `var(--${color}-contrast)`
   }
 
   return colors
@@ -136,26 +102,31 @@ export const radixThemesPlugin = withOptions(
   () => () => {},
   ({
     includeBase = false,
-    useTailwindColorNames = true,
-    mapMissingTailwindColors = true,
+    useTailwindColorNames = false,
+    mapMissingTailwindColors = false,
   }: RadixThemesPluginOptions) => {
     function generateTailwindColors(colorName: string) {
       const c = {
-        ...getColorDefinitions(colorName, false, useTailwindColorNames),
-        ...getColorDefinitions(colorName, true, useTailwindColorNames),
-      }
-
-      if (grayColorNames.includes(colorName)) {
-        c[`${getColorTokenName(2, useTailwindColorNames, false)}-translucent`]
-          = `var(--${colorName}-2-translucent)`
+        ...getColorDefinitions({
+          color: colorName,
+          alpha: false,
+          useTailwindColorNames,
+        }),
+        ...getColorDefinitions({
+          color: colorName,
+          alpha: true,
+          useTailwindColorNames,
+        }),
       }
 
       return c
     }
 
-    const allRadixColors = [...accentColorNames, ...grayColorNames].reduce<
+    const allRadixColors = [...accentColors, ...grayColors].reduce<
       Record<string, Record<string, string>>
     >((acc, colorName) => {
+      if (colorName === 'auto')
+        return acc
       acc[colorName] = { ...generateTailwindColors(colorName) }
       return acc
     }, {})
@@ -201,6 +172,7 @@ export const radixThemesPlugin = withOptions(
     }
 
     return {
+      darkMode: 'class',
       // @keep-sorted
       theme: {
         borderRadius: {

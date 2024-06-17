@@ -6,7 +6,6 @@ import defaultTheme from 'tailwindcss/defaultTheme'
 import { radixThemesPlugin } from './radix-themes-tailwind'
 
 const config = {
-  darkMode: 'class',
   content: [
     './src/**/*.{ts,tsx}',
     './node_modules/sakuin/output/index.js',
