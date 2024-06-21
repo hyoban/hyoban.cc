@@ -6,11 +6,8 @@
     }
   },
 
-  "eslint.codeActionsOnSave.rules": [
-    "!prefer-const",
-    "!unused-imports/no-unused-imports",
-    "!@stylistic/jsx-self-closing-comp",
-    "*"
+  "eslint.rules.customizations": [
+    { "rule": "*", "fixable": true, "severity": "off" }
   ],
 
   "typescript.tsdk": "node_modules/typescript/lib",

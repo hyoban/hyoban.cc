@@ -1,6 +1,5 @@
 // eslint-disable-next-line @cspell/spellchecker
 /* eslint-disable @eslint-react/dom/no-dangerously-set-innerhtml */
-import '@radix-ui/themes/styles.css'
 import 'remark-github-alerts/styles/github-base.css'
 import 'remark-github-alerts/styles/github-colors-light.css'
 import 'remark-github-alerts/styles/github-colors-dark-class.css'
@@ -28,37 +27,14 @@ export default async function RootLayout({ children }: React.PropsWithChildren) 
   const title = siteName ?? characterName
 
   return (
-    <html
-      lang="en"
-      suppressHydrationWarning
-    >
+    <html lang="en" suppressHydrationWarning className="h-full">
       <title>{title}</title>
       <meta name="description" content={description} />
       {icon && <link rel="icon" type="image/png" href={icon} />}
-      <link
-        rel="alternate"
-        type="application/rss+xml"
-        title={title}
-        href={`${xlogUrl}/feed`}
-      />
-      <link
-        rel="alternate"
-        type="application/rss+xml"
-        title={`Comments on ${title}`}
-        href={`${xlogUrl}/feed/comments`}
-      />
-      <link
-        rel="alternate"
-        type="application/feed+json"
-        title={title}
-        href={`${xlogUrl}/feed?format=json`}
-      />
-      <link
-        rel="alternate"
-        type="application/feed+json"
-        title={`Comments on ${title}`}
-        href={`${xlogUrl}/feed/comments?format=json`}
-      />
+      <link rel="alternate" type="application/rss+xml" title={title} href={`${xlogUrl}/feed`} />
+      <link rel="alternate" type="application/rss+xml" title={`Comments on ${title}`} href={`${xlogUrl}/feed/comments`} />
+      <link rel="alternate" type="application/feed+json" title={title} href={`${xlogUrl}/feed?format=json`} />
+      <link rel="alternate" type="application/feed+json" title={`Comments on ${title}`} href={`${xlogUrl}/feed/comments?format=json`} />
 
       <meta property="og:title" content={title} />
       <meta name="twitter:title" content={title} />
@@ -73,7 +49,7 @@ export default async function RootLayout({ children }: React.PropsWithChildren) 
           <meta name="twitter:image" content={banner} />
         </>
       )}
-      <body>
+      <body className="h-full">
         <script
           dangerouslySetInnerHTML={{
             __html: `

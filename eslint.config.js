@@ -1,6 +1,6 @@
 import path from 'node:path'
 
-import defineConfig from 'eslint-config-hyoban'
+import { defineConfig } from 'eslint-config-hyoban'
 import { getTsconfig } from 'get-tsconfig'
 
 const tsconfig = getTsconfig()
@@ -28,6 +28,11 @@ export default defineConfig(
     tailwindCSS: { order: false },
     strict: true,
     typeChecked: true,
+  },
+  {
+    rules: {
+      'unicorn/no-keyword-prefix': 'off',
+    },
   },
   {
     plugins: {

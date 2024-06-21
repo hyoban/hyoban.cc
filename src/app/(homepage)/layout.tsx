@@ -7,7 +7,7 @@ import { Navigation } from '../navigation'
 import { getUniverseLinks } from '../utils'
 
 export default async function HomeLayout({ children }: React.PropsWithChildren) {
-  const { HANDLE } = env
+  const { HANDLE, SITE_URL } = env
   const { characterName, description, socialPlatforms, navigation, xlogUrl }
     = await client.site.getInfo(HANDLE)
   const pages = await client.page.getAll(HANDLE)
@@ -20,11 +20,11 @@ export default async function HomeLayout({ children }: React.PropsWithChildren) 
     socialPlatforms,
     navigation,
     xlogUrl,
-    env.SITE_URL,
+    SITE_URL,
   )
 
   return (
-    <main className="mx-auto max-w-[692px] px-6 my-6 sm:my-16 antialiased prose dark:prose-invert">
+    <main className="mx-auto max-w-[692px] p-6 sm:py-16 antialiased prose dark:prose-invert">
       <section>
         <h2 className="flex items-center gap-3">
           {characterName}
