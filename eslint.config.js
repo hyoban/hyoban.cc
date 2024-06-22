@@ -22,17 +22,11 @@ function getAlias() {
 
 export default defineConfig(
   {
-    react: 'next',
     fileCase: 'kebabCase',
     cspell: true,
     tailwindCSS: { order: false },
     strict: true,
     typeChecked: true,
-  },
-  {
-    rules: {
-      'unicorn/no-keyword-prefix': 'off',
-    },
   },
   {
     plugins: {

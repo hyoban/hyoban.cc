@@ -26,7 +26,7 @@ export default async function PostPage({
   return (
     <main
       className={cn(
-        'mx-auto max-w-[692px] px-6 my-6 sm:my-16',
+        'mx-auto max-w-[692px] p-6 sm:py-16',
         'antialiased prose dark:prose-invert break-words prose-pre:shadow-sm prose-img:shadow-sm',
       )}
     >
