@@ -14,7 +14,7 @@ export function PostItem({ post }: { post: Post }) {
         className="group"
       >
         <Flex align="center" gap="2" my="4">
-          <Heading as="h2">{post.title}</Heading>
+          <Heading as="h2" size="4">{post.title}</Heading>
           <span className="i-lucide-arrow-right opacity-0 -translate-x-full group-hover:opacity-100 group-hover:translate-x-0 transition-transform" />
         </Flex>
         <Text className="line-clamp-3">

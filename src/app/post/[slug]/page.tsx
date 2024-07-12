@@ -1,3 +1,4 @@
+import { Container } from '@radix-ui/themes'
 import { notFound } from 'next/navigation'
 
 import { Comment } from '~/components/post/comment'
@@ -5,7 +6,6 @@ import { Markdown } from '~/components/post/markdown'
 import { PageMeta, PostMeta } from '~/components/post/meta'
 import { client } from '~/lib/client'
 import { env } from '~/lib/env'
-import { cn } from '~/lib/utils'
 
 export async function generateStaticParams() {
   const { list: posts } = await client.post.getMany(env.HANDLE)
@@ -24,11 +24,9 @@ export default async function PostPage({
     notFound()
 
   return (
-    <main
-      className={cn(
-        'mx-auto max-w-[692px] p-6 sm:py-16',
-        'antialiased prose dark:prose-invert break-words prose-pre:shadow-sm prose-img:shadow-sm',
-      )}
+    <Container
+      mx="auto"
+      className="prose dark:prose-invert break-words prose-pre:shadow-sm prose-img:shadow-sm"
     >
       <PageMeta slug={params.slug} isPost />
       <article>
@@ -37,6 +35,6 @@ export default async function PostPage({
         <Markdown content={post.content} />
       </article>
       <Comment noteId={post.noteId} />
-    </main>
+    </Container>
   )
 }

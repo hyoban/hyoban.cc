@@ -1,3 +1,5 @@
+import { Container } from '@radix-ui/themes'
+
 import { AppLink } from '~/components/app-link'
 import { AppearanceSwitch } from '~/components/appearance-switch'
 import { client } from '~/lib/client'
@@ -24,7 +26,7 @@ export default async function HomeLayout({ children }: React.PropsWithChildren) 
   )
 
   return (
-    <main className="mx-auto max-w-[692px] p-6 sm:py-16 antialiased prose dark:prose-invert">
+    <Container mx="auto" className="antialiased prose dark:prose-invert">
       <section>
         <h2 className="flex items-center gap-3">
           {characterName}
@@ -52,6 +54,6 @@ export default async function HomeLayout({ children }: React.PropsWithChildren) 
       </section>
       <Navigation additionalNavigation={navigationLinks} />
       {children}
-    </main>
+    </Container>
   )
 }
