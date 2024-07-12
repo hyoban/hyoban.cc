@@ -24,10 +24,7 @@ export default async function PostPage({
     notFound()
 
   return (
-    <Container
-      mx="auto"
-      className="prose dark:prose-invert break-words prose-pre:shadow-sm prose-img:shadow-sm"
-    >
+    <Container mx="auto" p="5" className="prose dark:prose-invert break-words prose-pre:shadow-sm prose-img:shadow-sm">
       <PageMeta slug={params.slug} isPost />
       <article>
         <h1>{post.title}</h1>

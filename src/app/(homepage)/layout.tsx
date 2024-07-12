@@ -26,7 +26,7 @@ export default async function HomeLayout({ children }: React.PropsWithChildren) 
   )
 
   return (
-    <Container mx="auto" className="antialiased prose dark:prose-invert">
+    <Container mx="auto" px="5" className="antialiased prose dark:prose-invert">
       <section>
         <h2 className="flex items-center gap-3">
           {characterName}
