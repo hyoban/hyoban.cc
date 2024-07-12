@@ -78,6 +78,7 @@ type RadixColors = Exclude<
   'auto'
 >
 
+// eslint-disable-next-line unused-imports/no-unused-vars
 const tailwindColorsToRadixMap: Record<
   'zinc' | 'neutral' | 'stone' | 'emerald' | 'fuchsia' | 'rose',
   RadixColors | Record<string, string>
