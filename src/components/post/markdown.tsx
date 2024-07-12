@@ -23,7 +23,7 @@ export function Markdown({ content }: { content: string }) {
         // @ts-expect-error types are not up-to-date with React 19
         'a': AppLink,
         // @ts-expect-error types are not up-to-date with React 19
-        'code': Code,
+        'code': props => <Code variant="soft" {...props} />,
         // @ts-expect-error types are not up-to-date with React 19
         'img': async (props) => {
           if (!props.src)

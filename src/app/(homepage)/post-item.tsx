@@ -7,7 +7,7 @@ import { TagList } from '~/components/post/tag-list'
 
 export function PostItem({ post }: { post: Post }) {
   return (
-    <Flex direction="column" my="6" asChild>
+    <Flex direction="column" mt="4" mb="6" asChild>
       <AppLink
         href={`post/${post.slug}`}
         raw

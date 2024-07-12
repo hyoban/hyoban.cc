@@ -1,6 +1,6 @@
 'use client'
 
-import { clsx } from 'clsx'
+import { TabNav } from '@radix-ui/themes'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
@@ -17,35 +17,19 @@ export function Navigation({
 }) {
   const pathname = usePathname()
   return (
-    <nav className="not-prose flex flex-wrap gap-4 my-6">
-      {navigation.map(({ href, label }) => (
-        <Link
+    <TabNav.Root className="not-prose" mt="4" mb="6" mx="-2">
+      {[...navigation, ...(additionalNavigation ?? [])].map(({ href, label }) => (
+        <TabNav.Link
           key={href}
           href={href}
-          className={clsx(
-            pathname === href
-              ? 'font-medium underline underline-offset-4'
-              : 'opacity-70',
-            'hover:opacity-100',
-          )}
+          active={pathname === href}
+          asChild
         >
-          {label}
-        </Link>
+          <Link href={href}>
+            {label}
+          </Link>
+        </TabNav.Link>
       ))}
-      {additionalNavigation?.map(({ href, label }) => (
-        <Link
-          key={href}
-          href={href}
-          className={clsx(
-            pathname === href
-              ? 'font-medium underline underline-offset-4'
-              : 'opacity-70',
-            'hover:opacity-100',
-          )}
-        >
-          {label}
-        </Link>
-      ))}
-    </nav>
+    </TabNav.Root>
   )
 }
