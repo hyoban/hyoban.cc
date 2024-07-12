@@ -1,22 +1,6 @@
 import sizeOf from 'image-size'
-import type { Navigation, Portfolio, SocialPlatform } from 'sakuin'
+import type { Navigation, SocialPlatform } from 'sakuin'
 import { platforms } from 'sakuin'
-
-export function getSuperscript(portfolio: Portfolio) {
-  if (portfolio.projectStarsCount)
-    return `${portfolio.projectStarsCount} stars`
-
-  if (portfolio.audioListensCount)
-    return `${portfolio.audioListensCount} listens`
-
-  if (portfolio.commentsCount)
-    return `${portfolio.commentsCount} comments`
-
-  if (portfolio.videoViewsCount)
-    return `${portfolio.videoViewsCount} views`
-
-  return ''
-}
 
 interface Link {
   href: string
@@ -65,10 +49,6 @@ export function getUniverseLinks(
       // then title
       return a.title?.localeCompare(b.title ?? '') ?? 0
     }) as Link[]
-}
-
-export function capitalize(str: string) {
-  return str.replaceAll(/\b\w/g, l => l.toUpperCase()).replaceAll('-', ' ')
 }
 
 export async function getImageDimensionByUri(
