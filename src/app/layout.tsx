@@ -27,7 +27,7 @@ export default async function RootLayout({ children }: React.PropsWithChildren) 
   const title = siteName ?? characterName
 
   return (
-    <html lang="en" suppressHydrationWarning className="h-full">
+    <html lang="en" suppressHydrationWarning className="h-full bg-background">
       <title>{title}</title>
       <meta name="description" content={description} />
       {icon && <link rel="icon" type="image/png" href={icon} />}
