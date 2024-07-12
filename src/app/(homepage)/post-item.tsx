@@ -10,7 +10,7 @@ export function PostItem({ post }: { post: Post }) {
     <Flex direction="column" my="6" asChild>
       <AppLink
         href={`post/${post.slug}`}
-        underline="none"
+        raw
         className="group"
       >
         <Flex align="center" gap="2" my="4">

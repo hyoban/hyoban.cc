@@ -21,7 +21,7 @@ export function AppLink({
       return (
         <a
           href={href}
-          className={className}
+          className={cn('not-prose', className)}
           target="_blank"
           rel="noreferrer noopener"
           {...rest}
@@ -54,7 +54,7 @@ export function AppLink({
     return (
       <NextLink
         href={href}
-        className={className}
+        className={cn('not-prose', className)}
         {...rest}
       >
         {children}
