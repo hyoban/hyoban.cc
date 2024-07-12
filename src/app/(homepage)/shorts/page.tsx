@@ -1,3 +1,4 @@
+import { Card, Flex } from '@radix-ui/themes'
 import Image from 'next/image'
 import type { Short } from 'sakuin'
 
@@ -27,21 +28,25 @@ async function ShortItem({ short }: { short: Short }) {
 
   const size = await getImageDimensionByUri(photos)
   return (
-    <AppLink
-      href={`${xlogUrl}/${short.slug}`}
-      key={short.slug}
-      raw
-      className="not-prose my-3 flex flex-col rounded-md overflow-hidden hover:bg-panel-solid"
-    >
-      <Image
-        src={photos}
-        alt={short.content}
-        width={size?.width}
-        height={size?.height}
-      />
-      <div className="px-2 py-3 space-y-2">
-        <p>{short.title || short.content}</p>
-      </div>
-    </AppLink>
+    <Flex direction="column" p="0" asChild>
+      <Card asChild>
+        <AppLink
+          href={`${xlogUrl}/${short.slug}`}
+          key={short.slug}
+          raw
+          className="overflow-hidden"
+        >
+          <Image
+            src={photos}
+            alt={short.content}
+            width={size?.width}
+            height={size?.height}
+          />
+          <div className="px-2 py-3 space-y-2">
+            <p>{short.title || short.content}</p>
+          </div>
+        </AppLink>
+      </Card>
+    </Flex>
   )
 }
