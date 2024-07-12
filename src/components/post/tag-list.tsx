@@ -1,18 +1,16 @@
-export function TagList({
-  tags,
-}: {
-  tags: string[]
-}) {
+import type { BadgeProps } from '@radix-ui/themes'
+import { Badge, Flex } from '@radix-ui/themes'
+
+type TagListProps = { tags: string[] } & BadgeProps
+
+export function TagList({ tags, ...props }: TagListProps) {
   return (
-    <section className="flex items-center gap-2">
+    <Flex gap="2">
       {tags.map(tag => (
-        <span
-          key={tag}
-          className="border border-gray-4 rounded-md px-1 py-0.5 text-sm"
-        >
+        <Badge key={tag} variant="surface" radius="large" {...props}>
           {tag}
-        </span>
+        </Badge>
       ))}
-    </section>
+    </Flex>
   )
 }

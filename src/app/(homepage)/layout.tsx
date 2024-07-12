@@ -37,10 +37,14 @@ export default async function HomeLayout({ children }: React.PropsWithChildren) 
               <AppLink
                 href={link.href}
                 key={link.href}
-                className={link.icon}
                 title={link.title}
+                raw
               >
-                {link.title}
+                {
+                  link.icon
+                    ? <div className={link.icon} />
+                    : <div>{link.title}</div>
+                }
               </AppLink>
             ))}
           </section>

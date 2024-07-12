@@ -30,6 +30,7 @@ async function ShortItem({ short }: { short: Short }) {
     <AppLink
       href={`${xlogUrl}/${short.slug}`}
       key={short.slug}
+      underline="none"
       className="not-prose my-3 flex flex-col rounded-md overflow-hidden hover:bg-panel-solid"
     >
       <Image

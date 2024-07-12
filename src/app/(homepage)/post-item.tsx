@@ -1,3 +1,4 @@
+import { Flex, Heading, Text } from '@radix-ui/themes'
 import type { Post } from 'sakuin'
 
 import { AppLink } from '~/components/app-link'
@@ -6,21 +7,24 @@ import { TagList } from '~/components/post/tag-list'
 
 export function PostItem({ post }: { post: Post }) {
   return (
-    <AppLink
-      href={`post/${post.slug}`}
-      className="not-prose group my-6 flex flex-col"
-    >
-      <section className="my-4 flex items-center gap-2">
-        <h2 className="font-medium">{post.title}</h2>
-        <span className="i-lucide-arrow-right text-sm opacity-0 -translate-x-full group-hover:opacity-100 group-hover:translate-x-0 transition-transform" />
-      </section>
-      <p className="text-gray-11 line-clamp-3">
-        {post.summary}
-      </p>
-      <div className="text-gray-11 mt-4 flex gap-3 items-center">
-        <RelativeDate date={post.publishedAt} />
-        <TagList tags={post.tags} />
-      </div>
-    </AppLink>
+    <Flex direction="column" my="6" asChild>
+      <AppLink
+        href={`post/${post.slug}`}
+        underline="none"
+        className="group"
+      >
+        <Flex align="center" gap="2" my="4">
+          <Heading as="h2">{post.title}</Heading>
+          <span className="i-lucide-arrow-right opacity-0 -translate-x-full group-hover:opacity-100 group-hover:translate-x-0 transition-transform" />
+        </Flex>
+        <Text className="line-clamp-3">
+          {post.summary}
+        </Text>
+        <Flex align="center" gap="2" mt="4">
+          <RelativeDate date={post.publishedAt} />
+          <TagList tags={post.tags} />
+        </Flex>
+      </AppLink>
+    </Flex>
   )
 }

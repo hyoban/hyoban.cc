@@ -72,21 +72,6 @@ const config = {
             'code ::after': {
               content: '""',
             },
-            'code': {
-              'border-radius': '.375rem',
-              'border-width': '1px',
-              'background-color': 'var(--gray-2)',
-              'border-color': 'var(--gray-6)',
-              'padding': '2px 3.6px',
-              'font-size': '.8571429em',
-            },
-            'a': {
-              'text-decoration': 'underline',
-              'text-underline-position': 'from-font',
-              'text-decoration-thickness': '1px',
-              'font-weight': '400',
-              'color': 'unset',
-            },
           },
         },
       },

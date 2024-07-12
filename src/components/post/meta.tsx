@@ -1,3 +1,5 @@
+import { Flex } from '@radix-ui/themes'
+
 import { AppLink } from '~/components/app-link'
 import { client } from '~/lib/client'
 import { env } from '~/lib/env'
@@ -23,12 +25,12 @@ export async function PostMeta({
     return null
 
   return (
-    <section className="flex flex-wrap gap-4 items-center my-6">
+    <Flex wrap="wrap" gap="4" align="center" my="6">
       <RelativeDate date={post.publishedAt} />
       <TagList tags={post.tags} />
       <AppLink href={`${site.xlogUrl}/${slug}`}>xLog</AppLink>
       <AppLink href="/">Back</AppLink>
-    </section>
+    </Flex>
   )
 }
 

@@ -1,3 +1,4 @@
+import { Code } from '@radix-ui/themes'
 import rehypeShiki from '@shikijs/rehype'
 import type { ImageProps } from 'next/image'
 import Image from 'next/image'
@@ -21,6 +22,8 @@ export function Markdown({ content }: { content: string }) {
       components={{
         // @ts-expect-error types are not up-to-date with React 19
         'a': AppLink,
+        // @ts-expect-error types are not up-to-date with React 19
+        'code': Code,
         // @ts-expect-error types are not up-to-date with React 19
         'img': async (props) => {
           if (!props.src)
