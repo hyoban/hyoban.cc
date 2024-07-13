@@ -2,8 +2,24 @@
 import { accentColors, grayColors } from '@radix-ui/themes/props'
 import { withOptions } from 'tailwindcss/plugin'
 
+type CreateArrayWithLengthX<
+    LENGTH extends number,
+    ACC extends unknown[] = [],
+> = ACC['length'] extends LENGTH
+  ? ACC
+  : CreateArrayWithLengthX<LENGTH, [...ACC, 1]>
+
+type NumericRange<
+   START_ARR extends number[],
+   END extends number,
+   ACC extends number = never,
+>
+= START_ARR['length'] extends END
+  ? ACC | END
+  : NumericRange<[...START_ARR, 1], END, ACC | START_ARR['length']>
+
 const radixColorScales = 12
-type RadixColorScales = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12
+type RadixColorScales = NumericRange<CreateArrayWithLengthX<1>, typeof radixColorScales>
 
 interface TokenOptions {
   number: RadixColorScales
@@ -45,8 +61,7 @@ interface ColorOptions {
 function getColorDefinitions(options: ColorOptions) {
   const { color, alpha, useTailwindColorNames } = options
 
-  const colors = Array
-    .from(Array.from({ length: radixColorScales }).keys())
+  const colors = Array.from({ length: radixColorScales })
     .reduce<Record<string, string>>(
       (acc, _, i) => {
         acc[
@@ -73,7 +88,7 @@ function getColorDefinitions(options: ColorOptions) {
   return colors
 }
 
-type RadixColors = Exclude<
+type RadixColor = Exclude<
   (typeof accentColors)[number] | (typeof grayColors)[number],
   'auto'
 >
@@ -81,7 +96,7 @@ type RadixColors = Exclude<
 type MissingTailwindColorsMap = Partial<
   Record<
     'zinc' | 'neutral' | 'stone' | 'emerald' | 'fuchsia' | 'rose',
-    RadixColors | Record<string, string>
+    RadixColor | Record<string, string>
   >
 >
 
