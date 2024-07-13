@@ -1,3 +1,4 @@
+import { Section } from '@radix-ui/themes'
 import { Suspense } from 'react'
 
 import { client } from '~/lib/client'
@@ -7,12 +8,12 @@ import { CommentListClient } from './comment-client'
 
 export function Comment({ noteId }: { noteId: number }) {
   return (
-    <section>
+    <Section size="2" className="prose max-w-full dark:prose-invert">
       <h2>Comments</h2>
       <Suspense fallback="Loading comments...">
         <CommentList noteId={noteId} />
       </Suspense>
-    </section>
+    </Section>
   )
 }
 
