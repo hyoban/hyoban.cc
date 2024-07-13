@@ -1,4 +1,4 @@
-import { Card, Flex } from '@radix-ui/themes'
+import { Box, Card, Inset, Text } from '@radix-ui/themes'
 import Image from 'next/image'
 import type { Short } from 'sakuin'
 
@@ -11,11 +11,11 @@ export default async function ShortPage() {
   const { list: shorts } = await client.short.getMany(env.HANDLE)
 
   return (
-    <div className="columns-3xs space-y-4 my-4">
+    <Box my="4" className="columns-3xs space-y-4">
       {shorts.map(short => (
         <ShortItem key={short.slug} short={short} />
       ))}
-    </div>
+    </Box>
   )
 }
 
@@ -25,28 +25,27 @@ async function ShortItem({ short }: { short: Short }) {
     return null
 
   const { xlogUrl } = await client.site.getInfo(env.HANDLE)
-
   const size = await getImageDimensionByUri(photos)
+
   return (
-    <Flex direction="column" p="0" asChild>
-      <Card asChild>
-        <AppLink
-          href={`${xlogUrl}/${short.slug}`}
-          key={short.slug}
-          raw
-          className="overflow-hidden"
-        >
+    <Card size="2">
+      <AppLink
+        href={`${xlogUrl}/${short.slug}`}
+        key={short.slug}
+        underline="none"
+      >
+        <Inset clip="padding-box" side="top" pb="current">
           <Image
             src={photos}
             alt={short.content}
             width={size?.width}
             height={size?.height}
           />
-          <div className="px-2 py-3 space-y-2">
-            <p>{short.title || short.content}</p>
-          </div>
-        </AppLink>
-      </Card>
-    </Flex>
+        </Inset>
+        <Text as="p" size="3">
+          {short.title || short.content}
+        </Text>
+      </AppLink>
+    </Card>
   )
 }

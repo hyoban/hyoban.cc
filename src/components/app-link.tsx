@@ -43,7 +43,7 @@ export function AppLink({
             {children}
           </RadixLink>
         </HoverCard.Trigger>
-        <HoverCard.Content size="1" className="p-1">
+        <HoverCard.Content size="1" className="p-2">
           {href}
         </HoverCard.Content>
       </HoverCard.Root>
