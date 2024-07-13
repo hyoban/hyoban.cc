@@ -78,24 +78,18 @@ type RadixColors = Exclude<
   'auto'
 >
 
-// eslint-disable-next-line unused-imports/no-unused-vars
-const tailwindColorsToRadixMap: Record<
-  'zinc' | 'neutral' | 'stone' | 'emerald' | 'fuchsia' | 'rose',
-  RadixColors | Record<string, string>
-> = {
-  zinc: 'sand',
-  neutral: 'sage',
-  stone: 'sand',
-  emerald: 'grass',
-  fuchsia: 'plum',
-  rose: 'crimson',
-}
+type MissingTailwindColorsMap = Partial<
+  Record<
+    'zinc' | 'neutral' | 'stone' | 'emerald' | 'fuchsia' | 'rose',
+    RadixColors | Record<string, string>
+  >
+>
 
 interface RadixThemesPluginOptions {
   includeBase?: boolean
   useTailwindColorNames?: boolean
   useTailwindRadiusNames?: boolean
-  mapMissingTailwindColors?: boolean | Partial<typeof tailwindColorsToRadixMap>
+  mapMissingTailwindColors?: boolean | MissingTailwindColorsMap
 }
 
 export const radixThemesPlugin = withOptions(
@@ -132,7 +126,7 @@ export const radixThemesPlugin = withOptions(
       return acc
     }, {})
 
-    let mappingsOfMissingTailwindColors = {}
+    let mappingsOfMissingTailwindColors: MissingTailwindColorsMap = {}
     if (typeof mapMissingTailwindColors === 'boolean') {
       mappingsOfMissingTailwindColors = {
         zinc: generateTailwindColors('sand'),
