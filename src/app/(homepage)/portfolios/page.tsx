@@ -37,7 +37,7 @@ function ListItem({
   link: string
 }) {
   return (
-    <Flex direction="column" mx="-3" p="3" my="3" asChild>
+    <Flex direction="column" mx="-3" p="3" my="4" asChild>
       <Card asChild>
         <AppLink href={link} raw>
           <Flex gap="2">

@@ -11,7 +11,7 @@ export default async function ShortPage() {
   const { list: shorts } = await client.short.getMany(env.HANDLE)
 
   return (
-    <div className="columns-3xs space-y-4">
+    <div className="columns-3xs space-y-4 my-4">
       {shorts.map(short => (
         <ShortItem key={short.slug} short={short} />
       ))}

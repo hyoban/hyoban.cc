@@ -78,16 +78,16 @@ export default async function HomeLayout({ children }: React.PropsWithChildren) 
 
   return (
     <Container mx="auto" p="5" size="2">
-      <Section size="1" className="space-y-4">
+      <Section size="1">
         <Flex align="center" gap="3" asChild>
           <Heading>
             {characterName}
             <AppearanceSwitch className="scale-75" />
           </Heading>
         </Flex>
-        <Text as="p">{description}</Text>
+        <Text as="p" mt="3">{description}</Text>
         {links.length > 0 && (
-          <Flex gap="4" align="center">
+          <Flex gap="4" align="center" mt="5">
             {links.map(link => (
               <AppLink
                 href={link.href}

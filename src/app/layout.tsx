@@ -63,7 +63,7 @@ export default async function RootLayout({ children }: React.PropsWithChildren) 
             `,
           }}
         />
-        <Theme accentColor="indigo" radius="large">
+        <Theme accentColor="gray" radius="large">
           <NextTopLoader color="var(--gray-11)" height={2} showSpinner={false} />
           {children}
           {footer && (
