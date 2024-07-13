@@ -17,7 +17,7 @@ export function Navigation({
 }) {
   const pathname = usePathname()
   return (
-    <TabNav.Root className="not-prose" mt="4" mb="6" mx="-2">
+    <TabNav.Root className="not-prose" mx="-2">
       {[...navigation, ...(additionalNavigation ?? [])].map(({ href, label }) => (
         <TabNav.Link
           key={href}
