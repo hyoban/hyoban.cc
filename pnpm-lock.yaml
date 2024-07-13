@@ -18,10 +18,10 @@ importers:
         specifier: ^1.1.109
         version: 1.1.109
       '@radix-ui/react-label':
-        specifier: 2.1.0
+        specifier: ^2.1.0
         version: 2.1.0(react-dom@19.0.0-rc-fb9a90fa48-20240614(react@19.0.0-rc-fb9a90fa48-20240614))(react@19.0.0-rc-fb9a90fa48-20240614)(types-react-dom@19.0.0-rc.1)(types-react@19.0.0-rc.1)
       '@radix-ui/themes':
-        specifier: 3.1.1
+        specifier: ^3.1.1
         version: 3.1.1(react-dom@19.0.0-rc-fb9a90fa48-20240614(react@19.0.0-rc-fb9a90fa48-20240614))(react@19.0.0-rc-fb9a90fa48-20240614)(types-react-dom@19.0.0-rc.1)(types-react@19.0.0-rc.1)
       '@shikijs/rehype':
         specifier: ^1.10.3
