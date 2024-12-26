@@ -1,6 +1,14 @@
-@import 'tailwindcss';
-@plugin "@tailwindcss/typography";
+import { defineConfig, presetTypography, presetUno } from 'unocss'
 
+export default defineConfig({
+  presets: [
+    presetTypography(),
+    presetUno(),
+  ],
+  preflights: [
+    {
+      getCSS() {
+        return `
 @media (prefers-color-scheme: dark) {
   .astro-code,
   .astro-code span {
@@ -14,4 +22,8 @@
   :root {
     color-scheme: dark;
   }
-}
+}`
+      },
+    },
+  ],
+})

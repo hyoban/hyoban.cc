@@ -1,8 +1,8 @@
 ---
 import { SITE_DESCRIPTION, SITE_TITLE } from '@/consts'
 import Layout from '@/layouts/Layout.astro'
-import { formatDate } from '@/lib/utils'
 import { getCollection } from 'astro:content'
+import { format } from 'date-fns'
 
 const posts = await getCollection('posts')
 ---
@@ -17,9 +17,9 @@ const posts = await getCollection('posts')
       {
         posts.map((post) => (
           <li>
-            <a href={`/${post.data.slug}`} class="flex justify-between gap-3">
+            <a href={`/${post.data.slug}`} class="flex justify-between items-center gap-3">
               <span class="hover:underline">{post.data.title}</span>
-              <span class="text-nowrap opacity-50">{formatDate(post.data.date)}</span>
+              <span class="text-nowrap opacity-50 font-mono text-sm">{format(post.data.date, 'MM/dd/yyyy')}</span>
             </a>
           </li>
         ))
