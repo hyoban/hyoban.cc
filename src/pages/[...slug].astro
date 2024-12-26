@@ -1,0 +1,36 @@
+---
+import Layout from '@/layouts/Layout.astro'
+import { formatDate } from '@/lib/utils'
+import { type CollectionEntry, getCollection, render } from 'astro:content'
+
+export async function getStaticPaths() {
+  const posts = await getCollection('posts')
+  return posts.map((post) => ({
+    params: { slug: post.data.slug },
+    props: post,
+  }))
+}
+
+type Props = CollectionEntry<'posts'>
+const post = Astro.props
+const { Content } = await render(post)
+---
+
+<Layout title={post.data.title} description={post.data.description}>
+  <main class="container max-w-[65ch] w-full mx-auto px-4 py-8">
+    <section class="mb-10 space-y-3">
+      <div class="flex justify-between items-center">
+        <h1>
+          {post.data.title}
+        </h1>
+        <a href="/" class="opacity-50 hover:underline">Back</a>
+      </div>
+      <p class="opacity-50">
+        {formatDate(post.data.date)}
+      </p>
+    </section>
+    <article class="prose dark:prose-invert prose-a:break-all">
+      <Content />
+    </article>
+  </main>
+</Layout>

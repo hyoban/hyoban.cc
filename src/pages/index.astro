@@ -1,0 +1,29 @@
+---
+import { SITE_DESCRIPTION, SITE_TITLE } from '@/consts'
+import Layout from '@/layouts/Layout.astro'
+import { formatDate } from '@/lib/utils'
+import { getCollection } from 'astro:content'
+
+const posts = await getCollection('posts')
+---
+
+<Layout title={SITE_TITLE} description={SITE_DESCRIPTION}>
+  <main class="container max-w-[65ch] mx-auto px-4 py-8">
+    <section class="mb-10 space-y-3">
+      <h1>{SITE_TITLE}</h1>
+      <p class="opacity-50">{SITE_DESCRIPTION}</p>
+    </section>
+    <ul class="flex flex-col gap-3">
+      {
+        posts.map((post) => (
+          <li>
+            <a href={`/${post.data.slug}`} class="flex justify-between gap-3">
+              <span class="hover:underline">{post.data.title}</span>
+              <span class="text-nowrap opacity-50">{formatDate(post.data.date)}</span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </main>
+</Layout>
