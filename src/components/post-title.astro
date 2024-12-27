@@ -1,0 +1,9 @@
+---
+interface Props {
+  className?: string
+  title: string
+}
+const { className, title } = Astro.props
+---
+
+<span class={className} transition:name={title}><slot /></span>
