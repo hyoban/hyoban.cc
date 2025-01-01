@@ -1,16 +1,15 @@
 ---
-import { SITE_ICON, SITE_TITLE } from '@/consts'
+import { SITE_TITLE } from '@/consts'
 import { ClientRouter } from 'astro:transitions'
 
 interface Props {
   title: string
   description: string
-  image?: string
 }
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site)
 
-const { title, description, image } = Astro.props
+const { title, description } = Astro.props
 ---
 
 <html class="h-full">
@@ -18,7 +17,7 @@ const { title, description, image } = Astro.props
     <!-- Global Metadata -->
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <link rel="icon" type="image/png" href={SITE_ICON} />
+    <link rel="icon" type="image/png" href="/avatar_cropped.png" />
     <meta name="generator" content={Astro.generator} />
 
     <link rel="alternate" type="application/rss+xml" title={SITE_TITLE} href="/rss.xml" />
@@ -36,14 +35,14 @@ const { title, description, image } = Astro.props
     <meta property="og:url" content={Astro.url} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    {image && <meta property="og:image" content={image} />}
+    <meta property="og:image" content="/avatar.png" />
 
     <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:card" content="summary" />
     <meta property="twitter:url" content={Astro.url} />
     <meta property="twitter:title" content={title} />
     <meta property="twitter:description" content={description} />
-    {image && <meta property="twitter:image" content={image} />}
+    <meta property="twitter:image" content="/avatar.png" />
 
     <ClientRouter />
   </head>
