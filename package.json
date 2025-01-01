@@ -19,7 +19,6 @@
     "@astrojs/sitemap": "^3.2.1",
     "@tailwindcss/typography": "^0.5.15",
     "@tailwindcss/vite": "4.0.0-beta.8",
-    "@unocss/reset": "^0.65.3",
     "astro": "^5.1.1",
     "astro-eslint-parser": "^1.1.0",
     "date-fns": "^4.1.0",
@@ -29,7 +28,6 @@
     "prettier-plugin-astro": "^0.14.1",
     "sakuin": "^0.2.10",
     "tailwindcss": "4.0.0-beta.8",
-    "typescript": "^5.7.2",
-    "unocss": "^0.65.3"
+    "typescript": "^5.7.2"
   }
 }
