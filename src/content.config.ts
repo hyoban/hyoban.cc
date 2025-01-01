@@ -9,7 +9,10 @@ const posts = defineCollection({
     name: 'xlog-loader',
     async load({ config, store }) {
       const markdownProcessor = await createMarkdownProcessor(config.markdown as any)
-      const posts = await client.post.getAll('hyoban')
+      const posts = (await client.post.getAll('hyoban')).sort((a, b) => {
+        return new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
+      })
+
       for (const post of posts) {
         const { code: html } = await markdownProcessor.render(post.content)
 
