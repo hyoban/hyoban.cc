@@ -11,6 +11,7 @@ export async function GET(context) {
     items: posts.map(post => ({
       ...post.data,
       link: `/posts/${post.data.slug}`,
+      content: post.rendered.html,
     })),
   })
 }
