@@ -51,8 +51,8 @@ importers:
         specifier: ^0.14.1
         version: 0.14.1
       sakuin:
-        specifier: ^0.2.13
-        version: 0.2.13(@astrojs/markdown-remark@6.0.1)(astro@5.1.2(jiti@2.4.2)(lightningcss@1.28.2)(rollup@4.29.1)(tsx@4.19.2)(typescript@5.7.2)(yaml@2.6.1))(typescript@5.7.2)(zod@3.24.1)
+        specifier: ^0.2.14
+        version: 0.2.14(@astrojs/markdown-remark@6.0.1)(astro@5.1.2(jiti@2.4.2)(lightningcss@1.28.2)(rollup@4.29.1)(tsx@4.19.2)(typescript@5.7.2)(yaml@2.6.1))(typescript@5.7.2)(zod@3.24.1)
       tailwindcss:
         specifier: 4.0.0-beta.8
         version: 4.0.0-beta.8
@@ -2810,8 +2810,8 @@ packages:
     resolution: {integrity: sha512-b3rppTKm9T+PsVCBEOUR46GWI7fdOs00VKZ1+9c1EWDaDMvjQc6tUwuFyIprgGgTcWoVHSKrU8H31ZHA2e0RHA==}
     engines: {node: '>=10'}
 
-  sakuin@0.2.13:
-    resolution: {integrity: sha512-OVbHYOAG+VL9yxCKvGLPA3EzFFx7Ejw7l3256CJtog9ZdUTEaMIr0+3Mot5ynKz5u2n7jBaBIFA1sRovu4DRDQ==}
+  sakuin@0.2.14:
+    resolution: {integrity: sha512-Cuxbh9K3RpYTI2D5V9mwRulAdt2hvIdk7hLFZ5KQTop909sx/vp2rcXvUqd2qBDizU9SQ3qdE2NHRpAHCa64Wg==}
     peerDependencies:
       '@astrojs/markdown-remark': ^6.0.1
       astro: ^5.1.2
@@ -6499,7 +6499,7 @@ snapshots:
 
   safe-stable-stringify@2.5.0: {}
 
-  sakuin@0.2.13(@astrojs/markdown-remark@6.0.1)(astro@5.1.2(jiti@2.4.2)(lightningcss@1.28.2)(rollup@4.29.1)(tsx@4.19.2)(typescript@5.7.2)(yaml@2.6.1))(typescript@5.7.2)(zod@3.24.1):
+  sakuin@0.2.14(@astrojs/markdown-remark@6.0.1)(astro@5.1.2(jiti@2.4.2)(lightningcss@1.28.2)(rollup@4.29.1)(tsx@4.19.2)(typescript@5.7.2)(yaml@2.6.1))(typescript@5.7.2)(zod@3.24.1):
     dependencies:
       '@astrojs/markdown-remark': 6.0.1
       '@urql/core': 5.1.0
