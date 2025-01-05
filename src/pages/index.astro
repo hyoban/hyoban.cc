@@ -1,18 +1,12 @@
 ---
+import Footer from '@/components/footer.astro'
+import PostTitle from '@/components/post-title.astro'
 import { SITE_DESCRIPTION, SITE_TITLE } from '@/consts'
 import Layout from '@/layouts/Layout.astro'
 import { getCollection } from 'astro:content'
 import { format } from 'date-fns'
-import PostTitle from '@/components/post-title.astro'
 
 const posts = await getCollection('posts')
-
-const links = [
-  { name: 'X', url: 'https://x.com/0xhyoban' },
-  { name: 'GitHub', url: 'https://github.com/hyoban' },
-  { name: 'xLog', url: 'https://hyoban.xlog.app' },
-  { name: 'RSS', url: '/rss.xml' },
-]
 ---
 
 <Layout title={SITE_TITLE} description={SITE_DESCRIPTION}>
@@ -36,20 +30,5 @@ const links = [
       }
     </ul>
   </main>
-  <footer class="mt-12 text-center">
-    <div class="flex justify-center space-x-4 tracking-tight">
-      {
-        links.map((link) => (
-          <a
-            href={link.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            class="text-neutral-400 hover:text-blue-500 transition-colors duration-200"
-          >
-            {link.name}
-          </a>
-        ))
-      }
-    </div>
-  </footer>
+  <Footer />
 </Layout>
