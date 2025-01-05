@@ -6,6 +6,13 @@ import { format } from 'date-fns'
 import PostTitle from '@/components/post-title.astro'
 
 const posts = await getCollection('posts')
+
+const links = [
+  { name: 'X', url: 'https://x.com/0xhyoban' },
+  { name: 'GitHub', url: 'https://github.com/hyoban' },
+  { name: 'xLog', url: 'https://hyoban.xlog.app' },
+  { name: 'RSS', url: '/rss.xml' },
+]
 ---
 
 <Layout title={SITE_TITLE} description={SITE_DESCRIPTION}>
@@ -29,4 +36,20 @@ const posts = await getCollection('posts')
       }
     </ul>
   </main>
+  <footer class="mt-12 text-center">
+    <div class="flex justify-center space-x-4 tracking-tight">
+      {
+        links.map((link) => (
+          <a
+            href={link.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-neutral-400 hover:text-blue-500 transition-colors duration-200"
+          >
+            {link.name}
+          </a>
+        ))
+      }
+    </div>
+  </footer>
 </Layout>
