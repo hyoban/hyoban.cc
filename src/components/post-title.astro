@@ -2,8 +2,21 @@
 interface Props {
   className?: string
   title: string
+  tag?: 'p' | 'span'
 }
-const { className, title } = Astro.props
+const { className, title, tag = 'span' } = Astro.props
 ---
 
-<span class={className} transition:name={title}><slot /></span>
+<>
+  {
+    tag === 'span' ? (
+      <span class={className} transition:name={title}>
+        <slot />
+      </span>
+    ) : (
+      <p class={className} transition:name={title}>
+        <slot />
+      </p>
+    )
+  }
+</>
