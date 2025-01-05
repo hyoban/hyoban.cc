@@ -23,7 +23,7 @@ const posts = await getCollection('posts')
               <PostTitle title={post.data.title} className="group-hover:underline">
                 {post.data.title}
               </PostTitle>
-              <span class="text-nowrap opacity-50 font-mono text-sm">{format(post.data.date, 'MM/dd/yyyy')}</span>
+              <span class="text-nowrap opacity-50 font-mono">{format(post.data.date, 'MM/dd/yyyy')}</span>
             </a>
           </li>
         ))
