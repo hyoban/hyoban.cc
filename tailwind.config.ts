@@ -1,4 +1,5 @@
 import type { Config } from 'tailwindcss'
+import { iconsPlugin } from '@egoist/tailwindcss-icons'
 import typographyPlugin from '@tailwindcss/typography'
 
 export default {
@@ -52,5 +53,6 @@ export default {
   },
   plugins: [
     typographyPlugin,
+    iconsPlugin(),
   ],
 } satisfies Config
