@@ -18,13 +18,13 @@ const posts = await getCollection('posts')
     <ul class="flex flex-col gap-3">
       {
         posts.map((post) => (
-          <li>
-            <a href={`/posts/${post.data.slug}`} class="group flex justify-between items-center gap-3">
-              <PostTitle title={post.data.title} className="group-hover:underline">
+          <li class="flex justify-between items-center gap-3">
+            <a href={`/posts/${post.data.slug}`}>
+              <PostTitle title={post.data.title} className="underline hover:text-cy">
                 {post.data.title}
               </PostTitle>
-              <span class="text-nowrap text-tx-2 font-mono">{format(post.data.date, 'MM/dd/yyyy')}</span>
             </a>
+            <span class="text-nowrap text-tx-2 font-mono">{format(post.data.date, 'MM/dd/yyyy')}</span>
           </li>
         ))
       }
