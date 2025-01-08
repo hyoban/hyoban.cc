@@ -33,6 +33,8 @@
 }
 
 @theme {
+  --color-*: initial;
+
   --color-bg: var(--color-bg);
 
   --color-tx: var(--color-tx);
