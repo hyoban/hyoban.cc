@@ -5,7 +5,6 @@ export default {
   theme: {
     extend: {
       typography: ({ theme }) => {
-        console.log(theme('colors.tx'))
         return {
           DEFAULT: {
             css: {
