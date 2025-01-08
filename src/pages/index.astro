@@ -1,6 +1,5 @@
 ---
 import Footer from '@/components/footer.astro'
-import PostTitle from '@/components/post-title.astro'
 import { SITE_DESCRIPTION, SITE_TITLE } from '@/consts'
 import Layout from '@/layouts/Layout.astro'
 import { getCollection } from 'astro:content'
@@ -19,10 +18,8 @@ const posts = await getCollection('posts')
       {
         posts.map((post) => (
           <li class="flex justify-between items-center gap-3">
-            <a href={`/posts/${post.data.slug}`}>
-              <PostTitle title={post.data.title} className="underline hover:text-cy">
-                {post.data.title}
-              </PostTitle>
+            <a href={`/posts/${post.data.slug}`} class="underline hover:text-cy">
+              {post.data.title}
             </a>
             <span class="text-nowrap text-tx-2 font-mono">{format(post.data.date, 'MM/dd/yyyy')}</span>
           </li>

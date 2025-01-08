@@ -1,5 +1,4 @@
 ---
-import PostTitle from '@/components/post-title.astro'
 import Layout from '@/layouts/Layout.astro'
 import { type CollectionEntry, getCollection, render } from 'astro:content'
 import { format } from 'date-fns'
@@ -20,9 +19,9 @@ const { Content } = await render(post)
 <Layout title={post.data.title} description={post.data.description}>
   <main class="container max-w-[65ch] w-full mx-auto">
     <section class="mb-10 space-y-3">
-      <PostTitle tag="p" title={post.data.title}>
+      <h1>
         {post.data.title}
-      </PostTitle>
+      </h1>
       <p class="text-tx-2 flex gap-3">
         {format(post.data.date, 'MMMM dd, yyyy')}
         <a href="/" class="underline">Back</a>
