@@ -1,6 +1,6 @@
 @import 'tailwindcss' source(none);
 @config '../../tailwind.config.ts';
-@source '../src';
+@source '../../src';
 
 @media (prefers-color-scheme: dark) {
   .astro-code,
