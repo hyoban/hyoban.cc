@@ -23,7 +23,7 @@ const { Content } = await render(post)
       <PostTitle tag="p" title={post.data.title}>
         {post.data.title}
       </PostTitle>
-      <p class="opacity-50 flex gap-3">
+      <p class="text-tx-2 flex gap-3">
         {format(post.data.date, 'MMMM dd, yyyy')}
         <a href="/" class="underline">Back</a>
       </p>

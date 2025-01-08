@@ -13,7 +13,7 @@ const posts = await getCollection('posts')
   <main class="container max-w-[65ch] mx-auto px-4 py-8">
     <section class="mb-10 space-y-3">
       <h1>{SITE_TITLE}</h1>
-      <p class="opacity-50">{SITE_DESCRIPTION}</p>
+      <p class="text-tx-2">{SITE_DESCRIPTION}</p>
     </section>
     <ul class="flex flex-col gap-3">
       {
@@ -23,7 +23,7 @@ const posts = await getCollection('posts')
               <PostTitle title={post.data.title} className="group-hover:underline">
                 {post.data.title}
               </PostTitle>
-              <span class="text-nowrap opacity-50 font-mono">{format(post.data.date, 'MM/dd/yyyy')}</span>
+              <span class="text-nowrap text-tx-2 font-mono">{format(post.data.date, 'MM/dd/yyyy')}</span>
             </a>
           </li>
         ))

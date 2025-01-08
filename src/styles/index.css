@@ -1,5 +1,5 @@
 @import 'tailwindcss';
-@plugin "@tailwindcss/typography";
+@plugin '@tailwindcss/typography';
 
 @media (prefers-color-scheme: dark) {
   .astro-code,
@@ -10,8 +10,33 @@
     font-weight: var(--shiki-dark-font-weight) !important;
     text-decoration: var(--shiki-dark-text-decoration) !important;
   }
+}
 
+:root {
+  --color-bg: #FFFCF0;
+
+  --color-tx: #100F0F;
+  --color-tx-2: #6F6E69;
+
+  --color-cy: #24837B;
+}
+
+@media (prefers-color-scheme: dark) {
   :root {
-    color-scheme: dark;
+    --color-bg: #100F0F;
+
+    --color-tx: #CECDC3;
+    --color-tx-2: #878580;
+
+    --color-cy: #3AA99F;
   }
+}
+
+@theme {
+  --color-bg: var(--color-bg);
+
+  --color-tx: var(--color-tx);
+  --color-tx-2: var(--color-tx-2);
+
+  --color-cy: var(--color-cy);
 }
