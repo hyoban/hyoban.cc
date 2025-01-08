@@ -1,5 +1,5 @@
 @import 'tailwindcss';
-@plugin '@tailwindcss/typography';
+@config '../../tailwind.config.ts';
 
 @media (prefers-color-scheme: dark) {
   .astro-code,
@@ -39,4 +39,18 @@
   --color-tx-2: var(--color-tx-2);
 
   --color-cy: var(--color-cy);
+
+  --color-flexoki-50:              #F2F0E5;
+  --color-flexoki-100:             #E6E4D9;
+  --color-flexoki-150:             #DAD8CE;
+  --color-flexoki-200:             #CECDC3;
+  --color-flexoki-300:             #B7B5AC;
+  --color-flexoki-400:             #9F9D96;
+  --color-flexoki-500:             #878580;
+  --color-flexoki-600:             #6F6E69;
+  --color-flexoki-700:             #575653;
+  --color-flexoki-800:             #403E3C;
+  --color-flexoki-850:             #343331;
+  --color-flexoki-900:             #282726;
+  --color-flexoki-950:             #1C1B1A;
 }
