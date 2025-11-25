@@ -28,7 +28,7 @@
     "eslint-plugin-astro": "^1.5.0",
     "eslint-plugin-format": "^1.0.2",
     "prettier-plugin-astro": "^0.14.1",
-    "sakuin": "^0.2.16",
+    "sakuin": "^0.2.18",
     "tailwindcss": "^4.1.17",
     "typescript": "^5.9.3"
   },
