@@ -4,7 +4,7 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '@/consts'
 
 export async function GET(context) {
   const posts = await getCollection('posts')
-  return rss({
+  const response = await rss({
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
     site: context.site,
@@ -15,4 +15,7 @@ export async function GET(context) {
     })),
     trailingSlash: false,
   })
+  response.headers.set('Content-Type', 'application/rss+xml; charset=utf-8')
+
+  return response
 }
