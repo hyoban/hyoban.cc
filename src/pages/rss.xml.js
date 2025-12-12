@@ -13,5 +13,6 @@ export async function GET(context) {
       link: `/${post.data.link}`,
       customData: `<guid>${post.data.link}</guid>`,
     })),
+    trailingSlash: false,
   })
 }
