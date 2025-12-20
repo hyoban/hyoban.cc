@@ -1,0 +1,59 @@
+@import 'tailwindcss' source(none);
+@config '../../tailwind.config.ts';
+@source '../../src';
+
+@media (prefers-color-scheme: dark) {
+  .astro-code,
+  .astro-code span {
+    color: var(--shiki-dark) !important;
+    background-color: var(--shiki-dark-bg) !important;
+    font-style: var(--shiki-dark-font-style) !important;
+    font-weight: var(--shiki-dark-font-weight) !important;
+    text-decoration: var(--shiki-dark-text-decoration) !important;
+  }
+}
+
+:root {
+  --color-bg: #ffffff;
+
+  --color-tx: #100f0f;
+  --color-tx-2: #6f6e69;
+
+  --color-cy: #24837b;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #100f0f;
+
+    --color-tx: #cecdc3;
+    --color-tx-2: #878580;
+
+    --color-cy: #3aa99f;
+  }
+}
+
+@theme {
+  --color-*: initial;
+
+  --color-bg: var(--color-bg);
+
+  --color-tx: var(--color-tx);
+  --color-tx-2: var(--color-tx-2);
+
+  --color-cy: var(--color-cy);
+
+  --color-flexoki-50: #f2f0e5;
+  --color-flexoki-100: #e6e4d9;
+  --color-flexoki-150: #dad8ce;
+  --color-flexoki-200: #cecdc3;
+  --color-flexoki-300: #b7b5ac;
+  --color-flexoki-400: #9f9d96;
+  --color-flexoki-500: #878580;
+  --color-flexoki-600: #6f6e69;
+  --color-flexoki-700: #575653;
+  --color-flexoki-800: #403e3c;
+  --color-flexoki-850: #343331;
+  --color-flexoki-900: #282726;
+  --color-flexoki-950: #1c1b1a;
+}
