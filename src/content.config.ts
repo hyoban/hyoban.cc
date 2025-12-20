@@ -1,8 +1,14 @@
-import { defineCollection } from 'astro:content'
-import { postLoader } from 'sakuin/astro'
+import { glob } from 'astro/loaders'
+import { defineCollection, z } from 'astro:content'
 
 const posts = defineCollection({
-  loader: postLoader({ handle: 'hyoban' }),
+  loader: glob({ pattern: '**/*.md', base: './src/content/posts' }),
+  schema: z.object({
+    title: z.string(),
+    link: z.string(),
+    description: z.string().optional(),
+    pubDate: z.coerce.date(),
+  }),
 })
 
 export const collections = { posts }

@@ -2,7 +2,6 @@
 import Age from './age.astro'
 
 const links = [
-  { name: 'xLog', url: 'https://hyoban.xlog.app', icon: '' },
   { name: 'X', url: 'https://x.com/hyoban_cc', icon: 'i-simple-icons-x' },
   { name: 'GitHub', url: 'https://github.com/hyoban', icon: 'i-simple-icons-github' },
   { name: 'RSS', url: '/rss.xml', icon: 'i-simple-icons-rss' },
@@ -10,22 +9,20 @@ const links = [
 ---
 
 <footer class="mt-6 text-center space-y-2">
-  <div class="flex justify-center items-center space-x-4 tracking-tight">
+  <div class="flex justify-center items-center space-x-4 tracking-tight text-tx-2">
     {
       links.map((link) => (
         <a
           href={link.url}
           target="_blank"
           rel="noopener noreferrer"
-          class={`text-tx-2 hover:text-cy transition-colors duration-200 ${link.icon}`}
+          class={`hover:text-cy transition-colors duration-200 ${link.icon}`}
           title={link.name}
         >
           {link.name}
         </a>
       ))
     }
-  </div>
-  <div class="text-tx-2 text-sm">
     <Age />
   </div>
 </footer>

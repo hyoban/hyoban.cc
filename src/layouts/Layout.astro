@@ -6,7 +6,7 @@ import { ViewTransitions } from 'astro:transitions'
 
 interface Props {
   title: string
-  description: string
+  description?: string | undefined
 }
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site)
