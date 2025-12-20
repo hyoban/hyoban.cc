@@ -2,7 +2,7 @@
 import '@/styles/index.css'
 
 import { SITE_TITLE, SITE_URL } from '@/consts'
-import { ViewTransitions } from 'astro:transitions'
+import { ClientRouter } from 'astro:transitions'
 
 interface Props {
   title: string
@@ -46,7 +46,7 @@ const { title, description } = Astro.props
     <meta property="twitter:description" content={description} />
     <meta property="twitter:image" content={SITE_URL + '/avatar.png'} />
 
-    <ViewTransitions />
+    <ClientRouter />
   </head>
   <body class="flex flex-col bg-bg text-tx scheme-light dark:scheme-dark px-4 py-8">
     <slot />
