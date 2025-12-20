@@ -1,0 +1,31 @@
+---
+import Footer from '@/components/footer.astro'
+import { SITE_DESCRIPTION, SITE_TITLE } from '@/consts'
+import Layout from '@/layouts/Layout.astro'
+import { getCollection } from 'astro:content'
+import { format } from 'date-fns'
+
+const posts = await getCollection('posts')
+---
+
+<Layout title={SITE_TITLE} description={SITE_DESCRIPTION}>
+  <main class="container max-w-[65ch] mx-auto">
+    <section class="mb-10 space-y-3">
+      <h1>{SITE_TITLE}</h1>
+      <p class="text-tx-2">{SITE_DESCRIPTION}</p>
+    </section>
+    <ul class="flex flex-col gap-3">
+      {
+        posts.map((post) => (
+          <li class="flex justify-between items-center gap-3">
+            <a href={`/${post.data.slug}`} class="underline hover:text-cy">
+              {post.data.title}
+            </a>
+            <span class="text-nowrap text-tx-2 font-mono">{format(post.data.date, 'MM/dd/yyyy')}</span>
+          </li>
+        ))
+      }
+    </ul>
+  </main>
+  <Footer />
+</Layout>
