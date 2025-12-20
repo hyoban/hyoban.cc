@@ -2,10 +2,10 @@
 import Footer from '@/components/footer.astro'
 import { SITE_DESCRIPTION, SITE_TITLE } from '@/consts'
 import Layout from '@/layouts/Layout.astro'
-import { getCollection } from 'astro:content'
+import { getSortedPosts } from '@/utils'
 import { format } from 'date-fns'
 
-const posts = await getCollection('posts')
+const posts = await getSortedPosts()
 ---
 
 <Layout title={SITE_TITLE} description={SITE_DESCRIPTION}>
@@ -18,10 +18,10 @@ const posts = await getCollection('posts')
       {
         posts.map((post) => (
           <li class="flex justify-between items-center gap-3">
-            <a href={`/${post.data.slug}`} class="underline hover:text-cy">
+            <a href={`/${post.data.link}`} class="underline hover:text-cy">
               {post.data.title}
             </a>
-            <span class="text-nowrap text-tx-2 font-mono">{format(post.data.date, 'MM/dd/yyyy')}</span>
+            <span class="text-nowrap text-tx-2 font-mono">{format(post.data.pubDate, 'MM/dd/yyyy')}</span>
           </li>
         ))
       }

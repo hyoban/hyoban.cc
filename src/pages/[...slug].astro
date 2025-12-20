@@ -1,12 +1,13 @@
 ---
 import Layout from '@/layouts/Layout.astro'
-import { type CollectionEntry, getCollection, render } from 'astro:content'
+import { getSortedPosts } from '@/utils'
+import { type CollectionEntry, render } from 'astro:content'
 import { format } from 'date-fns'
 
 export async function getStaticPaths() {
-  const posts = await getCollection('posts')
+  const posts = await getSortedPosts()
   return posts.map((post) => ({
-    params: { slug: post.data.slug },
+    params: { slug: post.data.link },
     props: post,
   }))
 }
@@ -23,7 +24,7 @@ const { Content } = await render(post)
         {post.data.title}
       </h1>
       <p class="text-tx-2 flex gap-3">
-        {format(post.data.date, 'MMMM dd, yyyy')}
+        {format(post.data.pubDate, 'MMMM dd, yyyy')}
         <a href="/" class="underline">Back</a>
       </p>
     </section>

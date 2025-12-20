@@ -9,7 +9,8 @@
     "build": "astro check && astro build",
     "preview": "astro preview",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "download": "npx tsx scripts/download-posts.ts"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^6.5.1",
