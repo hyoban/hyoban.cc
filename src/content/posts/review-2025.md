@@ -43,6 +43,9 @@ pubDate: "2025-12-26T08:00:00.000Z"
 
 Dify 在 AI 产品上的报销额度十分慷慨。我之前主要用的还是开源免费的 Copilot，觉得什么模型都能用，也挺好的，就是到了月底用量就会不够。
 现在是 Claude Code 和 VSCode 混着用。Claude 有一个浏览器插件可以用，这对我这个 Chrome 党很友好，不必用 Atlas。
+
+![](https://s2.loli.net/2025/12/25/xz89KtUXmnTA451.png)
+
 Claude Code 的话，我不是很习惯在 VSCode 的终端里来使用，就选了 Ghostty 配合着用。
 自己一边感叹着 AI 工具的进步和解放的人类生产力，一边又日常被 AI 在乱写气的不行。
 
