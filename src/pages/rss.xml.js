@@ -3,7 +3,9 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '@/consts'
 
 export async function GET(context) {
   const postImportResult = import.meta.glob('../content/posts/**/*.md', { eager: true })
-  const posts = Object.values(postImportResult)
+  const posts = Object.values(postImportResult).toSorted((a, b) =>
+    new Date(b.frontmatter.pubDate) - new Date(a.frontmatter.pubDate),
+  )
 
   return rss({
     title: SITE_TITLE,
