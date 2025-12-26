@@ -31,7 +31,8 @@
     "prettier-plugin-astro": "^0.14.1",
     "sakuin": "^0.2.18",
     "tailwindcss": "^4.1.17",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "unist-util-visit": "^5.0.0"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
