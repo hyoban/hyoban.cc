@@ -1,0 +1,3 @@
+post:
+  - changed-files:
+      - any-glob-to-any-file: 'src/content/posts/**'
