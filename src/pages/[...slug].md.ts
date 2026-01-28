@@ -12,15 +12,14 @@ export const getStaticPaths: GetStaticPaths = async () => {
 export const GET: APIRoute = async ({ props }) => {
   const { post } = props as { post: Awaited<ReturnType<typeof getSortedPosts>>[number] }
 
-  const frontmatter = [
-    '---',
-    `title: ${post.data.title}`,
-    `date: ${post.data.pubDate.toISOString()}`,
-    post.data.description ? `description: ${post.data.description}` : null,
-    '---',
-  ].filter(Boolean).join('\n')
+  const frontmatterLines = Object.entries(post.data).map(([key, value]) => {
+    if (value instanceof Date) {
+      return `${key}: ${value.toISOString()}`
+    }
+    return `${key}: ${JSON.stringify(value)}`
+  })
 
-  const content = `${frontmatter}\n\n${post.body}`
+  const content = `---\n${frontmatterLines.join('\n')}\n---\n\n${post.body}`
 
   return new Response(content, {
     headers: {
