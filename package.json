@@ -19,6 +19,7 @@
     "@astrojs/rss": "^4.0.15",
     "@astrojs/sitemap": "^3.7.0",
     "@egoist/tailwindcss-icons": "^1.9.0",
+    "@iconify-json/lucide": "^1.2.87",
     "@iconify-json/simple-icons": "^1.2.67",
     "@tailwindcss/vite": "^4.1.18",
     "astro": "^5.16.13",

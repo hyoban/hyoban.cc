@@ -25,6 +25,7 @@ const { Content } = await render(post)
       </h1>
       <p class="text-tx-2 flex gap-3">
         {format(post.data.pubDate, 'MMMM dd, yyyy')}
+        <a href={`/${post.data.link}.md`} class="underline">Source</a>
         <a href="/" class="underline">Back</a>
       </p>
     </section>
