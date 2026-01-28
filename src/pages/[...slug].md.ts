@@ -1,25 +1,26 @@
 import type { APIRoute, GetStaticPaths } from 'astro'
-
-const posts = import.meta.glob('../content/posts/**/*.md', {
-  eager: true,
-  query: '?raw',
-  import: 'default',
-}) as Record<string, string>
-
-const postEntries = Object.entries(posts).map(([path, content]) => {
-  const link = path.replace('../content/posts/', '').replace('.md', '')
-  return { link, content }
-})
+import { getSortedPosts } from '@/utils'
 
 export const getStaticPaths: GetStaticPaths = async () => {
-  return postEntries.map(({ link, content }) => ({
-    params: { slug: link },
-    props: { content },
+  const posts = await getSortedPosts()
+  return posts.map((post) => ({
+    params: { slug: post.data.link },
+    props: { post },
   }))
 }
 
 export const GET: APIRoute = async ({ props }) => {
-  const { content } = props as { content: string }
+  const { post } = props as { post: Awaited<ReturnType<typeof getSortedPosts>>[number] }
+
+  const frontmatter = [
+    '---',
+    `title: ${post.data.title}`,
+    `date: ${post.data.pubDate.toISOString()}`,
+    post.data.description ? `description: ${post.data.description}` : null,
+    '---',
+  ].filter(Boolean).join('\n')
+
+  const content = `${frontmatter}\n\n${post.body}`
 
   return new Response(content, {
     headers: {
