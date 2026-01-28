@@ -1,12 +1,12 @@
 import type { APIRoute } from 'astro'
-import rss from '@astrojs/rss'
+import { getRssString } from '@astrojs/rss'
 import { SITE_DESCRIPTION, SITE_TITLE } from '@/consts'
 import { getSortedPosts } from '@/utils'
 
 export const GET: APIRoute = async (context) => {
   const posts = await getSortedPosts()
 
-  const response = await rss({
+  const response = await getRssString({
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
     site: context.site!,
@@ -19,7 +19,9 @@ export const GET: APIRoute = async (context) => {
     trailingSlash: false,
   })
 
-  response.headers.set('Content-Type', 'application/xml; charset=utf-8')
-
-  return response
+  return new Response(response, {
+    headers: {
+      'Content-Type': 'application/xml; charset=utf-8',
+    },
+  })
 }
