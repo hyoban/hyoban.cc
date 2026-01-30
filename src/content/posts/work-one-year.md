@@ -72,7 +72,7 @@ zeabur 也是一个很酷的公司，团队里的人都很厉害。不过很可�
 
 研二的这个暑假，没有学校的事情需要处理，但是总共只有三周时间，第一周在家里，后面两周去了湖北。我算是体验了一点数字游民的感觉，带上电脑，可以去任何地方。睡觉睡到自然醒，随便出去找点吃的，无聊的时候刷刷 Twitter，看看视频，在任何时间写一点代码就好。
 
-![IMG_20230805_134548.jpg](https://s2.loli.net/2023/08/05/VIr9hGaWwMD1BYm.jpg)
+![IMG_20230805_134548.jpg](../../assets/images/posts/VIr9hGaWwMD1BYm.jpg)
 
 [深入浅出现代 Web 编程]: https://fullstackopen.com/zh
 [mui]: https://mui.com

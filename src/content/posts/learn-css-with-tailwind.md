@@ -47,7 +47,7 @@ HTML 大概是长成下面这样子的。每个 HTML 标签都有自己的含义
 与通过 MDN 的文档来学习相比：
 
 1. Tailwind 的文档更加简洁，更多图例；MDN 的文档更加详细，更多概念。
-   ![justify-start doc](https://s2.loli.net/2023/08/16/NhYoerOTa6ZjFRB.png)
+   ![justify-start doc](../../assets/images/posts/NhYoerOTa6ZjFRB.png)
 1. Tailwind 分类更加清晰，更能突出重点；MDN 的文档更加全面，但是容易让人迷失。
    - CSS 的知识点很多，但是日常开发中我们只会用到其中的一部分。
 1. Tailwind 的文档有助于你更快了解一些关键概念，如 [深色模式支持](https://tailwindcss.com/docs/dark-mode) 和 [响应式设计](https://tailwindcss.com/docs/responsive-design)。

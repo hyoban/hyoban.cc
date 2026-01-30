@@ -12,7 +12,7 @@ export const GET: APIRoute = async () => {
     '',
     '## Posts',
     '',
-    ...posts.map((post) => `- [${post.data.title}](${SITE_URL}/${post.data.link}.md)`),
+    ...posts.map(post => `- [${post.data.title}](${SITE_URL}/${post.data.link}.md)`),
   ]
 
   return new Response(lines.join('\n'), {

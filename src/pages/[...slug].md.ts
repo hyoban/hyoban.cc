@@ -3,7 +3,7 @@ import { getSortedPosts } from '@/utils'
 
 export const getStaticPaths: GetStaticPaths = async () => {
   const posts = await getSortedPosts()
-  return posts.map((post) => ({
+  return posts.map(post => ({
     params: { slug: post.data.link },
     props: { post },
   }))
