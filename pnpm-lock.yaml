@@ -62,6 +62,9 @@ importers:
       sakuin:
         specifier: ^0.2.18
         version: 0.2.18(@astrojs/markdown-remark@6.3.10)(astro@5.16.13(@vercel/functions@2.2.13)(jiti@2.6.1)(lightningcss@1.30.2)(rollup@4.53.3)(tsx@4.19.2)(typescript@5.9.3)(yaml@2.8.2))(viem@2.21.57(typescript@5.9.3)(zod@3.25.76))
+      sharp:
+        specifier: ^0.34.5
+        version: 0.34.5
       tailwindcss:
         specifier: ^4.1.18
         version: 4.1.18
