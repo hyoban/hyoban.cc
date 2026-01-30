@@ -10,7 +10,8 @@
     "preview": "astro preview",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "download": "npx tsx scripts/download-posts.ts"
+    "download": "npx tsx scripts/download-posts.ts",
+    "download:images": "npx tsx scripts/download-images.ts"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^7.2.0",

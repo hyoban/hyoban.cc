@@ -50,7 +50,7 @@ const site = = await client.site.getInfo(HANDLE)
 
 sakuin 是从我的博客项目衍生出来的，所以很自然的我使用它来构建[自己的博客](https://hyoban.cc)，你可以对比它和原版 xLog 的访问速度。此外，我按照自己的喜好重新实现了布局和文章的渲染，我拥有了完全可控的自由度。对接 xLog 提供的匿名评论接口，我可以轻松的实现评论模块。
 
-![评论界面截图](https://s2.loli.net/2024/03/19/UFNHbaBGdvz5Zmj.png)
+![评论界面截图](../../assets/images/posts/UFNHbaBGdvz5Zmj.png)
 
 https://github.com/hyoban/vscode-xlog
 

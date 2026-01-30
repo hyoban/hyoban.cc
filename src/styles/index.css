@@ -80,10 +80,18 @@
     }
   }
 
-  & h1 { font-size: 2em; }
-  & h2 { font-size: 1.5em; }
-  & h3 { font-size: 1.25em; }
-  & h4 { font-size: 1em; }
+  & h1 {
+    font-size: 2em;
+  }
+  & h2 {
+    font-size: 1.5em;
+  }
+  & h3 {
+    font-size: 1.25em;
+  }
+  & h4 {
+    font-size: 1em;
+  }
 
   & :is(h1, h2, h3, h4, h5, h6):first-child {
     margin-top: 0;
@@ -121,8 +129,12 @@
     margin: 1.25em 0;
   }
 
-  & ul { list-style-type: disc; }
-  & ol { list-style-type: decimal; }
+  & ul {
+    list-style-type: disc;
+  }
+  & ol {
+    list-style-type: decimal;
+  }
 
   & li {
     margin: 0.5em 0;
@@ -219,7 +231,8 @@
     margin: 1.5em 0;
   }
 
-  & th, & td {
+  & th,
+  & td {
     border: 1px solid var(--color-flexoki-200);
     padding: 0.5em 0.75em;
     text-align: left;
