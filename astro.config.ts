@@ -35,8 +35,8 @@ export default defineConfig({
 
           return new Promise((resolve) => {
             const promises = Array.from(imageNodes).map(async (node) => {
-              const src = node.properties.src as string
-              if (!src.startsWith('http://') && !src.startsWith('https://')) {
+              const src = node.properties.src as string | undefined
+              if (!src || (!src.startsWith('http://') && !src.startsWith('https://'))) {
                 return
               }
               const { width, height } = await inferRemoteSize(src)
