@@ -1,4 +1,5 @@
 import Sitemap from '@astrojs/sitemap'
+import vercel from '@astrojs/vercel'
 import tailwindcss from '@tailwindcss/vite'
 import { inferRemoteSize } from 'astro/assets/utils'
 import { defineConfig } from 'astro/config'
@@ -8,6 +9,7 @@ import { SITE_URL } from './src/consts'
 // https://astro.build/config
 export default defineConfig({
   site: SITE_URL,
+  adapter: vercel(),
   integrations: [
     Sitemap(),
   ],
