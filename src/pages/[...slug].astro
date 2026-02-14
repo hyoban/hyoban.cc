@@ -1,31 +1,32 @@
 ---
 import Layout from '@/layouts/Layout.astro'
-import { getSortedPosts } from '@/utils'
-import { type CollectionEntry, render } from 'astro:content'
+import { getMarkdownEntries, type PostEntry } from '@/utils'
+import { render } from 'astro:content'
 import { format } from 'date-fns'
 
 export async function getStaticPaths() {
-  const posts = await getSortedPosts()
-  return posts.map((post) => ({
-    params: { slug: post.data.link },
-    props: post,
+  const entries = await getMarkdownEntries()
+  return entries.map((entry) => ({
+    params: { slug: entry.data.link },
+    props: { entry },
   }))
 }
 
-type Props = CollectionEntry<'posts'>
-const post = Astro.props
-const { Content } = await render(post)
+type Props = { entry: Awaited<ReturnType<typeof getMarkdownEntries>>[number] }
+const { entry } = Astro.props as Props
+const post = entry.collection === 'posts' ? (entry as PostEntry) : null
+const { Content } = await render(entry)
 ---
 
-<Layout title={post.data.title} description={post.data.description}>
+<Layout title={entry.data.title} description={entry.data.description}>
   <main class="container max-w-[65ch] w-full mx-auto space-y-8">
     <section class="space-y-3">
       <h1>
-        {post.data.title}
+        {entry.data.title}
       </h1>
       <p class="text-tx-2 flex gap-3">
-        {format(post.data.pubDate, 'MMMM dd, yyyy')}
-        <a href={`/${post.data.link}.md`} class="underline">Source</a>
+        {post && format(post.data.pubDate, 'MMMM dd, yyyy')}
+        <a href={`/${entry.data.link}.md`} class="underline">Source</a>
         <a href="/" class="underline">Back</a>
       </p>
     </section>
