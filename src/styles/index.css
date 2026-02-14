@@ -129,6 +129,11 @@
     margin: 1.25em 0;
   }
 
+  /* Keep nested lists compact */
+  & :is(ul, ol) :is(ul, ol) {
+    margin: 0.35em 0;
+  }
+
   & ul {
     list-style-type: disc;
   }
@@ -138,6 +143,10 @@
 
   & li {
     margin: 0.5em 0;
+  }
+
+  & :is(ul, ol) :is(ul, ol) > li {
+    margin: 0.2em 0;
   }
 
   & li::marker {
@@ -226,20 +235,57 @@
 
   /* Tables */
   & table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 1.5em 0;
-  }
-
-  & th,
-  & td {
+    display: block;
+    width: fit-content;
+    max-width: 100%;
+    overflow-x: auto;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 1.25em 0;
     border: 1px solid var(--color-flexoki-200);
-    padding: 0.5em 0.75em;
-    text-align: left;
+    border-radius: 0.375em;
 
     @media (prefers-color-scheme: dark) {
       border-color: var(--color-flexoki-700);
     }
+  }
+
+  & th,
+  & td {
+    border-bottom: 1px solid var(--color-flexoki-200);
+    padding: 0.55em 0.75em;
+    text-align: left;
+    vertical-align: top;
+    white-space: nowrap;
+
+    @media (prefers-color-scheme: dark) {
+      border-color: var(--color-flexoki-700);
+    }
+  }
+
+  /* Respect markdown table alignment markers */
+  & :is(th, td)[align='left'] {
+    text-align: left;
+  }
+
+  & :is(th, td)[align='center'] {
+    text-align: center;
+  }
+
+  & :is(th, td)[align='right'] {
+    text-align: right;
+  }
+
+  & tr > :not(:last-child) {
+    border-right: 1px solid var(--color-flexoki-200);
+
+    @media (prefers-color-scheme: dark) {
+      border-color: var(--color-flexoki-700);
+    }
+  }
+
+  & tbody tr:last-child td {
+    border-bottom: none;
   }
 
   & th {
