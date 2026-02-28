@@ -18,25 +18,32 @@ pubDate: "2024-02-15T07:14:39.208Z"
 
 ### pnpm + bunchee + tsx + vitest
 
-为了方便的测试我们写的库，[pnpm] 的 [workspace][pnpm workspace] 是必不可少的，可以很方便的开一个 playground。此外，它默认不提升依赖的特性也能够防止我们不小心引用了没有定义的依赖。我的 `.npmrc` 为：
+为了方便的测试我们写的库，[pnpm] 的 [workspace][pnpm workspace] 是必不可少的，可以很方便的开一个 playground。
+此外，它默认不提升依赖的特性也能够防止我们不小心引用了没有定义的依赖。
+我的 `.npmrc` 为：
 
 ```ini
 ignore-workspace-root-check=true
 public-hoist-pattern=[]
 ```
 
-使用 [bunchee] 来完成打包任务，它读取 package.json 中的 `exports` 字段作为打包的输入输出，无需手动指定配置。此外它的 esm 打包结果看起来也更好，tsup 存在 [ESM output with CJS content](https://github.com/egoist/tsup/issues/701) 的问题。
+使用 [bunchee] 来完成打包任务，它读取 package.
+json 中的 `exports` 字段作为打包的输入输出，无需手动指定配置。
+此外它的 esm 打包结果看起来也更好，tsup 存在 [ESM output with CJS content](https://github.com/egoist/tsup/issues/701) 的问题。
 
-如果你希望更清楚精细的控制打包流程，可以使用 [rollup] 配合一些插件来自己写配置。这里有一些常用的插件推荐。
+如果你希望更清楚精细的控制打包流程，可以使用 [rollup] 配合一些插件来自己写配置。
+这里有一些常用的插件推荐。
 
 1. [rollup-plugin-dts]
 1. [rollup-plugin-swc] 或者 [rollup-plugin-esbuild]
 1. [@rollup/plugin-node-resolve]
 1. [@rollup/plugin-commonjs]
 
-如果你想看看类似 bunchee 的其它选择，可以看看 [unbuild] 和 [tsup]。tsup 的 `--dts-resolve` 选项在你想要打包一些依赖的时候很有用。
+如果你想看看类似 bunchee 的其它选择，可以看看 [unbuild] 和 [tsup]。
+tsup 的 `--dts-resolve` 选项在你想要打包一些依赖的时候很有用。
 
-开发过程中，非必要的情况下，基本上没人想先打包再跑代码。因此，我使用 [tsx] 来直接执行 ts 文件，用 [vitest] 来测试代码。
+开发过程中，非必要的情况下，基本上没人想先打包再跑代码。
+因此，我使用 [tsx] 来直接执行 ts 文件，用 [vitest] 来测试代码。
 
 ## 正确设置 `package.json`
 
@@ -106,14 +113,17 @@ npx knip
   },
   "lint-staged": {
     "*": "eslint --fix"
-  }
+  },
   "scripts": {
-    "prepare": "simple-git-hooks",
+    "prepare": "simple-git-hooks"
   }
 }
 ```
 
-不过这种方案存在的问题是，如果你的 ESLint 配置发生了变化，那 commit 的代码依然可能存在需要修复的问题。所以我更倾向于在 CI 中进行检查。使用 [git-auto-commit-action] 来自动修复并 apply 到当前分支。这样还有一个好处是你不需要 require 其它贡献者完全设置好正确的环境。
+不过这种方案存在的问题是，如果你的 ESLint 配置发生了变化，那 commit 的代码依然可能存在需要修复的问题。
+所以我更倾向于在 CI 中进行检查。
+使用 [git-auto-commit-action] 来自动修复并 apply 到当前分支。
+这样还有一个好处是你不需要 require 其它贡献者完全设置好正确的环境。
 
 ## 发版流程
 
@@ -125,7 +135,8 @@ npx knip
 1. commit && tag
 1. 写这次更新的日志，在 GitHub 上发布 release
 
-如果每次都要手动做这些事情，那就太麻烦了，所以我们可以使用 [release-it] 来帮助我们自动化这些步骤。借助 release-it 的 hooks 功能和自定义插件，我们能够方便的定义需要的发版流程。
+如果每次都要手动做这些事情，那就太麻烦了，所以我们可以使用 [release-it] 来帮助我们自动化这些步骤。
+借助 release-it 的 hooks 功能和自定义插件，我们能够方便的定义需要的发版流程。
 
 release-it 对于 pnpm workspace 的支持几乎为零，在 monorepo 发布多个包的情况下需要切换到其它方案，我写了个插件提供简单的支持。
 
