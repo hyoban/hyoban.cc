@@ -26,25 +26,27 @@ pubDate: "2024-01-04T13:15:06.994Z"
 
 通过 [Media queries](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_media_queries/Using_media_queries#targeting_media_features) 的 [prefers-color-scheme](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme) 和 [matchMedia](https://developer.mozilla.org/en-US/docs/Web/API/Window/matchMedia) 来获取系统偏好是否为深色。
 
-[onMount](https://jotai.org/docs/core/atom) 函数会在 atom 被订阅时执行，在取消订阅时执行其返回的函数。加上判断浏览器环境的逻辑来兼容服务端渲染。
+[onMount](https://jotai.org/docs/core/atom) 函数会在 atom 被订阅时执行，在取消订阅时执行其返回的函数。
+加上判断浏览器环境的逻辑来兼容服务端渲染。
 
 ```ts
 function atomSystemDark() {
-  const isSystemDarkAtom = atom<boolean | null>(null);
+  const isSystemDarkAtom = atom<boolean | null>(null)
 
   isSystemDarkAtom.onMount = (set) => {
-    if (typeof window === "undefined") return;
-    const matcher = window.matchMedia("(prefers-color-scheme: dark)");
+    if (typeof window === 'undefined')
+      return
+    const matcher = window.matchMedia('(prefers-color-scheme: dark)')
     const update = () => {
-      set(matcher.matches);
-    };
-    update();
-    matcher.addEventListener("change", update);
+      set(matcher.matches)
+    }
+    update()
+    matcher.addEventListener('change', update)
     return () => {
-      matcher.removeEventListener("change", update);
-    };
-  };
-  return isSystemDarkAtom;
+      matcher.removeEventListener('change', update)
+    }
+  }
+  return isSystemDarkAtom
 }
 ```
 
@@ -54,10 +56,10 @@ function atomSystemDark() {
 1. 系统偏好为深色，且用户偏好不为浅色
 
 ```ts
-type Theme = "system" | "light" | "dark";
+type Theme = 'system' | 'light' | 'dark'
 
 function isDarkMode(setting?: Theme | null, isSystemDark?: boolean | null) {
-  return setting === "dark" || (!!isSystemDark && setting !== "light");
+  return setting === 'dark' || (!!isSystemDark && setting !== 'light')
 }
 ```
 
@@ -69,53 +71,54 @@ function isDarkMode(setting?: Theme | null, isSystemDark?: boolean | null) {
 
 ```ts
 function atomDark() {
-  const isSystemDarkAtom = atomSystemDark();
-  const themeAtom = atomWithStorage<Theme>(storageKey, "system");
+  const isSystemDarkAtom = atomSystemDark()
+  const themeAtom = atomWithStorage<Theme>(storageKey, 'system')
 
   const toggleDarkEffect = atomEffect((get, set) => {
-    const theme = get(themeAtom);
-    const isSystemDark = get(isSystemDarkAtom);
-    const isDark = isDarkMode(theme, isSystemDark);
-    document.documentElement.classList.toggle("dark", isDark);
+    const theme = get(themeAtom)
+    const isSystemDark = get(isSystemDarkAtom)
+    const isDark = isDarkMode(theme, isSystemDark)
+    document.documentElement.classList.toggle('dark', isDark)
 
     if (
-      (theme === "dark" && isSystemDark) ||
-      (theme === "light" && !isSystemDark)
+      (theme === 'dark' && isSystemDark)
+      || (theme === 'light' && !isSystemDark)
     ) {
-      set(themeAtom, "system");
+      set(themeAtom, 'system')
     }
-  });
+  })
 
   return atom(
     (get) => {
-      get(toggleDarkEffect);
-      const theme = get(themeAtom);
-      const isSystemDark = get(isSystemDarkAtom);
-      return isDarkMode(theme, isSystemDark);
+      get(toggleDarkEffect)
+      const theme = get(themeAtom)
+      const isSystemDark = get(isSystemDarkAtom)
+      return isDarkMode(theme, isSystemDark)
     },
     (get, set) => {
-      const theme = get(themeAtom);
-      const isSystemDark = get(isSystemDarkAtom);
+      const theme = get(themeAtom)
+      const isSystemDark = get(isSystemDarkAtom)
       set(
         themeAtom,
-        theme === "system" ? (isSystemDark ? "light" : "dark") : "system"
-      );
+        theme === 'system' ? (isSystemDark ? 'light' : 'dark') : 'system'
+      )
     }
-  );
+  )
 }
 ```
 
 ## 我们有能用的 hook 了
 
-相比于直接使用 atom，为 `atomDark` 创建一个自定义 hook 会是一个更好的选择。因为 Jotai 的 write 函数是没有响应式的，直接使用 atom 可能会只使用到 `toggleDark` 函数，此时读取到的状态是不正确的。
+相比于直接使用 atom，为 `atomDark` 创建一个自定义 hook 会是一个更好的选择。
+因为 Jotai 的 write 函数是没有响应式的，直接使用 atom 可能会只使用到 `toggleDark` 函数，此时读取到的状态是不正确的。
 
 ```ts
-const isDarkAtom = atomDark();
+const isDarkAtom = atomDark()
 
 function useDark() {
-  const isDark = useAtomValue(isDarkAtom);
-  const toggleDark = useSetAtom(isDarkAtom) as () => void;
-  return { isDark, toggleDark };
+  const isDark = useAtomValue(isDarkAtom)
+  const toggleDark = useSetAtom(isDarkAtom) as () => void
+  return { isDark, toggleDark }
 }
 ```
 
@@ -127,37 +130,38 @@ function useDark() {
 
 ```tsx
 function AppearanceSwitch() {
-  const { toggleDark } = useDark();
+  const { toggleDark } = useDark()
 
   return (
     <button onClick={toggleDark} className="flex">
       <div className="i-lucide-sun scale-100 dark:scale-0 transition-transform duration-500 rotate-0 dark:-rotate-90" />
       <div className="i-lucide-moon absolute scale-0 dark:scale-100 transition-transform duration-500 rotate-90 dark:rotate-0" />
     </button>
-  );
+  )
 }
 ```
 
 ## 页面闪烁怎么解决？
 
-当浏览器加载的页面样式和用户偏好不一致时，就会出现页面闪烁，更新样式的情况。我们需要在页面加载前注入脚本来确保主题正确。（Fixes 1-3）
+当浏览器加载的页面样式和用户偏好不一致时，就会出现页面闪烁，更新样式的情况。
+我们需要在页面加载前注入脚本来确保主题正确。
+（Fixes 1-3）
 
 如果你使用 Vite，可以在 `index.html` 中注入脚本：
 
 ```html
 <script>
   !(function () {
-    var e =
-        window.matchMedia &&
-        window.matchMedia("(prefers-color-scheme: dark)").matches,
-      t = localStorage.getItem("use-dark") || '"system"';
-    ('"dark"' === t || (e && '"light"' !== t)) &&
-      document.documentElement.classList.toggle("dark", !0);
-  })();
+    var e = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches,
+      t = localStorage.getItem('use-dark') || '"system"'
+    ;('"dark"' === t || (e && '"light"' !== t)) && document.documentElement.classList.toggle('dark', !0)
+  })()
 </script>
 ```
 
-如果你使用 Next.js，可以使用 `dangerouslySetInnerHTML` 来注入脚本。值得一提的是，我们需要使用 `suppressHydrationWarning` 来忽略 React 在客户端水合时的警告。因为我们在客户端切换了 `html` 节点的 `className`，这可能会和服务端渲染的结果不一致。
+如果你使用 Next.js，可以使用 `dangerouslySetInnerHTML` 来注入脚本。
+值得一提的是，我们需要使用 `suppressHydrationWarning` 来忽略 React 在客户端水合时的警告。
+因为我们在客户端切换了 `html` 节点的 `className`，这可能会和服务端渲染的结果不一致。
 
 ```tsx
 function ThemeProvider({ children }: { children: React.ReactNode }) {
@@ -165,12 +169,13 @@ function ThemeProvider({ children }: { children: React.ReactNode }) {
     <>
       <script
         dangerouslySetInnerHTML={{
-          __html: "here",
+          __html: 'here',
         }}
-      ></script>
+      >
+      </script>
       {children}
     </>
-  );
+  )
 }
 
 function RootLayout({ children }: { children: React.ReactNode }) {
@@ -180,13 +185,15 @@ function RootLayout({ children }: { children: React.ReactNode }) {
         <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
-  );
+  )
 }
 ```
 
 ## 在切换时禁用 transition
 
-在 [Disable transitions on theme toggle](https://paco.me/writing/disable-theme-transitions) 一文中，已经十分详细的解释了这样做的原因。因为我们不希望在切换时部分组件的颜色过渡和页面主题的过渡节奏不一致。（Fixes 1-4）
+在 [Disable transitions on theme toggle](https://paco.me/writing/disable-theme-transitions) 一文中，已经十分详细的解释了这样做的原因。
+因为我们不希望在切换时部分组件的颜色过渡和页面主题的过渡节奏不一致。
+（Fixes 1-4）
 
 ![transition demo](../../assets/images/posts/before.gif)
 
@@ -197,11 +204,11 @@ function RootLayout({ children }: { children: React.ReactNode }) {
  * credit: https://github.com/pacocoursey/next-themes/blob/cd67bfa20ef6ea78a814d65625c530baae4075ef/packages/next-themes/src/index.tsx#L285
  */
 export function disableAnimation(disableTransitionExclude: string[] = []) {
-  const css = document.createElement("style");
+  const css = document.createElement('style')
   css.append(
     document.createTextNode(
       `
-*${disableTransitionExclude.map((s) => `:not(${s})`).join("")} {
+*${disableTransitionExclude.map(s => `:not(${s})`).join('')} {
   -webkit-transition: none !important;
   -moz-transition: none !important;
   -o-transition: none !important;
@@ -210,23 +217,25 @@ export function disableAnimation(disableTransitionExclude: string[] = []) {
 }
       `
     )
-  );
-  document.head.append(css);
+  )
+  document.head.append(css)
 
   return () => {
     // Force restyle
-    (() => window.getComputedStyle(document.body))();
+    (() => window.getComputedStyle(document.body))()
 
     // Wait for next tick before removing
     setTimeout(() => {
-      css.remove();
-    }, 1);
-  };
+      css.remove()
+    }, 1)
+  }
 }
 ```
 
 ## 最后
 
-处理完以上问题，我就有了一个满意的深色模式切换按钮了。我将其发布到了 [npm](https://www.npmjs.com/package/jotai-dark) 上，你可以直接使用。你可以在 GitHub 上查看完整的代码和示例。
+处理完以上问题，我就有了一个满意的深色模式切换按钮了。
+我将其发布到了 [npm](https://www.npmjs.com/package/jotai-dark) 上，你可以直接使用。
+你可以在 GitHub 上查看完整的代码和示例。
 
 https://github.com/hyoban/jotai-dark

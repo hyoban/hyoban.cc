@@ -30,6 +30,7 @@
     "eslint": "^10.0.2",
     "eslint-plugin-astro": "^1.6.0",
     "eslint-plugin-format": "^2.0.1",
+    "eslint-plugin-hyoban": "^0.12.2",
     "prettier-plugin-astro": "^0.14.1",
     "sakuin": "^0.2.18",
     "sharp": "^0.34.5",
