@@ -21,8 +21,8 @@ export default defineConfig({
   markdown: {
     shikiConfig: {
       themes: {
-        light: 'solarized-light',
-        dark: 'tokyo-night',
+        light: 'vitesse-light',
+        dark: 'vitesse-dark',
       },
     },
     rehypePlugins: [
