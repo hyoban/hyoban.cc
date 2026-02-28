@@ -58,11 +58,11 @@ Command](https://eslint-plugin-command.antfu.me)。
   "eslint.rules.customizations": [
     { "rule": "@stylistic/*", "severity": "off" },
     { "rule": "@stylistic/no-tabs", "severity": "default" },
-    { "rule": "@stylistic/max-statements-per-line", "severity": "default" }
+    { "rule": "@stylistic/max-statements-per-line", "severity": "default" },
     { "rule": "antfu/consistent-list-newline", "severity": "off" },
     { "rule": "prefer-const", "severity": "off" },
     { "rule": "unused-imports/no-unused-imports", "severity": "off" },
-    { "rule": "simple-import-sort/*", "severity": "off" },
+    { "rule": "simple-import-sort/*", "severity": "off" }
   ]
 }
 ```
@@ -73,7 +73,7 @@ Command](https://eslint-plugin-command.antfu.me)。
 
 基于 Rust 的 lint 工具很快，但是却没有使用类型信息进行 lint 的能力，Josh Goldberg 在 [Rust-Based JavaScript Linters: Fast, But No Typed Linting Right Now](https://www.joshuakgoldberg.com/blog/rust-based-javascript-linters-fast-but-no-typed-linting-right-now/) 一文中进行了十分详细的介绍。
 
-oxlint 最近进行了尝试，但是这似乎也导致了它回到了 JavaScript 的速度。
+Oxlint 最近进行了尝试，~~但是这似乎也导致了它回到了 JavaScript 的速度~~。
 
 https://x.com/boshen_c/status/1783632651506823204
 
@@ -81,37 +81,35 @@ Biome 开始准备实现 Type-aware linter。
 
 https://x.com/biomejs/status/1800858872896487889
 
+2026 年 2 月更新，Oxlint 和 Biome 都已经实现了 type-aware linting 的功能了。
+
+- [Oxlint Type-Aware Linting Alpha](https://oxc.rs/blog/2025-12-08-type-aware-alpha.html)
+- [Biome v2.0 beta](https://biomejs.dev/blog/biome-v2-0-beta/#nofloatingpromises)
+
 ## 我不那么在乎的 ESLint 的“缺点”
 
 ### 性能
 
-你可以看到非常多的 benchmark 展现出 oxlint，biome 等工具的性能远远超过 ESLint。但是，从我的使用场景来看，性能问题好像没有那么重要。
+你可以看到非常多的 benchmark 展现出 Oxlint，Biome 等工具的性能远远超过 ESLint。但是，从我的使用场景来看，性能问题好像没有那么重要。
 
-在编辑器中的实时 lint 和 precommit 时的 lint 一般都只需要对少量文件进行检查，我们可以将完整的 lint 过程交给 CI。CI 并不会阻塞我们本地的开发流程，我们只需要在 CI 报错时再在本地对特定文件进行 lint 即可。
+在编辑器中的实时 lint 和 precommit 时的 lint 一般都只需要对少量文件进行检查，我们可以将完整的 lint 过程交给 CI。
+CI 并不会阻塞我们本地的开发流程，我们只需要在 CI 报错时再在本地对特定文件进行 lint 即可。
 
-我遇到的在编辑器中依然会出现性能问题的情况是，当项目逐渐变大，我们开启基于类型检查的规则会导致编辑器的保存操作出现明显的延迟。但这时我们也不用完全妥协，关闭基于类型检查的规则。ESLint Flat Config 的灵活性允许我们在编辑器中关闭特定的规则。在终端或是 CI 环境中，我们依然可以进行完整的 lint。
-
-对于我自己的 ESLint Config，可以使用如下的配置。
+我遇到的在编辑器中依然会出现性能问题的情况是，当项目逐渐变大，我们开启基于类型检查的规则会导致编辑器的保存操作出现明显的延迟。
+但这时我们也不用完全妥协，关闭基于类型检查的规则。
+ESLint Flat Config 的灵活性允许我们在编辑器中关闭特定的规则。在终端或是 CI 环境中，我们依然可以进行完整的 lint。
 
 ```js
-import defineConfig from "eslint-config-hyoban";
+import antfu, { isInEditorEnv } from '@antfu/eslint-config'
 
-const isInEditor = !!(
-  (process.env.VSCODE_PID ||
-    process.env.VSCODE_CWD ||
-    process.env.JETBRAINS_IDE ||
-    process.env.VIM) &&
-  !process.env.CI
-);
-
-export default defineConfig({
-  typeChecked: isInEditor ? false : "essential",
-});
+export default antfu({
+  typescript: {
+    tsconfigPath: !isInEditorEnv() ? 'tsconfig.json' : undefined,
+  },
+})
 ```
 
-你也可以尝试一下 tsslint，它是一个与 TypeScript 语言服务器无缝集成的轻量级检查工具。
-
-https://github.com/johnsoncodehk/tsslint
+你也可以尝试一下 [tsslint] 或者 [tsl]，它们是与 tsc 集成的带类型信息的 lint 工具。
 
 ### 非官方推荐
 
@@ -140,3 +138,6 @@ https://github.com/antfu/eslint-config
 如果你主要写 TypeScript 和 React 的话，也推荐你使用我的 ESLint config 试试。我配置规则的哲学是尽可能使用插件预设的规则，在此基础上按照我的习惯进行调整，同时提供 `strict` 和 `typeChecked` 选项进行不同级别的调整。
 
 https://github.com/hyoban/eslint-config-hyoban
+
+[tsslint]: https://github.com/johnsoncodehk/tsslint
+[tsl]: https://github.com/ArnaudBarre/tsl
