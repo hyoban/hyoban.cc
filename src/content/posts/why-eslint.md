@@ -135,7 +135,8 @@ API 的 breaking change 带来的问题也可以通过多种方式来解决：
 
 https://github.com/antfu/eslint-config
 
-如果你主要写 TypeScript 和 React 的话，也推荐你使用我的 ESLint config 试试。我配置规则的哲学是尽可能使用插件预设的规则，在此基础上按照我的习惯进行调整，同时提供 `strict` 和 `typeChecked` 选项进行不同级别的调整。
+为了更开箱即用，我也为自己维护了一套 ESLint config。
+它基于 @antfu/eslint-config，增加了一些自己的偏好，和开箱即用的 react & tailwind 预设。
 
 https://github.com/hyoban/eslint-config-hyoban
 
