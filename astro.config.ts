@@ -10,6 +10,7 @@ import { SITE_URL } from './src/consts'
 export default defineConfig({
   site: SITE_URL,
   adapter: vercel(),
+  devToolbar: { enabled: false },
   integrations: [
     Sitemap(),
   ],
