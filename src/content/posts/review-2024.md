@@ -68,13 +68,15 @@ https://hyoban.xlog.app/24-years
 - 在 Follow 的工作，没有人给你派任务，都是自己按兴趣驱动找事情干，做的产品也是开源的。
 - 团队氛围十分友好，感觉可以和团队里的任何成员都成为好朋友。
 - 完全远程+无固定的工作时间，可以很好的兼顾工作和生活。
-- 薪资待遇不妥协，我可以不用考虑生活的苟且。（这个最不重要）
+- 薪资待遇不妥协，我可以不用考虑生活的苟且。（
+  这个最不重要）
 
 ## 开源
 
 今年开启了每月赞助开源的计划，预算为 20 刀每月。
 
-> 我赞助了哪些人？总共花了多少钱？
+> 我赞助了哪些人？
+> 总共花了多少钱？
 
 你可以在我的 [GitHub](https://github.com/hyoban?tab=sponsoring)、[open collective](https://opencollective.com/hyoban)、[爱发电](https://afdian.com/a/hyoban) 主页上看到我赞助过哪些人或项目。
 大部分都是我在用的项目、我阅读的博客的作者。
@@ -85,7 +87,8 @@ https://hyoban.xlog.app/24-years
 - open collective 47.58 sgd
 - 爱发电 270 cny
 
-> 我以什么样的方式来赞助？为什么要每月赞助社区？
+> 我以什么样的方式来赞助？
+> 为什么要每月赞助社区？
 
 刚开始我选择按月长期赞助某些人再加上 Anthony Fu 的 [赞助转发计划](https://antfu.me/posts/sponsorship-forwarding)。
 但是后来发现这样我的预算涉及到的开源作者很有限，就选择自己手动一次性赞助，每次赞助 5 刀。
@@ -101,8 +104,10 @@ https://hyoban.xlog.app/24-years
 
 > 有哪些项目想要分享一下？
 
-- [tailwindcss-classname-highlight](https://github.com/hyoban/tailwindcss-classname-highlight) 高亮你代码文件中会正确生成到 css 的 classname，今年支持了 tailwind v4 beta。我也抽离出其中的和 tailwind api 交互的部分，发布了 [tailwind-api-utils](https://github.com/hyoban/tailwind-api-utils)。
-- [eslint-config-hyoban](https://github.com/hyoban/eslint-config-hyoban) 一个自认为还不错的 eslint 预设，主要包含 react 和 ts 相关的插件和规则。如果你在用且有想配置的规则和插件的话，欢迎提 issue 让我来加入。
+- [tailwindcss-classname-highlight](https://github.com/hyoban/tailwindcss-classname-highlight) 高亮你代码文件中会正确生成到 css 的 classname，今年支持了 tailwind v4 beta。
+  我也抽离出其中的和 tailwind api 交互的部分，发布了 [tailwind-api-utils](https://github.com/hyoban/tailwind-api-utils)。
+- [eslint-config-hyoban](https://github.com/hyoban/eslint-config-hyoban) 一个自认为还不错的 eslint 预设，主要包含 react 和 ts 相关的插件和规则。
+  如果你在用且有想配置的规则和插件的话，欢迎提 issue 让我来加入。
 
 你可以在我的 [GitHub 主页](https://github.com/hyoban) 中查看更多的项目。
 
@@ -141,7 +146,8 @@ https://hyoban.xlog.app/24-years
 
 今年逐渐开始买一些之前没买过的数码装备
 
-> 买了哪些值得一说的东西？还计划买什么？
+> 买了哪些值得一说的东西？
+> 还计划买什么？
 
 - nuphy air 60 v2 第一次用矮轴的键盘，加上它的尺寸和重量，变成了我和 Mac 在外旅行的好帮手
 - AirPods 第四代 第一次用无线降噪耳机，因为旅居发现它能在很多场景发挥关键作用。

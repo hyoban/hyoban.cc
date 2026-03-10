@@ -36,7 +36,7 @@ export default defineConfig({
           })
 
           return new Promise((resolve) => {
-            const promises = Array.from(imageNodes).map(async (node) => {
+            const promises = Array.from(imageNodes, async (node) => {
               const src = node.properties.src as string | undefined
               if (!src || (!src.startsWith('http://') && !src.startsWith('https://'))) {
                 return

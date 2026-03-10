@@ -12,7 +12,7 @@ export default antfu(
       hyoban,
     },
     rules: {
-      'hyoban/markdown-paragraph-wrapping': 'error',
+      'hyoban/md-one-sentence-per-line': 'error',
     },
   },
 )
