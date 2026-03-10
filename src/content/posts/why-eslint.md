@@ -23,7 +23,8 @@ pubDate: "2024-05-17T16:14:11.183Z"
 
 尽管 Prettier 的哲学是用户不需要考虑格式化的配置选项，让你把代码放心的交给它来变得漂亮。
 但实际上现有的可配置选项可能是 Prettier 能成为现在 js 社区最流行的格式化工具的原因之一。
-想象一下，你会使用一个不能控制是用 `tab` 还是 `space` 来缩进的格式化工具吗？考虑到 [`tab` 和 `space` 之争](https://github.com/prettier/prettier/issues/7475) 基本上是五五开的情况，如果没有这个选项的话，Prettier 至少会少一半的用户？
+想象一下，你会使用一个不能控制是用 `tab` 还是 `space` 来缩进的格式化工具吗？
+考虑到 [`tab` 和 `space` 之争](https://github.com/prettier/prettier/issues/7475) 基本上是五五开的情况，如果没有这个选项的话，Prettier 至少会少一半的用户？
 
 此外，对于相对没那么多争论的选项，Prettier 的固执己见可能会给用户带来一些困扰。
 例如 Prettier 会强制在文件末尾保留一行空行，这是 [不可配置的](https://github.com/prettier/prettier/issues/6360)。
