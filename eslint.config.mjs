@@ -5,6 +5,7 @@ export default antfu(
   {
     astro: true,
     formatters: true,
+    ignores: ['**/.obsidian/**'],
   },
   {
     files: ['**/*.md'],
