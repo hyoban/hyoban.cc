@@ -46,7 +46,7 @@ description: 我在用的东西
 |  OpenAI ChatGPT Plus  |  $200/月   |     每月5日     |     codex 好耶      |    是    |    B     |
 |    GitHub Sponsor     |   $15/月   |     每月7日     |      按月赞助       |    是    |    A     |
 |   Cloudflare Worker   |   $5/月    |     每月8日     |       花不完        |    是    |    B     |
-|      Claude Pro       |   $20/月   |    每月21日     |      偶尔用用       |    是    |    B     |
+|    ~~Claude Pro~~     |   $20/月   |    每月21日     |    已经取消订阅     |    是    |    B     |
 |     Google AI Pro     | $19.99/月  |    每月27日     |                     |    是    |    B     |
 |       Surge Mac       |   $69.99   |        -        |      3 Devices      |    否    |    B     |
 |       Surge iOS       |   $49.99   |        -        |      3 devices      |    否    |    B     |
