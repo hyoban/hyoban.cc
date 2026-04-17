@@ -14,7 +14,7 @@ pubDate: "2024-02-15T07:14:39.208Z"
 
 如果你和 [Prettier] 的 `printWidth` 也做过斗争并且不能忍受的话，请看 [Why I don't use Prettier]，可能会喜欢用 ESLint 来格式化代码，并且我们现在有了 [ESLint Stylistic] 这种开箱即用的配置。
 
-要了解更多，请查看 [为什么是 ESLint](https://hyoban.xlog.app/why-eslint)。
+要了解更多，请查看 [为什么是 ESLint](https://hyoban.cc/why-eslint)。
 
 ### pnpm + bunchee + tsx + vitest
 

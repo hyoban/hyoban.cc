@@ -17,9 +17,9 @@ pubDate: "2025-01-01T03:12:15.412Z"
 学习前端，参与开源，远程兼职，找工作，几乎每个时间段都留下了值得记录的痕迹。
 如果你对这些感兴趣，可以阅读这两篇文章。
 
-https://hyoban.xlog.app/work-one-year
+https://hyoban.cc/work-one-year
 
-https://hyoban.xlog.app/24-years
+https://hyoban.cc/24-years
 
 另一方面来说，对于很不擅长、不喜欢科研的我，这也是我最容易遇到烦心事的日子。
 因为学校和导师的事情很难让我产生兴趣，整体环境的氛围又很难和自由扯得上半毛钱关系。
