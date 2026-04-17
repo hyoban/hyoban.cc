@@ -61,7 +61,7 @@ https://github.com/egoist/tailwindcss-icons
 
 ## 秋招
 
-https://hyoban.xlog.app/work-one-year
+https://hyoban.cc/work-one-year
 
 在远程兼职一年后一文中，我介绍了我远程兼职一年来的体验，这里就不再提了。
 写完后的九月份也就刚好到了秋招的时候，本着「不面白不面，面了还能看看自己水平」的想法，我就开始投简历了。
