@@ -1,5 +1,5 @@
 @import 'tailwindcss' source(none);
-@config '../../tailwind.config.ts';
+@plugin '@egoist/tailwindcss-icons';
 @source '../../src';
 
 @media (prefers-color-scheme: dark) {
