@@ -1,3 +1,4 @@
+import { unified } from '@astrojs/markdown-remark'
 import Sitemap from '@astrojs/sitemap'
 import tailwindcss from '@tailwindcss/vite'
 import { inferRemoteSize } from 'astro/assets/utils'
@@ -24,33 +25,35 @@ export default defineConfig({
         dark: 'vitesse-dark',
       },
     },
-    rehypePlugins: [
-      () => {
-        const imageNodes = new Set<any>()
-        return (tree) => {
-          visit(tree, 'element', (node) => {
-            if (node.tagName === 'img') {
-              imageNodes.add(node)
-            }
-          })
-
-          return new Promise((resolve) => {
-            const promises = Array.from(imageNodes, async (node) => {
-              const src = node.properties.src as string | undefined
-              if (!src || (!src.startsWith('http://') && !src.startsWith('https://'))) {
-                return
+    processor: unified({
+      rehypePlugins: [
+        () => {
+          const imageNodes = new Set<any>()
+          return (tree) => {
+            visit(tree, 'element', (node) => {
+              if (node.tagName === 'img') {
+                imageNodes.add(node)
               }
-              const { width, height } = await inferRemoteSize(src)
-              node.properties.width = width
-              node.properties.height = height
             })
 
-            Promise.all(promises).then(() => {
-              resolve()
+            return new Promise((resolve) => {
+              const promises = Array.from(imageNodes, async (node) => {
+                const src = node.properties.src as string | undefined
+                if (!src || (!src.startsWith('http://') && !src.startsWith('https://'))) {
+                  return
+                }
+                const { width, height } = await inferRemoteSize(src)
+                node.properties.width = width
+                node.properties.height = height
+              })
+
+              Promise.all(promises).then(() => {
+                resolve()
+              })
             })
-          })
-        }
-      },
-    ],
+          }
+        },
+      ],
+    }),
   },
 })
