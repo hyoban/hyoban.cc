@@ -1,8 +1,7 @@
 ---
 import { SITE_DESCRIPTION, SITE_TITLE } from '@/consts'
 import Layout from '@/layouts/Layout.astro'
-import { getSortedPosts } from '@/utils'
-import { format } from 'date-fns'
+import { formatPostListDate, formatPostYear, getSortedPosts } from '@/utils'
 
 const posts = await getSortedPosts()
 const introLinkClass = 'text-tx underline hover:text-cy'
@@ -10,7 +9,7 @@ type Post = (typeof posts)[number]
 const postsByYear: Array<{ year: string; posts: Post[] }> = []
 
 for (const post of posts) {
-  const year = format(post.data.pubDate, 'yyyy')
+  const year = formatPostYear(post.data.pubDate)
   const lastGroup = postsByYear[postsByYear.length - 1]
 
   if (lastGroup?.year === year) {
@@ -48,7 +47,7 @@ for (const post of posts) {
                   <a href={`/${post.data.link}`} class="underline hover:text-cy">
                     {post.data.title}
                   </a>
-                  <span class="text-nowrap text-tx-2 font-mono">{format(post.data.pubDate, 'MM/dd')}</span>
+                  <span class="text-nowrap text-tx-2 font-mono">{formatPostListDate(post.data.pubDate)}</span>
                 </li>
               ))}
             </ul>

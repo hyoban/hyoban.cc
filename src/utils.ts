@@ -5,7 +5,28 @@ export type PostEntry = CollectionEntry<'posts'>
 export type PageEntry = CollectionEntry<'pages'>
 export type MarkdownEntry = PostEntry | PageEntry
 
+const postDateFormatter = new Intl.DateTimeFormat('en-CA', {
+  day: '2-digit',
+  month: '2-digit',
+  timeZone: 'Asia/Shanghai',
+  year: 'numeric',
+})
+
 const pageModules = import.meta.glob('./content/pages/**/*.md')
+
+export function formatPostYear(date: Date) {
+  return getPostDateParts(date).year
+}
+
+export function formatPostListDate(date: Date) {
+  const { day, month } = getPostDateParts(date)
+  return `${month}/${day}`
+}
+
+export function formatPostFullDate(date: Date) {
+  const { day, month, year } = getPostDateParts(date)
+  return `${year} 年 ${Number.parseInt(month, 10)} 月 ${Number.parseInt(day, 10)} 日`
+}
 
 export async function getSortedPosts() {
   return (await getCollection('posts')).sort(
@@ -41,4 +62,18 @@ export async function getMarkdownEntries() {
   }
 
   return entries
+}
+
+function getPostDateParts(date: Date) {
+  const parts = Object.fromEntries(
+    postDateFormatter
+      .formatToParts(date)
+      .map(part => [part.type, part.value]),
+  )
+
+  return {
+    day: parts.day,
+    month: parts.month,
+    year: parts.year,
+  }
 }
