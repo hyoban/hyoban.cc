@@ -167,16 +167,6 @@ export default function UserInfo() {
 }
 ```
 
-好了，来看看现在的效果。
-
-:::div{style="max-width: 400px"}
-
-<video>
-  <source src="https://ipfs.crossbell.io/ipfs/QmfLkDiQ74q1V9wXUBkHXCZGNU4dPLSB9dabXurEearWSa" type="video/mp4" />
-</video>
-
-:::
-
 啊哦，看起来 Follow 的网页端还需要做点移动端适配，我又可以水 PR 了。
 
 ## 主题系统
@@ -328,16 +318,6 @@ https://github.com/drizzle-team/drizzle-orm/issues/1602
 
 OK，这样我们只要在请求数据的时候正确地设置 key，就能高效地获取最新的数据了。
 配合下拉刷新和定时同步数据，我们的 APP 就能够实现基本的 Local First 了。
-
-最后一起看看它现在的样子！
-
-:::div{style="max-width: 400px"}
-
-<video>
-  <source src="https://ipfs.crossbell.io/ipfs/QmQcyByJdtfqeD9jb5UjmNPNBURjWhGKxoWkZpA8wxivoW" type="video/mp4" />
-</video>
-
-:::
 
 ## 分享你写的 iOS App
 
