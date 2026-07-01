@@ -1,6 +1,7 @@
 ---
 title: 为什么是 ESLint
 link: why-eslint
+description: 说明我选择 ESLint 作为代码检查和格式化工具的原因，包括可配置性、扩展性和生态体验。
 pubDate: "2024-05-17T16:14:11.183Z"
 ---
 

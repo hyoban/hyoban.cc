@@ -1,6 +1,7 @@
 ---
 title: Folo 中的状态管理 - 数据库篇
 link: folo-database
+description: 记录 Folo 桌面端和移动端状态管理中的数据库选型、SQLite WASM 运行模式和多端整合实践。
 pubDate: "2025-06-17T10:50:53.264Z"
 ---
 
