@@ -1,0 +1,24 @@
+~version: "2.1"
+
+# Single-segment article pages only. Static pages such as /use do not include
+# data-iv-published, so they are excluded by the required marker below.
+?path: /[^/.]+/?
+!exists: //*[@data-iv-title]
+!exists: //*[@data-iv-body]
+!exists: //*[@data-iv-published]
+
+title: //*[@data-iv-title]
+body: //*[@data-iv-body]
+description: //meta[@name="description"]/@content
+published_date: //*[@data-iv-published]/@data-iv-published
+site_name: "Hyoban"
+author: "Hyoban"
+author_url: "https://hyoban.cc"
+
+# Telegram Instant View supports images, videos, audio, and selected iframe
+# embeds. If a future article includes a Telegram widget rendered through
+# srcdoc, do not generate IV for that page because the embed cannot be
+# represented without losing content.
+@unsupported: $body//iframe[@srcdoc]
+
+cover: ($body//img)[1]
