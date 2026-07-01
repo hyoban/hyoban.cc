@@ -2,12 +2,14 @@ import { glob } from 'astro/loaders'
 import { z } from 'astro/zod'
 import { defineCollection } from 'astro:content'
 
+const description = z.string().trim().min(1)
+
 const posts = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/posts' }),
   schema: z.object({
     title: z.string(),
     link: z.string(),
-    description: z.string().optional(),
+    description,
     pubDate: z.coerce.date(),
   }),
 })
@@ -17,7 +19,7 @@ const pages = defineCollection({
   schema: z.object({
     title: z.string(),
     link: z.string(),
-    description: z.string().optional(),
+    description,
   }),
 })
 
