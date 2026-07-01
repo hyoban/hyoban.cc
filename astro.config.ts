@@ -3,6 +3,7 @@ import Sitemap from '@astrojs/sitemap'
 import tailwindcss from '@tailwindcss/vite'
 import { defineConfig, passthroughImageService } from 'astro/config'
 import { SITE_URL } from './src/consts'
+import { remarkInstantViewImages } from './src/instant-view-images.mjs'
 import { remarkTelegramWidgets } from './src/telegram-widget.mjs'
 
 // https://astro.build/config
@@ -24,6 +25,7 @@ export default defineConfig({
     processor: unified({
       remarkPlugins: [
         remarkTelegramWidgets,
+        remarkInstantViewImages,
       ],
     }),
     shikiConfig: {
