@@ -1,11 +1,11 @@
 ---
-import Footer from '@/components/footer.astro'
 import { SITE_DESCRIPTION, SITE_TITLE } from '@/consts'
 import Layout from '@/layouts/Layout.astro'
 import { getSortedPosts } from '@/utils'
 import { format } from 'date-fns'
 
 const posts = await getSortedPosts()
+const introLinkClass = 'text-tx underline hover:text-cy'
 type Post = (typeof posts)[number]
 const postsByYear: Array<{ year: string; posts: Post[] }> = []
 
@@ -26,6 +26,16 @@ for (const post of posts) {
     <section class="mb-10 space-y-3">
       <h1>{SITE_TITLE}</h1>
       <p class="text-tx-2">{SITE_DESCRIPTION}</p>
+      <p class="text-tx-2 leading-relaxed">
+        我会在这里写一些关于工作、代码和生活的记录。你也可以在{' '}
+        <a class={introLinkClass} href="https://x.com/hyoban_cc" target="_blank" rel="noopener noreferrer">X</a>、
+        <a class={introLinkClass} href="https://bsky.app/profile/hyoban.cc" target="_blank" rel="noopener noreferrer">Bluesky</a>
+        {' '}和 <a class={introLinkClass} href="https://t.me/hyoban" target="_blank" rel="noopener noreferrer">Telegram</a> 找到我；旅行相关的内容会放在{' '}
+        <a class={introLinkClass} href="https://t.me/s/hyoban_travel" target="_blank" rel="noopener noreferrer">Telegram 旅行频道</a>
+        {' '}和 <a class={introLinkClass} href="https://photos.hyoban.cc/" target="_blank" rel="noopener noreferrer">Photos</a>；代码在{' '}
+        <a class={introLinkClass} href="https://github.com/hyoban" target="_blank" rel="noopener noreferrer">GitHub</a>。你也可以订阅{' '}
+        <a class={introLinkClass} href="/rss.xml">RSS</a>、查看 <a class={introLinkClass} href="/llms.txt">LLMs</a> 或我的 <a class={introLinkClass} href="/use">Use</a> 页面。
+      </p>
     </section>
     <div class="flex flex-col gap-8">
       {
@@ -47,5 +57,4 @@ for (const post of posts) {
       }
     </div>
   </main>
-  <Footer />
 </Layout>
