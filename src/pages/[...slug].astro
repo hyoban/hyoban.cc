@@ -1,8 +1,7 @@
 ---
 import Layout from '@/layouts/Layout.astro'
-import { getMarkdownEntries, type PostEntry } from '@/utils'
+import { formatPostFullDate, getMarkdownEntries, type PostEntry } from '@/utils'
 import { render } from 'astro:content'
-import { format } from 'date-fns'
 
 export async function getStaticPaths() {
   const entries = await getMarkdownEntries()
@@ -25,9 +24,9 @@ const { Content } = await render(entry)
         {entry.data.title}
       </h1>
       <p class="text-tx-2 flex gap-3">
-        {post && format(post.data.pubDate, 'MMMM dd, yyyy')}
-        <a href={`/${entry.data.link}.md`} class="underline">Source</a>
-        <a href="/" class="underline">Back</a>
+        {post && formatPostFullDate(post.data.pubDate)}
+        <a href={`/${entry.data.link}.md`} class="underline">源文件</a>
+        <a href="/" class="underline">返回</a>
       </p>
     </section>
     <article class="prose">
