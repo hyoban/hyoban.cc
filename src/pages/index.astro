@@ -4,7 +4,7 @@ import Layout from '@/layouts/Layout.astro'
 import { formatPostListDate, formatPostYear, getSortedPosts } from '@/utils'
 
 const posts = await getSortedPosts()
-const introLinkClass = 'text-tx underline hover:text-cy'
+const introLinkClass = 'text-tx underline'
 type Post = (typeof posts)[number]
 const postsByYear: Array<{ year: string; posts: Post[] }> = []
 
@@ -44,7 +44,7 @@ for (const post of posts) {
             <ul class="mt-3 flex flex-col gap-3">
               {group.posts.map((post) => (
                 <li class="flex justify-between items-center gap-3">
-                  <a href={`/${post.data.link}`} class="underline hover:text-cy">
+                  <a href={`/${post.data.link}`} class="underline">
                     {post.data.title}
                   </a>
                   <span class="text-nowrap text-tx-2 font-mono">{formatPostListDate(post.data.pubDate)}</span>
