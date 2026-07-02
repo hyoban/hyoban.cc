@@ -11,7 +11,7 @@ interface Props {
 const { title, description } = Astro.props
 ---
 
-<html class="h-full" lang="zh-Hans">
+<html lang="zh-Hans">
   <head>
     <!-- Global Metadata -->
     <meta charset="utf-8" />
@@ -26,7 +26,7 @@ const { title, description } = Astro.props
     <meta name="title" content={title} />
     <meta name="description" content={description} />
   </head>
-  <body class="flex flex-col bg-bg text-tx scheme-light dark:scheme-dark px-4 py-8">
+  <body class="bg-bg px-4 py-8 text-tx">
     <slot />
   </body>
 </html>
