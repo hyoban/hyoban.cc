@@ -17,10 +17,17 @@ const post = entry.collection === 'posts' ? (entry as PostEntry) : null
 const publishedTimestamp = post
   ? Math.floor(post.data.pubDate.valueOf() / 1000)
   : null
+const article = post
+  ? {
+      author: 'Hyoban',
+      publishedTime: post.data.pubDate.toISOString(),
+      telegramChannel: '@hyoban',
+    }
+  : undefined
 const { Content } = await render(entry)
 ---
 
-<Layout title={entry.data.title} description={entry.data.description}>
+<Layout title={entry.data.title} description={entry.data.description} article={article}>
   <main class="mx-auto max-w-[65ch] space-y-8">
     <section class="space-y-3">
       <h1 data-iv-title>
@@ -36,8 +43,10 @@ const { Content } = await render(entry)
         <a href="/" class="underline">返回</a>
       </p>
     </section>
-    <article class="prose" data-iv-body>
-      <Content />
-    </article>
+    <div class="article">
+      <article class="prose article__content" data-iv-body>
+        <Content />
+      </article>
+    </div>
   </main>
 </Layout>
