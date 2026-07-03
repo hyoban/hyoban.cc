@@ -186,22 +186,22 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
                           href={work.bilibiliUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          class="block w-full self-start overflow-hidden rounded border border-border bg-inline sm:col-start-2 sm:row-span-2 sm:row-start-1"
+                          class="block w-full self-start sm:col-start-2 sm:row-span-2 sm:row-start-1"
                         >
                           <img
                             src={work.posterUrl}
                             alt={`${work.title} poster`}
-                            class="aspect-[2/3] w-full object-cover"
+                            class="w-full border border-border"
                             loading="lazy"
                           />
                         </a>
                       )
                     : work.posterUrl && (
-                        <div class="block w-full self-start overflow-hidden rounded border border-border bg-inline sm:col-start-2 sm:row-span-2 sm:row-start-1">
+                        <div class="block w-full self-start sm:col-start-2 sm:row-span-2 sm:row-start-1">
                           <img
                             src={work.posterUrl}
                             alt={`${work.title} poster`}
-                            class="aspect-[2/3] w-full object-cover"
+                            class="w-full border border-border"
                             loading="lazy"
                           />
                         </div>

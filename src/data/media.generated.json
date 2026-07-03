@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-03T09:18:20.065Z",
+  "generatedAt": "2026-07-03T09:33:01.759Z",
   "language": "zh-CN",
   "provider": "TMDB",
   "items": [
@@ -880,6 +880,636 @@
               "credit_id": "69f625a78e3ee2fe9ca1cb59",
               "department": "Writing",
               "job": "Original Concept"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "tv",
+      "tmdbId": 1668,
+      "data": {
+        "adult": false,
+        "backdrop_path": "/l0qVZIpXtIo7km9u5Yqh0nKPOr5.jpg",
+        "created_by": [
+          {
+            "id": 163461,
+            "credit_id": "525710bf19c295731c03280b",
+            "name": "玛尔塔·考夫曼",
+            "original_name": "Marta Kauffman",
+            "gender": 1,
+            "profile_path": "/AsX4ZOoQP5oQVLiA51zdRiTNKTm.jpg"
+          },
+          {
+            "id": 1216352,
+            "credit_id": "525710bf19c295731c032811",
+            "name": "大卫·克拉尼",
+            "original_name": "David Crane",
+            "gender": 2,
+            "profile_path": "/1NYo5ZYCSqoxQ5sqXLMDm3cqvKp.jpg"
+          }
+        ],
+        "episode_run_time": [],
+        "first_air_date": "1994-09-22",
+        "genres": [
+          {
+            "id": 35,
+            "name": "喜剧"
+          }
+        ],
+        "homepage": "",
+        "id": 1668,
+        "in_production": false,
+        "languages": [
+          "en"
+        ],
+        "last_air_date": "2004-05-06",
+        "last_episode_to_air": {
+          "id": 87632,
+          "name": "大结局",
+          "overview": "瑞秋和罗斯过夜后，罗斯决定和瑞秋厮守，不料瑞秋却将这一夜看作最好的告别方式。\n\n莫妮卡和钱德在产房陪伴埃里卡，埃里卡产下双胞胎。乔伊买回新的小鸡小鸭恭贺莫妮卡和钱德乔迁之喜。阿甘向瑞秋表白。菲比陪罗斯飞车赶往机场向瑞秋表白，却搞错了机场。乔伊的小鸡小鸭钻到足球桌里，不劈开桌子就就不出来。菲比和罗斯终于追上瑞秋，但覆水难收，罗斯对瑞秋的倾诉终于没能将她挽留。罗斯失魂落魄的回家，几分钟后……Friends落幕",
+          "vote_average": 8.9,
+          "vote_count": 68,
+          "air_date": "2004-05-06",
+          "episode_number": 17,
+          "episode_type": "finale",
+          "production_code": "176266 / 176267",
+          "runtime": 48,
+          "season_number": 10,
+          "show_id": 1668,
+          "still_path": "/7XmwmXkJtObpt6ABPENanrJHlg9.jpg"
+        },
+        "name": "老友记",
+        "next_episode_to_air": null,
+        "networks": [
+          {
+            "id": 6,
+            "logo_path": "/cm111bsDVlYaC1foL0itvEI4yLG.png",
+            "name": "NBC",
+            "origin_country": "US"
+          }
+        ],
+        "number_of_episodes": 228,
+        "number_of_seasons": 10,
+        "origin_country": [
+          "US"
+        ],
+        "original_language": "en",
+        "original_name": "Friends",
+        "overview": "莫妮卡、钱德勒、瑞秋、菲比、乔伊和罗斯是彼此最好的朋友，一起走过十年岁月的点点滴滴。虽然老友们各有各的性格特点，也会有矛盾和争执，但对于彼此，他们永远\"be there for you\"。故事开始在Central Perk咖啡馆里，婚礼上落荒而逃的瑞秋闯进来寻找老同学莫妮卡。莫妮卡的哥哥刚刚离婚，而他从小暗恋的人正是这个落跑新娘瑞秋。瑞秋在莫妮卡家住了下来，决定真正的步入社会，于是在其他老友的帮助下她上路了，从二十多岁初入社会，到三十多岁成家立业，他们一走就是十年。十年间风风雨雨，在嬉笑怒骂中，在离别团聚中，他们向我们讲述着友情、爱情还有生活。",
+        "popularity": 119.1856,
+        "poster_path": "/3SS00ajNciI1NTzL6NpW5GxlAU4.jpg",
+        "production_companies": [
+          {
+            "id": 1957,
+            "logo_path": "/pJJw98MtNFC9cHn3o15G7vaUnnX.png",
+            "name": "Warner Bros. Television",
+            "origin_country": "US"
+          },
+          {
+            "id": 31810,
+            "logo_path": "/3oyBCnFO3tIRmny3yzYQpF5n2cS.png",
+            "name": "Bright/Kauffman/Crane Productions",
+            "origin_country": "US"
+          }
+        ],
+        "production_countries": [
+          {
+            "iso_3166_1": "US",
+            "name": "United States of America"
+          }
+        ],
+        "seasons": [
+          {
+            "air_date": "2001-02-15",
+            "episode_count": 39,
+            "id": 4583,
+            "name": "特别篇",
+            "overview": "",
+            "poster_path": "/xaEj0Vw0LOmp7kBeX2vmYPb5sTg.jpg",
+            "season_number": 0,
+            "vote_average": 0
+          },
+          {
+            "air_date": "1994-09-22",
+            "episode_count": 24,
+            "id": 4573,
+            "name": "第 1 季",
+            "overview": "瑞秋、莫妮卡、菲比、钱德勒、乔伊和罗斯悉数登场。罗斯刚刚因为他的同性恋妻子卡萝（Carol）而离婚。此时莫妮卡、菲比和罗斯都单独居住，只有钱德勒和乔伊住在一个公寓里。这时莫妮卡的老朋友瑞秋穿着婚纱闯进了Central Perk咖啡馆，她刚刚逃脱了自己和未婚夫贝瑞（Barry）的婚礼，并搬来和莫妮卡一起住。很快瑞秋成为Central Perk的一名服务员，开始学着告别从前优裕的生活独立养活自己。此时罗斯的前妻已经怀有罗斯的孩子，后来她将这个男孩生下来，取名为班（Ben），由卡萝和她的同性恋女友苏珊（Susan）共同抚养。",
+            "poster_path": "/odCW88Cq5hAF0ZFVOkeJmeQv1nV.jpg",
+            "season_number": 1,
+            "vote_average": 7.9
+          },
+          {
+            "air_date": "1995-09-21",
+            "episode_count": 24,
+            "id": 4574,
+            "name": "第 2 季",
+            "overview": "罗斯此时并不知道瑞秋已经对他有了感觉，他已经和在中国重逢的老同学，同是古生物学家的茱莉（Julie）开始一段了恋情。瑞秋对此很不开心，于是尝试破坏这一对恋人。\n\n很快瑞秋也与另一个男人约会了。但一次在瑞秋大醉时，在罗斯的电话留言机上说“我已经忘掉你了！”（I am over you），并被罗斯发现。之后罗斯来到Central Perk，生气地告诉瑞秋这本不应该告诉他，但罗斯离开之后咖啡馆又折回，这次他与瑞秋拥吻了。之后罗斯在瑞秋和茱莉两人中无所适从，于是钱德勒建议用一张单子列出两人的优缺点之后决定。但罗斯知道自己真正爱的还是瑞秋，于是很快与茱莉分手。不幸的是瑞秋发现了那张列有自己优缺点的单子，异常生气的她拒绝了罗斯。\n\n后来，朋友们一起观看了一卷瑞秋和莫妮卡准备学校舞会的录像带。瑞秋看到这里被罗斯感动了，决定和罗斯重新开始。\n\n乔伊由于在肥皂剧“医生的遭遇”（Days of Our Lives）扮演雷莫瑞（Ramorey）医生大获成功，已经赚够了钱可以住进自己的公寓了。菲比此时找到了他同父异母的弟弟小弗兰克（Frank）。\n\n在这一段时间，莫妮卡与父亲的老朋友理查德（Richard）交往。但由于后来理查德告诉莫妮卡他以后不想再要孩子后，一心想要孩子的莫妮卡忍痛与其分手。",
+            "poster_path": "/kC9VHoMh1KkoAYfsY3QlHpZRxDy.jpg",
+            "season_number": 2,
+            "vote_average": 8.1
+          },
+          {
+            "air_date": "1996-09-16",
+            "episode_count": 25,
+            "id": 4575,
+            "name": "第 3 季",
+            "overview": "瑞秋把在Central Perk的工作辞掉，开始尝试在时尚界找一份工作。后来她遇到了马克（Mark），马克在Bloomingdate's为她找了一份工作，但罗斯始终确信马克对瑞秋有企图，因此变得异常敏感和嫉妒。这种紧张关系在他们的周年纪念日是达到了顶点，瑞秋由于工作无法和罗斯共进晚餐，罗斯就带了食物到瑞秋办公室，但弄得一团糟直到瑞秋命令他回到了家。两人在回家后的争吵最终导致两人赌气分手。\n\n当晚，罗斯和瑞秋都试图解决他们之间的分歧。罗斯在和乔伊、钱德勒在外面喝酒的时候，罗斯打电话给瑞秋，碰巧马克来到家里探望瑞秋，罗斯气愤地挂断了电话。在绝望的时候他和一名叫柯萝伊（Chloe）的女子度过了一夜，当第二天他和瑞秋试图重归于好时，瑞秋却知道了罗斯的一夜情，一段激烈争吵和绝望的哀求之后，他们最终分手了。\n\n但是，在这一季结尾，看到罗斯开始和邦妮（Bonnie）约会时，瑞秋感到非常伤心。最后一集，大家来到海滩度假，菲比遇到了一个同名的女人，于是菲比向她打听自己的家事。在海滩小屋里，邦妮出人意料地出现了，瑞秋很不开心。于是由于嫉妒就劝说邦妮像以前一样剃光头。当罗斯和瑞秋为此争吵时，他们发现彼此仍然爱着对方。本季最后，罗斯来到走廊，面对着邦妮和瑞秋两个卧室的门，犹豫着。",
+            "poster_path": "/n9u4pslqb6tpiLc8soldL5IbAyG.jpg",
+            "season_number": 3,
+            "vote_average": 8.2
+          },
+          {
+            "air_date": "1997-09-25",
+            "episode_count": 23,
+            "id": 4576,
+            "name": "第 4 季",
+            "overview": "罗斯决定与瑞秋复合，与邦妮分手。于是瑞秋写了一封长信表达自己的感受，信中提出要罗斯承担过去这一段错误的一切责任，但罗斯无法接受，于是很快又分手了。\n\n与此同时，当菲比不断询问老菲比时，才知道老菲比其实是菲比的生母。回到纽约之后，菲比同意成为弟弟小法兰克和弟媳爱丽斯的受孕母亲。于是她很快接受了人工受孕并一下子怀了三胞胎。\n\n钱德勒和乔伊，莫妮卡和瑞秋这两对在一次谁比较了解谁的争吵中决定要进行一次比赛。他们决定如果钱德勒和乔伊输，他们必须放弃自己养的鸡和鸭，另一对输了则要放弃她们的公寓。最后，钱德勒和乔伊赢了，于是他们和瑞秋、莫妮卡交换了公寓。在住了一段日子之后，瑞秋和莫妮卡决定拿篮球票交换回自己的公寓，但随后的比赛钱德勒他们又赢了。但当他们从橄榄球场回来时，却发现莫妮卡他们已经快速换回了自己的公寓，钱德勒和乔伊觉得很不公平，当莫妮卡和瑞秋同意在两个男生面前亲吻才解决了问题。\n\n此时罗斯遇到了一个叫艾米丽（Emily）的英国女孩，并决定和她交往。当艾米丽要回英国时，两人恋恋不舍并最终决定结婚，最后一集，菲比由于怀孕，瑞秋由于旧情问题，两人留在纽约。其他人都赶赴伦敦参加罗斯的婚礼。在婚宴上，莫妮卡触景生情很伤感，钱德勒于是安慰她，后来两人竟睡在了一起。当瑞秋意识到自己仍然爱着罗斯的时候决定飞赴伦敦把这一切告诉罗斯。但当她到达时，看到幸福的罗斯和艾米丽，她决定自己不应该扰乱了这个婚礼。婚礼照常进行，但最后在婚礼上神父面前，罗斯在做婚礼宣誓的时候，却将艾米丽的名字说成了瑞秋。",
+            "poster_path": "/3WdH3FNMXgp3Qlx21T7kwKS8Mtc.jpg",
+            "season_number": 4,
+            "vote_average": 8.3
+          },
+          {
+            "air_date": "1998-09-24",
+            "episode_count": 23,
+            "id": 4577,
+            "name": "第 5 季",
+            "overview": "罗斯和艾米丽还是完婚了，但由于不能容忍生活里还有瑞秋，最终两人离婚了。罗斯搬出公寓，找到了跟大家很近新住处，但因为得罪上司而丢掉了博物馆的工作。菲比生下一个男孩两个女孩，希望留下一个孩子，但无奈弟弟不同意。一夜情后，钱德勒和莫妮卡决定秘密维持关系。直至被大家知道，两人的恋情才公之于众。乔伊获得一个做男主角的机会，但却因为资金问题被迫停止了。众人去拉斯维加斯看望乔伊，在飞机上罗斯和瑞秋再次重逢。钱德勒和莫妮卡决定在拉斯维加斯的小教堂结婚，刚到就遇到了酩酊大醉刚糊涂结了婚的罗斯和瑞秋。",
+            "poster_path": "/aEwLXWbo6gV1TNIv9veu4rRwsPZ.jpg",
+            "season_number": 5,
+            "vote_average": 8.3
+          },
+          {
+            "air_date": "1999-09-23",
+            "episode_count": 23,
+            "id": 4578,
+            "name": "第 6 季",
+            "overview": "在发现两人已经结婚之后，两人决定到法院取消夫妻关系，但罗斯担心自己可能要离婚三次之多，所以谎称自己已经取消了。瑞秋后来发现之后逼着罗斯去取消，但由于瑞秋在取消申请中填写了关于罗斯的羞辱性语句，最后导致两人只能通过离婚解决问题。\n\n罗斯在纽约大学找到了一份教古生物学的工作。钱德勒和莫妮卡决定暂时不结婚，而是先同居。钱德勒搬到了莫妮卡的住处，瑞秋跟菲比住在了一起。后来，一场起火事件使瑞秋搬到了莫妮卡的住处，菲比以为自己引起了火灾，转而在条件较差的乔伊那里住了下来。后来发现火灾原来是由于瑞秋的直发器引起的，所以两人调换了住处。瑞秋发现跟乔伊主更有趣而与此同时，菲比正为莫妮卡的洁癖而倍受折磨。\n\n在这一季结尾，钱德勒决定向莫妮卡求婚。最后一集，由于在求婚的一刻之前莫妮卡的前男友理查德出现在了餐厅里，钱德勒只好临时放弃。随后理查德见到莫妮卡告诉他仍然爱着她，与此同时钱德勒为了给莫妮卡一个惊喜就假装自己对婚姻不感兴趣，这使得莫妮卡一度想回到理查德身边，但当乔伊把一切告诉了她，钱德勒正式求婚时，莫妮卡哭着答应了钱德勒。",
+            "poster_path": "/7EU6bV6d8j1Xbc1F8QoNkOZrpsi.jpg",
+            "season_number": 6,
+            "vote_average": 8.1
+          },
+          {
+            "air_date": "2000-10-12",
+            "episode_count": 23,
+            "id": 4579,
+            "name": "第 7 季",
+            "overview": "瑞秋和菲比决定把莫妮卡怀孕的消息保密。乔伊在拍片现场设法脱身，却难以如愿。虽然他只有一场戏，却因为大明星喝醉而迟迟拍不完。罗斯和菲比到钱德勒的办公室逮到他，逐步劝他回去结婚。瑞秋负责拦住莫妮卡，万般无奈中她几乎要讲出钱德勒逃婚的真相，幸好罗斯和菲比及时将钱德勒带回。乔伊仍未赶到，瑞秋抓了个希腊东正教的神父来充数。钱德勒仍然犹豫不决，直到他无意听到菲比提起莫妮卡怀孕的事，他才终于肯面对现实。乔伊为准时参加婚礼，不得已绑架了大明星，在最后一秒，他来到了婚礼现场。钱德勒对莫妮卡说他已经知道有孩子的事了；莫妮卡一头雾水。大伙不知道的是，瑞秋才是怀孕的人。",
+            "poster_path": "/yvUZVChjOnqCjB9rjdEqEmpDdnQ.jpg",
+            "season_number": 7,
+            "vote_average": 8.1
+          },
+          {
+            "air_date": "2001-09-27",
+            "episode_count": 23,
+            "id": 4580,
+            "name": "第 8 季",
+            "overview": "瑞秋证实自己怀孕了，第二集中大家发现罗斯其实是孩子的父亲，事情就发生在钱德勒和莫妮卡婚礼前的一个月。瑞秋和乔伊继续住在一起，这时乔伊忽然对瑞秋产生了感觉。当罗斯觉得自己在丧失了很多父亲的感觉时，乔伊只好建议瑞秋搬到罗斯那里住。后来乔伊表达了自己对瑞秋的感觉，但瑞秋婉拒了。最后一集，瑞秋给自己的女儿取名叫艾玛（Emma）。尽管艾玛这个名字是莫妮卡从小就计划好了的，准备用在自己孩子身上的。",
+            "poster_path": "/a1VSZKR2fAgMhc4FQZPMl0NxjMA.jpg",
+            "season_number": 8,
+            "vote_average": 8.3
+          },
+          {
+            "air_date": "2002-09-26",
+            "episode_count": 23,
+            "id": 4581,
+            "name": "第 9 季",
+            "overview": "罗斯、瑞秋和艾玛继续住在一起，直到一天他们由于当时两人的奇怪的关系争吵起来——两人住在一起，有孩子，但却不处于恋爱关系。于是瑞秋决定领着艾玛搬回到乔伊那里。钱德勒的公司把他调职到俄克拉荷马州的塔尔萨，商量后。他决定独自前往塔尔萨。在圣诞夜，一名女职员想在办公室与钱德勒调戏，结果钱德勒辞了职，随后投身广告界。\n\n钱德勒和莫妮卡屡次试图要一个孩子，但总是失败，因此他们来到医院检查，发现两人都有生理问题不能够生孩子，于是两人决定领养。菲比开始跟麦克（Mike）约会。后来两人决定开始同居，麦克告诉菲比由于自己之前失败的婚姻，他不打算在结婚了。而菲比却想结婚，因此两人分手了。这一季后来，瑞秋也对乔伊产生了感觉。\n\n最后一集，一帮人决定去巴巴多斯岛，跟要到那里作演讲的罗斯一起度假。菲比带着自己的男朋友大卫（David）（第一季中到明斯克工作的科学家），乔伊带着自己的女友Charlie（最初是和罗斯约会的，但后来爱上了乔伊）。莫妮卡知道了David计划向菲比求婚，但莫妮卡深知菲比仍然爱着麦克，所以莫妮卡打电话给麦克让他赶快过来。麦克最初并不想介入，但后来他还是来到了巴巴多斯告诉菲比他仍然爱着她并请求嫁给他。菲比虽然拒绝了求婚，但答应与麦克继续关系，同时婉拒了大卫。\n\n乔伊和Charlie由于两人没有共同点最终分手，很快乔伊得知瑞秋对自己有好感，起初他并不决定做出任何行动。与此同时，Charlie认定自己仍然爱着罗斯，乔伊看到了罗斯和Charlie两人的热吻，于是改变了主意来到了瑞秋房间亲吻起来，该季结束。",
+            "poster_path": "/1IvIdN4I5jJ0bwC3BkmDCy4pQ9j.jpg",
+            "season_number": 9,
+            "vote_average": 8.1
+          },
+          {
+            "air_date": "2003-09-25",
+            "episode_count": 17,
+            "id": 4582,
+            "name": "第 10 季",
+            "overview": "乔伊和瑞秋的恋情只维持了三集，当他们发现他们之间的情感一直是纯洁的友情，他们根本不适应身体上的交往，于是他们决定还是只做朋友。剧情继续，麦克决定再次向菲比求婚，并于稍后两人举行了婚礼。\n\n钱德勒和莫妮卡向Erica申请领养她的孩子并决定从现在的公寓搬到郊外去住。最后一集，Erica生了一对龙凤胎，Jack和Erica。瑞秋到Gucci应聘工作，但拉夫劳伦（Ralph Lauren）的老板也在场，最后她因此丢掉了工作。当她离开公司时，碰到了马克（在第三季出现过），马克介绍了她新的工作，但地点在巴黎。朋友们为瑞秋举行了告别派对，瑞秋伤感的轮流跟朋友们告别，但除了罗斯。罗斯因此很沮丧，直到瑞秋告诉他她不向他告别是因为太难了。两人随后睡在了一起。\n\n最后一集，罗斯意识到自己仍然爱着瑞秋，并赶到机场告诉了她，但瑞秋婉拒了。罗斯沮丧地回到公寓，但瑞秋下了飞机回到了公寓，于是两人拥吻了。结尾，所有人都留下自己的一把钥匙离开了钱德勒和莫妮卡的旧公寓，然后一起喝咖啡。临走时钱德勒说了一句讽刺意味的幽默：“到哪里去呢？”（Where?）。",
+            "poster_path": "/67ETB6XIqYc5vZkyAjN8XINOX5i.jpg",
+            "season_number": 10,
+            "vote_average": 8.4
+          }
+        ],
+        "softcore": false,
+        "spoken_languages": [
+          {
+            "english_name": "English",
+            "iso_639_1": "en",
+            "name": "English"
+          }
+        ],
+        "status": "Ended",
+        "tagline": "",
+        "type": "Scripted",
+        "vote_average": 8.4,
+        "vote_count": 9170,
+        "credits": {
+          "cast": [
+            {
+              "adult": false,
+              "gender": 1,
+              "id": 4491,
+              "known_for_department": "Acting",
+              "name": "詹妮弗·安妮斯顿",
+              "original_name": "Jennifer Aniston",
+              "popularity": 4.8806,
+              "profile_path": "/qPXG41rYdUGldZhMhuZFvmpZKRp.jpg",
+              "character": "Rachel Green",
+              "credit_id": "525710bd19c295731c03242d",
+              "order": 0
+            },
+            {
+              "adult": false,
+              "gender": 1,
+              "id": 14405,
+              "known_for_department": "Acting",
+              "name": "柯特妮·考克斯",
+              "original_name": "Courteney Cox",
+              "popularity": 4.2471,
+              "profile_path": "/cSOORhCRPJiwKghozXVXrOBi3Tp.jpg",
+              "character": "Monica Geller",
+              "credit_id": "525710bc19c295731c032341",
+              "order": 1
+            },
+            {
+              "adult": false,
+              "gender": 1,
+              "id": 14406,
+              "known_for_department": "Acting",
+              "name": "丽莎·库卓",
+              "original_name": "Lisa Kudrow",
+              "popularity": 2.8495,
+              "profile_path": "/ziatnwJRiBJIcc8jlk6xoClhfOy.jpg",
+              "character": "Phoebe Buffay",
+              "credit_id": "525710bd19c295731c032525",
+              "order": 2
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 14407,
+              "known_for_department": "Acting",
+              "name": "马特·理勃兰",
+              "original_name": "Matt LeBlanc",
+              "popularity": 2.6832,
+              "profile_path": "/a7Fl1sLUq1UDJ4pHsnwpBdEiDEZ.jpg",
+              "character": "Joey Tribbiani",
+              "credit_id": "525710bd19c295731c0323a3",
+              "order": 3
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 14408,
+              "known_for_department": "Acting",
+              "name": "马修·派瑞",
+              "original_name": "Matthew Perry",
+              "popularity": 2.4477,
+              "profile_path": "/ecDzkLWPV1z0x31I1GTjNmLxAHk.jpg",
+              "character": "Chandler Bing",
+              "credit_id": "525710be19c295731c03256f",
+              "order": 4
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 14409,
+              "known_for_department": "Acting",
+              "name": "大卫·休默",
+              "original_name": "David Schwimmer",
+              "popularity": 2.7609,
+              "profile_path": "/XtKzJ9lM5Xwa7vCmE4xNHy6Owf.jpg",
+              "character": "Ross Geller",
+              "credit_id": "525710bd19c295731c0324a9",
+              "order": 5
+            }
+          ],
+          "crew": [
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 1226570,
+              "known_for_department": "Production",
+              "name": "Noel Bright",
+              "original_name": "Noel Bright",
+              "popularity": 0.4671,
+              "profile_path": null,
+              "credit_id": "6a00d0555d1bc41373241635",
+              "department": "Production",
+              "job": "Unit Production Manager"
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 1224760,
+              "known_for_department": "Writing",
+              "name": "罗伯特·卡洛克",
+              "original_name": "Robert Carlock",
+              "popularity": 1.2506,
+              "profile_path": "/mZPYQ2LiITLJp3FsFEjotpBuFXb.jpg",
+              "credit_id": "6a00cc5ed8f80c6961ed711b",
+              "department": "Production",
+              "job": "Producer"
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 1226552,
+              "known_for_department": "Writing",
+              "name": "Mark Kunerth",
+              "original_name": "Mark Kunerth",
+              "popularity": 0.4214,
+              "profile_path": null,
+              "credit_id": "6a00cbf240130003697907aa",
+              "department": "Production",
+              "job": "Supervising Producer"
+            },
+            {
+              "adult": false,
+              "gender": 1,
+              "id": 1226555,
+              "known_for_department": "Creator",
+              "name": "Dana Klein",
+              "original_name": "Dana Klein",
+              "popularity": 0.7684,
+              "profile_path": null,
+              "credit_id": "6a00ca309aa52a34b1630714",
+              "department": "Production",
+              "job": "Supervising Producer"
+            },
+            {
+              "adult": false,
+              "gender": 1,
+              "id": 193707,
+              "known_for_department": "Writing",
+              "name": "Sherry Bilsing",
+              "original_name": "Sherry Bilsing",
+              "popularity": 0.8492,
+              "profile_path": null,
+              "credit_id": "6a00d2e65f0a1a6129241527",
+              "department": "Production",
+              "job": "Co-Executive Producer"
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 1226460,
+              "known_for_department": "Writing",
+              "name": "Sebastian Jones",
+              "original_name": "Sebastian Jones",
+              "popularity": 0.4868,
+              "profile_path": null,
+              "credit_id": "6a00ce93241166275222200f",
+              "department": "Production",
+              "job": "Co-Executive Producer"
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 1226573,
+              "known_for_department": "Production",
+              "name": "Richard Choi",
+              "original_name": "Richard Choi",
+              "popularity": 0.3456,
+              "profile_path": null,
+              "credit_id": "6a00cc32eeab3445837999f4",
+              "department": "Production",
+              "job": "Associate Producer"
+            },
+            {
+              "adult": false,
+              "gender": 1,
+              "id": 1226564,
+              "known_for_department": "Writing",
+              "name": "Ellen Kreamer",
+              "original_name": "Ellen Kreamer",
+              "popularity": 0.516,
+              "profile_path": null,
+              "credit_id": "6a00ca5ad8f80c6961ed70fc",
+              "department": "Production",
+              "job": "Co-Executive Producer"
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 1215936,
+              "known_for_department": "Writing",
+              "name": "Ted Cohen",
+              "original_name": "Ted Cohen",
+              "popularity": 0.7273,
+              "profile_path": "/ljRA8vLezAYCoyN8gGGtiAyXjpb.jpg",
+              "credit_id": "69e8c8d7ee5367ed30c01419",
+              "department": "Production",
+              "job": "Executive Producer"
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 1215784,
+              "known_for_department": "Writing",
+              "name": "Brian Buckner",
+              "original_name": "Brian Buckner",
+              "popularity": 0.3494,
+              "profile_path": null,
+              "credit_id": "69f08a73e390e36c9da89773",
+              "department": "Production",
+              "job": "Co-Executive Producer"
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 1215935,
+              "known_for_department": "Writing",
+              "name": "Andrew Reich",
+              "original_name": "Andrew Reich",
+              "popularity": 0.596,
+              "profile_path": "/z4zNzbr3FZzTPbFavXmBtFaGbeW.jpg",
+              "credit_id": "6a00c9f5e7124ba25278fe9d",
+              "department": "Production",
+              "job": "Executive Producer"
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 1217286,
+              "known_for_department": "Writing",
+              "name": "Scott Silveri",
+              "original_name": "Scott Silveri",
+              "popularity": 0.5339,
+              "profile_path": null,
+              "credit_id": "6a00d70feeab344583799aa6",
+              "department": "Production",
+              "job": "Executive Producer"
+            },
+            {
+              "adult": false,
+              "gender": 1,
+              "id": 1217284,
+              "known_for_department": "Writing",
+              "name": "Shana Goldberg-Meehan",
+              "original_name": "Shana Goldberg-Meehan",
+              "popularity": 0.9078,
+              "profile_path": null,
+              "credit_id": "6a00cfce47a05f5cc279a38e",
+              "department": "Production",
+              "job": "Executive Producer"
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 1226546,
+              "known_for_department": "Production",
+              "name": "Todd Stevens",
+              "original_name": "Todd Stevens",
+              "popularity": 0.5382,
+              "profile_path": "/n7lsDv2XSnMCbYeru5dUwpX2j6w.jpg",
+              "credit_id": "6a00d3359abd78d4c8cfca43",
+              "department": "Production",
+              "job": "Co-Executive Producer"
+            },
+            {
+              "adult": false,
+              "gender": 1,
+              "id": 1226543,
+              "known_for_department": "Production",
+              "name": "Wendy Knoller",
+              "original_name": "Wendy Knoller",
+              "popularity": 0.5745,
+              "profile_path": null,
+              "credit_id": "6a00d3957bb130f4cfa8d460",
+              "department": "Production",
+              "job": "Producer"
+            },
+            {
+              "adult": false,
+              "gender": 1,
+              "id": 1855013,
+              "known_for_department": "Production",
+              "name": "Leslie Litt",
+              "original_name": "Leslie Litt",
+              "popularity": 0.4009,
+              "profile_path": null,
+              "credit_id": "6a00748f1c09a0a963ed7dcb",
+              "department": "Production",
+              "job": "Casting"
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 1216352,
+              "known_for_department": "Writing",
+              "name": "大卫·克拉尼",
+              "original_name": "David Crane",
+              "popularity": 1.4565,
+              "profile_path": "/1NYo5ZYCSqoxQ5sqXLMDm3cqvKp.jpg",
+              "credit_id": "60bdc46feb79c20040b0a362",
+              "department": "Production",
+              "job": "Executive Producer"
+            },
+            {
+              "adult": false,
+              "gender": 1,
+              "id": 163461,
+              "known_for_department": "Writing",
+              "name": "玛尔塔·考夫曼",
+              "original_name": "Marta Kauffman",
+              "popularity": 0.901,
+              "profile_path": "/AsX4ZOoQP5oQVLiA51zdRiTNKTm.jpg",
+              "credit_id": "60bdc4930bc529006f26d3be",
+              "department": "Production",
+              "job": "Executive Producer"
+            },
+            {
+              "adult": false,
+              "gender": 0,
+              "id": 1638552,
+              "known_for_department": "Camera",
+              "name": "Kevin McGill",
+              "original_name": "Kevin McGill",
+              "popularity": 0.3217,
+              "profile_path": null,
+              "credit_id": "5b8d69ad0e0a261d7304d971",
+              "department": "Camera",
+              "job": "First Assistant Camera"
+            },
+            {
+              "adult": false,
+              "gender": 0,
+              "id": 1881668,
+              "known_for_department": "Sound",
+              "name": "John Bickelhaupt",
+              "original_name": "John Bickelhaupt",
+              "popularity": 0.361,
+              "profile_path": null,
+              "credit_id": "5b8d68d5c3a368520904ff8d",
+              "department": "Sound",
+              "job": "Sound Re-Recording Mixer"
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 1438574,
+              "known_for_department": "Crew",
+              "name": "James Fredburg",
+              "original_name": "James Fredburg",
+              "popularity": 0.2074,
+              "profile_path": null,
+              "credit_id": "5b8d695c9251415183047b7a",
+              "department": "Visual Effects",
+              "job": "Special Effects Supervisor"
+            },
+            {
+              "adult": false,
+              "gender": 0,
+              "id": 1480314,
+              "known_for_department": "Sound",
+              "name": "Charlie McDaniel",
+              "original_name": "Charlie McDaniel",
+              "popularity": 0.3096,
+              "profile_path": null,
+              "credit_id": "5b8d691e0e0a261d6e051a26",
+              "department": "Sound",
+              "job": "Sound Re-Recording Mixer"
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 1332209,
+              "known_for_department": "Art",
+              "name": "Greg J. Grande",
+              "original_name": "Greg J. Grande",
+              "popularity": 0.3534,
+              "profile_path": null,
+              "credit_id": "59a72bc09251415808005106",
+              "department": "Art",
+              "job": "Set Decoration"
+            },
+            {
+              "adult": false,
+              "gender": 1,
+              "id": 41084,
+              "known_for_department": "Costume & Make-Up",
+              "name": "Debra McGuire",
+              "original_name": "Debra McGuire",
+              "popularity": 0.6396,
+              "profile_path": "/2wH44GuUhNUORaANbwOjJNmkC3r.jpg",
+              "credit_id": "59a72bc7925141579d005073",
+              "department": "Costume & Make-Up",
+              "job": "Costume Design"
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 1218971,
+              "known_for_department": "Production",
+              "name": "Kevin S. Bright",
+              "original_name": "Kevin S. Bright",
+              "popularity": 0.3821,
+              "profile_path": "/qzDpbbso1S9l8FjD2WLzLbMwsyh.jpg",
+              "credit_id": "525710c719c295731c032ba9",
+              "department": "Production",
+              "job": "Executive Producer"
             }
           ]
         }
@@ -2504,6 +3134,381 @@
           "facebook_id": null,
           "instagram_id": null,
           "twitter_id": null
+        }
+      }
+    },
+    {
+      "type": "tv",
+      "tmdbId": 64709,
+      "data": {
+        "adult": false,
+        "backdrop_path": "/7pafv6rEW6M0GtKjg3oVKjD4cjw.jpg",
+        "created_by": [
+          {
+            "id": 130976,
+            "credit_id": "62e5e7ade86017005a554f2d",
+            "name": "尚敬",
+            "original_name": "尚敬",
+            "gender": 2,
+            "profile_path": "/bL0iBPPucyjBWMLdCKdfoCDFV6g.jpg"
+          },
+          {
+            "id": 235353,
+            "credit_id": "669045aa6757f2555aaaaccc",
+            "name": "宁财神",
+            "original_name": "宁财神",
+            "gender": 2,
+            "profile_path": "/ueZC3DAPpxcrIpsgYGS9Aa8EE1O.jpg"
+          }
+        ],
+        "episode_run_time": [
+          47
+        ],
+        "first_air_date": "2006-01-02",
+        "genres": [
+          {
+            "id": 35,
+            "name": "喜剧"
+          },
+          {
+            "id": 18,
+            "name": "剧情"
+          },
+          {
+            "id": 10751,
+            "name": "家庭"
+          }
+        ],
+        "homepage": "",
+        "id": 64709,
+        "in_production": false,
+        "languages": [
+          "zh"
+        ],
+        "last_air_date": "2006-01-06",
+        "last_episode_to_air": {
+          "id": 1148081,
+          "name": "燕小六接到调职令，凌腾云夜袭同福店",
+          "overview": "小六终于接到了调职令，数日后奔赴京城就职，众人欣喜之余，不禁有些惆怅。小六告之，新任的捕快是西安凌家的凌腾云，白大惊失色。凌腾云曾在少年时与白交手，差一点擒获，白非常担心日后会被认出，经过佟的劝导，白心下稍安。凌腾云到来之后，种种迹象表明，他已经认出了白展堂是少年时期他曾追捕过的盗圣……",
+          "vote_average": 0,
+          "vote_count": 0,
+          "air_date": "2006-01-06",
+          "episode_number": 80,
+          "episode_type": "standard",
+          "production_code": "",
+          "runtime": 47,
+          "season_number": 1,
+          "show_id": 64709,
+          "still_path": "/5HnqWqKDUH1I4z5fpyyVnHdBnpq.jpg"
+        },
+        "name": "武林外传",
+        "next_episode_to_air": null,
+        "networks": [
+          {
+            "id": 521,
+            "logo_path": "/2aXk02xBwG2Nhu4lftabfqSpwY3.png",
+            "name": "CCTV-8",
+            "origin_country": "CN"
+          }
+        ],
+        "number_of_episodes": 81,
+        "number_of_seasons": 1,
+        "origin_country": [
+          "CN"
+        ],
+        "original_language": "zh",
+        "original_name": "武林外传",
+        "overview": "关中一个普通的小镇——七俠镇，这里有一家同福客栈。就是这间不起眼的江湖客栈，因缘巧合之下汇聚了一群性格各异又活泼搞怪的年轻人：武功高强但初入江湖的郭芙蓉（姚晨 饰）、客栈老板娘佟湘玉（闫妮 饰）、金盘洗手的神偷白展堂（沙溢 饰）、满腹经纶的吕秀才（喻恩泰 饰）、客栈厨师李大嘴（姜超 饰）等等。这群年轻人在同一屋檐下演绎了一幕幕经典的搞笑场面，在欢笑与眼泪中陪伴观众们一起渐渐成长。",
+        "popularity": 10.3912,
+        "poster_path": "/v6roq2SBQf58flUlau5khcK2Mni.jpg",
+        "production_companies": [
+          {
+            "id": 138129,
+            "logo_path": null,
+            "name": "北京联盟影业投资有限公司",
+            "origin_country": ""
+          }
+        ],
+        "production_countries": [
+          {
+            "iso_3166_1": "CN",
+            "name": "China"
+          }
+        ],
+        "seasons": [
+          {
+            "air_date": null,
+            "episode_count": 1,
+            "id": 399994,
+            "name": "特别篇",
+            "overview": "拍摄花絮",
+            "poster_path": "/gtNpJzdoJ9NQ1DqgwDIAt237XnL.jpg",
+            "season_number": 0,
+            "vote_average": 0
+          },
+          {
+            "air_date": "2006-01-02",
+            "episode_count": 81,
+            "id": 72781,
+            "name": "武林外传",
+            "overview": "这是一个系列的戏说江湖的轻松喜剧。关中一个普通的小镇——七俠镇，这里有一家同福客栈。就是这间不起眼的江湖客栈，因缘巧合之下汇聚了一群性格各异又活泼搞怪的年轻人：武功高强但初入江湖的郭芙蓉（姚晨 饰）、客栈老板娘佟湘玉（闫妮 饰）、金盘洗手的神偷白展堂（沙溢 饰）、满腹经纶的吕秀才（喻恩泰 饰）、客栈厨师李大嘴（姜超 饰）等等。这群年轻人在同一屋檐下演绎了一幕幕经典的搞笑场面，在欢笑与眼泪中陪伴观众们一起渐渐成长。",
+            "poster_path": "/due6TUhiSsyAWuP2sERVAj83V6W.jpg",
+            "season_number": 1,
+            "vote_average": 9.5
+          }
+        ],
+        "softcore": false,
+        "spoken_languages": [
+          {
+            "english_name": "Mandarin",
+            "iso_639_1": "zh",
+            "name": "普通话"
+          }
+        ],
+        "status": "Ended",
+        "tagline": "江湖，我指给你看",
+        "type": "Scripted",
+        "vote_average": 8.9,
+        "vote_count": 68,
+        "credits": {
+          "cast": [
+            {
+              "adult": false,
+              "gender": 1,
+              "id": 131303,
+              "known_for_department": "Acting",
+              "name": "闫妮",
+              "original_name": "闫妮",
+              "popularity": 1.7617,
+              "profile_path": "/olR80y58ixqu6e2Vs0cNTeKWQqm.jpg",
+              "character": "Tong Xiangyu",
+              "credit_id": "567416b8c3a3685ee200217e",
+              "order": 0
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 235518,
+              "known_for_department": "Acting",
+              "name": "沙溢",
+              "original_name": "沙溢",
+              "popularity": 3.0647,
+              "profile_path": "/ip9GpE5RhxBzqlbbVX0DwktOlss.jpg",
+              "character": "Bai Zhan Tang",
+              "credit_id": "567416ca9251412db8001feb",
+              "order": 1
+            },
+            {
+              "adult": false,
+              "gender": 1,
+              "id": 482101,
+              "known_for_department": "Acting",
+              "name": "姚晨",
+              "original_name": "姚晨",
+              "popularity": 1.3775,
+              "profile_path": "/99N6rlwqbf96wRMbBsiam5IsCMX.jpg",
+              "character": "Guo Fu Rong",
+              "credit_id": "567416da9251412db1002097",
+              "order": 2
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 235519,
+              "known_for_department": "Acting",
+              "name": "喻恩泰",
+              "original_name": "喻恩泰",
+              "popularity": 1.2931,
+              "profile_path": "/2fLBOWx6hw9jLZLDzg2aKZW4btk.jpg",
+              "character": "Lyu Qing Hou",
+              "credit_id": "567416e99251412daf002d2e",
+              "order": 3
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 235521,
+              "known_for_department": "Acting",
+              "name": "姜超",
+              "original_name": "姜超",
+              "popularity": 1.1071,
+              "profile_path": "/q7Y4kNRkIK1GrfCZSuP7GqRKw85.jpg",
+              "character": "Li Da Zui",
+              "credit_id": "567417509251412daf002d3a",
+              "order": 4
+            },
+            {
+              "adult": false,
+              "gender": 1,
+              "id": 1550597,
+              "known_for_department": "Acting",
+              "name": "王莎莎",
+              "original_name": "Wang Shasha",
+              "popularity": 0.5096,
+              "profile_path": "/6PBLJm4hveuV7DZzPp5kwZw1loE.jpg",
+              "character": "Mo Xiao Bei",
+              "credit_id": "567417fac3a3685eeb00234a",
+              "order": 5
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 1100750,
+              "known_for_department": "Acting",
+              "name": "范明",
+              "original_name": "范明",
+              "popularity": 1.4173,
+              "profile_path": "/lgs16RJ2YPhvx5Vmp1H7sLhXm1M.jpg",
+              "character": "Xing Yu Sen",
+              "credit_id": "567417bc9251412dbb002293",
+              "order": 6
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 1173199,
+              "known_for_department": "Acting",
+              "name": "肖剑",
+              "original_name": "肖剑",
+              "popularity": 0.6,
+              "profile_path": "/xYH2kDvfxK6YcfrgXOBZ8ANykXg.jpg",
+              "character": "Yan Xiao Liu",
+              "credit_id": "56741732c3a3685ee500248d",
+              "order": 7
+            },
+            {
+              "adult": false,
+              "gender": 1,
+              "id": 235520,
+              "known_for_department": "Acting",
+              "name": "倪虹洁",
+              "original_name": "倪虹洁",
+              "popularity": 1.6812,
+              "profile_path": "/uDPjKOs1SyiAMjKQVMX6Hay61Bm.jpg",
+              "character": "Zhu Wu Shuang",
+              "credit_id": "567417059251412db4002458",
+              "order": 8
+            }
+          ],
+          "crew": [
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 130976,
+              "known_for_department": "Directing",
+              "name": "尚敬",
+              "original_name": "尚敬",
+              "popularity": 0.9167,
+              "profile_path": "/bL0iBPPucyjBWMLdCKdfoCDFV6g.jpg",
+              "credit_id": "56741673c3a3685ede00255b",
+              "department": "Directing",
+              "job": "Director"
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 235353,
+              "known_for_department": "Writing",
+              "name": "宁财神",
+              "original_name": "宁财神",
+              "popularity": 0.6921,
+              "profile_path": "/ueZC3DAPpxcrIpsgYGS9Aa8EE1O.jpg",
+              "credit_id": "567416959251412db100208f",
+              "department": "Writing",
+              "job": "Writer"
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 2730604,
+              "known_for_department": "Crew",
+              "name": "郝亚宁",
+              "original_name": "郝亚宁",
+              "popularity": 0.2027,
+              "profile_path": "/un8te6myK8qnU4dKCTVdcYAY64U.jpg",
+              "credit_id": "5f28b8d5d8cc4a00381a844c",
+              "department": "Crew",
+              "job": "Presenter"
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 235353,
+              "known_for_department": "Writing",
+              "name": "宁财神",
+              "original_name": "宁财神",
+              "popularity": 0.6921,
+              "profile_path": "/ueZC3DAPpxcrIpsgYGS9Aa8EE1O.jpg",
+              "credit_id": "5f28b91d435abd0037799918",
+              "department": "Production",
+              "job": "Associate Producer"
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 1557252,
+              "known_for_department": "Directing",
+              "name": "俞白眉",
+              "original_name": "俞白眉",
+              "popularity": 0.7694,
+              "profile_path": "/scoBhnioL1uNHniMDo2E9UaT5dj.jpg",
+              "credit_id": "5f28b949869e7500366d1f3f",
+              "department": "Writing",
+              "job": "Writer"
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 130976,
+              "known_for_department": "Directing",
+              "name": "尚敬",
+              "original_name": "尚敬",
+              "popularity": 0.9167,
+              "profile_path": "/bL0iBPPucyjBWMLdCKdfoCDFV6g.jpg",
+              "credit_id": "5f28b9c44e6742003378ac39",
+              "department": "Writing",
+              "job": "Writer"
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 2730613,
+              "known_for_department": "Crew",
+              "name": "郭庆锐",
+              "original_name": "Guo Qingrui",
+              "popularity": 0.0646,
+              "profile_path": "/jR32AdjinJIdZbV5b6GDeSjhSWh.jpg",
+              "credit_id": "5f28b9e5d8cc4a00391b2778",
+              "department": "Crew",
+              "job": "Cinematography"
+            },
+            {
+              "adult": false,
+              "gender": 1,
+              "id": 1076749,
+              "known_for_department": "Acting",
+              "name": "张建新",
+              "original_name": "Jianxin Zhang",
+              "popularity": 0.2547,
+              "profile_path": "/jnmB4G102PYh16l3z3fqlaTRPQo.jpg",
+              "credit_id": "5f28ba42a35c8e00344f3dde",
+              "department": "Directing",
+              "job": "Assistant Director"
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 2730563,
+              "known_for_department": "Directing",
+              "name": "米昊易",
+              "original_name": "Mi Haoyi",
+              "popularity": 0.0577,
+              "profile_path": "/8D27tsGCAC8G8T0UHqCrvzviXyV.jpg",
+              "credit_id": "5f28badbb1f68d00366b6eaf",
+              "department": "Sound",
+              "job": "Sound"
+            }
+          ]
         }
       }
     },
@@ -5295,6 +6300,275 @@
           "facebook_id": null,
           "instagram_id": null,
           "twitter_id": "supercub_anime"
+        }
+      }
+    },
+    {
+      "type": "movie",
+      "tmdbId": 272875,
+      "data": {
+        "adult": false,
+        "backdrop_path": "/dzJfEnNwgBRuKcpnWQe5euDLIdN.jpg",
+        "belongs_to_collection": null,
+        "budget": 7300000,
+        "genres": [
+          {
+            "id": 18,
+            "name": "剧情"
+          }
+        ],
+        "homepage": "",
+        "id": 272875,
+        "imdb_id": "tt3896016",
+        "origin_country": [
+          "CN"
+        ],
+        "original_language": "zh",
+        "original_title": "后会无期",
+        "overview": "故事开始于虚构的中国最东边的小岛“东极岛”，智力低下的青年胡生（高华阳 饰）讲述了关于他的两个哥们儿——马浩汉（冯绍峰 饰）和江河（陈柏霖 饰）的故事。浩汉在外闯荡多年后回到故乡，却发现全岛面临着拆迁问题，而他最好的朋友，岛上唯一的老师江河也将被调到更为偏远的地区。于是 浩汉做出了一个决定，那就是开车送江河去三千多公里外的学校报到。兄弟三人踏上了前所未有的旅程，途中他们见了当临时演员的童年玩伴周沫（陈乔恩 饰），误入歧途的苏米（王珞丹 饰），还有浩汉心仪多年从未见面的笔友刘莺莺（袁泉 饰），以及不羁的摩托车手阿吕（钟汉良 饰）。看似平常的旅程却暗藏伏笔，浩汉和江河最终走到了终点，开始了截然不同的人生轨迹。本片是著名作家兼赛车手韩寒的电影导演处女作。",
+        "popularity": 1.5451,
+        "poster_path": "/uDAQEq5uLeTJoY2ID4MUZeeVGIC.jpg",
+        "production_companies": [
+          {
+            "id": 8250,
+            "logo_path": null,
+            "name": "Bona International Film Group",
+            "origin_country": "CN"
+          }
+        ],
+        "production_countries": [
+          {
+            "iso_3166_1": "CN",
+            "name": "China"
+          }
+        ],
+        "release_date": "2014-07-24",
+        "revenue": 9166810,
+        "runtime": 104,
+        "softcore": false,
+        "spoken_languages": [
+          {
+            "english_name": "Mandarin",
+            "iso_639_1": "zh",
+            "name": "普通话"
+          }
+        ],
+        "status": "Released",
+        "tagline": "听过很多道理，依然过不好这一生",
+        "title": "后会无期",
+        "video": false,
+        "vote_average": 6.255,
+        "vote_count": 96,
+        "credits": {
+          "cast": [
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 936431,
+              "known_for_department": "Acting",
+              "name": "冯绍峰",
+              "original_name": "冯绍峰",
+              "popularity": 1.7103,
+              "profile_path": "/tSn5BIRw3Xdj3XYKIycjyNTgl49.jpg",
+              "cast_id": 1,
+              "character": "Ma Haohan",
+              "credit_id": "5388a14a0e0a26144a0064f5",
+              "order": 0
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 64440,
+              "known_for_department": "Acting",
+              "name": "陈柏霖",
+              "original_name": "陳柏霖",
+              "popularity": 1.1181,
+              "profile_path": "/w89BYi3LaMFROA9gTw2vWPVcbda.jpg",
+              "cast_id": 0,
+              "character": "Jiang He",
+              "credit_id": "5388a1140e0a2614560065c3",
+              "order": 1
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 1183233,
+              "known_for_department": "Acting",
+              "name": "钟汉良",
+              "original_name": "鍾漢良",
+              "popularity": 2.0981,
+              "profile_path": "/mDJQSyCQdPW2lJDbY46udu0161n.jpg",
+              "cast_id": 3,
+              "character": "A Lu",
+              "credit_id": "5388a1600e0a2614560065cf",
+              "order": 2
+            },
+            {
+              "adult": false,
+              "gender": 1,
+              "id": 1239952,
+              "known_for_department": "Acting",
+              "name": "陈乔恩",
+              "original_name": "陳喬恩",
+              "popularity": 1.2901,
+              "profile_path": "/1ExQFQRhiivl35kLycW6k2UU1pU.jpg",
+              "cast_id": 4,
+              "character": "Zhou Mo",
+              "credit_id": "5388a2580e0a2614410065a5",
+              "order": 3
+            },
+            {
+              "adult": false,
+              "gender": 1,
+              "id": 543159,
+              "known_for_department": "Acting",
+              "name": "王珞丹",
+              "original_name": "王珞丹",
+              "popularity": 1.5752,
+              "profile_path": "/coSon6ItOshT7XjEC6odW8PXa1A.jpg",
+              "cast_id": 5,
+              "character": "Su Mi",
+              "credit_id": "5388a2bd0e0a26144d006569",
+              "order": 4
+            },
+            {
+              "adult": false,
+              "gender": 1,
+              "id": 1172609,
+              "known_for_department": "Acting",
+              "name": "袁泉",
+              "original_name": "袁泉",
+              "popularity": 1.2771,
+              "profile_path": "/wtkOtG4840ebwgtDA7mjSwlsfwJ.jpg",
+              "cast_id": 6,
+              "character": "Liu Yingying",
+              "credit_id": "5388a2d90e0a2614470065f8",
+              "order": 5
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 24011,
+              "known_for_department": "Directing",
+              "name": "贾樟柯",
+              "original_name": "贾樟柯",
+              "popularity": 1.4301,
+              "profile_path": "/sqEcM73aYOVueERBm6JCsZCImFC.jpg",
+              "cast_id": 9,
+              "character": "Su Mi's Uncle",
+              "credit_id": "544149bcc3a3686098001c52",
+              "order": 6
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 1627281,
+              "known_for_department": "Acting",
+              "name": "白客",
+              "original_name": "白客",
+              "popularity": 1.2387,
+              "profile_path": "/t7Hi7qYnXPaeehR7K5rbf0hHX0B.jpg",
+              "cast_id": 10,
+              "character": "Su Mi's brother",
+              "credit_id": "589257e6c3a36834cc0005d5",
+              "order": 7
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 1627288,
+              "known_for_department": "Acting",
+              "name": "孔连顺",
+              "original_name": "孔连顺",
+              "popularity": 1.2255,
+              "profile_path": "/dAqV16WmglYw1c2DwBERYrkI5Zz.jpg",
+              "cast_id": 11,
+              "character": "Su Mi's brother",
+              "credit_id": "58925804c3a36834cf000556",
+              "order": 8
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 1748885,
+              "known_for_department": "Acting",
+              "name": "高华阳",
+              "original_name": "高华阳",
+              "popularity": 0.2707,
+              "profile_path": "/o12WReZQI3C2ti6sns0uXKGoiDJ.jpg",
+              "cast_id": 12,
+              "character": "Hu Sheng",
+              "credit_id": "58925810c3a36834cc0005fb",
+              "order": 9
+            }
+          ],
+          "crew": [
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 2212889,
+              "known_for_department": "Camera",
+              "name": "廖拟",
+              "original_name": "廖拟",
+              "popularity": 0.2177,
+              "profile_path": "/maPnHSgs2OelC8PgJD2pTLITuTK.jpg",
+              "credit_id": "60fa8097e24b930048f19b4f",
+              "department": "Camera",
+              "job": "Director of Photography"
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 109428,
+              "known_for_department": "Editing",
+              "name": "肖洋",
+              "original_name": "肖洋",
+              "popularity": 0.3223,
+              "profile_path": null,
+              "credit_id": "60fa80bfc439c0005c3053d1",
+              "department": "Editing",
+              "job": "Editor"
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 1326036,
+              "known_for_department": "Writing",
+              "name": "韩寒",
+              "original_name": "韩寒",
+              "popularity": 0.7786,
+              "profile_path": "/uAYoUdcgLedCQASTsQ34joMeD9y.jpg",
+              "credit_id": "5388f297c3a3681aea004dd6",
+              "department": "Directing",
+              "job": "Director"
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 55786,
+              "known_for_department": "Sound",
+              "name": "小林武史",
+              "original_name": "小林武史",
+              "popularity": 0.3249,
+              "profile_path": "/uzexjQtViYWTPxmGrHpiOIvLNRE.jpg",
+              "credit_id": "5388a383c3a3681aea004823",
+              "department": "Sound",
+              "job": "Original Music Composer"
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 1326036,
+              "known_for_department": "Writing",
+              "name": "韩寒",
+              "original_name": "韩寒",
+              "popularity": 0.7786,
+              "profile_path": "/uAYoUdcgLedCQASTsQ34joMeD9y.jpg",
+              "credit_id": "5892582ac3a36834dc0005da",
+              "department": "Writing",
+              "job": "Writer"
+            }
+          ]
         }
       }
     }
