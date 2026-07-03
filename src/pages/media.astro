@@ -83,6 +83,7 @@ function resolveMediaWork(recommendation: MediaRecommendation, generated: Genera
     originalTitle: originalTitle && originalTitle !== title ? originalTitle : undefined,
     overview: data.overview,
     posterUrl: data.poster_path ? `${TMDB_IMAGE_BASE_URL}/w342${data.poster_path}` : undefined,
+    tmdbUrl: getTmdbUrl(generated.type, generated.tmdbId),
     title,
     year: getYear(generated.type, data),
   }
@@ -94,6 +95,10 @@ function getMediaKey(media: Pick<MediaRecommendation, 'type' | 'tmdbId'>) {
 
 function getBilibiliUrl(bilibiliId: number) {
   return `https://www.bilibili.com/bangumi/play/ss${bilibiliId}`
+}
+
+function getTmdbUrl(type: GeneratedMediaItem['type'], tmdbId: number) {
+  return `https://www.themoviedb.org/${type}/${tmdbId}`
 }
 
 function compareMedia(
@@ -205,9 +210,11 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
 
                 <header class="min-w-0 space-y-2 sm:col-start-3 sm:row-start-1">
                   <h2 class="font-semibold leading-snug text-tx">
-                    {work.title}
+                    <a href={work.tmdbUrl} target="_blank" rel="noopener noreferrer" class="hover:underline">
+                      {work.title}
+                    </a>
                   </h2>
-                  {(work.originalTitle || work.creator || work.year) && (
+                  {(work.originalTitle || work.creator || work.year || work.bilibiliUrl) && (
                     <p class="flex flex-wrap gap-x-3 gap-y-1 text-tx-2">
                       {work.originalTitle && <span>{work.originalTitle}</span>}
                       {work.creator && <span>{work.creator}</span>}
