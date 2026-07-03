@@ -1,0 +1,239 @@
+---
+import { SITE_TITLE } from '@/consts'
+import generatedMedia from '@/data/media.generated.json'
+import mediaRecommendations from '@/data/media-recommendations.json'
+import Layout from '@/layouts/Layout.astro'
+
+const pageTitle = `Media | ${SITE_TITLE}`
+const pageDescription = '我推荐的电影、剧集和动画'
+const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p'
+
+type MediaRecommendation = {
+  bilibiliId?: number
+  note?: string
+  type: 'movie' | 'tv'
+  tmdbId: number
+}
+
+type TmdbPerson = {
+  job?: string
+  name?: string
+}
+
+type TmdbCompany = {
+  name?: string
+}
+
+type TmdbDetails = {
+  created_by?: TmdbPerson[]
+  credits?: {
+    crew?: TmdbPerson[]
+  }
+  first_air_date?: string
+  name?: string
+  networks?: TmdbCompany[]
+  original_name?: string
+  original_title?: string
+  overview?: string
+  poster_path?: string | null
+  production_companies?: TmdbCompany[]
+  release_date?: string
+  title?: string
+}
+
+type GeneratedMediaItem = {
+  type: 'movie' | 'tv'
+  tmdbId: number
+  data: TmdbDetails
+}
+
+const generatedByKey = new Map(
+  (generatedMedia.items as GeneratedMediaItem[]).map(item => [
+    getMediaKey(item),
+    item,
+  ]),
+)
+
+const sortedRecommendations = [...mediaRecommendations as MediaRecommendation[]].sort(compareMedia)
+
+const mediaWorks = sortedRecommendations.map((recommendation) => {
+  const generated = generatedByKey.get(getMediaKey(recommendation))
+
+  if (!generated) {
+    throw new Error(
+      `Missing generated TMDB data for ${getMediaKey(recommendation)}. Run "pnpm media:generate".`,
+    )
+  }
+
+  return resolveMediaWork(recommendation, generated)
+})
+
+function resolveMediaWork(recommendation: MediaRecommendation, generated: GeneratedMediaItem) {
+  const data = generated.data
+  const title = getTitle(generated.type, data)
+  const originalTitle = getOriginalTitle(generated.type, data)
+  const bilibiliUrl = recommendation.bilibiliId
+    ? getBilibiliUrl(recommendation.bilibiliId)
+    : undefined
+
+  return {
+    bilibiliUrl,
+    creator: getCreator(generated.type, data),
+    note: recommendation.note,
+    originalTitle: originalTitle && originalTitle !== title ? originalTitle : undefined,
+    overview: data.overview,
+    posterUrl: data.poster_path ? `${TMDB_IMAGE_BASE_URL}/w342${data.poster_path}` : undefined,
+    title,
+    year: getYear(generated.type, data),
+  }
+}
+
+function getMediaKey(media: Pick<MediaRecommendation, 'type' | 'tmdbId'>) {
+  return `${media.type}:${media.tmdbId}`
+}
+
+function getBilibiliUrl(bilibiliId: number) {
+  return `https://www.bilibili.com/bangumi/play/ss${bilibiliId}`
+}
+
+function compareMedia(
+  first: Pick<MediaRecommendation, 'type' | 'tmdbId'>,
+  second: Pick<MediaRecommendation, 'type' | 'tmdbId'>,
+) {
+  return first.tmdbId - second.tmdbId || first.type.localeCompare(second.type)
+}
+
+function getTitle(type: GeneratedMediaItem['type'], data: TmdbDetails) {
+  if (type === 'movie') {
+    return data.title || getOriginalTitle(type, data) || '未命名电影'
+  }
+
+  return data.name || getOriginalTitle(type, data) || '未命名剧集'
+}
+
+function getOriginalTitle(type: GeneratedMediaItem['type'], data: TmdbDetails) {
+  return type === 'movie'
+    ? data.original_title
+    : data.original_name
+}
+
+function getYear(type: GeneratedMediaItem['type'], data: TmdbDetails) {
+  const date = type === 'movie'
+    ? data.release_date
+    : data.first_air_date
+
+  return date?.slice(0, 4)
+}
+
+function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
+  if (type === 'movie') {
+    const directors = data.credits?.crew
+      ?.filter(person => person.job === 'Director')
+      .map(person => person.name)
+      .filter(Boolean)
+
+    if (directors?.length) {
+      return directors.join(', ')
+    }
+  } else {
+    const creators = data.created_by
+      ?.map(person => person.name)
+      .filter(Boolean)
+
+    if (creators?.length) {
+      return creators.join(', ')
+    }
+  }
+
+  return data.production_companies?.[0]?.name
+    || data.networks?.[0]?.name
+    || undefined
+}
+
+---
+
+<Layout title={pageTitle} description={pageDescription}>
+  <main class="mx-auto max-w-[72ch] space-y-8 sm:space-y-10">
+    <section class="space-y-4">
+      <div class="flex items-baseline gap-3">
+        <h1>影视推荐</h1>
+        <a href="/" class="text-tx-2 underline">返回</a>
+      </div>
+      <p class="leading-relaxed text-tx-2">
+        一些我觉得值得看的电影、剧集和动画。
+      </p>
+    </section>
+
+    <ol class="space-y-8 sm:space-y-10">
+      {
+        mediaWorks.map((work, index) => (
+          <li class="media-item">
+            <article class="border-border grid grid-cols-[2rem_1fr] items-start gap-x-3 gap-y-3 border-t pt-5 first:border-t-0 first:pt-0 sm:grid-cols-[3rem_7rem_1fr] sm:gap-x-6 sm:gap-y-2">
+              <p class="font-mono text-tx-3 sm:row-span-2">
+                {String(index + 1).padStart(2, '0')}
+              </p>
+
+              <div class="grid min-w-0 grid-cols-[5rem_1fr] items-start gap-x-3 gap-y-3 sm:contents">
+                {
+                  work.posterUrl && work.bilibiliUrl
+                    ? (
+                        <a
+                          href={work.bilibiliUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="block w-full self-start overflow-hidden rounded border border-border bg-inline sm:col-start-2 sm:row-span-2 sm:row-start-1"
+                        >
+                          <img
+                            src={work.posterUrl}
+                            alt={`${work.title} poster`}
+                            class="aspect-[2/3] w-full object-cover"
+                            loading="lazy"
+                          />
+                        </a>
+                      )
+                    : work.posterUrl && (
+                        <div class="block w-full self-start overflow-hidden rounded border border-border bg-inline sm:col-start-2 sm:row-span-2 sm:row-start-1">
+                          <img
+                            src={work.posterUrl}
+                            alt={`${work.title} poster`}
+                            class="aspect-[2/3] w-full object-cover"
+                            loading="lazy"
+                          />
+                        </div>
+                      )
+                }
+
+                <header class="min-w-0 space-y-2 sm:col-start-3 sm:row-start-1">
+                  <h2 class="font-semibold leading-snug text-tx">
+                    {work.title}
+                  </h2>
+                  {(work.originalTitle || work.creator || work.year) && (
+                    <p class="flex flex-wrap gap-x-3 gap-y-1 text-tx-2">
+                      {work.originalTitle && <span>{work.originalTitle}</span>}
+                      {work.creator && <span>{work.creator}</span>}
+                      {work.year && <span>{work.year}</span>}
+                      {work.bilibiliUrl && (
+                        <a href={work.bilibiliUrl} target="_blank" rel="noopener noreferrer" class="inline-flex items-center" aria-label="Bilibili" title="Bilibili">
+                          <span class="i-simple-icons-bilibili inline-block size-[1em] text-current" aria-hidden="true" />
+                        </a>
+                      )}
+                    </p>
+                  )}
+                </header>
+
+                {work.note && (
+                  <p class="col-span-2 leading-relaxed text-tx sm:col-span-1 sm:col-start-3">{work.note}</p>
+                )}
+
+                {work.overview && (
+                  <p class="col-span-2 line-clamp-3 leading-relaxed text-tx-2 sm:col-span-1 sm:col-start-3">{work.overview}</p>
+                )}
+              </div>
+            </article>
+          </li>
+        ))
+      }
+    </ol>
+
+  </main>
+</Layout>
