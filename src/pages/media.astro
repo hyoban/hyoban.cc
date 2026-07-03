@@ -7,6 +7,7 @@ import Layout from '@/layouts/Layout.astro'
 const pageTitle = `Media | ${SITE_TITLE}`
 const pageDescription = '我推荐的电影、剧集和动画'
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p'
+const posterImageClass = 'aspect-[2/3] w-full border border-border object-cover'
 
 type MediaRecommendation = {
   bilibiliId?: number
@@ -72,6 +73,7 @@ function resolveMediaWork(recommendation: MediaRecommendation, generated: Genera
   const data = generated.data
   const title = getTitle(generated.type, data)
   const originalTitle = getOriginalTitle(generated.type, data)
+  const displayTitle = originalTitle && originalTitle !== title ? originalTitle : title
   const bilibiliUrl = recommendation.bilibiliId
     ? getBilibiliUrl(recommendation.bilibiliId)
     : undefined
@@ -79,12 +81,11 @@ function resolveMediaWork(recommendation: MediaRecommendation, generated: Genera
   return {
     bilibiliUrl,
     creator: getCreator(generated.type, data),
+    displayTitle,
     note: recommendation.note,
-    originalTitle: originalTitle && originalTitle !== title ? originalTitle : undefined,
     overview: data.overview,
     posterUrl: data.poster_path ? `${TMDB_IMAGE_BASE_URL}/w342${data.poster_path}` : undefined,
     tmdbUrl: getTmdbUrl(generated.type, generated.tmdbId),
-    title,
     year: getYear(generated.type, data),
   }
 }
@@ -182,22 +183,22 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
                           href={work.bilibiliUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          class="col-start-1 row-span-2 row-start-1 block w-full self-start"
+                          class="col-start-1 row-start-1 block w-full self-start sm:row-span-2"
                         >
                           <img
                             src={work.posterUrl}
-                            alt={`${work.title} poster`}
-                            class="w-full border border-border"
+                            alt={`${work.displayTitle} poster`}
+                            class={posterImageClass}
                             loading="lazy"
                           />
                         </a>
                       )
                     : work.posterUrl && (
-                        <div class="col-start-1 row-span-2 row-start-1 block w-full self-start">
+                        <div class="col-start-1 row-start-1 block w-full self-start sm:row-span-2">
                           <img
                             src={work.posterUrl}
-                            alt={`${work.title} poster`}
-                            class="w-full border border-border"
+                            alt={`${work.displayTitle} poster`}
+                            class={posterImageClass}
                             loading="lazy"
                           />
                         </div>
@@ -207,12 +208,11 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
                 <header class="col-start-2 row-start-1 min-w-0 space-y-2">
                   <h2 class="font-semibold leading-snug text-tx">
                     <a href={work.tmdbUrl} target="_blank" rel="noopener noreferrer">
-                      {work.title}
+                      {work.displayTitle}
                     </a>
                   </h2>
-                  {(work.originalTitle || work.creator || work.year || work.bilibiliUrl) && (
+                  {(work.creator || work.year || work.bilibiliUrl) && (
                     <p class="flex flex-wrap gap-x-3 gap-y-1 text-tx-2">
-                      {work.originalTitle && <span>{work.originalTitle}</span>}
                       {work.creator && <span>{work.creator}</span>}
                       {work.year && <span>{work.year}</span>}
                       {work.bilibiliUrl && (
@@ -225,11 +225,11 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
                 </header>
 
                 {work.note && (
-                  <p class="col-start-2 leading-relaxed text-tx">{work.note}</p>
+                  <p class="hidden leading-relaxed text-tx sm:col-start-2 sm:block sm:self-end">{work.note}</p>
                 )}
 
                 {work.overview && (
-                  <p class="col-start-2 line-clamp-3 leading-relaxed text-tx-2">{work.overview}</p>
+                  <p class="hidden leading-relaxed text-tx-2 sm:col-start-2 sm:self-end sm:line-clamp-3">{work.overview}</p>
                 )}
               </div>
             </article>
