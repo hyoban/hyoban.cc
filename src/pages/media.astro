@@ -171,14 +171,10 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
 
     <ol class="space-y-8 sm:space-y-10">
       {
-        mediaWorks.map((work, index) => (
+        mediaWorks.map(work => (
           <li class="media-item">
-            <article class="border-border grid grid-cols-[2rem_1fr] items-start gap-x-3 gap-y-3 border-t pt-5 first:border-t-0 first:pt-0 sm:grid-cols-[3rem_7rem_1fr] sm:gap-x-6 sm:gap-y-2">
-              <p class="font-mono text-tx-3 sm:row-span-2">
-                {String(index + 1).padStart(2, '0')}
-              </p>
-
-              <div class="grid min-w-0 grid-cols-[5rem_1fr] items-start gap-x-3 gap-y-3 sm:contents">
+            <article class="border-border grid items-start gap-x-3 gap-y-3 border-t pt-5 first:border-t-0 first:pt-0 sm:grid-cols-[7rem_minmax(0,1fr)] sm:gap-x-6 sm:gap-y-2">
+              <div class="grid min-w-0 grid-cols-[5rem_minmax(0,1fr)] items-start gap-x-3 gap-y-3 sm:contents">
                 {
                   work.posterUrl && work.bilibiliUrl
                     ? (
@@ -186,7 +182,7 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
                           href={work.bilibiliUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          class="block w-full self-start sm:col-start-2 sm:row-span-2 sm:row-start-1"
+                          class="col-start-1 row-span-2 row-start-1 block w-full self-start"
                         >
                           <img
                             src={work.posterUrl}
@@ -197,7 +193,7 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
                         </a>
                       )
                     : work.posterUrl && (
-                        <div class="block w-full self-start sm:col-start-2 sm:row-span-2 sm:row-start-1">
+                        <div class="col-start-1 row-span-2 row-start-1 block w-full self-start">
                           <img
                             src={work.posterUrl}
                             alt={`${work.title} poster`}
@@ -208,7 +204,7 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
                       )
                 }
 
-                <header class="min-w-0 space-y-2 sm:col-start-3 sm:row-start-1">
+                <header class="col-start-2 row-start-1 min-w-0 space-y-2">
                   <h2 class="font-semibold leading-snug text-tx">
                     <a href={work.tmdbUrl} target="_blank" rel="noopener noreferrer">
                       {work.title}
@@ -229,11 +225,11 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
                 </header>
 
                 {work.note && (
-                  <p class="col-span-2 leading-relaxed text-tx sm:col-span-1 sm:col-start-3">{work.note}</p>
+                  <p class="col-start-2 leading-relaxed text-tx">{work.note}</p>
                 )}
 
                 {work.overview && (
-                  <p class="col-span-2 line-clamp-3 leading-relaxed text-tx-2 sm:col-span-1 sm:col-start-3">{work.overview}</p>
+                  <p class="col-start-2 line-clamp-3 leading-relaxed text-tx-2">{work.overview}</p>
                 )}
               </div>
             </article>
