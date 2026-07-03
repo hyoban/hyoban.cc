@@ -4,7 +4,8 @@ import Layout from '@/layouts/Layout.astro'
 import { formatPostListDate, formatPostYear, getSortedPosts } from '@/utils'
 
 const posts = await getSortedPosts()
-const introLinkClass = 'text-tx underline'
+const introLinkClass = 'whitespace-nowrap text-tx underline'
+const introIconClass = 'mr-1 inline-block size-[0.85em] align-[-0.08em] text-current'
 type Post = (typeof posts)[number]
 const postsByYear: Array<{ year: string; posts: Post[] }> = []
 
@@ -27,13 +28,14 @@ for (const post of posts) {
       <p class="text-tx-2">{SITE_DESCRIPTION}</p>
       <p class="text-tx-2 leading-relaxed">
         我会在这里写一些关于工作、代码和生活的记录。你也可以在{' '}
-        <a class={introLinkClass} href="https://x.com/hyoban_cc" target="_blank" rel="noopener noreferrer">X</a>、
-        <a class={introLinkClass} href="https://bsky.app/profile/hyoban.cc" target="_blank" rel="noopener noreferrer">Bluesky</a>
-        {' '}和 <a class={introLinkClass} href="https://t.me/hyoban" target="_blank" rel="noopener noreferrer">Telegram</a> 找到我；旅行相关的内容会放在{' '}
-        <a class={introLinkClass} href="https://t.me/s/hyoban_travel" target="_blank" rel="noopener noreferrer">Telegram 旅行频道</a>
+        <a class={introLinkClass} href="https://x.com/hyoban_cc" target="_blank" rel="noopener noreferrer"><span class={`${introIconClass} i-simple-icons-x`} aria-hidden="true" />X</a>、
+        <a class={introLinkClass} href="https://bsky.app/profile/hyoban.cc" target="_blank" rel="noopener noreferrer"><span class={`${introIconClass} i-simple-icons-bluesky`} aria-hidden="true" />Bluesky</a>、
+        <a class={introLinkClass} href="https://t.me/hyoban" target="_blank" rel="noopener noreferrer"><span class={`${introIconClass} i-simple-icons-telegram`} aria-hidden="true" />Telegram</a>
+        {' '}和 <a class={introLinkClass} href="https://www.xiaohongshu.com/user/profile/64085a45000000000f01228d" target="_blank" rel="noopener noreferrer"><span class={`${introIconClass} i-simple-icons-xiaohongshu`} aria-hidden="true" />小红书</a> 找到我；旅行相关的内容会放在{' '}
+        <a class={introLinkClass} href="https://t.me/s/hyoban_travel" target="_blank" rel="noopener noreferrer"><span class={`${introIconClass} i-simple-icons-telegram`} aria-hidden="true" />Telegram 旅行频道</a>
         {' '}和 <a class={introLinkClass} href="https://photos.hyoban.cc/" target="_blank" rel="noopener noreferrer">Photos</a>；代码在{' '}
-        <a class={introLinkClass} href="https://github.com/hyoban" target="_blank" rel="noopener noreferrer">GitHub</a>。你也可以订阅{' '}
-        <a class={introLinkClass} href="/rss.xml">RSS</a>、查看 <a class={introLinkClass} href="/llms.txt">LLMs</a> 或我的 <a class={introLinkClass} href="/use">Use</a> 页面。
+        <a class={introLinkClass} href="https://github.com/hyoban" target="_blank" rel="noopener noreferrer"><span class={`${introIconClass} i-simple-icons-github`} aria-hidden="true" />GitHub</a>。你也可以订阅{' '}
+        <a class={introLinkClass} href="/rss.xml"><span class={`${introIconClass} i-simple-icons-rss`} aria-hidden="true" />RSS</a>、查看 <a class={introLinkClass} href="/llms.txt">LLMs</a> 或我的 <a class={introLinkClass} href="/use">Use</a> 页面。
       </p>
     </section>
     <div class="flex flex-col gap-8">
