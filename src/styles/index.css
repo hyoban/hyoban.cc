@@ -51,6 +51,12 @@
   --color-tx-3: var(--color-tx-3);
 }
 
+a {
+  text-decoration: underline;
+  text-decoration-color: var(--color-tx-3);
+  text-underline-offset: 3px;
+}
+
 /* Prose styles */
 .prose {
   color: var(--color-tx-2);
@@ -90,7 +96,6 @@
   /* Links */
   & a {
     color: var(--color-tx);
-    text-decoration: underline;
     word-break: break-all;
   }
 
