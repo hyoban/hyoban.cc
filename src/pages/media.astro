@@ -183,7 +183,7 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
                           href={work.bilibiliUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          class="col-start-1 row-start-1 block w-full self-start sm:row-span-2"
+                          class="col-start-1 row-span-2 row-start-1 block w-full self-start"
                         >
                           <img
                             src={work.posterUrl}
@@ -194,7 +194,7 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
                         </a>
                       )
                     : work.posterUrl && (
-                        <div class="col-start-1 row-start-1 block w-full self-start sm:row-span-2">
+                        <div class="col-start-1 row-span-2 row-start-1 block w-full self-start">
                           <img
                             src={work.posterUrl}
                             alt={`${work.displayTitle} poster`}
@@ -206,7 +206,7 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
                 }
 
                 <header class="col-start-2 row-start-1 min-w-0 space-y-2">
-                  <h2 class="font-semibold leading-snug text-tx">
+                  <h2 class="truncate font-semibold leading-snug text-tx">
                     <a href={work.tmdbUrl} target="_blank" rel="noopener noreferrer">
                       {work.displayTitle}
                     </a>
@@ -225,11 +225,11 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
                 </header>
 
                 {work.note && (
-                  <p class="hidden leading-relaxed text-tx sm:col-start-2 sm:block sm:self-end">{work.note}</p>
+                  <p class="col-start-2 self-end line-clamp-2 leading-relaxed text-tx sm:line-clamp-3">{work.note}</p>
                 )}
 
                 {work.overview && (
-                  <p class="hidden leading-relaxed text-tx-2 sm:col-start-2 sm:self-end sm:line-clamp-3">{work.overview}</p>
+                  <p class="col-start-2 self-end line-clamp-2 leading-relaxed text-tx-2 sm:line-clamp-3">{work.overview}</p>
                 )}
               </div>
             </article>
