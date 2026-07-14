@@ -1,0 +1,16 @@
+---
+import CalendarView from '@/components/CalendarView.astro'
+import { getArchiveMonthKeys, getMoments } from '@/moments'
+
+const months = getArchiveMonthKeys(await getMoments())
+const latestMonth = months.at(-1)
+
+if (!latestMonth) {
+  return Astro.redirect('/')
+}
+
+const year = Number.parseInt(latestMonth.slice(0, 4), 10)
+const month = Number.parseInt(latestMonth.slice(5, 7), 10)
+---
+
+<CalendarView year={year} month={month} />

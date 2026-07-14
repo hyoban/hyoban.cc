@@ -1,0 +1,75 @@
+---
+interface Props {
+  text: string
+}
+
+type Token = {
+  type: 'hashtag' | 'mention' | 'text' | 'url'
+  value: string
+}
+
+const { text } = Astro.props
+const tokens = tokenize(text)
+
+function tokenize(value: string): Token[] {
+  const pattern = /(https?:\/\/[^\s\u3000-\u303f\u3040-\u30ff\u3400-\u9fff\uf900-\ufaff\uff01-\uff65]+|@[A-Za-z0-9_]+|#[\p{L}\p{N}_]+)/gu
+  const tokens: Token[] = []
+  let cursor = 0
+
+  for (const match of value.matchAll(pattern)) {
+    const index = match.index
+
+    if (index > cursor) {
+      tokens.push({ type: 'text', value: value.slice(cursor, index) })
+    }
+
+    const matched = match[0]
+    const tokenValue = matched.startsWith('http')
+      ? matched.replace(/[),.!?;:'"\]}]+$/u, '')
+      : matched
+
+    tokens.push({
+      type: tokenValue.startsWith('http')
+        ? 'url'
+        : tokenValue.startsWith('@')
+          ? 'mention'
+          : 'hashtag',
+      value: tokenValue,
+    })
+
+    if (tokenValue.length < matched.length) {
+      tokens.push({ type: 'text', value: matched.slice(tokenValue.length) })
+    }
+
+    cursor = index + matched.length
+  }
+
+  if (cursor < value.length) {
+    tokens.push({ type: 'text', value: value.slice(cursor) })
+  }
+
+  return tokens
+}
+---
+
+<p class="moment-text">
+  {
+    tokens.map(token => token.type === 'url'
+      ? <a href={token.value} target="_blank" rel="noopener noreferrer">{token.value}</a>
+      : token.type === 'text'
+        ? token.value
+        : <span class="text-tx-2">{token.value}</span>)
+  }
+</p>
+
+<style>
+  .moment-text {
+    line-height: 1.7;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+  }
+
+  .moment-text a {
+    color: var(--color-tx);
+  }
+</style>

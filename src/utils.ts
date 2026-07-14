@@ -72,8 +72,8 @@ function getPostDateParts(date: Date) {
   )
 
   return {
-    day: parts.day,
-    month: parts.month,
-    year: parts.year,
+    day: parts.day!,
+    month: parts.month!,
+    year: parts.year!,
   }
 }

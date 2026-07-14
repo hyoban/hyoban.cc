@@ -1,0 +1,101 @@
+---
+import type { ResolvedMomentMedia } from '@/moments'
+import { Image } from 'astro:assets'
+
+interface Props {
+  media: ResolvedMomentMedia[]
+}
+
+const { media } = Astro.props
+const galleryClass = `moment-gallery moment-gallery--${Math.min(media.length, 4)}`
+---
+
+<div class={galleryClass}>
+  {
+    media.map((item, index) => item.type === 'image'
+      ? (
+          <button
+            type="button"
+            class="moment-gallery__image"
+            data-lightbox-item
+            data-lightbox-src={item.src.src}
+            data-lightbox-alt={item.alt}
+            aria-label={`查看图片 ${index + 1}`}
+          >
+            <Image
+              src={item.src}
+              alt={item.alt}
+              width={Math.min(item.src.width, 960)}
+              height={Math.round(Math.min(item.src.width, 960) * item.src.height / item.src.width)}
+              loading="lazy"
+            />
+          </button>
+        )
+      : (
+          <div class="moment-gallery__video">
+            <video controls preload="metadata" poster={item.poster?.src} aria-label={item.alt || `视频 ${index + 1}`}>
+              <source src={item.src} type="video/mp4" />
+            </video>
+          </div>
+        ))
+  }
+</div>
+
+<style>
+  .moment-gallery {
+    display: grid;
+    gap: 0.25rem;
+    margin-top: 0.875rem;
+    overflow: hidden;
+  }
+
+  .moment-gallery--1 {
+    grid-template-columns: 1fr;
+  }
+
+  .moment-gallery--2,
+  .moment-gallery--3,
+  .moment-gallery--4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .moment-gallery--3 > :first-child {
+    grid-row: span 2;
+  }
+
+  .moment-gallery__image,
+  .moment-gallery__video {
+    aspect-ratio: 4 / 3;
+    background: var(--color-inline);
+    border: 0;
+    border-radius: 0.375rem;
+    min-width: 0;
+    overflow: hidden;
+    padding: 0;
+  }
+
+  .moment-gallery__image {
+    cursor: zoom-in;
+  }
+
+  .moment-gallery__image :global(img),
+  .moment-gallery__video video {
+    display: block;
+    height: 100%;
+    object-fit: cover;
+    width: 100%;
+  }
+
+  .moment-gallery--1 .moment-gallery__image,
+  .moment-gallery--1 .moment-gallery__video {
+    aspect-ratio: auto;
+    max-height: 32rem;
+  }
+
+  .moment-gallery--1 .moment-gallery__image :global(img),
+  .moment-gallery--1 .moment-gallery__video video {
+    height: auto;
+    max-height: 32rem;
+    object-fit: contain;
+  }
+</style>

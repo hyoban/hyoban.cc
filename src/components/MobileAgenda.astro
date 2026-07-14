@@ -1,0 +1,147 @@
+---
+import MomentEntry from '@/components/MomentEntry.astro'
+import type { Moment } from '@/moments'
+
+interface AgendaDay {
+  dateKey: string
+  day: number
+  moments: Moment[]
+}
+
+interface Props {
+  days: AgendaDay[]
+  month: number
+  year: number
+}
+
+const { days, month, year } = Astro.props
+const agendaDays = days.toReversed()
+
+function formatDate(dateKey: string) {
+  const dateYear = Number.parseInt(dateKey.slice(0, 4), 10)
+  const dateMonth = Number.parseInt(dateKey.slice(5, 7), 10)
+  const dateDay = Number.parseInt(dateKey.slice(8, 10), 10)
+  const weekday = new Intl.DateTimeFormat('zh-CN', {
+    timeZone: 'Asia/Singapore',
+    weekday: 'short',
+  }).format(new Date(Date.UTC(dateYear, dateMonth - 1, dateDay)))
+
+  return `${dateMonth} 月 ${dateDay} 日 · ${weekday}`
+}
+---
+
+<section class="mobile-agenda" aria-label={`${year} 年 ${month} 月的全部记录`}>
+  {
+    days.length > 0
+      ? (
+          <>
+            <nav class="mobile-agenda__index" aria-label="本月有记录的日期">
+              {days.map(day => (
+                <button
+                  type="button"
+                  data-agenda-target={`agenda-${day.dateKey}`}
+                  aria-label={`定位到 ${formatDate(day.dateKey)}`}
+                >
+                  {String(day.day).padStart(2, '0')}
+                </button>
+              ))}
+            </nav>
+
+            <div class="mobile-agenda__days">
+              {agendaDays.map(day => (
+                <section class="mobile-agenda__day" id={`agenda-${day.dateKey}`}>
+                  <header>
+                    <h2>{formatDate(day.dateKey)}</h2>
+                    <span>{day.moments.length} 条</span>
+                  </header>
+                  <div class="mobile-agenda__moments">
+                    {day.moments.map(moment => <MomentEntry moment={moment} />)}
+                  </div>
+                </section>
+              ))}
+            </div>
+          </>
+        )
+      : <p class="mobile-agenda__empty">本月没有记录。</p>
+  }
+</section>
+
+<style>
+  .mobile-agenda {
+    display: none;
+  }
+
+  @media (max-width: 56rem) {
+    .mobile-agenda {
+      display: block;
+    }
+
+    .mobile-agenda__index {
+      border-bottom: 1px solid var(--color-border);
+      border-top: 1px solid var(--color-border);
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+      overflow-x: auto;
+      padding: 0.25rem 0;
+      scrollbar-width: none;
+    }
+
+    .mobile-agenda__index::-webkit-scrollbar {
+      display: none;
+    }
+
+    .mobile-agenda__index button {
+      align-items: center;
+      background: transparent;
+      border: 0;
+      color: var(--color-tx-2);
+      cursor: pointer;
+      display: flex;
+      flex: none;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      height: 2.75rem;
+      justify-content: center;
+      min-width: 2.75rem;
+      padding: 0;
+    }
+
+    .mobile-agenda__day {
+      scroll-margin-top: 0.75rem;
+    }
+
+    .mobile-agenda__day + .mobile-agenda__day {
+      border-top: 1px solid var(--color-border);
+    }
+
+    .mobile-agenda__day > header {
+      align-items: baseline;
+      display: flex;
+      gap: 0.75rem;
+      justify-content: space-between;
+      padding-top: 1.75rem;
+    }
+
+    .mobile-agenda__day h2 {
+      font-size: 1.125rem;
+      font-weight: 500;
+    }
+
+    .mobile-agenda__day > header span {
+      color: var(--color-tx-3);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.75rem;
+      white-space: nowrap;
+    }
+
+    .mobile-agenda__moments {
+      padding-bottom: 0.25rem;
+    }
+
+    .mobile-agenda__empty {
+      color: var(--color-tx-3);
+      padding: 4rem 0;
+      text-align: center;
+    }
+  }
+</style>

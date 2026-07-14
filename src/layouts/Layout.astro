@@ -2,8 +2,10 @@
 import '@/styles/index.css'
 
 import { SITE_TITLE, SITE_URL } from '@/consts'
+import { ClientRouter } from 'astro:transitions'
 
 interface Props {
+  clientNavigation?: boolean | undefined
   title: string
   description?: string | undefined
   article?: {
@@ -13,7 +15,7 @@ interface Props {
   } | undefined
 }
 
-const { title, description, article } = Astro.props
+const { title, description, article, clientNavigation = false } = Astro.props
 const canonicalUrl = new URL(Astro.url.pathname, SITE_URL).toString()
 
 // Telegram Instant View fallback via Teletype's undocumented verification flow.
@@ -23,7 +25,7 @@ const canonicalUrl = new URL(Astro.url.pathname, SITE_URL).toString()
 const TELETYPE_SITE_VERIFICATION = 'g7j8/rPFXfhyrq5q0QQV7EsYWv4='
 ---
 
-<html lang="zh-Hans">
+<html lang="zh-Hans" transition:name="root" transition:animate="none">
   <head>
     <!-- Global Metadata -->
     <meta charset="utf-8" />
@@ -37,6 +39,7 @@ const TELETYPE_SITE_VERIFICATION = 'g7j8/rPFXfhyrq5q0QQV7EsYWv4='
     <title>{title}</title>
     <meta name="title" content={title} />
     <meta name="description" content={description} />
+    {clientNavigation && <ClientRouter fallback="swap" />}
     <link rel="canonical" href={canonicalUrl} />
     <meta property="og:type" content={article ? 'article' : 'website'} />
     <meta property="og:title" content={title} />
