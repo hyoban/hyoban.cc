@@ -4,6 +4,7 @@
   "private": true,
   "packageManager": "pnpm@11.9.0",
   "scripts": {
+    "dev": "astro dev",
     "build": "astro build",
     "check": "astro check",
     "media:generate": "node scripts/generate-media.mjs",
