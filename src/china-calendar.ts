@@ -20,13 +20,13 @@ export type ChinaCalendarDay = Readonly<{
 }>
 
 const holidayNames = {
-  'dragon-boat': '端午节',
-  'labor-day': '劳动节',
-  'mid-autumn': '中秋节',
-  'national-day': '国庆节',
+  'dragon-boat': '端午',
+  'labor-day': '五一',
+  'mid-autumn': '中秋',
+  'national-day': '国庆',
   'new-year': '元旦',
-  qingming: '清明节',
-  'spring-festival': '春节',
+  qingming: '清明',
+  'spring-festival': '新春',
 } as const
 
 const schedules: readonly HolidaySchedule[] = [
