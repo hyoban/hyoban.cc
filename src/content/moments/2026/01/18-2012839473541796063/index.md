@@ -1,5 +1,6 @@
 ---
 publishedAt: "2026-01-18T18:48:21+08:00"
+location: nanxun
 sourceUrl: "https://twitter.com/hyoban_cc/status/2012839473541796063"
 media:
   - type: image

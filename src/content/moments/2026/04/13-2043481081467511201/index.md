@@ -1,6 +1,6 @@
 ---
 publishedAt: "2026-04-13T08:07:10+08:00"
-location: nanjing
+location: xuanwu-lake
 sourceUrl: "https://twitter.com/hyoban_cc/status/2043481081467511201"
 media:
   - type: image

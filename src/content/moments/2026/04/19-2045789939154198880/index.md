@@ -1,5 +1,6 @@
 ---
 publishedAt: "2026-04-19T17:01:45+08:00"
+location: dalongwan-beach
 sourceUrl: "https://twitter.com/hyoban_cc/status/2045789939154198880"
 media:
   - type: image

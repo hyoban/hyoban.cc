@@ -1,5 +1,6 @@
 ---
 publishedAt: "2026-06-27T22:15:55+08:00"
+location: dougou
 sourceUrl: "https://telegram.me/hyoban_travel/129"
 media:
   - type: image

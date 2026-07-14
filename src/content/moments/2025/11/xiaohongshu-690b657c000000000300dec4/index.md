@@ -1,5 +1,6 @@
 ---
 publishedAt: "2025-11-05T22:55:56+08:00"
+location: lenggacuo
 sourceUrl: "https://www.xiaohongshu.com/explore/690b657c000000000300dec4"
 media:
   - type: image

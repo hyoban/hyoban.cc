@@ -1,6 +1,6 @@
 ---
 publishedAt: "2026-05-01T13:28:29+08:00"
-location: hefei
+location: dashu-mountain
 sourceUrl: "https://telegram.me/hyoban_travel/36"
 media:
   - type: image

@@ -1,5 +1,6 @@
 ---
 publishedAt: "2026-04-05T08:57:17+08:00"
+location: anji
 sourceUrl: "https://twitter.com/hyoban_cc/status/2040594591473377688"
 media: []
 ---

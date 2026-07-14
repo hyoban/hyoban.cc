@@ -1,5 +1,6 @@
 ---
 publishedAt: "2026-03-24T11:39:00+08:00"
+location: qiandao-lake
 sourceUrl: "https://twitter.com/hyoban_cc/status/2036286634740814096"
 media:
   - type: image

@@ -1,5 +1,6 @@
 ---
 publishedAt: "2025-12-21T21:17:05+08:00"
+location: suzhou
 sourceUrl: "https://twitter.com/hyoban_cc/status/2002730043471180190"
 media: []
 ---

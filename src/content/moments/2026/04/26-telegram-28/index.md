@@ -1,5 +1,6 @@
 ---
 publishedAt: "2026-04-26T20:23:54+08:00"
+location: wuhu
 occurredOn: "2026-04-25"
 sourceUrl: "https://telegram.me/hyoban_travel/28"
 media:

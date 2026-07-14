@@ -1,5 +1,6 @@
 ---
 publishedAt: "2026-04-19T12:55:06+08:00"
+location: wuhu-tianmen-mountain
 sourceUrl: "https://twitter.com/hyoban_cc/status/2045727868316221933"
 media:
   - type: image
