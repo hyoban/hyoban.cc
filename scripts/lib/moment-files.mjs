@@ -23,8 +23,14 @@ export function generateVideoPoster(videoUrl, posterUrl) {
 }
 
 export function parseMomentOccurredOn(document) {
-  const frontmatter = document.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/)?.[1]
+  const frontmatter = parseFrontmatter(document)
   return frontmatter?.match(/^occurredOn:\s*["']?(\d{4}-\d{2}-\d{2})["']?\s*$/m)?.[1]
+}
+
+export function parseMomentSourceUrl(document) {
+  const frontmatter = parseFrontmatter(document)
+  const value = frontmatter?.match(/^sourceUrl:\s*(?:"([^"]+)"|'([^']+)'|(\S+))\s*$/m)
+  return value?.[1] ?? value?.[2] ?? value?.[3]
 }
 
 export function serializeMoment(moment) {
@@ -64,4 +70,8 @@ export function serializeMoment(moment) {
 
   lines.push('')
   return lines.join('\n')
+}
+
+function parseFrontmatter(document) {
+  return document.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/)?.[1]
 }

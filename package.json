@@ -7,6 +7,7 @@
     "build": "astro build",
     "check": "astro check",
     "media:generate": "node scripts/generate-media.mjs",
+    "moment:import-xiaohongshu": "node scripts/import-xiaohongshu-moments.mjs",
     "moment:import-twitter": "node scripts/import-twitter-moments.mjs",
     "moment:new": "node scripts/new-moment.mjs",
     "moment:import-telegram": "node scripts/import-telegram-moments.mjs",

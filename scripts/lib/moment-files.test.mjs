@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { parseMomentOccurredOn, serializeMoment } from './moment-files.mjs'
+import {
+  parseMomentOccurredOn,
+  parseMomentSourceUrl,
+  serializeMoment,
+} from './moment-files.mjs'
 
 test('serializes an occurrence date separately from the publication time', () => {
   const document = serializeMoment({
@@ -41,4 +45,21 @@ test('reads an occurrence date from existing moment frontmatter', () => {
   ].join('\n')
 
   assert.equal(parseMomentOccurredOn(document), '2026-07-11')
+})
+
+test('reads a source URL only from moment frontmatter', () => {
+  const document = [
+    '---',
+    'publishedAt: "2026-07-13T22:38:02+08:00"',
+    'sourceUrl: "https://www.xiaohongshu.com/explore/6a5504ba0000000006031b50"',
+    'media: []',
+    '---',
+    '',
+    'sourceUrl: https://example.com/not-frontmatter',
+  ].join('\n')
+
+  assert.equal(
+    parseMomentSourceUrl(document),
+    'https://www.xiaohongshu.com/explore/6a5504ba0000000006031b50',
+  )
 })
