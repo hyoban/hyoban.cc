@@ -13,7 +13,7 @@ for (const post of posts) {
   const year = formatPostYear(post.data.pubDate)
   const lastGroup = postsByYear[postsByYear.length - 1]
 
-  if (lastGroup?.year === year) {
+  if (lastGroup && lastGroup.year === year) {
     lastGroup.posts.push(post)
   } else {
     postsByYear.push({ year, posts: [post] })
@@ -42,7 +42,7 @@ for (const post of posts) {
         </p>
         <p>
           你也可以订阅{' '}
-          <a class={introLinkClass} href="/rss.xml"><span class={`${introIconClass} i-simple-icons-rss`} aria-hidden="true" />RSS</a>、查看 <a class={introLinkClass} href="/llms.txt">LLMs</a>、我的 <a class={introLinkClass} href="/use">Use</a> 或 <a class={introLinkClass} href="/media"><span class={`${introIconClass} i-lucide-clapperboard`} aria-hidden="true" />影视推荐</a> 页面。
+          <a class={introLinkClass} href="/rss.xml"><span class={`${introIconClass} i-simple-icons-rss`} aria-hidden="true" />RSS</a>、查看 <a class={introLinkClass} href="/llms.txt">LLMs</a>、我的 <a class={introLinkClass} href="/use">Use</a>、<a class={introLinkClass} href="/calendar"><span class={`${introIconClass} i-lucide-calendar-days`} aria-hidden="true" />日历</a> 或 <a class={introLinkClass} href="/media"><span class={`${introIconClass} i-lucide-clapperboard`} aria-hidden="true" />影视推荐</a> 页面。
         </p>
       </div>
     </section>

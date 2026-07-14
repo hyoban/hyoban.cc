@@ -1,0 +1,57 @@
+---
+import MomentGallery from '@/components/MomentGallery.astro'
+import MomentText from '@/components/MomentText.astro'
+import type { Moment } from '@/moments'
+
+interface Props {
+  moment: Moment
+}
+
+const { moment } = Astro.props
+---
+
+<article class="moment-entry">
+  <header>
+    <time datetime={moment.publishedAt.toISOString()}>{moment.time}</time>
+    {
+      moment.sourceUrl && (
+        <a href={moment.sourceUrl} target="_blank" rel="noopener noreferrer" aria-label="查看原始内容">
+          <span class="i-lucide-external-link" aria-hidden="true" />
+        </a>
+      )
+    }
+  </header>
+  <MomentText text={moment.text} />
+  {moment.media.length > 0 && <MomentGallery media={moment.media} />}
+</article>
+
+<style>
+  .moment-entry {
+    padding: 1.5rem 0;
+  }
+
+  .moment-entry + .moment-entry {
+    border-top: 1px solid var(--color-border);
+  }
+
+  .moment-entry > header {
+    align-items: center;
+    color: var(--color-tx-2);
+    display: flex;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.75rem;
+    gap: 0.5rem;
+    margin-bottom: 0.625rem;
+  }
+
+  .moment-entry > header a {
+    align-items: center;
+    color: var(--color-tx-3);
+    display: inline-flex;
+    justify-content: center;
+    margin: -0.75rem 0;
+    min-height: 2.75rem;
+    min-width: 2.75rem;
+    text-decoration: none;
+  }
+</style>

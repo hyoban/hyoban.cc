@@ -23,4 +23,34 @@ const pages = defineCollection({
   }),
 })
 
-export const collections = { posts, pages }
+const momentMedia = z.object({
+  alt: z.string(),
+  file: z.string().trim().min(1),
+  poster: z.string().trim().min(1).optional(),
+  type: z.enum(['image', 'video']),
+})
+
+const moments = defineCollection({
+  loader: glob({ pattern: '**/index.md', base: './src/content/moments' }),
+  schema: z.object({
+    media: z.array(momentMedia).default([]),
+    publishedAt: z.coerce.date(),
+    sourceUrl: z.url().optional(),
+  }).superRefine((moment, context) => {
+    if (moment.sourceUrl) {
+      return
+    }
+
+    for (const [index, media] of moment.media.entries()) {
+      if (!media.alt.trim()) {
+        context.addIssue({
+          code: 'custom',
+          message: 'New moment media requires alt text.',
+          path: ['media', index, 'alt'],
+        })
+      }
+    }
+  }),
+})
+
+export const collections = { posts, pages, moments }

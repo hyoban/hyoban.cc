@@ -1,0 +1,30 @@
+---
+import CalendarView from '@/components/CalendarView.astro'
+import { getArchiveMonthKeys, getMoments } from '@/moments'
+
+export async function getStaticPaths() {
+  const monthKeys = getArchiveMonthKeys(await getMoments())
+
+  return monthKeys.map((key) => {
+    const year = key.slice(0, 4)
+    const month = key.slice(5, 7)
+
+    return {
+      params: { month, year },
+      props: {
+        month: Number.parseInt(month, 10),
+        year: Number.parseInt(year, 10),
+      },
+    }
+  })
+}
+
+interface Props {
+  month: number
+  year: number
+}
+
+const { month, year } = Astro.props
+---
+
+<CalendarView year={year} month={month} />
