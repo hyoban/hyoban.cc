@@ -1,4 +1,4 @@
-const TELEGRAM_POST_URL = /^https:\/\/t\.me\/([A-Za-z0-9_]+\/\d+)\/?(?:[?#].*)?$/
+const TELEGRAM_POST_URL = /^https:\/\/telegram\.me\/([A-Za-z0-9_]+\/\d+)\/?(?:[?#].*)?$/
 const TELEGRAM_LEFT_ALIGN_STYLE = '<style>body.widget_frame_base { margin-left: 0 !important; margin-right: auto !important; }</style>'
 const TELEGRAM_IFRAME_STYLE = 'display: block; overflow: hidden; background-color: transparent; border: none; min-width: 320px; width: 100%;'
 const HTML_ATTRIBUTE_ESCAPES = {
@@ -53,7 +53,7 @@ function getStandaloneTelegramPostPath(node) {
 }
 
 async function renderTelegramPost(postPath) {
-  const response = await fetch(`https://t.me/${postPath}?embed=1`, {
+  const response = await fetch(`https://telegram.me/${postPath}?embed=1`, {
     headers: {
       'user-agent': 'Mozilla/5.0',
     },
