@@ -1,5 +1,6 @@
 ---
 publishedAt: "2025-10-24T12:20:47+08:00"
+location: xiangyang
 sourceUrl: "https://www.xiaohongshu.com/explore/68fafe9f000000000303523c"
 media:
   - type: image

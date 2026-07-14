@@ -1,5 +1,6 @@
 ---
 publishedAt: "2026-02-20T18:19:34+08:00"
+location: lingbi
 sourceUrl: "https://twitter.com/hyoban_cc/status/2024791027933237375"
 media:
   - type: image

@@ -1,5 +1,6 @@
 ---
 publishedAt: "2026-06-24T22:13:16+08:00"
+location: laojunshan
 sourceUrl: "https://telegram.me/hyoban_travel/118"
 media:
   - type: image

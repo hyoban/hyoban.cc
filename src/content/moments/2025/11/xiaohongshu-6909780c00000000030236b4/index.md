@@ -1,5 +1,6 @@
 ---
 publishedAt: "2025-11-04T11:50:36+08:00"
+location: kangding
 sourceUrl: "https://www.xiaohongshu.com/explore/6909780c00000000030236b4"
 media:
   - type: image

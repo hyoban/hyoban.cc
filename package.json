@@ -27,5 +27,9 @@
     "tailwindcss": "^4.3.1",
     "typescript": "^6.0.3",
     "wrangler": "^4.104.0"
+  },
+  "dependencies": {
+    "@mapbox/mapbox-gl-language": "^1.0.1",
+    "mapbox-gl": "^3.26.0"
   }
 }

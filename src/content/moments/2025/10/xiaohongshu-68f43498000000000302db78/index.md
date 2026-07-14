@@ -1,5 +1,6 @@
 ---
 publishedAt: "2025-10-19T08:45:12+08:00"
+location: xinyang
 sourceUrl: "https://www.xiaohongshu.com/explore/68f43498000000000302db78"
 media:
   - type: image

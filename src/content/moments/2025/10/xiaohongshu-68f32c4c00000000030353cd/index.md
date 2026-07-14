@@ -1,5 +1,6 @@
 ---
 publishedAt: "2025-10-18T13:57:32+08:00"
+location: hefei
 sourceUrl: "https://www.xiaohongshu.com/explore/68f32c4c00000000030353cd"
 media:
   - type: image

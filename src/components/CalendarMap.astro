@@ -1,0 +1,557 @@
+---
+import CalendarModeSwitch from '@/components/CalendarModeSwitch.astro'
+import MomentEntry from '@/components/MomentEntry.astro'
+import Layout from '@/layouts/Layout.astro'
+import { getYearColor } from '@/map-locations'
+import {
+  getMappedLocationGroups,
+  getMomentPath,
+  getMoments,
+} from '@/moments'
+import { SITE_TITLE } from '@/consts'
+import 'mapbox-gl/dist/mapbox-gl.css'
+
+const moments = await getMoments()
+const locationGroups = getMappedLocationGroups(moments)
+const years = [...new Set(locationGroups.map(group => group.latestYear))].sort((a, b) => a - b)
+const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN ?? ''
+const title = `地图 · 日历 | ${SITE_TITLE}`
+const description = '按地点浏览 Calendar 中记录的 Moment。'
+const markerData = locationGroups.map(group => ({
+  color: getYearColor(group.latestYear),
+  count: group.moments.length,
+  id: group.id,
+  latestYear: group.latestYear,
+  latitude: group.location.latitude,
+  longitude: group.location.longitude,
+  name: group.location.name,
+}))
+const markerDataJson = JSON.stringify(markerData).replaceAll('<', '\\u003c')
+
+function formatDate(dateKey: string) {
+  const date = new Date(`${dateKey}T00:00:00Z`)
+  return new Intl.DateTimeFormat('zh-CN', {
+    day: 'numeric',
+    month: 'long',
+    timeZone: 'UTC',
+    weekday: 'short',
+    year: 'numeric',
+  }).format(date)
+}
+---
+
+<Layout title={title} description={description} clientNavigation>
+  <main class="calendar-map-page" data-calendar-map data-mapbox-token={mapboxToken} transition:persist="calendar-map">
+    <div class="calendar-map-canvas" data-calendar-map-canvas role="region" aria-label="Calendar 地点地图" />
+
+    <header class="calendar-map-toolbar">
+      <CalendarModeSwitch mode="map" />
+      <p>全部地点</p>
+      <a href="/" data-astro-reload>返回</a>
+    </header>
+
+    <ol class="calendar-map-legend" aria-label="地点最近记录年份">
+      {
+        years.map(year => (
+          <li>
+            <span style={`--year-color: ${getYearColor(year)}`} aria-hidden="true" />
+            {year}
+          </li>
+        ))
+      }
+    </ol>
+
+    <p class="calendar-map-loading" data-calendar-map-loading>正在加载地图…</p>
+
+    <section class="calendar-map-fallback" data-calendar-map-fallback aria-live="polite" hidden>
+      <p data-calendar-map-fallback-message>地图暂时无法加载，仍可通过地点列表浏览记录。</p>
+      <div>
+        {
+          locationGroups.map(group => (
+            <button type="button" data-map-location-id={group.id}>
+              <span style={`--year-color: ${getYearColor(group.latestYear)}`} aria-hidden="true" />
+              <strong>{group.location.name}</strong>
+              <small>{group.moments.length} 条</small>
+            </button>
+          ))
+        }
+      </div>
+    </section>
+
+    <aside class="calendar-map-drawer" data-calendar-map-drawer role="dialog" aria-labelledby="calendar-map-drawer-title" hidden>
+      <header>
+        <div>
+          <p>地点</p>
+          <h1 id="calendar-map-drawer-title" data-calendar-map-drawer-title />
+        </div>
+        <button type="button" data-calendar-map-drawer-close aria-label="关闭地点详情">
+          <span class="i-lucide-x" aria-hidden="true" />
+        </button>
+      </header>
+      <div class="calendar-map-drawer__content" data-calendar-map-drawer-content />
+    </aside>
+
+    {
+      locationGroups.map(group => {
+        const groupYears = [...new Set(group.moments.map(moment => Number.parseInt(moment.dateKey.slice(0, 4), 10)))]
+          .sort((a, b) => b - a)
+
+        return (
+          <template data-calendar-map-template={group.id}>
+            <div class="calendar-map-drawer__summary">
+              <span>{group.moments.length} 条记录</span>
+              <span aria-hidden="true">·</span>
+              <span>{groupYears.map(year => `${year} 年`).join('、')}</span>
+            </div>
+            <div class="calendar-map-drawer__moments">
+              {group.moments.map(moment => (
+                <section class="calendar-map-moment">
+                  <a class="calendar-map-moment__date" href={getMomentPath(moment.dateKey)}>
+                    {formatDate(moment.dateKey)}
+                  </a>
+                  <MomentEntry moment={moment} showLocation={false} />
+                </section>
+              ))}
+            </div>
+          </template>
+        )
+      })
+    }
+
+    <dialog class="calendar-map-lightbox" data-calendar-map-lightbox aria-label="图片查看器">
+      <button type="button" class="calendar-map-lightbox__close" data-map-lightbox-close aria-label="关闭图片">
+        <span class="i-lucide-x" aria-hidden="true" />
+      </button>
+      <button type="button" class="calendar-map-lightbox__previous" data-map-lightbox-previous aria-label="上一张图片">
+        <span class="i-lucide-chevron-left" aria-hidden="true" />
+      </button>
+      <img alt="" data-map-lightbox-image />
+      <button type="button" class="calendar-map-lightbox__next" data-map-lightbox-next aria-label="下一张图片">
+        <span class="i-lucide-chevron-right" aria-hidden="true" />
+      </button>
+    </dialog>
+
+    <script is:inline type="application/json" data-calendar-map-locations set:html={markerDataJson} />
+  </main>
+</Layout>
+
+<script>
+  import '@/calendar-map-client'
+</script>
+
+<style>
+  :global(body:has(.calendar-map-page)) {
+    overflow: hidden;
+    padding: 0;
+  }
+
+  .calendar-map-page {
+    background: var(--color-bg);
+    height: 100dvh;
+    isolation: isolate;
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+  }
+
+  .calendar-map-canvas {
+    inset: 0;
+    position: absolute;
+  }
+
+  .calendar-map-toolbar {
+    align-items: center;
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: 1fr auto 1fr;
+    left: 1rem;
+    pointer-events: none;
+    position: absolute;
+    right: 1rem;
+    top: 1rem;
+    z-index: 5;
+  }
+
+  .calendar-map-toolbar > * {
+    pointer-events: auto;
+  }
+
+  .calendar-map-toolbar > :global(.calendar-mode-switch) {
+    justify-self: start;
+  }
+
+  .calendar-map-toolbar > p,
+  .calendar-map-toolbar > a {
+    background: color-mix(in srgb, var(--color-bg) 82%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-border) 82%, transparent);
+    border-radius: 999px;
+    backdrop-filter: blur(1rem);
+    font-size: 0.8125rem;
+    min-height: 2.375rem;
+  }
+
+  .calendar-map-toolbar > p {
+    align-items: center;
+    display: flex;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    grid-column: 2;
+    padding: 0 0.875rem;
+  }
+
+  .calendar-map-toolbar > a {
+    align-items: center;
+    color: var(--color-tx-2);
+    display: flex;
+    grid-column: 3;
+    justify-self: end;
+    padding: 0 0.875rem;
+    text-decoration: none;
+  }
+
+  .calendar-map-legend {
+    align-items: center;
+    background: color-mix(in srgb, var(--color-bg) 82%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-border) 82%, transparent);
+    border-radius: 999px;
+    bottom: 2.5rem;
+    box-shadow: 0 0.5rem 2rem rgb(0 0 0 / 0.08);
+    display: flex;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.75rem;
+    gap: 0.75rem;
+    left: 50%;
+    list-style: none;
+    padding: 0.625rem 0.875rem;
+    position: absolute;
+    transform: translateX(-50%);
+    z-index: 4;
+  }
+
+  .calendar-map-legend li {
+    align-items: center;
+    display: flex;
+    gap: 0.35rem;
+  }
+
+  .calendar-map-legend span,
+  .calendar-map-fallback button > span {
+    background: var(--year-color);
+    border: 1px solid rgb(255 255 255 / 0.9);
+    border-radius: 999px;
+    box-shadow: 0 0 0 1px rgb(0 0 0 / 0.12);
+    display: block;
+    height: 0.625rem;
+    width: 0.625rem;
+  }
+
+  .calendar-map-loading {
+    background: color-mix(in srgb, var(--color-bg) 88%, transparent);
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    left: 50%;
+    padding: 0.625rem 0.875rem;
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 3;
+  }
+
+  .calendar-map-loading[hidden],
+  .calendar-map-fallback[hidden],
+  .calendar-map-drawer[hidden] {
+    display: none;
+  }
+
+  .calendar-map-fallback {
+    background: color-mix(in srgb, var(--color-bg) 94%, transparent);
+    border: 1px solid var(--color-border);
+    box-shadow: 0 1rem 4rem rgb(0 0 0 / 0.12);
+    left: 50%;
+    max-height: min(36rem, calc(100dvh - 8rem));
+    overflow-y: auto;
+    padding: 1.25rem;
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: min(28rem, calc(100vw - 2rem));
+    z-index: 6;
+  }
+
+  .calendar-map-fallback > p {
+    color: var(--color-tx-2);
+    line-height: 1.6;
+    margin-bottom: 1rem;
+  }
+
+  .calendar-map-fallback > div {
+    display: grid;
+    gap: 0.25rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .calendar-map-fallback button {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    color: var(--color-tx);
+    cursor: pointer;
+    display: grid;
+    gap: 0.5rem;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    min-height: 2.75rem;
+    padding: 0 0.5rem;
+    text-align: left;
+  }
+
+  .calendar-map-fallback button:hover,
+  .calendar-map-fallback button:focus-visible {
+    background: var(--color-inline);
+  }
+
+  .calendar-map-fallback strong {
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .calendar-map-fallback small {
+    color: var(--color-tx-3);
+  }
+
+  .calendar-map-drawer {
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    bottom: 1rem;
+    box-shadow: 0 1.5rem 5rem rgb(0 0 0 / 0.16);
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    min-width: 0;
+    position: absolute;
+    right: 1rem;
+    top: 1rem;
+    width: min(28rem, calc(100vw - 2rem));
+    z-index: 10;
+  }
+
+  .calendar-map-drawer > header {
+    align-items: center;
+    border-bottom: 1px solid var(--color-border);
+    display: flex;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+  }
+
+  .calendar-map-drawer > header > div,
+  .calendar-map-drawer__content,
+  .calendar-map-drawer__moments,
+  .calendar-map-moment {
+    min-width: 0;
+  }
+
+  .calendar-map-drawer > header p {
+    color: var(--color-tx-3);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.6875rem;
+    margin-bottom: 0.125rem;
+    text-transform: uppercase;
+  }
+
+  .calendar-map-drawer h1 {
+    font-size: 1.125rem;
+    font-weight: 500;
+  }
+
+  .calendar-map-drawer > header button,
+  .calendar-map-lightbox button {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    color: inherit;
+    cursor: pointer;
+    display: flex;
+    height: 2.75rem;
+    justify-content: center;
+    width: 2.75rem;
+  }
+
+  .calendar-map-drawer__content {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 0 1.25rem 1rem;
+  }
+
+  .calendar-map-drawer__summary {
+    align-items: center;
+    color: var(--color-tx-3);
+    display: flex;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.75rem;
+    gap: 0.375rem;
+    padding: 1rem 0 0.25rem;
+  }
+
+  .calendar-map-moment + .calendar-map-moment {
+    border-top: 1px solid var(--color-border);
+  }
+
+  .calendar-map-moment__date {
+    color: var(--color-tx-2);
+    display: inline-block;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.75rem;
+    margin-top: 1.25rem;
+    text-decoration: none;
+  }
+
+  .calendar-map-moment :global(.moment-entry) {
+    padding-top: 0.625rem;
+  }
+
+  :global(.calendar-map-marker) {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    display: flex;
+    height: 2.75rem;
+    justify-content: center;
+    padding: 0;
+    width: 2.75rem;
+  }
+
+  :global(.calendar-map-marker__dot) {
+    align-items: center;
+    background: var(--marker-color);
+    border: 2px solid rgb(255 255 255 / 0.95);
+    border-radius: 999px;
+    box-shadow: 0 0.125rem 0.75rem rgb(0 0 0 / 0.24), 0 0 0 1px rgb(0 0 0 / 0.12);
+    color: white;
+    display: flex;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.625rem;
+    font-weight: 600;
+    height: 1.125rem;
+    justify-content: center;
+    min-width: 1.125rem;
+    padding: 0 0.1875rem;
+    transition: transform 160ms ease, box-shadow 160ms ease;
+  }
+
+  :global(.calendar-map-marker:hover .calendar-map-marker__dot),
+  :global(.calendar-map-marker:focus-visible .calendar-map-marker__dot),
+  :global(.calendar-map-marker[aria-pressed='true'] .calendar-map-marker__dot) {
+    box-shadow: 0 0.25rem 1rem rgb(0 0 0 / 0.3), 0 0 0 2px var(--color-tx);
+    transform: scale(1.25);
+  }
+
+  :global(.calendar-map-marker:focus-visible) {
+    outline: none;
+  }
+
+  .calendar-map-page:has(.calendar-map-drawer:not([hidden])) :global(.mapboxgl-ctrl-bottom-right) {
+    right: calc(min(28rem, calc(100vw - 2rem)) + 1.5rem);
+  }
+
+  .calendar-map-lightbox {
+    background: rgb(0 0 0 / 0.88);
+    border: 0;
+    height: 100dvh;
+    margin: 0;
+    max-height: none;
+    max-width: none;
+    padding: 4rem;
+    width: 100vw;
+  }
+
+  .calendar-map-lightbox::backdrop {
+    background: transparent;
+  }
+
+  .calendar-map-lightbox img {
+    height: 100%;
+    object-fit: contain;
+    width: 100%;
+  }
+
+  .calendar-map-lightbox button {
+    color: white;
+    position: fixed;
+    z-index: 1;
+  }
+
+  .calendar-map-lightbox__close {
+    right: 1rem;
+    top: 1rem;
+  }
+
+  .calendar-map-lightbox__previous,
+  .calendar-map-lightbox__next {
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .calendar-map-lightbox__previous {
+    left: 0.5rem;
+  }
+
+  .calendar-map-lightbox__next {
+    right: 0.5rem;
+  }
+
+  @media (max-width: 48rem) {
+    .calendar-map-toolbar {
+      left: 0.75rem;
+      right: 0.75rem;
+      top: 0.75rem;
+    }
+
+    .calendar-map-toolbar > p {
+      display: none;
+    }
+
+    .calendar-map-toolbar > a {
+      grid-column: 3;
+    }
+
+    .calendar-map-legend {
+      bottom: calc(1rem + env(safe-area-inset-bottom));
+    }
+
+    .calendar-map-drawer {
+      border-radius: 0.75rem;
+      bottom: calc(0.75rem + env(safe-area-inset-bottom));
+      height: min(78dvh, 42rem);
+      left: 0.75rem;
+      right: 0.75rem;
+      top: auto;
+      width: auto;
+    }
+
+    .calendar-map-page:has(.calendar-map-drawer:not([hidden])) :global(.mapboxgl-ctrl-bottom-left),
+    .calendar-map-page:has(.calendar-map-drawer:not([hidden])) :global(.mapboxgl-ctrl-bottom-right) {
+      bottom: calc(min(78dvh, 42rem) + 1.25rem + env(safe-area-inset-bottom));
+    }
+
+    .calendar-map-page:has(.calendar-map-drawer:not([hidden])) :global(.mapboxgl-ctrl-bottom-right) {
+      right: 0;
+    }
+
+    .calendar-map-lightbox {
+      padding: 3rem 1rem;
+    }
+
+    .calendar-map-lightbox__previous,
+    .calendar-map-lightbox__next {
+      bottom: 1rem;
+      top: auto;
+      transform: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :global(.calendar-map-marker__dot) {
+      transition: none;
+    }
+  }
+</style>

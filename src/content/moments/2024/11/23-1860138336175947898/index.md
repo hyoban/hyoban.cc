@@ -1,5 +1,6 @@
 ---
 publishedAt: "2024-11-23T09:48:33+08:00"
+location: hong-kong
 sourceUrl: "https://twitter.com/hyoban_cc/status/1860138336175947898"
 media:
   - type: image

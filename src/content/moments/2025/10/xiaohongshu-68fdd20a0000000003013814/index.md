@@ -1,5 +1,6 @@
 ---
 publishedAt: "2025-10-26T15:47:22+08:00"
+location: mianyang
 sourceUrl: "https://www.xiaohongshu.com/explore/68fdd20a0000000003013814"
 media:
   - type: image

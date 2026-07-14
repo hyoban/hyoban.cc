@@ -1,6 +1,7 @@
 import { glob } from 'astro/loaders'
 import { z } from 'astro/zod'
 import { defineCollection } from 'astro:content'
+import { isLocationId } from '@/data/locations'
 
 const description = z.string().trim().min(1)
 
@@ -30,10 +31,15 @@ const momentMedia = z.object({
   type: z.enum(['image', 'video']),
 })
 
+const momentLocation = z.string().refine(isLocationId, {
+  message: 'Unknown calendar map location id.',
+})
+
 const moments = defineCollection({
   loader: glob({ pattern: '**/index.md', base: './src/content/moments' }),
   schema: z.object({
     hidden: z.boolean().default(false),
+    location: momentLocation.optional(),
     media: z.array(momentMedia).default([]),
     occurredOn: z.iso.date().optional(),
     publishedAt: z.coerce.date(),

@@ -1,6 +1,7 @@
 ---
 publishedAt: "2026-06-24T22:12:07+08:00"
 occurredOn: "2026-06-19"
+location: xuchang
 sourceUrl: "https://telegram.me/hyoban_travel/111"
 media:
   - type: image
