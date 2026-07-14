@@ -1,5 +1,6 @@
 ---
 import CalendarDayStatus from '@/components/CalendarDayStatus.astro'
+import CalendarModeSwitch from '@/components/CalendarModeSwitch.astro'
 import MobileAgenda from '@/components/MobileAgenda.astro'
 import MomentEntry from '@/components/MomentEntry.astro'
 import {
@@ -131,6 +132,8 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
     style={`--calendar-weeks: ${calendarDays.length / 7}`}
   >
     <header class="calendar-toolbar">
+      <CalendarModeSwitch mode="calendar" />
+
       <nav class="month-navigation" aria-label="月份导航">
         {
           previousMonth
@@ -435,6 +438,11 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
     color: var(--color-tx-2);
     grid-column: 3;
     justify-self: end;
+  }
+
+  .calendar-toolbar > :global(.calendar-mode-switch) {
+    grid-column: 1;
+    justify-self: start;
   }
 
   .month-navigation {
@@ -796,6 +804,26 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
     .calendar-page--with-drawer,
     .desktop-calendar {
       display: none;
+    }
+
+    .calendar-toolbar {
+      gap: 0.5rem;
+      grid-template-columns: 1fr auto;
+    }
+
+    .calendar-toolbar > :global(.calendar-mode-switch) {
+      grid-column: 1;
+      grid-row: 1;
+    }
+
+    .calendar-toolbar > a {
+      grid-column: 2;
+      grid-row: 1;
+    }
+
+    .month-navigation {
+      grid-column: 1 / -1;
+      grid-row: 2;
     }
 
     .month-navigation__arrow {

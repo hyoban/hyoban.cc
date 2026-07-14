@@ -1,0 +1,57 @@
+---
+interface Props {
+  mode: 'calendar' | 'map'
+}
+
+const { mode } = Astro.props
+---
+
+<nav class="calendar-mode-switch" aria-label="日历视图" style="pointer-events: auto">
+  <a href="/calendar" aria-current={mode === 'calendar' ? 'page' : undefined}>
+    <span class="i-lucide-calendar-days" aria-hidden="true" />
+    日历
+  </a>
+  <a href="/map" aria-current={mode === 'map' ? 'page' : undefined}>
+    <span class="i-lucide-map" aria-hidden="true" />
+    地图
+  </a>
+</nav>
+
+<style>
+  .calendar-mode-switch {
+    align-items: center;
+    background: color-mix(in srgb, var(--color-bg) 82%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-border) 82%, transparent);
+    border-radius: 999px;
+    display: inline-flex;
+    padding: 0.1875rem;
+  }
+
+  .calendar-mode-switch a {
+    align-items: center;
+    border-radius: 999px;
+    color: var(--color-tx-2);
+    display: inline-flex;
+    font-size: 0.8125rem;
+    gap: 0.375rem;
+    min-height: 2rem;
+    padding: 0 0.75rem;
+    text-decoration: none;
+  }
+
+  .calendar-mode-switch a[aria-current='page'] {
+    background: var(--color-inline);
+    box-shadow: 0 0.0625rem 0.25rem rgb(0 0 0 / 0.08);
+    color: var(--color-tx);
+  }
+
+  .calendar-mode-switch span {
+    font-size: 0.9375rem;
+  }
+
+  @media (max-width: 40rem) {
+    .calendar-mode-switch a {
+      padding: 0 0.625rem;
+    }
+  }
+</style>

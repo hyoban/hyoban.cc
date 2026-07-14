@@ -5,17 +5,26 @@ import type { Moment } from '@/moments'
 
 interface Props {
   moment: Moment
+  showLocation?: boolean
 }
 
-const { moment } = Astro.props
+const { moment, showLocation = true } = Astro.props
 ---
 
 <article class="moment-entry">
   <header>
     <time datetime={moment.publishedAt.toISOString()}>{moment.publishedLabel}</time>
     {
+      showLocation && moment.location && (
+        <a class="moment-entry__location" href={`/map#${moment.location.id}`}>
+          <span class="i-lucide-map-pin" aria-hidden="true" />
+          {moment.location.name}
+        </a>
+      )
+    }
+    {
       moment.sourceUrl && (
-        <a href={moment.sourceUrl} target="_blank" rel="noopener noreferrer" aria-label="查看原始内容">
+        <a class="moment-entry__source" href={moment.sourceUrl} target="_blank" rel="noopener noreferrer" aria-label="查看原始内容">
           <span class="i-lucide-external-link" aria-hidden="true" />
         </a>
       )
@@ -53,5 +62,16 @@ const { moment } = Astro.props
     min-height: 2.75rem;
     min-width: 2.75rem;
     text-decoration: none;
+  }
+
+  .moment-entry > header .moment-entry__location {
+    gap: 0.25rem;
+    margin-inline: 0;
+    padding: 0 0.25rem;
+    width: auto;
+  }
+
+  .moment-entry__location span {
+    font-size: 0.875rem;
   }
 </style>

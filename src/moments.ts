@@ -1,6 +1,12 @@
 import type { ImageMetadata } from 'astro'
 import type { CollectionEntry } from 'astro:content'
 import { getCollection } from 'astro:content'
+import { locations, type LocationId } from '@/data/locations'
+import {
+  getLocation,
+  groupMomentsByLocation,
+  type MapLocation,
+} from '@/map-locations'
 
 const TIME_ZONE = 'Asia/Singapore'
 
@@ -51,11 +57,17 @@ export type ResolvedMomentMedia =
 export type Moment = {
   dateKey: string
   id: string
+  location?: ResolvedMomentLocation
+  locationId?: LocationId
   media: ResolvedMomentMedia[]
   publishedAt: Date
   publishedLabel: string
   sourceUrl?: string
   text: string
+}
+
+export type ResolvedMomentLocation = MapLocation & {
+  id: LocationId
 }
 
 let momentsPromise: Promise<Moment[]> | undefined
@@ -93,6 +105,10 @@ export function getArchiveMonthKeys(moments: Moment[]) {
   }
 
   return months
+}
+
+export function getMappedLocationGroups(moments: Moment[]) {
+  return groupMomentsByLocation(locations, moments)
 }
 
 export function getMomentDateKey(date: Date) {
@@ -133,6 +149,13 @@ function resolveMoment(entry: MomentEntry): Moment {
 
   if (entry.data.sourceUrl) {
     moment.sourceUrl = entry.data.sourceUrl
+  }
+
+  if (entry.data.location) {
+    const locationId = entry.data.location as LocationId
+    const location = getLocation(locations, locationId)
+    moment.locationId = locationId
+    moment.location = { id: locationId, ...location }
   }
 
   return moment
