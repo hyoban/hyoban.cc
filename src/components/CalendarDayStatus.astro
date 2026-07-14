@@ -1,0 +1,50 @@
+---
+import { getChinaCalendarDayDescription, type ChinaCalendarDay } from '@/china-calendar'
+
+interface Props {
+  compact?: boolean
+  day: ChinaCalendarDay
+}
+
+const { compact = false, day } = Astro.props
+const label = day.kind === 'day-off' ? day.name : `${day.name}调休`
+const description = getChinaCalendarDayDescription(day)
+---
+
+<span
+  class:list={[
+    'calendar-day-status',
+    `calendar-day-status--${day.kind}`,
+    { 'calendar-day-status--compact': compact },
+  ]}
+  aria-label={description}
+  title={description}
+>
+  {label}
+</span>
+
+<style>
+  .calendar-day-status {
+    align-items: center;
+    color: var(--color-tx-2);
+    display: inline-flex;
+    flex: none;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.6875rem;
+    white-space: nowrap;
+  }
+
+  .calendar-day-status--day-off {
+    color: var(--color-tx);
+  }
+
+  .calendar-day-status--compact {
+    box-sizing: border-box;
+    display: block;
+    font-size: 0.625rem;
+    line-height: 1.25;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+</style>

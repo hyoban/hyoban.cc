@@ -1,8 +1,11 @@
 ---
+import CalendarDayStatus from '@/components/CalendarDayStatus.astro'
 import MomentEntry from '@/components/MomentEntry.astro'
+import type { ChinaCalendarDay } from '@/china-calendar'
 import type { Moment } from '@/moments'
 
 interface AgendaDay {
+  chinaCalendarDay: ChinaCalendarDay | undefined
   dateKey: string
   day: number
   moments: Moment[]
@@ -51,8 +54,11 @@ function formatDate(dateKey: string) {
               {agendaDays.map(day => (
                 <section class="mobile-agenda__day" id={`agenda-${day.dateKey}`}>
                   <header>
-                    <h2>{formatDate(day.dateKey)}</h2>
-                    <span>{day.moments.length} 条</span>
+                    <div class="mobile-agenda__date">
+                      <h2>{formatDate(day.dateKey)}</h2>
+                      {day.chinaCalendarDay && <CalendarDayStatus day={day.chinaCalendarDay} />}
+                    </div>
+                    <span class="mobile-agenda__count">{day.moments.length} 条</span>
                   </header>
                   <div class="mobile-agenda__moments">
                     {day.moments.map(moment => <MomentEntry moment={moment} />)}
@@ -122,12 +128,19 @@ function formatDate(dateKey: string) {
       padding-top: 1.75rem;
     }
 
+    .mobile-agenda__date {
+      align-items: baseline;
+      display: flex;
+      gap: 0.625rem;
+      min-width: 0;
+    }
+
     .mobile-agenda__day h2 {
       font-size: 1.125rem;
       font-weight: 500;
     }
 
-    .mobile-agenda__day > header span {
+    .mobile-agenda__count {
       color: var(--color-tx-3);
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       font-size: 0.75rem;
