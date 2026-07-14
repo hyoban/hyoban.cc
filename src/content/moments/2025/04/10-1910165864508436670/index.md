@@ -1,5 +1,6 @@
 ---
 publishedAt: "2025-04-10T11:00:05+08:00"
+occurredOn: "2025-04-05"
 sourceUrl: "https://twitter.com/hyoban_cc/status/1910165864508436670"
 media:
   - type: image

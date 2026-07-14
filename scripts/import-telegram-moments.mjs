@@ -2,7 +2,7 @@ import { cp, mkdir, readFile, readdir, rename, rm, stat, writeFile } from 'node:
 import { basename, isAbsolute, relative, resolve } from 'node:path'
 
 import { parseTelegramExport } from './lib/telegram-export.mjs'
-import { generateVideoPoster, serializeMoment } from './lib/moment-files.mjs'
+import { generateVideoPoster, parseMomentOccurredOn, serializeMoment } from './lib/moment-files.mjs'
 
 const rootUrl = new URL('../', import.meta.url)
 const outputUrl = new URL('src/content/moments/', rootUrl)
@@ -25,8 +25,12 @@ let posterCount = 0
 
 for (const moment of targets) {
   const existingDirectory = existingEntries.get(moment.id)
+  const occurredOn = existingDirectory
+    ? await readOccurredOn(existingDirectory)
+    : undefined
   const result = await importMoment(moment, {
     directoryUrl: existingDirectory,
+    occurredOn,
     replace: refresh && Boolean(existingDirectory),
   })
 
@@ -124,6 +128,7 @@ async function importMoment(moment, options) {
       new URL('index.md', temporaryUrl),
       serializeMoment({
         media,
+        occurredOn: options.occurredOn,
         publishedAt: moment.publishedAt,
         sourceUrl: moment.sourceUrl,
         text: moment.text,
@@ -157,6 +162,11 @@ async function importMoment(moment, options) {
     await rm(temporaryUrl, { force: true, recursive: true })
     throw error
   }
+}
+
+async function readOccurredOn(directoryUrl) {
+  const document = await readFile(new URL('index.md', directoryUrl), 'utf8')
+  return parseMomentOccurredOn(document)
 }
 
 async function resolveExportFile(path) {

@@ -22,13 +22,25 @@ export function generateVideoPoster(videoUrl, posterUrl) {
   }
 }
 
+export function parseMomentOccurredOn(document) {
+  const frontmatter = document.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/)?.[1]
+  return frontmatter?.match(/^occurredOn:\s*["']?(\d{4}-\d{2}-\d{2})["']?\s*$/m)?.[1]
+}
+
 export function serializeMoment(moment) {
   const lines = [
     '---',
     `publishedAt: ${JSON.stringify(moment.publishedAt)}`,
+  ]
+
+  if (moment.occurredOn) {
+    lines.push(`occurredOn: ${JSON.stringify(moment.occurredOn)}`)
+  }
+
+  lines.push(
     `sourceUrl: ${JSON.stringify(moment.sourceUrl)}`,
     'media:',
-  ]
+  )
 
   if (moment.media.length === 0) {
     lines[lines.length - 1] = 'media: []'

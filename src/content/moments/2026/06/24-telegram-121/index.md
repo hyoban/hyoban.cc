@@ -1,5 +1,6 @@
 ---
 publishedAt: "2026-06-24T22:14:09+08:00"
+occurredOn: "2026-06-20"
 sourceUrl: "https://telegram.me/hyoban_travel/121"
 media:
   - type: image
