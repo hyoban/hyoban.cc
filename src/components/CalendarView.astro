@@ -1,6 +1,12 @@
 ---
+import CalendarDayStatus from '@/components/CalendarDayStatus.astro'
 import MobileAgenda from '@/components/MobileAgenda.astro'
 import MomentEntry from '@/components/MomentEntry.astro'
+import {
+  getChinaCalendarDay,
+  getChinaCalendarDayDescription,
+  type ChinaCalendarDay,
+} from '@/china-calendar'
 import Layout from '@/layouts/Layout.astro'
 import {
   getActiveDateKeys,
@@ -22,6 +28,7 @@ interface Props {
 }
 
 type CalendarDay = {
+  chinaCalendarDay: ChinaCalendarDay | undefined
   dateKey: string
   day: number
   mediaCount: number
@@ -51,6 +58,7 @@ for (let day = 1; day <= daysInMonth; day += 1) {
   const thumbnail = allMedia.find(item => item.type === 'image' || item.poster)
 
   calendarDays.push({
+    chinaCalendarDay: getChinaCalendarDay(dateKey),
     dateKey,
     day,
     mediaCount: allMedia.length,
@@ -184,11 +192,15 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
           const thumbnail = getThumbnailImage(calendarDay.thumbnail)
           const isSelected = calendarDay.dateKey === selectedDate
           const isToday = calendarDay.dateKey === today
+          const dayStatusDescription = calendarDay.chinaCalendarDay
+            ? getChinaCalendarDayDescription(calendarDay.chinaCalendarDay)
+            : undefined
 
           if (calendarDay.moments.length === 0) {
             return (
               <div class:list={['calendar-day', { 'calendar-day--today': isToday }] }>
                 <span class="calendar-day__number">{String(calendarDay.day).padStart(2, '0')}</span>
+                {calendarDay.chinaCalendarDay && <CalendarDayStatus day={calendarDay.chinaCalendarDay} compact />}
               </div>
             )
           }
@@ -205,7 +217,7 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
                 },
               ]}
               aria-current={isSelected ? 'date' : undefined}
-              aria-label={`${calendarDay.dateKey}，${calendarDay.moments.length} 条记录`}
+              aria-label={`${calendarDay.dateKey}，${calendarDay.moments.length} 条记录${dayStatusDescription ? `，${dayStatusDescription}` : ''}`}
             >
               {thumbnail && (
                 <Image
@@ -218,6 +230,7 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
               )}
               <span class="calendar-day__shade" />
               <span class="calendar-day__number">{String(calendarDay.day).padStart(2, '0')}</span>
+              {calendarDay.chinaCalendarDay && <CalendarDayStatus day={calendarDay.chinaCalendarDay} compact />}
               {
                 thumbnail
                   ? calendarDay.mediaCount > 1 && <span class="calendar-day__count">+{calendarDay.mediaCount - 1}</span>
@@ -604,15 +617,35 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
 
   .calendar-day__number,
   .calendar-day__activity,
-  .calendar-day__count {
+  .calendar-day__count,
+  .calendar-day :global(.calendar-day-status--compact) {
     position: relative;
     z-index: 1;
   }
 
+  .calendar-day :global(.calendar-day-status--compact) {
+    bottom: 0.625rem;
+    left: 0.625rem;
+    max-width: calc(100% - 1.25rem);
+    position: absolute;
+  }
+
+  .calendar-day:has(.calendar-day__count) :global(.calendar-day-status--compact) {
+    max-width: calc(100% - 3rem);
+  }
+
   .calendar-day--with-media .calendar-day__number,
-  .calendar-day--with-media .calendar-day__count {
+  .calendar-day--with-media .calendar-day__count,
+  .calendar-day--with-media :global(.calendar-day-status--compact) {
     color: white;
     text-shadow: 0 1px 0.25rem rgb(0 0 0 / 0.45);
+  }
+
+  .calendar-day--with-media :global(.calendar-day-status--compact) {
+    background: rgb(17 17 16 / 0.58);
+    border-radius: 0.1875rem;
+    padding: 0.125rem 0.25rem;
+    text-shadow: none;
   }
 
   .calendar-day__activity {
