@@ -1,5 +1,6 @@
 ---
 publishedAt: "2026-06-24T22:03:02+08:00"
+hidden: true
 sourceUrl: "https://www.xiaohongshu.com/explore/6a3be396000000001003dff4"
 media:
   - type: image

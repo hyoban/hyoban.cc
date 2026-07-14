@@ -109,7 +109,7 @@ export function getMonthPath(monthKey: string) {
 }
 
 async function loadMoments() {
-  const entries = await getCollection('moments')
+  const entries = await getCollection('moments', ({ data }) => !data.hidden)
 
   return entries
     .map(resolveMoment)

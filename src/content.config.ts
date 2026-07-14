@@ -33,6 +33,7 @@ const momentMedia = z.object({
 const moments = defineCollection({
   loader: glob({ pattern: '**/index.md', base: './src/content/moments' }),
   schema: z.object({
+    hidden: z.boolean().default(false),
     media: z.array(momentMedia).default([]),
     occurredOn: z.iso.date().optional(),
     publishedAt: z.coerce.date(),

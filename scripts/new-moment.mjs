@@ -20,6 +20,7 @@ await writeFile(
     '---',
     `publishedAt: ${JSON.stringify(publishedAt)}`,
     '# occurredOn: "YYYY-MM-DD"',
+    '# hidden: true',
     '# Add media files beside this document and describe them here.',
     '# media:',
     '#   - type: image',
