@@ -2,8 +2,10 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 
 import {
+  parseMomentHidden,
   parseMomentOccurredOn,
   parseMomentSourceUrl,
+  serializeImportedMoment,
   serializeMoment,
 } from './moment-files.mjs'
 
@@ -33,6 +35,26 @@ test('omits the occurrence date when none is provided', () => {
   assert.doesNotMatch(document, /^occurredOn:/m)
 })
 
+test('serializes hidden moments without adding a false default', () => {
+  const hiddenDocument = serializeMoment({
+    hidden: true,
+    media: [],
+    publishedAt: '2026-07-05T15:41:45+08:00',
+    sourceUrl: 'https://www.xiaohongshu.com/explore/6a5504ba0000000006031b50',
+    text: 'A duplicate note.',
+  })
+  const visibleDocument = serializeMoment({
+    hidden: false,
+    media: [],
+    publishedAt: '2026-07-05T15:41:45+08:00',
+    sourceUrl: 'https://telegram.me/hyoban_travel/151',
+    text: 'A canonical note.',
+  })
+
+  assert.match(hiddenDocument, /^hidden: true$/m)
+  assert.doesNotMatch(visibleDocument, /^hidden:/m)
+})
+
 test('reads an occurrence date from existing moment frontmatter', () => {
   const document = [
     '---',
@@ -45,6 +67,52 @@ test('reads an occurrence date from existing moment frontmatter', () => {
   ].join('\n')
 
   assert.equal(parseMomentOccurredOn(document), '2026-07-11')
+})
+
+test('reads the hidden flag only from moment frontmatter', () => {
+  const hiddenDocument = [
+    '---',
+    'publishedAt: "2026-07-13T22:38:02+08:00"',
+    'hidden: true',
+    'media: []',
+    '---',
+    '',
+    'hidden: false',
+  ].join('\n')
+  const visibleDocument = hiddenDocument.replace('hidden: true', 'hidden: false')
+  const commentedDocument = hiddenDocument.replace(
+    'hidden: true',
+    'hidden: TRUE # duplicate of Telegram',
+  )
+
+  assert.equal(parseMomentHidden(hiddenDocument), true)
+  assert.equal(parseMomentHidden(visibleDocument), false)
+  assert.equal(parseMomentHidden(commentedDocument), true)
+  assert.equal(parseMomentHidden('---\nmedia: []\n---\n'), undefined)
+})
+
+test('preserves manually maintained metadata when refreshing an imported moment', () => {
+  const existingDocument = [
+    '---',
+    'publishedAt: "2026-07-13T22:38:02+08:00"',
+    'occurredOn: "2026-07-11"',
+    'hidden: TRUE # duplicate of Telegram',
+    'media: []',
+    '---',
+    '',
+    'Old text.',
+  ].join('\n')
+  const refreshedDocument = serializeImportedMoment({
+    media: [],
+    publishedAt: '2026-07-14T09:00:00+08:00',
+    sourceUrl: 'https://www.xiaohongshu.com/explore/refreshed',
+    text: 'Refreshed text.',
+  }, existingDocument)
+
+  assert.equal(parseMomentHidden(refreshedDocument), true)
+  assert.equal(parseMomentOccurredOn(refreshedDocument), '2026-07-11')
+  assert.match(refreshedDocument, /publishedAt: "2026-07-14T09:00:00\+08:00"/)
+  assert.match(refreshedDocument, /Refreshed text\./)
 })
 
 test('reads a source URL only from moment frontmatter', () => {

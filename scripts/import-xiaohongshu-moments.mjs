@@ -28,9 +28,8 @@ import {
 } from './lib/xiaohongshu-export.mjs'
 import {
   generateVideoPoster,
-  parseMomentOccurredOn,
   parseMomentSourceUrl,
-  serializeMoment,
+  serializeImportedMoment,
 } from './lib/moment-files.mjs'
 import { recoverMomentTransactions } from './lib/moment-transactions.mjs'
 
@@ -87,12 +86,12 @@ try {
 
   for (const moment of moments) {
     const existingDirectory = existingEntries.get(moment.id)
-    const occurredOn = existingDirectory
-      ? await readOccurredOn(existingDirectory)
+    const existingDocument = existingDirectory
+      ? await readExistingDocument(existingDirectory)
       : undefined
     const result = await importMoment(moment, {
       directoryUrl: existingDirectory,
-      occurredOn,
+      existingDocument,
       replace: refresh && Boolean(existingDirectory),
     })
 
@@ -259,13 +258,12 @@ async function importMoment(moment, options) {
 
     await writeFile(
       new URL('index.md', temporaryUrl),
-      serializeMoment({
+      serializeImportedMoment({
         media,
-        occurredOn: options.occurredOn,
         publishedAt: moment.publishedAt,
         sourceUrl: moment.sourceUrl,
         text: moment.text,
-      }),
+      }, options.existingDocument),
     )
 
     const replacing = await exists(directoryUrl)
@@ -325,9 +323,8 @@ async function findExistingEntries() {
   return entries
 }
 
-async function readOccurredOn(directoryUrl) {
-  const document = await readFile(new URL('index.md', directoryUrl), 'utf8')
-  return parseMomentOccurredOn(document)
+async function readExistingDocument(directoryUrl) {
+  return readFile(new URL('index.md', directoryUrl), 'utf8')
 }
 
 async function fetchProfileNotes(profileValue, maximum, expectedMinimum) {

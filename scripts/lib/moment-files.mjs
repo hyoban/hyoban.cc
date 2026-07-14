@@ -27,10 +27,34 @@ export function parseMomentOccurredOn(document) {
   return frontmatter?.match(/^occurredOn:\s*["']?(\d{4}-\d{2}-\d{2})["']?\s*$/m)?.[1]
 }
 
+export function parseMomentHidden(document) {
+  const frontmatter = parseFrontmatter(document)
+  const value = frontmatter?.match(
+    /^hidden:\s*(true|false)(?:\s+#.*)?\s*$/im,
+  )?.[1]
+
+  if (value === undefined) {
+    return undefined
+  }
+
+  return value.toLowerCase() === 'true'
+}
+
 export function parseMomentSourceUrl(document) {
   const frontmatter = parseFrontmatter(document)
   const value = frontmatter?.match(/^sourceUrl:\s*(?:"([^"]+)"|'([^']+)'|(\S+))\s*$/m)
   return value?.[1] ?? value?.[2] ?? value?.[3]
+}
+
+export function serializeImportedMoment(moment, existingDocument) {
+  const existingMetadata = existingDocument
+    ? {
+        hidden: parseMomentHidden(existingDocument),
+        occurredOn: parseMomentOccurredOn(existingDocument),
+      }
+    : {}
+
+  return serializeMoment({ ...moment, ...existingMetadata })
 }
 
 export function serializeMoment(moment) {
@@ -41,6 +65,10 @@ export function serializeMoment(moment) {
 
   if (moment.occurredOn) {
     lines.push(`occurredOn: ${JSON.stringify(moment.occurredOn)}`)
+  }
+
+  if (moment.hidden) {
+    lines.push('hidden: true')
   }
 
   lines.push(
