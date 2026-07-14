@@ -12,7 +12,7 @@ const { moment } = Astro.props
 
 <article class="moment-entry">
   <header>
-    <time datetime={moment.publishedAt.toISOString()}>{moment.time}</time>
+    <time datetime={moment.publishedAt.toISOString()}>{moment.publishedLabel}</time>
     {
       moment.sourceUrl && (
         <a href={moment.sourceUrl} target="_blank" rel="noopener noreferrer" aria-label="查看原始内容">

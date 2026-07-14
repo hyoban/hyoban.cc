@@ -34,6 +34,7 @@ const moments = defineCollection({
   loader: glob({ pattern: '**/index.md', base: './src/content/moments' }),
   schema: z.object({
     media: z.array(momentMedia).default([]),
+    occurredOn: z.iso.date().optional(),
     publishedAt: z.coerce.date(),
     sourceUrl: z.url().optional(),
   }).superRefine((moment, context) => {

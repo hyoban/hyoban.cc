@@ -53,9 +53,9 @@ export type Moment = {
   id: string
   media: ResolvedMomentMedia[]
   publishedAt: Date
+  publishedLabel: string
   sourceUrl?: string
   text: string
-  time: string
 }
 
 let momentsPromise: Promise<Moment[]> | undefined
@@ -113,17 +113,22 @@ async function loadMoments() {
 
   return entries
     .map(resolveMoment)
-    .sort((first, second) => first.publishedAt.valueOf() - second.publishedAt.valueOf())
+    .sort((first, second) => (
+      first.dateKey.localeCompare(second.dateKey)
+      || first.publishedAt.valueOf() - second.publishedAt.valueOf()
+    ))
 }
 
 function resolveMoment(entry: MomentEntry): Moment {
+  const publishedDateKey = getMomentDateKey(entry.data.publishedAt)
+  const dateKey = entry.data.occurredOn ?? publishedDateKey
   const moment: Moment = {
-    dateKey: getMomentDateKey(entry.data.publishedAt),
+    dateKey,
     id: entry.id,
     media: entry.data.media.map(item => resolveMedia(entry, item)),
     publishedAt: entry.data.publishedAt,
+    publishedLabel: formatPublishedLabel(entry.data.publishedAt, dateKey),
     text: getMomentText(entry),
-    time: timeFormatter.format(entry.data.publishedAt),
   }
 
   if (entry.data.sourceUrl) {
@@ -131,6 +136,17 @@ function resolveMoment(entry: MomentEntry): Moment {
   }
 
   return moment
+}
+
+function formatPublishedLabel(publishedAt: Date, dateKey: string) {
+  const time = timeFormatter.format(publishedAt)
+
+  if (getMomentDateKey(publishedAt) === dateKey) {
+    return time
+  }
+
+  const parts = getDateParts(publishedAt)
+  return `发布于 ${parts.year}/${Number(parts.month)}/${Number(parts.day)} ${time}`
 }
 
 function getMomentText(entry: MomentEntry) {
