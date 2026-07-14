@@ -68,9 +68,9 @@ console.log(
 )
 
 async function importMoment(moment, options) {
-  const [year, month, day] = moment.publishedAt.slice(0, 10).split('-')
+  const [year, month] = moment.publishedAt.slice(0, 10).split('-')
   const defaultDirectoryUrl = new URL(
-    `${year}/${month}/${day}-telegram-${moment.id}/`,
+    `${year}/${month}/telegram-${moment.id}/`,
     outputUrl,
   )
   const directoryUrl = options.directoryUrl ?? defaultDirectoryUrl
