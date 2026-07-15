@@ -1,10 +1,8 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import {
-  createOpenCliPublicationAdapters,
-  PublicationOutcomeUnknownError,
-} from './opencli-publication-adapters.mjs'
+import { createOpenCliPublicationAdapters } from './opencli-publication-adapters.mjs'
+import { PublicationOutcomeUnknownError } from './publication.mjs'
 
 test('publishes a Telegram adaptation through the project OpenCLI adapter', async () => {
   const calls = []
