@@ -1,4 +1,5 @@
 ---
+import CalendarBackLink from '@/components/CalendarBackLink.astro'
 import CalendarModeSwitch from '@/components/CalendarModeSwitch.astro'
 import MomentEntry from '@/components/MomentEntry.astro'
 import Layout from '@/layouts/Layout.astro'
@@ -47,7 +48,7 @@ function formatDate(dateKey: string) {
     <header class="calendar-map-toolbar">
       <CalendarModeSwitch mode="map" />
       <p>全部地点</p>
-      <a href="/">返回</a>
+      <CalendarBackLink />
     </header>
 
     <ol class="calendar-map-legend" aria-label="地点最近记录年份">
@@ -180,8 +181,7 @@ function formatDate(dateKey: string) {
     justify-self: start;
   }
 
-  .calendar-map-toolbar > p,
-  .calendar-map-toolbar > a {
+  .calendar-map-toolbar > p {
     background: color-mix(in srgb, var(--color-bg) 82%, transparent);
     border: 1px solid color-mix(in srgb, var(--color-border) 82%, transparent);
     border-radius: 999px;
@@ -198,14 +198,9 @@ function formatDate(dateKey: string) {
     padding: 0 0.875rem;
   }
 
-  .calendar-map-toolbar > a {
-    align-items: center;
-    color: var(--color-tx-2);
-    display: flex;
+  .calendar-map-toolbar > :global(.calendar-back-link) {
     grid-column: 3;
     justify-self: end;
-    padding: 0 0.875rem;
-    text-decoration: none;
   }
 
   .calendar-map-legend {
@@ -500,18 +495,8 @@ function formatDate(dateKey: string) {
   }
 
   @media (max-width: 48rem) {
-    .calendar-map-toolbar {
-      left: 0.75rem;
-      right: 0.75rem;
-      top: 0.75rem;
-    }
-
     .calendar-map-toolbar > p {
       display: none;
-    }
-
-    .calendar-map-toolbar > a {
-      grid-column: 3;
     }
 
     .calendar-map-legend {

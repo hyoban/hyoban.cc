@@ -1,0 +1,25 @@
+<a class="calendar-back-link" href="/">返回</a>
+
+<style>
+  .calendar-back-link {
+    align-items: center;
+    backdrop-filter: blur(1rem);
+    background: color-mix(in srgb, var(--color-bg) 82%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-border) 82%, transparent);
+    border-radius: 999px;
+    color: var(--color-tx-2);
+    display: inline-flex;
+    font-size: 0.8125rem;
+    min-height: 2.5rem;
+    padding: 0 0.875rem;
+    text-decoration: none;
+    view-transition-name: calendar-back-link;
+  }
+
+  @supports (view-transition-name: none) {
+    :global(::view-transition-group(calendar-back-link)) {
+      animation-duration: 360ms;
+      animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+  }
+</style>
