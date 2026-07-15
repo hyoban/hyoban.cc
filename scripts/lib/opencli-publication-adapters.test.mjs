@@ -80,6 +80,35 @@ test('rejects Telegram adaptations that cannot preserve the complete Moment', ()
   )
 })
 
+test('treats an unclassified OpenCLI write failure as an unknown outcome', async () => {
+  const adapters = createOpenCliPublicationAdapters({
+    runOpenCli: async () => {
+      throw new Error('Browser disconnected after submission.')
+    },
+  })
+  const payload = adapters.telegram.adapt({ media: [], text: 'A canonical moment.' })
+
+  await assert.rejects(
+    adapters.telegram.publish(payload),
+    error => error instanceof PublicationOutcomeUnknownError
+      && /Browser disconnected after submission/.test(error.message),
+  )
+})
+
+test('keeps provably pre-write OpenCLI failures retryable', async () => {
+  const authError = Object.assign(new Error('Telegram login expired.'), {
+    code: 'AUTH_REQUIRED',
+  })
+  const adapters = createOpenCliPublicationAdapters({
+    runOpenCli: async () => {
+      throw authError
+    },
+  })
+  const payload = adapters.telegram.adapt({ media: [], text: 'A canonical moment.' })
+
+  await assert.rejects(adapters.telegram.publish(payload), error => error === authError)
+})
+
 test('publishes an X adaptation through OpenCLI and returns a receipt identity', async () => {
   const calls = []
   const adapters = createOpenCliPublicationAdapters({
@@ -139,6 +168,10 @@ test('rejects X adaptations that would discard media', () => {
     }),
     /X video Publication is not supported/,
   )
+  assert.throws(
+    () => adapters.x.adapt({ media: [], text: '旅'.repeat(141) }),
+    /X Publications support at most 280 weighted characters/,
+  )
 })
 
 test('publishes a Xiaohongshu adaptation and resolves its external identity', async () => {
@@ -146,6 +179,14 @@ test('publishes a Xiaohongshu adaptation and resolves its external identity', as
   const adapters = createOpenCliPublicationAdapters({
     runOpenCli: async (args) => {
       calls.push(args)
+
+      if (args[1] === 'creator-notes' && calls.length === 1) {
+        return [{
+          id: 'older-note',
+          title: 'A canonical moment.',
+          url: 'https://www.xiaohongshu.com/explore/older-note',
+        }]
+      }
 
       if (args[1] === 'publish') {
         return [{ detail: 'published', status: '✅ 发布成功' }]
@@ -166,6 +207,16 @@ test('publishes a Xiaohongshu adaptation and resolves its external identity', as
   const result = await adapters.xiaohongshu.publish(payload)
 
   assert.deepEqual(calls, [
+    [
+      'xiaohongshu',
+      'creator-notes',
+      '--limit',
+      '10',
+      '--trace',
+      'retain-on-failure',
+      '-f',
+      'json',
+    ],
     [
       'xiaohongshu',
       'publish',
@@ -219,10 +270,14 @@ test('rejects Xiaohongshu adaptations that would discard media', () => {
 })
 
 test('marks an unidentifiable Xiaohongshu write as an unknown outcome', async () => {
+  let call = 0
   const adapters = createOpenCliPublicationAdapters({
-    runOpenCli: async (args) => args[1] === 'publish'
-      ? [{ detail: 'published', status: '✅ 发布成功' }]
-      : [],
+    runOpenCli: async (args) => {
+      call += 1
+      return args[1] === 'publish'
+        ? [{ detail: 'published', status: '✅ 发布成功' }]
+        : []
+    },
   })
   const payload = adapters.xiaohongshu.adapt({ media: [], text: 'A canonical moment.' })
 
@@ -230,5 +285,56 @@ test('marks an unidentifiable Xiaohongshu write as an unknown outcome', async ()
     adapters.xiaohongshu.publish(payload),
     error => error instanceof PublicationOutcomeUnknownError
       && /could not be identified/.test(error.message),
+  )
+  assert.equal(call, 3)
+})
+
+test('identifies a new Xiaohongshu note instead of an older duplicate title', async () => {
+  let noteLookup = 0
+  const adapters = createOpenCliPublicationAdapters({
+    runOpenCli: async (args) => {
+      if (args[1] === 'publish') {
+        return [{ detail: 'published', status: '✅ 发布成功' }]
+      }
+
+      noteLookup += 1
+      return noteLookup === 1
+        ? [{ id: 'old', title: 'Repeated title', url: 'https://xiaohongshu.com/old' }]
+        : [
+            { id: 'new', title: 'Repeated title', url: 'https://xiaohongshu.com/new' },
+            { id: 'old', title: 'Repeated title', url: 'https://xiaohongshu.com/old' },
+          ]
+    },
+  })
+  const payload = adapters.xiaohongshu.adapt({ media: [], text: 'Repeated title' })
+
+  assert.deepEqual(await adapters.xiaohongshu.publish(payload), {
+    externalId: 'new',
+    url: 'https://xiaohongshu.com/new',
+  })
+})
+
+test('treats a post-write Xiaohongshu lookup failure as an unknown outcome', async () => {
+  let call = 0
+  const adapters = createOpenCliPublicationAdapters({
+    runOpenCli: async (args) => {
+      call += 1
+
+      if (call === 1) {
+        return []
+      }
+      if (args[1] === 'publish') {
+        return [{ detail: 'published', status: '✅ 发布成功' }]
+      }
+
+      throw new Error('Creator notes could not be loaded.')
+    },
+  })
+  const payload = adapters.xiaohongshu.adapt({ media: [], text: 'A canonical moment.' })
+
+  await assert.rejects(
+    adapters.xiaohongshu.publish(payload),
+    error => error instanceof PublicationOutcomeUnknownError
+      && /Creator notes could not be loaded/.test(error.message),
   )
 })

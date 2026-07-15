@@ -1,4 +1,6 @@
-export const PUBLICATION_PLATFORMS = ['telegram', 'xiaohongshu', 'x']
+import { PUBLICATION_PLATFORMS } from './publication-platforms.mjs'
+
+export { PUBLICATION_PLATFORMS }
 
 export class PublicationOutcomeUnknownError extends Error {
   constructor(message) {
