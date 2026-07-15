@@ -52,7 +52,7 @@ function tokenize(value: string): Token[] {
 }
 ---
 
-<p class="moment-text">
+<p class="moment-text whitespace-pre-wrap [line-height:1.7] [overflow-wrap:anywhere] [&_a]:text-tx">
   {
     tokens.map(token => token.type === 'url'
       ? <a href={token.value} target="_blank" rel="noopener noreferrer">{token.value}</a>
@@ -61,15 +61,3 @@ function tokenize(value: string): Token[] {
         : <span class="text-tx-2">{token.value}</span>)
   }
 </p>
-
-<style>
-  .moment-text {
-    line-height: 1.7;
-    overflow-wrap: anywhere;
-    white-space: pre-wrap;
-  }
-
-  .moment-text a {
-    color: var(--color-tx);
-  }
-</style>

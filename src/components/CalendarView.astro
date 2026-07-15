@@ -129,36 +129,42 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
 
 <Layout title={title} description={description}>
   <main
-    class:list={['calendar-page', { 'calendar-page--with-drawer': selectedDate }] }
+    class:list={[
+      'calendar-page mx-auto grid h-[calc(100dvh-4rem)] w-full max-w-[60rem] grid-rows-[auto_minmax(0,1fr)] max-[56rem]:block max-[56rem]:h-auto max-[56rem]:max-w-[42rem]',
+      {
+        'calendar-page--with-drawer max-[56rem]:hidden min-[56.0625rem]:overflow-y-auto min-[56.0625rem]:overscroll-contain': selectedDate,
+      },
+    ]}
     style={`--calendar-weeks: ${calendarDays.length / 7}`}
   >
-    <header class="calendar-toolbar">
-      <CalendarModeSwitch mode="calendar" />
+    <header class="calendar-toolbar mb-4 grid grid-cols-[1fr_auto_1fr] items-center max-[56rem]:grid-cols-[1fr_auto] max-[56rem]:gap-2">
+      <CalendarModeSwitch class="col-start-1 justify-self-start max-[56rem]:row-start-1" mode="calendar" />
 
-      <nav class="month-navigation" aria-label="月份导航">
+      <nav class="month-navigation col-start-2 flex items-center justify-center gap-5 max-[56rem]:col-span-full max-[56rem]:col-start-1 max-[56rem]:row-start-2 max-[40rem]:gap-2" aria-label="月份导航">
         {
           previousMonth
-            ? <a class="month-navigation__arrow" href={getMonthPath(previousMonth)} aria-label="上一个月"><span class="i-lucide-chevron-left" aria-hidden="true" /></a>
-            : <span class="month-navigation__arrow month-navigation__arrow--disabled"><span class="i-lucide-chevron-left" aria-hidden="true" /></span>
+            ? <a class="month-navigation__arrow inline-flex size-8 items-center justify-center text-tx-2 no-underline max-[56rem]:size-11" href={getMonthPath(previousMonth)} aria-label="上一个月"><span class="i-lucide-chevron-left" aria-hidden="true" /></a>
+            : <span class="month-navigation__arrow month-navigation__arrow--disabled inline-flex size-8 items-center justify-center text-tx-3 opacity-35 max-[56rem]:size-11"><span class="i-lucide-chevron-left" aria-hidden="true" /></span>
         }
 
-        <details class="month-picker">
-          <summary>{year} 年 {month} 月 <span class="i-lucide-chevron-down" aria-hidden="true" /></summary>
-          <div class="month-picker__panel">
+        <details class="month-picker relative">
+          <summary class="flex cursor-pointer list-none items-center gap-2 px-2 py-1.5 font-mono max-[56rem]:min-h-11 [&::-webkit-details-marker]:hidden">{year} 年 {month} 月 <span class="i-lucide-chevron-down" aria-hidden="true" /></summary>
+          <div class="month-picker__panel absolute top-[calc(100%+0.5rem)] left-1/2 z-20 max-h-[min(32rem,70vh)] w-[min(22rem,calc(100vw-2rem))] -translate-x-1/2 overflow-y-auto border border-border bg-bg p-4 shadow-[0_1rem_3rem_rgb(0_0_0/0.08)]">
             {
               [...groupedMonths].map(([pickerYear, pickerMonths]) => (
-                <section>
-                  <h2>{pickerYear}</h2>
-                  <div>
+                <section class="[&+&]:mt-4 [&+&]:border-t [&+&]:border-border [&+&]:pt-4">
+                  <h2 class="mb-2.5 font-mono text-[0.8125rem] font-medium text-tx-2">{pickerYear}</h2>
+                  <div class="grid grid-cols-6 gap-1">
                     {pickerMonths.map(key => {
                       const pickerMonth = Number.parseInt(key.slice(5), 10)
                       return (
                         <a
                           href={getMonthPath(key)}
-                          class:list={{
-                            'is-active': key === monthKey,
-                            'has-content': activeMonthKeys.has(key),
-                          }}
+                          class:list={[
+                            'flex h-8 items-center justify-center font-mono no-underline',
+                            key === monthKey && 'is-active bg-inline shadow-[inset_0_0_0_1px_var(--color-border)]',
+                            activeMonthKeys.has(key) ? 'has-content text-tx' : 'text-tx-3',
+                          ]}
                         >
                           {pickerMonth}
                         </a>
@@ -173,24 +179,24 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
 
         {
           nextMonth
-            ? <a class="month-navigation__arrow" href={getMonthPath(nextMonth)} aria-label="下一个月"><span class="i-lucide-chevron-right" aria-hidden="true" /></a>
-            : <span class="month-navigation__arrow month-navigation__arrow--disabled"><span class="i-lucide-chevron-right" aria-hidden="true" /></span>
+            ? <a class="month-navigation__arrow inline-flex size-8 items-center justify-center text-tx-2 no-underline max-[56rem]:size-11" href={getMonthPath(nextMonth)} aria-label="下一个月"><span class="i-lucide-chevron-right" aria-hidden="true" /></a>
+            : <span class="month-navigation__arrow month-navigation__arrow--disabled inline-flex size-8 items-center justify-center text-tx-3 opacity-35 max-[56rem]:size-11"><span class="i-lucide-chevron-right" aria-hidden="true" /></span>
         }
       </nav>
 
-      <CalendarBackLink />
+      <CalendarBackLink class="col-start-3 justify-self-end max-[56rem]:col-start-2 max-[56rem]:row-start-1" />
     </header>
 
-    <div class="desktop-calendar">
-      <div class="weekday-row" aria-hidden="true">
+    <div class="desktop-calendar grid min-h-0 content-start grid-rows-[auto_auto] max-[56rem]:hidden">
+      <div class="weekday-row mb-2.5 grid grid-cols-7 text-center font-mono text-xs text-tx-3 [&_span:nth-last-child(-n+2)]:text-tx-2" aria-hidden="true">
         {['一', '二', '三', '四', '五', '六', '日'].map(day => <span>{day}</span>)}
       </div>
 
-      <section class="calendar-grid" aria-label={`${year} 年 ${month} 月`}>
+      <section class="calendar-grid grid min-h-0 grid-cols-7 grid-rows-[repeat(var(--calendar-weeks),minmax(0,1fr))] border-t border-l border-border [aspect-ratio:7/var(--calendar-weeks)]" aria-label={`${year} 年 ${month} 月`}>
         {
           calendarDays.map((calendarDay) => {
           if (!calendarDay) {
-            return <div class="calendar-day calendar-day--empty" aria-hidden="true" />
+            return <div class="calendar-day calendar-day--empty relative min-h-0 min-w-0 overflow-hidden border-r border-b border-border p-3 font-mono text-tx-2" aria-hidden="true" />
           }
 
           const thumbnail = getThumbnailImage(calendarDay.thumbnail)
@@ -202,9 +208,15 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
 
           if (calendarDay.moments.length === 0) {
             return (
-              <div class:list={['calendar-day', { 'calendar-day--today': isToday }] }>
-                <span class="calendar-day__number">{String(calendarDay.day).padStart(2, '0')}</span>
-                {calendarDay.chinaCalendarDay && <CalendarDayStatus day={calendarDay.chinaCalendarDay} compact />}
+              <div class:list={['calendar-day relative min-h-0 min-w-0 overflow-hidden border-r border-b border-border p-3 font-mono text-tx-2', { 'calendar-day--today': isToday }] }>
+                <span class:list={['calendar-day__number relative z-[1]', { 'underline decoration-2 underline-offset-4': isToday }]}>{String(calendarDay.day).padStart(2, '0')}</span>
+                {calendarDay.chinaCalendarDay && (
+                  <CalendarDayStatus
+                    class="absolute bottom-2.5 left-2.5 z-[1] max-w-[calc(100%-1.25rem)]"
+                    day={calendarDay.chinaCalendarDay}
+                    compact
+                  />
+                )}
               </div>
             )
           }
@@ -213,9 +225,9 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
             <a
               href={getMomentPath(calendarDay.dateKey)}
               class:list={[
-                'calendar-day calendar-day--active',
+                'calendar-day calendar-day--active group relative min-h-0 min-w-0 overflow-hidden border-r border-b border-border p-3 font-mono text-tx no-underline focus-visible:outline-2 focus-visible:-outline-offset-3 focus-visible:outline-tx',
                 {
-                  'calendar-day--selected': isSelected,
+                  'calendar-day--selected z-[2] shadow-[inset_0_0_0_2px_var(--color-tx)]': isSelected,
                   'calendar-day--today': isToday,
                   'calendar-day--with-media': thumbnail,
                 },
@@ -230,15 +242,41 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
                   width={Math.min(thumbnail.width, 360)}
                   height={Math.round(Math.min(thumbnail.width, 360) * thumbnail.height / thumbnail.width)}
                   loading="lazy"
+                  class="absolute inset-0 h-full w-full object-cover transition-transform duration-[180ms] ease-in-out group-hover:scale-[1.025] motion-reduce:transition-none"
                 />
               )}
-              <span class="calendar-day__shade" />
-              <span class="calendar-day__number">{String(calendarDay.day).padStart(2, '0')}</span>
-              {calendarDay.chinaCalendarDay && <CalendarDayStatus day={calendarDay.chinaCalendarDay} compact />}
+              <span class:list={[
+                'calendar-day__shade pointer-events-none absolute inset-0 bg-[linear-gradient(to_bottom,rgb(0_0_0/0.2),transparent_45%,rgb(0_0_0/0.28))]',
+                thumbnail ? 'opacity-100' : 'opacity-0',
+              ]}
+              />
+              <span class:list={[
+                'calendar-day__number relative z-[1]',
+                {
+                  'underline decoration-2 underline-offset-4': isToday,
+                  'text-white [text-shadow:0_1px_0.25rem_rgb(0_0_0/0.45)]': thumbnail,
+                },
+              ]}
+              >
+                {String(calendarDay.day).padStart(2, '0')}
+              </span>
+              {calendarDay.chinaCalendarDay && (
+                <CalendarDayStatus
+                  class:list={[
+                    'absolute bottom-2.5 left-2.5 z-[1]',
+                    calendarDay.mediaCount > 1 ? 'max-w-[calc(100%-3rem)]' : 'max-w-[calc(100%-1.25rem)]',
+                    {
+                      'rounded-[0.1875rem] bg-[rgb(17_17_16/0.58)] px-1 py-0.5 !text-white [text-shadow:none]': thumbnail,
+                    },
+                  ]}
+                  day={calendarDay.chinaCalendarDay}
+                  compact
+                />
+              )}
               {
                 thumbnail
-                  ? calendarDay.mediaCount > 1 && <span class="calendar-day__count">+{calendarDay.mediaCount - 1}</span>
-                  : <span class="calendar-day__activity">• {calendarDay.moments.length}</span>
+                  ? calendarDay.mediaCount > 1 && <span class="calendar-day__count absolute right-2.5 bottom-2.5 z-[1] text-[0.6875rem] text-white [text-shadow:0_1px_0.25rem_rgb(0_0_0/0.45)]">+{calendarDay.mediaCount - 1}</span>
+                  : <span class="calendar-day__activity relative z-[1] mt-1.5 block text-[0.6875rem] text-tx-3">• {calendarDay.moments.length}</span>
               }
             </a>
           )
@@ -257,30 +295,30 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
   {
     selectedDate && selectedDateLabel && (
       <>
-        <a class="drawer-scrim" href={closePath} aria-label="关闭当天详情" />
+        <a class="drawer-scrim hidden" href={closePath} aria-label="关闭当天详情" />
         <aside
-          class="day-drawer"
+          class="day-drawer fixed inset-y-0 right-0 z-40 flex w-[min(var(--calendar-drawer-width),100vw)] flex-col border-l border-border bg-bg shadow-[-1rem_0_3rem_rgb(0_0_0/0.07)] max-[56rem]:static max-[56rem]:mx-auto max-[56rem]:grid max-[56rem]:min-h-[calc(100dvh-2rem)] max-[56rem]:w-full max-[56rem]:max-w-[42rem] max-[56rem]:grid-rows-[auto_1fr_auto] max-[56rem]:border-0 max-[56rem]:shadow-none"
           data-calendar-drawer
           data-close-path={closePath}
           data-previous-path={previousDate ? getMomentPath(previousDate) : undefined}
           data-next-path={nextDate ? getMomentPath(nextDate) : undefined}
           aria-label={`${selectedDateLabel}的记录`}
         >
-          <header class="day-drawer__header">
-            <h2>{selectedDateLabel}</h2>
-            <a href={closePath} aria-label="返回本月">
-              <span class="day-drawer__close-icon i-lucide-x" aria-hidden="true" />
-              <span class="day-drawer__back-label"><span class="i-lucide-chevron-left" aria-hidden="true" />{month} 月</span>
+          <header class="day-drawer__header flex items-center justify-between border-b border-border p-6 max-[56rem]:sticky max-[56rem]:top-0 max-[56rem]:z-10 max-[56rem]:grid max-[56rem]:grid-cols-[1fr_auto_1fr] max-[56rem]:bg-bg max-[56rem]:px-0 max-[56rem]:py-3">
+            <h2 class="text-base font-semibold max-[56rem]:col-start-2">{selectedDateLabel}</h2>
+            <a class="flex size-8 items-center justify-center text-tx-2 no-underline max-[56rem]:col-start-1 max-[56rem]:row-start-1 max-[56rem]:h-11 max-[56rem]:w-auto max-[56rem]:justify-self-start" href={closePath} aria-label="返回本月">
+              <span class="day-drawer__close-icon i-lucide-x max-[56rem]:hidden" aria-hidden="true" />
+              <span class="day-drawer__back-label hidden items-center gap-1 text-sm max-[56rem]:flex"><span class="i-lucide-chevron-left" aria-hidden="true" />{month} 月</span>
             </a>
           </header>
 
-          <div class="day-drawer__content">
+          <div class="day-drawer__content overflow-y-auto overscroll-contain px-6 pb-12 max-[56rem]:overflow-visible max-[56rem]:p-0">
             {
               selectedMoments.map(moment => <MomentEntry moment={moment} />)
             }
           </div>
 
-          <nav class="day-drawer__navigation" aria-label="日期导航">
+          <nav class="day-drawer__navigation sticky bottom-0 hidden grid-cols-3 border-t border-border bg-bg py-3.5 max-[56rem]:grid [&_a]:flex [&_a]:min-h-11 [&_a]:items-center [&_a]:gap-1 [&_a]:font-mono [&_a]:text-xs [&_a]:text-tx-2 [&_a]:no-underline [&>:first-child]:justify-self-start [&>:last-child]:justify-self-end [&>:nth-child(2)]:justify-self-center" aria-label="日期导航">
             {
               previousDate
                 ? <a href={getMomentPath(previousDate)}><span class="i-lucide-chevron-left" aria-hidden="true" />{formatCompactDate(previousDate)}</a>
@@ -299,11 +337,11 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
     )
   }
 
-  <dialog class="moment-lightbox" data-moment-lightbox aria-label="图片查看器">
-    <button type="button" class="moment-lightbox__close" data-lightbox-close aria-label="关闭图片"><span class="i-lucide-x" aria-hidden="true" /></button>
-    <button type="button" class="moment-lightbox__previous" data-lightbox-previous aria-label="上一张图片"><span class="i-lucide-chevron-left" aria-hidden="true" /></button>
-    <img alt="" data-lightbox-image />
-    <button type="button" class="moment-lightbox__next" data-lightbox-next aria-label="下一张图片"><span class="i-lucide-chevron-right" aria-hidden="true" /></button>
+  <dialog class="moment-lightbox m-auto h-full max-h-none w-full max-w-none border-0 bg-transparent p-12 backdrop:bg-[rgb(17_17_16/0.92)] [&[open]]:flex [&[open]]:items-center [&[open]]:justify-center max-[40rem]:px-4" data-moment-lightbox aria-label="图片查看器">
+    <button type="button" class="moment-lightbox__close fixed top-5 right-5 flex size-10 cursor-pointer items-center justify-center rounded-full border-0 bg-[rgb(255_255_255/0.08)] text-white" data-lightbox-close aria-label="关闭图片"><span class="i-lucide-x" aria-hidden="true" /></button>
+    <button type="button" class="moment-lightbox__previous fixed top-[calc(50%-1.25rem)] left-5 flex size-10 cursor-pointer items-center justify-center rounded-full border-0 bg-[rgb(255_255_255/0.08)] text-white max-[40rem]:top-auto max-[40rem]:bottom-4" data-lightbox-previous aria-label="上一张图片"><span class="i-lucide-chevron-left" aria-hidden="true" /></button>
+    <img class="max-h-[calc(100vh-6rem)] max-w-[calc(100vw-10rem)] object-contain max-[40rem]:max-w-[calc(100vw-2rem)]" alt="" data-lightbox-image />
+    <button type="button" class="moment-lightbox__next fixed top-[calc(50%-1.25rem)] right-5 flex size-10 cursor-pointer items-center justify-center rounded-full border-0 bg-[rgb(255_255_255/0.08)] text-white max-[40rem]:top-auto max-[40rem]:bottom-4" data-lightbox-next aria-label="下一张图片"><span class="i-lucide-chevron-right" aria-hidden="true" /></button>
   </dialog>
 </Layout>
 
@@ -407,552 +445,3 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
   document.addEventListener('astro:page-load', initializeCalendar)
   initializeCalendar()
 </script>
-
-<style>
-  :global(:root) {
-    --calendar-drawer-width: 27rem;
-  }
-
-  .calendar-page {
-    display: grid;
-    grid-template-rows: auto minmax(0, 1fr);
-    height: calc(100dvh - 4rem);
-    margin: 0 auto;
-    max-width: 60rem;
-    width: 100%;
-  }
-
-  .desktop-calendar {
-    display: grid;
-    grid-template-rows: auto minmax(0, 1fr);
-    min-height: 0;
-  }
-
-  .calendar-toolbar {
-    align-items: center;
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    margin-bottom: 1rem;
-  }
-
-  .calendar-toolbar > :global(.calendar-back-link) {
-    grid-column: 3;
-    justify-self: end;
-  }
-
-  .calendar-toolbar > :global(.calendar-mode-switch) {
-    grid-column: 1;
-    justify-self: start;
-  }
-
-  .month-navigation {
-    align-items: center;
-    display: flex;
-    gap: 1.25rem;
-    grid-column: 2;
-    justify-content: center;
-  }
-
-  .month-navigation__arrow {
-    align-items: center;
-    color: var(--color-tx-2);
-    display: inline-flex;
-    height: 2rem;
-    justify-content: center;
-    text-decoration: none;
-    width: 2rem;
-  }
-
-  .month-navigation__arrow--disabled {
-    color: var(--color-tx-3);
-    opacity: 0.35;
-  }
-
-  .month-picker {
-    position: relative;
-  }
-
-  .month-picker summary {
-    align-items: center;
-    cursor: pointer;
-    display: flex;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    gap: 0.5rem;
-    list-style: none;
-    padding: 0.375rem 0.5rem;
-  }
-
-  .month-picker summary::-webkit-details-marker {
-    display: none;
-  }
-
-  .month-picker__panel {
-    background: var(--color-bg);
-    border: 1px solid var(--color-border);
-    box-shadow: 0 1rem 3rem rgb(0 0 0 / 0.08);
-    left: 50%;
-    max-height: min(32rem, 70vh);
-    overflow-y: auto;
-    padding: 1rem;
-    position: absolute;
-    top: calc(100% + 0.5rem);
-    transform: translateX(-50%);
-    width: min(22rem, calc(100vw - 2rem));
-    z-index: 20;
-  }
-
-  .month-picker__panel section + section {
-    border-top: 1px solid var(--color-border);
-    margin-top: 1rem;
-    padding-top: 1rem;
-  }
-
-  .month-picker__panel h2 {
-    color: var(--color-tx-2);
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    font-size: 0.8125rem;
-    font-weight: 500;
-    margin-bottom: 0.625rem;
-  }
-
-  .month-picker__panel section > div {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 0.25rem;
-  }
-
-  .month-picker__panel a {
-    align-items: center;
-    color: var(--color-tx-3);
-    display: flex;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    height: 2rem;
-    justify-content: center;
-    text-decoration: none;
-  }
-
-  .month-picker__panel a.has-content {
-    color: var(--color-tx);
-  }
-
-  .month-picker__panel a.is-active {
-    background: var(--color-inline);
-    box-shadow: inset 0 0 0 1px var(--color-border);
-  }
-
-  .weekday-row,
-  .calendar-grid {
-    display: grid;
-    grid-template-columns: repeat(7, minmax(0, 1fr));
-  }
-
-  .weekday-row {
-    color: var(--color-tx-3);
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    font-size: 0.75rem;
-    margin-bottom: 0.625rem;
-    text-align: center;
-  }
-
-  .weekday-row span:nth-last-child(-n + 2) {
-    color: var(--color-tx-2);
-  }
-
-  .calendar-grid {
-    border-left: 1px solid var(--color-border);
-    border-top: 1px solid var(--color-border);
-    grid-template-rows: repeat(var(--calendar-weeks), minmax(0, 1fr));
-    min-height: 0;
-  }
-
-  .calendar-day {
-    border-bottom: 1px solid var(--color-border);
-    border-right: 1px solid var(--color-border);
-    color: var(--color-tx-2);
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    min-height: 0;
-    min-width: 0;
-    overflow: hidden;
-    padding: 0.75rem;
-    position: relative;
-    text-decoration: none;
-  }
-
-  .calendar-day--active {
-    color: var(--color-tx);
-  }
-
-  .calendar-day--active:focus-visible {
-    outline: 2px solid var(--color-tx);
-    outline-offset: -3px;
-  }
-
-  .calendar-day--selected {
-    box-shadow: inset 0 0 0 2px var(--color-tx);
-    z-index: 2;
-  }
-
-  .calendar-day--today .calendar-day__number {
-    text-decoration: underline;
-    text-decoration-thickness: 2px;
-    text-underline-offset: 0.25rem;
-  }
-
-  .calendar-day :global(img) {
-    height: 100%;
-    inset: 0;
-    object-fit: cover;
-    position: absolute;
-    transition: transform 180ms ease;
-    width: 100%;
-  }
-
-  .calendar-day--with-media:hover :global(img) {
-    transform: scale(1.025);
-  }
-
-  .calendar-day__shade {
-    background: linear-gradient(to bottom, rgb(0 0 0 / 0.2), transparent 45%, rgb(0 0 0 / 0.28));
-    inset: 0;
-    opacity: 0;
-    pointer-events: none;
-    position: absolute;
-  }
-
-  .calendar-day--with-media .calendar-day__shade {
-    opacity: 1;
-  }
-
-  .calendar-day__number,
-  .calendar-day__activity,
-  .calendar-day__count,
-  .calendar-day :global(.calendar-day-status--compact) {
-    position: relative;
-    z-index: 1;
-  }
-
-  .calendar-day :global(.calendar-day-status--compact) {
-    bottom: 0.625rem;
-    left: 0.625rem;
-    max-width: calc(100% - 1.25rem);
-    position: absolute;
-  }
-
-  .calendar-day:has(.calendar-day__count) :global(.calendar-day-status--compact) {
-    max-width: calc(100% - 3rem);
-  }
-
-  .calendar-day--with-media .calendar-day__number,
-  .calendar-day--with-media .calendar-day__count,
-  .calendar-day--with-media :global(.calendar-day-status--compact) {
-    color: white;
-    text-shadow: 0 1px 0.25rem rgb(0 0 0 / 0.45);
-  }
-
-  .calendar-day--with-media :global(.calendar-day-status--compact) {
-    background: rgb(17 17 16 / 0.58);
-    border-radius: 0.1875rem;
-    padding: 0.125rem 0.25rem;
-    text-shadow: none;
-  }
-
-  .calendar-day__activity {
-    color: var(--color-tx-3);
-    display: block;
-    font-size: 0.6875rem;
-    margin-top: 0.375rem;
-  }
-
-  .calendar-day__count {
-    bottom: 0.625rem;
-    font-size: 0.6875rem;
-    right: 0.625rem;
-    position: absolute;
-  }
-
-  .day-drawer__back-label,
-  .day-drawer__navigation {
-    display: none;
-  }
-
-  .drawer-scrim {
-    display: none;
-  }
-
-  .day-drawer {
-    background: var(--color-bg);
-    border-left: 1px solid var(--color-border);
-    bottom: 0;
-    box-shadow: -1rem 0 3rem rgb(0 0 0 / 0.07);
-    display: flex;
-    flex-direction: column;
-    position: fixed;
-    right: 0;
-    top: 0;
-    width: min(var(--calendar-drawer-width), 100vw);
-    z-index: 40;
-  }
-
-  .day-drawer__header {
-    align-items: center;
-    border-bottom: 1px solid var(--color-border);
-    display: flex;
-    justify-content: space-between;
-    padding: 1.5rem;
-  }
-
-  .day-drawer__header h2 {
-    font-size: 1rem;
-    font-weight: 600;
-  }
-
-  .day-drawer__header a {
-    align-items: center;
-    color: var(--color-tx-2);
-    display: flex;
-    height: 2rem;
-    justify-content: center;
-    text-decoration: none;
-    width: 2rem;
-  }
-
-  .day-drawer__content {
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    padding: 0 1.5rem 3rem;
-  }
-
-  .moment-lightbox {
-    background: transparent;
-    border: 0;
-    height: 100%;
-    margin: auto;
-    max-height: none;
-    max-width: none;
-    padding: 3rem;
-    width: 100%;
-  }
-
-  .moment-lightbox::backdrop {
-    background: rgb(17 17 16 / 0.92);
-  }
-
-  .moment-lightbox[open] {
-    align-items: center;
-    display: flex;
-    justify-content: center;
-  }
-
-  .moment-lightbox img {
-    max-height: calc(100vh - 6rem);
-    max-width: calc(100vw - 10rem);
-    object-fit: contain;
-  }
-
-  .moment-lightbox button {
-    align-items: center;
-    background: rgb(255 255 255 / 0.08);
-    border: 0;
-    border-radius: 999px;
-    color: white;
-    cursor: pointer;
-    display: flex;
-    height: 2.5rem;
-    justify-content: center;
-    position: fixed;
-    width: 2.5rem;
-  }
-
-  .moment-lightbox__close {
-    right: 1.25rem;
-    top: 1.25rem;
-  }
-
-  .moment-lightbox__previous {
-    left: 1.25rem;
-    top: calc(50% - 1.25rem);
-  }
-
-  .moment-lightbox__next {
-    right: 1.25rem;
-    top: calc(50% - 1.25rem);
-  }
-
-  @media (min-width: 56.0625rem) {
-    :global(html.calendar-drawer-open) {
-      overflow: hidden;
-    }
-
-    :global(body:has(.day-drawer)) {
-      padding-right: calc(var(--calendar-drawer-width) + 1rem);
-    }
-  }
-
-  @media (max-width: 56rem) {
-    :global(body:has(.calendar-page)),
-    :global(body:has(.day-drawer)) {
-      padding-bottom: 1rem;
-      padding-top: 1rem;
-    }
-
-    .calendar-page {
-      display: block;
-      height: auto;
-      max-width: 42rem;
-    }
-
-    .calendar-page--with-drawer,
-    .desktop-calendar {
-      display: none;
-    }
-
-    .calendar-toolbar {
-      gap: 0.5rem;
-      grid-template-columns: 1fr auto;
-    }
-
-    .calendar-toolbar > :global(.calendar-mode-switch) {
-      grid-column: 1;
-      grid-row: 1;
-    }
-
-    .calendar-toolbar > :global(.calendar-back-link) {
-      grid-column: 2;
-      grid-row: 1;
-    }
-
-    .month-navigation {
-      grid-column: 1 / -1;
-      grid-row: 2;
-    }
-
-    .month-navigation__arrow {
-      height: 2.75rem;
-      width: 2.75rem;
-    }
-
-    .month-picker summary {
-      align-items: center;
-      display: flex;
-      min-height: 2.75rem;
-    }
-
-    .day-drawer {
-      border: 0;
-      border-radius: 0;
-      bottom: auto;
-      box-shadow: none;
-      display: grid;
-      grid-template-rows: auto 1fr auto;
-      margin: 0 auto;
-      max-width: 42rem;
-      min-height: calc(100dvh - 2rem);
-      position: static;
-      right: auto;
-      top: auto;
-      width: 100%;
-    }
-
-    .day-drawer__header {
-      background: var(--color-bg);
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
-      padding: 0.75rem 0;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-
-    .day-drawer__header h2 {
-      grid-column: 2;
-    }
-
-    .day-drawer__header a {
-      grid-column: 1;
-      grid-row: 1;
-      height: 2.75rem;
-      justify-self: start;
-      width: auto;
-    }
-
-    .day-drawer__close-icon {
-      display: none;
-    }
-
-    .day-drawer__back-label {
-      align-items: center;
-      display: flex;
-      font-size: 0.875rem;
-      gap: 0.25rem;
-    }
-
-    .day-drawer__content {
-      overflow: visible;
-      padding: 0;
-    }
-
-    .day-drawer__navigation {
-      background: var(--color-bg);
-      border-top: 1px solid var(--color-border);
-      bottom: 0;
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      padding: 0.875rem 0;
-      position: sticky;
-    }
-
-    .day-drawer__navigation a {
-      align-items: center;
-      color: var(--color-tx-2);
-      display: flex;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      font-size: 0.75rem;
-      gap: 0.25rem;
-      min-height: 2.75rem;
-      text-decoration: none;
-    }
-
-    .day-drawer__navigation > :nth-child(2) {
-      justify-self: center;
-    }
-
-    .day-drawer__navigation > :last-child {
-      justify-self: end;
-    }
-
-    .day-drawer__navigation > :first-child {
-      justify-self: start;
-    }
-
-    .drawer-scrim {
-      display: none;
-    }
-
-  }
-
-  @media (max-width: 40rem) {
-    .month-navigation {
-      gap: 0.5rem;
-    }
-
-    .moment-lightbox {
-      padding: 3rem 1rem;
-    }
-
-    .moment-lightbox img {
-      max-width: calc(100vw - 2rem);
-    }
-
-    .moment-lightbox__previous,
-    .moment-lightbox__next {
-      top: auto;
-      bottom: 1rem;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .calendar-day :global(img) {
-      transition: none;
-    }
-  }
-</style>

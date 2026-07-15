@@ -309,11 +309,11 @@ function initializeCalendarMap() {
       }).setText(`${location.name} · ${location.count} 条记录`)
 
       button.type = 'button'
-      button.className = 'calendar-map-marker'
+      button.className = 'calendar-map-marker group flex size-11 cursor-pointer items-center justify-center border-0 bg-transparent p-0 focus-visible:outline-none'
       button.setAttribute('aria-label', `${location.name}，${location.count} 条记录，最近记录于 ${location.latestYear} 年`)
       button.setAttribute('aria-pressed', 'false')
       button.style.setProperty('--marker-color', location.color)
-      dot.className = 'calendar-map-marker__dot'
+      dot.className = 'calendar-map-marker__dot flex h-[1.125rem] min-w-[1.125rem] items-center justify-center rounded-full border-2 border-white/95 bg-[var(--marker-color)] px-[0.1875rem] font-mono text-[0.625rem] font-semibold text-white shadow-[0_0.125rem_0.75rem_rgb(0_0_0/0.24),0_0_0_1px_rgb(0_0_0/0.12)] transition-[transform,box-shadow] duration-[160ms] ease-in-out group-hover:scale-125 group-hover:shadow-[0_0.25rem_1rem_rgb(0_0_0/0.3),0_0_0_2px_var(--color-tx)] group-focus-visible:scale-125 group-focus-visible:shadow-[0_0.25rem_1rem_rgb(0_0_0/0.3),0_0_0_2px_var(--color-tx)] group-aria-[pressed=true]:scale-125 group-aria-[pressed=true]:shadow-[0_0.25rem_1rem_rgb(0_0_0/0.3),0_0_0_2px_var(--color-tx)] motion-reduce:transition-none'
       dot.setAttribute('aria-hidden', 'true')
       dot.textContent = String(location.count)
       button.append(dot)
