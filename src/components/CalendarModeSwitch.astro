@@ -10,14 +10,14 @@ const modeLinkClass = 'relative z-[1] inline-flex min-h-8 min-w-[4.5rem] items-c
 
 <nav
   class:list={[
-    'calendar-mode-switch group pointer-events-auto relative isolate inline-grid grid-cols-2 items-center rounded-full border border-[color-mix(in_srgb,var(--color-border)_82%,transparent)] bg-[color-mix(in_srgb,var(--color-bg)_82%,transparent)] p-[var(--mode-switch-padding)] backdrop-blur-[1rem] [--mode-switch-padding:0.1875rem] [view-transition-name:calendar-mode-switch]',
+    'calendar-mode-switch group pointer-events-auto relative isolate inline-grid grid-cols-2 items-center rounded-full border border-[color-mix(in_srgb,var(--color-border)_82%,transparent)] bg-[color-mix(in_srgb,var(--color-bg)_82%,transparent)] p-[var(--mode-switch-padding)] backdrop-blur-[1rem] [--mode-switch-padding:0.1875rem]',
     className,
   ]}
   aria-label="日历视图"
   data-calendar-mode-switch
   data-mode={mode}
 >
-  <span class="calendar-mode-switch__indicator pointer-events-none absolute inset-y-[var(--mode-switch-padding)] left-[var(--mode-switch-padding)] z-0 w-[calc((100%-var(--mode-switch-padding)*2)/2)] translate-x-0 rounded-full bg-inline shadow-[0_0.0625rem_0.25rem_rgb(0_0_0/0.08)] transition-transform duration-[280ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-data-[mode=map]:translate-x-full motion-reduce:transition-none [view-transition-name:calendar-mode-indicator]" aria-hidden="true" />
+  <span class="calendar-mode-switch__indicator pointer-events-none absolute inset-y-[var(--mode-switch-padding)] left-[var(--mode-switch-padding)] z-0 w-[calc((100%-var(--mode-switch-padding)*2)/2)] translate-x-0 rounded-full bg-inline shadow-[0_0.0625rem_0.25rem_rgb(0_0_0/0.08)] transition-transform duration-[280ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-data-[mode=map]:translate-x-full motion-reduce:transition-none" aria-hidden="true" />
   <a class={modeLinkClass} href="/calendar" data-mode="calendar" aria-current={mode === 'calendar' ? 'page' : undefined}>
     <span class="i-lucide-calendar-days text-[0.9375rem]" aria-hidden="true" />
     日历
@@ -30,78 +30,162 @@ const modeLinkClass = 'relative z-[1] inline-flex min-h-8 min-w-[4.5rem] items-c
 
 <script>
   type CalendarMode = 'calendar' | 'map'
-  const motionSelectors = [
-    '[data-calendar-mode-switch]',
-    '.calendar-back-link',
-  ]
-
-  function updateMode(switcher: HTMLElement, mode: CalendarMode) {
-    switcher.dataset.mode = mode
-
-    for (const link of switcher.querySelectorAll<HTMLAnchorElement>('a[data-mode]')) {
-      if (link.dataset.mode === mode) {
-        link.setAttribute('aria-current', 'page')
-      } else {
-        link.removeAttribute('aria-current')
-      }
-    }
+  interface FallbackMotionTarget {
+    duration: number
+    easing: string
+    property: 'color' | 'transform'
+    relativeTo?: string
+    selector: string
   }
 
-  function initializeModeSwitch() {
-    const switcher = document.querySelector<HTMLElement>('[data-calendar-mode-switch]')
+  const modeTransitionAttribute = 'data-calendar-mode-transition'
+  let activeModeTransitionSignal: AbortSignal | undefined
+  const fallbackMotionTargets: FallbackMotionTarget[] = [
+    {
+      duration: 360,
+      easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+      property: 'transform',
+      selector: '[data-calendar-mode-switch]',
+    },
+    {
+      duration: 360,
+      easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+      property: 'transform',
+      selector: '.calendar-back-link',
+    },
+    {
+      duration: 280,
+      easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+      property: 'transform',
+      relativeTo: '[data-calendar-mode-switch]',
+      selector: '.calendar-mode-switch__indicator',
+    },
+    {
+      duration: 160,
+      easing: 'ease',
+      property: 'color',
+      selector: '.calendar-mode-switch a[data-mode="calendar"]',
+    },
+    {
+      duration: 160,
+      easing: 'ease',
+      property: 'color',
+      selector: '.calendar-mode-switch a[data-mode="map"]',
+    },
+  ]
 
-    if (!switcher || switcher.dataset.modeSwitchReady !== undefined) {
+  function getCalendarMode(url: URL): CalendarMode | undefined {
+    if (url.pathname === '/map') {
+      return 'map'
+    }
+
+    if (url.pathname === '/calendar' || url.pathname.startsWith('/calendar/')) {
+      return 'calendar'
+    }
+
+    return undefined
+  }
+
+  function isModeSwitchNavigation(sourceElement: Element | undefined, from: URL, to: URL) {
+    const modeLink = sourceElement?.closest<HTMLAnchorElement>('[data-calendar-mode-switch] a[data-mode]')
+    const targetMode = modeLink?.dataset.mode
+
+    return (targetMode === 'calendar' || targetMode === 'map')
+      && getCalendarMode(from) !== targetMode
+      && getCalendarMode(to) === targetMode
+  }
+
+  function clearModeTransition(signal: AbortSignal) {
+    if (activeModeTransitionSignal !== signal) {
       return
     }
 
-    switcher.dataset.modeSwitchReady = ''
-    switcher.addEventListener('click', (event) => {
-      if (
-        event.button !== 0
-        || event.metaKey
-        || event.ctrlKey
-        || event.altKey
-        || event.shiftKey
-        || event.defaultPrevented
-      ) {
-        return
-      }
-
-      const target = event.target
-      const link = target instanceof Element
-        ? target.closest<HTMLAnchorElement>('a[data-mode]')
-        : null
-      const nextMode = link?.dataset.mode
-
-      if (nextMode === 'calendar' || nextMode === 'map') {
-        updateMode(switcher, nextMode)
-      }
-    })
+    activeModeTransitionSignal = undefined
+    document.documentElement.removeAttribute(modeTransitionAttribute)
   }
+
+  document.addEventListener('astro:before-preparation', (event) => {
+    const preparationEvent = event as Event & {
+      from: URL
+      signal: AbortSignal
+      sourceElement?: Element
+      to: URL
+    }
+    const shouldAnimatePosition = isModeSwitchNavigation(
+      preparationEvent.sourceElement,
+      preparationEvent.from,
+      preparationEvent.to,
+    )
+
+    if (shouldAnimatePosition) {
+      activeModeTransitionSignal = preparationEvent.signal
+      document.documentElement.setAttribute(modeTransitionAttribute, '')
+      preparationEvent.signal.addEventListener('abort', () => {
+        clearModeTransition(preparationEvent.signal)
+      }, { once: true })
+    } else {
+      activeModeTransitionSignal = undefined
+      document.documentElement.removeAttribute(modeTransitionAttribute)
+    }
+  })
 
   document.addEventListener('astro:before-swap', (event) => {
     const transitionEvent = event as Event & {
+      from: URL
       newDocument: Document
+      signal: AbortSignal
+      sourceElement?: Element
       swap: () => void
+      to: URL
+      viewTransition: ViewTransition
     }
     const { newDocument } = transitionEvent
-    const currentSwitcher = document.querySelector<HTMLElement>('[data-calendar-mode-switch]')
-    const nextSwitcher = newDocument.querySelector<HTMLElement>('[data-calendar-mode-switch]')
-    const nextMode = nextSwitcher?.dataset.mode
-    const motionTargets = motionSelectors.flatMap((selector) => {
-      const currentElement = document.querySelector<HTMLElement>(selector)
-      const nextElement = newDocument.querySelector<HTMLElement>(selector)
+    const shouldAnimatePosition = isModeSwitchNavigation(
+      transitionEvent.sourceElement,
+      transitionEvent.from,
+      transitionEvent.to,
+    )
+      && activeModeTransitionSignal === transitionEvent.signal
+    const motionSnapshots = shouldAnimatePosition
+      ? fallbackMotionTargets.flatMap((target) => {
+          const currentElement = document.querySelector<HTMLElement>(target.selector)
+          const nextElement = newDocument.querySelector<HTMLElement>(target.selector)
+          const currentRelativeElement = target.relativeTo
+            ? document.querySelector<HTMLElement>(target.relativeTo)
+            : undefined
+          const nextRelativeElement = target.relativeTo
+            ? newDocument.querySelector<HTMLElement>(target.relativeTo)
+            : undefined
 
-      return currentElement && nextElement
-        ? [{ fromRect: currentElement.getBoundingClientRect(), selector }]
-        : []
-    })
+          return currentElement
+            && nextElement
+            && (!target.relativeTo || (currentRelativeElement && nextRelativeElement))
+            ? [{
+                ...target,
+                fromColor: getComputedStyle(currentElement).color,
+                fromRect: currentElement.getBoundingClientRect(),
+                fromRelativeRect: currentRelativeElement?.getBoundingClientRect(),
+              }]
+            : []
+        })
+      : []
 
-    if (currentSwitcher && (nextMode === 'calendar' || nextMode === 'map')) {
-      updateMode(currentSwitcher, nextMode)
+    if (shouldAnimatePosition) {
+      newDocument.documentElement.setAttribute(modeTransitionAttribute, '')
+      const cleanupTransitionAttribute = () => {
+        clearModeTransition(transitionEvent.signal)
+      }
+
+      transitionEvent.viewTransition.finished.then(
+        cleanupTransitionAttribute,
+        cleanupTransitionAttribute,
+      )
+    } else {
+      document.documentElement.removeAttribute(modeTransitionAttribute)
+      newDocument.documentElement.removeAttribute(modeTransitionAttribute)
     }
 
-    if (motionTargets.length === 0) {
+    if (motionSnapshots.length === 0) {
       return
     }
 
@@ -116,34 +200,48 @@ const modeLinkClass = 'relative z-[1] inline-flex min-h-8 min-w-[4.5rem] items-c
         return
       }
 
-      for (const { fromRect, selector } of motionTargets) {
-        const persistedElement = document.querySelector<HTMLElement>(selector)
+      for (const { duration, easing, fromColor, fromRect, fromRelativeRect, property, relativeTo, selector } of motionSnapshots) {
+        const motionElement = document.querySelector<HTMLElement>(selector)
 
-        if (!persistedElement) {
+        if (!motionElement) {
           continue
         }
 
-        const toRect = persistedElement.getBoundingClientRect()
-        const offsetX = fromRect.left - toRect.left
-        const offsetY = fromRect.top - toRect.top
+        if (property === 'color') {
+          const toColor = getComputedStyle(motionElement).color
+
+          if (fromColor !== toColor) {
+            motionElement.animate(
+              [{ color: fromColor }, { color: toColor }],
+              { duration, easing },
+            )
+          }
+          continue
+        }
+
+        const toRect = motionElement.getBoundingClientRect()
+        const toRelativeRect = relativeTo
+          ? document.querySelector<HTMLElement>(relativeTo)?.getBoundingClientRect()
+          : undefined
+        const offsetX = fromRelativeRect && toRelativeRect
+          ? (fromRect.left - fromRelativeRect.left) - (toRect.left - toRelativeRect.left)
+          : fromRect.left - toRect.left
+        const offsetY = fromRelativeRect && toRelativeRect
+          ? (fromRect.top - fromRelativeRect.top) - (toRect.top - toRelativeRect.top)
+          : fromRect.top - toRect.top
 
         if (Math.abs(offsetX) < 0.5 && Math.abs(offsetY) < 0.5) {
           continue
         }
 
-        persistedElement.animate(
+        motionElement.animate(
           [
             { transform: `translate(${offsetX}px, ${offsetY}px)` },
             { transform: 'translate(0, 0)' },
           ],
-          {
-            duration: 360,
-            easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
-          },
+          { duration, easing },
         )
       }
     }
   })
-  document.addEventListener('astro:page-load', initializeModeSwitch)
-  initializeModeSwitch()
 </script>

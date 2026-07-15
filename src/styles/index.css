@@ -62,13 +62,25 @@
   }
 }
 
-/* Keep mode-switch foreground layers above the moving indicator during page swaps. */
-.calendar-mode-switch a[data-mode='calendar'] {
+/* Only opt controls into position morphing for calendar/map mode changes. */
+html[data-calendar-mode-transition] .calendar-mode-switch {
+  view-transition-name: calendar-mode-switch;
+}
+
+html[data-calendar-mode-transition] .calendar-mode-switch__indicator {
+  view-transition-name: calendar-mode-indicator;
+}
+
+html[data-calendar-mode-transition] .calendar-mode-switch a[data-mode='calendar'] {
   view-transition-name: calendar-mode-calendar-label;
 }
 
-.calendar-mode-switch a[data-mode='map'] {
+html[data-calendar-mode-transition] .calendar-mode-switch a[data-mode='map'] {
   view-transition-name: calendar-mode-map-label;
+}
+
+html[data-calendar-mode-transition] .calendar-back-link {
+  view-transition-name: calendar-back-link;
 }
 
 @supports (view-transition-name: none) {
