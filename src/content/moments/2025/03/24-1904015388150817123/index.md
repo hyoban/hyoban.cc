@@ -1,4 +1,5 @@
 ---
+hidden: true
 publishedAt: "2025-03-24T11:40:18+08:00"
 sourceUrl: "https://twitter.com/hyoban_cc/status/1904015388150817123"
 media: []
