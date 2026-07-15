@@ -57,6 +57,23 @@ a {
   text-underline-offset: 3px;
 }
 
+/* Keep calendar geometry stable across ClientRouter page swaps. */
+main.calendar-page > .desktop-calendar {
+  align-content: start;
+  grid-template-rows: auto auto;
+}
+
+main.calendar-page .calendar-grid {
+  aspect-ratio: 7 / var(--calendar-weeks);
+}
+
+@media (min-width: 56.0625rem) {
+  main.calendar-page.calendar-page--with-drawer {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+}
+
 /* Prose styles */
 .prose {
   color: var(--color-tx-2);
