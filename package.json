@@ -8,10 +8,9 @@
     "build": "astro build",
     "check": "astro check",
     "media:generate": "node scripts/generate-media.mjs",
-    "moment:import-xiaohongshu": "node scripts/import-xiaohongshu-moments.mjs",
-    "moment:import-twitter": "node scripts/import-twitter-moments.mjs",
     "moment:new": "node scripts/new-moment.mjs",
-    "moment:import-telegram": "node scripts/import-telegram-moments.mjs",
+    "moment:publish": "node scripts/publish-moment.mjs",
+    "opencli:install": "opencli plugin install file://$PWD/opencli-plugin-hyoban-publishing",
     "test": "node --test scripts/lib/*.test.mjs"
   },
   "devDependencies": {
@@ -31,6 +30,8 @@
   },
   "dependencies": {
     "@mapbox/mapbox-gl-language": "^1.0.1",
-    "mapbox-gl": "^3.26.0"
+    "mapbox-gl": "^3.26.0",
+    "yaml": "^2.9.0",
+    "zod": "^4.4.3"
   }
 }

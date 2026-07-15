@@ -1,0 +1,6 @@
+{
+  "name": "hyoban-publishing",
+  "version": "0.1.0",
+  "description": "OpenCLI adapters for publishing canonical hyoban.cc Moments",
+  "opencli": ">=1.8.6"
+}
