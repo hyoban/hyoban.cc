@@ -24,8 +24,8 @@ const { class: className, moment, showLocation = true } = Astro.props
       )
     }
     {
-      moment.sourceUrl && (
-        <a class="moment-entry__source" href={moment.sourceUrl} target="_blank" rel="noopener noreferrer" aria-label="查看原始内容">
+      moment.provenanceUrl && (
+        <a class="moment-entry__source" href={moment.provenanceUrl} target="_blank" rel="noopener noreferrer" aria-label="查看原始内容">
           <span class="i-lucide-external-link" aria-hidden="true" />
         </a>
       )

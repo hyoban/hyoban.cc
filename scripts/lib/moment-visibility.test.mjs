@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url'
 import test from 'node:test'
 import { promisify } from 'node:util'
 
-import { parseMomentHidden, parseMomentSourceUrl } from './moment-files.mjs'
+import { parseMomentDocument } from '../../src/moment-content.ts'
 
 const execFile = promisify(execFileCallback)
 const root = fileURLToPath(new URL('../../', import.meta.url))
@@ -47,13 +47,14 @@ async function collectMomentSourceUrls() {
 
   for (const file of files) {
     const document = await readFile(join(contentRoot, file), 'utf8')
-    const sourceUrl = parseMomentSourceUrl(document)
+    const id = file.replace(/\/index\.md$/, '')
+    const moment = parseMomentDocument(document, { id })
 
-    if (!sourceUrl) {
+    if (!moment.provenance) {
       continue
     }
 
-    sourceUrls[parseMomentHidden(document) ? 'hidden' : 'visible'].push(sourceUrl)
+    sourceUrls[moment.hidden ? 'hidden' : 'visible'].push(moment.provenance.url)
   }
 
   return sourceUrls

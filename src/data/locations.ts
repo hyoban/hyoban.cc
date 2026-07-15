@@ -1,4 +1,4 @@
-import { defineLocations } from '@/map-locations'
+import { defineLocations } from '../map-locations.ts'
 
 // Public, approximate place centres for the calendar map.
 export const locations = defineLocations({

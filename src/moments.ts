@@ -2,6 +2,7 @@ import type { ImageMetadata } from 'astro'
 import type { CollectionEntry } from 'astro:content'
 import { getCollection } from 'astro:content'
 import { locations, type LocationId } from '@/data/locations'
+import { parseMomentDocument, type CanonicalMoment } from '@/moment-content'
 import {
   getLocation,
   groupMomentsByLocation,
@@ -62,7 +63,7 @@ export type Moment = {
   media: ResolvedMomentMedia[]
   publishedAt: Date
   publishedLabel: string
-  sourceUrl?: string
+  provenanceUrl?: string
   text: string
 }
 
@@ -136,23 +137,24 @@ async function loadMoments() {
 }
 
 function resolveMoment(entry: MomentEntry): Moment {
-  const publishedDateKey = getMomentDateKey(entry.data.publishedAt)
-  const dateKey = entry.data.occurredOn ?? publishedDateKey
+  const source = parseMomentDocument(getMomentDocument(entry), { id: entry.id })
+  const publishedDateKey = getMomentDateKey(source.publishedAt)
+  const dateKey = source.occurredOn ?? publishedDateKey
   const moment: Moment = {
     dateKey,
     id: entry.id,
-    media: entry.data.media.map(item => resolveMedia(entry, item)),
-    publishedAt: entry.data.publishedAt,
-    publishedLabel: formatPublishedLabel(entry.data.publishedAt, dateKey),
-    text: getMomentText(entry),
+    media: source.media.map(item => resolveMedia(entry, item)),
+    publishedAt: source.publishedAt,
+    publishedLabel: formatPublishedLabel(source.publishedAt, dateKey),
+    text: source.text,
   }
 
-  if (entry.data.sourceUrl) {
-    moment.sourceUrl = entry.data.sourceUrl
+  if (source.provenance) {
+    moment.provenanceUrl = source.provenance.url
   }
 
-  if (entry.data.location) {
-    const locationId = entry.data.location as LocationId
+  if (source.location) {
+    const locationId = source.location as LocationId
     const location = getLocation(locations, locationId)
     moment.locationId = locationId
     moment.location = { id: locationId, ...location }
@@ -172,7 +174,7 @@ function formatPublishedLabel(publishedAt: Date, dateKey: string) {
   return `发布于 ${parts.year}/${Number(parts.month)}/${Number(parts.day)} ${time}`
 }
 
-function getMomentText(entry: MomentEntry) {
+function getMomentDocument(entry: MomentEntry) {
   const key = `/src/content/moments/${entry.id}/index.md`
   const document = momentDocuments[key]
 
@@ -180,16 +182,10 @@ function getMomentText(entry: MomentEntry) {
     throw new Error(`Missing moment document: ${key}`)
   }
 
-  const body = document.match(/^---\r?\n[\s\S]*?\r?\n---\r?\n([\s\S]*)$/)?.[1]
-
-  if (body === undefined) {
-    throw new Error(`Invalid moment frontmatter: ${key}`)
-  }
-
-  return body.trim()
+  return document
 }
 
-function resolveMedia(entry: MomentEntry, media: MomentEntry['data']['media'][number]): ResolvedMomentMedia {
+function resolveMedia(entry: MomentEntry, media: CanonicalMoment['media'][number]): ResolvedMomentMedia {
   const directory = entry.id.replace(/\/index$/, '')
   const key = `/src/content/moments/${directory}/${media.file}`
 
