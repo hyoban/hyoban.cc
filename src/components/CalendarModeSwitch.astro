@@ -201,6 +201,14 @@ const { mode } = Astro.props
     color: var(--color-tx);
   }
 
+  .calendar-mode-switch a[data-mode='calendar'] {
+    view-transition-name: calendar-mode-calendar-label;
+  }
+
+  .calendar-mode-switch a[data-mode='map'] {
+    view-transition-name: calendar-mode-map-label;
+  }
+
   .calendar-mode-switch span {
     font-size: 0.9375rem;
   }
@@ -209,11 +217,20 @@ const { mode } = Astro.props
     :global(::view-transition-group(calendar-mode-indicator)) {
       animation-duration: 280ms;
       animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+      z-index: 1;
     }
 
     :global(::view-transition-group(calendar-mode-switch)) {
       animation-duration: 360ms;
       animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+      z-index: 0;
+    }
+
+    :global(::view-transition-group(calendar-mode-calendar-label)),
+    :global(::view-transition-group(calendar-mode-map-label)) {
+      animation-duration: 360ms;
+      animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+      z-index: 2;
     }
   }
 
