@@ -1,10 +1,9 @@
-import { execFile } from 'node:child_process'
-import { promisify } from 'node:util'
 import { fileURLToPath } from 'node:url'
 
+import { runOpenCli } from './lib/opencli-runner.mjs'
 import { runPublicationCommand } from './lib/publication-command.mjs'
+import { PUBLICATION_PLATFORMS } from './lib/publication-platforms.mjs'
 
-const execFileAsync = promisify(execFile)
 const root = fileURLToPath(new URL('../src/content/moments/', import.meta.url))
 const argv = process.argv.slice(2)
 
@@ -14,7 +13,7 @@ if (argv.includes('--help') || argv.includes('-h')) {
 Publish exactly one canonical Moment to every Platform by default.
 
 Options:
-  --platform <name>  Target telegram, xiaohongshu, or x. Repeat for a subset.
+  --platform <name>  Target ${PUBLICATION_PLATFORMS.join(', ')}. Repeat for a subset.
   --execute          Perform external writes. Without it, only preview.
   -h, --help         Show this help.`)
   process.exit(0)
@@ -36,21 +35,4 @@ try {
 } catch (error) {
   console.error(error instanceof Error ? error.message : String(error))
   process.exitCode = 1
-}
-
-async function runOpenCli(args) {
-  try {
-    const { stdout } = await execFileAsync('opencli', args, {
-      encoding: 'utf8',
-      maxBuffer: 50 * 1024 * 1024,
-    })
-
-    return JSON.parse(stdout)
-  } catch (error) {
-    const detail = [error.stderr, error.stdout, error.message]
-      .find(value => typeof value === 'string' && value.trim())
-      ?.trim()
-
-    throw new Error(`OpenCLI command failed: ${detail ?? 'unknown error'}`, { cause: error })
-  }
 }
