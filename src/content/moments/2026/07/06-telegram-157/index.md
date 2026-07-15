@@ -1,5 +1,4 @@
 ---
-hidden: true
 publishedAt: "2026-07-06T19:34:16+08:00"
 sourceUrl: "https://telegram.me/hyoban_travel/157"
 media:

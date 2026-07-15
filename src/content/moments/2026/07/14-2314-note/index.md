@@ -1,5 +1,4 @@
 ---
-hidden: true
 publishedAt: "2026-07-14T23:14:20+08:00"
 media:
   - type: image
