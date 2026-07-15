@@ -1,4 +1,5 @@
 ---
+import CalendarBackLink from '@/components/CalendarBackLink.astro'
 import CalendarDayStatus from '@/components/CalendarDayStatus.astro'
 import CalendarModeSwitch from '@/components/CalendarModeSwitch.astro'
 import MobileAgenda from '@/components/MobileAgenda.astro'
@@ -177,7 +178,7 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
         }
       </nav>
 
-      <a href="/">返回</a>
+      <CalendarBackLink />
     </header>
 
     <div class="desktop-calendar">
@@ -434,8 +435,7 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
     margin-bottom: 1rem;
   }
 
-  .calendar-toolbar > a {
-    color: var(--color-tx-2);
+  .calendar-toolbar > :global(.calendar-back-link) {
     grid-column: 3;
     justify-self: end;
   }
@@ -816,7 +816,7 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
       grid-row: 1;
     }
 
-    .calendar-toolbar > a {
+    .calendar-toolbar > :global(.calendar-back-link) {
       grid-column: 2;
       grid-row: 1;
     }
@@ -831,8 +831,7 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
       width: 2.75rem;
     }
 
-    .month-picker summary,
-    .calendar-toolbar > a {
+    .month-picker summary {
       align-items: center;
       display: flex;
       min-height: 2.75rem;

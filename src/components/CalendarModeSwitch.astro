@@ -6,25 +6,178 @@ interface Props {
 const { mode } = Astro.props
 ---
 
-<nav class="calendar-mode-switch" aria-label="日历视图" style="pointer-events: auto">
-  <a href="/calendar" aria-current={mode === 'calendar' ? 'page' : undefined}>
+<nav
+  class="calendar-mode-switch"
+  aria-label="日历视图"
+  data-calendar-mode-switch
+  data-mode={mode}
+>
+  <span class="calendar-mode-switch__indicator" aria-hidden="true" />
+  <a href="/calendar" data-mode="calendar" aria-current={mode === 'calendar' ? 'page' : undefined}>
     <span class="i-lucide-calendar-days" aria-hidden="true" />
     日历
   </a>
-  <a href="/map" aria-current={mode === 'map' ? 'page' : undefined}>
+  <a href="/map" data-mode="map" aria-current={mode === 'map' ? 'page' : undefined}>
     <span class="i-lucide-map" aria-hidden="true" />
     地图
   </a>
 </nav>
 
+<script>
+  type CalendarMode = 'calendar' | 'map'
+  const motionSelectors = [
+    '[data-calendar-mode-switch]',
+    '.calendar-back-link',
+  ]
+
+  function updateMode(switcher: HTMLElement, mode: CalendarMode) {
+    switcher.dataset.mode = mode
+
+    for (const link of switcher.querySelectorAll<HTMLAnchorElement>('a[data-mode]')) {
+      if (link.dataset.mode === mode) {
+        link.setAttribute('aria-current', 'page')
+      } else {
+        link.removeAttribute('aria-current')
+      }
+    }
+  }
+
+  function initializeModeSwitch() {
+    const switcher = document.querySelector<HTMLElement>('[data-calendar-mode-switch]')
+
+    if (!switcher || switcher.dataset.modeSwitchReady !== undefined) {
+      return
+    }
+
+    switcher.dataset.modeSwitchReady = ''
+    switcher.addEventListener('click', (event) => {
+      if (
+        event.button !== 0
+        || event.metaKey
+        || event.ctrlKey
+        || event.altKey
+        || event.shiftKey
+        || event.defaultPrevented
+      ) {
+        return
+      }
+
+      const target = event.target
+      const link = target instanceof Element
+        ? target.closest<HTMLAnchorElement>('a[data-mode]')
+        : null
+      const nextMode = link?.dataset.mode
+
+      if (nextMode === 'calendar' || nextMode === 'map') {
+        updateMode(switcher, nextMode)
+      }
+    })
+  }
+
+  document.addEventListener('astro:before-swap', (event) => {
+    const transitionEvent = event as Event & {
+      newDocument: Document
+      swap: () => void
+    }
+    const { newDocument } = transitionEvent
+    const currentSwitcher = document.querySelector<HTMLElement>('[data-calendar-mode-switch]')
+    const nextSwitcher = newDocument.querySelector<HTMLElement>('[data-calendar-mode-switch]')
+    const nextMode = nextSwitcher?.dataset.mode
+    const motionTargets = motionSelectors.flatMap((selector) => {
+      const currentElement = document.querySelector<HTMLElement>(selector)
+      const nextElement = newDocument.querySelector<HTMLElement>(selector)
+
+      return currentElement && nextElement
+        ? [{ fromRect: currentElement.getBoundingClientRect(), selector }]
+        : []
+    })
+
+    if (currentSwitcher && (nextMode === 'calendar' || nextMode === 'map')) {
+      updateMode(currentSwitcher, nextMode)
+    }
+
+    if (motionTargets.length === 0) {
+      return
+    }
+
+    const swap = transitionEvent.swap
+    transitionEvent.swap = () => {
+      swap()
+
+      if (
+        typeof document.startViewTransition === 'function'
+        || window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      ) {
+        return
+      }
+
+      for (const { fromRect, selector } of motionTargets) {
+        const persistedElement = document.querySelector<HTMLElement>(selector)
+
+        if (!persistedElement) {
+          continue
+        }
+
+        const toRect = persistedElement.getBoundingClientRect()
+        const offsetX = fromRect.left - toRect.left
+        const offsetY = fromRect.top - toRect.top
+
+        if (Math.abs(offsetX) < 0.5 && Math.abs(offsetY) < 0.5) {
+          continue
+        }
+
+        persistedElement.animate(
+          [
+            { transform: `translate(${offsetX}px, ${offsetY}px)` },
+            { transform: 'translate(0, 0)' },
+          ],
+          {
+            duration: 360,
+            easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+          },
+        )
+      }
+    }
+  })
+  document.addEventListener('astro:page-load', initializeModeSwitch)
+  initializeModeSwitch()
+</script>
+
 <style>
   .calendar-mode-switch {
+    --mode-switch-padding: 0.1875rem;
+
     align-items: center;
+    backdrop-filter: blur(1rem);
     background: color-mix(in srgb, var(--color-bg) 82%, transparent);
     border: 1px solid color-mix(in srgb, var(--color-border) 82%, transparent);
     border-radius: 999px;
-    display: inline-flex;
-    padding: 0.1875rem;
+    display: inline-grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    isolation: isolate;
+    padding: var(--mode-switch-padding);
+    pointer-events: auto;
+    position: relative;
+    view-transition-name: calendar-mode-switch;
+  }
+
+  .calendar-mode-switch__indicator {
+    background: var(--color-inline);
+    border-radius: 999px;
+    box-shadow: 0 0.0625rem 0.25rem rgb(0 0 0 / 0.08);
+    inset-block: var(--mode-switch-padding);
+    left: var(--mode-switch-padding);
+    pointer-events: none;
+    position: absolute;
+    transform: translateX(0);
+    transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
+    view-transition-name: calendar-mode-indicator;
+    width: calc((100% - var(--mode-switch-padding) * 2) / 2);
+    z-index: 0;
+  }
+
+  .calendar-mode-switch[data-mode='map'] .calendar-mode-switch__indicator {
+    transform: translateX(100%);
   }
 
   .calendar-mode-switch a {
@@ -34,14 +187,17 @@ const { mode } = Astro.props
     display: inline-flex;
     font-size: 0.8125rem;
     gap: 0.375rem;
+    justify-content: center;
     min-height: 2rem;
+    min-width: 4.5rem;
     padding: 0 0.75rem;
+    position: relative;
     text-decoration: none;
+    transition: color 160ms ease;
+    z-index: 1;
   }
 
   .calendar-mode-switch a[aria-current='page'] {
-    background: var(--color-inline);
-    box-shadow: 0 0.0625rem 0.25rem rgb(0 0 0 / 0.08);
     color: var(--color-tx);
   }
 
@@ -49,9 +205,29 @@ const { mode } = Astro.props
     font-size: 0.9375rem;
   }
 
+  @supports (view-transition-name: none) {
+    :global(::view-transition-group(calendar-mode-indicator)) {
+      animation-duration: 280ms;
+      animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    :global(::view-transition-group(calendar-mode-switch)) {
+      animation-duration: 360ms;
+      animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+  }
+
   @media (max-width: 40rem) {
     .calendar-mode-switch a {
+      min-width: 4.25rem;
       padding: 0 0.625rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .calendar-mode-switch__indicator,
+    .calendar-mode-switch a {
+      transition: none;
     }
   }
 </style>
