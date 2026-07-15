@@ -24,7 +24,12 @@ const canonicalUrl = new URL(Astro.url.pathname, SITE_URL).toString()
 const TELETYPE_SITE_VERIFICATION = 'g7j8/rPFXfhyrq5q0QQV7EsYWv4='
 ---
 
-<html lang="zh-Hans" transition:name="root" transition:animate={fade({ duration: '200ms' })}>
+<html
+  lang="zh-Hans"
+  class="[--calendar-drawer-width:27rem] min-[56.0625rem]:[&.calendar-drawer-open]:overflow-hidden"
+  transition:name="root"
+  transition:animate={fade({ duration: '200ms' })}
+>
   <head>
     <!-- Global Metadata -->
     <meta charset="utf-8" />
@@ -56,7 +61,7 @@ const TELETYPE_SITE_VERIFICATION = 'g7j8/rPFXfhyrq5q0QQV7EsYWv4='
       )
     }
   </head>
-  <body class="bg-bg px-4 py-8 text-tx">
+  <body class="bg-bg px-4 py-8 text-tx has-[.calendar-map-page]:overflow-hidden has-[.calendar-map-page]:p-0 max-[56rem]:has-[.calendar-page]:py-4 max-[56rem]:has-[.day-drawer]:py-4 min-[56.0625rem]:has-[.day-drawer]:pr-[calc(var(--calendar-drawer-width)+1rem)]">
     <slot />
   </body>
 </html>

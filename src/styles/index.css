@@ -1,4 +1,5 @@
 @import 'tailwindcss' source(none);
+@import 'mapbox-gl/dist/mapbox-gl.css' layer(components);
 @plugin '@egoist/tailwindcss-icons';
 @source '../../src';
 
@@ -42,6 +43,8 @@
 @theme {
   --color-*: initial;
 
+  --color-black: #000;
+  --color-white: #fff;
   --color-bg: var(--color-bg);
   --color-border: var(--color-border);
   --color-inline: var(--color-inline);
@@ -51,20 +54,12 @@
   --color-tx-3: var(--color-tx-3);
 }
 
-a {
-  text-decoration: underline;
-  text-decoration-color: var(--color-tx-3);
-  text-underline-offset: 3px;
-}
-
-/* Keep calendar geometry stable across ClientRouter page swaps. */
-main.calendar-page > .desktop-calendar {
-  align-content: start;
-  grid-template-rows: auto auto;
-}
-
-main.calendar-page .calendar-grid {
-  aspect-ratio: 7 / var(--calendar-weeks);
+@layer base {
+  a {
+    text-decoration: underline;
+    text-decoration-color: var(--color-tx-3);
+    text-underline-offset: 3px;
+  }
 }
 
 /* Keep mode-switch foreground layers above the moving indicator during page swaps. */
@@ -78,10 +73,14 @@ main.calendar-page .calendar-grid {
 
 @supports (view-transition-name: none) {
   ::view-transition-group(calendar-mode-switch) {
+    animation-duration: 360ms;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
     z-index: 0;
   }
 
   ::view-transition-group(calendar-mode-indicator) {
+    animation-duration: 280ms;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
     z-index: 1;
   }
 
@@ -91,12 +90,50 @@ main.calendar-page .calendar-grid {
     animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
     z-index: 2;
   }
+
+  ::view-transition-group(calendar-back-link) {
+    animation-duration: 360ms;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
 }
 
-@media (min-width: 56.0625rem) {
-  main.calendar-page.calendar-page--with-drawer {
-    overflow-y: auto;
-    overscroll-behavior: contain;
+/* Mapbox controls are generated outside Astro templates, so these stay global. */
+.calendar-map-page .mapboxgl-popup-content {
+  color: var(--color-tx);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 0.5rem 2rem rgb(0 0 0 / 0.18);
+}
+
+.calendar-map-page :is(.mapboxgl-popup-anchor-top, .mapboxgl-popup-anchor-top-left, .mapboxgl-popup-anchor-top-right) .mapboxgl-popup-tip {
+  border-bottom-color: var(--color-bg);
+}
+
+.calendar-map-page :is(.mapboxgl-popup-anchor-bottom, .mapboxgl-popup-anchor-bottom-left, .mapboxgl-popup-anchor-bottom-right) .mapboxgl-popup-tip {
+  border-top-color: var(--color-bg);
+}
+
+.calendar-map-page .mapboxgl-popup-anchor-left .mapboxgl-popup-tip {
+  border-right-color: var(--color-bg);
+}
+
+.calendar-map-page .mapboxgl-popup-anchor-right .mapboxgl-popup-tip {
+  border-left-color: var(--color-bg);
+}
+
+@media (min-width: 48.0625rem) {
+  .calendar-map-page:has(.calendar-map-drawer:not([hidden])) .mapboxgl-ctrl-bottom-right {
+    right: calc(min(28rem, calc(100vw - 2rem)) + 1.5rem);
+  }
+}
+
+@media (max-width: 48rem) {
+  .calendar-map-page:has(.calendar-map-drawer:not([hidden])) :is(.mapboxgl-ctrl-bottom-left, .mapboxgl-ctrl-bottom-right) {
+    bottom: calc(min(78dvh, 42rem) + 1.25rem + env(safe-area-inset-bottom));
+  }
+
+  .calendar-map-page:has(.calendar-map-drawer:not([hidden])) .mapboxgl-ctrl-bottom-right {
+    right: 0;
   }
 }
 

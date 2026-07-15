@@ -1,25 +1,17 @@
-<a class="calendar-back-link" href="/">返回</a>
+---
+interface Props {
+  class?: string
+}
 
-<style>
-  .calendar-back-link {
-    align-items: center;
-    backdrop-filter: blur(1rem);
-    background: color-mix(in srgb, var(--color-bg) 82%, transparent);
-    border: 1px solid color-mix(in srgb, var(--color-border) 82%, transparent);
-    border-radius: 999px;
-    color: var(--color-tx-2);
-    display: inline-flex;
-    font-size: 0.8125rem;
-    min-height: 2.5rem;
-    padding: 0 0.875rem;
-    text-decoration: none;
-    view-transition-name: calendar-back-link;
-  }
+const { class: className } = Astro.props
+---
 
-  @supports (view-transition-name: none) {
-    :global(::view-transition-group(calendar-back-link)) {
-      animation-duration: 360ms;
-      animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
-    }
-  }
-</style>
+<a
+  class:list={[
+    'calendar-back-link inline-flex min-h-10 items-center rounded-full border border-[color-mix(in_srgb,var(--color-border)_82%,transparent)] bg-[color-mix(in_srgb,var(--color-bg)_82%,transparent)] px-3.5 text-[0.8125rem] text-tx-2 no-underline backdrop-blur-[1rem] [view-transition-name:calendar-back-link]',
+    className,
+  ]}
+  href="/"
+>
+  返回
+</a>

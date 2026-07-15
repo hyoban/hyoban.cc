@@ -8,15 +8,26 @@ interface Props {
 
 const { media } = Astro.props
 const galleryClass = `moment-gallery moment-gallery--${Math.min(media.length, 4)}`
+const isSingle = media.length === 1
 ---
 
-<div class={galleryClass}>
+<div
+  class:list={[
+    galleryClass,
+    'mt-3.5 grid gap-1 overflow-hidden',
+    isSingle ? 'grid-cols-1' : 'grid-cols-2',
+  ]}
+>
   {
     media.map((item, index) => item.type === 'image'
       ? (
           <button
             type="button"
-            class="moment-gallery__image"
+            class:list={[
+              'moment-gallery__image min-w-0 cursor-zoom-in overflow-hidden rounded-md border-0 bg-inline p-0',
+              isSingle ? 'max-h-[32rem] [aspect-ratio:auto]' : 'aspect-[4/3]',
+              { 'row-span-2': media.length === 3 && index === 0 },
+            ]}
             data-lightbox-item
             data-lightbox-src={item.src.src}
             data-lightbox-alt={item.alt}
@@ -28,74 +39,34 @@ const galleryClass = `moment-gallery moment-gallery--${Math.min(media.length, 4)
               width={Math.min(item.src.width, 960)}
               height={Math.round(Math.min(item.src.width, 960) * item.src.height / item.src.width)}
               loading="lazy"
+              class:list={[
+                'block w-full',
+                isSingle ? 'h-auto max-h-[32rem] object-contain' : 'h-full object-cover',
+              ]}
             />
           </button>
         )
       : (
-          <div class="moment-gallery__video">
-            <video controls preload="metadata" poster={item.poster?.src} aria-label={item.alt || `视频 ${index + 1}`}>
+          <div
+            class:list={[
+              'moment-gallery__video min-w-0 overflow-hidden rounded-md bg-inline',
+              isSingle ? 'max-h-[32rem] [aspect-ratio:auto]' : 'aspect-[4/3]',
+              { 'row-span-2': media.length === 3 && index === 0 },
+            ]}
+          >
+            <video
+              controls
+              preload="metadata"
+              poster={item.poster?.src}
+              aria-label={item.alt || `视频 ${index + 1}`}
+              class:list={[
+                'block w-full',
+                isSingle ? 'h-auto max-h-[32rem] object-contain' : 'h-full object-cover',
+              ]}
+            >
               <source src={item.src} type="video/mp4" />
             </video>
           </div>
         ))
   }
 </div>
-
-<style>
-  .moment-gallery {
-    display: grid;
-    gap: 0.25rem;
-    margin-top: 0.875rem;
-    overflow: hidden;
-  }
-
-  .moment-gallery--1 {
-    grid-template-columns: 1fr;
-  }
-
-  .moment-gallery--2,
-  .moment-gallery--3,
-  .moment-gallery--4 {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .moment-gallery--3 > :first-child {
-    grid-row: span 2;
-  }
-
-  .moment-gallery__image,
-  .moment-gallery__video {
-    aspect-ratio: 4 / 3;
-    background: var(--color-inline);
-    border: 0;
-    border-radius: 0.375rem;
-    min-width: 0;
-    overflow: hidden;
-    padding: 0;
-  }
-
-  .moment-gallery__image {
-    cursor: zoom-in;
-  }
-
-  .moment-gallery__image :global(img),
-  .moment-gallery__video video {
-    display: block;
-    height: 100%;
-    object-fit: cover;
-    width: 100%;
-  }
-
-  .moment-gallery--1 .moment-gallery__image,
-  .moment-gallery--1 .moment-gallery__video {
-    aspect-ratio: auto;
-    max-height: 32rem;
-  }
-
-  .moment-gallery--1 .moment-gallery__image :global(img),
-  .moment-gallery--1 .moment-gallery__video video {
-    height: auto;
-    max-height: 32rem;
-    object-fit: contain;
-  }
-</style>

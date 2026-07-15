@@ -33,15 +33,16 @@ function formatDate(dateKey: string) {
 }
 ---
 
-<section class="mobile-agenda" aria-label={`${year} 年 ${month} 月的全部记录`}>
+<section class="mobile-agenda hidden max-[56rem]:block" aria-label={`${year} 年 ${month} 月的全部记录`}>
   {
     days.length > 0
       ? (
           <>
-            <nav class="mobile-agenda__index" aria-label="本月有记录的日期">
+            <nav class="mobile-agenda__index mt-3 flex gap-2 overflow-x-auto border-y border-border py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-label="本月有记录的日期">
               {days.map(day => (
                 <button
                   type="button"
+                  class="flex h-11 min-w-11 flex-none cursor-pointer items-center justify-center border-0 bg-transparent p-0 font-mono text-tx-2"
                   data-agenda-target={`agenda-${day.dateKey}`}
                   aria-label={`定位到 ${formatDate(day.dateKey)}`}
                 >
@@ -52,15 +53,15 @@ function formatDate(dateKey: string) {
 
             <div class="mobile-agenda__days">
               {agendaDays.map(day => (
-                <section class="mobile-agenda__day" id={`agenda-${day.dateKey}`}>
-                  <header>
-                    <div class="mobile-agenda__date">
-                      <h2>{formatDate(day.dateKey)}</h2>
+                <section class="mobile-agenda__day scroll-mt-3 [&+&]:border-t [&+&]:border-border" id={`agenda-${day.dateKey}`}>
+                  <header class="flex items-baseline justify-between gap-3 pt-7">
+                    <div class="mobile-agenda__date flex min-w-0 items-baseline gap-2.5">
+                      <h2 class="text-lg font-medium">{formatDate(day.dateKey)}</h2>
                       {day.chinaCalendarDay && <CalendarDayStatus day={day.chinaCalendarDay} />}
                     </div>
-                    <span class="mobile-agenda__count">{day.moments.length} 条</span>
+                    <span class="mobile-agenda__count whitespace-nowrap font-mono text-xs text-tx-3">{day.moments.length} 条</span>
                   </header>
-                  <div class="mobile-agenda__moments">
+                  <div class="mobile-agenda__moments pb-1">
                     {day.moments.map(moment => <MomentEntry moment={moment} />)}
                   </div>
                 </section>
@@ -68,93 +69,6 @@ function formatDate(dateKey: string) {
             </div>
           </>
         )
-      : <p class="mobile-agenda__empty">本月没有记录。</p>
+      : <p class="mobile-agenda__empty py-16 text-center text-tx-3">本月没有记录。</p>
   }
 </section>
-
-<style>
-  .mobile-agenda {
-    display: none;
-  }
-
-  @media (max-width: 56rem) {
-    .mobile-agenda {
-      display: block;
-    }
-
-    .mobile-agenda__index {
-      border-bottom: 1px solid var(--color-border);
-      border-top: 1px solid var(--color-border);
-      display: flex;
-      gap: 0.5rem;
-      margin-top: 0.75rem;
-      overflow-x: auto;
-      padding: 0.25rem 0;
-      scrollbar-width: none;
-    }
-
-    .mobile-agenda__index::-webkit-scrollbar {
-      display: none;
-    }
-
-    .mobile-agenda__index button {
-      align-items: center;
-      background: transparent;
-      border: 0;
-      color: var(--color-tx-2);
-      cursor: pointer;
-      display: flex;
-      flex: none;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      height: 2.75rem;
-      justify-content: center;
-      min-width: 2.75rem;
-      padding: 0;
-    }
-
-    .mobile-agenda__day {
-      scroll-margin-top: 0.75rem;
-    }
-
-    .mobile-agenda__day + .mobile-agenda__day {
-      border-top: 1px solid var(--color-border);
-    }
-
-    .mobile-agenda__day > header {
-      align-items: baseline;
-      display: flex;
-      gap: 0.75rem;
-      justify-content: space-between;
-      padding-top: 1.75rem;
-    }
-
-    .mobile-agenda__date {
-      align-items: baseline;
-      display: flex;
-      gap: 0.625rem;
-      min-width: 0;
-    }
-
-    .mobile-agenda__day h2 {
-      font-size: 1.125rem;
-      font-weight: 500;
-    }
-
-    .mobile-agenda__count {
-      color: var(--color-tx-3);
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      font-size: 0.75rem;
-      white-space: nowrap;
-    }
-
-    .mobile-agenda__moments {
-      padding-bottom: 0.25rem;
-    }
-
-    .mobile-agenda__empty {
-      color: var(--color-tx-3);
-      padding: 4rem 0;
-      text-align: center;
-    }
-  }
-</style>
