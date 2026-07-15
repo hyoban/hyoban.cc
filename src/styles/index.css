@@ -67,6 +67,32 @@ main.calendar-page .calendar-grid {
   aspect-ratio: 7 / var(--calendar-weeks);
 }
 
+/* Keep mode-switch foreground layers above the moving indicator during page swaps. */
+.calendar-mode-switch a[data-mode='calendar'] {
+  view-transition-name: calendar-mode-calendar-label;
+}
+
+.calendar-mode-switch a[data-mode='map'] {
+  view-transition-name: calendar-mode-map-label;
+}
+
+@supports (view-transition-name: none) {
+  ::view-transition-group(calendar-mode-switch) {
+    z-index: 0;
+  }
+
+  ::view-transition-group(calendar-mode-indicator) {
+    z-index: 1;
+  }
+
+  ::view-transition-group(calendar-mode-calendar-label),
+  ::view-transition-group(calendar-mode-map-label) {
+    animation-duration: 360ms;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+    z-index: 2;
+  }
+}
+
 @media (min-width: 56.0625rem) {
   main.calendar-page.calendar-page--with-drawer {
     overflow-y: auto;
