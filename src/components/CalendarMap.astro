@@ -40,14 +40,14 @@ function formatDate(dateKey: string) {
 }
 ---
 
-<Layout title={title} description={description} clientNavigation>
+<Layout title={title} description={description}>
   <main class="calendar-map-page" data-calendar-map data-mapbox-token={mapboxToken} transition:persist="calendar-map">
     <div class="calendar-map-canvas" data-calendar-map-canvas role="region" aria-label="Calendar 地点地图" />
 
     <header class="calendar-map-toolbar">
       <CalendarModeSwitch mode="map" />
       <p>全部地点</p>
-      <a href="/" data-astro-reload>返回</a>
+      <a href="/">返回</a>
     </header>
 
     <ol class="calendar-map-legend" aria-label="地点最近记录年份">

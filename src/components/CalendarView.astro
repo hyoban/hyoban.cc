@@ -126,7 +126,7 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
 }
 ---
 
-<Layout title={title} description={description} clientNavigation>
+<Layout title={title} description={description}>
   <main
     class:list={['calendar-page', { 'calendar-page--with-drawer': selectedDate }] }
     style={`--calendar-weeks: ${calendarDays.length / 7}`}
@@ -177,7 +177,7 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
         }
       </nav>
 
-      <a href="/" data-astro-reload>返回</a>
+      <a href="/">返回</a>
     </header>
 
     <div class="desktop-calendar">
