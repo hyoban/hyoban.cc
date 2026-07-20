@@ -8,7 +8,6 @@
     "build": "astro build",
     "check": "astro check",
     "media:generate": "node scripts/generate-media.mjs",
-    "moment:new": "node scripts/new-moment.mjs",
     "test": "node --test scripts/lib/*.test.mjs"
   },
   "devDependencies": {
