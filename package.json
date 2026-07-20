@@ -9,8 +9,6 @@
     "check": "astro check",
     "media:generate": "node scripts/generate-media.mjs",
     "moment:new": "node scripts/new-moment.mjs",
-    "moment:publish": "node scripts/publish-moment.mjs",
-    "opencli:install": "opencli plugin install file://$PWD/opencli-plugin-hyoban-publishing",
     "test": "node --test scripts/lib/*.test.mjs"
   },
   "devDependencies": {
