@@ -1,0 +1,4 @@
+interface:
+  display_name: "Create Moment"
+  short_description: "Create a Moment from text and images"
+  default_prompt: "Use $create-moment to create a Moment from my exact text and attached images."
