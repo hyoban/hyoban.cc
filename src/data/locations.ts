@@ -42,6 +42,11 @@ export const locations = defineLocations({
     longitude: 118.0122,
     name: '陡沟',
   },
+  'fangxing-lake': {
+    latitude: 31.7266,
+    longitude: 117.3238,
+    name: '方兴湖公园',
+  },
   guangzhou: {
     latitude: 23.1291,
     longitude: 113.2644,
