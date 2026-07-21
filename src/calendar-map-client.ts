@@ -71,6 +71,7 @@ function initializeCalendarMap() {
   let mapLoaded = false
   let activeLocationId: string | undefined
   let activeTrigger: HTMLButtonElement | undefined
+  let suppressMarkerFocusPopup = false
   let lightboxIndex = 0
   let lightboxItems: HTMLElement[] = []
   let loadTimeout: ReturnType<typeof setTimeout> | undefined
@@ -192,7 +193,13 @@ function initializeCalendarMap() {
     }
 
     if (options.restoreFocus !== false && activeTrigger?.isConnected && !activeTrigger.hidden) {
-      activeTrigger.focus({ preventScroll: true })
+      suppressMarkerFocusPopup = true
+
+      try {
+        activeTrigger.focus({ preventScroll: true })
+      } finally {
+        suppressMarkerFocusPopup = false
+      }
     }
   }
 
@@ -328,6 +335,10 @@ function initializeCalendarMap() {
       button.append(dot)
 
       const showPopup = () => {
+        if (suppressMarkerFocusPopup) {
+          return
+        }
+
         popup
           .setLngLat([location.longitude, location.latitude])
           .addTo(map!)
