@@ -1,5 +1,5 @@
 import MapboxLanguage from '@mapbox/mapbox-gl-language'
-import mapboxgl, { type PaddingOptions } from 'mapbox-gl'
+import mapboxgl, { type GeoJSONSource, type PaddingOptions } from 'mapbox-gl'
 
 type MarkerData = {
   color: string
@@ -13,11 +13,19 @@ type MarkerData = {
 
 type MarkerEntry = {
   button: HTMLButtonElement
-  data: MarkerData
+  marker: mapboxgl.Marker
+  popup: mapboxgl.Popup
+}
+
+type ClusterMarkerEntry = {
+  marker: mapboxgl.Marker
   popup: mapboxgl.Popup
 }
 
 const HISTORY_STATE_KEY = 'calendarMapSelection'
+const LOCATION_INDEX_LAYER_ID = 'calendar-location-index'
+const LOCATION_SOURCE_ID = 'calendar-locations'
+const LOCATION_CLUSTER_MAX_ZOOM = 9
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
 let destroyCurrentMap: (() => void) | undefined
 let currentMapPage: HTMLElement | undefined
@@ -57,6 +65,7 @@ function initializeCalendarMap() {
   const locationsById = new Map(locations.map(location => [location.id, location]))
   const templates = new Map<string, HTMLTemplateElement>()
   const markers = new Map<string, MarkerEntry>()
+  const clusterMarkers = new Map<number, ClusterMarkerEntry>()
   const darkMode = window.matchMedia('(prefers-color-scheme: dark)')
   let map: mapboxgl.Map | undefined
   let mapLoaded = false
@@ -128,7 +137,7 @@ function initializeCalendarMap() {
       center: [location.longitude, location.latitude],
       duration: getAnimationDuration(),
       padding: getDrawerPadding(),
-      zoom: Math.max(map.getZoom(), 5),
+      zoom: Math.max(map.getZoom(), LOCATION_CLUSTER_MAX_ZOOM + 1),
     })
   }
 
@@ -335,12 +344,159 @@ function initializeCalendarMap() {
         selectLocation(location.id, button)
       }, { signal })
 
-      new mapboxgl.Marker({ anchor: 'center', element: button })
+      const marker = new mapboxgl.Marker({ anchor: 'center', element: button })
         .setLngLat([location.longitude, location.latitude])
         .addTo(map)
       button.setAttribute('role', 'button')
 
-      markers.set(location.id, { button, data: location, popup })
+      markers.set(location.id, { button, marker, popup })
+    }
+  }
+
+  function createLocationIndex() {
+    if (!map || map.getSource(LOCATION_SOURCE_ID)) {
+      return
+    }
+
+    clearClusterMarkers()
+
+    for (const marker of markers.values()) {
+      marker.button.hidden = false
+    }
+
+    map.addSource(LOCATION_SOURCE_ID, {
+      cluster: true,
+      clusterMaxZoom: LOCATION_CLUSTER_MAX_ZOOM,
+      clusterProperties: {
+        momentCount: ['+', ['get', 'count']],
+      },
+      clusterRadius: 64,
+      data: {
+        features: locations.map(location => ({
+          geometry: {
+            coordinates: [location.longitude, location.latitude],
+            type: 'Point' as const,
+          },
+          properties: {
+            count: location.count,
+            id: location.id,
+          },
+          type: 'Feature' as const,
+        })),
+        type: 'FeatureCollection',
+      },
+      type: 'geojson',
+    })
+    map.addLayer({
+      id: LOCATION_INDEX_LAYER_ID,
+      paint: {
+        'circle-opacity': 0,
+        'circle-radius': 1,
+      },
+      source: LOCATION_SOURCE_ID,
+      type: 'circle',
+    })
+  }
+
+  function clearClusterMarkers() {
+    for (const cluster of clusterMarkers.values()) {
+      cluster.popup.remove()
+      cluster.marker.remove()
+    }
+
+    clusterMarkers.clear()
+  }
+
+  function syncClusterMarkers() {
+    if (!map || !mapLoaded || !map.getSource(LOCATION_SOURCE_ID) || !map.isSourceLoaded(LOCATION_SOURCE_ID)) {
+      return
+    }
+
+    const visibleLocationIds = new Set<string>()
+    const clusters = new Map<number, {
+      coordinates: [number, number]
+      locationCount: number
+      momentCount: number
+    }>()
+
+    for (const feature of map.queryRenderedFeatures({ layers: [LOCATION_INDEX_LAYER_ID] })) {
+      if (feature.geometry.type !== 'Point') {
+        continue
+      }
+
+      const properties = feature.properties ?? {}
+
+      if (properties.cluster) {
+        const id = Number(properties.cluster_id)
+        const coordinates = feature.geometry.coordinates
+
+        if (Number.isFinite(id) && coordinates.length >= 2) {
+          clusters.set(id, {
+            coordinates: [coordinates[0]!, coordinates[1]!],
+            locationCount: Number(properties.point_count) || 0,
+            momentCount: Number(properties.momentCount) || 0,
+          })
+        }
+      } else if (typeof properties.id === 'string') {
+        visibleLocationIds.add(properties.id)
+      }
+    }
+
+    for (const [id, marker] of markers) {
+      marker.button.hidden = !visibleLocationIds.has(id)
+    }
+
+    clearClusterMarkers()
+
+    for (const [id, cluster] of clusters) {
+      const button = document.createElement('button')
+      const dot = document.createElement('span')
+      const popup = new mapboxgl.Popup({
+        closeButton: false,
+        closeOnClick: false,
+        focusAfterOpen: false,
+        offset: 16,
+      }).setText(`${cluster.locationCount} 个地点 · ${cluster.momentCount} 条记录`)
+
+      button.type = 'button'
+      button.className = 'calendar-map-cluster group flex size-12 cursor-pointer items-center justify-center border-0 bg-transparent p-0 focus-visible:outline-none'
+      button.setAttribute('aria-label', `${cluster.locationCount} 个地点，共 ${cluster.momentCount} 条记录，点击放大`)
+      dot.className = 'flex h-8 min-w-8 items-center justify-center rounded-full border-2 border-bg bg-tx px-2 font-mono text-xs font-semibold text-bg shadow-[0_0.25rem_1rem_rgb(0_0_0/0.28)] transition-transform duration-[160ms] group-hover:scale-110 group-focus-visible:scale-110 motion-reduce:transition-none'
+      dot.setAttribute('aria-hidden', 'true')
+      dot.textContent = String(cluster.momentCount)
+      button.append(dot)
+
+      const showPopup = () => popup.setLngLat(cluster.coordinates).addTo(map!)
+      const hidePopup = () => popup.remove()
+
+      button.addEventListener('mouseenter', showPopup, { signal })
+      button.addEventListener('mouseleave', hidePopup, { signal })
+      button.addEventListener('focus', showPopup, { signal })
+      button.addEventListener('blur', hidePopup, { signal })
+      button.addEventListener('click', (event) => {
+        event.stopPropagation()
+        hidePopup()
+
+        const source = map?.getSource(LOCATION_SOURCE_ID) as GeoJSONSource | undefined
+        source?.getClusterExpansionZoom(id, (error, zoom) => {
+          if (error || zoom == null || !map) {
+            return
+          }
+
+          map.easeTo({
+            center: cluster.coordinates,
+            duration: getAnimationDuration(),
+            zoom,
+          })
+        })
+      }, { signal })
+
+      const marker = new mapboxgl.Marker({ anchor: 'center', element: button })
+        .setLngLat(cluster.coordinates)
+        .addTo(map)
+      button.setAttribute('role', 'button')
+
+      clusterMarkers.set(id, { marker, popup })
     }
   }
 
@@ -456,8 +612,13 @@ function initializeCalendarMap() {
       map.addControl(new MapboxLanguage({ defaultLanguage: 'zh-Hans' }) as unknown as mapboxgl.IControl)
       createMarkers()
 
-      map.on('style.load', applyFog)
+      map.on('style.load', () => {
+        applyFog()
+        createLocationIndex()
+      })
       map.on('click', requestDrawerClose)
+      map.on('idle', syncClusterMarkers)
+      map.on('moveend', syncClusterMarkers)
       map.on('load', () => {
         mapLoaded = true
 
@@ -468,6 +629,7 @@ function initializeCalendarMap() {
 
         hideFallback()
         applyFog()
+        syncClusterMarkers()
 
         const hashLocationId = getHashLocationId()
 
@@ -505,7 +667,10 @@ function initializeCalendarMap() {
 
     for (const marker of markers.values()) {
       marker.popup.remove()
+      marker.marker.remove()
     }
+
+    clearClusterMarkers()
 
     map?.remove()
     canvas.replaceChildren()
