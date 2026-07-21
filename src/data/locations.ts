@@ -122,6 +122,11 @@ export const locations = defineLocations({
     longitude: 118.3205,
     name: '外龙窝湖',
   },
+  'luogang-park': {
+    latitude: 31.7744,
+    longitude: 117.2987,
+    name: '骆岗公园',
+  },
   maogongshan: {
     latitude: 31.2934,
     longitude: 117.6109,
