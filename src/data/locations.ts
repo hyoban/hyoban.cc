@@ -77,6 +77,11 @@ export const locations = defineLocations({
     longitude: 117.2272,
     name: '合肥',
   },
+  'hefei-binhu': {
+    latitude: 31.7135,
+    longitude: 117.2988,
+    name: '合肥滨湖新区',
+  },
   'hong-kong': {
     latitude: 22.3193,
     longitude: 114.1694,
