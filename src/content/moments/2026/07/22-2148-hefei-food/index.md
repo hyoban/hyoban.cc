@@ -1,5 +1,6 @@
 ---
 publishedAt: "2026-07-22T21:48:08+08:00"
+occurredOn: "2026-07-18"
 location: hefei-binhu
 media:
   - type: image
