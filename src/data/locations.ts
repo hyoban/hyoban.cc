@@ -82,6 +82,11 @@ export const locations = defineLocations({
     longitude: 117.2988,
     name: '合肥滨湖新区',
   },
+  'hefei-binhu-national-forest-park': {
+    latitude: 31.7247,
+    longitude: 117.3771,
+    name: '合肥滨湖国家森林公园',
+  },
   'hong-kong': {
     latitude: 22.3193,
     longitude: 114.1694,
