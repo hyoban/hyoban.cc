@@ -1,7 +1,7 @@
 ---
 publishedAt: "2026-05-21T18:11:17+08:00"
 location: wuwei
-sourceUrl: "https://telegram.me/hyoban_travel/75"
+sourceUrl: "https://t.me/hyoban_travel/75"
 media:
   - type: image
     file: "image-1.jpg"

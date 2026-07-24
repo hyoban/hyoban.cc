@@ -1,7 +1,7 @@
 ---
 publishedAt: "2026-05-02T22:59:44+08:00"
 location: chengkan
-sourceUrl: "https://telegram.me/hyoban_travel/39"
+sourceUrl: "https://t.me/hyoban_travel/39"
 media:
   - type: image
     file: "image-1.jpg"

@@ -1,7 +1,7 @@
 ---
 publishedAt: "2024-10-27T12:37:19+08:00"
 location: chengdu
-sourceUrl: "https://twitter.com/hyoban_cc/status/1850396334253294061"
+sourceUrl: "https://x.com/hyoban_cc/status/1850396334253294061"
 media:
   - type: image
     file: "image-1.jpg"

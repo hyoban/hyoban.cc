@@ -1,7 +1,7 @@
 ---
 publishedAt: "2026-05-10T21:49:30+08:00"
 location: sanhe
-sourceUrl: "https://telegram.me/hyoban_travel/59"
+sourceUrl: "https://t.me/hyoban_travel/59"
 media:
   - type: image
     file: "image-1.jpg"

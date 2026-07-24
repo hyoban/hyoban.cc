@@ -1,7 +1,7 @@
 ---
 hidden: true
 publishedAt: "2025-04-10T10:35:59+08:00"
-sourceUrl: "https://twitter.com/hyoban_cc/status/1910159799167373533"
+sourceUrl: "https://x.com/hyoban_cc/status/1910159799167373533"
 media: []
 ---
 

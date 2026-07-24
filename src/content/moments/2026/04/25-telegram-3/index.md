@@ -1,7 +1,7 @@
 ---
 publishedAt: "2026-04-25T16:07:20+08:00"
 location: longwo-lake
-sourceUrl: "https://telegram.me/hyoban_travel/3"
+sourceUrl: "https://t.me/hyoban_travel/3"
 media:
   - type: image
     file: "image-1.jpg"

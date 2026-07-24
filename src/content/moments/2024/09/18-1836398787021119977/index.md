@@ -1,7 +1,7 @@
 ---
 publishedAt: "2024-09-18T21:36:04+08:00"
 location: nanjing
-sourceUrl: "https://twitter.com/hyoban_cc/status/1836398787021119977"
+sourceUrl: "https://x.com/hyoban_cc/status/1836398787021119977"
 media:
   - type: image
     file: "image-1.jpg"

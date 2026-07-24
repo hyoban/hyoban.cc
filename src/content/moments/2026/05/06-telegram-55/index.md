@@ -2,7 +2,7 @@
 publishedAt: "2026-05-06T16:23:28+08:00"
 occurredOn: "2026-05-04"
 location: wuwei-xiangan
-sourceUrl: "https://telegram.me/hyoban_travel/55"
+sourceUrl: "https://t.me/hyoban_travel/55"
 media:
   - type: image
     file: "image-1.jpg"

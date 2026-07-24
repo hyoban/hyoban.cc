@@ -1,7 +1,7 @@
 ---
 publishedAt: "2026-04-26T16:37:53+08:00"
 location: maogongshan
-sourceUrl: "https://telegram.me/hyoban_travel/12"
+sourceUrl: "https://t.me/hyoban_travel/12"
 media:
   - type: video
     file: "video-1.mp4"

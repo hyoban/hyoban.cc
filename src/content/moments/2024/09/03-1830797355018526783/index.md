@@ -1,7 +1,7 @@
 ---
 publishedAt: "2024-09-03T10:37:58+08:00"
 location: beijing
-sourceUrl: "https://twitter.com/hyoban_cc/status/1830797355018526783"
+sourceUrl: "https://x.com/hyoban_cc/status/1830797355018526783"
 media: []
 ---
 

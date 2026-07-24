@@ -1,7 +1,7 @@
 ---
 publishedAt: "2026-05-01T11:33:12+08:00"
 location: hefei
-sourceUrl: "https://telegram.me/hyoban_travel/32"
+sourceUrl: "https://t.me/hyoban_travel/32"
 media:
   - type: image
     file: "image-1.jpg"

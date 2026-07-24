@@ -1,6 +1,6 @@
 ---
 publishedAt: "2026-05-02T23:15:54+08:00"
-sourceUrl: "https://telegram.me/hyoban_travel/45"
+sourceUrl: "https://t.me/hyoban_travel/45"
 media: []
 ---
 

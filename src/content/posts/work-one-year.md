@@ -75,7 +75,7 @@ pubDate: "2023-07-09T16:00:00.000Z"
 但是在几个项目之后，就换到了 React，主要有如下几点考虑。
 
 - [volar][] 的体验不佳，经常需要 reload；相对比写 React 的 tsx 不需要安装额外的插件，也更加稳定。
-  - volar 具体的体验可以看 [这条推](https://twitter.com/isukkaw/status/1688077064359079936)
+  - volar 具体的体验可以看 [这条推](https://x.com/isukkaw/status/1688077064359079936)
 - React 的生态更加好，比如 [radix-ui][] 和 [framer-motion][]。
 
 基于同样的 DX 考虑，也把原本祥岩配置的一套 eslint 给换了，因为它严重影响保存代码时的性能。
@@ -114,7 +114,7 @@ zeabur 也是一个很酷的公司，团队里的人都很厉害。
 [memos]: https://github.com/usememos/memos
 [第一个 issue]: https://github.com/usememos/memos/issues/90
 [Steven]: https://github.com/boojack
-[祥岩]: https://twitter.com/kxycigaret
+[祥岩]: https://x.com/kxycigaret
 [招聘帖]: https://www.v2ex.com/t/865194
 [大家好，我开始了一项公开创业计划，目标是九个月获得五千万元投资]: https://www.v2ex.com/t/864079
 [李书]: https://github.com/lsby
@@ -122,7 +122,7 @@ zeabur 也是一个很酷的公司，团队里的人都很厉害。
 [radix-ui]: https://www.radix-ui.com
 [framer-motion]: https://www.framer.com/motion
 [zeabur]: https://zeabur.com/zh-CN
-[沅霖]: https://twitter.com/yuaanlin
-[宇航]: https://twitter.com/CoooolXyh
+[沅霖]: https://x.com/yuaanlin
+[宇航]: https://x.com/CoooolXyh
 [团队]: https://github.com/planet-matrix
 [Grow in Public]: https://datadata.feishu.cn/wiki/ZSrDw1ioji9vPIkfSrNcJBREnWd

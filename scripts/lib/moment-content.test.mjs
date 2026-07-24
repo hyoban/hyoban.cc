@@ -9,7 +9,7 @@ test('parses a canonical Moment through one interface', () => {
     'publishedAt: "2026-07-15T10:03:04+08:00"',
     'occurredOn: "2026-07-14"',
     'location: hefei',
-    'sourceUrl: "https://twitter.com/hyoban/status/123"',
+    'sourceUrl: "https://x.com/hyoban/status/123"',
     'media:',
     '  - type: image',
     '    file: "image-1.jpg"',
@@ -31,7 +31,7 @@ test('parses a canonical Moment through one interface', () => {
     }],
     occurredOn: '2026-07-14',
     provenance: {
-      url: 'https://twitter.com/hyoban/status/123',
+      url: 'https://x.com/hyoban/status/123',
     },
     publishedAt: new Date('2026-07-15T02:03:04.000Z'),
     text: 'A canonical moment.',

@@ -1,7 +1,7 @@
 ---
 publishedAt: "2026-06-15T12:52:48+08:00"
 location: moganshan
-sourceUrl: "https://telegram.me/hyoban_travel/97"
+sourceUrl: "https://t.me/hyoban_travel/97"
 media:
   - type: image
     file: "image-1.jpg"

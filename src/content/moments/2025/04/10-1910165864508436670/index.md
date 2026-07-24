@@ -2,7 +2,7 @@
 publishedAt: "2025-04-10T11:00:05+08:00"
 location: west-lake
 occurredOn: "2025-04-05"
-sourceUrl: "https://twitter.com/hyoban_cc/status/1910165864508436670"
+sourceUrl: "https://x.com/hyoban_cc/status/1910165864508436670"
 media:
   - type: image
     file: "image-1.jpg"

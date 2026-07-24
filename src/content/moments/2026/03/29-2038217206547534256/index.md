@@ -1,7 +1,7 @@
 ---
 publishedAt: "2026-03-29T19:30:24+08:00"
 location: yangzhou
-sourceUrl: "https://twitter.com/hyoban_cc/status/2038217206547534256"
+sourceUrl: "https://x.com/hyoban_cc/status/2038217206547534256"
 media:
   - type: image
     file: "image-1.jpg"

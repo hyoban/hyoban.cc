@@ -1,7 +1,7 @@
 ---
 publishedAt: "2026-05-25T23:56:16+08:00"
 location: jiangxinzhou
-sourceUrl: "https://telegram.me/hyoban_travel/81"
+sourceUrl: "https://t.me/hyoban_travel/81"
 media:
   - type: image
     file: "image-1.jpg"

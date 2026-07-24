@@ -1,6 +1,6 @@
 ---
 publishedAt: "2026-04-03T23:29:10+08:00"
-sourceUrl: "https://twitter.com/hyoban_cc/status/2040089230253445615"
+sourceUrl: "https://x.com/hyoban_cc/status/2040089230253445615"
 media: []
 ---
 

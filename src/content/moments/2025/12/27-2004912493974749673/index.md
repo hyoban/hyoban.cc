@@ -1,7 +1,7 @@
 ---
 publishedAt: "2025-12-27T21:49:22+08:00"
 location: hangzhou
-sourceUrl: "https://twitter.com/hyoban_cc/status/2004912493974749673"
+sourceUrl: "https://x.com/hyoban_cc/status/2004912493974749673"
 media:
   - type: image
     file: "image-1.jpg"

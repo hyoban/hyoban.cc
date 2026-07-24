@@ -2,7 +2,7 @@
 publishedAt: "2026-06-24T22:14:09+08:00"
 occurredOn: "2026-06-20"
 location: laojunshan
-sourceUrl: "https://telegram.me/hyoban_travel/121"
+sourceUrl: "https://t.me/hyoban_travel/121"
 media:
   - type: image
     file: "image-1.jpg"

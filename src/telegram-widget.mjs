@@ -53,7 +53,7 @@ function getStandaloneTelegramPostPath(node) {
 }
 
 async function renderTelegramPost(postPath) {
-  const response = await fetch(`https://telegram.me/${postPath}?embed=1`, {
+  const response = await fetch(`https://t.me/${postPath}?embed=1`, {
     headers: {
       'user-agent': 'Mozilla/5.0',
     },

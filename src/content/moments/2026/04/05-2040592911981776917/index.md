@@ -2,7 +2,7 @@
 publishedAt: "2026-04-05T08:50:37+08:00"
 occurredOn: "2026-04-04"
 location: yucun
-sourceUrl: "https://twitter.com/hyoban_cc/status/2040592911981776917"
+sourceUrl: "https://x.com/hyoban_cc/status/2040592911981776917"
 media:
   - type: image
     file: "image-1.jpg"

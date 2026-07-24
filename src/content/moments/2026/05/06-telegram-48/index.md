@@ -2,7 +2,7 @@
 publishedAt: "2026-05-06T16:17:04+08:00"
 occurredOn: "2026-05-03"
 location: sanqingshan
-sourceUrl: "https://telegram.me/hyoban_travel/48"
+sourceUrl: "https://t.me/hyoban_travel/48"
 media:
   - type: image
     file: "image-1.jpg"

@@ -1,7 +1,7 @@
 ---
 publishedAt: "2026-05-06T16:21:31+08:00"
 location: wuyuan-cultural-park
-sourceUrl: "https://telegram.me/hyoban_travel/52"
+sourceUrl: "https://t.me/hyoban_travel/52"
 media:
   - type: image
     file: "image-1.jpg"

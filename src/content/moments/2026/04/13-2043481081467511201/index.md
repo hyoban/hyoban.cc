@@ -1,7 +1,7 @@
 ---
 publishedAt: "2026-04-13T08:07:10+08:00"
 location: xuanwu-lake
-sourceUrl: "https://twitter.com/hyoban_cc/status/2043481081467511201"
+sourceUrl: "https://x.com/hyoban_cc/status/2043481081467511201"
 media:
   - type: image
     file: "image-1.jpg"

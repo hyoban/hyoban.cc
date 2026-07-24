@@ -1,7 +1,7 @@
 ---
 publishedAt: "2026-01-03T20:39:41+08:00"
 location: suzhou
-sourceUrl: "https://twitter.com/hyoban_cc/status/2007431672384340395"
+sourceUrl: "https://x.com/hyoban_cc/status/2007431672384340395"
 media:
   - type: image
     file: "image-1.jpg"
