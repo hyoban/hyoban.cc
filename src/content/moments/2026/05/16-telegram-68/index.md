@@ -1,5 +1,6 @@
 ---
 publishedAt: "2026-05-16T23:59:22+08:00"
+location: universe-is-a-granary
 sourceUrl: "https://telegram.me/hyoban_travel/68"
 media:
   - type: image

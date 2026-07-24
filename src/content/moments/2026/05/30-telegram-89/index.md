@@ -1,5 +1,6 @@
 ---
 publishedAt: "2026-05-30T22:33:54+08:00"
+location: baimao
 sourceUrl: "https://telegram.me/hyoban_travel/89"
 media:
   - type: image

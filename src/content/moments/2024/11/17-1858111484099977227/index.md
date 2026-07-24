@@ -1,5 +1,6 @@
 ---
 publishedAt: "2024-11-17T19:34:34+08:00"
+location: shenzhen
 sourceUrl: "https://twitter.com/hyoban_cc/status/1858111484099977227"
 media:
   - type: image

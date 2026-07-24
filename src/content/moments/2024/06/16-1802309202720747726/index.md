@@ -1,5 +1,6 @@
 ---
 publishedAt: "2024-06-16T19:56:13+08:00"
+location: beijing
 sourceUrl: "https://twitter.com/hyoban_cc/status/1802309202720747726"
 media:
   - type: image

@@ -1,5 +1,6 @@
 ---
 publishedAt: "2025-11-12T14:50:57+08:00"
+location: western-sichuan
 sourceUrl: "https://www.xiaohongshu.com/explore/69142e5100000000030126a0"
 media:
   - type: image

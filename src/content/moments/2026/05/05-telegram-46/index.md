@@ -1,5 +1,6 @@
 ---
 publishedAt: "2026-05-05T19:08:04+08:00"
+location: xiangyang
 sourceUrl: "https://telegram.me/hyoban_travel/46"
 media:
   - type: image

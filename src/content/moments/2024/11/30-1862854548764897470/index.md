@@ -1,5 +1,6 @@
 ---
 publishedAt: "2024-11-30T21:41:49+08:00"
+location: guangzhou
 sourceUrl: "https://twitter.com/hyoban_cc/status/1862854548764897470"
 media:
   - type: image

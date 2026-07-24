@@ -1,5 +1,6 @@
 ---
 publishedAt: "2025-11-12T11:04:33+08:00"
+location: xiangyang
 sourceUrl: "https://www.xiaohongshu.com/explore/6913f941000000000301f211"
 media:
   - type: image
