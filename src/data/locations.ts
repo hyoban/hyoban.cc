@@ -72,6 +72,11 @@ export const locations = defineLocations({
     longitude: 120.5643,
     name: '寒山寺',
   },
+  'hechai-1972': {
+    latitude: 31.797911,
+    longitude: 117.245085,
+    name: '合柴1972',
+  },
   hefei: {
     latitude: 31.8206,
     longitude: 117.2272,
