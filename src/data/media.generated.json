@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-03T09:33:01.759Z",
+  "generatedAt": "2026-07-27T13:14:41.000Z",
   "language": "zh-CN",
   "provider": "TMDB",
   "items": [
@@ -6567,6 +6567,44 @@
               "credit_id": "5892582ac3a36834dc0005da",
               "department": "Writing",
               "job": "Writer"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "movie",
+      "tmdbId": 406125,
+      "data": {
+        "adult": false,
+        "backdrop_path": "/6qzT1KCMKydefNLPWhA9l4MJwlv.jpg",
+        "genres": [
+          {
+            "id": 35,
+            "name": "喜剧"
+          },
+          {
+            "id": 10749,
+            "name": "爱情"
+          }
+        ],
+        "id": 406125,
+        "origin_country": [
+          "TW"
+        ],
+        "original_language": "zh",
+        "original_title": "六弄咖啡館",
+        "overview": "　　电影《六弄咖啡馆》改编自藤井树（吴子云）的同名畅销小说，同时导演和编剧也是由原著作者出任，刘杰担任影片监制。主要讲述男主小绿（董子健 饰）和女主心蕊（颜卓灵 饰）之间一场真挚却无奈的青春爱情故事，对于亲情和友情的探究，以及距离对爱情的考验，同时关注年轻人对待成长和人生的态度与状态",
+        "poster_path": "/qswXMyYuLtDwKvIviZUdieVTCQQ.jpg",
+        "release_date": "2016-07-14",
+        "runtime": 98,
+        "tagline": "类似的青春 不一样的人生",
+        "title": "六弄咖啡馆",
+        "credits": {
+          "crew": [
+            {
+              "name": "吴子云",
+              "job": "Director"
             }
           ]
         }
