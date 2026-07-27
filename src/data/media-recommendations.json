@@ -42,5 +42,9 @@
     "type": "movie",
     "tmdbId": 406125,
     "bilibiliId": 12540
+  },
+  {
+    "type": "tv",
+    "tmdbId": 64010
   }
 ]
