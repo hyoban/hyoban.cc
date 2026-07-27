@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-27T13:14:41.000Z",
+  "generatedAt": "2026-07-27T13:31:10.000Z",
   "language": "zh-CN",
   "provider": "TMDB",
   "items": [
@@ -3135,6 +3135,58 @@
           "instagram_id": null,
           "twitter_id": null
         }
+      }
+    },
+    {
+      "type": "tv",
+      "tmdbId": 64010,
+      "data": {
+        "adult": false,
+        "backdrop_path": "/wgmikRStgBbrzjxFVe5rhFlpL2R.jpg",
+        "created_by": [
+          {
+            "id": 1691328,
+            "name": "申源浩",
+            "original_name": "신원호"
+          },
+          {
+            "id": 1691327,
+            "name": "李祐汀",
+            "original_name": "이우정"
+          }
+        ],
+        "first_air_date": "2015-11-06",
+        "genres": [
+          {
+            "id": 35,
+            "name": "喜剧"
+          }
+        ],
+        "id": 64010,
+        "in_production": false,
+        "languages": [
+          "ko"
+        ],
+        "last_air_date": "2016-01-16",
+        "name": "请回答1988",
+        "networks": [
+          {
+            "id": 866,
+            "logo_path": "/4iJILrndsUAvriueBVHe8u0nVqo.png",
+            "name": "tvN",
+            "origin_country": "KR"
+          }
+        ],
+        "number_of_episodes": 20,
+        "number_of_seasons": 1,
+        "origin_country": [
+          "KR"
+        ],
+        "original_language": "ko",
+        "original_name": "응답하라 1988",
+        "overview": "故事以1988年汉城（今首尔）奥运会为故事背景，讲述住在首尔市道峰区双门洞的五个家庭的故事，这五个家庭的孩子中，都生于1971年的德善、善宇、东龙、崔泽、正焕，是从小一起长大的好朋友，1988年正处于他们18岁的青春年华，他们有共同的兴趣，还有共同崇拜的偶像，在这五个男女中也有暧昧的男女情愫，在那个纯真的年代，他们共谱了许多美好的记忆。",
+        "poster_path": "/cX068rNsLNFnRCTNbqqARhwbhug.jpg",
+        "status": "Ended"
       }
     },
     {
