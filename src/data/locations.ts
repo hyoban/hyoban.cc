@@ -67,6 +67,11 @@ export const locations = defineLocations({
     longitude: 120.1551,
     name: '杭州',
   },
+  'hangzhou-city-balcony': {
+    latitude: 30.241827,
+    longitude: 120.216803,
+    name: '杭州城市阳台',
+  },
   'hangzhou-national-edition-museum': {
     latitude: 30.3836,
     longitude: 120.0129,
