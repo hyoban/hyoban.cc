@@ -237,6 +237,11 @@ export const locations = defineLocations({
     longitude: 120.1431,
     name: '西湖',
   },
+  'west-lake-yuemiao-parking': {
+    latitude: 30.251067,
+    longitude: 120.134999,
+    name: '印象西湖岳庙停车场',
+  },
   'western-sichuan': {
     latitude: 30,
     longitude: 101.8,
