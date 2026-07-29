@@ -63,7 +63,7 @@ sakuin 是从我的博客项目衍生出来的，所以很自然的我使用它�
 此外，我按照自己的喜好重新实现了布局和文章的渲染，我拥有了完全可控的自由度。
 对接 xLog 提供的匿名评论接口，我可以轻松的实现评论模块。
 
-![评论界面截图](../../assets/images/posts/UFNHbaBGdvz5Zmj.png)
+![评论界面截图](https://image.hyoban.cc/posts/UFNHbaBGdvz5Zmj.png)
 
 https://github.com/hyoban/vscode-xlog
 

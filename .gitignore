@@ -17,6 +17,27 @@ pnpm-debug.log*
 .env
 .env.production
 
+# media is stored in Cloudflare R2
+public/*.avif
+public/*.gif
+public/*.jpeg
+public/*.jpg
+public/*.mov
+public/*.mp4
+public/*.png
+public/*.webm
+public/*.webp
+src/assets/images/posts/
+src/content/moments/**/*.avif
+src/content/moments/**/*.gif
+src/content/moments/**/*.jpeg
+src/content/moments/**/*.jpg
+src/content/moments/**/*.mov
+src/content/moments/**/*.mp4
+src/content/moments/**/*.png
+src/content/moments/**/*.webm
+src/content/moments/**/*.webp
+
 # macOS-specific files
 .DS_Store
 

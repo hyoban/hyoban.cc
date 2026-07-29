@@ -21,7 +21,6 @@ import {
   type ResolvedMomentMedia,
 } from '@/moments'
 import { SITE_TITLE } from '@/consts'
-import { Image } from 'astro:assets'
 
 interface Props {
   month: number
@@ -236,12 +235,13 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
               aria-label={`${calendarDay.dateKey}，${calendarDay.moments.length} 条记录${dayStatusDescription ? `，${dayStatusDescription}` : ''}`}
             >
               {thumbnail && (
-                <Image
-                  src={thumbnail}
+                <img
+                  src={thumbnail.src}
                   alt=""
                   width={Math.min(thumbnail.width, 360)}
                   height={Math.round(Math.min(thumbnail.width, 360) * thumbnail.height / thumbnail.width)}
                   loading="lazy"
+                  decoding="async"
                   class="absolute inset-0 h-full w-full object-cover transition-transform duration-[180ms] ease-in-out group-hover:scale-[1.025] motion-reduce:transition-none"
                 />
               )}

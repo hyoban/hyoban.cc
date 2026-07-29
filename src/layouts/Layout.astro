@@ -1,6 +1,7 @@
 ---
 import '@/styles/index.css'
 
+import { getAssetUrl } from '@/asset-url'
 import { SITE_TITLE, SITE_URL } from '@/consts'
 import { ClientRouter, fade } from 'astro:transitions'
 
@@ -34,7 +35,7 @@ const TELETYPE_SITE_VERIFICATION = 'g7j8/rPFXfhyrq5q0QQV7EsYWv4='
     <!-- Global Metadata -->
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <link rel="icon" type="image/png" href="/avatar-cropped.png" />
+    <link rel="icon" type="image/png" href={getAssetUrl('site/avatar-cropped.png')} />
     <meta name="generator" content={Astro.generator} />
 
     <link rel="alternate" type="application/rss+xml" title={SITE_TITLE} href="/rss.xml" />

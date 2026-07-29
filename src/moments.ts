@@ -1,6 +1,7 @@
-import type { ImageMetadata } from 'astro'
 import type { CollectionEntry } from 'astro:content'
 import { getCollection } from 'astro:content'
+import { getAssetUrl } from '@/asset-url'
+import momentMediaMetadataJson from '@/data/moment-media.generated.json'
 import { locations, type LocationId } from '@/data/locations'
 import { parseMomentDocument, type CanonicalMoment } from '@/moment-content'
 import {
@@ -25,16 +26,6 @@ const timeFormatter = new Intl.DateTimeFormat('en-GB', {
   timeZone: TIME_ZONE,
 })
 
-const imageModules = import.meta.glob<ImageMetadata>(
-  '/src/content/moments/**/*.{avif,gif,jpeg,jpg,png,webp}',
-  { eager: true, import: 'default' },
-)
-
-const videoModules = import.meta.glob<string>(
-  '/src/content/moments/**/*.mp4',
-  { eager: true, import: 'default', query: '?url' },
-)
-
 const momentDocuments = import.meta.glob<string>(
   '/src/content/moments/**/index.md',
   { eager: true, import: 'default', query: '?raw' },
@@ -42,15 +33,26 @@ const momentDocuments = import.meta.glob<string>(
 
 type MomentEntry = CollectionEntry<'moments'>
 
+type RemoteImage = {
+  height: number
+  src: string
+  width: number
+}
+
+const momentMediaMetadata = momentMediaMetadataJson as Record<
+  string,
+  Omit<RemoteImage, 'src'>
+>
+
 export type ResolvedMomentMedia =
   | {
       alt: string
-      src: ImageMetadata
+      src: RemoteImage
       type: 'image'
     }
   | {
       alt: string
-      poster?: ImageMetadata
+      poster?: RemoteImage
       src: string
       type: 'video'
     }
@@ -187,41 +189,38 @@ function getMomentDocument(entry: MomentEntry) {
 
 function resolveMedia(entry: MomentEntry, media: CanonicalMoment['media'][number]): ResolvedMomentMedia {
   const directory = entry.id.replace(/\/index$/, '')
-  const key = `/src/content/moments/${directory}/${media.file}`
+  const key = `moments/${directory}/${media.file}`
 
   if (media.type === 'image') {
-    const src = imageModules[key]
-
-    if (!src) {
-      throw new Error(`Missing moment image: ${key}`)
-    }
-
     return {
       alt: media.alt,
-      src,
+      src: resolveRemoteImage(key),
       type: 'image',
     }
   }
 
-  const src = videoModules[key]
   const posterKey = media.poster
-    ? `/src/content/moments/${directory}/${media.poster}`
+    ? `moments/${directory}/${media.poster}`
     : undefined
-  const poster = posterKey ? imageModules[posterKey] : undefined
-
-  if (!src) {
-    throw new Error(`Missing moment video: ${key}`)
-  }
-
-  if (posterKey && !poster) {
-    throw new Error(`Missing moment video poster: ${posterKey}`)
-  }
 
   return {
     alt: media.alt,
-    src,
+    src: getAssetUrl(key),
     type: 'video',
-    ...(poster ? { poster } : {}),
+    ...(posterKey ? { poster: resolveRemoteImage(posterKey) } : {}),
+  }
+}
+
+function resolveRemoteImage(key: string): RemoteImage {
+  const metadata = momentMediaMetadata[key]
+
+  if (!metadata) {
+    throw new Error(`Missing Moment image metadata: ${key}`)
+  }
+
+  return {
+    ...metadata,
+    src: getAssetUrl(key),
   }
 }
 

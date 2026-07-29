@@ -1,6 +1,5 @@
 ---
 import type { ResolvedMomentMedia } from '@/moments'
-import { Image } from 'astro:assets'
 
 interface Props {
   media: ResolvedMomentMedia[]
@@ -33,12 +32,13 @@ const isSingle = media.length === 1
             data-lightbox-alt={item.alt}
             aria-label={`查看图片 ${index + 1}`}
           >
-            <Image
-              src={item.src}
+            <img
+              src={item.src.src}
               alt={item.alt}
               width={Math.min(item.src.width, 960)}
               height={Math.round(Math.min(item.src.width, 960) * item.src.height / item.src.width)}
               loading="lazy"
+              decoding="async"
               class:list={[
                 'block w-full',
                 isSingle ? 'h-auto max-h-[32rem] object-contain' : 'h-full object-cover',
