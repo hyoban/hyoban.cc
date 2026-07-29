@@ -19,7 +19,7 @@ pubDate: "2024-01-04T13:15:06.994Z"
 1. 用户偏好可以持久化到浏览器存储
 1. 用户偏好可以无感的恢复到系统偏好
 
-![ScreenShot 2024-01-04 19.10.00](https://image.hyoban.cc/posts/ZyQXY2EUq5aphm3.gif)
+![ScreenShot 2024-01-04 19.10.00](https://image.hyoban.cc/posts/dark-mode/theme-preference-demo.gif)
 
 我会使用 [Jotai](https://jotai.org) 来实现，我喜欢 Jotai。
 
@@ -196,7 +196,7 @@ function RootLayout({ children }: { children: React.ReactNode }) {
 因为我们不希望在切换时部分组件的颜色过渡和页面主题的过渡节奏不一致。
 （Fixes 1-4）
 
-![transition demo](https://image.hyoban.cc/posts/before.gif)
+![transition demo](https://image.hyoban.cc/posts/dark-mode/theme-transition-demo.gif)
 
 这很好，但是我们的主题切换按钮有用到 `transition`，我们需要能给部分组件开白名单，可以使用 css 的 [\:not](https://developer.mozilla.org/en-US/docs/Web/CSS/:not) 伪类来实现。
 

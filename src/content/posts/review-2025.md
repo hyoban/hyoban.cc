@@ -13,7 +13,7 @@ description: 没挣到钱的一年
 能把自己最热爱的事情变成工作，这种感觉真的很棒。
 我爱自由、爱开源、爱 Folo、爱这些朋友们。
 
-![](https://image.hyoban.cc/posts/4EeCnXMdc1gItmJ.png)
+![](https://image.hyoban.cc/posts/review-2025/folo-team-github-activity.png)
 
 故事的最后让我感到难过，我总是想如果过去的自己能做得更好更努力一些，或许结果会不一样。
 回过头来看，自己今年的表现确实不够好，GitHub 上的绿点也比去年少。
@@ -26,7 +26,7 @@ description: 没挣到钱的一年
 
 今年大多数开源贡献都是从 Folo 出发做的一点小打小闹，比如维护了一点 RSSHub。
 
-[![](https://image.hyoban.cc/posts/yasoj2mFnYWNuOd.jpg)](https://x.com/hyoban_cc/status/1997942616428851400)
+[![](https://image.hyoban.cc/posts/review-2025/rsshub-contribution.jpg)](https://x.com/hyoban_cc/status/1997942616428851400)
 
 希望明年能够让自己变得更强一点，多贡献一些自己感兴趣的东西，最好能打磨个自己的产品/开源项目收获大家的认可。
 也希望自己能多挣点钱，可以不用太为生计发愁。
@@ -37,13 +37,13 @@ description: 没挣到钱的一年
 但现在想想还是觉得不后悔，我很享受在路上在车里的感觉。
 （甚至在车里也睡过了很多个夜晚）
 
-[![](https://image.hyoban.cc/posts/yET5seQGdJZa3Fb.jpg)](https://x.com/hyoban_cc/status/1957277366138679452)
+[![](https://image.hyoban.cc/posts/review-2025/zeekr-007gt-delivery.jpg)](https://x.com/hyoban_cc/status/1957277366138679452)
 
 买车之后开车去了很多地方。
 最长的一段旅程就是开车从安徽去了川西，和同学一起自驾到了雪山边。
 车子保险杠第一次刮蹭之后难过得不行，底盘低导致的刮蹭也让我趴着地上看了好久。
 
-![](https://image.hyoban.cc/posts/V41BqyJYcSNzG7v.jpg)
+![](https://image.hyoban.cc/posts/review-2025/western-sichuan-snow-mountains.jpg)
 
 找到新工作之后来到了苏州，想着到年前这段线下的时间能多和网友们见见面，交交朋友。
 明年也想多出去走走，再扩大一点活动范围，争取可以出次国。
@@ -56,7 +56,7 @@ Dify 在 AI 产品上的报销额度十分慷慨。
 现在是 Claude Code 和 VSCode 混着用。
 Claude 有一个浏览器插件可以用，这对我这个 Chrome 党很友好，不必用 Atlas。
 
-![](https://image.hyoban.cc/posts/xz89KtUXmnTA451.png)
+![](https://image.hyoban.cc/posts/review-2025/claude-browser-extension.png)
 
 Claude Code 的话，我不是很习惯在 VSCode 的终端里来使用，就选了 Ghostty 配合着用。
 自己一边感叹着 AI 工具的进步和解放的人类生产力，一边又日常被 AI 乱写的代码气得不行。
@@ -73,7 +73,7 @@ macOS 内置的剪切板助手勉强也能用。
 今年买了 Mac mini 又卖了，因为自己还是只需要一台便携的笔记本电脑就够了。
 自己的 m1 pro 也陪了我快三年，日均成本降到了不到十块钱，简直超值。
 
-![](https://image.hyoban.cc/posts/WsnJ9UV2y8Bhlgc.jpg)
+![](https://image.hyoban.cc/posts/review-2025/macbook-pro-cost-summary.jpg)
 
 买了 PS5 并开了会员但是逐渐吃灰，这两个月在苏州也没带过来。
 NAS 倒是一直勤勤恳恳的工作着。
