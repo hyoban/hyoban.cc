@@ -20,7 +20,7 @@ pubDate: "2023-09-29T16:00:00.000Z"
 比如在通过浏览器使用在线编辑器来写博客时，我发现编辑和预览区域所占的宽度太小，编辑体验不佳，就增加了专注模式。
 现在开启专注模式，就可以使得页面全屏，同时隐藏与编辑区无关的元素。
 
-![Focus Mode demo](../../assets/images/posts/L9YEJSs1jwClNR3.png)
+![Focus Mode demo](https://image.hyoban.cc/posts/L9YEJSs1jwClNR3.png)
 
 又比如 `Callout` 在很多站点生成器（如 VitePress）都是内置的语法，因此我就找了个 remark 插件支持了一下，现在你可以使用如下的写法来渲染一个 `Callout`。
 

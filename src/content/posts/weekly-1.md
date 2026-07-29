@@ -22,12 +22,12 @@ pubDate: "2025-01-04T14:05:49.237Z"
 在 NAS 上可以创建一个单向同步的任务，下载完自动同步到 NAS 上。
 注意忽略下载中的文件 `.part`。
 
-![](../../assets/images/posts/FOpknm7JVtDlvC8.png)
+![](https://image.hyoban.cc/posts/FOpknm7JVtDlvC8.png)
 
 绿联的影视中心初用起来感觉还是挺好的。
 视频信息可以很好的识别到。
 
-![](../../assets/images/posts/mXY4BExsH6NCOLQ.png)
+![](https://image.hyoban.cc/posts/mXY4BExsH6NCOLQ.png)
 
 折腾 NAS 带来的一个坏结果就是对网络的带宽提出了要求。
 我家之前的网络是 100M 的，折腾 NAS 之后直接升级成了 1000M 的。
@@ -76,4 +76,4 @@ pubDate: "2025-01-04T14:05:49.237Z"
 升级宽带之后，联通的方案给了个路由器，我就把原本的红米 AX5 拿到了房间里。
 这样我自己瞎折腾网络的时候就不会影响到家里的人了。
 
-![](../../assets/images/posts/LVU7oBmOPgD96kT.png)
+![](https://image.hyoban.cc/posts/LVU7oBmOPgD96kT.png)

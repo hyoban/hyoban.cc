@@ -5,18 +5,24 @@ description: Create a hyoban.cc Moment from exact user text and images. Use when
 
 # Create Moment
 
-Create one Moment in `src/content/moments`. Never publish it externally.
+Create one Moment in `src/content/moments`. Never deploy the site or publish the
+Moment to a social network. Uploading its media to the configured R2 bucket is
+part of preparing the local Moment.
 
 1. Inspect `src/moment-content.ts`, `src/data/locations.ts`, and a recent Moment.
 2. Preserve the user's text exactly, including errors, punctuation, paragraphs, and line breaks.
 3. Use the current Asia/Singapore time for `publishedAt`. Add `occurredOn` only when clear. If the text names a specific place, use that place instead of its city; reuse or add it in `src/data/locations.ts` and verify new coordinates. Use `YYYY/MM/DD-HHmm-short-slug` for the ID.
-4. Process images in order from the repository root:
+4. Process and upload images in order from the repository root:
 
 ```bash
 node .agents/skills/create-moment/scripts/prepare-images.mjs --repo <repo> --target <moment-dir> -- <images...>
 ```
 
-5. Inspect each image and write concise English alt text.
+The command optimizes images in a temporary directory, uploads and verifies them
+in R2, updates `src/data/moment-media.generated.json`, and leaves no image files
+in the Moment directory.
+
+5. Inspect each source image and write concise English alt text.
 6. Create `index.md` with `apply_patch`, ordering fields as `publishedAt`, `occurredOn`, `location`, `media`. Omit unused optional fields and `hidden`.
 7. Compare the saved body with the user's text, then run `pnpm test`, `pnpm check`, and `pnpm build`.
 
