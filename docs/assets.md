@@ -7,13 +7,13 @@ Images and videos are stored in the Cloudflare R2 bucket configured in
 Use these object key prefixes:
 
 - `moments/<moment-id>/<file>` for Moment media
-- `posts/<file>` for article media
+- `posts/<post-slug>/<semantic-file>` for article media
 - `site/<file>` for global site assets
 
 Upload a new article or site asset without adding it to the repository:
 
 ```sh
-pnpm assets:upload --key posts/example.webp --file /absolute/path/example.webp
+pnpm assets:upload --key posts/my-article/architecture-diagram.webp --file /absolute/path/architecture-diagram.webp
 ```
 
 The command refuses to overwrite an existing key unless its ETag and size match

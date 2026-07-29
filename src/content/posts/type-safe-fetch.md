@@ -221,7 +221,7 @@ class CustomError<T extends string> extends Error {
 
 nice，让我们来看看使用效果吧。
 
-![ScreenShot 2023-08-09 12.38.53.gif](https://image.hyoban.cc/posts/7LaBo5QqRWFAHVm.gif)
+![ScreenShot 2023-08-09 12.38.53.gif](https://image.hyoban.cc/posts/type-safe-fetch/type-safe-fetch-demo.gif)
 
 ## 最后
 
