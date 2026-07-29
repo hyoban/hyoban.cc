@@ -3,9 +3,10 @@ publishedAt: "2026-07-29T22:06:40+08:00"
 occurredOn: "2026-07-26"
 location: "west-lake"
 media:
-  - type: image
-    file: "image-1.webp"
-    alt: "Sunrise over West Lake behind a tree-covered island"
+  - type: video
+    file: "video-1.mp4"
+    alt: "Sunrise timelapse over West Lake with a tree-covered island obscuring the sun"
+    poster: "image-1.webp"
 ---
 
 在西湖拍日出！
