@@ -11,6 +11,9 @@
     "assets:upload": "node scripts/upload-asset-to-r2.mjs",
     "media:generate": "node scripts/generate-media.mjs",
     "moments:audit": "node scripts/audit-moments.mjs",
+    "moments:gc": "node scripts/gc-moment-assets.mjs --dry-run",
+    "moments:review-hidden": "node scripts/review-hidden-moments.mjs",
+    "moments:variants": "node scripts/generate-moment-variants.mjs",
     "test": "node --test scripts/lib/*.test.mjs"
   },
   "devDependencies": {
@@ -23,6 +26,7 @@
     "@iconify-json/simple-icons": "^1.2.87",
     "@tailwindcss/vite": "^4.3.1",
     "astro": "^7.0.2",
+    "ffmpeg-static": "^5.3.0",
     "sharp": "^0.35.2",
     "tailwindcss": "^4.3.1",
     "typescript": "^6.0.3",

@@ -1,78 +1,68 @@
 import assert from 'node:assert/strict'
-import { readFile, readdir } from 'node:fs/promises'
-import { join } from 'node:path'
+import { execFile as execFileCallback } from 'node:child_process'
+import { readFile } from 'node:fs/promises'
+import { basename, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { promisify } from 'node:util'
 
-import { parseMomentDocument } from '../src/moments/content.ts'
+import {
+  getReferencedAssetFiles,
+  getReferencedR2Objects,
+  momentIdPattern,
+  readMomentRecords,
+} from './lib/moment-assets.mjs'
 
+const execFile = promisify(execFileCallback)
 const root = fileURLToPath(new URL('../', import.meta.url))
 const contentRoot = join(root, 'src/content/moments')
 const config = JSON.parse(
   await readFile(join(root, 'src/data/asset-config.json'), 'utf8'),
 )
-const remote = process.argv.includes('--remote')
-const unsupportedArguments = process.argv.slice(2).filter(argument => argument !== '--remote')
-
-if (unsupportedArguments.length > 0) {
-  throw new Error('Usage: audit-moments.mjs [--remote]')
-}
-
-const files = (await readdir(contentRoot, { recursive: true }))
-  .filter(file => file.endsWith('index.md'))
-  .sort()
-const objects = []
+const options = parseArguments(process.argv.slice(2))
+const records = await readMomentRecords(contentRoot)
+const objects = getReferencedR2Objects(records)
 const ordersByDate = new Map()
+const blankAltIds = []
+const changedMomentIds = options.changedFrom
+  ? await getChangedMomentIds(options.changedFrom)
+  : new Set()
 
-for (const file of files) {
-  const id = file.replace(/\/index\.md$/, '')
-  const document = await readFile(join(contentRoot, file), 'utf8')
-  const moment = parseMomentDocument(document, { id })
-  const assets = JSON.parse(
-    await readFile(join(contentRoot, id, 'assets.json'), 'utf8'),
-  )
-  const referenced = new Set()
+for (const record of records) {
+  const idMatch = record.id.match(momentIdPattern)
 
-  const idMatch = id.match(/^(\d{4})\/(\d{2})\/(\d{2})-(\d{2})-[a-z0-9]+(?:-[a-z0-9]+)*$/)
-
-  assert.ok(idMatch, `Invalid Moment id: ${id}`)
+  assert.ok(idMatch, `Invalid Moment id: ${record.id}`)
   const idDate = `${idMatch[1]}-${idMatch[2]}-${idMatch[3]}`
   const order = Number.parseInt(idMatch[4], 10)
-  assert.equal(moment.occurredAt.slice(0, 10), idDate)
+  assert.equal(record.moment.occurredAt.slice(0, 10), idDate)
   ordersByDate.set(idDate, [...(ordersByDate.get(idDate) ?? []), order])
 
-  for (const media of moment.media) {
-    addAsset(media.file, media.type)
+  const directFiles = new Set()
 
-    if (media.poster) {
-      addAsset(media.poster, 'image')
+  for (const media of record.moment.media) {
+    assert.ok(!directFiles.has(media.file), `Duplicate media reference in ${record.id}: ${media.file}`)
+    directFiles.add(media.file)
+    validateAsset(record, media.file, media.type)
+
+    if (!record.moment.hidden && media.alt.trim() === '') {
+      blankAltIds.push(`${record.id}/${media.file}`)
+
+      assert.ok(
+        !changedMomentIds.has(record.id),
+        `Visible changed Moment requires non-empty alt text: ${record.id}/${media.file}`,
+      )
+    }
+
+    if (media.type === 'video' && media.poster) {
+      assert.notEqual(media.poster, media.file, `Video poster matches video in ${record.id}`)
+      validateAsset(record, media.poster, 'image')
     }
   }
 
   assert.deepEqual(
-    Object.keys(assets).sort(),
-    [...referenced].sort(),
-    `Unreferenced or missing asset metadata in ${id}`,
+    Object.keys(record.assets).sort(),
+    [...getReferencedAssetFiles(record)].sort(),
+    `Unreferenced or missing asset metadata in ${record.id}`,
   )
-
-  function addAsset(file, type) {
-    const metadata = assets[file]
-
-    assert.ok(metadata, `Missing metadata for moments/${id}/${file}`)
-    assert.ok(Number.isInteger(metadata.bytes) && metadata.bytes > 0)
-    assert.match(metadata.etag, /^[a-f0-9]{32}$/)
-    assert.match(metadata.contentType, type === 'image' ? /^image\// : /^video\//)
-
-    if (type === 'image') {
-      assert.ok(Number.isInteger(metadata.width) && metadata.width > 0)
-      assert.ok(Number.isInteger(metadata.height) && metadata.height > 0)
-    }
-
-    referenced.add(file)
-    objects.push({
-      key: `moments/${id}/${file}`,
-      metadata,
-    })
-  }
 }
 
 for (const [date, orders] of ordersByDate) {
@@ -84,14 +74,70 @@ for (const [date, orders] of ordersByDate) {
   )
 }
 
-if (remote) {
+if (options.remote) {
   await auditRemoteObjects(objects)
 }
 
 console.log(
-  `Moment audit passed: ${files.length} document(s), ${objects.length} R2 object(s)`
-  + `${remote ? ', remote metadata verified' : ''}.`,
+  `Moment audit passed: ${records.length} document(s), ${objects.length} R2 object(s)`
+  + `${options.remote ? ', remote metadata verified' : ''}.`,
 )
+
+if (blankAltIds.length > 0) {
+  console.warn(
+    `Accessibility warning: ${blankAltIds.length} visible media item(s) have empty alt text.`
+    + ' Existing entries remain valid; changed visible Moments must fix them.',
+  )
+}
+
+function validateAsset(record, file, type) {
+  assert.equal(basename(file), file, `Asset filename must not contain a path: ${record.id}/${file}`)
+  assert.match(
+    file,
+    /^[a-z0-9]+(?:-[a-z0-9]+)*\.[a-z0-9]+$/,
+    `Unsafe asset filename: ${record.id}/${file}`,
+  )
+  const metadata = record.assets[file]
+
+  assert.ok(metadata, `Missing metadata for moments/${record.id}/${file}`)
+  assert.ok(Number.isInteger(metadata.bytes) && metadata.bytes > 0)
+  assert.match(metadata.etag, /^[a-f0-9]{32}$/)
+  assert.match(metadata.contentType, type === 'image' ? /^image\// : /^video\//)
+
+  if (type === 'image') {
+    assert.ok(Number.isInteger(metadata.width) && metadata.width > 0)
+    assert.ok(Number.isInteger(metadata.height) && metadata.height > 0)
+
+    const widths = []
+
+    for (const variant of metadata.variants ?? []) {
+      assert.notEqual(variant, file, `Image lists itself as a variant: ${record.id}/${file}`)
+      const variantMetadata = record.assets[variant]
+
+      assert.ok(variantMetadata, `Missing variant metadata: ${record.id}/${variant}`)
+      assert.equal(variantMetadata.variants, undefined, `Nested variants are not allowed: ${record.id}/${variant}`)
+      assert.match(variantMetadata.contentType, /^image\//)
+      assert.ok(Number.isInteger(variantMetadata.width) && variantMetadata.width > 0)
+      assert.ok(Number.isInteger(variantMetadata.height) && variantMetadata.height > 0)
+      assert.ok(variantMetadata.width < metadata.width, `Variant is not narrower than source: ${record.id}/${variant}`)
+      assert.ok(
+        Math.abs(
+          variantMetadata.height
+          - Math.round(variantMetadata.width * metadata.height / metadata.width),
+        ) <= 1,
+        `Variant aspect ratio mismatch: ${record.id}/${variant}`,
+      )
+      widths.push(variantMetadata.width)
+    }
+
+    assert.equal(new Set(metadata.variants ?? []).size, (metadata.variants ?? []).length)
+    assert.deepEqual(widths, [...widths].sort((first, second) => first - second))
+  } else {
+    assert.equal(metadata.width, undefined, `Video metadata must not have width: ${record.id}/${file}`)
+    assert.equal(metadata.height, undefined, `Video metadata must not have height: ${record.id}/${file}`)
+    assert.equal(metadata.variants, undefined, `Video metadata must not have variants: ${record.id}/${file}`)
+  }
+}
 
 async function auditRemoteObjects(items) {
   let nextIndex = 0
@@ -131,6 +177,23 @@ async function auditRemoteObjects(items) {
   }))
 }
 
+async function getChangedMomentIds(ref) {
+  const { stdout } = await execFile('git', [
+    'diff',
+    '--name-only',
+    '--diff-filter=AM',
+    `${ref}...HEAD`,
+    '--',
+    'src/content/moments/**/index.md',
+  ], { cwd: root })
+
+  return new Set(
+    stdout.trim().split('\n')
+      .filter(Boolean)
+      .map(file => file.replace(/^src\/content\/moments\//, '').replace(/\/index\.md$/, '')),
+  )
+}
+
 async function headWithRetries(url) {
   let lastError
 
@@ -156,4 +219,26 @@ async function headWithRetries(url) {
   }
 
   throw new Error(`Failed to inspect ${url} after 5 attempts.`, { cause: lastError })
+}
+
+function parseArguments(argv) {
+  const options = {
+    changedFrom: undefined,
+    remote: false,
+  }
+
+  for (let index = 0; index < argv.length; index += 1) {
+    const argument = argv[index]
+
+    if (argument === '--remote') {
+      options.remote = true
+    } else if (argument === '--changed-from' && argv[index + 1]) {
+      options.changedFrom = argv[index + 1]
+      index += 1
+    } else {
+      throw new Error('Usage: audit-moments.mjs [--remote] [--changed-from <git-ref>]')
+    }
+  }
+
+  return options
 }

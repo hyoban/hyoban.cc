@@ -1,6 +1,6 @@
 ---
 name: create-moment
-description: Create a hyoban.cc Moment from exact user text and images. Use when adding or recording a Moment through conversation.
+description: Create a hyoban.cc Moment from exact user text and media. Use when adding or recording a Moment through conversation.
 ---
 
 # Create Moment
@@ -18,18 +18,21 @@ part of preparing the local Moment.
    `src/data/locations.ts` and verify new coordinates. Use
    `YYYY/MM/DD-NN-short-slug` for the ID, where `NN` is the next available
    two-digit order for that occurrence date.
-4. Process and upload images in order from the repository root:
+4. Process and upload images or videos in order from the repository root:
 
 ```bash
-node .agents/skills/create-moment/scripts/prepare-images.mjs --repo <repo> --target <moment-dir> -- <images...>
+node .agents/skills/create-moment/scripts/prepare-media.mjs --repo <repo> --target <moment-dir> -- <media...>
 ```
 
-The command optimizes images in a temporary directory, gives them semantic names
-from the Moment slug, uploads and verifies them in the matching R2 directory,
-writes the colocated `assets.json`, and leaves no image files in the Moment
-directory.
+The command prepares everything before atomically creating the Moment directory.
+It optimizes images and responsive variants, transcodes videos to web-compatible
+MP4 with a poster, gives files semantic names from the Moment slug, uploads or
+safely reuses and verifies them in the matching R2 directory, and writes the
+colocated `assets.json`. It is safe to rerun after an interrupted upload and
+leaves no media files in the Moment directory.
 
-5. Inspect each source image and write concise English alt text.
+5. Inspect each source media item and replace every empty suggested alt with
+   concise English alt text. Visible new Moments must never use an empty alt.
 6. Create `index.md` with `apply_patch`, ordering fields as `occurredAt`,
    `location`, `media`. Omit unused optional fields and `hidden`.
 7. Compare the saved body with the user's text, then run `pnpm test`, `pnpm check`, and `pnpm build`.

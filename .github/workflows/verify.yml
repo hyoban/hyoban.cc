@@ -1,0 +1,39 @@
+name: Verify
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  schedule:
+    - cron: '17 3 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+      - run: pnpm check
+      - name: Audit Moments
+        if: github.event_name != 'pull_request'
+        run: pnpm moments:audit
+      - name: Audit changed Moment alt text
+        if: github.event_name == 'pull_request'
+        run: pnpm moments:audit --changed-from ${{ github.event.pull_request.base.sha }}
+      - run: pnpm build
+      - name: Audit remote Moment assets
+        if: github.event_name == 'schedule'
+        run: pnpm moments:audit --remote

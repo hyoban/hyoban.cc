@@ -33,11 +33,16 @@ type AssetMetadata = {
   contentType: string
   etag: string
   height?: number
+  variants?: string[]
   width?: number
 }
 
 type RemoteImage = {
   height: number
+  sources: {
+    src: string
+    width: number
+  }[]
   src: string
   width: number
 }
@@ -261,11 +266,50 @@ function resolveRemoteImage(key: string, metadata: AssetMetadata): RemoteImage {
     throw new Error(`Invalid Moment image metadata: ${key}`)
   }
 
+  const directory = key.slice(0, key.lastIndexOf('/') + 1)
+  const variants = (metadata.variants ?? []).map((file) => {
+    const variant = getAssetMetadataByKey(key, file)
+
+    if (
+      !variant.contentType.startsWith('image/')
+      || !Number.isInteger(variant.width)
+      || !Number.isInteger(variant.height)
+    ) {
+      throw new Error(`Invalid Moment image variant metadata: ${directory}${file}`)
+    }
+
+    return {
+      src: getAssetUrl(`${directory}${file}`),
+      width: variant.width!,
+    }
+  })
+  const sources = [
+    ...variants,
+    ...(metadata.width! <= 1920
+      ? [{ src: getAssetUrl(key), width: metadata.width! }]
+      : []),
+  ]
+    .sort((first, second) => first.width - second.width)
+    .filter((source, index, items) => index === 0 || source.width !== items[index - 1]!.width)
+
   return {
     height: metadata.height!,
+    sources,
     src: getAssetUrl(key),
     width: metadata.width!,
   }
+}
+
+function getAssetMetadataByKey(key: string, file: string) {
+  const directory = key.slice('moments/'.length, key.lastIndexOf('/'))
+  const assets = momentAssetDocuments[`/src/content/moments/${directory}/assets.json`]
+  const metadata = assets?.[file]
+
+  if (!metadata) {
+    throw new Error(`Missing Moment asset metadata: ${directory}/${file}`)
+  }
+
+  return metadata
 }
 
 function parseMonthKey(key: string): [number, number] {
