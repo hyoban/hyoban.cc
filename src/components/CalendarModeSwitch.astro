@@ -18,11 +18,11 @@ const modeLinkClass = 'relative z-[1] inline-flex min-h-8 min-w-[4.5rem] items-c
   data-mode={mode}
 >
   <span class="calendar-mode-switch__indicator pointer-events-none absolute inset-y-[var(--mode-switch-padding)] left-[var(--mode-switch-padding)] z-0 w-[calc((100%-var(--mode-switch-padding)*2)/2)] translate-x-0 rounded-full bg-inline shadow-[0_0.0625rem_0.25rem_rgb(0_0_0/0.08)] transition-transform duration-[280ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-data-[mode=map]:translate-x-full motion-reduce:transition-none" aria-hidden="true" />
-  <a class={modeLinkClass} href="/calendar" data-mode="calendar" aria-current={mode === 'calendar' ? 'page' : undefined}>
+  <a class={modeLinkClass} href="/calendar/" data-mode="calendar" aria-current={mode === 'calendar' ? 'page' : undefined}>
     <span class="i-lucide-calendar-days text-[0.9375rem]" aria-hidden="true" />
     日历
   </a>
-  <a class={modeLinkClass} href="/map" data-mode="map" aria-current={mode === 'map' ? 'page' : undefined}>
+  <a class={modeLinkClass} href="/map/" data-mode="map" aria-current={mode === 'map' ? 'page' : undefined}>
     <span class="i-lucide-map text-[0.9375rem]" aria-hidden="true" />
     地图
   </a>

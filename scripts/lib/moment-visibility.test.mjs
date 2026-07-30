@@ -16,7 +16,7 @@ const assetConfig = JSON.parse(
   await readFile(join(root, 'src/data/asset-config.json'), 'utf8'),
 )
 
-test('excludes hidden moments from the public calendar build', { timeout: 30_000 }, async () => {
+test('builds optimized public calendar pages without hidden moments', { timeout: 30_000 }, async () => {
   const mediaUrls = await collectMomentMediaUrls()
   const outputRoot = await mkdtemp(join(tmpdir(), 'hyoban-calendar-build-'))
 
@@ -37,6 +37,21 @@ test('excludes hidden moments from the public calendar build', { timeout: 30_000
     assert.ok(
       mediaUrls.visible.some(mediaUrl => calendarHtml.includes(mediaUrl)),
       'Expected visible Moment media in the calendar output.',
+    )
+    assert.doesNotMatch(
+      calendarHtml,
+      /href="\/calendar\/\d{4}\/\d{2}(?:\/\d{2})?"/,
+      'Expected calendar links to use canonical trailing slashes.',
+    )
+    assert.match(
+      calendarHtml,
+      /data-calendar-month-prefetch="load"/,
+      'Expected adjacent calendar months to be prefetched.',
+    )
+    assert.match(
+      calendarHtml,
+      /srcset="[^"]+-480w\.webp 480w/,
+      'Expected calendar thumbnails to use responsive image variants.',
     )
   } finally {
     await rm(outputRoot, { force: true, recursive: true })

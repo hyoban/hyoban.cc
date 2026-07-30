@@ -155,7 +155,7 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
       <nav class="month-navigation col-start-2 flex items-center justify-center gap-5 max-[56rem]:col-span-full max-[56rem]:col-start-1 max-[56rem]:row-start-2 max-[40rem]:gap-2" aria-label="月份导航">
         {
           previousMonth
-            ? <a class="month-navigation__arrow inline-flex size-8 items-center justify-center text-tx-2 no-underline max-[56rem]:size-11" href={getMonthPath(previousMonth)} aria-label="上一个月"><span class="i-lucide-chevron-left" aria-hidden="true" /></a>
+            ? <a class="month-navigation__arrow inline-flex size-8 items-center justify-center text-tx-2 no-underline max-[56rem]:size-11" href={getMonthPath(previousMonth)} aria-label="上一个月" data-calendar-month-link data-calendar-month-prefetch="load" data-astro-prefetch="false"><span class="i-lucide-chevron-left" aria-hidden="true" /></a>
             : <span class="month-navigation__arrow month-navigation__arrow--disabled inline-flex size-8 items-center justify-center text-tx-3 opacity-35 max-[56rem]:size-11"><span class="i-lucide-chevron-left" aria-hidden="true" /></span>
         }
 
@@ -172,6 +172,8 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
                       return (
                         <a
                           href={getMonthPath(key)}
+                          data-calendar-month-link
+                          data-astro-prefetch="false"
                           class:list={[
                             'flex h-8 items-center justify-center font-mono no-underline',
                             key === monthKey && 'is-active bg-inline shadow-[inset_0_0_0_1px_var(--color-border)]',
@@ -191,7 +193,7 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
 
         {
           nextMonth
-            ? <a class="month-navigation__arrow inline-flex size-8 items-center justify-center text-tx-2 no-underline max-[56rem]:size-11" href={getMonthPath(nextMonth)} aria-label="下一个月"><span class="i-lucide-chevron-right" aria-hidden="true" /></a>
+            ? <a class="month-navigation__arrow inline-flex size-8 items-center justify-center text-tx-2 no-underline max-[56rem]:size-11" href={getMonthPath(nextMonth)} aria-label="下一个月" data-calendar-month-link data-calendar-month-prefetch="load" data-astro-prefetch="false"><span class="i-lucide-chevron-right" aria-hidden="true" /></a>
             : <span class="month-navigation__arrow month-navigation__arrow--disabled inline-flex size-8 items-center justify-center text-tx-3 opacity-35 max-[56rem]:size-11"><span class="i-lucide-chevron-right" aria-hidden="true" /></span>
         }
       </nav>
@@ -259,12 +261,15 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
             >
               {thumbnail && (
                 <img
-                  src={thumbnail.src}
+                  src={thumbnail.sources.find(source => source.width >= 480)?.src ?? thumbnail.sources.at(-1)?.src ?? thumbnail.src}
+                  srcset={thumbnail.sources.map(source => `${source.src} ${source.width}w`).join(', ')}
+                  sizes="(min-width: 60rem) 8.6rem, calc((100vw - 2rem) / 7)"
                   alt=""
-                  width={Math.min(thumbnail.width, 360)}
-                  height={Math.round(Math.min(thumbnail.width, 360) * thumbnail.height / thumbnail.width)}
+                  width={thumbnail.width}
+                  height={thumbnail.height}
                   loading="lazy"
                   decoding="async"
+                  fetchpriority="low"
                   class="absolute inset-0 h-full w-full object-cover transition-transform duration-[180ms] ease-in-out group-hover:scale-[1.025] motion-reduce:transition-none"
                 />
               )}
@@ -382,6 +387,7 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
 </Layout>
 
 <script>
+  import '@/calendar-prefetch-client'
   import { navigate } from 'astro:transitions/client'
 
   let calendarController: AbortController | undefined
