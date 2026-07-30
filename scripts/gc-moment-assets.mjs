@@ -125,7 +125,9 @@ async function applyManifest() {
 
   const wrangler = join(root, 'node_modules', '.bin', 'wrangler')
 
-  for (const [index, candidate] of candidates.entries()) {
+  let completed = 0
+
+  await runConcurrent(candidates, 8, async (candidate) => {
     await execFile(wrangler, [
       'r2',
       'object',
@@ -138,12 +140,26 @@ async function applyManifest() {
       maxBuffer: 10 * 1024 * 1024,
     })
 
-    if ((index + 1) % 50 === 0 || index === candidates.length - 1) {
-      console.log(`Deleted ${index + 1}/${candidates.length} verified object(s).`)
+    completed += 1
+
+    if (completed % 50 === 0 || completed === candidates.length) {
+      console.log(`Deleted ${completed}/${candidates.length} verified object(s).`)
     }
-  }
+  })
 
   console.log(`R2 GC applied: ${candidates.length} object(s) deleted from ${config.bucket}.`)
+}
+
+async function runConcurrent(items, concurrency, operation) {
+  let nextIndex = 0
+
+  await Promise.all(Array.from({ length: concurrency }, async () => {
+    while (nextIndex < items.length) {
+      const index = nextIndex
+      nextIndex += 1
+      await operation(items[index], index)
+    }
+  }))
 }
 
 function digestCandidates(candidates) {
