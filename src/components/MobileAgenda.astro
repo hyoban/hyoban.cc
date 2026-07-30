@@ -1,10 +1,13 @@
 ---
+import CalendarAnniversaryStatus from '@/components/CalendarAnniversaryStatus.astro'
 import CalendarDayStatus from '@/components/CalendarDayStatus.astro'
 import MomentEntry from '@/components/MomentEntry.astro'
+import type { CalendarAnniversary } from '@/anniversaries'
 import type { ChinaCalendarDay } from '@/china-calendar'
 import type { Moment } from '@/moments'
 
 interface AgendaDay {
+  anniversaries: CalendarAnniversary[]
   chinaCalendarDay: ChinaCalendarDay | undefined
   dateKey: string
   day: number
@@ -44,7 +47,7 @@ function formatDate(dateKey: string) {
                   type="button"
                   class="flex h-11 min-w-11 flex-none cursor-pointer items-center justify-center border-0 bg-transparent p-0 font-mono text-tx-2"
                   data-agenda-target={`agenda-${day.dateKey}`}
-                  aria-label={`定位到 ${formatDate(day.dateKey)}`}
+                  aria-label={`定位到 ${formatDate(day.dateKey)}${day.anniversaries.length ? '的纪念日' : ''}`}
                 >
                   {String(day.day).padStart(2, '0')}
                 </button>
@@ -54,15 +57,25 @@ function formatDate(dateKey: string) {
             <div class="mobile-agenda__days">
               {agendaDays.map(day => (
                 <section class="mobile-agenda__day scroll-mt-3 [&+&]:border-t [&+&]:border-border" id={`agenda-${day.dateKey}`}>
-                  <header class="flex items-baseline justify-between gap-3 pt-7">
-                    <div class="mobile-agenda__date flex min-w-0 items-baseline gap-2.5">
+                  <header class="flex items-start justify-between gap-3 pt-7">
+                    <div class="mobile-agenda__date flex min-w-0 flex-wrap items-center gap-2.5">
                       <h2 class="text-lg font-medium">{formatDate(day.dateKey)}</h2>
+                      {day.anniversaries.map(anniversary => (
+                        <CalendarAnniversaryStatus anniversary={anniversary} />
+                      ))}
                       {day.chinaCalendarDay && <CalendarDayStatus day={day.chinaCalendarDay} />}
                     </div>
-                    <span class="mobile-agenda__count whitespace-nowrap font-mono text-xs text-tx-3">{day.moments.length} 条</span>
+                    {day.moments.length > 0 && (
+                      <span class="mobile-agenda__count pt-1 whitespace-nowrap font-mono text-xs text-tx-3">{day.moments.length} 条</span>
+                    )}
                   </header>
                   <div class="mobile-agenda__moments pb-1">
                     {day.moments.map(moment => <MomentEntry moment={moment} />)}
+                    {day.moments.length === 0 && (
+                      <p class="py-6 text-sm text-tx-3">
+                        {day.anniversaries.map(anniversary => anniversary.description).join('、')}
+                      </p>
+                    )}
                   </div>
                 </section>
               ))}
