@@ -13,7 +13,7 @@ import Layout from '@/layouts/Layout.astro'
 import {
   getActiveDateKeys,
   getArchiveMonthKeys,
-  getMomentDateKey,
+  getCalendarDateKey,
   getMomentPath,
   getMoments,
   getMonthPath,
@@ -75,7 +75,7 @@ while (calendarDays.length % 7 !== 0) {
 const activeCalendarDays = calendarDays.filter(
   (day): day is CalendarDay => Boolean(day?.moments.length),
 )
-const today = getMomentDateKey(new Date())
+const today = getCalendarDateKey(new Date())
 const selectedMoments = selectedDate ? momentsByDate.get(selectedDate) ?? [] : []
 const selectedDateIndex = selectedDate ? activeDateKeys.indexOf(selectedDate) : -1
 const previousDate = selectedDateIndex > 0 ? activeDateKeys[selectedDateIndex - 1] : undefined

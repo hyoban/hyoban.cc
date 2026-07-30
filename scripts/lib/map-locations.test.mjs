@@ -4,7 +4,7 @@ import {
   defineLocations,
   getLocation,
   groupMomentsByLocation,
-} from '../../src/map-locations.ts'
+} from '../../src/moments/map-locations.ts'
 
 test('rejects locations with coordinates outside the public map range', () => {
   assert.throws(
@@ -52,24 +52,28 @@ test('groups mapped moments by place and uses the newest occurrence year', () =>
       dateKey: '2025-04-01',
       id: 'tokyo-older',
       locationId: 'tokyo',
-      publishedAt: new Date('2025-04-01T08:00:00Z'),
+      occurredAt: '2025-04-01T16:00:00+08:00',
+      order: 1,
     },
     {
       dateKey: '2026-03-10',
       id: 'tokyo-newer',
       locationId: 'tokyo',
-      publishedAt: new Date('2026-03-10T08:00:00Z'),
+      occurredAt: '2026-03-10T16:00:00+08:00',
+      order: 1,
     },
     {
       dateKey: '2024-06-20',
       id: 'paris-only',
       locationId: 'paris',
-      publishedAt: new Date('2024-06-20T08:00:00Z'),
+      occurredAt: '2024-06-20',
+      order: 1,
     },
     {
       dateKey: '2026-06-01',
       id: 'unmapped',
-      publishedAt: new Date('2026-06-01T08:00:00Z'),
+      occurredAt: '2026-06-01',
+      order: 1,
     },
   ]
 

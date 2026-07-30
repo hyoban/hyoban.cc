@@ -1,29 +1,19 @@
 import type { CollectionEntry } from 'astro:content'
 import { getCollection } from 'astro:content'
 import { getAssetUrl } from '@/asset-url'
-import momentMediaMetadataJson from '@/data/moment-media.generated.json'
 import { locations, type LocationId } from '@/data/locations'
-import { parseMomentDocument, type CanonicalMoment } from '@/moment-content'
+import { parseMomentDocument, type CanonicalMoment } from '@/moments/content'
 import {
   getLocation,
   groupMomentsByLocation,
   type MapLocation,
-} from '@/map-locations'
+} from '@/moments/map-locations'
 
-const TIME_ZONE = 'Asia/Singapore'
-
-const dateFormatter = new Intl.DateTimeFormat('en-CA', {
+const calendarDateFormatter = new Intl.DateTimeFormat('en-CA', {
   day: '2-digit',
   month: '2-digit',
-  timeZone: TIME_ZONE,
+  timeZone: 'Asia/Singapore',
   year: 'numeric',
-})
-
-const timeFormatter = new Intl.DateTimeFormat('en-GB', {
-  hour: '2-digit',
-  hourCycle: 'h23',
-  minute: '2-digit',
-  timeZone: TIME_ZONE,
 })
 
 const momentDocuments = import.meta.glob<string>(
@@ -31,18 +21,26 @@ const momentDocuments = import.meta.glob<string>(
   { eager: true, import: 'default', query: '?raw' },
 )
 
+const momentAssetDocuments = import.meta.glob<Record<string, AssetMetadata>>(
+  '/src/content/moments/**/assets.json',
+  { eager: true, import: 'default' },
+)
+
 type MomentEntry = CollectionEntry<'moments'>
+
+type AssetMetadata = {
+  bytes: number
+  contentType: string
+  etag: string
+  height?: number
+  width?: number
+}
 
 type RemoteImage = {
   height: number
   src: string
   width: number
 }
-
-const momentMediaMetadata = momentMediaMetadataJson as Record<
-  string,
-  Omit<RemoteImage, 'src'>
->
 
 export type ResolvedMomentMedia =
   | {
@@ -52,6 +50,7 @@ export type ResolvedMomentMedia =
     }
   | {
       alt: string
+      contentType: string
       poster?: RemoteImage
       src: string
       type: 'video'
@@ -63,9 +62,9 @@ export type Moment = {
   location?: ResolvedMomentLocation
   locationId?: LocationId
   media: ResolvedMomentMedia[]
-  publishedAt: Date
-  publishedLabel: string
-  provenanceUrl?: string
+  occurredAt: string
+  occurredLabel?: string
+  order: number
   text: string
 }
 
@@ -114,8 +113,13 @@ export function getMappedLocationGroups(moments: Moment[]) {
   return groupMomentsByLocation(locations, moments)
 }
 
-export function getMomentDateKey(date: Date) {
-  const parts = getDateParts(date)
+export function getCalendarDateKey(date: Date) {
+  const parts = Object.fromEntries(
+    calendarDateFormatter
+      .formatToParts(date)
+      .map(part => [part.type, part.value]),
+  ) as Record<'day' | 'month' | 'year', string>
+
   return `${parts.year}-${parts.month}-${parts.day}`
 }
 
@@ -132,27 +136,24 @@ async function loadMoments() {
 
   return entries
     .map(resolveMoment)
-    .sort((first, second) => (
-      first.dateKey.localeCompare(second.dateKey)
-      || first.publishedAt.valueOf() - second.publishedAt.valueOf()
-    ))
+    .sort(compareMoments)
 }
 
 function resolveMoment(entry: MomentEntry): Moment {
   const source = parseMomentDocument(getMomentDocument(entry), { id: entry.id })
-  const publishedDateKey = getMomentDateKey(source.publishedAt)
-  const dateKey = source.occurredOn ?? publishedDateKey
+  const dateKey = source.occurredAt.slice(0, 10)
+  const order = getMomentOrder(entry.id, dateKey)
   const moment: Moment = {
     dateKey,
     id: entry.id,
     media: source.media.map(item => resolveMedia(entry, item)),
-    publishedAt: source.publishedAt,
-    publishedLabel: formatPublishedLabel(source.publishedAt, dateKey),
+    occurredAt: source.occurredAt,
+    order,
     text: source.text,
   }
 
-  if (source.provenance) {
-    moment.provenanceUrl = source.provenance.url
+  if (source.occurredAt.length > 10) {
+    moment.occurredLabel = source.occurredAt.slice(11, 16)
   }
 
   if (source.location) {
@@ -165,15 +166,34 @@ function resolveMoment(entry: MomentEntry): Moment {
   return moment
 }
 
-function formatPublishedLabel(publishedAt: Date, dateKey: string) {
-  const time = timeFormatter.format(publishedAt)
+function compareMoments(first: Moment, second: Moment) {
+  const dateComparison = first.dateKey.localeCompare(second.dateKey)
 
-  if (getMomentDateKey(publishedAt) === dateKey) {
-    return time
+  if (dateComparison !== 0) {
+    return dateComparison
   }
 
-  const parts = getDateParts(publishedAt)
-  return `发布于 ${parts.year}/${Number(parts.month)}/${Number(parts.day)} ${time}`
+  const firstHasTime = first.occurredAt.length > 10
+  const secondHasTime = second.occurredAt.length > 10
+
+  if (firstHasTime && secondHasTime) {
+    return Date.parse(first.occurredAt) - Date.parse(second.occurredAt)
+      || first.order - second.order
+  }
+
+  return first.order - second.order
+}
+
+function getMomentOrder(id: string, dateKey: string) {
+  const directory = id.split('/').at(-1)
+  const match = directory?.match(/^(\d{2})-(\d{2})-[a-z0-9]+(?:-[a-z0-9]+)*$/)
+  const expectedDay = dateKey.slice(8, 10)
+
+  if (!match || match[1] !== expectedDay) {
+    throw new Error(`Invalid Moment directory id: ${id}`)
+  }
+
+  return Number.parseInt(match[2]!, 10)
 }
 
 function getMomentDocument(entry: MomentEntry) {
@@ -190,11 +210,12 @@ function getMomentDocument(entry: MomentEntry) {
 function resolveMedia(entry: MomentEntry, media: CanonicalMoment['media'][number]): ResolvedMomentMedia {
   const directory = entry.id.replace(/\/index$/, '')
   const key = `moments/${directory}/${media.file}`
+  const metadata = getAssetMetadata(entry, media.file)
 
   if (media.type === 'image') {
     return {
       alt: media.alt,
-      src: resolveRemoteImage(key),
+      src: resolveRemoteImage(key, metadata),
       type: 'image',
     }
   }
@@ -205,22 +226,45 @@ function resolveMedia(entry: MomentEntry, media: CanonicalMoment['media'][number
 
   return {
     alt: media.alt,
+    contentType: metadata.contentType,
     src: getAssetUrl(key),
     type: 'video',
-    ...(posterKey ? { poster: resolveRemoteImage(posterKey) } : {}),
+    ...(posterKey
+      ? {
+          poster: resolveRemoteImage(
+            posterKey,
+            getAssetMetadata(entry, media.poster!),
+          ),
+        }
+      : {}),
   }
 }
 
-function resolveRemoteImage(key: string): RemoteImage {
-  const metadata = momentMediaMetadata[key]
+function getAssetMetadata(entry: MomentEntry, file: string) {
+  const key = `/src/content/moments/${entry.id}/assets.json`
+  const assets = momentAssetDocuments[key]
+  const metadata = assets?.[file]
 
   if (!metadata) {
-    throw new Error(`Missing Moment image metadata: ${key}`)
+    throw new Error(`Missing Moment asset metadata: ${entry.id}/${file}`)
+  }
+
+  return metadata
+}
+
+function resolveRemoteImage(key: string, metadata: AssetMetadata): RemoteImage {
+  if (
+    !metadata.contentType.startsWith('image/')
+    || !Number.isInteger(metadata.width)
+    || !Number.isInteger(metadata.height)
+  ) {
+    throw new Error(`Invalid Moment image metadata: ${key}`)
   }
 
   return {
-    ...metadata,
+    height: metadata.height!,
     src: getAssetUrl(key),
+    width: metadata.width!,
   }
 }
 
@@ -233,12 +277,4 @@ function parseMonthKey(key: string): [number, number] {
   }
 
   return [year, month]
-}
-
-function getDateParts(date: Date) {
-  return Object.fromEntries(
-    dateFormatter
-      .formatToParts(date)
-      .map(part => [part.type, part.value]),
-  ) as Record<'day' | 'month' | 'year', string>
 }

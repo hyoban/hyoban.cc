@@ -7,7 +7,8 @@ export type MapLocation = Readonly<{
 type MappableMoment = Readonly<{
   dateKey: string
   locationId?: string
-  publishedAt: Date
+  occurredAt: string
+  order: number
 }>
 
 export type MapLocationGroup<T extends MappableMoment> = Readonly<{
@@ -91,6 +92,16 @@ export function getYearColor(year: number) {
 }
 
 function compareMomentsDescending(first: MappableMoment, second: MappableMoment) {
-  return second.dateKey.localeCompare(first.dateKey)
-    || second.publishedAt.valueOf() - first.publishedAt.valueOf()
+  const dateComparison = second.dateKey.localeCompare(first.dateKey)
+
+  if (dateComparison !== 0) {
+    return dateComparison
+  }
+
+  if (first.occurredAt.length > 10 && second.occurredAt.length > 10) {
+    return Date.parse(second.occurredAt) - Date.parse(first.occurredAt)
+      || second.order - first.order
+  }
+
+  return second.order - first.order
 }

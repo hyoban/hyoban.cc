@@ -1,5 +1,6 @@
+import { createHash } from 'node:crypto'
 import { readFile, readdir, rm, writeFile } from 'node:fs/promises'
-import { join, relative, sep } from 'node:path'
+import { basename, dirname, join, relative, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import sharp from 'sharp'
@@ -8,7 +9,6 @@ import { getContentType, uploadR2Object } from './lib/r2-assets.mjs'
 
 const root = fileURLToPath(new URL('../', import.meta.url))
 const configPath = join(root, 'src/data/asset-config.json')
-const manifestPath = join(root, 'src/data/moment-media.generated.json')
 const config = JSON.parse(await readFile(configPath, 'utf8'))
 const shouldUpload = process.argv.includes('--upload')
 const shouldRemoveLocal = process.argv.includes('--remove-local')
@@ -37,34 +37,36 @@ const assets = (
 
 assertUniqueKeys(assets)
 
-const momentImageMetadata = await readJsonOrDefault(manifestPath, {})
-
 for (const asset of assets) {
-  if (!asset.key.startsWith('moments/') || !getContentType(asset.file).startsWith('image/')) {
+  if (!asset.key.startsWith('moments/')) {
     continue
   }
 
-  const metadata = await sharp(asset.file).metadata()
-
-  if (!metadata.width || !metadata.height) {
-    throw new Error(`Unable to read image dimensions: ${asset.file}`)
+  const contents = await readFile(asset.file)
+  const contentType = getContentType(asset.file)
+  const metadata = {
+    bytes: contents.byteLength,
+    contentType,
+    etag: createHash('md5').update(contents).digest('hex'),
   }
 
-  momentImageMetadata[asset.key] = {
-    height: metadata.height,
-    width: metadata.width,
+  if (contentType.startsWith('image/')) {
+    const image = await sharp(asset.file).metadata()
+
+    if (!image.width || !image.height) {
+      throw new Error(`Unable to read image dimensions: ${asset.file}`)
+    }
+
+    metadata.height = image.height
+    metadata.width = image.width
   }
+
+  asset.metadata = metadata
 }
-
-await writeFile(
-  manifestPath,
-  `${JSON.stringify(momentImageMetadata, null, 2)}\n`,
-)
 
 if (!shouldUpload) {
   console.log(
-    `Verified metadata for ${Object.keys(momentImageMetadata).length} Moment image(s). `
-    + `Run with --upload to migrate ${assets.length} asset(s) to R2.`,
+    `Dry run found ${assets.length} local asset(s). Run with --upload to migrate them to R2.`,
   )
   process.exit()
 }
@@ -93,6 +95,8 @@ if (completed.size !== assets.length) {
   throw new Error(`Only ${completed.size}/${assets.length} assets were verified`)
 }
 
+await writeMomentAssetMetadata(assets)
+
 if (shouldRemoveLocal) {
   await Promise.all([...completed].map(file => rm(file)))
   await removeEmptyDirectories(sources.map(source => source.directory))
@@ -108,13 +112,18 @@ async function collectSourceAssets(source) {
 
   return files
     .filter(file => isSupportedAsset(file))
-    .map(file => ({
-      file,
-      key: [
+    .map((file) => {
+      const relativeFile = relative(source.directory, file).split(sep).join('/')
+
+      return {
+        file,
+        key: [
         source.keyPrefix,
-        relative(source.directory, file).split(sep).join('/'),
+          relativeFile,
       ].join('/'),
-    }))
+        relativeFile,
+      }
+    })
 }
 
 async function readJsonOrDefault(file, fallback) {
@@ -170,6 +179,27 @@ async function runConcurrent(items, concurrency, operation) {
       await operation(items[index], index)
     }
   }))
+}
+
+async function writeMomentAssetMetadata(items) {
+  const groups = Map.groupBy(
+    items.filter(item => item.key.startsWith('moments/')),
+    item => dirname(item.file),
+  )
+
+  for (const [directory, momentAssets] of groups) {
+    const assetsPath = join(directory, 'assets.json')
+    const assets = await readJsonOrDefault(assetsPath, {})
+
+    for (const asset of momentAssets) {
+      assets[basename(asset.file)] = asset.metadata
+    }
+
+    const sortedAssets = Object.fromEntries(
+      Object.entries(assets).sort(([first], [second]) => first.localeCompare(second)),
+    )
+    await writeFile(assetsPath, `${JSON.stringify(sortedAssets, null, 2)}\n`)
+  }
 }
 
 async function removeEmptyDirectories(roots) {

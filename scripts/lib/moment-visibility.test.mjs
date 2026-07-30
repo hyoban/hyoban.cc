@@ -7,18 +7,21 @@ import { fileURLToPath } from 'node:url'
 import test from 'node:test'
 import { promisify } from 'node:util'
 
-import { parseMomentDocument } from '../../src/moment-content.ts'
+import { parseMomentDocument } from '../../src/moments/content.ts'
 
 const execFile = promisify(execFileCallback)
 const root = fileURLToPath(new URL('../../', import.meta.url))
 const contentRoot = join(root, 'src/content/moments')
+const assetConfig = JSON.parse(
+  await readFile(join(root, 'src/data/asset-config.json'), 'utf8'),
+)
 
 test('excludes hidden moments from the public calendar build', { timeout: 30_000 }, async () => {
-  const sourceUrls = await collectMomentSourceUrls()
+  const mediaUrls = await collectMomentMediaUrls()
   const outputRoot = await mkdtemp(join(tmpdir(), 'hyoban-calendar-build-'))
 
-  assert.ok(sourceUrls.hidden.length > 0, 'Expected at least one hidden moment fixture.')
-  assert.ok(sourceUrls.visible.length > 0, 'Expected at least one visible moment fixture.')
+  assert.ok(mediaUrls.hidden.length > 0, 'Expected at least one hidden moment fixture.')
+  assert.ok(mediaUrls.visible.length > 0, 'Expected at least one visible moment fixture.')
 
   try {
     await execFile(
@@ -28,36 +31,41 @@ test('excludes hidden moments from the public calendar build', { timeout: 30_000
     )
 
     const calendarHtml = await readCalendarHtml(outputRoot)
-    const leakedSources = sourceUrls.hidden.filter(sourceUrl => calendarHtml.includes(sourceUrl))
+    const leakedMedia = mediaUrls.hidden.filter(mediaUrl => calendarHtml.includes(mediaUrl))
 
-    assert.deepEqual(leakedSources, [])
+    assert.deepEqual(leakedMedia, [])
     assert.ok(
-      sourceUrls.visible.some(sourceUrl => calendarHtml.includes(sourceUrl)),
-      'Expected a visible moment source in the calendar output.',
+      mediaUrls.visible.some(mediaUrl => calendarHtml.includes(mediaUrl)),
+      'Expected visible Moment media in the calendar output.',
     )
   } finally {
     await rm(outputRoot, { force: true, recursive: true })
   }
 })
 
-async function collectMomentSourceUrls() {
+async function collectMomentMediaUrls() {
   const files = (await readdir(contentRoot, { recursive: true }))
     .filter(file => file.endsWith('index.md'))
-  const sourceUrls = { hidden: [], visible: [] }
+  const mediaUrls = { hidden: [], visible: [] }
 
   for (const file of files) {
     const document = await readFile(join(contentRoot, file), 'utf8')
     const id = file.replace(/\/index\.md$/, '')
     const moment = parseMomentDocument(document, { id })
+    const media = moment.media[0]
 
-    if (!moment.provenance) {
+    if (!media) {
       continue
     }
 
-    sourceUrls[moment.hidden ? 'hidden' : 'visible'].push(moment.provenance.url)
+    const key = `moments/${id}/${media.file}`
+      .split('/')
+      .map(encodeURIComponent)
+      .join('/')
+    mediaUrls[moment.hidden ? 'hidden' : 'visible'].push(`${assetConfig.origin}/${key}`)
   }
 
-  return sourceUrls
+  return mediaUrls
 }
 
 async function readCalendarHtml(outputRoot) {

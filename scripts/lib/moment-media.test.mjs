@@ -4,42 +4,51 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import test from 'node:test'
 
-import { parseMomentDocument } from '../../src/moment-content.ts'
+import { parseMomentDocument } from '../../src/moments/content.ts'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
 const contentRoot = join(root, 'src/content/moments')
-const manifest = JSON.parse(
-  await readFile(join(root, 'src/data/moment-media.generated.json'), 'utf8'),
-)
 
-test('has remote image metadata for every Moment image and video poster', async () => {
+test('keeps complete colocated metadata for every semantic Moment asset', async () => {
   const files = (await readdir(contentRoot, { recursive: true }))
     .filter(file => file.endsWith('index.md'))
-  const missing = []
 
   for (const file of files) {
     const document = await readFile(join(contentRoot, file), 'utf8')
     const id = file.replace(/\/index\.md$/, '')
     const moment = parseMomentDocument(document, { id })
+    const assets = JSON.parse(
+      await readFile(join(contentRoot, id, 'assets.json'), 'utf8'),
+    )
+    const referencedFiles = new Set()
 
     for (const media of moment.media) {
-      const imageFiles = media.type === 'image'
-        ? [media.file]
-        : media.poster
-          ? [media.poster]
-          : []
+      referencedFiles.add(media.file)
+      assert.doesNotMatch(media.file, /^(?:image|video)-\d/i)
+      assert.ok(assets[media.file], `Missing metadata for moments/${id}/${media.file}`)
+      assert.ok(assets[media.file].bytes > 0)
+      assert.match(
+        assets[media.file].contentType,
+        media.type === 'image' ? /^image\// : /^video\//,
+      )
 
-      for (const imageFile of imageFiles) {
-        const key = `moments/${id}/${imageFile}`
+      if (media.type === 'image') {
+        assert.ok(assets[media.file].width > 0)
+        assert.ok(assets[media.file].height > 0)
+      }
 
-        if (!manifest[key]) {
-          missing.push(key)
-        }
+      if (media.poster) {
+        referencedFiles.add(media.poster)
+        assert.ok(assets[media.poster], `Missing metadata for moments/${id}/${media.poster}`)
+        assert.match(assets[media.poster].contentType, /^image\//)
+        assert.ok(assets[media.poster].width > 0)
+        assert.ok(assets[media.poster].height > 0)
       }
     }
-  }
 
-  assert.deepEqual(missing, [])
+    assert.match(id, /^\d{4}\/\d{2}\/\d{2}-\d{2}-[a-z0-9]+(?:-[a-z0-9]+)*$/)
+    assert.deepEqual(Object.keys(assets).sort(), [...referencedFiles].sort())
+  }
 })
 
 test('keeps binary site media out of the repository', async () => {

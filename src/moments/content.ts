@@ -1,6 +1,6 @@
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 import { z } from 'zod'
-import { isLocationId } from './data/locations.ts'
+import { isLocationId } from '../data/locations.ts'
 
 const momentMediaSchema = z.object({
   alt: z.string(),
@@ -15,40 +15,20 @@ export const momentFrontmatterSchema = z.object({
     message: 'Unknown calendar map location id.',
   }).optional(),
   media: z.array(momentMediaSchema).default([]),
-  occurredOn: z.iso.date().optional(),
-  publishedAt: z.coerce.date(),
-  sourceUrl: z.url().optional(),
-}).superRefine((moment, context) => {
-  if (moment.sourceUrl) {
-    return
-  }
-
-  for (const [index, media] of moment.media.entries()) {
-    if (!media.alt.trim()) {
-      context.addIssue({
-        code: 'custom',
-        message: 'Canonical Moment media requires alt text.',
-        path: ['media', index, 'alt'],
-      })
-    }
-  }
+  occurredAt: z.union([
+    z.iso.date(),
+    z.iso.datetime({ offset: true }),
+  ]),
 })
 
 export type MomentFrontmatter = z.infer<typeof momentFrontmatterSchema>
 
-export type CanonicalMoment = Omit<MomentFrontmatter, 'sourceUrl'> & {
+export type CanonicalMoment = MomentFrontmatter & {
   id: string
-  provenance?: {
-    url: string
-  }
   text: string
 }
 
-export type MomentDocumentInput = Omit<MomentFrontmatter, 'publishedAt' | 'sourceUrl'> & {
-  provenance?: {
-    url: string
-  }
-  publishedAt: string
+export type MomentDocumentInput = MomentFrontmatter & {
   text: string
 }
 
@@ -60,23 +40,19 @@ export function parseMomentDocument(document: string, options: { id: string }): 
   }
 
   const frontmatter = momentFrontmatterSchema.parse(parseYaml(match[1]!))
-  const { sourceUrl, ...data } = frontmatter
 
   return {
-    ...data,
+    ...frontmatter,
     id: options.id,
-    ...(sourceUrl ? { provenance: { url: sourceUrl } } : {}),
     text: (match[2] ?? '').trim(),
   }
 }
 
 export function serializeMomentDocument(moment: MomentDocumentInput) {
   const frontmatter = {
-    publishedAt: moment.publishedAt,
-    ...(moment.occurredOn ? { occurredOn: moment.occurredOn } : {}),
+    occurredAt: moment.occurredAt,
     ...(moment.hidden ? { hidden: true } : {}),
     ...(moment.location ? { location: moment.location } : {}),
-    ...(moment.provenance ? { sourceUrl: moment.provenance.url } : {}),
     media: moment.media,
   }
 
@@ -84,7 +60,7 @@ export function serializeMomentDocument(moment: MomentDocumentInput) {
 
   const lines = [
     '---',
-    stringifyYaml(frontmatter, { lineWidth: 0 }).trimEnd(),
+    stringifyMomentFrontmatter(frontmatter),
     '---',
   ]
 
@@ -94,4 +70,13 @@ export function serializeMomentDocument(moment: MomentDocumentInput) {
 
   lines.push('')
   return lines.join('\n')
+}
+
+function stringifyMomentFrontmatter(frontmatter: object) {
+  return stringifyYaml(frontmatter, { lineWidth: 0 })
+    .trimEnd()
+    .replace(
+      /^occurredAt: (?!")(.+)$/m,
+      'occurredAt: "$1"',
+    )
 }

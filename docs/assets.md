@@ -6,7 +6,7 @@ Images and videos are stored in the Cloudflare R2 bucket configured in
 
 Use these object key prefixes:
 
-- `moments/<moment-id>/<file>` for Moment media
+- `moments/YYYY/MM/DD-NN-short-slug/<semantic-file>` for Moment media
 - `posts/<post-slug>/<semantic-file>` for article media
 - `site/<file>` for global site assets
 
@@ -21,9 +21,22 @@ the local file. Uploaded objects use their correct MIME type and
 `Cache-Control: public, max-age=31536000, immutable`.
 
 The `create-moment` skill handles image optimization, upload, verification, and
-dimension metadata automatically. Moment Markdown keeps the media filename while
-`src/data/moment-media.generated.json` keeps the width and height used for stable
-page layout.
+colocated metadata automatically. Each Moment directory contains:
+
+- `index.md` for the exact Moment text and ordered semantic media references
+- `assets.json` for byte size, MIME type, ETag, and image dimensions
+
+The R2 directory mirrors the Moment content id. Existing objects are immutable;
+replace changed media with a new semantic filename instead of overwriting a key.
+
+Audit every Moment document and colocated asset record:
+
+```sh
+pnpm moments:audit
+```
+
+Add `--remote` to verify every referenced R2 object's status, byte size, MIME
+type, and ETag.
 
 `pnpm assets:migrate` is a dry run for any legacy media accidentally placed in
 the old local directories. Add `--upload` to upload and verify it. Add

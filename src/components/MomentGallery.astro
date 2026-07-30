@@ -64,7 +64,7 @@ const isSingle = media.length === 1
                 isSingle ? 'h-auto max-h-[32rem] object-contain' : 'h-full object-cover',
               ]}
             >
-              <source src={item.src} type="video/mp4" />
+              <source src={item.src} type={item.contentType} />
             </video>
           </div>
         ))

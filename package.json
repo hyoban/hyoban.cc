@@ -10,6 +10,7 @@
     "assets:migrate": "node scripts/migrate-assets-to-r2.mjs",
     "assets:upload": "node scripts/upload-asset-to-r2.mjs",
     "media:generate": "node scripts/generate-media.mjs",
+    "moments:audit": "node scripts/audit-moments.mjs",
     "test": "node --test scripts/lib/*.test.mjs"
   },
   "devDependencies": {

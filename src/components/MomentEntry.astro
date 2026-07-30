@@ -10,27 +10,25 @@ interface Props {
 }
 
 const { class: className, moment, showLocation = true } = Astro.props
+const showHeader = Boolean(moment.occurredLabel || (showLocation && moment.location))
 ---
 
 <article class:list={['moment-entry py-6 [&+&]:border-t [&+&]:border-border', className]}>
-  <header class="mb-2.5 flex items-center gap-2 font-mono text-xs text-tx-2 [&_a]:-my-3 [&_a]:inline-flex [&_a]:min-h-11 [&_a]:min-w-11 [&_a]:items-center [&_a]:justify-center [&_a]:text-tx-3 [&_a]:no-underline">
-    <time datetime={moment.publishedAt.toISOString()}>{moment.publishedLabel}</time>
-    {
-      showLocation && moment.location && (
-        <a class="moment-entry__location !mx-0 !w-auto gap-1 px-1" href={`/map#${moment.location.id}`}>
-          <span class="i-lucide-map-pin text-sm" aria-hidden="true" />
-          {moment.location.name}
-        </a>
-      )
-    }
-    {
-      moment.provenanceUrl && (
-        <a class="moment-entry__source" href={moment.provenanceUrl} target="_blank" rel="noopener noreferrer" aria-label="查看原始内容">
-          <span class="i-lucide-external-link" aria-hidden="true" />
-        </a>
-      )
-    }
-  </header>
+  {
+    showHeader && (
+      <header class="mb-2.5 flex items-center gap-2 font-mono text-xs text-tx-2 [&_a]:-my-3 [&_a]:inline-flex [&_a]:min-h-11 [&_a]:min-w-11 [&_a]:items-center [&_a]:justify-center [&_a]:text-tx-3 [&_a]:no-underline">
+        {moment.occurredLabel && <time datetime={moment.occurredAt}>{moment.occurredLabel}</time>}
+        {
+          showLocation && moment.location && (
+            <a class="moment-entry__location !mx-0 !w-auto gap-1 px-1" href={`/map#${moment.location.id}`}>
+              <span class="i-lucide-map-pin text-sm" aria-hidden="true" />
+              {moment.location.name}
+            </a>
+          )
+        }
+      </header>
+    )
+  }
   <MomentText text={moment.text} />
   {moment.media.length > 0 && <MomentGallery media={moment.media} />}
 </article>
