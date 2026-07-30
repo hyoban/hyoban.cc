@@ -1,23 +1,77 @@
 {
+  "wo-tao-yan-xuan-cheng-shang-zhou-mo-qu-qian-2-1920w.webp": {
+    "bytes": 68844,
+    "contentType": "image/webp",
+    "etag": "8b81389bd027c3e837b43fa0f5a0b1d4",
+    "height": 1440,
+    "width": 1920
+  },
+  "wo-tao-yan-xuan-cheng-shang-zhou-mo-qu-qian-2-480w.webp": {
+    "bytes": 6160,
+    "contentType": "image/webp",
+    "etag": "50ad3e0c148bef273d9fbc534b9e682b",
+    "height": 360,
+    "width": 480
+  },
+  "wo-tao-yan-xuan-cheng-shang-zhou-mo-qu-qian-2-960w.webp": {
+    "bytes": 20324,
+    "contentType": "image/webp",
+    "etag": "524928bed6f03db3f50d787909838386",
+    "height": 720,
+    "width": 960
+  },
   "wo-tao-yan-xuan-cheng-shang-zhou-mo-qu-qian-2.jpg": {
     "height": 1536,
     "width": 2048,
     "bytes": 153390,
     "contentType": "image/jpeg",
-    "etag": "501f98dde8d345d837c2fac1ffc1602b"
+    "etag": "501f98dde8d345d837c2fac1ffc1602b",
+    "variants": [
+      "wo-tao-yan-xuan-cheng-shang-zhou-mo-qu-qian-2-480w.webp",
+      "wo-tao-yan-xuan-cheng-shang-zhou-mo-qu-qian-2-960w.webp",
+      "wo-tao-yan-xuan-cheng-shang-zhou-mo-qu-qian-2-1920w.webp"
+    ]
+  },
+  "wo-tao-yan-xuan-cheng-shang-zhou-mo-qu-qian-3-480w.webp": {
+    "bytes": 104890,
+    "contentType": "image/webp",
+    "etag": "b2364c575ab5edadd245bf1d9f887a76",
+    "height": 640,
+    "width": 480
+  },
+  "wo-tao-yan-xuan-cheng-shang-zhou-mo-qu-qian-3-960w.webp": {
+    "bytes": 362248,
+    "contentType": "image/webp",
+    "etag": "f7dfa09b87c9e1d7ae2e4df53ee5db79",
+    "height": 1280,
+    "width": 960
   },
   "wo-tao-yan-xuan-cheng-shang-zhou-mo-qu-qian-3.jpg": {
     "height": 2048,
     "width": 1536,
     "bytes": 855361,
     "contentType": "image/jpeg",
-    "etag": "4d10016c1d35189e1ea98cbdc6936aa3"
+    "etag": "4d10016c1d35189e1ea98cbdc6936aa3",
+    "variants": [
+      "wo-tao-yan-xuan-cheng-shang-zhou-mo-qu-qian-3-480w.webp",
+      "wo-tao-yan-xuan-cheng-shang-zhou-mo-qu-qian-3-960w.webp"
+    ]
+  },
+  "wo-tao-yan-xuan-cheng-shang-zhou-mo-qu-qian-480w.webp": {
+    "bytes": 46356,
+    "contentType": "image/webp",
+    "etag": "7e1ca7facb4c8df1010de0986ef50e29",
+    "height": 1040,
+    "width": 480
   },
   "wo-tao-yan-xuan-cheng-shang-zhou-mo-qu-qian.jpg": {
     "height": 2048,
     "width": 945,
     "bytes": 191661,
     "contentType": "image/jpeg",
-    "etag": "9a60b432ef8bc8120e9df5c7c5c78f84"
+    "etag": "9a60b432ef8bc8120e9df5c7c5c78f84",
+    "variants": [
+      "wo-tao-yan-xuan-cheng-shang-zhou-mo-qu-qian-480w.webp"
+    ]
   }
 }

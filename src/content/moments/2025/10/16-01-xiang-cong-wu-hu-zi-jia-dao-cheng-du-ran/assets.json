@@ -1,9 +1,27 @@
 {
+  "xiang-cong-wu-hu-zi-jia-dao-cheng-du-ran-480w.webp": {
+    "bytes": 23684,
+    "contentType": "image/webp",
+    "etag": "f6d502fe92b71ff5a997127ac882b7b5",
+    "height": 640,
+    "width": 480
+  },
+  "xiang-cong-wu-hu-zi-jia-dao-cheng-du-ran-960w.webp": {
+    "bytes": 46558,
+    "contentType": "image/webp",
+    "etag": "c9b6b2fefa4f132c8039f011b8dc76d5",
+    "height": 1280,
+    "width": 960
+  },
   "xiang-cong-wu-hu-zi-jia-dao-cheng-du-ran.webp": {
     "height": 1440,
     "width": 1080,
     "bytes": 97116,
     "contentType": "image/webp",
-    "etag": "50d7fb66d2435d4ab91e91a1526380d8"
+    "etag": "50d7fb66d2435d4ab91e91a1526380d8",
+    "variants": [
+      "xiang-cong-wu-hu-zi-jia-dao-cheng-du-ran-480w.webp",
+      "xiang-cong-wu-hu-zi-jia-dao-cheng-du-ran-960w.webp"
+    ]
   }
 }

@@ -1,9 +1,35 @@
 {
+  "yong-nativewind-he-eslint-plugin-tailwindcss-ke-neng-hui-1920w.webp": {
+    "bytes": 65996,
+    "contentType": "image/webp",
+    "etag": "1bd2671d143b9341f9976d970e063d7e",
+    "height": 1146,
+    "width": 1920
+  },
+  "yong-nativewind-he-eslint-plugin-tailwindcss-ke-neng-hui-480w.webp": {
+    "bytes": 10874,
+    "contentType": "image/webp",
+    "etag": "416e164dfa0dcb734a077248f155a28d",
+    "height": 287,
+    "width": 480
+  },
+  "yong-nativewind-he-eslint-plugin-tailwindcss-ke-neng-hui-960w.webp": {
+    "bytes": 29124,
+    "contentType": "image/webp",
+    "etag": "af42886b3d6707820d19c8ad82bc4bce",
+    "height": 573,
+    "width": 960
+  },
   "yong-nativewind-he-eslint-plugin-tailwindcss-ke-neng-hui.jpg": {
     "height": 1968,
     "width": 3296,
     "bytes": 269784,
     "contentType": "image/jpeg",
-    "etag": "31e9cf25ccaf90271978a0c2c1817f6e"
+    "etag": "31e9cf25ccaf90271978a0c2c1817f6e",
+    "variants": [
+      "yong-nativewind-he-eslint-plugin-tailwindcss-ke-neng-hui-480w.webp",
+      "yong-nativewind-he-eslint-plugin-tailwindcss-ke-neng-hui-960w.webp",
+      "yong-nativewind-he-eslint-plugin-tailwindcss-ke-neng-hui-1920w.webp"
+    ]
   }
 }

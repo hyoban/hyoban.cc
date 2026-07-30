@@ -1,9 +1,35 @@
 {
+  "yong-you-le-zi-ji-de-che-che-o-ye-1920w.webp": {
+    "bytes": 166220,
+    "contentType": "image/webp",
+    "etag": "370352f74fc1b326f849207cc1456f7d",
+    "height": 1440,
+    "width": 1920
+  },
+  "yong-you-le-zi-ji-de-che-che-o-ye-480w.webp": {
+    "bytes": 24918,
+    "contentType": "image/webp",
+    "etag": "6c67c01b14a1c1f5c00f448b1b798091",
+    "height": 360,
+    "width": 480
+  },
+  "yong-you-le-zi-ji-de-che-che-o-ye-960w.webp": {
+    "bytes": 68248,
+    "contentType": "image/webp",
+    "etag": "01c0e2db70e73a03ed59674901d8b6f7",
+    "height": 720,
+    "width": 960
+  },
   "yong-you-le-zi-ji-de-che-che-o-ye.jpg": {
     "height": 1536,
     "width": 2048,
     "bytes": 350721,
     "contentType": "image/jpeg",
-    "etag": "6b042d433a9ebe73190f2a4beade160d"
+    "etag": "6b042d433a9ebe73190f2a4beade160d",
+    "variants": [
+      "yong-you-le-zi-ji-de-che-che-o-ye-480w.webp",
+      "yong-you-le-zi-ji-de-che-che-o-ye-960w.webp",
+      "yong-you-le-zi-ji-de-che-che-o-ye-1920w.webp"
+    ]
   }
 }

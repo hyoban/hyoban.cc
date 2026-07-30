@@ -1,9 +1,35 @@
 {
+  "na-dao-le-follow-app-de-nei-ce-yao-qing-1920w.webp": {
+    "bytes": 56142,
+    "contentType": "image/webp",
+    "etag": "b2c45bb0e0b1b4ec989a2cbc1fbadbdd",
+    "height": 1248,
+    "width": 1920
+  },
+  "na-dao-le-follow-app-de-nei-ce-yao-qing-480w.webp": {
+    "bytes": 6546,
+    "contentType": "image/webp",
+    "etag": "c47a81a6956bf288e47d7c64fab9b6b0",
+    "height": 312,
+    "width": 480
+  },
+  "na-dao-le-follow-app-de-nei-ce-yao-qing-960w.webp": {
+    "bytes": 19868,
+    "contentType": "image/webp",
+    "etag": "7409ac7f596bf49701d97f600cca40be",
+    "height": 624,
+    "width": 960
+  },
   "na-dao-le-follow-app-de-nei-ce-yao-qing.jpg": {
     "height": 2112,
     "width": 3248,
     "bytes": 257478,
     "contentType": "image/jpeg",
-    "etag": "23ea15473a279577b8e60c0b5df87156"
+    "etag": "23ea15473a279577b8e60c0b5df87156",
+    "variants": [
+      "na-dao-le-follow-app-de-nei-ce-yao-qing-480w.webp",
+      "na-dao-le-follow-app-de-nei-ce-yao-qing-960w.webp",
+      "na-dao-le-follow-app-de-nei-ce-yao-qing-1920w.webp"
+    ]
   }
 }

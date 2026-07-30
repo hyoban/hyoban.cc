@@ -1,65 +1,227 @@
 {
+  "binhu-national-forest-park-2-480w.webp": {
+    "bytes": 41468,
+    "contentType": "image/webp",
+    "etag": "8fcdd554ceab502e0ac034d81c44d1f7",
+    "height": 320,
+    "width": 480
+  },
+  "binhu-national-forest-park-2-960w.webp": {
+    "bytes": 104272,
+    "contentType": "image/webp",
+    "etag": "4420866a6165050349072f4c60ed1e85",
+    "height": 640,
+    "width": 960
+  },
   "binhu-national-forest-park-2.webp": {
     "height": 1280,
     "width": 1920,
     "bytes": 266826,
     "contentType": "image/webp",
-    "etag": "1bddfce4f14d5a5fedd0a608321e735f"
+    "etag": "1bddfce4f14d5a5fedd0a608321e735f",
+    "variants": [
+      "binhu-national-forest-park-2-480w.webp",
+      "binhu-national-forest-park-2-960w.webp"
+    ]
+  },
+  "binhu-national-forest-park-3-480w.webp": {
+    "bytes": 35330,
+    "contentType": "image/webp",
+    "etag": "ac34a5be7ee97b15fbd63a8e0656f692",
+    "height": 320,
+    "width": 480
+  },
+  "binhu-national-forest-park-3-960w.webp": {
+    "bytes": 131960,
+    "contentType": "image/webp",
+    "etag": "39fca76c7325f37649c09018cc6a4d5a",
+    "height": 640,
+    "width": 960
   },
   "binhu-national-forest-park-3.webp": {
     "height": 1280,
     "width": 1920,
     "bytes": 498690,
     "contentType": "image/webp",
-    "etag": "32f0607ae7c33acd6a093596772dc622"
+    "etag": "32f0607ae7c33acd6a093596772dc622",
+    "variants": [
+      "binhu-national-forest-park-3-480w.webp",
+      "binhu-national-forest-park-3-960w.webp"
+    ]
+  },
+  "binhu-national-forest-park-4-480w.webp": {
+    "bytes": 27838,
+    "contentType": "image/webp",
+    "etag": "5c9741a2090612984177804058618246",
+    "height": 320,
+    "width": 480
+  },
+  "binhu-national-forest-park-4-960w.webp": {
+    "bytes": 83614,
+    "contentType": "image/webp",
+    "etag": "4c4b76854703fcfaaaa08cf86b329220",
+    "height": 640,
+    "width": 960
   },
   "binhu-national-forest-park-4.webp": {
     "height": 1280,
     "width": 1920,
     "bytes": 251542,
     "contentType": "image/webp",
-    "etag": "a371ab4d6581c921dc5fdaad7c9bb2bd"
+    "etag": "a371ab4d6581c921dc5fdaad7c9bb2bd",
+    "variants": [
+      "binhu-national-forest-park-4-480w.webp",
+      "binhu-national-forest-park-4-960w.webp"
+    ]
+  },
+  "binhu-national-forest-park-480w.webp": {
+    "bytes": 34544,
+    "contentType": "image/webp",
+    "etag": "72a866ed88b501920d7bf20b9b03c21d",
+    "height": 320,
+    "width": 480
+  },
+  "binhu-national-forest-park-5-480w.webp": {
+    "bytes": 48290,
+    "contentType": "image/webp",
+    "etag": "cde2b792502fb6ae4ab5ccd88ededa3b",
+    "height": 320,
+    "width": 480
+  },
+  "binhu-national-forest-park-5-960w.webp": {
+    "bytes": 161494,
+    "contentType": "image/webp",
+    "etag": "45a604fa8adb2df806d3a53e6bdac2ec",
+    "height": 640,
+    "width": 960
   },
   "binhu-national-forest-park-5.webp": {
     "height": 1280,
     "width": 1920,
     "bytes": 534168,
     "contentType": "image/webp",
-    "etag": "5198aa83df5d7486858ce978d429746a"
+    "etag": "5198aa83df5d7486858ce978d429746a",
+    "variants": [
+      "binhu-national-forest-park-5-480w.webp",
+      "binhu-national-forest-park-5-960w.webp"
+    ]
+  },
+  "binhu-national-forest-park-6-480w.webp": {
+    "bytes": 40796,
+    "contentType": "image/webp",
+    "etag": "2f16e453fda7f2220ead65bd147e4ea2",
+    "height": 320,
+    "width": 480
+  },
+  "binhu-national-forest-park-6-960w.webp": {
+    "bytes": 142530,
+    "contentType": "image/webp",
+    "etag": "08c72ab531dd4ca3952f05af84c18335",
+    "height": 640,
+    "width": 960
   },
   "binhu-national-forest-park-6.webp": {
     "height": 1280,
     "width": 1920,
     "bytes": 488656,
     "contentType": "image/webp",
-    "etag": "53f5d6ff77d93f8d132a3edc06b48058"
+    "etag": "53f5d6ff77d93f8d132a3edc06b48058",
+    "variants": [
+      "binhu-national-forest-park-6-480w.webp",
+      "binhu-national-forest-park-6-960w.webp"
+    ]
+  },
+  "binhu-national-forest-park-7-480w.webp": {
+    "bytes": 39060,
+    "contentType": "image/webp",
+    "etag": "c754978c6f2abe441291333bd59484a1",
+    "height": 320,
+    "width": 480
+  },
+  "binhu-national-forest-park-7-960w.webp": {
+    "bytes": 139190,
+    "contentType": "image/webp",
+    "etag": "df9d0875b3bd423cd82ddd253c15feed",
+    "height": 640,
+    "width": 960
   },
   "binhu-national-forest-park-7.webp": {
     "height": 1280,
     "width": 1920,
     "bytes": 488708,
     "contentType": "image/webp",
-    "etag": "d9c6fdb6cb4a2a6c0740427e970a8a9b"
+    "etag": "d9c6fdb6cb4a2a6c0740427e970a8a9b",
+    "variants": [
+      "binhu-national-forest-park-7-480w.webp",
+      "binhu-national-forest-park-7-960w.webp"
+    ]
+  },
+  "binhu-national-forest-park-8-480w.webp": {
+    "bytes": 42680,
+    "contentType": "image/webp",
+    "etag": "75c36032639262fb1e574532b8d1ffa6",
+    "height": 320,
+    "width": 480
+  },
+  "binhu-national-forest-park-8-960w.webp": {
+    "bytes": 154440,
+    "contentType": "image/webp",
+    "etag": "e39fcfb282dd4d9e42a4d3430d99d275",
+    "height": 640,
+    "width": 960
   },
   "binhu-national-forest-park-8.webp": {
     "height": 1280,
     "width": 1920,
     "bytes": 548398,
     "contentType": "image/webp",
-    "etag": "7ed457b5f63998d86cbcf8cb47e5f8e2"
+    "etag": "7ed457b5f63998d86cbcf8cb47e5f8e2",
+    "variants": [
+      "binhu-national-forest-park-8-480w.webp",
+      "binhu-national-forest-park-8-960w.webp"
+    ]
+  },
+  "binhu-national-forest-park-9-480w.webp": {
+    "bytes": 95772,
+    "contentType": "image/webp",
+    "etag": "7493b224396d2d5dad5b8d97d12e0e55",
+    "height": 720,
+    "width": 480
+  },
+  "binhu-national-forest-park-9-960w.webp": {
+    "bytes": 259364,
+    "contentType": "image/webp",
+    "etag": "c56b3dce19ea57679ef7c1f01b42021f",
+    "height": 1440,
+    "width": 960
   },
   "binhu-national-forest-park-9.webp": {
     "height": 1920,
     "width": 1280,
     "bytes": 475306,
     "contentType": "image/webp",
-    "etag": "6adfd2213ad7013554544ab82f40272e"
+    "etag": "6adfd2213ad7013554544ab82f40272e",
+    "variants": [
+      "binhu-national-forest-park-9-480w.webp",
+      "binhu-national-forest-park-9-960w.webp"
+    ]
+  },
+  "binhu-national-forest-park-960w.webp": {
+    "bytes": 115546,
+    "contentType": "image/webp",
+    "etag": "7612d8df26c8cdd65eee5a8e2c1aae9f",
+    "height": 640,
+    "width": 960
   },
   "binhu-national-forest-park.webp": {
     "height": 1280,
     "width": 1920,
     "bytes": 412500,
     "contentType": "image/webp",
-    "etag": "4ff50fea821d40a60435a6bebbce1418"
+    "etag": "4ff50fea821d40a60435a6bebbce1418",
+    "variants": [
+      "binhu-national-forest-park-480w.webp",
+      "binhu-national-forest-park-960w.webp"
+    ]
   }
 }

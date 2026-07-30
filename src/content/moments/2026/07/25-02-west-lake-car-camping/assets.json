@@ -1,30 +1,102 @@
 {
+  "west-lake-car-camping-2-480w.webp": {
+    "bytes": 22548,
+    "contentType": "image/webp",
+    "etag": "24a6d56704bc0e54eb8a0bb17318a7b5",
+    "height": 360,
+    "width": 480
+  },
+  "west-lake-car-camping-2-960w.webp": {
+    "bytes": 72360,
+    "contentType": "image/webp",
+    "etag": "80525e41dbfecac11fd486020c6b78e9",
+    "height": 720,
+    "width": 960
+  },
   "west-lake-car-camping-2.webp": {
     "height": 1440,
     "width": 1920,
     "bytes": 244134,
     "contentType": "image/webp",
-    "etag": "979b99bb8193e2fca37bf9603823820d"
+    "etag": "979b99bb8193e2fca37bf9603823820d",
+    "variants": [
+      "west-lake-car-camping-2-480w.webp",
+      "west-lake-car-camping-2-960w.webp"
+    ]
+  },
+  "west-lake-car-camping-3-480w.webp": {
+    "bytes": 23848,
+    "contentType": "image/webp",
+    "etag": "5a22bc243263954b6f33f5a3b2e14740",
+    "height": 360,
+    "width": 480
+  },
+  "west-lake-car-camping-3-960w.webp": {
+    "bytes": 70498,
+    "contentType": "image/webp",
+    "etag": "de977b7f75af6f5dce4342e1d80c814d",
+    "height": 720,
+    "width": 960
   },
   "west-lake-car-camping-3.webp": {
     "height": 1440,
     "width": 1920,
     "bytes": 211078,
     "contentType": "image/webp",
-    "etag": "8da28cc02072c3ccec84da40eebaf20b"
+    "etag": "8da28cc02072c3ccec84da40eebaf20b",
+    "variants": [
+      "west-lake-car-camping-3-480w.webp",
+      "west-lake-car-camping-3-960w.webp"
+    ]
+  },
+  "west-lake-car-camping-4-480w.webp": {
+    "bytes": 35996,
+    "contentType": "image/webp",
+    "etag": "7febac1f9fa0384e7526561083237d8c",
+    "height": 360,
+    "width": 480
+  },
+  "west-lake-car-camping-4-960w.webp": {
+    "bytes": 130864,
+    "contentType": "image/webp",
+    "etag": "7493e523f8dbe45ba78a15c169149b50",
+    "height": 720,
+    "width": 960
   },
   "west-lake-car-camping-4.webp": {
     "height": 1440,
     "width": 1920,
     "bytes": 471268,
     "contentType": "image/webp",
-    "etag": "f53b4b69500aeb3f09ccfb7e796eaabf"
+    "etag": "f53b4b69500aeb3f09ccfb7e796eaabf",
+    "variants": [
+      "west-lake-car-camping-4-480w.webp",
+      "west-lake-car-camping-4-960w.webp"
+    ]
+  },
+  "west-lake-car-camping-480w.webp": {
+    "bytes": 14668,
+    "contentType": "image/webp",
+    "etag": "cb8e0ea3f3f7013967ca0edcd57b05ec",
+    "height": 360,
+    "width": 480
+  },
+  "west-lake-car-camping-960w.webp": {
+    "bytes": 47910,
+    "contentType": "image/webp",
+    "etag": "648a34ba5813d8d832ef555091211787",
+    "height": 720,
+    "width": 960
   },
   "west-lake-car-camping.webp": {
     "height": 1440,
     "width": 1920,
     "bytes": 169422,
     "contentType": "image/webp",
-    "etag": "5eca3d3ed3d6373be674a3c699779263"
+    "etag": "5eca3d3ed3d6373be674a3c699779263",
+    "variants": [
+      "west-lake-car-camping-480w.webp",
+      "west-lake-car-camping-960w.webp"
+    ]
   }
 }

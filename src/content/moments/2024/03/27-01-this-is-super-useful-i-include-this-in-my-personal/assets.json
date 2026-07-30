@@ -1,9 +1,27 @@
 {
+  "this-is-super-useful-i-include-this-in-my-personal-480w.webp": {
+    "bytes": 20440,
+    "contentType": "image/webp",
+    "etag": "3f35aa9223692f29fb14abade9642bdd",
+    "height": 341,
+    "width": 480
+  },
+  "this-is-super-useful-i-include-this-in-my-personal-960w.webp": {
+    "bytes": 47928,
+    "contentType": "image/webp",
+    "etag": "58672414889da982416eb801b28f89d9",
+    "height": 682,
+    "width": 960
+  },
   "this-is-super-useful-i-include-this-in-my-personal.jpg": {
     "height": 1018,
     "width": 1432,
     "bytes": 145809,
     "contentType": "image/jpeg",
-    "etag": "10b9ed7f63ca068bf523087259eec6f6"
+    "etag": "10b9ed7f63ca068bf523087259eec6f6",
+    "variants": [
+      "this-is-super-useful-i-include-this-in-my-personal-480w.webp",
+      "this-is-super-useful-i-include-this-in-my-personal-960w.webp"
+    ]
   }
 }

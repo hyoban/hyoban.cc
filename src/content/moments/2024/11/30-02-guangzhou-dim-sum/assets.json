@@ -1,9 +1,35 @@
 {
+  "guangzhou-dim-sum-1920w.webp": {
+    "bytes": 166730,
+    "contentType": "image/webp",
+    "etag": "dcc6ce6955260354c55cf5bbab5c1b6e",
+    "height": 1080,
+    "width": 1920
+  },
+  "guangzhou-dim-sum-480w.webp": {
+    "bytes": 18430,
+    "contentType": "image/webp",
+    "etag": "544ce33f67e7f907d2556d24d795d503",
+    "height": 270,
+    "width": 480
+  },
+  "guangzhou-dim-sum-960w.webp": {
+    "bytes": 57006,
+    "contentType": "image/webp",
+    "etag": "e851a2956e072aac15536cfa2f95c8de",
+    "height": 540,
+    "width": 960
+  },
   "guangzhou-dim-sum.jpg": {
     "height": 1152,
     "width": 2048,
     "bytes": 325131,
     "contentType": "image/jpeg",
-    "etag": "24d3227c6b9177d626f7a293e57af611"
+    "etag": "24d3227c6b9177d626f7a293e57af611",
+    "variants": [
+      "guangzhou-dim-sum-480w.webp",
+      "guangzhou-dim-sum-960w.webp",
+      "guangzhou-dim-sum-1920w.webp"
+    ]
   }
 }

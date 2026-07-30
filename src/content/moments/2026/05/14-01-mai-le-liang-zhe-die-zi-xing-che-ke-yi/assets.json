@@ -1,9 +1,27 @@
 {
+  "mai-le-liang-zhe-die-zi-xing-che-ke-yi-480w.webp": {
+    "bytes": 9762,
+    "contentType": "image/webp",
+    "etag": "74c136d0a22c4ecc197c47a2305ae9fa",
+    "height": 178,
+    "width": 480
+  },
+  "mai-le-liang-zhe-die-zi-xing-che-ke-yi-960w.webp": {
+    "bytes": 22972,
+    "contentType": "image/webp",
+    "etag": "aeb5fb60f30dd5f4376047dfa74342ae",
+    "height": 355,
+    "width": 960
+  },
   "mai-le-liang-zhe-die-zi-xing-che-ke-yi.jpg": {
     "height": 436,
     "width": 1179,
     "bytes": 42064,
     "contentType": "image/jpeg",
-    "etag": "29f5eaee6c6cd472da2505bfb3a0c659"
+    "etag": "29f5eaee6c6cd472da2505bfb3a0c659",
+    "variants": [
+      "mai-le-liang-zhe-die-zi-xing-che-ke-yi-480w.webp",
+      "mai-le-liang-zhe-die-zi-xing-che-ke-yi-960w.webp"
+    ]
   }
 }

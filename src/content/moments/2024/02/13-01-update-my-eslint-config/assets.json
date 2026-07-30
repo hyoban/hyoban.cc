@@ -1,9 +1,27 @@
 {
+  "update-my-eslint-config-480w.webp": {
+    "bytes": 18004,
+    "contentType": "image/webp",
+    "etag": "3d0ba31c64101a5114881508a67076e8",
+    "height": 668,
+    "width": 480
+  },
+  "update-my-eslint-config-960w.webp": {
+    "bytes": 40548,
+    "contentType": "image/webp",
+    "etag": "3a93ce3f6c4e656332884cb2686cbe84",
+    "height": 1336,
+    "width": 960
+  },
   "update-my-eslint-config.jpg": {
     "height": 1458,
     "width": 1048,
     "bytes": 101016,
     "contentType": "image/jpeg",
-    "etag": "ada471c8758770bfea527adc6441e012"
+    "etag": "ada471c8758770bfea527adc6441e012",
+    "variants": [
+      "update-my-eslint-config-480w.webp",
+      "update-my-eslint-config-960w.webp"
+    ]
   }
 }

@@ -1,58 +1,138 @@
 {
+  "zai-jia-pai-le-ji-zhang-yue-liang-bu-guo-2-480w.webp": {
+    "bytes": 2840,
+    "contentType": "image/webp",
+    "etag": "d9c6c7b8e4760063e55a2cbc5a354781",
+    "height": 480,
+    "width": 480
+  },
   "zai-jia-pai-le-ji-zhang-yue-liang-bu-guo-2.jpg": {
     "height": 927,
     "width": 927,
     "bytes": 16470,
     "contentType": "image/jpeg",
-    "etag": "396bccf83b5f5f762049f9ddb8beee41"
+    "etag": "396bccf83b5f5f762049f9ddb8beee41",
+    "variants": [
+      "zai-jia-pai-le-ji-zhang-yue-liang-bu-guo-2-480w.webp"
+    ]
+  },
+  "zai-jia-pai-le-ji-zhang-yue-liang-bu-guo-3-480w.webp": {
+    "bytes": 2608,
+    "contentType": "image/webp",
+    "etag": "12195042989f592b3fdb9b4e78eed7f4",
+    "height": 480,
+    "width": 480
   },
   "zai-jia-pai-le-ji-zhang-yue-liang-bu-guo-3.jpg": {
     "height": 927,
     "width": 927,
     "bytes": 16173,
     "contentType": "image/jpeg",
-    "etag": "5d686c286229c8758568eaabe621f114"
+    "etag": "5d686c286229c8758568eaabe621f114",
+    "variants": [
+      "zai-jia-pai-le-ji-zhang-yue-liang-bu-guo-3-480w.webp"
+    ]
+  },
+  "zai-jia-pai-le-ji-zhang-yue-liang-bu-guo-4-480w.webp": {
+    "bytes": 2480,
+    "contentType": "image/webp",
+    "etag": "00ff208cf4b244b0453656a59b8ff41e",
+    "height": 480,
+    "width": 480
   },
   "zai-jia-pai-le-ji-zhang-yue-liang-bu-guo-4.jpg": {
     "height": 927,
     "width": 927,
     "bytes": 15888,
     "contentType": "image/jpeg",
-    "etag": "36bfcc2e802a5c4eb923a6566bf1bbb3"
+    "etag": "36bfcc2e802a5c4eb923a6566bf1bbb3",
+    "variants": [
+      "zai-jia-pai-le-ji-zhang-yue-liang-bu-guo-4-480w.webp"
+    ]
+  },
+  "zai-jia-pai-le-ji-zhang-yue-liang-bu-guo-480w.webp": {
+    "bytes": 2620,
+    "contentType": "image/webp",
+    "etag": "ceaba0ed42f5578ea1e11a38d05abeca",
+    "height": 480,
+    "width": 480
+  },
+  "zai-jia-pai-le-ji-zhang-yue-liang-bu-guo-5-480w.webp": {
+    "bytes": 2386,
+    "contentType": "image/webp",
+    "etag": "3bd456dbb3546aa8ebeab58e87077778",
+    "height": 480,
+    "width": 480
   },
   "zai-jia-pai-le-ji-zhang-yue-liang-bu-guo-5.jpg": {
     "height": 943,
     "width": 943,
     "bytes": 16114,
     "contentType": "image/jpeg",
-    "etag": "fe46e49a9d4694608559ff441966b4df"
+    "etag": "fe46e49a9d4694608559ff441966b4df",
+    "variants": [
+      "zai-jia-pai-le-ji-zhang-yue-liang-bu-guo-5-480w.webp"
+    ]
+  },
+  "zai-jia-pai-le-ji-zhang-yue-liang-bu-guo-6-480w.webp": {
+    "bytes": 2268,
+    "contentType": "image/webp",
+    "etag": "e84119eb7dae014ded031201c9cc231c",
+    "height": 480,
+    "width": 480
   },
   "zai-jia-pai-le-ji-zhang-yue-liang-bu-guo-6.jpg": {
     "height": 927,
     "width": 927,
     "bytes": 15246,
     "contentType": "image/jpeg",
-    "etag": "8e63f2ddb65c337e4b4091ed654dee07"
+    "etag": "8e63f2ddb65c337e4b4091ed654dee07",
+    "variants": [
+      "zai-jia-pai-le-ji-zhang-yue-liang-bu-guo-6-480w.webp"
+    ]
+  },
+  "zai-jia-pai-le-ji-zhang-yue-liang-bu-guo-7-480w.webp": {
+    "bytes": 2458,
+    "contentType": "image/webp",
+    "etag": "c35d7a94f98dd90d99b2232218f607a4",
+    "height": 480,
+    "width": 480
   },
   "zai-jia-pai-le-ji-zhang-yue-liang-bu-guo-7.jpg": {
     "height": 927,
     "width": 927,
     "bytes": 15582,
     "contentType": "image/jpeg",
-    "etag": "4b762e5db9eec47286083bc8b930a88b"
+    "etag": "4b762e5db9eec47286083bc8b930a88b",
+    "variants": [
+      "zai-jia-pai-le-ji-zhang-yue-liang-bu-guo-7-480w.webp"
+    ]
+  },
+  "zai-jia-pai-le-ji-zhang-yue-liang-bu-guo-8-480w.webp": {
+    "bytes": 2660,
+    "contentType": "image/webp",
+    "etag": "4f132dc59785c0f386e261de7771a3cd",
+    "height": 480,
+    "width": 480
   },
   "zai-jia-pai-le-ji-zhang-yue-liang-bu-guo-8.jpg": {
     "height": 927,
     "width": 927,
     "bytes": 16587,
     "contentType": "image/jpeg",
-    "etag": "0fda9f6d0cdc33526e68344cc2f5a12b"
+    "etag": "0fda9f6d0cdc33526e68344cc2f5a12b",
+    "variants": [
+      "zai-jia-pai-le-ji-zhang-yue-liang-bu-guo-8-480w.webp"
+    ]
   },
   "zai-jia-pai-le-ji-zhang-yue-liang-bu-guo.jpg": {
     "height": 943,
     "width": 943,
     "bytes": 16539,
     "contentType": "image/jpeg",
-    "etag": "7730982a2de2588eaf4c8d33f6c625b6"
+    "etag": "7730982a2de2588eaf4c8d33f6c625b6",
+    "variants": [
+      "zai-jia-pai-le-ji-zhang-yue-liang-bu-guo-480w.webp"
+    ]
   }
 }

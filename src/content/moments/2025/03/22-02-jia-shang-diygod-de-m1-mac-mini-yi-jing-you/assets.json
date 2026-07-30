@@ -1,9 +1,27 @@
 {
+  "jia-shang-diygod-de-m1-mac-mini-yi-jing-you-480w.webp": {
+    "bytes": 2994,
+    "contentType": "image/webp",
+    "etag": "a254d5d7aeb66df970d2d00037949bbf",
+    "height": 97,
+    "width": 480
+  },
+  "jia-shang-diygod-de-m1-mac-mini-yi-jing-you-960w.webp": {
+    "bytes": 7616,
+    "contentType": "image/webp",
+    "etag": "5c96d65db5dbf58a75e211baeebba7c6",
+    "height": 194,
+    "width": 960
+  },
   "jia-shang-diygod-de-m1-mac-mini-yi-jing-you.jpg": {
     "height": 318,
     "width": 1574,
     "bytes": 33651,
     "contentType": "image/jpeg",
-    "etag": "1fee5fee1f2e29c5e45ba1e748c15e70"
+    "etag": "1fee5fee1f2e29c5e45ba1e748c15e70",
+    "variants": [
+      "jia-shang-diygod-de-m1-mac-mini-yi-jing-you-480w.webp",
+      "jia-shang-diygod-de-m1-mac-mini-yi-jing-you-960w.webp"
+    ]
   }
 }

@@ -1,30 +1,110 @@
 {
+  "jian-dan-guang-ge-si-2-1920w.webp": {
+    "bytes": 225754,
+    "contentType": "image/webp",
+    "etag": "650429b440a33a795a2a454fd995ff72",
+    "height": 1440,
+    "width": 1920
+  },
+  "jian-dan-guang-ge-si-2-480w.webp": {
+    "bytes": 18546,
+    "contentType": "image/webp",
+    "etag": "e53e610642c30f4c98242abdc89b618f",
+    "height": 360,
+    "width": 480
+  },
+  "jian-dan-guang-ge-si-2-960w.webp": {
+    "bytes": 66366,
+    "contentType": "image/webp",
+    "etag": "ddfbda51c3f5627accbc6fb713bf3b3e",
+    "height": 720,
+    "width": 960
+  },
   "jian-dan-guang-ge-si-2.jpg": {
     "height": 1536,
     "width": 2048,
     "bytes": 417803,
     "contentType": "image/jpeg",
-    "etag": "c5c386211987e3f4ee287a58870f9f51"
+    "etag": "c5c386211987e3f4ee287a58870f9f51",
+    "variants": [
+      "jian-dan-guang-ge-si-2-480w.webp",
+      "jian-dan-guang-ge-si-2-960w.webp",
+      "jian-dan-guang-ge-si-2-1920w.webp"
+    ]
+  },
+  "jian-dan-guang-ge-si-3-480w.webp": {
+    "bytes": 57836,
+    "contentType": "image/webp",
+    "etag": "49250f68a1f7a366cf66fb76179c0190",
+    "height": 640,
+    "width": 480
+  },
+  "jian-dan-guang-ge-si-3-960w.webp": {
+    "bytes": 157120,
+    "contentType": "image/webp",
+    "etag": "16939b30eda783324fc7bdd94631ac0d",
+    "height": 1280,
+    "width": 960
   },
   "jian-dan-guang-ge-si-3.jpg": {
     "height": 2048,
     "width": 1536,
     "bytes": 472496,
     "contentType": "image/jpeg",
-    "etag": "fa05a8b2bf22efa0067de4beb7f538b4"
+    "etag": "fa05a8b2bf22efa0067de4beb7f538b4",
+    "variants": [
+      "jian-dan-guang-ge-si-3-480w.webp",
+      "jian-dan-guang-ge-si-3-960w.webp"
+    ]
+  },
+  "jian-dan-guang-ge-si-4-480w.webp": {
+    "bytes": 27662,
+    "contentType": "image/webp",
+    "etag": "158270106f953f0fc835544aaa647c2c",
+    "height": 640,
+    "width": 480
+  },
+  "jian-dan-guang-ge-si-4-960w.webp": {
+    "bytes": 96060,
+    "contentType": "image/webp",
+    "etag": "c50e2465fcfdf88d05c67ed47d2bfc78",
+    "height": 1280,
+    "width": 960
   },
   "jian-dan-guang-ge-si-4.jpg": {
     "height": 2048,
     "width": 1536,
     "bytes": 337925,
     "contentType": "image/jpeg",
-    "etag": "458cfc8ee0f9468f3905699f26dce3be"
+    "etag": "458cfc8ee0f9468f3905699f26dce3be",
+    "variants": [
+      "jian-dan-guang-ge-si-4-480w.webp",
+      "jian-dan-guang-ge-si-4-960w.webp"
+    ]
+  },
+  "jian-dan-guang-ge-si-480w.webp": {
+    "bytes": 78044,
+    "contentType": "image/webp",
+    "etag": "7515f7fdeda25c5b75e7a4d1720c7201",
+    "height": 640,
+    "width": 480
+  },
+  "jian-dan-guang-ge-si-960w.webp": {
+    "bytes": 294394,
+    "contentType": "image/webp",
+    "etag": "72374e7c2e54fd9c27c404c24b19e10b",
+    "height": 1280,
+    "width": 960
   },
   "jian-dan-guang-ge-si.jpg": {
     "height": 2048,
     "width": 1536,
     "bytes": 777047,
     "contentType": "image/jpeg",
-    "etag": "8ab618371b9204b0e644d921c612f4f8"
+    "etag": "8ab618371b9204b0e644d921c612f4f8",
+    "variants": [
+      "jian-dan-guang-ge-si-480w.webp",
+      "jian-dan-guang-ge-si-960w.webp"
+    ]
   }
 }

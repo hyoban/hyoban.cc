@@ -1,30 +1,102 @@
 {
+  "qi-xing-ri-chang-2-480w.webp": {
+    "bytes": 7644,
+    "contentType": "image/webp",
+    "etag": "c64d89cd044a60b6c57cbf88b543c6fd",
+    "height": 320,
+    "width": 480
+  },
+  "qi-xing-ri-chang-2-960w.webp": {
+    "bytes": 24406,
+    "contentType": "image/webp",
+    "etag": "b37d9bb74196fd61ef79d2bad849214b",
+    "height": 640,
+    "width": 960
+  },
   "qi-xing-ri-chang-2.webp": {
     "height": 1080,
     "width": 1620,
     "bytes": 109948,
     "contentType": "image/webp",
-    "etag": "1445c56d670ab0fe5fc8ea0b5a39ce86"
+    "etag": "1445c56d670ab0fe5fc8ea0b5a39ce86",
+    "variants": [
+      "qi-xing-ri-chang-2-480w.webp",
+      "qi-xing-ri-chang-2-960w.webp"
+    ]
+  },
+  "qi-xing-ri-chang-3-480w.webp": {
+    "bytes": 7530,
+    "contentType": "image/webp",
+    "etag": "aa1c5fbd54b1b6105a76461971f2f8b1",
+    "height": 320,
+    "width": 480
+  },
+  "qi-xing-ri-chang-3-960w.webp": {
+    "bytes": 21474,
+    "contentType": "image/webp",
+    "etag": "d5adf28889835a556d64a39941a4b4bf",
+    "height": 640,
+    "width": 960
   },
   "qi-xing-ri-chang-3.webp": {
     "height": 1080,
     "width": 1620,
     "bytes": 71746,
     "contentType": "image/webp",
-    "etag": "bff2268deb4fa465a356e08c39cba91f"
+    "etag": "bff2268deb4fa465a356e08c39cba91f",
+    "variants": [
+      "qi-xing-ri-chang-3-480w.webp",
+      "qi-xing-ri-chang-3-960w.webp"
+    ]
+  },
+  "qi-xing-ri-chang-4-480w.webp": {
+    "bytes": 37064,
+    "contentType": "image/webp",
+    "etag": "48de3e4cea308ac24da354f95f5deb6a",
+    "height": 320,
+    "width": 480
+  },
+  "qi-xing-ri-chang-4-960w.webp": {
+    "bytes": 117598,
+    "contentType": "image/webp",
+    "etag": "9f4ce69a61fdd9ad00c1b3956c938176",
+    "height": 640,
+    "width": 960
   },
   "qi-xing-ri-chang-4.webp": {
     "height": 1080,
     "width": 1620,
     "bytes": 410026,
     "contentType": "image/webp",
-    "etag": "0c6e81b4465b6fadf0891822d81d7c22"
+    "etag": "0c6e81b4465b6fadf0891822d81d7c22",
+    "variants": [
+      "qi-xing-ri-chang-4-480w.webp",
+      "qi-xing-ri-chang-4-960w.webp"
+    ]
+  },
+  "qi-xing-ri-chang-480w.webp": {
+    "bytes": 21874,
+    "contentType": "image/webp",
+    "etag": "6da55a56dff6bc6ba30f04e5d510b628",
+    "height": 320,
+    "width": 480
+  },
+  "qi-xing-ri-chang-960w.webp": {
+    "bytes": 67266,
+    "contentType": "image/webp",
+    "etag": "2cb565600c4ed6504671439715cb3378",
+    "height": 640,
+    "width": 960
   },
   "qi-xing-ri-chang.webp": {
     "height": 1080,
     "width": 1620,
     "bytes": 263782,
     "contentType": "image/webp",
-    "etag": "267a074ee418a58377759dd5716c94ab"
+    "etag": "267a074ee418a58377759dd5716c94ab",
+    "variants": [
+      "qi-xing-ri-chang-480w.webp",
+      "qi-xing-ri-chang-960w.webp"
+    ]
   }
 }

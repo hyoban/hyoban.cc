@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url'
 import test from 'node:test'
 
 import { parseMomentDocument } from '../../src/moments/content.ts'
+import { getReferencedAssetFiles } from './moment-assets.mjs'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
 const contentRoot = join(root, 'src/content/moments')
@@ -20,10 +21,9 @@ test('keeps complete colocated metadata for every semantic Moment asset', async 
     const assets = JSON.parse(
       await readFile(join(contentRoot, id, 'assets.json'), 'utf8'),
     )
-    const referencedFiles = new Set()
+    const referencedFiles = getReferencedAssetFiles({ assets, moment })
 
     for (const media of moment.media) {
-      referencedFiles.add(media.file)
       assert.doesNotMatch(media.file, /^(?:image|video)-\d/i)
       assert.ok(assets[media.file], `Missing metadata for moments/${id}/${media.file}`)
       assert.ok(assets[media.file].bytes > 0)
@@ -38,7 +38,6 @@ test('keeps complete colocated metadata for every semantic Moment asset', async 
       }
 
       if (media.poster) {
-        referencedFiles.add(media.poster)
         assert.ok(assets[media.poster], `Missing metadata for moments/${id}/${media.poster}`)
         assert.match(assets[media.poster].contentType, /^image\//)
         assert.ok(assets[media.poster].width > 0)

@@ -1,37 +1,127 @@
 {
+  "wu-hu-wan-xia-2-480w.webp": {
+    "bytes": 13202,
+    "contentType": "image/webp",
+    "etag": "488a726a677873d62c2ecb77e3779759",
+    "height": 320,
+    "width": 480
+  },
+  "wu-hu-wan-xia-2-960w.webp": {
+    "bytes": 40370,
+    "contentType": "image/webp",
+    "etag": "58bbe90cf060ae95a233720692832681",
+    "height": 640,
+    "width": 960
+  },
   "wu-hu-wan-xia-2.jpg": {
     "height": 853,
     "width": 1280,
     "bytes": 166764,
     "contentType": "image/jpeg",
-    "etag": "9e7ffc60949dc2e2f92fd4b80d32ef8a"
+    "etag": "9e7ffc60949dc2e2f92fd4b80d32ef8a",
+    "variants": [
+      "wu-hu-wan-xia-2-480w.webp",
+      "wu-hu-wan-xia-2-960w.webp"
+    ]
+  },
+  "wu-hu-wan-xia-3-480w.webp": {
+    "bytes": 16094,
+    "contentType": "image/webp",
+    "etag": "0d7afa9611629d79888a395a91f4216d",
+    "height": 320,
+    "width": 480
+  },
+  "wu-hu-wan-xia-3-960w.webp": {
+    "bytes": 58468,
+    "contentType": "image/webp",
+    "etag": "b3f26f6758319a9d9cb47addacf8d439",
+    "height": 640,
+    "width": 960
   },
   "wu-hu-wan-xia-3.jpg": {
     "height": 853,
     "width": 1280,
     "bytes": 212820,
     "contentType": "image/jpeg",
-    "etag": "a3323c9f01a804546ab46b5b4259a364"
+    "etag": "a3323c9f01a804546ab46b5b4259a364",
+    "variants": [
+      "wu-hu-wan-xia-3-480w.webp",
+      "wu-hu-wan-xia-3-960w.webp"
+    ]
+  },
+  "wu-hu-wan-xia-4-480w.webp": {
+    "bytes": 16260,
+    "contentType": "image/webp",
+    "etag": "8bb540866be0b15b8015caf6c55876ba",
+    "height": 320,
+    "width": 480
+  },
+  "wu-hu-wan-xia-4-960w.webp": {
+    "bytes": 43230,
+    "contentType": "image/webp",
+    "etag": "b600793372743c117567abec2ed71bd9",
+    "height": 640,
+    "width": 960
   },
   "wu-hu-wan-xia-4.jpg": {
     "height": 853,
     "width": 1280,
     "bytes": 175272,
     "contentType": "image/jpeg",
-    "etag": "08f6e6972df99269891f1443934a414c"
+    "etag": "08f6e6972df99269891f1443934a414c",
+    "variants": [
+      "wu-hu-wan-xia-4-480w.webp",
+      "wu-hu-wan-xia-4-960w.webp"
+    ]
+  },
+  "wu-hu-wan-xia-480w.webp": {
+    "bytes": 7058,
+    "contentType": "image/webp",
+    "etag": "cf78e2e5537c8f371e95d4b71701ef76",
+    "height": 320,
+    "width": 480
+  },
+  "wu-hu-wan-xia-5-480w.webp": {
+    "bytes": 16106,
+    "contentType": "image/webp",
+    "etag": "0f944d331a8473adec784a0d2514ff00",
+    "height": 320,
+    "width": 480
+  },
+  "wu-hu-wan-xia-5-960w.webp": {
+    "bytes": 58284,
+    "contentType": "image/webp",
+    "etag": "935dd6fc527c6842dd2fa6647b838fe6",
+    "height": 640,
+    "width": 960
   },
   "wu-hu-wan-xia-5.jpg": {
     "height": 853,
     "width": 1280,
     "bytes": 209929,
     "contentType": "image/jpeg",
-    "etag": "228c8a791975c65b2f303b75ad6dff9f"
+    "etag": "228c8a791975c65b2f303b75ad6dff9f",
+    "variants": [
+      "wu-hu-wan-xia-5-480w.webp",
+      "wu-hu-wan-xia-5-960w.webp"
+    ]
+  },
+  "wu-hu-wan-xia-960w.webp": {
+    "bytes": 17278,
+    "contentType": "image/webp",
+    "etag": "85f7bc698bed4929d5068cd41ad5a7db",
+    "height": 640,
+    "width": 960
   },
   "wu-hu-wan-xia.jpg": {
     "height": 853,
     "width": 1280,
     "bytes": 99326,
     "contentType": "image/jpeg",
-    "etag": "a259f5a9887fcbe6637792c87a27302e"
+    "etag": "a259f5a9887fcbe6637792c87a27302e",
+    "variants": [
+      "wu-hu-wan-xia-480w.webp",
+      "wu-hu-wan-xia-960w.webp"
+    ]
   }
 }

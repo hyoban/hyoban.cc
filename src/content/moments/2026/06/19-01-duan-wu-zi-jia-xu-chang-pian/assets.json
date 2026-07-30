@@ -1,51 +1,225 @@
 {
+  "duan-wu-zi-jia-xu-chang-pian-1920w.webp": {
+    "bytes": 233128,
+    "contentType": "image/webp",
+    "etag": "e8216ec56238fffc0264c321db865b61",
+    "height": 1280,
+    "width": 1920
+  },
+  "duan-wu-zi-jia-xu-chang-pian-2-1920w.webp": {
+    "bytes": 238396,
+    "contentType": "image/webp",
+    "etag": "70915615267608405c754c620a64f588",
+    "height": 1280,
+    "width": 1920
+  },
+  "duan-wu-zi-jia-xu-chang-pian-2-480w.webp": {
+    "bytes": 33308,
+    "contentType": "image/webp",
+    "etag": "c9db39eb8bf549ae41084f6b19459bce",
+    "height": 320,
+    "width": 480
+  },
+  "duan-wu-zi-jia-xu-chang-pian-2-960w.webp": {
+    "bytes": 94738,
+    "contentType": "image/webp",
+    "etag": "3354e9bc604995d9ad577020aa0ef3ff",
+    "height": 640,
+    "width": 960
+  },
   "duan-wu-zi-jia-xu-chang-pian-2.jpg": {
     "height": 1707,
     "width": 2560,
     "bytes": 501815,
     "contentType": "image/jpeg",
-    "etag": "821f44ddfffbc6fff1e4376ab6c87db3"
+    "etag": "821f44ddfffbc6fff1e4376ab6c87db3",
+    "variants": [
+      "duan-wu-zi-jia-xu-chang-pian-2-480w.webp",
+      "duan-wu-zi-jia-xu-chang-pian-2-960w.webp",
+      "duan-wu-zi-jia-xu-chang-pian-2-1920w.webp"
+    ]
+  },
+  "duan-wu-zi-jia-xu-chang-pian-3-1920w.webp": {
+    "bytes": 138804,
+    "contentType": "image/webp",
+    "etag": "f4a43ed972600096a225bf8d50eb0526",
+    "height": 1280,
+    "width": 1920
+  },
+  "duan-wu-zi-jia-xu-chang-pian-3-480w.webp": {
+    "bytes": 19648,
+    "contentType": "image/webp",
+    "etag": "94cfdcfedc5a61a4ca9ee2e55d436b93",
+    "height": 320,
+    "width": 480
+  },
+  "duan-wu-zi-jia-xu-chang-pian-3-960w.webp": {
+    "bytes": 52938,
+    "contentType": "image/webp",
+    "etag": "7fc831539118d2f6968cfcbfdc2bb0cd",
+    "height": 640,
+    "width": 960
   },
   "duan-wu-zi-jia-xu-chang-pian-3.jpg": {
     "height": 1707,
     "width": 2560,
     "bytes": 388354,
     "contentType": "image/jpeg",
-    "etag": "b245bb8e17aa2dbc694c87d2aa1623a4"
+    "etag": "b245bb8e17aa2dbc694c87d2aa1623a4",
+    "variants": [
+      "duan-wu-zi-jia-xu-chang-pian-3-480w.webp",
+      "duan-wu-zi-jia-xu-chang-pian-3-960w.webp",
+      "duan-wu-zi-jia-xu-chang-pian-3-1920w.webp"
+    ]
+  },
+  "duan-wu-zi-jia-xu-chang-pian-4-1920w.webp": {
+    "bytes": 121690,
+    "contentType": "image/webp",
+    "etag": "bb092d340ec5cfda3926430f8f09e0b9",
+    "height": 1280,
+    "width": 1920
+  },
+  "duan-wu-zi-jia-xu-chang-pian-4-480w.webp": {
+    "bytes": 21550,
+    "contentType": "image/webp",
+    "etag": "3a4fb1236f1be7c0b6310a4f5d7ce119",
+    "height": 320,
+    "width": 480
+  },
+  "duan-wu-zi-jia-xu-chang-pian-4-960w.webp": {
+    "bytes": 51776,
+    "contentType": "image/webp",
+    "etag": "eef280984168d5e2a0c5949e9bb62688",
+    "height": 640,
+    "width": 960
   },
   "duan-wu-zi-jia-xu-chang-pian-4.jpg": {
     "height": 1707,
     "width": 2560,
     "bytes": 313987,
     "contentType": "image/jpeg",
-    "etag": "50a2170285da315f5a1e0b1d6b3b2208"
+    "etag": "50a2170285da315f5a1e0b1d6b3b2208",
+    "variants": [
+      "duan-wu-zi-jia-xu-chang-pian-4-480w.webp",
+      "duan-wu-zi-jia-xu-chang-pian-4-960w.webp",
+      "duan-wu-zi-jia-xu-chang-pian-4-1920w.webp"
+    ]
+  },
+  "duan-wu-zi-jia-xu-chang-pian-480w.webp": {
+    "bytes": 23128,
+    "contentType": "image/webp",
+    "etag": "67cdc180e286664a0a4b869bc741874e",
+    "height": 320,
+    "width": 480
+  },
+  "duan-wu-zi-jia-xu-chang-pian-5-1920w.webp": {
+    "bytes": 64410,
+    "contentType": "image/webp",
+    "etag": "284a578acf3879f48da3b90ec02080e7",
+    "height": 1280,
+    "width": 1920
+  },
+  "duan-wu-zi-jia-xu-chang-pian-5-480w.webp": {
+    "bytes": 8772,
+    "contentType": "image/webp",
+    "etag": "3c7a0fb01f6c8de9a7539b152838db57",
+    "height": 320,
+    "width": 480
+  },
+  "duan-wu-zi-jia-xu-chang-pian-5-960w.webp": {
+    "bytes": 25172,
+    "contentType": "image/webp",
+    "etag": "52ba2b69258b0ce22a43318fb962f8f8",
+    "height": 640,
+    "width": 960
   },
   "duan-wu-zi-jia-xu-chang-pian-5.jpg": {
     "height": 1707,
     "width": 2560,
     "bytes": 176808,
     "contentType": "image/jpeg",
-    "etag": "75b00ce5fffd434984a9f65a945d1009"
+    "etag": "75b00ce5fffd434984a9f65a945d1009",
+    "variants": [
+      "duan-wu-zi-jia-xu-chang-pian-5-480w.webp",
+      "duan-wu-zi-jia-xu-chang-pian-5-960w.webp",
+      "duan-wu-zi-jia-xu-chang-pian-5-1920w.webp"
+    ]
+  },
+  "duan-wu-zi-jia-xu-chang-pian-6-1920w.webp": {
+    "bytes": 205590,
+    "contentType": "image/webp",
+    "etag": "83ce16f911ddad24ffa997005a7dd67b",
+    "height": 1280,
+    "width": 1920
+  },
+  "duan-wu-zi-jia-xu-chang-pian-6-480w.webp": {
+    "bytes": 37366,
+    "contentType": "image/webp",
+    "etag": "4bf781d3f1aa0790ee80bc755d895caa",
+    "height": 320,
+    "width": 480
+  },
+  "duan-wu-zi-jia-xu-chang-pian-6-960w.webp": {
+    "bytes": 93718,
+    "contentType": "image/webp",
+    "etag": "d2dfa0c78bcc42610039d1d176de244b",
+    "height": 640,
+    "width": 960
   },
   "duan-wu-zi-jia-xu-chang-pian-6.jpg": {
     "height": 1707,
     "width": 2560,
     "bytes": 452632,
     "contentType": "image/jpeg",
-    "etag": "83c7e0bcf8775583f34bfe0842fa8dca"
+    "etag": "83c7e0bcf8775583f34bfe0842fa8dca",
+    "variants": [
+      "duan-wu-zi-jia-xu-chang-pian-6-480w.webp",
+      "duan-wu-zi-jia-xu-chang-pian-6-960w.webp",
+      "duan-wu-zi-jia-xu-chang-pian-6-1920w.webp"
+    ]
+  },
+  "duan-wu-zi-jia-xu-chang-pian-7-480w.webp": {
+    "bytes": 48690,
+    "contentType": "image/webp",
+    "etag": "9841fa04d76afc4789ec0fe5732cbfba",
+    "height": 720,
+    "width": 480
+  },
+  "duan-wu-zi-jia-xu-chang-pian-7-960w.webp": {
+    "bytes": 125842,
+    "contentType": "image/webp",
+    "etag": "23b08f7cfce04afbc83cc0e2ddc6c92e",
+    "height": 1440,
+    "width": 960
   },
   "duan-wu-zi-jia-xu-chang-pian-7.jpg": {
     "height": 2560,
     "width": 1707,
     "bytes": 429830,
     "contentType": "image/jpeg",
-    "etag": "ca00a30e12ffa4dc99cb827c0f5328f0"
+    "etag": "ca00a30e12ffa4dc99cb827c0f5328f0",
+    "variants": [
+      "duan-wu-zi-jia-xu-chang-pian-7-480w.webp",
+      "duan-wu-zi-jia-xu-chang-pian-7-960w.webp"
+    ]
+  },
+  "duan-wu-zi-jia-xu-chang-pian-960w.webp": {
+    "bytes": 77836,
+    "contentType": "image/webp",
+    "etag": "23528f6fcd7037a8bbdd188e21fcb2c6",
+    "height": 640,
+    "width": 960
   },
   "duan-wu-zi-jia-xu-chang-pian.jpg": {
     "height": 1707,
     "width": 2560,
     "bytes": 504981,
     "contentType": "image/jpeg",
-    "etag": "c3ac5b45aa2c388bfcab641ad70f1ca0"
+    "etag": "c3ac5b45aa2c388bfcab641ad70f1ca0",
+    "variants": [
+      "duan-wu-zi-jia-xu-chang-pian-480w.webp",
+      "duan-wu-zi-jia-xu-chang-pian-960w.webp",
+      "duan-wu-zi-jia-xu-chang-pian-1920w.webp"
+    ]
   }
 }

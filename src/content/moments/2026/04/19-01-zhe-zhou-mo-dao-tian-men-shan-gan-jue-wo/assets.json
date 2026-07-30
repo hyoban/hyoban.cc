@@ -1,30 +1,126 @@
 {
+  "zhe-zhou-mo-dao-tian-men-shan-gan-jue-wo-2-1920w.webp": {
+    "bytes": 640266,
+    "contentType": "image/webp",
+    "etag": "3ed73a15ce2e7abb82df8f296b0a4f72",
+    "height": 1440,
+    "width": 1920
+  },
+  "zhe-zhou-mo-dao-tian-men-shan-gan-jue-wo-2-480w.webp": {
+    "bytes": 46486,
+    "contentType": "image/webp",
+    "etag": "6fa188d91c6befb3d8f8aa598a539fd4",
+    "height": 360,
+    "width": 480
+  },
+  "zhe-zhou-mo-dao-tian-men-shan-gan-jue-wo-2-960w.webp": {
+    "bytes": 179744,
+    "contentType": "image/webp",
+    "etag": "a16e56ee80022de610098642faf7b409",
+    "height": 720,
+    "width": 960
+  },
   "zhe-zhou-mo-dao-tian-men-shan-gan-jue-wo-2.jpg": {
     "height": 1536,
     "width": 2048,
     "bytes": 883449,
     "contentType": "image/jpeg",
-    "etag": "884d41d02db15a0919e7f9e5cc92efcf"
+    "etag": "884d41d02db15a0919e7f9e5cc92efcf",
+    "variants": [
+      "zhe-zhou-mo-dao-tian-men-shan-gan-jue-wo-2-480w.webp",
+      "zhe-zhou-mo-dao-tian-men-shan-gan-jue-wo-2-960w.webp",
+      "zhe-zhou-mo-dao-tian-men-shan-gan-jue-wo-2-1920w.webp"
+    ]
+  },
+  "zhe-zhou-mo-dao-tian-men-shan-gan-jue-wo-3-1920w.webp": {
+    "bytes": 806996,
+    "contentType": "image/webp",
+    "etag": "a2fe4ef5b3979c3c3693b68cac0d044e",
+    "height": 1440,
+    "width": 1920
+  },
+  "zhe-zhou-mo-dao-tian-men-shan-gan-jue-wo-3-480w.webp": {
+    "bytes": 54784,
+    "contentType": "image/webp",
+    "etag": "ae43384e71b3e7cc81803ccfa2505288",
+    "height": 360,
+    "width": 480
+  },
+  "zhe-zhou-mo-dao-tian-men-shan-gan-jue-wo-3-960w.webp": {
+    "bytes": 213398,
+    "contentType": "image/webp",
+    "etag": "a99723822d34d4791010160247d7e2b4",
+    "height": 720,
+    "width": 960
   },
   "zhe-zhou-mo-dao-tian-men-shan-gan-jue-wo-3.jpg": {
     "height": 1536,
     "width": 2048,
     "bytes": 1042363,
     "contentType": "image/jpeg",
-    "etag": "f397f49c31215bc6f724f5dbd95fe4a6"
+    "etag": "f397f49c31215bc6f724f5dbd95fe4a6",
+    "variants": [
+      "zhe-zhou-mo-dao-tian-men-shan-gan-jue-wo-3-480w.webp",
+      "zhe-zhou-mo-dao-tian-men-shan-gan-jue-wo-3-960w.webp",
+      "zhe-zhou-mo-dao-tian-men-shan-gan-jue-wo-3-1920w.webp"
+    ]
+  },
+  "zhe-zhou-mo-dao-tian-men-shan-gan-jue-wo-4-1920w.webp": {
+    "bytes": 927680,
+    "contentType": "image/webp",
+    "etag": "97e630607b809153f228c0c3c6cf787b",
+    "height": 1440,
+    "width": 1920
+  },
+  "zhe-zhou-mo-dao-tian-men-shan-gan-jue-wo-4-480w.webp": {
+    "bytes": 68512,
+    "contentType": "image/webp",
+    "etag": "ba0de9238d0a498b89ff447717b63e83",
+    "height": 360,
+    "width": 480
+  },
+  "zhe-zhou-mo-dao-tian-men-shan-gan-jue-wo-4-960w.webp": {
+    "bytes": 266386,
+    "contentType": "image/webp",
+    "etag": "a44968f931f5fed22dab9b95d938a772",
+    "height": 720,
+    "width": 960
   },
   "zhe-zhou-mo-dao-tian-men-shan-gan-jue-wo-4.jpg": {
     "height": 1536,
     "width": 2048,
     "bytes": 1196373,
     "contentType": "image/jpeg",
-    "etag": "60a0ae467273bc8815f77b4b4f9df1c8"
+    "etag": "60a0ae467273bc8815f77b4b4f9df1c8",
+    "variants": [
+      "zhe-zhou-mo-dao-tian-men-shan-gan-jue-wo-4-480w.webp",
+      "zhe-zhou-mo-dao-tian-men-shan-gan-jue-wo-4-960w.webp",
+      "zhe-zhou-mo-dao-tian-men-shan-gan-jue-wo-4-1920w.webp"
+    ]
+  },
+  "zhe-zhou-mo-dao-tian-men-shan-gan-jue-wo-480w.webp": {
+    "bytes": 54354,
+    "contentType": "image/webp",
+    "etag": "6b0002ff78c3c7da3196df98a7e54b10",
+    "height": 640,
+    "width": 480
+  },
+  "zhe-zhou-mo-dao-tian-men-shan-gan-jue-wo-960w.webp": {
+    "bytes": 235108,
+    "contentType": "image/webp",
+    "etag": "117439fab387171d9c96be5904648d83",
+    "height": 1280,
+    "width": 960
   },
   "zhe-zhou-mo-dao-tian-men-shan-gan-jue-wo.jpg": {
     "height": 2048,
     "width": 1536,
     "bytes": 744139,
     "contentType": "image/jpeg",
-    "etag": "260de01a5a0ed562fe5b0ebb4a976cfd"
+    "etag": "260de01a5a0ed562fe5b0ebb4a976cfd",
+    "variants": [
+      "zhe-zhou-mo-dao-tian-men-shan-gan-jue-wo-480w.webp",
+      "zhe-zhou-mo-dao-tian-men-shan-gan-jue-wo-960w.webp"
+    ]
   }
 }

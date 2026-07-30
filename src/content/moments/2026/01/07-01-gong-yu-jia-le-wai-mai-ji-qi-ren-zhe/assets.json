@@ -1,16 +1,52 @@
 {
+  "gong-yu-jia-le-wai-mai-ji-qi-ren-zhe-2-480w.webp": {
+    "bytes": 10484,
+    "contentType": "image/webp",
+    "etag": "e62d03051fc7be60ec5b115da1cb7ced",
+    "height": 640,
+    "width": 480
+  },
+  "gong-yu-jia-le-wai-mai-ji-qi-ren-zhe-2-960w.webp": {
+    "bytes": 28980,
+    "contentType": "image/webp",
+    "etag": "f6db313923b7706a1a24bca361e556b7",
+    "height": 1280,
+    "width": 960
+  },
   "gong-yu-jia-le-wai-mai-ji-qi-ren-zhe-2.jpg": {
     "height": 2048,
     "width": 1536,
     "bytes": 230608,
     "contentType": "image/jpeg",
-    "etag": "d75bbce8d91f810c5aec96839d1a9225"
+    "etag": "d75bbce8d91f810c5aec96839d1a9225",
+    "variants": [
+      "gong-yu-jia-le-wai-mai-ji-qi-ren-zhe-2-480w.webp",
+      "gong-yu-jia-le-wai-mai-ji-qi-ren-zhe-2-960w.webp"
+    ]
+  },
+  "gong-yu-jia-le-wai-mai-ji-qi-ren-zhe-480w.webp": {
+    "bytes": 27484,
+    "contentType": "image/webp",
+    "etag": "d4c810fb4fb679e3d20e3964f1ca2e20",
+    "height": 640,
+    "width": 480
+  },
+  "gong-yu-jia-le-wai-mai-ji-qi-ren-zhe-960w.webp": {
+    "bytes": 79714,
+    "contentType": "image/webp",
+    "etag": "036ed650c3556d17882f1e62ca988008",
+    "height": 1280,
+    "width": 960
   },
   "gong-yu-jia-le-wai-mai-ji-qi-ren-zhe.jpg": {
     "height": 2048,
     "width": 1536,
     "bytes": 345045,
     "contentType": "image/jpeg",
-    "etag": "9edcdc6d8b0f9730c92121b7772a45e4"
+    "etag": "9edcdc6d8b0f9730c92121b7772a45e4",
+    "variants": [
+      "gong-yu-jia-le-wai-mai-ji-qi-ren-zhe-480w.webp",
+      "gong-yu-jia-le-wai-mai-ji-qi-ren-zhe-960w.webp"
+    ]
   }
 }

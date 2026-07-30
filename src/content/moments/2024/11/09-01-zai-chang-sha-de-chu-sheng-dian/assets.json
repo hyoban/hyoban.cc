@@ -1,9 +1,27 @@
 {
+  "zai-chang-sha-de-chu-sheng-dian-480w.webp": {
+    "bytes": 104618,
+    "contentType": "image/webp",
+    "etag": "1598b5e68843851f4552335fa0890991",
+    "height": 853,
+    "width": 480
+  },
+  "zai-chang-sha-de-chu-sheng-dian-960w.webp": {
+    "bytes": 402638,
+    "contentType": "image/webp",
+    "etag": "aa4bd6b37a3f698e4a578bf8ae15c42e",
+    "height": 1707,
+    "width": 960
+  },
   "zai-chang-sha-de-chu-sheng-dian.jpg": {
     "height": 2048,
     "width": 1152,
     "bytes": 641883,
     "contentType": "image/jpeg",
-    "etag": "3db20adc55cd670a6bc792853b2702ed"
+    "etag": "3db20adc55cd670a6bc792853b2702ed",
+    "variants": [
+      "zai-chang-sha-de-chu-sheng-dian-480w.webp",
+      "zai-chang-sha-de-chu-sheng-dian-960w.webp"
+    ]
   }
 }

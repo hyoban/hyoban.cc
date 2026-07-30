@@ -82,3 +82,38 @@ test('rejects occurrence timestamps without an explicit offset', () => {
     /Invalid ISO datetime/,
   )
 })
+
+test('keeps image and video fields mutually exclusive', () => {
+  const imageWithPoster = [
+    '---',
+    'occurredAt: "2026-07-15"',
+    'media:',
+    '  - type: image',
+    '    file: "lake.jpg"',
+    '    poster: "lake-poster.jpg"',
+    '    alt: "A lake"',
+    '---',
+  ].join('\n')
+
+  assert.throws(
+    () => parseMomentDocument(imageWithPoster, { id: '2026/07/15-01-lake' }),
+    /Unrecognized key/,
+  )
+})
+
+test('rejects unsafe or type-mismatched media filenames', () => {
+  const videoWithImageFile = [
+    '---',
+    'occurredAt: "2026-07-15"',
+    'media:',
+    '  - type: video',
+    '    file: "../clip.jpg"',
+    '    alt: "A clip"',
+    '---',
+  ].join('\n')
+
+  assert.throws(
+    () => parseMomentDocument(videoWithImageFile, { id: '2026/07/15-01-clip' }),
+    /safe kebab-case semantic video filename/,
+  )
+})

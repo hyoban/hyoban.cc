@@ -1,23 +1,101 @@
 {
+  "zhi-chi-le-tablet-de-bu-ju-1920w.webp": {
+    "bytes": 125666,
+    "contentType": "image/webp",
+    "etag": "d67274483516a42206b759560d57721d",
+    "height": 1334,
+    "width": 1920
+  },
+  "zhi-chi-le-tablet-de-bu-ju-2-1920w.webp": {
+    "bytes": 107280,
+    "contentType": "image/webp",
+    "etag": "f566c04f36b51b6bb304228d62a614d0",
+    "height": 1334,
+    "width": 1920
+  },
+  "zhi-chi-le-tablet-de-bu-ju-2-480w.webp": {
+    "bytes": 17300,
+    "contentType": "image/webp",
+    "etag": "3d705a515235debf9d17c46351cf8c08",
+    "height": 334,
+    "width": 480
+  },
+  "zhi-chi-le-tablet-de-bu-ju-2-960w.webp": {
+    "bytes": 47214,
+    "contentType": "image/webp",
+    "etag": "17fe636b1812f59899ed8a33f0761e24",
+    "height": 667,
+    "width": 960
+  },
   "zhi-chi-le-tablet-de-bu-ju-2.jpg": {
     "height": 1640,
     "width": 2360,
     "bytes": 287915,
     "contentType": "image/jpeg",
-    "etag": "c0adf9a808b2a8d94ab9977c9ed2d8f5"
+    "etag": "c0adf9a808b2a8d94ab9977c9ed2d8f5",
+    "variants": [
+      "zhi-chi-le-tablet-de-bu-ju-2-480w.webp",
+      "zhi-chi-le-tablet-de-bu-ju-2-960w.webp",
+      "zhi-chi-le-tablet-de-bu-ju-2-1920w.webp"
+    ]
+  },
+  "zhi-chi-le-tablet-de-bu-ju-3-1920w.webp": {
+    "bytes": 206290,
+    "contentType": "image/webp",
+    "etag": "718d395577a2d83dfc033fa31c81f7e4",
+    "height": 1334,
+    "width": 1920
+  },
+  "zhi-chi-le-tablet-de-bu-ju-3-480w.webp": {
+    "bytes": 26478,
+    "contentType": "image/webp",
+    "etag": "3d144cacdc164ce80c43ec1b07fb6c29",
+    "height": 334,
+    "width": 480
+  },
+  "zhi-chi-le-tablet-de-bu-ju-3-960w.webp": {
+    "bytes": 82442,
+    "contentType": "image/webp",
+    "etag": "b7b3f9a737cc6f7916d210e454789ca3",
+    "height": 667,
+    "width": 960
   },
   "zhi-chi-le-tablet-de-bu-ju-3.jpg": {
     "height": 1640,
     "width": 2360,
     "bytes": 478704,
     "contentType": "image/jpeg",
-    "etag": "cc5f5e9a560f94000e7b57c0db28b990"
+    "etag": "cc5f5e9a560f94000e7b57c0db28b990",
+    "variants": [
+      "zhi-chi-le-tablet-de-bu-ju-3-480w.webp",
+      "zhi-chi-le-tablet-de-bu-ju-3-960w.webp",
+      "zhi-chi-le-tablet-de-bu-ju-3-1920w.webp"
+    ]
+  },
+  "zhi-chi-le-tablet-de-bu-ju-480w.webp": {
+    "bytes": 16278,
+    "contentType": "image/webp",
+    "etag": "8ce640799e222b724d61890cc5396e2d",
+    "height": 334,
+    "width": 480
+  },
+  "zhi-chi-le-tablet-de-bu-ju-960w.webp": {
+    "bytes": 49358,
+    "contentType": "image/webp",
+    "etag": "bf96fcc6d638ff485ed293808822b980",
+    "height": 667,
+    "width": 960
   },
   "zhi-chi-le-tablet-de-bu-ju.jpg": {
     "height": 1640,
     "width": 2360,
     "bytes": 300148,
     "contentType": "image/jpeg",
-    "etag": "dcdae907f2da2a9d300774dd3484f6a6"
+    "etag": "dcdae907f2da2a9d300774dd3484f6a6",
+    "variants": [
+      "zhi-chi-le-tablet-de-bu-ju-480w.webp",
+      "zhi-chi-le-tablet-de-bu-ju-960w.webp",
+      "zhi-chi-le-tablet-de-bu-ju-1920w.webp"
+    ]
   }
 }

@@ -1,9 +1,27 @@
 {
+  "im-basically-still-in-the-first-stage-of-the-picture-480w.webp": {
+    "bytes": 28224,
+    "contentType": "image/webp",
+    "etag": "bc7ca707fa9af1ba2f3685e414683095",
+    "height": 477,
+    "width": 480
+  },
+  "im-basically-still-in-the-first-stage-of-the-picture-960w.webp": {
+    "bytes": 58732,
+    "contentType": "image/webp",
+    "etag": "cb5fb38c51394f75f79604e54c4d654f",
+    "height": 953,
+    "width": 960
+  },
   "im-basically-still-in-the-first-stage-of-the-picture.jpg": {
     "height": 1171,
     "width": 1179,
     "bytes": 134176,
     "contentType": "image/jpeg",
-    "etag": "9b958f0094712faf0cb52e609a18e97b"
+    "etag": "9b958f0094712faf0cb52e609a18e97b",
+    "variants": [
+      "im-basically-still-in-the-first-stage-of-the-picture-480w.webp",
+      "im-basically-still-in-the-first-stage-of-the-picture-960w.webp"
+    ]
   }
 }

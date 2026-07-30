@@ -1,23 +1,69 @@
 {
+  "jie-shao-yi-xia-wo-de-chuang-che-fang-an-2-480w.webp": {
+    "bytes": 22746,
+    "contentType": "image/webp",
+    "etag": "ea8ee015ad93ed4f0c5f1f2c4cf5a668",
+    "height": 360,
+    "width": 480
+  },
+  "jie-shao-yi-xia-wo-de-chuang-che-fang-an-2-960w.webp": {
+    "bytes": 100640,
+    "contentType": "image/webp",
+    "etag": "2ec1de41f2e456bbcc394950d4a72b96",
+    "height": 720,
+    "width": 960
+  },
   "jie-shao-yi-xia-wo-de-chuang-che-fang-an-2.jpg": {
     "height": 960,
     "width": 1280,
     "bytes": 186501,
     "contentType": "image/jpeg",
-    "etag": "2337db483873f67bb351add01d4212ce"
+    "etag": "2337db483873f67bb351add01d4212ce",
+    "variants": [
+      "jie-shao-yi-xia-wo-de-chuang-che-fang-an-2-480w.webp",
+      "jie-shao-yi-xia-wo-de-chuang-che-fang-an-2-960w.webp"
+    ]
+  },
+  "jie-shao-yi-xia-wo-de-chuang-che-fang-an-3-480w.webp": {
+    "bytes": 22352,
+    "contentType": "image/webp",
+    "etag": "25c39bff1f7941bccaab4923ab04d7ce",
+    "height": 360,
+    "width": 480
+  },
+  "jie-shao-yi-xia-wo-de-chuang-che-fang-an-3-960w.webp": {
+    "bytes": 89890,
+    "contentType": "image/webp",
+    "etag": "9e41f34e0fe0806e7cce1e54198c61b1",
+    "height": 720,
+    "width": 960
   },
   "jie-shao-yi-xia-wo-de-chuang-che-fang-an-3.jpg": {
     "height": 960,
     "width": 1280,
     "bytes": 170626,
     "contentType": "image/jpeg",
-    "etag": "40fb89ab4a12a8c66a1a149ced0a58a9"
+    "etag": "40fb89ab4a12a8c66a1a149ced0a58a9",
+    "variants": [
+      "jie-shao-yi-xia-wo-de-chuang-che-fang-an-3-480w.webp",
+      "jie-shao-yi-xia-wo-de-chuang-che-fang-an-3-960w.webp"
+    ]
+  },
+  "jie-shao-yi-xia-wo-de-chuang-che-fang-an-480w.webp": {
+    "bytes": 37442,
+    "contentType": "image/webp",
+    "etag": "99d03c8c2f74de4e51f10aad7c1dc040",
+    "height": 640,
+    "width": 480
   },
   "jie-shao-yi-xia-wo-de-chuang-che-fang-an.jpg": {
     "height": 1280,
     "width": 960,
     "bytes": 148559,
     "contentType": "image/jpeg",
-    "etag": "896982288b4bcf56e25f85264b9a998f"
+    "etag": "896982288b4bcf56e25f85264b9a998f",
+    "variants": [
+      "jie-shao-yi-xia-wo-de-chuang-che-fang-an-480w.webp"
+    ]
   }
 }

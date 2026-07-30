@@ -1,9 +1,27 @@
 {
+  "di-yi-ci-lai-yu-niao-ji-480w.webp": {
+    "bytes": 44442,
+    "contentType": "image/webp",
+    "etag": "de7ffee89e9dc03c49e4e2cbb335325a",
+    "height": 853,
+    "width": 480
+  },
+  "di-yi-ci-lai-yu-niao-ji-960w.webp": {
+    "bytes": 130890,
+    "contentType": "image/webp",
+    "etag": "3424bbb88335ee663cc9ed755d31b57e",
+    "height": 1707,
+    "width": 960
+  },
   "di-yi-ci-lai-yu-niao-ji.jpg": {
     "height": 2048,
     "width": 1152,
     "bytes": 296207,
     "contentType": "image/jpeg",
-    "etag": "3e4a2e5e99a90f45c9172ff55216c1ad"
+    "etag": "3e4a2e5e99a90f45c9172ff55216c1ad",
+    "variants": [
+      "di-yi-ci-lai-yu-niao-ji-480w.webp",
+      "di-yi-ci-lai-yu-niao-ji-960w.webp"
+    ]
   }
 }

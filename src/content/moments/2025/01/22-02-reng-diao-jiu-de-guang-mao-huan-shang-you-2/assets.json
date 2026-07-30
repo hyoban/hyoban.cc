@@ -1,9 +1,27 @@
 {
+  "reng-diao-jiu-de-guang-mao-huan-shang-you-2-480w.webp": {
+    "bytes": 2444,
+    "contentType": "image/webp",
+    "etag": "8cee68a11a7391bc6bbb5f952809d0f3",
+    "height": 89,
+    "width": 480
+  },
+  "reng-diao-jiu-de-guang-mao-huan-shang-you-2-960w.webp": {
+    "bytes": 5442,
+    "contentType": "image/webp",
+    "etag": "feea969b03506d57da2efaae3b222258",
+    "height": 177,
+    "width": 960
+  },
   "reng-diao-jiu-de-guang-mao-huan-shang-you-2.jpg": {
     "height": 284,
     "width": 1538,
     "bytes": 21089,
     "contentType": "image/jpeg",
-    "etag": "7921ff8a2f29609a1518f2bdb0cb62ea"
+    "etag": "7921ff8a2f29609a1518f2bdb0cb62ea",
+    "variants": [
+      "reng-diao-jiu-de-guang-mao-huan-shang-you-2-480w.webp",
+      "reng-diao-jiu-de-guang-mao-huan-shang-you-2-960w.webp"
+    ]
   }
 }

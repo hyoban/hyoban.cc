@@ -1,58 +1,202 @@
 {
+  "fangxing-lake-2-480w.webp": {
+    "bytes": 27158,
+    "contentType": "image/webp",
+    "etag": "f55d3b27c8af9ffe02a27d718b5fcf52",
+    "height": 320,
+    "width": 480
+  },
+  "fangxing-lake-2-960w.webp": {
+    "bytes": 82224,
+    "contentType": "image/webp",
+    "etag": "710f027ce73c71976d399d8d05bdc553",
+    "height": 640,
+    "width": 960
+  },
   "fangxing-lake-2.webp": {
     "height": 1280,
     "width": 1920,
     "bytes": 250880,
     "contentType": "image/webp",
-    "etag": "0c061d0a9a31198357a86c2a37d6a037"
+    "etag": "0c061d0a9a31198357a86c2a37d6a037",
+    "variants": [
+      "fangxing-lake-2-480w.webp",
+      "fangxing-lake-2-960w.webp"
+    ]
+  },
+  "fangxing-lake-3-480w.webp": {
+    "bytes": 26672,
+    "contentType": "image/webp",
+    "etag": "fa37fab71edcf13e4dc40356b1b13525",
+    "height": 320,
+    "width": 480
+  },
+  "fangxing-lake-3-960w.webp": {
+    "bytes": 82838,
+    "contentType": "image/webp",
+    "etag": "77fe59a9edb1047ccaa9b8b8e8884ce7",
+    "height": 640,
+    "width": 960
   },
   "fangxing-lake-3.webp": {
     "height": 1280,
     "width": 1920,
     "bytes": 253350,
     "contentType": "image/webp",
-    "etag": "2000e327ad97f0459a5b2fd3e4b9609d"
+    "etag": "2000e327ad97f0459a5b2fd3e4b9609d",
+    "variants": [
+      "fangxing-lake-3-480w.webp",
+      "fangxing-lake-3-960w.webp"
+    ]
+  },
+  "fangxing-lake-4-480w.webp": {
+    "bytes": 30324,
+    "contentType": "image/webp",
+    "etag": "25f5ac4c7a9848a06f548e17e58b62ea",
+    "height": 320,
+    "width": 480
+  },
+  "fangxing-lake-4-960w.webp": {
+    "bytes": 119322,
+    "contentType": "image/webp",
+    "etag": "b32ac16a53c693ff070c268a657167eb",
+    "height": 640,
+    "width": 960
   },
   "fangxing-lake-4.webp": {
     "height": 1280,
     "width": 1920,
     "bytes": 492910,
     "contentType": "image/webp",
-    "etag": "3bc16cace14d71cc7a456ae52b583227"
+    "etag": "3bc16cace14d71cc7a456ae52b583227",
+    "variants": [
+      "fangxing-lake-4-480w.webp",
+      "fangxing-lake-4-960w.webp"
+    ]
+  },
+  "fangxing-lake-480w.webp": {
+    "bytes": 12234,
+    "contentType": "image/webp",
+    "etag": "34c2278429fe713b7e10b076f0e3fe7c",
+    "height": 320,
+    "width": 480
+  },
+  "fangxing-lake-5-480w.webp": {
+    "bytes": 38426,
+    "contentType": "image/webp",
+    "etag": "9b552d9b2d8e238462de1a4a37e0cc80",
+    "height": 320,
+    "width": 480
+  },
+  "fangxing-lake-5-960w.webp": {
+    "bytes": 126480,
+    "contentType": "image/webp",
+    "etag": "c7955c2adb05dfbcdbf14c0e9aeb5023",
+    "height": 640,
+    "width": 960
   },
   "fangxing-lake-5.webp": {
     "height": 1280,
     "width": 1920,
     "bytes": 396916,
     "contentType": "image/webp",
-    "etag": "5cf0713d36de9517afe3c8032669ee99"
+    "etag": "5cf0713d36de9517afe3c8032669ee99",
+    "variants": [
+      "fangxing-lake-5-480w.webp",
+      "fangxing-lake-5-960w.webp"
+    ]
+  },
+  "fangxing-lake-6-480w.webp": {
+    "bytes": 49666,
+    "contentType": "image/webp",
+    "etag": "36b053310820b78a3377ee7b57115e80",
+    "height": 320,
+    "width": 480
+  },
+  "fangxing-lake-6-960w.webp": {
+    "bytes": 156564,
+    "contentType": "image/webp",
+    "etag": "6197d3055a93b35ee15fd47f83dd815f",
+    "height": 640,
+    "width": 960
   },
   "fangxing-lake-6.webp": {
     "height": 1280,
     "width": 1920,
     "bytes": 475738,
     "contentType": "image/webp",
-    "etag": "bd2b3af254ac776aadd07b607af073fb"
+    "etag": "bd2b3af254ac776aadd07b607af073fb",
+    "variants": [
+      "fangxing-lake-6-480w.webp",
+      "fangxing-lake-6-960w.webp"
+    ]
+  },
+  "fangxing-lake-7-480w.webp": {
+    "bytes": 42238,
+    "contentType": "image/webp",
+    "etag": "69b350f876ef4e2932389f2fb789fb35",
+    "height": 320,
+    "width": 480
+  },
+  "fangxing-lake-7-960w.webp": {
+    "bytes": 190136,
+    "contentType": "image/webp",
+    "etag": "8e5e965c5b739893e7a6ffacb73cbd01",
+    "height": 640,
+    "width": 960
   },
   "fangxing-lake-7.webp": {
     "height": 1280,
     "width": 1920,
     "bytes": 817506,
     "contentType": "image/webp",
-    "etag": "7b727e8c315ae38ed2be1e287e7efb6e"
+    "etag": "7b727e8c315ae38ed2be1e287e7efb6e",
+    "variants": [
+      "fangxing-lake-7-480w.webp",
+      "fangxing-lake-7-960w.webp"
+    ]
+  },
+  "fangxing-lake-8-480w.webp": {
+    "bytes": 64170,
+    "contentType": "image/webp",
+    "etag": "f84ece909e16070e56f41292587288c4",
+    "height": 320,
+    "width": 480
+  },
+  "fangxing-lake-8-960w.webp": {
+    "bytes": 246578,
+    "contentType": "image/webp",
+    "etag": "bd2aefdcefa4f271ddf7843eac43e1a5",
+    "height": 640,
+    "width": 960
   },
   "fangxing-lake-8.webp": {
     "height": 1280,
     "width": 1920,
     "bytes": 884540,
     "contentType": "image/webp",
-    "etag": "622e2aa2bca1d340da9141c5060bd01b"
+    "etag": "622e2aa2bca1d340da9141c5060bd01b",
+    "variants": [
+      "fangxing-lake-8-480w.webp",
+      "fangxing-lake-8-960w.webp"
+    ]
+  },
+  "fangxing-lake-960w.webp": {
+    "bytes": 27928,
+    "contentType": "image/webp",
+    "etag": "ef42ae993452a47f226e521c3f0b7e3d",
+    "height": 640,
+    "width": 960
   },
   "fangxing-lake.webp": {
     "height": 1280,
     "width": 1920,
     "bytes": 72538,
     "contentType": "image/webp",
-    "etag": "ca68f711348563626484dae70d8ac01a"
+    "etag": "ca68f711348563626484dae70d8ac01a",
+    "variants": [
+      "fangxing-lake-480w.webp",
+      "fangxing-lake-960w.webp"
+    ]
   }
 }

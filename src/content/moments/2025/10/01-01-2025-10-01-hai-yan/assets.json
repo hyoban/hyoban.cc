@@ -1,23 +1,93 @@
 {
+  "2025-10-01-hai-yan-2-1920w.webp": {
+    "bytes": 250358,
+    "contentType": "image/webp",
+    "etag": "92199b761a84a4b8f957996e9c0f1d50",
+    "height": 1440,
+    "width": 1920
+  },
+  "2025-10-01-hai-yan-2-480w.webp": {
+    "bytes": 31824,
+    "contentType": "image/webp",
+    "etag": "9bd095694a51af06d11c9b1f4cd42666",
+    "height": 360,
+    "width": 480
+  },
+  "2025-10-01-hai-yan-2-960w.webp": {
+    "bytes": 92428,
+    "contentType": "image/webp",
+    "etag": "bb1b3b78fba89164ca2fcff9e6cc4918",
+    "height": 720,
+    "width": 960
+  },
   "2025-10-01-hai-yan-2.jpg": {
     "height": 1920,
     "width": 2560,
     "bytes": 544916,
     "contentType": "image/jpeg",
-    "etag": "b8638b7ac539cab424fdf16d450c4fff"
+    "etag": "b8638b7ac539cab424fdf16d450c4fff",
+    "variants": [
+      "2025-10-01-hai-yan-2-480w.webp",
+      "2025-10-01-hai-yan-2-960w.webp",
+      "2025-10-01-hai-yan-2-1920w.webp"
+    ]
+  },
+  "2025-10-01-hai-yan-3-1920w.webp": {
+    "bytes": 134314,
+    "contentType": "image/webp",
+    "etag": "68301a1f46b1d24934e4bb7f3060d124",
+    "height": 1440,
+    "width": 1920
+  },
+  "2025-10-01-hai-yan-3-480w.webp": {
+    "bytes": 11412,
+    "contentType": "image/webp",
+    "etag": "97bd6c9c40ec9ab7cc4835ddc3a7236e",
+    "height": 360,
+    "width": 480
+  },
+  "2025-10-01-hai-yan-3-960w.webp": {
+    "bytes": 42682,
+    "contentType": "image/webp",
+    "etag": "12d58d2c4b32c96b4601cd8e23864865",
+    "height": 720,
+    "width": 960
   },
   "2025-10-01-hai-yan-3.jpg": {
     "height": 1920,
     "width": 2560,
     "bytes": 307037,
     "contentType": "image/jpeg",
-    "etag": "dfb3f4c382a6b2dad1a640706408e886"
+    "etag": "dfb3f4c382a6b2dad1a640706408e886",
+    "variants": [
+      "2025-10-01-hai-yan-3-480w.webp",
+      "2025-10-01-hai-yan-3-960w.webp",
+      "2025-10-01-hai-yan-3-1920w.webp"
+    ]
+  },
+  "2025-10-01-hai-yan-480w.webp": {
+    "bytes": 10218,
+    "contentType": "image/webp",
+    "etag": "94254ce015b2637db68a307f2b9997fe",
+    "height": 640,
+    "width": 480
+  },
+  "2025-10-01-hai-yan-960w.webp": {
+    "bytes": 25436,
+    "contentType": "image/webp",
+    "etag": "4db51af9764d2cb569a8312488378717",
+    "height": 1280,
+    "width": 960
   },
   "2025-10-01-hai-yan.jpg": {
     "height": 2560,
     "width": 1920,
     "bytes": 156565,
     "contentType": "image/jpeg",
-    "etag": "aeb81275596f12edd34a061ad442dee2"
+    "etag": "aeb81275596f12edd34a061ad442dee2",
+    "variants": [
+      "2025-10-01-hai-yan-480w.webp",
+      "2025-10-01-hai-yan-960w.webp"
+    ]
   }
 }

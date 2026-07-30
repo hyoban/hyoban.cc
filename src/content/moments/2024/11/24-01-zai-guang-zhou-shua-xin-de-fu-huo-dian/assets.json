@@ -1,9 +1,27 @@
 {
+  "zai-guang-zhou-shua-xin-de-fu-huo-dian-480w.webp": {
+    "bytes": 121256,
+    "contentType": "image/webp",
+    "etag": "50feaa71cbbfe67011b5e3b6e8bb3b3b",
+    "height": 853,
+    "width": 480
+  },
+  "zai-guang-zhou-shua-xin-de-fu-huo-dian-960w.webp": {
+    "bytes": 461844,
+    "contentType": "image/webp",
+    "etag": "4150073ef6e3195384f1593f91cd71d3",
+    "height": 1707,
+    "width": 960
+  },
   "zai-guang-zhou-shua-xin-de-fu-huo-dian.jpg": {
     "height": 2048,
     "width": 1152,
     "bytes": 726890,
     "contentType": "image/jpeg",
-    "etag": "fd0450fd5cca12ef8c020531fd5b3467"
+    "etag": "fd0450fd5cca12ef8c020531fd5b3467",
+    "variants": [
+      "zai-guang-zhou-shua-xin-de-fu-huo-dian-480w.webp",
+      "zai-guang-zhou-shua-xin-de-fu-huo-dian-960w.webp"
+    ]
   }
 }

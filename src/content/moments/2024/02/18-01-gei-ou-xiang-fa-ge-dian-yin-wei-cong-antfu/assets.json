@@ -1,9 +1,27 @@
 {
+  "gei-ou-xiang-fa-ge-dian-yin-wei-cong-antfu-480w.webp": {
+    "bytes": 5294,
+    "contentType": "image/webp",
+    "etag": "daf9112a16d7aa16fad9c0de3f69f319",
+    "height": 302,
+    "width": 480
+  },
+  "gei-ou-xiang-fa-ge-dian-yin-wei-cong-antfu-960w.webp": {
+    "bytes": 11992,
+    "contentType": "image/webp",
+    "etag": "51f1897525b9b9b445609f67451e2928",
+    "height": 605,
+    "width": 960
+  },
   "gei-ou-xiang-fa-ge-dian-yin-wei-cong-antfu.jpg": {
     "height": 810,
     "width": 1286,
     "bytes": 41197,
     "contentType": "image/jpeg",
-    "etag": "15714be452521278ecfbb336d945fd73"
+    "etag": "15714be452521278ecfbb336d945fd73",
+    "variants": [
+      "gei-ou-xiang-fa-ge-dian-yin-wei-cong-antfu-480w.webp",
+      "gei-ou-xiang-fa-ge-dian-yin-wei-cong-antfu-960w.webp"
+    ]
   }
 }

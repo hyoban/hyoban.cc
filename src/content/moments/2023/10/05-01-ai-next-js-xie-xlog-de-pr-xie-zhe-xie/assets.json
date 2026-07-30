@@ -1,9 +1,35 @@
 {
+  "ai-next-js-xie-xlog-de-pr-xie-zhe-xie-1920w.webp": {
+    "bytes": 219202,
+    "contentType": "image/webp",
+    "etag": "ca46c871ea963a8b013c60aacd978250",
+    "height": 1022,
+    "width": 1920
+  },
+  "ai-next-js-xie-xlog-de-pr-xie-zhe-xie-480w.webp": {
+    "bytes": 34256,
+    "contentType": "image/webp",
+    "etag": "1947d2c35f678d8da474e620df4e85a5",
+    "height": 256,
+    "width": 480
+  },
+  "ai-next-js-xie-xlog-de-pr-xie-zhe-xie-960w.webp": {
+    "bytes": 95256,
+    "contentType": "image/webp",
+    "etag": "ff1ce067399fb9259838f7098e7747ab",
+    "height": 511,
+    "width": 960
+  },
   "ai-next-js-xie-xlog-de-pr-xie-zhe-xie.png": {
     "height": 1168,
     "width": 2194,
     "bytes": 144664,
     "contentType": "image/png",
-    "etag": "b1186340a0829e2f84db6924f24d16c5"
+    "etag": "b1186340a0829e2f84db6924f24d16c5",
+    "variants": [
+      "ai-next-js-xie-xlog-de-pr-xie-zhe-xie-480w.webp",
+      "ai-next-js-xie-xlog-de-pr-xie-zhe-xie-960w.webp",
+      "ai-next-js-xie-xlog-de-pr-xie-zhe-xie-1920w.webp"
+    ]
   }
 }

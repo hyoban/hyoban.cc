@@ -1,9 +1,35 @@
 {
+  "chi-yi-xia-mai-de-xin-pin-1920w.webp": {
+    "bytes": 134142,
+    "contentType": "image/webp",
+    "etag": "61ce9918ed1b67a7f6df18edffc5f1a4",
+    "height": 1080,
+    "width": 1920
+  },
+  "chi-yi-xia-mai-de-xin-pin-480w.webp": {
+    "bytes": 17632,
+    "contentType": "image/webp",
+    "etag": "049b68a2da030946295b5728499788f8",
+    "height": 270,
+    "width": 480
+  },
+  "chi-yi-xia-mai-de-xin-pin-960w.webp": {
+    "bytes": 51160,
+    "contentType": "image/webp",
+    "etag": "ce59284411ddfd50639be6d4e7975f8e",
+    "height": 540,
+    "width": 960
+  },
   "chi-yi-xia-mai-de-xin-pin.jpg": {
     "height": 1152,
     "width": 2048,
     "bytes": 289852,
     "contentType": "image/jpeg",
-    "etag": "c5f67176b704a65b2ee657550a917526"
+    "etag": "c5f67176b704a65b2ee657550a917526",
+    "variants": [
+      "chi-yi-xia-mai-de-xin-pin-480w.webp",
+      "chi-yi-xia-mai-de-xin-pin-960w.webp",
+      "chi-yi-xia-mai-de-xin-pin-1920w.webp"
+    ]
   }
 }

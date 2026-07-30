@@ -1,51 +1,153 @@
 {
+  "wu-yi-san-qing-shan-wu-yuan-2-480w.webp": {
+    "bytes": 99780,
+    "contentType": "image/webp",
+    "etag": "7a2db13a0270da32abe9c471368663b3",
+    "height": 640,
+    "width": 480
+  },
   "wu-yi-san-qing-shan-wu-yuan-2.webp": {
     "height": 1280,
     "width": 960,
     "bytes": 312298,
     "contentType": "image/webp",
-    "etag": "b3a10971769ff9119fb2e6fabe43c04b"
+    "etag": "b3a10971769ff9119fb2e6fabe43c04b",
+    "variants": [
+      "wu-yi-san-qing-shan-wu-yuan-2-480w.webp"
+    ]
+  },
+  "wu-yi-san-qing-shan-wu-yuan-3-480w.webp": {
+    "bytes": 24112,
+    "contentType": "image/webp",
+    "etag": "6c686babe3e3e34dfa74b40864261044",
+    "height": 640,
+    "width": 480
   },
   "wu-yi-san-qing-shan-wu-yuan-3.webp": {
     "height": 1280,
     "width": 960,
     "bytes": 46458,
     "contentType": "image/webp",
-    "etag": "24d5f65ceb323b5298e1c3aa8c690a72"
+    "etag": "24d5f65ceb323b5298e1c3aa8c690a72",
+    "variants": [
+      "wu-yi-san-qing-shan-wu-yuan-3-480w.webp"
+    ]
+  },
+  "wu-yi-san-qing-shan-wu-yuan-4-480w.webp": {
+    "bytes": 42540,
+    "contentType": "image/webp",
+    "etag": "eec3113278df70623e33d29ea46989fa",
+    "height": 360,
+    "width": 480
+  },
+  "wu-yi-san-qing-shan-wu-yuan-4-960w.webp": {
+    "bytes": 118178,
+    "contentType": "image/webp",
+    "etag": "b065c3752dc95f8e941f1449e47f39b2",
+    "height": 719,
+    "width": 960
   },
   "wu-yi-san-qing-shan-wu-yuan-4.webp": {
     "height": 959,
     "width": 1280,
     "bytes": 169012,
     "contentType": "image/webp",
-    "etag": "bc85c6e90c19f8bb1f98bdf8194f408a"
+    "etag": "bc85c6e90c19f8bb1f98bdf8194f408a",
+    "variants": [
+      "wu-yi-san-qing-shan-wu-yuan-4-480w.webp",
+      "wu-yi-san-qing-shan-wu-yuan-4-960w.webp"
+    ]
+  },
+  "wu-yi-san-qing-shan-wu-yuan-480w.webp": {
+    "bytes": 48696,
+    "contentType": "image/webp",
+    "etag": "3c055bbcd830b7f017ff80e28f71fd90",
+    "height": 640,
+    "width": 480
+  },
+  "wu-yi-san-qing-shan-wu-yuan-5-480w.webp": {
+    "bytes": 53852,
+    "contentType": "image/webp",
+    "etag": "7d2de4c361048e2462fa0f7ec027fadc",
+    "height": 360,
+    "width": 480
+  },
+  "wu-yi-san-qing-shan-wu-yuan-5-960w.webp": {
+    "bytes": 196610,
+    "contentType": "image/webp",
+    "etag": "4b6522a318946abfa0f61bc798dfaa67",
+    "height": 720,
+    "width": 960
   },
   "wu-yi-san-qing-shan-wu-yuan-5.webp": {
     "height": 960,
     "width": 1280,
     "bytes": 322692,
     "contentType": "image/webp",
-    "etag": "1d49cc46d5751fde88e40744f3921535"
+    "etag": "1d49cc46d5751fde88e40744f3921535",
+    "variants": [
+      "wu-yi-san-qing-shan-wu-yuan-5-480w.webp",
+      "wu-yi-san-qing-shan-wu-yuan-5-960w.webp"
+    ]
+  },
+  "wu-yi-san-qing-shan-wu-yuan-6-480w.webp": {
+    "bytes": 39764,
+    "contentType": "image/webp",
+    "etag": "f2ae9c2d9f6a11d567c428e54049343b",
+    "height": 360,
+    "width": 480
+  },
+  "wu-yi-san-qing-shan-wu-yuan-6-960w.webp": {
+    "bytes": 134678,
+    "contentType": "image/webp",
+    "etag": "9692ffba5dfc891b40625cdc618c3c78",
+    "height": 720,
+    "width": 960
   },
   "wu-yi-san-qing-shan-wu-yuan-6.webp": {
     "height": 960,
     "width": 1280,
     "bytes": 220994,
     "contentType": "image/webp",
-    "etag": "17e8f2c06785971638a2def7ac8309a7"
+    "etag": "17e8f2c06785971638a2def7ac8309a7",
+    "variants": [
+      "wu-yi-san-qing-shan-wu-yuan-6-480w.webp",
+      "wu-yi-san-qing-shan-wu-yuan-6-960w.webp"
+    ]
+  },
+  "wu-yi-san-qing-shan-wu-yuan-7-480w.webp": {
+    "bytes": 55240,
+    "contentType": "image/webp",
+    "etag": "488d48b96981b945a3778ed9a1c13a72",
+    "height": 360,
+    "width": 480
+  },
+  "wu-yi-san-qing-shan-wu-yuan-7-960w.webp": {
+    "bytes": 203886,
+    "contentType": "image/webp",
+    "etag": "49bd13223c34a102fbf08a2e20df3219",
+    "height": 720,
+    "width": 960
   },
   "wu-yi-san-qing-shan-wu-yuan-7.webp": {
     "height": 960,
     "width": 1280,
     "bytes": 330426,
     "contentType": "image/webp",
-    "etag": "6567d0740396b66b3846886d154e3f7c"
+    "etag": "6567d0740396b66b3846886d154e3f7c",
+    "variants": [
+      "wu-yi-san-qing-shan-wu-yuan-7-480w.webp",
+      "wu-yi-san-qing-shan-wu-yuan-7-960w.webp"
+    ]
   },
   "wu-yi-san-qing-shan-wu-yuan.webp": {
     "height": 1280,
     "width": 960,
     "bytes": 198112,
     "contentType": "image/webp",
-    "etag": "ae48a8ac7ed175e533832c8ad08fe7b9"
+    "etag": "ae48a8ac7ed175e533832c8ad08fe7b9",
+    "variants": [
+      "wu-yi-san-qing-shan-wu-yuan-480w.webp"
+    ]
   }
 }

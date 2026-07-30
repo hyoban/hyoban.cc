@@ -1,51 +1,177 @@
 {
+  "wu-yi-he-fei-pian-2-480w.webp": {
+    "bytes": 20764,
+    "contentType": "image/webp",
+    "etag": "161b09761224573a606768038e563c78",
+    "height": 360,
+    "width": 480
+  },
+  "wu-yi-he-fei-pian-2-960w.webp": {
+    "bytes": 49488,
+    "contentType": "image/webp",
+    "etag": "9e1ef3867dfc1e282a3c66a23467cae5",
+    "height": 720,
+    "width": 960
+  },
   "wu-yi-he-fei-pian-2.webp": {
     "height": 960,
     "width": 1280,
     "bytes": 72868,
     "contentType": "image/webp",
-    "etag": "3516d5919ca78843a77c6ea5fdf417a1"
+    "etag": "3516d5919ca78843a77c6ea5fdf417a1",
+    "variants": [
+      "wu-yi-he-fei-pian-2-480w.webp",
+      "wu-yi-he-fei-pian-2-960w.webp"
+    ]
+  },
+  "wu-yi-he-fei-pian-3-480w.webp": {
+    "bytes": 29444,
+    "contentType": "image/webp",
+    "etag": "54d2f19435fca42bc40560383c81f6ac",
+    "height": 360,
+    "width": 480
+  },
+  "wu-yi-he-fei-pian-3-960w.webp": {
+    "bytes": 76404,
+    "contentType": "image/webp",
+    "etag": "4b70f6e6bc50f510ea1d915e99ef2d51",
+    "height": 720,
+    "width": 960
   },
   "wu-yi-he-fei-pian-3.webp": {
     "height": 960,
     "width": 1280,
     "bytes": 116492,
     "contentType": "image/webp",
-    "etag": "671fe161510ae3db2ec9a6ca7dd29542"
+    "etag": "671fe161510ae3db2ec9a6ca7dd29542",
+    "variants": [
+      "wu-yi-he-fei-pian-3-480w.webp",
+      "wu-yi-he-fei-pian-3-960w.webp"
+    ]
+  },
+  "wu-yi-he-fei-pian-4-480w.webp": {
+    "bytes": 17880,
+    "contentType": "image/webp",
+    "etag": "b176f0549cd6b957925d0e4e528ae68f",
+    "height": 360,
+    "width": 480
+  },
+  "wu-yi-he-fei-pian-4-960w.webp": {
+    "bytes": 42242,
+    "contentType": "image/webp",
+    "etag": "356edab96168cd6636a66d88caac7ee2",
+    "height": 720,
+    "width": 960
   },
   "wu-yi-he-fei-pian-4.webp": {
     "height": 960,
     "width": 1280,
     "bytes": 61806,
     "contentType": "image/webp",
-    "etag": "d8b6e198f32e03ca8f6d16fcbdc88dfd"
+    "etag": "d8b6e198f32e03ca8f6d16fcbdc88dfd",
+    "variants": [
+      "wu-yi-he-fei-pian-4-480w.webp",
+      "wu-yi-he-fei-pian-4-960w.webp"
+    ]
+  },
+  "wu-yi-he-fei-pian-480w.webp": {
+    "bytes": 48330,
+    "contentType": "image/webp",
+    "etag": "5495cef6fd26e6da3a53c315828e4e70",
+    "height": 360,
+    "width": 480
+  },
+  "wu-yi-he-fei-pian-5-480w.webp": {
+    "bytes": 57540,
+    "contentType": "image/webp",
+    "etag": "6d928085434cbc53a4121c825f4faf2d",
+    "height": 360,
+    "width": 480
+  },
+  "wu-yi-he-fei-pian-5-960w.webp": {
+    "bytes": 219980,
+    "contentType": "image/webp",
+    "etag": "89b051ba483bec206e8df4658a272b80",
+    "height": 720,
+    "width": 960
   },
   "wu-yi-he-fei-pian-5.webp": {
     "height": 960,
     "width": 1280,
     "bytes": 387906,
     "contentType": "image/webp",
-    "etag": "68f9dc1a41809c20c641a661ec9804dd"
+    "etag": "68f9dc1a41809c20c641a661ec9804dd",
+    "variants": [
+      "wu-yi-he-fei-pian-5-480w.webp",
+      "wu-yi-he-fei-pian-5-960w.webp"
+    ]
+  },
+  "wu-yi-he-fei-pian-6-480w.webp": {
+    "bytes": 59458,
+    "contentType": "image/webp",
+    "etag": "b7dbfa8ab45419f7f5e5c958d98f3f74",
+    "height": 360,
+    "width": 480
+  },
+  "wu-yi-he-fei-pian-6-960w.webp": {
+    "bytes": 223732,
+    "contentType": "image/webp",
+    "etag": "ff438dee5a675bb423417e47993bd1e1",
+    "height": 720,
+    "width": 960
   },
   "wu-yi-he-fei-pian-6.webp": {
     "height": 960,
     "width": 1280,
     "bytes": 370852,
     "contentType": "image/webp",
-    "etag": "c6330446c08b2ed8cf187cad05e3c9ef"
+    "etag": "c6330446c08b2ed8cf187cad05e3c9ef",
+    "variants": [
+      "wu-yi-he-fei-pian-6-480w.webp",
+      "wu-yi-he-fei-pian-6-960w.webp"
+    ]
+  },
+  "wu-yi-he-fei-pian-7-480w.webp": {
+    "bytes": 65328,
+    "contentType": "image/webp",
+    "etag": "7d13d44a9c47a89242a21b0ca0669b87",
+    "height": 360,
+    "width": 480
+  },
+  "wu-yi-he-fei-pian-7-960w.webp": {
+    "bytes": 246640,
+    "contentType": "image/webp",
+    "etag": "5f9aafabb1a7f0e2aa2064bdafb25224",
+    "height": 720,
+    "width": 960
   },
   "wu-yi-he-fei-pian-7.webp": {
     "height": 960,
     "width": 1280,
     "bytes": 419412,
     "contentType": "image/webp",
-    "etag": "d1620327270e5a38b823c9b3e3e4bcfb"
+    "etag": "d1620327270e5a38b823c9b3e3e4bcfb",
+    "variants": [
+      "wu-yi-he-fei-pian-7-480w.webp",
+      "wu-yi-he-fei-pian-7-960w.webp"
+    ]
+  },
+  "wu-yi-he-fei-pian-960w.webp": {
+    "bytes": 144888,
+    "contentType": "image/webp",
+    "etag": "9105cfb8d5cea3387c3dd71c08bcc934",
+    "height": 719,
+    "width": 960
   },
   "wu-yi-he-fei-pian.webp": {
     "height": 959,
     "width": 1280,
     "bytes": 217678,
     "contentType": "image/webp",
-    "etag": "17f7f3632b9890649d2e70b209866da8"
+    "etag": "17f7f3632b9890649d2e70b209866da8",
+    "variants": [
+      "wu-yi-he-fei-pian-480w.webp",
+      "wu-yi-he-fei-pian-960w.webp"
+    ]
   }
 }

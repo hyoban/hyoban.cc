@@ -1,9 +1,35 @@
 {
+  "folo-mcp-1920w.webp": {
+    "bytes": 107798,
+    "contentType": "image/webp",
+    "etag": "1b1125b71143b767b87247f410436eda",
+    "height": 1366,
+    "width": 1920
+  },
+  "folo-mcp-480w.webp": {
+    "bytes": 13586,
+    "contentType": "image/webp",
+    "etag": "8396b82951b692a25c2b071bae41e0b8",
+    "height": 342,
+    "width": 480
+  },
+  "folo-mcp-960w.webp": {
+    "bytes": 43742,
+    "contentType": "image/webp",
+    "etag": "95ea0ed6634a382425b701356a8a5ec9",
+    "height": 683,
+    "width": 960
+  },
   "folo-mcp.jpg": {
     "height": 1530,
     "width": 2150,
     "bytes": 222959,
     "contentType": "image/jpeg",
-    "etag": "87b861ed2da37fcc2f422ac67de27a4b"
+    "etag": "87b861ed2da37fcc2f422ac67de27a4b",
+    "variants": [
+      "folo-mcp-480w.webp",
+      "folo-mcp-960w.webp",
+      "folo-mcp-1920w.webp"
+    ]
   }
 }

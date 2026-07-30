@@ -1,9 +1,35 @@
 {
+  "zhou-ri-bu-xin-xie-chang-shi-le-yi-xia-1920w.webp": {
+    "bytes": 500978,
+    "contentType": "image/webp",
+    "etag": "3aa888b66e4ab858e7060033abf30c15",
+    "height": 2560,
+    "width": 1920
+  },
+  "zhou-ri-bu-xin-xie-chang-shi-le-yi-xia-480w.webp": {
+    "bytes": 47838,
+    "contentType": "image/webp",
+    "etag": "b87b68cf064a319ed5784a1f0286ff36",
+    "height": 640,
+    "width": 480
+  },
+  "zhou-ri-bu-xin-xie-chang-shi-le-yi-xia-960w.webp": {
+    "bytes": 157096,
+    "contentType": "image/webp",
+    "etag": "6ea4a049ed42284191ff3abbe413e7c6",
+    "height": 1280,
+    "width": 960
+  },
   "zhou-ri-bu-xin-xie-chang-shi-le-yi-xia.jpg": {
     "height": 4096,
     "width": 3072,
     "bytes": 1870606,
     "contentType": "image/jpeg",
-    "etag": "3fdf0f79c6f2eebc4d904a7e7bc8c785"
+    "etag": "3fdf0f79c6f2eebc4d904a7e7bc8c785",
+    "variants": [
+      "zhou-ri-bu-xin-xie-chang-shi-le-yi-xia-480w.webp",
+      "zhou-ri-bu-xin-xie-chang-shi-le-yi-xia-960w.webp",
+      "zhou-ri-bu-xin-xie-chang-shi-le-yi-xia-1920w.webp"
+    ]
   }
 }

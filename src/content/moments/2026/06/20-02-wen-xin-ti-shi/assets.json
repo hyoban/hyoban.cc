@@ -1,9 +1,27 @@
 {
+  "wen-xin-ti-shi-480w.webp": {
+    "bytes": 9048,
+    "contentType": "image/webp",
+    "etag": "0afba2ab2328bf9b9408e2bc4e9a2205",
+    "height": 360,
+    "width": 480
+  },
+  "wen-xin-ti-shi-960w.webp": {
+    "bytes": 22202,
+    "contentType": "image/webp",
+    "etag": "c38e0d0bac89c25aafdb9e2e6a4e786a",
+    "height": 720,
+    "width": 960
+  },
   "wen-xin-ti-shi.webp": {
     "height": 1080,
     "width": 1440,
     "bytes": 57202,
     "contentType": "image/webp",
-    "etag": "ec2adb3afd4dcd252662b392d7b1684b"
+    "etag": "ec2adb3afd4dcd252662b392d7b1684b",
+    "variants": [
+      "wen-xin-ti-shi-480w.webp",
+      "wen-xin-ti-shi-960w.webp"
+    ]
   }
 }

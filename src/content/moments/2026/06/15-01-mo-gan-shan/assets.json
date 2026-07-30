@@ -1,65 +1,227 @@
 {
+  "mo-gan-shan-2-480w.webp": {
+    "bytes": 44040,
+    "contentType": "image/webp",
+    "etag": "7166eba1457b98e84c021f0cca2f22d9",
+    "height": 320,
+    "width": 480
+  },
+  "mo-gan-shan-2-960w.webp": {
+    "bytes": 154930,
+    "contentType": "image/webp",
+    "etag": "09fabf931a6817f8d532ae6c1efce1d7",
+    "height": 640,
+    "width": 960
+  },
   "mo-gan-shan-2.jpg": {
     "height": 853,
     "width": 1280,
     "bytes": 251645,
     "contentType": "image/jpeg",
-    "etag": "251e6e0375fee4871f274465427fd5a1"
+    "etag": "251e6e0375fee4871f274465427fd5a1",
+    "variants": [
+      "mo-gan-shan-2-480w.webp",
+      "mo-gan-shan-2-960w.webp"
+    ]
+  },
+  "mo-gan-shan-3-480w.webp": {
+    "bytes": 32170,
+    "contentType": "image/webp",
+    "etag": "21682ae1efdaa5fd42063d28a9cf4b1c",
+    "height": 320,
+    "width": 480
+  },
+  "mo-gan-shan-3-960w.webp": {
+    "bytes": 82696,
+    "contentType": "image/webp",
+    "etag": "cb943f73f232a3115821bb541b0f41a4",
+    "height": 640,
+    "width": 960
   },
   "mo-gan-shan-3.jpg": {
     "height": 853,
     "width": 1280,
     "bytes": 161021,
     "contentType": "image/jpeg",
-    "etag": "212f0d48c5ce55a43b734a3a64e58ee2"
+    "etag": "212f0d48c5ce55a43b734a3a64e58ee2",
+    "variants": [
+      "mo-gan-shan-3-480w.webp",
+      "mo-gan-shan-3-960w.webp"
+    ]
+  },
+  "mo-gan-shan-4-480w.webp": {
+    "bytes": 34534,
+    "contentType": "image/webp",
+    "etag": "c244628e4156751e4e3926e1dc7c0cf1",
+    "height": 320,
+    "width": 480
+  },
+  "mo-gan-shan-4-960w.webp": {
+    "bytes": 101408,
+    "contentType": "image/webp",
+    "etag": "38646253c6b3e566d2344fc34ee587f2",
+    "height": 640,
+    "width": 960
   },
   "mo-gan-shan-4.jpg": {
     "height": 853,
     "width": 1280,
     "bytes": 186456,
     "contentType": "image/jpeg",
-    "etag": "55c6e9e9a90069b1f93eb823145dd0cd"
+    "etag": "55c6e9e9a90069b1f93eb823145dd0cd",
+    "variants": [
+      "mo-gan-shan-4-480w.webp",
+      "mo-gan-shan-4-960w.webp"
+    ]
+  },
+  "mo-gan-shan-480w.webp": {
+    "bytes": 18510,
+    "contentType": "image/webp",
+    "etag": "0ee6c0dd158acf343b58b3efa5c87d36",
+    "height": 320,
+    "width": 480
+  },
+  "mo-gan-shan-5-480w.webp": {
+    "bytes": 21512,
+    "contentType": "image/webp",
+    "etag": "84316c57e25187bb3362620c5555df3e",
+    "height": 320,
+    "width": 480
+  },
+  "mo-gan-shan-5-960w.webp": {
+    "bytes": 57700,
+    "contentType": "image/webp",
+    "etag": "8ec06a278544ceaf6647a31b28af5f88",
+    "height": 640,
+    "width": 960
   },
   "mo-gan-shan-5.jpg": {
     "height": 853,
     "width": 1280,
     "bytes": 114575,
     "contentType": "image/jpeg",
-    "etag": "e4be0dc12759305d9e41be68f65af880"
+    "etag": "e4be0dc12759305d9e41be68f65af880",
+    "variants": [
+      "mo-gan-shan-5-480w.webp",
+      "mo-gan-shan-5-960w.webp"
+    ]
+  },
+  "mo-gan-shan-6-480w.webp": {
+    "bytes": 46144,
+    "contentType": "image/webp",
+    "etag": "61b3524bd57fbd51c7d5658f0538dfc4",
+    "height": 320,
+    "width": 480
+  },
+  "mo-gan-shan-6-960w.webp": {
+    "bytes": 158370,
+    "contentType": "image/webp",
+    "etag": "6ad38fa2ba56a10a7850e9b69c7b19c7",
+    "height": 640,
+    "width": 960
   },
   "mo-gan-shan-6.jpg": {
     "height": 853,
     "width": 1280,
     "bytes": 244717,
     "contentType": "image/jpeg",
-    "etag": "8414b2a126f470974f38cee9ae1a94eb"
+    "etag": "8414b2a126f470974f38cee9ae1a94eb",
+    "variants": [
+      "mo-gan-shan-6-480w.webp",
+      "mo-gan-shan-6-960w.webp"
+    ]
+  },
+  "mo-gan-shan-7-480w.webp": {
+    "bytes": 48764,
+    "contentType": "image/webp",
+    "etag": "34267204e6ee935b6b945f2d059df9ac",
+    "height": 320,
+    "width": 480
+  },
+  "mo-gan-shan-7-960w.webp": {
+    "bytes": 167430,
+    "contentType": "image/webp",
+    "etag": "49d4809181d13d8aa1ea57525aef6def",
+    "height": 640,
+    "width": 960
   },
   "mo-gan-shan-7.jpg": {
     "height": 853,
     "width": 1280,
     "bytes": 258032,
     "contentType": "image/jpeg",
-    "etag": "884fdef05841b70e57f1de1d8e0ee998"
+    "etag": "884fdef05841b70e57f1de1d8e0ee998",
+    "variants": [
+      "mo-gan-shan-7-480w.webp",
+      "mo-gan-shan-7-960w.webp"
+    ]
+  },
+  "mo-gan-shan-8-480w.webp": {
+    "bytes": 32058,
+    "contentType": "image/webp",
+    "etag": "746afe5aea06a032aedc52e3a8c1afc4",
+    "height": 320,
+    "width": 480
+  },
+  "mo-gan-shan-8-960w.webp": {
+    "bytes": 90510,
+    "contentType": "image/webp",
+    "etag": "85329ed58c27dff91c9d6f6c1945d505",
+    "height": 640,
+    "width": 960
   },
   "mo-gan-shan-8.jpg": {
     "height": 853,
     "width": 1280,
     "bytes": 179852,
     "contentType": "image/jpeg",
-    "etag": "53b4c8d8ce4d9560f3b2dafa8be0bb1c"
+    "etag": "53b4c8d8ce4d9560f3b2dafa8be0bb1c",
+    "variants": [
+      "mo-gan-shan-8-480w.webp",
+      "mo-gan-shan-8-960w.webp"
+    ]
+  },
+  "mo-gan-shan-9-480w.webp": {
+    "bytes": 40840,
+    "contentType": "image/webp",
+    "etag": "0706298f1d0355eaba28ef93bd743091",
+    "height": 320,
+    "width": 480
+  },
+  "mo-gan-shan-9-960w.webp": {
+    "bytes": 135726,
+    "contentType": "image/webp",
+    "etag": "8ebe37d3badf82d9ea4b0719ddebc5ed",
+    "height": 640,
+    "width": 960
   },
   "mo-gan-shan-9.jpg": {
     "height": 853,
     "width": 1280,
     "bytes": 218376,
     "contentType": "image/jpeg",
-    "etag": "851b120744733f7a21fdde98d7147d6a"
+    "etag": "851b120744733f7a21fdde98d7147d6a",
+    "variants": [
+      "mo-gan-shan-9-480w.webp",
+      "mo-gan-shan-9-960w.webp"
+    ]
+  },
+  "mo-gan-shan-960w.webp": {
+    "bytes": 50278,
+    "contentType": "image/webp",
+    "etag": "b4fdc450f8810601ea5f5fc2a28bd230",
+    "height": 640,
+    "width": 960
   },
   "mo-gan-shan.jpg": {
     "height": 853,
     "width": 1280,
     "bytes": 114300,
     "contentType": "image/jpeg",
-    "etag": "f3cf2efeca5451e482b22e437718547e"
+    "etag": "f3cf2efeca5451e482b22e437718547e",
+    "variants": [
+      "mo-gan-shan-480w.webp",
+      "mo-gan-shan-960w.webp"
+    ]
   }
 }

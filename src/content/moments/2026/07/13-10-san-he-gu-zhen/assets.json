@@ -1,30 +1,78 @@
 {
+  "san-he-gu-zhen-2-480w.webp": {
+    "bytes": 57888,
+    "contentType": "image/webp",
+    "etag": "d097ccf4c2f479cadf68ee3d6eef9c3e",
+    "height": 640,
+    "width": 480
+  },
   "san-he-gu-zhen-2.webp": {
     "height": 1280,
     "width": 960,
     "bytes": 190596,
     "contentType": "image/webp",
-    "etag": "f6de1bcb82082c8726e6174a188ee0e9"
+    "etag": "f6de1bcb82082c8726e6174a188ee0e9",
+    "variants": [
+      "san-he-gu-zhen-2-480w.webp"
+    ]
+  },
+  "san-he-gu-zhen-3-480w.webp": {
+    "bytes": 49702,
+    "contentType": "image/webp",
+    "etag": "f4acf6c76a1d968d642072123e75e76f",
+    "height": 640,
+    "width": 480
   },
   "san-he-gu-zhen-3.webp": {
     "height": 1280,
     "width": 960,
     "bytes": 149728,
     "contentType": "image/webp",
-    "etag": "90e74feefdfe2593df86d075c66fd1ae"
+    "etag": "90e74feefdfe2593df86d075c66fd1ae",
+    "variants": [
+      "san-he-gu-zhen-3-480w.webp"
+    ]
+  },
+  "san-he-gu-zhen-4-480w.webp": {
+    "bytes": 52584,
+    "contentType": "image/webp",
+    "etag": "57b007f44354f74dff59b3c83ffda5c1",
+    "height": 360,
+    "width": 480
+  },
+  "san-he-gu-zhen-4-960w.webp": {
+    "bytes": 168680,
+    "contentType": "image/webp",
+    "etag": "d39657e334f1d8778d8415d632123d28",
+    "height": 720,
+    "width": 960
   },
   "san-he-gu-zhen-4.webp": {
     "height": 960,
     "width": 1280,
     "bytes": 267954,
     "contentType": "image/webp",
-    "etag": "3759fcf4d6c80b7a39a01cfa0f34746c"
+    "etag": "3759fcf4d6c80b7a39a01cfa0f34746c",
+    "variants": [
+      "san-he-gu-zhen-4-480w.webp",
+      "san-he-gu-zhen-4-960w.webp"
+    ]
+  },
+  "san-he-gu-zhen-480w.webp": {
+    "bytes": 103590,
+    "contentType": "image/webp",
+    "etag": "f28908d5dcba5964f62ca69315145078",
+    "height": 640,
+    "width": 480
   },
   "san-he-gu-zhen.webp": {
     "height": 1280,
     "width": 960,
     "bytes": 352340,
     "contentType": "image/webp",
-    "etag": "ef73b4cbd4adc0095c82b7021a24223d"
+    "etag": "ef73b4cbd4adc0095c82b7021a24223d",
+    "variants": [
+      "san-he-gu-zhen-480w.webp"
+    ]
   }
 }

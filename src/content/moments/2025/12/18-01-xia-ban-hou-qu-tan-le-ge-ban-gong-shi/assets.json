@@ -1,9 +1,35 @@
 {
+  "xia-ban-hou-qu-tan-le-ge-ban-gong-shi-1920w.webp": {
+    "bytes": 123516,
+    "contentType": "image/webp",
+    "etag": "38615268eddf49224fc0d58072311275",
+    "height": 1440,
+    "width": 1920
+  },
+  "xia-ban-hou-qu-tan-le-ge-ban-gong-shi-480w.webp": {
+    "bytes": 18570,
+    "contentType": "image/webp",
+    "etag": "2ac083089ca23679b29063d3194ee0a0",
+    "height": 360,
+    "width": 480
+  },
+  "xia-ban-hou-qu-tan-le-ge-ban-gong-shi-960w.webp": {
+    "bytes": 52766,
+    "contentType": "image/webp",
+    "etag": "74f9dc927f736cebb9f15b82232998b4",
+    "height": 720,
+    "width": 960
+  },
   "xia-ban-hou-qu-tan-le-ge-ban-gong-shi.jpg": {
     "height": 1536,
     "width": 2048,
     "bytes": 269306,
     "contentType": "image/jpeg",
-    "etag": "59f71934c32f8396e99899167591dd50"
+    "etag": "59f71934c32f8396e99899167591dd50",
+    "variants": [
+      "xia-ban-hou-qu-tan-le-ge-ban-gong-shi-480w.webp",
+      "xia-ban-hou-qu-tan-le-ge-ban-gong-shi-960w.webp",
+      "xia-ban-hou-qu-tan-le-ge-ban-gong-shi-1920w.webp"
+    ]
   }
 }

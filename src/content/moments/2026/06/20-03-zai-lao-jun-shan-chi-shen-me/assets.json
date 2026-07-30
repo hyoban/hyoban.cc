@@ -1,23 +1,77 @@
 {
+  "zai-lao-jun-shan-chi-shen-me-2-480w.webp": {
+    "bytes": 29430,
+    "contentType": "image/webp",
+    "etag": "2dacf6bf69afd18271c3c1c196d31845",
+    "height": 360,
+    "width": 480
+  },
+  "zai-lao-jun-shan-chi-shen-me-2-960w.webp": {
+    "bytes": 79812,
+    "contentType": "image/webp",
+    "etag": "0f1c714f9d436479e8419ab6b26d0ac7",
+    "height": 720,
+    "width": 960
+  },
   "zai-lao-jun-shan-chi-shen-me-2.webp": {
     "height": 1080,
     "width": 1440,
     "bytes": 211572,
     "contentType": "image/webp",
-    "etag": "9100a92f7bf82d751e47d0a964522dde"
+    "etag": "9100a92f7bf82d751e47d0a964522dde",
+    "variants": [
+      "zai-lao-jun-shan-chi-shen-me-2-480w.webp",
+      "zai-lao-jun-shan-chi-shen-me-2-960w.webp"
+    ]
+  },
+  "zai-lao-jun-shan-chi-shen-me-3-480w.webp": {
+    "bytes": 46440,
+    "contentType": "image/webp",
+    "etag": "191805d850ec073d5467634fa76dd74e",
+    "height": 360,
+    "width": 480
+  },
+  "zai-lao-jun-shan-chi-shen-me-3-960w.webp": {
+    "bytes": 136366,
+    "contentType": "image/webp",
+    "etag": "a8834e5fa3179fe0c55859c7b875606d",
+    "height": 720,
+    "width": 960
   },
   "zai-lao-jun-shan-chi-shen-me-3.webp": {
     "height": 1080,
     "width": 1440,
     "bytes": 383134,
     "contentType": "image/webp",
-    "etag": "2c3f4aa785b1dea02c535765e3b755cc"
+    "etag": "2c3f4aa785b1dea02c535765e3b755cc",
+    "variants": [
+      "zai-lao-jun-shan-chi-shen-me-3-480w.webp",
+      "zai-lao-jun-shan-chi-shen-me-3-960w.webp"
+    ]
+  },
+  "zai-lao-jun-shan-chi-shen-me-480w.webp": {
+    "bytes": 40972,
+    "contentType": "image/webp",
+    "etag": "c4971e9e6477c1930bb97ca89bf22a0f",
+    "height": 360,
+    "width": 480
+  },
+  "zai-lao-jun-shan-chi-shen-me-960w.webp": {
+    "bytes": 114136,
+    "contentType": "image/webp",
+    "etag": "9df30c6abc2a2abde0c69a80a845c5e4",
+    "height": 720,
+    "width": 960
   },
   "zai-lao-jun-shan-chi-shen-me.webp": {
     "height": 1080,
     "width": 1440,
     "bytes": 305584,
     "contentType": "image/webp",
-    "etag": "51a7a1daaf34351a059d696990262f1f"
+    "etag": "51a7a1daaf34351a059d696990262f1f",
+    "variants": [
+      "zai-lao-jun-shan-chi-shen-me-480w.webp",
+      "zai-lao-jun-shan-chi-shen-me-960w.webp"
+    ]
   }
 }

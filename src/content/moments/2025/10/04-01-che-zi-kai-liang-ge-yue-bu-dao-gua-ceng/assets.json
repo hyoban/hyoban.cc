@@ -1,23 +1,77 @@
 {
+  "che-zi-kai-liang-ge-yue-bu-dao-gua-ceng-2-480w.webp": {
+    "bytes": 5168,
+    "contentType": "image/webp",
+    "etag": "f7a051783518ebe42693f1287d41e9b3",
+    "height": 270,
+    "width": 480
+  },
+  "che-zi-kai-liang-ge-yue-bu-dao-gua-ceng-2-960w.webp": {
+    "bytes": 12492,
+    "contentType": "image/webp",
+    "etag": "0d8acba4f20906e68c81faa4c509b0de",
+    "height": 540,
+    "width": 960
+  },
   "che-zi-kai-liang-ge-yue-bu-dao-gua-ceng-2.webp": {
     "height": 810,
     "width": 1440,
     "bytes": 34318,
     "contentType": "image/webp",
-    "etag": "27dfc76e8c7f660877aa87698e24cd49"
+    "etag": "27dfc76e8c7f660877aa87698e24cd49",
+    "variants": [
+      "che-zi-kai-liang-ge-yue-bu-dao-gua-ceng-2-480w.webp",
+      "che-zi-kai-liang-ge-yue-bu-dao-gua-ceng-2-960w.webp"
+    ]
+  },
+  "che-zi-kai-liang-ge-yue-bu-dao-gua-ceng-3-480w.webp": {
+    "bytes": 3492,
+    "contentType": "image/webp",
+    "etag": "bfac232d801d06e78a2536968c8f7f0f",
+    "height": 270,
+    "width": 480
+  },
+  "che-zi-kai-liang-ge-yue-bu-dao-gua-ceng-3-960w.webp": {
+    "bytes": 9596,
+    "contentType": "image/webp",
+    "etag": "d53f23c6b800075bf30a15ea0d4b6952",
+    "height": 540,
+    "width": 960
   },
   "che-zi-kai-liang-ge-yue-bu-dao-gua-ceng-3.webp": {
     "height": 810,
     "width": 1440,
     "bytes": 25516,
     "contentType": "image/webp",
-    "etag": "b39674fb8590dda30bc4d87c905bfd80"
+    "etag": "b39674fb8590dda30bc4d87c905bfd80",
+    "variants": [
+      "che-zi-kai-liang-ge-yue-bu-dao-gua-ceng-3-480w.webp",
+      "che-zi-kai-liang-ge-yue-bu-dao-gua-ceng-3-960w.webp"
+    ]
+  },
+  "che-zi-kai-liang-ge-yue-bu-dao-gua-ceng-480w.webp": {
+    "bytes": 26882,
+    "contentType": "image/webp",
+    "etag": "cfa3d69b1c782f99c847783b28835f41",
+    "height": 640,
+    "width": 480
+  },
+  "che-zi-kai-liang-ge-yue-bu-dao-gua-ceng-960w.webp": {
+    "bytes": 68486,
+    "contentType": "image/webp",
+    "etag": "0e5b00559d0d33e48a814388595dd8b3",
+    "height": 1280,
+    "width": 960
   },
   "che-zi-kai-liang-ge-yue-bu-dao-gua-ceng.webp": {
     "height": 1440,
     "width": 1080,
     "bytes": 130992,
     "contentType": "image/webp",
-    "etag": "979d37c3030a5d5e1cd5698732a2e5a1"
+    "etag": "979d37c3030a5d5e1cd5698732a2e5a1",
+    "variants": [
+      "che-zi-kai-liang-ge-yue-bu-dao-gua-ceng-480w.webp",
+      "che-zi-kai-liang-ge-yue-bu-dao-gua-ceng-960w.webp"
+    ]
   }
 }

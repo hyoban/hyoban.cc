@@ -1,9 +1,35 @@
 {
+  "mai-le-ge-24-cun-4k-de-xian-shi-qi-1920w.webp": {
+    "bytes": 111566,
+    "contentType": "image/webp",
+    "etag": "eabb01873588675856e711a47f9659cf",
+    "height": 1440,
+    "width": 1920
+  },
+  "mai-le-ge-24-cun-4k-de-xian-shi-qi-480w.webp": {
+    "bytes": 17074,
+    "contentType": "image/webp",
+    "etag": "4edebde7abf248678a58506c6dfafdd9",
+    "height": 360,
+    "width": 480
+  },
+  "mai-le-ge-24-cun-4k-de-xian-shi-qi-960w.webp": {
+    "bytes": 44398,
+    "contentType": "image/webp",
+    "etag": "ccd55e2b866b517cd31d7e1b289d828b",
+    "height": 720,
+    "width": 960
+  },
   "mai-le-ge-24-cun-4k-de-xian-shi-qi.jpg": {
     "height": 1536,
     "width": 2048,
     "bytes": 271217,
     "contentType": "image/jpeg",
-    "etag": "72ffcb30ec92fb79d410aa1c91b9be56"
+    "etag": "72ffcb30ec92fb79d410aa1c91b9be56",
+    "variants": [
+      "mai-le-ge-24-cun-4k-de-xian-shi-qi-480w.webp",
+      "mai-le-ge-24-cun-4k-de-xian-shi-qi-960w.webp",
+      "mai-le-ge-24-cun-4k-de-xian-shi-qi-1920w.webp"
+    ]
   }
 }

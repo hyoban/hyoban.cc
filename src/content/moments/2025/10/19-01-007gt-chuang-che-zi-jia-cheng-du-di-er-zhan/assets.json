@@ -1,16 +1,52 @@
 {
+  "007gt-chuang-che-zi-jia-cheng-du-di-er-zhan-2-480w.webp": {
+    "bytes": 18800,
+    "contentType": "image/webp",
+    "etag": "2e64b20e38a1f5cdc219223259ac14b3",
+    "height": 360,
+    "width": 480
+  },
+  "007gt-chuang-che-zi-jia-cheng-du-di-er-zhan-2-960w.webp": {
+    "bytes": 51980,
+    "contentType": "image/webp",
+    "etag": "0bdff825a5df7e639905ac092159cf5b",
+    "height": 720,
+    "width": 960
+  },
   "007gt-chuang-che-zi-jia-cheng-du-di-er-zhan-2.webp": {
     "height": 1080,
     "width": 1440,
     "bytes": 161114,
     "contentType": "image/webp",
-    "etag": "8a75e1b04e7c143dd0279fcfde1e1640"
+    "etag": "8a75e1b04e7c143dd0279fcfde1e1640",
+    "variants": [
+      "007gt-chuang-che-zi-jia-cheng-du-di-er-zhan-2-480w.webp",
+      "007gt-chuang-che-zi-jia-cheng-du-di-er-zhan-2-960w.webp"
+    ]
+  },
+  "007gt-chuang-che-zi-jia-cheng-du-di-er-zhan-480w.webp": {
+    "bytes": 34110,
+    "contentType": "image/webp",
+    "etag": "f833947043a0ace9c1bb6bb5baadd10a",
+    "height": 640,
+    "width": 480
+  },
+  "007gt-chuang-che-zi-jia-cheng-du-di-er-zhan-960w.webp": {
+    "bytes": 99846,
+    "contentType": "image/webp",
+    "etag": "db64b9f7e518ae6819fa0cf7be123505",
+    "height": 1280,
+    "width": 960
   },
   "007gt-chuang-che-zi-jia-cheng-du-di-er-zhan.webp": {
     "height": 1440,
     "width": 1080,
     "bytes": 222058,
     "contentType": "image/webp",
-    "etag": "394e7b38d2b777629aefcbb5bff4e3e3"
+    "etag": "394e7b38d2b777629aefcbb5bff4e3e3",
+    "variants": [
+      "007gt-chuang-che-zi-jia-cheng-du-di-er-zhan-480w.webp",
+      "007gt-chuang-che-zi-jia-cheng-du-di-er-zhan-960w.webp"
+    ]
   }
 }

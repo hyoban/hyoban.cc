@@ -1,23 +1,77 @@
 {
+  "zi-jia-cheng-du-di-yi-zhan-zai-he-fei-2-480w.webp": {
+    "bytes": 29760,
+    "contentType": "image/webp",
+    "etag": "b5b54e24708d122c54d8e2b970a5bdbb",
+    "height": 360,
+    "width": 480
+  },
+  "zi-jia-cheng-du-di-yi-zhan-zai-he-fei-2-960w.webp": {
+    "bytes": 78414,
+    "contentType": "image/webp",
+    "etag": "f845231eaee723b0894c899c420c1994",
+    "height": 720,
+    "width": 960
+  },
   "zi-jia-cheng-du-di-yi-zhan-zai-he-fei-2.webp": {
     "height": 1080,
     "width": 1440,
     "bytes": 205346,
     "contentType": "image/webp",
-    "etag": "1e5fcefacf71dcf139e94803c53adf14"
+    "etag": "1e5fcefacf71dcf139e94803c53adf14",
+    "variants": [
+      "zi-jia-cheng-du-di-yi-zhan-zai-he-fei-2-480w.webp",
+      "zi-jia-cheng-du-di-yi-zhan-zai-he-fei-2-960w.webp"
+    ]
+  },
+  "zi-jia-cheng-du-di-yi-zhan-zai-he-fei-3-480w.webp": {
+    "bytes": 33536,
+    "contentType": "image/webp",
+    "etag": "e837dfb5dac94eb6f5d07afb03e9274b",
+    "height": 360,
+    "width": 480
+  },
+  "zi-jia-cheng-du-di-yi-zhan-zai-he-fei-3-960w.webp": {
+    "bytes": 103182,
+    "contentType": "image/webp",
+    "etag": "51a28785c9eff4d88941920445205d94",
+    "height": 720,
+    "width": 960
   },
   "zi-jia-cheng-du-di-yi-zhan-zai-he-fei-3.webp": {
     "height": 1080,
     "width": 1440,
     "bytes": 316904,
     "contentType": "image/webp",
-    "etag": "8608044019a66e78bca8d2858601f1cd"
+    "etag": "8608044019a66e78bca8d2858601f1cd",
+    "variants": [
+      "zi-jia-cheng-du-di-yi-zhan-zai-he-fei-3-480w.webp",
+      "zi-jia-cheng-du-di-yi-zhan-zai-he-fei-3-960w.webp"
+    ]
+  },
+  "zi-jia-cheng-du-di-yi-zhan-zai-he-fei-480w.webp": {
+    "bytes": 33380,
+    "contentType": "image/webp",
+    "etag": "222797340c85accc7e2f33878cc051d0",
+    "height": 360,
+    "width": 480
+  },
+  "zi-jia-cheng-du-di-yi-zhan-zai-he-fei-960w.webp": {
+    "bytes": 92100,
+    "contentType": "image/webp",
+    "etag": "74b0140b889296597bac7b3e45ac1382",
+    "height": 720,
+    "width": 960
   },
   "zi-jia-cheng-du-di-yi-zhan-zai-he-fei.webp": {
     "height": 1080,
     "width": 1440,
     "bytes": 235956,
     "contentType": "image/webp",
-    "etag": "a5e8b12cc9dbe21b2dac344e43851d20"
+    "etag": "a5e8b12cc9dbe21b2dac344e43851d20",
+    "variants": [
+      "zi-jia-cheng-du-di-yi-zhan-zai-he-fei-480w.webp",
+      "zi-jia-cheng-du-di-yi-zhan-zai-he-fei-960w.webp"
+    ]
   }
 }

@@ -1,9 +1,19 @@
 {
+  "nian-zhong-zong-jie-kan-shuang-le-you-nian-zhong-480w.webp": {
+    "bytes": 167928,
+    "contentType": "image/webp",
+    "etag": "273b00b4f1cdf0bc0e43e675959426e3",
+    "height": 2970,
+    "width": 480
+  },
   "nian-zhong-zong-jie-kan-shuang-le-you-nian-zhong.jpg": {
     "height": 4096,
     "width": 662,
     "bytes": 411680,
     "contentType": "image/jpeg",
-    "etag": "853e37fbfbd47c9160058e0195b8fc25"
+    "etag": "853e37fbfbd47c9160058e0195b8fc25",
+    "variants": [
+      "nian-zhong-zong-jie-kan-shuang-le-you-nian-zhong-480w.webp"
+    ]
   }
 }

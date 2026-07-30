@@ -1,9 +1,35 @@
 {
+  "ji-ke-7-2-fen-ping-1920w.webp": {
+    "bytes": 83896,
+    "contentType": "image/webp",
+    "etag": "c52cc784f6beb1bda5ca98fc15f65d56",
+    "height": 1440,
+    "width": 1920
+  },
+  "ji-ke-7-2-fen-ping-480w.webp": {
+    "bytes": 10520,
+    "contentType": "image/webp",
+    "etag": "376069899919da41139d66c49a06430a",
+    "height": 360,
+    "width": 480
+  },
+  "ji-ke-7-2-fen-ping-960w.webp": {
+    "bytes": 27850,
+    "contentType": "image/webp",
+    "etag": "750809b82b76157a0a99ba299b48615f",
+    "height": 720,
+    "width": 960
+  },
   "ji-ke-7-2-fen-ping.jpg": {
     "height": 1920,
     "width": 2560,
     "bytes": 266253,
     "contentType": "image/jpeg",
-    "etag": "489b7bc64399c94db8f5b16ec300d683"
+    "etag": "489b7bc64399c94db8f5b16ec300d683",
+    "variants": [
+      "ji-ke-7-2-fen-ping-480w.webp",
+      "ji-ke-7-2-fen-ping-960w.webp",
+      "ji-ke-7-2-fen-ping-1920w.webp"
+    ]
   }
 }

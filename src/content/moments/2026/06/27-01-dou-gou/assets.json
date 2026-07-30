@@ -1,51 +1,177 @@
 {
+  "dou-gou-2-480w.webp": {
+    "bytes": 47720,
+    "contentType": "image/webp",
+    "etag": "47df0277cf89c4e4597db8e19b961921",
+    "height": 320,
+    "width": 480
+  },
+  "dou-gou-2-960w.webp": {
+    "bytes": 156310,
+    "contentType": "image/webp",
+    "etag": "259e4f568043b249c54031105ba4eae9",
+    "height": 640,
+    "width": 960
+  },
   "dou-gou-2.webp": {
     "height": 1080,
     "width": 1620,
     "bytes": 566796,
     "contentType": "image/webp",
-    "etag": "324d68f53074fccf23c6529539e48e92"
+    "etag": "324d68f53074fccf23c6529539e48e92",
+    "variants": [
+      "dou-gou-2-480w.webp",
+      "dou-gou-2-960w.webp"
+    ]
+  },
+  "dou-gou-3-480w.webp": {
+    "bytes": 30338,
+    "contentType": "image/webp",
+    "etag": "ad64d8238c9e3d2bd04370c313aa9940",
+    "height": 320,
+    "width": 480
+  },
+  "dou-gou-3-960w.webp": {
+    "bytes": 93720,
+    "contentType": "image/webp",
+    "etag": "312a463c2edef7b9725526f6ef8580e8",
+    "height": 640,
+    "width": 960
   },
   "dou-gou-3.webp": {
     "height": 1080,
     "width": 1620,
     "bytes": 399428,
     "contentType": "image/webp",
-    "etag": "00decd48fe2352be7b49d25b99e6afdb"
+    "etag": "00decd48fe2352be7b49d25b99e6afdb",
+    "variants": [
+      "dou-gou-3-480w.webp",
+      "dou-gou-3-960w.webp"
+    ]
+  },
+  "dou-gou-4-480w.webp": {
+    "bytes": 62730,
+    "contentType": "image/webp",
+    "etag": "2a83e683c99d2ee68192367532aa3658",
+    "height": 720,
+    "width": 480
+  },
+  "dou-gou-4-960w.webp": {
+    "bytes": 167306,
+    "contentType": "image/webp",
+    "etag": "8a979ed0e9a562d9c160ffab66d4633a",
+    "height": 1440,
+    "width": 960
   },
   "dou-gou-4.webp": {
     "height": 1620,
     "width": 1080,
     "bytes": 347896,
     "contentType": "image/webp",
-    "etag": "3921891cf0dbaf429c032badf521de56"
+    "etag": "3921891cf0dbaf429c032badf521de56",
+    "variants": [
+      "dou-gou-4-480w.webp",
+      "dou-gou-4-960w.webp"
+    ]
+  },
+  "dou-gou-480w.webp": {
+    "bytes": 23416,
+    "contentType": "image/webp",
+    "etag": "7f132af2ec473b9037668b85220462bf",
+    "height": 320,
+    "width": 480
+  },
+  "dou-gou-5-480w.webp": {
+    "bytes": 55404,
+    "contentType": "image/webp",
+    "etag": "e4e9f4afeb3b3e9e4c1bfe7127fed8fb",
+    "height": 320,
+    "width": 480
+  },
+  "dou-gou-5-960w.webp": {
+    "bytes": 181488,
+    "contentType": "image/webp",
+    "etag": "68e5344e4b6ababbe583e4d87254ac2e",
+    "height": 640,
+    "width": 960
   },
   "dou-gou-5.webp": {
     "height": 1080,
     "width": 1620,
     "bytes": 663940,
     "contentType": "image/webp",
-    "etag": "7cd5ebe4cd9a77e403a711e6bf6ec0e4"
+    "etag": "7cd5ebe4cd9a77e403a711e6bf6ec0e4",
+    "variants": [
+      "dou-gou-5-480w.webp",
+      "dou-gou-5-960w.webp"
+    ]
+  },
+  "dou-gou-6-480w.webp": {
+    "bytes": 32014,
+    "contentType": "image/webp",
+    "etag": "714ff0faa7906a11f7d101d42c321e5c",
+    "height": 320,
+    "width": 480
+  },
+  "dou-gou-6-960w.webp": {
+    "bytes": 97468,
+    "contentType": "image/webp",
+    "etag": "ea74adfc102a25b74d0801bc70d64bef",
+    "height": 640,
+    "width": 960
   },
   "dou-gou-6.webp": {
     "height": 1080,
     "width": 1620,
     "bytes": 347880,
     "contentType": "image/webp",
-    "etag": "3c8d57e3e9a8335df16d526df47f69de"
+    "etag": "3c8d57e3e9a8335df16d526df47f69de",
+    "variants": [
+      "dou-gou-6-480w.webp",
+      "dou-gou-6-960w.webp"
+    ]
+  },
+  "dou-gou-7-480w.webp": {
+    "bytes": 20094,
+    "contentType": "image/webp",
+    "etag": "6097635d8a6668f6d418f08989a49059",
+    "height": 640,
+    "width": 480
+  },
+  "dou-gou-7-960w.webp": {
+    "bytes": 47060,
+    "contentType": "image/webp",
+    "etag": "45efede700cfc71c7bdb6682207367f0",
+    "height": 1280,
+    "width": 960
   },
   "dou-gou-7.webp": {
     "height": 1440,
     "width": 1080,
     "bytes": 87088,
     "contentType": "image/webp",
-    "etag": "006aba1e41439e0d9fdd8cbb64fa7828"
+    "etag": "006aba1e41439e0d9fdd8cbb64fa7828",
+    "variants": [
+      "dou-gou-7-480w.webp",
+      "dou-gou-7-960w.webp"
+    ]
+  },
+  "dou-gou-960w.webp": {
+    "bytes": 67186,
+    "contentType": "image/webp",
+    "etag": "55e40c6881445233fce538e3a83c19cd",
+    "height": 640,
+    "width": 960
   },
   "dou-gou.webp": {
     "height": 1080,
     "width": 1620,
     "bytes": 263894,
     "contentType": "image/webp",
-    "etag": "dbc3103e1b024186a856b3abe9711f7c"
+    "etag": "dbc3103e1b024186a856b3abe9711f7c",
+    "variants": [
+      "dou-gou-480w.webp",
+      "dou-gou-960w.webp"
+    ]
   }
 }

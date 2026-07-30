@@ -1,16 +1,52 @@
 {
+  "lun-tai-zhe-yang-ya-dao-ding-zi-xu-yao-2-480w.webp": {
+    "bytes": 27936,
+    "contentType": "image/webp",
+    "etag": "2108a788acee29acd8405dac2e729b95",
+    "height": 853,
+    "width": 480
+  },
+  "lun-tai-zhe-yang-ya-dao-ding-zi-xu-yao-2-960w.webp": {
+    "bytes": 62960,
+    "contentType": "image/webp",
+    "etag": "88c62c06bff1a7d1f75ef0eb1966dde6",
+    "height": 1707,
+    "width": 960
+  },
   "lun-tai-zhe-yang-ya-dao-ding-zi-xu-yao-2.webp": {
     "height": 1920,
     "width": 1080,
     "bytes": 103076,
     "contentType": "image/webp",
-    "etag": "85fa411d48ac9b76c4c81fa3829de6ee"
+    "etag": "85fa411d48ac9b76c4c81fa3829de6ee",
+    "variants": [
+      "lun-tai-zhe-yang-ya-dao-ding-zi-xu-yao-2-480w.webp",
+      "lun-tai-zhe-yang-ya-dao-ding-zi-xu-yao-2-960w.webp"
+    ]
+  },
+  "lun-tai-zhe-yang-ya-dao-ding-zi-xu-yao-480w.webp": {
+    "bytes": 16416,
+    "contentType": "image/webp",
+    "etag": "5675b6500e983f147afc5cda2a60dbe4",
+    "height": 853,
+    "width": 480
+  },
+  "lun-tai-zhe-yang-ya-dao-ding-zi-xu-yao-960w.webp": {
+    "bytes": 38786,
+    "contentType": "image/webp",
+    "etag": "f7be1da82c818c247e01adb09fb7e833",
+    "height": 1707,
+    "width": 960
   },
   "lun-tai-zhe-yang-ya-dao-ding-zi-xu-yao.webp": {
     "height": 1920,
     "width": 1080,
     "bytes": 67002,
     "contentType": "image/webp",
-    "etag": "adafb223478b0b395c288362b5417d1f"
+    "etag": "adafb223478b0b395c288362b5417d1f",
+    "variants": [
+      "lun-tai-zhe-yang-ya-dao-ding-zi-xu-yao-480w.webp",
+      "lun-tai-zhe-yang-ya-dao-ding-zi-xu-yao-960w.webp"
+    ]
   }
 }

@@ -1,9 +1,35 @@
 {
+  "di-er-ge-shi-multithread-linting-ke-yi-rang-ni-1920w.webp": {
+    "bytes": 113366,
+    "contentType": "image/webp",
+    "etag": "5d337bc24494a30fc294335db0d33432",
+    "height": 771,
+    "width": 1920
+  },
+  "di-er-ge-shi-multithread-linting-ke-yi-rang-ni-480w.webp": {
+    "bytes": 17312,
+    "contentType": "image/webp",
+    "etag": "3afa84a386dd747af591ba98adced7ef",
+    "height": 193,
+    "width": 480
+  },
+  "di-er-ge-shi-multithread-linting-ke-yi-rang-ni-960w.webp": {
+    "bytes": 50308,
+    "contentType": "image/webp",
+    "etag": "8aefff1e2c9fb350b37446fc05ffb050",
+    "height": 385,
+    "width": 960
+  },
   "di-er-ge-shi-multithread-linting-ke-yi-rang-ni.jpg": {
     "height": 1052,
     "width": 2620,
     "bytes": 288316,
     "contentType": "image/jpeg",
-    "etag": "993b35673dea9fd57d5c9213ffc26864"
+    "etag": "993b35673dea9fd57d5c9213ffc26864",
+    "variants": [
+      "di-er-ge-shi-multithread-linting-ke-yi-rang-ni-480w.webp",
+      "di-er-ge-shi-multithread-linting-ke-yi-rang-ni-960w.webp",
+      "di-er-ge-shi-multithread-linting-ke-yi-rang-ni-1920w.webp"
+    ]
   }
 }

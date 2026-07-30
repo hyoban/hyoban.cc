@@ -1,23 +1,77 @@
 {
+  "wu-yuan-you-ge-gong-yuan-wen-bo-yi-shu-2-480w.webp": {
+    "bytes": 41908,
+    "contentType": "image/webp",
+    "etag": "9bb8fd8bac891bdda0cd79b25c2e41a5",
+    "height": 360,
+    "width": 480
+  },
+  "wu-yuan-you-ge-gong-yuan-wen-bo-yi-shu-2-960w.webp": {
+    "bytes": 154352,
+    "contentType": "image/webp",
+    "etag": "a940f1cedb64b4fdc46df0bc55a16f67",
+    "height": 720,
+    "width": 960
+  },
   "wu-yuan-you-ge-gong-yuan-wen-bo-yi-shu-2.jpg": {
     "height": 960,
     "width": 1280,
     "bytes": 244397,
     "contentType": "image/jpeg",
-    "etag": "fdf67b5224577b75d80f6ff55eba5b02"
+    "etag": "fdf67b5224577b75d80f6ff55eba5b02",
+    "variants": [
+      "wu-yuan-you-ge-gong-yuan-wen-bo-yi-shu-2-480w.webp",
+      "wu-yuan-you-ge-gong-yuan-wen-bo-yi-shu-2-960w.webp"
+    ]
+  },
+  "wu-yuan-you-ge-gong-yuan-wen-bo-yi-shu-3-480w.webp": {
+    "bytes": 57802,
+    "contentType": "image/webp",
+    "etag": "bd6c9ae9d8fa80831c278484be5ecc1a",
+    "height": 360,
+    "width": 480
+  },
+  "wu-yuan-you-ge-gong-yuan-wen-bo-yi-shu-3-960w.webp": {
+    "bytes": 231260,
+    "contentType": "image/webp",
+    "etag": "970fa3223dd9ae7a0a70fa22580626f5",
+    "height": 720,
+    "width": 960
   },
   "wu-yuan-you-ge-gong-yuan-wen-bo-yi-shu-3.jpg": {
     "height": 960,
     "width": 1280,
     "bytes": 323027,
     "contentType": "image/jpeg",
-    "etag": "d277131dccb939e83b9d32b4eaaee421"
+    "etag": "d277131dccb939e83b9d32b4eaaee421",
+    "variants": [
+      "wu-yuan-you-ge-gong-yuan-wen-bo-yi-shu-3-480w.webp",
+      "wu-yuan-you-ge-gong-yuan-wen-bo-yi-shu-3-960w.webp"
+    ]
+  },
+  "wu-yuan-you-ge-gong-yuan-wen-bo-yi-shu-480w.webp": {
+    "bytes": 55798,
+    "contentType": "image/webp",
+    "etag": "235b43c2d3b2c0433504ac7a8c8a7ccc",
+    "height": 360,
+    "width": 480
+  },
+  "wu-yuan-you-ge-gong-yuan-wen-bo-yi-shu-960w.webp": {
+    "bytes": 220536,
+    "contentType": "image/webp",
+    "etag": "fe2b781eafd44b3714eef50b4887c7e3",
+    "height": 720,
+    "width": 960
   },
   "wu-yuan-you-ge-gong-yuan-wen-bo-yi-shu.jpg": {
     "height": 960,
     "width": 1280,
     "bytes": 323441,
     "contentType": "image/jpeg",
-    "etag": "72516db8a1c97dc8d327c9ce7e266beb"
+    "etag": "72516db8a1c97dc8d327c9ce7e266beb",
+    "variants": [
+      "wu-yuan-you-ge-gong-yuan-wen-bo-yi-shu-480w.webp",
+      "wu-yuan-you-ge-gong-yuan-wen-bo-yi-shu-960w.webp"
+    ]
   }
 }

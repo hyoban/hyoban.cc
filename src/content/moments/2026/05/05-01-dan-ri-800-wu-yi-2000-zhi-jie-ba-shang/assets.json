@@ -1,16 +1,52 @@
 {
+  "dan-ri-800-wu-yi-2000-zhi-jie-ba-shang-2-480w.webp": {
+    "bytes": 29336,
+    "contentType": "image/webp",
+    "etag": "132e7e6f218c0e321635ba4bd1412132",
+    "height": 480,
+    "width": 480
+  },
+  "dan-ri-800-wu-yi-2000-zhi-jie-ba-shang-2-960w.webp": {
+    "bytes": 88548,
+    "contentType": "image/webp",
+    "etag": "281041a6a868e30146a82d50d35ba40e",
+    "height": 960,
+    "width": 960
+  },
   "dan-ri-800-wu-yi-2000-zhi-jie-ba-shang-2.jpg": {
     "height": 1280,
     "width": 1280,
     "bytes": 171965,
     "contentType": "image/jpeg",
-    "etag": "1c525d9990ca1531a308e283b2f88717"
+    "etag": "1c525d9990ca1531a308e283b2f88717",
+    "variants": [
+      "dan-ri-800-wu-yi-2000-zhi-jie-ba-shang-2-480w.webp",
+      "dan-ri-800-wu-yi-2000-zhi-jie-ba-shang-2-960w.webp"
+    ]
+  },
+  "dan-ri-800-wu-yi-2000-zhi-jie-ba-shang-480w.webp": {
+    "bytes": 21636,
+    "contentType": "image/webp",
+    "etag": "81067e0ca8dfedaf585dab0f7a464b88",
+    "height": 480,
+    "width": 480
+  },
+  "dan-ri-800-wu-yi-2000-zhi-jie-ba-shang-960w.webp": {
+    "bytes": 57372,
+    "contentType": "image/webp",
+    "etag": "f92e188a1e150049fb7ab91008c82e80",
+    "height": 960,
+    "width": 960
   },
   "dan-ri-800-wu-yi-2000-zhi-jie-ba-shang.jpg": {
     "height": 1280,
     "width": 1280,
     "bytes": 127915,
     "contentType": "image/jpeg",
-    "etag": "47f838f2f071668bfb041de3049ad6b6"
+    "etag": "47f838f2f071668bfb041de3049ad6b6",
+    "variants": [
+      "dan-ri-800-wu-yi-2000-zhi-jie-ba-shang-480w.webp",
+      "dan-ri-800-wu-yi-2000-zhi-jie-ba-shang-960w.webp"
+    ]
   }
 }

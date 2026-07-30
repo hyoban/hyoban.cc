@@ -1,9 +1,27 @@
 {
+  "etc-storage-480w.webp": {
+    "bytes": 14986,
+    "contentType": "image/webp",
+    "etag": "934fcc323e824cb6c57ae8ec061d3f49",
+    "height": 640,
+    "width": 480
+  },
+  "etc-storage-960w.webp": {
+    "bytes": 40018,
+    "contentType": "image/webp",
+    "etag": "6a6abae0a58ee71ea9378df414e3f1e5",
+    "height": 1280,
+    "width": 960
+  },
   "etc-storage.webp": {
     "height": 1920,
     "width": 1440,
     "bytes": 112236,
     "contentType": "image/webp",
-    "etag": "29a4c6dadbcd1ea1e2877e88129ed990"
+    "etag": "29a4c6dadbcd1ea1e2877e88129ed990",
+    "variants": [
+      "etc-storage-480w.webp",
+      "etc-storage-960w.webp"
+    ]
   }
 }

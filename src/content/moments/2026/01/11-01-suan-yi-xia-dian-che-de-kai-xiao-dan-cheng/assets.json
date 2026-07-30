@@ -1,9 +1,27 @@
 {
+  "suan-yi-xia-dian-che-de-kai-xiao-dan-cheng-480w.webp": {
+    "bytes": 7654,
+    "contentType": "image/webp",
+    "etag": "3cb650e3892e874ce0d07f150dcd3463",
+    "height": 270,
+    "width": 480
+  },
+  "suan-yi-xia-dian-che-de-kai-xiao-dan-cheng-960w.webp": {
+    "bytes": 18312,
+    "contentType": "image/webp",
+    "etag": "65df3c6e63438d1905530a0492f3dcfa",
+    "height": 540,
+    "width": 960
+  },
   "suan-yi-xia-dian-che-de-kai-xiao-dan-cheng.jpg": {
     "height": 1080,
     "width": 1920,
     "bytes": 81084,
     "contentType": "image/jpeg",
-    "etag": "e0da83b008b39e586bd438b2be18bd70"
+    "etag": "e0da83b008b39e586bd438b2be18bd70",
+    "variants": [
+      "suan-yi-xia-dian-che-de-kai-xiao-dan-cheng-480w.webp",
+      "suan-yi-xia-dian-che-de-kai-xiao-dan-cheng-960w.webp"
+    ]
   }
 }

@@ -1,9 +1,27 @@
 {
+  "xia-ge-ban-ben-de-follow-app-zhong-jiang-zhi-480w.webp": {
+    "bytes": 23452,
+    "contentType": "image/webp",
+    "etag": "837ab61251df87a10ccdbf53afdf8227",
+    "height": 493,
+    "width": 480
+  },
+  "xia-ge-ban-ben-de-follow-app-zhong-jiang-zhi-960w.webp": {
+    "bytes": 68096,
+    "contentType": "image/webp",
+    "etag": "5c2202da5c5ea0963440ff1d48e47e12",
+    "height": 985,
+    "width": 960
+  },
   "xia-ge-ban-ben-de-follow-app-zhong-jiang-zhi.jpg": {
     "height": 1650,
     "width": 1608,
     "bytes": 235359,
     "contentType": "image/jpeg",
-    "etag": "015a0e8b6cfd8fec5ecf65df2d29efc1"
+    "etag": "015a0e8b6cfd8fec5ecf65df2d29efc1",
+    "variants": [
+      "xia-ge-ban-ben-de-follow-app-zhong-jiang-zhi-480w.webp",
+      "xia-ge-ban-ben-de-follow-app-zhong-jiang-zhi-960w.webp"
+    ]
   }
 }

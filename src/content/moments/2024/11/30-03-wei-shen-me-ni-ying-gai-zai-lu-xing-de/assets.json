@@ -1,9 +1,27 @@
 {
+  "wei-shen-me-ni-ying-gai-zai-lu-xing-de-480w.webp": {
+    "bytes": 36444,
+    "contentType": "image/webp",
+    "etag": "a74f0fceecd4cbc79d9a7b36b1cc564b",
+    "height": 853,
+    "width": 480
+  },
+  "wei-shen-me-ni-ying-gai-zai-lu-xing-de-960w.webp": {
+    "bytes": 119136,
+    "contentType": "image/webp",
+    "etag": "5ac46db42d3ae60f89705b9e8fa8257b",
+    "height": 1707,
+    "width": 960
+  },
   "wei-shen-me-ni-ying-gai-zai-lu-xing-de.jpg": {
     "height": 2048,
     "width": 1152,
     "bytes": 266022,
     "contentType": "image/jpeg",
-    "etag": "fffa2fa4e4db819bde472cdf4349e3e2"
+    "etag": "fffa2fa4e4db819bde472cdf4349e3e2",
+    "variants": [
+      "wei-shen-me-ni-ying-gai-zai-lu-xing-de-480w.webp",
+      "wei-shen-me-ni-ying-gai-zai-lu-xing-de-960w.webp"
+    ]
   }
 }

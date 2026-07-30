@@ -1,9 +1,27 @@
 {
+  "ban-dong-xi-dao-zu-de-fang-zi-le-qi-480w.webp": {
+    "bytes": 16744,
+    "contentType": "image/webp",
+    "etag": "70dc7fa71b2c95a78e8938611449a1f9",
+    "height": 270,
+    "width": 480
+  },
+  "ban-dong-xi-dao-zu-de-fang-zi-le-qi-960w.webp": {
+    "bytes": 44586,
+    "contentType": "image/webp",
+    "etag": "c014ffc9236a15a24353c89af1c3cda7",
+    "height": 540,
+    "width": 960
+  },
   "ban-dong-xi-dao-zu-de-fang-zi-le-qi.jpg": {
     "height": 1080,
     "width": 1920,
     "bytes": 215720,
     "contentType": "image/jpeg",
-    "etag": "f88cafa72e3d857906e05915b974d7d9"
+    "etag": "f88cafa72e3d857906e05915b974d7d9",
+    "variants": [
+      "ban-dong-xi-dao-zu-de-fang-zi-le-qi-480w.webp",
+      "ban-dong-xi-dao-zu-de-fang-zi-le-qi-960w.webp"
+    ]
   }
 }

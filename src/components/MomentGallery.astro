@@ -8,6 +8,9 @@ interface Props {
 const { media } = Astro.props
 const galleryClass = `moment-gallery moment-gallery--${Math.min(media.length, 4)}`
 const isSingle = media.length === 1
+const imageSizes = isSingle
+  ? '(max-width: 640px) calc(100vw - 2rem), 960px'
+  : '(max-width: 640px) calc((100vw - 2.25rem) / 2), 480px'
 ---
 
 <div
@@ -33,10 +36,12 @@ const isSingle = media.length === 1
             aria-label={`查看图片 ${index + 1}`}
           >
             <img
-              src={item.src.src}
+              src={item.src.sources.find(source => source.width >= 960)?.src ?? item.src.sources.at(-1)?.src ?? item.src.src}
+              srcset={item.src.sources.map(source => `${source.src} ${source.width}w`).join(', ')}
+              sizes={imageSizes}
               alt={item.alt}
-              width={Math.min(item.src.width, 960)}
-              height={Math.round(Math.min(item.src.width, 960) * item.src.height / item.src.width)}
+              width={item.src.width}
+              height={item.src.height}
               loading="lazy"
               decoding="async"
               class:list={[

@@ -1,72 +1,252 @@
 {
+  "zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-10-480w.webp": {
+    "bytes": 18172,
+    "contentType": "image/webp",
+    "etag": "18716387b52ff6ffc1dbd9072acbec8f",
+    "height": 270,
+    "width": 480
+  },
+  "zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-10-960w.webp": {
+    "bytes": 48758,
+    "contentType": "image/webp",
+    "etag": "517f868f5f1fe1e2a235f60c4479ee1b",
+    "height": 540,
+    "width": 960
+  },
   "zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-10.webp": {
     "height": 1080,
     "width": 1920,
     "bytes": 160652,
     "contentType": "image/webp",
-    "etag": "a77182bca73a7d6584554000fa2af0e3"
+    "etag": "a77182bca73a7d6584554000fa2af0e3",
+    "variants": [
+      "zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-10-480w.webp",
+      "zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-10-960w.webp"
+    ]
+  },
+  "zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-2-480w.webp": {
+    "bytes": 19162,
+    "contentType": "image/webp",
+    "etag": "63d826134a366cc97a5c442896901ecb",
+    "height": 360,
+    "width": 480
+  },
+  "zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-2-960w.webp": {
+    "bytes": 62456,
+    "contentType": "image/webp",
+    "etag": "e8d579a72be66163108dce55f0a7e47c",
+    "height": 720,
+    "width": 960
   },
   "zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-2.webp": {
     "height": 1080,
     "width": 1440,
     "bytes": 202196,
     "contentType": "image/webp",
-    "etag": "71931d8547433e720232ec55ed92740a"
+    "etag": "71931d8547433e720232ec55ed92740a",
+    "variants": [
+      "zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-2-480w.webp",
+      "zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-2-960w.webp"
+    ]
+  },
+  "zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-3-480w.webp": {
+    "bytes": 41442,
+    "contentType": "image/webp",
+    "etag": "07679b21b245bd71de22b6faf0524d23",
+    "height": 640,
+    "width": 480
+  },
+  "zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-3-960w.webp": {
+    "bytes": 135824,
+    "contentType": "image/webp",
+    "etag": "a134d4a4aeafff023497790e09ca5cc4",
+    "height": 1280,
+    "width": 960
   },
   "zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-3.webp": {
     "height": 1440,
     "width": 1080,
     "bytes": 265668,
     "contentType": "image/webp",
-    "etag": "02e8f6d747193a1c7fc07b91daf6494b"
+    "etag": "02e8f6d747193a1c7fc07b91daf6494b",
+    "variants": [
+      "zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-3-480w.webp",
+      "zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-3-960w.webp"
+    ]
+  },
+  "zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-4-480w.webp": {
+    "bytes": 41190,
+    "contentType": "image/webp",
+    "etag": "f9f985799c555ef896cf3b999a7b9b6f",
+    "height": 360,
+    "width": 480
+  },
+  "zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-4-960w.webp": {
+    "bytes": 143556,
+    "contentType": "image/webp",
+    "etag": "56be182291cd5ab701b80a3f9dd75e9b",
+    "height": 720,
+    "width": 960
   },
   "zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-4.webp": {
     "height": 1080,
     "width": 1440,
     "bytes": 421438,
     "contentType": "image/webp",
-    "etag": "e1cfdcd5f182539c2df446f7c10810e6"
+    "etag": "e1cfdcd5f182539c2df446f7c10810e6",
+    "variants": [
+      "zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-4-480w.webp",
+      "zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-4-960w.webp"
+    ]
+  },
+  "zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-480w.webp": {
+    "bytes": 55824,
+    "contentType": "image/webp",
+    "etag": "8b4907ddbe7b8cdabc1354c4d034045c",
+    "height": 640,
+    "width": 480
+  },
+  "zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-5-480w.webp": {
+    "bytes": 45684,
+    "contentType": "image/webp",
+    "etag": "cca92d7d13951325516cc63ff8e5a0d1",
+    "height": 360,
+    "width": 480
+  },
+  "zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-5-960w.webp": {
+    "bytes": 161676,
+    "contentType": "image/webp",
+    "etag": "af5702dc10ddd1d3554256d7c7c7131a",
+    "height": 720,
+    "width": 960
   },
   "zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-5.webp": {
     "height": 1080,
     "width": 1440,
     "bytes": 488344,
     "contentType": "image/webp",
-    "etag": "5436814138628d31e1f15d91c8495268"
+    "etag": "5436814138628d31e1f15d91c8495268",
+    "variants": [
+      "zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-5-480w.webp",
+      "zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-5-960w.webp"
+    ]
+  },
+  "zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-6-480w.webp": {
+    "bytes": 55858,
+    "contentType": "image/webp",
+    "etag": "42780fb91ef4640055e27d508a61eddb",
+    "height": 640,
+    "width": 480
+  },
+  "zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-6-960w.webp": {
+    "bytes": 191458,
+    "contentType": "image/webp",
+    "etag": "868241bcc3e72edde9c379321c18e499",
+    "height": 1280,
+    "width": 960
   },
   "zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-6.webp": {
     "height": 1440,
     "width": 1080,
     "bytes": 411930,
     "contentType": "image/webp",
-    "etag": "ef84fde2c8d7905026949c80e42e844e"
+    "etag": "ef84fde2c8d7905026949c80e42e844e",
+    "variants": [
+      "zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-6-480w.webp",
+      "zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-6-960w.webp"
+    ]
+  },
+  "zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-7-480w.webp": {
+    "bytes": 42930,
+    "contentType": "image/webp",
+    "etag": "9046c43e6fcbd58428ecfcbf63222f96",
+    "height": 360,
+    "width": 480
+  },
+  "zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-7-960w.webp": {
+    "bytes": 155528,
+    "contentType": "image/webp",
+    "etag": "58aa853e098d42e672a138eecc817e5b",
+    "height": 720,
+    "width": 960
   },
   "zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-7.webp": {
     "height": 1080,
     "width": 1440,
     "bytes": 462320,
     "contentType": "image/webp",
-    "etag": "55e6e46718ca61f09d75200618fb346b"
+    "etag": "55e6e46718ca61f09d75200618fb346b",
+    "variants": [
+      "zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-7-480w.webp",
+      "zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-7-960w.webp"
+    ]
+  },
+  "zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-8-480w.webp": {
+    "bytes": 23470,
+    "contentType": "image/webp",
+    "etag": "a7a35d08b9d128e132b3545d4eb35b26",
+    "height": 360,
+    "width": 480
+  },
+  "zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-8-960w.webp": {
+    "bytes": 89776,
+    "contentType": "image/webp",
+    "etag": "89455022638fa82035229b515801148c",
+    "height": 720,
+    "width": 960
   },
   "zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-8.webp": {
     "height": 1080,
     "width": 1440,
     "bytes": 285268,
     "contentType": "image/webp",
-    "etag": "d0aae7993ffda003938758e859395e67"
+    "etag": "d0aae7993ffda003938758e859395e67",
+    "variants": [
+      "zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-8-480w.webp",
+      "zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-8-960w.webp"
+    ]
+  },
+  "zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-9-480w.webp": {
+    "bytes": 59770,
+    "contentType": "image/webp",
+    "etag": "dfbbcf139c57acf7d0c52fa77a55598f",
+    "height": 853,
+    "width": 480
+  },
+  "zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-9-960w.webp": {
+    "bytes": 162408,
+    "contentType": "image/webp",
+    "etag": "157ef76b66cd70aaf162630d4b84006a",
+    "height": 1707,
+    "width": 960
   },
   "zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-9.webp": {
     "height": 1920,
     "width": 1080,
     "bytes": 274852,
     "contentType": "image/webp",
-    "etag": "bdeba1a92a284f1430dcfa49e325158e"
+    "etag": "bdeba1a92a284f1430dcfa49e325158e",
+    "variants": [
+      "zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-9-480w.webp",
+      "zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-9-960w.webp"
+    ]
+  },
+  "zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-960w.webp": {
+    "bytes": 147572,
+    "contentType": "image/webp",
+    "etag": "380e59e3f3bf6a947cd2caf8fc8fcd5b",
+    "height": 1279,
+    "width": 960
   },
   "zi-jia-chuan-xi-di-yi-tian-tian-quan-kang.webp": {
     "height": 1439,
     "width": 1080,
     "bytes": 324012,
     "contentType": "image/webp",
-    "etag": "5823049eba880a88c9c9577adae79249"
+    "etag": "5823049eba880a88c9c9577adae79249",
+    "variants": [
+      "zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-480w.webp",
+      "zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-960w.webp"
+    ]
   }
 }

@@ -1,23 +1,61 @@
 {
+  "wo-xie-le-ge-demo-de-yi-yu-vite-fang-2-480w.webp": {
+    "bytes": 4766,
+    "contentType": "image/webp",
+    "etag": "599da333b542223fc83f94890ff7b488",
+    "height": 162,
+    "width": 480
+  },
   "wo-xie-le-ge-demo-de-yi-yu-vite-fang-2.png": {
     "height": 214,
     "width": 636,
     "bytes": 21918,
     "contentType": "image/png",
-    "etag": "7f311fc7a26da8231e34536e68db442b"
+    "etag": "7f311fc7a26da8231e34536e68db442b",
+    "variants": [
+      "wo-xie-le-ge-demo-de-yi-yu-vite-fang-2-480w.webp"
+    ]
+  },
+  "wo-xie-le-ge-demo-de-yi-yu-vite-fang-3-480w.webp": {
+    "bytes": 17718,
+    "contentType": "image/webp",
+    "etag": "4c00eae8e62123efe80996cfdfe393dc",
+    "height": 390,
+    "width": 480
   },
   "wo-xie-le-ge-demo-de-yi-yu-vite-fang-3.jpg": {
     "height": 776,
     "width": 956,
     "bytes": 67747,
     "contentType": "image/jpeg",
-    "etag": "c62a34b2bbed63f0b65e51565d27bd68"
+    "etag": "c62a34b2bbed63f0b65e51565d27bd68",
+    "variants": [
+      "wo-xie-le-ge-demo-de-yi-yu-vite-fang-3-480w.webp"
+    ]
+  },
+  "wo-xie-le-ge-demo-de-yi-yu-vite-fang-480w.webp": {
+    "bytes": 14548,
+    "contentType": "image/webp",
+    "etag": "a105516d3a0faaec742a37b56be72cd8",
+    "height": 253,
+    "width": 480
+  },
+  "wo-xie-le-ge-demo-de-yi-yu-vite-fang-960w.webp": {
+    "bytes": 41916,
+    "contentType": "image/webp",
+    "etag": "8e08cc9d4296747f4c49c0d42a3a3ac2",
+    "height": 505,
+    "width": 960
   },
   "wo-xie-le-ge-demo-de-yi-yu-vite-fang.jpg": {
     "height": 856,
     "width": 1626,
     "bytes": 139837,
     "contentType": "image/jpeg",
-    "etag": "872edede5006ca8be65e1a76cdb99d81"
+    "etag": "872edede5006ca8be65e1a76cdb99d81",
+    "variants": [
+      "wo-xie-le-ge-demo-de-yi-yu-vite-fang-480w.webp",
+      "wo-xie-le-ge-demo-de-yi-yu-vite-fang-960w.webp"
+    ]
   }
 }

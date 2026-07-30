@@ -1,30 +1,86 @@
 {
+  "yao-ye-lu-ying-kai-shi-2-480w.webp": {
+    "bytes": 60704,
+    "contentType": "image/webp",
+    "etag": "6b33aacbdf4146576b656cfa47b64f56",
+    "height": 360,
+    "width": 480
+  },
+  "yao-ye-lu-ying-kai-shi-2-960w.webp": {
+    "bytes": 228578,
+    "contentType": "image/webp",
+    "etag": "bdbd59cf626c7714d1145d1b002662ea",
+    "height": 720,
+    "width": 960
+  },
   "yao-ye-lu-ying-kai-shi-2.jpg": {
     "height": 960,
     "width": 1280,
     "bytes": 354709,
     "contentType": "image/jpeg",
-    "etag": "b3f7492f1cc83ed6832a738dbe517646"
+    "etag": "b3f7492f1cc83ed6832a738dbe517646",
+    "variants": [
+      "yao-ye-lu-ying-kai-shi-2-480w.webp",
+      "yao-ye-lu-ying-kai-shi-2-960w.webp"
+    ]
+  },
+  "yao-ye-lu-ying-kai-shi-3-480w.webp": {
+    "bytes": 62984,
+    "contentType": "image/webp",
+    "etag": "bf6d8bf314240e4779cec3aab9714d09",
+    "height": 360,
+    "width": 480
+  },
+  "yao-ye-lu-ying-kai-shi-3-960w.webp": {
+    "bytes": 270012,
+    "contentType": "image/webp",
+    "etag": "261c9927a8a273c341744990e74f8d89",
+    "height": 720,
+    "width": 960
   },
   "yao-ye-lu-ying-kai-shi-3.jpg": {
     "height": 960,
     "width": 1280,
     "bytes": 409750,
     "contentType": "image/jpeg",
-    "etag": "1955384b6aab0e9dc7b9427376df25ac"
+    "etag": "1955384b6aab0e9dc7b9427376df25ac",
+    "variants": [
+      "yao-ye-lu-ying-kai-shi-3-480w.webp",
+      "yao-ye-lu-ying-kai-shi-3-960w.webp"
+    ]
+  },
+  "yao-ye-lu-ying-kai-shi-4-480w.webp": {
+    "bytes": 36908,
+    "contentType": "image/webp",
+    "etag": "7f592a812c466842c8868cf84fe5bf9e",
+    "height": 640,
+    "width": 480
   },
   "yao-ye-lu-ying-kai-shi-4.jpg": {
     "height": 1280,
     "width": 960,
     "bytes": 135175,
     "contentType": "image/jpeg",
-    "etag": "d52ffa7b1d8ff0db2cf253cf3b996a7b"
+    "etag": "d52ffa7b1d8ff0db2cf253cf3b996a7b",
+    "variants": [
+      "yao-ye-lu-ying-kai-shi-4-480w.webp"
+    ]
+  },
+  "yao-ye-lu-ying-kai-shi-480w.webp": {
+    "bytes": 31304,
+    "contentType": "image/webp",
+    "etag": "e8d97294d45cf8920b4d62c7917deadb",
+    "height": 640,
+    "width": 480
   },
   "yao-ye-lu-ying-kai-shi.jpg": {
     "height": 1280,
     "width": 960,
     "bytes": 111878,
     "contentType": "image/jpeg",
-    "etag": "452ab52392b900c8e5c942e7ce3943ad"
+    "etag": "452ab52392b900c8e5c942e7ce3943ad",
+    "variants": [
+      "yao-ye-lu-ying-kai-shi-480w.webp"
+    ]
   }
 }

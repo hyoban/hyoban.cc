@@ -1,9 +1,35 @@
 {
+  "hun-li-shang-shou-dao-le-shou-xie-de-he-1920w.webp": {
+    "bytes": 214944,
+    "contentType": "image/webp",
+    "etag": "51514f78c98a28e1465c9f3e605fa3b8",
+    "height": 1440,
+    "width": 1920
+  },
+  "hun-li-shang-shou-dao-le-shou-xie-de-he-480w.webp": {
+    "bytes": 19254,
+    "contentType": "image/webp",
+    "etag": "f5d2e13158364de65f8452b463a07261",
+    "height": 360,
+    "width": 480
+  },
+  "hun-li-shang-shou-dao-le-shou-xie-de-he-960w.webp": {
+    "bytes": 68270,
+    "contentType": "image/webp",
+    "etag": "9d7c1e7c17d582266a879898b6dbafc8",
+    "height": 720,
+    "width": 960
+  },
   "hun-li-shang-shou-dao-le-shou-xie-de-he.jpg": {
     "height": 1536,
     "width": 2048,
     "bytes": 421466,
     "contentType": "image/jpeg",
-    "etag": "623b89d54adf665e77ad94badac7ca35"
+    "etag": "623b89d54adf665e77ad94badac7ca35",
+    "variants": [
+      "hun-li-shang-shou-dao-le-shou-xie-de-he-480w.webp",
+      "hun-li-shang-shou-dao-le-shou-xie-de-he-960w.webp",
+      "hun-li-shang-shou-dao-le-shou-xie-de-he-1920w.webp"
+    ]
   }
 }

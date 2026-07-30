@@ -1,16 +1,36 @@
 {
+  "1-kai-qi-hou-de-bao-cuo-2-480w.webp": {
+    "bytes": 7424,
+    "contentType": "image/webp",
+    "etag": "68508af883e6a3d522273208d248ac5d",
+    "height": 396,
+    "width": 480
+  },
   "1-kai-qi-hou-de-bao-cuo-2.png": {
     "height": 412,
     "width": 500,
     "bytes": 29450,
     "contentType": "image/png",
-    "etag": "05fdce1d2f72668af689ff73cf9cef91"
+    "etag": "05fdce1d2f72668af689ff73cf9cef91",
+    "variants": [
+      "1-kai-qi-hou-de-bao-cuo-2-480w.webp"
+    ]
+  },
+  "1-kai-qi-hou-de-bao-cuo-480w.webp": {
+    "bytes": 16910,
+    "contentType": "image/webp",
+    "etag": "fca4e6a037987fdee2bbeef7116693ee",
+    "height": 418,
+    "width": 480
   },
   "1-kai-qi-hou-de-bao-cuo.png": {
     "height": 592,
     "width": 680,
     "bytes": 76098,
     "contentType": "image/png",
-    "etag": "1f344a80bfa457626a82f41e70632569"
+    "etag": "1f344a80bfa457626a82f41e70632569",
+    "variants": [
+      "1-kai-qi-hou-de-bao-cuo-480w.webp"
+    ]
   }
 }

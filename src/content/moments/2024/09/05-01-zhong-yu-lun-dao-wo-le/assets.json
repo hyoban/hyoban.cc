@@ -1,9 +1,27 @@
 {
+  "zhong-yu-lun-dao-wo-le-480w.webp": {
+    "bytes": 19202,
+    "contentType": "image/webp",
+    "etag": "5d0f0b8490e66997c9c69f2ec2046902",
+    "height": 640,
+    "width": 480
+  },
+  "zhong-yu-lun-dao-wo-le-960w.webp": {
+    "bytes": 57060,
+    "contentType": "image/webp",
+    "etag": "f886ee6552b5556b12edeb8647130129",
+    "height": 1280,
+    "width": 960
+  },
   "zhong-yu-lun-dao-wo-le.jpg": {
     "height": 2048,
     "width": 1536,
     "bytes": 236146,
     "contentType": "image/jpeg",
-    "etag": "4a47b9628429129d8d9906119813ffaa"
+    "etag": "4a47b9628429129d8d9906119813ffaa",
+    "variants": [
+      "zhong-yu-lun-dao-wo-le-480w.webp",
+      "zhong-yu-lun-dao-wo-le-960w.webp"
+    ]
   }
 }

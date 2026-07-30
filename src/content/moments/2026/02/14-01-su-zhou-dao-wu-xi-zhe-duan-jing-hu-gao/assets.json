@@ -1,23 +1,77 @@
 {
+  "su-zhou-dao-wu-xi-zhe-duan-jing-hu-gao-2-480w.webp": {
+    "bytes": 24690,
+    "contentType": "image/webp",
+    "etag": "39aaabc9b0f86529f15e04b952ea8d0c",
+    "height": 853,
+    "width": 480
+  },
+  "su-zhou-dao-wu-xi-zhe-duan-jing-hu-gao-2-960w.webp": {
+    "bytes": 61362,
+    "contentType": "image/webp",
+    "etag": "1d8e25e77f35d12df536f5e1ee23e7ab",
+    "height": 1707,
+    "width": 960
+  },
   "su-zhou-dao-wu-xi-zhe-duan-jing-hu-gao-2.jpg": {
     "height": 2048,
     "width": 1152,
     "bytes": 173978,
     "contentType": "image/jpeg",
-    "etag": "687b337f929ec8ae182538670fc476fc"
+    "etag": "687b337f929ec8ae182538670fc476fc",
+    "variants": [
+      "su-zhou-dao-wu-xi-zhe-duan-jing-hu-gao-2-480w.webp",
+      "su-zhou-dao-wu-xi-zhe-duan-jing-hu-gao-2-960w.webp"
+    ]
+  },
+  "su-zhou-dao-wu-xi-zhe-duan-jing-hu-gao-3-480w.webp": {
+    "bytes": 25176,
+    "contentType": "image/webp",
+    "etag": "168d279d59e36f24cbb5f5c0c79a4a76",
+    "height": 853,
+    "width": 480
+  },
+  "su-zhou-dao-wu-xi-zhe-duan-jing-hu-gao-3-960w.webp": {
+    "bytes": 64006,
+    "contentType": "image/webp",
+    "etag": "c12b389e575da58d386501b281598ad8",
+    "height": 1707,
+    "width": 960
   },
   "su-zhou-dao-wu-xi-zhe-duan-jing-hu-gao-3.jpg": {
     "height": 2048,
     "width": 1152,
     "bytes": 177801,
     "contentType": "image/jpeg",
-    "etag": "3e4e7a8c6633ac903c9e0d070035e5ae"
+    "etag": "3e4e7a8c6633ac903c9e0d070035e5ae",
+    "variants": [
+      "su-zhou-dao-wu-xi-zhe-duan-jing-hu-gao-3-480w.webp",
+      "su-zhou-dao-wu-xi-zhe-duan-jing-hu-gao-3-960w.webp"
+    ]
+  },
+  "su-zhou-dao-wu-xi-zhe-duan-jing-hu-gao-480w.webp": {
+    "bytes": 94018,
+    "contentType": "image/webp",
+    "etag": "07f92643eac82152ff63fe18ded37f6c",
+    "height": 853,
+    "width": 480
+  },
+  "su-zhou-dao-wu-xi-zhe-duan-jing-hu-gao-960w.webp": {
+    "bytes": 283094,
+    "contentType": "image/webp",
+    "etag": "74958db628e84bf717bea6514ad46579",
+    "height": 1707,
+    "width": 960
   },
   "su-zhou-dao-wu-xi-zhe-duan-jing-hu-gao.jpg": {
     "height": 2048,
     "width": 1152,
     "bytes": 493604,
     "contentType": "image/jpeg",
-    "etag": "d111f2fba90070beef013273a080b8af"
+    "etag": "d111f2fba90070beef013273a080b8af",
+    "variants": [
+      "su-zhou-dao-wu-xi-zhe-duan-jing-hu-gao-480w.webp",
+      "su-zhou-dao-wu-xi-zhe-duan-jing-hu-gao-960w.webp"
+    ]
   }
 }

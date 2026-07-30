@@ -1,9 +1,35 @@
 {
+  "rang-tong-xue-zhuan-yun-dao-wo-shou-li-la-1920w.webp": {
+    "bytes": 84766,
+    "contentType": "image/webp",
+    "etag": "fad57757bcb576f43b8635b418e50531",
+    "height": 1080,
+    "width": 1920
+  },
+  "rang-tong-xue-zhuan-yun-dao-wo-shou-li-la-480w.webp": {
+    "bytes": 9320,
+    "contentType": "image/webp",
+    "etag": "3cc12ea4403a7c3a4476697222e4b888",
+    "height": 270,
+    "width": 480
+  },
+  "rang-tong-xue-zhuan-yun-dao-wo-shou-li-la-960w.webp": {
+    "bytes": 29506,
+    "contentType": "image/webp",
+    "etag": "63b7ed26cd3dfca1bd2385f7a2664d30",
+    "height": 540,
+    "width": 960
+  },
   "rang-tong-xue-zhuan-yun-dao-wo-shou-li-la.jpg": {
     "height": 1152,
     "width": 2048,
     "bytes": 202401,
     "contentType": "image/jpeg",
-    "etag": "dfb505b25f831f04ac9f6618d4d862c2"
+    "etag": "dfb505b25f831f04ac9f6618d4d862c2",
+    "variants": [
+      "rang-tong-xue-zhuan-yun-dao-wo-shou-li-la-480w.webp",
+      "rang-tong-xue-zhuan-yun-dao-wo-shou-li-la-960w.webp",
+      "rang-tong-xue-zhuan-yun-dao-wo-shou-li-la-1920w.webp"
+    ]
   }
 }

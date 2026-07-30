@@ -1,9 +1,27 @@
 {
+  "nan-jing-de-di-yi-tian-du-guo-wo-25-480w.webp": {
+    "bytes": 29714,
+    "contentType": "image/webp",
+    "etag": "7d04aa186855e32d5baae0858dc7f337",
+    "height": 270,
+    "width": 480
+  },
+  "nan-jing-de-di-yi-tian-du-guo-wo-25-960w.webp": {
+    "bytes": 88454,
+    "contentType": "image/webp",
+    "etag": "2b14f9c963f9023db7f495e77f32e351",
+    "height": 540,
+    "width": 960
+  },
   "nan-jing-de-di-yi-tian-du-guo-wo-25.jpg": {
     "height": 1080,
     "width": 1920,
     "bytes": 360321,
     "contentType": "image/jpeg",
-    "etag": "f50af390d34514b13b53385cfc2220f8"
+    "etag": "f50af390d34514b13b53385cfc2220f8",
+    "variants": [
+      "nan-jing-de-di-yi-tian-du-guo-wo-25-480w.webp",
+      "nan-jing-de-di-yi-tian-du-guo-wo-25-960w.webp"
+    ]
   }
 }

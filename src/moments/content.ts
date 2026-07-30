@@ -2,14 +2,35 @@ import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 import { z } from 'zod'
 import { isLocationId } from '../data/locations.ts'
 
-const momentMediaSchema = z.object({
+const semanticImageFileSchema = z.string().trim().regex(
+  /^[a-z0-9]+(?:-[a-z0-9]+)*\.(?:avif|gif|jpeg|jpg|png|webp)$/,
+  'Use a safe kebab-case semantic image filename.',
+)
+
+const semanticVideoFileSchema = z.string().trim().regex(
+  /^[a-z0-9]+(?:-[a-z0-9]+)*\.(?:mov|mp4|webm)$/,
+  'Use a safe kebab-case semantic video filename.',
+)
+
+const momentImageSchema = z.strictObject({
   alt: z.string(),
-  file: z.string().trim().min(1),
-  poster: z.string().trim().min(1).optional(),
-  type: z.enum(['image', 'video']),
+  file: semanticImageFileSchema,
+  type: z.literal('image'),
 })
 
-export const momentFrontmatterSchema = z.object({
+const momentVideoSchema = z.strictObject({
+  alt: z.string(),
+  file: semanticVideoFileSchema,
+  poster: semanticImageFileSchema.optional(),
+  type: z.literal('video'),
+})
+
+const momentMediaSchema = z.discriminatedUnion('type', [
+  momentImageSchema,
+  momentVideoSchema,
+])
+
+export const momentFrontmatterSchema = z.strictObject({
   hidden: z.boolean().default(false),
   location: z.string().refine(isLocationId, {
     message: 'Unknown calendar map location id.',

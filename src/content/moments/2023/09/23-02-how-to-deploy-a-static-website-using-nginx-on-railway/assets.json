@@ -1,9 +1,27 @@
 {
+  "how-to-deploy-a-static-website-using-nginx-on-railway-480w.webp": {
+    "bytes": 3612,
+    "contentType": "image/webp",
+    "etag": "3bb30c2976f03758643d999dc8ed6d8a",
+    "height": 117,
+    "width": 480
+  },
+  "how-to-deploy-a-static-website-using-nginx-on-railway-960w.webp": {
+    "bytes": 9480,
+    "contentType": "image/webp",
+    "etag": "c4745199425b88b468610b79c4e607f6",
+    "height": 235,
+    "width": 960
+  },
   "how-to-deploy-a-static-website-using-nginx-on-railway.jpg": {
     "height": 450,
     "width": 1840,
     "bytes": 45542,
     "contentType": "image/jpeg",
-    "etag": "2cb9165e9faeb561011fe80be20d8e37"
+    "etag": "2cb9165e9faeb561011fe80be20d8e37",
+    "variants": [
+      "how-to-deploy-a-static-website-using-nginx-on-railway-480w.webp",
+      "how-to-deploy-a-static-website-using-nginx-on-railway-960w.webp"
+    ]
   }
 }

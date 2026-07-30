@@ -1,9 +1,19 @@
 {
+  "zhi-mai-le-yi-fen-surge-de-wo-de-yi-480w.webp": {
+    "bytes": 5826,
+    "contentType": "image/webp",
+    "etag": "dcc408ee0a0a7654e0ee92b02ddcd0ef",
+    "height": 165,
+    "width": 480
+  },
   "zhi-mai-le-yi-fen-surge-de-wo-de-yi.png": {
     "height": 250,
     "width": 726,
     "bytes": 32164,
     "contentType": "image/png",
-    "etag": "1cd00463c4f1e79208e4bb02d1599149"
+    "etag": "1cd00463c4f1e79208e4bb02d1599149",
+    "variants": [
+      "zhi-mai-le-yi-fen-surge-de-wo-de-yi-480w.webp"
+    ]
   }
 }

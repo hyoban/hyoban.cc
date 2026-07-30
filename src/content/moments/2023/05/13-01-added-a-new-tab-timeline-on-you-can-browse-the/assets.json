@@ -1,23 +1,101 @@
 {
+  "added-a-new-tab-timeline-on-you-can-browse-the-1920w.webp": {
+    "bytes": 73950,
+    "contentType": "image/webp",
+    "etag": "a78e1c5d3646f9ea68fd97c5c1fccefa",
+    "height": 1248,
+    "width": 1920
+  },
+  "added-a-new-tab-timeline-on-you-can-browse-the-2-1920w.webp": {
+    "bytes": 56522,
+    "contentType": "image/webp",
+    "etag": "35ba6baf13c1cbc80c8c7e9e79f114c5",
+    "height": 1248,
+    "width": 1920
+  },
+  "added-a-new-tab-timeline-on-you-can-browse-the-2-480w.webp": {
+    "bytes": 7390,
+    "contentType": "image/webp",
+    "etag": "687b13237274de3b7516d8266398fe59",
+    "height": 312,
+    "width": 480
+  },
+  "added-a-new-tab-timeline-on-you-can-browse-the-2-960w.webp": {
+    "bytes": 21198,
+    "contentType": "image/webp",
+    "etag": "4d19640d1381cc10ddae503f3f141ddc",
+    "height": 624,
+    "width": 960
+  },
   "added-a-new-tab-timeline-on-you-can-browse-the-2.jpg": {
     "height": 2112,
     "width": 3248,
     "bytes": 297695,
     "contentType": "image/jpeg",
-    "etag": "855b70cf15772079c47e60459b6504fc"
+    "etag": "855b70cf15772079c47e60459b6504fc",
+    "variants": [
+      "added-a-new-tab-timeline-on-you-can-browse-the-2-480w.webp",
+      "added-a-new-tab-timeline-on-you-can-browse-the-2-960w.webp",
+      "added-a-new-tab-timeline-on-you-can-browse-the-2-1920w.webp"
+    ]
+  },
+  "added-a-new-tab-timeline-on-you-can-browse-the-3-1920w.webp": {
+    "bytes": 33748,
+    "contentType": "image/webp",
+    "etag": "8ae671341532531c6cead5e0f84ce0de",
+    "height": 1248,
+    "width": 1920
+  },
+  "added-a-new-tab-timeline-on-you-can-browse-the-3-480w.webp": {
+    "bytes": 4116,
+    "contentType": "image/webp",
+    "etag": "a01ad728339e94219df4d9447c0614ba",
+    "height": 312,
+    "width": 480
+  },
+  "added-a-new-tab-timeline-on-you-can-browse-the-3-960w.webp": {
+    "bytes": 12650,
+    "contentType": "image/webp",
+    "etag": "c4b22a9e366e654cfd0fbbc331cac3f1",
+    "height": 624,
+    "width": 960
   },
   "added-a-new-tab-timeline-on-you-can-browse-the-3.jpg": {
     "height": 2112,
     "width": 3248,
     "bytes": 195515,
     "contentType": "image/jpeg",
-    "etag": "591aaac4f90e7668d76f50349d4ab458"
+    "etag": "591aaac4f90e7668d76f50349d4ab458",
+    "variants": [
+      "added-a-new-tab-timeline-on-you-can-browse-the-3-480w.webp",
+      "added-a-new-tab-timeline-on-you-can-browse-the-3-960w.webp",
+      "added-a-new-tab-timeline-on-you-can-browse-the-3-1920w.webp"
+    ]
+  },
+  "added-a-new-tab-timeline-on-you-can-browse-the-480w.webp": {
+    "bytes": 9680,
+    "contentType": "image/webp",
+    "etag": "e94b322daf029d28c288c31bccd23e18",
+    "height": 312,
+    "width": 480
+  },
+  "added-a-new-tab-timeline-on-you-can-browse-the-960w.webp": {
+    "bytes": 29666,
+    "contentType": "image/webp",
+    "etag": "9c9c6eb69dcf30b5edd803d440889054",
+    "height": 624,
+    "width": 960
   },
   "added-a-new-tab-timeline-on-you-can-browse-the.jpg": {
     "height": 2112,
     "width": 3248,
     "bytes": 339623,
     "contentType": "image/jpeg",
-    "etag": "1dabcacb385ed6a6b629b7a3d43f9591"
+    "etag": "1dabcacb385ed6a6b629b7a3d43f9591",
+    "variants": [
+      "added-a-new-tab-timeline-on-you-can-browse-the-480w.webp",
+      "added-a-new-tab-timeline-on-you-can-browse-the-960w.webp",
+      "added-a-new-tab-timeline-on-you-can-browse-the-1920w.webp"
+    ]
   }
 }

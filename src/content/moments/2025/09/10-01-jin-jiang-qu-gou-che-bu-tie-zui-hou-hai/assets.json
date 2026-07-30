@@ -1,9 +1,27 @@
 {
+  "jin-jiang-qu-gou-che-bu-tie-zui-hou-hai-480w.webp": {
+    "bytes": 16938,
+    "contentType": "image/webp",
+    "etag": "ab9d94bda943132088469a2e75800e98",
+    "height": 789,
+    "width": 480
+  },
+  "jin-jiang-qu-gou-che-bu-tie-zui-hou-hai-960w.webp": {
+    "bytes": 34640,
+    "contentType": "image/webp",
+    "etag": "58bb2be0bab409550b28f06e860eee63",
+    "height": 1578,
+    "width": 960
+  },
   "jin-jiang-qu-gou-che-bu-tie-zui-hou-hai.webp": {
     "height": 1775,
     "width": 1080,
     "bytes": 62692,
     "contentType": "image/webp",
-    "etag": "1c9e91eae850b183d7ee15143fdfe047"
+    "etag": "1c9e91eae850b183d7ee15143fdfe047",
+    "variants": [
+      "jin-jiang-qu-gou-che-bu-tie-zui-hou-hai-480w.webp",
+      "jin-jiang-qu-gou-che-bu-tie-zui-hou-hai-960w.webp"
+    ]
   }
 }

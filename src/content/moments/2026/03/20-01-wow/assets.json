@@ -1,9 +1,27 @@
 {
+  "wow-480w.webp": {
+    "bytes": 2432,
+    "contentType": "image/webp",
+    "etag": "da54e2cdd618fa56c7f8740ff85f1cd3",
+    "height": 101,
+    "width": 480
+  },
+  "wow-960w.webp": {
+    "bytes": 5180,
+    "contentType": "image/webp",
+    "etag": "f8581c6692572c9d979f1332346d8e78",
+    "height": 202,
+    "width": 960
+  },
   "wow.jpg": {
     "height": 248,
     "width": 1179,
     "bytes": 14946,
     "contentType": "image/jpeg",
-    "etag": "e0f8b36fd931641d102fe0982e0e6c68"
+    "etag": "e0f8b36fd931641d102fe0982e0e6c68",
+    "variants": [
+      "wow-480w.webp",
+      "wow-960w.webp"
+    ]
   }
 }

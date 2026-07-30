@@ -1,23 +1,93 @@
 {
+  "zai-zhen-jiang-pu-su-yi-can-1920w.webp": {
+    "bytes": 191996,
+    "contentType": "image/webp",
+    "etag": "486b550258b353e37919a9b1c739d1e6",
+    "height": 1440,
+    "width": 1920
+  },
+  "zai-zhen-jiang-pu-su-yi-can-2-480w.webp": {
+    "bytes": 59930,
+    "contentType": "image/webp",
+    "etag": "c47f574f50c6471e23dd6857f8c260b6",
+    "height": 640,
+    "width": 480
+  },
+  "zai-zhen-jiang-pu-su-yi-can-2-960w.webp": {
+    "bytes": 187146,
+    "contentType": "image/webp",
+    "etag": "f29d9bf921153e586dffc96ea79fa73f",
+    "height": 1280,
+    "width": 960
+  },
   "zai-zhen-jiang-pu-su-yi-can-2.jpg": {
     "height": 2048,
     "width": 1536,
     "bytes": 540307,
     "contentType": "image/jpeg",
-    "etag": "2f78cc967df062d48ce1871a1005ef19"
+    "etag": "2f78cc967df062d48ce1871a1005ef19",
+    "variants": [
+      "zai-zhen-jiang-pu-su-yi-can-2-480w.webp",
+      "zai-zhen-jiang-pu-su-yi-can-2-960w.webp"
+    ]
+  },
+  "zai-zhen-jiang-pu-su-yi-can-3-1920w.webp": {
+    "bytes": 269054,
+    "contentType": "image/webp",
+    "etag": "841d08ad3f8074675768c27c0465f279",
+    "height": 1440,
+    "width": 1920
+  },
+  "zai-zhen-jiang-pu-su-yi-can-3-480w.webp": {
+    "bytes": 34928,
+    "contentType": "image/webp",
+    "etag": "0c047ff1050cac4a9b01571a1ba0d4ba",
+    "height": 360,
+    "width": 480
+  },
+  "zai-zhen-jiang-pu-su-yi-can-3-960w.webp": {
+    "bytes": 101500,
+    "contentType": "image/webp",
+    "etag": "89a367b85ecb8ffaf37128ebba7df035",
+    "height": 720,
+    "width": 960
   },
   "zai-zhen-jiang-pu-su-yi-can-3.jpg": {
     "height": 1536,
     "width": 2048,
     "bytes": 482961,
     "contentType": "image/jpeg",
-    "etag": "f23c08ce9b486e67db21dbd3051d7e8c"
+    "etag": "f23c08ce9b486e67db21dbd3051d7e8c",
+    "variants": [
+      "zai-zhen-jiang-pu-su-yi-can-3-480w.webp",
+      "zai-zhen-jiang-pu-su-yi-can-3-960w.webp",
+      "zai-zhen-jiang-pu-su-yi-can-3-1920w.webp"
+    ]
+  },
+  "zai-zhen-jiang-pu-su-yi-can-480w.webp": {
+    "bytes": 21634,
+    "contentType": "image/webp",
+    "etag": "82a0139041322151f5a44066461ac23e",
+    "height": 360,
+    "width": 480
+  },
+  "zai-zhen-jiang-pu-su-yi-can-960w.webp": {
+    "bytes": 66294,
+    "contentType": "image/webp",
+    "etag": "39f4726a1e52bf6fb3d7c83fb929790e",
+    "height": 720,
+    "width": 960
   },
   "zai-zhen-jiang-pu-su-yi-can.jpg": {
     "height": 1536,
     "width": 2048,
     "bytes": 388241,
     "contentType": "image/jpeg",
-    "etag": "be1ed6743cbeeb5017e4224e8e046772"
+    "etag": "be1ed6743cbeeb5017e4224e8e046772",
+    "variants": [
+      "zai-zhen-jiang-pu-su-yi-can-480w.webp",
+      "zai-zhen-jiang-pu-su-yi-can-960w.webp",
+      "zai-zhen-jiang-pu-su-yi-can-1920w.webp"
+    ]
   }
 }

@@ -1,9 +1,27 @@
 {
+  "ba-wo-de-tou-xiang-yong-ri-chang-de-hua-480w.webp": {
+    "bytes": 21566,
+    "contentType": "image/webp",
+    "etag": "2260f8e6df36c084a276cb74ff02cc69",
+    "height": 720,
+    "width": 480
+  },
+  "ba-wo-de-tou-xiang-yong-ri-chang-de-hua-960w.webp": {
+    "bytes": 59148,
+    "contentType": "image/webp",
+    "etag": "90cbb18b1c381996db446b294ecce143",
+    "height": 1440,
+    "width": 960
+  },
   "ba-wo-de-tou-xiang-yong-ri-chang-de-hua.jpg": {
     "height": 1536,
     "width": 1024,
     "bytes": 128531,
     "contentType": "image/jpeg",
-    "etag": "73b1fac11ea03ef75964736d8784164e"
+    "etag": "73b1fac11ea03ef75964736d8784164e",
+    "variants": [
+      "ba-wo-de-tou-xiang-yong-ri-chang-de-hua-480w.webp",
+      "ba-wo-de-tou-xiang-yong-ri-chang-de-hua-960w.webp"
+    ]
   }
 }

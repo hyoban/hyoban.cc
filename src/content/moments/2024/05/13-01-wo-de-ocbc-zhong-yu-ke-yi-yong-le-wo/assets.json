@@ -1,9 +1,19 @@
 {
+  "wo-de-ocbc-zhong-yu-ke-yi-yong-le-wo-480w.webp": {
+    "bytes": 14164,
+    "contentType": "image/webp",
+    "etag": "e90058885cd7c4c632831b77235d62ab",
+    "height": 1041,
+    "width": 480
+  },
   "wo-de-ocbc-zhong-yu-ke-yi-yong-le-wo.jpg": {
     "height": 2048,
     "width": 944,
     "bytes": 74132,
     "contentType": "image/jpeg",
-    "etag": "13a60f89f9501ca0f6fdd7fa1ef5eb00"
+    "etag": "13a60f89f9501ca0f6fdd7fa1ef5eb00",
+    "variants": [
+      "wo-de-ocbc-zhong-yu-ke-yi-yong-le-wo-480w.webp"
+    ]
   }
 }

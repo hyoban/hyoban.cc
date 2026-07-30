@@ -1,9 +1,27 @@
 {
+  "dao-xiang-gang-le-480w.webp": {
+    "bytes": 50346,
+    "contentType": "image/webp",
+    "etag": "c9acaddf09acb16f77ecea00358c9330",
+    "height": 640,
+    "width": 480
+  },
+  "dao-xiang-gang-le-960w.webp": {
+    "bytes": 173466,
+    "contentType": "image/webp",
+    "etag": "3994ca081267521042a18eb01c31a9b7",
+    "height": 1280,
+    "width": 960
+  },
   "dao-xiang-gang-le.jpg": {
     "height": 2048,
     "width": 1536,
     "bytes": 530748,
     "contentType": "image/jpeg",
-    "etag": "477abee40226585ad28470baf40b53c0"
+    "etag": "477abee40226585ad28470baf40b53c0",
+    "variants": [
+      "dao-xiang-gang-le-480w.webp",
+      "dao-xiang-gang-le-960w.webp"
+    ]
   }
 }

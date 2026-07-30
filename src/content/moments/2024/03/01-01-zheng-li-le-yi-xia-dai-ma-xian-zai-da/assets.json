@@ -1,9 +1,35 @@
 {
+  "zheng-li-le-yi-xia-dai-ma-xian-zai-da-1920w.webp": {
+    "bytes": 93614,
+    "contentType": "image/webp",
+    "etag": "434c74915e86250d6736c681db644043",
+    "height": 2553,
+    "width": 1920
+  },
+  "zheng-li-le-yi-xia-dai-ma-xian-zai-da-480w.webp": {
+    "bytes": 9542,
+    "contentType": "image/webp",
+    "etag": "44c6240a7c500f9187b04d4924d0b04e",
+    "height": 638,
+    "width": 480
+  },
+  "zheng-li-le-yi-xia-dai-ma-xian-zai-da-960w.webp": {
+    "bytes": 41660,
+    "contentType": "image/webp",
+    "etag": "c8e0b34ce2094dd52e6c636bf3a399f5",
+    "height": 1276,
+    "width": 960
+  },
   "zheng-li-le-yi-xia-dai-ma-xian-zai-da.jpg": {
     "height": 3324,
     "width": 2500,
     "bytes": 314260,
     "contentType": "image/jpeg",
-    "etag": "f950b589857d2907a1f3b17883c866b0"
+    "etag": "f950b589857d2907a1f3b17883c866b0",
+    "variants": [
+      "zheng-li-le-yi-xia-dai-ma-xian-zai-da-480w.webp",
+      "zheng-li-le-yi-xia-dai-ma-xian-zai-da-960w.webp",
+      "zheng-li-le-yi-xia-dai-ma-xian-zai-da-1920w.webp"
+    ]
   }
 }

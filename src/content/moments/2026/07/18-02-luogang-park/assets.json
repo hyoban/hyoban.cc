@@ -1,37 +1,127 @@
 {
+  "luogang-park-2-480w.webp": {
+    "bytes": 10760,
+    "contentType": "image/webp",
+    "etag": "66832d24d31cfe9290e153407ae1cb60",
+    "height": 360,
+    "width": 480
+  },
+  "luogang-park-2-960w.webp": {
+    "bytes": 25968,
+    "contentType": "image/webp",
+    "etag": "f7f4129a60eb7474a7a65b96e624cd72",
+    "height": 720,
+    "width": 960
+  },
   "luogang-park-2.webp": {
     "height": 960,
     "width": 1280,
     "bytes": 47164,
     "contentType": "image/webp",
-    "etag": "1dfb26fe4ab5c5dc23ed3806b4389e20"
+    "etag": "1dfb26fe4ab5c5dc23ed3806b4389e20",
+    "variants": [
+      "luogang-park-2-480w.webp",
+      "luogang-park-2-960w.webp"
+    ]
+  },
+  "luogang-park-3-480w.webp": {
+    "bytes": 10514,
+    "contentType": "image/webp",
+    "etag": "7add3de4c35b4b282dd5031cc9b36c67",
+    "height": 640,
+    "width": 480
+  },
+  "luogang-park-3-960w.webp": {
+    "bytes": 26118,
+    "contentType": "image/webp",
+    "etag": "f9db0294fe6d85bf1386f8627aa700bf",
+    "height": 1280,
+    "width": 960
   },
   "luogang-park-3.webp": {
     "height": 1920,
     "width": 1440,
     "bytes": 52664,
     "contentType": "image/webp",
-    "etag": "d4d76ddf6a59fb3e3a3e2469debfffed"
+    "etag": "d4d76ddf6a59fb3e3a3e2469debfffed",
+    "variants": [
+      "luogang-park-3-480w.webp",
+      "luogang-park-3-960w.webp"
+    ]
+  },
+  "luogang-park-4-480w.webp": {
+    "bytes": 22392,
+    "contentType": "image/webp",
+    "etag": "193c27d51444fbe2bc8055282ce68d9a",
+    "height": 640,
+    "width": 480
+  },
+  "luogang-park-4-960w.webp": {
+    "bytes": 80016,
+    "contentType": "image/webp",
+    "etag": "535d65b2f9b3daa934207892a2f0ed97",
+    "height": 1280,
+    "width": 960
   },
   "luogang-park-4.webp": {
     "height": 1920,
     "width": 1440,
     "bytes": 182248,
     "contentType": "image/webp",
-    "etag": "b6612a2f14a176620097761f1f0ca101"
+    "etag": "b6612a2f14a176620097761f1f0ca101",
+    "variants": [
+      "luogang-park-4-480w.webp",
+      "luogang-park-4-960w.webp"
+    ]
+  },
+  "luogang-park-480w.webp": {
+    "bytes": 30214,
+    "contentType": "image/webp",
+    "etag": "e663a17a22ba1eefc769cc830a8e3e22",
+    "height": 360,
+    "width": 480
+  },
+  "luogang-park-5-480w.webp": {
+    "bytes": 34292,
+    "contentType": "image/webp",
+    "etag": "4104144571253ee5e21f9156bb31e934",
+    "height": 640,
+    "width": 480
+  },
+  "luogang-park-5-960w.webp": {
+    "bytes": 92930,
+    "contentType": "image/webp",
+    "etag": "7517328e573071cc4bbef543480be5fc",
+    "height": 1280,
+    "width": 960
   },
   "luogang-park-5.webp": {
     "height": 1920,
     "width": 1440,
     "bytes": 205104,
     "contentType": "image/webp",
-    "etag": "c19d84fa62edfbfbfbc5ce7c68a1d473"
+    "etag": "c19d84fa62edfbfbfbc5ce7c68a1d473",
+    "variants": [
+      "luogang-park-5-480w.webp",
+      "luogang-park-5-960w.webp"
+    ]
+  },
+  "luogang-park-960w.webp": {
+    "bytes": 88182,
+    "contentType": "image/webp",
+    "etag": "2fd02f473e94e7b185980b5e98b07d90",
+    "height": 720,
+    "width": 960
   },
   "luogang-park.webp": {
     "height": 960,
     "width": 1280,
     "bytes": 165838,
     "contentType": "image/webp",
-    "etag": "6ff224586e92537550ff2d9010e1cb11"
+    "etag": "6ff224586e92537550ff2d9010e1cb11",
+    "variants": [
+      "luogang-park-480w.webp",
+      "luogang-park-960w.webp"
+    ]
   }
 }

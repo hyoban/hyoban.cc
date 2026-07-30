@@ -1,16 +1,52 @@
 {
+  "github-de-zhe-ge-used-by-bu-neng-an-star-2-480w.webp": {
+    "bytes": 13210,
+    "contentType": "image/webp",
+    "etag": "810862f54e2068a295c99ef217eb8039",
+    "height": 590,
+    "width": 480
+  },
+  "github-de-zhe-ge-used-by-bu-neng-an-star-2-960w.webp": {
+    "bytes": 30798,
+    "contentType": "image/webp",
+    "etag": "b590b61f8e330624519264bc14a3b075",
+    "height": 1179,
+    "width": 960
+  },
   "github-de-zhe-ge-used-by-bu-neng-an-star-2.png": {
     "height": 1280,
     "width": 1042,
     "bytes": 39481,
     "contentType": "image/png",
-    "etag": "705c33c0841548200ae9cbf580fe004b"
+    "etag": "705c33c0841548200ae9cbf580fe004b",
+    "variants": [
+      "github-de-zhe-ge-used-by-bu-neng-an-star-2-480w.webp",
+      "github-de-zhe-ge-used-by-bu-neng-an-star-2-960w.webp"
+    ]
+  },
+  "github-de-zhe-ge-used-by-bu-neng-an-star-480w.webp": {
+    "bytes": 13522,
+    "contentType": "image/webp",
+    "etag": "032910367c00d720c5d44d218e736f1d",
+    "height": 584,
+    "width": 480
+  },
+  "github-de-zhe-ge-used-by-bu-neng-an-star-960w.webp": {
+    "bytes": 31770,
+    "contentType": "image/webp",
+    "etag": "bd111756ae3a8eee4f3eacf9e9e4648e",
+    "height": 1167,
+    "width": 960
   },
   "github-de-zhe-ge-used-by-bu-neng-an-star.png": {
     "height": 1262,
     "width": 1038,
     "bytes": 40834,
     "contentType": "image/png",
-    "etag": "e535047d3af0422725234d0773784cf6"
+    "etag": "e535047d3af0422725234d0773784cf6",
+    "variants": [
+      "github-de-zhe-ge-used-by-bu-neng-an-star-480w.webp",
+      "github-de-zhe-ge-used-by-bu-neng-an-star-960w.webp"
+    ]
   }
 }

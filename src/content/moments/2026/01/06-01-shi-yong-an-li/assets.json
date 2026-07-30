@@ -1,9 +1,27 @@
 {
+  "shi-yong-an-li-480w.webp": {
+    "bytes": 18156,
+    "contentType": "image/webp",
+    "etag": "c8058fc771d67df0fc420f83a0af01a9",
+    "height": 340,
+    "width": 480
+  },
+  "shi-yong-an-li-960w.webp": {
+    "bytes": 47952,
+    "contentType": "image/webp",
+    "etag": "803018e10a140539f287ea544cdcd7fb",
+    "height": 679,
+    "width": 960
+  },
   "shi-yong-an-li.jpg": {
     "height": 1090,
     "width": 1540,
     "bytes": 156044,
     "contentType": "image/jpeg",
-    "etag": "56e76ed8a388713b0306229cd2999d16"
+    "etag": "56e76ed8a388713b0306229cd2999d16",
+    "variants": [
+      "shi-yong-an-li-480w.webp",
+      "shi-yong-an-li-960w.webp"
+    ]
   }
 }

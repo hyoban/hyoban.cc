@@ -1,30 +1,126 @@
 {
+  "wo-jue-de-xi-che-shi-ge-hen-jie-ya-1920w.webp": {
+    "bytes": 391958,
+    "contentType": "image/webp",
+    "etag": "16ffa8d31e6fc6f4dcd4d43ea8e48b4a",
+    "height": 1280,
+    "width": 1920
+  },
+  "wo-jue-de-xi-che-shi-ge-hen-jie-ya-2-1920w.webp": {
+    "bytes": 298062,
+    "contentType": "image/webp",
+    "etag": "20a980b2dd4439fc4f26fb088a59f763",
+    "height": 1669,
+    "width": 1920
+  },
+  "wo-jue-de-xi-che-shi-ge-hen-jie-ya-2-480w.webp": {
+    "bytes": 33160,
+    "contentType": "image/webp",
+    "etag": "34ebd788e978d76dbc95a79a67059eb5",
+    "height": 417,
+    "width": 480
+  },
+  "wo-jue-de-xi-che-shi-ge-hen-jie-ya-2-960w.webp": {
+    "bytes": 98682,
+    "contentType": "image/webp",
+    "etag": "d4df20d2dcabeda8e6418723875772c4",
+    "height": 834,
+    "width": 960
+  },
   "wo-jue-de-xi-che-shi-ge-hen-jie-ya-2.jpg": {
     "height": 2225,
     "width": 2560,
     "bytes": 622516,
     "contentType": "image/jpeg",
-    "etag": "09b5738c4a1cbea75bca8889c8b4e638"
+    "etag": "09b5738c4a1cbea75bca8889c8b4e638",
+    "variants": [
+      "wo-jue-de-xi-che-shi-ge-hen-jie-ya-2-480w.webp",
+      "wo-jue-de-xi-che-shi-ge-hen-jie-ya-2-960w.webp",
+      "wo-jue-de-xi-che-shi-ge-hen-jie-ya-2-1920w.webp"
+    ]
+  },
+  "wo-jue-de-xi-che-shi-ge-hen-jie-ya-3-1920w.webp": {
+    "bytes": 211720,
+    "contentType": "image/webp",
+    "etag": "bdcccfe3ad9fe678440bcc970f03e2a4",
+    "height": 1441,
+    "width": 1920
+  },
+  "wo-jue-de-xi-che-shi-ge-hen-jie-ya-3-480w.webp": {
+    "bytes": 28556,
+    "contentType": "image/webp",
+    "etag": "3ebc91633afc2b577e7aadf6d9f1b0ea",
+    "height": 360,
+    "width": 480
+  },
+  "wo-jue-de-xi-che-shi-ge-hen-jie-ya-3-960w.webp": {
+    "bytes": 81998,
+    "contentType": "image/webp",
+    "etag": "0864e8ed055d3bd012188499558aaa90",
+    "height": 720,
+    "width": 960
   },
   "wo-jue-de-xi-che-shi-ge-hen-jie-ya-3.jpg": {
     "height": 1576,
     "width": 2100,
     "bytes": 333344,
     "contentType": "image/jpeg",
-    "etag": "f71e9a7712ea98f28929cbe01f725f95"
+    "etag": "f71e9a7712ea98f28929cbe01f725f95",
+    "variants": [
+      "wo-jue-de-xi-che-shi-ge-hen-jie-ya-3-480w.webp",
+      "wo-jue-de-xi-che-shi-ge-hen-jie-ya-3-960w.webp",
+      "wo-jue-de-xi-che-shi-ge-hen-jie-ya-3-1920w.webp"
+    ]
+  },
+  "wo-jue-de-xi-che-shi-ge-hen-jie-ya-4-480w.webp": {
+    "bytes": 31906,
+    "contentType": "image/webp",
+    "etag": "06ff580cc9b98a96435627e2551d2593",
+    "height": 720,
+    "width": 480
+  },
+  "wo-jue-de-xi-che-shi-ge-hen-jie-ya-4-960w.webp": {
+    "bytes": 77524,
+    "contentType": "image/webp",
+    "etag": "9e9806abc92aadcb7d8da7be49e5880f",
+    "height": 1441,
+    "width": 960
   },
   "wo-jue-de-xi-che-shi-ge-hen-jie-ya-4.jpg": {
     "height": 2560,
     "width": 1706,
     "bytes": 251929,
     "contentType": "image/jpeg",
-    "etag": "2dd2f885096859f600cb341cd686cd6a"
+    "etag": "2dd2f885096859f600cb341cd686cd6a",
+    "variants": [
+      "wo-jue-de-xi-che-shi-ge-hen-jie-ya-4-480w.webp",
+      "wo-jue-de-xi-che-shi-ge-hen-jie-ya-4-960w.webp"
+    ]
+  },
+  "wo-jue-de-xi-che-shi-ge-hen-jie-ya-480w.webp": {
+    "bytes": 30904,
+    "contentType": "image/webp",
+    "etag": "efb12c61f4beb583394e5a3ca0da8267",
+    "height": 320,
+    "width": 480
+  },
+  "wo-jue-de-xi-che-shi-ge-hen-jie-ya-960w.webp": {
+    "bytes": 116210,
+    "contentType": "image/webp",
+    "etag": "45257541fa5bf29822d4fc610ca1ca92",
+    "height": 640,
+    "width": 960
   },
   "wo-jue-de-xi-che-shi-ge-hen-jie-ya.jpg": {
     "height": 1485,
     "width": 2227,
     "bytes": 519356,
     "contentType": "image/jpeg",
-    "etag": "9af343dc4a4f745bd95f21215cf3b857"
+    "etag": "9af343dc4a4f745bd95f21215cf3b857",
+    "variants": [
+      "wo-jue-de-xi-che-shi-ge-hen-jie-ya-480w.webp",
+      "wo-jue-de-xi-che-shi-ge-hen-jie-ya-960w.webp",
+      "wo-jue-de-xi-che-shi-ge-hen-jie-ya-1920w.webp"
+    ]
   }
 }

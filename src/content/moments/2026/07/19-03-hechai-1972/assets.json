@@ -1,37 +1,127 @@
 {
+  "hechai-1972-2-480w.webp": {
+    "bytes": 41022,
+    "contentType": "image/webp",
+    "etag": "1d5600aafc8cd93f465dcafe7557c421",
+    "height": 720,
+    "width": 480
+  },
+  "hechai-1972-2-960w.webp": {
+    "bytes": 131962,
+    "contentType": "image/webp",
+    "etag": "5bd9f7db114d3b7c49d35e363f8a39e6",
+    "height": 1440,
+    "width": 960
+  },
   "hechai-1972-2.webp": {
     "height": 1920,
     "width": 1280,
     "bytes": 283006,
     "contentType": "image/webp",
-    "etag": "ec469d01d76488d71bb824bb665675d8"
+    "etag": "ec469d01d76488d71bb824bb665675d8",
+    "variants": [
+      "hechai-1972-2-480w.webp",
+      "hechai-1972-2-960w.webp"
+    ]
+  },
+  "hechai-1972-3-480w.webp": {
+    "bytes": 27280,
+    "contentType": "image/webp",
+    "etag": "e895d0c64d441a2f23f57bf7a5858ff4",
+    "height": 320,
+    "width": 480
+  },
+  "hechai-1972-3-960w.webp": {
+    "bytes": 95152,
+    "contentType": "image/webp",
+    "etag": "91227a82261f187efe4c842c8959c794",
+    "height": 640,
+    "width": 960
   },
   "hechai-1972-3.webp": {
     "height": 1280,
     "width": 1920,
     "bytes": 335200,
     "contentType": "image/webp",
-    "etag": "4aeeace5e383967830788973af1b754d"
+    "etag": "4aeeace5e383967830788973af1b754d",
+    "variants": [
+      "hechai-1972-3-480w.webp",
+      "hechai-1972-3-960w.webp"
+    ]
+  },
+  "hechai-1972-4-480w.webp": {
+    "bytes": 54168,
+    "contentType": "image/webp",
+    "etag": "77d42e551f6f8951fda7e1a074be6b96",
+    "height": 720,
+    "width": 480
+  },
+  "hechai-1972-4-960w.webp": {
+    "bytes": 143932,
+    "contentType": "image/webp",
+    "etag": "3e20581e97fbebf42f31bb83307716d4",
+    "height": 1440,
+    "width": 960
   },
   "hechai-1972-4.webp": {
     "height": 1920,
     "width": 1280,
     "bytes": 279188,
     "contentType": "image/webp",
-    "etag": "2f3a26637c338fd070e820d46f0c25f2"
+    "etag": "2f3a26637c338fd070e820d46f0c25f2",
+    "variants": [
+      "hechai-1972-4-480w.webp",
+      "hechai-1972-4-960w.webp"
+    ]
+  },
+  "hechai-1972-480w.webp": {
+    "bytes": 41948,
+    "contentType": "image/webp",
+    "etag": "785c2fe33e9a2b7666f5757cba19d84f",
+    "height": 320,
+    "width": 480
+  },
+  "hechai-1972-5-480w.webp": {
+    "bytes": 43480,
+    "contentType": "image/webp",
+    "etag": "02b47129f11044de9b8208b473058ee4",
+    "height": 320,
+    "width": 480
+  },
+  "hechai-1972-5-960w.webp": {
+    "bytes": 147346,
+    "contentType": "image/webp",
+    "etag": "a81f9ff4cb5ac375f5fe7561bcd87398",
+    "height": 640,
+    "width": 960
   },
   "hechai-1972-5.webp": {
     "height": 1280,
     "width": 1920,
     "bytes": 512714,
     "contentType": "image/webp",
-    "etag": "2aa85416a4b02ca5cff18d3e143c60aa"
+    "etag": "2aa85416a4b02ca5cff18d3e143c60aa",
+    "variants": [
+      "hechai-1972-5-480w.webp",
+      "hechai-1972-5-960w.webp"
+    ]
+  },
+  "hechai-1972-960w.webp": {
+    "bytes": 123568,
+    "contentType": "image/webp",
+    "etag": "db4da85e63dbbfffaa82ac61503be9a4",
+    "height": 640,
+    "width": 960
   },
   "hechai-1972.webp": {
     "height": 1280,
     "width": 1920,
     "bytes": 362044,
     "contentType": "image/webp",
-    "etag": "462fc3e73e1269ce503b71c60c592d59"
+    "etag": "462fc3e73e1269ce503b71c60c592d59",
+    "variants": [
+      "hechai-1972-480w.webp",
+      "hechai-1972-960w.webp"
+    ]
   }
 }

@@ -1,9 +1,27 @@
 {
+  "xue-xi-qian-duan-de-di-san-nian-quan-zhi-480w.webp": {
+    "bytes": 19324,
+    "contentType": "image/webp",
+    "etag": "7b4c6a3c1a0919f57774d83ae2ca2a88",
+    "height": 418,
+    "width": 480
+  },
+  "xue-xi-qian-duan-de-di-san-nian-quan-zhi-960w.webp": {
+    "bytes": 48306,
+    "contentType": "image/webp",
+    "etag": "609bab547a1048d9c52c95b68487ebbb",
+    "height": 835,
+    "width": 960
+  },
   "xue-xi-qian-duan-de-di-san-nian-quan-zhi.jpg": {
     "height": 1284,
     "width": 1476,
     "bytes": 173223,
     "contentType": "image/jpeg",
-    "etag": "0c86e81162a66dcefb35e345336508a9"
+    "etag": "0c86e81162a66dcefb35e345336508a9",
+    "variants": [
+      "xue-xi-qian-duan-de-di-san-nian-quan-zhi-480w.webp",
+      "xue-xi-qian-duan-de-di-san-nian-quan-zhi-960w.webp"
+    ]
   }
 }

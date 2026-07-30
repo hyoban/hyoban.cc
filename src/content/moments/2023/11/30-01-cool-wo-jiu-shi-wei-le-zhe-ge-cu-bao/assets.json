@@ -1,9 +1,35 @@
 {
+  "cool-wo-jiu-shi-wei-le-zhe-ge-cu-bao-1920w.webp": {
+    "bytes": 100666,
+    "contentType": "image/webp",
+    "etag": "a13e35a935be429043e156820d0d562e",
+    "height": 1080,
+    "width": 1920
+  },
+  "cool-wo-jiu-shi-wei-le-zhe-ge-cu-bao-480w.webp": {
+    "bytes": 17640,
+    "contentType": "image/webp",
+    "etag": "e2d1f70fe2886f40fefe97b542f20453",
+    "height": 270,
+    "width": 480
+  },
+  "cool-wo-jiu-shi-wei-le-zhe-ge-cu-bao-960w.webp": {
+    "bytes": 43240,
+    "contentType": "image/webp",
+    "etag": "8964e251ba8bcad17aa0802a7b5deb99",
+    "height": 540,
+    "width": 960
+  },
   "cool-wo-jiu-shi-wei-le-zhe-ge-cu-bao.jpg": {
     "height": 1152,
     "width": 2048,
     "bytes": 247188,
     "contentType": "image/jpeg",
-    "etag": "a0161ebabddf50fc890ffb2ba034f5f2"
+    "etag": "a0161ebabddf50fc890ffb2ba034f5f2",
+    "variants": [
+      "cool-wo-jiu-shi-wei-le-zhe-ge-cu-bao-480w.webp",
+      "cool-wo-jiu-shi-wei-le-zhe-ge-cu-bao-960w.webp",
+      "cool-wo-jiu-shi-wei-le-zhe-ge-cu-bao-1920w.webp"
+    ]
   }
 }

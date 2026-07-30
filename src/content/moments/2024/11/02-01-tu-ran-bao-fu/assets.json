@@ -1,9 +1,27 @@
 {
+  "tu-ran-bao-fu-480w.webp": {
+    "bytes": 19352,
+    "contentType": "image/webp",
+    "etag": "fe784773335a4327a57bd26d6b92d697",
+    "height": 598,
+    "width": 480
+  },
+  "tu-ran-bao-fu-960w.webp": {
+    "bytes": 47452,
+    "contentType": "image/webp",
+    "etag": "663ed5c4460706124d56c08cf179b0d4",
+    "height": 1196,
+    "width": 960
+  },
   "tu-ran-bao-fu.jpg": {
     "height": 2344,
     "width": 1882,
     "bytes": 201475,
     "contentType": "image/jpeg",
-    "etag": "782ca920c6d9ff197967b7aa7fc1e01a"
+    "etag": "782ca920c6d9ff197967b7aa7fc1e01a",
+    "variants": [
+      "tu-ran-bao-fu-480w.webp",
+      "tu-ran-bao-fu-960w.webp"
+    ]
   }
 }

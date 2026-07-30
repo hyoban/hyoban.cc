@@ -1,9 +1,27 @@
 {
+  "fei-chang-gan-xie-hakadaooo-emiya-cuikaipeng-hooray-480w.webp": {
+    "bytes": 5692,
+    "contentType": "image/webp",
+    "etag": "aea7832fed99fcf170a0d667475764a5",
+    "height": 126,
+    "width": 480
+  },
+  "fei-chang-gan-xie-hakadaooo-emiya-cuikaipeng-hooray-960w.webp": {
+    "bytes": 15020,
+    "contentType": "image/webp",
+    "etag": "ad79f4edcdb6d8e6cf9bfc7e7441eb6e",
+    "height": 252,
+    "width": 960
+  },
   "fei-chang-gan-xie-hakadaooo-emiya-cuikaipeng-hooray.png": {
     "height": 438,
     "width": 1667,
     "bytes": 21414,
     "contentType": "image/png",
-    "etag": "6d67ba6d770f6680b16b7d87a4661a9e"
+    "etag": "6d67ba6d770f6680b16b7d87a4661a9e",
+    "variants": [
+      "fei-chang-gan-xie-hakadaooo-emiya-cuikaipeng-hooray-480w.webp",
+      "fei-chang-gan-xie-hakadaooo-emiya-cuikaipeng-hooray-960w.webp"
+    ]
   }
 }

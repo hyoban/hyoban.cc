@@ -1,16 +1,36 @@
 {
+  "1-kai-qi-zhi-qian-2-480w.webp": {
+    "bytes": 4630,
+    "contentType": "image/webp",
+    "etag": "3b9c965a117f472af271e02c98d46723",
+    "height": 157,
+    "width": 480
+  },
   "1-kai-qi-zhi-qian-2.png": {
     "height": 218,
     "width": 668,
     "bytes": 24258,
     "contentType": "image/png",
-    "etag": "d7788016ccadb079fa94327a03e85022"
+    "etag": "d7788016ccadb079fa94327a03e85022",
+    "variants": [
+      "1-kai-qi-zhi-qian-2-480w.webp"
+    ]
+  },
+  "1-kai-qi-zhi-qian-480w.webp": {
+    "bytes": 5458,
+    "contentType": "image/webp",
+    "etag": "5035776ca2263b2fb415cfda06e7ba13",
+    "height": 207,
+    "width": 480
   },
   "1-kai-qi-zhi-qian.png": {
     "height": 212,
     "width": 492,
     "bytes": 19956,
     "contentType": "image/png",
-    "etag": "4c0cf8f1b6456a19e16a9d7db5dca969"
+    "etag": "4c0cf8f1b6456a19e16a9d7db5dca969",
+    "variants": [
+      "1-kai-qi-zhi-qian-480w.webp"
+    ]
   }
 }

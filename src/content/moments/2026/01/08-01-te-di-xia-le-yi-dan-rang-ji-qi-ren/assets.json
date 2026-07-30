@@ -1,9 +1,19 @@
 {
+  "te-di-xia-le-yi-dan-rang-ji-qi-ren-480w.webp": {
+    "bytes": 16050,
+    "contentType": "image/webp",
+    "etag": "808b8c905660d0b52b876877aa1a124d",
+    "height": 640,
+    "width": 480
+  },
   "te-di-xia-le-yi-dan-rang-ji-qi-ren.jpg": {
     "height": 853,
     "width": 640,
     "bytes": 53618,
     "contentType": "image/jpeg",
-    "etag": "8923ef172329c3de6800696517d0e26a"
+    "etag": "8923ef172329c3de6800696517d0e26a",
+    "variants": [
+      "te-di-xia-le-yi-dan-rang-ji-qi-ren-480w.webp"
+    ]
   }
 }

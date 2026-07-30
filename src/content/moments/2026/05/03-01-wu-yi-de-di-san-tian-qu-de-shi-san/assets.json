@@ -1,30 +1,78 @@
 {
+  "wu-yi-de-di-san-tian-qu-de-shi-san-2-480w.webp": {
+    "bytes": 102080,
+    "contentType": "image/webp",
+    "etag": "401a6787aefc0fd4d6d428b0a07cafaa",
+    "height": 640,
+    "width": 480
+  },
   "wu-yi-de-di-san-tian-qu-de-shi-san-2.jpg": {
     "height": 1280,
     "width": 960,
     "bytes": 326831,
     "contentType": "image/jpeg",
-    "etag": "0e138866ef6c22d8f694dad7627e5553"
+    "etag": "0e138866ef6c22d8f694dad7627e5553",
+    "variants": [
+      "wu-yi-de-di-san-tian-qu-de-shi-san-2-480w.webp"
+    ]
+  },
+  "wu-yi-de-di-san-tian-qu-de-shi-san-3-480w.webp": {
+    "bytes": 24288,
+    "contentType": "image/webp",
+    "etag": "0e0817864a553d136972f48f8ba4d113",
+    "height": 640,
+    "width": 480
   },
   "wu-yi-de-di-san-tian-qu-de-shi-san-3.jpg": {
     "height": 1280,
     "width": 960,
     "bytes": 94240,
     "contentType": "image/jpeg",
-    "etag": "8d3355d5bbe7336d305e94e6df5a4c26"
+    "etag": "8d3355d5bbe7336d305e94e6df5a4c26",
+    "variants": [
+      "wu-yi-de-di-san-tian-qu-de-shi-san-3-480w.webp"
+    ]
+  },
+  "wu-yi-de-di-san-tian-qu-de-shi-san-4-480w.webp": {
+    "bytes": 45096,
+    "contentType": "image/webp",
+    "etag": "2945115893cda30b70c03438eb053c4f",
+    "height": 360,
+    "width": 480
+  },
+  "wu-yi-de-di-san-tian-qu-de-shi-san-4-960w.webp": {
+    "bytes": 135444,
+    "contentType": "image/webp",
+    "etag": "90a69d642e26cc4950b64edabc93c053",
+    "height": 719,
+    "width": 960
   },
   "wu-yi-de-di-san-tian-qu-de-shi-san-4.jpg": {
     "height": 959,
     "width": 1280,
     "bytes": 220523,
     "contentType": "image/jpeg",
-    "etag": "c12211b25cee35bb954313ad7e39aae6"
+    "etag": "c12211b25cee35bb954313ad7e39aae6",
+    "variants": [
+      "wu-yi-de-di-san-tian-qu-de-shi-san-4-480w.webp",
+      "wu-yi-de-di-san-tian-qu-de-shi-san-4-960w.webp"
+    ]
+  },
+  "wu-yi-de-di-san-tian-qu-de-shi-san-480w.webp": {
+    "bytes": 49240,
+    "contentType": "image/webp",
+    "etag": "71061a4dbf598cccdf93b88c221d7590",
+    "height": 640,
+    "width": 480
   },
   "wu-yi-de-di-san-tian-qu-de-shi-san.jpg": {
     "height": 1280,
     "width": 960,
     "bytes": 181290,
     "contentType": "image/jpeg",
-    "etag": "ef001927995129acae0904cc5e2a55a7"
+    "etag": "ef001927995129acae0904cc5e2a55a7",
+    "variants": [
+      "wu-yi-de-di-san-tian-qu-de-shi-san-480w.webp"
+    ]
   }
 }

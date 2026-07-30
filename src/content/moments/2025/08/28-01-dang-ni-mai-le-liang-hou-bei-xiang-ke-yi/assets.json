@@ -1,16 +1,52 @@
 {
+  "dang-ni-mai-le-liang-hou-bei-xiang-ke-yi-2-480w.webp": {
+    "bytes": 11238,
+    "contentType": "image/webp",
+    "etag": "88c89eb870bf00afa8df4c1b1986d6b2",
+    "height": 270,
+    "width": 480
+  },
+  "dang-ni-mai-le-liang-hou-bei-xiang-ke-yi-2-960w.webp": {
+    "bytes": 29290,
+    "contentType": "image/webp",
+    "etag": "d09fa84eab9a21e19cff672d06fe755a",
+    "height": 540,
+    "width": 960
+  },
   "dang-ni-mai-le-liang-hou-bei-xiang-ke-yi-2.jpg": {
     "height": 1080,
     "width": 1920,
     "bytes": 189250,
     "contentType": "image/jpeg",
-    "etag": "737989e66a65903b89c0751ddad3ea57"
+    "etag": "737989e66a65903b89c0751ddad3ea57",
+    "variants": [
+      "dang-ni-mai-le-liang-hou-bei-xiang-ke-yi-2-480w.webp",
+      "dang-ni-mai-le-liang-hou-bei-xiang-ke-yi-2-960w.webp"
+    ]
+  },
+  "dang-ni-mai-le-liang-hou-bei-xiang-ke-yi-480w.webp": {
+    "bytes": 9510,
+    "contentType": "image/webp",
+    "etag": "a6e82613a6f119ed18fc2fc95b8180aa",
+    "height": 270,
+    "width": 480
+  },
+  "dang-ni-mai-le-liang-hou-bei-xiang-ke-yi-960w.webp": {
+    "bytes": 23686,
+    "contentType": "image/webp",
+    "etag": "ac136653cbf0306afcc46eb3b426ec4e",
+    "height": 540,
+    "width": 960
   },
   "dang-ni-mai-le-liang-hou-bei-xiang-ke-yi.jpg": {
     "height": 1080,
     "width": 1920,
     "bytes": 128438,
     "contentType": "image/jpeg",
-    "etag": "4bd30c1168bbe2edf7280b4fc3ee3d53"
+    "etag": "4bd30c1168bbe2edf7280b4fc3ee3d53",
+    "variants": [
+      "dang-ni-mai-le-liang-hou-bei-xiang-ke-yi-480w.webp",
+      "dang-ni-mai-le-liang-hou-bei-xiang-ke-yi-960w.webp"
+    ]
   }
 }

@@ -1,9 +1,27 @@
 {
+  "cheng-du-de-chu-sheng-dian-shua-xin-zai-480w.webp": {
+    "bytes": 73468,
+    "contentType": "image/webp",
+    "etag": "f7aaea5ede2a0e4078ac437560707346",
+    "height": 640,
+    "width": 480
+  },
+  "cheng-du-de-chu-sheng-dian-shua-xin-zai-960w.webp": {
+    "bytes": 287892,
+    "contentType": "image/webp",
+    "etag": "99c6dc4988fef16a11e28139333fb6d0",
+    "height": 1280,
+    "width": 960
+  },
   "cheng-du-de-chu-sheng-dian-shua-xin-zai.jpg": {
     "height": 2048,
     "width": 1536,
     "bytes": 765922,
     "contentType": "image/jpeg",
-    "etag": "c700fa1eda56e14149ba32d806722217"
+    "etag": "c700fa1eda56e14149ba32d806722217",
+    "variants": [
+      "cheng-du-de-chu-sheng-dian-shua-xin-zai-480w.webp",
+      "cheng-du-de-chu-sheng-dian-shua-xin-zai-960w.webp"
+    ]
   }
 }

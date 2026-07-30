@@ -1,16 +1,60 @@
 {
+  "zai-nan-jing-gei-tong-xue-pai-ling-zheng-zhao-2-1920w.webp": {
+    "bytes": 283196,
+    "contentType": "image/webp",
+    "etag": "42e83472fd6471bf177e2b062c127994",
+    "height": 1280,
+    "width": 1920
+  },
+  "zai-nan-jing-gei-tong-xue-pai-ling-zheng-zhao-2-480w.webp": {
+    "bytes": 29884,
+    "contentType": "image/webp",
+    "etag": "4a48e81b3fa91d4c9054d51b6526bff9",
+    "height": 320,
+    "width": 480
+  },
+  "zai-nan-jing-gei-tong-xue-pai-ling-zheng-zhao-2-960w.webp": {
+    "bytes": 102816,
+    "contentType": "image/webp",
+    "etag": "55a41651645d6b64b0e7d992ff9c3073",
+    "height": 640,
+    "width": 960
+  },
   "zai-nan-jing-gei-tong-xue-pai-ling-zheng-zhao-2.jpg": {
     "height": 1706,
     "width": 2560,
     "bytes": 526068,
     "contentType": "image/jpeg",
-    "etag": "740a99f11fb63d09c9395ea36bf899a2"
+    "etag": "740a99f11fb63d09c9395ea36bf899a2",
+    "variants": [
+      "zai-nan-jing-gei-tong-xue-pai-ling-zheng-zhao-2-480w.webp",
+      "zai-nan-jing-gei-tong-xue-pai-ling-zheng-zhao-2-960w.webp",
+      "zai-nan-jing-gei-tong-xue-pai-ling-zheng-zhao-2-1920w.webp"
+    ]
+  },
+  "zai-nan-jing-gei-tong-xue-pai-ling-zheng-zhao-480w.webp": {
+    "bytes": 22040,
+    "contentType": "image/webp",
+    "etag": "6d606b8d8da8424a3c8ecb8c9c5a10af",
+    "height": 640,
+    "width": 480
+  },
+  "zai-nan-jing-gei-tong-xue-pai-ling-zheng-zhao-960w.webp": {
+    "bytes": 56776,
+    "contentType": "image/webp",
+    "etag": "3851bfc29934011ff1e308c77e053c94",
+    "height": 1280,
+    "width": 960
   },
   "zai-nan-jing-gei-tong-xue-pai-ling-zheng-zhao.jpg": {
     "height": 1707,
     "width": 1280,
     "bytes": 121855,
     "contentType": "image/jpeg",
-    "etag": "0f661a4baf34e4dd10583795916d963a"
+    "etag": "0f661a4baf34e4dd10583795916d963a",
+    "variants": [
+      "zai-nan-jing-gei-tong-xue-pai-ling-zheng-zhao-480w.webp",
+      "zai-nan-jing-gei-tong-xue-pai-ling-zheng-zhao-960w.webp"
+    ]
   }
 }

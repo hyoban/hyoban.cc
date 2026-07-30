@@ -1,9 +1,27 @@
 {
+  "dao-cheng-du-le-di-yi-ci-lai-cheng-du-480w.webp": {
+    "bytes": 38522,
+    "contentType": "image/webp",
+    "etag": "300f2bd9572b908ead5c64bc4ffba60f",
+    "height": 853,
+    "width": 480
+  },
+  "dao-cheng-du-le-di-yi-ci-lai-cheng-du-960w.webp": {
+    "bytes": 137700,
+    "contentType": "image/webp",
+    "etag": "36f51a3f4b74dde6458277cbdd8bd93b",
+    "height": 1707,
+    "width": 960
+  },
   "dao-cheng-du-le-di-yi-ci-lai-cheng-du.jpg": {
     "height": 1920,
     "width": 1080,
     "bytes": 276898,
     "contentType": "image/jpeg",
-    "etag": "bafc4cbd9fb1b70671af22ecb8bd9dbb"
+    "etag": "bafc4cbd9fb1b70671af22ecb8bd9dbb",
+    "variants": [
+      "dao-cheng-du-le-di-yi-ci-lai-cheng-du-480w.webp",
+      "dao-cheng-du-le-di-yi-ci-lai-cheng-du-960w.webp"
+    ]
   }
 }

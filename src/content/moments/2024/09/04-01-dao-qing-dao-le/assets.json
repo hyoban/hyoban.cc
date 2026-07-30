@@ -1,16 +1,60 @@
 {
+  "dao-qing-dao-le-2-1920w.webp": {
+    "bytes": 272416,
+    "contentType": "image/webp",
+    "etag": "396f71802a6f45aa004f044a2bfdaddb",
+    "height": 1440,
+    "width": 1920
+  },
+  "dao-qing-dao-le-2-480w.webp": {
+    "bytes": 23880,
+    "contentType": "image/webp",
+    "etag": "92d01e0697d29f20c023d42d48923885",
+    "height": 360,
+    "width": 480
+  },
+  "dao-qing-dao-le-2-960w.webp": {
+    "bytes": 85728,
+    "contentType": "image/webp",
+    "etag": "0547ac48132183468ddcfc2dcf4dbbd1",
+    "height": 720,
+    "width": 960
+  },
   "dao-qing-dao-le-2.jpg": {
     "height": 1536,
     "width": 2048,
     "bytes": 450541,
     "contentType": "image/jpeg",
-    "etag": "4c0bba8a602ccdee4c96b84b21490a6e"
+    "etag": "4c0bba8a602ccdee4c96b84b21490a6e",
+    "variants": [
+      "dao-qing-dao-le-2-480w.webp",
+      "dao-qing-dao-le-2-960w.webp",
+      "dao-qing-dao-le-2-1920w.webp"
+    ]
+  },
+  "dao-qing-dao-le-480w.webp": {
+    "bytes": 24374,
+    "contentType": "image/webp",
+    "etag": "f304c98fe224ae7d8461e94ca702b33b",
+    "height": 640,
+    "width": 480
+  },
+  "dao-qing-dao-le-960w.webp": {
+    "bytes": 78662,
+    "contentType": "image/webp",
+    "etag": "2b41bd20f91c5fbd4561a706a09d0564",
+    "height": 1280,
+    "width": 960
   },
   "dao-qing-dao-le.jpg": {
     "height": 2048,
     "width": 1536,
     "bytes": 281775,
     "contentType": "image/jpeg",
-    "etag": "10da58dfe818c1d9a8c3a71205a49661"
+    "etag": "10da58dfe818c1d9a8c3a71205a49661",
+    "variants": [
+      "dao-qing-dao-le-480w.webp",
+      "dao-qing-dao-le-960w.webp"
+    ]
   }
 }

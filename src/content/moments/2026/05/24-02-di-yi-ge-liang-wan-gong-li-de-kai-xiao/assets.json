@@ -1,9 +1,27 @@
 {
+  "di-yi-ge-liang-wan-gong-li-de-kai-xiao-480w.webp": {
+    "bytes": 23738,
+    "contentType": "image/webp",
+    "etag": "6ebd19515c12470c8c49a2a725dcae16",
+    "height": 640,
+    "width": 480
+  },
+  "di-yi-ge-liang-wan-gong-li-de-kai-xiao-960w.webp": {
+    "bytes": 61438,
+    "contentType": "image/webp",
+    "etag": "0921724c3fd4fb11f755c0ae9c7546f5",
+    "height": 1280,
+    "width": 960
+  },
   "di-yi-ge-liang-wan-gong-li-de-kai-xiao.webp": {
     "height": 1440,
     "width": 1080,
     "bytes": 136074,
     "contentType": "image/webp",
-    "etag": "ce0bb6754eda2d6ffb24f568aeefba72"
+    "etag": "ce0bb6754eda2d6ffb24f568aeefba72",
+    "variants": [
+      "di-yi-ge-liang-wan-gong-li-de-kai-xiao-480w.webp",
+      "di-yi-ge-liang-wan-gong-li-de-kai-xiao-960w.webp"
+    ]
   }
 }

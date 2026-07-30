@@ -1,9 +1,19 @@
 {
+  "ke-neng-shi-quan-shi-jie-zui-hao-chi-de-480w.webp": {
+    "bytes": 34800,
+    "contentType": "image/webp",
+    "etag": "f8dcbc337264c61c9a3f4a0e2c6b6837",
+    "height": 853,
+    "width": 480
+  },
   "ke-neng-shi-quan-shi-jie-zui-hao-chi-de.jpg": {
     "height": 1280,
     "width": 720,
     "bytes": 112433,
     "contentType": "image/jpeg",
-    "etag": "33a0284fa7b3dee91fe8946660d7a47a"
+    "etag": "33a0284fa7b3dee91fe8946660d7a47a",
+    "variants": [
+      "ke-neng-shi-quan-shi-jie-zui-hao-chi-de-480w.webp"
+    ]
   }
 }

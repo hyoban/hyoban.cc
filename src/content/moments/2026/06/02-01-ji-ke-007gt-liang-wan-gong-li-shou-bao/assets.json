@@ -4,41 +4,116 @@
     "width": 356,
     "bytes": 8730,
     "contentType": "image/webp",
-    "etag": "96dfb5bfafec3f43eccb424baa3a50be"
+    "etag": "96dfb5bfafec3f43eccb424baa3a50be",
+    "variants": []
+  },
+  "ji-ke-007gt-liang-wan-gong-li-shou-bao-3-480w.webp": {
+    "bytes": 15566,
+    "contentType": "image/webp",
+    "etag": "6a8128798b280605ac06fb8eef7bbdf0",
+    "height": 640,
+    "width": 480
   },
   "ji-ke-007gt-liang-wan-gong-li-shou-bao-3.webp": {
     "height": 1280,
     "width": 960,
     "bytes": 48632,
     "contentType": "image/webp",
-    "etag": "d4d2219c49c52a4a252da0ffab8c8b27"
+    "etag": "d4d2219c49c52a4a252da0ffab8c8b27",
+    "variants": [
+      "ji-ke-007gt-liang-wan-gong-li-shou-bao-3-480w.webp"
+    ]
+  },
+  "ji-ke-007gt-liang-wan-gong-li-shou-bao-4-480w.webp": {
+    "bytes": 16302,
+    "contentType": "image/webp",
+    "etag": "48c3d87c80ad3fdc09f6214a8b011d8b",
+    "height": 640,
+    "width": 480
   },
   "ji-ke-007gt-liang-wan-gong-li-shou-bao-4.webp": {
     "height": 1280,
     "width": 960,
     "bytes": 48376,
     "contentType": "image/webp",
-    "etag": "16665eea2c26ba61c7ca84f51483ce48"
+    "etag": "16665eea2c26ba61c7ca84f51483ce48",
+    "variants": [
+      "ji-ke-007gt-liang-wan-gong-li-shou-bao-4-480w.webp"
+    ]
+  },
+  "ji-ke-007gt-liang-wan-gong-li-shou-bao-480w.webp": {
+    "bytes": 24308,
+    "contentType": "image/webp",
+    "etag": "eef713c7dae47d32dbabafabbe026edf",
+    "height": 360,
+    "width": 480
+  },
+  "ji-ke-007gt-liang-wan-gong-li-shou-bao-5-480w.webp": {
+    "bytes": 16536,
+    "contentType": "image/webp",
+    "etag": "6bc16b79bec0f80682dc82c29568b505",
+    "height": 640,
+    "width": 480
+  },
+  "ji-ke-007gt-liang-wan-gong-li-shou-bao-5-960w.webp": {
+    "bytes": 37250,
+    "contentType": "image/webp",
+    "etag": "aa002218b5e1b2116cdcfccb0f71f1e9",
+    "height": 1280,
+    "width": 960
   },
   "ji-ke-007gt-liang-wan-gong-li-shou-bao-5.webp": {
     "height": 1440,
     "width": 1080,
     "bytes": 58870,
     "contentType": "image/webp",
-    "etag": "e1e3e5d1970dbe6031dd4459895581f2"
+    "etag": "e1e3e5d1970dbe6031dd4459895581f2",
+    "variants": [
+      "ji-ke-007gt-liang-wan-gong-li-shou-bao-5-480w.webp",
+      "ji-ke-007gt-liang-wan-gong-li-shou-bao-5-960w.webp"
+    ]
+  },
+  "ji-ke-007gt-liang-wan-gong-li-shou-bao-6-480w.webp": {
+    "bytes": 14828,
+    "contentType": "image/webp",
+    "etag": "c79bf87d066221a4eb41d6b40fde22d0",
+    "height": 640,
+    "width": 480
+  },
+  "ji-ke-007gt-liang-wan-gong-li-shou-bao-6-960w.webp": {
+    "bytes": 33816,
+    "contentType": "image/webp",
+    "etag": "510fcf7c3899aba1a9fd554919aec41a",
+    "height": 1280,
+    "width": 960
   },
   "ji-ke-007gt-liang-wan-gong-li-shou-bao-6.webp": {
     "height": 1440,
     "width": 1080,
     "bytes": 53308,
     "contentType": "image/webp",
-    "etag": "0fe56b37215ca2d317cf7f6e94da458a"
+    "etag": "0fe56b37215ca2d317cf7f6e94da458a",
+    "variants": [
+      "ji-ke-007gt-liang-wan-gong-li-shou-bao-6-480w.webp",
+      "ji-ke-007gt-liang-wan-gong-li-shou-bao-6-960w.webp"
+    ]
+  },
+  "ji-ke-007gt-liang-wan-gong-li-shou-bao-960w.webp": {
+    "bytes": 64498,
+    "contentType": "image/webp",
+    "etag": "64e459adc07e8a42dbaba02b2f2862a8",
+    "height": 720,
+    "width": 960
   },
   "ji-ke-007gt-liang-wan-gong-li-shou-bao.webp": {
     "height": 1080,
     "width": 1440,
     "bytes": 170022,
     "contentType": "image/webp",
-    "etag": "30b287d609249138b684b40c24031856"
+    "etag": "30b287d609249138b684b40c24031856",
+    "variants": [
+      "ji-ke-007gt-liang-wan-gong-li-shou-bao-480w.webp",
+      "ji-ke-007gt-liang-wan-gong-li-shou-bao-960w.webp"
+    ]
   }
 }

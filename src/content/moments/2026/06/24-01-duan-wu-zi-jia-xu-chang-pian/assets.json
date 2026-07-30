@@ -1,51 +1,177 @@
 {
+  "duan-wu-zi-jia-xu-chang-pian-2-480w.webp": {
+    "bytes": 32286,
+    "contentType": "image/webp",
+    "etag": "5c1ac3ce2ba7d6a4fcda803fe8451fa5",
+    "height": 320,
+    "width": 480
+  },
+  "duan-wu-zi-jia-xu-chang-pian-2-960w.webp": {
+    "bytes": 85512,
+    "contentType": "image/webp",
+    "etag": "da86411be54d97f002e3c13c7240a040",
+    "height": 640,
+    "width": 960
+  },
   "duan-wu-zi-jia-xu-chang-pian-2.webp": {
     "height": 1080,
     "width": 1620,
     "bytes": 286462,
     "contentType": "image/webp",
-    "etag": "54d8babb090a587b9d56c7803eacd76b"
+    "etag": "54d8babb090a587b9d56c7803eacd76b",
+    "variants": [
+      "duan-wu-zi-jia-xu-chang-pian-2-480w.webp",
+      "duan-wu-zi-jia-xu-chang-pian-2-960w.webp"
+    ]
+  },
+  "duan-wu-zi-jia-xu-chang-pian-3-480w.webp": {
+    "bytes": 19302,
+    "contentType": "image/webp",
+    "etag": "574f8fbe6e157c72f0f555f07caf1d02",
+    "height": 320,
+    "width": 480
+  },
+  "duan-wu-zi-jia-xu-chang-pian-3-960w.webp": {
+    "bytes": 48834,
+    "contentType": "image/webp",
+    "etag": "3799cb92f80307d64239e789d99730c8",
+    "height": 640,
+    "width": 960
   },
   "duan-wu-zi-jia-xu-chang-pian-3.webp": {
     "height": 1080,
     "width": 1620,
     "bytes": 187768,
     "contentType": "image/webp",
-    "etag": "8b6ded97d79e383681c598dab338f67b"
+    "etag": "8b6ded97d79e383681c598dab338f67b",
+    "variants": [
+      "duan-wu-zi-jia-xu-chang-pian-3-480w.webp",
+      "duan-wu-zi-jia-xu-chang-pian-3-960w.webp"
+    ]
+  },
+  "duan-wu-zi-jia-xu-chang-pian-4-480w.webp": {
+    "bytes": 20834,
+    "contentType": "image/webp",
+    "etag": "1960ef3876656a4696fd81ff704ed7fd",
+    "height": 320,
+    "width": 480
+  },
+  "duan-wu-zi-jia-xu-chang-pian-4-960w.webp": {
+    "bytes": 47364,
+    "contentType": "image/webp",
+    "etag": "bfddca18943dca8d95138a7cbc2a70af",
+    "height": 640,
+    "width": 960
   },
   "duan-wu-zi-jia-xu-chang-pian-4.webp": {
     "height": 1080,
     "width": 1620,
     "bytes": 175336,
     "contentType": "image/webp",
-    "etag": "4d7b210dc354c62992cb72e79ee5b3b3"
+    "etag": "4d7b210dc354c62992cb72e79ee5b3b3",
+    "variants": [
+      "duan-wu-zi-jia-xu-chang-pian-4-480w.webp",
+      "duan-wu-zi-jia-xu-chang-pian-4-960w.webp"
+    ]
+  },
+  "duan-wu-zi-jia-xu-chang-pian-480w.webp": {
+    "bytes": 22598,
+    "contentType": "image/webp",
+    "etag": "607ab05939271e3ad81972617ec963a0",
+    "height": 320,
+    "width": 480
+  },
+  "duan-wu-zi-jia-xu-chang-pian-5-480w.webp": {
+    "bytes": 8606,
+    "contentType": "image/webp",
+    "etag": "65e2d06093ffd57b58d2d0e2b2935311",
+    "height": 320,
+    "width": 480
+  },
+  "duan-wu-zi-jia-xu-chang-pian-5-960w.webp": {
+    "bytes": 21884,
+    "contentType": "image/webp",
+    "etag": "2621a8b0651c8fea8baabb57ef46c4a3",
+    "height": 640,
+    "width": 960
   },
   "duan-wu-zi-jia-xu-chang-pian-5.webp": {
     "height": 1080,
     "width": 1620,
     "bytes": 109940,
     "contentType": "image/webp",
-    "etag": "c7b7eb88130c4f92da9778fc77d00216"
+    "etag": "c7b7eb88130c4f92da9778fc77d00216",
+    "variants": [
+      "duan-wu-zi-jia-xu-chang-pian-5-480w.webp",
+      "duan-wu-zi-jia-xu-chang-pian-5-960w.webp"
+    ]
+  },
+  "duan-wu-zi-jia-xu-chang-pian-6-480w.webp": {
+    "bytes": 36214,
+    "contentType": "image/webp",
+    "etag": "6c56d205c713a1a27332445764dccc1a",
+    "height": 320,
+    "width": 480
+  },
+  "duan-wu-zi-jia-xu-chang-pian-6-960w.webp": {
+    "bytes": 86288,
+    "contentType": "image/webp",
+    "etag": "6b53dcdfc8eb4a262de1e56ba7dc436c",
+    "height": 640,
+    "width": 960
   },
   "duan-wu-zi-jia-xu-chang-pian-6.webp": {
     "height": 1080,
     "width": 1620,
     "bytes": 260824,
     "contentType": "image/webp",
-    "etag": "8ecda8038956f12d92155886644dda98"
+    "etag": "8ecda8038956f12d92155886644dda98",
+    "variants": [
+      "duan-wu-zi-jia-xu-chang-pian-6-480w.webp",
+      "duan-wu-zi-jia-xu-chang-pian-6-960w.webp"
+    ]
+  },
+  "duan-wu-zi-jia-xu-chang-pian-7-480w.webp": {
+    "bytes": 44294,
+    "contentType": "image/webp",
+    "etag": "b523d92cabf915eaf1edc0d5099070e2",
+    "height": 720,
+    "width": 480
+  },
+  "duan-wu-zi-jia-xu-chang-pian-7-960w.webp": {
+    "bytes": 104394,
+    "contentType": "image/webp",
+    "etag": "5303054f04f66d729cc5b9bc64765c1f",
+    "height": 1440,
+    "width": 960
   },
   "duan-wu-zi-jia-xu-chang-pian-7.webp": {
     "height": 1620,
     "width": 1080,
     "bytes": 238882,
     "contentType": "image/webp",
-    "etag": "39c216f3135c1f93d600179a85e427ac"
+    "etag": "39c216f3135c1f93d600179a85e427ac",
+    "variants": [
+      "duan-wu-zi-jia-xu-chang-pian-7-480w.webp",
+      "duan-wu-zi-jia-xu-chang-pian-7-960w.webp"
+    ]
+  },
+  "duan-wu-zi-jia-xu-chang-pian-960w.webp": {
+    "bytes": 67118,
+    "contentType": "image/webp",
+    "etag": "8fcfb5cc7fc4dd851a7ed91200ed6f5a",
+    "height": 640,
+    "width": 960
   },
   "duan-wu-zi-jia-xu-chang-pian.webp": {
     "height": 1080,
     "width": 1620,
     "bytes": 278346,
     "contentType": "image/webp",
-    "etag": "a9e1cfa59f13f6bbd0b3fed4abef7519"
+    "etag": "a9e1cfa59f13f6bbd0b3fed4abef7519",
+    "variants": [
+      "duan-wu-zi-jia-xu-chang-pian-480w.webp",
+      "duan-wu-zi-jia-xu-chang-pian-960w.webp"
+    ]
   }
 }

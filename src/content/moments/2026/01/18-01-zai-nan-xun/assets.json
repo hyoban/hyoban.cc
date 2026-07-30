@@ -1,30 +1,126 @@
 {
+  "zai-nan-xun-1920w.webp": {
+    "bytes": 311010,
+    "contentType": "image/webp",
+    "etag": "2e3f529d5e9c45af083d095d55f05d4b",
+    "height": 1440,
+    "width": 1920
+  },
+  "zai-nan-xun-2-1920w.webp": {
+    "bytes": 861422,
+    "contentType": "image/webp",
+    "etag": "8eaebd8dea55f825a064f17618c43c98",
+    "height": 1440,
+    "width": 1920
+  },
+  "zai-nan-xun-2-480w.webp": {
+    "bytes": 59004,
+    "contentType": "image/webp",
+    "etag": "dff59b75911193fc3bd4d7fa40750b4e",
+    "height": 360,
+    "width": 480
+  },
+  "zai-nan-xun-2-960w.webp": {
+    "bytes": 238254,
+    "contentType": "image/webp",
+    "etag": "02c55b3244f8f32fc330aadfa2d3d45e",
+    "height": 720,
+    "width": 960
+  },
   "zai-nan-xun-2.jpg": {
     "height": 1536,
     "width": 2048,
     "bytes": 1096017,
     "contentType": "image/jpeg",
-    "etag": "0b817b708698adf1da4f257b187de8dd"
+    "etag": "0b817b708698adf1da4f257b187de8dd",
+    "variants": [
+      "zai-nan-xun-2-480w.webp",
+      "zai-nan-xun-2-960w.webp",
+      "zai-nan-xun-2-1920w.webp"
+    ]
+  },
+  "zai-nan-xun-3-480w.webp": {
+    "bytes": 37192,
+    "contentType": "image/webp",
+    "etag": "9217513b89bb72c9f594d7cf0900ee31",
+    "height": 640,
+    "width": 480
+  },
+  "zai-nan-xun-3-960w.webp": {
+    "bytes": 113204,
+    "contentType": "image/webp",
+    "etag": "062d69081cf7185388fd69235767efbd",
+    "height": 1280,
+    "width": 960
   },
   "zai-nan-xun-3.jpg": {
     "height": 2048,
     "width": 1536,
     "bytes": 392706,
     "contentType": "image/jpeg",
-    "etag": "d298606772f7ad9a19fb9b9774b4dcbf"
+    "etag": "d298606772f7ad9a19fb9b9774b4dcbf",
+    "variants": [
+      "zai-nan-xun-3-480w.webp",
+      "zai-nan-xun-3-960w.webp"
+    ]
+  },
+  "zai-nan-xun-4-1920w.webp": {
+    "bytes": 218664,
+    "contentType": "image/webp",
+    "etag": "62af08ac9c1b437cac57f9ec8a9390c1",
+    "height": 1440,
+    "width": 1920
+  },
+  "zai-nan-xun-4-480w.webp": {
+    "bytes": 22838,
+    "contentType": "image/webp",
+    "etag": "67d192e486acc2d35ff005790b776c84",
+    "height": 360,
+    "width": 480
+  },
+  "zai-nan-xun-4-960w.webp": {
+    "bytes": 74278,
+    "contentType": "image/webp",
+    "etag": "09679a8a9b5a3993f3313266e584319e",
+    "height": 720,
+    "width": 960
   },
   "zai-nan-xun-4.jpg": {
     "height": 1536,
     "width": 2048,
     "bytes": 417054,
     "contentType": "image/jpeg",
-    "etag": "16435295b3d53c3378f9f7647ef6ae67"
+    "etag": "16435295b3d53c3378f9f7647ef6ae67",
+    "variants": [
+      "zai-nan-xun-4-480w.webp",
+      "zai-nan-xun-4-960w.webp",
+      "zai-nan-xun-4-1920w.webp"
+    ]
+  },
+  "zai-nan-xun-480w.webp": {
+    "bytes": 22342,
+    "contentType": "image/webp",
+    "etag": "05e74e25e2c6bcb089e206b008bf2f67",
+    "height": 360,
+    "width": 480
+  },
+  "zai-nan-xun-960w.webp": {
+    "bytes": 84268,
+    "contentType": "image/webp",
+    "etag": "7349c22f44683fd2d653ac0581d2e541",
+    "height": 720,
+    "width": 960
   },
   "zai-nan-xun.jpg": {
     "height": 1536,
     "width": 2048,
     "bytes": 492818,
     "contentType": "image/jpeg",
-    "etag": "c4689841315a8a27f41cccbf150f00cc"
+    "etag": "c4689841315a8a27f41cccbf150f00cc",
+    "variants": [
+      "zai-nan-xun-480w.webp",
+      "zai-nan-xun-960w.webp",
+      "zai-nan-xun-1920w.webp"
+    ]
   }
 }

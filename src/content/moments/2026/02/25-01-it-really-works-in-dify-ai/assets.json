@@ -1,9 +1,35 @@
 {
+  "it-really-works-in-dify-ai-1920w.webp": {
+    "bytes": 29836,
+    "contentType": "image/webp",
+    "etag": "c666aae54143a3aece767f6cba2e5533",
+    "height": 1454,
+    "width": 1920
+  },
+  "it-really-works-in-dify-ai-480w.webp": {
+    "bytes": 3762,
+    "contentType": "image/webp",
+    "etag": "56e398d1ae47c9be49c6046e09033ca9",
+    "height": 363,
+    "width": 480
+  },
+  "it-really-works-in-dify-ai-960w.webp": {
+    "bytes": 12066,
+    "contentType": "image/webp",
+    "etag": "828d125f1ed335425732ab50b052e386",
+    "height": 727,
+    "width": 960
+  },
   "it-really-works-in-dify-ai.jpg": {
     "height": 1826,
     "width": 2412,
     "bytes": 104008,
     "contentType": "image/jpeg",
-    "etag": "be26e1ee8cd67a55fd185766265f2b6d"
+    "etag": "be26e1ee8cd67a55fd185766265f2b6d",
+    "variants": [
+      "it-really-works-in-dify-ai-480w.webp",
+      "it-really-works-in-dify-ai-960w.webp",
+      "it-really-works-in-dify-ai-1920w.webp"
+    ]
   }
 }

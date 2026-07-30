@@ -1,9 +1,19 @@
 {
+  "mai-le-32-256-de-mac-mini-hao-pian-yi-480w.webp": {
+    "bytes": 10154,
+    "contentType": "image/webp",
+    "etag": "ba73c7a81a061b68b67338088bf89a50",
+    "height": 256,
+    "width": 480
+  },
   "mai-le-32-256-de-mac-mini-hao-pian-yi.jpg": {
     "height": 428,
     "width": 801,
     "bytes": 33231,
     "contentType": "image/jpeg",
-    "etag": "5815b1a72996df1dbb5de7e3214c22f5"
+    "etag": "5815b1a72996df1dbb5de7e3214c22f5",
+    "variants": [
+      "mai-le-32-256-de-mac-mini-hao-pian-yi-480w.webp"
+    ]
   }
 }

@@ -1,16 +1,52 @@
 {
+  "zi-jia-cheng-du-di-san-zhan-zai-xiang-yang-2-480w.webp": {
+    "bytes": 22428,
+    "contentType": "image/webp",
+    "etag": "674fd4bde156e91a1c052cdf66b65658",
+    "height": 360,
+    "width": 480
+  },
+  "zi-jia-cheng-du-di-san-zhan-zai-xiang-yang-2-960w.webp": {
+    "bytes": 55926,
+    "contentType": "image/webp",
+    "etag": "ce74de77f2baca80aa9d735008ed23d8",
+    "height": 720,
+    "width": 960
+  },
   "zi-jia-cheng-du-di-san-zhan-zai-xiang-yang-2.webp": {
     "height": 1080,
     "width": 1440,
     "bytes": 137136,
     "contentType": "image/webp",
-    "etag": "98a1696186141156ca6910856fd4d65d"
+    "etag": "98a1696186141156ca6910856fd4d65d",
+    "variants": [
+      "zi-jia-cheng-du-di-san-zhan-zai-xiang-yang-2-480w.webp",
+      "zi-jia-cheng-du-di-san-zhan-zai-xiang-yang-2-960w.webp"
+    ]
+  },
+  "zi-jia-cheng-du-di-san-zhan-zai-xiang-yang-480w.webp": {
+    "bytes": 30094,
+    "contentType": "image/webp",
+    "etag": "a9366ef15588fce317b2af3d7b05eb92",
+    "height": 360,
+    "width": 480
+  },
+  "zi-jia-cheng-du-di-san-zhan-zai-xiang-yang-960w.webp": {
+    "bytes": 75680,
+    "contentType": "image/webp",
+    "etag": "8819beb5d3e980b19eda8bd5bfce9e75",
+    "height": 720,
+    "width": 960
   },
   "zi-jia-cheng-du-di-san-zhan-zai-xiang-yang.webp": {
     "height": 1080,
     "width": 1440,
     "bytes": 182258,
     "contentType": "image/webp",
-    "etag": "26336bf8723a62c00e2c69d8b85417b4"
+    "etag": "26336bf8723a62c00e2c69d8b85417b4",
+    "variants": [
+      "zi-jia-cheng-du-di-san-zhan-zai-xiang-yang-480w.webp",
+      "zi-jia-cheng-du-di-san-zhan-zai-xiang-yang-960w.webp"
+    ]
   }
 }

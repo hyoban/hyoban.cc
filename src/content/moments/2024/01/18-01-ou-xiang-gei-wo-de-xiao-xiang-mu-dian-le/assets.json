@@ -1,9 +1,27 @@
 {
+  "ou-xiang-gei-wo-de-xiao-xiang-mu-dian-le-480w.webp": {
+    "bytes": 8628,
+    "contentType": "image/webp",
+    "etag": "216b2bd6d78960b63f47f5815c6f7c59",
+    "height": 326,
+    "width": 480
+  },
+  "ou-xiang-gei-wo-de-xiao-xiang-mu-dian-le-960w.webp": {
+    "bytes": 19050,
+    "contentType": "image/webp",
+    "etag": "4204d365ccfc3151aac1e63c32839919",
+    "height": 652,
+    "width": 960
+  },
   "ou-xiang-gei-wo-de-xiao-xiang-mu-dian-le.jpg": {
     "height": 800,
     "width": 1178,
     "bytes": 53525,
     "contentType": "image/jpeg",
-    "etag": "8b176fc5393e8449959e11740fcc9cc3"
+    "etag": "8b176fc5393e8449959e11740fcc9cc3",
+    "variants": [
+      "ou-xiang-gei-wo-de-xiao-xiang-mu-dian-le-480w.webp",
+      "ou-xiang-gei-wo-de-xiao-xiang-mu-dian-le-960w.webp"
+    ]
   }
 }

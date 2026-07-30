@@ -1,16 +1,68 @@
 {
+  "try-to-remove-ts-expect-error-for-rsc-1920w.webp": {
+    "bytes": 112860,
+    "contentType": "image/webp",
+    "etag": "2e12a1898b2b6a7f096617b23f4c96cd",
+    "height": 1401,
+    "width": 1920
+  },
+  "try-to-remove-ts-expect-error-for-rsc-2-1920w.webp": {
+    "bytes": 122286,
+    "contentType": "image/webp",
+    "etag": "803c04c02cbdf36c9176d0ba83867b76",
+    "height": 1401,
+    "width": 1920
+  },
+  "try-to-remove-ts-expect-error-for-rsc-2-480w.webp": {
+    "bytes": 15982,
+    "contentType": "image/webp",
+    "etag": "42300bfed20b937439563dd91c515811",
+    "height": 351,
+    "width": 480
+  },
+  "try-to-remove-ts-expect-error-for-rsc-2-960w.webp": {
+    "bytes": 49468,
+    "contentType": "image/webp",
+    "etag": "ec90adaf04cefb115a1e71368d8472f7",
+    "height": 701,
+    "width": 960
+  },
   "try-to-remove-ts-expect-error-for-rsc-2.jpg": {
     "height": 2112,
     "width": 2894,
     "bytes": 433860,
     "contentType": "image/jpeg",
-    "etag": "60271dfbfd145801b1cba5a0ae3be83f"
+    "etag": "60271dfbfd145801b1cba5a0ae3be83f",
+    "variants": [
+      "try-to-remove-ts-expect-error-for-rsc-2-480w.webp",
+      "try-to-remove-ts-expect-error-for-rsc-2-960w.webp",
+      "try-to-remove-ts-expect-error-for-rsc-2-1920w.webp"
+    ]
+  },
+  "try-to-remove-ts-expect-error-for-rsc-480w.webp": {
+    "bytes": 14524,
+    "contentType": "image/webp",
+    "etag": "b817183598d2482afd34dce19727caa9",
+    "height": 351,
+    "width": 480
+  },
+  "try-to-remove-ts-expect-error-for-rsc-960w.webp": {
+    "bytes": 45236,
+    "contentType": "image/webp",
+    "etag": "5452816adcf27418c7d0586145d18636",
+    "height": 701,
+    "width": 960
   },
   "try-to-remove-ts-expect-error-for-rsc.jpg": {
     "height": 2112,
     "width": 2894,
     "bytes": 421008,
     "contentType": "image/jpeg",
-    "etag": "392e0e7d40b8e1187e3e0a1a072b1d5c"
+    "etag": "392e0e7d40b8e1187e3e0a1a072b1d5c",
+    "variants": [
+      "try-to-remove-ts-expect-error-for-rsc-480w.webp",
+      "try-to-remove-ts-expect-error-for-rsc-960w.webp",
+      "try-to-remove-ts-expect-error-for-rsc-1920w.webp"
+    ]
   }
 }

@@ -1,9 +1,27 @@
 {
+  "wu-yi-mei-you-chu-qu-ye-mei-zuo-shen-480w.webp": {
+    "bytes": 16848,
+    "contentType": "image/webp",
+    "etag": "b01473f1208ce701535e6ea49efcb3f1",
+    "height": 360,
+    "width": 480
+  },
+  "wu-yi-mei-you-chu-qu-ye-mei-zuo-shen-960w.webp": {
+    "bytes": 45526,
+    "contentType": "image/webp",
+    "etag": "e4e2fdc426c5da2c6e2f7222e8e65c8f",
+    "height": 720,
+    "width": 960
+  },
   "wu-yi-mei-you-chu-qu-ye-mei-zuo-shen.jpg": {
     "height": 960,
     "width": 1280,
     "bytes": 141810,
     "contentType": "image/jpeg",
-    "etag": "82e79858f804275b27cd58fc08f46603"
+    "etag": "82e79858f804275b27cd58fc08f46603",
+    "variants": [
+      "wu-yi-mei-you-chu-qu-ye-mei-zuo-shen-480w.webp",
+      "wu-yi-mei-you-chu-qu-ye-mei-zuo-shen-960w.webp"
+    ]
   }
 }

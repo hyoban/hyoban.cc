@@ -1,30 +1,102 @@
 {
+  "mai-le-ge-dian-dong-die-you-gua-di-pan-2-480w.webp": {
+    "bytes": 13760,
+    "contentType": "image/webp",
+    "etag": "aaebd952030ba838e20745f70ecf91c3",
+    "height": 360,
+    "width": 480
+  },
+  "mai-le-ge-dian-dong-die-you-gua-di-pan-2-960w.webp": {
+    "bytes": 32290,
+    "contentType": "image/webp",
+    "etag": "591d299f5c68d0937c76f8f1bde83ef0",
+    "height": 720,
+    "width": 960
+  },
   "mai-le-ge-dian-dong-die-you-gua-di-pan-2.webp": {
     "height": 1080,
     "width": 1440,
     "bytes": 75034,
     "contentType": "image/webp",
-    "etag": "2ac03278ca14f18d916b059eeb7a9016"
+    "etag": "2ac03278ca14f18d916b059eeb7a9016",
+    "variants": [
+      "mai-le-ge-dian-dong-die-you-gua-di-pan-2-480w.webp",
+      "mai-le-ge-dian-dong-die-you-gua-di-pan-2-960w.webp"
+    ]
+  },
+  "mai-le-ge-dian-dong-die-you-gua-di-pan-3-480w.webp": {
+    "bytes": 13154,
+    "contentType": "image/webp",
+    "etag": "d3c321d05ca406f3a801927f2cd86d2e",
+    "height": 360,
+    "width": 480
+  },
+  "mai-le-ge-dian-dong-die-you-gua-di-pan-3-960w.webp": {
+    "bytes": 33936,
+    "contentType": "image/webp",
+    "etag": "24fca33246749c0927885ab15db64822",
+    "height": 720,
+    "width": 960
   },
   "mai-le-ge-dian-dong-die-you-gua-di-pan-3.webp": {
     "height": 1080,
     "width": 1440,
     "bytes": 89154,
     "contentType": "image/webp",
-    "etag": "29315d0d0586fbcf0f7e1d56a3e527aa"
+    "etag": "29315d0d0586fbcf0f7e1d56a3e527aa",
+    "variants": [
+      "mai-le-ge-dian-dong-die-you-gua-di-pan-3-480w.webp",
+      "mai-le-ge-dian-dong-die-you-gua-di-pan-3-960w.webp"
+    ]
+  },
+  "mai-le-ge-dian-dong-die-you-gua-di-pan-4-480w.webp": {
+    "bytes": 70070,
+    "contentType": "image/webp",
+    "etag": "fd230a0fa0f6625c6bca086c3d1e772b",
+    "height": 853,
+    "width": 480
+  },
+  "mai-le-ge-dian-dong-die-you-gua-di-pan-4-960w.webp": {
+    "bytes": 210464,
+    "contentType": "image/webp",
+    "etag": "da431803e0ab8ef9fb0cd1301de4895e",
+    "height": 1707,
+    "width": 960
   },
   "mai-le-ge-dian-dong-die-you-gua-di-pan-4.webp": {
     "height": 1920,
     "width": 1080,
     "bytes": 274730,
     "contentType": "image/webp",
-    "etag": "3e60d88236698b35f96eeed130e0b45b"
+    "etag": "3e60d88236698b35f96eeed130e0b45b",
+    "variants": [
+      "mai-le-ge-dian-dong-die-you-gua-di-pan-4-480w.webp",
+      "mai-le-ge-dian-dong-die-you-gua-di-pan-4-960w.webp"
+    ]
+  },
+  "mai-le-ge-dian-dong-die-you-gua-di-pan-480w.webp": {
+    "bytes": 10668,
+    "contentType": "image/webp",
+    "etag": "fd25c110d119dd9dfdba8a996240ef8c",
+    "height": 360,
+    "width": 480
+  },
+  "mai-le-ge-dian-dong-die-you-gua-di-pan-960w.webp": {
+    "bytes": 28480,
+    "contentType": "image/webp",
+    "etag": "57e95725ab8924709728fb8bce668fbe",
+    "height": 720,
+    "width": 960
   },
   "mai-le-ge-dian-dong-die-you-gua-di-pan.webp": {
     "height": 1080,
     "width": 1440,
     "bytes": 78366,
     "contentType": "image/webp",
-    "etag": "add74e8616ac951c5e9be6c80fa29362"
+    "etag": "add74e8616ac951c5e9be6c80fa29362",
+    "variants": [
+      "mai-le-ge-dian-dong-die-you-gua-di-pan-480w.webp",
+      "mai-le-ge-dian-dong-die-you-gua-di-pan-960w.webp"
+    ]
   }
 }

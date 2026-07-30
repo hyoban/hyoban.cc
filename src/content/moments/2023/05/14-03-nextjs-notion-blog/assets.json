@@ -1,9 +1,35 @@
 {
+  "nextjs-notion-blog-1920w.webp": {
+    "bytes": 65268,
+    "contentType": "image/webp",
+    "etag": "add0736c347bf73b0e781704eadb9129",
+    "height": 933,
+    "width": 1920
+  },
+  "nextjs-notion-blog-480w.webp": {
+    "bytes": 7478,
+    "contentType": "image/webp",
+    "etag": "9fb134e8adc82669111c803f577315ba",
+    "height": 233,
+    "width": 480
+  },
+  "nextjs-notion-blog-960w.webp": {
+    "bytes": 25196,
+    "contentType": "image/webp",
+    "etag": "ce54430e55b1a697ac06716f027bc4e6",
+    "height": 467,
+    "width": 960
+  },
   "nextjs-notion-blog.jpg": {
     "height": 1196,
     "width": 2460,
     "bytes": 180649,
     "contentType": "image/jpeg",
-    "etag": "386074097df026e5f81623b3c3fda83b"
+    "etag": "386074097df026e5f81623b3c3fda83b",
+    "variants": [
+      "nextjs-notion-blog-480w.webp",
+      "nextjs-notion-blog-960w.webp",
+      "nextjs-notion-blog-1920w.webp"
+    ]
   }
 }

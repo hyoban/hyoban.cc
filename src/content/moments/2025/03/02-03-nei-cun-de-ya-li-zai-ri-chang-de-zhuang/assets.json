@@ -1,9 +1,27 @@
 {
+  "nei-cun-de-ya-li-zai-ri-chang-de-zhuang-480w.webp": {
+    "bytes": 4622,
+    "contentType": "image/webp",
+    "etag": "46e55e7f4efd6c50373319f79a4306a2",
+    "height": 82,
+    "width": 480
+  },
+  "nei-cun-de-ya-li-zai-ri-chang-de-zhuang-960w.webp": {
+    "bytes": 10928,
+    "contentType": "image/webp",
+    "etag": "460be97b3626f16b955ec2ffe5bb5870",
+    "height": 163,
+    "width": 960
+  },
   "nei-cun-de-ya-li-zai-ri-chang-de-zhuang.jpg": {
     "height": 208,
     "width": 1222,
     "bytes": 29422,
     "contentType": "image/jpeg",
-    "etag": "2742155da318cbe7e22c9b641381f1da"
+    "etag": "2742155da318cbe7e22c9b641381f1da",
+    "variants": [
+      "nei-cun-de-ya-li-zai-ri-chang-de-zhuang-480w.webp",
+      "nei-cun-de-ya-li-zai-ri-chang-de-zhuang-960w.webp"
+    ]
   }
 }

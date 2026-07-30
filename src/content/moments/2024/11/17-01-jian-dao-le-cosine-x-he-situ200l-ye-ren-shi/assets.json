@@ -1,23 +1,101 @@
 {
+  "jian-dao-le-cosine-x-he-situ200l-ye-ren-shi-1920w.webp": {
+    "bytes": 304866,
+    "contentType": "image/webp",
+    "etag": "2e4d374c2f5932d1213718d4b0c7c571",
+    "height": 1440,
+    "width": 1920
+  },
+  "jian-dao-le-cosine-x-he-situ200l-ye-ren-shi-2-1920w.webp": {
+    "bytes": 443542,
+    "contentType": "image/webp",
+    "etag": "938f6dcada79c75a05967011e6526ebe",
+    "height": 1440,
+    "width": 1920
+  },
+  "jian-dao-le-cosine-x-he-situ200l-ye-ren-shi-2-480w.webp": {
+    "bytes": 29192,
+    "contentType": "image/webp",
+    "etag": "e17bcdc426acb01d33f38276f6ce29a5",
+    "height": 360,
+    "width": 480
+  },
+  "jian-dao-le-cosine-x-he-situ200l-ye-ren-shi-2-960w.webp": {
+    "bytes": 122096,
+    "contentType": "image/webp",
+    "etag": "ada0cd6a18b3a416dd3734556029a875",
+    "height": 720,
+    "width": 960
+  },
   "jian-dao-le-cosine-x-he-situ200l-ye-ren-shi-2.jpg": {
     "height": 1536,
     "width": 2048,
     "bytes": 666305,
     "contentType": "image/jpeg",
-    "etag": "d2b339ca6cdcb7e34a5a83fac52f23e9"
+    "etag": "d2b339ca6cdcb7e34a5a83fac52f23e9",
+    "variants": [
+      "jian-dao-le-cosine-x-he-situ200l-ye-ren-shi-2-480w.webp",
+      "jian-dao-le-cosine-x-he-situ200l-ye-ren-shi-2-960w.webp",
+      "jian-dao-le-cosine-x-he-situ200l-ye-ren-shi-2-1920w.webp"
+    ]
+  },
+  "jian-dao-le-cosine-x-he-situ200l-ye-ren-shi-3-1920w.webp": {
+    "bytes": 319458,
+    "contentType": "image/webp",
+    "etag": "75a0df416c7b0ce15eafe4c32036ff03",
+    "height": 1440,
+    "width": 1920
+  },
+  "jian-dao-le-cosine-x-he-situ200l-ye-ren-shi-3-480w.webp": {
+    "bytes": 41944,
+    "contentType": "image/webp",
+    "etag": "49bf27eb46fea44f5f61420ecc407b19",
+    "height": 360,
+    "width": 480
+  },
+  "jian-dao-le-cosine-x-he-situ200l-ye-ren-shi-3-960w.webp": {
+    "bytes": 125926,
+    "contentType": "image/webp",
+    "etag": "ec1a46cd17c9e4a55fe3604d4ac50f99",
+    "height": 720,
+    "width": 960
   },
   "jian-dao-le-cosine-x-he-situ200l-ye-ren-shi-3.jpg": {
     "height": 1536,
     "width": 2048,
     "bytes": 543454,
     "contentType": "image/jpeg",
-    "etag": "ddfdc1be7384951d4dda9bf49ec80122"
+    "etag": "ddfdc1be7384951d4dda9bf49ec80122",
+    "variants": [
+      "jian-dao-le-cosine-x-he-situ200l-ye-ren-shi-3-480w.webp",
+      "jian-dao-le-cosine-x-he-situ200l-ye-ren-shi-3-960w.webp",
+      "jian-dao-le-cosine-x-he-situ200l-ye-ren-shi-3-1920w.webp"
+    ]
+  },
+  "jian-dao-le-cosine-x-he-situ200l-ye-ren-shi-480w.webp": {
+    "bytes": 37246,
+    "contentType": "image/webp",
+    "etag": "be43ce02fd13cfff02b175989ec1d265",
+    "height": 360,
+    "width": 480
+  },
+  "jian-dao-le-cosine-x-he-situ200l-ye-ren-shi-960w.webp": {
+    "bytes": 112390,
+    "contentType": "image/webp",
+    "etag": "6284e6c5f6335836470798fc859669b4",
+    "height": 720,
+    "width": 960
   },
   "jian-dao-le-cosine-x-he-situ200l-ye-ren-shi.jpg": {
     "height": 1536,
     "width": 2048,
     "bytes": 517655,
     "contentType": "image/jpeg",
-    "etag": "da6359942a8f1abe2789cd2afc3a9f8c"
+    "etag": "da6359942a8f1abe2789cd2afc3a9f8c",
+    "variants": [
+      "jian-dao-le-cosine-x-he-situ200l-ye-ren-shi-480w.webp",
+      "jian-dao-le-cosine-x-he-situ200l-ye-ren-shi-960w.webp",
+      "jian-dao-le-cosine-x-he-situ200l-ye-ren-shi-1920w.webp"
+    ]
   }
 }

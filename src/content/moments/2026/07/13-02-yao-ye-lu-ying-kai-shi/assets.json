@@ -1,58 +1,178 @@
 {
+  "yao-ye-lu-ying-kai-shi-2-480w.webp": {
+    "bytes": 58848,
+    "contentType": "image/webp",
+    "etag": "1ea68c89ba42a7ae91d5ab731f22d93a",
+    "height": 360,
+    "width": 480
+  },
+  "yao-ye-lu-ying-kai-shi-2-960w.webp": {
+    "bytes": 207182,
+    "contentType": "image/webp",
+    "etag": "e58b06a37106a08407fa21ec9c777fde",
+    "height": 720,
+    "width": 960
+  },
   "yao-ye-lu-ying-kai-shi-2.webp": {
     "height": 960,
     "width": 1280,
     "bytes": 348584,
     "contentType": "image/webp",
-    "etag": "5c0148a385e0e4256d615b5ce060135a"
+    "etag": "5c0148a385e0e4256d615b5ce060135a",
+    "variants": [
+      "yao-ye-lu-ying-kai-shi-2-480w.webp",
+      "yao-ye-lu-ying-kai-shi-2-960w.webp"
+    ]
+  },
+  "yao-ye-lu-ying-kai-shi-3-480w.webp": {
+    "bytes": 60632,
+    "contentType": "image/webp",
+    "etag": "7ebf55609274c53663eb0dee51a3e4c1",
+    "height": 360,
+    "width": 480
+  },
+  "yao-ye-lu-ying-kai-shi-3-960w.webp": {
+    "bytes": 240590,
+    "contentType": "image/webp",
+    "etag": "bb96a34f940560828740a4e761bb2bc0",
+    "height": 720,
+    "width": 960
   },
   "yao-ye-lu-ying-kai-shi-3.webp": {
     "height": 960,
     "width": 1280,
     "bytes": 437460,
     "contentType": "image/webp",
-    "etag": "7df0ad710d10a6936d210c91cd40c203"
+    "etag": "7df0ad710d10a6936d210c91cd40c203",
+    "variants": [
+      "yao-ye-lu-ying-kai-shi-3-480w.webp",
+      "yao-ye-lu-ying-kai-shi-3-960w.webp"
+    ]
+  },
+  "yao-ye-lu-ying-kai-shi-4-480w.webp": {
+    "bytes": 35826,
+    "contentType": "image/webp",
+    "etag": "471c14be8031a062038bad8008cfcb0f",
+    "height": 640,
+    "width": 480
   },
   "yao-ye-lu-ying-kai-shi-4.webp": {
     "height": 1280,
     "width": 960,
     "bytes": 76934,
     "contentType": "image/webp",
-    "etag": "d070e82f3f9f95049abd67607719e1a3"
+    "etag": "d070e82f3f9f95049abd67607719e1a3",
+    "variants": [
+      "yao-ye-lu-ying-kai-shi-4-480w.webp"
+    ]
+  },
+  "yao-ye-lu-ying-kai-shi-480w.webp": {
+    "bytes": 29780,
+    "contentType": "image/webp",
+    "etag": "59c6bc46695f68f7d8e985a79072a86c",
+    "height": 640,
+    "width": 480
+  },
+  "yao-ye-lu-ying-kai-shi-5-480w.webp": {
+    "bytes": 17566,
+    "contentType": "image/webp",
+    "etag": "0fe5b824ce1e093bd0bd627ea9701bb3",
+    "height": 360,
+    "width": 480
+  },
+  "yao-ye-lu-ying-kai-shi-5-960w.webp": {
+    "bytes": 72134,
+    "contentType": "image/webp",
+    "etag": "da1855cb1290168f1684312d8e04915d",
+    "height": 720,
+    "width": 960
   },
   "yao-ye-lu-ying-kai-shi-5.webp": {
     "height": 960,
     "width": 1280,
     "bytes": 125778,
     "contentType": "image/webp",
-    "etag": "d1a16b59ec2957466389f494736f57ec"
+    "etag": "d1a16b59ec2957466389f494736f57ec",
+    "variants": [
+      "yao-ye-lu-ying-kai-shi-5-480w.webp",
+      "yao-ye-lu-ying-kai-shi-5-960w.webp"
+    ]
+  },
+  "yao-ye-lu-ying-kai-shi-6-480w.webp": {
+    "bytes": 11434,
+    "contentType": "image/webp",
+    "etag": "6f253c79ae968285b5abe3788ebbf8dd",
+    "height": 360,
+    "width": 480
+  },
+  "yao-ye-lu-ying-kai-shi-6-960w.webp": {
+    "bytes": 40562,
+    "contentType": "image/webp",
+    "etag": "dbbd6cac98e3633922db105d33b43a85",
+    "height": 720,
+    "width": 960
   },
   "yao-ye-lu-ying-kai-shi-6.webp": {
     "height": 960,
     "width": 1280,
     "bytes": 71788,
     "contentType": "image/webp",
-    "etag": "a13fe08119af8c45c40e286e89e38326"
+    "etag": "a13fe08119af8c45c40e286e89e38326",
+    "variants": [
+      "yao-ye-lu-ying-kai-shi-6-480w.webp",
+      "yao-ye-lu-ying-kai-shi-6-960w.webp"
+    ]
+  },
+  "yao-ye-lu-ying-kai-shi-7-480w.webp": {
+    "bytes": 52238,
+    "contentType": "image/webp",
+    "etag": "73d1d756c44119bdcc6765ad4d71adc2",
+    "height": 640,
+    "width": 480
   },
   "yao-ye-lu-ying-kai-shi-7.webp": {
     "height": 1280,
     "width": 960,
     "bytes": 188108,
     "contentType": "image/webp",
-    "etag": "e815aae873ff23a1a67190768708c9b7"
+    "etag": "e815aae873ff23a1a67190768708c9b7",
+    "variants": [
+      "yao-ye-lu-ying-kai-shi-7-480w.webp"
+    ]
+  },
+  "yao-ye-lu-ying-kai-shi-8-480w.webp": {
+    "bytes": 32978,
+    "contentType": "image/webp",
+    "etag": "37917bb2584e00b15fe3f3798add902a",
+    "height": 360,
+    "width": 480
+  },
+  "yao-ye-lu-ying-kai-shi-8-960w.webp": {
+    "bytes": 130750,
+    "contentType": "image/webp",
+    "etag": "5b1b532bc10a920d03400c2525146abf",
+    "height": 720,
+    "width": 960
   },
   "yao-ye-lu-ying-kai-shi-8.webp": {
     "height": 960,
     "width": 1280,
     "bytes": 238196,
     "contentType": "image/webp",
-    "etag": "1fe6d752e3f6232b597b2f3338a0f20e"
+    "etag": "1fe6d752e3f6232b597b2f3338a0f20e",
+    "variants": [
+      "yao-ye-lu-ying-kai-shi-8-480w.webp",
+      "yao-ye-lu-ying-kai-shi-8-960w.webp"
+    ]
   },
   "yao-ye-lu-ying-kai-shi.webp": {
     "height": 1280,
     "width": 960,
     "bytes": 64084,
     "contentType": "image/webp",
-    "etag": "35eee353e60d643e3b03ecc841e218f5"
+    "etag": "35eee353e60d643e3b03ecc841e218f5",
+    "variants": [
+      "yao-ye-lu-ying-kai-shi-480w.webp"
+    ]
   }
 }

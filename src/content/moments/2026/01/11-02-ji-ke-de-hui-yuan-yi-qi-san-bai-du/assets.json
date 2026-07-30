@@ -1,9 +1,27 @@
 {
+  "ji-ke-de-hui-yuan-yi-qi-san-bai-du-480w.webp": {
+    "bytes": 8542,
+    "contentType": "image/webp",
+    "etag": "c8a01ede396e20e90e0dfa760e9f856b",
+    "height": 259,
+    "width": 480
+  },
+  "ji-ke-de-hui-yuan-yi-qi-san-bai-du-960w.webp": {
+    "bytes": 19624,
+    "contentType": "image/webp",
+    "etag": "befc0ba16270167b9e3f2ad6b3ec8caa",
+    "height": 518,
+    "width": 960
+  },
   "ji-ke-de-hui-yuan-yi-qi-san-bai-du.jpg": {
     "height": 636,
     "width": 1179,
     "bytes": 48902,
     "contentType": "image/jpeg",
-    "etag": "39d2904aa352e7e5d9e19ae1a912ce09"
+    "etag": "39d2904aa352e7e5d9e19ae1a912ce09",
+    "variants": [
+      "ji-ke-de-hui-yuan-yi-qi-san-bai-du-480w.webp",
+      "ji-ke-de-hui-yuan-yi-qi-san-bai-du-960w.webp"
+    ]
   }
 }

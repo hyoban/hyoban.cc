@@ -1,9 +1,35 @@
 {
+  "you-you-shui-che-li-de-ji-hui-le-1920w.webp": {
+    "bytes": 194434,
+    "contentType": "image/webp",
+    "etag": "41f95464b1c591e594209c219c423a7f",
+    "height": 1440,
+    "width": 1920
+  },
+  "you-you-shui-che-li-de-ji-hui-le-480w.webp": {
+    "bytes": 28176,
+    "contentType": "image/webp",
+    "etag": "f8576982542633e7d85f1321deacfa32",
+    "height": 360,
+    "width": 480
+  },
+  "you-you-shui-che-li-de-ji-hui-le-960w.webp": {
+    "bytes": 76972,
+    "contentType": "image/webp",
+    "etag": "6dea3ff70034434c763500dc9c785af3",
+    "height": 720,
+    "width": 960
+  },
   "you-you-shui-che-li-de-ji-hui-le.jpg": {
     "height": 1536,
     "width": 2048,
     "bytes": 416536,
     "contentType": "image/jpeg",
-    "etag": "2a3494217f580ae402e6c68bc411a357"
+    "etag": "2a3494217f580ae402e6c68bc411a357",
+    "variants": [
+      "you-you-shui-che-li-de-ji-hui-le-480w.webp",
+      "you-you-shui-che-li-de-ji-hui-le-960w.webp",
+      "you-you-shui-che-li-de-ji-hui-le-1920w.webp"
+    ]
   }
 }

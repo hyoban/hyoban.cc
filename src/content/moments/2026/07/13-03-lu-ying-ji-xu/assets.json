@@ -1,86 +1,294 @@
 {
+  "lu-ying-ji-xu-10-480w.webp": {
+    "bytes": 24944,
+    "contentType": "image/webp",
+    "etag": "9f8e3c9668382fcbbc453095b0dd2d8a",
+    "height": 360,
+    "width": 480
+  },
+  "lu-ying-ji-xu-10-960w.webp": {
+    "bytes": 91824,
+    "contentType": "image/webp",
+    "etag": "e8a793943e65fe1394ab926b29da3e80",
+    "height": 720,
+    "width": 960
+  },
   "lu-ying-ji-xu-10.webp": {
     "height": 960,
     "width": 1280,
     "bytes": 159024,
     "contentType": "image/webp",
-    "etag": "7ec0401373afa2ddbb3d1abe19f660da"
+    "etag": "7ec0401373afa2ddbb3d1abe19f660da",
+    "variants": [
+      "lu-ying-ji-xu-10-480w.webp",
+      "lu-ying-ji-xu-10-960w.webp"
+    ]
+  },
+  "lu-ying-ji-xu-11-480w.webp": {
+    "bytes": 31988,
+    "contentType": "image/webp",
+    "etag": "156e3f99a0964ad17e1c71496226e700",
+    "height": 360,
+    "width": 480
+  },
+  "lu-ying-ji-xu-11-960w.webp": {
+    "bytes": 124004,
+    "contentType": "image/webp",
+    "etag": "a00ddb35c7efdc5a73cfef384328a912",
+    "height": 720,
+    "width": 960
   },
   "lu-ying-ji-xu-11.webp": {
     "height": 960,
     "width": 1280,
     "bytes": 220484,
     "contentType": "image/webp",
-    "etag": "7f63fc82e9c3a9c1f172755afa69e15b"
+    "etag": "7f63fc82e9c3a9c1f172755afa69e15b",
+    "variants": [
+      "lu-ying-ji-xu-11-480w.webp",
+      "lu-ying-ji-xu-11-960w.webp"
+    ]
+  },
+  "lu-ying-ji-xu-12-480w.webp": {
+    "bytes": 46596,
+    "contentType": "image/webp",
+    "etag": "e2044b1c893082bbceff9f6a6887ef24",
+    "height": 360,
+    "width": 480
+  },
+  "lu-ying-ji-xu-12-960w.webp": {
+    "bytes": 185956,
+    "contentType": "image/webp",
+    "etag": "b7257f7c18431d7437f842643df36a5a",
+    "height": 720,
+    "width": 960
   },
   "lu-ying-ji-xu-12.webp": {
     "height": 960,
     "width": 1280,
     "bytes": 329102,
     "contentType": "image/webp",
-    "etag": "b4a57c73500eaf5ce30e6a16f134691c"
+    "etag": "b4a57c73500eaf5ce30e6a16f134691c",
+    "variants": [
+      "lu-ying-ji-xu-12-480w.webp",
+      "lu-ying-ji-xu-12-960w.webp"
+    ]
+  },
+  "lu-ying-ji-xu-2-480w.webp": {
+    "bytes": 17160,
+    "contentType": "image/webp",
+    "etag": "d0a1ec81d78b8ce4ffca15094da6c8b3",
+    "height": 360,
+    "width": 480
+  },
+  "lu-ying-ji-xu-2-960w.webp": {
+    "bytes": 56874,
+    "contentType": "image/webp",
+    "etag": "44ada1ac097be6b6750f7c851baa8331",
+    "height": 720,
+    "width": 960
   },
   "lu-ying-ji-xu-2.webp": {
     "height": 960,
     "width": 1280,
     "bytes": 100608,
     "contentType": "image/webp",
-    "etag": "a04f24c8c0ff367c681439c3e9bca10b"
+    "etag": "a04f24c8c0ff367c681439c3e9bca10b",
+    "variants": [
+      "lu-ying-ji-xu-2-480w.webp",
+      "lu-ying-ji-xu-2-960w.webp"
+    ]
+  },
+  "lu-ying-ji-xu-3-480w.webp": {
+    "bytes": 28378,
+    "contentType": "image/webp",
+    "etag": "5bf74f4e0595aa375d6d89dbb0752e2b",
+    "height": 360,
+    "width": 480
+  },
+  "lu-ying-ji-xu-3-960w.webp": {
+    "bytes": 104594,
+    "contentType": "image/webp",
+    "etag": "c239d644ef9986883c97320b7ca25e25",
+    "height": 720,
+    "width": 960
   },
   "lu-ying-ji-xu-3.webp": {
     "height": 960,
     "width": 1280,
     "bytes": 183502,
     "contentType": "image/webp",
-    "etag": "044a9080bddc4ad2e9c9c74827e4fe33"
+    "etag": "044a9080bddc4ad2e9c9c74827e4fe33",
+    "variants": [
+      "lu-ying-ji-xu-3-480w.webp",
+      "lu-ying-ji-xu-3-960w.webp"
+    ]
+  },
+  "lu-ying-ji-xu-4-480w.webp": {
+    "bytes": 26418,
+    "contentType": "image/webp",
+    "etag": "bb0dafd6b1a41cfbbae69e1e87343c8b",
+    "height": 360,
+    "width": 480
+  },
+  "lu-ying-ji-xu-4-960w.webp": {
+    "bytes": 94300,
+    "contentType": "image/webp",
+    "etag": "b9b3879dae4dede217b11523d85ca4ac",
+    "height": 720,
+    "width": 960
   },
   "lu-ying-ji-xu-4.webp": {
     "height": 960,
     "width": 1280,
     "bytes": 165314,
     "contentType": "image/webp",
-    "etag": "2e10751cc5542d23db1946c6c38b1e7c"
+    "etag": "2e10751cc5542d23db1946c6c38b1e7c",
+    "variants": [
+      "lu-ying-ji-xu-4-480w.webp",
+      "lu-ying-ji-xu-4-960w.webp"
+    ]
+  },
+  "lu-ying-ji-xu-480w.webp": {
+    "bytes": 25448,
+    "contentType": "image/webp",
+    "etag": "cc211d1f807f57e3f7ec7a28a0b4cbe3",
+    "height": 360,
+    "width": 480
+  },
+  "lu-ying-ji-xu-5-480w.webp": {
+    "bytes": 15254,
+    "contentType": "image/webp",
+    "etag": "d37ac7c454eda7fef38f428199a55887",
+    "height": 360,
+    "width": 480
+  },
+  "lu-ying-ji-xu-5-960w.webp": {
+    "bytes": 42904,
+    "contentType": "image/webp",
+    "etag": "434a32df3cab24e7ec4e2fc34948cdb6",
+    "height": 720,
+    "width": 960
   },
   "lu-ying-ji-xu-5.webp": {
     "height": 960,
     "width": 1280,
     "bytes": 77194,
     "contentType": "image/webp",
-    "etag": "35d9d3d0040dd77b6ad9b3bdda093894"
+    "etag": "35d9d3d0040dd77b6ad9b3bdda093894",
+    "variants": [
+      "lu-ying-ji-xu-5-480w.webp",
+      "lu-ying-ji-xu-5-960w.webp"
+    ]
+  },
+  "lu-ying-ji-xu-6-480w.webp": {
+    "bytes": 22050,
+    "contentType": "image/webp",
+    "etag": "5a47e34838c2f7a4d00bad0bac66ffc3",
+    "height": 360,
+    "width": 480
+  },
+  "lu-ying-ji-xu-6-960w.webp": {
+    "bytes": 102886,
+    "contentType": "image/webp",
+    "etag": "101e5ba1fc59b79e8001a4f9e3eb545e",
+    "height": 720,
+    "width": 960
   },
   "lu-ying-ji-xu-6.webp": {
     "height": 960,
     "width": 1280,
     "bytes": 188046,
     "contentType": "image/webp",
-    "etag": "6987a06d9ceb2ecaeafb2eb71bd9ddc7"
+    "etag": "6987a06d9ceb2ecaeafb2eb71bd9ddc7",
+    "variants": [
+      "lu-ying-ji-xu-6-480w.webp",
+      "lu-ying-ji-xu-6-960w.webp"
+    ]
+  },
+  "lu-ying-ji-xu-7-480w.webp": {
+    "bytes": 25928,
+    "contentType": "image/webp",
+    "etag": "9f6b9331d3d7170111a879ea3c0e407c",
+    "height": 640,
+    "width": 480
   },
   "lu-ying-ji-xu-7.webp": {
     "height": 1280,
     "width": 960,
     "bytes": 67656,
     "contentType": "image/webp",
-    "etag": "dbeec09b9e337a3a82b2cb0c99a216cc"
+    "etag": "dbeec09b9e337a3a82b2cb0c99a216cc",
+    "variants": [
+      "lu-ying-ji-xu-7-480w.webp"
+    ]
+  },
+  "lu-ying-ji-xu-8-480w.webp": {
+    "bytes": 23146,
+    "contentType": "image/webp",
+    "etag": "f98207389937bb781fc1feb6ee4f8698",
+    "height": 360,
+    "width": 480
+  },
+  "lu-ying-ji-xu-8-960w.webp": {
+    "bytes": 73754,
+    "contentType": "image/webp",
+    "etag": "cc4daae7aad77dc0e03971e871a1ff7e",
+    "height": 720,
+    "width": 960
   },
   "lu-ying-ji-xu-8.webp": {
     "height": 960,
     "width": 1280,
     "bytes": 123456,
     "contentType": "image/webp",
-    "etag": "c8178dab7c7acf7a8f0bef392d3936bc"
+    "etag": "c8178dab7c7acf7a8f0bef392d3936bc",
+    "variants": [
+      "lu-ying-ji-xu-8-480w.webp",
+      "lu-ying-ji-xu-8-960w.webp"
+    ]
+  },
+  "lu-ying-ji-xu-9-480w.webp": {
+    "bytes": 31126,
+    "contentType": "image/webp",
+    "etag": "98380d6b5f8729c3269f3d6051a1dcab",
+    "height": 360,
+    "width": 480
+  },
+  "lu-ying-ji-xu-9-960w.webp": {
+    "bytes": 120148,
+    "contentType": "image/webp",
+    "etag": "28261ef5afe52f69a04674ce9a89c1f6",
+    "height": 720,
+    "width": 960
   },
   "lu-ying-ji-xu-9.webp": {
     "height": 960,
     "width": 1280,
     "bytes": 214266,
     "contentType": "image/webp",
-    "etag": "26d34038579524536a131e35ef85e43a"
+    "etag": "26d34038579524536a131e35ef85e43a",
+    "variants": [
+      "lu-ying-ji-xu-9-480w.webp",
+      "lu-ying-ji-xu-9-960w.webp"
+    ]
+  },
+  "lu-ying-ji-xu-960w.webp": {
+    "bytes": 96076,
+    "contentType": "image/webp",
+    "etag": "f88b50c09c94c31877d1fee081b65c2e",
+    "height": 720,
+    "width": 960
   },
   "lu-ying-ji-xu.webp": {
     "height": 960,
     "width": 1280,
     "bytes": 168066,
     "contentType": "image/webp",
-    "etag": "15472654c147d0eef11fe726995c56af"
+    "etag": "15472654c147d0eef11fe726995c56af",
+    "variants": [
+      "lu-ying-ji-xu-480w.webp",
+      "lu-ying-ji-xu-960w.webp"
+    ]
   }
 }

@@ -1,9 +1,35 @@
 {
+  "an-de-hao-wu-yi-wen-zui-zhong-du-shi-1920w.webp": {
+    "bytes": 67942,
+    "contentType": "image/webp",
+    "etag": "b5fe58d119c9fdd1c25eedf2bbdb4c5b",
+    "height": 1216,
+    "width": 1920
+  },
+  "an-de-hao-wu-yi-wen-zui-zhong-du-shi-480w.webp": {
+    "bytes": 11404,
+    "contentType": "image/webp",
+    "etag": "549c55084bb1200fd9fe64fd2aab09cc",
+    "height": 304,
+    "width": 480
+  },
+  "an-de-hao-wu-yi-wen-zui-zhong-du-shi-960w.webp": {
+    "bytes": 29824,
+    "contentType": "image/webp",
+    "etag": "8b7c707be8b4ad0627992a68f6a92927",
+    "height": 608,
+    "width": 960
+  },
   "an-de-hao-wu-yi-wen-zui-zhong-du-shi.jpg": {
     "height": 1740,
     "width": 2748,
     "bytes": 257309,
     "contentType": "image/jpeg",
-    "etag": "ac10780ca25a022e1c0e77e69eb683a2"
+    "etag": "ac10780ca25a022e1c0e77e69eb683a2",
+    "variants": [
+      "an-de-hao-wu-yi-wen-zui-zhong-du-shi-480w.webp",
+      "an-de-hao-wu-yi-wen-zui-zhong-du-shi-960w.webp",
+      "an-de-hao-wu-yi-wen-zui-zhong-du-shi-1920w.webp"
+    ]
   }
 }

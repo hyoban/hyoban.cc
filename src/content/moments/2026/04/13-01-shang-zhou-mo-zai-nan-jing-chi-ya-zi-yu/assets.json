@@ -1,30 +1,118 @@
 {
+  "shang-zhou-mo-zai-nan-jing-chi-ya-zi-yu-2-1920w.webp": {
+    "bytes": 402712,
+    "contentType": "image/webp",
+    "etag": "c775ea1872d9c0ed591b4e4d9290574e",
+    "height": 1440,
+    "width": 1920
+  },
+  "shang-zhou-mo-zai-nan-jing-chi-ya-zi-yu-2-480w.webp": {
+    "bytes": 32572,
+    "contentType": "image/webp",
+    "etag": "b2095b311b5cac6f4f14010d18f61301",
+    "height": 360,
+    "width": 480
+  },
+  "shang-zhou-mo-zai-nan-jing-chi-ya-zi-yu-2-960w.webp": {
+    "bytes": 117568,
+    "contentType": "image/webp",
+    "etag": "6bf19ed232a6d685d490996ba8d54388",
+    "height": 720,
+    "width": 960
+  },
   "shang-zhou-mo-zai-nan-jing-chi-ya-zi-yu-2.jpg": {
     "height": 1536,
     "width": 2048,
     "bytes": 622688,
     "contentType": "image/jpeg",
-    "etag": "55642832cea93294edb8c7c14d7a0320"
+    "etag": "55642832cea93294edb8c7c14d7a0320",
+    "variants": [
+      "shang-zhou-mo-zai-nan-jing-chi-ya-zi-yu-2-480w.webp",
+      "shang-zhou-mo-zai-nan-jing-chi-ya-zi-yu-2-960w.webp",
+      "shang-zhou-mo-zai-nan-jing-chi-ya-zi-yu-2-1920w.webp"
+    ]
+  },
+  "shang-zhou-mo-zai-nan-jing-chi-ya-zi-yu-3-480w.webp": {
+    "bytes": 52234,
+    "contentType": "image/webp",
+    "etag": "74aca69d55fc581cb07c3a191c00e120",
+    "height": 640,
+    "width": 480
+  },
+  "shang-zhou-mo-zai-nan-jing-chi-ya-zi-yu-3-960w.webp": {
+    "bytes": 143432,
+    "contentType": "image/webp",
+    "etag": "0ed678c4180fd775ace79c6118aca890",
+    "height": 1280,
+    "width": 960
   },
   "shang-zhou-mo-zai-nan-jing-chi-ya-zi-yu-3.jpg": {
     "height": 2048,
     "width": 1536,
     "bytes": 439716,
     "contentType": "image/jpeg",
-    "etag": "0fff7857bd2bffbf4bfe8bddd17517de"
+    "etag": "0fff7857bd2bffbf4bfe8bddd17517de",
+    "variants": [
+      "shang-zhou-mo-zai-nan-jing-chi-ya-zi-yu-3-480w.webp",
+      "shang-zhou-mo-zai-nan-jing-chi-ya-zi-yu-3-960w.webp"
+    ]
+  },
+  "shang-zhou-mo-zai-nan-jing-chi-ya-zi-yu-4-1920w.webp": {
+    "bytes": 301692,
+    "contentType": "image/webp",
+    "etag": "82fb1533ed469defc8373ebb28dd4000",
+    "height": 1440,
+    "width": 1920
+  },
+  "shang-zhou-mo-zai-nan-jing-chi-ya-zi-yu-4-480w.webp": {
+    "bytes": 18106,
+    "contentType": "image/webp",
+    "etag": "fca187fa7918f12796abcc2a25b2298f",
+    "height": 360,
+    "width": 480
+  },
+  "shang-zhou-mo-zai-nan-jing-chi-ya-zi-yu-4-960w.webp": {
+    "bytes": 81074,
+    "contentType": "image/webp",
+    "etag": "180d984569d1e50aa770e590926eae39",
+    "height": 720,
+    "width": 960
   },
   "shang-zhou-mo-zai-nan-jing-chi-ya-zi-yu-4.jpg": {
     "height": 1536,
     "width": 2048,
     "bytes": 517839,
     "contentType": "image/jpeg",
-    "etag": "9d6f4aa70bb22c8aa5083e26ef5ff9ab"
+    "etag": "9d6f4aa70bb22c8aa5083e26ef5ff9ab",
+    "variants": [
+      "shang-zhou-mo-zai-nan-jing-chi-ya-zi-yu-4-480w.webp",
+      "shang-zhou-mo-zai-nan-jing-chi-ya-zi-yu-4-960w.webp",
+      "shang-zhou-mo-zai-nan-jing-chi-ya-zi-yu-4-1920w.webp"
+    ]
+  },
+  "shang-zhou-mo-zai-nan-jing-chi-ya-zi-yu-480w.webp": {
+    "bytes": 37642,
+    "contentType": "image/webp",
+    "etag": "3225d7ce6445d9076c4f0db1c5f153fc",
+    "height": 640,
+    "width": 480
+  },
+  "shang-zhou-mo-zai-nan-jing-chi-ya-zi-yu-960w.webp": {
+    "bytes": 148620,
+    "contentType": "image/webp",
+    "etag": "d2000811d80bb8d19eba765f2a13659c",
+    "height": 1280,
+    "width": 960
   },
   "shang-zhou-mo-zai-nan-jing-chi-ya-zi-yu.jpg": {
     "height": 2048,
     "width": 1536,
     "bytes": 454461,
     "contentType": "image/jpeg",
-    "etag": "b6a3e16a0e930b51b412642fdfe7bb4c"
+    "etag": "b6a3e16a0e930b51b412642fdfe7bb4c",
+    "variants": [
+      "shang-zhou-mo-zai-nan-jing-chi-ya-zi-yu-480w.webp",
+      "shang-zhou-mo-zai-nan-jing-chi-ya-zi-yu-960w.webp"
+    ]
   }
 }

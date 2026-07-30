@@ -1,9 +1,35 @@
 {
+  "jian-zhu-bi-cang-pin-hao-kan-1920w.webp": {
+    "bytes": 240660,
+    "contentType": "image/webp",
+    "etag": "5843f185737aa9fda6fe0b60c636db98",
+    "height": 1440,
+    "width": 1920
+  },
+  "jian-zhu-bi-cang-pin-hao-kan-480w.webp": {
+    "bytes": 31046,
+    "contentType": "image/webp",
+    "etag": "824890f95a1683d94a96ebc34759874d",
+    "height": 360,
+    "width": 480
+  },
+  "jian-zhu-bi-cang-pin-hao-kan-960w.webp": {
+    "bytes": 91268,
+    "contentType": "image/webp",
+    "etag": "bfc60a70a1045b392f13e24f3f855076",
+    "height": 720,
+    "width": 960
+  },
   "jian-zhu-bi-cang-pin-hao-kan.jpg": {
     "height": 1536,
     "width": 2048,
     "bytes": 493082,
     "contentType": "image/jpeg",
-    "etag": "ef9f1514f6c02337b8883e39e1ce60d6"
+    "etag": "ef9f1514f6c02337b8883e39e1ce60d6",
+    "variants": [
+      "jian-zhu-bi-cang-pin-hao-kan-480w.webp",
+      "jian-zhu-bi-cang-pin-hao-kan-960w.webp",
+      "jian-zhu-bi-cang-pin-hao-kan-1920w.webp"
+    ]
   }
 }

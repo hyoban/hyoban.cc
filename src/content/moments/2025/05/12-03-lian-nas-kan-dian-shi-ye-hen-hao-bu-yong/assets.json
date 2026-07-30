@@ -1,9 +1,35 @@
 {
+  "lian-nas-kan-dian-shi-ye-hen-hao-bu-yong-1920w.webp": {
+    "bytes": 249954,
+    "contentType": "image/webp",
+    "etag": "808618f373c2e788febbfe98a8eb788c",
+    "height": 1080,
+    "width": 1920
+  },
+  "lian-nas-kan-dian-shi-ye-hen-hao-bu-yong-480w.webp": {
+    "bytes": 22812,
+    "contentType": "image/webp",
+    "etag": "b4dfc3fa4232e30dd6eb2ca9845cff1a",
+    "height": 270,
+    "width": 480
+  },
+  "lian-nas-kan-dian-shi-ye-hen-hao-bu-yong-960w.webp": {
+    "bytes": 87260,
+    "contentType": "image/webp",
+    "etag": "6afe10a3bb8be09ae8cfa14342e27b19",
+    "height": 540,
+    "width": 960
+  },
   "lian-nas-kan-dian-shi-ye-hen-hao-bu-yong.jpg": {
     "height": 1152,
     "width": 2048,
     "bytes": 425195,
     "contentType": "image/jpeg",
-    "etag": "1705460991dd575a09082d147e4639a2"
+    "etag": "1705460991dd575a09082d147e4639a2",
+    "variants": [
+      "lian-nas-kan-dian-shi-ye-hen-hao-bu-yong-480w.webp",
+      "lian-nas-kan-dian-shi-ye-hen-hao-bu-yong-960w.webp",
+      "lian-nas-kan-dian-shi-ye-hen-hao-bu-yong-1920w.webp"
+    ]
   }
 }

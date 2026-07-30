@@ -1,9 +1,27 @@
 {
+  "ba-xi-tong-zhuang-zai-le-wai-jie-de-ying-480w.webp": {
+    "bytes": 13784,
+    "contentType": "image/webp",
+    "etag": "bb854ca5acc67036dfed2d834bae3fee",
+    "height": 360,
+    "width": 480
+  },
+  "ba-xi-tong-zhuang-zai-le-wai-jie-de-ying-960w.webp": {
+    "bytes": 39232,
+    "contentType": "image/webp",
+    "etag": "7796eb3ee50cfc12cc42e73cb844adc7",
+    "height": 720,
+    "width": 960
+  },
   "ba-xi-tong-zhuang-zai-le-wai-jie-de-ying.jpg": {
     "height": 1440,
     "width": 1920,
     "bytes": 620381,
     "contentType": "image/jpeg",
-    "etag": "a3462460a4b5bb98715d18fc0bba9402"
+    "etag": "a3462460a4b5bb98715d18fc0bba9402",
+    "variants": [
+      "ba-xi-tong-zhuang-zai-le-wai-jie-de-ying-480w.webp",
+      "ba-xi-tong-zhuang-zai-le-wai-jie-de-ying-960w.webp"
+    ]
   }
 }

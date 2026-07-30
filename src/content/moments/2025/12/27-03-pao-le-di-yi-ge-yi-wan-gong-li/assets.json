@@ -1,9 +1,35 @@
 {
+  "pao-le-di-yi-ge-yi-wan-gong-li-1920w.webp": {
+    "bytes": 91014,
+    "contentType": "image/webp",
+    "etag": "b476efe0f2e1b3b30fb5a980678bca92",
+    "height": 1440,
+    "width": 1920
+  },
+  "pao-le-di-yi-ge-yi-wan-gong-li-480w.webp": {
+    "bytes": 14252,
+    "contentType": "image/webp",
+    "etag": "62ba5df2b34193b82f8f7b48686c3e13",
+    "height": 360,
+    "width": 480
+  },
+  "pao-le-di-yi-ge-yi-wan-gong-li-960w.webp": {
+    "bytes": 35506,
+    "contentType": "image/webp",
+    "etag": "22c0a59a875f5990ed50843ed13b6e9b",
+    "height": 720,
+    "width": 960
+  },
   "pao-le-di-yi-ge-yi-wan-gong-li.jpg": {
     "height": 1536,
     "width": 2048,
     "bytes": 240435,
     "contentType": "image/jpeg",
-    "etag": "e673380c544ebcbf006e3707bd4348a0"
+    "etag": "e673380c544ebcbf006e3707bd4348a0",
+    "variants": [
+      "pao-le-di-yi-ge-yi-wan-gong-li-480w.webp",
+      "pao-le-di-yi-ge-yi-wan-gong-li-960w.webp",
+      "pao-le-di-yi-ge-yi-wan-gong-li-1920w.webp"
+    ]
   }
 }

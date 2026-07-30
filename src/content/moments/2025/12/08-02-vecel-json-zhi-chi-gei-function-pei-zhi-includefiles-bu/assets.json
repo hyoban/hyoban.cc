@@ -1,9 +1,35 @@
 {
+  "vecel-json-zhi-chi-gei-function-pei-zhi-includefiles-bu-1920w.webp": {
+    "bytes": 54776,
+    "contentType": "image/webp",
+    "etag": "1fe42d600636597203e6408374cb254e",
+    "height": 1609,
+    "width": 1920
+  },
+  "vecel-json-zhi-chi-gei-function-pei-zhi-includefiles-bu-480w.webp": {
+    "bytes": 9416,
+    "contentType": "image/webp",
+    "etag": "30c705fc9035a083739c934f310e44f5",
+    "height": 402,
+    "width": 480
+  },
+  "vecel-json-zhi-chi-gei-function-pei-zhi-includefiles-bu-960w.webp": {
+    "bytes": 24308,
+    "contentType": "image/webp",
+    "etag": "5fe64e04ae22cd95fd466c096272b44a",
+    "height": 805,
+    "width": 960
+  },
   "vecel-json-zhi-chi-gei-function-pei-zhi-includefiles-bu.jpg": {
     "height": 2216,
     "width": 2644,
     "bytes": 190166,
     "contentType": "image/jpeg",
-    "etag": "90ad83394867c7d8b0db034c4a26604d"
+    "etag": "90ad83394867c7d8b0db034c4a26604d",
+    "variants": [
+      "vecel-json-zhi-chi-gei-function-pei-zhi-includefiles-bu-480w.webp",
+      "vecel-json-zhi-chi-gei-function-pei-zhi-includefiles-bu-960w.webp",
+      "vecel-json-zhi-chi-gei-function-pei-zhi-includefiles-bu-1920w.webp"
+    ]
   }
 }

@@ -1,37 +1,127 @@
 {
+  "zi-jia-meng-kai-yi-tian-dao-mian-yang-2-480w.webp": {
+    "bytes": 13474,
+    "contentType": "image/webp",
+    "etag": "513bc09087ec0fda4ccfc2683ba0f787",
+    "height": 853,
+    "width": 480
+  },
+  "zi-jia-meng-kai-yi-tian-dao-mian-yang-2-960w.webp": {
+    "bytes": 30950,
+    "contentType": "image/webp",
+    "etag": "a97ea1f37fd7b00687c806ddf87e5872",
+    "height": 1707,
+    "width": 960
+  },
   "zi-jia-meng-kai-yi-tian-dao-mian-yang-2.webp": {
     "height": 1920,
     "width": 1080,
     "bytes": 36646,
     "contentType": "image/webp",
-    "etag": "aee4aea97badc741f5a56439872a249c"
+    "etag": "aee4aea97badc741f5a56439872a249c",
+    "variants": [
+      "zi-jia-meng-kai-yi-tian-dao-mian-yang-2-480w.webp",
+      "zi-jia-meng-kai-yi-tian-dao-mian-yang-2-960w.webp"
+    ]
+  },
+  "zi-jia-meng-kai-yi-tian-dao-mian-yang-3-480w.webp": {
+    "bytes": 40976,
+    "contentType": "image/webp",
+    "etag": "3ab51b2d505a2573391abb5b03cde9e0",
+    "height": 360,
+    "width": 480
+  },
+  "zi-jia-meng-kai-yi-tian-dao-mian-yang-3-960w.webp": {
+    "bytes": 107666,
+    "contentType": "image/webp",
+    "etag": "ff074c2b32b76c20f86bdcb261ae63b5",
+    "height": 720,
+    "width": 960
   },
   "zi-jia-meng-kai-yi-tian-dao-mian-yang-3.webp": {
     "height": 1080,
     "width": 1440,
     "bytes": 271802,
     "contentType": "image/webp",
-    "etag": "577b6a50c7c6734bce4c060b9ba8bdcb"
+    "etag": "577b6a50c7c6734bce4c060b9ba8bdcb",
+    "variants": [
+      "zi-jia-meng-kai-yi-tian-dao-mian-yang-3-480w.webp",
+      "zi-jia-meng-kai-yi-tian-dao-mian-yang-3-960w.webp"
+    ]
+  },
+  "zi-jia-meng-kai-yi-tian-dao-mian-yang-4-480w.webp": {
+    "bytes": 28614,
+    "contentType": "image/webp",
+    "etag": "23f421cbbabbdee06fc69214077a853d",
+    "height": 640,
+    "width": 480
+  },
+  "zi-jia-meng-kai-yi-tian-dao-mian-yang-4-960w.webp": {
+    "bytes": 89776,
+    "contentType": "image/webp",
+    "etag": "bc095bbe0f367b1c725a43c502741e6e",
+    "height": 1280,
+    "width": 960
   },
   "zi-jia-meng-kai-yi-tian-dao-mian-yang-4.webp": {
     "height": 1440,
     "width": 1080,
     "bytes": 184500,
     "contentType": "image/webp",
-    "etag": "3e32a7d6bcabd6e92831f89b98db946b"
+    "etag": "3e32a7d6bcabd6e92831f89b98db946b",
+    "variants": [
+      "zi-jia-meng-kai-yi-tian-dao-mian-yang-4-480w.webp",
+      "zi-jia-meng-kai-yi-tian-dao-mian-yang-4-960w.webp"
+    ]
+  },
+  "zi-jia-meng-kai-yi-tian-dao-mian-yang-480w.webp": {
+    "bytes": 23142,
+    "contentType": "image/webp",
+    "etag": "b9239de75a48eea37b0727823629cebd",
+    "height": 360,
+    "width": 480
+  },
+  "zi-jia-meng-kai-yi-tian-dao-mian-yang-5-480w.webp": {
+    "bytes": 24406,
+    "contentType": "image/webp",
+    "etag": "923e7af04f7ee0002cc526dd35baea21",
+    "height": 360,
+    "width": 480
+  },
+  "zi-jia-meng-kai-yi-tian-dao-mian-yang-5-960w.webp": {
+    "bytes": 86632,
+    "contentType": "image/webp",
+    "etag": "6232d0b45b28663266a04a4e23e21a81",
+    "height": 720,
+    "width": 960
   },
   "zi-jia-meng-kai-yi-tian-dao-mian-yang-5.webp": {
     "height": 1080,
     "width": 1440,
     "bytes": 257154,
     "contentType": "image/webp",
-    "etag": "f948625134d58a6971bb26d19c53a9c2"
+    "etag": "f948625134d58a6971bb26d19c53a9c2",
+    "variants": [
+      "zi-jia-meng-kai-yi-tian-dao-mian-yang-5-480w.webp",
+      "zi-jia-meng-kai-yi-tian-dao-mian-yang-5-960w.webp"
+    ]
+  },
+  "zi-jia-meng-kai-yi-tian-dao-mian-yang-960w.webp": {
+    "bytes": 82570,
+    "contentType": "image/webp",
+    "etag": "7476a92ff121dd3827185ad368e7cea2",
+    "height": 720,
+    "width": 960
   },
   "zi-jia-meng-kai-yi-tian-dao-mian-yang.webp": {
     "height": 1080,
     "width": 1440,
     "bytes": 252434,
     "contentType": "image/webp",
-    "etag": "2385a26082a04a56ecefbcda1c6ad28d"
+    "etag": "2385a26082a04a56ecefbcda1c6ad28d",
+    "variants": [
+      "zi-jia-meng-kai-yi-tian-dao-mian-yang-480w.webp",
+      "zi-jia-meng-kai-yi-tian-dao-mian-yang-960w.webp"
+    ]
   }
 }

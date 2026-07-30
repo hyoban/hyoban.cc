@@ -1,9 +1,35 @@
 {
+  "bei-an-tong-xue-han-chu-lai-wan-1920w.webp": {
+    "bytes": 375004,
+    "contentType": "image/webp",
+    "etag": "edcbb60471c535584aef3438563ddf56",
+    "height": 2560,
+    "width": 1920
+  },
+  "bei-an-tong-xue-han-chu-lai-wan-480w.webp": {
+    "bytes": 28776,
+    "contentType": "image/webp",
+    "etag": "21ac8960b83b10b38169d551db2d2247",
+    "height": 640,
+    "width": 480
+  },
+  "bei-an-tong-xue-han-chu-lai-wan-960w.webp": {
+    "bytes": 104454,
+    "contentType": "image/webp",
+    "etag": "66a9db5049c928d3dc67013dbc48f8af",
+    "height": 1280,
+    "width": 960
+  },
   "bei-an-tong-xue-han-chu-lai-wan.jpg": {
     "height": 4096,
     "width": 3072,
     "bytes": 1536615,
     "contentType": "image/jpeg",
-    "etag": "138d411f8da870cf2f8b457f923485b7"
+    "etag": "138d411f8da870cf2f8b457f923485b7",
+    "variants": [
+      "bei-an-tong-xue-han-chu-lai-wan-480w.webp",
+      "bei-an-tong-xue-han-chu-lai-wan-960w.webp",
+      "bei-an-tong-xue-han-chu-lai-wan-1920w.webp"
+    ]
   }
 }

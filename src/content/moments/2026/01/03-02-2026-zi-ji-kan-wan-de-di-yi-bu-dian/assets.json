@@ -1,9 +1,27 @@
 {
+  "2026-zi-ji-kan-wan-de-di-yi-bu-dian-480w.webp": {
+    "bytes": 8868,
+    "contentType": "image/webp",
+    "etag": "45bc2d79b94191bdf08c5b70eb6df402",
+    "height": 580,
+    "width": 480
+  },
+  "2026-zi-ji-kan-wan-de-di-yi-bu-dian-960w.webp": {
+    "bytes": 21430,
+    "contentType": "image/webp",
+    "etag": "ff14e9d9c23a0c6cc5db380e53fd97b8",
+    "height": 1160,
+    "width": 960
+  },
   "2026-zi-ji-kan-wan-de-di-yi-bu-dian.jpg": {
     "height": 1305,
     "width": 1080,
     "bytes": 63432,
     "contentType": "image/jpeg",
-    "etag": "26e31afd67dff7d72dab60df62e9664d"
+    "etag": "26e31afd67dff7d72dab60df62e9664d",
+    "variants": [
+      "2026-zi-ji-kan-wan-de-di-yi-bu-dian-480w.webp",
+      "2026-zi-ji-kan-wan-de-di-yi-bu-dian-960w.webp"
+    ]
   }
 }

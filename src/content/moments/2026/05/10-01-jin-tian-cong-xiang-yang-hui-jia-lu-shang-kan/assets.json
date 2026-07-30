@@ -1,30 +1,78 @@
 {
+  "jin-tian-cong-xiang-yang-hui-jia-lu-shang-kan-2-480w.webp": {
+    "bytes": 57508,
+    "contentType": "image/webp",
+    "etag": "26108f47cca377b5f2e9ec3529ae4e2b",
+    "height": 640,
+    "width": 480
+  },
   "jin-tian-cong-xiang-yang-hui-jia-lu-shang-kan-2.jpg": {
     "height": 1280,
     "width": 960,
     "bytes": 213521,
     "contentType": "image/jpeg",
-    "etag": "ed1fe8f5596320ac9360160c118733c5"
+    "etag": "ed1fe8f5596320ac9360160c118733c5",
+    "variants": [
+      "jin-tian-cong-xiang-yang-hui-jia-lu-shang-kan-2-480w.webp"
+    ]
+  },
+  "jin-tian-cong-xiang-yang-hui-jia-lu-shang-kan-3-480w.webp": {
+    "bytes": 49480,
+    "contentType": "image/webp",
+    "etag": "2ba33783f18a05fc408a8ad052fb51bf",
+    "height": 640,
+    "width": 480
   },
   "jin-tian-cong-xiang-yang-hui-jia-lu-shang-kan-3.jpg": {
     "height": 1280,
     "width": 960,
     "bytes": 180765,
     "contentType": "image/jpeg",
-    "etag": "4fa1e424f278a7c46e0ca46d2f622246"
+    "etag": "4fa1e424f278a7c46e0ca46d2f622246",
+    "variants": [
+      "jin-tian-cong-xiang-yang-hui-jia-lu-shang-kan-3-480w.webp"
+    ]
+  },
+  "jin-tian-cong-xiang-yang-hui-jia-lu-shang-kan-4-480w.webp": {
+    "bytes": 56152,
+    "contentType": "image/webp",
+    "etag": "37ba514e1028dcb63f06a16b31237fc1",
+    "height": 360,
+    "width": 480
+  },
+  "jin-tian-cong-xiang-yang-hui-jia-lu-shang-kan-4-960w.webp": {
+    "bytes": 189186,
+    "contentType": "image/webp",
+    "etag": "20eb3b75d7ffa19b90522bf892965c81",
+    "height": 720,
+    "width": 960
   },
   "jin-tian-cong-xiang-yang-hui-jia-lu-shang-kan-4.jpg": {
     "height": 960,
     "width": 1280,
     "bytes": 293591,
     "contentType": "image/jpeg",
-    "etag": "cf95fa69ebacd6ab9caecefc806b230a"
+    "etag": "cf95fa69ebacd6ab9caecefc806b230a",
+    "variants": [
+      "jin-tian-cong-xiang-yang-hui-jia-lu-shang-kan-4-480w.webp",
+      "jin-tian-cong-xiang-yang-hui-jia-lu-shang-kan-4-960w.webp"
+    ]
+  },
+  "jin-tian-cong-xiang-yang-hui-jia-lu-shang-kan-480w.webp": {
+    "bytes": 103568,
+    "contentType": "image/webp",
+    "etag": "14feeda4a51e394860c3209636b82bb2",
+    "height": 640,
+    "width": 480
   },
   "jin-tian-cong-xiang-yang-hui-jia-lu-shang-kan.jpg": {
     "height": 1280,
     "width": 960,
     "bytes": 345838,
     "contentType": "image/jpeg",
-    "etag": "c9c92e42e62708fdb2bf67d3206bd7c4"
+    "etag": "c9c92e42e62708fdb2bf67d3206bd7c4",
+    "variants": [
+      "jin-tian-cong-xiang-yang-hui-jia-lu-shang-kan-480w.webp"
+    ]
   }
 }

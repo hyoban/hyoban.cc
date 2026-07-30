@@ -1,45 +1,159 @@
 {
+  "jin-tian-de-lu-ying-dian-jian-zhi-le-hen-2-480w.webp": {
+    "bytes": 18018,
+    "contentType": "image/webp",
+    "etag": "22887f151d2fbe379422ab0d53bf21f6",
+    "height": 360,
+    "width": 480
+  },
+  "jin-tian-de-lu-ying-dian-jian-zhi-le-hen-2-960w.webp": {
+    "bytes": 66756,
+    "contentType": "image/webp",
+    "etag": "133f689982a2eb66fdb0c568095f3f9b",
+    "height": 720,
+    "width": 960
+  },
   "jin-tian-de-lu-ying-dian-jian-zhi-le-hen-2.jpg": {
     "height": 960,
     "width": 1280,
     "bytes": 125151,
     "contentType": "image/jpeg",
-    "etag": "b483e0c3b7426f79248519dbcb6d3d85"
+    "etag": "b483e0c3b7426f79248519dbcb6d3d85",
+    "variants": [
+      "jin-tian-de-lu-ying-dian-jian-zhi-le-hen-2-480w.webp",
+      "jin-tian-de-lu-ying-dian-jian-zhi-le-hen-2-960w.webp"
+    ]
+  },
+  "jin-tian-de-lu-ying-dian-jian-zhi-le-hen-3-480w.webp": {
+    "bytes": 29842,
+    "contentType": "image/webp",
+    "etag": "b341baf837ce6bdb5b32872c44815ebd",
+    "height": 360,
+    "width": 480
+  },
+  "jin-tian-de-lu-ying-dian-jian-zhi-le-hen-3-960w.webp": {
+    "bytes": 117790,
+    "contentType": "image/webp",
+    "etag": "9f0a7d1a7639dbf7d4420237bd58b3ff",
+    "height": 720,
+    "width": 960
   },
   "jin-tian-de-lu-ying-dian-jian-zhi-le-hen-3.jpg": {
     "height": 960,
     "width": 1280,
     "bytes": 199107,
     "contentType": "image/jpeg",
-    "etag": "e39bb09638e7aa7c10f294e8c9c05427"
+    "etag": "e39bb09638e7aa7c10f294e8c9c05427",
+    "variants": [
+      "jin-tian-de-lu-ying-dian-jian-zhi-le-hen-3-480w.webp",
+      "jin-tian-de-lu-ying-dian-jian-zhi-le-hen-3-960w.webp"
+    ]
+  },
+  "jin-tian-de-lu-ying-dian-jian-zhi-le-hen-4-480w.webp": {
+    "bytes": 28112,
+    "contentType": "image/webp",
+    "etag": "49d054dd77c45c973f192b1e532ac4af",
+    "height": 360,
+    "width": 480
+  },
+  "jin-tian-de-lu-ying-dian-jian-zhi-le-hen-4-960w.webp": {
+    "bytes": 111136,
+    "contentType": "image/webp",
+    "etag": "ef70ced0f12b8cfe831977d312354ef0",
+    "height": 720,
+    "width": 960
   },
   "jin-tian-de-lu-ying-dian-jian-zhi-le-hen-4.jpg": {
     "height": 960,
     "width": 1280,
     "bytes": 203029,
     "contentType": "image/jpeg",
-    "etag": "7a0030ec7328578df1c5323fa5e04619"
+    "etag": "7a0030ec7328578df1c5323fa5e04619",
+    "variants": [
+      "jin-tian-de-lu-ying-dian-jian-zhi-le-hen-4-480w.webp",
+      "jin-tian-de-lu-ying-dian-jian-zhi-le-hen-4-960w.webp"
+    ]
+  },
+  "jin-tian-de-lu-ying-dian-jian-zhi-le-hen-480w.webp": {
+    "bytes": 26814,
+    "contentType": "image/webp",
+    "etag": "ef6845eb91ceaae74a7072ec6b4c2c43",
+    "height": 360,
+    "width": 480
+  },
+  "jin-tian-de-lu-ying-dian-jian-zhi-le-hen-5-480w.webp": {
+    "bytes": 15974,
+    "contentType": "image/webp",
+    "etag": "bf7b2b38456e6893e034e55a6856a332",
+    "height": 360,
+    "width": 480
+  },
+  "jin-tian-de-lu-ying-dian-jian-zhi-le-hen-5-960w.webp": {
+    "bytes": 52592,
+    "contentType": "image/webp",
+    "etag": "979e96d9fc545635952ad4d33aefb5a4",
+    "height": 720,
+    "width": 960
   },
   "jin-tian-de-lu-ying-dian-jian-zhi-le-hen-5.jpg": {
     "height": 960,
     "width": 1280,
     "bytes": 107786,
     "contentType": "image/jpeg",
-    "etag": "445899329cd2495731b416b612f65de3"
+    "etag": "445899329cd2495731b416b612f65de3",
+    "variants": [
+      "jin-tian-de-lu-ying-dian-jian-zhi-le-hen-5-480w.webp",
+      "jin-tian-de-lu-ying-dian-jian-zhi-le-hen-5-960w.webp"
+    ]
+  },
+  "jin-tian-de-lu-ying-dian-jian-zhi-le-hen-6-480w.webp": {
+    "bytes": 22996,
+    "contentType": "image/webp",
+    "etag": "4778e262389499a3165391c55c592d0c",
+    "height": 360,
+    "width": 480
+  },
+  "jin-tian-de-lu-ying-dian-jian-zhi-le-hen-6-960w.webp": {
+    "bytes": 115446,
+    "contentType": "image/webp",
+    "etag": "0e88427a2fbafe2c9d1e32063e8ddd00",
+    "height": 720,
+    "width": 960
   },
   "jin-tian-de-lu-ying-dian-jian-zhi-le-hen-6.jpg": {
     "height": 960,
     "width": 1280,
     "bytes": 192617,
     "contentType": "image/jpeg",
-    "etag": "753602c4d62398eea25fe56bb02671b8"
+    "etag": "753602c4d62398eea25fe56bb02671b8",
+    "variants": [
+      "jin-tian-de-lu-ying-dian-jian-zhi-le-hen-6-480w.webp",
+      "jin-tian-de-lu-ying-dian-jian-zhi-le-hen-6-960w.webp"
+    ]
+  },
+  "jin-tian-de-lu-ying-dian-jian-zhi-le-hen-7-480w.webp": {
+    "bytes": 26372,
+    "contentType": "image/webp",
+    "etag": "33cd9e69e8827538ae0e3ae9607fdbf8",
+    "height": 640,
+    "width": 480
   },
   "jin-tian-de-lu-ying-dian-jian-zhi-le-hen-7.jpg": {
     "height": 1280,
     "width": 960,
     "bytes": 99909,
     "contentType": "image/jpeg",
-    "etag": "a2dc62425e75888603972bf60e254953"
+    "etag": "a2dc62425e75888603972bf60e254953",
+    "variants": [
+      "jin-tian-de-lu-ying-dian-jian-zhi-le-hen-7-480w.webp"
+    ]
+  },
+  "jin-tian-de-lu-ying-dian-jian-zhi-le-hen-960w.webp": {
+    "bytes": 108696,
+    "contentType": "image/webp",
+    "etag": "a86c63eb77c2f54a665f1f1ab2aae64e",
+    "height": 720,
+    "width": 960
   },
   "jin-tian-de-lu-ying-dian-jian-zhi-le-hen-video-poster.jpg": {
     "height": 180,
@@ -58,6 +172,10 @@
     "width": 1280,
     "bytes": 183772,
     "contentType": "image/jpeg",
-    "etag": "44ad981f004fa3f1d99e230b31dd8fde"
+    "etag": "44ad981f004fa3f1d99e230b31dd8fde",
+    "variants": [
+      "jin-tian-de-lu-ying-dian-jian-zhi-le-hen-480w.webp",
+      "jin-tian-de-lu-ying-dian-jian-zhi-le-hen-960w.webp"
+    ]
   }
 }

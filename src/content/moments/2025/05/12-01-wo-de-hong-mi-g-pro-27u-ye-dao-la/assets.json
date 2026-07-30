@@ -1,9 +1,35 @@
 {
+  "wo-de-hong-mi-g-pro-27u-ye-dao-la-1920w.webp": {
+    "bytes": 277242,
+    "contentType": "image/webp",
+    "etag": "06ce0955567e0fded7962223c4784e58",
+    "height": 1080,
+    "width": 1920
+  },
+  "wo-de-hong-mi-g-pro-27u-ye-dao-la-480w.webp": {
+    "bytes": 19382,
+    "contentType": "image/webp",
+    "etag": "36a010ae77c7a03967de9cda2c233243",
+    "height": 270,
+    "width": 480
+  },
+  "wo-de-hong-mi-g-pro-27u-ye-dao-la-960w.webp": {
+    "bytes": 80664,
+    "contentType": "image/webp",
+    "etag": "ea2ac94e43f5e43b98d647832d6e9f4b",
+    "height": 540,
+    "width": 960
+  },
   "wo-de-hong-mi-g-pro-27u-ye-dao-la.jpg": {
     "height": 1152,
     "width": 2048,
     "bytes": 458941,
     "contentType": "image/jpeg",
-    "etag": "240d6bcb77d2badbbf1eeb115ecc8001"
+    "etag": "240d6bcb77d2badbbf1eeb115ecc8001",
+    "variants": [
+      "wo-de-hong-mi-g-pro-27u-ye-dao-la-480w.webp",
+      "wo-de-hong-mi-g-pro-27u-ye-dao-la-960w.webp",
+      "wo-de-hong-mi-g-pro-27u-ye-dao-la-1920w.webp"
+    ]
   }
 }

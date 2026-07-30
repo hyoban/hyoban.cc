@@ -1,9 +1,27 @@
 {
+  "zuo-le-yi-ge-duo-lin-guo-de-kao-shi-480w.webp": {
+    "bytes": 7278,
+    "contentType": "image/webp",
+    "etag": "ef506ea19b91fe9cf33f8d7aec8cfe80",
+    "height": 329,
+    "width": 480
+  },
+  "zuo-le-yi-ge-duo-lin-guo-de-kao-shi-960w.webp": {
+    "bytes": 16266,
+    "contentType": "image/webp",
+    "etag": "e01bb087d50c805ea52be02354921653",
+    "height": 659,
+    "width": 960
+  },
   "zuo-le-yi-ge-duo-lin-guo-de-kao-shi.jpg": {
     "height": 1062,
     "width": 1548,
     "bytes": 69443,
     "contentType": "image/jpeg",
-    "etag": "0a0ad22681b244f4dd59e706703f427a"
+    "etag": "0a0ad22681b244f4dd59e706703f427a",
+    "variants": [
+      "zuo-le-yi-ge-duo-lin-guo-de-kao-shi-480w.webp",
+      "zuo-le-yi-ge-duo-lin-guo-de-kao-shi-960w.webp"
+    ]
   }
 }

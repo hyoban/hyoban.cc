@@ -1,9 +1,27 @@
 {
+  "ru-tu-480w.webp": {
+    "bytes": 5026,
+    "contentType": "image/webp",
+    "etag": "753c5fe76ae18fe6e2e3dd29773558b3",
+    "height": 50,
+    "width": 480
+  },
+  "ru-tu-960w.webp": {
+    "bytes": 14316,
+    "contentType": "image/webp",
+    "etag": "0ead997a150fe9500a892c3544dfff32",
+    "height": 100,
+    "width": 960
+  },
   "ru-tu.jpg": {
     "height": 188,
     "width": 1808,
     "bytes": 62175,
     "contentType": "image/jpeg",
-    "etag": "1f27c834e971be07f14d7b14a1d0137f"
+    "etag": "1f27c834e971be07f14d7b14a1d0137f",
+    "variants": [
+      "ru-tu-480w.webp",
+      "ru-tu-960w.webp"
+    ]
   }
 }

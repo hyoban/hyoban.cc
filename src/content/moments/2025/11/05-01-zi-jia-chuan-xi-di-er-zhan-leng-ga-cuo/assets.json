@@ -1,72 +1,252 @@
 {
+  "zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-10-480w.webp": {
+    "bytes": 28544,
+    "contentType": "image/webp",
+    "etag": "bd8f592322d4a485da3969c024b8bfd2",
+    "height": 640,
+    "width": 480
+  },
+  "zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-10-960w.webp": {
+    "bytes": 62590,
+    "contentType": "image/webp",
+    "etag": "49c3d95aebe689c5311b94a092afa2dd",
+    "height": 1280,
+    "width": 960
+  },
   "zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-10.webp": {
     "height": 1440,
     "width": 1080,
     "bytes": 99238,
     "contentType": "image/webp",
-    "etag": "fc1d080ec035dbeb15cfe831a6539b61"
+    "etag": "fc1d080ec035dbeb15cfe831a6539b61",
+    "variants": [
+      "zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-10-480w.webp",
+      "zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-10-960w.webp"
+    ]
+  },
+  "zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-2-480w.webp": {
+    "bytes": 29502,
+    "contentType": "image/webp",
+    "etag": "6ce8451547f91e52a73d0e0063dfc731",
+    "height": 360,
+    "width": 480
+  },
+  "zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-2-960w.webp": {
+    "bytes": 94454,
+    "contentType": "image/webp",
+    "etag": "bcde1bc49e97a764d8f995fd83e4247d",
+    "height": 720,
+    "width": 960
   },
   "zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-2.webp": {
     "height": 1080,
     "width": 1440,
     "bytes": 289256,
     "contentType": "image/webp",
-    "etag": "5a47df891df5a55acc8bca661779eab2"
+    "etag": "5a47df891df5a55acc8bca661779eab2",
+    "variants": [
+      "zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-2-480w.webp",
+      "zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-2-960w.webp"
+    ]
+  },
+  "zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-3-480w.webp": {
+    "bytes": 48580,
+    "contentType": "image/webp",
+    "etag": "af2b78324daf75609a88c543efbf47c2",
+    "height": 640,
+    "width": 480
+  },
+  "zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-3-960w.webp": {
+    "bytes": 135888,
+    "contentType": "image/webp",
+    "etag": "02c70e69e464fe7bcdf8ec81251dc7cb",
+    "height": 1280,
+    "width": 960
   },
   "zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-3.webp": {
     "height": 1440,
     "width": 1080,
     "bytes": 281410,
     "contentType": "image/webp",
-    "etag": "a1dd2d8934964780c3480e78e65659de"
+    "etag": "a1dd2d8934964780c3480e78e65659de",
+    "variants": [
+      "zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-3-480w.webp",
+      "zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-3-960w.webp"
+    ]
+  },
+  "zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-4-480w.webp": {
+    "bytes": 18080,
+    "contentType": "image/webp",
+    "etag": "1a31f4538340a3c1e2176820365cdb4d",
+    "height": 360,
+    "width": 480
+  },
+  "zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-4-960w.webp": {
+    "bytes": 55008,
+    "contentType": "image/webp",
+    "etag": "13a4eceaa2efc0a3ad21623e9bf9c50b",
+    "height": 720,
+    "width": 960
   },
   "zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-4.webp": {
     "height": 1080,
     "width": 1440,
     "bytes": 150810,
     "contentType": "image/webp",
-    "etag": "ebf785dc0276fbb4b2a32a51b590ce31"
+    "etag": "ebf785dc0276fbb4b2a32a51b590ce31",
+    "variants": [
+      "zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-4-480w.webp",
+      "zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-4-960w.webp"
+    ]
+  },
+  "zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-480w.webp": {
+    "bytes": 39476,
+    "contentType": "image/webp",
+    "etag": "283a6624ca774c3213c5cde6c957bad6",
+    "height": 360,
+    "width": 480
+  },
+  "zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-5-480w.webp": {
+    "bytes": 21342,
+    "contentType": "image/webp",
+    "etag": "21e2f8e121bf76fcd3e7df13606e55a0",
+    "height": 360,
+    "width": 480
+  },
+  "zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-5-960w.webp": {
+    "bytes": 66088,
+    "contentType": "image/webp",
+    "etag": "04ece5242b621ae27afc72b28e0ae277",
+    "height": 720,
+    "width": 960
   },
   "zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-5.webp": {
     "height": 1080,
     "width": 1440,
     "bytes": 191384,
     "contentType": "image/webp",
-    "etag": "558d4df3eae2d0952ee1233474f05e4d"
+    "etag": "558d4df3eae2d0952ee1233474f05e4d",
+    "variants": [
+      "zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-5-480w.webp",
+      "zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-5-960w.webp"
+    ]
+  },
+  "zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-6-480w.webp": {
+    "bytes": 25354,
+    "contentType": "image/webp",
+    "etag": "c84b5dd9049270de5a6804878dfd48f9",
+    "height": 360,
+    "width": 480
+  },
+  "zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-6-960w.webp": {
+    "bytes": 85124,
+    "contentType": "image/webp",
+    "etag": "ff3c5dfca153dd2ec7f2e4651b919ba2",
+    "height": 720,
+    "width": 960
   },
   "zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-6.webp": {
     "height": 1080,
     "width": 1440,
     "bytes": 243912,
     "contentType": "image/webp",
-    "etag": "ec7a20a35e0f21840dfce49ab5fdfcb3"
+    "etag": "ec7a20a35e0f21840dfce49ab5fdfcb3",
+    "variants": [
+      "zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-6-480w.webp",
+      "zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-6-960w.webp"
+    ]
+  },
+  "zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-7-480w.webp": {
+    "bytes": 23606,
+    "contentType": "image/webp",
+    "etag": "5e1f98cec6a96fb5d7cf64cea283ef7d",
+    "height": 360,
+    "width": 480
+  },
+  "zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-7-960w.webp": {
+    "bytes": 78340,
+    "contentType": "image/webp",
+    "etag": "bd1e5f204f3eb11ca7697a3d390c816a",
+    "height": 720,
+    "width": 960
   },
   "zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-7.webp": {
     "height": 1080,
     "width": 1440,
     "bytes": 221932,
     "contentType": "image/webp",
-    "etag": "bda452b8a37cf9b910e1bff2ee3a3f7a"
+    "etag": "bda452b8a37cf9b910e1bff2ee3a3f7a",
+    "variants": [
+      "zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-7-480w.webp",
+      "zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-7-960w.webp"
+    ]
+  },
+  "zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-8-480w.webp": {
+    "bytes": 19140,
+    "contentType": "image/webp",
+    "etag": "f03e224977aba5573400639ddd1173ea",
+    "height": 360,
+    "width": 480
+  },
+  "zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-8-960w.webp": {
+    "bytes": 58550,
+    "contentType": "image/webp",
+    "etag": "07143b56038167d5df0b206f22823675",
+    "height": 720,
+    "width": 960
   },
   "zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-8.webp": {
     "height": 1080,
     "width": 1440,
     "bytes": 164500,
     "contentType": "image/webp",
-    "etag": "922b8bc96110d1180df8799d8e844caa"
+    "etag": "922b8bc96110d1180df8799d8e844caa",
+    "variants": [
+      "zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-8-480w.webp",
+      "zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-8-960w.webp"
+    ]
+  },
+  "zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-9-480w.webp": {
+    "bytes": 46706,
+    "contentType": "image/webp",
+    "etag": "274f19a83de715614c4c6343b4f42465",
+    "height": 640,
+    "width": 480
+  },
+  "zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-9-960w.webp": {
+    "bytes": 107504,
+    "contentType": "image/webp",
+    "etag": "47882b430543ad649e4b3b1424daaacd",
+    "height": 1280,
+    "width": 960
   },
   "zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-9.webp": {
     "height": 1440,
     "width": 1080,
     "bytes": 179890,
     "contentType": "image/webp",
-    "etag": "13a0b5e0f290f490c644ab4ce94099ef"
+    "etag": "13a0b5e0f290f490c644ab4ce94099ef",
+    "variants": [
+      "zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-9-480w.webp",
+      "zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-9-960w.webp"
+    ]
+  },
+  "zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-960w.webp": {
+    "bytes": 142318,
+    "contentType": "image/webp",
+    "etag": "fb65c83dce2915188897746984e20121",
+    "height": 720,
+    "width": 960
   },
   "zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo.webp": {
     "height": 1080,
     "width": 1440,
     "bytes": 445494,
     "contentType": "image/webp",
-    "etag": "2500ec90afe9c47304e026b130d6b505"
+    "etag": "2500ec90afe9c47304e026b130d6b505",
+    "variants": [
+      "zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-480w.webp",
+      "zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-960w.webp"
+    ]
   }
 }

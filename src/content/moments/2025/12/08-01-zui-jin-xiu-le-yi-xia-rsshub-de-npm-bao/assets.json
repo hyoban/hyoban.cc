@@ -1,9 +1,27 @@
 {
+  "zui-jin-xiu-le-yi-xia-rsshub-de-npm-bao-480w.webp": {
+    "bytes": 17494,
+    "contentType": "image/webp",
+    "etag": "03bbb5099dead035685cfd7d61f2279b",
+    "height": 302,
+    "width": 480
+  },
+  "zui-jin-xiu-le-yi-xia-rsshub-de-npm-bao-960w.webp": {
+    "bytes": 37802,
+    "contentType": "image/webp",
+    "etag": "1c5f52fceff5afbed8e36df3a90c9d22",
+    "height": 603,
+    "width": 960
+  },
   "zui-jin-xiu-le-yi-xia-rsshub-de-npm-bao.jpg": {
     "height": 650,
     "width": 1034,
     "bytes": 76771,
     "contentType": "image/jpeg",
-    "etag": "389571e173e9f01bf0e3c98a491ae0d8"
+    "etag": "389571e173e9f01bf0e3c98a491ae0d8",
+    "variants": [
+      "zui-jin-xiu-le-yi-xia-rsshub-de-npm-bao-480w.webp",
+      "zui-jin-xiu-le-yi-xia-rsshub-de-npm-bao-960w.webp"
+    ]
   }
 }

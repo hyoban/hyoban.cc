@@ -1,16 +1,52 @@
 {
+  "yi-ci-he-san-zhong-zhe-ge-kao-yu-hao-2-480w.webp": {
+    "bytes": 19120,
+    "contentType": "image/webp",
+    "etag": "2e3a9da41b180b4a5a4aec187acf91c2",
+    "height": 360,
+    "width": 480
+  },
+  "yi-ci-he-san-zhong-zhe-ge-kao-yu-hao-2-960w.webp": {
+    "bytes": 50488,
+    "contentType": "image/webp",
+    "etag": "e209a5555b5412704847f0c5a19f8abb",
+    "height": 720,
+    "width": 960
+  },
   "yi-ci-he-san-zhong-zhe-ge-kao-yu-hao-2.jpg": {
     "height": 960,
     "width": 1280,
     "bytes": 114316,
     "contentType": "image/jpeg",
-    "etag": "de5efc5760593a2c80cfc765dfaf31ca"
+    "etag": "de5efc5760593a2c80cfc765dfaf31ca",
+    "variants": [
+      "yi-ci-he-san-zhong-zhe-ge-kao-yu-hao-2-480w.webp",
+      "yi-ci-he-san-zhong-zhe-ge-kao-yu-hao-2-960w.webp"
+    ]
+  },
+  "yi-ci-he-san-zhong-zhe-ge-kao-yu-hao-480w.webp": {
+    "bytes": 31534,
+    "contentType": "image/webp",
+    "etag": "0543bffbdc49a536e2ab864ef777da2d",
+    "height": 360,
+    "width": 480
+  },
+  "yi-ci-he-san-zhong-zhe-ge-kao-yu-hao-960w.webp": {
+    "bytes": 90098,
+    "contentType": "image/webp",
+    "etag": "4a07f7a34b81485889b6fe982cc38906",
+    "height": 720,
+    "width": 960
   },
   "yi-ci-he-san-zhong-zhe-ge-kao-yu-hao.jpg": {
     "height": 960,
     "width": 1280,
     "bytes": 163432,
     "contentType": "image/jpeg",
-    "etag": "6dec57e3dc029a057f42d751fcda0251"
+    "etag": "6dec57e3dc029a057f42d751fcda0251",
+    "variants": [
+      "yi-ci-he-san-zhong-zhe-ge-kao-yu-hao-480w.webp",
+      "yi-ci-he-san-zhong-zhe-ge-kao-yu-hao-960w.webp"
+    ]
   }
 }

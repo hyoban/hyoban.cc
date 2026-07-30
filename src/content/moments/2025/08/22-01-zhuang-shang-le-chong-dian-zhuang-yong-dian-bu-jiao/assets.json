@@ -1,9 +1,27 @@
 {
+  "zhuang-shang-le-chong-dian-zhuang-yong-dian-bu-jiao-480w.webp": {
+    "bytes": 17764,
+    "contentType": "image/webp",
+    "etag": "590b6f1f106ad192e99472eb76fa8b8e",
+    "height": 270,
+    "width": 480
+  },
+  "zhuang-shang-le-chong-dian-zhuang-yong-dian-bu-jiao-960w.webp": {
+    "bytes": 46640,
+    "contentType": "image/webp",
+    "etag": "cb708288273e0afed568e5213d814739",
+    "height": 540,
+    "width": 960
+  },
   "zhuang-shang-le-chong-dian-zhuang-yong-dian-bu-jiao.jpg": {
     "height": 1080,
     "width": 1920,
     "bytes": 190263,
     "contentType": "image/jpeg",
-    "etag": "b49fede1afb9fe7005efa992025f96dd"
+    "etag": "b49fede1afb9fe7005efa992025f96dd",
+    "variants": [
+      "zhuang-shang-le-chong-dian-zhuang-yong-dian-bu-jiao-480w.webp",
+      "zhuang-shang-le-chong-dian-zhuang-yong-dian-bu-jiao-960w.webp"
+    ]
   }
 }

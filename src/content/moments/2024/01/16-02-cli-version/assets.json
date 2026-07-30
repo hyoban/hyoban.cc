@@ -1,9 +1,27 @@
 {
+  "cli-version-480w.webp": {
+    "bytes": 20452,
+    "contentType": "image/webp",
+    "etag": "f3c56ba425cc02c3537137deca7e565a",
+    "height": 369,
+    "width": 480
+  },
+  "cli-version-960w.webp": {
+    "bytes": 50498,
+    "contentType": "image/webp",
+    "etag": "8b83cbaf2bdbb6b2ed22aa07e1d0ff45",
+    "height": 738,
+    "width": 960
+  },
   "cli-version.jpg": {
     "height": 1128,
     "width": 1468,
     "bytes": 183862,
     "contentType": "image/jpeg",
-    "etag": "2ab0f49f07c9fb06d4b37eba17c18f81"
+    "etag": "2ab0f49f07c9fb06d4b37eba17c18f81",
+    "variants": [
+      "cli-version-480w.webp",
+      "cli-version-960w.webp"
+    ]
   }
 }

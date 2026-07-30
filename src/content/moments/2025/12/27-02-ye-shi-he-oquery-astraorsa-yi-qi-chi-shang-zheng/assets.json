@@ -1,23 +1,85 @@
 {
+  "ye-shi-he-oquery-astraorsa-yi-qi-chi-shang-zheng-2-1920w.webp": {
+    "bytes": 304482,
+    "contentType": "image/webp",
+    "etag": "10dbba1eae7da1c0ed48aeacdf3c7d37",
+    "height": 1440,
+    "width": 1920
+  },
+  "ye-shi-he-oquery-astraorsa-yi-qi-chi-shang-zheng-2-480w.webp": {
+    "bytes": 37352,
+    "contentType": "image/webp",
+    "etag": "42d1e02096be841335210a1002fd1901",
+    "height": 360,
+    "width": 480
+  },
+  "ye-shi-he-oquery-astraorsa-yi-qi-chi-shang-zheng-2-960w.webp": {
+    "bytes": 111492,
+    "contentType": "image/webp",
+    "etag": "477d0a5d1db785381a07686b3a2a932b",
+    "height": 720,
+    "width": 960
+  },
   "ye-shi-he-oquery-astraorsa-yi-qi-chi-shang-zheng-2.jpg": {
     "height": 1536,
     "width": 2048,
     "bytes": 510866,
     "contentType": "image/jpeg",
-    "etag": "c6d90309b77952fb47373b0d849cafb8"
+    "etag": "c6d90309b77952fb47373b0d849cafb8",
+    "variants": [
+      "ye-shi-he-oquery-astraorsa-yi-qi-chi-shang-zheng-2-480w.webp",
+      "ye-shi-he-oquery-astraorsa-yi-qi-chi-shang-zheng-2-960w.webp",
+      "ye-shi-he-oquery-astraorsa-yi-qi-chi-shang-zheng-2-1920w.webp"
+    ]
+  },
+  "ye-shi-he-oquery-astraorsa-yi-qi-chi-shang-zheng-3-480w.webp": {
+    "bytes": 34462,
+    "contentType": "image/webp",
+    "etag": "83e1ec0ee8f4caf5d54e823402b71655",
+    "height": 640,
+    "width": 480
+  },
+  "ye-shi-he-oquery-astraorsa-yi-qi-chi-shang-zheng-3-960w.webp": {
+    "bytes": 91242,
+    "contentType": "image/webp",
+    "etag": "7a95d9a6cd1011a8062e126d26eaae6b",
+    "height": 1280,
+    "width": 960
   },
   "ye-shi-he-oquery-astraorsa-yi-qi-chi-shang-zheng-3.jpg": {
     "height": 2048,
     "width": 1536,
     "bytes": 334438,
     "contentType": "image/jpeg",
-    "etag": "0bf7b52c46fe4c9833d4a93dfb2c1765"
+    "etag": "0bf7b52c46fe4c9833d4a93dfb2c1765",
+    "variants": [
+      "ye-shi-he-oquery-astraorsa-yi-qi-chi-shang-zheng-3-480w.webp",
+      "ye-shi-he-oquery-astraorsa-yi-qi-chi-shang-zheng-3-960w.webp"
+    ]
+  },
+  "ye-shi-he-oquery-astraorsa-yi-qi-chi-shang-zheng-480w.webp": {
+    "bytes": 29776,
+    "contentType": "image/webp",
+    "etag": "bfeac6d3a9a62740f8e4de539edf1150",
+    "height": 640,
+    "width": 480
+  },
+  "ye-shi-he-oquery-astraorsa-yi-qi-chi-shang-zheng-960w.webp": {
+    "bytes": 70978,
+    "contentType": "image/webp",
+    "etag": "4786981543136b8331c3d6c93cdb09fb",
+    "height": 1280,
+    "width": 960
   },
   "ye-shi-he-oquery-astraorsa-yi-qi-chi-shang-zheng.jpg": {
     "height": 2048,
     "width": 1536,
     "bytes": 298315,
     "contentType": "image/jpeg",
-    "etag": "69daea056ce4e90dc7b07caa4516052d"
+    "etag": "69daea056ce4e90dc7b07caa4516052d",
+    "variants": [
+      "ye-shi-he-oquery-astraorsa-yi-qi-chi-shang-zheng-480w.webp",
+      "ye-shi-he-oquery-astraorsa-yi-qi-chi-shang-zheng-960w.webp"
+    ]
   }
 }

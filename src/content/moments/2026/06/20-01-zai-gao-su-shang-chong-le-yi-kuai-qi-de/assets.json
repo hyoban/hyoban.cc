@@ -1,9 +1,27 @@
 {
+  "zai-gao-su-shang-chong-le-yi-kuai-qi-de-480w.webp": {
+    "bytes": 9252,
+    "contentType": "image/webp",
+    "etag": "eae576696a3de292cf47b7abcbfca698",
+    "height": 360,
+    "width": 480
+  },
+  "zai-gao-su-shang-chong-le-yi-kuai-qi-de-960w.webp": {
+    "bytes": 23434,
+    "contentType": "image/webp",
+    "etag": "274324af5d41bfe93a8c59fdda2c0eb8",
+    "height": 720,
+    "width": 960
+  },
   "zai-gao-su-shang-chong-le-yi-kuai-qi-de.jpg": {
     "height": 960,
     "width": 1280,
     "bytes": 55070,
     "contentType": "image/jpeg",
-    "etag": "d7ddb2d35a4ebed2e58143a94d866dbf"
+    "etag": "d7ddb2d35a4ebed2e58143a94d866dbf",
+    "variants": [
+      "zai-gao-su-shang-chong-le-yi-kuai-qi-de-480w.webp",
+      "zai-gao-su-shang-chong-le-yi-kuai-qi-de-960w.webp"
+    ]
   }
 }

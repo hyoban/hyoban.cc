@@ -1,23 +1,77 @@
 {
+  "zai-shu-shan-sen-lin-gong-yuan-jin-xing-yi-2-480w.webp": {
+    "bytes": 61894,
+    "contentType": "image/webp",
+    "etag": "1921bb94bed5d92473ed8e7c99a70dd2",
+    "height": 360,
+    "width": 480
+  },
+  "zai-shu-shan-sen-lin-gong-yuan-jin-xing-yi-2-960w.webp": {
+    "bytes": 250422,
+    "contentType": "image/webp",
+    "etag": "acaaae9c1a0f35e14516e9bafa7729e5",
+    "height": 720,
+    "width": 960
+  },
   "zai-shu-shan-sen-lin-gong-yuan-jin-xing-yi-2.jpg": {
     "height": 960,
     "width": 1280,
     "bytes": 360611,
     "contentType": "image/jpeg",
-    "etag": "27979dda3525a05d60d54f49dcd9617a"
+    "etag": "27979dda3525a05d60d54f49dcd9617a",
+    "variants": [
+      "zai-shu-shan-sen-lin-gong-yuan-jin-xing-yi-2-480w.webp",
+      "zai-shu-shan-sen-lin-gong-yuan-jin-xing-yi-2-960w.webp"
+    ]
+  },
+  "zai-shu-shan-sen-lin-gong-yuan-jin-xing-yi-3-480w.webp": {
+    "bytes": 69100,
+    "contentType": "image/webp",
+    "etag": "4f0c29ef2de290426bdb930bd1da0f5c",
+    "height": 360,
+    "width": 480
+  },
+  "zai-shu-shan-sen-lin-gong-yuan-jin-xing-yi-3-960w.webp": {
+    "bytes": 275512,
+    "contentType": "image/webp",
+    "etag": "809be40fb19d6fbe5eef90fb6404b06c",
+    "height": 720,
+    "width": 960
   },
   "zai-shu-shan-sen-lin-gong-yuan-jin-xing-yi-3.jpg": {
     "height": 960,
     "width": 1280,
     "bytes": 395363,
     "contentType": "image/jpeg",
-    "etag": "a004bf3a67e2f5188d12b52007b1deff"
+    "etag": "a004bf3a67e2f5188d12b52007b1deff",
+    "variants": [
+      "zai-shu-shan-sen-lin-gong-yuan-jin-xing-yi-3-480w.webp",
+      "zai-shu-shan-sen-lin-gong-yuan-jin-xing-yi-3-960w.webp"
+    ]
+  },
+  "zai-shu-shan-sen-lin-gong-yuan-jin-xing-yi-480w.webp": {
+    "bytes": 60144,
+    "contentType": "image/webp",
+    "etag": "5192133596a2ad7d2e2f0708b889dbee",
+    "height": 360,
+    "width": 480
+  },
+  "zai-shu-shan-sen-lin-gong-yuan-jin-xing-yi-960w.webp": {
+    "bytes": 249682,
+    "contentType": "image/webp",
+    "etag": "35b3e244c88b92d97bf96731e5e045f1",
+    "height": 720,
+    "width": 960
   },
   "zai-shu-shan-sen-lin-gong-yuan-jin-xing-yi.jpg": {
     "height": 960,
     "width": 1280,
     "bytes": 372481,
     "contentType": "image/jpeg",
-    "etag": "a450a0577970aa48559f1e5aaef1f8cd"
+    "etag": "a450a0577970aa48559f1e5aaef1f8cd",
+    "variants": [
+      "zai-shu-shan-sen-lin-gong-yuan-jin-xing-yi-480w.webp",
+      "zai-shu-shan-sen-lin-gong-yuan-jin-xing-yi-960w.webp"
+    ]
   }
 }

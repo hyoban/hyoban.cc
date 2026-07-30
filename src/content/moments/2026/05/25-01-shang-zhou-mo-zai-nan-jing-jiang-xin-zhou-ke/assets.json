@@ -1,51 +1,233 @@
 {
+  "shang-zhou-mo-zai-nan-jing-jiang-xin-zhou-ke-1920w.webp": {
+    "bytes": 260616,
+    "contentType": "image/webp",
+    "etag": "8bcaaa4b5985be0d1b32842c7f2d837c",
+    "height": 1280,
+    "width": 1920
+  },
+  "shang-zhou-mo-zai-nan-jing-jiang-xin-zhou-ke-2-1920w.webp": {
+    "bytes": 60034,
+    "contentType": "image/webp",
+    "etag": "4aed0bc3ce0e6a56428e1febac3de742",
+    "height": 1280,
+    "width": 1920
+  },
+  "shang-zhou-mo-zai-nan-jing-jiang-xin-zhou-ke-2-480w.webp": {
+    "bytes": 10542,
+    "contentType": "image/webp",
+    "etag": "f3aa289c3453b36f799210c1bc3bd93c",
+    "height": 320,
+    "width": 480
+  },
+  "shang-zhou-mo-zai-nan-jing-jiang-xin-zhou-ke-2-960w.webp": {
+    "bytes": 24962,
+    "contentType": "image/webp",
+    "etag": "8cff4267cf82afb9c7243e3a656e57eb",
+    "height": 640,
+    "width": 960
+  },
   "shang-zhou-mo-zai-nan-jing-jiang-xin-zhou-ke-2.jpg": {
     "height": 1706,
     "width": 2560,
     "bytes": 154537,
     "contentType": "image/jpeg",
-    "etag": "a86b1d7433a40d7c665bc7dde53e2913"
+    "etag": "a86b1d7433a40d7c665bc7dde53e2913",
+    "variants": [
+      "shang-zhou-mo-zai-nan-jing-jiang-xin-zhou-ke-2-480w.webp",
+      "shang-zhou-mo-zai-nan-jing-jiang-xin-zhou-ke-2-960w.webp",
+      "shang-zhou-mo-zai-nan-jing-jiang-xin-zhou-ke-2-1920w.webp"
+    ]
+  },
+  "shang-zhou-mo-zai-nan-jing-jiang-xin-zhou-ke-3-1920w.webp": {
+    "bytes": 359964,
+    "contentType": "image/webp",
+    "etag": "0a946437617382a5df1d322bed2d5224",
+    "height": 1280,
+    "width": 1920
+  },
+  "shang-zhou-mo-zai-nan-jing-jiang-xin-zhou-ke-3-480w.webp": {
+    "bytes": 38392,
+    "contentType": "image/webp",
+    "etag": "0ecb2aeb90f7d4bbff97df5318d3fe53",
+    "height": 320,
+    "width": 480
+  },
+  "shang-zhou-mo-zai-nan-jing-jiang-xin-zhou-ke-3-960w.webp": {
+    "bytes": 135884,
+    "contentType": "image/webp",
+    "etag": "11f85ce46c62a4e4b271fce5a97dae1b",
+    "height": 640,
+    "width": 960
   },
   "shang-zhou-mo-zai-nan-jing-jiang-xin-zhou-ke-3.jpg": {
     "height": 1706,
     "width": 2560,
     "bytes": 611164,
     "contentType": "image/jpeg",
-    "etag": "d9ed9ac6096b017636343cc8f785443e"
+    "etag": "d9ed9ac6096b017636343cc8f785443e",
+    "variants": [
+      "shang-zhou-mo-zai-nan-jing-jiang-xin-zhou-ke-3-480w.webp",
+      "shang-zhou-mo-zai-nan-jing-jiang-xin-zhou-ke-3-960w.webp",
+      "shang-zhou-mo-zai-nan-jing-jiang-xin-zhou-ke-3-1920w.webp"
+    ]
+  },
+  "shang-zhou-mo-zai-nan-jing-jiang-xin-zhou-ke-4-1920w.webp": {
+    "bytes": 51124,
+    "contentType": "image/webp",
+    "etag": "42f79b5b74bba65b9e1f382ebd1a5456",
+    "height": 1280,
+    "width": 1920
+  },
+  "shang-zhou-mo-zai-nan-jing-jiang-xin-zhou-ke-4-480w.webp": {
+    "bytes": 4632,
+    "contentType": "image/webp",
+    "etag": "6c3a8b6b1bdeb2d0c4f5e03a7606d202",
+    "height": 320,
+    "width": 480
+  },
+  "shang-zhou-mo-zai-nan-jing-jiang-xin-zhou-ke-4-960w.webp": {
+    "bytes": 16448,
+    "contentType": "image/webp",
+    "etag": "a69d3551e64a2b27286629ad434ff99b",
+    "height": 640,
+    "width": 960
   },
   "shang-zhou-mo-zai-nan-jing-jiang-xin-zhou-ke-4.jpg": {
     "height": 1706,
     "width": 2560,
     "bytes": 158140,
     "contentType": "image/jpeg",
-    "etag": "7a24d8a14e15242d469f1b733403fb69"
+    "etag": "7a24d8a14e15242d469f1b733403fb69",
+    "variants": [
+      "shang-zhou-mo-zai-nan-jing-jiang-xin-zhou-ke-4-480w.webp",
+      "shang-zhou-mo-zai-nan-jing-jiang-xin-zhou-ke-4-960w.webp",
+      "shang-zhou-mo-zai-nan-jing-jiang-xin-zhou-ke-4-1920w.webp"
+    ]
+  },
+  "shang-zhou-mo-zai-nan-jing-jiang-xin-zhou-ke-480w.webp": {
+    "bytes": 34688,
+    "contentType": "image/webp",
+    "etag": "5db5637c864d6c1ddeb18dffb1a28b45",
+    "height": 320,
+    "width": 480
+  },
+  "shang-zhou-mo-zai-nan-jing-jiang-xin-zhou-ke-5-1920w.webp": {
+    "bytes": 108186,
+    "contentType": "image/webp",
+    "etag": "70d754a6b1dbf2c39422542d826f5c6b",
+    "height": 1280,
+    "width": 1920
+  },
+  "shang-zhou-mo-zai-nan-jing-jiang-xin-zhou-ke-5-480w.webp": {
+    "bytes": 11650,
+    "contentType": "image/webp",
+    "etag": "dc599207315024979cc0f3f0df2984c2",
+    "height": 320,
+    "width": 480
+  },
+  "shang-zhou-mo-zai-nan-jing-jiang-xin-zhou-ke-5-960w.webp": {
+    "bytes": 38864,
+    "contentType": "image/webp",
+    "etag": "e8547b5e9df1e838e02ce35559358a5f",
+    "height": 640,
+    "width": 960
   },
   "shang-zhou-mo-zai-nan-jing-jiang-xin-zhou-ke-5.jpg": {
     "height": 1706,
     "width": 2560,
     "bytes": 256449,
     "contentType": "image/jpeg",
-    "etag": "3a30fd08716baa86844df57f2c1b8607"
+    "etag": "3a30fd08716baa86844df57f2c1b8607",
+    "variants": [
+      "shang-zhou-mo-zai-nan-jing-jiang-xin-zhou-ke-5-480w.webp",
+      "shang-zhou-mo-zai-nan-jing-jiang-xin-zhou-ke-5-960w.webp",
+      "shang-zhou-mo-zai-nan-jing-jiang-xin-zhou-ke-5-1920w.webp"
+    ]
+  },
+  "shang-zhou-mo-zai-nan-jing-jiang-xin-zhou-ke-6-1920w.webp": {
+    "bytes": 178066,
+    "contentType": "image/webp",
+    "etag": "406788a999b058fde4c302f83a19a20e",
+    "height": 1280,
+    "width": 1920
+  },
+  "shang-zhou-mo-zai-nan-jing-jiang-xin-zhou-ke-6-480w.webp": {
+    "bytes": 29768,
+    "contentType": "image/webp",
+    "etag": "bcb4622f1d27957b5a1c5c412db5ee94",
+    "height": 320,
+    "width": 480
+  },
+  "shang-zhou-mo-zai-nan-jing-jiang-xin-zhou-ke-6-960w.webp": {
+    "bytes": 77100,
+    "contentType": "image/webp",
+    "etag": "7ac17be80d38c90ca854400026ba8688",
+    "height": 640,
+    "width": 960
   },
   "shang-zhou-mo-zai-nan-jing-jiang-xin-zhou-ke-6.jpg": {
     "height": 1706,
     "width": 2560,
     "bytes": 395591,
     "contentType": "image/jpeg",
-    "etag": "ee8b8a647147f5e3c3ed24b36c4d067c"
+    "etag": "ee8b8a647147f5e3c3ed24b36c4d067c",
+    "variants": [
+      "shang-zhou-mo-zai-nan-jing-jiang-xin-zhou-ke-6-480w.webp",
+      "shang-zhou-mo-zai-nan-jing-jiang-xin-zhou-ke-6-960w.webp",
+      "shang-zhou-mo-zai-nan-jing-jiang-xin-zhou-ke-6-1920w.webp"
+    ]
+  },
+  "shang-zhou-mo-zai-nan-jing-jiang-xin-zhou-ke-7-1920w.webp": {
+    "bytes": 90668,
+    "contentType": "image/webp",
+    "etag": "1a11126802b93dba6cb05d3c25cac59f",
+    "height": 1280,
+    "width": 1920
+  },
+  "shang-zhou-mo-zai-nan-jing-jiang-xin-zhou-ke-7-480w.webp": {
+    "bytes": 12544,
+    "contentType": "image/webp",
+    "etag": "66e48f127ef2a54dc27d2b4f356f3715",
+    "height": 320,
+    "width": 480
+  },
+  "shang-zhou-mo-zai-nan-jing-jiang-xin-zhou-ke-7-960w.webp": {
+    "bytes": 34160,
+    "contentType": "image/webp",
+    "etag": "dd3df04d76230dc6fb96f928c699fb8d",
+    "height": 640,
+    "width": 960
   },
   "shang-zhou-mo-zai-nan-jing-jiang-xin-zhou-ke-7.jpg": {
     "height": 1706,
     "width": 2560,
     "bytes": 228673,
     "contentType": "image/jpeg",
-    "etag": "1d5cf913770b539da3c3e6e2dfabfe37"
+    "etag": "1d5cf913770b539da3c3e6e2dfabfe37",
+    "variants": [
+      "shang-zhou-mo-zai-nan-jing-jiang-xin-zhou-ke-7-480w.webp",
+      "shang-zhou-mo-zai-nan-jing-jiang-xin-zhou-ke-7-960w.webp",
+      "shang-zhou-mo-zai-nan-jing-jiang-xin-zhou-ke-7-1920w.webp"
+    ]
+  },
+  "shang-zhou-mo-zai-nan-jing-jiang-xin-zhou-ke-960w.webp": {
+    "bytes": 102122,
+    "contentType": "image/webp",
+    "etag": "2c6fe9f547ecf41b976f3a2d930d875c",
+    "height": 640,
+    "width": 960
   },
   "shang-zhou-mo-zai-nan-jing-jiang-xin-zhou-ke.jpg": {
     "height": 1706,
     "width": 2560,
     "bytes": 536717,
     "contentType": "image/jpeg",
-    "etag": "aa2463ab1449e153b4f167db449c8c4d"
+    "etag": "aa2463ab1449e153b4f167db449c8c4d",
+    "variants": [
+      "shang-zhou-mo-zai-nan-jing-jiang-xin-zhou-ke-480w.webp",
+      "shang-zhou-mo-zai-nan-jing-jiang-xin-zhou-ke-960w.webp",
+      "shang-zhou-mo-zai-nan-jing-jiang-xin-zhou-ke-1920w.webp"
+    ]
   }
 }

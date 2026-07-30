@@ -1,51 +1,217 @@
 {
+  "dou-gou-1920w.webp": {
+    "bytes": 218586,
+    "contentType": "image/webp",
+    "etag": "2d8214391105a0f9d34006bbdbf8c660",
+    "height": 1280,
+    "width": 1920
+  },
+  "dou-gou-2-1920w.webp": {
+    "bytes": 529560,
+    "contentType": "image/webp",
+    "etag": "3c681d8b3ec42a68aac19fc2d0b4caa6",
+    "height": 1280,
+    "width": 1920
+  },
+  "dou-gou-2-480w.webp": {
+    "bytes": 48312,
+    "contentType": "image/webp",
+    "etag": "700c24b7538769226cf76068bb73fdce",
+    "height": 320,
+    "width": 480
+  },
+  "dou-gou-2-960w.webp": {
+    "bytes": 178834,
+    "contentType": "image/webp",
+    "etag": "1aa720c83c4e0d077f1ac71e7c7ada14",
+    "height": 640,
+    "width": 960
+  },
   "dou-gou-2.jpg": {
     "height": 1707,
     "width": 2560,
     "bytes": 881804,
     "contentType": "image/jpeg",
-    "etag": "9a9a4e579e8b5e9f6a19aa312858c422"
+    "etag": "9a9a4e579e8b5e9f6a19aa312858c422",
+    "variants": [
+      "dou-gou-2-480w.webp",
+      "dou-gou-2-960w.webp",
+      "dou-gou-2-1920w.webp"
+    ]
+  },
+  "dou-gou-3-1920w.webp": {
+    "bytes": 344540,
+    "contentType": "image/webp",
+    "etag": "270ede3c16e34aeac6fca42b802ce5ec",
+    "height": 1280,
+    "width": 1920
+  },
+  "dou-gou-3-480w.webp": {
+    "bytes": 30428,
+    "contentType": "image/webp",
+    "etag": "0877c4e83c9947b26741c87fbed904f2",
+    "height": 320,
+    "width": 480
+  },
+  "dou-gou-3-960w.webp": {
+    "bytes": 107152,
+    "contentType": "image/webp",
+    "etag": "a01c8188481821c96ddd19369a1f3bb2",
+    "height": 640,
+    "width": 960
   },
   "dou-gou-3.jpg": {
     "height": 1707,
     "width": 2560,
     "bytes": 700652,
     "contentType": "image/jpeg",
-    "etag": "a9c2b7ca3be017309acecba2c2219062"
+    "etag": "a9c2b7ca3be017309acecba2c2219062",
+    "variants": [
+      "dou-gou-3-480w.webp",
+      "dou-gou-3-960w.webp",
+      "dou-gou-3-1920w.webp"
+    ]
+  },
+  "dou-gou-4-480w.webp": {
+    "bytes": 70822,
+    "contentType": "image/webp",
+    "etag": "c374c65a734ee00eb1a8051cf77fc90c",
+    "height": 720,
+    "width": 480
+  },
+  "dou-gou-4-960w.webp": {
+    "bytes": 203238,
+    "contentType": "image/webp",
+    "etag": "9b61fe375f36e363bbf2be0b7a210c4e",
+    "height": 1440,
+    "width": 960
   },
   "dou-gou-4.jpg": {
     "height": 2560,
     "width": 1707,
     "bytes": 567825,
     "contentType": "image/jpeg",
-    "etag": "62c6086c63b2a8d8e59ee8f83a447696"
+    "etag": "62c6086c63b2a8d8e59ee8f83a447696",
+    "variants": [
+      "dou-gou-4-480w.webp",
+      "dou-gou-4-960w.webp"
+    ]
+  },
+  "dou-gou-480w.webp": {
+    "bytes": 23810,
+    "contentType": "image/webp",
+    "etag": "af00abafcd243a0ed110bf5622e53ce8",
+    "height": 320,
+    "width": 480
+  },
+  "dou-gou-5-1920w.webp": {
+    "bytes": 640282,
+    "contentType": "image/webp",
+    "etag": "70160e18dc66fa9b285558e165dff37b",
+    "height": 1280,
+    "width": 1920
+  },
+  "dou-gou-5-480w.webp": {
+    "bytes": 56988,
+    "contentType": "image/webp",
+    "etag": "1d0ec09dde3585162e0e6cfc1c214021",
+    "height": 320,
+    "width": 480
+  },
+  "dou-gou-5-960w.webp": {
+    "bytes": 205450,
+    "contentType": "image/webp",
+    "etag": "267144bf5e76bf944a45d1ea78dac107",
+    "height": 640,
+    "width": 960
   },
   "dou-gou-5.jpg": {
     "height": 1707,
     "width": 2560,
     "bytes": 997589,
     "contentType": "image/jpeg",
-    "etag": "c8fb457d6475382ee6e8da5eae8d89f9"
+    "etag": "c8fb457d6475382ee6e8da5eae8d89f9",
+    "variants": [
+      "dou-gou-5-480w.webp",
+      "dou-gou-5-960w.webp",
+      "dou-gou-5-1920w.webp"
+    ]
+  },
+  "dou-gou-6-1920w.webp": {
+    "bytes": 291548,
+    "contentType": "image/webp",
+    "etag": "2282800958a10580ed2cf97e9ca082c0",
+    "height": 1280,
+    "width": 1920
+  },
+  "dou-gou-6-480w.webp": {
+    "bytes": 32206,
+    "contentType": "image/webp",
+    "etag": "c4f570403304cdc09b27c982e34ba221",
+    "height": 320,
+    "width": 480
+  },
+  "dou-gou-6-960w.webp": {
+    "bytes": 110670,
+    "contentType": "image/webp",
+    "etag": "65a06cf5a64a8c84a4bde13bb4b785d9",
+    "height": 640,
+    "width": 960
   },
   "dou-gou-6.jpg": {
     "height": 1707,
     "width": 2560,
     "bytes": 615521,
     "contentType": "image/jpeg",
-    "etag": "ff8e2a7d4a44e166b571a96482fde432"
+    "etag": "ff8e2a7d4a44e166b571a96482fde432",
+    "variants": [
+      "dou-gou-6-480w.webp",
+      "dou-gou-6-960w.webp",
+      "dou-gou-6-1920w.webp"
+    ]
+  },
+  "dou-gou-7-480w.webp": {
+    "bytes": 21816,
+    "contentType": "image/webp",
+    "etag": "fa0cbf1ef1093176727feed3fdc8914e",
+    "height": 640,
+    "width": 480
+  },
+  "dou-gou-7-960w.webp": {
+    "bytes": 57098,
+    "contentType": "image/webp",
+    "etag": "14ca7ab0e07c681edc5b91bd392d2e1c",
+    "height": 1280,
+    "width": 960
   },
   "dou-gou-7.jpg": {
     "height": 2560,
     "width": 1920,
     "bytes": 276649,
     "contentType": "image/jpeg",
-    "etag": "63e1124c663b561da06524fd566c5150"
+    "etag": "63e1124c663b561da06524fd566c5150",
+    "variants": [
+      "dou-gou-7-480w.webp",
+      "dou-gou-7-960w.webp"
+    ]
+  },
+  "dou-gou-960w.webp": {
+    "bytes": 76472,
+    "contentType": "image/webp",
+    "etag": "112d6adf37042eba06317e53202985eb",
+    "height": 640,
+    "width": 960
   },
   "dou-gou.jpg": {
     "height": 1707,
     "width": 2560,
     "bytes": 456138,
     "contentType": "image/jpeg",
-    "etag": "75276f510dd705904aa00702fde61269"
+    "etag": "75276f510dd705904aa00702fde61269",
+    "variants": [
+      "dou-gou-480w.webp",
+      "dou-gou-960w.webp",
+      "dou-gou-1920w.webp"
+    ]
   }
 }

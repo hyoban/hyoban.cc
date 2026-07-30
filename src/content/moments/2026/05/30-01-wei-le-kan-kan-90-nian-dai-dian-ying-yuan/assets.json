@@ -1,51 +1,169 @@
 {
+  "wei-le-kan-kan-90-nian-dai-dian-ying-yuan-2-480w.webp": {
+    "bytes": 23844,
+    "contentType": "image/webp",
+    "etag": "5eec309f687ecf3e60746f5d24529aa7",
+    "height": 720,
+    "width": 480
+  },
   "wei-le-kan-kan-90-nian-dai-dian-ying-yuan-2.jpg": {
     "height": 1280,
     "width": 853,
     "bytes": 93443,
     "contentType": "image/jpeg",
-    "etag": "cecee66eb3689b25dba067d36a6a2ac2"
+    "etag": "cecee66eb3689b25dba067d36a6a2ac2",
+    "variants": [
+      "wei-le-kan-kan-90-nian-dai-dian-ying-yuan-2-480w.webp"
+    ]
+  },
+  "wei-le-kan-kan-90-nian-dai-dian-ying-yuan-3-480w.webp": {
+    "bytes": 23888,
+    "contentType": "image/webp",
+    "etag": "748616aa8035c4f2a36d403a5b8aca1d",
+    "height": 320,
+    "width": 480
+  },
+  "wei-le-kan-kan-90-nian-dai-dian-ying-yuan-3-960w.webp": {
+    "bytes": 71568,
+    "contentType": "image/webp",
+    "etag": "855ac244a736a81752ac79ad1238bcc2",
+    "height": 640,
+    "width": 960
   },
   "wei-le-kan-kan-90-nian-dai-dian-ying-yuan-3.jpg": {
     "height": 853,
     "width": 1280,
     "bytes": 145139,
     "contentType": "image/jpeg",
-    "etag": "9c7adaa4952037afd5f0a69fb4343ccf"
+    "etag": "9c7adaa4952037afd5f0a69fb4343ccf",
+    "variants": [
+      "wei-le-kan-kan-90-nian-dai-dian-ying-yuan-3-480w.webp",
+      "wei-le-kan-kan-90-nian-dai-dian-ying-yuan-3-960w.webp"
+    ]
+  },
+  "wei-le-kan-kan-90-nian-dai-dian-ying-yuan-4-480w.webp": {
+    "bytes": 11920,
+    "contentType": "image/webp",
+    "etag": "298ee0b1fed19b9f07ea2d06733ebe11",
+    "height": 320,
+    "width": 480
+  },
+  "wei-le-kan-kan-90-nian-dai-dian-ying-yuan-4-960w.webp": {
+    "bytes": 36736,
+    "contentType": "image/webp",
+    "etag": "0828d58530c777585f632d2f2e643ce8",
+    "height": 640,
+    "width": 960
   },
   "wei-le-kan-kan-90-nian-dai-dian-ying-yuan-4.jpg": {
     "height": 853,
     "width": 1280,
     "bytes": 92438,
     "contentType": "image/jpeg",
-    "etag": "11968c5415499a59862de4fe3f5e4e11"
+    "etag": "11968c5415499a59862de4fe3f5e4e11",
+    "variants": [
+      "wei-le-kan-kan-90-nian-dai-dian-ying-yuan-4-480w.webp",
+      "wei-le-kan-kan-90-nian-dai-dian-ying-yuan-4-960w.webp"
+    ]
+  },
+  "wei-le-kan-kan-90-nian-dai-dian-ying-yuan-480w.webp": {
+    "bytes": 19926,
+    "contentType": "image/webp",
+    "etag": "9b392f5532efa13be5cfcc388ba06a4b",
+    "height": 320,
+    "width": 480
+  },
+  "wei-le-kan-kan-90-nian-dai-dian-ying-yuan-5-480w.webp": {
+    "bytes": 17904,
+    "contentType": "image/webp",
+    "etag": "b0b1cb41c0c48ec8fec684d6d3aaae98",
+    "height": 320,
+    "width": 480
+  },
+  "wei-le-kan-kan-90-nian-dai-dian-ying-yuan-5-960w.webp": {
+    "bytes": 57544,
+    "contentType": "image/webp",
+    "etag": "45cb0f3466642901723dd9e06c5dcf73",
+    "height": 640,
+    "width": 960
   },
   "wei-le-kan-kan-90-nian-dai-dian-ying-yuan-5.jpg": {
     "height": 853,
     "width": 1280,
     "bytes": 120414,
     "contentType": "image/jpeg",
-    "etag": "7ce7e2cbdc2f170cb3f29b90a72ea0f8"
+    "etag": "7ce7e2cbdc2f170cb3f29b90a72ea0f8",
+    "variants": [
+      "wei-le-kan-kan-90-nian-dai-dian-ying-yuan-5-480w.webp",
+      "wei-le-kan-kan-90-nian-dai-dian-ying-yuan-5-960w.webp"
+    ]
+  },
+  "wei-le-kan-kan-90-nian-dai-dian-ying-yuan-6-480w.webp": {
+    "bytes": 37370,
+    "contentType": "image/webp",
+    "etag": "70ed3f00ee141197bf120f530c253234",
+    "height": 320,
+    "width": 480
+  },
+  "wei-le-kan-kan-90-nian-dai-dian-ying-yuan-6-960w.webp": {
+    "bytes": 125844,
+    "contentType": "image/webp",
+    "etag": "33db2413198b95fcf600c30194ff1bac",
+    "height": 640,
+    "width": 960
   },
   "wei-le-kan-kan-90-nian-dai-dian-ying-yuan-6.jpg": {
     "height": 853,
     "width": 1280,
     "bytes": 213601,
     "contentType": "image/jpeg",
-    "etag": "be5735c9bfce1d0c66a3c08f09dcbdc6"
+    "etag": "be5735c9bfce1d0c66a3c08f09dcbdc6",
+    "variants": [
+      "wei-le-kan-kan-90-nian-dai-dian-ying-yuan-6-480w.webp",
+      "wei-le-kan-kan-90-nian-dai-dian-ying-yuan-6-960w.webp"
+    ]
+  },
+  "wei-le-kan-kan-90-nian-dai-dian-ying-yuan-7-480w.webp": {
+    "bytes": 38274,
+    "contentType": "image/webp",
+    "etag": "ab9a7a0dabef6f45f08459c7b13457b0",
+    "height": 320,
+    "width": 480
+  },
+  "wei-le-kan-kan-90-nian-dai-dian-ying-yuan-7-960w.webp": {
+    "bytes": 112904,
+    "contentType": "image/webp",
+    "etag": "c626abe2f77288e71d1d3e3c15015201",
+    "height": 640,
+    "width": 960
   },
   "wei-le-kan-kan-90-nian-dai-dian-ying-yuan-7.jpg": {
     "height": 853,
     "width": 1280,
     "bytes": 195793,
     "contentType": "image/jpeg",
-    "etag": "fa491965fd5e568691c0453047433a94"
+    "etag": "fa491965fd5e568691c0453047433a94",
+    "variants": [
+      "wei-le-kan-kan-90-nian-dai-dian-ying-yuan-7-480w.webp",
+      "wei-le-kan-kan-90-nian-dai-dian-ying-yuan-7-960w.webp"
+    ]
+  },
+  "wei-le-kan-kan-90-nian-dai-dian-ying-yuan-960w.webp": {
+    "bytes": 72708,
+    "contentType": "image/webp",
+    "etag": "a56201ce82e2798efcfd52df908adcc4",
+    "height": 640,
+    "width": 960
   },
   "wei-le-kan-kan-90-nian-dai-dian-ying-yuan.jpg": {
     "height": 853,
     "width": 1280,
     "bytes": 146595,
     "contentType": "image/jpeg",
-    "etag": "bc6564c98d2b29fe88493102aae272e2"
+    "etag": "bc6564c98d2b29fe88493102aae272e2",
+    "variants": [
+      "wei-le-kan-kan-90-nian-dai-dian-ying-yuan-480w.webp",
+      "wei-le-kan-kan-90-nian-dai-dian-ying-yuan-960w.webp"
+    ]
   }
 }

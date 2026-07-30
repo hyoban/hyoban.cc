@@ -1,30 +1,126 @@
 {
+  "mo-ming-tan-le-liang-ge-shi-he-lu-ying-1920w.webp": {
+    "bytes": 713246,
+    "contentType": "image/webp",
+    "etag": "590de3b046938914dcfba075e58764be",
+    "height": 1440,
+    "width": 1920
+  },
+  "mo-ming-tan-le-liang-ge-shi-he-lu-ying-2-1920w.webp": {
+    "bytes": 564014,
+    "contentType": "image/webp",
+    "etag": "892202809ed0e020e5aa19cedee98c21",
+    "height": 1440,
+    "width": 1920
+  },
+  "mo-ming-tan-le-liang-ge-shi-he-lu-ying-2-480w.webp": {
+    "bytes": 45126,
+    "contentType": "image/webp",
+    "etag": "2547e9140b49102f88ed756ee84f9755",
+    "height": 360,
+    "width": 480
+  },
+  "mo-ming-tan-le-liang-ge-shi-he-lu-ying-2-960w.webp": {
+    "bytes": 175798,
+    "contentType": "image/webp",
+    "etag": "3c620b94a608d2b6e21606ea0acf921b",
+    "height": 720,
+    "width": 960
+  },
   "mo-ming-tan-le-liang-ge-shi-he-lu-ying-2.jpg": {
     "height": 1536,
     "width": 2048,
     "bytes": 786554,
     "contentType": "image/jpeg",
-    "etag": "9cf3bba4bdfc13f80ecb09b25699500a"
+    "etag": "9cf3bba4bdfc13f80ecb09b25699500a",
+    "variants": [
+      "mo-ming-tan-le-liang-ge-shi-he-lu-ying-2-480w.webp",
+      "mo-ming-tan-le-liang-ge-shi-he-lu-ying-2-960w.webp",
+      "mo-ming-tan-le-liang-ge-shi-he-lu-ying-2-1920w.webp"
+    ]
+  },
+  "mo-ming-tan-le-liang-ge-shi-he-lu-ying-3-1920w.webp": {
+    "bytes": 234122,
+    "contentType": "image/webp",
+    "etag": "bdee3d307fd953fe03ce6be3bf8ffeee",
+    "height": 1440,
+    "width": 1920
+  },
+  "mo-ming-tan-le-liang-ge-shi-he-lu-ying-3-480w.webp": {
+    "bytes": 16764,
+    "contentType": "image/webp",
+    "etag": "427532715287d51bf63afb19b9f4e07d",
+    "height": 360,
+    "width": 480
+  },
+  "mo-ming-tan-le-liang-ge-shi-he-lu-ying-3-960w.webp": {
+    "bytes": 63520,
+    "contentType": "image/webp",
+    "etag": "2eb6814095d1d22250e09ddb1d839d77",
+    "height": 720,
+    "width": 960
   },
   "mo-ming-tan-le-liang-ge-shi-he-lu-ying-3.jpg": {
     "height": 1536,
     "width": 2048,
     "bytes": 387248,
     "contentType": "image/jpeg",
-    "etag": "43afe31eee252ac7b3353f27c6e752f8"
+    "etag": "43afe31eee252ac7b3353f27c6e752f8",
+    "variants": [
+      "mo-ming-tan-le-liang-ge-shi-he-lu-ying-3-480w.webp",
+      "mo-ming-tan-le-liang-ge-shi-he-lu-ying-3-960w.webp",
+      "mo-ming-tan-le-liang-ge-shi-he-lu-ying-3-1920w.webp"
+    ]
+  },
+  "mo-ming-tan-le-liang-ge-shi-he-lu-ying-4-480w.webp": {
+    "bytes": 25136,
+    "contentType": "image/webp",
+    "etag": "d3b5a2f058202b93f6fe4dd9a8a7868e",
+    "height": 640,
+    "width": 480
+  },
+  "mo-ming-tan-le-liang-ge-shi-he-lu-ying-4-960w.webp": {
+    "bytes": 78176,
+    "contentType": "image/webp",
+    "etag": "e4778d3feb90cb02c8576ab9d6f69cc9",
+    "height": 1280,
+    "width": 960
   },
   "mo-ming-tan-le-liang-ge-shi-he-lu-ying-4.jpg": {
     "height": 2048,
     "width": 1536,
     "bytes": 314851,
     "contentType": "image/jpeg",
-    "etag": "46c2a1bc41993e73a21bf8bfb859b320"
+    "etag": "46c2a1bc41993e73a21bf8bfb859b320",
+    "variants": [
+      "mo-ming-tan-le-liang-ge-shi-he-lu-ying-4-480w.webp",
+      "mo-ming-tan-le-liang-ge-shi-he-lu-ying-4-960w.webp"
+    ]
+  },
+  "mo-ming-tan-le-liang-ge-shi-he-lu-ying-480w.webp": {
+    "bytes": 45704,
+    "contentType": "image/webp",
+    "etag": "a66fb35b6b4ebfb8493fd8982b28b4a6",
+    "height": 360,
+    "width": 480
+  },
+  "mo-ming-tan-le-liang-ge-shi-he-lu-ying-960w.webp": {
+    "bytes": 188330,
+    "contentType": "image/webp",
+    "etag": "d5e506b043efcab20568178d6601d6d0",
+    "height": 720,
+    "width": 960
   },
   "mo-ming-tan-le-liang-ge-shi-he-lu-ying.jpg": {
     "height": 1536,
     "width": 2048,
     "bytes": 931257,
     "contentType": "image/jpeg",
-    "etag": "b7d961d1a73d8c082df11fd29799ad83"
+    "etag": "b7d961d1a73d8c082df11fd29799ad83",
+    "variants": [
+      "mo-ming-tan-le-liang-ge-shi-he-lu-ying-480w.webp",
+      "mo-ming-tan-le-liang-ge-shi-he-lu-ying-960w.webp",
+      "mo-ming-tan-le-liang-ge-shi-he-lu-ying-1920w.webp"
+    ]
   }
 }

@@ -1,44 +1,152 @@
 {
+  "wu-yi-cheng-kan-pian-2-480w.webp": {
+    "bytes": 25190,
+    "contentType": "image/webp",
+    "etag": "55c5cefe7a9d77d2937b1589c7589753",
+    "height": 360,
+    "width": 480
+  },
+  "wu-yi-cheng-kan-pian-2-960w.webp": {
+    "bytes": 87502,
+    "contentType": "image/webp",
+    "etag": "c81196a252cd6ee79d6ac57857352bac",
+    "height": 720,
+    "width": 960
+  },
   "wu-yi-cheng-kan-pian-2.webp": {
     "height": 960,
     "width": 1280,
     "bytes": 141646,
     "contentType": "image/webp",
-    "etag": "7a65631d85af15f16729c09aad08a028"
+    "etag": "7a65631d85af15f16729c09aad08a028",
+    "variants": [
+      "wu-yi-cheng-kan-pian-2-480w.webp",
+      "wu-yi-cheng-kan-pian-2-960w.webp"
+    ]
+  },
+  "wu-yi-cheng-kan-pian-3-480w.webp": {
+    "bytes": 18512,
+    "contentType": "image/webp",
+    "etag": "dab2a190eb72f73cfbe4b31c4b9b7822",
+    "height": 360,
+    "width": 480
+  },
+  "wu-yi-cheng-kan-pian-3-960w.webp": {
+    "bytes": 52776,
+    "contentType": "image/webp",
+    "etag": "afa0d98fef52447a49276a40a20a4ff7",
+    "height": 720,
+    "width": 960
   },
   "wu-yi-cheng-kan-pian-3.webp": {
     "height": 960,
     "width": 1280,
     "bytes": 82198,
     "contentType": "image/webp",
-    "etag": "3622c16a88d8abf94b6a4867e93bac41"
+    "etag": "3622c16a88d8abf94b6a4867e93bac41",
+    "variants": [
+      "wu-yi-cheng-kan-pian-3-480w.webp",
+      "wu-yi-cheng-kan-pian-3-960w.webp"
+    ]
+  },
+  "wu-yi-cheng-kan-pian-4-480w.webp": {
+    "bytes": 26212,
+    "contentType": "image/webp",
+    "etag": "39af32b792c51e2ea8a09f2e6726c6ad",
+    "height": 360,
+    "width": 480
+  },
+  "wu-yi-cheng-kan-pian-4-960w.webp": {
+    "bytes": 73250,
+    "contentType": "image/webp",
+    "etag": "926da17df171e7985dfc1289f0f2a8a8",
+    "height": 720,
+    "width": 960
   },
   "wu-yi-cheng-kan-pian-4.webp": {
     "height": 960,
     "width": 1280,
     "bytes": 113154,
     "contentType": "image/webp",
-    "etag": "a59e96f225c4702c6606c70bc9c9e221"
+    "etag": "a59e96f225c4702c6606c70bc9c9e221",
+    "variants": [
+      "wu-yi-cheng-kan-pian-4-480w.webp",
+      "wu-yi-cheng-kan-pian-4-960w.webp"
+    ]
+  },
+  "wu-yi-cheng-kan-pian-480w.webp": {
+    "bytes": 23416,
+    "contentType": "image/webp",
+    "etag": "4c32c64da07f3be32b1dcc07b378c166",
+    "height": 360,
+    "width": 480
+  },
+  "wu-yi-cheng-kan-pian-5-480w.webp": {
+    "bytes": 17512,
+    "contentType": "image/webp",
+    "etag": "5f1a20c2eb0cfab3f409a28a7416b3fa",
+    "height": 360,
+    "width": 480
+  },
+  "wu-yi-cheng-kan-pian-5-960w.webp": {
+    "bytes": 45056,
+    "contentType": "image/webp",
+    "etag": "31e952a0fbf910b62616613794c8fb73",
+    "height": 720,
+    "width": 960
   },
   "wu-yi-cheng-kan-pian-5.webp": {
     "height": 960,
     "width": 1280,
     "bytes": 66018,
     "contentType": "image/webp",
-    "etag": "6a3dc7f9a0ec8c1a0b257c7cddad127f"
+    "etag": "6a3dc7f9a0ec8c1a0b257c7cddad127f",
+    "variants": [
+      "wu-yi-cheng-kan-pian-5-480w.webp",
+      "wu-yi-cheng-kan-pian-5-960w.webp"
+    ]
+  },
+  "wu-yi-cheng-kan-pian-6-480w.webp": {
+    "bytes": 12994,
+    "contentType": "image/webp",
+    "etag": "dad41c561105659213d9e2f9569ac2e0",
+    "height": 360,
+    "width": 480
+  },
+  "wu-yi-cheng-kan-pian-6-960w.webp": {
+    "bytes": 32818,
+    "contentType": "image/webp",
+    "etag": "d5120d5d4e4fd854203e9a561dd88fbf",
+    "height": 720,
+    "width": 960
   },
   "wu-yi-cheng-kan-pian-6.webp": {
     "height": 960,
     "width": 1280,
     "bytes": 48106,
     "contentType": "image/webp",
-    "etag": "8ce61b4931278d37a003039018b1d589"
+    "etag": "8ce61b4931278d37a003039018b1d589",
+    "variants": [
+      "wu-yi-cheng-kan-pian-6-480w.webp",
+      "wu-yi-cheng-kan-pian-6-960w.webp"
+    ]
+  },
+  "wu-yi-cheng-kan-pian-960w.webp": {
+    "bytes": 89154,
+    "contentType": "image/webp",
+    "etag": "06d9503329484ef26d218121abd48200",
+    "height": 720,
+    "width": 960
   },
   "wu-yi-cheng-kan-pian.webp": {
     "height": 960,
     "width": 1280,
     "bytes": 153036,
     "contentType": "image/webp",
-    "etag": "100762cc893a3bf312d7706ec9c9b107"
+    "etag": "100762cc893a3bf312d7706ec9c9b107",
+    "variants": [
+      "wu-yi-cheng-kan-pian-480w.webp",
+      "wu-yi-cheng-kan-pian-960w.webp"
+    ]
   }
 }

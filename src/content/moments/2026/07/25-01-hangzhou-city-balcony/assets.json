@@ -1,58 +1,202 @@
 {
+  "hangzhou-city-balcony-2-480w.webp": {
+    "bytes": 28494,
+    "contentType": "image/webp",
+    "etag": "75f1d6ba9d3a42b413b1f4e3ba51335e",
+    "height": 720,
+    "width": 480
+  },
+  "hangzhou-city-balcony-2-960w.webp": {
+    "bytes": 97084,
+    "contentType": "image/webp",
+    "etag": "1dfd6ae371c512d1a049ec3a13d5f157",
+    "height": 1440,
+    "width": 960
+  },
   "hangzhou-city-balcony-2.webp": {
     "height": 1920,
     "width": 1280,
     "bytes": 205880,
     "contentType": "image/webp",
-    "etag": "badfd7c65a017a6a33209a839594e63a"
+    "etag": "badfd7c65a017a6a33209a839594e63a",
+    "variants": [
+      "hangzhou-city-balcony-2-480w.webp",
+      "hangzhou-city-balcony-2-960w.webp"
+    ]
+  },
+  "hangzhou-city-balcony-3-480w.webp": {
+    "bytes": 17146,
+    "contentType": "image/webp",
+    "etag": "4122bb894ad9790b3d1d845cf95a2d10",
+    "height": 320,
+    "width": 480
+  },
+  "hangzhou-city-balcony-3-960w.webp": {
+    "bytes": 56378,
+    "contentType": "image/webp",
+    "etag": "878cfd62a884fc61e6583c36e1d0ebd0",
+    "height": 640,
+    "width": 960
   },
   "hangzhou-city-balcony-3.webp": {
     "height": 1280,
     "width": 1920,
     "bytes": 170800,
     "contentType": "image/webp",
-    "etag": "de2e80c62f30599a2def339947d84626"
+    "etag": "de2e80c62f30599a2def339947d84626",
+    "variants": [
+      "hangzhou-city-balcony-3-480w.webp",
+      "hangzhou-city-balcony-3-960w.webp"
+    ]
+  },
+  "hangzhou-city-balcony-4-480w.webp": {
+    "bytes": 10436,
+    "contentType": "image/webp",
+    "etag": "25ba3b246b22fe403a612c47527d047b",
+    "height": 320,
+    "width": 480
+  },
+  "hangzhou-city-balcony-4-960w.webp": {
+    "bytes": 38040,
+    "contentType": "image/webp",
+    "etag": "7b39153f747c929416f22db04c69732f",
+    "height": 640,
+    "width": 960
   },
   "hangzhou-city-balcony-4.webp": {
     "height": 1280,
     "width": 1920,
     "bytes": 151938,
     "contentType": "image/webp",
-    "etag": "bbbb02fee9f52966877e3509aea08a79"
+    "etag": "bbbb02fee9f52966877e3509aea08a79",
+    "variants": [
+      "hangzhou-city-balcony-4-480w.webp",
+      "hangzhou-city-balcony-4-960w.webp"
+    ]
+  },
+  "hangzhou-city-balcony-480w.webp": {
+    "bytes": 12282,
+    "contentType": "image/webp",
+    "etag": "5f5640f8873766e13988f479537585c4",
+    "height": 320,
+    "width": 480
+  },
+  "hangzhou-city-balcony-5-480w.webp": {
+    "bytes": 9976,
+    "contentType": "image/webp",
+    "etag": "68ba663eb745f83ed9ae93bda835ddf4",
+    "height": 320,
+    "width": 480
+  },
+  "hangzhou-city-balcony-5-960w.webp": {
+    "bytes": 37986,
+    "contentType": "image/webp",
+    "etag": "661967d7428e0a056e15d91217b9e569",
+    "height": 640,
+    "width": 960
   },
   "hangzhou-city-balcony-5.webp": {
     "height": 1280,
     "width": 1920,
     "bytes": 161444,
     "contentType": "image/webp",
-    "etag": "74939ba769f653e24add49a76dbd1022"
+    "etag": "74939ba769f653e24add49a76dbd1022",
+    "variants": [
+      "hangzhou-city-balcony-5-480w.webp",
+      "hangzhou-city-balcony-5-960w.webp"
+    ]
+  },
+  "hangzhou-city-balcony-6-480w.webp": {
+    "bytes": 21164,
+    "contentType": "image/webp",
+    "etag": "51da7e2ff25d91ce02bd80a042d38c1f",
+    "height": 320,
+    "width": 480
+  },
+  "hangzhou-city-balcony-6-960w.webp": {
+    "bytes": 76726,
+    "contentType": "image/webp",
+    "etag": "c98734acfa3438a6a7c956a3df4335ef",
+    "height": 640,
+    "width": 960
   },
   "hangzhou-city-balcony-6.webp": {
     "height": 1280,
     "width": 1920,
     "bytes": 270310,
     "contentType": "image/webp",
-    "etag": "5dedddac60855db9a1e5004dcf0e6f35"
+    "etag": "5dedddac60855db9a1e5004dcf0e6f35",
+    "variants": [
+      "hangzhou-city-balcony-6-480w.webp",
+      "hangzhou-city-balcony-6-960w.webp"
+    ]
+  },
+  "hangzhou-city-balcony-7-480w.webp": {
+    "bytes": 24648,
+    "contentType": "image/webp",
+    "etag": "3a55b6119b99548eb82c3a04d20921ed",
+    "height": 320,
+    "width": 480
+  },
+  "hangzhou-city-balcony-7-960w.webp": {
+    "bytes": 79310,
+    "contentType": "image/webp",
+    "etag": "aece9e815d97d96e611b4c36b3d0985a",
+    "height": 640,
+    "width": 960
   },
   "hangzhou-city-balcony-7.webp": {
     "height": 1280,
     "width": 1920,
     "bytes": 248314,
     "contentType": "image/webp",
-    "etag": "d2c33bc3c00136315664065c480fd9cd"
+    "etag": "d2c33bc3c00136315664065c480fd9cd",
+    "variants": [
+      "hangzhou-city-balcony-7-480w.webp",
+      "hangzhou-city-balcony-7-960w.webp"
+    ]
+  },
+  "hangzhou-city-balcony-8-480w.webp": {
+    "bytes": 28226,
+    "contentType": "image/webp",
+    "etag": "4f34ed01f7851bd204afbe80cfaa39eb",
+    "height": 320,
+    "width": 480
+  },
+  "hangzhou-city-balcony-8-960w.webp": {
+    "bytes": 92306,
+    "contentType": "image/webp",
+    "etag": "5cda549b3aab6e09fe832e7a481ef04a",
+    "height": 640,
+    "width": 960
   },
   "hangzhou-city-balcony-8.webp": {
     "height": 1280,
     "width": 1920,
     "bytes": 299824,
     "contentType": "image/webp",
-    "etag": "bb28caf778a0d7be9baee7b6d3c6b1f9"
+    "etag": "bb28caf778a0d7be9baee7b6d3c6b1f9",
+    "variants": [
+      "hangzhou-city-balcony-8-480w.webp",
+      "hangzhou-city-balcony-8-960w.webp"
+    ]
+  },
+  "hangzhou-city-balcony-960w.webp": {
+    "bytes": 51974,
+    "contentType": "image/webp",
+    "etag": "32aeb7c1b2be58a0b004317eb7c9cadf",
+    "height": 640,
+    "width": 960
   },
   "hangzhou-city-balcony.webp": {
     "height": 1280,
     "width": 1920,
     "bytes": 227072,
     "contentType": "image/webp",
-    "etag": "2e2bc9ae2001a19b64f5a6dc4231eb0f"
+    "etag": "2e2bc9ae2001a19b64f5a6dc4231eb0f",
+    "variants": [
+      "hangzhou-city-balcony-480w.webp",
+      "hangzhou-city-balcony-960w.webp"
+    ]
   }
 }

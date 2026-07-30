@@ -1,9 +1,35 @@
 {
+  "wo-de-di-yi-tai-you-xi-zhu-ji-huan-1920w.webp": {
+    "bytes": 90236,
+    "contentType": "image/webp",
+    "etag": "6b6d29f2a7c9ed4c64e03237dc621ad2",
+    "height": 1080,
+    "width": 1920
+  },
+  "wo-de-di-yi-tai-you-xi-zhu-ji-huan-480w.webp": {
+    "bytes": 14744,
+    "contentType": "image/webp",
+    "etag": "df23385431ac553a4bad170bf48df1be",
+    "height": 270,
+    "width": 480
+  },
+  "wo-de-di-yi-tai-you-xi-zhu-ji-huan-960w.webp": {
+    "bytes": 38486,
+    "contentType": "image/webp",
+    "etag": "92ae5b234e82670ccdc027ce00a75176",
+    "height": 540,
+    "width": 960
+  },
   "wo-de-di-yi-tai-you-xi-zhu-ji-huan.jpg": {
     "height": 1152,
     "width": 2048,
     "bytes": 214301,
     "contentType": "image/jpeg",
-    "etag": "28908e0ca19b9df7d4c3204e6f7e09a5"
+    "etag": "28908e0ca19b9df7d4c3204e6f7e09a5",
+    "variants": [
+      "wo-de-di-yi-tai-you-xi-zhu-ji-huan-480w.webp",
+      "wo-de-di-yi-tai-you-xi-zhu-ji-huan-960w.webp",
+      "wo-de-di-yi-tai-you-xi-zhu-ji-huan-1920w.webp"
+    ]
   }
 }

@@ -1,9 +1,27 @@
 {
+  "nice-yi-kou-qi-zai-xlog-shui-san-ge-pr-480w.webp": {
+    "bytes": 7404,
+    "contentType": "image/webp",
+    "etag": "bd0166e28c4f0c521edb4fb57a8f8795",
+    "height": 150,
+    "width": 480
+  },
+  "nice-yi-kou-qi-zai-xlog-shui-san-ge-pr-960w.webp": {
+    "bytes": 17512,
+    "contentType": "image/webp",
+    "etag": "95a1076385785fe7aca223db8e1da7ed",
+    "height": 300,
+    "width": 960
+  },
   "nice-yi-kou-qi-zai-xlog-shui-san-ge-pr.jpg": {
     "height": 402,
     "width": 1288,
     "bytes": 50971,
     "contentType": "image/jpeg",
-    "etag": "b07456aa2790081dc46daf2d72ffe453"
+    "etag": "b07456aa2790081dc46daf2d72ffe453",
+    "variants": [
+      "nice-yi-kou-qi-zai-xlog-shui-san-ge-pr-480w.webp",
+      "nice-yi-kou-qi-zai-xlog-shui-san-ge-pr-960w.webp"
+    ]
   }
 }

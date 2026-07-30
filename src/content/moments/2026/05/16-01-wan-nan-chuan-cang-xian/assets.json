@@ -1,44 +1,152 @@
 {
+  "wan-nan-chuan-cang-xian-2-480w.webp": {
+    "bytes": 9714,
+    "contentType": "image/webp",
+    "etag": "dd1a6f6913b912e75cf0513d8f33673c",
+    "height": 320,
+    "width": 480
+  },
+  "wan-nan-chuan-cang-xian-2-960w.webp": {
+    "bytes": 29798,
+    "contentType": "image/webp",
+    "etag": "b8ec3e906ce9145c1edbc1519b9590c7",
+    "height": 640,
+    "width": 960
+  },
   "wan-nan-chuan-cang-xian-2.webp": {
     "height": 1080,
     "width": 1620,
     "bytes": 113312,
     "contentType": "image/webp",
-    "etag": "c88070e60747ec643d6c3ec1f91ad615"
+    "etag": "c88070e60747ec643d6c3ec1f91ad615",
+    "variants": [
+      "wan-nan-chuan-cang-xian-2-480w.webp",
+      "wan-nan-chuan-cang-xian-2-960w.webp"
+    ]
+  },
+  "wan-nan-chuan-cang-xian-3-480w.webp": {
+    "bytes": 51094,
+    "contentType": "image/webp",
+    "etag": "311e2b721d0222f7f257f9e9c46a2f2d",
+    "height": 320,
+    "width": 480
+  },
+  "wan-nan-chuan-cang-xian-3-960w.webp": {
+    "bytes": 155940,
+    "contentType": "image/webp",
+    "etag": "39dc49874ea736dccaa1ddf1ee13f706",
+    "height": 640,
+    "width": 960
   },
   "wan-nan-chuan-cang-xian-3.webp": {
     "height": 1080,
     "width": 1620,
     "bytes": 517870,
     "contentType": "image/webp",
-    "etag": "b34051fce460a5e6d6b576fa6773f853"
+    "etag": "b34051fce460a5e6d6b576fa6773f853",
+    "variants": [
+      "wan-nan-chuan-cang-xian-3-480w.webp",
+      "wan-nan-chuan-cang-xian-3-960w.webp"
+    ]
+  },
+  "wan-nan-chuan-cang-xian-4-480w.webp": {
+    "bytes": 41100,
+    "contentType": "image/webp",
+    "etag": "79b70f27fb11962ef524ecceb733f225",
+    "height": 320,
+    "width": 480
+  },
+  "wan-nan-chuan-cang-xian-4-960w.webp": {
+    "bytes": 147862,
+    "contentType": "image/webp",
+    "etag": "fa46b0ed08cc8207103cfe6ca4df6de0",
+    "height": 640,
+    "width": 960
   },
   "wan-nan-chuan-cang-xian-4.webp": {
     "height": 1080,
     "width": 1620,
     "bytes": 597240,
     "contentType": "image/webp",
-    "etag": "9159f4f39caf88c6ffb1f61198e19601"
+    "etag": "9159f4f39caf88c6ffb1f61198e19601",
+    "variants": [
+      "wan-nan-chuan-cang-xian-4-480w.webp",
+      "wan-nan-chuan-cang-xian-4-960w.webp"
+    ]
+  },
+  "wan-nan-chuan-cang-xian-480w.webp": {
+    "bytes": 28874,
+    "contentType": "image/webp",
+    "etag": "e2fa12d41f01a521224964ee9dfcaf2c",
+    "height": 320,
+    "width": 480
+  },
+  "wan-nan-chuan-cang-xian-5-480w.webp": {
+    "bytes": 48648,
+    "contentType": "image/webp",
+    "etag": "8d555eee07f4d01ad8b26838a5543011",
+    "height": 320,
+    "width": 480
+  },
+  "wan-nan-chuan-cang-xian-5-960w.webp": {
+    "bytes": 160648,
+    "contentType": "image/webp",
+    "etag": "94341fbe60f03140c26327d66b6bd6a7",
+    "height": 640,
+    "width": 960
   },
   "wan-nan-chuan-cang-xian-5.webp": {
     "height": 1080,
     "width": 1620,
     "bytes": 541362,
     "contentType": "image/webp",
-    "etag": "b2d1c81c86bd35222820594d2b6899ff"
+    "etag": "b2d1c81c86bd35222820594d2b6899ff",
+    "variants": [
+      "wan-nan-chuan-cang-xian-5-480w.webp",
+      "wan-nan-chuan-cang-xian-5-960w.webp"
+    ]
+  },
+  "wan-nan-chuan-cang-xian-6-480w.webp": {
+    "bytes": 20458,
+    "contentType": "image/webp",
+    "etag": "3a02a728f0925d1d52f885f55c583e17",
+    "height": 320,
+    "width": 480
+  },
+  "wan-nan-chuan-cang-xian-6-960w.webp": {
+    "bytes": 56168,
+    "contentType": "image/webp",
+    "etag": "d130843eebc89ebfc4e8e1139c8c47e5",
+    "height": 640,
+    "width": 960
   },
   "wan-nan-chuan-cang-xian-6.webp": {
     "height": 1080,
     "width": 1620,
     "bytes": 199612,
     "contentType": "image/webp",
-    "etag": "e11b79c96d1213536d23aceea6ea992b"
+    "etag": "e11b79c96d1213536d23aceea6ea992b",
+    "variants": [
+      "wan-nan-chuan-cang-xian-6-480w.webp",
+      "wan-nan-chuan-cang-xian-6-960w.webp"
+    ]
+  },
+  "wan-nan-chuan-cang-xian-960w.webp": {
+    "bytes": 92940,
+    "contentType": "image/webp",
+    "etag": "e79082931e692570c4159c83e1873f4b",
+    "height": 640,
+    "width": 960
   },
   "wan-nan-chuan-cang-xian.webp": {
     "height": 1080,
     "width": 1620,
     "bytes": 364992,
     "contentType": "image/webp",
-    "etag": "d0b02707ffef2a2cebd944558ef7914c"
+    "etag": "d0b02707ffef2a2cebd944558ef7914c",
+    "variants": [
+      "wan-nan-chuan-cang-xian-480w.webp",
+      "wan-nan-chuan-cang-xian-960w.webp"
+    ]
   }
 }

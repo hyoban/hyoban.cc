@@ -1,9 +1,27 @@
 {
+  "mei-tian-qing-diao-liao-tian-ji-lu-rong-yi-480w.webp": {
+    "bytes": 5832,
+    "contentType": "image/webp",
+    "etag": "a71883c15c39c38c4076983192eae933",
+    "height": 1040,
+    "width": 480
+  },
+  "mei-tian-qing-diao-liao-tian-ji-lu-rong-yi-960w.webp": {
+    "bytes": 13552,
+    "contentType": "image/webp",
+    "etag": "0790270a6373a3691426f470f092f4a8",
+    "height": 2080,
+    "width": 960
+  },
   "mei-tian-qing-diao-liao-tian-ji-lu-rong-yi.jpg": {
     "height": 2340,
     "width": 1080,
     "bytes": 63583,
     "contentType": "image/jpeg",
-    "etag": "33982d8fc8c564424f6184d33c5a333b"
+    "etag": "33982d8fc8c564424f6184d33c5a333b",
+    "variants": [
+      "mei-tian-qing-diao-liao-tian-ji-lu-rong-yi-480w.webp",
+      "mei-tian-qing-diao-liao-tian-ji-lu-rong-yi-960w.webp"
+    ]
   }
 }

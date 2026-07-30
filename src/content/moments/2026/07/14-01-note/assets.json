@@ -1,16 +1,68 @@
 {
+  "note-1920w.webp": {
+    "bytes": 92962,
+    "contentType": "image/webp",
+    "etag": "05c2a4251af00b34421eb1cc6c1fb078",
+    "height": 1430,
+    "width": 1920
+  },
+  "note-2-1920w.webp": {
+    "bytes": 30498,
+    "contentType": "image/webp",
+    "etag": "a25a87e35baedefddd731bdb98b8eb73",
+    "height": 1430,
+    "width": 1920
+  },
+  "note-2-480w.webp": {
+    "bytes": 4966,
+    "contentType": "image/webp",
+    "etag": "3a328c9069424712ea8f5d3149bee94c",
+    "height": 357,
+    "width": 480
+  },
+  "note-2-960w.webp": {
+    "bytes": 12558,
+    "contentType": "image/webp",
+    "etag": "fea8ba1bb67d71f383f7d885853afb49",
+    "height": 715,
+    "width": 960
+  },
   "note-2.jpg": {
     "height": 1726,
     "width": 2318,
     "bytes": 123629,
     "contentType": "image/jpeg",
-    "etag": "9ce549d273c4a38647e0868c7bd3cad5"
+    "etag": "9ce549d273c4a38647e0868c7bd3cad5",
+    "variants": [
+      "note-2-480w.webp",
+      "note-2-960w.webp",
+      "note-2-1920w.webp"
+    ]
+  },
+  "note-480w.webp": {
+    "bytes": 12522,
+    "contentType": "image/webp",
+    "etag": "e2201cdbdffc6485923d9fd0bb473b2e",
+    "height": 357,
+    "width": 480
+  },
+  "note-960w.webp": {
+    "bytes": 38694,
+    "contentType": "image/webp",
+    "etag": "136c3e864a0ff72279484d402dea9d08",
+    "height": 715,
+    "width": 960
   },
   "note.jpg": {
     "height": 1726,
     "width": 2318,
     "bytes": 269142,
     "contentType": "image/jpeg",
-    "etag": "bacfdaba9a61d781e051d248078adb8e"
+    "etag": "bacfdaba9a61d781e051d248078adb8e",
+    "variants": [
+      "note-480w.webp",
+      "note-960w.webp",
+      "note-1920w.webp"
+    ]
   }
 }

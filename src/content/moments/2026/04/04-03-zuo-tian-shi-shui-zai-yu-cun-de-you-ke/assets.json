@@ -1,30 +1,110 @@
 {
+  "zuo-tian-shi-shui-zai-yu-cun-de-you-ke-2-1920w.webp": {
+    "bytes": 503042,
+    "contentType": "image/webp",
+    "etag": "4aa72fb4b3569e7f47f724e623e4299f",
+    "height": 1440,
+    "width": 1920
+  },
+  "zuo-tian-shi-shui-zai-yu-cun-de-you-ke-2-480w.webp": {
+    "bytes": 19862,
+    "contentType": "image/webp",
+    "etag": "9520142fbe6807ef9bd19ce749b507a6",
+    "height": 360,
+    "width": 480
+  },
+  "zuo-tian-shi-shui-zai-yu-cun-de-you-ke-2-960w.webp": {
+    "bytes": 100028,
+    "contentType": "image/webp",
+    "etag": "6551fd40fe31805a3aad6cb2544872ed",
+    "height": 720,
+    "width": 960
+  },
   "zuo-tian-shi-shui-zai-yu-cun-de-you-ke-2.jpg": {
     "height": 1536,
     "width": 2048,
     "bytes": 730610,
     "contentType": "image/jpeg",
-    "etag": "a168ace88a74171563271434ee4338f5"
+    "etag": "a168ace88a74171563271434ee4338f5",
+    "variants": [
+      "zuo-tian-shi-shui-zai-yu-cun-de-you-ke-2-480w.webp",
+      "zuo-tian-shi-shui-zai-yu-cun-de-you-ke-2-960w.webp",
+      "zuo-tian-shi-shui-zai-yu-cun-de-you-ke-2-1920w.webp"
+    ]
+  },
+  "zuo-tian-shi-shui-zai-yu-cun-de-you-ke-3-480w.webp": {
+    "bytes": 55122,
+    "contentType": "image/webp",
+    "etag": "b74077edf0dbb3d494b8f2809f37db93",
+    "height": 640,
+    "width": 480
+  },
+  "zuo-tian-shi-shui-zai-yu-cun-de-you-ke-3-960w.webp": {
+    "bytes": 234668,
+    "contentType": "image/webp",
+    "etag": "5421f184d7b4a37ab7bdcca19422e6b4",
+    "height": 1280,
+    "width": 960
   },
   "zuo-tian-shi-shui-zai-yu-cun-de-you-ke-3.jpg": {
     "height": 2048,
     "width": 1536,
     "bytes": 663619,
     "contentType": "image/jpeg",
-    "etag": "b5f1236cde9b71521f1ef35f2616c38a"
+    "etag": "b5f1236cde9b71521f1ef35f2616c38a",
+    "variants": [
+      "zuo-tian-shi-shui-zai-yu-cun-de-you-ke-3-480w.webp",
+      "zuo-tian-shi-shui-zai-yu-cun-de-you-ke-3-960w.webp"
+    ]
+  },
+  "zuo-tian-shi-shui-zai-yu-cun-de-you-ke-4-480w.webp": {
+    "bytes": 53130,
+    "contentType": "image/webp",
+    "etag": "d1fb00ecee3d4e5fdcf6bcead28fbf28",
+    "height": 640,
+    "width": 480
+  },
+  "zuo-tian-shi-shui-zai-yu-cun-de-you-ke-4-960w.webp": {
+    "bytes": 273156,
+    "contentType": "image/webp",
+    "etag": "b3c4810f6047c7190280fec92de66d82",
+    "height": 1280,
+    "width": 960
   },
   "zuo-tian-shi-shui-zai-yu-cun-de-you-ke-4.jpg": {
     "height": 2048,
     "width": 1536,
     "bytes": 861701,
     "contentType": "image/jpeg",
-    "etag": "53657c3d55af183457de969e7fb81888"
+    "etag": "53657c3d55af183457de969e7fb81888",
+    "variants": [
+      "zuo-tian-shi-shui-zai-yu-cun-de-you-ke-4-480w.webp",
+      "zuo-tian-shi-shui-zai-yu-cun-de-you-ke-4-960w.webp"
+    ]
+  },
+  "zuo-tian-shi-shui-zai-yu-cun-de-you-ke-480w.webp": {
+    "bytes": 49710,
+    "contentType": "image/webp",
+    "etag": "c331c40fa89a53858da2bfb2cf4c4527",
+    "height": 640,
+    "width": 480
+  },
+  "zuo-tian-shi-shui-zai-yu-cun-de-you-ke-960w.webp": {
+    "bytes": 223804,
+    "contentType": "image/webp",
+    "etag": "77a6a38194303ed31c799c983170c456",
+    "height": 1280,
+    "width": 960
   },
   "zuo-tian-shi-shui-zai-yu-cun-de-you-ke.jpg": {
     "height": 2048,
     "width": 1536,
     "bytes": 695162,
     "contentType": "image/jpeg",
-    "etag": "13ec2fe7aba370c6df3f51d6eb5707d8"
+    "etag": "13ec2fe7aba370c6df3f51d6eb5707d8",
+    "variants": [
+      "zuo-tian-shi-shui-zai-yu-cun-de-you-ke-480w.webp",
+      "zuo-tian-shi-shui-zai-yu-cun-de-you-ke-960w.webp"
+    ]
   }
 }

@@ -1,9 +1,27 @@
 {
+  "wo-wei-qie-huang-dai-yan-480w.webp": {
+    "bytes": 29946,
+    "contentType": "image/webp",
+    "etag": "17d804aa0d268d95dfad1958873186f8",
+    "height": 853,
+    "width": 480
+  },
+  "wo-wei-qie-huang-dai-yan-960w.webp": {
+    "bytes": 73678,
+    "contentType": "image/webp",
+    "etag": "2a41a752a7dbd0ffc426ef8f98df4357",
+    "height": 1707,
+    "width": 960
+  },
   "wo-wei-qie-huang-dai-yan.jpg": {
     "height": 2048,
     "width": 1152,
     "bytes": 210298,
     "contentType": "image/jpeg",
-    "etag": "b1e9c0b3487bc5e688028b6898053c4f"
+    "etag": "b1e9c0b3487bc5e688028b6898053c4f",
+    "variants": [
+      "wo-wei-qie-huang-dai-yan-480w.webp",
+      "wo-wei-qie-huang-dai-yan-960w.webp"
+    ]
   }
 }

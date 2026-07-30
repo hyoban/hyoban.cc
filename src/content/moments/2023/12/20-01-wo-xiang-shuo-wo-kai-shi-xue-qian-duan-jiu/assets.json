@@ -1,9 +1,27 @@
 {
+  "wo-xiang-shuo-wo-kai-shi-xue-qian-duan-jiu-480w.webp": {
+    "bytes": 15140,
+    "contentType": "image/webp",
+    "etag": "b9f82044520089e24cded8932ad12fa5",
+    "height": 282,
+    "width": 480
+  },
+  "wo-xiang-shuo-wo-kai-shi-xue-qian-duan-jiu-960w.webp": {
+    "bytes": 34344,
+    "contentType": "image/webp",
+    "etag": "cbee1fb41f02be46cc2ebe636011a0c1",
+    "height": 564,
+    "width": 960
+  },
   "wo-xiang-shuo-wo-kai-shi-xue-qian-duan-jiu.png": {
     "height": 862,
     "width": 1466,
     "bytes": 94464,
     "contentType": "image/png",
-    "etag": "c7ff580ac4a46cbd5c68538563756d0c"
+    "etag": "c7ff580ac4a46cbd5c68538563756d0c",
+    "variants": [
+      "wo-xiang-shuo-wo-kai-shi-xue-qian-duan-jiu-480w.webp",
+      "wo-xiang-shuo-wo-kai-shi-xue-qian-duan-jiu-960w.webp"
+    ]
   }
 }

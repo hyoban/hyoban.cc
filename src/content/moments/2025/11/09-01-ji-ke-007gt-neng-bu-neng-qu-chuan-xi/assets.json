@@ -1,16 +1,52 @@
 {
+  "ji-ke-007gt-neng-bu-neng-qu-chuan-xi-2-480w.webp": {
+    "bytes": 23792,
+    "contentType": "image/webp",
+    "etag": "ce6e219f64311e662b9b2a57d1d519d0",
+    "height": 640,
+    "width": 480
+  },
+  "ji-ke-007gt-neng-bu-neng-qu-chuan-xi-2-960w.webp": {
+    "bytes": 65884,
+    "contentType": "image/webp",
+    "etag": "603a97fd09c2f42c629ef7c0d94465c1",
+    "height": 1280,
+    "width": 960
+  },
   "ji-ke-007gt-neng-bu-neng-qu-chuan-xi-2.webp": {
     "height": 1440,
     "width": 1080,
     "bytes": 132730,
     "contentType": "image/webp",
-    "etag": "14dfbf0545c08175bf94252da2a5d1d0"
+    "etag": "14dfbf0545c08175bf94252da2a5d1d0",
+    "variants": [
+      "ji-ke-007gt-neng-bu-neng-qu-chuan-xi-2-480w.webp",
+      "ji-ke-007gt-neng-bu-neng-qu-chuan-xi-2-960w.webp"
+    ]
+  },
+  "ji-ke-007gt-neng-bu-neng-qu-chuan-xi-480w.webp": {
+    "bytes": 21354,
+    "contentType": "image/webp",
+    "etag": "b8a307d4bb692ebfe3cf9806251fd27f",
+    "height": 640,
+    "width": 480
+  },
+  "ji-ke-007gt-neng-bu-neng-qu-chuan-xi-960w.webp": {
+    "bytes": 60366,
+    "contentType": "image/webp",
+    "etag": "28a647ef387eec1a75f368be9af09b44",
+    "height": 1280,
+    "width": 960
   },
   "ji-ke-007gt-neng-bu-neng-qu-chuan-xi.webp": {
     "height": 1440,
     "width": 1080,
     "bytes": 132140,
     "contentType": "image/webp",
-    "etag": "74f79b3454c55b534d4d079ec6a35863"
+    "etag": "74f79b3454c55b534d4d079ec6a35863",
+    "variants": [
+      "ji-ke-007gt-neng-bu-neng-qu-chuan-xi-480w.webp",
+      "ji-ke-007gt-neng-bu-neng-qu-chuan-xi-960w.webp"
+    ]
   }
 }

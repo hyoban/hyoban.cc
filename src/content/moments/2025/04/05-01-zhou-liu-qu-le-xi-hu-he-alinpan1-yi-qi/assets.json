@@ -1,16 +1,68 @@
 {
+  "zhou-liu-qu-le-xi-hu-he-alinpan1-yi-qi-1920w.webp": {
+    "bytes": 55262,
+    "contentType": "image/webp",
+    "etag": "d7a3680cf288651003c0d2263e71b5f1",
+    "height": 1440,
+    "width": 1920
+  },
+  "zhou-liu-qu-le-xi-hu-he-alinpan1-yi-qi-2-1920w.webp": {
+    "bytes": 424700,
+    "contentType": "image/webp",
+    "etag": "f98b1bbb47b7597e3d5da8fcbe2206e2",
+    "height": 2560,
+    "width": 1920
+  },
+  "zhou-liu-qu-le-xi-hu-he-alinpan1-yi-qi-2-480w.webp": {
+    "bytes": 50810,
+    "contentType": "image/webp",
+    "etag": "80d1ee2b52c527205638121a9ca6bc58",
+    "height": 640,
+    "width": 480
+  },
+  "zhou-liu-qu-le-xi-hu-he-alinpan1-yi-qi-2-960w.webp": {
+    "bytes": 152704,
+    "contentType": "image/webp",
+    "etag": "8ab6c2c57684e2f62d566df3165e86db",
+    "height": 1280,
+    "width": 960
+  },
   "zhou-liu-qu-le-xi-hu-he-alinpan1-yi-qi-2.jpg": {
     "height": 4096,
     "width": 3072,
     "bytes": 1604574,
     "contentType": "image/jpeg",
-    "etag": "a6111362f381405fa1e54ae7e25bd2d4"
+    "etag": "a6111362f381405fa1e54ae7e25bd2d4",
+    "variants": [
+      "zhou-liu-qu-le-xi-hu-he-alinpan1-yi-qi-2-480w.webp",
+      "zhou-liu-qu-le-xi-hu-he-alinpan1-yi-qi-2-960w.webp",
+      "zhou-liu-qu-le-xi-hu-he-alinpan1-yi-qi-2-1920w.webp"
+    ]
+  },
+  "zhou-liu-qu-le-xi-hu-he-alinpan1-yi-qi-480w.webp": {
+    "bytes": 5754,
+    "contentType": "image/webp",
+    "etag": "d5b92f2cb49bc01266d8fcb565d1decd",
+    "height": 360,
+    "width": 480
+  },
+  "zhou-liu-qu-le-xi-hu-he-alinpan1-yi-qi-960w.webp": {
+    "bytes": 17494,
+    "contentType": "image/webp",
+    "etag": "cd1f2bd981c9586002aa6acfc6973177",
+    "height": 720,
+    "width": 960
   },
   "zhou-liu-qu-le-xi-hu-he-alinpan1-yi-qi.jpg": {
     "height": 3072,
     "width": 4096,
     "bytes": 929812,
     "contentType": "image/jpeg",
-    "etag": "3b399d77fbbe07aebecfdd7d28b66969"
+    "etag": "3b399d77fbbe07aebecfdd7d28b66969",
+    "variants": [
+      "zhou-liu-qu-le-xi-hu-he-alinpan1-yi-qi-480w.webp",
+      "zhou-liu-qu-le-xi-hu-he-alinpan1-yi-qi-960w.webp",
+      "zhou-liu-qu-le-xi-hu-he-alinpan1-yi-qi-1920w.webp"
+    ]
   }
 }

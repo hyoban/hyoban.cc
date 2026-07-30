@@ -1,30 +1,102 @@
 {
+  "xi-che-jie-ya-2-480w.webp": {
+    "bytes": 31984,
+    "contentType": "image/webp",
+    "etag": "8ee14011644b9815bb5ff61f4963e41f",
+    "height": 417,
+    "width": 480
+  },
+  "xi-che-jie-ya-2-960w.webp": {
+    "bytes": 82240,
+    "contentType": "image/webp",
+    "etag": "40121a2919d801ad10e25adad248ae78",
+    "height": 835,
+    "width": 960
+  },
   "xi-che-jie-ya-2.webp": {
     "height": 1080,
     "width": 1242,
     "bytes": 174506,
     "contentType": "image/webp",
-    "etag": "24dc4d2072b90097946f0fc0c46fbf65"
+    "etag": "24dc4d2072b90097946f0fc0c46fbf65",
+    "variants": [
+      "xi-che-jie-ya-2-480w.webp",
+      "xi-che-jie-ya-2-960w.webp"
+    ]
+  },
+  "xi-che-jie-ya-3-480w.webp": {
+    "bytes": 27664,
+    "contentType": "image/webp",
+    "etag": "93d7a01e1fca77a3fba45a4819ff4738",
+    "height": 360,
+    "width": 480
+  },
+  "xi-che-jie-ya-3-960w.webp": {
+    "bytes": 73274,
+    "contentType": "image/webp",
+    "etag": "bd563f1bf0262c95c88d52baee6dcebb",
+    "height": 721,
+    "width": 960
   },
   "xi-che-jie-ya-3.webp": {
     "height": 1080,
     "width": 1439,
     "bytes": 174798,
     "contentType": "image/webp",
-    "etag": "d48a6706de3b89adceda9444fab71bd6"
+    "etag": "d48a6706de3b89adceda9444fab71bd6",
+    "variants": [
+      "xi-che-jie-ya-3-480w.webp",
+      "xi-che-jie-ya-3-960w.webp"
+    ]
+  },
+  "xi-che-jie-ya-4-480w.webp": {
+    "bytes": 30034,
+    "contentType": "image/webp",
+    "etag": "a93eeb3a004d022564f8abf3448e3d37",
+    "height": 720,
+    "width": 480
+  },
+  "xi-che-jie-ya-4-960w.webp": {
+    "bytes": 69256,
+    "contentType": "image/webp",
+    "etag": "be4c62df8f42749acf9dfe5f2ff1df28",
+    "height": 1440,
+    "width": 960
   },
   "xi-che-jie-ya-4.webp": {
     "height": 1620,
     "width": 1080,
     "bytes": 128520,
     "contentType": "image/webp",
-    "etag": "77b84919e9eef87f0a002561086b17b5"
+    "etag": "77b84919e9eef87f0a002561086b17b5",
+    "variants": [
+      "xi-che-jie-ya-4-480w.webp",
+      "xi-che-jie-ya-4-960w.webp"
+    ]
+  },
+  "xi-che-jie-ya-480w.webp": {
+    "bytes": 29890,
+    "contentType": "image/webp",
+    "etag": "ab38b5184e1658396188d0ea991219f3",
+    "height": 320,
+    "width": 480
+  },
+  "xi-che-jie-ya-960w.webp": {
+    "bytes": 101616,
+    "contentType": "image/webp",
+    "etag": "606da7158b62244b0c13f9d3c8ad12ba",
+    "height": 640,
+    "width": 960
   },
   "xi-che-jie-ya.webp": {
     "height": 1080,
     "width": 1620,
     "bytes": 376106,
     "contentType": "image/webp",
-    "etag": "0912eacdd2f7168254450b9e72e477aa"
+    "etag": "0912eacdd2f7168254450b9e72e477aa",
+    "variants": [
+      "xi-che-jie-ya-480w.webp",
+      "xi-che-jie-ya-960w.webp"
+    ]
   }
 }

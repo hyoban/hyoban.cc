@@ -1,16 +1,36 @@
 {
+  "xia-zhou-jiu-wu-yi-le-suo-yi-si-yue-2-480w.webp": {
+    "bytes": 12664,
+    "contentType": "image/webp",
+    "etag": "3a5f645ec705e111a2b151001bda0682",
+    "height": 1041,
+    "width": 480
+  },
   "xia-zhou-jiu-wu-yi-le-suo-yi-si-yue-2.jpg": {
     "height": 1280,
     "width": 590,
     "bytes": 33153,
     "contentType": "image/jpeg",
-    "etag": "078dba3ff005b7e6d151856dddcda4c5"
+    "etag": "078dba3ff005b7e6d151856dddcda4c5",
+    "variants": [
+      "xia-zhou-jiu-wu-yi-le-suo-yi-si-yue-2-480w.webp"
+    ]
+  },
+  "xia-zhou-jiu-wu-yi-le-suo-yi-si-yue-480w.webp": {
+    "bytes": 19500,
+    "contentType": "image/webp",
+    "etag": "9a58101a5f7c2478182edc50188af38f",
+    "height": 1041,
+    "width": 480
   },
   "xia-zhou-jiu-wu-yi-le-suo-yi-si-yue.jpg": {
     "height": 1280,
     "width": 590,
     "bytes": 36809,
     "contentType": "image/jpeg",
-    "etag": "e576bb65d3325a12639346d0539a9e83"
+    "etag": "e576bb65d3325a12639346d0539a9e83",
+    "variants": [
+      "xia-zhou-jiu-wu-yi-le-suo-yi-si-yue-480w.webp"
+    ]
   }
 }

@@ -1,9 +1,19 @@
 {
+  "ru-guo-ni-wen-wo-bu-shi-ke-yi-shi-480w.webp": {
+    "bytes": 814,
+    "contentType": "image/webp",
+    "etag": "bb9872cfa2af211c55bcbe237ca45f01",
+    "height": 67,
+    "width": 480
+  },
   "ru-guo-ni-wen-wo-bu-shi-ke-yi-shi.png": {
     "height": 72,
     "width": 514,
     "bytes": 48779,
     "contentType": "image/png",
-    "etag": "b198459689c8904d0c591a97065032d2"
+    "etag": "b198459689c8904d0c591a97065032d2",
+    "variants": [
+      "ru-guo-ni-wen-wo-bu-shi-ke-yi-shi-480w.webp"
+    ]
   }
 }

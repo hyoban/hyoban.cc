@@ -1,9 +1,35 @@
 {
+  "chi-ge-ma-la-tang-1920w.webp": {
+    "bytes": 343100,
+    "contentType": "image/webp",
+    "etag": "bb60d55235ddceace101f760af2f640d",
+    "height": 1080,
+    "width": 1920
+  },
+  "chi-ge-ma-la-tang-480w.webp": {
+    "bytes": 31926,
+    "contentType": "image/webp",
+    "etag": "e5ea36c8705d7ecf4c643a9694ef22ba",
+    "height": 270,
+    "width": 480
+  },
+  "chi-ge-ma-la-tang-960w.webp": {
+    "bytes": 115226,
+    "contentType": "image/webp",
+    "etag": "bdda83b1ee183b6faa1f1e756054e80d",
+    "height": 540,
+    "width": 960
+  },
   "chi-ge-ma-la-tang.jpg": {
     "height": 1152,
     "width": 2048,
     "bytes": 528035,
     "contentType": "image/jpeg",
-    "etag": "5ca6d74e2c0549d3b5b7ce2ff8827ea2"
+    "etag": "5ca6d74e2c0549d3b5b7ce2ff8827ea2",
+    "variants": [
+      "chi-ge-ma-la-tang-480w.webp",
+      "chi-ge-ma-la-tang-960w.webp",
+      "chi-ge-ma-la-tang-1920w.webp"
+    ]
   }
 }

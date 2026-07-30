@@ -1,9 +1,27 @@
 {
+  "hakadaooo-cuikaipeng-meanc-p-pacexy-shirouzu-ref-cosine-480w.webp": {
+    "bytes": 30042,
+    "contentType": "image/webp",
+    "etag": "cf199cf9f08a53f3eea79e8f6285355a",
+    "height": 230,
+    "width": 480
+  },
+  "hakadaooo-cuikaipeng-meanc-p-pacexy-shirouzu-ref-cosine-960w.webp": {
+    "bytes": 68742,
+    "contentType": "image/webp",
+    "etag": "a8dd29c5cdd09fb70841de7935d040ff",
+    "height": 461,
+    "width": 960
+  },
   "hakadaooo-cuikaipeng-meanc-p-pacexy-shirouzu-ref-cosine.png": {
     "height": 800,
     "width": 1667,
     "bytes": 139781,
     "contentType": "image/png",
-    "etag": "2c7a139732adc469df7391f84fda30fa"
+    "etag": "2c7a139732adc469df7391f84fda30fa",
+    "variants": [
+      "hakadaooo-cuikaipeng-meanc-p-pacexy-shirouzu-ref-cosine-480w.webp",
+      "hakadaooo-cuikaipeng-meanc-p-pacexy-shirouzu-ref-cosine-960w.webp"
+    ]
   }
 }

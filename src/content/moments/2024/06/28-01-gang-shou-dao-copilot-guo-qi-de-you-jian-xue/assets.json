@@ -1,9 +1,19 @@
 {
+  "gang-shou-dao-copilot-guo-qi-de-you-jian-xue-480w.webp": {
+    "bytes": 38464,
+    "contentType": "image/webp",
+    "etag": "c1a0634fbac4868e5fead3d48a6d7b28",
+    "height": 1040,
+    "width": 480
+  },
   "gang-shou-dao-copilot-guo-qi-de-you-jian-xue.jpg": {
     "height": 2048,
     "width": 945,
     "bytes": 162686,
     "contentType": "image/jpeg",
-    "etag": "17f7ce442396369f49bdba5d0bc33893"
+    "etag": "17f7ce442396369f49bdba5d0bc33893",
+    "variants": [
+      "gang-shou-dao-copilot-guo-qi-de-you-jian-xue-480w.webp"
+    ]
   }
 }

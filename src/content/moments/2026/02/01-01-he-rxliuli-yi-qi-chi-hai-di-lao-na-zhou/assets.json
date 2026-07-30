@@ -1,9 +1,35 @@
 {
+  "he-rxliuli-yi-qi-chi-hai-di-lao-na-zhou-1920w.webp": {
+    "bytes": 260494,
+    "contentType": "image/webp",
+    "etag": "7c415954f7bc76754bd98e4d70bb2c9b",
+    "height": 1440,
+    "width": 1920
+  },
+  "he-rxliuli-yi-qi-chi-hai-di-lao-na-zhou-480w.webp": {
+    "bytes": 36424,
+    "contentType": "image/webp",
+    "etag": "e5b81037d020b9338dc358c4aedd7d39",
+    "height": 360,
+    "width": 480
+  },
+  "he-rxliuli-yi-qi-chi-hai-di-lao-na-zhou-960w.webp": {
+    "bytes": 106600,
+    "contentType": "image/webp",
+    "etag": "745d0cc1250ad11a4b0fc9809b52b4a4",
+    "height": 720,
+    "width": 960
+  },
   "he-rxliuli-yi-qi-chi-hai-di-lao-na-zhou.jpg": {
     "height": 1536,
     "width": 2048,
     "bytes": 480248,
     "contentType": "image/jpeg",
-    "etag": "cb07a482efc86beeb7179f4eb1da2d08"
+    "etag": "cb07a482efc86beeb7179f4eb1da2d08",
+    "variants": [
+      "he-rxliuli-yi-qi-chi-hai-di-lao-na-zhou-480w.webp",
+      "he-rxliuli-yi-qi-chi-hai-di-lao-na-zhou-960w.webp",
+      "he-rxliuli-yi-qi-chi-hai-di-lao-na-zhou-1920w.webp"
+    ]
   }
 }

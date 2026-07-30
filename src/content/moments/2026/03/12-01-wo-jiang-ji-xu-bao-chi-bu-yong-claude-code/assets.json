@@ -1,9 +1,27 @@
 {
+  "wo-jiang-ji-xu-bao-chi-bu-yong-claude-code-480w.webp": {
+    "bytes": 29840,
+    "contentType": "image/webp",
+    "etag": "3ad822b222420eacd681f7ae7ca5d986",
+    "height": 700,
+    "width": 480
+  },
+  "wo-jiang-ji-xu-bao-chi-bu-yong-claude-code-960w.webp": {
+    "bytes": 64534,
+    "contentType": "image/webp",
+    "etag": "f1a997daff5381427aacf8aa9ca07b60",
+    "height": 1400,
+    "width": 960
+  },
   "wo-jiang-ji-xu-bao-chi-bu-yong-claude-code.jpg": {
     "height": 1719,
     "width": 1179,
     "bytes": 152400,
     "contentType": "image/jpeg",
-    "etag": "4647b6eb43bb759bf3bf2d701dc66122"
+    "etag": "4647b6eb43bb759bf3bf2d701dc66122",
+    "variants": [
+      "wo-jiang-ji-xu-bao-chi-bu-yong-claude-code-480w.webp",
+      "wo-jiang-ji-xu-bao-chi-bu-yong-claude-code-960w.webp"
+    ]
   }
 }

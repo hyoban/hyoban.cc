@@ -1,30 +1,134 @@
 {
+  "xian-cheng-li-you-tiao-yan-he-de-da-ba-1920w.webp": {
+    "bytes": 290808,
+    "contentType": "image/webp",
+    "etag": "37d7e2f6644546e1b9cca6d7b8202057",
+    "height": 1280,
+    "width": 1920
+  },
+  "xian-cheng-li-you-tiao-yan-he-de-da-ba-2-1920w.webp": {
+    "bytes": 113828,
+    "contentType": "image/webp",
+    "etag": "178993bcb5788c2a548b10cfcb1d11e9",
+    "height": 1280,
+    "width": 1920
+  },
+  "xian-cheng-li-you-tiao-yan-he-de-da-ba-2-480w.webp": {
+    "bytes": 8136,
+    "contentType": "image/webp",
+    "etag": "80b5c5b9bc6ead0564c0a86d84479e16",
+    "height": 320,
+    "width": 480
+  },
+  "xian-cheng-li-you-tiao-yan-he-de-da-ba-2-960w.webp": {
+    "bytes": 28880,
+    "contentType": "image/webp",
+    "etag": "5073fe4588daabfb0bb299278488f077",
+    "height": 640,
+    "width": 960
+  },
   "xian-cheng-li-you-tiao-yan-he-de-da-ba-2.jpg": {
     "height": 1706,
     "width": 2560,
     "bytes": 245887,
     "contentType": "image/jpeg",
-    "etag": "a1b2684891af1f6d9bee3f725a028f22"
+    "etag": "a1b2684891af1f6d9bee3f725a028f22",
+    "variants": [
+      "xian-cheng-li-you-tiao-yan-he-de-da-ba-2-480w.webp",
+      "xian-cheng-li-you-tiao-yan-he-de-da-ba-2-960w.webp",
+      "xian-cheng-li-you-tiao-yan-he-de-da-ba-2-1920w.webp"
+    ]
+  },
+  "xian-cheng-li-you-tiao-yan-he-de-da-ba-3-1920w.webp": {
+    "bytes": 71610,
+    "contentType": "image/webp",
+    "etag": "f674e2ecc82ba3fa7b58127e8313f60f",
+    "height": 1280,
+    "width": 1920
+  },
+  "xian-cheng-li-you-tiao-yan-he-de-da-ba-3-480w.webp": {
+    "bytes": 7790,
+    "contentType": "image/webp",
+    "etag": "326f4bb405ba4af4282ac7108526be68",
+    "height": 320,
+    "width": 480
+  },
+  "xian-cheng-li-you-tiao-yan-he-de-da-ba-3-960w.webp": {
+    "bytes": 24796,
+    "contentType": "image/webp",
+    "etag": "6970a576bddf0943b21d335814b361ae",
+    "height": 640,
+    "width": 960
   },
   "xian-cheng-li-you-tiao-yan-he-de-da-ba-3.jpg": {
     "height": 1706,
     "width": 2560,
     "bytes": 157714,
     "contentType": "image/jpeg",
-    "etag": "432d1ac044c5a89a1c2fa7363838d6f9"
+    "etag": "432d1ac044c5a89a1c2fa7363838d6f9",
+    "variants": [
+      "xian-cheng-li-you-tiao-yan-he-de-da-ba-3-480w.webp",
+      "xian-cheng-li-you-tiao-yan-he-de-da-ba-3-960w.webp",
+      "xian-cheng-li-you-tiao-yan-he-de-da-ba-3-1920w.webp"
+    ]
+  },
+  "xian-cheng-li-you-tiao-yan-he-de-da-ba-4-1920w.webp": {
+    "bytes": 466076,
+    "contentType": "image/webp",
+    "etag": "fca311ce6136f2ad6d92f162c7616109",
+    "height": 1280,
+    "width": 1920
+  },
+  "xian-cheng-li-you-tiao-yan-he-de-da-ba-4-480w.webp": {
+    "bytes": 38280,
+    "contentType": "image/webp",
+    "etag": "653e5c905918ee1ee4316c42f16d449a",
+    "height": 320,
+    "width": 480
+  },
+  "xian-cheng-li-you-tiao-yan-he-de-da-ba-4-960w.webp": {
+    "bytes": 137972,
+    "contentType": "image/webp",
+    "etag": "bd12e710eb802d284086fb4aa2c49d99",
+    "height": 640,
+    "width": 960
   },
   "xian-cheng-li-you-tiao-yan-he-de-da-ba-4.jpg": {
     "height": 1706,
     "width": 2560,
     "bytes": 748952,
     "contentType": "image/jpeg",
-    "etag": "c91d3ea46663400a4e6ce52d5863a745"
+    "etag": "c91d3ea46663400a4e6ce52d5863a745",
+    "variants": [
+      "xian-cheng-li-you-tiao-yan-he-de-da-ba-4-480w.webp",
+      "xian-cheng-li-you-tiao-yan-he-de-da-ba-4-960w.webp",
+      "xian-cheng-li-you-tiao-yan-he-de-da-ba-4-1920w.webp"
+    ]
+  },
+  "xian-cheng-li-you-tiao-yan-he-de-da-ba-480w.webp": {
+    "bytes": 22550,
+    "contentType": "image/webp",
+    "etag": "8de187daaad50e2bf8988bb57d71294d",
+    "height": 320,
+    "width": 480
+  },
+  "xian-cheng-li-you-tiao-yan-he-de-da-ba-960w.webp": {
+    "bytes": 80408,
+    "contentType": "image/webp",
+    "etag": "a29de670abdf63298ad64a02a0d2c3be",
+    "height": 640,
+    "width": 960
   },
   "xian-cheng-li-you-tiao-yan-he-de-da-ba.jpg": {
     "height": 1706,
     "width": 2560,
     "bytes": 525345,
     "contentType": "image/jpeg",
-    "etag": "613ca5ceca37b63b0809073bcec7cba5"
+    "etag": "613ca5ceca37b63b0809073bcec7cba5",
+    "variants": [
+      "xian-cheng-li-you-tiao-yan-he-de-da-ba-480w.webp",
+      "xian-cheng-li-you-tiao-yan-he-de-da-ba-960w.webp",
+      "xian-cheng-li-you-tiao-yan-he-de-da-ba-1920w.webp"
+    ]
   }
 }

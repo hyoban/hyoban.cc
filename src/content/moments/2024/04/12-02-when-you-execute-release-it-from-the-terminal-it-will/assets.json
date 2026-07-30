@@ -1,9 +1,27 @@
 {
+  "when-you-execute-release-it-from-the-terminal-it-will-480w.webp": {
+    "bytes": 7776,
+    "contentType": "image/webp",
+    "etag": "8556a6cffea439fbd6dcab21828879f4",
+    "height": 241,
+    "width": 480
+  },
+  "when-you-execute-release-it-from-the-terminal-it-will-960w.webp": {
+    "bytes": 19144,
+    "contentType": "image/webp",
+    "etag": "00a45b5311a3e186e632f91d45757390",
+    "height": 482,
+    "width": 960
+  },
   "when-you-execute-release-it-from-the-terminal-it-will.jpg": {
     "height": 892,
     "width": 1778,
     "bytes": 72398,
     "contentType": "image/jpeg",
-    "etag": "9a72c075f988ad678508340cf0fc8314"
+    "etag": "9a72c075f988ad678508340cf0fc8314",
+    "variants": [
+      "when-you-execute-release-it-from-the-terminal-it-will-480w.webp",
+      "when-you-execute-release-it-from-the-terminal-it-will-960w.webp"
+    ]
   }
 }

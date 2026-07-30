@@ -1,16 +1,68 @@
 {
+  "san-dian-zhong-yin-cha-xian-1920w.webp": {
+    "bytes": 281474,
+    "contentType": "image/webp",
+    "etag": "6d9edd8dc025da9d55939a1c1fed6b79",
+    "height": 1080,
+    "width": 1920
+  },
+  "san-dian-zhong-yin-cha-xian-2-1920w.webp": {
+    "bytes": 87836,
+    "contentType": "image/webp",
+    "etag": "90bf35a1a04780bf7cb8b9f764fe4df8",
+    "height": 1080,
+    "width": 1920
+  },
+  "san-dian-zhong-yin-cha-xian-2-480w.webp": {
+    "bytes": 9996,
+    "contentType": "image/webp",
+    "etag": "58f4380fffd20b65de494b59efc15df1",
+    "height": 270,
+    "width": 480
+  },
+  "san-dian-zhong-yin-cha-xian-2-960w.webp": {
+    "bytes": 29924,
+    "contentType": "image/webp",
+    "etag": "f5ad8436aba6c2c64b08a3e3a2aa7ff1",
+    "height": 540,
+    "width": 960
+  },
   "san-dian-zhong-yin-cha-xian-2.jpg": {
     "height": 1152,
     "width": 2048,
     "bytes": 207121,
     "contentType": "image/jpeg",
-    "etag": "fa5f148e4ef966ee594535e40fe7d4ac"
+    "etag": "fa5f148e4ef966ee594535e40fe7d4ac",
+    "variants": [
+      "san-dian-zhong-yin-cha-xian-2-480w.webp",
+      "san-dian-zhong-yin-cha-xian-2-960w.webp",
+      "san-dian-zhong-yin-cha-xian-2-1920w.webp"
+    ]
+  },
+  "san-dian-zhong-yin-cha-xian-480w.webp": {
+    "bytes": 29828,
+    "contentType": "image/webp",
+    "etag": "81fefe6a0b19eea642dbb8e1fef04fae",
+    "height": 270,
+    "width": 480
+  },
+  "san-dian-zhong-yin-cha-xian-960w.webp": {
+    "bytes": 97620,
+    "contentType": "image/webp",
+    "etag": "f39f67a17173a2bbb99525d3f6813991",
+    "height": 540,
+    "width": 960
   },
   "san-dian-zhong-yin-cha-xian.jpg": {
     "height": 1152,
     "width": 2048,
     "bytes": 463210,
     "contentType": "image/jpeg",
-    "etag": "c3f4924a293462a1fb791012d0bb73e4"
+    "etag": "c3f4924a293462a1fb791012d0bb73e4",
+    "variants": [
+      "san-dian-zhong-yin-cha-xian-480w.webp",
+      "san-dian-zhong-yin-cha-xian-960w.webp",
+      "san-dian-zhong-yin-cha-xian-1920w.webp"
+    ]
   }
 }

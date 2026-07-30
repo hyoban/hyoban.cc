@@ -1,9 +1,27 @@
 {
+  "hai-mai-le-xiang-ji-xi-wang-zi-ji-bu-480w.webp": {
+    "bytes": 17644,
+    "contentType": "image/webp",
+    "etag": "560bef7b4aeb3d1a64c87709562e1fed",
+    "height": 358,
+    "width": 480
+  },
+  "hai-mai-le-xiang-ji-xi-wang-zi-ji-bu-960w.webp": {
+    "bytes": 41112,
+    "contentType": "image/webp",
+    "etag": "954e3aa0dc76ef5f109ef0e655b0502c",
+    "height": 716,
+    "width": 960
+  },
   "hai-mai-le-xiang-ji-xi-wang-zi-ji-bu.jpg": {
     "height": 879,
     "width": 1179,
     "bytes": 77841,
     "contentType": "image/jpeg",
-    "etag": "f44d8214a5afc8e3706c9734c411ef7d"
+    "etag": "f44d8214a5afc8e3706c9734c411ef7d",
+    "variants": [
+      "hai-mai-le-xiang-ji-xi-wang-zi-ji-bu-480w.webp",
+      "hai-mai-le-xiang-ji-xi-wang-zi-ji-bu-960w.webp"
+    ]
   }
 }

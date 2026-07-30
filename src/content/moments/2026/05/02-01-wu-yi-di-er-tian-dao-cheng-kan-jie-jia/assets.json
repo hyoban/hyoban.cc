@@ -1,44 +1,152 @@
 {
+  "wu-yi-di-er-tian-dao-cheng-kan-jie-jia-2-480w.webp": {
+    "bytes": 26528,
+    "contentType": "image/webp",
+    "etag": "0116b1d9688f5232085122ef067e12d8",
+    "height": 360,
+    "width": 480
+  },
+  "wu-yi-di-er-tian-dao-cheng-kan-jie-jia-2-960w.webp": {
+    "bytes": 100004,
+    "contentType": "image/webp",
+    "etag": "79b6c48c061cb893dd7cf9a827c68105",
+    "height": 720,
+    "width": 960
+  },
   "wu-yi-di-er-tian-dao-cheng-kan-jie-jia-2.jpg": {
     "height": 960,
     "width": 1280,
     "bytes": 164883,
     "contentType": "image/jpeg",
-    "etag": "0ffdba35f2accd58bdc6103cb2396d6d"
+    "etag": "0ffdba35f2accd58bdc6103cb2396d6d",
+    "variants": [
+      "wu-yi-di-er-tian-dao-cheng-kan-jie-jia-2-480w.webp",
+      "wu-yi-di-er-tian-dao-cheng-kan-jie-jia-2-960w.webp"
+    ]
+  },
+  "wu-yi-di-er-tian-dao-cheng-kan-jie-jia-3-480w.webp": {
+    "bytes": 19736,
+    "contentType": "image/webp",
+    "etag": "5c3679a018000ffb3d096e13f8ad631f",
+    "height": 360,
+    "width": 480
+  },
+  "wu-yi-di-er-tian-dao-cheng-kan-jie-jia-3-960w.webp": {
+    "bytes": 61614,
+    "contentType": "image/webp",
+    "etag": "a28910b63eaeaeb0abe11afe61c147ac",
+    "height": 720,
+    "width": 960
   },
   "wu-yi-di-er-tian-dao-cheng-kan-jie-jia-3.jpg": {
     "height": 960,
     "width": 1280,
     "bytes": 115311,
     "contentType": "image/jpeg",
-    "etag": "a1070379a3b3d89898c30019cec9c7ba"
+    "etag": "a1070379a3b3d89898c30019cec9c7ba",
+    "variants": [
+      "wu-yi-di-er-tian-dao-cheng-kan-jie-jia-3-480w.webp",
+      "wu-yi-di-er-tian-dao-cheng-kan-jie-jia-3-960w.webp"
+    ]
+  },
+  "wu-yi-di-er-tian-dao-cheng-kan-jie-jia-4-480w.webp": {
+    "bytes": 28046,
+    "contentType": "image/webp",
+    "etag": "66d38ca70ba5e6d0b656ad09c49068d2",
+    "height": 360,
+    "width": 480
+  },
+  "wu-yi-di-er-tian-dao-cheng-kan-jie-jia-4-960w.webp": {
+    "bytes": 84988,
+    "contentType": "image/webp",
+    "etag": "7e1cec3f9c3ab098300716bd51d7dfbe",
+    "height": 720,
+    "width": 960
   },
   "wu-yi-di-er-tian-dao-cheng-kan-jie-jia-4.jpg": {
     "height": 960,
     "width": 1280,
     "bytes": 150224,
     "contentType": "image/jpeg",
-    "etag": "4182459f19a76f02aa706a5f9323b0a8"
+    "etag": "4182459f19a76f02aa706a5f9323b0a8",
+    "variants": [
+      "wu-yi-di-er-tian-dao-cheng-kan-jie-jia-4-480w.webp",
+      "wu-yi-di-er-tian-dao-cheng-kan-jie-jia-4-960w.webp"
+    ]
+  },
+  "wu-yi-di-er-tian-dao-cheng-kan-jie-jia-480w.webp": {
+    "bytes": 24830,
+    "contentType": "image/webp",
+    "etag": "e7e72382359b790d36e4705c52b51445",
+    "height": 360,
+    "width": 480
+  },
+  "wu-yi-di-er-tian-dao-cheng-kan-jie-jia-5-480w.webp": {
+    "bytes": 18678,
+    "contentType": "image/webp",
+    "etag": "13f314fcd0c9e7e7effcee6ce418f314",
+    "height": 360,
+    "width": 480
+  },
+  "wu-yi-di-er-tian-dao-cheng-kan-jie-jia-5-960w.webp": {
+    "bytes": 51260,
+    "contentType": "image/webp",
+    "etag": "60a14dee6a9fc55a82fd26d0967df58e",
+    "height": 720,
+    "width": 960
   },
   "wu-yi-di-er-tian-dao-cheng-kan-jie-jia-5.jpg": {
     "height": 960,
     "width": 1280,
     "bytes": 99745,
     "contentType": "image/jpeg",
-    "etag": "bc8b8aa397f6b4160f4ecf87b052e252"
+    "etag": "bc8b8aa397f6b4160f4ecf87b052e252",
+    "variants": [
+      "wu-yi-di-er-tian-dao-cheng-kan-jie-jia-5-480w.webp",
+      "wu-yi-di-er-tian-dao-cheng-kan-jie-jia-5-960w.webp"
+    ]
+  },
+  "wu-yi-di-er-tian-dao-cheng-kan-jie-jia-6-480w.webp": {
+    "bytes": 13780,
+    "contentType": "image/webp",
+    "etag": "6fa04a349facddb2768493dceb250810",
+    "height": 360,
+    "width": 480
+  },
+  "wu-yi-di-er-tian-dao-cheng-kan-jie-jia-6-960w.webp": {
+    "bytes": 36706,
+    "contentType": "image/webp",
+    "etag": "d344e0e41a1c3795cb601ec2a221c73b",
+    "height": 720,
+    "width": 960
   },
   "wu-yi-di-er-tian-dao-cheng-kan-jie-jia-6.jpg": {
     "height": 960,
     "width": 1280,
     "bytes": 77030,
     "contentType": "image/jpeg",
-    "etag": "bba8f8c3644dee288b72d8e6bcbe7a6b"
+    "etag": "bba8f8c3644dee288b72d8e6bcbe7a6b",
+    "variants": [
+      "wu-yi-di-er-tian-dao-cheng-kan-jie-jia-6-480w.webp",
+      "wu-yi-di-er-tian-dao-cheng-kan-jie-jia-6-960w.webp"
+    ]
+  },
+  "wu-yi-di-er-tian-dao-cheng-kan-jie-jia-960w.webp": {
+    "bytes": 102730,
+    "contentType": "image/webp",
+    "etag": "8a9ecbd7ea6ab5ac4ef218b963aa2652",
+    "height": 720,
+    "width": 960
   },
   "wu-yi-di-er-tian-dao-cheng-kan-jie-jia.jpg": {
     "height": 960,
     "width": 1280,
     "bytes": 181355,
     "contentType": "image/jpeg",
-    "etag": "cabd75e8ecfa3231d5970be167a9da56"
+    "etag": "cabd75e8ecfa3231d5970be167a9da56",
+    "variants": [
+      "wu-yi-di-er-tian-dao-cheng-kan-jie-jia-480w.webp",
+      "wu-yi-di-er-tian-dao-cheng-kan-jie-jia-960w.webp"
+    ]
   }
 }

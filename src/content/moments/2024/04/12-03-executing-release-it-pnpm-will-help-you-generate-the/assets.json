@@ -1,9 +1,27 @@
 {
+  "executing-release-it-pnpm-will-help-you-generate-the-480w.webp": {
+    "bytes": 15736,
+    "contentType": "image/webp",
+    "etag": "4120a9b7d1bee3c70bc5b91b12e4c3c4",
+    "height": 422,
+    "width": 480
+  },
+  "executing-release-it-pnpm-will-help-you-generate-the-960w.webp": {
+    "bytes": 41318,
+    "contentType": "image/webp",
+    "etag": "4acd208ed3c6f90dbaa04db36adff74b",
+    "height": 844,
+    "width": 960
+  },
   "executing-release-it-pnpm-will-help-you-generate-the.jpg": {
     "height": 1436,
     "width": 1634,
     "bytes": 137609,
     "contentType": "image/jpeg",
-    "etag": "13f5a03482c0bfeb2e6c942b7bb99bb3"
+    "etag": "13f5a03482c0bfeb2e6c942b7bb99bb3",
+    "variants": [
+      "executing-release-it-pnpm-will-help-you-generate-the-480w.webp",
+      "executing-release-it-pnpm-will-help-you-generate-the-960w.webp"
+    ]
   }
 }

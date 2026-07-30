@@ -1,9 +1,27 @@
 {
+  "eslint-vscode-you-ge-eslint-codeactionsonsave-rules-de-480w.webp": {
+    "bytes": 5046,
+    "contentType": "image/webp",
+    "etag": "c1ad9a5c710e62735eab372f4e2e0631",
+    "height": 347,
+    "width": 480
+  },
+  "eslint-vscode-you-ge-eslint-codeactionsonsave-rules-de-960w.webp": {
+    "bytes": 12002,
+    "contentType": "image/webp",
+    "etag": "e5d31f08d4b1a5a1b04a720e3a31829c",
+    "height": 694,
+    "width": 960
+  },
   "eslint-vscode-you-ge-eslint-codeactionsonsave-rules-de.jpg": {
     "height": 758,
     "width": 1048,
     "bytes": 33500,
     "contentType": "image/jpeg",
-    "etag": "2064e19c3eac0f24949cdcc9b5b148c6"
+    "etag": "2064e19c3eac0f24949cdcc9b5b148c6",
+    "variants": [
+      "eslint-vscode-you-ge-eslint-codeactionsonsave-rules-de-480w.webp",
+      "eslint-vscode-you-ge-eslint-codeactionsonsave-rules-de-960w.webp"
+    ]
   }
 }

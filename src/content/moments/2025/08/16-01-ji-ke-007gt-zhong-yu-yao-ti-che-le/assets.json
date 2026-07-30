@@ -1,9 +1,27 @@
 {
+  "ji-ke-007gt-zhong-yu-yao-ti-che-le-480w.webp": {
+    "bytes": 22502,
+    "contentType": "image/webp",
+    "etag": "b83804263bef3eb371171835b6c4bf03",
+    "height": 1040,
+    "width": 480
+  },
+  "ji-ke-007gt-zhong-yu-yao-ti-che-le-960w.webp": {
+    "bytes": 50450,
+    "contentType": "image/webp",
+    "etag": "a760eb2b2e45405ebd87a14c3dc066ea",
+    "height": 2081,
+    "width": 960
+  },
   "ji-ke-007gt-zhong-yu-yao-ti-che-le.webp": {
     "height": 2341,
     "width": 1080,
     "bytes": 84758,
     "contentType": "image/webp",
-    "etag": "744f744a45787a0dedcbe2b94dae3ce2"
+    "etag": "744f744a45787a0dedcbe2b94dae3ce2",
+    "variants": [
+      "ji-ke-007gt-zhong-yu-yao-ti-che-le-480w.webp",
+      "ji-ke-007gt-zhong-yu-yao-ti-che-le-960w.webp"
+    ]
   }
 }

@@ -1,16 +1,52 @@
 {
+  "shi-de-lu-xing-jiu-shi-huan-ge-di-fang-2-480w.webp": {
+    "bytes": 19632,
+    "contentType": "image/webp",
+    "etag": "fc81e8ffd429711900411c6407329f38",
+    "height": 270,
+    "width": 480
+  },
+  "shi-de-lu-xing-jiu-shi-huan-ge-di-fang-2-960w.webp": {
+    "bytes": 56866,
+    "contentType": "image/webp",
+    "etag": "0dbab9687bdcaa07d2f06d75430a8869",
+    "height": 540,
+    "width": 960
+  },
   "shi-de-lu-xing-jiu-shi-huan-ge-di-fang-2.jpg": {
     "height": 1080,
     "width": 1920,
     "bytes": 232151,
     "contentType": "image/jpeg",
-    "etag": "544cc3a0ec3ca14e1bf3a8850a9cbe20"
+    "etag": "544cc3a0ec3ca14e1bf3a8850a9cbe20",
+    "variants": [
+      "shi-de-lu-xing-jiu-shi-huan-ge-di-fang-2-480w.webp",
+      "shi-de-lu-xing-jiu-shi-huan-ge-di-fang-2-960w.webp"
+    ]
+  },
+  "shi-de-lu-xing-jiu-shi-huan-ge-di-fang-480w.webp": {
+    "bytes": 46412,
+    "contentType": "image/webp",
+    "etag": "a7399b2bc1b5fc4aed9e12cb53555406",
+    "height": 853,
+    "width": 480
+  },
+  "shi-de-lu-xing-jiu-shi-huan-ge-di-fang-960w.webp": {
+    "bytes": 118830,
+    "contentType": "image/webp",
+    "etag": "865810194630f064a6fa1135fa89d657",
+    "height": 1707,
+    "width": 960
   },
   "shi-de-lu-xing-jiu-shi-huan-ge-di-fang.jpg": {
     "height": 2048,
     "width": 1152,
     "bytes": 280279,
     "contentType": "image/jpeg",
-    "etag": "dc28e9ded90d073f5cfc31a0ff646439"
+    "etag": "dc28e9ded90d073f5cfc31a0ff646439",
+    "variants": [
+      "shi-de-lu-xing-jiu-shi-huan-ge-di-fang-480w.webp",
+      "shi-de-lu-xing-jiu-shi-huan-ge-di-fang-960w.webp"
+    ]
   }
 }

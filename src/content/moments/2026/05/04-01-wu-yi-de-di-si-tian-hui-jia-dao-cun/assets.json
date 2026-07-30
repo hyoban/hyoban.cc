@@ -1,23 +1,77 @@
 {
+  "wu-yi-de-di-si-tian-hui-jia-dao-cun-2-480w.webp": {
+    "bytes": 54776,
+    "contentType": "image/webp",
+    "etag": "db57ba2847348b5500214481ae87a60c",
+    "height": 360,
+    "width": 480
+  },
+  "wu-yi-de-di-si-tian-hui-jia-dao-cun-2-960w.webp": {
+    "bytes": 209164,
+    "contentType": "image/webp",
+    "etag": "fd084e0fc9a6ee9b8bb1dc3cc125b6ad",
+    "height": 719,
+    "width": 960
+  },
   "wu-yi-de-di-si-tian-hui-jia-dao-cun-2.jpg": {
     "height": 959,
     "width": 1280,
     "bytes": 295807,
     "contentType": "image/jpeg",
-    "etag": "20c14fb337fa8e3d336e44294acb98b0"
+    "etag": "20c14fb337fa8e3d336e44294acb98b0",
+    "variants": [
+      "wu-yi-de-di-si-tian-hui-jia-dao-cun-2-480w.webp",
+      "wu-yi-de-di-si-tian-hui-jia-dao-cun-2-960w.webp"
+    ]
+  },
+  "wu-yi-de-di-si-tian-hui-jia-dao-cun-3-480w.webp": {
+    "bytes": 39292,
+    "contentType": "image/webp",
+    "etag": "318af2ea458cd1e1531a3033247f22a5",
+    "height": 360,
+    "width": 480
+  },
+  "wu-yi-de-di-si-tian-hui-jia-dao-cun-3-960w.webp": {
+    "bytes": 151336,
+    "contentType": "image/webp",
+    "etag": "e83ca81d39daf08777e0cc9a0591328a",
+    "height": 719,
+    "width": 960
   },
   "wu-yi-de-di-si-tian-hui-jia-dao-cun-3.jpg": {
     "height": 959,
     "width": 1280,
     "bytes": 233779,
     "contentType": "image/jpeg",
-    "etag": "933fac56680728060f954bdc4186d4dd"
+    "etag": "933fac56680728060f954bdc4186d4dd",
+    "variants": [
+      "wu-yi-de-di-si-tian-hui-jia-dao-cun-3-480w.webp",
+      "wu-yi-de-di-si-tian-hui-jia-dao-cun-3-960w.webp"
+    ]
+  },
+  "wu-yi-de-di-si-tian-hui-jia-dao-cun-480w.webp": {
+    "bytes": 55000,
+    "contentType": "image/webp",
+    "etag": "5b461ed2c336ecf53fe6106b76ecd7b3",
+    "height": 480,
+    "width": 480
+  },
+  "wu-yi-de-di-si-tian-hui-jia-dao-cun-960w.webp": {
+    "bytes": 190314,
+    "contentType": "image/webp",
+    "etag": "67a9c38a70d33af1986665cd1eaccff2",
+    "height": 960,
+    "width": 960
   },
   "wu-yi-de-di-si-tian-hui-jia-dao-cun.jpg": {
     "height": 1280,
     "width": 1280,
     "bytes": 304803,
     "contentType": "image/jpeg",
-    "etag": "e837db03232572b6ed8d1dc68dca0d48"
+    "etag": "e837db03232572b6ed8d1dc68dca0d48",
+    "variants": [
+      "wu-yi-de-di-si-tian-hui-jia-dao-cun-480w.webp",
+      "wu-yi-de-di-si-tian-hui-jia-dao-cun-960w.webp"
+    ]
   }
 }

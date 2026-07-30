@@ -1,30 +1,134 @@
 {
+  "dao-an-ji-le-wo-ai-gan-tiao-mian-1920w.webp": {
+    "bytes": 487264,
+    "contentType": "image/webp",
+    "etag": "030b1d03bdedb6ecb03e8c063809e02b",
+    "height": 1440,
+    "width": 1920
+  },
+  "dao-an-ji-le-wo-ai-gan-tiao-mian-2-1920w.webp": {
+    "bytes": 1029706,
+    "contentType": "image/webp",
+    "etag": "e590aca3e35f098bf2bb270703b14af3",
+    "height": 1440,
+    "width": 1920
+  },
+  "dao-an-ji-le-wo-ai-gan-tiao-mian-2-480w.webp": {
+    "bytes": 75778,
+    "contentType": "image/webp",
+    "etag": "5a30e0bcb20dc5e897618027f57e2be5",
+    "height": 360,
+    "width": 480
+  },
+  "dao-an-ji-le-wo-ai-gan-tiao-mian-2-960w.webp": {
+    "bytes": 306012,
+    "contentType": "image/webp",
+    "etag": "0442ce738702f4d5b389e88429318642",
+    "height": 720,
+    "width": 960
+  },
   "dao-an-ji-le-wo-ai-gan-tiao-mian-2.jpg": {
     "height": 1536,
     "width": 2048,
     "bytes": 1194909,
     "contentType": "image/jpeg",
-    "etag": "26403dd3e4f3f1b3c1166b9781d0ddb0"
+    "etag": "26403dd3e4f3f1b3c1166b9781d0ddb0",
+    "variants": [
+      "dao-an-ji-le-wo-ai-gan-tiao-mian-2-480w.webp",
+      "dao-an-ji-le-wo-ai-gan-tiao-mian-2-960w.webp",
+      "dao-an-ji-le-wo-ai-gan-tiao-mian-2-1920w.webp"
+    ]
+  },
+  "dao-an-ji-le-wo-ai-gan-tiao-mian-3-1920w.webp": {
+    "bytes": 155740,
+    "contentType": "image/webp",
+    "etag": "902adf26e2564d8fcd0dbf48a582a1cd",
+    "height": 1440,
+    "width": 1920
+  },
+  "dao-an-ji-le-wo-ai-gan-tiao-mian-3-480w.webp": {
+    "bytes": 22962,
+    "contentType": "image/webp",
+    "etag": "5c1b100333946fc4e1334a15e8fd04a9",
+    "height": 360,
+    "width": 480
+  },
+  "dao-an-ji-le-wo-ai-gan-tiao-mian-3-960w.webp": {
+    "bytes": 60344,
+    "contentType": "image/webp",
+    "etag": "9d0cb21c67bdc0a5e82604d42c249f87",
+    "height": 720,
+    "width": 960
   },
   "dao-an-ji-le-wo-ai-gan-tiao-mian-3.jpg": {
     "height": 1536,
     "width": 2048,
     "bytes": 334375,
     "contentType": "image/jpeg",
-    "etag": "1ec3f2c2549bb14d3135cc1375723251"
+    "etag": "1ec3f2c2549bb14d3135cc1375723251",
+    "variants": [
+      "dao-an-ji-le-wo-ai-gan-tiao-mian-3-480w.webp",
+      "dao-an-ji-le-wo-ai-gan-tiao-mian-3-960w.webp",
+      "dao-an-ji-le-wo-ai-gan-tiao-mian-3-1920w.webp"
+    ]
+  },
+  "dao-an-ji-le-wo-ai-gan-tiao-mian-4-1920w.webp": {
+    "bytes": 250736,
+    "contentType": "image/webp",
+    "etag": "61cd598e6ca36678a3a6ab42b58382fe",
+    "height": 1440,
+    "width": 1920
+  },
+  "dao-an-ji-le-wo-ai-gan-tiao-mian-4-480w.webp": {
+    "bytes": 35704,
+    "contentType": "image/webp",
+    "etag": "30b1955fba63a8ebd5e35caf90ba518f",
+    "height": 360,
+    "width": 480
+  },
+  "dao-an-ji-le-wo-ai-gan-tiao-mian-4-960w.webp": {
+    "bytes": 97684,
+    "contentType": "image/webp",
+    "etag": "2cc0d5f11e9805a1e2e23ba5272e417c",
+    "height": 720,
+    "width": 960
   },
   "dao-an-ji-le-wo-ai-gan-tiao-mian-4.jpg": {
     "height": 1536,
     "width": 2048,
     "bytes": 469490,
     "contentType": "image/jpeg",
-    "etag": "9119c163b6a6f25faba082402d3baeb0"
+    "etag": "9119c163b6a6f25faba082402d3baeb0",
+    "variants": [
+      "dao-an-ji-le-wo-ai-gan-tiao-mian-4-480w.webp",
+      "dao-an-ji-le-wo-ai-gan-tiao-mian-4-960w.webp",
+      "dao-an-ji-le-wo-ai-gan-tiao-mian-4-1920w.webp"
+    ]
+  },
+  "dao-an-ji-le-wo-ai-gan-tiao-mian-480w.webp": {
+    "bytes": 39650,
+    "contentType": "image/webp",
+    "etag": "e0b7ad0d88e60f9613cd59bdd7c9bb06",
+    "height": 360,
+    "width": 480
+  },
+  "dao-an-ji-le-wo-ai-gan-tiao-mian-960w.webp": {
+    "bytes": 142386,
+    "contentType": "image/webp",
+    "etag": "4e7e2f1231854884f336f251cdb2577a",
+    "height": 720,
+    "width": 960
   },
   "dao-an-ji-le-wo-ai-gan-tiao-mian.jpg": {
     "height": 1536,
     "width": 2048,
     "bytes": 698024,
     "contentType": "image/jpeg",
-    "etag": "b284e9ff74d27c92441630c5506b40b3"
+    "etag": "b284e9ff74d27c92441630c5506b40b3",
+    "variants": [
+      "dao-an-ji-le-wo-ai-gan-tiao-mian-480w.webp",
+      "dao-an-ji-le-wo-ai-gan-tiao-mian-960w.webp",
+      "dao-an-ji-le-wo-ai-gan-tiao-mian-1920w.webp"
+    ]
   }
 }

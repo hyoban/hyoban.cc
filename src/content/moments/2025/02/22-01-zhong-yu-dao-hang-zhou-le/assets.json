@@ -1,9 +1,27 @@
 {
+  "zhong-yu-dao-hang-zhou-le-480w.webp": {
+    "bytes": 58570,
+    "contentType": "image/webp",
+    "etag": "f378b95c8e6b45156a29e89e1e4e2c6e",
+    "height": 853,
+    "width": 480
+  },
+  "zhong-yu-dao-hang-zhou-le-960w.webp": {
+    "bytes": 188494,
+    "contentType": "image/webp",
+    "etag": "2f65e6a909ea95aa84cbe598f5cb2c56",
+    "height": 1707,
+    "width": 960
+  },
   "zhong-yu-dao-hang-zhou-le.jpg": {
     "height": 2048,
     "width": 1152,
     "bytes": 400909,
     "contentType": "image/jpeg",
-    "etag": "96a87947b8ca83adc9897325ef9bb043"
+    "etag": "96a87947b8ca83adc9897325ef9bb043",
+    "variants": [
+      "zhong-yu-dao-hang-zhou-le-480w.webp",
+      "zhong-yu-dao-hang-zhou-le-960w.webp"
+    ]
   }
 }

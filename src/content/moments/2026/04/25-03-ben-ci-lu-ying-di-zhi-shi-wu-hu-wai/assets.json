@@ -1,30 +1,94 @@
 {
+  "ben-ci-lu-ying-di-zhi-shi-wu-hu-wai-2-480w.webp": {
+    "bytes": 12190,
+    "contentType": "image/webp",
+    "etag": "faf4b3fa730d9903c4b6eea94b11c4a7",
+    "height": 360,
+    "width": 480
+  },
+  "ben-ci-lu-ying-di-zhi-shi-wu-hu-wai-2-960w.webp": {
+    "bytes": 48414,
+    "contentType": "image/webp",
+    "etag": "6d8fb0f8b0c37ce03a944072b888b615",
+    "height": 720,
+    "width": 960
+  },
   "ben-ci-lu-ying-di-zhi-shi-wu-hu-wai-2.jpg": {
     "height": 960,
     "width": 1280,
     "bytes": 101695,
     "contentType": "image/jpeg",
-    "etag": "ef1d969e81aa280e0ec214c5a9db0928"
+    "etag": "ef1d969e81aa280e0ec214c5a9db0928",
+    "variants": [
+      "ben-ci-lu-ying-di-zhi-shi-wu-hu-wai-2-480w.webp",
+      "ben-ci-lu-ying-di-zhi-shi-wu-hu-wai-2-960w.webp"
+    ]
+  },
+  "ben-ci-lu-ying-di-zhi-shi-wu-hu-wai-3-480w.webp": {
+    "bytes": 53138,
+    "contentType": "image/webp",
+    "etag": "51afbc88281dc6df72b08fe51aaa4b1c",
+    "height": 640,
+    "width": 480
   },
   "ben-ci-lu-ying-di-zhi-shi-wu-hu-wai-3.jpg": {
     "height": 1280,
     "width": 960,
     "bytes": 189103,
     "contentType": "image/jpeg",
-    "etag": "ac431c7c769d1ef5d03ece3e595b8cc6"
+    "etag": "ac431c7c769d1ef5d03ece3e595b8cc6",
+    "variants": [
+      "ben-ci-lu-ying-di-zhi-shi-wu-hu-wai-3-480w.webp"
+    ]
+  },
+  "ben-ci-lu-ying-di-zhi-shi-wu-hu-wai-4-480w.webp": {
+    "bytes": 35122,
+    "contentType": "image/webp",
+    "etag": "a56ddee70012410ae67e9c25afe907e0",
+    "height": 360,
+    "width": 480
+  },
+  "ben-ci-lu-ying-di-zhi-shi-wu-hu-wai-4-960w.webp": {
+    "bytes": 149896,
+    "contentType": "image/webp",
+    "etag": "b42aa9db10f682d25b87d0d9eb16350b",
+    "height": 720,
+    "width": 960
   },
   "ben-ci-lu-ying-di-zhi-shi-wu-hu-wai-4.jpg": {
     "height": 960,
     "width": 1280,
     "bytes": 250630,
     "contentType": "image/jpeg",
-    "etag": "35cc751aec9887fe2b985dd52aa4838b"
+    "etag": "35cc751aec9887fe2b985dd52aa4838b",
+    "variants": [
+      "ben-ci-lu-ying-di-zhi-shi-wu-hu-wai-4-480w.webp",
+      "ben-ci-lu-ying-di-zhi-shi-wu-hu-wai-4-960w.webp"
+    ]
+  },
+  "ben-ci-lu-ying-di-zhi-shi-wu-hu-wai-480w.webp": {
+    "bytes": 18616,
+    "contentType": "image/webp",
+    "etag": "7867d60ce390f97cd6b5d9782367f6e2",
+    "height": 360,
+    "width": 480
+  },
+  "ben-ci-lu-ying-di-zhi-shi-wu-hu-wai-960w.webp": {
+    "bytes": 82974,
+    "contentType": "image/webp",
+    "etag": "e8130a3f3876d14516bf08c3ab5e72e3",
+    "height": 720,
+    "width": 960
   },
   "ben-ci-lu-ying-di-zhi-shi-wu-hu-wai.jpg": {
     "height": 960,
     "width": 1280,
     "bytes": 142990,
     "contentType": "image/jpeg",
-    "etag": "56fc90b7f967e10ed3d4ac40c9ffb1da"
+    "etag": "56fc90b7f967e10ed3d4ac40c9ffb1da",
+    "variants": [
+      "ben-ci-lu-ying-di-zhi-shi-wu-hu-wai-480w.webp",
+      "ben-ci-lu-ying-di-zhi-shi-wu-hu-wai-960w.webp"
+    ]
   }
 }

@@ -1,9 +1,27 @@
 {
+  "jin-tian-cai-zhi-dao-npx-you-ge-p-de-480w.webp": {
+    "bytes": 2718,
+    "contentType": "image/webp",
+    "etag": "878a2f69cd3c9e9b911f4e3adbca90fa",
+    "height": 229,
+    "width": 480
+  },
+  "jin-tian-cai-zhi-dao-npx-you-ge-p-de-960w.webp": {
+    "bytes": 6196,
+    "contentType": "image/webp",
+    "etag": "58d9bfd958e651db259d809955e9da07",
+    "height": 458,
+    "width": 960
+  },
   "jin-tian-cai-zhi-dao-npx-you-ge-p-de.jpg": {
     "height": 496,
     "width": 1040,
     "bytes": 18355,
     "contentType": "image/jpeg",
-    "etag": "abad22e94bf19ec1833ead636d1c0d37"
+    "etag": "abad22e94bf19ec1833ead636d1c0d37",
+    "variants": [
+      "jin-tian-cai-zhi-dao-npx-you-ge-p-de-480w.webp",
+      "jin-tian-cai-zhi-dao-npx-you-ge-p-de-960w.webp"
+    ]
   }
 }

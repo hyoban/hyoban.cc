@@ -1,16 +1,52 @@
 {
+  "shi-le-xia-yong-mac-mini-lai-dang-self-hosted-2-480w.webp": {
+    "bytes": 8350,
+    "contentType": "image/webp",
+    "etag": "2a6d179f4be23d9fd46bacfe8f81770a",
+    "height": 370,
+    "width": 480
+  },
+  "shi-le-xia-yong-mac-mini-lai-dang-self-hosted-2-960w.webp": {
+    "bytes": 20758,
+    "contentType": "image/webp",
+    "etag": "0bfff7f42f8da2e348699982c672cd7b",
+    "height": 739,
+    "width": 960
+  },
   "shi-le-xia-yong-mac-mini-lai-dang-self-hosted-2.jpg": {
     "height": 1126,
     "width": 1462,
     "bytes": 79865,
     "contentType": "image/jpeg",
-    "etag": "a52b3ba40579801a59b27f8e2265d49e"
+    "etag": "a52b3ba40579801a59b27f8e2265d49e",
+    "variants": [
+      "shi-le-xia-yong-mac-mini-lai-dang-self-hosted-2-480w.webp",
+      "shi-le-xia-yong-mac-mini-lai-dang-self-hosted-2-960w.webp"
+    ]
+  },
+  "shi-le-xia-yong-mac-mini-lai-dang-self-hosted-480w.webp": {
+    "bytes": 8464,
+    "contentType": "image/webp",
+    "etag": "558af67bf5434274a76b37fdea3c9ea2",
+    "height": 365,
+    "width": 480
+  },
+  "shi-le-xia-yong-mac-mini-lai-dang-self-hosted-960w.webp": {
+    "bytes": 21038,
+    "contentType": "image/webp",
+    "etag": "c6f02544d6174a01b1c09a5594217ace",
+    "height": 730,
+    "width": 960
   },
   "shi-le-xia-yong-mac-mini-lai-dang-self-hosted.jpg": {
     "height": 1116,
     "width": 1468,
     "bytes": 79277,
     "contentType": "image/jpeg",
-    "etag": "556f57dc811e4e62cc50b3b4ecf224b5"
+    "etag": "556f57dc811e4e62cc50b3b4ecf224b5",
+    "variants": [
+      "shi-le-xia-yong-mac-mini-lai-dang-self-hosted-480w.webp",
+      "shi-le-xia-yong-mac-mini-lai-dang-self-hosted-960w.webp"
+    ]
   }
 }

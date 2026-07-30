@@ -1,9 +1,27 @@
 {
+  "zuo-tian-lu-ying-jie-shu-zhi-hou-qu-shi-480w.webp": {
+    "bytes": 44154,
+    "contentType": "image/webp",
+    "etag": "b8462e8590a02f3507256d99a10028a3",
+    "height": 360,
+    "width": 480
+  },
+  "zuo-tian-lu-ying-jie-shu-zhi-hou-qu-shi-960w.webp": {
+    "bytes": 140408,
+    "contentType": "image/webp",
+    "etag": "0bbec641c032dd8b3ae65448c1bf5d0a",
+    "height": 719,
+    "width": 960
+  },
   "zuo-tian-lu-ying-jie-shu-zhi-hou-qu-shi.jpg": {
     "height": 959,
     "width": 1280,
     "bytes": 223529,
     "contentType": "image/jpeg",
-    "etag": "c4eb7563563b1b48519bb31aa33de1ce"
+    "etag": "c4eb7563563b1b48519bb31aa33de1ce",
+    "variants": [
+      "zuo-tian-lu-ying-jie-shu-zhi-hou-qu-shi-480w.webp",
+      "zuo-tian-lu-ying-jie-shu-zhi-hou-qu-shi-960w.webp"
+    ]
   }
 }

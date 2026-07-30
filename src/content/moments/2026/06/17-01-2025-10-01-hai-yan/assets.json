@@ -1,23 +1,77 @@
 {
+  "2025-10-01-hai-yan-2-480w.webp": {
+    "bytes": 31704,
+    "contentType": "image/webp",
+    "etag": "794a28f320a923d573e1ff321485283f",
+    "height": 360,
+    "width": 480
+  },
+  "2025-10-01-hai-yan-2-960w.webp": {
+    "bytes": 80636,
+    "contentType": "image/webp",
+    "etag": "590fb62496ea6b88ce60b9bf01dc64b5",
+    "height": 720,
+    "width": 960
+  },
   "2025-10-01-hai-yan-2.webp": {
     "height": 1080,
     "width": 1440,
     "bytes": 220816,
     "contentType": "image/webp",
-    "etag": "96efc8eb2434eedde0b932616e75ae88"
+    "etag": "96efc8eb2434eedde0b932616e75ae88",
+    "variants": [
+      "2025-10-01-hai-yan-2-480w.webp",
+      "2025-10-01-hai-yan-2-960w.webp"
+    ]
+  },
+  "2025-10-01-hai-yan-3-480w.webp": {
+    "bytes": 11604,
+    "contentType": "image/webp",
+    "etag": "b267f69513de919ff7b253042586dafd",
+    "height": 360,
+    "width": 480
+  },
+  "2025-10-01-hai-yan-3-960w.webp": {
+    "bytes": 35590,
+    "contentType": "image/webp",
+    "etag": "fa257718f8c499fab03e8f8d3cc68ca4",
+    "height": 720,
+    "width": 960
   },
   "2025-10-01-hai-yan-3.webp": {
     "height": 1080,
     "width": 1440,
     "bytes": 112550,
     "contentType": "image/webp",
-    "etag": "9d99e61ba0d13f479f59ac88c849a785"
+    "etag": "9d99e61ba0d13f479f59ac88c849a785",
+    "variants": [
+      "2025-10-01-hai-yan-3-480w.webp",
+      "2025-10-01-hai-yan-3-960w.webp"
+    ]
+  },
+  "2025-10-01-hai-yan-480w.webp": {
+    "bytes": 9612,
+    "contentType": "image/webp",
+    "etag": "62c53fe0836c7658bc716af3365e8be8",
+    "height": 640,
+    "width": 480
+  },
+  "2025-10-01-hai-yan-960w.webp": {
+    "bytes": 21782,
+    "contentType": "image/webp",
+    "etag": "8cefdbbc270298dd5a2bca47e1ecc293",
+    "height": 1280,
+    "width": 960
   },
   "2025-10-01-hai-yan.webp": {
     "height": 1440,
     "width": 1080,
     "bytes": 41562,
     "contentType": "image/webp",
-    "etag": "b73cd34002d0d728d7cc2b59d268f1d1"
+    "etag": "b73cd34002d0d728d7cc2b59d268f1d1",
+    "variants": [
+      "2025-10-01-hai-yan-480w.webp",
+      "2025-10-01-hai-yan-960w.webp"
+    ]
   }
 }

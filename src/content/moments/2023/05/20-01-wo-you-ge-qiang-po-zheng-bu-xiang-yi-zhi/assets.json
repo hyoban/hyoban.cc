@@ -1,9 +1,19 @@
 {
+  "wo-you-ge-qiang-po-zheng-bu-xiang-yi-zhi-480w.webp": {
+    "bytes": 23904,
+    "contentType": "image/webp",
+    "etag": "ae7eecf431f68dcf0c35e335c9f60549",
+    "height": 666,
+    "width": 480
+  },
   "wo-you-ge-qiang-po-zheng-bu-xiang-yi-zhi.jpg": {
     "height": 832,
     "width": 600,
     "bytes": 187643,
     "contentType": "image/jpeg",
-    "etag": "a4c65bf9cb4bbcabec0cecfdf162b42b"
+    "etag": "a4c65bf9cb4bbcabec0cecfdf162b42b",
+    "variants": [
+      "wo-you-ge-qiang-po-zheng-bu-xiang-yi-zhi-480w.webp"
+    ]
   }
 }

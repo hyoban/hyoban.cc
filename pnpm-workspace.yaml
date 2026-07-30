@@ -1,6 +1,7 @@
 allowBuilds:
   bufferutil: false
   esbuild: true
+  ffmpeg-static: true
   sharp: true
   utf-8-validate: false
   workerd: true
@@ -9,5 +10,6 @@ minimumReleaseAge: 0
 
 onlyBuiltDependencies:
   - esbuild
+  - ffmpeg-static
   - sharp
   - workerd

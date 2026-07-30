@@ -1,9 +1,19 @@
 {
+  "jiu-gan-jue-hen-ku-cai-zhu-yi-dao-shi-480w.webp": {
+    "bytes": 8474,
+    "contentType": "image/webp",
+    "etag": "535c85c1d7402837f8d42b9902a8ee52",
+    "height": 247,
+    "width": 480
+  },
   "jiu-gan-jue-hen-ku-cai-zhu-yi-dao-shi.png": {
     "height": 254,
     "width": 494,
     "bytes": 43679,
     "contentType": "image/png",
-    "etag": "e4fa1a199c442fee6b94436a46bb6589"
+    "etag": "e4fa1a199c442fee6b94436a46bb6589",
+    "variants": [
+      "jiu-gan-jue-hen-ku-cai-zhu-yi-dao-shi-480w.webp"
+    ]
   }
 }

@@ -1,9 +1,35 @@
 {
+  "zui-hou-mai-le-jie-yin-xing-guang-xian-ba-1920w.webp": {
+    "bytes": 61570,
+    "contentType": "image/webp",
+    "etag": "158144ab8a0873074b602e173b5b6921",
+    "height": 1013,
+    "width": 1920
+  },
+  "zui-hou-mai-le-jie-yin-xing-guang-xian-ba-480w.webp": {
+    "bytes": 9614,
+    "contentType": "image/webp",
+    "etag": "4b46b39b6e0f527b57d113453a71dd19",
+    "height": 253,
+    "width": 480
+  },
+  "zui-hou-mai-le-jie-yin-xing-guang-xian-ba-960w.webp": {
+    "bytes": 23986,
+    "contentType": "image/webp",
+    "etag": "bea98feaaef385860dcf5441dfae8732",
+    "height": 506,
+    "width": 960
+  },
   "zui-hou-mai-le-jie-yin-xing-guang-xian-ba.jpg": {
     "height": 1080,
     "width": 2048,
     "bytes": 177259,
     "contentType": "image/jpeg",
-    "etag": "4ca5e97d74d5cce80b90b95354ad0352"
+    "etag": "4ca5e97d74d5cce80b90b95354ad0352",
+    "variants": [
+      "zui-hou-mai-le-jie-yin-xing-guang-xian-ba-480w.webp",
+      "zui-hou-mai-le-jie-yin-xing-guang-xian-ba-960w.webp",
+      "zui-hou-mai-le-jie-yin-xing-guang-xian-ba-1920w.webp"
+    ]
   }
 }

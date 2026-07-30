@@ -1,9 +1,27 @@
 {
+  "zai-ran-hou-wo-jie-zhu-ta-caller-path-de-480w.webp": {
+    "bytes": 10750,
+    "contentType": "image/webp",
+    "etag": "70d9709fb6ca4ebfcb692d63d782e4b5",
+    "height": 398,
+    "width": 480
+  },
+  "zai-ran-hou-wo-jie-zhu-ta-caller-path-de-960w.webp": {
+    "bytes": 28400,
+    "contentType": "image/webp",
+    "etag": "6f772698758868a6cc0ba0ed1179d9a9",
+    "height": 795,
+    "width": 960
+  },
   "zai-ran-hou-wo-jie-zhu-ta-caller-path-de.jpg": {
     "height": 1524,
     "width": 1840,
     "bytes": 131031,
     "contentType": "image/jpeg",
-    "etag": "ed42b484dcbaccff2a3d4c32e5a000a7"
+    "etag": "ed42b484dcbaccff2a3d4c32e5a000a7",
+    "variants": [
+      "zai-ran-hou-wo-jie-zhu-ta-caller-path-de-480w.webp",
+      "zai-ran-hou-wo-jie-zhu-ta-caller-path-de-960w.webp"
+    ]
   }
 }

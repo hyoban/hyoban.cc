@@ -1,30 +1,134 @@
 {
+  "yu-cun-na-tiao-lu-ting-che-tai-nan-le-1920w.webp": {
+    "bytes": 597834,
+    "contentType": "image/webp",
+    "etag": "dcd7d7a314b156807c99b1e7676df54e",
+    "height": 1440,
+    "width": 1920
+  },
+  "yu-cun-na-tiao-lu-ting-che-tai-nan-le-2-1920w.webp": {
+    "bytes": 318262,
+    "contentType": "image/webp",
+    "etag": "435cc272dab6c7161984a8c1bfcf35df",
+    "height": 1440,
+    "width": 1920
+  },
+  "yu-cun-na-tiao-lu-ting-che-tai-nan-le-2-480w.webp": {
+    "bytes": 25920,
+    "contentType": "image/webp",
+    "etag": "ac59aaf855f12c25d070fcf43edc7163",
+    "height": 360,
+    "width": 480
+  },
+  "yu-cun-na-tiao-lu-ting-che-tai-nan-le-2-960w.webp": {
+    "bytes": 90578,
+    "contentType": "image/webp",
+    "etag": "c84d769c9be0a8c6d66040ac637e8c14",
+    "height": 720,
+    "width": 960
+  },
   "yu-cun-na-tiao-lu-ting-che-tai-nan-le-2.jpg": {
     "height": 1536,
     "width": 2048,
     "bytes": 524765,
     "contentType": "image/jpeg",
-    "etag": "487268a049076ea71c920b502bf9b9b1"
+    "etag": "487268a049076ea71c920b502bf9b9b1",
+    "variants": [
+      "yu-cun-na-tiao-lu-ting-che-tai-nan-le-2-480w.webp",
+      "yu-cun-na-tiao-lu-ting-che-tai-nan-le-2-960w.webp",
+      "yu-cun-na-tiao-lu-ting-che-tai-nan-le-2-1920w.webp"
+    ]
+  },
+  "yu-cun-na-tiao-lu-ting-che-tai-nan-le-3-1920w.webp": {
+    "bytes": 368332,
+    "contentType": "image/webp",
+    "etag": "5d5620600b5329f954a1b69ace847d25",
+    "height": 1440,
+    "width": 1920
+  },
+  "yu-cun-na-tiao-lu-ting-che-tai-nan-le-3-480w.webp": {
+    "bytes": 31298,
+    "contentType": "image/webp",
+    "etag": "14da5ea351793c50374556a9b6ef0775",
+    "height": 360,
+    "width": 480
+  },
+  "yu-cun-na-tiao-lu-ting-che-tai-nan-le-3-960w.webp": {
+    "bytes": 107626,
+    "contentType": "image/webp",
+    "etag": "97d92c4503da6c3eb036bbec2e4e5eef",
+    "height": 720,
+    "width": 960
   },
   "yu-cun-na-tiao-lu-ting-che-tai-nan-le-3.jpg": {
     "height": 1536,
     "width": 2048,
     "bytes": 607600,
     "contentType": "image/jpeg",
-    "etag": "a9406716bbe985684a404751e9f0ee64"
+    "etag": "a9406716bbe985684a404751e9f0ee64",
+    "variants": [
+      "yu-cun-na-tiao-lu-ting-che-tai-nan-le-3-480w.webp",
+      "yu-cun-na-tiao-lu-ting-che-tai-nan-le-3-960w.webp",
+      "yu-cun-na-tiao-lu-ting-che-tai-nan-le-3-1920w.webp"
+    ]
+  },
+  "yu-cun-na-tiao-lu-ting-che-tai-nan-le-4-1920w.webp": {
+    "bytes": 304992,
+    "contentType": "image/webp",
+    "etag": "c97f7a9c3410deddbd02cc6b5a4ceb00",
+    "height": 1440,
+    "width": 1920
+  },
+  "yu-cun-na-tiao-lu-ting-che-tai-nan-le-4-480w.webp": {
+    "bytes": 17764,
+    "contentType": "image/webp",
+    "etag": "df745c408cc82b1a04f96b991af89373",
+    "height": 360,
+    "width": 480
+  },
+  "yu-cun-na-tiao-lu-ting-che-tai-nan-le-4-960w.webp": {
+    "bytes": 75090,
+    "contentType": "image/webp",
+    "etag": "28a2a63432b84bf991ce0e0b8bacb11a",
+    "height": 720,
+    "width": 960
   },
   "yu-cun-na-tiao-lu-ting-che-tai-nan-le-4.jpg": {
     "height": 1536,
     "width": 2048,
     "bytes": 465722,
     "contentType": "image/jpeg",
-    "etag": "eb071aba00aed2edec7faae1fe8b9306"
+    "etag": "eb071aba00aed2edec7faae1fe8b9306",
+    "variants": [
+      "yu-cun-na-tiao-lu-ting-che-tai-nan-le-4-480w.webp",
+      "yu-cun-na-tiao-lu-ting-che-tai-nan-le-4-960w.webp",
+      "yu-cun-na-tiao-lu-ting-che-tai-nan-le-4-1920w.webp"
+    ]
+  },
+  "yu-cun-na-tiao-lu-ting-che-tai-nan-le-480w.webp": {
+    "bytes": 37474,
+    "contentType": "image/webp",
+    "etag": "f85dc3bab529dd8b90bd1073398d89b6",
+    "height": 360,
+    "width": 480
+  },
+  "yu-cun-na-tiao-lu-ting-che-tai-nan-le-960w.webp": {
+    "bytes": 167690,
+    "contentType": "image/webp",
+    "etag": "3f250720745a02c3439b0e65895c1a3a",
+    "height": 720,
+    "width": 960
   },
   "yu-cun-na-tiao-lu-ting-che-tai-nan-le.jpg": {
     "height": 1536,
     "width": 2048,
     "bytes": 791904,
     "contentType": "image/jpeg",
-    "etag": "b9ccd305965f769614b9ff94d6d7dd44"
+    "etag": "b9ccd305965f769614b9ff94d6d7dd44",
+    "variants": [
+      "yu-cun-na-tiao-lu-ting-che-tai-nan-le-480w.webp",
+      "yu-cun-na-tiao-lu-ting-che-tai-nan-le-960w.webp",
+      "yu-cun-na-tiao-lu-ting-che-tai-nan-le-1920w.webp"
+    ]
   }
 }

@@ -1,58 +1,202 @@
 {
+  "duan-wu-zi-jia-lao-jun-shan-pian-2-480w.webp": {
+    "bytes": 25434,
+    "contentType": "image/webp",
+    "etag": "f6476dd7c552f7a3dfb756646e332aa4",
+    "height": 720,
+    "width": 480
+  },
+  "duan-wu-zi-jia-lao-jun-shan-pian-2-960w.webp": {
+    "bytes": 65022,
+    "contentType": "image/webp",
+    "etag": "d1c4df2404646bb5e681623da47f3b6a",
+    "height": 1440,
+    "width": 960
+  },
   "duan-wu-zi-jia-lao-jun-shan-pian-2.webp": {
     "height": 1620,
     "width": 1080,
     "bytes": 171626,
     "contentType": "image/webp",
-    "etag": "a6bf21800526d21bc6925260b276d63d"
+    "etag": "a6bf21800526d21bc6925260b276d63d",
+    "variants": [
+      "duan-wu-zi-jia-lao-jun-shan-pian-2-480w.webp",
+      "duan-wu-zi-jia-lao-jun-shan-pian-2-960w.webp"
+    ]
+  },
+  "duan-wu-zi-jia-lao-jun-shan-pian-3-480w.webp": {
+    "bytes": 12848,
+    "contentType": "image/webp",
+    "etag": "b06d1f5eb6961226a5979249ef476aea",
+    "height": 320,
+    "width": 480
+  },
+  "duan-wu-zi-jia-lao-jun-shan-pian-3-960w.webp": {
+    "bytes": 33138,
+    "contentType": "image/webp",
+    "etag": "d4f96c9dcafd70341457a1328bb684dd",
+    "height": 640,
+    "width": 960
   },
   "duan-wu-zi-jia-lao-jun-shan-pian-3.webp": {
     "height": 1080,
     "width": 1620,
     "bytes": 173658,
     "contentType": "image/webp",
-    "etag": "c0ea3a657603c516e7cdb8053ead6dd0"
+    "etag": "c0ea3a657603c516e7cdb8053ead6dd0",
+    "variants": [
+      "duan-wu-zi-jia-lao-jun-shan-pian-3-480w.webp",
+      "duan-wu-zi-jia-lao-jun-shan-pian-3-960w.webp"
+    ]
+  },
+  "duan-wu-zi-jia-lao-jun-shan-pian-4-480w.webp": {
+    "bytes": 48698,
+    "contentType": "image/webp",
+    "etag": "f59f169d6be86378bb2d984f71fde9f4",
+    "height": 320,
+    "width": 480
+  },
+  "duan-wu-zi-jia-lao-jun-shan-pian-4-960w.webp": {
+    "bytes": 148094,
+    "contentType": "image/webp",
+    "etag": "d8cdfbd711c15708bab9151e4e36de82",
+    "height": 640,
+    "width": 960
   },
   "duan-wu-zi-jia-lao-jun-shan-pian-4.webp": {
     "height": 1080,
     "width": 1620,
     "bytes": 512504,
     "contentType": "image/webp",
-    "etag": "2b5ca93e7ed5bc9951e0290aa885d5af"
+    "etag": "2b5ca93e7ed5bc9951e0290aa885d5af",
+    "variants": [
+      "duan-wu-zi-jia-lao-jun-shan-pian-4-480w.webp",
+      "duan-wu-zi-jia-lao-jun-shan-pian-4-960w.webp"
+    ]
+  },
+  "duan-wu-zi-jia-lao-jun-shan-pian-480w.webp": {
+    "bytes": 41042,
+    "contentType": "image/webp",
+    "etag": "95bfa449cc1b7ea74a355d3d41ba26c3",
+    "height": 320,
+    "width": 480
+  },
+  "duan-wu-zi-jia-lao-jun-shan-pian-5-480w.webp": {
+    "bytes": 21838,
+    "contentType": "image/webp",
+    "etag": "ce207d35e0e79617ff4ac131c5bc994a",
+    "height": 720,
+    "width": 480
+  },
+  "duan-wu-zi-jia-lao-jun-shan-pian-5-960w.webp": {
+    "bytes": 53538,
+    "contentType": "image/webp",
+    "etag": "b91a8a99d7604f79def1a9a9847b4a88",
+    "height": 1440,
+    "width": 960
   },
   "duan-wu-zi-jia-lao-jun-shan-pian-5.webp": {
     "height": 1620,
     "width": 1080,
     "bytes": 136542,
     "contentType": "image/webp",
-    "etag": "98b8a7c5777dd1c73064d04dc43545d1"
+    "etag": "98b8a7c5777dd1c73064d04dc43545d1",
+    "variants": [
+      "duan-wu-zi-jia-lao-jun-shan-pian-5-480w.webp",
+      "duan-wu-zi-jia-lao-jun-shan-pian-5-960w.webp"
+    ]
+  },
+  "duan-wu-zi-jia-lao-jun-shan-pian-6-480w.webp": {
+    "bytes": 24064,
+    "contentType": "image/webp",
+    "etag": "09be318c36627d6b5395b3d7b32c102d",
+    "height": 320,
+    "width": 480
+  },
+  "duan-wu-zi-jia-lao-jun-shan-pian-6-960w.webp": {
+    "bytes": 78594,
+    "contentType": "image/webp",
+    "etag": "2dd5b78e4b5fd60b42845027de211d63",
+    "height": 640,
+    "width": 960
   },
   "duan-wu-zi-jia-lao-jun-shan-pian-6.webp": {
     "height": 1080,
     "width": 1620,
     "bytes": 345906,
     "contentType": "image/webp",
-    "etag": "db8f5f72aa88cee44b1bd58e309adaa3"
+    "etag": "db8f5f72aa88cee44b1bd58e309adaa3",
+    "variants": [
+      "duan-wu-zi-jia-lao-jun-shan-pian-6-480w.webp",
+      "duan-wu-zi-jia-lao-jun-shan-pian-6-960w.webp"
+    ]
+  },
+  "duan-wu-zi-jia-lao-jun-shan-pian-7-480w.webp": {
+    "bytes": 24154,
+    "contentType": "image/webp",
+    "etag": "be12ff388d3af1f479b4816b91127be0",
+    "height": 320,
+    "width": 480
+  },
+  "duan-wu-zi-jia-lao-jun-shan-pian-7-960w.webp": {
+    "bytes": 68850,
+    "contentType": "image/webp",
+    "etag": "cafb0a920ca1081b31663d4feff8556b",
+    "height": 640,
+    "width": 960
   },
   "duan-wu-zi-jia-lao-jun-shan-pian-7.webp": {
     "height": 1080,
     "width": 1620,
     "bytes": 275284,
     "contentType": "image/webp",
-    "etag": "0c8f0124979d7749c5a7e46bca9e1a5b"
+    "etag": "0c8f0124979d7749c5a7e46bca9e1a5b",
+    "variants": [
+      "duan-wu-zi-jia-lao-jun-shan-pian-7-480w.webp",
+      "duan-wu-zi-jia-lao-jun-shan-pian-7-960w.webp"
+    ]
+  },
+  "duan-wu-zi-jia-lao-jun-shan-pian-8-480w.webp": {
+    "bytes": 21176,
+    "contentType": "image/webp",
+    "etag": "15a21765963db985d48a0f8f8d6799ca",
+    "height": 320,
+    "width": 480
+  },
+  "duan-wu-zi-jia-lao-jun-shan-pian-8-960w.webp": {
+    "bytes": 54214,
+    "contentType": "image/webp",
+    "etag": "7167a1d4dac62855db378bcd2e95a3c4",
+    "height": 640,
+    "width": 960
   },
   "duan-wu-zi-jia-lao-jun-shan-pian-8.webp": {
     "height": 1080,
     "width": 1620,
     "bytes": 203062,
     "contentType": "image/webp",
-    "etag": "efb768acc46370e0063d46daddd282a9"
+    "etag": "efb768acc46370e0063d46daddd282a9",
+    "variants": [
+      "duan-wu-zi-jia-lao-jun-shan-pian-8-480w.webp",
+      "duan-wu-zi-jia-lao-jun-shan-pian-8-960w.webp"
+    ]
+  },
+  "duan-wu-zi-jia-lao-jun-shan-pian-960w.webp": {
+    "bytes": 128358,
+    "contentType": "image/webp",
+    "etag": "267016b6df063fae255ff98dee2cf8c8",
+    "height": 640,
+    "width": 960
   },
   "duan-wu-zi-jia-lao-jun-shan-pian.webp": {
     "height": 1080,
     "width": 1620,
     "bytes": 493888,
     "contentType": "image/webp",
-    "etag": "5c618cf087c74039e79512566c44ca76"
+    "etag": "5c618cf087c74039e79512566c44ca76",
+    "variants": [
+      "duan-wu-zi-jia-lao-jun-shan-pian-480w.webp",
+      "duan-wu-zi-jia-lao-jun-shan-pian-960w.webp"
+    ]
   }
 }

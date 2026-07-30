@@ -1,9 +1,35 @@
 {
+  "xue-dao-le-che-di-shu-fu-la-1920w.webp": {
+    "bytes": 59244,
+    "contentType": "image/webp",
+    "etag": "0f291d4b91e5ed42fbedbcbf7c30aa6e",
+    "height": 1248,
+    "width": 1920
+  },
+  "xue-dao-le-che-di-shu-fu-la-480w.webp": {
+    "bytes": 6692,
+    "contentType": "image/webp",
+    "etag": "184b00c7aac29d7f0de9801a8b8c5446",
+    "height": 312,
+    "width": 480
+  },
+  "xue-dao-le-che-di-shu-fu-la-960w.webp": {
+    "bytes": 21148,
+    "contentType": "image/webp",
+    "etag": "3f8deed7fab1698fb1f8bb49e26da2ca",
+    "height": 624,
+    "width": 960
+  },
   "xue-dao-le-che-di-shu-fu-la.jpg": {
     "height": 2112,
     "width": 3248,
     "bytes": 266981,
     "contentType": "image/jpeg",
-    "etag": "8020bc92aa72071fe3459524b8cd5a9d"
+    "etag": "8020bc92aa72071fe3459524b8cd5a9d",
+    "variants": [
+      "xue-dao-le-che-di-shu-fu-la-480w.webp",
+      "xue-dao-le-che-di-shu-fu-la-960w.webp",
+      "xue-dao-le-che-di-shu-fu-la-1920w.webp"
+    ]
   }
 }

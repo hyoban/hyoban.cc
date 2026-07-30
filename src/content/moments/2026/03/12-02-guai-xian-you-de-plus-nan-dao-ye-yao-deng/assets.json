@@ -1,9 +1,27 @@
 {
+  "guai-xian-you-de-plus-nan-dao-ye-yao-deng-480w.webp": {
+    "bytes": 5492,
+    "contentType": "image/webp",
+    "etag": "1b42dd83c03a03b0914091fec720b022",
+    "height": 271,
+    "width": 480
+  },
+  "guai-xian-you-de-plus-nan-dao-ye-yao-deng-960w.webp": {
+    "bytes": 11246,
+    "contentType": "image/webp",
+    "etag": "dd8c46d7b8d3fd4d05468426e6f8fbde",
+    "height": 541,
+    "width": 960
+  },
   "guai-xian-you-de-plus-nan-dao-ye-yao-deng.jpg": {
     "height": 665,
     "width": 1179,
     "bytes": 33871,
     "contentType": "image/jpeg",
-    "etag": "d6453867bde0b7e0815e2a0265f8cb7e"
+    "etag": "d6453867bde0b7e0815e2a0265f8cb7e",
+    "variants": [
+      "guai-xian-you-de-plus-nan-dao-ye-yao-deng-480w.webp",
+      "guai-xian-you-de-plus-nan-dao-ye-yao-deng-960w.webp"
+    ]
   }
 }

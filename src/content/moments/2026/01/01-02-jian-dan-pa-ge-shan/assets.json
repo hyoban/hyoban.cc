@@ -1,23 +1,85 @@
 {
+  "jian-dan-pa-ge-shan-1920w.webp": {
+    "bytes": 554356,
+    "contentType": "image/webp",
+    "etag": "e4e32faae3867787e45069e96ffc4df3",
+    "height": 1440,
+    "width": 1920
+  },
+  "jian-dan-pa-ge-shan-2-480w.webp": {
+    "bytes": 36398,
+    "contentType": "image/webp",
+    "etag": "da65b0ba2eb9eab37470f51092a6e888",
+    "height": 640,
+    "width": 480
+  },
+  "jian-dan-pa-ge-shan-2-960w.webp": {
+    "bytes": 116036,
+    "contentType": "image/webp",
+    "etag": "2eed861af3a5b8a83955e295b33fc35b",
+    "height": 1280,
+    "width": 960
+  },
   "jian-dan-pa-ge-shan-2.jpg": {
     "height": 2048,
     "width": 1536,
     "bytes": 402795,
     "contentType": "image/jpeg",
-    "etag": "fb9f604ed4f0e9a651fed6bbb7a59a1a"
+    "etag": "fb9f604ed4f0e9a651fed6bbb7a59a1a",
+    "variants": [
+      "jian-dan-pa-ge-shan-2-480w.webp",
+      "jian-dan-pa-ge-shan-2-960w.webp"
+    ]
+  },
+  "jian-dan-pa-ge-shan-3-480w.webp": {
+    "bytes": 58688,
+    "contentType": "image/webp",
+    "etag": "fc52de93132bc9d37ed9de5f87ad12f8",
+    "height": 640,
+    "width": 480
+  },
+  "jian-dan-pa-ge-shan-3-960w.webp": {
+    "bytes": 186780,
+    "contentType": "image/webp",
+    "etag": "4ca774e561f887ef3486f9748ba1600e",
+    "height": 1280,
+    "width": 960
   },
   "jian-dan-pa-ge-shan-3.jpg": {
     "height": 2048,
     "width": 1536,
     "bytes": 560193,
     "contentType": "image/jpeg",
-    "etag": "c3d1a97178c4d5dfeca127838965be57"
+    "etag": "c3d1a97178c4d5dfeca127838965be57",
+    "variants": [
+      "jian-dan-pa-ge-shan-3-480w.webp",
+      "jian-dan-pa-ge-shan-3-960w.webp"
+    ]
+  },
+  "jian-dan-pa-ge-shan-480w.webp": {
+    "bytes": 49808,
+    "contentType": "image/webp",
+    "etag": "38c06f25fdeb201343146e9e697cefd4",
+    "height": 360,
+    "width": 480
+  },
+  "jian-dan-pa-ge-shan-960w.webp": {
+    "bytes": 183336,
+    "contentType": "image/webp",
+    "etag": "68f013b50f2a7f6b8fc3b4312b7e2733",
+    "height": 720,
+    "width": 960
   },
   "jian-dan-pa-ge-shan.jpg": {
     "height": 1536,
     "width": 2048,
     "bytes": 794270,
     "contentType": "image/jpeg",
-    "etag": "a1572d43d2c750fac243b7fde65becc9"
+    "etag": "a1572d43d2c750fac243b7fde65becc9",
+    "variants": [
+      "jian-dan-pa-ge-shan-480w.webp",
+      "jian-dan-pa-ge-shan-960w.webp",
+      "jian-dan-pa-ge-shan-1920w.webp"
+    ]
   }
 }

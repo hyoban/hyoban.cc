@@ -1,30 +1,118 @@
 {
+  "li-kai-su-zhou-zhi-qian-zong-suan-shi-yue-2-1920w.webp": {
+    "bytes": 249576,
+    "contentType": "image/webp",
+    "etag": "2e496587bbe5790fe8134f472cd1ffe8",
+    "height": 1440,
+    "width": 1920
+  },
+  "li-kai-su-zhou-zhi-qian-zong-suan-shi-yue-2-480w.webp": {
+    "bytes": 19604,
+    "contentType": "image/webp",
+    "etag": "3fc355a698255dbcea6698b210366d44",
+    "height": 360,
+    "width": 480
+  },
+  "li-kai-su-zhou-zhi-qian-zong-suan-shi-yue-2-960w.webp": {
+    "bytes": 68902,
+    "contentType": "image/webp",
+    "etag": "ae0d5c33f48dac7d1d2dab0c3cbde5bd",
+    "height": 720,
+    "width": 960
+  },
   "li-kai-su-zhou-zhi-qian-zong-suan-shi-yue-2.jpg": {
     "height": 1536,
     "width": 2048,
     "bytes": 414943,
     "contentType": "image/jpeg",
-    "etag": "80e4c2af334f2cd22a7fb977b7467f58"
+    "etag": "80e4c2af334f2cd22a7fb977b7467f58",
+    "variants": [
+      "li-kai-su-zhou-zhi-qian-zong-suan-shi-yue-2-480w.webp",
+      "li-kai-su-zhou-zhi-qian-zong-suan-shi-yue-2-960w.webp",
+      "li-kai-su-zhou-zhi-qian-zong-suan-shi-yue-2-1920w.webp"
+    ]
+  },
+  "li-kai-su-zhou-zhi-qian-zong-suan-shi-yue-3-1920w.webp": {
+    "bytes": 238374,
+    "contentType": "image/webp",
+    "etag": "8a839475c3a35a2662f83cde191c20fe",
+    "height": 1440,
+    "width": 1920
+  },
+  "li-kai-su-zhou-zhi-qian-zong-suan-shi-yue-3-480w.webp": {
+    "bytes": 22344,
+    "contentType": "image/webp",
+    "etag": "e27513def3b0d43a60b9c1aa3e021b3b",
+    "height": 360,
+    "width": 480
+  },
+  "li-kai-su-zhou-zhi-qian-zong-suan-shi-yue-3-960w.webp": {
+    "bytes": 74530,
+    "contentType": "image/webp",
+    "etag": "e01e341f8ab924e5d1f4864d0b2ea3ca",
+    "height": 720,
+    "width": 960
   },
   "li-kai-su-zhou-zhi-qian-zong-suan-shi-yue-3.jpg": {
     "height": 1536,
     "width": 2048,
     "bytes": 427211,
     "contentType": "image/jpeg",
-    "etag": "832887d74cd6f404bb47f37411bb4458"
+    "etag": "832887d74cd6f404bb47f37411bb4458",
+    "variants": [
+      "li-kai-su-zhou-zhi-qian-zong-suan-shi-yue-3-480w.webp",
+      "li-kai-su-zhou-zhi-qian-zong-suan-shi-yue-3-960w.webp",
+      "li-kai-su-zhou-zhi-qian-zong-suan-shi-yue-3-1920w.webp"
+    ]
+  },
+  "li-kai-su-zhou-zhi-qian-zong-suan-shi-yue-4-480w.webp": {
+    "bytes": 12680,
+    "contentType": "image/webp",
+    "etag": "defe51585cd486124b505797f6201eed",
+    "height": 640,
+    "width": 480
+  },
+  "li-kai-su-zhou-zhi-qian-zong-suan-shi-yue-4-960w.webp": {
+    "bytes": 31886,
+    "contentType": "image/webp",
+    "etag": "46f93bbc0ae7fd87b8c4d360abe1c49c",
+    "height": 1280,
+    "width": 960
   },
   "li-kai-su-zhou-zhi-qian-zong-suan-shi-yue-4.jpg": {
     "height": 2048,
     "width": 1536,
     "bytes": 207202,
     "contentType": "image/jpeg",
-    "etag": "59f91b44a1fff1f16eabe4b92d6f3679"
+    "etag": "59f91b44a1fff1f16eabe4b92d6f3679",
+    "variants": [
+      "li-kai-su-zhou-zhi-qian-zong-suan-shi-yue-4-480w.webp",
+      "li-kai-su-zhou-zhi-qian-zong-suan-shi-yue-4-960w.webp"
+    ]
+  },
+  "li-kai-su-zhou-zhi-qian-zong-suan-shi-yue-480w.webp": {
+    "bytes": 19404,
+    "contentType": "image/webp",
+    "etag": "8eb8cffa241eb564055035c128911b6b",
+    "height": 640,
+    "width": 480
+  },
+  "li-kai-su-zhou-zhi-qian-zong-suan-shi-yue-960w.webp": {
+    "bytes": 75888,
+    "contentType": "image/webp",
+    "etag": "5b2861d251b8211dc33d212303d99564",
+    "height": 1280,
+    "width": 960
   },
   "li-kai-su-zhou-zhi-qian-zong-suan-shi-yue.jpg": {
     "height": 2048,
     "width": 1536,
     "bytes": 377043,
     "contentType": "image/jpeg",
-    "etag": "209c6ed3ca3e182662abd3bf49af8ccd"
+    "etag": "209c6ed3ca3e182662abd3bf49af8ccd",
+    "variants": [
+      "li-kai-su-zhou-zhi-qian-zong-suan-shi-yue-480w.webp",
+      "li-kai-su-zhou-zhi-qian-zong-suan-shi-yue-960w.webp"
+    ]
   }
 }

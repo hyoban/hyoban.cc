@@ -1,9 +1,27 @@
 {
+  "tai-hao-wan-le-ta-song-shang-lai-zhi-hou-480w.webp": {
+    "bytes": 22114,
+    "contentType": "image/webp",
+    "etag": "d0410c78322e284ac249fbff58c101c8",
+    "height": 640,
+    "width": 480
+  },
+  "tai-hao-wan-le-ta-song-shang-lai-zhi-hou-960w.webp": {
+    "bytes": 78506,
+    "contentType": "image/webp",
+    "etag": "bb1e2e2a34e15bb57fab9d2cfa488298",
+    "height": 1280,
+    "width": 960
+  },
   "tai-hao-wan-le-ta-song-shang-lai-zhi-hou.jpg": {
     "height": 2048,
     "width": 1536,
     "bytes": 337224,
     "contentType": "image/jpeg",
-    "etag": "f47016c159c2343df3f9c71668a1e3a0"
+    "etag": "f47016c159c2343df3f9c71668a1e3a0",
+    "variants": [
+      "tai-hao-wan-le-ta-song-shang-lai-zhi-hou-480w.webp",
+      "tai-hao-wan-le-ta-song-shang-lai-zhi-hou-960w.webp"
+    ]
   }
 }

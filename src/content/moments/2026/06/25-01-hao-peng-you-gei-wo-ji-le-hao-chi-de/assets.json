@@ -1,9 +1,27 @@
 {
+  "hao-peng-you-gei-wo-ji-le-hao-chi-de-480w.webp": {
+    "bytes": 36476,
+    "contentType": "image/webp",
+    "etag": "f646566e58f8adcbf98d31676cf72ecf",
+    "height": 640,
+    "width": 480
+  },
+  "hao-peng-you-gei-wo-ji-le-hao-chi-de-960w.webp": {
+    "bytes": 100226,
+    "contentType": "image/webp",
+    "etag": "2a5b80701b318a3fa5e0bd4689ff71c5",
+    "height": 1280,
+    "width": 960
+  },
   "hao-peng-you-gei-wo-ji-le-hao-chi-de.webp": {
     "height": 1440,
     "width": 1080,
     "bytes": 197882,
     "contentType": "image/webp",
-    "etag": "130bb41fdb97cd734dba217ac94879f3"
+    "etag": "130bb41fdb97cd734dba217ac94879f3",
+    "variants": [
+      "hao-peng-you-gei-wo-ji-le-hao-chi-de-480w.webp",
+      "hao-peng-you-gei-wo-ji-le-hao-chi-de-960w.webp"
+    ]
   }
 }

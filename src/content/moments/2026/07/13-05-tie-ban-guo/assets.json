@@ -1,9 +1,27 @@
 {
+  "tie-ban-guo-480w.webp": {
+    "bytes": 40580,
+    "contentType": "image/webp",
+    "etag": "7ef14ca8d471bbf271d64b9476eff042",
+    "height": 360,
+    "width": 480
+  },
+  "tie-ban-guo-960w.webp": {
+    "bytes": 118998,
+    "contentType": "image/webp",
+    "etag": "3d8a8ca66e1d8532a8325a49f7fc087f",
+    "height": 719,
+    "width": 960
+  },
   "tie-ban-guo.webp": {
     "height": 959,
     "width": 1280,
     "bytes": 180596,
     "contentType": "image/webp",
-    "etag": "3a5bcb264f28675bac6fc6fc1033d02e"
+    "etag": "3a5bcb264f28675bac6fc6fc1033d02e",
+    "variants": [
+      "tie-ban-guo-480w.webp",
+      "tie-ban-guo-960w.webp"
+    ]
   }
 }
