@@ -4,9 +4,18 @@ import { homedir } from 'node:os'
 import { join } from 'node:path'
 import { promisify } from 'node:util'
 
+import {
+  ListObjectsV2Command,
+  S3Client,
+} from '@aws-sdk/client-s3'
+
 const execFile = promisify(execFileCallback)
 
 export async function listR2Objects(options) {
+  if (process.env.R2_ACCESS_KEY_ID || process.env.R2_SECRET_ACCESS_KEY) {
+    return listR2ObjectsWithS3(options)
+  }
+
   const token = await getCloudflareToken(options.root)
   const objects = []
   let cursor
@@ -29,6 +38,47 @@ export async function listR2Objects(options) {
       ? result.result_info.cursor
       : undefined
   } while (cursor)
+
+  return objects
+}
+
+async function listR2ObjectsWithS3(options) {
+  if (!process.env.R2_ACCESS_KEY_ID || !process.env.R2_SECRET_ACCESS_KEY) {
+    throw new Error(
+      'R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY must both be set.',
+    )
+  }
+
+  const client = new S3Client({
+    credentials: {
+      accessKeyId: process.env.R2_ACCESS_KEY_ID,
+      secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
+    },
+    endpoint: `https://${options.accountId}.r2.cloudflarestorage.com`,
+    region: 'auto',
+  })
+  const objects = []
+  let continuationToken
+
+  do {
+    const result = await client.send(new ListObjectsV2Command({
+      Bucket: options.bucket,
+      ContinuationToken: continuationToken,
+      MaxKeys: 1000,
+      Prefix: options.prefix ?? '',
+    }))
+
+    objects.push(...(result.Contents ?? []).map(object => ({
+      etag: object.ETag?.replaceAll('"', '') ?? null,
+      key: object.Key,
+      last_modified: object.LastModified?.toISOString() ?? null,
+      size: object.Size ?? 0,
+      storage_class: object.StorageClass ?? null,
+    })))
+    continuationToken = result.IsTruncated
+      ? result.NextContinuationToken
+      : undefined
+  } while (continuationToken)
 
   return objects
 }

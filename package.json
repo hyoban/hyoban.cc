@@ -21,6 +21,7 @@
     "@astrojs/markdown-remark": "7.2.0",
     "@astrojs/rss": "4.0.18",
     "@astrojs/sitemap": "^3.7.3",
+    "@aws-sdk/client-s3": "^3.1098.0",
     "@egoist/tailwindcss-icons": "^1.9.2",
     "@iconify-json/lucide": "^1.2.114",
     "@iconify-json/simple-icons": "^1.2.87",
