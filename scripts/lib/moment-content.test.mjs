@@ -1,66 +1,59 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { parseMomentDocument } from '../../src/moment-content.ts'
+import { parseMomentDocument } from '../../src/moments/content.ts'
 
 test('parses a canonical Moment through one interface', () => {
   const moment = parseMomentDocument([
     '---',
-    'publishedAt: "2026-07-15T10:03:04+08:00"',
-    'occurredOn: "2026-07-14"',
+    'occurredAt: "2026-07-14T10:03:04+08:00"',
     'location: hefei',
-    'sourceUrl: "https://x.com/hyoban/status/123"',
     'media:',
     '  - type: image',
-    '    file: "image-1.jpg"',
+    '    file: "hefei-skyline.jpg"',
     '    alt: "Marina Bay at dusk"',
     '---',
     '',
     'A canonical moment.',
     '',
-  ].join('\n'), { id: '2026/07/15-1003-note' })
+  ].join('\n'), { id: '2026/07/14-01-hefei-skyline' })
 
   assert.deepEqual(moment, {
     hidden: false,
-    id: '2026/07/15-1003-note',
+    id: '2026/07/14-01-hefei-skyline',
     location: 'hefei',
     media: [{
       alt: 'Marina Bay at dusk',
-      file: 'image-1.jpg',
+      file: 'hefei-skyline.jpg',
       type: 'image',
     }],
-    occurredOn: '2026-07-14',
-    provenance: {
-      url: 'https://x.com/hyoban/status/123',
-    },
-    publishedAt: new Date('2026-07-15T02:03:04.000Z'),
+    occurredAt: '2026-07-14T10:03:04+08:00',
     text: 'A canonical moment.',
   })
 })
 
-test('rejects blank media descriptions on canonical-first Moments', () => {
+test('accepts a date-only occurrence and preserves imported blank descriptions', () => {
   const document = [
     '---',
-    'publishedAt: "2026-07-15T10:03:04+08:00"',
+    'occurredAt: "2026-07-14"',
     'media:',
     '  - type: image',
-    '    file: "image-1.jpg"',
+    '    file: "legacy-screenshot.jpg"',
     '    alt: ""',
     '---',
     '',
-    'Missing a media description.',
+    'A date-only moment.',
   ].join('\n')
+  const moment = parseMomentDocument(document, { id: '2026/07/14-02-date-only' })
 
-  assert.throws(
-    () => parseMomentDocument(document, { id: '2026/07/15-1003-note' }),
-    /Canonical Moment media requires alt text/,
-  )
+  assert.equal(moment.occurredAt, '2026-07-14')
+  assert.equal(moment.media[0].alt, '')
 })
 
 test('rejects Moment references to unknown locations', () => {
   const document = [
     '---',
-    'publishedAt: "2026-07-15T10:03:04+08:00"',
+    'occurredAt: "2026-07-15T10:03:04+08:00"',
     'location: nowhere',
     'media: []',
     '---',
@@ -69,7 +62,23 @@ test('rejects Moment references to unknown locations', () => {
   ].join('\n')
 
   assert.throws(
-    () => parseMomentDocument(document, { id: '2026/07/15-1003-note' }),
+    () => parseMomentDocument(document, { id: '2026/07/15-01-note' }),
     /Unknown calendar map location id/,
+  )
+})
+
+test('rejects occurrence timestamps without an explicit offset', () => {
+  const document = [
+    '---',
+    'occurredAt: "2026-07-15T10:03:04"',
+    'media: []',
+    '---',
+    '',
+    'An ambiguous timestamp.',
+  ].join('\n')
+
+  assert.throws(
+    () => parseMomentDocument(document, { id: '2026/07/15-01-note' }),
+    /Invalid ISO datetime/,
   )
 })

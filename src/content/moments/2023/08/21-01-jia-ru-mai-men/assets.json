@@ -1,0 +1,16 @@
+{
+  "jia-ru-mai-men-2.jpg": {
+    "height": 1920,
+    "width": 1080,
+    "bytes": 197073,
+    "contentType": "image/jpeg",
+    "etag": "ce7f6d6cc6ab116bedbba51d6b9cada3"
+  },
+  "jia-ru-mai-men.jpg": {
+    "height": 1080,
+    "width": 1920,
+    "bytes": 224284,
+    "contentType": "image/jpeg",
+    "etag": "8ca18933adf79910115ca7096c9d2e90"
+  }
+}

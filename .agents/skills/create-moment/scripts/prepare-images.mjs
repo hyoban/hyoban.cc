@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import { access, mkdir, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises'
 import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
@@ -10,12 +11,14 @@ const momentsPath = join(repositoryPath, 'src/content/moments')
 const targetPath = resolve(options.target)
 const targetId = relative(momentsPath, targetPath).split(sep).join('/')
 const configPath = join(repositoryPath, 'src/data/asset-config.json')
-const manifestPath = join(repositoryPath, 'src/data/moment-media.generated.json')
 
-if (!/^\d{4}\/\d{2}\/[^/]+$/.test(targetId)) {
+const targetMatch = targetId.match(/^\d{4}\/\d{2}\/\d{2}-\d{2}-([a-z0-9]+(?:-[a-z0-9]+)*)$/)
+
+if (!targetMatch) {
   throw new Error(`Target must be one Moment directory inside ${momentsPath}`)
 }
 
+const slug = targetMatch[1]
 const requireFromRepository = createRequire(join(repositoryPath, 'package.json'))
 const sharp = requireFromRepository('sharp')
 const { uploadR2Object } = await import(
@@ -42,7 +45,7 @@ try {
   const prepared = []
 
   for (const [index, inputPath] of inputs.entries()) {
-    const file = `image-${index + 1}.webp`
+    const file = `${slug}${index === 0 ? '' : `-${index + 1}`}.webp`
     const outputPath = join(temporaryPath, file)
     const key = `moments/${targetId}/${file}`
 
@@ -56,6 +59,7 @@ try {
       })
       .webp({ effort: 6, quality: 82 })
       .toFile(outputPath)
+    const contents = await readFile(outputPath)
 
     const uploaded = await uploadR2Object({
       bucket: config.bucket,
@@ -66,7 +70,9 @@ try {
     })
 
     prepared.push({
-      bytes: info.size,
+      bytes: contents.byteLength,
+      contentType: 'image/webp',
+      etag: createHash('md5').update(contents).digest('hex'),
       file,
       height: info.height,
       source: basename(inputPath),
@@ -75,7 +81,7 @@ try {
     })
   }
 
-  await updateManifest(prepared)
+  await writeAssets(prepared)
 
   console.log(JSON.stringify({ images: prepared, target: targetPath }, null, 2))
 } catch (error) {
@@ -85,21 +91,24 @@ try {
   await rm(temporaryPath, { force: true, recursive: true })
 }
 
-async function updateManifest(images) {
-  const manifest = JSON.parse(await readFile(manifestPath, 'utf8'))
-
-  for (const image of images) {
-    manifest[`moments/${targetId}/${image.file}`] = {
-      height: image.height,
-      width: image.width,
-    }
-  }
-
-  const sortedManifest = Object.fromEntries(
-    Object.entries(manifest).sort(([first], [second]) => first.localeCompare(second)),
+async function writeAssets(images) {
+  const assets = Object.fromEntries(
+    images.map(image => [
+      image.file,
+      {
+        bytes: image.bytes,
+        contentType: image.contentType,
+        etag: image.etag,
+        height: image.height,
+        width: image.width,
+      },
+    ]),
   )
 
-  await writeFile(manifestPath, `${JSON.stringify(sortedManifest, null, 2)}\n`)
+  await writeFile(
+    join(targetPath, 'assets.json'),
+    `${JSON.stringify(assets, null, 2)}\n`,
+  )
 }
 
 async function assertMissing(path) {

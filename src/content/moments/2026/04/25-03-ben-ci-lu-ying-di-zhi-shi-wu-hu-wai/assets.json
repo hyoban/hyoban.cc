@@ -1,0 +1,30 @@
+{
+  "ben-ci-lu-ying-di-zhi-shi-wu-hu-wai-2.jpg": {
+    "height": 960,
+    "width": 1280,
+    "bytes": 101695,
+    "contentType": "image/jpeg",
+    "etag": "ef1d969e81aa280e0ec214c5a9db0928"
+  },
+  "ben-ci-lu-ying-di-zhi-shi-wu-hu-wai-3.jpg": {
+    "height": 1280,
+    "width": 960,
+    "bytes": 189103,
+    "contentType": "image/jpeg",
+    "etag": "ac431c7c769d1ef5d03ece3e595b8cc6"
+  },
+  "ben-ci-lu-ying-di-zhi-shi-wu-hu-wai-4.jpg": {
+    "height": 960,
+    "width": 1280,
+    "bytes": 250630,
+    "contentType": "image/jpeg",
+    "etag": "35cc751aec9887fe2b985dd52aa4838b"
+  },
+  "ben-ci-lu-ying-di-zhi-shi-wu-hu-wai.jpg": {
+    "height": 960,
+    "width": 1280,
+    "bytes": 142990,
+    "contentType": "image/jpeg",
+    "etag": "56fc90b7f967e10ed3d4ac40c9ffb1da"
+  }
+}

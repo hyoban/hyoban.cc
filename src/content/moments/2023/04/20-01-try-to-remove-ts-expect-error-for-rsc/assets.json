@@ -1,0 +1,16 @@
+{
+  "try-to-remove-ts-expect-error-for-rsc-2.jpg": {
+    "height": 2112,
+    "width": 2894,
+    "bytes": 433860,
+    "contentType": "image/jpeg",
+    "etag": "60271dfbfd145801b1cba5a0ae3be83f"
+  },
+  "try-to-remove-ts-expect-error-for-rsc.jpg": {
+    "height": 2112,
+    "width": 2894,
+    "bytes": 421008,
+    "contentType": "image/jpeg",
+    "etag": "392e0e7d40b8e1187e3e0a1a072b1d5c"
+  }
+}

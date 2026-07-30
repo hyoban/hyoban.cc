@@ -1,0 +1,23 @@
+{
+  "2025-10-01-hai-yan-2.jpg": {
+    "height": 1920,
+    "width": 2560,
+    "bytes": 544916,
+    "contentType": "image/jpeg",
+    "etag": "b8638b7ac539cab424fdf16d450c4fff"
+  },
+  "2025-10-01-hai-yan-3.jpg": {
+    "height": 1920,
+    "width": 2560,
+    "bytes": 307037,
+    "contentType": "image/jpeg",
+    "etag": "dfb3f4c382a6b2dad1a640706408e886"
+  },
+  "2025-10-01-hai-yan.jpg": {
+    "height": 2560,
+    "width": 1920,
+    "bytes": 156565,
+    "contentType": "image/jpeg",
+    "etag": "aeb81275596f12edd34a061ad442dee2"
+  }
+}

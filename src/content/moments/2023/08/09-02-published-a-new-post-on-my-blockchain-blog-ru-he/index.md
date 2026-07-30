@@ -1,0 +1,7 @@
+---
+occurredAt: "2023-08-09T12:58:28+08:00"
+hidden: true
+media: []
+---
+
+Published a new post on my blockchain blog: 如何让 fetch 变的类型安全. Check it out now! https://blog.hyoban.cc/type-safe-fetch via @_xLog

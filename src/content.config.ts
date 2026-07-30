@@ -1,7 +1,7 @@
 import { glob } from 'astro/loaders'
 import { z } from 'astro/zod'
 import { defineCollection } from 'astro:content'
-import { momentFrontmatterSchema } from '@/moment-content'
+import { momentFrontmatterSchema } from '@/moments/content'
 
 const description = z.string().trim().min(1)
 

@@ -1,0 +1,23 @@
+{
+  "jian-dan-pa-ge-shan-2.jpg": {
+    "height": 2048,
+    "width": 1536,
+    "bytes": 402795,
+    "contentType": "image/jpeg",
+    "etag": "fb9f604ed4f0e9a651fed6bbb7a59a1a"
+  },
+  "jian-dan-pa-ge-shan-3.jpg": {
+    "height": 2048,
+    "width": 1536,
+    "bytes": 560193,
+    "contentType": "image/jpeg",
+    "etag": "c3d1a97178c4d5dfeca127838965be57"
+  },
+  "jian-dan-pa-ge-shan.jpg": {
+    "height": 1536,
+    "width": 2048,
+    "bytes": 794270,
+    "contentType": "image/jpeg",
+    "etag": "a1572d43d2c750fac243b7fde65becc9"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "west-lake-sunrise-video-poster.webp": {
+    "height": 1066,
+    "width": 1600,
+    "bytes": 135556,
+    "contentType": "image/webp",
+    "etag": "f35fda05e72460d698b09426d992e456"
+  },
+  "west-lake-sunrise-video.mp4": {
+    "bytes": 54638328,
+    "contentType": "video/mp4",
+    "etag": "8c048a45b8f10806211c7e1297e9f118"
+  }
+}

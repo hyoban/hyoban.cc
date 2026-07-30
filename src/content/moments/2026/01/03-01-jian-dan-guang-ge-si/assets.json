@@ -1,0 +1,30 @@
+{
+  "jian-dan-guang-ge-si-2.jpg": {
+    "height": 1536,
+    "width": 2048,
+    "bytes": 417803,
+    "contentType": "image/jpeg",
+    "etag": "c5c386211987e3f4ee287a58870f9f51"
+  },
+  "jian-dan-guang-ge-si-3.jpg": {
+    "height": 2048,
+    "width": 1536,
+    "bytes": 472496,
+    "contentType": "image/jpeg",
+    "etag": "fa05a8b2bf22efa0067de4beb7f538b4"
+  },
+  "jian-dan-guang-ge-si-4.jpg": {
+    "height": 2048,
+    "width": 1536,
+    "bytes": 337925,
+    "contentType": "image/jpeg",
+    "etag": "458cfc8ee0f9468f3905699f26dce3be"
+  },
+  "jian-dan-guang-ge-si.jpg": {
+    "height": 2048,
+    "width": 1536,
+    "bytes": 777047,
+    "contentType": "image/jpeg",
+    "etag": "8ab618371b9204b0e644d921c612f4f8"
+  }
+}

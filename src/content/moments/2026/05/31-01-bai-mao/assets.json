@@ -1,0 +1,51 @@
+{
+  "bai-mao-2.webp": {
+    "height": 1620,
+    "width": 1080,
+    "bytes": 108272,
+    "contentType": "image/webp",
+    "etag": "ccdbdffed97df3f7ec2410968c430482"
+  },
+  "bai-mao-3.webp": {
+    "height": 1080,
+    "width": 1620,
+    "bytes": 118682,
+    "contentType": "image/webp",
+    "etag": "e5c4f317f09c053503d34c78afcfff8d"
+  },
+  "bai-mao-4.webp": {
+    "height": 1080,
+    "width": 1620,
+    "bytes": 230544,
+    "contentType": "image/webp",
+    "etag": "4d4e9fc6fc88b5e56fa656c625ad8ff6"
+  },
+  "bai-mao-5.webp": {
+    "height": 1080,
+    "width": 1620,
+    "bytes": 190778,
+    "contentType": "image/webp",
+    "etag": "6bf6173fff4abf3b4a6163ff38fe7bd3"
+  },
+  "bai-mao-6.webp": {
+    "height": 1080,
+    "width": 1620,
+    "bytes": 406926,
+    "contentType": "image/webp",
+    "etag": "8f167cd83c018a15fc8b641ec2651887"
+  },
+  "bai-mao-7.webp": {
+    "height": 1080,
+    "width": 1620,
+    "bytes": 334360,
+    "contentType": "image/webp",
+    "etag": "7ac8dcf44036203eb99e1c07cab555e3"
+  },
+  "bai-mao.webp": {
+    "height": 1080,
+    "width": 1620,
+    "bytes": 271020,
+    "contentType": "image/webp",
+    "etag": "c5e46add8d13bf5ed7a92b13d63dfa2a"
+  }
+}

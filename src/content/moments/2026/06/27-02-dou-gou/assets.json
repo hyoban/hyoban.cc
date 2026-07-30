@@ -1,0 +1,51 @@
+{
+  "dou-gou-2.jpg": {
+    "height": 1707,
+    "width": 2560,
+    "bytes": 881804,
+    "contentType": "image/jpeg",
+    "etag": "9a9a4e579e8b5e9f6a19aa312858c422"
+  },
+  "dou-gou-3.jpg": {
+    "height": 1707,
+    "width": 2560,
+    "bytes": 700652,
+    "contentType": "image/jpeg",
+    "etag": "a9c2b7ca3be017309acecba2c2219062"
+  },
+  "dou-gou-4.jpg": {
+    "height": 2560,
+    "width": 1707,
+    "bytes": 567825,
+    "contentType": "image/jpeg",
+    "etag": "62c6086c63b2a8d8e59ee8f83a447696"
+  },
+  "dou-gou-5.jpg": {
+    "height": 1707,
+    "width": 2560,
+    "bytes": 997589,
+    "contentType": "image/jpeg",
+    "etag": "c8fb457d6475382ee6e8da5eae8d89f9"
+  },
+  "dou-gou-6.jpg": {
+    "height": 1707,
+    "width": 2560,
+    "bytes": 615521,
+    "contentType": "image/jpeg",
+    "etag": "ff8e2a7d4a44e166b571a96482fde432"
+  },
+  "dou-gou-7.jpg": {
+    "height": 2560,
+    "width": 1920,
+    "bytes": 276649,
+    "contentType": "image/jpeg",
+    "etag": "63e1124c663b561da06524fd566c5150"
+  },
+  "dou-gou.jpg": {
+    "height": 1707,
+    "width": 2560,
+    "bytes": 456138,
+    "contentType": "image/jpeg",
+    "etag": "75276f510dd705904aa00702fde61269"
+  }
+}

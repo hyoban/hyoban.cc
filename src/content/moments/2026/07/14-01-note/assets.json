@@ -1,0 +1,16 @@
+{
+  "note-2.jpg": {
+    "height": 1726,
+    "width": 2318,
+    "bytes": 123629,
+    "contentType": "image/jpeg",
+    "etag": "9ce549d273c4a38647e0868c7bd3cad5"
+  },
+  "note.jpg": {
+    "height": 1726,
+    "width": 2318,
+    "bytes": 269142,
+    "contentType": "image/jpeg",
+    "etag": "bacfdaba9a61d781e051d248078adb8e"
+  }
+}

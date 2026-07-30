@@ -1,0 +1,23 @@
+{
+  "2025-10-01-hai-yan-2.webp": {
+    "height": 1080,
+    "width": 1440,
+    "bytes": 220816,
+    "contentType": "image/webp",
+    "etag": "96efc8eb2434eedde0b932616e75ae88"
+  },
+  "2025-10-01-hai-yan-3.webp": {
+    "height": 1080,
+    "width": 1440,
+    "bytes": 112550,
+    "contentType": "image/webp",
+    "etag": "9d99e61ba0d13f479f59ac88c849a785"
+  },
+  "2025-10-01-hai-yan.webp": {
+    "height": 1440,
+    "width": 1080,
+    "bytes": 41562,
+    "contentType": "image/webp",
+    "etag": "b73cd34002d0d728d7cc2b59d268f1d1"
+  }
+}

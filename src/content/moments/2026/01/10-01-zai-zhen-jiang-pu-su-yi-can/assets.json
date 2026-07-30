@@ -1,0 +1,23 @@
+{
+  "zai-zhen-jiang-pu-su-yi-can-2.jpg": {
+    "height": 2048,
+    "width": 1536,
+    "bytes": 540307,
+    "contentType": "image/jpeg",
+    "etag": "2f78cc967df062d48ce1871a1005ef19"
+  },
+  "zai-zhen-jiang-pu-su-yi-can-3.jpg": {
+    "height": 1536,
+    "width": 2048,
+    "bytes": 482961,
+    "contentType": "image/jpeg",
+    "etag": "f23c08ce9b486e67db21dbd3051d7e8c"
+  },
+  "zai-zhen-jiang-pu-su-yi-can.jpg": {
+    "height": 1536,
+    "width": 2048,
+    "bytes": 388241,
+    "contentType": "image/jpeg",
+    "etag": "be1ed6743cbeeb5017e4224e8e046772"
+  }
+}

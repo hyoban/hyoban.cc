@@ -1,0 +1,30 @@
+{
+  "san-he-gu-zhen-2.webp": {
+    "height": 1280,
+    "width": 960,
+    "bytes": 190596,
+    "contentType": "image/webp",
+    "etag": "f6de1bcb82082c8726e6174a188ee0e9"
+  },
+  "san-he-gu-zhen-3.webp": {
+    "height": 1280,
+    "width": 960,
+    "bytes": 149728,
+    "contentType": "image/webp",
+    "etag": "90e74feefdfe2593df86d075c66fd1ae"
+  },
+  "san-he-gu-zhen-4.webp": {
+    "height": 960,
+    "width": 1280,
+    "bytes": 267954,
+    "contentType": "image/webp",
+    "etag": "3759fcf4d6c80b7a39a01cfa0f34746c"
+  },
+  "san-he-gu-zhen.webp": {
+    "height": 1280,
+    "width": 960,
+    "bytes": 352340,
+    "contentType": "image/webp",
+    "etag": "ef73b4cbd4adc0095c82b7021a24223d"
+  }
+}

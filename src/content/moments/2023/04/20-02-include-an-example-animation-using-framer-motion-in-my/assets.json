@@ -1,0 +1,14 @@
+{
+  "include-an-example-animation-using-framer-motion-in-my-video-poster.png": {
+    "height": 720,
+    "width": 1108,
+    "bytes": 286674,
+    "contentType": "image/png",
+    "etag": "357f32f4595c3a540ece68c2dac5a4cd"
+  },
+  "include-an-example-animation-using-framer-motion-in-my-video.mp4": {
+    "bytes": 882791,
+    "contentType": "video/mp4",
+    "etag": "fd480d31c205f48531abc35359b8627d"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "wu-hu-wan-xia-2.jpg": {
+    "height": 853,
+    "width": 1280,
+    "bytes": 166764,
+    "contentType": "image/jpeg",
+    "etag": "9e7ffc60949dc2e2f92fd4b80d32ef8a"
+  },
+  "wu-hu-wan-xia-3.jpg": {
+    "height": 853,
+    "width": 1280,
+    "bytes": 212820,
+    "contentType": "image/jpeg",
+    "etag": "a3323c9f01a804546ab46b5b4259a364"
+  },
+  "wu-hu-wan-xia-4.jpg": {
+    "height": 853,
+    "width": 1280,
+    "bytes": 175272,
+    "contentType": "image/jpeg",
+    "etag": "08f6e6972df99269891f1443934a414c"
+  },
+  "wu-hu-wan-xia-5.jpg": {
+    "height": 853,
+    "width": 1280,
+    "bytes": 209929,
+    "contentType": "image/jpeg",
+    "etag": "228c8a791975c65b2f303b75ad6dff9f"
+  },
+  "wu-hu-wan-xia.jpg": {
+    "height": 853,
+    "width": 1280,
+    "bytes": 99326,
+    "contentType": "image/jpeg",
+    "etag": "a259f5a9887fcbe6637792c87a27302e"
+  }
+}

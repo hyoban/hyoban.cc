@@ -1,0 +1,23 @@
+---
+occurredAt: "2026-07-05"
+location: wuhu
+media:
+  - type: image
+    file: wu-hu-wan-xia.jpg
+    alt: ""
+  - type: image
+    file: wu-hu-wan-xia-2.jpg
+    alt: ""
+  - type: image
+    file: wu-hu-wan-xia-3.jpg
+    alt: ""
+  - type: image
+    file: wu-hu-wan-xia-4.jpg
+    alt: ""
+  - type: image
+    file: wu-hu-wan-xia-5.jpg
+    alt: ""
+---
+
+2026 w27 芜湖晚霞
+本来专程来看晚霞的，路上想着时间还够，就去极氪家升级一下最新的系统。算着吃饭的时候更新差不多也够了，结果下来还等了快二十分钟。于是刚好错过好看的晚霞。下次再也不强迫症追更新了。

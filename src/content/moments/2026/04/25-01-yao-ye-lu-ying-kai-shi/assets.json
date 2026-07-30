@@ -1,0 +1,30 @@
+{
+  "yao-ye-lu-ying-kai-shi-2.jpg": {
+    "height": 960,
+    "width": 1280,
+    "bytes": 354709,
+    "contentType": "image/jpeg",
+    "etag": "b3f7492f1cc83ed6832a738dbe517646"
+  },
+  "yao-ye-lu-ying-kai-shi-3.jpg": {
+    "height": 960,
+    "width": 1280,
+    "bytes": 409750,
+    "contentType": "image/jpeg",
+    "etag": "1955384b6aab0e9dc7b9427376df25ac"
+  },
+  "yao-ye-lu-ying-kai-shi-4.jpg": {
+    "height": 1280,
+    "width": 960,
+    "bytes": 135175,
+    "contentType": "image/jpeg",
+    "etag": "d52ffa7b1d8ff0db2cf253cf3b996a7b"
+  },
+  "yao-ye-lu-ying-kai-shi.jpg": {
+    "height": 1280,
+    "width": 960,
+    "bytes": 111878,
+    "contentType": "image/jpeg",
+    "etag": "452ab52392b900c8e5c942e7ce3943ad"
+  }
+}

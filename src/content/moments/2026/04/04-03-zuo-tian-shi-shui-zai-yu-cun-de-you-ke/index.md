@@ -1,0 +1,19 @@
+---
+occurredAt: "2026-04-04"
+location: yucun
+media:
+  - type: image
+    file: zuo-tian-shi-shui-zai-yu-cun-de-you-ke.jpg
+    alt: ""
+  - type: image
+    file: zuo-tian-shi-shui-zai-yu-cun-de-you-ke-2.jpg
+    alt: ""
+  - type: image
+    file: zuo-tian-shi-shui-zai-yu-cun-de-you-ke-3.jpg
+    alt: ""
+  - type: image
+    file: zuo-tian-shi-shui-zai-yu-cun-de-you-ke-4.jpg
+    alt: ""
+---
+
+昨天是睡在余村的游客中心停车场。车位超大，有干净卫生间和热水。好多床车自驾的在这里，甚至有同款车友。

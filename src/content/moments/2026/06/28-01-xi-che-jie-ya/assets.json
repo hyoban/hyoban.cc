@@ -1,0 +1,30 @@
+{
+  "xi-che-jie-ya-2.webp": {
+    "height": 1080,
+    "width": 1242,
+    "bytes": 174506,
+    "contentType": "image/webp",
+    "etag": "24dc4d2072b90097946f0fc0c46fbf65"
+  },
+  "xi-che-jie-ya-3.webp": {
+    "height": 1080,
+    "width": 1439,
+    "bytes": 174798,
+    "contentType": "image/webp",
+    "etag": "d48a6706de3b89adceda9444fab71bd6"
+  },
+  "xi-che-jie-ya-4.webp": {
+    "height": 1620,
+    "width": 1080,
+    "bytes": 128520,
+    "contentType": "image/webp",
+    "etag": "77b84919e9eef87f0a002561086b17b5"
+  },
+  "xi-che-jie-ya.webp": {
+    "height": 1080,
+    "width": 1620,
+    "bytes": 376106,
+    "contentType": "image/webp",
+    "etag": "0912eacdd2f7168254450b9e72e477aa"
+  }
+}

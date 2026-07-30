@@ -1,0 +1,30 @@
+{
+  "jian-dan-guang-ge-da-xue-2.jpg": {
+    "height": 2048,
+    "width": 1536,
+    "bytes": 203563,
+    "contentType": "image/jpeg",
+    "etag": "d466a2ddb87cd21dae921b10e3d87e77"
+  },
+  "jian-dan-guang-ge-da-xue-3.jpg": {
+    "height": 2048,
+    "width": 1536,
+    "bytes": 437360,
+    "contentType": "image/jpeg",
+    "etag": "0d5429d563756169e8cca0d72aec47f6"
+  },
+  "jian-dan-guang-ge-da-xue-4.jpg": {
+    "height": 2048,
+    "width": 1536,
+    "bytes": 701623,
+    "contentType": "image/jpeg",
+    "etag": "d80205ecaade4dc682e6be0e923a72fc"
+  },
+  "jian-dan-guang-ge-da-xue.jpg": {
+    "height": 1536,
+    "width": 2048,
+    "bytes": 1053075,
+    "contentType": "image/jpeg",
+    "etag": "86db5470adb631c9792be8bff2e01326"
+  }
+}

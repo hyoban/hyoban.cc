@@ -1,0 +1,37 @@
+{
+  "hechai-1972-2.webp": {
+    "height": 1920,
+    "width": 1280,
+    "bytes": 283006,
+    "contentType": "image/webp",
+    "etag": "ec469d01d76488d71bb824bb665675d8"
+  },
+  "hechai-1972-3.webp": {
+    "height": 1280,
+    "width": 1920,
+    "bytes": 335200,
+    "contentType": "image/webp",
+    "etag": "4aeeace5e383967830788973af1b754d"
+  },
+  "hechai-1972-4.webp": {
+    "height": 1920,
+    "width": 1280,
+    "bytes": 279188,
+    "contentType": "image/webp",
+    "etag": "2f3a26637c338fd070e820d46f0c25f2"
+  },
+  "hechai-1972-5.webp": {
+    "height": 1280,
+    "width": 1920,
+    "bytes": 512714,
+    "contentType": "image/webp",
+    "etag": "2aa85416a4b02ca5cff18d3e143c60aa"
+  },
+  "hechai-1972.webp": {
+    "height": 1280,
+    "width": 1920,
+    "bytes": 362044,
+    "contentType": "image/webp",
+    "etag": "462fc3e73e1269ce503b71c60c592d59"
+  }
+}

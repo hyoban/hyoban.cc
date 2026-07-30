@@ -1,0 +1,30 @@
+{
+  "zai-nan-xun-2.jpg": {
+    "height": 1536,
+    "width": 2048,
+    "bytes": 1096017,
+    "contentType": "image/jpeg",
+    "etag": "0b817b708698adf1da4f257b187de8dd"
+  },
+  "zai-nan-xun-3.jpg": {
+    "height": 2048,
+    "width": 1536,
+    "bytes": 392706,
+    "contentType": "image/jpeg",
+    "etag": "d298606772f7ad9a19fb9b9774b4dcbf"
+  },
+  "zai-nan-xun-4.jpg": {
+    "height": 1536,
+    "width": 2048,
+    "bytes": 417054,
+    "contentType": "image/jpeg",
+    "etag": "16435295b3d53c3378f9f7647ef6ae67"
+  },
+  "zai-nan-xun.jpg": {
+    "height": 1536,
+    "width": 2048,
+    "bytes": 492818,
+    "contentType": "image/jpeg",
+    "etag": "c4689841315a8a27f41cccbf150f00cc"
+  }
+}

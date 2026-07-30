@@ -1,0 +1,37 @@
+{
+  "luogang-park-2.webp": {
+    "height": 960,
+    "width": 1280,
+    "bytes": 47164,
+    "contentType": "image/webp",
+    "etag": "1dfb26fe4ab5c5dc23ed3806b4389e20"
+  },
+  "luogang-park-3.webp": {
+    "height": 1920,
+    "width": 1440,
+    "bytes": 52664,
+    "contentType": "image/webp",
+    "etag": "d4d76ddf6a59fb3e3a3e2469debfffed"
+  },
+  "luogang-park-4.webp": {
+    "height": 1920,
+    "width": 1440,
+    "bytes": 182248,
+    "contentType": "image/webp",
+    "etag": "b6612a2f14a176620097761f1f0ca101"
+  },
+  "luogang-park-5.webp": {
+    "height": 1920,
+    "width": 1440,
+    "bytes": 205104,
+    "contentType": "image/webp",
+    "etag": "c19d84fa62edfbfbfbc5ce7c68a1d473"
+  },
+  "luogang-park.webp": {
+    "height": 960,
+    "width": 1280,
+    "bytes": 165838,
+    "contentType": "image/webp",
+    "etag": "6ff224586e92537550ff2d9010e1cb11"
+  }
+}

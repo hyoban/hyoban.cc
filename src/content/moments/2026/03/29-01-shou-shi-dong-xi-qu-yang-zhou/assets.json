@@ -1,0 +1,30 @@
+{
+  "shou-shi-dong-xi-qu-yang-zhou-2.jpg": {
+    "height": 2048,
+    "width": 1536,
+    "bytes": 445865,
+    "contentType": "image/jpeg",
+    "etag": "8d64ee6b0fe1ba1c53158eb2e06e0f45"
+  },
+  "shou-shi-dong-xi-qu-yang-zhou-3.jpg": {
+    "height": 1536,
+    "width": 2048,
+    "bytes": 447369,
+    "contentType": "image/jpeg",
+    "etag": "c8fdf57a828b12ee2900623da357ccd5"
+  },
+  "shou-shi-dong-xi-qu-yang-zhou-4.jpg": {
+    "height": 1536,
+    "width": 2048,
+    "bytes": 740561,
+    "contentType": "image/jpeg",
+    "etag": "4bbbbcd47fe598dabe15af22ce922f95"
+  },
+  "shou-shi-dong-xi-qu-yang-zhou.jpg": {
+    "height": 2048,
+    "width": 1536,
+    "bytes": 1212948,
+    "contentType": "image/jpeg",
+    "etag": "475d76f1d68dfea0d22694a01ea93771"
+  }
+}
