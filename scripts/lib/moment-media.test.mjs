@@ -57,11 +57,19 @@ test('keeps binary site media out of the repository', async () => {
     join(root, 'public'),
   ]
   const mediaFiles = (
-    await Promise.all(roots.map(async directory => (
-      (await readdir(directory, { recursive: true }))
-        .filter(file => /\.(?:avif|gif|jpe?g|mov|mp4|png|webm|webp)$/i.test(file))
-        .map(file => join(directory, file))
-    )))
+    await Promise.all(roots.map(async (directory) => {
+      try {
+        return (await readdir(directory, { recursive: true }))
+          .filter(file => /\.(?:avif|gif|jpe?g|mov|mp4|png|webm|webp)$/i.test(file))
+          .map(file => join(directory, file))
+      }
+      catch (error) {
+        if (error.code === 'ENOENT')
+          return []
+
+        throw error
+      }
+    }))
   ).flat()
 
   assert.deepEqual(mediaFiles, [])
