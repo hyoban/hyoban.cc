@@ -79,6 +79,12 @@ while (calendarDays.length % 7 !== 0) {
   calendarDays.push(undefined)
 }
 
+const desktopCalendarDays = calendarDays.length === 42
+  ? [
+      ...calendarDays.slice(0, 7).map((day, weekday) => day ?? calendarDays[35 + weekday]),
+      ...calendarDays.slice(7, 35),
+    ]
+  : calendarDays
 const activeCalendarDays = calendarDays.filter(
   (day): day is CalendarDay => Boolean(day && (day.moments.length || day.anniversaries.length)),
 )
@@ -141,7 +147,7 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
         'calendar-page--with-drawer max-[56rem]:hidden min-[56.0625rem]:overflow-y-auto min-[56.0625rem]:overscroll-contain': selectedDate,
       },
     ]}
-    style={`--calendar-weeks: ${calendarDays.length / 7}`}
+    style={`--calendar-weeks: ${desktopCalendarDays.length / 7}`}
   >
     <header class="calendar-toolbar mb-4 grid grid-cols-[1fr_auto_1fr] items-center max-[56rem]:grid-cols-[1fr_auto] max-[56rem]:gap-2">
       <CalendarModeSwitch class="col-start-1 justify-self-start max-[56rem]:row-start-1" mode="calendar" />
@@ -193,14 +199,14 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
       <CalendarBackLink class="col-start-3 justify-self-end max-[56rem]:col-start-2 max-[56rem]:row-start-1" />
     </header>
 
-    <div class="desktop-calendar grid min-h-0 content-start grid-rows-[auto_auto] max-[56rem]:hidden">
+    <div class="desktop-calendar grid min-h-0 content-start grid-rows-[auto_minmax(0,1fr)] [container-type:inline-size] max-[56rem]:hidden">
       <div class="weekday-row mb-2.5 grid grid-cols-7 text-center font-mono text-xs text-tx-3 [&_span:nth-last-child(-n+2)]:text-tx-2" aria-hidden="true">
         {['一', '二', '三', '四', '五', '六', '日'].map(day => <span>{day}</span>)}
       </div>
 
-      <section class="calendar-grid grid min-h-0 grid-cols-7 grid-rows-[repeat(var(--calendar-weeks),minmax(0,1fr))] border-t border-l border-border [aspect-ratio:7/var(--calendar-weeks)]" aria-label={`${year} 年 ${month} 月`}>
+      <section class="calendar-grid grid h-full min-h-0 max-h-[calc(100cqw*var(--calendar-weeks)/7)] grid-cols-7 grid-rows-[repeat(var(--calendar-weeks),minmax(0,1fr))] border-t border-l border-border" aria-label={`${year} 年 ${month} 月`}>
         {
-          calendarDays.map((calendarDay) => {
+          desktopCalendarDays.map((calendarDay) => {
           if (!calendarDay) {
             return <div class="calendar-day calendar-day--empty relative min-h-0 min-w-0 overflow-hidden border-r border-b border-border p-3 font-mono text-tx-2" aria-hidden="true" />
           }
