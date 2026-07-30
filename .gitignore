@@ -1,6 +1,7 @@
 # build output
 dist/
 .artifacts/
+/r2/.parts/
 # generated types
 .astro/
 
