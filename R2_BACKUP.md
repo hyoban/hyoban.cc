@@ -11,8 +11,8 @@ Refresh the snapshot from a checkout with project dependencies installed:
 node scripts/backup-r2-to-lfs.mjs
 ```
 
-The `R2 Backup` GitHub Actions workflow runs this command every day and can
-also be started manually. It uses the repository secrets
+The `R2 Backup` GitHub Actions workflow runs this command after every commit
+to `main` and can also be started manually. It uses the repository secrets
 `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY`; the configured Cloudflare
 credential has Object Read only access to this bucket.
 
