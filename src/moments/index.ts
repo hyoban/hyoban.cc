@@ -129,11 +129,11 @@ export function getCalendarDateKey(date: Date) {
 }
 
 export function getMomentPath(dateKey: string) {
-  return `/calendar/${dateKey.replaceAll('-', '/')}`
+  return `/calendar/${dateKey.replaceAll('-', '/')}/`
 }
 
 export function getMonthPath(monthKey: string) {
-  return `/calendar/${monthKey.replace('-', '/')}`
+  return `/calendar/${monthKey.replace('-', '/')}/`
 }
 
 async function loadMoments() {
