@@ -1,5 +1,6 @@
 ---
 import CalendarBackLink from '@/components/CalendarBackLink.astro'
+import CalendarAnniversaryStatus from '@/components/CalendarAnniversaryStatus.astro'
 import CalendarDayStatus from '@/components/CalendarDayStatus.astro'
 import CalendarModeSwitch from '@/components/CalendarModeSwitch.astro'
 import MobileAgenda from '@/components/MobileAgenda.astro'
@@ -21,6 +22,10 @@ import {
   type ResolvedMomentMedia,
 } from '@/moments'
 import { SITE_TITLE } from '@/consts'
+import {
+  getCalendarAnniversaries,
+  type CalendarAnniversary,
+} from '@/anniversaries'
 
 interface Props {
   month: number
@@ -29,6 +34,7 @@ interface Props {
 }
 
 type CalendarDay = {
+  anniversaries: CalendarAnniversary[]
   chinaCalendarDay: ChinaCalendarDay | undefined
   dateKey: string
   day: number
@@ -59,6 +65,7 @@ for (let day = 1; day <= daysInMonth; day += 1) {
   const thumbnail = allMedia.find(item => item.type === 'image' || item.poster)
 
   calendarDays.push({
+    anniversaries: getCalendarAnniversaries(dateKey),
     chinaCalendarDay: getChinaCalendarDay(dateKey),
     dateKey,
     day,
@@ -73,7 +80,7 @@ while (calendarDays.length % 7 !== 0) {
 }
 
 const activeCalendarDays = calendarDays.filter(
-  (day): day is CalendarDay => Boolean(day?.moments.length),
+  (day): day is CalendarDay => Boolean(day && (day.moments.length || day.anniversaries.length)),
 )
 const today = getCalendarDateKey(new Date())
 const selectedMoments = selectedDate ? momentsByDate.get(selectedDate) ?? [] : []
@@ -204,17 +211,27 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
           const dayStatusDescription = calendarDay.chinaCalendarDay
             ? getChinaCalendarDayDescription(calendarDay.chinaCalendarDay)
             : undefined
+          const anniversaryDescription = calendarDay.anniversaries
+            .map(anniversary => anniversary.description)
+            .join('，')
 
           if (calendarDay.moments.length === 0) {
             return (
               <div class:list={['calendar-day relative min-h-0 min-w-0 overflow-hidden border-r border-b border-border p-3 font-mono text-tx-2', { 'calendar-day--today': isToday }] }>
                 <span class:list={['calendar-day__number relative z-[1]', { 'underline decoration-2 underline-offset-4': isToday }]}>{String(calendarDay.day).padStart(2, '0')}</span>
-                {calendarDay.chinaCalendarDay && (
-                  <CalendarDayStatus
-                    class="absolute bottom-2.5 left-2.5 z-[1] max-w-[calc(100%-1.25rem)]"
-                    day={calendarDay.chinaCalendarDay}
-                    compact
-                  />
+                {(calendarDay.chinaCalendarDay || calendarDay.anniversaries.length > 0) && (
+                  <div class="absolute right-2.5 bottom-2.5 left-2.5 z-[1] flex min-w-0 flex-col items-start gap-1">
+                    {calendarDay.anniversaries.map(anniversary => (
+                      <CalendarAnniversaryStatus anniversary={anniversary} compact />
+                    ))}
+                    {calendarDay.chinaCalendarDay && (
+                      <CalendarDayStatus
+                        class="max-w-full"
+                        day={calendarDay.chinaCalendarDay}
+                        compact
+                      />
+                    )}
+                  </div>
                 )}
               </div>
             )
@@ -232,7 +249,7 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
                 },
               ]}
               aria-current={isSelected ? 'date' : undefined}
-              aria-label={`${calendarDay.dateKey}，${calendarDay.moments.length} 条记录${dayStatusDescription ? `，${dayStatusDescription}` : ''}`}
+              aria-label={`${calendarDay.dateKey}，${calendarDay.moments.length} 条记录${anniversaryDescription ? `，${anniversaryDescription}` : ''}${dayStatusDescription ? `，${dayStatusDescription}` : ''}`}
             >
               {thumbnail && (
                 <img
@@ -260,18 +277,31 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
               >
                 {String(calendarDay.day).padStart(2, '0')}
               </span>
-              {calendarDay.chinaCalendarDay && (
-                <CalendarDayStatus
-                  class:list={[
-                    'absolute bottom-2.5 left-2.5 z-[1]',
-                    calendarDay.mediaCount > 1 ? 'max-w-[calc(100%-3rem)]' : 'max-w-[calc(100%-1.25rem)]',
-                    {
-                      'rounded-[0.1875rem] bg-[rgb(17_17_16/0.58)] px-1 py-0.5 !text-white [text-shadow:none]': thumbnail,
-                    },
-                  ]}
-                  day={calendarDay.chinaCalendarDay}
-                  compact
-                />
+              {(calendarDay.chinaCalendarDay || calendarDay.anniversaries.length > 0) && (
+                <div class:list={[
+                  'absolute bottom-2.5 left-2.5 z-[1] flex min-w-0 flex-col items-start gap-1',
+                  calendarDay.mediaCount > 1 ? 'right-10' : 'right-2.5',
+                ]}>
+                  {calendarDay.anniversaries.map(anniversary => (
+                    <CalendarAnniversaryStatus
+                      anniversary={anniversary}
+                      compact
+                      overMedia={Boolean(thumbnail)}
+                    />
+                  ))}
+                  {calendarDay.chinaCalendarDay && (
+                    <CalendarDayStatus
+                      class:list={[
+                        'max-w-full',
+                        {
+                          'rounded-[0.1875rem] bg-[rgb(17_17_16/0.58)] px-1 py-0.5 !text-white [text-shadow:none]': thumbnail,
+                        },
+                      ]}
+                      day={calendarDay.chinaCalendarDay}
+                      compact
+                    />
+                  )}
+                </div>
               )}
               {
                 thumbnail
