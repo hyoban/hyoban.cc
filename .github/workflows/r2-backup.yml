@@ -1,8 +1,9 @@
 name: R2 Backup
 
 on:
-  schedule:
-    - cron: '41 2 * * *'
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
