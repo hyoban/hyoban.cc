@@ -34,3 +34,28 @@ test('marks the delivery date and following anniversaries', () => {
   }])
   assert.equal(getCalendarAnniversaries('2026-08-18').length, 0)
 })
+
+test('marks the annual driver-license reset and its fixed expiry date', () => {
+  assert.deepEqual(getCalendarAnniversaries('2027-12-16'), [{
+    description: '驾驶证清分',
+    icon: 'i-lucide-rotate-ccw',
+    id: 'driver-license-points-reset',
+    label: '驾驶证清分',
+  }])
+  assert.deepEqual(getCalendarAnniversaries('2028-12-16'), [
+    {
+      description: '驾驶证清分',
+      icon: 'i-lucide-rotate-ccw',
+      id: 'driver-license-points-reset',
+      label: '驾驶证清分',
+    },
+    {
+      description: '驾驶证有效期截止',
+      icon: 'i-lucide-calendar-clock',
+      id: 'driver-license-expiry',
+      label: '驾驶证有效期截止',
+    },
+  ])
+  assert.equal(getCalendarAnniversaries('2029-12-16').length, 1)
+  assert.equal(getCalendarAnniversaries('2028-12-17').length, 0)
+})
