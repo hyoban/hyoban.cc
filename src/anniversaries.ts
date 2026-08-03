@@ -19,6 +19,7 @@ type AnniversaryOccurrence = {
 type AnniversaryDefinition = {
   date: AnnualDate
   describe: (occurrence: AnniversaryOccurrence) => string
+  endYear?: number
   icon: string
   id: string
   label: (occurrence: AnniversaryOccurrence) => string
@@ -42,6 +43,23 @@ type YearlyAnniversaryOptions = {
   startYear: number
 }
 
+type AnnualEventOptions = {
+  date: AnnualDate
+  description?: string
+  icon: string
+  id: string
+  label: string
+  startYear?: number
+}
+
+type DatedEventOptions = {
+  dateKey: string
+  description?: string
+  icon: string
+  id: string
+  label: string
+}
+
 export type CalendarAnniversary = Readonly<{
   description: string
   icon: string
@@ -63,6 +81,18 @@ const anniversaryDefinitions: readonly AnniversaryDefinition[] = [
     initialLabel: '提车日',
     name: '提车',
     startYear: 2025,
+  }),
+  defineAnnualEvent({
+    date: gregorianDate(12, 16),
+    icon: 'i-lucide-rotate-ccw',
+    id: 'driver-license-points-reset',
+    label: '驾驶证清分',
+  }),
+  defineDatedEvent({
+    dateKey: '2028-12-16',
+    icon: 'i-lucide-calendar-clock',
+    id: 'driver-license-expiry',
+    label: '驾驶证有效期截止',
   }),
 ]
 
@@ -91,7 +121,11 @@ export function getCalendarAnniversaries(dateKey: string): CalendarAnniversary[]
   const year = Number.parseInt(dateKey.slice(0, 4), 10)
 
   return anniversaryDefinitions.flatMap((definition) => {
-    if (year < definition.startYear || !matchesAnnualDate(dateKey, definition.date)) {
+    if (
+      year < definition.startYear
+      || (definition.endYear !== undefined && year > definition.endYear)
+      || !matchesAnnualDate(dateKey, definition.date)
+    ) {
       return []
     }
 
@@ -136,6 +170,37 @@ function defineYearlyAnniversary(
     id: options.id,
     label: format,
     startYear: options.startYear,
+  }
+}
+
+function defineAnnualEvent(options: AnnualEventOptions): AnniversaryDefinition {
+  const description = options.description ?? options.label
+
+  return {
+    date: options.date,
+    describe: () => description,
+    icon: options.icon,
+    id: options.id,
+    label: () => options.label,
+    startYear: options.startYear ?? 0,
+  }
+}
+
+function defineDatedEvent(options: DatedEventOptions): AnniversaryDefinition {
+  const year = Number.parseInt(options.dateKey.slice(0, 4), 10)
+  const month = Number.parseInt(options.dateKey.slice(5, 7), 10)
+  const day = Number.parseInt(options.dateKey.slice(8, 10), 10)
+
+  return {
+    ...defineAnnualEvent({
+      date: gregorianDate(month, day),
+      icon: options.icon,
+      id: options.id,
+      label: options.label,
+      startYear: year,
+      ...(options.description === undefined ? {} : { description: options.description }),
+    }),
+    endYear: year,
   }
 }
 
