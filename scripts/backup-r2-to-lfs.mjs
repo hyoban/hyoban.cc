@@ -13,6 +13,7 @@ import { fileURLToPath } from 'node:url'
 
 import { listR2Objects } from './lib/cloudflare-r2-api.mjs'
 
+const DOWNLOAD_TIMEOUT_MS = 30_000
 const root = fileURLToPath(new URL('../', import.meta.url))
 const options = parseArguments(process.argv.slice(2))
 const toolRoot = resolve(options.toolRoot ?? root)
@@ -169,7 +170,7 @@ async function matchesObject(file, object) {
 
 async function downloadObject(object, file) {
   const url = `${config.origin}/${object.key.split('/').map(encodeURIComponent).join('/')}`
-  const response = await fetchWithRetries(url)
+  const { contents, response } = await fetchWithRetries(url)
 
   if (!response.ok) {
     throw new Error(`Unable to download ${object.key}: ${response.status} ${response.statusText}`)
@@ -182,7 +183,6 @@ async function downloadObject(object, file) {
     throw new Error(`R2 response metadata mismatch: ${object.key}`)
   }
 
-  const contents = Buffer.from(await response.arrayBuffer())
   const contentEtag = isMd5Etag(object.etag)
     ? createHash('md5').update(contents).digest('hex')
     : object.etag
@@ -284,13 +284,18 @@ async function fetchWithRetries(url) {
 
   for (let attempt = 1; attempt <= 5; attempt += 1) {
     try {
-      const response = await fetch(url, { cache: 'no-store' })
+      const response = await fetch(url, {
+        cache: 'no-store',
+        signal: AbortSignal.timeout(DOWNLOAD_TIMEOUT_MS),
+      })
 
       if (response.status === 429 || response.status >= 500) {
         throw new Error(`${response.status} ${response.statusText}`)
       }
 
-      return response
+      const contents = Buffer.from(await response.arrayBuffer())
+
+      return { contents, response }
     } catch (error) {
       lastError = error
 

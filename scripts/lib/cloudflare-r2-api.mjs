@@ -10,6 +10,7 @@ import {
 } from '@aws-sdk/client-s3'
 
 const execFile = promisify(execFileCallback)
+const REQUEST_TIMEOUT_MS = 30_000
 
 export async function listR2Objects(options) {
   if (process.env.R2_ACCESS_KEY_ID || process.env.R2_SECRET_ACCESS_KEY) {
@@ -61,12 +62,17 @@ async function listR2ObjectsWithS3(options) {
   let continuationToken
 
   do {
-    const result = await client.send(new ListObjectsV2Command({
-      Bucket: options.bucket,
-      ContinuationToken: continuationToken,
-      MaxKeys: 1000,
-      Prefix: options.prefix ?? '',
-    }))
+    const result = await withRetries(
+      () => client.send(new ListObjectsV2Command({
+        Bucket: options.bucket,
+        ContinuationToken: continuationToken,
+        MaxKeys: 1000,
+        Prefix: options.prefix ?? '',
+      }), {
+        abortSignal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      }),
+      'list R2 objects through the S3 API',
+    )
 
     objects.push(...(result.Contents ?? []).map(object => ({
       etag: object.ETag?.replaceAll('"', '') ?? null,
@@ -125,19 +131,40 @@ async function getCloudflareToken(root) {
 }
 
 async function cloudflareRequest(url, token) {
-  const response = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'User-Agent': 'hyoban-moments',
-    },
-  })
-  const result = await response.json()
+  return withRetries(async () => {
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'User-Agent': 'hyoban-moments',
+      },
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    })
+    const result = await response.json()
 
-  if (!response.ok || !result.success) {
-    throw new Error(
-      `Cloudflare API request failed: ${response.status} ${JSON.stringify(result.errors ?? [])}`,
-    )
+    if (!response.ok || !result.success) {
+      throw new Error(
+        `Cloudflare API request failed: ${response.status} ${JSON.stringify(result.errors ?? [])}`,
+      )
+    }
+
+    return result
+  }, 'list R2 objects through the Cloudflare API')
+}
+
+async function withRetries(operation, label) {
+  let lastError
+
+  for (let attempt = 1; attempt <= 5; attempt += 1) {
+    try {
+      return await operation()
+    } catch (error) {
+      lastError = error
+
+      if (attempt < 5) {
+        await new Promise(resolve => setTimeout(resolve, 250 * 2 ** (attempt - 1)))
+      }
+    }
   }
 
-  return result
+  throw new Error(`Failed to ${label} after 5 attempts.`, { cause: lastError })
 }
