@@ -1,0 +1,27 @@
+{
+  "nanjing-jiangbei-hongyuecheng-480w.webp": {
+    "bytes": 43174,
+    "contentType": "image/webp",
+    "etag": "84a7f45a3c32943aee1dc9cdcc8fd00c",
+    "height": 360,
+    "width": 480
+  },
+  "nanjing-jiangbei-hongyuecheng-960w.webp": {
+    "bytes": 134614,
+    "contentType": "image/webp",
+    "etag": "1de9d8ff0e214ba949431cc0237a9369",
+    "height": 720,
+    "width": 960
+  },
+  "nanjing-jiangbei-hongyuecheng.webp": {
+    "bytes": 431420,
+    "contentType": "image/webp",
+    "etag": "4cad00be0d33b03364b6f342bf56e2e7",
+    "height": 1440,
+    "width": 1920,
+    "variants": [
+      "nanjing-jiangbei-hongyuecheng-480w.webp",
+      "nanjing-jiangbei-hongyuecheng-960w.webp"
+    ]
+  }
+}

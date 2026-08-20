@@ -1,0 +1,88 @@
+{
+  "rizhao-sunrise-2-480w.webp": {
+    "bytes": 18328,
+    "contentType": "image/webp",
+    "etag": "b1ca277985cd7bd228934cb6daee6196",
+    "height": 360,
+    "width": 480
+  },
+  "rizhao-sunrise-2-960w.webp": {
+    "bytes": 67562,
+    "contentType": "image/webp",
+    "etag": "07eddd2f71c5b2b17fa51962d6cf410e",
+    "height": 720,
+    "width": 960
+  },
+  "rizhao-sunrise-2.webp": {
+    "bytes": 251390,
+    "contentType": "image/webp",
+    "etag": "b29dcdfea0c743d879fc36363bdb5a77",
+    "height": 1440,
+    "width": 1920,
+    "variants": [
+      "rizhao-sunrise-2-480w.webp",
+      "rizhao-sunrise-2-960w.webp"
+    ]
+  },
+  "rizhao-sunrise-480w.webp": {
+    "bytes": 10832,
+    "contentType": "image/webp",
+    "etag": "27d01dbbc3e3c367299b7bf0651bfbff",
+    "height": 360,
+    "width": 480
+  },
+  "rizhao-sunrise-960w.webp": {
+    "bytes": 38570,
+    "contentType": "image/webp",
+    "etag": "e438f870ee584fdf066734140b4cb381",
+    "height": 720,
+    "width": 960
+  },
+  "rizhao-sunrise-video-2-poster.webp": {
+    "bytes": 67926,
+    "contentType": "image/webp",
+    "etag": "676aa3600338ea416e83c4f199db5c8c",
+    "height": 720,
+    "width": 1280
+  },
+  "rizhao-sunrise-video-2.mp4": {
+    "bytes": 10676734,
+    "contentType": "video/mp4",
+    "etag": "465d4217da1e829e44b46a3b2d15dd5e"
+  },
+  "rizhao-sunrise-video-3-poster.webp": {
+    "bytes": 46098,
+    "contentType": "image/webp",
+    "etag": "645edf2f492ffc97d68a962e6d75f238",
+    "height": 720,
+    "width": 1280
+  },
+  "rizhao-sunrise-video-3.mp4": {
+    "bytes": 6408099,
+    "contentType": "video/mp4",
+    "etag": "1fabe7e7f005288297c78b7634746ece"
+  },
+  "rizhao-sunrise-video-poster.webp": {
+    "bytes": 24606,
+    "contentType": "image/webp",
+    "etag": "88b8f5b80c97b042f183d777654fe08c",
+    "height": 720,
+    "width": 1280
+  },
+  "rizhao-sunrise-video.mp4": {
+    "bytes": 1632872,
+    "contentType": "video/mp4",
+    "etag": "2596eb49507b8e068e78f6ceb49cf8e5"
+  },
+  "rizhao-sunrise.webp": {
+    "bytes": 156532,
+    "contentType": "image/webp",
+    "etag": "0f72f715083fd7d3d35c98324051238b",
+    "height": 1440,
+    "width": 1920,
+    "variants": [
+      "rizhao-sunrise-480w.webp",
+      "rizhao-sunrise-960w.webp"
+    ]
+  }
+}

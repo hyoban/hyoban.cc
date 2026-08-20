@@ -1,0 +1,27 @@
+{
+  "yunnan-trip-booked-480w.webp": {
+    "bytes": 11874,
+    "contentType": "image/webp",
+    "etag": "117ee81755885d08df88479a5906d94f",
+    "height": 403,
+    "width": 480
+  },
+  "yunnan-trip-booked-960w.webp": {
+    "bytes": 25552,
+    "contentType": "image/webp",
+    "etag": "93f6d15e3cf7fd48abdc96832e625be2",
+    "height": 807,
+    "width": 960
+  },
+  "yunnan-trip-booked.webp": {
+    "bytes": 37374,
+    "contentType": "image/webp",
+    "etag": "6bf4621ba186153d9f082b3de60730cd",
+    "height": 991,
+    "width": 1179,
+    "variants": [
+      "yunnan-trip-booked-480w.webp",
+      "yunnan-trip-booked-960w.webp"
+    ]
+  }
+}

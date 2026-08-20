@@ -1,0 +1,77 @@
+{
+  "rizhao-food-2-480w.webp": {
+    "bytes": 40002,
+    "contentType": "image/webp",
+    "etag": "bcc532aa1b227f949232260de2bd3917",
+    "height": 360,
+    "width": 480
+  },
+  "rizhao-food-2-960w.webp": {
+    "bytes": 124750,
+    "contentType": "image/webp",
+    "etag": "96ca2fba9d2383b9fe12ba409ae11f59",
+    "height": 720,
+    "width": 960
+  },
+  "rizhao-food-2.webp": {
+    "bytes": 401512,
+    "contentType": "image/webp",
+    "etag": "965770e1669efdba00e472c12ea614ea",
+    "height": 1440,
+    "width": 1920,
+    "variants": [
+      "rizhao-food-2-480w.webp",
+      "rizhao-food-2-960w.webp"
+    ]
+  },
+  "rizhao-food-3-480w.webp": {
+    "bytes": 46384,
+    "contentType": "image/webp",
+    "etag": "be18004d6e9a882909ed5fa9a0fcb62a",
+    "height": 360,
+    "width": 480
+  },
+  "rizhao-food-3-960w.webp": {
+    "bytes": 146424,
+    "contentType": "image/webp",
+    "etag": "7c55e741082f712863478ff0c0bf391d",
+    "height": 720,
+    "width": 960
+  },
+  "rizhao-food-3.webp": {
+    "bytes": 442472,
+    "contentType": "image/webp",
+    "etag": "57823a824519e3d09d39aebad3e0fb06",
+    "height": 1440,
+    "width": 1920,
+    "variants": [
+      "rizhao-food-3-480w.webp",
+      "rizhao-food-3-960w.webp"
+    ]
+  },
+  "rizhao-food-480w.webp": {
+    "bytes": 50080,
+    "contentType": "image/webp",
+    "etag": "f139a91b2cfe482caee2d939878bf42a",
+    "height": 360,
+    "width": 480
+  },
+  "rizhao-food-960w.webp": {
+    "bytes": 177930,
+    "contentType": "image/webp",
+    "etag": "228fdce684462372d75b49d6ca472905",
+    "height": 720,
+    "width": 960
+  },
+  "rizhao-food.webp": {
+    "bytes": 636290,
+    "contentType": "image/webp",
+    "etag": "f60ac2939dd2f6c97e518431fe448d8f",
+    "height": 1440,
+    "width": 1920,
+    "variants": [
+      "rizhao-food-480w.webp",
+      "rizhao-food-960w.webp"
+    ]
+  }
+}

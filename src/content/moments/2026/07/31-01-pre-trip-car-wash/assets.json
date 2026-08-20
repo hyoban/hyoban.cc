@@ -1,0 +1,27 @@
+{
+  "pre-trip-car-wash-480w.webp": {
+    "bytes": 29216,
+    "contentType": "image/webp",
+    "etag": "250275c824df6b4a42eb30812289c05d",
+    "height": 360,
+    "width": 480
+  },
+  "pre-trip-car-wash-960w.webp": {
+    "bytes": 111576,
+    "contentType": "image/webp",
+    "etag": "548950948237dca9ea46a269a5bd5348",
+    "height": 720,
+    "width": 960
+  },
+  "pre-trip-car-wash.webp": {
+    "bytes": 419980,
+    "contentType": "image/webp",
+    "etag": "13a49f17cc82d40391184a08cc46830b",
+    "height": 1440,
+    "width": 1920,
+    "variants": [
+      "pre-trip-car-wash-480w.webp",
+      "pre-trip-car-wash-960w.webp"
+    ]
+  }
+}

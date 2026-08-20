@@ -1,0 +1,127 @@
+{
+  "village-starbucks-2-480w.webp": {
+    "bytes": 20316,
+    "contentType": "image/webp",
+    "etag": "57137b75b33615ba5a5b8ab33d43429e",
+    "height": 360,
+    "width": 480
+  },
+  "village-starbucks-2-960w.webp": {
+    "bytes": 72616,
+    "contentType": "image/webp",
+    "etag": "1d43aadeebee3e1b0289556279451b51",
+    "height": 720,
+    "width": 960
+  },
+  "village-starbucks-2.webp": {
+    "bytes": 308804,
+    "contentType": "image/webp",
+    "etag": "909d57fadeb94263dfa25dac30a24046",
+    "height": 1440,
+    "width": 1920,
+    "variants": [
+      "village-starbucks-2-480w.webp",
+      "village-starbucks-2-960w.webp"
+    ]
+  },
+  "village-starbucks-3-480w.webp": {
+    "bytes": 31372,
+    "contentType": "image/webp",
+    "etag": "87e5513c3950ba86ccf4745f11862de9",
+    "height": 360,
+    "width": 480
+  },
+  "village-starbucks-3-960w.webp": {
+    "bytes": 99198,
+    "contentType": "image/webp",
+    "etag": "a827ea2a254b9eca3fc4dda8c588c7b5",
+    "height": 720,
+    "width": 960
+  },
+  "village-starbucks-3.webp": {
+    "bytes": 322910,
+    "contentType": "image/webp",
+    "etag": "1b46d3056f8279d41ce8cce7101f38cf",
+    "height": 1440,
+    "width": 1920,
+    "variants": [
+      "village-starbucks-3-480w.webp",
+      "village-starbucks-3-960w.webp"
+    ]
+  },
+  "village-starbucks-4-480w.webp": {
+    "bytes": 53220,
+    "contentType": "image/webp",
+    "etag": "d6add6209fc9341996d3a1db52719970",
+    "height": 640,
+    "width": 480
+  },
+  "village-starbucks-4-960w.webp": {
+    "bytes": 159962,
+    "contentType": "image/webp",
+    "etag": "cc037b2de4ff74369ecff87675cd4c94",
+    "height": 1280,
+    "width": 960
+  },
+  "village-starbucks-4.webp": {
+    "bytes": 393040,
+    "contentType": "image/webp",
+    "etag": "8d2f1d6d5178ded1fe37712188755ed9",
+    "height": 1920,
+    "width": 1440,
+    "variants": [
+      "village-starbucks-4-480w.webp",
+      "village-starbucks-4-960w.webp"
+    ]
+  },
+  "village-starbucks-480w.webp": {
+    "bytes": 44154,
+    "contentType": "image/webp",
+    "etag": "3bebcc8beeee4626a6c3a2fa466488d4",
+    "height": 640,
+    "width": 480
+  },
+  "village-starbucks-5-480w.webp": {
+    "bytes": 18128,
+    "contentType": "image/webp",
+    "etag": "04fb5b2eea35d5e81c5e6afa6398809e",
+    "height": 360,
+    "width": 480
+  },
+  "village-starbucks-5-960w.webp": {
+    "bytes": 74490,
+    "contentType": "image/webp",
+    "etag": "db758bf31b73114e42c36969323b20d7",
+    "height": 720,
+    "width": 960
+  },
+  "village-starbucks-5.webp": {
+    "bytes": 315940,
+    "contentType": "image/webp",
+    "etag": "90151debd28d77b8b9dffa89564f9b9e",
+    "height": 1440,
+    "width": 1920,
+    "variants": [
+      "village-starbucks-5-480w.webp",
+      "village-starbucks-5-960w.webp"
+    ]
+  },
+  "village-starbucks-960w.webp": {
+    "bytes": 118126,
+    "contentType": "image/webp",
+    "etag": "a0eee12df044bd2f66d994e627a28e60",
+    "height": 1280,
+    "width": 960
+  },
+  "village-starbucks.webp": {
+    "bytes": 261360,
+    "contentType": "image/webp",
+    "etag": "0f3b3d90eb2acf5999b65264226f754e",
+    "height": 1920,
+    "width": 1440,
+    "variants": [
+      "village-starbucks-480w.webp",
+      "village-starbucks-960w.webp"
+    ]
+  }
+}

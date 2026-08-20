@@ -1,0 +1,252 @@
+{
+  "huaian-10-480w.webp": {
+    "bytes": 34032,
+    "contentType": "image/webp",
+    "etag": "ec26328e62b2637f7dfdb382e1aead25",
+    "height": 640,
+    "width": 480
+  },
+  "huaian-10-960w.webp": {
+    "bytes": 91078,
+    "contentType": "image/webp",
+    "etag": "41ec91d5589326e4a70912d3f1afae81",
+    "height": 1280,
+    "width": 960
+  },
+  "huaian-10.webp": {
+    "bytes": 195868,
+    "contentType": "image/webp",
+    "etag": "85cec9da9de0cdca62bef454e82a4021",
+    "height": 1920,
+    "width": 1440,
+    "variants": [
+      "huaian-10-480w.webp",
+      "huaian-10-960w.webp"
+    ]
+  },
+  "huaian-2-480w.webp": {
+    "bytes": 54614,
+    "contentType": "image/webp",
+    "etag": "916926f222d2f37daeb4e55f4341c790",
+    "height": 720,
+    "width": 480
+  },
+  "huaian-2-960w.webp": {
+    "bytes": 137436,
+    "contentType": "image/webp",
+    "etag": "8c8697062d4460a3841ed8d0f3b99fed",
+    "height": 1440,
+    "width": 960
+  },
+  "huaian-2.webp": {
+    "bytes": 247152,
+    "contentType": "image/webp",
+    "etag": "28fc1a802cadc4a6a55fc2d933cd9283",
+    "height": 1920,
+    "width": 1280,
+    "variants": [
+      "huaian-2-480w.webp",
+      "huaian-2-960w.webp"
+    ]
+  },
+  "huaian-3-480w.webp": {
+    "bytes": 48954,
+    "contentType": "image/webp",
+    "etag": "ef2eda518437df02089cf1b33cb17a5c",
+    "height": 720,
+    "width": 480
+  },
+  "huaian-3-960w.webp": {
+    "bytes": 136270,
+    "contentType": "image/webp",
+    "etag": "e1ec73c0cd4ced172ed912ee2eebbae5",
+    "height": 1440,
+    "width": 960
+  },
+  "huaian-3.webp": {
+    "bytes": 276286,
+    "contentType": "image/webp",
+    "etag": "fb1c485c77f26b9ee84a2cf1b4154c99",
+    "height": 1920,
+    "width": 1280,
+    "variants": [
+      "huaian-3-480w.webp",
+      "huaian-3-960w.webp"
+    ]
+  },
+  "huaian-4-480w.webp": {
+    "bytes": 31084,
+    "contentType": "image/webp",
+    "etag": "c6535f93c4075a1de257f9cd4d2cd319",
+    "height": 320,
+    "width": 480
+  },
+  "huaian-4-960w.webp": {
+    "bytes": 91696,
+    "contentType": "image/webp",
+    "etag": "dd770f318f53872e350748871176bddf",
+    "height": 640,
+    "width": 960
+  },
+  "huaian-4.webp": {
+    "bytes": 281276,
+    "contentType": "image/webp",
+    "etag": "50c0fc0e798e825d3d229832eb24284d",
+    "height": 1280,
+    "width": 1920,
+    "variants": [
+      "huaian-4-480w.webp",
+      "huaian-4-960w.webp"
+    ]
+  },
+  "huaian-480w.webp": {
+    "bytes": 24226,
+    "contentType": "image/webp",
+    "etag": "bceabde24c9410d229cc205665602916",
+    "height": 320,
+    "width": 480
+  },
+  "huaian-5-480w.webp": {
+    "bytes": 46812,
+    "contentType": "image/webp",
+    "etag": "fe175f33e29a482107bbc48371af3905",
+    "height": 640,
+    "width": 480
+  },
+  "huaian-5-960w.webp": {
+    "bytes": 121492,
+    "contentType": "image/webp",
+    "etag": "3db72d4d9208ec848cf2c83f55d675ce",
+    "height": 1280,
+    "width": 960
+  },
+  "huaian-5.webp": {
+    "bytes": 254840,
+    "contentType": "image/webp",
+    "etag": "3cf6df9a86f1a4dd56670745bd80e30d",
+    "height": 1920,
+    "width": 1440,
+    "variants": [
+      "huaian-5-480w.webp",
+      "huaian-5-960w.webp"
+    ]
+  },
+  "huaian-6-480w.webp": {
+    "bytes": 24998,
+    "contentType": "image/webp",
+    "etag": "afff57809a25ebe48bd89af097f3cb83",
+    "height": 640,
+    "width": 480
+  },
+  "huaian-6-960w.webp": {
+    "bytes": 67700,
+    "contentType": "image/webp",
+    "etag": "3e885a4516fdfb43daba2790b53adacf",
+    "height": 1280,
+    "width": 960
+  },
+  "huaian-6.webp": {
+    "bytes": 153342,
+    "contentType": "image/webp",
+    "etag": "2e46326ce255226e91dfaeec3f6db6a7",
+    "height": 1920,
+    "width": 1440,
+    "variants": [
+      "huaian-6-480w.webp",
+      "huaian-6-960w.webp"
+    ]
+  },
+  "huaian-7-480w.webp": {
+    "bytes": 20252,
+    "contentType": "image/webp",
+    "etag": "460834f73f60ec606fda7e2f53008786",
+    "height": 320,
+    "width": 480
+  },
+  "huaian-7-960w.webp": {
+    "bytes": 59046,
+    "contentType": "image/webp",
+    "etag": "add658f4dff8a1420fa877031ff5daf8",
+    "height": 640,
+    "width": 960
+  },
+  "huaian-7.webp": {
+    "bytes": 179876,
+    "contentType": "image/webp",
+    "etag": "118874f575a279e5a51a4a8aea78f5cb",
+    "height": 1280,
+    "width": 1920,
+    "variants": [
+      "huaian-7-480w.webp",
+      "huaian-7-960w.webp"
+    ]
+  },
+  "huaian-8-480w.webp": {
+    "bytes": 11896,
+    "contentType": "image/webp",
+    "etag": "1e0de0b41bb70f78b621218a907ac56a",
+    "height": 320,
+    "width": 480
+  },
+  "huaian-8-960w.webp": {
+    "bytes": 29656,
+    "contentType": "image/webp",
+    "etag": "37aff19fb3eb27d990c96c74a9cd383f",
+    "height": 640,
+    "width": 960
+  },
+  "huaian-8.webp": {
+    "bytes": 84440,
+    "contentType": "image/webp",
+    "etag": "8433d0f769a0fdf9d40b8b2f7cd10152",
+    "height": 1280,
+    "width": 1920,
+    "variants": [
+      "huaian-8-480w.webp",
+      "huaian-8-960w.webp"
+    ]
+  },
+  "huaian-9-480w.webp": {
+    "bytes": 34594,
+    "contentType": "image/webp",
+    "etag": "a1623c20a3da18457754d0e3c51df1f7",
+    "height": 360,
+    "width": 480
+  },
+  "huaian-9-960w.webp": {
+    "bytes": 112346,
+    "contentType": "image/webp",
+    "etag": "b9345fb8ecf6a28714a667ae5d066442",
+    "height": 720,
+    "width": 960
+  },
+  "huaian-9.webp": {
+    "bytes": 353868,
+    "contentType": "image/webp",
+    "etag": "7867081a4941ddc85d1b52ee65cd7c3b",
+    "height": 1440,
+    "width": 1920,
+    "variants": [
+      "huaian-9-480w.webp",
+      "huaian-9-960w.webp"
+    ]
+  },
+  "huaian-960w.webp": {
+    "bytes": 73656,
+    "contentType": "image/webp",
+    "etag": "d904bd5048a5800e992a7c12521582d4",
+    "height": 640,
+    "width": 960
+  },
+  "huaian.webp": {
+    "bytes": 261662,
+    "contentType": "image/webp",
+    "etag": "0f0f0e9976575781a57a8726c356810c",
+    "height": 1280,
+    "width": 1920,
+    "variants": [
+      "huaian-480w.webp",
+      "huaian-960w.webp"
+    ]
+  }
+}

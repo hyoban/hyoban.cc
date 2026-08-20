@@ -1,0 +1,26 @@
+{
+  "ready-for-sea-sunrise-video-2-poster.webp": {
+    "bytes": 8894,
+    "contentType": "image/webp",
+    "etag": "e7d9ba893942a16044918125335e2ef4",
+    "height": 1280,
+    "width": 720
+  },
+  "ready-for-sea-sunrise-video-2.mp4": {
+    "bytes": 1131049,
+    "contentType": "video/mp4",
+    "etag": "1abc439d5bca3d495191c3b848a03089"
+  },
+  "ready-for-sea-sunrise-video-poster.webp": {
+    "bytes": 10426,
+    "contentType": "image/webp",
+    "etag": "b22702fdc88a465fa2a1270e68219e8a",
+    "height": 720,
+    "width": 1280
+  },
+  "ready-for-sea-sunrise-video.mp4": {
+    "bytes": 1632140,
+    "contentType": "video/mp4",
+    "etag": "ae34cba462258dbbfa3b4a5b29b0eca6"
+  }
+}

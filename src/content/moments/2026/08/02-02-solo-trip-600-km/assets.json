@@ -1,0 +1,27 @@
+{
+  "solo-trip-600-km-480w.webp": {
+    "bytes": 24456,
+    "contentType": "image/webp",
+    "etag": "cc5c772b3f5d76360cc142785ea90399",
+    "height": 944,
+    "width": 480
+  },
+  "solo-trip-600-km-960w.webp": {
+    "bytes": 59898,
+    "contentType": "image/webp",
+    "etag": "71f65023da67c5fc27b2a217c38b62e2",
+    "height": 1889,
+    "width": 960
+  },
+  "solo-trip-600-km.webp": {
+    "bytes": 82496,
+    "contentType": "image/webp",
+    "etag": "482e12d628cb55b6786d06dc5f348541",
+    "height": 1920,
+    "width": 976,
+    "variants": [
+      "solo-trip-600-km-480w.webp",
+      "solo-trip-600-km-960w.webp"
+    ]
+  }
+}

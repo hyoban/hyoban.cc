@@ -1,0 +1,27 @@
+{
+  "good-morning-west-lake-480w.webp": {
+    "bytes": 32058,
+    "contentType": "image/webp",
+    "etag": "5f2bd960c28aed2f4a4909b06b60efc8",
+    "height": 360,
+    "width": 480
+  },
+  "good-morning-west-lake-960w.webp": {
+    "bytes": 117310,
+    "contentType": "image/webp",
+    "etag": "3a03c73a2a01524190fb363f92e39035",
+    "height": 720,
+    "width": 960
+  },
+  "good-morning-west-lake.webp": {
+    "bytes": 426478,
+    "contentType": "image/webp",
+    "etag": "3cfd2a9e4070bf1ff85b30b7740c1dc5",
+    "height": 1440,
+    "width": 1920,
+    "variants": [
+      "good-morning-west-lake-480w.webp",
+      "good-morning-west-lake-960w.webp"
+    ]
+  }
+}

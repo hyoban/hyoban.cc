@@ -107,6 +107,11 @@ export const locations = defineLocations({
     longitude: 114.1694,
     name: '香港',
   },
+  huaian: {
+    latitude: 33.6065,
+    longitude: 119.0302,
+    name: '淮安',
+  },
   kangding: {
     latitude: 30.0507,
     longitude: 101.9601,
@@ -131,6 +136,11 @@ export const locations = defineLocations({
     latitude: 29.6511,
     longitude: 101.6836,
     name: '冷嘎措',
+  },
+  liandao: {
+    latitude: 34.7652,
+    longitude: 119.4353,
+    name: '连岛景区',
   },
   lingbi: {
     latitude: 33.541,
@@ -172,6 +182,11 @@ export const locations = defineLocations({
     longitude: 118.7969,
     name: '南京',
   },
+  'nanjing-jiangbei-hongyuecheng': {
+    latitude: 32.06926,
+    longitude: 118.63504,
+    name: '南京江北虹悦城',
+  },
   nanxun: {
     latitude: 30.883,
     longitude: 120.4353,
@@ -191,6 +206,11 @@ export const locations = defineLocations({
     latitude: 36.0671,
     longitude: 120.3826,
     name: '青岛',
+  },
+  rizhao: {
+    latitude: 35.4154,
+    longitude: 119.5267,
+    name: '日照',
   },
   sanhe: {
     latitude: 31.514,

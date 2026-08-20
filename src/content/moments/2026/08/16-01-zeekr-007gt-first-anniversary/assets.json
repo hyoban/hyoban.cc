@@ -1,0 +1,69 @@
+{
+  "zeekr-007gt-first-anniversary-2-480w.webp": {
+    "bytes": 31680,
+    "contentType": "image/webp",
+    "etag": "b7d9ef130b441bf799c5900a88efe6f1",
+    "height": 360,
+    "width": 480
+  },
+  "zeekr-007gt-first-anniversary-2-960w.webp": {
+    "bytes": 96604,
+    "contentType": "image/webp",
+    "etag": "222f68adc7eef766fce31048a27e5dd5",
+    "height": 720,
+    "width": 960
+  },
+  "zeekr-007gt-first-anniversary-2.webp": {
+    "bytes": 298886,
+    "contentType": "image/webp",
+    "etag": "a9695b32c3817ca053c0d83aa8523a6c",
+    "height": 1441,
+    "width": 1920,
+    "variants": [
+      "zeekr-007gt-first-anniversary-2-480w.webp",
+      "zeekr-007gt-first-anniversary-2-960w.webp"
+    ]
+  },
+  "zeekr-007gt-first-anniversary-3-480w.webp": {
+    "bytes": 32324,
+    "contentType": "image/webp",
+    "etag": "bd1b5664093ae10cd871029d4b7a33e8",
+    "height": 1293,
+    "width": 480
+  },
+  "zeekr-007gt-first-anniversary-3.webp": {
+    "bytes": 58186,
+    "contentType": "image/webp",
+    "etag": "d0b932810f0709f61a6bba7ca2122944",
+    "height": 1920,
+    "width": 713,
+    "variants": [
+      "zeekr-007gt-first-anniversary-3-480w.webp"
+    ]
+  },
+  "zeekr-007gt-first-anniversary-480w.webp": {
+    "bytes": 34050,
+    "contentType": "image/webp",
+    "etag": "fe6dc5e4070086703b7c86712c8a3585",
+    "height": 360,
+    "width": 480
+  },
+  "zeekr-007gt-first-anniversary-960w.webp": {
+    "bytes": 109078,
+    "contentType": "image/webp",
+    "etag": "1151a29a4006040d93c3a33ac08ee6db",
+    "height": 720,
+    "width": 960
+  },
+  "zeekr-007gt-first-anniversary.webp": {
+    "bytes": 214486,
+    "contentType": "image/webp",
+    "etag": "bb721ae4aa0b847555133dc5123adc01",
+    "height": 960,
+    "width": 1280,
+    "variants": [
+      "zeekr-007gt-first-anniversary-480w.webp",
+      "zeekr-007gt-first-anniversary-960w.webp"
+    ]
+  }
+}
