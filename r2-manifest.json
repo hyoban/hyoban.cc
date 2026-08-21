@@ -3,10 +3,10 @@
   "accountId": "e68c7dce80df20ff5802b9ac36f1eab6",
   "bucket": "blog-images",
   "origin": "https://image.hyoban.cc",
-  "createdAt": "2026-08-20T15:15:47.999Z",
-  "inventorySha256": "5b7058e1b611a2772935efd4060656c789444d6ae233786a60dc93a25dc1d408",
-  "objectCount": 2008,
-  "totalBytes": 444269156,
+  "createdAt": "2026-08-21T02:28:35.106Z",
+  "inventorySha256": "2093d2f4956d6e83474c3d340294ae2979e923906cafc92ae005003811cbf125",
+  "objectCount": 2011,
+  "totalBytes": 444638378,
   "objects": [
     {
       "key": "moments/2023/04/15-01-preview-dialog-for-my-blog-post-with-intercepting-amp/preview-dialog-for-my-blog-post-with-intercepting-amp-video-poster.png",
@@ -15910,6 +15910,30 @@
       "contentType": "image/webp",
       "etag": "6bf4621ba186153d9f082b3de60730cd",
       "lastModified": "2026-08-20T14:54:33.582Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/08/21-01-ricoh-gr3x-magic/ricoh-gr3x-magic-480w.webp",
+      "bytes": 24514,
+      "contentType": "image/webp",
+      "etag": "f9c219626dde346dbb2cdfd0cdc3b7f3",
+      "lastModified": "2026-08-21T02:26:14.585Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/08/21-01-ricoh-gr3x-magic/ricoh-gr3x-magic-960w.webp",
+      "bytes": 82210,
+      "contentType": "image/webp",
+      "etag": "cb6c3b20da7f6497814f2af4434d33fb",
+      "lastModified": "2026-08-21T02:26:18.380Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/08/21-01-ricoh-gr3x-magic/ricoh-gr3x-magic.webp",
+      "bytes": 262498,
+      "contentType": "image/webp",
+      "etag": "b9e0fa6a19455b96422d005c8ea786d0",
+      "lastModified": "2026-08-21T02:26:22.363Z",
       "storageClass": "Standard"
     },
     {
