@@ -1,0 +1,27 @@
+{
+  "ricoh-gr3x-magic-480w.webp": {
+    "bytes": 24514,
+    "contentType": "image/webp",
+    "etag": "f9c219626dde346dbb2cdfd0cdc3b7f3",
+    "height": 360,
+    "width": 480
+  },
+  "ricoh-gr3x-magic-960w.webp": {
+    "bytes": 82210,
+    "contentType": "image/webp",
+    "etag": "cb6c3b20da7f6497814f2af4434d33fb",
+    "height": 720,
+    "width": 960
+  },
+  "ricoh-gr3x-magic.webp": {
+    "bytes": 262498,
+    "contentType": "image/webp",
+    "etag": "b9e0fa6a19455b96422d005c8ea786d0",
+    "height": 1440,
+    "width": 1920,
+    "variants": [
+      "ricoh-gr3x-magic-480w.webp",
+      "ricoh-gr3x-magic-960w.webp"
+    ]
+  }
+}
