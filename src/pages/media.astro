@@ -10,7 +10,6 @@ const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p'
 const posterImageClass = 'aspect-[2/3] w-full border border-border object-cover'
 
 type MediaRecommendation = {
-  bilibiliEpisodeId?: number
   bilibiliId?: number
   note?: string
   type: 'movie' | 'tv'
@@ -77,9 +76,7 @@ function resolveMediaWork(recommendation: MediaRecommendation, generated: Genera
   const displayTitle = originalTitle && originalTitle !== title ? originalTitle : title
   const bilibiliUrl = recommendation.bilibiliId
     ? getBilibiliUrl(recommendation.bilibiliId)
-    : recommendation.bilibiliEpisodeId
-      ? getBilibiliEpisodeUrl(recommendation.bilibiliEpisodeId)
-      : undefined
+    : undefined
 
   return {
     bilibiliUrl,
@@ -99,10 +96,6 @@ function getMediaKey(media: Pick<MediaRecommendation, 'type' | 'tmdbId'>) {
 
 function getBilibiliUrl(bilibiliId: number) {
   return `https://www.bilibili.com/bangumi/play/ss${bilibiliId}`
-}
-
-function getBilibiliEpisodeUrl(bilibiliEpisodeId: number) {
-  return `https://www.bilibili.com/bangumi/play/ep${bilibiliEpisodeId}`
 }
 
 function getTmdbUrl(type: GeneratedMediaItem['type'], tmdbId: number) {
