@@ -198,5 +198,429 @@
         "url": "https://www.bilibili.com/bangumi/play/ss47471"
       }
     ]
+  },
+  {
+    "type": "tv",
+    "tmdbId": 90960,
+    "doubanId": 6013870
+  },
+  {
+    "type": "tv",
+    "tmdbId": 104960,
+    "doubanId": 33404425,
+    "playbackSources": [
+      {
+        "name": "爱奇艺",
+        "url": "https://www.iqiyi.com/v_2ffkws0bgr0.html?vfm=m_331_dbdy&fv=4904d94982104144a1548dd9040df241"
+      }
+    ]
+  },
+  {
+    "type": "tv",
+    "tmdbId": 95623,
+    "doubanId": 34906720
+  },
+  {
+    "type": "tv",
+    "tmdbId": 18604,
+    "doubanId": 3237723,
+    "playbackSources": [
+      {
+        "name": "腾讯视频",
+        "url": "https://v.qq.com/x/cover/ceusrubximxm0g8/g0023yhas9e.html"
+      }
+    ]
+  },
+  {
+    "type": "tv",
+    "tmdbId": 32043,
+    "doubanId": 2284418,
+    "playbackSources": [
+      {
+        "name": "咪咕视频",
+        "url": "https://m.miguvideo.com/mgs/msite/prd/detail.html?cid=694215404&pwId=d01197d3076b4164af82983c408bb996"
+      },
+      {
+        "name": "腾讯视频",
+        "url": "https://v.qq.com/x/page/b00413znmnp.html"
+      },
+      {
+        "name": "爱奇艺",
+        "url": "https://www.iqiyi.com/v_19rrkch36w.html?vfm=m_331_dbdy&fv=4904d94982104144a1548dd9040df241"
+      }
+    ]
+  },
+  {
+    "type": "tv",
+    "tmdbId": 8757,
+    "doubanId": 2210031,
+    "playbackSources": [
+      {
+        "name": "咪咕视频",
+        "url": "https://m.miguvideo.com/mgs/msite/prd/detail.html?cid=650280877&pwId=d01197d3076b4164af82983c408bb996&pkgId=null"
+      },
+      {
+        "name": "优酷视频",
+        "url": "https://www.youku.com/show_page/id_zcbfbbea2962411de83b1.html"
+      }
+    ]
+  },
+  {
+    "type": "tv",
+    "tmdbId": 33823,
+    "doubanId": 3227335,
+    "playbackSources": [
+      {
+        "name": "咪咕视频",
+        "url": "https://m.miguvideo.com/mgs/msite/prd/detail.html?cid=647216841&pwId=d01197d3076b4164af82983c408bb996&pkgId=null"
+      },
+      {
+        "name": "优酷视频",
+        "url": "https://www.youku.com/show_page/id_zcc07361a962411de83b1.html"
+      }
+    ]
+  },
+  {
+    "type": "movie",
+    "tmdbId": 1212009,
+    "doubanId": 36149032,
+    "playbackSources": [
+      {
+        "name": "腾讯视频",
+        "url": "https://v.qq.com/x/cover/mzc002008ccy3rw.html"
+      },
+      {
+        "name": "爱奇艺",
+        "url": "https://www.iqiyi.com/v_1suqv77p1bw.html?vfm=m_331_dbdy&fv=4904d94982104144a1548dd9040df241"
+      },
+      {
+        "name": "优酷视频",
+        "url": "https://www.youku.com/show_page/id_zadeb694d056644f19392.html"
+      }
+    ]
+  },
+  {
+    "type": "tv",
+    "tmdbId": 78510,
+    "doubanId": 3609075,
+    "playbackSources": [
+      {
+        "name": "爱奇艺",
+        "url": "https://www.iqiyi.com/v_19rrj5rqnk.html?vfm=m_331_dbdy&fv=4904d94982104144a1548dd9040df241"
+      }
+    ]
+  },
+  {
+    "type": "tv",
+    "tmdbId": 96792,
+    "doubanId": 3197783,
+    "playbackSources": [
+      {
+        "name": "腾讯视频",
+        "url": "https://v.qq.com/x/page/b0020qlr4fy.html"
+      },
+      {
+        "name": "优酷视频",
+        "url": "https://www.youku.com/show_page/id_zcc1723fe962411de83b1.html"
+      }
+    ]
+  },
+  {
+    "type": "tv",
+    "tmdbId": 64444,
+    "doubanId": 2997325,
+    "playbackSources": [
+      {
+        "name": "爱奇艺",
+        "url": "https://www.iqiyi.com/v_19rrjaizd4.html?vfm=m_331_dbdy&fv=4904d94982104144a1548dd9040df241"
+      }
+    ]
+  },
+  {
+    "type": "tv",
+    "tmdbId": 72819,
+    "doubanId": 3990403
+  },
+  {
+    "type": "tv",
+    "tmdbId": 84634,
+    "doubanId": 4718246,
+    "playbackSources": [
+      {
+        "name": "腾讯视频",
+        "url": "https://v.qq.com/x/cover/lth99s5zzjf0lyd/m0021ukvtop.html"
+      }
+    ]
+  },
+  {
+    "type": "tv",
+    "tmdbId": 18335,
+    "doubanId": 2154096,
+    "playbackSources": [
+      {
+        "name": "腾讯视频",
+        "url": "https://v.qq.com/x/cover/qn4ablksldmsyw7/9Yfl2rewRDw.html"
+      },
+      {
+        "name": "爱奇艺",
+        "url": "https://www.iqiyi.com/v_19rrjaiybk.html?vfm=m_331_dbdy&fv=4904d94982104144a1548dd9040df241"
+      },
+      {
+        "name": "哔哩哔哩",
+        "url": "https://www.bilibili.com/bangumi/play/ep140058"
+      }
+    ]
+  },
+  {
+    "type": "tv",
+    "tmdbId": 46234,
+    "doubanId": 10491666,
+    "playbackSources": [
+      {
+        "name": "腾讯视频",
+        "url": "https://v.qq.com/x/cover/mzc00200pwnselj/d0040n1bsn9.html"
+      },
+      {
+        "name": "哔哩哔哩",
+        "url": "https://www.bilibili.com/bangumi/play/ss46138"
+      }
+    ]
+  },
+  {
+    "type": "tv",
+    "tmdbId": 79276,
+    "doubanId": 3732699,
+    "playbackSources": [
+      {
+        "name": "优酷视频",
+        "url": "https://www.youku.com/show_page/id_z659a5650dcba11de97c0.html"
+      }
+    ]
+  },
+  {
+    "type": "tv",
+    "tmdbId": 80935,
+    "doubanId": 2301032,
+    "playbackSources": [
+      {
+        "name": "腾讯视频",
+        "url": "https://v.qq.com/x/cover/mzc00200rkf2mc9/k4101qwpln3.html"
+      },
+      {
+        "name": "咪咕视频",
+        "url": "https://m.miguvideo.com/mgs/msite/prd/detail.html?cid=660356051&pwId=PRO_3ca4ab19cd934880a9829aafad6661d3&pkgId=null"
+      },
+      {
+        "name": "优酷视频",
+        "url": "https://v.youku.com/v_show/id_XNjEyMTAzNjc2.html"
+      }
+    ]
+  },
+  {
+    "type": "tv",
+    "tmdbId": 7682,
+    "doubanId": 2995158,
+    "playbackSources": [
+      {
+        "name": "咪咕视频",
+        "url": "https://m.miguvideo.com/mgs/msite/prd/detail.html?cid=686239338&pwId=PRO_54e20a1a3dd04ef1b8c922f016dc76fc&pkgId=null"
+      },
+      {
+        "name": "优酷视频",
+        "url": "https://www.youku.com/show_page/id_zcbfc4ef8962411de83b1.html"
+      }
+    ]
+  },
+  {
+    "type": "tv",
+    "tmdbId": 71100,
+    "doubanId": 26727273
+  },
+  {
+    "type": "movie",
+    "tmdbId": 84111,
+    "doubanId": 4920528,
+    "playbackSources": [
+      {
+        "name": "腾讯视频",
+        "url": "https://v.qq.com/x/cover/tu0bpgju3a1xno6.html"
+      },
+      {
+        "name": "爱奇艺",
+        "url": "https://www.iqiyi.com/v_19rrjzuao4.html?vfm=m_331_dbdy&fv=4904d94982104144a1548dd9040df241"
+      },
+      {
+        "name": "优酷视频",
+        "url": "https://v.youku.com/v_show/id_XMzU3ODU3NzEy.html"
+      }
+    ]
+  },
+  {
+    "type": "tv",
+    "tmdbId": 225008,
+    "doubanId": 35588177,
+    "playbackSources": [
+      {
+        "name": "腾讯视频",
+        "url": "https://v.qq.com/x/cover/mzc00200fhhxx8d/v0046des2cr.html"
+      }
+    ]
+  },
+  {
+    "type": "tv",
+    "tmdbId": 65568,
+    "doubanId": 2994955
+  },
+  {
+    "type": "tv",
+    "tmdbId": 210757,
+    "doubanId": 35465232,
+    "playbackSources": [
+      {
+        "name": "爱奇艺",
+        "url": "https://www.iqiyi.com/v_xkt6z3z798.html?vfm=m_331_dbdy&fv=4904d94982104144a1548dd9040df241"
+      }
+    ]
+  },
+  {
+    "type": "movie",
+    "tmdbId": 496243,
+    "doubanId": 27010768
+  },
+  {
+    "type": "movie",
+    "tmdbId": 387886,
+    "doubanId": 26307755
+  },
+  {
+    "type": "tv",
+    "tmdbId": 50878,
+    "doubanId": 4922787,
+    "playbackSources": [
+      {
+        "name": "优酷视频",
+        "url": "https://v.youku.com/v_show/id_XMzcxNDY5ODQ4.html"
+      }
+    ]
+  },
+  {
+    "type": "tv",
+    "tmdbId": 7153,
+    "doubanId": 3012309,
+    "playbackSources": [
+      {
+        "name": "腾讯视频",
+        "url": "https://v.qq.com/x/cover/timngrxhnktlcnw/f41019sy4di.html"
+      },
+      {
+        "name": "咪咕视频",
+        "url": "https://m.miguvideo.com/mgs/msite/prd/detail.html?cid=686228713&pwId=PRO_d93a6bacb14d497db427e2820df362e3&pkgId=null"
+      },
+      {
+        "name": "优酷视频",
+        "url": "https://v.youku.com/v_show/id_XMjI2NTY4OTYw.html"
+      }
+    ]
+  },
+  {
+    "type": "tv",
+    "tmdbId": 79278,
+    "doubanId": 19965220,
+    "playbackSources": [
+      {
+        "name": "腾讯视频",
+        "url": "https://v.qq.com/x/cover/aeuz5ypnru0wxqq/n0013k7vzl5.html"
+      },
+      {
+        "name": "爱奇艺",
+        "url": "https://www.iqiyi.com/v_19rrgylwg4.html?vfm=m_331_dbdy&fv=4904d94982104144a1548dd9040df241"
+      }
+    ]
+  },
+  {
+    "type": "tv",
+    "tmdbId": 106841,
+    "doubanId": 34874646,
+    "playbackSources": [
+      {
+        "name": "腾讯视频",
+        "url": "https://v.qq.com/x/cover/mzc00200whsp9r6/a0047l69jnp.html"
+      }
+    ]
+  },
+  {
+    "type": "tv",
+    "tmdbId": 57423,
+    "doubanId": 2327494,
+    "playbackSources": [
+      {
+        "name": "腾讯视频",
+        "url": "https://v.qq.com/x/cover/xdik16plcy4bo5w/8nBenEc0r7y.html"
+      }
+    ]
+  },
+  {
+    "type": "tv",
+    "tmdbId": 92778,
+    "doubanId": 2229479,
+    "playbackSources": [
+      {
+        "name": "优酷视频",
+        "url": "https://www.youku.com/show_page/id_zcbfbbcd6962411de83b1.html"
+      }
+    ]
+  },
+  {
+    "type": "tv",
+    "tmdbId": 105053,
+    "doubanId": 33447642,
+    "playbackSources": [
+      {
+        "name": "爱奇艺",
+        "url": "https://www.iqiyi.com/v_2g5a5i86730.html?vfm=m_331_dbdy&fv=4904d94982104144a1548dd9040df241"
+      }
+    ]
+  },
+  {
+    "type": "movie",
+    "tmdbId": 126545,
+    "doubanId": 1307014,
+    "playbackSources": [
+      {
+        "name": "咪咕视频",
+        "url": "https://m.miguvideo.com/mgs/msite/prd/detail.html?cid=780526498&pwId=PRO_1275ddf1665c43bda5c2494bb2c93762&pkgId=null"
+      },
+      {
+        "name": "腾讯视频",
+        "url": "https://v.qq.com/x/cover/8phfkjz0bb9oufj.html"
+      },
+      {
+        "name": "哔哩哔哩",
+        "url": "https://www.bilibili.com/bangumi/play/ss39235"
+      },
+      {
+        "name": "爱奇艺",
+        "url": "https://www.iqiyi.com/v_19rr7pycow.html?vfm=m_331_dbdy&fv=4904d94982104144a1548dd9040df241"
+      },
+      {
+        "name": "优酷视频",
+        "url": "https://www.youku.com/show_page/id_zcc00d69e962411de83b1.html"
+      }
+    ]
+  },
+  {
+    "type": "tv",
+    "tmdbId": 1375,
+    "doubanId": 2983389,
+    "playbackSources": [
+      {
+        "name": "咪咕视频",
+        "url": "https://m.miguvideo.com/mgs/msite/prd/detail.html?cid=686234976&pwId=PRO_ec7aee290f9b46f89473fa2c497fa5d7&pkgId=null"
+      },
+      {
+        "name": "优酷视频",
+        "url": "https://www.youku.com/show_page/id_zcbfb7c9e962411de83b1.html"
+      }
+    ]
   }
 ]
