@@ -13,9 +13,9 @@ const sourceLinkClass = 'inline-flex items-center'
 const sourceIconClass = 'inline-block size-[1em] text-current'
 const ANIMATION_GENRE_ID = 16
 const mediaCategories = [
+  { label: '动漫', value: 'anime' },
   { label: '电视剧', value: 'tv' },
   { label: '电影', value: 'movie' },
-  { label: '动漫', value: 'anime' },
 ] as const
 
 type MediaCategory = typeof mediaCategories[number]['value']
@@ -205,7 +205,7 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
     </section>
 
     <div
-      class="flex gap-2 overflow-x-auto sm:gap-4"
+      class="flex w-fit items-center gap-6 overflow-x-auto sm:gap-8"
       aria-label="分类过滤"
       data-media-filters
       hidden
@@ -214,7 +214,7 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
         mediaCategories.map(category => (
           <button
             type="button"
-            class="min-h-11 shrink-0 cursor-pointer border-0 bg-transparent px-4 py-2 font-mono text-sm text-tx transition-colors hover:bg-inline aria-[pressed=true]:bg-tx aria-[pressed=true]:text-bg sm:px-5 sm:text-base"
+            class="min-h-10 shrink-0 cursor-pointer border-0 bg-transparent px-3 py-1.5 text-base font-normal leading-none text-tx transition-colors hover:text-tx-2 aria-[pressed=true]:bg-tx aria-[pressed=true]:text-bg"
             aria-controls="media-list"
             aria-pressed="false"
             data-media-filter={category.value}
@@ -292,6 +292,7 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
 
 <script>
   const DEFAULT_MEDIA_CATEGORY = 'anime'
+  const MEDIA_CATEGORIES = new Set(['tv', 'movie', 'anime'])
   const filters = document.querySelector<HTMLElement>('[data-media-filters]')
   const filterButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-media-filter]'))
   const mediaItems = Array.from(document.querySelectorAll<HTMLElement>('[data-media-category]'))
@@ -306,16 +307,38 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
     })
   }
 
+  function getMediaCategoryFromUrl() {
+    const category = new URL(window.location.href).searchParams.get('category')
+
+    return category && MEDIA_CATEGORIES.has(category)
+      ? category
+      : DEFAULT_MEDIA_CATEGORY
+  }
+
+  function updateMediaCategoryUrl(category: string) {
+    const url = new URL(window.location.href)
+    url.searchParams.set('category', category)
+    window.history.replaceState({}, '', url)
+  }
+
   filterButtons.forEach((button) => {
     button.addEventListener('click', () => {
-      if (button.dataset.mediaFilter) {
-        applyMediaFilter(button.dataset.mediaFilter)
+      const category = button.dataset.mediaFilter
+
+      if (category && button.getAttribute('aria-pressed') !== 'true') {
+        applyMediaFilter(category)
+        updateMediaCategoryUrl(category)
       }
     })
   })
 
   if (filters) {
     filters.hidden = false
-    applyMediaFilter(DEFAULT_MEDIA_CATEGORY)
+    const initialCategory = getMediaCategoryFromUrl()
+    applyMediaFilter(initialCategory)
+
+    if (new URL(window.location.href).searchParams.get('category') !== initialCategory) {
+      updateMediaCategoryUrl(initialCategory)
+    }
   }
 </script>
