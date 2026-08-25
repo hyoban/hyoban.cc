@@ -130,7 +130,7 @@ function getMediaCategories(type: GeneratedMediaItem['type'], data: TmdbDetails)
   }
 
   if (type === 'tv' && isTvbMedia(data)) {
-    return ['tv', 'tvb']
+    return ['tvb']
   }
 
   return [type]
