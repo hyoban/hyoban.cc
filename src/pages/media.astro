@@ -204,26 +204,25 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
       </p>
     </section>
 
-    <div
-      class="flex w-fit items-center gap-6 overflow-x-auto sm:gap-8"
+    <nav
+      class="flex w-fit items-center gap-2 overflow-x-auto"
       aria-label="分类过滤"
       data-media-filters
       hidden
     >
       {
         mediaCategories.map(category => (
-          <button
-            type="button"
-            class="min-h-10 shrink-0 cursor-pointer border-0 bg-transparent px-3 py-1.5 text-base font-normal leading-none text-tx transition-colors hover:text-tx-2 aria-[pressed=true]:bg-tx aria-[pressed=true]:text-bg"
+          <a
+            href={`/media/?category=${category.value}`}
+            class="block shrink-0 px-2 font-mono text-base font-normal leading-7 text-tx no-underline transition-colors hover:text-tx-2 aria-[current=page]:bg-tx aria-[current=page]:text-bg"
             aria-controls="media-list"
-            aria-pressed="false"
             data-media-filter={category.value}
           >
             {category.label}
-          </button>
+          </a>
         ))
       }
-    </div>
+    </nav>
 
     <ol id="media-list" class="space-y-8 sm:space-y-10">
       {
@@ -293,19 +292,6 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
 <script>
   const DEFAULT_MEDIA_CATEGORY = 'anime'
   const MEDIA_CATEGORIES = new Set(['tv', 'movie', 'anime'])
-  const filters = document.querySelector<HTMLElement>('[data-media-filters]')
-  const filterButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-media-filter]'))
-  const mediaItems = Array.from(document.querySelectorAll<HTMLElement>('[data-media-category]'))
-
-  function applyMediaFilter(category: string) {
-    filterButtons.forEach((button) => {
-      button.setAttribute('aria-pressed', String(button.dataset.mediaFilter === category))
-    })
-
-    mediaItems.forEach((item) => {
-      item.hidden = item.dataset.mediaCategory !== category
-    })
-  }
 
   function getMediaCategoryFromUrl() {
     const category = new URL(window.location.href).searchParams.get('category')
@@ -321,24 +307,36 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
     window.history.replaceState({}, '', url)
   }
 
-  filterButtons.forEach((button) => {
-    button.addEventListener('click', () => {
-      const category = button.dataset.mediaFilter
+  function initializeMediaFilters() {
+    const filters = document.querySelector<HTMLElement>('[data-media-filters]')
 
-      if (category && button.getAttribute('aria-pressed') !== 'true') {
-        applyMediaFilter(category)
-        updateMediaCategoryUrl(category)
+    if (!filters) {
+      return
+    }
+
+    const filterLinks = Array.from(document.querySelectorAll<HTMLAnchorElement>('[data-media-filter]'))
+    const mediaItems = Array.from(document.querySelectorAll<HTMLElement>('[data-media-category]'))
+    const initialCategory = getMediaCategoryFromUrl()
+
+    filterLinks.forEach((link) => {
+      if (link.dataset.mediaFilter === initialCategory) {
+        link.setAttribute('aria-current', 'page')
+      } else {
+        link.removeAttribute('aria-current')
       }
     })
-  })
 
-  if (filters) {
+    mediaItems.forEach((item) => {
+      item.hidden = item.dataset.mediaCategory !== initialCategory
+    })
+
     filters.hidden = false
-    const initialCategory = getMediaCategoryFromUrl()
-    applyMediaFilter(initialCategory)
 
     if (new URL(window.location.href).searchParams.get('category') !== initialCategory) {
       updateMediaCategoryUrl(initialCategory)
     }
   }
+
+  document.addEventListener('astro:page-load', initializeMediaFilters)
+  initializeMediaFilters()
 </script>
