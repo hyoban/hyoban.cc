@@ -8,6 +8,8 @@ const pageTitle = `Media | ${SITE_TITLE}`
 const pageDescription = '我推荐的电影、剧集和动画'
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p'
 const posterImageClass = 'aspect-[2/3] w-full border border-border object-cover'
+const sourceLinkClass = 'inline-flex items-center'
+const sourceIconClass = 'inline-block size-[1em] text-current'
 
 type MediaRecommendation = {
   doubanId?: number
@@ -90,7 +92,10 @@ function resolveMediaWork(recommendation: MediaRecommendation, generated: Genera
     doubanUrl,
     note: recommendation.note,
     overview: data.overview,
-    playbackSources: recommendation.playbackSources ?? [],
+    playbackSources: (recommendation.playbackSources ?? []).map(source => ({
+      ...source,
+      iconClass: getPlaybackSourceIconClass(source.name),
+    })),
     posterUrl: data.poster_path ? `${TMDB_IMAGE_BASE_URL}/w342${data.poster_path}` : undefined,
     tmdbUrl: getTmdbUrl(generated.type, generated.tmdbId),
     year: getYear(generated.type, data),
@@ -103,6 +108,10 @@ function getMediaKey(media: Pick<MediaRecommendation, 'type' | 'tmdbId'>) {
 
 function getDoubanUrl(doubanId: number) {
   return `https://movie.douban.com/subject/${doubanId}/`
+}
+
+function getPlaybackSourceIconClass(name: string) {
+  return name === '哔哩哔哩' ? 'i-simple-icons-bilibili' : undefined
 }
 
 function getTmdbUrl(type: GeneratedMediaItem['type'], tmdbId: number) {
@@ -184,55 +193,50 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
             <article class="border-border grid items-start gap-x-3 gap-y-3 border-t pt-5 first:border-t-0 first:pt-0 sm:grid-cols-[7rem_minmax(0,1fr)] sm:gap-x-6 sm:gap-y-2">
               <div class="grid min-w-0 grid-cols-[5rem_minmax(0,1fr)] items-start gap-x-3 gap-y-3 sm:contents">
                 {
-                  work.posterUrl && work.doubanUrl
-                    ? (
-                        <a
-                          href={work.doubanUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          class="col-start-1 row-span-2 row-start-1 block w-full self-start"
-                        >
-                          <img
-                            src={work.posterUrl}
-                            alt={`${work.displayTitle} poster`}
-                            class={posterImageClass}
-                            loading="lazy"
-                          />
-                        </a>
-                      )
-                    : work.posterUrl && (
-                        <div class="col-start-1 row-span-2 row-start-1 block w-full self-start">
-                          <img
-                            src={work.posterUrl}
-                            alt={`${work.displayTitle} poster`}
-                            class={posterImageClass}
-                            loading="lazy"
-                          />
-                        </div>
-                      )
+                  work.posterUrl && (
+                    <a
+                      href={work.tmdbUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="col-start-1 row-span-2 row-start-1 block w-full self-start"
+                    >
+                      <img
+                        src={work.posterUrl}
+                        alt={`${work.displayTitle} poster`}
+                        class={posterImageClass}
+                        loading="lazy"
+                      />
+                    </a>
+                  )
                 }
 
                 <header class="col-start-2 row-start-1 min-w-0 space-y-2">
                   <h2 class="truncate font-semibold leading-snug text-tx">
-                    <a href={work.doubanUrl ?? work.tmdbUrl} target="_blank" rel="noopener noreferrer">
+                    <a href={work.tmdbUrl} target="_blank" rel="noopener noreferrer">
                       {work.displayTitle}
                     </a>
                   </h2>
-                  {(work.creator || work.year || work.doubanUrl) && (
+                  {(work.creator || work.year) && (
                     <p class="flex flex-wrap gap-x-3 gap-y-1 text-tx-2">
                       {work.creator && <span>{work.creator}</span>}
                       {work.year && <span>{work.year}</span>}
-                      {work.doubanUrl && <a href={work.doubanUrl} target="_blank" rel="noopener noreferrer">豆瓣</a>}
-                      <a href={work.tmdbUrl} target="_blank" rel="noopener noreferrer">TMDB</a>
                     </p>
                   )}
                 </header>
 
-                {work.playbackSources.length > 0 && (
-                  <p class="col-start-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-tx-2">
-                    <span>播放</span>
+                {(work.doubanUrl || work.playbackSources.length > 0) && (
+                  <p class="col-start-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-tx-2" aria-label="播放源">
+                    {work.doubanUrl && (
+                      <a href={work.doubanUrl} target="_blank" rel="noopener noreferrer" class={sourceLinkClass} aria-label="豆瓣" title="豆瓣">
+                        <span class={`${sourceIconClass} i-simple-icons-douban`} aria-hidden="true" />
+                      </a>
+                    )}
                     {work.playbackSources.map(source => (
-                      <a href={source.url} target="_blank" rel="noopener noreferrer">{source.name}</a>
+                      <a href={source.url} target="_blank" rel="noopener noreferrer" class={sourceLinkClass} aria-label={source.name} title={source.name}>
+                        {source.iconClass
+                          ? <span class={`${sourceIconClass} ${source.iconClass}`} aria-hidden="true" />
+                          : source.name}
+                      </a>
                     ))}
                   </p>
                 )}
