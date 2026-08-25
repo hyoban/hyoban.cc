@@ -111,7 +111,20 @@ function getDoubanUrl(doubanId: number) {
 }
 
 function getPlaybackSourceIconClass(name: string) {
-  return name === '哔哩哔哩' ? 'i-simple-icons-bilibili' : undefined
+  switch (name) {
+    case '咪咕视频':
+      return 'i-arcticons-migu'
+    case '腾讯视频':
+      return 'i-lucide-circle-play'
+    case '爱奇艺':
+      return 'i-arcticons-iqiyi'
+    case '优酷视频':
+      return 'i-arcticons-youku'
+    case '哔哩哔哩':
+      return 'i-simple-icons-bilibili'
+    default:
+      return undefined
+  }
 }
 
 function getTmdbUrl(type: GeneratedMediaItem['type'], tmdbId: number) {
