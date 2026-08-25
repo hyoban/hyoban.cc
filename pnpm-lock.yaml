@@ -36,9 +36,6 @@ importers:
       '@egoist/tailwindcss-icons':
         specifier: ^1.9.2
         version: 1.9.2(tailwindcss@4.3.1)
-      '@iconify-json/arcticons':
-        specifier: ^1.2.57
-        version: 1.2.57
       '@iconify-json/lucide':
         specifier: ^1.2.114
         version: 1.2.114
@@ -646,9 +643,6 @@ packages:
     engines: {node: '>=18'}
     cpu: [x64]
     os: [win32]
-
-  '@iconify-json/arcticons@1.2.57':
-    resolution: {integrity: sha512-GFiPQa0C2XHDZTmS9ZOah50nVAoLeXdXwKDNxvzbvdbBNDCi7HFIPpkGNU+cjms6rWKc5D/7pjl3+u0AHrjVkA==}
 
   '@iconify-json/lucide@1.2.114':
     resolution: {integrity: sha512-NbvH3B1BYo6wBtS7joLi7f2UVQOqK2dtZodMFf3kkBs+Tnh9TkRuy8oVHr1RM8UK6bUtvAXxfNlGAah0CuvPCw==}
@@ -3316,10 +3310,6 @@ snapshots:
 
   '@esbuild/win32-x64@0.28.1':
     optional: true
-
-  '@iconify-json/arcticons@1.2.57':
-    dependencies:
-      '@iconify/types': 2.0.0
 
   '@iconify-json/lucide@1.2.114':
     dependencies:

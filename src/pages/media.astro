@@ -1,5 +1,6 @@
 ---
 import { SITE_TITLE } from '@/consts'
+import MediaSourceIcon from '@/components/MediaSourceIcon.astro'
 import generatedMedia from '@/data/media.generated.json'
 import mediaRecommendations from '@/data/media-recommendations.json'
 import Layout from '@/layouts/Layout.astro'
@@ -92,10 +93,7 @@ function resolveMediaWork(recommendation: MediaRecommendation, generated: Genera
     doubanUrl,
     note: recommendation.note,
     overview: data.overview,
-    playbackSources: (recommendation.playbackSources ?? []).map(source => ({
-      ...source,
-      iconClass: getPlaybackSourceIconClass(source.name),
-    })),
+    playbackSources: recommendation.playbackSources ?? [],
     posterUrl: data.poster_path ? `${TMDB_IMAGE_BASE_URL}/w342${data.poster_path}` : undefined,
     tmdbUrl: getTmdbUrl(generated.type, generated.tmdbId),
     year: getYear(generated.type, data),
@@ -108,23 +106,6 @@ function getMediaKey(media: Pick<MediaRecommendation, 'type' | 'tmdbId'>) {
 
 function getDoubanUrl(doubanId: number) {
   return `https://movie.douban.com/subject/${doubanId}/`
-}
-
-function getPlaybackSourceIconClass(name: string) {
-  switch (name) {
-    case '咪咕视频':
-      return 'i-arcticons-migu'
-    case '腾讯视频':
-      return 'i-lucide-circle-play'
-    case '爱奇艺':
-      return 'i-arcticons-iqiyi'
-    case '优酷视频':
-      return 'i-arcticons-youku'
-    case '哔哩哔哩':
-      return 'i-simple-icons-bilibili'
-    default:
-      return undefined
-  }
 }
 
 function getTmdbUrl(type: GeneratedMediaItem['type'], tmdbId: number) {
@@ -240,9 +221,7 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
                       )}
                       {work.playbackSources.map(source => (
                         <a href={source.url} target="_blank" rel="noopener noreferrer" class={sourceLinkClass} aria-label={source.name} title={source.name}>
-                          {source.iconClass
-                            ? <span class={`${sourceIconClass} ${source.iconClass}`} aria-hidden="true" />
-                            : source.name}
+                          <MediaSourceIcon name={source.name} />
                         </a>
                       ))}
                     </p>
