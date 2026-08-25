@@ -222,17 +222,6 @@
   },
   {
     "type": "tv",
-    "tmdbId": 18604,
-    "doubanId": 3237723,
-    "playbackSources": [
-      {
-        "name": "腾讯视频",
-        "url": "https://v.qq.com/x/cover/ceusrubximxm0g8/g0023yhas9e.html"
-      }
-    ]
-  },
-  {
-    "type": "tv",
     "tmdbId": 32043,
     "doubanId": 2284418,
     "playbackSources": [
@@ -340,36 +329,6 @@
     "type": "tv",
     "tmdbId": 72819,
     "doubanId": 3990403
-  },
-  {
-    "type": "tv",
-    "tmdbId": 84634,
-    "doubanId": 4718246,
-    "playbackSources": [
-      {
-        "name": "腾讯视频",
-        "url": "https://v.qq.com/x/cover/lth99s5zzjf0lyd/m0021ukvtop.html"
-      }
-    ]
-  },
-  {
-    "type": "tv",
-    "tmdbId": 18335,
-    "doubanId": 2154096,
-    "playbackSources": [
-      {
-        "name": "腾讯视频",
-        "url": "https://v.qq.com/x/cover/qn4ablksldmsyw7/9Yfl2rewRDw.html"
-      },
-      {
-        "name": "爱奇艺",
-        "url": "https://www.iqiyi.com/v_19rrjaiybk.html?vfm=m_331_dbdy&fv=4904d94982104144a1548dd9040df241"
-      },
-      {
-        "name": "哔哩哔哩",
-        "url": "https://www.bilibili.com/bangumi/play/ep140058"
-      }
-    ]
   },
   {
     "type": "tv",
