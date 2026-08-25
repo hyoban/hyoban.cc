@@ -210,6 +210,15 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
 ---
 
 <Layout title={pageTitle} description={pageDescription}>
+  <Fragment slot="head">
+    <script is:inline data-astro-rerun>
+      const mediaCategory = new URL(window.location.href).searchParams.get('category')
+      document.documentElement.dataset.mediaCategory = ['anime', 'tv', 'tvb', 'movie'].includes(mediaCategory)
+        ? mediaCategory
+        : 'anime'
+    </script>
+  </Fragment>
+
   <main class="mx-auto max-w-[65ch] space-y-8">
     <section class="space-y-4">
       <div class="flex items-baseline gap-3">
@@ -225,14 +234,14 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
       class="flex w-fit items-center gap-2 overflow-x-auto"
       aria-label="分类过滤"
       data-media-filters
-      hidden
     >
       {
         mediaCategories.map(category => (
           <a
             href={`/media/?category=${category.value}`}
-            class="block shrink-0 px-2 font-mono text-base font-normal leading-7 text-tx no-underline transition-colors hover:text-tx-2 aria-[current=page]:bg-tx aria-[current=page]:text-bg"
+            class="block shrink-0 px-2 font-mono text-base font-normal leading-7 text-tx no-underline transition-colors hover:text-tx-2"
             aria-controls="media-list"
+            aria-current={category.value === 'anime' ? 'page' : undefined}
             data-media-filter={category.value}
           >
             {category.label}（{mediaCategoryCounts.get(category.value)}）
@@ -325,15 +334,16 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
   }
 
   function initializeMediaFilters() {
-    const filters = document.querySelector<HTMLElement>('[data-media-filters]')
+    const filters = document.querySelector('[data-media-filters]')
 
     if (!filters) {
       return
     }
 
     const filterLinks = Array.from(document.querySelectorAll<HTMLAnchorElement>('[data-media-filter]'))
-    const mediaItems = Array.from(document.querySelectorAll<HTMLElement>('[data-media-category]'))
     const initialCategory = getMediaCategoryFromUrl()
+
+    document.documentElement.dataset.mediaCategory = initialCategory
 
     filterLinks.forEach((link) => {
       if (link.dataset.mediaFilter === initialCategory) {
@@ -343,12 +353,6 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
       }
     })
 
-    mediaItems.forEach((item) => {
-      item.hidden = !item.dataset.mediaCategory?.split(' ').includes(initialCategory)
-    })
-
-    filters.hidden = false
-
     if (new URL(window.location.href).searchParams.get('category') !== initialCategory) {
       updateMediaCategoryUrl(initialCategory)
     }
@@ -357,3 +361,22 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
   document.addEventListener('astro:page-load', initializeMediaFilters)
   initializeMediaFilters()
 </script>
+
+<style is:global>
+  html:not([data-media-category]) [data-media-category]:not([data-media-category~='anime']),
+  html[data-media-category='anime'] [data-media-category]:not([data-media-category~='anime']),
+  html[data-media-category='tv'] [data-media-category]:not([data-media-category~='tv']),
+  html[data-media-category='tvb'] [data-media-category]:not([data-media-category~='tvb']),
+  html[data-media-category='movie'] [data-media-category]:not([data-media-category~='movie']) {
+    display: none;
+  }
+
+  html:not([data-media-category]) [data-media-filter='anime'],
+  html[data-media-category='anime'] [data-media-filter='anime'],
+  html[data-media-category='tv'] [data-media-filter='tv'],
+  html[data-media-category='tvb'] [data-media-filter='tvb'],
+  html[data-media-category='movie'] [data-media-filter='movie'] {
+    color: var(--color-bg);
+    background: var(--color-tx);
+  }
+</style>
