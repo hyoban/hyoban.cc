@@ -11,6 +11,14 @@ const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p'
 const posterImageClass = 'aspect-[2/3] w-full border border-border object-cover'
 const sourceLinkClass = 'inline-flex items-center'
 const sourceIconClass = 'inline-block size-[1em] text-current'
+const ANIMATION_GENRE_ID = 16
+const mediaCategories = [
+  { label: '电视剧', value: 'tv' },
+  { label: '电影', value: 'movie' },
+  { label: '动漫', value: 'anime' },
+] as const
+
+type MediaCategory = typeof mediaCategories[number]['value']
 
 type MediaRecommendation = {
   doubanId?: number
@@ -34,12 +42,17 @@ type TmdbCompany = {
   name?: string
 }
 
+type TmdbGenre = {
+  id?: number
+}
+
 type TmdbDetails = {
   created_by?: TmdbPerson[]
   credits?: {
     crew?: TmdbPerson[]
   }
   first_air_date?: string
+  genres?: TmdbGenre[]
   name?: string
   networks?: TmdbCompany[]
   original_name?: string
@@ -90,6 +103,7 @@ function resolveMediaWork(recommendation: MediaRecommendation, generated: Genera
     : undefined
 
   return {
+    category: getMediaCategory(generated.type, data),
     creator: getCreator(generated.type, data),
     displayTitle,
     doubanUrl,
@@ -100,6 +114,14 @@ function resolveMediaWork(recommendation: MediaRecommendation, generated: Genera
     tmdbUrl: getTmdbUrl(generated.type, generated.tmdbId),
     year: getYear(generated.type, data),
   }
+}
+
+function getMediaCategory(type: GeneratedMediaItem['type'], data: TmdbDetails): MediaCategory {
+  if (data.genres?.some(genre => genre.id === ANIMATION_GENRE_ID)) {
+    return 'anime'
+  }
+
+  return type
 }
 
 function getMediaKey(media: Pick<MediaRecommendation, 'type' | 'tmdbId'>) {
@@ -182,10 +204,31 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
       </p>
     </section>
 
-    <ol class="space-y-8 sm:space-y-10">
+    <div
+      class="flex gap-2 overflow-x-auto sm:gap-4"
+      aria-label="分类过滤"
+      data-media-filters
+      hidden
+    >
+      {
+        mediaCategories.map(category => (
+          <button
+            type="button"
+            class="min-h-11 shrink-0 cursor-pointer border-0 bg-transparent px-4 py-2 font-mono text-sm text-tx transition-colors hover:bg-inline aria-[pressed=true]:bg-tx aria-[pressed=true]:text-bg sm:px-5 sm:text-base"
+            aria-controls="media-list"
+            aria-pressed="false"
+            data-media-filter={category.value}
+          >
+            {category.label}
+          </button>
+        ))
+      }
+    </div>
+
+    <ol id="media-list" class="space-y-8 sm:space-y-10">
       {
         mediaWorks.map(work => (
-          <li class="media-item">
+          <li class="media-item" data-media-category={work.category}>
             <article class="border-border grid items-start gap-x-3 gap-y-3 border-t pt-5 first:border-t-0 first:pt-0 sm:grid-cols-[7rem_minmax(0,1fr)] sm:gap-x-6 sm:gap-y-2">
               <div class="grid min-w-0 grid-cols-[5rem_minmax(0,1fr)] items-start gap-x-3 gap-y-3 sm:contents">
                 {
@@ -246,3 +289,33 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
 
   </main>
 </Layout>
+
+<script>
+  const DEFAULT_MEDIA_CATEGORY = 'anime'
+  const filters = document.querySelector<HTMLElement>('[data-media-filters]')
+  const filterButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-media-filter]'))
+  const mediaItems = Array.from(document.querySelectorAll<HTMLElement>('[data-media-category]'))
+
+  function applyMediaFilter(category: string) {
+    filterButtons.forEach((button) => {
+      button.setAttribute('aria-pressed', String(button.dataset.mediaFilter === category))
+    })
+
+    mediaItems.forEach((item) => {
+      item.hidden = item.dataset.mediaCategory !== category
+    })
+  }
+
+  filterButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      if (button.dataset.mediaFilter) {
+        applyMediaFilter(button.dataset.mediaFilter)
+      }
+    })
+  })
+
+  if (filters) {
+    filters.hidden = false
+    applyMediaFilter(DEFAULT_MEDIA_CATEGORY)
+  }
+</script>
