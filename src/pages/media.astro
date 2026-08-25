@@ -82,7 +82,9 @@ function resolveMediaWork(recommendation: MediaRecommendation, generated: Genera
   const data = generated.data
   const title = getTitle(generated.type, data)
   const originalTitle = getOriginalTitle(generated.type, data)
-  const displayTitle = originalTitle && originalTitle !== title ? originalTitle : title
+  const displayTitle = originalTitle && originalTitle !== title
+    ? `${title}（${originalTitle}）`
+    : title
   const doubanUrl = recommendation.doubanId
     ? getDoubanUrl(recommendation.doubanId)
     : undefined
