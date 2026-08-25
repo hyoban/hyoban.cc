@@ -91,6 +91,13 @@ const mediaWorks = sortedRecommendations.map((recommendation) => {
   return resolveMediaWork(recommendation, generated)
 })
 
+const mediaCategoryCounts = new Map(
+  mediaCategories.map(category => [
+    category.value,
+    mediaWorks.filter(work => work.category === category.value).length,
+  ]),
+)
+
 function resolveMediaWork(recommendation: MediaRecommendation, generated: GeneratedMediaItem) {
   const data = generated.data
   const title = getTitle(generated.type, data)
@@ -218,7 +225,7 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
             aria-controls="media-list"
             data-media-filter={category.value}
           >
-            {category.label}
+            {category.label}（{mediaCategoryCounts.get(category.value)}）
           </a>
         ))
       }
