@@ -216,30 +216,25 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
                       {work.displayTitle}
                     </a>
                   </h2>
-                  {(work.creator || work.year) && (
+                  {(work.creator || work.year || work.doubanUrl || work.playbackSources.length > 0) && (
                     <p class="flex flex-wrap gap-x-3 gap-y-1 text-tx-2">
                       {work.creator && <span>{work.creator}</span>}
                       {work.year && <span>{work.year}</span>}
+                      {work.doubanUrl && (
+                        <a href={work.doubanUrl} target="_blank" rel="noopener noreferrer" class={sourceLinkClass} aria-label="豆瓣" title="豆瓣">
+                          <span class={`${sourceIconClass} i-simple-icons-douban`} aria-hidden="true" />
+                        </a>
+                      )}
+                      {work.playbackSources.map(source => (
+                        <a href={source.url} target="_blank" rel="noopener noreferrer" class={sourceLinkClass} aria-label={source.name} title={source.name}>
+                          {source.iconClass
+                            ? <span class={`${sourceIconClass} ${source.iconClass}`} aria-hidden="true" />
+                            : source.name}
+                        </a>
+                      ))}
                     </p>
                   )}
                 </header>
-
-                {(work.doubanUrl || work.playbackSources.length > 0) && (
-                  <p class="col-start-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-tx-2" aria-label="播放源">
-                    {work.doubanUrl && (
-                      <a href={work.doubanUrl} target="_blank" rel="noopener noreferrer" class={sourceLinkClass} aria-label="豆瓣" title="豆瓣">
-                        <span class={`${sourceIconClass} i-simple-icons-douban`} aria-hidden="true" />
-                      </a>
-                    )}
-                    {work.playbackSources.map(source => (
-                      <a href={source.url} target="_blank" rel="noopener noreferrer" class={sourceLinkClass} aria-label={source.name} title={source.name}>
-                        {source.iconClass
-                          ? <span class={`${sourceIconClass} ${source.iconClass}`} aria-hidden="true" />
-                          : source.name}
-                      </a>
-                    ))}
-                  </p>
-                )}
 
                 {work.note && (
                   <p class="col-start-2 self-end line-clamp-2 leading-relaxed text-tx sm:line-clamp-3">{work.note}</p>
