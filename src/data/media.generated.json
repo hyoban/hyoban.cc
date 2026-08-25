@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-21T09:18:21.483Z",
+  "generatedAt": "2026-08-25T07:17:58.097Z",
   "language": "zh-CN",
   "provider": "TMDB",
   "items": [
@@ -3134,6 +3134,572 @@
           "facebook_id": null,
           "instagram_id": null,
           "twitter_id": null
+        }
+      }
+    },
+    {
+      "type": "tv",
+      "tmdbId": 60573,
+      "data": {
+        "adult": false,
+        "backdrop_path": "/4pfXAnWxOfEJsUgDPW0zqzs5UWv.jpg",
+        "created_by": [
+          {
+            "id": 60932,
+            "credit_id": "52fb8ebdc3a36819b142886b",
+            "name": "戴夫·克里斯凯",
+            "original_name": "Dave Krinsky",
+            "gender": 2,
+            "profile_path": null
+          },
+          {
+            "id": 17403,
+            "credit_id": "52fb8dbfc3a3682e7f1a7663",
+            "name": "迈克尔·贾奇",
+            "original_name": "Mike Judge",
+            "gender": 2,
+            "profile_path": "/ol4kd4mSOK7Hx3r86ydez84bwEI.jpg"
+          },
+          {
+            "id": 60931,
+            "credit_id": "52fb8ec8c3a36819a73ef9c1",
+            "name": "约翰·阿尔特舒勒",
+            "original_name": "John Altschuler",
+            "gender": 2,
+            "profile_path": null
+          }
+        ],
+        "episode_run_time": [
+          28
+        ],
+        "first_air_date": "2014-04-06",
+        "genres": [
+          {
+            "id": 35,
+            "name": "喜剧"
+          }
+        ],
+        "homepage": "http://www.hbo.com/silicon-valley",
+        "id": 60573,
+        "in_production": false,
+        "languages": [
+          "en"
+        ],
+        "last_air_date": "2019-12-08",
+        "last_episode_to_air": {
+          "id": 1984160,
+          "name": "退出事件",
+          "overview": "在确定职业生涯的时刻之前，Richard做出了惊人的发现，它改变了一切，并派遣了整个Pied Piper团队参加比赛，以拉开硅谷有史以来最大的诱饵和转折。",
+          "vote_average": 8,
+          "vote_count": 35,
+          "air_date": "2019-12-08",
+          "episode_number": 7,
+          "episode_type": "finale",
+          "production_code": "",
+          "runtime": 45,
+          "season_number": 6,
+          "show_id": 60573,
+          "still_path": "/nVD7ePa3EYJOiqIgA84O6kfTMA.jpg"
+        },
+        "name": "硅谷",
+        "next_episode_to_air": null,
+        "networks": [
+          {
+            "id": 49,
+            "logo_path": "/tuomPhY2UtuPTqqFnKMVHvSb724.png",
+            "name": "HBO",
+            "origin_country": "US"
+          }
+        ],
+        "number_of_episodes": 53,
+        "number_of_seasons": 6,
+        "origin_country": [
+          "US"
+        ],
+        "original_language": "en",
+        "original_name": "Silicon Valley",
+        "overview": "故事发生在高科技产业云集的美国硅谷，在这里，最有资质成功的人往往却是最没有办法处理其“功成名就”的人，本剧主人公理查德（托马斯·米德勒蒂奇 Thomas Middleditch 饰）正是这样的人。故事围绕着包括理查德在内的四个不善社交但绝顶聪明的计算机程序员，以及早期依靠互联网站发家的百万富翁埃利希（托德·约瑟夫·米勒 T.J. Miller 饰）。理查德他们免费住在埃利希那个号称“孵化器”的别墅里，自行研究开发有潜力的科技项目。他们原以为理查德开发的“魔笛手”注定是个失败的产品，岂料其运用的新型压缩算法具有无穷的商业潜力，当即引起大公司“互利”的注意，要高价收购。正当理查德要同意时，另一家投资公司加入争夺，“魔笛手”一时间水涨船高，一场价值千万的争夺战开始了。",
+        "popularity": 27.0272,
+        "poster_path": "/qpN9Sl35iNcOUTJdQYPObvdRQXt.jpg",
+        "production_companies": [
+          {
+            "id": 3268,
+            "logo_path": "/tuomPhY2UtuPTqqFnKMVHvSb724.png",
+            "name": "HBO",
+            "origin_country": "US"
+          },
+          {
+            "id": 787,
+            "logo_path": "/cCefBs1t7jxtiz3eCxBp9yxrxGx.png",
+            "name": "3 Arts Entertainment",
+            "origin_country": "US"
+          },
+          {
+            "id": 59993,
+            "logo_path": null,
+            "name": "Judgemental Films",
+            "origin_country": "US"
+          },
+          {
+            "id": 105859,
+            "logo_path": null,
+            "name": "Alec Berg Productions",
+            "origin_country": "US"
+          },
+          {
+            "id": 177645,
+            "logo_path": null,
+            "name": "Altschuler Krinsky Works",
+            "origin_country": "US"
+          }
+        ],
+        "production_countries": [
+          {
+            "iso_3166_1": "US",
+            "name": "United States of America"
+          }
+        ],
+        "seasons": [
+          {
+            "air_date": "2014-04-06",
+            "episode_count": 5,
+            "id": 136204,
+            "name": "特别篇",
+            "overview": "",
+            "poster_path": "/4mGpM9OhlhZXcGNSieLtRi83mey.jpg",
+            "season_number": 0,
+            "vote_average": 0
+          },
+          {
+            "air_date": "2014-04-06",
+            "episode_count": 8,
+            "id": 59905,
+            "name": "第 1 季",
+            "overview": "围绕着包括理查德（Richard Hendricks，托马斯·米德蒂奇 饰）在内的四个不善社交但绝顶聪明的计算机程序员，以及早期依靠互联网站发家的百万富翁埃利希（Erlich Bachman，托德·约瑟夫·米勒 饰）。理查德他们免费住在埃利希那个号称“孵化器”的别墅里，自行研究开发有潜力的科技项目。他们原以为理查德开发的“Pied Piper（魔笛手）”注定是个失败的产品，岂料其运用的新型压缩算法具有无穷的商业潜力，当即引起大公司“互利”的注意，要高价收购。正当理查德要同意时，另一家投资公司加入争夺，“魔笛手”一时间水涨船高，一场价值千万的争夺战开始了。",
+            "poster_path": "/qYlh5E7Cpg5tu0WXH6LTHXZCcEq.jpg",
+            "season_number": 1,
+            "vote_average": 7.6
+          },
+          {
+            "air_date": "2015-04-12",
+            "episode_count": 10,
+            "id": 64396,
+            "name": "第 2 季",
+            "overview": "由年轻喜剧演员与老牌明星联合主演，《硅谷》叙说着一位住在“骇客旅社”的内向电脑工程师与他朋友们的故事。这群不太能融入社会的家伙被一位网路公司的百万富翁“关照”着，他允许这群工程师免费住在他的房子，不过条件是要取得他们专案的10%股份。",
+            "poster_path": "/jrEJCERtdGstGs54mUpZEATBcg3.jpg",
+            "season_number": 2,
+            "vote_average": 7.9
+          },
+          {
+            "air_date": "2016-04-24",
+            "episode_count": 10,
+            "id": 74544,
+            "name": "第 3 季",
+            "overview": "",
+            "poster_path": "/a6koqgKRnnCZR4MJuAOhdcdgMP0.jpg",
+            "season_number": 3,
+            "vote_average": 8
+          },
+          {
+            "air_date": "2017-04-23",
+            "episode_count": 10,
+            "id": 84905,
+            "name": "第 4 季",
+            "overview": "",
+            "poster_path": "/zMGYWj3y4vs7AW2CHzAl2CUId1R.jpg",
+            "season_number": 4,
+            "vote_average": 7.9
+          },
+          {
+            "air_date": "2018-03-25",
+            "episode_count": 8,
+            "id": 97737,
+            "name": "第 5 季",
+            "overview": "",
+            "poster_path": "/7CHHATjiUS99abkqCQFwizCVMpL.jpg",
+            "season_number": 5,
+            "vote_average": 7.8
+          },
+          {
+            "air_date": "2019-10-27",
+            "episode_count": 7,
+            "id": 130106,
+            "name": "第 6 季",
+            "overview": "新一季将继续聚焦当下科技世界的核心，这些最有可能成功的人，往往是最不容易“处理”成功的人。托马斯·米德迪奇、扎克·伍兹、库梅尔·南贾尼、马丁·斯塔尔、阿曼达·克鲁、欧阳万成、苏珊·克莱尔、马特·罗斯与乔什·布雷纳均回归出演。“《硅谷》是我们人生与工作中的高光时刻，”剧集创作人说，“我们肯定会想念它，但用第六季来完结还不错。”",
+            "poster_path": "/vNLCOk4cFGAVBpzfDZQ4sV1oIv9.jpg",
+            "season_number": 6,
+            "vote_average": 7.7
+          }
+        ],
+        "softcore": false,
+        "spoken_languages": [
+          {
+            "english_name": "English",
+            "iso_639_1": "en",
+            "name": "English"
+          }
+        ],
+        "status": "Ended",
+        "tagline": "太大有多大？",
+        "type": "Scripted",
+        "vote_average": 8.142,
+        "vote_count": 2000,
+        "credits": {
+          "cast": [
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 111678,
+              "known_for_department": "Acting",
+              "name": "托马斯·米德尔迪奇",
+              "original_name": "Thomas Middleditch",
+              "popularity": 1.3298,
+              "profile_path": "/2c15BQ6DWSiDSBTRjvdsp8X4AAe.jpg",
+              "character": "Richard Hendricks",
+              "credit_id": "52fb8dd9c3a36819bf3b8d59",
+              "order": 0
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 464993,
+              "known_for_department": "Acting",
+              "name": "扎克·伍兹",
+              "original_name": "Zach Woods",
+              "popularity": 1.9893,
+              "profile_path": "/jolb1uMzDZGTKOKyhgeG3RIsL2W.jpg",
+              "character": "Donald 'Jared' Dunn",
+              "credit_id": "52fb8df5c3a3682e7f1a7cb2",
+              "order": 2
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 466505,
+              "known_for_department": "Acting",
+              "name": "库马尔·纳贾尼",
+              "original_name": "Kumail Nanjiani",
+              "popularity": 3.2172,
+              "profile_path": "/9EyrK1Cv7ey1h1GgmsVAOn45w6G.jpg",
+              "character": "Dinesh Chugtai",
+              "credit_id": "52fb8e0ac3a3682ce41da5e7",
+              "order": 3
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 41089,
+              "known_for_department": "Acting",
+              "name": "馬丁·斯塔爾",
+              "original_name": "Martin Starr",
+              "popularity": 2.0718,
+              "profile_path": "/cxGxr0S1jnvOpOHyZDYXrg2GHju.jpg",
+              "character": "Bertram Gilfoyle",
+              "credit_id": "52fb8e19c3a36819a73eea4d",
+              "order": 4
+            },
+            {
+              "adult": false,
+              "gender": 1,
+              "id": 58370,
+              "known_for_department": "Acting",
+              "name": "阿曼达·克鲁",
+              "original_name": "Amanda Crew",
+              "popularity": 2.0858,
+              "profile_path": "/diGTfFDOAjtfpClK3pJHkQIYhNc.jpg",
+              "character": "Monica Hall",
+              "credit_id": "52fb8e40c3a36863af213414",
+              "order": 5
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 11154,
+              "known_for_department": "Acting",
+              "name": "马特·罗斯",
+              "original_name": "Matt Ross",
+              "popularity": 1.8734,
+              "profile_path": "/qqPMm2lrjajJ1EpJ1jXEayz5oqP.jpg",
+              "character": "Gavin Belson",
+              "credit_id": "57704666c3a36836a3002309",
+              "order": 6
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 1180979,
+              "known_for_department": "Acting",
+              "name": "乔什·布雷纳",
+              "original_name": "Josh Brener",
+              "popularity": 1.7014,
+              "profile_path": "/sIyQYq2imu1V2RxRQ1zp70RSqTi.jpg",
+              "character": "Nelson 'Big Head' Bighetti",
+              "credit_id": "52fb8e25c3a36819b1427dc3",
+              "order": 8
+            },
+            {
+              "adult": false,
+              "gender": 1,
+              "id": 8269,
+              "known_for_department": "Acting",
+              "name": "苏珊娜·克莱尔",
+              "original_name": "Suzanne Cryer",
+              "popularity": 2.3774,
+              "profile_path": "/hVqmp8WX9hRhZ3qE6ndk7PfkFDJ.jpg",
+              "character": "Laurie Bream",
+              "credit_id": "585aba439251416f63082a34",
+              "order": 9
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 1468779,
+              "known_for_department": "Acting",
+              "name": "欧阳万成",
+              "original_name": "Jimmy O. Yang",
+              "popularity": 2.5617,
+              "profile_path": "/1QfCVmdNo4AqBdN54kc9DTBx84X.jpg",
+              "character": "Jian-Yang",
+              "credit_id": "5a98c1ee0e0a2630b800c8ca",
+              "order": 10
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 1217648,
+              "known_for_department": "Acting",
+              "name": "克里斯·迪曼托波罗斯",
+              "original_name": "Chris Diamantopoulos",
+              "popularity": 2.3357,
+              "profile_path": "/oenBtpk0RTId4wacQKYU4cPcq8Z.jpg",
+              "character": "Russ Hanneman",
+              "credit_id": "5914e622c3a3683fb6011d55",
+              "order": 12
+            }
+          ],
+          "crew": [
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 6168110,
+              "known_for_department": "Production",
+              "name": "Jonathan Dotan",
+              "original_name": "Jonathan Dotan",
+              "popularity": 0.4631,
+              "profile_path": null,
+              "credit_id": "69ed430fdbbc3b362ab4eb80",
+              "department": "Production",
+              "job": "Supervising Producer"
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 1531428,
+              "known_for_department": "Writing",
+              "name": "Adam Countee",
+              "original_name": "Adam Countee",
+              "popularity": 0.774,
+              "profile_path": "/nec6nIPffXxGiWhaqivNEl26nsa.jpg",
+              "credit_id": "69d66bcbf1cc99db4e3e4a9f",
+              "department": "Production",
+              "job": "Consulting Producer"
+            },
+            {
+              "adult": false,
+              "gender": 1,
+              "id": 1585341,
+              "known_for_department": "Writing",
+              "name": "Carrie Kemper",
+              "original_name": "Carrie Kemper",
+              "popularity": 0.9203,
+              "profile_path": "/zbXu1DWp3YGcfqJYIxKsX0l0Oee.jpg",
+              "credit_id": "69d65210e90c742702314344",
+              "department": "Production",
+              "job": "Consulting Producer"
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 3360093,
+              "known_for_department": "Production",
+              "name": "Jim Klever-Weis",
+              "original_name": "Jim Klever-Weis",
+              "popularity": 0.7006,
+              "profile_path": null,
+              "credit_id": "69cfafbb9194aa2e2b0b8f74",
+              "department": "Production",
+              "job": "Executive Producer"
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 67539,
+              "known_for_department": "Writing",
+              "name": "Clay Tarver",
+              "original_name": "Clay Tarver",
+              "popularity": 0.6994,
+              "profile_path": null,
+              "credit_id": "69cfad8dbd0174c21ab2e3ee",
+              "department": "Production",
+              "job": "Executive Producer"
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 1216561,
+              "known_for_department": "Writing",
+              "name": "Ron Weiner",
+              "original_name": "Ron Weiner",
+              "popularity": 0.7678,
+              "profile_path": null,
+              "credit_id": "69cfb002d1a6c181c74d2256",
+              "department": "Production",
+              "job": "Co-Executive Producer"
+            },
+            {
+              "adult": false,
+              "gender": 1,
+              "id": 2682926,
+              "known_for_department": "Writing",
+              "name": "Marlena Rodriguez",
+              "original_name": "Marlena Rodriguez",
+              "popularity": 0.461,
+              "profile_path": null,
+              "credit_id": "5f077301d5ffcb00367f8e3e",
+              "department": "Writing",
+              "job": "Executive Story Editor"
+            },
+            {
+              "adult": false,
+              "gender": 1,
+              "id": 1085600,
+              "known_for_department": "Production",
+              "name": "Leslie Woo",
+              "original_name": "Leslie Woo",
+              "popularity": 0.5081,
+              "profile_path": null,
+              "credit_id": "69ed56adcdcdef39c5935e5f",
+              "department": "Production",
+              "job": "Casting"
+            },
+            {
+              "adult": false,
+              "gender": 1,
+              "id": 1835816,
+              "known_for_department": "Costume & Make-Up",
+              "name": "Christina Mongini",
+              "original_name": "Christina Mongini",
+              "popularity": 0.4021,
+              "profile_path": null,
+              "credit_id": "69ed56bd1cff2a9aaedc8234",
+              "department": "Costume & Make-Up",
+              "job": "Costume Design"
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 24177,
+              "known_for_department": "Production",
+              "name": "Michael Rotenberg",
+              "original_name": "Michael Rotenberg",
+              "popularity": 0.5912,
+              "profile_path": null,
+              "credit_id": "69d651b3ba25c0be953e45f5",
+              "department": "Production",
+              "job": "Executive Producer"
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 17146,
+              "known_for_department": "Camera",
+              "name": "蒂姆·苏哈尔斯特德",
+              "original_name": "Tim Suhrstedt",
+              "popularity": 0.0969,
+              "profile_path": null,
+              "credit_id": "62b54c5625b95500615ef772",
+              "department": "Camera",
+              "job": "Director of Photography"
+            },
+            {
+              "adult": false,
+              "gender": 1,
+              "id": 935278,
+              "known_for_department": "Production",
+              "name": "Nicole Abellera Hallman",
+              "original_name": "Nicole Abellera Hallman",
+              "popularity": 0.7876,
+              "profile_path": null,
+              "credit_id": "69ed569e476ac3cd16dc8106",
+              "department": "Production",
+              "job": "Casting"
+            },
+            {
+              "adult": false,
+              "gender": 1,
+              "id": 546,
+              "known_for_department": "Production",
+              "name": "Jeanne McCarthy",
+              "original_name": "Jeanne McCarthy",
+              "popularity": 0.8588,
+              "profile_path": null,
+              "credit_id": "69ed56a4ab25fda2266b1b42",
+              "department": "Production",
+              "job": "Casting"
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 53756,
+              "known_for_department": "Production",
+              "name": "Tom Lassally",
+              "original_name": "Tom Lassally",
+              "popularity": 0.4152,
+              "profile_path": null,
+              "credit_id": "62b54cbf031a1d0051dc3d3e",
+              "department": "Production",
+              "job": "Executive Producer"
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 17403,
+              "known_for_department": "Acting",
+              "name": "迈克尔·贾奇",
+              "original_name": "Mike Judge",
+              "popularity": 2.6068,
+              "profile_path": "/ol4kd4mSOK7Hx3r86ydez84bwEI.jpg",
+              "credit_id": "62b54cb3a34911008b7a5216",
+              "department": "Production",
+              "job": "Executive Producer"
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 57406,
+              "known_for_department": "Writing",
+              "name": "Alec Berg",
+              "original_name": "Alec Berg",
+              "popularity": 0.8413,
+              "profile_path": "/8qCkqxlyxrSybMnUWf85XQ11qMB.jpg",
+              "credit_id": "62b54c9e1b722c0053c505c6",
+              "department": "Production",
+              "job": "Executive Producer"
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 1446658,
+              "known_for_department": "Art",
+              "name": "Richard Toyon",
+              "original_name": "Richard Toyon",
+              "popularity": 0.5771,
+              "profile_path": "/lXr40YfvHvNYKPTn3BRwYRgcOEb.jpg",
+              "credit_id": "62b54c45e33f83005127c30f",
+              "department": "Art",
+              "job": "Production Design"
+            }
+          ]
         }
       }
     },

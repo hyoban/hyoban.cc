@@ -50,5 +50,9 @@
   {
     "type": "tv",
     "tmdbId": 64010
+  },
+  {
+    "type": "tv",
+    "tmdbId": 60573
   }
 ]
