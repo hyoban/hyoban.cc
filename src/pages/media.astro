@@ -15,6 +15,7 @@ const ANIMATION_GENRE_ID = 16
 const mediaCategories = [
   { label: '动漫', value: 'anime' },
   { label: '电视剧', value: 'tv' },
+  { label: 'TVB', value: 'tvb' },
   { label: '电影', value: 'movie' },
 ] as const
 
@@ -94,7 +95,7 @@ const mediaWorks = sortedRecommendations.map((recommendation) => {
 const mediaCategoryCounts = new Map(
   mediaCategories.map(category => [
     category.value,
-    mediaWorks.filter(work => work.category === category.value).length,
+    mediaWorks.filter(work => work.categories.includes(category.value)).length,
   ]),
 )
 
@@ -110,7 +111,7 @@ function resolveMediaWork(recommendation: MediaRecommendation, generated: Genera
     : undefined
 
   return {
-    category: getMediaCategory(generated.type, data),
+    categories: getMediaCategories(generated.type, data),
     creator: getCreator(generated.type, data),
     displayTitle,
     doubanUrl,
@@ -123,12 +124,21 @@ function resolveMediaWork(recommendation: MediaRecommendation, generated: Genera
   }
 }
 
-function getMediaCategory(type: GeneratedMediaItem['type'], data: TmdbDetails): MediaCategory {
+function getMediaCategories(type: GeneratedMediaItem['type'], data: TmdbDetails): MediaCategory[] {
   if (data.genres?.some(genre => genre.id === ANIMATION_GENRE_ID)) {
-    return 'anime'
+    return ['anime']
   }
 
-  return type
+  if (type === 'tv' && isTvbMedia(data)) {
+    return ['tv', 'tvb']
+  }
+
+  return [type]
+}
+
+function isTvbMedia(data: TmdbDetails) {
+  return [...(data.networks ?? []), ...(data.production_companies ?? [])]
+    .some(company => company.name && (/(^|\s)TVB($|\s)/i.test(company.name) || company.name.includes('香港电视广播')))
 }
 
 function getMediaKey(media: Pick<MediaRecommendation, 'type' | 'tmdbId'>) {
@@ -234,7 +244,7 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
     <ol id="media-list" class="space-y-8 sm:space-y-10">
       {
         mediaWorks.map(work => (
-          <li class="media-item" data-media-category={work.category}>
+          <li class="media-item" data-media-category={work.categories.join(' ')}>
             <article class="border-border grid items-start gap-x-3 gap-y-3 border-t pt-5 first:border-t-0 first:pt-0 sm:grid-cols-[7rem_minmax(0,1fr)] sm:gap-x-6 sm:gap-y-2">
               <div class="grid min-w-0 grid-cols-[5rem_minmax(0,1fr)] items-start gap-x-3 gap-y-3 sm:contents">
                 {
@@ -298,7 +308,7 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
 
 <script>
   const DEFAULT_MEDIA_CATEGORY = 'anime'
-  const MEDIA_CATEGORIES = new Set(['tv', 'movie', 'anime'])
+  const MEDIA_CATEGORIES = new Set(['tv', 'tvb', 'movie', 'anime'])
 
   function getMediaCategoryFromUrl() {
     const category = new URL(window.location.href).searchParams.get('category')
@@ -334,7 +344,7 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
     })
 
     mediaItems.forEach((item) => {
-      item.hidden = item.dataset.mediaCategory !== initialCategory
+      item.hidden = !item.dataset.mediaCategory?.split(' ').includes(initialCategory)
     })
 
     filters.hidden = false
