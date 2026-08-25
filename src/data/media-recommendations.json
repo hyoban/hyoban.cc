@@ -32,15 +32,18 @@
   },
   {
     "type": "tv",
-    "tmdbId": 1668
+    "tmdbId": 1668,
+    "bilibiliId": 38729
   },
   {
     "type": "movie",
-    "tmdbId": 188183
+    "tmdbId": 188183,
+    "bilibiliId": 12499
   },
   {
     "type": "movie",
-    "tmdbId": 272875
+    "tmdbId": 272875,
+    "bilibiliEpisodeId": 570861
   },
   {
     "type": "movie",
