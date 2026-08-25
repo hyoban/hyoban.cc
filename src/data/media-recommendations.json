@@ -217,11 +217,6 @@
   },
   {
     "type": "tv",
-    "tmdbId": 95623,
-    "doubanId": 34906720
-  },
-  {
-    "type": "tv",
     "tmdbId": 32043,
     "doubanId": 2284418,
     "playbackSources": [
