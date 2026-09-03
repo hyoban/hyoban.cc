@@ -1,8 +1,7 @@
 {
   "name": "hyoban.cc",
-  "type": "module",
   "private": true,
-  "packageManager": "pnpm@11.9.0",
+  "type": "module",
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
@@ -14,7 +13,14 @@
     "moments:gc": "node scripts/gc-moment-assets.mjs --dry-run",
     "moments:review-hidden": "node scripts/review-hidden-moments.mjs",
     "moments:variants": "node scripts/generate-moment-variants.mjs",
-    "test": "node --test scripts/lib/*.test.mjs"
+    "test": "node --test scripts/lib/*.test.mjs",
+    "prepare": "vp config"
+  },
+  "dependencies": {
+    "@mapbox/mapbox-gl-language": "^1.0.1",
+    "mapbox-gl": "^3.26.0",
+    "yaml": "^2.9.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.9",
@@ -30,12 +36,9 @@
     "sharp": "^0.35.2",
     "tailwindcss": "^4.3.1",
     "typescript": "^6.0.3",
+    "vite": "catalog:",
+    "vite-plus": "catalog:",
     "wrangler": "^4.104.0"
   },
-  "dependencies": {
-    "@mapbox/mapbox-gl-language": "^1.0.1",
-    "mapbox-gl": "^3.26.0",
-    "yaml": "^2.9.0",
-    "zod": "^4.4.3"
-  }
+  "packageManager": "pnpm@11.9.0"
 }
