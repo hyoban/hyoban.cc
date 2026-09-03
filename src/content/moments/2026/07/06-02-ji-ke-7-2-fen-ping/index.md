@@ -1,10 +1,10 @@
 ---
-occurredAt: "2026-07-06T19:33:41+08:00"
+occurredAt: '2026-07-06T19:33:41+08:00'
 hidden: true
 media:
   - type: image
     file: ji-ke-7-2-fen-ping.webp
-    alt: ""
+    alt: ''
 ---
 
 极氪7.2分屏

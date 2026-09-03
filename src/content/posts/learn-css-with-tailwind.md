@@ -2,7 +2,7 @@
 title: 你可以用 Tailwind 来学习 CSS
 link: learn-css-with-tailwind
 description: 介绍如何借助 Tailwind 的工具类和文档体系理解 HTML/CSS，并把它当作学习 CSS 的入口。
-pubDate: "2023-08-16T13:06:42.431Z"
+pubDate: '2023-08-16T13:06:42.431Z'
 ---
 
 ## 如果你还不太懂 HTML 和 CSS

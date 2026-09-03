@@ -1,13 +1,13 @@
 ---
-occurredAt: "2026-07-11"
+occurredAt: '2026-07-11'
 location: nanjing
 media:
   - type: image
     file: zai-nan-jing-gei-tong-xue-pai-ling-zheng-zhao.jpg
-    alt: ""
+    alt: ''
   - type: image
     file: zai-nan-jing-gei-tong-xue-pai-ling-zheng-zhao-2.jpg
-    alt: ""
+    alt: ''
 ---
 
 2026 w28 在南京给同学拍领证照片！

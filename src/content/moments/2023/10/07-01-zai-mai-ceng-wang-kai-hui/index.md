@@ -1,9 +1,9 @@
 ---
-occurredAt: "2023-10-07T16:26:11+08:00"
+occurredAt: '2023-10-07T16:26:11+08:00'
 media:
   - type: video
     file: zai-mai-ceng-wang-kai-hui-video.mp4
-    alt: ""
+    alt: ''
     poster: zai-mai-ceng-wang-kai-hui-video-poster.png
 ---
 

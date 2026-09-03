@@ -26,10 +26,7 @@
     "bytes": 402795,
     "contentType": "image/jpeg",
     "etag": "fb9f604ed4f0e9a651fed6bbb7a59a1a",
-    "variants": [
-      "jian-dan-pa-ge-shan-2-480w.webp",
-      "jian-dan-pa-ge-shan-2-960w.webp"
-    ]
+    "variants": ["jian-dan-pa-ge-shan-2-480w.webp", "jian-dan-pa-ge-shan-2-960w.webp"]
   },
   "jian-dan-pa-ge-shan-3-480w.webp": {
     "bytes": 58688,
@@ -51,10 +48,7 @@
     "bytes": 560193,
     "contentType": "image/jpeg",
     "etag": "c3d1a97178c4d5dfeca127838965be57",
-    "variants": [
-      "jian-dan-pa-ge-shan-3-480w.webp",
-      "jian-dan-pa-ge-shan-3-960w.webp"
-    ]
+    "variants": ["jian-dan-pa-ge-shan-3-480w.webp", "jian-dan-pa-ge-shan-3-960w.webp"]
   },
   "jian-dan-pa-ge-shan-480w.webp": {
     "bytes": 49808,

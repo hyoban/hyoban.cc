@@ -1,10 +1,10 @@
 ---
-occurredAt: "2026-01-17T20:39:50+08:00"
+occurredAt: '2026-01-17T20:39:50+08:00'
 hidden: true
 media:
   - type: image
     file: di-er-ge-shi-multithread-linting-ke-yi-rang-ni.jpg
-    alt: ""
+    alt: ''
 ---
 
 第二个是 Multithread Linting，可以让你在大型项目的 lint 时间减少一半以上。不过在 CI 里，和实际会被分配的资源有关，提升一般比你本机的提升要小。以 Dify 的 lint 为例，在 CI 里不开 concurrency 的时间是 4m 12s，开

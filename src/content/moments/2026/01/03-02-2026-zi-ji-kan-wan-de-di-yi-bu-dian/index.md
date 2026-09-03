@@ -1,10 +1,10 @@
 ---
-occurredAt: "2026-01-03T20:39:41+08:00"
+occurredAt: '2026-01-03T20:39:41+08:00'
 location: suzhou
 media:
   - type: image
     file: 2026-zi-ji-kan-wan-de-di-yi-bu-dian.jpg
-    alt: ""
+    alt: ''
 ---
 
 2026自己看完的第一部电影，十分。

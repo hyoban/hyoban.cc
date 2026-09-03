@@ -1,10 +1,10 @@
 ---
-occurredAt: "2024-08-17T11:59:36+08:00"
+occurredAt: '2024-08-17T11:59:36+08:00'
 hidden: true
 media:
   - type: video
     file: yi-xia-shi-mu-qian-wei-zhi-app-de-qing-video.mp4
-    alt: ""
+    alt: ''
     poster: yi-xia-shi-mu-qian-wei-zhi-app-de-qing-video-poster.png
 ---
 

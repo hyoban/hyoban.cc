@@ -19,9 +19,6 @@
     "bytes": 62175,
     "contentType": "image/jpeg",
     "etag": "1f27c834e971be07f14d7b14a1d0137f",
-    "variants": [
-      "ru-tu-480w.webp",
-      "ru-tu-960w.webp"
-    ]
+    "variants": ["ru-tu-480w.webp", "ru-tu-960w.webp"]
   }
 }

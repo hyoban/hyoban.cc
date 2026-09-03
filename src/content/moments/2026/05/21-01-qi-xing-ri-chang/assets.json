@@ -19,10 +19,7 @@
     "bytes": 109948,
     "contentType": "image/webp",
     "etag": "1445c56d670ab0fe5fc8ea0b5a39ce86",
-    "variants": [
-      "qi-xing-ri-chang-2-480w.webp",
-      "qi-xing-ri-chang-2-960w.webp"
-    ]
+    "variants": ["qi-xing-ri-chang-2-480w.webp", "qi-xing-ri-chang-2-960w.webp"]
   },
   "qi-xing-ri-chang-3-480w.webp": {
     "bytes": 7530,
@@ -44,10 +41,7 @@
     "bytes": 71746,
     "contentType": "image/webp",
     "etag": "bff2268deb4fa465a356e08c39cba91f",
-    "variants": [
-      "qi-xing-ri-chang-3-480w.webp",
-      "qi-xing-ri-chang-3-960w.webp"
-    ]
+    "variants": ["qi-xing-ri-chang-3-480w.webp", "qi-xing-ri-chang-3-960w.webp"]
   },
   "qi-xing-ri-chang-4-480w.webp": {
     "bytes": 37064,
@@ -69,10 +63,7 @@
     "bytes": 410026,
     "contentType": "image/webp",
     "etag": "0c6e81b4465b6fadf0891822d81d7c22",
-    "variants": [
-      "qi-xing-ri-chang-4-480w.webp",
-      "qi-xing-ri-chang-4-960w.webp"
-    ]
+    "variants": ["qi-xing-ri-chang-4-480w.webp", "qi-xing-ri-chang-4-960w.webp"]
   },
   "qi-xing-ri-chang-480w.webp": {
     "bytes": 21874,
@@ -94,9 +85,6 @@
     "bytes": 263782,
     "contentType": "image/webp",
     "etag": "267a074ee418a58377759dd5716c94ab",
-    "variants": [
-      "qi-xing-ri-chang-480w.webp",
-      "qi-xing-ri-chang-960w.webp"
-    ]
+    "variants": ["qi-xing-ri-chang-480w.webp", "qi-xing-ri-chang-960w.webp"]
   }
 }

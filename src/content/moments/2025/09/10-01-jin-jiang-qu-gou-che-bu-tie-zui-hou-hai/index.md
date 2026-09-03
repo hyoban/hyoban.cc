@@ -1,9 +1,9 @@
 ---
-occurredAt: "2025-09-10T17:42:23+08:00"
+occurredAt: '2025-09-10T17:42:23+08:00'
 media:
   - type: image
     file: jin-jiang-qu-gou-che-bu-tie-zui-hou-hai.webp
-    alt: ""
+    alt: ''
 ---
 
 锦江区购车补贴最后还是赶上了

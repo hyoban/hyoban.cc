@@ -1,19 +1,19 @@
 ---
-occurredAt: "2026-04-25T16:07:20+08:00"
+occurredAt: '2026-04-25T16:07:20+08:00'
 location: longwo-lake
 media:
   - type: image
     file: yao-ye-lu-ying-kai-shi.jpg
-    alt: ""
+    alt: ''
   - type: image
     file: yao-ye-lu-ying-kai-shi-2.jpg
-    alt: ""
+    alt: ''
   - type: image
     file: yao-ye-lu-ying-kai-shi-3.jpg
-    alt: ""
+    alt: ''
   - type: image
     file: yao-ye-lu-ying-kai-shi-4.jpg
-    alt: ""
+    alt: ''
 ---
 
 摇曳露营开始！

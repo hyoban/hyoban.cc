@@ -1,12 +1,12 @@
 ---
-occurredAt: "2026-04-27T09:51:17+08:00"
+occurredAt: '2026-04-27T09:51:17+08:00'
 media:
   - type: image
     file: xia-zhou-jiu-wu-yi-le-suo-yi-si-yue.jpg
-    alt: ""
+    alt: ''
   - type: image
     file: xia-zhou-jiu-wu-yi-le-suo-yi-si-yue-2.jpg
-    alt: ""
+    alt: ''
 ---
 
 下周就五一了，所以四月行驶报告也出来了。本月行驶1875公里，累计行驶16567公里，完成十四万公里目标的11.83%。

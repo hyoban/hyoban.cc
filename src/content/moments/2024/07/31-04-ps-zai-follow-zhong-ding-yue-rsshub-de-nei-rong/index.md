@@ -1,10 +1,10 @@
 ---
-occurredAt: "2024-07-31T06:56:09+08:00"
+occurredAt: '2024-07-31T06:56:09+08:00'
 hidden: true
 media:
   - type: video
     file: ps-zai-follow-zhong-ding-yue-rsshub-de-nei-rong-video.mp4
-    alt: ""
+    alt: ''
     poster: ps-zai-follow-zhong-ding-yue-rsshub-de-nei-rong-video-poster.png
 ---
 

@@ -1,10 +1,10 @@
 ---
-occurredAt: "2024-08-14T12:57:42+08:00"
+occurredAt: '2024-08-14T12:57:42+08:00'
 hidden: true
 media:
   - type: video
     file: ke-yi-zai-shou-ji-shang-tian-jia-he-shan-video.mp4
-    alt: ""
+    alt: ''
     poster: ke-yi-zai-shou-ji-shang-tian-jia-he-shan-video-poster.png
 ---
 

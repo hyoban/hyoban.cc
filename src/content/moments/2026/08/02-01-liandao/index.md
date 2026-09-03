@@ -1,5 +1,5 @@
 ---
-occurredAt: "2026-08-02"
+occurredAt: '2026-08-02'
 location: liandao
 media:
   - type: image

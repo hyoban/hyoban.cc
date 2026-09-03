@@ -1,13 +1,13 @@
 ---
-occurredAt: "2023-08-06T00:33:06+08:00"
+occurredAt: '2023-08-06T00:33:06+08:00'
 hidden: true
 media:
   - type: image
     file: 1-kai-qi-zhi-qian.png
-    alt: ""
+    alt: ''
   - type: image
     file: 1-kai-qi-zhi-qian-2.png
-    alt: ""
+    alt: ''
 ---
 
 1. 开启之前

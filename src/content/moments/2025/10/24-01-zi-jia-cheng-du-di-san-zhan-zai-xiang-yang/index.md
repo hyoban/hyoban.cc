@@ -1,13 +1,13 @@
 ---
-occurredAt: "2025-10-24T12:20:47+08:00"
+occurredAt: '2025-10-24T12:20:47+08:00'
 location: xiangyang
 media:
   - type: image
     file: zi-jia-cheng-du-di-san-zhan-zai-xiang-yang.webp
-    alt: ""
+    alt: ''
   - type: image
     file: zi-jia-cheng-du-di-san-zhan-zai-xiang-yang-2.webp
-    alt: ""
+    alt: ''
 ---
 
 自驾成都第三站，在襄阳吃牛肉面

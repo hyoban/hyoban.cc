@@ -1,10 +1,10 @@
 ---
-occurredAt: "2024-08-02T21:17:02+08:00"
+occurredAt: '2024-08-02T21:17:02+08:00'
 hidden: true
 media:
   - type: video
     file: jin-tian-de-jin-zhan-shi-ji-chu-de-tu-video.mp4
-    alt: ""
+    alt: ''
     poster: jin-tian-de-jin-zhan-shi-ji-chu-de-tu-video-poster.png
 ---
 

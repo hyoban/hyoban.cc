@@ -19,10 +19,7 @@
     "bytes": 108272,
     "contentType": "image/webp",
     "etag": "ccdbdffed97df3f7ec2410968c430482",
-    "variants": [
-      "bai-mao-2-480w.webp",
-      "bai-mao-2-960w.webp"
-    ]
+    "variants": ["bai-mao-2-480w.webp", "bai-mao-2-960w.webp"]
   },
   "bai-mao-3-480w.webp": {
     "bytes": 11002,
@@ -44,10 +41,7 @@
     "bytes": 118682,
     "contentType": "image/webp",
     "etag": "e5c4f317f09c053503d34c78afcfff8d",
-    "variants": [
-      "bai-mao-3-480w.webp",
-      "bai-mao-3-960w.webp"
-    ]
+    "variants": ["bai-mao-3-480w.webp", "bai-mao-3-960w.webp"]
   },
   "bai-mao-4-480w.webp": {
     "bytes": 22498,
@@ -69,10 +63,7 @@
     "bytes": 230544,
     "contentType": "image/webp",
     "etag": "4d4e9fc6fc88b5e56fa656c625ad8ff6",
-    "variants": [
-      "bai-mao-4-480w.webp",
-      "bai-mao-4-960w.webp"
-    ]
+    "variants": ["bai-mao-4-480w.webp", "bai-mao-4-960w.webp"]
   },
   "bai-mao-480w.webp": {
     "bytes": 18292,
@@ -101,10 +92,7 @@
     "bytes": 190778,
     "contentType": "image/webp",
     "etag": "6bf6173fff4abf3b4a6163ff38fe7bd3",
-    "variants": [
-      "bai-mao-5-480w.webp",
-      "bai-mao-5-960w.webp"
-    ]
+    "variants": ["bai-mao-5-480w.webp", "bai-mao-5-960w.webp"]
   },
   "bai-mao-6-480w.webp": {
     "bytes": 35580,
@@ -126,10 +114,7 @@
     "bytes": 406926,
     "contentType": "image/webp",
     "etag": "8f167cd83c018a15fc8b641ec2651887",
-    "variants": [
-      "bai-mao-6-480w.webp",
-      "bai-mao-6-960w.webp"
-    ]
+    "variants": ["bai-mao-6-480w.webp", "bai-mao-6-960w.webp"]
   },
   "bai-mao-7-480w.webp": {
     "bytes": 36100,
@@ -151,10 +136,7 @@
     "bytes": 334360,
     "contentType": "image/webp",
     "etag": "7ac8dcf44036203eb99e1c07cab555e3",
-    "variants": [
-      "bai-mao-7-480w.webp",
-      "bai-mao-7-960w.webp"
-    ]
+    "variants": ["bai-mao-7-480w.webp", "bai-mao-7-960w.webp"]
   },
   "bai-mao-960w.webp": {
     "bytes": 61992,
@@ -169,9 +151,6 @@
     "bytes": 271020,
     "contentType": "image/webp",
     "etag": "c5e46add8d13bf5ed7a92b13d63dfa2a",
-    "variants": [
-      "bai-mao-480w.webp",
-      "bai-mao-960w.webp"
-    ]
+    "variants": ["bai-mao-480w.webp", "bai-mao-960w.webp"]
   }
 }

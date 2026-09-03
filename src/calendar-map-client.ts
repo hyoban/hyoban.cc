@@ -62,7 +62,7 @@ function initializeCalendarMap() {
   const controller = new AbortController()
   const { signal } = controller
   const locations = parseMarkerData(dataElement)
-  const locationsById = new Map(locations.map(location => [location.id, location]))
+  const locationsById = new Map(locations.map((location) => [location.id, location]))
   const templates = new Map<string, HTMLTemplateElement>()
   const markers = new Map<string, MarkerEntry>()
   const clusterMarkers = new Map<number, ClusterMarkerEntry>()
@@ -76,7 +76,9 @@ function initializeCalendarMap() {
   let lightboxItems: HTMLElement[] = []
   let loadTimeout: ReturnType<typeof setTimeout> | undefined
 
-  for (const template of page.querySelectorAll<HTMLTemplateElement>('[data-calendar-map-template]')) {
+  for (const template of page.querySelectorAll<HTMLTemplateElement>(
+    '[data-calendar-map-template]',
+  )) {
     const id = template.dataset.calendarMapTemplate
 
     if (id) {
@@ -103,7 +105,7 @@ function initializeCalendarMap() {
 
   function getHistoryState() {
     return history.state && typeof history.state === 'object'
-      ? history.state as Record<string, unknown>
+      ? (history.state as Record<string, unknown>)
       : {}
   }
 
@@ -142,10 +144,7 @@ function initializeCalendarMap() {
     })
   }
 
-  function openLocation(
-    id: string,
-    options: { focus?: boolean, moveMap?: boolean } = {},
-  ) {
+  function openLocation(id: string, options: { focus?: boolean; moveMap?: boolean } = {}) {
     const location = locationsById.get(id)
     const template = templates.get(id)
 
@@ -203,12 +202,14 @@ function initializeCalendarMap() {
     }
   }
 
-  function syncLocationFromHash(options: { focus?: boolean, moveMap?: boolean } = {}) {
+  function syncLocationFromHash(options: { focus?: boolean; moveMap?: boolean } = {}) {
     const id = getHashLocationId()
 
     if (id) {
       const markerButton = markers.get(id)?.button
-      const fallbackButton = page!.querySelector<HTMLButtonElement>(`[data-map-location-id="${CSS.escape(id)}"]`)
+      const fallbackButton = page!.querySelector<HTMLButtonElement>(
+        `[data-map-location-id="${CSS.escape(id)}"]`,
+      )
       activeTrigger = markerButton ?? fallbackButton ?? activeTrigger
       openLocation(id, options)
       return
@@ -224,9 +225,7 @@ function initializeCalendarMap() {
     const currentState = getHistoryState()
     const nextState = {
       ...currentState,
-      [HISTORY_STATE_KEY]: currentId
-        ? currentState[HISTORY_STATE_KEY] === true
-        : true,
+      [HISTORY_STATE_KEY]: currentId ? currentState[HISTORY_STATE_KEY] === true : true,
     }
     const url = `${window.location.pathname}${window.location.search}#${encodeURIComponent(id)}`
 
@@ -325,11 +324,16 @@ function initializeCalendarMap() {
       }).setText(`${location.name} · ${location.count} 条记录`)
 
       button.type = 'button'
-      button.className = 'calendar-map-marker group flex size-11 cursor-pointer items-center justify-center border-0 bg-transparent p-0 focus-visible:outline-none'
-      button.setAttribute('aria-label', `${location.name}，${location.count} 条记录，最近记录于 ${location.latestYear} 年`)
+      button.className =
+        'calendar-map-marker group flex size-11 cursor-pointer items-center justify-center border-0 bg-transparent p-0 focus-visible:outline-none'
+      button.setAttribute(
+        'aria-label',
+        `${location.name}，${location.count} 条记录，最近记录于 ${location.latestYear} 年`,
+      )
       button.setAttribute('aria-pressed', 'false')
       button.style.setProperty('--marker-color', location.color)
-      dot.className = 'calendar-map-marker__dot flex h-[1.125rem] min-w-[1.125rem] items-center justify-center rounded-full border-2 border-white/95 bg-[var(--marker-color)] px-[0.1875rem] font-mono text-[0.625rem] font-semibold text-white shadow-[0_0.125rem_0.75rem_rgb(0_0_0/0.24),0_0_0_1px_rgb(0_0_0/0.12)] transition-[transform,box-shadow] duration-[160ms] ease-in-out group-hover:scale-125 group-hover:shadow-[0_0.25rem_1rem_rgb(0_0_0/0.3),0_0_0_2px_var(--color-tx)] group-focus-visible:scale-125 group-focus-visible:shadow-[0_0.25rem_1rem_rgb(0_0_0/0.3),0_0_0_2px_var(--color-tx)] group-aria-[pressed=true]:scale-125 group-aria-[pressed=true]:shadow-[0_0.25rem_1rem_rgb(0_0_0/0.3),0_0_0_2px_var(--color-tx)] motion-reduce:transition-none'
+      dot.className =
+        'calendar-map-marker__dot flex h-[1.125rem] min-w-[1.125rem] items-center justify-center rounded-full border-2 border-white/95 bg-[var(--marker-color)] px-[0.1875rem] font-mono text-[0.625rem] font-semibold text-white shadow-[0_0.125rem_0.75rem_rgb(0_0_0/0.24),0_0_0_1px_rgb(0_0_0/0.12)] transition-[transform,box-shadow] duration-[160ms] ease-in-out group-hover:scale-125 group-hover:shadow-[0_0.25rem_1rem_rgb(0_0_0/0.3),0_0_0_2px_var(--color-tx)] group-focus-visible:scale-125 group-focus-visible:shadow-[0_0.25rem_1rem_rgb(0_0_0/0.3),0_0_0_2px_var(--color-tx)] group-aria-[pressed=true]:scale-125 group-aria-[pressed=true]:shadow-[0_0.25rem_1rem_rgb(0_0_0/0.3),0_0_0_2px_var(--color-tx)] motion-reduce:transition-none'
       dot.setAttribute('aria-hidden', 'true')
       dot.textContent = String(location.count)
       button.append(dot)
@@ -339,9 +343,7 @@ function initializeCalendarMap() {
           return
         }
 
-        popup
-          .setLngLat([location.longitude, location.latitude])
-          .addTo(map!)
+        popup.setLngLat([location.longitude, location.latitude]).addTo(map!)
       }
       const hidePopup = () => popup.remove()
 
@@ -349,11 +351,15 @@ function initializeCalendarMap() {
       button.addEventListener('mouseleave', hidePopup, { signal })
       button.addEventListener('focus', showPopup, { signal })
       button.addEventListener('blur', hidePopup, { signal })
-      button.addEventListener('click', (event) => {
-        event.stopPropagation()
-        hidePopup()
-        selectLocation(location.id, button)
-      }, { signal })
+      button.addEventListener(
+        'click',
+        (event) => {
+          event.stopPropagation()
+          hidePopup()
+          selectLocation(location.id, button)
+        },
+        { signal },
+      )
 
       const marker = new mapboxgl.Marker({ anchor: 'center', element: button })
         .setLngLat([location.longitude, location.latitude])
@@ -383,7 +389,7 @@ function initializeCalendarMap() {
       },
       clusterRadius: 64,
       data: {
-        features: locations.map(location => ({
+        features: locations.map((location) => ({
           geometry: {
             coordinates: [location.longitude, location.latitude],
             type: 'Point' as const,
@@ -419,16 +425,24 @@ function initializeCalendarMap() {
   }
 
   function syncClusterMarkers() {
-    if (!map || !mapLoaded || !map.getSource(LOCATION_SOURCE_ID) || !map.isSourceLoaded(LOCATION_SOURCE_ID)) {
+    if (
+      !map ||
+      !mapLoaded ||
+      !map.getSource(LOCATION_SOURCE_ID) ||
+      !map.isSourceLoaded(LOCATION_SOURCE_ID)
+    ) {
       return
     }
 
     const visibleLocationIds = new Set<string>()
-    const clusters = new Map<number, {
-      coordinates: [number, number]
-      locationCount: number
-      momentCount: number
-    }>()
+    const clusters = new Map<
+      number,
+      {
+        coordinates: [number, number]
+        locationCount: number
+        momentCount: number
+      }
+    >()
 
     for (const feature of map.queryRenderedFeatures({ layers: [LOCATION_INDEX_LAYER_ID] })) {
       if (feature.geometry.type !== 'Point') {
@@ -470,9 +484,14 @@ function initializeCalendarMap() {
       }).setText(`${cluster.locationCount} 个地点 · ${cluster.momentCount} 条记录`)
 
       button.type = 'button'
-      button.className = 'calendar-map-cluster group flex size-12 cursor-pointer items-center justify-center border-0 bg-transparent p-0 focus-visible:outline-none'
-      button.setAttribute('aria-label', `${cluster.locationCount} 个地点，共 ${cluster.momentCount} 条记录，点击放大`)
-      dot.className = 'flex h-8 min-w-8 items-center justify-center rounded-full border-2 border-bg bg-tx px-2 font-mono text-xs font-semibold text-bg shadow-[0_0.25rem_1rem_rgb(0_0_0/0.28)] transition-transform duration-[160ms] group-hover:scale-110 group-focus-visible:scale-110 motion-reduce:transition-none'
+      button.className =
+        'calendar-map-cluster group flex size-12 cursor-pointer items-center justify-center border-0 bg-transparent p-0 focus-visible:outline-none'
+      button.setAttribute(
+        'aria-label',
+        `${cluster.locationCount} 个地点，共 ${cluster.momentCount} 条记录，点击放大`,
+      )
+      dot.className =
+        'flex h-8 min-w-8 items-center justify-center rounded-full border-2 border-bg bg-tx px-2 font-mono text-xs font-semibold text-bg shadow-[0_0.25rem_1rem_rgb(0_0_0/0.28)] transition-transform duration-[160ms] group-hover:scale-110 group-focus-visible:scale-110 motion-reduce:transition-none'
       dot.setAttribute('aria-hidden', 'true')
       dot.textContent = String(cluster.momentCount)
       button.append(dot)
@@ -484,23 +503,27 @@ function initializeCalendarMap() {
       button.addEventListener('mouseleave', hidePopup, { signal })
       button.addEventListener('focus', showPopup, { signal })
       button.addEventListener('blur', hidePopup, { signal })
-      button.addEventListener('click', (event) => {
-        event.stopPropagation()
-        hidePopup()
+      button.addEventListener(
+        'click',
+        (event) => {
+          event.stopPropagation()
+          hidePopup()
 
-        const source = map?.getSource(LOCATION_SOURCE_ID) as GeoJSONSource | undefined
-        source?.getClusterExpansionZoom(id, (error, zoom) => {
-          if (error || zoom == null || !map) {
-            return
-          }
+          const source = map?.getSource(LOCATION_SOURCE_ID) as GeoJSONSource | undefined
+          source?.getClusterExpansionZoom(id, (error, zoom) => {
+            if (error || zoom == null || !map) {
+              return
+            }
 
-          map.easeTo({
-            center: cluster.coordinates,
-            duration: getAnimationDuration(),
-            zoom,
+            map.easeTo({
+              center: cluster.coordinates,
+              duration: getAnimationDuration(),
+              zoom,
+            })
           })
-        })
-      }, { signal })
+        },
+        { signal },
+      )
 
       const marker = new mapboxgl.Marker({ anchor: 'center', element: button })
         .setLngLat(cluster.coordinates)
@@ -532,71 +555,105 @@ function initializeCalendarMap() {
   }
 
   for (const fallbackButton of page.querySelectorAll<HTMLButtonElement>('[data-map-location-id]')) {
-    fallbackButton.addEventListener('click', () => {
-      const id = fallbackButton.dataset.mapLocationId
+    fallbackButton.addEventListener(
+      'click',
+      () => {
+        const id = fallbackButton.dataset.mapLocationId
 
-      if (id) {
-        selectLocation(id, fallbackButton)
-      }
-    }, { signal })
+        if (id) {
+          selectLocation(id, fallbackButton)
+        }
+      },
+      { signal },
+    )
   }
 
   drawerClose.addEventListener('click', requestDrawerClose, { signal })
   window.addEventListener('popstate', () => syncLocationFromHash(), { signal })
-  window.addEventListener('resize', () => {
-    map?.resize()
+  window.addEventListener(
+    'resize',
+    () => {
+      map?.resize()
 
-    if (activeLocationId) {
-      const location = locationsById.get(activeLocationId)
+      if (activeLocationId) {
+        const location = locationsById.get(activeLocationId)
 
-      if (location) {
-        moveMapToLocation(location)
+        if (location) {
+          moveMapToLocation(location)
+        }
       }
-    }
-  }, { signal })
-  window.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && activeLocationId && !lightbox.open) {
-      requestDrawerClose()
-    }
-  }, { signal })
-  darkMode.addEventListener('change', () => {
-    if (map && mapLoaded) {
-      map.setStyle(getMapStyle())
-    }
-  }, { signal })
+    },
+    { signal },
+  )
+  window.addEventListener(
+    'keydown',
+    (event) => {
+      if (event.key === 'Escape' && activeLocationId && !lightbox.open) {
+        requestDrawerClose()
+      }
+    },
+    { signal },
+  )
+  darkMode.addEventListener(
+    'change',
+    () => {
+      if (map && mapLoaded) {
+        map.setStyle(getMapStyle())
+      }
+    },
+    { signal },
+  )
 
-  page.addEventListener('click', (event) => {
-    const target = event.target
+  page.addEventListener(
+    'click',
+    (event) => {
+      const target = event.target
 
-    if (!(target instanceof Element)) {
-      return
-    }
+      if (!(target instanceof Element)) {
+        return
+      }
 
-    const item = target.closest<HTMLElement>('[data-lightbox-item]')
+      const item = target.closest<HTMLElement>('[data-lightbox-item]')
 
-    if (!item || !drawer.contains(item)) {
-      return
-    }
+      if (!item || !drawer.contains(item)) {
+        return
+      }
 
-    lightboxItems = [...drawer.querySelectorAll<HTMLElement>('[data-lightbox-item]')]
-    showLightboxItem(lightboxItems.indexOf(item))
-  }, { signal })
+      lightboxItems = [...drawer.querySelectorAll<HTMLElement>('[data-lightbox-item]')]
+      showLightboxItem(lightboxItems.indexOf(item))
+    },
+    { signal },
+  )
 
-  lightbox.querySelector('[data-map-lightbox-close]')?.addEventListener('click', () => lightbox.close(), { signal })
-  lightbox.querySelector('[data-map-lightbox-previous]')?.addEventListener('click', () => showLightboxItem(lightboxIndex - 1), { signal })
-  lightbox.querySelector('[data-map-lightbox-next]')?.addEventListener('click', () => showLightboxItem(lightboxIndex + 1), { signal })
-  lightbox.addEventListener('click', (event) => {
-    if (event.target === lightbox) {
-      lightbox.close()
-    }
-  }, { signal })
-  lightbox.addEventListener('keydown', (event) => {
-    if (event.key === 'ArrowLeft') {
-      showLightboxItem(lightboxIndex - 1)
-    } else if (event.key === 'ArrowRight') {
-      showLightboxItem(lightboxIndex + 1)
-    }
-  }, { signal })
+  lightbox
+    .querySelector('[data-map-lightbox-close]')
+    ?.addEventListener('click', () => lightbox.close(), { signal })
+  lightbox
+    .querySelector('[data-map-lightbox-previous]')
+    ?.addEventListener('click', () => showLightboxItem(lightboxIndex - 1), { signal })
+  lightbox
+    .querySelector('[data-map-lightbox-next]')
+    ?.addEventListener('click', () => showLightboxItem(lightboxIndex + 1), { signal })
+  lightbox.addEventListener(
+    'click',
+    (event) => {
+      if (event.target === lightbox) {
+        lightbox.close()
+      }
+    },
+    { signal },
+  )
+  lightbox.addEventListener(
+    'keydown',
+    (event) => {
+      if (event.key === 'ArrowLeft') {
+        showLightboxItem(lightboxIndex - 1)
+      } else if (event.key === 'ArrowRight') {
+        showLightboxItem(lightboxIndex + 1)
+      }
+    },
+    { signal },
+  )
 
   syncLocationFromHash({ focus: true, moveMap: false })
 
@@ -620,7 +677,9 @@ function initializeCalendarMap() {
         zoom: 2,
       })
 
-      map.addControl(new MapboxLanguage({ defaultLanguage: 'zh-Hans' }) as unknown as mapboxgl.IControl)
+      map.addControl(
+        new MapboxLanguage({ defaultLanguage: 'zh-Hans' }) as unknown as mapboxgl.IControl,
+      )
       createMarkers()
 
       map.on('style.load', () => {
@@ -695,7 +754,7 @@ function initializeCalendarMap() {
 function parseMarkerData(element: HTMLScriptElement): MarkerData[] {
   try {
     const value: unknown = JSON.parse(element.textContent ?? '[]')
-    return Array.isArray(value) ? value as MarkerData[] : []
+    return Array.isArray(value) ? (value as MarkerData[]) : []
   } catch {
     return []
   }
@@ -713,7 +772,7 @@ function queryRequired<T extends Element>(root: ParentNode, selector: string) {
 
 document.addEventListener('astro:page-load', initializeCalendarMap)
 document.addEventListener('astro:before-swap', (event) => {
-  const { from, to } = event as Event & { from: URL, to: URL }
+  const { from, to } = event as Event & { from: URL; to: URL }
 
   if (from.pathname === to.pathname && from.search === to.search) {
     return

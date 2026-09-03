@@ -1,15 +1,15 @@
 ---
-occurredAt: "2026-04-26T20:08:20+08:00"
+occurredAt: '2026-04-26T20:08:20+08:00'
 media:
   - type: image
     file: jie-shao-yi-xia-wo-de-chuang-che-fang-an.jpg
-    alt: ""
+    alt: ''
   - type: image
     file: jie-shao-yi-xia-wo-de-chuang-che-fang-an-2.jpg
-    alt: ""
+    alt: ''
   - type: image
     file: jie-shao-yi-xia-wo-de-chuang-che-fang-an-3.jpg
-    alt: ""
+    alt: ''
 ---
 
 介绍一下我的床车方案。

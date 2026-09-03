@@ -1,5 +1,5 @@
 ---
-occurredAt: "2026-08-01T13:52:50+08:00"
+occurredAt: '2026-08-01T13:52:50+08:00'
 location: nanjing-jiangbei-hongyuecheng
 media:
   - type: image

@@ -19,9 +19,6 @@
     "etag": "482e12d628cb55b6786d06dc5f348541",
     "height": 1920,
     "width": 976,
-    "variants": [
-      "solo-trip-600-km-480w.webp",
-      "solo-trip-600-km-960w.webp"
-    ]
+    "variants": ["solo-trip-600-km-480w.webp", "solo-trip-600-km-960w.webp"]
   }
 }

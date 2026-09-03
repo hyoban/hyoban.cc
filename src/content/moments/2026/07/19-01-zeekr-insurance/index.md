@@ -1,5 +1,5 @@
 ---
-occurredAt: "2026-07-19"
+occurredAt: '2026-07-19'
 media: []
 ---
 

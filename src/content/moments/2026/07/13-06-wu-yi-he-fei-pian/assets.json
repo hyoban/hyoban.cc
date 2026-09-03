@@ -19,10 +19,7 @@
     "bytes": 72868,
     "contentType": "image/webp",
     "etag": "3516d5919ca78843a77c6ea5fdf417a1",
-    "variants": [
-      "wu-yi-he-fei-pian-2-480w.webp",
-      "wu-yi-he-fei-pian-2-960w.webp"
-    ]
+    "variants": ["wu-yi-he-fei-pian-2-480w.webp", "wu-yi-he-fei-pian-2-960w.webp"]
   },
   "wu-yi-he-fei-pian-3-480w.webp": {
     "bytes": 29444,
@@ -44,10 +41,7 @@
     "bytes": 116492,
     "contentType": "image/webp",
     "etag": "671fe161510ae3db2ec9a6ca7dd29542",
-    "variants": [
-      "wu-yi-he-fei-pian-3-480w.webp",
-      "wu-yi-he-fei-pian-3-960w.webp"
-    ]
+    "variants": ["wu-yi-he-fei-pian-3-480w.webp", "wu-yi-he-fei-pian-3-960w.webp"]
   },
   "wu-yi-he-fei-pian-4-480w.webp": {
     "bytes": 17880,
@@ -69,10 +63,7 @@
     "bytes": 61806,
     "contentType": "image/webp",
     "etag": "d8b6e198f32e03ca8f6d16fcbdc88dfd",
-    "variants": [
-      "wu-yi-he-fei-pian-4-480w.webp",
-      "wu-yi-he-fei-pian-4-960w.webp"
-    ]
+    "variants": ["wu-yi-he-fei-pian-4-480w.webp", "wu-yi-he-fei-pian-4-960w.webp"]
   },
   "wu-yi-he-fei-pian-480w.webp": {
     "bytes": 48330,
@@ -101,10 +92,7 @@
     "bytes": 387906,
     "contentType": "image/webp",
     "etag": "68f9dc1a41809c20c641a661ec9804dd",
-    "variants": [
-      "wu-yi-he-fei-pian-5-480w.webp",
-      "wu-yi-he-fei-pian-5-960w.webp"
-    ]
+    "variants": ["wu-yi-he-fei-pian-5-480w.webp", "wu-yi-he-fei-pian-5-960w.webp"]
   },
   "wu-yi-he-fei-pian-6-480w.webp": {
     "bytes": 59458,
@@ -126,10 +114,7 @@
     "bytes": 370852,
     "contentType": "image/webp",
     "etag": "c6330446c08b2ed8cf187cad05e3c9ef",
-    "variants": [
-      "wu-yi-he-fei-pian-6-480w.webp",
-      "wu-yi-he-fei-pian-6-960w.webp"
-    ]
+    "variants": ["wu-yi-he-fei-pian-6-480w.webp", "wu-yi-he-fei-pian-6-960w.webp"]
   },
   "wu-yi-he-fei-pian-7-480w.webp": {
     "bytes": 65328,
@@ -151,10 +136,7 @@
     "bytes": 419412,
     "contentType": "image/webp",
     "etag": "d1620327270e5a38b823c9b3e3e4bcfb",
-    "variants": [
-      "wu-yi-he-fei-pian-7-480w.webp",
-      "wu-yi-he-fei-pian-7-960w.webp"
-    ]
+    "variants": ["wu-yi-he-fei-pian-7-480w.webp", "wu-yi-he-fei-pian-7-960w.webp"]
   },
   "wu-yi-he-fei-pian-960w.webp": {
     "bytes": 144888,
@@ -169,9 +151,6 @@
     "bytes": 217678,
     "contentType": "image/webp",
     "etag": "17f7f3632b9890649d2e70b209866da8",
-    "variants": [
-      "wu-yi-he-fei-pian-480w.webp",
-      "wu-yi-he-fei-pian-960w.webp"
-    ]
+    "variants": ["wu-yi-he-fei-pian-480w.webp", "wu-yi-he-fei-pian-960w.webp"]
   }
 }

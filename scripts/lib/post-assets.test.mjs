@@ -10,7 +10,7 @@ const assetPattern = /https:\/\/image\.hyoban\.cc\/posts\/([^)"'\s]+)/g
 const semanticFilenamePattern = /^[a-z0-9]+(?:-[a-z0-9]+)*\.(?:avif|gif|jpe?g|png|webp)$/
 
 test('uses semantic, post-scoped names for article assets', async () => {
-  const files = (await readdir(postsRoot)).filter(file => file.endsWith('.md'))
+  const files = (await readdir(postsRoot)).filter((file) => file.endsWith('.md'))
   const invalid = []
 
   for (const file of files) {
@@ -21,9 +21,9 @@ test('uses semantic, post-scoped names for article assets', async () => {
       const [assetPostSlug, ...pathSegments] = match[1].split('/')
 
       if (
-        assetPostSlug !== postSlug
-        || pathSegments.length !== 1
-        || !semanticFilenamePattern.test(pathSegments[0])
+        assetPostSlug !== postSlug ||
+        pathSegments.length !== 1 ||
+        !semanticFilenamePattern.test(pathSegments[0])
       ) {
         invalid.push(match[0])
       }

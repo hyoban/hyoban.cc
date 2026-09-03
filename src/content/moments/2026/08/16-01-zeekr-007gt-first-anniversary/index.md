@@ -1,5 +1,5 @@
 ---
-occurredAt: "2026-08-16T21:27:31+08:00"
+occurredAt: '2026-08-16T21:27:31+08:00'
 media:
   - type: image
     file: zeekr-007gt-first-anniversary.webp

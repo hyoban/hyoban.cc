@@ -169,9 +169,6 @@
     "bytes": 278346,
     "contentType": "image/webp",
     "etag": "a9e1cfa59f13f6bbd0b3fed4abef7519",
-    "variants": [
-      "duan-wu-zi-jia-xu-chang-pian-480w.webp",
-      "duan-wu-zi-jia-xu-chang-pian-960w.webp"
-    ]
+    "variants": ["duan-wu-zi-jia-xu-chang-pian-480w.webp", "duan-wu-zi-jia-xu-chang-pian-960w.webp"]
   }
 }

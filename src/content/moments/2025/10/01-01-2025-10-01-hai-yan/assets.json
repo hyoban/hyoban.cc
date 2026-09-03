@@ -85,9 +85,6 @@
     "bytes": 156565,
     "contentType": "image/jpeg",
     "etag": "aeb81275596f12edd34a061ad442dee2",
-    "variants": [
-      "2025-10-01-hai-yan-480w.webp",
-      "2025-10-01-hai-yan-960w.webp"
-    ]
+    "variants": ["2025-10-01-hai-yan-480w.webp", "2025-10-01-hai-yan-960w.webp"]
   }
 }

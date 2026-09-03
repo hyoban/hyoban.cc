@@ -1,16 +1,16 @@
 ---
-occurredAt: "2026-06-17T09:13:37+08:00"
+occurredAt: '2026-06-17T09:13:37+08:00'
 hidden: true
 media:
   - type: image
     file: 2025-10-01-hai-yan.webp
-    alt: ""
+    alt: ''
   - type: image
     file: 2025-10-01-hai-yan-2.webp
-    alt: ""
+    alt: ''
   - type: image
     file: 2025-10-01-hai-yan-3.webp
-    alt: ""
+    alt: ''
 ---
 
 2025 10 01 海盐

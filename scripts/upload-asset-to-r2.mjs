@@ -6,9 +6,7 @@ import { uploadR2Object } from './lib/r2-assets.mjs'
 
 const root = fileURLToPath(new URL('../', import.meta.url))
 const options = parseArguments(process.argv.slice(2))
-const config = JSON.parse(
-  await readFile(join(root, 'src/data/asset-config.json'), 'utf8'),
-)
+const config = JSON.parse(await readFile(join(root, 'src/data/asset-config.json'), 'utf8'))
 const file = isAbsolute(options.file) ? options.file : resolve(options.file)
 const result = await uploadR2Object({
   bucket: config.bucket,

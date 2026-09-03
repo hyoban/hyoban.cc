@@ -19,10 +19,7 @@
     "etag": "85cec9da9de0cdca62bef454e82a4021",
     "height": 1920,
     "width": 1440,
-    "variants": [
-      "huaian-10-480w.webp",
-      "huaian-10-960w.webp"
-    ]
+    "variants": ["huaian-10-480w.webp", "huaian-10-960w.webp"]
   },
   "huaian-2-480w.webp": {
     "bytes": 54614,
@@ -44,10 +41,7 @@
     "etag": "28fc1a802cadc4a6a55fc2d933cd9283",
     "height": 1920,
     "width": 1280,
-    "variants": [
-      "huaian-2-480w.webp",
-      "huaian-2-960w.webp"
-    ]
+    "variants": ["huaian-2-480w.webp", "huaian-2-960w.webp"]
   },
   "huaian-3-480w.webp": {
     "bytes": 48954,
@@ -69,10 +63,7 @@
     "etag": "fb1c485c77f26b9ee84a2cf1b4154c99",
     "height": 1920,
     "width": 1280,
-    "variants": [
-      "huaian-3-480w.webp",
-      "huaian-3-960w.webp"
-    ]
+    "variants": ["huaian-3-480w.webp", "huaian-3-960w.webp"]
   },
   "huaian-4-480w.webp": {
     "bytes": 31084,
@@ -94,10 +85,7 @@
     "etag": "50c0fc0e798e825d3d229832eb24284d",
     "height": 1280,
     "width": 1920,
-    "variants": [
-      "huaian-4-480w.webp",
-      "huaian-4-960w.webp"
-    ]
+    "variants": ["huaian-4-480w.webp", "huaian-4-960w.webp"]
   },
   "huaian-480w.webp": {
     "bytes": 24226,
@@ -126,10 +114,7 @@
     "etag": "3cf6df9a86f1a4dd56670745bd80e30d",
     "height": 1920,
     "width": 1440,
-    "variants": [
-      "huaian-5-480w.webp",
-      "huaian-5-960w.webp"
-    ]
+    "variants": ["huaian-5-480w.webp", "huaian-5-960w.webp"]
   },
   "huaian-6-480w.webp": {
     "bytes": 24998,
@@ -151,10 +136,7 @@
     "etag": "2e46326ce255226e91dfaeec3f6db6a7",
     "height": 1920,
     "width": 1440,
-    "variants": [
-      "huaian-6-480w.webp",
-      "huaian-6-960w.webp"
-    ]
+    "variants": ["huaian-6-480w.webp", "huaian-6-960w.webp"]
   },
   "huaian-7-480w.webp": {
     "bytes": 20252,
@@ -176,10 +158,7 @@
     "etag": "118874f575a279e5a51a4a8aea78f5cb",
     "height": 1280,
     "width": 1920,
-    "variants": [
-      "huaian-7-480w.webp",
-      "huaian-7-960w.webp"
-    ]
+    "variants": ["huaian-7-480w.webp", "huaian-7-960w.webp"]
   },
   "huaian-8-480w.webp": {
     "bytes": 11896,
@@ -201,10 +180,7 @@
     "etag": "8433d0f769a0fdf9d40b8b2f7cd10152",
     "height": 1280,
     "width": 1920,
-    "variants": [
-      "huaian-8-480w.webp",
-      "huaian-8-960w.webp"
-    ]
+    "variants": ["huaian-8-480w.webp", "huaian-8-960w.webp"]
   },
   "huaian-9-480w.webp": {
     "bytes": 34594,
@@ -226,10 +202,7 @@
     "etag": "7867081a4941ddc85d1b52ee65cd7c3b",
     "height": 1440,
     "width": 1920,
-    "variants": [
-      "huaian-9-480w.webp",
-      "huaian-9-960w.webp"
-    ]
+    "variants": ["huaian-9-480w.webp", "huaian-9-960w.webp"]
   },
   "huaian-960w.webp": {
     "bytes": 73656,
@@ -244,9 +217,6 @@
     "etag": "0f0f0e9976575781a57a8726c356810c",
     "height": 1280,
     "width": 1920,
-    "variants": [
-      "huaian-480w.webp",
-      "huaian-960w.webp"
-    ]
+    "variants": ["huaian-480w.webp", "huaian-960w.webp"]
   }
 }

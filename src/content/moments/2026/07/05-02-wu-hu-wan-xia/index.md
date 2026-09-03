@@ -1,22 +1,22 @@
 ---
-occurredAt: "2026-07-05"
+occurredAt: '2026-07-05'
 location: wuhu
 media:
   - type: image
     file: wu-hu-wan-xia.jpg
-    alt: ""
+    alt: ''
   - type: image
     file: wu-hu-wan-xia-2.jpg
-    alt: ""
+    alt: ''
   - type: image
     file: wu-hu-wan-xia-3.jpg
-    alt: ""
+    alt: ''
   - type: image
     file: wu-hu-wan-xia-4.jpg
-    alt: ""
+    alt: ''
   - type: image
     file: wu-hu-wan-xia-5.jpg
-    alt: ""
+    alt: ''
 ---
 
 2026 w27 芜湖晚霞

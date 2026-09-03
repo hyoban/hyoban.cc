@@ -18,9 +18,7 @@ if (!Array.isArray(recommendations)) {
   throw new TypeError('src/data/media-recommendations.json must contain an array.')
 }
 
-const cachedItemsByKey = force
-  ? new Map()
-  : await readCachedItemsByKey()
+const cachedItemsByKey = force ? new Map() : await readCachedItemsByKey()
 const pendingItemsByKey = new Map()
 const stats = {
   fetched: 0,
@@ -31,12 +29,16 @@ const items = await Promise.all(sortedRecommendations.map(resolveRecommendation)
 
 await writeFile(
   generatedUrl,
-  `${JSON.stringify({
-    generatedAt: new Date().toISOString(),
-    language: LANGUAGE,
-    provider: 'TMDB',
-    items,
-  }, null, 2)}\n`,
+  `${JSON.stringify(
+    {
+      generatedAt: new Date().toISOString(),
+      language: LANGUAGE,
+      provider: 'TMDB',
+      items,
+    },
+    null,
+    2,
+  )}\n`,
 )
 
 console.log(
@@ -81,24 +83,26 @@ async function readCachedItemsByKey() {
 
   const generated = JSON.parse(await readFile(generatedUrl, 'utf8'))
 
-  if (generated.provider !== 'TMDB' || generated.language !== LANGUAGE || !Array.isArray(generated.items)) {
+  if (
+    generated.provider !== 'TMDB' ||
+    generated.language !== LANGUAGE ||
+    !Array.isArray(generated.items)
+  ) {
     return new Map()
   }
 
-  return new Map(
-    generated.items
-      .filter(isGeneratedItem)
-      .map(item => [getMediaKey(item), item]),
-  )
+  return new Map(generated.items.filter(isGeneratedItem).map((item) => [getMediaKey(item), item]))
 }
 
 function isGeneratedItem(item) {
-  return item
-    && typeof item === 'object'
-    && (item.type === 'movie' || item.type === 'tv')
-    && Number.isInteger(item.tmdbId)
-    && item.data
-    && typeof item.data === 'object'
+  return (
+    item &&
+    typeof item === 'object' &&
+    (item.type === 'movie' || item.type === 'tv') &&
+    Number.isInteger(item.tmdbId) &&
+    item.data &&
+    typeof item.data === 'object'
+  )
 }
 
 function getMediaKey(media) {
@@ -135,7 +139,9 @@ async function fetchTmdb(path, params) {
   const apiKey = process.env.TMDB_API_KEY
 
   if (!token && !apiKey) {
-    throw new Error('Missing TMDB credentials. Set TMDB_API_TOKEN or TMDB_API_KEY before running this script.')
+    throw new Error(
+      'Missing TMDB credentials. Set TMDB_API_TOKEN or TMDB_API_KEY before running this script.',
+    )
   }
 
   const url = new URL(`${TMDB_API_BASE_URL}${path}`)
@@ -158,7 +164,9 @@ async function fetchTmdb(path, params) {
 
   if (!response.ok) {
     const body = await response.text()
-    throw new Error(`TMDB request failed: ${response.status} ${response.statusText} ${body.slice(0, 200)}`)
+    throw new Error(
+      `TMDB request failed: ${response.status} ${response.statusText} ${body.slice(0, 200)}`,
+    )
   }
 
   return response.json()

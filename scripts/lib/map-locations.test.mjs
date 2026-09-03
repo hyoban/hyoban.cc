@@ -8,13 +8,14 @@ import {
 
 test('rejects locations with coordinates outside the public map range', () => {
   assert.throws(
-    () => defineLocations({
-      invalid: {
-        latitude: 31,
-        longitude: 181,
-        name: 'Invalid place',
-      },
-    }),
+    () =>
+      defineLocations({
+        invalid: {
+          latitude: 31,
+          longitude: 181,
+          name: 'Invalid place',
+        },
+      }),
     /Invalid coordinates for location "invalid"/,
   )
 })
@@ -28,10 +29,7 @@ test('rejects moment references to unknown location ids', () => {
     },
   })
 
-  assert.throws(
-    () => getLocation(locations, 'missing'),
-    /Unknown location id "missing"/,
-  )
+  assert.throws(() => getLocation(locations, 'missing'), /Unknown location id "missing"/)
 })
 
 test('groups mapped moments by place and uses the newest occurrence year', () => {
@@ -80,10 +78,10 @@ test('groups mapped moments by place and uses the newest occurrence year', () =>
   const groups = groupMomentsByLocation(locations, moments)
 
   assert.deepEqual(
-    groups.map(group => ({
+    groups.map((group) => ({
       id: group.id,
       latestYear: group.latestYear,
-      momentIds: group.moments.map(moment => moment.id),
+      momentIds: group.moments.map((moment) => moment.id),
     })),
     [
       {

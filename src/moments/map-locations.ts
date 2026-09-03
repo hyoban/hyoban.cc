@@ -18,23 +18,14 @@ export type MapLocationGroup<T extends MappableMoment> = Readonly<{
   moments: T[]
 }>
 
-const YEAR_COLORS = [
-  '#3b82f6',
-  '#8b5cf6',
-  '#f59e0b',
-  '#10b981',
-  '#ef4444',
-  '#06b6d4',
-] as const
+const YEAR_COLORS = ['#3b82f6', '#8b5cf6', '#f59e0b', '#10b981', '#ef4444', '#06b6d4'] as const
 
 export function defineLocations<const T extends Record<string, MapLocation>>(locations: T) {
   for (const [id, location] of Object.entries(locations)) {
-    const validLatitude = Number.isFinite(location.latitude)
-      && location.latitude >= -90
-      && location.latitude <= 90
-    const validLongitude = Number.isFinite(location.longitude)
-      && location.longitude >= -180
-      && location.longitude <= 180
+    const validLatitude =
+      Number.isFinite(location.latitude) && location.latitude >= -90 && location.latitude <= 90
+    const validLongitude =
+      Number.isFinite(location.longitude) && location.longitude >= -180 && location.longitude <= 180
 
     if (!validLatitude || !validLongitude) {
       throw new RangeError(`Invalid coordinates for location "${id}".`)
@@ -87,7 +78,7 @@ export function groupMomentsByLocation<T extends MappableMoment>(
 }
 
 export function getYearColor(year: number) {
-  const index = ((year - 2024) % YEAR_COLORS.length + YEAR_COLORS.length) % YEAR_COLORS.length
+  const index = (((year - 2024) % YEAR_COLORS.length) + YEAR_COLORS.length) % YEAR_COLORS.length
   return YEAR_COLORS[index]!
 }
 
@@ -99,8 +90,9 @@ function compareMomentsDescending(first: MappableMoment, second: MappableMoment)
   }
 
   if (first.occurredAt.length > 10 && second.occurredAt.length > 10) {
-    return Date.parse(second.occurredAt) - Date.parse(first.occurredAt)
-      || second.order - first.order
+    return (
+      Date.parse(second.occurredAt) - Date.parse(first.occurredAt) || second.order - first.order
+    )
   }
 
   return second.order - first.order

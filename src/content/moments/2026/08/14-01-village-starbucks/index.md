@@ -1,5 +1,5 @@
 ---
-occurredAt: "2026-08-14T21:05:22+08:00"
+occurredAt: '2026-08-14T21:05:22+08:00'
 location: wuwei-xiangan
 media:
   - type: image

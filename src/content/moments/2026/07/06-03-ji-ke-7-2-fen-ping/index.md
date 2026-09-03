@@ -1,9 +1,9 @@
 ---
-occurredAt: "2026-07-06T19:34:16+08:00"
+occurredAt: '2026-07-06T19:34:16+08:00'
 media:
   - type: image
     file: ji-ke-7-2-fen-ping.jpg
-    alt: ""
+    alt: ''
 ---
 
 极氪7.2分屏

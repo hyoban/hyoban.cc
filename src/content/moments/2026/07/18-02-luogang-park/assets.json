@@ -19,10 +19,7 @@
     "bytes": 47164,
     "contentType": "image/webp",
     "etag": "1dfb26fe4ab5c5dc23ed3806b4389e20",
-    "variants": [
-      "luogang-park-2-480w.webp",
-      "luogang-park-2-960w.webp"
-    ]
+    "variants": ["luogang-park-2-480w.webp", "luogang-park-2-960w.webp"]
   },
   "luogang-park-3-480w.webp": {
     "bytes": 10514,
@@ -44,10 +41,7 @@
     "bytes": 52664,
     "contentType": "image/webp",
     "etag": "d4d76ddf6a59fb3e3a3e2469debfffed",
-    "variants": [
-      "luogang-park-3-480w.webp",
-      "luogang-park-3-960w.webp"
-    ]
+    "variants": ["luogang-park-3-480w.webp", "luogang-park-3-960w.webp"]
   },
   "luogang-park-4-480w.webp": {
     "bytes": 22392,
@@ -69,10 +63,7 @@
     "bytes": 182248,
     "contentType": "image/webp",
     "etag": "b6612a2f14a176620097761f1f0ca101",
-    "variants": [
-      "luogang-park-4-480w.webp",
-      "luogang-park-4-960w.webp"
-    ]
+    "variants": ["luogang-park-4-480w.webp", "luogang-park-4-960w.webp"]
   },
   "luogang-park-480w.webp": {
     "bytes": 30214,
@@ -101,10 +92,7 @@
     "bytes": 205104,
     "contentType": "image/webp",
     "etag": "c19d84fa62edfbfbfbc5ce7c68a1d473",
-    "variants": [
-      "luogang-park-5-480w.webp",
-      "luogang-park-5-960w.webp"
-    ]
+    "variants": ["luogang-park-5-480w.webp", "luogang-park-5-960w.webp"]
   },
   "luogang-park-960w.webp": {
     "bytes": 88182,
@@ -119,9 +107,6 @@
     "bytes": 165838,
     "contentType": "image/webp",
     "etag": "6ff224586e92537550ff2d9010e1cb11",
-    "variants": [
-      "luogang-park-480w.webp",
-      "luogang-park-960w.webp"
-    ]
+    "variants": ["luogang-park-480w.webp", "luogang-park-960w.webp"]
   }
 }

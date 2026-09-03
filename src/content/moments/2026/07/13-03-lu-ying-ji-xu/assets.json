@@ -19,10 +19,7 @@
     "bytes": 159024,
     "contentType": "image/webp",
     "etag": "7ec0401373afa2ddbb3d1abe19f660da",
-    "variants": [
-      "lu-ying-ji-xu-10-480w.webp",
-      "lu-ying-ji-xu-10-960w.webp"
-    ]
+    "variants": ["lu-ying-ji-xu-10-480w.webp", "lu-ying-ji-xu-10-960w.webp"]
   },
   "lu-ying-ji-xu-11-480w.webp": {
     "bytes": 31988,
@@ -44,10 +41,7 @@
     "bytes": 220484,
     "contentType": "image/webp",
     "etag": "7f63fc82e9c3a9c1f172755afa69e15b",
-    "variants": [
-      "lu-ying-ji-xu-11-480w.webp",
-      "lu-ying-ji-xu-11-960w.webp"
-    ]
+    "variants": ["lu-ying-ji-xu-11-480w.webp", "lu-ying-ji-xu-11-960w.webp"]
   },
   "lu-ying-ji-xu-12-480w.webp": {
     "bytes": 46596,
@@ -69,10 +63,7 @@
     "bytes": 329102,
     "contentType": "image/webp",
     "etag": "b4a57c73500eaf5ce30e6a16f134691c",
-    "variants": [
-      "lu-ying-ji-xu-12-480w.webp",
-      "lu-ying-ji-xu-12-960w.webp"
-    ]
+    "variants": ["lu-ying-ji-xu-12-480w.webp", "lu-ying-ji-xu-12-960w.webp"]
   },
   "lu-ying-ji-xu-2-480w.webp": {
     "bytes": 17160,
@@ -94,10 +85,7 @@
     "bytes": 100608,
     "contentType": "image/webp",
     "etag": "a04f24c8c0ff367c681439c3e9bca10b",
-    "variants": [
-      "lu-ying-ji-xu-2-480w.webp",
-      "lu-ying-ji-xu-2-960w.webp"
-    ]
+    "variants": ["lu-ying-ji-xu-2-480w.webp", "lu-ying-ji-xu-2-960w.webp"]
   },
   "lu-ying-ji-xu-3-480w.webp": {
     "bytes": 28378,
@@ -119,10 +107,7 @@
     "bytes": 183502,
     "contentType": "image/webp",
     "etag": "044a9080bddc4ad2e9c9c74827e4fe33",
-    "variants": [
-      "lu-ying-ji-xu-3-480w.webp",
-      "lu-ying-ji-xu-3-960w.webp"
-    ]
+    "variants": ["lu-ying-ji-xu-3-480w.webp", "lu-ying-ji-xu-3-960w.webp"]
   },
   "lu-ying-ji-xu-4-480w.webp": {
     "bytes": 26418,
@@ -144,10 +129,7 @@
     "bytes": 165314,
     "contentType": "image/webp",
     "etag": "2e10751cc5542d23db1946c6c38b1e7c",
-    "variants": [
-      "lu-ying-ji-xu-4-480w.webp",
-      "lu-ying-ji-xu-4-960w.webp"
-    ]
+    "variants": ["lu-ying-ji-xu-4-480w.webp", "lu-ying-ji-xu-4-960w.webp"]
   },
   "lu-ying-ji-xu-480w.webp": {
     "bytes": 25448,
@@ -176,10 +158,7 @@
     "bytes": 77194,
     "contentType": "image/webp",
     "etag": "35d9d3d0040dd77b6ad9b3bdda093894",
-    "variants": [
-      "lu-ying-ji-xu-5-480w.webp",
-      "lu-ying-ji-xu-5-960w.webp"
-    ]
+    "variants": ["lu-ying-ji-xu-5-480w.webp", "lu-ying-ji-xu-5-960w.webp"]
   },
   "lu-ying-ji-xu-6-480w.webp": {
     "bytes": 22050,
@@ -201,10 +180,7 @@
     "bytes": 188046,
     "contentType": "image/webp",
     "etag": "6987a06d9ceb2ecaeafb2eb71bd9ddc7",
-    "variants": [
-      "lu-ying-ji-xu-6-480w.webp",
-      "lu-ying-ji-xu-6-960w.webp"
-    ]
+    "variants": ["lu-ying-ji-xu-6-480w.webp", "lu-ying-ji-xu-6-960w.webp"]
   },
   "lu-ying-ji-xu-7-480w.webp": {
     "bytes": 25928,
@@ -219,9 +195,7 @@
     "bytes": 67656,
     "contentType": "image/webp",
     "etag": "dbeec09b9e337a3a82b2cb0c99a216cc",
-    "variants": [
-      "lu-ying-ji-xu-7-480w.webp"
-    ]
+    "variants": ["lu-ying-ji-xu-7-480w.webp"]
   },
   "lu-ying-ji-xu-8-480w.webp": {
     "bytes": 23146,
@@ -243,10 +217,7 @@
     "bytes": 123456,
     "contentType": "image/webp",
     "etag": "c8178dab7c7acf7a8f0bef392d3936bc",
-    "variants": [
-      "lu-ying-ji-xu-8-480w.webp",
-      "lu-ying-ji-xu-8-960w.webp"
-    ]
+    "variants": ["lu-ying-ji-xu-8-480w.webp", "lu-ying-ji-xu-8-960w.webp"]
   },
   "lu-ying-ji-xu-9-480w.webp": {
     "bytes": 31126,
@@ -268,10 +239,7 @@
     "bytes": 214266,
     "contentType": "image/webp",
     "etag": "26d34038579524536a131e35ef85e43a",
-    "variants": [
-      "lu-ying-ji-xu-9-480w.webp",
-      "lu-ying-ji-xu-9-960w.webp"
-    ]
+    "variants": ["lu-ying-ji-xu-9-480w.webp", "lu-ying-ji-xu-9-960w.webp"]
   },
   "lu-ying-ji-xu-960w.webp": {
     "bytes": 96076,
@@ -286,9 +254,6 @@
     "bytes": 168066,
     "contentType": "image/webp",
     "etag": "15472654c147d0eef11fe726995c56af",
-    "variants": [
-      "lu-ying-ji-xu-480w.webp",
-      "lu-ying-ji-xu-960w.webp"
-    ]
+    "variants": ["lu-ying-ji-xu-480w.webp", "lu-ying-ji-xu-960w.webp"]
   }
 }

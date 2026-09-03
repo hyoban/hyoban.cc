@@ -1,16 +1,16 @@
 ---
-occurredAt: "2026-07-13T23:13:13+08:00"
+occurredAt: '2026-07-13T23:13:13+08:00'
 hidden: true
 media:
   - type: image
     file: jie-shao-yi-xia-wo-de-chuang-che-fang-an.webp
-    alt: ""
+    alt: ''
   - type: image
     file: jie-shao-yi-xia-wo-de-chuang-che-fang-an-2.webp
-    alt: ""
+    alt: ''
   - type: image
     file: jie-shao-yi-xia-wo-de-chuang-che-fang-an-3.webp
-    alt: ""
+    alt: ''
 ---
 
 介绍一下我的床车方案

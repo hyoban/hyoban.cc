@@ -19,9 +19,6 @@
     "bytes": 201475,
     "contentType": "image/jpeg",
     "etag": "782ca920c6d9ff197967b7aa7fc1e01a",
-    "variants": [
-      "tu-ran-bao-fu-480w.webp",
-      "tu-ran-bao-fu-960w.webp"
-    ]
+    "variants": ["tu-ran-bao-fu-480w.webp", "tu-ran-bao-fu-960w.webp"]
   }
 }

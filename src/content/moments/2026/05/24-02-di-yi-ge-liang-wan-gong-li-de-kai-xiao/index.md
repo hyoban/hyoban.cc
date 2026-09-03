@@ -1,10 +1,10 @@
 ---
-occurredAt: "2026-05-24T22:26:01+08:00"
+occurredAt: '2026-05-24T22:26:01+08:00'
 hidden: true
 media:
   - type: image
     file: di-yi-ge-liang-wan-gong-li-de-kai-xiao.webp
-    alt: ""
+    alt: ''
 ---
 
 第一个两万公里的开销

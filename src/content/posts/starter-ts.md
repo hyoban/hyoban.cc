@@ -2,7 +2,7 @@
 title: 我如何开始写一个 TypeScript 库
 link: starter-ts
 description: 记录基于 starter-ts 搭建 TypeScript 库模板时，对 ESLint、打包、导出、测试和发布流程的取舍。
-pubDate: "2024-02-15T07:14:39.208Z"
+pubDate: '2024-02-15T07:14:39.208Z'
 ---
 
 要全自己折腾的话，或许会陷入无尽的坑，所以我选择从 antfu 的 [starter-ts] 开始，按照自己的习惯进行一些改造。

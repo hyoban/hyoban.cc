@@ -1,32 +1,32 @@
 ---
-occurredAt: "2026-04-26T16:37:53+08:00"
+occurredAt: '2026-04-26T16:37:53+08:00'
 location: maogongshan
 media:
   - type: video
     file: jin-tian-de-lu-ying-dian-jian-zhi-le-hen-video.mp4
-    alt: ""
+    alt: ''
     poster: jin-tian-de-lu-ying-dian-jian-zhi-le-hen-video-poster.jpg
   - type: image
     file: jin-tian-de-lu-ying-dian-jian-zhi-le-hen.jpg
-    alt: ""
+    alt: ''
   - type: image
     file: jin-tian-de-lu-ying-dian-jian-zhi-le-hen-2.jpg
-    alt: ""
+    alt: ''
   - type: image
     file: jin-tian-de-lu-ying-dian-jian-zhi-le-hen-3.jpg
-    alt: ""
+    alt: ''
   - type: image
     file: jin-tian-de-lu-ying-dian-jian-zhi-le-hen-4.jpg
-    alt: ""
+    alt: ''
   - type: image
     file: jin-tian-de-lu-ying-dian-jian-zhi-le-hen-5.jpg
-    alt: ""
+    alt: ''
   - type: image
     file: jin-tian-de-lu-ying-dian-jian-zhi-le-hen-6.jpg
-    alt: ""
+    alt: ''
   - type: image
     file: jin-tian-de-lu-ying-dian-jian-zhi-le-hen-7.jpg
-    alt: ""
+    alt: ''
 ---
 
 今天的露营点简直了，很小众，所以没有人。

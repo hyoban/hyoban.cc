@@ -1,34 +1,34 @@
 ---
-occurredAt: "2025-11-12T14:50:57+08:00"
+occurredAt: '2025-11-12T14:50:57+08:00'
 location: western-sichuan
 media:
   - type: image
     file: yi-xie-ji-ke-xiang-ji-pai-de-chuan-xi.webp
-    alt: ""
+    alt: ''
   - type: image
     file: yi-xie-ji-ke-xiang-ji-pai-de-chuan-xi-2.webp
-    alt: ""
+    alt: ''
   - type: image
     file: yi-xie-ji-ke-xiang-ji-pai-de-chuan-xi-3.webp
-    alt: ""
+    alt: ''
   - type: image
     file: yi-xie-ji-ke-xiang-ji-pai-de-chuan-xi-4.webp
-    alt: ""
+    alt: ''
   - type: image
     file: yi-xie-ji-ke-xiang-ji-pai-de-chuan-xi-5.webp
-    alt: ""
+    alt: ''
   - type: image
     file: yi-xie-ji-ke-xiang-ji-pai-de-chuan-xi-6.webp
-    alt: ""
+    alt: ''
   - type: image
     file: yi-xie-ji-ke-xiang-ji-pai-de-chuan-xi-7.webp
-    alt: ""
+    alt: ''
   - type: image
     file: yi-xie-ji-ke-xiang-ji-pai-de-chuan-xi-8.webp
-    alt: ""
+    alt: ''
   - type: image
     file: yi-xie-ji-ke-xiang-ji-pai-de-chuan-xi-9.webp
-    alt: ""
+    alt: ''
 ---
 
 一些极氪相机拍的川西路景

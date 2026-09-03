@@ -19,9 +19,6 @@
     "bytes": 101016,
     "contentType": "image/jpeg",
     "etag": "ada471c8758770bfea527adc6441e012",
-    "variants": [
-      "update-my-eslint-config-480w.webp",
-      "update-my-eslint-config-960w.webp"
-    ]
+    "variants": ["update-my-eslint-config-480w.webp", "update-my-eslint-config-960w.webp"]
   }
 }

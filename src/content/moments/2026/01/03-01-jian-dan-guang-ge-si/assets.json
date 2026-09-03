@@ -52,10 +52,7 @@
     "bytes": 472496,
     "contentType": "image/jpeg",
     "etag": "fa05a8b2bf22efa0067de4beb7f538b4",
-    "variants": [
-      "jian-dan-guang-ge-si-3-480w.webp",
-      "jian-dan-guang-ge-si-3-960w.webp"
-    ]
+    "variants": ["jian-dan-guang-ge-si-3-480w.webp", "jian-dan-guang-ge-si-3-960w.webp"]
   },
   "jian-dan-guang-ge-si-4-480w.webp": {
     "bytes": 27662,
@@ -77,10 +74,7 @@
     "bytes": 337925,
     "contentType": "image/jpeg",
     "etag": "458cfc8ee0f9468f3905699f26dce3be",
-    "variants": [
-      "jian-dan-guang-ge-si-4-480w.webp",
-      "jian-dan-guang-ge-si-4-960w.webp"
-    ]
+    "variants": ["jian-dan-guang-ge-si-4-480w.webp", "jian-dan-guang-ge-si-4-960w.webp"]
   },
   "jian-dan-guang-ge-si-480w.webp": {
     "bytes": 78044,
@@ -102,9 +96,6 @@
     "bytes": 777047,
     "contentType": "image/jpeg",
     "etag": "8ab618371b9204b0e644d921c612f4f8",
-    "variants": [
-      "jian-dan-guang-ge-si-480w.webp",
-      "jian-dan-guang-ge-si-960w.webp"
-    ]
+    "variants": ["jian-dan-guang-ge-si-480w.webp", "jian-dan-guang-ge-si-960w.webp"]
   }
 }

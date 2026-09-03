@@ -1,10 +1,10 @@
 ---
-occurredAt: "2026-07-13T23:14:23+08:00"
+occurredAt: '2026-07-13T23:14:23+08:00'
 hidden: true
 media:
   - type: image
     file: tie-ban-guo.webp
-    alt: ""
+    alt: ''
 ---
 
 2025 w17 铁板锅

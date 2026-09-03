@@ -1,10 +1,10 @@
 ---
-occurredAt: "2024-08-04T21:17:31+08:00"
+occurredAt: '2024-08-04T21:17:31+08:00'
 hidden: true
 media:
   - type: video
     file: mei-ri-jin-zhan-zhi-tu-biao-gai-jin-de-video.mp4
-    alt: ""
+    alt: ''
     poster: mei-ri-jin-zhan-zhi-tu-biao-gai-jin-de-video-poster.png
 ---
 

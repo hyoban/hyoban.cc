@@ -1,19 +1,19 @@
 ---
-occurredAt: "2025-11-12T11:04:33+08:00"
+occurredAt: '2025-11-12T11:04:33+08:00'
 location: xiangyang
 media:
   - type: image
     file: mai-le-ge-dian-dong-die-you-gua-di-pan.webp
-    alt: ""
+    alt: ''
   - type: image
     file: mai-le-ge-dian-dong-die-you-gua-di-pan-2.webp
-    alt: ""
+    alt: ''
   - type: image
     file: mai-le-ge-dian-dong-die-you-gua-di-pan-3.webp
-    alt: ""
+    alt: ''
   - type: image
     file: mai-le-ge-dian-dong-die-you-gua-di-pan-4.webp
-    alt: ""
+    alt: ''
 ---
 
 买了个电动爹，又刮底盘了

@@ -26,10 +26,6 @@
     "bytes": 222959,
     "contentType": "image/jpeg",
     "etag": "87b861ed2da37fcc2f422ac67de27a4b",
-    "variants": [
-      "folo-mcp-480w.webp",
-      "folo-mcp-960w.webp",
-      "folo-mcp-1920w.webp"
-    ]
+    "variants": ["folo-mcp-480w.webp", "folo-mcp-960w.webp", "folo-mcp-1920w.webp"]
   }
 }

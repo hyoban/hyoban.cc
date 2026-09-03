@@ -1,16 +1,16 @@
 ---
-occurredAt: "2026-06-20T21:02:34+08:00"
+occurredAt: '2026-06-20T21:02:34+08:00'
 hidden: true
 media:
   - type: image
     file: zai-lao-jun-shan-chi-shen-me.webp
-    alt: ""
+    alt: ''
   - type: image
     file: zai-lao-jun-shan-chi-shen-me-2.webp
-    alt: ""
+    alt: ''
   - type: image
     file: zai-lao-jun-shan-chi-shen-me-3.webp
-    alt: ""
+    alt: ''
 ---
 
 在老君山吃什么

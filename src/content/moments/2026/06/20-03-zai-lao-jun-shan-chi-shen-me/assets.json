@@ -69,9 +69,6 @@
     "bytes": 305584,
     "contentType": "image/webp",
     "etag": "51a7a1daaf34351a059d696990262f1f",
-    "variants": [
-      "zai-lao-jun-shan-chi-shen-me-480w.webp",
-      "zai-lao-jun-shan-chi-shen-me-960w.webp"
-    ]
+    "variants": ["zai-lao-jun-shan-chi-shen-me-480w.webp", "zai-lao-jun-shan-chi-shen-me-960w.webp"]
   }
 }

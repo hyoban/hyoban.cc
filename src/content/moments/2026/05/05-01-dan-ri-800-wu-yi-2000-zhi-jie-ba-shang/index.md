@@ -1,13 +1,13 @@
 ---
-occurredAt: "2026-05-05T19:08:04+08:00"
+occurredAt: '2026-05-05T19:08:04+08:00'
 location: xiangyang
 media:
   - type: image
     file: dan-ri-800-wu-yi-2000-zhi-jie-ba-shang.jpg
-    alt: ""
+    alt: ''
   - type: image
     file: dan-ri-800-wu-yi-2000-zhi-jie-ba-shang-2.jpg
-    alt: ""
+    alt: ''
 ---
 
 单日800+ 五一2000+，直接把上个月的累积里程超过了。马上要迎来第一个两万公里和保养了。

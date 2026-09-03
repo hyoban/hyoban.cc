@@ -1,12 +1,12 @@
 ---
-occurredAt: "2025-11-09T19:13:52+08:00"
+occurredAt: '2025-11-09T19:13:52+08:00'
 media:
   - type: image
     file: ji-ke-007gt-neng-bu-neng-qu-chuan-xi.webp
-    alt: ""
+    alt: ''
   - type: image
     file: ji-ke-007gt-neng-bu-neng-qu-chuan-xi-2.webp
-    alt: ""
+    alt: ''
 ---
 
 极氪 007GT 能不能去川西？

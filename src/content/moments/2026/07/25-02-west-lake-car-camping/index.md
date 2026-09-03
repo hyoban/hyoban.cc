@@ -1,5 +1,5 @@
 ---
-occurredAt: "2026-07-25"
+occurredAt: '2026-07-25'
 location: west-lake-yuemiao-parking
 media:
   - type: image

@@ -1,34 +1,34 @@
 ---
-occurredAt: "2026-06-15T12:52:48+08:00"
+occurredAt: '2026-06-15T12:52:48+08:00'
 location: moganshan
 media:
   - type: image
     file: mo-gan-shan.jpg
-    alt: ""
+    alt: ''
   - type: image
     file: mo-gan-shan-2.jpg
-    alt: ""
+    alt: ''
   - type: image
     file: mo-gan-shan-3.jpg
-    alt: ""
+    alt: ''
   - type: image
     file: mo-gan-shan-4.jpg
-    alt: ""
+    alt: ''
   - type: image
     file: mo-gan-shan-5.jpg
-    alt: ""
+    alt: ''
   - type: image
     file: mo-gan-shan-6.jpg
-    alt: ""
+    alt: ''
   - type: image
     file: mo-gan-shan-7.jpg
-    alt: ""
+    alt: ''
   - type: image
     file: mo-gan-shan-8.jpg
-    alt: ""
+    alt: ''
   - type: image
     file: mo-gan-shan-9.jpg
-    alt: ""
+    alt: ''
 ---
 
 2026 w24 莫干山

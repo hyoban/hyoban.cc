@@ -33,11 +33,7 @@
     "bytes": 123629,
     "contentType": "image/jpeg",
     "etag": "9ce549d273c4a38647e0868c7bd3cad5",
-    "variants": [
-      "note-2-480w.webp",
-      "note-2-960w.webp",
-      "note-2-1920w.webp"
-    ]
+    "variants": ["note-2-480w.webp", "note-2-960w.webp", "note-2-1920w.webp"]
   },
   "note-480w.webp": {
     "bytes": 12522,
@@ -59,10 +55,6 @@
     "bytes": 269142,
     "contentType": "image/jpeg",
     "etag": "bacfdaba9a61d781e051d248078adb8e",
-    "variants": [
-      "note-480w.webp",
-      "note-960w.webp",
-      "note-1920w.webp"
-    ]
+    "variants": ["note-480w.webp", "note-960w.webp", "note-1920w.webp"]
   }
 }

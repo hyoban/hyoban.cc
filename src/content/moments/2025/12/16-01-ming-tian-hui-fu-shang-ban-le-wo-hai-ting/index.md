@@ -1,5 +1,5 @@
 ---
-occurredAt: "2025-12-16T14:25:56+08:00"
+occurredAt: '2025-12-16T14:25:56+08:00'
 location: suzhou
 media: []
 ---

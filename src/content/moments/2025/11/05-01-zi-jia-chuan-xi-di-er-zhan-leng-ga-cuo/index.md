@@ -1,37 +1,37 @@
 ---
-occurredAt: "2025-11-05T22:55:56+08:00"
+occurredAt: '2025-11-05T22:55:56+08:00'
 location: lenggacuo
 media:
   - type: image
     file: zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo.webp
-    alt: ""
+    alt: ''
   - type: image
     file: zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-2.webp
-    alt: ""
+    alt: ''
   - type: image
     file: zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-3.webp
-    alt: ""
+    alt: ''
   - type: image
     file: zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-4.webp
-    alt: ""
+    alt: ''
   - type: image
     file: zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-5.webp
-    alt: ""
+    alt: ''
   - type: image
     file: zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-6.webp
-    alt: ""
+    alt: ''
   - type: image
     file: zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-7.webp
-    alt: ""
+    alt: ''
   - type: image
     file: zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-8.webp
-    alt: ""
+    alt: ''
   - type: image
     file: zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-9.webp
-    alt: ""
+    alt: ''
   - type: image
     file: zi-jia-chuan-xi-di-er-zhan-leng-ga-cuo-10.webp
-    alt: ""
+    alt: ''
 ---
 
 自驾川西第二站 冷嘎措

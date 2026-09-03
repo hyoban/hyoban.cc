@@ -52,9 +52,6 @@
     "bytes": 281775,
     "contentType": "image/jpeg",
     "etag": "10da58dfe818c1d9a8c3a71205a49661",
-    "variants": [
-      "dao-qing-dao-le-480w.webp",
-      "dao-qing-dao-le-960w.webp"
-    ]
+    "variants": ["dao-qing-dao-le-480w.webp", "dao-qing-dao-le-960w.webp"]
   }
 }

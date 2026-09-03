@@ -19,9 +19,6 @@
     "etag": "13a49f17cc82d40391184a08cc46830b",
     "height": 1440,
     "width": 1920,
-    "variants": [
-      "pre-trip-car-wash-480w.webp",
-      "pre-trip-car-wash-960w.webp"
-    ]
+    "variants": ["pre-trip-car-wash-480w.webp", "pre-trip-car-wash-960w.webp"]
   }
 }

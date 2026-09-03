@@ -1,5 +1,5 @@
 ---
-occurredAt: "2026-07-25"
+occurredAt: '2026-07-25'
 location: hangzhou-city-balcony
 media:
   - type: image

@@ -1,10 +1,10 @@
 ---
-occurredAt: "2023-05-14T13:29:46+08:00"
+occurredAt: '2023-05-14T13:29:46+08:00'
 hidden: true
 media:
   - type: video
     file: obsidian-zhen-shi-tai-you-ya-la-xie-cha-jian-video.mp4
-    alt: ""
+    alt: ''
     poster: obsidian-zhen-shi-tai-you-ya-la-xie-cha-jian-video-poster.png
 ---
 

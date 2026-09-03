@@ -12,9 +12,11 @@ function getPageKey(url: URL) {
 }
 
 function canPrefetch() {
-  const connection = (navigator as Navigator & {
-    connection?: NetworkInformation
-  }).connection
+  const connection = (
+    navigator as Navigator & {
+      connection?: NetworkInformation
+    }
+  ).connection
 
   return !connection?.saveData && !connection?.effectiveType?.includes('2g')
 }
@@ -33,9 +35,9 @@ function prefetchPage(url: URL) {
   })
     .then(async (response) => {
       if (
-        !response.ok
-        || !response.headers.get('content-type')?.includes('text/html')
-        || getPageKey(new URL(response.url)) !== key
+        !response.ok ||
+        !response.headers.get('content-type')?.includes('text/html') ||
+        getPageKey(new URL(response.url)) !== key
       ) {
         return undefined
       }
@@ -106,12 +108,12 @@ document.addEventListener('astro:before-preparation', (event) => {
       return
     }
 
-    newDocument.querySelectorAll('noscript').forEach(element => element.remove())
+    newDocument.querySelectorAll('noscript').forEach((element) => element.remove())
     event.newDocument = newDocument
   }
 })
 
-document.addEventListener('mouseenter', event => prefetchLink(event.target), true)
-document.addEventListener('focusin', event => prefetchLink(event.target))
+document.addEventListener('mouseenter', (event) => prefetchLink(event.target), true)
+document.addEventListener('focusin', (event) => prefetchLink(event.target))
 document.addEventListener('astro:page-load', prefetchAdjacentMonths)
 prefetchAdjacentMonths()

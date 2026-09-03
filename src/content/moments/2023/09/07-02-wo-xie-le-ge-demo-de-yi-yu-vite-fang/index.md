@@ -1,16 +1,16 @@
 ---
-occurredAt: "2023-09-07T09:38:50+08:00"
+occurredAt: '2023-09-07T09:38:50+08:00'
 hidden: true
 media:
   - type: image
     file: wo-xie-le-ge-demo-de-yi-yu-vite-fang.jpg
-    alt: ""
+    alt: ''
   - type: image
     file: wo-xie-le-ge-demo-de-yi-yu-vite-fang-2.png
-    alt: ""
+    alt: ''
   - type: image
     file: wo-xie-le-ge-demo-de-yi-yu-vite-fang-3.jpg
-    alt: ""
+    alt: ''
 ---
 
 我写了个 demo，得易于 Vite 方便的 ssr 支持，这并不复杂。

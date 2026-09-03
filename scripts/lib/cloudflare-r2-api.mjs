@@ -25,9 +25,7 @@ export async function listR2Objects(options) {
 
     const result = await cloudflareRequest(url, token)
     objects.push(...result.result)
-    cursor = result.result_info?.is_truncated
-      ? result.result_info.cursor
-      : undefined
+    cursor = result.result_info?.is_truncated ? result.result_info.cursor : undefined
   } while (cursor)
 
   return objects
@@ -44,15 +42,16 @@ async function getCloudflareToken(root) {
     maxBuffer: 10 * 1024 * 1024,
   })
 
-  const candidates = process.platform === 'darwin'
-    ? [
-        join(homedir(), 'Library/Preferences/.wrangler/config/default.toml'),
-        join(homedir(), '.config/.wrangler/config/default.toml'),
-      ]
-    : [
-        join(homedir(), '.config/.wrangler/config/default.toml'),
-        join(homedir(), '.wrangler/config/default.toml'),
-      ]
+  const candidates =
+    process.platform === 'darwin'
+      ? [
+          join(homedir(), 'Library/Preferences/.wrangler/config/default.toml'),
+          join(homedir(), '.config/.wrangler/config/default.toml'),
+        ]
+      : [
+          join(homedir(), '.config/.wrangler/config/default.toml'),
+          join(homedir(), '.wrangler/config/default.toml'),
+        ]
 
   for (const candidate of candidates) {
     try {
@@ -69,9 +68,7 @@ async function getCloudflareToken(root) {
     }
   }
 
-  throw new Error(
-    'Unable to read Wrangler OAuth credentials. Set CLOUDFLARE_API_TOKEN.',
-  )
+  throw new Error('Unable to read Wrangler OAuth credentials. Set CLOUDFLARE_API_TOKEN.')
 }
 
 async function cloudflareRequest(url, token) {

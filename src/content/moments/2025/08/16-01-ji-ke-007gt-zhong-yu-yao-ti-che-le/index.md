@@ -1,10 +1,10 @@
 ---
-occurredAt: "2025-08-16T11:08:05+08:00"
+occurredAt: '2025-08-16T11:08:05+08:00'
 location: hefei
 media:
   - type: image
     file: ji-ke-007gt-zhong-yu-yao-ti-che-le.webp
-    alt: ""
+    alt: ''
 ---
 
 极氪 007gt 终于要提车了

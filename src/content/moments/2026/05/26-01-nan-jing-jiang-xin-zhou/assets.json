@@ -19,10 +19,7 @@
     "bytes": 59320,
     "contentType": "image/webp",
     "etag": "ecaacd45072483be0afe24f13ea9a77d",
-    "variants": [
-      "nan-jing-jiang-xin-zhou-2-480w.webp",
-      "nan-jing-jiang-xin-zhou-2-960w.webp"
-    ]
+    "variants": ["nan-jing-jiang-xin-zhou-2-480w.webp", "nan-jing-jiang-xin-zhou-2-960w.webp"]
   },
   "nan-jing-jiang-xin-zhou-3-480w.webp": {
     "bytes": 36668,
@@ -44,10 +41,7 @@
     "bytes": 357730,
     "contentType": "image/webp",
     "etag": "b32c289d21cf1eb1e0cd8bec1288845f",
-    "variants": [
-      "nan-jing-jiang-xin-zhou-3-480w.webp",
-      "nan-jing-jiang-xin-zhou-3-960w.webp"
-    ]
+    "variants": ["nan-jing-jiang-xin-zhou-3-480w.webp", "nan-jing-jiang-xin-zhou-3-960w.webp"]
   },
   "nan-jing-jiang-xin-zhou-4-480w.webp": {
     "bytes": 4334,
@@ -69,10 +63,7 @@
     "bytes": 51278,
     "contentType": "image/webp",
     "etag": "0c1aee51ddca596e5b9f1d4d0504a8e6",
-    "variants": [
-      "nan-jing-jiang-xin-zhou-4-480w.webp",
-      "nan-jing-jiang-xin-zhou-4-960w.webp"
-    ]
+    "variants": ["nan-jing-jiang-xin-zhou-4-480w.webp", "nan-jing-jiang-xin-zhou-4-960w.webp"]
   },
   "nan-jing-jiang-xin-zhou-480w.webp": {
     "bytes": 32782,
@@ -101,10 +92,7 @@
     "bytes": 104356,
     "contentType": "image/webp",
     "etag": "fb6d64a863ade65bf6a57a2ced97eeb6",
-    "variants": [
-      "nan-jing-jiang-xin-zhou-5-480w.webp",
-      "nan-jing-jiang-xin-zhou-5-960w.webp"
-    ]
+    "variants": ["nan-jing-jiang-xin-zhou-5-480w.webp", "nan-jing-jiang-xin-zhou-5-960w.webp"]
   },
   "nan-jing-jiang-xin-zhou-6-480w.webp": {
     "bytes": 28994,
@@ -126,10 +114,7 @@
     "bytes": 176946,
     "contentType": "image/webp",
     "etag": "044f0a1d77bdf50ccdc1f379a37a96c9",
-    "variants": [
-      "nan-jing-jiang-xin-zhou-6-480w.webp",
-      "nan-jing-jiang-xin-zhou-6-960w.webp"
-    ]
+    "variants": ["nan-jing-jiang-xin-zhou-6-480w.webp", "nan-jing-jiang-xin-zhou-6-960w.webp"]
   },
   "nan-jing-jiang-xin-zhou-7-480w.webp": {
     "bytes": 12004,
@@ -151,10 +136,7 @@
     "bytes": 89326,
     "contentType": "image/webp",
     "etag": "89440c632aedf50b03bb3a0cf675641f",
-    "variants": [
-      "nan-jing-jiang-xin-zhou-7-480w.webp",
-      "nan-jing-jiang-xin-zhou-7-960w.webp"
-    ]
+    "variants": ["nan-jing-jiang-xin-zhou-7-480w.webp", "nan-jing-jiang-xin-zhou-7-960w.webp"]
   },
   "nan-jing-jiang-xin-zhou-960w.webp": {
     "bytes": 85650,
@@ -169,9 +151,6 @@
     "bytes": 257530,
     "contentType": "image/webp",
     "etag": "29c2aa73cad5bc331bc6f644163a16d8",
-    "variants": [
-      "nan-jing-jiang-xin-zhou-480w.webp",
-      "nan-jing-jiang-xin-zhou-960w.webp"
-    ]
+    "variants": ["nan-jing-jiang-xin-zhou-480w.webp", "nan-jing-jiang-xin-zhou-960w.webp"]
   }
 }

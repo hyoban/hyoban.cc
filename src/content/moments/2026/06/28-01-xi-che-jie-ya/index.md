@@ -1,19 +1,19 @@
 ---
-occurredAt: "2026-06-28T21:44:21+08:00"
+occurredAt: '2026-06-28T21:44:21+08:00'
 hidden: true
 media:
   - type: image
     file: xi-che-jie-ya.webp
-    alt: ""
+    alt: ''
   - type: image
     file: xi-che-jie-ya-2.webp
-    alt: ""
+    alt: ''
   - type: image
     file: xi-che-jie-ya-3.webp
-    alt: ""
+    alt: ''
   - type: image
     file: xi-che-jie-ya-4.webp
-    alt: ""
+    alt: ''
 ---
 
 洗车解压

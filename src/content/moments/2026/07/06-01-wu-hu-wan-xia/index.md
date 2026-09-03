@@ -1,22 +1,22 @@
 ---
-occurredAt: "2026-07-06T00:09:34+08:00"
+occurredAt: '2026-07-06T00:09:34+08:00'
 hidden: true
 media:
   - type: image
     file: wu-hu-wan-xia.webp
-    alt: ""
+    alt: ''
   - type: image
     file: wu-hu-wan-xia-2.webp
-    alt: ""
+    alt: ''
   - type: image
     file: wu-hu-wan-xia-3.webp
-    alt: ""
+    alt: ''
   - type: image
     file: wu-hu-wan-xia-4.webp
-    alt: ""
+    alt: ''
   - type: image
     file: wu-hu-wan-xia-5.webp
-    alt: ""
+    alt: ''
 ---
 
 2026 w27 芜湖晚霞

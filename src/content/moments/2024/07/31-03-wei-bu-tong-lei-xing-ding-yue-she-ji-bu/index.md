@@ -1,10 +1,10 @@
 ---
-occurredAt: "2024-07-31T06:46:37+08:00"
+occurredAt: '2024-07-31T06:46:37+08:00'
 hidden: true
 media:
   - type: video
     file: wei-bu-tong-lei-xing-ding-yue-she-ji-bu-video.mp4
-    alt: ""
+    alt: ''
     poster: wei-bu-tong-lei-xing-ding-yue-she-ji-bu-video-poster.png
 ---
 

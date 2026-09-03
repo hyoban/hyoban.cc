@@ -1,13 +1,13 @@
 ---
-occurredAt: "2025-10-19T08:45:12+08:00"
+occurredAt: '2025-10-19T08:45:12+08:00'
 location: xinyang
 media:
   - type: image
     file: 007gt-chuang-che-zi-jia-cheng-du-di-er-zhan.webp
-    alt: ""
+    alt: ''
   - type: image
     file: 007gt-chuang-che-zi-jia-cheng-du-di-er-zhan-2.webp
-    alt: ""
+    alt: ''
 ---
 
 007gt床车自驾成都第二站信阳，日常睡车里

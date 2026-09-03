@@ -19,9 +19,6 @@
     "bytes": 183862,
     "contentType": "image/jpeg",
     "etag": "2ab0f49f07c9fb06d4b37eba17c18f81",
-    "variants": [
-      "cli-version-480w.webp",
-      "cli-version-960w.webp"
-    ]
+    "variants": ["cli-version-480w.webp", "cli-version-960w.webp"]
   }
 }

@@ -1,13 +1,13 @@
 ---
-occurredAt: "2024-11-30T14:43:04+08:00"
+occurredAt: '2024-11-30T14:43:04+08:00'
 location: guangzhou
 media:
   - type: image
     file: san-dian-zhong-yin-cha-xian.jpg
-    alt: ""
+    alt: ''
   - type: image
     file: san-dian-zhong-yin-cha-xian-2.jpg
-    alt: ""
+    alt: ''
 ---
 
 三点钟，饮茶先！

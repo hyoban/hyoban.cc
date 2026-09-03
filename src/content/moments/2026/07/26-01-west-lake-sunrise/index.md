@@ -1,5 +1,5 @@
 ---
-occurredAt: "2026-07-26"
+occurredAt: '2026-07-26'
 location: west-lake
 media:
   - type: video

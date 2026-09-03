@@ -7,25 +7,27 @@ export const momentIdPattern = /^(\d{4})\/(\d{2})\/(\d{2})-(\d{2})-[a-z0-9]+(?:-
 
 export async function readMomentRecords(contentRoot) {
   const files = (await readdir(contentRoot, { recursive: true }))
-    .filter(file => file.endsWith('index.md'))
+    .filter((file) => file.endsWith('index.md'))
     .sort()
 
-  return Promise.all(files.map(async (file) => {
-    const id = file.replace(/\/index\.md$/, '')
-    const directory = join(contentRoot, id)
-    const document = await readFile(join(contentRoot, file), 'utf8')
-    const moment = parseMomentDocument(document, { id })
-    const assets = JSON.parse(await readFile(join(directory, 'assets.json'), 'utf8'))
+  return Promise.all(
+    files.map(async (file) => {
+      const id = file.replace(/\/index\.md$/, '')
+      const directory = join(contentRoot, id)
+      const document = await readFile(join(contentRoot, file), 'utf8')
+      const moment = parseMomentDocument(document, { id })
+      const assets = JSON.parse(await readFile(join(directory, 'assets.json'), 'utf8'))
 
-    return {
-      assets,
-      directory,
-      document,
-      file,
-      id,
-      moment,
-    }
-  }))
+      return {
+        assets,
+        directory,
+        document,
+        file,
+        id,
+        moment,
+      }
+    }),
+  )
 }
 
 export function getReferencedAssetFiles(record) {
@@ -55,8 +57,8 @@ export function getReferencedAssetFiles(record) {
 }
 
 export function getReferencedR2Objects(records) {
-  return records.flatMap(record =>
-    [...getReferencedAssetFiles(record)].map(file => ({
+  return records.flatMap((record) =>
+    [...getReferencedAssetFiles(record)].map((file) => ({
       file,
       key: `moments/${record.id}/${file}`,
       metadata: record.assets[file],

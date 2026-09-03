@@ -2,7 +2,7 @@
 title: 为什么是 ESLint
 link: why-eslint
 description: 说明我选择 ESLint 作为代码检查和格式化工具的原因，包括可配置性、扩展性和生态体验。
-pubDate: "2024-05-17T16:14:11.183Z"
+pubDate: '2024-05-17T16:14:11.183Z'
 ---
 
 ## 前言
@@ -64,11 +64,7 @@ Command](https://eslint-plugin-command.antfu.me)。
 
 ```jsonc
 {
-  "eslint.codeActionsOnSave.rules": [
-    "!prefer-const",
-    "!unused-imports/no-unused-imports",
-    "*"
-  ]
+  "eslint.codeActionsOnSave.rules": ["!prefer-const", "!unused-imports/no-unused-imports", "*"],
 }
 ```
 
@@ -87,8 +83,8 @@ Command](https://eslint-plugin-command.antfu.me)。
     { "rule": "antfu/consistent-list-newline", "severity": "off" },
     { "rule": "prefer-const", "severity": "off" },
     { "rule": "unused-imports/no-unused-imports", "severity": "off" },
-    { "rule": "simple-import-sort/*", "severity": "off" }
-  ]
+    { "rule": "simple-import-sort/*", "severity": "off" },
+  ],
 }
 ```
 

@@ -1,10 +1,10 @@
 ---
-occurredAt: "2023-05-20T17:25:25+08:00"
+occurredAt: '2023-05-20T17:25:25+08:00'
 hidden: true
 media:
   - type: image
     file: ru-guo-ni-wen-wo-bu-shi-ke-yi-shi.png
-    alt: ""
+    alt: ''
 ---
 
 如果你问我，不是可以始终显示电池百分比吗？

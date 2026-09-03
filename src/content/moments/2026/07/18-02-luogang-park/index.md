@@ -1,5 +1,5 @@
 ---
-occurredAt: "2026-07-18"
+occurredAt: '2026-07-18'
 location: luogang-park
 media:
   - type: image

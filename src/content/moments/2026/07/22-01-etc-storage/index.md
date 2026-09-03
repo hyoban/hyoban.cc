@@ -1,5 +1,5 @@
 ---
-occurredAt: "2026-07-22T21:52:45+08:00"
+occurredAt: '2026-07-22T21:52:45+08:00'
 media:
   - type: image
     file: etc-storage.webp

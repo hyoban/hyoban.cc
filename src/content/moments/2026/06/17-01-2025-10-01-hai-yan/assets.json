@@ -19,10 +19,7 @@
     "bytes": 220816,
     "contentType": "image/webp",
     "etag": "96efc8eb2434eedde0b932616e75ae88",
-    "variants": [
-      "2025-10-01-hai-yan-2-480w.webp",
-      "2025-10-01-hai-yan-2-960w.webp"
-    ]
+    "variants": ["2025-10-01-hai-yan-2-480w.webp", "2025-10-01-hai-yan-2-960w.webp"]
   },
   "2025-10-01-hai-yan-3-480w.webp": {
     "bytes": 11604,
@@ -44,10 +41,7 @@
     "bytes": 112550,
     "contentType": "image/webp",
     "etag": "9d99e61ba0d13f479f59ac88c849a785",
-    "variants": [
-      "2025-10-01-hai-yan-3-480w.webp",
-      "2025-10-01-hai-yan-3-960w.webp"
-    ]
+    "variants": ["2025-10-01-hai-yan-3-480w.webp", "2025-10-01-hai-yan-3-960w.webp"]
   },
   "2025-10-01-hai-yan-480w.webp": {
     "bytes": 9612,
@@ -69,9 +63,6 @@
     "bytes": 41562,
     "contentType": "image/webp",
     "etag": "b73cd34002d0d728d7cc2b59d268f1d1",
-    "variants": [
-      "2025-10-01-hai-yan-480w.webp",
-      "2025-10-01-hai-yan-960w.webp"
-    ]
+    "variants": ["2025-10-01-hai-yan-480w.webp", "2025-10-01-hai-yan-960w.webp"]
   }
 }

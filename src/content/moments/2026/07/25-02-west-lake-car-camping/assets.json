@@ -19,10 +19,7 @@
     "bytes": 244134,
     "contentType": "image/webp",
     "etag": "979b99bb8193e2fca37bf9603823820d",
-    "variants": [
-      "west-lake-car-camping-2-480w.webp",
-      "west-lake-car-camping-2-960w.webp"
-    ]
+    "variants": ["west-lake-car-camping-2-480w.webp", "west-lake-car-camping-2-960w.webp"]
   },
   "west-lake-car-camping-3-480w.webp": {
     "bytes": 23848,
@@ -44,10 +41,7 @@
     "bytes": 211078,
     "contentType": "image/webp",
     "etag": "8da28cc02072c3ccec84da40eebaf20b",
-    "variants": [
-      "west-lake-car-camping-3-480w.webp",
-      "west-lake-car-camping-3-960w.webp"
-    ]
+    "variants": ["west-lake-car-camping-3-480w.webp", "west-lake-car-camping-3-960w.webp"]
   },
   "west-lake-car-camping-4-480w.webp": {
     "bytes": 35996,
@@ -69,10 +63,7 @@
     "bytes": 471268,
     "contentType": "image/webp",
     "etag": "f53b4b69500aeb3f09ccfb7e796eaabf",
-    "variants": [
-      "west-lake-car-camping-4-480w.webp",
-      "west-lake-car-camping-4-960w.webp"
-    ]
+    "variants": ["west-lake-car-camping-4-480w.webp", "west-lake-car-camping-4-960w.webp"]
   },
   "west-lake-car-camping-480w.webp": {
     "bytes": 14668,
@@ -94,9 +85,6 @@
     "bytes": 169422,
     "contentType": "image/webp",
     "etag": "5eca3d3ed3d6373be674a3c699779263",
-    "variants": [
-      "west-lake-car-camping-480w.webp",
-      "west-lake-car-camping-960w.webp"
-    ]
+    "variants": ["west-lake-car-camping-480w.webp", "west-lake-car-camping-960w.webp"]
   }
 }

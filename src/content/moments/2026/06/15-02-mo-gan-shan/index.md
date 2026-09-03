@@ -1,34 +1,34 @@
 ---
-occurredAt: "2026-06-15T12:57:12+08:00"
+occurredAt: '2026-06-15T12:57:12+08:00'
 hidden: true
 media:
   - type: image
     file: mo-gan-shan.webp
-    alt: ""
+    alt: ''
   - type: image
     file: mo-gan-shan-2.webp
-    alt: ""
+    alt: ''
   - type: image
     file: mo-gan-shan-3.webp
-    alt: ""
+    alt: ''
   - type: image
     file: mo-gan-shan-4.webp
-    alt: ""
+    alt: ''
   - type: image
     file: mo-gan-shan-5.webp
-    alt: ""
+    alt: ''
   - type: image
     file: mo-gan-shan-6.webp
-    alt: ""
+    alt: ''
   - type: image
     file: mo-gan-shan-7.webp
-    alt: ""
+    alt: ''
   - type: image
     file: mo-gan-shan-8.webp
-    alt: ""
+    alt: ''
   - type: image
     file: mo-gan-shan-9.webp
-    alt: ""
+    alt: ''
 ---
 
 2026 w24 莫干山

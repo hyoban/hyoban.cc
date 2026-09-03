@@ -1,9 +1,9 @@
 ---
-occurredAt: "2025-10-16T22:12:27+08:00"
+occurredAt: '2025-10-16T22:12:27+08:00'
 media:
   - type: image
     file: xiang-cong-wu-hu-zi-jia-dao-cheng-du-ran.webp
-    alt: ""
+    alt: ''
 ---
 
 想从芜湖自驾到成都然后去九寨沟

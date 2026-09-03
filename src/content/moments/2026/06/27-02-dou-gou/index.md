@@ -1,28 +1,28 @@
 ---
-occurredAt: "2026-06-27T22:15:55+08:00"
+occurredAt: '2026-06-27T22:15:55+08:00'
 location: dougou
 media:
   - type: image
     file: dou-gou.jpg
-    alt: ""
+    alt: ''
   - type: image
     file: dou-gou-2.jpg
-    alt: ""
+    alt: ''
   - type: image
     file: dou-gou-3.jpg
-    alt: ""
+    alt: ''
   - type: image
     file: dou-gou-4.jpg
-    alt: ""
+    alt: ''
   - type: image
     file: dou-gou-5.jpg
-    alt: ""
+    alt: ''
   - type: image
     file: dou-gou-6.jpg
-    alt: ""
+    alt: ''
   - type: image
     file: dou-gou-7.jpg
-    alt: ""
+    alt: ''
 ---
 
 2026 w26 陡沟

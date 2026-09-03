@@ -19,10 +19,7 @@
     "bytes": 205880,
     "contentType": "image/webp",
     "etag": "badfd7c65a017a6a33209a839594e63a",
-    "variants": [
-      "hangzhou-city-balcony-2-480w.webp",
-      "hangzhou-city-balcony-2-960w.webp"
-    ]
+    "variants": ["hangzhou-city-balcony-2-480w.webp", "hangzhou-city-balcony-2-960w.webp"]
   },
   "hangzhou-city-balcony-3-480w.webp": {
     "bytes": 17146,
@@ -44,10 +41,7 @@
     "bytes": 170800,
     "contentType": "image/webp",
     "etag": "de2e80c62f30599a2def339947d84626",
-    "variants": [
-      "hangzhou-city-balcony-3-480w.webp",
-      "hangzhou-city-balcony-3-960w.webp"
-    ]
+    "variants": ["hangzhou-city-balcony-3-480w.webp", "hangzhou-city-balcony-3-960w.webp"]
   },
   "hangzhou-city-balcony-4-480w.webp": {
     "bytes": 10436,
@@ -69,10 +63,7 @@
     "bytes": 151938,
     "contentType": "image/webp",
     "etag": "bbbb02fee9f52966877e3509aea08a79",
-    "variants": [
-      "hangzhou-city-balcony-4-480w.webp",
-      "hangzhou-city-balcony-4-960w.webp"
-    ]
+    "variants": ["hangzhou-city-balcony-4-480w.webp", "hangzhou-city-balcony-4-960w.webp"]
   },
   "hangzhou-city-balcony-480w.webp": {
     "bytes": 12282,
@@ -101,10 +92,7 @@
     "bytes": 161444,
     "contentType": "image/webp",
     "etag": "74939ba769f653e24add49a76dbd1022",
-    "variants": [
-      "hangzhou-city-balcony-5-480w.webp",
-      "hangzhou-city-balcony-5-960w.webp"
-    ]
+    "variants": ["hangzhou-city-balcony-5-480w.webp", "hangzhou-city-balcony-5-960w.webp"]
   },
   "hangzhou-city-balcony-6-480w.webp": {
     "bytes": 21164,
@@ -126,10 +114,7 @@
     "bytes": 270310,
     "contentType": "image/webp",
     "etag": "5dedddac60855db9a1e5004dcf0e6f35",
-    "variants": [
-      "hangzhou-city-balcony-6-480w.webp",
-      "hangzhou-city-balcony-6-960w.webp"
-    ]
+    "variants": ["hangzhou-city-balcony-6-480w.webp", "hangzhou-city-balcony-6-960w.webp"]
   },
   "hangzhou-city-balcony-7-480w.webp": {
     "bytes": 24648,
@@ -151,10 +136,7 @@
     "bytes": 248314,
     "contentType": "image/webp",
     "etag": "d2c33bc3c00136315664065c480fd9cd",
-    "variants": [
-      "hangzhou-city-balcony-7-480w.webp",
-      "hangzhou-city-balcony-7-960w.webp"
-    ]
+    "variants": ["hangzhou-city-balcony-7-480w.webp", "hangzhou-city-balcony-7-960w.webp"]
   },
   "hangzhou-city-balcony-8-480w.webp": {
     "bytes": 28226,
@@ -176,10 +158,7 @@
     "bytes": 299824,
     "contentType": "image/webp",
     "etag": "bb28caf778a0d7be9baee7b6d3c6b1f9",
-    "variants": [
-      "hangzhou-city-balcony-8-480w.webp",
-      "hangzhou-city-balcony-8-960w.webp"
-    ]
+    "variants": ["hangzhou-city-balcony-8-480w.webp", "hangzhou-city-balcony-8-960w.webp"]
   },
   "hangzhou-city-balcony-960w.webp": {
     "bytes": 51974,
@@ -194,9 +173,6 @@
     "bytes": 227072,
     "contentType": "image/webp",
     "etag": "2e2bc9ae2001a19b64f5a6dc4231eb0f",
-    "variants": [
-      "hangzhou-city-balcony-480w.webp",
-      "hangzhou-city-balcony-960w.webp"
-    ]
+    "variants": ["hangzhou-city-balcony-480w.webp", "hangzhou-city-balcony-960w.webp"]
   }
 }

@@ -1,31 +1,31 @@
 ---
-occurredAt: "2026-07-13T23:04:56+08:00"
+occurredAt: '2026-07-13T23:04:56+08:00'
 hidden: true
 media:
   - type: image
     file: yao-ye-lu-ying-kai-shi.webp
-    alt: ""
+    alt: ''
   - type: image
     file: yao-ye-lu-ying-kai-shi-2.webp
-    alt: ""
+    alt: ''
   - type: image
     file: yao-ye-lu-ying-kai-shi-3.webp
-    alt: ""
+    alt: ''
   - type: image
     file: yao-ye-lu-ying-kai-shi-4.webp
-    alt: ""
+    alt: ''
   - type: image
     file: yao-ye-lu-ying-kai-shi-5.webp
-    alt: ""
+    alt: ''
   - type: image
     file: yao-ye-lu-ying-kai-shi-6.webp
-    alt: ""
+    alt: ''
   - type: image
     file: yao-ye-lu-ying-kai-shi-7.webp
-    alt: ""
+    alt: ''
   - type: image
     file: yao-ye-lu-ying-kai-shi-8.webp
-    alt: ""
+    alt: ''
 ---
 
 2026 w17 摇曳露营开始！

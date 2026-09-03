@@ -1,10 +1,10 @@
 ---
-occurredAt: "2024-07-31T06:42:29+08:00"
+occurredAt: '2024-07-31T06:42:29+08:00'
 hidden: true
 media:
   - type: video
     file: ta-hai-ti-dai-le-wo-de-bo-ke-yue-video.mp4
-    alt: ""
+    alt: ''
     poster: ta-hai-ti-dai-le-wo-de-bo-ke-yue-video-poster.png
 ---
 

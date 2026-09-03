@@ -33,11 +33,7 @@
     "bytes": 1096017,
     "contentType": "image/jpeg",
     "etag": "0b817b708698adf1da4f257b187de8dd",
-    "variants": [
-      "zai-nan-xun-2-480w.webp",
-      "zai-nan-xun-2-960w.webp",
-      "zai-nan-xun-2-1920w.webp"
-    ]
+    "variants": ["zai-nan-xun-2-480w.webp", "zai-nan-xun-2-960w.webp", "zai-nan-xun-2-1920w.webp"]
   },
   "zai-nan-xun-3-480w.webp": {
     "bytes": 37192,
@@ -59,10 +55,7 @@
     "bytes": 392706,
     "contentType": "image/jpeg",
     "etag": "d298606772f7ad9a19fb9b9774b4dcbf",
-    "variants": [
-      "zai-nan-xun-3-480w.webp",
-      "zai-nan-xun-3-960w.webp"
-    ]
+    "variants": ["zai-nan-xun-3-480w.webp", "zai-nan-xun-3-960w.webp"]
   },
   "zai-nan-xun-4-1920w.webp": {
     "bytes": 218664,
@@ -91,11 +84,7 @@
     "bytes": 417054,
     "contentType": "image/jpeg",
     "etag": "16435295b3d53c3378f9f7647ef6ae67",
-    "variants": [
-      "zai-nan-xun-4-480w.webp",
-      "zai-nan-xun-4-960w.webp",
-      "zai-nan-xun-4-1920w.webp"
-    ]
+    "variants": ["zai-nan-xun-4-480w.webp", "zai-nan-xun-4-960w.webp", "zai-nan-xun-4-1920w.webp"]
   },
   "zai-nan-xun-480w.webp": {
     "bytes": 22342,
@@ -117,10 +106,6 @@
     "bytes": 492818,
     "contentType": "image/jpeg",
     "etag": "c4689841315a8a27f41cccbf150f00cc",
-    "variants": [
-      "zai-nan-xun-480w.webp",
-      "zai-nan-xun-960w.webp",
-      "zai-nan-xun-1920w.webp"
-    ]
+    "variants": ["zai-nan-xun-480w.webp", "zai-nan-xun-960w.webp", "zai-nan-xun-1920w.webp"]
   }
 }

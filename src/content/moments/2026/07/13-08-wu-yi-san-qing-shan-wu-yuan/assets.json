@@ -12,9 +12,7 @@
     "bytes": 312298,
     "contentType": "image/webp",
     "etag": "b3a10971769ff9119fb2e6fabe43c04b",
-    "variants": [
-      "wu-yi-san-qing-shan-wu-yuan-2-480w.webp"
-    ]
+    "variants": ["wu-yi-san-qing-shan-wu-yuan-2-480w.webp"]
   },
   "wu-yi-san-qing-shan-wu-yuan-3-480w.webp": {
     "bytes": 24112,
@@ -29,9 +27,7 @@
     "bytes": 46458,
     "contentType": "image/webp",
     "etag": "24d5f65ceb323b5298e1c3aa8c690a72",
-    "variants": [
-      "wu-yi-san-qing-shan-wu-yuan-3-480w.webp"
-    ]
+    "variants": ["wu-yi-san-qing-shan-wu-yuan-3-480w.webp"]
   },
   "wu-yi-san-qing-shan-wu-yuan-4-480w.webp": {
     "bytes": 42540,
@@ -146,8 +142,6 @@
     "bytes": 198112,
     "contentType": "image/webp",
     "etag": "ae48a8ac7ed175e533832c8ad08fe7b9",
-    "variants": [
-      "wu-yi-san-qing-shan-wu-yuan-480w.webp"
-    ]
+    "variants": ["wu-yi-san-qing-shan-wu-yuan-480w.webp"]
   }
 }

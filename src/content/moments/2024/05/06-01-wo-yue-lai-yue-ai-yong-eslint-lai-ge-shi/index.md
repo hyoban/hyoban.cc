@@ -1,10 +1,10 @@
 ---
-occurredAt: "2024-05-06T14:14:07+08:00"
+occurredAt: '2024-05-06T14:14:07+08:00'
 hidden: true
 media:
   - type: video
     file: wo-yue-lai-yue-ai-yong-eslint-lai-ge-shi-video.mp4
-    alt: ""
+    alt: ''
     poster: wo-yue-lai-yue-ai-yong-eslint-lai-ge-shi-video-poster.png
 ---
 

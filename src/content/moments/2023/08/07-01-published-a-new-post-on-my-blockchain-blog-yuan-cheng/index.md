@@ -1,5 +1,5 @@
 ---
-occurredAt: "2023-08-07T18:07:03+08:00"
+occurredAt: '2023-08-07T18:07:03+08:00'
 hidden: true
 media: []
 ---

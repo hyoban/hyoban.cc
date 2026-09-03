@@ -1,19 +1,19 @@
 ---
-occurredAt: "2026-01-02T16:44:22+08:00"
+occurredAt: '2026-01-02T16:44:22+08:00'
 location: soochow-university
 media:
   - type: image
     file: jian-dan-guang-ge-da-xue.jpg
-    alt: ""
+    alt: ''
   - type: image
     file: jian-dan-guang-ge-da-xue-2.jpg
-    alt: ""
+    alt: ''
   - type: image
     file: jian-dan-guang-ge-da-xue-3.jpg
-    alt: ""
+    alt: ''
   - type: image
     file: jian-dan-guang-ge-da-xue-4.jpg
-    alt: ""
+    alt: ''
 ---
 
 简单逛个大学！

@@ -1,10 +1,10 @@
 ---
-occurredAt: "2024-10-15T10:15:27+08:00"
+occurredAt: '2024-10-15T10:15:27+08:00'
 hidden: true
 media:
   - type: video
     file: xia-ge-ban-ben-zhong-follow-app-zhi-chi-jiang-video.mp4
-    alt: ""
+    alt: ''
     poster: xia-ge-ban-ben-zhong-follow-app-zhi-chi-jiang-video-poster.png
 ---
 

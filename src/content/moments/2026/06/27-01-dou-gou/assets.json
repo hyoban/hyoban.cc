@@ -19,10 +19,7 @@
     "bytes": 566796,
     "contentType": "image/webp",
     "etag": "324d68f53074fccf23c6529539e48e92",
-    "variants": [
-      "dou-gou-2-480w.webp",
-      "dou-gou-2-960w.webp"
-    ]
+    "variants": ["dou-gou-2-480w.webp", "dou-gou-2-960w.webp"]
   },
   "dou-gou-3-480w.webp": {
     "bytes": 30338,
@@ -44,10 +41,7 @@
     "bytes": 399428,
     "contentType": "image/webp",
     "etag": "00decd48fe2352be7b49d25b99e6afdb",
-    "variants": [
-      "dou-gou-3-480w.webp",
-      "dou-gou-3-960w.webp"
-    ]
+    "variants": ["dou-gou-3-480w.webp", "dou-gou-3-960w.webp"]
   },
   "dou-gou-4-480w.webp": {
     "bytes": 62730,
@@ -69,10 +63,7 @@
     "bytes": 347896,
     "contentType": "image/webp",
     "etag": "3921891cf0dbaf429c032badf521de56",
-    "variants": [
-      "dou-gou-4-480w.webp",
-      "dou-gou-4-960w.webp"
-    ]
+    "variants": ["dou-gou-4-480w.webp", "dou-gou-4-960w.webp"]
   },
   "dou-gou-480w.webp": {
     "bytes": 23416,
@@ -101,10 +92,7 @@
     "bytes": 663940,
     "contentType": "image/webp",
     "etag": "7cd5ebe4cd9a77e403a711e6bf6ec0e4",
-    "variants": [
-      "dou-gou-5-480w.webp",
-      "dou-gou-5-960w.webp"
-    ]
+    "variants": ["dou-gou-5-480w.webp", "dou-gou-5-960w.webp"]
   },
   "dou-gou-6-480w.webp": {
     "bytes": 32014,
@@ -126,10 +114,7 @@
     "bytes": 347880,
     "contentType": "image/webp",
     "etag": "3c8d57e3e9a8335df16d526df47f69de",
-    "variants": [
-      "dou-gou-6-480w.webp",
-      "dou-gou-6-960w.webp"
-    ]
+    "variants": ["dou-gou-6-480w.webp", "dou-gou-6-960w.webp"]
   },
   "dou-gou-7-480w.webp": {
     "bytes": 20094,
@@ -151,10 +136,7 @@
     "bytes": 87088,
     "contentType": "image/webp",
     "etag": "006aba1e41439e0d9fdd8cbb64fa7828",
-    "variants": [
-      "dou-gou-7-480w.webp",
-      "dou-gou-7-960w.webp"
-    ]
+    "variants": ["dou-gou-7-480w.webp", "dou-gou-7-960w.webp"]
   },
   "dou-gou-960w.webp": {
     "bytes": 67186,
@@ -169,9 +151,6 @@
     "bytes": 263894,
     "contentType": "image/webp",
     "etag": "dbc3103e1b024186a856b3abe9711f7c",
-    "variants": [
-      "dou-gou-480w.webp",
-      "dou-gou-960w.webp"
-    ]
+    "variants": ["dou-gou-480w.webp", "dou-gou-960w.webp"]
   }
 }

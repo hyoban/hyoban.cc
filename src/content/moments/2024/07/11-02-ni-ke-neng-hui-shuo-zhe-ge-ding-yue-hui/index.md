@@ -1,10 +1,10 @@
 ---
-occurredAt: "2024-07-11T06:55:46+08:00"
+occurredAt: '2024-07-11T06:55:46+08:00'
 hidden: true
 media:
   - type: video
     file: ni-ke-neng-hui-shuo-zhe-ge-ding-yue-hui-video.mp4
-    alt: ""
+    alt: ''
     poster: ni-ke-neng-hui-shuo-zhe-ge-ding-yue-hui-video-poster.png
 ---
 

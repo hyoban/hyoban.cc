@@ -1,5 +1,5 @@
 ---
-occurredAt: "2026-07-26T05:21:17+08:00"
+occurredAt: '2026-07-26T05:21:17+08:00'
 location: west-lake
 media:
   - type: image

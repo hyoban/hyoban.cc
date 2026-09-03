@@ -1,16 +1,16 @@
 ---
-occurredAt: "2026-05-06T16:21:31+08:00"
+occurredAt: '2026-05-06T16:21:31+08:00'
 location: wuyuan-cultural-park
 media:
   - type: image
     file: wu-yuan-you-ge-gong-yuan-wen-bo-yi-shu.jpg
-    alt: ""
+    alt: ''
   - type: image
     file: wu-yuan-you-ge-gong-yuan-wen-bo-yi-shu-2.jpg
-    alt: ""
+    alt: ''
   - type: image
     file: wu-yuan-you-ge-gong-yuan-wen-bo-yi-shu-3.jpg
-    alt: ""
+    alt: ''
 ---
 
 婺源有个公园（文博艺术公园）很露营友好，停车不需要钱，然后园外有露营烧烤。

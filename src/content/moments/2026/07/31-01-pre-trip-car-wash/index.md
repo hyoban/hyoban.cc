@@ -1,5 +1,5 @@
 ---
-occurredAt: "2026-07-31T22:39:28+08:00"
+occurredAt: '2026-07-31T22:39:28+08:00'
 media:
   - type: image
     file: pre-trip-car-wash.webp

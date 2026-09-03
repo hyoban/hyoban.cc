@@ -1,13 +1,13 @@
 ---
-occurredAt: "2024-11-16T15:46:38+08:00"
+occurredAt: '2024-11-16T15:46:38+08:00'
 location: shenzhen
 media:
   - type: image
     file: zai-shen-zhen-le-shen-zhen-hao-men-re.jpg
-    alt: ""
+    alt: ''
   - type: image
     file: zai-shen-zhen-le-shen-zhen-hao-men-re-2.jpg
-    alt: ""
+    alt: ''
 ---
 
 在深圳了，深圳好闷热🫠

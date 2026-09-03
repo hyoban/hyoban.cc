@@ -19,10 +19,7 @@
     "bytes": 166764,
     "contentType": "image/jpeg",
     "etag": "9e7ffc60949dc2e2f92fd4b80d32ef8a",
-    "variants": [
-      "wu-hu-wan-xia-2-480w.webp",
-      "wu-hu-wan-xia-2-960w.webp"
-    ]
+    "variants": ["wu-hu-wan-xia-2-480w.webp", "wu-hu-wan-xia-2-960w.webp"]
   },
   "wu-hu-wan-xia-3-480w.webp": {
     "bytes": 16094,
@@ -44,10 +41,7 @@
     "bytes": 212820,
     "contentType": "image/jpeg",
     "etag": "a3323c9f01a804546ab46b5b4259a364",
-    "variants": [
-      "wu-hu-wan-xia-3-480w.webp",
-      "wu-hu-wan-xia-3-960w.webp"
-    ]
+    "variants": ["wu-hu-wan-xia-3-480w.webp", "wu-hu-wan-xia-3-960w.webp"]
   },
   "wu-hu-wan-xia-4-480w.webp": {
     "bytes": 16260,
@@ -69,10 +63,7 @@
     "bytes": 175272,
     "contentType": "image/jpeg",
     "etag": "08f6e6972df99269891f1443934a414c",
-    "variants": [
-      "wu-hu-wan-xia-4-480w.webp",
-      "wu-hu-wan-xia-4-960w.webp"
-    ]
+    "variants": ["wu-hu-wan-xia-4-480w.webp", "wu-hu-wan-xia-4-960w.webp"]
   },
   "wu-hu-wan-xia-480w.webp": {
     "bytes": 7058,
@@ -101,10 +92,7 @@
     "bytes": 209929,
     "contentType": "image/jpeg",
     "etag": "228c8a791975c65b2f303b75ad6dff9f",
-    "variants": [
-      "wu-hu-wan-xia-5-480w.webp",
-      "wu-hu-wan-xia-5-960w.webp"
-    ]
+    "variants": ["wu-hu-wan-xia-5-480w.webp", "wu-hu-wan-xia-5-960w.webp"]
   },
   "wu-hu-wan-xia-960w.webp": {
     "bytes": 17278,
@@ -119,9 +107,6 @@
     "bytes": 99326,
     "contentType": "image/jpeg",
     "etag": "a259f5a9887fcbe6637792c87a27302e",
-    "variants": [
-      "wu-hu-wan-xia-480w.webp",
-      "wu-hu-wan-xia-960w.webp"
-    ]
+    "variants": ["wu-hu-wan-xia-480w.webp", "wu-hu-wan-xia-960w.webp"]
   }
 }

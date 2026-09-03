@@ -12,9 +12,7 @@
     "bytes": 326831,
     "contentType": "image/jpeg",
     "etag": "0e138866ef6c22d8f694dad7627e5553",
-    "variants": [
-      "wu-yi-de-di-san-tian-qu-de-shi-san-2-480w.webp"
-    ]
+    "variants": ["wu-yi-de-di-san-tian-qu-de-shi-san-2-480w.webp"]
   },
   "wu-yi-de-di-san-tian-qu-de-shi-san-3-480w.webp": {
     "bytes": 24288,
@@ -29,9 +27,7 @@
     "bytes": 94240,
     "contentType": "image/jpeg",
     "etag": "8d3355d5bbe7336d305e94e6df5a4c26",
-    "variants": [
-      "wu-yi-de-di-san-tian-qu-de-shi-san-3-480w.webp"
-    ]
+    "variants": ["wu-yi-de-di-san-tian-qu-de-shi-san-3-480w.webp"]
   },
   "wu-yi-de-di-san-tian-qu-de-shi-san-4-480w.webp": {
     "bytes": 45096,
@@ -71,8 +67,6 @@
     "bytes": 181290,
     "contentType": "image/jpeg",
     "etag": "ef001927995129acae0904cc5e2a55a7",
-    "variants": [
-      "wu-yi-de-di-san-tian-qu-de-shi-san-480w.webp"
-    ]
+    "variants": ["wu-yi-de-di-san-tian-qu-de-shi-san-480w.webp"]
   }
 }

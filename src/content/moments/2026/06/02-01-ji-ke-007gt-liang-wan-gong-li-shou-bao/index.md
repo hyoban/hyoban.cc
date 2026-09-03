@@ -1,24 +1,24 @@
 ---
-occurredAt: "2026-06-02T11:57:30+08:00"
+occurredAt: '2026-06-02T11:57:30+08:00'
 media:
   - type: image
     file: ji-ke-007gt-liang-wan-gong-li-shou-bao.webp
-    alt: ""
+    alt: ''
   - type: image
     file: ji-ke-007gt-liang-wan-gong-li-shou-bao-2.webp
-    alt: ""
+    alt: ''
   - type: image
     file: ji-ke-007gt-liang-wan-gong-li-shou-bao-3.webp
-    alt: ""
+    alt: ''
   - type: image
     file: ji-ke-007gt-liang-wan-gong-li-shou-bao-4.webp
-    alt: ""
+    alt: ''
   - type: image
     file: ji-ke-007gt-liang-wan-gong-li-shou-bao-5.webp
-    alt: ""
+    alt: ''
   - type: image
     file: ji-ke-007gt-liang-wan-gong-li-shou-bao-6.webp
-    alt: ""
+    alt: ''
 ---
 
 极氪007gt两万公里首保

@@ -19,9 +19,6 @@
     "bytes": 57202,
     "contentType": "image/webp",
     "etag": "ec2adb3afd4dcd252662b392d7b1684b",
-    "variants": [
-      "wen-xin-ti-shi-480w.webp",
-      "wen-xin-ti-shi-960w.webp"
-    ]
+    "variants": ["wen-xin-ti-shi-480w.webp", "wen-xin-ti-shi-960w.webp"]
   }
 }

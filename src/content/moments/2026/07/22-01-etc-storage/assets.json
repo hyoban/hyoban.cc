@@ -19,9 +19,6 @@
     "bytes": 112236,
     "contentType": "image/webp",
     "etag": "29a4c6dadbcd1ea1e2877e88129ed990",
-    "variants": [
-      "etc-storage-480w.webp",
-      "etc-storage-960w.webp"
-    ]
+    "variants": ["etc-storage-480w.webp", "etc-storage-960w.webp"]
   }
 }

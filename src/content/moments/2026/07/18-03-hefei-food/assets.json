@@ -19,10 +19,7 @@
     "bytes": 111250,
     "contentType": "image/webp",
     "etag": "8166d3abc3305fe266eb9133fb561e31",
-    "variants": [
-      "hefei-food-2-480w.webp",
-      "hefei-food-2-960w.webp"
-    ]
+    "variants": ["hefei-food-2-480w.webp", "hefei-food-2-960w.webp"]
   },
   "hefei-food-3-480w.webp": {
     "bytes": 19442,
@@ -44,10 +41,7 @@
     "bytes": 146832,
     "contentType": "image/webp",
     "etag": "753a9a0ef2140d5cd1296fb5987cc659",
-    "variants": [
-      "hefei-food-3-480w.webp",
-      "hefei-food-3-960w.webp"
-    ]
+    "variants": ["hefei-food-3-480w.webp", "hefei-food-3-960w.webp"]
   },
   "hefei-food-4-480w.webp": {
     "bytes": 43440,
@@ -69,10 +63,7 @@
     "bytes": 612598,
     "contentType": "image/webp",
     "etag": "27e6fb60500efebf72d87a203d2461bb",
-    "variants": [
-      "hefei-food-4-480w.webp",
-      "hefei-food-4-960w.webp"
-    ]
+    "variants": ["hefei-food-4-480w.webp", "hefei-food-4-960w.webp"]
   },
   "hefei-food-480w.webp": {
     "bytes": 34278,
@@ -101,10 +92,7 @@
     "bytes": 125350,
     "contentType": "image/webp",
     "etag": "cd6dc4f413ae75c67226a2771ddc4495",
-    "variants": [
-      "hefei-food-5-480w.webp",
-      "hefei-food-5-960w.webp"
-    ]
+    "variants": ["hefei-food-5-480w.webp", "hefei-food-5-960w.webp"]
   },
   "hefei-food-960w.webp": {
     "bytes": 97410,
@@ -119,9 +107,6 @@
     "bytes": 259980,
     "contentType": "image/webp",
     "etag": "246f371388cfbfb0c5620a355b270a4a",
-    "variants": [
-      "hefei-food-480w.webp",
-      "hefei-food-960w.webp"
-    ]
+    "variants": ["hefei-food-480w.webp", "hefei-food-960w.webp"]
   }
 }

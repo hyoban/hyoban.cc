@@ -8,8 +8,8 @@ import { readMomentRecords } from './lib/moment-assets.mjs'
 const root = fileURLToPath(new URL('../', import.meta.url))
 const contentRoot = join(root, 'src/content/moments')
 const output = resolve(
-  process.argv[2]
-  ?? join(root, '.artifacts', `hidden-moments-review-${new Date().toISOString().slice(0, 10)}.json`),
+  process.argv[2] ??
+    join(root, '.artifacts', `hidden-moments-review-${new Date().toISOString().slice(0, 10)}.json`),
 )
 const records = await readMomentRecords(contentRoot)
 const fingerprints = new Map()
@@ -20,11 +20,12 @@ for (const record of records) {
 }
 
 const items = records
-  .filter(record => record.moment.hidden)
+  .filter((record) => record.moment.hidden)
   .map((record) => {
-    const matches = fingerprints.get(getFingerprint(record))
-      .filter(match => match.id !== record.id)
-    const visibleMatches = matches.filter(match => !match.moment.hidden)
+    const matches = fingerprints
+      .get(getFingerprint(record))
+      .filter((match) => match.id !== record.id)
+    const visibleMatches = matches.filter((match) => !match.moment.hidden)
     let classification = 'unique'
 
     if (visibleMatches.length > 0) {
@@ -38,17 +39,16 @@ const items = records
     return {
       classification,
       id: record.id,
-      matches: matches.map(match => match.id),
+      matches: matches.map((match) => match.id),
       mediaCount: record.moment.media.length,
       occurredAt: record.moment.occurredAt,
     }
   })
 const counts = Object.fromEntries(
-  ['duplicate-of-visible', 'duplicate-hidden', 'empty', 'unique']
-    .map(classification => [
-      classification,
-      items.filter(item => item.classification === classification).length,
-    ]),
+  ['duplicate-of-visible', 'duplicate-hidden', 'empty', 'unique'].map((classification) => [
+    classification,
+    items.filter((item) => item.classification === classification).length,
+  ]),
 )
 const report = {
   generatedAt: new Date().toISOString(),
@@ -67,7 +67,7 @@ console.log(`Report: ${output}`)
 function getFingerprint(record) {
   const value = {
     location: record.moment.location ?? null,
-    media: record.moment.media.map(media => ({
+    media: record.moment.media.map((media) => ({
       type: media.type,
       etag: record.assets[media.file]?.etag,
       posterEtag: media.poster ? record.assets[media.poster]?.etag : undefined,

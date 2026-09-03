@@ -1,10 +1,10 @@
 ---
-occurredAt: "2024-03-16T22:30:14+08:00"
+occurredAt: '2024-03-16T22:30:14+08:00'
 hidden: true
 media:
   - type: image
     file: im-basically-still-in-the-first-stage-of-the-picture.jpg
-    alt: ""
+    alt: ''
 ---
 
 I'm basically still in the first stage of the picture.

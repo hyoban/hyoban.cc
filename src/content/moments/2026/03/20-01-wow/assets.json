@@ -19,9 +19,6 @@
     "bytes": 14946,
     "contentType": "image/jpeg",
     "etag": "e0f8b36fd931641d102fe0982e0e6c68",
-    "variants": [
-      "wow-480w.webp",
-      "wow-960w.webp"
-    ]
+    "variants": ["wow-480w.webp", "wow-960w.webp"]
   }
 }

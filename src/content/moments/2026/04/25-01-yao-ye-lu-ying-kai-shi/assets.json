@@ -19,10 +19,7 @@
     "bytes": 354709,
     "contentType": "image/jpeg",
     "etag": "b3f7492f1cc83ed6832a738dbe517646",
-    "variants": [
-      "yao-ye-lu-ying-kai-shi-2-480w.webp",
-      "yao-ye-lu-ying-kai-shi-2-960w.webp"
-    ]
+    "variants": ["yao-ye-lu-ying-kai-shi-2-480w.webp", "yao-ye-lu-ying-kai-shi-2-960w.webp"]
   },
   "yao-ye-lu-ying-kai-shi-3-480w.webp": {
     "bytes": 62984,
@@ -44,10 +41,7 @@
     "bytes": 409750,
     "contentType": "image/jpeg",
     "etag": "1955384b6aab0e9dc7b9427376df25ac",
-    "variants": [
-      "yao-ye-lu-ying-kai-shi-3-480w.webp",
-      "yao-ye-lu-ying-kai-shi-3-960w.webp"
-    ]
+    "variants": ["yao-ye-lu-ying-kai-shi-3-480w.webp", "yao-ye-lu-ying-kai-shi-3-960w.webp"]
   },
   "yao-ye-lu-ying-kai-shi-4-480w.webp": {
     "bytes": 36908,
@@ -62,9 +56,7 @@
     "bytes": 135175,
     "contentType": "image/jpeg",
     "etag": "d52ffa7b1d8ff0db2cf253cf3b996a7b",
-    "variants": [
-      "yao-ye-lu-ying-kai-shi-4-480w.webp"
-    ]
+    "variants": ["yao-ye-lu-ying-kai-shi-4-480w.webp"]
   },
   "yao-ye-lu-ying-kai-shi-480w.webp": {
     "bytes": 31304,
@@ -79,8 +71,6 @@
     "bytes": 111878,
     "contentType": "image/jpeg",
     "etag": "452ab52392b900c8e5c942e7ce3943ad",
-    "variants": [
-      "yao-ye-lu-ying-kai-shi-480w.webp"
-    ]
+    "variants": ["yao-ye-lu-ying-kai-shi-480w.webp"]
   }
 }

@@ -1,31 +1,31 @@
 ---
-occurredAt: "2026-07-02T00:45:55+08:00"
+occurredAt: '2026-07-02T00:45:55+08:00'
 hidden: true
 media:
   - type: image
     file: zai-jia-pai-le-ji-zhang-yue-liang.webp
-    alt: ""
+    alt: ''
   - type: image
     file: zai-jia-pai-le-ji-zhang-yue-liang-2.webp
-    alt: ""
+    alt: ''
   - type: image
     file: zai-jia-pai-le-ji-zhang-yue-liang-3.webp
-    alt: ""
+    alt: ''
   - type: image
     file: zai-jia-pai-le-ji-zhang-yue-liang-4.webp
-    alt: ""
+    alt: ''
   - type: image
     file: zai-jia-pai-le-ji-zhang-yue-liang-5.webp
-    alt: ""
+    alt: ''
   - type: image
     file: zai-jia-pai-le-ji-zhang-yue-liang-6.webp
-    alt: ""
+    alt: ''
   - type: image
     file: zai-jia-pai-le-ji-zhang-yue-liang-7.webp
-    alt: ""
+    alt: ''
   - type: image
     file: zai-jia-pai-le-ji-zhang-yue-liang-8.webp
-    alt: ""
+    alt: ''
 ---
 
 在家拍了几张月亮

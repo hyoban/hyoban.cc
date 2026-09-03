@@ -1,10 +1,10 @@
 ---
-occurredAt: "2024-01-16T10:25:38+08:00"
+occurredAt: '2024-01-16T10:25:38+08:00'
 hidden: true
 media:
   - type: video
     file: zhi-chi-le-zhi-jie-sou-suo-github-cang-ku-video.mp4
-    alt: ""
+    alt: ''
     poster: zhi-chi-le-zhi-jie-sou-suo-github-cang-ku-video-poster.png
 ---
 

@@ -1,10 +1,10 @@
 ---
-occurredAt: "2024-02-08T11:54:07+08:00"
+occurredAt: '2024-02-08T11:54:07+08:00'
 hidden: true
 media:
   - type: video
     file: rang-tailwindcss-ye-zhi-chi-lei-si-unocss-vscode-cha-video.mp4
-    alt: ""
+    alt: ''
     poster: rang-tailwindcss-ye-zhi-chi-lei-si-unocss-vscode-cha-video-poster.png
 ---
 

@@ -19,10 +19,7 @@
     "etag": "b29dcdfea0c743d879fc36363bdb5a77",
     "height": 1440,
     "width": 1920,
-    "variants": [
-      "rizhao-sunrise-2-480w.webp",
-      "rizhao-sunrise-2-960w.webp"
-    ]
+    "variants": ["rizhao-sunrise-2-480w.webp", "rizhao-sunrise-2-960w.webp"]
   },
   "rizhao-sunrise-480w.webp": {
     "bytes": 10832,
@@ -80,9 +77,6 @@
     "etag": "0f72f715083fd7d3d35c98324051238b",
     "height": 1440,
     "width": 1920,
-    "variants": [
-      "rizhao-sunrise-480w.webp",
-      "rizhao-sunrise-960w.webp"
-    ]
+    "variants": ["rizhao-sunrise-480w.webp", "rizhao-sunrise-960w.webp"]
   }
 }

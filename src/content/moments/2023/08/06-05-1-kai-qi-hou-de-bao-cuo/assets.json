@@ -12,9 +12,7 @@
     "bytes": 29450,
     "contentType": "image/png",
     "etag": "05fdce1d2f72668af689ff73cf9cef91",
-    "variants": [
-      "1-kai-qi-hou-de-bao-cuo-2-480w.webp"
-    ]
+    "variants": ["1-kai-qi-hou-de-bao-cuo-2-480w.webp"]
   },
   "1-kai-qi-hou-de-bao-cuo-480w.webp": {
     "bytes": 16910,
@@ -29,8 +27,6 @@
     "bytes": 76098,
     "contentType": "image/png",
     "etag": "1f344a80bfa457626a82f41e70632569",
-    "variants": [
-      "1-kai-qi-hou-de-bao-cuo-480w.webp"
-    ]
+    "variants": ["1-kai-qi-hou-de-bao-cuo-480w.webp"]
   }
 }

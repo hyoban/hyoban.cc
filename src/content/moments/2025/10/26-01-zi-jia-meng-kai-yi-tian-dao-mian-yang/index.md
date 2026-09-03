@@ -1,22 +1,22 @@
 ---
-occurredAt: "2025-10-26T15:47:22+08:00"
+occurredAt: '2025-10-26T15:47:22+08:00'
 location: mianyang
 media:
   - type: image
     file: zi-jia-meng-kai-yi-tian-dao-mian-yang.webp
-    alt: ""
+    alt: ''
   - type: image
     file: zi-jia-meng-kai-yi-tian-dao-mian-yang-2.webp
-    alt: ""
+    alt: ''
   - type: image
     file: zi-jia-meng-kai-yi-tian-dao-mian-yang-3.webp
-    alt: ""
+    alt: ''
   - type: image
     file: zi-jia-meng-kai-yi-tian-dao-mian-yang-4.webp
-    alt: ""
+    alt: ''
   - type: image
     file: zi-jia-meng-kai-yi-tian-dao-mian-yang-5.webp
-    alt: ""
+    alt: ''
 ---
 
 自驾猛开一天到绵阳

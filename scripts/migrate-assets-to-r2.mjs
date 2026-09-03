@@ -31,9 +31,9 @@ const sources = [
     keyPrefix: 'site',
   },
 ]
-const assets = (
-  await Promise.all(sources.map(collectSourceAssets))
-).flat().sort((first, second) => first.key.localeCompare(second.key))
+const assets = (await Promise.all(sources.map(collectSourceAssets)))
+  .flat()
+  .sort((first, second) => first.key.localeCompare(second.key))
 
 assertUniqueKeys(assets)
 
@@ -98,29 +98,26 @@ if (completed.size !== assets.length) {
 await writeMomentAssetMetadata(assets)
 
 if (shouldRemoveLocal) {
-  await Promise.all([...completed].map(file => rm(file)))
-  await removeEmptyDirectories(sources.map(source => source.directory))
+  await Promise.all([...completed].map((file) => rm(file)))
+  await removeEmptyDirectories(sources.map((source) => source.directory))
 }
 
 console.log(
-  `R2 migration complete: ${stats.uploaded} uploaded, ${stats.reused} reused`
-  + `${shouldRemoveLocal ? `, ${completed.size} local files removed` : ''}.`,
+  `R2 migration complete: ${stats.uploaded} uploaded, ${stats.reused} reused` +
+    `${shouldRemoveLocal ? `, ${completed.size} local files removed` : ''}.`,
 )
 
 async function collectSourceAssets(source) {
   const files = await walkFiles(source.directory)
 
   return files
-    .filter(file => isSupportedAsset(file))
+    .filter((file) => isSupportedAsset(file))
     .map((file) => {
       const relativeFile = relative(source.directory, file).split(sep).join('/')
 
       return {
         file,
-        key: [
-        source.keyPrefix,
-          relativeFile,
-      ].join('/'),
+        key: [source.keyPrefix, relativeFile].join('/'),
         relativeFile,
       }
     })
@@ -140,10 +137,12 @@ async function readJsonOrDefault(file, fallback) {
 
 async function walkFiles(directory) {
   const entries = await readdir(directory, { withFileTypes: true })
-  const files = await Promise.all(entries.map(async (entry) => {
-    const path = join(directory, entry.name)
-    return entry.isDirectory() ? walkFiles(path) : [path]
-  }))
+  const files = await Promise.all(
+    entries.map(async (entry) => {
+      const path = join(directory, entry.name)
+      return entry.isDirectory() ? walkFiles(path) : [path]
+    }),
+  )
 
   return files.flat()
 }
@@ -172,19 +171,21 @@ function assertUniqueKeys(items) {
 async function runConcurrent(items, concurrency, operation) {
   let nextIndex = 0
 
-  await Promise.all(Array.from({ length: concurrency }, async () => {
-    while (nextIndex < items.length) {
-      const index = nextIndex
-      nextIndex += 1
-      await operation(items[index], index)
-    }
-  }))
+  await Promise.all(
+    Array.from({ length: concurrency }, async () => {
+      while (nextIndex < items.length) {
+        const index = nextIndex
+        nextIndex += 1
+        await operation(items[index], index)
+      }
+    }),
+  )
 }
 
 async function writeMomentAssetMetadata(items) {
   const groups = Map.groupBy(
-    items.filter(item => item.key.startsWith('moments/')),
-    item => dirname(item.file),
+    items.filter((item) => item.key.startsWith('moments/')),
+    (item) => dirname(item.file),
   )
 
   for (const [directory, momentAssets] of groups) {

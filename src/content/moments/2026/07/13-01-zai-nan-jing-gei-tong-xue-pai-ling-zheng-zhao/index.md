@@ -1,13 +1,13 @@
 ---
-occurredAt: "2026-07-13T22:37:24+08:00"
+occurredAt: '2026-07-13T22:37:24+08:00'
 hidden: true
 media:
   - type: image
     file: zai-nan-jing-gei-tong-xue-pai-ling-zheng-zhao.webp
-    alt: ""
+    alt: ''
   - type: image
     file: zai-nan-jing-gei-tong-xue-pai-ling-zheng-zhao-2.webp
-    alt: ""
+    alt: ''
 ---
 
 2026 w28 在南京给同学拍领证照片！

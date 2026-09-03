@@ -1,37 +1,37 @@
 ---
-occurredAt: "2025-11-04T11:50:36+08:00"
+occurredAt: '2025-11-04T11:50:36+08:00'
 location: kangding
 media:
   - type: image
     file: zi-jia-chuan-xi-di-yi-tian-tian-quan-kang.webp
-    alt: ""
+    alt: ''
   - type: image
     file: zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-2.webp
-    alt: ""
+    alt: ''
   - type: image
     file: zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-3.webp
-    alt: ""
+    alt: ''
   - type: image
     file: zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-4.webp
-    alt: ""
+    alt: ''
   - type: image
     file: zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-5.webp
-    alt: ""
+    alt: ''
   - type: image
     file: zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-6.webp
-    alt: ""
+    alt: ''
   - type: image
     file: zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-7.webp
-    alt: ""
+    alt: ''
   - type: image
     file: zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-8.webp
-    alt: ""
+    alt: ''
   - type: image
     file: zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-9.webp
-    alt: ""
+    alt: ''
   - type: image
     file: zi-jia-chuan-xi-di-yi-tian-tian-quan-kang-10.webp
-    alt: ""
+    alt: ''
 ---
 
 自驾川西第一天 天全 康定 红海子 新都桥

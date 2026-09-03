@@ -19,9 +19,6 @@
     "bytes": 180596,
     "contentType": "image/webp",
     "etag": "3a5bcb264f28675bac6fc6fc1033d02e",
-    "variants": [
-      "tie-ban-guo-480w.webp",
-      "tie-ban-guo-960w.webp"
-    ]
+    "variants": ["tie-ban-guo-480w.webp", "tie-ban-guo-960w.webp"]
   }
 }

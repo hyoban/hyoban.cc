@@ -19,9 +19,6 @@
     "etag": "3cfd2a9e4070bf1ff85b30b7740c1dc5",
     "height": 1440,
     "width": 1920,
-    "variants": [
-      "good-morning-west-lake-480w.webp",
-      "good-morning-west-lake-960w.webp"
-    ]
+    "variants": ["good-morning-west-lake-480w.webp", "good-morning-west-lake-960w.webp"]
   }
 }

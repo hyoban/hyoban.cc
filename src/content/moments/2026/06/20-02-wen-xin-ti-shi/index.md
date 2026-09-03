@@ -1,10 +1,10 @@
 ---
-occurredAt: "2026-06-20T00:06:43+08:00"
+occurredAt: '2026-06-20T00:06:43+08:00'
 hidden: true
 media:
   - type: image
     file: wen-xin-ti-shi.webp
-    alt: ""
+    alt: ''
 ---
 
 温馨提示

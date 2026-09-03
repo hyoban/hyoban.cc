@@ -1,13 +1,13 @@
 ---
-occurredAt: "2023-08-06T00:30:41+08:00"
+occurredAt: '2023-08-06T00:30:41+08:00'
 hidden: true
 media:
   - type: image
     file: 1-kai-qi-hou-de-bao-cuo.png
-    alt: ""
+    alt: ''
   - type: image
     file: 1-kai-qi-hou-de-bao-cuo-2.png
-    alt: ""
+    alt: ''
 ---
 
 1. 开启后的报错

@@ -1,19 +1,19 @@
 ---
-occurredAt: "2026-04-25T17:43:33+08:00"
+occurredAt: '2026-04-25T17:43:33+08:00'
 location: longwo-lake
 media:
   - type: image
     file: ben-ci-lu-ying-di-zhi-shi-wu-hu-wai.jpg
-    alt: ""
+    alt: ''
   - type: image
     file: ben-ci-lu-ying-di-zhi-shi-wu-hu-wai-2.jpg
-    alt: ""
+    alt: ''
   - type: image
     file: ben-ci-lu-ying-di-zhi-shi-wu-hu-wai-3.jpg
-    alt: ""
+    alt: ''
   - type: image
     file: ben-ci-lu-ying-di-zhi-shi-wu-hu-wai-4.jpg
-    alt: ""
+    alt: ''
 ---
 
 本次露营地址是芜湖外龙窝湖湿地自然公园

@@ -153,9 +153,7 @@ export function getChinaCalendarDay(dateKey: string) {
 }
 
 export function getChinaCalendarDayDescription(day: ChinaCalendarDay) {
-  return day.kind === 'day-off'
-    ? `${day.name}假期`
-    : `${day.name}调休上班`
+  return day.kind === 'day-off' ? `${day.name}假期` : `${day.name}调休上班`
 }
 
 function buildCalendarDays(holidaySchedules: readonly HolidaySchedule[]) {
@@ -163,7 +161,7 @@ function buildCalendarDays(holidaySchedules: readonly HolidaySchedule[]) {
 
   for (const schedule of holidaySchedules) {
     for (const period of schedule.periods) {
-      const name = period.holidays.map(holiday => holidayNames[holiday]).join('、')
+      const name = period.holidays.map((holiday) => holidayNames[holiday]).join('、')
 
       for (const dateKey of expandDateRange(period.daysOff)) {
         addCalendarDay(days, dateKey, { kind: 'day-off', name })

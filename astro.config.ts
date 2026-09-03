@@ -9,19 +9,13 @@ import { remarkTelegramWidgets } from './src/telegram-widget.mjs'
 export default defineConfig({
   site: SITE_URL,
   devToolbar: { enabled: false },
-  integrations: [
-    Sitemap(),
-  ],
+  integrations: [Sitemap()],
   vite: {
-    plugins: [
-      tailwindcss() as any,
-    ],
+    plugins: [tailwindcss() as any],
   },
   markdown: {
     processor: unified({
-      remarkPlugins: [
-        remarkTelegramWidgets,
-      ],
+      remarkPlugins: [remarkTelegramWidgets],
     }),
     shikiConfig: {
       themes: {

@@ -1,25 +1,25 @@
 ---
-occurredAt: "2026-05-16T23:58:05+08:00"
+occurredAt: '2026-05-16T23:58:05+08:00'
 hidden: true
 media:
   - type: image
     file: wan-nan-chuan-cang-xian.webp
-    alt: ""
+    alt: ''
   - type: image
     file: wan-nan-chuan-cang-xian-2.webp
-    alt: ""
+    alt: ''
   - type: image
     file: wan-nan-chuan-cang-xian-3.webp
-    alt: ""
+    alt: ''
   - type: image
     file: wan-nan-chuan-cang-xian-4.webp
-    alt: ""
+    alt: ''
   - type: image
     file: wan-nan-chuan-cang-xian-5.webp
-    alt: ""
+    alt: ''
   - type: image
     file: wan-nan-chuan-cang-xian-6.webp
-    alt: ""
+    alt: ''
 ---
 
 2026 w20 皖南川藏线

@@ -1,5 +1,5 @@
 ---
-occurredAt: "2026-08-17T23:23:43+08:00"
+occurredAt: '2026-08-17T23:23:43+08:00'
 media:
   - type: image
     file: yunnan-trip-booked.webp

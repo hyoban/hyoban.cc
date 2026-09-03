@@ -19,10 +19,7 @@
     "bytes": 251645,
     "contentType": "image/jpeg",
     "etag": "251e6e0375fee4871f274465427fd5a1",
-    "variants": [
-      "mo-gan-shan-2-480w.webp",
-      "mo-gan-shan-2-960w.webp"
-    ]
+    "variants": ["mo-gan-shan-2-480w.webp", "mo-gan-shan-2-960w.webp"]
   },
   "mo-gan-shan-3-480w.webp": {
     "bytes": 32170,
@@ -44,10 +41,7 @@
     "bytes": 161021,
     "contentType": "image/jpeg",
     "etag": "212f0d48c5ce55a43b734a3a64e58ee2",
-    "variants": [
-      "mo-gan-shan-3-480w.webp",
-      "mo-gan-shan-3-960w.webp"
-    ]
+    "variants": ["mo-gan-shan-3-480w.webp", "mo-gan-shan-3-960w.webp"]
   },
   "mo-gan-shan-4-480w.webp": {
     "bytes": 34534,
@@ -69,10 +63,7 @@
     "bytes": 186456,
     "contentType": "image/jpeg",
     "etag": "55c6e9e9a90069b1f93eb823145dd0cd",
-    "variants": [
-      "mo-gan-shan-4-480w.webp",
-      "mo-gan-shan-4-960w.webp"
-    ]
+    "variants": ["mo-gan-shan-4-480w.webp", "mo-gan-shan-4-960w.webp"]
   },
   "mo-gan-shan-480w.webp": {
     "bytes": 18510,
@@ -101,10 +92,7 @@
     "bytes": 114575,
     "contentType": "image/jpeg",
     "etag": "e4be0dc12759305d9e41be68f65af880",
-    "variants": [
-      "mo-gan-shan-5-480w.webp",
-      "mo-gan-shan-5-960w.webp"
-    ]
+    "variants": ["mo-gan-shan-5-480w.webp", "mo-gan-shan-5-960w.webp"]
   },
   "mo-gan-shan-6-480w.webp": {
     "bytes": 46144,
@@ -126,10 +114,7 @@
     "bytes": 244717,
     "contentType": "image/jpeg",
     "etag": "8414b2a126f470974f38cee9ae1a94eb",
-    "variants": [
-      "mo-gan-shan-6-480w.webp",
-      "mo-gan-shan-6-960w.webp"
-    ]
+    "variants": ["mo-gan-shan-6-480w.webp", "mo-gan-shan-6-960w.webp"]
   },
   "mo-gan-shan-7-480w.webp": {
     "bytes": 48764,
@@ -151,10 +136,7 @@
     "bytes": 258032,
     "contentType": "image/jpeg",
     "etag": "884fdef05841b70e57f1de1d8e0ee998",
-    "variants": [
-      "mo-gan-shan-7-480w.webp",
-      "mo-gan-shan-7-960w.webp"
-    ]
+    "variants": ["mo-gan-shan-7-480w.webp", "mo-gan-shan-7-960w.webp"]
   },
   "mo-gan-shan-8-480w.webp": {
     "bytes": 32058,
@@ -176,10 +158,7 @@
     "bytes": 179852,
     "contentType": "image/jpeg",
     "etag": "53b4c8d8ce4d9560f3b2dafa8be0bb1c",
-    "variants": [
-      "mo-gan-shan-8-480w.webp",
-      "mo-gan-shan-8-960w.webp"
-    ]
+    "variants": ["mo-gan-shan-8-480w.webp", "mo-gan-shan-8-960w.webp"]
   },
   "mo-gan-shan-9-480w.webp": {
     "bytes": 40840,
@@ -201,10 +180,7 @@
     "bytes": 218376,
     "contentType": "image/jpeg",
     "etag": "851b120744733f7a21fdde98d7147d6a",
-    "variants": [
-      "mo-gan-shan-9-480w.webp",
-      "mo-gan-shan-9-960w.webp"
-    ]
+    "variants": ["mo-gan-shan-9-480w.webp", "mo-gan-shan-9-960w.webp"]
   },
   "mo-gan-shan-960w.webp": {
     "bytes": 50278,
@@ -219,9 +195,6 @@
     "bytes": 114300,
     "contentType": "image/jpeg",
     "etag": "f3cf2efeca5451e482b22e437718547e",
-    "variants": [
-      "mo-gan-shan-480w.webp",
-      "mo-gan-shan-960w.webp"
-    ]
+    "variants": ["mo-gan-shan-480w.webp", "mo-gan-shan-960w.webp"]
   }
 }

@@ -1,19 +1,19 @@
 ---
-occurredAt: "2026-01-03T16:10:50+08:00"
+occurredAt: '2026-01-03T16:10:50+08:00'
 location: hanshan-temple
 media:
   - type: image
     file: jian-dan-guang-ge-si.jpg
-    alt: ""
+    alt: ''
   - type: image
     file: jian-dan-guang-ge-si-2.jpg
-    alt: ""
+    alt: ''
   - type: image
     file: jian-dan-guang-ge-si-3.jpg
-    alt: ""
+    alt: ''
   - type: image
     file: jian-dan-guang-ge-si-4.jpg
-    alt: ""
+    alt: ''
 ---
 
 简单逛个寺！

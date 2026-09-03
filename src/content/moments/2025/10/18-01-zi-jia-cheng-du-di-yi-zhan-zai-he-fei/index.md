@@ -1,16 +1,16 @@
 ---
-occurredAt: "2025-10-18T13:57:32+08:00"
+occurredAt: '2025-10-18T13:57:32+08:00'
 location: hefei
 media:
   - type: image
     file: zi-jia-cheng-du-di-yi-zhan-zai-he-fei.webp
-    alt: ""
+    alt: ''
   - type: image
     file: zi-jia-cheng-du-di-yi-zhan-zai-he-fei-2.webp
-    alt: ""
+    alt: ''
   - type: image
     file: zi-jia-cheng-du-di-yi-zhan-zai-he-fei-3.webp
-    alt: ""
+    alt: ''
 ---
 
 自驾成都第一站，在合肥吃烤鱼

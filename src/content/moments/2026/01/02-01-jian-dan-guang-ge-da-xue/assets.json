@@ -26,10 +26,7 @@
     "bytes": 203563,
     "contentType": "image/jpeg",
     "etag": "d466a2ddb87cd21dae921b10e3d87e77",
-    "variants": [
-      "jian-dan-guang-ge-da-xue-2-480w.webp",
-      "jian-dan-guang-ge-da-xue-2-960w.webp"
-    ]
+    "variants": ["jian-dan-guang-ge-da-xue-2-480w.webp", "jian-dan-guang-ge-da-xue-2-960w.webp"]
   },
   "jian-dan-guang-ge-da-xue-3-480w.webp": {
     "bytes": 36722,
@@ -51,10 +48,7 @@
     "bytes": 437360,
     "contentType": "image/jpeg",
     "etag": "0d5429d563756169e8cca0d72aec47f6",
-    "variants": [
-      "jian-dan-guang-ge-da-xue-3-480w.webp",
-      "jian-dan-guang-ge-da-xue-3-960w.webp"
-    ]
+    "variants": ["jian-dan-guang-ge-da-xue-3-480w.webp", "jian-dan-guang-ge-da-xue-3-960w.webp"]
   },
   "jian-dan-guang-ge-da-xue-4-480w.webp": {
     "bytes": 53786,
@@ -76,10 +70,7 @@
     "bytes": 701623,
     "contentType": "image/jpeg",
     "etag": "d80205ecaade4dc682e6be0e923a72fc",
-    "variants": [
-      "jian-dan-guang-ge-da-xue-4-480w.webp",
-      "jian-dan-guang-ge-da-xue-4-960w.webp"
-    ]
+    "variants": ["jian-dan-guang-ge-da-xue-4-480w.webp", "jian-dan-guang-ge-da-xue-4-960w.webp"]
   },
   "jian-dan-guang-ge-da-xue-480w.webp": {
     "bytes": 57228,

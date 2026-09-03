@@ -1,15 +1,15 @@
 ---
-occurredAt: "2025-10-04T12:49:25+08:00"
+occurredAt: '2025-10-04T12:49:25+08:00'
 media:
   - type: image
     file: che-zi-kai-liang-ge-yue-bu-dao-gua-ceng.webp
-    alt: ""
+    alt: ''
   - type: image
     file: che-zi-kai-liang-ge-yue-bu-dao-gua-ceng-2.webp
-    alt: ""
+    alt: ''
   - type: image
     file: che-zi-kai-liang-ge-yue-bu-dao-gua-ceng-3.webp
-    alt: ""
+    alt: ''
 ---
 
 车子开两个月不到刮蹭到了

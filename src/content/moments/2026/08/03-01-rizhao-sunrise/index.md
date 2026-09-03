@@ -1,5 +1,5 @@
 ---
-occurredAt: "2026-08-03T06:34:26+08:00"
+occurredAt: '2026-08-03T06:34:26+08:00'
 location: rizhao
 media:
   - type: video

@@ -33,11 +33,7 @@
     "bytes": 881804,
     "contentType": "image/jpeg",
     "etag": "9a9a4e579e8b5e9f6a19aa312858c422",
-    "variants": [
-      "dou-gou-2-480w.webp",
-      "dou-gou-2-960w.webp",
-      "dou-gou-2-1920w.webp"
-    ]
+    "variants": ["dou-gou-2-480w.webp", "dou-gou-2-960w.webp", "dou-gou-2-1920w.webp"]
   },
   "dou-gou-3-1920w.webp": {
     "bytes": 344540,
@@ -66,11 +62,7 @@
     "bytes": 700652,
     "contentType": "image/jpeg",
     "etag": "a9c2b7ca3be017309acecba2c2219062",
-    "variants": [
-      "dou-gou-3-480w.webp",
-      "dou-gou-3-960w.webp",
-      "dou-gou-3-1920w.webp"
-    ]
+    "variants": ["dou-gou-3-480w.webp", "dou-gou-3-960w.webp", "dou-gou-3-1920w.webp"]
   },
   "dou-gou-4-480w.webp": {
     "bytes": 70822,
@@ -92,10 +84,7 @@
     "bytes": 567825,
     "contentType": "image/jpeg",
     "etag": "62c6086c63b2a8d8e59ee8f83a447696",
-    "variants": [
-      "dou-gou-4-480w.webp",
-      "dou-gou-4-960w.webp"
-    ]
+    "variants": ["dou-gou-4-480w.webp", "dou-gou-4-960w.webp"]
   },
   "dou-gou-480w.webp": {
     "bytes": 23810,
@@ -131,11 +120,7 @@
     "bytes": 997589,
     "contentType": "image/jpeg",
     "etag": "c8fb457d6475382ee6e8da5eae8d89f9",
-    "variants": [
-      "dou-gou-5-480w.webp",
-      "dou-gou-5-960w.webp",
-      "dou-gou-5-1920w.webp"
-    ]
+    "variants": ["dou-gou-5-480w.webp", "dou-gou-5-960w.webp", "dou-gou-5-1920w.webp"]
   },
   "dou-gou-6-1920w.webp": {
     "bytes": 291548,
@@ -164,11 +149,7 @@
     "bytes": 615521,
     "contentType": "image/jpeg",
     "etag": "ff8e2a7d4a44e166b571a96482fde432",
-    "variants": [
-      "dou-gou-6-480w.webp",
-      "dou-gou-6-960w.webp",
-      "dou-gou-6-1920w.webp"
-    ]
+    "variants": ["dou-gou-6-480w.webp", "dou-gou-6-960w.webp", "dou-gou-6-1920w.webp"]
   },
   "dou-gou-7-480w.webp": {
     "bytes": 21816,
@@ -190,10 +171,7 @@
     "bytes": 276649,
     "contentType": "image/jpeg",
     "etag": "63e1124c663b561da06524fd566c5150",
-    "variants": [
-      "dou-gou-7-480w.webp",
-      "dou-gou-7-960w.webp"
-    ]
+    "variants": ["dou-gou-7-480w.webp", "dou-gou-7-960w.webp"]
   },
   "dou-gou-960w.webp": {
     "bytes": 76472,
@@ -208,10 +186,6 @@
     "bytes": 456138,
     "contentType": "image/jpeg",
     "etag": "75276f510dd705904aa00702fde61269",
-    "variants": [
-      "dou-gou-480w.webp",
-      "dou-gou-960w.webp",
-      "dou-gou-1920w.webp"
-    ]
+    "variants": ["dou-gou-480w.webp", "dou-gou-960w.webp", "dou-gou-1920w.webp"]
   }
 }
