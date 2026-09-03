@@ -10,7 +10,7 @@ description: 我在用的东西
 
 - 编辑器: VS Code
 - 字体: [MonoLisa]
-- 主题: [GitHub Theme](https://marketplace.visualstudio.com/items?itemName=hyoban.file-icons-continue)
+- 主题: [GitHub Theme]
 - 图标主题: [Flow Icons]
 
 ## 数码产品
@@ -56,6 +56,7 @@ description: 我在用的东西
 |        [MonoLisa]         |    $249    |        -        |    至今没有看腻     |    否    |    A     |
 |       [Flow Icons]        |     $5     |        -        |                     |    否    |    B     |
 
+[GitHub Theme]: https://github.com/primer/github-vscode-theme
 [Supercharge]: https://sindresorhus.com/supercharge
 [MonoLisa]: https://monolisa.dev
 [Flow Icons]: https://flow-icons.pages.dev
