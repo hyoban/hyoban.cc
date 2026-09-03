@@ -18,27 +18,27 @@
   },
   "dependencies": {
     "@mapbox/mapbox-gl-language": "^1.0.1",
-    "mapbox-gl": "^3.26.0",
+    "mapbox-gl": "^3.29.0",
     "yaml": "^2.9.0",
-    "zod": "^4.4.3"
+    "zod": "^4.5.4"
   },
   "devDependencies": {
-    "@astrojs/check": "^0.9.9",
-    "@astrojs/markdown-remark": "7.2.0",
-    "@astrojs/rss": "4.0.18",
-    "@astrojs/sitemap": "^3.7.3",
+    "@astrojs/check": "^0.9.10",
+    "@astrojs/markdown-remark": "7.3.0",
+    "@astrojs/rss": "4.0.19",
+    "@astrojs/sitemap": "^3.7.4",
     "@egoist/tailwindcss-icons": "^1.9.2",
-    "@iconify-json/lucide": "^1.2.114",
-    "@iconify-json/simple-icons": "^1.2.87",
-    "@tailwindcss/vite": "^4.3.1",
-    "astro": "^7.0.2",
+    "@iconify-json/lucide": "^1.2.129",
+    "@iconify-json/simple-icons": "^1.2.94",
+    "@tailwindcss/vite": "^4.3.3",
+    "astro": "^7.2.10",
     "ffmpeg-static": "^5.3.0",
-    "sharp": "^0.35.2",
-    "tailwindcss": "^4.3.1",
-    "typescript": "^6.0.3",
+    "sharp": "^0.35.4",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^7.0.2",
     "vite": "catalog:",
     "vite-plus": "catalog:",
-    "wrangler": "^4.104.0"
+    "wrangler": "^4.128.0"
   },
-  "packageManager": "pnpm@11.9.0"
+  "packageManager": "pnpm@11.25.0"
 }
