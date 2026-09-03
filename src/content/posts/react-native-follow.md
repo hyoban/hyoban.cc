@@ -1,8 +1,8 @@
 ---
-title: "Re: 从零开始的 React Native 之旅"
+title: 'Re: 从零开始的 React Native 之旅'
 link: react-native-follow
 description: 记录用 Expo 和 React Native 复刻 Follow 移动端的过程，包括登录、主题、Local First 和测试分发。
-pubDate: "2024-07-21T16:48:51.143Z"
+pubDate: '2024-07-21T16:48:51.143Z'
 ---
 
 ## 为什么要写 rn
@@ -137,32 +137,30 @@ export default function UserInfo() {
 
   return (
     <YStack flex={1} padding={20}>
-      {session
-        ? (
-            <YStack>
-              <XStack gap={24} alignItems="center">
-                <Image
-                  source={{
-                    uri: session.user.image,
-                    height: 100,
-                    width: 100,
-                  }}
-                  borderRadius={50}
-                />
-                <YStack gap={8}>
-                  <Text color="$color12" fontSize="$8" fontWeight="600">
-                    {session.user.name}
-                  </Text>
-                  <Text color="$color12" fontSize="$5">
-                    {session.user.email}
-                  </Text>
-                </YStack>
-              </XStack>
+      {session ? (
+        <YStack>
+          <XStack gap={24} alignItems="center">
+            <Image
+              source={{
+                uri: session.user.image,
+                height: 100,
+                width: 100,
+              }}
+              borderRadius={50}
+            />
+            <YStack gap={8}>
+              <Text color="$color12" fontSize="$8" fontWeight="600">
+                {session.user.name}
+              </Text>
+              <Text color="$color12" fontSize="$5">
+                {session.user.email}
+              </Text>
             </YStack>
-          )
-        : (
-            <Button onPress={handlePressButtonAsync}>Login</Button>
-          )}
+          </XStack>
+        </YStack>
+      ) : (
+        <Button onPress={handlePressButtonAsync}>Login</Button>
+      )}
     </YStack>
   )
 }
@@ -199,11 +197,11 @@ export const darkTheme = {
 
 ```ts
 type Expect<T extends true> = T
-type Equal<X, Y> = (<T>() => T extends X ? 1 : 2) extends <T>() => T extends Y ? 1 : 2 ? true : false
-type _ExpectLightAndDarkThemesHaveSameKeys = Expect<Equal<
-  keyof typeof lightTheme.colors,
-  keyof typeof darkTheme.colors
->>
+type Equal<X, Y> =
+  (<T>() => T extends X ? 1 : 2) extends <T>() => T extends Y ? 1 : 2 ? true : false
+type _ExpectLightAndDarkThemesHaveSameKeys = Expect<
+  Equal<keyof typeof lightTheme.colors, keyof typeof darkTheme.colors>
+>
 ```
 
 此外，你可以利用它的运行时来轻松修改主题，那么写像下面这样的动态主题切换就十分简单了。
@@ -211,19 +209,16 @@ type _ExpectLightAndDarkThemesHaveSameKeys = Expect<Equal<
 https://x.com/0xhyoban/status/1815764236494377263
 
 ```ts
-UnistylesRuntime.updateTheme(
-  UnistylesRuntime.themeName,
-  oldTheme => ({
-    ...oldTheme,
-    colors: {
-      ...oldTheme.colors,
-      ...accent,
-      ...accentA,
-      ...accentDark,
-      ...accentDarkA,
-    },
-  }),
-)
+UnistylesRuntime.updateTheme(UnistylesRuntime.themeName, (oldTheme) => ({
+  ...oldTheme,
+  colors: {
+    ...oldTheme.colors,
+    ...accent,
+    ...accentA,
+    ...accentDark,
+    ...accentDarkA,
+  },
+}))
 ```
 
 ## Local First
@@ -257,28 +252,28 @@ import { addDatabaseChangeListener } from 'expo-sqlite/next'
 import useSWRSubscription from 'swr/subscription'
 
 export function useQuerySubscription<
-  T extends
-  | Pick<AnySQLiteSelect, '_' | 'then'>
-  | SQLiteRelationalQuery<'sync', unknown>,
+  T extends Pick<AnySQLiteSelect, '_' | 'then'> | SQLiteRelationalQuery<'sync', unknown>,
   SWRSubKey extends Key,
->(
-  query: T,
-  key: SWRSubKey,
-) {
+>(query: T, key: SWRSubKey) {
   function subscribe(_key: SWRSubKey, { next }: SWRSubscriptionOptions<Awaited<T>, any>) {
     const entity = is(query, SQLiteRelationalQuery)
-    // @ts-expect-error
-      ? query.table
-      // @ts-expect-error
-      : (query as AnySQLiteSelect).config.table
+      ? // @ts-expect-error
+        query.table
+      : // @ts-expect-error
+        (query as AnySQLiteSelect).config.table
 
     if (is(entity, Subquery) || is(entity, SQL)) {
       next(new Error('Selecting from subqueries and SQL are not supported in useQuerySubscription'))
       return
     }
 
-    query.then((data) => { next(undefined, data) })
-      .catch((error) => { next(error) })
+    query
+      .then((data) => {
+        next(undefined, data)
+      })
+      .catch((error) => {
+        next(error)
+      })
 
     let listener: ReturnType<typeof addDatabaseChangeListener> | undefined
 
@@ -292,8 +287,13 @@ export function useQuerySubscription<
             clearTimeout(queryTimeout)
           }
           queryTimeout = setTimeout(() => {
-            query.then((data) => { next(undefined, data) })
-              .catch((error) => { next(error) })
+            query
+              .then((data) => {
+                next(undefined, data)
+              })
+              .catch((error) => {
+                next(error)
+              })
           }, 0)
         }
       })
@@ -304,10 +304,7 @@ export function useQuerySubscription<
     }
   }
 
-  return useSWRSubscription<Awaited<T>, any, SWRSubKey>(
-    key,
-    subscribe as any,
-  )
+  return useSWRSubscription<Awaited<T>, any, SWRSubKey>(key, subscribe as any)
 }
 ```
 

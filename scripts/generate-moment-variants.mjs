@@ -16,12 +16,12 @@ const contentRoot = join(root, 'src/content/moments')
 const config = JSON.parse(await readFile(join(root, 'src/data/asset-config.json'), 'utf8'))
 const temporaryPath = await mkdtemp(join(tmpdir(), 'hyoban-moment-variants-'))
 const records = await readMomentRecords(contentRoot)
-const tasks = records.flatMap(record =>
+const tasks = records.flatMap((record) =>
   record.moment.media
-    .filter(media => media.type === 'image')
-    .filter(media => record.assets[media.file].contentType !== 'image/gif')
-    .filter(media => !record.assets[media.file].variants)
-    .map(media => ({ media, record })),
+    .filter((media) => media.type === 'image')
+    .filter((media) => record.assets[media.file].contentType !== 'image/gif')
+    .filter((media) => !record.assets[media.file].variants)
+    .map((media) => ({ media, record })),
 )
 const generated = []
 
@@ -30,7 +30,7 @@ try {
 
   await runConcurrent(tasks, 6, async ({ media, record }) => {
     const metadata = record.assets[media.file]
-    const widths = [480, 960, 1920].filter(width => width < metadata.width)
+    const widths = [480, 960, 1920].filter((width) => width < metadata.width)
 
     if (widths.length === 0) {
       metadata.variants = []
@@ -77,7 +77,7 @@ try {
       generated.push(variant)
     }
 
-    metadata.variants = variants.map(variant => variant.file)
+    metadata.variants = variants.map((variant) => variant.file)
     completed += 1
 
     if (completed % 50 === 0 || completed === tasks.length) {
@@ -117,31 +117,28 @@ try {
   })
 
   for (const record of records) {
-    const recordVariants = generated.filter(variant => variant.record === record)
+    const recordVariants = generated.filter((variant) => variant.record === record)
 
     for (const variant of recordVariants) {
       record.assets[variant.file] = variant.metadata
     }
 
     if (
-      recordVariants.length > 0
-      || record.moment.media.some(media =>
-        media.type === 'image' && record.assets[media.file].variants?.length === 0,
+      recordVariants.length > 0 ||
+      record.moment.media.some(
+        (media) => media.type === 'image' && record.assets[media.file].variants?.length === 0,
       )
     ) {
       const sorted = Object.fromEntries(
         Object.entries(record.assets).sort(([first], [second]) => first.localeCompare(second)),
       )
-      await writeFile(
-        join(record.directory, 'assets.json'),
-        `${JSON.stringify(sorted, null, 2)}\n`,
-      )
+      await writeFile(join(record.directory, 'assets.json'), `${JSON.stringify(sorted, null, 2)}\n`)
     }
   }
 
   console.log(
-    `Moment variants complete: ${generated.length} verified `
-    + `(${missing.length} uploaded, ${reused} reused) across ${tasks.length} image(s).`,
+    `Moment variants complete: ${generated.length} verified ` +
+      `(${missing.length} uploaded, ${reused} reused) across ${tasks.length} image(s).`,
   )
 } finally {
   await rm(temporaryPath, { force: true, recursive: true })
@@ -155,32 +152,40 @@ async function uploadMissingWithRetries(initialMissing) {
     const manifestPath = join(temporaryPath, `bulk-upload-${attempt}.json`)
     await writeFile(
       manifestPath,
-      `${JSON.stringify(pending.map(variant => ({
-        file: variant.path,
-        key: variant.key,
-      })), null, 2)}\n`,
+      `${JSON.stringify(
+        pending.map((variant) => ({
+          file: variant.path,
+          key: variant.key,
+        })),
+        null,
+        2,
+      )}\n`,
     )
 
     try {
-      await execFile(wrangler, [
-        'r2',
-        'bulk',
-        'put',
-        config.bucket,
-        '--filename',
-        manifestPath,
-        '--content-type',
-        'image/webp',
-        '--cache-control',
-        'public, max-age=31536000, immutable',
-        '--concurrency',
-        '10',
-        '--remote',
-        '--force',
-      ], {
-        cwd: root,
-        maxBuffer: 20 * 1024 * 1024,
-      })
+      await execFile(
+        wrangler,
+        [
+          'r2',
+          'bulk',
+          'put',
+          config.bucket,
+          '--filename',
+          manifestPath,
+          '--content-type',
+          'image/webp',
+          '--cache-control',
+          'public, max-age=31536000, immutable',
+          '--concurrency',
+          '10',
+          '--remote',
+          '--force',
+        ],
+        {
+          cwd: root,
+          maxBuffer: 20 * 1024 * 1024,
+        },
+      )
     } catch (error) {
       console.warn(`Bulk upload attempt ${attempt} was interrupted; checking remaining objects.`)
     }
@@ -188,7 +193,7 @@ async function uploadMissingWithRetries(initialMissing) {
     const stillMissing = []
 
     await runConcurrent(pending, 12, async (variant) => {
-      if (await inspectRemote(variant) === 'missing') {
+      if ((await inspectRemote(variant)) === 'missing') {
         stillMissing.push(variant)
       }
     })
@@ -225,10 +230,10 @@ async function inspectRemote(variant) {
   }
 
   if (
-    response.status !== 200
-    || Number.parseInt(response.headers.get('content-length') ?? '', 10) !== variant.metadata.bytes
-    || response.headers.get('content-type') !== variant.metadata.contentType
-    || response.headers.get('etag')?.replaceAll('"', '') !== variant.metadata.etag
+    response.status !== 200 ||
+    Number.parseInt(response.headers.get('content-length') ?? '', 10) !== variant.metadata.bytes ||
+    response.headers.get('content-type') !== variant.metadata.contentType ||
+    response.headers.get('etag')?.replaceAll('"', '') !== variant.metadata.etag
   ) {
     throw new Error(`Refusing to overwrite a mismatched R2 object: ${variant.key}`)
   }
@@ -255,7 +260,7 @@ async function fetchWithRetries(url, options) {
       lastError = error
 
       if (attempt < 5) {
-        await new Promise(resolve => setTimeout(resolve, 250 * 2 ** (attempt - 1)))
+        await new Promise((resolve) => setTimeout(resolve, 250 * 2 ** (attempt - 1)))
       }
     }
   }
@@ -266,11 +271,13 @@ async function fetchWithRetries(url, options) {
 async function runConcurrent(items, concurrency, operation) {
   let nextIndex = 0
 
-  await Promise.all(Array.from({ length: concurrency }, async () => {
-    while (nextIndex < items.length) {
-      const index = nextIndex
-      nextIndex += 1
-      await operation(items[index], index)
-    }
-  }))
+  await Promise.all(
+    Array.from({ length: concurrency }, async () => {
+      while (nextIndex < items.length) {
+        const index = nextIndex
+        nextIndex += 1
+        await operation(items[index], index)
+      }
+    }),
+  )
 }

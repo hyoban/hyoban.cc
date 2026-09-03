@@ -117,11 +117,19 @@ html[data-calendar-mode-transition] .calendar-back-link {
   box-shadow: 0 0.5rem 2rem rgb(0 0 0 / 0.18);
 }
 
-.calendar-map-page :is(.mapboxgl-popup-anchor-top, .mapboxgl-popup-anchor-top-left, .mapboxgl-popup-anchor-top-right) .mapboxgl-popup-tip {
+.calendar-map-page
+  :is(.mapboxgl-popup-anchor-top, .mapboxgl-popup-anchor-top-left, .mapboxgl-popup-anchor-top-right)
+  .mapboxgl-popup-tip {
   border-bottom-color: var(--color-bg);
 }
 
-.calendar-map-page :is(.mapboxgl-popup-anchor-bottom, .mapboxgl-popup-anchor-bottom-left, .mapboxgl-popup-anchor-bottom-right) .mapboxgl-popup-tip {
+.calendar-map-page
+  :is(
+    .mapboxgl-popup-anchor-bottom,
+    .mapboxgl-popup-anchor-bottom-left,
+    .mapboxgl-popup-anchor-bottom-right
+  )
+  .mapboxgl-popup-tip {
   border-top-color: var(--color-bg);
 }
 
@@ -140,7 +148,8 @@ html[data-calendar-mode-transition] .calendar-back-link {
 }
 
 @media (max-width: 48rem) {
-  .calendar-map-page:has(.calendar-map-drawer:not([hidden])) :is(.mapboxgl-ctrl-bottom-left, .mapboxgl-ctrl-bottom-right) {
+  .calendar-map-page:has(.calendar-map-drawer:not([hidden]))
+    :is(.mapboxgl-ctrl-bottom-left, .mapboxgl-ctrl-bottom-right) {
     bottom: calc(min(78dvh, 42rem) + 1.25rem + env(safe-area-inset-bottom));
   }
 

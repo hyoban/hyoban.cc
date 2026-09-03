@@ -3,7 +3,7 @@ import { getMarkdownEntries } from '@/utils'
 
 export const getStaticPaths: GetStaticPaths = async () => {
   const entries = await getMarkdownEntries()
-  return entries.map(entry => ({
+  return entries.map((entry) => ({
     params: { slug: entry.data.link },
     props: { entry },
   }))

@@ -122,9 +122,9 @@ export function getCalendarAnniversaries(dateKey: string): CalendarAnniversary[]
 
   return anniversaryDefinitions.flatMap((definition) => {
     if (
-      year < definition.startYear
-      || (definition.endYear !== undefined && year > definition.endYear)
-      || !matchesAnnualDate(dateKey, definition.date)
+      year < definition.startYear ||
+      (definition.endYear !== undefined && year > definition.endYear) ||
+      !matchesAnnualDate(dateKey, definition.date)
     ) {
       return []
     }
@@ -134,12 +134,14 @@ export function getCalendarAnniversaries(dateKey: string): CalendarAnniversary[]
       years: year - definition.startYear,
     }
 
-    return [{
-      description: definition.describe(occurrence),
-      icon: definition.icon,
-      id: definition.id,
-      label: definition.label(occurrence),
-    }]
+    return [
+      {
+        description: definition.describe(occurrence),
+        icon: definition.icon,
+        id: definition.id,
+        label: definition.label(occurrence),
+      },
+    ]
   })
 }
 
@@ -156,12 +158,9 @@ function defineBirthday(options: BirthdayOptions): AnniversaryDefinition {
   }
 }
 
-function defineYearlyAnniversary(
-  options: YearlyAnniversaryOptions,
-): AnniversaryDefinition {
-  const format = ({ years }: AnniversaryOccurrence) => years === 0
-    ? options.initialLabel
-    : `${options.name} ${years} 周年`
+function defineYearlyAnniversary(options: YearlyAnniversaryOptions): AnniversaryDefinition {
+  const format = ({ years }: AnniversaryOccurrence) =>
+    years === 0 ? options.initialLabel : `${options.name} ${years} 周年`
 
   return {
     date: options.date,
@@ -214,23 +213,25 @@ function lunarDate(month: number, day: number, leapMonth = false): AnnualDate {
 
 function matchesAnnualDate(dateKey: string, annualDate: AnnualDate) {
   if (annualDate.calendar === 'gregorian') {
-    return Number.parseInt(dateKey.slice(5, 7), 10) === annualDate.month
-      && Number.parseInt(dateKey.slice(8, 10), 10) === annualDate.day
+    return (
+      Number.parseInt(dateKey.slice(5, 7), 10) === annualDate.month &&
+      Number.parseInt(dateKey.slice(8, 10), 10) === annualDate.day
+    )
   }
 
   const chineseDate = getChineseDate(dateKey)
 
-  return chineseDate.month === annualDate.month
-    && chineseDate.day === annualDate.day
-    && chineseDate.leapMonth === Boolean(annualDate.leapMonth)
+  return (
+    chineseDate.month === annualDate.month &&
+    chineseDate.day === annualDate.day &&
+    chineseDate.leapMonth === Boolean(annualDate.leapMonth)
+  )
 }
 
 function getChineseDate(dateKey: string) {
   const date = new Date(`${dateKey}T12:00:00Z`)
   const parts = Object.fromEntries(
-    chineseCalendarFormatter
-      .formatToParts(date)
-      .map(part => [part.type, part.value]),
+    chineseCalendarFormatter.formatToParts(date).map((part) => [part.type, part.value]),
   )
   const monthName = parts.month ?? ''
   const leapMonth = monthName.startsWith('闰')
@@ -239,7 +240,7 @@ function getChineseDate(dateKey: string) {
   return {
     day: Number.parseInt(parts.day ?? '', 10),
     leapMonth,
-    month: lunarMonthNames.indexOf(normalizedMonthName as typeof lunarMonthNames[number]) + 1,
+    month: lunarMonthNames.indexOf(normalizedMonthName as (typeof lunarMonthNames)[number]) + 1,
   }
 }
 
@@ -254,9 +255,36 @@ function formatAnnualDate(date: AnnualDate) {
 
 function toChineseDay(day: number) {
   const dayNames = [
-    '初一', '初二', '初三', '初四', '初五', '初六', '初七', '初八', '初九', '初十',
-    '十一', '十二', '十三', '十四', '十五', '十六', '十七', '十八', '十九', '二十',
-    '廿一', '廿二', '廿三', '廿四', '廿五', '廿六', '廿七', '廿八', '廿九', '三十',
+    '初一',
+    '初二',
+    '初三',
+    '初四',
+    '初五',
+    '初六',
+    '初七',
+    '初八',
+    '初九',
+    '初十',
+    '十一',
+    '十二',
+    '十三',
+    '十四',
+    '十五',
+    '十六',
+    '十七',
+    '十八',
+    '十九',
+    '二十',
+    '廿一',
+    '廿二',
+    '廿三',
+    '廿四',
+    '廿五',
+    '廿六',
+    '廿七',
+    '廿八',
+    '廿九',
+    '三十',
   ]
 
   return dayNames[day - 1] ?? String(day)

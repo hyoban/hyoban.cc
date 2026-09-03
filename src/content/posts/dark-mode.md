@@ -2,7 +2,7 @@
 title: 实现一个满意的深色模式切换按钮
 link: dark-mode
 description: 记录一个兼顾系统偏好、用户偏好、服务端渲染和切换过渡的深色模式按钮实现。
-pubDate: "2024-01-04T13:15:06.994Z"
+pubDate: '2024-01-04T13:15:06.994Z'
 ---
 
 ## 它会是什么样子
@@ -35,8 +35,7 @@ function atomSystemDark() {
   const isSystemDarkAtom = atom<boolean | null>(null)
 
   isSystemDarkAtom.onMount = (set) => {
-    if (typeof window === 'undefined')
-      return
+    if (typeof window === 'undefined') return
     const matcher = window.matchMedia('(prefers-color-scheme: dark)')
     const update = () => {
       set(matcher.matches)
@@ -81,10 +80,7 @@ function atomDark() {
     const isDark = isDarkMode(theme, isSystemDark)
     document.documentElement.classList.toggle('dark', isDark)
 
-    if (
-      (theme === 'dark' && isSystemDark)
-      || (theme === 'light' && !isSystemDark)
-    ) {
+    if ((theme === 'dark' && isSystemDark) || (theme === 'light' && !isSystemDark)) {
       set(themeAtom, 'system')
     }
   })
@@ -99,11 +95,8 @@ function atomDark() {
     (get, set) => {
       const theme = get(themeAtom)
       const isSystemDark = get(isSystemDarkAtom)
-      set(
-        themeAtom,
-        theme === 'system' ? (isSystemDark ? 'light' : 'dark') : 'system'
-      )
-    }
+      set(themeAtom, theme === 'system' ? (isSystemDark ? 'light' : 'dark') : 'system')
+    },
   )
 }
 ```
@@ -155,7 +148,8 @@ function AppearanceSwitch() {
   !(function () {
     var e = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches,
       t = localStorage.getItem('use-dark') || '"system"'
-    ;('"dark"' === t || (e && '"light"' !== t)) && document.documentElement.classList.toggle('dark', !0)
+    ;('"dark"' === t || (e && '"light"' !== t)) &&
+      document.documentElement.classList.toggle('dark', !0)
   })()
 </script>
 ```
@@ -172,8 +166,7 @@ function ThemeProvider({ children }: { children: React.ReactNode }) {
         dangerouslySetInnerHTML={{
           __html: 'here',
         }}
-      >
-      </script>
+      ></script>
       {children}
     </>
   )
@@ -209,21 +202,21 @@ export function disableAnimation(disableTransitionExclude: string[] = []) {
   css.append(
     document.createTextNode(
       `
-*${disableTransitionExclude.map(s => `:not(${s})`).join('')} {
+*${disableTransitionExclude.map((s) => `:not(${s})`).join('')} {
   -webkit-transition: none !important;
   -moz-transition: none !important;
   -o-transition: none !important;
   -ms-transition: none !important;
   transition: none !important;
 }
-      `
-    )
+      `,
+    ),
   )
   document.head.append(css)
 
   return () => {
     // Force restyle
-    (() => window.getComputedStyle(document.body))()
+    ;(() => window.getComputedStyle(document.body))()
 
     // Wait for next tick before removing
     setTimeout(() => {

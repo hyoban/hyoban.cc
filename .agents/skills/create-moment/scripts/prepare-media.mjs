@@ -1,15 +1,6 @@
 import { createHash } from 'node:crypto'
 import { execFile as execFileCallback } from 'node:child_process'
-import {
-  access,
-  mkdir,
-  mkdtemp,
-  readFile,
-  rename,
-  rm,
-  stat,
-  writeFile,
-} from 'node:fs/promises'
+import { access, mkdir, mkdtemp, readFile, rename, rm, stat, writeFile } from 'node:fs/promises'
 import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { basename, dirname, extname, join, relative, resolve, sep } from 'node:path'
@@ -37,22 +28,24 @@ const { getContentType, uploadR2Object } = await import(
   pathToFileURL(join(repositoryPath, 'scripts/lib/r2-assets.mjs'))
 )
 const config = JSON.parse(await readFile(configPath, 'utf8'))
-const inputs = await Promise.all(options.media.map(async (mediaPath) => {
-  const path = resolve(mediaPath)
-  const metadata = await stat(path)
+const inputs = await Promise.all(
+  options.media.map(async (mediaPath) => {
+    const path = resolve(mediaPath)
+    const metadata = await stat(path)
 
-  if (!metadata.isFile() || metadata.size === 0) {
-    throw new Error(`Media is missing or empty: ${path}`)
-  }
+    if (!metadata.isFile() || metadata.size === 0) {
+      throw new Error(`Media is missing or empty: ${path}`)
+    }
 
-  const contentType = getContentType(path)
+    const contentType = getContentType(path)
 
-  if (!contentType.startsWith('image/') && !contentType.startsWith('video/')) {
-    throw new Error(`Moment media must be an image or video: ${path}`)
-  }
+    if (!contentType.startsWith('image/') && !contentType.startsWith('video/')) {
+      throw new Error(`Moment media must be an image or video: ${path}`)
+    }
 
-  return { contentType, path }
-}))
+    return { contentType, path }
+  }),
+)
 
 await mkdir(dirname(targetPath), { recursive: true })
 const temporaryPath = await mkdtemp(join(tmpdir(), 'hyoban-moment-media-'))
@@ -94,7 +87,7 @@ try {
   const assets = Object.fromEntries(
     prepared
       .sort((first, second) => first.file.localeCompare(second.file))
-      .map(asset => [asset.file, asset.metadata]),
+      .map((asset) => [asset.file, asset.metadata]),
   )
 
   for (const asset of prepared) {
@@ -107,18 +100,21 @@ try {
     })
   }
 
-  await writeFile(
-    join(stagingPath, 'assets.json'),
-    `${JSON.stringify(assets, null, 2)}\n`,
-  )
+  await writeFile(join(stagingPath, 'assets.json'), `${JSON.stringify(assets, null, 2)}\n`)
   const action = await finalizeTarget(assets)
 
-  console.log(JSON.stringify({
-    action,
-    media,
-    target: targetPath,
-    uploads: Object.fromEntries(prepared.map(asset => [asset.file, asset.upload.action])),
-  }, null, 2))
+  console.log(
+    JSON.stringify(
+      {
+        action,
+        media,
+        target: targetPath,
+        uploads: Object.fromEntries(prepared.map((asset) => [asset.file, asset.upload.action])),
+      },
+      null,
+      2,
+    ),
+  )
 
   async function prepareImage(inputPath, stem) {
     const file = `${stem}.webp`
@@ -150,14 +146,16 @@ try {
         .resize({ width, withoutEnlargement: true })
         .webp({ effort: 6, quality: 80 })
         .toFile(variantPath)
-      variants.push(await describeAsset(variantPath, {
-        height: variantInfo.height,
-        width: variantInfo.width,
-      }))
+      variants.push(
+        await describeAsset(variantPath, {
+          height: variantInfo.height,
+          width: variantInfo.width,
+        }),
+      )
     }
 
     if (variants.length > 0) {
-      base.metadata.variants = variants.map(variant => variant.file)
+      base.metadata.variants = variants.map((variant) => variant.file)
     }
 
     return { assets: [base, ...variants], file }
@@ -170,53 +168,59 @@ try {
     const poster = `${stem}-poster.webp`
     const posterPath = join(temporaryPath, poster)
 
-    await execFile(ffmpeg, [
-      '-hide_banner',
-      '-loglevel',
-      'error',
-      '-y',
-      '-i',
-      inputPath,
-      '-map',
-      '0:v:0',
-      '-map',
-      '0:a?',
-      '-vf',
-      'scale=min(1920\\,iw):min(1920\\,ih):force_original_aspect_ratio=decrease:force_divisible_by=2',
-      '-c:v',
-      'libx264',
-      '-crf',
-      '23',
-      '-preset',
-      'medium',
-      '-pix_fmt',
-      'yuv420p',
-      '-c:a',
-      'aac',
-      '-b:a',
-      '160k',
-      '-movflags',
-      '+faststart',
-      outputPath,
-    ], { maxBuffer: 10 * 1024 * 1024 })
+    await execFile(
+      ffmpeg,
+      [
+        '-hide_banner',
+        '-loglevel',
+        'error',
+        '-y',
+        '-i',
+        inputPath,
+        '-map',
+        '0:v:0',
+        '-map',
+        '0:a?',
+        '-vf',
+        'scale=min(1920\\,iw):min(1920\\,ih):force_original_aspect_ratio=decrease:force_divisible_by=2',
+        '-c:v',
+        'libx264',
+        '-crf',
+        '23',
+        '-preset',
+        'medium',
+        '-pix_fmt',
+        'yuv420p',
+        '-c:a',
+        'aac',
+        '-b:a',
+        '160k',
+        '-movflags',
+        '+faststart',
+        outputPath,
+      ],
+      { maxBuffer: 10 * 1024 * 1024 },
+    )
 
-    await execFile(ffmpeg, [
-      '-hide_banner',
-      '-loglevel',
-      'error',
-      '-y',
-      '-ss',
-      '0',
-      '-i',
-      outputPath,
-      '-frames:v',
-      '1',
-      framePath,
-    ], { maxBuffer: 10 * 1024 * 1024 })
+    await execFile(
+      ffmpeg,
+      [
+        '-hide_banner',
+        '-loglevel',
+        'error',
+        '-y',
+        '-ss',
+        '0',
+        '-i',
+        outputPath,
+        '-frames:v',
+        '1',
+        framePath,
+      ],
+      { maxBuffer: 10 * 1024 * 1024 },
+    )
 
-    const posterInfo = await sharp(framePath)
-      .webp({ effort: 6, quality: 82 })
-      .toFile(posterPath)
+    const posterInfo = await sharp(framePath).webp({ effort: 6, quality: 82 }).toFile(posterPath)
 
     return {
       assets: [

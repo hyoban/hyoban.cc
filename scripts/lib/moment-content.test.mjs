@@ -4,29 +4,34 @@ import test from 'node:test'
 import { parseMomentDocument } from '../../src/moments/content.ts'
 
 test('parses a canonical Moment through one interface', () => {
-  const moment = parseMomentDocument([
-    '---',
-    'occurredAt: "2026-07-14T10:03:04+08:00"',
-    'location: hefei',
-    'media:',
-    '  - type: image',
-    '    file: "hefei-skyline.jpg"',
-    '    alt: "Marina Bay at dusk"',
-    '---',
-    '',
-    'A canonical moment.',
-    '',
-  ].join('\n'), { id: '2026/07/14-01-hefei-skyline' })
+  const moment = parseMomentDocument(
+    [
+      '---',
+      'occurredAt: "2026-07-14T10:03:04+08:00"',
+      'location: hefei',
+      'media:',
+      '  - type: image',
+      '    file: "hefei-skyline.jpg"',
+      '    alt: "Marina Bay at dusk"',
+      '---',
+      '',
+      'A canonical moment.',
+      '',
+    ].join('\n'),
+    { id: '2026/07/14-01-hefei-skyline' },
+  )
 
   assert.deepEqual(moment, {
     hidden: false,
     id: '2026/07/14-01-hefei-skyline',
     location: 'hefei',
-    media: [{
-      alt: 'Marina Bay at dusk',
-      file: 'hefei-skyline.jpg',
-      type: 'image',
-    }],
+    media: [
+      {
+        alt: 'Marina Bay at dusk',
+        file: 'hefei-skyline.jpg',
+        type: 'image',
+      },
+    ],
     occurredAt: '2026-07-14T10:03:04+08:00',
     text: 'A canonical moment.',
   })

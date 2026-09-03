@@ -2,7 +2,7 @@
 title: Folo 中的状态管理 - 数据库篇
 link: folo-database
 description: 记录 Folo 桌面端和移动端状态管理中的数据库选型、SQLite WASM 运行模式和多端整合实践。
-pubDate: "2025-06-17T10:50:53.264Z"
+pubDate: '2025-06-17T10:50:53.264Z'
 ---
 
 最近将 [Folo](https://follow.is) 桌面端和移动端中的状态管理合并到了同一的模块中，就想着记录一下相关的设计和踩坑经验。
@@ -106,9 +106,8 @@ import type { BaseSQLiteDatabase } from 'drizzle-orm/sqlite-core/db'
 
 import type * as schema from './schemas'
 
-type DB
-  = | BaseSQLiteDatabase<'async', any, typeof schema>
-    | BaseSQLiteDatabase<'sync', any, typeof schema>
+type DB =
+  BaseSQLiteDatabase<'async', any, typeof schema> | BaseSQLiteDatabase<'sync', any, typeof schema>
 
 export declare const sqlite: unknown
 export declare const db: DB

@@ -53,9 +53,7 @@ export async function getMarkdownEntries() {
     const duplicated = linkMap.get(entry.data.link)
 
     if (duplicated) {
-      throw new Error(
-        `Duplicate link "${entry.data.link}" found in ${duplicated} and ${location}.`,
-      )
+      throw new Error(`Duplicate link "${entry.data.link}" found in ${duplicated} and ${location}.`)
     }
 
     linkMap.set(entry.data.link, location)
@@ -66,9 +64,7 @@ export async function getMarkdownEntries() {
 
 function getPostDateParts(date: Date) {
   const parts = Object.fromEntries(
-    postDateFormatter
-      .formatToParts(date)
-      .map(part => [part.type, part.value]),
+    postDateFormatter.formatToParts(date).map((part) => [part.type, part.value]),
   )
 
   return {

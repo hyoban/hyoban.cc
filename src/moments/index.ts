@@ -3,11 +3,7 @@ import { getCollection } from 'astro:content'
 import { getAssetUrl } from '@/asset-url'
 import { locations, type LocationId } from '@/data/locations'
 import { parseMomentDocument, type CanonicalMoment } from '@/moments/content'
-import {
-  getLocation,
-  groupMomentsByLocation,
-  type MapLocation,
-} from '@/moments/map-locations'
+import { getLocation, groupMomentsByLocation, type MapLocation } from '@/moments/map-locations'
 
 const calendarDateFormatter = new Intl.DateTimeFormat('en-CA', {
   day: '2-digit',
@@ -16,10 +12,11 @@ const calendarDateFormatter = new Intl.DateTimeFormat('en-CA', {
   year: 'numeric',
 })
 
-const momentDocuments = import.meta.glob<string>(
-  '/src/content/moments/**/index.md',
-  { eager: true, import: 'default', query: '?raw' },
-)
+const momentDocuments = import.meta.glob<string>('/src/content/moments/**/index.md', {
+  eager: true,
+  import: 'default',
+  query: '?raw',
+})
 
 const momentAssetDocuments = import.meta.glob<Record<string, AssetMetadata>>(
   '/src/content/moments/**/assets.json',
@@ -85,7 +82,7 @@ export function getMoments() {
 }
 
 export function getActiveDateKeys(moments: Moment[]) {
-  return [...new Set(moments.map(moment => moment.dateKey))]
+  return [...new Set(moments.map((moment) => moment.dateKey))]
 }
 
 export function getArchiveMonthKeys(moments: Moment[]) {
@@ -120,9 +117,7 @@ export function getMappedLocationGroups(moments: Moment[]) {
 
 export function getCalendarDateKey(date: Date) {
   const parts = Object.fromEntries(
-    calendarDateFormatter
-      .formatToParts(date)
-      .map(part => [part.type, part.value]),
+    calendarDateFormatter.formatToParts(date).map((part) => [part.type, part.value]),
   ) as Record<'day' | 'month' | 'year', string>
 
   return `${parts.year}-${parts.month}-${parts.day}`
@@ -139,9 +134,7 @@ export function getMonthPath(monthKey: string) {
 async function loadMoments() {
   const entries = await getCollection('moments', ({ data }) => !data.hidden)
 
-  return entries
-    .map(resolveMoment)
-    .sort(compareMoments)
+  return entries.map(resolveMoment).sort(compareMoments)
 }
 
 function resolveMoment(entry: MomentEntry): Moment {
@@ -151,7 +144,7 @@ function resolveMoment(entry: MomentEntry): Moment {
   const moment: Moment = {
     dateKey,
     id: entry.id,
-    media: source.media.map(item => resolveMedia(entry, item)),
+    media: source.media.map((item) => resolveMedia(entry, item)),
     occurredAt: source.occurredAt,
     order,
     text: source.text,
@@ -182,8 +175,9 @@ function compareMoments(first: Moment, second: Moment) {
   const secondHasTime = second.occurredAt.length > 10
 
   if (firstHasTime && secondHasTime) {
-    return Date.parse(first.occurredAt) - Date.parse(second.occurredAt)
-      || first.order - second.order
+    return (
+      Date.parse(first.occurredAt) - Date.parse(second.occurredAt) || first.order - second.order
+    )
   }
 
   return first.order - second.order
@@ -212,7 +206,10 @@ function getMomentDocument(entry: MomentEntry) {
   return document
 }
 
-function resolveMedia(entry: MomentEntry, media: CanonicalMoment['media'][number]): ResolvedMomentMedia {
+function resolveMedia(
+  entry: MomentEntry,
+  media: CanonicalMoment['media'][number],
+): ResolvedMomentMedia {
   const directory = entry.id.replace(/\/index$/, '')
   const key = `moments/${directory}/${media.file}`
   const metadata = getAssetMetadata(entry, media.file)
@@ -225,9 +222,7 @@ function resolveMedia(entry: MomentEntry, media: CanonicalMoment['media'][number
     }
   }
 
-  const posterKey = media.poster
-    ? `moments/${directory}/${media.poster}`
-    : undefined
+  const posterKey = media.poster ? `moments/${directory}/${media.poster}` : undefined
 
   return {
     alt: media.alt,
@@ -236,10 +231,7 @@ function resolveMedia(entry: MomentEntry, media: CanonicalMoment['media'][number
     type: 'video',
     ...(posterKey
       ? {
-          poster: resolveRemoteImage(
-            posterKey,
-            getAssetMetadata(entry, media.poster!),
-          ),
+          poster: resolveRemoteImage(posterKey, getAssetMetadata(entry, media.poster!)),
         }
       : {}),
   }
@@ -259,9 +251,9 @@ function getAssetMetadata(entry: MomentEntry, file: string) {
 
 function resolveRemoteImage(key: string, metadata: AssetMetadata): RemoteImage {
   if (
-    !metadata.contentType.startsWith('image/')
-    || !Number.isInteger(metadata.width)
-    || !Number.isInteger(metadata.height)
+    !metadata.contentType.startsWith('image/') ||
+    !Number.isInteger(metadata.width) ||
+    !Number.isInteger(metadata.height)
   ) {
     throw new Error(`Invalid Moment image metadata: ${key}`)
   }
@@ -271,9 +263,9 @@ function resolveRemoteImage(key: string, metadata: AssetMetadata): RemoteImage {
     const variant = getAssetMetadataByKey(key, file)
 
     if (
-      !variant.contentType.startsWith('image/')
-      || !Number.isInteger(variant.width)
-      || !Number.isInteger(variant.height)
+      !variant.contentType.startsWith('image/') ||
+      !Number.isInteger(variant.width) ||
+      !Number.isInteger(variant.height)
     ) {
       throw new Error(`Invalid Moment image variant metadata: ${directory}${file}`)
     }
@@ -285,9 +277,7 @@ function resolveRemoteImage(key: string, metadata: AssetMetadata): RemoteImage {
   })
   const sources = [
     ...variants,
-    ...(metadata.width! <= 1920
-      ? [{ src: getAssetUrl(key), width: metadata.width! }]
-      : []),
+    ...(metadata.width! <= 1920 ? [{ src: getAssetUrl(key), width: metadata.width! }] : []),
   ]
     .sort((first, second) => first.width - second.width)
     .filter((source, index, items) => index === 0 || source.width !== items[index - 1]!.width)

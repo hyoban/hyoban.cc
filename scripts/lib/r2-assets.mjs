@@ -46,22 +46,27 @@ export async function uploadR2Object(options) {
 
   const wrangler = join(options.root, 'node_modules', '.bin', 'wrangler')
   await withRetries(
-    () => execFile(wrangler, [
-      'r2',
-      'object',
-      'put',
-      `${options.bucket}/${options.key}`,
-      '--file',
-      options.file,
-      '--content-type',
-      getContentType(options.file),
-      '--cache-control',
-      'public, max-age=31536000, immutable',
-      '--remote',
-    ], {
-      cwd: options.root,
-      maxBuffer: 10 * 1024 * 1024,
-    }),
+    () =>
+      execFile(
+        wrangler,
+        [
+          'r2',
+          'object',
+          'put',
+          `${options.bucket}/${options.key}`,
+          '--file',
+          options.file,
+          '--content-type',
+          getContentType(options.file),
+          '--cache-control',
+          'public, max-age=31536000, immutable',
+          '--remote',
+        ],
+        {
+          cwd: options.root,
+          maxBuffer: 10 * 1024 * 1024,
+        },
+      ),
     `upload ${options.key}`,
   )
 
@@ -113,7 +118,7 @@ async function withRetries(operation, label) {
       lastError = error
 
       if (attempt < 5) {
-        await new Promise(resolve => setTimeout(resolve, 250 * 2 ** (attempt - 1)))
+        await new Promise((resolve) => setTimeout(resolve, 250 * 2 ** (attempt - 1)))
       }
     }
   }
@@ -124,6 +129,6 @@ async function withRetries(operation, label) {
 function encodeObjectKey(key) {
   return key
     .split('/')
-    .map(segment => encodeURIComponent(segment))
+    .map((segment) => encodeURIComponent(segment))
     .join('/')
 }

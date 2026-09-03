@@ -24,7 +24,7 @@ async function createManifest() {
   const generatedAt = new Date()
   const cutoff = new Date(generatedAt.getTime() - options.graceDays * 24 * 60 * 60 * 1000)
   const records = await readMomentRecords(contentRoot)
-  const referenced = new Set(getReferencedR2Objects(records).map(object => object.key))
+  const referenced = new Set(getReferencedR2Objects(records).map((object) => object.key))
   const inventory = await listR2Objects({
     accountId: config.accountId,
     bucket: config.bucket,
@@ -32,8 +32,8 @@ async function createManifest() {
     root,
   })
   const candidates = inventory
-    .filter(object => !referenced.has(object.key))
-    .map(object => ({
+    .filter((object) => !referenced.has(object.key))
+    .map((object) => ({
       bytes: object.size,
       eligible: new Date(object.last_modified) <= cutoff,
       etag: object.etag,
@@ -41,7 +41,7 @@ async function createManifest() {
       lastModified: object.last_modified,
     }))
     .sort((first, second) => first.key.localeCompare(second.key))
-  const eligible = candidates.filter(candidate => candidate.eligible)
+  const eligible = candidates.filter((candidate) => candidate.eligible)
   const manifest = {
     version: 1,
     bucket: config.bucket,
@@ -54,8 +54,8 @@ async function createManifest() {
     eligibleDigest: digestCandidates(eligible),
   }
   const output = resolve(
-    options.output
-    ?? join(root, '.artifacts', `moments-r2-gc-${generatedAt.toISOString().slice(0, 10)}.json`),
+    options.output ??
+      join(root, '.artifacts', `moments-r2-gc-${generatedAt.toISOString().slice(0, 10)}.json`),
   )
 
   await mkdir(dirname(output), { recursive: true })
@@ -65,9 +65,9 @@ async function createManifest() {
   const eligibleBytes = eligible.reduce((sum, candidate) => sum + candidate.bytes, 0)
 
   console.log(
-    `R2 GC dry run: ${inventory.length} inventoried, ${referenced.size} referenced, `
-    + `${candidates.length} unreferenced (${formatBytes(candidateBytes)}), `
-    + `${eligible.length} past ${options.graceDays}-day grace (${formatBytes(eligibleBytes)}).`,
+    `R2 GC dry run: ${inventory.length} inventoried, ${referenced.size} referenced, ` +
+      `${candidates.length} unreferenced (${formatBytes(candidateBytes)}), ` +
+      `${eligible.length} past ${options.graceDays}-day grace (${formatBytes(eligibleBytes)}).`,
   )
   console.log(`Manifest: ${output}`)
   console.log('No objects were deleted.')
@@ -78,29 +78,29 @@ async function applyManifest() {
   const manifest = JSON.parse(await readFile(manifestPath, 'utf8'))
 
   if (
-    manifest.version !== 1
-    || manifest.bucket !== config.bucket
-    || manifest.prefix !== 'moments/'
-    || !Array.isArray(manifest.candidates)
+    manifest.version !== 1 ||
+    manifest.bucket !== config.bucket ||
+    manifest.prefix !== 'moments/' ||
+    !Array.isArray(manifest.candidates)
   ) {
     throw new Error(`Invalid R2 GC manifest: ${manifestPath}`)
   }
 
-  const candidates = manifest.candidates.filter(candidate => candidate.eligible)
+  const candidates = manifest.candidates.filter((candidate) => candidate.eligible)
 
   if (digestCandidates(candidates) !== manifest.eligibleDigest) {
     throw new Error('R2 GC manifest digest mismatch.')
   }
 
   const records = await readMomentRecords(contentRoot)
-  const referenced = new Set(getReferencedR2Objects(records).map(object => object.key))
+  const referenced = new Set(getReferencedR2Objects(records).map((object) => object.key))
   const inventory = await listR2Objects({
     accountId: config.accountId,
     bucket: config.bucket,
     prefix: 'moments/',
     root,
   })
-  const remoteByKey = new Map(inventory.map(object => [object.key, object]))
+  const remoteByKey = new Map(inventory.map((object) => [object.key, object]))
   const cutoff = new Date(
     new Date(manifest.generatedAt).getTime() - manifest.graceDays * 24 * 60 * 60 * 1000,
   )
@@ -113,11 +113,11 @@ async function applyManifest() {
     }
 
     if (
-      !remote
-      || remote.etag !== candidate.etag
-      || remote.size !== candidate.bytes
-      || remote.last_modified !== candidate.lastModified
-      || new Date(remote.last_modified) > cutoff
+      !remote ||
+      remote.etag !== candidate.etag ||
+      remote.size !== candidate.bytes ||
+      remote.last_modified !== candidate.lastModified ||
+      new Date(remote.last_modified) > cutoff
     ) {
       throw new Error(`R2 object changed since manifest creation: ${candidate.key}`)
     }
@@ -128,17 +128,14 @@ async function applyManifest() {
   let completed = 0
 
   await runConcurrent(candidates, 8, async (candidate) => {
-    await execFile(wrangler, [
-      'r2',
-      'object',
-      'delete',
-      `${config.bucket}/${candidate.key}`,
-      '--remote',
-      '--force',
-    ], {
-      cwd: root,
-      maxBuffer: 10 * 1024 * 1024,
-    })
+    await execFile(
+      wrangler,
+      ['r2', 'object', 'delete', `${config.bucket}/${candidate.key}`, '--remote', '--force'],
+      {
+        cwd: root,
+        maxBuffer: 10 * 1024 * 1024,
+      },
+    )
 
     completed += 1
 
@@ -153,19 +150,19 @@ async function applyManifest() {
 async function runConcurrent(items, concurrency, operation) {
   let nextIndex = 0
 
-  await Promise.all(Array.from({ length: concurrency }, async () => {
-    while (nextIndex < items.length) {
-      const index = nextIndex
-      nextIndex += 1
-      await operation(items[index], index)
-    }
-  }))
+  await Promise.all(
+    Array.from({ length: concurrency }, async () => {
+      while (nextIndex < items.length) {
+        const index = nextIndex
+        nextIndex += 1
+        await operation(items[index], index)
+      }
+    }),
+  )
 }
 
 function digestCandidates(candidates) {
-  return createHash('sha256')
-    .update(JSON.stringify(candidates))
-    .digest('hex')
+  return createHash('sha256').update(JSON.stringify(candidates)).digest('hex')
 }
 
 function formatBytes(bytes) {
@@ -207,8 +204,8 @@ function parseArguments(argv) {
     }
 
     throw new Error(
-      'Usage: gc-moment-assets.mjs [--dry-run] [--grace-days <days>] [--output <file>]'
-      + ' | --apply <manifest.json>',
+      'Usage: gc-moment-assets.mjs [--dry-run] [--grace-days <days>] [--output <file>]' +
+        ' | --apply <manifest.json>',
     )
   }
 

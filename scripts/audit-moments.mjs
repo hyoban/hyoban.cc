@@ -15,9 +15,7 @@ import {
 const execFile = promisify(execFileCallback)
 const root = fileURLToPath(new URL('../', import.meta.url))
 const contentRoot = join(root, 'src/content/moments')
-const config = JSON.parse(
-  await readFile(join(root, 'src/data/asset-config.json'), 'utf8'),
-)
+const config = JSON.parse(await readFile(join(root, 'src/data/asset-config.json'), 'utf8'))
 const options = parseArguments(process.argv.slice(2))
 const records = await readMomentRecords(contentRoot)
 const objects = getReferencedR2Objects(records)
@@ -39,7 +37,10 @@ for (const record of records) {
   const directFiles = new Set()
 
   for (const media of record.moment.media) {
-    assert.ok(!directFiles.has(media.file), `Duplicate media reference in ${record.id}: ${media.file}`)
+    assert.ok(
+      !directFiles.has(media.file),
+      `Duplicate media reference in ${record.id}: ${media.file}`,
+    )
     directFiles.add(media.file)
     validateAsset(record, media.file, media.type)
 
@@ -79,14 +80,14 @@ if (options.remote) {
 }
 
 console.log(
-  `Moment audit passed: ${records.length} document(s), ${objects.length} R2 object(s)`
-  + `${options.remote ? ', remote metadata verified' : ''}.`,
+  `Moment audit passed: ${records.length} document(s), ${objects.length} R2 object(s)` +
+    `${options.remote ? ', remote metadata verified' : ''}.`,
 )
 
 if (blankAltIds.length > 0) {
   console.warn(
-    `Accessibility warning: ${blankAltIds.length} visible media item(s) have empty alt text.`
-    + ' Existing entries remain valid; changed visible Moments must fix them.',
+    `Accessibility warning: ${blankAltIds.length} visible media item(s) have empty alt text.` +
+      ' Existing entries remain valid; changed visible Moments must fix them.',
   )
 }
 
@@ -115,15 +116,22 @@ function validateAsset(record, file, type) {
       const variantMetadata = record.assets[variant]
 
       assert.ok(variantMetadata, `Missing variant metadata: ${record.id}/${variant}`)
-      assert.equal(variantMetadata.variants, undefined, `Nested variants are not allowed: ${record.id}/${variant}`)
+      assert.equal(
+        variantMetadata.variants,
+        undefined,
+        `Nested variants are not allowed: ${record.id}/${variant}`,
+      )
       assert.match(variantMetadata.contentType, /^image\//)
       assert.ok(Number.isInteger(variantMetadata.width) && variantMetadata.width > 0)
       assert.ok(Number.isInteger(variantMetadata.height) && variantMetadata.height > 0)
-      assert.ok(variantMetadata.width < metadata.width, `Variant is not narrower than source: ${record.id}/${variant}`)
+      assert.ok(
+        variantMetadata.width < metadata.width,
+        `Variant is not narrower than source: ${record.id}/${variant}`,
+      )
       assert.ok(
         Math.abs(
-          variantMetadata.height
-          - Math.round(variantMetadata.width * metadata.height / metadata.width),
+          variantMetadata.height -
+            Math.round((variantMetadata.width * metadata.height) / metadata.width),
         ) <= 1,
         `Variant aspect ratio mismatch: ${record.id}/${variant}`,
       )
@@ -131,11 +139,26 @@ function validateAsset(record, file, type) {
     }
 
     assert.equal(new Set(metadata.variants ?? []).size, (metadata.variants ?? []).length)
-    assert.deepEqual(widths, [...widths].sort((first, second) => first - second))
+    assert.deepEqual(
+      widths,
+      [...widths].sort((first, second) => first - second),
+    )
   } else {
-    assert.equal(metadata.width, undefined, `Video metadata must not have width: ${record.id}/${file}`)
-    assert.equal(metadata.height, undefined, `Video metadata must not have height: ${record.id}/${file}`)
-    assert.equal(metadata.variants, undefined, `Video metadata must not have variants: ${record.id}/${file}`)
+    assert.equal(
+      metadata.width,
+      undefined,
+      `Video metadata must not have width: ${record.id}/${file}`,
+    )
+    assert.equal(
+      metadata.height,
+      undefined,
+      `Video metadata must not have height: ${record.id}/${file}`,
+    )
+    assert.equal(
+      metadata.variants,
+      undefined,
+      `Video metadata must not have variants: ${record.id}/${file}`,
+    )
   }
 }
 
@@ -143,54 +166,62 @@ async function auditRemoteObjects(items) {
   let nextIndex = 0
   let completed = 0
 
-  await Promise.all(Array.from({ length: 8 }, async () => {
-    while (nextIndex < items.length) {
-      const index = nextIndex
-      nextIndex += 1
-      const item = items[index]
-      const url = `${config.origin}/${item.key.split('/').map(encodeURIComponent).join('/')}`
-      const response = await headWithRetries(url)
+  await Promise.all(
+    Array.from({ length: 8 }, async () => {
+      while (nextIndex < items.length) {
+        const index = nextIndex
+        nextIndex += 1
+        const item = items[index]
+        const url = `${config.origin}/${item.key.split('/').map(encodeURIComponent).join('/')}`
+        const response = await headWithRetries(url)
 
-      assert.equal(response.status, 200, `Missing R2 object: ${item.key}`)
-      assert.equal(
-        Number.parseInt(response.headers.get('content-length') ?? '', 10),
-        item.metadata.bytes,
-        `R2 size mismatch: ${item.key}`,
-      )
-      assert.equal(
-        response.headers.get('content-type'),
-        item.metadata.contentType,
-        `R2 content type mismatch: ${item.key}`,
-      )
-      assert.equal(
-        response.headers.get('etag')?.replaceAll('"', ''),
-        item.metadata.etag,
-        `R2 ETag mismatch: ${item.key}`,
-      )
+        assert.equal(response.status, 200, `Missing R2 object: ${item.key}`)
+        assert.equal(
+          Number.parseInt(response.headers.get('content-length') ?? '', 10),
+          item.metadata.bytes,
+          `R2 size mismatch: ${item.key}`,
+        )
+        assert.equal(
+          response.headers.get('content-type'),
+          item.metadata.contentType,
+          `R2 content type mismatch: ${item.key}`,
+        )
+        assert.equal(
+          response.headers.get('etag')?.replaceAll('"', ''),
+          item.metadata.etag,
+          `R2 ETag mismatch: ${item.key}`,
+        )
 
-      completed += 1
+        completed += 1
 
-      if (completed % 100 === 0 || completed === items.length) {
-        console.log(`Audited ${completed}/${items.length} remote object(s).`)
+        if (completed % 100 === 0 || completed === items.length) {
+          console.log(`Audited ${completed}/${items.length} remote object(s).`)
+        }
       }
-    }
-  }))
+    }),
+  )
 }
 
 async function getChangedMomentIds(ref) {
-  const { stdout } = await execFile('git', [
-    'diff',
-    '--name-only',
-    '--diff-filter=AM',
-    `${ref}...HEAD`,
-    '--',
-    'src/content/moments/**/index.md',
-  ], { cwd: root })
+  const { stdout } = await execFile(
+    'git',
+    [
+      'diff',
+      '--name-only',
+      '--diff-filter=AM',
+      `${ref}...HEAD`,
+      '--',
+      'src/content/moments/**/index.md',
+    ],
+    { cwd: root },
+  )
 
   return new Set(
-    stdout.trim().split('\n')
+    stdout
+      .trim()
+      .split('\n')
       .filter(Boolean)
-      .map(file => file.replace(/^src\/content\/moments\//, '').replace(/\/index\.md$/, '')),
+      .map((file) => file.replace(/^src\/content\/moments\//, '').replace(/\/index\.md$/, '')),
   )
 }
 
@@ -213,7 +244,7 @@ async function headWithRetries(url) {
       lastError = error
 
       if (attempt < 5) {
-        await new Promise(resolve => setTimeout(resolve, 250 * 2 ** (attempt - 1)))
+        await new Promise((resolve) => setTimeout(resolve, 250 * 2 ** (attempt - 1)))
       }
     }
   }

@@ -2,15 +2,21 @@ import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 import { z } from 'zod'
 import { isLocationId } from '../data/locations.ts'
 
-const semanticImageFileSchema = z.string().trim().regex(
-  /^[a-z0-9]+(?:-[a-z0-9]+)*\.(?:avif|gif|jpeg|jpg|png|webp)$/,
-  'Use a safe kebab-case semantic image filename.',
-)
+const semanticImageFileSchema = z
+  .string()
+  .trim()
+  .regex(
+    /^[a-z0-9]+(?:-[a-z0-9]+)*\.(?:avif|gif|jpeg|jpg|png|webp)$/,
+    'Use a safe kebab-case semantic image filename.',
+  )
 
-const semanticVideoFileSchema = z.string().trim().regex(
-  /^[a-z0-9]+(?:-[a-z0-9]+)*\.(?:mov|mp4|webm)$/,
-  'Use a safe kebab-case semantic video filename.',
-)
+const semanticVideoFileSchema = z
+  .string()
+  .trim()
+  .regex(
+    /^[a-z0-9]+(?:-[a-z0-9]+)*\.(?:mov|mp4|webm)$/,
+    'Use a safe kebab-case semantic video filename.',
+  )
 
 const momentImageSchema = z.strictObject({
   alt: z.string(),
@@ -25,21 +31,18 @@ const momentVideoSchema = z.strictObject({
   type: z.literal('video'),
 })
 
-const momentMediaSchema = z.discriminatedUnion('type', [
-  momentImageSchema,
-  momentVideoSchema,
-])
+const momentMediaSchema = z.discriminatedUnion('type', [momentImageSchema, momentVideoSchema])
 
 export const momentFrontmatterSchema = z.strictObject({
   hidden: z.boolean().default(false),
-  location: z.string().refine(isLocationId, {
-    message: 'Unknown calendar map location id.',
-  }).optional(),
+  location: z
+    .string()
+    .refine(isLocationId, {
+      message: 'Unknown calendar map location id.',
+    })
+    .optional(),
   media: z.array(momentMediaSchema).default([]),
-  occurredAt: z.union([
-    z.iso.date(),
-    z.iso.datetime({ offset: true }),
-  ]),
+  occurredAt: z.union([z.iso.date(), z.iso.datetime({ offset: true })]),
 })
 
 export type MomentFrontmatter = z.infer<typeof momentFrontmatterSchema>
@@ -79,11 +82,7 @@ export function serializeMomentDocument(moment: MomentDocumentInput) {
 
   momentFrontmatterSchema.parse(frontmatter)
 
-  const lines = [
-    '---',
-    stringifyMomentFrontmatter(frontmatter),
-    '---',
-  ]
+  const lines = ['---', stringifyMomentFrontmatter(frontmatter), '---']
 
   if (moment.text) {
     lines.push('', moment.text.trim())
@@ -96,8 +95,5 @@ export function serializeMomentDocument(moment: MomentDocumentInput) {
 function stringifyMomentFrontmatter(frontmatter: object) {
   return stringifyYaml(frontmatter, { lineWidth: 0 })
     .trimEnd()
-    .replace(
-      /^occurredAt: (?!")(.+)$/m,
-      'occurredAt: "$1"',
-    )
+    .replace(/^occurredAt: (?!")(.+)$/m, 'occurredAt: "$1"')
 }

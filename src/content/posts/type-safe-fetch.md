@@ -2,15 +2,15 @@
 title: 如何让 fetch 变得类型安全
 link: type-safe-fetch
 description: 总所周知，发网络请求传递参数和获取返回值时只能凭感觉，但是我们可以做一点类型体操来解决这个问题
-pubDate: "2023-08-09T04:56:48.915Z"
+pubDate: '2023-08-09T04:56:48.915Z'
 ---
 
 ## 前言
 
 ```ts
 fetch('https://jsonplaceholder.typicode.com/todos/1')
-  .then(response => response.json())
-  .then(json => console.log(json))
+  .then((response) => response.json())
+  .then((json) => console.log(json))
 ```
 
 当你直接使用如上的代码来发起网络请求时，你会发现你的 IDE 无法给你提供任何关于 `json` 的类型提示。
@@ -82,9 +82,9 @@ export * as Add from './add'
 ```ts
 import * as routesWithoutPrefixObj from './interface/index'
 
-const routesWithoutPrefix = Object.values(
-  routesWithoutPrefixObj
-) as ValueOfObjectArray<typeof routesWithoutPrefixObj>
+const routesWithoutPrefix = Object.values(routesWithoutPrefixObj) as ValueOfObjectArray<
+  typeof routesWithoutPrefixObj
+>
 ```
 
 ## 定义公共类型
@@ -93,23 +93,23 @@ const routesWithoutPrefix = Object.values(
 我们并不是接口直接返回数据，而是返回一个包含了错误码和数据的对象。
 
 ```ts
-const routesWithoutPrefix = Object.values(
-  routesWithoutPrefixObj
-) as ValueOfObjectArray<typeof routesWithoutPrefixObj>
+const routesWithoutPrefix = Object.values(routesWithoutPrefixObj) as ValueOfObjectArray<
+  typeof routesWithoutPrefixObj
+>
 
 export const prefix = '/api'
 export type Prefix = typeof prefix
 export const unknownError = 'UNKNOWN_ERROR' as const
 
-export type OutputType<T, Err extends readonly string[]>
-  = | {
-    err: ArrayToUnion<Err> | typeof unknownError
-    data: null
-  }
+export type OutputType<T, Err extends readonly string[]> =
   | {
-    err: null
-    data: T
-  }
+      err: ArrayToUnion<Err> | typeof unknownError
+      data: null
+    }
+  | {
+      err: null
+      data: T
+    }
 ```
 
 计算出带前缀的实际路由
@@ -139,21 +139,19 @@ interface RouteItem {
 
 type Helper<T> = T extends RouteItem
   ? Record<
-    T['path'],
-    {
-      input: z.infer<T['input']>
-      data: z.infer<T['data']>
-      errCode: T['errCode']
-      output: OutputType<z.infer<T['data']>, T['errCode']>
-    }
-  >
+      T['path'],
+      {
+        input: z.infer<T['input']>
+        data: z.infer<T['data']>
+        errCode: T['errCode']
+        output: OutputType<z.infer<T['data']>, T['errCode']>
+      }
+    >
   : never
 
 export type DistributedHelper<T> = T extends RouteItem ? Helper<T> : never
 
-export type Route = UnionToIntersection<
-  DistributedHelper<ArrayToUnion<typeof routes>>
->
+export type Route = UnionToIntersection<DistributedHelper<ArrayToUnion<typeof routes>>>
 ```
 
 如此我们就能得到最终包含全部路由信息的类型 `Route`，这个类型的大致结构如下：
@@ -194,8 +192,7 @@ export async function myFetch<Path extends keyof Route>(path: Path, input: Route
       throw new CustomError(data.err)
     }
     return data.data as Route[Path]['data']
-  }
-  catch (err) {
+  } catch (err) {
     if (err instanceof CustomError) {
       throw err
     }
@@ -238,7 +235,7 @@ nice，让我们来看看使用效果吧。
 ```ts
 export type ValueOfObjectArray<
   T,
-  RestKey extends unknown[] = UnionToTuple<keyof T>
+  RestKey extends unknown[] = UnionToTuple<keyof T>,
 > = RestKey extends []
   ? []
   : RestKey extends [infer First, ...infer Rest]
@@ -248,11 +245,8 @@ export type ValueOfObjectArray<
     : never
 
 // https://github.com/type-challenges/type-challenges/issues/2835
-type LastUnion<T> = UnionToIntersection<
-  T extends any ? (x: T) => any : never
-> extends (x: infer L) => any
-  ? L
-  : never
+type LastUnion<T> =
+  UnionToIntersection<T extends any ? (x: T) => any : never> extends (x: infer L) => any ? L : never
 
 type UnionToTuple<T, Last = LastUnion<T>> = [T] extends [never]
   ? []
@@ -277,9 +271,9 @@ export type DistributedHelper<T> = T extends RouteItem ? Helper<T> : never
 
 export type ArrayToUnion<T extends readonly any[]> = T[number]
 
-export type UnionToIntersection<U> = (
-  U extends any ? (k: U) => void : never
-) extends (k: infer I) => void
+export type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (
+  k: infer I,
+) => void
   ? I
   : never
 ```
