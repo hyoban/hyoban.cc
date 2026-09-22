@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-25T10:25:48.370Z",
+  "generatedAt": "2026-09-22T06:01:50.643Z",
   "language": "zh-CN",
   "provider": "TMDB",
   "items": [
@@ -19763,6 +19763,342 @@
               "popularity": 0.2908,
               "profile_path": "/bvzexQOEDJf949gQfI5TO6AZ3wK.jpg",
               "credit_id": "694aef41f159144b35fb1bf3",
+              "department": "Production",
+              "job": "Producer"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "tv",
+      "tmdbId": 222976,
+      "data": {
+        "adult": false,
+        "backdrop_path": "/5BikG7NYJep3O0kQoeJjZGMcADz.jpg",
+        "created_by": [
+          {
+            "id": 1050610,
+            "credit_id": "64bc7412ac617c01202d019a",
+            "name": "冲田修一",
+            "original_name": "沖田修一",
+            "gender": 2,
+            "profile_path": "/zV0ZudWCBEZgnkhXPohNLciB1wW.jpg"
+          }
+        ],
+        "episode_run_time": [50],
+        "first_air_date": "2023-05-28",
+        "genres": [
+          {
+            "id": 18,
+            "name": "剧情"
+          }
+        ],
+        "homepage": "https://www.wowow.co.jp/drama/original/the-0.5/",
+        "id": 222976,
+        "in_production": false,
+        "languages": ["ja"],
+        "last_air_date": "2023-06-25",
+        "last_episode_to_air": {
+          "id": 4487830,
+          "name": "工作",
+          "overview": "修目睹了邻家的骚动，充满了反省自己的想法。被惠麻要求进行游戏对战的雅治，在被惠麻出乎意料的话语所动摇的同时，也建立起了新的关系。此外，前往托儿所迎接莲的雅治，对着莲的眼睛说出了某个决心... ..。就在此时，修邀请雅治，两人一起开车到青梅的酒窖，展开了一段奇妙的旅程。2.5围绕着家庭住宅的立花家的故事，现在迎来了大团圆!",
+          "vote_average": 7,
+          "vote_count": 1,
+          "air_date": "2023-06-25",
+          "episode_number": 5,
+          "episode_type": "standard",
+          "production_code": "",
+          "runtime": 55,
+          "season_number": 1,
+          "show_id": 222976,
+          "still_path": "/njiWfUondDlyxvvjWonD3Co8oDz.jpg"
+        },
+        "name": "0.5的男人",
+        "next_episode_to_air": null,
+        "networks": [
+          {
+            "id": 172,
+            "logo_path": "/dCN47YS5lugkwts5ellpW51cBzL.png",
+            "name": "WOWOW Prime",
+            "origin_country": "JP"
+          }
+        ],
+        "number_of_episodes": 5,
+        "number_of_seasons": 1,
+        "origin_country": ["JP"],
+        "original_language": "ja",
+        "original_name": "0.5の男",
+        "overview": "立花一家因自家房屋老旧而决定改建，女儿一家以此为借机，决定搬回跟父母同住，因此要改建为“2世代住宅”，但是40岁茧居族儿子的居住空间成了问题所在。经过房屋制造商推销员的劝说后，决定朝着以建设“2.5世代住宅”的方向改建。\n\n40岁的雅治自某个时期开始茧居在家，每日玩着第五人格、吃着妈妈做的饭菜、过着自由自在的生活。虽然在游戏世界是令人崇拜的存在，但是在现实生活中，因家中的变化，作为“0.5”的存在，越来越没有存在位置，被妹妹说“有空就帮忙做家事”、想跟侄女亲近也被嫌弃“恶心”。然而与此同时，因生活环境被迫改变，雅治慢慢走到外面的世界，恢复与人交流，找到新的自我。",
+        "popularity": 3.2444,
+        "poster_path": "/zv1D98hMWVI3xYLMS3JV9D8hEQQ.jpg",
+        "production_companies": [
+          {
+            "id": 88543,
+            "logo_path": null,
+            "name": "CAL",
+            "origin_country": "JP"
+          },
+          {
+            "id": 157807,
+            "logo_path": "/tyrJOOVAUIxQEJzjP1PhP2H5zFi.png",
+            "name": "WOWOW",
+            "origin_country": "JP"
+          }
+        ],
+        "production_countries": [
+          {
+            "iso_3166_1": "JP",
+            "name": "Japan"
+          }
+        ],
+        "seasons": [
+          {
+            "air_date": "2023-05-28",
+            "episode_count": 5,
+            "id": 333955,
+            "name": "第 1 季",
+            "overview": "立花一家因自家房屋老旧而决定改建，女儿一家以此为借机，决定搬回跟父母同住，因此要改建为“2世代住宅”，但是40岁茧居族儿子的居住空间成了问题所在。经过房屋制造商推销员的劝说后，决定朝着以建设“2.5世代住宅”的方向改建。\n\n40岁的雅治自某个时期开始茧居在家，每日玩着第五人格、吃着妈妈做的饭菜、过着自由自在的生活。虽然在游戏世界是令人崇拜的存在，但是在现实生活中，因家中的变化，作为“0.5”的存在，越来越没有存在位置，被妹妹说“有空就帮忙做家事”、想跟侄女亲近也被嫌弃“恶心”。然而与此同时，因生活环境被迫改变，雅治慢慢走到外面的世界，恢复与人交流，找到新的自我。",
+            "poster_path": null,
+            "season_number": 1,
+            "vote_average": 6.5
+          }
+        ],
+        "softcore": false,
+        "spoken_languages": [
+          {
+            "english_name": "Japanese",
+            "iso_639_1": "ja",
+            "name": "日本語"
+          }
+        ],
+        "status": "Ended",
+        "tagline": "0.5的男人",
+        "type": "Scripted",
+        "vote_average": 8.25,
+        "vote_count": 16,
+        "credits": {
+          "cast": [
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 72932,
+              "known_for_department": "Acting",
+              "name": "松田龙平",
+              "original_name": "松田龍平",
+              "popularity": 4.9026,
+              "profile_path": "/bRjLZSINa4n10JOdkPwNVdv4JfR.jpg",
+              "character": "Tachibana Masaharu",
+              "credit_id": "647668b300508a0116d4e60e",
+              "order": 0
+            },
+            {
+              "adult": false,
+              "gender": 1,
+              "id": 1030277,
+              "known_for_department": "Acting",
+              "name": "臼田麻美",
+              "original_name": "臼田あさ美",
+              "popularity": 1.9551,
+              "profile_path": "/ycZupRv1wPn7bKaB0mYEKOpakyw.jpg",
+              "character": "Saori",
+              "credit_id": "647668f112c60400a7b2d262",
+              "order": 1
+            },
+            {
+              "adult": false,
+              "gender": 1,
+              "id": 1602397,
+              "known_for_department": "Acting",
+              "name": "白鸟玉季",
+              "original_name": "白鳥玉季",
+              "popularity": 1.2807,
+              "profile_path": "/ujNj6iBqgFUoW4Jsmh9Du8nZHAv.jpg",
+              "character": "Ema",
+              "credit_id": "6476694a89d97f00f8fd81e6",
+              "order": 2
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 85005,
+              "known_for_department": "Acting",
+              "name": "井之胁海",
+              "original_name": "井之脇海",
+              "popularity": 1.0015,
+              "profile_path": "/3g9eION4PljkXjlEgoyxVWv8SWx.jpg",
+              "character": "Kawamura",
+              "credit_id": "64766990d3719700dcfecbc4",
+              "order": 3
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 1320679,
+              "known_for_department": "Acting",
+              "name": "青木柚",
+              "original_name": "青木柚",
+              "popularity": 1.1504,
+              "profile_path": "/xZdmoDei5fxBruGtpy9I01XV4aF.jpg",
+              "character": "Tamamushi",
+              "credit_id": "64766a43255dba00c62face9",
+              "order": 4
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 1562052,
+              "known_for_department": "Acting",
+              "name": "筱原笃",
+              "original_name": "篠原篤",
+              "popularity": 0.8275,
+              "profile_path": "/dREBtpeQfEOcu5Inj1ZlwxBuyro.jpg",
+              "character": "Kenta",
+              "credit_id": "64766ab200508a00dcc43d1e",
+              "order": 5
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 1060298,
+              "known_for_department": "Acting",
+              "name": "木场胜己",
+              "original_name": "木場勝己",
+              "popularity": 0.7344,
+              "profile_path": "/jXeuuLA2fcFhHPXCVhMCpz1e7PX.jpg",
+              "character": "Tachibana Osamu",
+              "credit_id": "64766b0d12c604010017ae37",
+              "order": 6
+            },
+            {
+              "adult": false,
+              "gender": 1,
+              "id": 1741323,
+              "known_for_department": "Acting",
+              "name": "西野七濑",
+              "original_name": "西野七瀬",
+              "popularity": 2.2288,
+              "profile_path": "/8Y3OFMBXPmbfn94QSrSEN64lE0F.jpg",
+              "character": "Hitomi",
+              "credit_id": "64766b5589d97f00a58eed6f",
+              "order": 7
+            },
+            {
+              "adult": false,
+              "gender": 1,
+              "id": 119244,
+              "known_for_department": "Acting",
+              "name": "风吹纯",
+              "original_name": "風吹ジュン",
+              "popularity": 2.0049,
+              "profile_path": "/uHF9NdKrG1bN7GwZB7PI21Rkdv8.jpg",
+              "character": "Tachibana Keiko",
+              "credit_id": "64766b8f89d97f01337b7240",
+              "order": 8
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 4089360,
+              "known_for_department": "Acting",
+              "name": "Kato Yahiro",
+              "original_name": "Kato Yahiro",
+              "popularity": 0.2525,
+              "profile_path": "/d7sA43Sg4oZWJmTADeH68HSiiwh.jpg",
+              "character": "Shioya Ren",
+              "credit_id": "64766c6912c60400a7b2d36e",
+              "order": 9
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 2109323,
+              "known_for_department": "Acting",
+              "name": "三河悠冴",
+              "original_name": "三河悠冴",
+              "popularity": 0.8144,
+              "profile_path": "/r4uBE8o7pEaztOSqeH0J6sIMzj3.jpg",
+              "character": "Nakamura (twin) Brothers",
+              "credit_id": "649e2d968289a000c582410b",
+              "order": 10
+            }
+          ],
+          "crew": [
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 1050610,
+              "known_for_department": "Directing",
+              "name": "冲田修一",
+              "original_name": "沖田修一",
+              "popularity": 0.7979,
+              "profile_path": "/zV0ZudWCBEZgnkhXPohNLciB1wW.jpg",
+              "credit_id": "64766766255dba00e74b42c0",
+              "department": "Directing",
+              "job": "Director"
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 1050610,
+              "known_for_department": "Directing",
+              "name": "冲田修一",
+              "original_name": "沖田修一",
+              "popularity": 0.7979,
+              "profile_path": "/zV0ZudWCBEZgnkhXPohNLciB1wW.jpg",
+              "credit_id": "647667711f98d102823357a8",
+              "department": "Writing",
+              "job": "Writer"
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 2085739,
+              "known_for_department": "Directing",
+              "name": "玉泽恭平",
+              "original_name": "玉澤恭平",
+              "popularity": 0.5118,
+              "profile_path": null,
+              "credit_id": "64bc74a9ac617c013da13c03",
+              "department": "Directing",
+              "job": "Director"
+            },
+            {
+              "adult": false,
+              "gender": 2,
+              "id": 1777200,
+              "known_for_department": "Sound",
+              "name": "池永正二",
+              "original_name": "池永正二",
+              "popularity": 0.3147,
+              "profile_path": null,
+              "credit_id": "67c1c99f591b238d2635a97f",
+              "department": "Sound",
+              "job": "Music"
+            },
+            {
+              "adult": false,
+              "gender": 0,
+              "id": 1901698,
+              "known_for_department": "Production",
+              "name": "石原仁美",
+              "original_name": "石原仁美",
+              "popularity": 0.4127,
+              "profile_path": null,
+              "credit_id": "696e0dec02dfc384f18fd59b",
+              "department": "Production",
+              "job": "Producer"
+            },
+            {
+              "adult": false,
+              "gender": 0,
+              "id": 4692507,
+              "known_for_department": "Production",
+              "name": "植田春菜",
+              "original_name": "植田春菜",
+              "popularity": 0.4794,
+              "profile_path": null,
+              "credit_id": "698c39affd5698afaf7be6ce",
               "department": "Production",
               "job": "Producer"
             }
