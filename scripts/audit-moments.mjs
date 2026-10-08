@@ -60,8 +60,8 @@ for (const record of records) {
   }
 
   assert.deepEqual(
-    Object.keys(record.assets).sort(),
-    [...getReferencedAssetFiles(record)].sort(),
+    new Set(Object.keys(record.assets)),
+    getReferencedAssetFiles(record),
     `Unreferenced or missing asset metadata in ${record.id}`,
   )
 }

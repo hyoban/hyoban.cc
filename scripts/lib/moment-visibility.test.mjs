@@ -4,8 +4,8 @@ import { mkdtemp, readFile, readdir, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import test from 'node:test'
 import { promisify } from 'node:util'
+import { test } from 'vite-plus/test'
 
 import { parseMomentDocument } from '../../src/moments/content.ts'
 

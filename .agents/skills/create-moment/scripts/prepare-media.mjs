@@ -3,7 +3,7 @@ import { execFile as execFileCallback } from 'node:child_process'
 import { access, mkdir, mkdtemp, readFile, rename, rm, stat, writeFile } from 'node:fs/promises'
 import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
-import { basename, dirname, extname, join, relative, resolve, sep } from 'node:path'
+import { basename, dirname, join, relative, resolve, sep } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { promisify } from 'node:util'
 

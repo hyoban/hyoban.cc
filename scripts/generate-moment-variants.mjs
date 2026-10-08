@@ -186,7 +186,7 @@ async function uploadMissingWithRetries(initialMissing) {
           maxBuffer: 20 * 1024 * 1024,
         },
       )
-    } catch (error) {
+    } catch {
       console.warn(`Bulk upload attempt ${attempt} was interrupted; checking remaining objects.`)
     }
 
