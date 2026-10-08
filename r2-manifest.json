@@ -3,10 +3,10 @@
   "accountId": "e68c7dce80df20ff5802b9ac36f1eab6",
   "bucket": "blog-images",
   "origin": "https://image.hyoban.cc",
-  "createdAt": "2026-08-21T02:28:35.106Z",
-  "inventorySha256": "2093d2f4956d6e83474c3d340294ae2979e923906cafc92ae005003811cbf125",
-  "objectCount": 2011,
-  "totalBytes": 444638378,
+  "createdAt": "2026-10-08T00:11:03.617Z",
+  "inventorySha256": "7456af012bdb3877bb09809f9f8ccb80fc35ebde50f61b19c1236c49bc46f04a",
+  "objectCount": 2359,
+  "totalBytes": 519454538,
   "objects": [
     {
       "key": "moments/2023/04/15-01-preview-dialog-for-my-blog-post-with-intercepting-amp/preview-dialog-for-my-blog-post-with-intercepting-amp-video-poster.png",
@@ -15934,6 +15934,2790 @@
       "contentType": "image/webp",
       "etag": "b9e0fa6a19455b96422d005c8ea786d0",
       "lastModified": "2026-08-21T02:26:22.363Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/08/29-01-maanshan-metro/maanshan-metro-2-480w.webp",
+      "bytes": 36210,
+      "contentType": "image/webp",
+      "etag": "b2a8164076bdfa8dc2cfd77e7bff9d90",
+      "lastModified": "2026-10-07T23:53:13.754Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/08/29-01-maanshan-metro/maanshan-metro-2-960w.webp",
+      "bytes": 135418,
+      "contentType": "image/webp",
+      "etag": "8b794e61b144be30c45e8aeceb20a8f8",
+      "lastModified": "2026-10-07T23:53:19.135Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/08/29-01-maanshan-metro/maanshan-metro-2.webp",
+      "bytes": 492384,
+      "contentType": "image/webp",
+      "etag": "e2fea5abaeec8561ff2257db7e83799b",
+      "lastModified": "2026-10-07T23:53:26.381Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/08/29-01-maanshan-metro/maanshan-metro-3-480w.webp",
+      "bytes": 29550,
+      "contentType": "image/webp",
+      "etag": "91cbaa26763dabd8cd7639e80bea1d89",
+      "lastModified": "2026-10-07T23:53:31.347Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/08/29-01-maanshan-metro/maanshan-metro-3-960w.webp",
+      "bytes": 94776,
+      "contentType": "image/webp",
+      "etag": "00c8233453a69b97f946457b83e46915",
+      "lastModified": "2026-10-07T23:53:37.825Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/08/29-01-maanshan-metro/maanshan-metro-3.webp",
+      "bytes": 354902,
+      "contentType": "image/webp",
+      "etag": "0f40675a341b34d78fa300064d458086",
+      "lastModified": "2026-10-07T23:53:43.963Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/08/29-01-maanshan-metro/maanshan-metro-4-480w.webp",
+      "bytes": 62776,
+      "contentType": "image/webp",
+      "etag": "abedc986c658861d0d020a25b90c0a31",
+      "lastModified": "2026-10-07T23:53:47.801Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/08/29-01-maanshan-metro/maanshan-metro-4-960w.webp",
+      "bytes": 186160,
+      "contentType": "image/webp",
+      "etag": "3d6d8865e6df6385a4ff517d2e9e51aa",
+      "lastModified": "2026-10-07T23:53:52.768Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/08/29-01-maanshan-metro/maanshan-metro-4.webp",
+      "bytes": 407626,
+      "contentType": "image/webp",
+      "etag": "f4898e1beb80eb3b1fd9ee80569f1a4b",
+      "lastModified": "2026-10-07T23:53:59.832Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/08/29-01-maanshan-metro/maanshan-metro-480w.webp",
+      "bytes": 25486,
+      "contentType": "image/webp",
+      "etag": "39983c854ab81ac368a4385d00fe9f38",
+      "lastModified": "2026-10-07T23:54:05.868Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/08/29-01-maanshan-metro/maanshan-metro-5-480w.webp",
+      "bytes": 45616,
+      "contentType": "image/webp",
+      "etag": "99e429f64fe10dda2ebbcb30ccb8053d",
+      "lastModified": "2026-10-07T23:54:12.944Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/08/29-01-maanshan-metro/maanshan-metro-5-960w.webp",
+      "bytes": 162768,
+      "contentType": "image/webp",
+      "etag": "fbdec500e0c3622285146a3bec1ba0ff",
+      "lastModified": "2026-10-07T23:54:18.267Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/08/29-01-maanshan-metro/maanshan-metro-5.webp",
+      "bytes": 605780,
+      "contentType": "image/webp",
+      "etag": "68efdadfdbe71c2d09146ebd40477d4c",
+      "lastModified": "2026-10-07T23:54:25.282Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/08/29-01-maanshan-metro/maanshan-metro-6-480w.webp",
+      "bytes": 30988,
+      "contentType": "image/webp",
+      "etag": "1c0361c6209963210920590a2e818841",
+      "lastModified": "2026-10-07T23:54:30.768Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/08/29-01-maanshan-metro/maanshan-metro-6-960w.webp",
+      "bytes": 127094,
+      "contentType": "image/webp",
+      "etag": "eef5da869d773b9ed785ddc25112e2a8",
+      "lastModified": "2026-10-07T23:54:36.255Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/08/29-01-maanshan-metro/maanshan-metro-6.webp",
+      "bytes": 470074,
+      "contentType": "image/webp",
+      "etag": "d866db1deeeba4aa5b21a47f5fcceb61",
+      "lastModified": "2026-10-07T23:54:41.631Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/08/29-01-maanshan-metro/maanshan-metro-960w.webp",
+      "bytes": 89078,
+      "contentType": "image/webp",
+      "etag": "42fad4a0c40b14e29f6e9fe32cf824cf",
+      "lastModified": "2026-10-07T23:54:46.480Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/08/29-01-maanshan-metro/maanshan-metro-video-2-poster.webp",
+      "bytes": 69080,
+      "contentType": "image/webp",
+      "etag": "b2d94dd28c33e0c066d6f6769181b0dd",
+      "lastModified": "2026-10-07T23:54:51.448Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/08/29-01-maanshan-metro/maanshan-metro-video-2.mp4",
+      "bytes": 8701323,
+      "contentType": "video/mp4",
+      "etag": "dfc4c8949d47756c60271f10e94443f4",
+      "lastModified": "2026-10-07T23:55:29.193Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/08/29-01-maanshan-metro/maanshan-metro-video-3-poster.webp",
+      "bytes": 43272,
+      "contentType": "image/webp",
+      "etag": "984b23a5a444cf8edaa42f2317444887",
+      "lastModified": "2026-10-07T23:55:35.367Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/08/29-01-maanshan-metro/maanshan-metro-video-3.mp4",
+      "bytes": 1836585,
+      "contentType": "video/mp4",
+      "etag": "2af2575efc27592939d45b071b8537c4",
+      "lastModified": "2026-10-07T23:55:46.507Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/08/29-01-maanshan-metro/maanshan-metro-video-poster.webp",
+      "bytes": 64884,
+      "contentType": "image/webp",
+      "etag": "56dff9abe5cc9ecded1dcea1b6622dc7",
+      "lastModified": "2026-10-07T23:55:51.372Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/08/29-01-maanshan-metro/maanshan-metro-video.mp4",
+      "bytes": 5800266,
+      "contentType": "video/mp4",
+      "etag": "a376708c3270ba95aa70f66476013c8d",
+      "lastModified": "2026-10-07T23:56:18.970Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/08/29-01-maanshan-metro/maanshan-metro.webp",
+      "bytes": 357608,
+      "contentType": "image/webp",
+      "etag": "d03985028a695d8aae7821780cef840e",
+      "lastModified": "2026-10-07T23:56:26.186Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/08/29-02-maanshan-walk-and-food/maanshan-walk-and-food-2-480w.webp",
+      "bytes": 63792,
+      "contentType": "image/webp",
+      "etag": "5db7b7c986963ff3644e0aef9171a7cf",
+      "lastModified": "2026-10-07T23:53:08.453Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/08/29-02-maanshan-walk-and-food/maanshan-walk-and-food-2.webp",
+      "bytes": 224670,
+      "contentType": "image/webp",
+      "etag": "c9d28fcc13d46f76349fa79d1efd4ea3",
+      "lastModified": "2026-10-07T23:53:13.213Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/08/29-02-maanshan-walk-and-food/maanshan-walk-and-food-3-480w.webp",
+      "bytes": 23830,
+      "contentType": "image/webp",
+      "etag": "0ff8b65e6d89b8fda1b3a22156183a96",
+      "lastModified": "2026-10-07T23:53:18.194Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/08/29-02-maanshan-walk-and-food/maanshan-walk-and-food-3.webp",
+      "bytes": 55394,
+      "contentType": "image/webp",
+      "etag": "bb8401a52b39b7f130ab89c95322a7c3",
+      "lastModified": "2026-10-07T23:53:23.208Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/08/29-02-maanshan-walk-and-food/maanshan-walk-and-food-4-480w.webp",
+      "bytes": 98526,
+      "contentType": "image/webp",
+      "etag": "d17f60acf1c2b15eb70e588d2643455d",
+      "lastModified": "2026-10-07T23:53:28.565Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/08/29-02-maanshan-walk-and-food/maanshan-walk-and-food-4.webp",
+      "bytes": 368836,
+      "contentType": "image/webp",
+      "etag": "99357cf7054fb1c67d4cfe1f45f85556",
+      "lastModified": "2026-10-07T23:53:35.251Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/08/29-02-maanshan-walk-and-food/maanshan-walk-and-food-480w.webp",
+      "bytes": 29844,
+      "contentType": "image/webp",
+      "etag": "a92fc7d7c2784d8ac3c77f657b995ec2",
+      "lastModified": "2026-10-07T23:53:40.214Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/08/29-02-maanshan-walk-and-food/maanshan-walk-and-food-5-480w.webp",
+      "bytes": 56620,
+      "contentType": "image/webp",
+      "etag": "0e7a04ab1a411e65d97f5797bc556fdd",
+      "lastModified": "2026-10-07T23:53:44.408Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/08/29-02-maanshan-walk-and-food/maanshan-walk-and-food-5-960w.webp",
+      "bytes": 190788,
+      "contentType": "image/webp",
+      "etag": "7d75c09d98224454f850bcd5257e4a5b",
+      "lastModified": "2026-10-07T23:53:49.884Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/08/29-02-maanshan-walk-and-food/maanshan-walk-and-food-5.webp",
+      "bytes": 369538,
+      "contentType": "image/webp",
+      "etag": "9967797769b0cc8f9027ea423d78cc3e",
+      "lastModified": "2026-10-07T23:53:55.891Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/08/29-02-maanshan-walk-and-food/maanshan-walk-and-food-6-480w.webp",
+      "bytes": 25558,
+      "contentType": "image/webp",
+      "etag": "3fa17bb9fb9f7d67f46f0f3cae99a731",
+      "lastModified": "2026-10-07T23:53:59.762Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/08/29-02-maanshan-walk-and-food/maanshan-walk-and-food-6-960w.webp",
+      "bytes": 78414,
+      "contentType": "image/webp",
+      "etag": "781eb0fddda4b6af9ea5762b25172f93",
+      "lastModified": "2026-10-07T23:54:05.038Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/08/29-02-maanshan-walk-and-food/maanshan-walk-and-food-6.webp",
+      "bytes": 167382,
+      "contentType": "image/webp",
+      "etag": "512f09963b6dc6fcf2eb57545937da87",
+      "lastModified": "2026-10-07T23:54:10.116Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/08/29-02-maanshan-walk-and-food/maanshan-walk-and-food-7-480w.webp",
+      "bytes": 108204,
+      "contentType": "image/webp",
+      "etag": "556a85a385e6dee239fb59b800c12fb1",
+      "lastModified": "2026-10-07T23:54:16.124Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/08/29-02-maanshan-walk-and-food/maanshan-walk-and-food-7.webp",
+      "bytes": 423522,
+      "contentType": "image/webp",
+      "etag": "2703a2cffab2730edb1b4564c21c9ed2",
+      "lastModified": "2026-10-07T23:54:21.186Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/08/29-02-maanshan-walk-and-food/maanshan-walk-and-food-8-480w.webp",
+      "bytes": 91220,
+      "contentType": "image/webp",
+      "etag": "195a25f38e2598f3a624aee9d97f0647",
+      "lastModified": "2026-10-07T23:54:25.839Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/08/29-02-maanshan-walk-and-food/maanshan-walk-and-food-8.webp",
+      "bytes": 364816,
+      "contentType": "image/webp",
+      "etag": "5e5e6a8e07622823d66faf77eae97d57",
+      "lastModified": "2026-10-07T23:54:31.667Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/08/29-02-maanshan-walk-and-food/maanshan-walk-and-food-9-480w.webp",
+      "bytes": 27208,
+      "contentType": "image/webp",
+      "etag": "d281fac0a8b20aa72d3065f6036367d8",
+      "lastModified": "2026-10-07T23:54:35.455Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/08/29-02-maanshan-walk-and-food/maanshan-walk-and-food-9.webp",
+      "bytes": 78856,
+      "contentType": "image/webp",
+      "etag": "2214896dff37e9ccaf18dde0f5ab8bd8",
+      "lastModified": "2026-10-07T23:54:39.371Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/08/29-02-maanshan-walk-and-food/maanshan-walk-and-food-960w.webp",
+      "bytes": 83772,
+      "contentType": "image/webp",
+      "etag": "3ced147cb821d4d5d35c7c36fcbbed15",
+      "lastModified": "2026-10-07T23:54:44.355Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/08/29-02-maanshan-walk-and-food/maanshan-walk-and-food.webp",
+      "bytes": 161486,
+      "contentType": "image/webp",
+      "etag": "cd8572c8d54220e95f03bfde6ac1753e",
+      "lastModified": "2026-10-07T23:54:50.174Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/06-01-weekend-food-queues/weekend-food-queues-2-480w.webp",
+      "bytes": 12592,
+      "contentType": "image/webp",
+      "etag": "8ced3a18f6abcef54dceeee7cbaeee7e",
+      "lastModified": "2026-10-07T23:53:07.227Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/06-01-weekend-food-queues/weekend-food-queues-2-960w.webp",
+      "bytes": 48574,
+      "contentType": "image/webp",
+      "etag": "05d396840d65fc44677e3e7bf15f0c98",
+      "lastModified": "2026-10-07T23:53:12.474Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/06-01-weekend-food-queues/weekend-food-queues-2.webp",
+      "bytes": 189382,
+      "contentType": "image/webp",
+      "etag": "920dd0dda2cfecd7a0bf1e50c701b2b6",
+      "lastModified": "2026-10-07T23:53:18.669Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/06-01-weekend-food-queues/weekend-food-queues-3-480w.webp",
+      "bytes": 17882,
+      "contentType": "image/webp",
+      "etag": "86c6ef9068ae2828c31787091128ace7",
+      "lastModified": "2026-10-07T23:53:23.992Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/06-01-weekend-food-queues/weekend-food-queues-3-960w.webp",
+      "bytes": 42614,
+      "contentType": "image/webp",
+      "etag": "f6b6bf48f9f08c048d6313536de3fdcd",
+      "lastModified": "2026-10-07T23:53:29.333Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/06-01-weekend-food-queues/weekend-food-queues-3.webp",
+      "bytes": 86682,
+      "contentType": "image/webp",
+      "etag": "fc179b8e6852791e1151e3adaa1f1f96",
+      "lastModified": "2026-10-07T23:53:34.793Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/06-01-weekend-food-queues/weekend-food-queues-4-480w.webp",
+      "bytes": 48924,
+      "contentType": "image/webp",
+      "etag": "49e72b668d0879ed4ed6e58a535690e9",
+      "lastModified": "2026-10-07T23:53:39.898Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/06-01-weekend-food-queues/weekend-food-queues-4-960w.webp",
+      "bytes": 133354,
+      "contentType": "image/webp",
+      "etag": "468a990ab1578053a6b32de8ee2d1d52",
+      "lastModified": "2026-10-07T23:53:46.021Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/06-01-weekend-food-queues/weekend-food-queues-4.webp",
+      "bytes": 291320,
+      "contentType": "image/webp",
+      "etag": "dcda1a7a5c949d2f746f406d408e4070",
+      "lastModified": "2026-10-07T23:53:51.328Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/06-01-weekend-food-queues/weekend-food-queues-480w.webp",
+      "bytes": 29254,
+      "contentType": "image/webp",
+      "etag": "923afb3af76e21a248f628456c3fb824",
+      "lastModified": "2026-10-07T23:53:57.256Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/06-01-weekend-food-queues/weekend-food-queues-5-480w.webp",
+      "bytes": 15294,
+      "contentType": "image/webp",
+      "etag": "7e2b1f48bda170b84025ec98cf7eb7a2",
+      "lastModified": "2026-10-07T23:54:01.277Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/06-01-weekend-food-queues/weekend-food-queues-5-960w.webp",
+      "bytes": 36848,
+      "contentType": "image/webp",
+      "etag": "72167ed9cbf6abdda5d903732d41fd4b",
+      "lastModified": "2026-10-07T23:54:08.067Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/06-01-weekend-food-queues/weekend-food-queues-5.webp",
+      "bytes": 75068,
+      "contentType": "image/webp",
+      "etag": "98c89647f131892a679a895bda6b9d4a",
+      "lastModified": "2026-10-07T23:54:14.013Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/06-01-weekend-food-queues/weekend-food-queues-6-480w.webp",
+      "bytes": 15520,
+      "contentType": "image/webp",
+      "etag": "795419d28ac9b6327711412cb2fdc2f6",
+      "lastModified": "2026-10-07T23:54:18.749Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/06-01-weekend-food-queues/weekend-food-queues-6-960w.webp",
+      "bytes": 38384,
+      "contentType": "image/webp",
+      "etag": "0cb7bed08ffa9b07537b056f8bf28f88",
+      "lastModified": "2026-10-07T23:54:24.128Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/06-01-weekend-food-queues/weekend-food-queues-6.webp",
+      "bytes": 106358,
+      "contentType": "image/webp",
+      "etag": "802608f38fcd0c0f04dea6f3f7177464",
+      "lastModified": "2026-10-07T23:54:30.629Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/06-01-weekend-food-queues/weekend-food-queues-960w.webp",
+      "bytes": 80512,
+      "contentType": "image/webp",
+      "etag": "3e2be61ae271c1a0a45aadb3d79359cc",
+      "lastModified": "2026-10-07T23:54:37.085Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/06-01-weekend-food-queues/weekend-food-queues.webp",
+      "bytes": 234526,
+      "contentType": "image/webp",
+      "etag": "4eb8f43c61a992b70bffda0d715bcc81",
+      "lastModified": "2026-10-07T23:54:42.125Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/12-03-waiting-in-hefei/waiting-in-hefei-2-480w.webp",
+      "bytes": 48962,
+      "contentType": "image/webp",
+      "etag": "3c15ebf0ef0fec8f1a6c004e465ae5b7",
+      "lastModified": "2026-10-07T23:54:47.422Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/12-03-waiting-in-hefei/waiting-in-hefei-2.webp",
+      "bytes": 76786,
+      "contentType": "image/webp",
+      "etag": "98177efa0b08c663653374c6b761188d",
+      "lastModified": "2026-10-07T23:54:53.550Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/12-03-waiting-in-hefei/waiting-in-hefei-480w.webp",
+      "bytes": 11138,
+      "contentType": "image/webp",
+      "etag": "dc4e51127e0394cfd442240847de881a",
+      "lastModified": "2026-10-07T23:54:59.094Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/12-03-waiting-in-hefei/waiting-in-hefei.webp",
+      "bytes": 23756,
+      "contentType": "image/webp",
+      "etag": "a1c1e8009009f7bb222bd1c0559d5f52",
+      "lastModified": "2026-10-07T23:55:04.441Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-2-480w.webp",
+      "bytes": 41526,
+      "contentType": "image/webp",
+      "etag": "118d52afea0653e956c5b1b219bed314",
+      "lastModified": "2026-10-07T23:55:10.170Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-2-960w.webp",
+      "bytes": 133420,
+      "contentType": "image/webp",
+      "etag": "44c7c63e5644a672c17bdbe66e278211",
+      "lastModified": "2026-10-07T23:55:16.134Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-2.webp",
+      "bytes": 383712,
+      "contentType": "image/webp",
+      "etag": "59adfa6c91703c8ff667e1eae368456e",
+      "lastModified": "2026-10-07T23:55:22.541Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-3-480w.webp",
+      "bytes": 49670,
+      "contentType": "image/webp",
+      "etag": "4c37c985eb97ce63d6417985b1dacd27",
+      "lastModified": "2026-10-07T23:55:27.443Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-3-960w.webp",
+      "bytes": 174808,
+      "contentType": "image/webp",
+      "etag": "3b0db5ae8a13fbf6a2c47ef76377f59b",
+      "lastModified": "2026-10-07T23:55:33.820Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-3.webp",
+      "bytes": 546478,
+      "contentType": "image/webp",
+      "etag": "996eea8fc114365d162a76b55dcce881",
+      "lastModified": "2026-10-07T23:55:40.439Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-4-480w.webp",
+      "bytes": 47730,
+      "contentType": "image/webp",
+      "etag": "a92ac470abcc3eadee250da8305eb4c1",
+      "lastModified": "2026-10-07T23:55:45.271Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-4-960w.webp",
+      "bytes": 168390,
+      "contentType": "image/webp",
+      "etag": "e5d5ba97d2ac788552362b811d759ec2",
+      "lastModified": "2026-10-07T23:55:51.972Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-4.webp",
+      "bytes": 532026,
+      "contentType": "image/webp",
+      "etag": "f38d8f52d56ba98ce6e97ad1fa161df8",
+      "lastModified": "2026-10-07T23:56:00.315Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-480w.webp",
+      "bytes": 34446,
+      "contentType": "image/webp",
+      "etag": "a38fe3336cf87761016034032c19a852",
+      "lastModified": "2026-10-07T23:56:05.959Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-5-480w.webp",
+      "bytes": 15704,
+      "contentType": "image/webp",
+      "etag": "98744972f60970d038d02cdbb0c40e5d",
+      "lastModified": "2026-10-07T23:56:11.963Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-5-960w.webp",
+      "bytes": 36312,
+      "contentType": "image/webp",
+      "etag": "510ae6d0f30d1b77304e7c8976f42d75",
+      "lastModified": "2026-10-07T23:56:17.805Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-5.webp",
+      "bytes": 93132,
+      "contentType": "image/webp",
+      "etag": "e4b30766ef8c772c1df641ac68316925",
+      "lastModified": "2026-10-07T23:56:23.449Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-960w.webp",
+      "bytes": 90440,
+      "contentType": "image/webp",
+      "etag": "de3acce9827b8e2fc78d999030849431",
+      "lastModified": "2026-10-07T23:56:28.286Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging.webp",
+      "bytes": 234720,
+      "contentType": "image/webp",
+      "etag": "0debdc67ca740017fd63a5b10a6f945c",
+      "lastModified": "2026-10-07T23:56:35.056Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/13-02-yunnan-birthday-surprise/yunnan-birthday-surprise-480w.webp",
+      "bytes": 20862,
+      "contentType": "image/webp",
+      "etag": "94cc5c414237ae9d0a8c98c86bb8df39",
+      "lastModified": "2026-10-07T23:54:55.215Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/13-02-yunnan-birthday-surprise/yunnan-birthday-surprise.webp",
+      "bytes": 53158,
+      "contentType": "image/webp",
+      "etag": "e893856029f3ab36ed49e27ff77dd228",
+      "lastModified": "2026-10-07T23:55:03.104Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/14-01-tiger-leaping-gorge/tiger-leaping-gorge-2-480w.webp",
+      "bytes": 30854,
+      "contentType": "image/webp",
+      "etag": "77852727e1002f29651a6ab8c00ae3fb",
+      "lastModified": "2026-10-07T23:55:10.834Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/14-01-tiger-leaping-gorge/tiger-leaping-gorge-2-960w.webp",
+      "bytes": 117024,
+      "contentType": "image/webp",
+      "etag": "39ffe2a0cd8b28efb8fe7813cba657aa",
+      "lastModified": "2026-10-07T23:55:15.923Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/14-01-tiger-leaping-gorge/tiger-leaping-gorge-2.webp",
+      "bytes": 426358,
+      "contentType": "image/webp",
+      "etag": "a20c18cb7d0a59743aa7e1bc96067501",
+      "lastModified": "2026-10-07T23:55:22.732Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/14-01-tiger-leaping-gorge/tiger-leaping-gorge-3-480w.webp",
+      "bytes": 29362,
+      "contentType": "image/webp",
+      "etag": "a3301363e57a3119717b36efa7981776",
+      "lastModified": "2026-10-07T23:55:27.506Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/14-01-tiger-leaping-gorge/tiger-leaping-gorge-3-960w.webp",
+      "bytes": 102460,
+      "contentType": "image/webp",
+      "etag": "0e0dce0d8ecc4bf045530482032544d1",
+      "lastModified": "2026-10-07T23:55:32.526Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/14-01-tiger-leaping-gorge/tiger-leaping-gorge-3.webp",
+      "bytes": 339138,
+      "contentType": "image/webp",
+      "etag": "28d277b084984b5951b8c1b5c56803d7",
+      "lastModified": "2026-10-07T23:55:37.552Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/14-01-tiger-leaping-gorge/tiger-leaping-gorge-4-480w.webp",
+      "bytes": 16680,
+      "contentType": "image/webp",
+      "etag": "366e4b7636d8453d14a10d471a9d90f5",
+      "lastModified": "2026-10-07T23:55:42.543Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/14-01-tiger-leaping-gorge/tiger-leaping-gorge-4-960w.webp",
+      "bytes": 60138,
+      "contentType": "image/webp",
+      "etag": "616f3ff6251d7c8f7e739803df50f456",
+      "lastModified": "2026-10-07T23:55:48.359Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/14-01-tiger-leaping-gorge/tiger-leaping-gorge-4.webp",
+      "bytes": 219496,
+      "contentType": "image/webp",
+      "etag": "2ba3a074bf9e64563fe25589acb8b6a9",
+      "lastModified": "2026-10-07T23:55:53.687Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/14-01-tiger-leaping-gorge/tiger-leaping-gorge-480w.webp",
+      "bytes": 52598,
+      "contentType": "image/webp",
+      "etag": "37d0134adb2e9ccadd620a910be1ffe0",
+      "lastModified": "2026-10-07T23:56:00.664Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/14-01-tiger-leaping-gorge/tiger-leaping-gorge-960w.webp",
+      "bytes": 164734,
+      "contentType": "image/webp",
+      "etag": "7b9a099b4e803765d83d7128865945f6",
+      "lastModified": "2026-10-07T23:56:05.285Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/14-01-tiger-leaping-gorge/tiger-leaping-gorge.webp",
+      "bytes": 499860,
+      "contentType": "image/webp",
+      "etag": "84203f2c9b7e79bfa8b305bbf6f3e03b",
+      "lastModified": "2026-10-07T23:56:12.326Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-2-480w.webp",
+      "bytes": 48692,
+      "contentType": "image/webp",
+      "etag": "37f519586dd3fa1973321966f85f13eb",
+      "lastModified": "2026-10-07T23:56:20.397Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-2-960w.webp",
+      "bytes": 194498,
+      "contentType": "image/webp",
+      "etag": "98a38ea96dac86be69da5ceb8b75c673",
+      "lastModified": "2026-10-07T23:56:25.664Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-2.webp",
+      "bytes": 735928,
+      "contentType": "image/webp",
+      "etag": "f0861822d71b5832f8763ab83307f521",
+      "lastModified": "2026-10-07T23:56:33.279Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-3-480w.webp",
+      "bytes": 24634,
+      "contentType": "image/webp",
+      "etag": "654de1f8c9ace8df1ceaf5119e5586a6",
+      "lastModified": "2026-10-07T23:56:38.974Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-3-960w.webp",
+      "bytes": 81188,
+      "contentType": "image/webp",
+      "etag": "47acdf073b018bf499d20bbd8c989748",
+      "lastModified": "2026-10-07T23:56:44.238Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-3.webp",
+      "bytes": 259674,
+      "contentType": "image/webp",
+      "etag": "eb77abfcfc8bb801938a8c6cd832cfb1",
+      "lastModified": "2026-10-07T23:56:49.734Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-4-480w.webp",
+      "bytes": 38998,
+      "contentType": "image/webp",
+      "etag": "6097eec52c138113217ab40af1ffb50e",
+      "lastModified": "2026-10-07T23:56:53.913Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-4-960w.webp",
+      "bytes": 142376,
+      "contentType": "image/webp",
+      "etag": "fb50b98114044955947392b94c495534",
+      "lastModified": "2026-10-07T23:57:00.142Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-4.webp",
+      "bytes": 441272,
+      "contentType": "image/webp",
+      "etag": "2ba931d52018d32d0592f5a5a5fae048",
+      "lastModified": "2026-10-07T23:57:11.945Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-480w.webp",
+      "bytes": 44808,
+      "contentType": "image/webp",
+      "etag": "b9d119a563d76ecdfe1cbe465d1cc810",
+      "lastModified": "2026-10-07T23:57:17.432Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-5-480w.webp",
+      "bytes": 31664,
+      "contentType": "image/webp",
+      "etag": "c2d471d185a701c171caf2459091850e",
+      "lastModified": "2026-10-07T23:57:22.206Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-5-960w.webp",
+      "bytes": 110034,
+      "contentType": "image/webp",
+      "etag": "ee4a0c901365dfe9a712115922fd4b04",
+      "lastModified": "2026-10-07T23:57:26.696Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-5.webp",
+      "bytes": 372672,
+      "contentType": "image/webp",
+      "etag": "6c238dab5c36d2af64bd4d22e75ce82e",
+      "lastModified": "2026-10-07T23:57:33.080Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-6-480w.webp",
+      "bytes": 18748,
+      "contentType": "image/webp",
+      "etag": "ce10e8b6cd309bff5db78ce301597bc2",
+      "lastModified": "2026-10-07T23:57:37.965Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-6-960w.webp",
+      "bytes": 55068,
+      "contentType": "image/webp",
+      "etag": "9cfc195c8ff1abba6a9d30e658251385",
+      "lastModified": "2026-10-07T23:57:42.555Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-6.webp",
+      "bytes": 150792,
+      "contentType": "image/webp",
+      "etag": "fe83b19b2332ad7956491ee148f2f008",
+      "lastModified": "2026-10-07T23:57:47.335Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-960w.webp",
+      "bytes": 175114,
+      "contentType": "image/webp",
+      "etag": "a1a6002a4c756330f58b364526c6b950",
+      "lastModified": "2026-10-07T23:57:54.583Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market.webp",
+      "bytes": 637442,
+      "contentType": "image/webp",
+      "etag": "d2d76127de863e458136fe42cbf4a3d0",
+      "lastModified": "2026-10-07T23:58:02.191Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-01-yantai-dalian-ferry/yantai-dalian-ferry-2-480w.webp",
+      "bytes": 11440,
+      "contentType": "image/webp",
+      "etag": "4b78e2e5fc52ceba4360f5562692c5e0",
+      "lastModified": "2026-10-07T23:56:34.210Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-01-yantai-dalian-ferry/yantai-dalian-ferry-2-960w.webp",
+      "bytes": 31396,
+      "contentType": "image/webp",
+      "etag": "bdaa34e867511e8f4d85998de6dabe5a",
+      "lastModified": "2026-10-07T23:56:39.561Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-01-yantai-dalian-ferry/yantai-dalian-ferry-2.webp",
+      "bytes": 60500,
+      "contentType": "image/webp",
+      "etag": "4237d6a9f5fff554f9a81af9e217cd59",
+      "lastModified": "2026-10-07T23:56:46.230Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-01-yantai-dalian-ferry/yantai-dalian-ferry-3-480w.webp",
+      "bytes": 8816,
+      "contentType": "image/webp",
+      "etag": "e44d7d010f551b5b203c05edcc9df28f",
+      "lastModified": "2026-10-07T23:56:50.639Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-01-yantai-dalian-ferry/yantai-dalian-ferry-3-960w.webp",
+      "bytes": 23000,
+      "contentType": "image/webp",
+      "etag": "db314a543151212a3b3b67539aa93d6b",
+      "lastModified": "2026-10-07T23:56:55.888Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-01-yantai-dalian-ferry/yantai-dalian-ferry-3.webp",
+      "bytes": 45780,
+      "contentType": "image/webp",
+      "etag": "eab0d943d6e8e4ccc7788aec32536c10",
+      "lastModified": "2026-10-07T23:57:00.561Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-01-yantai-dalian-ferry/yantai-dalian-ferry-480w.webp",
+      "bytes": 22046,
+      "contentType": "image/webp",
+      "etag": "3ed4cacfc48307cf72381fcee81b7383",
+      "lastModified": "2026-10-07T23:57:04.793Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-01-yantai-dalian-ferry/yantai-dalian-ferry-960w.webp",
+      "bytes": 61282,
+      "contentType": "image/webp",
+      "etag": "a2de652963b0edda34b0babc3e381b59",
+      "lastModified": "2026-10-07T23:57:09.445Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-01-yantai-dalian-ferry/yantai-dalian-ferry-video-2-poster.webp",
+      "bytes": 57206,
+      "contentType": "image/webp",
+      "etag": "6b8a994358eda489d12db29f61065e69",
+      "lastModified": "2026-10-07T23:57:14.688Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-01-yantai-dalian-ferry/yantai-dalian-ferry-video-2.mp4",
+      "bytes": 905618,
+      "contentType": "video/mp4",
+      "etag": "ffcac116de38daceb4cb77cad3c80f37",
+      "lastModified": "2026-10-07T23:57:22.387Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-01-yantai-dalian-ferry/yantai-dalian-ferry-video-3-poster.webp",
+      "bytes": 17832,
+      "contentType": "image/webp",
+      "etag": "276adc7447f8e47369db4249bc3b5b24",
+      "lastModified": "2026-10-07T23:57:27.885Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-01-yantai-dalian-ferry/yantai-dalian-ferry-video-3.mp4",
+      "bytes": 519631,
+      "contentType": "video/mp4",
+      "etag": "0d8b1dd65da9b87acaa263f0f8e15f35",
+      "lastModified": "2026-10-07T23:57:34.828Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-01-yantai-dalian-ferry/yantai-dalian-ferry-video-4-poster.webp",
+      "bytes": 107938,
+      "contentType": "image/webp",
+      "etag": "9dee418859e839d5c1fabfb0d0f68e43",
+      "lastModified": "2026-10-07T23:57:39.468Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-01-yantai-dalian-ferry/yantai-dalian-ferry-video-4.mp4",
+      "bytes": 1096541,
+      "contentType": "video/mp4",
+      "etag": "8bff3346b9fa6c351fc5389b946a94b0",
+      "lastModified": "2026-10-07T23:57:48.937Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-01-yantai-dalian-ferry/yantai-dalian-ferry-video-5-poster.webp",
+      "bytes": 83850,
+      "contentType": "image/webp",
+      "etag": "fa66141550cbc886f5be99efd9aadf32",
+      "lastModified": "2026-10-07T23:57:54.395Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-01-yantai-dalian-ferry/yantai-dalian-ferry-video-5.mp4",
+      "bytes": 772931,
+      "contentType": "video/mp4",
+      "etag": "7eae8736f1b456080478069045aa9c38",
+      "lastModified": "2026-10-07T23:58:03.829Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-01-yantai-dalian-ferry/yantai-dalian-ferry-video-poster.webp",
+      "bytes": 69082,
+      "contentType": "image/webp",
+      "etag": "6aabc6fa8cdb60488bd59235cc2e4457",
+      "lastModified": "2026-10-07T23:58:10.626Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-01-yantai-dalian-ferry/yantai-dalian-ferry-video.mp4",
+      "bytes": 792540,
+      "contentType": "video/mp4",
+      "etag": "9114cc57275f301d56611198a2845589",
+      "lastModified": "2026-10-07T23:58:18.596Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-01-yantai-dalian-ferry/yantai-dalian-ferry.webp",
+      "bytes": 122748,
+      "contentType": "image/webp",
+      "etag": "3ceaa9238a884384c7ef1ea164a4fae4",
+      "lastModified": "2026-10-07T23:58:23.382Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-video-10-poster.webp",
+      "bytes": 42728,
+      "contentType": "image/webp",
+      "etag": "69b4793bf4c9fb2ba1ddc95d5cf6afc8",
+      "lastModified": "2026-10-07T23:59:16.319Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-video-10.mp4",
+      "bytes": 509118,
+      "contentType": "video/mp4",
+      "etag": "ee0f2467f7c850a7680d1037313af643",
+      "lastModified": "2026-10-07T23:59:22.790Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-video-2-poster.webp",
+      "bytes": 25742,
+      "contentType": "image/webp",
+      "etag": "15e8d667a65c5a950478becb0bfb9752",
+      "lastModified": "2026-10-07T23:59:29.723Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-video-2.mp4",
+      "bytes": 498150,
+      "contentType": "video/mp4",
+      "etag": "b57543c3006e367d1c9a2409cbd954de",
+      "lastModified": "2026-10-07T23:59:36.594Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-video-3-poster.webp",
+      "bytes": 125542,
+      "contentType": "image/webp",
+      "etag": "de3cc685d91fb3e74a408f91dcce58b6",
+      "lastModified": "2026-10-07T23:59:41.721Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-video-3.mp4",
+      "bytes": 1310227,
+      "contentType": "video/mp4",
+      "etag": "72819e68136175978bef4a0466a8d410",
+      "lastModified": "2026-10-07T23:59:51.228Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-video-4-poster.webp",
+      "bytes": 114780,
+      "contentType": "image/webp",
+      "etag": "0261f5236421d265eb547eccdc9d5262",
+      "lastModified": "2026-10-07T23:59:56.855Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-video-4.mp4",
+      "bytes": 1332648,
+      "contentType": "video/mp4",
+      "etag": "f9bd572ddbf725b3b2a17133c824ccf1",
+      "lastModified": "2026-10-08T00:00:08.432Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-video-5-poster.webp",
+      "bytes": 58128,
+      "contentType": "image/webp",
+      "etag": "bca8ffd1eda45f7c3b1125e9c22db29b",
+      "lastModified": "2026-10-08T00:00:13.114Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-video-5.mp4",
+      "bytes": 719479,
+      "contentType": "video/mp4",
+      "etag": "bc6fb4e93176eeaa8df2976790ba7c52",
+      "lastModified": "2026-10-08T00:00:21.382Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-video-6-poster.webp",
+      "bytes": 41620,
+      "contentType": "image/webp",
+      "etag": "deb19714dcff3c29e49bb3f7e7d8b6be",
+      "lastModified": "2026-10-08T00:00:25.766Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-video-6.mp4",
+      "bytes": 648224,
+      "contentType": "video/mp4",
+      "etag": "43be35ff1bccbe31daaee998ec5d6428",
+      "lastModified": "2026-10-08T00:00:32.638Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-video-7-poster.webp",
+      "bytes": 34200,
+      "contentType": "image/webp",
+      "etag": "4c52becb7c5b694f9ed79d68f6ba8add",
+      "lastModified": "2026-10-08T00:00:38.472Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-video-7.mp4",
+      "bytes": 644505,
+      "contentType": "video/mp4",
+      "etag": "c2311580af583dd8a915d25ea01f2049",
+      "lastModified": "2026-10-08T00:00:58.596Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-video-8-poster.webp",
+      "bytes": 22522,
+      "contentType": "image/webp",
+      "etag": "eba251a93913a9d0d76349bddaa6cf85",
+      "lastModified": "2026-10-08T00:01:04.718Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-video-8.mp4",
+      "bytes": 330529,
+      "contentType": "video/mp4",
+      "etag": "28902e3f01399d79c31a495b9d959bc2",
+      "lastModified": "2026-10-08T00:01:11.282Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-video-9-poster.webp",
+      "bytes": 15244,
+      "contentType": "image/webp",
+      "etag": "d4549c832d2979935fff05dd7adb93a2",
+      "lastModified": "2026-10-08T00:01:16.442Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-video-9.mp4",
+      "bytes": 386065,
+      "contentType": "video/mp4",
+      "etag": "e8bbdc2254be5a719ebeef4c1afae9d1",
+      "lastModified": "2026-10-08T00:01:21.979Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-video-poster.webp",
+      "bytes": 12080,
+      "contentType": "image/webp",
+      "etag": "d9d23741bf18758847c5fae7b6576638",
+      "lastModified": "2026-10-08T00:01:26.496Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-video.mp4",
+      "bytes": 482513,
+      "contentType": "video/mp4",
+      "etag": "4b02f98699d4883a1f3a1150be812e40",
+      "lastModified": "2026-10-08T00:01:34.316Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-01-dalian-japanese-dinner/dalian-japanese-dinner-2-480w.webp",
+      "bytes": 33940,
+      "contentType": "image/webp",
+      "etag": "35cf1581d3d50fee7435fe2f4b14e37e",
+      "lastModified": "2026-10-07T23:56:41.063Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-01-dalian-japanese-dinner/dalian-japanese-dinner-2-960w.webp",
+      "bytes": 92946,
+      "contentType": "image/webp",
+      "etag": "9ae054d7f83d5c1ef95209692c151520",
+      "lastModified": "2026-10-07T23:56:46.864Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-01-dalian-japanese-dinner/dalian-japanese-dinner-2.webp",
+      "bytes": 263702,
+      "contentType": "image/webp",
+      "etag": "1d6363eee9b5ec0d98deed9cb4678489",
+      "lastModified": "2026-10-07T23:56:53.660Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-01-dalian-japanese-dinner/dalian-japanese-dinner-480w.webp",
+      "bytes": 34416,
+      "contentType": "image/webp",
+      "etag": "c3c7e21bfc593514eae62a2aff2becac",
+      "lastModified": "2026-10-07T23:56:58.032Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-01-dalian-japanese-dinner/dalian-japanese-dinner-960w.webp",
+      "bytes": 98208,
+      "contentType": "image/webp",
+      "etag": "c414715432734e07419a1148424d58e9",
+      "lastModified": "2026-10-07T23:57:02.950Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-01-dalian-japanese-dinner/dalian-japanese-dinner.webp",
+      "bytes": 283386,
+      "contentType": "image/webp",
+      "etag": "bc975cc130e3328044773d1dd05f82ef",
+      "lastModified": "2026-10-07T23:57:08.464Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-02-dalian-morning/dalian-morning-480w.webp",
+      "bytes": 7796,
+      "contentType": "image/webp",
+      "etag": "349ecfe8056f675764beda749ed6a9c8",
+      "lastModified": "2026-10-07T23:57:17.514Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-02-dalian-morning/dalian-morning-960w.webp",
+      "bytes": 21202,
+      "contentType": "image/webp",
+      "etag": "707aebb7783e94cc55b36d4c76613ba5",
+      "lastModified": "2026-10-07T23:57:21.527Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-02-dalian-morning/dalian-morning-video-2-poster.webp",
+      "bytes": 24114,
+      "contentType": "image/webp",
+      "etag": "1c302b46c6915b54be024f6c70aed57f",
+      "lastModified": "2026-10-07T23:57:27.961Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-02-dalian-morning/dalian-morning-video-2.mp4",
+      "bytes": 455306,
+      "contentType": "video/mp4",
+      "etag": "a5e63dbe66e2e02a4df449fa86049034",
+      "lastModified": "2026-10-07T23:57:33.928Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-02-dalian-morning/dalian-morning-video-3-poster.webp",
+      "bytes": 51924,
+      "contentType": "image/webp",
+      "etag": "4f386236c2e61e413d05785e5185b64c",
+      "lastModified": "2026-10-07T23:57:38.289Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-02-dalian-morning/dalian-morning-video-3.mp4",
+      "bytes": 467987,
+      "contentType": "video/mp4",
+      "etag": "7d89ad3e05f931682a85da0cd5eb928b",
+      "lastModified": "2026-10-07T23:57:46.773Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-02-dalian-morning/dalian-morning-video-4-poster.webp",
+      "bytes": 52172,
+      "contentType": "image/webp",
+      "etag": "af37f2aeea87fa7a5d6c20853b9ccfe0",
+      "lastModified": "2026-10-07T23:57:52.777Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-02-dalian-morning/dalian-morning-video-4.mp4",
+      "bytes": 518544,
+      "contentType": "video/mp4",
+      "etag": "b07262e9e20bb6cdd7eaec237d51d144",
+      "lastModified": "2026-10-07T23:58:00.420Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-02-dalian-morning/dalian-morning-video-5-poster.webp",
+      "bytes": 40984,
+      "contentType": "image/webp",
+      "etag": "473cb4c390d71e92946a26c70ca967c3",
+      "lastModified": "2026-10-07T23:58:05.038Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-02-dalian-morning/dalian-morning-video-5.mp4",
+      "bytes": 504154,
+      "contentType": "video/mp4",
+      "etag": "2ca7f0179cb12ae3c4e9a57c81256595",
+      "lastModified": "2026-10-07T23:58:12.540Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-02-dalian-morning/dalian-morning-video-6-poster.webp",
+      "bytes": 76228,
+      "contentType": "image/webp",
+      "etag": "57670d4b1c34426100b8649e11b445a0",
+      "lastModified": "2026-10-07T23:58:17.923Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-02-dalian-morning/dalian-morning-video-6.mp4",
+      "bytes": 542211,
+      "contentType": "video/mp4",
+      "etag": "69c3b264801e772741dbd68cd6b9cedb",
+      "lastModified": "2026-10-07T23:58:25.400Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-02-dalian-morning/dalian-morning-video-7-poster.webp",
+      "bytes": 46054,
+      "contentType": "image/webp",
+      "etag": "d0614d2d2b4d7d1790cea3af2e50e01e",
+      "lastModified": "2026-10-07T23:58:29.824Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-02-dalian-morning/dalian-morning-video-7.mp4",
+      "bytes": 573928,
+      "contentType": "video/mp4",
+      "etag": "2f395a5357327a62b84b69932a461517",
+      "lastModified": "2026-10-07T23:58:36.614Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-02-dalian-morning/dalian-morning-video-8-poster.webp",
+      "bytes": 116296,
+      "contentType": "image/webp",
+      "etag": "8a1473b4ff8ad5659392d873270e4519",
+      "lastModified": "2026-10-07T23:58:41.580Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-02-dalian-morning/dalian-morning-video-8.mp4",
+      "bytes": 813692,
+      "contentType": "video/mp4",
+      "etag": "712f24c9f42e3b36e47b45749df40fc5",
+      "lastModified": "2026-10-07T23:58:49.207Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-02-dalian-morning/dalian-morning-video-poster.webp",
+      "bytes": 35940,
+      "contentType": "image/webp",
+      "etag": "d3e1b3e8c04a4d28c1f08dffc0c0e9a8",
+      "lastModified": "2026-10-07T23:58:53.716Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-02-dalian-morning/dalian-morning-video.mp4",
+      "bytes": 587498,
+      "contentType": "video/mp4",
+      "etag": "79a623447253f231dde0f6c368342891",
+      "lastModified": "2026-10-07T23:59:01.273Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-02-dalian-morning/dalian-morning.webp",
+      "bytes": 42170,
+      "contentType": "image/webp",
+      "etag": "390fdd2b156c5af93f37780fd0762c82",
+      "lastModified": "2026-10-07T23:59:05.767Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-03-bangchuidao-seaside/bangchuidao-seaside-2-480w.webp",
+      "bytes": 36958,
+      "contentType": "image/webp",
+      "etag": "5ecdb19b8758d15f5593d274ab6888f6",
+      "lastModified": "2026-10-07T23:59:27.087Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-03-bangchuidao-seaside/bangchuidao-seaside-2-960w.webp",
+      "bytes": 132194,
+      "contentType": "image/webp",
+      "etag": "2afbc0fa738db11142bc20f002f08bc2",
+      "lastModified": "2026-10-07T23:59:31.744Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-03-bangchuidao-seaside/bangchuidao-seaside-2.webp",
+      "bytes": 437258,
+      "contentType": "image/webp",
+      "etag": "84e926ad4345c7f09158a5f5b7fa5f52",
+      "lastModified": "2026-10-07T23:59:38.579Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-03-bangchuidao-seaside/bangchuidao-seaside-3-480w.webp",
+      "bytes": 17700,
+      "contentType": "image/webp",
+      "etag": "70de09f644f5dd008e63618109cd51bd",
+      "lastModified": "2026-10-07T23:59:43.588Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-03-bangchuidao-seaside/bangchuidao-seaside-3-960w.webp",
+      "bytes": 48570,
+      "contentType": "image/webp",
+      "etag": "b9b7e8347d934123b784b23caf90b107",
+      "lastModified": "2026-10-07T23:59:49.033Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-03-bangchuidao-seaside/bangchuidao-seaside-3.webp",
+      "bytes": 150782,
+      "contentType": "image/webp",
+      "etag": "10cfb3217c53a4bd149e2e59add8658c",
+      "lastModified": "2026-10-07T23:59:56.338Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-03-bangchuidao-seaside/bangchuidao-seaside-4-480w.webp",
+      "bytes": 6902,
+      "contentType": "image/webp",
+      "etag": "b72ddbec0302dffbb7d0c5b66b59ffe9",
+      "lastModified": "2026-10-08T00:00:03.237Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-03-bangchuidao-seaside/bangchuidao-seaside-4-960w.webp",
+      "bytes": 26862,
+      "contentType": "image/webp",
+      "etag": "07dc3db8b0013e4f03ed228122575cff",
+      "lastModified": "2026-10-08T00:00:07.661Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-03-bangchuidao-seaside/bangchuidao-seaside-4.webp",
+      "bytes": 95272,
+      "contentType": "image/webp",
+      "etag": "286af9976e0480bf8032ba60a55d27cd",
+      "lastModified": "2026-10-08T00:00:12.796Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-03-bangchuidao-seaside/bangchuidao-seaside-480w.webp",
+      "bytes": 65368,
+      "contentType": "image/webp",
+      "etag": "81ee246f1dc8c75b7d0abd442944f1ee",
+      "lastModified": "2026-10-08T00:00:18.844Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-03-bangchuidao-seaside/bangchuidao-seaside-5-480w.webp",
+      "bytes": 33558,
+      "contentType": "image/webp",
+      "etag": "febdf6cf7aa96314fb92d48eacd095c6",
+      "lastModified": "2026-10-08T00:00:23.413Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-03-bangchuidao-seaside/bangchuidao-seaside-5-960w.webp",
+      "bytes": 109058,
+      "contentType": "image/webp",
+      "etag": "915e5fbd9775945ea38d5c30c3cc82a4",
+      "lastModified": "2026-10-08T00:00:28.307Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-03-bangchuidao-seaside/bangchuidao-seaside-5.webp",
+      "bytes": 362350,
+      "contentType": "image/webp",
+      "etag": "24fd63a176f4fbb7e3af44a071b280aa",
+      "lastModified": "2026-10-08T00:00:35.313Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-03-bangchuidao-seaside/bangchuidao-seaside-6-480w.webp",
+      "bytes": 35588,
+      "contentType": "image/webp",
+      "etag": "02f66581b41db13150212b363620507a",
+      "lastModified": "2026-10-08T00:00:52.998Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-03-bangchuidao-seaside/bangchuidao-seaside-6-960w.webp",
+      "bytes": 109986,
+      "contentType": "image/webp",
+      "etag": "56971dd722bc348d4b5fff28bd533612",
+      "lastModified": "2026-10-08T00:00:58.928Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-03-bangchuidao-seaside/bangchuidao-seaside-6.webp",
+      "bytes": 355702,
+      "contentType": "image/webp",
+      "etag": "28603d6a78a2c9ad8b99a78a6bf877d2",
+      "lastModified": "2026-10-08T00:01:06.259Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-03-bangchuidao-seaside/bangchuidao-seaside-960w.webp",
+      "bytes": 191128,
+      "contentType": "image/webp",
+      "etag": "005173b9a391305a039076f949db63a2",
+      "lastModified": "2026-10-08T00:01:11.582Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-03-bangchuidao-seaside/bangchuidao-seaside.webp",
+      "bytes": 415276,
+      "contentType": "image/webp",
+      "etag": "280f7a01f0b17c856be3dfa2197ff3cf",
+      "lastModified": "2026-10-08T00:01:18.570Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-04-dalian-sea-intestine-rice/dalian-sea-intestine-rice-2-480w.webp",
+      "bytes": 32778,
+      "contentType": "image/webp",
+      "etag": "5b582ab9a695297067098e1b545a3974",
+      "lastModified": "2026-10-07T23:58:08.457Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-04-dalian-sea-intestine-rice/dalian-sea-intestine-rice-2-960w.webp",
+      "bytes": 75666,
+      "contentType": "image/webp",
+      "etag": "347bae9dcb0bf0a91de4dd47a9668d6a",
+      "lastModified": "2026-10-07T23:58:13.903Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-04-dalian-sea-intestine-rice/dalian-sea-intestine-rice-2.webp",
+      "bytes": 130906,
+      "contentType": "image/webp",
+      "etag": "34b9c0e91223ce5b1560c246c35ae70f",
+      "lastModified": "2026-10-07T23:58:19.353Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-04-dalian-sea-intestine-rice/dalian-sea-intestine-rice-3-480w.webp",
+      "bytes": 25494,
+      "contentType": "image/webp",
+      "etag": "5f39769f5d4b129e18cd88bb838319a5",
+      "lastModified": "2026-10-07T23:58:24.347Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-04-dalian-sea-intestine-rice/dalian-sea-intestine-rice-3-960w.webp",
+      "bytes": 60956,
+      "contentType": "image/webp",
+      "etag": "8bdfd5332a512fde126d810cd48332ff",
+      "lastModified": "2026-10-07T23:58:29.536Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-04-dalian-sea-intestine-rice/dalian-sea-intestine-rice-3.webp",
+      "bytes": 105778,
+      "contentType": "image/webp",
+      "etag": "79ae4fab12699cacfbae865a7d17544a",
+      "lastModified": "2026-10-07T23:58:34.811Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-04-dalian-sea-intestine-rice/dalian-sea-intestine-rice-4-480w.webp",
+      "bytes": 19424,
+      "contentType": "image/webp",
+      "etag": "3a0f5595c48a74455fe0117ec4b7db73",
+      "lastModified": "2026-10-07T23:58:39.847Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-04-dalian-sea-intestine-rice/dalian-sea-intestine-rice-4-960w.webp",
+      "bytes": 46398,
+      "contentType": "image/webp",
+      "etag": "e5779907f0974cab8151b0bd2d77239a",
+      "lastModified": "2026-10-07T23:58:44.332Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-04-dalian-sea-intestine-rice/dalian-sea-intestine-rice-4.webp",
+      "bytes": 83574,
+      "contentType": "image/webp",
+      "etag": "8b3b429b0956ee8560a39734d82c4506",
+      "lastModified": "2026-10-07T23:58:49.693Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-04-dalian-sea-intestine-rice/dalian-sea-intestine-rice-480w.webp",
+      "bytes": 21474,
+      "contentType": "image/webp",
+      "etag": "e6a35148484c3e4a79b46d92511eace5",
+      "lastModified": "2026-10-07T23:58:54.374Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-04-dalian-sea-intestine-rice/dalian-sea-intestine-rice-5-480w.webp",
+      "bytes": 9542,
+      "contentType": "image/webp",
+      "etag": "039b5c20fd45e096e34606bd40436b07",
+      "lastModified": "2026-10-07T23:58:59.805Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-04-dalian-sea-intestine-rice/dalian-sea-intestine-rice-5-960w.webp",
+      "bytes": 21830,
+      "contentType": "image/webp",
+      "etag": "7fb612fa8e82cb99c4f1468317218c25",
+      "lastModified": "2026-10-07T23:59:03.907Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-04-dalian-sea-intestine-rice/dalian-sea-intestine-rice-5.webp",
+      "bytes": 41014,
+      "contentType": "image/webp",
+      "etag": "a7bfb6cb20a79d4152a72d7a5667935e",
+      "lastModified": "2026-10-07T23:59:08.807Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-04-dalian-sea-intestine-rice/dalian-sea-intestine-rice-960w.webp",
+      "bytes": 54736,
+      "contentType": "image/webp",
+      "etag": "54e88a6d64620c43d6020711f62639ae",
+      "lastModified": "2026-10-07T23:59:14.162Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-04-dalian-sea-intestine-rice/dalian-sea-intestine-rice.webp",
+      "bytes": 100844,
+      "contentType": "image/webp",
+      "etag": "91ac10e7b402875f3d8479d801f1dbb0",
+      "lastModified": "2026-10-07T23:59:18.538Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-05-dandong-barbecue/dandong-barbecue-2-480w.webp",
+      "bytes": 23262,
+      "contentType": "image/webp",
+      "etag": "42df7de3770a1ed322f6fc80ad8b27a8",
+      "lastModified": "2026-10-07T23:58:30.589Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-05-dandong-barbecue/dandong-barbecue-2-960w.webp",
+      "bytes": 65518,
+      "contentType": "image/webp",
+      "etag": "3ce82ed782fad46335c35d4374a93e11",
+      "lastModified": "2026-10-07T23:58:35.264Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-05-dandong-barbecue/dandong-barbecue-2.webp",
+      "bytes": 217510,
+      "contentType": "image/webp",
+      "etag": "3d5389cd269272804b8d9952cb41e9cd",
+      "lastModified": "2026-10-07T23:58:41.251Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-05-dandong-barbecue/dandong-barbecue-3-480w.webp",
+      "bytes": 28360,
+      "contentType": "image/webp",
+      "etag": "2e4e265468a0bbef413d1788e44f7df3",
+      "lastModified": "2026-10-07T23:58:46.371Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-05-dandong-barbecue/dandong-barbecue-3-960w.webp",
+      "bytes": 78688,
+      "contentType": "image/webp",
+      "etag": "6fcda89f7700e716b09ca1adf601302d",
+      "lastModified": "2026-10-07T23:58:51.397Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-05-dandong-barbecue/dandong-barbecue-3.webp",
+      "bytes": 222192,
+      "contentType": "image/webp",
+      "etag": "ce9e69d92f08dfc1ccc32beea7be4a64",
+      "lastModified": "2026-10-07T23:58:57.253Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-05-dandong-barbecue/dandong-barbecue-4-480w.webp",
+      "bytes": 57412,
+      "contentType": "image/webp",
+      "etag": "f11a6c149a234b61a72985d0a479b2b6",
+      "lastModified": "2026-10-07T23:59:02.397Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-05-dandong-barbecue/dandong-barbecue-4-960w.webp",
+      "bytes": 140056,
+      "contentType": "image/webp",
+      "etag": "d1a897b46127df49e03af7d6c30c3997",
+      "lastModified": "2026-10-07T23:59:07.305Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-05-dandong-barbecue/dandong-barbecue-4.webp",
+      "bytes": 275620,
+      "contentType": "image/webp",
+      "etag": "5793945881777a54cba612f15598ed82",
+      "lastModified": "2026-10-07T23:59:13.798Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-05-dandong-barbecue/dandong-barbecue-480w.webp",
+      "bytes": 18464,
+      "contentType": "image/webp",
+      "etag": "c946a4206a9e3813b19af1ba110e5466",
+      "lastModified": "2026-10-07T23:59:18.753Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-05-dandong-barbecue/dandong-barbecue-5-480w.webp",
+      "bytes": 36354,
+      "contentType": "image/webp",
+      "etag": "9bc5d480a957c9c41cba31c6e30ac78e",
+      "lastModified": "2026-10-07T23:59:23.651Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-05-dandong-barbecue/dandong-barbecue-5-960w.webp",
+      "bytes": 96178,
+      "contentType": "image/webp",
+      "etag": "ca8732c482de1385dc988b2a68dec959",
+      "lastModified": "2026-10-07T23:59:28.455Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-05-dandong-barbecue/dandong-barbecue-5.webp",
+      "bytes": 246930,
+      "contentType": "image/webp",
+      "etag": "5e0712e611667e553d6fb5263f955d6e",
+      "lastModified": "2026-10-07T23:59:34.039Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-05-dandong-barbecue/dandong-barbecue-6-480w.webp",
+      "bytes": 14536,
+      "contentType": "image/webp",
+      "etag": "bf3f3e4cc620ab520f4bad0b0b3b48c7",
+      "lastModified": "2026-10-07T23:59:39.135Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-05-dandong-barbecue/dandong-barbecue-6-960w.webp",
+      "bytes": 37542,
+      "contentType": "image/webp",
+      "etag": "d067fcb17e6215ff1668e64a362cb091",
+      "lastModified": "2026-10-07T23:59:44.269Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-05-dandong-barbecue/dandong-barbecue-6.webp",
+      "bytes": 107122,
+      "contentType": "image/webp",
+      "etag": "af3b5d90acb3dc9308d5266a5229b309",
+      "lastModified": "2026-10-07T23:59:50.336Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-05-dandong-barbecue/dandong-barbecue-960w.webp",
+      "bytes": 45010,
+      "contentType": "image/webp",
+      "etag": "17f7502e526028de5ee7904c33f61447",
+      "lastModified": "2026-10-07T23:59:54.886Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-05-dandong-barbecue/dandong-barbecue.webp",
+      "bytes": 86022,
+      "contentType": "image/webp",
+      "etag": "e96f7285bfb34f727211f3312b68f54f",
+      "lastModified": "2026-10-08T00:00:00.088Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-480w.webp",
+      "bytes": 13286,
+      "contentType": "image/webp",
+      "etag": "495ccfbb9117f87227e2026c9286d6b5",
+      "lastModified": "2026-10-08T00:00:09.898Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-960w.webp",
+      "bytes": 40276,
+      "contentType": "image/webp",
+      "etag": "874911889ac0fbb6ae68ba38d206259d",
+      "lastModified": "2026-10-08T00:00:16.762Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-video-2-poster.webp",
+      "bytes": 126438,
+      "contentType": "image/webp",
+      "etag": "488f47e91ee3010e1b93e0a52d44c759",
+      "lastModified": "2026-10-08T00:00:21.628Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-video-2.mp4",
+      "bytes": 1012478,
+      "contentType": "video/mp4",
+      "etag": "39ed2d1298e769258804e9e8b7a20e54",
+      "lastModified": "2026-10-08T00:00:30.008Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-video-3-poster.webp",
+      "bytes": 97260,
+      "contentType": "image/webp",
+      "etag": "c354cf1f93e249613b617d561c01b65a",
+      "lastModified": "2026-10-08T00:00:36.500Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-video-3.mp4",
+      "bytes": 804036,
+      "contentType": "video/mp4",
+      "etag": "f5f25f9cdfb8256802fbd43f2c4373e5",
+      "lastModified": "2026-10-08T00:00:56.094Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-video-4-poster.webp",
+      "bytes": 94954,
+      "contentType": "image/webp",
+      "etag": "e661df1772399a011c3006311441477b",
+      "lastModified": "2026-10-08T00:01:02.684Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-video-4.mp4",
+      "bytes": 1144727,
+      "contentType": "video/mp4",
+      "etag": "563a1b7b998b002f07ed04a5b1c1a7c9",
+      "lastModified": "2026-10-08T00:01:12.033Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-video-5-poster.webp",
+      "bytes": 299630,
+      "contentType": "image/webp",
+      "etag": "2b13cddbe7226dd20d55d2166f57bd19",
+      "lastModified": "2026-10-08T00:01:19.539Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-video-5.mp4",
+      "bytes": 1426098,
+      "contentType": "video/mp4",
+      "etag": "3622216e629b67c39deb365f13c6dc18",
+      "lastModified": "2026-10-08T00:01:29.495Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-video-6-poster.webp",
+      "bytes": 99048,
+      "contentType": "image/webp",
+      "etag": "a22bfccb1f4ed220c8b8dc82ff2aee9f",
+      "lastModified": "2026-10-08T00:01:34.826Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-video-6.mp4",
+      "bytes": 566532,
+      "contentType": "video/mp4",
+      "etag": "81aeeeac37dcaa6f091503a70be34ef1",
+      "lastModified": "2026-10-08T00:01:41.525Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-video-7-poster.webp",
+      "bytes": 153688,
+      "contentType": "image/webp",
+      "etag": "8e2e703f35d26f440b382458429566f0",
+      "lastModified": "2026-10-08T00:01:48.664Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-video-7.mp4",
+      "bytes": 1341469,
+      "contentType": "video/mp4",
+      "etag": "8cecd40753f82c994dd9a7e6dc103098",
+      "lastModified": "2026-10-08T00:01:58.998Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-video-poster.webp",
+      "bytes": 46170,
+      "contentType": "image/webp",
+      "etag": "90214f3ef336c4d0f3581fbac5c68a19",
+      "lastModified": "2026-10-08T00:02:03.221Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-video.mp4",
+      "bytes": 436625,
+      "contentType": "video/mp4",
+      "etag": "f8686e8fec578b876ad0ff713b6b4ca6",
+      "lastModified": "2026-10-08T00:02:09.748Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-01-dandong-morning/dandong-morning.webp",
+      "bytes": 120460,
+      "contentType": "image/webp",
+      "etag": "0e2de7b3f232a9644b2cca15b89e6ae4",
+      "lastModified": "2026-10-08T00:02:15.153Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-02-dandong-soup-rice/dandong-soup-rice-2-480w.webp",
+      "bytes": 28352,
+      "contentType": "image/webp",
+      "etag": "fa9d23177284c57e14003af44fdd1d87",
+      "lastModified": "2026-10-08T00:01:27.679Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-02-dandong-soup-rice/dandong-soup-rice-2-960w.webp",
+      "bytes": 76576,
+      "contentType": "image/webp",
+      "etag": "ce91652816b23222e5668102b3977a1c",
+      "lastModified": "2026-10-08T00:01:33.431Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-02-dandong-soup-rice/dandong-soup-rice-2.webp",
+      "bytes": 223042,
+      "contentType": "image/webp",
+      "etag": "e0f4cd3b88fce17669a156ec97035e5d",
+      "lastModified": "2026-10-08T00:01:38.871Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-02-dandong-soup-rice/dandong-soup-rice-3-480w.webp",
+      "bytes": 26698,
+      "contentType": "image/webp",
+      "etag": "3cc53931c81811c8a2448faf0d88c495",
+      "lastModified": "2026-10-08T00:01:45.025Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-02-dandong-soup-rice/dandong-soup-rice-3-960w.webp",
+      "bytes": 68326,
+      "contentType": "image/webp",
+      "etag": "4134d4206dbf1632b92192ed9ca9191b",
+      "lastModified": "2026-10-08T00:01:50.094Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-02-dandong-soup-rice/dandong-soup-rice-3.webp",
+      "bytes": 190306,
+      "contentType": "image/webp",
+      "etag": "9daf599d5e50ecc8db39f3ce8cde76f8",
+      "lastModified": "2026-10-08T00:01:56.743Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-02-dandong-soup-rice/dandong-soup-rice-4-480w.webp",
+      "bytes": 35542,
+      "contentType": "image/webp",
+      "etag": "cfee458eb3df9907e3e2281292eb24b4",
+      "lastModified": "2026-10-08T00:02:01.395Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-02-dandong-soup-rice/dandong-soup-rice-4-960w.webp",
+      "bytes": 123774,
+      "contentType": "image/webp",
+      "etag": "f71b5fdd5088c0c5ff1a116a749605d8",
+      "lastModified": "2026-10-08T00:02:07.006Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-02-dandong-soup-rice/dandong-soup-rice-4.webp",
+      "bytes": 445030,
+      "contentType": "image/webp",
+      "etag": "c93b966aacb8cec67a96898238b650eb",
+      "lastModified": "2026-10-08T00:02:14.079Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-02-dandong-soup-rice/dandong-soup-rice-480w.webp",
+      "bytes": 47720,
+      "contentType": "image/webp",
+      "etag": "275525729802f4914c0bfb71747849af",
+      "lastModified": "2026-10-08T00:02:18.190Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-02-dandong-soup-rice/dandong-soup-rice-960w.webp",
+      "bytes": 138548,
+      "contentType": "image/webp",
+      "etag": "4c416e42a903baab493213f8b89cb574",
+      "lastModified": "2026-10-08T00:02:22.624Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-02-dandong-soup-rice/dandong-soup-rice.webp",
+      "bytes": 396032,
+      "contentType": "image/webp",
+      "etag": "c45f181804c876cc23c430d3076d19a1",
+      "lastModified": "2026-10-08T00:02:28.609Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-03-shenyang-chicken-and-bathhouse/shenyang-chicken-and-bathhouse-2-480w.webp",
+      "bytes": 46532,
+      "contentType": "image/webp",
+      "etag": "ca58d494e0a1bbb8fb4006ae5393e65d",
+      "lastModified": "2026-10-08T00:01:43.669Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-03-shenyang-chicken-and-bathhouse/shenyang-chicken-and-bathhouse-2-960w.webp",
+      "bytes": 148604,
+      "contentType": "image/webp",
+      "etag": "a1729822390287bb74bed0d16941945e",
+      "lastModified": "2026-10-08T00:01:48.522Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-03-shenyang-chicken-and-bathhouse/shenyang-chicken-and-bathhouse-2.webp",
+      "bytes": 482608,
+      "contentType": "image/webp",
+      "etag": "ec07535a74b71f8180907f0be6cfffe9",
+      "lastModified": "2026-10-08T00:01:55.073Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-03-shenyang-chicken-and-bathhouse/shenyang-chicken-and-bathhouse-3-480w.webp",
+      "bytes": 38640,
+      "contentType": "image/webp",
+      "etag": "36628055ac83f4205e36c1d26a4550af",
+      "lastModified": "2026-10-08T00:02:00.660Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-03-shenyang-chicken-and-bathhouse/shenyang-chicken-and-bathhouse-3-960w.webp",
+      "bytes": 100992,
+      "contentType": "image/webp",
+      "etag": "c479244a7fdfe54fd0b1c88d8205237d",
+      "lastModified": "2026-10-08T00:02:05.669Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-03-shenyang-chicken-and-bathhouse/shenyang-chicken-and-bathhouse-3.webp",
+      "bytes": 207500,
+      "contentType": "image/webp",
+      "etag": "3d7878ed812294ece8cd434a82feb773",
+      "lastModified": "2026-10-08T00:02:10.973Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-03-shenyang-chicken-and-bathhouse/shenyang-chicken-and-bathhouse-4-480w.webp",
+      "bytes": 48122,
+      "contentType": "image/webp",
+      "etag": "bd8b93155cdfd76df23727b7a621ca93",
+      "lastModified": "2026-10-08T00:02:15.568Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-03-shenyang-chicken-and-bathhouse/shenyang-chicken-and-bathhouse-4-960w.webp",
+      "bytes": 159230,
+      "contentType": "image/webp",
+      "etag": "3577ebaf2ee5c7d058f51b9a48112d49",
+      "lastModified": "2026-10-08T00:02:21.997Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-03-shenyang-chicken-and-bathhouse/shenyang-chicken-and-bathhouse-4.webp",
+      "bytes": 472488,
+      "contentType": "image/webp",
+      "etag": "bae144e84870f76b50f43e9f62e1cf3b",
+      "lastModified": "2026-10-08T00:02:29.486Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-03-shenyang-chicken-and-bathhouse/shenyang-chicken-and-bathhouse-480w.webp",
+      "bytes": 39940,
+      "contentType": "image/webp",
+      "etag": "67ac0f57848f95e7f8b6102266e2b48a",
+      "lastModified": "2026-10-08T00:02:33.421Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-03-shenyang-chicken-and-bathhouse/shenyang-chicken-and-bathhouse-5-480w.webp",
+      "bytes": 28488,
+      "contentType": "image/webp",
+      "etag": "18c12dc475f7e02417995fba43d319f3",
+      "lastModified": "2026-10-08T00:02:37.911Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-03-shenyang-chicken-and-bathhouse/shenyang-chicken-and-bathhouse-5-960w.webp",
+      "bytes": 99244,
+      "contentType": "image/webp",
+      "etag": "bb8bd3df043e0e42755ce33e37c69e13",
+      "lastModified": "2026-10-08T00:02:43.378Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-03-shenyang-chicken-and-bathhouse/shenyang-chicken-and-bathhouse-5.webp",
+      "bytes": 350198,
+      "contentType": "image/webp",
+      "etag": "7bc9e66b8c7fcce2084c37365f3108fb",
+      "lastModified": "2026-10-08T00:02:50.490Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-03-shenyang-chicken-and-bathhouse/shenyang-chicken-and-bathhouse-6-480w.webp",
+      "bytes": 16032,
+      "contentType": "image/webp",
+      "etag": "fad360a1894b2136b6300e36e5edfc2b",
+      "lastModified": "2026-10-08T00:02:55.635Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-03-shenyang-chicken-and-bathhouse/shenyang-chicken-and-bathhouse-6-960w.webp",
+      "bytes": 51048,
+      "contentType": "image/webp",
+      "etag": "6d7f38a1b910b28754ff9cb2ad7e951b",
+      "lastModified": "2026-10-08T00:03:00.929Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-03-shenyang-chicken-and-bathhouse/shenyang-chicken-and-bathhouse-6.webp",
+      "bytes": 162652,
+      "contentType": "image/webp",
+      "etag": "21a268a2876104df60939fad0b349e4b",
+      "lastModified": "2026-10-08T00:03:07.219Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-03-shenyang-chicken-and-bathhouse/shenyang-chicken-and-bathhouse-7-480w.webp",
+      "bytes": 30076,
+      "contentType": "image/webp",
+      "etag": "83b9b2c3a599b5aa243a50e2903cd201",
+      "lastModified": "2026-10-08T00:03:12.378Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-03-shenyang-chicken-and-bathhouse/shenyang-chicken-and-bathhouse-7-960w.webp",
+      "bytes": 98254,
+      "contentType": "image/webp",
+      "etag": "677aabd6b68d4347b8e8007da19928b0",
+      "lastModified": "2026-10-08T00:03:16.901Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-03-shenyang-chicken-and-bathhouse/shenyang-chicken-and-bathhouse-7.webp",
+      "bytes": 318158,
+      "contentType": "image/webp",
+      "etag": "2ed8c38b702d8cb4f6247b6fdf61a9e7",
+      "lastModified": "2026-10-08T00:03:22.498Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-03-shenyang-chicken-and-bathhouse/shenyang-chicken-and-bathhouse-960w.webp",
+      "bytes": 115554,
+      "contentType": "image/webp",
+      "etag": "2b989d2474b33abf7b18c07e8ddba832",
+      "lastModified": "2026-10-08T00:03:27.395Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-03-shenyang-chicken-and-bathhouse/shenyang-chicken-and-bathhouse.webp",
+      "bytes": 321752,
+      "contentType": "image/webp",
+      "etag": "a90208998471b937ecf81945ad112c21",
+      "lastModified": "2026-10-08T00:03:33.599Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-2-480w.webp",
+      "bytes": 24166,
+      "contentType": "image/webp",
+      "etag": "e811053763ed15d784d4139c65aadd9a",
+      "lastModified": "2026-10-08T00:02:23.463Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-2-960w.webp",
+      "bytes": 60686,
+      "contentType": "image/webp",
+      "etag": "6c155ee35d7878712dd31860eb5d2da8",
+      "lastModified": "2026-10-08T00:02:29.654Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-2.webp",
+      "bytes": 165510,
+      "contentType": "image/webp",
+      "etag": "814c15ac10fdac8af89755c1d5ff080c",
+      "lastModified": "2026-10-08T00:02:35.771Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-3-480w.webp",
+      "bytes": 15776,
+      "contentType": "image/webp",
+      "etag": "4fa24b9fe544ae172770529fd64c39e2",
+      "lastModified": "2026-10-08T00:02:40.329Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-3-960w.webp",
+      "bytes": 42088,
+      "contentType": "image/webp",
+      "etag": "7a794f64edfd9e6fdbe4947fce250c74",
+      "lastModified": "2026-10-08T00:02:45.608Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-3.webp",
+      "bytes": 127954,
+      "contentType": "image/webp",
+      "etag": "4050ac74fe3aeba2c34bbe0c258200a2",
+      "lastModified": "2026-10-08T00:02:51.180Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-4-480w.webp",
+      "bytes": 44394,
+      "contentType": "image/webp",
+      "etag": "340e3f9fb71631470c59926f7a31e6e6",
+      "lastModified": "2026-10-08T00:02:59.366Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-4-960w.webp",
+      "bytes": 150700,
+      "contentType": "image/webp",
+      "etag": "af20c93d121974aaea1168610c64b990",
+      "lastModified": "2026-10-08T00:03:04.724Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-4.webp",
+      "bytes": 477066,
+      "contentType": "image/webp",
+      "etag": "eae5ae373d27d01887b999a72b7217bd",
+      "lastModified": "2026-10-08T00:03:11.437Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-480w.webp",
+      "bytes": 34084,
+      "contentType": "image/webp",
+      "etag": "9a22516f04e106040c8f38f52a1e7d88",
+      "lastModified": "2026-10-08T00:03:17.351Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-5-480w.webp",
+      "bytes": 24522,
+      "contentType": "image/webp",
+      "etag": "8fff8e0287ac8ceeb2c4df2e3e8598bb",
+      "lastModified": "2026-10-08T00:03:22.091Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-5-960w.webp",
+      "bytes": 68628,
+      "contentType": "image/webp",
+      "etag": "a64f8a985f08c172b6a593f8d3004da3",
+      "lastModified": "2026-10-08T00:03:26.772Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-5.webp",
+      "bytes": 195084,
+      "contentType": "image/webp",
+      "etag": "53eecb77e5652b1143503cdb1c7b4f7a",
+      "lastModified": "2026-10-08T00:03:32.569Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-6-480w.webp",
+      "bytes": 18422,
+      "contentType": "image/webp",
+      "etag": "7db91671389f8ee0f229e36485e2a1a4",
+      "lastModified": "2026-10-08T00:03:37.280Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-6-960w.webp",
+      "bytes": 50848,
+      "contentType": "image/webp",
+      "etag": "100777eb1304b49214aa2f2f1cbb7ff8",
+      "lastModified": "2026-10-08T00:03:44.488Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-6.webp",
+      "bytes": 150972,
+      "contentType": "image/webp",
+      "etag": "4253a50b89992192571c3abc2905e0a5",
+      "lastModified": "2026-10-08T00:03:49.333Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-7-480w.webp",
+      "bytes": 36148,
+      "contentType": "image/webp",
+      "etag": "a97587a8c5f27620f04df714c7c9b3fc",
+      "lastModified": "2026-10-08T00:03:54.855Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-7-960w.webp",
+      "bytes": 92622,
+      "contentType": "image/webp",
+      "etag": "8ac97c3ec9d8072361890bc8d381956f",
+      "lastModified": "2026-10-08T00:03:59.961Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-7.webp",
+      "bytes": 203444,
+      "contentType": "image/webp",
+      "etag": "9c6f4a70c3529a69771471f110dd095c",
+      "lastModified": "2026-10-08T00:04:06.167Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-960w.webp",
+      "bytes": 93586,
+      "contentType": "image/webp",
+      "etag": "af84e96997c4a0d5298eb106127e643e",
+      "lastModified": "2026-10-08T00:04:11.894Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food.webp",
+      "bytes": 272668,
+      "contentType": "image/webp",
+      "etag": "be43364802e6e7459800d8528f126e2e",
+      "lastModified": "2026-10-08T00:04:17.797Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-02-shenyang-cybercab/shenyang-cybercab-2-480w.webp",
+      "bytes": 20120,
+      "contentType": "image/webp",
+      "etag": "7a1b2ae65d68cd75120a9b4e6de5006f",
+      "lastModified": "2026-10-08T00:02:36.039Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-02-shenyang-cybercab/shenyang-cybercab-2-960w.webp",
+      "bytes": 51450,
+      "contentType": "image/webp",
+      "etag": "0cf4e2103a1d0918db01b4a369ae2888",
+      "lastModified": "2026-10-08T00:02:42.356Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-02-shenyang-cybercab/shenyang-cybercab-2.webp",
+      "bytes": 133924,
+      "contentType": "image/webp",
+      "etag": "5c62c0bf308bfe519e8822d28895086a",
+      "lastModified": "2026-10-08T00:02:47.796Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-02-shenyang-cybercab/shenyang-cybercab-3-480w.webp",
+      "bytes": 19196,
+      "contentType": "image/webp",
+      "etag": "fde2346dc90a5bbf7515384b35a77fee",
+      "lastModified": "2026-10-08T00:02:52.674Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-02-shenyang-cybercab/shenyang-cybercab-3-960w.webp",
+      "bytes": 50454,
+      "contentType": "image/webp",
+      "etag": "8e57086843ed7a91e0ea7fa61b90bbf4",
+      "lastModified": "2026-10-08T00:02:58.713Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-02-shenyang-cybercab/shenyang-cybercab-3.webp",
+      "bytes": 137394,
+      "contentType": "image/webp",
+      "etag": "453341be20cddb7717e4dc8ef51467ef",
+      "lastModified": "2026-10-08T00:03:04.269Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-02-shenyang-cybercab/shenyang-cybercab-4-480w.webp",
+      "bytes": 31794,
+      "contentType": "image/webp",
+      "etag": "da03897c0ee11a7ccdbc0fa55420da6d",
+      "lastModified": "2026-10-08T00:03:08.518Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-02-shenyang-cybercab/shenyang-cybercab-4-960w.webp",
+      "bytes": 82188,
+      "contentType": "image/webp",
+      "etag": "7d01ccf34ca6a516648bf19f9cf46c66",
+      "lastModified": "2026-10-08T00:03:14.214Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-02-shenyang-cybercab/shenyang-cybercab-4.webp",
+      "bytes": 176832,
+      "contentType": "image/webp",
+      "etag": "899f5946e4b94d8096f1ce2484199818",
+      "lastModified": "2026-10-08T00:03:19.015Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-02-shenyang-cybercab/shenyang-cybercab-480w.webp",
+      "bytes": 23738,
+      "contentType": "image/webp",
+      "etag": "ac32e9c7b8bb0d3925bd1515ecd42c1d",
+      "lastModified": "2026-10-08T00:03:23.876Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-02-shenyang-cybercab/shenyang-cybercab-5-480w.webp",
+      "bytes": 32248,
+      "contentType": "image/webp",
+      "etag": "ca5c76465fef81f5056d71a4ab919d2e",
+      "lastModified": "2026-10-08T00:03:27.840Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-02-shenyang-cybercab/shenyang-cybercab-5-960w.webp",
+      "bytes": 93638,
+      "contentType": "image/webp",
+      "etag": "b0d836c8fca18cbbd8def90ddb1fc7e4",
+      "lastModified": "2026-10-08T00:03:33.416Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-02-shenyang-cybercab/shenyang-cybercab-5.webp",
+      "bytes": 214522,
+      "contentType": "image/webp",
+      "etag": "5ba4bf455cdde89396d0b4d0ceb280cd",
+      "lastModified": "2026-10-08T00:03:38.706Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-02-shenyang-cybercab/shenyang-cybercab-6-480w.webp",
+      "bytes": 19922,
+      "contentType": "image/webp",
+      "etag": "dc2cff4421ce63b64dbc2c810a172807",
+      "lastModified": "2026-10-08T00:03:45.123Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-02-shenyang-cybercab/shenyang-cybercab-6-960w.webp",
+      "bytes": 60486,
+      "contentType": "image/webp",
+      "etag": "0360551f34e756ada5407d1a26687339",
+      "lastModified": "2026-10-08T00:03:50.085Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-02-shenyang-cybercab/shenyang-cybercab-6.webp",
+      "bytes": 166192,
+      "contentType": "image/webp",
+      "etag": "b49ff6e26c04cd5c28b26f0fd8305680",
+      "lastModified": "2026-10-08T00:03:56.133Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-02-shenyang-cybercab/shenyang-cybercab-960w.webp",
+      "bytes": 60120,
+      "contentType": "image/webp",
+      "etag": "6d20b2caa2736e70c4b64082f2f27e45",
+      "lastModified": "2026-10-08T00:04:00.859Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-02-shenyang-cybercab/shenyang-cybercab.webp",
+      "bytes": 156910,
+      "contentType": "image/webp",
+      "etag": "cd1bd5c2aa7ec63d138ba9d9f43d4861",
+      "lastModified": "2026-10-08T00:04:06.788Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/05-01-tianjin-guobacai/tianjin-guobacai-2-480w.webp",
+      "bytes": 28768,
+      "contentType": "image/webp",
+      "etag": "fc11cb392308feaea3012a22e0a28ab6",
+      "lastModified": "2026-10-08T00:03:41.289Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/05-01-tianjin-guobacai/tianjin-guobacai-2-960w.webp",
+      "bytes": 73006,
+      "contentType": "image/webp",
+      "etag": "2b9ef901bb5eaf611b4260448d6cfe08",
+      "lastModified": "2026-10-08T00:03:46.532Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/05-01-tianjin-guobacai/tianjin-guobacai-2.webp",
+      "bytes": 200218,
+      "contentType": "image/webp",
+      "etag": "5346638141e9f8b5e3a25c83a6892862",
+      "lastModified": "2026-10-08T00:03:51.472Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/05-01-tianjin-guobacai/tianjin-guobacai-3-480w.webp",
+      "bytes": 36560,
+      "contentType": "image/webp",
+      "etag": "4b7fe5d74de51fa3e109ac9460316f77",
+      "lastModified": "2026-10-08T00:03:55.266Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/05-01-tianjin-guobacai/tianjin-guobacai-3-960w.webp",
+      "bytes": 101364,
+      "contentType": "image/webp",
+      "etag": "bc2ebf410a8b57940b5624a647ed1d7e",
+      "lastModified": "2026-10-08T00:04:00.250Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/05-01-tianjin-guobacai/tianjin-guobacai-3.webp",
+      "bytes": 218628,
+      "contentType": "image/webp",
+      "etag": "f1fbd2a1aea688568c5b93cfbbfc7a1c",
+      "lastModified": "2026-10-08T00:04:07.519Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/05-01-tianjin-guobacai/tianjin-guobacai-4-480w.webp",
+      "bytes": 17856,
+      "contentType": "image/webp",
+      "etag": "ac4a16f571e7edf7e33cceec9a7ea7a5",
+      "lastModified": "2026-10-08T00:04:14.044Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/05-01-tianjin-guobacai/tianjin-guobacai-4-960w.webp",
+      "bytes": 53774,
+      "contentType": "image/webp",
+      "etag": "4db712583a9ad91f520fbdb3bd07d0bc",
+      "lastModified": "2026-10-08T00:04:18.874Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/05-01-tianjin-guobacai/tianjin-guobacai-4.webp",
+      "bytes": 157258,
+      "contentType": "image/webp",
+      "etag": "4c95980fad10aad9dbb7b2409f7e2530",
+      "lastModified": "2026-10-08T00:04:25.502Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/05-01-tianjin-guobacai/tianjin-guobacai-480w.webp",
+      "bytes": 17924,
+      "contentType": "image/webp",
+      "etag": "e776ae740acba62274f0c7c5d1ffeb6f",
+      "lastModified": "2026-10-08T00:04:29.600Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/05-01-tianjin-guobacai/tianjin-guobacai-5-480w.webp",
+      "bytes": 12890,
+      "contentType": "image/webp",
+      "etag": "e683951bbdafe592f83805b9fc0ebf45",
+      "lastModified": "2026-10-08T00:04:34.682Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/05-01-tianjin-guobacai/tianjin-guobacai-5-960w.webp",
+      "bytes": 32232,
+      "contentType": "image/webp",
+      "etag": "f03e972d6df936ac7f0b4fecf5730013",
+      "lastModified": "2026-10-08T00:04:39.262Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/05-01-tianjin-guobacai/tianjin-guobacai-5.webp",
+      "bytes": 87950,
+      "contentType": "image/webp",
+      "etag": "bcae814a59fae535c51cb10e06980d83",
+      "lastModified": "2026-10-08T00:04:44.215Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/05-01-tianjin-guobacai/tianjin-guobacai-6-480w.webp",
+      "bytes": 10540,
+      "contentType": "image/webp",
+      "etag": "97a74e60638d0c75c71ccfdfd17181c6",
+      "lastModified": "2026-10-08T00:04:49.224Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/05-01-tianjin-guobacai/tianjin-guobacai-6-960w.webp",
+      "bytes": 31608,
+      "contentType": "image/webp",
+      "etag": "6b0b4700e54e422b26196231d0eb9ceb",
+      "lastModified": "2026-10-08T00:04:54.500Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/05-01-tianjin-guobacai/tianjin-guobacai-6.webp",
+      "bytes": 95498,
+      "contentType": "image/webp",
+      "etag": "411d35303b6683a37c492b2ea3def71c",
+      "lastModified": "2026-10-08T00:05:00.417Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/05-01-tianjin-guobacai/tianjin-guobacai-960w.webp",
+      "bytes": 45220,
+      "contentType": "image/webp",
+      "etag": "e94dcffa6d0e23474cf09e6a91b09a3d",
+      "lastModified": "2026-10-08T00:05:05.770Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/05-01-tianjin-guobacai/tianjin-guobacai.webp",
+      "bytes": 129356,
+      "contentType": "image/webp",
+      "etag": "7a88f368476d7fd808debb9da36b2f07",
+      "lastModified": "2026-10-08T00:05:10.573Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/05-02-linzhou-stargazing/linzhou-stargazing-2-480w.webp",
+      "bytes": 1436,
+      "contentType": "image/webp",
+      "etag": "b069fe10464c7dccfb8290d7f5fb9e92",
+      "lastModified": "2026-10-08T00:04:12.416Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/05-02-linzhou-stargazing/linzhou-stargazing-2-960w.webp",
+      "bytes": 4674,
+      "contentType": "image/webp",
+      "etag": "3060ee4260a68f3754b4744979b29cda",
+      "lastModified": "2026-10-08T00:04:17.002Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/05-02-linzhou-stargazing/linzhou-stargazing-2.webp",
+      "bytes": 15494,
+      "contentType": "image/webp",
+      "etag": "312d80d42673ff750ee135b751d56dc7",
+      "lastModified": "2026-10-08T00:04:22.445Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/05-02-linzhou-stargazing/linzhou-stargazing-3-480w.webp",
+      "bytes": 1554,
+      "contentType": "image/webp",
+      "etag": "b8004b1d355bcf22c878e36d08b2ae6c",
+      "lastModified": "2026-10-08T00:04:28.155Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/05-02-linzhou-stargazing/linzhou-stargazing-3-960w.webp",
+      "bytes": 4644,
+      "contentType": "image/webp",
+      "etag": "60ad7660be06355254b59b68eebb4a8e",
+      "lastModified": "2026-10-08T00:04:33.953Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/05-02-linzhou-stargazing/linzhou-stargazing-3.webp",
+      "bytes": 14916,
+      "contentType": "image/webp",
+      "etag": "97d2dfa916e79b3ca3711a661fa12cf6",
+      "lastModified": "2026-10-08T00:04:39.058Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/05-02-linzhou-stargazing/linzhou-stargazing-480w.webp",
+      "bytes": 1646,
+      "contentType": "image/webp",
+      "etag": "7f5ccfbed8a9160815b7f40cae5ef533",
+      "lastModified": "2026-10-08T00:04:43.758Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/05-02-linzhou-stargazing/linzhou-stargazing-960w.webp",
+      "bytes": 4972,
+      "contentType": "image/webp",
+      "etag": "bc878ed966a6d6a3134ed935126e8f37",
+      "lastModified": "2026-10-08T00:04:48.660Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/05-02-linzhou-stargazing/linzhou-stargazing.webp",
+      "bytes": 16062,
+      "contentType": "image/webp",
+      "etag": "3d89b9bedd39430212109a198eec2e91",
+      "lastModified": "2026-10-08T00:04:53.292Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/06-01-national-day-road-trip-home/national-day-road-trip-home-480w.webp",
+      "bytes": 9066,
+      "contentType": "image/webp",
+      "etag": "3c00080e51dccea8427e05abbeed4daf",
+      "lastModified": "2026-10-08T00:04:25.904Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/06-01-national-day-road-trip-home/national-day-road-trip-home-960w.webp",
+      "bytes": 21974,
+      "contentType": "image/webp",
+      "etag": "1edc02a885711a613264393b86ebb322",
+      "lastModified": "2026-10-08T00:04:31.410Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/06-01-national-day-road-trip-home/national-day-road-trip-home.webp",
+      "bytes": 58074,
+      "contentType": "image/webp",
+      "etag": "107acb051aeb831d077c99e3647c074a",
+      "lastModified": "2026-10-08T00:04:37.086Z",
       "storageClass": "Standard"
     },
     {
