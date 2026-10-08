@@ -1,0 +1,112 @@
+{
+  "dalian-sea-intestine-rice-2-480w.webp": {
+    "bytes": 32778,
+    "contentType": "image/webp",
+    "etag": "5b582ab9a695297067098e1b545a3974",
+    "height": 360,
+    "width": 480
+  },
+  "dalian-sea-intestine-rice-2-960w.webp": {
+    "bytes": 75666,
+    "contentType": "image/webp",
+    "etag": "347bae9dcb0bf0a91de4dd47a9668d6a",
+    "height": 720,
+    "width": 960
+  },
+  "dalian-sea-intestine-rice-2.webp": {
+    "bytes": 130906,
+    "contentType": "image/webp",
+    "etag": "34b9c0e91223ce5b1560c246c35ae70f",
+    "height": 960,
+    "width": 1280,
+    "variants": ["dalian-sea-intestine-rice-2-480w.webp", "dalian-sea-intestine-rice-2-960w.webp"]
+  },
+  "dalian-sea-intestine-rice-3-480w.webp": {
+    "bytes": 25494,
+    "contentType": "image/webp",
+    "etag": "5f39769f5d4b129e18cd88bb838319a5",
+    "height": 360,
+    "width": 480
+  },
+  "dalian-sea-intestine-rice-3-960w.webp": {
+    "bytes": 60956,
+    "contentType": "image/webp",
+    "etag": "8bdfd5332a512fde126d810cd48332ff",
+    "height": 720,
+    "width": 960
+  },
+  "dalian-sea-intestine-rice-3.webp": {
+    "bytes": 105778,
+    "contentType": "image/webp",
+    "etag": "79ae4fab12699cacfbae865a7d17544a",
+    "height": 960,
+    "width": 1280,
+    "variants": ["dalian-sea-intestine-rice-3-480w.webp", "dalian-sea-intestine-rice-3-960w.webp"]
+  },
+  "dalian-sea-intestine-rice-4-480w.webp": {
+    "bytes": 19424,
+    "contentType": "image/webp",
+    "etag": "3a0f5595c48a74455fe0117ec4b7db73",
+    "height": 360,
+    "width": 480
+  },
+  "dalian-sea-intestine-rice-4-960w.webp": {
+    "bytes": 46398,
+    "contentType": "image/webp",
+    "etag": "e5779907f0974cab8151b0bd2d77239a",
+    "height": 720,
+    "width": 960
+  },
+  "dalian-sea-intestine-rice-4.webp": {
+    "bytes": 83574,
+    "contentType": "image/webp",
+    "etag": "8b3b429b0956ee8560a39734d82c4506",
+    "height": 960,
+    "width": 1280,
+    "variants": ["dalian-sea-intestine-rice-4-480w.webp", "dalian-sea-intestine-rice-4-960w.webp"]
+  },
+  "dalian-sea-intestine-rice-480w.webp": {
+    "bytes": 21474,
+    "contentType": "image/webp",
+    "etag": "e6a35148484c3e4a79b46d92511eace5",
+    "height": 360,
+    "width": 480
+  },
+  "dalian-sea-intestine-rice-5-480w.webp": {
+    "bytes": 9542,
+    "contentType": "image/webp",
+    "etag": "039b5c20fd45e096e34606bd40436b07",
+    "height": 360,
+    "width": 480
+  },
+  "dalian-sea-intestine-rice-5-960w.webp": {
+    "bytes": 21830,
+    "contentType": "image/webp",
+    "etag": "7fb612fa8e82cb99c4f1468317218c25",
+    "height": 720,
+    "width": 960
+  },
+  "dalian-sea-intestine-rice-5.webp": {
+    "bytes": 41014,
+    "contentType": "image/webp",
+    "etag": "a7bfb6cb20a79d4152a72d7a5667935e",
+    "height": 960,
+    "width": 1280,
+    "variants": ["dalian-sea-intestine-rice-5-480w.webp", "dalian-sea-intestine-rice-5-960w.webp"]
+  },
+  "dalian-sea-intestine-rice-960w.webp": {
+    "bytes": 54736,
+    "contentType": "image/webp",
+    "etag": "54e88a6d64620c43d6020711f62639ae",
+    "height": 720,
+    "width": 960
+  },
+  "dalian-sea-intestine-rice.webp": {
+    "bytes": 100844,
+    "contentType": "image/webp",
+    "etag": "91ac10e7b402875f3d8479d801f1dbb0",
+    "height": 960,
+    "width": 1280,
+    "variants": ["dalian-sea-intestine-rice-480w.webp", "dalian-sea-intestine-rice-960w.webp"]
+  }
+}

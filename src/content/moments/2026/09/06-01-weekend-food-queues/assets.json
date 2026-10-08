@@ -1,0 +1,134 @@
+{
+  "weekend-food-queues-2-480w.webp": {
+    "bytes": 12592,
+    "contentType": "image/webp",
+    "etag": "8ced3a18f6abcef54dceeee7cbaeee7e",
+    "height": 360,
+    "width": 480
+  },
+  "weekend-food-queues-2-960w.webp": {
+    "bytes": 48574,
+    "contentType": "image/webp",
+    "etag": "05d396840d65fc44677e3e7bf15f0c98",
+    "height": 720,
+    "width": 960
+  },
+  "weekend-food-queues-2.webp": {
+    "bytes": 189382,
+    "contentType": "image/webp",
+    "etag": "920dd0dda2cfecd7a0bf1e50c701b2b6",
+    "height": 1440,
+    "width": 1920,
+    "variants": ["weekend-food-queues-2-480w.webp", "weekend-food-queues-2-960w.webp"]
+  },
+  "weekend-food-queues-3-480w.webp": {
+    "bytes": 17882,
+    "contentType": "image/webp",
+    "etag": "86c6ef9068ae2828c31787091128ace7",
+    "height": 640,
+    "width": 480
+  },
+  "weekend-food-queues-3-960w.webp": {
+    "bytes": 42614,
+    "contentType": "image/webp",
+    "etag": "f6b6bf48f9f08c048d6313536de3fdcd",
+    "height": 1280,
+    "width": 960
+  },
+  "weekend-food-queues-3.webp": {
+    "bytes": 86682,
+    "contentType": "image/webp",
+    "etag": "fc179b8e6852791e1151e3adaa1f1f96",
+    "height": 1920,
+    "width": 1440,
+    "variants": ["weekend-food-queues-3-480w.webp", "weekend-food-queues-3-960w.webp"]
+  },
+  "weekend-food-queues-4-480w.webp": {
+    "bytes": 48924,
+    "contentType": "image/webp",
+    "etag": "49e72b668d0879ed4ed6e58a535690e9",
+    "height": 640,
+    "width": 480
+  },
+  "weekend-food-queues-4-960w.webp": {
+    "bytes": 133354,
+    "contentType": "image/webp",
+    "etag": "468a990ab1578053a6b32de8ee2d1d52",
+    "height": 1280,
+    "width": 960
+  },
+  "weekend-food-queues-4.webp": {
+    "bytes": 291320,
+    "contentType": "image/webp",
+    "etag": "dcda1a7a5c949d2f746f406d408e4070",
+    "height": 1920,
+    "width": 1440,
+    "variants": ["weekend-food-queues-4-480w.webp", "weekend-food-queues-4-960w.webp"]
+  },
+  "weekend-food-queues-480w.webp": {
+    "bytes": 29254,
+    "contentType": "image/webp",
+    "etag": "923afb3af76e21a248f628456c3fb824",
+    "height": 360,
+    "width": 480
+  },
+  "weekend-food-queues-5-480w.webp": {
+    "bytes": 15294,
+    "contentType": "image/webp",
+    "etag": "7e2b1f48bda170b84025ec98cf7eb7a2",
+    "height": 640,
+    "width": 480
+  },
+  "weekend-food-queues-5-960w.webp": {
+    "bytes": 36848,
+    "contentType": "image/webp",
+    "etag": "72167ed9cbf6abdda5d903732d41fd4b",
+    "height": 1280,
+    "width": 960
+  },
+  "weekend-food-queues-5.webp": {
+    "bytes": 75068,
+    "contentType": "image/webp",
+    "etag": "98c89647f131892a679a895bda6b9d4a",
+    "height": 1920,
+    "width": 1440,
+    "variants": ["weekend-food-queues-5-480w.webp", "weekend-food-queues-5-960w.webp"]
+  },
+  "weekend-food-queues-6-480w.webp": {
+    "bytes": 15520,
+    "contentType": "image/webp",
+    "etag": "795419d28ac9b6327711412cb2fdc2f6",
+    "height": 360,
+    "width": 480
+  },
+  "weekend-food-queues-6-960w.webp": {
+    "bytes": 38384,
+    "contentType": "image/webp",
+    "etag": "0cb7bed08ffa9b07537b056f8bf28f88",
+    "height": 720,
+    "width": 960
+  },
+  "weekend-food-queues-6.webp": {
+    "bytes": 106358,
+    "contentType": "image/webp",
+    "etag": "802608f38fcd0c0f04dea6f3f7177464",
+    "height": 1440,
+    "width": 1920,
+    "variants": ["weekend-food-queues-6-480w.webp", "weekend-food-queues-6-960w.webp"]
+  },
+  "weekend-food-queues-960w.webp": {
+    "bytes": 80512,
+    "contentType": "image/webp",
+    "etag": "3e2be61ae271c1a0a45aadb3d79359cc",
+    "height": 720,
+    "width": 960
+  },
+  "weekend-food-queues.webp": {
+    "bytes": 234526,
+    "contentType": "image/webp",
+    "etag": "4eb8f43c61a992b70bffda0d715bcc81",
+    "height": 1440,
+    "width": 1920,
+    "variants": ["weekend-food-queues-480w.webp", "weekend-food-queues-960w.webp"]
+  }
+}

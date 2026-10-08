@@ -1,0 +1,177 @@
+{
+  "shenyang-chicken-and-bathhouse-2-480w.webp": {
+    "bytes": 46532,
+    "contentType": "image/webp",
+    "etag": "ca58d494e0a1bbb8fb4006ae5393e65d",
+    "height": 360,
+    "width": 480
+  },
+  "shenyang-chicken-and-bathhouse-2-960w.webp": {
+    "bytes": 148604,
+    "contentType": "image/webp",
+    "etag": "a1729822390287bb74bed0d16941945e",
+    "height": 720,
+    "width": 960
+  },
+  "shenyang-chicken-and-bathhouse-2.webp": {
+    "bytes": 482608,
+    "contentType": "image/webp",
+    "etag": "ec07535a74b71f8180907f0be6cfffe9",
+    "height": 1440,
+    "width": 1920,
+    "variants": [
+      "shenyang-chicken-and-bathhouse-2-480w.webp",
+      "shenyang-chicken-and-bathhouse-2-960w.webp"
+    ]
+  },
+  "shenyang-chicken-and-bathhouse-3-480w.webp": {
+    "bytes": 38640,
+    "contentType": "image/webp",
+    "etag": "36628055ac83f4205e36c1d26a4550af",
+    "height": 640,
+    "width": 480
+  },
+  "shenyang-chicken-and-bathhouse-3-960w.webp": {
+    "bytes": 100992,
+    "contentType": "image/webp",
+    "etag": "c479244a7fdfe54fd0b1c88d8205237d",
+    "height": 1280,
+    "width": 960
+  },
+  "shenyang-chicken-and-bathhouse-3.webp": {
+    "bytes": 207500,
+    "contentType": "image/webp",
+    "etag": "3d7878ed812294ece8cd434a82feb773",
+    "height": 1920,
+    "width": 1440,
+    "variants": [
+      "shenyang-chicken-and-bathhouse-3-480w.webp",
+      "shenyang-chicken-and-bathhouse-3-960w.webp"
+    ]
+  },
+  "shenyang-chicken-and-bathhouse-4-480w.webp": {
+    "bytes": 48122,
+    "contentType": "image/webp",
+    "etag": "bd8b93155cdfd76df23727b7a621ca93",
+    "height": 360,
+    "width": 480
+  },
+  "shenyang-chicken-and-bathhouse-4-960w.webp": {
+    "bytes": 159230,
+    "contentType": "image/webp",
+    "etag": "3577ebaf2ee5c7d058f51b9a48112d49",
+    "height": 720,
+    "width": 960
+  },
+  "shenyang-chicken-and-bathhouse-4.webp": {
+    "bytes": 472488,
+    "contentType": "image/webp",
+    "etag": "bae144e84870f76b50f43e9f62e1cf3b",
+    "height": 1440,
+    "width": 1920,
+    "variants": [
+      "shenyang-chicken-and-bathhouse-4-480w.webp",
+      "shenyang-chicken-and-bathhouse-4-960w.webp"
+    ]
+  },
+  "shenyang-chicken-and-bathhouse-480w.webp": {
+    "bytes": 39940,
+    "contentType": "image/webp",
+    "etag": "67ac0f57848f95e7f8b6102266e2b48a",
+    "height": 360,
+    "width": 480
+  },
+  "shenyang-chicken-and-bathhouse-5-480w.webp": {
+    "bytes": 28488,
+    "contentType": "image/webp",
+    "etag": "18c12dc475f7e02417995fba43d319f3",
+    "height": 360,
+    "width": 480
+  },
+  "shenyang-chicken-and-bathhouse-5-960w.webp": {
+    "bytes": 99244,
+    "contentType": "image/webp",
+    "etag": "bb8bd3df043e0e42755ce33e37c69e13",
+    "height": 720,
+    "width": 960
+  },
+  "shenyang-chicken-and-bathhouse-5.webp": {
+    "bytes": 350198,
+    "contentType": "image/webp",
+    "etag": "7bc9e66b8c7fcce2084c37365f3108fb",
+    "height": 1440,
+    "width": 1920,
+    "variants": [
+      "shenyang-chicken-and-bathhouse-5-480w.webp",
+      "shenyang-chicken-and-bathhouse-5-960w.webp"
+    ]
+  },
+  "shenyang-chicken-and-bathhouse-6-480w.webp": {
+    "bytes": 16032,
+    "contentType": "image/webp",
+    "etag": "fad360a1894b2136b6300e36e5edfc2b",
+    "height": 178,
+    "width": 480
+  },
+  "shenyang-chicken-and-bathhouse-6-960w.webp": {
+    "bytes": 51048,
+    "contentType": "image/webp",
+    "etag": "6d7f38a1b910b28754ff9cb2ad7e951b",
+    "height": 355,
+    "width": 960
+  },
+  "shenyang-chicken-and-bathhouse-6.webp": {
+    "bytes": 162652,
+    "contentType": "image/webp",
+    "etag": "21a268a2876104df60939fad0b349e4b",
+    "height": 710,
+    "width": 1920,
+    "variants": [
+      "shenyang-chicken-and-bathhouse-6-480w.webp",
+      "shenyang-chicken-and-bathhouse-6-960w.webp"
+    ]
+  },
+  "shenyang-chicken-and-bathhouse-7-480w.webp": {
+    "bytes": 30076,
+    "contentType": "image/webp",
+    "etag": "83b9b2c3a599b5aa243a50e2903cd201",
+    "height": 360,
+    "width": 480
+  },
+  "shenyang-chicken-and-bathhouse-7-960w.webp": {
+    "bytes": 98254,
+    "contentType": "image/webp",
+    "etag": "677aabd6b68d4347b8e8007da19928b0",
+    "height": 720,
+    "width": 960
+  },
+  "shenyang-chicken-and-bathhouse-7.webp": {
+    "bytes": 318158,
+    "contentType": "image/webp",
+    "etag": "2ed8c38b702d8cb4f6247b6fdf61a9e7",
+    "height": 1440,
+    "width": 1920,
+    "variants": [
+      "shenyang-chicken-and-bathhouse-7-480w.webp",
+      "shenyang-chicken-and-bathhouse-7-960w.webp"
+    ]
+  },
+  "shenyang-chicken-and-bathhouse-960w.webp": {
+    "bytes": 115554,
+    "contentType": "image/webp",
+    "etag": "2b989d2474b33abf7b18c07e8ddba832",
+    "height": 720,
+    "width": 960
+  },
+  "shenyang-chicken-and-bathhouse.webp": {
+    "bytes": 321752,
+    "contentType": "image/webp",
+    "etag": "a90208998471b937ecf81945ad112c21",
+    "height": 1440,
+    "width": 1920,
+    "variants": [
+      "shenyang-chicken-and-bathhouse-480w.webp",
+      "shenyang-chicken-and-bathhouse-960w.webp"
+    ]
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "yunnan-birthday-surprise-480w.webp": {
+    "bytes": 20862,
+    "contentType": "image/webp",
+    "etag": "94cc5c414237ae9d0a8c98c86bb8df39",
+    "height": 640,
+    "width": 480
+  },
+  "yunnan-birthday-surprise.webp": {
+    "bytes": 53158,
+    "contentType": "image/webp",
+    "etag": "e893856029f3ab36ed49e27ff77dd228",
+    "height": 1280,
+    "width": 960,
+    "variants": ["yunnan-birthday-surprise-480w.webp"]
+  }
+}

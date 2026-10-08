@@ -1,0 +1,24 @@
+{
+  "national-day-road-trip-home-480w.webp": {
+    "bytes": 9066,
+    "contentType": "image/webp",
+    "etag": "3c00080e51dccea8427e05abbeed4daf",
+    "height": 270,
+    "width": 480
+  },
+  "national-day-road-trip-home-960w.webp": {
+    "bytes": 21974,
+    "contentType": "image/webp",
+    "etag": "1edc02a885711a613264393b86ebb322",
+    "height": 540,
+    "width": 960
+  },
+  "national-day-road-trip-home.webp": {
+    "bytes": 58074,
+    "contentType": "image/webp",
+    "etag": "107acb051aeb831d077c99e3647c074a",
+    "height": 1080,
+    "width": 1919,
+    "variants": ["national-day-road-trip-home-480w.webp", "national-day-road-trip-home-960w.webp"]
+  }
+}

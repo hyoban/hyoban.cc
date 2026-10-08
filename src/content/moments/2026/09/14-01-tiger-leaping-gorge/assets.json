@@ -1,0 +1,90 @@
+{
+  "tiger-leaping-gorge-2-480w.webp": {
+    "bytes": 30854,
+    "contentType": "image/webp",
+    "etag": "77852727e1002f29651a6ab8c00ae3fb",
+    "height": 270,
+    "width": 480
+  },
+  "tiger-leaping-gorge-2-960w.webp": {
+    "bytes": 117024,
+    "contentType": "image/webp",
+    "etag": "39ffe2a0cd8b28efb8fe7813cba657aa",
+    "height": 540,
+    "width": 960
+  },
+  "tiger-leaping-gorge-2.webp": {
+    "bytes": 426358,
+    "contentType": "image/webp",
+    "etag": "a20c18cb7d0a59743aa7e1bc96067501",
+    "height": 1080,
+    "width": 1920,
+    "variants": ["tiger-leaping-gorge-2-480w.webp", "tiger-leaping-gorge-2-960w.webp"]
+  },
+  "tiger-leaping-gorge-3-480w.webp": {
+    "bytes": 29362,
+    "contentType": "image/webp",
+    "etag": "a3301363e57a3119717b36efa7981776",
+    "height": 270,
+    "width": 480
+  },
+  "tiger-leaping-gorge-3-960w.webp": {
+    "bytes": 102460,
+    "contentType": "image/webp",
+    "etag": "0e0dce0d8ecc4bf045530482032544d1",
+    "height": 540,
+    "width": 960
+  },
+  "tiger-leaping-gorge-3.webp": {
+    "bytes": 339138,
+    "contentType": "image/webp",
+    "etag": "28d277b084984b5951b8c1b5c56803d7",
+    "height": 1080,
+    "width": 1920,
+    "variants": ["tiger-leaping-gorge-3-480w.webp", "tiger-leaping-gorge-3-960w.webp"]
+  },
+  "tiger-leaping-gorge-4-480w.webp": {
+    "bytes": 16680,
+    "contentType": "image/webp",
+    "etag": "366e4b7636d8453d14a10d471a9d90f5",
+    "height": 270,
+    "width": 480
+  },
+  "tiger-leaping-gorge-4-960w.webp": {
+    "bytes": 60138,
+    "contentType": "image/webp",
+    "etag": "616f3ff6251d7c8f7e739803df50f456",
+    "height": 540,
+    "width": 960
+  },
+  "tiger-leaping-gorge-4.webp": {
+    "bytes": 219496,
+    "contentType": "image/webp",
+    "etag": "2ba3a074bf9e64563fe25589acb8b6a9",
+    "height": 1080,
+    "width": 1920,
+    "variants": ["tiger-leaping-gorge-4-480w.webp", "tiger-leaping-gorge-4-960w.webp"]
+  },
+  "tiger-leaping-gorge-480w.webp": {
+    "bytes": 52598,
+    "contentType": "image/webp",
+    "etag": "37d0134adb2e9ccadd620a910be1ffe0",
+    "height": 270,
+    "width": 480
+  },
+  "tiger-leaping-gorge-960w.webp": {
+    "bytes": 164734,
+    "contentType": "image/webp",
+    "etag": "7b9a099b4e803765d83d7128865945f6",
+    "height": 540,
+    "width": 960
+  },
+  "tiger-leaping-gorge.webp": {
+    "bytes": 499860,
+    "contentType": "image/webp",
+    "etag": "84203f2c9b7e79bfa8b305bbf6f3e03b",
+    "height": 1080,
+    "width": 1920,
+    "variants": ["tiger-leaping-gorge-480w.webp", "tiger-leaping-gorge-960w.webp"]
+  }
+}

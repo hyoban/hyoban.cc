@@ -1,0 +1,90 @@
+{
+  "dandong-soup-rice-2-480w.webp": {
+    "bytes": 28352,
+    "contentType": "image/webp",
+    "etag": "fa9d23177284c57e14003af44fdd1d87",
+    "height": 360,
+    "width": 480
+  },
+  "dandong-soup-rice-2-960w.webp": {
+    "bytes": 76576,
+    "contentType": "image/webp",
+    "etag": "ce91652816b23222e5668102b3977a1c",
+    "height": 720,
+    "width": 960
+  },
+  "dandong-soup-rice-2.webp": {
+    "bytes": 223042,
+    "contentType": "image/webp",
+    "etag": "e0f4cd3b88fce17669a156ec97035e5d",
+    "height": 1440,
+    "width": 1920,
+    "variants": ["dandong-soup-rice-2-480w.webp", "dandong-soup-rice-2-960w.webp"]
+  },
+  "dandong-soup-rice-3-480w.webp": {
+    "bytes": 26698,
+    "contentType": "image/webp",
+    "etag": "3cc53931c81811c8a2448faf0d88c495",
+    "height": 360,
+    "width": 480
+  },
+  "dandong-soup-rice-3-960w.webp": {
+    "bytes": 68326,
+    "contentType": "image/webp",
+    "etag": "4134d4206dbf1632b92192ed9ca9191b",
+    "height": 720,
+    "width": 960
+  },
+  "dandong-soup-rice-3.webp": {
+    "bytes": 190306,
+    "contentType": "image/webp",
+    "etag": "9daf599d5e50ecc8db39f3ce8cde76f8",
+    "height": 1440,
+    "width": 1920,
+    "variants": ["dandong-soup-rice-3-480w.webp", "dandong-soup-rice-3-960w.webp"]
+  },
+  "dandong-soup-rice-4-480w.webp": {
+    "bytes": 35542,
+    "contentType": "image/webp",
+    "etag": "cfee458eb3df9907e3e2281292eb24b4",
+    "height": 360,
+    "width": 480
+  },
+  "dandong-soup-rice-4-960w.webp": {
+    "bytes": 123774,
+    "contentType": "image/webp",
+    "etag": "f71b5fdd5088c0c5ff1a116a749605d8",
+    "height": 720,
+    "width": 960
+  },
+  "dandong-soup-rice-4.webp": {
+    "bytes": 445030,
+    "contentType": "image/webp",
+    "etag": "c93b966aacb8cec67a96898238b650eb",
+    "height": 1440,
+    "width": 1920,
+    "variants": ["dandong-soup-rice-4-480w.webp", "dandong-soup-rice-4-960w.webp"]
+  },
+  "dandong-soup-rice-480w.webp": {
+    "bytes": 47720,
+    "contentType": "image/webp",
+    "etag": "275525729802f4914c0bfb71747849af",
+    "height": 360,
+    "width": 480
+  },
+  "dandong-soup-rice-960w.webp": {
+    "bytes": 138548,
+    "contentType": "image/webp",
+    "etag": "4c416e42a903baab493213f8b89cb574",
+    "height": 720,
+    "width": 960
+  },
+  "dandong-soup-rice.webp": {
+    "bytes": 396032,
+    "contentType": "image/webp",
+    "etag": "c45f181804c876cc23c430d3076d19a1",
+    "height": 1440,
+    "width": 1920,
+    "variants": ["dandong-soup-rice-480w.webp", "dandong-soup-rice-960w.webp"]
+  }
+}

@@ -1,0 +1,158 @@
+{
+  "maanshan-walk-and-food-2-480w.webp": {
+    "bytes": 63792,
+    "contentType": "image/webp",
+    "etag": "5db7b7c986963ff3644e0aef9171a7cf",
+    "height": 640,
+    "width": 480
+  },
+  "maanshan-walk-and-food-2.webp": {
+    "bytes": 224670,
+    "contentType": "image/webp",
+    "etag": "c9d28fcc13d46f76349fa79d1efd4ea3",
+    "height": 1280,
+    "width": 960,
+    "variants": ["maanshan-walk-and-food-2-480w.webp"]
+  },
+  "maanshan-walk-and-food-3-480w.webp": {
+    "bytes": 23830,
+    "contentType": "image/webp",
+    "etag": "0ff8b65e6d89b8fda1b3a22156183a96",
+    "height": 1040,
+    "width": 480
+  },
+  "maanshan-walk-and-food-3.webp": {
+    "bytes": 55394,
+    "contentType": "image/webp",
+    "etag": "bb8401a52b39b7f130ab89c95322a7c3",
+    "height": 1920,
+    "width": 886,
+    "variants": ["maanshan-walk-and-food-3-480w.webp"]
+  },
+  "maanshan-walk-and-food-4-480w.webp": {
+    "bytes": 98526,
+    "contentType": "image/webp",
+    "etag": "d17f60acf1c2b15eb70e588d2643455d",
+    "height": 640,
+    "width": 480
+  },
+  "maanshan-walk-and-food-4.webp": {
+    "bytes": 368836,
+    "contentType": "image/webp",
+    "etag": "99357cf7054fb1c67d4cfe1f45f85556",
+    "height": 1280,
+    "width": 960,
+    "variants": ["maanshan-walk-and-food-4-480w.webp"]
+  },
+  "maanshan-walk-and-food-480w.webp": {
+    "bytes": 29844,
+    "contentType": "image/webp",
+    "etag": "a92fc7d7c2784d8ac3c77f657b995ec2",
+    "height": 360,
+    "width": 480
+  },
+  "maanshan-walk-and-food-5-480w.webp": {
+    "bytes": 56620,
+    "contentType": "image/webp",
+    "etag": "0e7a04ab1a411e65d97f5797bc556fdd",
+    "height": 360,
+    "width": 480
+  },
+  "maanshan-walk-and-food-5-960w.webp": {
+    "bytes": 190788,
+    "contentType": "image/webp",
+    "etag": "7d75c09d98224454f850bcd5257e4a5b",
+    "height": 720,
+    "width": 960
+  },
+  "maanshan-walk-and-food-5.webp": {
+    "bytes": 369538,
+    "contentType": "image/webp",
+    "etag": "9967797769b0cc8f9027ea423d78cc3e",
+    "height": 960,
+    "width": 1280,
+    "variants": ["maanshan-walk-and-food-5-480w.webp", "maanshan-walk-and-food-5-960w.webp"]
+  },
+  "maanshan-walk-and-food-6-480w.webp": {
+    "bytes": 25558,
+    "contentType": "image/webp",
+    "etag": "3fa17bb9fb9f7d67f46f0f3cae99a731",
+    "height": 360,
+    "width": 480
+  },
+  "maanshan-walk-and-food-6-960w.webp": {
+    "bytes": 78414,
+    "contentType": "image/webp",
+    "etag": "781eb0fddda4b6af9ea5762b25172f93",
+    "height": 720,
+    "width": 960
+  },
+  "maanshan-walk-and-food-6.webp": {
+    "bytes": 167382,
+    "contentType": "image/webp",
+    "etag": "512f09963b6dc6fcf2eb57545937da87",
+    "height": 960,
+    "width": 1280,
+    "variants": ["maanshan-walk-and-food-6-480w.webp", "maanshan-walk-and-food-6-960w.webp"]
+  },
+  "maanshan-walk-and-food-7-480w.webp": {
+    "bytes": 108204,
+    "contentType": "image/webp",
+    "etag": "556a85a385e6dee239fb59b800c12fb1",
+    "height": 640,
+    "width": 480
+  },
+  "maanshan-walk-and-food-7.webp": {
+    "bytes": 423522,
+    "contentType": "image/webp",
+    "etag": "2703a2cffab2730edb1b4564c21c9ed2",
+    "height": 1280,
+    "width": 960,
+    "variants": ["maanshan-walk-and-food-7-480w.webp"]
+  },
+  "maanshan-walk-and-food-8-480w.webp": {
+    "bytes": 91220,
+    "contentType": "image/webp",
+    "etag": "195a25f38e2598f3a624aee9d97f0647",
+    "height": 640,
+    "width": 480
+  },
+  "maanshan-walk-and-food-8.webp": {
+    "bytes": 364816,
+    "contentType": "image/webp",
+    "etag": "5e5e6a8e07622823d66faf77eae97d57",
+    "height": 1280,
+    "width": 960,
+    "variants": ["maanshan-walk-and-food-8-480w.webp"]
+  },
+  "maanshan-walk-and-food-9-480w.webp": {
+    "bytes": 27208,
+    "contentType": "image/webp",
+    "etag": "d281fac0a8b20aa72d3065f6036367d8",
+    "height": 640,
+    "width": 480
+  },
+  "maanshan-walk-and-food-9.webp": {
+    "bytes": 78856,
+    "contentType": "image/webp",
+    "etag": "2214896dff37e9ccaf18dde0f5ab8bd8",
+    "height": 1280,
+    "width": 960,
+    "variants": ["maanshan-walk-and-food-9-480w.webp"]
+  },
+  "maanshan-walk-and-food-960w.webp": {
+    "bytes": 83772,
+    "contentType": "image/webp",
+    "etag": "3ced147cb821d4d5d35c7c36fcbbed15",
+    "height": 720,
+    "width": 960
+  },
+  "maanshan-walk-and-food.webp": {
+    "bytes": 161486,
+    "contentType": "image/webp",
+    "etag": "cd8572c8d54220e95f03bfde6ac1753e",
+    "height": 960,
+    "width": 1280,
+    "variants": ["maanshan-walk-and-food-480w.webp", "maanshan-walk-and-food-960w.webp"]
+  }
+}

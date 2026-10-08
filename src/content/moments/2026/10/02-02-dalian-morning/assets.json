@@ -1,0 +1,120 @@
+{
+  "dalian-morning-480w.webp": {
+    "bytes": 7796,
+    "contentType": "image/webp",
+    "etag": "349ecfe8056f675764beda749ed6a9c8",
+    "height": 177,
+    "width": 480
+  },
+  "dalian-morning-960w.webp": {
+    "bytes": 21202,
+    "contentType": "image/webp",
+    "etag": "707aebb7783e94cc55b36d4c76613ba5",
+    "height": 355,
+    "width": 960
+  },
+  "dalian-morning-video-2-poster.webp": {
+    "bytes": 24114,
+    "contentType": "image/webp",
+    "etag": "1c302b46c6915b54be024f6c70aed57f",
+    "height": 960,
+    "width": 1280
+  },
+  "dalian-morning-video-2.mp4": {
+    "bytes": 455306,
+    "contentType": "video/mp4",
+    "etag": "a5e63dbe66e2e02a4df449fa86049034"
+  },
+  "dalian-morning-video-3-poster.webp": {
+    "bytes": 51924,
+    "contentType": "image/webp",
+    "etag": "4f386236c2e61e413d05785e5185b64c",
+    "height": 960,
+    "width": 1280
+  },
+  "dalian-morning-video-3.mp4": {
+    "bytes": 467987,
+    "contentType": "video/mp4",
+    "etag": "7d89ad3e05f931682a85da0cd5eb928b"
+  },
+  "dalian-morning-video-4-poster.webp": {
+    "bytes": 52172,
+    "contentType": "image/webp",
+    "etag": "af37f2aeea87fa7a5d6c20853b9ccfe0",
+    "height": 1280,
+    "width": 960
+  },
+  "dalian-morning-video-4.mp4": {
+    "bytes": 518544,
+    "contentType": "video/mp4",
+    "etag": "b07262e9e20bb6cdd7eaec237d51d144"
+  },
+  "dalian-morning-video-5-poster.webp": {
+    "bytes": 40984,
+    "contentType": "image/webp",
+    "etag": "473cb4c390d71e92946a26c70ca967c3",
+    "height": 960,
+    "width": 1280
+  },
+  "dalian-morning-video-5.mp4": {
+    "bytes": 504154,
+    "contentType": "video/mp4",
+    "etag": "2ca7f0179cb12ae3c4e9a57c81256595"
+  },
+  "dalian-morning-video-6-poster.webp": {
+    "bytes": 76228,
+    "contentType": "image/webp",
+    "etag": "57670d4b1c34426100b8649e11b445a0",
+    "height": 960,
+    "width": 1280
+  },
+  "dalian-morning-video-6.mp4": {
+    "bytes": 542211,
+    "contentType": "video/mp4",
+    "etag": "69c3b264801e772741dbd68cd6b9cedb"
+  },
+  "dalian-morning-video-7-poster.webp": {
+    "bytes": 46054,
+    "contentType": "image/webp",
+    "etag": "d0614d2d2b4d7d1790cea3af2e50e01e",
+    "height": 960,
+    "width": 1280
+  },
+  "dalian-morning-video-7.mp4": {
+    "bytes": 573928,
+    "contentType": "video/mp4",
+    "etag": "2f395a5357327a62b84b69932a461517"
+  },
+  "dalian-morning-video-8-poster.webp": {
+    "bytes": 116296,
+    "contentType": "image/webp",
+    "etag": "8a1473b4ff8ad5659392d873270e4519",
+    "height": 1280,
+    "width": 960
+  },
+  "dalian-morning-video-8.mp4": {
+    "bytes": 813692,
+    "contentType": "video/mp4",
+    "etag": "712f24c9f42e3b36e47b45749df40fc5"
+  },
+  "dalian-morning-video-poster.webp": {
+    "bytes": 35940,
+    "contentType": "image/webp",
+    "etag": "d3e1b3e8c04a4d28c1f08dffc0c0e9a8",
+    "height": 960,
+    "width": 1280
+  },
+  "dalian-morning-video.mp4": {
+    "bytes": 587498,
+    "contentType": "video/mp4",
+    "etag": "79a623447253f231dde0f6c368342891"
+  },
+  "dalian-morning.webp": {
+    "bytes": 42170,
+    "contentType": "image/webp",
+    "etag": "390fdd2b156c5af93f37780fd0762c82",
+    "height": 473,
+    "width": 1280,
+    "variants": ["dalian-morning-480w.webp", "dalian-morning-960w.webp"]
+  }
+}

@@ -1,0 +1,134 @@
+{
+  "dandong-barbecue-2-480w.webp": {
+    "bytes": 23262,
+    "contentType": "image/webp",
+    "etag": "42df7de3770a1ed322f6fc80ad8b27a8",
+    "height": 360,
+    "width": 480
+  },
+  "dandong-barbecue-2-960w.webp": {
+    "bytes": 65518,
+    "contentType": "image/webp",
+    "etag": "3ce82ed782fad46335c35d4374a93e11",
+    "height": 720,
+    "width": 960
+  },
+  "dandong-barbecue-2.webp": {
+    "bytes": 217510,
+    "contentType": "image/webp",
+    "etag": "3d5389cd269272804b8d9952cb41e9cd",
+    "height": 1440,
+    "width": 1920,
+    "variants": ["dandong-barbecue-2-480w.webp", "dandong-barbecue-2-960w.webp"]
+  },
+  "dandong-barbecue-3-480w.webp": {
+    "bytes": 28360,
+    "contentType": "image/webp",
+    "etag": "2e4e265468a0bbef413d1788e44f7df3",
+    "height": 360,
+    "width": 480
+  },
+  "dandong-barbecue-3-960w.webp": {
+    "bytes": 78688,
+    "contentType": "image/webp",
+    "etag": "6fcda89f7700e716b09ca1adf601302d",
+    "height": 720,
+    "width": 960
+  },
+  "dandong-barbecue-3.webp": {
+    "bytes": 222192,
+    "contentType": "image/webp",
+    "etag": "ce9e69d92f08dfc1ccc32beea7be4a64",
+    "height": 1440,
+    "width": 1920,
+    "variants": ["dandong-barbecue-3-480w.webp", "dandong-barbecue-3-960w.webp"]
+  },
+  "dandong-barbecue-4-480w.webp": {
+    "bytes": 57412,
+    "contentType": "image/webp",
+    "etag": "f11a6c149a234b61a72985d0a479b2b6",
+    "height": 640,
+    "width": 480
+  },
+  "dandong-barbecue-4-960w.webp": {
+    "bytes": 140056,
+    "contentType": "image/webp",
+    "etag": "d1a897b46127df49e03af7d6c30c3997",
+    "height": 1280,
+    "width": 960
+  },
+  "dandong-barbecue-4.webp": {
+    "bytes": 275620,
+    "contentType": "image/webp",
+    "etag": "5793945881777a54cba612f15598ed82",
+    "height": 1920,
+    "width": 1440,
+    "variants": ["dandong-barbecue-4-480w.webp", "dandong-barbecue-4-960w.webp"]
+  },
+  "dandong-barbecue-480w.webp": {
+    "bytes": 18464,
+    "contentType": "image/webp",
+    "etag": "c946a4206a9e3813b19af1ba110e5466",
+    "height": 640,
+    "width": 480
+  },
+  "dandong-barbecue-5-480w.webp": {
+    "bytes": 36354,
+    "contentType": "image/webp",
+    "etag": "9bc5d480a957c9c41cba31c6e30ac78e",
+    "height": 360,
+    "width": 480
+  },
+  "dandong-barbecue-5-960w.webp": {
+    "bytes": 96178,
+    "contentType": "image/webp",
+    "etag": "ca8732c482de1385dc988b2a68dec959",
+    "height": 720,
+    "width": 960
+  },
+  "dandong-barbecue-5.webp": {
+    "bytes": 246930,
+    "contentType": "image/webp",
+    "etag": "5e0712e611667e553d6fb5263f955d6e",
+    "height": 1440,
+    "width": 1920,
+    "variants": ["dandong-barbecue-5-480w.webp", "dandong-barbecue-5-960w.webp"]
+  },
+  "dandong-barbecue-6-480w.webp": {
+    "bytes": 14536,
+    "contentType": "image/webp",
+    "etag": "bf3f3e4cc620ab520f4bad0b0b3b48c7",
+    "height": 360,
+    "width": 480
+  },
+  "dandong-barbecue-6-960w.webp": {
+    "bytes": 37542,
+    "contentType": "image/webp",
+    "etag": "d067fcb17e6215ff1668e64a362cb091",
+    "height": 720,
+    "width": 960
+  },
+  "dandong-barbecue-6.webp": {
+    "bytes": 107122,
+    "contentType": "image/webp",
+    "etag": "af3b5d90acb3dc9308d5266a5229b309",
+    "height": 1440,
+    "width": 1920,
+    "variants": ["dandong-barbecue-6-480w.webp", "dandong-barbecue-6-960w.webp"]
+  },
+  "dandong-barbecue-960w.webp": {
+    "bytes": 45010,
+    "contentType": "image/webp",
+    "etag": "17f7502e526028de5ee7904c33f61447",
+    "height": 1280,
+    "width": 960
+  },
+  "dandong-barbecue.webp": {
+    "bytes": 86022,
+    "contentType": "image/webp",
+    "etag": "e96f7285bfb34f727211f3312b68f54f",
+    "height": 1920,
+    "width": 1440,
+    "variants": ["dandong-barbecue-480w.webp", "dandong-barbecue-960w.webp"]
+  }
+}

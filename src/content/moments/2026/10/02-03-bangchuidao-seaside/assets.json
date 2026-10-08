@@ -1,0 +1,134 @@
+{
+  "bangchuidao-seaside-2-480w.webp": {
+    "bytes": 36958,
+    "contentType": "image/webp",
+    "etag": "5ecdb19b8758d15f5593d274ab6888f6",
+    "height": 360,
+    "width": 480
+  },
+  "bangchuidao-seaside-2-960w.webp": {
+    "bytes": 132194,
+    "contentType": "image/webp",
+    "etag": "2afbc0fa738db11142bc20f002f08bc2",
+    "height": 720,
+    "width": 960
+  },
+  "bangchuidao-seaside-2.webp": {
+    "bytes": 437258,
+    "contentType": "image/webp",
+    "etag": "84e926ad4345c7f09158a5f5b7fa5f52",
+    "height": 1440,
+    "width": 1920,
+    "variants": ["bangchuidao-seaside-2-480w.webp", "bangchuidao-seaside-2-960w.webp"]
+  },
+  "bangchuidao-seaside-3-480w.webp": {
+    "bytes": 17700,
+    "contentType": "image/webp",
+    "etag": "70de09f644f5dd008e63618109cd51bd",
+    "height": 360,
+    "width": 480
+  },
+  "bangchuidao-seaside-3-960w.webp": {
+    "bytes": 48570,
+    "contentType": "image/webp",
+    "etag": "b9b7e8347d934123b784b23caf90b107",
+    "height": 720,
+    "width": 960
+  },
+  "bangchuidao-seaside-3.webp": {
+    "bytes": 150782,
+    "contentType": "image/webp",
+    "etag": "10cfb3217c53a4bd149e2e59add8658c",
+    "height": 1440,
+    "width": 1920,
+    "variants": ["bangchuidao-seaside-3-480w.webp", "bangchuidao-seaside-3-960w.webp"]
+  },
+  "bangchuidao-seaside-4-480w.webp": {
+    "bytes": 6902,
+    "contentType": "image/webp",
+    "etag": "b72ddbec0302dffbb7d0c5b66b59ffe9",
+    "height": 178,
+    "width": 480
+  },
+  "bangchuidao-seaside-4-960w.webp": {
+    "bytes": 26862,
+    "contentType": "image/webp",
+    "etag": "07dc3db8b0013e4f03ed228122575cff",
+    "height": 355,
+    "width": 960
+  },
+  "bangchuidao-seaside-4.webp": {
+    "bytes": 95272,
+    "contentType": "image/webp",
+    "etag": "286af9976e0480bf8032ba60a55d27cd",
+    "height": 710,
+    "width": 1920,
+    "variants": ["bangchuidao-seaside-4-480w.webp", "bangchuidao-seaside-4-960w.webp"]
+  },
+  "bangchuidao-seaside-480w.webp": {
+    "bytes": 65368,
+    "contentType": "image/webp",
+    "etag": "81ee246f1dc8c75b7d0abd442944f1ee",
+    "height": 640,
+    "width": 480
+  },
+  "bangchuidao-seaside-5-480w.webp": {
+    "bytes": 33558,
+    "contentType": "image/webp",
+    "etag": "febdf6cf7aa96314fb92d48eacd095c6",
+    "height": 360,
+    "width": 480
+  },
+  "bangchuidao-seaside-5-960w.webp": {
+    "bytes": 109058,
+    "contentType": "image/webp",
+    "etag": "915e5fbd9775945ea38d5c30c3cc82a4",
+    "height": 720,
+    "width": 960
+  },
+  "bangchuidao-seaside-5.webp": {
+    "bytes": 362350,
+    "contentType": "image/webp",
+    "etag": "24fd63a176f4fbb7e3af44a071b280aa",
+    "height": 1440,
+    "width": 1920,
+    "variants": ["bangchuidao-seaside-5-480w.webp", "bangchuidao-seaside-5-960w.webp"]
+  },
+  "bangchuidao-seaside-6-480w.webp": {
+    "bytes": 35588,
+    "contentType": "image/webp",
+    "etag": "02f66581b41db13150212b363620507a",
+    "height": 360,
+    "width": 480
+  },
+  "bangchuidao-seaside-6-960w.webp": {
+    "bytes": 109986,
+    "contentType": "image/webp",
+    "etag": "56971dd722bc348d4b5fff28bd533612",
+    "height": 720,
+    "width": 960
+  },
+  "bangchuidao-seaside-6.webp": {
+    "bytes": 355702,
+    "contentType": "image/webp",
+    "etag": "28603d6a78a2c9ad8b99a78a6bf877d2",
+    "height": 1440,
+    "width": 1920,
+    "variants": ["bangchuidao-seaside-6-480w.webp", "bangchuidao-seaside-6-960w.webp"]
+  },
+  "bangchuidao-seaside-960w.webp": {
+    "bytes": 191128,
+    "contentType": "image/webp",
+    "etag": "005173b9a391305a039076f949db63a2",
+    "height": 1280,
+    "width": 960
+  },
+  "bangchuidao-seaside.webp": {
+    "bytes": 415276,
+    "contentType": "image/webp",
+    "etag": "280f7a01f0b17c856be3dfa2197ff3cf",
+    "height": 1920,
+    "width": 1440,
+    "variants": ["bangchuidao-seaside-480w.webp", "bangchuidao-seaside-960w.webp"]
+  }
+}

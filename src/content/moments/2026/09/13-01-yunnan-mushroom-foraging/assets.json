@@ -1,0 +1,112 @@
+{
+  "yunnan-mushroom-foraging-2-480w.webp": {
+    "bytes": 41526,
+    "contentType": "image/webp",
+    "etag": "118d52afea0653e956c5b1b219bed314",
+    "height": 270,
+    "width": 480
+  },
+  "yunnan-mushroom-foraging-2-960w.webp": {
+    "bytes": 133420,
+    "contentType": "image/webp",
+    "etag": "44c7c63e5644a672c17bdbe66e278211",
+    "height": 540,
+    "width": 960
+  },
+  "yunnan-mushroom-foraging-2.webp": {
+    "bytes": 383712,
+    "contentType": "image/webp",
+    "etag": "59adfa6c91703c8ff667e1eae368456e",
+    "height": 1080,
+    "width": 1920,
+    "variants": ["yunnan-mushroom-foraging-2-480w.webp", "yunnan-mushroom-foraging-2-960w.webp"]
+  },
+  "yunnan-mushroom-foraging-3-480w.webp": {
+    "bytes": 49670,
+    "contentType": "image/webp",
+    "etag": "4c37c985eb97ce63d6417985b1dacd27",
+    "height": 270,
+    "width": 480
+  },
+  "yunnan-mushroom-foraging-3-960w.webp": {
+    "bytes": 174808,
+    "contentType": "image/webp",
+    "etag": "3b0db5ae8a13fbf6a2c47ef76377f59b",
+    "height": 540,
+    "width": 960
+  },
+  "yunnan-mushroom-foraging-3.webp": {
+    "bytes": 546478,
+    "contentType": "image/webp",
+    "etag": "996eea8fc114365d162a76b55dcce881",
+    "height": 1080,
+    "width": 1920,
+    "variants": ["yunnan-mushroom-foraging-3-480w.webp", "yunnan-mushroom-foraging-3-960w.webp"]
+  },
+  "yunnan-mushroom-foraging-4-480w.webp": {
+    "bytes": 47730,
+    "contentType": "image/webp",
+    "etag": "a92ac470abcc3eadee250da8305eb4c1",
+    "height": 270,
+    "width": 480
+  },
+  "yunnan-mushroom-foraging-4-960w.webp": {
+    "bytes": 168390,
+    "contentType": "image/webp",
+    "etag": "e5d5ba97d2ac788552362b811d759ec2",
+    "height": 540,
+    "width": 960
+  },
+  "yunnan-mushroom-foraging-4.webp": {
+    "bytes": 532026,
+    "contentType": "image/webp",
+    "etag": "f38d8f52d56ba98ce6e97ad1fa161df8",
+    "height": 1080,
+    "width": 1920,
+    "variants": ["yunnan-mushroom-foraging-4-480w.webp", "yunnan-mushroom-foraging-4-960w.webp"]
+  },
+  "yunnan-mushroom-foraging-480w.webp": {
+    "bytes": 34446,
+    "contentType": "image/webp",
+    "etag": "a38fe3336cf87761016034032c19a852",
+    "height": 270,
+    "width": 480
+  },
+  "yunnan-mushroom-foraging-5-480w.webp": {
+    "bytes": 15704,
+    "contentType": "image/webp",
+    "etag": "98744972f60970d038d02cdbb0c40e5d",
+    "height": 270,
+    "width": 480
+  },
+  "yunnan-mushroom-foraging-5-960w.webp": {
+    "bytes": 36312,
+    "contentType": "image/webp",
+    "etag": "510ae6d0f30d1b77304e7c8976f42d75",
+    "height": 540,
+    "width": 960
+  },
+  "yunnan-mushroom-foraging-5.webp": {
+    "bytes": 93132,
+    "contentType": "image/webp",
+    "etag": "e4b30766ef8c772c1df641ac68316925",
+    "height": 1080,
+    "width": 1920,
+    "variants": ["yunnan-mushroom-foraging-5-480w.webp", "yunnan-mushroom-foraging-5-960w.webp"]
+  },
+  "yunnan-mushroom-foraging-960w.webp": {
+    "bytes": 90440,
+    "contentType": "image/webp",
+    "etag": "de3acce9827b8e2fc78d999030849431",
+    "height": 540,
+    "width": 960
+  },
+  "yunnan-mushroom-foraging.webp": {
+    "bytes": 234720,
+    "contentType": "image/webp",
+    "etag": "0debdc67ca740017fd63a5b10a6f945c",
+    "height": 1080,
+    "width": 1920,
+    "variants": ["yunnan-mushroom-foraging-480w.webp", "yunnan-mushroom-foraging-960w.webp"]
+  }
+}

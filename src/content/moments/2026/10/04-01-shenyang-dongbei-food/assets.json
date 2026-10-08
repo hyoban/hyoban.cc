@@ -1,0 +1,156 @@
+{
+  "shenyang-dongbei-food-2-480w.webp": {
+    "bytes": 24166,
+    "contentType": "image/webp",
+    "etag": "e811053763ed15d784d4139c65aadd9a",
+    "height": 360,
+    "width": 480
+  },
+  "shenyang-dongbei-food-2-960w.webp": {
+    "bytes": 60686,
+    "contentType": "image/webp",
+    "etag": "6c155ee35d7878712dd31860eb5d2da8",
+    "height": 720,
+    "width": 960
+  },
+  "shenyang-dongbei-food-2.webp": {
+    "bytes": 165510,
+    "contentType": "image/webp",
+    "etag": "814c15ac10fdac8af89755c1d5ff080c",
+    "height": 1440,
+    "width": 1920,
+    "variants": ["shenyang-dongbei-food-2-480w.webp", "shenyang-dongbei-food-2-960w.webp"]
+  },
+  "shenyang-dongbei-food-3-480w.webp": {
+    "bytes": 15776,
+    "contentType": "image/webp",
+    "etag": "4fa24b9fe544ae172770529fd64c39e2",
+    "height": 360,
+    "width": 480
+  },
+  "shenyang-dongbei-food-3-960w.webp": {
+    "bytes": 42088,
+    "contentType": "image/webp",
+    "etag": "7a794f64edfd9e6fdbe4947fce250c74",
+    "height": 720,
+    "width": 960
+  },
+  "shenyang-dongbei-food-3.webp": {
+    "bytes": 127954,
+    "contentType": "image/webp",
+    "etag": "4050ac74fe3aeba2c34bbe0c258200a2",
+    "height": 1440,
+    "width": 1920,
+    "variants": ["shenyang-dongbei-food-3-480w.webp", "shenyang-dongbei-food-3-960w.webp"]
+  },
+  "shenyang-dongbei-food-4-480w.webp": {
+    "bytes": 44394,
+    "contentType": "image/webp",
+    "etag": "340e3f9fb71631470c59926f7a31e6e6",
+    "height": 360,
+    "width": 480
+  },
+  "shenyang-dongbei-food-4-960w.webp": {
+    "bytes": 150700,
+    "contentType": "image/webp",
+    "etag": "af20c93d121974aaea1168610c64b990",
+    "height": 720,
+    "width": 960
+  },
+  "shenyang-dongbei-food-4.webp": {
+    "bytes": 477066,
+    "contentType": "image/webp",
+    "etag": "eae5ae373d27d01887b999a72b7217bd",
+    "height": 1440,
+    "width": 1920,
+    "variants": ["shenyang-dongbei-food-4-480w.webp", "shenyang-dongbei-food-4-960w.webp"]
+  },
+  "shenyang-dongbei-food-480w.webp": {
+    "bytes": 34084,
+    "contentType": "image/webp",
+    "etag": "9a22516f04e106040c8f38f52a1e7d88",
+    "height": 360,
+    "width": 480
+  },
+  "shenyang-dongbei-food-5-480w.webp": {
+    "bytes": 24522,
+    "contentType": "image/webp",
+    "etag": "8fff8e0287ac8ceeb2c4df2e3e8598bb",
+    "height": 360,
+    "width": 480
+  },
+  "shenyang-dongbei-food-5-960w.webp": {
+    "bytes": 68628,
+    "contentType": "image/webp",
+    "etag": "a64f8a985f08c172b6a593f8d3004da3",
+    "height": 720,
+    "width": 960
+  },
+  "shenyang-dongbei-food-5.webp": {
+    "bytes": 195084,
+    "contentType": "image/webp",
+    "etag": "53eecb77e5652b1143503cdb1c7b4f7a",
+    "height": 1440,
+    "width": 1920,
+    "variants": ["shenyang-dongbei-food-5-480w.webp", "shenyang-dongbei-food-5-960w.webp"]
+  },
+  "shenyang-dongbei-food-6-480w.webp": {
+    "bytes": 18422,
+    "contentType": "image/webp",
+    "etag": "7db91671389f8ee0f229e36485e2a1a4",
+    "height": 360,
+    "width": 480
+  },
+  "shenyang-dongbei-food-6-960w.webp": {
+    "bytes": 50848,
+    "contentType": "image/webp",
+    "etag": "100777eb1304b49214aa2f2f1cbb7ff8",
+    "height": 720,
+    "width": 960
+  },
+  "shenyang-dongbei-food-6.webp": {
+    "bytes": 150972,
+    "contentType": "image/webp",
+    "etag": "4253a50b89992192571c3abc2905e0a5",
+    "height": 1440,
+    "width": 1920,
+    "variants": ["shenyang-dongbei-food-6-480w.webp", "shenyang-dongbei-food-6-960w.webp"]
+  },
+  "shenyang-dongbei-food-7-480w.webp": {
+    "bytes": 36148,
+    "contentType": "image/webp",
+    "etag": "a97587a8c5f27620f04df714c7c9b3fc",
+    "height": 640,
+    "width": 480
+  },
+  "shenyang-dongbei-food-7-960w.webp": {
+    "bytes": 92622,
+    "contentType": "image/webp",
+    "etag": "8ac97c3ec9d8072361890bc8d381956f",
+    "height": 1280,
+    "width": 960
+  },
+  "shenyang-dongbei-food-7.webp": {
+    "bytes": 203444,
+    "contentType": "image/webp",
+    "etag": "9c6f4a70c3529a69771471f110dd095c",
+    "height": 1920,
+    "width": 1440,
+    "variants": ["shenyang-dongbei-food-7-480w.webp", "shenyang-dongbei-food-7-960w.webp"]
+  },
+  "shenyang-dongbei-food-960w.webp": {
+    "bytes": 93586,
+    "contentType": "image/webp",
+    "etag": "af84e96997c4a0d5298eb106127e643e",
+    "height": 720,
+    "width": 960
+  },
+  "shenyang-dongbei-food.webp": {
+    "bytes": 272668,
+    "contentType": "image/webp",
+    "etag": "be43364802e6e7459800d8528f126e2e",
+    "height": 1440,
+    "width": 1920,
+    "variants": ["shenyang-dongbei-food-480w.webp", "shenyang-dongbei-food-960w.webp"]
+  }
+}

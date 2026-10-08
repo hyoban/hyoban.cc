@@ -1,0 +1,108 @@
+{
+  "dandong-morning-480w.webp": {
+    "bytes": 13286,
+    "contentType": "image/webp",
+    "etag": "495ccfbb9117f87227e2026c9286d6b5",
+    "height": 178,
+    "width": 480
+  },
+  "dandong-morning-960w.webp": {
+    "bytes": 40276,
+    "contentType": "image/webp",
+    "etag": "874911889ac0fbb6ae68ba38d206259d",
+    "height": 355,
+    "width": 960
+  },
+  "dandong-morning-video-2-poster.webp": {
+    "bytes": 126438,
+    "contentType": "image/webp",
+    "etag": "488f47e91ee3010e1b93e0a52d44c759",
+    "height": 960,
+    "width": 1280
+  },
+  "dandong-morning-video-2.mp4": {
+    "bytes": 1012478,
+    "contentType": "video/mp4",
+    "etag": "39ed2d1298e769258804e9e8b7a20e54"
+  },
+  "dandong-morning-video-3-poster.webp": {
+    "bytes": 97260,
+    "contentType": "image/webp",
+    "etag": "c354cf1f93e249613b617d561c01b65a",
+    "height": 960,
+    "width": 1280
+  },
+  "dandong-morning-video-3.mp4": {
+    "bytes": 804036,
+    "contentType": "video/mp4",
+    "etag": "f5f25f9cdfb8256802fbd43f2c4373e5"
+  },
+  "dandong-morning-video-4-poster.webp": {
+    "bytes": 94954,
+    "contentType": "image/webp",
+    "etag": "e661df1772399a011c3006311441477b",
+    "height": 1280,
+    "width": 960
+  },
+  "dandong-morning-video-4.mp4": {
+    "bytes": 1144727,
+    "contentType": "video/mp4",
+    "etag": "563a1b7b998b002f07ed04a5b1c1a7c9"
+  },
+  "dandong-morning-video-5-poster.webp": {
+    "bytes": 299630,
+    "contentType": "image/webp",
+    "etag": "2b13cddbe7226dd20d55d2166f57bd19",
+    "height": 1280,
+    "width": 960
+  },
+  "dandong-morning-video-5.mp4": {
+    "bytes": 1426098,
+    "contentType": "video/mp4",
+    "etag": "3622216e629b67c39deb365f13c6dc18"
+  },
+  "dandong-morning-video-6-poster.webp": {
+    "bytes": 99048,
+    "contentType": "image/webp",
+    "etag": "a22bfccb1f4ed220c8b8dc82ff2aee9f",
+    "height": 960,
+    "width": 1280
+  },
+  "dandong-morning-video-6.mp4": {
+    "bytes": 566532,
+    "contentType": "video/mp4",
+    "etag": "81aeeeac37dcaa6f091503a70be34ef1"
+  },
+  "dandong-morning-video-7-poster.webp": {
+    "bytes": 153688,
+    "contentType": "image/webp",
+    "etag": "8e2e703f35d26f440b382458429566f0",
+    "height": 1280,
+    "width": 960
+  },
+  "dandong-morning-video-7.mp4": {
+    "bytes": 1341469,
+    "contentType": "video/mp4",
+    "etag": "8cecd40753f82c994dd9a7e6dc103098"
+  },
+  "dandong-morning-video-poster.webp": {
+    "bytes": 46170,
+    "contentType": "image/webp",
+    "etag": "90214f3ef336c4d0f3581fbac5c68a19",
+    "height": 1280,
+    "width": 960
+  },
+  "dandong-morning-video.mp4": {
+    "bytes": 436625,
+    "contentType": "video/mp4",
+    "etag": "f8686e8fec578b876ad0ff713b6b4ca6"
+  },
+  "dandong-morning.webp": {
+    "bytes": 120460,
+    "contentType": "image/webp",
+    "etag": "0e2de7b3f232a9644b2cca15b89e6ae4",
+    "height": 710,
+    "width": 1920,
+    "variants": ["dandong-morning-480w.webp", "dandong-morning-960w.webp"]
+  }
+}

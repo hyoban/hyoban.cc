@@ -1,0 +1,68 @@
+{
+  "linzhou-stargazing-2-480w.webp": {
+    "bytes": 1436,
+    "contentType": "image/webp",
+    "etag": "b069fe10464c7dccfb8290d7f5fb9e92",
+    "height": 360,
+    "width": 480
+  },
+  "linzhou-stargazing-2-960w.webp": {
+    "bytes": 4674,
+    "contentType": "image/webp",
+    "etag": "3060ee4260a68f3754b4744979b29cda",
+    "height": 720,
+    "width": 960
+  },
+  "linzhou-stargazing-2.webp": {
+    "bytes": 15494,
+    "contentType": "image/webp",
+    "etag": "312d80d42673ff750ee135b751d56dc7",
+    "height": 1440,
+    "width": 1920,
+    "variants": ["linzhou-stargazing-2-480w.webp", "linzhou-stargazing-2-960w.webp"]
+  },
+  "linzhou-stargazing-3-480w.webp": {
+    "bytes": 1554,
+    "contentType": "image/webp",
+    "etag": "b8004b1d355bcf22c878e36d08b2ae6c",
+    "height": 360,
+    "width": 480
+  },
+  "linzhou-stargazing-3-960w.webp": {
+    "bytes": 4644,
+    "contentType": "image/webp",
+    "etag": "60ad7660be06355254b59b68eebb4a8e",
+    "height": 720,
+    "width": 960
+  },
+  "linzhou-stargazing-3.webp": {
+    "bytes": 14916,
+    "contentType": "image/webp",
+    "etag": "97d2dfa916e79b3ca3711a661fa12cf6",
+    "height": 1440,
+    "width": 1920,
+    "variants": ["linzhou-stargazing-3-480w.webp", "linzhou-stargazing-3-960w.webp"]
+  },
+  "linzhou-stargazing-480w.webp": {
+    "bytes": 1646,
+    "contentType": "image/webp",
+    "etag": "7f5ccfbed8a9160815b7f40cae5ef533",
+    "height": 360,
+    "width": 480
+  },
+  "linzhou-stargazing-960w.webp": {
+    "bytes": 4972,
+    "contentType": "image/webp",
+    "etag": "bc878ed966a6d6a3134ed935126e8f37",
+    "height": 720,
+    "width": 960
+  },
+  "linzhou-stargazing.webp": {
+    "bytes": 16062,
+    "contentType": "image/webp",
+    "etag": "3d89b9bedd39430212109a198eec2e91",
+    "height": 1440,
+    "width": 1920,
+    "variants": ["linzhou-stargazing-480w.webp", "linzhou-stargazing-960w.webp"]
+  }
+}

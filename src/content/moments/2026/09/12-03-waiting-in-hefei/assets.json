@@ -1,0 +1,32 @@
+{
+  "waiting-in-hefei-2-480w.webp": {
+    "bytes": 48962,
+    "contentType": "image/webp",
+    "etag": "3c15ebf0ef0fec8f1a6c004e465ae5b7",
+    "height": 1040,
+    "width": 480
+  },
+  "waiting-in-hefei-2.webp": {
+    "bytes": 76786,
+    "contentType": "image/webp",
+    "etag": "98177efa0b08c663653374c6b761188d",
+    "height": 1280,
+    "width": 591,
+    "variants": ["waiting-in-hefei-2-480w.webp"]
+  },
+  "waiting-in-hefei-480w.webp": {
+    "bytes": 11138,
+    "contentType": "image/webp",
+    "etag": "dc4e51127e0394cfd442240847de881a",
+    "height": 360,
+    "width": 480
+  },
+  "waiting-in-hefei.webp": {
+    "bytes": 23756,
+    "contentType": "image/webp",
+    "etag": "a1c1e8009009f7bb222bd1c0559d5f52",
+    "height": 621,
+    "width": 828,
+    "variants": ["waiting-in-hefei-480w.webp"]
+  }
+}

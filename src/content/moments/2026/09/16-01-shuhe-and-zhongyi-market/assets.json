@@ -1,0 +1,134 @@
+{
+  "shuhe-and-zhongyi-market-2-480w.webp": {
+    "bytes": 48692,
+    "contentType": "image/webp",
+    "etag": "37f519586dd3fa1973321966f85f13eb",
+    "height": 270,
+    "width": 480
+  },
+  "shuhe-and-zhongyi-market-2-960w.webp": {
+    "bytes": 194498,
+    "contentType": "image/webp",
+    "etag": "98a38ea96dac86be69da5ceb8b75c673",
+    "height": 540,
+    "width": 960
+  },
+  "shuhe-and-zhongyi-market-2.webp": {
+    "bytes": 735928,
+    "contentType": "image/webp",
+    "etag": "f0861822d71b5832f8763ab83307f521",
+    "height": 1080,
+    "width": 1920,
+    "variants": ["shuhe-and-zhongyi-market-2-480w.webp", "shuhe-and-zhongyi-market-2-960w.webp"]
+  },
+  "shuhe-and-zhongyi-market-3-480w.webp": {
+    "bytes": 24634,
+    "contentType": "image/webp",
+    "etag": "654de1f8c9ace8df1ceaf5119e5586a6",
+    "height": 270,
+    "width": 480
+  },
+  "shuhe-and-zhongyi-market-3-960w.webp": {
+    "bytes": 81188,
+    "contentType": "image/webp",
+    "etag": "47acdf073b018bf499d20bbd8c989748",
+    "height": 540,
+    "width": 960
+  },
+  "shuhe-and-zhongyi-market-3.webp": {
+    "bytes": 259674,
+    "contentType": "image/webp",
+    "etag": "eb77abfcfc8bb801938a8c6cd832cfb1",
+    "height": 1080,
+    "width": 1920,
+    "variants": ["shuhe-and-zhongyi-market-3-480w.webp", "shuhe-and-zhongyi-market-3-960w.webp"]
+  },
+  "shuhe-and-zhongyi-market-4-480w.webp": {
+    "bytes": 38998,
+    "contentType": "image/webp",
+    "etag": "6097eec52c138113217ab40af1ffb50e",
+    "height": 270,
+    "width": 480
+  },
+  "shuhe-and-zhongyi-market-4-960w.webp": {
+    "bytes": 142376,
+    "contentType": "image/webp",
+    "etag": "fb50b98114044955947392b94c495534",
+    "height": 540,
+    "width": 960
+  },
+  "shuhe-and-zhongyi-market-4.webp": {
+    "bytes": 441272,
+    "contentType": "image/webp",
+    "etag": "2ba931d52018d32d0592f5a5a5fae048",
+    "height": 1080,
+    "width": 1920,
+    "variants": ["shuhe-and-zhongyi-market-4-480w.webp", "shuhe-and-zhongyi-market-4-960w.webp"]
+  },
+  "shuhe-and-zhongyi-market-480w.webp": {
+    "bytes": 44808,
+    "contentType": "image/webp",
+    "etag": "b9d119a563d76ecdfe1cbe465d1cc810",
+    "height": 270,
+    "width": 480
+  },
+  "shuhe-and-zhongyi-market-5-480w.webp": {
+    "bytes": 31664,
+    "contentType": "image/webp",
+    "etag": "c2d471d185a701c171caf2459091850e",
+    "height": 270,
+    "width": 480
+  },
+  "shuhe-and-zhongyi-market-5-960w.webp": {
+    "bytes": 110034,
+    "contentType": "image/webp",
+    "etag": "ee4a0c901365dfe9a712115922fd4b04",
+    "height": 540,
+    "width": 960
+  },
+  "shuhe-and-zhongyi-market-5.webp": {
+    "bytes": 372672,
+    "contentType": "image/webp",
+    "etag": "6c238dab5c36d2af64bd4d22e75ce82e",
+    "height": 1080,
+    "width": 1920,
+    "variants": ["shuhe-and-zhongyi-market-5-480w.webp", "shuhe-and-zhongyi-market-5-960w.webp"]
+  },
+  "shuhe-and-zhongyi-market-6-480w.webp": {
+    "bytes": 18748,
+    "contentType": "image/webp",
+    "etag": "ce10e8b6cd309bff5db78ce301597bc2",
+    "height": 270,
+    "width": 480
+  },
+  "shuhe-and-zhongyi-market-6-960w.webp": {
+    "bytes": 55068,
+    "contentType": "image/webp",
+    "etag": "9cfc195c8ff1abba6a9d30e658251385",
+    "height": 540,
+    "width": 960
+  },
+  "shuhe-and-zhongyi-market-6.webp": {
+    "bytes": 150792,
+    "contentType": "image/webp",
+    "etag": "fe83b19b2332ad7956491ee148f2f008",
+    "height": 1080,
+    "width": 1920,
+    "variants": ["shuhe-and-zhongyi-market-6-480w.webp", "shuhe-and-zhongyi-market-6-960w.webp"]
+  },
+  "shuhe-and-zhongyi-market-960w.webp": {
+    "bytes": 175114,
+    "contentType": "image/webp",
+    "etag": "a1a6002a4c756330f58b364526c6b950",
+    "height": 540,
+    "width": 960
+  },
+  "shuhe-and-zhongyi-market.webp": {
+    "bytes": 637442,
+    "contentType": "image/webp",
+    "etag": "d2d76127de863e458136fe42cbf4a3d0",
+    "height": 1080,
+    "width": 1920,
+    "variants": ["shuhe-and-zhongyi-market-480w.webp", "shuhe-and-zhongyi-market-960w.webp"]
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "dalian-japanese-dinner-2-480w.webp": {
+    "bytes": 33940,
+    "contentType": "image/webp",
+    "etag": "35cf1581d3d50fee7435fe2f4b14e37e",
+    "height": 360,
+    "width": 480
+  },
+  "dalian-japanese-dinner-2-960w.webp": {
+    "bytes": 92946,
+    "contentType": "image/webp",
+    "etag": "9ae054d7f83d5c1ef95209692c151520",
+    "height": 720,
+    "width": 960
+  },
+  "dalian-japanese-dinner-2.webp": {
+    "bytes": 263702,
+    "contentType": "image/webp",
+    "etag": "1d6363eee9b5ec0d98deed9cb4678489",
+    "height": 1440,
+    "width": 1920,
+    "variants": ["dalian-japanese-dinner-2-480w.webp", "dalian-japanese-dinner-2-960w.webp"]
+  },
+  "dalian-japanese-dinner-480w.webp": {
+    "bytes": 34416,
+    "contentType": "image/webp",
+    "etag": "c3c7e21bfc593514eae62a2aff2becac",
+    "height": 360,
+    "width": 480
+  },
+  "dalian-japanese-dinner-960w.webp": {
+    "bytes": 98208,
+    "contentType": "image/webp",
+    "etag": "c414715432734e07419a1148424d58e9",
+    "height": 720,
+    "width": 960
+  },
+  "dalian-japanese-dinner.webp": {
+    "bytes": 283386,
+    "contentType": "image/webp",
+    "etag": "bc975cc130e3328044773d1dd05f82ef",
+    "height": 1440,
+    "width": 1920,
+    "variants": ["dalian-japanese-dinner-480w.webp", "dalian-japanese-dinner-960w.webp"]
+  }
+}

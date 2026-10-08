@@ -1,0 +1,170 @@
+{
+  "maanshan-metro-2-480w.webp": {
+    "bytes": 36210,
+    "contentType": "image/webp",
+    "etag": "b2a8164076bdfa8dc2cfd77e7bff9d90",
+    "height": 360,
+    "width": 480
+  },
+  "maanshan-metro-2-960w.webp": {
+    "bytes": 135418,
+    "contentType": "image/webp",
+    "etag": "8b794e61b144be30c45e8aeceb20a8f8",
+    "height": 720,
+    "width": 960
+  },
+  "maanshan-metro-2.webp": {
+    "bytes": 492384,
+    "contentType": "image/webp",
+    "etag": "e2fea5abaeec8561ff2257db7e83799b",
+    "height": 1440,
+    "width": 1920,
+    "variants": ["maanshan-metro-2-480w.webp", "maanshan-metro-2-960w.webp"]
+  },
+  "maanshan-metro-3-480w.webp": {
+    "bytes": 29550,
+    "contentType": "image/webp",
+    "etag": "91cbaa26763dabd8cd7639e80bea1d89",
+    "height": 360,
+    "width": 480
+  },
+  "maanshan-metro-3-960w.webp": {
+    "bytes": 94776,
+    "contentType": "image/webp",
+    "etag": "00c8233453a69b97f946457b83e46915",
+    "height": 720,
+    "width": 960
+  },
+  "maanshan-metro-3.webp": {
+    "bytes": 354902,
+    "contentType": "image/webp",
+    "etag": "0f40675a341b34d78fa300064d458086",
+    "height": 1440,
+    "width": 1920,
+    "variants": ["maanshan-metro-3-480w.webp", "maanshan-metro-3-960w.webp"]
+  },
+  "maanshan-metro-4-480w.webp": {
+    "bytes": 62776,
+    "contentType": "image/webp",
+    "etag": "abedc986c658861d0d020a25b90c0a31",
+    "height": 640,
+    "width": 480
+  },
+  "maanshan-metro-4-960w.webp": {
+    "bytes": 186160,
+    "contentType": "image/webp",
+    "etag": "3d6d8865e6df6385a4ff517d2e9e51aa",
+    "height": 1280,
+    "width": 960
+  },
+  "maanshan-metro-4.webp": {
+    "bytes": 407626,
+    "contentType": "image/webp",
+    "etag": "f4898e1beb80eb3b1fd9ee80569f1a4b",
+    "height": 1920,
+    "width": 1440,
+    "variants": ["maanshan-metro-4-480w.webp", "maanshan-metro-4-960w.webp"]
+  },
+  "maanshan-metro-480w.webp": {
+    "bytes": 25486,
+    "contentType": "image/webp",
+    "etag": "39983c854ab81ac368a4385d00fe9f38",
+    "height": 360,
+    "width": 480
+  },
+  "maanshan-metro-5-480w.webp": {
+    "bytes": 45616,
+    "contentType": "image/webp",
+    "etag": "99e429f64fe10dda2ebbcb30ccb8053d",
+    "height": 360,
+    "width": 480
+  },
+  "maanshan-metro-5-960w.webp": {
+    "bytes": 162768,
+    "contentType": "image/webp",
+    "etag": "fbdec500e0c3622285146a3bec1ba0ff",
+    "height": 720,
+    "width": 960
+  },
+  "maanshan-metro-5.webp": {
+    "bytes": 605780,
+    "contentType": "image/webp",
+    "etag": "68efdadfdbe71c2d09146ebd40477d4c",
+    "height": 1440,
+    "width": 1920,
+    "variants": ["maanshan-metro-5-480w.webp", "maanshan-metro-5-960w.webp"]
+  },
+  "maanshan-metro-6-480w.webp": {
+    "bytes": 30988,
+    "contentType": "image/webp",
+    "etag": "1c0361c6209963210920590a2e818841",
+    "height": 360,
+    "width": 480
+  },
+  "maanshan-metro-6-960w.webp": {
+    "bytes": 127094,
+    "contentType": "image/webp",
+    "etag": "eef5da869d773b9ed785ddc25112e2a8",
+    "height": 720,
+    "width": 960
+  },
+  "maanshan-metro-6.webp": {
+    "bytes": 470074,
+    "contentType": "image/webp",
+    "etag": "d866db1deeeba4aa5b21a47f5fcceb61",
+    "height": 1440,
+    "width": 1920,
+    "variants": ["maanshan-metro-6-480w.webp", "maanshan-metro-6-960w.webp"]
+  },
+  "maanshan-metro-960w.webp": {
+    "bytes": 89078,
+    "contentType": "image/webp",
+    "etag": "42fad4a0c40b14e29f6e9fe32cf824cf",
+    "height": 720,
+    "width": 960
+  },
+  "maanshan-metro-video-2-poster.webp": {
+    "bytes": 69080,
+    "contentType": "image/webp",
+    "etag": "b2d94dd28c33e0c066d6f6769181b0dd",
+    "height": 720,
+    "width": 1280
+  },
+  "maanshan-metro-video-2.mp4": {
+    "bytes": 8701323,
+    "contentType": "video/mp4",
+    "etag": "dfc4c8949d47756c60271f10e94443f4"
+  },
+  "maanshan-metro-video-3-poster.webp": {
+    "bytes": 43272,
+    "contentType": "image/webp",
+    "etag": "984b23a5a444cf8edaa42f2317444887",
+    "height": 720,
+    "width": 1280
+  },
+  "maanshan-metro-video-3.mp4": {
+    "bytes": 1836585,
+    "contentType": "video/mp4",
+    "etag": "2af2575efc27592939d45b071b8537c4"
+  },
+  "maanshan-metro-video-poster.webp": {
+    "bytes": 64884,
+    "contentType": "image/webp",
+    "etag": "56dff9abe5cc9ecded1dcea1b6622dc7",
+    "height": 1280,
+    "width": 720
+  },
+  "maanshan-metro-video.mp4": {
+    "bytes": 5800266,
+    "contentType": "video/mp4",
+    "etag": "a376708c3270ba95aa70f66476013c8d"
+  },
+  "maanshan-metro.webp": {
+    "bytes": 357608,
+    "contentType": "image/webp",
+    "etag": "d03985028a695d8aae7821780cef840e",
+    "height": 1440,
+    "width": 1920,
+    "variants": ["maanshan-metro-480w.webp", "maanshan-metro-960w.webp"]
+  }
+}
