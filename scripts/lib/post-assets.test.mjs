@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { readFile, readdir } from 'node:fs/promises'
 import { basename, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import test from 'node:test'
+import { test } from 'vite-plus/test'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
 const postsRoot = join(root, 'src/content/posts')

@@ -1,5 +1,5 @@
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
-import { z } from 'zod'
+import { z } from 'astro/zod'
 import { isLocationId } from '../data/locations.ts'
 
 const semanticImageFileSchema = z

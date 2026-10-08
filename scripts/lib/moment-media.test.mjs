@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { readFile, readdir } from 'node:fs/promises'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import test from 'node:test'
+import { test } from 'vite-plus/test'
 
 import { parseMomentDocument } from '../../src/moments/content.ts'
 import { getReferencedAssetFiles } from './moment-assets.mjs'
@@ -42,7 +42,7 @@ test('keeps complete colocated metadata for every semantic Moment asset', async 
     }
 
     assert.match(id, /^\d{4}\/\d{2}\/\d{2}-\d{2}-[a-z0-9]+(?:-[a-z0-9]+)*$/)
-    assert.deepEqual(Object.keys(assets).sort(), [...referencedFiles].sort())
+    assert.deepEqual(new Set(Object.keys(assets)), referencedFiles)
   }
 })
 
