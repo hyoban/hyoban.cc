@@ -3,10 +3,10 @@
   "accountId": "e68c7dce80df20ff5802b9ac36f1eab6",
   "bucket": "blog-images",
   "origin": "https://image.hyoban.cc",
-  "createdAt": "2026-10-08T00:11:03.617Z",
-  "inventorySha256": "7456af012bdb3877bb09809f9f8ccb80fc35ebde50f61b19c1236c49bc46f04a",
-  "objectCount": 2359,
-  "totalBytes": 519454538,
+  "createdAt": "2026-10-09T13:07:41.473Z",
+  "inventorySha256": "552ad05543e16126843665bf716e13fe65c8bc8c25decdfb00eddb840fb661bf",
+  "objectCount": 2623,
+  "totalBytes": 633981925,
   "objects": [
     {
       "key": "moments/2023/04/15-01-preview-dialog-for-my-blog-post-with-intercepting-amp/preview-dialog-for-my-blog-post-with-intercepting-amp-video-poster.png",
@@ -16913,6 +16913,166 @@
       "storageClass": "Standard"
     },
     {
+      "key": "moments/2026/10/01-01-yantai-dalian-ferry/yantai-dalian-ferry-live-3-480w.webp",
+      "bytes": 24790,
+      "contentType": "image/webp",
+      "etag": "59780d3679c392ae1f4a12177a0864fa",
+      "lastModified": "2026-10-09T12:58:25.791Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-01-yantai-dalian-ferry/yantai-dalian-ferry-live-3-960w.webp",
+      "bytes": 76200,
+      "contentType": "image/webp",
+      "etag": "74148dfe0bee994a168df7cb201b89a6",
+      "lastModified": "2026-10-09T12:58:25.846Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-01-yantai-dalian-ferry/yantai-dalian-ferry-live-3.mp4",
+      "bytes": 1785522,
+      "contentType": "video/mp4",
+      "etag": "58c2850f032234e4a5250444ca862321",
+      "lastModified": "2026-10-09T12:58:26.490Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-01-yantai-dalian-ferry/yantai-dalian-ferry-live-3.webp",
+      "bytes": 199706,
+      "contentType": "image/webp",
+      "etag": "5e99bf9db4d8029309b9f08f697bba37",
+      "lastModified": "2026-10-09T12:58:27.480Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-01-yantai-dalian-ferry/yantai-dalian-ferry-live-5-480w.webp",
+      "bytes": 21552,
+      "contentType": "image/webp",
+      "etag": "58b84270d9b542458c8440c459a73b4f",
+      "lastModified": "2026-10-09T12:58:33.498Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-01-yantai-dalian-ferry/yantai-dalian-ferry-live-5-960w.webp",
+      "bytes": 56654,
+      "contentType": "image/webp",
+      "etag": "8eecdec09a61762a7e393cb3b55bb3d5",
+      "lastModified": "2026-10-09T12:58:35.110Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-01-yantai-dalian-ferry/yantai-dalian-ferry-live-5.mp4",
+      "bytes": 1594459,
+      "contentType": "video/mp4",
+      "etag": "2be9810fce689d135a85dc1b6bd85774",
+      "lastModified": "2026-10-09T12:58:35.195Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-01-yantai-dalian-ferry/yantai-dalian-ferry-live-5.webp",
+      "bytes": 124166,
+      "contentType": "image/webp",
+      "etag": "2e1eb9dad93e10211df521eecffd2ec9",
+      "lastModified": "2026-10-09T12:58:32.864Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-01-yantai-dalian-ferry/yantai-dalian-ferry-live-6-480w.webp",
+      "bytes": 26986,
+      "contentType": "image/webp",
+      "etag": "c7cb39051c8f5233ed88a3ac0bb259c2",
+      "lastModified": "2026-10-09T12:58:36.328Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-01-yantai-dalian-ferry/yantai-dalian-ferry-live-6-960w.webp",
+      "bytes": 97824,
+      "contentType": "image/webp",
+      "etag": "500ff799af99515a77fac1b25d4e85d9",
+      "lastModified": "2026-10-09T12:58:38.339Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-01-yantai-dalian-ferry/yantai-dalian-ferry-live-6.mp4",
+      "bytes": 2909287,
+      "contentType": "video/mp4",
+      "etag": "0212f0af99f8b97c13363af1ee556654",
+      "lastModified": "2026-10-09T12:58:41.466Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-01-yantai-dalian-ferry/yantai-dalian-ferry-live-6.webp",
+      "bytes": 254142,
+      "contentType": "image/webp",
+      "etag": "bac55dd07e93db4a4fd4f864764e104b",
+      "lastModified": "2026-10-09T12:58:36.346Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-01-yantai-dalian-ferry/yantai-dalian-ferry-live-7-480w.webp",
+      "bytes": 29138,
+      "contentType": "image/webp",
+      "etag": "ba45c8a76a2ab1ce92a10c918d94cc30",
+      "lastModified": "2026-10-09T12:58:40.506Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-01-yantai-dalian-ferry/yantai-dalian-ferry-live-7-960w.webp",
+      "bytes": 90772,
+      "contentType": "image/webp",
+      "etag": "0b02d6f8ba70f9b8d4ba00e8372a1592",
+      "lastModified": "2026-10-09T12:58:41.758Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-01-yantai-dalian-ferry/yantai-dalian-ferry-live-7.mp4",
+      "bytes": 1500697,
+      "contentType": "video/mp4",
+      "etag": "92c527be715ab1b9b55deee65fc9367e",
+      "lastModified": "2026-10-09T12:58:44.312Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-01-yantai-dalian-ferry/yantai-dalian-ferry-live-7.webp",
+      "bytes": 226116,
+      "contentType": "image/webp",
+      "etag": "77b6e5d0dd3fd6786802602b28e67b15",
+      "lastModified": "2026-10-09T12:58:40.440Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-01-yantai-dalian-ferry/yantai-dalian-ferry-live-8-480w.webp",
+      "bytes": 20612,
+      "contentType": "image/webp",
+      "etag": "c55fa1a9cb39c38b1747b7799a7d5da5",
+      "lastModified": "2026-10-09T12:58:44.669Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-01-yantai-dalian-ferry/yantai-dalian-ferry-live-8-960w.webp",
+      "bytes": 76486,
+      "contentType": "image/webp",
+      "etag": "d0fdae737e5f3ed4fb02fa6457137d03",
+      "lastModified": "2026-10-09T12:58:45.450Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-01-yantai-dalian-ferry/yantai-dalian-ferry-live-8.mp4",
+      "bytes": 1992349,
+      "contentType": "video/mp4",
+      "etag": "5b064ee22d4cd6c1bf15d5819bcd91c7",
+      "lastModified": "2026-10-09T12:58:47.421Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-01-yantai-dalian-ferry/yantai-dalian-ferry-live-8.webp",
+      "bytes": 227796,
+      "contentType": "image/webp",
+      "etag": "d6e15539a6bead6191cded252db5f4c2",
+      "lastModified": "2026-10-09T12:58:43.927Z",
+      "storageClass": "Standard"
+    },
+    {
       "key": "moments/2026/10/01-01-yantai-dalian-ferry/yantai-dalian-ferry-video-2-poster.webp",
       "bytes": 57206,
       "contentType": "image/webp",
@@ -16998,6 +17158,326 @@
       "contentType": "image/webp",
       "etag": "3ceaa9238a884384c7ef1ea164a4fae4",
       "lastModified": "2026-10-07T23:58:23.382Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-1-480w.webp",
+      "bytes": 7908,
+      "contentType": "image/webp",
+      "etag": "6d325e7597d2e67cfc1cfb6462e5571d",
+      "lastModified": "2026-10-09T12:58:48.143Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-1-960w.webp",
+      "bytes": 18928,
+      "contentType": "image/webp",
+      "etag": "c7a1b81265f2d6560ef1d8309a131dfc",
+      "lastModified": "2026-10-09T12:58:48.699Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-1.mp4",
+      "bytes": 992063,
+      "contentType": "video/mp4",
+      "etag": "300c195eb81d4a85536e512b05bc4815",
+      "lastModified": "2026-10-09T12:58:50.476Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-1.webp",
+      "bytes": 28020,
+      "contentType": "image/webp",
+      "etag": "90e955a1ca993d03a7240b6b55e27974",
+      "lastModified": "2026-10-09T12:58:47.468Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-10-480w.webp",
+      "bytes": 18916,
+      "contentType": "image/webp",
+      "etag": "bb9c1f22580b7670469fc30d7d46f6f7",
+      "lastModified": "2026-10-09T12:59:20.709Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-10-960w.webp",
+      "bytes": 53202,
+      "contentType": "image/webp",
+      "etag": "eb66bc38800b4bc6cfa1fa3ea6eb34c5",
+      "lastModified": "2026-10-09T12:59:22.637Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-10.mp4",
+      "bytes": 918264,
+      "contentType": "video/mp4",
+      "etag": "7c38d9a2a0a9ab27aa782ccf970dbad5",
+      "lastModified": "2026-10-09T12:59:25.632Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-10.webp",
+      "bytes": 124214,
+      "contentType": "image/webp",
+      "etag": "59fa64721d6c9e9b07afd4cbe37db7ca",
+      "lastModified": "2026-10-09T12:59:21.082Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-2-480w.webp",
+      "bytes": 8504,
+      "contentType": "image/webp",
+      "etag": "3f24538889fa943408c7d9ef17d204b5",
+      "lastModified": "2026-10-09T12:58:51.044Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-2-960w.webp",
+      "bytes": 22626,
+      "contentType": "image/webp",
+      "etag": "063909ed0a280a4e10028dae856efb52",
+      "lastModified": "2026-10-09T12:58:51.823Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-2.mp4",
+      "bytes": 684638,
+      "contentType": "video/mp4",
+      "etag": "4fefc887f3e644dc063b1a9821bafca4",
+      "lastModified": "2026-10-09T12:58:56.137Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-2.webp",
+      "bytes": 59280,
+      "contentType": "image/webp",
+      "etag": "8bfe782b67f89a3b6b1665ea4881983e",
+      "lastModified": "2026-10-09T12:58:51.199Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-3-480w.webp",
+      "bytes": 29448,
+      "contentType": "image/webp",
+      "etag": "4e873cdec573c5eb9cf3e6066bf7fc8e",
+      "lastModified": "2026-10-09T12:58:54.582Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-3-960w.webp",
+      "bytes": 97912,
+      "contentType": "image/webp",
+      "etag": "50dcd1b83e68a4b1022704fcf8bc24c3",
+      "lastModified": "2026-10-09T12:58:55.376Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-3.mp4",
+      "bytes": 2457194,
+      "contentType": "video/mp4",
+      "etag": "870326b83b3afd308f1d29a55c47a500",
+      "lastModified": "2026-10-09T12:58:58.300Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-3.webp",
+      "bytes": 269640,
+      "contentType": "image/webp",
+      "etag": "4349dd97dc635beea35b6df8301acc67",
+      "lastModified": "2026-10-09T12:58:54.477Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-4-480w.webp",
+      "bytes": 57194,
+      "contentType": "image/webp",
+      "etag": "a83dfa5eed68a53d9c81b00d847e055b",
+      "lastModified": "2026-10-09T12:58:58.938Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-4-960w.webp",
+      "bytes": 178138,
+      "contentType": "image/webp",
+      "etag": "e20ace58640c238e4b982849cf7a83cb",
+      "lastModified": "2026-10-09T12:58:59.906Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-4.mp4",
+      "bytes": 3111353,
+      "contentType": "video/mp4",
+      "etag": "3979649370c31deb5480c1a6d739ce43",
+      "lastModified": "2026-10-09T12:59:02.893Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-4.webp",
+      "bytes": 315796,
+      "contentType": "image/webp",
+      "etag": "c6de6c66e7c3c57ae6e9d5e180945e21",
+      "lastModified": "2026-10-09T12:58:58.754Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-5-480w.webp",
+      "bytes": 12994,
+      "contentType": "image/webp",
+      "etag": "0183b6ba9031b4531d22f49e8ca94fce",
+      "lastModified": "2026-10-09T12:59:02.883Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-5-960w.webp",
+      "bytes": 40190,
+      "contentType": "image/webp",
+      "etag": "e1e263abf89dd8fea4f3dfe39d68625a",
+      "lastModified": "2026-10-09T12:59:05.109Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-5.mp4",
+      "bytes": 1800415,
+      "contentType": "video/mp4",
+      "etag": "cb801aa388bab4a3fbb6f6f538e4fc09",
+      "lastModified": "2026-10-09T12:59:07.906Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-5.webp",
+      "bytes": 103782,
+      "contentType": "image/webp",
+      "etag": "caf3f53501c4b24598fb4053a784203d",
+      "lastModified": "2026-10-09T12:59:02.892Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-6-480w.webp",
+      "bytes": 12816,
+      "contentType": "image/webp",
+      "etag": "1610efa81aa1e840bff1ff3f0f210531",
+      "lastModified": "2026-10-09T12:59:07.512Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-6-960w.webp",
+      "bytes": 42308,
+      "contentType": "image/webp",
+      "etag": "0604b9d3b7376cadcd80beb2d58baffc",
+      "lastModified": "2026-10-09T12:59:08.155Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-6.mp4",
+      "bytes": 1345393,
+      "contentType": "video/mp4",
+      "etag": "b92f6c274abe1132faa89c747810103e",
+      "lastModified": "2026-10-09T12:59:10.793Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-6.webp",
+      "bytes": 110468,
+      "contentType": "image/webp",
+      "etag": "4ddb4ad7591ee76f3dd8ad8d0a632105",
+      "lastModified": "2026-10-09T12:59:07.651Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-7-480w.webp",
+      "bytes": 9592,
+      "contentType": "image/webp",
+      "etag": "7f58bc17bb84eae1c6f0acf83f87403d",
+      "lastModified": "2026-10-09T12:59:11.277Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-7-960w.webp",
+      "bytes": 32764,
+      "contentType": "image/webp",
+      "etag": "96debb58a650f2091cc300802b1bdd45",
+      "lastModified": "2026-10-09T12:59:10.857Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-7.mp4",
+      "bytes": 1872782,
+      "contentType": "video/mp4",
+      "etag": "52dae4425d7f12baa2666e0d0e497e38",
+      "lastModified": "2026-10-09T12:59:16.234Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-7.webp",
+      "bytes": 97400,
+      "contentType": "image/webp",
+      "etag": "72287493cf6f94803c1c887e02f3a2f6",
+      "lastModified": "2026-10-09T12:59:11.283Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-8-480w.webp",
+      "bytes": 6572,
+      "contentType": "image/webp",
+      "etag": "36c7f9e726ae89aeaa397dbf5b2d8f27",
+      "lastModified": "2026-10-09T12:59:14.432Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-8-960w.webp",
+      "bytes": 17338,
+      "contentType": "image/webp",
+      "etag": "edd00462268a484ae11ae85e224bc8b0",
+      "lastModified": "2026-10-09T12:59:15.115Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-8.mp4",
+      "bytes": 570229,
+      "contentType": "video/mp4",
+      "etag": "ca32425756ae003be1d4f54ee23cbe37",
+      "lastModified": "2026-10-09T12:59:18.060Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-8.webp",
+      "bytes": 35918,
+      "contentType": "image/webp",
+      "etag": "be9467899228952f265f5e311ac3c5cb",
+      "lastModified": "2026-10-09T12:59:14.432Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-9-480w.webp",
+      "bytes": 6364,
+      "contentType": "image/webp",
+      "etag": "04221531ccc7cb4189377f2a2f9c4ffb",
+      "lastModified": "2026-10-09T12:59:17.502Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-9-960w.webp",
+      "bytes": 20844,
+      "contentType": "image/webp",
+      "etag": "5239ea0f52dd43beed91558742582d03",
+      "lastModified": "2026-10-09T12:59:18.817Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-9.mp4",
+      "bytes": 825756,
+      "contentType": "video/mp4",
+      "etag": "8a33fe9d9069a2bc9766815cce9a08a1",
+      "lastModified": "2026-10-09T12:59:21.032Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-9.webp",
+      "bytes": 53834,
+      "contentType": "image/webp",
+      "etag": "1daf927491ba2960c8e819042a20140e",
+      "lastModified": "2026-10-09T12:59:17.457Z",
       "storageClass": "Standard"
     },
     {
@@ -17222,6 +17702,262 @@
       "contentType": "image/webp",
       "etag": "707aebb7783e94cc55b36d4c76613ba5",
       "lastModified": "2026-10-07T23:57:21.527Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-02-dalian-morning/dalian-morning-live-1-480w.webp",
+      "bytes": 13718,
+      "contentType": "image/webp",
+      "etag": "4d40925f69bacf0837614a72d5f9449c",
+      "lastModified": "2026-10-09T12:59:24.754Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-02-dalian-morning/dalian-morning-live-1-960w.webp",
+      "bytes": 43984,
+      "contentType": "image/webp",
+      "etag": "570c57c401fdf8747bbe1812bbe4ff6c",
+      "lastModified": "2026-10-09T12:59:25.481Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-02-dalian-morning/dalian-morning-live-1.mp4",
+      "bytes": 1127733,
+      "contentType": "video/mp4",
+      "etag": "72bee5483675820c08ce4b06be3d1b00",
+      "lastModified": "2026-10-09T12:59:27.357Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-02-dalian-morning/dalian-morning-live-1.webp",
+      "bytes": 117344,
+      "contentType": "image/webp",
+      "etag": "83a1c1420df7834cb11dd1d47769a931",
+      "lastModified": "2026-10-09T12:59:24.214Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-02-dalian-morning/dalian-morning-live-2-480w.webp",
+      "bytes": 8710,
+      "contentType": "image/webp",
+      "etag": "7b5f3b8d7fd6b9b86fb17bcdaa343b87",
+      "lastModified": "2026-10-09T12:59:28.237Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-02-dalian-morning/dalian-morning-live-2-960w.webp",
+      "bytes": 30002,
+      "contentType": "image/webp",
+      "etag": "dfa3426a7bcc0c0bc9fdf98ed75661b4",
+      "lastModified": "2026-10-09T12:59:29.371Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-02-dalian-morning/dalian-morning-live-2.mp4",
+      "bytes": 775125,
+      "contentType": "video/mp4",
+      "etag": "c692f2ae3e63218dfd4f5c4d75499b8c",
+      "lastModified": "2026-10-09T12:59:30.577Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-02-dalian-morning/dalian-morning-live-2.webp",
+      "bytes": 93108,
+      "contentType": "image/webp",
+      "etag": "8fe4d4410a68c915f0f356ce41932b09",
+      "lastModified": "2026-10-09T12:59:27.532Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-02-dalian-morning/dalian-morning-live-4-480w.webp",
+      "bytes": 16456,
+      "contentType": "image/webp",
+      "etag": "39d3c371ff7cadd7aaf978f5000b3e13",
+      "lastModified": "2026-10-09T12:59:30.999Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-02-dalian-morning/dalian-morning-live-4-960w.webp",
+      "bytes": 52042,
+      "contentType": "image/webp",
+      "etag": "a0e927753517f265dbed91fd6e4f8c46",
+      "lastModified": "2026-10-09T12:59:32.298Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-02-dalian-morning/dalian-morning-live-4.mp4",
+      "bytes": 885594,
+      "contentType": "video/mp4",
+      "etag": "84f3f8f6fb8c5bdcc33699016a95d126",
+      "lastModified": "2026-10-09T12:59:33.784Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-02-dalian-morning/dalian-morning-live-4.webp",
+      "bytes": 143028,
+      "contentType": "image/webp",
+      "etag": "428a933c11c3dd23248fcd64a3f6c0ab",
+      "lastModified": "2026-10-09T12:59:31.205Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-02-dalian-morning/dalian-morning-live-5-480w.webp",
+      "bytes": 24882,
+      "contentType": "image/webp",
+      "etag": "53e1560fe7212fc3240fa3a7e416fd11",
+      "lastModified": "2026-10-09T12:59:34.887Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-02-dalian-morning/dalian-morning-live-5-960w.webp",
+      "bytes": 75600,
+      "contentType": "image/webp",
+      "etag": "c4b45a6f87158dbe26c9f3791cb12608",
+      "lastModified": "2026-10-09T12:59:36.224Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-02-dalian-morning/dalian-morning-live-5.mp4",
+      "bytes": 1064792,
+      "contentType": "video/mp4",
+      "etag": "49dd5df03fa4777ea34da93e90b4f91c",
+      "lastModified": "2026-10-09T12:59:37.633Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-02-dalian-morning/dalian-morning-live-5.webp",
+      "bytes": 129638,
+      "contentType": "image/webp",
+      "etag": "fdfe7d4e7f9079c948d3f4ff698f0f63",
+      "lastModified": "2026-10-09T12:59:34.439Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-02-dalian-morning/dalian-morning-live-6-480w.webp",
+      "bytes": 14384,
+      "contentType": "image/webp",
+      "etag": "e5365ac5efdde80297551d4addada2bd",
+      "lastModified": "2026-10-09T12:59:37.569Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-02-dalian-morning/dalian-morning-live-6-960w.webp",
+      "bytes": 43262,
+      "contentType": "image/webp",
+      "etag": "0fbaad96e1df221424b6b556996d0bee",
+      "lastModified": "2026-10-09T12:59:40.088Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-02-dalian-morning/dalian-morning-live-6.mp4",
+      "bytes": 860827,
+      "contentType": "video/mp4",
+      "etag": "78a09bed7974530c9049fa1a89b45ae3",
+      "lastModified": "2026-10-09T12:59:40.837Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-02-dalian-morning/dalian-morning-live-6.webp",
+      "bytes": 109750,
+      "contentType": "image/webp",
+      "etag": "de8332a03e8f6b8aff14a137fb1c9cdd",
+      "lastModified": "2026-10-09T12:59:37.062Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-02-dalian-morning/dalian-morning-live-7-480w.webp",
+      "bytes": 18746,
+      "contentType": "image/webp",
+      "etag": "1f44621cb1907f0ca18456ec4f5dfe7a",
+      "lastModified": "2026-10-09T12:59:41.397Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-02-dalian-morning/dalian-morning-live-7-960w.webp",
+      "bytes": 60042,
+      "contentType": "image/webp",
+      "etag": "b42a76e6573c71e17429dcc419e02a13",
+      "lastModified": "2026-10-09T12:59:44.121Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-02-dalian-morning/dalian-morning-live-7.mp4",
+      "bytes": 1131845,
+      "contentType": "video/mp4",
+      "etag": "102605e91d5a0c60ce1b427e7bdf38af",
+      "lastModified": "2026-10-09T12:59:44.891Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-02-dalian-morning/dalian-morning-live-7.webp",
+      "bytes": 167778,
+      "contentType": "image/webp",
+      "etag": "edf9c30ea750a1d6b7dceb85ad54d931",
+      "lastModified": "2026-10-09T12:59:40.333Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-02-dalian-morning/dalian-morning-live-8-480w.webp",
+      "bytes": 14022,
+      "contentType": "image/webp",
+      "etag": "f4ef9be30b2e3b5c575d5e5a0cde3096",
+      "lastModified": "2026-10-09T12:59:45.722Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-02-dalian-morning/dalian-morning-live-8-960w.webp",
+      "bytes": 38954,
+      "contentType": "image/webp",
+      "etag": "69c6a1dec1bb0a5c9bb3f29da554cac5",
+      "lastModified": "2026-10-09T12:59:46.974Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-02-dalian-morning/dalian-morning-live-8.mp4",
+      "bytes": 1062307,
+      "contentType": "video/mp4",
+      "etag": "5acc57cdc434a6ba9a1ba160c2f55639",
+      "lastModified": "2026-10-09T12:59:47.780Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-02-dalian-morning/dalian-morning-live-8.webp",
+      "bytes": 94162,
+      "contentType": "image/webp",
+      "etag": "7f69e72097418738d49f630ca68bbbde",
+      "lastModified": "2026-10-09T12:59:44.675Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-02-dalian-morning/dalian-morning-live-9-480w.webp",
+      "bytes": 70764,
+      "contentType": "image/webp",
+      "etag": "d9bd082aed2fa2a5d6b1a37e9e7178dc",
+      "lastModified": "2026-10-09T12:59:49.757Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-02-dalian-morning/dalian-morning-live-9-960w.webp",
+      "bytes": 214742,
+      "contentType": "image/webp",
+      "etag": "f27268857cefb21366d46145cc2fdf08",
+      "lastModified": "2026-10-09T12:59:50.925Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-02-dalian-morning/dalian-morning-live-9.mp4",
+      "bytes": 1395601,
+      "contentType": "video/mp4",
+      "etag": "656d69c6faa1f069e66591bcd1e98681",
+      "lastModified": "2026-10-09T12:59:51.703Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-02-dalian-morning/dalian-morning-live-9.webp",
+      "bytes": 362282,
+      "contentType": "image/webp",
+      "etag": "86192616d447c8bd587af46c21a0dcba",
+      "lastModified": "2026-10-09T12:59:48.964Z",
       "storageClass": "Standard"
     },
     {
@@ -17497,6 +18233,166 @@
       "storageClass": "Standard"
     },
     {
+      "key": "moments/2026/10/02-03-bangchuidao-seaside/bangchuidao-seaside-live-1-480w.webp",
+      "bytes": 60552,
+      "contentType": "image/webp",
+      "etag": "ac2d41ab4c43e64a68a377dd21a7f646",
+      "lastModified": "2026-10-09T13:00:06.606Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-03-bangchuidao-seaside/bangchuidao-seaside-live-1-960w.webp",
+      "bytes": 171216,
+      "contentType": "image/webp",
+      "etag": "e9988e9e0045de840929ebccc8e32dae",
+      "lastModified": "2026-10-09T13:00:06.523Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-03-bangchuidao-seaside/bangchuidao-seaside-live-1.mp4",
+      "bytes": 3016246,
+      "contentType": "video/mp4",
+      "etag": "1d159ae777f1f74b99f9f757b08b03da",
+      "lastModified": "2026-10-09T13:00:06.573Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-03-bangchuidao-seaside/bangchuidao-seaside-live-1.webp",
+      "bytes": 274240,
+      "contentType": "image/webp",
+      "etag": "8f55bc5b9bb94295aefe65896a9d4337",
+      "lastModified": "2026-10-09T13:00:06.807Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-03-bangchuidao-seaside/bangchuidao-seaside-live-2-480w.webp",
+      "bytes": 36548,
+      "contentType": "image/webp",
+      "etag": "de3155c1d69e6b1cfc7b39cc93d6885b",
+      "lastModified": "2026-10-09T13:00:10.427Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-03-bangchuidao-seaside/bangchuidao-seaside-live-2-960w.webp",
+      "bytes": 117368,
+      "contentType": "image/webp",
+      "etag": "9b27006b0de74157f7e630e66148d2bf",
+      "lastModified": "2026-10-09T13:00:10.244Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-03-bangchuidao-seaside/bangchuidao-seaside-live-2.mp4",
+      "bytes": 1748266,
+      "contentType": "video/mp4",
+      "etag": "0268df711123533cfe823fbc822ebb06",
+      "lastModified": "2026-10-09T13:00:11.721Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-03-bangchuidao-seaside/bangchuidao-seaside-live-2.webp",
+      "bytes": 290100,
+      "contentType": "image/webp",
+      "etag": "0af1649d672235aa0b75fbc4e02fbad6",
+      "lastModified": "2026-10-09T13:00:09.927Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-03-bangchuidao-seaside/bangchuidao-seaside-live-3-480w.webp",
+      "bytes": 16946,
+      "contentType": "image/webp",
+      "etag": "e24398eccfe570789208f7ad5220e4ba",
+      "lastModified": "2026-10-09T13:00:14.065Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-03-bangchuidao-seaside/bangchuidao-seaside-live-3-960w.webp",
+      "bytes": 43580,
+      "contentType": "image/webp",
+      "etag": "7c8800152b3e72a502b3167f8b98a786",
+      "lastModified": "2026-10-09T13:00:15.722Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-03-bangchuidao-seaside/bangchuidao-seaside-live-3.mp4",
+      "bytes": 1391376,
+      "contentType": "video/mp4",
+      "etag": "602437e7168b78b490078640559eaa51",
+      "lastModified": "2026-10-09T13:00:16.616Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-03-bangchuidao-seaside/bangchuidao-seaside-live-3.webp",
+      "bytes": 97286,
+      "contentType": "image/webp",
+      "etag": "20122f40b1b616f87dd786884a38c2c1",
+      "lastModified": "2026-10-09T13:00:14.285Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-03-bangchuidao-seaside/bangchuidao-seaside-live-5-480w.webp",
+      "bytes": 32890,
+      "contentType": "image/webp",
+      "etag": "3562addb6046a539c243835467809a30",
+      "lastModified": "2026-10-09T13:00:18.200Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-03-bangchuidao-seaside/bangchuidao-seaside-live-5-960w.webp",
+      "bytes": 95830,
+      "contentType": "image/webp",
+      "etag": "27f5b306bc2ac4e8d13d2d27e6a3f8cf",
+      "lastModified": "2026-10-09T13:00:21.535Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-03-bangchuidao-seaside/bangchuidao-seaside-live-5.mp4",
+      "bytes": 2183481,
+      "contentType": "video/mp4",
+      "etag": "347f4a1a56d4600f85ef1ffe7b96005a",
+      "lastModified": "2026-10-09T13:00:22.265Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-03-bangchuidao-seaside/bangchuidao-seaside-live-5.webp",
+      "bytes": 232114,
+      "contentType": "image/webp",
+      "etag": "bf85f9cb31a372fc600b7e7e27e2ec53",
+      "lastModified": "2026-10-09T13:00:18.962Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-03-bangchuidao-seaside/bangchuidao-seaside-live-6-480w.webp",
+      "bytes": 35398,
+      "contentType": "image/webp",
+      "etag": "721780b0640078834919706a44585818",
+      "lastModified": "2026-10-09T13:00:23.787Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-03-bangchuidao-seaside/bangchuidao-seaside-live-6-960w.webp",
+      "bytes": 96060,
+      "contentType": "image/webp",
+      "etag": "25c1b9041e28f6cc676f5ee5c931d8be",
+      "lastModified": "2026-10-09T13:00:25.438Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-03-bangchuidao-seaside/bangchuidao-seaside-live-6.mp4",
+      "bytes": 1457343,
+      "contentType": "video/mp4",
+      "etag": "cf520f3ddb8de9ad910afd7c5d365452",
+      "lastModified": "2026-10-09T13:00:26.801Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-03-bangchuidao-seaside/bangchuidao-seaside-live-6.webp",
+      "bytes": 232708,
+      "contentType": "image/webp",
+      "etag": "5c635c39270f7c73ef811ed13f5c019a",
+      "lastModified": "2026-10-09T13:00:23.194Z",
+      "storageClass": "Standard"
+    },
+    {
       "key": "moments/2026/10/02-03-bangchuidao-seaside/bangchuidao-seaside.webp",
       "bytes": 415276,
       "contentType": "image/webp",
@@ -17614,6 +18510,166 @@
       "contentType": "image/webp",
       "etag": "54e88a6d64620c43d6020711f62639ae",
       "lastModified": "2026-10-07T23:59:14.162Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-04-dalian-sea-intestine-rice/dalian-sea-intestine-rice-live-1-480w.webp",
+      "bytes": 22606,
+      "contentType": "image/webp",
+      "etag": "bd94a18e5909826f4be056fb86ffca0b",
+      "lastModified": "2026-10-09T13:00:27.228Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-04-dalian-sea-intestine-rice/dalian-sea-intestine-rice-live-1-960w.webp",
+      "bytes": 57740,
+      "contentType": "image/webp",
+      "etag": "e13d256874c3b4a9834a3cc0414ce6fb",
+      "lastModified": "2026-10-09T13:00:28.431Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-04-dalian-sea-intestine-rice/dalian-sea-intestine-rice-live-1.mp4",
+      "bytes": 1217695,
+      "contentType": "video/mp4",
+      "etag": "c4597979e9f63e9147753f150dae4469",
+      "lastModified": "2026-10-09T13:00:29.902Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-04-dalian-sea-intestine-rice/dalian-sea-intestine-rice-live-1.webp",
+      "bytes": 130024,
+      "contentType": "image/webp",
+      "etag": "801b8394099b1fc452a0f1c06c7e532b",
+      "lastModified": "2026-10-09T13:00:26.500Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-04-dalian-sea-intestine-rice/dalian-sea-intestine-rice-live-2-480w.webp",
+      "bytes": 34142,
+      "contentType": "image/webp",
+      "etag": "8eacdc77050ac6bf15c9618e13edb6bc",
+      "lastModified": "2026-10-09T13:00:30.849Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-04-dalian-sea-intestine-rice/dalian-sea-intestine-rice-live-2-960w.webp",
+      "bytes": 80616,
+      "contentType": "image/webp",
+      "etag": "fe24e8a8f6a37a88f07fecba1be951c4",
+      "lastModified": "2026-10-09T13:00:32.082Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-04-dalian-sea-intestine-rice/dalian-sea-intestine-rice-live-2.mp4",
+      "bytes": 1563121,
+      "contentType": "video/mp4",
+      "etag": "aadc411ceb4dcc39f3d9cae429be4b95",
+      "lastModified": "2026-10-09T13:00:33.778Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-04-dalian-sea-intestine-rice/dalian-sea-intestine-rice-live-2.webp",
+      "bytes": 167960,
+      "contentType": "image/webp",
+      "etag": "1c2d2176dd38bf52373978a41fe4163f",
+      "lastModified": "2026-10-09T13:00:30.225Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-04-dalian-sea-intestine-rice/dalian-sea-intestine-rice-live-3-480w.webp",
+      "bytes": 25988,
+      "contentType": "image/webp",
+      "etag": "79f6b303c8b1e4be6054005d420b0a02",
+      "lastModified": "2026-10-09T13:00:35.600Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-04-dalian-sea-intestine-rice/dalian-sea-intestine-rice-live-3-960w.webp",
+      "bytes": 62972,
+      "contentType": "image/webp",
+      "etag": "2815893f06e322c8d2c16c8fe0c3935b",
+      "lastModified": "2026-10-09T13:00:36.090Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-04-dalian-sea-intestine-rice/dalian-sea-intestine-rice-live-3.mp4",
+      "bytes": 1456079,
+      "contentType": "video/mp4",
+      "etag": "6a4af319173ffb43b91a11ac0990cb3a",
+      "lastModified": "2026-10-09T13:00:37.611Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-04-dalian-sea-intestine-rice/dalian-sea-intestine-rice-live-3.webp",
+      "bytes": 128030,
+      "contentType": "image/webp",
+      "etag": "e2d7bc71d267adec1b8c4831a26a5c5f",
+      "lastModified": "2026-10-09T13:00:35.131Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-04-dalian-sea-intestine-rice/dalian-sea-intestine-rice-live-4-480w.webp",
+      "bytes": 20226,
+      "contentType": "image/webp",
+      "etag": "14446b7212c2500229dccfdcdd1083c3",
+      "lastModified": "2026-10-09T13:00:38.586Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-04-dalian-sea-intestine-rice/dalian-sea-intestine-rice-live-4-960w.webp",
+      "bytes": 49058,
+      "contentType": "image/webp",
+      "etag": "4a1aaf097420a06b117b2f358ba31527",
+      "lastModified": "2026-10-09T13:00:38.737Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-04-dalian-sea-intestine-rice/dalian-sea-intestine-rice-live-4.mp4",
+      "bytes": 1222753,
+      "contentType": "video/mp4",
+      "etag": "acbdcc6bcc5f593652657c4b74137183",
+      "lastModified": "2026-10-09T13:00:44.310Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-04-dalian-sea-intestine-rice/dalian-sea-intestine-rice-live-4.webp",
+      "bytes": 100888,
+      "contentType": "image/webp",
+      "etag": "9c7890036df0ed16c729c89dfdc64fba",
+      "lastModified": "2026-10-09T13:00:38.911Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-04-dalian-sea-intestine-rice/dalian-sea-intestine-rice-live-5-480w.webp",
+      "bytes": 9526,
+      "contentType": "image/webp",
+      "etag": "0b66697ce126acef02936a3d51a303a9",
+      "lastModified": "2026-10-09T13:00:46.071Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-04-dalian-sea-intestine-rice/dalian-sea-intestine-rice-live-5-960w.webp",
+      "bytes": 23346,
+      "contentType": "image/webp",
+      "etag": "704a833de84765b0265a2f45d7a3ab4b",
+      "lastModified": "2026-10-09T13:00:45.741Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-04-dalian-sea-intestine-rice/dalian-sea-intestine-rice-live-5.mp4",
+      "bytes": 931000,
+      "contentType": "video/mp4",
+      "etag": "e33641cc6fe5d002574fef9699ca00f8",
+      "lastModified": "2026-10-09T13:00:47.796Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-04-dalian-sea-intestine-rice/dalian-sea-intestine-rice-live-5.webp",
+      "bytes": 48450,
+      "contentType": "image/webp",
+      "etag": "859a4bd60e649777c2ba538789092dbb",
+      "lastModified": "2026-10-09T13:00:45.351Z",
       "storageClass": "Standard"
     },
     {
@@ -17761,6 +18817,102 @@
       "storageClass": "Standard"
     },
     {
+      "key": "moments/2026/10/02-05-dandong-barbecue/dandong-barbecue-live-3-480w.webp",
+      "bytes": 28010,
+      "contentType": "image/webp",
+      "etag": "caf38fffb61bf9ad7df26b7093955267",
+      "lastModified": "2026-10-09T13:00:52.067Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-05-dandong-barbecue/dandong-barbecue-live-3-960w.webp",
+      "bytes": 70960,
+      "contentType": "image/webp",
+      "etag": "b6e57259cc9c9a5707cfcde4ae2160b3",
+      "lastModified": "2026-10-09T13:00:52.851Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-05-dandong-barbecue/dandong-barbecue-live-3.mp4",
+      "bytes": 1361418,
+      "contentType": "video/mp4",
+      "etag": "a2d11cfc5d7f274e5fe8e2e4a7bea610",
+      "lastModified": "2026-10-09T13:00:54.978Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-05-dandong-barbecue/dandong-barbecue-live-3.webp",
+      "bytes": 150856,
+      "contentType": "image/webp",
+      "etag": "7cf4f20f921244b0e773b81139630f04",
+      "lastModified": "2026-10-09T13:00:52.390Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-05-dandong-barbecue/dandong-barbecue-live-4-480w.webp",
+      "bytes": 53348,
+      "contentType": "image/webp",
+      "etag": "d3a41425aca6b5b1081e9b5c0f134127",
+      "lastModified": "2026-10-09T13:00:55.594Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-05-dandong-barbecue/dandong-barbecue-live-4-960w.webp",
+      "bytes": 131162,
+      "contentType": "image/webp",
+      "etag": "a16e32f59cc58d9e79cd83b6ca61d8f3",
+      "lastModified": "2026-10-09T13:00:55.993Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-05-dandong-barbecue/dandong-barbecue-live-4.mp4",
+      "bytes": 1128969,
+      "contentType": "video/mp4",
+      "etag": "2b45a6f74726d34be9cb31ea9f00738f",
+      "lastModified": "2026-10-09T13:00:58.661Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-05-dandong-barbecue/dandong-barbecue-live-4.webp",
+      "bytes": 197946,
+      "contentType": "image/webp",
+      "etag": "95e19fe0cfcd075ef00014d42e4783ee",
+      "lastModified": "2026-10-09T13:00:54.914Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-05-dandong-barbecue/dandong-barbecue-live-6-480w.webp",
+      "bytes": 14184,
+      "contentType": "image/webp",
+      "etag": "4ead543d0c1b2c82c6c995af900c7b53",
+      "lastModified": "2026-10-09T13:00:49.152Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-05-dandong-barbecue/dandong-barbecue-live-6-960w.webp",
+      "bytes": 33664,
+      "contentType": "image/webp",
+      "etag": "32ba0086edc8055197e86ff66e065ba6",
+      "lastModified": "2026-10-09T13:00:49.172Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-05-dandong-barbecue/dandong-barbecue-live-6.mp4",
+      "bytes": 700658,
+      "contentType": "video/mp4",
+      "etag": "32296a55ad97fb6c0313dc5d4242c4e8",
+      "lastModified": "2026-10-09T13:00:51.105Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/02-05-dandong-barbecue/dandong-barbecue-live-6.webp",
+      "bytes": 68722,
+      "contentType": "image/webp",
+      "etag": "1ac44b8a02a3861aa212e2e61683034d",
+      "lastModified": "2026-10-09T13:00:48.659Z",
+      "storageClass": "Standard"
+    },
+    {
       "key": "moments/2026/10/02-05-dandong-barbecue/dandong-barbecue.webp",
       "bytes": 86022,
       "contentType": "image/webp",
@@ -17782,6 +18934,230 @@
       "contentType": "image/webp",
       "etag": "874911889ac0fbb6ae68ba38d206259d",
       "lastModified": "2026-10-08T00:00:16.762Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-live-1-480w.webp",
+      "bytes": 21582,
+      "contentType": "image/webp",
+      "etag": "8888b2812bfe19bb0c01740fad20cf31",
+      "lastModified": "2026-10-09T12:59:53.695Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-live-1-960w.webp",
+      "bytes": 53422,
+      "contentType": "image/webp",
+      "etag": "73119a08e8352ca6837b5e3a2137c08e",
+      "lastModified": "2026-10-09T12:59:55.537Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-live-1.mp4",
+      "bytes": 597941,
+      "contentType": "video/mp4",
+      "etag": "fcc4c34a625ca3276e69b5ad5544c292",
+      "lastModified": "2026-10-09T12:59:56.128Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-live-1.webp",
+      "bytes": 81814,
+      "contentType": "image/webp",
+      "etag": "1be60dab17574db79e81892d9fa4399c",
+      "lastModified": "2026-10-09T12:59:52.745Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-live-2-480w.webp",
+      "bytes": 48648,
+      "contentType": "image/webp",
+      "etag": "f4ecf1817a198ad6accc4fdc91fb7578",
+      "lastModified": "2026-10-09T12:59:57.073Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-live-2-960w.webp",
+      "bytes": 129654,
+      "contentType": "image/webp",
+      "etag": "e34d57d34f4f3802e2ff75c5cecc19c4",
+      "lastModified": "2026-10-09T12:59:58.978Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-live-2.mp4",
+      "bytes": 1673610,
+      "contentType": "video/mp4",
+      "etag": "9068166102647f8b6b81a9c16b3703bd",
+      "lastModified": "2026-10-09T13:00:00.298Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-live-2.webp",
+      "bytes": 280974,
+      "contentType": "image/webp",
+      "etag": "2ddc9cc33a497baa720eca7bf6281654",
+      "lastModified": "2026-10-09T12:59:56.731Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-live-3-480w.webp",
+      "bytes": 28124,
+      "contentType": "image/webp",
+      "etag": "0ad597dd9cc06932e339b31cfe5e3d60",
+      "lastModified": "2026-10-09T13:00:00.511Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-live-3-960w.webp",
+      "bytes": 79250,
+      "contentType": "image/webp",
+      "etag": "7cf813e92619a8f135204cc419f7abd9",
+      "lastModified": "2026-10-09T13:00:03.865Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-live-3.mp4",
+      "bytes": 1362483,
+      "contentType": "video/mp4",
+      "etag": "4cf08accdece8c44cc2f66114d5241e2",
+      "lastModified": "2026-10-09T13:00:04.753Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-live-3.webp",
+      "bytes": 177198,
+      "contentType": "image/webp",
+      "etag": "9cc7d076f32d3e0e5a23d3f39afd13a6",
+      "lastModified": "2026-10-09T13:00:00.922Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-live-5-480w.webp",
+      "bytes": 61906,
+      "contentType": "image/webp",
+      "etag": "dfb587251932070de29785602a67ae0a",
+      "lastModified": "2026-10-09T13:00:06.617Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-live-5-960w.webp",
+      "bytes": 193810,
+      "contentType": "image/webp",
+      "etag": "e1b5be8c5e50e3c8cddf46758bf69411",
+      "lastModified": "2026-10-09T13:00:08.055Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-live-5.mp4",
+      "bytes": 1618278,
+      "contentType": "video/mp4",
+      "etag": "c25d64bbb534e6b750a64e99b0176874",
+      "lastModified": "2026-10-09T13:00:09.009Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-live-5.webp",
+      "bytes": 345198,
+      "contentType": "image/webp",
+      "etag": "af7b24225b528ac43d04aff9ed62871c",
+      "lastModified": "2026-10-09T13:00:06.672Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-live-6-480w.webp",
+      "bytes": 101562,
+      "contentType": "image/webp",
+      "etag": "308758285a5314ede9757a2e41c2e6f5",
+      "lastModified": "2026-10-09T13:00:10.271Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-live-6-960w.webp",
+      "bytes": 323248,
+      "contentType": "image/webp",
+      "etag": "4b7ef6b9d79dd80f845c8fb457886ba1",
+      "lastModified": "2026-10-09T13:00:11.814Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-live-6.mp4",
+      "bytes": 2646147,
+      "contentType": "video/mp4",
+      "etag": "59ebfef4f10bc2276470cd59202e8b52",
+      "lastModified": "2026-10-09T13:00:14.490Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-live-6.webp",
+      "bytes": 530004,
+      "contentType": "image/webp",
+      "etag": "338c82a636276dea655a0fddf2fdf937",
+      "lastModified": "2026-10-09T13:00:10.487Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-live-7-480w.webp",
+      "bytes": 28120,
+      "contentType": "image/webp",
+      "etag": "bebb5414880462a411d19ac7962da5cc",
+      "lastModified": "2026-10-09T13:00:14.137Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-live-7-960w.webp",
+      "bytes": 81080,
+      "contentType": "image/webp",
+      "etag": "b5bca09b4f4d1f378296258a36524500",
+      "lastModified": "2026-10-09T13:00:15.501Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-live-7.mp4",
+      "bytes": 1087014,
+      "contentType": "video/mp4",
+      "etag": "129bb58b379eebd47a4f84a24abdc23b",
+      "lastModified": "2026-10-09T13:00:18.674Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-live-7.webp",
+      "bytes": 193738,
+      "contentType": "image/webp",
+      "etag": "bbe3ce5da48c988515ec5c8838b2719a",
+      "lastModified": "2026-10-09T13:00:14.357Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-live-8-480w.webp",
+      "bytes": 71588,
+      "contentType": "image/webp",
+      "etag": "493a9577bc4c1df2be9b4b40e992399c",
+      "lastModified": "2026-10-09T13:00:19.633Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-live-8-960w.webp",
+      "bytes": 206024,
+      "contentType": "image/webp",
+      "etag": "53186be17c1f613951fb3371fb0fe25a",
+      "lastModified": "2026-10-09T13:00:19.455Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-live-8.mp4",
+      "bytes": 2226997,
+      "contentType": "video/mp4",
+      "etag": "68862870134a5cbba01789b90efad5e3",
+      "lastModified": "2026-10-09T13:00:24.066Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-live-8.webp",
+      "bytes": 340914,
+      "contentType": "image/webp",
+      "etag": "c15a224c6867a9f547248c3c1bcb4fa3",
+      "lastModified": "2026-10-09T13:00:18.594Z",
       "storageClass": "Standard"
     },
     {
@@ -17993,6 +19369,134 @@
       "storageClass": "Standard"
     },
     {
+      "key": "moments/2026/10/03-02-dandong-soup-rice/dandong-soup-rice-live-1-480w.webp",
+      "bytes": 46988,
+      "contentType": "image/webp",
+      "etag": "aaf85eac2aa7444f2767730d483c6185",
+      "lastModified": "2026-10-09T13:00:59.445Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-02-dandong-soup-rice/dandong-soup-rice-live-1-960w.webp",
+      "bytes": 127194,
+      "contentType": "image/webp",
+      "etag": "8d592b1232e8c89c212cd4f6e600f7b1",
+      "lastModified": "2026-10-09T13:00:59.796Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-02-dandong-soup-rice/dandong-soup-rice-live-1.mp4",
+      "bytes": 1741690,
+      "contentType": "video/mp4",
+      "etag": "6b9bfd419e102c20a6cf177ff8f7c57c",
+      "lastModified": "2026-10-09T13:01:02.818Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-02-dandong-soup-rice/dandong-soup-rice-live-1.webp",
+      "bytes": 283138,
+      "contentType": "image/webp",
+      "etag": "b90ea0262218fb3f4e4532ba0070a22c",
+      "lastModified": "2026-10-09T13:00:58.963Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-02-dandong-soup-rice/dandong-soup-rice-live-2-480w.webp",
+      "bytes": 27684,
+      "contentType": "image/webp",
+      "etag": "dee01d24e4648c5b944a46b29cae7e75",
+      "lastModified": "2026-10-09T13:01:02.740Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-02-dandong-soup-rice/dandong-soup-rice-live-2-960w.webp",
+      "bytes": 70066,
+      "contentType": "image/webp",
+      "etag": "5871d59e598ab1fcc7413acc0b9170f0",
+      "lastModified": "2026-10-09T13:01:03.782Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-02-dandong-soup-rice/dandong-soup-rice-live-2.mp4",
+      "bytes": 1430561,
+      "contentType": "video/mp4",
+      "etag": "221694a89c4a6865bde70a38d6fa5619",
+      "lastModified": "2026-10-09T13:01:06.262Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-02-dandong-soup-rice/dandong-soup-rice-live-2.webp",
+      "bytes": 154284,
+      "contentType": "image/webp",
+      "etag": "384a94b9d0f5b7f9dbc5a4d6b637edc5",
+      "lastModified": "2026-10-09T13:01:02.897Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-02-dandong-soup-rice/dandong-soup-rice-live-3-480w.webp",
+      "bytes": 26278,
+      "contentType": "image/webp",
+      "etag": "43639f9cae0974b868215c5d1c1351d7",
+      "lastModified": "2026-10-09T13:01:06.518Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-02-dandong-soup-rice/dandong-soup-rice-live-3-960w.webp",
+      "bytes": 62246,
+      "contentType": "image/webp",
+      "etag": "511a8c27678f78f4a4ce43d0ab51c460",
+      "lastModified": "2026-10-09T13:01:07.206Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-02-dandong-soup-rice/dandong-soup-rice-live-3.mp4",
+      "bytes": 1353672,
+      "contentType": "video/mp4",
+      "etag": "faba881a2deb8e6de3e176b61aab64e9",
+      "lastModified": "2026-10-09T13:01:09.739Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-02-dandong-soup-rice/dandong-soup-rice-live-3.webp",
+      "bytes": 132136,
+      "contentType": "image/webp",
+      "etag": "3ec3570ca75ad0fa4a8651bc0a477a2d",
+      "lastModified": "2026-10-09T13:01:06.478Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-02-dandong-soup-rice/dandong-soup-rice-live-4-480w.webp",
+      "bytes": 35036,
+      "contentType": "image/webp",
+      "etag": "4eadc205dc50d84ebcdfbca6dced1981",
+      "lastModified": "2026-10-09T13:01:10.431Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-02-dandong-soup-rice/dandong-soup-rice-live-4-960w.webp",
+      "bytes": 108994,
+      "contentType": "image/webp",
+      "etag": "544770eb7f1f5f21259a3089e460ff19",
+      "lastModified": "2026-10-09T13:01:10.026Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-02-dandong-soup-rice/dandong-soup-rice-live-4.mp4",
+      "bytes": 1733661,
+      "contentType": "video/mp4",
+      "etag": "10ca790955afde539b39819184a241b3",
+      "lastModified": "2026-10-09T13:01:14.051Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-02-dandong-soup-rice/dandong-soup-rice-live-4.webp",
+      "bytes": 308862,
+      "contentType": "image/webp",
+      "etag": "c13c0416afa7e1f4d90ba494c219a5a2",
+      "lastModified": "2026-10-09T13:01:11.549Z",
+      "storageClass": "Standard"
+    },
+    {
       "key": "moments/2026/10/03-02-dandong-soup-rice/dandong-soup-rice.webp",
       "bytes": 396032,
       "contentType": "image/webp",
@@ -18158,6 +19662,166 @@
       "contentType": "image/webp",
       "etag": "2b989d2474b33abf7b18c07e8ddba832",
       "lastModified": "2026-10-08T00:03:27.395Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-03-shenyang-chicken-and-bathhouse/shenyang-chicken-and-bathhouse-live-1-480w.webp",
+      "bytes": 39902,
+      "contentType": "image/webp",
+      "etag": "d72f379e859967bd5bf6daaea45f913e",
+      "lastModified": "2026-10-09T13:01:13.717Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-03-shenyang-chicken-and-bathhouse/shenyang-chicken-and-bathhouse-live-1-960w.webp",
+      "bytes": 106752,
+      "contentType": "image/webp",
+      "etag": "8d1d6d38ff057ebdc416781040081083",
+      "lastModified": "2026-10-09T13:01:15.611Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-03-shenyang-chicken-and-bathhouse/shenyang-chicken-and-bathhouse-live-1.mp4",
+      "bytes": 1413499,
+      "contentType": "video/mp4",
+      "etag": "60fff39eb081077a30cdbd34f0856051",
+      "lastModified": "2026-10-09T13:01:16.694Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-03-shenyang-chicken-and-bathhouse/shenyang-chicken-and-bathhouse-live-1.webp",
+      "bytes": 239968,
+      "contentType": "image/webp",
+      "etag": "142d98f2fa6f7ce3d2948db9267ed4b7",
+      "lastModified": "2026-10-09T13:01:13.304Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-03-shenyang-chicken-and-bathhouse/shenyang-chicken-and-bathhouse-live-2-480w.webp",
+      "bytes": 45624,
+      "contentType": "image/webp",
+      "etag": "56c63e3c1073638127fbed98867496bc",
+      "lastModified": "2026-10-09T13:01:17.643Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-03-shenyang-chicken-and-bathhouse/shenyang-chicken-and-bathhouse-live-2-960w.webp",
+      "bytes": 135242,
+      "contentType": "image/webp",
+      "etag": "c033c2a0ec9cf23b41c4fe86bff816a1",
+      "lastModified": "2026-10-09T13:01:20.270Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-03-shenyang-chicken-and-bathhouse/shenyang-chicken-and-bathhouse-live-2.mp4",
+      "bytes": 1288255,
+      "contentType": "video/mp4",
+      "etag": "db469ffa7dc21e3b9bf323a8cfc4e6ed",
+      "lastModified": "2026-10-09T13:01:21.027Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-03-shenyang-chicken-and-bathhouse/shenyang-chicken-and-bathhouse-live-2.webp",
+      "bytes": 332508,
+      "contentType": "image/webp",
+      "etag": "85a4494eada4cbde35f04d3191322591",
+      "lastModified": "2026-10-09T13:01:17.517Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-03-shenyang-chicken-and-bathhouse/shenyang-chicken-and-bathhouse-live-3-480w.webp",
+      "bytes": 35246,
+      "contentType": "image/webp",
+      "etag": "974d4dc9117c3d2bd89284f2433e99c3",
+      "lastModified": "2026-10-09T13:01:21.731Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-03-shenyang-chicken-and-bathhouse/shenyang-chicken-and-bathhouse-live-3-960w.webp",
+      "bytes": 89746,
+      "contentType": "image/webp",
+      "etag": "f3e9b2653f26b7a35520de759454916f",
+      "lastModified": "2026-10-09T13:01:22.827Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-03-shenyang-chicken-and-bathhouse/shenyang-chicken-and-bathhouse-live-3.mp4",
+      "bytes": 1379970,
+      "contentType": "video/mp4",
+      "etag": "42a8319e3c49198428f3b29a785de008",
+      "lastModified": "2026-10-09T13:01:24.530Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-03-shenyang-chicken-and-bathhouse/shenyang-chicken-and-bathhouse-live-3.webp",
+      "bytes": 138290,
+      "contentType": "image/webp",
+      "etag": "3a9e74c57f3d863f83a314bb1da2fde7",
+      "lastModified": "2026-10-09T13:01:21.176Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-03-shenyang-chicken-and-bathhouse/shenyang-chicken-and-bathhouse-live-4-480w.webp",
+      "bytes": 47786,
+      "contentType": "image/webp",
+      "etag": "4019c5cdec5ef64e6da32989eeceda5d",
+      "lastModified": "2026-10-09T13:01:26.551Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-03-shenyang-chicken-and-bathhouse/shenyang-chicken-and-bathhouse-live-4-960w.webp",
+      "bytes": 143854,
+      "contentType": "image/webp",
+      "etag": "c8d9807f33da67c93c3c96ddd774e8d3",
+      "lastModified": "2026-10-09T13:01:26.767Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-03-shenyang-chicken-and-bathhouse/shenyang-chicken-and-bathhouse-live-4.mp4",
+      "bytes": 1889729,
+      "contentType": "video/mp4",
+      "etag": "03587dae3f2c870182189fc74c09d6c3",
+      "lastModified": "2026-10-09T13:01:28.227Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-03-shenyang-chicken-and-bathhouse/shenyang-chicken-and-bathhouse-live-4.webp",
+      "bytes": 341690,
+      "contentType": "image/webp",
+      "etag": "f91a0be26ae44be0ef201642ceb1295e",
+      "lastModified": "2026-10-09T13:01:24.789Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-03-shenyang-chicken-and-bathhouse/shenyang-chicken-and-bathhouse-live-7-480w.webp",
+      "bytes": 29436,
+      "contentType": "image/webp",
+      "etag": "7e56f805344628474ad1e2571a85bbb2",
+      "lastModified": "2026-10-09T13:01:29.416Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-03-shenyang-chicken-and-bathhouse/shenyang-chicken-and-bathhouse-live-7-960w.webp",
+      "bytes": 87302,
+      "contentType": "image/webp",
+      "etag": "9f2997f104e0688d42fac90c1dd4c251",
+      "lastModified": "2026-10-09T13:01:29.751Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-03-shenyang-chicken-and-bathhouse/shenyang-chicken-and-bathhouse-live-7.mp4",
+      "bytes": 1661517,
+      "contentType": "video/mp4",
+      "etag": "f7bb61f41921f2e1a302c66d376bd3d5",
+      "lastModified": "2026-10-09T13:01:32.643Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/03-03-shenyang-chicken-and-bathhouse/shenyang-chicken-and-bathhouse-live-7.webp",
+      "bytes": 204074,
+      "contentType": "image/webp",
+      "etag": "9a40b0976946fa9935b095f4fbb5dbce",
+      "lastModified": "2026-10-09T13:01:28.345Z",
       "storageClass": "Standard"
     },
     {
@@ -18329,6 +19993,230 @@
       "storageClass": "Standard"
     },
     {
+      "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-1-480w.webp",
+      "bytes": 33792,
+      "contentType": "image/webp",
+      "etag": "92e6e6ba31be1424f58e60b595e16ef1",
+      "lastModified": "2026-10-09T13:01:32.140Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-1-960w.webp",
+      "bytes": 86754,
+      "contentType": "image/webp",
+      "etag": "d5425215b5001c577e0682e81b91c68d",
+      "lastModified": "2026-10-09T13:01:33.735Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-1.mp4",
+      "bytes": 2785231,
+      "contentType": "video/mp4",
+      "etag": "6ba6ca7387a08c980aeb6105c45b2331",
+      "lastModified": "2026-10-09T13:01:36.581Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-1.webp",
+      "bytes": 195440,
+      "contentType": "image/webp",
+      "etag": "b15a8f8bb1598e43396dd8fc39fb9e15",
+      "lastModified": "2026-10-09T13:01:32.142Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-2-480w.webp",
+      "bytes": 23236,
+      "contentType": "image/webp",
+      "etag": "2ac9fcd641de04184abf35ed5413a565",
+      "lastModified": "2026-10-09T13:01:36.717Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-2-960w.webp",
+      "bytes": 55372,
+      "contentType": "image/webp",
+      "etag": "3154fb27f13b8a645f1364e3ae99ad2a",
+      "lastModified": "2026-10-09T13:01:37.628Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-2.mp4",
+      "bytes": 1275079,
+      "contentType": "video/mp4",
+      "etag": "d5dd7fd00f383bee3e21c0ca1c42df3d",
+      "lastModified": "2026-10-09T13:01:38.664Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-2.webp",
+      "bytes": 112688,
+      "contentType": "image/webp",
+      "etag": "73c8a5543d5f580e91144fd1411f0489",
+      "lastModified": "2026-10-09T13:01:35.028Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-3-480w.webp",
+      "bytes": 15164,
+      "contentType": "image/webp",
+      "etag": "700f642601e3ac106770c74d2266ded2",
+      "lastModified": "2026-10-09T13:01:39.754Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-3-960w.webp",
+      "bytes": 38086,
+      "contentType": "image/webp",
+      "etag": "75daa2d0d1cca40fc453b92b5b57a3ec",
+      "lastModified": "2026-10-09T13:01:40.228Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-3.mp4",
+      "bytes": 1740423,
+      "contentType": "video/mp4",
+      "etag": "e5fdd2d78407650587ea0b285892af9b",
+      "lastModified": "2026-10-09T13:01:42.465Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-3.webp",
+      "bytes": 82852,
+      "contentType": "image/webp",
+      "etag": "e8352686a9cf6677bd877f5b1a372e67",
+      "lastModified": "2026-10-09T13:01:39.630Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-4-480w.webp",
+      "bytes": 44416,
+      "contentType": "image/webp",
+      "etag": "50c43e3b25db3c5eb906df8adbcf06a6",
+      "lastModified": "2026-10-09T13:01:43.422Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-4-960w.webp",
+      "bytes": 137514,
+      "contentType": "image/webp",
+      "etag": "2afbc33dbe823c3e4f3e96eee3b9c02d",
+      "lastModified": "2026-10-09T13:01:45.180Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-4.mp4",
+      "bytes": 2577124,
+      "contentType": "video/mp4",
+      "etag": "a7168ca2fd8b88f0adf3ef397cbaedb9",
+      "lastModified": "2026-10-09T13:01:47.965Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-4.webp",
+      "bytes": 336500,
+      "contentType": "image/webp",
+      "etag": "73af211f1e4e5b62d1a43d88f5e93c9c",
+      "lastModified": "2026-10-09T13:01:43.959Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-5-480w.webp",
+      "bytes": 24340,
+      "contentType": "image/webp",
+      "etag": "5383a1fd7ffcc0205be643f95bbb67f8",
+      "lastModified": "2026-10-09T13:01:48.453Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-5-960w.webp",
+      "bytes": 62180,
+      "contentType": "image/webp",
+      "etag": "a03e7ea77783b1e315d0eb5ecc2990b3",
+      "lastModified": "2026-10-09T13:01:48.901Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-5.mp4",
+      "bytes": 1440344,
+      "contentType": "video/mp4",
+      "etag": "a3d9b896f7c8a9bbe02913644ecd7308",
+      "lastModified": "2026-10-09T13:01:52.348Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-5.webp",
+      "bytes": 135528,
+      "contentType": "image/webp",
+      "etag": "ebc15f2796fdb652379073f717478e4b",
+      "lastModified": "2026-10-09T13:01:48.565Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-6-480w.webp",
+      "bytes": 18068,
+      "contentType": "image/webp",
+      "etag": "896c2dde6a607f2dca7f74d0d960055e",
+      "lastModified": "2026-10-09T13:01:52.089Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-6-960w.webp",
+      "bytes": 46116,
+      "contentType": "image/webp",
+      "etag": "2998373fd2f2471d580a6066c91da4c8",
+      "lastModified": "2026-10-09T13:01:52.149Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-6.mp4",
+      "bytes": 1489370,
+      "contentType": "video/mp4",
+      "etag": "fd14eeef9401d169b6e725cdcda5f64b",
+      "lastModified": "2026-10-09T13:01:56.784Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-6.webp",
+      "bytes": 100814,
+      "contentType": "image/webp",
+      "etag": "d9743c0ea5d23bb6b6b2d276d581b2aa",
+      "lastModified": "2026-10-09T13:01:51.540Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-7-480w.webp",
+      "bytes": 33548,
+      "contentType": "image/webp",
+      "etag": "6a596858fbbc549b578cdf2402525f1e",
+      "lastModified": "2026-10-09T13:01:55.703Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-7-960w.webp",
+      "bytes": 84318,
+      "contentType": "image/webp",
+      "etag": "fee33dd80b7a9b501f8e77fb556f4810",
+      "lastModified": "2026-10-09T13:01:55.630Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-7.mp4",
+      "bytes": 1117991,
+      "contentType": "video/mp4",
+      "etag": "7e7d300b018bd69891b2014702c5ade9",
+      "lastModified": "2026-10-09T13:01:58.544Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-7.webp",
+      "bytes": 137816,
+      "contentType": "image/webp",
+      "etag": "1f8c22deffada046227c243007d05c66",
+      "lastModified": "2026-10-09T13:01:55.480Z",
+      "storageClass": "Standard"
+    },
+    {
       "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food.webp",
       "bytes": 272668,
       "contentType": "image/webp",
@@ -18473,6 +20361,70 @@
       "storageClass": "Standard"
     },
     {
+      "key": "moments/2026/10/04-02-shenyang-cybercab/shenyang-cybercab-live-4-480w.webp",
+      "bytes": 29972,
+      "contentType": "image/webp",
+      "etag": "83b587d9ea991e9c0e959a22ceac1249",
+      "lastModified": "2026-10-09T13:01:59.417Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-02-shenyang-cybercab/shenyang-cybercab-live-4-960w.webp",
+      "bytes": 74242,
+      "contentType": "image/webp",
+      "etag": "b1b10d801939c36f8f8f245511561716",
+      "lastModified": "2026-10-09T13:02:00.451Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-02-shenyang-cybercab/shenyang-cybercab-live-4.mp4",
+      "bytes": 546415,
+      "contentType": "video/mp4",
+      "etag": "bb8aa477f67b4d47e1c518829f173696",
+      "lastModified": "2026-10-09T13:02:11.481Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-02-shenyang-cybercab/shenyang-cybercab-live-4.webp",
+      "bytes": 113310,
+      "contentType": "image/webp",
+      "etag": "96c8a91f104cbd47ea9c2c2371780acf",
+      "lastModified": "2026-10-09T13:01:58.673Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-02-shenyang-cybercab/shenyang-cybercab-live-5-480w.webp",
+      "bytes": 30052,
+      "contentType": "image/webp",
+      "etag": "d5c12d4faca9cd4f396812dd6f4a6bc4",
+      "lastModified": "2026-10-09T13:02:12.206Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-02-shenyang-cybercab/shenyang-cybercab-live-5-960w.webp",
+      "bytes": 84002,
+      "contentType": "image/webp",
+      "etag": "b5946b731008ec3b43269895dfd83777",
+      "lastModified": "2026-10-09T13:02:13.420Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-02-shenyang-cybercab/shenyang-cybercab-live-5.mp4",
+      "bytes": 784799,
+      "contentType": "video/mp4",
+      "etag": "ea5af1a4bc889def5d0fd529bb9eed0e",
+      "lastModified": "2026-10-09T13:02:17.233Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/04-02-shenyang-cybercab/shenyang-cybercab-live-5.webp",
+      "bytes": 144486,
+      "contentType": "image/webp",
+      "etag": "e667edf9685d6d73a75181818ea67c0b",
+      "lastModified": "2026-10-09T13:02:11.961Z",
+      "storageClass": "Standard"
+    },
+    {
       "key": "moments/2026/10/04-02-shenyang-cybercab/shenyang-cybercab.webp",
       "bytes": 156910,
       "contentType": "image/webp",
@@ -18614,6 +20566,166 @@
       "contentType": "image/webp",
       "etag": "e94dcffa6d0e23474cf09e6a91b09a3d",
       "lastModified": "2026-10-08T00:05:05.770Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/05-01-tianjin-guobacai/tianjin-guobacai-live-1-480w.webp",
+      "bytes": 17396,
+      "contentType": "image/webp",
+      "etag": "3ded6caf4049a521a6e8a8f412678ce6",
+      "lastModified": "2026-10-09T13:02:16.056Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/05-01-tianjin-guobacai/tianjin-guobacai-live-1-960w.webp",
+      "bytes": 41426,
+      "contentType": "image/webp",
+      "etag": "3e36809fa2aac562674ba8aa082b9272",
+      "lastModified": "2026-10-09T13:02:16.811Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/05-01-tianjin-guobacai/tianjin-guobacai-live-1.mp4",
+      "bytes": 995228,
+      "contentType": "video/mp4",
+      "etag": "d7fafc62a24c7860473a11c3204b990d",
+      "lastModified": "2026-10-09T13:02:20.178Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/05-01-tianjin-guobacai/tianjin-guobacai-live-1.webp",
+      "bytes": 82106,
+      "contentType": "image/webp",
+      "etag": "3f00c16c5327596dcd82ff71d7747d76",
+      "lastModified": "2026-10-09T13:02:15.618Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/05-01-tianjin-guobacai/tianjin-guobacai-live-2-480w.webp",
+      "bytes": 27982,
+      "contentType": "image/webp",
+      "etag": "4317dedcdd919fb401c32a619b167c45",
+      "lastModified": "2026-10-09T13:02:21.990Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/05-01-tianjin-guobacai/tianjin-guobacai-live-2-960w.webp",
+      "bytes": 68144,
+      "contentType": "image/webp",
+      "etag": "1d3a3284f3178302d873a239fa60084c",
+      "lastModified": "2026-10-09T13:02:23.096Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/05-01-tianjin-guobacai/tianjin-guobacai-live-2.mp4",
+      "bytes": 1477349,
+      "contentType": "video/mp4",
+      "etag": "c2d549b58f32fa95f3b2cfba33be6c71",
+      "lastModified": "2026-10-09T13:02:23.099Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/05-01-tianjin-guobacai/tianjin-guobacai-live-2.webp",
+      "bytes": 139350,
+      "contentType": "image/webp",
+      "etag": "2ecfdc9f1119d173a53eaf7eec026e90",
+      "lastModified": "2026-10-09T13:02:19.297Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/05-01-tianjin-guobacai/tianjin-guobacai-live-3-480w.webp",
+      "bytes": 33988,
+      "contentType": "image/webp",
+      "etag": "4a4aea2850739d02c697fb5823420d5b",
+      "lastModified": "2026-10-09T13:02:25.086Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/05-01-tianjin-guobacai/tianjin-guobacai-live-3-960w.webp",
+      "bytes": 91566,
+      "contentType": "image/webp",
+      "etag": "8cba41f89add1370bd9fc2ba964fb0e6",
+      "lastModified": "2026-10-09T13:02:25.956Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/05-01-tianjin-guobacai/tianjin-guobacai-live-3.mp4",
+      "bytes": 834637,
+      "contentType": "video/mp4",
+      "etag": "b70f53f1017b7203007fdff57512de16",
+      "lastModified": "2026-10-09T13:02:26.420Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/05-01-tianjin-guobacai/tianjin-guobacai-live-3.webp",
+      "bytes": 142190,
+      "contentType": "image/webp",
+      "etag": "19a95563a9ff053440833bd3080b0139",
+      "lastModified": "2026-10-09T13:02:23.951Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/05-01-tianjin-guobacai/tianjin-guobacai-live-4-480w.webp",
+      "bytes": 17652,
+      "contentType": "image/webp",
+      "etag": "8083dc44535a235333377e43405fef1a",
+      "lastModified": "2026-10-09T13:02:28.515Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/05-01-tianjin-guobacai/tianjin-guobacai-live-4-960w.webp",
+      "bytes": 48090,
+      "contentType": "image/webp",
+      "etag": "d31cd60eb6426e1a90dcd88d4ff5bf6b",
+      "lastModified": "2026-10-09T13:02:29.558Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/05-01-tianjin-guobacai/tianjin-guobacai-live-4.mp4",
+      "bytes": 965655,
+      "contentType": "video/mp4",
+      "etag": "2397e8b3d7e9d6aeb95a72c16c670b41",
+      "lastModified": "2026-10-09T13:02:31.214Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/05-01-tianjin-guobacai/tianjin-guobacai-live-4.webp",
+      "bytes": 106138,
+      "contentType": "image/webp",
+      "etag": "28585ed62d89fda11f116032333228c7",
+      "lastModified": "2026-10-09T13:02:26.999Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/05-01-tianjin-guobacai/tianjin-guobacai-live-5-480w.webp",
+      "bytes": 12530,
+      "contentType": "image/webp",
+      "etag": "e6765b58c6e435f9107b69d7ad059f64",
+      "lastModified": "2026-10-09T13:02:32.369Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/05-01-tianjin-guobacai/tianjin-guobacai-live-5-960w.webp",
+      "bytes": 28804,
+      "contentType": "image/webp",
+      "etag": "11118c2feca3c3163229eda761a2aa52",
+      "lastModified": "2026-10-09T13:02:34.234Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/05-01-tianjin-guobacai/tianjin-guobacai-live-5.mp4",
+      "bytes": 428764,
+      "contentType": "video/mp4",
+      "etag": "7738765bcc2f8164ce6ddfb35937740d",
+      "lastModified": "2026-10-09T13:02:34.333Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/05-01-tianjin-guobacai/tianjin-guobacai-live-5.webp",
+      "bytes": 58662,
+      "contentType": "image/webp",
+      "etag": "5e3a29e94ffdd20dd1c7ed93a12c90ee",
+      "lastModified": "2026-10-09T13:02:30.745Z",
       "storageClass": "Standard"
     },
     {
