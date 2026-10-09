@@ -42,7 +42,11 @@ for (const record of records) {
       `Duplicate media reference in ${record.id}: ${media.file}`,
     )
     directFiles.add(media.file)
-    validateAsset(record, media.file, media.type)
+    validateAsset(record, media.file, media.type === 'video' ? 'video' : 'image')
+
+    if (media.type === 'live-photo') {
+      validateAsset(record, media.video, 'video')
+    }
 
     if (!record.moment.hidden && media.alt.trim() === '') {
       blankAltIds.push(`${record.id}/${media.file}`)

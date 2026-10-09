@@ -1,0 +1,28 @@
+---
+interface Props {
+  imageClass: string
+}
+
+const { imageClass } = Astro.props
+---
+
+<div class="relative min-h-0 min-w-0" data-lightbox-media>
+  <img class={imageClass} alt="" data-lightbox-image />
+  <video
+    class="absolute inset-0 size-full object-contain"
+    data-lightbox-video
+    hidden
+    playsinline
+    muted
+    preload="none"
+    aria-label="实况照片动态片段"
+  />
+</div>
+<button
+  type="button"
+  class="fixed bottom-5 left-1/2 -translate-x-1/2 cursor-pointer rounded-full border-0 bg-white/15 px-4 py-2 text-sm text-white disabled:cursor-wait"
+  data-lightbox-live-toggle
+  aria-pressed="false"
+  hidden
+>播放实况</button>
+<span class="sr-only" role="status" data-lightbox-live-status />

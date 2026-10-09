@@ -2,6 +2,7 @@
 import CalendarBackLink from '@/components/CalendarBackLink.astro'
 import CalendarModeSwitch from '@/components/CalendarModeSwitch.astro'
 import MomentEntry from '@/components/MomentEntry.astro'
+import MomentLightboxMedia from '@/components/MomentLightboxMedia.astro'
 import Layout from '@/layouts/Layout.astro'
 import { getYearColor } from '@/moments/map-locations'
 import {
@@ -125,7 +126,7 @@ function formatDate(dateKey: string) {
       <button type="button" class="calendar-map-lightbox__previous fixed left-2 top-1/2 z-[1] flex size-11 -translate-y-1/2 cursor-pointer items-center justify-center border-0 bg-transparent text-white max-[48rem]:bottom-4 max-[48rem]:top-auto max-[48rem]:translate-y-0" data-map-lightbox-previous aria-label="上一张图片">
         <span class="i-lucide-chevron-left" aria-hidden="true" />
       </button>
-      <img class="size-full object-contain" alt="" data-map-lightbox-image />
+      <MomentLightboxMedia imageClass="mx-auto max-h-[calc(100dvh-8rem)] max-w-full object-contain" />
       <button type="button" class="calendar-map-lightbox__next fixed right-2 top-1/2 z-[1] flex size-11 -translate-y-1/2 cursor-pointer items-center justify-center border-0 bg-transparent text-white max-[48rem]:bottom-4 max-[48rem]:top-auto max-[48rem]:translate-y-0" data-map-lightbox-next aria-label="下一张图片">
         <span class="i-lucide-chevron-right" aria-hidden="true" />
       </button>

@@ -18,7 +18,7 @@ const temporaryPath = await mkdtemp(join(tmpdir(), 'hyoban-moment-variants-'))
 const records = await readMomentRecords(contentRoot)
 const tasks = records.flatMap((record) =>
   record.moment.media
-    .filter((media) => media.type === 'image')
+    .filter((media) => media.type !== 'video')
     .filter((media) => record.assets[media.file].contentType !== 'image/gif')
     .filter((media) => !record.assets[media.file].variants)
     .map((media) => ({ media, record })),
@@ -126,7 +126,7 @@ try {
     if (
       recordVariants.length > 0 ||
       record.moment.media.some(
-        (media) => media.type === 'image' && record.assets[media.file].variants?.length === 0,
+        (media) => media.type !== 'video' && record.assets[media.file].variants?.length === 0,
       )
     ) {
       const sorted = Object.fromEntries(

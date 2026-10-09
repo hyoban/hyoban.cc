@@ -1,5 +1,6 @@
 import MapboxLanguage from '@mapbox/mapbox-gl-language'
 import mapboxgl, { type GeoJSONSource, type PaddingOptions } from 'mapbox-gl'
+import { initializeLightboxMedia } from './moment-lightbox-client'
 
 type MarkerData = {
   color: string
@@ -57,10 +58,10 @@ function initializeCalendarMap() {
   const fallbackMessage = queryRequired<HTMLElement>(page, '[data-calendar-map-fallback-message]')
   const loading = queryRequired<HTMLElement>(page, '[data-calendar-map-loading]')
   const lightbox = queryRequired<HTMLDialogElement>(page, '[data-calendar-map-lightbox]')
-  const lightboxImage = queryRequired<HTMLImageElement>(page, '[data-map-lightbox-image]')
 
   const controller = new AbortController()
   const { signal } = controller
+  const lightboxMedia = initializeLightboxMedia(lightbox, signal)
   const locations = parseMarkerData(dataElement)
   const locationsById = new Map(locations.map((location) => [location.id, location]))
   const templates = new Map<string, HTMLTemplateElement>()
@@ -546,8 +547,7 @@ function initializeCalendarMap() {
       return
     }
 
-    lightboxImage.src = item.dataset.lightboxSrc ?? ''
-    lightboxImage.alt = item.dataset.lightboxAlt ?? ''
+    lightboxMedia.show(item)
 
     if (!lightbox.open) {
       lightbox.showModal()

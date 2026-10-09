@@ -36,6 +36,10 @@ export function getReferencedAssetFiles(record) {
   for (const media of record.moment.media) {
     addAsset(media.file)
 
+    if (media.type === 'live-photo') {
+      addAsset(media.video)
+    }
+
     if (media.poster) {
       addAsset(media.poster)
     }

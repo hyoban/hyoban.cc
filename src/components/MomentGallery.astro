@@ -21,19 +21,20 @@ const imageSizes = isSingle
   ]}
 >
   {
-    media.map((item, index) => item.type === 'image'
+    media.map((item, index) => item.type !== 'video'
       ? (
           <button
             type="button"
             class:list={[
-              'moment-gallery__image min-w-0 cursor-zoom-in overflow-hidden rounded-md border-0 bg-inline p-0',
+              'moment-gallery__image relative min-w-0 cursor-zoom-in overflow-hidden rounded-md border-0 bg-inline p-0',
               isSingle ? 'max-h-[32rem] [aspect-ratio:auto]' : 'aspect-[4/3]',
               { 'row-span-2': media.length === 3 && index === 0 },
             ]}
             data-lightbox-item
             data-lightbox-src={item.src.src}
             data-lightbox-alt={item.alt}
-            aria-label={`查看图片 ${index + 1}`}
+            data-lightbox-video={item.type === 'live-photo' ? item.video.src : undefined}
+            aria-label={`查看${item.type === 'live-photo' ? '实况照片' : '图片'} ${index + 1}`}
           >
             <img
               src={item.src.sources.find(source => source.width >= 960)?.src ?? item.src.sources.at(-1)?.src ?? item.src.src}
@@ -49,6 +50,11 @@ const imageSizes = isSingle
                 isSingle ? 'h-auto max-h-[32rem] object-contain' : 'h-full object-cover',
               ]}
             />
+            {item.type === 'live-photo' && (
+              <span class="absolute top-2 left-2 flex items-center gap-1 rounded-full bg-black/55 px-2 py-1 text-[0.625rem] font-medium tracking-wide text-white" aria-hidden="true">
+                <span class="i-lucide-circle-dot size-3" /> LIVE
+              </span>
+            )}
           </button>
         )
       : (

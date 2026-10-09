@@ -26,11 +26,16 @@ test('keeps complete colocated metadata for every semantic Moment asset', async 
       assert.doesNotMatch(media.file, /^(?:image|video)-\d/i)
       assert.ok(assets[media.file], `Missing metadata for moments/${id}/${media.file}`)
       assert.ok(assets[media.file].bytes > 0)
-      assert.match(assets[media.file].contentType, media.type === 'image' ? /^image\// : /^video\//)
+      assert.match(assets[media.file].contentType, media.type === 'video' ? /^video\// : /^image\//)
 
-      if (media.type === 'image') {
+      if (media.type !== 'video') {
         assert.ok(assets[media.file].width > 0)
         assert.ok(assets[media.file].height > 0)
+      }
+
+      if (media.type === 'live-photo') {
+        assert.ok(assets[media.video]?.bytes > 0)
+        assert.match(assets[media.video].contentType, /^video\//)
       }
 
       if (media.poster) {
