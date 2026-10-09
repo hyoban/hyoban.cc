@@ -71,6 +71,7 @@ function getFingerprint(record) {
       type: media.type,
       etag: record.assets[media.file]?.etag,
       posterEtag: media.poster ? record.assets[media.poster]?.etag : undefined,
+      videoEtag: media.type === 'live-photo' ? record.assets[media.video]?.etag : undefined,
     })),
     text: record.moment.text,
   }

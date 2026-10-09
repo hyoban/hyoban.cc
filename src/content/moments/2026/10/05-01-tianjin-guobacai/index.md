@@ -2,20 +2,25 @@
 occurredAt: '2026-10-05'
 location: tianjin
 media:
-  - type: image
-    file: tianjin-guobacai.webp
+  - type: live-photo
+    file: tianjin-guobacai-live-1.webp
+    video: tianjin-guobacai-live-1.mp4
     alt: A bowl of soft tofu topped with savory brown gravy.
-  - type: image
-    file: tianjin-guobacai-2.webp
+  - type: live-photo
+    file: tianjin-guobacai-live-2.webp
+    video: tianjin-guobacai-live-2.mp4
     alt: Tianjin guobacai topped with chopped cilantro and sauce.
-  - type: image
-    file: tianjin-guobacai-3.webp
+  - type: live-photo
+    file: tianjin-guobacai-live-3.webp
+    video: tianjin-guobacai-live-3.mp4
     alt: A tall modern tower rising beyond an older apartment building.
-  - type: image
-    file: tianjin-guobacai-4.webp
+  - type: live-photo
+    file: tianjin-guobacai-live-4.webp
+    video: tianjin-guobacai-live-4.mp4
     alt: A broad city intersection seen through a car's windshield.
-  - type: image
-    file: tianjin-guobacai-5.webp
+  - type: live-photo
+    file: tianjin-guobacai-live-5.webp
+    video: tianjin-guobacai-live-5.mp4
     alt: An orange sunset reflected in the windows and body of a white car.
   - type: image
     file: tianjin-guobacai-6.webp

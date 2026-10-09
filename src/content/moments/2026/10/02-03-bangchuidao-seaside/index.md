@@ -2,23 +2,28 @@
 occurredAt: '2026-10-02'
 location: bangchuidao
 media:
-  - type: image
-    file: bangchuidao-seaside.webp
+  - type: live-photo
+    file: bangchuidao-seaside-live-1.webp
+    video: bangchuidao-seaside-live-1.mp4
     alt: Clear waves washing over the pebbles at Bangchuidao Beach.
-  - type: image
-    file: bangchuidao-seaside-2.webp
+  - type: live-photo
+    file: bangchuidao-seaside-live-2.webp
+    video: bangchuidao-seaside-live-2.mp4
     alt: A person relaxing in a folding chair on the pebble beach.
-  - type: image
-    file: bangchuidao-seaside-3.webp
+  - type: live-photo
+    file: bangchuidao-seaside-live-3.webp
+    video: bangchuidao-seaside-live-3.mp4
     alt: A person in a sun hat pointing toward an island from the beach.
   - type: image
     file: bangchuidao-seaside-4.webp
     alt: A small rocky island surrounded by bright blue water.
-  - type: image
-    file: bangchuidao-seaside-5.webp
+  - type: live-photo
+    file: bangchuidao-seaside-live-5.webp
+    video: bangchuidao-seaside-live-5.mp4
     alt: A vintage green tram approaching a street-side stop in Dalian.
-  - type: image
-    file: bangchuidao-seaside-6.webp
+  - type: live-photo
+    file: bangchuidao-seaside-live-6.webp
+    video: bangchuidao-seaside-live-6.mp4
     alt: A vintage yellow tram beside a green-roofed tram stop.
 ---
 

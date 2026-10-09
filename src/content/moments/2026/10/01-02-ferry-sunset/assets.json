@@ -1,122 +1,272 @@
 {
-  "ferry-sunset-video-10-poster.webp": {
-    "bytes": 42728,
+  "ferry-sunset-live-1-480w.webp": {
+    "bytes": 7908,
     "contentType": "image/webp",
-    "etag": "69b4793bf4c9fb2ba1ddc95d5cf6afc8",
-    "height": 960,
-    "width": 1280
+    "etag": "6d325e7597d2e67cfc1cfb6462e5571d",
+    "width": 480,
+    "height": 640
   },
-  "ferry-sunset-video-10.mp4": {
-    "bytes": 509118,
-    "contentType": "video/mp4",
-    "etag": "ee0f2467f7c850a7680d1037313af643"
-  },
-  "ferry-sunset-video-2-poster.webp": {
-    "bytes": 25742,
+  "ferry-sunset-live-1-960w.webp": {
+    "bytes": 18928,
     "contentType": "image/webp",
-    "etag": "15e8d667a65c5a950478becb0bfb9752",
-    "height": 960,
-    "width": 1280
+    "etag": "c7a1b81265f2d6560ef1d8309a131dfc",
+    "width": 960,
+    "height": 1280
   },
-  "ferry-sunset-video-2.mp4": {
-    "bytes": 498150,
+  "ferry-sunset-live-1.mp4": {
+    "bytes": 992063,
     "contentType": "video/mp4",
-    "etag": "b57543c3006e367d1c9a2409cbd954de"
+    "etag": "300c195eb81d4a85536e512b05bc4815"
   },
-  "ferry-sunset-video-3-poster.webp": {
-    "bytes": 125542,
+  "ferry-sunset-live-1.webp": {
+    "bytes": 28020,
     "contentType": "image/webp",
-    "etag": "de3cc685d91fb3e74a408f91dcce58b6",
-    "height": 960,
-    "width": 1280
+    "etag": "90e955a1ca993d03a7240b6b55e27974",
+    "width": 1080,
+    "height": 1440,
+    "variants": ["ferry-sunset-live-1-480w.webp", "ferry-sunset-live-1-960w.webp"]
   },
-  "ferry-sunset-video-3.mp4": {
-    "bytes": 1310227,
-    "contentType": "video/mp4",
-    "etag": "72819e68136175978bef4a0466a8d410"
-  },
-  "ferry-sunset-video-4-poster.webp": {
-    "bytes": 114780,
+  "ferry-sunset-live-10-480w.webp": {
+    "bytes": 18916,
     "contentType": "image/webp",
-    "etag": "0261f5236421d265eb547eccdc9d5262",
-    "height": 1280,
-    "width": 960
+    "etag": "bb9c1f22580b7670469fc30d7d46f6f7",
+    "width": 480,
+    "height": 360
   },
-  "ferry-sunset-video-4.mp4": {
-    "bytes": 1332648,
-    "contentType": "video/mp4",
-    "etag": "f9bd572ddbf725b3b2a17133c824ccf1"
-  },
-  "ferry-sunset-video-5-poster.webp": {
-    "bytes": 58128,
+  "ferry-sunset-live-10-960w.webp": {
+    "bytes": 53202,
     "contentType": "image/webp",
-    "etag": "bca8ffd1eda45f7c3b1125e9c22db29b",
-    "height": 960,
-    "width": 1280
+    "etag": "eb66bc38800b4bc6cfa1fa3ea6eb34c5",
+    "width": 960,
+    "height": 720
   },
-  "ferry-sunset-video-5.mp4": {
-    "bytes": 719479,
+  "ferry-sunset-live-10.mp4": {
+    "bytes": 918264,
     "contentType": "video/mp4",
-    "etag": "bc6fb4e93176eeaa8df2976790ba7c52"
+    "etag": "7c38d9a2a0a9ab27aa782ccf970dbad5"
   },
-  "ferry-sunset-video-6-poster.webp": {
-    "bytes": 41620,
+  "ferry-sunset-live-10.webp": {
+    "bytes": 124214,
     "contentType": "image/webp",
-    "etag": "deb19714dcff3c29e49bb3f7e7d8b6be",
-    "height": 960,
-    "width": 1280
+    "etag": "59fa64721d6c9e9b07afd4cbe37db7ca",
+    "width": 1440,
+    "height": 1080,
+    "variants": ["ferry-sunset-live-10-480w.webp", "ferry-sunset-live-10-960w.webp"]
   },
-  "ferry-sunset-video-6.mp4": {
-    "bytes": 648224,
-    "contentType": "video/mp4",
-    "etag": "43be35ff1bccbe31daaee998ec5d6428"
-  },
-  "ferry-sunset-video-7-poster.webp": {
-    "bytes": 34200,
+  "ferry-sunset-live-2-480w.webp": {
+    "bytes": 8504,
     "contentType": "image/webp",
-    "etag": "4c52becb7c5b694f9ed79d68f6ba8add",
-    "height": 960,
-    "width": 1280
+    "etag": "3f24538889fa943408c7d9ef17d204b5",
+    "width": 480,
+    "height": 360
   },
-  "ferry-sunset-video-7.mp4": {
-    "bytes": 644505,
-    "contentType": "video/mp4",
-    "etag": "c2311580af583dd8a915d25ea01f2049"
-  },
-  "ferry-sunset-video-8-poster.webp": {
-    "bytes": 22522,
+  "ferry-sunset-live-2-960w.webp": {
+    "bytes": 22626,
     "contentType": "image/webp",
-    "etag": "eba251a93913a9d0d76349bddaa6cf85",
-    "height": 960,
-    "width": 1280
+    "etag": "063909ed0a280a4e10028dae856efb52",
+    "width": 960,
+    "height": 720
   },
-  "ferry-sunset-video-8.mp4": {
-    "bytes": 330529,
+  "ferry-sunset-live-2.mp4": {
+    "bytes": 684638,
     "contentType": "video/mp4",
-    "etag": "28902e3f01399d79c31a495b9d959bc2"
+    "etag": "4fefc887f3e644dc063b1a9821bafca4"
   },
-  "ferry-sunset-video-9-poster.webp": {
-    "bytes": 15244,
+  "ferry-sunset-live-2.webp": {
+    "bytes": 59280,
     "contentType": "image/webp",
-    "etag": "d4549c832d2979935fff05dd7adb93a2",
-    "height": 960,
-    "width": 1280
+    "etag": "8bfe782b67f89a3b6b1665ea4881983e",
+    "width": 1440,
+    "height": 1080,
+    "variants": ["ferry-sunset-live-2-480w.webp", "ferry-sunset-live-2-960w.webp"]
   },
-  "ferry-sunset-video-9.mp4": {
-    "bytes": 386065,
-    "contentType": "video/mp4",
-    "etag": "e8bbdc2254be5a719ebeef4c1afae9d1"
-  },
-  "ferry-sunset-video-poster.webp": {
-    "bytes": 12080,
+  "ferry-sunset-live-3-480w.webp": {
+    "bytes": 29448,
     "contentType": "image/webp",
-    "etag": "d9d23741bf18758847c5fae7b6576638",
-    "height": 1280,
-    "width": 960
+    "etag": "4e873cdec573c5eb9cf3e6066bf7fc8e",
+    "width": 480,
+    "height": 360
   },
-  "ferry-sunset-video.mp4": {
-    "bytes": 482513,
+  "ferry-sunset-live-3-960w.webp": {
+    "bytes": 97912,
+    "contentType": "image/webp",
+    "etag": "50dcd1b83e68a4b1022704fcf8bc24c3",
+    "width": 960,
+    "height": 720
+  },
+  "ferry-sunset-live-3.mp4": {
+    "bytes": 2457194,
     "contentType": "video/mp4",
-    "etag": "4b02f98699d4883a1f3a1150be812e40"
+    "etag": "870326b83b3afd308f1d29a55c47a500"
+  },
+  "ferry-sunset-live-3.webp": {
+    "bytes": 269640,
+    "contentType": "image/webp",
+    "etag": "4349dd97dc635beea35b6df8301acc67",
+    "width": 1440,
+    "height": 1080,
+    "variants": ["ferry-sunset-live-3-480w.webp", "ferry-sunset-live-3-960w.webp"]
+  },
+  "ferry-sunset-live-4-480w.webp": {
+    "bytes": 57194,
+    "contentType": "image/webp",
+    "etag": "a83dfa5eed68a53d9c81b00d847e055b",
+    "width": 480,
+    "height": 640
+  },
+  "ferry-sunset-live-4-960w.webp": {
+    "bytes": 178138,
+    "contentType": "image/webp",
+    "etag": "e20ace58640c238e4b982849cf7a83cb",
+    "width": 960,
+    "height": 1280
+  },
+  "ferry-sunset-live-4.mp4": {
+    "bytes": 3111353,
+    "contentType": "video/mp4",
+    "etag": "3979649370c31deb5480c1a6d739ce43"
+  },
+  "ferry-sunset-live-4.webp": {
+    "bytes": 315796,
+    "contentType": "image/webp",
+    "etag": "c6de6c66e7c3c57ae6e9d5e180945e21",
+    "width": 1080,
+    "height": 1440,
+    "variants": ["ferry-sunset-live-4-480w.webp", "ferry-sunset-live-4-960w.webp"]
+  },
+  "ferry-sunset-live-5-480w.webp": {
+    "bytes": 12994,
+    "contentType": "image/webp",
+    "etag": "0183b6ba9031b4531d22f49e8ca94fce",
+    "width": 480,
+    "height": 360
+  },
+  "ferry-sunset-live-5-960w.webp": {
+    "bytes": 40190,
+    "contentType": "image/webp",
+    "etag": "e1e263abf89dd8fea4f3dfe39d68625a",
+    "width": 960,
+    "height": 720
+  },
+  "ferry-sunset-live-5.mp4": {
+    "bytes": 1800415,
+    "contentType": "video/mp4",
+    "etag": "cb801aa388bab4a3fbb6f6f538e4fc09"
+  },
+  "ferry-sunset-live-5.webp": {
+    "bytes": 103782,
+    "contentType": "image/webp",
+    "etag": "caf3f53501c4b24598fb4053a784203d",
+    "width": 1440,
+    "height": 1080,
+    "variants": ["ferry-sunset-live-5-480w.webp", "ferry-sunset-live-5-960w.webp"]
+  },
+  "ferry-sunset-live-6-480w.webp": {
+    "bytes": 12816,
+    "contentType": "image/webp",
+    "etag": "1610efa81aa1e840bff1ff3f0f210531",
+    "width": 480,
+    "height": 360
+  },
+  "ferry-sunset-live-6-960w.webp": {
+    "bytes": 42308,
+    "contentType": "image/webp",
+    "etag": "0604b9d3b7376cadcd80beb2d58baffc",
+    "width": 960,
+    "height": 720
+  },
+  "ferry-sunset-live-6.mp4": {
+    "bytes": 1345393,
+    "contentType": "video/mp4",
+    "etag": "b92f6c274abe1132faa89c747810103e"
+  },
+  "ferry-sunset-live-6.webp": {
+    "bytes": 110468,
+    "contentType": "image/webp",
+    "etag": "4ddb4ad7591ee76f3dd8ad8d0a632105",
+    "width": 1440,
+    "height": 1080,
+    "variants": ["ferry-sunset-live-6-480w.webp", "ferry-sunset-live-6-960w.webp"]
+  },
+  "ferry-sunset-live-7-480w.webp": {
+    "bytes": 9592,
+    "contentType": "image/webp",
+    "etag": "7f58bc17bb84eae1c6f0acf83f87403d",
+    "width": 480,
+    "height": 360
+  },
+  "ferry-sunset-live-7-960w.webp": {
+    "bytes": 32764,
+    "contentType": "image/webp",
+    "etag": "96debb58a650f2091cc300802b1bdd45",
+    "width": 960,
+    "height": 720
+  },
+  "ferry-sunset-live-7.mp4": {
+    "bytes": 1872782,
+    "contentType": "video/mp4",
+    "etag": "52dae4425d7f12baa2666e0d0e497e38"
+  },
+  "ferry-sunset-live-7.webp": {
+    "bytes": 97400,
+    "contentType": "image/webp",
+    "etag": "72287493cf6f94803c1c887e02f3a2f6",
+    "width": 1440,
+    "height": 1080,
+    "variants": ["ferry-sunset-live-7-480w.webp", "ferry-sunset-live-7-960w.webp"]
+  },
+  "ferry-sunset-live-8-480w.webp": {
+    "bytes": 6572,
+    "contentType": "image/webp",
+    "etag": "36c7f9e726ae89aeaa397dbf5b2d8f27",
+    "width": 480,
+    "height": 360
+  },
+  "ferry-sunset-live-8-960w.webp": {
+    "bytes": 17338,
+    "contentType": "image/webp",
+    "etag": "edd00462268a484ae11ae85e224bc8b0",
+    "width": 960,
+    "height": 720
+  },
+  "ferry-sunset-live-8.mp4": {
+    "bytes": 570229,
+    "contentType": "video/mp4",
+    "etag": "ca32425756ae003be1d4f54ee23cbe37"
+  },
+  "ferry-sunset-live-8.webp": {
+    "bytes": 35918,
+    "contentType": "image/webp",
+    "etag": "be9467899228952f265f5e311ac3c5cb",
+    "width": 1440,
+    "height": 1080,
+    "variants": ["ferry-sunset-live-8-480w.webp", "ferry-sunset-live-8-960w.webp"]
+  },
+  "ferry-sunset-live-9-480w.webp": {
+    "bytes": 6364,
+    "contentType": "image/webp",
+    "etag": "04221531ccc7cb4189377f2a2f9c4ffb",
+    "width": 480,
+    "height": 360
+  },
+  "ferry-sunset-live-9-960w.webp": {
+    "bytes": 20844,
+    "contentType": "image/webp",
+    "etag": "5239ea0f52dd43beed91558742582d03",
+    "width": 960,
+    "height": 720
+  },
+  "ferry-sunset-live-9.mp4": {
+    "bytes": 825756,
+    "contentType": "video/mp4",
+    "etag": "8a33fe9d9069a2bc9766815cce9a08a1"
+  },
+  "ferry-sunset-live-9.webp": {
+    "bytes": 53834,
+    "contentType": "image/webp",
+    "etag": "1daf927491ba2960c8e819042a20140e",
+    "width": 1440,
+    "height": 1080,
+    "variants": ["ferry-sunset-live-9-480w.webp", "ferry-sunset-live-9-960w.webp"]
   }
 }

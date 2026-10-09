@@ -2,20 +2,25 @@
 occurredAt: '2026-10-02T13:26:49+08:00'
 location: dalian
 media:
-  - type: image
-    file: dalian-sea-intestine-rice.webp
+  - type: live-photo
+    file: dalian-sea-intestine-rice-live-1.webp
+    video: dalian-sea-intestine-rice-live-1.mp4
     alt: Stir-fried seafood and vegetables served over crisp rice pieces.
-  - type: image
-    file: dalian-sea-intestine-rice-2.webp
+  - type: live-photo
+    file: dalian-sea-intestine-rice-live-2.webp
+    video: dalian-sea-intestine-rice-live-2.mp4
     alt: Sea-intestine fried rice with chopped green vegetables.
-  - type: image
-    file: dalian-sea-intestine-rice-3.webp
+  - type: live-photo
+    file: dalian-sea-intestine-rice-live-3.webp
+    video: dalian-sea-intestine-rice-live-3.mp4
     alt: Wide translucent noodles mixed with shredded cucumber and other vegetables.
-  - type: image
-    file: dalian-sea-intestine-rice-4.webp
+  - type: live-photo
+    file: dalian-sea-intestine-rice-live-4.webp
+    video: dalian-sea-intestine-rice-live-4.mp4
     alt: Two abalone in their shells with chopped garnishes and sauce.
-  - type: image
-    file: dalian-sea-intestine-rice-5.webp
+  - type: live-photo
+    file: dalian-sea-intestine-rice-live-5.webp
+    video: dalian-sea-intestine-rice-live-5.mp4
     alt: A plate of boiled dumplings.
 ---
 

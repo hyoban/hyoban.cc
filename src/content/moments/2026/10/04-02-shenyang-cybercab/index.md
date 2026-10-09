@@ -11,11 +11,13 @@ media:
   - type: image
     file: shenyang-cybercab-3.webp
     alt: Side view of the Tesla Cybercab with its passenger door open.
-  - type: image
-    file: shenyang-cybercab-4.webp
+  - type: live-photo
+    file: shenyang-cybercab-live-4.webp
+    video: shenyang-cybercab-live-4.mp4
     alt: The Tesla Cybercab's seats and central screen, viewed through the open door.
-  - type: image
-    file: shenyang-cybercab-5.webp
+  - type: live-photo
+    file: shenyang-cybercab-live-5.webp
+    video: shenyang-cybercab-live-5.mp4
     alt: Dark stone church towers beneath a cloudy sky.
   - type: image
     file: shenyang-cybercab-6.webp

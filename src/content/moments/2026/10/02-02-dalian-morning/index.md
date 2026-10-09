@@ -2,40 +2,40 @@
 occurredAt: '2026-10-02T10:33:17+08:00'
 location: xinghai-bay-bridge
 media:
-  - type: video
-    file: dalian-morning-video.mp4
-    poster: dalian-morning-video-poster.webp
+  - type: live-photo
+    file: dalian-morning-live-1.webp
+    video: dalian-morning-live-1.mp4
     alt: Two people fishing from a seaside platform in the morning light.
-  - type: video
-    file: dalian-morning-video-2.mp4
-    poster: dalian-morning-video-2-poster.webp
+  - type: live-photo
+    file: dalian-morning-live-2.webp
+    video: dalian-morning-live-2.mp4
     alt: A quiet blue sea beyond a grassy waterfront and a single lamp post.
   - type: image
     file: dalian-morning.webp
     alt: A sweeping view of Dalian's sea bridge curving across calm blue water.
-  - type: video
-    file: dalian-morning-video-3.mp4
-    poster: dalian-morning-video-3-poster.webp
+  - type: live-photo
+    file: dalian-morning-live-4.webp
+    video: dalian-morning-live-4.mp4
     alt: Elevated view of the curved roadways of Dalian's sea bridge.
-  - type: video
-    file: dalian-morning-video-4.mp4
-    poster: dalian-morning-video-4-poster.webp
+  - type: live-photo
+    file: dalian-morning-live-5.webp
+    video: dalian-morning-live-5.mp4
     alt: The sea bridge's twin roadways bending over calm blue water.
-  - type: video
-    file: dalian-morning-video-5.mp4
-    poster: dalian-morning-video-5-poster.webp
+  - type: live-photo
+    file: dalian-morning-live-6.webp
+    video: dalian-morning-live-6.mp4
     alt: Suspension bridge towers framed by waterfront buildings and hills.
-  - type: video
-    file: dalian-morning-video-6.mp4
-    poster: dalian-morning-video-6-poster.webp
+  - type: live-photo
+    file: dalian-morning-live-7.webp
+    video: dalian-morning-live-7.mp4
     alt: Dalian's sea bridge stretching across the bay beyond green trees.
-  - type: video
-    file: dalian-morning-video-7.mp4
-    poster: dalian-morning-video-7-poster.webp
+  - type: live-photo
+    file: dalian-morning-live-8.webp
+    video: dalian-morning-live-8.mp4
     alt: A large Ferris wheel rising behind a white building.
-  - type: video
-    file: dalian-morning-video-8.mp4
-    poster: dalian-morning-video-8-poster.webp
+  - type: live-photo
+    file: dalian-morning-live-9.webp
+    video: dalian-morning-live-9.mp4
     alt: A deer standing in the shade beside a park path.
 ---
 

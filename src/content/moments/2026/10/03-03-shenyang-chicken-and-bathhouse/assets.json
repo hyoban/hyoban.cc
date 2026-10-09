@@ -1,86 +1,4 @@
 {
-  "shenyang-chicken-and-bathhouse-2-480w.webp": {
-    "bytes": 46532,
-    "contentType": "image/webp",
-    "etag": "ca58d494e0a1bbb8fb4006ae5393e65d",
-    "height": 360,
-    "width": 480
-  },
-  "shenyang-chicken-and-bathhouse-2-960w.webp": {
-    "bytes": 148604,
-    "contentType": "image/webp",
-    "etag": "a1729822390287bb74bed0d16941945e",
-    "height": 720,
-    "width": 960
-  },
-  "shenyang-chicken-and-bathhouse-2.webp": {
-    "bytes": 482608,
-    "contentType": "image/webp",
-    "etag": "ec07535a74b71f8180907f0be6cfffe9",
-    "height": 1440,
-    "width": 1920,
-    "variants": [
-      "shenyang-chicken-and-bathhouse-2-480w.webp",
-      "shenyang-chicken-and-bathhouse-2-960w.webp"
-    ]
-  },
-  "shenyang-chicken-and-bathhouse-3-480w.webp": {
-    "bytes": 38640,
-    "contentType": "image/webp",
-    "etag": "36628055ac83f4205e36c1d26a4550af",
-    "height": 640,
-    "width": 480
-  },
-  "shenyang-chicken-and-bathhouse-3-960w.webp": {
-    "bytes": 100992,
-    "contentType": "image/webp",
-    "etag": "c479244a7fdfe54fd0b1c88d8205237d",
-    "height": 1280,
-    "width": 960
-  },
-  "shenyang-chicken-and-bathhouse-3.webp": {
-    "bytes": 207500,
-    "contentType": "image/webp",
-    "etag": "3d7878ed812294ece8cd434a82feb773",
-    "height": 1920,
-    "width": 1440,
-    "variants": [
-      "shenyang-chicken-and-bathhouse-3-480w.webp",
-      "shenyang-chicken-and-bathhouse-3-960w.webp"
-    ]
-  },
-  "shenyang-chicken-and-bathhouse-4-480w.webp": {
-    "bytes": 48122,
-    "contentType": "image/webp",
-    "etag": "bd8b93155cdfd76df23727b7a621ca93",
-    "height": 360,
-    "width": 480
-  },
-  "shenyang-chicken-and-bathhouse-4-960w.webp": {
-    "bytes": 159230,
-    "contentType": "image/webp",
-    "etag": "3577ebaf2ee5c7d058f51b9a48112d49",
-    "height": 720,
-    "width": 960
-  },
-  "shenyang-chicken-and-bathhouse-4.webp": {
-    "bytes": 472488,
-    "contentType": "image/webp",
-    "etag": "bae144e84870f76b50f43e9f62e1cf3b",
-    "height": 1440,
-    "width": 1920,
-    "variants": [
-      "shenyang-chicken-and-bathhouse-4-480w.webp",
-      "shenyang-chicken-and-bathhouse-4-960w.webp"
-    ]
-  },
-  "shenyang-chicken-and-bathhouse-480w.webp": {
-    "bytes": 39940,
-    "contentType": "image/webp",
-    "etag": "67ac0f57848f95e7f8b6102266e2b48a",
-    "height": 360,
-    "width": 480
-  },
   "shenyang-chicken-and-bathhouse-5-480w.webp": {
     "bytes": 28488,
     "contentType": "image/webp",
@@ -131,47 +49,154 @@
       "shenyang-chicken-and-bathhouse-6-960w.webp"
     ]
   },
-  "shenyang-chicken-and-bathhouse-7-480w.webp": {
-    "bytes": 30076,
+  "shenyang-chicken-and-bathhouse-live-1-480w.webp": {
+    "bytes": 39902,
     "contentType": "image/webp",
-    "etag": "83b9b2c3a599b5aa243a50e2903cd201",
-    "height": 360,
-    "width": 480
+    "etag": "d72f379e859967bd5bf6daaea45f913e",
+    "width": 480,
+    "height": 360
   },
-  "shenyang-chicken-and-bathhouse-7-960w.webp": {
-    "bytes": 98254,
+  "shenyang-chicken-and-bathhouse-live-1-960w.webp": {
+    "bytes": 106752,
     "contentType": "image/webp",
-    "etag": "677aabd6b68d4347b8e8007da19928b0",
-    "height": 720,
-    "width": 960
+    "etag": "8d1d6d38ff057ebdc416781040081083",
+    "width": 960,
+    "height": 720
   },
-  "shenyang-chicken-and-bathhouse-7.webp": {
-    "bytes": 318158,
+  "shenyang-chicken-and-bathhouse-live-1.mp4": {
+    "bytes": 1413499,
+    "contentType": "video/mp4",
+    "etag": "60fff39eb081077a30cdbd34f0856051"
+  },
+  "shenyang-chicken-and-bathhouse-live-1.webp": {
+    "bytes": 239968,
     "contentType": "image/webp",
-    "etag": "2ed8c38b702d8cb4f6247b6fdf61a9e7",
-    "height": 1440,
-    "width": 1920,
+    "etag": "142d98f2fa6f7ce3d2948db9267ed4b7",
+    "width": 1440,
+    "height": 1080,
     "variants": [
-      "shenyang-chicken-and-bathhouse-7-480w.webp",
-      "shenyang-chicken-and-bathhouse-7-960w.webp"
+      "shenyang-chicken-and-bathhouse-live-1-480w.webp",
+      "shenyang-chicken-and-bathhouse-live-1-960w.webp"
     ]
   },
-  "shenyang-chicken-and-bathhouse-960w.webp": {
-    "bytes": 115554,
+  "shenyang-chicken-and-bathhouse-live-2-480w.webp": {
+    "bytes": 45624,
     "contentType": "image/webp",
-    "etag": "2b989d2474b33abf7b18c07e8ddba832",
-    "height": 720,
-    "width": 960
+    "etag": "56c63e3c1073638127fbed98867496bc",
+    "width": 480,
+    "height": 360
   },
-  "shenyang-chicken-and-bathhouse.webp": {
-    "bytes": 321752,
+  "shenyang-chicken-and-bathhouse-live-2-960w.webp": {
+    "bytes": 135242,
     "contentType": "image/webp",
-    "etag": "a90208998471b937ecf81945ad112c21",
-    "height": 1440,
-    "width": 1920,
+    "etag": "c033c2a0ec9cf23b41c4fe86bff816a1",
+    "width": 960,
+    "height": 720
+  },
+  "shenyang-chicken-and-bathhouse-live-2.mp4": {
+    "bytes": 1288255,
+    "contentType": "video/mp4",
+    "etag": "db469ffa7dc21e3b9bf323a8cfc4e6ed"
+  },
+  "shenyang-chicken-and-bathhouse-live-2.webp": {
+    "bytes": 332508,
+    "contentType": "image/webp",
+    "etag": "85a4494eada4cbde35f04d3191322591",
+    "width": 1440,
+    "height": 1080,
     "variants": [
-      "shenyang-chicken-and-bathhouse-480w.webp",
-      "shenyang-chicken-and-bathhouse-960w.webp"
+      "shenyang-chicken-and-bathhouse-live-2-480w.webp",
+      "shenyang-chicken-and-bathhouse-live-2-960w.webp"
+    ]
+  },
+  "shenyang-chicken-and-bathhouse-live-3-480w.webp": {
+    "bytes": 35246,
+    "contentType": "image/webp",
+    "etag": "974d4dc9117c3d2bd89284f2433e99c3",
+    "width": 480,
+    "height": 640
+  },
+  "shenyang-chicken-and-bathhouse-live-3-960w.webp": {
+    "bytes": 89746,
+    "contentType": "image/webp",
+    "etag": "f3e9b2653f26b7a35520de759454916f",
+    "width": 960,
+    "height": 1280
+  },
+  "shenyang-chicken-and-bathhouse-live-3.mp4": {
+    "bytes": 1379970,
+    "contentType": "video/mp4",
+    "etag": "42a8319e3c49198428f3b29a785de008"
+  },
+  "shenyang-chicken-and-bathhouse-live-3.webp": {
+    "bytes": 138290,
+    "contentType": "image/webp",
+    "etag": "3a9e74c57f3d863f83a314bb1da2fde7",
+    "width": 1080,
+    "height": 1440,
+    "variants": [
+      "shenyang-chicken-and-bathhouse-live-3-480w.webp",
+      "shenyang-chicken-and-bathhouse-live-3-960w.webp"
+    ]
+  },
+  "shenyang-chicken-and-bathhouse-live-4-480w.webp": {
+    "bytes": 47786,
+    "contentType": "image/webp",
+    "etag": "4019c5cdec5ef64e6da32989eeceda5d",
+    "width": 480,
+    "height": 360
+  },
+  "shenyang-chicken-and-bathhouse-live-4-960w.webp": {
+    "bytes": 143854,
+    "contentType": "image/webp",
+    "etag": "c8d9807f33da67c93c3c96ddd774e8d3",
+    "width": 960,
+    "height": 720
+  },
+  "shenyang-chicken-and-bathhouse-live-4.mp4": {
+    "bytes": 1889729,
+    "contentType": "video/mp4",
+    "etag": "03587dae3f2c870182189fc74c09d6c3"
+  },
+  "shenyang-chicken-and-bathhouse-live-4.webp": {
+    "bytes": 341690,
+    "contentType": "image/webp",
+    "etag": "f91a0be26ae44be0ef201642ceb1295e",
+    "width": 1440,
+    "height": 1080,
+    "variants": [
+      "shenyang-chicken-and-bathhouse-live-4-480w.webp",
+      "shenyang-chicken-and-bathhouse-live-4-960w.webp"
+    ]
+  },
+  "shenyang-chicken-and-bathhouse-live-7-480w.webp": {
+    "bytes": 29436,
+    "contentType": "image/webp",
+    "etag": "7e56f805344628474ad1e2571a85bbb2",
+    "width": 480,
+    "height": 360
+  },
+  "shenyang-chicken-and-bathhouse-live-7-960w.webp": {
+    "bytes": 87302,
+    "contentType": "image/webp",
+    "etag": "9f2997f104e0688d42fac90c1dd4c251",
+    "width": 960,
+    "height": 720
+  },
+  "shenyang-chicken-and-bathhouse-live-7.mp4": {
+    "bytes": 1661517,
+    "contentType": "video/mp4",
+    "etag": "f7bb61f41921f2e1a302c66d376bd3d5"
+  },
+  "shenyang-chicken-and-bathhouse-live-7.webp": {
+    "bytes": 204074,
+    "contentType": "image/webp",
+    "etag": "9a40b0976946fa9935b095f4fbb5dbce",
+    "width": 1440,
+    "height": 1080,
+    "variants": [
+      "shenyang-chicken-and-bathhouse-live-7-480w.webp",
+      "shenyang-chicken-and-bathhouse-live-7-960w.webp"
     ]
   }
 }

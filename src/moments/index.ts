@@ -48,6 +48,12 @@ export type ResolvedMomentMedia =
   | {
       alt: string
       src: RemoteImage
+      type: 'live-photo'
+      video: { src: string; contentType: string }
+    }
+  | {
+      alt: string
+      src: RemoteImage
       type: 'image'
     }
   | {
@@ -219,6 +225,24 @@ function resolveMedia(
       alt: media.alt,
       src: resolveRemoteImage(key, metadata),
       type: 'image',
+    }
+  }
+
+  if (media.type === 'live-photo') {
+    const videoMetadata = getAssetMetadata(entry, media.video)
+
+    if (!videoMetadata.contentType.startsWith('video/')) {
+      throw new Error(`Invalid Live Photo video metadata: ${directory}/${media.video}`)
+    }
+
+    return {
+      alt: media.alt,
+      src: resolveRemoteImage(key, metadata),
+      type: 'live-photo',
+      video: {
+        src: getAssetUrl(`moments/${directory}/${media.video}`),
+        contentType: videoMetadata.contentType,
+      },
     }
   }
 

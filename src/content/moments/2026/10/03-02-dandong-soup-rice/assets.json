@@ -1,90 +1,110 @@
 {
-  "dandong-soup-rice-2-480w.webp": {
-    "bytes": 28352,
+  "dandong-soup-rice-live-1-480w.webp": {
+    "bytes": 46988,
     "contentType": "image/webp",
-    "etag": "fa9d23177284c57e14003af44fdd1d87",
-    "height": 360,
-    "width": 480
+    "etag": "aaf85eac2aa7444f2767730d483c6185",
+    "width": 480,
+    "height": 360
   },
-  "dandong-soup-rice-2-960w.webp": {
-    "bytes": 76576,
+  "dandong-soup-rice-live-1-960w.webp": {
+    "bytes": 127194,
     "contentType": "image/webp",
-    "etag": "ce91652816b23222e5668102b3977a1c",
-    "height": 720,
-    "width": 960
+    "etag": "8d592b1232e8c89c212cd4f6e600f7b1",
+    "width": 960,
+    "height": 720
   },
-  "dandong-soup-rice-2.webp": {
-    "bytes": 223042,
-    "contentType": "image/webp",
-    "etag": "e0f4cd3b88fce17669a156ec97035e5d",
-    "height": 1440,
-    "width": 1920,
-    "variants": ["dandong-soup-rice-2-480w.webp", "dandong-soup-rice-2-960w.webp"]
+  "dandong-soup-rice-live-1.mp4": {
+    "bytes": 1741690,
+    "contentType": "video/mp4",
+    "etag": "6b9bfd419e102c20a6cf177ff8f7c57c"
   },
-  "dandong-soup-rice-3-480w.webp": {
-    "bytes": 26698,
+  "dandong-soup-rice-live-1.webp": {
+    "bytes": 283138,
     "contentType": "image/webp",
-    "etag": "3cc53931c81811c8a2448faf0d88c495",
-    "height": 360,
-    "width": 480
+    "etag": "b90ea0262218fb3f4e4532ba0070a22c",
+    "width": 1440,
+    "height": 1080,
+    "variants": ["dandong-soup-rice-live-1-480w.webp", "dandong-soup-rice-live-1-960w.webp"]
   },
-  "dandong-soup-rice-3-960w.webp": {
-    "bytes": 68326,
+  "dandong-soup-rice-live-2-480w.webp": {
+    "bytes": 27684,
     "contentType": "image/webp",
-    "etag": "4134d4206dbf1632b92192ed9ca9191b",
-    "height": 720,
-    "width": 960
+    "etag": "dee01d24e4648c5b944a46b29cae7e75",
+    "width": 480,
+    "height": 360
   },
-  "dandong-soup-rice-3.webp": {
-    "bytes": 190306,
+  "dandong-soup-rice-live-2-960w.webp": {
+    "bytes": 70066,
     "contentType": "image/webp",
-    "etag": "9daf599d5e50ecc8db39f3ce8cde76f8",
-    "height": 1440,
-    "width": 1920,
-    "variants": ["dandong-soup-rice-3-480w.webp", "dandong-soup-rice-3-960w.webp"]
+    "etag": "5871d59e598ab1fcc7413acc0b9170f0",
+    "width": 960,
+    "height": 720
   },
-  "dandong-soup-rice-4-480w.webp": {
-    "bytes": 35542,
-    "contentType": "image/webp",
-    "etag": "cfee458eb3df9907e3e2281292eb24b4",
-    "height": 360,
-    "width": 480
+  "dandong-soup-rice-live-2.mp4": {
+    "bytes": 1430561,
+    "contentType": "video/mp4",
+    "etag": "221694a89c4a6865bde70a38d6fa5619"
   },
-  "dandong-soup-rice-4-960w.webp": {
-    "bytes": 123774,
+  "dandong-soup-rice-live-2.webp": {
+    "bytes": 154284,
     "contentType": "image/webp",
-    "etag": "f71b5fdd5088c0c5ff1a116a749605d8",
-    "height": 720,
-    "width": 960
+    "etag": "384a94b9d0f5b7f9dbc5a4d6b637edc5",
+    "width": 1440,
+    "height": 1080,
+    "variants": ["dandong-soup-rice-live-2-480w.webp", "dandong-soup-rice-live-2-960w.webp"]
   },
-  "dandong-soup-rice-4.webp": {
-    "bytes": 445030,
+  "dandong-soup-rice-live-3-480w.webp": {
+    "bytes": 26278,
     "contentType": "image/webp",
-    "etag": "c93b966aacb8cec67a96898238b650eb",
-    "height": 1440,
-    "width": 1920,
-    "variants": ["dandong-soup-rice-4-480w.webp", "dandong-soup-rice-4-960w.webp"]
+    "etag": "43639f9cae0974b868215c5d1c1351d7",
+    "width": 480,
+    "height": 360
   },
-  "dandong-soup-rice-480w.webp": {
-    "bytes": 47720,
+  "dandong-soup-rice-live-3-960w.webp": {
+    "bytes": 62246,
     "contentType": "image/webp",
-    "etag": "275525729802f4914c0bfb71747849af",
-    "height": 360,
-    "width": 480
+    "etag": "511a8c27678f78f4a4ce43d0ab51c460",
+    "width": 960,
+    "height": 720
   },
-  "dandong-soup-rice-960w.webp": {
-    "bytes": 138548,
-    "contentType": "image/webp",
-    "etag": "4c416e42a903baab493213f8b89cb574",
-    "height": 720,
-    "width": 960
+  "dandong-soup-rice-live-3.mp4": {
+    "bytes": 1353672,
+    "contentType": "video/mp4",
+    "etag": "faba881a2deb8e6de3e176b61aab64e9"
   },
-  "dandong-soup-rice.webp": {
-    "bytes": 396032,
+  "dandong-soup-rice-live-3.webp": {
+    "bytes": 132136,
     "contentType": "image/webp",
-    "etag": "c45f181804c876cc23c430d3076d19a1",
-    "height": 1440,
-    "width": 1920,
-    "variants": ["dandong-soup-rice-480w.webp", "dandong-soup-rice-960w.webp"]
+    "etag": "3ec3570ca75ad0fa4a8651bc0a477a2d",
+    "width": 1440,
+    "height": 1080,
+    "variants": ["dandong-soup-rice-live-3-480w.webp", "dandong-soup-rice-live-3-960w.webp"]
+  },
+  "dandong-soup-rice-live-4-480w.webp": {
+    "bytes": 35036,
+    "contentType": "image/webp",
+    "etag": "4eadc205dc50d84ebcdfbca6dced1981",
+    "width": 480,
+    "height": 360
+  },
+  "dandong-soup-rice-live-4-960w.webp": {
+    "bytes": 108994,
+    "contentType": "image/webp",
+    "etag": "544770eb7f1f5f21259a3089e460ff19",
+    "width": 960,
+    "height": 720
+  },
+  "dandong-soup-rice-live-4.mp4": {
+    "bytes": 1733661,
+    "contentType": "video/mp4",
+    "etag": "10ca790955afde539b39819184a241b3"
+  },
+  "dandong-soup-rice-live-4.webp": {
+    "bytes": 308862,
+    "contentType": "image/webp",
+    "etag": "c13c0416afa7e1f4d90ba494c219a5a2",
+    "width": 1440,
+    "height": 1080,
+    "variants": ["dandong-soup-rice-live-4-480w.webp", "dandong-soup-rice-live-4-960w.webp"]
   }
 }

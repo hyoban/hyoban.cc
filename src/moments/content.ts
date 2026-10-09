@@ -31,7 +31,18 @@ const momentVideoSchema = z.strictObject({
   type: z.literal('video'),
 })
 
-const momentMediaSchema = z.discriminatedUnion('type', [momentImageSchema, momentVideoSchema])
+const momentLivePhotoSchema = z.strictObject({
+  alt: z.string(),
+  file: semanticImageFileSchema,
+  type: z.literal('live-photo'),
+  video: semanticVideoFileSchema,
+})
+
+const momentMediaSchema = z.discriminatedUnion('type', [
+  momentImageSchema,
+  momentVideoSchema,
+  momentLivePhotoSchema,
+])
 
 export const momentFrontmatterSchema = z.strictObject({
   hidden: z.boolean().default(false),

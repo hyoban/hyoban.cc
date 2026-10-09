@@ -2,36 +2,36 @@
 occurredAt: '2026-10-03T10:45:42+08:00'
 location: jinjiangshan-park
 media:
-  - type: video
-    file: dandong-morning-video.mp4
-    poster: dandong-morning-video-poster.webp
+  - type: live-photo
+    file: dandong-morning-live-1.webp
+    video: dandong-morning-live-1.mp4
     alt: A tall white clock tower beneath a clear blue sky.
-  - type: video
-    file: dandong-morning-video-2.mp4
-    poster: dandong-morning-video-2-poster.webp
+  - type: live-photo
+    file: dandong-morning-live-2.webp
+    video: dandong-morning-live-2.mp4
     alt: A commercial building covered with colorful restaurant and hotel signs.
-  - type: video
-    file: dandong-morning-video-3.mp4
-    poster: dandong-morning-video-3-poster.webp
+  - type: live-photo
+    file: dandong-morning-live-3.webp
+    video: dandong-morning-live-3.mp4
     alt: A steel arch bridge lined with flags over the Yalu River.
   - type: image
     file: dandong-morning.webp
     alt: Two steel bridges spanning the blue Yalu River.
-  - type: video
-    file: dandong-morning-video-4.mp4
-    poster: dandong-morning-video-4-poster.webp
+  - type: live-photo
+    file: dandong-morning-live-5.webp
+    video: dandong-morning-live-5.mp4
     alt: Two older people playing rock-paper-scissors on a park staircase.
-  - type: video
-    file: dandong-morning-video-5.mp4
-    poster: dandong-morning-video-5-poster.webp
+  - type: live-photo
+    file: dandong-morning-live-6.webp
+    video: dandong-morning-live-6.mp4
     alt: Sunlight filtering through dense green trees in a park.
-  - type: video
-    file: dandong-morning-video-6.mp4
-    poster: dandong-morning-video-6-poster.webp
+  - type: live-photo
+    file: dandong-morning-live-7.webp
+    video: dandong-morning-live-7.mp4
     alt: A traditional multi-level pavilion with ornate curved roofs.
-  - type: video
-    file: dandong-morning-video-7.mp4
-    poster: dandong-morning-video-7-poster.webp
+  - type: live-photo
+    file: dandong-morning-live-8.webp
+    video: dandong-morning-live-8.mp4
     alt: People gathered around a stone table beneath the park's trees.
 ---
 

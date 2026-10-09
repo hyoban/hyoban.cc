@@ -43,56 +43,12 @@
     "width": 1920,
     "variants": ["shenyang-cybercab-3-480w.webp", "shenyang-cybercab-3-960w.webp"]
   },
-  "shenyang-cybercab-4-480w.webp": {
-    "bytes": 31794,
-    "contentType": "image/webp",
-    "etag": "da03897c0ee11a7ccdbc0fa55420da6d",
-    "height": 640,
-    "width": 480
-  },
-  "shenyang-cybercab-4-960w.webp": {
-    "bytes": 82188,
-    "contentType": "image/webp",
-    "etag": "7d01ccf34ca6a516648bf19f9cf46c66",
-    "height": 1280,
-    "width": 960
-  },
-  "shenyang-cybercab-4.webp": {
-    "bytes": 176832,
-    "contentType": "image/webp",
-    "etag": "899f5946e4b94d8096f1ce2484199818",
-    "height": 1920,
-    "width": 1440,
-    "variants": ["shenyang-cybercab-4-480w.webp", "shenyang-cybercab-4-960w.webp"]
-  },
   "shenyang-cybercab-480w.webp": {
     "bytes": 23738,
     "contentType": "image/webp",
     "etag": "ac32e9c7b8bb0d3925bd1515ecd42c1d",
     "height": 360,
     "width": 480
-  },
-  "shenyang-cybercab-5-480w.webp": {
-    "bytes": 32248,
-    "contentType": "image/webp",
-    "etag": "ca5c76465fef81f5056d71a4ab919d2e",
-    "height": 643,
-    "width": 480
-  },
-  "shenyang-cybercab-5-960w.webp": {
-    "bytes": 93638,
-    "contentType": "image/webp",
-    "etag": "b0d836c8fca18cbbd8def90ddb1fc7e4",
-    "height": 1286,
-    "width": 960
-  },
-  "shenyang-cybercab-5.webp": {
-    "bytes": 214522,
-    "contentType": "image/webp",
-    "etag": "5ba4bf455cdde89396d0b4d0ceb280cd",
-    "height": 1920,
-    "width": 1433,
-    "variants": ["shenyang-cybercab-5-480w.webp", "shenyang-cybercab-5-960w.webp"]
   },
   "shenyang-cybercab-6-480w.webp": {
     "bytes": 19922,
@@ -122,6 +78,60 @@
     "etag": "6d20b2caa2736e70c4b64082f2f27e45",
     "height": 720,
     "width": 960
+  },
+  "shenyang-cybercab-live-4-480w.webp": {
+    "bytes": 29972,
+    "contentType": "image/webp",
+    "etag": "83b587d9ea991e9c0e959a22ceac1249",
+    "width": 480,
+    "height": 640
+  },
+  "shenyang-cybercab-live-4-960w.webp": {
+    "bytes": 74242,
+    "contentType": "image/webp",
+    "etag": "b1b10d801939c36f8f8f245511561716",
+    "width": 960,
+    "height": 1280
+  },
+  "shenyang-cybercab-live-4.mp4": {
+    "bytes": 546415,
+    "contentType": "video/mp4",
+    "etag": "bb8aa477f67b4d47e1c518829f173696"
+  },
+  "shenyang-cybercab-live-4.webp": {
+    "bytes": 113310,
+    "contentType": "image/webp",
+    "etag": "96c8a91f104cbd47ea9c2c2371780acf",
+    "width": 1080,
+    "height": 1440,
+    "variants": ["shenyang-cybercab-live-4-480w.webp", "shenyang-cybercab-live-4-960w.webp"]
+  },
+  "shenyang-cybercab-live-5-480w.webp": {
+    "bytes": 30052,
+    "contentType": "image/webp",
+    "etag": "d5c12d4faca9cd4f396812dd6f4a6bc4",
+    "width": 480,
+    "height": 643
+  },
+  "shenyang-cybercab-live-5-960w.webp": {
+    "bytes": 84002,
+    "contentType": "image/webp",
+    "etag": "b5946b731008ec3b43269895dfd83777",
+    "width": 960,
+    "height": 1286
+  },
+  "shenyang-cybercab-live-5.mp4": {
+    "bytes": 784799,
+    "contentType": "video/mp4",
+    "etag": "ea5af1a4bc889def5d0fd529bb9eed0e"
+  },
+  "shenyang-cybercab-live-5.webp": {
+    "bytes": 144486,
+    "contentType": "image/webp",
+    "etag": "e667edf9685d6d73a75181818ea67c0b",
+    "width": 1080,
+    "height": 1447,
+    "variants": ["shenyang-cybercab-live-5-480w.webp", "shenyang-cybercab-live-5-960w.webp"]
   },
   "shenyang-cybercab.webp": {
     "bytes": 156910,

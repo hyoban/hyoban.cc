@@ -1,7 +1,46 @@
 import assert from 'node:assert/strict'
 import { test } from 'vite-plus/test'
 
-import { parseMomentDocument } from '../../src/moments/content.ts'
+import { parseMomentDocument, serializeMomentDocument } from '../../src/moments/content.ts'
+import { getReferencedAssetFiles } from './moment-assets.mjs'
+
+test('round-trips a Live Photo and retains its still variants and motion during asset collection', () => {
+  const input = {
+    occurredAt: '2026-10-01',
+    hidden: false,
+    text: 'A ferry at sunset.',
+    media: [{ type: 'live-photo', file: 'ferry.webp', video: 'ferry-live.mp4', alt: 'A ferry' }],
+  }
+  const moment = parseMomentDocument(serializeMomentDocument(input), { id: '2026/10/01-01-ferry' })
+  assert.deepEqual(moment.media, input.media)
+  assert.deepEqual(
+    getReferencedAssetFiles({
+      moment,
+      assets: { 'ferry.webp': { variants: ['ferry-480w.webp', 'ferry-960w.webp'] } },
+    }),
+    new Set(['ferry.webp', 'ferry-480w.webp', 'ferry-960w.webp', 'ferry-live.mp4']),
+  )
+})
+
+test('requires a valid still image and paired video for Live Photos', () => {
+  const media = { type: 'live-photo', file: 'ferry.webp', video: 'ferry-live.mp4', alt: 'A ferry' }
+  for (const invalid of [
+    { ...media, video: undefined },
+    { ...media, video: 'ferry.webp' },
+    { ...media, file: 'ferry.mp4' },
+    { ...media, video: '../ferry.mp4' },
+    { ...media, poster: 'ferry-poster.webp' },
+  ]) {
+    assert.throws(() =>
+      serializeMomentDocument({
+        occurredAt: '2026-10-01',
+        hidden: false,
+        text: '',
+        media: [invalid],
+      }),
+    )
+  }
+})
 
 test('parses a canonical Moment through one interface', () => {
   const moment = parseMomentDocument(

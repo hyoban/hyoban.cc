@@ -1,99 +1,4 @@
 {
-  "tianjin-guobacai-2-480w.webp": {
-    "bytes": 28768,
-    "contentType": "image/webp",
-    "etag": "fc11cb392308feaea3012a22e0a28ab6",
-    "height": 360,
-    "width": 480
-  },
-  "tianjin-guobacai-2-960w.webp": {
-    "bytes": 73006,
-    "contentType": "image/webp",
-    "etag": "2b9ef901bb5eaf611b4260448d6cfe08",
-    "height": 720,
-    "width": 960
-  },
-  "tianjin-guobacai-2.webp": {
-    "bytes": 200218,
-    "contentType": "image/webp",
-    "etag": "5346638141e9f8b5e3a25c83a6892862",
-    "height": 1440,
-    "width": 1920,
-    "variants": ["tianjin-guobacai-2-480w.webp", "tianjin-guobacai-2-960w.webp"]
-  },
-  "tianjin-guobacai-3-480w.webp": {
-    "bytes": 36560,
-    "contentType": "image/webp",
-    "etag": "4b7fe5d74de51fa3e109ac9460316f77",
-    "height": 640,
-    "width": 480
-  },
-  "tianjin-guobacai-3-960w.webp": {
-    "bytes": 101364,
-    "contentType": "image/webp",
-    "etag": "bc2ebf410a8b57940b5624a647ed1d7e",
-    "height": 1280,
-    "width": 960
-  },
-  "tianjin-guobacai-3.webp": {
-    "bytes": 218628,
-    "contentType": "image/webp",
-    "etag": "f1fbd2a1aea688568c5b93cfbbfc7a1c",
-    "height": 1920,
-    "width": 1440,
-    "variants": ["tianjin-guobacai-3-480w.webp", "tianjin-guobacai-3-960w.webp"]
-  },
-  "tianjin-guobacai-4-480w.webp": {
-    "bytes": 17856,
-    "contentType": "image/webp",
-    "etag": "ac4a16f571e7edf7e33cceec9a7ea7a5",
-    "height": 360,
-    "width": 480
-  },
-  "tianjin-guobacai-4-960w.webp": {
-    "bytes": 53774,
-    "contentType": "image/webp",
-    "etag": "4db712583a9ad91f520fbdb3bd07d0bc",
-    "height": 720,
-    "width": 960
-  },
-  "tianjin-guobacai-4.webp": {
-    "bytes": 157258,
-    "contentType": "image/webp",
-    "etag": "4c95980fad10aad9dbb7b2409f7e2530",
-    "height": 1440,
-    "width": 1920,
-    "variants": ["tianjin-guobacai-4-480w.webp", "tianjin-guobacai-4-960w.webp"]
-  },
-  "tianjin-guobacai-480w.webp": {
-    "bytes": 17924,
-    "contentType": "image/webp",
-    "etag": "e776ae740acba62274f0c7c5d1ffeb6f",
-    "height": 360,
-    "width": 480
-  },
-  "tianjin-guobacai-5-480w.webp": {
-    "bytes": 12890,
-    "contentType": "image/webp",
-    "etag": "e683951bbdafe592f83805b9fc0ebf45",
-    "height": 360,
-    "width": 480
-  },
-  "tianjin-guobacai-5-960w.webp": {
-    "bytes": 32232,
-    "contentType": "image/webp",
-    "etag": "f03e972d6df936ac7f0b4fecf5730013",
-    "height": 720,
-    "width": 960
-  },
-  "tianjin-guobacai-5.webp": {
-    "bytes": 87950,
-    "contentType": "image/webp",
-    "etag": "bcae814a59fae535c51cb10e06980d83",
-    "height": 1440,
-    "width": 1920,
-    "variants": ["tianjin-guobacai-5-480w.webp", "tianjin-guobacai-5-960w.webp"]
-  },
   "tianjin-guobacai-6-480w.webp": {
     "bytes": 10540,
     "contentType": "image/webp",
@@ -116,19 +21,139 @@
     "width": 1920,
     "variants": ["tianjin-guobacai-6-480w.webp", "tianjin-guobacai-6-960w.webp"]
   },
-  "tianjin-guobacai-960w.webp": {
-    "bytes": 45220,
+  "tianjin-guobacai-live-1-480w.webp": {
+    "bytes": 17396,
     "contentType": "image/webp",
-    "etag": "e94dcffa6d0e23474cf09e6a91b09a3d",
-    "height": 720,
-    "width": 960
+    "etag": "3ded6caf4049a521a6e8a8f412678ce6",
+    "width": 480,
+    "height": 360
   },
-  "tianjin-guobacai.webp": {
-    "bytes": 129356,
+  "tianjin-guobacai-live-1-960w.webp": {
+    "bytes": 41426,
     "contentType": "image/webp",
-    "etag": "7a88f368476d7fd808debb9da36b2f07",
+    "etag": "3e36809fa2aac562674ba8aa082b9272",
+    "width": 960,
+    "height": 720
+  },
+  "tianjin-guobacai-live-1.mp4": {
+    "bytes": 995228,
+    "contentType": "video/mp4",
+    "etag": "d7fafc62a24c7860473a11c3204b990d"
+  },
+  "tianjin-guobacai-live-1.webp": {
+    "bytes": 82106,
+    "contentType": "image/webp",
+    "etag": "3f00c16c5327596dcd82ff71d7747d76",
+    "width": 1440,
+    "height": 1080,
+    "variants": ["tianjin-guobacai-live-1-480w.webp", "tianjin-guobacai-live-1-960w.webp"]
+  },
+  "tianjin-guobacai-live-2-480w.webp": {
+    "bytes": 27982,
+    "contentType": "image/webp",
+    "etag": "4317dedcdd919fb401c32a619b167c45",
+    "width": 480,
+    "height": 360
+  },
+  "tianjin-guobacai-live-2-960w.webp": {
+    "bytes": 68144,
+    "contentType": "image/webp",
+    "etag": "1d3a3284f3178302d873a239fa60084c",
+    "width": 960,
+    "height": 720
+  },
+  "tianjin-guobacai-live-2.mp4": {
+    "bytes": 1477349,
+    "contentType": "video/mp4",
+    "etag": "c2d549b58f32fa95f3b2cfba33be6c71"
+  },
+  "tianjin-guobacai-live-2.webp": {
+    "bytes": 139350,
+    "contentType": "image/webp",
+    "etag": "2ecfdc9f1119d173a53eaf7eec026e90",
+    "width": 1440,
+    "height": 1080,
+    "variants": ["tianjin-guobacai-live-2-480w.webp", "tianjin-guobacai-live-2-960w.webp"]
+  },
+  "tianjin-guobacai-live-3-480w.webp": {
+    "bytes": 33988,
+    "contentType": "image/webp",
+    "etag": "4a4aea2850739d02c697fb5823420d5b",
+    "width": 480,
+    "height": 640
+  },
+  "tianjin-guobacai-live-3-960w.webp": {
+    "bytes": 91566,
+    "contentType": "image/webp",
+    "etag": "8cba41f89add1370bd9fc2ba964fb0e6",
+    "width": 960,
+    "height": 1280
+  },
+  "tianjin-guobacai-live-3.mp4": {
+    "bytes": 834637,
+    "contentType": "video/mp4",
+    "etag": "b70f53f1017b7203007fdff57512de16"
+  },
+  "tianjin-guobacai-live-3.webp": {
+    "bytes": 142190,
+    "contentType": "image/webp",
+    "etag": "19a95563a9ff053440833bd3080b0139",
+    "width": 1080,
     "height": 1440,
-    "width": 1920,
-    "variants": ["tianjin-guobacai-480w.webp", "tianjin-guobacai-960w.webp"]
+    "variants": ["tianjin-guobacai-live-3-480w.webp", "tianjin-guobacai-live-3-960w.webp"]
+  },
+  "tianjin-guobacai-live-4-480w.webp": {
+    "bytes": 17652,
+    "contentType": "image/webp",
+    "etag": "8083dc44535a235333377e43405fef1a",
+    "width": 480,
+    "height": 360
+  },
+  "tianjin-guobacai-live-4-960w.webp": {
+    "bytes": 48090,
+    "contentType": "image/webp",
+    "etag": "d31cd60eb6426e1a90dcd88d4ff5bf6b",
+    "width": 960,
+    "height": 720
+  },
+  "tianjin-guobacai-live-4.mp4": {
+    "bytes": 965655,
+    "contentType": "video/mp4",
+    "etag": "2397e8b3d7e9d6aeb95a72c16c670b41"
+  },
+  "tianjin-guobacai-live-4.webp": {
+    "bytes": 106138,
+    "contentType": "image/webp",
+    "etag": "28585ed62d89fda11f116032333228c7",
+    "width": 1440,
+    "height": 1080,
+    "variants": ["tianjin-guobacai-live-4-480w.webp", "tianjin-guobacai-live-4-960w.webp"]
+  },
+  "tianjin-guobacai-live-5-480w.webp": {
+    "bytes": 12530,
+    "contentType": "image/webp",
+    "etag": "e6765b58c6e435f9107b69d7ad059f64",
+    "width": 480,
+    "height": 360
+  },
+  "tianjin-guobacai-live-5-960w.webp": {
+    "bytes": 28804,
+    "contentType": "image/webp",
+    "etag": "11118c2feca3c3163229eda761a2aa52",
+    "width": 960,
+    "height": 720
+  },
+  "tianjin-guobacai-live-5.mp4": {
+    "bytes": 428764,
+    "contentType": "video/mp4",
+    "etag": "7738765bcc2f8164ce6ddfb35937740d"
+  },
+  "tianjin-guobacai-live-5.webp": {
+    "bytes": 58662,
+    "contentType": "image/webp",
+    "etag": "5e3a29e94ffdd20dd1c7ed93a12c90ee",
+    "width": 1440,
+    "height": 1080,
+    "variants": ["tianjin-guobacai-live-5-480w.webp", "tianjin-guobacai-live-5-960w.webp"]
   }
 }

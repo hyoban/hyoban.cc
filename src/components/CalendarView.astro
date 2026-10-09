@@ -5,6 +5,7 @@ import CalendarDayStatus from '@/components/CalendarDayStatus.astro'
 import CalendarModeSwitch from '@/components/CalendarModeSwitch.astro'
 import MobileAgenda from '@/components/MobileAgenda.astro'
 import MomentEntry from '@/components/MomentEntry.astro'
+import MomentLightboxMedia from '@/components/MomentLightboxMedia.astro'
 import {
   getChinaCalendarDay,
   getChinaCalendarDayDescription,
@@ -62,7 +63,7 @@ for (let day = 1; day <= daysInMonth; day += 1) {
   const dateKey = `${monthKey}-${String(day).padStart(2, '0')}`
   const dayMoments = momentsByDate.get(dateKey) ?? []
   const allMedia = dayMoments.flatMap(moment => moment.media)
-  const thumbnail = allMedia.find(item => item.type === 'image' || item.poster)
+  const thumbnail = allMedia.find(item => item.type !== 'video' || item.poster)
 
   calendarDays.push({
     anniversaries: getCalendarAnniversaries(dateKey),
@@ -135,7 +136,7 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
     return undefined
   }
 
-  return media.type === 'image' ? media.src : media.poster
+  return media.type === 'video' ? media.poster : media.src
 }
 ---
 
@@ -381,7 +382,7 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
   <dialog class="moment-lightbox m-auto h-full max-h-none w-full max-w-none border-0 bg-transparent p-12 backdrop:bg-[rgb(17_17_16/0.92)] [&[open]]:flex [&[open]]:items-center [&[open]]:justify-center max-[40rem]:px-4" data-moment-lightbox aria-label="图片查看器">
     <button type="button" class="moment-lightbox__close fixed top-5 right-5 flex size-10 cursor-pointer items-center justify-center rounded-full border-0 bg-[rgb(255_255_255/0.08)] text-white" data-lightbox-close aria-label="关闭图片"><span class="i-lucide-x" aria-hidden="true" /></button>
     <button type="button" class="moment-lightbox__previous fixed top-[calc(50%-1.25rem)] left-5 flex size-10 cursor-pointer items-center justify-center rounded-full border-0 bg-[rgb(255_255_255/0.08)] text-white max-[40rem]:top-auto max-[40rem]:bottom-4" data-lightbox-previous aria-label="上一张图片"><span class="i-lucide-chevron-left" aria-hidden="true" /></button>
-    <img class="max-h-[calc(100vh-6rem)] max-w-[calc(100vw-10rem)] object-contain max-[40rem]:max-w-[calc(100vw-2rem)]" alt="" data-lightbox-image />
+    <MomentLightboxMedia imageClass="max-h-[calc(100dvh-6rem)] max-w-[calc(100vw-10rem)] object-contain max-[40rem]:max-w-[calc(100vw-2rem)]" />
     <button type="button" class="moment-lightbox__next fixed top-[calc(50%-1.25rem)] right-5 flex size-10 cursor-pointer items-center justify-center rounded-full border-0 bg-[rgb(255_255_255/0.08)] text-white max-[40rem]:top-auto max-[40rem]:bottom-4" data-lightbox-next aria-label="下一张图片"><span class="i-lucide-chevron-right" aria-hidden="true" /></button>
   </dialog>
 </Layout>
@@ -389,6 +390,7 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
 <script>
   import '@/calendar-prefetch-client'
   import { navigate } from 'astro:transitions/client'
+  import { initializeLightboxMedia } from '@/moment-lightbox-client'
 
   let calendarController: AbortController | undefined
 
@@ -440,12 +442,12 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
     }
 
     const lightbox = document.querySelector<HTMLDialogElement>('[data-moment-lightbox]')
-    const lightboxImage = lightbox?.querySelector<HTMLImageElement>('[data-lightbox-image]')
+    const lightboxMedia = lightbox ? initializeLightboxMedia(lightbox, signal) : undefined
     const lightboxItems = [...document.querySelectorAll<HTMLElement>('[data-lightbox-item]')]
     let lightboxIndex = 0
 
     function showLightboxItem(index: number) {
-      if (!lightbox || !lightboxImage || lightboxItems.length === 0) {
+      if (!lightbox || !lightboxMedia || lightboxItems.length === 0) {
         return
       }
 
@@ -456,8 +458,7 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
         return
       }
 
-      lightboxImage.src = item.dataset.lightboxSrc ?? ''
-      lightboxImage.alt = item.dataset.lightboxAlt ?? ''
+      lightboxMedia.show(item)
     }
 
     for (const [index, item] of lightboxItems.entries()) {
@@ -485,5 +486,6 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
   }
 
   document.addEventListener('astro:page-load', initializeCalendar)
+  document.addEventListener('astro:before-swap', () => calendarController?.abort())
   initializeCalendar()
 </script>

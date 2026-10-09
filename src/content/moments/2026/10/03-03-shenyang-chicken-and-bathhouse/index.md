@@ -2,17 +2,21 @@
 occurredAt: '2026-10-03T22:10:07+08:00'
 location: shenyang
 media:
-  - type: image
-    file: shenyang-chicken-and-bathhouse.webp
+  - type: live-photo
+    file: shenyang-chicken-and-bathhouse-live-1.webp
+    video: shenyang-chicken-and-bathhouse-live-1.mp4
     alt: Diners seated outside a busy barbecue restaurant in Shenyang.
-  - type: image
-    file: shenyang-chicken-and-bathhouse-2.webp
+  - type: live-photo
+    file: shenyang-chicken-and-bathhouse-live-2.webp
+    video: shenyang-chicken-and-bathhouse-live-2.mp4
     alt: A tray of assorted grilled skewers with dipping sauces.
-  - type: image
-    file: shenyang-chicken-and-bathhouse-3.webp
+  - type: live-photo
+    file: shenyang-chicken-and-bathhouse-live-3.webp
+    video: shenyang-chicken-and-bathhouse-live-3.mp4
     alt: A close-up of a glazed grilled skewer held beside a window.
-  - type: image
-    file: shenyang-chicken-and-bathhouse-4.webp
+  - type: live-photo
+    file: shenyang-chicken-and-bathhouse-live-4.webp
+    video: shenyang-chicken-and-bathhouse-live-4.mp4
     alt: A seasoned grilled chicken frame on a metal tray.
   - type: image
     file: shenyang-chicken-and-bathhouse-5.webp
@@ -20,8 +24,9 @@ media:
   - type: image
     file: shenyang-chicken-and-bathhouse-6.webp
     alt: A wide night view of illuminated pools and distant city buildings.
-  - type: image
-    file: shenyang-chicken-and-bathhouse-7.webp
+  - type: live-photo
+    file: shenyang-chicken-and-bathhouse-live-7.webp
+    video: shenyang-chicken-and-bathhouse-live-7.mp4
     alt: Blue pool water and illuminated steps beside a covered terrace at night.
 ---
 

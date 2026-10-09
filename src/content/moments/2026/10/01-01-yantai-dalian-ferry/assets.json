@@ -57,65 +57,140 @@
     "height": 720,
     "width": 960
   },
-  "yantai-dalian-ferry-video-2-poster.webp": {
-    "bytes": 57206,
+  "yantai-dalian-ferry-live-3-480w.webp": {
+    "bytes": 24790,
     "contentType": "image/webp",
-    "etag": "6b8a994358eda489d12db29f61065e69",
-    "height": 960,
-    "width": 1280
+    "etag": "59780d3679c392ae1f4a12177a0864fa",
+    "width": 480,
+    "height": 360
   },
-  "yantai-dalian-ferry-video-2.mp4": {
-    "bytes": 905618,
-    "contentType": "video/mp4",
-    "etag": "ffcac116de38daceb4cb77cad3c80f37"
-  },
-  "yantai-dalian-ferry-video-3-poster.webp": {
-    "bytes": 17832,
+  "yantai-dalian-ferry-live-3-960w.webp": {
+    "bytes": 76200,
     "contentType": "image/webp",
-    "etag": "276adc7447f8e47369db4249bc3b5b24",
-    "height": 960,
-    "width": 1280
+    "etag": "74148dfe0bee994a168df7cb201b89a6",
+    "width": 960,
+    "height": 720
   },
-  "yantai-dalian-ferry-video-3.mp4": {
-    "bytes": 519631,
+  "yantai-dalian-ferry-live-3.mp4": {
+    "bytes": 1785522,
     "contentType": "video/mp4",
-    "etag": "0d8b1dd65da9b87acaa263f0f8e15f35"
+    "etag": "58c2850f032234e4a5250444ca862321"
   },
-  "yantai-dalian-ferry-video-4-poster.webp": {
-    "bytes": 107938,
+  "yantai-dalian-ferry-live-3.webp": {
+    "bytes": 199706,
     "contentType": "image/webp",
-    "etag": "9dee418859e839d5c1fabfb0d0f68e43",
-    "height": 960,
-    "width": 1280
+    "etag": "5e99bf9db4d8029309b9f08f697bba37",
+    "width": 1440,
+    "height": 1080,
+    "variants": ["yantai-dalian-ferry-live-3-480w.webp", "yantai-dalian-ferry-live-3-960w.webp"]
   },
-  "yantai-dalian-ferry-video-4.mp4": {
-    "bytes": 1096541,
-    "contentType": "video/mp4",
-    "etag": "8bff3346b9fa6c351fc5389b946a94b0"
-  },
-  "yantai-dalian-ferry-video-5-poster.webp": {
-    "bytes": 83850,
+  "yantai-dalian-ferry-live-5-480w.webp": {
+    "bytes": 21552,
     "contentType": "image/webp",
-    "etag": "fa66141550cbc886f5be99efd9aadf32",
-    "height": 960,
-    "width": 1280
+    "etag": "58b84270d9b542458c8440c459a73b4f",
+    "width": 480,
+    "height": 360
   },
-  "yantai-dalian-ferry-video-5.mp4": {
-    "bytes": 772931,
-    "contentType": "video/mp4",
-    "etag": "7eae8736f1b456080478069045aa9c38"
-  },
-  "yantai-dalian-ferry-video-poster.webp": {
-    "bytes": 69082,
+  "yantai-dalian-ferry-live-5-960w.webp": {
+    "bytes": 56654,
     "contentType": "image/webp",
-    "etag": "6aabc6fa8cdb60488bd59235cc2e4457",
-    "height": 960,
-    "width": 1280
+    "etag": "8eecdec09a61762a7e393cb3b55bb3d5",
+    "width": 960,
+    "height": 720
   },
-  "yantai-dalian-ferry-video.mp4": {
-    "bytes": 792540,
+  "yantai-dalian-ferry-live-5.mp4": {
+    "bytes": 1594459,
     "contentType": "video/mp4",
-    "etag": "9114cc57275f301d56611198a2845589"
+    "etag": "2be9810fce689d135a85dc1b6bd85774"
+  },
+  "yantai-dalian-ferry-live-5.webp": {
+    "bytes": 124166,
+    "contentType": "image/webp",
+    "etag": "2e1eb9dad93e10211df521eecffd2ec9",
+    "width": 1440,
+    "height": 1080,
+    "variants": ["yantai-dalian-ferry-live-5-480w.webp", "yantai-dalian-ferry-live-5-960w.webp"]
+  },
+  "yantai-dalian-ferry-live-6-480w.webp": {
+    "bytes": 26986,
+    "contentType": "image/webp",
+    "etag": "c7cb39051c8f5233ed88a3ac0bb259c2",
+    "width": 480,
+    "height": 360
+  },
+  "yantai-dalian-ferry-live-6-960w.webp": {
+    "bytes": 97824,
+    "contentType": "image/webp",
+    "etag": "500ff799af99515a77fac1b25d4e85d9",
+    "width": 960,
+    "height": 720
+  },
+  "yantai-dalian-ferry-live-6.mp4": {
+    "bytes": 2909287,
+    "contentType": "video/mp4",
+    "etag": "0212f0af99f8b97c13363af1ee556654"
+  },
+  "yantai-dalian-ferry-live-6.webp": {
+    "bytes": 254142,
+    "contentType": "image/webp",
+    "etag": "bac55dd07e93db4a4fd4f864764e104b",
+    "width": 1440,
+    "height": 1080,
+    "variants": ["yantai-dalian-ferry-live-6-480w.webp", "yantai-dalian-ferry-live-6-960w.webp"]
+  },
+  "yantai-dalian-ferry-live-7-480w.webp": {
+    "bytes": 29138,
+    "contentType": "image/webp",
+    "etag": "ba45c8a76a2ab1ce92a10c918d94cc30",
+    "width": 480,
+    "height": 360
+  },
+  "yantai-dalian-ferry-live-7-960w.webp": {
+    "bytes": 90772,
+    "contentType": "image/webp",
+    "etag": "0b02d6f8ba70f9b8d4ba00e8372a1592",
+    "width": 960,
+    "height": 720
+  },
+  "yantai-dalian-ferry-live-7.mp4": {
+    "bytes": 1500697,
+    "contentType": "video/mp4",
+    "etag": "92c527be715ab1b9b55deee65fc9367e"
+  },
+  "yantai-dalian-ferry-live-7.webp": {
+    "bytes": 226116,
+    "contentType": "image/webp",
+    "etag": "77b6e5d0dd3fd6786802602b28e67b15",
+    "width": 1440,
+    "height": 1080,
+    "variants": ["yantai-dalian-ferry-live-7-480w.webp", "yantai-dalian-ferry-live-7-960w.webp"]
+  },
+  "yantai-dalian-ferry-live-8-480w.webp": {
+    "bytes": 20612,
+    "contentType": "image/webp",
+    "etag": "c55fa1a9cb39c38b1747b7799a7d5da5",
+    "width": 480,
+    "height": 360
+  },
+  "yantai-dalian-ferry-live-8-960w.webp": {
+    "bytes": 76486,
+    "contentType": "image/webp",
+    "etag": "d0fdae737e5f3ed4fb02fa6457137d03",
+    "width": 960,
+    "height": 720
+  },
+  "yantai-dalian-ferry-live-8.mp4": {
+    "bytes": 1992349,
+    "contentType": "video/mp4",
+    "etag": "5b064ee22d4cd6c1bf15d5819bcd91c7"
+  },
+  "yantai-dalian-ferry-live-8.webp": {
+    "bytes": 227796,
+    "contentType": "image/webp",
+    "etag": "d6e15539a6bead6191cded252db5f4c2",
+    "width": 1440,
+    "height": 1080,
+    "variants": ["yantai-dalian-ferry-live-8-480w.webp", "yantai-dalian-ferry-live-8-960w.webp"]
   },
   "yantai-dalian-ferry.webp": {
     "bytes": 122748,

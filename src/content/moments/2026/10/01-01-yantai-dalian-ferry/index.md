@@ -8,28 +8,28 @@ media:
   - type: image
     file: yantai-dalian-ferry-2.webp
     alt: Ferries and loading lanes at a harbor under a bright blue sky.
-  - type: video
-    file: yantai-dalian-ferry-video.mp4
-    poster: yantai-dalian-ferry-video-poster.webp
+  - type: live-photo
+    file: yantai-dalian-ferry-live-3.webp
+    video: yantai-dalian-ferry-live-3.mp4
     alt: A blue-and-white ferry turning in the harbor beside the city skyline.
   - type: image
     file: yantai-dalian-ferry-3.webp
     alt: A COSCO passenger ferry crossing the harbor.
-  - type: video
-    file: yantai-dalian-ferry-video-2.mp4
-    poster: yantai-dalian-ferry-video-2-poster.webp
+  - type: live-photo
+    file: yantai-dalian-ferry-live-5.webp
+    video: yantai-dalian-ferry-live-5.mp4
     alt: Passengers enjoying the sunshine on the ferry's blue open deck.
-  - type: video
-    file: yantai-dalian-ferry-video-3.mp4
-    poster: yantai-dalian-ferry-video-3-poster.webp
+  - type: live-photo
+    file: yantai-dalian-ferry-live-6.webp
+    video: yantai-dalian-ferry-live-6.mp4
     alt: Seagulls flying low over green harbor water.
-  - type: video
-    file: yantai-dalian-ferry-video-4.mp4
-    poster: yantai-dalian-ferry-video-4-poster.webp
+  - type: live-photo
+    file: yantai-dalian-ferry-live-7.webp
+    video: yantai-dalian-ferry-live-7.mp4
     alt: View across the ferry's open deck toward the harbor and waterfront buildings.
-  - type: video
-    file: yantai-dalian-ferry-video-5.mp4
-    poster: yantai-dalian-ferry-video-5-poster.webp
+  - type: live-photo
+    file: yantai-dalian-ferry-live-8.webp
+    video: yantai-dalian-ferry-live-8.mp4
     alt: Seagulls over the harbor, with a red offshore platform near the waterfront.
 ---
 
