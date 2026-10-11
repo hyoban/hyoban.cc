@@ -229,9 +229,9 @@ export const locations = defineLocations({
     name: '外龙窝湖',
   },
   'lugu-lake': {
-    latitude: 27.7,
-    longitude: 100.8,
-    name: '泸沽湖',
+    latitude: 27.65928,
+    longitude: 100.80689,
+    name: '泸沽湖风景区观景台',
   },
   'luogang-park': {
     latitude: 31.7744,
@@ -497,6 +497,11 @@ export const locations = defineLocations({
     latitude: 32.188,
     longitude: 119.424,
     name: '镇江',
+  },
+  'zhongyi-market': {
+    latitude: 26.87027,
+    longitude: 100.23449,
+    name: '古城忠义市场',
   },
 })
 

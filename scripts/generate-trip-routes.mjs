@@ -31,7 +31,8 @@ for (const trip of trips) {
     const key = getLegKey(leg.from, leg.to)
     const [from, to] = key.split(';')
 
-    if (leg.by !== 'car' || from === to || routes[key]) {
+    // A drive back the same way reuses the route there, reversed.
+    if (leg.by !== 'car' || leg.retraced || from === to || routes[key]) {
       continue
     }
 

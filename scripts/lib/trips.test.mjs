@@ -173,6 +173,49 @@ test('uses cached road routes except on straight legs', () => {
   assert.equal(trip.drivingHours, 2)
 })
 
+test('drives back the same way along the outbound route, reversed', () => {
+  const moments = [
+    { dateKey: '2026-05-01', id: 'hefei', locations: [hefei], occurredAt: '2026-05-01T09:00' },
+    { dateKey: '2026-05-01', id: 'nanjing', locations: [nanjing], occurredAt: '2026-05-01T12:00' },
+    { dateKey: '2026-05-01', id: 'back', locations: [hefei], occurredAt: '2026-05-01T18:00' },
+  ]
+  const route = {
+    coordinates: [
+      [117.2, 31.8],
+      [118, 32.1],
+      [118.8, 32.06],
+    ],
+    distance: 180_000,
+    duration: 7200,
+  }
+  const trip = buildTrip(
+    {
+      end: '2026-05-01',
+      id: 'trip',
+      sameWayBack: [['hefei', 'nanjing']],
+      start: '2026-05-01',
+      title: 'Trip',
+    },
+    moments,
+    resolve,
+    { [getLegKey(hefei, nanjing)]: route },
+  )
+  const [there, back] = trip.legs
+
+  assert.equal(there.route, route)
+  assert.equal(there.retraced, undefined)
+  assert.equal(back.retraced, true)
+  assert.deepEqual(back.route.coordinates, [...route.coordinates].reverse())
+  assert.equal(trip.distanceKm, 360)
+  assert.throws(
+    () =>
+      defineTrips([
+        { end: '2026-01-01', id: 'x', sameWayBack: [['a', 'a']], start: '2026-01-01', title: 'x' },
+      ]),
+    /Invalid same-way-back/,
+  )
+})
+
 test('measures great-circle distance in kilometres', () => {
   const distance = getDistanceKm(hefei, nanjing)
 

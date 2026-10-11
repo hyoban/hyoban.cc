@@ -44,6 +44,7 @@ export const trips = defineTrips([
     end: '2026-09-16',
     id: '2026-yunnan',
     music: 'apple-cider',
+    sameWayBack: [['lijiang', 'lugu-lake']],
     start: '2026-09-12',
     straightLegs: [['nanjing-lukou-airport', 'lijiang-sanyi-airport', 'plane']],
     title: '云南之旅',
@@ -51,6 +52,9 @@ export const trips = defineTrips([
     waypoints: [
       { at: '2026-09-12T17:15:00+08:00', location: 'nanjing-lukou-airport' },
       { location: 'lijiang-sanyi-airport' },
+      // Lugu Lake was a day out from Lijiang and back the same way.
+      { at: '2026-09-15T08:00:00+08:00', location: 'lijiang' },
+      { at: '2026-09-15T23:50:00+08:00', location: 'lijiang' },
       { at: '2026-09-16T13:25:00+08:00', location: 'lijiang-sanyi-airport' },
     ],
   },
