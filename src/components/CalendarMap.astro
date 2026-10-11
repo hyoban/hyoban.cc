@@ -135,7 +135,7 @@ function formatDate(dateKey: string) {
 ---
 
 <Layout title={title} description={description}>
-  <main class="calendar-map-page relative isolate h-dvh w-full overflow-hidden bg-bg" data-calendar-map data-mapbox-token={mapboxToken} data-map-title={mapTitle} transition:persist="calendar-map">
+  <main class="calendar-map-page @container relative isolate h-dvh w-full overflow-hidden bg-bg" data-calendar-map data-mapbox-token={mapboxToken} data-map-title={mapTitle} transition:persist="calendar-map">
     <div class="calendar-map-canvas absolute inset-0" data-calendar-map-canvas role="region" aria-label="Calendar 地点地图" />
 
     <header class="calendar-map-toolbar pointer-events-none absolute inset-x-4 top-4 z-[5] grid grid-cols-[1fr_auto_1fr] items-center gap-4 [&>*]:pointer-events-auto">
@@ -189,7 +189,7 @@ function formatDate(dateKey: string) {
       </div>
     </section>
 
-    <section class="calendar-map-trip absolute bottom-4 left-4 z-10 flex max-h-[calc(100dvh-7rem)] w-[min(22rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-xl border border-border bg-bg shadow-[0_1.5rem_5rem_rgb(0_0_0/0.16)] max-[48rem]:inset-x-3 max-[48rem]:bottom-[calc(0.75rem+env(safe-area-inset-bottom))] max-[48rem]:max-h-[70dvh] max-[48rem]:w-auto [&[hidden]]:hidden" data-calendar-map-trip aria-labelledby="calendar-map-trip-title" hidden>
+    <section class="calendar-map-trip absolute bottom-4 left-4 z-10 flex max-h-[calc(100%-7rem)] w-[min(22rem,calc(100%-2rem))] flex-col overflow-hidden rounded-xl border border-border bg-bg shadow-[0_1.5rem_5rem_rgb(0_0_0/0.16)] @max-[48rem]:inset-x-3 @max-[48rem]:bottom-[calc(0.75rem+env(safe-area-inset-bottom))] @max-[48rem]:max-h-[70%] @max-[48rem]:w-auto [&[hidden]]:hidden" data-calendar-map-trip aria-labelledby="calendar-map-trip-title" hidden>
       <ol class="flex shrink-0 list-none gap-1 px-4 pt-3" data-calendar-map-trip-progress aria-hidden="true" />
       <header class="shrink-0 px-4 pt-3" data-calendar-map-trip-header>
         <p class="truncate text-xs text-tx-3 tabular-nums" data-calendar-map-trip-eyebrow />
@@ -197,7 +197,7 @@ function formatDate(dateKey: string) {
       </header>
       <div class="flex min-h-0 flex-col px-4 pt-1 pb-3" data-calendar-map-trip-body aria-live="polite" />
       <footer class="flex shrink-0 items-center justify-between border-t border-border px-2 py-1">
-        <div class="flex items-center">
+        <div class="flex items-center [&[hidden]]:hidden" data-calendar-map-trip-controls>
           <button class="flex size-9 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-tx-2 hover:bg-inline hover:text-tx disabled:cursor-default disabled:opacity-40 disabled:hover:bg-transparent" type="button" data-calendar-map-trip-previous aria-label="上一站">
             <span class="i-lucide-chevron-left" aria-hidden="true" />
           </button>
@@ -208,9 +208,22 @@ function formatDate(dateKey: string) {
             <span class="i-lucide-chevron-right" aria-hidden="true" />
           </button>
         </div>
-        <button class="flex size-9 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-tx-2 hover:bg-inline hover:text-tx" type="button" data-calendar-map-trip-close aria-label="退出旅程回放">
-          <span class="i-lucide-x" aria-hidden="true" />
-        </button>
+        <div class="flex items-center [&[hidden]]:hidden" data-calendar-map-trip-actions>
+          <button class="flex size-9 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-tx-2 hover:bg-inline hover:text-tx [&[hidden]]:hidden" type="button" data-calendar-map-trip-export aria-label="导出视频" hidden>
+            <span class="i-lucide-clapperboard" aria-hidden="true" />
+          </button>
+          <button class="flex size-9 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-tx-2 hover:bg-inline hover:text-tx" type="button" data-calendar-map-trip-close aria-label="退出旅程回放">
+            <span class="i-lucide-x" aria-hidden="true" />
+          </button>
+        </div>
+        <div class="flex w-full items-center gap-1 [&[hidden]]:hidden" data-calendar-map-trip-export-options hidden>
+          <span class="px-2 text-xs text-tx-3">导出视频</span>
+          <button class="min-h-9 cursor-pointer rounded-full border border-border bg-transparent px-3 text-[0.8125rem] text-tx hover:bg-inline" type="button" data-calendar-map-trip-export-ratio="portrait">竖屏 9:16</button>
+          <button class="min-h-9 cursor-pointer rounded-full border border-border bg-transparent px-3 text-[0.8125rem] text-tx hover:bg-inline" type="button" data-calendar-map-trip-export-ratio="landscape">横屏 16:9</button>
+          <button class="flex size-9 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-tx-2 hover:bg-inline hover:text-tx ml-auto" type="button" data-calendar-map-trip-export-cancel aria-label="取消导出">
+            <span class="i-lucide-x" aria-hidden="true" />
+          </button>
+        </div>
       </footer>
     </section>
 
