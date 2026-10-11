@@ -22,6 +22,12 @@ export const locations = defineLocations({
     longitude: 116.4074,
     name: '北京',
   },
+  // A point on the Yantai–Dalian ferry route across the Bohai Strait.
+  'bohai-sea': {
+    latitude: 38.24,
+    longitude: 121.52,
+    name: '渤海',
+  },
   chengdu: {
     latitude: 30.5728,
     longitude: 104.0668,
