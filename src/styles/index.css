@@ -394,7 +394,12 @@ html:has(.calendar-map-page[data-export-ratio]) body {
   padding: 0;
 }
 
-.calendar-map-trip-stage__progress > ol > li {
+.calendar-map-trip-stage__progress button {
+  margin: 0;
+  padding: 0;
+}
+
+.calendar-map-trip-stage__progress [data-progress-bar] {
   height: calc(var(--u) * 0.6);
 }
 
