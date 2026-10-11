@@ -195,6 +195,12 @@ html[data-calendar-mode-transition] .calendar-back-link {
   background: var(--color-bg);
 }
 
+/* Nor does the content scroll meanwhile: a scrollbar that came up mid-animation would
+   narrow the text, keep it overflowing and so stay after the card settles. */
+.calendar-map-trip[data-resizing] > [data-calendar-map-trip-body] {
+  overflow: hidden;
+}
+
 /* A copy of the outgoing card, fading out over the incoming one. */
 .calendar-map-trip-ghost {
   position: absolute;
