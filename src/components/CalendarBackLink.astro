@@ -1,4 +1,7 @@
 ---
+import { getAssetUrl } from '@/asset-url'
+import { SITE_TITLE } from '@/consts'
+
 interface Props {
   class?: string
 }
@@ -8,10 +11,12 @@ const { class: className } = Astro.props
 
 <a
   class:list={[
-    'calendar-back-link inline-flex min-h-10 items-center rounded-full border border-[color-mix(in_srgb,var(--color-border)_82%,transparent)] bg-[color-mix(in_srgb,var(--color-bg)_82%,transparent)] px-3.5 text-[0.8125rem] text-tx-2 no-underline backdrop-blur-[1rem]',
+    'calendar-back-link inline-flex min-h-10 items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--color-border)_82%,transparent)] bg-[color-mix(in_srgb,var(--color-bg)_82%,transparent)] py-1 pr-3.5 pl-1.5 text-[0.8125rem] text-tx no-underline backdrop-blur-[1rem] hover:bg-inline in-[.calendar-page--with-drawer]:pr-1.5',
     className,
   ]}
   href="/"
+  aria-label={`返回 ${SITE_TITLE} 首页`}
 >
-  返回
+  <img src={getAssetUrl('site/avatar-cropped.png')} alt="" width="24" height="24" class="size-6 rounded-full" />
+  <span class="font-semibold in-[.calendar-page--with-drawer]:sr-only">{SITE_TITLE}</span>
 </a>

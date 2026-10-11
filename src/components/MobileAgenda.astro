@@ -45,7 +45,7 @@ function formatDate(dateKey: string) {
               {days.map(day => (
                 <button
                   type="button"
-                  class="flex h-11 min-w-11 flex-none cursor-pointer items-center justify-center border-0 bg-transparent p-0 font-mono text-tx-2"
+                  class="flex h-11 min-w-11 flex-none cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-0 font-mono text-tx-2 hover:bg-inline hover:text-tx"
                   data-agenda-target={`agenda-${day.dateKey}`}
                   aria-label={`定位到 ${formatDate(day.dateKey)}${day.anniversaries.length ? '的纪念日' : ''}`}
                 >

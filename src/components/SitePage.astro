@@ -1,0 +1,23 @@
+---
+import SiteHeader from '@/components/SiteHeader.astro'
+
+interface Props {
+  description?: string | undefined
+  title?: string | undefined
+}
+
+const { description, title } = Astro.props
+---
+
+<SiteHeader />
+<main class="mx-auto mt-10 max-w-[40rem]">
+  {
+    title && (
+      <header class="mb-6">
+        <h1 class="font-medium">{title}</h1>
+        {description && <p class="text-tx-2">{description}</p>}
+      </header>
+    )
+  }
+  <slot />
+</main>

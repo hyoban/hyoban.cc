@@ -1,0 +1,20 @@
+---
+import { getAssetUrl } from '@/asset-url'
+import { SITE_DESCRIPTION, SITE_TITLE } from '@/consts'
+---
+
+<header class="mx-auto flex max-w-[40rem] items-center">
+  <a href="/" class="inline-flex items-center gap-3 text-tx no-underline" aria-label={`${SITE_TITLE} 首页`}>
+    <img
+      src={getAssetUrl('site/avatar-cropped.png')}
+      alt=""
+      width="40"
+      height="40"
+      class="size-10 rounded-full"
+    />
+    <span class="flex flex-col">
+      <span class="font-medium">{SITE_TITLE}</span>
+      <span class="text-tx-2">{SITE_DESCRIPTION}</span>
+    </span>
+  </a>
+</header>

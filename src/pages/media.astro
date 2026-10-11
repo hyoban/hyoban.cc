@@ -1,6 +1,7 @@
 ---
 import { SITE_TITLE } from '@/consts'
 import MediaSourceIcon from '@/components/MediaSourceIcon.astro'
+import SitePage from '@/components/SitePage.astro'
 import generatedMedia from '@/data/media.generated.json'
 import mediaRecommendations from '@/data/media-recommendations.json'
 import Layout from '@/layouts/Layout.astro'
@@ -8,8 +9,8 @@ import Layout from '@/layouts/Layout.astro'
 const pageTitle = `Media | ${SITE_TITLE}`
 const pageDescription = '我推荐的电影、剧集和动画'
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p'
-const posterImageClass = 'aspect-[2/3] w-full border border-border object-cover'
-const sourceLinkClass = 'inline-flex items-center'
+const posterImageClass = 'aspect-[2/3] w-full rounded bg-inline object-cover shadow-[0_0_0_1px_var(--color-border)]'
+const sourceLinkClass = 'inline-flex items-center text-tx-3 no-underline hover:text-tx'
 const sourceIconClass = 'inline-block size-[1em] text-current'
 const ANIMATION_GENRE_ID = 16
 const mediaCategories = [
@@ -219,19 +220,10 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
     </script>
   </Fragment>
 
-  <main class="mx-auto max-w-[65ch] space-y-8">
-    <section class="space-y-4">
-      <div class="flex items-baseline gap-3">
-        <h1>影视推荐</h1>
-        <a href="/" class="text-tx-2">返回</a>
-      </div>
-      <p class="leading-relaxed text-tx-2">
-        一些我觉得值得看的电影、剧集和动画。持续整理更新中...
-      </p>
-    </section>
+  <SitePage title="影视推荐" description="一些我觉得值得看的电影、剧集和动画，持续整理更新中。">
 
     <nav
-      class="flex w-fit items-center gap-2 overflow-x-auto"
+      class="mb-4 flex w-fit max-w-full items-center gap-5 overflow-x-auto [scrollbar-width:none]"
       aria-label="分类过滤"
       data-media-filters
     >
@@ -239,22 +231,23 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
         mediaCategories.map(category => (
           <a
             href={`/media/?category=${category.value}`}
-            class="block shrink-0 px-2 font-mono text-base font-normal leading-7 text-tx no-underline transition-colors hover:text-tx-2"
+            class="inline-flex min-h-9 shrink-0 items-center gap-1.5 text-tx-3 no-underline transition-colors hover:text-tx"
             aria-controls="media-list"
             aria-current={category.value === 'anime' ? 'page' : undefined}
             data-media-filter={category.value}
           >
-            {category.label}（{mediaCategoryCounts.get(category.value)}）
+            {category.label}
+            <span class="tabular-nums">{mediaCategoryCounts.get(category.value)}</span>
           </a>
         ))
       }
     </nav>
 
-    <ol id="media-list" class="space-y-8 sm:space-y-10">
+    <ol id="media-list" class="flex flex-col gap-1">
       {
         mediaWorks.map(work => (
           <li class="media-item" data-media-category={work.categories.join(' ')}>
-            <article class="border-border grid items-start gap-x-3 gap-y-3 border-t pt-5 first:border-t-0 first:pt-0 sm:grid-cols-[7rem_minmax(0,1fr)] sm:gap-x-6 sm:gap-y-2">
+            <article class="-mx-3 grid items-start gap-x-3 gap-y-3 rounded-md p-3 transition-colors hover:bg-hover sm:grid-cols-[6rem_minmax(0,1fr)] sm:gap-x-5 sm:gap-y-1">
               <div class="grid min-w-0 grid-cols-[5rem_minmax(0,1fr)] items-start gap-x-3 gap-y-3 sm:contents">
                 {
                   work.posterUrl && (
@@ -275,13 +268,13 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
                 }
 
                 <header class="col-start-2 row-start-1 min-w-0 space-y-2">
-                  <h2 class="truncate font-semibold leading-snug text-tx">
-                    <a href={work.tmdbUrl} target="_blank" rel="noopener noreferrer">
+                  <h2 class="truncate font-medium text-tx">
+                    <a href={work.tmdbUrl} target="_blank" rel="noopener noreferrer" class="no-underline">
                       {work.displayTitle}
                     </a>
                   </h2>
                   {(work.creator || work.year || work.doubanUrl || work.playbackSources.length > 0) && (
-                    <p class="flex flex-wrap gap-x-3 gap-y-1 text-tx-2">
+                    <p class="flex flex-wrap items-center gap-x-3 gap-y-1 text-tx-3">
                       {work.creator && <span>{work.creator}</span>}
                       {work.year && <span>{work.year}</span>}
                       {work.doubanUrl && (
@@ -311,8 +304,7 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
         ))
       }
     </ol>
-
-  </main>
+  </SitePage>
 </Layout>
 
 <script>
@@ -376,7 +368,6 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
   html[data-media-category='tv'] [data-media-filter='tv'],
   html[data-media-category='tvb'] [data-media-filter='tvb'],
   html[data-media-category='movie'] [data-media-filter='movie'] {
-    color: var(--color-bg);
-    background: var(--color-tx);
+    color: var(--color-tx);
   }
 </style>

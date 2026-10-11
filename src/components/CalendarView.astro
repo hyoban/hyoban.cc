@@ -104,6 +104,7 @@ const title = selectedDateLabel
   ? `${selectedDateLabel} · 日历 | ${SITE_TITLE}`
   : `${year} 年 ${month} 月 · 日历 | ${SITE_TITLE}`
 const closePath = getMonthPath(monthKey)
+const todayNumberClass = '-mx-1 -my-0.5 rounded-full bg-tx px-1 py-0.5 !text-bg [text-shadow:none]'
 
 function formatSelectedDate(dateKey: string) {
   const { dateDay, dateMonth, dateValue } = parseCalendarDate(dateKey)
@@ -151,18 +152,18 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
     style={`--calendar-weeks: ${desktopCalendarDays.length / 7}`}
   >
     <header class="calendar-toolbar mb-4 grid grid-cols-[1fr_auto_1fr] items-center max-[56rem]:grid-cols-[1fr_auto] max-[56rem]:gap-2">
-      <CalendarModeSwitch class="col-start-1 justify-self-start max-[56rem]:row-start-1" mode="calendar" />
+      <CalendarBackLink class="col-start-1 justify-self-start max-[56rem]:row-start-1" />
 
-      <nav class="month-navigation col-start-2 flex items-center justify-center gap-5 max-[56rem]:col-span-full max-[56rem]:col-start-1 max-[56rem]:row-start-2 max-[40rem]:gap-2" aria-label="月份导航">
+      <nav class="month-navigation col-start-2 flex items-center justify-center gap-5 in-[.calendar-page--with-drawer]:gap-1 max-[56rem]:col-span-full max-[56rem]:col-start-1 max-[56rem]:row-start-2 max-[40rem]:gap-2" aria-label="月份导航">
         {
           previousMonth
-            ? <a class="month-navigation__arrow inline-flex size-8 items-center justify-center text-tx-2 no-underline max-[56rem]:size-11" href={getMonthPath(previousMonth)} aria-label="上一个月" data-calendar-month-link data-calendar-month-prefetch="load" data-astro-prefetch="false"><span class="i-lucide-chevron-left" aria-hidden="true" /></a>
+            ? <a class="month-navigation__arrow inline-flex size-8 items-center justify-center rounded-full text-tx-2 no-underline hover:bg-inline hover:text-tx max-[56rem]:size-11" href={getMonthPath(previousMonth)} aria-label="上一个月" data-calendar-month-link data-calendar-month-prefetch="load" data-astro-prefetch="false"><span class="i-lucide-chevron-left" aria-hidden="true" /></a>
             : <span class="month-navigation__arrow month-navigation__arrow--disabled inline-flex size-8 items-center justify-center text-tx-3 opacity-35 max-[56rem]:size-11"><span class="i-lucide-chevron-left" aria-hidden="true" /></span>
         }
 
         <details class="month-picker relative">
-          <summary class="flex cursor-pointer list-none items-center gap-2 px-2 py-1.5 font-mono max-[56rem]:min-h-11 [&::-webkit-details-marker]:hidden">{year} 年 {month} 月 <span class="i-lucide-chevron-down" aria-hidden="true" /></summary>
-          <div class="month-picker__panel absolute top-[calc(100%+0.5rem)] left-1/2 z-20 max-h-[min(32rem,70vh)] w-[min(22rem,calc(100vw-2rem))] -translate-x-1/2 overflow-y-auto border border-border bg-bg p-4 shadow-[0_1rem_3rem_rgb(0_0_0/0.08)]">
+          <summary class="flex cursor-pointer list-none items-center gap-2 rounded-full px-3 py-1.5 font-mono hover:bg-inline max-[56rem]:min-h-11 [&::-webkit-details-marker]:hidden">{year} 年 {month} 月 <span class="i-lucide-chevron-down text-sm text-tx-3" aria-hidden="true" /></summary>
+          <div class="month-picker__panel absolute top-[calc(100%+0.5rem)] left-1/2 z-20 max-h-[min(32rem,70vh)] w-[min(22rem,calc(100vw-2rem))] -translate-x-1/2 overflow-y-auto rounded-xl border border-border bg-bg p-4 shadow-[0_1rem_3rem_rgb(0_0_0/0.1)]">
             {
               [...groupedMonths].map(([pickerYear, pickerMonths]) => (
                 <section class="[&+&]:mt-4 [&+&]:border-t [&+&]:border-border [&+&]:pt-4">
@@ -176,7 +177,7 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
                           data-calendar-month-link
                           data-astro-prefetch="false"
                           class:list={[
-                            'flex h-8 items-center justify-center font-mono no-underline',
+                            'flex h-8 items-center justify-center rounded-md font-mono no-underline hover:bg-inline',
                             key === monthKey && 'is-active bg-inline shadow-[inset_0_0_0_1px_var(--color-border)]',
                             activeMonthKeys.has(key) ? 'has-content text-tx' : 'text-tx-3',
                           ]}
@@ -194,12 +195,12 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
 
         {
           nextMonth
-            ? <a class="month-navigation__arrow inline-flex size-8 items-center justify-center text-tx-2 no-underline max-[56rem]:size-11" href={getMonthPath(nextMonth)} aria-label="下一个月" data-calendar-month-link data-calendar-month-prefetch="load" data-astro-prefetch="false"><span class="i-lucide-chevron-right" aria-hidden="true" /></a>
+            ? <a class="month-navigation__arrow inline-flex size-8 items-center justify-center rounded-full text-tx-2 no-underline hover:bg-inline hover:text-tx max-[56rem]:size-11" href={getMonthPath(nextMonth)} aria-label="下一个月" data-calendar-month-link data-calendar-month-prefetch="load" data-astro-prefetch="false"><span class="i-lucide-chevron-right" aria-hidden="true" /></a>
             : <span class="month-navigation__arrow month-navigation__arrow--disabled inline-flex size-8 items-center justify-center text-tx-3 opacity-35 max-[56rem]:size-11"><span class="i-lucide-chevron-right" aria-hidden="true" /></span>
         }
       </nav>
 
-      <CalendarBackLink class="col-start-3 justify-self-end max-[56rem]:col-start-2 max-[56rem]:row-start-1" />
+      <CalendarModeSwitch class="col-start-3 justify-self-end max-[56rem]:col-start-2 max-[56rem]:row-start-1" mode="calendar" />
     </header>
 
     <div class="desktop-calendar grid min-h-0 content-start grid-rows-[auto_minmax(0,1fr)] [container-type:inline-size] max-[56rem]:hidden">
@@ -207,11 +208,11 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
         {['一', '二', '三', '四', '五', '六', '日'].map(day => <span>{day}</span>)}
       </div>
 
-      <section class="calendar-grid grid h-full min-h-0 max-h-[calc(100cqw*var(--calendar-weeks)/7)] grid-cols-7 grid-rows-[repeat(var(--calendar-weeks),minmax(0,1fr))] border-t border-l border-border" aria-label={`${year} 年 ${month} 月`}>
+      <section class="calendar-grid grid h-full min-h-0 max-h-[calc(100cqw*var(--calendar-weeks)/7)] grid-cols-7 grid-rows-[repeat(var(--calendar-weeks),minmax(0,1fr))] gap-px overflow-hidden rounded-xl border border-border bg-border" aria-label={`${year} 年 ${month} 月`}>
         {
           desktopCalendarDays.map((calendarDay) => {
           if (!calendarDay) {
-            return <div class="calendar-day calendar-day--empty relative min-h-0 min-w-0 overflow-hidden border-r border-b border-border p-3 font-mono text-tx-2" aria-hidden="true" />
+            return <div class="calendar-day calendar-day--empty relative min-h-0 min-w-0 overflow-hidden bg-inline p-3 font-mono text-tx-2" aria-hidden="true" />
           }
 
           const thumbnail = getThumbnailImage(calendarDay.thumbnail)
@@ -226,8 +227,8 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
 
           if (calendarDay.moments.length === 0) {
             return (
-              <div class:list={['calendar-day relative min-h-0 min-w-0 overflow-hidden border-r border-b border-border p-3 font-mono text-tx-2', { 'calendar-day--today': isToday }] }>
-                <span class:list={['calendar-day__number relative z-[1]', { 'underline decoration-2 underline-offset-4': isToday }]}>{String(calendarDay.day).padStart(2, '0')}</span>
+              <div class:list={['calendar-day relative min-h-0 min-w-0 overflow-hidden bg-bg p-3 font-mono text-tx-3', { 'calendar-day--today': isToday }] }>
+                <span class:list={['calendar-day__number relative z-[1]', { [todayNumberClass]: isToday }]}>{String(calendarDay.day).padStart(2, '0')}</span>
                 {(calendarDay.chinaCalendarDay || calendarDay.anniversaries.length > 0) && (
                   <div class="absolute right-2.5 bottom-2.5 left-2.5 z-[1] flex min-w-0 flex-col items-start gap-1">
                     {calendarDay.anniversaries.map(anniversary => (
@@ -250,7 +251,7 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
             <a
               href={getMomentPath(calendarDay.dateKey)}
               class:list={[
-                'calendar-day calendar-day--active group relative min-h-0 min-w-0 overflow-hidden border-r border-b border-border p-3 font-mono text-tx no-underline focus-visible:outline-2 focus-visible:-outline-offset-3 focus-visible:outline-tx',
+                'calendar-day calendar-day--active group relative min-h-0 min-w-0 overflow-hidden bg-bg p-3 font-mono text-tx no-underline hover:bg-inline focus-visible:outline-2 focus-visible:-outline-offset-3 focus-visible:outline-tx',
                 {
                   'calendar-day--selected z-[2] shadow-[inset_0_0_0_2px_var(--color-tx)]': isSelected,
                   'calendar-day--today': isToday,
@@ -282,8 +283,8 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
               <span class:list={[
                 'calendar-day__number relative z-[1]',
                 {
-                  'underline decoration-2 underline-offset-4': isToday,
                   'text-white [text-shadow:0_1px_0.25rem_rgb(0_0_0/0.45)]': thumbnail,
+                  [todayNumberClass]: isToday,
                 },
               ]}
               >
@@ -318,7 +319,7 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
               {
                 thumbnail
                   ? calendarDay.mediaCount > 1 && <span class="calendar-day__count absolute right-2.5 bottom-2.5 z-[1] text-[0.6875rem] text-white [text-shadow:0_1px_0.25rem_rgb(0_0_0/0.45)]">+{calendarDay.mediaCount - 1}</span>
-                  : <span class="calendar-day__activity relative z-[1] mt-1.5 block text-[0.6875rem] text-tx-3">• {calendarDay.moments.length}</span>
+                  : <span class="calendar-day__activity relative z-[1] mt-1.5 flex items-center gap-1 text-[0.6875rem] text-tx-3"><span class="size-1.5 rounded-full bg-tx-3" aria-hidden="true" />{calendarDay.moments.length}</span>
               }
             </a>
           )
@@ -348,7 +349,7 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
         >
           <header class="day-drawer__header flex items-center justify-between border-b border-border p-6 max-[56rem]:sticky max-[56rem]:top-0 max-[56rem]:z-10 max-[56rem]:grid max-[56rem]:grid-cols-[1fr_auto_1fr] max-[56rem]:bg-bg max-[56rem]:px-0 max-[56rem]:py-3">
             <h2 class="text-base font-semibold max-[56rem]:col-start-2">{selectedDateLabel}</h2>
-            <a class="flex size-8 items-center justify-center text-tx-2 no-underline max-[56rem]:col-start-1 max-[56rem]:row-start-1 max-[56rem]:h-11 max-[56rem]:w-auto max-[56rem]:justify-self-start" href={closePath} aria-label="返回本月">
+            <a class="flex size-8 items-center justify-center rounded-full text-tx-2 no-underline hover:bg-inline hover:text-tx max-[56rem]:col-start-1 max-[56rem]:row-start-1 max-[56rem]:h-11 max-[56rem]:w-auto max-[56rem]:justify-self-start" href={closePath} aria-label="返回本月">
               <span class="day-drawer__close-icon i-lucide-x max-[56rem]:hidden" aria-hidden="true" />
               <span class="day-drawer__back-label hidden items-center gap-1 text-sm max-[56rem]:flex"><span class="i-lucide-chevron-left" aria-hidden="true" />{month} 月</span>
             </a>

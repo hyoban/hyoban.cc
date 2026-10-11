@@ -20,7 +20,7 @@ const showHeader = Boolean(moment.occurredLabel || (showLocation && moment.locat
         {moment.occurredLabel && <time datetime={moment.occurredAt}>{moment.occurredLabel}</time>}
         {
           showLocation && moment.location && (
-            <a class="moment-entry__location !mx-0 !w-auto gap-1 px-1" href={`/map#${moment.location.id}`}>
+            <a class="moment-entry__location !mx-0 !w-auto gap-1 px-1 hover:!text-tx" href={`/map#${moment.location.id}`}>
               <span class="i-lucide-map-pin text-sm" aria-hidden="true" />
               {moment.location.name}
             </a>
