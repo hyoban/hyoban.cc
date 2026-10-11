@@ -225,6 +225,9 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       }
     | undefined
   let stageMode: StageMode = 'record'
+  // The stage running or starting, and the speed to go back to after a recording,
+  // which always plays at 1×.
+  let activeStage: { mode: StageMode; speed: number } | undefined
   // Where each day starts in the video being recorded, for the description's chapters.
   let recording: { chapters: ReturnType<typeof createChapterLog>; start: number } | undefined
   // Music for the ordinary card playback, switched on with the music button.
@@ -330,9 +333,9 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   // The side card's photo switch in progress, finished early if another one starts.
   let photoTransition: { animations: Animation[]; cleanup: () => void } | undefined
   let liveVideo: HTMLVideoElement | undefined
-  // How long the current stop's photo card takes to appear when presenting, in the
-  // card's own time.
-  let stagePhotoDelay = 0
+  // How long the current stop waits for the route to arrive before its photos' time
+  // starts, in the card's own time.
+  let photoDelay = 0
   // A mouse resting on the card holds the current slide so it can be read.
   let hovering = false
   let idleTimer: ReturnType<typeof setTimeout> | undefined
@@ -343,12 +346,12 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   const readyPhotos = new Set<string>()
 
   /**
-   * Presenting or recording, a stop's photo card only appears once the route has
-   * reached it (see renderStage), so the stop lasts that much longer and its photos
-   * are timed from then: the first and last get as long as the others.
+   * A stop's photos are timed from when the route reaches it (presenting or recording,
+   * that's also when its photo card appears, see renderStage), so the stop lasts that
+   * much longer and the first and last photos get as long as the others.
    */
   function getPhotoDelay(slide: Slide | undefined) {
-    return slide === slides[index] && slide?.type === 'stop' ? stagePhotoDelay : 0
+    return slide === slides[index] && slide?.type === 'stop' ? photoDelay : 0
   }
 
   /** Live photos get time for their clips, which play unless motion is reduced. */
@@ -1406,7 +1409,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       createStageCard(stop, slide.stopIndex)
       stagePhotosReady = true
       showStagePhoto(stop, photoIndex)
-    }, stagePhotoDelay / speed)
+    }, photoDelay / speed)
   }
 
   function clearStagePhotos() {
@@ -1653,13 +1656,16 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       arrivingFrom = legStart ?? Math.max(getStopPlaceStart(slide.stopIndex) - 1, 0)
     }
 
-    // The photo card waits for the drive here, if there is one, else just pops up.
-    stagePhotoDelay =
-      slide.type !== 'stop' || !isStageLayout() || reducedMotion.matches
+    // The photos wait for the drive here, if there is one. Presenting or recording,
+    // the photo card pops up a moment later even when the route is already there.
+    photoDelay =
+      slide.type !== 'stop' || reducedMotion.matches
         ? 0
-        : arrivingFrom === undefined
-          ? CARD_POP
-          : getDriveTime(arrivingFrom, getStopPlaceStart(slide.stopIndex) + 1) * speed
+        : arrivingFrom !== undefined
+          ? getDriveTime(arrivingFrom, getStopPlaceStart(slide.stopIndex) + 1) * speed
+          : isStageLayout()
+            ? CARD_POP
+            : 0
 
     index = nextIndex
     elapsed = 0
@@ -1725,12 +1731,16 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
     renderRouteProgress()
 
+    // A recording ends a moment after the summary; a presentation stays on it until
+    // it is closed, its music fading out.
     if (staging && slide.type === 'summary') {
       if (staging.music) {
         fadeMusicOut(staging.music, EXPORT_SUMMARY_HOLD / 1000)
       }
 
-      staging.stopTimer = setTimeout(stopStage, EXPORT_SUMMARY_HOLD)
+      if (staging.recorder) {
+        staging.stopTimer = setTimeout(stopStage, EXPORT_SUMMARY_HOLD)
+      }
     }
   }
 
@@ -1784,6 +1794,11 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     if ((staging || stageToken) && event.key === 'Escape') {
       event.preventDefault()
       stopStage()
+      return
+    }
+
+    // A recording plays straight through: a stray key would end up in the video.
+    if (activeStage?.mode === 'record') {
       return
     }
 
@@ -1884,6 +1899,13 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
     const token = {}
     stageToken = token
+    activeStage = { mode, speed }
+
+    if (mode === 'record') {
+      speed = 1
+      renderSpeedButton()
+    }
+
     stopAmbientMusic()
     page.dataset.exportRatio = ratio
     page.toggleAttribute('data-trip-presenting', mode === 'present')
@@ -2053,6 +2075,13 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     }
 
     staging = undefined
+
+    if (activeStage) {
+      speed = activeStage.speed
+      activeStage = undefined
+      renderSpeedButton()
+    }
+
     delete page.dataset.exportRatio
     page.removeAttribute('data-trip-safe-area')
     page.removeAttribute('data-trip-presenting')
