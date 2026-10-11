@@ -24,7 +24,7 @@
 
   --color-tx: #21201c;
   --color-tx-2: #63635e;
-  --color-tx-3: #8d8d86;
+  --color-tx-3: #73736c;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -38,7 +38,7 @@
 
     --color-tx: #eeeeec;
     --color-tx-2: #b5b3ad;
-    --color-tx-3: #6f6d66;
+    --color-tx-3: #85837c;
   }
 }
 
@@ -80,7 +80,7 @@
 
   a {
     text-decoration: underline;
-    text-decoration-color: color-mix(in srgb, var(--color-tx-3) 70%, transparent);
+    text-decoration-color: var(--color-tx-3);
     text-decoration-thickness: 1px;
     text-underline-offset: 0.25em;
     transition:
@@ -142,6 +142,14 @@ html[data-calendar-mode-transition] .calendar-back-link {
   ::view-transition-group(calendar-back-link) {
     animation-duration: 360ms;
     animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+      animation: none !important;
+    }
   }
 }
 

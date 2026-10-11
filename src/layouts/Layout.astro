@@ -37,6 +37,8 @@ const TELETYPE_SITE_VERIFICATION = 'g7j8/rPFXfhyrq5q0QQV7EsYWv4='
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <link rel="icon" type="image/png" href={getAssetUrl('site/avatar-cropped.png')} />
     <meta name="generator" content={Astro.generator} />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#fdfdfc" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#111110" />
 
     <link rel="alternate" type="application/rss+xml" title={SITE_TITLE} href="/rss.xml" />
 
@@ -51,6 +53,8 @@ const TELETYPE_SITE_VERIFICATION = 'g7j8/rPFXfhyrq5q0QQV7EsYWv4='
     <meta property="og:site_name" content={SITE_TITLE} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:image" content={getAssetUrl('site/avatar-cropped.png')} />
+    <meta name="twitter:card" content="summary" />
     {
       article && (
         <>
