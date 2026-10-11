@@ -27,6 +27,8 @@ type TripStop = {
 
 type TripPoint = {
   coordinates: [number, number]
+  /** The trip day a waypoint was passed on. */
+  day?: number
   /** `第 N 天 · date · time`, shown above a waypoint's name on the map. */
   eyebrow?: string
   name: string
@@ -721,7 +723,29 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   }
 
   /** Frames every place of one day, as a preview before its stops play. */
-  function fitDay(day: number) {
+  /** Keeps a long leg in view while it is drawn, from `points[from]` to `points[to]`. */
+  function frameLeg(from: number, to: number) {
+    const map = getMap()
+    const bounds = new mapboxgl.LngLatBounds()
+
+    for (const coordinates of getRouteLine(from, to + 1)) {
+      bounds.extend(coordinates)
+    }
+
+    if (!map || bounds.isEmpty()) {
+      return
+    }
+
+    removeStopPopups()
+    map.fitBounds(bounds, {
+      duration: reducedMotion.matches ? 0 : getLegDuration() / 2,
+      maxZoom: NEARBY_MAX_ZOOM - 1,
+      padding: getCameraPadding(),
+    })
+  }
+
+  /** Frames where the day sets off from and every place it visits. */
+  function fitDay({ day, stopIndex }: Extract<Slide, { type: 'day' }>) {
     const map = getMap()
 
     if (!map || !trip) {
@@ -729,10 +753,20 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     }
 
     const bounds = new mapboxgl.LngLatBounds()
+    // The last place before the day's own: where the night was spent, or the last
+    // waypoint passed the evening before. Keeps the day's first drive in view.
+    const setOff = points[getStopPointStart(stopIndex) + getEarlierDayWaypointCount(stopIndex) - 1]
+
+    if (setOff) {
+      bounds.extend(setOff.coordinates)
+    }
 
     for (const stop of trip.stops) {
       if (stop.day === day) {
-        for (const place of [...stop.waypoints, ...stop.places]) {
+        for (const place of [
+          ...stop.waypoints.filter((waypoint) => waypoint.day === day),
+          ...stop.places,
+        ]) {
           bounds.extend([place.longitude, place.latitude])
         }
       }
@@ -760,7 +794,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     removeStopPopups()
 
     if (slide.type === 'day') {
-      fitDay(slide.day)
+      fitDay(slide)
       return
     }
 
@@ -880,7 +914,8 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       currentWaypointPoint = pointIndex
       updateStops()
       showPopups([
-        isStageLayout()
+        // The stage header names the day; a waypoint from another day says its own.
+        isStageLayout() && point.day === getSlideDay(slides[index])
           ? {
               coordinates: point.coordinates,
               name: point.time ? `${point.name} · ${point.time}` : point.name,
@@ -1594,6 +1629,36 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     }
   }
 
+  /**
+   * The waypoints the map passes before a slide shows, as `[first point, count]`.
+   * Waypoints from the day before a stop (leaving the evening before) are passed
+   * before that day's opener, so the new day starts where it really started.
+   */
+  function getWaypointsBefore(slide: Slide): [number, number] {
+    if (slide.type === 'summary') {
+      return [stopPointEnds.at(-1) ?? 0, trip?.trailingWaypoints.length ?? 0]
+    }
+
+    if (slide.type === 'intro') {
+      return [0, 0]
+    }
+
+    const start = getStopPointStart(slide.stopIndex)
+    const stop = trip!.stops[slide.stopIndex]!
+    const opensDay = trip!.stops[slide.stopIndex - 1]?.day !== stop.day
+    const earlier = opensDay ? getEarlierDayWaypointCount(slide.stopIndex) : 0
+
+    return slide.type === 'day'
+      ? [start, earlier]
+      : [start + earlier, stop.waypoints.length - earlier]
+  }
+
+  /** How many of a stop's waypoints were passed on an earlier day; they come first. */
+  function getEarlierDayWaypointCount(stopIndex: number) {
+    const stop = trip?.stops[stopIndex]
+    return stop?.waypoints.filter((waypoint) => waypoint.day < stop.day).length ?? 0
+  }
+
   /** The slide a shared link names: a stop's card, or its day's opener when it starts the day. */
   function getHashSlideIndex() {
     const anchor = decodeURIComponent(location.hash.slice(1))
@@ -1638,17 +1703,9 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       playing = options.play
     }
 
-    const waypointCount =
-      slide.type === 'stop'
-        ? slide.stop.waypoints.length
-        : slide.type === 'summary'
-          ? trip.trailingWaypoints.length
-          : 0
+    const [firstWaypoint, waypointCount] = getWaypointsBefore(slide)
 
     if (stepForward && waypointCount > 0) {
-      const firstWaypoint =
-        slide.type === 'stop' ? getStopPointStart(slide.stopIndex) : (stopPointEnds.at(-1) ?? 0)
-
       // The current card stays up while the map passes the waypoints.
       void travelThroughWaypoints(firstWaypoint, waypointCount, () =>
         showSlide(nextIndex, firstWaypoint + waypointCount - 1),
@@ -1666,6 +1723,10 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   function showSlide(nextIndex: number, legStart?: number) {
     const slide = slides[nextIndex]!
 
+    // Taken before rendering, which already starts the route onward from this stop.
+    const arrived =
+      slide.type === 'stop' && drawnPointCount >= getStopPlaceStart(slide.stopIndex) + 1
+
     index = nextIndex
     elapsed = 0
     syncHash(slide)
@@ -1681,6 +1742,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
     routeProgress = undefined
     followedStop = -1
+    let longArrival: Promise<void> | undefined
 
     if (slide.type === 'stop') {
       const placeStart = getStopPlaceStart(slide.stopIndex)
@@ -1688,18 +1750,31 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
       // The previous card's route usually arrived already; only a skip ahead or
       // the last leg after waypoints still has to be drawn.
-      if (legStart === -1 || (legStart === undefined && drawnPointCount >= arriveAt)) {
+      if (legStart === -1 || (legStart === undefined && arrived)) {
         cancelLeg()
         drawnPointCount = arriveAt
         setRoute(drawnPointCount)
       } else {
-        void drawLeg(legStart ?? Math.max(placeStart - 1, 0), arriveAt)
+        const from = legStart ?? Math.max(placeStart - 1, 0)
+        const leg = drawLeg(from, arriveAt)
+
+        if (
+          getDistanceKm(points[from]!.coordinates, points[placeStart]!.coordinates) >
+          NEARBY_RADIUS_KM
+        ) {
+          longArrival = leg
+          frameLeg(from, placeStart)
+        }
       }
     } else if (slide.type === 'day') {
       // Usually the previous stop's route already reached here; jumps set it directly.
       if (legStart === -1 || drawnPointCount === 0) {
         cancelLeg()
-        drawnPointCount = Math.min(getStopPointStart(slide.stopIndex) + 1, points.length)
+        drawnPointCount = Math.min(
+          getStopPointStart(slide.stopIndex) +
+            Math.max(getEarlierDayWaypointCount(slide.stopIndex), 1),
+          points.length,
+        )
         setRoute(drawnPointCount)
       }
     } else {
@@ -1709,7 +1784,19 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     }
 
     updateStops()
-    moveCamera()
+
+    if (longArrival) {
+      // Zooming in to the stop waits until the drive there has been drawn in view.
+      const token = travelToken
+      void longArrival.then(() => {
+        if (token === travelToken && index === nextIndex) {
+          moveCamera()
+        }
+      })
+    } else {
+      moveCamera()
+    }
+
     renderRouteProgress()
 
     if (staging && slide.type === 'summary') {
@@ -2056,7 +2143,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       waypoint: boolean,
     ): TripPoint => ({
       coordinates: [place.longitude, place.latitude],
-      ...('day' in place ? { eyebrow: getStopEyebrow(place) } : {}),
+      ...('day' in place ? { day: place.day, eyebrow: getStopEyebrow(place) } : {}),
       name: place.name,
       stopIndex,
       ...('time' in place && place.time ? { time: place.time } : {}),
@@ -2366,6 +2453,10 @@ function downloadBlob(blob: Blob, filename: string) {
   link.download = filename
   link.click()
   setTimeout(() => URL.revokeObjectURL(url), 60_000)
+}
+
+function getSlideDay(slide: Slide | undefined) {
+  return slide?.type === 'day' ? slide.day : slide?.type === 'stop' ? slide.stop.day : undefined
 }
 
 function getSlideLabel(slide: Slide) {
