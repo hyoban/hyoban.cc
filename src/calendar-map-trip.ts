@@ -167,10 +167,12 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
   function getCameraPadding() {
     if (isNarrow()) {
-      return { bottom: panel.offsetHeight + 40, left: 40, right: 40, top: 120 }
+      // Leaves room for the one-row toolbar, which returns when playback pauses.
+      return { bottom: panel.offsetHeight + 40, left: 40, right: 40, top: 72 }
     }
 
-    return { bottom: 64, left: panel.offsetWidth + 64, right: 64, top: 96 }
+    // The toolbar is hidden during playback, so the top needs little room.
+    return { bottom: 64, left: panel.offsetWidth + 64, right: 64, top: 64 }
   }
 
   function getStopPointStart(stopIndex: number) {
@@ -683,6 +685,8 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     playButton.setAttribute('aria-label', playing ? '暂停' : '播放')
     icon?.classList.toggle('i-lucide-pause', playing)
     icon?.classList.toggle('i-lucide-play', !playing)
+    // The toolbar steps aside while playing and returns when paused or finished.
+    page.toggleAttribute('data-trip-playing', playing)
   }
 
   function renderSlide() {
@@ -713,7 +717,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       const { stop } = slide
       const text = createElement(
         'p',
-        'max-h-[min(20dvh,9rem)] shrink-0 overflow-y-auto overscroll-contain [scrollbar-width:none] break-words whitespace-pre-line text-tx-2 data-[more]:[mask-image:linear-gradient(to_bottom,#000_calc(100%-2.5rem),transparent)] [&::-webkit-scrollbar]:hidden',
+        'mt-3 max-h-[min(20dvh,9rem)] shrink-0 overflow-y-auto @max-[48rem]:max-h-none overscroll-contain [scrollbar-width:none] break-words whitespace-pre-line text-tx-2 [&::-webkit-scrollbar]:hidden',
         stop.text,
       )
       const link = document.createElement('a')
@@ -729,32 +733,25 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       if (stop.images.length > 0) {
         photo = document.createElement('img')
         link.className =
-          'mt-3 block min-h-0 self-center overflow-hidden rounded-md border border-border bg-inline no-underline'
+          'block min-h-0 self-center overflow-hidden rounded-md border border-border bg-inline no-underline @max-[48rem]:shrink-0'
         link.setAttribute('aria-label', `查看 ${stop.date}的记录`)
-        photo.className = 'block h-auto max-h-[min(40dvh,22rem)] w-auto max-w-full'
+        photo.className =
+          'block h-auto max-h-[min(40dvh,22rem)] w-auto max-w-full @max-[48rem]:max-h-[38dvh]'
         photo.sizes = IMAGE_SIZES
         photo.decoding = 'async'
         link.append(photo)
       } else {
-        link.className = 'mt-3 self-start text-[0.8125rem] text-tx-2 hover:text-tx'
+        link.className = 'self-start text-[0.8125rem] text-tx-2 hover:text-tx'
         link.textContent = '查看当天记录'
       }
 
-      const syncTextFade = () => {
-        text.toggleAttribute(
-          'data-more',
-          text.scrollTop + text.clientHeight < text.scrollHeight - 1,
-        )
-      }
-
-      text.addEventListener('scroll', syncTextFade, { passive: true, signal })
+      // Text sits last, next to the fixed footer, so photos of other sizes don't move it.
       body.replaceChildren(
-        ...(stop.text ? [text] : []),
         link,
         ...(stop.images.length > 1 ? [createThumbnails(stop)] : []),
+        ...(stop.text ? [text] : []),
       )
       showPhoto(stop, 0)
-      syncTextFade()
 
       for (const image of stop.images.slice(1)) {
         preloadImage(image)
@@ -776,13 +773,13 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
       eyebrow.textContent = '旅程回顾'
       title.textContent = trip.title
-      stats.className = 'grid shrink-0 grid-cols-2 gap-1'
+      stats.className = 'grid shrink-0 grid-cols-2 gap-1 @max-[48rem]:grid-cols-4'
 
       for (const [value, label] of [
         [trip.dayCount, '天'],
         [trip.placeCount, '个地点'],
         [trip.photoCount, '张照片'],
-        [trip.distanceKm.toLocaleString('zh-CN'), '公里（直线）'],
+        [trip.distanceKm.toLocaleString('zh-CN'), '直线公里'],
       ] as const) {
         const item = createElement(
           'div',
@@ -1079,6 +1076,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
     stopExport()
     setExportOptionsOpen(false)
+    page.removeAttribute('data-trip-playing')
 
     if (frame !== undefined) {
       cancelAnimationFrame(frame)
@@ -1190,7 +1188,12 @@ function preloadImage(source: TripImage) {
 /** A grid of each stop's first photo for the intro and summary cards. */
 function createMosaic(trip: TripData) {
   const covers = trip.stops.flatMap((stop) => stop.images.slice(0, 1)).slice(0, 9)
-  const mosaic = createElement('div', 'mt-3 grid shrink-0 grid-cols-3 gap-1', '')
+  // Narrow screens keep one row so the map stays visible above the card.
+  const mosaic = createElement(
+    'div',
+    'mt-3 grid shrink-0 grid-cols-3 gap-1 @max-[48rem]:[&>:nth-child(n+4)]:hidden',
+    '',
+  )
 
   mosaic.setAttribute('aria-hidden', 'true')
 

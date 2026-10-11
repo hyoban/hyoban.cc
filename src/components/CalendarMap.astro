@@ -138,14 +138,14 @@ function formatDate(dateKey: string) {
   <main class="calendar-map-page @container relative isolate h-dvh w-full overflow-hidden bg-bg" data-calendar-map data-mapbox-token={mapboxToken} data-map-title={mapTitle} transition:persist="calendar-map">
     <div class="calendar-map-canvas absolute inset-0" data-calendar-map-canvas role="region" aria-label="Calendar 地点地图" />
 
-    <header class="calendar-map-toolbar pointer-events-none absolute inset-x-4 top-4 z-[5] grid grid-cols-[1fr_auto_1fr] items-center gap-4 [&>*]:pointer-events-auto">
+    <header class="calendar-map-toolbar pointer-events-none absolute inset-x-4 top-4 z-[5] grid grid-cols-[1fr_auto_1fr] items-center gap-4 max-[48rem]:grid-cols-[auto_minmax(0,1fr)_auto] max-[48rem]:gap-2 [&>*]:pointer-events-auto max-[48rem]:[&_.calendar-back-link]:pr-1.5 max-[48rem]:[&_.calendar-back-link>span]:sr-only">
       <CalendarBackLink class="justify-self-start" />
       {
         trips.length > 0
           ? (
-              <label class="calendar-map-trip-picker relative col-start-2 flex items-center rounded-full border border-[color-mix(in_srgb,var(--color-border)_82%,transparent)] bg-[color-mix(in_srgb,var(--color-bg)_82%,transparent)] font-mono text-[0.8125rem] backdrop-blur-[1rem] hover:bg-inline max-[48rem]:absolute max-[48rem]:left-0 max-[48rem]:top-[3.25rem]">
+              <label class="calendar-map-trip-picker relative col-start-2 flex items-center rounded-full border border-[color-mix(in_srgb,var(--color-border)_82%,transparent)] bg-[color-mix(in_srgb,var(--color-bg)_82%,transparent)] font-mono text-[0.8125rem] backdrop-blur-[1rem] hover:bg-inline min-w-0 justify-self-center max-[48rem]:max-w-full">
                 <span class="sr-only">选择要回放的旅程</span>
-                <select class="min-h-[2.375rem] max-w-[14rem] cursor-pointer appearance-none truncate rounded-full border-0 bg-transparent pr-8 pl-3.5 text-tx outline-offset-2" data-calendar-map-trip-select>
+                <select class="min-h-[2.375rem] w-full max-w-[14rem] min-w-0 cursor-pointer appearance-none truncate rounded-full border-0 bg-transparent pr-8 pl-3.5 text-tx outline-offset-2" data-calendar-map-trip-select>
                   <option value="">全部地点</option>
                   <optgroup label="旅程回放">
                     {trips.map(trip => <option value={trip.id} selected={trip.id === tripId}>{trip.title}</option>)}
@@ -189,13 +189,13 @@ function formatDate(dateKey: string) {
       </div>
     </section>
 
-    <section class="calendar-map-trip absolute bottom-4 left-4 z-10 flex max-h-[calc(100%-7rem)] w-[min(22rem,calc(100%-2rem))] flex-col overflow-hidden rounded-xl border border-border bg-bg shadow-[0_1.5rem_5rem_rgb(0_0_0/0.16)] @max-[48rem]:inset-x-3 @max-[48rem]:bottom-[calc(0.75rem+env(safe-area-inset-bottom))] @max-[48rem]:max-h-[70%] @max-[48rem]:w-auto [&[hidden]]:hidden" data-calendar-map-trip aria-labelledby="calendar-map-trip-title" hidden>
+    <section class="calendar-map-trip absolute bottom-4 left-4 z-10 flex max-h-[calc(100%-7rem)] w-[min(22rem,calc(100%-2rem))] flex-col overflow-hidden rounded-xl border border-border bg-bg shadow-[0_1.5rem_5rem_rgb(0_0_0/0.16)] @max-[48rem]:inset-x-3 @max-[48rem]:bottom-[calc(0.75rem+env(safe-area-inset-bottom))] @max-[48rem]:max-h-[calc(100%-1.5rem)] @max-[48rem]:w-auto [&[hidden]]:hidden" data-calendar-map-trip aria-labelledby="calendar-map-trip-title" hidden>
       <ol class="flex shrink-0 list-none gap-1 px-4 pt-3" data-calendar-map-trip-progress aria-hidden="true" />
       <header class="shrink-0 px-4 pt-3" data-calendar-map-trip-header>
         <p class="truncate text-xs text-tx-3 tabular-nums" data-calendar-map-trip-eyebrow />
         <h2 class="truncate text-lg font-medium" id="calendar-map-trip-title" data-calendar-map-trip-title />
       </header>
-      <div class="flex min-h-0 flex-col px-4 pt-1 pb-3" data-calendar-map-trip-body aria-live="polite" />
+      <div class="flex min-h-0 flex-col px-4 pt-1 pb-3 @max-[48rem]:overflow-y-auto @max-[48rem]:overscroll-contain" data-calendar-map-trip-body aria-live="polite" />
       <footer class="flex shrink-0 items-center justify-between border-t border-border px-2 py-1">
         <div class="flex items-center [&[hidden]]:hidden" data-calendar-map-trip-controls>
           <button class="flex size-9 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-tx-2 hover:bg-inline hover:text-tx disabled:cursor-default disabled:opacity-40 disabled:hover:bg-transparent" type="button" data-calendar-map-trip-previous aria-label="上一站">
