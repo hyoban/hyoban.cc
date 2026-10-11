@@ -200,6 +200,24 @@ html[data-calendar-mode-transition] .calendar-back-link {
   display: none;
 }
 
+/* Trip playback gets the whole map; the toolbar returns when paused or finished. */
+.calendar-map-toolbar {
+  transition:
+    opacity 200ms,
+    visibility 200ms;
+}
+
+.calendar-map-page[data-trip-playing] .calendar-map-toolbar {
+  visibility: hidden;
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .calendar-map-toolbar {
+    transition: none;
+  }
+}
+
 /* Video export: the map becomes a fixed-ratio stage the tab recording is cropped to. */
 html:has(.calendar-map-page[data-export-ratio]) body {
   background: #000;
