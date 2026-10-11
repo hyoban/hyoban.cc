@@ -1,5 +1,5 @@
 ---
-occurredAt: '2026-08-01'
+occurredAt: '2026-08-01T18:30:00+08:00'
 location: huaian
 media:
   - type: image

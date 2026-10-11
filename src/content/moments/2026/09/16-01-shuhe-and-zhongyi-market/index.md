@@ -1,5 +1,5 @@
 ---
-occurredAt: '2026-09-16'
+occurredAt: '2026-09-16T11:00:00+08:00'
 location: shuhe-ancient-town
 media:
   - type: image

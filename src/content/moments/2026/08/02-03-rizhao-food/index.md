@@ -1,5 +1,5 @@
 ---
-occurredAt: '2026-08-02'
+occurredAt: '2026-08-02T19:30:00+08:00'
 location: rizhao
 media:
   - type: image

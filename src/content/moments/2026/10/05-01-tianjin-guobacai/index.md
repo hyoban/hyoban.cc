@@ -1,5 +1,5 @@
 ---
-occurredAt: '2026-10-05'
+occurredAt: '2026-10-05T08:30:00+08:00'
 location: tianjin-meisu-guobacai
 media:
   - type: live-photo

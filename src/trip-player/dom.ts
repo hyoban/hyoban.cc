@@ -1,3 +1,4 @@
+import 'number-flow'
 import type { TripImage } from './types'
 
 // Small DOM builders and helpers the player and its cards share.
@@ -31,6 +32,20 @@ export function parseJson<T>(root: ParentNode, selector: string, fallback: T): T
   } catch {
     return fallback
   }
+}
+
+/**
+ * A number that counts up from zero once it is on the page, its digits rolling into
+ * place (number-flow; skipped for reduced motion).
+ */
+export function createCountUp(value: number) {
+  const flow = document.createElement('number-flow')
+
+  flow.locales = 'zh-CN'
+  flow.update(0)
+  // A frame later it is in the page, so the change animates.
+  requestAnimationFrame(() => flow.update(value))
+  return flow
 }
 
 /** Starts loading a photo at the size the side card will show it. */

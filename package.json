@@ -22,6 +22,7 @@
   "dependencies": {
     "@mapbox/mapbox-gl-language": "^1.0.1",
     "mapbox-gl": "^3.29.0",
+    "number-flow": "^0.6.2",
     "yaml": "^2.9.0"
   },
   "devDependencies": {

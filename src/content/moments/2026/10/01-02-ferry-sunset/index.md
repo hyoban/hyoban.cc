@@ -1,5 +1,5 @@
 ---
-occurredAt: '2026-10-01'
+occurredAt: '2026-10-01T17:40:00+08:00'
 location: bohai-sea
 media:
   - type: live-photo

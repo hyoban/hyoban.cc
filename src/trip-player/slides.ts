@@ -174,10 +174,6 @@ export function getSlideLabel(slide: TripSlide<SlideStop>) {
   return slide.type === 'summary' ? '旅程回顾' : `第 ${slide.stop.day} 天 · ${slide.stop.name}`
 }
 
-export function getSlideDay(slide: TripSlide<SlideStop> | undefined) {
-  return slide?.type === 'day' ? slide.day : slide?.type === 'stop' ? slide.stop.day : undefined
-}
-
 /** `第 N 天 · date · time`, the line above a place's name. */
 export function getStopEyebrow({
   date,

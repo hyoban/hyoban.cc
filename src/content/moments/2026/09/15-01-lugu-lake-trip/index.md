@@ -1,5 +1,5 @@
 ---
-occurredAt: '2026-09-15'
+occurredAt: '2026-09-15T16:00:00+08:00'
 location: lugu-lake
 ---
 

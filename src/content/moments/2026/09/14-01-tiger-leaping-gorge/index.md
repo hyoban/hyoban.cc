@@ -1,5 +1,5 @@
 ---
-occurredAt: '2026-09-14'
+occurredAt: '2026-09-14T14:00:00+08:00'
 location: tiger-leaping-gorge
 media:
   - type: image

@@ -1,5 +1,5 @@
 ---
-occurredAt: '2026-10-02'
+occurredAt: '2026-10-02T11:30:00+08:00'
 location: bangchuidao
 media:
   - type: live-photo
