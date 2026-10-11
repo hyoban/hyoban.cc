@@ -119,6 +119,15 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   const trips = new Map(parseTripData(page).map((trip) => [trip.id, trip]))
   const panel = queryRequired<HTMLElement>(page, '[data-calendar-map-trip]')
   const progress = queryRequired<HTMLOListElement>(page, '[data-calendar-map-trip-progress]')
+  // Names the slide a progress segment jumps to, under the hovered or focused segment.
+  const progressTip = createElement(
+    'div',
+    'pointer-events-none absolute z-20 rounded-[0.625rem] border border-[color-mix(in_srgb,var(--color-border)_82%,transparent)] bg-[color-mix(in_srgb,var(--color-bg)_88%,transparent)] px-2.5 py-1 text-xs whitespace-nowrap text-tx shadow-[0_0.25rem_1.25rem_rgb(0_0_0/0.12)] backdrop-blur-[1rem] [&[hidden]]:hidden',
+    '',
+  )
+  progressTip.hidden = true
+  progressTip.setAttribute('aria-hidden', 'true')
+  panel.append(progressTip)
   const header = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-header]')
   const eyebrow = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-eyebrow]')
   const title = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-title]')
@@ -660,6 +669,30 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     }
 
     stopPopups = []
+  }
+
+  function showProgressTip(button: HTMLElement) {
+    const label = button.getAttribute('aria-label')
+
+    if (!label || panel.hidden) {
+      return
+    }
+
+    progressTip.textContent = label
+    progressTip.hidden = false
+
+    const panelRect = panel.getBoundingClientRect()
+    const buttonRect = button.getBoundingClientRect()
+    const width = progressTip.offsetWidth
+    const center = buttonRect.left + buttonRect.width / 2 - panelRect.left
+    const left = Math.min(Math.max(center - width / 2, 8), panelRect.width - width - 8)
+
+    progressTip.style.left = `${left}px`
+    progressTip.style.top = `${buttonRect.bottom - panelRect.top + 2}px`
+  }
+
+  function hideProgressTip() {
+    progressTip.hidden = true
   }
 
   function renderProgress() {
@@ -1618,6 +1651,26 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
         button.type = 'button'
         button.setAttribute('aria-label', getSlideLabel(slide))
         button.addEventListener('click', () => goTo(slideIndex), { signal })
+        button.addEventListener(
+          'pointerenter',
+          (event) => {
+            if (event.pointerType === 'mouse') {
+              showProgressTip(button)
+            }
+          },
+          { signal },
+        )
+        button.addEventListener('pointerleave', hideProgressTip, { signal })
+        button.addEventListener(
+          'focus',
+          () => {
+            if (button.matches(':focus-visible')) {
+              showProgressTip(button)
+            }
+          },
+          { signal },
+        )
+        button.addEventListener('blur', hideProgressTip, { signal })
         bar.dataset.progressBar = ''
         fill.dataset.progressFill = ''
         bar.append(fill)
@@ -1660,6 +1713,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     playing = false
     panel.hidden = true
     progress.replaceChildren()
+    hideProgressTip()
     body.replaceChildren()
   }
 
