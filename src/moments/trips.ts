@@ -14,6 +14,8 @@ export type TripDefinition = Readonly<{
   covers?: readonly string[]
   end: string
   id: string
+  /** Default background music, an id from src/data/music.ts. */
+  music?: string
   start: string
   /** Location id pairs travelled by ferry or plane; drawn straight instead of along roads. */
   straightLegs?: readonly (readonly [string, string])[]
@@ -28,6 +30,8 @@ export type TripRoute = Readonly<{
   coordinates: readonly (readonly [number, number])[]
   /** Metres along the route. */
   distance: number
+  /** Seconds of driving without traffic, as Mapbox estimates it. */
+  duration?: number
 }>
 
 export type TripLeg = Readonly<{
@@ -59,6 +63,8 @@ export type Trip<T extends TripMoment> = TripDefinition &
   Readonly<{
     dayCount: number
     distanceKm: number
+    /** Hours of driving along cached routes; ferries and flights aren't counted. */
+    drivingHours: number
     placeCount: number
     /** One leg between each pair of consecutive places in `path`. */
     legs: TripLeg[]
@@ -215,6 +221,9 @@ export function buildTrip<T extends TripMoment>(
     ...trip,
     dayCount: getDayOffset(trip.start, trip.end) + 1,
     distanceKm: Math.round(distanceKm),
+    drivingHours: Math.round(
+      legs.reduce((total, leg) => total + (leg.route?.duration ?? 0), 0) / 3600,
+    ),
     legs,
     path,
     placeCount: new Set(path.map((location) => location.id)).size,

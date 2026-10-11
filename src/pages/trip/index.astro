@@ -1,0 +1,39 @@
+---
+import SitePage from '@/components/SitePage.astro'
+import { SITE_TITLE } from '@/consts'
+import Layout from '@/layouts/Layout.astro'
+import { getMoments, getTrips } from '@/moments'
+
+const trips = getTrips(await getMoments()).toSorted((first, second) =>
+  second.start.localeCompare(first.start),
+)
+
+function formatDate(dateKey: string, withYear = false) {
+  return new Intl.DateTimeFormat('zh-CN', {
+    day: 'numeric',
+    month: 'long',
+    timeZone: 'UTC',
+    ...(withYear ? { year: 'numeric' as const } : {}),
+  }).format(new Date(`${dateKey}T00:00:00Z`))
+}
+---
+
+<Layout title={`旅程 | ${SITE_TITLE}`} description="在地图上按时间回放的几段旅程。">
+  <SitePage>
+    <p>按时间顺序在地图上回放一段旅程，路线、照片和当时写下的话会一站一站出现。</p>
+    <ul class="mt-8 flex flex-col">
+      {
+        trips.map(trip => (
+          <li>
+            <a href={`/trip/${trip.id}/`} class="-mx-3 block rounded-md px-3 py-1.5 no-underline transition-colors hover:bg-hover">
+              {trip.title}
+              <span class="ml-2 whitespace-nowrap text-tx-2 tabular-nums">
+                {formatDate(trip.start, true)} – {formatDate(trip.end)} · {trip.dayCount} 天 · {trip.placeCount} 个地点 · {trip.distanceKm.toLocaleString('zh-CN')} 公里
+              </span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </SitePage>
+</Layout>

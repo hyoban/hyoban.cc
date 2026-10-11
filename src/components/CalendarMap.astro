@@ -10,9 +10,8 @@ import {
   getMomentPath,
   getMoments,
   getTrips,
-  type ResolvedMomentMedia,
 } from '@/moments'
-import { getDayOffset, type TripWaypoint } from '@/moments/trips'
+import { getTripData, getTripTitle } from '@/moments/trip-data'
 import { getAssetUrl } from '@/asset-url'
 import { tripVideoMusic } from '@/data/music'
 import { SITE_TITLE } from '@/consts'
@@ -37,113 +36,20 @@ const markerData = locationGroups.map(group => ({
   longitude: group.location.longitude,
   name: group.location.name,
 }))
-const markerDataJson = JSON.stringify(markerData).replaceAll('<', '\\u003c')
-const trips = getTrips(moments).toReversed()
-const tripData = trips.map(trip => ({
-  dateRange: `${formatShortDate(trip.start)} – ${formatShortDate(trip.end)}`,
-  dayCount: trip.dayCount,
-  distanceKm: trip.distanceKm,
-  id: trip.id,
-  pageTitle: getTripTitle(trip.title),
-  photoCount: trip.stops.reduce((count, stop) => count + stop.media.length, 0),
-  placeCount: trip.placeCount,
-  covers: getTripCovers(trip),
-  stops: trip.stops.map(stop => ({
-    date: formatShortDate(stop.dateKey, true),
-    day: getDayOffset(trip.start, stop.dateKey) + 1,
-    href: getMomentPath(stop.dateKey),
-    images: getImages(stop.media),
-    name: stop.locations.map(location => location.name).join('、'),
-    places: stop.locations.map(toTripPlace),
-    text: getPlainText(stop.text),
-    time: stop.occurredLabel,
-    waypoints: stop.waypoints.map(waypoint => toTripWaypoint(trip.start, waypoint)),
-  })),
-  title: trip.title,
-  trailingWaypoints: trip.trailingWaypoints.map(waypoint => toTripWaypoint(trip.start, waypoint)),
-  // Road geometry from one place to the next; null means draw it straight.
-  legs: trip.legs.map(leg => leg.route?.coordinates ?? null),
-}))
-const tripDataJson = JSON.stringify(tripData).replaceAll('<', '\\u003c')
+const markerDataJson = toScriptJson(markerData)
+const trips = getTrips(moments).toSorted((first, second) => second.start.localeCompare(first.start))
 const activeTrip = trips.find(trip => trip.id === tripId)
+// Every trip's id and title for the picker; only the opening trip's playback data is
+// inlined, and the player fetches the rest from /trip/<id>/data.json when needed.
+const tripListJson = toScriptJson(trips.map(trip => ({ id: trip.id, pageTitle: getTripTitle(trip.title) })))
+const activeTripJson = activeTrip ? toScriptJson(getTripData(activeTrip)) : undefined
 const title = activeTrip ? getTripTitle(activeTrip.title) : mapTitle
 const description = activeTrip
   ? `${activeTrip.title}的旅程回放，按时间顺序走过每一条 Moment。`
   : '按地点浏览 Calendar 中记录的 Moment。'
 
-function toTripPlace(location: { latitude: number; longitude: number; name: string }) {
-  return { latitude: location.latitude, longitude: location.longitude, name: location.name }
-}
-
-function toTripWaypoint(start: string, waypoint: TripWaypoint) {
-  return {
-    ...toTripPlace(waypoint.location),
-    date: formatShortDate(waypoint.dateKey, true),
-    day: getDayOffset(start, waypoint.dateKey) + 1,
-    time: waypoint.time,
-  }
-}
-
-function getTripTitle(tripTitle: string) {
-  return `${tripTitle} · 旅程 | ${SITE_TITLE}`
-}
-
-function formatShortDate(dateKey: string, weekday = false) {
-  return new Intl.DateTimeFormat('zh-CN', {
-    day: 'numeric',
-    month: 'long',
-    timeZone: 'UTC',
-    ...(weekday ? { weekday: 'short' as const } : {}),
-  }).format(new Date(`${dateKey}T00:00:00Z`))
-}
-
-function getPlainText(text: string) {
-  return text
-    .split('\n')
-    .map(line => line
-      .replaceAll(/\[([^\]]*)\]\([^)]*\)/g, '$1')
-      .replaceAll(/^[#>\s-]+|[*_`]/g, '')
-      .trim())
-    .filter(Boolean)
-    .join('\n')
-}
-
-/** Resolves a trip's chosen cover photos; a typo fails the build instead of dropping a photo. */
-function getTripCovers(trip: (typeof trips)[number]) {
-  return (trip.covers ?? []).map(cover => {
-    const slash = cover.lastIndexOf('/')
-    const id = cover.slice(0, slash)
-    const file = cover.slice(slash + 1)
-    const item = trip.stops
-      .find(stop => stop.id === id)
-      ?.media.find(media => (media.type === 'video' ? media.poster : media.src)?.src.endsWith(`/${file}`))
-    const [image] = item ? getImages([item]) : []
-
-    if (!image) {
-      throw new Error(`Cover "${cover}" isn't a photo of a Moment in trip "${trip.id}".`)
-    }
-
-    return image
-  })
-}
-
-function getImages(media: ResolvedMomentMedia[]) {
-  return media.flatMap((item) => {
-    const image = item.type === 'video' ? item.poster : item.src
-
-    if (!image) {
-      return []
-    }
-
-    return [{
-      alt: item.alt,
-      height: image.height,
-      src: image.sources.find(source => source.width >= 960)?.src ?? image.sources.at(-1)?.src ?? image.src,
-      srcset: image.sources.map(source => `${source.src} ${source.width}w`).join(', '),
-      thumbnail: image.sources[0]?.src ?? image.src,
-      width: image.width,
-    }]
-  })
+function toScriptJson(value: unknown) {
+  return JSON.stringify(value).replaceAll('<', '\\u003c')
 }
 
 function formatDate(dateKey: string) {
@@ -158,7 +64,7 @@ function formatDate(dateKey: string) {
 }
 ---
 
-<Layout title={title} description={description}>
+<Layout title={title} description={description} image={activeTrip ? `/trip/${activeTrip.id}/og.png` : undefined}>
   <main class="calendar-map-page @container relative isolate h-dvh w-full overflow-hidden bg-bg" data-calendar-map data-mapbox-token={mapboxToken} data-map-title={mapTitle} transition:persist="calendar-map">
     <div class="calendar-map-canvas absolute inset-0" data-calendar-map-canvas role="region" aria-label="Calendar 地点地图" />
 
@@ -335,7 +241,8 @@ function formatDate(dateKey: string) {
     </dialog>
 
     <script is:inline type="application/json" data-calendar-map-locations set:html={markerDataJson} />
-    <script is:inline type="application/json" data-calendar-map-trips set:html={tripDataJson} />
+    <script is:inline type="application/json" data-calendar-map-trips set:html={tripListJson} />
+    {activeTripJson && <script is:inline type="application/json" data-calendar-map-trip-data set:html={activeTripJson} />}
   </main>
 </Layout>
 

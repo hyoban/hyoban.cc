@@ -8,6 +8,8 @@ import { ClientRouter, fade } from 'astro:transitions'
 interface Props {
   title: string
   description?: string | undefined
+  /** A large share preview; pages without one fall back to the avatar. */
+  image?: string | undefined
   article?: {
     author: string
     publishedTime: string
@@ -15,7 +17,7 @@ interface Props {
   } | undefined
 }
 
-const { title, description, article } = Astro.props
+const { title, description, article, image } = Astro.props
 const canonicalUrl = new URL(Astro.url.pathname, SITE_URL).toString()
 
 // Telegram Instant View fallback via Teletype's undocumented verification flow.
@@ -53,8 +55,8 @@ const TELETYPE_SITE_VERIFICATION = 'g7j8/rPFXfhyrq5q0QQV7EsYWv4='
     <meta property="og:site_name" content={SITE_TITLE} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonicalUrl} />
-    <meta property="og:image" content={getAssetUrl('site/avatar-cropped.png')} />
-    <meta name="twitter:card" content="summary" />
+    <meta property="og:image" content={image ? new URL(image, SITE_URL).toString() : getAssetUrl('site/avatar-cropped.png')} />
+    <meta name="twitter:card" content={image ? 'summary_large_image' : 'summary'} />
     {
       article && (
         <>

@@ -44,6 +44,7 @@ export const trips = defineTrips([
     ],
     end: '2026-09-16',
     id: '2026-yunnan',
+    music: 'apple-cider',
     start: '2026-09-12',
     // The flight from Hefei to Lijiang.
     straightLegs: [['hefei-xinqiao-airport', 'lijiang']],

@@ -1,4 +1,5 @@
 import mapboxgl, { type GeoJSONSource } from 'mapbox-gl'
+import { buildSlides, getStopPointEnds, pickCovers, type TripSlide } from './trip-slides'
 
 type TripPlace = {
   latitude: number
@@ -43,14 +44,21 @@ type TripImage = {
   src: string
   srcset: string
   thumbnail: string
+  video?: string
   width: number
 }
+
+type TripSummary = { id: string; pageTitle: string }
 
 type TripData = {
   dateRange: string
   dayCount: number
   distanceKm: number
+  /** Hours of driving; ferries and flights aren't counted. */
+  drivingHours: number
   id: string
+  /** Default background music source. */
+  music?: string
   pageTitle: string
   photoCount: number
   placeCount: number
@@ -63,10 +71,7 @@ type TripData = {
   legs: (readonly (readonly [number, number])[] | null)[]
 }
 
-type Slide =
-  | { type: 'intro' }
-  | { stop: TripStop; stopIndex: number; type: 'stop' }
-  | { type: 'summary' }
+type Slide = TripSlide<TripStop>
 
 type TripPlayerOptions = {
   getMap: () => mapboxgl.Map | undefined
@@ -79,6 +84,7 @@ const ROUTE_SOURCE_ID = 'calendar-trip-route'
 const PLANNED_SOURCE_ID = 'calendar-trip-planned'
 const STOP_SOURCE_ID = 'calendar-trip-stops'
 const INTRO_DURATION = 3000
+const DAY_DURATION = 2200
 const STOP_DURATION = 5000
 const WAYPOINT_PAUSE = 2000
 const PHOTO_DURATION = 2000
@@ -92,6 +98,9 @@ const STOP_ZOOM = 9
 // Each stop is framed together with the trip's other places this close to it.
 const NEARBY_RADIUS_KM = 30
 const NEARBY_MAX_ZOOM = 13
+// On a long leg the camera pulls back from here in a stop's time to show both ends.
+const FOLLOW_START = 0.4
+const FOLLOW_SHARE = 0.4
 // How long the summary card stays in an exported video before it ends.
 const EXPORT_SUMMARY_HOLD = 4000
 // avc1 keeps the codec setup in the file header; QuickTime can't play avc3 MP4s.
@@ -118,7 +127,21 @@ type CroppableTrack = MediaStreamTrack & { cropTo?: (target: unknown) => Promise
 type CropTargetConstructor = { fromElement: (element: Element) => Promise<unknown> }
 
 export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOptions) {
-  const trips = new Map(parseTripData(page).map((trip) => [trip.id, trip]))
+  const tripTitles = new Map(
+    parseJson<TripSummary[]>(page, '[data-calendar-map-trips]', []).map((item) => [
+      item.id,
+      item.pageTitle,
+    ]),
+  )
+  const loadedTrips = new Map<string, TripData>()
+  const inlineTrip = parseJson<TripData | null>(page, '[data-calendar-map-trip-data]', null)
+  // The trip waiting on its data; `activeId` reports it so the map stays in trip mode.
+  let requestedId: string | undefined
+
+  if (inlineTrip) {
+    loadedTrips.set(inlineTrip.id, inlineTrip)
+  }
+
   const panel = queryRequired<HTMLElement>(page, '[data-calendar-map-trip]')
   const progress = queryRequired<HTMLOListElement>(page, '[data-calendar-map-trip-progress]')
   // Names the slide a progress segment jumps to, under the hovered or focused segment.
@@ -197,6 +220,8 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   let traveling = false
   let currentWaypointPoint = -1
   let drawnPointCount = 0
+  // The stop whose long leg the camera has already pulled back for.
+  let followedStop = -1
   let routeProgress:
     | { lengths: number[]; line: [number, number][]; stopIndex: number; total: number }
     | undefined
@@ -204,12 +229,17 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   let photo: HTMLImageElement | undefined
   let thumbnails: HTMLButtonElement[] = []
   let photoAnimation: Animation | undefined
+  let liveVideo: HTMLVideoElement | undefined
   // A mouse resting on the card holds the current slide so it can be read.
   let hovering = false
 
   function getSlideDuration(slide: Slide | undefined) {
     if (slide?.type === 'intro') {
       return INTRO_DURATION
+    }
+
+    if (slide?.type === 'day') {
+      return DAY_DURATION
     }
 
     return slide?.type === 'stop'
@@ -256,6 +286,45 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     return stopIndex === 0 ? 0 : stopPointEnds[stopIndex - 1]!
   }
 
+  /**
+   * When the next point is far away, eases the camera out to frame the stop and that
+   * point together, so the moving route stays in view on its way there.
+   */
+  function followLongLeg(stop: TripStop, next: TripPoint, duration: number) {
+    const map = getMap()
+    const places = stop.places.map((place) => [place.longitude, place.latitude] as [number, number])
+
+    if (
+      !map ||
+      places.some((coordinates) => getDistanceKm(coordinates, next.coordinates) <= NEARBY_RADIUS_KM)
+    ) {
+      return
+    }
+
+    const bounds = new mapboxgl.LngLatBounds()
+
+    for (const coordinates of [...places, next.coordinates]) {
+      bounds.extend(coordinates)
+    }
+
+    const camera = map.cameraForBounds(bounds, {
+      maxZoom: NEARBY_MAX_ZOOM,
+      padding: getCameraPadding(),
+    })
+
+    if (!camera) {
+      return
+    }
+
+    map.easeTo({
+      ...camera,
+      duration: reducedMotion.matches ? 0 : duration * FOLLOW_SHARE,
+      easing: (t) => t * (2 - t),
+      essential: false,
+      padding: getCameraPadding(),
+    })
+  }
+
   /** Index in `points` of a stop's first place, after the waypoints leading to it. */
   function getStopPlaceStart(stopIndex: number) {
     return getStopPointStart(stopIndex) + (trip?.stops[stopIndex]?.waypoints.length ?? 0)
@@ -291,6 +360,11 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     }
 
     const fraction = Math.min(elapsed / duration, 1)
+
+    if (fraction >= FOLLOW_START && followedStop !== slide.stopIndex) {
+      followedStop = slide.stopIndex
+      followLongLeg(slide.stop, points[to]!, duration)
+    }
 
     if (fraction >= 1 || routeProgress.total === 0) {
       drawnPointCount = fraction >= 1 ? to + 1 : from + 1
@@ -570,6 +644,35 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     })
   }
 
+  /** Frames every place of one day, as a preview before its stops play. */
+  function fitDay(day: number) {
+    const map = getMap()
+
+    if (!map || !trip) {
+      return
+    }
+
+    const bounds = new mapboxgl.LngLatBounds()
+
+    for (const stop of trip.stops) {
+      if (stop.day === day) {
+        for (const place of [...stop.waypoints, ...stop.places]) {
+          bounds.extend([place.longitude, place.latitude])
+        }
+      }
+    }
+
+    if (bounds.isEmpty()) {
+      return
+    }
+
+    map.fitBounds(bounds, {
+      duration: reducedMotion.matches ? 0 : 1200,
+      maxZoom: NEARBY_MAX_ZOOM - 1,
+      padding: getCameraPadding(),
+    })
+  }
+
   function moveCamera() {
     const map = getMap()
     const slide = slides[index]
@@ -579,6 +682,11 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     }
 
     removeStopPopups()
+
+    if (slide.type === 'day') {
+      fitDay(slide.day)
+      return
+    }
 
     if (slide.type !== 'stop') {
       fitTrip()
@@ -870,6 +978,38 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     )
   }
 
+  /** Plays a live photo's motion once over its still, then fades back to the still. */
+  function playLivePhoto(image: TripImage) {
+    const frame = photo?.parentElement
+
+    liveVideo?.remove()
+    liveVideo = undefined
+
+    if (!image.video || !frame || reducedMotion.matches || isStageLayout()) {
+      return
+    }
+
+    const video = document.createElement('video')
+
+    video.className =
+      'pointer-events-none absolute inset-0 size-full object-cover transition-opacity duration-300'
+    video.muted = true
+    video.playsInline = true
+    video.src = image.video
+    video.setAttribute('aria-hidden', 'true')
+    video.addEventListener(
+      'ended',
+      () => {
+        video.style.opacity = '0'
+        setTimeout(() => video.remove(), 320)
+      },
+      { once: true },
+    )
+    frame.append(video)
+    liveVideo = video
+    void video.play().catch(() => video.remove())
+  }
+
   function showPhoto(stop: TripStop, nextPhotoIndex: number) {
     const image = stop.images[nextPhotoIndex]
 
@@ -888,6 +1028,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     photo.width = image.width
     photo.height = image.height
     photo.alt = image.alt
+    playLivePhoto(image)
 
     for (const [thumbnailIndex, thumbnail] of thumbnails.entries()) {
       if (thumbnailIndex === nextPhotoIndex) {
@@ -1046,6 +1187,10 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
         ),
         createMosaic(covers),
       )
+    } else if (slide.type === 'day') {
+      eyebrow.textContent = `第 ${slide.day} 天`
+      title.textContent = slide.date
+      body.replaceChildren(createElement('p', 'shrink-0 text-tx-2', slide.places.join(' → ')))
     } else if (slide.type === 'stop') {
       const { stop } = slide
       const text = createElement(
@@ -1106,14 +1251,9 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
       eyebrow.textContent = '旅程回顾'
       title.textContent = trip.title
-      stats.className = 'grid shrink-0 grid-cols-2 gap-1 @max-[48rem]:grid-cols-4'
+      stats.className = 'grid shrink-0 grid-cols-2 gap-1 @max-[48rem]:grid-cols-3'
 
-      for (const [value, label] of [
-        [trip.dayCount, '天'],
-        [trip.placeCount, '个地点'],
-        [trip.photoCount, '张照片'],
-        [trip.distanceKm.toLocaleString('zh-CN'), '公里'],
-      ] as const) {
+      for (const [value, label] of getSummaryStats(trip)) {
         const item = createElement(
           'div',
           'flex flex-col-reverse rounded-md bg-inline px-3 py-2',
@@ -1164,6 +1304,11 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
     if (slide.type === 'summary') {
       stageCenter.replaceChildren(createSummaryCard(trip))
+      return
+    }
+
+    if (slide.type === 'day') {
+      stageCenter.replaceChildren(createDayCard(slide))
       return
     }
 
@@ -1304,18 +1449,24 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     return card
   }
 
+  function createDayCard(slide: Extract<Slide, { type: 'day' }>) {
+    const card = createElement('div', 'calendar-map-trip-stage-card', '')
+
+    card.append(
+      createElement('p', 'calendar-map-trip-stage-card__eyebrow', `第 ${slide.day} 天`),
+      createElement('p', 'calendar-map-trip-stage-card__title', slide.date),
+      createElement('p', 'calendar-map-trip-stage-card__meta', slide.places.join(' → ')),
+    )
+    return card
+  }
+
   function createSummaryCard(currentTrip: TripData) {
     const card = createElement('div', 'calendar-map-trip-stage-card', '')
     const stats = document.createElement('dl')
 
     stats.className = 'calendar-map-trip-stage-card__stats'
 
-    for (const [value, label] of [
-      [currentTrip.dayCount, '天'],
-      [currentTrip.placeCount, '个地点'],
-      [currentTrip.photoCount, '张照片'],
-      [currentTrip.distanceKm.toLocaleString('zh-CN'), '公里'],
-    ] as const) {
+    for (const [value, label] of getSummaryStats(currentTrip)) {
       const item = document.createElement('div')
       item.append(createElement('dt', '', label), createElement('dd', '', String(value)))
       stats.append(item)
@@ -1384,6 +1535,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     renderSlide()
 
     routeProgress = undefined
+    followedStop = -1
 
     if (slide.type === 'stop') {
       const placeStart = getStopPlaceStart(slide.stopIndex)
@@ -1397,6 +1549,13 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
         setRoute(drawnPointCount)
       } else {
         void drawLeg(legStart ?? Math.max(placeStart - 1, 0), arriveAt)
+      }
+    } else if (slide.type === 'day') {
+      // Usually the previous stop's route already reached here; jumps set it directly.
+      if (legStart === -1 || drawnPointCount === 0) {
+        cancelLeg()
+        drawnPointCount = Math.min(getStopPointStart(slide.stopIndex) + 1, points.length)
+        setRoute(drawnPointCount)
       }
     } else {
       cancelLeg()
@@ -1666,19 +1825,55 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   }
 
   function start(id: string) {
-    const nextTrip = trips.get(id)
-
-    if (!nextTrip) {
+    if (!tripTitles.has(id) || trip?.id === id || requestedId === id) {
       return
     }
 
-    if (trip?.id === id) {
+    const loadedTrip = loadedTrips.get(id)
+
+    if (loadedTrip) {
+      begin(loadedTrip)
       return
     }
 
     stop()
+    requestedId = id
+    void loadTrip(id).then((data) => {
+      if (requestedId !== id) {
+        return
+      }
+
+      requestedId = undefined
+
+      if (data) {
+        begin(data)
+      } else {
+        onClose()
+      }
+    })
+  }
+
+  async function loadTrip(id: string) {
+    try {
+      const response = await fetch(`/trip/${id}/data.json`, { signal })
+
+      if (!response.ok) {
+        return undefined
+      }
+
+      const data = (await response.json()) as TripData
+      loadedTrips.set(id, data)
+      return data
+    } catch {
+      return undefined
+    }
+  }
+
+  function begin(nextTrip: TripData) {
+    stop()
     trip = nextTrip
-    covers = getCovers(nextTrip, 9)
+    covers = pickCovers(nextTrip.covers, nextTrip.stops, 9)
+    exportMusic.value = nextTrip.music ?? exportMusic.options[0]?.value ?? ''
     const toPoint = (
       place: TripPlace | TripWaypoint,
       stopIndex: number,
@@ -1701,17 +1896,8 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
         toPoint(waypoint, nextTrip.stops.length, true),
       ),
     ]
-    stopPointEnds = []
-
-    for (const stop of nextTrip.stops) {
-      stopPointEnds.push((stopPointEnds.at(-1) ?? 0) + stop.waypoints.length + stop.places.length)
-    }
-
-    slides = [
-      { type: 'intro' },
-      ...nextTrip.stops.map((stop, stopIndex) => ({ stop, stopIndex, type: 'stop' as const })),
-      { type: 'summary' },
-    ]
+    stopPointEnds = getStopPointEnds(nextTrip.stops)
+    slides = buildSlides(nextTrip.stops)
     progress.replaceChildren(
       ...slides.map((slide, slideIndex) => {
         const item = createElement('li', 'flex-1', '')
@@ -1769,6 +1955,8 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   }
 
   function stop() {
+    requestedId = undefined
+
     if (!trip) {
       return
     }
@@ -1882,7 +2070,14 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
         return
       }
 
-      if (event.key === 'ArrowLeft') {
+      // A focused control keeps Space for itself.
+      if (
+        event.key === ' ' &&
+        !(event.target instanceof HTMLElement && event.target.closest('button, input, textarea, a'))
+      ) {
+        event.preventDefault()
+        playButton.click()
+      } else if (event.key === 'ArrowLeft') {
         goTo(index - 1)
       } else if (event.key === 'ArrowRight') {
         goTo(index + 1)
@@ -1893,10 +2088,10 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   signal.addEventListener('abort', stop)
 
   return {
-    getPageTitle: (id: string) => trips.get(id)?.pageTitle,
-    has: (id: string) => trips.has(id),
+    getPageTitle: (id: string) => tripTitles.get(id),
+    has: (id: string) => tripTitles.has(id),
     get activeId() {
-      return trip?.id
+      return trip?.id ?? requestedId
     },
     /** Re-adds the route layers after the map style changes. */
     restoreLayers: addLayers,
@@ -1917,20 +2112,6 @@ function preloadImage(source: TripImage) {
  * The trip's chosen covers, or else the first photo of each day followed by the
  * first photo of each remaining stop.
  */
-function getCovers(trip: TripData, count: number) {
-  if (trip.covers.length > 0) {
-    return trip.covers.slice(0, count)
-  }
-
-  const firsts = trip.stops.flatMap((stop) =>
-    stop.images[0] ? [{ day: stop.day, image: stop.images[0] }] : [],
-  )
-  const days = new Set<number>()
-  const dayFirsts = firsts.filter(({ day }) => !days.has(day) && days.add(day))
-
-  return [...new Set([...dayFirsts, ...firsts].map(({ image }) => image))].slice(0, count)
-}
-
 function createMosaic(covers: TripImage[]) {
   // Narrow screens keep one row so the map stays visible above the card.
   const mosaic = createElement(
@@ -1984,6 +2165,10 @@ function getSlideLabel(slide: Slide) {
     return '开头'
   }
 
+  if (slide.type === 'day') {
+    return `第 ${slide.day} 天 · ${slide.date}`
+  }
+
   return slide.type === 'summary' ? '旅程回顾' : `第 ${slide.stop.day} 天 · ${slide.stop.name}`
 }
 
@@ -2021,14 +2206,13 @@ function createElement(tag: string, className: string, text: string) {
   return element
 }
 
-function parseTripData(page: HTMLElement): TripData[] {
+function parseJson<T>(page: HTMLElement, selector: string, fallback: T): T {
+  const text = page.querySelector(selector)?.textContent
+
   try {
-    const value: unknown = JSON.parse(
-      page.querySelector('[data-calendar-map-trips]')?.textContent ?? '[]',
-    )
-    return Array.isArray(value) ? (value as TripData[]) : []
+    return text ? (JSON.parse(text) as T) : fallback
   } catch {
-    return []
+    return fallback
   }
 }
 
@@ -2040,4 +2224,15 @@ function queryRequired<T extends Element>(root: ParentNode, selector: string) {
   }
 
   return element
+}
+
+function getSummaryStats(trip: TripData) {
+  return [
+    [trip.dayCount, '天'],
+    [trip.stops.length, '条记录'],
+    [trip.placeCount, '个地点'],
+    [trip.photoCount, '张照片'],
+    [trip.distanceKm.toLocaleString('zh-CN'), '公里'],
+    [trip.drivingHours, '小时车程'],
+  ] as const
 }

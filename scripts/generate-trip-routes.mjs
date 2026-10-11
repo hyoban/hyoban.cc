@@ -52,7 +52,8 @@ for (const trip of trips) {
       continue
     }
 
-    if (cached[key]) {
+    // Routes cached before durations were stored are fetched again once.
+    if (cached[key]?.duration !== undefined) {
       routes[key] = cached[key]
       continue
     }
@@ -103,6 +104,7 @@ async function fetchRoute(key) {
       Number(lat.toFixed(5)),
     ]),
     distance: Math.round(route.distance),
+    duration: Math.round(route.duration),
   }
 }
 

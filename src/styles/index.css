@@ -297,6 +297,7 @@ html:has(.calendar-map-page[data-export-ratio]) body {
   right: 50%;
 }
 
+.calendar-map-trip-stage[data-slide='day'] .calendar-map-trip-stage__header,
 .calendar-map-trip-stage[data-slide='intro'] .calendar-map-trip-stage__header,
 .calendar-map-trip-stage[data-slide='summary'] .calendar-map-trip-stage__header {
   opacity: 0;
