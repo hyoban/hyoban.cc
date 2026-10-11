@@ -2,6 +2,7 @@ import type { Map as MapboxMap } from 'mapbox-gl'
 import type { Coordinates } from '../geo'
 import { createCamera } from './camera'
 import {
+  canAutoplayLiveClips,
   createElement,
   createLiveVideo,
   createMosaic,
@@ -10,6 +11,7 @@ import {
   IMAGE_SIZES,
   parseJson,
   preloadImage,
+  preloadThumbnail,
   queryRequired,
 } from './dom'
 import { createChapterLog, getSummaryStats } from './labels'
@@ -33,7 +35,6 @@ import { createMapLabels } from './map-labels'
 import { createRouteLayers, type StopState } from './route-layers'
 import {
   buildSlides,
-  getEarlierDayWaypointCount,
   getSlideDay,
   getSlideDuration,
   getSlideLabel,
@@ -86,6 +87,12 @@ const EXPORT_VIDEO_TYPES = [
   'video/webm',
 ]
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
+// The address bar follows the playing card so it can be shared, but reloading the page
+// should start the trip over rather than resume mid-way. Only the first trip started
+// after a reload ignores the card; links followed later in the same page still work.
+let reloadPending =
+  (performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined)
+    ?.type === 'reload'
 
 type ExportRatio = 'landscape' | 'portrait'
 // The story layout either plays on screen or is recorded to a video file.
@@ -216,6 +223,8 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   let liveVideo: HTMLVideoElement | undefined
   // A mouse resting on the card holds the current slide so it can be read.
   let hovering = false
+  // Photos already asked for, so going back and forth doesn't ask again.
+  const preloaded = new Set<string>()
   // Photos decoded ahead while recording, so a card never opens on a blank frame.
   const decodedPhotos = new Map<string, Promise<void>>()
   const readyPhotos = new Set<string>()
@@ -416,18 +425,21 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
    * Stays where the day sets off (where the night was spent, or the last waypoint
    * passed the evening before) and eases to a zoom for the day's first drive.
    */
-  function frameDay({ stopIndex }: Extract<Slide, { type: 'day' }>) {
-    if (!trip) {
+  function frameDay(slide: Extract<Slide, { type: 'day' }>) {
+    const stop = trip?.stops[slide.stopIndex]
+
+    if (!stop) {
       return
     }
 
-    const setOff =
-      getStopPointStart(stopIndex) + getEarlierDayWaypointCount(trip.stops[stopIndex]) - 1
+    const [first, count] = getWaypointsBefore(slide)
+    const start = getStopPointStart(slide.stopIndex)
+    // A travel day drives through its own waypoints; any other day on to its first stop.
+    const end = slide.waypointsOnly
+      ? start + stop.waypoints.findLastIndex((waypoint) => waypoint.day === slide.day)
+      : getStopPlaceStart(slide.stopIndex)
 
-    camera.follow(
-      getRouteLine(Math.max(setOff, 0), getStopPlaceStart(stopIndex) + 1),
-      NEARBY_MAX_ZOOM - 1,
-    )
+    camera.follow(getRouteLine(Math.max(first + count - 1, 0), end + 1), NEARBY_MAX_ZOOM - 1)
   }
 
   /**
@@ -687,7 +699,13 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     liveVideo = undefined
 
     // The stage card plays its own copy, see showStagePhoto.
-    if (!image.video || !frame || reducedMotion.matches || isStageLayout()) {
+    if (
+      !image.video ||
+      !frame ||
+      reducedMotion.matches ||
+      isStageLayout() ||
+      !canAutoplayLiveClips()
+    ) {
       return
     }
 
@@ -923,12 +941,6 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       for (const image of stop.images.slice(1)) {
         preloadImage(image)
       }
-
-      const nextSlide = slides[index + 1]
-
-      if (nextSlide?.type === 'stop' && nextSlide.stop.images[0]) {
-        preloadImage(nextSlide.stop.images[0])
-      }
     } else {
       const stats = document.createElement('dl')
       const replay = createElement(
@@ -962,9 +974,26 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       body.replaceChildren(stats, replay, createMosaic(covers))
     }
 
+    preloadNextStop()
     renderStage(slide)
     renderProgress()
     renderPlayButton()
+  }
+
+  /**
+   * Starts loading the next stop's photos and thumbnails while the current card is up,
+   * whatever it is, so the next card opens with its pictures already there.
+   */
+  function preloadNextStop() {
+    const next = slides.slice(index + 1).find((slide) => slide.type === 'stop')
+
+    for (const image of next?.type === 'stop' ? next.stop.images : []) {
+      if (!preloaded.has(image.src)) {
+        preloaded.add(image.src)
+        preloadImage(image)
+        preloadThumbnail(image)
+      }
+    }
   }
 
   function renderStage(slide: Slide) {
@@ -1116,7 +1145,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     frame.append(img)
 
     // A live photo moves once over its still, as on the side card.
-    if (image.video && !reducedMotion.matches) {
+    if (image.video && !reducedMotion.matches && canAutoplayLiveClips()) {
       const video = createLiveVideo(image.video, '')
 
       video.style.width = img.style.width
@@ -1152,22 +1181,35 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
   /** The slide a shared link names: a stop's card, or its day's opener when it starts the day. */
   function getHashSlideIndex() {
+    const reloaded = reloadPending
     const anchor = decodeURIComponent(location.hash.slice(1))
+
+    reloadPending = false
+
+    if (reloaded) {
+      return 0
+    }
+
     const stopIndex = trip?.stops.findIndex((stop) => stop.anchor === anchor) ?? -1
 
     if (!anchor || stopIndex === -1) {
       return 0
     }
 
+    // A travel day before the stop isn't what the link names; its own day is.
     return slides.findIndex(
-      (slide) => (slide.type === 'day' || slide.type === 'stop') && slide.stopIndex === stopIndex,
+      (slide) =>
+        ((slide.type === 'day' && !slide.waypointsOnly) || slide.type === 'stop') &&
+        slide.stopIndex === stopIndex,
     )
   }
 
   /** Keeps the address bar pointing at the current card, so it can be shared. */
   function syncHash(slide: Slide) {
     const anchor =
-      slide.type === 'stop' || slide.type === 'day' ? trip?.stops[slide.stopIndex]?.anchor : ''
+      slide.type === 'stop' || (slide.type === 'day' && !slide.waypointsOnly)
+        ? trip?.stops[slide.stopIndex]?.anchor
+        : ''
     const url = new URL(location.href)
 
     url.hash = anchor ?? ''
@@ -1259,11 +1301,9 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       // Usually the previous stop's route already reached here; jumps set it directly.
       if (legStart === -1 || drawnPointCount === 0) {
         cancelLeg()
-        drawnPointCount = Math.min(
-          getStopPointStart(slide.stopIndex) +
-            Math.max(getEarlierDayWaypointCount(trip?.stops[slide.stopIndex]), 1),
-          points.length,
-        )
+        // Drawn through the waypoints passed before this card, or to the first point.
+        const [first, count] = getWaypointsBefore(slide)
+        drawnPointCount = Math.min(Math.max(first + count, 1), points.length)
         setRoute(drawnPointCount)
       }
     } else {
