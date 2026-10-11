@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'vite-plus/test'
-import { buildTrip, defineTrips, getDistanceKm } from '../../src/moments/trips.ts'
+import { buildTrip, defineTrips, getDistanceKm, getLegKey } from '../../src/moments/trips.ts'
 
 const hefei = { id: 'hefei', latitude: 31.8206, longitude: 117.2272, name: '合肥' }
 const nanjing = { id: 'nanjing', latitude: 32.0603, longitude: 118.7969, name: '南京' }
@@ -129,6 +129,45 @@ test('rejects untimed first waypoints and waypoints out of order or range', () =
       ),
     /must be in time order/,
   )
+})
+
+test('uses cached road routes except on straight legs', () => {
+  const moments = [
+    { dateKey: '2026-05-01', id: 'hefei', locations: [hefei], occurredAt: '2026-05-01' },
+    { dateKey: '2026-05-01', id: 'nanjing', locations: [nanjing], occurredAt: '2026-05-01' },
+    { dateKey: '2026-05-02', id: 'rizhao', locations: [rizhao], occurredAt: '2026-05-02' },
+  ]
+  const route = {
+    coordinates: [
+      [117.5, 31.9],
+      [118.5, 32],
+    ],
+    distance: 180_000,
+  }
+  const trip = buildTrip(
+    {
+      end: '2026-05-02',
+      id: 'trip',
+      start: '2026-05-01',
+      straightLegs: [['rizhao', 'nanjing']],
+      title: 'Trip',
+    },
+    moments,
+    resolve,
+    {
+      [getLegKey(hefei, nanjing)]: route,
+      [getLegKey(nanjing, rizhao)]: route,
+    },
+  )
+
+  assert.deepEqual(
+    trip.legs.map((leg) => [leg.from.id, leg.to.id, leg.straight, leg.route === route]),
+    [
+      ['hefei', 'nanjing', false, true],
+      ['nanjing', 'rizhao', true, false],
+    ],
+  )
+  assert.equal(trip.distanceKm, Math.round(180 + getDistanceKm(nanjing, rizhao)))
 })
 
 test('measures great-circle distance in kilometres', () => {

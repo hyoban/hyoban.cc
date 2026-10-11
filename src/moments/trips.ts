@@ -13,11 +13,27 @@ export type TripDefinition = Readonly<{
   end: string
   id: string
   start: string
+  /** Location id pairs travelled by ferry or plane; drawn straight instead of along roads. */
+  straightLegs?: readonly (readonly [string, string])[]
   title: string
   waypoints?: readonly TripWaypointDefinition[]
 }>
 
 type TripLocation = MapLocation & { id: string }
+
+/** A driving route between two places, cached in src/data/trip-routes.json. */
+export type TripRoute = Readonly<{
+  coordinates: readonly (readonly [number, number])[]
+  /** Metres along the route. */
+  distance: number
+}>
+
+export type TripLeg = Readonly<{
+  from: TripLocation
+  route?: TripRoute
+  straight: boolean
+  to: TripLocation
+}>
 
 type TripMoment = Readonly<{
   dateKey: string
@@ -42,6 +58,10 @@ export type Trip<T extends TripMoment> = TripDefinition &
     dayCount: number
     distanceKm: number
     placeCount: number
+    /** One leg between each pair of consecutive places in `path`. */
+    legs: TripLeg[]
+    /** Every place in visiting order: each stop's waypoints, then its locations. */
+    path: TripLocation[]
     stops: TripStop<T>[]
     /** Waypoints after the last stop. */
     trailingWaypoints: TripWaypoint[]
@@ -69,6 +89,12 @@ export function defineTrips<const T extends readonly TripDefinition[]>(trips: T)
 
     if (!isDateKey(trip.start) || !isDateKey(trip.end) || trip.start > trip.end) {
       throw new RangeError(`Invalid date range for trip "${trip.id}".`)
+    }
+
+    for (const leg of trip.straightLegs ?? []) {
+      if (leg.length !== 2 || leg[0] === leg[1]) {
+        throw new Error(`Invalid straight leg in trip "${trip.id}".`)
+      }
     }
 
     let previousAt: string | undefined
@@ -110,6 +136,7 @@ export function buildTrip<T extends TripMoment>(
   trip: TripDefinition,
   moments: T[],
   resolveLocation: (id: string) => TripLocation,
+  routes: Readonly<Record<string, TripRoute>> = {},
 ): Trip<T> {
   const waypoints: (TripWaypoint & { at: string })[] = []
 
@@ -157,20 +184,41 @@ export function buildTrip<T extends TripMoment>(
     ]),
     ...trailingWaypoints.map((waypoint) => waypoint.location),
   ]
-  let distanceKm = 0
+  const legs = path.slice(1).map((to, index): TripLeg => {
+    const from = path[index]!
+    const straight = (trip.straightLegs ?? []).some(
+      ([first, second]) =>
+        (first === from.id && second === to.id) || (first === to.id && second === from.id),
+    )
+    const route = straight ? undefined : routes[getLegKey(from, to)]
 
-  for (let index = 1; index < path.length; index += 1) {
-    distanceKm += getDistanceKm(path[index - 1]!, path[index]!)
-  }
+    return { from, straight, to, ...(route ? { route } : {}) }
+  })
+  // Road distance where a route is cached, otherwise as the crow flies.
+  const distanceKm = legs.reduce(
+    (total, leg) =>
+      total + (leg.route ? leg.route.distance / 1000 : getDistanceKm(leg.from, leg.to)),
+    0,
+  )
 
   return {
     ...trip,
     dayCount: getDayOffset(trip.start, trip.end) + 1,
     distanceKm: Math.round(distanceKm),
+    legs,
+    path,
     placeCount: new Set(path.map((location) => location.id)).size,
     stops,
     trailingWaypoints,
   }
+}
+
+/** Identifies a leg by its end coordinates, so moving a place invalidates its route. */
+export function getLegKey(from: MapLocation, to: MapLocation) {
+  const point = (location: MapLocation) =>
+    `${location.longitude.toFixed(5)},${location.latitude.toFixed(5)}`
+
+  return `${point(from)};${point(to)}`
 }
 
 /** Great-circle distance, so it is a lower bound for the distance actually travelled. */

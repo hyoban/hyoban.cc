@@ -57,6 +57,8 @@ type TripData = {
   stops: TripStop[]
   title: string
   trailingWaypoints: TripWaypoint[]
+  /** Road geometry between consecutive places; null legs are drawn straight. */
+  legs: (readonly (readonly [number, number])[] | null)[]
 }
 
 type Slide =
@@ -293,7 +295,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     })
 
     ;(map.getSource(PLANNED_SOURCE_ID) as GeoJSONSource).setData(
-      lineFeature(points.map((point) => point.coordinates)),
+      lineFeature(getRouteLine(0, points.length)),
     )
     setRoute(drawnPointCount)
     updateStops()
@@ -317,20 +319,37 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     }
   }
 
-  function setRoute(pointCount: number, partial?: [number, number]) {
+  /** The line from `points[from]` to `points[to - 1]`, along roads where a route is known. */
+  function getRouteLine(from: number, to: number) {
+    const line: [number, number][] = []
+
+    for (let index = from; index < to; index += 1) {
+      const point = points[index]!
+
+      if (index > from) {
+        const road = trip?.legs[index - 1]
+
+        if (road) {
+          line.push(
+            ...road.map((coordinates) => [coordinates[0], coordinates[1]] as [number, number]),
+          )
+        }
+      }
+
+      line.push(point.coordinates)
+    }
+
+    return line
+  }
+
+  function setRoute(pointCount: number, partial?: [number, number][]) {
     const source = getMap()?.getSource(ROUTE_SOURCE_ID) as GeoJSONSource | undefined
 
     if (!trip || !source) {
       return
     }
 
-    const coordinates = points.slice(0, pointCount).map((point) => point.coordinates)
-
-    if (partial) {
-      coordinates.push(partial)
-    }
-
-    source.setData(lineFeature(coordinates))
+    source.setData(lineFeature([...getRouteLine(0, pointCount), ...(partial ?? [])]))
   }
 
   function updateStops() {
@@ -383,7 +402,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   }
 
   function animateLeg(legStart: number, legEnd: number) {
-    const leg = points.slice(legStart, legEnd).map((point) => point.coordinates)
+    const leg = getRouteLine(legStart, legEnd)
     const segmentLengths = leg
       .slice(1)
       .map((coordinates, segmentIndex) => getPlanarDistance(leg[segmentIndex]!, coordinates))
@@ -425,9 +444,10 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       const to = leg[segmentIndex + 1]!
       const ratio = segmentLengths[segmentIndex] ? remaining / segmentLengths[segmentIndex]! : 1
 
-      setRoute(legStart + segmentIndex + 1, [
-        from[0] + (to[0] - from[0]) * ratio,
-        from[1] + (to[1] - from[1]) * ratio,
+      // The drawn part of this leg follows its road shape up to the moving tip.
+      setRoute(legStart + 1, [
+        ...leg.slice(1, segmentIndex + 1),
+        [from[0] + (to[0] - from[0]) * ratio, from[1] + (to[1] - from[1]) * ratio],
       ])
       legFrame = requestAnimationFrame(step)
     }
@@ -846,7 +866,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
         [trip.dayCount, '天'],
         [trip.placeCount, '个地点'],
         [trip.photoCount, '张照片'],
-        [trip.distanceKm.toLocaleString('zh-CN'), '直线公里'],
+        [trip.distanceKm.toLocaleString('zh-CN'), '公里'],
       ] as const) {
         const item = createElement(
           'div',
@@ -1048,7 +1068,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       [currentTrip.dayCount, '天'],
       [currentTrip.placeCount, '个地点'],
       [currentTrip.photoCount, '张照片'],
-      [currentTrip.distanceKm.toLocaleString('zh-CN'), '直线公里'],
+      [currentTrip.distanceKm.toLocaleString('zh-CN'), '公里'],
     ] as const) {
       const item = document.createElement('div')
       item.append(createElement('dt', '', label), createElement('dd', '', String(value)))

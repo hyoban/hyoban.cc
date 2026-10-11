@@ -5,7 +5,9 @@ import { locations, type LocationId } from '@/data/locations'
 import { trips } from '@/data/trips'
 import { parseMomentDocument, type CanonicalMoment } from '@/moments/content'
 import { getLocation, groupMomentsByLocation, type MapLocation } from '@/moments/map-locations'
-import { buildTrip } from '@/moments/trips'
+import { compareMoments, getMomentOrder } from '@/moments/order'
+import { buildTrip, type TripRoute } from '@/moments/trips'
+import tripRoutes from '@/data/trip-routes.json'
 
 const calendarDateFormatter = new Intl.DateTimeFormat('en-CA', {
   day: '2-digit',
@@ -126,7 +128,13 @@ export function getMappedLocationGroups(moments: Moment[]) {
 export function getTrips(moments: Moment[]) {
   return trips
     .map((trip) =>
-      buildTrip(trip, moments, (id) => ({ id, ...getLocation(locations, id as LocationId) })),
+      buildTrip(
+        trip,
+        moments,
+        (id) => ({ id, ...getLocation(locations, id as LocationId) }),
+        // JSON coordinates are inferred as number[][]; the routes script writes pairs.
+        tripRoutes as unknown as Record<string, TripRoute>,
+      ),
     )
     .filter((trip) => trip.stops.length > 0)
 }
@@ -175,37 +183,6 @@ function resolveMoment(entry: MomentEntry): Moment {
   }
 
   return moment
-}
-
-function compareMoments(first: Moment, second: Moment) {
-  const dateComparison = first.dateKey.localeCompare(second.dateKey)
-
-  if (dateComparison !== 0) {
-    return dateComparison
-  }
-
-  const firstHasTime = first.occurredAt.length > 10
-  const secondHasTime = second.occurredAt.length > 10
-
-  if (firstHasTime && secondHasTime) {
-    return (
-      Date.parse(first.occurredAt) - Date.parse(second.occurredAt) || first.order - second.order
-    )
-  }
-
-  return first.order - second.order
-}
-
-function getMomentOrder(id: string, dateKey: string) {
-  const directory = id.split('/').at(-1)
-  const match = directory?.match(/^(\d{2})-(\d{2})-[a-z0-9]+(?:-[a-z0-9]+)*$/)
-  const expectedDay = dateKey.slice(8, 10)
-
-  if (!match || match[1] !== expectedDay) {
-    throw new Error(`Invalid Moment directory id: ${id}`)
-  }
-
-  return Number.parseInt(match[2]!, 10)
 }
 
 function getMomentDocument(entry: MomentEntry) {
