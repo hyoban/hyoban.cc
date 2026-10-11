@@ -186,13 +186,10 @@ html[data-calendar-mode-transition] .calendar-back-link {
 
 /* Prose styles */
 .prose {
-  color: var(--color-tx-2);
   line-height: 1.75;
 
   /* Headings */
   & :is(h1, h2, h3, h4, h5, h6) {
-    color: var(--color-tx);
-    font-weight: 600;
     font-size: 1em;
     line-height: 1.35;
     margin-top: 2.2em;
@@ -210,14 +207,7 @@ html[data-calendar-mode-transition] .calendar-back-link {
 
   /* Links */
   & a {
-    color: var(--color-tx);
     word-break: break-all;
-  }
-
-  /* Bold */
-  & strong {
-    color: var(--color-tx);
-    font-weight: 600;
   }
 
   /* Lists */
@@ -247,16 +237,11 @@ html[data-calendar-mode-transition] .calendar-back-link {
     margin: 0.2em 0;
   }
 
-  & li::marker {
-    color: var(--color-tx-3);
-  }
-
   /* Blockquote */
   & blockquote {
     border-left: 2px solid var(--color-border);
     padding: 0.1em 0 0.1em 1.1em;
     margin: 1.6em 0;
-    color: var(--color-tx-2);
 
     & p {
       margin: 0.6em 0;
@@ -265,7 +250,6 @@ html[data-calendar-mode-transition] .calendar-back-link {
 
   /* Code */
   & code {
-    color: var(--color-tx);
     font-size: 0.875em;
     word-break: break-all;
     overflow-wrap: break-word;
@@ -281,7 +265,6 @@ html[data-calendar-mode-transition] .calendar-back-link {
   /* Pre */
   & pre {
     background: var(--color-inline);
-    color: var(--color-tx);
     border: 1px solid var(--color-border);
     padding: 1em 1.15em;
     border-radius: 0.625rem;
@@ -365,7 +348,5 @@ html[data-calendar-mode-transition] .calendar-back-link {
 
   & th {
     background: var(--color-inline);
-    color: var(--color-tx);
-    font-weight: 500;
   }
 }

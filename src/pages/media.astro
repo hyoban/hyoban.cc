@@ -10,7 +10,7 @@ const pageTitle = `Media | ${SITE_TITLE}`
 const pageDescription = '我推荐的电影、剧集和动画'
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p'
 const posterImageClass = 'aspect-[2/3] w-full rounded bg-inline object-cover shadow-[0_0_0_1px_var(--color-border)]'
-const sourceLinkClass = 'inline-flex items-center text-tx-3 no-underline hover:text-tx'
+const sourceLinkClass = 'inline-flex items-center no-underline hover:text-tx'
 const sourceIconClass = 'inline-block size-[1em] text-current'
 const ANIMATION_GENRE_ID = 16
 const mediaCategories = [
@@ -231,7 +231,7 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
         mediaCategories.map(category => (
           <a
             href={`/media/?category=${category.value}`}
-            class="inline-flex min-h-9 shrink-0 items-center gap-1.5 text-tx-3 no-underline transition-colors hover:text-tx"
+            class="inline-flex min-h-9 shrink-0 items-center gap-1.5 text-tx-2 no-underline transition-colors hover:text-tx"
             aria-controls="media-list"
             aria-current={category.value === 'anime' ? 'page' : undefined}
             data-media-filter={category.value}
@@ -268,13 +268,13 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
                 }
 
                 <header class="col-start-2 row-start-1 min-w-0 space-y-2">
-                  <h2 class="truncate font-medium text-tx">
+                  <h2 class="truncate font-medium">
                     <a href={work.tmdbUrl} target="_blank" rel="noopener noreferrer" class="no-underline">
                       {work.displayTitle}
                     </a>
                   </h2>
                   {(work.creator || work.year || work.doubanUrl || work.playbackSources.length > 0) && (
-                    <p class="flex flex-wrap items-center gap-x-3 gap-y-1 text-tx-3">
+                    <p class="flex flex-wrap items-center gap-x-3 gap-y-1 text-tx-2">
                       {work.creator && <span>{work.creator}</span>}
                       {work.year && <span>{work.year}</span>}
                       {work.doubanUrl && (
@@ -292,7 +292,7 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
                 </header>
 
                 {work.note && (
-                  <p class="col-start-2 self-end line-clamp-2 leading-relaxed text-tx sm:line-clamp-3">{work.note}</p>
+                  <p class="col-start-2 self-end line-clamp-2 leading-relaxed sm:line-clamp-3">{work.note}</p>
                 )}
 
                 {work.overview && (
