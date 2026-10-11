@@ -77,14 +77,22 @@ const WAYPOINT_PAUSE = 2000
 // Switching photos fades through: the old one fades out, the frame takes the new one's
 // shape, then the new one fades in, so the two are never seen on top of each other.
 const PHOTO_SWITCH = { duration: 480, easing: 'cubic-bezier(0.4, 0, 0.2, 1)' }
-const FADE_OUT: Keyframe[] = [{ opacity: 1 }, { offset: 0.35, opacity: 0 }, { opacity: 0 }]
+// The two fades overlap a little while both are faint, so there's no empty moment
+// between them, but never both clearly at once.
+const FADE_OUT: Keyframe[] = [{ opacity: 1 }, { offset: 0.46, opacity: 0 }, { opacity: 0 }]
 const FADE_IN: Keyframe[] = [
-  { opacity: 0, transform: 'scale(0.97)' },
-  { offset: 0.4, opacity: 0, transform: 'scale(0.97)' },
+  { opacity: 0, transform: 'scale(0.98)' },
+  { offset: 0.2, opacity: 0, transform: 'scale(0.98)' },
   { opacity: 1, transform: 'none' },
 ]
-// A card's height eases to the next card's while its new content fades in.
-const CARD_SWITCH = { duration: 360, easing: 'cubic-bezier(0.4, 0, 0.2, 1)' }
+// A card's height eases to the next card's; the old content fades out as the new
+// content fades in.
+const CARD_SWITCH = { duration: 380, easing: 'cubic-bezier(0.4, 0, 0.2, 1)' }
+const CARD_FADE_IN: Keyframe[] = [
+  { opacity: 0, transform: 'translateY(0.25rem)' },
+  { offset: 0.25, opacity: 0, transform: 'translateY(0.25rem)' },
+  { opacity: 1, transform: 'none' },
+]
 const LEG_DURATION = 2200
 const STOP_ZOOM = 9
 // The closest the camera comes in while following a short drive.
@@ -284,6 +292,8 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   let photoIndex = 0
   let photo: HTMLImageElement | undefined
   let thumbnails: HTMLButtonElement[] = []
+  // The side card's change to the next card in progress, finished early if another starts.
+  let cardTransition: { animations: Animation[]; cleanup: () => void } | undefined
   // The side card's photo switch in progress, finished early if another one starts.
   let photoTransition: { animations: Animation[]; cleanup: () => void } | undefined
   let liveVideo: HTMLVideoElement | undefined
@@ -295,6 +305,21 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   // Photos decoded ahead while recording, so a card never opens on a blank frame.
   const decodedPhotos = new Map<string, Promise<void>>()
   const readyPhotos = new Set<string>()
+
+  /**
+   * Presenting or recording, a stop's photo card only appears once the camera has
+   * arrived (see renderStage), so the stop lasts that much longer and its photos are
+   * timed from then: the first and last get as long as the others.
+   */
+  function getPhotoDelay(slide: Slide | undefined) {
+    return slide?.type === 'stop' && isStageLayout() && !reducedMotion.matches ? LEG_DURATION : 0
+  }
+
+  /** How long a slide stays up, in the card's own time (which runs faster at 2×). */
+  function getDuration(slide: Slide | undefined) {
+    const duration = getSlideDuration(slide)
+    return duration === undefined ? undefined : duration + getPhotoDelay(slide)
+  }
 
   // The page itself becomes a narrow stage while recording or presenting, so measure it.
   function isNarrow() {
@@ -349,7 +374,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
    */
   function renderRouteProgress() {
     const slide = slides[index]
-    const duration = getSlideDuration(slide)
+    const duration = getDuration(slide)
 
     if (slide?.type !== 'stop' || !duration || traveling || legFrame !== undefined) {
       return
@@ -663,7 +688,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   }
 
   function renderProgress() {
-    const duration = getSlideDuration(slides[index])
+    const duration = getDuration(slides[index])
 
     for (const [itemIndex, item] of [...progress.children].entries()) {
       const fill = item.querySelector<HTMLElement>('[data-progress-fill]')
@@ -692,8 +717,11 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     const slide = slides[index]
 
     if (slide?.type === 'stop' && duration && slide.stop.images.length > 1) {
+      // The photos share the time from when the card shows them, evenly.
+      const delay = getPhotoDelay(slide)
+      const shown = Math.max(elapsed - delay, 0) / Math.max(duration - delay, 1)
       const nextPhotoIndex = Math.min(
-        Math.floor((elapsed / duration) * slide.stop.images.length),
+        Math.floor(shown * slide.stop.images.length),
         slide.stop.images.length - 1,
       )
 
@@ -706,29 +734,79 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   }
 
   /**
-   * Eases the side card from its old height to the new card's and fades the new
-   * content in. The card is anchored at the bottom, so it grows or shrinks upwards.
+   * Runs `update` (which renders the next card) and eases the side card between the
+   * two. The card is anchored at the bottom, so it grows or shrinks upwards; its
+   * footer stays pinned there meanwhile instead of being cut off. A copy of the old
+   * card fades out as the new one fades in.
    */
-  function animateCardChange(fromHeight: number | undefined) {
-    if (fromHeight === undefined || reducedMotion.matches || isStageLayout()) {
+  function changeCard(update: () => void) {
+    if (panel.hidden || reducedMotion.matches || isStageLayout()) {
+      endCardTransition()
+      update()
       return
     }
 
+    // Where a change still in progress has got to, so a quick second one carries on.
+    const fromHeight = panel.getBoundingClientRect().height
+    endCardTransition()
+
+    const ghost = createElement('div', 'calendar-map-trip-ghost', '')
+    const top = header.offsetTop
+
+    ghost.append(header.cloneNode(true), body.cloneNode(true))
+    ghost.setAttribute('aria-hidden', 'true')
+    ghost.inert = true
+
+    // The copy keeps nothing the player looks up, so it can't be mistaken for the card.
+    for (const element of [ghost, ...ghost.querySelectorAll('*')]) {
+      element.removeAttribute('id')
+
+      for (const name of element.getAttributeNames()) {
+        if (name.startsWith('data-calendar-map')) {
+          element.removeAttribute(name)
+        }
+      }
+    }
+
+    update()
+
     const toHeight = panel.offsetHeight
 
-    if (Math.abs(toHeight - fromHeight) > 1) {
-      panel.animate([{ height: `${fromHeight}px` }, { height: `${toHeight}px` }], CARD_SWITCH)
+    ghost.style.top = `${top}px`
+    panel.append(ghost)
+    panel.toggleAttribute('data-resizing', true)
+
+    const animations = [
+      panel.animate([{ height: `${fromHeight}px` }, { height: `${toHeight}px` }], CARD_SWITCH),
+      ghost.animate(FADE_OUT, CARD_SWITCH),
+      header.animate(CARD_FADE_IN, CARD_SWITCH),
+      body.animate(CARD_FADE_IN, CARD_SWITCH),
+    ]
+
+    cardTransition = {
+      animations,
+      cleanup: () => {
+        ghost.remove()
+        panel.removeAttribute('data-resizing')
+      },
+    }
+    void animations[0]!.finished.then(endCardTransition, () => {})
+  }
+
+  function endCardTransition() {
+    if (!cardTransition) {
+      return
     }
 
-    for (const part of [header, body]) {
-      part.animate(
-        [
-          { opacity: 0, transform: 'translateY(0.375rem)' },
-          { opacity: 1, transform: 'none' },
-        ],
-        { ...CARD_SWITCH, delay: 60, fill: 'backwards' },
-      )
+    const { animations, cleanup } = cardTransition
+
+    cardTransition = undefined
+
+    for (const animation of animations) {
+      animation.cancel()
     }
+
+    cleanup()
   }
 
   /**
@@ -861,9 +939,11 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
   /** Shows one of a stop's photos, moving the card's timer to where it is shown. */
   function selectPhoto(stop: TripStop, imageIndex: number) {
-    const duration = getSlideDuration(slides[index]) ?? 0
+    const slide = slides[index]
+    const delay = getPhotoDelay(slide)
+    const duration = getDuration(slide) ?? 0
 
-    elapsed = (duration / stop.images.length) * imageIndex
+    elapsed = delay + ((duration - delay) / stop.images.length) * imageIndex
     animatePhotoSize(() => showPhoto(stop, imageIndex))
     renderProgress()
   }
@@ -1064,6 +1144,10 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     if (!trip || !slide) {
       return
     }
+
+    // The outgoing stop's photo card is on its way out; the side card below mustn't
+    // put the next stop's first photo into it (renderStage builds the new one).
+    stagePhotosReady = false
 
     // A stop's day, time and place are labelled on the map instead of the card.
     header.classList.toggle('sr-only', slide.type === 'stop')
@@ -1491,14 +1575,11 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     // Autoplay stays quiet, like a carousel; stepping through by hand names each card.
     announcer.textContent = playing ? '' : getSlideLabel(slide)
 
-    if (!getSlideDuration(slide)) {
+    if (!getDuration(slide)) {
       playing = false
     }
 
-    const cardHeight = panel.hidden ? undefined : panel.offsetHeight
-
-    renderSlide()
-    animateCardChange(cardHeight)
+    changeCard(renderSlide)
 
     routeProgress = undefined
     // Where a drive to this stop starts, while it is still to be drawn.
@@ -1924,7 +2005,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     camera.update(now)
 
     const delta = lastFrameTime === undefined ? 0 : now - lastFrameTime
-    const duration = getSlideDuration(slides[index])
+    const duration = getDuration(slides[index])
 
     lastFrameTime = now
 
@@ -2204,7 +2285,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   playButton.addEventListener(
     'click',
     () => {
-      if (!playing && !getSlideDuration(slides[index])) {
+      if (!playing && !getDuration(slides[index])) {
         goTo(0, { play: true })
         return
       }
