@@ -92,7 +92,10 @@ test('times stops by their photos and text, and leaves the summary open', () => 
   const live = { video: 'clip.mp4' }
   const withClips = { liveClips: true }
 
-  assert.equal(getSlideDuration({ type: 'intro' }), 2000)
+  assert.equal(getSlideDuration({ type: 'intro' }), 3000)
+  // A day's opener stays longer the more places it lists, up to a limit.
+  assert.equal(getSlideDuration({ places: ['无为'], type: 'day' }), 1660)
+  assert.equal(getSlideDuration({ places: ['字'.repeat(80)], type: 'day' }), 2800)
   assert.equal(getSlideDuration(stopSlide([], '')), 3000)
   assert.equal(getSlideDuration(stopSlide([still, still, still], '')), 4500)
   assert.equal(getSlideDuration(stopSlide([still], '字'.repeat(50))), 6000)
