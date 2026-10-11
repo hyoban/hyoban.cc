@@ -17,6 +17,11 @@ export type TripDefinition = Readonly<{
   id: string
   /** Default background music, an id from src/data/music.ts. */
   music?: string
+  /**
+   * Places driven back the way they came, as `[from, to]` location ids: the drive back
+   * from `to` follows the road route from `from`, reversed, rather than its own.
+   */
+  sameWayBack?: readonly (readonly [string, string])[]
   start: string
   /** Legs between two location ids taken by ferry or plane; drawn straight instead of along roads. */
   straightLegs?: readonly (readonly [string, string, 'ferry' | 'plane'])[]
@@ -40,6 +45,8 @@ export type TravelMode = 'car' | 'ferry' | 'plane'
 export type TripLeg = Readonly<{
   by: TravelMode
   from: TripLocation
+  /** Driven back along the route the other way (see `sameWayBack`), so not fetched. */
+  retraced?: true
   route?: TripRoute
   to: TripLocation
 }>
@@ -112,6 +119,12 @@ export function defineTrips<const T extends readonly TripDefinition[]>(trips: T)
     for (const leg of trip.straightLegs ?? []) {
       if (leg[0] === leg[1] || (leg[2] !== 'ferry' && leg[2] !== 'plane')) {
         throw new Error(`Invalid straight leg in trip "${trip.id}".`)
+      }
+    }
+
+    for (const [from, to] of trip.sameWayBack ?? []) {
+      if (from === to) {
+        throw new Error(`Invalid same-way-back leg in trip "${trip.id}".`)
       }
     }
 
@@ -209,9 +222,26 @@ export function buildTrip<T extends TripMoment>(
         ([first, second]) =>
           (first === from.id && second === to.id) || (first === to.id && second === from.id),
       )?.[2] ?? 'car'
-    const route = by === 'car' ? routes[getLegKey(from, to)] : undefined
+    const retraced =
+      by === 'car' &&
+      (trip.sameWayBack ?? []).some(([first, second]) => first === to.id && second === from.id)
+    const outbound = retraced ? routes[getLegKey(to, from)] : undefined
+    const route =
+      by !== 'car'
+        ? undefined
+        : outbound
+          ? { ...outbound, coordinates: [...outbound.coordinates].reverse() }
+          : retraced
+            ? undefined
+            : routes[getLegKey(from, to)]
 
-    return { by, from, to, ...(route ? { route } : {}) }
+    return {
+      by,
+      from,
+      to,
+      ...(retraced ? { retraced: true as const } : {}),
+      ...(route ? { route } : {}),
+    }
   })
   // Road distance where a route is cached, otherwise as the crow flies.
   const distanceKm = legs.reduce(

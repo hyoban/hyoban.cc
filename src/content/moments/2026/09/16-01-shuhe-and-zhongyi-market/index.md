@@ -1,6 +1,8 @@
 ---
 occurredAt: '2026-09-16T11:00:00+08:00'
-location: shuhe-ancient-town
+location:
+  - shuhe-ancient-town
+  - zhongyi-market
 media:
   - type: image
     file: shuhe-and-zhongyi-market.webp
