@@ -42,6 +42,16 @@ export const locations = defineLocations({
     longitude: 121.6,
     name: '大连',
   },
+  'dalian-huozhang-niaogengzuo': {
+    latitude: 38.85751,
+    longitude: 121.51893,
+    name: '火長鳥耕作·燒鳥專門店（高新三号店）',
+  },
+  'dalian-riyuesheng-yujiacai': {
+    latitude: 38.91026,
+    longitude: 121.60186,
+    name: '日月昇渔家菜（万达华府店）',
+  },
   'dalongwan-beach': {
     latitude: 31.3126,
     longitude: 118.3407,
@@ -51,6 +61,16 @@ export const locations = defineLocations({
     latitude: 40.1211,
     longitude: 124.3943,
     name: '丹东',
+  },
+  'dandong-gaoshezhang-tangfan': {
+    latitude: 40.12989,
+    longitude: 124.38169,
+    name: '高社长汤饭（三部六纬路店）',
+  },
+  'dandong-yanjing-kaorou': {
+    latitude: 40.10392,
+    longitude: 124.35867,
+    name: '眼镜烤肉（老街店）',
   },
   'dashu-mountain': {
     latitude: 31.843,
@@ -187,6 +207,11 @@ export const locations = defineLocations({
     longitude: 113.81054,
     name: '林州',
   },
+  'linzhou-dongyao': {
+    latitude: 35.91412,
+    longitude: 113.95249,
+    name: '林州东姚镇',
+  },
   'longwo-lake': {
     latitude: 31.2735,
     longitude: 118.3205,
@@ -277,6 +302,26 @@ export const locations = defineLocations({
     longitude: 123.42806,
     name: '沈阳',
   },
+  'shenyang-mixc': {
+    latitude: 41.77405,
+    longitude: 123.42831,
+    name: '沈阳万象城',
+  },
+  'shenyang-laoma-jijia': {
+    latitude: 41.78392,
+    longitude: 123.42449,
+    name: '老马鸡架（总店）',
+  },
+  'shenyang-qinghe-bandao-hot-spring': {
+    latitude: 41.9341,
+    longitude: 123.42649,
+    name: '沈阳清河半岛温泉度假酒店',
+  },
+  'shenyang-yuyue-kaoya': {
+    latitude: 41.85344,
+    longitude: 123.41149,
+    name: '遇约烤鸭（中粮店）',
+  },
   shenzhen: {
     latitude: 22.5431,
     longitude: 114.0579,
@@ -306,6 +351,11 @@ export const locations = defineLocations({
     latitude: 39.1336,
     longitude: 117.2054,
     name: '天津',
+  },
+  'tianjin-meisu-guobacai': {
+    latitude: 39.13629,
+    longitude: 117.21053,
+    name: '美素锅巴菜（华捷道）',
   },
   'tiger-leaping-gorge': {
     latitude: 27.23,
@@ -387,6 +437,11 @@ export const locations = defineLocations({
     longitude: 118.7955,
     name: '玄武湖',
   },
+  'yalu-river': {
+    latitude: 40.1161,
+    longitude: 124.3898,
+    name: '鸭绿江',
+  },
   yangzhou: {
     latitude: 32.3942,
     longitude: 119.4127,
@@ -396,6 +451,11 @@ export const locations = defineLocations({
     latitude: 37.4646,
     longitude: 121.4478,
     name: '烟台',
+  },
+  'yantai-port-passenger-terminal': {
+    latitude: 37.5555,
+    longitude: 121.3718,
+    name: '烟台港客运站',
   },
   yucun: {
     latitude: 30.5252,
