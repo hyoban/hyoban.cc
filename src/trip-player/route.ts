@@ -105,6 +105,11 @@ export function getTravelMode(
   )
 }
 
+/** Starts and ends at rest, so speed never jumps between one stretch and the next. */
+export function easeInOut(t: number) {
+  return (1 - Math.cos(Math.PI * Math.min(Math.max(t, 0), 1))) / 2
+}
+
 export function lineFeature(coordinates: readonly Coordinates[]) {
   return {
     geometry: { coordinates: coordinates as [number, number][], type: 'LineString' as const },

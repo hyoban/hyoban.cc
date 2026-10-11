@@ -1,5 +1,6 @@
-import mapboxgl from 'mapbox-gl'
-import { getDistanceKm } from '../geo'
+import type { Map as MapboxMap } from 'mapbox-gl'
+import type { Coordinates } from '../geo'
+import { createCamera } from './camera'
 import {
   createElement,
   createLiveVideo,
@@ -21,12 +22,14 @@ import {
   writeSpeedPreference,
 } from './preferences'
 import {
+  easeInOut,
   getRouteLine as buildRouteLine,
   getTravelMode,
   measureLine,
   walkLine,
   type MeasuredLine,
 } from './route'
+import { createMapLabels } from './map-labels'
 import { createRouteLayers, type StopState } from './route-layers'
 import {
   buildSlides,
@@ -58,7 +61,7 @@ import type {
 // layout to present full screen or to record as a video.
 
 type TripPlayerOptions = {
-  getMap: () => mapboxgl.Map | undefined
+  getMap: () => MapboxMap | undefined
   onClose: () => void
   page: HTMLElement
   signal: AbortSignal
@@ -69,12 +72,8 @@ const WAYPOINT_PAUSE = 2000
 const PHOTO_SLIDE_DISTANCE = 20
 const LEG_DURATION = 2200
 const STOP_ZOOM = 9
-// Each stop is framed together with the trip's other places this close to it.
-const NEARBY_RADIUS_KM = 30
+// The closest the camera comes in while following a short drive.
 const NEARBY_MAX_ZOOM = 13
-// On a long leg the camera pulls back from here in a stop's time to show both ends.
-const FOLLOW_START = 0.4
-const FOLLOW_SHARE = 0.4
 // How long the summary card stays in an exported video before it ends.
 const EXPORT_SUMMARY_HOLD = 4000
 // avc1 keeps the codec setup in the file header; QuickTime can't play avc3 MP4s.
@@ -170,7 +169,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   let musicOn = readMusicPreference()
   let pendingAmbient: { src: string } | undefined
   let stageToken: object | undefined
-  let stopPopups: mapboxgl.Popup[] = []
+  const mapLabels = createMapLabels(getMap)
   let trip: TripData | undefined
   // Photos for the intro and summary.
   let covers: TripImage[] = []
@@ -183,6 +182,14 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   let elapsed = 0
   let playing = false
   let speed: number = readSpeedPreference()
+  const camera = createCamera({
+    // The tip while the route is drawn, else the last place it reached.
+    getFocus: () => routeTip ?? points[Math.max(drawnPointCount - 1, 0)]?.coordinates,
+    getMap,
+    getPadding: () => getCameraPadding(),
+    getSpeed: () => speed,
+    reducedMotion,
+  })
   const layers = createRouteLayers(getMap, () => ({
     ink: getComputedStyle(page).getPropertyValue('--color-tx').trim() || '#21201c',
     paper: getComputedStyle(page).getPropertyValue('--color-bg').trim() || '#fdfdfc',
@@ -196,9 +203,10 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   let traveling = false
   let currentWaypointPoint = -1
   let drawnPointCount = 0
-  // The stop whose long leg the camera has already pulled back for.
-  let followedStop = -1
-  let routeProgress: (MeasuredLine & { stopIndex: number }) | undefined
+  // The onward drive during a stop's card, timed from when the drive there finished.
+  // Where the route is being drawn up to right now, for the camera to follow.
+  let routeTip: Coordinates | undefined
+  let routeProgress: (MeasuredLine & { startedAt: number; stopIndex: number }) | undefined
   let photoIndex = 0
   let photo: HTMLImageElement | undefined
   let thumbnails: HTMLButtonElement[] = []
@@ -245,45 +253,6 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     return getPointStart(stopPointEnds, stopIndex)
   }
 
-  /**
-   * When the next point is far away, eases the camera out to frame the stop and that
-   * point together, so the moving route stays in view on its way there.
-   */
-  function followLongLeg(stop: TripStop, next: TripPoint, duration: number) {
-    const map = getMap()
-    const places = stop.places.map((place) => [place.longitude, place.latitude] as [number, number])
-
-    if (
-      !map ||
-      places.some((coordinates) => getDistanceKm(coordinates, next.coordinates) <= NEARBY_RADIUS_KM)
-    ) {
-      return
-    }
-
-    const bounds = new mapboxgl.LngLatBounds()
-
-    for (const coordinates of [...places, next.coordinates]) {
-      bounds.extend(coordinates)
-    }
-
-    const camera = map.cameraForBounds(bounds, {
-      maxZoom: NEARBY_MAX_ZOOM,
-      padding: getCameraPadding(),
-    })
-
-    if (!camera) {
-      return
-    }
-
-    map.easeTo({
-      ...camera,
-      duration: reducedMotion.matches ? 0 : (duration * FOLLOW_SHARE) / speed,
-      easing: (t) => t * (2 - t),
-      essential: false,
-      padding: getCameraPadding(),
-    })
-  }
-
   /** Index in `points` of a stop's first place, after the waypoints leading to it. */
   function getStopPlaceStart(stopIndex: number) {
     return getStopPointStart(stopIndex) + (trip?.stops[stopIndex]?.waypoints.length ?? 0)
@@ -305,15 +274,16 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     const to = Math.min(stopPointEnds[slide.stopIndex]!, points.length - 1)
 
     if (routeProgress?.stopIndex !== slide.stopIndex) {
-      routeProgress = { ...measureLine(getRouteLine(from, to + 1)), stopIndex: slide.stopIndex }
+      routeProgress = {
+        ...measureLine(getRouteLine(from, to + 1)),
+        startedAt: elapsed,
+        stopIndex: slide.stopIndex,
+      }
     }
 
-    const fraction = Math.min(elapsed / duration, 1)
-
-    if (fraction >= FOLLOW_START && followedStop !== slide.stopIndex) {
-      followedStop = slide.stopIndex
-      followLongLeg(slide.stop, points[to]!, duration)
-    }
+    // Starts from rest once any drive here is done, and arrives as the card ends.
+    const left = duration - routeProgress.startedAt
+    const fraction = left > 0 ? Math.min((elapsed - routeProgress.startedAt) / left, 1) : 1
 
     if (fraction >= 1 || routeProgress.total === 0) {
       drawnPointCount = fraction >= 1 ? to + 1 : from + 1
@@ -322,7 +292,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     }
 
     drawnPointCount = from + 1
-    setRoute(from + 1, walkLine(routeProgress, fraction))
+    setRoute(from + 1, walkLine(routeProgress, easeInOut(fraction)))
   }
 
   /** Adds the route layers, also after the map style changes and drops them. */
@@ -344,6 +314,8 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
    */
   function setRoute(pointCount: number, walked?: ReturnType<typeof walkLine>) {
     const from = points[pointCount - 1]
+
+    routeTip = walked?.passed.at(-1)
 
     layers.setRoute(
       pointCount,
@@ -421,121 +393,83 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
         return
       }
 
-      // Eases out, so the drive arrives gently; the drawn part follows the road.
-      setRoute(legStart + 1, walkLine(leg, 1 - (1 - t) ** 3))
+      // Sets off and arrives gently, as the onward drive on each card does.
+      setRoute(legStart + 1, walkLine(leg, easeInOut(t)))
       legFrame = requestAnimationFrame(step)
     }
 
     legFrame = requestAnimationFrame(step)
   }
 
-  function fitTrip(options: { instant?: boolean } = {}) {
-    const map = getMap()
-
-    if (!map || !trip) {
-      return
-    }
-
-    const bounds = new mapboxgl.LngLatBounds()
-
-    for (const point of points) {
-      bounds.extend(point.coordinates)
-    }
-
-    map.fitBounds(bounds, {
-      duration: reducedMotion.matches || options.instant ? 0 : 1200,
-      maxZoom: STOP_ZOOM,
-      padding: getCameraPadding(),
-    })
-  }
-
-  /** Keeps a long leg in view while it is drawn, from `points[from]` to `points[to]`. */
-  function frameLeg(from: number, to: number) {
-    const map = getMap()
-    const bounds = new mapboxgl.LngLatBounds()
-
-    for (const coordinates of getRouteLine(from, to + 1)) {
-      bounds.extend(coordinates)
-    }
-
-    if (!map || bounds.isEmpty()) {
-      return
-    }
-
-    removeStopPopups()
-    map.fitBounds(bounds, {
-      duration: reducedMotion.matches ? 0 : getLegDuration() / 2,
-      maxZoom: NEARBY_MAX_ZOOM - 1,
-      padding: getCameraPadding(),
-    })
+  function frameTrip(options: { instant?: boolean } = {}) {
+    camera.overview(
+      points.map((point) => point.coordinates),
+      STOP_ZOOM,
+      options,
+    )
   }
 
   /** Frames where the day sets off from and every place it visits. */
-  function fitDay({ day, stopIndex }: Extract<Slide, { type: 'day' }>) {
-    const map = getMap()
-
-    if (!map || !trip) {
+  /**
+   * Stays where the day sets off (where the night was spent, or the last waypoint
+   * passed the evening before) and eases to a zoom for the day's first drive.
+   */
+  function frameDay({ stopIndex }: Extract<Slide, { type: 'day' }>) {
+    if (!trip) {
       return
     }
 
-    const bounds = new mapboxgl.LngLatBounds()
-    // The last place before the day's own: where the night was spent, or the last
-    // waypoint passed the evening before. Keeps the day's first drive in view.
     const setOff =
-      points[getStopPointStart(stopIndex) + getEarlierDayWaypointCount(trip.stops[stopIndex]) - 1]
+      getStopPointStart(stopIndex) + getEarlierDayWaypointCount(trip.stops[stopIndex]) - 1
 
-    if (setOff) {
-      bounds.extend(setOff.coordinates)
-    }
-
-    for (const stop of trip.stops) {
-      if (stop.day === day) {
-        for (const place of [
-          ...stop.waypoints.filter((waypoint) => waypoint.day === day),
-          ...stop.places,
-        ]) {
-          bounds.extend([place.longitude, place.latitude])
-        }
-      }
-    }
-
-    if (bounds.isEmpty()) {
-      return
-    }
-
-    map.fitBounds(bounds, {
-      duration: reducedMotion.matches ? 0 : 1200,
-      maxZoom: NEARBY_MAX_ZOOM - 1,
-      padding: getCameraPadding(),
-    })
+    camera.follow(
+      getRouteLine(Math.max(setOff, 0), getStopPlaceStart(stopIndex) + 1),
+      NEARBY_MAX_ZOOM - 1,
+    )
   }
 
-  function moveCamera() {
-    const map = getMap()
+  /**
+   * Follows the drive on a stop's card: the drive here while it is still being
+   * drawn from `arrivingFrom`, else the drive on to the next place.
+   */
+  function frameStop(stopIndex: number, arrivingFrom?: number) {
+    const placeStart = getStopPlaceStart(stopIndex)
+    const onwardEnd = Math.min(stopPointEnds[stopIndex]!, points.length - 1)
+    const stretch =
+      arrivingFrom === undefined
+        ? getRouteLine(placeStart, onwardEnd + 1)
+        : getRouteLine(arrivingFrom, placeStart + 1)
+    const spread = stretch.some(
+      ([longitude, latitude]) => longitude !== stretch[0]![0] || latitude !== stretch[0]![1],
+    )
+
+    // A place with nowhere to drive on to is shown at a city's scale.
+    camera.follow(stretch, spread ? NEARBY_MAX_ZOOM : STOP_ZOOM)
+  }
+
+  function moveCamera(arrivingFrom?: number) {
     const slide = slides[index]
 
-    if (!map || !slide) {
+    if (!slide) {
       return
     }
 
-    removeStopPopups()
+    mapLabels.clear()
 
     if (slide.type === 'day') {
-      fitDay(slide)
+      frameDay(slide)
       return
     }
 
     if (slide.type !== 'stop') {
-      fitTrip()
+      frameTrip()
       return
     }
 
-    const { places } = slide.stop
-
     // The first place carries the day and time; the card itself shows no title. The
     // recording header already shows the day, so its labels only add the time.
-    showPopups(
-      places.map((place, placeIndex) =>
+    showLabels(
+      slide.stop.places.map((place, placeIndex) =>
         isStageLayout()
           ? {
               coordinates: [place.longitude, place.latitude],
@@ -551,74 +485,12 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
             },
       ),
     )
-
-    const placeCoordinates = places.map(
-      (place) => [place.longitude, place.latitude] as [number, number],
-    )
-    const bounds = new mapboxgl.LngLatBounds()
-
-    for (const point of points) {
-      if (
-        placeCoordinates.some(
-          (coordinates) => getDistanceKm(coordinates, point.coordinates) <= NEARBY_RADIUS_KM,
-        )
-      ) {
-        bounds.extend(point.coordinates)
-      }
-    }
-
-    const padding = getCameraPadding()
-    const camera = bounds.isEmpty()
-      ? undefined
-      : map.cameraForBounds(bounds, { maxZoom: NEARBY_MAX_ZOOM, padding })
-    const options = {
-      center: camera?.center ?? placeCoordinates[0]!,
-      padding,
-      zoom:
-        camera?.zoom !== undefined && bounds.getNorthEast().distanceTo(bounds.getSouthWest()) > 0
-          ? camera.zoom
-          : STOP_ZOOM,
-    }
-
-    if (reducedMotion.matches) {
-      map.jumpTo(options)
-    } else {
-      map.flyTo({ ...options, duration: getLegDuration(), essential: false })
-    }
+    frameStop(slide.stopIndex, arrivingFrom)
   }
 
-  function showPopups(labels: MapLabel[]) {
-    const map = getMap()
-
-    removeStopPopups()
-
-    if (!map) {
-      return
-    }
-
-    stopPopups = labels.map(({ coordinates, eyebrow: labelEyebrow, name }) => {
-      const content = createElement('div', 'grid gap-0.5 whitespace-nowrap', '')
-
-      if (labelEyebrow) {
-        content.append(createElement('p', 'text-[0.6875rem] text-tx-3 tabular-nums', labelEyebrow))
-      }
-
-      content.append(createElement('p', 'text-sm font-medium', name))
-
-      return new mapboxgl.Popup({
-        // On wide screens the card sits on the left, so labels open to the right.
-        anchor: isNarrow() || isStageLayout() ? 'bottom' : 'bottom-left',
-        className: 'calendar-map-trip-label',
-        closeButton: false,
-        closeOnClick: false,
-        focusAfterOpen: false,
-        maxWidth: 'none',
-        offset: 12,
-      })
-        .setLngLat(coordinates)
-        .setDOMContent(content)
-        .addTo(map)
-    })
+  function showLabels(labels: MapLabel[]) {
+    // On wide screens the card sits on the left, so labels open to the right.
+    mapLabels.show(labels, { alignLeft: !isNarrow() && !isStageLayout() })
   }
 
   /**
@@ -627,7 +499,6 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
    */
   async function travelThroughWaypoints(first: number, count: number, arrive: () => void) {
     const token = travelToken
-    const map = getMap()
 
     traveling = true
 
@@ -640,7 +511,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
       currentWaypointPoint = pointIndex
       updateStops()
-      showPopups([
+      showLabels([
         // The stage header names the day; a waypoint from another day says its own.
         isStageLayout() && point.day === getSlideDay(slides[index])
           ? {
@@ -653,20 +524,18 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
               ...(point.eyebrow ? { eyebrow: point.eyebrow } : {}),
             },
       ])
-      map?.flyTo({
-        center: point.coordinates,
-        duration: getLegDuration(),
-        essential: false,
-        padding: getCameraPadding(),
-        zoom: STOP_ZOOM,
-      })
-      // Wait for both the camera and the route to arrive, then pause there.
+      camera.follow(getRouteLine(Math.max(pointIndex - 1, 0), pointIndex + 1), STOP_ZOOM)
       await Promise.all([
         drawnPointCount >= pointIndex + 1
           ? Promise.resolve()
           : drawLeg(Math.max(pointIndex - 1, 0), pointIndex + 1),
         new Promise((resolve) => setTimeout(resolve, reducedMotion.matches ? 0 : getLegDuration())),
       ])
+
+      if (token !== travelToken) {
+        return
+      }
+
       await new Promise((resolve) => setTimeout(resolve, WAYPOINT_PAUSE / speed))
 
       if (token !== travelToken) {
@@ -678,14 +547,6 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     currentWaypointPoint = -1
     updateStops()
     arrive()
-  }
-
-  function removeStopPopups() {
-    for (const popup of stopPopups) {
-      popup.remove()
-    }
-
-    stopPopups = []
   }
 
   function showProgressTip(button: HTMLElement) {
@@ -1371,8 +1232,9 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     renderSlide()
 
     routeProgress = undefined
-    followedStop = -1
-    let longArrival: Promise<void> | undefined
+    // Where a drive to this stop starts, while it is still to be drawn.
+    let arrivingFrom: number | undefined
+    let arrival: Promise<void> | undefined
 
     if (slide.type === 'stop') {
       const placeStart = getStopPlaceStart(slide.stopIndex)
@@ -1385,16 +1247,8 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
         drawnPointCount = arriveAt
         setRoute(drawnPointCount)
       } else {
-        const from = legStart ?? Math.max(placeStart - 1, 0)
-        const leg = drawLeg(from, arriveAt)
-
-        if (
-          getDistanceKm(points[from]!.coordinates, points[placeStart]!.coordinates) >
-          NEARBY_RADIUS_KM
-        ) {
-          longArrival = leg
-          frameLeg(from, placeStart)
-        }
+        arrivingFrom = legStart ?? Math.max(placeStart - 1, 0)
+        arrival = drawLeg(arrivingFrom, arriveAt)
       }
     } else if (slide.type === 'day') {
       // Usually the previous stop's route already reached here; jumps set it directly.
@@ -1415,16 +1269,16 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
     updateStops()
 
-    if (longArrival) {
-      // Zooming in to the stop waits until the drive there has been drawn in view.
+    moveCamera(arrivingFrom)
+
+    if (arrival && slide.type === 'stop') {
+      // Once the drive here is drawn, the camera eases to the zoom of the drive on.
       const token = travelToken
-      void longArrival.then(() => {
+      void arrival.then(() => {
         if (token === travelToken && index === nextIndex) {
-          moveCamera()
+          frameStop(slide.stopIndex)
         }
       })
-    } else {
-      moveCamera()
     }
 
     renderRouteProgress()
@@ -1544,7 +1398,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     // Reset to a still intro first: the camera jumps to the whole route and the
     // tiles load before the first frame, so playback doesn't open mid-flight.
     goTo(0, { play: false })
-    fitTrip({ instant: true })
+    frameTrip({ instant: true })
     await waitForMapIdle()
 
     if (stageToken !== token) {
@@ -1665,6 +1519,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
   function tick(now: number) {
     frame = requestAnimationFrame(tick)
+    camera.update(now)
 
     const delta = lastFrameTime === undefined ? 0 : now - lastFrameTime
     const duration = getSlideDuration(slides[index])
@@ -1857,8 +1712,10 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     travelToken += 1
     traveling = false
     cancelLeg()
-    removeStopPopups()
+    mapLabels.destroy()
     layers.remove()
+    camera.stop()
+    routeTip = undefined
     trip = undefined
     slides = []
     playing = false
