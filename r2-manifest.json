@@ -3,10 +3,10 @@
   "accountId": "e68c7dce80df20ff5802b9ac36f1eab6",
   "bucket": "blog-images",
   "origin": "https://image.hyoban.cc",
-  "createdAt": "2026-10-09T13:07:41.473Z",
-  "inventorySha256": "552ad05543e16126843665bf716e13fe65c8bc8c25decdfb00eddb840fb661bf",
-  "objectCount": 2623,
-  "totalBytes": 633981925,
+  "createdAt": "2026-10-11T14:39:54.828Z",
+  "inventorySha256": "9febe969c16f7829ed7e78915887c67adbe2f39438033eb6c1e723df9d7b8178",
+  "objectCount": 2625,
+  "totalBytes": 633992839,
   "objects": [
     {
       "key": "moments/2023/04/15-01-preview-dialog-for-my-blog-post-with-intercepting-amp/preview-dialog-for-my-blog-post-with-intercepting-amp-video-poster.png",
@@ -20974,6 +20974,22 @@
       "contentType": "image/png",
       "etag": "f569ad542550ff3d5879e25ae9bd458b",
       "lastModified": "2026-07-29T15:19:14.574Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "site/avatar-64.png",
+      "bytes": 8392,
+      "contentType": "image/png",
+      "etag": "ab591d97cddb15925542d4d47e85657d",
+      "lastModified": "2026-10-11T14:37:27.909Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "site/avatar-80.webp",
+      "bytes": 2522,
+      "contentType": "image/webp",
+      "etag": "045b3125f38e89c3f3f6e46233d99ec0",
+      "lastModified": "2026-10-11T14:37:23.139Z",
       "storageClass": "Standard"
     },
     {
