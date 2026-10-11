@@ -89,11 +89,15 @@ const NEARBY_MAX_ZOOM = 13
 // How long the summary card stays in an exported video before it ends.
 const EXPORT_SUMMARY_HOLD = 4000
 const EXPORT_VIDEO_TYPES = [
-  'video/mp4;codecs=avc1',
+  'video/mp4;codecs=avc1,mp4a.40.2',
   'video/mp4',
-  'video/webm;codecs=vp9',
+  'video/webm;codecs=vp9,opus',
   'video/webm',
 ]
+// Background music fades in at the start and out as the summary card ends.
+const MUSIC_FADE_IN = 1
+const MUSIC_FADE_OUT = 2
+const MUSIC_VOLUME = 0.8
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
 
 type ExportRatio = 'landscape' | 'portrait'
@@ -129,8 +133,17 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   const actions = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-actions]')
   const exportButton = queryRequired<HTMLButtonElement>(page, '[data-calendar-map-trip-export]')
   const exportOptions = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-export-options]')
+  const exportMusic = queryRequired<HTMLSelectElement>(
+    page,
+    '[data-calendar-map-trip-export-music]',
+  )
   let exporting:
-    | { recorder: MediaRecorder; stopTimer?: ReturnType<typeof setTimeout>; stream: MediaStream }
+    | {
+        music?: { context: AudioContext; gain: GainNode; source: AudioBufferSourceNode }
+        recorder: MediaRecorder
+        stopTimer?: ReturnType<typeof setTimeout>
+        stream: MediaStream
+      }
     | undefined
   let stopPopups: mapboxgl.Popup[] = []
   let trip: TripData | undefined
@@ -1123,6 +1136,16 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     moveCamera()
 
     if (exporting && slide.type === 'summary') {
+      const music = exporting.music
+
+      if (music) {
+        const now = music.context.currentTime
+        const fadeStart = now + Math.max(EXPORT_SUMMARY_HOLD / 1000 - MUSIC_FADE_OUT, 0)
+
+        music.gain.gain.setValueAtTime(MUSIC_VOLUME, fadeStart)
+        music.gain.gain.linearRampToValueAtTime(0, fadeStart + MUSIC_FADE_OUT)
+      }
+
       exporting.stopTimer = setTimeout(stopExport, EXPORT_SUMMARY_HOLD)
     }
   }
@@ -1173,8 +1196,12 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       // Without Region Capture the video includes the whole tab.
     }
 
+    const music = await loadMusic(exportMusic.value)
+    const recorded = music
+      ? new MediaStream([...stream.getVideoTracks(), ...music.destination.stream.getAudioTracks()])
+      : stream
     const mimeType = EXPORT_VIDEO_TYPES.find((type) => MediaRecorder.isTypeSupported(type))
-    const recorder = new MediaRecorder(stream, {
+    const recorder = new MediaRecorder(recorded, {
       ...(mimeType ? { mimeType } : {}),
       videoBitsPerSecond: 12_000_000,
     })
@@ -1195,7 +1222,13 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       )
     })
     track?.addEventListener('ended', stopExport)
-    exporting = { recorder, stream }
+    exporting = {
+      recorder,
+      stream,
+      ...(music
+        ? { music: { context: music.context, gain: music.gain, source: music.source } }
+        : {}),
+    }
 
     // Let the map settle at its new size before the first frame.
     await new Promise((resolve) => setTimeout(resolve, 1000))
@@ -1205,7 +1238,43 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     }
 
     recorder.start(1000)
+
+    if (music) {
+      const now = music.context.currentTime
+
+      music.gain.gain.setValueAtTime(0, now)
+      music.gain.gain.linearRampToValueAtTime(MUSIC_VOLUME, now + MUSIC_FADE_IN)
+      music.source.start()
+    }
+
     goTo(0, { play: true })
+  }
+
+  /** Decodes a background track into a looping source routed to a recordable stream. */
+  async function loadMusic(src: string) {
+    if (!src) {
+      return undefined
+    }
+
+    try {
+      const context = new AudioContext()
+      const buffer = await fetch(src)
+        .then((response) => response.arrayBuffer())
+        .then((data) => context.decodeAudioData(data))
+      const source = context.createBufferSource()
+      const gain = context.createGain()
+      const destination = context.createMediaStreamDestination()
+
+      source.buffer = buffer
+      source.loop = true
+      gain.gain.value = 0
+      source.connect(gain).connect(destination)
+      await context.resume()
+      return { context, destination, gain, source }
+    } catch {
+      // A video without music is better than no video.
+      return undefined
+    }
   }
 
   function stopExport() {
@@ -1225,6 +1294,11 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
     for (const track of exporting.stream.getTracks()) {
       track.stop()
+    }
+
+    if (exporting.music) {
+      exporting.music.source.stop()
+      void exporting.music.context.close()
     }
 
     exporting = undefined
