@@ -9,14 +9,14 @@ type TripStats = Readonly<{
   stops: readonly unknown[]
 }>
 
-/** The summary's tiles, as `[value, unit]`. */
+/** The summary's tiles, as `[number, unit]`. */
 export function getSummaryStats(trip: TripStats) {
   return [
     [trip.dayCount, '天'],
     [trip.stops.length, '条记录'],
     [trip.placeCount, '个地点'],
     [trip.photoCount, '张照片'],
-    [trip.distanceKm.toLocaleString('zh-CN'), '公里'],
+    [trip.distanceKm, '公里'],
     [trip.drivingHours, '小时车程'],
   ] as const
 }
@@ -47,4 +47,17 @@ export function createChapterLog(title: string) {
       return `${chapters.map(({ label, time }) => `${formatChapterTime(time)} ${label}`).join('\n')}\n`
     },
   }
+}
+
+/**
+ * A place's name without what's in brackets, for labels with little room:
+ * 眼镜烤肉（老街店） → 眼镜烤肉. A name that is only brackets stays as it is.
+ */
+export function getShortPlaceName(name: string) {
+  return (
+    name
+      .replaceAll(/[（(][^（）()]*[）)]/g, ' ')
+      .replaceAll(/\s+/g, ' ')
+      .trim() || name
+  )
 }

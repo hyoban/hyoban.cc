@@ -3,6 +3,7 @@ import type { Coordinates } from '../geo'
 import { createCamera } from './camera'
 import {
   canAutoplayLiveClips,
+  createCountUp,
   createElement,
   createLiveVideo,
   createMosaic,
@@ -14,7 +15,7 @@ import {
   preloadThumbnail,
   queryRequired,
 } from './dom'
-import { createChapterLog, getSummaryStats } from './labels'
+import { createChapterLog, getShortPlaceName, getSummaryStats } from './labels'
 import { closeMusic, fadeMusicIn, fadeMusicOut, loadMusic, type Music } from './music'
 import {
   getNextSpeed,
@@ -40,7 +41,6 @@ import { createMapLabels } from './map-labels'
 import { createRouteLayers, type StopState } from './route-layers'
 import {
   buildSlides,
-  getSlideDay,
   getSlideDuration,
   getSlideLabel,
   getStopEyebrow,
@@ -149,6 +149,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   const stageHeader = queryRequired<HTMLElement>(page, '.calendar-map-trip-stage__header')
   const stageEyebrow = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-stage-eyebrow]')
   const stageTitle = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-stage-title]')
+  const stageHeading = createStageHeading(stageEyebrow, stageTitle)
   const stagePhotos = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-stage-photos]')
   const stageCenter = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-stage-center]')
   const stageProgress = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-stage-progress]')
@@ -243,6 +244,11 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   let elapsed = 0
   let playing = false
   let speed: number = readSpeedPreference()
+  // The speed's digits roll from one to the next.
+  const speedFlow = document.createElement('number-flow')
+
+  speedFlow.numberSuffix = '×'
+  speedButton.replaceChildren(speedFlow)
   const camera = createCamera({
     // The tip while the route is drawn, else the last place it reached.
     getFocus: () => routeTip ?? points[Math.max(drawnPointCount - 1, 0)]?.coordinates,
@@ -550,18 +556,12 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       return
     }
 
-    // The first place carries the day and time; the card itself shows no title. The
-    // recording header already shows the day, so its labels only add the time.
+    // The first place carries the day and time; the card itself shows no title.
+    // Presenting or recording, the header shows those, so labels are just short names.
     showLabels(
       slide.stop.places.map((place, placeIndex) =>
         isStageLayout()
-          ? {
-              coordinates: [place.longitude, place.latitude],
-              name:
-                placeIndex === 0 && slide.stop.time
-                  ? `${place.name} · ${slide.stop.time}`
-                  : place.name,
-            }
+          ? { coordinates: [place.longitude, place.latitude], name: getShortPlaceName(place.name) }
           : {
               coordinates: [place.longitude, place.latitude],
               name: place.name,
@@ -596,12 +596,9 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       currentWaypointPoint = pointIndex
       updateStops()
       showLabels([
-        // The stage header names the day; a waypoint from another day says its own.
-        isStageLayout() && point.day === getSlideDay(slides[index])
-          ? {
-              coordinates: point.coordinates,
-              name: point.time ? `${point.name} · ${point.time}` : point.name,
-            }
+        // Presenting or recording, a label is just the place's short name.
+        isStageLayout()
+          ? { coordinates: point.coordinates, name: getShortPlaceName(point.name) }
           : {
               coordinates: point.coordinates,
               name: point.name,
@@ -951,7 +948,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   }
 
   function renderSpeedButton() {
-    speedButton.textContent = `${speed}×`
+    speedFlow.update(speed)
     speedButton.setAttribute('aria-label', `播放速度 ${speed}×`)
   }
 
@@ -1113,10 +1110,10 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
           'flex flex-col-reverse rounded-md bg-inline px-3 py-2',
           '',
         )
-        item.append(
-          createElement('dt', 'text-xs text-tx-3', label),
-          createElement('dd', 'font-mono text-lg tabular-nums', String(value)),
-        )
+        const number = createElement('dd', 'font-mono text-lg tabular-nums', '')
+
+        number.append(createCountUp(value))
+        item.append(createElement('dt', 'text-xs text-tx-3', label), number)
         stats.append(item)
       }
 
@@ -1186,8 +1183,8 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     const { stop } = slide
 
     stageCenter.replaceChildren()
-    stageEyebrow.textContent = `第 ${stop.day} 天`
-    stageTitle.textContent = stop.date
+    // The time sits with the day in the header, so the map's labels can be just names.
+    stageHeading.show(stop)
     // The photo card pops up once the camera has arrived at the stop.
     stagePhotoTimer = setTimeout(
       () => {
@@ -2169,5 +2166,59 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     restoreLayers: addLayers,
     start,
     stop,
+  }
+}
+
+/**
+ * The story layout's day, date and time. Their numbers roll from one stop's to the
+ * next (number-flow) instead of being swapped, so moving on reads as time passing.
+ */
+function createStageHeading(eyebrow: HTMLElement, title: HTMLElement) {
+  const roll = (minimumIntegerDigits = 1) => {
+    const flow = document.createElement('number-flow')
+    flow.format = { minimumIntegerDigits, useGrouping: false }
+    return flow
+  }
+  const day = roll()
+  const hour = roll(2)
+  const minute = roll(2)
+  const month = roll()
+  const date = roll()
+  const time = document.createElement('span')
+  const weekday = document.createElement('span')
+
+  // The day and time lead; the date sits small above them.
+  time.append(' · ', hour, ':', minute)
+  title.replaceChildren('第 ', day, ' 天', time)
+  eyebrow.replaceChildren(month, '月', date, '日', weekday)
+
+  return {
+    show(stop: { date: string; day: number; time?: string | undefined }) {
+      // Dates read like 10月2日周五 and times like 19:43; anything else is shown as is.
+      const dateParts = /^(\d+)月(\d+)日(.*)$/.exec(stop.date)
+      const timeParts = /^(\d{1,2}):(\d{2})$/.exec(stop.time ?? '')
+
+      day.update(stop.day)
+      time.hidden = !timeParts
+
+      // A stop without a time hides it but leaves the last one, to roll on from.
+      if (timeParts) {
+        hour.update(Number(timeParts[1]))
+        minute.update(Number(timeParts[2]))
+      }
+
+      if (dateParts) {
+        month.update(Number(dateParts[1]))
+        date.update(Number(dateParts[2]))
+        weekday.textContent = dateParts[3] ?? ''
+
+        // Back from a date shown as plain text; otherwise the numbers stay in place.
+        if (!month.isConnected) {
+          eyebrow.replaceChildren(month, '月', date, '日', weekday)
+        }
+      } else {
+        eyebrow.textContent = stop.date
+      }
+    },
   }
 }

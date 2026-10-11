@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict'
 import { test } from 'vite-plus/test'
-import { createChapterLog, formatChapterTime } from '../../src/trip-player/labels.ts'
+import {
+  createChapterLog,
+  formatChapterTime,
+  getShortPlaceName,
+} from '../../src/trip-player/labels.ts'
 import { getNextSpeed } from '../../src/trip-player/preferences.ts'
 import {
   easeInOut,
@@ -81,4 +85,12 @@ test('eases each stretch in and out so speed never jumps', () => {
   // Nearly at rest at both ends: the first and last 1% cover far less than 1%.
   assert.ok(easeInOut(0.01) < 0.001)
   assert.ok(1 - easeInOut(0.99) < 0.001)
+})
+
+test('shortens place names to what is outside brackets', () => {
+  assert.equal(getShortPlaceName('眼镜烤肉（老街店）'), '眼镜烤肉')
+  assert.equal(getShortPlaceName('火長鳥耕作·燒鳥專門店（高新三号店）'), '火長鳥耕作·燒鳥專門店')
+  assert.equal(getShortPlaceName('Cafe (Downtown) Bar'), 'Cafe Bar')
+  assert.equal(getShortPlaceName('渤海'), '渤海')
+  assert.equal(getShortPlaceName('（未命名）'), '（未命名）')
 })

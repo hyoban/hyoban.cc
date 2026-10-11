@@ -1,5 +1,5 @@
 import { SITE_URL } from '../consts'
-import { createElement, createWeather } from './dom'
+import { createCountUp, createElement, createWeather } from './dom'
 import { getSummaryStats } from './labels'
 import type { Slide, TripData, TripImage } from './types'
 
@@ -46,7 +46,10 @@ export function createSummaryCard(trip: TripData) {
 
   for (const [value, label] of getSummaryStats(trip)) {
     const item = document.createElement('div')
-    item.append(createElement('dt', '', label), createElement('dd', '', String(value)))
+    const number = createElement('dd', '', '')
+
+    number.append(createCountUp(value))
+    item.append(createElement('dt', '', label), number)
     stats.append(item)
   }
 
