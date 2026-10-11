@@ -404,22 +404,6 @@ html:has(.calendar-map-page[data-export-ratio]) body {
   height: calc(var(--u) * 0.6);
 }
 
-/* Rides the tip of the route while it is drawn. */
-.calendar-map-trip-head {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.625rem;
-  height: 1.625rem;
-  font-size: 0.875rem;
-  color: var(--color-bg);
-  pointer-events: none;
-  background: var(--color-tx);
-  border: 2px solid var(--color-bg);
-  border-radius: 999px;
-  box-shadow: 0 1px 4px rgb(0 0 0 / 0.2);
-}
-
 .calendar-map-trip-polaroid {
   --tilt: -2deg;
   grid-area: 1 / 1;

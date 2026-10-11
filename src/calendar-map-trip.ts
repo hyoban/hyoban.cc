@@ -97,6 +97,13 @@ type TripPlayerOptions = {
 }
 
 const ROUTE_SOURCE_ID = 'calendar-trip-route'
+// The piece of route being drawn right now, kept apart so each frame sends only it.
+const ACTIVE_ROUTE_SOURCE_ID = 'calendar-trip-route-active'
+// A car, ship or plane riding the tip of the route. It is a map layer rather than a
+// DOM marker, which Mapbox snaps to whole pixels and so steps when moving slowly.
+const HEAD_SOURCE_ID = 'calendar-trip-head'
+const HEAD_SIZE = 26
+const HEAD_ICON_SIZE = 14
 const PLANNED_SOURCE_ID = 'calendar-trip-planned'
 const STOP_SOURCE_ID = 'calendar-trip-stops'
 const INTRO_DURATION = 3000
@@ -236,7 +243,13 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   let elapsed = 0
   let playing = false
   let speed: number = readSpeedPreference()
-  let travelHead: { icon: HTMLElement; marker: mapboxgl.Marker } | undefined
+  // What the route sources hold now, so frames that don't change them skip the update.
+  const shownRoute: {
+    head: boolean
+    partial: boolean
+    pointCount: number
+    source?: GeoJSONSource
+  } = { head: false, partial: false, pointCount: -1 }
   let frame: number | undefined
   let lastFrameTime: number | undefined
   let legFrame: number | undefined
@@ -446,6 +459,11 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
     map.addSource(PLANNED_SOURCE_ID, { data: emptyLine, type: 'geojson' })
     map.addSource(ROUTE_SOURCE_ID, { data: emptyLine, type: 'geojson' })
+    map.addSource(ACTIVE_ROUTE_SOURCE_ID, { data: emptyLine, type: 'geojson' })
+    map.addSource(HEAD_SOURCE_ID, {
+      data: { features: [], type: 'FeatureCollection' },
+      type: 'geojson',
+    })
     map.addSource(STOP_SOURCE_ID, {
       data: { features: [], type: 'FeatureCollection' },
       type: 'geojson',
@@ -467,6 +485,13 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       layout: { 'line-cap': 'round', 'line-join': 'round' },
       paint: { 'line-color': lineColor, 'line-width': 3 },
       source: ROUTE_SOURCE_ID,
+      type: 'line',
+    })
+    map.addLayer({
+      id: ACTIVE_ROUTE_SOURCE_ID,
+      layout: { 'line-cap': 'round', 'line-join': 'round' },
+      paint: { 'line-color': lineColor, 'line-width': 3 },
+      source: ACTIVE_ROUTE_SOURCE_ID,
       type: 'line',
     })
     map.addLayer({
@@ -492,6 +517,17 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       source: STOP_SOURCE_ID,
       type: 'circle',
     })
+    map.addLayer({
+      id: HEAD_SOURCE_ID,
+      layout: {
+        'icon-allow-overlap': true,
+        'icon-ignore-placement': true,
+        'icon-image': ['concat', `${HEAD_SOURCE_ID}-`, ['get', 'mode']],
+      },
+      source: HEAD_SOURCE_ID,
+      type: 'symbol',
+    })
+    void addHeadImages(map)
 
     ;(map.getSource(PLANNED_SOURCE_ID) as GeoJSONSource).setData(
       lineFeature(getRouteLine(0, points.length)),
@@ -503,13 +539,17 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   function removeLayers() {
     const map = getMap()
 
-    setTravelHead(undefined, 'car')
-
     if (!map) {
       return
     }
 
-    for (const id of [STOP_SOURCE_ID, ROUTE_SOURCE_ID, PLANNED_SOURCE_ID]) {
+    for (const id of [
+      HEAD_SOURCE_ID,
+      STOP_SOURCE_ID,
+      ACTIVE_ROUTE_SOURCE_ID,
+      ROUTE_SOURCE_ID,
+      PLANNED_SOURCE_ID,
+    ]) {
       if (map.getLayer(id)) {
         map.removeLayer(id)
       }
@@ -544,13 +584,31 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   }
 
   function setRoute(pointCount: number, partial?: [number, number][], mode: TravelMode = 'car') {
-    const source = getMap()?.getSource(ROUTE_SOURCE_ID) as GeoJSONSource | undefined
+    const map = getMap()
+    const source = map?.getSource(ROUTE_SOURCE_ID) as GeoJSONSource | undefined
+    const activeSource = map?.getSource(ACTIVE_ROUTE_SOURCE_ID) as GeoJSONSource | undefined
 
-    if (!trip || !source) {
+    if (!trip || !source || !activeSource) {
       return
     }
 
-    source.setData(lineFeature([...getRouteLine(0, pointCount), ...(partial ?? [])]))
+    // The whole route is thousands of points; resend it only when it gains a place.
+    if (source !== shownRoute.source || pointCount !== shownRoute.pointCount) {
+      source.setData(lineFeature(getRouteLine(0, pointCount)))
+      shownRoute.source = source
+      shownRoute.pointCount = pointCount
+    }
+
+    const start = points[pointCount - 1]
+
+    if (partial?.length && start) {
+      activeSource.setData(lineFeature([start.coordinates, ...partial]))
+      shownRoute.partial = true
+    } else if (shownRoute.partial) {
+      activeSource.setData(lineFeature([]))
+      shownRoute.partial = false
+    }
+
     setTravelHead(partial?.at(-1), mode)
   }
 
@@ -568,31 +626,72 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     return legIndex === undefined || legIndex === -1 ? 'car' : trip!.legModes[legIndex]!
   }
 
-  /** A car, ship or plane riding the tip of the route while it moves. */
+  /** Moves the head to the route's tip, or hides it when nothing is being drawn. */
   function setTravelHead(coordinates: [number, number] | undefined, mode: TravelMode) {
-    const map = getMap()
+    const source = getMap()?.getSource(HEAD_SOURCE_ID) as GeoJSONSource | undefined
 
-    if (!map || !coordinates) {
-      travelHead?.marker.remove()
-      travelHead = undefined
+    if (!source || (!coordinates && !shownRoute.head)) {
       return
     }
 
-    if (!travelHead) {
-      const element = createElement('div', 'calendar-map-trip-head', '')
-      const icon = createElement('span', '', '')
+    shownRoute.head = Boolean(coordinates)
+    source.setData({
+      features: coordinates
+        ? [
+            {
+              geometry: { coordinates, type: 'Point' as const },
+              properties: { mode },
+              type: 'Feature' as const,
+            },
+          ]
+        : [],
+      type: 'FeatureCollection',
+    })
+  }
 
-      element.setAttribute('aria-hidden', 'true')
-      element.append(icon)
-      travelHead = {
-        icon,
-        marker: new mapboxgl.Marker({ element }).setLngLat(coordinates).addTo(map),
-      }
-    } else {
-      travelHead.marker.setLngLat(coordinates)
-    }
+  /** Draws each travel mode's head (a dark disc with the icon) into the map's images. */
+  async function addHeadImages(map: mapboxgl.Map) {
+    const ratio = Math.max(window.devicePixelRatio || 1, 2)
+    const fill = getLineColor()
+    const ink = getBackgroundColor()
 
-    travelHead.icon.className = TRAVEL_ICONS[mode]
+    await Promise.all(
+      (Object.keys(TRAVEL_ICONS) as TravelMode[]).map(async (mode) => {
+        const icon = await loadIconImage(TRAVEL_ICONS[mode])
+        const canvas = document.createElement('canvas')
+        const context = canvas.getContext('2d')
+        const size = HEAD_SIZE * ratio
+        const iconSize = HEAD_ICON_SIZE * ratio
+
+        if (!context || !icon) {
+          return
+        }
+
+        canvas.width = size
+        canvas.height = size
+        // The icon in the page background colour on a disc in the text colour.
+        context.drawImage(icon, (size - iconSize) / 2, (size - iconSize) / 2, iconSize, iconSize)
+        context.globalCompositeOperation = 'source-in'
+        context.fillStyle = ink
+        context.fillRect(0, 0, size, size)
+        context.globalCompositeOperation = 'destination-over'
+        context.beginPath()
+        context.arc(size / 2, size / 2, size / 2 - 2 * ratio, 0, Math.PI * 2)
+        context.fillStyle = fill
+        context.fill()
+        context.lineWidth = 2 * ratio
+        context.strokeStyle = ink
+        context.stroke()
+
+        const name = `${HEAD_SOURCE_ID}-${mode}`
+
+        if (map.hasImage(name)) {
+          map.removeImage(name)
+        }
+
+        map.addImage(name, context.getImageData(0, 0, size, size), { pixelRatio: ratio })
+      }),
+    )
   }
 
   function updateStops() {
@@ -2499,6 +2598,36 @@ function lineFeature(coordinates: [number, number][]) {
 }
 
 /** A muted live photo clip that plays once, then fades back to the still under it. */
+/** A Lucide icon as an image, read from the mask its utility class generates. */
+async function loadIconImage(className: string) {
+  const probe = document.createElement('span')
+
+  probe.className = className
+  probe.style.position = 'absolute'
+  probe.style.visibility = 'hidden'
+  document.body.append(probe)
+
+  const style = getComputedStyle(probe)
+  const mask = style.maskImage || style.getPropertyValue('-webkit-mask-image')
+  const url = /url\(["']?(.*?)["']?\)$/.exec(mask)?.[1]
+
+  probe.remove()
+
+  if (!url) {
+    return undefined
+  }
+
+  const image = new Image()
+  image.src = url
+
+  try {
+    await image.decode()
+    return image
+  } catch {
+    return undefined
+  }
+}
+
 function createLiveVideo(src: string, className: string) {
   const video = document.createElement('video')
 
