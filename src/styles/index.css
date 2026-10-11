@@ -375,10 +375,33 @@ html[data-calendar-mode-transition] .calendar-back-link {
 }
 
 /* Trip place labels, placed by the player in step with the map (see map-labels.ts). */
+/* The car, ship or plane at the tip of the route being drawn, under the labels. */
+.calendar-map-trip-head {
+  position: absolute;
+  top: -13px;
+  left: -13px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  font-size: 14px;
+  color: var(--color-bg);
+  pointer-events: none;
+  background: var(--color-tx);
+  border: 2px solid var(--color-bg);
+  border-radius: 999px;
+}
+
+.calendar-map-trip-head[hidden] {
+  display: none;
+}
+
 .calendar-map-trip-labels {
   position: absolute;
   inset: 0;
-  z-index: 1;
+  z-index: 2;
   overflow: hidden;
   pointer-events: none;
 }

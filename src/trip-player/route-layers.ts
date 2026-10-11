@@ -1,26 +1,25 @@
-import type { GeoJSONSource, Map as MapboxMap } from 'mapbox-gl'
+import mapboxgl, { type GeoJSONSource, type Map as MapboxMap } from 'mapbox-gl'
 import type { Coordinates } from '../geo'
-import { loadIconImage } from './dom'
+import { createElement } from './dom'
 import { lineFeature, type TravelMode } from './route'
 
 // The trip's map layers: the planned route (dashed), the drawn route, the piece being
 // drawn right now, the stop dots and a car, ship or plane riding the route's tip.
+//
+// Nothing here sends the map new data every frame: each update goes through the map's
+// worker and makes it lay out its labels again, which on a slow device costs a third
+// of the frame rate. The piece being drawn is sent once and revealed by trimming it,
+// and the head is an element over the map, moved in the frame the map draws.
 
 const PLANNED_ID = 'calendar-trip-planned'
 const ROUTE_ID = 'calendar-trip-route'
-// The piece of route being drawn right now, kept apart so each frame sends only it.
 const ACTIVE_ROUTE_ID = 'calendar-trip-route-active'
 const STOPS_ID = 'calendar-trip-stops'
-// A map layer rather than a DOM marker, which Mapbox snaps to whole pixels and so
-// steps when it moves slowly.
-const HEAD_ID = 'calendar-trip-head'
 // Blank symbols over the stop dots: circles don't take part in label placement, so
 // without these the map's own place names print right over the dots.
 const STOPS_CLEAR_ID = 'calendar-trip-stops-clear'
 const CLEAR_SIZE = 20
-const LAYER_IDS = [HEAD_ID, STOPS_CLEAR_ID, STOPS_ID, ACTIVE_ROUTE_ID, ROUTE_ID, PLANNED_ID]
-const HEAD_SIZE = 26
-const HEAD_ICON_SIZE = 14
+const LAYER_IDS = [STOPS_CLEAR_ID, STOPS_ID, ACTIVE_ROUTE_ID, ROUTE_ID, PLANNED_ID]
 
 const TRAVEL_ICONS: Record<TravelMode, string> = {
   car: 'i-lucide-car-front',
@@ -35,13 +34,32 @@ export type StopDot = { coordinates: Coordinates; state: StopState; waypoint: bo
 /** `ink` draws the route; `paper` fills what is still ahead. Both follow the theme. */
 type Colors = { ink: string; paper: string }
 
+/** A stretch being drawn: its whole line, and how far along it the tip is. */
+export type RoutePiece = {
+  line: readonly Coordinates[]
+  mode: TravelMode
+  /** The segment the tip is on, and how far along it. */
+  ratio: number
+  segment: number
+}
+
 export function createRouteLayers(getMap: () => MapboxMap | undefined, getColors: () => Colors) {
   // What the sources hold now, so frames that don't change them skip the update.
-  let shown: { head: boolean; partial: boolean; pointCount: number; source?: GeoJSONSource } = {
-    head: false,
-    partial: false,
-    pointCount: -1,
-  }
+  let shown: {
+    line?: readonly Coordinates[] | undefined
+    pointCount: number
+    source?: GeoJSONSource
+  } = { pointCount: -1 }
+  // The piece's length along each segment, as the map measures it for trimming.
+  let measured: { cumulative: number[]; line: readonly Coordinates[]; total: number } | undefined
+  let head:
+    | {
+        coordinates?: Coordinates | undefined
+        element: HTMLElement
+        map: MapboxMap
+        place: () => void
+      }
+    | undefined
 
   function getSource(id: string) {
     return getMap()?.getSource(id) as GeoJSONSource | undefined
@@ -65,8 +83,8 @@ export function createRouteLayers(getMap: () => MapboxMap | undefined, getColors
 
     map.addSource(PLANNED_ID, { data: lineFeature(plannedLine), type: 'geojson' })
     map.addSource(ROUTE_ID, { data: lineFeature([]), type: 'geojson' })
-    map.addSource(ACTIVE_ROUTE_ID, { data: lineFeature([]), type: 'geojson' })
-    map.addSource(HEAD_ID, { data: emptyCollection, type: 'geojson' })
+    // Line metrics let the layer be trimmed to how far the tip has come.
+    map.addSource(ACTIVE_ROUTE_ID, { data: lineFeature([]), lineMetrics: true, type: 'geojson' })
     map.addSource(STOPS_ID, { data: emptyCollection, type: 'geojson' })
     map.addLayer({
       id: PLANNED_ID,
@@ -76,7 +94,12 @@ export function createRouteLayers(getMap: () => MapboxMap | undefined, getColors
       type: 'line',
     })
     map.addLayer({ ...solidLine, id: ROUTE_ID, source: ROUTE_ID })
-    map.addLayer({ ...solidLine, id: ACTIVE_ROUTE_ID, source: ACTIVE_ROUTE_ID })
+    map.addLayer({
+      ...solidLine,
+      id: ACTIVE_ROUTE_ID,
+      paint: { ...solidLine.paint, 'line-trim-offset': [0, 1] },
+      source: ACTIVE_ROUTE_ID,
+    })
     map.addLayer({
       id: STOPS_ID,
       paint: {
@@ -119,23 +142,50 @@ export function createRouteLayers(getMap: () => MapboxMap | undefined, getColors
       source: STOPS_ID,
       type: 'symbol',
     })
-    map.addLayer({
-      id: HEAD_ID,
-      layout: {
-        // Overlaps anything, but keeps the map's place names out from under it.
-        'icon-allow-overlap': true,
-        'icon-image': ['concat', `${HEAD_ID}-`, ['get', 'mode']],
-      },
-      source: HEAD_ID,
-      type: 'symbol',
-    })
-    shown = { head: false, partial: false, pointCount: -1 }
-    void addHeadImages(map, ink, paper)
+    shown = { pointCount: -1 }
+    measured = undefined
+    addHead(map)
     return true
+  }
+
+  function addHead(map: MapboxMap) {
+    if (head?.map === map && head.element.isConnected) {
+      return
+    }
+
+    removeHead()
+
+    const element = createElement('div', 'calendar-map-trip-head', '')
+    const place = () => {
+      const coordinates = head?.coordinates
+
+      if (coordinates) {
+        const { x, y } = map.project([coordinates[0], coordinates[1]])
+        element.style.transform = `translate3d(${x}px, ${y}px, 0)`
+      }
+    }
+
+    element.setAttribute('aria-hidden', 'true')
+    element.hidden = true
+    element.append(createElement('span', TRAVEL_ICONS.car, ''))
+    map.getContainer().append(element)
+    // Sub-pixel transforms set as the map draws keep it on the route as the map glides.
+    map.on('render', place)
+    head = { element, map, place }
+  }
+
+  function removeHead() {
+    if (head) {
+      head.map.off('render', head.place)
+      head.element.remove()
+      head = undefined
+    }
   }
 
   function remove() {
     const map = getMap()
+
+    removeHead()
 
     for (const id of map ? LAYER_IDS : []) {
       if (map!.getLayer(id)) {
@@ -152,11 +202,7 @@ export function createRouteLayers(getMap: () => MapboxMap | undefined, getColors
    * Shows the route through its first `pointCount` places, then `partial` (the piece
    * being drawn from the last of those) with the head at its tip.
    */
-  function setRoute(
-    pointCount: number,
-    getLine: () => readonly Coordinates[],
-    partial?: { from: Coordinates; mode: TravelMode; passed: readonly Coordinates[] },
-  ) {
+  function setRoute(pointCount: number, getLine: () => readonly Coordinates[], piece?: RoutePiece) {
     const source = getSource(ROUTE_ID)
     const activeSource = getSource(ACTIVE_ROUTE_ID)
 
@@ -171,37 +217,58 @@ export function createRouteLayers(getMap: () => MapboxMap | undefined, getColors
       shown.pointCount = pointCount
     }
 
-    if (partial?.passed.length) {
-      activeSource.setData(lineFeature([partial.from, ...partial.passed]))
-      shown.partial = true
-    } else if (shown.partial) {
-      activeSource.setData(lineFeature([]))
-      shown.partial = false
+    // The piece is sent once; each frame only moves where its trim starts.
+    if (piece?.line !== shown.line) {
+      activeSource.setData(lineFeature(piece?.line ?? []))
+      shown.line = piece?.line
     }
 
-    setHead(partial?.passed.at(-1), partial?.mode ?? 'car')
+    if (piece) {
+      getMap()?.setPaintProperty(ACTIVE_ROUTE_ID, 'line-trim-offset', [trimStart(piece), 1])
+    }
+
+    setHead(piece && tipOf(piece), piece?.mode ?? 'car')
+  }
+
+  /** How far along the piece its tip is, as a share of the line the map measures. */
+  function trimStart({ line, ratio, segment }: RoutePiece) {
+    if (measured?.line !== line) {
+      // The map measures lines in its flat projection, not in degrees.
+      const projected = line.map(([longitude, latitude]) =>
+        mapboxgl.MercatorCoordinate.fromLngLat([longitude, latitude]),
+      )
+      const cumulative = [0]
+
+      for (let index = 1; index < projected.length; index += 1) {
+        const from = projected[index - 1]!
+        const to = projected[index]!
+        cumulative.push(cumulative[index - 1]! + Math.hypot(to.x - from.x, to.y - from.y))
+      }
+
+      measured = { cumulative, line, total: cumulative.at(-1) ?? 0 }
+    }
+
+    const { cumulative, total } = measured
+    const start = cumulative[segment] ?? total
+    const end = cumulative[segment + 1] ?? start
+
+    return total > 0 ? Math.min((start + (end - start) * ratio) / total, 1) : 1
   }
 
   function setHead(coordinates: Coordinates | undefined, mode: TravelMode) {
-    const source = getSource(HEAD_ID)
-
-    if (!source || (!coordinates && !shown.head)) {
+    if (!head) {
       return
     }
 
-    shown.head = Boolean(coordinates)
-    source.setData({
-      features: coordinates
-        ? [
-            {
-              geometry: { coordinates: [coordinates[0], coordinates[1]], type: 'Point' },
-              properties: { mode },
-              type: 'Feature',
-            },
-          ]
-        : [],
-      type: 'FeatureCollection',
-    })
+    const icon = head.element.firstElementChild
+
+    if (icon && icon.className !== TRAVEL_ICONS[mode]) {
+      icon.className = TRAVEL_ICONS[mode]
+    }
+
+    head.element.hidden = !coordinates
+    head.coordinates = coordinates
+    head.place()
   }
 
   function setStops(dots: readonly StopDot[]) {
@@ -218,44 +285,9 @@ export function createRouteLayers(getMap: () => MapboxMap | undefined, getColors
   return { add, remove, setRoute, setStops }
 }
 
-/** Draws each travel mode's head, the icon on a disc in the route's colour. */
-async function addHeadImages(map: MapboxMap, ink: string, paper: string) {
-  const ratio = Math.max(window.devicePixelRatio || 1, 2)
-  const size = HEAD_SIZE * ratio
-  const iconSize = HEAD_ICON_SIZE * ratio
+function tipOf({ line, ratio, segment }: RoutePiece): Coordinates {
+  const start = line[segment]!
+  const end = line[segment + 1] ?? start
 
-  await Promise.all(
-    (Object.keys(TRAVEL_ICONS) as TravelMode[]).map(async (mode) => {
-      const icon = await loadIconImage(TRAVEL_ICONS[mode])
-      const canvas = document.createElement('canvas')
-      const context = canvas.getContext('2d')
-
-      if (!context || !icon) {
-        return
-      }
-
-      canvas.width = size
-      canvas.height = size
-      context.drawImage(icon, (size - iconSize) / 2, (size - iconSize) / 2, iconSize, iconSize)
-      context.globalCompositeOperation = 'source-in'
-      context.fillStyle = paper
-      context.fillRect(0, 0, size, size)
-      context.globalCompositeOperation = 'destination-over'
-      context.beginPath()
-      context.arc(size / 2, size / 2, size / 2 - 2 * ratio, 0, Math.PI * 2)
-      context.fillStyle = ink
-      context.fill()
-      context.lineWidth = 2 * ratio
-      context.strokeStyle = paper
-      context.stroke()
-
-      const name = `${HEAD_ID}-${mode}`
-
-      if (map.hasImage(name)) {
-        map.removeImage(name)
-      }
-
-      map.addImage(name, context.getImageData(0, 0, size, size), { pixelRatio: ratio })
-    }),
-  )
+  return [start[0] + (end[0] - start[0]) * ratio, start[1] + (end[1] - start[1]) * ratio]
 }

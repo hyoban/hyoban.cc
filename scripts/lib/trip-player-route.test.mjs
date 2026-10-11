@@ -47,6 +47,8 @@ test('walks a share of the line and stops at the tip', () => {
       [2, 0],
       [2, 1],
     ],
+    ratio: 0.5,
+    segment: 1,
     start: [2, 0],
   })
   assert.deepEqual(walkLine(line, 2).passed.at(-1), [2, 2])

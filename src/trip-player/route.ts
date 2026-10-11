@@ -56,7 +56,8 @@ export function measureLine(line: readonly Coordinates[]): MeasuredLine {
 
 /**
  * The part of a measured line up to `fraction` of its length: the vertices passed
- * after the first, then the tip. Also returns the segment the tip is on.
+ * after the first, then the tip. Also returns the segment the tip is on, by its index
+ * and ends, and how far along it the tip is.
  */
 export function walkLine({ lengths, line, total }: MeasuredLine, fraction: number) {
   let remaining = Math.min(Math.max(fraction, 0), 1) * total
@@ -78,6 +79,8 @@ export function walkLine({ lengths, line, total }: MeasuredLine, fraction: numbe
   return {
     end,
     passed: [...line.slice(1, segment + 1).map(([x, y]) => [x, y] as [number, number]), tip],
+    ratio,
+    segment,
     start,
   }
 }
