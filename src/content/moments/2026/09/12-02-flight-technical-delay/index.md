@@ -1,5 +1,6 @@
 ---
 occurredAt: '2026-09-12T10:06:17+08:00'
+hidden: true
 location: hefei-xinqiao-airport
 ---
 
