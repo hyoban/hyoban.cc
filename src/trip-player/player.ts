@@ -6,6 +6,7 @@ import {
   createElement,
   createLiveVideo,
   createMosaic,
+  createSteadyTrack,
   createWeather,
   downloadBlob,
   IMAGE_SIZES,
@@ -216,6 +217,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
         mode: StageMode
         music?: Music
         recorder?: MediaRecorder
+        steady?: ReturnType<typeof createSteadyTrack>
         stopTimer?: ReturnType<typeof setTimeout>
         stream?: MediaStream
       }
@@ -1880,6 +1882,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
     const music = await loadMusic(exportMusic.value, mode === 'record')
     let recorder: MediaRecorder | undefined
+    let steady: ReturnType<typeof createSteadyTrack> | undefined
 
     // Stopped while the music loaded: let go of what was opened for it.
     if (stageToken !== token) {
@@ -1894,13 +1897,17 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       return
     }
 
-    if (stream) {
-      const recorded = music?.destination
-        ? new MediaStream([
-            ...stream.getVideoTracks(),
-            ...music.destination.stream.getAudioTracks(),
-          ])
-        : stream
+    if (stream && track) {
+      // The page's size in device pixels, even for the encoder, held for the whole video.
+      const { height, width } = page.getBoundingClientRect()
+      const even = (size: number) => Math.round((size * devicePixelRatio) / 2) * 2
+
+      steady = createSteadyTrack(track, even(width), even(height))
+
+      const recorded = new MediaStream([
+        ...(steady.track ? [steady.track] : []),
+        ...(music?.destination?.stream.getAudioTracks() ?? []),
+      ])
       const mimeType = EXPORT_VIDEO_TYPES.find((type) => MediaRecorder.isTypeSupported(type))
       const chunks: Blob[] = []
       const activeRecorder = new MediaRecorder(recorded, {
@@ -1933,6 +1940,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       mode,
       ...(music ? { music } : {}),
       ...(recorder ? { recorder } : {}),
+      ...(steady ? { steady } : {}),
       ...(stream ? { stream } : {}),
     }
 
@@ -1941,6 +1949,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     goTo(0, { play: false })
     frameTrip({ instant: true })
     await waitForMapIdle()
+    await Promise.race([steady?.ready, new Promise((resolve) => setTimeout(resolve, 1000))])
 
     if (stageToken !== token) {
       return
@@ -2010,6 +2019,8 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       for (const track of staging.stream?.getTracks() ?? []) {
         track.stop()
       }
+
+      staging.steady?.stop()
 
       if (staging.music) {
         closeMusic(staging.music)
