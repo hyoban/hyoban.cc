@@ -2,20 +2,25 @@
 occurredAt: '2026-09-13T10:00:00+08:00'
 location: wenhai-village
 media:
-  - type: image
-    file: yunnan-mushroom-foraging.webp
+  - type: live-photo
+    file: yunnan-mushroom-foraging-live-1.webp
+    video: yunnan-mushroom-foraging-live-1-motion.mp4
     alt: An orange mushroom grows among pine needles and small green plants.
-  - type: image
-    file: yunnan-mushroom-foraging-2.webp
+  - type: live-photo
+    file: yunnan-mushroom-foraging-live-2.webp
+    video: yunnan-mushroom-foraging-live-2-motion.mp4
     alt: Tall dark tree trunks and branches disappear into a misty forest.
-  - type: image
-    file: yunnan-mushroom-foraging-3.webp
+  - type: live-photo
+    file: yunnan-mushroom-foraging-live-3.webp
+    video: yunnan-mushroom-foraging-live-3-motion.mp4
     alt: Dense green undergrowth covers a damp, misty forest floor.
-  - type: image
-    file: yunnan-mushroom-foraging-4.webp
+  - type: live-photo
+    file: yunnan-mushroom-foraging-live-4.webp
+    video: yunnan-mushroom-foraging-live-4-motion.mp4
     alt: A narrow earthy trail leads downhill through lush woodland.
-  - type: image
-    file: yunnan-mushroom-foraging-5.webp
+  - type: live-photo
+    file: yunnan-mushroom-foraging-live-5.webp
+    video: yunnan-mushroom-foraging-live-5-motion.mp4
     alt: Yellow wildflowers grow beside a forest trail.
 ---
 

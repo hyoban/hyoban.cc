@@ -2,17 +2,21 @@
 occurredAt: '2026-09-14T14:00:00+08:00'
 location: tiger-leaping-gorge
 media:
-  - type: image
-    file: tiger-leaping-gorge.webp
+  - type: live-photo
+    file: tiger-leaping-gorge-live-1.webp
+    video: tiger-leaping-gorge-live-1-motion.mp4
     alt: Hundreds of colorful decorative charms hang overhead inside a wooden building.
-  - type: image
-    file: tiger-leaping-gorge-2.webp
+  - type: live-photo
+    file: tiger-leaping-gorge-live-2.webp
+    video: tiger-leaping-gorge-live-2-motion.mp4
     alt: Whitewater rushes through Tiger Leaping Gorge below steep cliffs and a viewing walkway.
-  - type: image
-    file: tiger-leaping-gorge-3.webp
+  - type: live-photo
+    file: tiger-leaping-gorge-live-3.webp
+    video: tiger-leaping-gorge-live-3-motion.mp4
     alt: A close view of churning gray-green water and white foam.
-  - type: image
-    file: tiger-leaping-gorge-4.webp
+  - type: live-photo
+    file: tiger-leaping-gorge-live-4.webp
+    video: tiger-leaping-gorge-live-4-motion.mp4
     alt: Powerful whitewater surges around a large rock in the gorge.
 ---
 

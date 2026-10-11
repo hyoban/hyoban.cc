@@ -4,23 +4,29 @@ location:
   - shuhe-ancient-town
   - zhongyi-market
 media:
-  - type: image
-    file: shuhe-and-zhongyi-market.webp
+  - type: live-photo
+    file: shuhe-and-zhongyi-market-live-1.webp
+    video: shuhe-and-zhongyi-market-live-1-motion.mp4
     alt: Clear turquoise water reflects trees beside a stone-railed path.
-  - type: image
-    file: shuhe-and-zhongyi-market-2.webp
+  - type: live-photo
+    file: shuhe-and-zhongyi-market-live-2.webp
+    video: shuhe-and-zhongyi-market-live-2-motion.mp4
     alt: A small corn plot grows beside rustic houses and a stone path.
-  - type: image
-    file: shuhe-and-zhongyi-market-3.webp
+  - type: live-photo
+    file: shuhe-and-zhongyi-market-live-3.webp
+    video: shuhe-and-zhongyi-market-live-3-motion.mp4
     alt: Colorful paper umbrellas hang above a narrow street between wooden buildings.
-  - type: image
-    file: shuhe-and-zhongyi-market-4.webp
+  - type: live-photo
+    file: shuhe-and-zhongyi-market-live-4.webp
+    video: shuhe-and-zhongyi-market-live-4-motion.mp4
     alt: A tabby-and-white cat rests beneath drooping green branches.
-  - type: image
-    file: shuhe-and-zhongyi-market-5.webp
+  - type: live-photo
+    file: shuhe-and-zhongyi-market-live-5.webp
+    video: shuhe-and-zhongyi-market-live-5-motion.mp4
     alt: A cobbled lane passes traditional shops with wooden doors and red lanterns.
-  - type: image
-    file: shuhe-and-zhongyi-market-6.webp
+  - type: live-photo
+    file: shuhe-and-zhongyi-market-live-6.webp
+    video: shuhe-and-zhongyi-market-live-6-motion.mp4
     alt: Traditional tiled rooftops frame a distant mountain beneath an overcast sky.
 ---
 
