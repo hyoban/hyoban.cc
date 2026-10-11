@@ -155,3 +155,51 @@ export function downloadBlob(blob: Blob, filename: string) {
   link.click()
   setTimeout(() => URL.revokeObjectURL(url), 60_000)
 }
+
+/**
+ * Redraws a captured video track onto a canvas of a fixed size. A tab capture can
+ * change size mid-recording (a crop settling, the window or zoom changing), and an
+ * avc1 MP4 only records the first size, so later frames decode as garbage.
+ */
+export function createSteadyTrack(source: MediaStreamTrack, width: number, height: number) {
+  const video = document.createElement('video')
+  const canvas = document.createElement('canvas')
+  const context = canvas.getContext('2d')
+  const [track] = canvas.captureStream(30).getVideoTracks()
+  let stopped = false
+  let markReady: () => void
+  const ready = new Promise<void>((resolve) => (markReady = resolve))
+
+  canvas.width = width
+  canvas.height = height
+  video.muted = true
+  video.playsInline = true
+  video.srcObject = new MediaStream([source])
+
+  const draw = () => {
+    if (stopped) {
+      return
+    }
+
+    if (video.videoWidth > 0) {
+      context?.drawImage(video, 0, 0, width, height)
+      markReady()
+    }
+
+    video.requestVideoFrameCallback(draw)
+  }
+
+  video.requestVideoFrameCallback(draw)
+  void video.play().catch(() => {})
+
+  return {
+    /** Settles once the first frame is on the canvas. */
+    ready,
+    stop() {
+      stopped = true
+      video.srcObject = null
+      track?.stop()
+    },
+    track,
+  }
+}
