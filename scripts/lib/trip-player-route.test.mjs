@@ -2,7 +2,13 @@ import assert from 'node:assert/strict'
 import { test } from 'vite-plus/test'
 import { createChapterLog, formatChapterTime } from '../../src/trip-player/labels.ts'
 import { getNextSpeed } from '../../src/trip-player/preferences.ts'
-import { getRouteLine, getTravelMode, measureLine, walkLine } from '../../src/trip-player/route.ts'
+import {
+  easeInOut,
+  getRouteLine,
+  getTravelMode,
+  measureLine,
+  walkLine,
+} from '../../src/trip-player/route.ts'
 
 const point = (longitude, latitude) => ({ coordinates: [longitude, latitude] })
 const points = [point(0, 0), point(2, 0), point(2, 2)]
@@ -66,4 +72,13 @@ test('cycles playback speed', () => {
   assert.equal(getNextSpeed(1), 1.5)
   assert.equal(getNextSpeed(2), 1)
   assert.equal(getNextSpeed(3), 1)
+})
+
+test('eases each stretch in and out so speed never jumps', () => {
+  assert.equal(easeInOut(0), 0)
+  assert.equal(easeInOut(1), 1)
+  assert.ok(Math.abs(easeInOut(0.5) - 0.5) < 1e-9)
+  // Nearly at rest at both ends: the first and last 1% cover far less than 1%.
+  assert.ok(easeInOut(0.01) < 0.001)
+  assert.ok(1 - easeInOut(0.99) < 0.001)
 })
