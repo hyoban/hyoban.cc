@@ -27,8 +27,7 @@ function formatDate(dateKey: string, withYear = false) {
 
 <Layout title={`旅程 | ${SITE_TITLE}`} description="在地图上按时间回放的几段旅程。">
   <SitePage>
-    <p>按时间顺序在地图上回放一段旅程，路线、照片和当时写下的话会一站一站出现。</p>
-    <dl class="mt-6 grid grid-cols-4 gap-1 max-[30rem]:grid-cols-2">
+    <dl class="grid grid-cols-4 gap-1 max-[30rem]:grid-cols-2">
       {
         totals.map(([value, label]) => (
           <div class="flex flex-col-reverse rounded-md bg-inline px-3 py-2">

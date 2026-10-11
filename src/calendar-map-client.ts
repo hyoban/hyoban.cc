@@ -812,7 +812,7 @@ function initializeCalendarMap() {
   const token = page.dataset.mapboxToken?.trim()
 
   if (!token) {
-    showFallback('尚未配置 Mapbox Token，仍可通过地点列表浏览记录。')
+    showFallback('尚未配置 Mapbox Token。')
   } else if (locations.length === 0) {
     showFallback('还没有带地点的 Moment。')
   } else {
@@ -875,19 +875,19 @@ function initializeCalendarMap() {
       })
       map.on('error', () => {
         if (!mapLoaded) {
-          showFallback('地图资源加载失败，仍可通过地点列表浏览记录。')
+          showFallback('地图资源加载失败。')
         }
       })
 
       loadTimeout = setTimeout(() => {
         if (!mapLoaded) {
-          showFallback('地图加载超时，仍可通过地点列表浏览记录。')
+          showFallback('地图加载超时。')
         }
       }, 12_000)
     } catch {
       map?.remove()
       canvas.replaceChildren()
-      showFallback('浏览器无法初始化地图，仍可通过地点列表浏览记录。')
+      showFallback('浏览器无法初始化地图。')
     }
   }
 

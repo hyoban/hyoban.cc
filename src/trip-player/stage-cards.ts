@@ -18,7 +18,6 @@ export function createIntroCard(trip: TripData, covers: readonly TripImage[]) {
   }
 
   card.append(
-    createElement('p', 'calendar-map-trip-stage-card__eyebrow', '旅程回放'),
     createElement('p', 'calendar-map-trip-stage-card__title', trip.title),
     createElement('p', 'calendar-map-trip-stage-card__meta', getTripMeta(trip)),
     coverRow,
@@ -52,7 +51,6 @@ export function createSummaryCard(trip: TripData) {
   }
 
   card.append(
-    createElement('p', 'calendar-map-trip-stage-card__eyebrow', '这趟旅程'),
     createElement('p', 'calendar-map-trip-stage-card__title', trip.title),
     stats,
     // Where a viewer of the video can find the trip.

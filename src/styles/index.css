@@ -239,7 +239,7 @@ html[data-calendar-mode-transition] .calendar-back-link {
 .calendar-map-trip-setup__check {
   display: flex;
   gap: 0.5rem;
-  align-items: flex-start;
+  align-items: center;
   font-size: 0.8125rem;
   cursor: pointer;
 }
@@ -249,14 +249,8 @@ html[data-calendar-mode-transition] .calendar-back-link {
 }
 
 .calendar-map-trip-setup__check input {
-  margin-top: 0.1875rem;
+  margin: 0;
   accent-color: var(--color-tx);
-}
-
-.calendar-map-trip-setup__check small {
-  display: block;
-  font-size: 0.75rem;
-  color: var(--color-tx-3);
 }
 
 .calendar-map-trip-setup__select {

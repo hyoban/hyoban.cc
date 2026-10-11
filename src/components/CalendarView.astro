@@ -369,9 +369,9 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
           <div class="day-drawer__content overflow-y-auto overscroll-contain px-6 pb-12 max-[56rem]:overflow-visible max-[56rem]:p-0">
             {
               selectedTrip && (
-                <a class="mt-6 flex items-center gap-2 rounded-md bg-inline px-3 py-2.5 text-sm text-tx no-underline hover:bg-hover max-[56rem]:mt-4" href={selectedTripHref}>
+                <a class="mt-6 flex items-center gap-2 rounded-md bg-inline px-3 py-2.5 text-sm text-tx no-underline hover:bg-hover max-[56rem]:mt-4" href={selectedTripHref} aria-label={`回放旅程：${selectedTrip.title}`}>
                   <span class="i-lucide-route text-tx-2" aria-hidden="true" />
-                  <span class="min-w-0 flex-1 truncate">回放旅程：{selectedTrip.title}</span>
+                  <span class="min-w-0 flex-1 truncate">{selectedTrip.title}</span>
                   <span class="i-lucide-chevron-right text-tx-3" aria-hidden="true" />
                 </a>
               )
