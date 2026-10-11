@@ -186,6 +186,124 @@ html[data-calendar-mode-transition] .calendar-back-link {
 }
 
 /* Trip playback labels: a soft pill like the map toolbar, without the pointer tip. */
+/* Settings before presenting or recording, in place of the card's footer buttons. */
+.calendar-map-trip-setup {
+  display: grid;
+  flex: 1;
+  gap: 0.625rem;
+  padding: 0.625rem 0.5rem 0.375rem;
+}
+
+.calendar-map-trip-setup[hidden] {
+  display: none;
+}
+
+.calendar-map-trip-setup__row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.calendar-map-trip-setup__label {
+  font-size: 0.8125rem;
+  color: var(--color-tx-2);
+}
+
+/* Two options side by side, the chosen one raised, like a segmented control. */
+.calendar-map-trip-setup__segments {
+  display: flex;
+  padding: 0.1875rem;
+  background: var(--color-inline);
+  border-radius: 999px;
+}
+
+.calendar-map-trip-setup__segments button {
+  min-height: 1.875rem;
+  padding: 0 0.75rem;
+  font-size: 0.8125rem;
+  color: var(--color-tx-2);
+  white-space: nowrap;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+}
+
+.calendar-map-trip-setup__segments button[aria-checked='true'] {
+  color: var(--color-tx);
+  background: var(--color-bg);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.12);
+}
+
+.calendar-map-trip-setup__check {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.calendar-map-trip-setup__check[hidden] {
+  display: none;
+}
+
+.calendar-map-trip-setup__check input {
+  margin-top: 0.1875rem;
+  accent-color: var(--color-tx);
+}
+
+.calendar-map-trip-setup__check small {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--color-tx-3);
+}
+
+.calendar-map-trip-setup__select {
+  min-width: 0;
+  max-width: 10rem;
+  min-height: 2.25rem;
+  padding: 0 0.75rem;
+  font-size: 0.8125rem;
+  color: var(--color-tx);
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+}
+
+.calendar-map-trip-setup__actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.calendar-map-trip-setup__actions button {
+  min-height: 2.25rem;
+  padding: 0 1rem;
+  font-size: 0.8125rem;
+  color: var(--color-tx);
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+}
+
+.calendar-map-trip-setup__actions button:hover {
+  background: var(--color-inline);
+}
+
+/* The one that starts it. */
+.calendar-map-trip-setup__actions button:last-child {
+  color: var(--color-bg);
+  background: var(--color-tx);
+  border-color: var(--color-tx);
+}
+
+.calendar-map-trip-setup__actions button:last-child:hover {
+  opacity: 0.88;
+}
+
 /* The trip player's shortcut panel, opened with ?. */
 .calendar-map-trip-shortcuts {
   width: min(22rem, calc(100vw - 2rem));
@@ -333,6 +451,53 @@ html:has(.calendar-map-page[data-export-ratio]) body {
   --u: 0.5625cqw;
 }
 
+/*
+ * A portrait video plays full screen on a phone inside a short-video app, which lays
+ * its own things over it: the status bar and app icons at the top, the like, comment
+ * and share buttons down the right, the author, caption and progress bar at the
+ * bottom. With the option on, the words, cards and progress keep inside what stays
+ * clear of those (about 11% top, 13% right, 22% bottom of a 1080×1920 frame); the map
+ * still fills it all.
+ */
+.calendar-map-page[data-export-ratio='portrait'][data-trip-safe-area] .calendar-map-trip-stage {
+  --safe-top: calc(var(--u) * 20);
+  --safe-right: calc(var(--u) * 14);
+  --safe-bottom: calc(var(--u) * 40);
+  --safe-left: calc(var(--u) * 5);
+}
+
+.calendar-map-page[data-export-ratio='portrait'][data-trip-safe-area]
+  .calendar-map-trip-stage__header {
+  top: var(--safe-top);
+  left: var(--safe-left);
+}
+
+.calendar-map-page[data-export-ratio='portrait'][data-trip-safe-area]
+  .calendar-map-trip-stage__brand {
+  top: var(--safe-top);
+  right: var(--safe-right);
+}
+
+.calendar-map-page[data-export-ratio='portrait'][data-trip-safe-area]
+  .calendar-map-trip-stage__photos {
+  inset: 40% var(--safe-right) var(--safe-bottom) var(--safe-left);
+}
+
+.calendar-map-page[data-export-ratio='portrait'][data-trip-safe-area]
+  .calendar-map-trip-stage__center {
+  padding: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
+}
+
+.calendar-map-page[data-export-ratio='portrait'][data-trip-safe-area]
+  .calendar-map-trip-stage__progress {
+  inset: auto var(--safe-right) calc(var(--safe-bottom) - var(--u) * 4) var(--safe-left);
+}
+
+.calendar-map-page[data-export-ratio='portrait'][data-trip-safe-area]
+  .calendar-map-trip-stage::before {
+  height: calc(var(--safe-top) + var(--u) * 32);
+}
+
 .calendar-map-trip-stage::before,
 .calendar-map-trip-stage::after {
   position: absolute;
@@ -405,6 +570,14 @@ html:has(.calendar-map-page[data-export-ratio]) body {
   width: calc(var(--u) * 5);
   height: calc(var(--u) * 5);
   border-radius: 999px;
+}
+
+/* Marks the area clear of a phone's and an app's own overlays (see --safe-*), so the
+   camera and the place labels can keep to it too. Invisible. */
+.calendar-map-trip-stage__safe {
+  position: absolute;
+  inset: var(--safe-top, 0) var(--safe-right, 0) var(--safe-bottom, 0) var(--safe-left, 0);
+  pointer-events: none;
 }
 
 /* Where photo cards land; the map camera keeps stops out of this area. */
