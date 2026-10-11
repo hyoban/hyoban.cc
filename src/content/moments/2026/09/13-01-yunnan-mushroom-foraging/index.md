@@ -1,5 +1,6 @@
 ---
 occurredAt: '2026-09-13T10:00:00+08:00'
+location: wenhai-village
 media:
   - type: image
     file: yunnan-mushroom-foraging.webp

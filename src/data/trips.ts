@@ -45,8 +45,14 @@ export const trips = defineTrips([
     id: '2026-yunnan',
     music: 'apple-cider',
     start: '2026-09-12',
-    straightLegs: [['hefei-xinqiao-airport', 'lijiang', 'plane']],
+    straightLegs: [['nanjing-lukou-airport', 'lijiang-sanyi-airport', 'plane']],
     title: '云南之旅',
+    // The morning's flight from Hefei broke down, so the trip flew from Nanjing instead.
+    waypoints: [
+      { at: '2026-09-12T17:15:00+08:00', location: 'nanjing-lukou-airport' },
+      { location: 'lijiang-sanyi-airport' },
+      { at: '2026-09-16T13:25:00+08:00', location: 'lijiang-sanyi-airport' },
+    ],
   },
   {
     covers: [
