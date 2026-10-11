@@ -3,8 +3,9 @@ import { createCountUp, createElement, createWeather } from './dom'
 import { getSummaryStats } from './labels'
 import type { Slide, TripData, TripImage } from './types'
 
-// The centred cards of the story layout used for presenting and recording. A stop's
-// photo card is built by the player, since it changes with each photo.
+// The story layout used for presenting and recording: its centred cards and the day
+// and time heading above a stop. A stop's photo card is built by the player, since it
+// changes with each photo.
 
 export function createIntroCard(trip: TripData, covers: readonly TripImage[]) {
   const card = createElement('div', 'calendar-map-trip-stage-card', '')
@@ -65,4 +66,58 @@ export function createSummaryCard(trip: TripData) {
 /** `date range · N 天 · N 条记录`, under the trip's title on both intro cards. */
 export function getTripMeta(trip: TripData) {
   return `${trip.dateRange} · ${trip.dayCount} 天 · ${trip.stops.length} 条记录`
+}
+
+/**
+ * The story layout's day, date and time. Their numbers roll from one stop's to the
+ * next (number-flow) instead of being swapped, so moving on reads as time passing.
+ */
+export function createStageHeading(eyebrow: HTMLElement, title: HTMLElement) {
+  const roll = (minimumIntegerDigits = 1) => {
+    const flow = document.createElement('number-flow')
+    flow.format = { minimumIntegerDigits, useGrouping: false }
+    return flow
+  }
+  const day = roll()
+  const hour = roll(2)
+  const minute = roll(2)
+  const month = roll()
+  const date = roll()
+  const time = document.createElement('span')
+  const weekday = document.createElement('span')
+
+  // The day and time lead; the date sits small above them.
+  time.append(' · ', hour, ':', minute)
+  title.replaceChildren('第 ', day, ' 天', time)
+  eyebrow.replaceChildren(month, '月', date, '日', weekday)
+
+  return {
+    show(stop: { date: string; day: number; time?: string | undefined }) {
+      // Dates read like 10月2日周五 and times like 19:43; anything else is shown as is.
+      const dateParts = /^(\d+)月(\d+)日(.*)$/.exec(stop.date)
+      const timeParts = /^(\d{1,2}):(\d{2})$/.exec(stop.time ?? '')
+
+      day.update(stop.day)
+      time.hidden = !timeParts
+
+      // A stop without a time hides it but leaves the last one, to roll on from.
+      if (timeParts) {
+        hour.update(Number(timeParts[1]))
+        minute.update(Number(timeParts[2]))
+      }
+
+      if (dateParts) {
+        month.update(Number(dateParts[1]))
+        date.update(Number(dateParts[2]))
+        weekday.textContent = dateParts[3] ?? ''
+
+        // Back from a date shown as plain text; otherwise the numbers stay in place.
+        if (!month.isConnected) {
+          eyebrow.replaceChildren(month, '月', date, '日', weekday)
+        }
+      } else {
+        eyebrow.textContent = stop.date
+      }
+    },
+  }
 }

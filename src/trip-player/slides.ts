@@ -244,7 +244,7 @@ export function getStopPointStart(stopPointEnds: readonly number[], stopIndex: n
 }
 
 /** How many of a stop's waypoints were passed on an earlier day; they come first. */
-export function getEarlierDayWaypointCount(stop: SlideStop | undefined) {
+function getEarlierDayWaypointCount(stop: SlideStop | undefined) {
   return stop?.waypoints.filter((waypoint) => waypoint.day < stop.day).length ?? 0
 }
 

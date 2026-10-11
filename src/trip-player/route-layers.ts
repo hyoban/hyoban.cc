@@ -29,13 +29,13 @@ const TRAVEL_ICONS: Record<TravelMode, string> = {
 
 export type StopState = 'current' | 'upcoming' | 'visited'
 
-export type StopDot = { coordinates: Coordinates; state: StopState; waypoint: boolean }
+type StopDot = { coordinates: Coordinates; state: StopState; waypoint: boolean }
 
 /** `ink` draws the route; `paper` fills what is still ahead. Both follow the theme. */
 type Colors = { ink: string; paper: string }
 
 /** A stretch being drawn: its whole line, and how far along it the tip is. */
-export type RoutePiece = {
+type RoutePiece = {
   line: readonly Coordinates[]
   mode: TravelMode
   /** The segment the tip is on, and how far along it. */

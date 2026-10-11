@@ -23,7 +23,7 @@ const EDGE = 8
 const GLIDE = 0.14
 
 /** A dot or icon on the map that labels shouldn't cover, by its radius in pixels. */
-export type LabelMarker = { coordinates: Coordinates; radius: number }
+type LabelMarker = { coordinates: Coordinates; radius: number }
 
 type PlacedLabel = {
   coordinates: [number, number]

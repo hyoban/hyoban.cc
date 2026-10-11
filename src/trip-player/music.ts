@@ -3,7 +3,7 @@
 
 const MUSIC_FADE_IN = 1
 const MUSIC_VOLUME = 0.8
-export const MUSIC_FADE_OUT = 2
+const MUSIC_FADE_OUT = 2
 
 export type Music = {
   context: AudioContext
