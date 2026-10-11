@@ -1,93 +1,61 @@
-import mapboxgl, { type GeoJSONSource } from 'mapbox-gl'
-import { SITE_URL } from './consts'
-import { buildSlides, getStopPointEnds, pickCovers, type TripSlide } from './trip-slides'
+import mapboxgl from 'mapbox-gl'
+import { getDistanceKm } from '../geo'
+import {
+  createElement,
+  createLiveVideo,
+  createMosaic,
+  createWeather,
+  downloadBlob,
+  IMAGE_SIZES,
+  parseJson,
+  preloadImage,
+  queryRequired,
+} from './dom'
+import { createChapterLog, getSummaryStats } from './labels'
+import { closeMusic, fadeMusicIn, fadeMusicOut, loadMusic, type Music } from './music'
+import {
+  getNextSpeed,
+  readMusicPreference,
+  readSpeedPreference,
+  writeMusicPreference,
+  writeSpeedPreference,
+} from './preferences'
+import {
+  getRouteLine as buildRouteLine,
+  getTravelMode,
+  measureLine,
+  walkLine,
+  type MeasuredLine,
+} from './route'
+import { createRouteLayers, type StopState } from './route-layers'
+import {
+  buildSlides,
+  getEarlierDayWaypointCount,
+  getSlideDay,
+  getSlideDuration,
+  getSlideLabel,
+  getStopEyebrow,
+  getStopPointEnds,
+  getStopPointStart as getPointStart,
+  getWaypointsBefore as getWaypointRange,
+  pickCovers,
+} from './slides'
+import { createDayCard, createIntroCard, createSummaryCard, getTripMeta } from './stage-cards'
+import type {
+  MapLabel,
+  Slide,
+  TripData,
+  TripImage,
+  TripPlace,
+  TripPoint,
+  TripStop,
+  TripSummary,
+  TripWaypoint,
+} from './types'
 
-type TripPlace = {
-  latitude: number
-  longitude: number
-  name: string
-}
-
-type TripWaypoint = TripPlace & { date: string; day: number; time?: string }
-
-type TripStop = {
-  /** The URL hash that opens the trip on this card. */
-  anchor: string
-  date: string
-  day: number
-  href: string
-  images: TripImage[]
-  name: string
-  places: TripPlace[]
-  text: string
-  time?: string
-  /** Places the map pauses at on the way here, without a card of their own. */
-  waypoints: TripWaypoint[]
-}
-
-type TripPoint = {
-  coordinates: [number, number]
-  /** The trip day a waypoint was passed on. */
-  day?: number
-  /** `第 N 天 · date · time`, shown above a waypoint's name on the map. */
-  eyebrow?: string
-  name: string
-  stopIndex: number
-  time?: string
-  waypoint: boolean
-}
-
-type MapLabel = {
-  coordinates: [number, number]
-  eyebrow?: string
-  name: string
-}
-
-type TripImage = {
-  alt: string
-  height: number
-  src: string
-  srcset: string
-  thumbnail: string
-  video?: string
-  width: number
-}
-
-type TripSummary = { id: string; pageTitle: string }
-
-type TripData = {
-  dateRange: string
-  dayCount: number
-  distanceKm: number
-  /** Hours of driving; ferries and flights aren't counted. */
-  drivingHours: number
-  id: string
-  /** Default background music source. */
-  music?: string
-  pageTitle: string
-  photoCount: number
-  placeCount: number
-  /** Hand-picked photos for the intro and summary, best first. */
-  covers: TripImage[]
-  stops: TripStop[]
-  title: string
-  trailingWaypoints: TripWaypoint[]
-  /** Road geometry between consecutive places; null legs are drawn straight. */
-  legs: (readonly (readonly [number, number])[] | null)[]
-  legModes: TravelMode[]
-  /** Each day's weather where it starts, by day number. */
-  weather: Record<number, { icon: string; label: string }>
-}
-
-type Slide = TripSlide<TripStop>
-
-type TravelMode = 'car' | 'ferry' | 'plane'
-
-const TRAVEL_ICONS: Record<TravelMode, string> = {
-  car: 'i-lucide-car-front',
-  ferry: 'i-lucide-ship',
-  plane: 'i-lucide-plane',
-}
+// Plays a trip back on the map: the route draws itself from place to place while a
+// card shows each stop's photos and words. The same playback can run in a story
+// layout to present full screen or to record as a video.
 
 type TripPlayerOptions = {
   getMap: () => mapboxgl.Map | undefined
@@ -96,26 +64,9 @@ type TripPlayerOptions = {
   signal: AbortSignal
 }
 
-const ROUTE_SOURCE_ID = 'calendar-trip-route'
-// The piece of route being drawn right now, kept apart so each frame sends only it.
-const ACTIVE_ROUTE_SOURCE_ID = 'calendar-trip-route-active'
-// A car, ship or plane riding the tip of the route. It is a map layer rather than a
-// DOM marker, which Mapbox snaps to whole pixels and so steps when moving slowly.
-const HEAD_SOURCE_ID = 'calendar-trip-head'
-const HEAD_SIZE = 26
-const HEAD_ICON_SIZE = 14
-const PLANNED_SOURCE_ID = 'calendar-trip-planned'
-const STOP_SOURCE_ID = 'calendar-trip-stops'
-const INTRO_DURATION = 3000
-const DAY_DURATION = 2200
-const STOP_DURATION = 5000
 const WAYPOINT_PAUSE = 2000
-const PHOTO_DURATION = 2000
 // How far photos slide when the card moves to the next or previous one.
 const PHOTO_SLIDE_DISTANCE = 20
-// Roughly the time it takes to read one Chinese character.
-const CHARACTER_DURATION = 120
-const IMAGE_SIZES = '(max-width: 48rem) calc(100vw - 3.5rem), 20rem'
 const LEG_DURATION = 2200
 const STOP_ZOOM = 9
 // Each stop is framed together with the trip's other places this close to it.
@@ -133,19 +84,11 @@ const EXPORT_VIDEO_TYPES = [
   'video/webm;codecs=vp9,opus',
   'video/webm',
 ]
-// Background music fades in at the start and out as the summary card ends.
-const MUSIC_FADE_IN = 1
-const MUSIC_FADE_OUT = 2
-const MUSIC_VOLUME = 0.8
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
 
 type ExportRatio = 'landscape' | 'portrait'
 // The story layout either plays on screen or is recorded to a video file.
 type StageMode = 'present' | 'record'
-
-const MUSIC_PREFERENCE_KEY = 'calendar-trip-music'
-const SPEED_PREFERENCE_KEY = 'calendar-trip-speed'
-const SPEEDS = [1, 1.5, 2] as const
 
 // Region Capture is Chromium-only and not in the DOM typings yet.
 type CroppableTrack = MediaStreamTrack & { cropTo?: (target: unknown) => Promise<void> }
@@ -213,7 +156,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   let staging:
     | {
         mode: StageMode
-        music?: { context: AudioContext; gain: GainNode; source: AudioBufferSourceNode }
+        music?: Music
         recorder?: MediaRecorder
         stopTimer?: ReturnType<typeof setTimeout>
         stream?: MediaStream
@@ -221,12 +164,9 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     | undefined
   let stageMode: StageMode = 'record'
   // Where each day starts in the video being recorded, for the description's chapters.
-  let chapters: { label: string; time: number }[] = []
-  let recordingStart: number | undefined
+  let recording: { chapters: ReturnType<typeof createChapterLog>; start: number } | undefined
   // Music for the ordinary card playback, switched on with the music button.
-  let ambient:
-    | { context: AudioContext; gain: GainNode; source: AudioBufferSourceNode; src: string }
-    | undefined
+  let ambient: (Music & { src: string }) | undefined
   let musicOn = readMusicPreference()
   let pendingAmbient: { src: string } | undefined
   let stageToken: object | undefined
@@ -243,13 +183,10 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   let elapsed = 0
   let playing = false
   let speed: number = readSpeedPreference()
-  // What the route sources hold now, so frames that don't change them skip the update.
-  const shownRoute: {
-    head: boolean
-    partial: boolean
-    pointCount: number
-    source?: GeoJSONSource
-  } = { head: false, partial: false, pointCount: -1 }
+  const layers = createRouteLayers(getMap, () => ({
+    ink: getComputedStyle(page).getPropertyValue('--color-tx').trim() || '#21201c',
+    paper: getComputedStyle(page).getPropertyValue('--color-bg').trim() || '#fdfdfc',
+  }))
   let frame: number | undefined
   let lastFrameTime: number | undefined
   let legFrame: number | undefined
@@ -261,9 +198,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   let drawnPointCount = 0
   // The stop whose long leg the camera has already pulled back for.
   let followedStop = -1
-  let routeProgress:
-    | { lengths: number[]; line: [number, number][]; stopIndex: number; total: number }
-    | undefined
+  let routeProgress: (MeasuredLine & { stopIndex: number }) | undefined
   let photoIndex = 0
   let photo: HTMLImageElement | undefined
   let thumbnails: HTMLButtonElement[] = []
@@ -271,24 +206,9 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   let liveVideo: HTMLVideoElement | undefined
   // A mouse resting on the card holds the current slide so it can be read.
   let hovering = false
-
-  function getSlideDuration(slide: Slide | undefined) {
-    if (slide?.type === 'intro') {
-      return INTRO_DURATION
-    }
-
-    if (slide?.type === 'day') {
-      return DAY_DURATION
-    }
-
-    return slide?.type === 'stop'
-      ? Math.max(
-          STOP_DURATION,
-          slide.stop.images.length * PHOTO_DURATION,
-          slide.stop.text.length * CHARACTER_DURATION,
-        )
-      : undefined
-  }
+  // Photos decoded ahead while recording, so a card never opens on a blank frame.
+  const decodedPhotos = new Map<string, Promise<void>>()
+  const readyPhotos = new Set<string>()
 
   // The page itself becomes a narrow stage while recording or presenting, so measure it.
   function isNarrow() {
@@ -322,7 +242,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   }
 
   function getStopPointStart(stopIndex: number) {
-    return stopIndex === 0 ? 0 : stopPointEnds[stopIndex - 1]!
+    return getPointStart(stopPointEnds, stopIndex)
   }
 
   /**
@@ -385,17 +305,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     const to = Math.min(stopPointEnds[slide.stopIndex]!, points.length - 1)
 
     if (routeProgress?.stopIndex !== slide.stopIndex) {
-      const line = getRouteLine(from, to + 1)
-      const lengths = line
-        .slice(1)
-        .map((coordinates, segmentIndex) => getPlanarDistance(line[segmentIndex]!, coordinates))
-
-      routeProgress = {
-        lengths,
-        line,
-        stopIndex: slide.stopIndex,
-        total: lengths.reduce((total, length) => total + length, 0),
-      }
+      routeProgress = { ...measureLine(getRouteLine(from, to + 1)), stopIndex: slide.stopIndex }
     }
 
     const fraction = Math.min(elapsed / duration, 1)
@@ -411,316 +321,60 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       return
     }
 
-    const { lengths, line } = routeProgress
-    let remaining = fraction * routeProgress.total
-    let segmentIndex = 0
-
-    while (segmentIndex < lengths.length - 1 && remaining > lengths[segmentIndex]!) {
-      remaining -= lengths[segmentIndex]!
-      segmentIndex += 1
-    }
-
-    const start = line[segmentIndex]!
-    const end = line[segmentIndex + 1]!
-    const ratio = lengths[segmentIndex] ? remaining / lengths[segmentIndex]! : 1
-
     drawnPointCount = from + 1
-    setRoute(
-      from + 1,
-      [
-        ...line.slice(1, segmentIndex + 1),
-        [start[0] + (end[0] - start[0]) * ratio, start[1] + (end[1] - start[1]) * ratio],
-      ],
-      getTravelMode(start, end),
-    )
+    setRoute(from + 1, walkLine(routeProgress, fraction))
   }
 
-  function getLineColor() {
-    return getComputedStyle(page).getPropertyValue('--color-tx').trim() || '#21201c'
-  }
-
-  function getBackgroundColor() {
-    return getComputedStyle(page).getPropertyValue('--color-bg').trim() || '#fdfdfc'
-  }
-
+  /** Adds the route layers, also after the map style changes and drops them. */
   function addLayers() {
-    const map = getMap()
-
-    if (!map || !trip || map.getSource(ROUTE_SOURCE_ID)) {
-      return
-    }
-
-    const lineColor = getLineColor()
-    const emptyLine = {
-      geometry: { coordinates: [], type: 'LineString' as const },
-      properties: {},
-      type: 'Feature' as const,
-    }
-
-    map.addSource(PLANNED_SOURCE_ID, { data: emptyLine, type: 'geojson' })
-    map.addSource(ROUTE_SOURCE_ID, { data: emptyLine, type: 'geojson' })
-    map.addSource(ACTIVE_ROUTE_SOURCE_ID, { data: emptyLine, type: 'geojson' })
-    map.addSource(HEAD_SOURCE_ID, {
-      data: { features: [], type: 'FeatureCollection' },
-      type: 'geojson',
-    })
-    map.addSource(STOP_SOURCE_ID, {
-      data: { features: [], type: 'FeatureCollection' },
-      type: 'geojson',
-    })
-    map.addLayer({
-      id: PLANNED_SOURCE_ID,
-      layout: { 'line-cap': 'round', 'line-join': 'round' },
-      paint: {
-        'line-color': lineColor,
-        'line-dasharray': [1, 2],
-        'line-opacity': 0.3,
-        'line-width': 2,
-      },
-      source: PLANNED_SOURCE_ID,
-      type: 'line',
-    })
-    map.addLayer({
-      id: ROUTE_SOURCE_ID,
-      layout: { 'line-cap': 'round', 'line-join': 'round' },
-      paint: { 'line-color': lineColor, 'line-width': 3 },
-      source: ROUTE_SOURCE_ID,
-      type: 'line',
-    })
-    map.addLayer({
-      id: ACTIVE_ROUTE_SOURCE_ID,
-      layout: { 'line-cap': 'round', 'line-join': 'round' },
-      paint: { 'line-color': lineColor, 'line-width': 3 },
-      source: ACTIVE_ROUTE_SOURCE_ID,
-      type: 'line',
-    })
-    map.addLayer({
-      id: STOP_SOURCE_ID,
-      paint: {
-        'circle-color': ['match', ['get', 'state'], 'upcoming', getBackgroundColor(), lineColor],
-        'circle-radius': [
-          'match',
-          ['get', 'state'],
-          'current',
-          7,
-          ['case', ['get', 'waypoint'], 3, 4.5],
-        ],
-        'circle-stroke-color': [
-          'match',
-          ['get', 'state'],
-          'upcoming',
-          lineColor,
-          getBackgroundColor(),
-        ],
-        'circle-stroke-width': 2,
-      },
-      source: STOP_SOURCE_ID,
-      type: 'circle',
-    })
-    map.addLayer({
-      id: HEAD_SOURCE_ID,
-      layout: {
-        'icon-allow-overlap': true,
-        'icon-ignore-placement': true,
-        'icon-image': ['concat', `${HEAD_SOURCE_ID}-`, ['get', 'mode']],
-      },
-      source: HEAD_SOURCE_ID,
-      type: 'symbol',
-    })
-    void addHeadImages(map)
-
-    ;(map.getSource(PLANNED_SOURCE_ID) as GeoJSONSource).setData(
-      lineFeature(getRouteLine(0, points.length)),
-    )
-    setRoute(drawnPointCount)
-    updateStops()
-  }
-
-  function removeLayers() {
-    const map = getMap()
-
-    if (!map) {
-      return
-    }
-
-    for (const id of [
-      HEAD_SOURCE_ID,
-      STOP_SOURCE_ID,
-      ACTIVE_ROUTE_SOURCE_ID,
-      ROUTE_SOURCE_ID,
-      PLANNED_SOURCE_ID,
-    ]) {
-      if (map.getLayer(id)) {
-        map.removeLayer(id)
-      }
-
-      if (map.getSource(id)) {
-        map.removeSource(id)
-      }
+    if (trip && layers.add(getRouteLine(0, points.length))) {
+      setRoute(drawnPointCount)
+      updateStops()
     }
   }
 
   /** The line from `points[from]` to `points[to - 1]`, along roads where a route is known. */
   function getRouteLine(from: number, to: number) {
-    const line: [number, number][] = []
-
-    for (let index = from; index < to; index += 1) {
-      const point = points[index]!
-
-      if (index > from) {
-        const road = trip?.legs[index - 1]
-
-        if (road) {
-          line.push(
-            ...road.map((coordinates) => [coordinates[0], coordinates[1]] as [number, number]),
-          )
-        }
-      }
-
-      line.push(point.coordinates)
-    }
-
-    return line
+    return buildRouteLine(points, trip?.legs ?? [], from, to)
   }
 
-  function setRoute(pointCount: number, partial?: [number, number][], mode: TravelMode = 'car') {
-    const map = getMap()
-    const source = map?.getSource(ROUTE_SOURCE_ID) as GeoJSONSource | undefined
-    const activeSource = map?.getSource(ACTIVE_ROUTE_SOURCE_ID) as GeoJSONSource | undefined
+  /**
+   * Draws the route through the first `pointCount` points, plus the part of the next
+   * stretch `walked` so far, if it is being drawn.
+   */
+  function setRoute(pointCount: number, walked?: ReturnType<typeof walkLine>) {
+    const from = points[pointCount - 1]
 
-    if (!trip || !source || !activeSource) {
-      return
-    }
-
-    // The whole route is thousands of points; resend it only when it gains a place.
-    if (source !== shownRoute.source || pointCount !== shownRoute.pointCount) {
-      source.setData(lineFeature(getRouteLine(0, pointCount)))
-      shownRoute.source = source
-      shownRoute.pointCount = pointCount
-    }
-
-    const start = points[pointCount - 1]
-
-    if (partial?.length && start) {
-      activeSource.setData(lineFeature([start.coordinates, ...partial]))
-      shownRoute.partial = true
-    } else if (shownRoute.partial) {
-      activeSource.setData(lineFeature([]))
-      shownRoute.partial = false
-    }
-
-    setTravelHead(partial?.at(-1), mode)
-  }
-
-  /** The ferry or plane leg whose straight line runs from `start` to `end`, else by car. */
-  function getTravelMode(start: [number, number], end: [number, number]): TravelMode {
-    const same = (first: [number, number], second: [number, number]) =>
-      first[0] === second[0] && first[1] === second[1]
-    const legIndex = trip?.legModes.findIndex(
-      (mode, legIndex) =>
-        mode !== 'car' &&
-        same(points[legIndex]!.coordinates, start) &&
-        same(points[legIndex + 1]!.coordinates, end),
-    )
-
-    return legIndex === undefined || legIndex === -1 ? 'car' : trip!.legModes[legIndex]!
-  }
-
-  /** Moves the head to the route's tip, or hides it when nothing is being drawn. */
-  function setTravelHead(coordinates: [number, number] | undefined, mode: TravelMode) {
-    const source = getMap()?.getSource(HEAD_SOURCE_ID) as GeoJSONSource | undefined
-
-    if (!source || (!coordinates && !shownRoute.head)) {
-      return
-    }
-
-    shownRoute.head = Boolean(coordinates)
-    source.setData({
-      features: coordinates
-        ? [
-            {
-              geometry: { coordinates, type: 'Point' as const },
-              properties: { mode },
-              type: 'Feature' as const,
-            },
-          ]
-        : [],
-      type: 'FeatureCollection',
-    })
-  }
-
-  /** Draws each travel mode's head (a dark disc with the icon) into the map's images. */
-  async function addHeadImages(map: mapboxgl.Map) {
-    const ratio = Math.max(window.devicePixelRatio || 1, 2)
-    const fill = getLineColor()
-    const ink = getBackgroundColor()
-
-    await Promise.all(
-      (Object.keys(TRAVEL_ICONS) as TravelMode[]).map(async (mode) => {
-        const icon = await loadIconImage(TRAVEL_ICONS[mode])
-        const canvas = document.createElement('canvas')
-        const context = canvas.getContext('2d')
-        const size = HEAD_SIZE * ratio
-        const iconSize = HEAD_ICON_SIZE * ratio
-
-        if (!context || !icon) {
-          return
-        }
-
-        canvas.width = size
-        canvas.height = size
-        // The icon in the page background colour on a disc in the text colour.
-        context.drawImage(icon, (size - iconSize) / 2, (size - iconSize) / 2, iconSize, iconSize)
-        context.globalCompositeOperation = 'source-in'
-        context.fillStyle = ink
-        context.fillRect(0, 0, size, size)
-        context.globalCompositeOperation = 'destination-over'
-        context.beginPath()
-        context.arc(size / 2, size / 2, size / 2 - 2 * ratio, 0, Math.PI * 2)
-        context.fillStyle = fill
-        context.fill()
-        context.lineWidth = 2 * ratio
-        context.strokeStyle = ink
-        context.stroke()
-
-        const name = `${HEAD_SOURCE_ID}-${mode}`
-
-        if (map.hasImage(name)) {
-          map.removeImage(name)
-        }
-
-        map.addImage(name, context.getImageData(0, 0, size, size), { pixelRatio: ratio })
-      }),
+    layers.setRoute(
+      pointCount,
+      () => getRouteLine(0, pointCount),
+      walked && from
+        ? {
+            from: from.coordinates,
+            mode: getTravelMode(points, trip?.legModes ?? [], walked.start, walked.end),
+            passed: walked.passed,
+          }
+        : undefined,
     )
   }
 
   function updateStops() {
-    const source = getMap()?.getSource(STOP_SOURCE_ID) as GeoJSONSource | undefined
     const slide = slides[index]
-
-    if (!trip || !source) {
-      return
-    }
-
     const currentStopIndex = slide?.type === 'stop' ? slide.stopIndex : -1
 
-    source.setData({
-      features: points.map((point, pointIndex) => ({
-        geometry: { coordinates: point.coordinates, type: 'Point' as const },
-        properties: {
-          waypoint: point.waypoint,
-          state:
-            pointIndex === currentWaypointPoint ||
-            (point.stopIndex === currentStopIndex && !point.waypoint && !traveling)
-              ? 'current'
-              : pointIndex < drawnPointCount
-                ? 'visited'
-                : 'upcoming',
-        },
-        type: 'Feature' as const,
-      })),
-      type: 'FeatureCollection',
-    })
+    layers.setStops(
+      points.map((point, pointIndex) => {
+        const state: StopState =
+          pointIndex === currentWaypointPoint ||
+          (point.stopIndex === currentStopIndex && !point.waypoint && !traveling)
+            ? 'current'
+            : pointIndex < drawnPointCount
+              ? 'visited'
+              : 'upcoming'
+
+        return { coordinates: point.coordinates, state, waypoint: point.waypoint }
+      }),
+    )
   }
 
   function cancelLeg() {
@@ -744,13 +398,9 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   }
 
   function animateLeg(legStart: number, legEnd: number) {
-    const leg = getRouteLine(legStart, legEnd)
-    const segmentLengths = leg
-      .slice(1)
-      .map((coordinates, segmentIndex) => getPlanarDistance(leg[segmentIndex]!, coordinates))
-    const legLength = segmentLengths.reduce((total, length) => total + length, 0)
+    const leg = measureLine(getRouteLine(legStart, legEnd))
 
-    if (legLength === 0 || reducedMotion.matches) {
+    if (leg.total === 0 || reducedMotion.matches) {
       drawnPointCount = legEnd
       setRoute(drawnPointCount)
       cancelLeg()
@@ -771,30 +421,8 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
         return
       }
 
-      let remaining = (1 - (1 - t) ** 3) * legLength
-      let segmentIndex = 0
-
-      while (
-        segmentIndex < segmentLengths.length - 1 &&
-        remaining > segmentLengths[segmentIndex]!
-      ) {
-        remaining -= segmentLengths[segmentIndex]!
-        segmentIndex += 1
-      }
-
-      const from = leg[segmentIndex]!
-      const to = leg[segmentIndex + 1]!
-      const ratio = segmentLengths[segmentIndex] ? remaining / segmentLengths[segmentIndex]! : 1
-
-      // The drawn part of this leg follows its road shape up to the moving tip.
-      setRoute(
-        legStart + 1,
-        [
-          ...leg.slice(1, segmentIndex + 1),
-          [from[0] + (to[0] - from[0]) * ratio, from[1] + (to[1] - from[1]) * ratio],
-        ],
-        getTravelMode(from, to),
-      )
+      // Eases out, so the drive arrives gently; the drawn part follows the road.
+      setRoute(legStart + 1, walkLine(leg, 1 - (1 - t) ** 3))
       legFrame = requestAnimationFrame(step)
     }
 
@@ -821,7 +449,6 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     })
   }
 
-  /** Frames every place of one day, as a preview before its stops play. */
   /** Keeps a long leg in view while it is drawn, from `points[from]` to `points[to]`. */
   function frameLeg(from: number, to: number) {
     const map = getMap()
@@ -854,7 +481,8 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     const bounds = new mapboxgl.LngLatBounds()
     // The last place before the day's own: where the night was spent, or the last
     // waypoint passed the evening before. Keeps the day's first drive in view.
-    const setOff = points[getStopPointStart(stopIndex) + getEarlierDayWaypointCount(stopIndex) - 1]
+    const setOff =
+      points[getStopPointStart(stopIndex) + getEarlierDayWaypointCount(trip.stops[stopIndex]) - 1]
 
     if (setOff) {
       bounds.extend(setOff.coordinates)
@@ -1127,7 +755,6 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     renderRouteProgress()
   }
 
-  /** Runs a content change and eases the card from its old height to the new one. */
   /**
    * Swaps the photo and eases its frame between the old and new size. Only the photo
    * moves: the card grows from its bottom edge, so the text and buttons stay put. The
@@ -1343,7 +970,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       }
 
       pendingAmbient = undefined
-      ambient = { context: music.context, gain: music.gain, source: music.source, src }
+      ambient = { ...music, src }
       fadeMusicIn(music)
       syncAmbientMusic()
     })
@@ -1353,22 +980,9 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     pendingAmbient = undefined
 
     if (ambient) {
-      ambient.source.stop()
-      void ambient.context.close()
+      closeMusic(ambient)
       ambient = undefined
     }
-  }
-
-  function fadeMusicIn(music: {
-    context: AudioContext
-    gain: GainNode
-    source: AudioBufferSourceNode
-  }) {
-    const now = music.context.currentTime
-
-    music.gain.gain.setValueAtTime(0, now)
-    music.gain.gain.linearRampToValueAtTime(MUSIC_VOLUME, now + MUSIC_FADE_IN)
-    music.source.start()
   }
 
   function renderSlide() {
@@ -1388,11 +1002,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       eyebrow.textContent = '旅程回放'
       title.textContent = trip.title
       body.replaceChildren(
-        createElement(
-          'p',
-          'shrink-0 text-tx-2',
-          `${trip.dateRange} · ${trip.dayCount} 天 · ${trip.stops.length} 条记录`,
-        ),
+        createElement('p', 'shrink-0 text-tx-2', getTripMeta(trip)),
         createMosaic(covers),
       )
     } else if (slide.type === 'day') {
@@ -1513,7 +1123,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     clearStagePhotos()
 
     if (slide.type === 'intro') {
-      stageCenter.replaceChildren(createIntroCard(trip))
+      stageCenter.replaceChildren(createIntroCard(trip, covers))
       return
     }
 
@@ -1523,7 +1133,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     }
 
     if (slide.type === 'day') {
-      stageCenter.replaceChildren(createDayCard(slide))
+      stageCenter.replaceChildren(createDayCard(trip, slide))
       return
     }
 
@@ -1650,81 +1260,13 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     }
   }
 
-  function createIntroCard(currentTrip: TripData) {
-    const card = createElement('div', 'calendar-map-trip-stage-card', '')
-    const coverRow = createElement('div', 'calendar-map-trip-stage-card__covers', '')
-
-    for (const cover of covers.slice(0, 3)) {
-      const image = document.createElement('img')
-      image.src = cover.thumbnail
-      image.alt = ''
-      coverRow.append(image)
-    }
-
-    card.append(
-      createElement('p', 'calendar-map-trip-stage-card__eyebrow', '旅程回放'),
-      createElement('p', 'calendar-map-trip-stage-card__title', currentTrip.title),
-      createElement(
-        'p',
-        'calendar-map-trip-stage-card__meta',
-        `${currentTrip.dateRange} · ${currentTrip.dayCount} 天 · ${currentTrip.stops.length} 条记录`,
-      ),
-      coverRow,
-    )
-    return card
-  }
-
-  function createDayCard(slide: Extract<Slide, { type: 'day' }>) {
-    const card = createElement('div', 'calendar-map-trip-stage-card', '')
-
-    const weather = trip?.weather[slide.day]
-
-    card.append(
-      createElement('p', 'calendar-map-trip-stage-card__eyebrow', `第 ${slide.day} 天`),
-      createElement('p', 'calendar-map-trip-stage-card__title', slide.date),
-      ...(weather ? [createWeather(weather, 'calendar-map-trip-stage-card__weather')] : []),
-      createElement('p', 'calendar-map-trip-stage-card__meta', slide.places.join(' → ')),
-    )
-    return card
-  }
-
-  function createSummaryCard(currentTrip: TripData) {
-    const card = createElement('div', 'calendar-map-trip-stage-card', '')
-    const stats = document.createElement('dl')
-
-    stats.className = 'calendar-map-trip-stage-card__stats'
-
-    for (const [value, label] of getSummaryStats(currentTrip)) {
-      const item = document.createElement('div')
-      item.append(createElement('dt', '', label), createElement('dd', '', String(value)))
-      stats.append(item)
-    }
-
-    card.append(
-      createElement('p', 'calendar-map-trip-stage-card__eyebrow', '这趟旅程'),
-      createElement('p', 'calendar-map-trip-stage-card__title', currentTrip.title),
-      stats,
-      // Where a viewer of the video can find the trip.
-      createElement('p', 'calendar-map-trip-stage-card__site', `${new URL(SITE_URL).host}/trip/`),
-    )
-    return card
-  }
-
   /** Notes when a day or the summary starts in the recording. */
   function addChapter(slide: Slide) {
-    if (recordingStart === undefined || (slide.type !== 'day' && slide.type !== 'summary')) {
-      return
-    }
-
-    const label = slide.type === 'day' ? `第 ${slide.day} 天 · ${slide.date}` : '旅程回顾'
-    const time = Math.floor((performance.now() - recordingStart) / 1000)
-    const last = chapters.at(-1)
-
-    // Video sites want chapters at least ten seconds long, so a short one gives way.
-    if (last && time - last.time < 10) {
-      last.label = label
-    } else {
-      chapters.push({ label, time })
+    if (recording && (slide.type === 'day' || slide.type === 'summary')) {
+      recording.chapters.add(
+        slide.type === 'day' ? `第 ${slide.day} 天 · ${slide.date}` : '旅程回顾',
+        Math.floor((performance.now() - recording.start) / 1000),
+      )
     }
   }
 
@@ -1733,29 +1275,13 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
    * Waypoints from the day before a stop (leaving the evening before) are passed
    * before that day's opener, so the new day starts where it really started.
    */
-  function getWaypointsBefore(slide: Slide): [number, number] {
-    if (slide.type === 'summary') {
-      return [stopPointEnds.at(-1) ?? 0, trip?.trailingWaypoints.length ?? 0]
-    }
-
-    if (slide.type === 'intro') {
-      return [0, 0]
-    }
-
-    const start = getStopPointStart(slide.stopIndex)
-    const stop = trip!.stops[slide.stopIndex]!
-    const opensDay = trip!.stops[slide.stopIndex - 1]?.day !== stop.day
-    const earlier = opensDay ? getEarlierDayWaypointCount(slide.stopIndex) : 0
-
-    return slide.type === 'day'
-      ? [start, earlier]
-      : [start + earlier, stop.waypoints.length - earlier]
-  }
-
-  /** How many of a stop's waypoints were passed on an earlier day; they come first. */
-  function getEarlierDayWaypointCount(stopIndex: number) {
-    const stop = trip?.stops[stopIndex]
-    return stop?.waypoints.filter((waypoint) => waypoint.day < stop.day).length ?? 0
+  function getWaypointsBefore(slide: Slide) {
+    return getWaypointRange(
+      slide,
+      trip?.stops ?? [],
+      stopPointEnds,
+      trip?.trailingWaypoints.length ?? 0,
+    )
   }
 
   /** The slide a shared link names: a stop's card, or its day's opener when it starts the day. */
@@ -1830,6 +1356,11 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     elapsed = 0
     syncHash(slide)
     addChapter(slide)
+
+    if (staging?.recorder) {
+      preparePhotosAhead()
+    }
+
     // Autoplay stays quiet, like a carousel; stepping through by hand names each card.
     announcer.textContent = playing ? '' : getSlideLabel(slide)
 
@@ -1871,7 +1402,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
         cancelLeg()
         drawnPointCount = Math.min(
           getStopPointStart(slide.stopIndex) +
-            Math.max(getEarlierDayWaypointCount(slide.stopIndex), 1),
+            Math.max(getEarlierDayWaypointCount(trip?.stops[slide.stopIndex]), 1),
           points.length,
         )
         setRoute(drawnPointCount)
@@ -1899,14 +1430,8 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     renderRouteProgress()
 
     if (staging && slide.type === 'summary') {
-      const music = staging.music
-
-      if (music) {
-        const now = music.context.currentTime
-        const fadeStart = now + Math.max(EXPORT_SUMMARY_HOLD / 1000 - MUSIC_FADE_OUT, 0)
-
-        music.gain.gain.setValueAtTime(MUSIC_VOLUME, fadeStart)
-        music.gain.gain.linearRampToValueAtTime(0, fadeStart + MUSIC_FADE_OUT)
+      if (staging.music) {
+        fadeMusicOut(staging.music, EXPORT_SUMMARY_HOLD / 1000)
       }
 
       staging.stopTimer = setTimeout(stopStage, EXPORT_SUMMARY_HOLD)
@@ -1995,15 +1520,15 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       })
       activeRecorder.addEventListener('stop', () => {
         const type = activeRecorder.mimeType || 'video/webm'
-
         const name = `${currentTrip.title}-${ratio === 'portrait' ? '竖屏' : '横屏'}`
-        const chapterText = chapters
-          .map(({ label, time }) => `${formatChapterTime(time)} ${label}`)
-          .join('\n')
+        const chapters = recording?.chapters.toString()
 
         finishStage()
         downloadBlob(new Blob(chunks, { type }), `${name}.${type.includes('mp4') ? 'mp4' : 'webm'}`)
-        downloadBlob(new Blob([`${chapterText}\n`], { type: 'text/plain' }), `${name}-章节.txt`)
+
+        if (chapters) {
+          downloadBlob(new Blob([chapters], { type: 'text/plain' }), `${name}-章节.txt`)
+        }
       })
       track?.addEventListener('ended', stopStage)
       recorder = activeRecorder
@@ -2011,9 +1536,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
     staging = {
       mode,
-      ...(music
-        ? { music: { context: music.context, gain: music.gain, source: music.source } }
-        : {}),
+      ...(music ? { music } : {}),
       ...(recorder ? { recorder } : {}),
       ...(stream ? { stream } : {}),
     }
@@ -2031,8 +1554,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     recorder?.start(1000)
 
     if (recorder) {
-      recordingStart = performance.now()
-      chapters = [{ label: currentTrip.title, time: 0 }]
+      recording = { chapters: createChapterLog(currentTrip.title), start: performance.now() }
     }
 
     if (music) {
@@ -2065,42 +1587,6 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     })
   }
 
-  /**
-   * Decodes a background track into a looping source that plays out loud and, when
-   * recording, also feeds a stream for the video's audio track.
-   */
-  async function loadMusic(src: string, record: boolean) {
-    if (!src) {
-      return undefined
-    }
-
-    try {
-      const context = new AudioContext()
-      const buffer = await fetch(src)
-        .then((response) => response.arrayBuffer())
-        .then((data) => context.decodeAudioData(data))
-      const source = context.createBufferSource()
-      const gain = context.createGain()
-      const destination = record ? context.createMediaStreamDestination() : undefined
-
-      source.buffer = buffer
-      source.loop = true
-      gain.gain.value = 0
-      source.connect(gain)
-      gain.connect(context.destination)
-
-      if (destination) {
-        gain.connect(destination)
-      }
-
-      await context.resume()
-      return { context, gain, source, ...(destination ? { destination } : {}) }
-    } catch {
-      // Playback without music is better than none.
-      return undefined
-    }
-  }
-
   function stopStage() {
     if (staging?.recorder?.state === 'recording') {
       staging.recorder.stop()
@@ -2111,7 +1597,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
   function finishStage() {
     stageToken = undefined
-    recordingStart = undefined
+    recording = undefined
 
     if (!staging) {
       return
@@ -2126,8 +1612,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     }
 
     if (music) {
-      music.source.stop()
-      void music.context.close()
+      closeMusic(music)
     }
 
     staging = undefined
@@ -2141,6 +1626,41 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     getMap()?.resize()
     // Back to the side card for whatever slide is showing.
     renderSlide()
+  }
+
+  /** Starts decoding the photos of the first stop after the current slide. */
+  function preparePhotosAhead() {
+    const next = slides.slice(index + 1).find((slide) => slide.type === 'stop')
+
+    for (const image of next?.type === 'stop' ? next.stop.images : []) {
+      if (!decodedPhotos.has(image.src)) {
+        const photoImage = new Image()
+
+        photoImage.src = image.src
+        decodedPhotos.set(
+          image.src,
+          photoImage
+            .decode()
+            .catch(() => {})
+            .then(() => {
+              readyPhotos.add(image.src)
+            }),
+        )
+      }
+    }
+  }
+
+  /** Whether the next slide can show: a stop's first photo has to be ready to record. */
+  function isNextSlideReady() {
+    const next = slides[index + 1]
+    const first = next?.type === 'stop' ? next.stop.images[0] : undefined
+
+    if (!staging?.recorder || !first || readyPhotos.has(first.src)) {
+      return true
+    }
+
+    preparePhotosAhead()
+    return false
   }
 
   function tick(now: number) {
@@ -2159,7 +1679,8 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     elapsed += delta * speed
     renderProgress()
 
-    if (elapsed >= duration) {
+    // A slow photo holds the current card a little longer rather than record a blank.
+    if (elapsed >= duration && isNextSlideReady()) {
       goTo(index + 1)
     }
   }
@@ -2337,7 +1858,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     traveling = false
     cancelLeg()
     removeStopPopups()
-    removeLayers()
+    layers.remove()
     trip = undefined
     slides = []
     playing = false
@@ -2385,7 +1906,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   speedButton.addEventListener(
     'click',
     () => {
-      speed = SPEEDS[(SPEEDS.indexOf(speed as (typeof SPEEDS)[number]) + 1) % SPEEDS.length]!
+      speed = getNextSpeed(speed)
       writeSpeedPreference(speed)
       renderSpeedButton()
     },
@@ -2471,225 +1992,4 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     start,
     stop,
   }
-}
-
-function preloadImage(source: TripImage) {
-  const image = new Image()
-  image.sizes = IMAGE_SIZES
-  image.srcset = source.srcset
-  image.src = source.src
-}
-
-/** A grid of each stop's first photo for the intro and summary cards. */
-/**
- * The trip's chosen covers, or else the first photo of each day followed by the
- * first photo of each remaining stop.
- */
-function createMosaic(covers: TripImage[]) {
-  // Narrow screens keep one row so the map stays visible above the card.
-  const mosaic = createElement(
-    'div',
-    'mt-3 grid shrink-0 grid-cols-3 gap-1 @max-[48rem]:[&>:nth-child(n+4)]:hidden',
-    '',
-  )
-
-  mosaic.setAttribute('aria-hidden', 'true')
-
-  for (const cover of covers) {
-    const image = document.createElement('img')
-    image.className = 'block aspect-square w-full rounded-[0.3125rem] bg-inline object-cover'
-    image.src = cover.thumbnail
-    image.alt = ''
-    image.decoding = 'async'
-    mosaic.append(image)
-  }
-
-  return mosaic
-}
-
-function readMusicPreference() {
-  try {
-    return localStorage.getItem(MUSIC_PREFERENCE_KEY) === 'on'
-  } catch {
-    return false
-  }
-}
-
-function readSpeedPreference() {
-  try {
-    const value = Number(localStorage.getItem(SPEED_PREFERENCE_KEY))
-    return SPEEDS.find((speed) => speed === value) ?? 1
-  } catch {
-    return 1
-  }
-}
-
-function writeSpeedPreference(speed: number) {
-  try {
-    localStorage.setItem(SPEED_PREFERENCE_KEY, String(speed))
-  } catch {
-    // The choice just won't be remembered.
-  }
-}
-
-function writeMusicPreference(on: boolean) {
-  try {
-    localStorage.setItem(MUSIC_PREFERENCE_KEY, on ? 'on' : 'off')
-  } catch {
-    // The choice just won't be remembered.
-  }
-}
-
-function formatChapterTime(seconds: number) {
-  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`
-}
-
-function downloadBlob(blob: Blob, filename: string) {
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-
-  link.href = url
-  link.download = filename
-  link.click()
-  setTimeout(() => URL.revokeObjectURL(url), 60_000)
-}
-
-function getSlideDay(slide: Slide | undefined) {
-  return slide?.type === 'day' ? slide.day : slide?.type === 'stop' ? slide.stop.day : undefined
-}
-
-function getSlideLabel(slide: Slide) {
-  if (slide.type === 'intro') {
-    return '开头'
-  }
-
-  if (slide.type === 'day') {
-    return `第 ${slide.day} 天 · ${slide.date}`
-  }
-
-  return slide.type === 'summary' ? '旅程回顾' : `第 ${slide.stop.day} 天 · ${slide.stop.name}`
-}
-
-function getStopEyebrow({ date, day, time }: { date: string; day: number; time?: string }) {
-  return [`第 ${day} 天`, date, time].filter(Boolean).join(' · ')
-}
-
-function getDistanceKm(from: [number, number], to: [number, number]) {
-  const toRadians = (degrees: number) => (degrees * Math.PI) / 180
-  const latitudeDelta = toRadians(to[1] - from[1])
-  const longitudeDelta = toRadians(to[0] - from[0])
-  const a =
-    Math.sin(latitudeDelta / 2) ** 2 +
-    Math.cos(toRadians(from[1])) * Math.cos(toRadians(to[1])) * Math.sin(longitudeDelta / 2) ** 2
-
-  return 2 * 6371 * Math.asin(Math.sqrt(a))
-}
-
-function getPlanarDistance(from: [number, number], to: [number, number]) {
-  return Math.hypot(to[0] - from[0], to[1] - from[1])
-}
-
-function lineFeature(coordinates: [number, number][]) {
-  return {
-    geometry: { coordinates, type: 'LineString' as const },
-    properties: {},
-    type: 'Feature' as const,
-  }
-}
-
-/** A muted live photo clip that plays once, then fades back to the still under it. */
-/** A Lucide icon as an image, read from the mask its utility class generates. */
-async function loadIconImage(className: string) {
-  const probe = document.createElement('span')
-
-  probe.className = className
-  probe.style.position = 'absolute'
-  probe.style.visibility = 'hidden'
-  document.body.append(probe)
-
-  const style = getComputedStyle(probe)
-  const mask = style.maskImage || style.getPropertyValue('-webkit-mask-image')
-  const url = /url\(["']?(.*?)["']?\)$/.exec(mask)?.[1]
-
-  probe.remove()
-
-  if (!url) {
-    return undefined
-  }
-
-  const image = new Image()
-  image.src = url
-
-  try {
-    await image.decode()
-    return image
-  } catch {
-    return undefined
-  }
-}
-
-function createLiveVideo(src: string, className: string) {
-  const video = document.createElement('video')
-
-  video.className = className
-  video.muted = true
-  video.playsInline = true
-  video.src = src
-  video.setAttribute('aria-hidden', 'true')
-  video.addEventListener(
-    'ended',
-    () => {
-      video.style.opacity = '0'
-      setTimeout(() => video.remove(), 450)
-    },
-    { once: true },
-  )
-  return video
-}
-
-function createWeather(weather: { icon: string; label: string }, className: string) {
-  const element = createElement('p', className, '')
-  const icon = createElement('span', weather.icon, '')
-
-  icon.setAttribute('aria-hidden', 'true')
-  element.append(icon, weather.label)
-  return element
-}
-
-function createElement(tag: string, className: string, text: string) {
-  const element = document.createElement(tag)
-  element.className = className
-  element.textContent = text
-  return element
-}
-
-function parseJson<T>(page: HTMLElement, selector: string, fallback: T): T {
-  const text = page.querySelector(selector)?.textContent
-
-  try {
-    return text ? (JSON.parse(text) as T) : fallback
-  } catch {
-    return fallback
-  }
-}
-
-function queryRequired<T extends Element>(root: ParentNode, selector: string) {
-  const element = root.querySelector<T>(selector)
-
-  if (!element) {
-    throw new Error(`Missing required calendar map element: ${selector}`)
-  }
-
-  return element
-}
-
-function getSummaryStats(trip: TripData) {
-  return [
-    [trip.dayCount, '天'],
-    [trip.stops.length, '条记录'],
-    [trip.placeCount, '个地点'],
-    [trip.photoCount, '张照片'],
-    [trip.distanceKm.toLocaleString('zh-CN'), '公里'],
-    [trip.drivingHours, '小时车程'],
-  ] as const
 }
