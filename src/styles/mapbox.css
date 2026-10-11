@@ -1,0 +1,2 @@
+/* Only the map pages load this, so the rest of the site skips mapbox-gl's CSS. */
+@import 'mapbox-gl/dist/mapbox-gl.css' layer(components);

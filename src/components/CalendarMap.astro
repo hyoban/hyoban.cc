@@ -1,4 +1,6 @@
 ---
+import '@/styles/mapbox.css'
+
 import CalendarBackLink from '@/components/CalendarBackLink.astro'
 import CalendarModeSwitch from '@/components/CalendarModeSwitch.astro'
 import MomentLightboxMedia from '@/components/MomentLightboxMedia.astro'
@@ -82,6 +84,10 @@ function toScriptJson(value: unknown) {
 ---
 
 <Layout title={title} description={description} image={activeTrip ? `/trip/${activeTrip.id}/og.jpg` : undefined}>
+  <Fragment slot="head">
+    <!-- The map script is large; open the connection for the style and tiles while it loads. -->
+    <link rel="preconnect" href="https://api.mapbox.com" crossorigin />
+  </Fragment>
   <main class="calendar-map-page @container relative isolate h-dvh w-full overflow-hidden bg-bg" data-calendar-map data-mapbox-token={mapboxToken} data-map-title={mapTitle} transition:persist="calendar-map">
     <div class="calendar-map-canvas absolute inset-0" data-calendar-map-canvas role="region" aria-label="Calendar 地点地图" />
 
@@ -142,7 +148,7 @@ function toScriptJson(value: unknown) {
         <p class="calendar-map-trip-stage__title" data-calendar-map-trip-stage-title />
       </header>
       <p class="calendar-map-trip-stage__brand">
-        <img src={getAssetUrl('site/avatar-cropped.png')} alt="" width="24" height="24" />
+        <img src={getAssetUrl('site/avatar-80.webp')} alt="" width="24" height="24" />
         {SITE_TITLE}
       </p>
       <div class="calendar-map-trip-stage__photos" data-calendar-map-trip-stage-photos />
