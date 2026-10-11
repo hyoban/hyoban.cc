@@ -180,7 +180,34 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   let musicOn = readMusicPreference()
   let pendingAmbient: { src: string } | undefined
   let stageToken: object | undefined
-  const mapLabels = createMapLabels(getMap)
+  const mapLabels = createMapLabels({
+    getBlocked: () => {
+      const shown = (element: Element | null | undefined) =>
+        element &&
+        element.getClientRects().length > 0 &&
+        getComputedStyle(element).visibility !== 'hidden'
+          ? [element.getBoundingClientRect()]
+          : []
+
+      return isStageLayout()
+        ? [
+            ...shown(stageHeader),
+            ...[...stagePhotos.children].flatMap(shown),
+            ...shown(stageProgress),
+            ...shown(page.querySelector('[data-calendar-map-trip-stage-close]')),
+          ]
+        : [...shown(panel), ...shown(page.querySelector('.calendar-map-toolbar'))]
+    },
+    getMap,
+    // Every stop's dot, and the car, ship or plane while the route is drawn.
+    getMarkers: () => [
+      ...points.map((point) => ({
+        coordinates: point.coordinates,
+        radius: point.waypoint ? 7 : 10,
+      })),
+      ...(routeTip ? [{ coordinates: routeTip, radius: 16 }] : []),
+    ],
+  })
   let trip: TripData | undefined
   // Photos for the intro and summary.
   let covers: TripImage[] = []
