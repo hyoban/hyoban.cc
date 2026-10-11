@@ -59,7 +59,6 @@ import {
   getStopPointEnds,
   getStopPointStart as getPointStart,
   getWaypointsBefore as getWaypointRange,
-  pickCovers,
   type SlideTiming,
 } from './slides'
 import {
@@ -67,8 +66,8 @@ import {
   createIntroCard,
   createStageHeading,
   createSummaryCard,
-  getTripMeta,
 } from './stage-cards'
+import { getIntroCovers, getTripMeta } from './intro'
 import type {
   MapLabel,
   Slide,
@@ -1968,7 +1967,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   function begin(nextTrip: TripData) {
     stop()
     trip = nextTrip
-    covers = pickCovers(nextTrip.covers, nextTrip.stops, 9)
+    covers = getIntroCovers(nextTrip)
     exportMusic.value = nextTrip.music ?? exportMusic.options[0]?.value ?? ''
     const toPoint = (
       place: TripPlace | TripWaypoint,

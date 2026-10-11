@@ -1,4 +1,5 @@
 import 'number-flow'
+import { MOSAIC_CLASS, MOSAIC_IMAGE_CLASS } from './intro'
 import type { TripImage } from './types'
 
 // Small DOM builders and helpers the player and its cards share.
@@ -86,18 +87,13 @@ export function preloadThumbnail(source: TripImage) {
 
 /** A grid of the trip's cover photos for the intro and summary cards. */
 export function createMosaic(covers: readonly TripImage[]) {
-  // Narrow screens keep one row so the map stays visible above the card.
-  const mosaic = createElement(
-    'div',
-    'mt-3 grid shrink-0 grid-cols-3 gap-1 @max-[48rem]:[&>:nth-child(n+4)]:hidden',
-    '',
-  )
+  const mosaic = createElement('div', MOSAIC_CLASS, '')
 
   mosaic.setAttribute('aria-hidden', 'true')
 
   for (const cover of covers) {
     const image = document.createElement('img')
-    image.className = 'block aspect-square w-full rounded-[0.3125rem] bg-inline object-cover'
+    image.className = MOSAIC_IMAGE_CLASS
     image.src = cover.thumbnail
     image.alt = ''
     image.decoding = 'async'

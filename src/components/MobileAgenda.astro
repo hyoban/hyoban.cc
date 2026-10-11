@@ -4,6 +4,7 @@ import CalendarDayStatus from '@/components/CalendarDayStatus.astro'
 import MomentEntry from '@/components/MomentEntry.astro'
 import type { CalendarAnniversary } from '@/anniversaries'
 import type { ChinaCalendarDay } from '@/china-calendar'
+import { CALENDAR_MOBILE_MEDIA } from '@/consts'
 import type { Moment } from '@/moments'
 
 interface AgendaDay {
@@ -22,6 +23,10 @@ interface Props {
 
 const { days, month, year } = Astro.props
 const agendaDays = days.toReversed()
+// The first photo in the agenda is usually the largest thing on a phone's first screen.
+const leadMoment = agendaDays
+  .flatMap(day => day.moments)
+  .find(moment => moment.media.some(item => item.type !== 'video'))
 
 function formatDate(dateKey: string) {
   const dateYear = Number.parseInt(dateKey.slice(0, 4), 10)
@@ -47,9 +52,9 @@ function formatDate(dateKey: string) {
                   type="button"
                   class="flex h-11 min-w-11 flex-none cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-0 font-mono text-tx-2 hover:bg-inline hover:text-tx"
                   data-agenda-target={`agenda-${day.dateKey}`}
-                  aria-label={`定位到 ${formatDate(day.dateKey)}${day.anniversaries.length ? '的纪念日' : ''}`}
                 >
-                  {String(day.day).padStart(2, '0')}
+                  <span aria-hidden="true">{String(day.day).padStart(2, '0')}</span>
+                  <span class="sr-only">{`定位到 ${formatDate(day.dateKey)}${day.anniversaries.length ? '的纪念日' : ''}`}</span>
                 </button>
               ))}
             </nav>
@@ -70,7 +75,7 @@ function formatDate(dateKey: string) {
                     )}
                   </header>
                   <div class="mobile-agenda__moments pb-1">
-                    {day.moments.map(moment => <MomentEntry moment={moment} />)}
+                    {day.moments.map(moment => <MomentEntry moment={moment} priorityMedia={moment === leadMoment ? CALENDAR_MOBILE_MEDIA : undefined} />)}
                     {day.moments.length === 0 && (
                       <p class="py-6 text-sm text-tx-3">
                         {day.anniversaries.map(anniversary => anniversary.description).join('、')}

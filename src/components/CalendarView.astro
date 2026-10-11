@@ -24,7 +24,7 @@ import {
   type Moment,
   type ResolvedMomentMedia,
 } from '@/moments'
-import { SITE_TITLE } from '@/consts'
+import { BLANK_IMAGE, CALENDAR_DESKTOP_MEDIA, SITE_TITLE } from '@/consts'
 import {
   getCalendarAnniversaries,
   type CalendarAnniversary,
@@ -270,28 +270,30 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
                 },
               ]}
               aria-current={isSelected ? 'date' : undefined}
-              aria-label={`${calendarDay.dateKey}，${calendarDay.moments.length} 条记录${anniversaryDescription ? `，${anniversaryDescription}` : ''}${dayStatusDescription ? `，${dayStatusDescription}` : ''}`}
             >
+              {/* Read this in place of the visible day cell, whose parts only make sense laid out. */}
+              <span class="sr-only">{`${calendarDay.dateKey}，${calendarDay.moments.length} 条记录${anniversaryDescription ? `，${anniversaryDescription}` : ''}${dayStatusDescription ? `，${dayStatusDescription}` : ''}`}</span>
               {thumbnail && (
-                <img
-                  src={thumbnail.sources.find(source => source.width >= 480)?.src ?? thumbnail.sources.at(-1)?.src ?? thumbnail.src}
-                  srcset={thumbnail.sources.map(source => `${source.src} ${source.width}w`).join(', ')}
-                  sizes="(min-width: 60rem) 8.6rem, calc((100vw - 2rem) / 7)"
-                  alt=""
-                  width={thumbnail.width}
-                  height={thumbnail.height}
-                  loading="lazy"
-                  decoding="async"
-                  fetchpriority="low"
-                  class="absolute inset-0 h-full w-full object-cover transition-transform duration-[180ms] ease-in-out group-hover:scale-[1.025] motion-reduce:transition-none"
-                />
+                <picture class="contents">
+                  <source media={`not all and ${CALENDAR_DESKTOP_MEDIA}`} srcset={BLANK_IMAGE} />
+                  <img
+                    src={thumbnail.sources.find(source => source.width >= 480)?.src ?? thumbnail.sources.at(-1)?.src ?? thumbnail.src}
+                    srcset={thumbnail.sources.map(source => `${source.src} ${source.width}w`).join(', ')}
+                    sizes="(min-width: 60rem) 8.6rem, calc((100vw - 2rem) / 7)"
+                    alt=""
+                    width={thumbnail.width}
+                    height={thumbnail.height}
+                    decoding="async"
+                    class="absolute inset-0 h-full w-full object-cover transition-transform duration-[180ms] ease-in-out group-hover:scale-[1.025] motion-reduce:transition-none"
+                  />
+                </picture>
               )}
               <span class:list={[
                 'calendar-day__shade pointer-events-none absolute inset-0 bg-[linear-gradient(to_bottom,rgb(0_0_0/0.2),transparent_45%,rgb(0_0_0/0.28))]',
                 thumbnail ? 'opacity-100' : 'opacity-0',
               ]}
               />
-              <span class:list={[
+              <span aria-hidden="true" class:list={[
                 'calendar-day__number relative z-[1]',
                 {
                   'text-white [text-shadow:0_1px_0.25rem_rgb(0_0_0/0.45)]': thumbnail,
@@ -302,7 +304,7 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
                 {String(calendarDay.day).padStart(2, '0')}
               </span>
               {(calendarDay.chinaCalendarDay || calendarDay.anniversaries.length > 0) && (
-                <div class:list={[
+                <div aria-hidden="true" class:list={[
                   'absolute bottom-2.5 left-2.5 z-[1] flex min-w-0 flex-col items-start gap-1',
                   calendarDay.mediaCount > 1 ? 'right-10' : 'right-2.5',
                 ]}>
@@ -329,8 +331,8 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
               )}
               {
                 thumbnail
-                  ? calendarDay.mediaCount > 1 && <span class="calendar-day__count absolute right-2.5 bottom-2.5 z-[1] text-[0.6875rem] text-white [text-shadow:0_1px_0.25rem_rgb(0_0_0/0.45)]">+{calendarDay.mediaCount - 1}</span>
-                  : <span class="calendar-day__activity relative z-[1] mt-1.5 flex items-center gap-1 text-[0.6875rem] text-tx-3"><span class="size-1.5 rounded-full bg-tx-3" aria-hidden="true" />{calendarDay.moments.length}</span>
+                  ? calendarDay.mediaCount > 1 && <span aria-hidden="true" class="calendar-day__count absolute right-2.5 bottom-2.5 z-[1] text-[0.6875rem] text-white [text-shadow:0_1px_0.25rem_rgb(0_0_0/0.45)]">+{calendarDay.mediaCount - 1}</span>
+                  : <span aria-hidden="true" class="calendar-day__activity relative z-[1] mt-1.5 flex items-center gap-1 text-[0.6875rem] text-tx-3"><span class="size-1.5 rounded-full bg-tx-3" aria-hidden="true" />{calendarDay.moments.length}</span>
               }
             </a>
           )

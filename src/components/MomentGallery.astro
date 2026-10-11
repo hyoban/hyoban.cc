@@ -1,11 +1,14 @@
 ---
+import { BLANK_IMAGE } from '@/consts'
 import type { ResolvedMomentMedia } from '@/moments'
 
 interface Props {
   media: ResolvedMomentMedia[]
+  /** The viewport where this gallery opens the page; its images load first there and not at all elsewhere. */
+  priorityMedia?: string | undefined
 }
 
-const { media } = Astro.props
+const { media, priorityMedia } = Astro.props
 const galleryClass = `moment-gallery moment-gallery--${Math.min(media.length, 4)}`
 const isSingle = media.length === 1
 const imageSizes = isSingle
@@ -34,22 +37,26 @@ const imageSizes = isSingle
             data-lightbox-src={item.src.src}
             data-lightbox-alt={item.alt}
             data-lightbox-video={item.type === 'live-photo' ? item.video.src : undefined}
-            aria-label={`查看${item.type === 'live-photo' ? '实况照片' : '图片'} ${index + 1}`}
           >
-            <img
-              src={item.src.sources.find(source => source.width >= 960)?.src ?? item.src.sources.at(-1)?.src ?? item.src.src}
-              srcset={item.src.sources.map(source => `${source.src} ${source.width}w`).join(', ')}
-              sizes={imageSizes}
-              alt={item.alt}
-              width={item.src.width}
-              height={item.src.height}
-              loading="lazy"
-              decoding="async"
-              class:list={[
-                'block w-full',
-                isSingle ? 'h-auto max-h-[32rem] object-contain' : 'h-full object-cover',
-              ]}
-            />
+            <span class="sr-only">{`查看${item.type === 'live-photo' ? '实况照片' : '图片'} ${index + 1}`}</span>
+            <picture class="contents">
+              {priorityMedia && <source media={`not all and ${priorityMedia}`} srcset={BLANK_IMAGE} />}
+              <img
+                src={item.src.sources.find(source => source.width >= 960)?.src ?? item.src.sources.at(-1)?.src ?? item.src.src}
+                srcset={item.src.sources.map(source => `${source.src} ${source.width}w`).join(', ')}
+                sizes={imageSizes}
+                alt={item.alt}
+                width={item.src.width}
+                height={item.src.height}
+                loading={priorityMedia ? 'eager' : 'lazy'}
+                fetchpriority={priorityMedia && index === 0 ? 'high' : undefined}
+                decoding="async"
+                class:list={[
+                  'block w-full',
+                  isSingle ? 'h-auto max-h-[32rem] object-contain' : 'h-full object-cover',
+                ]}
+              />
+            </picture>
             {item.type === 'live-photo' && (
               <span class="absolute top-2 left-2 flex items-center gap-1 rounded-full bg-black/55 px-2 py-1 text-[0.625rem] font-medium tracking-wide text-white" aria-hidden="true">
                 <span class="i-lucide-circle-dot size-3" /> LIVE

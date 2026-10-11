@@ -26,7 +26,7 @@ description: 没挣到钱的一年
 
 今年大多数开源贡献都是从 Folo 出发做的一点小打小闹，比如维护了一点 RSSHub。
 
-[![](https://image.hyoban.cc/posts/review-2025/rsshub-contribution.jpg)](https://x.com/hyoban_cc/status/1997942616428851400)
+[![我在 X 上分享的 RSSHub 贡献截图](https://image.hyoban.cc/posts/review-2025/rsshub-contribution.jpg)](https://x.com/hyoban_cc/status/1997942616428851400)
 
 希望明年能够让自己变得更强一点，多贡献一些自己感兴趣的东西，最好能打磨个自己的产品/开源项目收获大家的认可。
 也希望自己能多挣点钱，可以不用太为生计发愁。
@@ -37,7 +37,7 @@ description: 没挣到钱的一年
 但现在想想还是觉得不后悔，我很享受在路上在车里的感觉。
 （甚至在车里也睡过了很多个夜晚）
 
-[![](https://image.hyoban.cc/posts/review-2025/zeekr-007gt-delivery.jpg)](https://x.com/hyoban_cc/status/1957277366138679452)
+[![我在 X 上分享的极氪 007GT 提车照片](https://image.hyoban.cc/posts/review-2025/zeekr-007gt-delivery.jpg)](https://x.com/hyoban_cc/status/1957277366138679452)
 
 买车之后开车去了很多地方。
 最长的一段旅程就是开车从安徽去了川西，和同学一起自驾到了雪山边。

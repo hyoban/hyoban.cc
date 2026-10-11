@@ -6,10 +6,12 @@ import type { Moment } from '@/moments'
 interface Props {
   class?: string
   moment: Moment
+  /** Passed to the gallery when this entry opens the page. */
+  priorityMedia?: string | undefined
   showLocation?: boolean
 }
 
-const { class: className, moment, showLocation = true } = Astro.props
+const { class: className, moment, priorityMedia, showLocation = true } = Astro.props
 const showHeader = Boolean(moment.occurredLabel || (showLocation && moment.locations.length > 0))
 ---
 
@@ -30,5 +32,5 @@ const showHeader = Boolean(moment.occurredLabel || (showLocation && moment.locat
     )
   }
   <MomentText text={moment.text} />
-  {moment.media.length > 0 && <MomentGallery media={moment.media} />}
+  {moment.media.length > 0 && <MomentGallery media={moment.media} priorityMedia={priorityMedia} />}
 </article>

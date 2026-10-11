@@ -1,0 +1,274 @@
+{
+  "posts/20-000-km/zeekr-007gt-mountain-road.jpg": {
+    "height": 900,
+    "variants": [
+      {
+        "key": "posts/20-000-km/zeekr-007gt-mountain-road-640w.webp",
+        "width": 640
+      },
+      {
+        "key": "posts/20-000-km/zeekr-007gt-mountain-road-960w.webp",
+        "width": 960
+      },
+      {
+        "key": "posts/20-000-km/zeekr-007gt-mountain-road-1280w.webp",
+        "width": 1280
+      }
+    ],
+    "width": 1600
+  },
+  "posts/24-years/xlog-editor-focus-mode.png": {
+    "height": 1890,
+    "variants": [
+      {
+        "key": "posts/24-years/xlog-editor-focus-mode-640w.webp",
+        "width": 640
+      },
+      {
+        "key": "posts/24-years/xlog-editor-focus-mode-960w.webp",
+        "width": 960
+      },
+      {
+        "key": "posts/24-years/xlog-editor-focus-mode-1280w.webp",
+        "width": 1280
+      }
+    ],
+    "width": 3024
+  },
+  "posts/dark-mode/theme-preference-demo.gif": {
+    "height": 467,
+    "variants": [],
+    "width": 800
+  },
+  "posts/dark-mode/theme-transition-demo.gif": {
+    "height": 330,
+    "variants": [],
+    "width": 1468
+  },
+  "posts/learn-css-with-tailwind/tailwind-justify-start-docs.png": {
+    "height": 726,
+    "variants": [
+      {
+        "key": "posts/learn-css-with-tailwind/tailwind-justify-start-docs-640w.webp",
+        "width": 640
+      },
+      {
+        "key": "posts/learn-css-with-tailwind/tailwind-justify-start-docs-960w.webp",
+        "width": 960
+      },
+      {
+        "key": "posts/learn-css-with-tailwind/tailwind-justify-start-docs-1280w.webp",
+        "width": 1280
+      }
+    ],
+    "width": 1582
+  },
+  "posts/review-2025/claude-browser-extension.png": {
+    "height": 1664,
+    "variants": [
+      {
+        "key": "posts/review-2025/claude-browser-extension-640w.webp",
+        "width": 640
+      },
+      {
+        "key": "posts/review-2025/claude-browser-extension-960w.webp",
+        "width": 960
+      },
+      {
+        "key": "posts/review-2025/claude-browser-extension-1280w.webp",
+        "width": 1280
+      }
+    ],
+    "width": 3024
+  },
+  "posts/review-2025/folo-team-github-activity.png": {
+    "height": 950,
+    "variants": [
+      {
+        "key": "posts/review-2025/folo-team-github-activity-640w.webp",
+        "width": 640
+      },
+      {
+        "key": "posts/review-2025/folo-team-github-activity-960w.webp",
+        "width": 960
+      },
+      {
+        "key": "posts/review-2025/folo-team-github-activity-1280w.webp",
+        "width": 1280
+      }
+    ],
+    "width": 1836
+  },
+  "posts/review-2025/macbook-pro-cost-summary.jpg": {
+    "height": 2025,
+    "variants": [
+      {
+        "key": "posts/review-2025/macbook-pro-cost-summary-640w.webp",
+        "width": 640
+      },
+      {
+        "key": "posts/review-2025/macbook-pro-cost-summary-960w.webp",
+        "width": 960
+      },
+      {
+        "key": "posts/review-2025/macbook-pro-cost-summary-1280w.webp",
+        "width": 1280
+      }
+    ],
+    "width": 3601
+  },
+  "posts/review-2025/rsshub-contribution.jpg": {
+    "height": 2360,
+    "variants": [
+      {
+        "key": "posts/review-2025/rsshub-contribution-640w.webp",
+        "width": 640
+      },
+      {
+        "key": "posts/review-2025/rsshub-contribution-960w.webp",
+        "width": 960
+      },
+      {
+        "key": "posts/review-2025/rsshub-contribution-1280w.webp",
+        "width": 1280
+      }
+    ],
+    "width": 2268
+  },
+  "posts/review-2025/western-sichuan-snow-mountains.jpg": {
+    "height": 3024,
+    "variants": [
+      {
+        "key": "posts/review-2025/western-sichuan-snow-mountains-640w.webp",
+        "width": 640
+      },
+      {
+        "key": "posts/review-2025/western-sichuan-snow-mountains-960w.webp",
+        "width": 960
+      },
+      {
+        "key": "posts/review-2025/western-sichuan-snow-mountains-1280w.webp",
+        "width": 1280
+      }
+    ],
+    "width": 4032
+  },
+  "posts/review-2025/zeekr-007gt-delivery.jpg": {
+    "height": 2424,
+    "variants": [
+      {
+        "key": "posts/review-2025/zeekr-007gt-delivery-640w.webp",
+        "width": 640
+      },
+      {
+        "key": "posts/review-2025/zeekr-007gt-delivery-960w.webp",
+        "width": 960
+      },
+      {
+        "key": "posts/review-2025/zeekr-007gt-delivery-1280w.webp",
+        "width": 1280
+      }
+    ],
+    "width": 2268
+  },
+  "posts/type-safe-fetch/type-safe-fetch-demo.gif": {
+    "height": 800,
+    "variants": [
+      {
+        "key": "posts/type-safe-fetch/type-safe-fetch-demo-796w.webp",
+        "width": 796
+      }
+    ],
+    "width": 796
+  },
+  "posts/weekly-1/desk-setup.png": {
+    "height": 3213,
+    "variants": [
+      {
+        "key": "posts/weekly-1/desk-setup-640w.webp",
+        "width": 640
+      },
+      {
+        "key": "posts/weekly-1/desk-setup-960w.webp",
+        "width": 960
+      },
+      {
+        "key": "posts/weekly-1/desk-setup-1280w.webp",
+        "width": 1280
+      }
+    ],
+    "width": 5712
+  },
+  "posts/weekly-1/nas-download-sync-task.png": {
+    "height": 294,
+    "variants": [
+      {
+        "key": "posts/weekly-1/nas-download-sync-task-640w.webp",
+        "width": 640
+      },
+      {
+        "key": "posts/weekly-1/nas-download-sync-task-960w.webp",
+        "width": 960
+      },
+      {
+        "key": "posts/weekly-1/nas-download-sync-task-1280w.webp",
+        "width": 1280
+      }
+    ],
+    "width": 1374
+  },
+  "posts/weekly-1/nas-media-center-tv-library.png": {
+    "height": 2334,
+    "variants": [
+      {
+        "key": "posts/weekly-1/nas-media-center-tv-library-640w.webp",
+        "width": 640
+      },
+      {
+        "key": "posts/weekly-1/nas-media-center-tv-library-960w.webp",
+        "width": 960
+      },
+      {
+        "key": "posts/weekly-1/nas-media-center-tv-library-1280w.webp",
+        "width": 1280
+      }
+    ],
+    "width": 4064
+  },
+  "posts/work-one-year/digital-nomad-workspace.jpg": {
+    "height": 1200,
+    "variants": [
+      {
+        "key": "posts/work-one-year/digital-nomad-workspace-640w.webp",
+        "width": 640
+      },
+      {
+        "key": "posts/work-one-year/digital-nomad-workspace-960w.webp",
+        "width": 960
+      },
+      {
+        "key": "posts/work-one-year/digital-nomad-workspace-1280w.webp",
+        "width": 1280
+      }
+    ],
+    "width": 1600
+  },
+  "posts/xlog-sdk/anonymous-comment-form.png": {
+    "height": 744,
+    "variants": [
+      {
+        "key": "posts/xlog-sdk/anonymous-comment-form-640w.webp",
+        "width": 640
+      },
+      {
+        "key": "posts/xlog-sdk/anonymous-comment-form-960w.webp",
+        "width": 960
+      },
+      {
+        "key": "posts/xlog-sdk/anonymous-comment-form-1280w.webp",
+        "width": 1280
+      }
+    ],
+    "width": 1378
+  }
+}
