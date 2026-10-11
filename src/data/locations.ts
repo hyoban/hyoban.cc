@@ -198,6 +198,11 @@ export const locations = defineLocations({
     longitude: 100.2259,
     name: '丽江',
   },
+  'lijiang-sanyi-airport': {
+    latitude: 26.68,
+    longitude: 100.2457,
+    name: '丽江三义国际机场',
+  },
   lingbi: {
     latitude: 33.541,
     longitude: 117.552,
@@ -262,6 +267,11 @@ export const locations = defineLocations({
     latitude: 32.06926,
     longitude: 118.63504,
     name: '南京江北虹悦城',
+  },
+  'nanjing-lukou-airport': {
+    latitude: 31.74203,
+    longitude: 118.86202,
+    name: '南京禄口国际机场',
   },
   nanxun: {
     latitude: 30.883,
@@ -372,6 +382,11 @@ export const locations = defineLocations({
     latitude: 30.54,
     longitude: 118.54,
     name: '宇宙是个粮仓',
+  },
+  'wenhai-village': {
+    latitude: 26.99094,
+    longitude: 100.16106,
+    name: '文海村',
   },
   'west-lake': {
     latitude: 30.246,
