@@ -160,9 +160,9 @@ function toScriptJson(value: unknown) {
         <p class="truncate text-xs text-tx-3 tabular-nums" data-calendar-map-trip-eyebrow />
         <h2 class="truncate text-lg font-medium" id="calendar-map-trip-title" data-calendar-map-trip-title />
       </header>
-      <div class="flex min-h-0 flex-col px-4 pt-1 pb-3 @max-[48rem]:overflow-y-auto @max-[48rem]:overscroll-contain" data-calendar-map-trip-body />
+      <div class="flex min-h-0 flex-col overflow-y-auto overscroll-contain px-4 pt-1 pb-3" data-calendar-map-trip-body />
       <p class="sr-only" data-calendar-map-trip-announcer aria-live="polite" />
-      <footer class="flex shrink-0 items-center justify-between border-t border-border px-2 py-1">
+      <footer class="relative flex shrink-0 items-center justify-between border-t border-border bg-bg px-2 py-1">
         <div class="flex items-center [&[hidden]]:hidden" data-calendar-map-trip-controls>
           <button class="flex size-9 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-tx-2 hover:bg-inline hover:text-tx disabled:cursor-default disabled:opacity-40 disabled:hover:bg-transparent" type="button" data-calendar-map-trip-previous aria-label="上一站" aria-keyshortcuts="ArrowLeft" title="上一站（←）">
             <span class="i-lucide-chevron-left" aria-hidden="true" />
