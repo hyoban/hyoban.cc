@@ -9,7 +9,7 @@ type SlideStop = Readonly<{
   name: string
   places: readonly Readonly<{ name: string }>[]
   text: string
-  waypoints: readonly Readonly<{ day: number; name: string }>[]
+  waypoints: readonly Readonly<{ date: string; day: number; name: string }>[]
 }>
 
 const INTRO_DURATION = 3000
@@ -21,22 +21,62 @@ const CHARACTER_DURATION = 120
 
 export type TripSlide<S> =
   | { type: 'intro' }
-  // Opens each day: `stopIndex` is the day's first stop.
-  | { date: string; day: number; places: string[]; stopIndex: number; type: 'day' }
+  | {
+      date: string
+      day: number
+      places: string[]
+      /** The next stop: the day's first, or the one a waypoints-only day drives toward. */
+      stopIndex: number
+      type: 'day'
+      /**
+       * The waypoints passed before this card shows, as `[first, count]` counted from
+       * the stop's first route point: those from the day or days before.
+       */
+      waypointsBefore: [number, number]
+      /** A day with no Moments, only places passed on the way (a travel day). */
+      waypointsOnly?: true
+    }
   | { stop: S; stopIndex: number; type: 'stop' }
   | { type: 'summary' }
 
-/** An intro, then each day's opener before its first stop, then a summary. */
+/**
+ * An intro, then each day's opener before its first stop, then a summary. A day with
+ * only waypoints (driving through without a Moment) gets an opener of its own, and
+ * the map passes that day's waypoints while it is up.
+ */
 export function buildSlides<S extends SlideStop>(stops: readonly S[]): TripSlide<S>[] {
   return [
     { type: 'intro' },
     ...stops.flatMap((stop, stopIndex): TripSlide<S>[] => {
       const slide: TripSlide<S> = { stop, stopIndex, type: 'stop' }
+      const previousDay = stops[stopIndex - 1]?.day
 
-      if (stops[stopIndex - 1]?.day === stop.day) {
+      if (previousDay === stop.day) {
         return [slide]
       }
 
+      // Waypoints come in time order; each day between the last stop's and this one
+      // that has waypoints is a travel day.
+      const earlier = stop.waypoints.slice(0, getEarlierDayWaypointCount(stop))
+      const travelDays = [...new Set(earlier.map((waypoint) => waypoint.day))].filter(
+        (day) => previousDay === undefined || day > previousDay,
+      )
+      const firstOfDay = (day: number) => earlier.findIndex((waypoint) => waypoint.day >= day)
+      const openers: TripSlide<S>[] = travelDays.map((day, dayIndex) => {
+        const from = dayIndex === 0 ? 0 : firstOfDay(travelDays[dayIndex - 1]!)
+        const ofDay = earlier.filter((waypoint) => waypoint.day === day)
+
+        return {
+          date: ofDay[0]!.date,
+          day,
+          places: [...new Set(ofDay.map((waypoint) => waypoint.name))],
+          stopIndex,
+          type: 'day',
+          waypointsBefore: [from, firstOfDay(day) - from],
+          waypointsOnly: true,
+        }
+      })
+      const ownFrom = travelDays.length > 0 ? firstOfDay(travelDays.at(-1)!) : 0
       const dayStops = stops.filter((item) => item.day === stop.day)
       // Waypoints from an earlier day (leaving the night before) aren't this day's places.
       const places = [
@@ -49,7 +89,18 @@ export function buildSlides<S extends SlideStop>(stops: readonly S[]): TripSlide
         ),
       ]
 
-      return [{ date: dayStops[0]!.date, day: stop.day, places, stopIndex, type: 'day' }, slide]
+      return [
+        ...openers,
+        {
+          date: dayStops[0]!.date,
+          day: stop.day,
+          places,
+          stopIndex,
+          type: 'day',
+          waypointsBefore: [ownFrom, earlier.length - ownFrom],
+        },
+        slide,
+      ]
     }),
     { type: 'summary' },
   ]
@@ -153,7 +204,8 @@ export function getEarlierDayWaypointCount(stop: SlideStop | undefined) {
 /**
  * The waypoints the map passes before a slide shows, as `[first point, count]`.
  * Waypoints from the day before a stop (leaving the evening before) are passed
- * before that day's opener, so the new day starts where it really started.
+ * before that day's opener, so the new day starts where it really started; a travel
+ * day's own waypoints are passed while its opener is up.
  */
 export function getWaypointsBefore(
   slide: TripSlide<SlideStop>,
@@ -171,10 +223,13 @@ export function getWaypointsBefore(
 
   const start = getStopPointStart(stopPointEnds, slide.stopIndex)
   const stop = stops[slide.stopIndex]!
+
+  if (slide.type === 'day') {
+    return [start + slide.waypointsBefore[0], slide.waypointsBefore[1]]
+  }
+
   const opensDay = stops[slide.stopIndex - 1]?.day !== stop.day
   const earlier = opensDay ? getEarlierDayWaypointCount(stop) : 0
 
-  return slide.type === 'day'
-    ? [start, earlier]
-    : [start + earlier, stop.waypoints.length - earlier]
+  return [start + earlier, stop.waypoints.length - earlier]
 }

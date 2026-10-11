@@ -18,7 +18,11 @@ const stop = (day, places, waypoints = [], images = []) => ({
   name: places.join('、'),
   places: places.map(place),
   text: '',
-  waypoints: waypoints.map(([name, waypointDay]) => ({ day: waypointDay ?? day, name })),
+  waypoints: waypoints.map(([name, waypointDay]) => ({
+    date: `第 ${waypointDay ?? day} 天`,
+    day: waypointDay ?? day,
+    name,
+  })),
 })
 
 test('opens each day before its first stop', () => {
@@ -132,4 +136,67 @@ test('names slides and stops for labels', () => {
     '第 2 天 · 10月1日 · 14:04',
   )
   assert.equal(getStopEyebrow({ date: '10月1日', day: 2, time: undefined }), '第 2 天 · 10月1日')
+})
+
+test('gives a day with only waypoints its own opener, and drives it while that is up', () => {
+  // 9/30 drives 无为 → 南京 with no Moment; the first Moment is in 烟台 on day 2.
+  const stops = [
+    stop(
+      2,
+      ['烟台'],
+      [
+        ['无为', 1],
+        ['南京', 1],
+      ],
+    ),
+    stop(3, ['大连']),
+  ]
+  const slides = buildSlides(stops)
+  const ends = getStopPointEnds(stops)
+
+  assert.deepEqual(
+    slides.map((slide) =>
+      slide.type === 'day'
+        ? `day ${slide.day}${slide.waypointsOnly ? ' (travel)' : ''} ${slide.places.join('→')}`
+        : slide.type,
+    ),
+    ['intro', 'day 1 (travel) 无为→南京', 'day 2 烟台', 'stop', 'day 3 大连', 'stop', 'summary'],
+  )
+  assert.deepEqual(
+    slides.slice(1, 4).map((slide) => getWaypointsBefore(slide, stops, ends, 0)),
+    [
+      [0, 0],
+      [0, 2],
+      [2, 0],
+    ],
+  )
+})
+
+test('passes the evening before a travel day ahead of its opener', () => {
+  // Day 1 ends in 合肥 and drives on to 南京 that evening; day 2 only passes 济南.
+  const stops = [
+    stop(1, ['合肥']),
+    stop(
+      3,
+      ['烟台'],
+      [
+        ['南京', 1],
+        ['济南', 2],
+      ],
+    ),
+  ]
+  const slides = buildSlides(stops)
+  const ends = getStopPointEnds(stops)
+  const days = slides.filter((slide) => slide.type === 'day')
+
+  assert.deepEqual(
+    days.map((slide) => [slide.day, Boolean(slide.waypointsOnly)]),
+    [
+      [1, false],
+      [2, true],
+      [3, false],
+    ],
+  )
+  assert.deepEqual(getWaypointsBefore(days[1], stops, ends, 0), [1, 1])
+  assert.deepEqual(getWaypointsBefore(days[2], stops, ends, 0), [2, 1])
 })
