@@ -193,7 +193,7 @@ function formatDate(dateKey: string) {
       </div>
     </section>
 
-    <div class="calendar-map-trip-stage" data-calendar-map-trip-stage aria-hidden="true">
+    <div class="calendar-map-trip-stage" data-calendar-map-trip-stage>
       <header class="calendar-map-trip-stage__header">
         <p class="calendar-map-trip-stage__eyebrow" data-calendar-map-trip-stage-eyebrow />
         <p class="calendar-map-trip-stage__title" data-calendar-map-trip-stage-title />
@@ -205,6 +205,9 @@ function formatDate(dateKey: string) {
       <div class="calendar-map-trip-stage__photos" data-calendar-map-trip-stage-photos />
       <div class="calendar-map-trip-stage__center" data-calendar-map-trip-stage-center />
       <div class="calendar-map-trip-stage__progress" data-calendar-map-trip-stage-progress />
+      <button class="calendar-map-trip-stage__close" type="button" data-calendar-map-trip-stage-close aria-label="退出放映">
+        <span class="i-lucide-x" aria-hidden="true" />
+      </button>
     </div>
 
     <section class="calendar-map-trip absolute bottom-4 left-4 z-10 flex max-h-[calc(100%-7rem)] w-[min(22rem,calc(100%-2rem))] flex-col overflow-hidden rounded-xl border border-border bg-bg shadow-[0_1.5rem_5rem_rgb(0_0_0/0.16)] @max-[48rem]:inset-x-3 @max-[48rem]:bottom-[calc(0.75rem+env(safe-area-inset-bottom))] @max-[48rem]:max-h-[calc(100%-1.5rem)] @max-[48rem]:w-auto [&[hidden]]:hidden" data-calendar-map-trip aria-labelledby="calendar-map-trip-title" hidden>
@@ -227,6 +230,12 @@ function formatDate(dateKey: string) {
           </button>
         </div>
         <div class="flex items-center [&[hidden]]:hidden" data-calendar-map-trip-actions>
+          <button class="flex size-9 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-tx-2 hover:bg-inline hover:text-tx aria-pressed:text-tx" type="button" data-calendar-map-trip-music aria-label="背景音乐" aria-pressed="false">
+            <span class="i-lucide-volume-x" aria-hidden="true" />
+          </button>
+          <button class="flex size-9 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-tx-2 hover:bg-inline hover:text-tx" type="button" data-calendar-map-trip-present aria-label="放映">
+            <span class="i-lucide-tv" aria-hidden="true" />
+          </button>
           <button class="flex size-9 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-tx-2 hover:bg-inline hover:text-tx [&[hidden]]:hidden" type="button" data-calendar-map-trip-export aria-label="导出视频" hidden>
             <span class="i-lucide-clapperboard" aria-hidden="true" />
           </button>

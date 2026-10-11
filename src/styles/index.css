@@ -359,6 +359,30 @@ html:has(.calendar-map-page[data-export-ratio]) body {
   padding: calc(var(--u) * 6);
 }
 
+.calendar-map-trip-stage__close {
+  display: none;
+}
+
+/* Only shown when presenting on screen; a recording must not include it. */
+.calendar-map-page[data-trip-presenting] .calendar-map-trip-stage__close {
+  position: absolute;
+  right: calc(var(--u) * 5);
+  bottom: calc(var(--u) * 7);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(var(--u) * 8);
+  height: calc(var(--u) * 8);
+  font-size: calc(var(--u) * 3.6);
+  color: var(--color-tx-2);
+  pointer-events: auto;
+  cursor: pointer;
+  background: color-mix(in srgb, var(--color-bg) 88%, transparent);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+}
+
 .calendar-map-trip-stage__progress {
   position: absolute;
   inset: auto calc(var(--u) * 6) calc(var(--u) * 4);

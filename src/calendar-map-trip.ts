@@ -104,6 +104,10 @@ const MUSIC_VOLUME = 0.8
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
 
 type ExportRatio = 'landscape' | 'portrait'
+// The story layout either plays on screen or is recorded to a video file.
+type StageMode = 'present' | 'record'
+
+const MUSIC_PREFERENCE_KEY = 'calendar-trip-music'
 
 // Region Capture is Chromium-only and not in the DOM typings yet.
 type CroppableTrack = MediaStreamTrack & { cropTo?: (target: unknown) => Promise<void> }
@@ -140,14 +144,25 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     page,
     '[data-calendar-map-trip-export-music]',
   )
-  let exporting:
+  const presentButton = queryRequired<HTMLButtonElement>(page, '[data-calendar-map-trip-present]')
+  const musicButton = queryRequired<HTMLButtonElement>(page, '[data-calendar-map-trip-music]')
+  let staging:
     | {
+        mode: StageMode
         music?: { context: AudioContext; gain: GainNode; source: AudioBufferSourceNode }
-        recorder: MediaRecorder
+        recorder?: MediaRecorder
         stopTimer?: ReturnType<typeof setTimeout>
-        stream: MediaStream
+        stream?: MediaStream
       }
     | undefined
+  let stageMode: StageMode = 'record'
+  // Music for the ordinary card playback, switched on with the music button.
+  let ambient:
+    | { context: AudioContext; gain: GainNode; source: AudioBufferSourceNode; src: string }
+    | undefined
+  let musicOn = readMusicPreference()
+  let pendingAmbient: { src: string } | undefined
+  let stageToken: object | undefined
   let stopPopups: mapboxgl.Popup[] = []
   let trip: TripData | undefined
   // Every place of every stop in visiting order; the route runs through these.
@@ -188,7 +203,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       : undefined
   }
 
-  // The page itself can be a narrow stage while exporting, so measure it, not the window.
+  // The page itself becomes a narrow stage while recording or presenting, so measure it.
   function isNarrow() {
     return page.clientWidth <= 768
   }
@@ -774,6 +789,81 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     icon?.classList.toggle('i-lucide-play', !playing)
     // The toolbar steps aside while playing and returns when paused or finished.
     page.toggleAttribute('data-trip-playing', playing)
+    syncAmbientMusic()
+  }
+
+  function renderMusicButton() {
+    const icon = musicButton.firstElementChild
+
+    musicButton.setAttribute('aria-pressed', String(musicOn))
+    icon?.classList.toggle('i-lucide-volume-2', musicOn)
+    icon?.classList.toggle('i-lucide-volume-x', !musicOn)
+  }
+
+  function getAmbientSource() {
+    return exportMusic.value || exportMusic.options[0]?.value || ''
+  }
+
+  /** Plays the chosen track while the card playback runs, and pauses it otherwise. */
+  function syncAmbientMusic() {
+    const src = getAmbientSource()
+
+    // Switched off, no trip, or the stage has its own music: release it entirely.
+    if (!musicOn || !trip || staging || (ambient && ambient.src !== src)) {
+      stopAmbientMusic()
+    }
+
+    if (!musicOn || !trip || staging) {
+      return
+    }
+
+    // Paused playback only pauses the music, so it picks up where it was.
+    if (!playing) {
+      void ambient?.context.suspend()
+      return
+    }
+
+    if (ambient) {
+      void ambient.context.resume()
+      return
+    }
+
+    const loading = { src }
+    pendingAmbient = loading
+
+    void loadMusic(src, false).then((music) => {
+      if (!music || pendingAmbient !== loading) {
+        void music?.context.close()
+        return
+      }
+
+      pendingAmbient = undefined
+      ambient = { context: music.context, gain: music.gain, source: music.source, src }
+      fadeMusicIn(music)
+      syncAmbientMusic()
+    })
+  }
+
+  function stopAmbientMusic() {
+    pendingAmbient = undefined
+
+    if (ambient) {
+      ambient.source.stop()
+      void ambient.context.close()
+      ambient = undefined
+    }
+  }
+
+  function fadeMusicIn(music: {
+    context: AudioContext
+    gain: GainNode
+    source: AudioBufferSourceNode
+  }) {
+    const now = music.context.currentTime
+
+    music.gain.gain.setValueAtTime(0, now)
+    music.gain.gain.linearRampToValueAtTime(MUSIC_VOLUME, now + MUSIC_FADE_IN)
+    music.source.start()
   }
 
   function renderSlide() {
@@ -1156,8 +1246,8 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     updateStops()
     moveCamera()
 
-    if (exporting && slide.type === 'summary') {
-      const music = exporting.music
+    if (staging && slide.type === 'summary') {
+      const music = staging.music
 
       if (music) {
         const now = music.context.currentTime
@@ -1167,47 +1257,59 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
         music.gain.gain.linearRampToValueAtTime(0, fadeStart + MUSIC_FADE_OUT)
       }
 
-      exporting.stopTimer = setTimeout(stopExport, EXPORT_SUMMARY_HOLD)
+      staging.stopTimer = setTimeout(stopStage, EXPORT_SUMMARY_HOLD)
     }
   }
 
-  function setExportOptionsOpen(open: boolean) {
+  function setExportOptionsOpen(open: boolean, mode: StageMode = stageMode) {
+    stageMode = mode
+    exportOptions.setAttribute('aria-label', mode === 'present' ? '放映' : '导出视频')
     exportOptions.hidden = !open
     controls.hidden = open
     actions.hidden = open
   }
 
   /**
-   * Records the current tab, cropped to the map stage, while the trip plays once
-   * from the start, then downloads the video.
+   * Plays the trip once from the start in the story layout. Recording captures the
+   * tab, cropped to the stage, and downloads the video; presenting goes full screen.
    */
-  async function exportVideo(ratio: ExportRatio) {
+  async function startStage(ratio: ExportRatio, mode: StageMode) {
     const currentTrip = trip
 
     setExportOptionsOpen(false)
 
-    if (!currentTrip || exporting) {
+    if (!currentTrip || staging) {
       return
     }
 
-    let stream: MediaStream
+    let stream: MediaStream | undefined
 
-    try {
-      stream = await navigator.mediaDevices.getDisplayMedia({
-        audio: false,
-        preferCurrentTab: true,
-        selfBrowserSurface: 'include',
-        video: { displaySurface: 'browser', frameRate: 30 },
-      } as DisplayMediaStreamOptions)
-    } catch {
-      return
+    // Both requests need the click that started this, so they come first.
+    if (mode === 'record') {
+      try {
+        stream = await navigator.mediaDevices.getDisplayMedia({
+          audio: false,
+          preferCurrentTab: true,
+          selfBrowserSurface: 'include',
+          video: { displaySurface: 'browser', frameRate: 30 },
+        } as DisplayMediaStreamOptions)
+      } catch {
+        return
+      }
+    } else {
+      // Full screen is a nicety; some browsers never settle the request, so don't wait.
+      void document.documentElement.requestFullscreen?.().catch(() => {})
     }
 
-    const track = stream.getVideoTracks()[0] as CroppableTrack | undefined
-    const cropTarget = (window as Window & { CropTarget?: CropTargetConstructor }).CropTarget
-
+    const token = {}
+    stageToken = token
+    stopAmbientMusic()
     page.dataset.exportRatio = ratio
+    page.toggleAttribute('data-trip-presenting', mode === 'present')
     getMap()?.resize()
+
+    const track = stream?.getVideoTracks()[0] as CroppableTrack | undefined
+    const cropTarget = (window as Window & { CropTarget?: CropTargetConstructor }).CropTarget
 
     try {
       if (track?.cropTo && cropTarget) {
@@ -1217,58 +1319,64 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       // Without Region Capture the video includes the whole tab.
     }
 
-    const music = await loadMusic(exportMusic.value)
-    const recorded = music
-      ? new MediaStream([...stream.getVideoTracks(), ...music.destination.stream.getAudioTracks()])
-      : stream
-    const mimeType = EXPORT_VIDEO_TYPES.find((type) => MediaRecorder.isTypeSupported(type))
-    const recorder = new MediaRecorder(recorded, {
-      ...(mimeType ? { mimeType } : {}),
-      videoBitsPerSecond: 12_000_000,
-    })
-    const chunks: Blob[] = []
+    const music = await loadMusic(exportMusic.value, mode === 'record')
+    let recorder: MediaRecorder | undefined
 
-    recorder.addEventListener('dataavailable', (event) => {
-      if (event.data.size > 0) {
-        chunks.push(event.data)
-      }
-    })
-    recorder.addEventListener('stop', () => {
-      const type = recorder.mimeType || 'video/webm'
+    if (stream) {
+      const recorded = music?.destination
+        ? new MediaStream([
+            ...stream.getVideoTracks(),
+            ...music.destination.stream.getAudioTracks(),
+          ])
+        : stream
+      const mimeType = EXPORT_VIDEO_TYPES.find((type) => MediaRecorder.isTypeSupported(type))
+      const chunks: Blob[] = []
+      const activeRecorder = new MediaRecorder(recorded, {
+        ...(mimeType ? { mimeType } : {}),
+        videoBitsPerSecond: 12_000_000,
+      })
 
-      finishExport()
-      downloadBlob(
-        new Blob(chunks, { type }),
-        `${currentTrip.title}-${ratio === 'portrait' ? '竖屏' : '横屏'}.${type.includes('mp4') ? 'mp4' : 'webm'}`,
-      )
-    })
-    track?.addEventListener('ended', stopExport)
-    exporting = {
-      recorder,
-      stream,
+      activeRecorder.addEventListener('dataavailable', (event) => {
+        if (event.data.size > 0) {
+          chunks.push(event.data)
+        }
+      })
+      activeRecorder.addEventListener('stop', () => {
+        const type = activeRecorder.mimeType || 'video/webm'
+
+        finishStage()
+        downloadBlob(
+          new Blob(chunks, { type }),
+          `${currentTrip.title}-${ratio === 'portrait' ? '竖屏' : '横屏'}.${type.includes('mp4') ? 'mp4' : 'webm'}`,
+        )
+      })
+      track?.addEventListener('ended', stopStage)
+      recorder = activeRecorder
+    }
+
+    staging = {
+      mode,
       ...(music
         ? { music: { context: music.context, gain: music.gain, source: music.source } }
         : {}),
+      ...(recorder ? { recorder } : {}),
+      ...(stream ? { stream } : {}),
     }
 
     // Reset to a still intro first: the camera jumps to the whole route and the
-    // tiles load before the first frame, so the video doesn't open mid-flight.
+    // tiles load before the first frame, so playback doesn't open mid-flight.
     goTo(0, { play: false })
     fitTrip({ instant: true })
     await waitForMapIdle()
 
-    if (exporting?.recorder !== recorder) {
+    if (stageToken !== token) {
       return
     }
 
-    recorder.start(1000)
+    recorder?.start(1000)
 
     if (music) {
-      const now = music.context.currentTime
-
-      music.gain.gain.setValueAtTime(0, now)
-      music.gain.gain.linearRampToValueAtTime(MUSIC_VOLUME, now + MUSIC_FADE_IN)
-      music.source.start()
+      fadeMusicIn(music)
     }
 
     elapsed = 0
@@ -1290,15 +1398,18 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
       map.once('idle', () => {
         clearTimeout(timeout)
-        // One more frame so the settled map is what the recording starts on.
+        // One more frame so the settled map is what playback starts on.
         requestAnimationFrame(() => resolve())
       })
       map.triggerRepaint()
     })
   }
 
-  /** Decodes a background track into a looping source routed to a recordable stream. */
-  async function loadMusic(src: string) {
+  /**
+   * Decodes a background track into a looping source that plays out loud and, when
+   * recording, also feeds a stream for the video's audio track.
+   */
+  async function loadMusic(src: string, record: boolean) {
     if (!src) {
       return undefined
     }
@@ -1310,49 +1421,62 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
         .then((data) => context.decodeAudioData(data))
       const source = context.createBufferSource()
       const gain = context.createGain()
-      const destination = context.createMediaStreamDestination()
+      const destination = record ? context.createMediaStreamDestination() : undefined
 
       source.buffer = buffer
       source.loop = true
       gain.gain.value = 0
       source.connect(gain)
-      gain.connect(destination)
-      // Also play it out loud so the recording can be heard while it runs.
       gain.connect(context.destination)
+
+      if (destination) {
+        gain.connect(destination)
+      }
+
       await context.resume()
-      return { context, destination, gain, source }
+      return { context, gain, source, ...(destination ? { destination } : {}) }
     } catch {
-      // A video without music is better than no video.
+      // Playback without music is better than none.
       return undefined
     }
   }
 
-  function stopExport() {
-    if (exporting?.recorder.state === 'recording') {
-      exporting.recorder.stop()
+  function stopStage() {
+    if (staging?.recorder?.state === 'recording') {
+      staging.recorder.stop()
     } else {
-      finishExport()
+      finishStage()
     }
   }
 
-  function finishExport() {
-    if (!exporting) {
+  function finishStage() {
+    stageToken = undefined
+
+    if (!staging) {
       return
     }
 
-    clearTimeout(exporting.stopTimer)
+    const { mode, music, stopTimer, stream } = staging
 
-    for (const track of exporting.stream.getTracks()) {
+    clearTimeout(stopTimer)
+
+    for (const track of stream?.getTracks() ?? []) {
       track.stop()
     }
 
-    if (exporting.music) {
-      exporting.music.source.stop()
-      void exporting.music.context.close()
+    if (music) {
+      music.source.stop()
+      void music.context.close()
     }
 
-    exporting = undefined
+    staging = undefined
     delete page.dataset.exportRatio
+    page.removeAttribute('data-trip-presenting')
+
+    if (mode === 'present' && document.fullscreenElement) {
+      void document.exitFullscreen().catch(() => {})
+    }
+
     getMap()?.resize()
     // Back to the side card for whatever slide is showing.
     renderSlide()
@@ -1367,7 +1491,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     lastFrameTime = now
 
     // The card's timer waits while the map travels between waypoints or the mouse rests on it.
-    if (!playing || !duration || document.hidden || traveling || (hovering && !exporting)) {
+    if (!playing || !duration || document.hidden || traveling || (hovering && !staging)) {
       return
     }
 
@@ -1446,7 +1570,8 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       return
     }
 
-    stopExport()
+    stopStage()
+    stopAmbientMusic()
     setExportOptionsOpen(false)
     page.removeAttribute('data-trip-playing')
 
@@ -1487,7 +1612,33 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   )
   exportButton.hidden =
     !navigator.mediaDevices?.getDisplayMedia || typeof MediaRecorder === 'undefined'
-  exportButton.addEventListener('click', () => setExportOptionsOpen(true), { signal })
+  exportButton.addEventListener('click', () => setExportOptionsOpen(true, 'record'), { signal })
+  presentButton.addEventListener('click', () => setExportOptionsOpen(true, 'present'), { signal })
+  page
+    .querySelector('[data-calendar-map-trip-stage-close]')
+    ?.addEventListener('click', stopStage, { signal })
+  document.addEventListener(
+    'fullscreenchange',
+    () => {
+      // Leaving full screen (Esc, or the browser's own control) ends a presentation.
+      if (staging?.mode === 'present' && !document.fullscreenElement) {
+        stopStage()
+      }
+    },
+    { signal },
+  )
+  renderMusicButton()
+  musicButton.addEventListener(
+    'click',
+    () => {
+      musicOn = !musicOn
+      writeMusicPreference(musicOn)
+      renderMusicButton()
+      syncAmbientMusic()
+    },
+    { signal },
+  )
+  exportMusic.addEventListener('change', syncAmbientMusic, { signal })
   page
     .querySelector('[data-calendar-map-trip-export-cancel]')
     ?.addEventListener('click', () => setExportOptionsOpen(false), { signal })
@@ -1497,7 +1648,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   )) {
     button.addEventListener(
       'click',
-      () => void exportVideo(button.dataset.calendarMapTripExportRatio as ExportRatio),
+      () => void startStage(button.dataset.calendarMapTripExportRatio as ExportRatio, stageMode),
       { signal },
     )
   }
@@ -1521,9 +1672,9 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
         return
       }
 
-      if (exporting && event.key === 'Escape') {
+      if (staging && event.key === 'Escape') {
         event.preventDefault()
-        stopExport()
+        stopStage()
         return
       }
 
@@ -1579,6 +1730,22 @@ function createMosaic(trip: TripData) {
   }
 
   return mosaic
+}
+
+function readMusicPreference() {
+  try {
+    return localStorage.getItem(MUSIC_PREFERENCE_KEY) === 'on'
+  } catch {
+    return false
+  }
+}
+
+function writeMusicPreference(on: boolean) {
+  try {
+    localStorage.setItem(MUSIC_PREFERENCE_KEY, on ? 'on' : 'off')
+  } catch {
+    // The choice just won't be remembered.
+  }
 }
 
 function downloadBlob(blob: Blob, filename: string) {
