@@ -687,7 +687,12 @@ function initializeCalendarMap() {
   window.addEventListener(
     'keydown',
     (event) => {
-      if (event.key === 'Escape' && (activeLocationId || tripPlayer.activeId) && !lightbox.open) {
+      if (
+        event.key === 'Escape' &&
+        !event.defaultPrevented &&
+        (activeLocationId || tripPlayer.activeId) &&
+        !lightbox.open
+      ) {
         requestSelectionClose()
       }
     },

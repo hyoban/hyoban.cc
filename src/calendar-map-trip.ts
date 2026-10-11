@@ -85,7 +85,21 @@ const STOP_ZOOM = 9
 // Each stop is framed together with the trip's other places this close to it.
 const NEARBY_RADIUS_KM = 30
 const NEARBY_MAX_ZOOM = 13
+// How long the summary card stays in an exported video before it ends.
+const EXPORT_SUMMARY_HOLD = 4000
+const EXPORT_VIDEO_TYPES = [
+  'video/mp4;codecs=avc1',
+  'video/mp4',
+  'video/webm;codecs=vp9',
+  'video/webm',
+]
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
+
+type ExportRatio = 'landscape' | 'portrait'
+
+// Region Capture is Chromium-only and not in the DOM typings yet.
+type CroppableTrack = MediaStreamTrack & { cropTo?: (target: unknown) => Promise<void> }
+type CropTargetConstructor = { fromElement: (element: Element) => Promise<unknown> }
 
 export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOptions) {
   const trips = new Map(parseTripData(page).map((trip) => [trip.id, trip]))
@@ -99,6 +113,13 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   const nextButton = queryRequired<HTMLButtonElement>(page, '[data-calendar-map-trip-next]')
   const playButton = queryRequired<HTMLButtonElement>(page, '[data-calendar-map-trip-play]')
   const closeButton = queryRequired<HTMLButtonElement>(page, '[data-calendar-map-trip-close]')
+  const controls = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-controls]')
+  const actions = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-actions]')
+  const exportButton = queryRequired<HTMLButtonElement>(page, '[data-calendar-map-trip-export]')
+  const exportOptions = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-export-options]')
+  let exporting:
+    | { recorder: MediaRecorder; stopTimer?: ReturnType<typeof setTimeout>; stream: MediaStream }
+    | undefined
   let stopPopups: mapboxgl.Popup[] = []
   let trip: TripData | undefined
   // Every place of every stop in visiting order; the route runs through these.
@@ -137,8 +158,13 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       : undefined
   }
 
+  // The page itself can be a narrow stage while exporting, so measure it, not the window.
+  function isNarrow() {
+    return page.clientWidth <= 768
+  }
+
   function getCameraPadding() {
-    if (window.matchMedia('(max-width: 48rem)').matches) {
+    if (isNarrow()) {
       return { bottom: panel.offsetHeight + 40, left: 40, right: 40, top: 120 }
     }
 
@@ -464,7 +490,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
       return new mapboxgl.Popup({
         // On wide screens the card sits on the left, so labels open to the right.
-        anchor: window.matchMedia('(max-width: 48rem)').matches ? 'bottom' : 'bottom-left',
+        anchor: isNarrow() ? 'bottom' : 'bottom-left',
         className: 'calendar-map-trip-label',
         closeButton: false,
         closeOnClick: false,
@@ -851,6 +877,115 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
     updateStops()
     moveCamera()
+
+    if (exporting && slide.type === 'summary') {
+      exporting.stopTimer = setTimeout(stopExport, EXPORT_SUMMARY_HOLD)
+    }
+  }
+
+  function setExportOptionsOpen(open: boolean) {
+    exportOptions.hidden = !open
+    controls.hidden = open
+    actions.hidden = open
+  }
+
+  /**
+   * Records the current tab, cropped to the map stage, while the trip plays once
+   * from the start, then downloads the video.
+   */
+  async function exportVideo(ratio: ExportRatio) {
+    const currentTrip = trip
+
+    setExportOptionsOpen(false)
+
+    if (!currentTrip || exporting) {
+      return
+    }
+
+    let stream: MediaStream
+
+    try {
+      stream = await navigator.mediaDevices.getDisplayMedia({
+        audio: false,
+        preferCurrentTab: true,
+        selfBrowserSurface: 'include',
+        video: { displaySurface: 'browser', frameRate: 30 },
+      } as DisplayMediaStreamOptions)
+    } catch {
+      return
+    }
+
+    const track = stream.getVideoTracks()[0] as CroppableTrack | undefined
+    const cropTarget = (window as Window & { CropTarget?: CropTargetConstructor }).CropTarget
+
+    page.dataset.exportRatio = ratio
+    getMap()?.resize()
+
+    try {
+      if (track?.cropTo && cropTarget) {
+        await track.cropTo(await cropTarget.fromElement(page))
+      }
+    } catch {
+      // Without Region Capture the video includes the whole tab.
+    }
+
+    const mimeType = EXPORT_VIDEO_TYPES.find((type) => MediaRecorder.isTypeSupported(type))
+    const recorder = new MediaRecorder(stream, {
+      ...(mimeType ? { mimeType } : {}),
+      videoBitsPerSecond: 12_000_000,
+    })
+    const chunks: Blob[] = []
+
+    recorder.addEventListener('dataavailable', (event) => {
+      if (event.data.size > 0) {
+        chunks.push(event.data)
+      }
+    })
+    recorder.addEventListener('stop', () => {
+      const type = recorder.mimeType || 'video/webm'
+
+      finishExport()
+      downloadBlob(
+        new Blob(chunks, { type }),
+        `${currentTrip.title}-${ratio === 'portrait' ? '竖屏' : '横屏'}.${type.includes('mp4') ? 'mp4' : 'webm'}`,
+      )
+    })
+    track?.addEventListener('ended', stopExport)
+    exporting = { recorder, stream }
+
+    // Let the map settle at its new size before the first frame.
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+
+    if (exporting?.recorder !== recorder) {
+      return
+    }
+
+    recorder.start(1000)
+    goTo(0, { play: true })
+  }
+
+  function stopExport() {
+    if (exporting?.recorder.state === 'recording') {
+      exporting.recorder.stop()
+    } else {
+      finishExport()
+    }
+  }
+
+  function finishExport() {
+    if (!exporting) {
+      return
+    }
+
+    clearTimeout(exporting.stopTimer)
+
+    for (const track of exporting.stream.getTracks()) {
+      track.stop()
+    }
+
+    exporting = undefined
+    delete page.dataset.exportRatio
+    getMap()?.resize()
   }
 
   function tick(now: number) {
@@ -940,6 +1075,9 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       return
     }
 
+    stopExport()
+    setExportOptionsOpen(false)
+
     if (frame !== undefined) {
       cancelAnimationFrame(frame)
       frame = undefined
@@ -961,6 +1099,22 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   previousButton.addEventListener('click', () => goTo(index - 1), { signal })
   nextButton.addEventListener('click', () => goTo(index + 1), { signal })
   closeButton.addEventListener('click', onClose, { signal })
+  exportButton.hidden =
+    !navigator.mediaDevices?.getDisplayMedia || typeof MediaRecorder === 'undefined'
+  exportButton.addEventListener('click', () => setExportOptionsOpen(true), { signal })
+  page
+    .querySelector('[data-calendar-map-trip-export-cancel]')
+    ?.addEventListener('click', () => setExportOptionsOpen(false), { signal })
+
+  for (const button of page.querySelectorAll<HTMLButtonElement>(
+    '[data-calendar-map-trip-export-ratio]',
+  )) {
+    button.addEventListener(
+      'click',
+      () => void exportVideo(button.dataset.calendarMapTripExportRatio as ExportRatio),
+      { signal },
+    )
+  }
   playButton.addEventListener(
     'click',
     () => {
@@ -978,6 +1132,12 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     'keydown',
     (event) => {
       if (!trip || event.defaultPrevented || event.target instanceof HTMLSelectElement) {
+        return
+      }
+
+      if (exporting && event.key === 'Escape') {
+        event.preventDefault()
+        stopExport()
         return
       }
 
@@ -1028,6 +1188,16 @@ function createMosaic(trip: TripData) {
   }
 
   return mosaic
+}
+
+function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+
+  link.href = url
+  link.download = filename
+  link.click()
+  setTimeout(() => URL.revokeObjectURL(url), 60_000)
 }
 
 function getStopEyebrow({ date, day, time }: { date: string; day: number; time?: string }) {

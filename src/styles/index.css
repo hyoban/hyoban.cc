@@ -200,6 +200,31 @@ html[data-calendar-mode-transition] .calendar-back-link {
   display: none;
 }
 
+/* Video export: the map becomes a fixed-ratio stage the tab recording is cropped to. */
+html:has(.calendar-map-page[data-export-ratio]) body {
+  background: #000;
+}
+
+.calendar-map-page[data-export-ratio='portrait'] {
+  position: fixed;
+  inset: 0;
+  width: min(100vw, calc(100dvh * 9 / 16));
+  height: min(100dvh, calc(100vw * 16 / 9));
+  margin: auto;
+}
+
+.calendar-map-page[data-export-ratio='landscape'] {
+  position: fixed;
+  inset: 0;
+  width: min(100vw, calc(100dvh * 16 / 9));
+  height: min(100dvh, calc(100vw * 9 / 16));
+  margin: auto;
+}
+
+.calendar-map-page[data-export-ratio] :is(.calendar-map-toolbar, .calendar-map-trip footer) {
+  display: none;
+}
+
 @media (min-width: 48.0625rem) {
   .calendar-map-page:has(.calendar-map-drawer:not([hidden])) .mapboxgl-ctrl-bottom-right {
     right: calc(min(28rem, calc(100vw - 2rem)) + 1.5rem);
