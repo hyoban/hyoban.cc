@@ -866,6 +866,15 @@ html:has(.calendar-map-page[data-export-ratio]) body {
   text-align: left;
 }
 
+/* A landscape frame is short: the stats go three across, so the card fits its height. */
+.calendar-map-page[data-export-ratio='landscape'] .calendar-map-trip-stage-card:has(> dl) {
+  width: min(100%, calc(var(--u) * 116));
+}
+
+.calendar-map-page[data-export-ratio='landscape'] .calendar-map-trip-stage-card__stats {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .calendar-map-trip-stage-card__stats > div {
   display: flex;
   flex-direction: column-reverse;

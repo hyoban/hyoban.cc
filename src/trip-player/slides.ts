@@ -12,9 +12,14 @@ type SlideStop = Readonly<{
   waypoints: readonly Readonly<{ date: string; day: number; name: string }>[]
 }>
 
-const INTRO_DURATION = 2000
-// A day's opener only shows its date, weather and places: a glance is enough.
-const DAY_DURATION = 1000
+// Pacing: the cards with photos keep a brisk rhythm, and everything between them
+// (the openers, the drives, the places passed) gets long enough to read and follow.
+const INTRO_DURATION = 3000
+// A day's opener shows its date, weather and the places ahead: a beat to take in the
+// date, then time to read the places, up to a limit for a long day.
+const DAY_DURATION = 1600
+const DAY_CHARACTER_DURATION = 30
+const DAY_MAX_DURATION = 2800
 const STOP_DURATION = 3000
 const PHOTO_DURATION = 1500
 // A live photo's clip runs about 1.3–3.2s (2.8s typically). Its slot lets most of it
@@ -167,7 +172,8 @@ export function getSlideDuration(
   }
 
   if (slide?.type === 'day') {
-    return DAY_DURATION
+    const characters = slide.places.join('').length
+    return Math.min(DAY_DURATION + characters * DAY_CHARACTER_DURATION, DAY_MAX_DURATION)
   }
 
   return slide?.type === 'stop'

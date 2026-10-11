@@ -78,7 +78,7 @@ type TripPlayerOptions = {
 }
 
 // Long enough to read a waypoint's name before driving on.
-const WAYPOINT_PAUSE = 600
+const WAYPOINT_PAUSE = 1000
 // Switching photos fades through: the old one fades out, the frame takes the new one's
 // shape, then the new one fades in, so the two are never seen on top of each other.
 const PHOTO_SWITCH = { duration: 480, easing: 'cubic-bezier(0.4, 0, 0.2, 1)' }
@@ -98,19 +98,20 @@ const CARD_FADE_IN: Keyframe[] = [
   { offset: 0.25, opacity: 0, transform: 'translateY(0.25rem)' },
   { opacity: 1, transform: 'none' },
 ]
-const LEG_DURATION = 2200
+const LEG_DURATION = 2500
 // Drawing a drive takes from SHORT_LEG for a hop across town up to LEG_DURATION for
-// LONG_LEG_KM or more, so nearby places don't keep the viewer waiting.
-const SHORT_LEG = 1200
+// LONG_LEG_KM or more, so nearby places don't keep the viewer waiting. Even a short
+// hop leaves the camera, which eases over most of a second, time to follow it.
+const SHORT_LEG = 1500
 const LONG_LEG_KM = 400
 const STOP_ZOOM = 9
 // The closest the camera comes in while following a short drive.
 const NEARBY_MAX_ZOOM = 13
 // How long the summary card stays in an exported video before it ends.
-const EXPORT_SUMMARY_HOLD = 3000
+const EXPORT_SUMMARY_HOLD = 4000
 // Presenting or recording, a stop's photo card pops up this soon when the route is
 // already there; otherwise once the drive there is drawn.
-const CARD_POP = 300
+const CARD_POP = 400
 // avc1 keeps the codec setup in the file header; QuickTime can't play avc3 MP4s.
 const EXPORT_VIDEO_TYPES = [
   'video/mp4;codecs=avc1,mp4a.40.2',
@@ -1150,7 +1151,10 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     const end = points[to - 1]
     const km = start && end ? getDistanceKm(start.coordinates, end.coordinates) : 0
 
-    return (SHORT_LEG + (LEG_DURATION - SHORT_LEG) * Math.min(km / LONG_LEG_KM, 1)) / speed
+    // Grows quickly over the first stretch and slowly after, as distance feels.
+    return (
+      (SHORT_LEG + (LEG_DURATION - SHORT_LEG) * Math.sqrt(Math.min(km / LONG_LEG_KM, 1))) / speed
+    )
   }
 
   function renderSpeedButton() {
