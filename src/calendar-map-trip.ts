@@ -1061,29 +1061,17 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     liveVideo?.remove()
     liveVideo = undefined
 
+    // The stage card plays its own copy, see showStagePhoto.
     if (!image.video || !frame || reducedMotion.matches || isStageLayout()) {
       return
     }
 
-    const video = document.createElement('video')
-
-    video.className =
-      'pointer-events-none absolute inset-0 size-full object-cover transition-opacity duration-300'
-    video.muted = true
-    video.playsInline = true
-    video.src = image.video
-    video.setAttribute('aria-hidden', 'true')
-    video.addEventListener(
-      'ended',
-      () => {
-        video.style.opacity = '0'
-        setTimeout(() => video.remove(), 320)
-      },
-      { once: true },
+    liveVideo = createLiveVideo(
+      image.video,
+      'pointer-events-none absolute inset-0 size-full object-cover transition-opacity duration-300',
     )
-    frame.append(video)
-    liveVideo = video
-    void video.play().catch(() => video.remove())
+    frame.append(liveVideo)
+    void liveVideo.play().catch(() => liveVideo?.remove())
   }
 
   function showPhoto(stop: TripStop, nextPhotoIndex: number) {
@@ -1496,7 +1484,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     img.style.width = `${height * ratio}px`
     img.style.height = `${height}px`
 
-    for (const old of frame.querySelectorAll('img')) {
+    for (const old of frame.querySelectorAll<HTMLElement>('img, video')) {
       old.style.opacity = '0'
       setTimeout(() => old.remove(), reducedMotion.matches ? 0 : 450)
     }
@@ -1516,6 +1504,16 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     }
 
     frame.append(img)
+
+    // A live photo moves once over its still, as on the side card.
+    if (image.video && !reducedMotion.matches) {
+      const video = createLiveVideo(image.video, '')
+
+      video.style.width = img.style.width
+      video.style.height = img.style.height
+      frame.append(video)
+      void video.play().catch(() => video.remove())
+    }
   }
 
   function createIntroCard(currentTrip: TripData) {
@@ -1535,7 +1533,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       createElement(
         'p',
         'calendar-map-trip-stage-card__meta',
-        `${currentTrip.dateRange} · ${currentTrip.dayCount} 天`,
+        `${currentTrip.dateRange} · ${currentTrip.dayCount} 天 · ${currentTrip.stops.length} 条记录`,
       ),
       coverRow,
     )
@@ -2407,6 +2405,26 @@ function lineFeature(coordinates: [number, number][]) {
     properties: {},
     type: 'Feature' as const,
   }
+}
+
+/** A muted live photo clip that plays once, then fades back to the still under it. */
+function createLiveVideo(src: string, className: string) {
+  const video = document.createElement('video')
+
+  video.className = className
+  video.muted = true
+  video.playsInline = true
+  video.src = src
+  video.setAttribute('aria-hidden', 'true')
+  video.addEventListener(
+    'ended',
+    () => {
+      video.style.opacity = '0'
+      setTimeout(() => video.remove(), 450)
+    },
+    { once: true },
+  )
+  return video
 }
 
 function createWeather(weather: { icon: string; label: string }, className: string) {
