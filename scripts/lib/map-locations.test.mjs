@@ -49,27 +49,28 @@ test('groups mapped moments by place and uses the newest occurrence year', () =>
     {
       dateKey: '2025-04-01',
       id: 'tokyo-older',
-      locationId: 'tokyo',
+      locations: [{ id: 'tokyo' }],
       occurredAt: '2025-04-01T16:00:00+08:00',
       order: 1,
     },
     {
       dateKey: '2026-03-10',
       id: 'tokyo-newer',
-      locationId: 'tokyo',
+      locations: [{ id: 'tokyo' }],
       occurredAt: '2026-03-10T16:00:00+08:00',
       order: 1,
     },
     {
       dateKey: '2024-06-20',
       id: 'paris-only',
-      locationId: 'paris',
+      locations: [{ id: 'paris' }],
       occurredAt: '2024-06-20',
       order: 1,
     },
     {
       dateKey: '2026-06-01',
       id: 'unmapped',
+      locations: [],
       occurredAt: '2026-06-01',
       order: 1,
     },
@@ -94,6 +95,32 @@ test('groups mapped moments by place and uses the newest occurrence year', () =>
         latestYear: 2024,
         momentIds: ['paris-only'],
       },
+    ],
+  )
+})
+
+test('adds a Moment with several places to each place group', () => {
+  const locations = defineLocations({
+    paris: { latitude: 48.8535, longitude: 2.3484, name: '巴黎' },
+    tokyo: { latitude: 35.6769, longitude: 139.7639, name: '东京' },
+  })
+  const groups = groupMomentsByLocation(locations, [
+    {
+      dateKey: '2026-03-10',
+      id: 'both',
+      locations: [{ id: 'tokyo' }, { id: 'paris' }],
+      occurredAt: '2026-03-10',
+      order: 1,
+    },
+  ])
+
+  assert.deepEqual(
+    groups
+      .map((group) => [group.id, group.moments.map((moment) => moment.id)])
+      .sort(([first], [second]) => first.localeCompare(second)),
+    [
+      ['paris', ['both']],
+      ['tokyo', ['both']],
     ],
   )
 })

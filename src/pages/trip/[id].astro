@@ -1,0 +1,10 @@
+---
+import CalendarMap from '@/components/CalendarMap.astro'
+import { getMoments, getTrips } from '@/moments'
+
+export async function getStaticPaths() {
+  return getTrips(await getMoments()).map(trip => ({ params: { id: trip.id } }))
+}
+---
+
+<CalendarMap tripId={Astro.params.id} />

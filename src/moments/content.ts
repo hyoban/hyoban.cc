@@ -44,13 +44,23 @@ const momentMediaSchema = z.discriminatedUnion('type', [
   momentLivePhotoSchema,
 ])
 
+const locationIdSchema = z.string().refine(isLocationId, {
+  message: 'Unknown calendar map location id.',
+})
+
 export const momentFrontmatterSchema = z.strictObject({
   hidden: z.boolean().default(false),
+  // One place, or several places in the order they were visited.
   location: z
-    .string()
-    .refine(isLocationId, {
-      message: 'Unknown calendar map location id.',
-    })
+    .union([
+      locationIdSchema,
+      z
+        .array(locationIdSchema)
+        .min(2, 'Use a single location id instead of a one-item list.')
+        .refine((ids) => new Set(ids).size === ids.length, {
+          message: 'Duplicate calendar map location id.',
+        }),
+    ])
     .optional(),
   media: z.array(momentMediaSchema).default([]),
   occurredAt: z.union([z.iso.date(), z.iso.datetime({ offset: true })]),
