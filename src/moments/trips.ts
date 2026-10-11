@@ -10,6 +10,8 @@ export type TripWaypointDefinition = Readonly<{
 }>
 
 export type TripDefinition = Readonly<{
+  /** Photos for the intro and summary, as `<moment id>/<file>`, best first. */
+  covers?: readonly string[]
   end: string
   id: string
   start: string
@@ -70,6 +72,8 @@ export type Trip<T extends TripMoment> = TripDefinition &
 const DATE_KEY_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 const TIMESTAMP_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2})?(?:Z|[+-]\d{2}:\d{2})$/
 const TRIP_ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
+const COVER_PATTERN =
+  /^\d{4}\/\d{2}\/\d{2}-\d{2}-[a-z0-9]+(?:-[a-z0-9]+)*\/[a-z0-9]+(?:-[a-z0-9]+)*\.[a-z0-9]+$/
 const EARTH_RADIUS_KM = 6371
 const DAY_MS = 86_400_000
 
@@ -89,6 +93,12 @@ export function defineTrips<const T extends readonly TripDefinition[]>(trips: T)
 
     if (!isDateKey(trip.start) || !isDateKey(trip.end) || trip.start > trip.end) {
       throw new RangeError(`Invalid date range for trip "${trip.id}".`)
+    }
+
+    for (const cover of trip.covers ?? []) {
+      if (!COVER_PATTERN.test(cover)) {
+        throw new Error(`Invalid cover "${cover}" in trip "${trip.id}".`)
+      }
     }
 
     for (const leg of trip.straightLegs ?? []) {

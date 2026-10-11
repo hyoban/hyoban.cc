@@ -47,6 +47,7 @@ const tripData = trips.map(trip => ({
   pageTitle: getTripTitle(trip.title),
   photoCount: trip.stops.reduce((count, stop) => count + stop.media.length, 0),
   placeCount: trip.placeCount,
+  covers: getTripCovers(trip),
   stops: trip.stops.map(stop => ({
     date: formatShortDate(stop.dateKey, true),
     day: getDayOffset(trip.start, stop.dateKey) + 1,
@@ -105,6 +106,25 @@ function getPlainText(text: string) {
       .trim())
     .filter(Boolean)
     .join('\n')
+}
+
+/** Resolves a trip's chosen cover photos; a typo fails the build instead of dropping a photo. */
+function getTripCovers(trip: (typeof trips)[number]) {
+  return (trip.covers ?? []).map(cover => {
+    const slash = cover.lastIndexOf('/')
+    const id = cover.slice(0, slash)
+    const file = cover.slice(slash + 1)
+    const item = trip.stops
+      .find(stop => stop.id === id)
+      ?.media.find(media => (media.type === 'video' ? media.poster : media.src)?.src.endsWith(`/${file}`))
+    const [image] = item ? getImages([item]) : []
+
+    if (!image) {
+      throw new Error(`Cover "${cover}" isn't a photo of a Moment in trip "${trip.id}".`)
+    }
+
+    return image
+  })
 }
 
 function getImages(media: ResolvedMomentMedia[]) {
