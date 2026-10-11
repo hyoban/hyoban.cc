@@ -791,7 +791,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     renderProgress()
   }
 
-  /** Steps through the current stop's photos, for the , and . keys. */
+  /** Steps through the current stop's photos, for ↑ and ↓ and a swipe on the photo. */
   function stepPhoto(direction: number) {
     const slide = slides[index]
 
@@ -801,6 +801,53 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
         Math.min(Math.max(photoIndex + direction, 0), slide.stop.images.length - 1),
       )
     }
+  }
+
+  /**
+   * Swiping the photo sideways moves to the next or previous one. The photo is also a
+   * link to the day's page, so a swipe swallows the click it ends with; a tap still
+   * opens the page. Vertical drags are left to scroll the card.
+   */
+  function addPhotoSwipe(link: HTMLElement) {
+    let start: { x: number; y: number } | undefined
+    let swiped = false
+
+    link.style.touchAction = 'pan-y'
+    link.addEventListener(
+      'pointerdown',
+      (event) => {
+        start = { x: event.clientX, y: event.clientY }
+        swiped = false
+      },
+      { signal },
+    )
+    link.addEventListener(
+      'pointerup',
+      (event) => {
+        const dx = event.clientX - (start?.x ?? event.clientX)
+        const dy = event.clientY - (start?.y ?? event.clientY)
+
+        start = undefined
+
+        if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+          swiped = true
+          stepPhoto(dx < 0 ? 1 : -1)
+        }
+      },
+      { signal },
+    )
+    link.addEventListener(
+      'click',
+      (event) => {
+        if (swiped) {
+          event.preventDefault()
+          swiped = false
+        }
+      },
+      { signal },
+    )
+    // A dragged link would otherwise start a native drag of the image.
+    link.addEventListener('dragstart', (event) => event.preventDefault(), { signal })
   }
 
   /** Jumps to the next day's opener, or back to this day's (then the one before). */
@@ -992,6 +1039,10 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
         photo.sizes = IMAGE_SIZES
         photo.decoding = 'async'
         link.append(photo)
+
+        if (stop.images.length > 1) {
+          addPhotoSwipe(link)
+        }
       } else {
         link.className = 'self-start text-[0.8125rem] text-tx-2 hover:text-tx'
         link.textContent = '查看当天记录'
@@ -1453,14 +1504,14 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     const key = event.key.length === 1 ? event.key.toLowerCase() : event.key
     const actions: Record<string, () => void> = {
       ' ': () => playButton.click(),
-      ',': () => stepPhoto(-1),
       '-': () => setSpeed(SPEEDS.findLast((value) => value < speed) ?? speed),
-      '.': () => stepPhoto(1),
       '=': () => setSpeed(SPEEDS.find((value) => value > speed) ?? speed),
       '+': () => setSpeed(SPEEDS.find((value) => value > speed) ?? speed),
       '?': () => shortcutsDialog.showModal(),
+      ArrowDown: () => stepPhoto(1),
       ArrowLeft: () => (event.shiftKey ? stepDay(-1) : goTo(index - 1)),
       ArrowRight: () => (event.shiftKey ? stepDay(1) : goTo(index + 1)),
+      ArrowUp: () => stepPhoto(-1),
       End: () => goTo(slides.length - 1),
       Home: () => goTo(0),
       f: () => {
