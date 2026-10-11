@@ -46,6 +46,36 @@ const description = activeTrip
   ? `${activeTrip.title}的旅程回放，按时间顺序走过每一条 Moment。`
   : '按地点浏览 Calendar 中记录的 Moment。'
 
+// Listed in the shortcut panel (press ?); the player handles the keys themselves.
+const tripShortcuts: { keys: [string[], string][]; title: string }[] = [
+  {
+    keys: [
+      [['空格'], '播放 / 暂停'],
+      [['←', '→'], '上一张 / 下一张卡片'],
+      [['Shift', '←', '→'], '上一天 / 下一天'],
+      [['Home', 'End'], '回到开头 / 跳到回顾'],
+      [[',', '.'], '上一张 / 下一张照片'],
+    ],
+    title: '播放',
+  },
+  {
+    keys: [
+      [['-', '='], '减速 / 加速'],
+      [['M'], '背景音乐'],
+    ],
+    title: '速度与声音',
+  },
+  {
+    keys: [
+      [['F'], '全屏放映'],
+      [['R'], '导出视频'],
+      [['Esc'], '退出放映 / 关闭回放'],
+      [['?'], '显示快捷键'],
+    ],
+    title: '放映与导出',
+  },
+]
+
 function toScriptJson(value: unknown) {
   return JSON.stringify(value).replaceAll('<', '\\u003c')
 }
@@ -133,28 +163,28 @@ function toScriptJson(value: unknown) {
       <p class="sr-only" data-calendar-map-trip-announcer aria-live="polite" />
       <footer class="flex shrink-0 items-center justify-between border-t border-border px-2 py-1">
         <div class="flex items-center [&[hidden]]:hidden" data-calendar-map-trip-controls>
-          <button class="flex size-9 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-tx-2 hover:bg-inline hover:text-tx disabled:cursor-default disabled:opacity-40 disabled:hover:bg-transparent" type="button" data-calendar-map-trip-previous aria-label="上一站">
+          <button class="flex size-9 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-tx-2 hover:bg-inline hover:text-tx disabled:cursor-default disabled:opacity-40 disabled:hover:bg-transparent" type="button" data-calendar-map-trip-previous aria-label="上一站" aria-keyshortcuts="ArrowLeft" title="上一站（←）">
             <span class="i-lucide-chevron-left" aria-hidden="true" />
           </button>
-          <button class="flex size-9 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-tx-2 hover:bg-inline hover:text-tx" type="button" data-calendar-map-trip-play aria-label="暂停">
+          <button class="flex size-9 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-tx-2 hover:bg-inline hover:text-tx" type="button" data-calendar-map-trip-play aria-label="暂停" aria-keyshortcuts="Space">
             <span class="i-lucide-pause" aria-hidden="true" />
           </button>
-          <button class="flex size-9 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-tx-2 hover:bg-inline hover:text-tx disabled:cursor-default disabled:opacity-40 disabled:hover:bg-transparent" type="button" data-calendar-map-trip-next aria-label="下一站">
+          <button class="flex size-9 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-tx-2 hover:bg-inline hover:text-tx disabled:cursor-default disabled:opacity-40 disabled:hover:bg-transparent" type="button" data-calendar-map-trip-next aria-label="下一站" aria-keyshortcuts="ArrowRight" title="下一站（→）">
             <span class="i-lucide-chevron-right" aria-hidden="true" />
           </button>
         </div>
         <div class="flex items-center [&[hidden]]:hidden" data-calendar-map-trip-actions>
-          <button class="flex h-9 min-w-9 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent px-1.5 font-mono text-xs text-tx-2 tabular-nums hover:bg-inline hover:text-tx" type="button" data-calendar-map-trip-speed aria-label="播放速度 1×">1×</button>
-          <button class="flex size-9 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-tx-2 hover:bg-inline hover:text-tx aria-pressed:text-tx" type="button" data-calendar-map-trip-music aria-label="背景音乐" aria-pressed="false">
+          <button class="flex h-9 min-w-9 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent px-1.5 font-mono text-xs text-tx-2 tabular-nums hover:bg-inline hover:text-tx" type="button" data-calendar-map-trip-speed aria-label="播放速度 1×" aria-keyshortcuts="- =" title="播放速度（- 减速，= 加速）">1×</button>
+          <button class="flex size-9 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-tx-2 hover:bg-inline hover:text-tx aria-pressed:text-tx" type="button" data-calendar-map-trip-music aria-label="背景音乐" aria-pressed="false" aria-keyshortcuts="M" title="背景音乐（M）">
             <span class="i-lucide-volume-x" aria-hidden="true" />
           </button>
-          <button class="flex size-9 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-tx-2 hover:bg-inline hover:text-tx" type="button" data-calendar-map-trip-present aria-label="放映">
+          <button class="flex size-9 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-tx-2 hover:bg-inline hover:text-tx" type="button" data-calendar-map-trip-present aria-label="放映" aria-keyshortcuts="F" title="放映（F）">
             <span class="i-lucide-tv" aria-hidden="true" />
           </button>
-          <button class="flex size-9 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-tx-2 hover:bg-inline hover:text-tx [&[hidden]]:hidden" type="button" data-calendar-map-trip-export aria-label="导出视频" hidden>
+          <button class="flex size-9 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-tx-2 hover:bg-inline hover:text-tx [&[hidden]]:hidden" type="button" data-calendar-map-trip-export aria-label="导出视频" aria-keyshortcuts="R" title="导出视频（R）" hidden>
             <span class="i-lucide-clapperboard" aria-hidden="true" />
           </button>
-          <button class="flex size-9 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-tx-2 hover:bg-inline hover:text-tx" type="button" data-calendar-map-trip-close aria-label="退出旅程回放">
+          <button class="flex size-9 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-tx-2 hover:bg-inline hover:text-tx" type="button" data-calendar-map-trip-close aria-label="退出旅程回放" aria-keyshortcuts="Escape" title="退出旅程回放（Esc）">
             <span class="i-lucide-x" aria-hidden="true" />
           </button>
         </div>
@@ -175,6 +205,32 @@ function toScriptJson(value: unknown) {
         </div>
       </footer>
     </section>
+
+    <dialog class="calendar-map-trip-shortcuts" data-calendar-map-trip-shortcuts aria-labelledby="calendar-map-trip-shortcuts-title" closedby="any">
+      <header class="flex items-center justify-between">
+        <h2 class="text-base font-medium" id="calendar-map-trip-shortcuts-title">快捷键</h2>
+        <form method="dialog">
+          <button class="flex size-8 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-tx-2 hover:bg-inline hover:text-tx" aria-label="关闭">
+            <span class="i-lucide-x" aria-hidden="true" />
+          </button>
+        </form>
+      </header>
+      {
+        tripShortcuts.map(group => (
+          <section>
+            <h3>{group.title}</h3>
+            <dl>
+              {group.keys.map(([keys, action]) => (
+                <div>
+                  <dt>{keys.map(key => <kbd>{key}</kbd>)}</dt>
+                  <dd>{action}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+        ))
+      }
+    </dialog>
 
     <aside class="calendar-map-drawer absolute inset-y-4 right-4 z-10 grid w-[min(28rem,calc(100vw-2rem))] min-w-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden rounded-xl border border-border bg-bg shadow-[0_1.5rem_5rem_rgb(0_0_0/0.16)] max-[48rem]:inset-x-3 max-[48rem]:bottom-[calc(0.75rem+env(safe-area-inset-bottom))] max-[48rem]:top-auto max-[48rem]:h-[min(78dvh,42rem)] max-[48rem]:w-auto [&[hidden]]:hidden" data-calendar-map-drawer role="dialog" aria-labelledby="calendar-map-drawer-title" hidden>
       <header class="flex items-center justify-between border-b border-border px-5 py-4">
