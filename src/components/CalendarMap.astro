@@ -12,6 +12,7 @@ import {
   getTrips,
 } from '@/moments'
 import { getTripData, getTripTitle } from '@/moments/trip-data'
+import { getIntroCovers, getTripMeta, MOSAIC_CLASS, MOSAIC_IMAGE_CLASS } from '@/trip-player/intro'
 import { getAssetUrl } from '@/asset-url'
 import { tripVideoMusic } from '@/data/music'
 import { SITE_TITLE } from '@/consts'
@@ -42,7 +43,11 @@ const activeTrip = trips.find(trip => trip.id === tripId)
 // Every trip's id and title for the picker; only the opening trip's playback data is
 // inlined, and the player fetches the rest from /trip/<id>/data.json when needed.
 const tripListJson = toScriptJson(trips.map(trip => ({ id: trip.id, pageTitle: getTripTitle(trip.title) })))
-const activeTripJson = activeTrip ? toScriptJson(getTripData(activeTrip)) : undefined
+const activeTripData = activeTrip ? getTripData(activeTrip) : undefined
+const activeTripJson = activeTripData ? toScriptJson(activeTripData) : undefined
+// The player opens a trip page on its intro card. Rendering that here shows it, and
+// starts its photos loading, while the map script is still on its way.
+const introCovers = activeTripData ? getIntroCovers(activeTripData) : []
 const title = activeTrip ? getTripTitle(activeTrip.title) : mapTitle
 const description = activeTrip
   ? `${activeTrip.title}的旅程回放，按时间顺序走过每一条 Moment。`
@@ -125,7 +130,7 @@ function toScriptJson(value: unknown) {
       }
     </ol>
 
-    <p class="calendar-map-loading absolute left-1/2 top-1/2 z-[3] -translate-1/2 rounded-full border border-border bg-[color-mix(in_srgb,var(--color-bg)_88%,transparent)] px-3.5 py-2.5 [&[hidden]]:hidden" data-calendar-map-loading>正在加载地图…</p>
+    <p class="calendar-map-loading absolute left-1/2 top-1/2 z-[3] -translate-1/2 rounded-full border border-border bg-[color-mix(in_srgb,var(--color-bg)_88%,transparent)] px-3.5 py-2.5 [&[hidden]]:hidden" data-calendar-map-loading>{activeTripData ? '正在加载旅程地图…' : `正在加载 ${locationGroups.length} 个地点的地图…`}</p>
 
     <section class="calendar-map-fallback absolute left-1/2 top-1/2 z-[6] max-h-[min(36rem,calc(100dvh-8rem))] w-[min(28rem,calc(100vw-2rem))] -translate-1/2 overflow-y-auto rounded-xl border border-border bg-[color-mix(in_srgb,var(--color-bg)_94%,transparent)] p-5 shadow-[0_1rem_4rem_rgb(0_0_0/0.12)] [&[hidden]]:hidden" data-calendar-map-fallback aria-live="polite" hidden>
       <p class="mb-4 leading-[1.6] text-tx-2" data-calendar-map-fallback-message>地图暂时无法加载。</p>
@@ -160,13 +165,24 @@ function toScriptJson(value: unknown) {
       </button>
     </div>
 
-    <section class="calendar-map-trip absolute bottom-4 left-4 z-10 flex max-h-[calc(100%-7rem)] w-[min(22rem,calc(100%-2rem))] flex-col overflow-hidden rounded-xl border border-border bg-bg shadow-[0_1.5rem_5rem_rgb(0_0_0/0.16)] @max-[48rem]:inset-x-3 @max-[48rem]:bottom-[calc(0.75rem+env(safe-area-inset-bottom))] @max-[48rem]:max-h-[calc(100%-1.5rem)] @max-[48rem]:w-auto [&[hidden]]:hidden" data-calendar-map-trip aria-labelledby="calendar-map-trip-title" hidden>
+    <section class="calendar-map-trip absolute bottom-4 left-4 z-10 flex max-h-[calc(100%-7rem)] w-[min(22rem,calc(100%-2rem))] flex-col overflow-hidden rounded-xl border border-border bg-bg shadow-[0_1.5rem_5rem_rgb(0_0_0/0.16)] @max-[48rem]:inset-x-3 @max-[48rem]:bottom-[calc(0.75rem+env(safe-area-inset-bottom))] @max-[48rem]:max-h-[calc(100%-1.5rem)] @max-[48rem]:w-auto [&[hidden]]:hidden" data-calendar-map-trip aria-labelledby="calendar-map-trip-title" hidden={!activeTripData}>
       <ol class="flex shrink-0 list-none gap-1 px-4 pt-3" data-calendar-map-trip-progress aria-label="旅程进度" />
       <header class="shrink-0 px-4 pt-3" data-calendar-map-trip-header>
         <p class="truncate text-xs text-tx-3 tabular-nums" data-calendar-map-trip-eyebrow />
-        <h2 class="truncate text-lg font-medium" id="calendar-map-trip-title" data-calendar-map-trip-title />
+        <h2 class="truncate text-lg font-medium" id="calendar-map-trip-title" data-calendar-map-trip-title>{activeTripData?.title}</h2>
       </header>
-      <div class="flex min-h-0 flex-col overflow-y-auto overscroll-contain px-4 pt-1 pb-3" data-calendar-map-trip-body />
+      <div class="flex min-h-0 flex-col overflow-y-auto overscroll-contain px-4 pt-1 pb-3" data-calendar-map-trip-body>
+        {activeTripData && (
+          <>
+            <p class="shrink-0 text-tx-2">{getTripMeta(activeTripData)}</p>
+            <div class={MOSAIC_CLASS} aria-hidden="true">
+              {introCovers.map((cover, index) => (
+                <img class={MOSAIC_IMAGE_CLASS} src={cover.thumbnail} alt="" decoding="async" fetchpriority={index < 3 ? 'high' : 'low'} />
+              ))}
+            </div>
+          </>
+        )}
+      </div>
       <p class="sr-only" data-calendar-map-trip-announcer aria-live="polite" />
       <footer class="relative flex shrink-0 items-center justify-between border-t border-border bg-bg px-2 py-1">
         <div class="flex items-center [&[hidden]]:hidden" data-calendar-map-trip-controls>
@@ -281,5 +297,21 @@ function toScriptJson(value: unknown) {
 </Layout>
 
 <script>
-  import '@/calendar-map-client'
+  let mapClient: Promise<typeof import('@/calendar-map-client')> | undefined
+
+  document.addEventListener('astro:page-load', () => {
+    // Pages without a map only need it to tear down one left from a map page.
+    if (!mapClient && !document.querySelector('[data-calendar-map]')) {
+      return
+    }
+
+    // The map script is large and runs long: let the page paint first, so its
+    // toolbar and a trip's intro card show while the map loads.
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        mapClient ??= import('@/calendar-map-client')
+        void mapClient.then((client) => client.initializeCalendarMap())
+      })
+    })
+  })
 </script>

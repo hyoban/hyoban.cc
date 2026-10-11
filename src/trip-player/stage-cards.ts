@@ -1,5 +1,6 @@
 import { SITE_URL } from '../consts'
 import { createCountUp, createElement, createWeather } from './dom'
+import { getTripMeta } from './intro'
 import { getSummaryStats } from './labels'
 import type { Slide, TripData, TripImage } from './types'
 
@@ -61,11 +62,6 @@ export function createSummaryCard(trip: TripData) {
     createElement('p', 'calendar-map-trip-stage-card__site', `${new URL(SITE_URL).host}/trip/`),
   )
   return card
-}
-
-/** `date range · N 天 · N 条记录`, under the trip's title on both intro cards. */
-export function getTripMeta(trip: TripData) {
-  return `${trip.dateRange} · ${trip.dayCount} 天 · ${trip.stops.length} 条记录`
 }
 
 /**

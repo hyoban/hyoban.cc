@@ -34,7 +34,7 @@ const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
 let destroyCurrentMap: (() => void) | undefined
 let currentMapPage: HTMLElement | undefined
 
-function initializeCalendarMap() {
+export function initializeCalendarMap() {
   const page = document.querySelector<HTMLElement>('[data-calendar-map]')
 
   if (page && page === currentMapPage && destroyCurrentMap) {
@@ -952,7 +952,6 @@ function queryRequired<T extends Element>(root: ParentNode, selector: string) {
   return element
 }
 
-document.addEventListener('astro:page-load', initializeCalendarMap)
 document.addEventListener('astro:before-swap', (event) => {
   const { from, to } = event as Event & { from: URL; to: URL }
 

@@ -4,7 +4,7 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '@/consts'
 ---
 
 <header class="mx-auto flex max-w-[40rem] items-center">
-  <a href="/" class="inline-flex items-center gap-3 no-underline" aria-label={`${SITE_TITLE} 首页`}>
+  <a href="/" class="inline-flex items-center gap-3 no-underline">
     <img
       src={getAssetUrl('site/avatar-80.webp')}
       alt=""
@@ -13,8 +13,8 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '@/consts'
       class="size-10 rounded-full"
     />
     <span class="flex flex-col">
-      <span class="font-medium">{SITE_TITLE}</span>
-      <span class="text-tx-2">{SITE_DESCRIPTION}</span>
+      <span class="font-medium">{SITE_TITLE}<span class="sr-only"> 首页</span></span>
+      <span class="text-tx-2" aria-hidden="true">{SITE_DESCRIPTION}</span>
     </span>
   </a>
 </header>
