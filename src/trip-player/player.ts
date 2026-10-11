@@ -1030,7 +1030,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     nextButton.disabled = index === slides.length - 1
 
     if (slide.type === 'intro') {
-      eyebrow.textContent = '旅程回放'
+      eyebrow.textContent = ''
       title.textContent = trip.title
       body.replaceChildren(
         createElement('p', 'shrink-0 text-tx-2', getTripMeta(trip)),
@@ -1103,7 +1103,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       ) as HTMLButtonElement
       const replayIcon = createElement('span', 'i-lucide-rotate-ccw', '')
 
-      eyebrow.textContent = '旅程回顾'
+      eyebrow.textContent = ''
       title.textContent = trip.title
       stats.className = 'grid shrink-0 grid-cols-2 gap-1 @max-[48rem]:grid-cols-3'
 
@@ -1602,8 +1602,8 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     }
 
     safeAreaInput.checked = safeArea
-    // Margins for a short-video app's overlays only matter in portrait.
-    safeAreaRow.hidden = ratio !== 'portrait'
+    // Margins for a short-video app's overlays only matter for a portrait video.
+    safeAreaRow.hidden = stageMode !== 'record' || ratio !== 'portrait'
   }
 
   /**
@@ -1643,7 +1643,10 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     stopAmbientMusic()
     page.dataset.exportRatio = ratio
     page.toggleAttribute('data-trip-presenting', mode === 'present')
-    page.toggleAttribute('data-trip-safe-area', safeArea && ratio === 'portrait')
+    page.toggleAttribute(
+      'data-trip-safe-area',
+      safeArea && mode === 'record' && ratio === 'portrait',
+    )
     wakeControls()
     getMap()?.resize()
 
