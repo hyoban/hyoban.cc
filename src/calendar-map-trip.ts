@@ -80,6 +80,8 @@ const INTRO_DURATION = 3000
 const STOP_DURATION = 5000
 const WAYPOINT_PAUSE = 2000
 const PHOTO_DURATION = 2000
+// How far photos slide when the card moves to the next or previous one.
+const PHOTO_SLIDE_DISTANCE = 20
 // Roughly the time it takes to read one Chinese character.
 const CHARACTER_DURATION = 120
 const IMAGE_SIZES = '(max-width: 48rem) calc(100vw - 3.5rem), 20rem'
@@ -185,7 +187,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   let photoIndex = 0
   let photo: HTMLImageElement | undefined
   let thumbnails: HTMLButtonElement[] = []
-  let heightAnimation: Animation | undefined
+  let photoAnimation: Animation | undefined
   // A mouse resting on the card holds the current slide so it can be read.
   let hovering = false
 
@@ -664,10 +666,16 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     const duration = getSlideDuration(slides[index])
 
     for (const [itemIndex, item] of [...progress.children].entries()) {
-      const fill = item.firstElementChild as HTMLElement | null
+      const fill = item.querySelector<HTMLElement>('[data-progress-fill]')
 
       if (!fill) {
         continue
+      }
+
+      if (itemIndex === index) {
+        item.firstElementChild?.setAttribute('aria-current', 'step')
+      } else {
+        item.firstElementChild?.removeAttribute('aria-current')
       }
 
       const amount =
@@ -690,28 +698,70 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       )
 
       if (nextPhotoIndex !== photoIndex) {
-        animateHeight(() => showPhoto(slide.stop, nextPhotoIndex))
+        animatePhotoSize(() => showPhoto(slide.stop, nextPhotoIndex), nextPhotoIndex - photoIndex)
       }
     }
   }
 
   /** Runs a content change and eases the card from its old height to the new one. */
-  function animateHeight(update: () => void) {
-    const from = panel.hidden ? 0 : panel.offsetHeight
+  /**
+   * Swaps the photo and eases its frame between the old and new size. Only the photo
+   * moves: the card grows from its bottom edge, so the text and buttons stay put. The
+   * photos also slide a little in the direction of travel through the thumbnails.
+   */
+  function animatePhotoSize(update: () => void, direction: number) {
+    const frame = photo?.parentElement
+    const from = frame ? { height: frame.offsetHeight, width: frame.offsetWidth } : undefined
+    const outgoing =
+      photo && frame && direction !== 0 && !reducedMotion.matches
+        ? (photo.cloneNode() as HTMLImageElement)
+        : undefined
 
-    heightAnimation?.cancel()
+    photoAnimation?.cancel()
+
+    if (outgoing && photo && frame) {
+      // A copy of the old photo stays in place to slide out over the new one.
+      outgoing.style.cssText = `position:absolute;top:0;left:0;width:${photo.offsetWidth}px;height:${photo.offsetHeight}px;max-width:none;max-height:none;pointer-events:none`
+      frame.append(outgoing)
+    }
+
     update()
 
-    const to = panel.offsetHeight
-
-    if (!from || from === to || reducedMotion.matches) {
+    if (!frame || !from || reducedMotion.matches) {
       return
     }
 
-    heightAnimation = panel.animate([{ height: `${from}px` }, { height: `${to}px` }], {
-      duration: 280,
-      easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
-    })
+    if (outgoing && photo) {
+      const shift = Math.sign(direction) * PHOTO_SLIDE_DISTANCE
+      const timing = { duration: 280, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' }
+
+      // Cancelled when photos change again quickly; the copy goes either way.
+      void outgoing
+        .animate([{ opacity: 1 }, { opacity: 0, transform: `translateX(${-shift}px)` }], timing)
+        .finished.catch(() => {})
+        .finally(() => outgoing.remove())
+      photo.animate(
+        [
+          { opacity: 0, transform: `translateX(${shift}px)` },
+          { opacity: 1, transform: 'none' },
+        ],
+        timing,
+      )
+    }
+
+    const to = { height: frame.offsetHeight, width: frame.offsetWidth }
+
+    if (from.height === to.height && from.width === to.width) {
+      return
+    }
+
+    photoAnimation = frame.animate(
+      [
+        { height: `${from.height}px`, width: `${from.width}px` },
+        { height: `${to.height}px`, width: `${to.width}px` },
+      ],
+      { duration: 280, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
+    )
   }
 
   function showPhoto(stop: TripStop, nextPhotoIndex: number) {
@@ -770,7 +820,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
         () => {
           const duration = getSlideDuration(slides[index]) ?? 0
           elapsed = (duration / stop.images.length) * imageIndex
-          animateHeight(() => showPhoto(stop, imageIndex))
+          animatePhotoSize(() => showPhoto(stop, imageIndex), imageIndex - photoIndex)
           renderProgress()
         },
         { signal },
@@ -910,7 +960,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       if (stop.images.length > 0) {
         photo = document.createElement('img')
         link.className =
-          'block min-h-0 self-center overflow-hidden rounded-md border border-border bg-inline no-underline @max-[48rem]:shrink-0'
+          'relative block min-h-0 self-center overflow-hidden rounded-md border border-border bg-inline no-underline @max-[48rem]:shrink-0'
         link.setAttribute('aria-label', `查看 ${stop.date}的记录`)
         photo.className =
           'block h-auto max-h-[min(40dvh,22rem)] w-auto max-w-full @max-[48rem]:max-h-[38dvh]'
@@ -1225,7 +1275,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       playing = false
     }
 
-    animateHeight(renderSlide)
+    renderSlide()
 
     if (slide.type === 'stop') {
       const legEnd = stopPointEnds[slide.stopIndex]!
@@ -1550,9 +1600,29 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       { type: 'summary' },
     ]
     progress.replaceChildren(
-      ...slides.map(() => {
-        const item = createElement('li', 'h-0.5 flex-1 overflow-hidden rounded-full bg-border', '')
-        item.append(createElement('span', 'block h-full origin-left bg-tx [scale:0_1]', ''))
+      ...slides.map((slide, slideIndex) => {
+        const item = createElement('li', 'flex-1', '')
+        // A taller transparent hit area around the thin bar, so a segment is easy to tap.
+        const button = createElement(
+          'button',
+          'group -my-2 block w-full cursor-pointer border-0 bg-transparent py-2',
+          '',
+        ) as HTMLButtonElement
+        const bar = createElement(
+          'span',
+          'block h-0.5 overflow-hidden rounded-full bg-border transition-colors duration-[140ms] group-hover:bg-tx-3 motion-reduce:transition-none',
+          '',
+        )
+        const fill = createElement('span', 'block h-full origin-left bg-tx [scale:0_1]', '')
+
+        button.type = 'button'
+        button.setAttribute('aria-label', getSlideLabel(slide))
+        button.addEventListener('click', () => goTo(slideIndex), { signal })
+        bar.dataset.progressBar = ''
+        fill.dataset.progressFill = ''
+        bar.append(fill)
+        button.append(bar)
+        item.append(button)
         return item
       }),
     )
@@ -1756,6 +1826,14 @@ function downloadBlob(blob: Blob, filename: string) {
   link.download = filename
   link.click()
   setTimeout(() => URL.revokeObjectURL(url), 60_000)
+}
+
+function getSlideLabel(slide: Slide) {
+  if (slide.type === 'intro') {
+    return '开头'
+  }
+
+  return slide.type === 'summary' ? '旅程回顾' : `第 ${slide.stop.day} 天 · ${slide.stop.name}`
 }
 
 function getStopEyebrow({ date, day, time }: { date: string; day: number; time?: string }) {
