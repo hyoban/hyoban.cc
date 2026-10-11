@@ -442,7 +442,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     }
 
     drawnPointCount = from + 1
-    setRoute(from + 1, walkLine(routeProgress, easeInOut(fraction)))
+    setRoute(from + 1, routeProgress, easeInOut(fraction))
   }
 
   /** The parts of `outer` around `inner`: what a short-video app's overlays cover. */
@@ -469,22 +469,23 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   }
 
   /**
-   * Draws the route through the first `pointCount` points, plus the part of the next
-   * stretch `walked` so far, if it is being drawn.
+   * Draws the route through the first `pointCount` points, plus `fraction` of the
+   * next stretch `leg`, if it is being drawn.
    */
-  function setRoute(pointCount: number, walked?: ReturnType<typeof walkLine>) {
-    const from = points[pointCount - 1]
+  function setRoute(pointCount: number, leg?: MeasuredLine, fraction = 0) {
+    const walked = leg && walkLine(leg, fraction)
 
     routeTip = walked?.passed.at(-1)
 
     layers.setRoute(
       pointCount,
       () => getRouteLine(0, pointCount),
-      walked && from
+      leg && walked
         ? {
-            from: from.coordinates,
+            line: leg.line,
             mode: getTravelMode(points, trip?.legModes ?? [], walked.start, walked.end),
-            passed: walked.passed,
+            ratio: walked.ratio,
+            segment: walked.segment,
           }
         : undefined,
     )
@@ -555,7 +556,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       }
 
       // Sets off and arrives gently, as the onward drive on each card does.
-      setRoute(legStart + 1, walkLine(leg, easeInOut(t)))
+      setRoute(legStart + 1, leg, easeInOut(t))
       legFrame = requestAnimationFrame(step)
     }
 
