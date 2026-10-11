@@ -46,9 +46,9 @@ function formatDate(dateKey: string) {
     <div class="calendar-map-canvas absolute inset-0" data-calendar-map-canvas role="region" aria-label="Calendar 地点地图" />
 
     <header class="calendar-map-toolbar pointer-events-none absolute inset-x-4 top-4 z-[5] grid grid-cols-[1fr_auto_1fr] items-center gap-4 [&>*]:pointer-events-auto">
-      <CalendarModeSwitch class="justify-self-start" mode="map" />
+      <CalendarBackLink class="justify-self-start" />
       <p class="col-start-2 flex min-h-[2.375rem] items-center rounded-full border border-[color-mix(in_srgb,var(--color-border)_82%,transparent)] bg-[color-mix(in_srgb,var(--color-bg)_82%,transparent)] px-3.5 font-mono text-[0.8125rem] backdrop-blur-[1rem] max-[48rem]:hidden">全部地点</p>
-      <CalendarBackLink class="col-start-3 justify-self-end" />
+      <CalendarModeSwitch class="col-start-3 justify-self-end" mode="map" />
     </header>
 
     <ol class="calendar-map-legend absolute bottom-10 left-1/2 z-[4] flex -translate-x-1/2 list-none items-center gap-3 rounded-full border border-[color-mix(in_srgb,var(--color-border)_82%,transparent)] bg-[color-mix(in_srgb,var(--color-bg)_82%,transparent)] px-3.5 py-2.5 font-mono text-xs shadow-[0_0.5rem_2rem_rgb(0_0_0/0.08)] max-[48rem]:bottom-[calc(1rem+env(safe-area-inset-bottom))]" aria-label="地点最近记录年份">
@@ -64,12 +64,12 @@ function formatDate(dateKey: string) {
 
     <p class="calendar-map-loading absolute left-1/2 top-1/2 z-[3] -translate-1/2 rounded-full border border-border bg-[color-mix(in_srgb,var(--color-bg)_88%,transparent)] px-3.5 py-2.5 [&[hidden]]:hidden" data-calendar-map-loading>正在加载地图…</p>
 
-    <section class="calendar-map-fallback absolute left-1/2 top-1/2 z-[6] max-h-[min(36rem,calc(100dvh-8rem))] w-[min(28rem,calc(100vw-2rem))] -translate-1/2 overflow-y-auto border border-border bg-[color-mix(in_srgb,var(--color-bg)_94%,transparent)] p-5 shadow-[0_1rem_4rem_rgb(0_0_0/0.12)] [&[hidden]]:hidden" data-calendar-map-fallback aria-live="polite" hidden>
+    <section class="calendar-map-fallback absolute left-1/2 top-1/2 z-[6] max-h-[min(36rem,calc(100dvh-8rem))] w-[min(28rem,calc(100vw-2rem))] -translate-1/2 overflow-y-auto rounded-xl border border-border bg-[color-mix(in_srgb,var(--color-bg)_94%,transparent)] p-5 shadow-[0_1rem_4rem_rgb(0_0_0/0.12)] [&[hidden]]:hidden" data-calendar-map-fallback aria-live="polite" hidden>
       <p class="mb-4 leading-[1.6] text-tx-2" data-calendar-map-fallback-message>地图暂时无法加载，仍可通过地点列表浏览记录。</p>
       <div class="grid grid-cols-2 gap-1">
         {
           locationGroups.map(group => (
-            <button class="grid min-h-11 cursor-pointer grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 border-0 bg-transparent px-2 text-left text-tx hover:bg-inline focus-visible:bg-inline" type="button" data-map-location-id={group.id}>
+            <button class="grid min-h-11 cursor-pointer grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-md border-0 bg-transparent px-2 text-left text-tx hover:bg-inline focus-visible:bg-inline" type="button" data-map-location-id={group.id}>
               <span class="block size-2.5 rounded-full border border-white/90 bg-[var(--year-color)] shadow-[0_0_0_1px_rgb(0_0_0/0.12)]" style={`--year-color: ${getYearColor(group.latestYear)}`} aria-hidden="true" />
               <strong class="truncate font-medium">{group.location.name}</strong>
               <small class="text-tx-3">{group.moments.length} 条</small>
@@ -79,13 +79,13 @@ function formatDate(dateKey: string) {
       </div>
     </section>
 
-    <aside class="calendar-map-drawer absolute inset-y-4 right-4 z-10 grid w-[min(28rem,calc(100vw-2rem))] min-w-0 grid-rows-[auto_minmax(0,1fr)] border border-border bg-bg shadow-[0_1.5rem_5rem_rgb(0_0_0/0.16)] max-[48rem]:inset-x-3 max-[48rem]:bottom-[calc(0.75rem+env(safe-area-inset-bottom))] max-[48rem]:top-auto max-[48rem]:h-[min(78dvh,42rem)] max-[48rem]:w-auto max-[48rem]:rounded-xl [&[hidden]]:hidden" data-calendar-map-drawer role="dialog" aria-labelledby="calendar-map-drawer-title" hidden>
+    <aside class="calendar-map-drawer absolute inset-y-4 right-4 z-10 grid w-[min(28rem,calc(100vw-2rem))] min-w-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden rounded-xl border border-border bg-bg shadow-[0_1.5rem_5rem_rgb(0_0_0/0.16)] max-[48rem]:inset-x-3 max-[48rem]:bottom-[calc(0.75rem+env(safe-area-inset-bottom))] max-[48rem]:top-auto max-[48rem]:h-[min(78dvh,42rem)] max-[48rem]:w-auto [&[hidden]]:hidden" data-calendar-map-drawer role="dialog" aria-labelledby="calendar-map-drawer-title" hidden>
       <header class="flex items-center justify-between border-b border-border px-5 py-4">
         <div class="min-w-0">
           <p class="mb-0.5 font-mono text-[0.6875rem] uppercase text-tx-3">地点</p>
           <h1 class="text-lg font-medium" id="calendar-map-drawer-title" data-calendar-map-drawer-title />
         </div>
-        <button class="flex size-11 cursor-pointer items-center justify-center border-0 bg-transparent text-inherit" type="button" data-calendar-map-drawer-close aria-label="关闭地点详情">
+        <button class="flex size-11 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-inherit hover:bg-inline" type="button" data-calendar-map-drawer-close aria-label="关闭地点详情">
           <span class="i-lucide-x" aria-hidden="true" />
         </button>
       </header>

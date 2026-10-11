@@ -1,4 +1,5 @@
 ---
+import SitePage from '@/components/SitePage.astro'
 import Layout from '@/layouts/Layout.astro'
 import { formatPostFullDate, getMarkdownEntries, type PostEntry } from '@/utils'
 import { render } from 'astro:content'
@@ -25,25 +26,34 @@ const { Content } = await render(entry)
 ---
 
 <Layout title={entry.data.title} description={entry.data.description} article={article}>
-  <main class="mx-auto max-w-[65ch] space-y-8">
-    <section class="space-y-3">
-      <h1>
-        {entry.data.title}
-      </h1>
-      <p class="text-tx-2 flex gap-3">
-        {post && (
-          <time datetime={post.data.pubDate.toISOString()}>
-            {formatPostFullDate(post.data.pubDate)}
-          </time>
-        )}
-        <a href={`/${entry.data.link}.md`}>源文件</a>
-        <a href="/">返回</a>
-      </p>
-    </section>
-    <div class="article">
-      <article class="prose article__content">
-        <Content />
-      </article>
-    </div>
-  </main>
+  {
+    post
+      ? (
+          <main class="relative mx-auto mt-6 max-w-[40rem]">
+            <a
+              href="/"
+              class="mb-8 inline-flex items-center gap-1.5 whitespace-nowrap text-tx-3 no-underline transition-colors hover:text-tx min-[64rem]:absolute min-[64rem]:top-0 min-[64rem]:right-full min-[64rem]:mr-16 min-[64rem]:mb-0"
+            >
+              <span class="i-lucide-undo-2 size-3.5" aria-hidden="true" />
+              返回
+            </a>
+            <header class="mb-8">
+              <h1 class="font-medium">{entry.data.title}</h1>
+              <time class="text-tx-2" datetime={post.data.pubDate.toISOString()}>
+                {formatPostFullDate(post.data.pubDate)}
+              </time>
+            </header>
+            <article class="prose">
+              <Content />
+            </article>
+          </main>
+        )
+      : (
+          <SitePage title={entry.data.title} description={entry.data.description}>
+            <article class="prose">
+              <Content />
+            </article>
+          </SitePage>
+        )
+  }
 </Layout>
