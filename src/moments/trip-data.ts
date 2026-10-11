@@ -1,8 +1,9 @@
 import { SITE_TITLE } from '@/consts'
 import { tripVideoMusic } from '@/data/music'
+import tripWeather from '@/data/trip-weather.json'
 import { getMomentPath, type getTrips } from '@/moments'
 import { getTripCovers, getTripImages } from '@/moments/trip-images'
-import { getDayOffset, type TripWaypoint } from '@/moments/trips'
+import { getDayOffset, getDayPlaces, getWeatherKey, type TripWaypoint } from '@/moments/trips'
 
 // What the trip player needs for one trip. The map page inlines it for the trip it
 // opens on and fetches /trip/<id>/data.json for the others.
@@ -22,6 +23,7 @@ export function getTripData(trip: BuiltTrip) {
     placeCount: trip.placeCount,
     covers: getTripCovers(trip),
     stops: trip.stops.map((stop) => ({
+      anchor: getStopAnchor(stop.id),
       date: formatShortDate(stop.dateKey, true),
       day: getDayOffset(trip.start, stop.dateKey) + 1,
       href: getMomentPath(stop.dateKey),
@@ -38,7 +40,49 @@ export function getTripData(trip: BuiltTrip) {
     ),
     // Road geometry from one place to the next; null means draw it straight.
     legs: trip.legs.map((leg) => leg.route?.coordinates ?? null),
+    legModes: trip.legs.map((leg) => leg.by),
+    weather: getTripWeather(trip),
   }
+}
+
+type DayWeather = { code: number; max: number; min: number }
+
+// WMO weather codes, as Open-Meteo reports them, grouped coarsely.
+const WEATHER_KINDS: [maxCode: number, label: string, icon: string][] = [
+  [0, '晴', 'i-lucide-sun'],
+  [2, '多云', 'i-lucide-cloud-sun'],
+  [3, '阴', 'i-lucide-cloud'],
+  [48, '雾', 'i-lucide-cloud-fog'],
+  [57, '毛毛雨', 'i-lucide-cloud-drizzle'],
+  [67, '雨', 'i-lucide-cloud-rain'],
+  [77, '雪', 'i-lucide-snowflake'],
+  [82, '阵雨', 'i-lucide-cloud-rain'],
+  [86, '阵雪', 'i-lucide-snowflake'],
+  [99, '雷雨', 'i-lucide-cloud-lightning'],
+]
+
+/** Each trip day's weather, by day number; days `pnpm trips:weather` hasn't fetched are left out. */
+function getTripWeather(trip: BuiltTrip) {
+  const days: Record<number, { icon: string; label: string }> = {}
+
+  for (const [dateKey, place] of getDayPlaces(trip)) {
+    const day = (tripWeather as Record<string, DayWeather>)[getWeatherKey(dateKey, place)]
+    const kind = day && WEATHER_KINDS.find(([maxCode]) => day.code <= maxCode)
+
+    if (day && kind) {
+      days[getDayOffset(trip.start, dateKey) + 1] = {
+        icon: kind[2],
+        label: `${kind[1]} · ${day.min}–${day.max}°C`,
+      }
+    }
+  }
+
+  return days
+}
+
+/** The URL hash that opens a trip on this Moment's card, like `01-02-ferry-sunset`. */
+export function getStopAnchor(momentId: string) {
+  return momentId.slice(momentId.lastIndexOf('/') + 1)
 }
 
 export function getTripTitle(tripTitle: string) {

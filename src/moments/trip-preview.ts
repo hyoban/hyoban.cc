@@ -1,27 +1,24 @@
-import type { APIRoute, GetStaticPaths } from 'astro'
 import sharp, { type OverlayOptions } from 'sharp'
-import { getMoments, getTrips } from '@/moments'
+import type { getTrips } from '@/moments'
 import { getTripCovers } from '@/moments/trip-images'
 
-// The share preview for a trip page: its route on the left and its first cover photo
-// on the right. No text, so the build needs no CJK fonts; the title comes from og:title.
+// A trip's preview: its route on the left and its first cover photo on the right. No
+// text, so the build needs no CJK fonts. It is the share image and the trip list's
+// thumbnail.
 
 const WIDTH = 1200
 const HEIGHT = 630
 const BACKGROUND = '#fdfdfc'
 const INK = '#21201c'
 
-export const getStaticPaths = (async () => {
-  return getTrips(await getMoments()).map((trip) => ({ params: { id: trip.id }, props: { trip } }))
-}) satisfies GetStaticPaths
+type BuiltTrip = ReturnType<typeof getTrips>[number]
 
-type Props = Awaited<ReturnType<typeof getStaticPaths>>[number]['props']
-
-export const GET: APIRoute<Props> = async ({ props: { trip } }) => {
+/** `lineScale` thickens the route for previews that will be shown small. */
+export async function renderTripPreview(trip: BuiltTrip, lineScale = 1) {
   const photo = await loadCoverPhoto(getTripCovers(trip)[0]?.src)
   const routeWidth = photo ? WIDTH / 2 : WIDTH
   const layers: OverlayOptions[] = [
-    { input: Buffer.from(getRouteSvg(trip, routeWidth)), left: 0, top: 0 },
+    { input: Buffer.from(getRouteSvg(trip, routeWidth, lineScale)), left: 0, top: 0 },
   ]
 
   if (photo) {
@@ -34,14 +31,12 @@ export const GET: APIRoute<Props> = async ({ props: { trip } }) => {
     })
   }
 
-  const image = await sharp({
+  return sharp({
     create: { background: BACKGROUND, channels: 3, height: HEIGHT, width: WIDTH },
   })
     .composite(layers)
     .png()
     .toBuffer()
-
-  return new Response(new Uint8Array(image), { headers: { 'Content-Type': 'image/png' } })
 }
 
 async function loadCoverPhoto(src: string | undefined) {
@@ -59,7 +54,7 @@ async function loadCoverPhoto(src: string | undefined) {
 }
 
 /** The whole route along roads, scaled to fit, with a dot at each place. */
-function getRouteSvg(trip: Props['trip'], width: number) {
+function getRouteSvg(trip: BuiltTrip, width: number, lineScale: number) {
   const line: [number, number][] = []
 
   for (const [index, place] of trip.path.entries()) {
@@ -100,8 +95,8 @@ function getRouteSvg(trip: Props['trip'], width: number) {
   })
   const dots = trip.path.map((place) => {
     const [x, y] = toPoint([place.longitude, place.latitude])
-    return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="7" fill="${BACKGROUND}" stroke="${INK}" stroke-width="3"/>`
+    return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${7 * lineScale}" fill="${BACKGROUND}" stroke="${INK}" stroke-width="${3 * lineScale}"/>`
   })
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${HEIGHT}" viewBox="0 0 ${width} ${HEIGHT}"><path d="${path.join('')}" fill="none" stroke="${INK}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>${dots.join('')}</svg>`
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${HEIGHT}" viewBox="0 0 ${width} ${HEIGHT}"><path d="${path.join('')}" fill="none" stroke="${INK}" stroke-width="${5 * lineScale}" stroke-linecap="round" stroke-linejoin="round"/>${dots.join('')}</svg>`
 }

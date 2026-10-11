@@ -1,4 +1,5 @@
 import mapboxgl, { type GeoJSONSource } from 'mapbox-gl'
+import { SITE_URL } from './consts'
 import { buildSlides, getStopPointEnds, pickCovers, type TripSlide } from './trip-slides'
 
 type TripPlace = {
@@ -10,6 +11,8 @@ type TripPlace = {
 type TripWaypoint = TripPlace & { date: string; day: number; time?: string }
 
 type TripStop = {
+  /** The URL hash that opens the trip on this card. */
+  anchor: string
   date: string
   day: number
   href: string
@@ -69,9 +72,20 @@ type TripData = {
   trailingWaypoints: TripWaypoint[]
   /** Road geometry between consecutive places; null legs are drawn straight. */
   legs: (readonly (readonly [number, number])[] | null)[]
+  legModes: TravelMode[]
+  /** Each day's weather where it starts, by day number. */
+  weather: Record<number, { icon: string; label: string }>
 }
 
 type Slide = TripSlide<TripStop>
+
+type TravelMode = 'car' | 'ferry' | 'plane'
+
+const TRAVEL_ICONS: Record<TravelMode, string> = {
+  car: 'i-lucide-car-front',
+  ferry: 'i-lucide-ship',
+  plane: 'i-lucide-plane',
+}
 
 type TripPlayerOptions = {
   getMap: () => mapboxgl.Map | undefined
@@ -121,6 +135,8 @@ type ExportRatio = 'landscape' | 'portrait'
 type StageMode = 'present' | 'record'
 
 const MUSIC_PREFERENCE_KEY = 'calendar-trip-music'
+const SPEED_PREFERENCE_KEY = 'calendar-trip-speed'
+const SPEEDS = [1, 1.5, 2] as const
 
 // Region Capture is Chromium-only and not in the DOM typings yet.
 type CroppableTrack = MediaStreamTrack & { cropTo?: (target: unknown) => Promise<void> }
@@ -134,6 +150,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     ]),
   )
   const loadedTrips = new Map<string, TripData>()
+  const tripRequests = new Map<string, Promise<TripData | undefined>>()
   const inlineTrip = parseJson<TripData | null>(page, '[data-calendar-map-trip-data]', null)
   // The trip waiting on its data; `activeId` reports it so the map stays in trip mode.
   let requestedId: string | undefined
@@ -182,6 +199,8 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   )
   const presentButton = queryRequired<HTMLButtonElement>(page, '[data-calendar-map-trip-present]')
   const musicButton = queryRequired<HTMLButtonElement>(page, '[data-calendar-map-trip-music]')
+  const speedButton = queryRequired<HTMLButtonElement>(page, '[data-calendar-map-trip-speed]')
+  const announcer = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-announcer]')
   let staging:
     | {
         mode: StageMode
@@ -192,6 +211,9 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       }
     | undefined
   let stageMode: StageMode = 'record'
+  // Where each day starts in the video being recorded, for the description's chapters.
+  let chapters: { label: string; time: number }[] = []
+  let recordingStart: number | undefined
   // Music for the ordinary card playback, switched on with the music button.
   let ambient:
     | { context: AudioContext; gain: GainNode; source: AudioBufferSourceNode; src: string }
@@ -211,6 +233,8 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   let index = 0
   let elapsed = 0
   let playing = false
+  let speed: number = readSpeedPreference()
+  let travelHead: { icon: HTMLElement; marker: mapboxgl.Marker } | undefined
   let frame: number | undefined
   let lastFrameTime: number | undefined
   let legFrame: number | undefined
@@ -318,7 +342,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
     map.easeTo({
       ...camera,
-      duration: reducedMotion.matches ? 0 : duration * FOLLOW_SHARE,
+      duration: reducedMotion.matches ? 0 : (duration * FOLLOW_SHARE) / speed,
       easing: (t) => t * (2 - t),
       essential: false,
       padding: getCameraPadding(),
@@ -386,10 +410,14 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     const ratio = lengths[segmentIndex] ? remaining / lengths[segmentIndex]! : 1
 
     drawnPointCount = from + 1
-    setRoute(from + 1, [
-      ...line.slice(1, segmentIndex + 1),
-      [start[0] + (end[0] - start[0]) * ratio, start[1] + (end[1] - start[1]) * ratio],
-    ])
+    setRoute(
+      from + 1,
+      [
+        ...line.slice(1, segmentIndex + 1),
+        [start[0] + (end[0] - start[0]) * ratio, start[1] + (end[1] - start[1]) * ratio],
+      ],
+      getTravelMode(start, end),
+    )
   }
 
   function getLineColor() {
@@ -473,6 +501,8 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   function removeLayers() {
     const map = getMap()
 
+    setTravelHead(undefined, 'car')
+
     if (!map) {
       return
     }
@@ -511,7 +541,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     return line
   }
 
-  function setRoute(pointCount: number, partial?: [number, number][]) {
+  function setRoute(pointCount: number, partial?: [number, number][], mode: TravelMode = 'car') {
     const source = getMap()?.getSource(ROUTE_SOURCE_ID) as GeoJSONSource | undefined
 
     if (!trip || !source) {
@@ -519,6 +549,48 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     }
 
     source.setData(lineFeature([...getRouteLine(0, pointCount), ...(partial ?? [])]))
+    setTravelHead(partial?.at(-1), mode)
+  }
+
+  /** The ferry or plane leg whose straight line runs from `start` to `end`, else by car. */
+  function getTravelMode(start: [number, number], end: [number, number]): TravelMode {
+    const same = (first: [number, number], second: [number, number]) =>
+      first[0] === second[0] && first[1] === second[1]
+    const legIndex = trip?.legModes.findIndex(
+      (mode, legIndex) =>
+        mode !== 'car' &&
+        same(points[legIndex]!.coordinates, start) &&
+        same(points[legIndex + 1]!.coordinates, end),
+    )
+
+    return legIndex === undefined || legIndex === -1 ? 'car' : trip!.legModes[legIndex]!
+  }
+
+  /** A car, ship or plane riding the tip of the route while it moves. */
+  function setTravelHead(coordinates: [number, number] | undefined, mode: TravelMode) {
+    const map = getMap()
+
+    if (!map || !coordinates) {
+      travelHead?.marker.remove()
+      travelHead = undefined
+      return
+    }
+
+    if (!travelHead) {
+      const element = createElement('div', 'calendar-map-trip-head', '')
+      const icon = createElement('span', '', '')
+
+      element.setAttribute('aria-hidden', 'true')
+      element.append(icon)
+      travelHead = {
+        icon,
+        marker: new mapboxgl.Marker({ element }).setLngLat(coordinates).addTo(map),
+      }
+    } else {
+      travelHead.marker.setLngLat(coordinates)
+    }
+
+    travelHead.icon.className = TRAVEL_ICONS[mode]
   }
 
   function updateStops() {
@@ -587,7 +659,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     drawnPointCount = legStart + 1
     const startTime = performance.now()
     const step = (now: number) => {
-      const t = Math.min((now - startTime) / LEG_DURATION, 1)
+      const t = Math.min((now - startTime) / getLegDuration(), 1)
 
       if (t >= 1) {
         legFrame = undefined
@@ -614,10 +686,14 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       const ratio = segmentLengths[segmentIndex] ? remaining / segmentLengths[segmentIndex]! : 1
 
       // The drawn part of this leg follows its road shape up to the moving tip.
-      setRoute(legStart + 1, [
-        ...leg.slice(1, segmentIndex + 1),
-        [from[0] + (to[0] - from[0]) * ratio, from[1] + (to[1] - from[1]) * ratio],
-      ])
+      setRoute(
+        legStart + 1,
+        [
+          ...leg.slice(1, segmentIndex + 1),
+          [from[0] + (to[0] - from[0]) * ratio, from[1] + (to[1] - from[1]) * ratio],
+        ],
+        getTravelMode(from, to),
+      )
       legFrame = requestAnimationFrame(step)
     }
 
@@ -746,7 +822,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     if (reducedMotion.matches) {
       map.jumpTo(options)
     } else {
-      map.flyTo({ ...options, duration: LEG_DURATION, essential: false })
+      map.flyTo({ ...options, duration: getLegDuration(), essential: false })
     }
   }
 
@@ -817,7 +893,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       ])
       map?.flyTo({
         center: point.coordinates,
-        duration: LEG_DURATION,
+        duration: getLegDuration(),
         essential: false,
         padding: getCameraPadding(),
         zoom: STOP_ZOOM,
@@ -827,9 +903,9 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
         drawnPointCount >= pointIndex + 1
           ? Promise.resolve()
           : drawLeg(Math.max(pointIndex - 1, 0), pointIndex + 1),
-        new Promise((resolve) => setTimeout(resolve, reducedMotion.matches ? 0 : LEG_DURATION)),
+        new Promise((resolve) => setTimeout(resolve, reducedMotion.matches ? 0 : getLegDuration())),
       ])
-      await new Promise((resolve) => setTimeout(resolve, WAYPOINT_PAUSE))
+      await new Promise((resolve) => setTimeout(resolve, WAYPOINT_PAUSE / speed))
 
       if (token !== travelToken) {
         return
@@ -1089,6 +1165,16 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     syncAmbientMusic()
   }
 
+  /** How long the map takes to travel one leg at the chosen speed. */
+  function getLegDuration() {
+    return LEG_DURATION / speed
+  }
+
+  function renderSpeedButton() {
+    speedButton.textContent = `${speed}×`
+    speedButton.setAttribute('aria-label', `播放速度 ${speed}×`)
+  }
+
   function renderMusicButton() {
     const icon = musicButton.firstElementChild
 
@@ -1188,9 +1274,16 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
         createMosaic(covers),
       )
     } else if (slide.type === 'day') {
+      const weather = trip.weather[slide.day]
+
       eyebrow.textContent = `第 ${slide.day} 天`
       title.textContent = slide.date
-      body.replaceChildren(createElement('p', 'shrink-0 text-tx-2', slide.places.join(' → ')))
+      body.replaceChildren(
+        ...(weather
+          ? [createWeather(weather, 'mb-1 flex shrink-0 items-center gap-1.5 text-tx-2')]
+          : []),
+        createElement('p', 'shrink-0 text-tx-2', slide.places.join(' → ')),
+      )
     } else if (slide.type === 'stop') {
       const { stop } = slide
       const text = createElement(
@@ -1324,7 +1417,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
         stagePhotosReady = true
         showStagePhoto(stop, photoIndex)
       },
-      reducedMotion.matches ? 0 : LEG_DURATION,
+      reducedMotion.matches ? 0 : getLegDuration(),
     )
   }
 
@@ -1452,9 +1545,12 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   function createDayCard(slide: Extract<Slide, { type: 'day' }>) {
     const card = createElement('div', 'calendar-map-trip-stage-card', '')
 
+    const weather = trip?.weather[slide.day]
+
     card.append(
       createElement('p', 'calendar-map-trip-stage-card__eyebrow', `第 ${slide.day} 天`),
       createElement('p', 'calendar-map-trip-stage-card__title', slide.date),
+      ...(weather ? [createWeather(weather, 'calendar-map-trip-stage-card__weather')] : []),
       createElement('p', 'calendar-map-trip-stage-card__meta', slide.places.join(' → ')),
     )
     return card
@@ -1476,8 +1572,55 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       createElement('p', 'calendar-map-trip-stage-card__eyebrow', '这趟旅程'),
       createElement('p', 'calendar-map-trip-stage-card__title', currentTrip.title),
       stats,
+      // Where a viewer of the video can find the trip.
+      createElement('p', 'calendar-map-trip-stage-card__site', `${new URL(SITE_URL).host}/trip/`),
     )
     return card
+  }
+
+  /** Notes when a day or the summary starts in the recording. */
+  function addChapter(slide: Slide) {
+    if (recordingStart === undefined || (slide.type !== 'day' && slide.type !== 'summary')) {
+      return
+    }
+
+    const label = slide.type === 'day' ? `第 ${slide.day} 天 · ${slide.date}` : '旅程回顾'
+    const time = Math.floor((performance.now() - recordingStart) / 1000)
+    const last = chapters.at(-1)
+
+    // Video sites want chapters at least ten seconds long, so a short one gives way.
+    if (last && time - last.time < 10) {
+      last.label = label
+    } else {
+      chapters.push({ label, time })
+    }
+  }
+
+  /** The slide a shared link names: a stop's card, or its day's opener when it starts the day. */
+  function getHashSlideIndex() {
+    const anchor = decodeURIComponent(location.hash.slice(1))
+    const stopIndex = trip?.stops.findIndex((stop) => stop.anchor === anchor) ?? -1
+
+    if (!anchor || stopIndex === -1) {
+      return 0
+    }
+
+    return slides.findIndex(
+      (slide) => (slide.type === 'day' || slide.type === 'stop') && slide.stopIndex === stopIndex,
+    )
+  }
+
+  /** Keeps the address bar pointing at the current card, so it can be shared. */
+  function syncHash(slide: Slide) {
+    const anchor =
+      slide.type === 'stop' || slide.type === 'day' ? trip?.stops[slide.stopIndex]?.anchor : ''
+    const url = new URL(location.href)
+
+    url.hash = anchor ?? ''
+
+    if (url.href !== location.href) {
+      history.replaceState(history.state, '', url)
+    }
   }
 
   function goTo(nextIndex: number, options: { play?: boolean } = {}) {
@@ -1527,6 +1670,10 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
     index = nextIndex
     elapsed = 0
+    syncHash(slide)
+    addChapter(slide)
+    // Autoplay stays quiet, like a carousel; stepping through by hand names each card.
+    announcer.textContent = playing ? '' : getSlideLabel(slide)
 
     if (!getSlideDuration(slide)) {
       playing = false
@@ -1665,11 +1812,14 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       activeRecorder.addEventListener('stop', () => {
         const type = activeRecorder.mimeType || 'video/webm'
 
+        const name = `${currentTrip.title}-${ratio === 'portrait' ? '竖屏' : '横屏'}`
+        const chapterText = chapters
+          .map(({ label, time }) => `${formatChapterTime(time)} ${label}`)
+          .join('\n')
+
         finishStage()
-        downloadBlob(
-          new Blob(chunks, { type }),
-          `${currentTrip.title}-${ratio === 'portrait' ? '竖屏' : '横屏'}.${type.includes('mp4') ? 'mp4' : 'webm'}`,
-        )
+        downloadBlob(new Blob(chunks, { type }), `${name}.${type.includes('mp4') ? 'mp4' : 'webm'}`)
+        downloadBlob(new Blob([`${chapterText}\n`], { type: 'text/plain' }), `${name}-章节.txt`)
       })
       track?.addEventListener('ended', stopStage)
       recorder = activeRecorder
@@ -1695,6 +1845,11 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     }
 
     recorder?.start(1000)
+
+    if (recorder) {
+      recordingStart = performance.now()
+      chapters = [{ label: currentTrip.title, time: 0 }]
+    }
 
     if (music) {
       fadeMusicIn(music)
@@ -1772,6 +1927,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
   function finishStage() {
     stageToken = undefined
+    recordingStart = undefined
 
     if (!staging) {
       return
@@ -1816,7 +1972,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       return
     }
 
-    elapsed += delta
+    elapsed += delta * speed
     renderProgress()
 
     if (elapsed >= duration) {
@@ -1853,19 +2009,41 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     })
   }
 
-  async function loadTrip(id: string) {
-    try {
-      const response = await fetch(`/trip/${id}/data.json`, { signal })
+  /** Fetches a trip's data once; a failed fetch is tried again next time. */
+  function loadTrip(id: string) {
+    let request = tripRequests.get(id)
 
-      if (!response.ok) {
-        return undefined
+    if (!request) {
+      request = fetch(`/trip/${id}/data.json`, { signal })
+        .then(async (response) => {
+          if (!response.ok) {
+            return undefined
+          }
+
+          const data = (await response.json()) as TripData
+          loadedTrips.set(id, data)
+          return data
+        })
+        .catch(() => undefined)
+        .then((data) => {
+          if (!data) {
+            tripRequests.delete(id)
+          }
+
+          return data
+        })
+      tripRequests.set(id, request)
+    }
+
+    return request
+  }
+
+  /** Loads every trip's data ahead of time, when a switch to another trip looks likely. */
+  function prefetch() {
+    for (const id of tripTitles.keys()) {
+      if (!loadedTrips.has(id)) {
+        void loadTrip(id)
       }
-
-      const data = (await response.json()) as TripData
-      loadedTrips.set(id, data)
-      return data
-    } catch {
-      return undefined
     }
   }
 
@@ -1949,7 +2127,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     drawnPointCount = 0
     addLayers()
     index = -1
-    goTo(0, { play: !reducedMotion.matches })
+    goTo(getHashSlideIndex(), { play: !reducedMotion.matches })
     lastFrameTime = undefined
     frame = requestAnimationFrame(tick)
   }
@@ -2016,6 +2194,16 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       if (staging?.mode === 'present' && !document.fullscreenElement) {
         stopStage()
       }
+    },
+    { signal },
+  )
+  renderSpeedButton()
+  speedButton.addEventListener(
+    'click',
+    () => {
+      speed = SPEEDS[(SPEEDS.indexOf(speed as (typeof SPEEDS)[number]) + 1) % SPEEDS.length]!
+      writeSpeedPreference(speed)
+      renderSpeedButton()
     },
     { signal },
   )
@@ -2090,6 +2278,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   return {
     getPageTitle: (id: string) => tripTitles.get(id),
     has: (id: string) => tripTitles.has(id),
+    prefetch,
     get activeId() {
       return trip?.id ?? requestedId
     },
@@ -2142,12 +2331,33 @@ function readMusicPreference() {
   }
 }
 
+function readSpeedPreference() {
+  try {
+    const value = Number(localStorage.getItem(SPEED_PREFERENCE_KEY))
+    return SPEEDS.find((speed) => speed === value) ?? 1
+  } catch {
+    return 1
+  }
+}
+
+function writeSpeedPreference(speed: number) {
+  try {
+    localStorage.setItem(SPEED_PREFERENCE_KEY, String(speed))
+  } catch {
+    // The choice just won't be remembered.
+  }
+}
+
 function writeMusicPreference(on: boolean) {
   try {
     localStorage.setItem(MUSIC_PREFERENCE_KEY, on ? 'on' : 'off')
   } catch {
     // The choice just won't be remembered.
   }
+}
+
+function formatChapterTime(seconds: number) {
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`
 }
 
 function downloadBlob(blob: Blob, filename: string) {
@@ -2197,6 +2407,15 @@ function lineFeature(coordinates: [number, number][]) {
     properties: {},
     type: 'Feature' as const,
   }
+}
+
+function createWeather(weather: { icon: string; label: string }, className: string) {
+  const element = createElement('p', className, '')
+  const icon = createElement('span', weather.icon, '')
+
+  icon.setAttribute('aria-hidden', 'true')
+  element.append(icon, weather.label)
+  return element
 }
 
 function createElement(tag: string, className: string, text: string) {

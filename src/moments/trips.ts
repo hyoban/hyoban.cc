@@ -17,8 +17,8 @@ export type TripDefinition = Readonly<{
   /** Default background music, an id from src/data/music.ts. */
   music?: string
   start: string
-  /** Location id pairs travelled by ferry or plane; drawn straight instead of along roads. */
-  straightLegs?: readonly (readonly [string, string])[]
+  /** Legs between two location ids taken by ferry or plane; drawn straight instead of along roads. */
+  straightLegs?: readonly (readonly [string, string, 'ferry' | 'plane'])[]
   title: string
   waypoints?: readonly TripWaypointDefinition[]
 }>
@@ -34,10 +34,12 @@ export type TripRoute = Readonly<{
   duration?: number
 }>
 
+export type TravelMode = 'car' | 'ferry' | 'plane'
+
 export type TripLeg = Readonly<{
+  by: TravelMode
   from: TripLocation
   route?: TripRoute
-  straight: boolean
   to: TripLocation
 }>
 
@@ -108,7 +110,7 @@ export function defineTrips<const T extends readonly TripDefinition[]>(trips: T)
     }
 
     for (const leg of trip.straightLegs ?? []) {
-      if (leg.length !== 2 || leg[0] === leg[1]) {
+      if (leg[0] === leg[1] || (leg[2] !== 'ferry' && leg[2] !== 'plane')) {
         throw new Error(`Invalid straight leg in trip "${trip.id}".`)
       }
     }
@@ -202,13 +204,14 @@ export function buildTrip<T extends TripMoment>(
   ]
   const legs = path.slice(1).map((to, index): TripLeg => {
     const from = path[index]!
-    const straight = (trip.straightLegs ?? []).some(
-      ([first, second]) =>
-        (first === from.id && second === to.id) || (first === to.id && second === from.id),
-    )
-    const route = straight ? undefined : routes[getLegKey(from, to)]
+    const by =
+      (trip.straightLegs ?? []).find(
+        ([first, second]) =>
+          (first === from.id && second === to.id) || (first === to.id && second === from.id),
+      )?.[2] ?? 'car'
+    const route = by === 'car' ? routes[getLegKey(from, to)] : undefined
 
-    return { from, straight, to, ...(route ? { route } : {}) }
+    return { by, from, to, ...(route ? { route } : {}) }
   })
   // Road distance where a route is cached, otherwise as the crow flies.
   const distanceKm = legs.reduce(
@@ -238,6 +241,24 @@ export function getLegKey(from: MapLocation, to: MapLocation) {
     `${location.longitude.toFixed(5)},${location.latitude.toFixed(5)}`
 
   return `${point(from)};${point(to)}`
+}
+
+/** Identifies a day's weather at a place, to about 1 km. */
+export function getWeatherKey(dateKey: string, location: MapLocation) {
+  return `${dateKey};${location.longitude.toFixed(2)},${location.latitude.toFixed(2)}`
+}
+
+/** The place a trip day's weather is taken at: the first place of its first stop. */
+export function getDayPlaces<T extends TripMoment>(trip: Trip<T>) {
+  const places = new Map<string, TripLocation>()
+
+  for (const stop of trip.stops) {
+    if (!places.has(stop.dateKey)) {
+      places.set(stop.dateKey, stop.locations[0]!)
+    }
+  }
+
+  return places
 }
 
 /** Great-circle distance, so it is a lower bound for the distance actually travelled. */

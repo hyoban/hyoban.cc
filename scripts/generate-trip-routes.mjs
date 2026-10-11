@@ -2,12 +2,9 @@ import { readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { locations } from '../src/data/locations.ts'
 import { trips } from '../src/data/trips.ts'
-import { getLocation } from '../src/moments/map-locations.ts'
-import { compareMoments, getMomentOrder } from '../src/moments/order.ts'
 import { buildTrip, getLegKey } from '../src/moments/trips.ts'
-import { readMomentRecords } from './lib/moment-assets.mjs'
+import { readTripMoments, resolveLocation } from './lib/trip-moments.mjs'
 
 // Fetches a driving route for every trip leg that isn't cached yet, so trip playback
 // can follow roads. Run it after adding a trip or moving a place; cached legs are
@@ -24,21 +21,7 @@ if (!token) {
   throw new Error('Set VITE_MAPBOX_TOKEN in .env or the environment.')
 }
 
-const resolveLocation = (id) => ({ id, ...getLocation(locations, id) })
-const moments = (await readMomentRecords(join(root, 'src/content/moments')))
-  .filter(({ moment }) => !moment.hidden)
-  .map(({ id, moment }) => {
-    const dateKey = moment.occurredAt.slice(0, 10)
-
-    return {
-      dateKey,
-      id,
-      locations: [moment.location ?? []].flat().map(resolveLocation),
-      occurredAt: moment.occurredAt,
-      order: getMomentOrder(id, dateKey),
-    }
-  })
-  .sort(compareMoments)
+const moments = await readTripMoments(root)
 const cached = JSON.parse(await readFile(routesFile, 'utf8'))
 const routes = {}
 let fetched = 0
@@ -48,7 +31,7 @@ for (const trip of trips) {
     const key = getLegKey(leg.from, leg.to)
     const [from, to] = key.split(';')
 
-    if (leg.straight || from === to || routes[key]) {
+    if (leg.by !== 'car' || from === to || routes[key]) {
       continue
     }
 

@@ -657,6 +657,11 @@ function initializeCalendarMap() {
   }
 
   drawerClose.addEventListener('click', requestSelectionClose, { signal })
+  // Pointing at or focusing the picker is a hint that another trip is next.
+  for (const type of ['pointerenter', 'focus'] as const) {
+    tripSelect?.addEventListener(type, tripPlayer.prefetch, { once: true, signal })
+  }
+
   tripSelect?.addEventListener(
     'change',
     () => {

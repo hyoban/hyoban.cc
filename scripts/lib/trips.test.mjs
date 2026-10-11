@@ -150,7 +150,7 @@ test('uses cached road routes except on straight legs', () => {
       end: '2026-05-02',
       id: 'trip',
       start: '2026-05-01',
-      straightLegs: [['rizhao', 'nanjing']],
+      straightLegs: [['rizhao', 'nanjing', 'ferry']],
       title: 'Trip',
     },
     moments,
@@ -162,10 +162,10 @@ test('uses cached road routes except on straight legs', () => {
   )
 
   assert.deepEqual(
-    trip.legs.map((leg) => [leg.from.id, leg.to.id, leg.straight, leg.route === route]),
+    trip.legs.map((leg) => [leg.from.id, leg.to.id, leg.by, leg.route === route]),
     [
-      ['hefei', 'nanjing', false, true],
-      ['nanjing', 'rizhao', true, false],
+      ['hefei', 'nanjing', 'car', true],
+      ['nanjing', 'rizhao', 'ferry', false],
     ],
   )
   assert.equal(trip.distanceKm, Math.round(180 + getDistanceKm(nanjing, rizhao)))
