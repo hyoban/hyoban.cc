@@ -143,6 +143,7 @@ test('uses cached road routes except on straight legs', () => {
       [118.5, 32],
     ],
     distance: 180_000,
+    duration: 7200,
   }
   const trip = buildTrip(
     {
@@ -168,6 +169,8 @@ test('uses cached road routes except on straight legs', () => {
     ],
   )
   assert.equal(trip.distanceKm, Math.round(180 + getDistanceKm(nanjing, rizhao)))
+  // The straight leg reuses no route, so only the drive to Nanjing counts.
+  assert.equal(trip.drivingHours, 2)
 })
 
 test('measures great-circle distance in kilometres', () => {

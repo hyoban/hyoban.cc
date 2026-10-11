@@ -19,6 +19,7 @@ import {
   getMomentPath,
   getMoments,
   getMonthPath,
+  getTrips,
   type Moment,
   type ResolvedMomentMedia,
 } from '@/moments'
@@ -100,6 +101,10 @@ const groupedMonths = Map.groupBy(monthKeys, key => key.slice(0, 4))
 const activeMonthKeys = new Set(activeDateKeys.map(key => key.slice(0, 7)))
 const description = '一些零碎记录，按发生的日期归档。'
 const selectedDateLabel = selectedDate ? formatSelectedDate(selectedDate) : undefined
+// A day inside a trip links to that trip's playback.
+const selectedTrip = selectedDate
+  ? getTrips(moments).find(trip => trip.start <= selectedDate && selectedDate <= trip.end)
+  : undefined
 const title = selectedDateLabel
   ? `${selectedDateLabel} · 日历 | ${SITE_TITLE}`
   : `${year} 年 ${month} 月 · 日历 | ${SITE_TITLE}`
@@ -356,6 +361,15 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
           </header>
 
           <div class="day-drawer__content overflow-y-auto overscroll-contain px-6 pb-12 max-[56rem]:overflow-visible max-[56rem]:p-0">
+            {
+              selectedTrip && (
+                <a class="mt-6 flex items-center gap-2 rounded-md bg-inline px-3 py-2.5 text-sm text-tx no-underline hover:bg-hover max-[56rem]:mt-4" href={`/trip/${selectedTrip.id}/`}>
+                  <span class="i-lucide-route text-tx-2" aria-hidden="true" />
+                  <span class="min-w-0 flex-1 truncate">回放旅程：{selectedTrip.title}</span>
+                  <span class="i-lucide-chevron-right text-tx-3" aria-hidden="true" />
+                </a>
+              )
+            }
             {
               selectedMoments.map(moment => <MomentEntry moment={moment} />)
             }
