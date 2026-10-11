@@ -18,6 +18,7 @@ import { createChapterLog, getSummaryStats } from './labels'
 import { closeMusic, fadeMusicIn, fadeMusicOut, loadMusic, type Music } from './music'
 import {
   getNextSpeed,
+  SPEEDS,
   readMusicPreference,
   readSpeedPreference,
   writeMusicPreference,
@@ -163,6 +164,10 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   const musicButton = queryRequired<HTMLButtonElement>(page, '[data-calendar-map-trip-music]')
   const speedButton = queryRequired<HTMLButtonElement>(page, '[data-calendar-map-trip-speed]')
   const announcer = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-announcer]')
+  const shortcutsDialog = queryRequired<HTMLDialogElement>(
+    page,
+    '[data-calendar-map-trip-shortcuts]',
+  )
   let staging:
     | {
         mode: StageMode
@@ -777,6 +782,46 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     }
   }
 
+  /** Shows one of a stop's photos, moving the card's timer to where it is shown. */
+  function selectPhoto(stop: TripStop, imageIndex: number) {
+    const duration = getSlideDuration(slides[index]) ?? 0
+
+    elapsed = (duration / stop.images.length) * imageIndex
+    animatePhotoSize(() => showPhoto(stop, imageIndex), imageIndex - photoIndex)
+    renderProgress()
+  }
+
+  /** Steps through the current stop's photos, for the , and . keys. */
+  function stepPhoto(direction: number) {
+    const slide = slides[index]
+
+    if (slide?.type === 'stop' && slide.stop.images.length > 1) {
+      selectPhoto(
+        slide.stop,
+        Math.min(Math.max(photoIndex + direction, 0), slide.stop.images.length - 1),
+      )
+    }
+  }
+
+  /** Jumps to the next day's opener, or back to this day's (then the one before). */
+  function stepDay(direction: number) {
+    const openers = slides.flatMap((slide, slideIndex) =>
+      slide.type === 'day' ? [slideIndex] : [],
+    )
+    const target =
+      direction > 0
+        ? openers.find((slideIndex) => slideIndex > index)
+        : openers.findLast((slideIndex) => slideIndex < index)
+
+    goTo(target ?? (direction > 0 ? slides.length - 1 : 0))
+  }
+
+  function setSpeed(next: number) {
+    speed = next
+    writeSpeedPreference(speed)
+    renderSpeedButton()
+  }
+
   function createThumbnails(stop: TripStop) {
     const list = createElement(
       'div',
@@ -799,16 +844,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       thumbnail.alt = ''
       thumbnail.decoding = 'async'
       button.append(thumbnail)
-      button.addEventListener(
-        'click',
-        () => {
-          const duration = getSlideDuration(slides[index]) ?? 0
-          elapsed = (duration / stop.images.length) * imageIndex
-          animatePhotoSize(() => showPhoto(stop, imageIndex), imageIndex - photoIndex)
-          renderProgress()
-        },
-        { signal },
-      )
+      button.addEventListener('click', () => selectPhoto(stop, imageIndex), { signal })
       return button
     })
     list.append(...thumbnails)
@@ -819,6 +855,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     const icon = playButton.firstElementChild
 
     playButton.setAttribute('aria-label', playing ? '暂停' : '播放')
+    playButton.title = `${playing ? '暂停' : '播放'}（空格）`
     icon?.classList.toggle('i-lucide-pause', playing)
     icon?.classList.toggle('i-lucide-play', !playing)
     // The toolbar steps aside while playing and returns when paused or finished.
@@ -1380,6 +1417,74 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     }
   }
 
+  /** The keyboard shortcuts; the shortcut panel (press ?) lists them. */
+  function handleShortcut(event: KeyboardEvent) {
+    const target = event.target instanceof HTMLElement ? event.target : undefined
+
+    // Leaves the browser's own shortcuts (⌘R, Ctrl+F…) and typing alone.
+    if (
+      !trip ||
+      event.defaultPrevented ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.altKey ||
+      target?.closest('input, textarea, select, [contenteditable]')
+    ) {
+      return
+    }
+
+    // Esc or ? closes the panel, and only the panel: the trip stays open.
+    if (shortcutsDialog.open) {
+      if (event.key === '?' || event.key === 'Escape') {
+        event.preventDefault()
+        shortcutsDialog.close()
+      }
+
+      return
+    }
+
+    // Also while a presentation or recording is still starting up.
+    if ((staging || stageToken) && event.key === 'Escape') {
+      event.preventDefault()
+      stopStage()
+      return
+    }
+
+    const key = event.key.length === 1 ? event.key.toLowerCase() : event.key
+    const actions: Record<string, () => void> = {
+      ' ': () => playButton.click(),
+      ',': () => stepPhoto(-1),
+      '-': () => setSpeed(SPEEDS.findLast((value) => value < speed) ?? speed),
+      '.': () => stepPhoto(1),
+      '=': () => setSpeed(SPEEDS.find((value) => value > speed) ?? speed),
+      '+': () => setSpeed(SPEEDS.find((value) => value > speed) ?? speed),
+      '?': () => shortcutsDialog.showModal(),
+      ArrowLeft: () => (event.shiftKey ? stepDay(-1) : goTo(index - 1)),
+      ArrowRight: () => (event.shiftKey ? stepDay(1) : goTo(index + 1)),
+      End: () => goTo(slides.length - 1),
+      Home: () => goTo(0),
+      f: () => {
+        if (!staging) {
+          void startStage(innerWidth >= innerHeight ? 'landscape' : 'portrait', 'present')
+        }
+      },
+      k: () => playButton.click(),
+      m: () => musicButton.click(),
+      r: () => {
+        if (!staging && !exportButton.hidden) {
+          setExportOptionsOpen(true, 'record')
+        }
+      },
+    }
+    const action = actions[key]
+
+    // A focused button or link keeps Space for itself.
+    if (action && !(key === ' ' && target?.closest('button, a'))) {
+      event.preventDefault()
+      action()
+    }
+  }
+
   function setExportOptionsOpen(open: boolean, mode: StageMode = stageMode) {
     stageMode = mode
     exportOptions.setAttribute('aria-label', mode === 'present' ? '放映' : '导出视频')
@@ -1397,7 +1502,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
     setExportOptionsOpen(false)
 
-    if (!currentTrip || staging) {
+    if (!currentTrip || staging || stageToken) {
       return
     }
 
@@ -1441,6 +1546,19 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
     const music = await loadMusic(exportMusic.value, mode === 'record')
     let recorder: MediaRecorder | undefined
+
+    // Stopped while the music loaded: let go of what was opened for it.
+    if (stageToken !== token) {
+      if (music) {
+        closeMusic(music)
+      }
+
+      for (const streamTrack of stream?.getTracks() ?? []) {
+        streamTrack.stop()
+      }
+
+      return
+    }
 
     if (stream) {
       const recorded = music?.destination
@@ -1539,23 +1657,29 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   }
 
   function finishStage() {
+    // Still starting (loading its music), the stage has nothing of its own to release
+    // yet, but its layout is already up.
+    const starting = stageToken !== undefined && !staging
+
     stageToken = undefined
     recording = undefined
 
-    if (!staging) {
+    if (!staging && !starting) {
       return
     }
 
-    const { mode, music, stopTimer, stream } = staging
+    const presenting = page.hasAttribute('data-trip-presenting')
 
-    clearTimeout(stopTimer)
+    if (staging) {
+      clearTimeout(staging.stopTimer)
 
-    for (const track of stream?.getTracks() ?? []) {
-      track.stop()
-    }
+      for (const track of staging.stream?.getTracks() ?? []) {
+        track.stop()
+      }
 
-    if (music) {
-      closeMusic(music)
+      if (staging.music) {
+        closeMusic(staging.music)
+      }
     }
 
     staging = undefined
@@ -1564,7 +1688,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     clearTimeout(idleTimer)
     page.removeAttribute('data-trip-idle')
 
-    if (mode === 'present' && document.fullscreenElement) {
+    if (presenting && document.fullscreenElement) {
       void document.exitFullscreen().catch(() => {})
     }
 
@@ -1853,15 +1977,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     { signal },
   )
   renderSpeedButton()
-  speedButton.addEventListener(
-    'click',
-    () => {
-      speed = getNextSpeed(speed)
-      writeSpeedPreference(speed)
-      renderSpeedButton()
-    },
-    { signal },
-  )
+  speedButton.addEventListener('click', () => setSpeed(getNextSpeed(speed)), { signal })
   renderMusicButton()
   musicButton.addEventListener(
     'click',
@@ -1900,34 +2016,17 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     },
     { signal },
   )
-  window.addEventListener(
-    'keydown',
+  shortcutsDialog.addEventListener(
+    'click',
     (event) => {
-      if (!trip || event.defaultPrevented || event.target instanceof HTMLSelectElement) {
-        return
-      }
-
-      if (staging && event.key === 'Escape') {
-        event.preventDefault()
-        stopStage()
-        return
-      }
-
-      // A focused control keeps Space for itself.
-      if (
-        event.key === ' ' &&
-        !(event.target instanceof HTMLElement && event.target.closest('button, input, textarea, a'))
-      ) {
-        event.preventDefault()
-        playButton.click()
-      } else if (event.key === 'ArrowLeft') {
-        goTo(index - 1)
-      } else if (event.key === 'ArrowRight') {
-        goTo(index + 1)
+      // A click on the backdrop, outside the panel, closes it.
+      if (event.target === shortcutsDialog) {
+        shortcutsDialog.close()
       }
     },
     { signal },
   )
+  window.addEventListener('keydown', handleShortcut, { signal })
   signal.addEventListener('abort', stop)
 
   return {
