@@ -69,7 +69,9 @@ type TripPlayerOptions = {
 
 const WAYPOINT_PAUSE = 2000
 // How far photos slide when the card moves to the next or previous one.
-const PHOTO_SLIDE_DISTANCE = 20
+const PHOTO_SLIDE_DISTANCE = 12
+// Long enough to see both photos; the new one fades in over the old one.
+const PHOTO_SWITCH = { duration: 600, easing: 'cubic-bezier(0.4, 0, 0.2, 1)' }
 const LEG_DURATION = 2200
 const STOP_ZOOM = 9
 // The closest the camera comes in while following a short drive.
@@ -632,9 +634,9 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     photoAnimation?.cancel()
 
     if (outgoing && photo && frame) {
-      // A copy of the old photo stays in place to slide out over the new one.
+      // A copy of the old photo stays put underneath while the new one fades in.
       outgoing.style.cssText = `position:absolute;top:0;left:0;width:${photo.offsetWidth}px;height:${photo.offsetHeight}px;max-width:none;max-height:none;pointer-events:none`
-      frame.append(outgoing)
+      frame.insertBefore(outgoing, photo)
     }
 
     update()
@@ -645,11 +647,12 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
     if (outgoing && photo) {
       const shift = Math.sign(direction) * PHOTO_SLIDE_DISTANCE
-      const timing = { duration: 280, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' }
 
-      // Cancelled when photos change again quickly; the copy goes either way.
+      // The old photo stays fully visible under the new one, and only fades in the
+      // second half, where a differently shaped new photo doesn't cover it. Cancelled
+      // when photos change again quickly; the copy goes either way.
       void outgoing
-        .animate([{ opacity: 1 }, { opacity: 0, transform: `translateX(${-shift}px)` }], timing)
+        .animate([{ opacity: 1 }, { offset: 0.5, opacity: 1 }, { opacity: 0 }], PHOTO_SWITCH)
         .finished.catch(() => {})
         .finally(() => outgoing.remove())
       photo.animate(
@@ -657,7 +660,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
           { opacity: 0, transform: `translateX(${shift}px)` },
           { opacity: 1, transform: 'none' },
         ],
-        timing,
+        PHOTO_SWITCH,
       )
     }
 
@@ -672,7 +675,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
         { height: `${from.height}px`, width: `${from.width}px` },
         { height: `${to.height}px`, width: `${to.width}px` },
       ],
-      { duration: 280, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
+      PHOTO_SWITCH,
     )
   }
 
@@ -900,7 +903,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
           'relative block min-h-0 self-center overflow-hidden rounded-md border border-border bg-inline no-underline @max-[48rem]:shrink-0'
         link.setAttribute('aria-label', `查看 ${stop.date}的记录`)
         photo.className =
-          'block h-auto max-h-[min(40dvh,22rem)] w-auto max-w-full @max-[48rem]:max-h-[38dvh]'
+          'relative block h-auto max-h-[min(40dvh,22rem)] w-auto max-w-full @max-[48rem]:max-h-[38dvh]'
         photo.sizes = IMAGE_SIZES
         photo.decoding = 'async'
         link.append(photo)
@@ -1089,9 +1092,11 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     img.style.width = `${height * ratio}px`
     img.style.height = `${height}px`
 
+    // The new photo fades in over the old ones, which only fade once it is half in.
     for (const old of frame.querySelectorAll<HTMLElement>('img, video')) {
+      old.style.transitionDelay = '300ms'
       old.style.opacity = '0'
-      setTimeout(() => old.remove(), reducedMotion.matches ? 0 : 450)
+      setTimeout(() => old.remove(), reducedMotion.matches ? 0 : 900)
     }
 
     if (firstPhoto) {
