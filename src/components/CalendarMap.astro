@@ -64,7 +64,7 @@ function formatDate(dateKey: string) {
 }
 ---
 
-<Layout title={title} description={description} image={activeTrip ? `/trip/${activeTrip.id}/og.png` : undefined}>
+<Layout title={title} description={description} image={activeTrip ? `/trip/${activeTrip.id}/og.jpg` : undefined}>
   <main class="calendar-map-page @container relative isolate h-dvh w-full overflow-hidden bg-bg" data-calendar-map data-mapbox-token={mapboxToken} data-map-title={mapTitle} transition:persist="calendar-map">
     <div class="calendar-map-canvas absolute inset-0" data-calendar-map-canvas role="region" aria-label="Calendar 地点地图" />
 
@@ -142,7 +142,8 @@ function formatDate(dateKey: string) {
         <p class="truncate text-xs text-tx-3 tabular-nums" data-calendar-map-trip-eyebrow />
         <h2 class="truncate text-lg font-medium" id="calendar-map-trip-title" data-calendar-map-trip-title />
       </header>
-      <div class="flex min-h-0 flex-col px-4 pt-1 pb-3 @max-[48rem]:overflow-y-auto @max-[48rem]:overscroll-contain" data-calendar-map-trip-body aria-live="polite" />
+      <div class="flex min-h-0 flex-col px-4 pt-1 pb-3 @max-[48rem]:overflow-y-auto @max-[48rem]:overscroll-contain" data-calendar-map-trip-body />
+      <p class="sr-only" data-calendar-map-trip-announcer aria-live="polite" />
       <footer class="flex shrink-0 items-center justify-between border-t border-border px-2 py-1">
         <div class="flex items-center [&[hidden]]:hidden" data-calendar-map-trip-controls>
           <button class="flex size-9 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-tx-2 hover:bg-inline hover:text-tx disabled:cursor-default disabled:opacity-40 disabled:hover:bg-transparent" type="button" data-calendar-map-trip-previous aria-label="上一站">
@@ -156,6 +157,7 @@ function formatDate(dateKey: string) {
           </button>
         </div>
         <div class="flex items-center [&[hidden]]:hidden" data-calendar-map-trip-actions>
+          <button class="flex h-9 min-w-9 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent px-1.5 font-mono text-xs text-tx-2 tabular-nums hover:bg-inline hover:text-tx" type="button" data-calendar-map-trip-speed aria-label="播放速度 1×">1×</button>
           <button class="flex size-9 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-tx-2 hover:bg-inline hover:text-tx aria-pressed:text-tx" type="button" data-calendar-map-trip-music aria-label="背景音乐" aria-pressed="false">
             <span class="i-lucide-volume-x" aria-hidden="true" />
           </button>
