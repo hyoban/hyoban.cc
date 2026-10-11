@@ -688,17 +688,23 @@ html:has(.calendar-map-page[data-export-ratio]) body {
   position: relative;
   height: 0;
   overflow: hidden;
-  transition: height 600ms cubic-bezier(0.4, 0, 0.2, 1);
+  /* Matches PHOTO_SWITCH in the player, which animates the photos inside. */
+  transition: height 480ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Centred with margins rather than a transform, which the switch animates. */
 .calendar-map-trip-polaroid__frame :is(img, video) {
   position: absolute;
-  top: 0;
-  left: 50%;
+  inset: 0 0 auto;
   display: block;
+  margin-inline: auto;
+  object-fit: cover;
   border-radius: calc(var(--u) * 0.6);
-  transform: translateX(-50%);
-  transition: opacity 600ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* A live clip fades back to its still when it ends. */
+.calendar-map-trip-polaroid__frame video {
+  transition: opacity 450ms;
 }
 
 .calendar-map-trip-polaroid:not(:has(figcaption)) {
