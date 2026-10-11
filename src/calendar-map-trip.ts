@@ -197,6 +197,9 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   let traveling = false
   let currentWaypointPoint = -1
   let drawnPointCount = 0
+  let routeProgress:
+    | { lengths: number[]; line: [number, number][]; stopIndex: number; total: number }
+    | undefined
   let photoIndex = 0
   let photo: HTMLImageElement | undefined
   let thumbnails: HTMLButtonElement[] = []
@@ -251,6 +254,68 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
   function getStopPointStart(stopIndex: number) {
     return stopIndex === 0 ? 0 : stopPointEnds[stopIndex - 1]!
+  }
+
+  /** Index in `points` of a stop's first place, after the waypoints leading to it. */
+  function getStopPlaceStart(stopIndex: number) {
+    return getStopPointStart(stopIndex) + (trip?.stops[stopIndex]?.waypoints.length ?? 0)
+  }
+
+  /**
+   * While a stop's card is up, the route keeps moving: from the stop's first place,
+   * through its other places, on to the next point, arriving as the card's time ends.
+   */
+  function renderRouteProgress() {
+    const slide = slides[index]
+    const duration = getSlideDuration(slide)
+
+    if (slide?.type !== 'stop' || !duration || traveling || legFrame !== undefined) {
+      return
+    }
+
+    const from = getStopPlaceStart(slide.stopIndex)
+    const to = Math.min(stopPointEnds[slide.stopIndex]!, points.length - 1)
+
+    if (routeProgress?.stopIndex !== slide.stopIndex) {
+      const line = getRouteLine(from, to + 1)
+      const lengths = line
+        .slice(1)
+        .map((coordinates, segmentIndex) => getPlanarDistance(line[segmentIndex]!, coordinates))
+
+      routeProgress = {
+        lengths,
+        line,
+        stopIndex: slide.stopIndex,
+        total: lengths.reduce((total, length) => total + length, 0),
+      }
+    }
+
+    const fraction = Math.min(elapsed / duration, 1)
+
+    if (fraction >= 1 || routeProgress.total === 0) {
+      drawnPointCount = fraction >= 1 ? to + 1 : from + 1
+      setRoute(drawnPointCount)
+      return
+    }
+
+    const { lengths, line } = routeProgress
+    let remaining = fraction * routeProgress.total
+    let segmentIndex = 0
+
+    while (segmentIndex < lengths.length - 1 && remaining > lengths[segmentIndex]!) {
+      remaining -= lengths[segmentIndex]!
+      segmentIndex += 1
+    }
+
+    const start = line[segmentIndex]!
+    const end = line[segmentIndex + 1]!
+    const ratio = lengths[segmentIndex] ? remaining / lengths[segmentIndex]! : 1
+
+    drawnPointCount = from + 1
+    setRoute(from + 1, [
+      ...line.slice(1, segmentIndex + 1),
+      [start[0] + (end[0] - start[0]) * ratio, start[1] + (end[1] - start[1]) * ratio],
+    ])
   }
 
   function getLineColor() {
@@ -651,7 +716,9 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       })
       // Wait for both the camera and the route to arrive, then pause there.
       await Promise.all([
-        drawLeg(Math.max(pointIndex - 1, 0), pointIndex + 1),
+        drawnPointCount >= pointIndex + 1
+          ? Promise.resolve()
+          : drawLeg(Math.max(pointIndex - 1, 0), pointIndex + 1),
         new Promise((resolve) => setTimeout(resolve, reducedMotion.matches ? 0 : LEG_DURATION)),
       ])
       await new Promise((resolve) => setTimeout(resolve, WAYPOINT_PAUSE))
@@ -738,6 +805,8 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
         animatePhotoSize(() => showPhoto(slide.stop, nextPhotoIndex), nextPhotoIndex - photoIndex)
       }
     }
+
+    renderRouteProgress()
   }
 
   /** Runs a content change and eases the card from its old height to the new one. */
@@ -1314,15 +1383,20 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
     renderSlide()
 
-    if (slide.type === 'stop') {
-      const legEnd = stopPointEnds[slide.stopIndex]!
+    routeProgress = undefined
 
-      if (legStart === -1) {
+    if (slide.type === 'stop') {
+      const placeStart = getStopPlaceStart(slide.stopIndex)
+      const arriveAt = placeStart + 1
+
+      // The previous card's route usually arrived already; only a skip ahead or
+      // the last leg after waypoints still has to be drawn.
+      if (legStart === -1 || (legStart === undefined && drawnPointCount >= arriveAt)) {
         cancelLeg()
-        drawnPointCount = legEnd
+        drawnPointCount = arriveAt
         setRoute(drawnPointCount)
       } else {
-        void drawLeg(legStart ?? Math.max(getStopPointStart(slide.stopIndex) - 1, 0), legEnd)
+        void drawLeg(legStart ?? Math.max(placeStart - 1, 0), arriveAt)
       }
     } else {
       cancelLeg()
@@ -1332,6 +1406,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
     updateStops()
     moveCamera()
+    renderRouteProgress()
 
     if (staging && slide.type === 'summary') {
       const music = staging.music
