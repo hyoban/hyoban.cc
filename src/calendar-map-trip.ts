@@ -88,9 +88,8 @@ const NEARBY_RADIUS_KM = 30
 const NEARBY_MAX_ZOOM = 13
 // How long the summary card stays in an exported video before it ends.
 const EXPORT_SUMMARY_HOLD = 4000
-// avc3 tolerates a capture whose size changes mid-recording, such as a resized window.
+// avc1 keeps the codec setup in the file header; QuickTime can't play avc3 MP4s.
 const EXPORT_VIDEO_TYPES = [
-  'video/mp4;codecs=avc3,mp4a.40.2',
   'video/mp4;codecs=avc1,mp4a.40.2',
   'video/mp4',
   'video/webm;codecs=vp9,opus',
