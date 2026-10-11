@@ -2,8 +2,10 @@ import type { CollectionEntry } from 'astro:content'
 import { getCollection } from 'astro:content'
 import { getAssetUrl } from '@/asset-url'
 import { locations, type LocationId } from '@/data/locations'
+import { trips } from '@/data/trips'
 import { parseMomentDocument, type CanonicalMoment } from '@/moments/content'
 import { getLocation, groupMomentsByLocation, type MapLocation } from '@/moments/map-locations'
+import { buildTrip } from '@/moments/trips'
 
 const calendarDateFormatter = new Intl.DateTimeFormat('en-CA', {
   day: '2-digit',
@@ -119,6 +121,10 @@ export function getArchiveMonthKeys(moments: Moment[]) {
 
 export function getMappedLocationGroups(moments: Moment[]) {
   return groupMomentsByLocation(locations, moments)
+}
+
+export function getTrips(moments: Moment[]) {
+  return trips.map((trip) => buildTrip(trip, moments)).filter((trip) => trip.stops.length > 0)
 }
 
 export function getCalendarDateKey(date: Date) {
