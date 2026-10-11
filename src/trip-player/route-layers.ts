@@ -14,7 +14,11 @@ const STOPS_ID = 'calendar-trip-stops'
 // A map layer rather than a DOM marker, which Mapbox snaps to whole pixels and so
 // steps when it moves slowly.
 const HEAD_ID = 'calendar-trip-head'
-const LAYER_IDS = [HEAD_ID, STOPS_ID, ACTIVE_ROUTE_ID, ROUTE_ID, PLANNED_ID]
+// Blank symbols over the stop dots: circles don't take part in label placement, so
+// without these the map's own place names print right over the dots.
+const STOPS_CLEAR_ID = 'calendar-trip-stops-clear'
+const CLEAR_SIZE = 20
+const LAYER_IDS = [HEAD_ID, STOPS_CLEAR_ID, STOPS_ID, ACTIVE_ROUTE_ID, ROUTE_ID, PLANNED_ID]
 const HEAD_SIZE = 26
 const HEAD_ICON_SIZE = 14
 
@@ -90,11 +94,36 @@ export function createRouteLayers(getMap: () => MapboxMap | undefined, getColors
       source: STOPS_ID,
       type: 'circle',
     })
+
+    if (!map.hasImage(STOPS_CLEAR_ID)) {
+      map.addImage(STOPS_CLEAR_ID, {
+        data: new Uint8Array(CLEAR_SIZE * CLEAR_SIZE * 4),
+        height: CLEAR_SIZE,
+        width: CLEAR_SIZE,
+      })
+    }
+
+    map.addLayer({
+      id: STOPS_CLEAR_ID,
+      layout: {
+        'icon-allow-overlap': true,
+        'icon-image': STOPS_CLEAR_ID,
+        'icon-size': [
+          'match',
+          ['get', 'state'],
+          'current',
+          1,
+          ['case', ['get', 'waypoint'], 0.5, 0.7],
+        ],
+      },
+      source: STOPS_ID,
+      type: 'symbol',
+    })
     map.addLayer({
       id: HEAD_ID,
       layout: {
+        // Overlaps anything, but keeps the map's place names out from under it.
         'icon-allow-overlap': true,
-        'icon-ignore-placement': true,
         'icon-image': ['concat', `${HEAD_ID}-`, ['get', 'mode']],
       },
       source: HEAD_ID,

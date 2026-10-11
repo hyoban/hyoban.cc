@@ -1847,7 +1847,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
           audio: false,
           preferCurrentTab: true,
           selfBrowserSurface: 'include',
-          video: { displaySurface: 'browser', frameRate: 30 },
+          video: { cursor: 'never', displaySurface: 'browser', frameRate: 30 },
         } as DisplayMediaStreamOptions)
       } catch {
         return

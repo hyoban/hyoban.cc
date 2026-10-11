@@ -466,9 +466,10 @@ html:has(.calendar-map-page[data-export-ratio]) body {
  * its own things over it: the status bar and app icons at the top, the like, comment
  * and share buttons down the right, the author, caption and progress bar at the
  * bottom. Phones taller than 9:16 also fill the screen by cropping the video's sides,
- * about 9% each on a 9:19.5 screen. With the option on, the words, cards and progress
- * keep inside what stays clear of all that (about 11% top, 21% right, 22% bottom and
- * 11% left of the frame); the map still fills it all.
+ * about 9% each on a 9:19.5 screen. With the option on, the words and map labels keep
+ * inside what stays clear of all that (about 11% top, 21% right, 22% bottom and 11%
+ * left of the frame), the card comes down to the author's avatar and the progress runs
+ * along the bottom edge like the app's own; the map still fills it all.
  */
 .calendar-map-page[data-export-ratio='portrait'][data-trip-safe-area] .calendar-map-trip-stage {
   --safe-top: calc(var(--u) * 20);
@@ -491,7 +492,9 @@ html:has(.calendar-map-page[data-export-ratio]) body {
 
 .calendar-map-page[data-export-ratio='portrait'][data-trip-safe-area]
   .calendar-map-trip-stage__photos {
-  inset: 40% var(--safe-right) var(--safe-bottom) var(--safe-left);
+  /* The card can come down to just above the author's avatar; the caption under the
+     avatar stays clear. */
+  inset: 46% var(--safe-right) calc(var(--u) * 28) var(--safe-left);
 }
 
 .calendar-map-page[data-export-ratio='portrait'][data-trip-safe-area]
@@ -501,7 +504,14 @@ html:has(.calendar-map-page[data-export-ratio]) body {
 
 .calendar-map-page[data-export-ratio='portrait'][data-trip-safe-area]
   .calendar-map-trip-stage__progress {
-  inset: auto var(--safe-right) calc(var(--safe-bottom) - var(--u) * 4) var(--safe-left);
+  /* Along the bottom edge like the app's own progress bar, below its buttons. */
+  inset: auto var(--safe-left) calc(var(--u) * 3);
+}
+
+/* The map's logo and attribution step up out of the progress bar's way. */
+.calendar-map-page[data-export-ratio='portrait'][data-trip-safe-area]
+  :is(.mapboxgl-ctrl-bottom-left, .mapboxgl-ctrl-bottom-right) {
+  bottom: 5cqw;
 }
 
 .calendar-map-page[data-export-ratio='portrait'][data-trip-safe-area]
@@ -639,6 +649,12 @@ html:has(.calendar-map-page[data-export-ratio]) body {
   transition:
     opacity 300ms,
     visibility 300ms;
+}
+
+/* A recording shows no pointer; tab capture draws whatever cursor the page sets. */
+.calendar-map-page[data-export-ratio]:not([data-trip-presenting]),
+.calendar-map-page[data-export-ratio]:not([data-trip-presenting]) * {
+  cursor: none !important;
 }
 
 /* Like a video player's controls: gone while nobody moves the pointer, back on a move
