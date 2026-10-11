@@ -6,7 +6,7 @@ export type MapLocation = Readonly<{
 
 type MappableMoment = Readonly<{
   dateKey: string
-  locationId?: string
+  locations: readonly { id: string }[]
   occurredAt: string
   order: number
 }>
@@ -52,14 +52,12 @@ export function groupMomentsByLocation<T extends MappableMoment>(
   const momentGroups = new Map<string, T[]>()
 
   for (const moment of moments) {
-    if (!moment.locationId) {
-      continue
+    for (const { id } of moment.locations) {
+      getLocation(locations, id)
+      const group = momentGroups.get(id) ?? []
+      group.push(moment)
+      momentGroups.set(id, group)
     }
-
-    getLocation(locations, moment.locationId)
-    const group = momentGroups.get(moment.locationId) ?? []
-    group.push(moment)
-    momentGroups.set(moment.locationId, group)
   }
 
   return [...momentGroups]

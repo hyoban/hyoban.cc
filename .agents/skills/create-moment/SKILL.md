@@ -15,7 +15,8 @@ part of preparing the local Moment.
    with an explicit offset when the time is known, otherwise use `YYYY-MM-DD`.
    Never add publication or source fields. If the text names a specific place,
    use that place instead of its city; reuse or add it in
-   `src/data/locations.ts` and verify new coordinates. Use
+   `src/data/locations.ts` and verify new coordinates. When the Moment covers
+   several places, set `location` to a list of ids in visiting order. Use
    `YYYY/MM/DD-NN-short-slug` for the ID, where `NN` is the next available
    two-digit order for that occurrence date.
 4. Process and upload images or videos in order from the repository root:

@@ -10,7 +10,7 @@ interface Props {
 }
 
 const { class: className, moment, showLocation = true } = Astro.props
-const showHeader = Boolean(moment.occurredLabel || (showLocation && moment.location))
+const showHeader = Boolean(moment.occurredLabel || (showLocation && moment.locations.length > 0))
 ---
 
 <article class:list={['moment-entry py-6 [&+&]:border-t [&+&]:border-border', className]}>
@@ -19,12 +19,12 @@ const showHeader = Boolean(moment.occurredLabel || (showLocation && moment.locat
       <header class="mb-2.5 flex items-center gap-2 font-mono text-xs text-tx-2 [&_a]:-my-3 [&_a]:inline-flex [&_a]:min-h-11 [&_a]:min-w-11 [&_a]:items-center [&_a]:justify-center [&_a]:text-tx-3 [&_a]:no-underline">
         {moment.occurredLabel && <time datetime={moment.occurredAt}>{moment.occurredLabel}</time>}
         {
-          showLocation && moment.location && (
-            <a class="moment-entry__location !mx-0 !w-auto gap-1 px-1 hover:!text-tx" href={`/map#${moment.location.id}`}>
+          showLocation && moment.locations.map(location => (
+            <a class="moment-entry__location !mx-0 !w-auto gap-1 px-1 hover:!text-tx" href={`/map#${location.id}`}>
               <span class="i-lucide-map-pin text-sm" aria-hidden="true" />
-              {moment.location.name}
+              {location.name}
             </a>
-          )
+          ))
         }
       </header>
     )

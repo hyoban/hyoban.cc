@@ -25,7 +25,8 @@ type ClusterMarkerEntry = {
 }
 
 const HISTORY_STATE_KEY = 'calendarMapSelection'
-const TRIP_HASH_PREFIX = 'trip/'
+const MAP_PATH = '/map/'
+const TRIP_PATH_PATTERN = /^\/trip\/([^/]+)\/?$/
 const LOCATION_INDEX_LAYER_ID = 'calendar-location-index'
 const LOCATION_SOURCE_ID = 'calendar-locations'
 const LOCATION_CLUSTER_MAX_ZOOM = 9
@@ -118,15 +119,21 @@ function initializeCalendarMap() {
     return id && locationsById.has(id) ? id : undefined
   }
 
-  function getHashTripId() {
-    const value = getHashValue()
+  function getUrlTripId() {
+    const match = window.location.pathname.match(TRIP_PATH_PATTERN)
+    let id: string | undefined
 
-    if (!value?.startsWith(TRIP_HASH_PREFIX)) {
-      return undefined
+    try {
+      id = match ? decodeURIComponent(match[1]!) : undefined
+    } catch {
+      id = undefined
     }
 
-    const id = value.slice(TRIP_HASH_PREFIX.length)
-    return tripPlayer.has(id) ? id : undefined
+    return id && tripPlayer.has(id) ? id : undefined
+  }
+
+  function getTripPath(id: string) {
+    return `/trip/${encodeURIComponent(id)}/`
   }
 
   function getHistoryState() {
@@ -240,12 +247,14 @@ function initializeCalendarMap() {
     }
   }
 
-  function syncTripFromHash() {
-    const id = getHashTripId()
+  function syncTripFromUrl() {
+    const id = getUrlTripId()
 
     if (tripSelect) {
       tripSelect.value = id ?? ''
     }
+
+    document.title = (id && tripPlayer.getPageTitle(id)) || page!.dataset.mapTitle || document.title
 
     if (id) {
       if (!mapLoaded) {
@@ -267,7 +276,7 @@ function initializeCalendarMap() {
   }
 
   function syncLocationFromHash(options: { focus?: boolean; moveMap?: boolean } = {}) {
-    syncTripFromHash()
+    syncTripFromUrl()
 
     if (tripPlayer.activeId) {
       closeDrawer({ restoreFocus: false })
@@ -291,14 +300,13 @@ function initializeCalendarMap() {
     })
   }
 
-  function setSelectionHash(hash: string) {
-    const hasSelection = Boolean(getHashLocationId() ?? getHashTripId())
+  function setSelectionUrl(url: string) {
+    const hasSelection = Boolean(getHashLocationId() ?? getUrlTripId())
     const currentState = getHistoryState()
     const nextState = {
       ...currentState,
       [HISTORY_STATE_KEY]: hasSelection ? currentState[HISTORY_STATE_KEY] === true : true,
     }
-    const url = `${window.location.pathname}${window.location.search}#${encodeURIComponent(hash)}`
 
     if (hasSelection) {
       history.replaceState(nextState, '', url)
@@ -309,12 +317,14 @@ function initializeCalendarMap() {
 
   function selectLocation(id: string, trigger: HTMLButtonElement) {
     activeTrigger = trigger
-    setSelectionHash(id)
+    setSelectionUrl(
+      `${window.location.pathname}${window.location.search}#${encodeURIComponent(id)}`,
+    )
     openLocation(id)
   }
 
   function selectTrip(id: string) {
-    setSelectionHash(`${TRIP_HASH_PREFIX}${id}`)
+    setSelectionUrl(getTripPath(id))
     syncLocationFromHash({ focus: false })
   }
 
@@ -331,7 +341,7 @@ function initializeCalendarMap() {
     history.replaceState(
       getHistoryState(),
       '',
-      `${window.location.pathname}${window.location.search}`,
+      getUrlTripId() ? MAP_PATH : `${window.location.pathname}${window.location.search}`,
     )
     syncLocationFromHash()
   }
@@ -801,8 +811,8 @@ function initializeCalendarMap() {
 
         const hashLocationId = getHashLocationId()
 
-        if (getHashTripId()) {
-          syncTripFromHash()
+        if (getUrlTripId()) {
+          syncTripFromUrl()
         } else if (hashLocationId) {
           activeTrigger = markers.get(hashLocationId)?.button ?? activeTrigger
           openLocation(hashLocationId, { focus: false })

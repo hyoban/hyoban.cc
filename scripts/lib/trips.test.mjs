@@ -4,6 +4,9 @@ import { buildTrip, defineTrips, getDistanceKm } from '../../src/moments/trips.t
 
 const hefei = { id: 'hefei', latitude: 31.8206, longitude: 117.2272, name: '合肥' }
 const nanjing = { id: 'nanjing', latitude: 32.0603, longitude: 118.7969, name: '南京' }
+const rizhao = { id: 'rizhao', latitude: 35.4164, longitude: 119.5269, name: '日照' }
+const places = { hefei, nanjing, rizhao }
+const resolve = (id) => places[id]
 
 test('rejects invalid, reversed and duplicate trips', () => {
   assert.throws(
@@ -26,15 +29,16 @@ test('rejects invalid, reversed and duplicate trips', () => {
 
 test('keeps located moments inside the inclusive date range', () => {
   const moments = [
-    { dateKey: '2026-04-30', id: 'before', location: hefei },
-    { dateKey: '2026-05-01', id: 'start', location: hefei },
-    { dateKey: '2026-05-02', id: 'unlocated' },
-    { dateKey: '2026-05-03', id: 'end', location: nanjing },
-    { dateKey: '2026-05-04', id: 'after', location: nanjing },
+    { dateKey: '2026-04-30', id: 'before', locations: [hefei], occurredAt: '2026-04-30' },
+    { dateKey: '2026-05-01', id: 'start', locations: [hefei], occurredAt: '2026-05-01' },
+    { dateKey: '2026-05-02', id: 'unlocated', locations: [], occurredAt: '2026-05-02' },
+    { dateKey: '2026-05-03', id: 'end', locations: [nanjing], occurredAt: '2026-05-03' },
+    { dateKey: '2026-05-04', id: 'after', locations: [nanjing], occurredAt: '2026-05-04' },
   ]
   const trip = buildTrip(
     { end: '2026-05-03', id: 'trip', start: '2026-05-01', title: 'Trip' },
     moments,
+    resolve,
   )
 
   assert.deepEqual(
@@ -44,6 +48,87 @@ test('keeps located moments inside the inclusive date range', () => {
   assert.equal(trip.dayCount, 3)
   assert.equal(trip.placeCount, 2)
   assert.equal(trip.distanceKm, Math.round(getDistanceKm(hefei, nanjing)))
+})
+
+test('routes through every place of a Moment with several places', () => {
+  const trip = buildTrip(
+    { end: '2026-05-01', id: 'trip', start: '2026-05-01', title: 'Trip' },
+    [
+      { dateKey: '2026-05-01', id: 'both', locations: [hefei, nanjing], occurredAt: '2026-05-01' },
+      { dateKey: '2026-05-01', id: 'back', locations: [hefei], occurredAt: '2026-05-01' },
+    ],
+    resolve,
+  )
+
+  assert.equal(trip.placeCount, 2)
+  assert.equal(trip.distanceKm, Math.round(getDistanceKm(hefei, nanjing) * 2))
+})
+
+test('threads waypoints between stops by time', () => {
+  const trip = buildTrip(
+    {
+      end: '2026-10-01',
+      id: 'trip',
+      start: '2026-09-30',
+      title: 'Trip',
+      waypoints: [
+        { at: '2026-09-30T18:00:00+08:00', location: 'hefei' },
+        { location: 'nanjing' },
+        { at: '2026-10-01T20:00:00+08:00', location: 'hefei' },
+      ],
+    },
+    [
+      {
+        dateKey: '2026-10-01',
+        id: 'rizhao',
+        locations: [rizhao],
+        occurredAt: '2026-10-01T09:00:00+08:00',
+      },
+    ],
+    resolve,
+  )
+
+  assert.deepEqual(
+    trip.stops.map((stop) => [stop.id, stop.waypoints.map((waypoint) => waypoint.location.id)]),
+    [['rizhao', ['hefei', 'nanjing']]],
+  )
+  assert.deepEqual(
+    trip.trailingWaypoints.map((waypoint) => waypoint.location.id),
+    ['hefei'],
+  )
+  assert.deepEqual(
+    trip.stops[0].waypoints.map((waypoint) => waypoint.time),
+    ['18:00', undefined],
+  )
+  assert.equal(trip.placeCount, 3)
+  assert.equal(
+    trip.distanceKm,
+    Math.round(
+      getDistanceKm(hefei, nanjing) + getDistanceKm(nanjing, rizhao) + getDistanceKm(rizhao, hefei),
+    ),
+  )
+})
+
+test('rejects untimed first waypoints and waypoints out of order or range', () => {
+  const trip = (waypoints) => [
+    { end: '2026-10-02', id: 'trip', start: '2026-10-01', title: 'Trip', waypoints },
+  ]
+
+  assert.throws(() => defineTrips(trip([{ location: 'hefei' }])), /needs an "at" time/)
+  assert.throws(
+    () => defineTrips(trip([{ at: '2026-09-30', location: 'hefei' }])),
+    /Invalid waypoint time/,
+  )
+  assert.throws(
+    () =>
+      defineTrips(
+        trip([
+          { at: '2026-10-02', location: 'hefei' },
+          { at: '2026-10-01T08:00:00+08:00', location: 'nanjing' },
+        ]),
+      ),
+    /must be in time order/,
+  )
 })
 
 test('measures great-circle distance in kilometres', () => {

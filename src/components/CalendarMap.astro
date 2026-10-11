@@ -12,15 +12,20 @@ import {
   getTrips,
   type ResolvedMomentMedia,
 } from '@/moments'
-import { getDayOffset } from '@/moments/trips'
+import { getDayOffset, type TripWaypoint } from '@/moments/trips'
 import { SITE_TITLE } from '@/consts'
 
+interface Props {
+  /** Starts playing this trip when the page loads (the /trip/<id>/ pages). */
+  tripId?: string
+}
+
+const { tripId } = Astro.props
 const moments = await getMoments()
 const locationGroups = getMappedLocationGroups(moments)
 const years = [...new Set(locationGroups.map(group => group.latestYear))].sort((a, b) => a - b)
 const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN ?? ''
-const title = `地图 · 日历 | ${SITE_TITLE}`
-const description = '按地点浏览 Calendar 中记录的 Moment。'
+const mapTitle = `地图 · 日历 | ${SITE_TITLE}`
 const markerData = locationGroups.map(group => ({
   color: getYearColor(group.latestYear),
   count: group.moments.length,
@@ -37,22 +42,46 @@ const tripData = trips.map(trip => ({
   dayCount: trip.dayCount,
   distanceKm: trip.distanceKm,
   id: trip.id,
+  pageTitle: getTripTitle(trip.title),
   photoCount: trip.stops.reduce((count, stop) => count + stop.media.length, 0),
   placeCount: trip.placeCount,
   stops: trip.stops.map(stop => ({
-    text: getPlainText(stop.text),
     date: formatShortDate(stop.dateKey, true),
     day: getDayOffset(trip.start, stop.dateKey) + 1,
     href: getMomentPath(stop.dateKey),
     images: getImages(stop.media),
-    latitude: stop.location.latitude,
-    longitude: stop.location.longitude,
-    name: stop.location.name,
+    name: stop.locations.map(location => location.name).join('、'),
+    places: stop.locations.map(toTripPlace),
+    text: getPlainText(stop.text),
     time: stop.occurredLabel,
+    waypoints: stop.waypoints.map(waypoint => toTripWaypoint(trip.start, waypoint)),
   })),
   title: trip.title,
+  trailingWaypoints: trip.trailingWaypoints.map(waypoint => toTripWaypoint(trip.start, waypoint)),
 }))
 const tripDataJson = JSON.stringify(tripData).replaceAll('<', '\\u003c')
+const activeTrip = trips.find(trip => trip.id === tripId)
+const title = activeTrip ? getTripTitle(activeTrip.title) : mapTitle
+const description = activeTrip
+  ? `${activeTrip.title}的旅程回放，按时间顺序走过每一条 Moment。`
+  : '按地点浏览 Calendar 中记录的 Moment。'
+
+function toTripPlace(location: { latitude: number; longitude: number; name: string }) {
+  return { latitude: location.latitude, longitude: location.longitude, name: location.name }
+}
+
+function toTripWaypoint(start: string, waypoint: TripWaypoint) {
+  return {
+    ...toTripPlace(waypoint.location),
+    date: formatShortDate(waypoint.dateKey, true),
+    day: getDayOffset(start, waypoint.dateKey) + 1,
+    time: waypoint.time,
+  }
+}
+
+function getTripTitle(tripTitle: string) {
+  return `${tripTitle} · 旅程 | ${SITE_TITLE}`
+}
 
 function formatShortDate(dateKey: string, weekday = false) {
   return new Intl.DateTimeFormat('zh-CN', {
@@ -106,7 +135,7 @@ function formatDate(dateKey: string) {
 ---
 
 <Layout title={title} description={description}>
-  <main class="calendar-map-page relative isolate h-dvh w-full overflow-hidden bg-bg" data-calendar-map data-mapbox-token={mapboxToken} transition:persist="calendar-map">
+  <main class="calendar-map-page relative isolate h-dvh w-full overflow-hidden bg-bg" data-calendar-map data-mapbox-token={mapboxToken} data-map-title={mapTitle} transition:persist="calendar-map">
     <div class="calendar-map-canvas absolute inset-0" data-calendar-map-canvas role="region" aria-label="Calendar 地点地图" />
 
     <header class="calendar-map-toolbar pointer-events-none absolute inset-x-4 top-4 z-[5] grid grid-cols-[1fr_auto_1fr] items-center gap-4 [&>*]:pointer-events-auto">
@@ -119,7 +148,7 @@ function formatDate(dateKey: string) {
                 <select class="min-h-[2.375rem] max-w-[14rem] cursor-pointer appearance-none truncate rounded-full border-0 bg-transparent pr-8 pl-3.5 text-tx outline-offset-2" data-calendar-map-trip-select>
                   <option value="">全部地点</option>
                   <optgroup label="旅程回放">
-                    {trips.map(trip => <option value={trip.id}>{trip.title}</option>)}
+                    {trips.map(trip => <option value={trip.id} selected={trip.id === tripId}>{trip.title}</option>)}
                   </optgroup>
                 </select>
                 <span class="i-lucide-chevrons-up-down pointer-events-none absolute right-3 text-tx-3" aria-hidden="true" />
@@ -160,14 +189,15 @@ function formatDate(dateKey: string) {
       </div>
     </section>
 
-    <section class="calendar-map-trip absolute bottom-4 left-4 z-10 w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-xl border border-border bg-bg shadow-[0_1.5rem_5rem_rgb(0_0_0/0.16)] max-[48rem]:inset-x-3 max-[48rem]:bottom-[calc(0.75rem+env(safe-area-inset-bottom))] max-[48rem]:w-auto [&[hidden]]:hidden" data-calendar-map-trip aria-labelledby="calendar-map-trip-title" hidden>
-      <ol class="flex list-none gap-1 px-4 pt-3" data-calendar-map-trip-progress aria-hidden="true" />
-      <header class="flex items-start justify-between gap-3 px-4 pt-3">
-        <div class="min-w-0">
-          <p class="truncate text-xs text-tx-3 tabular-nums" data-calendar-map-trip-eyebrow />
-          <h2 class="truncate text-lg font-medium" id="calendar-map-trip-title" data-calendar-map-trip-title />
-        </div>
-        <div class="-mt-1.5 -mr-2 flex shrink-0 items-center">
+    <section class="calendar-map-trip absolute bottom-4 left-4 z-10 flex max-h-[calc(100dvh-7rem)] w-[min(22rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-xl border border-border bg-bg shadow-[0_1.5rem_5rem_rgb(0_0_0/0.16)] max-[48rem]:inset-x-3 max-[48rem]:bottom-[calc(0.75rem+env(safe-area-inset-bottom))] max-[48rem]:max-h-[70dvh] max-[48rem]:w-auto [&[hidden]]:hidden" data-calendar-map-trip aria-labelledby="calendar-map-trip-title" hidden>
+      <ol class="flex shrink-0 list-none gap-1 px-4 pt-3" data-calendar-map-trip-progress aria-hidden="true" />
+      <header class="shrink-0 px-4 pt-3" data-calendar-map-trip-header>
+        <p class="truncate text-xs text-tx-3 tabular-nums" data-calendar-map-trip-eyebrow />
+        <h2 class="truncate text-lg font-medium" id="calendar-map-trip-title" data-calendar-map-trip-title />
+      </header>
+      <div class="flex min-h-0 flex-col px-4 pt-1 pb-3" data-calendar-map-trip-body aria-live="polite" />
+      <footer class="flex shrink-0 items-center justify-between border-t border-border px-2 py-1">
+        <div class="flex items-center">
           <button class="flex size-9 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-tx-2 hover:bg-inline hover:text-tx disabled:cursor-default disabled:opacity-40 disabled:hover:bg-transparent" type="button" data-calendar-map-trip-previous aria-label="上一站">
             <span class="i-lucide-chevron-left" aria-hidden="true" />
           </button>
@@ -177,12 +207,11 @@ function formatDate(dateKey: string) {
           <button class="flex size-9 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-tx-2 hover:bg-inline hover:text-tx disabled:cursor-default disabled:opacity-40 disabled:hover:bg-transparent" type="button" data-calendar-map-trip-next aria-label="下一站">
             <span class="i-lucide-chevron-right" aria-hidden="true" />
           </button>
-          <button class="flex size-9 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-tx-2 hover:bg-inline hover:text-tx" type="button" data-calendar-map-trip-close aria-label="退出旅程回放">
-            <span class="i-lucide-x" aria-hidden="true" />
-          </button>
         </div>
-      </header>
-      <div class="px-4 pt-1 pb-4" data-calendar-map-trip-body aria-live="polite" />
+        <button class="flex size-9 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-tx-2 hover:bg-inline hover:text-tx" type="button" data-calendar-map-trip-close aria-label="退出旅程回放">
+          <span class="i-lucide-x" aria-hidden="true" />
+        </button>
+      </footer>
     </section>
 
     <aside class="calendar-map-drawer absolute inset-y-4 right-4 z-10 grid w-[min(28rem,calc(100vw-2rem))] min-w-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden rounded-xl border border-border bg-bg shadow-[0_1.5rem_5rem_rgb(0_0_0/0.16)] max-[48rem]:inset-x-3 max-[48rem]:bottom-[calc(0.75rem+env(safe-area-inset-bottom))] max-[48rem]:top-auto max-[48rem]:h-[min(78dvh,42rem)] max-[48rem]:w-auto [&[hidden]]:hidden" data-calendar-map-drawer role="dialog" aria-labelledby="calendar-map-drawer-title" hidden>

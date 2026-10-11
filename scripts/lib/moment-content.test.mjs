@@ -94,6 +94,25 @@ test('accepts a date-only occurrence and preserves imported blank descriptions',
   assert.equal(moment.media[0].alt, '')
 })
 
+test('accepts several locations in visiting order but not one-item or duplicate lists', () => {
+  const document = (location) =>
+    ['---', 'occurredAt: "2026-07-15"', location, 'media: []', '---', '', 'Places.'].join('\n')
+
+  assert.deepEqual(
+    parseMomentDocument(document('location: [hefei, beijing]'), { id: '2026/07/15-01-places' })
+      .location,
+    ['hefei', 'beijing'],
+  )
+  assert.throws(
+    () => parseMomentDocument(document('location: [hefei]'), { id: '2026/07/15-01-places' }),
+    /single location id/,
+  )
+  assert.throws(
+    () => parseMomentDocument(document('location: [hefei, hefei]'), { id: '2026/07/15-01-places' }),
+    /Duplicate calendar map location id/,
+  )
+})
+
 test('rejects Moment references to unknown locations', () => {
   const document = [
     '---',

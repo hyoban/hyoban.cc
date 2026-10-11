@@ -185,6 +185,21 @@ html[data-calendar-mode-transition] .calendar-back-link {
   border-left-color: var(--color-bg);
 }
 
+/* Trip playback labels: a soft pill like the map toolbar, without the pointer tip. */
+.calendar-map-page .calendar-map-trip-label .mapboxgl-popup-content {
+  padding: 0.4375rem 0.75rem 0.5rem;
+  line-height: 1.35;
+  background: color-mix(in srgb, var(--color-bg) 88%, transparent);
+  border-color: color-mix(in srgb, var(--color-border) 82%, transparent);
+  border-radius: 0.625rem;
+  box-shadow: 0 0.25rem 1.25rem rgb(0 0 0 / 0.12);
+  backdrop-filter: blur(1rem);
+}
+
+.calendar-map-page .calendar-map-trip-label .mapboxgl-popup-tip {
+  display: none;
+}
+
 @media (min-width: 48.0625rem) {
   .calendar-map-page:has(.calendar-map-drawer:not([hidden])) .mapboxgl-ctrl-bottom-right {
     right: calc(min(28rem, calc(100vw - 2rem)) + 1.5rem);

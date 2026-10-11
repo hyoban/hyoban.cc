@@ -69,8 +69,8 @@ export type ResolvedMomentMedia =
 export type Moment = {
   dateKey: string
   id: string
-  location?: ResolvedMomentLocation
-  locationId?: LocationId
+  /** Places in visiting order; empty when the Moment has no location. */
+  locations: ResolvedMomentLocation[]
   media: ResolvedMomentMedia[]
   occurredAt: string
   occurredLabel?: string
@@ -124,7 +124,11 @@ export function getMappedLocationGroups(moments: Moment[]) {
 }
 
 export function getTrips(moments: Moment[]) {
-  return trips.map((trip) => buildTrip(trip, moments)).filter((trip) => trip.stops.length > 0)
+  return trips
+    .map((trip) =>
+      buildTrip(trip, moments, (id) => ({ id, ...getLocation(locations, id as LocationId) })),
+    )
+    .filter((trip) => trip.stops.length > 0)
 }
 
 export function getCalendarDateKey(date: Date) {
@@ -156,6 +160,10 @@ function resolveMoment(entry: MomentEntry): Moment {
   const moment: Moment = {
     dateKey,
     id: entry.id,
+    locations: [source.location ?? []].flat().map((id) => {
+      const locationId = id as LocationId
+      return { id: locationId, ...getLocation(locations, locationId) }
+    }),
     media: source.media.map((item) => resolveMedia(entry, item)),
     occurredAt: source.occurredAt,
     order,
@@ -164,13 +172,6 @@ function resolveMoment(entry: MomentEntry): Moment {
 
   if (source.occurredAt.length > 10) {
     moment.occurredLabel = source.occurredAt.slice(11, 16)
-  }
-
-  if (source.location) {
-    const locationId = source.location as LocationId
-    const location = getLocation(locations, locationId)
-    moment.locationId = locationId
-    moment.location = { id: locationId, ...location }
   }
 
   return moment
