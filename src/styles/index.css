@@ -395,6 +395,21 @@ html:has(.calendar-map-page[data-export-ratio]) body {
   background: color-mix(in srgb, var(--color-bg) 88%, transparent);
   border: 1px solid var(--color-border);
   border-radius: 999px;
+  transition:
+    opacity 300ms,
+    visibility 300ms;
+}
+
+/* Like a video player's controls: gone while nobody moves the pointer, back on a move
+   or a tap. Focus brings it back too, so it stays reachable from the keyboard. */
+.calendar-map-page[data-trip-presenting][data-trip-idle] {
+  cursor: none;
+}
+
+.calendar-map-page[data-trip-presenting][data-trip-idle]
+  .calendar-map-trip-stage__close:not(:focus-visible) {
+  visibility: hidden;
+  opacity: 0;
 }
 
 .calendar-map-trip-stage__progress {
