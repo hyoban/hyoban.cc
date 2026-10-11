@@ -1,4 +1,6 @@
 ---
+import { getBilibiliPlayer } from '@/moments/bilibili'
+
 interface Props {
   text: string
 }
@@ -8,8 +10,41 @@ type Token = {
   value: string
 }
 
+type Block =
+  | { type: 'bilibili', src: string }
+  | { type: 'text', tokens: Token[] }
+
 const { text } = Astro.props
-const tokens = tokenize(text)
+const blocks = splitBlocks(text)
+
+/** A Bilibili video link on a line of its own plays inline; everything else stays text. */
+function splitBlocks(value: string): Block[] {
+  const blocks: Block[] = []
+  let lines: string[] = []
+  const flush = () => {
+    const chunk = lines.join('\n').replace(/^\n+|\n+$/g, '')
+
+    if (chunk) {
+      blocks.push({ type: 'text', tokens: tokenize(chunk) })
+    }
+
+    lines = []
+  }
+
+  for (const line of value.split('\n')) {
+    const src = getBilibiliPlayer(line)
+
+    if (src) {
+      flush()
+      blocks.push({ type: 'bilibili', src })
+    } else {
+      lines.push(line)
+    }
+  }
+
+  flush()
+  return blocks
+}
 
 function tokenize(value: string): Token[] {
   const pattern = /(https?:\/\/[^\s\u3000-\u303f\u3040-\u30ff\u3400-\u9fff\uf900-\ufaff\uff01-\uff65]+|@[A-Za-z0-9_]+|#[\p{L}\p{N}_]+)/gu
@@ -52,12 +87,29 @@ function tokenize(value: string): Token[] {
 }
 ---
 
-<p class="moment-text whitespace-pre-wrap [line-height:1.7] [overflow-wrap:anywhere] [&_a]:text-tx">
-  {
-    tokens.map(token => token.type === 'url'
-      ? <a href={token.value} target="_blank" rel="noopener noreferrer">{token.value}</a>
-      : token.type === 'text'
-        ? token.value
-        : <span class="text-tx-2">{token.value}</span>)
-  }
-</p>
+{
+  blocks.map(block => block.type === 'bilibili'
+    ? (
+        <iframe
+          class="moment-video mt-3 block aspect-video w-full rounded-[0.625rem] border border-border bg-inline"
+          src={block.src}
+          title="哔哩哔哩视频"
+          loading="lazy"
+          allow="fullscreen; picture-in-picture"
+          allowfullscreen
+          referrerpolicy="strict-origin-when-cross-origin"
+          sandbox="allow-scripts allow-same-origin allow-popups allow-presentation"
+        />
+      )
+    : (
+        <p class="moment-text whitespace-pre-wrap [line-height:1.7] [overflow-wrap:anywhere] [&_a]:text-tx [&+&]:mt-3">
+          {
+            block.tokens.map(token => token.type === 'url'
+              ? <a href={token.value} target="_blank" rel="noopener noreferrer">{token.value}</a>
+              : token.type === 'text'
+                ? token.value
+                : <span class="text-tx-2">{token.value}</span>)
+          }
+        </p>
+      ))
+}

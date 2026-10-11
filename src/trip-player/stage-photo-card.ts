@@ -1,4 +1,4 @@
-import { createElement, createLiveVideo } from './dom'
+import { createElement, createLiveVideo, createVideoPlayer } from './dom'
 import { FADE_IN, FADE_OUT, PHOTO_SWITCH, reducedMotion } from './motion'
 import type { TripStop } from './types'
 
@@ -36,7 +36,9 @@ export function createStagePhotoCard(container: HTMLElement) {
     const frame =
       stop.images.length > 0
         ? createElement('div', 'calendar-map-trip-polaroid__frame', '')
-        : undefined
+        : stop.video
+          ? createVideoPlayer(stop.video, 'calendar-map-trip-polaroid__video')
+          : undefined
 
     clear()
 
@@ -69,7 +71,7 @@ export function createStagePhotoCard(container: HTMLElement) {
     const image = stop.images[imageIndex]
     const frame = current?.frame
 
-    if (!current || !frame || !image) {
+    if (!current || !frame || !image || frame instanceof HTMLIFrameElement) {
       return
     }
 

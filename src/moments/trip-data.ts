@@ -2,6 +2,7 @@ import { SITE_TITLE } from '@/consts'
 import { tripVideoMusic } from '@/data/music'
 import tripWeather from '@/data/trip-weather.json'
 import { getMomentPath, type MomentTrip } from '@/moments'
+import { takeBilibiliVideo } from '@/moments/bilibili'
 import { getTripCovers, getTripImages } from '@/moments/trip-images'
 import { getDayOffset, getDayPlaces, getWeatherKey, type TripWaypoint } from '@/moments/trips'
 
@@ -21,6 +22,7 @@ export function getTripData(trip: MomentTrip) {
     placeCount: trip.placeCount,
     covers: getTripCovers(trip),
     stops: trip.stops.map((stop) => ({
+      ...getStopWords(stop.text),
       anchor: getStopAnchor(stop.id),
       date: formatShortDate(stop.dateKey, true),
       day: getDayOffset(trip.start, stop.dateKey) + 1,
@@ -28,7 +30,6 @@ export function getTripData(trip: MomentTrip) {
       images: getTripImages(stop.media),
       name: stop.locations.map((location) => location.name).join('、'),
       places: stop.locations.map(toTripPlace),
-      text: getPlainText(stop.text),
       time: stop.occurredLabel,
       waypoints: stop.waypoints.map((waypoint) => toTripWaypoint(trip.start, waypoint)),
     })),
@@ -121,6 +122,12 @@ function formatShortDate(dateKey: string, weekday = false) {
     timeZone: 'UTC',
     ...(weekday ? { weekday: 'short' as const } : {}),
   }).format(new Date(`${dateKey}T00:00:00Z`))
+}
+
+/** A stop's words, with a Bilibili video it links to taken out to play on its card. */
+function getStopWords(text: string) {
+  const words = takeBilibiliVideo(text, { autoplay: true })
+  return { text: getPlainText(words.text), ...(words.video ? { video: words.video } : {}) }
 }
 
 function getPlainText(text: string) {

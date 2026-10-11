@@ -5,6 +5,7 @@ import {
   createCountUp,
   createElement,
   createLiveVideo,
+  createVideoPlayer,
   createMosaic,
   createWeather,
   downloadBlob,
@@ -1216,6 +1217,15 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
       // Text sits last, next to the fixed footer, so photos of other sizes don't move it.
       body.replaceChildren(
+        // Presenting or recording, the stage's card plays it instead.
+        ...(stop.video && stop.images.length === 0 && !isStageLayout()
+          ? [
+              createVideoPlayer(
+                stop.video,
+                'mt-1 w-full shrink-0 rounded-md border border-border bg-inline',
+              ),
+            ]
+          : []),
         link,
         ...(stop.images.length > 1 ? [createThumbnails(stop)] : []),
         ...(stop.text ? [text] : []),
