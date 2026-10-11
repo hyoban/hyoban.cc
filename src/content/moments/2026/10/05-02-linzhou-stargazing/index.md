@@ -1,6 +1,6 @@
 ---
 occurredAt: '2026-10-05T22:12:54+08:00'
-location: linzhou
+location: linzhou-dongyao
 media:
   - type: image
     file: linzhou-stargazing.webp

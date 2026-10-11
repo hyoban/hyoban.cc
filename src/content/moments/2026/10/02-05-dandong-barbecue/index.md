@@ -1,6 +1,6 @@
 ---
 occurredAt: '2026-10-02T19:43:22+08:00'
-location: dandong
+location: dandong-yanjing-kaorou
 media:
   - type: image
     file: dandong-barbecue.webp

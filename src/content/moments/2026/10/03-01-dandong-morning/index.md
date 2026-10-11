@@ -1,6 +1,8 @@
 ---
 occurredAt: '2026-10-03T10:45:42+08:00'
-location: jinjiangshan-park
+location:
+  - yalu-river
+  - jinjiangshan-park
 media:
   - type: live-photo
     file: dandong-morning-live-1.webp

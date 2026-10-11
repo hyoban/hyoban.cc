@@ -1,6 +1,6 @@
 ---
 occurredAt: '2026-10-05'
-location: tianjin
+location: tianjin-meisu-guobacai
 media:
   - type: live-photo
     file: tianjin-guobacai-live-1.webp

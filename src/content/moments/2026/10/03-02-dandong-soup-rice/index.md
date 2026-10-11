@@ -1,6 +1,6 @@
 ---
 occurredAt: '2026-10-03T10:55:36+08:00'
-location: dandong
+location: dandong-gaoshezhang-tangfan
 media:
   - type: live-photo
     file: dandong-soup-rice-live-1.webp

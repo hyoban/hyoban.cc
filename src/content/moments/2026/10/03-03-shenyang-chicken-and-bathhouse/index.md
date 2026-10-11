@@ -1,6 +1,8 @@
 ---
 occurredAt: '2026-10-03T22:10:07+08:00'
-location: shenyang
+location:
+  - shenyang-laoma-jijia
+  - shenyang-qinghe-bandao-hot-spring
 media:
   - type: live-photo
     file: shenyang-chicken-and-bathhouse-live-1.webp

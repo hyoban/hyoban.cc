@@ -1,6 +1,6 @@
 ---
 occurredAt: '2026-10-01T14:04:39+08:00'
-location: yantai
+location: yantai-port-passenger-terminal
 media:
   - type: image
     file: yantai-dalian-ferry.webp

@@ -1,6 +1,6 @@
 ---
 occurredAt: '2026-10-02T13:26:49+08:00'
-location: dalian
+location: dalian-riyuesheng-yujiacai
 media:
   - type: live-photo
     file: dalian-sea-intestine-rice-live-1.webp

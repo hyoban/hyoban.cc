@@ -1,6 +1,6 @@
 ---
 occurredAt: '2026-10-04T15:38:06+08:00'
-location: shenyang
+location: shenyang-mixc
 media:
   - type: image
     file: shenyang-cybercab.webp

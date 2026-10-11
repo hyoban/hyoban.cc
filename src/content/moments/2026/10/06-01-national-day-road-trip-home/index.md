@@ -1,5 +1,6 @@
 ---
 occurredAt: '2026-10-06T23:45:54+08:00'
+location: wuwei
 media:
   - type: image
     file: national-day-road-trip-home.webp

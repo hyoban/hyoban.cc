@@ -1,6 +1,6 @@
 ---
 occurredAt: '2026-10-02T00:13:32+08:00'
-location: dalian
+location: dalian-huozhang-niaogengzuo
 media:
   - type: image
     file: dalian-japanese-dinner.webp

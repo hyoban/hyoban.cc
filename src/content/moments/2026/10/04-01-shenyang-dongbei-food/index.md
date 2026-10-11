@@ -1,6 +1,6 @@
 ---
 occurredAt: '2026-10-04T12:51:06+08:00'
-location: shenyang
+location: shenyang-yuyue-kaoya
 media:
   - type: live-photo
     file: shenyang-dongbei-food-live-1.webp
