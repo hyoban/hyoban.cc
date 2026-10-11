@@ -1,4 +1,3 @@
-import { join } from 'node:path'
 import { parseArgs } from 'node:util'
 import { fileURLToPath } from 'node:url'
 
@@ -6,7 +5,7 @@ import { locations } from '../src/data/locations.ts'
 import { trips } from '../src/data/trips.ts'
 import { getLocation } from '../src/moments/map-locations.ts'
 import { getDayOffset, getDistanceKm } from '../src/moments/trips.ts'
-import { readMomentRecords } from './lib/moment-assets.mjs'
+import { readTripMoments } from './lib/trip-moments.mjs'
 
 // Lists runs of days with Moments far from home that no trip in src/data/trips.ts
 // covers yet, as candidates to add there. It only reports; nothing is written.
@@ -29,16 +28,8 @@ const MAX_GAP_DAYS = 2
 
 const awayDays = new Map()
 
-for (const { id, moment } of await readMomentRecords(join(root, 'src/content/moments'))) {
-  if (moment.hidden) {
-    continue
-  }
-
-  const dateKey = moment.occurredAt.slice(0, 10)
-  const far = [moment.location ?? []]
-    .flat()
-    .map((locationId) => ({ id: locationId, ...getLocation(locations, locationId) }))
-    .filter((location) => getDistanceKm(home, location) > radiusKm)
+for (const { dateKey, id, locations: places } of await readTripMoments(root)) {
+  const far = places.filter((location) => getDistanceKm(home, location) > radiusKm)
 
   if (far.length > 0) {
     const day = awayDays.get(dateKey) ?? { moments: [], places: new Set() }

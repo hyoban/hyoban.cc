@@ -9,7 +9,8 @@ import { remarkTelegramWidgets } from './src/telegram-widget.mjs'
 export default defineConfig({
   site: SITE_URL,
   devToolbar: { enabled: false },
-  integrations: [Sitemap()],
+  // Map place pages are drawer fragments, not pages to list.
+  integrations: [Sitemap({ filter: (page) => !page.includes('/map/place/') })],
   vite: {
     plugins: [tailwindcss() as any],
   },

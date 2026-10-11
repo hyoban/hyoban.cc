@@ -1,3 +1,4 @@
+import { getDistanceKm as getCoordinateDistanceKm } from '../geo.ts'
 import type { MapLocation } from './map-locations.ts'
 
 /**
@@ -82,7 +83,6 @@ const TIMESTAMP_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2})?(?:Z|[+-]\d{
 const TRIP_ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 const COVER_PATTERN =
   /^\d{4}\/\d{2}\/\d{2}-\d{2}-[a-z0-9]+(?:-[a-z0-9]+)*\/[a-z0-9]+(?:-[a-z0-9]+)*\.[a-z0-9]+$/
-const EARTH_RADIUS_KM = 6371
 const DAY_MS = 86_400_000
 
 export function defineTrips<const T extends readonly TripDefinition[]>(trips: T) {
@@ -261,18 +261,9 @@ export function getDayPlaces<T extends TripMoment>(trip: Trip<T>) {
   return places
 }
 
-/** Great-circle distance, so it is a lower bound for the distance actually travelled. */
+/** Great-circle distance between two places. */
 export function getDistanceKm(from: MapLocation, to: MapLocation) {
-  const toRadians = (degrees: number) => (degrees * Math.PI) / 180
-  const latitudeDelta = toRadians(to.latitude - from.latitude)
-  const longitudeDelta = toRadians(to.longitude - from.longitude)
-  const a =
-    Math.sin(latitudeDelta / 2) ** 2 +
-    Math.cos(toRadians(from.latitude)) *
-      Math.cos(toRadians(to.latitude)) *
-      Math.sin(longitudeDelta / 2) ** 2
-
-  return 2 * EARTH_RADIUS_KM * Math.asin(Math.sqrt(a))
+  return getCoordinateDistanceKm([from.longitude, from.latitude], [to.longitude, to.latitude])
 }
 
 export function getDayOffset(start: string, dateKey: string) {

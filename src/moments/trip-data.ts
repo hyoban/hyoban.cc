@@ -1,16 +1,14 @@
 import { SITE_TITLE } from '@/consts'
 import { tripVideoMusic } from '@/data/music'
 import tripWeather from '@/data/trip-weather.json'
-import { getMomentPath, type getTrips } from '@/moments'
+import { getMomentPath, type MomentTrip } from '@/moments'
 import { getTripCovers, getTripImages } from '@/moments/trip-images'
 import { getDayOffset, getDayPlaces, getWeatherKey, type TripWaypoint } from '@/moments/trips'
 
 // What the trip player needs for one trip. The map page inlines it for the trip it
 // opens on and fetches /trip/<id>/data.json for the others.
 
-type BuiltTrip = ReturnType<typeof getTrips>[number]
-
-export function getTripData(trip: BuiltTrip) {
+export function getTripData(trip: MomentTrip) {
   return {
     dateRange: `${formatShortDate(trip.start)} – ${formatShortDate(trip.end)}`,
     dayCount: trip.dayCount,
@@ -62,7 +60,7 @@ const WEATHER_KINDS: [maxCode: number, label: string, icon: string][] = [
 ]
 
 /** Each trip day's weather, by day number; days `pnpm trips:weather` hasn't fetched are left out. */
-function getTripWeather(trip: BuiltTrip) {
+function getTripWeather(trip: MomentTrip) {
   const days: Record<number, { icon: string; label: string }> = {}
 
   for (const [dateKey, place] of getDayPlaces(trip)) {

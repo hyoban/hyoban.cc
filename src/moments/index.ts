@@ -125,6 +125,16 @@ export function getMappedLocationGroups(moments: Moment[]) {
   return groupMomentsByLocation(locations, moments)
 }
 
+/** One static path per trip, for the /trip/<id>/ page and the files beside it. */
+export async function getTripPaths() {
+  return getTrips(await getMoments()).map((trip) => ({ params: { id: trip.id }, props: { trip } }))
+}
+
+export type TripPathProps = Awaited<ReturnType<typeof getTripPaths>>[number]['props']
+
+/** A trip with its Moments and route, as `getTrips` builds it. */
+export type MomentTrip = ReturnType<typeof getTrips>[number]
+
 export function getTrips(moments: Moment[]) {
   return trips
     .map((trip) =>

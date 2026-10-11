@@ -1,13 +1,11 @@
 ---
 import CalendarBackLink from '@/components/CalendarBackLink.astro'
 import CalendarModeSwitch from '@/components/CalendarModeSwitch.astro'
-import MomentEntry from '@/components/MomentEntry.astro'
 import MomentLightboxMedia from '@/components/MomentLightboxMedia.astro'
 import Layout from '@/layouts/Layout.astro'
 import { getYearColor } from '@/moments/map-locations'
 import {
   getMappedLocationGroups,
-  getMomentPath,
   getMoments,
   getTrips,
 } from '@/moments'
@@ -50,17 +48,6 @@ const description = activeTrip
 
 function toScriptJson(value: unknown) {
   return JSON.stringify(value).replaceAll('<', '\\u003c')
-}
-
-function formatDate(dateKey: string) {
-  const date = new Date(`${dateKey}T00:00:00Z`)
-  return new Intl.DateTimeFormat('zh-CN', {
-    day: 'numeric',
-    month: 'long',
-    timeZone: 'UTC',
-    weekday: 'short',
-    year: 'numeric',
-  }).format(date)
 }
 ---
 
@@ -201,33 +188,6 @@ function formatDate(dateKey: string) {
       </header>
       <div class="calendar-map-drawer__content min-w-0 overflow-y-auto overscroll-contain px-5 pb-4" data-calendar-map-drawer-content />
     </aside>
-
-    {
-      locationGroups.map(group => {
-        const groupYears = [...new Set(group.moments.map(moment => Number.parseInt(moment.dateKey.slice(0, 4), 10)))]
-          .sort((a, b) => b - a)
-
-        return (
-          <template data-calendar-map-template={group.id}>
-            <div class="calendar-map-drawer__summary flex items-center gap-1.5 pt-4 pb-1 font-mono text-xs text-tx-3">
-              <span>{group.moments.length} 条记录</span>
-              <span aria-hidden="true">·</span>
-              <span>{groupYears.map(year => `${year} 年`).join('、')}</span>
-            </div>
-            <div class="calendar-map-drawer__moments min-w-0">
-              {group.moments.map(moment => (
-                <section class="calendar-map-moment min-w-0 [&+&]:border-t [&+&]:border-border">
-                  <a class="calendar-map-moment__date mt-5 inline-block font-mono text-xs text-tx-2 no-underline" href={getMomentPath(moment.dateKey)}>
-                    {formatDate(moment.dateKey)}
-                  </a>
-                  <MomentEntry class="!pt-2.5" moment={moment} showLocation={false} />
-                </section>
-              ))}
-            </div>
-          </template>
-        )
-      })
-    }
 
     <dialog class="calendar-map-lightbox m-0 h-dvh max-h-none w-screen max-w-none border-0 bg-black/88 p-16 backdrop:bg-transparent max-[48rem]:px-4 max-[48rem]:py-12" data-calendar-map-lightbox aria-label="图片查看器">
       <button type="button" class="calendar-map-lightbox__close fixed right-4 top-4 z-[1] flex size-11 cursor-pointer items-center justify-center border-0 bg-transparent text-white" data-map-lightbox-close aria-label="关闭图片">

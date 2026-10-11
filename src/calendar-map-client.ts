@@ -1,6 +1,6 @@
 import MapboxLanguage from '@mapbox/mapbox-gl-language'
 import mapboxgl, { type GeoJSONSource, type PaddingOptions } from 'mapbox-gl'
-import { createTripPlayer } from './calendar-map-trip'
+import { createTripPlayer } from './trip-player/player'
 import { initializeLightboxMedia } from './moment-lightbox-client'
 
 type MarkerData = {
@@ -69,7 +69,9 @@ function initializeCalendarMap() {
   const lightboxMedia = initializeLightboxMedia(lightbox, signal)
   const locations = parseMarkerData(dataElement)
   const locationsById = new Map(locations.map((location) => [location.id, location]))
-  const templates = new Map<string, HTMLTemplateElement>()
+  // Each place's drawer content, fetched from /map/place/<id>/ the first time it's needed.
+  const placeHtml = new Map<string, string>()
+  const placeRequests = new Map<string, Promise<string | undefined>>()
   const markers = new Map<string, MarkerEntry>()
   const clusterMarkers = new Map<number, ClusterMarkerEntry>()
   const darkMode = window.matchMedia('(prefers-color-scheme: dark)')
@@ -87,16 +89,6 @@ function initializeCalendarMap() {
   let lightboxIndex = 0
   let lightboxItems: HTMLElement[] = []
   let loadTimeout: ReturnType<typeof setTimeout> | undefined
-
-  for (const template of page.querySelectorAll<HTMLTemplateElement>(
-    '[data-calendar-map-template]',
-  )) {
-    const id = template.dataset.calendarMapTemplate
-
-    if (id) {
-      templates.set(id, template)
-    }
-  }
 
   function getMapStyle() {
     return `mapbox://styles/mapbox/${darkMode.matches ? 'dark' : 'light'}-v11`
@@ -177,11 +169,46 @@ function initializeCalendarMap() {
     })
   }
 
+  /** Fetches a place's drawer content once; a failed fetch is tried again next time. */
+  function loadPlace(id: string) {
+    let request = placeRequests.get(id)
+
+    if (!request) {
+      request = fetch(`/map/place/${encodeURIComponent(id)}/`, { signal })
+        .then((response) => (response.ok ? response.text() : undefined))
+        .catch(() => undefined)
+        .then((html) => {
+          if (html === undefined) {
+            placeRequests.delete(id)
+          } else {
+            placeHtml.set(id, html)
+          }
+
+          return html
+        })
+      placeRequests.set(id, request)
+    }
+
+    return request
+  }
+
+  function renderPlace(html: string | undefined) {
+    const template = document.createElement('template')
+
+    if (html === undefined) {
+      drawerContent.replaceChildren(createLoadingMessage('没能加载这个地点的记录，请稍后再试。'))
+    } else {
+      template.innerHTML = html
+      drawerContent.replaceChildren(template.content)
+    }
+
+    drawerContent.removeAttribute('aria-busy')
+  }
+
   function openLocation(id: string, options: { focus?: boolean; moveMap?: boolean } = {}) {
     const location = locationsById.get(id)
-    const template = templates.get(id)
 
-    if (!location || !template) {
+    if (!location) {
       return
     }
 
@@ -191,8 +218,19 @@ function initializeCalendarMap() {
 
     activeLocationId = id
     drawerTitle.textContent = location.name
-    drawerContent.replaceChildren(template.content.cloneNode(true))
     drawer.hidden = false
+
+    if (placeHtml.has(id)) {
+      renderPlace(placeHtml.get(id))
+    } else {
+      drawerContent.setAttribute('aria-busy', 'true')
+      drawerContent.replaceChildren(createLoadingMessage('加载中…'))
+      void loadPlace(id).then((html) => {
+        if (activeLocationId === id) {
+          renderPlace(html)
+        }
+      })
+    }
 
     for (const [markerId, marker] of markers) {
       marker.button.setAttribute('aria-pressed', String(markerId === id))
@@ -435,10 +473,15 @@ function initializeCalendarMap() {
       }
       const hidePopup = () => popup.remove()
 
+      const prefetch = () => void loadPlace(location.id)
+
       button.addEventListener('mouseenter', showPopup, { signal })
       button.addEventListener('mouseleave', hidePopup, { signal })
       button.addEventListener('focus', showPopup, { signal })
       button.addEventListener('blur', hidePopup, { signal })
+      // Pointing at a place is a good hint it'll be opened, so its Moments start loading.
+      button.addEventListener('pointerenter', prefetch, { signal })
+      button.addEventListener('focus', prefetch, { signal })
       button.addEventListener(
         'click',
         (event) => {
@@ -900,3 +943,10 @@ document.addEventListener('astro:before-swap', (event) => {
 
   destroyCurrentMap?.()
 })
+
+function createLoadingMessage(text: string) {
+  const message = document.createElement('p')
+  message.className = 'pt-4 text-sm text-tx-3'
+  message.textContent = text
+  return message
+}

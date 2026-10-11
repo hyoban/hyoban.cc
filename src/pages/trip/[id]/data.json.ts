@@ -1,11 +1,8 @@
-import type { APIRoute, GetStaticPaths } from 'astro'
-import { getMoments, getTrips } from '@/moments'
+import type { APIRoute } from 'astro'
+import { getTripPaths, type TripPathProps } from '@/moments'
 import { getTripData } from '@/moments/trip-data'
 
-export const getStaticPaths = (async () => {
-  return getTrips(await getMoments()).map((trip) => ({ params: { id: trip.id }, props: { trip } }))
-}) satisfies GetStaticPaths
+export const getStaticPaths = getTripPaths
 
-type Props = Awaited<ReturnType<typeof getStaticPaths>>[number]['props']
-
-export const GET: APIRoute<Props> = ({ props: { trip } }) => Response.json(getTripData(trip))
+export const GET: APIRoute<TripPathProps> = ({ props: { trip } }) =>
+  Response.json(getTripData(trip))

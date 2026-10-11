@@ -1,5 +1,5 @@
 import sharp, { type OverlayOptions } from 'sharp'
-import type { getTrips } from '@/moments'
+import type { MomentTrip } from '@/moments'
 import { getTripCovers } from '@/moments/trip-images'
 
 // A trip's preview: its route on the left and its first cover photo on the right. No
@@ -11,10 +11,11 @@ const HEIGHT = 630
 const BACKGROUND = '#fdfdfc'
 const INK = '#21201c'
 
-type BuiltTrip = ReturnType<typeof getTrips>[number]
+// The share image and the thumbnail are rendered separately; the cover is fetched once.
+const coverPhotos = new Map<string, Promise<Buffer | undefined>>()
 
 /** `lineScale` thickens the route for previews that will be shown small. */
-export async function renderTripPreview(trip: BuiltTrip, lineScale = 1) {
+export async function renderTripPreview(trip: MomentTrip, lineScale = 1) {
   const photo = await loadCoverPhoto(getTripCovers(trip)[0]?.src)
   const routeWidth = photo ? WIDTH / 2 : WIDTH
   const layers: OverlayOptions[] = [
@@ -39,11 +40,22 @@ export async function renderTripPreview(trip: BuiltTrip, lineScale = 1) {
     .toBuffer()
 }
 
-async function loadCoverPhoto(src: string | undefined) {
+function loadCoverPhoto(src: string | undefined) {
   if (!src) {
-    return undefined
+    return Promise.resolve(undefined)
   }
 
+  let photo = coverPhotos.get(src)
+
+  if (!photo) {
+    photo = fetchCoverPhoto(src)
+    coverPhotos.set(src, photo)
+  }
+
+  return photo
+}
+
+async function fetchCoverPhoto(src: string) {
   try {
     const response = await fetch(src)
     return response.ok ? Buffer.from(await response.arrayBuffer()) : undefined
@@ -54,7 +66,7 @@ async function loadCoverPhoto(src: string | undefined) {
 }
 
 /** The whole route along roads, scaled to fit, with a dot at each place. */
-function getRouteSvg(trip: BuiltTrip, width: number, lineScale: number) {
+function getRouteSvg(trip: MomentTrip, width: number, lineScale: number) {
   const line: [number, number][] = []
 
   for (const [index, place] of trip.path.entries()) {
