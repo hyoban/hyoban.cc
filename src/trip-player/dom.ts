@@ -64,27 +64,6 @@ export function preloadThumbnail(source: TripImage) {
   return image
 }
 
-type NetworkInformation = { effectiveType?: string; saveData?: boolean; type?: string }
-
-/**
- * Whether live photos' clips play by themselves. They are over a megabyte each and a
- * trip has dozens, so they stay off on data saver, a slow link or mobile data. Safari
- * doesn't say which network it is on, so there a phone or tablet counts as mobile.
- */
-export function canAutoplayLiveClips() {
-  const connection = (navigator as Navigator & { connection?: NetworkInformation }).connection
-
-  if (connection) {
-    return (
-      !connection.saveData &&
-      connection.type !== 'cellular' &&
-      !['slow-2g', '2g', '3g'].includes(connection.effectiveType ?? '')
-    )
-  }
-
-  return !window.matchMedia('(max-width: 48rem), (pointer: coarse)').matches
-}
-
 /** A grid of the trip's cover photos for the intro and summary cards. */
 export function createMosaic(covers: readonly TripImage[]) {
   // Narrow screens keep one row so the map stays visible above the card.

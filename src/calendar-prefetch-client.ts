@@ -2,23 +2,8 @@ const calendarMonthPathPattern = /^\/calendar\/\d{4}\/\d{2}\/$/
 const pageCache = new Map<string, Promise<string | undefined>>()
 const parser = new DOMParser()
 
-type NetworkInformation = {
-  effectiveType?: string
-  saveData?: boolean
-}
-
 function getPageKey(url: URL) {
   return `${url.origin}${url.pathname}${url.search}`
-}
-
-function canPrefetch() {
-  const connection = (
-    navigator as Navigator & {
-      connection?: NetworkInformation
-    }
-  ).connection
-
-  return !connection?.saveData && !connection?.effectiveType?.includes('2g')
 }
 
 function prefetchPage(url: URL) {
@@ -57,7 +42,7 @@ function prefetchPage(url: URL) {
 }
 
 function prefetchLink(target: EventTarget | null) {
-  if (!canPrefetch() || !(target instanceof Element)) {
+  if (!(target instanceof Element)) {
     return
   }
 
@@ -69,10 +54,6 @@ function prefetchLink(target: EventTarget | null) {
 }
 
 function prefetchAdjacentMonths() {
-  if (!canPrefetch()) {
-    return
-  }
-
   for (const link of document.querySelectorAll<HTMLAnchorElement>(
     'a[data-calendar-month-prefetch="load"]',
   )) {

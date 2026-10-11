@@ -2,7 +2,6 @@ import type { Map as MapboxMap } from 'mapbox-gl'
 import { getDistanceKm, type Coordinates } from '../geo'
 import { createCamera } from './camera'
 import {
-  canAutoplayLiveClips,
   createCountUp,
   createElement,
   createLiveVideo,
@@ -329,9 +328,9 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     return slide === slides[index] && slide?.type === 'stop' ? stagePhotoDelay : 0
   }
 
-  /** Live photos get time for their clips only where the clips play. */
+  /** Live photos get time for their clips, which play unless motion is reduced. */
   function getTiming(): SlideTiming {
-    return { liveClips: canAutoplayLiveClips() && !reducedMotion.matches }
+    return { liveClips: !reducedMotion.matches }
   }
 
   /** How long a slide stays up, in the card's own time (which runs faster at 2×). */
@@ -916,13 +915,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     liveVideo = undefined
 
     // The stage card plays its own copy, see showStagePhoto.
-    if (
-      !image.video ||
-      !frame ||
-      reducedMotion.matches ||
-      isStageLayout() ||
-      !canAutoplayLiveClips()
-    ) {
+    if (!image.video || !frame || reducedMotion.matches || isStageLayout()) {
       return
     }
 
@@ -1508,7 +1501,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     }
 
     // A live photo moves once over its still, as on the side card.
-    if (image.video && !reducedMotion.matches && canAutoplayLiveClips()) {
+    if (image.video && !reducedMotion.matches) {
       const video = createLiveVideo(image.video, '')
 
       video.style.width = img.style.width
