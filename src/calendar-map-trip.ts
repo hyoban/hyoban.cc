@@ -88,7 +88,9 @@ const NEARBY_RADIUS_KM = 30
 const NEARBY_MAX_ZOOM = 13
 // How long the summary card stays in an exported video before it ends.
 const EXPORT_SUMMARY_HOLD = 4000
+// avc3 tolerates a capture whose size changes mid-recording, such as a resized window.
 const EXPORT_VIDEO_TYPES = [
+  'video/mp4;codecs=avc3,mp4a.40.2',
   'video/mp4;codecs=avc1,mp4a.40.2',
   'video/mp4',
   'video/webm;codecs=vp9,opus',
@@ -434,7 +436,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     legFrame = requestAnimationFrame(step)
   }
 
-  function fitTrip() {
+  function fitTrip(options: { instant?: boolean } = {}) {
     const map = getMap()
 
     if (!map || !trip) {
@@ -448,7 +450,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     }
 
     map.fitBounds(bounds, {
-      duration: reducedMotion.matches ? 0 : 1200,
+      duration: reducedMotion.matches || options.instant ? 0 : 1200,
       maxZoom: STOP_ZOOM,
       padding: getCameraPadding(),
     })
@@ -1230,8 +1232,11 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
         : {}),
     }
 
-    // Let the map settle at its new size before the first frame.
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    // Reset to a still intro first: the camera jumps to the whole route and the
+    // tiles load before the first frame, so the video doesn't open mid-flight.
+    goTo(0, { play: false })
+    fitTrip({ instant: true })
+    await waitForMapIdle()
 
     if (exporting?.recorder !== recorder) {
       return
@@ -1247,7 +1252,30 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       music.source.start()
     }
 
-    goTo(0, { play: true })
+    elapsed = 0
+    playing = true
+    renderPlayButton()
+  }
+
+  function waitForMapIdle() {
+    const map = getMap()
+
+    return new Promise<void>((resolve) => {
+      const timeout = setTimeout(resolve, 5000)
+
+      if (!map) {
+        clearTimeout(timeout)
+        resolve()
+        return
+      }
+
+      map.once('idle', () => {
+        clearTimeout(timeout)
+        // One more frame so the settled map is what the recording starts on.
+        requestAnimationFrame(() => resolve())
+      })
+      map.triggerRepaint()
+    })
   }
 
   /** Decodes a background track into a looping source routed to a recordable stream. */
@@ -1268,7 +1296,10 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       source.buffer = buffer
       source.loop = true
       gain.gain.value = 0
-      source.connect(gain).connect(destination)
+      source.connect(gain)
+      gain.connect(destination)
+      // Also play it out loud so the recording can be heard while it runs.
+      gain.connect(context.destination)
       await context.resume()
       return { context, destination, gain, source }
     } catch {
