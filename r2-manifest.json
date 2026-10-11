@@ -3,10 +3,10 @@
   "accountId": "e68c7dce80df20ff5802b9ac36f1eab6",
   "bucket": "blog-images",
   "origin": "https://image.hyoban.cc",
-  "createdAt": "2026-10-11T15:14:21.049Z",
-  "inventorySha256": "483295932f25d2238e80c99b0e6245afa7b36b669488a05896072fe7b6ac8673",
-  "objectCount": 2669,
-  "totalBytes": 639653157,
+  "createdAt": "2026-10-11T15:36:08.406Z",
+  "inventorySha256": "ac1a19679992541b355a8b6fb42e8d58eca66f01b350131b1a9e889c524ab502",
+  "objectCount": 2729,
+  "totalBytes": 677659589,
   "objects": [
     {
       "key": "moments/2023/04/15-01-preview-dialog-for-my-blog-post-with-intercepting-amp/preview-dialog-for-my-blog-post-with-intercepting-amp-video-poster.png",
@@ -16585,6 +16585,166 @@
       "storageClass": "Standard"
     },
     {
+      "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-live-1-480w.webp",
+      "bytes": 34248,
+      "contentType": "image/webp",
+      "etag": "d26e90952ffab64eaa75b9f5c348681a",
+      "lastModified": "2026-10-11T15:23:46.565Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-live-1-960w.webp",
+      "bytes": 90862,
+      "contentType": "image/webp",
+      "etag": "b38cf6b437f64bbe2f3ce8efa4124972",
+      "lastModified": "2026-10-11T15:23:49.953Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-live-1-motion.mp4",
+      "bytes": 1529182,
+      "contentType": "video/mp4",
+      "etag": "b5a2fcc31e2750123400f4dd4091410f",
+      "lastModified": "2026-10-11T15:29:20.120Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-live-1.webp",
+      "bytes": 232660,
+      "contentType": "image/webp",
+      "etag": "a6d41e5fd2d144bb0f0a276616a713eb",
+      "lastModified": "2026-10-11T15:23:43.579Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-live-2-480w.webp",
+      "bytes": 41576,
+      "contentType": "image/webp",
+      "etag": "962c5138f75dd3bf18116b5309a6ef82",
+      "lastModified": "2026-10-11T15:24:02.203Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-live-2-960w.webp",
+      "bytes": 133226,
+      "contentType": "image/webp",
+      "etag": "3df8215c7d4d36889146b7e0253c6205",
+      "lastModified": "2026-10-11T15:24:05.505Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-live-2-motion.mp4",
+      "bytes": 2276699,
+      "contentType": "video/mp4",
+      "etag": "baeb271d3eadef25bf015bfa92a8d156",
+      "lastModified": "2026-10-11T15:29:27.777Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-live-2.webp",
+      "bytes": 379264,
+      "contentType": "image/webp",
+      "etag": "6704aecf2756da61bf7ebfd30024e7e6",
+      "lastModified": "2026-10-11T15:23:58.687Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-live-3-480w.webp",
+      "bytes": 49542,
+      "contentType": "image/webp",
+      "etag": "785269e661aa5a8f882a08b8cf2d872f",
+      "lastModified": "2026-10-11T15:24:22.763Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-live-3-960w.webp",
+      "bytes": 176034,
+      "contentType": "image/webp",
+      "etag": "b69a2cf5419a79a5f7dd6f3d38c87ceb",
+      "lastModified": "2026-10-11T15:24:26.027Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-live-3-motion.mp4",
+      "bytes": 2298580,
+      "contentType": "video/mp4",
+      "etag": "93eab3c3e0ece8b52ef684b7ee45feed",
+      "lastModified": "2026-10-11T15:29:35.769Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-live-3.webp",
+      "bytes": 547920,
+      "contentType": "image/webp",
+      "etag": "55bfa7d1c018501be61a6301af4abf31",
+      "lastModified": "2026-10-11T15:24:19.578Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-live-4-480w.webp",
+      "bytes": 47740,
+      "contentType": "image/webp",
+      "etag": "d05faa240150252eafca3544603c3470",
+      "lastModified": "2026-10-11T15:24:41.292Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-live-4-960w.webp",
+      "bytes": 169100,
+      "contentType": "image/webp",
+      "etag": "7e2abca9f5e0d921534e4aef355f4160",
+      "lastModified": "2026-10-11T15:24:45.415Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-live-4-motion.mp4",
+      "bytes": 2340054,
+      "contentType": "video/mp4",
+      "etag": "d71177bb39eeba02926211c30d9b5a98",
+      "lastModified": "2026-10-11T15:29:43.443Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-live-4.webp",
+      "bytes": 531026,
+      "contentType": "image/webp",
+      "etag": "060b0975f9d36613df49a44174e2072f",
+      "lastModified": "2026-10-11T15:24:37.896Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-live-5-480w.webp",
+      "bytes": 15758,
+      "contentType": "image/webp",
+      "etag": "9ab1e37fdf58250d5db749eee1608cde",
+      "lastModified": "2026-10-11T15:25:01.273Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-live-5-960w.webp",
+      "bytes": 36340,
+      "contentType": "image/webp",
+      "etag": "10f741c61125fc7da27bbb5ee519ca61",
+      "lastModified": "2026-10-11T15:25:05.086Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-live-5-motion.mp4",
+      "bytes": 1798635,
+      "contentType": "video/mp4",
+      "etag": "e29db218e4c80a0241e88e0bf57abbc6",
+      "lastModified": "2026-10-11T15:29:50.829Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-live-5.webp",
+      "bytes": 93580,
+      "contentType": "image/webp",
+      "etag": "10bb69353e5445deaa691be8588a212c",
+      "lastModified": "2026-10-11T15:24:58.163Z",
+      "storageClass": "Standard"
+    },
+    {
       "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging.webp",
       "bytes": 234720,
       "contentType": "image/webp",
@@ -16694,6 +16854,134 @@
       "contentType": "image/webp",
       "etag": "7b9a099b4e803765d83d7128865945f6",
       "lastModified": "2026-10-07T23:56:05.285Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/14-01-tiger-leaping-gorge/tiger-leaping-gorge-live-1-480w.webp",
+      "bytes": 52760,
+      "contentType": "image/webp",
+      "etag": "7981195fb501ae4ce731fe3bbd1a9450",
+      "lastModified": "2026-10-11T15:25:24.494Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/14-01-tiger-leaping-gorge/tiger-leaping-gorge-live-1-960w.webp",
+      "bytes": 167036,
+      "contentType": "image/webp",
+      "etag": "5b3e816812e7893f84d4318901438369",
+      "lastModified": "2026-10-11T15:25:28.348Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/14-01-tiger-leaping-gorge/tiger-leaping-gorge-live-1-motion.mp4",
+      "bytes": 2107824,
+      "contentType": "video/mp4",
+      "etag": "4d800ba9e4e5f5fbed2d8a939100b7c8",
+      "lastModified": "2026-10-11T15:29:57.779Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/14-01-tiger-leaping-gorge/tiger-leaping-gorge-live-1.webp",
+      "bytes": 500684,
+      "contentType": "image/webp",
+      "etag": "0aa7fdc8f4c036a621e59d1ca1ec558b",
+      "lastModified": "2026-10-11T15:25:21.382Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/14-01-tiger-leaping-gorge/tiger-leaping-gorge-live-2-480w.webp",
+      "bytes": 30970,
+      "contentType": "image/webp",
+      "etag": "ba5a7a1fa407d34096a592ed656fed67",
+      "lastModified": "2026-10-11T15:25:42.885Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/14-01-tiger-leaping-gorge/tiger-leaping-gorge-live-2-960w.webp",
+      "bytes": 116226,
+      "contentType": "image/webp",
+      "etag": "01a4c0484651fa3a4b16e0008bf34e37",
+      "lastModified": "2026-10-11T15:25:46.450Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/14-01-tiger-leaping-gorge/tiger-leaping-gorge-live-2-motion.mp4",
+      "bytes": 2311094,
+      "contentType": "video/mp4",
+      "etag": "d59d58ade3ccb778a20a79f99e673cd2",
+      "lastModified": "2026-10-11T15:30:06.537Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/14-01-tiger-leaping-gorge/tiger-leaping-gorge-live-2.webp",
+      "bytes": 421306,
+      "contentType": "image/webp",
+      "etag": "08f0e7ad40044d1ab219fa65be6fa4c1",
+      "lastModified": "2026-10-11T15:25:39.481Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/14-01-tiger-leaping-gorge/tiger-leaping-gorge-live-3-480w.webp",
+      "bytes": 29548,
+      "contentType": "image/webp",
+      "etag": "5a9409f899238475b1fa8c1e7b68f369",
+      "lastModified": "2026-10-11T15:25:59.742Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/14-01-tiger-leaping-gorge/tiger-leaping-gorge-live-3-960w.webp",
+      "bytes": 102578,
+      "contentType": "image/webp",
+      "etag": "b7fbb67bfba8ba297bec9dbf284331d5",
+      "lastModified": "2026-10-11T15:26:03.174Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/14-01-tiger-leaping-gorge/tiger-leaping-gorge-live-3-motion.mp4",
+      "bytes": 2312503,
+      "contentType": "video/mp4",
+      "etag": "91cd9c6c30ec7666e606ec02a5bc0d49",
+      "lastModified": "2026-10-11T15:30:14.728Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/14-01-tiger-leaping-gorge/tiger-leaping-gorge-live-3.webp",
+      "bytes": 334814,
+      "contentType": "image/webp",
+      "etag": "f596c358ca3f1774f85c8b1fbb03ec73",
+      "lastModified": "2026-10-11T15:25:56.132Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/14-01-tiger-leaping-gorge/tiger-leaping-gorge-live-4-480w.webp",
+      "bytes": 16730,
+      "contentType": "image/webp",
+      "etag": "1fc72ddf9ec4955d783801a5d90df5f7",
+      "lastModified": "2026-10-11T15:26:18.753Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/14-01-tiger-leaping-gorge/tiger-leaping-gorge-live-4-960w.webp",
+      "bytes": 60650,
+      "contentType": "image/webp",
+      "etag": "3532ffd4b08aeb2a94206c2ad59a1bc7",
+      "lastModified": "2026-10-11T15:26:22.193Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/14-01-tiger-leaping-gorge/tiger-leaping-gorge-live-4-motion.mp4",
+      "bytes": 2230204,
+      "contentType": "video/mp4",
+      "etag": "7881c1408dfc6e4bbed349ce797a972e",
+      "lastModified": "2026-10-11T15:30:22.652Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/14-01-tiger-leaping-gorge/tiger-leaping-gorge-live-4.webp",
+      "bytes": 218012,
+      "contentType": "image/webp",
+      "etag": "7877b8aa9a618a7f9230e84eabf16123",
+      "lastModified": "2026-10-11T15:26:15.849Z",
       "storageClass": "Standard"
     },
     {
@@ -16838,6 +17126,198 @@
       "contentType": "image/webp",
       "etag": "a1a6002a4c756330f58b364526c6b950",
       "lastModified": "2026-10-07T23:57:54.583Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-live-1-480w.webp",
+      "bytes": 44484,
+      "contentType": "image/webp",
+      "etag": "f9fc00ada7f9f43f436ca2296c7d9465",
+      "lastModified": "2026-10-11T15:26:47.688Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-live-1-960w.webp",
+      "bytes": 175624,
+      "contentType": "image/webp",
+      "etag": "318443ece37e7891f5e49edef190f331",
+      "lastModified": "2026-10-11T15:26:51.575Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-live-1-motion.mp4",
+      "bytes": 2094343,
+      "contentType": "video/mp4",
+      "etag": "b0f737b161be4eb8da2a92af886ba1c9",
+      "lastModified": "2026-10-11T15:30:30.468Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-live-1.webp",
+      "bytes": 628004,
+      "contentType": "image/webp",
+      "etag": "f04e72eec026f6a4ca502b51f1bd8236",
+      "lastModified": "2026-10-11T15:26:44.237Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-live-2-480w.webp",
+      "bytes": 48612,
+      "contentType": "image/webp",
+      "etag": "c69a54fcc7b4d3f4c250a88f29769e49",
+      "lastModified": "2026-10-11T15:27:06.480Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-live-2-960w.webp",
+      "bytes": 195254,
+      "contentType": "image/webp",
+      "etag": "2332efd63a3d2bf25ea08100554a0ab0",
+      "lastModified": "2026-10-11T15:27:10.657Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-live-2-motion.mp4",
+      "bytes": 2211670,
+      "contentType": "video/mp4",
+      "etag": "cb6775c80067ba536b5117691759d046",
+      "lastModified": "2026-10-11T15:30:38.188Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-live-2.webp",
+      "bytes": 723240,
+      "contentType": "image/webp",
+      "etag": "fb8c0519e4ca012c3f8aa13c9a0e27cd",
+      "lastModified": "2026-10-11T15:27:02.574Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-live-3-480w.webp",
+      "bytes": 24626,
+      "contentType": "image/webp",
+      "etag": "860bcb61eb5e08322c82c5265acd9a74",
+      "lastModified": "2026-10-11T15:27:25.190Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-live-3-960w.webp",
+      "bytes": 80982,
+      "contentType": "image/webp",
+      "etag": "69693e038bfe09d4af8478a37ae51a9c",
+      "lastModified": "2026-10-11T15:27:29.133Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-live-3-motion.mp4",
+      "bytes": 1951815,
+      "contentType": "video/mp4",
+      "etag": "b378554d48fb9b82bbbbfa4db9f1e2e7",
+      "lastModified": "2026-10-11T15:30:45.493Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-live-3.webp",
+      "bytes": 255332,
+      "contentType": "image/webp",
+      "etag": "80f8495297c7b1ec2235aebcbd1661f5",
+      "lastModified": "2026-10-11T15:27:22.195Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-live-4-480w.webp",
+      "bytes": 39246,
+      "contentType": "image/webp",
+      "etag": "58cdf3d81a04b9c8416b889125883cf9",
+      "lastModified": "2026-10-11T15:27:42.123Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-live-4-960w.webp",
+      "bytes": 143102,
+      "contentType": "image/webp",
+      "etag": "adc27555e9e86709b7b7d74efba3d1af",
+      "lastModified": "2026-10-11T15:27:45.527Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-live-4-motion.mp4",
+      "bytes": 1620157,
+      "contentType": "video/mp4",
+      "etag": "fa0a55e573763e6830e8fe726c2b03da",
+      "lastModified": "2026-10-11T15:30:52.337Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-live-4.webp",
+      "bytes": 440380,
+      "contentType": "image/webp",
+      "etag": "e351c6bf126a2f08885d2aa86b9457c9",
+      "lastModified": "2026-10-11T15:27:38.965Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-live-5-480w.webp",
+      "bytes": 31662,
+      "contentType": "image/webp",
+      "etag": "c3d8e116b3b2141e7a2685ea60a72bab",
+      "lastModified": "2026-10-11T15:27:59.541Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-live-5-960w.webp",
+      "bytes": 109558,
+      "contentType": "image/webp",
+      "etag": "6e370b79548517e61a4e0a0342f32d05",
+      "lastModified": "2026-10-11T15:28:03.187Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-live-5-motion.mp4",
+      "bytes": 2097113,
+      "contentType": "video/mp4",
+      "etag": "a71e48a9e8eebd474749ad5ed0d0aab4",
+      "lastModified": "2026-10-11T15:30:59.672Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-live-5.webp",
+      "bytes": 370558,
+      "contentType": "image/webp",
+      "etag": "7257290513de0ca66f71acb1499e5f38",
+      "lastModified": "2026-10-11T15:27:56.351Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-live-6-480w.webp",
+      "bytes": 18880,
+      "contentType": "image/webp",
+      "etag": "624d2ab69621654afe216202c6f66e88",
+      "lastModified": "2026-10-11T15:28:18.458Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-live-6-960w.webp",
+      "bytes": 55362,
+      "contentType": "image/webp",
+      "etag": "87e1fd58e549413a5838c3676b58983e",
+      "lastModified": "2026-10-11T15:28:21.909Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-live-6-motion.mp4",
+      "bytes": 660155,
+      "contentType": "video/mp4",
+      "etag": "d4d77e529ac0cbb62cfa054fe48ad9c1",
+      "lastModified": "2026-10-11T15:31:06.489Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-live-6.webp",
+      "bytes": 151308,
+      "contentType": "image/webp",
+      "etag": "df9e624261068aee60445ca5b1ddc871",
+      "lastModified": "2026-10-11T15:28:12.862Z",
       "storageClass": "Standard"
     },
     {
