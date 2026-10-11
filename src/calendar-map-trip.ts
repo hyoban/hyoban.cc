@@ -143,6 +143,8 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   let photo: HTMLImageElement | undefined
   let thumbnails: HTMLButtonElement[] = []
   let heightAnimation: Animation | undefined
+  // A mouse resting on the card holds the current slide so it can be read.
+  let hovering = false
 
   function getSlideDuration(slide: Slide | undefined) {
     if (slide?.type === 'intro') {
@@ -996,8 +998,8 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
     lastFrameTime = now
 
-    // The card's timer waits while the map is still travelling between waypoints.
-    if (!playing || !duration || document.hidden || traveling) {
+    // The card's timer waits while the map travels between waypoints or the mouse rests on it.
+    if (!playing || !duration || document.hidden || traveling || (hovering && !exporting)) {
       return
     }
 
@@ -1099,6 +1101,20 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   previousButton.addEventListener('click', () => goTo(index - 1), { signal })
   nextButton.addEventListener('click', () => goTo(index + 1), { signal })
   closeButton.addEventListener('click', onClose, { signal })
+  panel.addEventListener(
+    'pointerenter',
+    (event) => {
+      hovering = event.pointerType === 'mouse'
+    },
+    { signal },
+  )
+  panel.addEventListener(
+    'pointerleave',
+    () => {
+      hovering = false
+    },
+    { signal },
+  )
   exportButton.hidden =
     !navigator.mediaDevices?.getDisplayMedia || typeof MediaRecorder === 'undefined'
   exportButton.addEventListener('click', () => setExportOptionsOpen(true), { signal })
