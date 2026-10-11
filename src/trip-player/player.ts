@@ -86,6 +86,8 @@ const EXPORT_VIDEO_TYPES = [
   'video/webm;codecs=vp9,opus',
   'video/webm',
 ]
+// How long the pointer rests before the presentation's exit button fades away.
+const CONTROLS_IDLE = 2500
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
 // The address bar follows the playing card so it can be shared, but reloading the page
 // should start the trip over rather than resume mid-way. Only the first trip started
@@ -223,6 +225,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   let liveVideo: HTMLVideoElement | undefined
   // A mouse resting on the card holds the current slide so it can be read.
   let hovering = false
+  let idleTimer: ReturnType<typeof setTimeout> | undefined
   // Photos already asked for, so going back and forth doesn't ask again.
   const preloaded = new Set<string>()
   // Photos decoded ahead while recording, so a card never opens on a blank frame.
@@ -1337,6 +1340,19 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     }
   }
 
+  /**
+   * Shows the presentation's exit button and pointer, then hides both again once the
+   * pointer has rested for a while, so they don't sit on the picture.
+   */
+  function wakeControls() {
+    clearTimeout(idleTimer)
+    page.removeAttribute('data-trip-idle')
+
+    if (page.hasAttribute('data-trip-presenting')) {
+      idleTimer = setTimeout(() => page.setAttribute('data-trip-idle', ''), CONTROLS_IDLE)
+    }
+  }
+
   function setExportOptionsOpen(open: boolean, mode: StageMode = stageMode) {
     stageMode = mode
     exportOptions.setAttribute('aria-label', mode === 'present' ? '放映' : '导出视频')
@@ -1382,6 +1398,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     stopAmbientMusic()
     page.dataset.exportRatio = ratio
     page.toggleAttribute('data-trip-presenting', mode === 'present')
+    wakeControls()
     getMap()?.resize()
 
     const track = stream?.getVideoTracks()[0] as CroppableTrack | undefined
@@ -1517,6 +1534,8 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     staging = undefined
     delete page.dataset.exportRatio
     page.removeAttribute('data-trip-presenting')
+    clearTimeout(idleTimer)
+    page.removeAttribute('data-trip-idle')
 
     if (mode === 'present' && document.fullscreenElement) {
       void document.exitFullscreen().catch(() => {})
@@ -1794,6 +1813,8 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   page
     .querySelector('[data-calendar-map-trip-stage-close]')
     ?.addEventListener('click', stopStage, { signal })
+  page.addEventListener('pointermove', wakeControls, { signal })
+  page.addEventListener('pointerdown', wakeControls, { signal })
   document.addEventListener(
     'fullscreenchange',
     () => {
