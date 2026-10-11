@@ -239,8 +239,311 @@ html:has(.calendar-map-page[data-export-ratio]) body {
   margin: auto;
 }
 
-.calendar-map-page[data-export-ratio] :is(.calendar-map-toolbar, .calendar-map-trip footer) {
+.calendar-map-page[data-export-ratio] :is(.calendar-map-toolbar, .calendar-map-trip) {
   display: none;
+}
+
+/*
+ * Recording layout: a story-style overlay with a day header, pop-up photo cards and
+ * bottom progress bars. Sizes use --u, one percent of the stage's shorter side.
+ */
+.calendar-map-trip-stage {
+  display: none;
+}
+
+.calendar-map-page[data-export-ratio] .calendar-map-trip-stage {
+  --u: 1cqw;
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: block;
+  color: var(--color-tx);
+  pointer-events: none;
+}
+
+.calendar-map-page[data-export-ratio='landscape'] .calendar-map-trip-stage {
+  --u: 0.5625cqw;
+}
+
+.calendar-map-trip-stage::before,
+.calendar-map-trip-stage::after {
+  position: absolute;
+  inset-inline: 0;
+  content: '';
+}
+
+.calendar-map-trip-stage::before {
+  top: 0;
+  height: calc(var(--u) * 38);
+  background: linear-gradient(var(--color-bg) 35%, transparent);
+}
+
+.calendar-map-trip-stage::after {
+  bottom: 0;
+  height: calc(var(--u) * 12);
+  background: linear-gradient(transparent, color-mix(in srgb, var(--color-bg) 85%, transparent));
+}
+
+.calendar-map-trip-stage__header {
+  position: absolute;
+  top: calc(var(--u) * 6);
+  left: calc(var(--u) * 6);
+  right: calc(var(--u) * 30);
+  z-index: 1;
+  transition: opacity 300ms;
+}
+
+.calendar-map-page[data-export-ratio='landscape'] .calendar-map-trip-stage__header {
+  right: 50%;
+}
+
+.calendar-map-trip-stage[data-slide='intro'] .calendar-map-trip-stage__header,
+.calendar-map-trip-stage[data-slide='summary'] .calendar-map-trip-stage__header {
+  opacity: 0;
+}
+
+.calendar-map-trip-stage__eyebrow {
+  font-size: calc(var(--u) * 3);
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  color: var(--color-tx-3);
+}
+
+.calendar-map-trip-stage__title {
+  margin-top: calc(var(--u) * 0.8);
+  font-size: calc(var(--u) * 7.5);
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.calendar-map-trip-stage__brand {
+  position: absolute;
+  top: calc(var(--u) * 6);
+  right: calc(var(--u) * 6);
+  z-index: 1;
+  display: flex;
+  gap: calc(var(--u) * 1.4);
+  align-items: center;
+  padding: calc(var(--u) * 0.8) calc(var(--u) * 2.4) calc(var(--u) * 0.8) calc(var(--u) * 0.8);
+  font-size: calc(var(--u) * 3);
+  font-weight: 600;
+  background: color-mix(in srgb, var(--color-bg) 88%, transparent);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+}
+
+.calendar-map-trip-stage__brand img {
+  width: calc(var(--u) * 5);
+  height: calc(var(--u) * 5);
+  border-radius: 999px;
+}
+
+/* Where photo cards land; the map camera keeps stops out of this area. */
+.calendar-map-trip-stage__photos {
+  position: absolute;
+  inset: 38% 6% 9%;
+  display: grid;
+  place-items: center;
+}
+
+.calendar-map-page[data-export-ratio='landscape'] .calendar-map-trip-stage__photos {
+  inset: 22% 5% 12% auto;
+  width: 40%;
+}
+
+.calendar-map-trip-stage__center {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: calc(var(--u) * 6);
+}
+
+.calendar-map-trip-stage__progress {
+  position: absolute;
+  inset: auto calc(var(--u) * 6) calc(var(--u) * 4);
+  z-index: 1;
+}
+
+.calendar-map-trip-stage__progress > ol {
+  gap: calc(var(--u) * 0.8);
+  padding: 0;
+}
+
+.calendar-map-trip-stage__progress > ol > li {
+  height: calc(var(--u) * 0.6);
+}
+
+.calendar-map-trip-polaroid {
+  --tilt: -2deg;
+  grid-area: 1 / 1;
+  align-self: end;
+  display: flex;
+  flex-direction: column;
+  width: calc(var(--u) * 76);
+  max-width: 100%;
+  padding: calc(var(--u) * 2.4) calc(var(--u) * 2.4) 0;
+  background: var(--color-bg);
+  border-radius: calc(var(--u) * 1.4);
+  box-shadow: 0 calc(var(--u) * 2) calc(var(--u) * 8) rgb(0 0 0 / 0.22);
+  transform: rotate(var(--tilt));
+  animation: calendar-map-polaroid-in 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.calendar-map-trip-polaroid[data-tilt='right'] {
+  --tilt: 2deg;
+}
+
+.calendar-map-trip-polaroid[data-leaving] {
+  animation: calendar-map-polaroid-out 280ms ease-in both;
+}
+
+.calendar-map-page[data-export-ratio='landscape'] .calendar-map-trip-polaroid {
+  align-self: center;
+  width: 100%;
+}
+
+/* Height is set per photo from script and eases between photos of different shapes. */
+.calendar-map-trip-polaroid__frame {
+  position: relative;
+  height: 0;
+  overflow: hidden;
+  transition: height 450ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.calendar-map-trip-polaroid__frame img {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  display: block;
+  border-radius: calc(var(--u) * 0.6);
+  transform: translateX(-50%);
+  transition: opacity 450ms;
+}
+
+.calendar-map-trip-polaroid:not(:has(figcaption)) {
+  padding-bottom: calc(var(--u) * 2.4);
+}
+
+.calendar-map-trip-polaroid figcaption {
+  padding: calc(var(--u) * 2.2) calc(var(--u) * 0.4) calc(var(--u) * 2.6);
+}
+
+.calendar-map-trip-polaroid__text {
+  font-size: calc(var(--u) * 3);
+  line-height: 1.5;
+  color: var(--color-tx-2);
+  white-space: pre-line;
+}
+
+.calendar-map-trip-stage-card {
+  width: min(100%, calc(var(--u) * 80));
+  padding: calc(var(--u) * 6);
+  text-align: center;
+  background: color-mix(in srgb, var(--color-bg) 94%, transparent);
+  border: 1px solid var(--color-border);
+  border-radius: calc(var(--u) * 3);
+  box-shadow: 0 calc(var(--u) * 2) calc(var(--u) * 8) rgb(0 0 0 / 0.16);
+  animation: calendar-map-polaroid-in 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.calendar-map-trip-stage-card__eyebrow {
+  font-size: calc(var(--u) * 3);
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  color: var(--color-tx-3);
+}
+
+.calendar-map-trip-stage-card__title {
+  margin-top: calc(var(--u) * 1.6);
+  font-size: calc(var(--u) * 8);
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.calendar-map-trip-stage-card__meta {
+  margin-top: calc(var(--u) * 2);
+  font-size: calc(var(--u) * 3.4);
+  color: var(--color-tx-2);
+}
+
+.calendar-map-trip-stage-card__covers {
+  display: flex;
+  justify-content: center;
+  margin-top: calc(var(--u) * 5);
+}
+
+.calendar-map-trip-stage-card__covers img {
+  width: calc(var(--u) * 20);
+  aspect-ratio: 1;
+  margin-inline: calc(var(--u) * -1.5);
+  object-fit: cover;
+  border: calc(var(--u) * 1) solid var(--color-bg);
+  border-radius: calc(var(--u) * 1);
+  box-shadow: 0 calc(var(--u) * 1) calc(var(--u) * 4) rgb(0 0 0 / 0.18);
+}
+
+.calendar-map-trip-stage-card__covers img:nth-child(1) {
+  transform: rotate(-6deg);
+}
+
+.calendar-map-trip-stage-card__covers img:nth-child(3) {
+  transform: rotate(6deg);
+}
+
+.calendar-map-trip-stage-card__stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: calc(var(--u) * 1.6);
+  margin-top: calc(var(--u) * 5);
+  text-align: left;
+}
+
+.calendar-map-trip-stage-card__stats > div {
+  display: flex;
+  flex-direction: column-reverse;
+  padding: calc(var(--u) * 2.4) calc(var(--u) * 3);
+  background: var(--color-inline);
+  border-radius: calc(var(--u) * 1.6);
+}
+
+.calendar-map-trip-stage-card__stats dd {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: calc(var(--u) * 6);
+  font-variant-numeric: tabular-nums;
+}
+
+.calendar-map-trip-stage-card__stats dt {
+  font-size: calc(var(--u) * 2.8);
+  color: var(--color-tx-3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :is(.calendar-map-trip-polaroid, .calendar-map-trip-stage-card) {
+    animation: none;
+  }
+
+  :is(.calendar-map-trip-polaroid__frame, .calendar-map-trip-polaroid__frame img) {
+    transition: none;
+  }
+
+  .calendar-map-trip-stage__header {
+    transition: none;
+  }
+}
+
+@keyframes calendar-map-polaroid-in {
+  from {
+    opacity: 0;
+    transform: translateY(6%) scale(0.9) rotate(calc(var(--tilt, 0deg) - 6deg));
+  }
+}
+
+@keyframes calendar-map-polaroid-out {
+  to {
+    opacity: 0;
+    transform: translateY(-4%) scale(0.96) rotate(var(--tilt, 0deg));
+  }
 }
 
 @media (min-width: 48.0625rem) {
