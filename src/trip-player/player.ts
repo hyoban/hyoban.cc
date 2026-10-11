@@ -272,7 +272,12 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   let stopPointEnds: number[] = []
   let slides: Slide[] = []
   let index = 0
+  // How far into the current card playback is. Picking a photo by hand moves it to
+  // that photo's time.
   let elapsed = 0
+  // The same, but only ever moved on by playback: the route's drive on a card follows
+  // it, so picking photos by hand never moves the map back and forth.
+  let driveElapsed = 0
   let playing = false
   let speed: number = readSpeedPreference()
   // The speed's digits roll from one to the next.
@@ -305,6 +310,10 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   // Where the route is being drawn up to right now, for the camera to follow.
   let routeTip: Coordinates | undefined
   let routeProgress: (MeasuredLine & { startedAt: number; stopIndex: number }) | undefined
+  // The stretch of route being drawn now: from `points[from]` toward `points[to]`,
+  // `fraction` of the way along `leg`. A card that comes up before it has arrived
+  // carries on from there rather than drawing it again.
+  let partial: { fraction: number; from: number; leg: MeasuredLine; to: number } | undefined
   let photoIndex = 0
   let photo: HTMLImageElement | undefined
   let thumbnails: HTMLButtonElement[] = []
@@ -406,17 +415,22 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     const from = getStopPlaceStart(slide.stopIndex)
     const to = Math.min(stopPointEnds[slide.stopIndex]!, points.length - 1)
 
+    // The drive here hasn't been drawn yet (the card has only just come up).
+    if (drawnPointCount < from + 1) {
+      return
+    }
+
     if (routeProgress?.stopIndex !== slide.stopIndex) {
       routeProgress = {
         ...measureLine(getRouteLine(from, to + 1)),
-        startedAt: elapsed,
+        startedAt: driveElapsed,
         stopIndex: slide.stopIndex,
       }
     }
 
     // Starts from rest once any drive here is done, and arrives as the card ends.
     const left = duration - routeProgress.startedAt
-    const fraction = left > 0 ? Math.min((elapsed - routeProgress.startedAt) / left, 1) : 1
+    const fraction = left > 0 ? Math.min((driveElapsed - routeProgress.startedAt) / left, 1) : 1
 
     if (fraction >= 1 || routeProgress.total === 0) {
       drawnPointCount = fraction >= 1 ? to + 1 : from + 1
@@ -425,7 +439,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     }
 
     drawnPointCount = from + 1
-    setRoute(from + 1, routeProgress, easeInOut(fraction))
+    setRoute(from + 1, { fraction: easeInOut(fraction), leg: routeProgress, to })
   }
 
   /** The parts of `outer` around `inner`: what a short-video app's overlays cover. */
@@ -452,12 +466,18 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   }
 
   /**
-   * Draws the route through the first `pointCount` points, plus `fraction` of the
-   * next stretch `leg`, if it is being drawn.
+   * Draws the route through the first `pointCount` points, plus the part of the next
+   * stretch drawn so far, if one is being drawn: `fraction` of `leg`, which heads
+   * for `points[to]`.
    */
-  function setRoute(pointCount: number, leg?: MeasuredLine, fraction = 0) {
-    const walked = leg && walkLine(leg, fraction)
+  function setRoute(
+    pointCount: number,
+    piece?: { fraction: number; leg: MeasuredLine; to: number },
+  ) {
+    const leg = piece?.leg
+    const walked = piece && walkLine(piece.leg, piece.fraction)
 
+    partial = piece && { ...piece, from: pointCount - 1 }
     routeTip = walked?.passed.at(-1)
 
     layers.setRoute(
@@ -513,8 +533,36 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     })
   }
 
+  /**
+   * How the route gets to `points[legEnd - 1]`: on from where the tip is, if the
+   * stretch being drawn heads there, or else from `points[legStart]`.
+   */
+  function planLeg(legStart: number, legEnd: number) {
+    const to = legEnd - 1
+
+    if (partial && partial.to === to && partial.from <= legStart && partial.fraction < 1) {
+      const { fraction, from, leg } = partial
+
+      return {
+        duration: getDriveTime(from, legEnd) * (1 - fraction),
+        from,
+        leg,
+        start: fraction,
+        to,
+      }
+    }
+
+    return {
+      duration: getDriveTime(legStart, legEnd),
+      from: legStart,
+      leg: measureLine(getRouteLine(legStart, legEnd)),
+      start: 0,
+      to,
+    }
+  }
+
   function animateLeg(legStart: number, legEnd: number) {
-    const leg = measureLine(getRouteLine(legStart, legEnd))
+    const { duration, from, leg, start, to } = planLeg(legStart, legEnd)
 
     if (leg.total === 0 || reducedMotion.matches) {
       drawnPointCount = legEnd
@@ -523,11 +571,13 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       return
     }
 
-    drawnPointCount = legStart + 1
+    drawnPointCount = from + 1
     const startTime = performance.now()
-    const duration = getDriveTime(legStart, legEnd)
+    // A fresh drive sets off and arrives gently, as the onward drive on each card does;
+    // one carried on is already moving, so it only slows to arrive.
+    const ease = start > 0 ? (t: number) => 1 - (1 - t) ** 2 : easeInOut
     const step = (now: number) => {
-      const t = Math.min((now - startTime) / duration, 1)
+      const t = Math.min((now - startTime) / Math.max(duration, 1), 1)
 
       if (t >= 1) {
         legFrame = undefined
@@ -538,8 +588,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
         return
       }
 
-      // Sets off and arrives gently, as the onward drive on each card does.
-      setRoute(legStart + 1, leg, easeInOut(t))
+      setRoute(from + 1, { fraction: start + (1 - start) * ease(t), leg, to })
       legFrame = requestAnimationFrame(step)
     }
 
@@ -671,7 +720,9 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
         new Promise((resolve) =>
           setTimeout(
             resolve,
-            reducedMotion.matches ? 0 : getDriveTime(Math.max(pointIndex - 1, 0), pointIndex + 1),
+            reducedMotion.matches
+              ? 0
+              : planLeg(Math.max(pointIndex - 1, 0), pointIndex + 1).duration,
           ),
         ),
       ])
@@ -875,15 +926,34 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     renderProgress()
   }
 
-  /** Steps through the current stop's photos, for ↑ and ↓ and a swipe on the photo. */
-  function stepPhoto(direction: number) {
+  /**
+   * Steps through the current stop's photos, for ↑ and ↓ and a swipe on the photo.
+   * Past the last photo it moves on to the next card; before the first, back to the
+   * card before, at its last photo.
+   */
+  function stepPhoto(direction: 1 | -1) {
     const slide = slides[index]
+    const images = slide?.type === 'stop' ? slide.stop.images : []
+    const next = photoIndex + direction
 
-    if (slide?.type === 'stop' && slide.stop.images.length > 1) {
-      selectPhoto(
-        slide.stop,
-        Math.min(Math.max(photoIndex + direction, 0), slide.stop.images.length - 1),
-      )
+    if (slide?.type === 'stop' && next >= 0 && next < images.length) {
+      selectPhoto(slide.stop, next)
+      return
+    }
+
+    const from = index
+
+    goTo(index + direction)
+
+    const previous = slides[index]
+
+    if (
+      direction < 0 &&
+      index !== from &&
+      previous?.type === 'stop' &&
+      previous.stop.images.length > 1
+    ) {
+      selectPhoto(previous.stop, previous.stop.images.length - 1)
     }
   }
 
@@ -1373,13 +1443,14 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       slide.type !== 'stop' || reducedMotion.matches
         ? 0
         : arrivingFrom !== undefined
-          ? getDriveTime(arrivingFrom, getStopPlaceStart(slide.stopIndex) + 1) * speed
+          ? planLeg(arrivingFrom, getStopPlaceStart(slide.stopIndex) + 1).duration * speed
           : isStageLayout()
             ? CARD_POP
             : 0
 
     index = nextIndex
     elapsed = 0
+    driveElapsed = 0
     syncHash(slide)
     addChapter(slide)
 
@@ -1687,6 +1758,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     }
 
     elapsed = 0
+    driveElapsed = 0
     playing = true
     renderPlayButton()
   }
@@ -1817,6 +1889,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     }
 
     elapsed += delta * speed
+    driveElapsed += delta * speed
     renderProgress()
 
     // A slow photo holds the current card a little longer rather than record a blank.
