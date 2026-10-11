@@ -11,6 +11,7 @@ import {
   downloadBlob,
   IMAGE_SIZES,
   parseJson,
+  perFrame,
   preloadImage,
   preloadThumbnail,
   queryRequired,
@@ -230,25 +231,12 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   let musicOn = readMusicPreference()
   let pendingAmbient: { src: string } | undefined
   let stageToken: object | undefined
+  // The camera and the labels each read the layout every frame. Whichever runs first in
+  // a frame measures, before anything is written, and the other reuses it; reading it
+  // again after the writes would make the browser lay out a second time.
+  const getFrameLayout = perFrame(readLayout)
   const mapLabels = createMapLabels({
-    getBlocked: () => {
-      const shown = (element: Element | null | undefined) =>
-        element &&
-        element.getClientRects().length > 0 &&
-        getComputedStyle(element).visibility !== 'hidden'
-          ? [element.getBoundingClientRect()]
-          : []
-
-      return isStageLayout()
-        ? [
-            ...outside(stageSafe.getBoundingClientRect(), page.getBoundingClientRect()),
-            ...shown(stageHeader),
-            ...[...stagePhotos.children].flatMap(shown),
-            ...shown(stageProgress),
-            ...shown(page.querySelector('[data-calendar-map-trip-stage-close]')),
-          ]
-        : [...shown(panel), ...shown(page.querySelector('.calendar-map-toolbar'))]
-    },
+    getLayout: getFrameLayout,
     getMap,
     // Every stop's dot, and the car, ship or plane while the route is drawn.
     getMarkers: () => [
@@ -259,6 +247,38 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       ...(routeTip ? [{ coordinates: routeTip, radius: 16 }] : []),
     ],
   })
+
+  /**
+   * The map's box and the cards and controls over it, in viewport pixels, and the
+   * camera's padding for them.
+   */
+  function readLayout() {
+    return {
+      blocked: readBlocked(),
+      container: getMap()?.getContainer().getBoundingClientRect(),
+      padding: getCameraPadding(),
+    }
+  }
+
+  function readBlocked() {
+    const shown = (element: Element | null | undefined) =>
+      element &&
+      element.getClientRects().length > 0 &&
+      getComputedStyle(element).visibility !== 'hidden'
+        ? [element.getBoundingClientRect()]
+        : []
+
+    return isStageLayout()
+      ? [
+          ...outside(stageSafe.getBoundingClientRect(), page.getBoundingClientRect()),
+          ...shown(stageHeader),
+          ...[...stagePhotos.children].flatMap(shown),
+          ...shown(stageProgress),
+          ...shown(page.querySelector('[data-calendar-map-trip-stage-close]')),
+        ]
+      : [...shown(panel), ...shown(page.querySelector('.calendar-map-toolbar'))]
+  }
+
   let trip: TripData | undefined
   // Photos for the intro and summary.
   let covers: TripImage[] = []
@@ -280,7 +300,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     // The tip while the route is drawn, else the last place it reached.
     getFocus: () => routeTip ?? points[Math.max(drawnPointCount - 1, 0)]?.coordinates,
     getMap,
-    getPadding: () => getCameraPadding(),
+    getPadding: () => getFrameLayout().padding,
     getSpeed: () => speed,
     reducedMotion,
   })

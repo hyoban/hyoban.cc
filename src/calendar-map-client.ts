@@ -273,9 +273,28 @@ function initializeCalendarMap() {
     }
   }
 
+  /**
+   * Takes a hidden marker off the map rather than only hiding it: Mapbox repositions
+   * every marker on the map each frame it draws, which adds up during trip playback.
+   */
+  function setMarkerShown(entry: MarkerEntry, shown: boolean) {
+    entry.button.hidden = !shown
+
+    if (!map || shown === Boolean(entry.marker.getElement().isConnected)) {
+      return
+    }
+
+    if (shown) {
+      entry.marker.addTo(map)
+    } else {
+      entry.popup.remove()
+      entry.marker.remove()
+    }
+  }
+
   function setMarkersHidden(hidden: boolean) {
     for (const marker of markers.values()) {
-      marker.button.hidden = hidden
+      setMarkerShown(marker, !hidden)
     }
 
     if (hidden) {
@@ -509,7 +528,7 @@ function initializeCalendarMap() {
     clearClusterMarkers()
 
     for (const marker of markers.values()) {
-      marker.button.hidden = false
+      setMarkerShown(marker, true)
     }
 
     map.addSource(LOCATION_SOURCE_ID, {
@@ -600,7 +619,7 @@ function initializeCalendarMap() {
     }
 
     for (const [id, marker] of markers) {
-      marker.button.hidden = !visibleLocationIds.has(id)
+      setMarkerShown(marker, visibleLocationIds.has(id))
     }
 
     clearClusterMarkers()

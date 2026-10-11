@@ -36,12 +36,15 @@ type PlacedLabel = {
 }
 
 export function createMapLabels({
-  getBlocked,
+  getLayout,
   getMap,
   getMarkers,
 }: {
-  /** Cards and controls over the map, in viewport pixels; labels keep out from under them. */
-  getBlocked: () => DOMRect[]
+  /**
+   * The map's box, and the cards and controls over it that labels keep out from under,
+   * in viewport pixels.
+   */
+  getLayout: () => { blocked: DOMRect[]; container: DOMRect | undefined }
   getMap: () => MapboxMap | undefined
   getMarkers: () => LabelMarker[]
 }) {
@@ -63,7 +66,8 @@ export function createMapLabels({
       return
     }
 
-    const container = map.getContainer().getBoundingClientRect()
+    const layout = getLayout()
+    const container = layout.container ?? map.getContainer().getBoundingClientRect()
     const toLocal = (rect: DOMRect): Rect => ({
       bottom: rect.bottom - container.top,
       left: rect.left - container.left,
@@ -76,7 +80,7 @@ export function createMapLabels({
       right: container.width - EDGE,
       top: EDGE,
     }
-    const blocked = getBlocked().map(toLocal)
+    const blocked = layout.blocked.map(toLocal)
     const avoid: Rect[] = getMarkers().map(({ coordinates, radius }) => {
       const { x, y } = map.project([coordinates[0], coordinates[1]])
       return { bottom: y + radius, left: x - radius, right: x + radius, top: y - radius }
