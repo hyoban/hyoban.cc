@@ -1,5 +1,6 @@
 ---
 occurredAt: '2026-10-01'
+location: bohai-sea
 media:
   - type: live-photo
     file: ferry-sunset-live-1.webp
