@@ -1,5 +1,6 @@
 import MapboxLanguage from '@mapbox/mapbox-gl-language'
 import mapboxgl, { type GeoJSONSource, type PaddingOptions } from 'mapbox-gl'
+import { createTripPlayer } from './calendar-map-trip'
 import { initializeLightboxMedia } from './moment-lightbox-client'
 
 type MarkerData = {
@@ -24,6 +25,7 @@ type ClusterMarkerEntry = {
 }
 
 const HISTORY_STATE_KEY = 'calendarMapSelection'
+const TRIP_HASH_PREFIX = 'trip/'
 const LOCATION_INDEX_LAYER_ID = 'calendar-location-index'
 const LOCATION_SOURCE_ID = 'calendar-locations'
 const LOCATION_CLUSTER_MAX_ZOOM = 9
@@ -58,6 +60,8 @@ function initializeCalendarMap() {
   const fallbackMessage = queryRequired<HTMLElement>(page, '[data-calendar-map-fallback-message]')
   const loading = queryRequired<HTMLElement>(page, '[data-calendar-map-loading]')
   const lightbox = queryRequired<HTMLDialogElement>(page, '[data-calendar-map-lightbox]')
+  const legend = queryRequired<HTMLElement>(page, '[data-calendar-map-legend]')
+  const tripSelect = page.querySelector<HTMLSelectElement>('[data-calendar-map-trip-select]')
 
   const controller = new AbortController()
   const { signal } = controller
@@ -68,6 +72,12 @@ function initializeCalendarMap() {
   const markers = new Map<string, MarkerEntry>()
   const clusterMarkers = new Map<number, ClusterMarkerEntry>()
   const darkMode = window.matchMedia('(prefers-color-scheme: dark)')
+  const tripPlayer = createTripPlayer({
+    getMap: () => (mapLoaded ? map : undefined),
+    onClose: requestSelectionClose,
+    page,
+    signal,
+  })
   let map: mapboxgl.Map | undefined
   let mapLoaded = false
   let activeLocationId: string | undefined
@@ -91,17 +101,32 @@ function initializeCalendarMap() {
     return `mapbox://styles/mapbox/${darkMode.matches ? 'dark' : 'light'}-v11`
   }
 
-  function getHashLocationId() {
+  function getHashValue() {
     if (!window.location.hash) {
       return undefined
     }
 
     try {
-      const id = decodeURIComponent(window.location.hash.slice(1))
-      return locationsById.has(id) ? id : undefined
+      return decodeURIComponent(window.location.hash.slice(1))
     } catch {
       return undefined
     }
+  }
+
+  function getHashLocationId() {
+    const id = getHashValue()
+    return id && locationsById.has(id) ? id : undefined
+  }
+
+  function getHashTripId() {
+    const value = getHashValue()
+
+    if (!value?.startsWith(TRIP_HASH_PREFIX)) {
+      return undefined
+    }
+
+    const id = value.slice(TRIP_HASH_PREFIX.length)
+    return tripPlayer.has(id) ? id : undefined
   }
 
   function getHistoryState() {
@@ -203,7 +228,52 @@ function initializeCalendarMap() {
     }
   }
 
+  function setMarkersHidden(hidden: boolean) {
+    for (const marker of markers.values()) {
+      marker.button.hidden = hidden
+    }
+
+    if (hidden) {
+      clearClusterMarkers()
+    } else {
+      syncClusterMarkers()
+    }
+  }
+
+  function syncTripFromHash() {
+    const id = getHashTripId()
+
+    if (tripSelect) {
+      tripSelect.value = id ?? ''
+    }
+
+    if (id) {
+      if (!mapLoaded) {
+        return
+      }
+
+      legend.hidden = true
+      setMarkersHidden(true)
+      tripPlayer.start(id)
+      return
+    }
+
+    if (tripPlayer.activeId) {
+      tripPlayer.stop()
+      legend.hidden = false
+      setMarkersHidden(false)
+      fitAllLocations()
+    }
+  }
+
   function syncLocationFromHash(options: { focus?: boolean; moveMap?: boolean } = {}) {
+    syncTripFromHash()
+
+    if (tripPlayer.activeId) {
+      closeDrawer({ restoreFocus: false })
+      return
+    }
+
     const id = getHashLocationId()
 
     if (id) {
@@ -221,28 +291,35 @@ function initializeCalendarMap() {
     })
   }
 
-  function selectLocation(id: string, trigger: HTMLButtonElement) {
-    const currentId = getHashLocationId()
+  function setSelectionHash(hash: string) {
+    const hasSelection = Boolean(getHashLocationId() ?? getHashTripId())
     const currentState = getHistoryState()
     const nextState = {
       ...currentState,
-      [HISTORY_STATE_KEY]: currentId ? currentState[HISTORY_STATE_KEY] === true : true,
+      [HISTORY_STATE_KEY]: hasSelection ? currentState[HISTORY_STATE_KEY] === true : true,
     }
-    const url = `${window.location.pathname}${window.location.search}#${encodeURIComponent(id)}`
+    const url = `${window.location.pathname}${window.location.search}#${encodeURIComponent(hash)}`
 
-    activeTrigger = trigger
-
-    if (currentId) {
+    if (hasSelection) {
       history.replaceState(nextState, '', url)
     } else {
       history.pushState(nextState, '', url)
     }
+  }
 
+  function selectLocation(id: string, trigger: HTMLButtonElement) {
+    activeTrigger = trigger
+    setSelectionHash(id)
     openLocation(id)
   }
 
-  function requestDrawerClose() {
-    if (!activeLocationId) {
+  function selectTrip(id: string) {
+    setSelectionHash(`${TRIP_HASH_PREFIX}${id}`)
+    syncLocationFromHash({ focus: false })
+  }
+
+  function requestSelectionClose() {
+    if (!activeLocationId && !tripPlayer.activeId) {
       return
     }
 
@@ -256,7 +333,7 @@ function initializeCalendarMap() {
       '',
       `${window.location.pathname}${window.location.search}`,
     )
-    closeDrawer()
+    syncLocationFromHash()
   }
 
   function showFallback(message: string) {
@@ -427,6 +504,7 @@ function initializeCalendarMap() {
 
   function syncClusterMarkers() {
     if (
+      tripPlayer.activeId ||
       !map ||
       !mapLoaded ||
       !map.getSource(LOCATION_SOURCE_ID) ||
@@ -568,7 +646,18 @@ function initializeCalendarMap() {
     )
   }
 
-  drawerClose.addEventListener('click', requestDrawerClose, { signal })
+  drawerClose.addEventListener('click', requestSelectionClose, { signal })
+  tripSelect?.addEventListener(
+    'change',
+    () => {
+      if (tripSelect.value) {
+        selectTrip(tripSelect.value)
+      } else {
+        requestSelectionClose()
+      }
+    },
+    { signal },
+  )
   window.addEventListener('popstate', () => syncLocationFromHash(), { signal })
   window.addEventListener(
     'resize',
@@ -588,8 +677,8 @@ function initializeCalendarMap() {
   window.addEventListener(
     'keydown',
     (event) => {
-      if (event.key === 'Escape' && activeLocationId && !lightbox.open) {
-        requestDrawerClose()
+      if (event.key === 'Escape' && (activeLocationId || tripPlayer.activeId) && !lightbox.open) {
+        requestSelectionClose()
       }
     },
     { signal },
@@ -685,8 +774,17 @@ function initializeCalendarMap() {
       map.on('style.load', () => {
         applyFog()
         createLocationIndex()
+        tripPlayer.restoreLayers()
+
+        if (tripPlayer.activeId) {
+          setMarkersHidden(true)
+        }
       })
-      map.on('click', requestDrawerClose)
+      map.on('click', () => {
+        if (activeLocationId) {
+          requestSelectionClose()
+        }
+      })
       map.on('idle', syncClusterMarkers)
       map.on('moveend', syncClusterMarkers)
       map.on('load', () => {
@@ -703,7 +801,9 @@ function initializeCalendarMap() {
 
         const hashLocationId = getHashLocationId()
 
-        if (hashLocationId) {
+        if (getHashTripId()) {
+          syncTripFromHash()
+        } else if (hashLocationId) {
           activeTrigger = markers.get(hashLocationId)?.button ?? activeTrigger
           openLocation(hashLocationId, { focus: false })
         } else {
