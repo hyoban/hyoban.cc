@@ -2,6 +2,8 @@
 
 const MUSIC_PREFERENCE_KEY = 'calendar-trip-music'
 const SPEED_PREFERENCE_KEY = 'calendar-trip-speed'
+const SAFE_AREA_PREFERENCE_KEY = 'calendar-trip-safe-area'
+const RATIO_PREFERENCE_KEY = 'calendar-trip-ratio'
 
 export const SPEEDS = [1, 1.5, 2] as const
 
@@ -42,4 +44,38 @@ export function writeSpeedPreference(speed: number) {
 export function getNextSpeed(speed: number) {
   const index = SPEEDS.findIndex((item) => item === speed)
   return SPEEDS[(index + 1) % SPEEDS.length]!
+}
+
+/** Whether a portrait video leaves room for a short-video app's own overlays; on by default. */
+export function readSafeAreaPreference() {
+  try {
+    return localStorage.getItem(SAFE_AREA_PREFERENCE_KEY) !== 'off'
+  } catch {
+    return true
+  }
+}
+
+export function writeSafeAreaPreference(on: boolean) {
+  try {
+    localStorage.setItem(SAFE_AREA_PREFERENCE_KEY, on ? 'on' : 'off')
+  } catch {
+    // The choice just won't be remembered.
+  }
+}
+
+/** The last layout chosen for presenting or recording; portrait suits phones best. */
+export function readRatioPreference(): 'landscape' | 'portrait' {
+  try {
+    return localStorage.getItem(RATIO_PREFERENCE_KEY) === 'landscape' ? 'landscape' : 'portrait'
+  } catch {
+    return 'portrait'
+  }
+}
+
+export function writeRatioPreference(ratio: 'landscape' | 'portrait') {
+  try {
+    localStorage.setItem(RATIO_PREFERENCE_KEY, ratio)
+  } catch {
+    // The choice just won't be remembered.
+  }
 }

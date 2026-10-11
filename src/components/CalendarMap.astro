@@ -146,6 +146,7 @@ function toScriptJson(value: unknown) {
         {SITE_TITLE}
       </p>
       <div class="calendar-map-trip-stage__photos" data-calendar-map-trip-stage-photos />
+      <div class="calendar-map-trip-stage__safe" data-calendar-map-trip-stage-safe aria-hidden="true" />
       <div class="calendar-map-trip-stage__center" data-calendar-map-trip-stage-center />
       <div class="calendar-map-trip-stage__progress" data-calendar-map-trip-stage-progress />
       <button class="calendar-map-trip-stage__close" type="button" data-calendar-map-trip-stage-close aria-label="退出放映">
@@ -188,20 +189,33 @@ function toScriptJson(value: unknown) {
             <span class="i-lucide-x" aria-hidden="true" />
           </button>
         </div>
-        <div class="flex w-full items-center gap-1 [&[hidden]]:hidden" data-calendar-map-trip-export-options role="group" aria-label="导出视频" hidden>
-          <label class="relative flex min-w-0 items-center">
-            <span class="sr-only">背景音乐</span>
-            <span class="i-lucide-music pointer-events-none absolute left-2.5 text-xs text-tx-3" aria-hidden="true" />
-            <select class="min-h-9 max-w-[7.5rem] min-w-0 cursor-pointer appearance-none truncate rounded-full border border-border bg-transparent pr-3 pl-7 text-xs text-tx hover:bg-inline" data-calendar-map-trip-export-music>
+        <div class="calendar-map-trip-setup" data-calendar-map-trip-export-options role="group" aria-labelledby="calendar-map-trip-setup-title" hidden>
+          <p class="text-sm font-medium" id="calendar-map-trip-setup-title" data-calendar-map-trip-setup-title>放映</p>
+          <div class="calendar-map-trip-setup__row">
+            <span class="calendar-map-trip-setup__label" id="calendar-map-trip-setup-ratio">画面</span>
+            <div class="calendar-map-trip-setup__segments" role="radiogroup" aria-labelledby="calendar-map-trip-setup-ratio">
+              <button type="button" role="radio" aria-checked="true" data-calendar-map-trip-export-ratio="portrait">竖屏 9:16</button>
+              <button type="button" role="radio" aria-checked="false" data-calendar-map-trip-export-ratio="landscape">横屏 16:9</button>
+            </div>
+          </div>
+          <label class="calendar-map-trip-setup__check" data-calendar-map-trip-safe-area-row>
+            <input type="checkbox" data-calendar-map-trip-safe-area checked />
+            <span>
+              为社交平台留边
+              <small>避开手机状态栏、右侧按钮和底部文案</small>
+            </span>
+          </label>
+          <label class="calendar-map-trip-setup__row">
+            <span class="calendar-map-trip-setup__label">背景音乐</span>
+            <select class="calendar-map-trip-setup__select" data-calendar-map-trip-export-music>
               {tripVideoMusic.map(track => <option value={track.src}>{track.title}</option>)}
               <option value="">无音乐</option>
             </select>
           </label>
-          <button class="min-h-9 cursor-pointer rounded-full border border-border bg-transparent px-2.5 text-xs whitespace-nowrap text-tx hover:bg-inline" type="button" data-calendar-map-trip-export-ratio="portrait">竖屏 9:16</button>
-          <button class="min-h-9 cursor-pointer rounded-full border border-border bg-transparent px-2.5 text-xs whitespace-nowrap text-tx hover:bg-inline" type="button" data-calendar-map-trip-export-ratio="landscape">横屏 16:9</button>
-          <button class="flex size-9 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-tx-2 hover:bg-inline hover:text-tx ml-auto" type="button" data-calendar-map-trip-export-cancel aria-label="取消导出">
-            <span class="i-lucide-x" aria-hidden="true" />
-          </button>
+          <div class="calendar-map-trip-setup__actions">
+            <button type="button" data-calendar-map-trip-export-cancel>取消</button>
+            <button type="button" data-calendar-map-trip-export-start>开始放映</button>
+          </div>
         </div>
       </footer>
     </section>

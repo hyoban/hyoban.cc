@@ -20,8 +20,12 @@ import {
   getNextSpeed,
   SPEEDS,
   readMusicPreference,
+  readRatioPreference,
+  readSafeAreaPreference,
   readSpeedPreference,
   writeMusicPreference,
+  writeRatioPreference,
+  writeSafeAreaPreference,
   writeSpeedPreference,
 } from './preferences'
 import {
@@ -148,6 +152,19 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   const stagePhotos = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-stage-photos]')
   const stageCenter = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-stage-center]')
   const stageProgress = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-stage-progress]')
+  const stageSafe = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-stage-safe]')
+  const safeAreaInput = queryRequired<HTMLInputElement>(page, '[data-calendar-map-trip-safe-area]')
+  const safeAreaRow = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-safe-area-row]')
+  const setupTitle = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-setup-title]')
+  const startButton = queryRequired<HTMLButtonElement>(
+    page,
+    '[data-calendar-map-trip-export-start]',
+  )
+  const ratioButtons = [
+    ...page.querySelectorAll<HTMLButtonElement>('[data-calendar-map-trip-export-ratio]'),
+  ]
+  let safeArea = readSafeAreaPreference()
+  let ratio: ExportRatio = readRatioPreference()
   let stagePhotoTimer: ReturnType<typeof setTimeout> | undefined
   let stagePhotosReady = false
   // The current stop's photo card: one per stop, with a frame that resizes per photo.
@@ -196,6 +213,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
       return isStageLayout()
         ? [
+            ...outside(stageSafe.getBoundingClientRect(), page.getBoundingClientRect()),
             ...shown(stageHeader),
             ...[...stagePhotos.children].flatMap(shown),
             ...shown(stageProgress),
@@ -281,9 +299,16 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       const top = stageHeader.getBoundingClientRect().bottom - pageRect.top + 72
       const photos = stagePhotos.getBoundingClientRect()
 
+      const safe = stageSafe.getBoundingClientRect()
+
       return page.dataset.exportRatio === 'landscape'
         ? { bottom: 64, left: 96, right: pageRect.right - photos.left + 96, top }
-        : { bottom: pageRect.bottom - photos.top + 16, left: 72, right: 72, top }
+        : {
+            bottom: pageRect.bottom - photos.top + 16,
+            left: safe.left - pageRect.left + 48,
+            right: pageRect.right - safe.right + 48,
+            top,
+          }
     }
 
     if (isNarrow()) {
@@ -339,6 +364,16 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
     drawnPointCount = from + 1
     setRoute(from + 1, walkLine(routeProgress, easeInOut(fraction)))
+  }
+
+  /** The parts of `outer` around `inner`: what a short-video app's overlays cover. */
+  function outside(inner: DOMRect, outer: DOMRect) {
+    return [
+      new DOMRect(outer.left, outer.top, outer.width, inner.top - outer.top),
+      new DOMRect(outer.left, inner.bottom, outer.width, outer.bottom - inner.bottom),
+      new DOMRect(outer.left, inner.top, inner.left - outer.left, inner.height),
+      new DOMRect(inner.right, inner.top, outer.right - inner.right, inner.height),
+    ].filter((rect) => rect.width > 0 && rect.height > 0)
   }
 
   /** Adds the route layers, also after the map style changes and drops them. */
@@ -1484,6 +1519,13 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       return
     }
 
+    // Esc closes the presenting/recording settings, and only them.
+    if (!exportOptions.hidden && event.key === 'Escape') {
+      event.preventDefault()
+      setExportOptionsOpen(false)
+      return
+    }
+
     // Esc or ? closes the panel, and only the panel: the trip stays open.
     if (shortcutsDialog.open) {
       if (event.key === '?' || event.key === 'Escape') {
@@ -1536,12 +1578,32 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     }
   }
 
+  /** Opens the settings for presenting or recording in place of the footer buttons. */
   function setExportOptionsOpen(open: boolean, mode: StageMode = stageMode) {
     stageMode = mode
-    exportOptions.setAttribute('aria-label', mode === 'present' ? '放映' : '导出视频')
+    setupTitle.textContent = mode === 'present' ? '放映' : '导出视频'
+    startButton.textContent = mode === 'present' ? '开始放映' : '开始录制'
+    renderSetup()
     exportOptions.hidden = !open
     controls.hidden = open
     actions.hidden = open
+
+    if (open) {
+      startButton.focus({ preventScroll: true })
+    }
+  }
+
+  function renderSetup() {
+    for (const button of ratioButtons) {
+      button.setAttribute(
+        'aria-checked',
+        String(button.dataset.calendarMapTripExportRatio === ratio),
+      )
+    }
+
+    safeAreaInput.checked = safeArea
+    // Margins for a short-video app's overlays only matter in portrait.
+    safeAreaRow.hidden = ratio !== 'portrait'
   }
 
   /**
@@ -1581,6 +1643,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     stopAmbientMusic()
     page.dataset.exportRatio = ratio
     page.toggleAttribute('data-trip-presenting', mode === 'present')
+    page.toggleAttribute('data-trip-safe-area', safeArea && ratio === 'portrait')
     wakeControls()
     getMap()?.resize()
 
@@ -1735,6 +1798,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
     staging = undefined
     delete page.dataset.exportRatio
+    page.removeAttribute('data-trip-safe-area')
     page.removeAttribute('data-trip-presenting')
     clearTimeout(idleTimer)
     page.removeAttribute('data-trip-idle')
@@ -2027,6 +2091,14 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     },
     { signal },
   )
+  safeAreaInput.addEventListener(
+    'change',
+    () => {
+      safeArea = safeAreaInput.checked
+      writeSafeAreaPreference(safeArea)
+    },
+    { signal },
+  )
   renderSpeedButton()
   speedButton.addEventListener('click', () => setSpeed(getNextSpeed(speed)), { signal })
   renderMusicButton()
@@ -2045,15 +2117,18 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     .querySelector('[data-calendar-map-trip-export-cancel]')
     ?.addEventListener('click', () => setExportOptionsOpen(false), { signal })
 
-  for (const button of page.querySelectorAll<HTMLButtonElement>(
-    '[data-calendar-map-trip-export-ratio]',
-  )) {
+  for (const button of ratioButtons) {
     button.addEventListener(
       'click',
-      () => void startStage(button.dataset.calendarMapTripExportRatio as ExportRatio, stageMode),
+      () => {
+        ratio = button.dataset.calendarMapTripExportRatio as ExportRatio
+        writeRatioPreference(ratio)
+        renderSetup()
+      },
       { signal },
     )
   }
+  startButton.addEventListener('click', () => void startStage(ratio, stageMode), { signal })
   playButton.addEventListener(
     'click',
     () => {
