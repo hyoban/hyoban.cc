@@ -186,6 +186,22 @@ html[data-calendar-mode-transition] .calendar-back-link {
 }
 
 /* Trip playback labels: a soft pill like the map toolbar, without the pointer tip. */
+/* While the side card eases between heights, its footer stays pinned to the bottom
+   edge and the content above slides under it, rather than the footer being cut off. */
+.calendar-map-trip[data-resizing] > footer {
+  position: absolute;
+  inset: auto 0 0;
+  z-index: 1;
+  background: var(--color-bg);
+}
+
+/* A copy of the outgoing card, fading out over the incoming one. */
+.calendar-map-trip-ghost {
+  position: absolute;
+  inset-inline: 0;
+  pointer-events: none;
+}
+
 /* Settings before presenting or recording, in place of the card's footer buttons. */
 .calendar-map-trip-setup {
   display: grid;
