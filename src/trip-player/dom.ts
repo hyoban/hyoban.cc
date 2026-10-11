@@ -48,6 +48,26 @@ export function createCountUp(value: number) {
   return flow
 }
 
+/**
+ * Wraps a read so it runs at most once per animation frame; calls later in the same
+ * frame get the first result.
+ */
+export function perFrame<T>(read: () => T) {
+  let time: CSSNumberish | null | undefined
+  let value: T
+
+  return () => {
+    const now = document.timeline.currentTime
+
+    if (now === null || now !== time) {
+      time = now
+      value = read()
+    }
+
+    return value
+  }
+}
+
 /** Starts loading a photo at the size the side card will show it. */
 export function preloadImage(source: TripImage) {
   const image = new Image()
