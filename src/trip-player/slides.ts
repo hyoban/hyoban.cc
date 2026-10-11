@@ -5,18 +5,21 @@
 type SlideStop = Readonly<{
   date: string
   day: number
-  images: readonly unknown[]
+  images: readonly Readonly<{ video?: string | undefined }>[]
   name: string
   places: readonly Readonly<{ name: string }>[]
   text: string
   waypoints: readonly Readonly<{ date: string; day: number; name: string }>[]
 }>
 
-const INTRO_DURATION = 3000
+const INTRO_DURATION = 2000
 // A day's opener only shows its date, weather and places: a glance is enough.
-const DAY_DURATION = 1400
-const STOP_DURATION = 5000
-const PHOTO_DURATION = 2000
+const DAY_DURATION = 1000
+const STOP_DURATION = 3000
+const PHOTO_DURATION = 1500
+// A live photo's clip runs about 1.3–3.2s (2.8s typically). Its slot lets most of it
+// play, the moment in its middle included, without making a trip's video drag.
+const LIVE_PHOTO_DURATION = 2400
 // Roughly the time it takes to read one Chinese character.
 const CHARACTER_DURATION = 120
 
@@ -140,11 +143,25 @@ export function pickCovers<I>(
   return [...new Set([...dayFirsts, ...firsts].map(({ image }) => image))].slice(0, count)
 }
 
+/** Whether a stop's live photos play their clips, which gives them longer slots. */
+export type SlideTiming = Readonly<{ liveClips: boolean }>
+
+/** How long each of a stop's photos would want to show. */
+function getPhotoSlots(stop: SlideStop, { liveClips }: SlideTiming) {
+  return stop.images.map((image) =>
+    liveClips && image.video ? LIVE_PHOTO_DURATION : PHOTO_DURATION,
+  )
+}
+
 /**
  * How long a slide stays up at normal speed: a stop long enough to show each photo
- * and read its text. The summary has no duration; playback ends there.
+ * (a live one until its clip has played) and to read its text. The summary has no
+ * duration; playback ends there.
  */
-export function getSlideDuration(slide: TripSlide<SlideStop> | undefined) {
+export function getSlideDuration(
+  slide: TripSlide<SlideStop> | undefined,
+  timing: SlideTiming = { liveClips: false },
+) {
   if (slide?.type === 'intro') {
     return INTRO_DURATION
   }
@@ -156,10 +173,37 @@ export function getSlideDuration(slide: TripSlide<SlideStop> | undefined) {
   return slide?.type === 'stop'
     ? Math.max(
         STOP_DURATION,
-        slide.stop.images.length * PHOTO_DURATION,
+        getPhotoSlots(slide.stop, timing).reduce((total, slot) => total + slot, 0),
         slide.stop.text.length * CHARACTER_DURATION,
       )
     : undefined
+}
+
+/**
+ * Where each of a stop's photos starts, as a share of the time the photos have: their
+ * slots, stretched evenly when the stop is longer (to read its text).
+ */
+export function getPhotoStarts(stop: SlideStop, timing: SlideTiming) {
+  const slots = getPhotoSlots(stop, timing)
+  const total = slots.reduce((sum, slot) => sum + slot, 0)
+  const starts: number[] = []
+  let start = 0
+
+  for (const slot of slots) {
+    starts.push(total ? start / total : 0)
+    start += slot
+  }
+
+  return starts
+}
+
+/** The photo showing at `share` of the way through a stop's photos. */
+export function getPhotoAt(stop: SlideStop, share: number, timing: SlideTiming) {
+  const starts = getPhotoStarts(stop, timing)
+  return Math.max(
+    starts.findLastIndex((start) => start <= share),
+    0,
+  )
 }
 
 /** Names a slide for the progress bar's tooltip and screen readers. */
