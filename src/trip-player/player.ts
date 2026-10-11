@@ -838,6 +838,9 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       'position:absolute;inset:0;width:100%;height:100%;max-width:none;max-height:none;object-fit:cover;pointer-events:none'
     const live = liveVideo?.parentElement === frame ? liveVideo : undefined
 
+    // The size sizePhoto gave the new photo, to put back once it's done filling the frame.
+    const size = { height: incoming.style.height, width: incoming.style.width }
+
     outgoing.style.cssText = fill
     incoming.style.cssText = fill
     frame.append(outgoing)
@@ -860,6 +863,8 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       cleanup: () => {
         outgoing.remove()
         incoming.style.cssText = ''
+        incoming.style.width = size.width
+        incoming.style.height = size.height
       },
     }
     void animations[0]!.finished.then(endPhotoTransition, () => {})
@@ -907,6 +912,38 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     void liveVideo.play().catch(() => liveVideo?.remove())
   }
 
+  /**
+   * Gives the side card's photo its size up front, from its proportions and the room
+   * the card has, so the card's layout is right before the photo has loaded rather
+   * than jumping when it arrives.
+   */
+  function sizePhoto(img: HTMLImageElement, image: TripImage) {
+    const frame = img.parentElement
+    const box = frame?.parentElement
+
+    if (!frame || !box) {
+      return
+    }
+
+    const boxStyle = getComputedStyle(box)
+    // The card's content width, less the frame's border.
+    const available =
+      box.clientWidth -
+      Number.parseFloat(boxStyle.paddingLeft) -
+      Number.parseFloat(boxStyle.paddingRight) -
+      (frame.offsetWidth - frame.clientWidth)
+
+    img.style.width = ''
+    img.style.height = ''
+
+    const maxHeight = Number.parseFloat(getComputedStyle(img).maxHeight) || Infinity
+    const ratio = image.width / image.height
+    const width = Math.min(available, maxHeight * ratio)
+
+    img.style.width = `${width}px`
+    img.style.height = `${width / ratio}px`
+  }
+
   function showPhoto(stop: TripStop, nextPhotoIndex: number) {
     const image = stop.images[nextPhotoIndex]
 
@@ -925,6 +962,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     photo.width = image.width
     photo.height = image.height
     photo.alt = image.alt
+    sizePhoto(photo, image)
     playLivePhoto(image)
 
     for (const [thumbnailIndex, thumbnail] of thumbnails.entries()) {
@@ -1195,8 +1233,10 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
         link.className =
           'relative block min-h-0 self-center overflow-hidden rounded-md border border-border bg-inline no-underline @max-[48rem]:shrink-0'
         link.setAttribute('aria-label', `查看 ${stop.date}的记录`)
+        // As tall as the card has room for beside the progress, thumbnails, text and
+        // buttons (about 24rem with the card's offset); on a phone, short of the map.
         photo.className =
-          'relative block h-auto max-h-[min(40dvh,22rem)] w-auto max-w-full @max-[48rem]:max-h-[38dvh]'
+          'relative block h-auto max-h-[calc(100dvh-24rem)] w-auto max-w-full @max-[48rem]:max-h-[38dvh]'
         photo.sizes = IMAGE_SIZES
         photo.decoding = 'async'
         link.append(photo)
@@ -2306,6 +2346,19 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     { signal },
   )
   window.addEventListener('keydown', handleShortcut, { signal })
+  window.addEventListener(
+    'resize',
+    () => {
+      const slide = slides[index]
+      const image = slide?.type === 'stop' ? slide.stop.images[photoIndex] : undefined
+
+      // The photo's size follows the room the card has.
+      if (photo && image && !photoTransition) {
+        sizePhoto(photo, image)
+      }
+    },
+    { signal },
+  )
   signal.addEventListener('abort', stop)
 
   return {
