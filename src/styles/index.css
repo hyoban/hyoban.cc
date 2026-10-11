@@ -1,5 +1,4 @@
 @import 'tailwindcss' source(none);
-@import 'mapbox-gl/dist/mapbox-gl.css' layer(components);
 @plugin '@egoist/tailwindcss-icons';
 @source '../../src';
 
