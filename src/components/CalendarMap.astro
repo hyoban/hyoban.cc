@@ -13,6 +13,7 @@ import {
   type ResolvedMomentMedia,
 } from '@/moments'
 import { getDayOffset, type TripWaypoint } from '@/moments/trips'
+import { getAssetUrl } from '@/asset-url'
 import { SITE_TITLE } from '@/consts'
 
 interface Props {
@@ -188,6 +189,20 @@ function formatDate(dateKey: string) {
         }
       </div>
     </section>
+
+    <div class="calendar-map-trip-stage" data-calendar-map-trip-stage aria-hidden="true">
+      <header class="calendar-map-trip-stage__header">
+        <p class="calendar-map-trip-stage__eyebrow" data-calendar-map-trip-stage-eyebrow />
+        <p class="calendar-map-trip-stage__title" data-calendar-map-trip-stage-title />
+      </header>
+      <p class="calendar-map-trip-stage__brand">
+        <img src={getAssetUrl('site/avatar-cropped.png')} alt="" width="24" height="24" />
+        {SITE_TITLE}
+      </p>
+      <div class="calendar-map-trip-stage__photos" data-calendar-map-trip-stage-photos />
+      <div class="calendar-map-trip-stage__center" data-calendar-map-trip-stage-center />
+      <div class="calendar-map-trip-stage__progress" data-calendar-map-trip-stage-progress />
+    </div>
 
     <section class="calendar-map-trip absolute bottom-4 left-4 z-10 flex max-h-[calc(100%-7rem)] w-[min(22rem,calc(100%-2rem))] flex-col overflow-hidden rounded-xl border border-border bg-bg shadow-[0_1.5rem_5rem_rgb(0_0_0/0.16)] @max-[48rem]:inset-x-3 @max-[48rem]:bottom-[calc(0.75rem+env(safe-area-inset-bottom))] @max-[48rem]:max-h-[calc(100%-1.5rem)] @max-[48rem]:w-auto [&[hidden]]:hidden" data-calendar-map-trip aria-labelledby="calendar-map-trip-title" hidden>
       <ol class="flex shrink-0 list-none gap-1 px-4 pt-3" data-calendar-map-trip-progress aria-hidden="true" />

@@ -27,6 +27,7 @@ type TripPoint = {
   eyebrow?: string
   name: string
   stopIndex: number
+  time?: string
   waypoint: boolean
 }
 
@@ -113,6 +114,17 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   const nextButton = queryRequired<HTMLButtonElement>(page, '[data-calendar-map-trip-next]')
   const playButton = queryRequired<HTMLButtonElement>(page, '[data-calendar-map-trip-play]')
   const closeButton = queryRequired<HTMLButtonElement>(page, '[data-calendar-map-trip-close]')
+  const stage = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-stage]')
+  const stageHeader = queryRequired<HTMLElement>(page, '.calendar-map-trip-stage__header')
+  const stageEyebrow = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-stage-eyebrow]')
+  const stageTitle = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-stage-title]')
+  const stagePhotos = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-stage-photos]')
+  const stageCenter = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-stage-center]')
+  const stageProgress = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-stage-progress]')
+  let stagePhotoTimer: ReturnType<typeof setTimeout> | undefined
+  let stagePhotosReady = false
+  // The current stop's photo card: one per stop, with a frame that resizes per photo.
+  let stageCard: { frame?: HTMLElement; frameWidth: number; photoMax: number } | undefined
   const controls = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-controls]')
   const actions = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-actions]')
   const exportButton = queryRequired<HTMLButtonElement>(page, '[data-calendar-map-trip-export]')
@@ -165,7 +177,23 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     return page.clientWidth <= 768
   }
 
+  /** While recording, a story-style overlay replaces the side card. */
+  function isStageLayout() {
+    return page.dataset.exportRatio !== undefined
+  }
+
   function getCameraPadding() {
+    if (isStageLayout()) {
+      const pageRect = page.getBoundingClientRect()
+      // Room for the header plus a two-line label above the topmost place.
+      const top = stageHeader.getBoundingClientRect().bottom - pageRect.top + 72
+      const photos = stagePhotos.getBoundingClientRect()
+
+      return page.dataset.exportRatio === 'landscape'
+        ? { bottom: 64, left: 96, right: pageRect.right - photos.left + 96, top }
+        : { bottom: pageRect.bottom - photos.top + 16, left: 72, right: 72, top }
+    }
+
     if (isNarrow()) {
       // Leaves room for the one-row toolbar, which returns when playback pauses.
       return { bottom: panel.offsetHeight + 40, left: 40, right: 40, top: 72 }
@@ -430,13 +458,24 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
     const { places } = slide.stop
 
-    // The first place carries the day and time; the card itself shows no title.
+    // The first place carries the day and time; the card itself shows no title. The
+    // recording header already shows the day, so its labels only add the time.
     showPopups(
-      places.map((place, placeIndex) => ({
-        coordinates: [place.longitude, place.latitude],
-        name: place.name,
-        ...(placeIndex === 0 ? { eyebrow: getStopEyebrow(slide.stop) } : {}),
-      })),
+      places.map((place, placeIndex) =>
+        isStageLayout()
+          ? {
+              coordinates: [place.longitude, place.latitude],
+              name:
+                placeIndex === 0 && slide.stop.time
+                  ? `${place.name} · ${slide.stop.time}`
+                  : place.name,
+            }
+          : {
+              coordinates: [place.longitude, place.latitude],
+              name: place.name,
+              ...(placeIndex === 0 ? { eyebrow: getStopEyebrow(slide.stop) } : {}),
+            },
+      ),
     )
 
     const placeCoordinates = places.map(
@@ -494,7 +533,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
       return new mapboxgl.Popup({
         // On wide screens the card sits on the left, so labels open to the right.
-        anchor: isNarrow() ? 'bottom' : 'bottom-left',
+        anchor: isNarrow() || isStageLayout() ? 'bottom' : 'bottom-left',
         className: 'calendar-map-trip-label',
         closeButton: false,
         closeOnClick: false,
@@ -518,17 +557,26 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
     traveling = true
 
+    if (isStageLayout()) {
+      clearStagePhotos()
+    }
+
     for (let pointIndex = first; pointIndex < first + count; pointIndex += 1) {
       const point = points[pointIndex]!
 
       currentWaypointPoint = pointIndex
       updateStops()
       showPopups([
-        {
-          coordinates: point.coordinates,
-          name: point.name,
-          ...(point.eyebrow ? { eyebrow: point.eyebrow } : {}),
-        },
+        isStageLayout()
+          ? {
+              coordinates: point.coordinates,
+              name: point.time ? `${point.name} · ${point.time}` : point.name,
+            }
+          : {
+              coordinates: point.coordinates,
+              name: point.name,
+              ...(point.eyebrow ? { eyebrow: point.eyebrow } : {}),
+            },
       ])
       map?.flyTo({
         center: point.coordinates,
@@ -625,6 +673,11 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     }
 
     photoIndex = nextPhotoIndex
+
+    if (stagePhotosReady) {
+      showStagePhoto(stop, nextPhotoIndex)
+    }
+
     photo.srcset = image.srcset
     photo.src = image.src
     photo.width = image.width
@@ -800,8 +853,200 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       body.replaceChildren(stats, replay, createMosaic(trip))
     }
 
+    renderStage(slide)
     renderProgress()
     renderPlayButton()
+  }
+
+  function renderStage(slide: Slide) {
+    clearTimeout(stagePhotoTimer)
+    stagePhotosReady = false
+
+    if (!isStageLayout() || !trip) {
+      if (progress.parentElement !== panel) {
+        panel.prepend(progress)
+      }
+
+      return
+    }
+
+    if (progress.parentElement !== stageProgress) {
+      stageProgress.append(progress)
+    }
+
+    stage.dataset.slide = slide.type
+    clearStagePhotos()
+
+    if (slide.type === 'intro') {
+      stageCenter.replaceChildren(createIntroCard(trip))
+      return
+    }
+
+    if (slide.type === 'summary') {
+      stageCenter.replaceChildren(createSummaryCard(trip))
+      return
+    }
+
+    const { stop } = slide
+
+    stageCenter.replaceChildren()
+    stageEyebrow.textContent = `第 ${stop.day} 天`
+    stageTitle.textContent = stop.date
+    // The photo card pops up once the camera has arrived at the stop.
+    stagePhotoTimer = setTimeout(
+      () => {
+        createStageCard(stop, slide.stopIndex)
+        stagePhotosReady = true
+        showStagePhoto(stop, photoIndex)
+      },
+      reducedMotion.matches ? 0 : LEG_DURATION,
+    )
+  }
+
+  function clearStagePhotos() {
+    stageCard = undefined
+
+    for (const card of stagePhotos.children) {
+      leaveStageCard(card as HTMLElement)
+    }
+  }
+
+  function leaveStageCard(card: HTMLElement) {
+    if (card.dataset.leaving !== undefined) {
+      return
+    }
+
+    card.dataset.leaving = ''
+    setTimeout(() => card.remove(), reducedMotion.matches ? 0 : 300)
+  }
+
+  /**
+   * Builds the stop's card with its full text first, then gives the photo frame
+   * whatever height is left, so the card always fits and the text is never cut.
+   */
+  function createStageCard(stop: TripStop, stopIndex: number) {
+    const card = document.createElement('figure')
+    const frame =
+      stop.images.length > 0
+        ? createElement('div', 'calendar-map-trip-polaroid__frame', '')
+        : undefined
+
+    clearStagePhotos()
+
+    // The place, day and time are on the map and header, so the card is just the
+    // photos and the Moment's words.
+    if (!frame && !stop.text) {
+      return
+    }
+
+    card.className = 'calendar-map-trip-polaroid'
+    card.dataset.tilt = stopIndex % 2 === 0 ? 'left' : 'right'
+    card.append(...(frame ? [frame] : []))
+
+    if (stop.text) {
+      const caption = document.createElement('figcaption')
+      caption.append(createElement('p', 'calendar-map-trip-polaroid__text', stop.text))
+      card.append(caption)
+    }
+
+    stagePhotos.append(card)
+    stageCard = {
+      ...(frame ? { frame } : {}),
+      frameWidth: frame?.clientWidth ?? 0,
+      photoMax: Math.max(stagePhotos.clientHeight - card.offsetHeight, 0),
+    }
+  }
+
+  /** Cross-fades to another photo while the frame eases to its height. */
+  function showStagePhoto(stop: TripStop, imageIndex: number) {
+    const image = stop.images[imageIndex]
+    const frame = stageCard?.frame
+
+    if (!stageCard || !frame || !image) {
+      return
+    }
+
+    const ratio = image.width / image.height
+    const height = Math.min(stageCard.frameWidth / ratio, stageCard.photoMax)
+    const img = document.createElement('img')
+    const firstPhoto = frame.childElementCount === 0
+
+    img.src = image.src
+    img.srcset = image.srcset
+    img.sizes = `${Math.round(stageCard.frameWidth)}px`
+    img.alt = ''
+    img.style.width = `${height * ratio}px`
+    img.style.height = `${height}px`
+
+    for (const old of frame.querySelectorAll('img')) {
+      old.style.opacity = '0'
+      setTimeout(() => old.remove(), reducedMotion.matches ? 0 : 450)
+    }
+
+    if (firstPhoto) {
+      // The card's own entrance animation covers the first photo.
+      frame.style.transition = 'none'
+      frame.style.height = `${height}px`
+      void frame.offsetHeight
+      frame.style.transition = ''
+    } else {
+      img.style.opacity = '0'
+      requestAnimationFrame(() => {
+        img.style.opacity = ''
+      })
+      frame.style.height = `${height}px`
+    }
+
+    frame.append(img)
+  }
+
+  function createIntroCard(currentTrip: TripData) {
+    const card = createElement('div', 'calendar-map-trip-stage-card', '')
+    const covers = createElement('div', 'calendar-map-trip-stage-card__covers', '')
+
+    for (const cover of currentTrip.stops.flatMap((stop) => stop.images.slice(0, 1)).slice(0, 3)) {
+      const image = document.createElement('img')
+      image.src = cover.thumbnail
+      image.alt = ''
+      covers.append(image)
+    }
+
+    card.append(
+      createElement('p', 'calendar-map-trip-stage-card__eyebrow', '旅程回放'),
+      createElement('p', 'calendar-map-trip-stage-card__title', currentTrip.title),
+      createElement(
+        'p',
+        'calendar-map-trip-stage-card__meta',
+        `${currentTrip.dateRange} · ${currentTrip.dayCount} 天`,
+      ),
+      covers,
+    )
+    return card
+  }
+
+  function createSummaryCard(currentTrip: TripData) {
+    const card = createElement('div', 'calendar-map-trip-stage-card', '')
+    const stats = document.createElement('dl')
+
+    stats.className = 'calendar-map-trip-stage-card__stats'
+
+    for (const [value, label] of [
+      [currentTrip.dayCount, '天'],
+      [currentTrip.placeCount, '个地点'],
+      [currentTrip.photoCount, '张照片'],
+      [currentTrip.distanceKm.toLocaleString('zh-CN'), '直线公里'],
+    ] as const) {
+      const item = document.createElement('div')
+      item.append(createElement('dt', '', label), createElement('dd', '', String(value)))
+      stats.append(item)
+    }
+
+    card.append(
+      createElement('p', 'calendar-map-trip-stage-card__eyebrow', '这趟旅程'),
+      createElement('p', 'calendar-map-trip-stage-card__title', currentTrip.title),
+      stats,
+    )
+    return card
   }
 
   function goTo(nextIndex: number, options: { play?: boolean } = {}) {
@@ -985,6 +1230,8 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     exporting = undefined
     delete page.dataset.exportRatio
     getMap()?.resize()
+    // Back to the side card for whatever slide is showing.
+    renderSlide()
   }
 
   function tick(now: number) {
@@ -1030,6 +1277,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       ...('day' in place ? { eyebrow: getStopEyebrow(place) } : {}),
       name: place.name,
       stopIndex,
+      ...('time' in place && place.time ? { time: place.time } : {}),
       waypoint,
     })
 
