@@ -465,15 +465,16 @@ html:has(.calendar-map-page[data-export-ratio]) body {
  * A portrait video plays full screen on a phone inside a short-video app, which lays
  * its own things over it: the status bar and app icons at the top, the like, comment
  * and share buttons down the right, the author, caption and progress bar at the
- * bottom. With the option on, the words, cards and progress keep inside what stays
- * clear of those (about 11% top, 13% right, 22% bottom of a 1080×1920 frame); the map
- * still fills it all.
+ * bottom. Phones taller than 9:16 also fill the screen by cropping the video's sides,
+ * about 9% each on a 9:19.5 screen. With the option on, the words, cards and progress
+ * keep inside what stays clear of all that (about 11% top, 21% right, 22% bottom and
+ * 11% left of the frame); the map still fills it all.
  */
 .calendar-map-page[data-export-ratio='portrait'][data-trip-safe-area] .calendar-map-trip-stage {
   --safe-top: calc(var(--u) * 20);
-  --safe-right: calc(var(--u) * 14);
+  --safe-right: calc(var(--u) * 21);
   --safe-bottom: calc(var(--u) * 40);
-  --safe-left: calc(var(--u) * 5);
+  --safe-left: calc(var(--u) * 11);
 }
 
 .calendar-map-page[data-export-ratio='portrait'][data-trip-safe-area]
@@ -590,11 +591,13 @@ html:has(.calendar-map-page[data-export-ratio]) body {
   pointer-events: none;
 }
 
-/* Where photo cards land; the map camera keeps stops out of this area. */
+/* Where photo cards land; the map camera keeps stops out of this area. The column is
+   the area's width, so a card's max-width keeps it inside. */
 .calendar-map-trip-stage__photos {
   position: absolute;
   inset: 38% 6% 9%;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   place-items: center;
 }
 
