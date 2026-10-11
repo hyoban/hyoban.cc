@@ -41,6 +41,8 @@ import { createMapLabels } from './map-labels'
 import { createRouteLayers, type StopState } from './route-layers'
 import {
   buildSlides,
+  getPhotoAt,
+  getPhotoStarts,
   getSlideDuration,
   getSlideLabel,
   getStopEyebrow,
@@ -48,6 +50,7 @@ import {
   getStopPointStart as getPointStart,
   getWaypointsBefore as getWaypointRange,
   pickCovers,
+  type SlideTiming,
 } from './slides'
 import { createDayCard, createIntroCard, createSummaryCard, getTripMeta } from './stage-cards'
 import type {
@@ -74,7 +77,7 @@ type TripPlayerOptions = {
 }
 
 // Long enough to read a waypoint's name before driving on.
-const WAYPOINT_PAUSE = 1000
+const WAYPOINT_PAUSE = 600
 // Switching photos fades through: the old one fades out, the frame takes the new one's
 // shape, then the new one fades in, so the two are never seen on top of each other.
 const PHOTO_SWITCH = { duration: 480, easing: 'cubic-bezier(0.4, 0, 0.2, 1)' }
@@ -103,7 +106,10 @@ const STOP_ZOOM = 9
 // The closest the camera comes in while following a short drive.
 const NEARBY_MAX_ZOOM = 13
 // How long the summary card stays in an exported video before it ends.
-const EXPORT_SUMMARY_HOLD = 4000
+const EXPORT_SUMMARY_HOLD = 3000
+// Presenting or recording, a stop's photo card pops up this soon when the route is
+// already there; otherwise once the drive there is drawn.
+const CARD_POP = 300
 // avc1 keeps the codec setup in the file header; QuickTime can't play avc3 MP4s.
 const EXPORT_VIDEO_TYPES = [
   'video/mp4;codecs=avc1,mp4a.40.2',
@@ -302,6 +308,9 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   // The side card's photo switch in progress, finished early if another one starts.
   let photoTransition: { animations: Animation[]; cleanup: () => void } | undefined
   let liveVideo: HTMLVideoElement | undefined
+  // How long the current stop's photo card takes to appear when presenting, in the
+  // card's own time.
+  let stagePhotoDelay = 0
   // A mouse resting on the card holds the current slide so it can be read.
   let hovering = false
   let idleTimer: ReturnType<typeof setTimeout> | undefined
@@ -312,17 +321,22 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   const readyPhotos = new Set<string>()
 
   /**
-   * Presenting or recording, a stop's photo card only appears once the camera has
-   * arrived (see renderStage), so the stop lasts that much longer and its photos are
-   * timed from then: the first and last get as long as the others.
+   * Presenting or recording, a stop's photo card only appears once the route has
+   * reached it (see renderStage), so the stop lasts that much longer and its photos
+   * are timed from then: the first and last get as long as the others.
    */
   function getPhotoDelay(slide: Slide | undefined) {
-    return slide?.type === 'stop' && isStageLayout() && !reducedMotion.matches ? LEG_DURATION : 0
+    return slide === slides[index] && slide?.type === 'stop' ? stagePhotoDelay : 0
+  }
+
+  /** Live photos get time for their clips only where the clips play. */
+  function getTiming(): SlideTiming {
+    return { liveClips: canAutoplayLiveClips() && !reducedMotion.matches }
   }
 
   /** How long a slide stays up, in the card's own time (which runs faster at 2×). */
   function getDuration(slide: Slide | undefined) {
-    const duration = getSlideDuration(slide)
+    const duration = getSlideDuration(slide, getTiming())
     return duration === undefined ? undefined : duration + getPhotoDelay(slide)
   }
 
@@ -728,13 +742,10 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     const slide = slides[index]
 
     if (slide?.type === 'stop' && duration && slide.stop.images.length > 1) {
-      // The photos share the time from when the card shows them, evenly.
+      // The photos share the time from when the card shows them, by their slots.
       const delay = getPhotoDelay(slide)
       const shown = Math.max(elapsed - delay, 0) / Math.max(duration - delay, 1)
-      const nextPhotoIndex = Math.min(
-        Math.floor(shown * slide.stop.images.length),
-        slide.stop.images.length - 1,
-      )
+      const nextPhotoIndex = getPhotoAt(slide.stop, shown, getTiming())
 
       if (nextPhotoIndex !== photoIndex) {
         animatePhotoSize(() => showPhoto(slide.stop, nextPhotoIndex))
@@ -991,8 +1002,9 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     const slide = slides[index]
     const delay = getPhotoDelay(slide)
     const duration = getDuration(slide) ?? 0
+    const start = getPhotoStarts(stop, getTiming())[imageIndex] ?? 0
 
-    elapsed = delay + ((duration - delay) / stop.images.length) * imageIndex
+    elapsed = delay + (duration - delay) * start
     animatePhotoSize(() => showPhoto(stop, imageIndex))
     renderProgress()
   }
@@ -1114,11 +1126,6 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     // The toolbar steps aside while playing and returns when paused or finished.
     page.toggleAttribute('data-trip-playing', playing)
     syncAmbientMusic()
-  }
-
-  /** How long the map takes to travel one leg at the chosen speed. */
-  function getLegDuration() {
-    return LEG_DURATION / speed
   }
 
   /** How long drawing the route from `points[from]` to `points[to - 1]` takes. */
@@ -1375,14 +1382,11 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     // The time sits with the day in the header, so the map's labels can be just names.
     stageHeading.show(stop)
     // The photo card pops up once the camera has arrived at the stop.
-    stagePhotoTimer = setTimeout(
-      () => {
-        createStageCard(stop, slide.stopIndex)
-        stagePhotosReady = true
-        showStagePhoto(stop, photoIndex)
-      },
-      reducedMotion.matches ? 0 : getLegDuration(),
-    )
+    stagePhotoTimer = setTimeout(() => {
+      createStageCard(stop, slide.stopIndex)
+      stagePhotosReady = true
+      showStagePhoto(stop, photoIndex)
+    }, stagePhotoDelay / speed)
   }
 
   function clearStagePhotos() {
@@ -1622,6 +1626,20 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     // Taken before rendering, which already starts the route onward from this stop.
     const arrived =
       slide.type === 'stop' && drawnPointCount >= getStopPlaceStart(slide.stopIndex) + 1
+    // Where a drive to this stop starts, while it is still to be drawn.
+    let arrivingFrom: number | undefined
+
+    if (slide.type === 'stop' && legStart !== -1 && !(legStart === undefined && arrived)) {
+      arrivingFrom = legStart ?? Math.max(getStopPlaceStart(slide.stopIndex) - 1, 0)
+    }
+
+    // The photo card waits for the drive here, if there is one, else just pops up.
+    stagePhotoDelay =
+      slide.type !== 'stop' || !isStageLayout() || reducedMotion.matches
+        ? 0
+        : arrivingFrom === undefined
+          ? CARD_POP
+          : getDriveTime(arrivingFrom, getStopPlaceStart(slide.stopIndex) + 1) * speed
 
     index = nextIndex
     elapsed = 0
@@ -1642,22 +1660,18 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     changeCard(renderSlide)
 
     routeProgress = undefined
-    // Where a drive to this stop starts, while it is still to be drawn.
-    let arrivingFrom: number | undefined
     let arrival: Promise<void> | undefined
 
     if (slide.type === 'stop') {
-      const placeStart = getStopPlaceStart(slide.stopIndex)
-      const arriveAt = placeStart + 1
+      const arriveAt = getStopPlaceStart(slide.stopIndex) + 1
 
       // The previous card's route usually arrived already; only a skip ahead or
       // the last leg after waypoints still has to be drawn.
-      if (legStart === -1 || (legStart === undefined && arrived)) {
+      if (arrivingFrom === undefined) {
         cancelLeg()
         drawnPointCount = arriveAt
         setRoute(drawnPointCount)
       } else {
-        arrivingFrom = legStart ?? Math.max(placeStart - 1, 0)
         arrival = drawLeg(arrivingFrom, arriveAt)
       }
     } else if (slide.type === 'day') {

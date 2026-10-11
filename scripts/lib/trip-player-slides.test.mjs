@@ -2,6 +2,8 @@ import assert from 'node:assert/strict'
 import { test } from 'vite-plus/test'
 import {
   buildSlides,
+  getPhotoAt,
+  getPhotoStarts,
   getSlideDuration,
   getSlideLabel,
   getStopEyebrow,
@@ -82,16 +84,37 @@ test("falls back to each day's first photo, then the other stops' first photos",
 
 test('times stops by their photos and text, and leaves the summary open', () => {
   const stopSlide = (images, text) => ({
-    stop: { ...stop(1, ['a'], [], Array.from({ length: images })), text },
+    stop: { ...stop(1, ['a'], [], images), text },
     stopIndex: 0,
     type: 'stop',
   })
+  const still = {}
+  const live = { video: 'clip.mp4' }
+  const withClips = { liveClips: true }
 
-  assert.equal(getSlideDuration({ type: 'intro' }), 3000)
-  assert.equal(getSlideDuration(stopSlide(0, '')), 5000)
-  assert.equal(getSlideDuration(stopSlide(4, '')), 8000)
-  assert.equal(getSlideDuration(stopSlide(1, '字'.repeat(50))), 6000)
+  assert.equal(getSlideDuration({ type: 'intro' }), 2000)
+  assert.equal(getSlideDuration(stopSlide([], '')), 3000)
+  assert.equal(getSlideDuration(stopSlide([still, still, still], '')), 4500)
+  assert.equal(getSlideDuration(stopSlide([still], '字'.repeat(50))), 6000)
+  // A live photo gets time for its clip, but only where clips play.
+  assert.equal(getSlideDuration(stopSlide([live, still], ''), withClips), 3900)
+  assert.equal(getSlideDuration(stopSlide([live, still], '')), 3000)
   assert.equal(getSlideDuration({ type: 'summary' }), undefined)
+})
+
+test('gives each photo its share of the stop, live ones longer', () => {
+  const photos = stop(1, ['a'], [], [{ video: 'clip.mp4' }, {}, {}])
+  const withClips = { liveClips: true }
+
+  assert.deepEqual(
+    getPhotoStarts(photos, withClips).map((start) => start.toFixed(3)),
+    ['0.000', '0.444', '0.722'],
+  )
+  assert.equal(getPhotoAt(photos, 0.3, withClips), 0)
+  assert.equal(getPhotoAt(photos, 0.5, withClips), 1)
+  assert.equal(getPhotoAt(photos, 1, withClips), 2)
+  // Without clips every photo gets the same share.
+  assert.equal(getPhotoAt(photos, 0.34, { liveClips: false }), 1)
 })
 
 test('passes waypoints from the evening before ahead of the day opener', () => {
