@@ -5,6 +5,17 @@ import { defineTrips } from '../moments/trips.ts'
 // After adding a trip or moving a place, run `pnpm trips:routes` so the route follows roads.
 export const trips = defineTrips([
   {
+    covers: [
+      '2026/10/01-02-ferry-sunset/ferry-sunset-live-6.webp',
+      '2026/10/02-02-dalian-morning/dalian-morning-live-6.webp',
+      '2026/10/03-01-dandong-morning/dandong-morning-live-3.webp',
+      '2026/10/04-02-shenyang-cybercab/shenyang-cybercab-6.webp',
+      '2026/10/02-03-bangchuidao-seaside/bangchuidao-seaside-live-3.webp',
+      '2026/10/01-01-yantai-dalian-ferry/yantai-dalian-ferry-live-3.webp',
+      '2026/10/02-03-bangchuidao-seaside/bangchuidao-seaside-live-5.webp',
+      '2026/10/03-02-dandong-soup-rice/dandong-soup-rice-live-1.webp',
+      '2026/10/05-01-tianjin-guobacai/tianjin-guobacai-6.webp',
+    ],
     end: '2026-10-06',
     id: '2026-national-day-road-trip',
     start: '2026-09-30',
@@ -20,6 +31,17 @@ export const trips = defineTrips([
     ],
   },
   {
+    covers: [
+      '2026/09/14-01-tiger-leaping-gorge/tiger-leaping-gorge-2.webp',
+      '2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-3.webp',
+      '2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market.webp',
+      '2026/09/14-01-tiger-leaping-gorge/tiger-leaping-gorge-4.webp',
+      '2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-5.webp',
+      '2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-4.webp',
+      '2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-6.webp',
+      '2026/09/14-01-tiger-leaping-gorge/tiger-leaping-gorge.webp',
+      '2026/09/13-02-yunnan-birthday-surprise/yunnan-birthday-surprise.webp',
+    ],
     end: '2026-09-16',
     id: '2026-yunnan',
     start: '2026-09-12',
@@ -28,6 +50,17 @@ export const trips = defineTrips([
     title: '云南之旅',
   },
   {
+    covers: [
+      '2026/08/03-01-rizhao-sunrise/rizhao-sunrise-video-2-poster.webp',
+      '2026/08/01-02-huaian/huaian-7.webp',
+      '2026/08/02-01-liandao/liandao-3.webp',
+      '2026/08/03-01-rizhao-sunrise/rizhao-sunrise.webp',
+      '2026/08/01-02-huaian/huaian-8.webp',
+      '2026/08/02-03-rizhao-food/rizhao-food-3.webp',
+      '2026/08/02-01-liandao/liandao-9.webp',
+      '2026/08/01-02-huaian/huaian-4.webp',
+      '2026/08/02-01-liandao/liandao.webp',
+    ],
     end: '2026-08-03',
     id: '2026-rizhao-solo-trip',
     start: '2026-08-01',

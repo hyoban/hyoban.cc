@@ -54,6 +54,8 @@ type TripData = {
   pageTitle: string
   photoCount: number
   placeCount: number
+  /** Hand-picked photos for the intro and summary, best first. */
+  covers: TripImage[]
   stops: TripStop[]
   title: string
   trailingWaypoints: TripWaypoint[]
@@ -176,6 +178,8 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   let stageToken: object | undefined
   let stopPopups: mapboxgl.Popup[] = []
   let trip: TripData | undefined
+  // Photos for the intro and summary.
+  let covers: TripImage[] = []
   // Every place of every stop in visiting order; the route runs through these.
   let points: TripPoint[] = []
   // Index into `points` just past each stop's last place.
@@ -971,7 +975,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
           'shrink-0 text-tx-2',
           `${trip.dateRange} · ${trip.dayCount} 天 · ${trip.stops.length} 条记录`,
         ),
-        createMosaic(trip),
+        createMosaic(covers),
       )
     } else if (slide.type === 'stop') {
       const { stop } = slide
@@ -1057,7 +1061,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       replay.type = 'button'
       replay.prepend(replayIcon)
       replay.addEventListener('click', () => goTo(0, { play: true }), { signal })
-      body.replaceChildren(stats, replay, createMosaic(trip))
+      body.replaceChildren(stats, replay, createMosaic(covers))
     }
 
     renderStage(slide)
@@ -1209,13 +1213,13 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
   function createIntroCard(currentTrip: TripData) {
     const card = createElement('div', 'calendar-map-trip-stage-card', '')
-    const covers = createElement('div', 'calendar-map-trip-stage-card__covers', '')
+    const coverRow = createElement('div', 'calendar-map-trip-stage-card__covers', '')
 
-    for (const cover of currentTrip.stops.flatMap((stop) => stop.images.slice(0, 1)).slice(0, 3)) {
+    for (const cover of covers.slice(0, 3)) {
       const image = document.createElement('img')
       image.src = cover.thumbnail
       image.alt = ''
-      covers.append(image)
+      coverRow.append(image)
     }
 
     card.append(
@@ -1226,7 +1230,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
         'calendar-map-trip-stage-card__meta',
         `${currentTrip.dateRange} · ${currentTrip.dayCount} 天`,
       ),
-      covers,
+      coverRow,
     )
     return card
   }
@@ -1599,6 +1603,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
     stop()
     trip = nextTrip
+    covers = getCovers(nextTrip, 9)
     const toPoint = (
       place: TripPlace | TripWaypoint,
       stopIndex: number,
@@ -1833,8 +1838,25 @@ function preloadImage(source: TripImage) {
 }
 
 /** A grid of each stop's first photo for the intro and summary cards. */
-function createMosaic(trip: TripData) {
-  const covers = trip.stops.flatMap((stop) => stop.images.slice(0, 1)).slice(0, 9)
+/**
+ * The trip's chosen covers, or else the first photo of each day followed by the
+ * first photo of each remaining stop.
+ */
+function getCovers(trip: TripData, count: number) {
+  if (trip.covers.length > 0) {
+    return trip.covers.slice(0, count)
+  }
+
+  const firsts = trip.stops.flatMap((stop) =>
+    stop.images[0] ? [{ day: stop.day, image: stop.images[0] }] : [],
+  )
+  const days = new Set<number>()
+  const dayFirsts = firsts.filter(({ day }) => !days.has(day) && days.add(day))
+
+  return [...new Set([...dayFirsts, ...firsts].map(({ image }) => image))].slice(0, count)
+}
+
+function createMosaic(covers: TripImage[]) {
   // Narrow screens keep one row so the map stays visible above the card.
   const mosaic = createElement(
     'div',
