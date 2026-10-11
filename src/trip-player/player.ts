@@ -1,5 +1,5 @@
 import type { Map as MapboxMap } from 'mapbox-gl'
-import type { Coordinates } from '../geo'
+import { getDistanceKm, type Coordinates } from '../geo'
 import { createCamera } from './camera'
 import {
   canAutoplayLiveClips,
@@ -73,7 +73,8 @@ type TripPlayerOptions = {
   signal: AbortSignal
 }
 
-const WAYPOINT_PAUSE = 2000
+// Long enough to read a waypoint's name before driving on.
+const WAYPOINT_PAUSE = 1000
 // Switching photos fades through: the old one fades out, the frame takes the new one's
 // shape, then the new one fades in, so the two are never seen on top of each other.
 const PHOTO_SWITCH = { duration: 480, easing: 'cubic-bezier(0.4, 0, 0.2, 1)' }
@@ -94,6 +95,10 @@ const CARD_FADE_IN: Keyframe[] = [
   { opacity: 1, transform: 'none' },
 ]
 const LEG_DURATION = 2200
+// Drawing a drive takes from SHORT_LEG for a hop across town up to LEG_DURATION for
+// LONG_LEG_KM or more, so nearby places don't keep the viewer waiting.
+const SHORT_LEG = 1200
+const LONG_LEG_KM = 400
 const STOP_ZOOM = 9
 // The closest the camera comes in while following a short drive.
 const NEARBY_MAX_ZOOM = 13
@@ -501,8 +506,9 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
     drawnPointCount = legStart + 1
     const startTime = performance.now()
+    const duration = getDriveTime(legStart, legEnd)
     const step = (now: number) => {
-      const t = Math.min((now - startTime) / getLegDuration(), 1)
+      const t = Math.min((now - startTime) / duration, 1)
 
       if (t >= 1) {
         legFrame = undefined
@@ -643,7 +649,12 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
         drawnPointCount >= pointIndex + 1
           ? Promise.resolve()
           : drawLeg(Math.max(pointIndex - 1, 0), pointIndex + 1),
-        new Promise((resolve) => setTimeout(resolve, reducedMotion.matches ? 0 : getLegDuration())),
+        new Promise((resolve) =>
+          setTimeout(
+            resolve,
+            reducedMotion.matches ? 0 : getDriveTime(Math.max(pointIndex - 1, 0), pointIndex + 1),
+          ),
+        ),
       ])
 
       if (token !== travelToken) {
@@ -1108,6 +1119,15 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   /** How long the map takes to travel one leg at the chosen speed. */
   function getLegDuration() {
     return LEG_DURATION / speed
+  }
+
+  /** How long drawing the route from `points[from]` to `points[to - 1]` takes. */
+  function getDriveTime(from: number, to: number) {
+    const start = points[from]
+    const end = points[to - 1]
+    const km = start && end ? getDistanceKm(start.coordinates, end.coordinates) : 0
+
+    return (SHORT_LEG + (LEG_DURATION - SHORT_LEG) * Math.min(km / LONG_LEG_KM, 1)) / speed
   }
 
   function renderSpeedButton() {

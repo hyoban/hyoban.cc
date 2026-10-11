@@ -13,7 +13,8 @@ type SlideStop = Readonly<{
 }>
 
 const INTRO_DURATION = 3000
-const DAY_DURATION = 2200
+// A day's opener only shows its date, weather and places: a glance is enough.
+const DAY_DURATION = 1400
 const STOP_DURATION = 5000
 const PHOTO_DURATION = 2000
 // Roughly the time it takes to read one Chinese character.
