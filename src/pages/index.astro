@@ -26,7 +26,7 @@ const external = { target: '_blank', rel: 'noopener noreferrer' }
 
 <Layout title={SITE_TITLE} description={SITE_DESCRIPTION}>
   <SitePage>
-    <section class="space-y-4 leading-relaxed">
+    <section class="space-y-4">
       <p>我会在这里写一些关于工作、代码和生活的记录。</p>
       <p>
         你也可以在{' '}
@@ -50,13 +50,13 @@ const external = { target: '_blank', rel: 'noopener noreferrer' }
       {
         postsByYear.map((group) => (
           <section class="grid gap-x-6 gap-y-1 sm:grid-cols-[3.5rem_minmax(0,1fr)]">
-            <h2 class="py-1.5 text-tx-2 tabular-nums sm:sticky sm:top-4 sm:self-start">{group.year}</h2>
+            <h2 class="py-1 text-tx-2 tabular-nums sm:sticky sm:top-4 sm:self-start">{group.year}</h2>
             <ul class="flex flex-col">
               {group.posts.map((post) => (
                 <li>
                   <a
                     href={`/${post.data.link}`}
-                    class="-mx-3 block rounded-md px-3 py-1.5 no-underline transition-colors hover:bg-hover"
+                    class="-mx-3 block rounded-md px-3 py-1 no-underline transition-colors hover:bg-hover"
                   >
                     {post.data.title}
                     <time class="ml-2 whitespace-nowrap text-tx-2 tabular-nums" datetime={post.data.pubDate.toISOString()}>{formatPostListDate(post.data.pubDate)}</time>

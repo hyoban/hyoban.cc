@@ -62,6 +62,16 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+    /* Add spacing between CJK and Latin text where the source has none. */
+    text-autospace: normal;
+  }
+
+  :is(p, li, blockquote, dd) {
+    text-wrap: pretty;
+  }
+
+  :is(h1, h2, h3, h4) {
+    text-wrap: balance;
   }
 
   ::selection {
@@ -72,7 +82,7 @@
     text-decoration: underline;
     text-decoration-color: color-mix(in srgb, var(--color-tx-3) 70%, transparent);
     text-decoration-thickness: 1px;
-    text-underline-offset: 3px;
+    text-underline-offset: 0.25em;
     transition:
       color 140ms ease,
       text-decoration-color 140ms ease;
@@ -186,11 +196,10 @@ html[data-calendar-mode-transition] .calendar-back-link {
 
 /* Prose styles */
 .prose {
-  line-height: 1.75;
-
   /* Headings */
   & :is(h1, h2, h3, h4, h5, h6) {
     font-size: 1em;
+    font-weight: 500;
     line-height: 1.35;
     margin-top: 2.2em;
     margin-bottom: 0.6em;
@@ -202,18 +211,18 @@ html[data-calendar-mode-transition] .calendar-back-link {
 
   /* Paragraphs */
   & p {
-    margin: 1.15em 0;
+    margin: 1em 0;
   }
 
   /* Links */
   & a {
-    word-break: break-all;
+    overflow-wrap: anywhere;
   }
 
   /* Lists */
   & :is(ul, ol) {
     padding-left: 1.5em;
-    margin: 1.15em 0;
+    margin: 1em 0;
   }
 
   /* Keep nested lists compact */
@@ -251,8 +260,7 @@ html[data-calendar-mode-transition] .calendar-back-link {
   /* Code */
   & code {
     font-size: 0.875em;
-    word-break: break-all;
-    overflow-wrap: break-word;
+    overflow-wrap: anywhere;
   }
 
   & :not(pre) > code {
@@ -277,7 +285,6 @@ html[data-calendar-mode-transition] .calendar-back-link {
       border: 0;
       padding: 0;
       color: inherit;
-      word-break: normal;
       overflow-wrap: normal;
     }
   }
