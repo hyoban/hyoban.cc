@@ -74,10 +74,17 @@ type TripPlayerOptions = {
 }
 
 const WAYPOINT_PAUSE = 2000
-// How far photos slide when the card moves to the next or previous one.
-const PHOTO_SLIDE_DISTANCE = 12
-// Long enough to see both photos; the new one fades in over the old one.
-const PHOTO_SWITCH = { duration: 600, easing: 'cubic-bezier(0.4, 0, 0.2, 1)' }
+// Switching photos fades through: the old one fades out, the frame takes the new one's
+// shape, then the new one fades in, so the two are never seen on top of each other.
+const PHOTO_SWITCH = { duration: 480, easing: 'cubic-bezier(0.4, 0, 0.2, 1)' }
+const FADE_OUT: Keyframe[] = [{ opacity: 1 }, { offset: 0.35, opacity: 0 }, { opacity: 0 }]
+const FADE_IN: Keyframe[] = [
+  { opacity: 0, transform: 'scale(0.97)' },
+  { offset: 0.4, opacity: 0, transform: 'scale(0.97)' },
+  { opacity: 1, transform: 'none' },
+]
+// A card's height eases to the next card's while its new content fades in.
+const CARD_SWITCH = { duration: 360, easing: 'cubic-bezier(0.4, 0, 0.2, 1)' }
 const LEG_DURATION = 2200
 const STOP_ZOOM = 9
 // The closest the camera comes in while following a short drive.
@@ -277,7 +284,8 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   let photoIndex = 0
   let photo: HTMLImageElement | undefined
   let thumbnails: HTMLButtonElement[] = []
-  let photoAnimation: Animation | undefined
+  // The side card's photo switch in progress, finished early if another one starts.
+  let photoTransition: { animations: Animation[]; cleanup: () => void } | undefined
   let liveVideo: HTMLVideoElement | undefined
   // A mouse resting on the card holds the current slide so it can be read.
   let hovering = false
@@ -690,7 +698,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       )
 
       if (nextPhotoIndex !== photoIndex) {
-        animatePhotoSize(() => showPhoto(slide.stop, nextPhotoIndex), nextPhotoIndex - photoIndex)
+        animatePhotoSize(() => showPhoto(slide.stop, nextPhotoIndex))
       }
     }
 
@@ -698,64 +706,101 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   }
 
   /**
-   * Swaps the photo and eases its frame between the old and new size. Only the photo
-   * moves: the card grows from its bottom edge, so the text and buttons stay put. The
-   * photos also slide a little in the direction of travel through the thumbnails.
+   * Eases the side card from its old height to the new card's and fades the new
+   * content in. The card is anchored at the bottom, so it grows or shrinks upwards.
    */
-  function animatePhotoSize(update: () => void, direction: number) {
-    const frame = photo?.parentElement
-    const from = frame ? { height: frame.offsetHeight, width: frame.offsetWidth } : undefined
-    const outgoing =
-      photo && frame && direction !== 0 && !reducedMotion.matches
-        ? (photo.cloneNode() as HTMLImageElement)
-        : undefined
-
-    photoAnimation?.cancel()
-
-    if (outgoing && photo && frame) {
-      // A copy of the old photo stays put underneath while the new one fades in.
-      outgoing.style.cssText = `position:absolute;top:0;left:0;width:${photo.offsetWidth}px;height:${photo.offsetHeight}px;max-width:none;max-height:none;pointer-events:none`
-      frame.insertBefore(outgoing, photo)
+  function animateCardChange(fromHeight: number | undefined) {
+    if (fromHeight === undefined || reducedMotion.matches || isStageLayout()) {
+      return
     }
+
+    const toHeight = panel.offsetHeight
+
+    if (Math.abs(toHeight - fromHeight) > 1) {
+      panel.animate([{ height: `${fromHeight}px` }, { height: `${toHeight}px` }], CARD_SWITCH)
+    }
+
+    for (const part of [header, body]) {
+      part.animate(
+        [
+          { opacity: 0, transform: 'translateY(0.375rem)' },
+          { opacity: 1, transform: 'none' },
+        ],
+        { ...CARD_SWITCH, delay: 60, fill: 'backwards' },
+      )
+    }
+  }
+
+  /**
+   * Swaps the side card's photo with a fade through: the old one fades out, the frame
+   * eases to the new photo's size with both filling it, then the new one fades in.
+   * Only the photo moves: the card grows from its bottom edge, so the text stays put.
+   */
+  function animatePhotoSize(update: () => void) {
+    const frame = photo?.parentElement
+
+    if (!photo || !frame || reducedMotion.matches) {
+      endPhotoTransition()
+      update()
+      return
+    }
+
+    // Where a switch still in progress has got to, so a quick second one carries on.
+    const from = frame.getBoundingClientRect()
+    endPhotoTransition()
+
+    const outgoing = photo.cloneNode() as HTMLImageElement
+    const incoming = photo
 
     update()
 
-    if (!frame || !from || reducedMotion.matches) {
-      return
-    }
+    const to = { height: frame.offsetHeight, width: frame.offsetWidth }
+    // While the frame changes shape, each photo fills it rather than being cut off.
+    const fill =
+      'position:absolute;inset:0;width:100%;height:100%;max-width:none;max-height:none;object-fit:cover;pointer-events:none'
+    const live = liveVideo?.parentElement === frame ? liveVideo : undefined
 
-    if (outgoing && photo) {
-      const shift = Math.sign(direction) * PHOTO_SLIDE_DISTANCE
+    outgoing.style.cssText = fill
+    incoming.style.cssText = fill
+    frame.append(outgoing)
 
-      // The old photo stays fully visible under the new one, and only fades in the
-      // second half, where a differently shaped new photo doesn't cover it. Cancelled
-      // when photos change again quickly; the copy goes either way.
-      void outgoing
-        .animate([{ opacity: 1 }, { offset: 0.5, opacity: 1 }, { opacity: 0 }], PHOTO_SWITCH)
-        .finished.catch(() => {})
-        .finally(() => outgoing.remove())
-      photo.animate(
+    const animations = [
+      frame.animate(
         [
-          { opacity: 0, transform: `translateX(${shift}px)` },
-          { opacity: 1, transform: 'none' },
+          { height: `${from.height}px`, width: `${from.width}px` },
+          { height: `${to.height}px`, width: `${to.width}px` },
         ],
         PHOTO_SWITCH,
-      )
+      ),
+      outgoing.animate(FADE_OUT, PHOTO_SWITCH),
+      incoming.animate(FADE_IN, PHOTO_SWITCH),
+      ...(live ? [live.animate(FADE_IN, PHOTO_SWITCH)] : []),
+    ]
+
+    photoTransition = {
+      animations,
+      cleanup: () => {
+        outgoing.remove()
+        incoming.style.cssText = ''
+      },
     }
+    void animations[0]!.finished.then(endPhotoTransition, () => {})
+  }
 
-    const to = { height: frame.offsetHeight, width: frame.offsetWidth }
-
-    if (from.height === to.height && from.width === to.width) {
+  function endPhotoTransition() {
+    if (!photoTransition) {
       return
     }
 
-    photoAnimation = frame.animate(
-      [
-        { height: `${from.height}px`, width: `${from.width}px` },
-        { height: `${to.height}px`, width: `${to.width}px` },
-      ],
-      PHOTO_SWITCH,
-    )
+    const { animations, cleanup } = photoTransition
+
+    photoTransition = undefined
+
+    for (const animation of animations) {
+      animation.cancel()
+    }
+
+    cleanup()
   }
 
   /** Plays a live photo's motion once over its still, then fades back to the still. */
@@ -819,7 +864,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     const duration = getSlideDuration(slides[index]) ?? 0
 
     elapsed = (duration / stop.images.length) * imageIndex
-    animatePhotoSize(() => showPhoto(stop, imageIndex), imageIndex - photoIndex)
+    animatePhotoSize(() => showPhoto(stop, imageIndex))
     renderProgress()
   }
 
@@ -1271,11 +1316,19 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     img.style.width = `${height * ratio}px`
     img.style.height = `${height}px`
 
-    // The new photo fades in over the old ones, which only fade once it is half in.
+    const previous = [...frame.querySelectorAll<HTMLImageElement>('img')].at(-1)
+    const animate = !firstPhoto && !reducedMotion.matches
+
+    // Fades through, as on the side card: the old photo goes before the new one shows.
     for (const old of frame.querySelectorAll<HTMLElement>('img, video')) {
-      old.style.transitionDelay = '300ms'
-      old.style.opacity = '0'
-      setTimeout(() => old.remove(), reducedMotion.matches ? 0 : 900)
+      if (animate) {
+        void old
+          .animate(FADE_OUT, PHOTO_SWITCH)
+          .finished.catch(() => {})
+          .finally(() => old.remove())
+      } else {
+        old.remove()
+      }
     }
 
     if (firstPhoto) {
@@ -1285,14 +1338,26 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       void frame.offsetHeight
       frame.style.transition = ''
     } else {
-      img.style.opacity = '0'
-      requestAnimationFrame(() => {
-        img.style.opacity = ''
-      })
       frame.style.height = `${height}px`
     }
 
     frame.append(img)
+
+    if (animate) {
+      // Grows or shrinks from the old photo's size along with the frame.
+      img.animate(
+        [
+          {
+            ...FADE_IN[0],
+            height: previous?.style.height ?? img.style.height,
+            width: previous?.style.width ?? img.style.width,
+          },
+          FADE_IN[1]!,
+          { ...FADE_IN[2], height: img.style.height, width: img.style.width },
+        ],
+        PHOTO_SWITCH,
+      )
+    }
 
     // A live photo moves once over its still, as on the side card.
     if (image.video && !reducedMotion.matches && canAutoplayLiveClips()) {
@@ -1301,6 +1366,10 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       video.style.width = img.style.width
       video.style.height = img.style.height
       frame.append(video)
+
+      if (animate) {
+        video.animate(FADE_IN, PHOTO_SWITCH)
+      }
       void video.play().catch(() => video.remove())
     }
   }
@@ -1426,7 +1495,10 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       playing = false
     }
 
+    const cardHeight = panel.hidden ? undefined : panel.offsetHeight
+
     renderSlide()
+    animateCardChange(cardHeight)
 
     routeProgress = undefined
     // Where a drive to this stop starts, while it is still to be drawn.
