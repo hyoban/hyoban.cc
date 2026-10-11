@@ -123,6 +123,19 @@ export function createLiveVideo(src: string, className: string) {
   return video
 }
 
+/** A stop's linked video, playing by itself while its card is up. */
+export function createVideoPlayer(src: string, className: string) {
+  const player = document.createElement('iframe')
+
+  player.className = `block aspect-video ${className}`
+  player.src = src
+  player.title = '哔哩哔哩视频'
+  player.allow = 'autoplay; fullscreen; picture-in-picture'
+  player.allowFullscreen = true
+  player.referrerPolicy = 'strict-origin-when-cross-origin'
+  return player
+}
+
 export function createWeather(weather: { icon: string; label: string }, className: string) {
   const element = createElement('p', className, '')
   const icon = createElement('span', weather.icon, '')

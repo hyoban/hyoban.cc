@@ -765,6 +765,14 @@ html:has(.calendar-map-page[data-export-ratio]) body {
   border-radius: calc(var(--u) * 0.6);
 }
 
+/* A stop's linked video, in place of photos. */
+.calendar-map-trip-polaroid__video {
+  width: 100%;
+  border: 0;
+  border-radius: calc(var(--u) * 0.6);
+  background: var(--color-inline);
+}
+
 /* A live clip fades back to its still when it ends. */
 .calendar-map-trip-polaroid__frame video {
   transition: opacity 450ms;
