@@ -34,6 +34,7 @@ type Look = { opacity: number; width: number }
 export function createTripOverview({
   getInk,
   getMap,
+  onHighlight,
   onSelect,
   reducedMotion,
   signal,
@@ -41,6 +42,8 @@ export function createTripOverview({
 }: {
   getInk: () => string
   getMap: () => MapboxMap | undefined
+  /** A route was lifted, a hint its trip may be opened next. */
+  onHighlight?: (id: string) => void
   onSelect: (id: string) => void
   reducedMotion: MediaQueryList
   signal: AbortSignal
@@ -257,6 +260,10 @@ export function createTripOverview({
     if (next !== highlightedId) {
       highlightedId = next
       paintAll(HOVER)
+
+      if (next) {
+        onHighlight?.(next)
+      }
     }
   }
 
