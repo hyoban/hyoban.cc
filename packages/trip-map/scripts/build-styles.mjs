@@ -5,7 +5,7 @@ import { createRequire } from 'node:module'
 // the import of it, so the published file stands on its own.
 
 const require = createRequire(import.meta.url)
-const importLine = /^@import 'mapbox-gl\/dist\/mapbox-gl\.css';\n/m
+const importLine = /^@import 'mapbox-gl\/dist\/mapbox-gl\.css' layer\(components\);\n/m
 const own = await readFile(new URL('../src/styles.css', import.meta.url), 'utf8')
 
 if (!importLine.test(own)) {
@@ -18,6 +18,6 @@ const { version } = require('mapbox-gl/package.json')
 await mkdir(new URL('../dist/', import.meta.url), { recursive: true })
 await writeFile(
   new URL('../dist/styles.css', import.meta.url),
-  `/* mapbox-gl ${version} (https://github.com/mapbox/mapbox-gl-js/blob/main/LICENSE.txt) */\n${mapbox.trim()}\n\n${own.replace(importLine, '')}`,
+  `/* mapbox-gl ${version} (https://github.com/mapbox/mapbox-gl-js/blob/main/LICENSE.txt), in a cascade layer so the page's styles win over it. */\n@layer components {\n${mapbox.trim()}\n}\n\n${own.replace(importLine, '')}`,
 )
 console.log('dist/styles.css written')

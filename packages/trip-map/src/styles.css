@@ -3,11 +3,19 @@
    README). The theme comes from the --color-bg, --color-border, --color-inline,
    --color-tx, --color-tx-2 and --color-tx-3 custom properties of the page, and the
    numbers from --font-mono when the page sets it. */
-@import 'mapbox-gl/dist/mapbox-gl.css';
+/* In a cascade layer, so the page's own styles (utilities in Tailwind's layers included)
+   win over mapbox-gl's, such as the `position: relative` it puts on the map's container. */
+@import 'mapbox-gl/dist/mapbox-gl.css' layer(components);
 
 /* The cards and the mosaic adapt to the page's width, not the viewport's. */
 .trip-map-page {
   container-type: inline-size;
+}
+
+/* The map fills its container, whatever mapbox-gl sets on it. */
+[data-trip-map-canvas] {
+  position: absolute;
+  inset: 0;
 }
 
 /* An inline icon, the size of the text around it (see icons.ts). */
