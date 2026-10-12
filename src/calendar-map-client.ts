@@ -19,15 +19,36 @@ type MarkerData = {
   years: number[]
 }
 
+/** How far a dot is pushed on screen, in pixels, to clear the dots beside it. */
+type Nudge = { x: number; y: number }
+
 type MarkerEntry = {
   button: HTMLButtonElement
+  coordinates: [number, number]
+  dot: HTMLElement
   marker: mapboxgl.Marker
+  nudge: Nudge
   popup: mapboxgl.Popup
+  radius: number
+}
+
+type ClusterInfo = {
+  coordinates: [number, number]
+  latestYear: number
+  locationCount: number
+  momentCount: number
 }
 
 type ClusterMarkerEntry = {
+  button: HTMLButtonElement
+  coordinates: [number, number]
+  dot: HTMLElement
   marker: mapboxgl.Marker
+  /** Busiest first, once they've been looked up. */
+  members?: MarkerData[]
+  nudge: Nudge
   popup: mapboxgl.Popup
+  radius: number
 }
 
 type MapStats = {
@@ -50,6 +71,16 @@ const LOCATION_CLUSTER_MAX_ZOOM = 9
 // if one covers part of the other.
 const LOCATION_CLUSTER_RADIUS = 20
 const LOCATION_CLUSTER_MIN_POINTS = 3
+// The dots' radii on screen, in pixels (a place with one Moment, one with more, and a
+// cluster), and the gap kept between dots pushed apart so none covers another.
+const DOT_RADIUS = { cluster: 12, place: 9, single: 7 }
+const DOT_GAP = 2
+const DOT_SPREAD_ROUNDS = 8
+// Opening a cluster frames its places, no closer than this.
+const CLUSTER_OPEN_MAX_ZOOM = 11
+const CLUSTER_OPEN_PADDING = 80
+// The markers are set in reading order for the keyboard, in rows this tall.
+const MARKER_ROW_HEIGHT = 48
 // How long the markers take to fade as a trip opens (see index.css), before they're
 // taken off the map.
 const MARKER_FADE = 200
@@ -387,6 +418,135 @@ export function initializeCalendarMap() {
     }
   }
 
+  /** Where a dot sits once pushed aside, for its name to hang over. */
+  function getNudgedLngLat(coordinates: [number, number], nudge: Nudge) {
+    const point = map!.project(coordinates)
+    point.x += nudge.x
+    point.y += nudge.y
+    return map!.unproject(point)
+  }
+
+  function setNudge(entry: MarkerEntry | ClusterMarkerEntry, x: number, y: number) {
+    if (entry.nudge.x === x && entry.nudge.y === y) {
+      return
+    }
+
+    entry.nudge = { x, y }
+    entry.marker.setOffset([x, y])
+
+    if (entry.popup.isOpen()) {
+      entry.popup.setLngLat(getNudgedLngLat(entry.coordinates, entry.nudge))
+    }
+  }
+
+  /**
+   * Pushes dots that would cover one another apart on screen, each a little, until
+   * every one shows: two places side by side stay two dots, and a place beside a
+   * cluster keeps clear of it.
+   */
+  function spreadDots() {
+    const dots = [...markers.values(), ...clusterMarkers.values()]
+      .filter((entry) => !entry.button.hidden && entry.button.isConnected)
+      .map((entry) => {
+        const point = map!.project(entry.coordinates)
+
+        return {
+          entry,
+          // A cluster's number widens its dot.
+          radius: Math.max(entry.radius, entry.dot.offsetWidth / 2),
+          x: point.x,
+          x0: point.x,
+          y: point.y,
+          y0: point.y,
+        }
+      })
+
+    for (let round = 0; round < DOT_SPREAD_ROUNDS; round++) {
+      let moved = false
+
+      for (let i = 0; i < dots.length; i++) {
+        for (let j = i + 1; j < dots.length; j++) {
+          const first = dots[i]!
+          const second = dots[j]!
+          const minimum = first.radius + second.radius + DOT_GAP
+          let dx = second.x - first.x
+          let dy = second.y - first.y
+          let distance = Math.hypot(dx, dy)
+
+          if (distance >= minimum) {
+            continue
+          }
+
+          // Two dots on the very same spot part sideways.
+          if (distance === 0) {
+            dx = 1
+            dy = 0
+            distance = 1
+          }
+
+          const push = (minimum - distance) / 2
+          first.x -= (dx / distance) * push
+          first.y -= (dy / distance) * push
+          second.x += (dx / distance) * push
+          second.y += (dy / distance) * push
+          moved = true
+        }
+      }
+
+      if (!moved) {
+        break
+      }
+    }
+
+    for (const dot of dots) {
+      setNudge(dot.entry, Math.round(dot.x - dot.x0), Math.round(dot.y - dot.y0))
+    }
+  }
+
+  /**
+   * Sets the markers in reading order, row by row from the top, so the keyboard walks
+   * them as the eye does rather than in the order they came into view. Left alone
+   * while the keyboard is on one of them.
+   */
+  function orderMarkers() {
+    const container = map!.getCanvasContainer()
+    const entries = [...markers.values(), ...clusterMarkers.values()].filter(
+      (entry) => !entry.button.hidden && entry.button.isConnected,
+    )
+
+    if (entries.some((entry) => entry.button === document.activeElement)) {
+      return
+    }
+
+    const ordered = entries
+      .map((entry) => {
+        const point = map!.project(entry.coordinates)
+        return { button: entry.button, x: point.x + entry.nudge.x, y: point.y + entry.nudge.y }
+      })
+      .sort(
+        (first, second) =>
+          Math.floor(first.y / MARKER_ROW_HEIGHT) - Math.floor(second.y / MARKER_ROW_HEIGHT) ||
+          first.x - second.x,
+      )
+      .map((item) => item.button)
+    const current = [
+      ...container.querySelectorAll(
+        ':scope > .calendar-map-marker, :scope > .calendar-map-cluster',
+      ),
+    ]
+
+    if (
+      ordered.length === current.length &&
+      ordered.every((button, index) => current[index] === button)
+    ) {
+      return
+    }
+
+    for (const button of ordered) {
+      container.append(button)
+    }
+  }
+
   function setMarkersHidden(hidden: boolean) {
     for (const marker of markers.values()) {
       setMarkerShown(marker, !hidden)
@@ -611,8 +771,11 @@ export function initializeCalendarMap() {
       const popup = createPlacePopup(12, `${location.count} 条记录`, location.name)
 
       button.type = 'button'
+      // The button is no bigger than its dot and a thin ring around it: a wider one
+      // would cover the dots beside it. (Mapbox sets the marker's pointer-events
+      // itself, so the button can't hand them to the dot.)
       button.className =
-        'calendar-map-marker group flex size-11 cursor-pointer items-center justify-center border-0 bg-transparent p-0 focus-visible:outline-none'
+        'calendar-map-marker group flex cursor-pointer items-center justify-center border-0 bg-transparent p-0 focus-visible:outline-none before:absolute before:-inset-1 before:rounded-full before:content-[""]'
       button.setAttribute(
         'aria-label',
         `${location.name}，${location.count} 条记录，最近记录于 ${location.latestYear} 年`,
@@ -627,12 +790,25 @@ export function initializeCalendarMap() {
       dot.textContent = location.count > 1 ? String(location.count) : ''
       button.append(dot)
 
+      const entry: MarkerEntry = {
+        button,
+        coordinates: [location.longitude, location.latitude],
+        dot,
+        marker: new mapboxgl.Marker({ anchor: 'center', element: button }).setLngLat([
+          location.longitude,
+          location.latitude,
+        ]),
+        nudge: { x: 0, y: 0 },
+        popup,
+        radius: location.count > 1 ? DOT_RADIUS.place : DOT_RADIUS.single,
+      }
+
       const showPopup = () => {
         if (suppressMarkerFocusPopup) {
           return
         }
 
-        popup.setLngLat([location.longitude, location.latitude]).addTo(map!)
+        popup.setLngLat(getNudgedLngLat(entry.coordinates, entry.nudge)).addTo(map!)
       }
       const hidePopup = () => popup.remove()
 
@@ -655,12 +831,9 @@ export function initializeCalendarMap() {
         { signal },
       )
 
-      const marker = new mapboxgl.Marker({ anchor: 'center', element: button })
-        .setLngLat([location.longitude, location.latitude])
-        .addTo(map)
+      // Put on the map by the first sync, if it's not in a cluster there.
       button.setAttribute('role', 'button')
-
-      markers.set(location.id, { button, marker, popup })
+      markers.set(location.id, entry)
     }
   }
 
@@ -680,11 +853,8 @@ export function initializeCalendarMap() {
       return
     }
 
+    // A new source numbers its clusters afresh; the next sync draws them.
     clearClusterMarkers()
-
-    for (const marker of markers.values()) {
-      setMarkerShown(marker, true)
-    }
 
     map.addSource(LOCATION_SOURCE_ID, {
       cluster: true,
@@ -732,7 +902,12 @@ export function initializeCalendarMap() {
     clusterMarkers.clear()
   }
 
-  function syncClusterMarkers() {
+  /**
+   * Puts the places and clusters the map gathers at this zoom on it, and takes off
+   * the rest. `settled` is false while a drag is under way, when only what's in view
+   * needs keeping up.
+   */
+  function syncClusterMarkers(options: { settled?: boolean } = {}) {
     if (
       tripPlayer.activeId ||
       !map ||
@@ -744,17 +919,11 @@ export function initializeCalendarMap() {
     }
 
     const visibleLocationIds = new Set<string>()
-    const clusters = new Map<
-      number,
-      {
-        coordinates: [number, number]
-        latestYear: number
-        locationCount: number
-        momentCount: number
-      }
-    >()
+    const clusters = new Map<number, ClusterInfo>()
 
-    for (const feature of map.queryRenderedFeatures({ layers: [LOCATION_INDEX_LAYER_ID] })) {
+    // The source's loaded tiles reach past the view, so the places about to come in
+    // are on the map before a drag brings them in.
+    for (const feature of map.querySourceFeatures(LOCATION_SOURCE_ID)) {
       if (feature.geometry.type !== 'Point') {
         continue
       }
@@ -797,29 +966,90 @@ export function initializeCalendarMap() {
         clusterMarkers.set(id, createClusterMarker(map, id, cluster))
       }
     }
+
+    spreadDots()
+
+    if (options.settled !== false) {
+      orderMarkers()
+    }
+  }
+
+  /** A cluster's places, busiest first. */
+  function getClusterMembers(map: mapboxgl.Map, id: number) {
+    const source = map.getSource(LOCATION_SOURCE_ID) as GeoJSONSource | undefined
+
+    if (!source) {
+      return Promise.resolve<MarkerData[]>([])
+    }
+
+    return new Promise<MarkerData[]>((resolve) =>
+      source.getClusterLeaves(id, Infinity, 0, (error, features) =>
+        resolve(
+          error
+            ? []
+            : (features ?? [])
+                .map((leaf) => locationsById.get(String(leaf.properties?.id)))
+                .filter((place) => place !== undefined)
+                .sort(
+                  (first, second) =>
+                    second.count - first.count || first.name.length - second.name.length,
+                ),
+        ),
+      ),
+    )
+  }
+
+  /** A cluster goes by its busiest place: 上海等. */
+  function getClusterName(members: MarkerData[]) {
+    return `${members[0]!.name}等`
+  }
+
+  /**
+   * Frames a cluster's places close enough to tell apart, in one move; a cluster
+   * whose places can't be looked up opens one step at a time instead.
+   */
+  async function openCluster(map: mapboxgl.Map, id: number, entry: ClusterMarkerEntry) {
+    const members = entry.members ?? (await getClusterMembers(map, id))
+
+    framedOnAll = false
+
+    if (members.length === 0) {
+      const source = map.getSource(LOCATION_SOURCE_ID) as GeoJSONSource | undefined
+      source?.getClusterExpansionZoom(id, (error, zoom) => {
+        if (!error && zoom != null) {
+          map.easeTo({ center: entry.coordinates, duration: getAnimationDuration(), zoom })
+        }
+      })
+      return
+    }
+
+    const bounds = new mapboxgl.LngLatBounds()
+
+    for (const member of members) {
+      bounds.extend([member.longitude, member.latitude])
+    }
+
+    map.fitBounds(bounds, {
+      duration: getAnimationDuration(),
+      maxZoom: CLUSTER_OPEN_MAX_ZOOM,
+      padding: CLUSTER_OPEN_PADDING,
+    })
   }
 
   function createClusterMarker(
     map: mapboxgl.Map,
     id: number,
-    cluster: {
-      coordinates: [number, number]
-      latestYear: number
-      locationCount: number
-      momentCount: number
-    },
+    cluster: ClusterInfo,
   ): ClusterMarkerEntry {
     const button = document.createElement('button')
     const dot = document.createElement('span')
-    const popup = createPlacePopup(
-      16,
-      `${cluster.momentCount} 条记录`,
-      `${cluster.locationCount} 个地点`,
-    )
+    const meta = `${cluster.momentCount} 条记录`
+    const popup = createPlacePopup(16, meta, `${cluster.locationCount} 个地点`)
 
     button.type = 'button'
+    // No bigger than its dot and a thin ring, as a place's.
     button.className =
-      'calendar-map-cluster group flex size-11 cursor-pointer items-center justify-center border-0 bg-transparent p-0 focus-visible:outline-none'
+      'calendar-map-cluster group flex cursor-pointer items-center justify-center border-0 bg-transparent p-0 focus-visible:outline-none before:absolute before:-inset-1 before:rounded-full before:content-[""]'
     button.setAttribute(
       'aria-label',
       `${cluster.locationCount} 个地点，共 ${cluster.momentCount} 条记录`,
@@ -834,7 +1064,21 @@ export function initializeCalendarMap() {
     dot.textContent = String(cluster.momentCount)
     button.append(dot)
 
-    const showPopup = () => popup.setLngLat(cluster.coordinates).addTo(map)
+    const entry: ClusterMarkerEntry = {
+      button,
+      coordinates: cluster.coordinates,
+      dot,
+      marker: new mapboxgl.Marker({ anchor: 'center', element: button })
+        .setLngLat(cluster.coordinates)
+        .addTo(map),
+      nudge: { x: 0, y: 0 },
+      popup,
+      radius: DOT_RADIUS.cluster,
+    }
+    button.setAttribute('role', 'button')
+
+    const showPopup = () =>
+      popup.setLngLat(getNudgedLngLat(entry.coordinates, entry.nudge)).addTo(map)
     const hidePopup = () => popup.remove()
 
     button.addEventListener('mouseenter', showPopup, { signal })
@@ -846,30 +1090,26 @@ export function initializeCalendarMap() {
       (event) => {
         event.stopPropagation()
         hidePopup()
-
-        const source = map.getSource(LOCATION_SOURCE_ID) as GeoJSONSource | undefined
-        source?.getClusterExpansionZoom(id, (error, zoom) => {
-          if (error || zoom == null) {
-            return
-          }
-
-          framedOnAll = false
-          map.easeTo({
-            center: cluster.coordinates,
-            duration: getAnimationDuration(),
-            zoom,
-          })
-        })
+        void openCluster(map, id, entry)
       },
       { signal },
     )
 
-    const marker = new mapboxgl.Marker({ anchor: 'center', element: button })
-      .setLngLat(cluster.coordinates)
-      .addTo(map)
-    button.setAttribute('role', 'button')
+    // Named after its busiest place once its places are known, on the card and to
+    // the screen reader, so it tells where it is without opening it.
+    void getClusterMembers(map, id).then((members) => {
+      if (clusterMarkers.get(id) !== entry || members.length === 0) {
+        return
+      }
 
-    return { marker, popup }
+      const title = `${getClusterName(members)} ${cluster.locationCount} 个地点`
+
+      entry.members = members
+      popup.setDOMContent(createPopupContent({ meta, title }))
+      button.setAttribute('aria-label', `${title}，共 ${cluster.momentCount} 条记录`)
+    })
+
+    return entry
   }
 
   /**
@@ -877,7 +1117,6 @@ export function initializeCalendarMap() {
    * each cluster named after its busiest place, with every place in it.
    */
   async function getScreenshotPlaces(map: mapboxgl.Map): Promise<ScreenshotPlace[]> {
-    const source = map.getSource(LOCATION_SOURCE_ID) as GeoJSONSource | undefined
     const places: ScreenshotPlace[] = []
     const seen = new Set<string>()
 
@@ -901,23 +1140,13 @@ export function initializeCalendarMap() {
 
       const id = Number(properties.cluster_id)
 
-      if (seen.has(`cluster-${id}`) || !source) {
+      if (seen.has(`cluster-${id}`)) {
         continue
       }
 
       seen.add(`cluster-${id}`)
 
-      const leaves = await new Promise<GeoJSON.Feature[]>((resolve) =>
-        source.getClusterLeaves(id, Infinity, 0, (error, features) =>
-          resolve(error ? [] : (features ?? [])),
-        ),
-      )
-      const members = leaves
-        .map((leaf) => locationsById.get(String(leaf.properties?.id)))
-        .filter((place) => place !== undefined)
-        .sort(
-          (first, second) => second.count - first.count || first.name.length - second.name.length,
-        )
+      const members = await getClusterMembers(map, id)
       const [longitude, latitude] = feature.geometry.coordinates
       const latestYear = Number(properties.latestYear) || 0
 
@@ -928,7 +1157,7 @@ export function initializeCalendarMap() {
         latitude: latitude!,
         longitude: longitude!,
         members,
-        name: members[0] ? `${members[0].name}等` : `${properties.point_count} 个地点`,
+        name: members.length > 0 ? getClusterName(members) : `${properties.point_count} 个地点`,
       })
     }
 
@@ -1215,8 +1444,26 @@ export function initializeCalendarMap() {
           framedOnAll = false
         }
       })
-      map.on('idle', syncClusterMarkers)
-      map.on('moveend', syncClusterMarkers)
+      map.on('idle', () => syncClusterMarkers())
+      map.on('moveend', () => syncClusterMarkers())
+      // A drag keeps the places coming in as it goes; a zoom waits for its end, when
+      // the clusters have settled.
+      let moveFrame: number | undefined
+      map.on('move', () => {
+        if (moveFrame !== undefined || map!.isZooming()) {
+          return
+        }
+
+        moveFrame = requestAnimationFrame(() => {
+          moveFrame = undefined
+          syncClusterMarkers({ settled: false })
+        })
+      })
+      signal.addEventListener('abort', () => {
+        if (moveFrame !== undefined) {
+          cancelAnimationFrame(moveFrame)
+        }
+      })
       map.on('load', () => {
         mapLoaded = true
 
