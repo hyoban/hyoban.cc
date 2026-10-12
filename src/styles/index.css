@@ -536,6 +536,16 @@ html[data-calendar-mode-transition] .calendar-back-link {
   pointer-events: none;
 }
 
+/* The dot being pointed at, or on, comes out from under its neighbours. */
+.calendar-map-page
+  :is(.calendar-map-marker, .calendar-map-cluster):is(
+    :hover,
+    :focus-visible,
+    [aria-pressed='true']
+  ) {
+  z-index: 1;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .calendar-map-page :is(.calendar-map-marker__dot, .calendar-map-cluster > span),
   .calendar-map-legend {
