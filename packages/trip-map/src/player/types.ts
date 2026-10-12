@@ -1,3 +1,4 @@
+import type { WeatherIcon } from '../icons.ts'
 import type { TravelMode } from '../trips.ts'
 import type { TripSlide } from './slides.ts'
 
@@ -50,7 +51,7 @@ export type TripDataStop = {
 }
 
 /** Each trip day's weather by day number; days without data are left out. */
-export type TripWeather = Record<number, { icon: string; label: string }>
+export type TripWeather = Record<number, { icon: WeatherIcon; label: string }>
 
 export type TripData = {
   /** Photos for the intro and summary cards, best first. */

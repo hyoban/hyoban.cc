@@ -6,11 +6,9 @@ import type { TripData } from './types.ts'
 
 const INTRO_COVER_COUNT = 9
 
-// Narrow screens keep one row so the map stays visible above the card.
-export const MOSAIC_CLASS =
-  'mt-3 grid shrink-0 grid-cols-3 gap-1 @max-[48rem]:[&>:nth-child(n+4)]:hidden'
-export const MOSAIC_IMAGE_CLASS =
-  'block aspect-square w-full rounded-[0.3125rem] bg-inline object-cover'
+// Styled in styles.css; narrow screens keep one row so the map stays visible above the card.
+export const MOSAIC_CLASS = 'calendar-map-mosaic'
+export const MOSAIC_IMAGE_CLASS = 'calendar-map-mosaic__image'
 
 /** Photos for the intro and summary. */
 export function getIntroCovers(trip: TripData) {

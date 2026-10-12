@@ -4,6 +4,7 @@
 // in `@hyoban/trip-map/client`, the preview image in `@hyoban/trip-map/preview`.
 
 export { type Coordinates, getDistanceKm as getCoordinateDistanceKm } from './geo.ts'
+export { renderIcon, type IconName, type WeatherIcon } from './icons.ts'
 export * from './locations.ts'
 export { getIntroCovers, getTripMeta, MOSAIC_CLASS, MOSAIC_IMAGE_CLASS } from './player/intro.ts'
 export {

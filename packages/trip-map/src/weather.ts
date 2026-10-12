@@ -1,22 +1,24 @@
+import type { WeatherIcon } from './icons.ts'
+
 // Weather for a trip's day cards, from the WMO codes Open-Meteo reports.
 
 /** A day's weather as cached: its WMO code and the temperatures in °C. */
 export type DayWeather = Readonly<{ code: number; max: number; min: number }>
 
-export type WeatherDescription = { icon: string; label: string }
+export type WeatherDescription = { icon: WeatherIcon; label: string }
 
-// WMO weather codes, grouped coarsely, each with a Lucide icon class.
-const WEATHER_KINDS: [maxCode: number, label: string, icon: string][] = [
-  [0, '晴', 'i-lucide-sun'],
-  [2, '多云', 'i-lucide-cloud-sun'],
-  [3, '阴', 'i-lucide-cloud'],
-  [48, '雾', 'i-lucide-cloud-fog'],
-  [57, '毛毛雨', 'i-lucide-cloud-drizzle'],
-  [67, '雨', 'i-lucide-cloud-rain'],
-  [77, '雪', 'i-lucide-snowflake'],
-  [82, '阵雨', 'i-lucide-cloud-rain'],
-  [86, '阵雪', 'i-lucide-snowflake'],
-  [99, '雷雨', 'i-lucide-cloud-lightning'],
+// WMO weather codes, grouped coarsely, each with one of the package's icons.
+const WEATHER_KINDS: [maxCode: number, label: string, icon: WeatherIcon][] = [
+  [0, '晴', 'sun'],
+  [2, '多云', 'cloud-sun'],
+  [3, '阴', 'cloud'],
+  [48, '雾', 'cloud-fog'],
+  [57, '毛毛雨', 'cloud-drizzle'],
+  [67, '雨', 'cloud-rain'],
+  [77, '雪', 'snowflake'],
+  [82, '阵雨', 'cloud-rain'],
+  [86, '阵雪', 'snowflake'],
+  [99, '雷雨', 'cloud-lightning'],
 ]
 
 /** `晴 · 12–20°C` with its icon, or nothing for a code outside the table. */

@@ -822,8 +822,7 @@ export function initializeCalendarMap(options: CalendarMapOptions) {
       // The button is no bigger than its dot and a thin ring around it: a wider one
       // would cover the dots beside it. (Mapbox sets the marker's pointer-events
       // itself, so the button can't hand them to the dot.)
-      button.className =
-        'calendar-map-marker group flex cursor-pointer items-center justify-center border-0 bg-transparent p-0 focus-visible:outline-none before:absolute before:-inset-1 before:rounded-full before:content-[""]'
+      button.className = 'calendar-map-marker'
       button.setAttribute(
         'aria-label',
         `${location.name}，${location.count} 条记录，最近记录于 ${location.latestYear} 年`,
@@ -832,8 +831,7 @@ export function initializeCalendarMap(options: CalendarMapOptions) {
       button.style.setProperty('--marker-color', location.color)
       // A single Moment is a smaller dot, without a number.
       dot.className =
-        (location.count > 1 ? 'h-[1.125rem] min-w-[1.125rem] ' : 'h-3.5 min-w-3.5 ') +
-        'calendar-map-marker__dot flex items-center justify-center rounded-full border-2 border-white/95 bg-[var(--marker-color)] px-[0.1875rem] font-mono text-[0.625rem] font-semibold text-white shadow-[0_0.125rem_0.75rem_rgb(0_0_0/0.24),0_0_0_1px_rgb(0_0_0/0.12)] transition-[transform,box-shadow] duration-[160ms] ease-in-out group-hover:scale-125 group-hover:shadow-[0_0.25rem_1rem_rgb(0_0_0/0.3),0_0_0_2px_var(--color-tx)] group-focus-visible:scale-125 group-focus-visible:shadow-[0_0.25rem_1rem_rgb(0_0_0/0.3),0_0_0_2px_var(--color-tx)] group-aria-[pressed=true]:scale-125 group-aria-[pressed=true]:shadow-[0_0.25rem_1rem_rgb(0_0_0/0.3),0_0_0_2px_var(--color-tx)] motion-reduce:transition-none'
+        'calendar-map-marker__dot' + (location.count > 1 ? ' calendar-map-marker__dot--many' : '')
       dot.setAttribute('aria-hidden', 'true')
       dot.textContent = location.count > 1 ? String(location.count) : ''
       button.append(dot)
@@ -1096,8 +1094,7 @@ export function initializeCalendarMap(options: CalendarMapOptions) {
 
     button.type = 'button'
     // No bigger than its dot and a thin ring, as a place's.
-    button.className =
-      'calendar-map-cluster group flex cursor-pointer items-center justify-center border-0 bg-transparent p-0 focus-visible:outline-none before:absolute before:-inset-1 before:rounded-full before:content-[""]'
+    button.className = 'calendar-map-cluster'
     button.setAttribute(
       'aria-label',
       `${cluster.locationCount} 个地点，共 ${cluster.momentCount} 条记录`,
@@ -1106,8 +1103,7 @@ export function initializeCalendarMap(options: CalendarMapOptions) {
       '--marker-color',
       yearColors.get(cluster.latestYear) ?? 'var(--color-tx)',
     )
-    dot.className =
-      'flex h-6 min-w-6 items-center justify-center rounded-full border-2 border-white/95 bg-[var(--marker-color)] px-1.5 font-mono text-[0.6875rem] font-semibold text-white shadow-[0_0.25rem_1rem_rgb(0_0_0/0.28),0_0_0_1px_rgb(0_0_0/0.12)] transition-transform duration-[160ms] group-hover:scale-110 group-focus-visible:scale-110 motion-reduce:transition-none'
+    dot.className = 'calendar-map-cluster__dot'
     dot.setAttribute('aria-hidden', 'true')
     dot.textContent = String(cluster.momentCount)
     button.append(dot)
@@ -1626,7 +1622,7 @@ export function destroyCalendarMap() {
 
 function createLoadingMessage(text: string) {
   const message = document.createElement('p')
-  message.className = 'pt-4 text-sm text-tx-3'
+  message.className = 'calendar-map-drawer__message'
   message.textContent = text
   return message
 }

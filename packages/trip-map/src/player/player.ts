@@ -4,6 +4,7 @@ import { createCamera } from './camera.ts'
 import {
   createCountUp,
   createElement,
+  createIcon,
   createLiveVideo,
   createVideoPlayer,
   createMosaic,
@@ -15,6 +16,7 @@ import {
   preloadImage,
   preloadThumbnail,
   queryRequired,
+  setButtonIcon,
 } from './dom.ts'
 import { createChapterLog, getShortPlaceName, getSummaryStats } from './labels.ts'
 import {
@@ -167,11 +169,7 @@ export function createTripPlayer({
   const panel = queryRequired<HTMLElement>(page, '[data-calendar-map-trip]')
   const progress = queryRequired<HTMLOListElement>(page, '[data-calendar-map-trip-progress]')
   // Names the slide a progress segment jumps to, under the hovered or focused segment.
-  const progressTip = createElement(
-    'div',
-    'pointer-events-none absolute z-20 rounded-[0.625rem] border border-[color-mix(in_srgb,var(--color-border)_82%,transparent)] bg-[color-mix(in_srgb,var(--color-bg)_88%,transparent)] px-2.5 py-1 text-xs whitespace-nowrap text-tx shadow-[0_0.25rem_1.25rem_rgb(0_0_0/0.12)] backdrop-blur-[1rem] [&[hidden]]:hidden',
-    '',
-  )
+  const progressTip = createElement('div', 'calendar-map-trip-tip', '')
   progressTip.hidden = true
   progressTip.setAttribute('aria-hidden', 'true')
   panel.append(progressTip)
@@ -936,10 +934,7 @@ export function createTripPlayer({
       return
     }
 
-    liveVideo = createLiveVideo(
-      image.video,
-      'pointer-events-none absolute inset-0 size-full object-cover transition-opacity duration-300',
-    )
+    liveVideo = createLiveVideo(image.video, 'calendar-map-trip-card__live')
     frame.append(liveVideo)
     void liveVideo.play().catch(() => liveVideo?.remove())
   }
@@ -1124,23 +1119,15 @@ export function createTripPlayer({
   }
 
   function createThumbnails(stop: TripDataStop) {
-    const list = createElement(
-      'div',
-      'mt-1 flex shrink-0 gap-1 overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
-      '',
-    )
+    const list = createElement('div', 'calendar-map-trip-thumbs', '')
 
     thumbnails = stop.images.map((image, imageIndex) => {
-      const button = createElement(
-        'button',
-        'size-11 shrink-0 cursor-pointer overflow-hidden rounded-[0.3125rem] border-0 bg-inline p-0 opacity-55 transition-opacity duration-[140ms] hover:opacity-100 aria-[current=true]:opacity-100 aria-[current=true]:outline-2 aria-[current=true]:-outline-offset-2 aria-[current=true]:outline-tx motion-reduce:transition-none',
-        '',
-      ) as HTMLButtonElement
+      const button = createElement('button', 'calendar-map-trip-thumb', '') as HTMLButtonElement
       const thumbnail = document.createElement('img')
 
       button.type = 'button'
       button.setAttribute('aria-label', `查看第 ${imageIndex + 1} 张照片`)
-      thumbnail.className = 'pointer-events-none block size-full object-cover'
+      thumbnail.className = 'calendar-map-trip-thumb__image'
       thumbnail.src = image.thumbnail
       thumbnail.alt = ''
       thumbnail.decoding = 'async'
@@ -1153,12 +1140,9 @@ export function createTripPlayer({
   }
 
   function renderPlayButton() {
-    const icon = playButton.firstElementChild
-
     playButton.setAttribute('aria-label', playing ? '暂停' : '播放')
     playButton.title = `${playing ? '暂停' : '播放'}（空格）`
-    icon?.classList.toggle('i-lucide-pause', playing)
-    icon?.classList.toggle('i-lucide-play', !playing)
+    setButtonIcon(playButton, playing ? 'pause' : 'play')
     // The toolbar steps aside while playing and returns when paused or finished.
     page.toggleAttribute('data-trip-playing', playing)
     syncAmbientMusic()
@@ -1183,11 +1167,8 @@ export function createTripPlayer({
 
   function renderMusicButton() {
     for (const button of [musicButton, stageMusicButton]) {
-      const icon = button.firstElementChild
-
       button.setAttribute('aria-pressed', String(musicOn))
-      icon?.classList.toggle('i-lucide-volume-2', musicOn)
-      icon?.classList.toggle('i-lucide-volume-x', !musicOn)
+      setButtonIcon(button, musicOn ? 'volume-2' : 'volume-x')
     }
   }
 
@@ -1269,8 +1250,8 @@ export function createTripPlayer({
 
     // A stop's day and time ride with the car and its places are labelled on the map,
     // so the card shows no heading.
-    header.classList.toggle('sr-only', slide.type === 'stop')
-    body.classList.toggle('pt-3', slide.type === 'stop')
+    header.classList.toggle('calendar-map-sr-only', slide.type === 'stop')
+    body.classList.toggle('calendar-map-trip-card__body--stop', slide.type === 'stop')
     previousButton.disabled = index === 0
     nextButton.disabled = index === slides.length - 1
 
@@ -1278,7 +1259,7 @@ export function createTripPlayer({
       eyebrow.textContent = ''
       title.textContent = trip.title
       body.replaceChildren(
-        createElement('p', 'shrink-0 text-tx-2', getTripMeta(trip)),
+        createElement('p', 'calendar-map-trip-card__meta', getTripMeta(trip)),
         createMosaic(covers),
       )
     } else if (slide.type === 'day') {
@@ -1287,18 +1268,12 @@ export function createTripPlayer({
       eyebrow.textContent = `第 ${slide.day} 天`
       title.textContent = slide.date
       body.replaceChildren(
-        ...(weather
-          ? [createWeather(weather, 'mb-1 flex shrink-0 items-center gap-1.5 text-tx-2')]
-          : []),
-        createElement('p', 'shrink-0 text-tx-2', slide.places.join(' → ')),
+        ...(weather ? [createWeather(weather, 'calendar-map-trip-card__weather')] : []),
+        createElement('p', 'calendar-map-trip-card__meta', slide.places.join(' → ')),
       )
     } else if (slide.type === 'stop') {
       const { stop } = slide
-      const text = createElement(
-        'p',
-        'mt-3 max-h-[min(20dvh,9rem)] shrink-0 overflow-y-auto @max-[48rem]:max-h-[min(12dvh,6.5rem)] overscroll-contain [scrollbar-width:none] break-words whitespace-pre-line text-tx-2 [&::-webkit-scrollbar]:hidden',
-        stop.text,
-      )
+      const text = createElement('p', 'calendar-map-trip-card__text', stop.text)
       const link = document.createElement('a')
 
       eyebrow.textContent = getStopEyebrow(stop)
@@ -1311,14 +1286,12 @@ export function createTripPlayer({
 
       if (stop.images.length > 0) {
         photo = document.createElement('img')
-        link.className =
-          'relative block min-h-0 self-center overflow-hidden rounded-md border border-border bg-inline no-underline @max-[48rem]:shrink-0'
+        link.className = 'calendar-map-trip-card__photo-link'
         link.setAttribute('aria-label', `查看 ${stop.date}的记录`)
         // As tall as the card has room for beside the progress, thumbnails, text and
         // buttons (about 24rem with the card's offset); on a phone, low enough that
         // the card leaves the map about half the screen.
-        photo.className =
-          'relative block h-auto max-h-[calc(100dvh-24rem)] w-auto max-w-full @max-[48rem]:max-h-[26dvh]'
+        photo.className = 'calendar-map-trip-card__photo'
         photo.sizes = IMAGE_SIZES
         photo.decoding = 'async'
         link.append(photo)
@@ -1327,7 +1300,7 @@ export function createTripPlayer({
           addPhotoSwipe(link)
         }
       } else {
-        link.className = 'self-start text-[0.8125rem] text-tx-2 hover:text-tx'
+        link.className = 'calendar-map-trip-card__link'
         link.textContent = '查看当天记录'
       }
 
@@ -1335,12 +1308,7 @@ export function createTripPlayer({
       body.replaceChildren(
         // Presenting or recording, the stage's card plays it instead.
         ...(stop.video && stop.images.length === 0 && !isStageLayout()
-          ? [
-              createVideoPlayer(
-                stop.video,
-                'mt-1 w-full shrink-0 rounded-md border border-border bg-inline',
-              ),
-            ]
+          ? [createVideoPlayer(stop.video, 'calendar-map-trip-card__video')]
           : []),
         link,
         ...(stop.images.length > 1 ? [createThumbnails(stop)] : []),
@@ -1355,29 +1323,24 @@ export function createTripPlayer({
       const stats = document.createElement('dl')
       const replay = createElement(
         'button',
-        'mt-3 inline-flex min-h-9 shrink-0 cursor-pointer self-start items-center gap-1.5 rounded-full border border-border bg-transparent px-3.5 text-[0.8125rem] text-tx hover:bg-inline',
+        'calendar-map-trip-card__replay',
         '重新播放',
       ) as HTMLButtonElement
-      const replayIcon = createElement('span', 'i-lucide-rotate-ccw', '')
+      const replayIcon = createIcon('rotate-ccw')
 
       eyebrow.textContent = ''
       title.textContent = trip.title
-      stats.className = 'grid shrink-0 grid-cols-2 gap-1 @max-[48rem]:grid-cols-3'
+      stats.className = 'calendar-map-trip-card__stats'
 
       for (const [value, label] of getSummaryStats(trip)) {
-        const item = createElement(
-          'div',
-          'flex flex-col-reverse rounded-md bg-inline px-3 py-2',
-          '',
-        )
-        const number = createElement('dd', 'font-mono text-lg tabular-nums', '')
+        const item = createElement('div', 'calendar-map-trip-card__stat', '')
+        const number = createElement('dd', 'calendar-map-trip-card__stat-value', '')
 
         number.append(createCountUp(value))
-        item.append(createElement('dt', 'text-xs text-tx-3', label), number)
+        item.append(createElement('dt', 'calendar-map-trip-card__stat-label', label), number)
         stats.append(item)
       }
 
-      replayIcon.setAttribute('aria-hidden', 'true')
       replay.type = 'button'
       replay.prepend(replayIcon)
       replay.addEventListener('click', () => goTo(0, { play: true }), { signal })
@@ -2173,20 +2136,16 @@ export function createTripPlayer({
     slides = buildSlides(nextTrip.stops)
     progress.replaceChildren(
       ...slides.map((slide, slideIndex) => {
-        const item = createElement('li', 'flex-1', '')
+        const item = createElement('li', 'calendar-map-trip-progress__item', '')
         item.dataset.slide = slide.type
         // A taller transparent hit area around the thin bar, so a segment is easy to tap.
         const button = createElement(
           'button',
-          'group -my-2 block w-full cursor-pointer border-0 bg-transparent py-2',
+          'calendar-map-trip-progress__button',
           '',
         ) as HTMLButtonElement
-        const bar = createElement(
-          'span',
-          'block h-0.5 overflow-hidden rounded-full bg-border transition-colors duration-[140ms] group-hover:bg-tx-3 motion-reduce:transition-none',
-          '',
-        )
-        const fill = createElement('span', 'block h-full origin-left bg-tx [scale:0_1]', '')
+        const bar = createElement('span', 'calendar-map-trip-progress__bar', '')
+        const fill = createElement('span', 'calendar-map-trip-progress__fill', '')
 
         button.type = 'button'
         button.setAttribute('aria-label', getSlideLabel(slide))
