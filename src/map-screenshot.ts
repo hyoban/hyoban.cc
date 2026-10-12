@@ -5,11 +5,15 @@ import { overlap, type Rect } from './trip-player/label-placement'
 // framed on every place, the basemap's lesser names put away, and each place drawn
 // with its name and count, under a header with the totals. The view is put back after.
 //
-// Dots that would sit on one another are nudged apart. Where too many places crowd
-// together to be named at all, a picture zoomed in on them is set in an empty corner,
-// with the area it shows outlined on the map.
+// Places are gathered as the map gathers them there: near ones into one bubble with
+// their Moments, named after the busiest. The bubbles get magnifiers, pictures zoomed
+// in on their places, each set in the free spot nearest them with the area it shows
+// outlined on the map. Dots may overlap a little, and a name with no room is left off.
 
 const ATTRIBUTION = '© Mapbox © OpenStreetMap'
+// The map is drawn at this size, in CSS pixels, whatever the screen: the picture is
+// always the same landscape one, a phone's only sharper for its denser pixels.
+const SHOT_SIZE = { height: 780, width: 1100 }
 // The strip under the map for the site and the attribution, in CSS pixels.
 const FOOTER_HEIGHT = 32
 // Room around the framed places; the bottom also clears the legend drawn over the map.
@@ -23,44 +27,53 @@ const LABEL_HEIGHT = 16
 const CROP_MARGIN = 32
 // The narrowest the picture is cut to, so the header and footer still fit.
 const MIN_CROP_WIDTH = 360
-// Between a dot's edge and its label.
+// Between a dot's edge and its label, and how much further out a name goes, with a
+// line to its dot, when there's no room beside it.
 const LABEL_GAP = 3
+const LEADER_LENGTH = 14
 const COUNT_FONT = '11px ui-monospace, monospace'
 // Basemap names kept in the picture; towns, roads and the rest give way to the places.
 const KEPT_BASEMAP_LABELS = /country|state|continent/
 // How long to wait for the tiles before taking the picture anyway.
 const IDLE_TIMEOUT = 10_000
-// Room kept between dots once they're nudged apart, and the furthest one is moved
-// from its place, in CSS pixels: a big crowd stays where it is, overlapping a little.
-const DOT_GAP = 1.5
-const MAX_NUDGE = 8
-// Dots closer than this, edge to edge, count as crowding one another.
-const CROWD_GAP = 6
-// A crowd this big gets a zoomed-in picture, for at most this many crowds.
-const INSET_MIN_PLACES = 6
-const MAX_INSETS = 2
-// Around the crowd in the zoomed-in picture, and how far in it may zoom.
+// Every bubble gets a magnifier, up to this many; bubbles near one another share one
+// while together they hold no more than this many places.
+const MAX_INSETS = 4
+const INSET_MAX_PLACES = 18
+const INSET_GROUP_GAP = 40
+// How large a magnifier may be, against the map, and the step between the spots it
+// may take while looking for the free one nearest the places it shows.
+const INSET_MAX_SHARE = { height: 0.45, width: 0.36 }
+const INSET_MAX_WIDTH = 340
+const INSET_STEP = 12
+// Around the places in a magnifier, and how far in it may zoom.
 const INSET_PADDING = 48
 const INSET_MAX_ZOOM = 11
-// Between the zoomed-in picture and the picture's edges.
+// Between a magnifier and the picture's edges.
 const INSET_MARGIN = 12
-// An inset shows its crowd at least this many times larger than the map does, or
+// A magnifier shows its places at least this many times larger than the map does, or
 // it isn't worth its room; and it's kept within these proportions, width to height.
 const INSET_MIN_GAIN = 2
 const INSET_ASPECT = { max: 1.7, min: 0.6 }
 
 export type ScreenshotPlace = Readonly<{
   color: string
+  /** Moments there; for a bubble, at all its places. */
   count: number
   latestYear: number
   latitude: number
   longitude: number
+  /** A bubble's places, busiest first. */
+  members?: readonly ScreenshotPlace[]
   name: string
 }>
 
 export type ScreenshotOptions = Readonly<{
+  /** What to draw once the map is framed: places, and bubbles of them, as it shows them. */
+  getPlaces: (map: MapboxMap) => Promise<readonly ScreenshotPlace[]>
   /** Drawn centred along the bottom of the map. */
   legend?: Element | null | undefined
+  /** Every place, to frame the map on. */
   places: readonly ScreenshotPlace[]
   site: string
   /** Each a phrase of the header's second line, wrapped between phrases. */
@@ -69,12 +82,29 @@ export type ScreenshotOptions = Readonly<{
   title: string
 }>
 
-type Label = { count: string; point: PlacePoint; nameWidth: number; rect: Rect }
+type Label = {
+  count: string
+  /** The place's name as the map shows it (see getShortName). */
+  name: string
+  /** Set a little away from its dot, joined to it by a line. */
+  leader?: boolean
+  nameWidth: number
+  point: PlacePoint
+  rect: Rect
+}
 
-type PlacePoint = ScreenshotPlace & { x: number; y: number }
+type PlacePoint = ScreenshotPlace & {
+  x: number
+  y: number
+  /** For a bubble, where its places are on the map. */
+  spots?: PlacePoint[]
+}
 
 /** A view of the map copied off its canvas, with where each place is in it. */
 type Shot = { image: HTMLCanvasElement; origin: DOMRect; points: PlacePoint[] }
+
+/** Bubbles to magnify together: the area their places take on the map, and a shot zoomed in on them. */
+type Zoomed = { area: Rect; places: readonly ScreenshotPlace[]; shot: Shot }
 
 export async function captureMap(map: MapboxMap, options: ScreenshotOptions) {
   const camera = {
@@ -84,27 +114,47 @@ export async function captureMap(map: MapboxMap, options: ScreenshotOptions) {
     pitch: map.getPitch(),
     zoom: map.getZoom(),
   }
+  const container = map.getContainer()
+  const containerStyle = container.style.cssText
   const hiddenLabels = hideBasemapLabels(map)
 
   try {
-    frame(map, options.places, FRAME_PADDING, FRAME_MAX_ZOOM)
+    container.style.cssText += `;inset:auto;left:0;top:0;width:${SHOT_SIZE.width}px;height:${SHOT_SIZE.height}px`
+    map.resize()
+    frame(map, options.places)
     await waitForIdle(map)
 
-    const overview = await shoot(map, options.places)
-    const crowds: { crowd: PlacePoint[]; shot: Shot }[] = []
+    const overview = await shoot(map, await options.getPlaces(map))
 
-    for (const crowd of findCrowds(overview.points).slice(0, MAX_INSETS)) {
-      frame(map, crowd, INSET_PADDING, INSET_MAX_ZOOM)
-      await waitForIdle(map)
-      crowds.push({ crowd, shot: await shoot(map, options.places) })
+    // Where each bubble's places are on the map, before it moves.
+    for (const point of overview.points) {
+      if (point.members) {
+        point.spots = projectPlaces(
+          map,
+          point.members,
+          overview.origin.width,
+          overview.origin.height,
+        )
+      }
     }
 
-    return await render(options, overview, crowds)
+    // The bubbles are magnified, near ones together.
+    const zoomed: Zoomed[] = []
+
+    for (const { area, places } of groupBubbles(overview.points).slice(0, MAX_INSETS)) {
+      frame(map, places, INSET_PADDING, INSET_MAX_ZOOM)
+      await waitForIdle(map)
+      zoomed.push({ area, places, shot: await shoot(map, options.places) })
+    }
+
+    return await render(options, overview, zoomed)
   } finally {
     for (const id of hiddenLabels) {
       map.setLayoutProperty(id, 'visibility', 'visible')
     }
 
+    container.style.cssText = containerStyle
+    map.resize()
     map.jumpTo(camera)
   }
 }
@@ -130,8 +180,8 @@ function hideBasemapLabels(map: MapboxMap) {
 function frame(
   map: MapboxMap,
   places: readonly ScreenshotPlace[],
-  padding: number | typeof FRAME_PADDING,
-  maxZoom: number,
+  padding: number | typeof FRAME_PADDING = FRAME_PADDING,
+  maxZoom = FRAME_MAX_ZOOM,
 ) {
   if (places.length === 0) {
     return
@@ -173,95 +223,39 @@ async function shoot(map: MapboxMap, places: readonly ScreenshotPlace[]): Promis
   return { image, origin, points: projectPlaces(map, places, origin.width, origin.height) }
 }
 
-/**
- * The crowds of places big enough for a picture of their own, biggest first: dots
- * that touch or nearly do, and the dots touching those, and so on.
- */
-function findCrowds(points: readonly PlacePoint[]) {
-  const near = (first: PlacePoint, second: PlacePoint) =>
-    Math.hypot(first.x - second.x, first.y - second.y) < radius(first) + radius(second) + CROWD_GAP
-  const seen = new Set<PlacePoint>()
-  const crowds: PlacePoint[][] = []
-
-  for (const start of points) {
-    if (seen.has(start)) {
-      continue
-    }
-
-    const crowd = [start]
-    seen.add(start)
-
-    for (let index = 0; index < crowd.length; index += 1) {
-      for (const other of points) {
-        if (!seen.has(other) && near(crowd[index]!, other)) {
-          seen.add(other)
-          crowd.push(other)
-        }
-      }
-    }
-
-    if (crowd.length >= INSET_MIN_PLACES) {
-      crowds.push(crowd)
-    }
-  }
-
-  return crowds.sort((first, second) => second.length - first.length)
+/** A place's spot on the earth, to tell it again in another shot. */
+function getSpot(place: Pick<ScreenshotPlace, 'latitude' | 'longitude'>) {
+  return `${place.longitude},${place.latitude}`
 }
 
 /**
- * Nudges dots that overlap apart until each shows whole, a pixel or two between them;
- * at a map's scale that moves a place by far less than the distance it stands for.
- * None moves further than MAX_NUDGE, so a crowd too big for that keeps its shape.
+ * The bubbles, gathered for magnifiers: each joins a group
+ * whose area it comes near while the two together hold few enough places; biggest
+ * groups first.
  */
-function separate(points: PlacePoint[]) {
-  const homes = new Map(points.map((point) => [point, { x: point.x, y: point.y }]))
-  const tether = (point: PlacePoint) => {
-    const home = homes.get(point)!
-    const away = Math.hypot(point.x - home.x, point.y - home.y)
+function groupBubbles(points: readonly PlacePoint[]) {
+  const groups: { area: Rect; places: ScreenshotPlace[] }[] = []
+  const bubbles = points
+    .filter((point) => point.members)
+    .sort((first, second) => second.members!.length - first.members!.length)
 
-    if (away > MAX_NUDGE) {
-      point.x = home.x + ((point.x - home.x) / away) * MAX_NUDGE
-      point.y = home.y + ((point.y - home.y) / away) * MAX_NUDGE
+  for (const bubble of bubbles) {
+    const area = padRect(boundsOf([getDot(bubble), ...(bubble.spots ?? []).map(getDot)]), 6)
+    const near = groups.find(
+      (group) =>
+        group.places.length + bubble.members!.length <= INSET_MAX_PLACES &&
+        overlap(padRect(group.area, INSET_GROUP_GAP), area) > 0,
+    )
+
+    if (near) {
+      near.area = boundsOf([near.area, area])
+      near.places.push(...bubble.members!)
+    } else {
+      groups.push({ area, places: [...bubble.members!] })
     }
   }
 
-  for (let round = 0; round < 100; round += 1) {
-    let moved = false
-
-    for (const [index, first] of points.entries()) {
-      for (const second of points.slice(index + 1)) {
-        let dx = second.x - first.x
-        let dy = second.y - first.y
-        let distance = Math.hypot(dx, dy)
-        const least = radius(first) + radius(second) + DOT_GAP
-
-        if (distance >= least) {
-          continue
-        }
-
-        // Places at the very same spot part along a direction of their own.
-        if (distance < 0.01) {
-          dx = Math.cos(index + points.indexOf(second))
-          dy = Math.sin(index + points.indexOf(second))
-          distance = 1
-        }
-
-        const push = (least - distance) / 2
-
-        first.x -= (dx / distance) * push
-        first.y -= (dy / distance) * push
-        second.x += (dx / distance) * push
-        second.y += (dy / distance) * push
-        tether(first)
-        tether(second)
-        moved = true
-      }
-    }
-
-    if (!moved) {
-      return
-    }
-  }
+  return groups.sort((first, second) => second.places.length - first.places.length)
 }
 
 /** Copies the canvas in the frame it's drawn (its buffer is cleared once shown). */
@@ -280,12 +274,8 @@ function copyCanvas(map: MapboxMap) {
   })
 }
 
-async function render(
-  options: ScreenshotOptions,
-  overview: Shot,
-  crowds: readonly { crowd: readonly PlacePoint[]; shot: Shot }[],
-) {
-  const { image: mapImage, origin } = overview
+async function render(options: ScreenshotOptions, overview: Shot, zoomed: readonly Zoomed[]) {
+  const { image: mapImage, origin, points } = overview
   const scale = mapImage.width / origin.width
   const font = getComputedStyle(document.body).fontFamily
   const output = document.createElement('canvas')
@@ -297,7 +287,6 @@ async function render(
       ? { height: legendBox.height, width: legendBox.width }
       : undefined
 
-  const points = overview.points
   const band = getBand(points, legendSize?.height ?? 0, origin.height)
   const legendTop = band.bottom - LEGEND_GAP - (legendSize?.height ?? 0)
   const minWidth = Math.max(MIN_CROP_WIDTH, (legendSize?.width ?? 0) + CROP_MARGIN * 2)
@@ -310,48 +299,32 @@ async function render(
   }
   const areas: Rect[] = []
   const insets: Inset[] = []
-  const crowded = new Set<PlacePoint>()
 
-  for (const { crowd, shot } of crowds) {
-    const area = padRect(boundsOf(crowd.map(getDot)), 6)
-    const inset = layOutInset(context, font, shot, crowd, area, {
-      avoid: [area, ...areas, ...insets.map((other) => other.box), ...points.map(getDot)],
+  for (const { area, places, shot } of zoomed) {
+    const inset = layOutInset(context, font, shot, places, area, {
+      avoid: [
+        ...zoomed.map((other) => other.area),
+        ...insets.map((other) => other.box),
+        ...points.map(getDot),
+      ],
       bounds: {
         ...band,
         ...getSides(points, [], minWidth, width),
         bottom: legendStrip ? legendStrip.top - INSET_MARGIN : band.bottom,
       },
-      // Two insets stay small enough to sit one above the other.
-      mapHeight: (band.bottom - band.top) / (crowds.length > 1 ? 1.25 : 1),
+      mapHeight: band.bottom - band.top,
     })
 
     if (inset) {
       areas.push(area)
       insets.push(inset)
-
-      for (const point of crowd) {
-        crowded.add(point)
-      }
     }
   }
 
-  // The crowds with an inset stay where they are, outlined, and are named in it.
-  separate(points.filter((point) => !crowded.has(point)))
-
-  const labels = placeLabels(
-    context,
-    points.filter((point) => !crowded.has(point)),
-    points,
-    font,
-    {
-      blocked: [
-        ...(legendStrip ? [legendStrip] : []),
-        ...areas,
-        ...insets.map((inset) => inset.box),
-      ],
-      bounds: { bottom: band.bottom - 4, left: 4, right: width - 4, top: band.top + 4 },
-    },
-  )
+  const labels = placeLabels(context, points, points, font, {
+    blocked: [...(legendStrip ? [legendStrip] : []), ...insets.map((inset) => inset.box)],
+    bounds: { bottom: band.bottom - 4, left: 4, right: width - 4, top: band.top + 4 },
+  })
   const crop = {
     ...band,
     ...getSides(
@@ -369,12 +342,13 @@ async function render(
   context.font = `12px ${font}`
   const statLines = wrapPhrases(context, options.stats, cropWidth - 32)
   const headerHeight = 16 + 22 + 6 + statLines.length * 18 + 12
+  const height = headerHeight + mapHeight + FOOTER_HEIGHT
 
   output.width = Math.round(cropWidth * scale)
-  output.height = Math.round((headerHeight + mapHeight + FOOTER_HEIGHT) * scale)
+  output.height = Math.round(height * scale)
   context.setTransform(scale, 0, 0, scale, 0, 0)
   context.fillStyle = options.theme.background
-  context.fillRect(0, 0, cropWidth, headerHeight + mapHeight + FOOTER_HEIGHT)
+  context.fillRect(0, 0, cropWidth, height)
 
   drawHeader(context, options, statLines, font)
 
@@ -428,58 +402,75 @@ type Inset = {
 }
 
 /**
- * Sizes the zoomed-in picture to the crowd and sets it in the corner of `bounds` it
- * covers least of, then places its dots and names.
+ * Sizes the magnifier to its places and sets it in the free spot of `bounds` nearest
+ * them, as large as fits, then places its dots and names. None if it wouldn't show
+ * them much larger than the map does.
  */
 function layOutInset(
   context: CanvasRenderingContext2D,
   font: string,
   shot: Shot,
-  crowd: readonly PlacePoint[],
+  places: readonly ScreenshotPlace[],
   area: Rect,
   view: { avoid: readonly Rect[]; bounds: Rect; mapHeight: number },
 ): Inset | undefined {
-  const spot = (point: PlacePoint) => `${point.longitude},${point.latitude}`
-  const crowdSpots = new Set(crowd.map(spot))
-  const inShot = shot.points.filter((point) => crowdSpots.has(spot(point)))
-  const crowdBox = boundsOf(inShot.map(getDot))
-  const source = fitAspect(padRect(crowdBox, INSET_PADDING), shot.origin)
+  const placeSpots = new Set(places.map(getSpot))
+  const inShot = shot.points.filter((point) => placeSpots.has(getSpot(point)))
+  const placesBox = boundsOf(inShot.map(getDot))
+  const source = fitAspect(padRect(placesBox, INSET_PADDING), shot.origin)
   const sourceWidth = source.right - source.left
   const sourceHeight = source.bottom - source.top
   const boundsWidth = view.bounds.right - view.bounds.left
   const largest = Math.min(
-    Math.min(boundsWidth * 0.42, 380) / sourceWidth,
-    (view.mapHeight * 0.5) / sourceHeight,
+    Math.min(boundsWidth * INSET_MAX_SHARE.width, INSET_MAX_WIDTH) / sourceWidth,
+    (view.mapHeight * INSET_MAX_SHARE.height) / sourceHeight,
   )
   const { bottom, left, right, top } = view.bounds
-  const cornersAt = (fit: number) => {
-    const width = sourceWidth * fit
-    const height = sourceHeight * fit
-    const at = (x: number, y: number) => ({
-      fit,
-      rect: { bottom: y + height, left: x, right: x + width, top: y },
-    })
-
-    return [
-      at(right - INSET_MARGIN - width, top + INSET_MARGIN),
-      at(left + INSET_MARGIN, top + INSET_MARGIN),
-      at(right - INSET_MARGIN - width, bottom - height),
-      at(left + INSET_MARGIN, bottom - height),
-    ]
-  }
+  const centre = { x: (area.left + area.right) / 2, y: (area.top + area.bottom) / 2 }
   const covered = (rect: Rect) =>
     view.avoid.reduce((total, other) => total + overlap(other, rect), 0)
-  // The largest size that fits a corner over no dot, crowd or other inset; failing
-  // that, the smallest size in the corner it covers least of.
-  const sizes = [1, 0.8, 0.64, 0.5].map((step) => largest * step)
-  const { fit, rect: box } =
-    sizes.flatMap(cornersAt).find(({ rect }) => covered(rect) === 0) ??
-    cornersAt(sizes.at(-1)!).reduce((best, next) =>
-      covered(next.rect) < covered(best.rect) ? next : best,
-    )
+  const spotsAt = (fit: number) => {
+    const width = sourceWidth * fit
+    const height = sourceHeight * fit
+    const spots: { distance: number; fit: number; rect: Rect }[] = []
 
-  // Not much bigger than on the map: the crowd is better left nudged apart there.
-  if (((crowdBox.right - crowdBox.left) * fit) / (area.right - area.left) < INSET_MIN_GAIN) {
+    for (let y = top + INSET_MARGIN; y + height <= bottom; y += INSET_STEP) {
+      for (let x = left + INSET_MARGIN; x + width <= right - INSET_MARGIN; x += INSET_STEP) {
+        const rect = { bottom: y + height, left: x, right: x + width, top: y }
+
+        spots.push({
+          distance: Math.hypot(x + width / 2 - centre.x, y + height / 2 - centre.y),
+          fit,
+          rect,
+        })
+      }
+    }
+
+    return spots
+  }
+  // The largest size with a spot over no dot, area or other magnifier, in the spot of
+  // those nearest its places; failing that, the smallest size where it covers least.
+  const sizes = [1, 0.8, 0.64, 0.5].map((step) => largest * step)
+  const free = sizes
+    .map((fit) =>
+      spotsAt(fit)
+        .filter(({ rect }) => covered(rect) === 0)
+        .sort((first, second) => first.distance - second.distance),
+    )
+    .find((spots) => spots.length > 0)?.[0]
+  const fallback = spotsAt(sizes.at(-1)!).reduce<
+    { distance: number; fit: number; rect: Rect } | undefined
+  >((best, next) => (!best || covered(next.rect) < covered(best.rect) ? next : best), undefined)
+  const chosen = free ?? fallback
+
+  if (!chosen) {
+    return undefined
+  }
+
+  const { fit, rect: box } = chosen
+
+  // Not much bigger than on the map: the places is better left nudged apart there.
+  if (((placesBox.right - placesBox.left) * fit) / (area.right - area.left) < INSET_MIN_GAIN) {
     return undefined
   }
   const points = shot.points
@@ -496,8 +487,6 @@ function layOutInset(
       y: box.top + (point.y - source.top) * fit,
     }))
 
-  separate(points)
-
   return {
     box,
     image: shot.image,
@@ -511,7 +500,7 @@ function layOutInset(
   }
 }
 
-/** The zoomed-in picture in its card, and a line to the area it shows on the map. */
+/** The magnifier in its card, and a line to the area it shows on the map. */
 function drawInset(
   context: CanvasRenderingContext2D,
   inset: Inset,
@@ -666,8 +655,11 @@ function projectPlaces(
     .sort((first, second) => second.count - first.count || first.name.length - second.name.length)
 }
 
-function radius(point: PlacePoint) {
-  return Math.min(3 + Math.sqrt(point.count) * 1.4, 10)
+/** A place's dot grows with its Moments; a bubble is wide enough for its number. */
+function radius(point: Pick<PlacePoint, 'count' | 'members'>) {
+  return point.members
+    ? 7 + String(point.count).length * 2
+    : Math.min(3 + Math.sqrt(point.count) * 1.4, 10)
 }
 
 /**
@@ -748,14 +740,22 @@ function placeLabels(
   const labels: Label[] = []
 
   for (const point of named) {
-    const count = String(point.count)
+    // A bubble's Moments are in it already; its label says how many places it holds.
+    // A single Moment goes without a number.
+    const count = point.members
+      ? `${point.members.length} 处`
+      : point.count > 1
+        ? String(point.count)
+        : ''
 
     context.font = `500 12px ${font}`
-    const nameWidth = context.measureText(point.name).width
+    const name = getShortName(point.name)
+    const nameWidth = context.measureText(name).width
     context.font = COUNT_FONT
     const countWidth = context.measureText(count).width
-    const rect = getLabelRects(point, radius(point), nameWidth + 4 + countWidth).find(
-      (candidate) =>
+    const width = count ? nameWidth + 4 + countWidth : nameWidth
+    const spot = getLabelRects(point, radius(point), width).find(
+      ({ rect: candidate }) =>
         candidate.left >= bounds.left &&
         candidate.right <= bounds.right &&
         candidate.top >= bounds.top &&
@@ -765,12 +765,20 @@ function placeLabels(
         !view.blocked.some((rect) => overlap(rect, candidate) > 0),
     )
 
-    if (rect) {
-      labels.push({ count, point, nameWidth, rect })
+    if (spot) {
+      labels.push({ count, leader: spot.leader, name, nameWidth, point, rect: spot.rect })
     }
   }
 
   return labels
+}
+
+/**
+ * A name without the branch in brackets at its end, as in 遇约烤鸭（中粮店）: on the
+ * map the place is clear without it, and it takes the room of another name.
+ */
+function getShortName(name: string) {
+  return name.replace(/\s*[（(][^（）()]*[）)]$/, '') || name
 }
 
 /** Each place as a dot sized by its Moments, then the names placed for them. */
@@ -781,31 +789,29 @@ function drawPlaces(
   theme: ScreenshotOptions['theme'],
   font: string,
 ) {
-  context.save()
-  context.shadowColor = 'rgb(0 0 0 / 0.25)'
-  context.shadowBlur = 4
-
   for (const point of points) {
-    context.beginPath()
-    context.arc(point.x, point.y, radius(point), 0, Math.PI * 2)
-    context.fillStyle = point.color
-    context.fill()
+    drawDot(context, point)
   }
 
-  context.shadowColor = 'transparent'
-  context.lineWidth = 1.5
-  context.strokeStyle = 'rgb(255 255 255 / 0.95)'
-
-  for (const point of points) {
-    context.beginPath()
-    context.arc(point.x, point.y, radius(point), 0, Math.PI * 2)
-    context.stroke()
-  }
-
-  context.restore()
-
-  for (const { count, point, nameWidth, rect } of labels) {
+  for (const { count, leader, name, point, nameWidth, rect } of labels) {
     const middle = (rect.top + rect.bottom) / 2
+
+    if (leader) {
+      // From the dot's edge to the nearest point of the name.
+      const toX = Math.max(rect.left, Math.min(rect.right, point.x))
+      const toY = Math.max(rect.top, Math.min(rect.bottom, point.y))
+      const length = Math.hypot(toX - point.x, toY - point.y)
+      const start = radius(point) / length
+
+      context.save()
+      context.strokeStyle = theme.muted
+      context.lineWidth = 1
+      context.beginPath()
+      context.moveTo(point.x + (toX - point.x) * start, point.y + (toY - point.y) * start)
+      context.lineTo(toX, toY)
+      context.stroke()
+      context.restore()
+    }
 
     context.textBaseline = 'middle'
     context.textAlign = 'left'
@@ -813,31 +819,74 @@ function drawPlaces(
     context.lineWidth = 3
     context.strokeStyle = theme.background
     context.font = `500 12px ${font}`
-    context.strokeText(point.name, rect.left, middle)
+    context.strokeText(name, rect.left, middle)
     context.fillStyle = theme.text
-    context.fillText(point.name, rect.left, middle)
-    context.font = COUNT_FONT
-    context.strokeText(count, rect.left + nameWidth + 4, middle)
-    context.fillStyle = theme.muted
-    context.fillText(count, rect.left + nameWidth + 4, middle)
+    context.fillText(name, rect.left, middle)
+
+    if (count) {
+      context.font = COUNT_FONT
+      context.strokeText(count, rect.left + nameWidth + 4, middle)
+      context.fillStyle = theme.muted
+      context.fillText(count, rect.left + nameWidth + 4, middle)
+    }
   }
 }
 
-/** A label's spots around a dot, best first: to its right, left, above and below. */
-function getLabelRects({ x, y }: PlacePoint, radius: number, width: number): Rect[] {
-  const offset = radius + LABEL_GAP
-  const box = (left: number, top: number) => ({
-    bottom: top + LABEL_HEIGHT,
-    left,
-    right: left + width,
-    top,
-  })
+/** A place's dot, or a bubble with its Moments in it, as the map draws them. */
+function drawDot(context: CanvasRenderingContext2D, point: PlacePoint) {
+  const size = radius(point)
+
+  context.save()
+  context.beginPath()
+  context.arc(point.x, point.y, size, 0, Math.PI * 2)
+  context.shadowColor = 'rgb(0 0 0 / 0.25)'
+  context.shadowBlur = 4
+  context.fillStyle = point.color
+  context.fill()
+  context.shadowColor = 'transparent'
+  context.lineWidth = point.members ? 2 : 1.5
+  context.strokeStyle = 'rgb(255 255 255 / 0.95)'
+  context.stroke()
+
+  if (point.members) {
+    context.font = `600 10px ui-monospace, monospace`
+    context.textAlign = 'center'
+    context.textBaseline = 'middle'
+    context.fillStyle = '#fff'
+    context.fillText(String(point.count), point.x, point.y + 0.5)
+  }
+
+  context.restore()
+}
+
+/**
+ * A label's spots around a dot, best first: right beside it (to its right, left, above
+ * and below, then at its corners), then the same a little further out, joined to it by
+ * a line.
+ */
+function getLabelRects({ x, y }: PlacePoint, radius: number, width: number) {
+  const around = (offset: number, leader: boolean) => {
+    const corner = offset * Math.SQRT1_2
+    const box = (left: number, top: number) => ({
+      leader,
+      rect: { bottom: top + LABEL_HEIGHT, left, right: left + width, top },
+    })
+    return [
+      box(x + offset, y - LABEL_HEIGHT / 2),
+      box(x - offset - width, y - LABEL_HEIGHT / 2),
+      box(x - width / 2, y - offset - LABEL_HEIGHT),
+      box(x - width / 2, y + offset),
+      box(x + corner, y - corner - LABEL_HEIGHT),
+      box(x + corner, y + corner),
+      box(x - corner - width, y - corner - LABEL_HEIGHT),
+      box(x - corner - width, y + corner),
+    ]
+  }
 
   return [
-    box(x + offset, y - LABEL_HEIGHT / 2),
-    box(x - offset - width, y - LABEL_HEIGHT / 2),
-    box(x - width / 2, y - offset - LABEL_HEIGHT),
-    box(x - width / 2, y + offset),
+    ...around(radius + LABEL_GAP, false),
+    ...around(radius + LABEL_GAP + LEADER_LENGTH, true),
+    ...around(radius + LABEL_GAP + LEADER_LENGTH * 2, true),
   ]
 }
 

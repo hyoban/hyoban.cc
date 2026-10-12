@@ -5,7 +5,7 @@ import { createPopupContent, MAP_POPUP_CLASS, parseJson } from './trip-player/do
 import { createTripOverview } from './trip-player/overview'
 import { createTripPlayer } from './trip-player/player'
 import type { TripSummary } from './trip-player/types'
-import { captureMap, savePicture } from './map-screenshot'
+import { captureMap, savePicture, type ScreenshotPlace } from './map-screenshot'
 import { initializeLightboxMedia } from './moment-lightbox-client'
 
 type MarkerData = {
@@ -45,8 +45,11 @@ const TRIP_PATH_PATTERN = /^\/trip\/([^/]+)\/?$/
 const LOCATION_INDEX_LAYER_ID = 'calendar-location-index'
 const LOCATION_SOURCE_ID = 'calendar-locations'
 const LOCATION_CLUSTER_MAX_ZOOM = 9
-// How close on screen, in pixels, places are gathered into one cluster.
+// How close on screen, in pixels, places are gathered into one cluster, and how many
+// it takes: two places side by side aren't a crowd, so they stay as they are, even
+// if one covers part of the other.
 const LOCATION_CLUSTER_RADIUS = 20
+const LOCATION_CLUSTER_MIN_POINTS = 3
 // How long the markers take to fade as a trip opens (see index.css), before they're
 // taken off the map.
 const MARKER_FADE = 200
@@ -616,10 +619,12 @@ export function initializeCalendarMap() {
       )
       button.setAttribute('aria-pressed', 'false')
       button.style.setProperty('--marker-color', location.color)
+      // A single Moment is a smaller dot, without a number.
       dot.className =
-        'calendar-map-marker__dot flex h-[1.125rem] min-w-[1.125rem] items-center justify-center rounded-full border-2 border-white/95 bg-[var(--marker-color)] px-[0.1875rem] font-mono text-[0.625rem] font-semibold text-white shadow-[0_0.125rem_0.75rem_rgb(0_0_0/0.24),0_0_0_1px_rgb(0_0_0/0.12)] transition-[transform,box-shadow] duration-[160ms] ease-in-out group-hover:scale-125 group-hover:shadow-[0_0.25rem_1rem_rgb(0_0_0/0.3),0_0_0_2px_var(--color-tx)] group-focus-visible:scale-125 group-focus-visible:shadow-[0_0.25rem_1rem_rgb(0_0_0/0.3),0_0_0_2px_var(--color-tx)] group-aria-[pressed=true]:scale-125 group-aria-[pressed=true]:shadow-[0_0.25rem_1rem_rgb(0_0_0/0.3),0_0_0_2px_var(--color-tx)] motion-reduce:transition-none'
+        (location.count > 1 ? 'h-[1.125rem] min-w-[1.125rem] ' : 'h-3.5 min-w-3.5 ') +
+        'calendar-map-marker__dot flex items-center justify-center rounded-full border-2 border-white/95 bg-[var(--marker-color)] px-[0.1875rem] font-mono text-[0.625rem] font-semibold text-white shadow-[0_0.125rem_0.75rem_rgb(0_0_0/0.24),0_0_0_1px_rgb(0_0_0/0.12)] transition-[transform,box-shadow] duration-[160ms] ease-in-out group-hover:scale-125 group-hover:shadow-[0_0.25rem_1rem_rgb(0_0_0/0.3),0_0_0_2px_var(--color-tx)] group-focus-visible:scale-125 group-focus-visible:shadow-[0_0.25rem_1rem_rgb(0_0_0/0.3),0_0_0_2px_var(--color-tx)] group-aria-[pressed=true]:scale-125 group-aria-[pressed=true]:shadow-[0_0.25rem_1rem_rgb(0_0_0/0.3),0_0_0_2px_var(--color-tx)] motion-reduce:transition-none'
       dot.setAttribute('aria-hidden', 'true')
-      dot.textContent = String(location.count)
+      dot.textContent = location.count > 1 ? String(location.count) : ''
       button.append(dot)
 
       const showPopup = () => {
@@ -684,6 +689,7 @@ export function initializeCalendarMap() {
     map.addSource(LOCATION_SOURCE_ID, {
       cluster: true,
       clusterMaxZoom: LOCATION_CLUSTER_MAX_ZOOM,
+      clusterMinPoints: LOCATION_CLUSTER_MIN_POINTS,
       clusterProperties: {
         latestYear: ['max', ['get', 'latestYear']],
         momentCount: ['+', ['get', 'count']],
@@ -866,6 +872,69 @@ export function initializeCalendarMap() {
     return { marker, popup }
   }
 
+  /**
+   * The places a screenshot draws, gathered as the map gathers them at its framing:
+   * each cluster named after its busiest place, with every place in it.
+   */
+  async function getScreenshotPlaces(map: mapboxgl.Map): Promise<ScreenshotPlace[]> {
+    const source = map.getSource(LOCATION_SOURCE_ID) as GeoJSONSource | undefined
+    const places: ScreenshotPlace[] = []
+    const seen = new Set<string>()
+
+    for (const feature of map.queryRenderedFeatures({ layers: [LOCATION_INDEX_LAYER_ID] })) {
+      const properties = feature.properties ?? {}
+
+      if (feature.geometry.type !== 'Point') {
+        continue
+      }
+
+      if (!properties.cluster) {
+        const place = locationsById.get(String(properties.id))
+
+        if (place && !seen.has(place.id)) {
+          seen.add(place.id)
+          places.push(place)
+        }
+
+        continue
+      }
+
+      const id = Number(properties.cluster_id)
+
+      if (seen.has(`cluster-${id}`) || !source) {
+        continue
+      }
+
+      seen.add(`cluster-${id}`)
+
+      const leaves = await new Promise<GeoJSON.Feature[]>((resolve) =>
+        source.getClusterLeaves(id, Infinity, 0, (error, features) =>
+          resolve(error ? [] : (features ?? [])),
+        ),
+      )
+      const members = leaves
+        .map((leaf) => locationsById.get(String(leaf.properties?.id)))
+        .filter((place) => place !== undefined)
+        .sort(
+          (first, second) => second.count - first.count || first.name.length - second.name.length,
+        )
+      const [longitude, latitude] = feature.geometry.coordinates
+      const latestYear = Number(properties.latestYear) || 0
+
+      places.push({
+        color: yearColors.get(latestYear) ?? members[0]?.color ?? '#888',
+        count: Number(properties.momentCount) || 0,
+        latestYear,
+        latitude: latitude!,
+        longitude: longitude!,
+        members,
+        name: members[0] ? `${members[0].name}等` : `${properties.point_count} 个地点`,
+      })
+    }
+
+    return places
+  }
+
   function showLightboxItem(index: number) {
     if (lightboxItems.length === 0) {
       return
@@ -924,6 +993,7 @@ export function initializeCalendarMap() {
 
     try {
       const blob = await captureMap(map, {
+        getPlaces: getScreenshotPlaces,
         legend,
         places: locations,
         site: `${window.location.host}/map/`,
