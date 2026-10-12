@@ -343,10 +343,10 @@ export const locations = defineLocations({
     longitude: 118.065,
     name: '三清山',
   },
-  shanghai: {
-    latitude: 31.2304,
-    longitude: 121.4737,
-    name: '上海',
+  'shanghai-haidilao-jingan-dayuecheng': {
+    latitude: 31.28131,
+    longitude: 121.42556,
+    name: '海底捞火锅（静安大融城店）',
   },
   shenyang: {
     latitude: 41.8025,
