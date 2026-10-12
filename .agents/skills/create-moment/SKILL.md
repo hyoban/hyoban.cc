@@ -46,7 +46,8 @@ hundred metres off; never store their coordinates as they are. Even after
 conversion, AMap and Mapbox often disagree by around 100 m on the same shop.
 
 Start from the user's AMap link (resolve `surl.amap.com` with `curl -sI`; its
-`p` parameter holds the GCJ-02 latitude and longitude) or another lookup, then:
+`p` parameter holds the POI id, GCJ-02 latitude and longitude, name, and address)
+or another lookup, then:
 
 ```bash
 node .agents/skills/create-moment/scripts/find-place.mjs <latitude> <longitude> <name> --gcj
@@ -55,5 +56,27 @@ node .agents/skills/create-moment/scripts/find-place.mjs <latitude> <longitude> 
 Drop `--gcj` for WGS-84 input. If it lists a Mapbox POI that is the same place,
 use that POI's coordinates; otherwise use the converted point it prints. Cities
 and regions keep an approximate centre.
+
+- Only Mapbox tilequery (`poi_label`) covers China. The Mapbox Search Box and
+  geocoding APIs, Nominatim, and Baidu's web endpoints return nothing useful for
+  Chinese shops. The script already queries around the point, because tilequery
+  stops at the 50 nearest POIs.
+- A matching name is not always the same place. Reject a nearby visitor centre,
+  campsite, memorial, school, or a different branch, and keep the point the
+  Moment is about (a summit, a beach, a lake shore) for large scenic areas.
+- Without a link from the user, search AMap in the built-in browser: open
+  `https://www.amap.com`, have the user sign in, and fetch
+  `/service/poiInfo?query_type=TQUERY&pagesize=5&pagenum=1&city=<adcode>&keywords=<name>`
+  (or `geoobj=<minLng>|<minLat>|<maxLng>|<maxLat>` instead of `city`). It returns
+  GCJ-02. The REST API needs a key, and searching without signing in hits a login
+  wall. Space requests several seconds apart; a burst brings up a slider CAPTCHA,
+  which the user must solve. Check the returned branch name matches.
+- When several candidates fit (which noodle shop, which station), ask the user
+  instead of guessing.
+- Some older entries in `src/data/locations.ts` were stored in GCJ-02. When a
+  point looks a few hundred metres off, compare it with AMap's raw and converted
+  coordinates: if it sits near the raw one, convert it.
+- Changing an existing Moment, even only its `location`, makes CI require
+  non-empty alt text on its visible media, so describe those images too.
 
 Only perform Git operations when requested. Commit directly on `main`; do not create a branch.
