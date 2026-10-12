@@ -51,7 +51,7 @@ export function initializeLightboxMedia(dialog: HTMLDialogElement, signal: Abort
         if (currentRevision !== revision) return
 
         stop()
-        status.textContent = '实况暂时无法播放，仍可查看照片。'
+        status.textContent = '实况暂时无法播放。'
       }
     },
     { signal },
@@ -63,7 +63,7 @@ export function initializeLightboxMedia(dialog: HTMLDialogElement, signal: Abort
     () => {
       if (!video.hasAttribute('src')) return
       stop()
-      status.textContent = '实况暂时无法播放，仍可查看照片。'
+      status.textContent = '实况暂时无法播放。'
     },
     { signal },
   )

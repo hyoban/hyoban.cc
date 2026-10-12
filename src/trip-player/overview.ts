@@ -1,0 +1,293 @@
+import mapboxgl, { type Map as MapboxMap } from 'mapbox-gl'
+import { lineFeature } from './route'
+import type { TripSummary } from './types'
+
+// Every trip's route on the overview map, as the way into its playback: pointing at a
+// route lifts it above the others, and clicking it opens the trip.
+//
+// Opening a trip, the other routes fade away at once while the opened one stays a
+// moment longer, so the eye follows it as the camera flies in and the trip's own route
+// takes its place. Closing, the trip's route stays put while the player's layers go
+// and relaxes into the others as they come back.
+
+const PREFIX = 'calendar-trip-overview-'
+// How far from a route, in pixels, a pointer or a finger still hits it.
+const HIT_RADIUS = 10
+const BASE = { opacity: 0.5, width: 1.5 }
+const DIMMED = { opacity: 0.15, width: 1.5 }
+const LIFTED = { opacity: 1, width: 2.5 }
+// The width the trip player draws its route at, so the two meet without a jump.
+const PLAYING = { opacity: 1, width: 3 }
+const HOVER = 160
+const LEAVE = 280
+const LINGER = { delay: 480, duration: 640 }
+const RETURN = 640
+
+type Look = { opacity: number; width: number }
+
+export function createTripOverview({
+  getInk,
+  getMap,
+  onSelect,
+  reducedMotion,
+  signal,
+  trips,
+}: {
+  getInk: () => string
+  getMap: () => MapboxMap | undefined
+  onSelect: (id: string) => void
+  reducedMotion: MediaQueryList
+  signal: AbortSignal
+  trips: readonly TripSummary[]
+}) {
+  // The trip being played; its route and the others are hidden meanwhile.
+  let activeId: string | undefined
+  let highlightedId: string | undefined
+  let watched: MapboxMap | undefined
+  // Cancels the second half of a two-step change, waiting on a timer or a frame.
+  let settle: (() => void) | undefined
+  // Styled like the trip's place labels (see index.css), above the pointer.
+  const popup = new mapboxgl.Popup({
+    anchor: 'bottom',
+    className: 'calendar-map-trip-popup',
+    closeButton: false,
+    closeOnClick: false,
+    focusAfterOpen: false,
+    offset: 14,
+  })
+  const tripsById = new Map(trips.map((trip) => [trip.id, trip]))
+  const layerIds = trips.map((trip) => `${PREFIX}${trip.id}`)
+
+  function getLook(id: string): Look {
+    if (activeId) {
+      return { opacity: 0, width: PLAYING.width }
+    }
+
+    if (!highlightedId) {
+      return BASE
+    }
+
+    return id === highlightedId ? LIFTED : DIMMED
+  }
+
+  function paint(id: string, look: Look, transition: { delay?: number; duration: number }) {
+    const map = getMap()
+    const layerId = `${PREFIX}${id}`
+
+    if (!map?.getLayer(layerId)) {
+      return
+    }
+
+    const timing = {
+      delay: 0,
+      ...transition,
+      duration: reducedMotion.matches ? 0 : transition.duration,
+    }
+
+    map.setPaintProperty(layerId, 'line-opacity-transition', timing)
+    map.setPaintProperty(layerId, 'line-width-transition', timing)
+    map.setPaintProperty(layerId, 'line-opacity', look.opacity)
+    map.setPaintProperty(layerId, 'line-width', look.width)
+  }
+
+  function paintAll(duration: number) {
+    for (const trip of trips) {
+      paint(trip.id, getLook(trip.id), { duration })
+    }
+  }
+
+  /** Adds the routes unless they're there already, also after the style changes. */
+  function add() {
+    const map = getMap()
+
+    if (!map || trips.length === 0 || map.getSource(`${PREFIX}${trips[0]!.id}`)) {
+      return
+    }
+
+    // Oldest first, so the latest trip's route is drawn on top where routes cross.
+    for (const trip of trips.toReversed()) {
+      const id = `${PREFIX}${trip.id}`
+      const look = getLook(trip.id)
+
+      map.addSource(id, { data: lineFeature(trip.line), type: 'geojson' })
+      map.addLayer({
+        id,
+        layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: {
+          'line-color': getInk(),
+          'line-opacity': look.opacity,
+          'line-width': look.width,
+        },
+        source: id,
+        type: 'line',
+      })
+    }
+
+    watch(map)
+  }
+
+  function getTripAt(point: mapboxgl.Point) {
+    const map = getMap()
+
+    if (activeId || !map) {
+      return undefined
+    }
+
+    const layers = layerIds.filter((id) => map.getLayer(id))
+    const box: [mapboxgl.PointLike, mapboxgl.PointLike] = [
+      [point.x - HIT_RADIUS, point.y - HIT_RADIUS],
+      [point.x + HIT_RADIUS, point.y + HIT_RADIUS],
+    ]
+    // Topmost first, which is the latest trip where routes cross.
+    const feature = layers.length > 0 ? map.queryRenderedFeatures(box, { layers })[0] : undefined
+    const id = feature?.layer?.id.slice(PREFIX.length)
+
+    return id ? tripsById.get(id) : undefined
+  }
+
+  function watch(map: MapboxMap) {
+    if (watched === map) {
+      return
+    }
+
+    watched = map
+    map.on('mousemove', (event) => {
+      const trip = getTripAt(event.point)
+
+      map.getCanvas().style.cursor = trip ? 'pointer' : ''
+      highlight(trip?.id, event.lngLat)
+    })
+    map.on('mouseout', () => highlight(undefined))
+  }
+
+  /** Lifts a route above the others, with its name by `at` or by the route's middle. */
+  function highlight(id: string | undefined, at?: mapboxgl.LngLatLike) {
+    const map = getMap()
+    const trip = id ? tripsById.get(id) : undefined
+
+    if (!trip || activeId || !map) {
+      popup.remove()
+    } else {
+      const middle = trip.line[Math.floor(trip.line.length / 2)]!
+
+      popup.setLngLat(at ?? middle)
+
+      if (highlightedId !== id) {
+        popup.setDOMContent(createPopupContent(trip))
+      }
+
+      if (!popup.isOpen()) {
+        popup.addTo(map)
+      }
+    }
+
+    const next = activeId ? undefined : trip?.id
+
+    if (next !== highlightedId) {
+      highlightedId = next
+      paintAll(HOVER)
+    }
+  }
+
+  /** The trip under a click on the map, if any; opens it and reports whether it did. */
+  function click(point: mapboxgl.Point) {
+    const trip = getTripAt(point)
+
+    if (trip) {
+      onSelect(trip.id)
+    }
+
+    return Boolean(trip)
+  }
+
+  /** Hides the routes as trip `id` opens, its own route staying a moment longer. */
+  function hide(id: string) {
+    if (activeId === id) {
+      return
+    }
+
+    settle?.()
+    activeId = id
+    highlightedId = undefined
+    popup.remove()
+
+    const map = getMap()
+
+    if (map) {
+      map.getCanvas().style.cursor = ''
+    }
+
+    for (const trip of trips) {
+      if (trip.id === id) {
+        paint(trip.id, PLAYING, { duration: HOVER })
+      } else {
+        paint(trip.id, getLook(trip.id), { duration: LEAVE })
+      }
+    }
+
+    const timer = setTimeout(() => {
+      settle = undefined
+      paint(id, getLook(id), { duration: LINGER.duration })
+    }, LINGER.delay)
+
+    settle = () => {
+      clearTimeout(timer)
+      settle = undefined
+    }
+  }
+
+  /** Brings the routes back as the playing trip closes. */
+  function show() {
+    const previousId = activeId
+
+    if (!previousId) {
+      return
+    }
+
+    settle?.()
+    activeId = undefined
+
+    const map = getMap()
+
+    // The trip's route takes the place of the player's at once; once that has been
+    // drawn, it eases into the others as they fade in.
+    paint(previousId, PLAYING, { duration: 0 })
+
+    if (!map) {
+      paintAll(RETURN)
+      return
+    }
+
+    const frame = () => {
+      settle = undefined
+      paintAll(RETURN)
+    }
+
+    settle = () => {
+      map.off('render', frame)
+      settle = undefined
+    }
+    map.once('render', frame)
+    map.triggerRepaint()
+  }
+
+  signal.addEventListener('abort', () => {
+    settle?.()
+    popup.remove()
+  })
+
+  return { add, click, hide, highlight, show }
+}
+
+function createPopupContent(trip: TripSummary) {
+  const content = document.createElement('div')
+  const date = document.createElement('p')
+  const title = document.createElement('p')
+
+  date.className = 'text-[0.6875rem] text-tx-3 tabular-nums'
+  date.textContent = trip.dateRange
+  title.className = 'font-medium'
+  title.textContent = trip.title
+  content.append(date, title)
+  return content
+}

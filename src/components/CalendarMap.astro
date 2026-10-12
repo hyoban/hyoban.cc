@@ -11,7 +11,7 @@ import {
   getMoments,
   getTrips,
 } from '@/moments'
-import { getTripData, getTripTitle } from '@/moments/trip-data'
+import { getTripData, getTripSummary, getTripTitle } from '@/moments/trip-data'
 import { getIntroCovers, getTripMeta, MOSAIC_CLASS, MOSAIC_IMAGE_CLASS } from '@/trip-player/intro'
 import { getAssetUrl } from '@/asset-url'
 import { tripVideoMusic } from '@/data/music'
@@ -40,9 +40,9 @@ const markerData = locationGroups.map(group => ({
 const markerDataJson = toScriptJson(markerData)
 const trips = getTrips(moments).toSorted((first, second) => second.start.localeCompare(first.start))
 const activeTrip = trips.find(trip => trip.id === tripId)
-// Every trip's id and title for the picker; only the opening trip's playback data is
-// inlined, and the player fetches the rest from /trip/<id>/data.json when needed.
-const tripListJson = toScriptJson(trips.map(trip => ({ id: trip.id, pageTitle: getTripTitle(trip.title) })))
+// Every trip's route and title for the overview; only the opening trip's playback data
+// is inlined, and the player fetches the rest from /trip/<id>/data.json when needed.
+const tripListJson = toScriptJson(trips.map(getTripSummary))
 const activeTripData = activeTrip ? getTripData(activeTrip) : undefined
 const activeTripJson = activeTripData ? toScriptJson(activeTripData) : undefined
 // The player opens a trip page on its intro card. Rendering that here shows it, and
@@ -61,7 +61,7 @@ const tripShortcuts: { keys: [string[], string][]; title: string }[] = [
       [['←', '→'], '上一张 / 下一张卡片'],
       [['Shift', '←', '→'], '上一天 / 下一天'],
       [['Home', 'End'], '回到开头 / 跳到回顾'],
-      [['↑', '↓'], '上一张 / 下一张照片，到头时换卡片'],
+      [['↑', '↓'], '上一张 / 下一张照片'],
     ],
     title: '播放',
   },
@@ -93,28 +93,23 @@ function toScriptJson(value: unknown) {
     <!-- The map script is large; open the connection for the style and tiles while it loads. -->
     <link rel="preconnect" href="https://api.mapbox.com" crossorigin />
   </Fragment>
-  <main class="calendar-map-page @container relative isolate h-dvh w-full overflow-hidden bg-bg" data-calendar-map data-mapbox-token={mapboxToken} data-map-title={mapTitle} transition:persist="calendar-map">
+  <main class="calendar-map-page @container relative isolate h-dvh w-full overflow-hidden bg-bg" data-calendar-map data-mapbox-token={mapboxToken} data-map-title={mapTitle} data-map-trip={activeTrip ? '' : undefined} transition:persist="calendar-map">
     <div class="calendar-map-canvas absolute inset-0" data-calendar-map-canvas role="region" aria-label="Calendar 地点地图" />
 
     <header class="calendar-map-toolbar pointer-events-none absolute inset-x-4 top-4 z-[5] grid grid-cols-[1fr_auto_1fr] items-center gap-4 max-[48rem]:grid-cols-[auto_minmax(0,1fr)_auto] max-[48rem]:gap-2 [&>*]:pointer-events-auto max-[48rem]:[&_.calendar-back-link]:pr-1.5 max-[48rem]:[&_.calendar-back-link>span]:sr-only">
       <CalendarBackLink class="justify-self-start" />
       {
-        trips.length > 0
-          ? (
-              <label class="calendar-map-trip-picker relative col-start-2 flex items-center rounded-full border border-[color-mix(in_srgb,var(--color-border)_82%,transparent)] bg-[color-mix(in_srgb,var(--color-bg)_82%,transparent)] font-mono text-[0.8125rem] backdrop-blur-[1rem] hover:bg-inline min-w-0 justify-self-center max-[48rem]:max-w-full">
-                <span class="sr-only">选择要回放的旅程</span>
-                <select class="min-h-[2.375rem] w-full max-w-[14rem] min-w-0 cursor-pointer appearance-none truncate rounded-full border-0 bg-transparent pr-8 pl-3.5 text-tx outline-offset-2" data-calendar-map-trip-select>
-                  <option value="">全部地点</option>
-                  <optgroup label="旅程">
-                    {trips.map(trip => <option value={trip.id} selected={trip.id === tripId}>{trip.title}</option>)}
-                  </optgroup>
-                </select>
-                <span class="i-lucide-chevrons-up-down pointer-events-none absolute right-3 text-tx-3" aria-hidden="true" />
-              </label>
-            )
-          : (
-              <p class="col-start-2 flex min-h-[2.375rem] items-center rounded-full border border-[color-mix(in_srgb,var(--color-border)_82%,transparent)] bg-[color-mix(in_srgb,var(--color-bg)_82%,transparent)] px-3.5 font-mono text-[0.8125rem] backdrop-blur-[1rem] max-[48rem]:hidden">全部地点</p>
-            )
+        trips.length > 0 && (
+          // The routes are drawn on the map; these reach the same trips by keyboard,
+          // lifting each one's route as it's focused.
+          <nav class="sr-only" aria-label="旅程回放">
+            <ul>
+              {trips.map(trip => (
+                <li><a href={`/trip/${trip.id}/`} data-calendar-map-trip-link={trip.id}>回放旅程：{trip.title}</a></li>
+              ))}
+            </ul>
+          </nav>
+        )
       }
       <CalendarModeSwitch class="col-start-3 justify-self-end" mode="map" />
     </header>

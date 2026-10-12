@@ -11,6 +11,7 @@ import {
   getRouteLine,
   getTravelMode,
   measureLine,
+  simplifyLine,
   walkLine,
 } from '../../src/trip-player/route.ts'
 
@@ -72,6 +73,35 @@ test('writes chapters video sites accept', () => {
 
   assert.equal(formatChapterTime(75), '1:15')
   assert.equal(log.toString(), '0:00 第 2 天\n1:15 第 3 天\n10:10 旅程回顾\n')
+})
+
+test('thins a line to the points that shape it, keeping both ends', () => {
+  const line = [
+    [0, 0],
+    [1, 0.001],
+    [2, 0],
+    [3, 1],
+    [4, 1],
+  ]
+  assert.deepEqual(simplifyLine(line, 0.01), [
+    [0, 0],
+    [2, 0],
+    [3, 1],
+    [4, 1],
+  ])
+  assert.deepEqual(
+    simplifyLine(
+      [
+        [0, 0],
+        [1, 1],
+      ],
+      1,
+    ),
+    [
+      [0, 0],
+      [1, 1],
+    ],
+  )
 })
 
 test('cycles playback speed', () => {

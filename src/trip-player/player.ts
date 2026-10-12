@@ -117,6 +117,16 @@ let reloadPending =
   (performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined)
     ?.type === 'reload'
 
+// The side card slides in from just below as a trip opens, and back down as it closes.
+const PANEL_HIDDEN: Keyframe[] = [
+  { opacity: 1, transform: 'none' },
+  { opacity: 0, transform: 'translateY(0.75rem) scale(0.98)' },
+]
+const PANEL_MOTION: KeyframeAnimationOptions = {
+  duration: 280,
+  easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+}
+
 type ExportRatio = 'landscape' | 'portrait'
 // The story layout either plays on screen or is recorded to a video file.
 type StageMode = 'present' | 'record'
@@ -1975,6 +1985,8 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   }
 
   function begin(nextTrip: TripData) {
+    // A trip page renders its intro card already; only a card opened here slides in.
+    const rendered = !trip && !panel.hidden
     stop()
     trip = nextTrip
     covers = getIntroCovers(nextTrip)
@@ -2055,6 +2067,10 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     addLayers()
     index = -1
     goTo(getHashSlideIndex(), { play: !reducedMotion.matches })
+
+    if (!rendered && !reducedMotion.matches && !isStageLayout()) {
+      panel.animate(PANEL_HIDDEN.toReversed(), PANEL_MOTION)
+    }
     lastFrameTime = undefined
     frame = requestAnimationFrame(tick)
   }
@@ -2076,6 +2092,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       frame = undefined
     }
 
+    leavePanel()
     travelToken += 1
     traveling = false
     cancelLeg()
@@ -2090,6 +2107,44 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     progress.replaceChildren()
     hideProgressTip()
     body.replaceChildren()
+  }
+
+  /**
+   * Leaves a copy of the card fading out where it was, since the card itself is
+   * emptied and hidden at once. Its media are swapped for empty boxes the same size,
+   * so the copy plays and loads nothing.
+   */
+  function leavePanel() {
+    if (panel.hidden || reducedMotion.matches || isStageLayout()) {
+      return
+    }
+
+    cardTransition.end()
+    photoTransition.end()
+
+    const ghost = panel.cloneNode(true) as HTMLElement
+
+    for (const media of ghost.querySelectorAll('video, iframe, audio')) {
+      const box = document.createElement('div')
+      box.className = media.className
+      box.style.cssText = (media as HTMLElement).style.cssText
+      media.replaceWith(box)
+    }
+
+    for (const element of ghost.querySelectorAll('[id]')) {
+      element.removeAttribute('id')
+    }
+
+    ghost.removeAttribute('aria-labelledby')
+    ghost.setAttribute('aria-hidden', 'true')
+    ghost.inert = true
+    ghost.style.pointerEvents = 'none'
+    panel.after(ghost)
+    ghost.animate(PANEL_HIDDEN, PANEL_MOTION).finished.then(
+      () => ghost.remove(),
+      () => ghost.remove(),
+    )
+    signal.addEventListener('abort', () => ghost.remove(), { once: true })
   }
 
   previousButton.addEventListener('click', () => goTo(index - 1), { signal })
