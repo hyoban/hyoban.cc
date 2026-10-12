@@ -25,6 +25,7 @@ const STATIONS = {
   'hong-kong': { latitude: 22.3046, longitude: 114.1653, name: '香港西九龙站' },
   nanjing: { latitude: 31.9686, longitude: 118.7976, name: '南京南站' },
   qingdao: { latitude: 36.1714, longitude: 120.3732, name: '青岛北站' },
+  'qingdao-tsutaya-haitian': { latitude: 36.1714, longitude: 120.3732, name: '青岛北站' },
   shenzhen: { latitude: 22.6097, longitude: 114.0292, name: '深圳北站' },
 }
 

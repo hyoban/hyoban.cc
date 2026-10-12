@@ -8,8 +8,8 @@ export const locations = defineLocations({
     name: '安吉',
   },
   baimao: {
-    latitude: 31.2889,
-    longitude: 118.0617,
+    latitude: 31.29263,
+    longitude: 118.05873,
     name: '白茆',
   },
   bangchuidao: {
@@ -89,8 +89,8 @@ export const locations = defineLocations({
     name: '大蜀山森林公园',
   },
   dougou: {
-    latitude: 31.3577,
-    longitude: 118.0122,
+    latitude: 31.36055,
+    longitude: 118.01416,
     name: '陡沟',
   },
   'fangxing-lake': {
@@ -159,8 +159,8 @@ export const locations = defineLocations({
     name: '千寻烧肉·黑金店（滨湖银泰店）',
   },
   'hefei-xinqiao-airport': {
-    latitude: 31.98779,
-    longitude: 116.9769,
+    latitude: 31.98862,
+    longitude: 116.96378,
     name: '合肥新桥国际机场',
   },
   'hefei-yangjia-huoguo': {
@@ -229,8 +229,8 @@ export const locations = defineLocations({
     name: '丽江',
   },
   'lijiang-sanyi-airport': {
-    latitude: 26.68,
-    longitude: 100.2457,
+    latitude: 26.66944,
+    longitude: 100.24766,
     name: '丽江三义国际机场',
   },
   lingbi: {
@@ -469,8 +469,8 @@ export const locations = defineLocations({
     name: '芜湖天门山',
   },
   'wuyuan-cultural-park': {
-    latitude: 29.264,
-    longitude: 117.834,
+    latitude: 29.26454,
+    longitude: 117.83176,
     name: '文博艺术公园',
   },
   wuwei: {
@@ -479,8 +479,8 @@ export const locations = defineLocations({
     name: '无为',
   },
   'wuwei-xiangan': {
-    latitude: 31.1928,
-    longitude: 117.7733,
+    latitude: 31.19798,
+    longitude: 117.79478,
     name: '无为襄安',
   },
   'wuyuan-huji-sichu': {
