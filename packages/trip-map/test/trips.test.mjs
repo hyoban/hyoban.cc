@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'vite-plus/test'
-import { buildTrip, defineTrips, getDistanceKm, getLegKey } from '../src/trips.ts'
+import { getDistanceKm } from '../src/geo.ts'
+import { buildTrip, defineTrips, getLegKey } from '../src/trips.ts'
 
 const hefei = { id: 'hefei', latitude: 31.8206, longitude: 117.2272, name: '合肥' }
 const nanjing = { id: 'nanjing', latitude: 32.0603, longitude: 118.7969, name: '南京' }
@@ -38,7 +39,7 @@ test('keeps located moments inside the inclusive date range', () => {
   const trip = buildTrip(
     { end: '2026-05-03', id: 'trip', start: '2026-05-01', title: 'Trip' },
     moments,
-    resolve,
+    { resolveLocation: resolve },
   )
 
   assert.deepEqual(
@@ -57,7 +58,7 @@ test('routes through every place of a Moment with several places', () => {
       { dateKey: '2026-05-01', id: 'both', locations: [hefei, nanjing], occurredAt: '2026-05-01' },
       { dateKey: '2026-05-01', id: 'back', locations: [hefei], occurredAt: '2026-05-01' },
     ],
-    resolve,
+    { resolveLocation: resolve },
   )
 
   assert.equal(trip.placeCount, 2)
@@ -85,7 +86,7 @@ test('threads waypoints between stops by time', () => {
         occurredAt: '2026-10-01T09:00:00+08:00',
       },
     ],
-    resolve,
+    { resolveLocation: resolve },
   )
 
   assert.deepEqual(
@@ -154,10 +155,12 @@ test('uses cached road routes except on straight legs', () => {
       title: 'Trip',
     },
     moments,
-    resolve,
     {
-      [getLegKey(hefei, nanjing)]: route,
-      [getLegKey(nanjing, rizhao)]: route,
+      resolveLocation: resolve,
+      routes: {
+        [getLegKey(hefei, nanjing)]: route,
+        [getLegKey(nanjing, rizhao)]: route,
+      },
     },
   )
 
@@ -187,7 +190,7 @@ test('counts no driving for a trip taken only by train', () => {
       title: 'Trip',
     },
     moments,
-    resolve,
+    { resolveLocation: resolve },
   )
 
   assert.deepEqual(
@@ -234,8 +237,7 @@ test('drives back the same way along the outbound route, reversed', () => {
       title: 'Trip',
     },
     moments,
-    resolve,
-    { [getLegKey(hefei, nanjing)]: route },
+    { resolveLocation: resolve, routes: { [getLegKey(hefei, nanjing)]: route } },
   )
   const [there, back] = trip.legs
 

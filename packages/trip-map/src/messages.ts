@@ -66,7 +66,6 @@ export const zhCN = {
   noMusic: '无音乐',
   pause: '暂停',
   play: '播放',
-  playShortcut: '{action}（空格）',
   portrait: '竖屏 9:16',
   portraitFile: '竖屏',
   present: '放映',
@@ -76,6 +75,8 @@ export const zhCN = {
   ratio: '画面',
   recordStart: '开始录制',
   safeArea: '为社交平台留边',
+  /** A control's hint with its key: 播放（空格）. */
+  withKey: '{action}（{key}）',
 
   // The shortcut panel
   keyEnd: 'End',

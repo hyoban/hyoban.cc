@@ -9,6 +9,8 @@ import { getMappedLocationGroups, getMoments, getTrips } from '@/moments'
 import { getTripData, getTripSummary } from '@/moments/trip-data'
 import {
   createYearPalette,
+  getMapStats,
+  getPlaceMarkers,
   renderShortcuts,
   renderTripPanel,
   renderTripStage,
@@ -29,32 +31,11 @@ const years = [...new Set(locationGroups.map(group => group.latestYear))].sort((
 const yearColor = createYearPalette(years)
 const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN ?? ''
 const mapTitle = `地图 · 日历 | ${SITE_TITLE}`
-const placesJson = toScriptJson(
-  locationGroups.map(group => ({
-    color: yearColor(group.latestYear),
-    count: group.moments.length,
-    id: group.id,
-    latestYear: group.latestYear,
-    latitude: group.location.latitude,
-    longitude: group.location.longitude,
-    name: group.location.name,
-    // Newest first, for the drawer's line of totals.
-    years: [...new Set(group.moments.map(moment => Number(moment.dateKey.slice(0, 4))))].sort((a, b) => b - a),
-  })),
-)
+const placesJson = toScriptJson(getPlaceMarkers(locationGroups, yearColor))
 const trips = getTrips(moments).toSorted((first, second) => second.start.localeCompare(first.start))
 const activeTrip = trips.find(trip => trip.id === tripId)
 // The totals a screenshot of the map puts in its header.
-const locatedMoments = new Set(locationGroups.flatMap(group => group.moments))
-const momentYears = [...locatedMoments].map(moment => Number(moment.dateKey.slice(0, 4)))
-const statsJson = toScriptJson({
-  drivingKm: trips.reduce((total, trip) => total + trip.drivingKm, 0),
-  firstYear: Math.min(...momentYears),
-  lastYear: Math.max(...momentYears),
-  moments: locatedMoments.size,
-  places: locationGroups.length,
-  trips: trips.length,
-})
+const statsJson = toScriptJson(getMapStats(locationGroups, trips))
 // Every trip's route and title for the overview; only the opening trip's playback data
 // is inlined, and the player fetches the rest from /trip/<id>/data.json when needed.
 const tripsJson = toScriptJson(trips.map(getTripSummary))
@@ -189,13 +170,19 @@ const description = activeTrip
   import { getTripTitle, tripMapBrand, tripMapMessages, tripMapMusic, tripMapSiteLine } from '@/trip-map'
 
   type MapClient = typeof import('@hyoban/trip-map/client')
+  type TripMap = ReturnType<MapClient['createTripMap']>
 
   let mapClient: Promise<MapClient> | undefined
-  let loadedClient: MapClient | undefined
+  let map: TripMap | undefined
 
   document.addEventListener('astro:page-load', () => {
-    // Pages without a map only need it to tear down one left from a map page.
-    if (!mapClient && !document.querySelector('[data-trip-map]')) {
+    const page = document.querySelector<HTMLElement>('[data-trip-map]')
+
+    // The map persists across the map and trip pages; a page without one only needs
+    // the one left behind taken down.
+    if (!page || map?.page === page) {
+      map?.destroy()
+      map = undefined
       return
     }
 
@@ -203,19 +190,26 @@ const description = activeTrip
     // toolbar and a trip's intro card show while the map loads.
     requestAnimationFrame(() => {
       setTimeout(() => {
-        mapClient ??= import('@hyoban/trip-map/client').then((client) => (loadedClient = client))
-        void mapClient.then((client) =>
-          client.initializeTripMap({
+        mapClient ??= import('@hyoban/trip-map/client')
+        void mapClient.then((client) => {
+          if (!page.isConnected || map?.page === page) {
+            return
+          }
+
+          map?.destroy()
+          map = client.createTripMap({
             brand: tripMapBrand,
             createLightboxMedia: initializeLightboxMedia,
             documentTitle: `地图 · 日历 | ${SITE_TITLE}`,
             getDocumentTitle: (trip) => getTripTitle(trip.title),
             messages: tripMapMessages,
             music: tripMapMusic,
+            onError: (error) => console.warn('[trip-map]', error.message, error.cause ?? ''),
+            page,
             screenshotTitle: `${SITE_TITLE} 的足迹`,
             siteLine: tripMapSiteLine,
-          }),
-        )
+          })
+        })
       })
     })
   })
@@ -229,6 +223,7 @@ const description = activeTrip
       return
     }
 
-    loadedClient?.destroyTripMap()
+    map?.destroy()
+    map = undefined
   })
 </script>

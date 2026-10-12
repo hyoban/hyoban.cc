@@ -143,13 +143,11 @@ export type MomentTrip = ReturnType<typeof getTrips>[number]
 export function getTrips(moments: Moment[]) {
   return trips
     .map((trip) =>
-      buildTrip(
-        trip,
-        moments,
-        (id) => ({ id, ...getLocation(locations, id as LocationId) }),
+      buildTrip(trip, moments, {
+        resolveLocation: (id) => ({ id, ...getLocation(locations, id as LocationId) }),
         // JSON coordinates are inferred as number[][]; the routes script writes pairs.
-        tripRoutes as unknown as Record<string, TripRoute>,
-      ),
+        routes: tripRoutes as unknown as Record<string, TripRoute>,
+      }),
     )
     .filter((trip) => trip.stops.length > 0)
 }

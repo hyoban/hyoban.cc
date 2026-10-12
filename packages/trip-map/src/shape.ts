@@ -2,10 +2,13 @@ import type { MapLocation } from './locations.ts'
 import { type Messages, zhCN } from './messages.ts'
 import { getRouteLine, simplifyLine } from './player/route.ts'
 import type {
+  MapStats,
+  PlaceMarker,
   TripData,
   TripDataStop,
   TripDataWaypoint,
   TripImage,
+  TripImageInput,
   TripSummary,
   TripWeather,
 } from './player/types.ts'
@@ -29,7 +32,7 @@ export type StopDetails = {
   anchor: string
   /** Where the Moment itself can be read. */
   href: string
-  images: TripImage[]
+  images: TripImageInput[]
   text: string
   /** `HH:mm`, when the Moment has a time. */
   time?: string | undefined
@@ -39,7 +42,7 @@ export type StopDetails = {
 
 export type ShapeTripOptions<T extends TripMoment> = {
   /** Photos for the intro and summary cards, best first. */
-  covers: TripImage[]
+  covers: TripImageInput[]
   describeStop: (stop: TripStop<T>) => StopDetails
   /** For the weather labels; the Chinese defaults otherwise. */
   messages?: Messages
@@ -55,10 +58,11 @@ export function shapeTripData<T extends TripMoment>(
 ): TripData {
   const messages = options.messages ?? zhCN
   const stops = trip.stops.map((stop): TripDataStop => {
-    const { time, video, ...details } = options.describeStop(stop)
+    const { images, time, video, ...details } = options.describeStop(stop)
 
     return {
       ...details,
+      images: images.map(toTripImage),
       dateKey: stop.dateKey,
       day: getDayOffset(trip.start, stop.dateKey) + 1,
       places: stop.locations.map(toTripPlace),
@@ -69,7 +73,7 @@ export function shapeTripData<T extends TripMoment>(
   })
 
   return {
-    covers: options.covers,
+    covers: options.covers.map(toTripImage),
     dayCount: trip.dayCount,
     drivingHours: trip.drivingHours,
     drivingKm: trip.drivingKm,
@@ -173,6 +177,72 @@ function getTripWeather(
   }
 
   return days
+}
+
+/** Fills in what a site left out of an image: one source for every width, itself as its thumbnail. */
+export function toTripImage(image: TripImageInput): TripImage {
+  return {
+    alt: image.alt ?? '',
+    height: image.height,
+    src: image.src,
+    srcset: image.srcset ?? `${image.src} ${image.width}w`,
+    thumbnail: image.thumbnail ?? image.src,
+    ...(image.video ? { video: image.video } : {}),
+    width: image.width,
+  }
+}
+
+/** A place and its posts, as `groupMomentsByLocation` groups them. */
+export type PlaceGroup = Readonly<{
+  id: string
+  latestYear: number
+  location: MapLocation
+  moments: readonly Readonly<{ dateKey: string }>[]
+}>
+
+/**
+ * The places for the map page, from `groupMomentsByLocation`'s groups: each with its
+ * posts counted and coloured by the year it was last visited (see `createYearPalette`).
+ */
+export function getPlaceMarkers(
+  groups: readonly PlaceGroup[],
+  yearColor: (year: number) => string,
+): PlaceMarker[] {
+  return groups.map((group) => ({
+    color: yearColor(group.latestYear),
+    count: group.moments.length,
+    id: group.id,
+    latestYear: group.latestYear,
+    latitude: group.location.latitude,
+    longitude: group.location.longitude,
+    name: group.location.name,
+    // Newest first, for the drawer's line of totals.
+    years: [...new Set(group.moments.map((moment) => getYear(moment.dateKey)))].sort(
+      (first, second) => second - first,
+    ),
+  }))
+}
+
+/** The totals a screenshot of the map puts in its header. */
+export function getMapStats(
+  groups: readonly PlaceGroup[],
+  trips: readonly Readonly<{ drivingKm: number }>[],
+): MapStats {
+  const moments = new Set(groups.flatMap((group) => group.moments))
+  const years = [...moments].map((moment) => getYear(moment.dateKey))
+
+  return {
+    drivingKm: trips.reduce((total, trip) => total + trip.drivingKm, 0),
+    firstYear: years.length > 0 ? Math.min(...years) : 0,
+    lastYear: years.length > 0 ? Math.max(...years) : 0,
+    moments: moments.size,
+    places: groups.length,
+    trips: trips.length,
+  }
+}
+
+function getYear(dateKey: string) {
+  return Number(dateKey.slice(0, 4))
 }
 
 function toTripPlace(location: MapLocation) {

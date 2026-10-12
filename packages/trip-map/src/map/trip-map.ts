@@ -7,24 +7,35 @@ import { parseJson } from '../player/dom.ts'
 import { getReducedMotionQuery } from '../player/motion.ts'
 import { createTripOverview } from '../player/overview.ts'
 import { createTripPlayer } from '../player/player.ts'
-import type { TripData, TripSummary } from '../player/types.ts'
+import type { MapStats, PlaceMarker, TripData, TripSummary } from '../player/types.ts'
 import { readTheme } from '../theme.ts'
 import { createPlaceDrawer, type LightboxMedia } from './place-drawer.ts'
-import {
-  CLUSTER_MAX_ZOOM,
-  createPlaceMarkers,
-  getAllPlacesView,
-  type PlaceMarker,
-} from './place-markers.ts'
+import { CLUSTER_MAX_ZOOM, createPlaceMarkers, getAllPlacesView } from './place-markers.ts'
 import { captureMap, savePicture } from './screenshot.ts'
 import { defaultUrls, getHistoryState, HISTORY_STATE_KEY, parseHash } from './selection-url.ts'
 
-// The map page: every place with Moments as a dot, each opening a drawer with its
-// Moments; and every trip's route, each opening its playback. The page's own markup
+// The map page: every place with posts as a dot, each opening a drawer with its
+// posts; and every trip's route, each opening its playback. The page's own markup
 // is the site's (see README); this finds its parts by their data attributes, and
 // renders the player's parts into the containers the page gives it.
-//
-// One map per page: closing the page's map is `destroyTripMap`.
+
+/** Something the map couldn't do; the page is told, and carries on. */
+export type TripMapError = {
+  cause?: unknown
+  /** The place or trip concerned. */
+  id?: string
+  kind: 'map' | 'place' | 'trip'
+  message: string
+}
+
+/** A map on a page, until `destroy`. */
+export type TripMap = {
+  /** The trip playing, or loading to play. */
+  readonly activeTripId: string | undefined
+  /** Takes the map down: before the page it's on is replaced. */
+  destroy: () => void
+  readonly page: HTMLElement
+}
 
 export type TripMapOptions = {
   /** Who made a video, on the presentation stage's corner. */
@@ -48,57 +59,47 @@ export type TripMapOptions = {
   getTripId?: ((pathname: string) => string | undefined) | undefined
   /** A trip's page. Default: `/trip/<id>/`. */
   getTripPath?: ((id: string) => string) | undefined
+  /**
+   * The language the basemap's names are shown in, as @mapbox/mapbox-gl-language takes
+   * it (`en`, `ja`, `zh-Hans`…); `false` leaves the basemap as it is. Default: from
+   * the messages' locale.
+   */
+  mapLanguage?: string | false | undefined
   /** The map's own page, which closing a trip goes back to. Default: `/map/`. */
   mapPath?: string | undefined
+  /** A Mapbox style URL, or one for each colour scheme. Default: Mapbox's light and dark. */
+  mapStyle?: string | Readonly<{ dark: string; light: string }> | undefined
   /** Otherwise read from the page's `data-trip-map-token`. */
   mapboxToken?: string | undefined
   /** Words to replace the Chinese defaults with. */
   messages?: Partial<Messages> | undefined
   /** The tracks a video may be set to. */
   music?: readonly MusicTrack[] | undefined
-  /** The element holding the map's markup. Default: the page's `[data-trip-map]`. */
-  page?: HTMLElement | undefined
-  /** The title over a saved screenshot, like `Hyoban 的足迹`. */
-  screenshotTitle: string
-  /** Where a video's viewers can find the trips, on its summary card: `hyoban.cc/trip/`. */
-  siteLine: string
-}
-
-type MapStats = {
-  drivingKm: number
-  firstYear: number
-  lastYear: number
-  moments: number
-  places: number
-  trips: number
+  /** Something couldn't be fetched or shown; the map carries on without it. */
+  onError?: ((error: TripMapError) => void) | undefined
+  /** The element holding the map's markup. */
+  page: HTMLElement
+  /** The places to show. Otherwise read from the page's `[data-trip-map-places]` JSON. */
+  places?: readonly PlaceMarker[] | undefined
+  /** The title over a saved screenshot. Default: the document's title. */
+  screenshotTitle?: string | undefined
+  /** Where a video's viewers can find the trips, on its summary card. Default: the page's host. */
+  siteLine?: string | undefined
+  /** The totals for a screenshot's header. Otherwise read from `[data-trip-map-stats]`. */
+  stats?: MapStats | undefined
+  /** The trip the page opens on, with its data. Otherwise read from `[data-trip-map-trip]`. */
+  trip?: TripData | undefined
+  /** Every trip, for the overview. Otherwise read from `[data-trip-map-trips]`. */
+  trips?: readonly TripSummary[] | undefined
 }
 
 // How long the markers take to fade as a trip opens (see styles.css), before they're
 // taken off the map.
 const MARKER_FADE = 200
-let destroyCurrent: (() => void) | undefined
-let currentPage: HTMLElement | undefined
 
-/**
- * Sets the map up on the page, or takes down the one left from a page without it.
- * Calling it again for the same element while its map is up does nothing.
- */
-export function initializeTripMap(options: TripMapOptions) {
-  const found = options.page ?? document.querySelector<HTMLElement>('[data-trip-map]')
-
-  if (found && found === currentPage && destroyCurrent) {
-    return
-  }
-
-  destroyTripMap()
-
-  if (!found) {
-    return
-  }
-
-  const page: HTMLElement = found
-  currentPage = page
-
+/** Sets the map up on `page`. One map per page: its shortcuts listen on the window. */
+export function createTripMap(options: TripMapOptions): TripMap {
+  const { page } = options
   const messages = resolveMessages(options.messages)
   const urls = {
     getPlaceUrl: options.getPlaceUrl ?? defaultUrls.getPlaceUrl,
@@ -113,10 +114,15 @@ export function initializeTripMap(options: TripMapOptions) {
   const { signal } = controller
   const reducedMotion = getReducedMotionQuery()
   const darkMode = window.matchMedia('(prefers-color-scheme: dark)')
-  const places = parseJson<PlaceMarker[]>(page, '[data-trip-map-places]', [])
-  const trips = parseJson<TripSummary[]>(page, '[data-trip-map-trips]', [])
-  const inlineTrip = parseJson<TripData | null>(page, '[data-trip-map-trip]', null) ?? undefined
+  const places = options.places ?? parseJson<PlaceMarker[]>(page, '[data-trip-map-places]', [])
+  const trips = options.trips ?? parseJson<TripSummary[]>(page, '[data-trip-map-trips]', [])
+  const inlineTrip =
+    options.trip ?? parseJson<TripData | null>(page, '[data-trip-map-trip]', null) ?? undefined
+  const stats =
+    options.stats ?? parseJson<MapStats | undefined>(page, '[data-trip-map-stats]', undefined)
   const documentTitle = options.documentTitle ?? document.title
+  const mapLanguage = options.mapLanguage ?? getMapLanguage(messages.locale)
+  const report = (error: TripMapError) => options.onError?.(error)
   let map: mapboxgl.Map | undefined
   let mapLoaded = false
   let markerTimer: ReturnType<typeof setTimeout> | undefined
@@ -130,9 +136,26 @@ export function initializeTripMap(options: TripMapOptions) {
   const tripPlayer = createTripPlayer({
     brand: options.brand,
     fetchTrip: (id) =>
-      fetch(urls.getTripDataUrl(id), { signal }).then((response) =>
-        response.ok ? (response.json() as Promise<TripData>) : undefined,
-      ),
+      fetch(urls.getTripDataUrl(id), { signal })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`${response.status} ${response.statusText}`)
+          }
+
+          return response.json() as Promise<TripData>
+        })
+        .catch((cause: unknown) => {
+          if (!signal.aborted) {
+            report({
+              cause,
+              id,
+              kind: 'trip',
+              message: `The data of trip "${id}" couldn't be fetched.`,
+            })
+          }
+
+          return undefined
+        }),
     getMap: () => (mapLoaded ? map : undefined),
     inlineTrip,
     messages,
@@ -142,7 +165,7 @@ export function initializeTripMap(options: TripMapOptions) {
     panel: elements.panel,
     shortcuts: elements.shortcuts,
     signal,
-    siteLine: options.siteLine,
+    siteLine: options.siteLine ?? window.location.host,
     stage: elements.stage,
     trips,
   })
@@ -178,6 +201,13 @@ export function initializeTripMap(options: TripMapOptions) {
       clearDrawerPadding()
       markers.setPressed(undefined)
     },
+    onError: (id, cause) =>
+      report({
+        cause,
+        id,
+        kind: 'place',
+        message: `The posts at place "${id}" couldn't be fetched.`,
+      }),
     onOpen: (place, { moveMap }) => {
       markers.setPressed(place.id)
 
@@ -195,7 +225,12 @@ export function initializeTripMap(options: TripMapOptions) {
   }
 
   function getMapStyle() {
-    return `mapbox://styles/mapbox/${darkMode.matches ? 'dark' : 'light'}-v11`
+    const style = options.mapStyle ?? {
+      dark: 'mapbox://styles/mapbox/dark-v11',
+      light: 'mapbox://styles/mapbox/light-v11',
+    }
+
+    return typeof style === 'string' ? style : darkMode.matches ? style.dark : style.light
   }
 
   function isNarrow() {
@@ -405,6 +440,7 @@ export function initializeTripMap(options: TripMapOptions) {
   }
 
   function showFallback(message: string, fallbackOptions: { retry?: boolean } = {}) {
+    report({ kind: 'map', message })
     loading.hidden = true
     fallbackMessage.textContent = message
     fallbackRetry.hidden = !fallbackOptions.retry
@@ -453,7 +489,6 @@ export function initializeTripMap(options: TripMapOptions) {
     }
 
     const theme = readTheme(page)
-    const stats = parseJson<MapStats | undefined>(page, '[data-trip-map-stats]', undefined)
     const number = (value: number) => value.toLocaleString(messages.locale)
 
     screenshotButton.ariaBusy = 'true'
@@ -486,9 +521,12 @@ export function initializeTripMap(options: TripMapOptions) {
           muted: theme.muted,
           text: theme.ink,
         },
-        title: options.screenshotTitle,
+        title: options.screenshotTitle ?? document.title,
       })
-      const day = new Date().toLocaleDateString('en-CA').replaceAll('-', '')
+      const now = new Date()
+      const day = [now.getFullYear(), now.getMonth() + 1, now.getDate()]
+        .map((part) => String(part).padStart(2, '0'))
+        .join('')
 
       loading.hidden = true
       await savePicture(blob, `map-${day}.png`)
@@ -619,9 +657,12 @@ export function initializeTripMap(options: TripMapOptions) {
 
       // The attribution stays folded into its ⓘ button at every width, opening on a click.
       map.addControl(new mapboxgl.AttributionControl({ compact: true }))
-      map.addControl(
-        new MapboxLanguage({ defaultLanguage: 'zh-Hans' }) as unknown as mapboxgl.IControl,
-      )
+
+      if (mapLanguage) {
+        map.addControl(
+          new MapboxLanguage({ defaultLanguage: mapLanguage }) as unknown as mapboxgl.IControl,
+        )
+      }
 
       map.on('style.load', () => {
         applyFog()
@@ -732,30 +773,46 @@ export function initializeTripMap(options: TripMapOptions) {
     }
   }
 
-  destroyCurrent = () => {
-    controller.abort()
+  let destroyed = false
 
-    if (loadTimeout) {
-      clearTimeout(loadTimeout)
-    }
+  return {
+    get activeTripId() {
+      return tripPlayer.activeId
+    },
+    destroy() {
+      if (destroyed) {
+        return
+      }
 
-    if (markerTimer) {
-      clearTimeout(markerTimer)
-    }
+      destroyed = true
+      controller.abort()
 
-    markers.destroy()
-    map?.remove()
-    canvas.replaceChildren()
+      if (loadTimeout) {
+        clearTimeout(loadTimeout)
+      }
 
-    if (currentPage === page) {
-      currentPage = undefined
-    }
+      if (markerTimer) {
+        clearTimeout(markerTimer)
+      }
+
+      markers.destroy()
+      map?.remove()
+      canvas.replaceChildren()
+    },
+    page,
   }
 }
 
-/** Takes the map down if one is up; for before the page it's on is replaced. */
-export function destroyTripMap() {
-  destroyCurrent?.()
-  destroyCurrent = undefined
-  currentPage = undefined
+/** The basemap language for a locale: Chinese by script, anything else by its language. */
+function getMapLanguage(locale: string) {
+  const [language = 'en', ...rest] = locale.split('-')
+  const tags = new Set(rest.map((tag) => tag.toLowerCase()))
+
+  if (language.toLowerCase() === 'zh') {
+    return tags.has('hant') || tags.has('tw') || tags.has('hk') || tags.has('mo')
+      ? 'zh-Hant'
+      : 'zh-Hans'
+  }
+
+  return language.toLowerCase()
 }

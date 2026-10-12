@@ -20,6 +20,7 @@ export function createPlaceDrawer({
   isNarrow,
   messages,
   onClosed,
+  onError,
   onOpen,
   onRestoreFocus,
   reducedMotion,
@@ -34,6 +35,8 @@ export function createPlaceDrawer({
   messages: Messages
   /** The drawer started closing: the map can drop the room it left for it. */
   onClosed: () => void
+  /** A place's content couldn't be fetched. */
+  onError: (id: string, cause: unknown) => void
   /** A place opened; the map may move to it. */
   onOpen: (place: PlaceMarker, options: { moveMap: boolean }) => void
   /** Puts focus back on what opened the drawer. */
@@ -58,17 +61,28 @@ export function createPlaceDrawer({
 
     if (!request) {
       request = fetch(getPlaceUrl(id), { signal })
-        .then((response) => (response.ok ? response.text() : undefined))
-        .catch(() => undefined)
-        .then((text) => {
-          if (text === undefined) {
-            requests.delete(id)
-          } else {
-            html.set(id, text)
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`${response.status} ${response.statusText}`)
           }
 
-          return text
+          return response.text()
         })
+        .then(
+          (text) => {
+            html.set(id, text)
+            return text
+          },
+          (cause: unknown) => {
+            requests.delete(id)
+
+            if (!signal.aborted) {
+              onError(id, cause)
+            }
+
+            return undefined
+          },
+        )
       requests.set(id, request)
     }
 

@@ -21,7 +21,9 @@ function collect<T extends Spec>(root: ParentNode, spec: T, what: string) {
   ) as { [K in keyof T]: Element }
 
   if (missing.length > 0) {
-    throw new Error(`The ${what} is missing ${missing.join(', ')}.`)
+    throw new Error(
+      `The ${what} is missing ${missing.join(', ')}. See https://github.com/hyoban/hyoban.cc/tree/main/packages/trip-map#the-map-page for the markup it needs.`,
+    )
   }
 
   return found

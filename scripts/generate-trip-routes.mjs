@@ -41,7 +41,7 @@ const routes = {}
 let fetched = 0
 
 for (const trip of trips) {
-  for (const leg of buildTrip(trip, moments, resolveLocation).legs) {
+  for (const leg of buildTrip(trip, moments, { resolveLocation }).legs) {
     if (leg.by === 'train') {
       const key = getTrainLegKey(leg.from, leg.to)
 
