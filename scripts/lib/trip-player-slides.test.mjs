@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'vite-plus/test'
 import {
   buildSlides,
+  getClock,
   getPhotoAt,
   getPhotoStarts,
   getSlideDuration,
@@ -162,6 +163,25 @@ test('names slides and stops for labels', () => {
     '第 2 天 · 10月1日 · 14:04',
   )
   assert.equal(getStopEyebrow({ date: '10月1日', day: 2, time: undefined }), '第 2 天 · 10月1日')
+})
+
+test('runs the clock on with the route tip, through midnight into the next day', () => {
+  const points = [
+    { date: '10月1日', day: 2, time: '9:30' },
+    { date: '10月1日', day: 2, time: '22:00' },
+    { date: '10月2日', day: 3, time: '2:00' },
+    { date: '10月2日', day: 3 },
+    { date: '10月4日', day: 5, time: '9:00' },
+  ]
+
+  assert.deepEqual(getClock(points, 0), points[0])
+  assert.equal(getClock(points, 0, 1, 0.5).time, '15:45')
+  assert.deepEqual(getClock(points, 0, 1, 1), points[1])
+  assert.deepEqual(getClock(points, 1, 2, 0.25), { ...points[1], time: '23:00' })
+  assert.deepEqual(getClock(points, 1, 2, 0.75), { ...points[2], time: '1:00' })
+  // Toward a place without a time, or across days whose dates aren't known: no guessing.
+  assert.deepEqual(getClock(points, 2, 3, 0.5), points[2])
+  assert.deepEqual(getClock(points, 2, 4, 0.5), points[2])
 })
 
 test('gives a day with only waypoints its own opener, and drives it while that is up', () => {

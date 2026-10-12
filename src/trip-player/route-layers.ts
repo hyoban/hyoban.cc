@@ -43,7 +43,12 @@ type RoutePiece = {
   segment: number
 }
 
-export function createRouteLayers(getMap: () => MapboxMap | undefined, getColors: () => Colors) {
+/** `headLabel` rides beside the car, ship or plane. */
+export function createRouteLayers(
+  getMap: () => MapboxMap | undefined,
+  getColors: () => Colors,
+  headLabel?: HTMLElement,
+) {
   // What the sources hold now, so frames that don't change them skip the update.
   let shown: {
     line?: readonly Coordinates[] | undefined
@@ -167,7 +172,7 @@ export function createRouteLayers(getMap: () => MapboxMap | undefined, getColors
 
     element.setAttribute('aria-hidden', 'true')
     element.hidden = true
-    element.append(createElement('span', TRAVEL_ICONS.car, ''))
+    element.append(createElement('span', TRAVEL_ICONS.car, ''), ...(headLabel ? [headLabel] : []))
     map.getContainer().append(element)
     // Sub-pixel transforms set as the map draws keep it on the route as the map glides.
     map.on('render', place)

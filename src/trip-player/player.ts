@@ -63,13 +63,14 @@ import {
   getPhotoStarts,
   getSlideDuration,
   getSlideLabel,
+  getClock,
   getStopEyebrow,
   getStopPointEnds,
   getStopPointStart as getPointStart,
   getWaypointsBefore as getWaypointRange,
   type SlideTiming,
 } from './slides'
-import { createIntroCard, createStageHeading, createSummaryCard } from './stage-cards'
+import { createDayHeading, createIntroCard, createSummaryCard } from './stage-cards'
 import { getIntroCovers, getTripMeta } from './intro'
 import type {
   MapLabel,
@@ -173,7 +174,9 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   const stageHeader = queryRequired<HTMLElement>(page, '.calendar-map-trip-stage__header')
   const stageEyebrow = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-stage-eyebrow]')
   const stageTitle = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-stage-title]')
-  const stageHeading = createStageHeading(stageEyebrow, stageTitle)
+  const stageHeading = createDayHeading(stageEyebrow, stageTitle)
+
+  stageHeading.attach()
   const stagePhotos = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-stage-photos]')
   const stagePhotoCard = createStagePhotoCard(stagePhotos)
   const stageCenter = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-stage-center]')
@@ -254,6 +257,11 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
    */
   function readLayout() {
     return {
+      // Labels keep clear of the clock beside the car.
+      avoid:
+        !isStageLayout() && headClock.getClientRects().length > 0
+          ? [headClock.getBoundingClientRect()]
+          : [],
       blocked: readBlocked(),
       container: getMap()?.getContainer().getBoundingClientRect(),
       padding: getCameraPadding(),
@@ -309,10 +317,22 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     getSpeed: () => speed,
     reducedMotion,
   })
-  const layers = createRouteLayers(getMap, () => ({
-    ink: getComputedStyle(page).getPropertyValue('--color-tx').trim() || '#21201c',
-    paper: getComputedStyle(page).getPropertyValue('--color-bg').trim() || '#fdfdfc',
-  }))
+  // On the map, the day and time ride beside the car, ship or plane.
+  const headClock = createElement('div', 'calendar-map-trip-head__clock', '')
+  const headClockDate = createElement('p', 'calendar-map-trip-head__date', '')
+  const headClockTime = createElement('p', 'calendar-map-trip-head__time', '')
+  const headHeading = createDayHeading(headClockDate, headClockTime)
+
+  headClock.append(headClockDate, headClockTime)
+  headHeading.attach()
+  const layers = createRouteLayers(
+    getMap,
+    () => ({
+      ink: getComputedStyle(page).getPropertyValue('--color-tx').trim() || '#21201c',
+      paper: getComputedStyle(page).getPropertyValue('--color-bg').trim() || '#fdfdfc',
+    }),
+    headClock,
+  )
   let frame: number | undefined
   let lastFrameTime: number | undefined
   let legFrame: number | undefined
@@ -495,6 +515,8 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
     partial = piece && { ...piece, from: pointCount - 1 }
     routeTip = walked?.passed.at(-1)
+    // The clock ticks on while the route is drawn, and rolls when it jumps.
+    renderClock({ animate: !piece })
 
     layers.setRoute(
       pointCount,
@@ -508,6 +530,29 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
           }
         : undefined,
     )
+  }
+
+  /** The day and time the route's tip has reached. */
+  function getTipClock() {
+    return partial
+      ? getClock(points, partial.from, partial.to, partial.fraction)
+      : getClock(points, Math.max(drawnPointCount - 1, 0))
+  }
+
+  /**
+   * Brings the clock up to the route's tip: the one beside the car on the map, or the
+   * story layout's heading while a stop is showing.
+   */
+  function renderClock(options: { animate: boolean }) {
+    if (points.length === 0) {
+      return
+    }
+
+    if (!isStageLayout()) {
+      headHeading.set(getTipClock(), options)
+    } else if (slides[index]?.type === 'stop') {
+      stageHeading.set(getTipClock(), options)
+    }
   }
 
   function updateStops() {
@@ -679,18 +724,12 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       return
     }
 
-    // The first place carries the day and time; the card itself shows no title.
-    // Presenting or recording, the header shows those, so labels are just short names.
+    // The heading carries the day and time, so labels are just short names.
     showLabels(
-      slide.stop.places.map((place, placeIndex) =>
-        isStageLayout()
-          ? { coordinates: [place.longitude, place.latitude], name: getShortPlaceName(place.name) }
-          : {
-              coordinates: [place.longitude, place.latitude],
-              name: place.name,
-              ...(placeIndex === 0 ? { eyebrow: getStopEyebrow(slide.stop) } : {}),
-            },
-      ),
+      slide.stop.places.map((place) => ({
+        coordinates: [place.longitude, place.latitude],
+        name: getShortPlaceName(place.name),
+      })),
     )
     frameStop(slide.stopIndex, arrivingFrom)
   }
@@ -718,16 +757,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
       currentWaypointPoint = pointIndex
       updateStops()
-      showLabels([
-        // Presenting or recording, a label is just the place's short name.
-        isStageLayout()
-          ? { coordinates: point.coordinates, name: getShortPlaceName(point.name) }
-          : {
-              coordinates: point.coordinates,
-              name: point.name,
-              ...(point.eyebrow ? { eyebrow: point.eyebrow } : {}),
-            },
-      ])
+      showLabels([{ coordinates: point.coordinates, name: getShortPlaceName(point.name) }])
       camera.follow(getRouteLine(Math.max(pointIndex - 1, 0), pointIndex + 1), STOP_ZOOM)
       await Promise.all([
         drawnPointCount >= pointIndex + 1
@@ -1189,7 +1219,8 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     // next stop's first photo into it (renderStage builds the new one).
     stagePhotoCard.clear()
 
-    // A stop's day, time and place are labelled on the map instead of the card.
+    // A stop's day and time ride with the car and its places are labelled on the map,
+    // so the card shows no heading.
     header.classList.toggle('sr-only', slide.type === 'stop')
     body.classList.toggle('pt-3', slide.type === 'stop')
     previousButton.disabled = index === 0
@@ -1362,8 +1393,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     const { stop } = slide
 
     stageCenter.replaceChildren()
-    // The time sits with the day in the header, so the map's labels can be just names.
-    stageHeading.show(stop)
+    renderClock({ animate: true })
     // The photo card pops up once the camera has arrived at the stop.
     stagePhotoTimer = setTimeout(() => {
       stagePhotoCard.show(stop, slide.stopIndex)
@@ -2049,10 +2079,12 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       waypoint: boolean,
     ): TripPoint => ({
       coordinates: [place.longitude, place.latitude],
-      ...('day' in place ? { day: place.day, eyebrow: getStopEyebrow(place) } : {}),
+      // A stop's places take its day and time; a waypoint has its own.
+      date: 'date' in place ? place.date : nextTrip.stops[stopIndex]!.date,
+      day: 'day' in place ? place.day : nextTrip.stops[stopIndex]!.day,
       name: place.name,
       stopIndex,
-      ...('time' in place && place.time ? { time: place.time } : {}),
+      time: 'day' in place ? place.time : nextTrip.stops[stopIndex]!.time,
       waypoint,
     })
 
