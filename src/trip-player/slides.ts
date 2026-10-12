@@ -225,7 +225,7 @@ export function getSlideLabel(slide: TripSlide<SlideStop>) {
   return slide.type === 'summary' ? '旅程回顾' : `第 ${slide.stop.day} 天 · ${slide.stop.name}`
 }
 
-/** `第 N 天 · date · time`, the line above a place's name. */
+/** `第 N 天 · date · time`, naming a stop for screen readers. */
 export function getStopEyebrow({
   date,
   day,
@@ -236,6 +236,56 @@ export function getStopEyebrow({
   time?: string | undefined
 }) {
   return [`第 ${day} 天`, date, time].filter(Boolean).join(' · ')
+}
+
+export type ClockMoment = { date: string; day: number; time?: string | undefined }
+
+const DAY_MINUTES = 24 * 60
+
+/**
+ * The day and time where the route's tip is: `fraction` of the way from `points[from]`
+ * to `points[to]`, the clock running on between their times, through midnight into
+ * the next day. Between places without a time, or across more than a night (whose
+ * dates in between aren't known), it keeps the departure's until it arrives.
+ */
+export function getClock(
+  points: readonly ClockMoment[],
+  from: number,
+  to = from,
+  fraction = 0,
+): ClockMoment {
+  const departure = points[from]!
+  const arrival = points[to] ?? departure
+
+  if (fraction >= 1) {
+    return arrival
+  }
+
+  const nights = arrival.day - departure.day
+  const start = toMinutes(departure.time)
+  const end = toMinutes(arrival.time)
+
+  if (
+    fraction <= 0 ||
+    start === undefined ||
+    end === undefined ||
+    nights < 0 ||
+    nights > 1 ||
+    end + nights * DAY_MINUTES < start
+  ) {
+    return departure
+  }
+
+  const minutes = Math.floor(start + (end + nights * DAY_MINUTES - start) * fraction)
+  const clock = minutes % DAY_MINUTES
+  const time = `${Math.floor(clock / 60)}:${String(clock % 60).padStart(2, '0')}`
+
+  return { ...(minutes >= DAY_MINUTES ? arrival : departure), time }
+}
+
+function toMinutes(time: string | undefined) {
+  const parts = /^(\d{1,2}):(\d{2})$/.exec(time ?? '')
+  return parts ? Number(parts[1]) * 60 + Number(parts[2]) : undefined
 }
 
 /** Index of a stop's first route point (its first waypoint, or else its first place). */

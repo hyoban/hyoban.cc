@@ -41,10 +41,10 @@ export function createMapLabels({
   getMarkers,
 }: {
   /**
-   * The map's box, and the cards and controls over it that labels keep out from under,
-   * in viewport pixels.
+   * The map's box, the cards and controls over it that labels keep out from under, and
+   * other boxes they keep clear of, in viewport pixels.
    */
-  getLayout: () => { blocked: DOMRect[]; container: DOMRect | undefined }
+  getLayout: () => { avoid: DOMRect[]; blocked: DOMRect[]; container: DOMRect | undefined }
   getMap: () => MapboxMap | undefined
   getMarkers: () => LabelMarker[]
 }) {
@@ -81,10 +81,13 @@ export function createMapLabels({
       top: EDGE,
     }
     const blocked = layout.blocked.map(toLocal)
-    const avoid: Rect[] = getMarkers().map(({ coordinates, radius }) => {
-      const { x, y } = map.project([coordinates[0], coordinates[1]])
-      return { bottom: y + radius, left: x - radius, right: x + radius, top: y - radius }
-    })
+    const avoid: Rect[] = [
+      ...getMarkers().map(({ coordinates, radius }) => {
+        const { x, y } = map.project([coordinates[0], coordinates[1]])
+        return { bottom: y + radius, left: x - radius, right: x + radius, top: y - radius }
+      }),
+      ...layout.avoid.map(toLocal),
+    ]
     const glide = 1 - Math.exp(-seconds / GLIDE)
     let gliding = false
 
@@ -162,12 +165,8 @@ export function createMapLabels({
     preferred = options.alignLeft
       ? ['top-right', 'top', 'right', 'bottom-right', 'top-left', 'bottom', 'left', 'bottom-left']
       : ['top', 'top-right', 'top-left', 'bottom', 'right', 'left', 'bottom-right', 'bottom-left']
-    labels = next.map(({ coordinates, eyebrow, name }) => {
+    labels = next.map(({ coordinates, name }) => {
       const element = createElement('div', 'calendar-map-trip-label', '')
-
-      if (eyebrow) {
-        element.append(createElement('p', 'text-[0.6875rem] text-tx-3 tabular-nums', eyebrow))
-      }
 
       element.append(createElement('p', 'text-sm font-medium', name))
       // Starts hidden and fades in once its place is on screen.

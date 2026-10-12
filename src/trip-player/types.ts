@@ -17,18 +17,16 @@ export type TripSummary = ReturnType<typeof getTripSummary>
 /** One place the route runs through, a stop's own place or a waypoint before it. */
 export type TripPoint = {
   coordinates: [number, number]
-  /** The trip day a waypoint was passed on. */
-  day?: number
-  /** `第 N 天 · date · time`, shown above a waypoint's name on the map. */
-  eyebrow?: string
+  /** When the route passes it: a stop's own day and time, or the waypoint's. */
+  date: string
+  day: number
   name: string
   stopIndex: number
-  time?: string
+  time?: string | undefined
   waypoint: boolean
 }
 
 export type MapLabel = {
   coordinates: [number, number]
-  eyebrow?: string
   name: string
 }
