@@ -1,28 +1,30 @@
 ---
 occurredAt: '2026-06-19'
-location: xuchang
+location:
+  - xuchang-pangdonglai-times-square
+  - xuchang-caowei-ancient-city
 media:
   - type: image
     file: duan-wu-zi-jia-xu-chang-pian.jpg
-    alt: ''
+    alt: Shoppers outside the Pangdonglai Times Square department store.
   - type: image
     file: duan-wu-zi-jia-xu-chang-pian-2.jpg
-    alt: ''
+    alt: A shopping cart holding tissues, juice, and beef jerky.
   - type: image
     file: duan-wu-zi-jia-xu-chang-pian-3.jpg
-    alt: ''
+    alt: A smart restroom display showing free stalls and air quality.
   - type: image
     file: duan-wu-zi-jia-xu-chang-pian-4.jpg
-    alt: ''
+    alt: Rows of grilled sausages behind a priced display counter.
   - type: image
     file: duan-wu-zi-jia-xu-chang-pian-5.jpg
-    alt: ''
+    alt: A lantern hanging from the eaves of a gate at Caowei Ancient City.
   - type: image
     file: duan-wu-zi-jia-xu-chang-pian-6.jpg
-    alt: ''
+    alt: Neon food stall signs advertising squid and meter-long skewers.
   - type: image
     file: duan-wu-zi-jia-xu-chang-pian-7.jpg
-    alt: ''
+    alt: A Lemon Town tricycle cart selling Chongqing glutinous rice cakes.
 ---
 
 2026 w25 端午自驾 许昌篇

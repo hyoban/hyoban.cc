@@ -1,6 +1,8 @@
 ---
 occurredAt: '2026-08-29T15:37:28+08:00'
-location: yushan-lake
+location:
+  - maanshan-rail-coffee
+  - yushan-lake
 media:
   - type: image
     file: maanshan-walk-and-food.webp

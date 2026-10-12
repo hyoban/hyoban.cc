@@ -1,5 +1,8 @@
 ---
 occurredAt: '2026-09-06T22:40:35+08:00'
+location:
+  - wuhu-intime-inpark
+  - nanjing-kinglomo-ifcx
 media:
   - type: image
     file: weekend-food-queues.webp

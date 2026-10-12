@@ -1,6 +1,8 @@
 ---
 occurredAt: '2026-10-02T11:30:00+08:00'
-location: bangchuidao
+location:
+  - bangchuidao
+  - dalian-datongjie-tram-stop
 media:
   - type: live-photo
     file: bangchuidao-seaside-live-1.webp

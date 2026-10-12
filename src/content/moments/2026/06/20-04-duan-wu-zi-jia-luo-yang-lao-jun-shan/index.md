@@ -1,31 +1,33 @@
 ---
 occurredAt: '2026-06-20'
-location: laojunshan
+location:
+  - jiguan-cave
+  - laojunshan
 media:
   - type: image
     file: duan-wu-zi-jia-luo-yang-lao-jun-shan.jpg
-    alt: ''
+    alt: Colorfully lit stalactites inside Jiguan Cave.
   - type: image
     file: duan-wu-zi-jia-luo-yang-lao-jun-shan-2.jpg
-    alt: ''
+    alt: A tunnel walkway glowing in blue and orange light.
   - type: image
     file: duan-wu-zi-jia-luo-yang-lao-jun-shan-3.jpg
-    alt: ''
+    alt: Red and blue apple-shaped wishing tags tied to a rope.
   - type: image
     file: duan-wu-zi-jia-luo-yang-lao-jun-shan-4.jpg
-    alt: ''
+    alt: A squirrel foraging on a rock slope.
   - type: image
     file: duan-wu-zi-jia-luo-yang-lao-jun-shan-5.jpg
-    alt: ''
+    alt: Red wishing tags hanging from a pine branch above misty cliffs.
   - type: image
     file: duan-wu-zi-jia-luo-yang-lao-jun-shan-6.jpg
-    alt: ''
+    alt: Red temple halls and a pagoda beside a rocky peak on Laojunshan.
   - type: image
     file: duan-wu-zi-jia-luo-yang-lao-jun-shan-7.jpg
-    alt: ''
+    alt: The golden-roofed Jinding hall on the summit of Laojunshan.
   - type: image
     file: duan-wu-zi-jia-luo-yang-lao-jun-shan-8.jpg
-    alt: ''
+    alt: Golden eaves and bells on a summit temple roof.
 ---
 
 2026 w25 端午自驾 洛阳老君山

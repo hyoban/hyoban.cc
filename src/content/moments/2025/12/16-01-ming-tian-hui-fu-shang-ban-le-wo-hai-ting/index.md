@@ -1,6 +1,6 @@
 ---
 occurredAt: '2025-12-16T14:25:56+08:00'
-location: suzhou
+location: suzhou-guanyu-dushu-lake
 media: []
 ---
 

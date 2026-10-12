@@ -1,6 +1,8 @@
 ---
 occurredAt: '2026-07-18'
-location: hefei-binhu
+location:
+  - hefei-qianxun-shaorou
+  - hefei-yangjia-huoguo
 media:
   - type: image
     file: hefei-food.webp
