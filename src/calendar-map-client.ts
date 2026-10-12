@@ -1,5 +1,5 @@
 import MapboxLanguage from '@mapbox/mapbox-gl-language'
-import mapboxgl, { type PaddingOptions } from 'mapbox-gl'
+import mapboxgl, { type GeoJSONSource, type PaddingOptions } from 'mapbox-gl'
 import { SITE_TITLE } from './consts'
 import { createPopupContent, MAP_POPUP_CLASS, parseJson } from './trip-player/dom'
 import { createTripOverview } from './trip-player/overview'
@@ -25,6 +25,11 @@ type MarkerEntry = {
   popup: mapboxgl.Popup
 }
 
+type ClusterMarkerEntry = {
+  marker: mapboxgl.Marker
+  popup: mapboxgl.Popup
+}
+
 type MapStats = {
   drivingKm: number
   firstYear: number
@@ -35,13 +40,13 @@ type MapStats = {
 }
 
 const HISTORY_STATE_KEY = 'calendarMapSelection'
-// Below this zoom, each place is a small dot without its count, so the crowded parts
-// of the map stay readable; the count is in its name on hover.
-const FAR_ZOOM = 5.5
 const MAP_PATH = '/map/'
 const TRIP_PATH_PATTERN = /^\/trip\/([^/]+)\/?$/
-// Opening a place zooms in at least this far, close enough to tell it from its neighbours.
-const PLACE_ZOOM = 10
+const LOCATION_INDEX_LAYER_ID = 'calendar-location-index'
+const LOCATION_SOURCE_ID = 'calendar-locations'
+const LOCATION_CLUSTER_MAX_ZOOM = 9
+// How close on screen, in pixels, places are gathered into one cluster.
+const LOCATION_CLUSTER_RADIUS = 20
 // How long the markers take to fade as a trip opens (see index.css), before they're
 // taken off the map.
 const MARKER_FADE = 200
@@ -90,9 +95,12 @@ export function initializeCalendarMap() {
   const locations = parseMarkerData(dataElement)
   const locationsById = new Map(locations.map((location) => [location.id, location]))
   // Each place's drawer content, fetched from /map/place/<id>/ the first time it's needed.
+  // A cluster takes the colour of its latest year, like a place does.
+  const yearColors = new Map(locations.map((location) => [location.latestYear, location.color]))
   const placeHtml = new Map<string, string>()
   const placeRequests = new Map<string, Promise<string | undefined>>()
   const markers = new Map<string, MarkerEntry>()
+  const clusterMarkers = new Map<number, ClusterMarkerEntry>()
   const darkMode = window.matchMedia('(prefers-color-scheme: dark)')
   const tripPlayer = createTripPlayer({
     getMap: () => (mapLoaded ? map : undefined),
@@ -202,7 +210,7 @@ export function initializeCalendarMap() {
       center: [location.longitude, location.latitude],
       duration: getAnimationDuration(),
       padding: getDrawerPadding(),
-      zoom: Math.max(map.getZoom(), PLACE_ZOOM),
+      zoom: Math.max(map.getZoom(), LOCATION_CLUSTER_MAX_ZOOM + 1),
     })
   }
 
@@ -342,7 +350,7 @@ export function initializeCalendarMap() {
 
   /**
    * Opening a place leaves the map padded for the drawer, which would keep later moves
-   * off centre once it's gone. Drops the padding without
+   * (a cluster opening, say) off centre once it's gone. Drops the padding without
    * moving what's on screen.
    */
   function clearDrawerPadding() {
@@ -379,6 +387,12 @@ export function initializeCalendarMap() {
   function setMarkersHidden(hidden: boolean) {
     for (const marker of markers.values()) {
       setMarkerShown(marker, !hidden)
+    }
+
+    if (hidden) {
+      clearClusterMarkers()
+    } else {
+      syncClusterMarkers()
     }
   }
 
@@ -645,7 +659,7 @@ export function initializeCalendarMap() {
     }
   }
 
-  /** A place's, cluster's or city's name on hover, styled like a route's. */
+  /** A place's or cluster's name on hover, styled like a route's. */
   function createPlacePopup(offset: number, meta: string, title: string) {
     return new mapboxgl.Popup({
       className: MAP_POPUP_CLASS,
@@ -654,6 +668,202 @@ export function initializeCalendarMap() {
       focusAfterOpen: false,
       offset,
     }).setDOMContent(createPopupContent({ meta, title }))
+  }
+
+  function createLocationIndex() {
+    if (!map || map.getSource(LOCATION_SOURCE_ID)) {
+      return
+    }
+
+    clearClusterMarkers()
+
+    for (const marker of markers.values()) {
+      setMarkerShown(marker, true)
+    }
+
+    map.addSource(LOCATION_SOURCE_ID, {
+      cluster: true,
+      clusterMaxZoom: LOCATION_CLUSTER_MAX_ZOOM,
+      clusterProperties: {
+        latestYear: ['max', ['get', 'latestYear']],
+        momentCount: ['+', ['get', 'count']],
+      },
+      clusterRadius: LOCATION_CLUSTER_RADIUS,
+      data: {
+        features: locations.map((location) => ({
+          geometry: {
+            coordinates: [location.longitude, location.latitude],
+            type: 'Point' as const,
+          },
+          properties: {
+            count: location.count,
+            id: location.id,
+            latestYear: location.latestYear,
+          },
+          type: 'Feature' as const,
+        })),
+        type: 'FeatureCollection',
+      },
+      type: 'geojson',
+    })
+    map.addLayer({
+      id: LOCATION_INDEX_LAYER_ID,
+      paint: {
+        'circle-opacity': 0,
+        'circle-radius': 1,
+      },
+      source: LOCATION_SOURCE_ID,
+      type: 'circle',
+    })
+  }
+
+  function clearClusterMarkers() {
+    for (const cluster of clusterMarkers.values()) {
+      cluster.popup.remove()
+      cluster.marker.remove()
+    }
+
+    clusterMarkers.clear()
+  }
+
+  function syncClusterMarkers() {
+    if (
+      tripPlayer.activeId ||
+      !map ||
+      !mapLoaded ||
+      !map.getSource(LOCATION_SOURCE_ID) ||
+      !map.isSourceLoaded(LOCATION_SOURCE_ID)
+    ) {
+      return
+    }
+
+    const visibleLocationIds = new Set<string>()
+    const clusters = new Map<
+      number,
+      {
+        coordinates: [number, number]
+        latestYear: number
+        locationCount: number
+        momentCount: number
+      }
+    >()
+
+    for (const feature of map.queryRenderedFeatures({ layers: [LOCATION_INDEX_LAYER_ID] })) {
+      if (feature.geometry.type !== 'Point') {
+        continue
+      }
+
+      const properties = feature.properties ?? {}
+
+      if (properties.cluster) {
+        const id = Number(properties.cluster_id)
+        const coordinates = feature.geometry.coordinates
+
+        if (Number.isFinite(id) && coordinates.length >= 2) {
+          clusters.set(id, {
+            coordinates: [coordinates[0]!, coordinates[1]!],
+            latestYear: Number(properties.latestYear) || 0,
+            locationCount: Number(properties.point_count) || 0,
+            momentCount: Number(properties.momentCount) || 0,
+          })
+        }
+      } else if (typeof properties.id === 'string') {
+        visibleLocationIds.add(properties.id)
+      }
+    }
+
+    for (const [id, marker] of markers) {
+      setMarkerShown(marker, visibleLocationIds.has(id))
+    }
+
+    // A cluster's id stands for the same places at the same spot, so the ones still
+    // shown are kept: a focused cluster keeps its focus, and a hovered one its name.
+    for (const [id, cluster] of clusterMarkers) {
+      if (!clusters.has(id)) {
+        cluster.popup.remove()
+        cluster.marker.remove()
+        clusterMarkers.delete(id)
+      }
+    }
+
+    for (const [id, cluster] of clusters) {
+      if (!clusterMarkers.has(id)) {
+        clusterMarkers.set(id, createClusterMarker(map, id, cluster))
+      }
+    }
+  }
+
+  function createClusterMarker(
+    map: mapboxgl.Map,
+    id: number,
+    cluster: {
+      coordinates: [number, number]
+      latestYear: number
+      locationCount: number
+      momentCount: number
+    },
+  ): ClusterMarkerEntry {
+    const button = document.createElement('button')
+    const dot = document.createElement('span')
+    const popup = createPlacePopup(
+      16,
+      `${cluster.momentCount} 条记录`,
+      `${cluster.locationCount} 个地点`,
+    )
+
+    button.type = 'button'
+    button.className =
+      'calendar-map-cluster group flex size-11 cursor-pointer items-center justify-center border-0 bg-transparent p-0 focus-visible:outline-none'
+    button.setAttribute(
+      'aria-label',
+      `${cluster.locationCount} 个地点，共 ${cluster.momentCount} 条记录`,
+    )
+    button.style.setProperty(
+      '--marker-color',
+      yearColors.get(cluster.latestYear) ?? 'var(--color-tx)',
+    )
+    dot.className =
+      'flex h-6 min-w-6 items-center justify-center rounded-full border-2 border-white/95 bg-[var(--marker-color)] px-1.5 font-mono text-[0.6875rem] font-semibold text-white shadow-[0_0.25rem_1rem_rgb(0_0_0/0.28),0_0_0_1px_rgb(0_0_0/0.12)] transition-transform duration-[160ms] group-hover:scale-110 group-focus-visible:scale-110 motion-reduce:transition-none'
+    dot.setAttribute('aria-hidden', 'true')
+    dot.textContent = String(cluster.momentCount)
+    button.append(dot)
+
+    const showPopup = () => popup.setLngLat(cluster.coordinates).addTo(map)
+    const hidePopup = () => popup.remove()
+
+    button.addEventListener('mouseenter', showPopup, { signal })
+    button.addEventListener('mouseleave', hidePopup, { signal })
+    button.addEventListener('focus', showPopup, { signal })
+    button.addEventListener('blur', hidePopup, { signal })
+    button.addEventListener(
+      'click',
+      (event) => {
+        event.stopPropagation()
+        hidePopup()
+
+        const source = map.getSource(LOCATION_SOURCE_ID) as GeoJSONSource | undefined
+        source?.getClusterExpansionZoom(id, (error, zoom) => {
+          if (error || zoom == null) {
+            return
+          }
+
+          framedOnAll = false
+          map.easeTo({
+            center: cluster.coordinates,
+            duration: getAnimationDuration(),
+            zoom,
+          })
+        })
+      },
+      { signal },
+    )
+
+    const marker = new mapboxgl.Marker({ anchor: 'center', element: button })
+      .setLngLat(cluster.coordinates)
+      .addTo(map)
+    button.setAttribute('role', 'button')
+
+    return { marker, popup }
   }
 
   function showLightboxItem(index: number) {
@@ -905,6 +1115,7 @@ export function initializeCalendarMap() {
 
       map.on('style.load', () => {
         applyFog()
+        createLocationIndex()
         tripOverview.add()
         tripPlayer.restoreLayers()
 
@@ -934,10 +1145,8 @@ export function initializeCalendarMap() {
           framedOnAll = false
         }
       })
-      // Marks a far-out view, where the dots shrink (see index.css).
-      const markFar = () => page.toggleAttribute('data-map-far', map!.getZoom() < FAR_ZOOM)
-      markFar()
-      map.on('zoom', markFar)
+      map.on('idle', syncClusterMarkers)
+      map.on('moveend', syncClusterMarkers)
       map.on('load', () => {
         mapLoaded = true
 
@@ -959,6 +1168,7 @@ export function initializeCalendarMap() {
         }
 
         applyFog()
+        syncClusterMarkers()
 
         const hashLocationId = getHashLocationId()
 
@@ -1011,6 +1221,8 @@ export function initializeCalendarMap() {
       marker.popup.remove()
       marker.marker.remove()
     }
+
+    clearClusterMarkers()
 
     map?.remove()
     canvas.replaceChildren()
