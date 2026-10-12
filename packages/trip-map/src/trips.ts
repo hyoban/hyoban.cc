@@ -1,4 +1,4 @@
-import { getDistanceKm as getCoordinateDistanceKm } from './geo.ts'
+import { getDistanceKm } from './geo.ts'
 import type { MapLocation } from './locations.ts'
 
 /**
@@ -167,15 +167,21 @@ export function defineTrips<const T extends readonly TripDefinition[]>(trips: T)
   return trips
 }
 
+export type BuildTripOptions = {
+  /** The place a location id names. */
+  resolveLocation: (id: string) => TripLocation
+  /** Cached routes by `getLegKey` or `getTrainLegKey`; a leg without one is drawn straight. */
+  routes?: Readonly<Record<string, TripRoute>> | undefined
+}
+
 /**
  * Collects the located moments inside a trip's date range and threads the trip's
  * waypoints between them by time. `moments` must be sorted oldest first.
  */
 export function buildTrip<T extends TripMoment>(
   trip: TripDefinition,
-  moments: T[],
-  resolveLocation: (id: string) => TripLocation,
-  routes: Readonly<Record<string, TripRoute>> = {},
+  moments: readonly T[],
+  { resolveLocation, routes = {} }: BuildTripOptions,
 ): Trip<T> {
   const waypoints: (TripWaypoint & { at: string })[] = []
 
@@ -308,11 +314,6 @@ export function getDayPlaces<T extends TripMoment>(trip: Trip<T>) {
   }
 
   return places
-}
-
-/** Great-circle distance between two places. */
-export function getDistanceKm(from: MapLocation, to: MapLocation) {
-  return getCoordinateDistanceKm([from.longitude, from.latitude], [to.longitude, to.latitude])
 }
 
 export function getDayOffset(start: string, dateKey: string) {

@@ -18,7 +18,7 @@ const weather = {}
 let fetched = 0
 
 for (const trip of trips) {
-  for (const [dateKey, place] of getDayPlaces(buildTrip(trip, moments, resolveLocation))) {
+  for (const [dateKey, place] of getDayPlaces(buildTrip(trip, moments, { resolveLocation }))) {
     const key = getWeatherKey(dateKey, place)
 
     if (cached[key]) {

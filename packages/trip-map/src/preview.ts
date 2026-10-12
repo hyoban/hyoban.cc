@@ -22,7 +22,7 @@ export type PreviewTrip = Readonly<{
     by: TravelMode
     route?: Readonly<{ coordinates: readonly (readonly [number, number])[] }> | undefined
   }>[]
-  path: readonly Readonly<{ id: string; latitude: number; longitude: number }>[]
+  path: readonly Readonly<{ latitude: number; longitude: number }>[]
 }>
 
 export type PreviewOptions = Readonly<{
@@ -38,7 +38,7 @@ export type PreviewOptions = Readonly<{
 // The share image and the thumbnail are rendered separately; the cover is fetched once.
 const coverPhotos = new Map<string, Promise<Buffer | undefined>>()
 
-/** The preview as a PNG. */
+/** The preview as PNG bytes. */
 export async function renderTripPreview(trip: PreviewTrip, options: PreviewOptions = {}) {
   const { cover, lineScale = 1, theme = 'light' } = options
   const colors = options.colors?.[theme] ?? COLORS[theme]
@@ -58,12 +58,14 @@ export async function renderTripPreview(trip: PreviewTrip, options: PreviewOptio
     })
   }
 
-  return sharp({
+  const png = await sharp({
     create: { background: colors.background, channels: 3, height: HEIGHT, width: WIDTH },
   })
     .composite(layers)
     .png()
     .toBuffer()
+
+  return new Uint8Array(png.buffer, png.byteOffset, png.byteLength)
 }
 
 function loadCoverPhoto(src: string | undefined) {
@@ -142,7 +144,10 @@ function getRouteSvg(
     const to = trip.path[index + 1]!
 
     if (leg.by !== 'car') {
-      const ends = [from.id, to.id].sort().join(' ')
+      const ends = [from, to]
+        .map((place) => `${place.longitude},${place.latitude}`)
+        .sort()
+        .join(' ')
 
       if (straightLegs.has(ends)) {
         continue

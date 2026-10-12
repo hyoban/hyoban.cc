@@ -3,7 +3,7 @@
    README). The theme comes from the --color-bg, --color-border, --color-inline,
    --color-tx, --color-tx-2 and --color-tx-3 custom properties of the page, and the
    numbers from --font-mono when the page sets it. */
-@import 'mapbox-gl/dist/mapbox-gl.css' layer(components);
+@import 'mapbox-gl/dist/mapbox-gl.css';
 
 /* The cards and the mosaic adapt to the page's width, not the viewport's. */
 .trip-map-page {

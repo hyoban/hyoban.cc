@@ -19,6 +19,45 @@ export type TripImage = {
   width: number
 }
 
+/**
+ * An image as a site gives it to `shapeTripData`: at least its `src` and size. Without
+ * `srcset` the one source serves every width, and without `thumbnail` the thumbnails
+ * load the image itself.
+ */
+export type TripImageInput = {
+  alt?: string | undefined
+  height: number
+  src: string
+  srcset?: string | undefined
+  thumbnail?: string | undefined
+  video?: string | undefined
+  width: number
+}
+
+/** A place with posts, as the map page lists them (see `getPlaceMarkers`). */
+export type PlaceMarker = {
+  color: string
+  /** Posts there. */
+  count: number
+  id: string
+  latestYear: number
+  latitude: number
+  longitude: number
+  name: string
+  /** The years it has posts in, newest first. */
+  years: number[]
+}
+
+/** The totals a screenshot of the map puts in its header (see `getMapStats`). */
+export type MapStats = {
+  drivingKm: number
+  firstYear: number
+  lastYear: number
+  moments: number
+  places: number
+  trips: number
+}
+
 export type TripPlace = { latitude: number; longitude: number; name: string }
 
 /** A place passed on the way to a stop, and when the route passed it. */

@@ -95,9 +95,17 @@ const CARD_POP = 400
 // The address bar follows the playing card so it can be shared, but reloading the page
 // should start the trip over rather than resume mid-way. Only the first trip started
 // after a reload ignores the card; links followed later in the same page still work.
-let reloadPending =
-  (performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined)
-    ?.type === 'reload'
+let reloadPending: boolean | undefined
+
+function takeReload() {
+  reloadPending ??=
+    (performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined)
+      ?.type === 'reload'
+
+  const reloaded = reloadPending
+  reloadPending = false
+  return reloaded
+}
 
 export function createTripPlayer(options: TripPlayerOptions) {
   const { getMap, messages, onClose, page, signal, siteLine } = options
@@ -577,7 +585,7 @@ export function createTripPlayer(options: TripPlayerOptions) {
     const action = playing ? messages.pause : messages.play
 
     panel.play.setAttribute('aria-label', action)
-    panel.play.title = t(messages, 'playShortcut', { action })
+    panel.play.title = t(messages, 'withKey', { action, key: messages.keySpace })
     setButtonIcon(panel.play, playing ? 'pause' : 'play')
     // The toolbar steps aside while playing and returns when paused or finished.
     page.toggleAttribute('data-trip-map-playing', playing)
@@ -643,7 +651,7 @@ export function createTripPlayer(options: TripPlayerOptions) {
 
   /** The slide a shared link names, or the first; a reload starts the trip over. */
   function getHashSlideIndex() {
-    const reloaded = reloadPending
+    const reloaded = takeReload()
     let anchor = ''
 
     try {
@@ -651,8 +659,6 @@ export function createTripPlayer(options: TripPlayerOptions) {
     } catch {
       // A malformed hash names no card; the trip starts from the beginning.
     }
-
-    reloadPending = false
 
     return reloaded || !trip ? 0 : findAnchorSlide(slides, trip.stops, anchor)
   }

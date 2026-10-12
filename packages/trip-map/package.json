@@ -1,10 +1,30 @@
 {
   "name": "@hyoban/trip-map",
-  "version": "0.0.0",
-  "description": "A map of the places a site's Moments were written at, and a player that replays its trips along their routes, on Mapbox.",
+  "version": "0.1.0",
+  "description": "A map of the places your posts were written at, and a player that replays your trips along their routes, on Mapbox GL JS.",
+  "keywords": [
+    "map",
+    "mapbox",
+    "mapbox-gl",
+    "player",
+    "route",
+    "timeline",
+    "travel",
+    "trip"
+  ],
+  "homepage": "https://github.com/hyoban/hyoban.cc/tree/main/packages/trip-map#readme",
+  "bugs": "https://github.com/hyoban/hyoban.cc/issues",
+  "license": "MIT",
+  "author": "Stephen Zhou",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hyoban/hyoban.cc.git",
+    "directory": "packages/trip-map"
+  },
   "files": [
     "dist",
-    "src"
+    "CHANGELOG.md",
+    "LICENSE"
   ],
   "type": "module",
   "exports": {
@@ -16,26 +36,41 @@
     "./package.json": "./package.json"
   },
   "publishConfig": {
+    "main": "./dist/index.mjs",
+    "types": "./dist/index.d.mts",
     "exports": {
-      ".": "./dist/index.mjs",
-      "./client": "./dist/client.mjs",
-      "./dom": "./dist/dom.mjs",
-      "./preview": "./dist/preview.mjs",
+      ".": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "./client": {
+        "types": "./dist/client.d.mts",
+        "default": "./dist/client.mjs"
+      },
+      "./dom": {
+        "types": "./dist/dom.d.mts",
+        "default": "./dist/dom.mjs"
+      },
+      "./preview": {
+        "types": "./dist/preview.d.mts",
+        "default": "./dist/preview.mjs"
+      },
       "./styles.css": "./dist/styles.css",
       "./package.json": "./package.json"
     }
   },
   "scripts": {
-    "build": "vp pack",
+    "build": "vp pack && node scripts/build-styles.mjs",
     "test": "vp test"
   },
   "dependencies": {
     "@mapbox/mapbox-gl-language": "^1.0.1",
     "@types/geojson": "^7946.0.16",
     "mapbox-gl": "^3.29.0",
-    "number-flow": "^0.6.2"
+    "number-flow": "~0.6.2"
   },
   "devDependencies": {
+    "happy-dom": "^20.0.0",
     "sharp": "^0.35.4",
     "vite-plus": "catalog:"
   },
@@ -46,5 +81,8 @@
     "sharp": {
       "optional": true
     }
+  },
+  "engines": {
+    "node": ">=20"
   }
 }

@@ -27,7 +27,7 @@ const moments = [
   },
   { dateKey: '2026-08-02', id: 'm2', locations: [rizhao], occurredAt: '2026-08-02' },
 ]
-const trip = buildTrip(definition, moments, resolve)
+const trip = buildTrip(definition, moments, { resolveLocation: resolve })
 
 test('shapes a built trip into what the player plays', () => {
   const data = shapeTripData(trip, {

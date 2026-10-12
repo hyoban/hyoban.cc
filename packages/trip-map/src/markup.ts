@@ -48,7 +48,7 @@ export function renderTripPanel({
     `<footer class="trip-map-panel__footer">` +
     `<div class="trip-map-panel__controls" data-trip-map-controls>` +
     button(
-      `data-trip-map-previous aria-label="${escape(messages.previous)}" aria-keyshortcuts="ArrowLeft" title="${escape(messages.previous)}（←）"`,
+      `data-trip-map-previous aria-label="${escape(messages.previous)}" aria-keyshortcuts="ArrowLeft" title="${escape(t(messages, 'withKey', { action: messages.previous, key: '←' }))}"`,
       'chevron-left',
     ) +
     button(
@@ -56,26 +56,26 @@ export function renderTripPanel({
       'pause',
     ) +
     button(
-      `data-trip-map-next aria-label="${escape(messages.next)}" aria-keyshortcuts="ArrowRight" title="${escape(messages.next)}（→）"`,
+      `data-trip-map-next aria-label="${escape(messages.next)}" aria-keyshortcuts="ArrowRight" title="${escape(t(messages, 'withKey', { action: messages.next, key: '→' }))}"`,
       'chevron-right',
     ) +
     `</div>` +
     `<div class="trip-map-panel__actions" data-trip-map-actions>` +
     `<button class="trip-map-panel__button trip-map-panel__speed" type="button" data-trip-map-speed aria-label="${escape(t(messages, 'playbackSpeed', { speed: 1 }))}" aria-keyshortcuts="- =">1×</button>` +
     button(
-      `data-trip-map-music aria-label="${escape(messages.music)}" aria-pressed="false" aria-keyshortcuts="M" title="${escape(messages.music)}（M）"`,
+      `data-trip-map-music aria-label="${escape(messages.music)}" aria-pressed="false" aria-keyshortcuts="M" title="${escape(t(messages, 'withKey', { action: messages.music, key: 'M' }))}"`,
       'volume-x',
     ) +
     button(
-      `data-trip-map-present aria-label="${escape(messages.present)}" aria-keyshortcuts="F" title="${escape(messages.present)}（F）"`,
+      `data-trip-map-present aria-label="${escape(messages.present)}" aria-keyshortcuts="F" title="${escape(t(messages, 'withKey', { action: messages.present, key: 'F' }))}"`,
       'tv',
     ) +
     button(
-      `data-trip-map-export aria-label="${escape(messages.exportVideo)}" aria-keyshortcuts="R" title="${escape(messages.exportVideo)}（R）" hidden`,
+      `data-trip-map-export aria-label="${escape(messages.exportVideo)}" aria-keyshortcuts="R" title="${escape(t(messages, 'withKey', { action: messages.exportVideo, key: 'R' }))}" hidden`,
       'clapperboard',
     ) +
     button(
-      `data-trip-map-close aria-label="${escape(messages.closePlayback)}" aria-keyshortcuts="Escape" title="${escape(messages.closePlayback)}（Esc）"`,
+      `data-trip-map-close aria-label="${escape(messages.closePlayback)}" aria-keyshortcuts="Escape" title="${escape(t(messages, 'withKey', { action: messages.closePlayback, key: messages.keyEscape }))}"`,
       'x',
     ) +
     `</div>` +
@@ -128,7 +128,7 @@ export function renderTripStage({
     `<div class="trip-map-stage__safe" data-trip-map-stage-safe aria-hidden="true"></div>` +
     `<div class="trip-map-stage__center" data-trip-map-stage-center></div>` +
     `<div class="trip-map-stage__progress" data-trip-map-stage-progress></div>` +
-    `<button class="trip-map-stage__music" type="button" data-trip-map-stage-music aria-label="${escape(messages.music)}" aria-pressed="false" aria-keyshortcuts="M" title="${escape(messages.music)}（M）">${renderIcon('volume-x')}</button>` +
+    `<button class="trip-map-stage__music" type="button" data-trip-map-stage-music aria-label="${escape(messages.music)}" aria-pressed="false" aria-keyshortcuts="M" title="${escape(t(messages, 'withKey', { action: messages.music, key: 'M' }))}">${renderIcon('volume-x')}</button>` +
     `<button class="trip-map-stage__close" type="button" data-trip-map-stage-close aria-label="${escape(messages.exitPresentation)}">${renderIcon('x')}</button>`
   )
 }

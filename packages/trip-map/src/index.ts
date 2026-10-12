@@ -5,7 +5,7 @@
 // preview image in `@hyoban/trip-map/preview`.
 
 export { formatDate, formatDateRange, getDateParts, parseDateKey } from './format.ts'
-export { type Coordinates, getDistanceKm as getCoordinateDistanceKm } from './geo.ts'
+export { getDistanceKm, toCoordinates, type Coordinates, type LngLatLike } from './geo.ts'
 export { renderIcon, type IconName, type WeatherIcon } from './icons.ts'
 export * from './locations.ts'
 export {
@@ -44,18 +44,28 @@ export {
 } from './player/slides.ts'
 export type {
   MapLabel,
+  MapStats,
+  PlaceMarker,
   Slide,
   TripData,
   TripDataLeg,
   TripDataStop,
   TripDataWaypoint,
   TripImage,
+  TripImageInput,
   TripPlace,
   TripPoint,
   TripSummary,
   TripWeather,
 } from './player/types.ts'
-export { getTripSummary, shapeTripData, type ShapeTripOptions, type StopDetails } from './shape.ts'
+export {
+  getMapStats,
+  getPlaceMarkers,
+  getTripSummary,
+  shapeTripData,
+  type ShapeTripOptions,
+  type StopDetails,
+} from './shape.ts'
 export { createYearPalette, YEAR_COLORS, type Theme } from './theme.ts'
 export * from './trips.ts'
 export * from './weather.ts'

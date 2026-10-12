@@ -1,6 +1,7 @@
 import mapboxgl, { type GeoJSONSource } from 'mapbox-gl'
 import { t, type Messages } from '../messages.ts'
 import { createPopupContent, MAP_POPUP_CLASS } from '../player/dom.ts'
+import type { PlaceMarker } from '../player/types.ts'
 import type { ScreenshotPlace } from './screenshot.ts'
 
 // The places on the map: a dot per place, coloured by the year it was last visited,
@@ -8,18 +9,7 @@ import type { ScreenshotPlace } from './screenshot.ts'
 // a hidden GeoJSON source, and the dots are buttons placed over it, so they can be
 // hovered, focused and pressed like any other.
 
-/** A place with Moments, as the page lists them for the map. */
-export type PlaceMarker = {
-  color: string
-  count: number
-  id: string
-  latestYear: number
-  latitude: number
-  longitude: number
-  name: string
-  /** The years it has Moments in, newest first. */
-  years: number[]
-}
+export type { PlaceMarker }
 
 /** How far a dot is pushed on screen, in pixels, to clear the dots beside it. */
 type Nudge = { x: number; y: number }
