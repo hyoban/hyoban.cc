@@ -541,7 +541,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
   /**
    * Brings the clock up to the route's tip: the one beside the car on the map, or the
-   * story layout's heading while a stop is showing.
+   * story layout's heading, which shows it the whole trip through.
    */
   function renderClock(options: { animate: boolean }) {
     if (points.length === 0) {
@@ -550,7 +550,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
     if (!isStageLayout()) {
       headHeading.set(getTipClock(), options)
-    } else if (slides[index]?.type === 'stop') {
+    } else {
       stageHeading.set(getTipClock(), options)
     }
   }
@@ -1780,6 +1780,8 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     }
 
     stopAmbientMusic()
+    // The heading is up from the start, so it opens on the trip's first moment.
+    stageHeading.set(getClock(points, 0), { animate: false })
     page.dataset.exportRatio = ratio
     page.toggleAttribute('data-trip-presenting', mode === 'present')
     page.toggleAttribute(
