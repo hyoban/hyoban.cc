@@ -1,5 +1,5 @@
-import { getDistanceKm as getCoordinateDistanceKm } from '../geo.ts'
-import type { MapLocation } from './map-locations.ts'
+import { getDistanceKm as getCoordinateDistanceKm } from './geo.ts'
+import type { MapLocation } from './locations.ts'
 
 /**
  * A place the route passes through without a Moment there. `at` is a date or an

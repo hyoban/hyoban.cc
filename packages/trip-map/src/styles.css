@@ -1,0 +1,965 @@
+/* Styles for the map page and the trip player. The markers, popups and controls are
+   generated outside the page's templates, so they're styled here, by class; the page
+   itself is laid out with Tailwind utilities (see README). The theme comes from the
+   --color-bg, --color-border, --color-inline, --color-tx, --color-tx-2 and --color-tx-3
+   custom properties of the page. */
+@import 'mapbox-gl/dist/mapbox-gl.css' layer(components);
+
+.calendar-map-page .mapboxgl-popup-content {
+  color: var(--color-tx);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 0.5rem 2rem rgb(0 0 0 / 0.18);
+}
+
+.calendar-map-page
+  :is(.mapboxgl-popup-anchor-top, .mapboxgl-popup-anchor-top-left, .mapboxgl-popup-anchor-top-right)
+  .mapboxgl-popup-tip {
+  border-bottom-color: var(--color-bg);
+}
+
+.calendar-map-page
+  :is(
+    .mapboxgl-popup-anchor-bottom,
+    .mapboxgl-popup-anchor-bottom-left,
+    .mapboxgl-popup-anchor-bottom-right
+  )
+  .mapboxgl-popup-tip {
+  border-top-color: var(--color-bg);
+}
+
+.calendar-map-page .mapboxgl-popup-anchor-left .mapboxgl-popup-tip {
+  border-right-color: var(--color-bg);
+}
+
+.calendar-map-page .mapboxgl-popup-anchor-right .mapboxgl-popup-tip {
+  border-left-color: var(--color-bg);
+}
+
+/* The place drawer slides in from the right, or up from the bottom on a phone; it
+   slides back out from script as it closes (see calendar-map-client.ts). */
+.calendar-map-drawer {
+  transition:
+    opacity 200ms ease,
+    translate 280ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@starting-style {
+  .calendar-map-drawer:not([hidden]) {
+    opacity: 0;
+    translate: 1.5rem 0;
+  }
+}
+
+@media (max-width: 48rem) {
+  @starting-style {
+    .calendar-map-drawer:not([hidden]) {
+      translate: 0 2rem;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .calendar-map-drawer {
+    translate: none;
+    transition-property: opacity;
+  }
+}
+
+/* A route's or a place's name on hover, styled like the trip's place labels, without a tip. */
+.calendar-map-page .calendar-map-popup {
+  pointer-events: none;
+}
+
+.calendar-map-page .calendar-map-popup .mapboxgl-popup-content {
+  display: grid;
+  gap: 0.125rem;
+  padding: 0.4375rem 0.75rem 0.5rem;
+  line-height: 1.35;
+  white-space: nowrap;
+  background: color-mix(in srgb, var(--color-bg) 88%, transparent);
+  border-color: color-mix(in srgb, var(--color-border) 82%, transparent);
+  border-radius: 0.625rem;
+  box-shadow: 0 0.25rem 1.25rem rgb(0 0 0 / 0.12);
+  backdrop-filter: blur(1rem);
+}
+
+.calendar-map-page .calendar-map-popup .mapboxgl-popup-tip {
+  display: none;
+}
+
+/* Trip playback labels: a soft pill like the map toolbar, without the pointer tip. */
+/* While the side card eases between heights, its footer stays pinned to the bottom
+   edge and the content above slides under it, rather than the footer being cut off. */
+.calendar-map-trip[data-resizing] > footer {
+  position: absolute;
+  inset: auto 0 0;
+  z-index: 1;
+  background: var(--color-bg);
+}
+
+/* Nor does the content scroll meanwhile: a scrollbar that came up mid-animation would
+   narrow the text, keep it overflowing and so stay after the card settles. */
+.calendar-map-trip[data-resizing] > [data-calendar-map-trip-body] {
+  overflow: hidden;
+}
+
+/* A copy of the outgoing card, fading out over the incoming one. */
+.calendar-map-trip-ghost {
+  position: absolute;
+  inset-inline: 0;
+  pointer-events: none;
+}
+
+/* Settings before presenting or recording, in place of the card's footer buttons. */
+.calendar-map-trip-setup {
+  display: grid;
+  flex: 1;
+  gap: 0.625rem;
+  padding: 0.625rem 0.5rem 0.375rem;
+}
+
+.calendar-map-trip-setup[hidden] {
+  display: none;
+}
+
+.calendar-map-trip-setup__row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.calendar-map-trip-setup__label {
+  font-size: 0.8125rem;
+  color: var(--color-tx-2);
+}
+
+/* Two options side by side, the chosen one raised, like a segmented control. */
+.calendar-map-trip-setup__segments {
+  display: flex;
+  padding: 0.1875rem;
+  background: var(--color-inline);
+  border-radius: 999px;
+}
+
+.calendar-map-trip-setup__segments button {
+  min-height: 1.875rem;
+  padding: 0 0.75rem;
+  font-size: 0.8125rem;
+  color: var(--color-tx-2);
+  white-space: nowrap;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+}
+
+.calendar-map-trip-setup__segments button[aria-checked='true'] {
+  color: var(--color-tx);
+  background: var(--color-bg);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.12);
+}
+
+.calendar-map-trip-setup__check {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.calendar-map-trip-setup__check[hidden] {
+  display: none;
+}
+
+.calendar-map-trip-setup__check input {
+  margin: 0;
+  accent-color: var(--color-tx);
+}
+
+.calendar-map-trip-setup__select {
+  min-width: 0;
+  max-width: 10rem;
+  min-height: 2.25rem;
+  padding: 0 0.75rem;
+  font-size: 0.8125rem;
+  color: var(--color-tx);
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+}
+
+.calendar-map-trip-setup__actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.calendar-map-trip-setup__actions button {
+  min-height: 2.25rem;
+  padding: 0 1rem;
+  font-size: 0.8125rem;
+  color: var(--color-tx);
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+}
+
+.calendar-map-trip-setup__actions button:hover {
+  background: var(--color-inline);
+}
+
+/* The one that starts it. */
+.calendar-map-trip-setup__actions button:last-child {
+  color: var(--color-bg);
+  background: var(--color-tx);
+  border-color: var(--color-tx);
+}
+
+.calendar-map-trip-setup__actions button:last-child:hover {
+  opacity: 0.88;
+}
+
+/* The trip player's shortcut panel, opened with ?. */
+.calendar-map-trip-shortcuts {
+  width: min(22rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+  padding: 1rem 1.25rem 1.25rem;
+  margin: auto;
+  overflow-y: auto;
+  color: var(--color-tx);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 0.875rem;
+  box-shadow: 0 1.5rem 5rem rgb(0 0 0 / 0.2);
+}
+
+.calendar-map-trip-shortcuts::backdrop {
+  background: rgb(0 0 0 / 0.2);
+}
+
+.calendar-map-trip-shortcuts h3 {
+  margin: 1rem 0 0.375rem;
+  font-size: 0.75rem;
+  color: var(--color-tx-3);
+}
+
+.calendar-map-trip-shortcuts dl > div {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.3125rem 0;
+  font-size: 0.875rem;
+}
+
+.calendar-map-trip-shortcuts dt {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.calendar-map-trip-shortcuts dd {
+  color: var(--color-tx-2);
+}
+
+.calendar-map-trip-shortcuts kbd {
+  min-width: 1.5rem;
+  padding: 0.0625rem 0.375rem;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.75rem;
+  text-align: center;
+  background: var(--color-inline);
+  border: 1px solid var(--color-border);
+  border-bottom-width: 2px;
+  border-radius: 0.3125rem;
+}
+
+/* Trip place labels, placed by the player in step with the map (see map-labels.ts). */
+/* The car, ship or plane at the tip of the route being drawn, under the labels. */
+.calendar-map-trip-head {
+  position: absolute;
+  top: -13px;
+  left: -13px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  font-size: 14px;
+  color: var(--color-bg);
+  pointer-events: none;
+  background: var(--color-tx);
+  border: 2px solid var(--color-bg);
+  border-radius: 999px;
+}
+
+.calendar-map-trip-head[hidden] {
+  display: none;
+}
+
+/* The day and time the route's tip has reached, beside it; on the map only. */
+.calendar-map-trip-head__clock {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 0.5rem);
+  width: max-content;
+  padding: 0.3125rem 0.625rem 0.375rem;
+  line-height: 1.35;
+  color: var(--color-tx);
+  white-space: nowrap;
+  background: color-mix(in srgb, var(--color-bg) 88%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-border) 82%, transparent);
+  border-radius: 0.625rem;
+  box-shadow: 0 0.25rem 1.25rem rgb(0 0 0 / 0.12);
+  backdrop-filter: blur(1rem);
+  translate: 0 -50%;
+}
+
+.calendar-map-page[data-export-ratio] .calendar-map-trip-head__clock {
+  display: none;
+}
+
+.calendar-map-trip-head__date {
+  font-size: 0.6875rem;
+  color: var(--color-tx-3);
+}
+
+.calendar-map-trip-head__time {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.calendar-map-trip-labels {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.calendar-map-trip-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: grid;
+  gap: 0.125rem;
+  padding: 0.4375rem 0.75rem 0.5rem;
+  line-height: 1.35;
+  color: var(--color-tx);
+  white-space: nowrap;
+  background: color-mix(in srgb, var(--color-bg) 88%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-border) 82%, transparent);
+  border-radius: 0.625rem;
+  box-shadow: 0 0.25rem 1.25rem rgb(0 0 0 / 0.12);
+  backdrop-filter: blur(1rem);
+  transition: opacity 200ms;
+  will-change: transform;
+}
+
+/* While a trip plays, the places and their legend step aside. The
+   markers fade before the map script takes them off the map (MARKER_FADE). */
+.calendar-map-legend {
+  transition:
+    opacity 200ms,
+    visibility 200ms;
+}
+
+/* Keeps the markers' own hover transitions alongside the fade. */
+.calendar-map-page :is(.calendar-map-marker__dot, .calendar-map-cluster > span) {
+  transition:
+    opacity 200ms,
+    visibility 200ms,
+    transform 160ms ease-in-out,
+    box-shadow 160ms ease-in-out;
+}
+
+.calendar-map-page[data-map-trip] :is(.calendar-map-marker__dot, .calendar-map-cluster > span),
+.calendar-map-page[data-map-trip] .calendar-map-legend {
+  visibility: hidden;
+  opacity: 0;
+}
+
+.calendar-map-page[data-map-trip] :is(.calendar-map-marker, .calendar-map-cluster) {
+  pointer-events: none;
+}
+
+/* The dot being pointed at, or on, comes out from under its neighbours. */
+.calendar-map-page
+  :is(.calendar-map-marker, .calendar-map-cluster):is(
+    :hover,
+    :focus-visible,
+    [aria-pressed='true']
+  ) {
+  z-index: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .calendar-map-page :is(.calendar-map-marker__dot, .calendar-map-cluster > span),
+  .calendar-map-legend {
+    transition: none;
+  }
+}
+
+/* Trip playback gets the whole map; the toolbar returns when paused or finished. */
+.calendar-map-toolbar {
+  transition:
+    opacity 200ms,
+    visibility 200ms;
+}
+
+.calendar-map-page[data-trip-playing] .calendar-map-toolbar {
+  visibility: hidden;
+  opacity: 0;
+}
+
+/* A trip's labels are its own; it saves itself as a video instead. */
+.calendar-map-page[data-map-trip] .calendar-map-screenshot {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .calendar-map-toolbar {
+    transition: none;
+  }
+}
+
+/* Video export: the map becomes a fixed-ratio stage the tab recording is cropped to. */
+html:has(.calendar-map-page[data-export-ratio]) body {
+  background: #000;
+}
+
+.calendar-map-page[data-export-ratio='portrait'] {
+  position: fixed;
+  inset: 0;
+  width: min(100vw, calc(100dvh * 9 / 16));
+  height: min(100dvh, calc(100vw * 16 / 9));
+  margin: auto;
+}
+
+.calendar-map-page[data-export-ratio='landscape'] {
+  position: fixed;
+  inset: 0;
+  width: min(100vw, calc(100dvh * 16 / 9));
+  height: min(100dvh, calc(100vw * 9 / 16));
+  margin: auto;
+}
+
+.calendar-map-page[data-export-ratio] :is(.calendar-map-toolbar, .calendar-map-trip) {
+  display: none;
+}
+
+/*
+ * Recording layout: a story-style overlay with a day header, pop-up photo cards and
+ * bottom progress bars. Sizes use --u, one percent of the stage's shorter side.
+ */
+.calendar-map-trip-stage {
+  display: none;
+}
+
+.calendar-map-page[data-export-ratio] .calendar-map-trip-stage {
+  --u: 1cqw;
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: block;
+  color: var(--color-tx);
+  pointer-events: none;
+}
+
+.calendar-map-page[data-export-ratio='landscape'] .calendar-map-trip-stage {
+  --u: 0.5625cqw;
+}
+
+/*
+ * A portrait video plays full screen on a phone inside a short-video app, which lays
+ * its own things over it: the status bar and app icons at the top, the like, comment
+ * and share buttons down the right, the author, caption and progress bar at the
+ * bottom. Phones taller than 9:16 also fill the screen by cropping the video's sides,
+ * about 9% each on a 9:19.5 screen. With the option on, the words and map labels keep
+ * inside what stays clear of all that (about 11% top, 21% right, 22% bottom and 11%
+ * left of the frame), the card comes down to the author's avatar and the progress runs
+ * along the bottom edge like the app's own; the map still fills it all.
+ */
+.calendar-map-page[data-export-ratio='portrait'][data-trip-safe-area] .calendar-map-trip-stage {
+  --safe-top: calc(var(--u) * 20);
+  --safe-right: calc(var(--u) * 21);
+  --safe-bottom: calc(var(--u) * 40);
+  --safe-left: calc(var(--u) * 11);
+}
+
+.calendar-map-page[data-export-ratio='portrait'][data-trip-safe-area]
+  .calendar-map-trip-stage__header {
+  top: var(--safe-top);
+  left: var(--safe-left);
+}
+
+.calendar-map-page[data-export-ratio='portrait'][data-trip-safe-area]
+  .calendar-map-trip-stage__brand {
+  top: var(--safe-top);
+  right: var(--safe-right);
+}
+
+.calendar-map-page[data-export-ratio='portrait'][data-trip-safe-area]
+  .calendar-map-trip-stage__photos {
+  /* The card can come down to just above the author's avatar; the caption under the
+     avatar stays clear. */
+  inset: 46% var(--safe-right) calc(var(--u) * 28) var(--safe-left);
+}
+
+.calendar-map-page[data-export-ratio='portrait'][data-trip-safe-area]
+  .calendar-map-trip-stage__center {
+  padding: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
+}
+
+.calendar-map-page[data-export-ratio='portrait'][data-trip-safe-area]
+  .calendar-map-trip-stage__progress {
+  /* Along the bottom edge like the app's own progress bar, below its buttons. */
+  inset: auto var(--safe-left) calc(var(--u) * 3);
+}
+
+/* The map's logo and attribution step up out of the progress bar's way. */
+.calendar-map-page[data-export-ratio='portrait'][data-trip-safe-area]
+  :is(.mapboxgl-ctrl-bottom-left, .mapboxgl-ctrl-bottom-right) {
+  bottom: 5cqw;
+}
+
+.calendar-map-page[data-export-ratio='portrait'][data-trip-safe-area]
+  .calendar-map-trip-stage::before {
+  height: calc(var(--safe-top) + var(--u) * 32);
+}
+
+.calendar-map-trip-stage::before,
+.calendar-map-trip-stage::after {
+  position: absolute;
+  inset-inline: 0;
+  content: '';
+}
+
+.calendar-map-trip-stage::before {
+  top: 0;
+  height: calc(var(--u) * 38);
+  background: linear-gradient(var(--color-bg) 35%, transparent);
+}
+
+.calendar-map-trip-stage::after {
+  bottom: 0;
+  height: calc(var(--u) * 12);
+  background: linear-gradient(transparent, color-mix(in srgb, var(--color-bg) 85%, transparent));
+}
+
+.calendar-map-trip-stage__header {
+  position: absolute;
+  top: calc(var(--u) * 6);
+  left: calc(var(--u) * 6);
+  right: calc(var(--u) * 30);
+  z-index: 1;
+  transition: opacity 300ms;
+}
+
+.calendar-map-page[data-export-ratio='landscape'] .calendar-map-trip-stage__header {
+  right: 50%;
+}
+
+.calendar-map-trip-stage__eyebrow {
+  font-size: calc(var(--u) * 3);
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  color: var(--color-tx-3);
+}
+
+.calendar-map-trip-stage__title {
+  margin-top: calc(var(--u) * 0.8);
+  font-size: calc(var(--u) * 7.5);
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.calendar-map-trip-stage__brand {
+  position: absolute;
+  top: calc(var(--u) * 6);
+  right: calc(var(--u) * 6);
+  z-index: 1;
+  display: flex;
+  gap: calc(var(--u) * 1.4);
+  align-items: center;
+  padding: calc(var(--u) * 0.8) calc(var(--u) * 2.4) calc(var(--u) * 0.8) calc(var(--u) * 0.8);
+  font-size: calc(var(--u) * 3);
+  font-weight: 600;
+  background: color-mix(in srgb, var(--color-bg) 88%, transparent);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+}
+
+.calendar-map-trip-stage__brand img {
+  width: calc(var(--u) * 5);
+  height: calc(var(--u) * 5);
+  border-radius: 999px;
+}
+
+/* Marks the area clear of a phone's and an app's own overlays (see --safe-*), so the
+   camera and the place labels can keep to it too. Invisible. */
+.calendar-map-trip-stage__safe {
+  position: absolute;
+  inset: var(--safe-top, 0) var(--safe-right, 0) var(--safe-bottom, 0) var(--safe-left, 0);
+  pointer-events: none;
+}
+
+/* Where photo cards land; the map camera keeps stops out of this area. The column is
+   the area's width, so a card's max-width keeps it inside. */
+.calendar-map-trip-stage__photos {
+  position: absolute;
+  inset: 38% 6% 9%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  place-items: center;
+}
+
+.calendar-map-page[data-export-ratio='landscape'] .calendar-map-trip-stage__photos {
+  inset: 22% 5% 12% auto;
+  width: 40%;
+}
+
+.calendar-map-trip-stage__center {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: calc(var(--u) * 6);
+}
+
+.calendar-map-trip-stage__close,
+.calendar-map-trip-stage__music {
+  display: none;
+}
+
+/* Only shown when presenting on screen; a recording must not include them. */
+.calendar-map-page[data-trip-presenting] .calendar-map-trip-stage__close,
+.calendar-map-page[data-trip-presenting] .calendar-map-trip-stage__music {
+  position: absolute;
+  right: calc(var(--u) * 5);
+  bottom: calc(var(--u) * 7);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(var(--u) * 8);
+  height: calc(var(--u) * 8);
+  font-size: calc(var(--u) * 3.6);
+  color: var(--color-tx-2);
+  pointer-events: auto;
+  cursor: pointer;
+  background: color-mix(in srgb, var(--color-bg) 88%, transparent);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  transition:
+    opacity 300ms,
+    visibility 300ms;
+}
+
+.calendar-map-page[data-trip-presenting] .calendar-map-trip-stage__music {
+  right: calc(var(--u) * 15);
+}
+
+.calendar-map-page[data-trip-presenting] .calendar-map-trip-stage__music[aria-pressed='true'] {
+  color: var(--color-tx);
+}
+
+/* A recording shows no pointer; tab capture draws whatever cursor the page sets. */
+.calendar-map-page[data-export-ratio]:not([data-trip-presenting]),
+.calendar-map-page[data-export-ratio]:not([data-trip-presenting]) * {
+  cursor: none !important;
+}
+
+/* Like a video player's controls: gone while nobody moves the pointer, back on a move
+   or a tap. Focus brings it back too, so it stays reachable from the keyboard. */
+.calendar-map-page[data-trip-presenting][data-trip-idle] {
+  cursor: none;
+}
+
+.calendar-map-page[data-trip-presenting][data-trip-idle]
+  :is(.calendar-map-trip-stage__close, .calendar-map-trip-stage__music):not(:focus-visible) {
+  visibility: hidden;
+  opacity: 0;
+}
+
+.calendar-map-trip-stage__progress {
+  position: absolute;
+  inset: auto calc(var(--u) * 6) calc(var(--u) * 4);
+  z-index: 1;
+}
+
+.calendar-map-trip-stage__progress > ol {
+  gap: calc(var(--u) * 0.8);
+  padding: 0;
+}
+
+.calendar-map-trip-stage__progress li[data-slide='day'] {
+  display: none;
+}
+
+.calendar-map-trip-stage__progress button {
+  margin: 0;
+  padding: 0;
+}
+
+.calendar-map-trip-stage__progress [data-progress-bar] {
+  height: calc(var(--u) * 0.6);
+}
+
+.calendar-map-trip-polaroid {
+  --tilt: -2deg;
+  grid-area: 1 / 1;
+  align-self: end;
+  display: flex;
+  flex-direction: column;
+  width: calc(var(--u) * 76);
+  max-width: 100%;
+  padding: calc(var(--u) * 2.4) calc(var(--u) * 2.4) 0;
+  background: var(--color-bg);
+  border-radius: calc(var(--u) * 1.4);
+  box-shadow: 0 calc(var(--u) * 2) calc(var(--u) * 8) rgb(0 0 0 / 0.22);
+  transform: rotate(var(--tilt));
+  animation: calendar-map-polaroid-in 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.calendar-map-trip-polaroid[data-tilt='right'] {
+  --tilt: 2deg;
+}
+
+.calendar-map-trip-polaroid[data-leaving] {
+  animation: calendar-map-polaroid-out 280ms ease-in both;
+}
+
+.calendar-map-page[data-export-ratio='landscape'] .calendar-map-trip-polaroid {
+  align-self: center;
+  width: 100%;
+}
+
+/* Height is set per photo from script and eases between photos of different shapes. */
+.calendar-map-trip-polaroid__frame {
+  position: relative;
+  height: 0;
+  overflow: hidden;
+  /* Matches PHOTO_SWITCH in the player, which animates the photos inside. */
+  transition: height 480ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Centred with margins rather than a transform, which the switch animates. */
+.calendar-map-trip-polaroid__frame :is(img, video) {
+  position: absolute;
+  inset: 0 0 auto;
+  display: block;
+  margin-inline: auto;
+  object-fit: cover;
+  border-radius: calc(var(--u) * 0.6);
+}
+
+/* A stop's linked video, in place of photos. */
+.calendar-map-trip-polaroid__video {
+  width: 100%;
+  border: 0;
+  border-radius: calc(var(--u) * 0.6);
+  background: var(--color-inline);
+}
+
+/* A live clip fades back to its still when it ends. */
+.calendar-map-trip-polaroid__frame video {
+  transition: opacity 450ms;
+}
+
+.calendar-map-trip-polaroid:not(:has(figcaption)) {
+  padding-bottom: calc(var(--u) * 2.4);
+}
+
+.calendar-map-trip-polaroid figcaption {
+  padding: calc(var(--u) * 2.2) calc(var(--u) * 0.4) calc(var(--u) * 2.6);
+}
+
+.calendar-map-trip-polaroid__text {
+  font-size: calc(var(--u) * 3);
+  line-height: 1.5;
+  color: var(--color-tx-2);
+  white-space: pre-line;
+}
+
+.calendar-map-trip-stage-card {
+  width: min(100%, calc(var(--u) * 80));
+  padding: calc(var(--u) * 6);
+  text-align: center;
+  background: color-mix(in srgb, var(--color-bg) 94%, transparent);
+  border: 1px solid var(--color-border);
+  border-radius: calc(var(--u) * 3);
+  box-shadow: 0 calc(var(--u) * 2) calc(var(--u) * 8) rgb(0 0 0 / 0.16);
+  animation: calendar-map-polaroid-in 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.calendar-map-trip-stage-card__title {
+  margin-top: calc(var(--u) * 1.6);
+  font-size: calc(var(--u) * 8);
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.calendar-map-trip-stage-card__meta {
+  margin-top: calc(var(--u) * 2);
+  font-size: calc(var(--u) * 3.4);
+  color: var(--color-tx-2);
+}
+
+.calendar-map-trip-stage-card__site {
+  margin-top: calc(var(--u) * 4);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: calc(var(--u) * 3);
+  color: var(--color-tx-3);
+}
+
+.calendar-map-trip-stage-card__covers {
+  display: flex;
+  justify-content: center;
+  margin-top: calc(var(--u) * 5);
+}
+
+.calendar-map-trip-stage-card__covers img {
+  width: calc(var(--u) * 20);
+  aspect-ratio: 1;
+  margin-inline: calc(var(--u) * -1.5);
+  object-fit: cover;
+  border: calc(var(--u) * 1) solid var(--color-bg);
+  border-radius: calc(var(--u) * 1);
+  box-shadow: 0 calc(var(--u) * 1) calc(var(--u) * 4) rgb(0 0 0 / 0.18);
+}
+
+.calendar-map-trip-stage-card__covers img:nth-child(1) {
+  transform: rotate(-6deg);
+}
+
+.calendar-map-trip-stage-card__covers img:nth-child(3) {
+  transform: rotate(6deg);
+}
+
+.calendar-map-trip-stage-card__stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: calc(var(--u) * 1.6);
+  margin-top: calc(var(--u) * 5);
+  text-align: left;
+}
+
+/* A landscape frame is short: the stats go three across, so the card fits its height. */
+.calendar-map-page[data-export-ratio='landscape'] .calendar-map-trip-stage-card:has(> dl) {
+  width: min(100%, calc(var(--u) * 116));
+}
+
+.calendar-map-page[data-export-ratio='landscape'] .calendar-map-trip-stage-card__stats {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.calendar-map-trip-stage-card__stats > div {
+  display: flex;
+  flex-direction: column-reverse;
+  padding: calc(var(--u) * 2.4) calc(var(--u) * 3);
+  background: var(--color-inline);
+  border-radius: calc(var(--u) * 1.6);
+}
+
+.calendar-map-trip-stage-card__stats dd {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: calc(var(--u) * 6);
+  font-variant-numeric: tabular-nums;
+}
+
+.calendar-map-trip-stage-card__stats dt {
+  font-size: calc(var(--u) * 2.8);
+  color: var(--color-tx-3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :is(.calendar-map-trip-polaroid, .calendar-map-trip-stage-card) {
+    animation: none;
+  }
+
+  :is(.calendar-map-trip-polaroid__frame, .calendar-map-trip-polaroid__frame :is(img, video)) {
+    transition: none;
+  }
+
+  .calendar-map-trip-stage__header {
+    transition: none;
+  }
+}
+
+@keyframes calendar-map-polaroid-in {
+  from {
+    opacity: 0;
+    transform: translateY(6%) scale(0.9) rotate(calc(var(--tilt, 0deg) - 6deg));
+  }
+}
+
+@keyframes calendar-map-polaroid-out {
+  to {
+    opacity: 0;
+    transform: translateY(-4%) scale(0.96) rotate(var(--tilt, 0deg));
+  }
+}
+
+/* The trip's side card sits in the bottom-left corner: the map's logo steps out to its
+   right, or on a phone, where the card spans the width, up above it with the
+   attribution. --trip-panel-height is kept by the player. */
+@container (min-width: 48.0625rem) {
+  .calendar-map-page:has(.calendar-map-trip:not([hidden])):not([data-export-ratio])
+    .mapboxgl-ctrl-bottom-left {
+    left: calc(min(22rem, 100cqw - 2rem) + 1.5rem);
+  }
+}
+
+@container (max-width: 48rem) {
+  .calendar-map-page:has(.calendar-map-trip:not([hidden])):not([data-export-ratio])
+    :is(.mapboxgl-ctrl-bottom-left, .mapboxgl-ctrl-bottom-right) {
+    bottom: calc(var(--trip-panel-height, 0px) + 1rem + env(safe-area-inset-bottom));
+  }
+}
+
+/* A mouse resting on the side card holds it; the current segment breathes meanwhile. */
+.calendar-map-page[data-trip-playing]
+  .calendar-map-trip[data-held]
+  [aria-current='step']
+  [data-progress-fill] {
+  animation: calendar-map-trip-held 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes calendar-map-trip-held {
+  to {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .calendar-map-page[data-trip-playing]
+    .calendar-map-trip[data-held]
+    [aria-current='step']
+    [data-progress-fill] {
+    animation: none;
+    opacity: 0.5;
+  }
+}
+
+@media (min-width: 48.0625rem) {
+  .calendar-map-page:has(.calendar-map-drawer:not([hidden])) .mapboxgl-ctrl-bottom-right {
+    right: calc(min(28rem, calc(100vw - 2rem)) + 1.5rem);
+  }
+}
+
+@media (max-width: 48rem) {
+  .calendar-map-page:has(.calendar-map-drawer:not([hidden]))
+    :is(.mapboxgl-ctrl-bottom-left, .mapboxgl-ctrl-bottom-right) {
+    bottom: calc(min(78dvh, 42rem) + 1.25rem + env(safe-area-inset-bottom));
+  }
+
+  .calendar-map-page:has(.calendar-map-drawer:not([hidden])) .mapboxgl-ctrl-bottom-right {
+    right: 0;
+  }
+}

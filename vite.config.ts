@@ -1,6 +1,9 @@
 import { defineConfig } from 'vite-plus'
 
 export default defineConfig({
+  // `vp pack` at the root builds the one library in the workspace; the site itself is
+  // built by Astro through `vp run build`.
+  defaultPackage: { pack: './packages/trip-map' },
   staged: {
     '*': 'vp check --fix',
   },

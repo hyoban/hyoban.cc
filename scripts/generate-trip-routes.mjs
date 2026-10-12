@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { trips } from '../src/data/trips.ts'
-import { buildTrip, getLegKey, getTrainLegKey } from '../src/moments/trips.ts'
+import { buildTrip, getLegKey, getTrainLegKey } from '@hyoban/trip-map'
 import { readTripMoments, resolveLocation } from './lib/trip-moments.mjs'
 
 // Fetches a driving route for every trip leg that isn't cached yet, so trip playback

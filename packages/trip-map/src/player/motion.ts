@@ -1,4 +1,4 @@
-import { createElement } from './dom'
+import { createElement } from './dom.ts'
 
 // How the trip's cards and photos change: the side card eases between cards'
 // heights, and photos (on the side card and the stage's photo card) fade through.

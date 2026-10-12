@@ -1,6 +1,6 @@
 import type { Map as MapboxMap } from 'mapbox-gl'
-import type { Coordinates } from '../geo'
-import { createElement } from './dom'
+import type { Coordinates } from '../geo.ts'
+import { createElement } from './dom.ts'
 import {
   chooseLabelPlacement,
   contains,
@@ -8,8 +8,8 @@ import {
   type Point,
   type Rect,
   type Size,
-} from './label-placement'
-import type { MapLabel } from './types'
+} from './label-placement.ts'
+import type { MapLabel } from './types.ts'
 
 // Place names over the map during playback. Mapbox popups snap to whole pixels, so
 // while the camera glides they step a pixel at a time; these are placed with

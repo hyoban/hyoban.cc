@@ -1,6 +1,6 @@
 import 'number-flow'
-import { MOSAIC_CLASS, MOSAIC_IMAGE_CLASS } from './intro'
-import type { TripImage } from './types'
+import { MOSAIC_CLASS, MOSAIC_IMAGE_CLASS } from './intro.ts'
+import type { TripImage } from './types.ts'
 
 // Small DOM builders and helpers the player and its cards share.
 

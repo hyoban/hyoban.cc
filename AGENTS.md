@@ -25,3 +25,7 @@ release. Add a tool name to select part of the graph. For example, run
 - [ ] If setup, runtime, or package-manager behavior looks wrong, run `vp env doctor` and include its output when asking for help.
 
 <!--VITE PLUS END-->
+
+## Workspace
+
+The map page and the trip player live in `packages/trip-map` (`@hyoban/trip-map`), a workspace package the site imports; its README describes the markup and data the client expects. The site keeps the Moments, places and trips data (`src/data`, `src/moments`) and the Astro pages and components. Root `vp check` and `vp test` cover the package too; `vp pack` builds its publishable `dist`.

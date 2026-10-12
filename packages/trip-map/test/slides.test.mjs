@@ -11,7 +11,7 @@ import {
   getStopPointEnds,
   getWaypointsBefore,
   pickCovers,
-} from '../../src/trip-player/slides.ts'
+} from '../src/player/slides.ts'
 
 const place = (name) => ({ name })
 const stop = (day, places, waypoints = [], images = []) => ({

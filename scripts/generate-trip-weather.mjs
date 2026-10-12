@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { trips } from '../src/data/trips.ts'
-import { buildTrip, getDayPlaces, getWeatherKey } from '../src/moments/trips.ts'
+import { buildTrip, getDayPlaces, getWeatherKey } from '@hyoban/trip-map'
 import { readTripMoments, resolveLocation } from './lib/trip-moments.mjs'
 
 // Looks up each trip day's weather where the day starts, from Open-Meteo's historical

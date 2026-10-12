@@ -1,7 +1,7 @@
 import mapboxgl, { type GeoJSONSource, type Map as MapboxMap } from 'mapbox-gl'
-import type { Coordinates } from '../geo'
-import { createElement } from './dom'
-import { lineFeature, type TravelMode } from './route'
+import type { Coordinates } from '../geo.ts'
+import { createElement } from './dom.ts'
+import { lineFeature, type TravelMode } from './route.ts'
 
 // The trip's map layers: the planned route (dashed), the drawn route, the piece being
 // drawn right now, the stop dots and a car, ship or plane riding the route's tip.

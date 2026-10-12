@@ -4,13 +4,24 @@ import tripWeather from '@/data/trip-weather.json'
 import { getMomentPath, type MomentTrip } from '@/moments'
 import { takeBilibiliVideo } from '@/moments/bilibili'
 import { getTripCovers, getTripImages } from '@/moments/trip-images'
-import { getDayOffset, getDayPlaces, getWeatherKey, type TripWaypoint } from '@/moments/trips'
-import { getRouteLine, simplifyLine } from '@/trip-player/route'
+import {
+  describeWeather,
+  getDayOffset,
+  getDayPlaces,
+  getRouteLine,
+  getWeatherKey,
+  simplifyLine,
+  type DayWeather,
+  type TripData,
+  type TripSummary,
+  type TripWaypoint,
+  type TripWeather,
+} from '@hyoban/trip-map'
 
 // What the trip player needs for one trip. The map page inlines it for the trip it
 // opens on and fetches /trip/<id>/data.json for the others.
 
-export function getTripData(trip: MomentTrip) {
+export function getTripData(trip: MomentTrip): TripData {
   return {
     dateRange: `${formatShortDate(trip.start)} – ${formatShortDate(trip.end)}`,
     dayCount: trip.dayCount,
@@ -50,7 +61,7 @@ export function getTripData(trip: MomentTrip) {
 const OVERVIEW_TOLERANCE = 0.002
 
 /** What the map overview needs for every trip: its route to draw and click, and its name. */
-export function getTripSummary(trip: MomentTrip) {
+export function getTripSummary(trip: MomentTrip): TripSummary {
   const points = trip.path.map((location) => ({
     coordinates: [location.longitude, location.latitude] as const,
   }))
@@ -112,35 +123,16 @@ function round(degrees: number) {
   return Math.round(degrees * 1e4) / 1e4
 }
 
-type DayWeather = { code: number; max: number; min: number }
-
-// WMO weather codes, as Open-Meteo reports them, grouped coarsely.
-const WEATHER_KINDS: [maxCode: number, label: string, icon: string][] = [
-  [0, '晴', 'i-lucide-sun'],
-  [2, '多云', 'i-lucide-cloud-sun'],
-  [3, '阴', 'i-lucide-cloud'],
-  [48, '雾', 'i-lucide-cloud-fog'],
-  [57, '毛毛雨', 'i-lucide-cloud-drizzle'],
-  [67, '雨', 'i-lucide-cloud-rain'],
-  [77, '雪', 'i-lucide-snowflake'],
-  [82, '阵雨', 'i-lucide-cloud-rain'],
-  [86, '阵雪', 'i-lucide-snowflake'],
-  [99, '雷雨', 'i-lucide-cloud-lightning'],
-]
-
 /** Each trip day's weather, by day number; days `pnpm trips:weather` hasn't fetched are left out. */
 function getTripWeather(trip: MomentTrip) {
-  const days: Record<number, { icon: string; label: string }> = {}
+  const days: TripWeather = {}
 
   for (const [dateKey, place] of getDayPlaces(trip)) {
     const day = (tripWeather as Record<string, DayWeather>)[getWeatherKey(dateKey, place)]
-    const kind = day && WEATHER_KINDS.find(([maxCode]) => day.code <= maxCode)
+    const weather = day && describeWeather(day)
 
-    if (day && kind) {
-      days[getDayOffset(trip.start, dateKey) + 1] = {
-        icon: kind[2],
-        label: `${kind[1]} · ${day.min}–${day.max}°C`,
-      }
+    if (weather) {
+      days[getDayOffset(trip.start, dateKey) + 1] = weather
     }
   }
 

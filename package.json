@@ -21,9 +21,7 @@
     "prepare": "vp config"
   },
   "dependencies": {
-    "@mapbox/mapbox-gl-language": "^1.0.1",
-    "mapbox-gl": "^3.29.0",
-    "number-flow": "^0.6.2",
+    "@hyoban/trip-map": "workspace:*",
     "yaml": "^2.9.0"
   },
   "devDependencies": {
@@ -35,7 +33,6 @@
     "@iconify-json/lucide": "^1.2.129",
     "@iconify-json/simple-icons": "^1.2.94",
     "@tailwindcss/vite": "^4.3.3",
-    "@types/geojson": "^7946.0.16",
     "astro": "^7.2.10",
     "ffmpeg-static": "^5.3.0",
     "sharp": "^0.35.4",

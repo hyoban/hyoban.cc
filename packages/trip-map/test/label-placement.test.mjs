@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'vite-plus/test'
-import { chooseLabelPlacement, placeLabel } from '../../src/trip-player/label-placement.ts'
+import { chooseLabelPlacement, placeLabel } from '../src/player/label-placement.ts'
 
 const size = { height: 40, width: 120 }
 const screen = { bottom: 600, left: 0, right: 800, top: 0 }

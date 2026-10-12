@@ -1,4 +1,4 @@
-import { defineTrips } from '../moments/trips.ts'
+import { defineTrips } from '@hyoban/trip-map'
 
 // Each trip plays back every located Moment between `start` and `end` (inclusive) at
 // /trip/<id>/. `waypoints` add places the route passed through without a Moment.

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'vite-plus/test'
-import { buildTrip, defineTrips, getDistanceKm, getLegKey } from '../../src/moments/trips.ts'
+import { buildTrip, defineTrips, getDistanceKm, getLegKey } from '../src/trips.ts'
 
 const hefei = { id: 'hefei', latitude: 31.8206, longitude: 117.2272, name: '合肥' }
 const nanjing = { id: 'nanjing', latitude: 32.0603, longitude: 118.7969, name: '南京' }

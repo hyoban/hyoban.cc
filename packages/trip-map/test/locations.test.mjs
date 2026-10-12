@@ -1,10 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'vite-plus/test'
-import {
-  defineLocations,
-  getLocation,
-  groupMomentsByLocation,
-} from '../../src/moments/map-locations.ts'
+import { defineLocations, getLocation, groupMomentsByLocation } from '../src/locations.ts'
 
 test('rejects locations with coordinates outside the public map range', () => {
   assert.throws(

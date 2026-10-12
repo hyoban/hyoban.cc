@@ -1,4 +1,4 @@
-import type { ClockMoment } from './slides'
+import type { ClockMoment } from './slides.ts'
 
 /**
  * A day, date and time: `date` gets the date (10月2日周五), `title` the day and time

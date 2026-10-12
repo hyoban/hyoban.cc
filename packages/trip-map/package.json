@@ -1,0 +1,50 @@
+{
+  "name": "@hyoban/trip-map",
+  "version": "0.0.0",
+  "description": "A map of the places a site's Moments were written at, and a player that replays its trips along their routes, on Mapbox.",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./client": "./src/client.ts",
+    "./dom": "./src/player/dom.ts",
+    "./preview": "./src/preview.ts",
+    "./styles.css": "./src/styles.css",
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": "./dist/index.mjs",
+      "./client": "./dist/client.mjs",
+      "./dom": "./dist/dom.mjs",
+      "./preview": "./dist/preview.mjs",
+      "./styles.css": "./dist/styles.css",
+      "./package.json": "./package.json"
+    }
+  },
+  "scripts": {
+    "build": "vp pack",
+    "test": "vp test"
+  },
+  "dependencies": {
+    "@mapbox/mapbox-gl-language": "^1.0.1",
+    "@types/geojson": "^7946.0.16",
+    "mapbox-gl": "^3.29.0",
+    "number-flow": "^0.6.2"
+  },
+  "devDependencies": {
+    "sharp": "^0.35.4",
+    "vite-plus": "catalog:"
+  },
+  "peerDependencies": {
+    "sharp": "^0.35.0"
+  },
+  "peerDependenciesMeta": {
+    "sharp": {
+      "optional": true
+    }
+  }
+}

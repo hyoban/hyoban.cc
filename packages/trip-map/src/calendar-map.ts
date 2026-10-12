@@ -1,12 +1,15 @@
 import MapboxLanguage from '@mapbox/mapbox-gl-language'
 import mapboxgl, { type GeoJSONSource, type PaddingOptions } from 'mapbox-gl'
-import { SITE_TITLE } from './consts'
-import { createPopupContent, MAP_POPUP_CLASS, parseJson } from './trip-player/dom'
-import { createTripOverview } from './trip-player/overview'
-import { createTripPlayer } from './trip-player/player'
-import type { TripSummary } from './trip-player/types'
-import { captureMap, savePicture, type ScreenshotPlace } from './map-screenshot'
-import { initializeLightboxMedia } from './moment-lightbox-client'
+import { createPopupContent, MAP_POPUP_CLASS, parseJson } from './player/dom.ts'
+import { createTripOverview } from './player/overview.ts'
+import { createTripPlayer } from './player/player.ts'
+import type { TripSummary } from './player/types.ts'
+import { captureMap, savePicture, type ScreenshotPlace } from './screenshot.ts'
+
+// The map page: every place with Moments as a dot, gathered into clusters when they
+// crowd, each opening a drawer with its Moments; and every trip's route, each opening
+// its playback (see player/player.ts). The page's markup is the site's (see the README
+// for the elements it needs); this script finds them by their data attributes.
 
 type MarkerData = {
   color: string
@@ -60,9 +63,50 @@ type MapStats = {
   trips: number
 }
 
+/** Shows a drawer item's media in the lightbox: a still, or a live photo's clip. */
+export type LightboxMedia = { show: (item: HTMLElement) => void }
+
+export type CalendarMapOptions = {
+  /**
+   * Makes the lightbox's media controller for the `[data-calendar-map-lightbox]` dialog;
+   * without one, the drawer's images don't open in it.
+   */
+  createLightboxMedia?: (dialog: HTMLDialogElement, signal: AbortSignal) => LightboxMedia
+  /** A place's drawer content, an HTML fragment. Default: `/map/place/<id>/`. */
+  getPlaceUrl?: (id: string) => string
+  /** A trip's playback data, `TripData` as JSON. Default: `/trip/<id>/data.json`. */
+  getTripDataUrl?: (id: string) => string
+  /** The trip a pathname opens, if any. Default: the id in `/trip/<id>/`. */
+  getTripId?: (pathname: string) => string | undefined
+  /** A trip's page. Default: `/trip/<id>/`. */
+  getTripPath?: (id: string) => string
+  /** The map's own page, which closing a trip goes back to. Default: `/map/`. */
+  mapPath?: string
+  /** The element holding the map's markup. Default: the page's `[data-calendar-map]`. */
+  page?: HTMLElement
+  /** The title over a saved screenshot, like `Hyoban 的足迹`. */
+  screenshotTitle: string
+  /** Where a video's viewers can find the trips, on its summary card: `hyoban.cc/trip/`. */
+  siteLine: string
+}
+
 const HISTORY_STATE_KEY = 'calendarMapSelection'
-const MAP_PATH = '/map/'
 const TRIP_PATH_PATTERN = /^\/trip\/([^/]+)\/?$/
+const defaults = {
+  getPlaceUrl: (id: string) => `/map/place/${encodeURIComponent(id)}/`,
+  getTripDataUrl: (id: string) => `/trip/${encodeURIComponent(id)}/data.json`,
+  getTripId: (pathname: string) => {
+    const match = pathname.match(TRIP_PATH_PATTERN)
+
+    try {
+      return match ? decodeURIComponent(match[1]!) : undefined
+    } catch {
+      return undefined
+    }
+  },
+  getTripPath: (id: string) => `/trip/${encodeURIComponent(id)}/`,
+  mapPath: '/map/',
+}
 const LOCATION_INDEX_LAYER_ID = 'calendar-location-index'
 const LOCATION_SOURCE_ID = 'calendar-locations'
 const LOCATION_CLUSTER_MAX_ZOOM = 9
@@ -90,8 +134,22 @@ const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
 let destroyCurrentMap: (() => void) | undefined
 let currentMapPage: HTMLElement | undefined
 
-export function initializeCalendarMap() {
-  const page = document.querySelector<HTMLElement>('[data-calendar-map]')
+/**
+ * Sets the map up on the page, or takes down the one left from a page without it.
+ * Calling it again for the same element while its map is up does nothing.
+ */
+export function initializeCalendarMap(options: CalendarMapOptions) {
+  const {
+    createLightboxMedia,
+    getPlaceUrl,
+    getTripDataUrl,
+    getTripId,
+    getTripPath,
+    mapPath,
+    screenshotTitle,
+    siteLine,
+  } = { ...defaults, ...options }
+  const page = options.page ?? document.querySelector<HTMLElement>('[data-calendar-map]')
 
   if (page && page === currentMapPage && destroyCurrentMap) {
     return
@@ -125,7 +183,7 @@ export function initializeCalendarMap() {
 
   const controller = new AbortController()
   const { signal } = controller
-  const lightboxMedia = initializeLightboxMedia(lightbox, signal)
+  const lightboxMedia = createLightboxMedia?.(lightbox, signal)
   const locations = parseMarkerData(dataElement)
   const locationsById = new Map(locations.map((location) => [location.id, location]))
   // Each place's drawer content, fetched from /map/place/<id>/ the first time it's needed.
@@ -138,9 +196,11 @@ export function initializeCalendarMap() {
   const darkMode = window.matchMedia('(prefers-color-scheme: dark)')
   const tripPlayer = createTripPlayer({
     getMap: () => (mapLoaded ? map : undefined),
+    getTripDataUrl,
     onClose: requestSelectionClose,
     page,
     signal,
+    siteLine,
   })
   const tripOverview = createTripOverview({
     getInk: () => getComputedStyle(page).getPropertyValue('--color-tx').trim() || '#21201c',
@@ -190,20 +250,8 @@ export function initializeCalendarMap() {
   }
 
   function getUrlTripId() {
-    const match = window.location.pathname.match(TRIP_PATH_PATTERN)
-    let id: string | undefined
-
-    try {
-      id = match ? decodeURIComponent(match[1]!) : undefined
-    } catch {
-      id = undefined
-    }
-
+    const id = getTripId(window.location.pathname)
     return id && tripPlayer.has(id) ? id : undefined
-  }
-
-  function getTripPath(id: string) {
-    return `/trip/${encodeURIComponent(id)}/`
   }
 
   function getHistoryState() {
@@ -253,7 +301,7 @@ export function initializeCalendarMap() {
     let request = placeRequests.get(id)
 
     if (!request) {
-      request = fetch(`/map/place/${encodeURIComponent(id)}/`, { signal })
+      request = fetch(getPlaceUrl(id), { signal })
         .then((response) => (response.ok ? response.text() : undefined))
         .catch(() => undefined)
         .then((html) => {
@@ -687,7 +735,7 @@ export function initializeCalendarMap() {
     history.replaceState(
       getHistoryState(),
       '',
-      getUrlTripId() ? MAP_PATH : `${window.location.pathname}${window.location.search}`,
+      getUrlTripId() ? mapPath : `${window.location.pathname}${window.location.search}`,
     )
     syncLocationFromHash()
   }
@@ -1165,7 +1213,7 @@ export function initializeCalendarMap() {
   }
 
   function showLightboxItem(index: number) {
-    if (lightboxItems.length === 0) {
+    if (!lightboxMedia || lightboxItems.length === 0) {
       return
     }
 
@@ -1225,7 +1273,7 @@ export function initializeCalendarMap() {
         getPlaces: getScreenshotPlaces,
         legend,
         places: locations,
-        site: `${window.location.host}/map/`,
+        site: `${window.location.host}${mapPath}`,
         stats: stats
           ? [
               stats.firstYear === stats.lastYear
@@ -1242,7 +1290,7 @@ export function initializeCalendarMap() {
           muted: pageStyle.getPropertyValue('--color-tx-3').trim() || '#82817b',
           text: pageStyle.getPropertyValue('--color-tx').trim() || '#21201c',
         },
-        title: `${SITE_TITLE} 的足迹`,
+        title: screenshotTitle,
       })
       const day = new Date().toLocaleDateString('en-CA').replaceAll('-', '')
 
@@ -1569,15 +1617,12 @@ function queryRequired<T extends Element>(root: ParentNode, selector: string) {
   return element
 }
 
-document.addEventListener('astro:before-swap', (event) => {
-  const { from, to } = event as Event & { from: URL; to: URL }
-
-  if (from.pathname === to.pathname && from.search === to.search) {
-    return
-  }
-
+/** Takes the map down if one is up; for before the page it's on is replaced. */
+export function destroyCalendarMap() {
   destroyCurrentMap?.()
-})
+  destroyCurrentMap = undefined
+  currentMapPage = undefined
+}
 
 function createLoadingMessage(text: string) {
   const message = document.createElement('p')

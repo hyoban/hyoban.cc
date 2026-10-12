@@ -1,16 +1,7 @@
+import type { Trip, TripImage } from '@hyoban/trip-map'
 import type { Moment, ResolvedMomentMedia } from '@/moments'
-import type { Trip } from '@/moments/trips'
 
-export type TripImage = {
-  alt: string
-  height: number
-  src: string
-  srcset: string
-  thumbnail: string
-  /** A live photo's motion, played once over the still. */
-  video?: string
-  width: number
-}
+export type { TripImage }
 
 /** The still image of each photo, live photo or video poster, sized for trip cards. */
 export function getTripImages(media: ResolvedMomentMedia[]): TripImage[] {
