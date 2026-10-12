@@ -22,25 +22,25 @@
   },
   "dependencies": {
     "@hyoban/trip-map": "workspace:*",
-    "yaml": "^2.9.0"
+    "yaml": "^2.9.1"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
-    "@astrojs/markdown-remark": "7.3.0",
+    "@astrojs/markdown-remark": "7.3.2",
     "@astrojs/rss": "4.0.19",
     "@astrojs/sitemap": "^3.7.4",
     "@egoist/tailwindcss-icons": "^1.9.2",
-    "@iconify-json/lucide": "^1.2.129",
-    "@iconify-json/simple-icons": "^1.2.94",
+    "@iconify-json/lucide": "^1.2.143",
+    "@iconify-json/simple-icons": "^1.2.100",
     "@tailwindcss/vite": "^4.3.3",
-    "astro": "^7.2.10",
+    "astro": "^7.3.8",
     "ffmpeg-static": "^5.3.0",
-    "sharp": "^0.35.4",
+    "sharp": "^0.35.5",
     "tailwindcss": "^4.3.3",
     "typescript": "^6.0.3",
     "vite": "catalog:",
     "vite-plus": "catalog:",
-    "wrangler": "^4.128.0"
+    "wrangler": "^4.149.0"
   },
   "packageManager": "pnpm@11.25.0"
 }
