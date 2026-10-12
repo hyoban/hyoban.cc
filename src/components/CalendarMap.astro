@@ -101,11 +101,13 @@ function toScriptJson(value: unknown) {
       {
         trips.length > 0 && (
           // The routes are drawn on the map; these reach the same trips by keyboard,
-          // lifting each one's route as it's focused.
-          <nav class="sr-only" aria-label="旅程回放">
-            <ul>
+          // showing up while one is focused and lifting its route into view.
+          <nav class="sr-only min-w-0 justify-self-center focus-within:not-sr-only" aria-label="旅程回放">
+            <ul class="flex max-w-full list-none gap-0.5 overflow-x-auto rounded-full border border-[color-mix(in_srgb,var(--color-border)_82%,transparent)] bg-[color-mix(in_srgb,var(--color-bg)_88%,transparent)] p-1 shadow-[0_0.5rem_2rem_rgb(0_0_0/0.08)] backdrop-blur-[1rem] [scrollbar-width:none]">
               {trips.map(trip => (
-                <li><a href={`/trip/${trip.id}/`} data-calendar-map-trip-link={trip.id}>回放旅程：{trip.title}</a></li>
+                <li class="shrink-0">
+                  <a class="block rounded-full px-3 py-1.5 text-sm whitespace-nowrap text-tx-2 no-underline hover:bg-inline hover:text-tx focus-visible:bg-inline focus-visible:text-tx" href={`/trip/${trip.id}/`} data-calendar-map-trip-link={trip.id}><span class="sr-only">回放旅程：</span>{trip.title}</a>
+                </li>
               ))}
             </ul>
           </nav>
@@ -114,7 +116,7 @@ function toScriptJson(value: unknown) {
       <CalendarModeSwitch class="col-start-3 justify-self-end" mode="map" />
     </header>
 
-    <ol class="calendar-map-legend [&[hidden]]:hidden absolute bottom-10 left-1/2 z-[4] flex -translate-x-1/2 list-none items-center gap-3 rounded-full border border-[color-mix(in_srgb,var(--color-border)_82%,transparent)] bg-[color-mix(in_srgb,var(--color-bg)_82%,transparent)] px-3.5 py-2.5 font-mono text-xs shadow-[0_0.5rem_2rem_rgb(0_0_0/0.08)] max-[48rem]:bottom-[calc(1rem+env(safe-area-inset-bottom))]" aria-label="地点最近记录年份" data-calendar-map-legend>
+    <ol class="calendar-map-legend [&[hidden]]:hidden absolute bottom-10 left-1/2 z-[4] flex -translate-x-1/2 list-none items-center gap-3 rounded-full border border-[color-mix(in_srgb,var(--color-border)_82%,transparent)] bg-[color-mix(in_srgb,var(--color-bg)_82%,transparent)] px-3.5 py-2.5 font-mono text-xs shadow-[0_0.5rem_2rem_rgb(0_0_0/0.08)] max-[48rem]:bottom-[calc(1rem+env(safe-area-inset-bottom))]" aria-label="图例：地点按最近记录年份着色" data-calendar-map-legend>
       {
         years.map(year => (
           <li class="flex items-center gap-[0.35rem]">
@@ -123,12 +125,27 @@ function toScriptJson(value: unknown) {
           </li>
         ))
       }
+      {
+        // The grey lines are trips: say so, and lead to their list.
+        trips.length > 0 && (
+          <li class="flex items-center border-l border-border pl-3">
+            <a class="flex items-center gap-[0.35rem] text-inherit no-underline hover:text-tx-2" href="/trip/">
+              <span class="block h-0.5 w-3.5 rounded-full bg-tx opacity-50" aria-hidden="true" />
+              旅程
+            </a>
+          </li>
+        )
+      }
     </ol>
 
     <p class="calendar-map-loading absolute left-1/2 top-1/2 z-[3] -translate-1/2 rounded-full border border-border bg-[color-mix(in_srgb,var(--color-bg)_88%,transparent)] px-3.5 py-2.5 [&[hidden]]:hidden" data-calendar-map-loading>{activeTripData ? '正在加载旅程地图…' : `正在加载 ${locationGroups.length} 个地点的地图…`}</p>
 
     <section class="calendar-map-fallback absolute left-1/2 top-1/2 z-[6] max-h-[min(36rem,calc(100dvh-8rem))] w-[min(28rem,calc(100vw-2rem))] -translate-1/2 overflow-y-auto rounded-xl border border-border bg-[color-mix(in_srgb,var(--color-bg)_94%,transparent)] p-5 shadow-[0_1rem_4rem_rgb(0_0_0/0.12)] [&[hidden]]:hidden" data-calendar-map-fallback aria-live="polite" hidden>
       <p class="mb-4 leading-[1.6] text-tx-2" data-calendar-map-fallback-message>地图暂时无法加载。</p>
+      <button class="-mt-2 mb-4 inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-full border border-border bg-transparent px-3.5 text-[0.8125rem] text-tx hover:bg-inline [&[hidden]]:hidden" type="button" data-calendar-map-fallback-retry hidden>
+        <span class="i-lucide-rotate-ccw" aria-hidden="true" />
+        重新加载
+      </button>
       <div class="grid grid-cols-2 gap-1">
         {
           locationGroups.map(group => (
