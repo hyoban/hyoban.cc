@@ -173,6 +173,43 @@ test('uses cached road routes except on straight legs', () => {
   assert.equal(trip.drivingHours, 2)
 })
 
+test('counts no driving for a trip taken only by train', () => {
+  const moments = [
+    { dateKey: '2026-05-01', id: 'hefei', locations: [hefei], occurredAt: '2026-05-01T09:00' },
+    { dateKey: '2026-05-01', id: 'nanjing', locations: [nanjing], occurredAt: '2026-05-01T12:00' },
+  ]
+  const trip = buildTrip(
+    {
+      end: '2026-05-01',
+      id: 'trip',
+      start: '2026-05-01',
+      straightLegs: [['nanjing', 'hefei', 'train']],
+      title: 'Trip',
+    },
+    moments,
+    resolve,
+  )
+
+  assert.deepEqual(
+    trip.legs.map((leg) => leg.by),
+    ['train'],
+  )
+  assert.equal(trip.drivingKm, 0)
+  assert.throws(
+    () =>
+      defineTrips([
+        {
+          end: '2026-05-01',
+          id: 'bus',
+          start: '2026-05-01',
+          straightLegs: [['hefei', 'nanjing', 'bus']],
+          title: 'x',
+        },
+      ]),
+    /Invalid straight leg/,
+  )
+})
+
 test('drives back the same way along the outbound route, reversed', () => {
   const moments = [
     { dateKey: '2026-05-01', id: 'hefei', locations: [hefei], occurredAt: '2026-05-01T09:00' },

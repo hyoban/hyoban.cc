@@ -75,4 +75,49 @@ export const trips = defineTrips([
     start: '2026-08-01',
     title: '单人自驾去日照',
   },
+  {
+    end: '2026-06-20',
+    id: '2026-dragon-boat-laojunshan',
+    start: '2026-06-19',
+    title: '端午自驾老君山',
+    waypoints: [{ at: '2026-06-19T08:00:00+08:00', location: 'wuwei' }],
+  },
+  {
+    end: '2026-05-05',
+    id: '2026-may-day-road-trip',
+    start: '2026-05-01',
+    title: '五一皖赣自驾',
+    waypoints: [{ at: '2026-05-01T09:00:00+08:00', location: 'wuwei' }],
+  },
+  {
+    end: '2026-04-05',
+    id: '2026-qingming-anji',
+    start: '2026-04-04',
+    title: '清明安吉床车',
+    waypoints: [{ at: '2026-04-04T13:00:00+08:00', location: 'wuwei' }],
+  },
+  {
+    end: '2025-11-05',
+    id: '2025-western-sichuan-road-trip',
+    start: '2025-10-18',
+    title: '床车自驾川西',
+    // Set out from Wuhu, resting a week in Xiangyang on the way.
+    waypoints: [{ at: '2025-10-18T10:00:00+08:00', location: 'wuwei' }],
+  },
+  {
+    end: '2024-11-30',
+    id: '2024-code-and-travel',
+    start: '2024-09-03',
+    // No car yet: every leg went by high-speed rail or plane.
+    straightLegs: [
+      ['beijing', 'qingdao', 'train'],
+      ['qingdao', 'nanjing', 'train'],
+      ['nanjing', 'chengdu', 'plane'],
+      ['chengdu', 'changsha', 'train'],
+      ['changsha', 'shenzhen', 'train'],
+      ['shenzhen', 'hong-kong', 'train'],
+      ['hong-kong', 'guangzhou', 'train'],
+    ],
+    title: '边写代码边旅游',
+  },
 ])

@@ -536,7 +536,13 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       leg && walked
         ? {
             line: leg.line,
-            mode: getTravelMode(points, trip?.legModes ?? [], walked.start, walked.end),
+            mode: getTravelMode(
+              points,
+              trip?.legs ?? [],
+              trip?.legModes ?? [],
+              walked.start,
+              walked.end,
+            ),
             ratio: walked.ratio,
             segment: walked.segment,
           }

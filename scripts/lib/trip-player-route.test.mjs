@@ -58,10 +58,19 @@ test('walks a share of the line and stops at the tip', () => {
 test('tells a ferry or plane leg from driving by its straight segment', () => {
   const modes = ['car', 'ferry']
 
-  assert.equal(getTravelMode(points, modes, [2, 0], [2, 2]), 'ferry')
-  assert.equal(getTravelMode(points, modes, [0, 0], [2, 0]), 'car')
+  assert.equal(getTravelMode(points, [], modes, [2, 0], [2, 2]), 'ferry')
+  assert.equal(getTravelMode(points, [], modes, [0, 0], [2, 0]), 'car')
   // A road vertex that happens to sit on the ferry's line is still driving.
-  assert.equal(getTravelMode(points, modes, [2, 0], [2, 1]), 'car')
+  assert.equal(getTravelMode(points, [], modes, [2, 0], [2, 1]), 'car')
+})
+
+test('tells a train leg along its rail line from driving', () => {
+  const modes = ['car', 'train']
+  const legs = [null, [[3, 1]]]
+
+  assert.equal(getTravelMode(points, legs, modes, [2, 0], [3, 1]), 'train')
+  assert.equal(getTravelMode(points, legs, modes, [3, 1], [2, 2]), 'train')
+  assert.equal(getTravelMode(points, legs, modes, [0, 0], [2, 0]), 'car')
 })
 
 test('writes chapters video sites accept', () => {
