@@ -180,9 +180,14 @@ const description = activeTrip
 
     // The map persists across the map and trip pages; a page without one only needs
     // the one left behind taken down.
-    if (!page || map?.page === page) {
+    if (!page) {
       map?.destroy()
       map = undefined
+      return
+    }
+
+    // Closing a place through history fires page-load for the same persisted map.
+    if (map?.page === page) {
       return
     }
 
