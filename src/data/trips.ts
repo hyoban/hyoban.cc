@@ -111,7 +111,7 @@ export const trips = defineTrips([
     // No car yet: every leg went by high-speed rail or plane.
     straightLegs: [
       ['beijing', 'qingdao', 'train'],
-      ['qingdao', 'nanjing', 'train'],
+      ['qingdao-tsutaya-haitian', 'nanjing', 'train'],
       ['nanjing', 'chengdu', 'plane'],
       ['chengdu', 'changsha', 'train'],
       ['changsha', 'shenzhen', 'train'],
