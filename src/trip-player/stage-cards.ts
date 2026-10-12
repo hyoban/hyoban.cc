@@ -1,8 +1,8 @@
 import { SITE_URL } from '../consts'
-import { createCountUp, createElement, createWeather } from './dom'
+import { createCountUp, createElement } from './dom'
 import { getTripMeta } from './intro'
 import { getSummaryStats } from './labels'
-import type { Slide, TripData, TripImage } from './types'
+import type { TripData, TripImage } from './types'
 
 // The story layout used for presenting and recording: its centred cards and the day
 // and time heading above a stop. A stop's photo card is built by the player, since it
@@ -23,19 +23,6 @@ export function createIntroCard(trip: TripData, covers: readonly TripImage[]) {
     createElement('p', 'calendar-map-trip-stage-card__title', trip.title),
     createElement('p', 'calendar-map-trip-stage-card__meta', getTripMeta(trip)),
     coverRow,
-  )
-  return card
-}
-
-export function createDayCard(trip: TripData, slide: Extract<Slide, { type: 'day' }>) {
-  const card = createElement('div', 'calendar-map-trip-stage-card', '')
-  const weather = trip.weather[slide.day]
-
-  card.append(
-    createElement('p', 'calendar-map-trip-stage-card__eyebrow', `第 ${slide.day} 天`),
-    createElement('p', 'calendar-map-trip-stage-card__title', slide.date),
-    ...(weather ? [createWeather(weather, 'calendar-map-trip-stage-card__weather')] : []),
-    createElement('p', 'calendar-map-trip-stage-card__meta', slide.places.join(' → ')),
   )
   return card
 }
