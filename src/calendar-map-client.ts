@@ -44,10 +44,10 @@ type ClusterMarkerEntry = {
 }
 
 const HISTORY_STATE_KEY = 'calendarMapSelection'
-// The 地点 setting in the URL, as ?places=compact or ?places=all; 标准 is left out.
+// The 地点 setting in the URL, as ?places=cluster or ?places=all; 城市 is left out.
 const PLACE_GROUPING_PARAM = 'places'
 // How the map gathers places: 合并 clusters those near each other on screen, 城市 rolls
-// them up into their city, 全部 shows each on its own. 合并 is the default.
+// them up into their city, 全部 shows each on its own. 城市 is the default.
 const PLACE_GROUPINGS = ['cluster', 'city', 'all'] as const
 // Below this zoom, 城市 shows cities; from it on, their places, as clusters spread.
 const CITY_MAX_ZOOM = 9
@@ -751,7 +751,7 @@ export function initializeCalendarMap() {
     // Kept in the URL, so a link or a reload opens the map the same way.
     const url = new URL(window.location.href)
 
-    if (grouping === 'cluster') {
+    if (grouping === 'city') {
       url.searchParams.delete(PLACE_GROUPING_PARAM)
     } else {
       url.searchParams.set(PLACE_GROUPING_PARAM, grouping)
@@ -1610,5 +1610,5 @@ function createLoadingMessage(text: string) {
 function readPlaceGrouping(): PlaceGrouping {
   const value = new URLSearchParams(window.location.search).get(PLACE_GROUPING_PARAM)
 
-  return PLACE_GROUPINGS.find((grouping) => grouping === value) ?? 'cluster'
+  return PLACE_GROUPINGS.find((grouping) => grouping === value) ?? 'city'
 }
