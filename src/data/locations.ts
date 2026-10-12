@@ -48,6 +48,11 @@ export const locations = defineLocations({
     longitude: 121.6,
     name: '大连',
   },
+  'dalian-datongjie-tram-stop': {
+    latitude: 38.91815,
+    longitude: 121.60193,
+    name: '大同街有轨电车站',
+  },
   'dalian-huozhang-niaogengzuo': {
     latitude: 38.85751,
     longitude: 121.51893,
@@ -98,6 +103,11 @@ export const locations = defineLocations({
     longitude: 113.2644,
     name: '广州',
   },
+  'guangzhou-baiyun-airport': {
+    latitude: 23.38005,
+    longitude: 113.29883,
+    name: '广州白云国际机场',
+  },
   haiyan: {
     latitude: 30.5254,
     longitude: 120.9458,
@@ -133,30 +143,50 @@ export const locations = defineLocations({
     longitude: 117.2272,
     name: '合肥',
   },
-  'hefei-binhu': {
-    latitude: 31.7135,
-    longitude: 117.2988,
-    name: '合肥滨湖新区',
-  },
   'hefei-binhu-national-forest-park': {
     latitude: 31.7247,
     longitude: 117.3771,
     name: '合肥滨湖国家森林公园',
+  },
+  'hefei-jiangheli-kaoyu': {
+    latitude: 31.85161,
+    longitude: 117.12054,
+    name: '江河里麻辣烤鱼（高新龙湖天街店）',
+  },
+  'hefei-qianxun-shaorou': {
+    latitude: 31.71487,
+    longitude: 117.29583,
+    name: '千寻烧肉·黑金店（滨湖银泰店）',
   },
   'hefei-xinqiao-airport': {
     latitude: 31.98779,
     longitude: 116.9769,
     name: '合肥新桥国际机场',
   },
+  'hefei-yangjia-huoguo': {
+    latitude: 31.74412,
+    longitude: 117.30583,
+    name: '杨家火锅（滨湖店）',
+  },
   'hong-kong': {
     latitude: 22.3193,
     longitude: 114.1694,
     name: '香港',
   },
+  honghaizi: {
+    latitude: 30.18532,
+    longitude: 101.77422,
+    name: '红海子',
+  },
   huaian: {
     latitude: 33.6065,
     longitude: 119.0302,
     name: '淮安',
+  },
+  'jiguan-cave': {
+    latitude: 33.78488,
+    longitude: 111.5647,
+    name: '鸡冠洞',
   },
   kangding: {
     latitude: 30.0507,
@@ -213,11 +243,6 @@ export const locations = defineLocations({
     longitude: 120.4971,
     name: '灵岩山寺',
   },
-  linzhou: {
-    latitude: 36.0674,
-    longitude: 113.81054,
-    name: '林州',
-  },
   'linzhou-dongyao': {
     latitude: 35.91412,
     longitude: 113.95249,
@@ -243,15 +268,15 @@ export const locations = defineLocations({
     longitude: 118.507,
     name: '马鞍山',
   },
+  'maanshan-rail-coffee': {
+    latitude: 31.70842,
+    longitude: 118.50324,
+    name: '第三铁道咖啡（健康路店）',
+  },
   maogongshan: {
     latitude: 31.2934,
     longitude: 117.6109,
     name: '毛公山',
-  },
-  mianyang: {
-    latitude: 31.4675,
-    longitude: 104.6796,
-    name: '绵阳',
   },
   moganshan: {
     latitude: 30.601,
@@ -267,6 +292,11 @@ export const locations = defineLocations({
     latitude: 32.06926,
     longitude: 118.63504,
     name: '南京江北虹悦城',
+  },
+  'nanjing-kinglomo-ifcx': {
+    latitude: 32.04305,
+    longitude: 118.77797,
+    name: '金粒门KINGLOMO（新街口国际金融中心IFCX店）',
   },
   'nanjing-lukou-airport': {
     latitude: 31.74203,
@@ -292,6 +322,11 @@ export const locations = defineLocations({
     latitude: 36.0671,
     longitude: 120.3826,
     name: '青岛',
+  },
+  'qingdao-tsutaya-haitian': {
+    latitude: 36.05784,
+    longitude: 120.36433,
+    name: 'TSUTAYA BOOKSTORE 蔦屋书店（海天MALL）',
   },
   rizhao: {
     latitude: 35.4154,
@@ -358,6 +393,11 @@ export const locations = defineLocations({
     longitude: 120.6357,
     name: '苏州大学',
   },
+  'suzhou-guanyu-dushu-lake': {
+    latitude: 31.25566,
+    longitude: 120.7328,
+    name: '冠寓（苏州腾飞创新园独墅湖店）',
+  },
   'suzhou-museum': {
     latitude: 31.3252,
     longitude: 120.6236,
@@ -372,6 +412,11 @@ export const locations = defineLocations({
     latitude: 39.13629,
     longitude: 117.21053,
     name: '美素锅巴菜（华捷道）',
+  },
+  tianquan: {
+    latitude: 30.06051,
+    longitude: 102.77066,
+    name: '天全',
   },
   'tiger-leaping-gorge': {
     latitude: 27.23,
@@ -408,6 +453,16 @@ export const locations = defineLocations({
     longitude: 118.4331,
     name: '芜湖',
   },
+  'wuhu-intime-inpark': {
+    latitude: 31.33242,
+    longitude: 118.36518,
+    name: '芜湖银泰inPARK',
+  },
+  'wuhu-shejian-dashi-tieban': {
+    latitude: 31.33899,
+    longitude: 118.39405,
+    name: '舌尖大师铁板香锅（万达金街店）',
+  },
   'wuhu-tianmen-mountain': {
     latitude: 31.498,
     longitude: 118.365,
@@ -417,11 +472,6 @@ export const locations = defineLocations({
     latitude: 29.264,
     longitude: 117.834,
     name: '文博艺术公园',
-  },
-  wuyuan: {
-    latitude: 29.248,
-    longitude: 117.861,
-    name: '婺源',
   },
   wuwei: {
     latitude: 31.2999,
@@ -433,10 +483,25 @@ export const locations = defineLocations({
     longitude: 117.7733,
     name: '无为襄安',
   },
+  'wuyuan-huji-sichu': {
+    latitude: 29.26089,
+    longitude: 117.83104,
+    name: '胡记私厨（七里湖岸店）',
+  },
   xiangyang: {
     latitude: 32.009,
     longitude: 112.1224,
     name: '襄阳',
+  },
+  'xianhai-lake': {
+    latitude: 31.5306,
+    longitude: 104.85757,
+    name: '仙海湖',
+  },
+  xinduqiao: {
+    latitude: 30.04709,
+    longitude: 101.49073,
+    name: '新都桥',
   },
   'xinghai-bay-bridge': {
     latitude: 38.868167,
@@ -448,15 +513,20 @@ export const locations = defineLocations({
     longitude: 114.091,
     name: '信阳',
   },
-  xuchang: {
-    latitude: 34.0357,
-    longitude: 113.8523,
-    name: '许昌',
-  },
   'xuanwu-lake': {
     latitude: 32.0744,
     longitude: 118.7955,
     name: '玄武湖',
+  },
+  'xuchang-caowei-ancient-city': {
+    latitude: 34.03032,
+    longitude: 113.82162,
+    name: '曹魏古城',
+  },
+  'xuchang-pangdonglai-times-square': {
+    latitude: 34.01996,
+    longitude: 113.8272,
+    name: '胖东来时代广场',
   },
   'yalu-river': {
     latitude: 40.1161,
@@ -478,10 +548,10 @@ export const locations = defineLocations({
     longitude: 121.3718,
     name: '烟台港客运站',
   },
-  yucun: {
-    latitude: 30.5252,
-    longitude: 119.5995,
-    name: '余村',
+  'yucun-visitor-center': {
+    latitude: 30.51977,
+    longitude: 119.61293,
+    name: '安吉余村游客中心',
   },
   yunniaoji: {
     latitude: 30.368,
