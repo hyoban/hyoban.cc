@@ -1,9 +1,9 @@
 // Per-viewer playback choices, remembered in this browser when storage allows.
 
-const MUSIC_PREFERENCE_KEY = 'calendar-trip-music'
-const SPEED_PREFERENCE_KEY = 'calendar-trip-speed'
-const SAFE_AREA_PREFERENCE_KEY = 'calendar-trip-safe-area'
-const RATIO_PREFERENCE_KEY = 'calendar-trip-ratio'
+const MUSIC_PREFERENCE_KEY = 'trip-map-music'
+const SPEED_PREFERENCE_KEY = 'trip-map-speed'
+const SAFE_AREA_PREFERENCE_KEY = 'trip-map-safe-area'
+const RATIO_PREFERENCE_KEY = 'trip-map-ratio'
 
 export const SPEEDS = [1, 1.5, 2] as const
 

@@ -3,7 +3,16 @@ import { createElement } from './dom.ts'
 // How the trip's cards and photos change: the side card eases between cards'
 // heights, and photos (on the side card and the stage's photo card) fade through.
 
-export const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
+let reducedMotionQuery: MediaQueryList | undefined
+
+/** The viewer's motion preference, asked for on first use so importing this needs no window. */
+export function getReducedMotionQuery() {
+  return (reducedMotionQuery ??= window.matchMedia('(prefers-reduced-motion: reduce)'))
+}
+
+export function prefersReducedMotion() {
+  return getReducedMotionQuery().matches
+}
 
 // Switching photos fades through: the old one fades out, the frame takes the new one's
 // shape, then the new one fades in, so the two are never seen on top of each other.
@@ -79,7 +88,7 @@ export function easeCardChange(
   const fromHeight = panel.getBoundingClientRect().height
   transition.end()
 
-  const ghost = createElement('div', 'calendar-map-trip-ghost', '')
+  const ghost = createElement('div', 'trip-map-ghost', '')
   const top = header.offsetTop
 
   ghost.append(header.cloneNode(true), body.cloneNode(true))
@@ -91,7 +100,7 @@ export function easeCardChange(
     element.removeAttribute('id')
 
     for (const name of element.getAttributeNames()) {
-      if (name.startsWith('data-calendar-map')) {
+      if (name.startsWith('data-trip-map')) {
         element.removeAttribute(name)
       }
     }
@@ -103,7 +112,7 @@ export function easeCardChange(
 
   ghost.style.top = `${top}px`
   panel.append(ghost)
-  panel.toggleAttribute('data-resizing', true)
+  panel.toggleAttribute('data-trip-map-resizing', true)
   transition.run(
     [
       panel.animate([{ height: `${fromHeight}px` }, { height: `${toHeight}px` }], CARD_SWITCH),
@@ -113,7 +122,7 @@ export function easeCardChange(
     ],
     () => {
       ghost.remove()
-      panel.removeAttribute('data-resizing')
+      panel.removeAttribute('data-trip-map-resizing')
     },
   )
 }

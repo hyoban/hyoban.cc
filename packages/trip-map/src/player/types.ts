@@ -1,9 +1,11 @@
+import type { Coordinates } from '../geo.ts'
 import type { WeatherIcon } from '../icons.ts'
 import type { TravelMode } from '../trips.ts'
 import type { TripSlide } from './slides.ts'
 
-// What the player plays: one trip's data, as the site builds it and inlines in the page
-// or serves as JSON (see the README), and every trip's summary for the overview map.
+// What the player plays: one trip's data, as `shapeTripData` builds it from a built
+// trip and the site inlines in the page or serves as JSON, and every trip's summary
+// (`getTripSummary`) for the overview map.
 
 /** A still image sized for the trip cards, with its responsive sources. */
 export type TripImage = {
@@ -21,8 +23,8 @@ export type TripPlace = { latitude: number; longitude: number; name: string }
 
 /** A place passed on the way to a stop, and when the route passed it. */
 export type TripDataWaypoint = TripPlace & {
-  /** The date as shown on the cards, like `10月1日周四`. */
-  date: string
+  /** The day's date as `YYYY-MM-DD`. */
+  dateKey: string
   /** 1-based day of the trip. */
   day: number
   /** `HH:mm`, when known. */
@@ -33,13 +35,11 @@ export type TripDataWaypoint = TripPlace & {
 export type TripDataStop = {
   /** The URL hash that opens the trip on this card. */
   anchor: string
-  date: string
+  dateKey: string
   day: number
   /** Where the Moment itself can be read. */
   href: string
   images: TripImage[]
-  /** The places' names, joined. */
-  name: string
   places: TripPlace[]
   text: string
   /** `HH:mm`, when the Moment has a time. */
@@ -50,26 +50,33 @@ export type TripDataStop = {
   waypoints: TripDataWaypoint[]
 }
 
+/** From one place of the route to the next: along a road or rail line, or straight. */
+export type TripDataLeg = {
+  /** The road or rail geometry between the two places; null draws a straight line. */
+  line: readonly Coordinates[] | null
+  mode: TravelMode
+}
+
 /** Each trip day's weather by day number; days without data are left out. */
 export type TripWeather = Record<number, { icon: WeatherIcon; label: string }>
 
 export type TripData = {
   /** Photos for the intro and summary cards, best first. */
   covers: TripImage[]
-  dateRange: string
   dayCount: number
   drivingHours: number
   drivingKm: number
+  /** The last day, as `YYYY-MM-DD`. */
+  end: string
   id: string
-  /** Road or rail geometry from each place of the route to the next; null draws it straight. */
-  legs: (readonly (readonly [number, number])[] | null)[]
-  legModes: TravelMode[]
+  /** One per pair of consecutive places in the route (every stop's waypoints then its places). */
+  legs: TripDataLeg[]
   /** The background music's URL, when the trip has some. */
   music?: string | undefined
-  /** The document title while the trip plays. */
-  pageTitle: string
   photoCount: number
   placeCount: number
+  /** The first day, as `YYYY-MM-DD`. */
+  start: string
   stops: TripDataStop[]
   title: string
   /** Waypoints after the last stop. */
@@ -81,11 +88,11 @@ export type Slide = TripSlide<TripDataStop>
 
 /** The overview's view of a trip: its route to draw and name. Its playback data loads when it starts. */
 export type TripSummary = {
-  dateRange: string
+  end: string
   id: string
-  pageTitle: string
   /** Stretches of the route: drives, and the ferries or flights drawn dashed. */
   segments: { line: [number, number][]; straight: boolean }[]
+  start: string
   title: string
 }
 
@@ -93,7 +100,7 @@ export type TripSummary = {
 export type TripPoint = {
   coordinates: [number, number]
   /** When the route passes it: a stop's own day and time, or the waypoint's. */
-  date: string
+  dateKey: string
   day: number
   name: string
   stopIndex: number

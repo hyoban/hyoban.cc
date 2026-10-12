@@ -1,3 +1,5 @@
+import { getDateParts } from '../format.ts'
+import type { Messages } from '../messages.ts'
 import type { ClockMoment } from './slides.ts'
 
 /**
@@ -5,7 +7,7 @@ import type { ClockMoment } from './slides.ts'
  * (第 3 天 · 19:43). Their numbers roll (number-flow) from one moment to the next, or
  * just tick on while the clock runs with the route, so moving on reads as time passing.
  */
-export function createDayHeading(date: HTMLElement, title: HTMLElement) {
+export function createDayHeading(date: HTMLElement, title: HTMLElement, messages: Messages) {
   const roll = (minimumIntegerDigits = 1) => {
     const flow = document.createElement('number-flow')
     flow.format = { minimumIntegerDigits, useGrouping: false }
@@ -18,28 +20,29 @@ export function createDayHeading(date: HTMLElement, title: HTMLElement) {
   const monthDay = roll()
   const flows = [day, hour, minute, month, monthDay]
   const time = document.createElement('span')
-  const weekday = document.createElement('span')
-  const rolledDate = [month, '月', monthDay, '日', weekday]
-  // A date that isn't like 10月2日周五 is shown as it is.
-  let plainDate: string | undefined
+  // The day's label around its number: 第 {day} 天.
+  const [dayBefore = '', dayAfter = ''] = messages.dayLabel.split('{day}')
+  // The date's pieces that aren't its numbers, to know when its shape changes.
+  let dateShape: string | undefined
   let shown: string | undefined
 
-  time.append(' · ', hour, ':', minute)
-  title.replaceChildren('第 ', day, ' 天', time)
-  date.replaceChildren(...rolledDate)
+  time.append(messages.separator, hour, ':', minute)
+  title.replaceChildren(dayBefore, day, dayAfter, time)
 
   return {
     /** Rolls to `moment`, or with `animate` off just sets it, as a running clock does. */
     set(moment: ClockMoment, options: { animate: boolean }) {
-      const key = `${moment.day} ${moment.date} ${moment.time}`
+      const key = `${moment.day} ${moment.dateKey} ${moment.time}`
 
       if (key === shown) {
         return
       }
 
-      const dateParts = /^(\d+)月(\d+)日(.*)$/.exec(moment.date)
       const timeParts = /^(\d{1,2}):(\d{2})$/.exec(moment.time ?? '')
-      const nextPlainDate = dateParts ? undefined : moment.date
+      const parts = getDateParts(moment.dateKey, messages.locale)
+      const shape = parts
+        .map((part) => (part.type === 'day' || part.type === 'month' ? part.type : part.value))
+        .join('\u0000')
 
       shown = key
 
@@ -56,19 +59,22 @@ export function createDayHeading(date: HTMLElement, title: HTMLElement) {
         minute.update(Number(timeParts[2]))
       }
 
-      if (dateParts) {
-        month.update(Number(dateParts[1]))
-        monthDay.update(Number(dateParts[2]))
-        weekday.textContent = dateParts[3] ?? ''
+      // The numbers roll in place; the words around them are laid out again only
+      // when they change (a different weekday, or a date the locale writes otherwise).
+      if (shape !== dateShape) {
+        dateShape = shape
+        date.replaceChildren(
+          ...parts.map((part) =>
+            part.type === 'month' ? month : part.type === 'day' ? monthDay : part.value,
+          ),
+        )
       }
 
-      if (nextPlainDate !== plainDate) {
-        plainDate = nextPlainDate
-
-        if (plainDate === undefined) {
-          date.replaceChildren(...rolledDate)
-        } else {
-          date.textContent = plainDate
+      for (const part of parts) {
+        if (part.type === 'month') {
+          month.update(Number(part.value))
+        } else if (part.type === 'day') {
+          monthDay.update(Number(part.value))
         }
       }
     },

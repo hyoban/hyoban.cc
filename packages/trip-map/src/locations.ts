@@ -18,8 +18,6 @@ export type MapLocationGroup<T extends MappableMoment> = Readonly<{
   moments: T[]
 }>
 
-const YEAR_COLORS = ['#3b82f6', '#8b5cf6', '#f59e0b', '#10b981', '#ef4444', '#06b6d4'] as const
-
 export function defineLocations<const T extends Record<string, MapLocation>>(locations: T) {
   for (const [id, location] of Object.entries(locations)) {
     const validLatitude =
@@ -75,13 +73,9 @@ export function groupMomentsByLocation<T extends MappableMoment>(
     .sort((first, second) => compareMomentsDescending(first.moments[0]!, second.moments[0]!))
 }
 
-export function getYearColor(year: number) {
-  const index = (((year - 2024) % YEAR_COLORS.length) + YEAR_COLORS.length) % YEAR_COLORS.length
-  return YEAR_COLORS[index]!
-}
-
-function compareMomentsDescending(first: MappableMoment, second: MappableMoment) {
-  const dateComparison = second.dateKey.localeCompare(first.dateKey)
+/** Oldest first; timed Moments on the same day sort by time, then by `order`. */
+export function compareMoments(first: MappableMoment, second: MappableMoment) {
+  const dateComparison = first.dateKey.localeCompare(second.dateKey)
 
   if (dateComparison !== 0) {
     return dateComparison
@@ -89,9 +83,13 @@ function compareMomentsDescending(first: MappableMoment, second: MappableMoment)
 
   if (first.occurredAt.length > 10 && second.occurredAt.length > 10) {
     return (
-      Date.parse(second.occurredAt) - Date.parse(first.occurredAt) || second.order - first.order
+      Date.parse(first.occurredAt) - Date.parse(second.occurredAt) || first.order - second.order
     )
   }
 
-  return second.order - first.order
+  return first.order - second.order
+}
+
+function compareMomentsDescending(first: MappableMoment, second: MappableMoment) {
+  return compareMoments(second, first)
 }

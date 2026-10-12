@@ -1,3 +1,5 @@
+import type { Messages } from '../messages.ts'
+
 // Numbers and text the cards and the exported video's chapters show. DOM-free.
 
 type TripStats = Readonly<{
@@ -10,14 +12,14 @@ type TripStats = Readonly<{
 }>
 
 /** The summary's tiles, as `[number, unit]`; the driving ones only when there was driving. */
-export function getSummaryStats(trip: TripStats) {
+export function getSummaryStats(trip: TripStats, messages: Messages) {
   const stats = [
-    [trip.dayCount, '天'],
-    [trip.stops.length, '条记录'],
-    [trip.placeCount, '个地点'],
-    [trip.photoCount, '张照片'],
-    [trip.drivingKm, '公里自驾'],
-    [trip.drivingHours, '小时车程'],
+    [trip.dayCount, messages.unitDays],
+    [trip.stops.length, messages.unitMoments],
+    [trip.placeCount, messages.unitPlaces],
+    [trip.photoCount, messages.unitPhotos],
+    [trip.drivingKm, messages.unitDrivingKm],
+    [trip.drivingHours, messages.unitDrivingHours],
   ] as const
 
   return trip.drivingKm > 0 ? stats : stats.slice(0, 4)

@@ -157,7 +157,7 @@ export function createMapLabels({
     }
 
     if (!layer?.isConnected) {
-      layer = createElement('div', 'calendar-map-trip-labels', '')
+      layer = createElement('div', 'trip-map-labels', '')
       layer.setAttribute('aria-hidden', 'true')
       map.getContainer().append(layer)
     }
@@ -166,9 +166,9 @@ export function createMapLabels({
       ? ['top-right', 'top', 'right', 'bottom-right', 'top-left', 'bottom', 'left', 'bottom-left']
       : ['top', 'top-right', 'top-left', 'bottom', 'right', 'left', 'bottom-right', 'bottom-left']
     labels = next.map(({ coordinates, name }) => {
-      const element = createElement('div', 'calendar-map-trip-label', '')
+      const element = createElement('div', 'trip-map-label', '')
 
-      element.append(createElement('p', 'calendar-map-trip-label__name', name))
+      element.append(createElement('p', 'trip-map-label__name', name))
       // Starts hidden and fades in once its place is on screen.
       element.style.opacity = '0'
       layer!.append(element)

@@ -1,0 +1,268 @@
+import type { MapElements } from '../elements.ts'
+import { t, type Messages } from '../messages.ts'
+import type { PlaceMarker } from './place-markers.ts'
+
+// The drawer a place opens with its Moments: an HTML fragment fetched from the site
+// the first time, and a lightbox for its photos when the site provides one.
+
+/** Shows a drawer item's media in the lightbox: a still, or a live photo's clip. */
+export type LightboxMedia = { show: (item: HTMLElement) => void }
+
+// The drawer sliding away as it closes; it slides in from the same spot (see styles.css).
+const DRAWER_EXIT = { duration: 200, easing: 'cubic-bezier(0.4, 0, 1, 1)' }
+
+export type PlaceDrawer = ReturnType<typeof createPlaceDrawer>
+
+export function createPlaceDrawer({
+  createLightboxMedia,
+  elements,
+  getPlaceUrl,
+  isNarrow,
+  messages,
+  onClosed,
+  onOpen,
+  onRestoreFocus,
+  reducedMotion,
+  signal,
+}: {
+  createLightboxMedia?:
+    | ((dialog: HTMLDialogElement, signal: AbortSignal) => LightboxMedia)
+    | undefined
+  elements: MapElements
+  getPlaceUrl: (id: string) => string
+  isNarrow: () => boolean
+  messages: Messages
+  /** The drawer started closing: the map can drop the room it left for it. */
+  onClosed: () => void
+  /** A place opened; the map may move to it. */
+  onOpen: (place: PlaceMarker, options: { moveMap: boolean }) => void
+  /** Puts focus back on what opened the drawer. */
+  onRestoreFocus: (trigger: HTMLButtonElement) => void
+  reducedMotion: MediaQueryList
+  signal: AbortSignal
+}) {
+  const { drawer, drawerClose, drawerContent, drawerEyebrow, drawerTitle, lightbox, page } =
+    elements
+  // Each place's drawer content, fetched once; a failed fetch is tried again next time.
+  const html = new Map<string, string>()
+  const requests = new Map<string, Promise<string | undefined>>()
+  const lightboxMedia = lightbox && createLightboxMedia?.(lightbox, signal)
+  let activeId: string | undefined
+  let activeTrigger: HTMLButtonElement | undefined
+  let exit: Animation | undefined
+  let lightboxIndex = 0
+  let lightboxItems: HTMLElement[] = []
+
+  function load(id: string) {
+    let request = requests.get(id)
+
+    if (!request) {
+      request = fetch(getPlaceUrl(id), { signal })
+        .then((response) => (response.ok ? response.text() : undefined))
+        .catch(() => undefined)
+        .then((text) => {
+          if (text === undefined) {
+            requests.delete(id)
+          } else {
+            html.set(id, text)
+          }
+
+          return text
+        })
+      requests.set(id, request)
+    }
+
+    return request
+  }
+
+  function createMessage(text: string) {
+    const message = document.createElement('p')
+    message.className = 'trip-map-drawer__message'
+    message.textContent = text
+    return message
+  }
+
+  function renderContent(text: string | undefined) {
+    const template = document.createElement('template')
+
+    if (text === undefined) {
+      drawerContent.replaceChildren(createMessage(messages.drawerFailed))
+    } else {
+      template.innerHTML = text
+      drawerContent.replaceChildren(template.content)
+    }
+
+    drawerContent.removeAttribute('aria-busy')
+  }
+
+  function closeLightbox() {
+    if (lightbox?.open) {
+      lightbox.close()
+    }
+  }
+
+  function open(
+    place: PlaceMarker,
+    options: { focus?: boolean; moveMap?: boolean; trigger?: HTMLButtonElement | undefined } = {},
+  ) {
+    closeLightbox()
+
+    activeId = place.id
+    activeTrigger = options.trigger ?? activeTrigger
+    drawerTitle.textContent = place.name
+    drawerEyebrow.textContent = t(messages, 'placeEyebrow', {
+      count: place.count,
+      years: place.years
+        .map((year) => t(messages, 'yearItem', { year }))
+        .join(messages.yearSeparator),
+    })
+    exit?.cancel()
+    exit = undefined
+    drawer.hidden = false
+
+    if (html.has(place.id)) {
+      renderContent(html.get(place.id))
+    } else {
+      drawerContent.setAttribute('aria-busy', 'true')
+      drawerContent.replaceChildren(createMessage(messages.drawerLoading))
+      void load(place.id).then((text) => {
+        if (activeId === place.id) {
+          renderContent(text)
+        }
+      })
+    }
+
+    onOpen(place, { moveMap: options.moveMap !== false })
+
+    if (options.focus !== false) {
+      drawerClose.focus({ preventScroll: true })
+    }
+  }
+
+  function close(options: { restoreFocus?: boolean } = {}) {
+    if (drawer.hidden || exit) {
+      return
+    }
+
+    closeLightbox()
+    activeId = undefined
+
+    // Slides away first, then hides and lets go of its content; a place opened
+    // meanwhile cancels the slide and keeps the drawer. A script animation, as going
+    // back to the map page has the router put the map back into the page, which would
+    // end a CSS transition on the spot.
+    const animation = drawer.animate(
+      [{}, { opacity: 0, translate: isNarrow() ? '0 2rem' : '1.5rem 0' }],
+      { ...DRAWER_EXIT, duration: reducedMotion.matches ? 0 : DRAWER_EXIT.duration },
+    )
+
+    exit = animation
+    animation.finished.then(
+      () => {
+        if (exit === animation) {
+          exit = undefined
+          drawer.hidden = true
+          drawerContent.replaceChildren()
+          animation.cancel()
+        }
+      },
+      () => {},
+    )
+    onClosed()
+
+    if (options.restoreFocus !== false && activeTrigger?.isConnected && !activeTrigger.hidden) {
+      onRestoreFocus(activeTrigger)
+    }
+  }
+
+  function showLightboxItem(index: number) {
+    if (!lightbox || !lightboxMedia || lightboxItems.length === 0) {
+      return
+    }
+
+    lightboxIndex = (index + lightboxItems.length) % lightboxItems.length
+    const item = lightboxItems[lightboxIndex]
+
+    if (!item) {
+      return
+    }
+
+    lightboxMedia.show(item)
+
+    if (!lightbox.open) {
+      lightbox.showModal()
+    }
+  }
+
+  page.addEventListener(
+    'click',
+    (event) => {
+      const target = event.target
+
+      if (!(target instanceof Element)) {
+        return
+      }
+
+      const item = target.closest<HTMLElement>('[data-lightbox-item]')
+
+      if (!item || !drawer.contains(item)) {
+        return
+      }
+
+      lightboxItems = [...drawer.querySelectorAll<HTMLElement>('[data-lightbox-item]')]
+      showLightboxItem(lightboxItems.indexOf(item))
+    },
+    { signal },
+  )
+
+  if (lightbox) {
+    lightbox
+      .querySelector('[data-trip-map-lightbox-close]')
+      ?.addEventListener('click', () => lightbox.close(), { signal })
+    lightbox
+      .querySelector('[data-trip-map-lightbox-previous]')
+      ?.addEventListener('click', () => showLightboxItem(lightboxIndex - 1), { signal })
+    lightbox
+      .querySelector('[data-trip-map-lightbox-next]')
+      ?.addEventListener('click', () => showLightboxItem(lightboxIndex + 1), { signal })
+    lightbox.addEventListener(
+      'click',
+      (event) => {
+        if (event.target === lightbox) {
+          lightbox.close()
+        }
+      },
+      { signal },
+    )
+    lightbox.addEventListener(
+      'keydown',
+      (event) => {
+        if (event.key === 'ArrowLeft') {
+          showLightboxItem(lightboxIndex - 1)
+        } else if (event.key === 'ArrowRight') {
+          showLightboxItem(lightboxIndex + 1)
+        }
+      },
+      { signal },
+    )
+  }
+
+  signal.addEventListener('abort', () => exit?.cancel())
+
+  return {
+    get activeId() {
+      return activeId
+    },
+    close,
+    /** Whether a photo is open over the drawer. */
+    get lightboxOpen() {
+      return lightbox?.open ?? false
+    },
+    load,
+    open,
+    /** Remembers what to put focus back on; set before a place opens from the URL. */
+    set trigger(button: HTMLButtonElement | undefined) {
+      activeTrigger = button ?? activeTrigger
+    },
+  }
+}

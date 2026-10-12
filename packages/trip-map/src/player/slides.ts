@@ -1,15 +1,17 @@
+import { formatDate } from '../format.ts'
+import { t, type Messages } from '../messages.ts'
+
 // The DOM-free parts of trip playback: which slides a trip plays, how long each one
 // lasts, what they're called and which waypoints come before them. Kept apart from
 // the player so they can be unit-tested.
 
 type SlideStop = Readonly<{
-  date: string
+  dateKey: string
   day: number
   images: readonly Readonly<{ video?: string | undefined }>[]
-  name: string
   places: readonly Readonly<{ name: string }>[]
   text: string
-  waypoints: readonly Readonly<{ date: string; day: number; name: string }>[]
+  waypoints: readonly Readonly<{ dateKey: string; day: number; name: string }>[]
 }>
 
 // Pacing: the cards with photos keep a brisk rhythm, and everything between them
@@ -31,7 +33,7 @@ const CHARACTER_DURATION = 120
 export type TripSlide<S> =
   | { type: 'intro' }
   | {
-      date: string
+      dateKey: string
       day: number
       places: string[]
       /** The next stop: the day's first, or the one a waypoints-only day drives toward. */
@@ -76,7 +78,7 @@ export function buildSlides<S extends SlideStop>(stops: readonly S[]): TripSlide
         const ofDay = earlier.filter((waypoint) => waypoint.day === day)
 
         return {
-          date: ofDay[0]!.date,
+          dateKey: ofDay[0]!.dateKey,
           day,
           places: [...new Set(ofDay.map((waypoint) => waypoint.name))],
           stopIndex,
@@ -101,7 +103,7 @@ export function buildSlides<S extends SlideStop>(stops: readonly S[]): TripSlide
       return [
         ...openers,
         {
-          date: dayStops[0]!.date,
+          dateKey: dayStops[0]!.dateKey,
           day: stop.day,
           places,
           stopIndex,
@@ -212,33 +214,45 @@ export function getPhotoAt(stop: SlideStop, share: number, timing: SlideTiming) 
   )
 }
 
+/** A stop's places' names, joined. */
+export function getStopName(stop: Pick<SlideStop, 'places'>, messages: Messages) {
+  return stop.places.map((place) => place.name).join(messages.placeSeparator)
+}
+
 /** Names a slide for the progress bar's tooltip and screen readers. */
-export function getSlideLabel(slide: TripSlide<SlideStop>) {
+export function getSlideLabel(slide: TripSlide<SlideStop>, messages: Messages) {
   if (slide.type === 'intro') {
-    return '开头'
+    return messages.intro
   }
 
-  if (slide.type === 'day') {
-    return `第 ${slide.day} 天 · ${slide.date}`
+  if (slide.type === 'summary') {
+    return messages.summary
   }
 
-  return slide.type === 'summary' ? '旅程回顾' : `第 ${slide.stop.day} 天 · ${slide.stop.name}`
+  const day = t(messages, 'dayLabel', { day: slide.type === 'day' ? slide.day : slide.stop.day })
+  const name =
+    slide.type === 'day'
+      ? formatDate(slide.dateKey, messages.locale, { weekday: true })
+      : getStopName(slide.stop, messages)
+
+  return `${day}${messages.separator}${name}`
 }
 
 /** `第 N 天 · date · time`, naming a stop for screen readers. */
-export function getStopEyebrow({
-  date,
-  day,
-  time,
-}: {
-  date: string
-  day: number
-  time?: string | undefined
-}) {
-  return [`第 ${day} 天`, date, time].filter(Boolean).join(' · ')
+export function getStopEyebrow(
+  { dateKey, day, time }: { dateKey: string; day: number; time?: string | undefined },
+  messages: Messages,
+) {
+  return [
+    t(messages, 'dayLabel', { day }),
+    formatDate(dateKey, messages.locale, { weekday: true }),
+    time,
+  ]
+    .filter(Boolean)
+    .join(messages.separator)
 }
 
-export type ClockMoment = { date: string; day: number; time?: string | undefined }
+export type ClockMoment = { dateKey: string; day: number; time?: string | undefined }
 
 const DAY_MINUTES = 24 * 60
 

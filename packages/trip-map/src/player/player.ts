@@ -1,126 +1,97 @@
 import type { Map as MapboxMap } from 'mapbox-gl'
-import { getDistanceKm, type Coordinates } from '../geo.ts'
+import { collectPanelElements, collectStageElements } from '../elements.ts'
+import { getDistanceKm } from '../geo.ts'
+import {
+  renderShortcuts,
+  renderTripPanel,
+  renderTripStage,
+  type Brand,
+  type MusicTrack,
+} from '../markup.ts'
+import { t, type Messages } from '../messages.ts'
+import { readTheme } from '../theme.ts'
+import { createAmbientMusic } from './ambient-music.ts'
 import { createCamera } from './camera.ts'
-import {
-  createCountUp,
-  createElement,
-  createIcon,
-  createLiveVideo,
-  createVideoPlayer,
-  createMosaic,
-  createWeather,
-  downloadBlob,
-  IMAGE_SIZES,
-  parseJson,
-  perFrame,
-  preloadImage,
-  preloadThumbnail,
-  queryRequired,
-  setButtonIcon,
-} from './dom.ts'
-import { createChapterLog, getShortPlaceName, getSummaryStats } from './labels.ts'
-import {
-  closeMusic,
-  fadeMusicIn,
-  fadeMusicOut,
-  loadMusic,
-  setMusicAudible,
-  type Music,
-} from './music.ts'
+import { createDayHeading } from './day-heading.ts'
+import { createElement, perFrame, preloadImage, preloadThumbnail, setButtonIcon } from './dom.ts'
+import { getIntroCovers } from './intro.ts'
+import { getShortPlaceName } from './labels.ts'
+import { createMapLabels } from './map-labels.ts'
+import { getReducedMotionQuery } from './motion.ts'
+import { setMusicAudible } from './music.ts'
 import {
   getNextSpeed,
-  SPEEDS,
   readMusicPreference,
-  readRatioPreference,
-  readSafeAreaPreference,
   readSpeedPreference,
+  SPEEDS,
   writeMusicPreference,
-  writeRatioPreference,
-  writeSafeAreaPreference,
   writeSpeedPreference,
 } from './preferences.ts'
+import { createRouteDrawer } from './route-drawer.ts'
+import { createRoutePlan, type RoutePlan } from './route-plan.ts'
+import { createSideCard } from './side-card.ts'
+import { getSlideDuration, getSlideLabel, type SlideTiming } from './slides.ts'
+import { createStage } from './stage.ts'
 import {
-  easeInOut,
-  getRouteLine as buildRouteLine,
-  getTravelMode,
-  measureLine,
-  walkLine,
-  type MeasuredLine,
-} from './route.ts'
-import { createMapLabels } from './map-labels.ts'
-import {
-  canRecord,
-  createRecording,
-  cropTo,
-  releaseCapture,
-  requestTabCapture,
-  type Recording,
-} from './recorder.ts'
-import { createTransition, easeCardChange, easePhotoChange, reducedMotion } from './motion.ts'
-import { createStagePhotoCard } from './stage-photo-card.ts'
-import { createScreenWakeLock } from './wake-lock.ts'
-import { createRouteLayers, type StopState } from './route-layers.ts'
-import {
-  buildSlides,
-  getPhotoAt,
-  getPhotoStarts,
-  getSlideDuration,
-  getSlideLabel,
-  getClock,
-  getStopEyebrow,
-  getStopPointEnds,
-  getStopPointStart as getPointStart,
-  getWaypointsBefore as getWaypointRange,
-  type SlideTiming,
-} from './slides.ts'
-import { createDayHeading } from './day-heading.ts'
-import { createIntroCard, createSummaryCard } from './stage-cards.ts'
-import { getIntroCovers, getTripMeta } from './intro.ts'
+  findAnchorSlide,
+  findDayTarget,
+  getPhotoTime,
+  getSlideAnchor,
+  resolveSlideIndex,
+  stepThroughPhotos,
+} from './timeline.ts'
+import { createTripLoader } from './trip-loader.ts'
 import type {
   MapLabel,
   Slide,
   TripData,
-  TripImage,
-  TripPlace,
-  TripPoint,
   TripDataStop,
+  TripImage,
+  TripPoint,
   TripSummary,
-  TripDataWaypoint,
 } from './types.ts'
 
 // Plays a trip back on the map: the route draws itself from place to place while a
 // card shows each stop's photos and words. The same playback can run in a story
-// layout to present full screen or to record as a video.
+// layout to present full screen or to record as a video. This keeps the time and
+// decides what happens when; the route drawer, the side card, the stage and the
+// camera each do their part.
+//
+// One player per page: its shortcuts listen on the window.
 
-type TripPlayerOptions = {
+export type TripPlayerOptions = {
+  /** Who made the video, on the presentation stage's corner. */
+  brand?: Brand | undefined
+  /** Fetches a trip's `TripData`; undefined when it can't be had. */
+  fetchTrip: (id: string) => Promise<TripData | undefined>
   getMap: () => MapboxMap | undefined
-  /** Where a trip's playback data (`TripData` as JSON) is fetched from. */
-  getTripDataUrl: (id: string) => string
+  /** The trip whose data the page already carries, to play without a fetch. */
+  inlineTrip?: TripData | undefined
+  messages: Messages
+  /** The tracks a video may be set to. */
+  music?: readonly MusicTrack[] | undefined
   onClose: () => void
   page: HTMLElement
+  /** The side card's container; filled by `renderTripPanel` unless the page did. */
+  panel: HTMLElement
+  /** The shortcut panel's `<dialog>`; filled by `renderShortcuts` unless the page did. */
+  shortcuts: HTMLDialogElement
   signal: AbortSignal
   /** Shown on the summary card of a video: where to find the trips, like `hyoban.cc/trip/`. */
   siteLine: string
+  /** The presentation stage's container; filled by `renderTripStage` unless the page did. */
+  stage: HTMLElement
+  trips: readonly TripSummary[]
 }
 
 // Long enough to read a waypoint's name before driving on.
 const WAYPOINT_PAUSE = 1000
-const LEG_DURATION = 2500
-// Drawing a drive takes from SHORT_LEG for a hop across town up to LEG_DURATION for
-// LONG_LEG_KM or more, so nearby places don't keep the viewer waiting. Even a short
-// hop leaves the camera, which eases over most of a second, time to follow it.
-const SHORT_LEG = 1500
-const LONG_LEG_KM = 400
 const STOP_ZOOM = 9
 // The closest the camera comes in while following a short drive.
 const NEARBY_MAX_ZOOM = 13
-// How long the summary card stays in an exported video before it ends.
-const EXPORT_SUMMARY_HOLD = 4000
 // Presenting or recording, a stop's photo card pops up this soon when the route is
 // already there; otherwise once the drive there is drawn.
 const CARD_POP = 400
-// How long the pointer rests before the presentation's exit button fades away.
-const CONTROLS_IDLE = 2500
 // The address bar follows the playing card so it can be shared, but reloading the page
 // should start the trip over rather than resume mid-way. Only the first trip started
 // after a reload ignores the card; links followed later in the same page still work.
@@ -128,182 +99,41 @@ let reloadPending =
   (performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined)
     ?.type === 'reload'
 
-// The side card slides in from just below as a trip opens, and back down as it closes.
-const PANEL_HIDDEN: Keyframe[] = [
-  { opacity: 1, transform: 'none' },
-  { opacity: 0, transform: 'translateY(0.75rem) scale(0.98)' },
-]
-const PANEL_MOTION: KeyframeAnimationOptions = {
-  duration: 280,
-  easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
-}
+export function createTripPlayer(options: TripPlayerOptions) {
+  const { getMap, messages, onClose, page, signal, siteLine } = options
+  const reducedMotion = getReducedMotionQuery()
 
-type ExportRatio = 'landscape' | 'portrait'
-// The story layout either plays on screen or is recorded to a video file.
-type StageMode = 'present' | 'record'
+  // The containers come empty unless the page rendered them on the server.
+  if (!options.panel.querySelector('[data-trip-map-progress]')) {
+    options.panel.innerHTML = renderTripPanel({
+      messages,
+      music: options.music,
+      trip: options.inlineTrip,
+    })
+  }
 
-export function createTripPlayer({
-  getMap,
-  getTripDataUrl,
-  onClose,
-  page,
-  signal,
-  siteLine,
-}: TripPlayerOptions) {
-  const tripTitles = new Map(
-    parseJson<TripSummary[]>(page, '[data-calendar-map-trips]', []).map((item) => [
-      item.id,
-      item.pageTitle,
-    ]),
-  )
-  const loadedTrips = new Map<string, TripData>()
-  const tripRequests = new Map<string, Promise<TripData | undefined>>()
-  const inlineTrip = parseJson<TripData | null>(page, '[data-calendar-map-trip-data]', null)
+  if (!options.stage.querySelector('[data-trip-map-stage-center]')) {
+    options.stage.innerHTML = renderTripStage({ brand: options.brand, messages })
+  }
+
+  if (!options.shortcuts.querySelector('[id="trip-map-shortcuts-title"]')) {
+    options.shortcuts.innerHTML = renderShortcuts(messages)
+  }
+
+  const panel = collectPanelElements(options.panel)
+  const stageElements = collectStageElements(options.stage)
+  const shortcutsDialog = options.shortcuts
+  const loader = createTripLoader({
+    fetchTrip: options.fetchTrip,
+    inline: options.inlineTrip,
+    trips: options.trips,
+  })
   // The trip waiting on its data; `activeId` reports it so the map stays in trip mode.
   let requestedId: string | undefined
-
-  if (inlineTrip) {
-    loadedTrips.set(inlineTrip.id, inlineTrip)
-  }
-
-  const panel = queryRequired<HTMLElement>(page, '[data-calendar-map-trip]')
-  const progress = queryRequired<HTMLOListElement>(page, '[data-calendar-map-trip-progress]')
-  // Names the slide a progress segment jumps to, under the hovered or focused segment.
-  const progressTip = createElement('div', 'calendar-map-trip-tip', '')
-  progressTip.hidden = true
-  progressTip.setAttribute('aria-hidden', 'true')
-  panel.append(progressTip)
-  const header = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-header]')
-  const eyebrow = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-eyebrow]')
-  const title = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-title]')
-  const body = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-body]')
-  const previousButton = queryRequired<HTMLButtonElement>(page, '[data-calendar-map-trip-previous]')
-  const nextButton = queryRequired<HTMLButtonElement>(page, '[data-calendar-map-trip-next]')
-  const playButton = queryRequired<HTMLButtonElement>(page, '[data-calendar-map-trip-play]')
-  const closeButton = queryRequired<HTMLButtonElement>(page, '[data-calendar-map-trip-close]')
-  const stage = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-stage]')
-  const stageHeader = queryRequired<HTMLElement>(page, '.calendar-map-trip-stage__header')
-  const stageEyebrow = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-stage-eyebrow]')
-  const stageTitle = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-stage-title]')
-  const stageHeading = createDayHeading(stageEyebrow, stageTitle)
-  const stagePhotos = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-stage-photos]')
-  const stagePhotoCard = createStagePhotoCard(stagePhotos)
-  const stageCenter = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-stage-center]')
-  const stageProgress = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-stage-progress]')
-  const stageSafe = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-stage-safe]')
-  const safeAreaInput = queryRequired<HTMLInputElement>(page, '[data-calendar-map-trip-safe-area]')
-  const safeAreaRow = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-safe-area-row]')
-  const setupTitle = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-setup-title]')
-  const startButton = queryRequired<HTMLButtonElement>(
-    page,
-    '[data-calendar-map-trip-export-start]',
-  )
-  const ratioButtons = [
-    ...page.querySelectorAll<HTMLButtonElement>('[data-calendar-map-trip-export-ratio]'),
-  ]
-  let safeArea = readSafeAreaPreference()
-  let ratio: ExportRatio = readRatioPreference()
-  // Bumped whenever the stage photo card's pending pop-up is called off.
-  let stagePhotoToken = 0
-  const controls = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-controls]')
-  const actions = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-actions]')
-  const exportButton = queryRequired<HTMLButtonElement>(page, '[data-calendar-map-trip-export]')
-  const exportOptions = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-export-options]')
-  const exportMusic = queryRequired<HTMLSelectElement>(
-    page,
-    '[data-calendar-map-trip-export-music]',
-  )
-  const presentButton = queryRequired<HTMLButtonElement>(page, '[data-calendar-map-trip-present]')
-  const musicButton = queryRequired<HTMLButtonElement>(page, '[data-calendar-map-trip-music]')
-  const stageMusicButton = queryRequired<HTMLButtonElement>(
-    page,
-    '[data-calendar-map-trip-stage-music]',
-  )
-  const speedButton = queryRequired<HTMLButtonElement>(page, '[data-calendar-map-trip-speed]')
-  const announcer = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-announcer]')
-  const shortcutsDialog = queryRequired<HTMLDialogElement>(
-    page,
-    '[data-calendar-map-trip-shortcuts]',
-  )
-  let staging:
-    | {
-        mode: StageMode
-        music?: Music
-        recording?: Recording
-        stopTimer?: ReturnType<typeof setTimeout>
-      }
-    | undefined
-  let stageMode: StageMode = 'record'
-  // The stage running or starting, and the speed to go back to after a recording,
-  // which always plays at 1×.
-  let activeStage: { mode: StageMode; speed: number } | undefined
-  // Where each day starts in the video being recorded, for the description's chapters.
-  let chapters: { log: ReturnType<typeof createChapterLog>; start: number } | undefined
-  // Music for the ordinary card playback, switched on with the music button.
-  let ambient: (Music & { src: string }) | undefined
-  let musicOn = readMusicPreference()
-  let pendingAmbient: { src: string } | undefined
-  let stageToken: object | undefined
-  // The camera and the labels each read the layout every frame. Whichever runs first in
-  // a frame measures, before anything is written, and the other reuses it; reading it
-  // again after the writes would make the browser lay out a second time.
-  const getFrameLayout = perFrame(readLayout)
-  const mapLabels = createMapLabels({
-    getLayout: getFrameLayout,
-    getMap,
-    // Every stop's dot, and the car, ship or plane while the route is drawn.
-    getMarkers: () => [
-      ...points.map((point) => ({
-        coordinates: point.coordinates,
-        radius: point.waypoint ? 7 : 10,
-      })),
-      ...(routeTip ? [{ coordinates: routeTip, radius: 16 }] : []),
-    ],
-  })
-
-  /**
-   * The map's box and the cards and controls over it, in viewport pixels, and the
-   * camera's padding for them.
-   */
-  function readLayout() {
-    return {
-      // Labels keep clear of the clock beside the car.
-      avoid:
-        !isStageLayout() && headClock.getClientRects().length > 0
-          ? [headClock.getBoundingClientRect()]
-          : [],
-      blocked: readBlocked(),
-      container: getMap()?.getContainer().getBoundingClientRect(),
-      padding: getCameraPadding(),
-    }
-  }
-
-  function readBlocked() {
-    const shown = (element: Element | null | undefined) =>
-      element &&
-      element.getClientRects().length > 0 &&
-      getComputedStyle(element).visibility !== 'hidden'
-        ? [element.getBoundingClientRect()]
-        : []
-
-    return isStageLayout()
-      ? [
-          ...outside(stageSafe.getBoundingClientRect(), page.getBoundingClientRect()),
-          ...shown(stageHeader),
-          ...[...stagePhotos.children].flatMap(shown),
-          ...shown(stageProgress),
-          ...shown(page.querySelector('[data-calendar-map-trip-stage-close]')),
-        ]
-      : [...shown(panel), ...shown(page.querySelector('.calendar-map-toolbar'))]
-  }
-
   let trip: TripData | undefined
+  let plan: RoutePlan | undefined
   // Photos for the intro and summary.
   let covers: TripImage[] = []
-  // Every place of every stop in visiting order; the route runs through these.
-  let points: TripPoint[] = []
-  // Index into `points` just past each stop's last place.
-  let stopPointEnds: number[] = []
   let slides: Slide[] = []
   let index = 0
   // How far into the current card playback is. Picking a photo by hand moves it to
@@ -319,76 +149,179 @@ export function createTripPlayer({
   // Milliseconds of motion so far; it stands still while held.
   let motionTime = 0
   let speed: number = readSpeedPreference()
+  let musicOn = readMusicPreference()
+  let frame: number | undefined
+  let lastFrameTime: number | undefined
+  // Bumped on every slide change so an unfinished trip between waypoints stops.
+  let travelToken = 0
+  let traveling = false
+  let currentWaypointPoint = -1
+  // How long the current stop waits for the route to arrive before its photos' time
+  // starts, in the card's own time.
+  let photoDelay = 0
   // The speed's digits roll from one to the next.
   const speedFlow = document.createElement('number-flow')
 
   speedFlow.numberSuffix = '×'
-  speedButton.replaceChildren(speedFlow)
+  panel.speed.replaceChildren(speedFlow)
+
+  const points = (): readonly TripPoint[] => plan?.points ?? []
+
+  // The camera and the labels each read the layout every frame. Whichever runs first in
+  // a frame measures, before anything is written, and the other reuses it; reading it
+  // again after the writes would make the browser lay out a second time.
+  const getFrameLayout = perFrame(readLayout)
+  const mapLabels = createMapLabels({
+    getLayout: getFrameLayout,
+    getMap,
+    // Every stop's dot, and the car, ship or plane while the route is drawn.
+    getMarkers: () => [
+      ...points().map((point) => ({
+        coordinates: point.coordinates,
+        radius: point.waypoint ? 7 : 10,
+      })),
+      ...(drawer.routeTip ? [{ coordinates: drawer.routeTip, radius: 16 }] : []),
+    ],
+  })
+
+  /**
+   * The map's box and the cards and controls over it, in viewport pixels, and the
+   * camera's padding for them.
+   */
+  function readLayout() {
+    return {
+      // Labels keep clear of the clock beside the car.
+      avoid:
+        !stage.isStageLayout() && headClock.getClientRects().length > 0
+          ? [headClock.getBoundingClientRect()]
+          : [],
+      blocked: readBlocked(),
+      container: getMap()?.getContainer().getBoundingClientRect(),
+      padding: getCameraPadding(),
+    }
+  }
+
+  function readBlocked() {
+    if (stage.isStageLayout()) {
+      return stage.getBlocked()
+    }
+
+    const shown = (element: Element | null | undefined) =>
+      element &&
+      element.getClientRects().length > 0 &&
+      getComputedStyle(element).visibility !== 'hidden'
+        ? [element.getBoundingClientRect()]
+        : []
+
+    return [...shown(panel.panel), ...shown(page.querySelector('[data-trip-map-toolbar]'))]
+  }
+
+  // The page itself becomes a narrow stage while recording or presenting, so measure it.
+  function isNarrow() {
+    return page.clientWidth <= 768
+  }
+
+  function getCameraPadding() {
+    if (stage.isStageLayout()) {
+      return stage.getPadding()
+    }
+
+    if (isNarrow()) {
+      // Leaves room for the one-row toolbar, which returns when playback pauses.
+      return { bottom: panel.panel.offsetHeight + 40, left: 40, right: 40, top: 72 }
+    }
+
+    // The toolbar is hidden during playback, so the top needs little room.
+    return { bottom: 64, left: panel.panel.offsetWidth + 64, right: 64, top: 64 }
+  }
+
   const camera = createCamera({
     // The tip while the route is drawn, else the last place it reached.
-    getFocus: () => routeTip ?? points[Math.max(drawnPointCount - 1, 0)]?.coordinates,
+    getFocus: () =>
+      drawer.routeTip ?? points()[Math.max(drawer.drawnPointCount - 1, 0)]?.coordinates,
     getMap,
     getPadding: () => getFrameLayout().padding,
     getSpeed: () => speed,
     reducedMotion,
   })
   // On the map, the day and time ride beside the car, ship or plane.
-  const headClock = createElement('div', 'calendar-map-trip-head__clock', '')
-  const headClockDate = createElement('p', 'calendar-map-trip-head__date', '')
-  const headClockTime = createElement('p', 'calendar-map-trip-head__time', '')
-  const headHeading = createDayHeading(headClockDate, headClockTime)
-
-  headClock.append(headClockDate, headClockTime)
-  const layers = createRouteLayers(
-    getMap,
-    () => ({
-      ink: getComputedStyle(page).getPropertyValue('--color-tx').trim() || '#21201c',
-      paper: getComputedStyle(page).getPropertyValue('--color-bg').trim() || '#fdfdfc',
-    }),
-    headClock,
-  )
-  let frame: number | undefined
-  let lastFrameTime: number | undefined
-  let legFrame: number | undefined
-  let finishLeg: (() => void) | undefined
-  // Bumped on every slide change so an unfinished trip between waypoints stops.
-  let travelToken = 0
-  let traveling = false
-  let currentWaypointPoint = -1
-  let drawnPointCount = 0
-  // The onward drive during a stop's card, timed from when the drive there finished.
-  // Where the route is being drawn up to right now, for the camera to follow.
-  let routeTip: Coordinates | undefined
-  let routeProgress: (MeasuredLine & { startedAt: number; stopIndex: number }) | undefined
-  // The stretch of route being drawn now: from `points[from]` toward `points[to]`,
-  // `fraction` of the way along `leg`. A card that comes up before it has arrived
-  // carries on from there rather than drawing it again.
-  let partial: { fraction: number; from: number; leg: MeasuredLine; to: number } | undefined
-  let photoIndex = 0
-  let photo: HTMLImageElement | undefined
-  let thumbnails: HTMLButtonElement[] = []
-  // The side card's change to the next card, and to the next photo, in progress.
-  const cardTransition = createTransition()
-  const photoTransition = createTransition()
-  let liveVideo: HTMLVideoElement | undefined
-  // How long the current stop waits for the route to arrive before its photos' time
-  // starts, in the card's own time.
-  let photoDelay = 0
-  // A mouse resting on the card holds the current slide so it can be read.
-  let hovering = false
-  let idleTimer: ReturnType<typeof setTimeout> | undefined
+  const headClock = createElement('div', 'trip-map-head__clock', '')
+  const headClockDate = createElement('p', 'trip-map-head__date', '')
+  const headClockTime = createElement('p', 'trip-map-head__time', '')
+  const clockHeading = createDayHeading(headClockDate, headClockTime, messages)
   // Photos already asked for, so going back and forth doesn't ask again.
   const preloaded = new Set<string>()
-  // Photos decoded ahead while recording, so a card never opens on a blank frame.
-  const decodedPhotos = new Map<string, Promise<void>>()
-  const readyPhotos = new Set<string>()
-  // The screen stays on through a presentation or a recording.
-  const wakeLock = createScreenWakeLock(signal)
+
+  headClock.append(headClockDate, headClockTime)
+
+  const drawer = createRouteDrawer({
+    getDistanceKm,
+    getMap,
+    getMotionTime: () => motionTime,
+    getSpeed: () => speed,
+    getStatus: () => ({
+      currentStopIndex: currentStopIndex(),
+      currentWaypointPoint,
+      traveling,
+    }),
+    getTheme: () => readTheme(page),
+    headClock,
+    onClock: (clock, clockOptions) =>
+      (stage.isStageLayout() ? stage.heading : clockHeading).set(clock, clockOptions),
+    reducedMotion,
+  })
+  const stage = createStage({
+    elements: stageElements,
+    frameTrip,
+    getMap,
+    getPoints: points,
+    getSlides: () => slides,
+    getSpeed: () => speed,
+    getTrip: () => trip,
+    goTo,
+    isMusicOn: () => musicOn,
+    messages,
+    onFinish: renderSlide,
+    onStart: () => {
+      elapsed = 0
+      driveElapsed = 0
+      playing = true
+      renderPlayButton()
+    },
+    page,
+    panel,
+    setSpeed,
+    signal,
+    siteLine,
+    waitForMotion,
+  })
+  const card = createSideCard({
+    elements: panel,
+    isStageLayout: stage.isStageLayout,
+    messages,
+    onJump: (slideIndex) => goTo(slideIndex),
+    onPhotoShown: (stop, imageIndex) => stage.photoCard.showPhoto(stop, imageIndex),
+    onReplay: () => goTo(0, { play: true }),
+    onSelectPhoto: selectPhoto,
+    onStepPhoto: stepPhoto,
+    reducedMotion,
+    signal,
+  })
+  const ambient = createAmbientMusic({
+    getSource: () => panel.setupMusic.value || panel.setupMusic.options[0]?.value || '',
+    isPlaying: () => playing && !document.hidden,
+    isWanted: () => musicOn && trip !== undefined && !stage.staging,
+  })
+
+  function currentStopIndex() {
+    const slide = slides[index]
+    return slide?.type === 'stop' ? slide.stopIndex : -1
+  }
 
   /**
    * A stop's photos are timed from when the route reaches it (presenting or recording,
-   * that's also when its photo card appears, see renderStage), so the stop lasts that
-   * much longer and the first and last photos get as long as the others.
+   * that's also when its photo card appears), so the stop lasts that much longer and
+   * the first and last photos get as long as the others.
    */
   function getPhotoDelay(slide: Slide | undefined) {
     return slide === slides[index] && slide?.type === 'stop' ? photoDelay : 0
@@ -405,285 +338,11 @@ export function createTripPlayer({
     return duration === undefined ? undefined : duration + getPhotoDelay(slide)
   }
 
-  // The page itself becomes a narrow stage while recording or presenting, so measure it.
-  function isNarrow() {
-    return page.clientWidth <= 768
-  }
-
-  /** Presenting or recording, a story-style overlay replaces the side card. */
-  function isStageLayout() {
-    return page.dataset.exportRatio !== undefined
-  }
-
-  function getCameraPadding() {
-    if (isStageLayout()) {
-      const pageRect = page.getBoundingClientRect()
-      // Room for the header plus a two-line label above the topmost place.
-      const top = stageHeader.getBoundingClientRect().bottom - pageRect.top + 72
-      const photos = stagePhotos.getBoundingClientRect()
-
-      const safe = stageSafe.getBoundingClientRect()
-
-      return page.dataset.exportRatio === 'landscape'
-        ? { bottom: 64, left: 96, right: pageRect.right - photos.left + 96, top }
-        : {
-            bottom: pageRect.bottom - photos.top + 16,
-            left: safe.left - pageRect.left + 48,
-            right: pageRect.right - safe.right + 48,
-            top,
-          }
-    }
-
-    if (isNarrow()) {
-      // Leaves room for the one-row toolbar, which returns when playback pauses.
-      return { bottom: panel.offsetHeight + 40, left: 40, right: 40, top: 72 }
-    }
-
-    // The toolbar is hidden during playback, so the top needs little room.
-    return { bottom: 64, left: panel.offsetWidth + 64, right: 64, top: 64 }
-  }
-
-  function getStopPointStart(stopIndex: number) {
-    return getPointStart(stopPointEnds, stopIndex)
-  }
-
-  /** Index in `points` of a stop's first place, after the waypoints leading to it. */
-  function getStopPlaceStart(stopIndex: number) {
-    return getStopPointStart(stopIndex) + (trip?.stops[stopIndex]?.waypoints.length ?? 0)
-  }
-
-  /**
-   * While a stop's card is up, the route keeps moving: from the stop's first place,
-   * through its other places, on to the next point, arriving as the card's time ends.
-   */
-  function renderRouteProgress() {
-    const slide = slides[index]
-    const duration = getDuration(slide)
-
-    if (slide?.type !== 'stop' || !duration || traveling || legFrame !== undefined) {
-      return
-    }
-
-    const from = getStopPlaceStart(slide.stopIndex)
-    const to = Math.min(stopPointEnds[slide.stopIndex]!, points.length - 1)
-
-    // The drive here hasn't been drawn yet (the card has only just come up).
-    if (drawnPointCount < from + 1) {
-      return
-    }
-
-    if (routeProgress?.stopIndex !== slide.stopIndex) {
-      routeProgress = {
-        ...measureLine(getRouteLine(from, to + 1)),
-        startedAt: driveElapsed,
-        stopIndex: slide.stopIndex,
-      }
-    }
-
-    // Starts from rest once any drive here is done, and arrives as the card ends.
-    const left = duration - routeProgress.startedAt
-    const fraction = left > 0 ? Math.min((driveElapsed - routeProgress.startedAt) / left, 1) : 1
-
-    if (fraction >= 1 || routeProgress.total === 0) {
-      drawnPointCount = fraction >= 1 ? to + 1 : from + 1
-      setRoute(drawnPointCount)
-      return
-    }
-
-    drawnPointCount = from + 1
-    setRoute(from + 1, { fraction: easeInOut(fraction), leg: routeProgress, to })
-  }
-
-  /** The parts of `outer` around `inner`: what a short-video app's overlays cover. */
-  function outside(inner: DOMRect, outer: DOMRect) {
-    return [
-      new DOMRect(outer.left, outer.top, outer.width, inner.top - outer.top),
-      new DOMRect(outer.left, inner.bottom, outer.width, outer.bottom - inner.bottom),
-      new DOMRect(outer.left, inner.top, inner.left - outer.left, inner.height),
-      new DOMRect(inner.right, inner.top, outer.right - inner.right, inner.height),
-    ].filter((rect) => rect.width > 0 && rect.height > 0)
-  }
-
-  /** Adds the route layers, also after the map style changes and drops them. */
-  function addLayers() {
-    // The trip has its own arrow, +/- and Home/End keys; the map's would move the camera too.
-    if (trip) {
-      getMap()?.keyboard.disable()
-    }
-
-    if (trip && layers.add(getRouteLine(0, points.length))) {
-      setRoute(drawnPointCount)
-      updateStops()
-    }
-  }
-
-  /** The line from `points[from]` to `points[to - 1]`, along roads where a route is known. */
-  function getRouteLine(from: number, to: number) {
-    return buildRouteLine(points, trip?.legs ?? [], from, to)
-  }
-
-  /**
-   * Draws the route through the first `pointCount` points, plus the part of the next
-   * stretch drawn so far, if one is being drawn: `fraction` of `leg`, which heads
-   * for `points[to]`.
-   */
-  function setRoute(
-    pointCount: number,
-    piece?: { fraction: number; leg: MeasuredLine; to: number },
-  ) {
-    const leg = piece?.leg
-    const walked = piece && walkLine(piece.leg, piece.fraction)
-
-    partial = piece && { ...piece, from: pointCount - 1 }
-    routeTip = walked?.passed.at(-1)
-    // The clock ticks on while the route is drawn, and rolls when it jumps.
-    renderClock({ animate: !piece })
-
-    layers.setRoute(
-      pointCount,
-      () => getRouteLine(0, pointCount),
-      leg && walked
-        ? {
-            line: leg.line,
-            mode: getTravelMode(
-              points,
-              trip?.legs ?? [],
-              trip?.legModes ?? [],
-              walked.start,
-              walked.end,
-            ),
-            ratio: walked.ratio,
-            segment: walked.segment,
-          }
-        : undefined,
-    )
-  }
-
-  /** The day and time the route's tip has reached. */
-  function getTipClock() {
-    return partial
-      ? getClock(points, partial.from, partial.to, partial.fraction)
-      : getClock(points, Math.max(drawnPointCount - 1, 0))
-  }
-
-  /**
-   * Brings the clock up to the route's tip: the one beside the car on the map, or the
-   * story layout's heading, which shows it the whole trip through.
-   */
-  function renderClock(options: { animate: boolean }) {
-    if (points.length === 0) {
-      return
-    }
-
-    ;(isStageLayout() ? stageHeading : headHeading).set(getTipClock(), options)
-  }
-
-  function updateStops() {
-    const slide = slides[index]
-    const currentStopIndex = slide?.type === 'stop' ? slide.stopIndex : -1
-
-    layers.setStops(
-      points.map((point, pointIndex) => {
-        const state: StopState =
-          pointIndex === currentWaypointPoint ||
-          (point.stopIndex === currentStopIndex && !point.waypoint && !traveling)
-            ? 'current'
-            : pointIndex < drawnPointCount
-              ? 'visited'
-              : 'upcoming'
-
-        return { coordinates: point.coordinates, state, waypoint: point.waypoint }
-      }),
-    )
-  }
-
-  function cancelLeg() {
-    if (legFrame !== undefined) {
-      cancelAnimationFrame(legFrame)
-      legFrame = undefined
-    }
-
-    finishLeg?.()
-    finishLeg = undefined
-  }
-
-  /** Draws the route from `points[legStart]` through every point before `legEnd`. */
-  function drawLeg(legStart: number, legEnd: number) {
-    cancelLeg()
-
-    return new Promise<void>((resolve) => {
-      finishLeg = resolve
-      animateLeg(legStart, legEnd)
-    })
-  }
-
-  /**
-   * How the route gets to `points[legEnd - 1]`: on from where the tip is, if the
-   * stretch being drawn heads there, or else from `points[legStart]`.
-   */
-  function planLeg(legStart: number, legEnd: number) {
-    const to = legEnd - 1
-
-    if (partial && partial.to === to && partial.from <= legStart && partial.fraction < 1) {
-      const { fraction, from, leg } = partial
-
-      return {
-        duration: getDriveTime(from, legEnd) * (1 - fraction),
-        from,
-        leg,
-        start: fraction,
-        to,
-      }
-    }
-
-    return {
-      duration: getDriveTime(legStart, legEnd),
-      from: legStart,
-      leg: measureLine(getRouteLine(legStart, legEnd)),
-      start: 0,
-      to,
-    }
-  }
-
-  function animateLeg(legStart: number, legEnd: number) {
-    const { duration, from, leg, start, to } = planLeg(legStart, legEnd)
-
-    if (leg.total === 0 || reducedMotion.matches) {
-      drawnPointCount = legEnd
-      setRoute(drawnPointCount)
-      cancelLeg()
-      return
-    }
-
-    drawnPointCount = from + 1
-    const startTime = motionTime
-    // A fresh drive sets off and arrives gently, as the onward drive on each card does;
-    // one carried on is already moving, so it only slows to arrive.
-    const ease = start > 0 ? (t: number) => 1 - (1 - t) ** 2 : easeInOut
-    const step = () => {
-      const t = Math.min((motionTime - startTime) / Math.max(duration, 1), 1)
-
-      if (t >= 1) {
-        legFrame = undefined
-        drawnPointCount = legEnd
-        setRoute(drawnPointCount)
-        updateStops()
-        cancelLeg()
-        return
-      }
-
-      setRoute(from + 1, { fraction: start + (1 - start) * ease(t), leg, to })
-      legFrame = requestAnimationFrame(step)
-    }
-
-    legFrame = requestAnimationFrame(step)
-  }
-
-  function frameTrip(options: { instant?: boolean } = {}) {
+  function frameTrip(frameOptions: { instant?: boolean } = {}) {
     camera.overview(
-      points.map((point) => point.coordinates),
+      points().map((point) => point.coordinates),
       STOP_ZOOM,
-      options,
+      frameOptions,
     )
   }
 
@@ -694,18 +353,18 @@ export function createTripPlayer({
   function frameDay(slide: Extract<Slide, { type: 'day' }>) {
     const stop = trip?.stops[slide.stopIndex]
 
-    if (!stop) {
+    if (!stop || !plan) {
       return
     }
 
-    const [first, count] = getWaypointsBefore(slide)
-    const start = getStopPointStart(slide.stopIndex)
+    const [first, count] = plan.waypointsBefore(slide)
+    const start = plan.pointStart(slide.stopIndex)
     // A travel day drives through its own waypoints; any other day on to its first stop.
     const end = slide.waypointsOnly
       ? start + stop.waypoints.findLastIndex((waypoint) => waypoint.day === slide.day)
-      : getStopPlaceStart(slide.stopIndex)
+      : plan.placeStart(slide.stopIndex)
 
-    camera.follow(getRouteLine(Math.max(first + count - 1, 0), end + 1), NEARBY_MAX_ZOOM - 1)
+    camera.follow(plan.line(Math.max(first + count - 1, 0), end + 1), NEARBY_MAX_ZOOM - 1)
   }
 
   /**
@@ -713,12 +372,15 @@ export function createTripPlayer({
    * drawn from `arrivingFrom`, else the drive on to the next place.
    */
   function frameStop(stopIndex: number, arrivingFrom?: number) {
-    const placeStart = getStopPlaceStart(stopIndex)
-    const onwardEnd = Math.min(stopPointEnds[stopIndex]!, points.length - 1)
+    if (!plan) {
+      return
+    }
+
+    const placeStart = plan.placeStart(stopIndex)
     const stretch =
       arrivingFrom === undefined
-        ? getRouteLine(placeStart, onwardEnd + 1)
-        : getRouteLine(arrivingFrom, placeStart + 1)
+        ? plan.line(placeStart, plan.onwardEnd(stopIndex) + 1)
+        : plan.line(arrivingFrom, placeStart + 1)
     const spread = stretch.some(
       ([longitude, latitude]) => longitude !== stretch[0]![0] || latitude !== stretch[0]![1],
     )
@@ -758,7 +420,7 @@ export function createTripPlayer({
 
   function showLabels(labels: MapLabel[]) {
     // On wide screens the card sits on the left, so labels open to the right.
-    mapLabels.show(labels, { alignLeft: !isNarrow() && !isStageLayout() })
+    mapLabels.show(labels, { alignLeft: !isNarrow() && !stage.isStageLayout() })
   }
 
   /**
@@ -770,23 +432,24 @@ export function createTripPlayer({
 
     traveling = true
 
-    if (isStageLayout()) {
-      stagePhotoCard.clear()
+    if (stage.isStageLayout()) {
+      stage.photoCard.clear()
     }
 
     for (let pointIndex = first; pointIndex < first + count; pointIndex += 1) {
-      const point = points[pointIndex]!
+      const point = points()[pointIndex]!
+      const legStart = Math.max(pointIndex - 1, 0)
 
       currentWaypointPoint = pointIndex
-      updateStops()
+      drawer.updateStops()
       showLabels([{ coordinates: point.coordinates, name: getShortPlaceName(point.name) }])
-      camera.follow(getRouteLine(Math.max(pointIndex - 1, 0), pointIndex + 1), STOP_ZOOM)
+      camera.follow(plan!.line(legStart, pointIndex + 1), STOP_ZOOM)
       await Promise.all([
-        drawnPointCount >= pointIndex + 1
+        drawer.drawnPointCount >= pointIndex + 1
           ? Promise.resolve()
-          : drawLeg(Math.max(pointIndex - 1, 0), pointIndex + 1),
+          : drawer.drawLeg(legStart, pointIndex + 1),
         waitForMotion(
-          reducedMotion.matches ? 0 : planLeg(Math.max(pointIndex - 1, 0), pointIndex + 1).duration,
+          reducedMotion.matches ? 0 : drawer.planLeg(legStart, pointIndex + 1).duration,
         ),
       ])
 
@@ -802,7 +465,7 @@ export function createTripPlayer({
     }
 
     // A mouse resting on the card holds it here too, until it moves off.
-    while (hovering && !staging) {
+    while (card.hovering && !stage.staging) {
       await new Promise((resolve) => setTimeout(resolve, 100))
 
       if (token !== travelToken) {
@@ -812,7 +475,7 @@ export function createTripPlayer({
 
     traveling = false
     currentWaypointPoint = -1
-    updateStops()
+    drawer.updateStops()
     arrive()
   }
 
@@ -833,186 +496,35 @@ export function createTripPlayer({
     })
   }
 
-  function showProgressTip(button: HTMLElement) {
-    const label = button.getAttribute('aria-label')
-
-    if (!label || panel.hidden) {
-      return
-    }
-
-    progressTip.textContent = label
-    progressTip.hidden = false
-
-    const panelRect = panel.getBoundingClientRect()
-    const buttonRect = button.getBoundingClientRect()
-    const width = progressTip.offsetWidth
-    const center = buttonRect.left + buttonRect.width / 2 - panelRect.left
-    const left = Math.min(Math.max(center - width / 2, 8), panelRect.width - width - 8)
-
-    progressTip.style.left = `${left}px`
-    progressTip.style.top = `${buttonRect.bottom - panelRect.top + 2}px`
-  }
-
-  function hideProgressTip() {
-    progressTip.hidden = true
-  }
-
   function renderProgress() {
-    const duration = getDuration(slides[index])
-
-    for (const [itemIndex, item] of [...progress.children].entries()) {
-      const fill = item.querySelector<HTMLElement>('[data-progress-fill]')
-
-      if (!fill) {
-        continue
-      }
-
-      if (itemIndex === index) {
-        item.firstElementChild?.setAttribute('aria-current', 'step')
-      } else {
-        item.firstElementChild?.removeAttribute('aria-current')
-      }
-
-      const amount =
-        itemIndex < index
-          ? 1
-          : itemIndex > index
-            ? 0
-            : duration
-              ? Math.min(elapsed / duration, 1)
-              : 1
-      fill.style.scale = `${amount} 1`
-    }
-
     const slide = slides[index]
+    const duration = getDuration(slide)
+
+    card.renderProgress(index, elapsed, duration)
 
     if (slide?.type === 'stop' && duration && slide.stop.images.length > 1) {
       // The photos share the time from when the card shows them, by their slots.
       const delay = getPhotoDelay(slide)
       const shown = Math.max(elapsed - delay, 0) / Math.max(duration - delay, 1)
-      const nextPhotoIndex = getPhotoAt(slide.stop, shown, getTiming())
 
-      if (nextPhotoIndex !== photoIndex) {
-        changePhoto(() => showPhoto(slide.stop, nextPhotoIndex))
-      }
+      card.syncPhoto(slide.stop, shown, getTiming())
     }
 
-    renderRouteProgress()
-  }
-
-  /** Renders the next card with `update`, easing the side card between the two. */
-  function changeCard(update: () => void) {
-    if (panel.hidden || reducedMotion.matches || isStageLayout()) {
-      cardTransition.end()
-      update()
-      return
-    }
-
-    easeCardChange(cardTransition, { body, header, panel }, update)
-  }
-
-  /** Shows the next photo with `update`, fading the side card's photo through. */
-  function changePhoto(update: () => void) {
-    if (!photo || reducedMotion.matches) {
-      photoTransition.end()
-      update()
-      return
-    }
-
-    easePhotoChange(photoTransition, photo, () => liveVideo, update)
-  }
-
-  /** Plays a live photo's motion once over its still, then fades back to the still. */
-  function playLivePhoto(image: TripImage) {
-    const frame = photo?.parentElement
-
-    liveVideo?.remove()
-    liveVideo = undefined
-
-    // The stage's photo card plays its own copy.
-    if (!image.video || !frame || reducedMotion.matches || isStageLayout()) {
-      return
-    }
-
-    liveVideo = createLiveVideo(image.video, 'calendar-map-trip-card__live')
-    frame.append(liveVideo)
-    void liveVideo.play().catch(() => liveVideo?.remove())
-  }
-
-  /**
-   * Gives the side card's photo its size up front, from its proportions and the room
-   * the card has, so the card's layout is right before the photo has loaded rather
-   * than jumping when it arrives.
-   */
-  function sizePhoto(img: HTMLImageElement, image: TripImage) {
-    const frame = img.parentElement
-    const box = frame?.parentElement
-
-    if (!frame || !box) {
-      return
-    }
-
-    const boxStyle = getComputedStyle(box)
-    // The card's content width, less the frame's border.
-    const available =
-      box.clientWidth -
-      Number.parseFloat(boxStyle.paddingLeft) -
-      Number.parseFloat(boxStyle.paddingRight) -
-      (frame.offsetWidth - frame.clientWidth)
-
-    img.style.width = ''
-    img.style.height = ''
-
-    const maxHeight = Number.parseFloat(getComputedStyle(img).maxHeight) || Infinity
-    const ratio = image.width / image.height
-    const width = Math.min(available, maxHeight * ratio)
-
-    img.style.width = `${width}px`
-    img.style.height = `${width / ratio}px`
-  }
-
-  function showPhoto(stop: TripDataStop, nextPhotoIndex: number) {
-    const image = stop.images[nextPhotoIndex]
-
-    if (!photo || !image) {
-      return
-    }
-
-    photoIndex = nextPhotoIndex
-
-    stagePhotoCard.showPhoto(stop, nextPhotoIndex)
-
-    photo.srcset = image.srcset
-    photo.src = image.src
-    photo.width = image.width
-    photo.height = image.height
-    photo.alt = image.alt
-    sizePhoto(photo, image)
-    playLivePhoto(image)
-
-    for (const [thumbnailIndex, thumbnail] of thumbnails.entries()) {
-      if (thumbnailIndex === nextPhotoIndex) {
-        thumbnail.setAttribute('aria-current', 'true')
-        thumbnail.scrollIntoView({
-          behavior: reducedMotion.matches ? 'auto' : 'smooth',
-          block: 'nearest',
-          inline: 'nearest',
-        })
-      } else {
-        thumbnail.removeAttribute('aria-current')
-      }
-    }
+    drawer.renderProgress(slide, duration, driveElapsed)
   }
 
   /** Shows one of a stop's photos, moving the card's timer to where it is shown. */
   function selectPhoto(stop: TripDataStop, imageIndex: number) {
     const slide = slides[index]
-    const delay = getPhotoDelay(slide)
-    const duration = getDuration(slide) ?? 0
-    const start = getPhotoStarts(stop, getTiming())[imageIndex] ?? 0
 
-    elapsed = delay + (duration - delay) * start
-    changePhoto(() => showPhoto(stop, imageIndex))
+    elapsed = getPhotoTime(
+      stop,
+      imageIndex,
+      getDuration(slide) ?? 0,
+      getPhotoDelay(slide),
+      getTiming(),
+    )
+    card.changePhoto(() => card.showPhoto(stop, imageIndex))
     renderProgress()
   }
 
@@ -1023,11 +535,14 @@ export function createTripPlayer({
    */
   function stepPhoto(direction: 1 | -1) {
     const slide = slides[index]
-    const images = slide?.type === 'stop' ? slide.stop.images : []
-    const next = photoIndex + direction
+    const step = stepThroughPhotos(
+      slide?.type === 'stop' ? slide.stop.images.length : 0,
+      card.photoIndex,
+      direction,
+    )
 
-    if (slide?.type === 'stop' && next >= 0 && next < images.length) {
-      selectPhoto(slide.stop, next)
+    if (step.type === 'photo' && slide?.type === 'stop') {
+      selectPhoto(slide.stop, step.photo)
       return
     }
 
@@ -1047,69 +562,9 @@ export function createTripPlayer({
     }
   }
 
-  /**
-   * Swiping the photo sideways moves to the next or previous one. The photo is also a
-   * link to the day's page, so a swipe swallows the click it ends with; a tap still
-   * opens the page. Vertical drags are left to scroll the card.
-   */
-  function addPhotoSwipe(link: HTMLElement) {
-    let start: { x: number; y: number } | undefined
-    let swiped = false
-
-    link.style.touchAction = 'pan-y'
-    link.addEventListener(
-      'pointerdown',
-      (event) => {
-        start = { x: event.clientX, y: event.clientY }
-        swiped = false
-      },
-      { signal },
-    )
-    link.addEventListener(
-      'pointerup',
-      (event) => {
-        const dx = event.clientX - (start?.x ?? event.clientX)
-        const dy = event.clientY - (start?.y ?? event.clientY)
-
-        start = undefined
-
-        if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5) {
-          swiped = true
-          stepPhoto(dx < 0 ? 1 : -1)
-        }
-      },
-      { signal },
-    )
-    link.addEventListener(
-      'click',
-      (event) => {
-        if (swiped) {
-          event.preventDefault()
-          swiped = false
-        }
-      },
-      { signal },
-    )
-    // A dragged link would otherwise start a native drag of the image.
-    link.addEventListener('dragstart', (event) => event.preventDefault(), { signal })
-  }
-
   /** Jumps to the next day's opener, or back to this day's (then the one before). */
   function stepDay(direction: number) {
-    // Presenting or recording skips the openers, so a day starts at the stop after them.
-    const startsDay = isStageLayout()
-      ? (slide: Slide, slideIndex: number) =>
-          slide.type !== 'day' && slides[slideIndex - 1]?.type === 'day'
-      : (slide: Slide) => slide.type === 'day'
-    const openers = slides.flatMap((slide, slideIndex) =>
-      startsDay(slide, slideIndex) ? [slideIndex] : [],
-    )
-    const target =
-      direction > 0
-        ? openers.find((slideIndex) => slideIndex > index)
-        : openers.findLast((slideIndex) => slideIndex < index)
-
-    goTo(target ?? (direction > 0 ? slides.length - 1 : 0))
+    goTo(findDayTarget(slides, index, direction, stage.isStageLayout()))
   }
 
   function setSpeed(next: number) {
@@ -1118,55 +573,24 @@ export function createTripPlayer({
     renderSpeedButton()
   }
 
-  function createThumbnails(stop: TripDataStop) {
-    const list = createElement('div', 'calendar-map-trip-thumbs', '')
-
-    thumbnails = stop.images.map((image, imageIndex) => {
-      const button = createElement('button', 'calendar-map-trip-thumb', '') as HTMLButtonElement
-      const thumbnail = document.createElement('img')
-
-      button.type = 'button'
-      button.setAttribute('aria-label', `查看第 ${imageIndex + 1} 张照片`)
-      thumbnail.className = 'calendar-map-trip-thumb__image'
-      thumbnail.src = image.thumbnail
-      thumbnail.alt = ''
-      thumbnail.decoding = 'async'
-      button.append(thumbnail)
-      button.addEventListener('click', () => selectPhoto(stop, imageIndex), { signal })
-      return button
-    })
-    list.append(...thumbnails)
-    return list
-  }
-
   function renderPlayButton() {
-    playButton.setAttribute('aria-label', playing ? '暂停' : '播放')
-    playButton.title = `${playing ? '暂停' : '播放'}（空格）`
-    setButtonIcon(playButton, playing ? 'pause' : 'play')
+    const action = playing ? messages.pause : messages.play
+
+    panel.play.setAttribute('aria-label', action)
+    panel.play.title = t(messages, 'playShortcut', { action })
+    setButtonIcon(panel.play, playing ? 'pause' : 'play')
     // The toolbar steps aside while playing and returns when paused or finished.
-    page.toggleAttribute('data-trip-playing', playing)
-    syncAmbientMusic()
-  }
-
-  /** How long drawing the route from `points[from]` to `points[to - 1]` takes. */
-  function getDriveTime(from: number, to: number) {
-    const start = points[from]
-    const end = points[to - 1]
-    const km = start && end ? getDistanceKm(start.coordinates, end.coordinates) : 0
-
-    // Grows quickly over the first stretch and slowly after, as distance feels.
-    return (
-      (SHORT_LEG + (LEG_DURATION - SHORT_LEG) * Math.sqrt(Math.min(km / LONG_LEG_KM, 1))) / speed
-    )
+    page.toggleAttribute('data-trip-map-playing', playing)
+    ambient.sync()
   }
 
   function renderSpeedButton() {
     speedFlow.update(speed)
-    speedButton.setAttribute('aria-label', `播放速度 ${speed}×`)
+    panel.speed.setAttribute('aria-label', t(messages, 'playbackSpeed', { speed }))
   }
 
   function renderMusicButton() {
-    for (const button of [musicButton, stageMusicButton]) {
+    for (const button of [panel.music, stageElements.music]) {
       button.setAttribute('aria-pressed', String(musicOn))
       setButtonIcon(button, musicOn ? 'volume-2' : 'volume-x')
     }
@@ -1176,64 +600,12 @@ export function createTripPlayer({
     musicOn = !musicOn
     writeMusicPreference(musicOn)
     renderMusicButton()
-    syncAmbientMusic()
+    ambient.sync()
 
-    if (staging?.music) {
-      setMusicAudible(staging.music, musicOn)
-    }
-  }
+    const music = stage.staging?.music
 
-  function getAmbientSource() {
-    return exportMusic.value || exportMusic.options[0]?.value || ''
-  }
-
-  /** Plays the chosen track while the card playback runs, and pauses it otherwise. */
-  function syncAmbientMusic() {
-    const src = getAmbientSource()
-
-    // Switched off, no trip, or the stage has its own music: release it entirely.
-    if (!musicOn || !trip || staging || (ambient && ambient.src !== src)) {
-      stopAmbientMusic()
-    }
-
-    if (!musicOn || !trip || staging) {
-      return
-    }
-
-    // Paused playback only pauses the music, so it picks up where it was. A hidden tab
-    // holds the card too (see tick), so the music waits with it.
-    if (!playing || document.hidden) {
-      void ambient?.context.suspend()
-      return
-    }
-
-    if (ambient) {
-      void ambient.context.resume()
-      return
-    }
-
-    const loading = { src }
-    pendingAmbient = loading
-
-    void loadMusic(src, { audible: true, record: false }).then((music) => {
-      if (!music || pendingAmbient !== loading) {
-        void music?.context.close()
-        return
-      }
-
-      pendingAmbient = undefined
-      ambient = { ...music, src }
-      fadeMusicIn(music)
-      syncAmbientMusic()
-    })
-  }
-
-  function stopAmbientMusic() {
-    pendingAmbient = undefined
-
-    if (ambient) {
-      closeMusic(ambient)
-      ambient = undefined
+    if (music) {
+      setMusicAudible(music, musicOn)
     }
   }
 
@@ -1245,111 +617,11 @@ export function createTripPlayer({
     }
 
     // The outgoing stop's photo card goes now, so the side card below can't put the
-    // next stop's first photo into it (renderStage builds the new one).
-    stagePhotoCard.clear()
-
-    // A stop's day and time ride with the car and its places are labelled on the map,
-    // so the card shows no heading.
-    header.classList.toggle('calendar-map-sr-only', slide.type === 'stop')
-    body.classList.toggle('calendar-map-trip-card__body--stop', slide.type === 'stop')
-    previousButton.disabled = index === 0
-    nextButton.disabled = index === slides.length - 1
-
-    if (slide.type === 'intro') {
-      eyebrow.textContent = ''
-      title.textContent = trip.title
-      body.replaceChildren(
-        createElement('p', 'calendar-map-trip-card__meta', getTripMeta(trip)),
-        createMosaic(covers),
-      )
-    } else if (slide.type === 'day') {
-      const weather = trip.weather[slide.day]
-
-      eyebrow.textContent = `第 ${slide.day} 天`
-      title.textContent = slide.date
-      body.replaceChildren(
-        ...(weather ? [createWeather(weather, 'calendar-map-trip-card__weather')] : []),
-        createElement('p', 'calendar-map-trip-card__meta', slide.places.join(' → ')),
-      )
-    } else if (slide.type === 'stop') {
-      const { stop } = slide
-      const text = createElement('p', 'calendar-map-trip-card__text', stop.text)
-      const link = document.createElement('a')
-
-      eyebrow.textContent = getStopEyebrow(stop)
-      title.textContent = stop.name
-      link.href = stop.href
-
-      photo = undefined
-      thumbnails = []
-      photoIndex = 0
-
-      if (stop.images.length > 0) {
-        photo = document.createElement('img')
-        link.className = 'calendar-map-trip-card__photo-link'
-        link.setAttribute('aria-label', `查看 ${stop.date}的记录`)
-        // As tall as the card has room for beside the progress, thumbnails, text and
-        // buttons (about 24rem with the card's offset); on a phone, low enough that
-        // the card leaves the map about half the screen.
-        photo.className = 'calendar-map-trip-card__photo'
-        photo.sizes = IMAGE_SIZES
-        photo.decoding = 'async'
-        link.append(photo)
-
-        if (stop.images.length > 1) {
-          addPhotoSwipe(link)
-        }
-      } else {
-        link.className = 'calendar-map-trip-card__link'
-        link.textContent = '查看当天记录'
-      }
-
-      // Text sits last, next to the fixed footer, so photos of other sizes don't move it.
-      body.replaceChildren(
-        // Presenting or recording, the stage's card plays it instead.
-        ...(stop.video && stop.images.length === 0 && !isStageLayout()
-          ? [createVideoPlayer(stop.video, 'calendar-map-trip-card__video')]
-          : []),
-        link,
-        ...(stop.images.length > 1 ? [createThumbnails(stop)] : []),
-        ...(stop.text ? [text] : []),
-      )
-      showPhoto(stop, 0)
-
-      for (const image of stop.images.slice(1)) {
-        preloadImage(image)
-      }
-    } else {
-      const stats = document.createElement('dl')
-      const replay = createElement(
-        'button',
-        'calendar-map-trip-card__replay',
-        '重新播放',
-      ) as HTMLButtonElement
-      const replayIcon = createIcon('rotate-ccw')
-
-      eyebrow.textContent = ''
-      title.textContent = trip.title
-      stats.className = 'calendar-map-trip-card__stats'
-
-      for (const [value, label] of getSummaryStats(trip)) {
-        const item = createElement('div', 'calendar-map-trip-card__stat', '')
-        const number = createElement('dd', 'calendar-map-trip-card__stat-value', '')
-
-        number.append(createCountUp(value))
-        item.append(createElement('dt', 'calendar-map-trip-card__stat-label', label), number)
-        stats.append(item)
-      }
-
-      replay.type = 'button'
-      replay.prepend(replayIcon)
-      replay.addEventListener('click', () => goTo(0, { play: true }), { signal })
-      body.replaceChildren(stats, replay, createMosaic(covers))
-    }
-
+    // next stop's first photo into it (the stage builds the new one).
+    stage.photoCard.clear()
+    card.render({ covers, index, slide, slideCount: slides.length, trip })
     preloadNextStop()
-    renderStage(slide)
-    renderProgress()
+    stage.render(slide, { covers, photoDelay, photoIndex: card.photoIndex })
     renderPlayButton()
   }
 
@@ -1369,84 +641,7 @@ export function createTripPlayer({
     }
   }
 
-  function renderStage(slide: Slide) {
-    stagePhotoToken += 1
-
-    if (!isStageLayout() || !trip) {
-      if (progress.parentElement !== panel) {
-        panel.prepend(progress)
-      }
-
-      return
-    }
-
-    if (progress.parentElement !== stageProgress) {
-      stageProgress.append(progress)
-    }
-
-    stage.dataset.slide = slide.type
-    stagePhotoCard.clear()
-
-    if (slide.type === 'intro') {
-      stageCenter.replaceChildren(createIntroCard(trip, covers))
-      return
-    }
-
-    if (slide.type === 'summary') {
-      stageCenter.replaceChildren(createSummaryCard(trip, siteLine))
-      return
-    }
-
-    // Presenting or recording skips a day's opener, so a stop is all that's left.
-    if (slide.type !== 'stop') {
-      return
-    }
-
-    const { stop } = slide
-
-    stageCenter.replaceChildren()
-    // The photo card pops up once the camera has arrived at the stop.
-    const token = stagePhotoToken
-
-    void waitForMotion(photoDelay / speed).then(() => {
-      if (token === stagePhotoToken) {
-        stagePhotoCard.show(stop, slide.stopIndex)
-        stagePhotoCard.showPhoto(stop, photoIndex)
-      }
-    })
-  }
-
-  /**
-   * Notes in the recording where each day starts (the stop after its skipped opener)
-   * and where the summary does.
-   */
-  function addChapter(slideIndex: number) {
-    const previous = slides[slideIndex - 1]
-    const slide = previous?.type === 'day' ? previous : slides[slideIndex]
-
-    if (chapters && (slide?.type === 'day' || slide?.type === 'summary')) {
-      chapters.log.add(
-        slide.type === 'day' ? `第 ${slide.day} 天 · ${slide.date}` : '旅程回顾',
-        Math.floor((performance.now() - chapters.start) / 1000),
-      )
-    }
-  }
-
-  /**
-   * The waypoints the map passes before a slide shows, as `[first point, count]`.
-   * Waypoints from the day before a stop (leaving the evening before) are passed
-   * before that day's opener, so the new day starts where it really started.
-   */
-  function getWaypointsBefore(slide: Slide) {
-    return getWaypointRange(
-      slide,
-      trip?.stops ?? [],
-      stopPointEnds,
-      trip?.trailingWaypoints.length ?? 0,
-    )
-  }
-
-  /** The slide a shared link names: a stop's card, or its day's opener when it starts the day. */
+  /** The slide a shared link names, or the first; a reload starts the trip over. */
   function getHashSlideIndex() {
     const reloaded = reloadPending
     let anchor = ''
@@ -1459,72 +654,42 @@ export function createTripPlayer({
 
     reloadPending = false
 
-    if (reloaded) {
-      return 0
-    }
-
-    const stopIndex = trip?.stops.findIndex((stop) => stop.anchor === anchor) ?? -1
-
-    if (!anchor || stopIndex === -1) {
-      return 0
-    }
-
-    // A travel day before the stop isn't what the link names; its own day is.
-    return slides.findIndex(
-      (slide) =>
-        ((slide.type === 'day' && !slide.waypointsOnly) || slide.type === 'stop') &&
-        slide.stopIndex === stopIndex,
-    )
+    return reloaded || !trip ? 0 : findAnchorSlide(slides, trip.stops, anchor)
   }
 
   /** Keeps the address bar pointing at the current card, so it can be shared. */
   function syncHash(slide: Slide) {
-    const anchor =
-      slide.type === 'stop' || (slide.type === 'day' && !slide.waypointsOnly)
-        ? trip?.stops[slide.stopIndex]?.anchor
-        : ''
     const url = new URL(location.href)
 
-    url.hash = anchor ?? ''
+    url.hash = trip ? getSlideAnchor(slide, trip.stops) : ''
 
     if (url.href !== location.href) {
       history.replaceState(history.state, '', url)
     }
   }
 
-  function goTo(requestedIndex: number, options: { play?: boolean } = {}) {
-    if (!trip || requestedIndex < 0 || requestedIndex >= slides.length) {
+  function goTo(requestedIndex: number, goOptions: { play?: boolean } = {}) {
+    if (!trip || !plan || requestedIndex < 0 || requestedIndex >= slides.length) {
       return
     }
 
     // Skipping ahead while the map is still travelling jumps straight to the stop.
     const stepForward = requestedIndex === index + 1 && !traveling && !reducedMotion.matches
-    let nextIndex = requestedIndex
-
-    // Presenting or recording, the header's rolling day stands in for a day's opener.
-    if (isStageLayout()) {
-      const direction = requestedIndex < index ? -1 : 1
-
-      while (slides[nextIndex]?.type === 'day') {
-        nextIndex += direction
-      }
-    }
-
+    const nextIndex = resolveSlideIndex(slides, index, requestedIndex, stage.isStageLayout())
     const slide = slides[nextIndex]!
 
     travelToken += 1
     traveling = false
     currentWaypointPoint = -1
-
     held = false
 
-    if (options.play !== undefined) {
-      playing = options.play
+    if (goOptions.play !== undefined) {
+      playing = goOptions.play
     }
 
     // The skipped openers' waypoints run straight on into the slide's own.
-    const [firstWaypoint] = getWaypointsBefore(slides[requestedIndex]!)
-    const [lastStart, lastCount] = getWaypointsBefore(slide)
+    const [firstWaypoint] = plan.waypointsBefore(slides[requestedIndex]!)
+    const [lastStart, lastCount] = plan.waypointsBefore(slide)
     const waypointCount = lastStart + lastCount - firstWaypoint
 
     if (stepForward && waypointCount > 0) {
@@ -1544,15 +709,16 @@ export function createTripPlayer({
    */
   function showSlide(nextIndex: number, legStart?: number) {
     const slide = slides[nextIndex]!
+    const route = plan!
 
     // Taken before rendering, which already starts the route onward from this stop.
     const arrived =
-      slide.type === 'stop' && drawnPointCount >= getStopPlaceStart(slide.stopIndex) + 1
+      slide.type === 'stop' && drawer.drawnPointCount >= route.placeStart(slide.stopIndex) + 1
     // Where a drive to this stop starts, while it is still to be drawn.
     let arrivingFrom: number | undefined
 
     if (slide.type === 'stop' && legStart !== -1 && !(legStart === undefined && arrived)) {
-      arrivingFrom = legStart ?? Math.max(getStopPlaceStart(slide.stopIndex) - 1, 0)
+      arrivingFrom = legStart ?? Math.max(route.placeStart(slide.stopIndex) - 1, 0)
     }
 
     // The photos wait for the drive here, if there is one. Presenting or recording,
@@ -1561,8 +727,8 @@ export function createTripPlayer({
       slide.type !== 'stop' || reducedMotion.matches
         ? 0
         : arrivingFrom !== undefined
-          ? planLeg(arrivingFrom, getStopPlaceStart(slide.stopIndex) + 1).duration * speed
-          : isStageLayout()
+          ? drawer.planLeg(arrivingFrom, route.placeStart(slide.stopIndex) + 1).duration * speed
+          : stage.isStageLayout()
             ? CARD_POP
             : 0
 
@@ -1570,53 +736,52 @@ export function createTripPlayer({
     elapsed = 0
     driveElapsed = 0
     syncHash(slide)
-    addChapter(nextIndex)
+    stage.addChapter(nextIndex)
 
-    if (staging?.recording) {
-      preparePhotosAhead()
+    if (stage.staging?.recording) {
+      stage.preparePhotosAhead(index)
     }
 
     // Autoplay stays quiet, like a carousel; stepping through by hand names each card.
-    announcer.textContent = playing ? '' : getSlideLabel(slide)
+    card.announce(playing ? '' : getSlideLabel(slide, messages))
 
     if (!getDuration(slide)) {
       playing = false
     }
 
-    changeCard(renderSlide)
+    card.change(renderSlide)
+    drawer.resetProgress()
 
-    routeProgress = undefined
     let arrival: Promise<void> | undefined
 
     if (slide.type === 'stop') {
-      const arriveAt = getStopPlaceStart(slide.stopIndex) + 1
+      const arriveAt = route.placeStart(slide.stopIndex) + 1
 
       // The previous card's route usually arrived already; only a skip ahead or
       // the last leg after waypoints still has to be drawn.
       if (arrivingFrom === undefined) {
-        cancelLeg()
-        drawnPointCount = arriveAt
-        setRoute(drawnPointCount)
+        drawer.cancelLeg()
+        drawer.drawnPointCount = arriveAt
+        drawer.setRoute(arriveAt)
       } else {
-        arrival = drawLeg(arrivingFrom, arriveAt)
+        arrival = drawer.drawLeg(arrivingFrom, arriveAt)
       }
     } else if (slide.type === 'day') {
       // Usually the previous stop's route already reached here; jumps set it directly.
-      if (legStart === -1 || drawnPointCount === 0) {
-        cancelLeg()
+      if (legStart === -1 || drawer.drawnPointCount === 0) {
+        drawer.cancelLeg()
         // Drawn through the waypoints passed before this card, or to the first point.
-        const [first, count] = getWaypointsBefore(slide)
-        drawnPointCount = Math.min(Math.max(first + count, 1), points.length)
-        setRoute(drawnPointCount)
+        const [first, count] = route.waypointsBefore(slide)
+        drawer.drawnPointCount = Math.min(Math.max(first + count, 1), route.points.length)
+        drawer.setRoute(drawer.drawnPointCount)
       }
     } else {
-      cancelLeg()
-      drawnPointCount = slide.type === 'intro' ? 0 : points.length
-      setRoute(drawnPointCount)
+      drawer.cancelLeg()
+      drawer.drawnPointCount = slide.type === 'intro' ? 0 : route.points.length
+      drawer.setRoute(drawer.drawnPointCount)
     }
 
-    updateStops()
-
+    drawer.updateStops()
     moveCamera(arrivingFrom)
 
     if (arrival && slide.type === 'stop') {
@@ -1629,31 +794,10 @@ export function createTripPlayer({
       })
     }
 
-    renderRouteProgress()
+    renderProgress()
 
-    // A recording ends a moment after the summary; a presentation stays on it until
-    // it is closed, its music fading out.
-    if (staging && slide.type === 'summary') {
-      if (staging.music) {
-        fadeMusicOut(staging.music, EXPORT_SUMMARY_HOLD / 1000)
-      }
-
-      if (staging.recording) {
-        staging.stopTimer = setTimeout(stopStage, EXPORT_SUMMARY_HOLD)
-      }
-    }
-  }
-
-  /**
-   * Shows the presentation's exit button and pointer, then hides both again once the
-   * pointer has rested for a while, so they don't sit on the picture.
-   */
-  function wakeControls() {
-    clearTimeout(idleTimer)
-    page.removeAttribute('data-trip-idle')
-
-    if (page.hasAttribute('data-trip-presenting')) {
-      idleTimer = setTimeout(() => page.setAttribute('data-trip-idle', ''), CONTROLS_IDLE)
+    if (slide.type === 'summary') {
+      stage.onSummary()
     }
   }
 
@@ -1674,9 +818,9 @@ export function createTripPlayer({
     }
 
     // Esc closes the presenting/recording settings, and only them.
-    if (!exportOptions.hidden && event.key === 'Escape') {
+    if (stage.setupOpen && event.key === 'Escape') {
       event.preventDefault()
-      setExportOptionsOpen(false)
+      stage.closeSetup()
       return
     }
 
@@ -1691,9 +835,9 @@ export function createTripPlayer({
     }
 
     // Also while a presentation or recording is still starting up.
-    if ((staging || stageToken) && event.key === 'Escape') {
+    if (stage.pending && event.key === 'Escape') {
       event.preventDefault()
-      stopStage()
+      stage.stop()
       return
     }
 
@@ -1706,15 +850,16 @@ export function createTripPlayer({
     }
 
     // A recording plays straight through: a stray key would end up in the video.
-    if (activeStage?.mode === 'record') {
+    if (stage.active?.mode === 'record') {
       return
     }
 
+    const faster = () => setSpeed(SPEEDS.find((value) => value > speed) ?? speed)
     const actions: Record<string, () => void> = {
-      ' ': () => playButton.click(),
+      ' ': () => panel.play.click(),
       '-': () => setSpeed(SPEEDS.findLast((value) => value < speed) ?? speed),
-      '=': () => setSpeed(SPEEDS.find((value) => value > speed) ?? speed),
-      '+': () => setSpeed(SPEEDS.find((value) => value > speed) ?? speed),
+      '=': faster,
+      '+': faster,
       '?': () => shortcutsDialog.showModal(),
       ArrowDown: () => stepPhoto(1),
       ArrowLeft: () => (event.shiftKey ? stepDay(-1) : goTo(index - 1)),
@@ -1723,14 +868,14 @@ export function createTripPlayer({
       End: () => goTo(slides.length - 1),
       Home: () => goTo(0),
       f: () => {
-        if (!staging) {
-          void startStage(innerWidth >= innerHeight ? 'landscape' : 'portrait', 'present')
+        if (!stage.staging) {
+          void stage.start(innerWidth >= innerHeight ? 'landscape' : 'portrait', 'present')
         }
       },
-      k: () => playButton.click(),
+      k: () => panel.play.click(),
       r: () => {
-        if (!staging && !exportButton.hidden) {
-          setExportOptionsOpen(true, 'record')
+        if (!stage.staging && !panel.exportButton.hidden) {
+          stage.openSetup('record')
         }
       },
     }
@@ -1741,268 +886,6 @@ export function createTripPlayer({
       event.preventDefault()
       action()
     }
-  }
-
-  /** Opens the settings for presenting or recording in place of the footer buttons. */
-  function setExportOptionsOpen(open: boolean, mode: StageMode = stageMode) {
-    stageMode = mode
-    setupTitle.textContent = mode === 'present' ? '放映' : '导出视频'
-    startButton.textContent = mode === 'present' ? '开始放映' : '开始录制'
-    renderSetup()
-    exportOptions.hidden = !open
-    controls.hidden = open
-    actions.hidden = open
-
-    if (open) {
-      startButton.focus({ preventScroll: true })
-    }
-  }
-
-  function renderSetup() {
-    for (const button of ratioButtons) {
-      button.setAttribute(
-        'aria-checked',
-        String(button.dataset.calendarMapTripExportRatio === ratio),
-      )
-    }
-
-    safeAreaInput.checked = safeArea
-    // Margins for a short-video app's overlays only matter for a portrait video.
-    safeAreaRow.hidden = stageMode !== 'record' || ratio !== 'portrait'
-  }
-
-  /**
-   * Plays the trip once from the start in the story layout. Recording captures the
-   * tab, cropped to the stage, and downloads the video; presenting goes full screen.
-   */
-  async function startStage(ratio: ExportRatio, mode: StageMode) {
-    const currentTrip = trip
-
-    setExportOptionsOpen(false)
-
-    if (!currentTrip || staging || stageToken) {
-      return
-    }
-
-    // Both requests need the click that started this, so they come first.
-    const stream = mode === 'record' ? await requestTabCapture() : undefined
-
-    if (mode === 'record' && !stream) {
-      return
-    }
-
-    if (mode === 'present') {
-      // Full screen is a nicety; some browsers never settle the request, so don't wait.
-      void document.documentElement.requestFullscreen?.().catch(() => {})
-    }
-
-    const token = {}
-    stageToken = token
-    activeStage = { mode, speed }
-    wakeLock.hold()
-
-    if (mode === 'record') {
-      speed = 1
-      renderSpeedButton()
-    }
-
-    stopAmbientMusic()
-    // The heading is up from the start, so it opens on the trip's first moment.
-    stageHeading.set(getClock(points, 0), { animate: false })
-    page.dataset.exportRatio = ratio
-    page.toggleAttribute('data-trip-presenting', mode === 'present')
-    page.toggleAttribute(
-      'data-trip-safe-area',
-      safeArea && mode === 'record' && ratio === 'portrait',
-    )
-    wakeControls()
-    getMap()?.resize()
-
-    if (stream) {
-      await cropTo(stream, page)
-    }
-
-    const music = await loadMusic(exportMusic.value, {
-      audible: musicOn,
-      record: mode === 'record',
-    })
-
-    // Stopped while the music loaded: let go of what was opened for it.
-    if (stageToken !== token) {
-      if (music) {
-        closeMusic(music)
-      }
-
-      if (stream) {
-        releaseCapture(stream)
-      }
-
-      return
-    }
-
-    const recording =
-      stream &&
-      createRecording(
-        stream,
-        page,
-        music?.destination?.stream.getAudioTracks() ?? [],
-        (video, extension) => {
-          const name = `${currentTrip.title}-${ratio === 'portrait' ? '竖屏' : '横屏'}`
-          const chapterText = chapters?.log.toString()
-
-          finishStage()
-          downloadBlob(video, `${name}.${extension}`)
-
-          if (chapterText) {
-            downloadBlob(new Blob([chapterText], { type: 'text/plain' }), `${name}-章节.txt`)
-          }
-        },
-      )
-
-    // Ending the capture from the browser's own bar ends the recording.
-    stream?.getVideoTracks()[0]?.addEventListener('ended', stopStage)
-    staging = {
-      mode,
-      ...(music ? { music } : {}),
-      ...(recording ? { recording } : {}),
-    }
-
-    // Reset to a still intro first: the camera jumps to the whole route and the
-    // tiles load before the first frame, so playback doesn't open mid-flight.
-    goTo(0, { play: false })
-    frameTrip({ instant: true })
-    await waitForMapIdle()
-    await recording?.ready
-
-    if (stageToken !== token) {
-      return
-    }
-
-    if (recording) {
-      recording.start()
-      chapters = { log: createChapterLog(currentTrip.title), start: performance.now() }
-    }
-
-    if (music) {
-      fadeMusicIn(music)
-    }
-
-    elapsed = 0
-    driveElapsed = 0
-    playing = true
-    renderPlayButton()
-  }
-
-  function waitForMapIdle() {
-    const map = getMap()
-
-    return new Promise<void>((resolve) => {
-      const timeout = setTimeout(resolve, 5000)
-
-      if (!map) {
-        clearTimeout(timeout)
-        resolve()
-        return
-      }
-
-      map.once('idle', () => {
-        clearTimeout(timeout)
-        // One more frame so the settled map is what playback starts on.
-        requestAnimationFrame(() => resolve())
-      })
-      map.triggerRepaint()
-    })
-  }
-
-  function stopStage() {
-    if (staging?.recording?.active) {
-      staging.recording.stop()
-    } else {
-      finishStage()
-    }
-  }
-
-  function finishStage() {
-    // Still starting (loading its music), the stage has nothing of its own to release
-    // yet, but its layout is already up.
-    const starting = stageToken !== undefined && !staging
-
-    stageToken = undefined
-    chapters = undefined
-    wakeLock.release()
-
-    if (!staging && !starting) {
-      return
-    }
-
-    const presenting = page.hasAttribute('data-trip-presenting')
-
-    if (staging) {
-      clearTimeout(staging.stopTimer)
-
-      staging.recording?.release()
-
-      if (staging.music) {
-        closeMusic(staging.music)
-      }
-    }
-
-    staging = undefined
-
-    if (activeStage) {
-      speed = activeStage.speed
-      activeStage = undefined
-      renderSpeedButton()
-    }
-
-    delete page.dataset.exportRatio
-    page.removeAttribute('data-trip-safe-area')
-    page.removeAttribute('data-trip-presenting')
-    clearTimeout(idleTimer)
-    page.removeAttribute('data-trip-idle')
-
-    if (presenting && document.fullscreenElement) {
-      void document.exitFullscreen().catch(() => {})
-    }
-
-    getMap()?.resize()
-    // Back to the side card for whatever slide is showing.
-    renderSlide()
-  }
-
-  /** Starts decoding the photos of the first stop after the current slide. */
-  function preparePhotosAhead() {
-    const next = slides.slice(index + 1).find((slide) => slide.type === 'stop')
-
-    for (const image of next?.type === 'stop' ? next.stop.images : []) {
-      if (!decodedPhotos.has(image.src)) {
-        const photoImage = new Image()
-
-        photoImage.src = image.src
-        decodedPhotos.set(
-          image.src,
-          photoImage
-            .decode()
-            .catch(() => {})
-            .then(() => {
-              readyPhotos.add(image.src)
-            }),
-        )
-      }
-    }
-  }
-
-  /** Whether the next slide can show: a stop's first photo has to be ready to record. */
-  function isNextSlideReady() {
-    const next = slides[index + 1]
-    const first = next?.type === 'stop' ? next.stop.images[0] : undefined
-
-    if (!staging?.recording || !first || readyPhotos.has(first.src)) {
-      return true
-    }
-
-    preparePhotosAhead()
-    return false
   }
 
   function tick(now: number) {
@@ -2021,7 +904,13 @@ export function createTripPlayer({
     }
 
     // The card's timer waits while the map travels between waypoints or the mouse rests on it.
-    if (!playing || !duration || document.hidden || traveling || (hovering && !staging)) {
+    if (
+      !playing ||
+      !duration ||
+      document.hidden ||
+      traveling ||
+      (card.hovering && !stage.staging)
+    ) {
       return
     }
 
@@ -2030,17 +919,17 @@ export function createTripPlayer({
     renderProgress()
 
     // A slow photo holds the current card a little longer rather than record a blank.
-    if (elapsed >= duration && isNextSlideReady()) {
+    if (elapsed >= duration && stage.isNextSlideReady(index)) {
       goTo(index + 1)
     }
   }
 
   function start(id: string) {
-    if (!tripTitles.has(id) || trip?.id === id || requestedId === id) {
+    if (!loader.has(id) || trip?.id === id || requestedId === id) {
       return
     }
 
-    const loadedTrip = loadedTrips.get(id)
+    const loadedTrip = loader.get(id)
 
     if (loadedTrip) {
       begin(loadedTrip)
@@ -2049,7 +938,7 @@ export function createTripPlayer({
 
     stop()
     requestedId = id
-    void loadTrip(id).then((data) => {
+    void loader.load(id).then((data) => {
       if (requestedId !== id) {
         return
       }
@@ -2064,139 +953,23 @@ export function createTripPlayer({
     })
   }
 
-  /** Fetches a trip's data once; a failed fetch is tried again next time. */
-  function loadTrip(id: string) {
-    let request = tripRequests.get(id)
-
-    if (!request) {
-      request = fetch(getTripDataUrl(id), { signal })
-        .then(async (response) => {
-          if (!response.ok) {
-            return undefined
-          }
-
-          const data = (await response.json()) as TripData
-          loadedTrips.set(id, data)
-          return data
-        })
-        .catch(() => undefined)
-        .then((data) => {
-          if (!data) {
-            tripRequests.delete(id)
-          }
-
-          return data
-        })
-      tripRequests.set(id, request)
-    }
-
-    return request
-  }
-
-  /** Loads a trip's data ahead of time, when it looks likely to be opened next. */
-  function prefetch(id: string) {
-    if (tripTitles.has(id) && !loadedTrips.has(id)) {
-      void loadTrip(id)
-    }
-  }
-
   function begin(nextTrip: TripData) {
     // A trip page renders its intro card already; only a card opened here slides in.
-    const rendered = !trip && !panel.hidden
+    const rendered = !trip && !panel.panel.hidden
+
     stop()
     trip = nextTrip
+    plan = createRoutePlan(nextTrip)
+    slides = plan.slides
     covers = getIntroCovers(nextTrip)
-    exportMusic.value = nextTrip.music ?? exportMusic.options[0]?.value ?? ''
-    // A waypoint has its own day and time; a stop's places take the stop's.
-    const toPoint = (
-      place: TripPlace,
-      when: Pick<TripDataWaypoint, 'date' | 'day' | 'time'>,
-      stopIndex: number,
-      waypoint: boolean,
-    ): TripPoint => ({
-      coordinates: [place.longitude, place.latitude],
-      date: when.date,
-      day: when.day,
-      name: place.name,
-      stopIndex,
-      time: when.time,
-      waypoint,
-    })
-
-    points = [
-      ...nextTrip.stops.flatMap((stop, stopIndex) => [
-        ...stop.waypoints.map((waypoint) => toPoint(waypoint, waypoint, stopIndex, true)),
-        ...stop.places.map((place) => toPoint(place, stop, stopIndex, false)),
-      ]),
-      ...nextTrip.trailingWaypoints.map((waypoint) =>
-        toPoint(waypoint, waypoint, nextTrip.stops.length, true),
-      ),
-    ]
-    stopPointEnds = getStopPointEnds(nextTrip.stops)
-    slides = buildSlides(nextTrip.stops)
-    progress.replaceChildren(
-      ...slides.map((slide, slideIndex) => {
-        const item = createElement('li', 'calendar-map-trip-progress__item', '')
-        item.dataset.slide = slide.type
-        // A taller transparent hit area around the thin bar, so a segment is easy to tap.
-        const button = createElement(
-          'button',
-          'calendar-map-trip-progress__button',
-          '',
-        ) as HTMLButtonElement
-        const bar = createElement('span', 'calendar-map-trip-progress__bar', '')
-        const fill = createElement('span', 'calendar-map-trip-progress__fill', '')
-
-        button.type = 'button'
-        button.setAttribute('aria-label', getSlideLabel(slide))
-        // A pointer is handled by the bar as a whole (see the scrubbing below); this
-        // is Enter or Space on a focused segment.
-        button.addEventListener(
-          'click',
-          (event) => {
-            if (event.detail === 0) {
-              goTo(slideIndex)
-            }
-          },
-          { signal },
-        )
-        button.addEventListener(
-          'pointerenter',
-          (event) => {
-            if (event.pointerType === 'mouse') {
-              showProgressTip(button)
-            }
-          },
-          { signal },
-        )
-        button.addEventListener('pointerleave', hideProgressTip, { signal })
-        button.addEventListener(
-          'focus',
-          () => {
-            if (button.matches(':focus-visible')) {
-              showProgressTip(button)
-            }
-          },
-          { signal },
-        )
-        button.addEventListener('blur', hideProgressTip, { signal })
-        bar.dataset.progressBar = ''
-        fill.dataset.progressFill = ''
-        bar.append(fill)
-        button.append(bar)
-        item.append(button)
-        return item
-      }),
-    )
-    panel.hidden = false
-    drawnPointCount = 0
-    addLayers()
+    panel.setupMusic.value = nextTrip.music ?? panel.setupMusic.options[0]?.value ?? ''
+    drawer.load(plan)
+    card.buildProgress(slides)
+    card.enter(rendered)
+    drawer.addLayers()
     index = -1
     goTo(getHashSlideIndex(), { play: !reducedMotion.matches })
-
-    if (!rendered && !reducedMotion.matches && !isStageLayout()) {
-      panel.animate(PANEL_HIDDEN.toReversed(), PANEL_MOTION)
-    }
+    renderPlayButton()
     lastFrameTime = undefined
     frame = requestAnimationFrame(tick)
   }
@@ -2208,216 +981,47 @@ export function createTripPlayer({
       return
     }
 
-    stopStage()
-    stopAmbientMusic()
-    setExportOptionsOpen(false)
-    page.removeAttribute('data-trip-playing')
+    stage.stop()
+    ambient.stop()
+    stage.closeSetup()
+    page.removeAttribute('data-trip-map-playing')
 
     if (frame !== undefined) {
       cancelAnimationFrame(frame)
       frame = undefined
     }
 
-    leavePanel()
+    card.leave()
     travelToken += 1
     traveling = false
-    cancelLeg()
+    drawer.remove()
     mapLabels.destroy()
-    layers.remove()
     camera.stop()
-    getMap()?.keyboard.enable()
-    routeTip = undefined
     trip = undefined
+    plan = undefined
     slides = []
     playing = false
     held = false
-    panel.hidden = true
-    progress.replaceChildren()
-    hideProgressTip()
-    body.replaceChildren()
+    card.clear()
   }
 
-  /**
-   * Leaves a copy of the card fading out where it was, since the card itself is
-   * emptied and hidden at once. Its media are swapped for empty boxes the same size,
-   * so the copy plays and loads nothing.
-   */
-  function leavePanel() {
-    if (panel.hidden || reducedMotion.matches || isStageLayout()) {
-      return
-    }
-
-    cardTransition.end()
-    photoTransition.end()
-
-    const ghost = panel.cloneNode(true) as HTMLElement
-
-    for (const media of ghost.querySelectorAll('video, iframe, audio')) {
-      const box = document.createElement('div')
-      box.className = media.className
-      box.style.cssText = (media as HTMLElement).style.cssText
-      media.replaceWith(box)
-    }
-
-    for (const element of ghost.querySelectorAll('[id]')) {
-      element.removeAttribute('id')
-    }
-
-    ghost.removeAttribute('aria-labelledby')
-    ghost.setAttribute('aria-hidden', 'true')
-    ghost.inert = true
-    ghost.style.pointerEvents = 'none'
-    panel.after(ghost)
-    ghost.animate(PANEL_HIDDEN, PANEL_MOTION).finished.then(
-      () => ghost.remove(),
-      () => ghost.remove(),
-    )
-    signal.addEventListener('abort', () => ghost.remove(), { once: true })
-  }
-
-  /** The progress segment under `x`, clamped to the bar's ends. */
-  function getProgressIndexAt(x: number) {
-    const rect = progress.getBoundingClientRect()
-    const fraction = Math.min(Math.max((x - rect.left) / Math.max(rect.width, 1), 0), 0.9999)
-
-    return Math.floor(fraction * progress.children.length)
-  }
-
-  // The segments are too narrow to hit one by one on a phone, so a finger can slide
-  // along the bar, naming the card under it, and lands on that card when lifted.
-  let scrubIndex: number | undefined
-
-  progress.addEventListener(
-    'pointerdown',
-    (event) => {
-      if (event.button !== 0 || progress.children.length === 0) {
-        return
-      }
-
-      scrubIndex = getProgressIndexAt(event.clientX)
-      progress.setPointerCapture(event.pointerId)
-    },
-    { signal },
-  )
-  progress.addEventListener(
-    'pointermove',
-    (event) => {
-      if (scrubIndex === undefined) {
-        return
-      }
-
-      scrubIndex = getProgressIndexAt(event.clientX)
-      const button = progress.children[scrubIndex]?.querySelector('button')
-
-      if (button) {
-        showProgressTip(button)
-      }
-    },
-    { signal },
-  )
-  progress.addEventListener(
-    'pointerup',
-    (event) => {
-      const target = scrubIndex
-
-      scrubIndex = undefined
-
-      if (event.pointerType !== 'mouse') {
-        hideProgressTip()
-      }
-
-      if (target !== undefined) {
-        goTo(target)
-      }
-    },
-    { signal },
-  )
-  progress.addEventListener(
-    'pointercancel',
-    () => {
-      scrubIndex = undefined
-      hideProgressTip()
-    },
-    { signal },
-  )
-  // Sliding along the bar mustn't scroll or pull the page.
-  progress.style.touchAction = 'none'
-  previousButton.addEventListener('click', () => goTo(index - 1), { signal })
-  nextButton.addEventListener('click', () => goTo(index + 1), { signal })
-  closeButton.addEventListener('click', onClose, { signal })
-  panel.addEventListener(
-    'pointerenter',
-    (event) => {
-      hovering = event.pointerType === 'mouse'
-      // The current progress segment breathes while the card is held (see index.css).
-      panel.toggleAttribute('data-held', hovering)
-    },
-    { signal },
-  )
-  panel.addEventListener(
-    'pointerleave',
-    () => {
-      hovering = false
-      panel.removeAttribute('data-held')
-    },
-    { signal },
-  )
-  // The map's logo and attribution keep clear of the card (see index.css).
+  panel.previous.addEventListener('click', () => goTo(index - 1), { signal })
+  panel.next.addEventListener('click', () => goTo(index + 1), { signal })
+  panel.close.addEventListener('click', onClose, { signal })
+  // The map's logo and attribution keep clear of the card (see styles.css).
   const panelSize = new ResizeObserver(() => {
-    page.style.setProperty('--trip-panel-height', `${panel.offsetHeight}px`)
+    page.style.setProperty('--trip-panel-height', `${panel.panel.offsetHeight}px`)
   })
-  panelSize.observe(panel)
+  panelSize.observe(panel.panel)
   signal.addEventListener('abort', () => panelSize.disconnect())
-  exportButton.hidden = !canRecord()
-  exportButton.addEventListener('click', () => setExportOptionsOpen(true, 'record'), { signal })
-  presentButton.addEventListener('click', () => setExportOptionsOpen(true, 'present'), { signal })
-  page
-    .querySelector('[data-calendar-map-trip-stage-close]')
-    ?.addEventListener('click', stopStage, { signal })
-  page.addEventListener('pointermove', wakeControls, { signal })
-  page.addEventListener('pointerdown', wakeControls, { signal })
-  document.addEventListener(
-    'fullscreenchange',
-    () => {
-      // Leaving full screen (Esc, or the browser's own control) ends a presentation.
-      if (staging?.mode === 'present' && !document.fullscreenElement) {
-        stopStage()
-      }
-    },
-    { signal },
-  )
-  safeAreaInput.addEventListener(
-    'change',
-    () => {
-      safeArea = safeAreaInput.checked
-      writeSafeAreaPreference(safeArea)
-    },
-    { signal },
-  )
   renderSpeedButton()
-  speedButton.addEventListener('click', () => setSpeed(getNextSpeed(speed)), { signal })
+  panel.speed.addEventListener('click', () => setSpeed(getNextSpeed(speed)), { signal })
   renderMusicButton()
-  musicButton.addEventListener('click', toggleMusic, { signal })
-  stageMusicButton.addEventListener('click', toggleMusic, { signal })
-  exportMusic.addEventListener('change', syncAmbientMusic, { signal })
-  document.addEventListener('visibilitychange', syncAmbientMusic, { signal })
-  page
-    .querySelector('[data-calendar-map-trip-export-cancel]')
-    ?.addEventListener('click', () => setExportOptionsOpen(false), { signal })
-
-  for (const button of ratioButtons) {
-    button.addEventListener(
-      'click',
-      () => {
-        ratio = button.dataset.calendarMapTripExportRatio as ExportRatio
-        writeRatioPreference(ratio)
-        renderSetup()
-      },
-      { signal },
-    )
-  }
-  startButton.addEventListener('click', () => void startStage(ratio, stageMode), { signal })
-  playButton.addEventListener(
+  panel.music.addEventListener('click', toggleMusic, { signal })
+  stageElements.music.addEventListener('click', toggleMusic, { signal })
+  panel.setupMusic.addEventListener('change', ambient.sync, { signal })
+  document.addEventListener('visibilitychange', ambient.sync, { signal })
+  panel.play.addEventListener(
     'click',
     () => {
       if (!playing && !getDuration(slides[index])) {
@@ -2442,30 +1046,17 @@ export function createTripPlayer({
     { signal },
   )
   window.addEventListener('keydown', handleShortcut, { signal })
-  window.addEventListener(
-    'resize',
-    () => {
-      const slide = slides[index]
-      const image = slide?.type === 'stop' ? slide.stop.images[photoIndex] : undefined
-
-      // The photo's size follows the room the card has.
-      if (photo && image && !photoTransition.running) {
-        sizePhoto(photo, image)
-      }
-    },
-    { signal },
-  )
   signal.addEventListener('abort', stop)
 
   return {
-    getPageTitle: (id: string) => tripTitles.get(id),
-    has: (id: string) => tripTitles.has(id),
-    prefetch,
     get activeId() {
       return trip?.id ?? requestedId
     },
+    getTitle: (id: string) => loader.getTitle(id),
+    has: (id: string) => loader.has(id),
+    prefetch: (id: string) => loader.prefetch(id),
     /** Re-adds the route layers after the map style changes. */
-    restoreLayers: addLayers,
+    restoreLayers: () => drawer.addLayers(),
     start,
     stop,
   }

@@ -15,8 +15,8 @@ export function createElement(tag: string, className: string, text: string) {
   return element
 }
 
-/** The class the map's hover names share, styled in index.css. */
-export const MAP_POPUP_CLASS = 'calendar-map-popup'
+/** The class the map's hover names share, styled in styles.css. */
+export const MAP_POPUP_CLASS = 'trip-map-popup'
 
 /**
  * A hover name on the map, for a route, a place or a group of them: a small grey line
@@ -34,12 +34,12 @@ export function createPopupContent({
   const content = document.createElement('div')
 
   content.append(
-    createElement('p', 'calendar-map-popup__meta', meta),
-    createElement('p', 'calendar-map-popup__title', title),
+    createElement('p', 'trip-map-popup__meta', meta),
+    createElement('p', 'trip-map-popup__title', title),
   )
 
   if (hint) {
-    content.append(createElement('p', 'calendar-map-popup__hint', hint))
+    content.append(createElement('p', 'trip-map-popup__hint', hint))
   }
 
   return content
@@ -49,7 +49,7 @@ export function queryRequired<T extends Element>(root: ParentNode, selector: str
   const element = root.querySelector<T>(selector)
 
   if (!element) {
-    throw new Error(`Missing required calendar map element: ${selector}`)
+    throw new Error(`Missing required trip map element: ${selector}`)
   }
 
   return element
@@ -155,12 +155,12 @@ export function createLiveVideo(src: string, className: string) {
 }
 
 /** A stop's linked video, playing by itself while its card is up. */
-export function createVideoPlayer(src: string, className: string) {
+export function createVideoPlayer(src: string, className: string, title: string) {
   const player = document.createElement('iframe')
 
-  player.className = `calendar-map-video ${className}`.trim()
+  player.className = `trip-map-video ${className}`.trim()
   player.src = src
-  player.title = '哔哩哔哩视频'
+  player.title = title
   player.allow = 'autoplay; fullscreen; picture-in-picture'
   player.allowFullscreen = true
   player.referrerPolicy = 'strict-origin-when-cross-origin'

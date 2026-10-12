@@ -1,4 +1,6 @@
 import mapboxgl, { type Map as MapboxMap } from 'mapbox-gl'
+import { formatDateRange } from '../format.ts'
+import type { Messages } from '../messages.ts'
 import { createPopupContent, MAP_POPUP_CLASS } from './dom.ts'
 import type { TripSummary } from './types.ts'
 
@@ -11,7 +13,7 @@ import type { TripSummary } from './types.ts'
 // takes its place. Closing, the trip's route stays put while the player's layers go
 // and relaxes into the others as they come back.
 
-const PREFIX = 'calendar-trip-overview-'
+const PREFIX = 'trip-map-overview-'
 // The second layer of a trip's route, its ferries and flights.
 const STRAIGHT_SUFFIX = '-straight'
 // How far apart, in degrees, the points added along a ferry or a flight are.
@@ -35,6 +37,7 @@ type Look = { opacity: number; width: number }
 export function createTripOverview({
   getInk,
   getMap,
+  messages,
   onHighlight,
   onSelect,
   reducedMotion,
@@ -43,6 +46,7 @@ export function createTripOverview({
 }: {
   getInk: () => string
   getMap: () => MapboxMap | undefined
+  messages: Messages
   /** A route was lifted, a hint its trip may be opened next. */
   onHighlight?: (id: string) => void
   onSelect: (id: string) => void
@@ -254,8 +258,8 @@ export function createTripOverview({
       if (highlightedId !== id) {
         popup.setDOMContent(
           createPopupContent({
-            hint: isTouch() ? '再点一次回放' : undefined,
-            meta: trip.dateRange,
+            hint: isTouch() ? messages.tapAgainToPlay : undefined,
+            meta: formatDateRange(trip.start, trip.end, messages.locale),
             title: trip.title,
           }),
         )

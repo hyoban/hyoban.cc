@@ -32,7 +32,7 @@ export type TripDefinition = Readonly<{
   waypoints?: readonly TripWaypointDefinition[]
 }>
 
-type TripLocation = MapLocation & { id: string }
+export type TripLocation = MapLocation & { id: string }
 
 /**
  * A driving route between two places, or a rail line for a train leg, cached in
@@ -57,7 +57,8 @@ export type TripLeg = Readonly<{
   to: TripLocation
 }>
 
-type TripMoment = Readonly<{
+/** What `buildTrip` needs of a Moment: when it was, and the places it names. */
+export type TripMoment = Readonly<{
   dateKey: string
   locations: readonly TripLocation[]
   occurredAt: string
