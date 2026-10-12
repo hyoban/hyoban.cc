@@ -17,7 +17,14 @@ import {
   queryRequired,
 } from './dom'
 import { createChapterLog, getShortPlaceName, getSummaryStats } from './labels'
-import { closeMusic, fadeMusicIn, fadeMusicOut, loadMusic, type Music } from './music'
+import {
+  closeMusic,
+  fadeMusicIn,
+  fadeMusicOut,
+  loadMusic,
+  setMusicAudible,
+  type Music,
+} from './music'
 import {
   getNextSpeed,
   SPEEDS,
@@ -200,6 +207,10 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   )
   const presentButton = queryRequired<HTMLButtonElement>(page, '[data-calendar-map-trip-present]')
   const musicButton = queryRequired<HTMLButtonElement>(page, '[data-calendar-map-trip-music]')
+  const stageMusicButton = queryRequired<HTMLButtonElement>(
+    page,
+    '[data-calendar-map-trip-stage-music]',
+  )
   const speedButton = queryRequired<HTMLButtonElement>(page, '[data-calendar-map-trip-speed]')
   const announcer = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-announcer]')
   const shortcutsDialog = queryRequired<HTMLDialogElement>(
@@ -1092,11 +1103,24 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   }
 
   function renderMusicButton() {
-    const icon = musicButton.firstElementChild
+    for (const button of [musicButton, stageMusicButton]) {
+      const icon = button.firstElementChild
 
-    musicButton.setAttribute('aria-pressed', String(musicOn))
-    icon?.classList.toggle('i-lucide-volume-2', musicOn)
-    icon?.classList.toggle('i-lucide-volume-x', !musicOn)
+      button.setAttribute('aria-pressed', String(musicOn))
+      icon?.classList.toggle('i-lucide-volume-2', musicOn)
+      icon?.classList.toggle('i-lucide-volume-x', !musicOn)
+    }
+  }
+
+  function toggleMusic() {
+    musicOn = !musicOn
+    writeMusicPreference(musicOn)
+    renderMusicButton()
+    syncAmbientMusic()
+
+    if (staging?.music) {
+      setMusicAudible(staging.music, musicOn)
+    }
   }
 
   function getAmbientSource() {
@@ -1130,7 +1154,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     const loading = { src }
     pendingAmbient = loading
 
-    void loadMusic(src, false).then((music) => {
+    void loadMusic(src, { audible: true, record: false }).then((music) => {
       if (!music || pendingAmbient !== loading) {
         void music?.context.close()
         return
@@ -1598,12 +1622,19 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       return
     }
 
+    const key = event.key.length === 1 ? event.key.toLowerCase() : event.key
+
+    if (key === 'm') {
+      event.preventDefault()
+      toggleMusic()
+      return
+    }
+
     // A recording plays straight through: a stray key would end up in the video.
     if (activeStage?.mode === 'record') {
       return
     }
 
-    const key = event.key.length === 1 ? event.key.toLowerCase() : event.key
     const actions: Record<string, () => void> = {
       ' ': () => playButton.click(),
       '-': () => setSpeed(SPEEDS.findLast((value) => value < speed) ?? speed),
@@ -1622,7 +1653,6 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
         }
       },
       k: () => playButton.click(),
-      m: () => musicButton.click(),
       r: () => {
         if (!staging && !exportButton.hidden) {
           setExportOptionsOpen(true, 'record')
@@ -1714,7 +1744,10 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       await cropTo(stream, page)
     }
 
-    const music = await loadMusic(exportMusic.value, mode === 'record')
+    const music = await loadMusic(exportMusic.value, {
+      audible: musicOn,
+      record: mode === 'record',
+    })
 
     // Stopped while the music loaded: let go of what was opened for it.
     if (stageToken !== token) {
@@ -2193,16 +2226,8 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   renderSpeedButton()
   speedButton.addEventListener('click', () => setSpeed(getNextSpeed(speed)), { signal })
   renderMusicButton()
-  musicButton.addEventListener(
-    'click',
-    () => {
-      musicOn = !musicOn
-      writeMusicPreference(musicOn)
-      renderMusicButton()
-      syncAmbientMusic()
-    },
-    { signal },
-  )
+  musicButton.addEventListener('click', toggleMusic, { signal })
+  stageMusicButton.addEventListener('click', toggleMusic, { signal })
   exportMusic.addEventListener('change', syncAmbientMusic, { signal })
   page
     .querySelector('[data-calendar-map-trip-export-cancel]')
