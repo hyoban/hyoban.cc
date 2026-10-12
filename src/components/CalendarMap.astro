@@ -116,7 +116,7 @@ function toScriptJson(value: unknown) {
       <CalendarModeSwitch class="col-start-3 justify-self-end" mode="map" />
     </header>
 
-    <ol class="calendar-map-legend [&[hidden]]:hidden absolute bottom-10 left-1/2 z-[4] flex -translate-x-1/2 list-none items-center gap-3 rounded-full border border-[color-mix(in_srgb,var(--color-border)_82%,transparent)] bg-[color-mix(in_srgb,var(--color-bg)_82%,transparent)] px-3.5 py-2.5 font-mono text-xs shadow-[0_0.5rem_2rem_rgb(0_0_0/0.08)] max-[48rem]:bottom-[calc(1rem+env(safe-area-inset-bottom))]" aria-label="图例：地点按最近记录年份着色" data-calendar-map-legend>
+    <ol class="calendar-map-legend [&[hidden]]:hidden absolute bottom-10 left-1/2 z-[4] flex w-max -translate-x-1/2 list-none items-center gap-3 rounded-full border border-[color-mix(in_srgb,var(--color-border)_82%,transparent)] bg-[color-mix(in_srgb,var(--color-bg)_82%,transparent)] px-3.5 py-2.5 font-mono text-xs shadow-[0_0.5rem_2rem_rgb(0_0_0/0.08)] max-[48rem]:bottom-[calc(1rem+env(safe-area-inset-bottom))]" aria-label="图例：地点按最近记录年份着色" data-calendar-map-legend>
       {
         years.map(year => (
           <li class="flex items-center gap-[0.35rem]">
@@ -129,7 +129,7 @@ function toScriptJson(value: unknown) {
         // The grey lines are trips: say so, and lead to their list.
         trips.length > 0 && (
           <li class="flex items-center border-l border-border pl-3">
-            <a class="flex items-center gap-[0.35rem] text-inherit no-underline hover:text-tx-2" href="/trip/">
+            <a class="flex items-center gap-[0.35rem] whitespace-nowrap text-inherit no-underline hover:text-tx-2" href="/trip/">
               <span class="block h-0.5 w-3.5 rounded-full bg-tx opacity-50" aria-hidden="true" />
               旅程
             </a>

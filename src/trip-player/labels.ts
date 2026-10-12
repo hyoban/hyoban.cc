@@ -2,7 +2,7 @@
 
 type TripStats = Readonly<{
   dayCount: number
-  distanceKm: number
+  drivingKm: number
   drivingHours: number
   photoCount: number
   placeCount: number
@@ -16,7 +16,7 @@ export function getSummaryStats(trip: TripStats) {
     [trip.stops.length, '条记录'],
     [trip.placeCount, '个地点'],
     [trip.photoCount, '张照片'],
-    [trip.distanceKm, '公里'],
+    [trip.drivingKm, '公里自驾'],
     [trip.drivingHours, '小时车程'],
   ] as const
 }

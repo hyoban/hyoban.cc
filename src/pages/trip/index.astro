@@ -11,7 +11,7 @@ const trips = getTrips(await getMoments()).toSorted((first, second) =>
 const totals = [
   [trips.length, '段旅程'],
   [trips.reduce((total, trip) => total + trip.dayCount, 0), '天'],
-  [trips.reduce((total, trip) => total + trip.distanceKm, 0), '公里'],
+  [trips.reduce((total, trip) => total + trip.drivingKm, 0), '公里自驾'],
   [trips.reduce((total, trip) => total + trip.drivingHours, 0), '小时车程'],
 ] as const
 
@@ -42,14 +42,17 @@ function formatDate(dateKey: string, withYear = false) {
         trips.map(trip => (
           <li>
             <a href={`/trip/${trip.id}/`} class="-mx-3 flex items-center gap-4 rounded-md p-3 no-underline transition-colors hover:bg-hover">
-              <img class="aspect-[1200/630] w-36 shrink-0 rounded-[0.3125rem] bg-inline object-cover max-[30rem]:w-28" src={`/trip/${trip.id}/thumbnail.webp`} width="480" height="252" alt="" loading="lazy" decoding="async" />
+              <picture class="contents">
+                <source srcset={`/trip/${trip.id}/thumbnail-dark.webp`} media="(prefers-color-scheme: dark)" />
+                <img class="aspect-[1200/630] w-36 shrink-0 rounded-[0.3125rem] bg-inline object-cover max-[30rem]:w-28" src={`/trip/${trip.id}/thumbnail.webp`} width="480" height="252" alt="" loading="lazy" decoding="async" />
+              </picture>
               <span class="flex min-w-0 flex-col gap-1">
                 <span>{trip.title}</span>
                 <span class="text-sm text-tx-2 tabular-nums">
                   {formatDate(trip.start, true)} – {formatDate(trip.end)}
                 </span>
                 <span class="text-sm text-tx-3 tabular-nums">
-                  {trip.dayCount} 天 · {trip.placeCount} 个地点 · {trip.distanceKm.toLocaleString('zh-CN')} 公里
+                  {trip.dayCount} 天 · {trip.placeCount} 个地点 · 自驾 {trip.drivingKm.toLocaleString('zh-CN')} 公里
                 </span>
               </span>
             </a>

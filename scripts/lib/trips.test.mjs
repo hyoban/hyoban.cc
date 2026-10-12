@@ -47,7 +47,7 @@ test('keeps located moments inside the inclusive date range', () => {
   )
   assert.equal(trip.dayCount, 3)
   assert.equal(trip.placeCount, 2)
-  assert.equal(trip.distanceKm, Math.round(getDistanceKm(hefei, nanjing)))
+  assert.equal(trip.drivingKm, Math.round(getDistanceKm(hefei, nanjing)))
 })
 
 test('routes through every place of a Moment with several places', () => {
@@ -61,7 +61,7 @@ test('routes through every place of a Moment with several places', () => {
   )
 
   assert.equal(trip.placeCount, 2)
-  assert.equal(trip.distanceKm, Math.round(getDistanceKm(hefei, nanjing) * 2))
+  assert.equal(trip.drivingKm, Math.round(getDistanceKm(hefei, nanjing) * 2))
 })
 
 test('threads waypoints between stops by time', () => {
@@ -102,7 +102,7 @@ test('threads waypoints between stops by time', () => {
   )
   assert.equal(trip.placeCount, 3)
   assert.equal(
-    trip.distanceKm,
+    trip.drivingKm,
     Math.round(
       getDistanceKm(hefei, nanjing) + getDistanceKm(nanjing, rizhao) + getDistanceKm(rizhao, hefei),
     ),
@@ -168,7 +168,7 @@ test('uses cached road routes except on straight legs', () => {
       ['nanjing', 'rizhao', 'ferry', false],
     ],
   )
-  assert.equal(trip.distanceKm, Math.round(180 + getDistanceKm(nanjing, rizhao)))
+  assert.equal(trip.drivingKm, 180)
   // The straight leg reuses no route, so only the drive to Nanjing counts.
   assert.equal(trip.drivingHours, 2)
 })
@@ -206,7 +206,7 @@ test('drives back the same way along the outbound route, reversed', () => {
   assert.equal(there.retraced, undefined)
   assert.equal(back.retraced, true)
   assert.deepEqual(back.route.coordinates, [...route.coordinates].reverse())
-  assert.equal(trip.distanceKm, 360)
+  assert.equal(trip.drivingKm, 360)
   assert.throws(
     () =>
       defineTrips([

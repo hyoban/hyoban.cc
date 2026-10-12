@@ -56,6 +56,7 @@ import {
 } from './recorder'
 import { createTransition, easeCardChange, easePhotoChange, reducedMotion } from './motion'
 import { createStagePhotoCard } from './stage-photo-card'
+import { createScreenWakeLock } from './wake-lock'
 import { createRouteLayers, type StopState } from './route-layers'
 import {
   buildSlides,
@@ -368,6 +369,8 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   // Photos decoded ahead while recording, so a card never opens on a blank frame.
   const decodedPhotos = new Map<string, Promise<void>>()
   const readyPhotos = new Set<string>()
+  // The screen stays on through a presentation or a recording.
+  const wakeLock = createScreenWakeLock(signal)
 
   /**
    * A stop's photos are timed from when the route reaches it (presenting or recording,
@@ -1780,6 +1783,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     const token = {}
     stageToken = token
     activeStage = { mode, speed }
+    wakeLock.hold()
 
     if (mode === 'record') {
       speed = 1
@@ -1909,6 +1913,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
     stageToken = undefined
     chapters = undefined
+    wakeLock.release()
 
     if (!staging && !starting) {
       return

@@ -72,7 +72,8 @@ export type TripStop<T extends TripMoment> = T & {
 export type Trip<T extends TripMoment> = TripDefinition &
   Readonly<{
     dayCount: number
-    distanceKm: number
+    /** Kilometres driven; ferries and flights aren't counted. */
+    drivingKm: number
     /** Hours of driving along cached routes; ferries and flights aren't counted. */
     drivingHours: number
     placeCount: number
@@ -243,17 +244,20 @@ export function buildTrip<T extends TripMoment>(
       ...(route ? { route } : {}),
     }
   })
-  // Road distance where a route is cached, otherwise as the crow flies.
-  const distanceKm = legs.reduce(
+  // Only what was driven: road distance where a route is cached, otherwise as the
+  // crow flies. Ferries and flights aren't driving, so they'd only inflate it.
+  const drivingKm = legs.reduce(
     (total, leg) =>
-      total + (leg.route ? leg.route.distance / 1000 : getDistanceKm(leg.from, leg.to)),
+      leg.by !== 'car'
+        ? total
+        : total + (leg.route ? leg.route.distance / 1000 : getDistanceKm(leg.from, leg.to)),
     0,
   )
 
   return {
     ...trip,
     dayCount: getDayOffset(trip.start, trip.end) + 1,
-    distanceKm: Math.round(distanceKm),
+    drivingKm: Math.round(drivingKm),
     drivingHours: Math.round(
       legs.reduce((total, leg) => total + (leg.route?.duration ?? 0), 0) / 3600,
     ),
