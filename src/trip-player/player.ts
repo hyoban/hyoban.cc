@@ -351,8 +351,6 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   let partial: { fraction: number; from: number; leg: MeasuredLine; to: number } | undefined
   let photoIndex = 0
   let photo: HTMLImageElement | undefined
-  // Holds the photo's frame at the height of the stop's tallest photo.
-  let photoSlot: HTMLElement | undefined
   let thumbnails: HTMLButtonElement[] = []
   // The side card's change to the next card, and to the next photo, in progress.
   const cardTransition = createTransition()
@@ -900,40 +898,33 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   /**
    * Gives the side card's photo its size up front, from its proportions and the room
    * the card has, so the card's layout is right before the photo has loaded rather
-   * than jumping when it arrives. The slot around it is as tall as the stop's tallest
-   * photo, so stepping through a stop's photos never changes the card's height.
+   * than jumping when it arrives.
    */
   function sizePhoto(img: HTMLImageElement, image: TripImage) {
     const frame = img.parentElement
-    const slide = slides[index]
+    const box = frame?.parentElement
 
-    if (!frame || !photoSlot) {
+    if (!frame || !box) {
       return
     }
 
-    const bodyStyle = getComputedStyle(body)
-    const border = frame.offsetWidth - frame.clientWidth
+    const boxStyle = getComputedStyle(box)
     // The card's content width, less the frame's border.
     const available =
-      body.clientWidth -
-      Number.parseFloat(bodyStyle.paddingLeft) -
-      Number.parseFloat(bodyStyle.paddingRight) -
-      border
+      box.clientWidth -
+      Number.parseFloat(boxStyle.paddingLeft) -
+      Number.parseFloat(boxStyle.paddingRight) -
+      (frame.offsetWidth - frame.clientWidth)
 
     img.style.width = ''
     img.style.height = ''
 
     const maxHeight = Number.parseFloat(getComputedStyle(img).maxHeight) || Infinity
-    const fit = ({ height, width }: TripImage) => {
-      const fitted = Math.min(available, maxHeight * (width / height))
-      return { height: fitted * (height / width), width: fitted }
-    }
-    const size = fit(image)
-    const images = slide?.type === 'stop' ? slide.stop.images : [image]
+    const ratio = image.width / image.height
+    const width = Math.min(available, maxHeight * ratio)
 
-    img.style.width = `${size.width}px`
-    img.style.height = `${size.height}px`
-    photoSlot.style.height = `${Math.max(...images.map((item) => fit(item).height)) + border}px`
+    img.style.width = `${width}px`
+    img.style.height = `${width / ratio}px`
   }
 
   function showPhoto(stop: TripStop, nextPhotoIndex: number) {
@@ -1262,15 +1253,13 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       link.href = stop.href
 
       photo = undefined
-      photoSlot = undefined
       thumbnails = []
       photoIndex = 0
 
       if (stop.images.length > 0) {
         photo = document.createElement('img')
-        photoSlot = createElement('div', 'flex shrink-0 items-center justify-center', '')
         link.className =
-          'relative block overflow-hidden rounded-md border border-border bg-inline no-underline'
+          'relative block min-h-0 self-center overflow-hidden rounded-md border border-border bg-inline no-underline @max-[48rem]:shrink-0'
         link.setAttribute('aria-label', `查看 ${stop.date}的记录`)
         // As tall as the card has room for beside the progress, thumbnails, text and
         // buttons (about 24rem with the card's offset); on a phone, low enough that
@@ -1280,7 +1269,6 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
         photo.sizes = IMAGE_SIZES
         photo.decoding = 'async'
         link.append(photo)
-        photoSlot.append(link)
 
         if (stop.images.length > 1) {
           addPhotoSwipe(link)
@@ -1301,7 +1289,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
               ),
             ]
           : []),
-        photoSlot ?? link,
+        link,
         ...(stop.images.length > 1 ? [createThumbnails(stop)] : []),
         ...(stop.text ? [text] : []),
       )
