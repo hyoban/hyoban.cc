@@ -1,6 +1,6 @@
 import mapboxgl, { type Map as MapboxMap } from 'mapbox-gl'
-import { createPopupContent, MAP_POPUP_CLASS } from './dom'
-import type { TripSummary } from './types'
+import { createPopupContent, MAP_POPUP_CLASS } from './dom.ts'
+import type { TripSummary } from './types.ts'
 
 // Every trip's route on the overview map, as the way into its playback: pointing at a
 // route lifts it above the others, and clicking it opens the trip. A finger has no

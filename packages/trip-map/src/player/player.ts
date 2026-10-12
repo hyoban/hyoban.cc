@@ -1,6 +1,6 @@
 import type { Map as MapboxMap } from 'mapbox-gl'
-import { getDistanceKm, type Coordinates } from '../geo'
-import { createCamera } from './camera'
+import { getDistanceKm, type Coordinates } from '../geo.ts'
+import { createCamera } from './camera.ts'
 import {
   createCountUp,
   createElement,
@@ -15,8 +15,8 @@ import {
   preloadImage,
   preloadThumbnail,
   queryRequired,
-} from './dom'
-import { createChapterLog, getShortPlaceName, getSummaryStats } from './labels'
+} from './dom.ts'
+import { createChapterLog, getShortPlaceName, getSummaryStats } from './labels.ts'
 import {
   closeMusic,
   fadeMusicIn,
@@ -24,7 +24,7 @@ import {
   loadMusic,
   setMusicAudible,
   type Music,
-} from './music'
+} from './music.ts'
 import {
   getNextSpeed,
   SPEEDS,
@@ -36,7 +36,7 @@ import {
   writeRatioPreference,
   writeSafeAreaPreference,
   writeSpeedPreference,
-} from './preferences'
+} from './preferences.ts'
 import {
   easeInOut,
   getRouteLine as buildRouteLine,
@@ -44,8 +44,8 @@ import {
   measureLine,
   walkLine,
   type MeasuredLine,
-} from './route'
-import { createMapLabels } from './map-labels'
+} from './route.ts'
+import { createMapLabels } from './map-labels.ts'
 import {
   canRecord,
   createRecording,
@@ -53,11 +53,11 @@ import {
   releaseCapture,
   requestTabCapture,
   type Recording,
-} from './recorder'
-import { createTransition, easeCardChange, easePhotoChange, reducedMotion } from './motion'
-import { createStagePhotoCard } from './stage-photo-card'
-import { createScreenWakeLock } from './wake-lock'
-import { createRouteLayers, type StopState } from './route-layers'
+} from './recorder.ts'
+import { createTransition, easeCardChange, easePhotoChange, reducedMotion } from './motion.ts'
+import { createStagePhotoCard } from './stage-photo-card.ts'
+import { createScreenWakeLock } from './wake-lock.ts'
+import { createRouteLayers, type StopState } from './route-layers.ts'
 import {
   buildSlides,
   getPhotoAt,
@@ -70,10 +70,10 @@ import {
   getStopPointStart as getPointStart,
   getWaypointsBefore as getWaypointRange,
   type SlideTiming,
-} from './slides'
-import { createDayHeading } from './day-heading'
-import { createIntroCard, createSummaryCard } from './stage-cards'
-import { getIntroCovers, getTripMeta } from './intro'
+} from './slides.ts'
+import { createDayHeading } from './day-heading.ts'
+import { createIntroCard, createSummaryCard } from './stage-cards.ts'
+import { getIntroCovers, getTripMeta } from './intro.ts'
 import type {
   MapLabel,
   Slide,
@@ -81,10 +81,10 @@ import type {
   TripImage,
   TripPlace,
   TripPoint,
-  TripStop,
+  TripDataStop,
   TripSummary,
-  TripWaypoint,
-} from './types'
+  TripDataWaypoint,
+} from './types.ts'
 
 // Plays a trip back on the map: the route draws itself from place to place while a
 // card shows each stop's photos and words. The same playback can run in a story
@@ -92,9 +92,13 @@ import type {
 
 type TripPlayerOptions = {
   getMap: () => MapboxMap | undefined
+  /** Where a trip's playback data (`TripData` as JSON) is fetched from. */
+  getTripDataUrl: (id: string) => string
   onClose: () => void
   page: HTMLElement
   signal: AbortSignal
+  /** Shown on the summary card of a video: where to find the trips, like `hyoban.cc/trip/`. */
+  siteLine: string
 }
 
 // Long enough to read a waypoint's name before driving on.
@@ -136,7 +140,14 @@ type ExportRatio = 'landscape' | 'portrait'
 // The story layout either plays on screen or is recorded to a video file.
 type StageMode = 'present' | 'record'
 
-export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOptions) {
+export function createTripPlayer({
+  getMap,
+  getTripDataUrl,
+  onClose,
+  page,
+  signal,
+  siteLine,
+}: TripPlayerOptions) {
   const tripTitles = new Map(
     parseJson<TripSummary[]>(page, '[data-calendar-map-trips]', []).map((item) => [
       item.id,
@@ -965,7 +976,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     img.style.height = `${width / ratio}px`
   }
 
-  function showPhoto(stop: TripStop, nextPhotoIndex: number) {
+  function showPhoto(stop: TripDataStop, nextPhotoIndex: number) {
     const image = stop.images[nextPhotoIndex]
 
     if (!photo || !image) {
@@ -999,7 +1010,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   }
 
   /** Shows one of a stop's photos, moving the card's timer to where it is shown. */
-  function selectPhoto(stop: TripStop, imageIndex: number) {
+  function selectPhoto(stop: TripDataStop, imageIndex: number) {
     const slide = slides[index]
     const delay = getPhotoDelay(slide)
     const duration = getDuration(slide) ?? 0
@@ -1112,7 +1123,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     renderSpeedButton()
   }
 
-  function createThumbnails(stop: TripStop) {
+  function createThumbnails(stop: TripDataStop) {
     const list = createElement(
       'div',
       'mt-1 flex shrink-0 gap-1 overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
@@ -1419,7 +1430,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     }
 
     if (slide.type === 'summary') {
-      stageCenter.replaceChildren(createSummaryCard(trip))
+      stageCenter.replaceChildren(createSummaryCard(trip, siteLine))
       return
     }
 
@@ -2095,7 +2106,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     let request = tripRequests.get(id)
 
     if (!request) {
-      request = fetch(`/trip/${encodeURIComponent(id)}/data.json`, { signal })
+      request = fetch(getTripDataUrl(id), { signal })
         .then(async (response) => {
           if (!response.ok) {
             return undefined
@@ -2136,7 +2147,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     // A waypoint has its own day and time; a stop's places take the stop's.
     const toPoint = (
       place: TripPlace,
-      when: Pick<TripWaypoint, 'date' | 'day' | 'time'>,
+      when: Pick<TripDataWaypoint, 'date' | 'day' | 'time'>,
       stopIndex: number,
       waypoint: boolean,
     ): TripPoint => ({

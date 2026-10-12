@@ -1,157 +1,24 @@
-import sharp, { type OverlayOptions } from 'sharp'
+import { renderTripPreview as renderPreview, type PreviewTheme } from '@hyoban/trip-map/preview'
 import type { MomentTrip } from '@/moments'
 import { getTripCovers } from '@/moments/trip-images'
 
-// A trip's preview: its route on the left and its first cover photo on the right. No
-// text, so the build needs no CJK fonts. It is the share image and the trip list's
-// thumbnail, which also comes in the dark theme's colours.
-
-const WIDTH = 1200
-const HEIGHT = 630
 // The site's --color-bg and --color-tx in each theme (see index.css).
 const COLORS = {
   dark: { background: '#111110', ink: '#eeeeec' },
   light: { background: '#fdfdfc', ink: '#21201c' },
 }
 
-export type PreviewTheme = keyof typeof COLORS
+export type { PreviewTheme }
 
-// The share image and the thumbnail are rendered separately; the cover is fetched once.
-const coverPhotos = new Map<string, Promise<Buffer | undefined>>()
-
-/** `lineScale` thickens the route for previews that will be shown small. */
-export async function renderTripPreview(
-  trip: MomentTrip,
-  lineScale = 1,
-  theme: PreviewTheme = 'light',
-) {
-  const colors = COLORS[theme]
-  const photo = await loadCoverPhoto(getTripCovers(trip)[0]?.src)
-  const routeWidth = photo ? WIDTH / 2 : WIDTH
-  const layers: OverlayOptions[] = [
-    { input: Buffer.from(getRouteSvg(trip, routeWidth, lineScale, colors)), left: 0, top: 0 },
-  ]
-
-  if (photo) {
-    layers.push({
-      input: await sharp(photo)
-        .resize(WIDTH - routeWidth, HEIGHT, { fit: 'cover' })
-        .toBuffer(),
-      left: routeWidth,
-      top: 0,
-    })
-  }
-
-  return sharp({
-    create: { background: colors.background, channels: 3, height: HEIGHT, width: WIDTH },
+/**
+ * A trip's share image and thumbnail: its route beside its first cover photo.
+ * `lineScale` thickens the route for previews that will be shown small.
+ */
+export function renderTripPreview(trip: MomentTrip, lineScale = 1, theme: PreviewTheme = 'light') {
+  return renderPreview(trip, {
+    colors: COLORS,
+    cover: getTripCovers(trip)[0]?.src,
+    lineScale,
+    theme,
   })
-    .composite(layers)
-    .png()
-    .toBuffer()
-}
-
-function loadCoverPhoto(src: string | undefined) {
-  if (!src) {
-    return Promise.resolve(undefined)
-  }
-
-  let photo = coverPhotos.get(src)
-
-  if (!photo) {
-    photo = fetchCoverPhoto(src)
-    coverPhotos.set(src, photo)
-  }
-
-  return photo
-}
-
-async function fetchCoverPhoto(src: string) {
-  try {
-    const response = await fetch(src)
-    return response.ok ? Buffer.from(await response.arrayBuffer()) : undefined
-  } catch {
-    // Offline builds still get a route-only preview.
-    return undefined
-  }
-}
-
-/** The whole route along roads, scaled to fit, with a dot at each place. */
-function getRouteSvg(
-  trip: MomentTrip,
-  width: number,
-  lineScale: number,
-  { background, ink }: { background: string; ink: string },
-) {
-  const line: [number, number][] = []
-
-  for (const [index, place] of trip.path.entries()) {
-    if (index > 0) {
-      line.push(
-        ...(trip.legs[index - 1]?.route?.coordinates ?? []).map(
-          ([lng, lat]) => [lng, lat] as [number, number],
-        ),
-      )
-    }
-
-    line.push([place.longitude, place.latitude])
-  }
-
-  const meanLatitude = line.reduce((total, [, lat]) => total + lat, 0) / Math.max(line.length, 1)
-  const xScale = Math.cos((meanLatitude * Math.PI) / 180)
-  const projected = line.map(([lng, lat]) => [lng * xScale, -lat] as const)
-  const xs = projected.map(([x]) => x)
-  const ys = projected.map(([, y]) => y)
-  const [minX, maxX, minY, maxY] = [
-    Math.min(...xs),
-    Math.max(...xs),
-    Math.min(...ys),
-    Math.max(...ys),
-  ]
-  const padding = 72
-  const scale = Math.min(
-    (width - padding * 2) / Math.max(maxX - minX, 1e-6),
-    (HEIGHT - padding * 2) / Math.max(maxY - minY, 1e-6),
-  )
-  const offsetX = (width - (maxX - minX) * scale) / 2
-  const offsetY = (HEIGHT - (maxY - minY) * scale) / 2
-  const toPoint = ([lng, lat]: readonly [number, number]) =>
-    [(lng * xScale - minX) * scale + offsetX, (-lat - minY) * scale + offsetY] as const
-  // Each leg on its own, drives solid and ferries or flights dashed, as on the map.
-  const paths = { car: '', straight: '' }
-  // A ferry or flight taken both ways is drawn once, or the dashes fill each other in.
-  const straightLegs = new Set<string>()
-
-  for (const [index, leg] of trip.legs.entries()) {
-    const from = trip.path[index]!
-    const to = trip.path[index + 1]!
-
-    if (leg.by !== 'car') {
-      const ends = [from.id, to.id].sort().join(' ')
-
-      if (straightLegs.has(ends)) {
-        continue
-      }
-
-      straightLegs.add(ends)
-    }
-    const points = [
-      [from.longitude, from.latitude] as const,
-      ...(leg.route?.coordinates ?? []).map(([lng, lat]) => [lng, lat] as const),
-      [to.longitude, to.latitude] as const,
-    ]
-
-    paths[leg.by === 'car' ? 'car' : 'straight'] += points
-      .map((coordinates, pointIndex) => {
-        const [x, y] = toPoint(coordinates)
-        return `${pointIndex === 0 ? 'M' : 'L'}${x.toFixed(1)} ${y.toFixed(1)}`
-      })
-      .join('')
-  }
-
-  const dots = trip.path.map((place) => {
-    const [x, y] = toPoint([place.longitude, place.latitude])
-    return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${7 * lineScale}" fill="${background}" stroke="${ink}" stroke-width="${3 * lineScale}"/>`
-  })
-
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${HEIGHT}" viewBox="0 0 ${width} ${HEIGHT}"><path d="${paths.car}" fill="none" stroke="${ink}" stroke-width="${5 * lineScale}" stroke-linecap="round" stroke-linejoin="round"/><path d="${paths.straight}" fill="none" stroke="${ink}" stroke-width="${5 * lineScale}" stroke-dasharray="${10 * lineScale} ${10 * lineScale}"/>${dots.join('')}</svg>`
 }

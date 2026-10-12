@@ -1,7 +1,7 @@
 import { join } from 'node:path'
 
 import { locations } from '../../src/data/locations.ts'
-import { getLocation } from '../../src/moments/map-locations.ts'
+import { getLocation } from '@hyoban/trip-map'
 import { compareMoments, getMomentOrder } from '../../src/moments/order.ts'
 import { readMomentRecords } from './moment-assets.mjs'
 

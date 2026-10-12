@@ -1,11 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'vite-plus/test'
-import {
-  createChapterLog,
-  formatChapterTime,
-  getShortPlaceName,
-} from '../../src/trip-player/labels.ts'
-import { getNextSpeed } from '../../src/trip-player/preferences.ts'
+import { createChapterLog, formatChapterTime, getShortPlaceName } from '../src/player/labels.ts'
+import { getNextSpeed } from '../src/player/preferences.ts'
 import {
   easeInOut,
   getRouteLine,
@@ -13,7 +9,7 @@ import {
   measureLine,
   simplifyLine,
   walkLine,
-} from '../../src/trip-player/route.ts'
+} from '../src/player/route.ts'
 
 const point = (longitude, latitude) => ({ coordinates: [longitude, latitude] })
 const points = [point(0, 0), point(2, 0), point(2, 2)]

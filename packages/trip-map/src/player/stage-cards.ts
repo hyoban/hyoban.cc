@@ -1,8 +1,7 @@
-import { SITE_URL } from '../consts'
-import { createCountUp, createElement } from './dom'
-import { getTripMeta } from './intro'
-import { getSummaryStats } from './labels'
-import type { TripData, TripImage } from './types'
+import { createCountUp, createElement } from './dom.ts'
+import { getTripMeta } from './intro.ts'
+import { getSummaryStats } from './labels.ts'
+import type { TripData, TripImage } from './types.ts'
 
 // The story layout's centred cards for presenting and recording. A stop's photo card
 // is built by the player, since it changes with each photo, and the heading above it
@@ -27,7 +26,8 @@ export function createIntroCard(trip: TripData, covers: readonly TripImage[]) {
   return card
 }
 
-export function createSummaryCard(trip: TripData) {
+/** `siteLine` tells a viewer of the video where to find the trips, like `hyoban.cc/trip/`. */
+export function createSummaryCard(trip: TripData, siteLine: string) {
   const card = createElement('div', 'calendar-map-trip-stage-card', '')
   const stats = document.createElement('dl')
 
@@ -46,7 +46,7 @@ export function createSummaryCard(trip: TripData) {
     createElement('p', 'calendar-map-trip-stage-card__title', trip.title),
     stats,
     // Where a viewer of the video can find the trip.
-    createElement('p', 'calendar-map-trip-stage-card__site', `${new URL(SITE_URL).host}/trip/`),
+    createElement('p', 'calendar-map-trip-stage-card__site', siteLine),
   )
   return card
 }

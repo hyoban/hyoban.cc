@@ -1,5 +1,5 @@
 import mapboxgl, { type Map as MapboxMap, type PaddingOptions } from 'mapbox-gl'
-import type { Coordinates } from '../geo'
+import type { Coordinates } from '../geo.ts'
 
 // One calm camera for the whole playback. While the route is drawn, the camera keeps
 // the line's moving tip in the middle, so it glides along with it: the tip eases in

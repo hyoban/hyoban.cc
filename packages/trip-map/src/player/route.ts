@@ -1,9 +1,10 @@
-import type { Coordinates } from '../geo'
+import type { Coordinates } from '../geo.ts'
+import type { TravelMode } from '../trips.ts'
 
 // The trip's route as a line: built from its places and the road geometry between
 // them, measured, and walked along to find where a moving tip is. DOM-free.
 
-export type TravelMode = 'car' | 'ferry' | 'plane' | 'train'
+export type { TravelMode }
 
 type RoutePoint = Readonly<{ coordinates: Coordinates }>
 

@@ -1,5 +1,5 @@
-import { pickCovers } from './slides'
-import type { TripData } from './types'
+import { pickCovers } from './slides.ts'
+import type { TripData } from './types.ts'
 
 // The side card's intro, which the trip pages also render on the server so it shows
 // (and its photos load) before the map script has run. Kept free of the DOM for that.

@@ -1,12 +1,17 @@
+import {
+  buildTrip,
+  getLocation,
+  groupMomentsByLocation,
+  type MapLocation,
+  type TripRoute,
+} from '@hyoban/trip-map'
 import type { CollectionEntry } from 'astro:content'
 import { getCollection } from 'astro:content'
 import { getAssetUrl } from '@/asset-url'
 import { locations, type LocationId } from '@/data/locations'
 import { trips } from '@/data/trips'
 import { parseMomentDocument, type CanonicalMoment } from '@/moments/content'
-import { getLocation, groupMomentsByLocation, type MapLocation } from '@/moments/map-locations'
 import { compareMoments, getMomentOrder } from '@/moments/order'
-import { buildTrip, type TripRoute } from '@/moments/trips'
 import tripRoutes from '@/data/trip-routes.json'
 
 const calendarDateFormatter = new Intl.DateTimeFormat('en-CA', {

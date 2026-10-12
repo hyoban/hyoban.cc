@@ -1,6 +1,6 @@
-import { createElement, createLiveVideo, createVideoPlayer } from './dom'
-import { FADE_IN, FADE_OUT, PHOTO_SWITCH, reducedMotion } from './motion'
-import type { TripStop } from './types'
+import { createElement, createLiveVideo, createVideoPlayer } from './dom.ts'
+import { FADE_IN, FADE_OUT, PHOTO_SWITCH, reducedMotion } from './motion.ts'
+import type { TripDataStop } from './types.ts'
 
 /**
  * The stop's photo card in the story layout: one card per stop, its words below a
@@ -31,7 +31,7 @@ export function createStagePhotoCard(container: HTMLElement) {
    * Builds the stop's card with its full text first, then gives the photo frame
    * whatever height is left, so the card always fits and the text is never cut.
    */
-  function show(stop: TripStop, stopIndex: number) {
+  function show(stop: TripDataStop, stopIndex: number) {
     const card = document.createElement('figure')
     const frame =
       stop.images.length > 0
@@ -67,7 +67,7 @@ export function createStagePhotoCard(container: HTMLElement) {
   }
 
   /** Cross-fades to another photo while the frame eases to its height. */
-  function showPhoto(stop: TripStop, imageIndex: number) {
+  function showPhoto(stop: TripDataStop, imageIndex: number) {
     const image = stop.images[imageIndex]
     const frame = current?.frame
 

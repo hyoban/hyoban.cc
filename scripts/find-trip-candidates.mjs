@@ -1,10 +1,10 @@
 import { parseArgs } from 'node:util'
 import { fileURLToPath } from 'node:url'
 
+import { getDayOffset, getDistanceKm, getLocation } from '@hyoban/trip-map'
+
 import { locations } from '../src/data/locations.ts'
 import { trips } from '../src/data/trips.ts'
-import { getLocation } from '../src/moments/map-locations.ts'
-import { getDayOffset, getDistanceKm } from '../src/moments/trips.ts'
 import { readTripMoments } from './lib/trip-moments.mjs'
 
 // Lists runs of days with Moments far from home that no trip in src/data/trips.ts

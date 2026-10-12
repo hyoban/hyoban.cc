@@ -1,5 +1,5 @@
 import mapboxgl, { type Map as MapboxMap } from 'mapbox-gl'
-import { overlap, type Rect } from './trip-player/label-placement'
+import { overlap, type Rect } from './player/label-placement.ts'
 
 // A picture of the map made for sharing rather than a copy of the screen: the view
 // framed on every place, the basemap's lesser names put away, and each place drawn

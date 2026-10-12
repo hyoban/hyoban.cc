@@ -1,18 +1,23 @@
 ---
-import '@/styles/mapbox.css'
+import '@hyoban/trip-map/styles.css'
 
 import CalendarBackLink from '@/components/CalendarBackLink.astro'
 import CalendarModeSwitch from '@/components/CalendarModeSwitch.astro'
 import MomentLightboxMedia from '@/components/MomentLightboxMedia.astro'
 import Layout from '@/layouts/Layout.astro'
-import { getYearColor } from '@/moments/map-locations'
 import {
   getMappedLocationGroups,
   getMoments,
   getTrips,
 } from '@/moments'
 import { getTripData, getTripSummary, getTripTitle } from '@/moments/trip-data'
-import { getIntroCovers, getTripMeta, MOSAIC_CLASS, MOSAIC_IMAGE_CLASS } from '@/trip-player/intro'
+import {
+  getIntroCovers,
+  getTripMeta,
+  getYearColor,
+  MOSAIC_CLASS,
+  MOSAIC_IMAGE_CLASS,
+} from '@hyoban/trip-map'
 import { getAssetUrl } from '@/asset-url'
 import { tripVideoMusic } from '@/data/music'
 import { SITE_TITLE } from '@/consts'
@@ -333,7 +338,13 @@ function toScriptJson(value: unknown) {
 </Layout>
 
 <script>
-  let mapClient: Promise<typeof import('@/calendar-map-client')> | undefined
+  import { SITE_TITLE, SITE_URL } from '@/consts'
+  import { initializeLightboxMedia } from '@/moment-lightbox-client'
+
+  type MapClient = typeof import('@hyoban/trip-map/client')
+
+  let mapClient: Promise<MapClient> | undefined
+  let loadedClient: MapClient | undefined
 
   document.addEventListener('astro:page-load', () => {
     // Pages without a map only need it to tear down one left from a map page.
@@ -345,9 +356,27 @@ function toScriptJson(value: unknown) {
     // toolbar and a trip's intro card show while the map loads.
     requestAnimationFrame(() => {
       setTimeout(() => {
-        mapClient ??= import('@/calendar-map-client')
-        void mapClient.then((client) => client.initializeCalendarMap())
+        mapClient ??= import('@hyoban/trip-map/client').then((client) => (loadedClient = client))
+        void mapClient.then((client) =>
+          client.initializeCalendarMap({
+            createLightboxMedia: initializeLightboxMedia,
+            screenshotTitle: `${SITE_TITLE} 的足迹`,
+            siteLine: `${new URL(SITE_URL).host}/trip/`,
+          }),
+        )
       })
     })
+  })
+
+  // Leaving the map for another page takes the map down before the swap; a change of
+  // hash or trip on the same map keeps it.
+  document.addEventListener('astro:before-swap', (event) => {
+    const { from, to } = event as Event & { from: URL; to: URL }
+
+    if (from.pathname === to.pathname && from.search === to.search) {
+      return
+    }
+
+    loadedClient?.destroyCalendarMap()
   })
 </script>
