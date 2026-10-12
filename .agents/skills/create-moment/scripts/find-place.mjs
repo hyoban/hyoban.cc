@@ -38,33 +38,38 @@ let [latitude, longitude] = [Number(latitudeArg), Number(longitudeArg)]
 if (gcj) [latitude, longitude] = gcjToWgs(latitude, longitude)
 console.log(`point ${latitude.toFixed(5)}, ${longitude.toFixed(5)}${gcj ? ' (from GCJ-02)' : ''}`)
 
-const url = new URL(
-  `https://api.mapbox.com/v4/mapbox.mapbox-streets-v8/tilequery/${longitude},${latitude}.json`,
-)
-url.search = new URLSearchParams({
-  radius: String(radius),
-  limit: '50',
-  layers: 'poi_label',
-  dedupe: 'true',
-  access_token: token,
-}).toString()
-const response = await fetch(url)
-if (!response.ok) throw new Error(`Mapbox tilequery failed: ${response.status}`)
-const { features } = await response.json()
+// Tilequery returns at most the 50 nearest POIs, which in a dense city centre can
+// all sit within a couple of hundred metres. Also query around the point so a
+// match a little further away still shows up.
+const step = Math.min(radius / 2, 400) / 111_320
+const centres = [
+  [latitude, longitude],
+  [latitude + step, longitude],
+  [latitude - step, longitude],
+  [latitude, longitude + step / Math.cos((latitude * Math.PI) / 180)],
+  [latitude, longitude - step / Math.cos((latitude * Math.PI) / 180)],
+]
+const features = new Map()
+for (const [centreLatitude, centreLongitude] of centres) {
+  for (const feature of await tilequery(centreLatitude, centreLongitude)) {
+    features.set(feature.geometry.coordinates.join(','), feature)
+  }
+}
 
 const core = coreName(name)
-const matches = features
+const matches = [...features.values()]
   .map((feature) => {
     const label = feature.properties.name_zh_Hans ?? feature.properties.name ?? ''
+    const [poiLongitude, poiLatitude] = feature.geometry.coordinates
     return {
       label,
       score: similarity(core, coreName(label)),
-      distance: Math.round(feature.properties.tilequery.distance),
-      latitude: feature.geometry.coordinates[1],
-      longitude: feature.geometry.coordinates[0],
+      distance: Math.round(metres(latitude, longitude, poiLatitude, poiLongitude)),
+      latitude: poiLatitude,
+      longitude: poiLongitude,
     }
   })
-  .filter((match) => match.score > 0)
+  .filter((match) => match.score > 0 && match.distance <= radius)
   .sort((a, b) => b.score - a.score || a.distance - b.distance)
   .slice(0, 8)
 
@@ -73,6 +78,28 @@ for (const match of matches) {
   console.log(
     `${match.score.toFixed(2)}  ${match.latitude.toFixed(5)}, ${match.longitude.toFixed(5)}  ${match.distance}m  ${match.label}`,
   )
+}
+
+async function tilequery(centreLatitude, centreLongitude) {
+  const url = new URL(
+    `https://api.mapbox.com/v4/mapbox.mapbox-streets-v8/tilequery/${centreLongitude},${centreLatitude}.json`,
+  )
+  url.search = new URLSearchParams({
+    radius: String(radius),
+    limit: '50',
+    layers: 'poi_label',
+    dedupe: 'true',
+    access_token: token,
+  }).toString()
+  const response = await fetch(url)
+  if (!response.ok) throw new Error(`Mapbox tilequery failed: ${response.status}`)
+  return (await response.json()).features
+}
+
+function metres(fromLatitude, fromLongitude, toLatitude, toLongitude) {
+  const y = (toLatitude - fromLatitude) * 111_320
+  const x = (toLongitude - fromLongitude) * 111_320 * Math.cos((fromLatitude * Math.PI) / 180)
+  return Math.hypot(x, y)
 }
 
 function readEnvToken() {
