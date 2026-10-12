@@ -4,17 +4,22 @@
 const MUSIC_FADE_IN = 1
 const MUSIC_VOLUME = 0.8
 const MUSIC_FADE_OUT = 2
+const MUSIC_MUTE = 0.15
 
 export type Music = {
   context: AudioContext
   /** Present while recording: the stream the video's audio track is taken from. */
   destination?: MediaStreamAudioDestinationNode
   gain: GainNode
+  output: GainNode
   source: AudioBufferSourceNode
 }
 
 /** Decodes a track into a silent looping source; `fadeMusicIn` starts it. */
-export async function loadMusic(src: string, record: boolean): Promise<Music | undefined> {
+export async function loadMusic(
+  src: string,
+  options: { audible: boolean; record: boolean },
+): Promise<Music | undefined> {
   if (!src) {
     return undefined
   }
@@ -26,20 +31,23 @@ export async function loadMusic(src: string, record: boolean): Promise<Music | u
       .then((data) => context.decodeAudioData(data))
     const source = context.createBufferSource()
     const gain = context.createGain()
-    const destination = record ? context.createMediaStreamDestination() : undefined
+    const output = context.createGain()
+    const destination = options.record ? context.createMediaStreamDestination() : undefined
 
     source.buffer = buffer
     source.loop = true
     gain.gain.value = 0
+    output.gain.value = options.audible ? 1 : 0
     source.connect(gain)
-    gain.connect(context.destination)
+    gain.connect(output)
+    output.connect(context.destination)
 
     if (destination) {
       gain.connect(destination)
     }
 
     await context.resume()
-    return { context, gain, source, ...(destination ? { destination } : {}) }
+    return { context, gain, output, source, ...(destination ? { destination } : {}) }
   } catch {
     // Playback without music is better than none.
     return undefined
@@ -60,6 +68,14 @@ export function fadeMusicOut(music: Music, endsIn: number) {
 
   music.gain.gain.setValueAtTime(MUSIC_VOLUME, fadeStart)
   music.gain.gain.linearRampToValueAtTime(0, fadeStart + MUSIC_FADE_OUT)
+}
+
+export function setMusicAudible(music: Music, audible: boolean) {
+  const now = music.context.currentTime
+
+  music.output.gain.cancelScheduledValues(now)
+  music.output.gain.setValueAtTime(music.output.gain.value, now)
+  music.output.gain.linearRampToValueAtTime(audible ? 1 : 0, now + MUSIC_MUTE)
 }
 
 export function closeMusic(music: Music) {

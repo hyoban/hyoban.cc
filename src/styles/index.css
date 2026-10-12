@@ -708,12 +708,14 @@ html:has(.calendar-map-page[data-export-ratio]) body {
   padding: calc(var(--u) * 6);
 }
 
-.calendar-map-trip-stage__close {
+.calendar-map-trip-stage__close,
+.calendar-map-trip-stage__music {
   display: none;
 }
 
-/* Only shown when presenting on screen; a recording must not include it. */
-.calendar-map-page[data-trip-presenting] .calendar-map-trip-stage__close {
+/* Only shown when presenting on screen; a recording must not include them. */
+.calendar-map-page[data-trip-presenting] .calendar-map-trip-stage__close,
+.calendar-map-page[data-trip-presenting] .calendar-map-trip-stage__music {
   position: absolute;
   right: calc(var(--u) * 5);
   bottom: calc(var(--u) * 7);
@@ -735,6 +737,14 @@ html:has(.calendar-map-page[data-export-ratio]) body {
     visibility 300ms;
 }
 
+.calendar-map-page[data-trip-presenting] .calendar-map-trip-stage__music {
+  right: calc(var(--u) * 15);
+}
+
+.calendar-map-page[data-trip-presenting] .calendar-map-trip-stage__music[aria-pressed='true'] {
+  color: var(--color-tx);
+}
+
 /* A recording shows no pointer; tab capture draws whatever cursor the page sets. */
 .calendar-map-page[data-export-ratio]:not([data-trip-presenting]),
 .calendar-map-page[data-export-ratio]:not([data-trip-presenting]) * {
@@ -748,7 +758,7 @@ html:has(.calendar-map-page[data-export-ratio]) body {
 }
 
 .calendar-map-page[data-trip-presenting][data-trip-idle]
-  .calendar-map-trip-stage__close:not(:focus-visible) {
+  :is(.calendar-map-trip-stage__close, .calendar-map-trip-stage__music):not(:focus-visible) {
   visibility: hidden;
   opacity: 0;
 }
