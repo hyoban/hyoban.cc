@@ -4,22 +4,32 @@ import { getTripCovers } from '@/moments/trip-images'
 
 // A trip's preview: its route on the left and its first cover photo on the right. No
 // text, so the build needs no CJK fonts. It is the share image and the trip list's
-// thumbnail.
+// thumbnail, which also comes in the dark theme's colours.
 
 const WIDTH = 1200
 const HEIGHT = 630
-const BACKGROUND = '#fdfdfc'
-const INK = '#21201c'
+// The site's --color-bg and --color-tx in each theme (see index.css).
+const COLORS = {
+  dark: { background: '#111110', ink: '#eeeeec' },
+  light: { background: '#fdfdfc', ink: '#21201c' },
+}
+
+export type PreviewTheme = keyof typeof COLORS
 
 // The share image and the thumbnail are rendered separately; the cover is fetched once.
 const coverPhotos = new Map<string, Promise<Buffer | undefined>>()
 
 /** `lineScale` thickens the route for previews that will be shown small. */
-export async function renderTripPreview(trip: MomentTrip, lineScale = 1) {
+export async function renderTripPreview(
+  trip: MomentTrip,
+  lineScale = 1,
+  theme: PreviewTheme = 'light',
+) {
+  const colors = COLORS[theme]
   const photo = await loadCoverPhoto(getTripCovers(trip)[0]?.src)
   const routeWidth = photo ? WIDTH / 2 : WIDTH
   const layers: OverlayOptions[] = [
-    { input: Buffer.from(getRouteSvg(trip, routeWidth, lineScale)), left: 0, top: 0 },
+    { input: Buffer.from(getRouteSvg(trip, routeWidth, lineScale, colors)), left: 0, top: 0 },
   ]
 
   if (photo) {
@@ -33,7 +43,7 @@ export async function renderTripPreview(trip: MomentTrip, lineScale = 1) {
   }
 
   return sharp({
-    create: { background: BACKGROUND, channels: 3, height: HEIGHT, width: WIDTH },
+    create: { background: colors.background, channels: 3, height: HEIGHT, width: WIDTH },
   })
     .composite(layers)
     .png()
@@ -66,7 +76,12 @@ async function fetchCoverPhoto(src: string) {
 }
 
 /** The whole route along roads, scaled to fit, with a dot at each place. */
-function getRouteSvg(trip: MomentTrip, width: number, lineScale: number) {
+function getRouteSvg(
+  trip: MomentTrip,
+  width: number,
+  lineScale: number,
+  { background, ink }: { background: string; ink: string },
+) {
   const line: [number, number][] = []
 
   for (const [index, place] of trip.path.entries()) {
@@ -101,14 +116,42 @@ function getRouteSvg(trip: MomentTrip, width: number, lineScale: number) {
   const offsetY = (HEIGHT - (maxY - minY) * scale) / 2
   const toPoint = ([lng, lat]: readonly [number, number]) =>
     [(lng * xScale - minX) * scale + offsetX, (-lat - minY) * scale + offsetY] as const
-  const path = line.map((coordinates, index) => {
-    const [x, y] = toPoint(coordinates)
-    return `${index === 0 ? 'M' : 'L'}${x.toFixed(1)} ${y.toFixed(1)}`
-  })
+  // Each leg on its own, drives solid and ferries or flights dashed, as on the map.
+  const paths = { car: '', straight: '' }
+  // A ferry or flight taken both ways is drawn once, or the dashes fill each other in.
+  const straightLegs = new Set<string>()
+
+  for (const [index, leg] of trip.legs.entries()) {
+    const from = trip.path[index]!
+    const to = trip.path[index + 1]!
+
+    if (leg.by !== 'car') {
+      const ends = [from.id, to.id].sort().join(' ')
+
+      if (straightLegs.has(ends)) {
+        continue
+      }
+
+      straightLegs.add(ends)
+    }
+    const points = [
+      [from.longitude, from.latitude] as const,
+      ...(leg.route?.coordinates ?? []).map(([lng, lat]) => [lng, lat] as const),
+      [to.longitude, to.latitude] as const,
+    ]
+
+    paths[leg.by === 'car' ? 'car' : 'straight'] += points
+      .map((coordinates, pointIndex) => {
+        const [x, y] = toPoint(coordinates)
+        return `${pointIndex === 0 ? 'M' : 'L'}${x.toFixed(1)} ${y.toFixed(1)}`
+      })
+      .join('')
+  }
+
   const dots = trip.path.map((place) => {
     const [x, y] = toPoint([place.longitude, place.latitude])
-    return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${7 * lineScale}" fill="${BACKGROUND}" stroke="${INK}" stroke-width="${3 * lineScale}"/>`
+    return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${7 * lineScale}" fill="${background}" stroke="${ink}" stroke-width="${3 * lineScale}"/>`
   })
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${HEIGHT}" viewBox="0 0 ${width} ${HEIGHT}"><path d="${path.join('')}" fill="none" stroke="${INK}" stroke-width="${5 * lineScale}" stroke-linecap="round" stroke-linejoin="round"/>${dots.join('')}</svg>`
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${HEIGHT}" viewBox="0 0 ${width} ${HEIGHT}"><path d="${paths.car}" fill="none" stroke="${ink}" stroke-width="${5 * lineScale}" stroke-linecap="round" stroke-linejoin="round"/><path d="${paths.straight}" fill="none" stroke="${ink}" stroke-width="${5 * lineScale}" stroke-dasharray="${10 * lineScale} ${10 * lineScale}"/>${dots.join('')}</svg>`
 }

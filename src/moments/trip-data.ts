@@ -14,7 +14,7 @@ export function getTripData(trip: MomentTrip) {
   return {
     dateRange: `${formatShortDate(trip.start)} – ${formatShortDate(trip.end)}`,
     dayCount: trip.dayCount,
-    distanceKm: trip.distanceKm,
+    drivingKm: trip.drivingKm,
     drivingHours: trip.drivingHours,
     id: trip.id,
     music: getTripMusic(trip),
@@ -54,20 +54,56 @@ export function getTripSummary(trip: MomentTrip) {
   const points = trip.path.map((location) => ({
     coordinates: [location.longitude, location.latitude] as const,
   }))
-  const line = getRouteLine(
-    points,
-    trip.legs.map((leg) => leg.route?.coordinates ?? null),
-    0,
-    points.length,
-  )
+  const legs = trip.legs.map((leg) => leg.route?.coordinates ?? null)
+  // Consecutive drives make one stretch; each ferry or flight is a stretch of its own,
+  // drawn dashed so it doesn't read as a road.
+  const segments: { line: [number, number][]; straight: boolean }[] = []
+
+  // A ferry or flight taken both ways is drawn once: two dashed lines on top of each
+  // other drift out of step and read as a solid one.
+  const straightLegs = new Set<string>()
+  // Set after a leg is left out, so the drive after it starts a stretch of its own.
+  let gap = false
+
+  for (const [index, leg] of trip.legs.entries()) {
+    const straight = leg.by !== 'car'
+    const line = getRouteLine(points, legs, index, index + 2)
+    const last = segments.at(-1)
+
+    if (straight) {
+      const ends = [leg.from.id, leg.to.id].sort().join(' ')
+
+      if (straightLegs.has(ends)) {
+        gap = true
+        continue
+      }
+
+      straightLegs.add(ends)
+    }
+
+    if (last && !last.straight && !straight && !gap) {
+      last.line.push(...line.slice(1))
+    } else {
+      segments.push({ line, straight })
+    }
+
+    gap = false
+  }
+
+  if (segments.length === 0 && points.length > 0) {
+    segments.push({ line: getRouteLine(points, legs, 0, points.length), straight: false })
+  }
 
   return {
     dateRange: `${formatShortDate(trip.start)} – ${formatShortDate(trip.end)}`,
     id: trip.id,
-    line: simplifyLine(line, OVERVIEW_TOLERANCE).map(
-      ([longitude, latitude]) => [round(longitude), round(latitude)] as [number, number],
-    ),
     pageTitle: getTripTitle(trip.title),
+    segments: segments.map(({ line, straight }) => ({
+      line: simplifyLine(line, OVERVIEW_TOLERANCE).map(
+        ([longitude, latitude]) => [round(longitude), round(latitude)] as [number, number],
+      ),
+      straight,
+    })),
     title: trip.title,
   }
 }

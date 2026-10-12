@@ -1,5 +1,4 @@
 import mapboxgl, { type Map as MapboxMap } from 'mapbox-gl'
-import { lineFeature } from './route'
 import type { TripSummary } from './types'
 
 // Every trip's route on the overview map, as the way into its playback: pointing at a
@@ -12,6 +11,10 @@ import type { TripSummary } from './types'
 // and relaxes into the others as they come back.
 
 const PREFIX = 'calendar-trip-overview-'
+// The second layer of a trip's route, its ferries and flights.
+const STRAIGHT_SUFFIX = '-straight'
+// How far apart, in degrees, the points added along a ferry or a flight are.
+const DENSIFY_STEP = 0.25
 // How far from a route, in pixels, a pointer or a finger still hits it.
 const HIT_RADIUS = { mouse: 10, touch: 22 }
 // Room kept around a route brought into view for a focused trip link.
@@ -62,7 +65,17 @@ export function createTripOverview({
     offset: 14,
   })
   const tripsById = new Map(trips.map((trip) => [trip.id, trip]))
-  const layerIds = trips.map((trip) => `${PREFIX}${trip.id}`)
+  // Each trip's route as one line, to frame it and to find its middle.
+  const lines = new Map(
+    trips.map((trip) => [trip.id, trip.segments.flatMap((segment) => segment.line)]),
+  )
+  const tripIdsByLayer = new Map(
+    trips.flatMap((trip) => [
+      [`${PREFIX}${trip.id}`, trip.id],
+      [`${PREFIX}${trip.id}${STRAIGHT_SUFFIX}`, trip.id],
+    ]),
+  )
+  const layerIds = [...tripIdsByLayer.keys()]
 
   function getLook(id: string): Look {
     if (activeId) {
@@ -78,22 +91,22 @@ export function createTripOverview({
 
   function paint(id: string, look: Look, transition: { delay?: number; duration: number }) {
     const map = getMap()
-    const layerId = `${PREFIX}${id}`
-
-    if (!map?.getLayer(layerId)) {
-      return
-    }
-
     const timing = {
       delay: 0,
       ...transition,
       duration: reducedMotion.matches ? 0 : transition.duration,
     }
 
-    map.setPaintProperty(layerId, 'line-opacity-transition', timing)
-    map.setPaintProperty(layerId, 'line-width-transition', timing)
-    map.setPaintProperty(layerId, 'line-opacity', look.opacity)
-    map.setPaintProperty(layerId, 'line-width', look.width)
+    for (const layerId of [`${PREFIX}${id}`, `${PREFIX}${id}${STRAIGHT_SUFFIX}`]) {
+      if (!map?.getLayer(layerId)) {
+        continue
+      }
+
+      map.setPaintProperty(layerId, 'line-opacity-transition', timing)
+      map.setPaintProperty(layerId, 'line-width-transition', timing)
+      map.setPaintProperty(layerId, 'line-opacity', look.opacity)
+      map.setPaintProperty(layerId, 'line-width', look.width)
+    }
   }
 
   function paintAll(duration: number) {
@@ -110,23 +123,54 @@ export function createTripOverview({
       return
     }
 
+    // Under the map's own place names, so the routes don't strike through them.
+    const beforeId = map.getStyle()?.layers?.find((layer) => layer.type === 'symbol')?.id
+
     // Oldest first, so the latest trip's route is drawn on top where routes cross.
     for (const trip of trips.toReversed()) {
       const id = `${PREFIX}${trip.id}`
       const look = getLook(trip.id)
+      const paint = {
+        'line-color': getInk(),
+        'line-opacity': look.opacity,
+        'line-width': look.width,
+      }
 
-      map.addSource(id, { data: lineFeature(trip.line), type: 'geojson' })
-      map.addLayer({
-        id,
-        layout: { 'line-cap': 'round', 'line-join': 'round' },
-        paint: {
-          'line-color': getInk(),
-          'line-opacity': look.opacity,
-          'line-width': look.width,
+      map.addSource(id, {
+        data: {
+          features: trip.segments.map((segment) => ({
+            geometry: {
+              coordinates: segment.straight ? densify(segment.line) : segment.line,
+              type: 'LineString' as const,
+            },
+            properties: { straight: segment.straight },
+            type: 'Feature' as const,
+          })),
+          type: 'FeatureCollection',
         },
-        source: id,
-        type: 'line',
+        type: 'geojson',
       })
+      map.addLayer(
+        {
+          filter: ['!', ['get', 'straight']],
+          id,
+          layout: { 'line-cap': 'round', 'line-join': 'round' },
+          paint,
+          source: id,
+          type: 'line',
+        },
+        beforeId,
+      )
+      map.addLayer(
+        {
+          filter: ['get', 'straight'],
+          id: `${id}${STRAIGHT_SUFFIX}`,
+          paint: { ...paint, 'line-dasharray': [2, 2] },
+          source: id,
+          type: 'line',
+        },
+        beforeId,
+      )
     }
 
     watch(map)
@@ -151,7 +195,7 @@ export function createTripOverview({
     ]
     // Topmost first, which is the latest trip where routes cross.
     const feature = layers.length > 0 ? map.queryRenderedFeatures(box, { layers })[0] : undefined
-    const id = feature?.layer?.id.slice(PREFIX.length)
+    const id = feature?.layer ? tripIdsByLayer.get(feature.layer.id) : undefined
 
     return id ? tripsById.get(id) : undefined
   }
@@ -194,7 +238,8 @@ export function createTripOverview({
     if (!trip || activeId || !map) {
       popup.remove()
     } else {
-      const middle = trip.line[Math.floor(trip.line.length / 2)]!
+      const line = lines.get(trip.id)!
+      const middle = line[Math.floor(line.length / 2)]!
 
       popup.setLngLat(at ?? middle)
 
@@ -236,21 +281,21 @@ export function createTripOverview({
   /** Brings a trip's whole route into view, if part of it is off the map. */
   function reveal(id: string) {
     const map = getMap()
-    const trip = tripsById.get(id)
+    const line = lines.get(id) ?? []
 
-    if (!map || !trip || activeId || trip.line.length === 0) {
+    if (!map || activeId || line.length === 0) {
       return
     }
 
     const view = map.getBounds()
 
-    if (view && trip.line.every((coordinates) => view.contains(coordinates))) {
+    if (view && line.every((coordinates) => view.contains(coordinates))) {
       return
     }
 
     const bounds = new mapboxgl.LngLatBounds()
 
-    for (const coordinates of trip.line) {
+    for (const coordinates of line) {
       bounds.extend(coordinates)
     }
 
@@ -338,6 +383,31 @@ export function createTripOverview({
   })
 
   return { add, click, hide, highlight, reveal, show }
+}
+
+/**
+ * A straight leg with points every so often along it. On the globe, Mapbox stretches
+ * the dashes of a long line with only its two ends until it looks solid.
+ */
+function densify(line: readonly [number, number][]) {
+  const dense: [number, number][] = []
+
+  for (const [index, [x2, y2]] of line.entries()) {
+    const previous = line[index - 1]
+
+    if (previous) {
+      const [x1, y1] = previous
+      const steps = Math.ceil(Math.hypot(x2 - x1, y2 - y1) / DENSIFY_STEP)
+
+      for (let step = 1; step < steps; step += 1) {
+        dense.push([x1 + ((x2 - x1) * step) / steps, y1 + ((y2 - y1) * step) / steps])
+      }
+    }
+
+    dense.push([x2, y2])
+  }
+
+  return dense
 }
 
 function createPopupContent(trip: TripSummary, touch: boolean) {

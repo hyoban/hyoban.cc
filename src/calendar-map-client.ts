@@ -75,6 +75,8 @@ export function initializeCalendarMap() {
   const lightboxMedia = initializeLightboxMedia(lightbox, signal)
   const locations = parseMarkerData(dataElement)
   const locationsById = new Map(locations.map((location) => [location.id, location]))
+  // A cluster takes the colour of its latest year, like a place does.
+  const yearColors = new Map(locations.map((location) => [location.latestYear, location.color]))
   // Each place's drawer content, fetched from /map/place/<id>/ the first time it's needed.
   const placeHtml = new Map<string, string>()
   const placeRequests = new Map<string, Promise<string | undefined>>()
@@ -466,15 +468,11 @@ export function initializeCalendarMap() {
     canvas.removeAttribute('aria-hidden')
   }
 
-  function fitAllLocations() {
-    if (!map || locations.length === 0) {
-      return
-    }
-
+  /** The view that shows every place, leaving room for the toolbar and the legend. */
+  function getAllLocationsView() {
     if (locations.length === 1) {
       const location = locations[0]!
-      map.jumpTo({ center: [location.longitude, location.latitude], zoom: 4 })
-      return
+      return { center: [location.longitude, location.latitude] as [number, number], zoom: 4 }
     }
 
     const bounds = new mapboxgl.LngLatBounds()
@@ -483,11 +481,30 @@ export function initializeCalendarMap() {
       bounds.extend([location.longitude, location.latitude])
     }
 
-    map.fitBounds(bounds, {
-      duration: getAnimationDuration(),
-      maxZoom: 4,
-      padding: { bottom: 80, left: 56, right: 56, top: 88 },
-    })
+    // A phone held upright is short of width, so the sides get only a little room.
+    const side = window.matchMedia('(max-width: 48rem)').matches ? 20 : 56
+
+    return {
+      bounds,
+      fitBoundsOptions: {
+        maxZoom: 4,
+        padding: { bottom: 80, left: side, right: side, top: 88 },
+      },
+    }
+  }
+
+  function fitAllLocations() {
+    if (!map || locations.length === 0) {
+      return
+    }
+
+    const view = getAllLocationsView()
+
+    if ('bounds' in view) {
+      map.fitBounds(view.bounds, { ...view.fitBoundsOptions, duration: getAnimationDuration() })
+    } else {
+      map.jumpTo(view)
+    }
   }
 
   function applyFog() {
@@ -585,6 +602,7 @@ export function initializeCalendarMap() {
       cluster: true,
       clusterMaxZoom: LOCATION_CLUSTER_MAX_ZOOM,
       clusterProperties: {
+        latestYear: ['max', ['get', 'latestYear']],
         momentCount: ['+', ['get', 'count']],
       },
       clusterRadius: 64,
@@ -597,6 +615,7 @@ export function initializeCalendarMap() {
           properties: {
             count: location.count,
             id: location.id,
+            latestYear: location.latestYear,
           },
           type: 'Feature' as const,
         })),
@@ -640,6 +659,7 @@ export function initializeCalendarMap() {
       number,
       {
         coordinates: [number, number]
+        latestYear: number
         locationCount: number
         momentCount: number
       }
@@ -659,6 +679,7 @@ export function initializeCalendarMap() {
         if (Number.isFinite(id) && coordinates.length >= 2) {
           clusters.set(id, {
             coordinates: [coordinates[0]!, coordinates[1]!],
+            latestYear: Number(properties.latestYear) || 0,
             locationCount: Number(properties.point_count) || 0,
             momentCount: Number(properties.momentCount) || 0,
           })
@@ -692,7 +713,12 @@ export function initializeCalendarMap() {
   function createClusterMarker(
     map: mapboxgl.Map,
     id: number,
-    cluster: { coordinates: [number, number]; locationCount: number; momentCount: number },
+    cluster: {
+      coordinates: [number, number]
+      latestYear: number
+      locationCount: number
+      momentCount: number
+    },
   ): ClusterMarkerEntry {
     const button = document.createElement('button')
     const dot = document.createElement('span')
@@ -710,8 +736,12 @@ export function initializeCalendarMap() {
       'aria-label',
       `${cluster.locationCount} 个地点，共 ${cluster.momentCount} 条记录`,
     )
+    button.style.setProperty(
+      '--marker-color',
+      yearColors.get(cluster.latestYear) ?? 'var(--color-tx)',
+    )
     dot.className =
-      'flex h-8 min-w-8 items-center justify-center rounded-full border-2 border-bg bg-tx px-2 font-mono text-xs font-semibold text-bg shadow-[0_0.25rem_1rem_rgb(0_0_0/0.28)] transition-transform duration-[160ms] group-hover:scale-110 group-focus-visible:scale-110 motion-reduce:transition-none'
+      'flex h-8 min-w-8 items-center justify-center rounded-full border-2 border-white/95 bg-[var(--marker-color)] px-2 font-mono text-xs font-semibold text-white shadow-[0_0.25rem_1rem_rgb(0_0_0/0.28),0_0_0_1px_rgb(0_0_0/0.12)] transition-transform duration-[160ms] group-hover:scale-110 group-focus-visible:scale-110 motion-reduce:transition-none'
     dot.setAttribute('aria-hidden', 'true')
     dot.textContent = String(cluster.momentCount)
     button.append(dot)
@@ -920,15 +950,15 @@ export function initializeCalendarMap() {
   } else {
     try {
       mapboxgl.accessToken = token
+      // Opens already framed on the places, rather than on the globe and then flying in.
       map = new mapboxgl.Map({
+        ...getAllLocationsView(),
         attributionControl: false,
-        center: [110, 32],
         container: canvas,
         dragRotate: true,
         projection: 'globe',
         style: getMapStyle(),
         touchPitch: true,
-        zoom: 2,
       })
 
       // The attribution stays folded into its ⓘ button at every width, opening on a click.
@@ -980,8 +1010,6 @@ export function initializeCalendarMap() {
         } else if (hashLocationId) {
           activeTrigger = markers.get(hashLocationId)?.button ?? activeTrigger
           openLocation(hashLocationId, { focus: false })
-        } else {
-          fitAllLocations()
         }
       })
       map.on('error', () => {
