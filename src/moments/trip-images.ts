@@ -1,4 +1,5 @@
 import type { Trip, TripImage } from '@hyoban/trip-map'
+import { tripCovers } from '@/data/trips'
 import type { Moment, ResolvedMomentMedia } from '@/moments'
 
 export type { TripImage }
@@ -29,21 +30,18 @@ export function getTripImages(media: ResolvedMomentMedia[]): TripImage[] {
   })
 }
 
-/** Resolves a trip's chosen cover photos; a typo fails the build instead of dropping a photo. */
+/** Resolves a trip's chosen cover photos; a stale uid fails the build instead of dropping a photo. */
 export function getTripCovers(trip: Trip<Moment>) {
-  return (trip.covers ?? []).map((cover) => {
-    const slash = cover.lastIndexOf('/')
-    const id = cover.slice(0, slash)
-    const file = cover.slice(slash + 1)
+  return (tripCovers.get(trip.id) ?? []).map((cover) => {
     const item = trip.stops
-      .find((stop) => stop.id === id)
-      ?.media.find((media) =>
-        (media.type === 'video' ? media.poster : media.src)?.src.endsWith(`/${file}`),
-      )
+      .find((stop) => stop.uid === cover.moment)
+      ?.media.find((media) => media.uid === cover.media)
     const [image] = item ? getTripImages([item]) : []
 
     if (!image) {
-      throw new Error(`Cover "${cover}" isn't a photo of a Moment in trip "${trip.id}".`)
+      throw new Error(
+        `Cover ${cover.moment}/${cover.media} isn't a photo of a Moment in trip "${trip.id}".`,
+      )
     }
 
     return image

@@ -1,0 +1,85 @@
+{
+  "uid": "01K7WYTWE06SR3Y2R80WA3S4D5",
+  "occurredAt": "2025-10-19T08:45:12+08:00",
+  "places": [
+    "xinyang"
+  ],
+  "text": "007gt床车自驾成都第二站信阳，日常睡车里\n\n信阳的极氪充电站这里有两个免费的停车场，果断睡车里了。今天早上来麦当劳这里洗漱加吃早饭。 #开着电车去露营 #后备箱里的世界 #带着我的大玩具去旅行 #007GT #极氪充电桩",
+  "hidden": false,
+  "media": [
+    {
+      "uid": "01K7WYTWE163VT8815FB3ZF4XT",
+      "type": "image",
+      "alt": "",
+      "width": 1080,
+      "height": 1440,
+      "published": {
+        "key": "moments/2025/10/19-01-007gt-chuang-che-zi-jia-cheng-du-di-er-zhan/007gt-chuang-che-zi-jia-cheng-du-di-er-zhan.webp",
+        "contentType": "image/webp",
+        "bytes": 222058,
+        "etag": "394e7b38d2b777629aefcbb5bff4e3e3",
+        "width": 1080,
+        "height": 1440,
+        "variants": [
+          {
+            "key": "moments/2025/10/19-01-007gt-chuang-che-zi-jia-cheng-du-di-er-zhan/007gt-chuang-che-zi-jia-cheng-du-di-er-zhan-480w.webp",
+            "contentType": "image/webp",
+            "bytes": 34110,
+            "etag": "f833947043a0ace9c1bb6bb5baadd10a",
+            "width": 480,
+            "height": 640
+          },
+          {
+            "key": "moments/2025/10/19-01-007gt-chuang-che-zi-jia-cheng-du-di-er-zhan/007gt-chuang-che-zi-jia-cheng-du-di-er-zhan-960w.webp",
+            "contentType": "image/webp",
+            "bytes": 99846,
+            "etag": "db64b9f7e518ae6819fa0cf7be123505",
+            "width": 960,
+            "height": 1280
+          }
+        ]
+      }
+    },
+    {
+      "uid": "01K7WYTWE28M8HT3PYH9WNNCNB",
+      "type": "image",
+      "alt": "",
+      "width": 1440,
+      "height": 1080,
+      "published": {
+        "key": "moments/2025/10/19-01-007gt-chuang-che-zi-jia-cheng-du-di-er-zhan/007gt-chuang-che-zi-jia-cheng-du-di-er-zhan-2.webp",
+        "contentType": "image/webp",
+        "bytes": 161114,
+        "etag": "8a75e1b04e7c143dd0279fcfde1e1640",
+        "width": 1440,
+        "height": 1080,
+        "variants": [
+          {
+            "key": "moments/2025/10/19-01-007gt-chuang-che-zi-jia-cheng-du-di-er-zhan/007gt-chuang-che-zi-jia-cheng-du-di-er-zhan-2-480w.webp",
+            "contentType": "image/webp",
+            "bytes": 18800,
+            "etag": "2e64b20e38a1f5cdc219223259ac14b3",
+            "width": 480,
+            "height": 360
+          },
+          {
+            "key": "moments/2025/10/19-01-007gt-chuang-che-zi-jia-cheng-du-di-er-zhan/007gt-chuang-che-zi-jia-cheng-du-di-er-zhan-2-960w.webp",
+            "contentType": "image/webp",
+            "bytes": 51980,
+            "etag": "0bdff825a5df7e639905ac092159cf5b",
+            "width": 960,
+            "height": 720
+          }
+        ]
+      }
+    }
+  ],
+  "published": {
+    "id": "2025/10/19-01-007gt-chuang-che-zi-jia-cheng-du-di-er-zhan",
+    "slug": "007gt-chuang-che-zi-jia-cheng-du-di-er-zhan",
+    "order": 1,
+    "at": "2026-07-30T08:12:13+08:00"
+  },
+  "createdAt": "2025-10-19T08:45:12+08:00",
+  "updatedAt": "2026-09-03T10:44:40+08:00"
+}

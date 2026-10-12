@@ -1,0 +1,409 @@
+{
+  "uid": "01M3VDBHC0PTZ3BXQQAH9SZESW",
+  "occurredAt": "2026-10-01T17:40:00+08:00",
+  "places": [
+    "bohai-sea"
+  ],
+  "text": "昨天在烟台到大连的轮渡上看到了最美的大海和日落！",
+  "hidden": false,
+  "media": [
+    {
+      "uid": "01M3VDBHC1H3MXPNSYS378NYC6",
+      "type": "live-photo",
+      "alt": "Seagulls flying above the ferry against a clear blue sky.",
+      "width": 1080,
+      "height": 1440,
+      "published": {
+        "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-1.webp",
+        "contentType": "image/webp",
+        "bytes": 28020,
+        "etag": "90e955a1ca993d03a7240b6b55e27974",
+        "width": 1080,
+        "height": 1440,
+        "variants": [
+          {
+            "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-1-480w.webp",
+            "contentType": "image/webp",
+            "bytes": 7908,
+            "etag": "6d325e7597d2e67cfc1cfb6462e5571d",
+            "width": 480,
+            "height": 640
+          },
+          {
+            "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-1-960w.webp",
+            "contentType": "image/webp",
+            "bytes": 18928,
+            "etag": "c7a1b81265f2d6560ef1d8309a131dfc",
+            "width": 960,
+            "height": 1280
+          }
+        ],
+        "video": {
+          "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-1.mp4",
+          "contentType": "video/mp4",
+          "bytes": 992063,
+          "etag": "300c195eb81d4a85536e512b05bc4815"
+        }
+      }
+    },
+    {
+      "uid": "01M3VDBHC28YRKPQ7BTY4BCY6G",
+      "type": "live-photo",
+      "alt": "The ferry's blue funnel against the sky.",
+      "width": 1440,
+      "height": 1080,
+      "published": {
+        "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-2.webp",
+        "contentType": "image/webp",
+        "bytes": 59280,
+        "etag": "8bfe782b67f89a3b6b1665ea4881983e",
+        "width": 1440,
+        "height": 1080,
+        "variants": [
+          {
+            "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-2-480w.webp",
+            "contentType": "image/webp",
+            "bytes": 8504,
+            "etag": "3f24538889fa943408c7d9ef17d204b5",
+            "width": 480,
+            "height": 360
+          },
+          {
+            "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-2-960w.webp",
+            "contentType": "image/webp",
+            "bytes": 22626,
+            "etag": "063909ed0a280a4e10028dae856efb52",
+            "width": 960,
+            "height": 720
+          }
+        ],
+        "video": {
+          "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-2.mp4",
+          "contentType": "video/mp4",
+          "bytes": 684638,
+          "etag": "4fefc887f3e644dc063b1a9821bafca4"
+        }
+      }
+    },
+    {
+      "uid": "01M3VDBHC331XDC43DFVXYD2CG",
+      "type": "live-photo",
+      "alt": "A long white wake trailing behind the ferry across the blue sea.",
+      "width": 1440,
+      "height": 1080,
+      "published": {
+        "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-3.webp",
+        "contentType": "image/webp",
+        "bytes": 269640,
+        "etag": "4349dd97dc635beea35b6df8301acc67",
+        "width": 1440,
+        "height": 1080,
+        "variants": [
+          {
+            "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-3-480w.webp",
+            "contentType": "image/webp",
+            "bytes": 29448,
+            "etag": "4e873cdec573c5eb9cf3e6066bf7fc8e",
+            "width": 480,
+            "height": 360
+          },
+          {
+            "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-3-960w.webp",
+            "contentType": "image/webp",
+            "bytes": 97912,
+            "etag": "50dcd1b83e68a4b1022704fcf8bc24c3",
+            "width": 960,
+            "height": 720
+          }
+        ],
+        "video": {
+          "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-3.mp4",
+          "contentType": "video/mp4",
+          "bytes": 2457194,
+          "etag": "870326b83b3afd308f1d29a55c47a500"
+        }
+      }
+    },
+    {
+      "uid": "01M3VDBHC49QKBPWD8HHSVCQJC",
+      "type": "live-photo",
+      "alt": "Dark blue waves passing alongside the ferry's white railing.",
+      "width": 1080,
+      "height": 1440,
+      "published": {
+        "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-4.webp",
+        "contentType": "image/webp",
+        "bytes": 315796,
+        "etag": "c6de6c66e7c3c57ae6e9d5e180945e21",
+        "width": 1080,
+        "height": 1440,
+        "variants": [
+          {
+            "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-4-480w.webp",
+            "contentType": "image/webp",
+            "bytes": 57194,
+            "etag": "a83dfa5eed68a53d9c81b00d847e055b",
+            "width": 480,
+            "height": 640
+          },
+          {
+            "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-4-960w.webp",
+            "contentType": "image/webp",
+            "bytes": 178138,
+            "etag": "e20ace58640c238e4b982849cf7a83cb",
+            "width": 960,
+            "height": 1280
+          }
+        ],
+        "video": {
+          "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-4.mp4",
+          "contentType": "video/mp4",
+          "bytes": 3111353,
+          "etag": "3979649370c31deb5480c1a6d739ce43"
+        }
+      }
+    },
+    {
+      "uid": "01M3VDBHC57SQP242822T7DG90",
+      "type": "live-photo",
+      "alt": "A passenger watching the sun sink toward the sea from the ferry.",
+      "width": 1440,
+      "height": 1080,
+      "published": {
+        "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-5.webp",
+        "contentType": "image/webp",
+        "bytes": 103782,
+        "etag": "caf3f53501c4b24598fb4053a784203d",
+        "width": 1440,
+        "height": 1080,
+        "variants": [
+          {
+            "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-5-480w.webp",
+            "contentType": "image/webp",
+            "bytes": 12994,
+            "etag": "0183b6ba9031b4531d22f49e8ca94fce",
+            "width": 480,
+            "height": 360
+          },
+          {
+            "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-5-960w.webp",
+            "contentType": "image/webp",
+            "bytes": 40190,
+            "etag": "e1e263abf89dd8fea4f3dfe39d68625a",
+            "width": 960,
+            "height": 720
+          }
+        ],
+        "video": {
+          "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-5.mp4",
+          "contentType": "video/mp4",
+          "bytes": 1800415,
+          "etag": "cb801aa388bab4a3fbb6f6f538e4fc09"
+        }
+      }
+    },
+    {
+      "uid": "01M3VDBHC6GPPAT2JME9QGKJ4R",
+      "type": "live-photo",
+      "alt": "The setting sun touching the sea beneath a glowing orange sky.",
+      "width": 1440,
+      "height": 1080,
+      "published": {
+        "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-6.webp",
+        "contentType": "image/webp",
+        "bytes": 110468,
+        "etag": "4ddb4ad7591ee76f3dd8ad8d0a632105",
+        "width": 1440,
+        "height": 1080,
+        "variants": [
+          {
+            "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-6-480w.webp",
+            "contentType": "image/webp",
+            "bytes": 12816,
+            "etag": "1610efa81aa1e840bff1ff3f0f210531",
+            "width": 480,
+            "height": 360
+          },
+          {
+            "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-6-960w.webp",
+            "contentType": "image/webp",
+            "bytes": 42308,
+            "etag": "0604b9d3b7376cadcd80beb2d58baffc",
+            "width": 960,
+            "height": 720
+          }
+        ],
+        "video": {
+          "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-6.mp4",
+          "contentType": "video/mp4",
+          "bytes": 1345393,
+          "etag": "b92f6c274abe1132faa89c747810103e"
+        }
+      }
+    },
+    {
+      "uid": "01M3VDBHC7N3PAQ6DE5YG4K2R6",
+      "type": "live-photo",
+      "alt": "Ships silhouetted against the orange glow of sunset on the horizon.",
+      "width": 1440,
+      "height": 1080,
+      "published": {
+        "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-7.webp",
+        "contentType": "image/webp",
+        "bytes": 97400,
+        "etag": "72287493cf6f94803c1c887e02f3a2f6",
+        "width": 1440,
+        "height": 1080,
+        "variants": [
+          {
+            "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-7-480w.webp",
+            "contentType": "image/webp",
+            "bytes": 9592,
+            "etag": "7f58bc17bb84eae1c6f0acf83f87403d",
+            "width": 480,
+            "height": 360
+          },
+          {
+            "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-7-960w.webp",
+            "contentType": "image/webp",
+            "bytes": 32764,
+            "etag": "96debb58a650f2091cc300802b1bdd45",
+            "width": 960,
+            "height": 720
+          }
+        ],
+        "video": {
+          "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-7.mp4",
+          "contentType": "video/mp4",
+          "bytes": 1872782,
+          "etag": "52dae4425d7f12baa2666e0d0e497e38"
+        }
+      }
+    },
+    {
+      "uid": "01M3VDBHC8J7DSP3571R7253F3",
+      "type": "live-photo",
+      "alt": "A distant ship at dusk, seen past the ferry's railing and window frame.",
+      "width": 1440,
+      "height": 1080,
+      "published": {
+        "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-8.webp",
+        "contentType": "image/webp",
+        "bytes": 35918,
+        "etag": "be9467899228952f265f5e311ac3c5cb",
+        "width": 1440,
+        "height": 1080,
+        "variants": [
+          {
+            "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-8-480w.webp",
+            "contentType": "image/webp",
+            "bytes": 6572,
+            "etag": "36c7f9e726ae89aeaa397dbf5b2d8f27",
+            "width": 480,
+            "height": 360
+          },
+          {
+            "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-8-960w.webp",
+            "contentType": "image/webp",
+            "bytes": 17338,
+            "etag": "edd00462268a484ae11ae85e224bc8b0",
+            "width": 960,
+            "height": 720
+          }
+        ],
+        "video": {
+          "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-8.mp4",
+          "contentType": "video/mp4",
+          "bytes": 570229,
+          "etag": "ca32425756ae003be1d4f54ee23cbe37"
+        }
+      }
+    },
+    {
+      "uid": "01M3VDBHC9F5ETHMQ0SMPWYZ44",
+      "type": "live-photo",
+      "alt": "A narrow band of golden twilight over the dark sea.",
+      "width": 1440,
+      "height": 1080,
+      "published": {
+        "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-9.webp",
+        "contentType": "image/webp",
+        "bytes": 53834,
+        "etag": "1daf927491ba2960c8e819042a20140e",
+        "width": 1440,
+        "height": 1080,
+        "variants": [
+          {
+            "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-9-480w.webp",
+            "contentType": "image/webp",
+            "bytes": 6364,
+            "etag": "04221531ccc7cb4189377f2a2f9c4ffb",
+            "width": 480,
+            "height": 360
+          },
+          {
+            "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-9-960w.webp",
+            "contentType": "image/webp",
+            "bytes": 20844,
+            "etag": "5239ea0f52dd43beed91558742582d03",
+            "width": 960,
+            "height": 720
+          }
+        ],
+        "video": {
+          "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-9.mp4",
+          "contentType": "video/mp4",
+          "bytes": 825756,
+          "etag": "8a33fe9d9069a2bc9766815cce9a08a1"
+        }
+      }
+    },
+    {
+      "uid": "01M3VDBHCACXCMR1NBZ80GE8X1",
+      "type": "live-photo",
+      "alt": "Ferry railings and ropes framing the orange evening horizon.",
+      "width": 1440,
+      "height": 1080,
+      "published": {
+        "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-10.webp",
+        "contentType": "image/webp",
+        "bytes": 124214,
+        "etag": "59fa64721d6c9e9b07afd4cbe37db7ca",
+        "width": 1440,
+        "height": 1080,
+        "variants": [
+          {
+            "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-10-480w.webp",
+            "contentType": "image/webp",
+            "bytes": 18916,
+            "etag": "bb9c1f22580b7670469fc30d7d46f6f7",
+            "width": 480,
+            "height": 360
+          },
+          {
+            "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-10-960w.webp",
+            "contentType": "image/webp",
+            "bytes": 53202,
+            "etag": "eb66bc38800b4bc6cfa1fa3ea6eb34c5",
+            "width": 960,
+            "height": 720
+          }
+        ],
+        "video": {
+          "key": "moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-10.mp4",
+          "contentType": "video/mp4",
+          "bytes": 918264,
+          "etag": "7c38d9a2a0a9ab27aa782ccf970dbad5"
+        }
+      }
+    }
+  ],
+  "published": {
+    "id": "2026/10/01-02-ferry-sunset",
+    "slug": "ferry-sunset",
+    "order": 2,
+    "at": "2026-10-08T08:10:00+08:00"
+  },
+  "createdAt": "2026-10-01T17:40:00+08:00",
+  "updatedAt": "2026-10-11T19:01:43+08:00"
+}

@@ -1,0 +1,229 @@
+{
+  "uid": "01M42XJFSG6C4QRRFAJNJ2N6BR",
+  "occurredAt": "2026-10-04T15:38:06+08:00",
+  "places": [
+    "shenyang-mixc"
+  ],
+  "text": "在沈阳逛街看到了特斯拉 Cybercab，真酷。今天天气不是很好，外面的景点不太好看。",
+  "hidden": false,
+  "media": [
+    {
+      "uid": "01M42XJFSH7TEJW8S5CR4M65GG",
+      "type": "image",
+      "alt": "A gold Tesla Cybercab displayed with both doors raised in a shopping mall.",
+      "width": 1920,
+      "height": 1440,
+      "published": {
+        "key": "moments/2026/10/04-02-shenyang-cybercab/shenyang-cybercab.webp",
+        "contentType": "image/webp",
+        "bytes": 156910,
+        "etag": "cd1bd5c2aa7ec63d138ba9d9f43d4861",
+        "width": 1920,
+        "height": 1440,
+        "variants": [
+          {
+            "key": "moments/2026/10/04-02-shenyang-cybercab/shenyang-cybercab-480w.webp",
+            "contentType": "image/webp",
+            "bytes": 23738,
+            "etag": "ac32e9c7b8bb0d3925bd1515ecd42c1d",
+            "width": 480,
+            "height": 360
+          },
+          {
+            "key": "moments/2026/10/04-02-shenyang-cybercab/shenyang-cybercab-960w.webp",
+            "contentType": "image/webp",
+            "bytes": 60120,
+            "etag": "6d20b2caa2736e70c4b64082f2f27e45",
+            "width": 960,
+            "height": 720
+          }
+        ]
+      }
+    },
+    {
+      "uid": "01M42XJFSJZVFFX3Q5CY77NT6S",
+      "type": "image",
+      "alt": "Front view of the gold Tesla Cybercab with its doors raised.",
+      "width": 1920,
+      "height": 1440,
+      "published": {
+        "key": "moments/2026/10/04-02-shenyang-cybercab/shenyang-cybercab-2.webp",
+        "contentType": "image/webp",
+        "bytes": 133924,
+        "etag": "5c62c0bf308bfe519e8822d28895086a",
+        "width": 1920,
+        "height": 1440,
+        "variants": [
+          {
+            "key": "moments/2026/10/04-02-shenyang-cybercab/shenyang-cybercab-2-480w.webp",
+            "contentType": "image/webp",
+            "bytes": 20120,
+            "etag": "7a1b2ae65d68cd75120a9b4e6de5006f",
+            "width": 480,
+            "height": 360
+          },
+          {
+            "key": "moments/2026/10/04-02-shenyang-cybercab/shenyang-cybercab-2-960w.webp",
+            "contentType": "image/webp",
+            "bytes": 51450,
+            "etag": "0cf4e2103a1d0918db01b4a369ae2888",
+            "width": 960,
+            "height": 720
+          }
+        ]
+      }
+    },
+    {
+      "uid": "01M42XJFSKZTBR3H6M4CF5SFC4",
+      "type": "image",
+      "alt": "Side view of the Tesla Cybercab with its passenger door open.",
+      "width": 1920,
+      "height": 1440,
+      "published": {
+        "key": "moments/2026/10/04-02-shenyang-cybercab/shenyang-cybercab-3.webp",
+        "contentType": "image/webp",
+        "bytes": 137394,
+        "etag": "453341be20cddb7717e4dc8ef51467ef",
+        "width": 1920,
+        "height": 1440,
+        "variants": [
+          {
+            "key": "moments/2026/10/04-02-shenyang-cybercab/shenyang-cybercab-3-480w.webp",
+            "contentType": "image/webp",
+            "bytes": 19196,
+            "etag": "fde2346dc90a5bbf7515384b35a77fee",
+            "width": 480,
+            "height": 360
+          },
+          {
+            "key": "moments/2026/10/04-02-shenyang-cybercab/shenyang-cybercab-3-960w.webp",
+            "contentType": "image/webp",
+            "bytes": 50454,
+            "etag": "8e57086843ed7a91e0ea7fa61b90bbf4",
+            "width": 960,
+            "height": 720
+          }
+        ]
+      }
+    },
+    {
+      "uid": "01M42XJFSMF0VDSMHQ2X92CJBY",
+      "type": "live-photo",
+      "alt": "The Tesla Cybercab's seats and central screen, viewed through the open door.",
+      "width": 1080,
+      "height": 1440,
+      "published": {
+        "key": "moments/2026/10/04-02-shenyang-cybercab/shenyang-cybercab-live-4.webp",
+        "contentType": "image/webp",
+        "bytes": 113310,
+        "etag": "96c8a91f104cbd47ea9c2c2371780acf",
+        "width": 1080,
+        "height": 1440,
+        "variants": [
+          {
+            "key": "moments/2026/10/04-02-shenyang-cybercab/shenyang-cybercab-live-4-480w.webp",
+            "contentType": "image/webp",
+            "bytes": 29972,
+            "etag": "83b587d9ea991e9c0e959a22ceac1249",
+            "width": 480,
+            "height": 640
+          },
+          {
+            "key": "moments/2026/10/04-02-shenyang-cybercab/shenyang-cybercab-live-4-960w.webp",
+            "contentType": "image/webp",
+            "bytes": 74242,
+            "etag": "b1b10d801939c36f8f8f245511561716",
+            "width": 960,
+            "height": 1280
+          }
+        ],
+        "video": {
+          "key": "moments/2026/10/04-02-shenyang-cybercab/shenyang-cybercab-live-4.mp4",
+          "contentType": "video/mp4",
+          "bytes": 546415,
+          "etag": "bb8aa477f67b4d47e1c518829f173696"
+        }
+      }
+    },
+    {
+      "uid": "01M42XJFSN923HM5W6R7XAW8WC",
+      "type": "live-photo",
+      "alt": "Dark stone church towers beneath a cloudy sky.",
+      "width": 1080,
+      "height": 1447,
+      "published": {
+        "key": "moments/2026/10/04-02-shenyang-cybercab/shenyang-cybercab-live-5.webp",
+        "contentType": "image/webp",
+        "bytes": 144486,
+        "etag": "e667edf9685d6d73a75181818ea67c0b",
+        "width": 1080,
+        "height": 1447,
+        "variants": [
+          {
+            "key": "moments/2026/10/04-02-shenyang-cybercab/shenyang-cybercab-live-5-480w.webp",
+            "contentType": "image/webp",
+            "bytes": 30052,
+            "etag": "d5c12d4faca9cd4f396812dd6f4a6bc4",
+            "width": 480,
+            "height": 643
+          },
+          {
+            "key": "moments/2026/10/04-02-shenyang-cybercab/shenyang-cybercab-live-5-960w.webp",
+            "contentType": "image/webp",
+            "bytes": 84002,
+            "etag": "b5946b731008ec3b43269895dfd83777",
+            "width": 960,
+            "height": 1286
+          }
+        ],
+        "video": {
+          "key": "moments/2026/10/04-02-shenyang-cybercab/shenyang-cybercab-live-5.mp4",
+          "contentType": "video/mp4",
+          "bytes": 784799,
+          "etag": "ea5af1a4bc889def5d0fd529bb9eed0e"
+        }
+      }
+    },
+    {
+      "uid": "01M42XJFSP5MG7HNC3KGVHR537",
+      "type": "image",
+      "alt": "A person looking toward a church with twin pointed towers.",
+      "width": 1920,
+      "height": 1440,
+      "published": {
+        "key": "moments/2026/10/04-02-shenyang-cybercab/shenyang-cybercab-6.webp",
+        "contentType": "image/webp",
+        "bytes": 166192,
+        "etag": "b49ff6e26c04cd5c28b26f0fd8305680",
+        "width": 1920,
+        "height": 1440,
+        "variants": [
+          {
+            "key": "moments/2026/10/04-02-shenyang-cybercab/shenyang-cybercab-6-480w.webp",
+            "contentType": "image/webp",
+            "bytes": 19922,
+            "etag": "dc2cff4421ce63b64dbc2c810a172807",
+            "width": 480,
+            "height": 360
+          },
+          {
+            "key": "moments/2026/10/04-02-shenyang-cybercab/shenyang-cybercab-6-960w.webp",
+            "contentType": "image/webp",
+            "bytes": 60486,
+            "etag": "0360551f34e756ada5407d1a26687339",
+            "width": 960,
+            "height": 720
+          }
+        ]
+      }
+    }
+  ],
+  "published": {
+    "id": "2026/10/04-02-shenyang-cybercab",
+    "slug": "shenyang-cybercab",
+    "order": 2,
+    "at": "2026-10-08T08:10:00+08:00"
+  },
+  "createdAt": "2026-10-04T15:38:06+08:00",
+  "updatedAt": "2026-10-11T11:34:40+08:00"
+}

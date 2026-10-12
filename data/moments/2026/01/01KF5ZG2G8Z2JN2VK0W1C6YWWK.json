@@ -1,0 +1,16 @@
+{
+  "uid": "01KF5ZG2G8Z2JN2VK0W1C6YWWK",
+  "occurredAt": "2026-01-17T20:39:49+08:00",
+  "places": [],
+  "text": "今天才用上 ESLint 的两个好功能，让我来简单说明一下。\n之前虽然也看过文章，但是没实际体验过，今天看到 ESLint 的 2025 review 才想起来。\nhttps://eslint.org/blog/2026/01/eslint-2025-year-review/",
+  "hidden": true,
+  "media": [],
+  "published": {
+    "id": "2026/01/17-01-jin-tian-cai-yong-shang-eslint-de-liang-ge-hao",
+    "slug": "jin-tian-cai-yong-shang-eslint-de-liang-ge-hao",
+    "order": 1,
+    "at": "2026-07-30T08:12:13+08:00"
+  },
+  "createdAt": "2026-01-17T20:39:49+08:00",
+  "updatedAt": "2026-09-03T10:44:40+08:00"
+}

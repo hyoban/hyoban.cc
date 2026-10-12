@@ -1,0 +1,39 @@
+{
+  "uid": "01GYFC9JVGKJJ41JT6R0G7A000",
+  "occurredAt": "2023-04-20T21:05:10+08:00",
+  "places": [],
+  "text": "Include an example animation using framer motion in my react template",
+  "hidden": true,
+  "media": [
+    {
+      "uid": "01GYFC9JVHATT8YTPCK12NRMMC",
+      "type": "video",
+      "alt": "",
+      "width": 1108,
+      "height": 720,
+      "published": {
+        "key": "moments/2023/04/20-02-include-an-example-animation-using-framer-motion-in-my/include-an-example-animation-using-framer-motion-in-my-video.mp4",
+        "contentType": "video/mp4",
+        "bytes": 882791,
+        "etag": "fd480d31c205f48531abc35359b8627d",
+        "poster": {
+          "key": "moments/2023/04/20-02-include-an-example-animation-using-framer-motion-in-my/include-an-example-animation-using-framer-motion-in-my-video-poster.png",
+          "contentType": "image/png",
+          "bytes": 286674,
+          "etag": "357f32f4595c3a540ece68c2dac5a4cd",
+          "width": 1108,
+          "height": 720,
+          "variants": []
+        }
+      }
+    }
+  ],
+  "published": {
+    "id": "2023/04/20-02-include-an-example-animation-using-framer-motion-in-my",
+    "slug": "include-an-example-animation-using-framer-motion-in-my",
+    "order": 2,
+    "at": "2026-07-30T08:12:13+08:00"
+  },
+  "createdAt": "2023-04-20T21:05:10+08:00",
+  "updatedAt": "2026-09-03T10:44:40+08:00"
+}

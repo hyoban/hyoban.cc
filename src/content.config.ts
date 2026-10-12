@@ -1,7 +1,7 @@
 import { glob } from 'astro/loaders'
 import { z } from 'astro/zod'
 import { defineCollection } from 'astro:content'
-import { momentFrontmatterSchema } from '@/moments/content'
+import { momentRecordSchema } from '@/data/spec'
 
 const description = z.string().trim().min(1)
 
@@ -24,9 +24,10 @@ const pages = defineCollection({
   }),
 })
 
+// The recording app's Moments, one JSON file each, in the shape src/data/spec.ts gives.
 const moments = defineCollection({
-  loader: glob({ pattern: '**/index.md', base: './src/content/moments' }),
-  schema: momentFrontmatterSchema,
+  loader: glob({ pattern: '**/*.json', base: './data/moments' }),
+  schema: momentRecordSchema,
 })
 
 export const collections = { posts, pages, moments }

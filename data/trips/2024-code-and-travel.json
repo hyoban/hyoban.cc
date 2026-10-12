@@ -1,0 +1,49 @@
+{
+  "id": "2024-code-and-travel",
+  "title": "边写代码边旅游",
+  "start": "2024-09-03",
+  "end": "2024-11-30",
+  "note": "No car yet: every leg went by high-speed rail or plane.",
+  "waypoints": [],
+  "straightLegs": [
+    {
+      "from": "beijing",
+      "to": "qingdao",
+      "by": "train"
+    },
+    {
+      "from": "qingdao-tsutaya-haitian",
+      "to": "nanjing",
+      "by": "train"
+    },
+    {
+      "from": "nanjing",
+      "to": "chengdu",
+      "by": "plane"
+    },
+    {
+      "from": "chengdu",
+      "to": "changsha",
+      "by": "train"
+    },
+    {
+      "from": "changsha",
+      "to": "shenzhen",
+      "by": "train"
+    },
+    {
+      "from": "shenzhen",
+      "to": "hong-kong",
+      "by": "train"
+    },
+    {
+      "from": "hong-kong",
+      "to": "guangzhou",
+      "by": "train"
+    }
+  ],
+  "sameWayBack": [],
+  "covers": [],
+  "createdAt": "2024-09-03T00:00:00+08:00",
+  "updatedAt": "2026-10-12T19:30:16+08:00"
+}

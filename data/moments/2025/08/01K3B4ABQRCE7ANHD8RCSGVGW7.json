@@ -1,0 +1,60 @@
+{
+  "uid": "01K3B4ABQRCE7ANHD8RCSGVGW7",
+  "occurredAt": "2025-08-23T17:31:55+08:00",
+  "places": [
+    "pingtian-lake"
+  ],
+  "text": "周末开始第一次自驾",
+  "hidden": false,
+  "media": [
+    {
+      "uid": "01K3B4ABQSRZ7X2W3YQPTBM93P",
+      "type": "image",
+      "alt": "",
+      "width": 2048,
+      "height": 1536,
+      "published": {
+        "key": "moments/2025/08/23-01-zhou-mo-kai-shi-di-yi-ci-zi-jia/zhou-mo-kai-shi-di-yi-ci-zi-jia.jpg",
+        "contentType": "image/jpeg",
+        "bytes": 405615,
+        "etag": "6e9ca8d96abf022ecd3dc3029ec9357f",
+        "width": 2048,
+        "height": 1536,
+        "variants": [
+          {
+            "key": "moments/2025/08/23-01-zhou-mo-kai-shi-di-yi-ci-zi-jia/zhou-mo-kai-shi-di-yi-ci-zi-jia-480w.webp",
+            "contentType": "image/webp",
+            "bytes": 19312,
+            "etag": "43bdbf4db7df22c167e4809fa678d895",
+            "width": 480,
+            "height": 360
+          },
+          {
+            "key": "moments/2025/08/23-01-zhou-mo-kai-shi-di-yi-ci-zi-jia/zhou-mo-kai-shi-di-yi-ci-zi-jia-960w.webp",
+            "contentType": "image/webp",
+            "bytes": 70548,
+            "etag": "0662d97b8d5765b079c515b4ba3750df",
+            "width": 960,
+            "height": 720
+          },
+          {
+            "key": "moments/2025/08/23-01-zhou-mo-kai-shi-di-yi-ci-zi-jia/zhou-mo-kai-shi-di-yi-ci-zi-jia-1920w.webp",
+            "contentType": "image/webp",
+            "bytes": 237386,
+            "etag": "4d7af8fd7c2ebfcfccb3a69184b1cbf6",
+            "width": 1920,
+            "height": 1440
+          }
+        ]
+      }
+    }
+  ],
+  "published": {
+    "id": "2025/08/23-01-zhou-mo-kai-shi-di-yi-ci-zi-jia",
+    "slug": "zhou-mo-kai-shi-di-yi-ci-zi-jia",
+    "order": 1,
+    "at": "2026-07-30T08:12:13+08:00"
+  },
+  "createdAt": "2025-08-23T17:31:55+08:00",
+  "updatedAt": "2026-09-03T10:44:40+08:00"
+}

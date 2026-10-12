@@ -1,0 +1,60 @@
+{
+  "uid": "01KCRPXARRMY3SDQ142BEP0ZF3",
+  "occurredAt": "2025-12-18T20:28:15+08:00",
+  "places": [
+    "suzhou"
+  ],
+  "text": "下班后去探了个办公室@AprilNEA",
+  "hidden": false,
+  "media": [
+    {
+      "uid": "01KCRPXARS5G7XFH7W9P7NRFJ5",
+      "type": "image",
+      "alt": "",
+      "width": 2048,
+      "height": 1536,
+      "published": {
+        "key": "moments/2025/12/18-01-xia-ban-hou-qu-tan-le-ge-ban-gong-shi/xia-ban-hou-qu-tan-le-ge-ban-gong-shi.jpg",
+        "contentType": "image/jpeg",
+        "bytes": 269306,
+        "etag": "59f71934c32f8396e99899167591dd50",
+        "width": 2048,
+        "height": 1536,
+        "variants": [
+          {
+            "key": "moments/2025/12/18-01-xia-ban-hou-qu-tan-le-ge-ban-gong-shi/xia-ban-hou-qu-tan-le-ge-ban-gong-shi-480w.webp",
+            "contentType": "image/webp",
+            "bytes": 18570,
+            "etag": "2ac083089ca23679b29063d3194ee0a0",
+            "width": 480,
+            "height": 360
+          },
+          {
+            "key": "moments/2025/12/18-01-xia-ban-hou-qu-tan-le-ge-ban-gong-shi/xia-ban-hou-qu-tan-le-ge-ban-gong-shi-960w.webp",
+            "contentType": "image/webp",
+            "bytes": 52766,
+            "etag": "74f9dc927f736cebb9f15b82232998b4",
+            "width": 960,
+            "height": 720
+          },
+          {
+            "key": "moments/2025/12/18-01-xia-ban-hou-qu-tan-le-ge-ban-gong-shi/xia-ban-hou-qu-tan-le-ge-ban-gong-shi-1920w.webp",
+            "contentType": "image/webp",
+            "bytes": 123516,
+            "etag": "38615268eddf49224fc0d58072311275",
+            "width": 1920,
+            "height": 1440
+          }
+        ]
+      }
+    }
+  ],
+  "published": {
+    "id": "2025/12/18-01-xia-ban-hou-qu-tan-le-ge-ban-gong-shi",
+    "slug": "xia-ban-hou-qu-tan-le-ge-ban-gong-shi",
+    "order": 1,
+    "at": "2026-07-30T08:12:13+08:00"
+  },
+  "createdAt": "2025-12-18T20:28:15+08:00",
+  "updatedAt": "2026-09-03T10:44:40+08:00"
+}

@@ -1,0 +1,16 @@
+{
+  "uid": "01J4XQ839RB2HK5VBGJX9K3B4R",
+  "occurredAt": "2024-08-10T16:42:27+08:00",
+  "places": [],
+  "text": "If you upgrade to ESLint 9.9.0 and want to use eslint.config.ts, do not forget to add the following settings to your vscode settings.\n\n{\n\"eslint.options\": {\n\"flags\": [\"unstable_ts_config\"]\n}\n}",
+  "hidden": true,
+  "media": [],
+  "published": {
+    "id": "2024/08/10-01-if-you-upgrade-to-eslint-9-9-0-and-want",
+    "slug": "if-you-upgrade-to-eslint-9-9-0-and-want",
+    "order": 1,
+    "at": "2026-07-30T08:12:13+08:00"
+  },
+  "createdAt": "2024-08-10T16:42:27+08:00",
+  "updatedAt": "2026-09-03T10:44:40+08:00"
+}

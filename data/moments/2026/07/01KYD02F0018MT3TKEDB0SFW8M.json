@@ -1,0 +1,41 @@
+{
+  "uid": "01KYD02F0018MT3TKEDB0SFW8M",
+  "occurredAt": "2026-07-26",
+  "places": [
+    "west-lake"
+  ],
+  "text": "在西湖拍日出！\n第一次尝试延时摄影，到现场之后居然忘记拿快装板，于是飞奔回去拿。然后回来的时候心里开始着急，觉得已经迟了，就在苏堤开始的这段直接拍了。\n但是忽略了这个岛的遮挡，然后开始延时了又没法改。要是往前多跑几步再拍就好了。\n然后就是延时设置的时间居然短了，只能在拍完之后再按下一次快门续上。",
+  "hidden": false,
+  "media": [
+    {
+      "uid": "01KYD02F01NFA0XWJZWPRSNDCC",
+      "type": "video",
+      "alt": "Sunrise timelapse over West Lake with a tree-covered island obscuring the sun",
+      "width": 1600,
+      "height": 1066,
+      "published": {
+        "key": "moments/2026/07/26-01-west-lake-sunrise/west-lake-sunrise-video.mp4",
+        "contentType": "video/mp4",
+        "bytes": 54638328,
+        "etag": "8c048a45b8f10806211c7e1297e9f118",
+        "poster": {
+          "key": "moments/2026/07/26-01-west-lake-sunrise/west-lake-sunrise-video-poster.webp",
+          "contentType": "image/webp",
+          "bytes": 135556,
+          "etag": "f35fda05e72460d698b09426d992e456",
+          "width": 1600,
+          "height": 1066,
+          "variants": []
+        }
+      }
+    }
+  ],
+  "published": {
+    "id": "2026/07/26-01-west-lake-sunrise",
+    "slug": "west-lake-sunrise",
+    "order": 1,
+    "at": "2026-07-30T08:12:13+08:00"
+  },
+  "createdAt": "2026-07-26T00:00:00+08:00",
+  "updatedAt": "2026-09-03T10:44:40+08:00"
+}

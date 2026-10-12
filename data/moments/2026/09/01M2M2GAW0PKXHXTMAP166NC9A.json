@@ -1,0 +1,254 @@
+{
+  "uid": "01M2M2GAW0PKXHXTMAP166NC9A",
+  "occurredAt": "2026-09-16T11:00:00+08:00",
+  "places": [
+    "shuhe-ancient-town",
+    "zhongyi-market"
+  ],
+  "text": "束河古镇和忠义市场\n都是很适合住下来慢慢体验的地方，可惜没住上几天。也是在这里买到了好吃的鲜花饼。",
+  "hidden": false,
+  "media": [
+    {
+      "uid": "01M2M2GAW1QNH95JG0RVSZYBJA",
+      "type": "live-photo",
+      "alt": "Clear turquoise water reflects trees beside a stone-railed path.",
+      "width": 1920,
+      "height": 1080,
+      "published": {
+        "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-live-1.webp",
+        "contentType": "image/webp",
+        "bytes": 628004,
+        "etag": "f04e72eec026f6a4ca502b51f1bd8236",
+        "width": 1920,
+        "height": 1080,
+        "variants": [
+          {
+            "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-live-1-480w.webp",
+            "contentType": "image/webp",
+            "bytes": 44484,
+            "etag": "f9fc00ada7f9f43f436ca2296c7d9465",
+            "width": 480,
+            "height": 270
+          },
+          {
+            "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-live-1-960w.webp",
+            "contentType": "image/webp",
+            "bytes": 175624,
+            "etag": "318443ece37e7891f5e49edef190f331",
+            "width": 960,
+            "height": 540
+          }
+        ],
+        "video": {
+          "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-live-1-motion.mp4",
+          "contentType": "video/mp4",
+          "bytes": 2094343,
+          "etag": "b0f737b161be4eb8da2a92af886ba1c9"
+        }
+      }
+    },
+    {
+      "uid": "01M2M2GAW2KMK6Q79GNKQ6AJS9",
+      "type": "live-photo",
+      "alt": "A small corn plot grows beside rustic houses and a stone path.",
+      "width": 1920,
+      "height": 1080,
+      "published": {
+        "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-live-2.webp",
+        "contentType": "image/webp",
+        "bytes": 723240,
+        "etag": "fb8c0519e4ca012c3f8aa13c9a0e27cd",
+        "width": 1920,
+        "height": 1080,
+        "variants": [
+          {
+            "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-live-2-480w.webp",
+            "contentType": "image/webp",
+            "bytes": 48612,
+            "etag": "c69a54fcc7b4d3f4c250a88f29769e49",
+            "width": 480,
+            "height": 270
+          },
+          {
+            "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-live-2-960w.webp",
+            "contentType": "image/webp",
+            "bytes": 195254,
+            "etag": "2332efd63a3d2bf25ea08100554a0ab0",
+            "width": 960,
+            "height": 540
+          }
+        ],
+        "video": {
+          "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-live-2-motion.mp4",
+          "contentType": "video/mp4",
+          "bytes": 2211670,
+          "etag": "cb6775c80067ba536b5117691759d046"
+        }
+      }
+    },
+    {
+      "uid": "01M2M2GAW3JKVTGTR8NYJ83FPQ",
+      "type": "live-photo",
+      "alt": "Colorful paper umbrellas hang above a narrow street between wooden buildings.",
+      "width": 1920,
+      "height": 1080,
+      "published": {
+        "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-live-3.webp",
+        "contentType": "image/webp",
+        "bytes": 255332,
+        "etag": "80f8495297c7b1ec2235aebcbd1661f5",
+        "width": 1920,
+        "height": 1080,
+        "variants": [
+          {
+            "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-live-3-480w.webp",
+            "contentType": "image/webp",
+            "bytes": 24626,
+            "etag": "860bcb61eb5e08322c82c5265acd9a74",
+            "width": 480,
+            "height": 270
+          },
+          {
+            "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-live-3-960w.webp",
+            "contentType": "image/webp",
+            "bytes": 80982,
+            "etag": "69693e038bfe09d4af8478a37ae51a9c",
+            "width": 960,
+            "height": 540
+          }
+        ],
+        "video": {
+          "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-live-3-motion.mp4",
+          "contentType": "video/mp4",
+          "bytes": 1951815,
+          "etag": "b378554d48fb9b82bbbbfa4db9f1e2e7"
+        }
+      }
+    },
+    {
+      "uid": "01M2M2GAW4DK7JH4CP3KA7Q104",
+      "type": "live-photo",
+      "alt": "A tabby-and-white cat rests beneath drooping green branches.",
+      "width": 1920,
+      "height": 1080,
+      "published": {
+        "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-live-4.webp",
+        "contentType": "image/webp",
+        "bytes": 440380,
+        "etag": "e351c6bf126a2f08885d2aa86b9457c9",
+        "width": 1920,
+        "height": 1080,
+        "variants": [
+          {
+            "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-live-4-480w.webp",
+            "contentType": "image/webp",
+            "bytes": 39246,
+            "etag": "58cdf3d81a04b9c8416b889125883cf9",
+            "width": 480,
+            "height": 270
+          },
+          {
+            "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-live-4-960w.webp",
+            "contentType": "image/webp",
+            "bytes": 143102,
+            "etag": "adc27555e9e86709b7b7d74efba3d1af",
+            "width": 960,
+            "height": 540
+          }
+        ],
+        "video": {
+          "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-live-4-motion.mp4",
+          "contentType": "video/mp4",
+          "bytes": 1620157,
+          "etag": "fa0a55e573763e6830e8fe726c2b03da"
+        }
+      }
+    },
+    {
+      "uid": "01M2M2GAW5KCC2Q6BCM1SYBS9S",
+      "type": "live-photo",
+      "alt": "A cobbled lane passes traditional shops with wooden doors and red lanterns.",
+      "width": 1920,
+      "height": 1080,
+      "published": {
+        "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-live-5.webp",
+        "contentType": "image/webp",
+        "bytes": 370558,
+        "etag": "7257290513de0ca66f71acb1499e5f38",
+        "width": 1920,
+        "height": 1080,
+        "variants": [
+          {
+            "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-live-5-480w.webp",
+            "contentType": "image/webp",
+            "bytes": 31662,
+            "etag": "c3d8e116b3b2141e7a2685ea60a72bab",
+            "width": 480,
+            "height": 270
+          },
+          {
+            "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-live-5-960w.webp",
+            "contentType": "image/webp",
+            "bytes": 109558,
+            "etag": "6e370b79548517e61a4e0a0342f32d05",
+            "width": 960,
+            "height": 540
+          }
+        ],
+        "video": {
+          "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-live-5-motion.mp4",
+          "contentType": "video/mp4",
+          "bytes": 2097113,
+          "etag": "a71e48a9e8eebd474749ad5ed0d0aab4"
+        }
+      }
+    },
+    {
+      "uid": "01M2M2GAW6N8WAC68TRYB2GZRC",
+      "type": "live-photo",
+      "alt": "Traditional tiled rooftops frame a distant mountain beneath an overcast sky.",
+      "width": 1920,
+      "height": 1080,
+      "published": {
+        "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-live-6.webp",
+        "contentType": "image/webp",
+        "bytes": 151308,
+        "etag": "df9e624261068aee60445ca5b1ddc871",
+        "width": 1920,
+        "height": 1080,
+        "variants": [
+          {
+            "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-live-6-480w.webp",
+            "contentType": "image/webp",
+            "bytes": 18880,
+            "etag": "624d2ab69621654afe216202c6f66e88",
+            "width": 480,
+            "height": 270
+          },
+          {
+            "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-live-6-960w.webp",
+            "contentType": "image/webp",
+            "bytes": 55362,
+            "etag": "87e1fd58e549413a5838c3676b58983e",
+            "width": 960,
+            "height": 540
+          }
+        ],
+        "video": {
+          "key": "moments/2026/09/16-01-shuhe-and-zhongyi-market/shuhe-and-zhongyi-market-live-6-motion.mp4",
+          "contentType": "video/mp4",
+          "bytes": 660155,
+          "etag": "d4d77e529ac0cbb62cfa054fe48ad9c1"
+        }
+      }
+    }
+  ],
+  "published": {
+    "id": "2026/09/16-01-shuhe-and-zhongyi-market",
+    "slug": "shuhe-and-zhongyi-market",
+    "order": 1,
+    "at": "2026-10-08T08:10:00+08:00"
+  },
+  "createdAt": "2026-09-16T11:00:00+08:00",
+  "updatedAt": "2026-10-11T23:35:20+08:00"
+}

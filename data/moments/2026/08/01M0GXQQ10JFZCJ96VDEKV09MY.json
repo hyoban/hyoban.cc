@@ -1,0 +1,52 @@
+{
+  "uid": "01M0GXQQ10JFZCJ96VDEKV09MY",
+  "occurredAt": "2026-08-21T09:07:32+08:00",
+  "places": [
+    "wuwei"
+  ],
+  "text": "租了一台理光gr3x，感受一下它的魔力",
+  "hidden": false,
+  "media": [
+    {
+      "uid": "01M0GXQQ11SMTR2NWF9S7K8YF0",
+      "type": "image",
+      "alt": "Close-up of a black Ricoh GR IIIx camera with a green lens ring",
+      "width": 1920,
+      "height": 1440,
+      "published": {
+        "key": "moments/2026/08/21-01-ricoh-gr3x-magic/ricoh-gr3x-magic.webp",
+        "contentType": "image/webp",
+        "bytes": 262498,
+        "etag": "b9e0fa6a19455b96422d005c8ea786d0",
+        "width": 1920,
+        "height": 1440,
+        "variants": [
+          {
+            "key": "moments/2026/08/21-01-ricoh-gr3x-magic/ricoh-gr3x-magic-480w.webp",
+            "contentType": "image/webp",
+            "bytes": 24514,
+            "etag": "f9c219626dde346dbb2cdfd0cdc3b7f3",
+            "width": 480,
+            "height": 360
+          },
+          {
+            "key": "moments/2026/08/21-01-ricoh-gr3x-magic/ricoh-gr3x-magic-960w.webp",
+            "contentType": "image/webp",
+            "bytes": 82210,
+            "etag": "cb6c3b20da7f6497814f2af4434d33fb",
+            "width": 960,
+            "height": 720
+          }
+        ]
+      }
+    }
+  ],
+  "published": {
+    "id": "2026/08/21-01-ricoh-gr3x-magic",
+    "slug": "ricoh-gr3x-magic",
+    "order": 1,
+    "at": "2026-08-21T10:27:32+08:00"
+  },
+  "createdAt": "2026-08-21T09:07:32+08:00",
+  "updatedAt": "2026-09-03T10:44:40+08:00"
+}

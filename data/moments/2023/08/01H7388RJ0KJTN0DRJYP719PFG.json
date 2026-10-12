@@ -1,0 +1,16 @@
+{
+  "uid": "01H7388RJ0KJTN0DRJYP719PFG",
+  "occurredAt": "2023-08-06T00:25:12+08:00",
+  "places": [],
+  "text": "6/n noImplicitReturns 帮助你检查函数中的每一条路径的返回值都和函数定义的返回值类型匹配",
+  "hidden": true,
+  "media": [],
+  "published": {
+    "id": "2023/08/06-04-6-n-noimplicitreturns-bang-zhu-ni-jian-cha-han-shu",
+    "slug": "6-n-noimplicitreturns-bang-zhu-ni-jian-cha-han-shu",
+    "order": 4,
+    "at": "2026-07-30T08:12:13+08:00"
+  },
+  "createdAt": "2023-08-06T00:25:12+08:00",
+  "updatedAt": "2026-09-03T10:44:40+08:00"
+}

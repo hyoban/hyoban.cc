@@ -1,0 +1,39 @@
+{
+  "uid": "01H0CBRZ8GH69RV4Z0VRFTWP52",
+  "occurredAt": "2023-05-14T13:29:46+08:00",
+  "places": [],
+  "text": "obsidian 真是太优雅啦。写插件也很简单，没一会就写了个同步 momos 到 obsidian 的插件。",
+  "hidden": true,
+  "media": [
+    {
+      "uid": "01H0CBRZ8HFXCHQ87EW2X11G1N",
+      "type": "video",
+      "alt": "",
+      "width": 1106,
+      "height": 720,
+      "published": {
+        "key": "moments/2023/05/14-01-obsidian-zhen-shi-tai-you-ya-la-xie-cha-jian/obsidian-zhen-shi-tai-you-ya-la-xie-cha-jian-video.mp4",
+        "contentType": "video/mp4",
+        "bytes": 424938,
+        "etag": "e8ea4b88d4bc769214fac7bf1606bf4d",
+        "poster": {
+          "key": "moments/2023/05/14-01-obsidian-zhen-shi-tai-you-ya-la-xie-cha-jian/obsidian-zhen-shi-tai-you-ya-la-xie-cha-jian-video-poster.png",
+          "contentType": "image/png",
+          "bytes": 206093,
+          "etag": "84f1b34b2737584ef632ac0e07e017d5",
+          "width": 1106,
+          "height": 720,
+          "variants": []
+        }
+      }
+    }
+  ],
+  "published": {
+    "id": "2023/05/14-01-obsidian-zhen-shi-tai-you-ya-la-xie-cha-jian",
+    "slug": "obsidian-zhen-shi-tai-you-ya-la-xie-cha-jian",
+    "order": 1,
+    "at": "2026-07-30T08:12:13+08:00"
+  },
+  "createdAt": "2023-05-14T13:29:46+08:00",
+  "updatedAt": "2026-09-03T10:44:40+08:00"
+}

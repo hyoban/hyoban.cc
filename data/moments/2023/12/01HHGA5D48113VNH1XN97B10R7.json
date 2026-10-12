@@ -1,0 +1,39 @@
+{
+  "uid": "01HHGA5D48113VNH1XN97B10R7",
+  "occurredAt": "2023-12-13T08:45:25+08:00",
+  "places": [],
+  "text": "Check out my #GitHubUnwrapped 2023! Get yours now on https://githubunwrapped.com",
+  "hidden": true,
+  "media": [
+    {
+      "uid": "01HHGA5D49XK8B3CPRBG7NFFSF",
+      "type": "video",
+      "alt": "",
+      "width": 720,
+      "height": 720,
+      "published": {
+        "key": "moments/2023/12/13-01-check-out-my-githubunwrapped-2023-get-yours-now-on/check-out-my-githubunwrapped-2023-get-yours-now-on-video.mp4",
+        "contentType": "video/mp4",
+        "bytes": 3068746,
+        "etag": "e503bf2db1b255791fe3e76d2a4ea629",
+        "poster": {
+          "key": "moments/2023/12/13-01-check-out-my-githubunwrapped-2023-get-yours-now-on/check-out-my-githubunwrapped-2023-get-yours-now-on-video-poster.png",
+          "contentType": "image/png",
+          "bytes": 118593,
+          "etag": "25b50189edb3384ebefaaee8969ea4fd",
+          "width": 720,
+          "height": 720,
+          "variants": []
+        }
+      }
+    }
+  ],
+  "published": {
+    "id": "2023/12/13-01-check-out-my-githubunwrapped-2023-get-yours-now-on",
+    "slug": "check-out-my-githubunwrapped-2023-get-yours-now-on",
+    "order": 1,
+    "at": "2026-07-30T08:12:13+08:00"
+  },
+  "createdAt": "2023-12-13T08:45:25+08:00",
+  "updatedAt": "2026-09-03T10:44:40+08:00"
+}

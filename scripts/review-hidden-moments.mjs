@@ -6,12 +6,11 @@ import { fileURLToPath } from 'node:url'
 import { readMomentRecords } from './lib/moment-assets.mjs'
 
 const root = fileURLToPath(new URL('../', import.meta.url))
-const contentRoot = join(root, 'src/content/moments')
 const output = resolve(
   process.argv[2] ??
     join(root, '.artifacts', `hidden-moments-review-${new Date().toISOString().slice(0, 10)}.json`),
 )
-const records = await readMomentRecords(contentRoot)
+const records = await readMomentRecords()
 const fingerprints = new Map()
 
 for (const record of records) {

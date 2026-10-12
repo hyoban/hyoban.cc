@@ -1,0 +1,151 @@
+{
+  "uid": "01KZ29TEAGY68GRSRXE2WDY1AV",
+  "occurredAt": "2026-08-03T06:34:26+08:00",
+  "places": [
+    "rizhao"
+  ],
+  "text": "当你住在海边\n虽然没有早起看完整，但海上日出还是很美！",
+  "hidden": false,
+  "media": [
+    {
+      "uid": "01KZ29TEAH7E2JFPK0X5476WED",
+      "type": "video",
+      "alt": "View of the seawall from inside an open car hatch at sunrise",
+      "width": 1280,
+      "height": 720,
+      "published": {
+        "key": "moments/2026/08/03-01-rizhao-sunrise/rizhao-sunrise-video.mp4",
+        "contentType": "video/mp4",
+        "bytes": 1632872,
+        "etag": "2596eb49507b8e068e78f6ceb49cf8e5",
+        "poster": {
+          "key": "moments/2026/08/03-01-rizhao-sunrise/rizhao-sunrise-video-poster.webp",
+          "contentType": "image/webp",
+          "bytes": 24606,
+          "etag": "88b8f5b80c97b042f183d777654fe08c",
+          "width": 1280,
+          "height": 720,
+          "variants": []
+        }
+      }
+    },
+    {
+      "uid": "01KZ29TEAJT9BXV1CB0NFV379K",
+      "type": "video",
+      "alt": "Morning sun reflecting across calm water in Rizhao",
+      "width": 1280,
+      "height": 720,
+      "published": {
+        "key": "moments/2026/08/03-01-rizhao-sunrise/rizhao-sunrise-video-2.mp4",
+        "contentType": "video/mp4",
+        "bytes": 10676734,
+        "etag": "465d4217da1e829e44b46a3b2d15dd5e",
+        "poster": {
+          "key": "moments/2026/08/03-01-rizhao-sunrise/rizhao-sunrise-video-2-poster.webp",
+          "contentType": "image/webp",
+          "bytes": 67926,
+          "etag": "676aa3600338ea416e83c4f199db5c8c",
+          "width": 1280,
+          "height": 720,
+          "variants": []
+        }
+      }
+    },
+    {
+      "uid": "01KZ29TEAKFRQRCDHK2GBZQC63",
+      "type": "video",
+      "alt": "Sun rising over the sea beside a distant breakwater",
+      "width": 1280,
+      "height": 720,
+      "published": {
+        "key": "moments/2026/08/03-01-rizhao-sunrise/rizhao-sunrise-video-3.mp4",
+        "contentType": "video/mp4",
+        "bytes": 6408099,
+        "etag": "1fabe7e7f005288297c78b7634746ece",
+        "poster": {
+          "key": "moments/2026/08/03-01-rizhao-sunrise/rizhao-sunrise-video-3-poster.webp",
+          "contentType": "image/webp",
+          "bytes": 46098,
+          "etag": "645edf2f492ffc97d68a962e6d75f238",
+          "width": 1280,
+          "height": 720,
+          "variants": []
+        }
+      }
+    },
+    {
+      "uid": "01KZ29TEAMYNAC4SB96SQ87ZQF",
+      "type": "image",
+      "alt": "White Zeekr parked by the sea with its hatch open at sunrise",
+      "width": 1920,
+      "height": 1440,
+      "published": {
+        "key": "moments/2026/08/03-01-rizhao-sunrise/rizhao-sunrise.webp",
+        "contentType": "image/webp",
+        "bytes": 156532,
+        "etag": "0f72f715083fd7d3d35c98324051238b",
+        "width": 1920,
+        "height": 1440,
+        "variants": [
+          {
+            "key": "moments/2026/08/03-01-rizhao-sunrise/rizhao-sunrise-480w.webp",
+            "contentType": "image/webp",
+            "bytes": 10832,
+            "etag": "27d01dbbc3e3c367299b7bf0651bfbff",
+            "width": 480,
+            "height": 360
+          },
+          {
+            "key": "moments/2026/08/03-01-rizhao-sunrise/rizhao-sunrise-960w.webp",
+            "contentType": "image/webp",
+            "bytes": 38570,
+            "etag": "e438f870ee584fdf066734140b4cb381",
+            "width": 960,
+            "height": 720
+          }
+        ]
+      }
+    },
+    {
+      "uid": "01KZ29TEAN5CD3NAQK82CAGDX5",
+      "type": "image",
+      "alt": "Dew-covered white Zeekr parked beside the sea",
+      "width": 1920,
+      "height": 1440,
+      "published": {
+        "key": "moments/2026/08/03-01-rizhao-sunrise/rizhao-sunrise-2.webp",
+        "contentType": "image/webp",
+        "bytes": 251390,
+        "etag": "b29dcdfea0c743d879fc36363bdb5a77",
+        "width": 1920,
+        "height": 1440,
+        "variants": [
+          {
+            "key": "moments/2026/08/03-01-rizhao-sunrise/rizhao-sunrise-2-480w.webp",
+            "contentType": "image/webp",
+            "bytes": 18328,
+            "etag": "b1ca277985cd7bd228934cb6daee6196",
+            "width": 480,
+            "height": 360
+          },
+          {
+            "key": "moments/2026/08/03-01-rizhao-sunrise/rizhao-sunrise-2-960w.webp",
+            "contentType": "image/webp",
+            "bytes": 67562,
+            "etag": "07eddd2f71c5b2b17fa51962d6cf410e",
+            "width": 960,
+            "height": 720
+          }
+        ]
+      }
+    }
+  ],
+  "published": {
+    "id": "2026/08/03-01-rizhao-sunrise",
+    "slug": "rizhao-sunrise",
+    "order": 1,
+    "at": "2026-08-20T22:58:53+08:00"
+  },
+  "createdAt": "2026-08-03T06:34:26+08:00",
+  "updatedAt": "2026-09-03T10:44:40+08:00"
+}

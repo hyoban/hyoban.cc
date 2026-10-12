@@ -1,0 +1,42 @@
+{
+  "uid": "01JN614208K6SVVRZ6ZV9PHNTN",
+  "occurredAt": "2025-02-28T18:20:05+08:00",
+  "places": [],
+  "text": "买了 32+256 的 Mac mini，好便宜啊，到手扩个容✌️",
+  "hidden": true,
+  "media": [
+    {
+      "uid": "01JN614209YN1X0G6SGRS41WNM",
+      "type": "image",
+      "alt": "",
+      "width": 801,
+      "height": 428,
+      "published": {
+        "key": "moments/2025/02/28-01-mai-le-32-256-de-mac-mini-hao-pian-yi/mai-le-32-256-de-mac-mini-hao-pian-yi.jpg",
+        "contentType": "image/jpeg",
+        "bytes": 33231,
+        "etag": "5815b1a72996df1dbb5de7e3214c22f5",
+        "width": 801,
+        "height": 428,
+        "variants": [
+          {
+            "key": "moments/2025/02/28-01-mai-le-32-256-de-mac-mini-hao-pian-yi/mai-le-32-256-de-mac-mini-hao-pian-yi-480w.webp",
+            "contentType": "image/webp",
+            "bytes": 10154,
+            "etag": "ba73c7a81a061b68b67338088bf89a50",
+            "width": 480,
+            "height": 256
+          }
+        ]
+      }
+    }
+  ],
+  "published": {
+    "id": "2025/02/28-01-mai-le-32-256-de-mac-mini-hao-pian-yi",
+    "slug": "mai-le-32-256-de-mac-mini-hao-pian-yi",
+    "order": 1,
+    "at": "2026-07-30T08:12:13+08:00"
+  },
+  "createdAt": "2025-02-28T18:20:05+08:00",
+  "updatedAt": "2026-09-03T10:44:40+08:00"
+}

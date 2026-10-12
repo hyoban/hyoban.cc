@@ -1,0 +1,50 @@
+{
+  "uid": "01K7PNTV7RV0ECE3VGYZKQB0FF",
+  "occurredAt": "2025-10-16T22:12:27+08:00",
+  "places": [],
+  "text": "想从芜湖自驾到成都然后去九寨沟\n\n自从买了车之后好想试一次床车自驾，打算不走高速这样慢慢开过去，沿途随意换途径点。 #极氪 #极氪007GT #想出去走走 #自驾 #床车 #川西",
+  "hidden": false,
+  "media": [
+    {
+      "uid": "01K7PNTV7S0BWXC0SJ59Q3NE39",
+      "type": "image",
+      "alt": "",
+      "width": 1080,
+      "height": 1440,
+      "published": {
+        "key": "moments/2025/10/16-01-xiang-cong-wu-hu-zi-jia-dao-cheng-du-ran/xiang-cong-wu-hu-zi-jia-dao-cheng-du-ran.webp",
+        "contentType": "image/webp",
+        "bytes": 97116,
+        "etag": "50d7fb66d2435d4ab91e91a1526380d8",
+        "width": 1080,
+        "height": 1440,
+        "variants": [
+          {
+            "key": "moments/2025/10/16-01-xiang-cong-wu-hu-zi-jia-dao-cheng-du-ran/xiang-cong-wu-hu-zi-jia-dao-cheng-du-ran-480w.webp",
+            "contentType": "image/webp",
+            "bytes": 23684,
+            "etag": "f6d502fe92b71ff5a997127ac882b7b5",
+            "width": 480,
+            "height": 640
+          },
+          {
+            "key": "moments/2025/10/16-01-xiang-cong-wu-hu-zi-jia-dao-cheng-du-ran/xiang-cong-wu-hu-zi-jia-dao-cheng-du-ran-960w.webp",
+            "contentType": "image/webp",
+            "bytes": 46558,
+            "etag": "c9b6b2fefa4f132c8039f011b8dc76d5",
+            "width": 960,
+            "height": 1280
+          }
+        ]
+      }
+    }
+  ],
+  "published": {
+    "id": "2025/10/16-01-xiang-cong-wu-hu-zi-jia-dao-cheng-du-ran",
+    "slug": "xiang-cong-wu-hu-zi-jia-dao-cheng-du-ran",
+    "order": 1,
+    "at": "2026-07-30T08:12:13+08:00"
+  },
+  "createdAt": "2025-10-16T22:12:27+08:00",
+  "updatedAt": "2026-09-03T10:44:40+08:00"
+}

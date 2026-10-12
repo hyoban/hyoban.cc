@@ -1,0 +1,16 @@
+{
+  "uid": "01JQN25Q103EGZY61FBQKPCAQ6",
+  "occurredAt": "2025-03-31T10:58:28+08:00",
+  "places": [],
+  "text": "xcode 的 Derived Data 会不断累积，所以最好每次 build 删一次，rm -rf ~/Library/Developer/Xcode/DerivedData",
+  "hidden": true,
+  "media": [],
+  "published": {
+    "id": "2025/03/31-01-xcode-de-derived-data-hui-bu-duan-lei-ji-suo",
+    "slug": "xcode-de-derived-data-hui-bu-duan-lei-ji-suo",
+    "order": 1,
+    "at": "2026-07-30T08:12:13+08:00"
+  },
+  "createdAt": "2025-03-31T10:58:28+08:00",
+  "updatedAt": "2026-09-03T10:44:40+08:00"
+}

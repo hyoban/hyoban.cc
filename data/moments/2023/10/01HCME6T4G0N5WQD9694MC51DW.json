@@ -1,0 +1,58 @@
+{
+  "uid": "01HCME6T4G0N5WQD9694MC51DW",
+  "occurredAt": "2023-10-13T19:54:34+08:00",
+  "places": [],
+  "text": "吃一下麦的新品",
+  "hidden": false,
+  "media": [
+    {
+      "uid": "01HCME6T4HS4EP4G72RESPYG4C",
+      "type": "image",
+      "alt": "",
+      "width": 2048,
+      "height": 1152,
+      "published": {
+        "key": "moments/2023/10/13-01-chi-yi-xia-mai-de-xin-pin/chi-yi-xia-mai-de-xin-pin.jpg",
+        "contentType": "image/jpeg",
+        "bytes": 289852,
+        "etag": "c5f67176b704a65b2ee657550a917526",
+        "width": 2048,
+        "height": 1152,
+        "variants": [
+          {
+            "key": "moments/2023/10/13-01-chi-yi-xia-mai-de-xin-pin/chi-yi-xia-mai-de-xin-pin-480w.webp",
+            "contentType": "image/webp",
+            "bytes": 17632,
+            "etag": "049b68a2da030946295b5728499788f8",
+            "width": 480,
+            "height": 270
+          },
+          {
+            "key": "moments/2023/10/13-01-chi-yi-xia-mai-de-xin-pin/chi-yi-xia-mai-de-xin-pin-960w.webp",
+            "contentType": "image/webp",
+            "bytes": 51160,
+            "etag": "ce59284411ddfd50639be6d4e7975f8e",
+            "width": 960,
+            "height": 540
+          },
+          {
+            "key": "moments/2023/10/13-01-chi-yi-xia-mai-de-xin-pin/chi-yi-xia-mai-de-xin-pin-1920w.webp",
+            "contentType": "image/webp",
+            "bytes": 134142,
+            "etag": "61ce9918ed1b67a7f6df18edffc5f1a4",
+            "width": 1920,
+            "height": 1080
+          }
+        ]
+      }
+    }
+  ],
+  "published": {
+    "id": "2023/10/13-01-chi-yi-xia-mai-de-xin-pin",
+    "slug": "chi-yi-xia-mai-de-xin-pin",
+    "order": 1,
+    "at": "2026-07-30T08:12:13+08:00"
+  },
+  "createdAt": "2023-10-13T19:54:34+08:00",
+  "updatedAt": "2026-09-03T10:44:40+08:00"
+}

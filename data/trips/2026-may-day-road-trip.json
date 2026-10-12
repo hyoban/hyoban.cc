@@ -1,0 +1,17 @@
+{
+  "id": "2026-may-day-road-trip",
+  "title": "五一皖赣自驾",
+  "start": "2026-05-01",
+  "end": "2026-05-05",
+  "waypoints": [
+    {
+      "at": "2026-05-01T09:00:00+08:00",
+      "place": "wuwei"
+    }
+  ],
+  "straightLegs": [],
+  "sameWayBack": [],
+  "covers": [],
+  "createdAt": "2026-05-01T00:00:00+08:00",
+  "updatedAt": "2026-10-12T19:30:16+08:00"
+}

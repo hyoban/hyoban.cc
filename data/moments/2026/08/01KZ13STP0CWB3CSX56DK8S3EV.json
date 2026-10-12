@@ -1,0 +1,118 @@
+{
+  "uid": "01KZ13STP0CWB3CSX56DK8S3EV",
+  "occurredAt": "2026-08-02T19:30:00+08:00",
+  "places": [
+    "rizhao"
+  ],
+  "text": "在日照吃什么😋",
+  "hidden": false,
+  "media": [
+    {
+      "uid": "01KZ13STP1VEYMQT0JP5Z2SH49",
+      "type": "image",
+      "alt": "Table filled with seafood and local dishes in Rizhao",
+      "width": 1920,
+      "height": 1440,
+      "published": {
+        "key": "moments/2026/08/02-03-rizhao-food/rizhao-food.webp",
+        "contentType": "image/webp",
+        "bytes": 636290,
+        "etag": "f60ac2939dd2f6c97e518431fe448d8f",
+        "width": 1920,
+        "height": 1440,
+        "variants": [
+          {
+            "key": "moments/2026/08/02-03-rizhao-food/rizhao-food-480w.webp",
+            "contentType": "image/webp",
+            "bytes": 50080,
+            "etag": "f139a91b2cfe482caee2d939878bf42a",
+            "width": 480,
+            "height": 360
+          },
+          {
+            "key": "moments/2026/08/02-03-rizhao-food/rizhao-food-960w.webp",
+            "contentType": "image/webp",
+            "bytes": 177930,
+            "etag": "228fdce684462372d75b49d6ca472905",
+            "width": 960,
+            "height": 720
+          }
+        ]
+      }
+    },
+    {
+      "uid": "01KZ13STP2TA7RFVH1QRRA2BZX",
+      "type": "image",
+      "alt": "Platter of grilled meat and vegetable skewers",
+      "width": 1920,
+      "height": 1440,
+      "published": {
+        "key": "moments/2026/08/02-03-rizhao-food/rizhao-food-2.webp",
+        "contentType": "image/webp",
+        "bytes": 401512,
+        "etag": "965770e1669efdba00e472c12ea614ea",
+        "width": 1920,
+        "height": 1440,
+        "variants": [
+          {
+            "key": "moments/2026/08/02-03-rizhao-food/rizhao-food-2-480w.webp",
+            "contentType": "image/webp",
+            "bytes": 40002,
+            "etag": "bcc532aa1b227f949232260de2bd3917",
+            "width": 480,
+            "height": 360
+          },
+          {
+            "key": "moments/2026/08/02-03-rizhao-food/rizhao-food-2-960w.webp",
+            "contentType": "image/webp",
+            "bytes": 124750,
+            "etag": "96ca2fba9d2383b9fe12ba409ae11f59",
+            "width": 960,
+            "height": 720
+          }
+        ]
+      }
+    },
+    {
+      "uid": "01KZ13STP34X2BFANR3J0ZEWCS",
+      "type": "image",
+      "alt": "Spicy crab served in a glass bowl",
+      "width": 1920,
+      "height": 1440,
+      "published": {
+        "key": "moments/2026/08/02-03-rizhao-food/rizhao-food-3.webp",
+        "contentType": "image/webp",
+        "bytes": 442472,
+        "etag": "57823a824519e3d09d39aebad3e0fb06",
+        "width": 1920,
+        "height": 1440,
+        "variants": [
+          {
+            "key": "moments/2026/08/02-03-rizhao-food/rizhao-food-3-480w.webp",
+            "contentType": "image/webp",
+            "bytes": 46384,
+            "etag": "be18004d6e9a882909ed5fa9a0fcb62a",
+            "width": 480,
+            "height": 360
+          },
+          {
+            "key": "moments/2026/08/02-03-rizhao-food/rizhao-food-3-960w.webp",
+            "contentType": "image/webp",
+            "bytes": 146424,
+            "etag": "7c55e741082f712863478ff0c0bf391d",
+            "width": 960,
+            "height": 720
+          }
+        ]
+      }
+    }
+  ],
+  "published": {
+    "id": "2026/08/02-03-rizhao-food",
+    "slug": "rizhao-food",
+    "order": 3,
+    "at": "2026-08-20T22:58:53+08:00"
+  },
+  "createdAt": "2026-08-02T19:30:00+08:00",
+  "updatedAt": "2026-10-11T19:01:43+08:00"
+}

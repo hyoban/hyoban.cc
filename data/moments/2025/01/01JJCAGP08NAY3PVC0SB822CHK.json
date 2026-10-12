@@ -1,0 +1,58 @@
+{
+  "uid": "01JJCAGP08NAY3PVC0SB822CHK",
+  "occurredAt": "2025-01-24T22:12:37+08:00",
+  "places": [],
+  "text": "One-line CSS configuration to use https://github.com/egoist/tailwindcss-icons in TailwindCSS v4",
+  "hidden": true,
+  "media": [
+    {
+      "uid": "01JJCAGP09XH5EB0V7M9CZGHQ6",
+      "type": "image",
+      "alt": "",
+      "width": 2080,
+      "height": 992,
+      "published": {
+        "key": "moments/2025/01/24-01-one-line-css-configuration-to-use-in-tailwindcss-v4/one-line-css-configuration-to-use-in-tailwindcss-v4.jpg",
+        "contentType": "image/jpeg",
+        "bytes": 49832,
+        "etag": "a306adb1c3d8b2a1115b8457e41a492c",
+        "width": 2080,
+        "height": 992,
+        "variants": [
+          {
+            "key": "moments/2025/01/24-01-one-line-css-configuration-to-use-in-tailwindcss-v4/one-line-css-configuration-to-use-in-tailwindcss-v4-480w.webp",
+            "contentType": "image/webp",
+            "bytes": 3036,
+            "etag": "d4d1a28c50101d39157d351ca6a2e10f",
+            "width": 480,
+            "height": 229
+          },
+          {
+            "key": "moments/2025/01/24-01-one-line-css-configuration-to-use-in-tailwindcss-v4/one-line-css-configuration-to-use-in-tailwindcss-v4-960w.webp",
+            "contentType": "image/webp",
+            "bytes": 7086,
+            "etag": "4814655495eb101def0e7e8c5b5007a9",
+            "width": 960,
+            "height": 458
+          },
+          {
+            "key": "moments/2025/01/24-01-one-line-css-configuration-to-use-in-tailwindcss-v4/one-line-css-configuration-to-use-in-tailwindcss-v4-1920w.webp",
+            "contentType": "image/webp",
+            "bytes": 16330,
+            "etag": "d8c20ab3bb5f022956952ee3185410f3",
+            "width": 1920,
+            "height": 916
+          }
+        ]
+      }
+    }
+  ],
+  "published": {
+    "id": "2025/01/24-01-one-line-css-configuration-to-use-in-tailwindcss-v4",
+    "slug": "one-line-css-configuration-to-use-in-tailwindcss-v4",
+    "order": 1,
+    "at": "2026-07-30T08:12:13+08:00"
+  },
+  "createdAt": "2025-01-24T22:12:37+08:00",
+  "updatedAt": "2026-09-03T10:44:40+08:00"
+}

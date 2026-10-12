@@ -8,19 +8,20 @@ import { promisify } from 'node:util'
 
 import sharp from 'sharp'
 
-import { readMomentRecords } from './lib/moment-assets.mjs'
+import { readMomentRecords, writeMomentRecord } from './lib/moment-assets.mjs'
 
 const execFile = promisify(execFileCallback)
 const root = fileURLToPath(new URL('../', import.meta.url))
-const contentRoot = join(root, 'src/content/moments')
 const config = JSON.parse(await readFile(join(root, 'src/data/asset-config.json'), 'utf8'))
 const temporaryPath = await mkdtemp(join(tmpdir(), 'hyoban-moment-variants-'))
-const records = await readMomentRecords(contentRoot)
+const records = await readMomentRecords()
 const tasks = records.flatMap((record) =>
   record.moment.media
     .filter((media) => media.type !== 'video')
     .filter((media) => record.assets[media.file].contentType !== 'image/gif')
-    .filter((media) => !record.assets[media.file].variants)
+    // Generated once: an image wider than the smallest variant with no variants yet.
+    .filter((media) => record.assets[media.file].variants.length === 0)
+    .filter((media) => record.assets[media.file].width > 480)
     .map((media) => ({ media, record })),
 )
 const generated = []
@@ -70,6 +71,7 @@ try {
           height: info.height,
           width: info.width,
         },
+        media,
         path,
         record,
       }
@@ -119,21 +121,17 @@ try {
   for (const record of records) {
     const recordVariants = generated.filter((variant) => variant.record === record)
 
-    for (const variant of recordVariants) {
-      record.assets[variant.file] = variant.metadata
+    if (recordVariants.length === 0) {
+      continue
     }
 
-    if (
-      recordVariants.length > 0 ||
-      record.moment.media.some(
-        (media) => media.type !== 'video' && record.assets[media.file].variants?.length === 0,
-      )
-    ) {
-      const sorted = Object.fromEntries(
-        Object.entries(record.assets).sort(([first], [second]) => first.localeCompare(second)),
-      )
-      await writeFile(join(record.directory, 'assets.json'), `${JSON.stringify(sorted, null, 2)}\n`)
+    for (const variant of recordVariants) {
+      const image = record.record.media.find((media) => media.uid === variant.media.uid).published
+      const { bytes, contentType, etag, width, height } = variant.metadata
+      image.variants.push({ key: variant.key, contentType, bytes, etag, width, height })
     }
+
+    await writeMomentRecord(record.record, record.path)
   }
 
   console.log(

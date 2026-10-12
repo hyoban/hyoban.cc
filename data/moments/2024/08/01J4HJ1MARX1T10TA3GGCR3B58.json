@@ -1,0 +1,42 @@
+{
+  "uid": "01J4HJ1MARX1T10TA3GGCR3B58",
+  "occurredAt": "2024-08-05T23:20:39+08:00",
+  "places": [],
+  "text": "今天简单丰富一下详情页面的信息。",
+  "hidden": true,
+  "media": [
+    {
+      "uid": "01J4HJ1MASPZKSJXSVGV78ZGFS",
+      "type": "image",
+      "alt": "",
+      "width": 945,
+      "height": 2048,
+      "published": {
+        "key": "moments/2024/08/05-01-jin-tian-jian-dan-feng-fu-yi-xia-xiang-qing/jin-tian-jian-dan-feng-fu-yi-xia-xiang-qing.jpg",
+        "contentType": "image/jpeg",
+        "bytes": 179289,
+        "etag": "d45566fa7ccd6256cd64f135cdc7d26e",
+        "width": 945,
+        "height": 2048,
+        "variants": [
+          {
+            "key": "moments/2024/08/05-01-jin-tian-jian-dan-feng-fu-yi-xia-xiang-qing/jin-tian-jian-dan-feng-fu-yi-xia-xiang-qing-480w.webp",
+            "contentType": "image/webp",
+            "bytes": 46660,
+            "etag": "a2098fb33f2104f63f41aba904812f96",
+            "width": 480,
+            "height": 1040
+          }
+        ]
+      }
+    }
+  ],
+  "published": {
+    "id": "2024/08/05-01-jin-tian-jian-dan-feng-fu-yi-xia-xiang-qing",
+    "slug": "jin-tian-jian-dan-feng-fu-yi-xia-xiang-qing",
+    "order": 1,
+    "at": "2026-07-30T08:12:13+08:00"
+  },
+  "createdAt": "2024-08-05T23:20:39+08:00",
+  "updatedAt": "2026-09-03T10:44:40+08:00"
+}

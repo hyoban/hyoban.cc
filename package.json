@@ -8,6 +8,7 @@
     "check": "astro check",
     "assets:migrate": "node scripts/migrate-assets-to-r2.mjs",
     "assets:upload": "node scripts/upload-asset-to-r2.mjs",
+    "data:schema": "node scripts/generate-data-schema.mjs",
     "media:generate": "node scripts/generate-media.mjs",
     "moments:audit": "node scripts/audit-moments.mjs",
     "moments:gc": "node scripts/gc-moment-assets.mjs --dry-run",

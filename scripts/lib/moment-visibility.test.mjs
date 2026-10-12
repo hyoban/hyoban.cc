@@ -7,11 +7,10 @@ import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
 import { test } from 'vite-plus/test'
 
-import { parseMomentDocument } from '../../src/moments/content.ts'
+import { readMomentRecords } from '../../src/data/store.ts'
 
 const execFile = promisify(execFileCallback)
 const root = fileURLToPath(new URL('../../', import.meta.url))
-const contentRoot = join(root, 'src/content/moments')
 const assetConfig = JSON.parse(await readFile(join(root, 'src/data/asset-config.json'), 'utf8'))
 
 test(
@@ -60,23 +59,18 @@ test(
 )
 
 async function collectMomentMediaUrls() {
-  const files = (await readdir(contentRoot, { recursive: true })).filter((file) =>
-    file.endsWith('index.md'),
-  )
   const mediaUrls = { hidden: [], visible: [] }
 
-  for (const file of files) {
-    const document = await readFile(join(contentRoot, file), 'utf8')
-    const id = file.replace(/\/index\.md$/, '')
-    const moment = parseMomentDocument(document, { id })
-    const media = moment.media[0]
+  for (const { record } of readMomentRecords()) {
+    const key = record.media[0]?.published?.key
 
-    if (!media) {
+    if (!key) {
       continue
     }
 
-    const key = `moments/${id}/${media.file}`.split('/').map(encodeURIComponent).join('/')
-    mediaUrls[moment.hidden ? 'hidden' : 'visible'].push(`${assetConfig.origin}/${key}`)
+    mediaUrls[record.hidden ? 'hidden' : 'visible'].push(
+      `${assetConfig.origin}/${key.split('/').map(encodeURIComponent).join('/')}`,
+    )
   }
 
   return mediaUrls

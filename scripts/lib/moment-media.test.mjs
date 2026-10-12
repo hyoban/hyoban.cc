@@ -1,58 +1,50 @@
 import assert from 'node:assert/strict'
-import { readFile, readdir } from 'node:fs/promises'
+import { readdir } from 'node:fs/promises'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { test } from 'vite-plus/test'
 
-import { parseMomentDocument } from '../../src/moments/content.ts'
-import { getReferencedAssetFiles } from './moment-assets.mjs'
+import { readMomentRecords } from '../../src/data/store.ts'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
-const contentRoot = join(root, 'src/content/moments')
 
-test('keeps complete colocated metadata for every semantic Moment asset', async () => {
-  const files = (await readdir(contentRoot, { recursive: true })).filter((file) =>
-    file.endsWith('index.md'),
-  )
+test('publishes every Moment with complete metadata for each media file', async () => {
+  for (const { record } of readMomentRecords()) {
+    assert.ok(record.published, `Moment ${record.uid} is not published`)
 
-  for (const file of files) {
-    const document = await readFile(join(contentRoot, file), 'utf8')
-    const id = file.replace(/\/index\.md$/, '')
-    const moment = parseMomentDocument(document, { id })
-    const assets = JSON.parse(await readFile(join(contentRoot, id, 'assets.json'), 'utf8'))
-    const referencedFiles = getReferencedAssetFiles({ assets, moment })
+    for (const media of record.media) {
+      const { published } = media
+      assert.ok(published, `Moment ${record.uid} has unpublished media ${media.uid}`)
+      assert.doesNotMatch(published.key, /\/(?:image|video)-\d/i)
+      assert.ok(published.bytes > 0)
 
-    for (const media of moment.media) {
-      assert.doesNotMatch(media.file, /^(?:image|video)-\d/i)
-      assert.ok(assets[media.file], `Missing metadata for moments/${id}/${media.file}`)
-      assert.ok(assets[media.file].bytes > 0)
-      assert.match(assets[media.file].contentType, media.type === 'video' ? /^video\// : /^image\//)
+      if (media.type === 'video') {
+        assert.match(published.contentType, /^video\//)
 
-      if (media.type !== 'video') {
-        assert.ok(assets[media.file].width > 0)
-        assert.ok(assets[media.file].height > 0)
+        if (published.poster) {
+          assert.match(published.poster.contentType, /^image\//)
+          assert.ok(published.poster.width > 0 && published.poster.height > 0)
+        }
+      } else {
+        assert.match(published.contentType, /^image\//)
+        assert.ok(published.width > 0 && published.height > 0)
+
+        for (const variant of published.variants) {
+          assert.ok(variant.width < published.width, `Variant ${variant.key} isn't smaller`)
+          assert.ok(variant.bytes > 0)
+        }
       }
 
       if (media.type === 'live-photo') {
-        assert.ok(assets[media.video]?.bytes > 0)
-        assert.match(assets[media.video].contentType, /^video\//)
-      }
-
-      if (media.poster) {
-        assert.ok(assets[media.poster], `Missing metadata for moments/${id}/${media.poster}`)
-        assert.match(assets[media.poster].contentType, /^image\//)
-        assert.ok(assets[media.poster].width > 0)
-        assert.ok(assets[media.poster].height > 0)
+        assert.ok(published.video.bytes > 0)
+        assert.match(published.video.contentType, /^video\//)
       }
     }
-
-    assert.match(id, /^\d{4}\/\d{2}\/\d{2}-\d{2}-[a-z0-9]+(?:-[a-z0-9]+)*$/)
-    assert.deepEqual(new Set(Object.keys(assets)), referencedFiles)
   }
 })
 
 test('keeps binary site media out of the repository', async () => {
-  const roots = [contentRoot, join(root, 'src/assets'), join(root, 'public')]
+  const roots = [join(root, 'data'), join(root, 'src/assets'), join(root, 'public')]
   const mediaFiles = (
     await Promise.all(
       roots.map(async (directory) => {

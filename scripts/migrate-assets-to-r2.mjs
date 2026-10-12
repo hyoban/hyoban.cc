@@ -19,10 +19,6 @@ if (shouldRemoveLocal && !shouldUpload) {
 
 const sources = [
   {
-    directory: join(root, 'src/content/moments'),
-    keyPrefix: 'moments',
-  },
-  {
     directory: join(root, 'src/assets/images/posts'),
     keyPrefix: 'posts',
   },

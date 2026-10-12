@@ -10,7 +10,6 @@ import { getReferencedR2Objects, readMomentRecords } from './lib/moment-assets.m
 
 const execFile = promisify(execFileCallback)
 const root = fileURLToPath(new URL('../', import.meta.url))
-const contentRoot = join(root, 'src/content/moments')
 const config = JSON.parse(await readFile(join(root, 'src/data/asset-config.json'), 'utf8'))
 const options = parseArguments(process.argv.slice(2))
 
@@ -23,7 +22,7 @@ if (options.mode === 'dry-run') {
 async function createManifest() {
   const generatedAt = new Date()
   const cutoff = new Date(generatedAt.getTime() - options.graceDays * 24 * 60 * 60 * 1000)
-  const records = await readMomentRecords(contentRoot)
+  const records = await readMomentRecords()
   const referenced = new Set(getReferencedR2Objects(records).map((object) => object.key))
   const inventory = await listR2Objects({
     accountId: config.accountId,
@@ -92,7 +91,7 @@ async function applyManifest() {
     throw new Error('R2 GC manifest digest mismatch.')
   }
 
-  const records = await readMomentRecords(contentRoot)
+  const records = await readMomentRecords()
   const referenced = new Set(getReferencedR2Objects(records).map((object) => object.key))
   const inventory = await listR2Objects({
     accountId: config.accountId,

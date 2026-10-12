@@ -1,0 +1,18 @@
+{
+  "id": "2025-western-sichuan-road-trip",
+  "title": "床车自驾川西",
+  "start": "2025-10-18",
+  "end": "2025-11-05",
+  "note": "Set out from Wuhu, resting a week in Xiangyang on the way.",
+  "waypoints": [
+    {
+      "at": "2025-10-18T10:00:00+08:00",
+      "place": "wuwei"
+    }
+  ],
+  "straightLegs": [],
+  "sameWayBack": [],
+  "covers": [],
+  "createdAt": "2025-10-18T00:00:00+08:00",
+  "updatedAt": "2026-10-12T19:30:16+08:00"
+}

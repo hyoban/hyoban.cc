@@ -1,0 +1,39 @@
+{
+  "uid": "01HC4KWY5RHB23JMR78CYET36W",
+  "occurredAt": "2023-10-07T16:26:11+08:00",
+  "places": [],
+  "text": "在麦蹭网开会",
+  "hidden": false,
+  "media": [
+    {
+      "uid": "01HC4KWY5SZFK4N3VWFX1DG2H2",
+      "type": "video",
+      "alt": "",
+      "width": 854,
+      "height": 640,
+      "published": {
+        "key": "moments/2023/10/07-01-zai-mai-ceng-wang-kai-hui/zai-mai-ceng-wang-kai-hui-video.mp4",
+        "contentType": "video/mp4",
+        "bytes": 65421,
+        "etag": "ecc383dbc4e773437517b7c739f42c2f",
+        "poster": {
+          "key": "moments/2023/10/07-01-zai-mai-ceng-wang-kai-hui/zai-mai-ceng-wang-kai-hui-video-poster.png",
+          "contentType": "image/png",
+          "bytes": 600201,
+          "etag": "89823480aca6bce4279d505ca861db1e",
+          "width": 854,
+          "height": 640,
+          "variants": []
+        }
+      }
+    }
+  ],
+  "published": {
+    "id": "2023/10/07-01-zai-mai-ceng-wang-kai-hui",
+    "slug": "zai-mai-ceng-wang-kai-hui",
+    "order": 1,
+    "at": "2026-07-30T08:12:13+08:00"
+  },
+  "createdAt": "2023-10-07T16:26:11+08:00",
+  "updatedAt": "2026-09-03T10:44:40+08:00"
+}

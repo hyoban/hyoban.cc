@@ -1,5 +1,6 @@
 import {
   buildTrip,
+  compareMoments,
   getLocation,
   groupMomentsByLocation,
   type MapLocation,
@@ -9,9 +10,8 @@ import type { CollectionEntry } from 'astro:content'
 import { getCollection } from 'astro:content'
 import { getAssetUrl } from '@/asset-url'
 import { locations, type LocationId } from '@/data/locations'
+import type { MomentMedia, PublishedImage, PublishedVideo } from '@/data/spec'
 import { trips } from '@/data/trips'
-import { parseMomentDocument, type CanonicalMoment } from '@/moments/content'
-import { compareMoments, getMomentOrder } from '@/moments/order'
 import tripRoutes from '@/data/trip-routes.json'
 
 const calendarDateFormatter = new Intl.DateTimeFormat('en-CA', {
@@ -21,27 +21,7 @@ const calendarDateFormatter = new Intl.DateTimeFormat('en-CA', {
   year: 'numeric',
 })
 
-const momentDocuments = import.meta.glob<string>('/src/content/moments/**/index.md', {
-  eager: true,
-  import: 'default',
-  query: '?raw',
-})
-
-const momentAssetDocuments = import.meta.glob<Record<string, AssetMetadata>>(
-  '/src/content/moments/**/assets.json',
-  { eager: true, import: 'default' },
-)
-
 type MomentEntry = CollectionEntry<'moments'>
-
-type AssetMetadata = {
-  bytes: number
-  contentType: string
-  etag: string
-  height?: number
-  variants?: string[]
-  width?: number
-}
 
 type RemoteImage = {
   height: number
@@ -58,12 +38,14 @@ export type ResolvedMomentMedia =
       alt: string
       src: RemoteImage
       type: 'live-photo'
+      uid: string
       video: { src: string; contentType: string }
     }
   | {
       alt: string
       src: RemoteImage
       type: 'image'
+      uid: string
     }
   | {
       alt: string
@@ -71,10 +53,12 @@ export type ResolvedMomentMedia =
       poster?: RemoteImage
       src: string
       type: 'video'
+      uid: string
     }
 
 export type Moment = {
   dateKey: string
+  /** The published id, `YYYY/MM/DD-NN-slug`: the R2 directory and the page anchor. */
   id: string
   /** Places in visiting order; empty when the Moment has no location. */
   locations: ResolvedMomentLocation[]
@@ -83,6 +67,8 @@ export type Moment = {
   occurredLabel?: string
   order: number
   text: string
+  /** The record's ULID, as trips' covers name it. */
+  uid: string
 }
 
 export type ResolvedMomentLocation = MapLocation & {
@@ -171,156 +157,94 @@ export function getMonthPath(monthKey: string) {
 async function loadMoments() {
   const entries = await getCollection('moments', ({ data }) => !data.hidden)
 
-  return entries.map(resolveMoment).sort(compareMoments)
+  return entries.flatMap((entry) => resolveMoment(entry) ?? []).sort(compareMoments)
 }
 
-function resolveMoment(entry: MomentEntry): Moment {
-  const source = parseMomentDocument(getMomentDocument(entry), { id: entry.id })
-  const dateKey = source.occurredAt.slice(0, 10)
-  const order = getMomentOrder(entry.id, dateKey)
+/** A record as the pages use it; a draft that isn't published yet is left out with a warning. */
+function resolveMoment(entry: MomentEntry): Moment | undefined {
+  const record = entry.data
+
+  if (!record.published) {
+    console.warn(`Skipping unpublished Moment ${record.uid} (${record.occurredAt}).`)
+    return undefined
+  }
+
+  const dateKey = record.occurredAt.slice(0, 10)
   const moment: Moment = {
     dateKey,
-    id: entry.id,
-    locations: [source.location ?? []].flat().map((id) => {
+    id: record.published.id,
+    locations: record.places.map((id) => {
       const locationId = id as LocationId
       return { id: locationId, ...getLocation(locations, locationId) }
     }),
-    media: source.media.map((item) => resolveMedia(entry, item)),
-    occurredAt: source.occurredAt,
-    order,
-    text: source.text,
+    media: record.media.map((media) => resolveMedia(record.uid, media)),
+    occurredAt: record.occurredAt,
+    order: record.published.order,
+    text: record.text,
+    uid: record.uid,
   }
 
-  if (source.occurredAt.length > 10) {
-    moment.occurredLabel = source.occurredAt.slice(11, 16)
+  if (record.occurredAt.length > 10) {
+    moment.occurredLabel = record.occurredAt.slice(11, 16)
   }
 
   return moment
 }
 
-function getMomentDocument(entry: MomentEntry) {
-  const key = `/src/content/moments/${entry.id}/index.md`
-  const document = momentDocuments[key]
-
-  if (!document) {
-    throw new Error(`Missing moment document: ${key}`)
+function resolveMedia(momentUid: string, media: MomentMedia): ResolvedMomentMedia {
+  if (!media.published) {
+    throw new Error(`Published Moment ${momentUid} has unpublished media ${media.uid}.`)
   }
 
-  return document
-}
+  switch (media.type) {
+    case 'image':
+      return {
+        alt: media.alt,
+        src: resolveRemoteImage(media.published),
+        type: 'image',
+        uid: media.uid,
+      }
+    case 'live-photo': {
+      const { video, ...still } = media.published
 
-function resolveMedia(
-  entry: MomentEntry,
-  media: CanonicalMoment['media'][number],
-): ResolvedMomentMedia {
-  const directory = entry.id.replace(/\/index$/, '')
-  const key = `moments/${directory}/${media.file}`
-  const metadata = getAssetMetadata(entry, media.file)
-
-  if (media.type === 'image') {
-    return {
-      alt: media.alt,
-      src: resolveRemoteImage(key, metadata),
-      type: 'image',
+      return {
+        alt: media.alt,
+        src: resolveRemoteImage(still),
+        type: 'live-photo',
+        uid: media.uid,
+        video: { src: getAssetUrl(video.key), contentType: video.contentType },
+      }
     }
-  }
+    case 'video': {
+      const { poster, ...video } = media.published
 
-  if (media.type === 'live-photo') {
-    const videoMetadata = getAssetMetadata(entry, media.video)
-
-    if (!videoMetadata.contentType.startsWith('video/')) {
-      throw new Error(`Invalid Live Photo video metadata: ${directory}/${media.video}`)
+      return {
+        alt: media.alt,
+        contentType: video.contentType,
+        src: getAssetUrl(video.key),
+        type: 'video',
+        uid: media.uid,
+        ...(poster ? { poster: resolveRemoteImage(poster) } : {}),
+      }
     }
-
-    return {
-      alt: media.alt,
-      src: resolveRemoteImage(key, metadata),
-      type: 'live-photo',
-      video: {
-        src: getAssetUrl(`moments/${directory}/${media.video}`),
-        contentType: videoMetadata.contentType,
-      },
-    }
-  }
-
-  const posterKey = media.poster ? `moments/${directory}/${media.poster}` : undefined
-
-  return {
-    alt: media.alt,
-    contentType: metadata.contentType,
-    src: getAssetUrl(key),
-    type: 'video',
-    ...(posterKey
-      ? {
-          poster: resolveRemoteImage(posterKey, getAssetMetadata(entry, media.poster!)),
-        }
-      : {}),
   }
 }
 
-function getAssetMetadata(entry: MomentEntry, file: string) {
-  const key = `/src/content/moments/${entry.id}/assets.json`
-  const assets = momentAssetDocuments[key]
-  const metadata = assets?.[file]
-
-  if (!metadata) {
-    throw new Error(`Missing Moment asset metadata: ${entry.id}/${file}`)
-  }
-
-  return metadata
-}
-
-function resolveRemoteImage(key: string, metadata: AssetMetadata): RemoteImage {
-  if (
-    !metadata.contentType.startsWith('image/') ||
-    !Number.isInteger(metadata.width) ||
-    !Number.isInteger(metadata.height)
-  ) {
-    throw new Error(`Invalid Moment image metadata: ${key}`)
-  }
-
-  const directory = key.slice(0, key.lastIndexOf('/') + 1)
-  const variants = (metadata.variants ?? []).map((file) => {
-    const variant = getAssetMetadataByKey(key, file)
-
-    if (
-      !variant.contentType.startsWith('image/') ||
-      !Number.isInteger(variant.width) ||
-      !Number.isInteger(variant.height)
-    ) {
-      throw new Error(`Invalid Moment image variant metadata: ${directory}${file}`)
-    }
-
-    return {
-      src: getAssetUrl(`${directory}${file}`),
-      width: variant.width!,
-    }
-  })
+/** An image's sources for `srcset`: its variants, and the original when it isn't oversized. */
+function resolveRemoteImage(image: PublishedImage): RemoteImage {
   const sources = [
-    ...variants,
-    ...(metadata.width! <= 1920 ? [{ src: getAssetUrl(key), width: metadata.width! }] : []),
+    ...image.variants.map((variant) => ({ src: getAssetUrl(variant.key), width: variant.width })),
+    ...(image.width <= 1920 ? [{ src: getAssetUrl(image.key), width: image.width }] : []),
   ]
     .sort((first, second) => first.width - second.width)
     .filter((source, index, items) => index === 0 || source.width !== items[index - 1]!.width)
 
   return {
-    height: metadata.height!,
+    height: image.height,
     sources,
-    src: getAssetUrl(key),
-    width: metadata.width!,
+    src: getAssetUrl(image.key),
+    width: image.width,
   }
-}
-
-function getAssetMetadataByKey(key: string, file: string) {
-  const directory = key.slice('moments/'.length, key.lastIndexOf('/'))
-  const assets = momentAssetDocuments[`/src/content/moments/${directory}/assets.json`]
-  const metadata = assets?.[file]
-
-  if (!metadata) {
-    throw new Error(`Missing Moment asset metadata: ${directory}/${file}`)
-  }
-
-  return metadata
 }
 
 function parseMonthKey(key: string): [number, number] {
@@ -333,3 +257,5 @@ function parseMonthKey(key: string): [number, number] {
 
   return [year, month]
 }
+
+export type { PublishedVideo }

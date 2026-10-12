@@ -1,0 +1,44 @@
+{
+  "uid": "01KEEQB2W8GB1KKW1W0TX3CHMA",
+  "occurredAt": "2026-01-08T19:54:45+08:00",
+  "places": [
+    "suzhou-guanyu-dushu-lake"
+  ],
+  "text": "特地下了一单，让机器人给我带饭",
+  "hidden": false,
+  "media": [
+    {
+      "uid": "01KEEQB2W9AJV4S1X4Y43XRW9D",
+      "type": "image",
+      "alt": "A hand pointing into the open compartment of a delivery robot.",
+      "width": 640,
+      "height": 853,
+      "published": {
+        "key": "moments/2026/01/08-01-te-di-xia-le-yi-dan-rang-ji-qi-ren/te-di-xia-le-yi-dan-rang-ji-qi-ren.jpg",
+        "contentType": "image/jpeg",
+        "bytes": 53618,
+        "etag": "8923ef172329c3de6800696517d0e26a",
+        "width": 640,
+        "height": 853,
+        "variants": [
+          {
+            "key": "moments/2026/01/08-01-te-di-xia-le-yi-dan-rang-ji-qi-ren/te-di-xia-le-yi-dan-rang-ji-qi-ren-480w.webp",
+            "contentType": "image/webp",
+            "bytes": 16050,
+            "etag": "808b8c905660d0b52b876877aa1a124d",
+            "width": 480,
+            "height": 640
+          }
+        ]
+      }
+    }
+  ],
+  "published": {
+    "id": "2026/01/08-01-te-di-xia-le-yi-dan-rang-ji-qi-ren",
+    "slug": "te-di-xia-le-yi-dan-rang-ji-qi-ren",
+    "order": 1,
+    "at": "2026-07-30T08:12:13+08:00"
+  },
+  "createdAt": "2026-01-08T19:54:45+08:00",
+  "updatedAt": "2026-10-12T18:09:45+08:00"
+}

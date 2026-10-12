@@ -1,0 +1,99 @@
+{
+  "uid": "01GYEH7ZMGQ5V3KB4F6YJRE99B",
+  "occurredAt": "2023-04-20T13:12:26+08:00",
+  "places": [],
+  "text": "try to remove ts-expect-error for rsc",
+  "hidden": true,
+  "media": [
+    {
+      "uid": "01GYEH7ZMHWMXJ958N7J7X2ADN",
+      "type": "image",
+      "alt": "",
+      "width": 2894,
+      "height": 2112,
+      "published": {
+        "key": "moments/2023/04/20-01-try-to-remove-ts-expect-error-for-rsc/try-to-remove-ts-expect-error-for-rsc.jpg",
+        "contentType": "image/jpeg",
+        "bytes": 421008,
+        "etag": "392e0e7d40b8e1187e3e0a1a072b1d5c",
+        "width": 2894,
+        "height": 2112,
+        "variants": [
+          {
+            "key": "moments/2023/04/20-01-try-to-remove-ts-expect-error-for-rsc/try-to-remove-ts-expect-error-for-rsc-480w.webp",
+            "contentType": "image/webp",
+            "bytes": 14524,
+            "etag": "b817183598d2482afd34dce19727caa9",
+            "width": 480,
+            "height": 351
+          },
+          {
+            "key": "moments/2023/04/20-01-try-to-remove-ts-expect-error-for-rsc/try-to-remove-ts-expect-error-for-rsc-960w.webp",
+            "contentType": "image/webp",
+            "bytes": 45236,
+            "etag": "5452816adcf27418c7d0586145d18636",
+            "width": 960,
+            "height": 701
+          },
+          {
+            "key": "moments/2023/04/20-01-try-to-remove-ts-expect-error-for-rsc/try-to-remove-ts-expect-error-for-rsc-1920w.webp",
+            "contentType": "image/webp",
+            "bytes": 112860,
+            "etag": "2e12a1898b2b6a7f096617b23f4c96cd",
+            "width": 1920,
+            "height": 1401
+          }
+        ]
+      }
+    },
+    {
+      "uid": "01GYEH7ZMJ3KT0XCJVXN8C8K91",
+      "type": "image",
+      "alt": "",
+      "width": 2894,
+      "height": 2112,
+      "published": {
+        "key": "moments/2023/04/20-01-try-to-remove-ts-expect-error-for-rsc/try-to-remove-ts-expect-error-for-rsc-2.jpg",
+        "contentType": "image/jpeg",
+        "bytes": 433860,
+        "etag": "60271dfbfd145801b1cba5a0ae3be83f",
+        "width": 2894,
+        "height": 2112,
+        "variants": [
+          {
+            "key": "moments/2023/04/20-01-try-to-remove-ts-expect-error-for-rsc/try-to-remove-ts-expect-error-for-rsc-2-480w.webp",
+            "contentType": "image/webp",
+            "bytes": 15982,
+            "etag": "42300bfed20b937439563dd91c515811",
+            "width": 480,
+            "height": 351
+          },
+          {
+            "key": "moments/2023/04/20-01-try-to-remove-ts-expect-error-for-rsc/try-to-remove-ts-expect-error-for-rsc-2-960w.webp",
+            "contentType": "image/webp",
+            "bytes": 49468,
+            "etag": "ec90adaf04cefb115a1e71368d8472f7",
+            "width": 960,
+            "height": 701
+          },
+          {
+            "key": "moments/2023/04/20-01-try-to-remove-ts-expect-error-for-rsc/try-to-remove-ts-expect-error-for-rsc-2-1920w.webp",
+            "contentType": "image/webp",
+            "bytes": 122286,
+            "etag": "803c04c02cbdf36c9176d0ba83867b76",
+            "width": 1920,
+            "height": 1401
+          }
+        ]
+      }
+    }
+  ],
+  "published": {
+    "id": "2023/04/20-01-try-to-remove-ts-expect-error-for-rsc",
+    "slug": "try-to-remove-ts-expect-error-for-rsc",
+    "order": 1,
+    "at": "2026-07-30T08:12:13+08:00"
+  },
+  "createdAt": "2023-04-20T13:12:26+08:00",
+  "updatedAt": "2026-09-03T10:44:40+08:00"
+}

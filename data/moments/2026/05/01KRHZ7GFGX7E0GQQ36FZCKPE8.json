@@ -1,0 +1,50 @@
+{
+  "uid": "01KRHZ7GFGX7E0GQQ36FZCKPE8",
+  "occurredAt": "2026-05-14T08:47:18+08:00",
+  "places": [],
+  "text": "买了辆折叠自行车，可以开启4+2旅行，获得更大的活动范围了🥰",
+  "hidden": false,
+  "media": [
+    {
+      "uid": "01KRHZ7GFHY2NVJPQDTRXA3X7C",
+      "type": "image",
+      "alt": "",
+      "width": 1179,
+      "height": 436,
+      "published": {
+        "key": "moments/2026/05/14-01-mai-le-liang-zhe-die-zi-xing-che-ke-yi/mai-le-liang-zhe-die-zi-xing-che-ke-yi.jpg",
+        "contentType": "image/jpeg",
+        "bytes": 42064,
+        "etag": "29f5eaee6c6cd472da2505bfb3a0c659",
+        "width": 1179,
+        "height": 436,
+        "variants": [
+          {
+            "key": "moments/2026/05/14-01-mai-le-liang-zhe-die-zi-xing-che-ke-yi/mai-le-liang-zhe-die-zi-xing-che-ke-yi-480w.webp",
+            "contentType": "image/webp",
+            "bytes": 9762,
+            "etag": "74c136d0a22c4ecc197c47a2305ae9fa",
+            "width": 480,
+            "height": 178
+          },
+          {
+            "key": "moments/2026/05/14-01-mai-le-liang-zhe-die-zi-xing-che-ke-yi/mai-le-liang-zhe-die-zi-xing-che-ke-yi-960w.webp",
+            "contentType": "image/webp",
+            "bytes": 22972,
+            "etag": "aeb5fb60f30dd5f4376047dfa74342ae",
+            "width": 960,
+            "height": 355
+          }
+        ]
+      }
+    }
+  ],
+  "published": {
+    "id": "2026/05/14-01-mai-le-liang-zhe-die-zi-xing-che-ke-yi",
+    "slug": "mai-le-liang-zhe-die-zi-xing-che-ke-yi",
+    "order": 1,
+    "at": "2026-07-30T08:12:13+08:00"
+  },
+  "createdAt": "2026-05-14T08:47:18+08:00",
+  "updatedAt": "2026-09-03T10:44:40+08:00"
+}

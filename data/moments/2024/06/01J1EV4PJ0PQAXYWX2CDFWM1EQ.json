@@ -1,0 +1,42 @@
+{
+  "uid": "01J1EV4PJ0PQAXYWX2CDFWM1EQ",
+  "occurredAt": "2024-06-28T15:14:48+08:00",
+  "places": [],
+  "text": "刚收到 copilot 过期的邮件（学生包结束了），吓我一跳。不过还好我写开源，可以续上。离开 copilot 写不了代码了现在。",
+  "hidden": true,
+  "media": [
+    {
+      "uid": "01J1EV4PJ186TZW61VXS83RYE0",
+      "type": "image",
+      "alt": "",
+      "width": 945,
+      "height": 2048,
+      "published": {
+        "key": "moments/2024/06/28-01-gang-shou-dao-copilot-guo-qi-de-you-jian-xue/gang-shou-dao-copilot-guo-qi-de-you-jian-xue.jpg",
+        "contentType": "image/jpeg",
+        "bytes": 162686,
+        "etag": "17f7ce442396369f49bdba5d0bc33893",
+        "width": 945,
+        "height": 2048,
+        "variants": [
+          {
+            "key": "moments/2024/06/28-01-gang-shou-dao-copilot-guo-qi-de-you-jian-xue/gang-shou-dao-copilot-guo-qi-de-you-jian-xue-480w.webp",
+            "contentType": "image/webp",
+            "bytes": 38464,
+            "etag": "c1a0634fbac4868e5fead3d48a6d7b28",
+            "width": 480,
+            "height": 1040
+          }
+        ]
+      }
+    }
+  ],
+  "published": {
+    "id": "2024/06/28-01-gang-shou-dao-copilot-guo-qi-de-you-jian-xue",
+    "slug": "gang-shou-dao-copilot-guo-qi-de-you-jian-xue",
+    "order": 1,
+    "at": "2026-07-30T08:12:13+08:00"
+  },
+  "createdAt": "2024-06-28T15:14:48+08:00",
+  "updatedAt": "2026-09-03T10:44:40+08:00"
+}

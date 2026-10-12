@@ -1,26 +1,20 @@
-import { join } from 'node:path'
+import { compareMoments, getLocation } from '@hyoban/trip-map'
 
 import { locations } from '../../src/data/locations.ts'
-import { getLocation } from '@hyoban/trip-map'
-import { compareMoments, getMomentOrder } from '../../src/moments/order.ts'
 import { readMomentRecords } from './moment-assets.mjs'
 
 export const resolveLocation = (id) => ({ id, ...getLocation(locations, id) })
 
 /** Visible Moments with resolved places, oldest first, as `buildTrip` takes them. */
-export async function readTripMoments(root) {
-  return (await readMomentRecords(join(root, 'src/content/moments')))
+export async function readTripMoments() {
+  return (await readMomentRecords())
     .filter(({ moment }) => !moment.hidden)
-    .map(({ id, moment }) => {
-      const dateKey = moment.occurredAt.slice(0, 10)
-
-      return {
-        dateKey,
-        id,
-        locations: [moment.location ?? []].flat().map(resolveLocation),
-        occurredAt: moment.occurredAt,
-        order: getMomentOrder(id, dateKey),
-      }
-    })
+    .map(({ id, moment, record }) => ({
+      dateKey: moment.occurredAt.slice(0, 10),
+      id,
+      locations: (moment.location ?? []).map(resolveLocation),
+      occurredAt: moment.occurredAt,
+      order: record.published.order,
+    }))
     .sort(compareMoments)
 }

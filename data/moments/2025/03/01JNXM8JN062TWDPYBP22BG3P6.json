@@ -1,0 +1,58 @@
+{
+  "uid": "01JNXM8JN062TWDPYBP22BG3P6",
+  "occurredAt": "2025-03-09T22:17:08+08:00",
+  "places": [],
+  "text": "用nativewind和eslint-plugin-tailwindcss可能会遇到两个坑。一是monorepo下使用不同的tailwind config可能会读到被错误 cache 的，https://github.com/francoismassart/eslint-plugin-tailwindcss/pull/389。二是 nativewind 的 preset 会根据是否是 tailwind 插件环境来返回不同的内容，导致 no-custom-classname 规则的结果不对。",
+  "hidden": true,
+  "media": [
+    {
+      "uid": "01JNXM8JN107Z3721096C74RS4",
+      "type": "image",
+      "alt": "",
+      "width": 3296,
+      "height": 1968,
+      "published": {
+        "key": "moments/2025/03/09-02-yong-nativewind-he-eslint-plugin-tailwindcss-ke-neng-hui/yong-nativewind-he-eslint-plugin-tailwindcss-ke-neng-hui.jpg",
+        "contentType": "image/jpeg",
+        "bytes": 269784,
+        "etag": "31e9cf25ccaf90271978a0c2c1817f6e",
+        "width": 3296,
+        "height": 1968,
+        "variants": [
+          {
+            "key": "moments/2025/03/09-02-yong-nativewind-he-eslint-plugin-tailwindcss-ke-neng-hui/yong-nativewind-he-eslint-plugin-tailwindcss-ke-neng-hui-480w.webp",
+            "contentType": "image/webp",
+            "bytes": 10874,
+            "etag": "416e164dfa0dcb734a077248f155a28d",
+            "width": 480,
+            "height": 287
+          },
+          {
+            "key": "moments/2025/03/09-02-yong-nativewind-he-eslint-plugin-tailwindcss-ke-neng-hui/yong-nativewind-he-eslint-plugin-tailwindcss-ke-neng-hui-960w.webp",
+            "contentType": "image/webp",
+            "bytes": 29124,
+            "etag": "af42886b3d6707820d19c8ad82bc4bce",
+            "width": 960,
+            "height": 573
+          },
+          {
+            "key": "moments/2025/03/09-02-yong-nativewind-he-eslint-plugin-tailwindcss-ke-neng-hui/yong-nativewind-he-eslint-plugin-tailwindcss-ke-neng-hui-1920w.webp",
+            "contentType": "image/webp",
+            "bytes": 65996,
+            "etag": "1bd2671d143b9341f9976d970e063d7e",
+            "width": 1920,
+            "height": 1146
+          }
+        ]
+      }
+    }
+  ],
+  "published": {
+    "id": "2025/03/09-02-yong-nativewind-he-eslint-plugin-tailwindcss-ke-neng-hui",
+    "slug": "yong-nativewind-he-eslint-plugin-tailwindcss-ke-neng-hui",
+    "order": 2,
+    "at": "2026-07-30T08:12:13+08:00"
+  },
+  "createdAt": "2025-03-09T22:17:08+08:00",
+  "updatedAt": "2026-09-03T10:44:40+08:00"
+}

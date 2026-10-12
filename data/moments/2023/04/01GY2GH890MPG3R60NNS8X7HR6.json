@@ -1,0 +1,39 @@
+{
+  "uid": "01GY2GH890MPG3R60NNS8X7HR6",
+  "occurredAt": "2023-04-15T21:09:08+08:00",
+  "places": [],
+  "text": "Preview dialog for my blog post with intercepting &amp; parallel routes in nextjs.",
+  "hidden": true,
+  "media": [
+    {
+      "uid": "01GY2GH8913E31DN1WTF6R46CJ",
+      "type": "video",
+      "alt": "",
+      "width": 1108,
+      "height": 720,
+      "published": {
+        "key": "moments/2023/04/15-01-preview-dialog-for-my-blog-post-with-intercepting-amp/preview-dialog-for-my-blog-post-with-intercepting-amp-video.mp4",
+        "contentType": "video/mp4",
+        "bytes": 783828,
+        "etag": "92e5f66f37d4334866a8984b436258e2",
+        "poster": {
+          "key": "moments/2023/04/15-01-preview-dialog-for-my-blog-post-with-intercepting-amp/preview-dialog-for-my-blog-post-with-intercepting-amp-video-poster.png",
+          "contentType": "image/png",
+          "bytes": 322511,
+          "etag": "bcf7e3ce1f80327f0b0e1af41ebd1b92",
+          "width": 1108,
+          "height": 720,
+          "variants": []
+        }
+      }
+    }
+  ],
+  "published": {
+    "id": "2023/04/15-01-preview-dialog-for-my-blog-post-with-intercepting-amp",
+    "slug": "preview-dialog-for-my-blog-post-with-intercepting-amp",
+    "order": 1,
+    "at": "2026-07-30T08:12:13+08:00"
+  },
+  "createdAt": "2023-04-15T21:09:08+08:00",
+  "updatedAt": "2026-09-03T10:44:40+08:00"
+}

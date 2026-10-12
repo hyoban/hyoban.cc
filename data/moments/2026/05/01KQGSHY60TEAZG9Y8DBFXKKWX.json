@@ -1,0 +1,85 @@
+{
+  "uid": "01KQGSHY60TEAZG9Y8DBFXKKWX",
+  "occurredAt": "2026-05-01T11:33:12+08:00",
+  "places": [
+    "hefei-jiangheli-kaoyu"
+  ],
+  "text": "五一第一天在合肥吃烤鱼，喝卡旺卡！",
+  "hidden": false,
+  "media": [
+    {
+      "uid": "01KQGSHY61EZ08X5VZ5SX3Z45Q",
+      "type": "image",
+      "alt": "A spicy grilled fish covered in dried chilies and green peppercorns.",
+      "width": 1280,
+      "height": 959,
+      "published": {
+        "key": "moments/2026/05/01-01-wu-yi-di-yi-tian-zai-he-fei-chi-kao/wu-yi-di-yi-tian-zai-he-fei-chi-kao.jpg",
+        "contentType": "image/jpeg",
+        "bytes": 253914,
+        "etag": "69c6239723a4e9d27f8bb5cb6e790a7d",
+        "width": 1280,
+        "height": 959,
+        "variants": [
+          {
+            "key": "moments/2026/05/01-01-wu-yi-di-yi-tian-zai-he-fei-chi-kao/wu-yi-di-yi-tian-zai-he-fei-chi-kao-480w.webp",
+            "contentType": "image/webp",
+            "bytes": 52286,
+            "etag": "a352923692bd6003469d20c8fc9d2224",
+            "width": 480,
+            "height": 360
+          },
+          {
+            "key": "moments/2026/05/01-01-wu-yi-di-yi-tian-zai-he-fei-chi-kao/wu-yi-di-yi-tian-zai-he-fei-chi-kao-960w.webp",
+            "contentType": "image/webp",
+            "bytes": 166218,
+            "etag": "f69aecca5f13bd58d75b00410519c00c",
+            "width": 960,
+            "height": 719
+          }
+        ]
+      }
+    },
+    {
+      "uid": "01KQGSHY62Q8X02XVV5B65BW2K",
+      "type": "image",
+      "alt": "Three Kawangka milk tea and fruit drinks on a restaurant table.",
+      "width": 1280,
+      "height": 960,
+      "published": {
+        "key": "moments/2026/05/01-01-wu-yi-di-yi-tian-zai-he-fei-chi-kao/wu-yi-di-yi-tian-zai-he-fei-chi-kao-2.jpg",
+        "contentType": "image/jpeg",
+        "bytes": 118474,
+        "etag": "76a8f76e4536bd9bde9bfd22963b87aa",
+        "width": 1280,
+        "height": 960,
+        "variants": [
+          {
+            "key": "moments/2026/05/01-01-wu-yi-di-yi-tian-zai-he-fei-chi-kao/wu-yi-di-yi-tian-zai-he-fei-chi-kao-2-480w.webp",
+            "contentType": "image/webp",
+            "bytes": 22354,
+            "etag": "3c188be183ddbeb9be4f7384296f5bcc",
+            "width": 480,
+            "height": 360
+          },
+          {
+            "key": "moments/2026/05/01-01-wu-yi-di-yi-tian-zai-he-fei-chi-kao/wu-yi-di-yi-tian-zai-he-fei-chi-kao-2-960w.webp",
+            "contentType": "image/webp",
+            "bytes": 59174,
+            "etag": "110bae1864ee8822ce154bff40fd65e3",
+            "width": 960,
+            "height": 720
+          }
+        ]
+      }
+    }
+  ],
+  "published": {
+    "id": "2026/05/01-01-wu-yi-di-yi-tian-zai-he-fei-chi-kao",
+    "slug": "wu-yi-di-yi-tian-zai-he-fei-chi-kao",
+    "order": 1,
+    "at": "2026-07-30T08:12:13+08:00"
+  },
+  "createdAt": "2026-05-01T11:33:12+08:00",
+  "updatedAt": "2026-10-12T18:09:45+08:00"
+}

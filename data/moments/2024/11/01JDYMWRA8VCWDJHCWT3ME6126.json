@@ -1,0 +1,52 @@
+{
+  "uid": "01JDYMWRA8VCWDJHCWT3ME6126",
+  "occurredAt": "2024-11-30T21:41:49+08:00",
+  "places": [
+    "guangzhou-baiyun-airport"
+  ],
+  "text": "为什么你应该在旅行的时候带上一个插线板，你会成为机场充电区的神！",
+  "hidden": false,
+  "media": [
+    {
+      "uid": "01JDYMWRA9P0FWJK1H5B7YTHPW",
+      "type": "image",
+      "alt": "A power strip on a suitcase charging several devices at an airport charging area.",
+      "width": 1152,
+      "height": 2048,
+      "published": {
+        "key": "moments/2024/11/30-03-wei-shen-me-ni-ying-gai-zai-lu-xing-de/wei-shen-me-ni-ying-gai-zai-lu-xing-de.jpg",
+        "contentType": "image/jpeg",
+        "bytes": 266022,
+        "etag": "fffa2fa4e4db819bde472cdf4349e3e2",
+        "width": 1152,
+        "height": 2048,
+        "variants": [
+          {
+            "key": "moments/2024/11/30-03-wei-shen-me-ni-ying-gai-zai-lu-xing-de/wei-shen-me-ni-ying-gai-zai-lu-xing-de-480w.webp",
+            "contentType": "image/webp",
+            "bytes": 36444,
+            "etag": "a74f0fceecd4cbc79d9a7b36b1cc564b",
+            "width": 480,
+            "height": 853
+          },
+          {
+            "key": "moments/2024/11/30-03-wei-shen-me-ni-ying-gai-zai-lu-xing-de/wei-shen-me-ni-ying-gai-zai-lu-xing-de-960w.webp",
+            "contentType": "image/webp",
+            "bytes": 119136,
+            "etag": "5ac46db42d3ae60f89705b9e8fa8257b",
+            "width": 960,
+            "height": 1707
+          }
+        ]
+      }
+    }
+  ],
+  "published": {
+    "id": "2024/11/30-03-wei-shen-me-ni-ying-gai-zai-lu-xing-de",
+    "slug": "wei-shen-me-ni-ying-gai-zai-lu-xing-de",
+    "order": 3,
+    "at": "2026-07-30T08:12:13+08:00"
+  },
+  "createdAt": "2024-11-30T21:41:49+08:00",
+  "updatedAt": "2026-10-12T18:09:45+08:00"
+}

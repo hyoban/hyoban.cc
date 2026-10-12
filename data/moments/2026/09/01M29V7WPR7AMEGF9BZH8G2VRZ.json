@@ -1,0 +1,69 @@
+{
+  "uid": "01M29V7WPR7AMEGF9BZH8G2VRZ",
+  "occurredAt": "2026-09-12T11:40:39+08:00",
+  "places": [
+    "hefei-xinqiao-airport"
+  ],
+  "text": "我不要被延误在合肥",
+  "hidden": false,
+  "media": [
+    {
+      "uid": "01M29V7WPS2VX0Q19MVZGXWGK3",
+      "type": "image",
+      "alt": "A television reaction image shows a tearful man with the Chinese subtitle saying he wants rice noodles.",
+      "width": 828,
+      "height": 621,
+      "published": {
+        "key": "moments/2026/09/12-03-waiting-in-hefei/waiting-in-hefei.webp",
+        "contentType": "image/webp",
+        "bytes": 23756,
+        "etag": "a1c1e8009009f7bb222bd1c0559d5f52",
+        "width": 828,
+        "height": 621,
+        "variants": [
+          {
+            "key": "moments/2026/09/12-03-waiting-in-hefei/waiting-in-hefei-480w.webp",
+            "contentType": "image/webp",
+            "bytes": 11138,
+            "etag": "dc4e51127e0394cfd442240847de881a",
+            "width": 480,
+            "height": 360
+          }
+        ]
+      }
+    },
+    {
+      "uid": "01M29V7WPTB0TSMBWZYA21T6E4",
+      "type": "image",
+      "alt": "Text messages from Qingdao Airlines announce repeated delays to a Hefei-to-Lijiang flight on September 12.",
+      "width": 591,
+      "height": 1280,
+      "published": {
+        "key": "moments/2026/09/12-03-waiting-in-hefei/waiting-in-hefei-2.webp",
+        "contentType": "image/webp",
+        "bytes": 76786,
+        "etag": "98177efa0b08c663653374c6b761188d",
+        "width": 591,
+        "height": 1280,
+        "variants": [
+          {
+            "key": "moments/2026/09/12-03-waiting-in-hefei/waiting-in-hefei-2-480w.webp",
+            "contentType": "image/webp",
+            "bytes": 48962,
+            "etag": "3c15ebf0ef0fec8f1a6c004e465ae5b7",
+            "width": 480,
+            "height": 1040
+          }
+        ]
+      }
+    }
+  ],
+  "published": {
+    "id": "2026/09/12-03-waiting-in-hefei",
+    "slug": "waiting-in-hefei",
+    "order": 3,
+    "at": "2026-10-08T08:10:00+08:00"
+  },
+  "createdAt": "2026-09-12T11:40:39+08:00",
+  "updatedAt": "2026-10-08T08:10:00+08:00"
+}

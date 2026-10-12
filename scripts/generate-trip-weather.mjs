@@ -12,7 +12,7 @@ import { readTripMoments, resolveLocation } from './lib/trip-moments.mjs'
 
 const root = fileURLToPath(new URL('../', import.meta.url))
 const weatherFile = join(root, 'src/data/trip-weather.json')
-const moments = await readTripMoments(root)
+const moments = await readTripMoments()
 const cached = JSON.parse(await readFile(weatherFile, 'utf8').catch(() => '{}'))
 const weather = {}
 let fetched = 0

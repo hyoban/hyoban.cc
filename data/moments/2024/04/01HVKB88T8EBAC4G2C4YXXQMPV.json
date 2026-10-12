@@ -1,0 +1,16 @@
+{
+  "uid": "01HVKB88T8EBAC4G2C4YXXQMPV",
+  "occurredAt": "2024-04-16T19:39:09+08:00",
+  "places": [],
+  "text": "pnpm now has a cache for dlx, I don't need to use npx anymore.",
+  "hidden": true,
+  "media": [],
+  "published": {
+    "id": "2024/04/16-01-pnpm-now-has-a-cache-for-dlx-i-dont-need",
+    "slug": "pnpm-now-has-a-cache-for-dlx-i-dont-need",
+    "order": 1,
+    "at": "2026-07-30T08:12:13+08:00"
+  },
+  "createdAt": "2024-04-16T19:39:09+08:00",
+  "updatedAt": "2026-09-03T10:44:40+08:00"
+}

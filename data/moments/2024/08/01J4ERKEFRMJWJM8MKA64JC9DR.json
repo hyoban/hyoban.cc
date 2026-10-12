@@ -1,0 +1,39 @@
+{
+  "uid": "01J4ERKEFRMJWJM8MKA64JC9DR",
+  "occurredAt": "2024-08-04T21:17:31+08:00",
+  "places": [],
+  "text": "每日进展之图标、改进的加载逻辑以及快速标记为已读。",
+  "hidden": true,
+  "media": [
+    {
+      "uid": "01J4ERKEFS9K8DMNA18RQ2B2ZS",
+      "type": "video",
+      "alt": "",
+      "width": 553,
+      "height": 1200,
+      "published": {
+        "key": "moments/2024/08/04-02-mei-ri-jin-zhan-zhi-tu-biao-gai-jin-de/mei-ri-jin-zhan-zhi-tu-biao-gai-jin-de-video.mp4",
+        "contentType": "video/mp4",
+        "bytes": 4295510,
+        "etag": "d60dffe416dbf2970409fccf4319d01c",
+        "poster": {
+          "key": "moments/2024/08/04-02-mei-ri-jin-zhan-zhi-tu-biao-gai-jin-de/mei-ri-jin-zhan-zhi-tu-biao-gai-jin-de-video-poster.png",
+          "contentType": "image/png",
+          "bytes": 498534,
+          "etag": "17ec1a1a3416f4bf7f3339936b62c069",
+          "width": 553,
+          "height": 1200,
+          "variants": []
+        }
+      }
+    }
+  ],
+  "published": {
+    "id": "2024/08/04-02-mei-ri-jin-zhan-zhi-tu-biao-gai-jin-de",
+    "slug": "mei-ri-jin-zhan-zhi-tu-biao-gai-jin-de",
+    "order": 2,
+    "at": "2026-07-30T08:12:13+08:00"
+  },
+  "createdAt": "2024-08-04T21:17:31+08:00",
+  "updatedAt": "2026-09-03T10:44:40+08:00"
+}

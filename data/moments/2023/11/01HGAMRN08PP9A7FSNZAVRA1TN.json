@@ -1,0 +1,16 @@
+{
+  "uid": "01HGAMRN08PP9A7FSNZAVRA1TN",
+  "occurredAt": "2023-11-28T17:39:33+08:00",
+  "places": [],
+  "text": "这个 publicDir 在 rspack/rsbuild 中对应什么配置呢？\nhttps://vitejs.dev/config/shared-options.html#publicdir",
+  "hidden": true,
+  "media": [],
+  "published": {
+    "id": "2023/11/28-01-zhe-ge-publicdir-zai-rspack-rsbuild-zhong-dui-ying-shen",
+    "slug": "zhe-ge-publicdir-zai-rspack-rsbuild-zhong-dui-ying-shen",
+    "order": 1,
+    "at": "2026-07-30T08:12:13+08:00"
+  },
+  "createdAt": "2023-11-28T17:39:33+08:00",
+  "updatedAt": "2026-09-03T10:44:40+08:00"
+}

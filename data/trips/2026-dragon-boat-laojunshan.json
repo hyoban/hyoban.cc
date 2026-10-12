@@ -1,0 +1,17 @@
+{
+  "id": "2026-dragon-boat-laojunshan",
+  "title": "端午自驾老君山",
+  "start": "2026-06-19",
+  "end": "2026-06-20",
+  "waypoints": [
+    {
+      "at": "2026-06-19T08:00:00+08:00",
+      "place": "wuwei"
+    }
+  ],
+  "straightLegs": [],
+  "sameWayBack": [],
+  "covers": [],
+  "createdAt": "2026-06-19T00:00:00+08:00",
+  "updatedAt": "2026-10-12T19:30:16+08:00"
+}

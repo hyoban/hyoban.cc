@@ -1,0 +1,50 @@
+{
+  "uid": "01KKFK9XH04Z61943J8KFB40NX",
+  "occurredAt": "2026-03-12T07:21:56+08:00",
+  "places": [],
+  "text": "我将继续保持不用 Claude Code！",
+  "hidden": true,
+  "media": [
+    {
+      "uid": "01KKFK9XH1W0Q0305FFF6STXNC",
+      "type": "image",
+      "alt": "",
+      "width": 1179,
+      "height": 1719,
+      "published": {
+        "key": "moments/2026/03/12-01-wo-jiang-ji-xu-bao-chi-bu-yong-claude-code/wo-jiang-ji-xu-bao-chi-bu-yong-claude-code.jpg",
+        "contentType": "image/jpeg",
+        "bytes": 152400,
+        "etag": "4647b6eb43bb759bf3bf2d701dc66122",
+        "width": 1179,
+        "height": 1719,
+        "variants": [
+          {
+            "key": "moments/2026/03/12-01-wo-jiang-ji-xu-bao-chi-bu-yong-claude-code/wo-jiang-ji-xu-bao-chi-bu-yong-claude-code-480w.webp",
+            "contentType": "image/webp",
+            "bytes": 29840,
+            "etag": "3ad822b222420eacd681f7ae7ca5d986",
+            "width": 480,
+            "height": 700
+          },
+          {
+            "key": "moments/2026/03/12-01-wo-jiang-ji-xu-bao-chi-bu-yong-claude-code/wo-jiang-ji-xu-bao-chi-bu-yong-claude-code-960w.webp",
+            "contentType": "image/webp",
+            "bytes": 64534,
+            "etag": "f1a997daff5381427aacf8aa9ca07b60",
+            "width": 960,
+            "height": 1400
+          }
+        ]
+      }
+    }
+  ],
+  "published": {
+    "id": "2026/03/12-01-wo-jiang-ji-xu-bao-chi-bu-yong-claude-code",
+    "slug": "wo-jiang-ji-xu-bao-chi-bu-yong-claude-code",
+    "order": 1,
+    "at": "2026-07-30T08:12:13+08:00"
+  },
+  "createdAt": "2026-03-12T07:21:56+08:00",
+  "updatedAt": "2026-09-03T10:44:40+08:00"
+}

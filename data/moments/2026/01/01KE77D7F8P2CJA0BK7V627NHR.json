@@ -1,0 +1,16 @@
+{
+  "uid": "01KE77D7F8P2CJA0BK7V627NHR",
+  "occurredAt": "2026-01-05T22:01:37+08:00",
+  "places": [],
+  "text": "写了篇在 RSC 中使用 react-i18n 的文章。和 https://next-intl.dev 很相似，好处是可以随时切换到 CSR。\nhttps://github.com/hyoban/react-i18n-rsc",
+  "hidden": true,
+  "media": [],
+  "published": {
+    "id": "2026/01/05-01-xie-le-pian-zai-rsc-zhong-shi-yong-react-i18n",
+    "slug": "xie-le-pian-zai-rsc-zhong-shi-yong-react-i18n",
+    "order": 1,
+    "at": "2026-07-30T08:12:13+08:00"
+  },
+  "createdAt": "2026-01-05T22:01:37+08:00",
+  "updatedAt": "2026-09-03T10:44:40+08:00"
+}

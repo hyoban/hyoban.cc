@@ -21,19 +21,18 @@ the local file. Uploaded objects use their correct MIME type and
 `Cache-Control: public, max-age=31536000, immutable`.
 
 The `create-moment` skill handles image optimization, responsive variants,
-video transcoding and poster generation, upload, verification, and colocated
-metadata automatically. Its preparation step is resumable and creates the final
-Moment directory atomically only after every remote object has been verified.
-Each Moment directory contains:
+video transcoding and poster generation, upload, verification, and the Moment's
+record automatically. Its preparation step is resumable and writes the record
+under `data/moments` only after every remote object has been verified. Each
+media item of a record carries its R2 key, byte size, MIME type, ETag, image
+dimensions and responsive variants in its `published` block (see
+`src/data/spec.ts`).
 
-- `index.md` for the exact Moment text and ordered semantic media references
-- `assets.json` for byte size, MIME type, ETag, image dimensions, and responsive
-  variant relationships
+The R2 directory mirrors the Moment's published id. Existing objects are
+immutable; replace changed media with a new semantic filename instead of
+overwriting a key.
 
-The R2 directory mirrors the Moment content id. Existing objects are immutable;
-replace changed media with a new semantic filename instead of overwriting a key.
-
-Audit every Moment document and colocated asset record:
+Audit every Moment record and its published media:
 
 ```sh
 pnpm moments:audit

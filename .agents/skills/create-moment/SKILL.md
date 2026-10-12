@@ -5,38 +5,42 @@ description: Create a hyoban.cc Moment from exact user text and media. Use when 
 
 # Create Moment
 
-Create one Moment in `src/content/moments`. Never deploy the site or publish the
-Moment to a social network. Uploading its media to the configured R2 bucket is
-part of preparing the local Moment.
+Create one Moment as a record under `data/moments` (the shape is in
+`src/data/spec.ts`). Never deploy the site or publish the Moment to a social
+network. Uploading its media to the configured R2 bucket is part of preparing
+the local Moment.
 
-1. Inspect `src/moments/content.ts`, `src/data/locations.ts`, and a recent Moment.
+1. Inspect `src/data/spec.ts`, `data/places.json`, and a recent record under
+   `data/moments`.
 2. Preserve the user's text exactly, including errors, punctuation, paragraphs, and line breaks.
 3. Use one `occurredAt` value for when the Moment happened. Use an ISO timestamp
    with an explicit offset when the time is known, otherwise use `YYYY-MM-DD`.
    Never add publication or source fields. If the text names a specific place,
-   use that place instead of its city; reuse or add it in
-   `src/data/locations.ts` and verify new coordinates (see Coordinates below). When the Moment covers
-   several places, set `location` to a list of ids in visiting order. Use
-   `YYYY/MM/DD-NN-short-slug` for the ID, where `NN` is the next available
-   two-digit order for that occurrence date.
+   use that place instead of its city; reuse or add it in `data/places.json`
+   and verify new coordinates (see Coordinates below). When the Moment covers
+   several places, list their ids in visiting order. Use
+   `YYYY/MM/DD-NN-short-slug` for the published id, where `NN` is the next
+   available two-digit order for that occurrence date (check the records of
+   that day under `data/moments/YYYY/MM`).
 4. Process and upload images or videos in order from the repository root:
 
 ```bash
-node .agents/skills/create-moment/scripts/prepare-media.mjs --repo <repo> --target <moment-dir> -- <media...>
+node .agents/skills/create-moment/scripts/prepare-media.mjs --repo <repo> --id <YYYY/MM/DD-NN-short-slug> --occurred-at <occurredAt> [--place <id>]... -- <media...>
 ```
 
-The command prepares everything before atomically creating the Moment directory.
-It optimizes images and responsive variants, transcodes videos to web-compatible
-MP4 with a poster, gives files semantic names from the Moment slug, uploads or
-safely reuses and verifies them in the matching R2 directory, and writes the
-colocated `assets.json`. It is safe to rerun after an interrupted upload and
-leaves no media files in the Moment directory.
+The command optimizes images and responsive variants, transcodes videos to
+web-compatible MP4 with a poster, gives files semantic names from the slug,
+uploads or safely reuses and verifies them in the matching R2 directory, and
+then writes the Moment's record under `data/moments` with every media item
+published, its places set, and empty `text` and `alt`. It prints the record's
+file. It is safe to rerun after an interrupted upload.
 
-5. Inspect each source media item and replace every empty suggested alt with
-   concise English alt text. Visible new Moments must never use an empty alt.
-6. Create `index.md` with `apply_patch`, ordering fields as `occurredAt`,
-   `location`, `media`. Omit unused optional fields and `hidden`.
-7. Compare the saved body with the user's text, then run `pnpm test`, `pnpm check`, and `pnpm build`.
+5. Inspect each source media item and replace every empty `alt` in the record
+   with concise English alt text. Visible new Moments must never use an empty alt.
+6. Set `text` in the record with `apply_patch`. Leave the other fields as the
+   command wrote them; never edit `uid`, `published` or a media item's
+   `published` by hand.
+7. Compare the saved text with the user's text, then run `pnpm test`, `pnpm check`, and `pnpm build`.
 
 ## Coordinates
 
@@ -73,16 +77,16 @@ and regions keep an approximate centre.
   which the user must solve. Check the returned branch name matches.
 - When several candidates fit (which noodle shop, which station), ask the user
   instead of guessing.
-- Some older entries in `src/data/locations.ts` were stored in GCJ-02. When a
+- Some older entries in `data/places.json` were stored in GCJ-02. When a
   point looks a few hundred metres off, compare it with AMap's raw and converted
   coordinates: if it sits near the raw one, convert it.
 - Trip routes are cached by coordinates. After moving a place or locating a
   Moment inside a trip, run `pnpm trips:routes` and `pnpm trips:weather`. If the
   new place now ends a train, plane, or ferry leg, update that trip's
-  `straightLegs` in `src/data/trips.ts`, or the leg turns into a drive; a new
+  `straightLegs` in `data/trips/<id>.json`, or the leg turns into a drive; a new
   train endpoint also needs a station in `STATIONS` in
   `scripts/generate-trip-routes.mjs`.
-- Changing an existing Moment, even only its `location`, makes CI require
-  non-empty alt text on its visible media, so describe those images too.
+- Changing an existing Moment's record, even only its `places`, makes CI
+  require non-empty alt text on its visible media, so describe those images too.
 
 Only perform Git operations when requested. Commit directly on `main`; do not create a branch.

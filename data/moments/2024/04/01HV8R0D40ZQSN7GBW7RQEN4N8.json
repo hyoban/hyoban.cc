@@ -1,0 +1,50 @@
+{
+  "uid": "01HV8R0D40ZQSN7GBW7RQEN4N8",
+  "occurredAt": "2024-04-12T16:50:24+08:00",
+  "places": [],
+  "text": "Executing release-it-pnpm will help you generate the required release-it configuration and GitHub actions for release. You can publish a package on GitHub with one click, and it will automatically determine the version based on your commit message.",
+  "hidden": true,
+  "media": [
+    {
+      "uid": "01HV8R0D41R0HF7F7KMY4EESJP",
+      "type": "image",
+      "alt": "",
+      "width": 1634,
+      "height": 1436,
+      "published": {
+        "key": "moments/2024/04/12-03-executing-release-it-pnpm-will-help-you-generate-the/executing-release-it-pnpm-will-help-you-generate-the.jpg",
+        "contentType": "image/jpeg",
+        "bytes": 137609,
+        "etag": "13f5a03482c0bfeb2e6c942b7bb99bb3",
+        "width": 1634,
+        "height": 1436,
+        "variants": [
+          {
+            "key": "moments/2024/04/12-03-executing-release-it-pnpm-will-help-you-generate-the/executing-release-it-pnpm-will-help-you-generate-the-480w.webp",
+            "contentType": "image/webp",
+            "bytes": 15736,
+            "etag": "4120a9b7d1bee3c70bc5b91b12e4c3c4",
+            "width": 480,
+            "height": 422
+          },
+          {
+            "key": "moments/2024/04/12-03-executing-release-it-pnpm-will-help-you-generate-the/executing-release-it-pnpm-will-help-you-generate-the-960w.webp",
+            "contentType": "image/webp",
+            "bytes": 41318,
+            "etag": "4acd208ed3c6f90dbaa04db36adff74b",
+            "width": 960,
+            "height": 844
+          }
+        ]
+      }
+    }
+  ],
+  "published": {
+    "id": "2024/04/12-03-executing-release-it-pnpm-will-help-you-generate-the",
+    "slug": "executing-release-it-pnpm-will-help-you-generate-the",
+    "order": 3,
+    "at": "2026-07-30T08:12:13+08:00"
+  },
+  "createdAt": "2024-04-12T16:50:24+08:00",
+  "updatedAt": "2026-09-03T10:44:40+08:00"
+}

@@ -1,0 +1,16 @@
+{
+  "uid": "01HV8Q9HNRE12FX2FZD3WZZNWF",
+  "occurredAt": "2024-04-12T16:37:55+08:00",
+  "places": [],
+  "text": "I really like the experience of release-it and @antfu7's release workflow, so I try to integrate them. I've got everything I wanted in my publishing workflow now, and I welcome more people to use it and get feedback.",
+  "hidden": true,
+  "media": [],
+  "published": {
+    "id": "2024/04/12-01-i-really-like-the-experience-of-release-it-and-antfu7s",
+    "slug": "i-really-like-the-experience-of-release-it-and-antfu7s",
+    "order": 1,
+    "at": "2026-07-30T08:12:13+08:00"
+  },
+  "createdAt": "2024-04-12T16:37:55+08:00",
+  "updatedAt": "2026-09-03T10:44:40+08:00"
+}
