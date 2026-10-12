@@ -69,12 +69,7 @@ import {
   getWaypointsBefore as getWaypointRange,
   type SlideTiming,
 } from './slides'
-import {
-  createDayCard,
-  createIntroCard,
-  createStageHeading,
-  createSummaryCard,
-} from './stage-cards'
+import { createIntroCard, createStageHeading, createSummaryCard } from './stage-cards'
 import { getIntroCovers, getTripMeta } from './intro'
 import type {
   MapLabel,
@@ -1027,8 +1022,15 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
   /** Jumps to the next day's opener, or back to this day's (then the one before). */
   function stepDay(direction: number) {
+    // Presenting or recording, a day starts at its first stop instead.
     const openers = slides.flatMap((slide, slideIndex) =>
-      slide.type === 'day' ? [slideIndex] : [],
+      isStageLayout()
+        ? slide.type !== 'day' && slides[slideIndex - 1]?.type === 'day'
+          ? [slideIndex]
+          : []
+        : slide.type === 'day'
+          ? [slideIndex]
+          : [],
     )
     const target =
       direction > 0
@@ -1352,8 +1354,8 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       return
     }
 
-    if (slide.type === 'day') {
-      stageCenter.replaceChildren(createDayCard(trip, slide))
+    // Presenting or recording skips a day's opener, so a stop is all that's left.
+    if (slide.type !== 'stop') {
       return
     }
 
@@ -1369,9 +1371,12 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     }, photoDelay / speed)
   }
 
-  /** Notes when a day or the summary starts in the recording. */
-  function addChapter(slide: Slide) {
-    if (chapters && (slide.type === 'day' || slide.type === 'summary')) {
+  /** Notes when a day (its skipped opener, just before) or the summary starts in the recording. */
+  function addChapter(slideIndex: number) {
+    const previous = slides[slideIndex - 1]
+    const slide = previous?.type === 'day' ? previous : slides[slideIndex]
+
+    if (chapters && (slide?.type === 'day' || slide?.type === 'summary')) {
       chapters.log.add(
         slide.type === 'day' ? `第 ${slide.day} 天 · ${slide.date}` : '旅程回顾',
         Math.floor((performance.now() - chapters.start) / 1000),
@@ -1433,14 +1438,25 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     }
   }
 
-  function goTo(nextIndex: number, options: { play?: boolean } = {}) {
-    if (!trip || nextIndex < 0 || nextIndex >= slides.length) {
+  function goTo(requestedIndex: number, options: { play?: boolean } = {}) {
+    if (!trip || requestedIndex < 0 || requestedIndex >= slides.length) {
       return
     }
 
-    const slide = slides[nextIndex]!
     // Skipping ahead while the map is still travelling jumps straight to the stop.
-    const stepForward = nextIndex === index + 1 && !traveling && !reducedMotion.matches
+    const stepForward = requestedIndex === index + 1 && !traveling && !reducedMotion.matches
+    let nextIndex = requestedIndex
+
+    // Presenting or recording, the header's rolling day stands in for a day's opener.
+    if (isStageLayout()) {
+      const direction = requestedIndex < index ? -1 : 1
+
+      while (slides[nextIndex]?.type === 'day') {
+        nextIndex += direction
+      }
+    }
+
+    const slide = slides[nextIndex]!
 
     travelToken += 1
     traveling = false
@@ -1450,7 +1466,10 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       playing = options.play
     }
 
-    const [firstWaypoint, waypointCount] = getWaypointsBefore(slide)
+    // The skipped openers' waypoints run straight on into the slide's own.
+    const [firstWaypoint] = getWaypointsBefore(slides[requestedIndex]!)
+    const [lastStart, lastCount] = getWaypointsBefore(slide)
+    const waypointCount = lastStart + lastCount - firstWaypoint
 
     if (stepForward && waypointCount > 0) {
       // The current card stays up while the map passes the waypoints.
@@ -1495,7 +1514,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     elapsed = 0
     driveElapsed = 0
     syncHash(slide)
-    addChapter(slide)
+    addChapter(nextIndex)
 
     if (staging?.recording) {
       preparePhotosAhead()
@@ -2051,6 +2070,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     progress.replaceChildren(
       ...slides.map((slide, slideIndex) => {
         const item = createElement('li', 'flex-1', '')
+        item.dataset.slide = slide.type
         // A taller transparent hit area around the thin bar, so a segment is easy to tap.
         const button = createElement(
           'button',

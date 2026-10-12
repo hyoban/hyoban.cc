@@ -635,7 +635,6 @@ html:has(.calendar-map-page[data-export-ratio]) body {
   right: 50%;
 }
 
-.calendar-map-trip-stage[data-slide='day'] .calendar-map-trip-stage__header,
 .calendar-map-trip-stage[data-slide='intro'] .calendar-map-trip-stage__header,
 .calendar-map-trip-stage[data-slide='summary'] .calendar-map-trip-stage__header {
   opacity: 0;
@@ -774,6 +773,10 @@ html:has(.calendar-map-page[data-export-ratio]) body {
   padding: 0;
 }
 
+.calendar-map-trip-stage__progress li[data-slide='day'] {
+  display: none;
+}
+
 .calendar-map-trip-stage__progress button {
   margin: 0;
   padding: 0;
@@ -870,13 +873,6 @@ html:has(.calendar-map-page[data-export-ratio]) body {
   animation: calendar-map-polaroid-in 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-.calendar-map-trip-stage-card__eyebrow {
-  font-size: calc(var(--u) * 3);
-  font-weight: 600;
-  letter-spacing: 0.3em;
-  color: var(--color-tx-3);
-}
-
 .calendar-map-trip-stage-card__title {
   margin-top: calc(var(--u) * 1.6);
   font-size: calc(var(--u) * 8);
@@ -895,16 +891,6 @@ html:has(.calendar-map-page[data-export-ratio]) body {
   font-family: var(--font-mono, ui-monospace, monospace);
   font-size: calc(var(--u) * 3);
   color: var(--color-tx-3);
-}
-
-.calendar-map-trip-stage-card__weather {
-  display: flex;
-  gap: calc(var(--u) * 1.6);
-  align-items: center;
-  justify-content: center;
-  margin-top: calc(var(--u) * 2);
-  font-size: calc(var(--u) * 3.4);
-  color: var(--color-tx-2);
 }
 
 .calendar-map-trip-stage-card__covers {
