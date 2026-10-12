@@ -120,3 +120,44 @@ export function lineFeature(coordinates: readonly Coordinates[]) {
     type: 'Feature' as const,
   }
 }
+
+/**
+ * Drops the points that stray less than `tolerance` (in degrees) from the line through
+ * their neighbours (Douglas–Peucker), keeping both ends.
+ */
+export function simplifyLine(line: readonly Coordinates[], tolerance: number) {
+  if (line.length < 3) {
+    return [...line]
+  }
+
+  const keep = new Set([0, line.length - 1])
+  const spans: [number, number][] = [[0, line.length - 1]]
+
+  while (spans.length > 0) {
+    const [first, last] = spans.pop()!
+    const [x1, y1] = line[first]!
+    const [x2, y2] = line[last]!
+    const length = Math.hypot(x2 - x1, y2 - y1)
+    let farthest = -1
+    let farthestDistance = tolerance
+
+    for (let index = first + 1; index < last; index += 1) {
+      const [x, y] = line[index]!
+      const distance = length
+        ? Math.abs((x2 - x1) * (y1 - y) - (x1 - x) * (y2 - y1)) / length
+        : Math.hypot(x - x1, y - y1)
+
+      if (distance > farthestDistance) {
+        farthest = index
+        farthestDistance = distance
+      }
+    }
+
+    if (farthest !== -1) {
+      keep.add(farthest)
+      spans.push([first, farthest], [farthest, last])
+    }
+  }
+
+  return line.filter((_, index) => keep.has(index))
+}

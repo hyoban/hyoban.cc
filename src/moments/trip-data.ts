@@ -5,6 +5,7 @@ import { getMomentPath, type MomentTrip } from '@/moments'
 import { takeBilibiliVideo } from '@/moments/bilibili'
 import { getTripCovers, getTripImages } from '@/moments/trip-images'
 import { getDayOffset, getDayPlaces, getWeatherKey, type TripWaypoint } from '@/moments/trips'
+import { getRouteLine, simplifyLine } from '@/trip-player/route'
 
 // What the trip player needs for one trip. The map page inlines it for the trip it
 // opens on and fetches /trip/<id>/data.json for the others.
@@ -42,6 +43,37 @@ export function getTripData(trip: MomentTrip) {
     legModes: trip.legs.map((leg) => leg.by),
     weather: getTripWeather(trip),
   }
+}
+
+// The overview map draws every trip's whole route at once, so it gets a thinned copy:
+// straying a couple hundred metres from the road only shows when zoomed in close.
+const OVERVIEW_TOLERANCE = 0.002
+
+/** What the map overview needs for every trip: its route to draw and click, and its name. */
+export function getTripSummary(trip: MomentTrip) {
+  const points = trip.path.map((location) => ({
+    coordinates: [location.longitude, location.latitude] as const,
+  }))
+  const line = getRouteLine(
+    points,
+    trip.legs.map((leg) => leg.route?.coordinates ?? null),
+    0,
+    points.length,
+  )
+
+  return {
+    dateRange: `${formatShortDate(trip.start)} – ${formatShortDate(trip.end)}`,
+    id: trip.id,
+    line: simplifyLine(line, OVERVIEW_TOLERANCE).map(
+      ([longitude, latitude]) => [round(longitude), round(latitude)] as [number, number],
+    ),
+    pageTitle: getTripTitle(trip.title),
+    title: trip.title,
+  }
+}
+
+function round(degrees: number) {
+  return Math.round(degrees * 1e4) / 1e4
 }
 
 type DayWeather = { code: number; max: number; min: number }

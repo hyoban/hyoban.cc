@@ -1,6 +1,9 @@
 import MapboxLanguage from '@mapbox/mapbox-gl-language'
 import mapboxgl, { type GeoJSONSource, type PaddingOptions } from 'mapbox-gl'
+import { parseJson } from './trip-player/dom'
+import { createTripOverview } from './trip-player/overview'
 import { createTripPlayer } from './trip-player/player'
+import type { TripSummary } from './trip-player/types'
 import { initializeLightboxMedia } from './moment-lightbox-client'
 
 type MarkerData = {
@@ -30,6 +33,9 @@ const TRIP_PATH_PATTERN = /^\/trip\/([^/]+)\/?$/
 const LOCATION_INDEX_LAYER_ID = 'calendar-location-index'
 const LOCATION_SOURCE_ID = 'calendar-locations'
 const LOCATION_CLUSTER_MAX_ZOOM = 9
+// How long the markers take to fade as a trip opens (see index.css), before they're
+// taken off the map.
+const MARKER_FADE = 200
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
 let destroyCurrentMap: (() => void) | undefined
 let currentMapPage: HTMLElement | undefined
@@ -61,8 +67,7 @@ export function initializeCalendarMap() {
   const fallbackMessage = queryRequired<HTMLElement>(page, '[data-calendar-map-fallback-message]')
   const loading = queryRequired<HTMLElement>(page, '[data-calendar-map-loading]')
   const lightbox = queryRequired<HTMLDialogElement>(page, '[data-calendar-map-lightbox]')
-  const legend = queryRequired<HTMLElement>(page, '[data-calendar-map-legend]')
-  const tripSelect = page.querySelector<HTMLSelectElement>('[data-calendar-map-trip-select]')
+  const tripLinks = [...page.querySelectorAll<HTMLAnchorElement>('[data-calendar-map-trip-link]')]
 
   const controller = new AbortController()
   const { signal } = controller
@@ -81,8 +86,17 @@ export function initializeCalendarMap() {
     page,
     signal,
   })
+  const tripOverview = createTripOverview({
+    getInk: () => getComputedStyle(page).getPropertyValue('--color-tx').trim() || '#21201c',
+    getMap: () => map,
+    onSelect: selectTrip,
+    reducedMotion,
+    signal,
+    trips: parseJson<TripSummary[]>(page, '[data-calendar-map-trips]', []),
+  })
   let map: mapboxgl.Map | undefined
   let mapLoaded = false
+  let markerTimer: ReturnType<typeof setTimeout> | undefined
   let activeLocationId: string | undefined
   let activeTrigger: HTMLButtonElement | undefined
   let suppressMarkerFocusPopup = false
@@ -196,7 +210,7 @@ export function initializeCalendarMap() {
     const template = document.createElement('template')
 
     if (html === undefined) {
-      drawerContent.replaceChildren(createLoadingMessage('没能加载这个地点的记录，请稍后再试。'))
+      drawerContent.replaceChildren(createLoadingMessage('没能加载这个地点的记录。'))
     } else {
       template.innerHTML = html
       drawerContent.replaceChildren(template.content)
@@ -304,30 +318,64 @@ export function initializeCalendarMap() {
     }
   }
 
+  /**
+   * Fades the markers and the legend out as a trip opens, then takes the markers off
+   * the map; closing it, puts them back and fades them in.
+   */
+  function setTripMode(on: boolean) {
+    if (markerTimer) {
+      clearTimeout(markerTimer)
+      markerTimer = undefined
+    }
+
+    if (on) {
+      page!.dataset.mapTrip = ''
+      markerTimer = setTimeout(
+        () => {
+          markerTimer = undefined
+          setMarkersHidden(true)
+        },
+        reducedMotion.matches ? 0 : MARKER_FADE,
+      )
+      return
+    }
+
+    // Back on the map still faded, then let go of the attribute so they fade in.
+    setMarkersHidden(false)
+    requestAnimationFrame(() => {
+      if (!tripPlayer.activeId) {
+        delete page!.dataset.mapTrip
+      }
+    })
+  }
+
   function syncTripFromUrl() {
     const id = getUrlTripId()
-
-    if (tripSelect) {
-      tripSelect.value = id ?? ''
-    }
 
     document.title = (id && tripPlayer.getPageTitle(id)) || page!.dataset.mapTitle || document.title
 
     if (id) {
+      // Set before the map loads too, so its routes are added hidden.
+      tripOverview.hide(id)
+      page!.dataset.mapTrip = ''
+
       if (!mapLoaded) {
         return
       }
 
-      legend.hidden = true
-      setMarkersHidden(true)
+      if (!tripPlayer.activeId) {
+        setTripMode(true)
+      }
+
       tripPlayer.start(id)
       return
     }
 
-    if (tripPlayer.activeId) {
+    // Also after a trip that failed to load, or was closed before the map loaded.
+    if (tripPlayer.activeId || page!.dataset.mapTrip !== undefined) {
       tripPlayer.stop()
-      legend.hidden = false
-      setMarkersHidden(false)
+      tripOverview.show()
+      setTripMode(false)
       fitAllLocations()
     }
   }
@@ -639,7 +687,7 @@ export function initializeCalendarMap() {
         'calendar-map-cluster group flex size-12 cursor-pointer items-center justify-center border-0 bg-transparent p-0 focus-visible:outline-none'
       button.setAttribute(
         'aria-label',
-        `${cluster.locationCount} 个地点，共 ${cluster.momentCount} 条记录，点击放大`,
+        `${cluster.locationCount} 个地点，共 ${cluster.momentCount} 条记录`,
       )
       dot.className =
         'flex h-8 min-w-8 items-center justify-center rounded-full border-2 border-bg bg-tx px-2 font-mono text-xs font-semibold text-bg shadow-[0_0.25rem_1rem_rgb(0_0_0/0.28)] transition-transform duration-[160ms] group-hover:scale-110 group-focus-visible:scale-110 motion-reduce:transition-none'
@@ -719,22 +767,21 @@ export function initializeCalendarMap() {
   }
 
   drawerClose.addEventListener('click', requestSelectionClose, { signal })
-  // Pointing at or focusing the picker is a hint that another trip is next.
-  for (const type of ['pointerenter', 'focus'] as const) {
-    tripSelect?.addEventListener(type, tripPlayer.prefetch, { once: true, signal })
-  }
 
-  tripSelect?.addEventListener(
-    'change',
-    () => {
-      if (tripSelect.value) {
-        selectTrip(tripSelect.value)
-      } else {
-        requestSelectionClose()
-      }
-    },
-    { signal },
-  )
+  for (const link of tripLinks) {
+    const id = link.dataset.calendarMapTripLink!
+
+    link.addEventListener('focus', () => tripOverview.highlight(id), { signal })
+    link.addEventListener('blur', () => tripOverview.highlight(undefined), { signal })
+    link.addEventListener(
+      'click',
+      (event) => {
+        event.preventDefault()
+        selectTrip(id)
+      },
+      { signal },
+    )
+  }
   window.addEventListener('popstate', () => syncLocationFromHash(), { signal })
   window.addEventListener(
     'resize',
@@ -856,17 +903,24 @@ export function initializeCalendarMap() {
       map.on('style.load', () => {
         applyFog()
         createLocationIndex()
+        tripOverview.add()
         tripPlayer.restoreLayers()
 
         if (tripPlayer.activeId) {
           setMarkersHidden(true)
         }
       })
-      map.on('click', () => {
+      map.on('click', (event) => {
+        if (tripOverview.click(event.point)) {
+          return
+        }
+
         if (activeLocationId) {
           requestSelectionClose()
         }
       })
+      // Pointing at a route is a hint its trip is next, so trips start loading.
+      map.once('mousemove', tripPlayer.prefetch)
       map.on('idle', syncClusterMarkers)
       map.on('moveend', syncClusterMarkers)
       map.on('load', () => {
@@ -915,6 +969,10 @@ export function initializeCalendarMap() {
 
     if (loadTimeout) {
       clearTimeout(loadTimeout)
+    }
+
+    if (markerTimer) {
+      clearTimeout(markerTimer)
     }
 
     for (const marker of markers.values()) {
