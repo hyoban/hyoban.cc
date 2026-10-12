@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import {
   manifestSchema,
@@ -16,33 +16,37 @@ import {
 
 export const dataRoot = resolve(process.cwd(), 'data')
 
-export function readManifest(): Manifest {
-  return manifestSchema.parse(readJson('manifest.json'))
+export function readManifest(root = dataRoot): Manifest {
+  return manifestSchema.parse(readJson('manifest.json', root))
 }
 
-export function readPlaces(): Places {
-  return placesSchema.parse(readJson('places.json'))
+export function readPlaces(root = dataRoot): Places {
+  return placesSchema.parse(readJson('places.json', root))
 }
 
-export function readTripRecords(): TripRecord[] {
-  return listJsonFiles('trips').map((file) => tripRecordSchema.parse(readJson(file)))
+export function readTripRecords(root = dataRoot): TripRecord[] {
+  return listJsonFiles('trips', root).map((file) => tripRecordSchema.parse(readJson(file, root)))
 }
 
 /** Every Moment with the file it came from, relative to `data/`. */
-export function readMomentRecords(): { file: string; record: MomentRecord }[] {
-  return listJsonFiles('moments').map((file) => ({
+export function readMomentRecords(root = dataRoot): { file: string; record: MomentRecord }[] {
+  return listJsonFiles('moments', root).map((file) => ({
     file,
-    record: momentRecordSchema.parse(readJson(file)),
+    record: momentRecordSchema.parse(readJson(file, root)),
   }))
 }
 
-export function readJson(file: string): unknown {
-  return JSON.parse(readFileSync(join(dataRoot, file), 'utf8'))
+export function readJson(file: string, root = dataRoot): unknown {
+  return JSON.parse(readFileSync(join(root, file), 'utf8'))
 }
 
-/** The JSON files under a directory of `data/`, as paths relative to `data/`, sorted. */
-export function listJsonFiles(directory: string) {
-  return readdirSync(join(dataRoot, directory), { recursive: true })
+/** The JSON files under a directory of `data/`, as paths relative to `data/`, sorted; none when it's missing. */
+export function listJsonFiles(directory: string, root = dataRoot) {
+  if (!existsSync(join(root, directory))) {
+    return []
+  }
+
+  return readdirSync(join(root, directory), { recursive: true })
     .map(String)
     .filter((file) => file.endsWith('.json'))
     .sort()

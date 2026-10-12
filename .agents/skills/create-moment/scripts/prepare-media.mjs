@@ -1,21 +1,15 @@
-import { createHash } from 'node:crypto'
-import { execFile as execFileCallback } from 'node:child_process'
 import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises'
-import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { basename, dirname, join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { promisify } from 'node:util'
 
 // Prepares a Moment's media for the site: optimizes images with responsive variants,
 // transcodes videos with a poster, uploads everything to R2 under the Moment's id, and
-// writes the Moment's record under data/moments with its media published and its words,
-// places and alt text left for the skill to fill in.
+// writes the Moment's record under data/moments with its media published and its words
+// and alt text left for the skill to fill in.
 
-const execFile = promisify(execFileCallback)
 const options = parseArguments(process.argv.slice(2))
 const repositoryPath = resolve(options.repo)
-const configPath = join(repositoryPath, 'src/data/asset-config.json')
 const targetMatch = options.id.match(
   /^(\d{4})\/(\d{2})\/(\d{2})-(\d{2})-([a-z0-9]+(?:-[a-z0-9]+)*)$/,
 )
@@ -30,18 +24,17 @@ if (options.occurredAt.slice(0, 10) !== `${targetMatch[1]}-${targetMatch[2]}-${t
 
 const slug = targetMatch[5]
 const order = Number.parseInt(targetMatch[4], 10)
-const requireFromRepository = createRequire(join(repositoryPath, 'package.json'))
-const sharp = requireFromRepository('sharp')
-const ffmpeg = requireFromRepository('ffmpeg-static')
-const { getContentType, uploadR2Object } = await import(
-  pathToFileURL(join(repositoryPath, 'scripts/lib/r2-assets.mjs'))
+const fromRepository = (file) => import(pathToFileURL(join(repositoryPath, file)))
+const { getContentType } = await fromRepository('scripts/lib/r2-assets.mjs')
+const { prepareImage, prepareVideo, uploadAssets } = await fromRepository(
+  'scripts/lib/moment-media.mjs',
 )
-const { ulid } = await import(pathToFileURL(join(repositoryPath, 'scripts/lib/ulid.mjs')))
-const { getMomentFile, momentRecordSchema } = await import(
-  pathToFileURL(join(repositoryPath, 'src/data/spec.ts'))
+const { ulid } = await fromRepository('scripts/lib/ulid.mjs')
+const { getMomentFile, momentRecordSchema } = await fromRepository('src/data/spec.ts')
+const { readMomentRecords } = await fromRepository('src/data/store.ts')
+const config = JSON.parse(
+  await readFile(join(repositoryPath, 'src/data/asset-config.json'), 'utf8'),
 )
-const { readMomentRecords } = await import(pathToFileURL(join(repositoryPath, 'src/data/store.ts')))
-const config = JSON.parse(await readFile(configPath, 'utf8'))
 const inputs = await Promise.all(
   options.media.map(async (mediaPath) => {
     const path = resolve(mediaPath)
@@ -64,51 +57,34 @@ const existing = readMomentRecords().find(({ record }) => record.published?.id =
 const temporaryPath = await mkdtemp(join(tmpdir(), 'hyoban-moment-media-'))
 
 try {
-  const prepared = []
+  const assets = []
   const media = []
   let imageIndex = 0
   let videoIndex = 0
 
   for (const input of inputs) {
-    if (input.contentType.startsWith('image/')) {
-      imageIndex += 1
-      const stem = `${slug}${imageIndex === 1 ? '' : `-${imageIndex}`}`
-      const image = await prepareImage(input.path, stem)
-      prepared.push(...image.assets)
-      media.push({
-        alt: '',
-        published: image.published,
-        source: basename(input.path),
-        type: 'image',
-        width: image.published.width,
-        height: image.published.height,
-      })
-    } else {
-      videoIndex += 1
-      const stem = `${slug}-video${videoIndex === 1 ? '' : `-${videoIndex}`}`
-      const video = await prepareVideo(input.path, stem)
-      prepared.push(...video.assets)
-      media.push({
-        alt: '',
-        published: video.published,
-        source: basename(input.path),
-        type: 'video',
-        width: video.published.poster.width,
-        height: video.published.poster.height,
-      })
-    }
-  }
-
-  for (const asset of prepared) {
-    asset.upload = await uploadR2Object({
-      bucket: config.bucket,
-      file: asset.path,
-      key: asset.key,
-      origin: config.origin,
-      root: repositoryPath,
+    const isImage = input.contentType.startsWith('image/')
+    const index = isImage ? (imageIndex += 1) : (videoIndex += 1)
+    const stem = `${slug}${isImage ? '' : '-video'}${index === 1 ? '' : `-${index}`}`
+    const prepared = await (isImage ? prepareImage : prepareVideo)({
+      inputPath: input.path,
+      momentId: options.id,
+      stem,
+      temporaryPath,
+    })
+    const size = isImage ? prepared.published : prepared.published.poster
+    assets.push(...prepared.assets)
+    media.push({
+      alt: '',
+      height: size.height,
+      published: prepared.published,
+      source: basename(input.path),
+      type: isImage ? 'image' : 'video',
+      width: size.width,
     })
   }
 
+  const uploads = await uploadAssets(assets, { config, root: repositoryPath })
   const { action, file, uid } = await writeRecord(media)
 
   console.log(
@@ -116,143 +92,14 @@ try {
       {
         action,
         file,
-        media: media.map(({ source, type, published }) => ({ key: published.key, source, type })),
+        media: media.map(({ published, source, type }) => ({ key: published.key, source, type })),
         uid,
-        uploads: Object.fromEntries(
-          prepared.map((asset) => [basename(asset.key), asset.upload.action]),
-        ),
+        uploads,
       },
       null,
       2,
     ),
   )
-
-  async function prepareImage(inputPath, stem) {
-    const file = `${stem}.webp`
-    const outputPath = join(temporaryPath, file)
-    const info = await sharp(inputPath)
-      .rotate()
-      .resize({
-        fit: 'inside',
-        height: 1920,
-        width: 1920,
-        withoutEnlargement: true,
-      })
-      .webp({ effort: 6, quality: 82 })
-      .toFile(outputPath)
-    const base = await describeAsset(outputPath, { height: info.height, width: info.width })
-    const variants = []
-
-    for (const width of [480, 960]) {
-      if (width >= info.width) {
-        continue
-      }
-
-      const variantFile = `${stem}-${width}w.webp`
-      const variantPath = join(temporaryPath, variantFile)
-      const variantInfo = await sharp(outputPath)
-        .resize({ width, withoutEnlargement: true })
-        .webp({ effort: 6, quality: 80 })
-        .toFile(variantPath)
-      variants.push(
-        await describeAsset(variantPath, { height: variantInfo.height, width: variantInfo.width }),
-      )
-    }
-
-    return {
-      assets: [base, ...variants],
-      published: { ...base.published, variants: variants.map((variant) => variant.published) },
-    }
-  }
-
-  async function prepareVideo(inputPath, stem) {
-    const file = `${stem}.mp4`
-    const outputPath = join(temporaryPath, file)
-    const framePath = join(temporaryPath, `${stem}-frame.png`)
-    const posterPath = join(temporaryPath, `${stem}-poster.webp`)
-
-    await execFile(
-      ffmpeg,
-      [
-        '-hide_banner',
-        '-loglevel',
-        'error',
-        '-y',
-        '-i',
-        inputPath,
-        '-map',
-        '0:v:0',
-        '-map',
-        '0:a?',
-        '-vf',
-        'scale=min(1920\\,iw):min(1920\\,ih):force_original_aspect_ratio=decrease:force_divisible_by=2',
-        '-c:v',
-        'libx264',
-        '-crf',
-        '23',
-        '-preset',
-        'medium',
-        '-pix_fmt',
-        'yuv420p',
-        '-c:a',
-        'aac',
-        '-b:a',
-        '160k',
-        '-movflags',
-        '+faststart',
-        outputPath,
-      ],
-      { maxBuffer: 10 * 1024 * 1024 },
-    )
-
-    await execFile(
-      ffmpeg,
-      [
-        '-hide_banner',
-        '-loglevel',
-        'error',
-        '-y',
-        '-ss',
-        '0',
-        '-i',
-        outputPath,
-        '-frames:v',
-        '1',
-        framePath,
-      ],
-      { maxBuffer: 10 * 1024 * 1024 },
-    )
-
-    const posterInfo = await sharp(framePath).webp({ effort: 6, quality: 82 }).toFile(posterPath)
-    const video = await describeAsset(outputPath)
-    const poster = await describeAsset(posterPath, {
-      height: posterInfo.height,
-      width: posterInfo.width,
-    })
-
-    return {
-      assets: [video, poster],
-      published: { ...video.published, poster: { ...poster.published, variants: [] } },
-    }
-  }
-
-  /** An optimized file's R2 key and metadata, as the record publishes it. */
-  async function describeAsset(path, dimensions = {}) {
-    const contents = await readFile(path)
-    const key = `moments/${options.id}/${basename(path)}`
-
-    return {
-      key,
-      path,
-      published: {
-        key,
-        contentType: getContentType(path),
-        bytes: contents.byteLength,
-        etag: createHash('md5').update(contents).digest('hex'),
-        ...dimensions,
-      },
-    }
-  }
 
   /** Writes the Moment's record, or leaves an identical one from an interrupted run alone. */
   async function writeRecord(media) {
