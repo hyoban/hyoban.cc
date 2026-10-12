@@ -491,6 +491,11 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
   /** Adds the route layers, also after the map style changes and drops them. */
   function addLayers() {
+    // The trip has its own arrow, +/- and Home/End keys; the map's would move the camera too.
+    if (trip) {
+      getMap()?.keyboard.disable()
+    }
+
     if (trip && layers.add(getRouteLine(0, points.length))) {
       setRoute(drawnPointCount)
       updateStops()
@@ -2187,6 +2192,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     mapLabels.destroy()
     layers.remove()
     camera.stop()
+    getMap()?.keyboard.enable()
     routeTip = undefined
     trip = undefined
     slides = []
