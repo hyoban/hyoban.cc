@@ -194,7 +194,8 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   ]
   let safeArea = readSafeAreaPreference()
   let ratio: ExportRatio = readRatioPreference()
-  let stagePhotoTimer: ReturnType<typeof setTimeout> | undefined
+  // Bumped whenever the stage photo card's pending pop-up is called off.
+  let stagePhotoToken = 0
   const controls = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-controls]')
   const actions = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-actions]')
   const exportButton = queryRequired<HTMLButtonElement>(page, '[data-calendar-map-trip-export]')
@@ -303,6 +304,11 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   // it, so picking photos by hand never moves the map back and forth.
   let driveElapsed = 0
   let playing = false
+  // Paused by hand: the map's own motion (the drive being drawn, the camera, the
+  // flight past waypoints) holds still too, until playback resumes or the card changes.
+  let held = false
+  // Milliseconds of motion so far; it stands still while held.
+  let motionTime = 0
   let speed: number = readSpeedPreference()
   // The speed's digits roll from one to the next.
   const speedFlow = document.createElement('number-flow')
@@ -635,12 +641,12 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     }
 
     drawnPointCount = from + 1
-    const startTime = performance.now()
+    const startTime = motionTime
     // A fresh drive sets off and arrives gently, as the onward drive on each card does;
     // one carried on is already moving, so it only slows to arrive.
     const ease = start > 0 ? (t: number) => 1 - (1 - t) ** 2 : easeInOut
-    const step = (now: number) => {
-      const t = Math.min((now - startTime) / Math.max(duration, 1), 1)
+    const step = () => {
+      const t = Math.min((motionTime - startTime) / Math.max(duration, 1), 1)
 
       if (t >= 1) {
         legFrame = undefined
@@ -764,13 +770,8 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
         drawnPointCount >= pointIndex + 1
           ? Promise.resolve()
           : drawLeg(Math.max(pointIndex - 1, 0), pointIndex + 1),
-        new Promise((resolve) =>
-          setTimeout(
-            resolve,
-            reducedMotion.matches
-              ? 0
-              : planLeg(Math.max(pointIndex - 1, 0), pointIndex + 1).duration,
-          ),
+        waitForMotion(
+          reducedMotion.matches ? 0 : planLeg(Math.max(pointIndex - 1, 0), pointIndex + 1).duration,
         ),
       ])
 
@@ -778,7 +779,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
         return
       }
 
-      await new Promise((resolve) => setTimeout(resolve, WAYPOINT_PAUSE / speed))
+      await waitForMotion(WAYPOINT_PAUSE / speed)
 
       if (token !== travelToken) {
         return
@@ -798,6 +799,23 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     currentWaypointPoint = -1
     updateStops()
     arrive()
+  }
+
+  /** Resolves once `duration` milliseconds of motion have passed, not counting holds. */
+  function waitForMotion(duration: number) {
+    const until = motionTime + duration
+
+    return new Promise<void>((resolve) => {
+      const check = () => {
+        if (motionTime >= until) {
+          resolve()
+        } else {
+          requestAnimationFrame(check)
+        }
+      }
+
+      check()
+    })
   }
 
   function showProgressTip(button: HTMLElement) {
@@ -1372,7 +1390,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   }
 
   function renderStage(slide: Slide) {
-    clearTimeout(stagePhotoTimer)
+    stagePhotoToken += 1
 
     if (!isStageLayout() || !trip) {
       if (progress.parentElement !== panel) {
@@ -1408,10 +1426,14 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
     stageCenter.replaceChildren()
     // The photo card pops up once the camera has arrived at the stop.
-    stagePhotoTimer = setTimeout(() => {
-      stagePhotoCard.show(stop, slide.stopIndex)
-      stagePhotoCard.showPhoto(stop, photoIndex)
-    }, photoDelay / speed)
+    const token = stagePhotoToken
+
+    void waitForMotion(photoDelay / speed).then(() => {
+      if (token === stagePhotoToken) {
+        stagePhotoCard.show(stop, slide.stopIndex)
+        stagePhotoCard.showPhoto(stop, photoIndex)
+      }
+    })
   }
 
   /**
@@ -1513,6 +1535,8 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     travelToken += 1
     traveling = false
     currentWaypointPoint = -1
+
+    held = false
 
     if (options.play !== undefined) {
       playing = options.play
@@ -2003,12 +2027,18 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
   function tick(now: number) {
     frame = requestAnimationFrame(tick)
-    camera.update(now)
 
     const delta = lastFrameTime === undefined ? 0 : now - lastFrameTime
     const duration = getDuration(slides[index])
 
     lastFrameTime = now
+
+    if (held) {
+      camera.hold(now)
+    } else {
+      motionTime += delta
+      camera.update(now)
+    }
 
     // The card's timer waits while the map travels between waypoints or the mouse rests on it.
     if (!playing || !duration || document.hidden || traveling || (hovering && !staging)) {
@@ -2224,6 +2254,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     trip = undefined
     slides = []
     playing = false
+    held = false
     panel.hidden = true
     progress.replaceChildren()
     hideProgressTip()
@@ -2419,6 +2450,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       }
 
       playing = !playing
+      held = !playing
       renderPlayButton()
     },
     { signal },

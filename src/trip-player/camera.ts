@@ -250,6 +250,11 @@ export function createCamera({
     return target
   }
 
+  /** Keeps the camera still for this frame; it carries on from there afterwards. */
+  function hold(now: number) {
+    lastTime = now
+  }
+
   function stop() {
     shot = undefined
     target = undefined
@@ -267,7 +272,7 @@ export function createCamera({
     }
   }
 
-  return { follow, overview, stop, update }
+  return { follow, hold, overview, stop, update }
 }
 
 /** One exact step of a critically damped spring toward `goal`, stable at any frame rate. */
