@@ -70,7 +70,8 @@ import {
   getWaypointsBefore as getWaypointRange,
   type SlideTiming,
 } from './slides'
-import { createDayHeading, createIntroCard, createSummaryCard } from './stage-cards'
+import { createDayHeading } from './day-heading'
+import { createIntroCard, createSummaryCard } from './stage-cards'
 import { getIntroCovers, getTripMeta } from './intro'
 import type {
   MapLabel,
@@ -175,8 +176,6 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   const stageEyebrow = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-stage-eyebrow]')
   const stageTitle = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-stage-title]')
   const stageHeading = createDayHeading(stageEyebrow, stageTitle)
-
-  stageHeading.attach()
   const stagePhotos = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-stage-photos]')
   const stagePhotoCard = createStagePhotoCard(stagePhotos)
   const stageCenter = queryRequired<HTMLElement>(page, '[data-calendar-map-trip-stage-center]')
@@ -324,7 +323,6 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   const headHeading = createDayHeading(headClockDate, headClockTime)
 
   headClock.append(headClockDate, headClockTime)
-  headHeading.attach()
   const layers = createRouteLayers(
     getMap,
     () => ({
@@ -548,11 +546,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       return
     }
 
-    if (!isStageLayout()) {
-      headHeading.set(getTipClock(), options)
-    } else {
-      stageHeading.set(getTipClock(), options)
-    }
+    ;(isStageLayout() ? stageHeading : headHeading).set(getTipClock(), options)
   }
 
   function updateStops() {
@@ -664,7 +658,6 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     )
   }
 
-  /** Frames where the day sets off from and every place it visits. */
   /**
    * Stays where the day sets off (where the night was spent, or the last waypoint
    * passed the evening before) and eases to a zoom for the day's first drive.
@@ -1052,15 +1045,13 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
   /** Jumps to the next day's opener, or back to this day's (then the one before). */
   function stepDay(direction: number) {
-    // Presenting or recording, a day starts at its first stop instead.
+    // Presenting or recording skips the openers, so a day starts at the stop after them.
+    const startsDay = isStageLayout()
+      ? (slide: Slide, slideIndex: number) =>
+          slide.type !== 'day' && slides[slideIndex - 1]?.type === 'day'
+      : (slide: Slide) => slide.type === 'day'
     const openers = slides.flatMap((slide, slideIndex) =>
-      isStageLayout()
-        ? slide.type !== 'day' && slides[slideIndex - 1]?.type === 'day'
-          ? [slideIndex]
-          : []
-        : slide.type === 'day'
-          ? [slideIndex]
-          : [],
+      startsDay(slide, slideIndex) ? [slideIndex] : [],
     )
     const target =
       direction > 0
@@ -1393,7 +1384,6 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     const { stop } = slide
 
     stageCenter.replaceChildren()
-    renderClock({ animate: true })
     // The photo card pops up once the camera has arrived at the stop.
     stagePhotoTimer = setTimeout(() => {
       stagePhotoCard.show(stop, slide.stopIndex)
@@ -1401,7 +1391,10 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     }, photoDelay / speed)
   }
 
-  /** Notes when a day (its skipped opener, just before) or the summary starts in the recording. */
+  /**
+   * Notes in the recording where each day starts (the stop after its skipped opener)
+   * and where the summary does.
+   */
   function addChapter(slideIndex: number) {
     const previous = slides[slideIndex - 1]
     const slide = previous?.type === 'day' ? previous : slides[slideIndex]
@@ -2075,28 +2068,29 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     trip = nextTrip
     covers = getIntroCovers(nextTrip)
     exportMusic.value = nextTrip.music ?? exportMusic.options[0]?.value ?? ''
+    // A waypoint has its own day and time; a stop's places take the stop's.
     const toPoint = (
-      place: TripPlace | TripWaypoint,
+      place: TripPlace,
+      when: Pick<TripWaypoint, 'date' | 'day' | 'time'>,
       stopIndex: number,
       waypoint: boolean,
     ): TripPoint => ({
       coordinates: [place.longitude, place.latitude],
-      // A stop's places take its day and time; a waypoint has its own.
-      date: 'date' in place ? place.date : nextTrip.stops[stopIndex]!.date,
-      day: 'day' in place ? place.day : nextTrip.stops[stopIndex]!.day,
+      date: when.date,
+      day: when.day,
       name: place.name,
       stopIndex,
-      time: 'day' in place ? place.time : nextTrip.stops[stopIndex]!.time,
+      time: when.time,
       waypoint,
     })
 
     points = [
       ...nextTrip.stops.flatMap((stop, stopIndex) => [
-        ...stop.waypoints.map((waypoint) => toPoint(waypoint, stopIndex, true)),
-        ...stop.places.map((place) => toPoint(place, stopIndex, false)),
+        ...stop.waypoints.map((waypoint) => toPoint(waypoint, waypoint, stopIndex, true)),
+        ...stop.places.map((place) => toPoint(place, stop, stopIndex, false)),
       ]),
       ...nextTrip.trailingWaypoints.map((waypoint) =>
-        toPoint(waypoint, nextTrip.stops.length, true),
+        toPoint(waypoint, waypoint, nextTrip.stops.length, true),
       ),
     ]
     stopPointEnds = getStopPointEnds(nextTrip.stops)
