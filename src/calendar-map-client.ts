@@ -92,6 +92,8 @@ export function initializeCalendarMap() {
   const tripOverview = createTripOverview({
     getInk: () => getComputedStyle(page).getPropertyValue('--color-tx').trim() || '#21201c',
     getMap: () => map,
+    // Pointing at a route, or focusing its link, starts loading that trip.
+    onHighlight: (id) => tripPlayer.prefetch(id),
     onSelect: selectTrip,
     reducedMotion,
     signal,
@@ -106,6 +108,11 @@ export function initializeCalendarMap() {
   let lightboxIndex = 0
   let lightboxItems: HTMLElement[] = []
   let loadTimeout: ReturnType<typeof setTimeout> | undefined
+  // The style the map was last given, to catch a theme change made while it loaded.
+  let mapStyle = getMapStyle()
+  // Whether the view is still the one framing every place, untouched since: only then
+  // does a change of width frame them again.
+  let framedOnAll = true
 
   function getMapStyle() {
     return `mapbox://styles/mapbox/${darkMode.matches ? 'dark' : 'light'}-v11`
@@ -178,6 +185,7 @@ export function initializeCalendarMap() {
       return
     }
 
+    framedOnAll = false
     map.easeTo({
       center: [location.longitude, location.latitude],
       duration: getAnimationDuration(),
@@ -274,6 +282,7 @@ export function initializeCalendarMap() {
     drawer.hidden = true
     drawerContent.replaceChildren()
     activeLocationId = undefined
+    clearDrawerPadding()
 
     for (const marker of markers.values()) {
       marker.button.setAttribute('aria-pressed', 'false')
@@ -288,6 +297,23 @@ export function initializeCalendarMap() {
         suppressMarkerFocusPopup = false
       }
     }
+  }
+
+  /**
+   * Opening a place leaves the map padded for the drawer, which would keep later moves
+   * (a cluster opening, say) off centre once it's gone. Drops the padding without
+   * moving what's on screen.
+   */
+  function clearDrawerPadding() {
+    // A trip's camera sets its own padding every frame.
+    if (!map || !mapLoaded || tripPlayer.activeId) {
+      return
+    }
+
+    const container = map.getContainer()
+    const center = map.unproject([container.clientWidth / 2, container.clientHeight / 2])
+
+    map.jumpTo({ center, padding: { bottom: 0, left: 0, right: 0, top: 0 } })
   }
 
   /**
@@ -505,6 +531,8 @@ export function initializeCalendarMap() {
     } else {
       map.jumpTo(view)
     }
+
+    framedOnAll = true
   }
 
   function applyFog() {
@@ -765,6 +793,7 @@ export function initializeCalendarMap() {
             return
           }
 
+          framedOnAll = false
           map.easeTo({
             center: cluster.coordinates,
             duration: getAnimationDuration(),
@@ -856,6 +885,14 @@ export function initializeCalendarMap() {
 
         if (window.innerWidth !== lastWidth && location) {
           moveMapToLocation(location)
+        } else if (
+          window.innerWidth !== lastWidth &&
+          framedOnAll &&
+          !activeLocationId &&
+          !tripPlayer.activeId
+        ) {
+          // A phone turned sideways, or a window narrowed: every place back in view.
+          fitAllLocations()
         }
 
         lastWidth = window.innerWidth
@@ -882,7 +919,8 @@ export function initializeCalendarMap() {
     'change',
     () => {
       if (map && mapLoaded) {
-        map.setStyle(getMapStyle())
+        mapStyle = getMapStyle()
+        map.setStyle(mapStyle)
       }
     },
     { signal },
@@ -957,7 +995,7 @@ export function initializeCalendarMap() {
         container: canvas,
         dragRotate: true,
         projection: 'globe',
-        style: getMapStyle(),
+        style: mapStyle,
         touchPitch: true,
       })
 
@@ -987,8 +1025,19 @@ export function initializeCalendarMap() {
           requestSelectionClose()
         }
       })
-      // Pointing at a route is a hint its trip is next, so trips start loading.
-      map.once('mousemove', tripPlayer.prefetch)
+      // A drag, a scroll or a key leaves the framing. (Mapbox starts a move of its own
+      // on a window resize, carrying the resize event.)
+      map.on('movestart', (event) => {
+        const input = (event as { originalEvent?: Event }).originalEvent
+
+        if (
+          input instanceof MouseEvent ||
+          input instanceof KeyboardEvent ||
+          (typeof TouchEvent !== 'undefined' && input instanceof TouchEvent)
+        ) {
+          framedOnAll = false
+        }
+      })
       map.on('idle', syncClusterMarkers)
       map.on('moveend', syncClusterMarkers)
       map.on('load', () => {
@@ -1000,6 +1049,13 @@ export function initializeCalendarMap() {
         }
 
         hideFallback()
+
+        // The theme changed while the map loaded.
+        if (getMapStyle() !== mapStyle) {
+          mapStyle = getMapStyle()
+          map!.setStyle(mapStyle)
+        }
+
         applyFog()
         syncClusterMarkers()
 

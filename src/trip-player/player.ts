@@ -785,6 +785,15 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       }
     }
 
+    // A mouse resting on the card holds it here too, until it moves off.
+    while (hovering && !staging) {
+      await new Promise((resolve) => setTimeout(resolve, 100))
+
+      if (token !== travelToken) {
+        return
+      }
+    }
+
     traveling = false
     currentWaypointPoint = -1
     updateStops()
@@ -954,7 +963,11 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     for (const [thumbnailIndex, thumbnail] of thumbnails.entries()) {
       if (thumbnailIndex === nextPhotoIndex) {
         thumbnail.setAttribute('aria-current', 'true')
-        thumbnail.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' })
+        thumbnail.scrollIntoView({
+          behavior: reducedMotion.matches ? 'auto' : 'smooth',
+          block: 'nearest',
+          inline: 'nearest',
+        })
       } else {
         thumbnail.removeAttribute('aria-current')
       }
@@ -1434,7 +1447,13 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   /** The slide a shared link names: a stop's card, or its day's opener when it starts the day. */
   function getHashSlideIndex() {
     const reloaded = reloadPending
-    const anchor = decodeURIComponent(location.hash.slice(1))
+    let anchor = ''
+
+    try {
+      anchor = decodeURIComponent(location.hash.slice(1))
+    } catch {
+      // A malformed hash names no card; the trip starts from the beginning.
+    }
 
     reloadPending = false
 
@@ -2040,7 +2059,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     let request = tripRequests.get(id)
 
     if (!request) {
-      request = fetch(`/trip/${id}/data.json`, { signal })
+      request = fetch(`/trip/${encodeURIComponent(id)}/data.json`, { signal })
         .then(async (response) => {
           if (!response.ok) {
             return undefined
@@ -2064,12 +2083,10 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     return request
   }
 
-  /** Loads every trip's data ahead of time, when a switch to another trip looks likely. */
-  function prefetch() {
-    for (const id of tripTitles.keys()) {
-      if (!loadedTrips.has(id)) {
-        void loadTrip(id)
-      }
+  /** Loads a trip's data ahead of time, when it looks likely to be opened next. */
+  function prefetch(id: string) {
+    if (tripTitles.has(id) && !loadedTrips.has(id)) {
+      void loadTrip(id)
     }
   }
 
@@ -2126,7 +2143,17 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
 
         button.type = 'button'
         button.setAttribute('aria-label', getSlideLabel(slide))
-        button.addEventListener('click', () => goTo(slideIndex), { signal })
+        // A pointer is handled by the bar as a whole (see the scrubbing below); this
+        // is Enter or Space on a focused segment.
+        button.addEventListener(
+          'click',
+          (event) => {
+            if (event.detail === 0) {
+              goTo(slideIndex)
+            }
+          },
+          { signal },
+        )
         button.addEventListener(
           'pointerenter',
           (event) => {
@@ -2241,6 +2268,73 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     signal.addEventListener('abort', () => ghost.remove(), { once: true })
   }
 
+  /** The progress segment under `x`, clamped to the bar's ends. */
+  function getProgressIndexAt(x: number) {
+    const rect = progress.getBoundingClientRect()
+    const fraction = Math.min(Math.max((x - rect.left) / Math.max(rect.width, 1), 0), 0.9999)
+
+    return Math.floor(fraction * progress.children.length)
+  }
+
+  // The segments are too narrow to hit one by one on a phone, so a finger can slide
+  // along the bar, naming the card under it, and lands on that card when lifted.
+  let scrubIndex: number | undefined
+
+  progress.addEventListener(
+    'pointerdown',
+    (event) => {
+      if (event.button !== 0 || progress.children.length === 0) {
+        return
+      }
+
+      scrubIndex = getProgressIndexAt(event.clientX)
+      progress.setPointerCapture(event.pointerId)
+    },
+    { signal },
+  )
+  progress.addEventListener(
+    'pointermove',
+    (event) => {
+      if (scrubIndex === undefined) {
+        return
+      }
+
+      scrubIndex = getProgressIndexAt(event.clientX)
+      const button = progress.children[scrubIndex]?.querySelector('button')
+
+      if (button) {
+        showProgressTip(button)
+      }
+    },
+    { signal },
+  )
+  progress.addEventListener(
+    'pointerup',
+    (event) => {
+      const target = scrubIndex
+
+      scrubIndex = undefined
+
+      if (event.pointerType !== 'mouse') {
+        hideProgressTip()
+      }
+
+      if (target !== undefined) {
+        goTo(target)
+      }
+    },
+    { signal },
+  )
+  progress.addEventListener(
+    'pointercancel',
+    () => {
+      scrubIndex = undefined
+      hideProgressTip()
+    },
+    { signal },
+  )
+  // Sliding along the bar mustn't scroll or pull the page.
+  progress.style.touchAction = 'none'
   previousButton.addEventListener('click', () => goTo(index - 1), { signal })
   nextButton.addEventListener('click', () => goTo(index + 1), { signal })
   closeButton.addEventListener('click', onClose, { signal })
