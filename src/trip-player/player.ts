@@ -350,6 +350,8 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   let partial: { fraction: number; from: number; leg: MeasuredLine; to: number } | undefined
   let photoIndex = 0
   let photo: HTMLImageElement | undefined
+  // Holds the photo's frame at the height of the stop's tallest photo.
+  let photoSlot: HTMLElement | undefined
   let thumbnails: HTMLButtonElement[] = []
   // The side card's change to the next card, and to the next photo, in progress.
   const cardTransition = createTransition()
@@ -895,33 +897,40 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   /**
    * Gives the side card's photo its size up front, from its proportions and the room
    * the card has, so the card's layout is right before the photo has loaded rather
-   * than jumping when it arrives.
+   * than jumping when it arrives. The slot around it is as tall as the stop's tallest
+   * photo, so stepping through a stop's photos never changes the card's height.
    */
   function sizePhoto(img: HTMLImageElement, image: TripImage) {
     const frame = img.parentElement
-    const box = frame?.parentElement
+    const slide = slides[index]
 
-    if (!frame || !box) {
+    if (!frame || !photoSlot) {
       return
     }
 
-    const boxStyle = getComputedStyle(box)
+    const bodyStyle = getComputedStyle(body)
+    const border = frame.offsetWidth - frame.clientWidth
     // The card's content width, less the frame's border.
     const available =
-      box.clientWidth -
-      Number.parseFloat(boxStyle.paddingLeft) -
-      Number.parseFloat(boxStyle.paddingRight) -
-      (frame.offsetWidth - frame.clientWidth)
+      body.clientWidth -
+      Number.parseFloat(bodyStyle.paddingLeft) -
+      Number.parseFloat(bodyStyle.paddingRight) -
+      border
 
     img.style.width = ''
     img.style.height = ''
 
     const maxHeight = Number.parseFloat(getComputedStyle(img).maxHeight) || Infinity
-    const ratio = image.width / image.height
-    const width = Math.min(available, maxHeight * ratio)
+    const fit = ({ height, width }: TripImage) => {
+      const fitted = Math.min(available, maxHeight * (width / height))
+      return { height: fitted * (height / width), width: fitted }
+    }
+    const size = fit(image)
+    const images = slide?.type === 'stop' ? slide.stop.images : [image]
 
-    img.style.width = `${width}px`
-    img.style.height = `${width / ratio}px`
+    img.style.width = `${size.width}px`
+    img.style.height = `${size.height}px`
+    photoSlot.style.height = `${Math.max(...images.map((item) => fit(item).height)) + border}px`
   }
 
   function showPhoto(stop: TripStop, nextPhotoIndex: number) {
@@ -1163,8 +1172,9 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       return
     }
 
-    // Paused playback only pauses the music, so it picks up where it was.
-    if (!playing) {
+    // Paused playback only pauses the music, so it picks up where it was. A hidden tab
+    // holds the card too (see tick), so the music waits with it.
+    if (!playing || document.hidden) {
       void ambient?.context.suspend()
       return
     }
@@ -1239,7 +1249,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       const { stop } = slide
       const text = createElement(
         'p',
-        'mt-3 max-h-[min(20dvh,9rem)] shrink-0 overflow-y-auto @max-[48rem]:max-h-none overscroll-contain [scrollbar-width:none] break-words whitespace-pre-line text-tx-2 [&::-webkit-scrollbar]:hidden',
+        'mt-3 max-h-[min(20dvh,9rem)] shrink-0 overflow-y-auto @max-[48rem]:max-h-[min(12dvh,6.5rem)] overscroll-contain [scrollbar-width:none] break-words whitespace-pre-line text-tx-2 [&::-webkit-scrollbar]:hidden',
         stop.text,
       )
       const link = document.createElement('a')
@@ -1249,21 +1259,25 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
       link.href = stop.href
 
       photo = undefined
+      photoSlot = undefined
       thumbnails = []
       photoIndex = 0
 
       if (stop.images.length > 0) {
         photo = document.createElement('img')
+        photoSlot = createElement('div', 'flex shrink-0 items-center justify-center', '')
         link.className =
-          'relative block min-h-0 self-center overflow-hidden rounded-md border border-border bg-inline no-underline @max-[48rem]:shrink-0'
+          'relative block overflow-hidden rounded-md border border-border bg-inline no-underline'
         link.setAttribute('aria-label', `查看 ${stop.date}的记录`)
         // As tall as the card has room for beside the progress, thumbnails, text and
-        // buttons (about 24rem with the card's offset); on a phone, short of the map.
+        // buttons (about 24rem with the card's offset); on a phone, low enough that
+        // the card leaves the map about half the screen.
         photo.className =
-          'relative block h-auto max-h-[calc(100dvh-24rem)] w-auto max-w-full @max-[48rem]:max-h-[38dvh]'
+          'relative block h-auto max-h-[calc(100dvh-24rem)] w-auto max-w-full @max-[48rem]:max-h-[26dvh]'
         photo.sizes = IMAGE_SIZES
         photo.decoding = 'async'
         link.append(photo)
+        photoSlot.append(link)
 
         if (stop.images.length > 1) {
           addPhotoSwipe(link)
@@ -1284,7 +1298,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
               ),
             ]
           : []),
-        link,
+        photoSlot ?? link,
         ...(stop.images.length > 1 ? [createThumbnails(stop)] : []),
         ...(stop.text ? [text] : []),
       )
@@ -2235,6 +2249,8 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     'pointerenter',
     (event) => {
       hovering = event.pointerType === 'mouse'
+      // The current progress segment breathes while the card is held (see index.css).
+      panel.toggleAttribute('data-held', hovering)
     },
     { signal },
   )
@@ -2242,9 +2258,16 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
     'pointerleave',
     () => {
       hovering = false
+      panel.removeAttribute('data-held')
     },
     { signal },
   )
+  // The map's logo and attribution keep clear of the card (see index.css).
+  const panelSize = new ResizeObserver(() => {
+    page.style.setProperty('--trip-panel-height', `${panel.offsetHeight}px`)
+  })
+  panelSize.observe(panel)
+  signal.addEventListener('abort', () => panelSize.disconnect())
   exportButton.hidden = !canRecord()
   exportButton.addEventListener('click', () => setExportOptionsOpen(true, 'record'), { signal })
   presentButton.addEventListener('click', () => setExportOptionsOpen(true, 'present'), { signal })
@@ -2277,6 +2300,7 @@ export function createTripPlayer({ getMap, onClose, page, signal }: TripPlayerOp
   musicButton.addEventListener('click', toggleMusic, { signal })
   stageMusicButton.addEventListener('click', toggleMusic, { signal })
   exportMusic.addEventListener('change', syncAmbientMusic, { signal })
+  document.addEventListener('visibilitychange', syncAmbientMusic, { signal })
   page
     .querySelector('[data-calendar-map-trip-export-cancel]')
     ?.addEventListener('click', () => setExportOptionsOpen(false), { signal })

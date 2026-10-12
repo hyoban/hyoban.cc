@@ -1009,6 +1009,47 @@ html:has(.calendar-map-page[data-export-ratio]) body {
   }
 }
 
+/* The trip's side card sits in the bottom-left corner: the map's logo steps out to its
+   right, or on a phone, where the card spans the width, up above it with the
+   attribution. --trip-panel-height is kept by the player. */
+@container (min-width: 48.0625rem) {
+  .calendar-map-page:has(.calendar-map-trip:not([hidden])):not([data-export-ratio])
+    .mapboxgl-ctrl-bottom-left {
+    left: calc(min(22rem, 100cqw - 2rem) + 1.5rem);
+  }
+}
+
+@container (max-width: 48rem) {
+  .calendar-map-page:has(.calendar-map-trip:not([hidden])):not([data-export-ratio])
+    :is(.mapboxgl-ctrl-bottom-left, .mapboxgl-ctrl-bottom-right) {
+    bottom: calc(var(--trip-panel-height, 0px) + 1rem + env(safe-area-inset-bottom));
+  }
+}
+
+/* A mouse resting on the side card holds it; the current segment breathes meanwhile. */
+.calendar-map-page[data-trip-playing]
+  .calendar-map-trip[data-held]
+  [aria-current='step']
+  [data-progress-fill] {
+  animation: calendar-map-trip-held 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes calendar-map-trip-held {
+  to {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .calendar-map-page[data-trip-playing]
+    .calendar-map-trip[data-held]
+    [aria-current='step']
+    [data-progress-fill] {
+    animation: none;
+    opacity: 0.5;
+  }
+}
+
 @media (min-width: 48.0625rem) {
   .calendar-map-page:has(.calendar-map-drawer:not([hidden])) .mapboxgl-ctrl-bottom-right {
     right: calc(min(28rem, calc(100vw - 2rem)) + 1.5rem);

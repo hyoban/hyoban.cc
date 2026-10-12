@@ -65,6 +65,7 @@ export function initializeCalendarMap() {
   const drawerTitle = queryRequired<HTMLElement>(page, '[data-calendar-map-drawer-title]')
   const fallback = queryRequired<HTMLElement>(page, '[data-calendar-map-fallback]')
   const fallbackMessage = queryRequired<HTMLElement>(page, '[data-calendar-map-fallback-message]')
+  const fallbackRetry = queryRequired<HTMLButtonElement>(page, '[data-calendar-map-fallback-retry]')
   const loading = queryRequired<HTMLElement>(page, '[data-calendar-map-loading]')
   const lightbox = queryRequired<HTMLDialogElement>(page, '[data-calendar-map-lightbox]')
   const tripLinks = [...page.querySelectorAll<HTMLAnchorElement>('[data-calendar-map-trip-link]')]
@@ -451,9 +452,10 @@ export function initializeCalendarMap() {
     syncLocationFromHash()
   }
 
-  function showFallback(message: string) {
+  function showFallback(message: string, options: { retry?: boolean } = {}) {
     loading.hidden = true
     fallbackMessage.textContent = message
+    fallbackRetry.hidden = !options.retry
     fallback.hidden = false
     canvas.setAttribute('aria-hidden', 'true')
   }
@@ -670,67 +672,85 @@ export function initializeCalendarMap() {
       setMarkerShown(marker, visibleLocationIds.has(id))
     }
 
-    clearClusterMarkers()
+    // A cluster's id stands for the same places at the same spot, so the ones still
+    // shown are kept: a focused cluster keeps its focus, and a hovered one its name.
+    for (const [id, cluster] of clusterMarkers) {
+      if (!clusters.has(id)) {
+        cluster.popup.remove()
+        cluster.marker.remove()
+        clusterMarkers.delete(id)
+      }
+    }
 
     for (const [id, cluster] of clusters) {
-      const button = document.createElement('button')
-      const dot = document.createElement('span')
-      const popup = new mapboxgl.Popup({
-        closeButton: false,
-        closeOnClick: false,
-        focusAfterOpen: false,
-        offset: 16,
-      }).setText(`${cluster.locationCount} 个地点 · ${cluster.momentCount} 条记录`)
-
-      button.type = 'button'
-      button.className =
-        'calendar-map-cluster group flex size-12 cursor-pointer items-center justify-center border-0 bg-transparent p-0 focus-visible:outline-none'
-      button.setAttribute(
-        'aria-label',
-        `${cluster.locationCount} 个地点，共 ${cluster.momentCount} 条记录`,
-      )
-      dot.className =
-        'flex h-8 min-w-8 items-center justify-center rounded-full border-2 border-bg bg-tx px-2 font-mono text-xs font-semibold text-bg shadow-[0_0.25rem_1rem_rgb(0_0_0/0.28)] transition-transform duration-[160ms] group-hover:scale-110 group-focus-visible:scale-110 motion-reduce:transition-none'
-      dot.setAttribute('aria-hidden', 'true')
-      dot.textContent = String(cluster.momentCount)
-      button.append(dot)
-
-      const showPopup = () => popup.setLngLat(cluster.coordinates).addTo(map!)
-      const hidePopup = () => popup.remove()
-
-      button.addEventListener('mouseenter', showPopup, { signal })
-      button.addEventListener('mouseleave', hidePopup, { signal })
-      button.addEventListener('focus', showPopup, { signal })
-      button.addEventListener('blur', hidePopup, { signal })
-      button.addEventListener(
-        'click',
-        (event) => {
-          event.stopPropagation()
-          hidePopup()
-
-          const source = map?.getSource(LOCATION_SOURCE_ID) as GeoJSONSource | undefined
-          source?.getClusterExpansionZoom(id, (error, zoom) => {
-            if (error || zoom == null || !map) {
-              return
-            }
-
-            map.easeTo({
-              center: cluster.coordinates,
-              duration: getAnimationDuration(),
-              zoom,
-            })
-          })
-        },
-        { signal },
-      )
-
-      const marker = new mapboxgl.Marker({ anchor: 'center', element: button })
-        .setLngLat(cluster.coordinates)
-        .addTo(map)
-      button.setAttribute('role', 'button')
-
-      clusterMarkers.set(id, { marker, popup })
+      if (!clusterMarkers.has(id)) {
+        clusterMarkers.set(id, createClusterMarker(map, id, cluster))
+      }
     }
+  }
+
+  function createClusterMarker(
+    map: mapboxgl.Map,
+    id: number,
+    cluster: { coordinates: [number, number]; locationCount: number; momentCount: number },
+  ): ClusterMarkerEntry {
+    const button = document.createElement('button')
+    const dot = document.createElement('span')
+    const popup = new mapboxgl.Popup({
+      closeButton: false,
+      closeOnClick: false,
+      focusAfterOpen: false,
+      offset: 16,
+    }).setText(`${cluster.locationCount} 个地点 · ${cluster.momentCount} 条记录`)
+
+    button.type = 'button'
+    button.className =
+      'calendar-map-cluster group flex size-12 cursor-pointer items-center justify-center border-0 bg-transparent p-0 focus-visible:outline-none'
+    button.setAttribute(
+      'aria-label',
+      `${cluster.locationCount} 个地点，共 ${cluster.momentCount} 条记录`,
+    )
+    dot.className =
+      'flex h-8 min-w-8 items-center justify-center rounded-full border-2 border-bg bg-tx px-2 font-mono text-xs font-semibold text-bg shadow-[0_0.25rem_1rem_rgb(0_0_0/0.28)] transition-transform duration-[160ms] group-hover:scale-110 group-focus-visible:scale-110 motion-reduce:transition-none'
+    dot.setAttribute('aria-hidden', 'true')
+    dot.textContent = String(cluster.momentCount)
+    button.append(dot)
+
+    const showPopup = () => popup.setLngLat(cluster.coordinates).addTo(map)
+    const hidePopup = () => popup.remove()
+
+    button.addEventListener('mouseenter', showPopup, { signal })
+    button.addEventListener('mouseleave', hidePopup, { signal })
+    button.addEventListener('focus', showPopup, { signal })
+    button.addEventListener('blur', hidePopup, { signal })
+    button.addEventListener(
+      'click',
+      (event) => {
+        event.stopPropagation()
+        hidePopup()
+
+        const source = map.getSource(LOCATION_SOURCE_ID) as GeoJSONSource | undefined
+        source?.getClusterExpansionZoom(id, (error, zoom) => {
+          if (error || zoom == null) {
+            return
+          }
+
+          map.easeTo({
+            center: cluster.coordinates,
+            duration: getAnimationDuration(),
+            zoom,
+          })
+        })
+      },
+      { signal },
+    )
+
+    const marker = new mapboxgl.Marker({ anchor: 'center', element: button })
+      .setLngLat(cluster.coordinates)
+      .addTo(map)
+    button.setAttribute('role', 'button')
+
+    return { marker, popup }
   }
 
   function showLightboxItem(index: number) {
@@ -767,11 +787,19 @@ export function initializeCalendarMap() {
   }
 
   drawerClose.addEventListener('click', requestSelectionClose, { signal })
+  fallbackRetry.addEventListener('click', () => window.location.reload(), { signal })
 
   for (const link of tripLinks) {
     const id = link.dataset.calendarMapTripLink!
 
-    link.addEventListener('focus', () => tripOverview.highlight(id), { signal })
+    link.addEventListener(
+      'focus',
+      () => {
+        tripOverview.highlight(id)
+        tripOverview.reveal(id)
+      },
+      { signal },
+    )
     link.addEventListener('blur', () => tripOverview.highlight(undefined), { signal })
     link.addEventListener(
       'click',
@@ -783,21 +811,29 @@ export function initializeCalendarMap() {
     )
   }
   window.addEventListener('popstate', () => syncLocationFromHash(), { signal })
+  // The map follows its container's size by itself. The open place is centred again
+  // once a resize settles, and only when the width changed: a phone's address bar
+  // showing and hiding only changes the height, and shouldn't keep moving the map.
+  let resizeTimer: ReturnType<typeof setTimeout> | undefined
+  let lastWidth = window.innerWidth
+
   window.addEventListener(
     'resize',
     () => {
-      map?.resize()
+      clearTimeout(resizeTimer)
+      resizeTimer = setTimeout(() => {
+        const location = activeLocationId ? locationsById.get(activeLocationId) : undefined
 
-      if (activeLocationId) {
-        const location = locationsById.get(activeLocationId)
-
-        if (location) {
+        if (window.innerWidth !== lastWidth && location) {
           moveMapToLocation(location)
         }
-      }
+
+        lastWidth = window.innerWidth
+      }, 150)
     },
     { signal },
   )
+  signal.addEventListener('abort', () => clearTimeout(resizeTimer))
   window.addEventListener(
     'keydown',
     (event) => {
@@ -885,7 +921,7 @@ export function initializeCalendarMap() {
     try {
       mapboxgl.accessToken = token
       map = new mapboxgl.Map({
-        attributionControl: true,
+        attributionControl: false,
         center: [110, 32],
         container: canvas,
         dragRotate: true,
@@ -895,6 +931,8 @@ export function initializeCalendarMap() {
         zoom: 2,
       })
 
+      // The attribution stays folded into its ⓘ button at every width, opening on a click.
+      map.addControl(new mapboxgl.AttributionControl({ compact: true }))
       map.addControl(
         new MapboxLanguage({ defaultLanguage: 'zh-Hans' }) as unknown as mapboxgl.IControl,
       )
@@ -911,7 +949,7 @@ export function initializeCalendarMap() {
         }
       })
       map.on('click', (event) => {
-        if (tripOverview.click(event.point)) {
+        if (tripOverview.click(event.point, event.lngLat)) {
           return
         }
 
@@ -948,15 +986,22 @@ export function initializeCalendarMap() {
       })
       map.on('error', () => {
         if (!mapLoaded) {
-          showFallback('地图资源加载失败。')
+          showFallback('地图资源加载失败。', { retry: true })
         }
       })
 
+      // A slow connection gets a word that the map is still coming, and only much
+      // later the list of places with a way to try again.
       loadTimeout = setTimeout(() => {
         if (!mapLoaded) {
-          showFallback('地图加载超时。')
+          loading.textContent = '地图加载得有点慢，再等等…'
+          loadTimeout = setTimeout(() => {
+            if (!mapLoaded) {
+              showFallback('地图加载超时。', { retry: true })
+            }
+          }, 30_000)
         }
-      }, 12_000)
+      }, 10_000)
     } catch {
       map?.remove()
       canvas.replaceChildren()

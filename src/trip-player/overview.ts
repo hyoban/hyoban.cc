@@ -3,7 +3,8 @@ import { lineFeature } from './route'
 import type { TripSummary } from './types'
 
 // Every trip's route on the overview map, as the way into its playback: pointing at a
-// route lifts it above the others, and clicking it opens the trip.
+// route lifts it above the others, and clicking it opens the trip. A finger has no
+// pointing, so its first tap on a route lifts it and names it, and a second opens it.
 //
 // Opening a trip, the other routes fade away at once while the opened one stays a
 // moment longer, so the eye follows it as the camera flies in and the trip's own route
@@ -12,7 +13,9 @@ import type { TripSummary } from './types'
 
 const PREFIX = 'calendar-trip-overview-'
 // How far from a route, in pixels, a pointer or a finger still hits it.
-const HIT_RADIUS = 10
+const HIT_RADIUS = { mouse: 10, touch: 22 }
+// Room kept around a route brought into view for a focused trip link.
+const REVEAL_PADDING = 64
 const BASE = { opacity: 0.5, width: 1.5 }
 const DIMMED = { opacity: 0.15, width: 1.5 }
 const LIFTED = { opacity: 1, width: 2.5 }
@@ -44,6 +47,9 @@ export function createTripOverview({
   let activeId: string | undefined
   let highlightedId: string | undefined
   let watched: MapboxMap | undefined
+  // What last pressed or moved over the map. A tap also sends the mouse events of a
+  // click, which mustn't count as pointing.
+  let pointerType = 'mouse'
   // Cancels the second half of a two-step change, waiting on a timer or a frame.
   let settle: (() => void) | undefined
   // Styled like the trip's place labels (see index.css), above the pointer.
@@ -126,6 +132,10 @@ export function createTripOverview({
     watch(map)
   }
 
+  function isTouch() {
+    return pointerType !== 'mouse'
+  }
+
   function getTripAt(point: mapboxgl.Point) {
     const map = getMap()
 
@@ -134,9 +144,10 @@ export function createTripOverview({
     }
 
     const layers = layerIds.filter((id) => map.getLayer(id))
+    const radius = isTouch() ? HIT_RADIUS.touch : HIT_RADIUS.mouse
     const box: [mapboxgl.PointLike, mapboxgl.PointLike] = [
-      [point.x - HIT_RADIUS, point.y - HIT_RADIUS],
-      [point.x + HIT_RADIUS, point.y + HIT_RADIUS],
+      [point.x - radius, point.y - radius],
+      [point.x + radius, point.y + radius],
     ]
     // Topmost first, which is the latest trip where routes cross.
     const feature = layers.length > 0 ? map.queryRenderedFeatures(box, { layers })[0] : undefined
@@ -151,13 +162,28 @@ export function createTripOverview({
     }
 
     watched = map
+
+    const notePointer = (event: PointerEvent) => {
+      pointerType = event.pointerType
+    }
+
+    map.getCanvasContainer().addEventListener('pointerdown', notePointer, { capture: true, signal })
+    map.getCanvasContainer().addEventListener('pointermove', notePointer, { capture: true, signal })
     map.on('mousemove', (event) => {
+      if (isTouch()) {
+        return
+      }
+
       const trip = getTripAt(event.point)
 
       map.getCanvas().style.cursor = trip ? 'pointer' : ''
       highlight(trip?.id, event.lngLat)
     })
-    map.on('mouseout', () => highlight(undefined))
+    map.on('mouseout', () => {
+      if (!isTouch()) {
+        highlight(undefined)
+      }
+    })
   }
 
   /** Lifts a route above the others, with its name by `at` or by the route's middle. */
@@ -173,7 +199,7 @@ export function createTripOverview({
       popup.setLngLat(at ?? middle)
 
       if (highlightedId !== id) {
-        popup.setDOMContent(createPopupContent(trip))
+        popup.setDOMContent(createPopupContent(trip, isTouch()))
       }
 
       if (!popup.isOpen()) {
@@ -189,15 +215,50 @@ export function createTripOverview({
     }
   }
 
-  /** The trip under a click on the map, if any; opens it and reports whether it did. */
-  function click(point: mapboxgl.Point) {
+  /**
+   * The trip under a click on the map, if any: opens it, or with a finger lifts it
+   * first unless it already is. Reports whether the click was the trip's.
+   */
+  function click(point: mapboxgl.Point, at: mapboxgl.LngLat) {
     const trip = getTripAt(point)
 
-    if (trip) {
+    if (trip && (!isTouch() || highlightedId === trip.id)) {
       onSelect(trip.id)
+    } else if (trip) {
+      highlight(trip.id, at)
+    } else if (isTouch() && highlightedId) {
+      highlight(undefined)
     }
 
     return Boolean(trip)
+  }
+
+  /** Brings a trip's whole route into view, if part of it is off the map. */
+  function reveal(id: string) {
+    const map = getMap()
+    const trip = tripsById.get(id)
+
+    if (!map || !trip || activeId || trip.line.length === 0) {
+      return
+    }
+
+    const view = map.getBounds()
+
+    if (view && trip.line.every((coordinates) => view.contains(coordinates))) {
+      return
+    }
+
+    const bounds = new mapboxgl.LngLatBounds()
+
+    for (const coordinates of trip.line) {
+      bounds.extend(coordinates)
+    }
+
+    map.fitBounds(bounds, {
+      duration: reducedMotion.matches ? 0 : 500,
+      maxZoom: map.getZoom(),
+      padding: REVEAL_PADDING,
+    })
   }
 
   /** Hides the routes as trip `id` opens, its own route staying a moment longer. */
@@ -276,10 +337,10 @@ export function createTripOverview({
     popup.remove()
   })
 
-  return { add, click, hide, highlight, show }
+  return { add, click, hide, highlight, reveal, show }
 }
 
-function createPopupContent(trip: TripSummary) {
+function createPopupContent(trip: TripSummary, touch: boolean) {
   const content = document.createElement('div')
   const date = document.createElement('p')
   const title = document.createElement('p')
@@ -289,5 +350,15 @@ function createPopupContent(trip: TripSummary) {
   title.className = 'font-medium'
   title.textContent = trip.title
   content.append(date, title)
+
+  if (touch) {
+    content.append(
+      Object.assign(document.createElement('p'), {
+        className: 'text-[0.6875rem] text-tx-3',
+        textContent: '再点一次回放',
+      }),
+    )
+  }
+
   return content
 }
