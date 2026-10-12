@@ -66,12 +66,12 @@
   "dependencies": {
     "@mapbox/mapbox-gl-language": "^1.0.1",
     "@types/geojson": "^7946.0.16",
-    "mapbox-gl": "^3.29.0",
+    "mapbox-gl": "^3.32.0",
     "number-flow": "~0.6.2"
   },
   "devDependencies": {
-    "happy-dom": "^20.0.0",
-    "sharp": "^0.35.4",
+    "happy-dom": "^21.0.1",
+    "sharp": "^0.35.5",
     "vite-plus": "catalog:"
   },
   "peerDependencies": {
