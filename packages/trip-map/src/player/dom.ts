@@ -1,4 +1,5 @@
 import 'number-flow'
+import { getIconBody, ICON_CLASS, type IconName } from '../icons.ts'
 import { MOSAIC_CLASS, MOSAIC_IMAGE_CLASS } from './intro.ts'
 import type { TripImage } from './types.ts'
 
@@ -33,12 +34,12 @@ export function createPopupContent({
   const content = document.createElement('div')
 
   content.append(
-    createElement('p', 'text-[0.6875rem] text-tx-3 tabular-nums', meta),
-    createElement('p', 'font-medium', title),
+    createElement('p', 'calendar-map-popup__meta', meta),
+    createElement('p', 'calendar-map-popup__title', title),
   )
 
   if (hint) {
-    content.append(createElement('p', 'text-[0.6875rem] text-tx-3', hint))
+    content.append(createElement('p', 'calendar-map-popup__hint', hint))
   }
 
   return content
@@ -157,7 +158,7 @@ export function createLiveVideo(src: string, className: string) {
 export function createVideoPlayer(src: string, className: string) {
   const player = document.createElement('iframe')
 
-  player.className = `block aspect-video ${className}`
+  player.className = `calendar-map-video ${className}`.trim()
   player.src = src
   player.title = '哔哩哔哩视频'
   player.allow = 'autoplay; fullscreen; picture-in-picture'
@@ -166,13 +167,45 @@ export function createVideoPlayer(src: string, className: string) {
   return player
 }
 
-export function createWeather(weather: { icon: string; label: string }, className: string) {
+export function createWeather(weather: { icon: IconName; label: string }, className: string) {
   const element = createElement('p', className, '')
-  const icon = createElement('span', weather.icon, '')
-
-  icon.setAttribute('aria-hidden', 'true')
-  element.append(icon, weather.label)
+  element.append(createIcon(weather.icon), weather.label)
   return element
+}
+
+/** An inline icon, decorative, the size of the text around it (see styles.css). */
+export function createIcon(name: IconName) {
+  const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+
+  icon.setAttribute('class', ICON_CLASS)
+  icon.setAttribute('viewBox', '0 0 24 24')
+  icon.setAttribute('aria-hidden', 'true')
+  setIcon(icon, name)
+  return icon
+}
+
+/** Changes which icon an `<svg>` from `createIcon` shows. */
+export function setIcon(icon: SVGSVGElement, name: IconName) {
+  if (icon.dataset.icon !== name) {
+    icon.dataset.icon = name
+    icon.innerHTML = getIconBody(name)
+  }
+}
+
+/**
+ * Puts an icon in a button's icon slot, its first child, in place of whatever the
+ * page rendered there.
+ */
+export function setButtonIcon(button: Element, name: IconName) {
+  const slot = button.firstElementChild
+
+  if (slot instanceof SVGSVGElement && slot.dataset.icon !== undefined) {
+    setIcon(slot, name)
+  } else if (slot) {
+    slot.replaceWith(createIcon(name))
+  } else {
+    button.prepend(createIcon(name))
+  }
 }
 
 export function downloadBlob(blob: Blob, filename: string) {

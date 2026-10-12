@@ -92,22 +92,27 @@ pages are the reference use.
 
 ## Styling
 
-The markup the client builds uses Tailwind utility classes and Lucide icon classes
-(`i-lucide-*` through `@egoist/tailwindcss-icons`), with the theme tokens `bg`, `border`,
-`inline`, `hover`, `tx`, `tx-2` and `tx-3`. A site on Tailwind 4 adds the package's sources
-to its scan and defines those colours:
+Everything the client puts on the page is styled by `styles.css`, with its icons as
+inline SVG (Lucide's), so a site needs neither Tailwind nor an icon font. The stylesheet
+reads the page's theme from these custom properties, which the site defines on `:root`
+or on the map page:
 
 ```css
-@source '../node_modules/@hyoban/trip-map/src';
-@theme {
+:root {
   --color-bg: #fdfdfc;
+  --color-border: #e9e9e7;
+  --color-inline: #f9f9f8;
   --color-tx: #21201c;
-  /* … */
+  --color-tx-2: #63635e;
+  --color-tx-3: #73736c;
+  /* Optional: the numbers' typeface. */
+  --font-mono: ui-monospace, monospace;
 }
 ```
 
-`styles.css` reads the same colours as custom properties (`--color-bg`, `--color-tx` …) on
-the page. Shipping compiled CSS so that Tailwind isn't needed is a planned follow-up.
+The page's own markup (toolbar, drawer, trip card, stage) is the site's to lay out; in
+hyoban.cc it uses Tailwind, but any CSS will do. `renderIcon(name)` from the package root
+gives the same icons as markup for buttons the player later toggles, such as play/pause.
 
 ## Development
 

@@ -17,6 +17,7 @@ import {
   getYearColor,
   MOSAIC_CLASS,
   MOSAIC_IMAGE_CLASS,
+  renderIcon,
 } from '@hyoban/trip-map'
 import { getAssetUrl } from '@/asset-url'
 import { tripVideoMusic } from '@/data/music'
@@ -196,7 +197,7 @@ function toScriptJson(value: unknown) {
       <div class="calendar-map-trip-stage__center" data-calendar-map-trip-stage-center />
       <div class="calendar-map-trip-stage__progress" data-calendar-map-trip-stage-progress />
       <button class="calendar-map-trip-stage__music" type="button" data-calendar-map-trip-stage-music aria-label="背景音乐" aria-pressed="false" aria-keyshortcuts="M" title="背景音乐（M）">
-        <span class="i-lucide-volume-x" aria-hidden="true" />
+        <Fragment set:html={renderIcon('volume-x')} />
       </button>
       <button class="calendar-map-trip-stage__close" type="button" data-calendar-map-trip-stage-close aria-label="退出放映">
         <span class="i-lucide-x" aria-hidden="true" />
@@ -228,7 +229,7 @@ function toScriptJson(value: unknown) {
             <span class="i-lucide-chevron-left" aria-hidden="true" />
           </button>
           <button class="flex size-9 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-tx-2 hover:bg-inline hover:text-tx" type="button" data-calendar-map-trip-play aria-label="暂停" aria-keyshortcuts="Space">
-            <span class="i-lucide-pause" aria-hidden="true" />
+            <Fragment set:html={renderIcon('pause')} />
           </button>
           <button class="flex size-9 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-tx-2 hover:bg-inline hover:text-tx disabled:cursor-default disabled:opacity-40 disabled:hover:bg-transparent" type="button" data-calendar-map-trip-next aria-label="下一站" aria-keyshortcuts="ArrowRight" title="下一站（→）">
             <span class="i-lucide-chevron-right" aria-hidden="true" />
@@ -237,7 +238,7 @@ function toScriptJson(value: unknown) {
         <div class="flex items-center [&[hidden]]:hidden" data-calendar-map-trip-actions>
           <button class="flex h-9 min-w-9 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent px-1.5 font-mono text-xs text-tx-2 tabular-nums hover:bg-inline hover:text-tx" type="button" data-calendar-map-trip-speed aria-label="播放速度 1×" aria-keyshortcuts="- =" title="播放速度（- 减速，= 加速）">1×</button>
           <button class="flex size-9 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-tx-2 hover:bg-inline hover:text-tx aria-pressed:text-tx" type="button" data-calendar-map-trip-music aria-label="背景音乐" aria-pressed="false" aria-keyshortcuts="M" title="背景音乐（M）">
-            <span class="i-lucide-volume-x" aria-hidden="true" />
+            <Fragment set:html={renderIcon('volume-x')} />
           </button>
           <button class="flex size-9 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-tx-2 hover:bg-inline hover:text-tx" type="button" data-calendar-map-trip-present aria-label="放映" aria-keyshortcuts="F" title="放映（F）">
             <span class="i-lucide-tv" aria-hidden="true" />

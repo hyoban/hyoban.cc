@@ -1,8 +1,6 @@
 @import 'tailwindcss' source(none);
 @plugin '@egoist/tailwindcss-icons';
 @source '../../src';
-/* The map and trip player build their markup in script, with these utilities. */
-@source '../../packages/trip-map/src';
 
 @media (prefers-color-scheme: dark) {
   .astro-code,

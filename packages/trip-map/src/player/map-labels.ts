@@ -168,7 +168,7 @@ export function createMapLabels({
     labels = next.map(({ coordinates, name }) => {
       const element = createElement('div', 'calendar-map-trip-label', '')
 
-      element.append(createElement('p', 'text-sm font-medium', name))
+      element.append(createElement('p', 'calendar-map-trip-label__name', name))
       // Starts hidden and fades in once its place is on screen.
       element.style.opacity = '0'
       layer!.append(element)

@@ -1,6 +1,7 @@
 import mapboxgl, { type GeoJSONSource, type Map as MapboxMap } from 'mapbox-gl'
 import type { Coordinates } from '../geo.ts'
-import { createElement } from './dom.ts'
+import type { IconName } from '../icons.ts'
+import { createElement, createIcon, setIcon } from './dom.ts'
 import { lineFeature, type TravelMode } from './route.ts'
 
 // The trip's map layers: the planned route (dashed), the drawn route, the piece being
@@ -21,11 +22,11 @@ const STOPS_CLEAR_ID = 'calendar-trip-stops-clear'
 const CLEAR_SIZE = 20
 const LAYER_IDS = [STOPS_CLEAR_ID, STOPS_ID, ACTIVE_ROUTE_ID, ROUTE_ID, PLANNED_ID]
 
-const TRAVEL_ICONS: Record<TravelMode, string> = {
-  car: 'i-lucide-car-front',
-  ferry: 'i-lucide-ship',
-  plane: 'i-lucide-plane',
-  train: 'i-lucide-train-front',
+const TRAVEL_ICONS: Record<TravelMode, IconName> = {
+  car: 'car-front',
+  ferry: 'ship',
+  plane: 'plane',
+  train: 'train-front',
 }
 
 export type StopState = 'current' | 'upcoming' | 'visited'
@@ -173,7 +174,7 @@ export function createRouteLayers(
 
     element.setAttribute('aria-hidden', 'true')
     element.hidden = true
-    element.append(createElement('span', TRAVEL_ICONS.car, ''), ...(headLabel ? [headLabel] : []))
+    element.append(createIcon(TRAVEL_ICONS.car), ...(headLabel ? [headLabel] : []))
     map.getContainer().append(element)
     // Sub-pixel transforms set as the map draws keep it on the route as the map glides.
     map.on('render', place)
@@ -268,8 +269,8 @@ export function createRouteLayers(
 
     const icon = head.element.firstElementChild
 
-    if (icon && icon.className !== TRAVEL_ICONS[mode]) {
-      icon.className = TRAVEL_ICONS[mode]
+    if (icon instanceof SVGSVGElement) {
+      setIcon(icon, TRAVEL_ICONS[mode])
     }
 
     head.element.hidden = !coordinates
