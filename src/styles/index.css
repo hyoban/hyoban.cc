@@ -518,8 +518,7 @@ html[data-calendar-mode-transition] .calendar-back-link {
 }
 
 /* Keeps the markers' own hover transitions alongside the fade. */
-.calendar-map-page
-  :is(.calendar-map-marker__dot, .calendar-map-cluster > span, .calendar-map-city > span) {
+.calendar-map-page .calendar-map-marker__dot {
   transition:
     opacity 200ms,
     visibility 200ms,
@@ -527,29 +526,25 @@ html[data-calendar-mode-transition] .calendar-back-link {
     box-shadow 160ms ease-in-out;
 }
 
-.calendar-map-page[data-map-trip]
-  :is(.calendar-map-marker__dot, .calendar-map-cluster > span, .calendar-map-city > span),
-.calendar-map-page[data-map-trip] :is(.calendar-map-legend, .calendar-map-places) {
+.calendar-map-page[data-map-trip] :is(.calendar-map-marker__dot, .calendar-map-legend) {
   visibility: hidden;
   opacity: 0;
 }
 
-.calendar-map-page[data-map-trip]
-  :is(.calendar-map-marker, .calendar-map-cluster, .calendar-map-city) {
+.calendar-map-page[data-map-trip] .calendar-map-marker {
   pointer-events: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .calendar-map-page :is(.calendar-map-marker__dot, .calendar-map-cluster > span),
-  .calendar-map-legend,
-  .calendar-map-places {
+  .calendar-map-page .calendar-map-marker__dot,
+  .calendar-map-legend {
     transition: none;
   }
 }
 
-/* 全部 far out: every place a small dot without its count, so crowded parts stay
+/* Far out, every place is a small dot without its count, so crowded parts stay
    readable; hovering one still names it with its count. */
-.calendar-map-page[data-map-places='all'][data-map-far] .calendar-map-marker__dot {
+.calendar-map-page[data-map-far] .calendar-map-marker__dot {
   min-width: 0.625rem;
   height: 0.625rem;
   padding: 0;

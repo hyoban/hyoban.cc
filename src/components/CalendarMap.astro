@@ -5,8 +5,7 @@ import CalendarBackLink from '@/components/CalendarBackLink.astro'
 import CalendarModeSwitch from '@/components/CalendarModeSwitch.astro'
 import MomentLightboxMedia from '@/components/MomentLightboxMedia.astro'
 import Layout from '@/layouts/Layout.astro'
-import { locations } from '@/data/locations'
-import { getLocation, getYearColor } from '@/moments/map-locations'
+import { getYearColor } from '@/moments/map-locations'
 import {
   getMappedLocationGroups,
   getMoments,
@@ -41,32 +40,6 @@ const markerData = locationGroups.map(group => ({
   name: group.location.name,
 }))
 const markerDataJson = toScriptJson(markerData)
-// Each city with the places in it, for the map's 城市 grouping. A Moment at two places
-// in the same city counts once.
-const cityMoments = new Map<string, { moments: Set<(typeof locationGroups)[number]['moments'][number]>; places: string[] }>()
-for (const group of locationGroups) {
-  const cityId = group.location.city ?? group.id
-  const city = cityMoments.get(cityId) ?? { moments: new Set(), places: [] }
-  city.places.push(group.id)
-  for (const moment of group.moments) {
-    city.moments.add(moment)
-  }
-  cityMoments.set(cityId, city)
-}
-const cityDataJson = toScriptJson([...cityMoments].map(([id, city]) => {
-  const location = getLocation(locations, id)
-  const latestYear = Math.max(...[...city.moments].map(moment => Number(moment.dateKey.slice(0, 4))))
-  return {
-    color: getYearColor(latestYear),
-    count: city.moments.size,
-    id,
-    latestYear,
-    latitude: location.latitude,
-    longitude: location.longitude,
-    name: location.name,
-    places: city.places,
-  }
-}))
 const trips = getTrips(moments).toSorted((first, second) => second.start.localeCompare(first.start))
 const activeTrip = trips.find(trip => trip.id === tripId)
 // The totals a screenshot of the map puts in its header.
@@ -153,27 +126,11 @@ function toScriptJson(value: unknown) {
           </nav>
         )
       }
-      <div class="relative col-start-3 flex items-center gap-2 justify-self-end">
-        <button class="calendar-map-screenshot flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--color-border)_82%,transparent)] bg-[color-mix(in_srgb,var(--color-bg)_82%,transparent)] text-tx-2 backdrop-blur-[1rem] hover:text-tx disabled:cursor-default disabled:opacity-40 aria-busy:cursor-progress aria-expanded:text-tx" type="button" data-calendar-map-screenshot aria-label="保存地图截图" aria-expanded="false" aria-controls="calendar-map-screenshot-options" title="保存地图截图" disabled>
+      <div class="col-start-3 flex items-center gap-2 justify-self-end">
+        <button class="calendar-map-screenshot flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--color-border)_82%,transparent)] bg-[color-mix(in_srgb,var(--color-bg)_82%,transparent)] text-tx-2 backdrop-blur-[1rem] hover:text-tx disabled:cursor-default disabled:opacity-40 aria-busy:cursor-progress" type="button" data-calendar-map-screenshot aria-label="保存地图截图" title="保存地图截图" disabled>
           <span class="i-lucide-camera text-[0.9375rem]" aria-hidden="true" />
         </button>
         <CalendarModeSwitch mode="map" />
-        <div class="calendar-map-trip-setup absolute right-0 top-full mt-2 w-[min(19rem,calc(100vw-2rem))] rounded-xl border border-border bg-bg p-3 shadow-[0_1rem_3rem_rgb(0_0_0/0.14)]" id="calendar-map-screenshot-options" data-calendar-map-screenshot-options role="group" aria-labelledby="calendar-map-screenshot-title" hidden>
-          <p class="text-sm font-medium" id="calendar-map-screenshot-title">保存截图</p>
-          <div class="calendar-map-trip-setup__row">
-            <span class="calendar-map-trip-setup__label" id="calendar-map-screenshot-size">画幅</span>
-            <div class="calendar-map-trip-setup__segments" role="radiogroup" aria-labelledby="calendar-map-screenshot-size">
-              <button type="button" role="radio" aria-checked="true" data-calendar-map-screenshot-size="1">1×</button>
-              <button type="button" role="radio" aria-checked="false" data-calendar-map-screenshot-size="2">2×</button>
-              <button type="button" role="radio" aria-checked="false" data-calendar-map-screenshot-size="3">3×</button>
-            </div>
-          </div>
-          <p class="text-xs leading-[1.6] text-tx-3">画幅越大，地点之间越开阔，能标出的地名越多，图片也越大。地点按地图上的「地点」设置合并。</p>
-          <div class="calendar-map-trip-setup__actions">
-            <button type="button" data-calendar-map-screenshot-cancel>取消</button>
-            <button type="button" data-calendar-map-screenshot-save>保存</button>
-          </div>
-        </div>
       </div>
     </header>
 
@@ -198,13 +155,6 @@ function toScriptJson(value: unknown) {
         )
       }
     </ol>
-
-    <div class="calendar-map-places calendar-map-trip-setup__segments absolute bottom-10 right-4 z-[4] items-center border border-[color-mix(in_srgb,var(--color-border)_82%,transparent)] bg-[color-mix(in_srgb,var(--color-bg)_82%,transparent)] shadow-[0_0.5rem_2rem_rgb(0_0_0/0.08)] backdrop-blur-[1rem] max-[48rem]:bottom-[calc(4.25rem+env(safe-area-inset-bottom))] max-[48rem]:right-1/2 max-[48rem]:translate-x-1/2" role="radiogroup" aria-labelledby="calendar-map-places-label">
-      <span class="px-2 text-xs whitespace-nowrap text-tx-3" id="calendar-map-places-label">地点</span>
-      <button type="button" role="radio" aria-checked="false" data-calendar-map-place-grouping="cluster" title="离得近的地点合成一个点，放大后散开">合并</button>
-      <button type="button" role="radio" aria-checked="true" data-calendar-map-place-grouping="city" title="同一座城市的地点合成一个点，放大后散开">城市</button>
-      <button type="button" role="radio" aria-checked="false" data-calendar-map-place-grouping="all" title="不合并，每个地点各占一个点">全部</button>
-    </div>
 
     <p class="calendar-map-loading absolute left-1/2 top-1/2 z-[3] -translate-1/2 rounded-full border border-border bg-[color-mix(in_srgb,var(--color-bg)_88%,transparent)] px-3.5 py-2.5 [&[hidden]]:hidden" data-calendar-map-loading>{activeTripData ? '正在加载旅程地图…' : `正在加载 ${locationGroups.length} 个地点的地图…`}</p>
 
@@ -378,7 +328,6 @@ function toScriptJson(value: unknown) {
     <script is:inline type="application/json" data-calendar-map-locations set:html={markerDataJson} />
     <script is:inline type="application/json" data-calendar-map-trips set:html={tripListJson} />
     <script is:inline type="application/json" data-calendar-map-stats set:html={mapStatsJson} />
-    <script is:inline type="application/json" data-calendar-map-cities set:html={cityDataJson} />
     {activeTripJson && <script is:inline type="application/json" data-calendar-map-trip-data set:html={activeTripJson} />}
   </main>
 </Layout>
