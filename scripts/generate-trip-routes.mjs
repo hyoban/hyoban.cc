@@ -35,7 +35,7 @@ if (!token) {
   throw new Error('Set VITE_MAPBOX_TOKEN in .env or the environment.')
 }
 
-const moments = await readTripMoments(root)
+const moments = await readTripMoments()
 const cached = JSON.parse(await readFile(routesFile, 'utf8'))
 const routes = {}
 let fetched = 0

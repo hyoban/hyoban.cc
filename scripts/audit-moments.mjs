@@ -14,15 +14,14 @@ import {
 
 const execFile = promisify(execFileCallback)
 const root = fileURLToPath(new URL('../', import.meta.url))
-const contentRoot = join(root, 'src/content/moments')
 const config = JSON.parse(await readFile(join(root, 'src/data/asset-config.json'), 'utf8'))
 const options = parseArguments(process.argv.slice(2))
-const records = await readMomentRecords(contentRoot)
+const records = await readMomentRecords()
 const objects = getReferencedR2Objects(records)
 const ordersByDate = new Map()
 const blankAltIds = []
-const changedMomentIds = options.changedFrom
-  ? await getChangedMomentIds(options.changedFrom)
+const changedMomentFiles = options.changedFrom
+  ? await getChangedMomentFiles(options.changedFrom)
   : new Set()
 
 for (const record of records) {
@@ -52,7 +51,7 @@ for (const record of records) {
       blankAltIds.push(`${record.id}/${media.file}`)
 
       assert.ok(
-        !changedMomentIds.has(record.id),
+        !changedMomentFiles.has(record.file),
         `Visible changed Moment requires non-empty alt text: ${record.id}/${media.file}`,
       )
     }
@@ -206,17 +205,11 @@ async function auditRemoteObjects(items) {
   )
 }
 
-async function getChangedMomentIds(ref) {
+/** The Moment files added or changed since a ref, relative to data/. */
+async function getChangedMomentFiles(ref) {
   const { stdout } = await execFile(
     'git',
-    [
-      'diff',
-      '--name-only',
-      '--diff-filter=AM',
-      `${ref}...HEAD`,
-      '--',
-      'src/content/moments/**/index.md',
-    ],
+    ['diff', '--name-only', '--diff-filter=AM', `${ref}...HEAD`, '--', 'data/moments/**/*.json'],
     { cwd: root },
   )
 
@@ -225,7 +218,7 @@ async function getChangedMomentIds(ref) {
       .trim()
       .split('\n')
       .filter(Boolean)
-      .map((file) => file.replace(/^src\/content\/moments\//, '').replace(/\/index\.md$/, '')),
+      .map((file) => file.replace(/^data\//, '')),
   )
 }
 

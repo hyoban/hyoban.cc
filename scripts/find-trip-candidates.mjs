@@ -1,5 +1,4 @@
 import { parseArgs } from 'node:util'
-import { fileURLToPath } from 'node:url'
 
 import { getDayOffset, getDistanceKm, getLocation } from '@hyoban/trip-map'
 
@@ -22,13 +21,12 @@ const { values } = parseArgs({
 const home = getLocation(locations, values.home)
 const radiusKm = Number(values.radius)
 const minDays = Number(values['min-days'])
-const root = fileURLToPath(new URL('../', import.meta.url))
 // One quiet day inside a run doesn't end it.
 const MAX_GAP_DAYS = 2
 
 const awayDays = new Map()
 
-for (const { dateKey, id, locations: places } of await readTripMoments(root)) {
+for (const { dateKey, id, locations: places } of await readTripMoments()) {
   const far = places.filter((location) => getDistanceKm(home, location) > radiusKm)
 
   if (far.length > 0) {
