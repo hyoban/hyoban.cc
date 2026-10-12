@@ -42,17 +42,30 @@ export function getRouteLine(
 }
 
 /**
- * Measures in plain degrees: only the share of the whole matters, and it keeps the
- * tip's speed even along the line.
+ * Measures as the map draws it, in Mercator units: only the share of the whole
+ * matters, and this keeps the tip's speed even on screen, where a degree of latitude
+ * is drawn taller than one of longitude away from the equator.
  */
 export function measureLine(line: readonly Coordinates[]): MeasuredLine {
-  const lengths = line
+  const projected = line.map(toMercator)
+  const lengths = projected
     .slice(1)
-    .map((coordinates, index) =>
-      Math.hypot(coordinates[0] - line[index]![0], coordinates[1] - line[index]![1]),
+    .map((point, index) =>
+      Math.hypot(point[0] - projected[index]![0], point[1] - projected[index]![1]),
     )
 
   return { lengths, line, total: lengths.reduce((total, length) => total + length, 0) }
+}
+
+// Latitudes nearer the poles than this are drawn as if at it, as Web Mercator does.
+const MAX_LATITUDE = 85.051129
+
+/** Mercator, scaled so a degree of longitude stays a unit. */
+function toMercator([longitude, latitude]: Coordinates): [number, number] {
+  const clamped = Math.min(Math.max(latitude, -MAX_LATITUDE), MAX_LATITUDE)
+  const radians = (clamped * Math.PI) / 180
+
+  return [longitude, (Math.log(Math.tan(Math.PI / 4 + radians / 2)) * 180) / Math.PI]
 }
 
 /**
@@ -61,7 +74,8 @@ export function measureLine(line: readonly Coordinates[]): MeasuredLine {
  * and ends, and how far along it the tip is.
  */
 export function walkLine({ lengths, line, total }: MeasuredLine, fraction: number) {
-  let remaining = Math.min(Math.max(fraction, 0), 1) * total
+  const share = Math.min(Math.max(fraction, 0), 1)
+  let remaining = share * total
   let segment = 0
 
   while (segment < lengths.length - 1 && remaining > lengths[segment]!) {
@@ -69,9 +83,14 @@ export function walkLine({ lengths, line, total }: MeasuredLine, fraction: numbe
     segment += 1
   }
 
+  // The whole line walked lands on its last point exactly, whatever rounding did.
+  if (share >= 1) {
+    segment = Math.max(lengths.length - 1, 0)
+  }
+
   const start = line[segment]!
   const end = line[segment + 1] ?? start
-  const ratio = lengths[segment] ? remaining / lengths[segment]! : 1
+  const ratio = share >= 1 || !lengths[segment] ? 1 : remaining / lengths[segment]!
   const tip: [number, number] = [
     start[0] + (end[0] - start[0]) * ratio,
     start[1] + (end[1] - start[1]) * ratio,

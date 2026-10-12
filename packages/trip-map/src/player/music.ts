@@ -79,6 +79,11 @@ export function setMusicAudible(music: Music, audible: boolean) {
 }
 
 export function closeMusic(music: Music) {
-  music.source.stop()
+  try {
+    music.source.stop()
+  } catch {
+    // Never started: the stage was stopped before its music faded in.
+  }
+
   void music.context.close()
 }

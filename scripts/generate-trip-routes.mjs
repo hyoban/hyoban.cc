@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { trips } from '../src/data/trips.ts'
-import { buildTrip, getLegKey, getTrainLegKey } from '@hyoban/trip-map'
+import { buildTrip, getLegKey, getTrainLegKey, simplifyLine } from '@hyoban/trip-map'
 import { readTripMoments, resolveLocation } from './lib/trip-moments.mjs'
 
 // Fetches a driving route for every trip leg that isn't cached yet, so trip playback
@@ -126,7 +126,7 @@ async function fetchRoute(key) {
   const [route] = body.routes
 
   return {
-    coordinates: simplify(route.geometry.coordinates, SIMPLIFY_TOLERANCE).map(([lng, lat]) => [
+    coordinates: simplifyLine(route.geometry.coordinates, SIMPLIFY_TOLERANCE).map(([lng, lat]) => [
       Number(lng.toFixed(5)),
       Number(lat.toFixed(5)),
     ]),
@@ -158,59 +158,13 @@ async function fetchRailRoute(from, to) {
   const [path] = body.paths
 
   return {
-    coordinates: simplify(path.points.coordinates, SIMPLIFY_TOLERANCE).map(([lng, lat]) => [
+    coordinates: simplifyLine(path.points.coordinates, SIMPLIFY_TOLERANCE).map(([lng, lat]) => [
       Number(lng.toFixed(5)),
       Number(lat.toFixed(5)),
     ]),
     distance: Math.round(path.distance),
     duration: Math.round(path.time / 1000),
   }
-}
-
-/** Ramer–Douglas–Peucker in degrees, which is close enough at this tolerance. */
-function simplify(points, tolerance) {
-  if (points.length <= 2) {
-    return points
-  }
-
-  const keep = new Uint8Array(points.length)
-  const stack = [[0, points.length - 1]]
-  keep[0] = 1
-  keep[points.length - 1] = 1
-
-  while (stack.length > 0) {
-    const [start, end] = stack.pop()
-    let farthest = -1
-    let farthestDistance = tolerance
-
-    for (let index = start + 1; index < end; index += 1) {
-      const distance = getSegmentDistance(points[index], points[start], points[end])
-
-      if (distance > farthestDistance) {
-        farthest = index
-        farthestDistance = distance
-      }
-    }
-
-    if (farthest !== -1) {
-      keep[farthest] = 1
-      stack.push([start, farthest], [farthest, end])
-    }
-  }
-
-  return points.filter((_, index) => keep[index])
-}
-
-function getSegmentDistance([x, y], [x1, y1], [x2, y2]) {
-  const dx = x2 - x1
-  const dy = y2 - y1
-  const lengthSquared = dx * dx + dy * dy
-  const t =
-    lengthSquared === 0
-      ? 0
-      : Math.max(0, Math.min(1, ((x - x1) * dx + (y - y1) * dy) / lengthSquared))
-
-  return Math.hypot(x - (x1 + t * dx), y - (y1 + t * dy))
 }
 
 /** One route per line keeps the file diffable without spreading every vertex out. */

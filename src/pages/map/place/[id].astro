@@ -26,10 +26,10 @@ function formatDate(dateKey: string) {
 }
 ---
 
-<div class="calendar-map-drawer__moments min-w-0">
+<div class="trip-map-drawer__moments min-w-0">
   {group.moments.map(moment => (
-    <section class="calendar-map-moment min-w-0 [&+&]:border-t [&+&]:border-border">
-      <a class="calendar-map-moment__date mt-5 inline-block text-xs text-tx-3 tabular-nums no-underline hover:text-tx-2" href={getMomentPath(moment.dateKey)}>
+    <section class="trip-map-moment min-w-0 [&+&]:border-t [&+&]:border-border">
+      <a class="trip-map-moment__date mt-5 inline-block text-xs text-tx-3 tabular-nums no-underline hover:text-tx-2" href={getMomentPath(moment.dateKey)}>
         {formatDate(moment.dateKey)}
       </a>
       <MomentEntry class="!pt-2.5" moment={moment} showLocation={false} />

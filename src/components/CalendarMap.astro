@@ -5,22 +5,16 @@ import CalendarBackLink from '@/components/CalendarBackLink.astro'
 import CalendarModeSwitch from '@/components/CalendarModeSwitch.astro'
 import MomentLightboxMedia from '@/components/MomentLightboxMedia.astro'
 import Layout from '@/layouts/Layout.astro'
+import { getMappedLocationGroups, getMoments, getTrips } from '@/moments'
+import { getTripData, getTripSummary } from '@/moments/trip-data'
 import {
-  getMappedLocationGroups,
-  getMoments,
-  getTrips,
-} from '@/moments'
-import { getTripData, getTripSummary, getTripTitle } from '@/moments/trip-data'
-import {
-  getIntroCovers,
-  getTripMeta,
-  getYearColor,
-  MOSAIC_CLASS,
-  MOSAIC_IMAGE_CLASS,
-  renderIcon,
+  createYearPalette,
+  renderShortcuts,
+  renderTripPanel,
+  renderTripStage,
+  toScriptJson,
 } from '@hyoban/trip-map'
-import { getAssetUrl } from '@/asset-url'
-import { tripVideoMusic } from '@/data/music'
+import { getTripTitle, tripMapBrand, tripMapMessages, tripMapMusic } from '@/trip-map'
 import { SITE_TITLE } from '@/consts'
 
 interface Props {
@@ -32,26 +26,28 @@ const { tripId } = Astro.props
 const moments = await getMoments()
 const locationGroups = getMappedLocationGroups(moments)
 const years = [...new Set(locationGroups.map(group => group.latestYear))].sort((a, b) => a - b)
+const yearColor = createYearPalette(years)
 const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN ?? ''
 const mapTitle = `地图 · 日历 | ${SITE_TITLE}`
-const markerData = locationGroups.map(group => ({
-  color: getYearColor(group.latestYear),
-  count: group.moments.length,
-  id: group.id,
-  latestYear: group.latestYear,
-  latitude: group.location.latitude,
-  // Newest first, for the drawer's line of totals.
-  years: [...new Set(group.moments.map(moment => Number(moment.dateKey.slice(0, 4))))].sort((a, b) => b - a),
-  longitude: group.location.longitude,
-  name: group.location.name,
-}))
-const markerDataJson = toScriptJson(markerData)
+const placesJson = toScriptJson(
+  locationGroups.map(group => ({
+    color: yearColor(group.latestYear),
+    count: group.moments.length,
+    id: group.id,
+    latestYear: group.latestYear,
+    latitude: group.location.latitude,
+    longitude: group.location.longitude,
+    name: group.location.name,
+    // Newest first, for the drawer's line of totals.
+    years: [...new Set(group.moments.map(moment => Number(moment.dateKey.slice(0, 4))))].sort((a, b) => b - a),
+  })),
+)
 const trips = getTrips(moments).toSorted((first, second) => second.start.localeCompare(first.start))
 const activeTrip = trips.find(trip => trip.id === tripId)
 // The totals a screenshot of the map puts in its header.
 const locatedMoments = new Set(locationGroups.flatMap(group => group.moments))
 const momentYears = [...locatedMoments].map(moment => Number(moment.dateKey.slice(0, 4)))
-const mapStatsJson = toScriptJson({
+const statsJson = toScriptJson({
   drivingKm: trips.reduce((total, trip) => total + trip.drivingKm, 0),
   firstYear: Math.min(...momentYears),
   lastYear: Math.max(...momentYears),
@@ -61,50 +57,13 @@ const mapStatsJson = toScriptJson({
 })
 // Every trip's route and title for the overview; only the opening trip's playback data
 // is inlined, and the player fetches the rest from /trip/<id>/data.json when needed.
-const tripListJson = toScriptJson(trips.map(getTripSummary))
+const tripsJson = toScriptJson(trips.map(getTripSummary))
 const activeTripData = activeTrip ? getTripData(activeTrip) : undefined
 const activeTripJson = activeTripData ? toScriptJson(activeTripData) : undefined
-// The player opens a trip page on its intro card. Rendering that here shows it, and
-// starts its photos loading, while the map script is still on its way.
-const introCovers = activeTripData ? getIntroCovers(activeTripData) : []
 const title = activeTrip ? getTripTitle(activeTrip.title) : mapTitle
 const description = activeTrip
   ? `${activeTrip.title}的旅程回放，按时间顺序走过每一条 Moment。`
   : '按地点浏览 Calendar 中记录的 Moment。'
-
-// Listed in the shortcut panel (press ?); the player handles the keys themselves.
-const tripShortcuts: { keys: [string[], string][]; title: string }[] = [
-  {
-    keys: [
-      [['空格'], '播放 / 暂停'],
-      [['←', '→'], '上一张 / 下一张卡片'],
-      [['Shift', '←', '→'], '上一天 / 下一天'],
-      [['Home', 'End'], '回到开头 / 跳到回顾'],
-      [['↑', '↓'], '上一张 / 下一张照片'],
-    ],
-    title: '播放',
-  },
-  {
-    keys: [
-      [['-', '='], '减速 / 加速'],
-      [['M'], '背景音乐'],
-    ],
-    title: '速度与声音',
-  },
-  {
-    keys: [
-      [['F'], '全屏放映'],
-      [['R'], '导出视频'],
-      [['Esc'], '退出放映 / 关闭回放'],
-      [['?'], '显示快捷键'],
-    ],
-    title: '放映与导出',
-  },
-]
-
-function toScriptJson(value: unknown) {
-  return JSON.stringify(value).replaceAll('<', '\\u003c')
-}
 ---
 
 <Layout title={title} description={description} image={activeTrip ? `/trip/${activeTrip.id}/og.jpg` : undefined}>
@@ -112,10 +71,10 @@ function toScriptJson(value: unknown) {
     <!-- The map script is large; open the connection for the style and tiles while it loads. -->
     <link rel="preconnect" href="https://api.mapbox.com" crossorigin />
   </Fragment>
-  <main class="calendar-map-page @container relative isolate h-dvh w-full overflow-hidden bg-bg" data-calendar-map data-mapbox-token={mapboxToken} data-map-title={mapTitle} data-map-trip={activeTrip ? '' : undefined} transition:persist="calendar-map">
-    <div class="calendar-map-canvas absolute inset-0" data-calendar-map-canvas role="region" aria-label="Calendar 地点地图" />
+  <main class="trip-map-page @container relative isolate h-dvh w-full overflow-hidden bg-bg" data-trip-map data-trip-map-token={mapboxToken} data-trip-map-active={activeTrip ? '' : undefined} transition:persist="trip-map">
+    <div class="trip-map-canvas absolute inset-0" data-trip-map-canvas role="region" aria-label="Calendar 地点地图" />
 
-    <header class="calendar-map-toolbar pointer-events-none absolute inset-x-4 top-4 z-[5] grid grid-cols-[1fr_auto_1fr] items-center gap-4 max-[48rem]:grid-cols-[auto_minmax(0,1fr)_auto] max-[48rem]:gap-2 [&>*]:pointer-events-auto max-[48rem]:[&_.calendar-back-link]:pr-1.5 max-[48rem]:[&_.calendar-back-link>span]:sr-only">
+    <header class="trip-map-toolbar pointer-events-none absolute inset-x-4 top-4 z-[5] grid grid-cols-[1fr_auto_1fr] items-center gap-4 max-[48rem]:grid-cols-[auto_minmax(0,1fr)_auto] max-[48rem]:gap-2 [&>*]:pointer-events-auto max-[48rem]:[&_.calendar-back-link]:pr-1.5 max-[48rem]:[&_.calendar-back-link>span]:sr-only" data-trip-map-toolbar>
       <CalendarBackLink class="justify-self-start" />
       {
         trips.length > 0 && (
@@ -125,7 +84,7 @@ function toScriptJson(value: unknown) {
             <ul class="flex max-w-full list-none gap-0.5 overflow-x-auto rounded-full border border-[color-mix(in_srgb,var(--color-border)_82%,transparent)] bg-[color-mix(in_srgb,var(--color-bg)_88%,transparent)] p-1 shadow-[0_0.5rem_2rem_rgb(0_0_0/0.08)] backdrop-blur-[1rem] [scrollbar-width:none]">
               {trips.map(trip => (
                 <li class="shrink-0">
-                  <a class="block rounded-full px-3 py-1.5 text-sm whitespace-nowrap text-tx-2 no-underline hover:bg-inline hover:text-tx focus-visible:bg-inline focus-visible:text-tx" href={`/trip/${trip.id}/`} data-calendar-map-trip-link={trip.id}><span class="sr-only">回放旅程：</span>{trip.title}</a>
+                  <a class="block rounded-full px-3 py-1.5 text-sm whitespace-nowrap text-tx-2 no-underline hover:bg-inline hover:text-tx focus-visible:bg-inline focus-visible:text-tx" href={`/trip/${trip.id}/`} data-trip-map-trip-link={trip.id}><span class="sr-only">回放旅程：</span>{trip.title}</a>
                 </li>
               ))}
             </ul>
@@ -133,18 +92,18 @@ function toScriptJson(value: unknown) {
         )
       }
       <div class="col-start-3 flex items-center gap-2 justify-self-end">
-        <button class="calendar-map-screenshot flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--color-border)_82%,transparent)] bg-[color-mix(in_srgb,var(--color-bg)_82%,transparent)] text-tx-2 backdrop-blur-[1rem] hover:text-tx disabled:cursor-default disabled:opacity-40 aria-busy:cursor-progress" type="button" data-calendar-map-screenshot aria-label="保存地图截图" title="保存地图截图" disabled>
+        <button class="trip-map-screenshot flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--color-border)_82%,transparent)] bg-[color-mix(in_srgb,var(--color-bg)_82%,transparent)] text-tx-2 backdrop-blur-[1rem] hover:text-tx disabled:cursor-default disabled:opacity-40 aria-busy:cursor-progress" type="button" data-trip-map-screenshot aria-label="保存地图截图" title="保存地图截图" disabled>
           <span class="i-lucide-camera text-[0.9375rem]" aria-hidden="true" />
         </button>
         <CalendarModeSwitch mode="map" />
       </div>
     </header>
 
-    <ol class="calendar-map-legend [&[hidden]]:hidden absolute bottom-10 left-1/2 z-[4] flex w-max -translate-x-1/2 list-none items-center gap-3 rounded-full border border-[color-mix(in_srgb,var(--color-border)_82%,transparent)] bg-[color-mix(in_srgb,var(--color-bg)_82%,transparent)] px-3.5 py-2.5 font-mono text-xs shadow-[0_0.5rem_2rem_rgb(0_0_0/0.08)] max-[48rem]:bottom-[calc(1rem+env(safe-area-inset-bottom))]" aria-label="图例：地点按最近记录年份着色" data-calendar-map-legend>
+    <ol class="trip-map-legend [&[hidden]]:hidden absolute bottom-10 left-1/2 z-[4] flex w-max -translate-x-1/2 list-none items-center gap-3 rounded-full border border-[color-mix(in_srgb,var(--color-border)_82%,transparent)] bg-[color-mix(in_srgb,var(--color-bg)_82%,transparent)] px-3.5 py-2.5 font-mono text-xs shadow-[0_0.5rem_2rem_rgb(0_0_0/0.08)] max-[48rem]:bottom-[calc(1rem+env(safe-area-inset-bottom))]" aria-label="图例：地点按最近记录年份着色" data-trip-map-legend>
       {
         years.map(year => (
           <li class="flex items-center gap-[0.35rem]">
-            <span class="block size-2.5 rounded-full border border-white/90 bg-[var(--year-color)] shadow-[0_0_0_1px_rgb(0_0_0/0.12)]" style={`--year-color: ${getYearColor(year)}`} aria-hidden="true" />
+            <span class="block size-2.5 rounded-full border border-white/90 bg-[var(--year-color)] shadow-[0_0_0_1px_rgb(0_0_0/0.12)]" style={`--year-color: ${yearColor(year)}`} aria-hidden="true" />
             {year}
           </li>
         ))
@@ -162,19 +121,19 @@ function toScriptJson(value: unknown) {
       }
     </ol>
 
-    <p class="calendar-map-loading absolute left-1/2 top-1/2 z-[3] -translate-1/2 rounded-full border border-border bg-[color-mix(in_srgb,var(--color-bg)_88%,transparent)] px-3.5 py-2.5 [&[hidden]]:hidden" data-calendar-map-loading>{activeTripData ? '正在加载旅程地图…' : `正在加载 ${locationGroups.length} 个地点的地图…`}</p>
+    <p class="trip-map-loading absolute left-1/2 top-1/2 z-[3] -translate-1/2 rounded-full border border-border bg-[color-mix(in_srgb,var(--color-bg)_88%,transparent)] px-3.5 py-2.5 [&[hidden]]:hidden" data-trip-map-loading>{activeTripData ? '正在加载旅程地图…' : `正在加载 ${locationGroups.length} 个地点的地图…`}</p>
 
-    <section class="calendar-map-fallback absolute left-1/2 top-1/2 z-[6] max-h-[min(36rem,calc(100dvh-8rem))] w-[min(28rem,calc(100vw-2rem))] -translate-1/2 overflow-y-auto rounded-xl border border-border bg-[color-mix(in_srgb,var(--color-bg)_94%,transparent)] p-5 shadow-[0_1rem_4rem_rgb(0_0_0/0.12)] [&[hidden]]:hidden" data-calendar-map-fallback aria-live="polite" hidden>
-      <p class="mb-4 leading-[1.6] text-tx-2" data-calendar-map-fallback-message>地图暂时无法加载。</p>
-      <button class="-mt-2 mb-4 inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-full border border-border bg-transparent px-3.5 text-[0.8125rem] text-tx hover:bg-inline [&[hidden]]:hidden" type="button" data-calendar-map-fallback-retry hidden>
+    <section class="trip-map-fallback absolute left-1/2 top-1/2 z-[6] max-h-[min(36rem,calc(100dvh-8rem))] w-[min(28rem,calc(100vw-2rem))] -translate-1/2 overflow-y-auto rounded-xl border border-border bg-[color-mix(in_srgb,var(--color-bg)_94%,transparent)] p-5 shadow-[0_1rem_4rem_rgb(0_0_0/0.12)] [&[hidden]]:hidden" data-trip-map-fallback aria-live="polite" hidden>
+      <p class="mb-4 leading-[1.6] text-tx-2" data-trip-map-fallback-message>地图暂时无法加载。</p>
+      <button class="-mt-2 mb-4 inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-full border border-border bg-transparent px-3.5 text-[0.8125rem] text-tx hover:bg-inline [&[hidden]]:hidden" type="button" data-trip-map-fallback-retry hidden>
         <span class="i-lucide-rotate-ccw" aria-hidden="true" />
         重新加载
       </button>
       <div class="grid grid-cols-2 gap-1">
         {
           locationGroups.map(group => (
-            <button class="grid min-h-11 cursor-pointer grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-md border-0 bg-transparent px-2 text-left text-tx hover:bg-inline focus-visible:bg-inline" type="button" data-map-location-id={group.id}>
-              <span class="block size-2.5 rounded-full border border-white/90 bg-[var(--year-color)] shadow-[0_0_0_1px_rgb(0_0_0/0.12)]" style={`--year-color: ${getYearColor(group.latestYear)}`} aria-hidden="true" />
+            <button class="grid min-h-11 cursor-pointer grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-md border-0 bg-transparent px-2 text-left text-tx hover:bg-inline focus-visible:bg-inline" type="button" data-trip-map-place={group.id}>
+              <span class="block size-2.5 rounded-full border border-white/90 bg-[var(--year-color)] shadow-[0_0_0_1px_rgb(0_0_0/0.12)]" style={`--year-color: ${yearColor(group.latestYear)}`} aria-hidden="true" />
               <strong class="truncate font-medium">{group.location.name}</strong>
               <small class="text-tx-3">{group.moments.length} 条</small>
             </button>
@@ -183,164 +142,51 @@ function toScriptJson(value: unknown) {
       </div>
     </section>
 
-    <div class="calendar-map-trip-stage" data-calendar-map-trip-stage>
-      <header class="calendar-map-trip-stage__header">
-        <p class="calendar-map-trip-stage__eyebrow" data-calendar-map-trip-stage-eyebrow />
-        <p class="calendar-map-trip-stage__title" data-calendar-map-trip-stage-title />
-      </header>
-      <p class="calendar-map-trip-stage__brand">
-        <img src={getAssetUrl('site/avatar-80.webp')} alt="" width="24" height="24" />
-        {SITE_TITLE}
-      </p>
-      <div class="calendar-map-trip-stage__photos" data-calendar-map-trip-stage-photos />
-      <div class="calendar-map-trip-stage__safe" data-calendar-map-trip-stage-safe aria-hidden="true" />
-      <div class="calendar-map-trip-stage__center" data-calendar-map-trip-stage-center />
-      <div class="calendar-map-trip-stage__progress" data-calendar-map-trip-stage-progress />
-      <button class="calendar-map-trip-stage__music" type="button" data-calendar-map-trip-stage-music aria-label="背景音乐" aria-pressed="false" aria-keyshortcuts="M" title="背景音乐（M）">
-        <Fragment set:html={renderIcon('volume-x')} />
-      </button>
-      <button class="calendar-map-trip-stage__close" type="button" data-calendar-map-trip-stage-close aria-label="退出放映">
-        <span class="i-lucide-x" aria-hidden="true" />
-      </button>
-    </div>
+    <!-- The player's parts are the package's: rendered here so a trip page opens on its intro card at once. -->
+    <div class="trip-map-stage" data-trip-map-stage set:html={renderTripStage({ brand: tripMapBrand, messages: tripMapMessages })} />
 
-    <section class="calendar-map-trip absolute bottom-4 left-4 z-10 flex max-h-[calc(100%-7rem)] w-[min(22rem,calc(100%-2rem))] flex-col overflow-hidden rounded-xl border border-border bg-bg shadow-[0_1.5rem_5rem_rgb(0_0_0/0.16)] @max-[48rem]:inset-x-3 @max-[48rem]:bottom-[calc(0.75rem+env(safe-area-inset-bottom))] @max-[48rem]:max-h-[calc(100%-1.5rem)] @max-[48rem]:w-auto [&[hidden]]:hidden" data-calendar-map-trip aria-labelledby="calendar-map-trip-title" hidden={!activeTripData}>
-      <ol class="flex shrink-0 list-none gap-1 px-4 pt-3" data-calendar-map-trip-progress aria-label="旅程进度" />
-      <header class="shrink-0 px-4 pt-3" data-calendar-map-trip-header>
-        <p class="truncate text-xs text-tx-3 tabular-nums" data-calendar-map-trip-eyebrow />
-        <h2 class="truncate text-lg font-medium" id="calendar-map-trip-title" data-calendar-map-trip-title>{activeTripData?.title}</h2>
-      </header>
-      <div class="flex min-h-0 flex-col overflow-y-auto overscroll-contain px-4 pt-1 pb-3" data-calendar-map-trip-body>
-        {activeTripData && (
-          <>
-            <p class="shrink-0 text-tx-2">{getTripMeta(activeTripData)}</p>
-            <div class={MOSAIC_CLASS} aria-hidden="true">
-              {introCovers.map((cover, index) => (
-                <img class={MOSAIC_IMAGE_CLASS} src={cover.thumbnail} alt="" decoding="async" fetchpriority={index < 3 ? 'high' : 'low'} />
-              ))}
-            </div>
-          </>
-        )}
-      </div>
-      <p class="sr-only" data-calendar-map-trip-announcer aria-live="polite" />
-      <footer class="relative flex shrink-0 items-center justify-between border-t border-border bg-bg px-2 py-1">
-        <div class="flex items-center [&[hidden]]:hidden" data-calendar-map-trip-controls>
-          <button class="flex size-9 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-tx-2 hover:bg-inline hover:text-tx disabled:cursor-default disabled:opacity-40 disabled:hover:bg-transparent" type="button" data-calendar-map-trip-previous aria-label="上一站" aria-keyshortcuts="ArrowLeft" title="上一站（←）">
-            <span class="i-lucide-chevron-left" aria-hidden="true" />
-          </button>
-          <button class="flex size-9 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-tx-2 hover:bg-inline hover:text-tx" type="button" data-calendar-map-trip-play aria-label="暂停" aria-keyshortcuts="Space">
-            <Fragment set:html={renderIcon('pause')} />
-          </button>
-          <button class="flex size-9 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-tx-2 hover:bg-inline hover:text-tx disabled:cursor-default disabled:opacity-40 disabled:hover:bg-transparent" type="button" data-calendar-map-trip-next aria-label="下一站" aria-keyshortcuts="ArrowRight" title="下一站（→）">
-            <span class="i-lucide-chevron-right" aria-hidden="true" />
-          </button>
-        </div>
-        <div class="flex items-center [&[hidden]]:hidden" data-calendar-map-trip-actions>
-          <button class="flex h-9 min-w-9 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent px-1.5 font-mono text-xs text-tx-2 tabular-nums hover:bg-inline hover:text-tx" type="button" data-calendar-map-trip-speed aria-label="播放速度 1×" aria-keyshortcuts="- =" title="播放速度（- 减速，= 加速）">1×</button>
-          <button class="flex size-9 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-tx-2 hover:bg-inline hover:text-tx aria-pressed:text-tx" type="button" data-calendar-map-trip-music aria-label="背景音乐" aria-pressed="false" aria-keyshortcuts="M" title="背景音乐（M）">
-            <Fragment set:html={renderIcon('volume-x')} />
-          </button>
-          <button class="flex size-9 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-tx-2 hover:bg-inline hover:text-tx" type="button" data-calendar-map-trip-present aria-label="放映" aria-keyshortcuts="F" title="放映（F）">
-            <span class="i-lucide-tv" aria-hidden="true" />
-          </button>
-          <button class="flex size-9 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-tx-2 hover:bg-inline hover:text-tx [&[hidden]]:hidden" type="button" data-calendar-map-trip-export aria-label="导出视频" aria-keyshortcuts="R" title="导出视频（R）" hidden>
-            <span class="i-lucide-clapperboard" aria-hidden="true" />
-          </button>
-          <button class="flex size-9 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-tx-2 hover:bg-inline hover:text-tx" type="button" data-calendar-map-trip-close aria-label="退出旅程回放" aria-keyshortcuts="Escape" title="退出旅程回放（Esc）">
-            <span class="i-lucide-x" aria-hidden="true" />
-          </button>
-        </div>
-        <div class="calendar-map-trip-setup" data-calendar-map-trip-export-options role="group" aria-labelledby="calendar-map-trip-setup-title" hidden>
-          <p class="text-sm font-medium" id="calendar-map-trip-setup-title" data-calendar-map-trip-setup-title>放映</p>
-          <div class="calendar-map-trip-setup__row">
-            <span class="calendar-map-trip-setup__label" id="calendar-map-trip-setup-ratio">画面</span>
-            <div class="calendar-map-trip-setup__segments" role="radiogroup" aria-labelledby="calendar-map-trip-setup-ratio">
-              <button type="button" role="radio" aria-checked="true" data-calendar-map-trip-export-ratio="portrait">竖屏 9:16</button>
-              <button type="button" role="radio" aria-checked="false" data-calendar-map-trip-export-ratio="landscape">横屏 16:9</button>
-            </div>
-          </div>
-          <label class="calendar-map-trip-setup__check" data-calendar-map-trip-safe-area-row>
-            <input type="checkbox" data-calendar-map-trip-safe-area checked />
-            <span>为社交平台留边</span>
-          </label>
-          <label class="calendar-map-trip-setup__row">
-            <span class="calendar-map-trip-setup__label">背景音乐</span>
-            <select class="calendar-map-trip-setup__select" data-calendar-map-trip-export-music>
-              {tripVideoMusic.map(track => <option value={track.src}>{track.title}</option>)}
-              <option value="">无音乐</option>
-            </select>
-          </label>
-          <div class="calendar-map-trip-setup__actions">
-            <button type="button" data-calendar-map-trip-export-cancel>取消</button>
-            <button type="button" data-calendar-map-trip-export-start>开始放映</button>
-          </div>
-        </div>
-      </footer>
-    </section>
+    <section class="trip-map-panel absolute bottom-4 left-4 z-10 flex max-h-[calc(100%-7rem)] w-[min(22rem,calc(100%-2rem))] flex-col overflow-hidden rounded-xl border border-border bg-bg shadow-[0_1.5rem_5rem_rgb(0_0_0/0.16)] @max-[48rem]:inset-x-3 @max-[48rem]:bottom-[calc(0.75rem+env(safe-area-inset-bottom))] @max-[48rem]:max-h-[calc(100%-1.5rem)] @max-[48rem]:w-auto [&[hidden]]:hidden" data-trip-map-panel aria-labelledby="trip-map-panel-title" hidden={!activeTripData} set:html={renderTripPanel({ messages: tripMapMessages, music: tripMapMusic, trip: activeTripData })} />
 
-    <dialog class="calendar-map-trip-shortcuts" data-calendar-map-trip-shortcuts aria-labelledby="calendar-map-trip-shortcuts-title" closedby="any">
-      <header class="flex items-center justify-between">
-        <h2 class="text-base font-medium" id="calendar-map-trip-shortcuts-title">快捷键</h2>
-        <form method="dialog">
-          <button class="flex size-8 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-tx-2 hover:bg-inline hover:text-tx" aria-label="关闭">
-            <span class="i-lucide-x" aria-hidden="true" />
-          </button>
-        </form>
-      </header>
-      {
-        tripShortcuts.map(group => (
-          <section>
-            <h3>{group.title}</h3>
-            <dl>
-              {group.keys.map(([keys, action]) => (
-                <div>
-                  <dt>{keys.map(key => <kbd>{key}</kbd>)}</dt>
-                  <dd>{action}</dd>
-                </div>
-              ))}
-            </dl>
-          </section>
-        ))
-      }
-    </dialog>
+    <dialog class="trip-map-shortcuts" data-trip-map-shortcuts aria-labelledby="trip-map-shortcuts-title" closedby="any" set:html={renderShortcuts(tripMapMessages)} />
 
-    <aside class="calendar-map-drawer absolute inset-y-4 right-4 z-10 grid w-[min(28rem,calc(100vw-2rem))] min-w-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden rounded-xl border border-border bg-bg shadow-[0_1.5rem_5rem_rgb(0_0_0/0.16)] max-[48rem]:inset-x-3 max-[48rem]:bottom-[calc(0.75rem+env(safe-area-inset-bottom))] max-[48rem]:top-auto max-[48rem]:h-[min(78dvh,42rem)] max-[48rem]:w-auto [&[hidden]]:hidden" data-calendar-map-drawer role="dialog" aria-labelledby="calendar-map-drawer-title" hidden>
+    <aside class="trip-map-drawer absolute inset-y-4 right-4 z-10 grid w-[min(28rem,calc(100vw-2rem))] min-w-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden rounded-xl border border-border bg-bg shadow-[0_1.5rem_5rem_rgb(0_0_0/0.16)] max-[48rem]:inset-x-3 max-[48rem]:bottom-[calc(0.75rem+env(safe-area-inset-bottom))] max-[48rem]:top-auto max-[48rem]:h-[min(78dvh,42rem)] max-[48rem]:w-auto [&[hidden]]:hidden" data-trip-map-drawer role="dialog" aria-labelledby="trip-map-drawer-title" hidden>
       <!-- Laid out like the trip card's header: a grey line of totals over the name. -->
       <header class="flex items-center justify-between gap-3 border-b border-border py-3 pr-2 pl-5">
         <div class="min-w-0">
-          <p class="truncate text-xs text-tx-3 tabular-nums" data-calendar-map-drawer-eyebrow />
-          <h1 class="truncate text-lg font-medium" id="calendar-map-drawer-title" data-calendar-map-drawer-title />
+          <p class="truncate text-xs text-tx-3 tabular-nums" data-trip-map-drawer-eyebrow />
+          <h1 class="truncate text-lg font-medium" id="trip-map-drawer-title" data-trip-map-drawer-title />
         </div>
-        <button class="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-tx-2 hover:bg-inline hover:text-tx focus-visible:bg-inline focus-visible:text-tx focus-visible:outline-none" type="button" data-calendar-map-drawer-close aria-label="关闭地点详情">
+        <button class="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-tx-2 hover:bg-inline hover:text-tx focus-visible:bg-inline focus-visible:text-tx focus-visible:outline-none" type="button" data-trip-map-drawer-close aria-label="关闭地点详情">
           <span class="i-lucide-x" aria-hidden="true" />
         </button>
       </header>
-      <div class="calendar-map-drawer__content min-w-0 overflow-y-auto overscroll-contain px-5 pb-4" data-calendar-map-drawer-content />
+      <div class="trip-map-drawer__content min-w-0 overflow-y-auto overscroll-contain px-5 pb-4" data-trip-map-drawer-content />
     </aside>
 
-    <dialog class="calendar-map-lightbox m-0 h-dvh max-h-none w-screen max-w-none border-0 bg-black/88 p-16 backdrop:bg-transparent max-[48rem]:px-4 max-[48rem]:py-12" data-calendar-map-lightbox aria-label="图片查看器">
-      <button type="button" class="calendar-map-lightbox__close fixed right-4 top-4 z-[1] flex size-11 cursor-pointer items-center justify-center border-0 bg-transparent text-white" data-map-lightbox-close aria-label="关闭图片">
+    <dialog class="trip-map-lightbox m-0 h-dvh max-h-none w-screen max-w-none border-0 bg-black/88 p-16 backdrop:bg-transparent max-[48rem]:px-4 max-[48rem]:py-12" data-trip-map-lightbox aria-label="图片查看器">
+      <button type="button" class="fixed right-4 top-4 z-[1] flex size-11 cursor-pointer items-center justify-center border-0 bg-transparent text-white" data-trip-map-lightbox-close aria-label="关闭图片">
         <span class="i-lucide-x" aria-hidden="true" />
       </button>
-      <button type="button" class="calendar-map-lightbox__previous fixed left-2 top-1/2 z-[1] flex size-11 -translate-y-1/2 cursor-pointer items-center justify-center border-0 bg-transparent text-white max-[48rem]:bottom-4 max-[48rem]:top-auto max-[48rem]:translate-y-0" data-map-lightbox-previous aria-label="上一张图片">
+      <button type="button" class="fixed left-2 top-1/2 z-[1] flex size-11 -translate-y-1/2 cursor-pointer items-center justify-center border-0 bg-transparent text-white max-[48rem]:bottom-4 max-[48rem]:top-auto max-[48rem]:translate-y-0" data-trip-map-lightbox-previous aria-label="上一张图片">
         <span class="i-lucide-chevron-left" aria-hidden="true" />
       </button>
       <MomentLightboxMedia imageClass="mx-auto max-h-[calc(100dvh-8rem)] max-w-full object-contain" />
-      <button type="button" class="calendar-map-lightbox__next fixed right-2 top-1/2 z-[1] flex size-11 -translate-y-1/2 cursor-pointer items-center justify-center border-0 bg-transparent text-white max-[48rem]:bottom-4 max-[48rem]:top-auto max-[48rem]:translate-y-0" data-map-lightbox-next aria-label="下一张图片">
+      <button type="button" class="fixed right-2 top-1/2 z-[1] flex size-11 -translate-y-1/2 cursor-pointer items-center justify-center border-0 bg-transparent text-white max-[48rem]:bottom-4 max-[48rem]:top-auto max-[48rem]:translate-y-0" data-trip-map-lightbox-next aria-label="下一张图片">
         <span class="i-lucide-chevron-right" aria-hidden="true" />
       </button>
     </dialog>
 
-    <script is:inline type="application/json" data-calendar-map-locations set:html={markerDataJson} />
-    <script is:inline type="application/json" data-calendar-map-trips set:html={tripListJson} />
-    <script is:inline type="application/json" data-calendar-map-stats set:html={mapStatsJson} />
-    {activeTripJson && <script is:inline type="application/json" data-calendar-map-trip-data set:html={activeTripJson} />}
+    <script is:inline type="application/json" data-trip-map-places set:html={placesJson} />
+    <script is:inline type="application/json" data-trip-map-trips set:html={tripsJson} />
+    <script is:inline type="application/json" data-trip-map-stats set:html={statsJson} />
+    {activeTripJson && <script is:inline type="application/json" data-trip-map-trip set:html={activeTripJson} />}
   </main>
 </Layout>
 
 <script>
-  import { SITE_TITLE, SITE_URL } from '@/consts'
+  import { SITE_TITLE } from '@/consts'
   import { initializeLightboxMedia } from '@/moment-lightbox-client'
+  import { getTripTitle, tripMapBrand, tripMapMessages, tripMapMusic, tripMapSiteLine } from '@/trip-map'
 
   type MapClient = typeof import('@hyoban/trip-map/client')
 
@@ -349,7 +195,7 @@ function toScriptJson(value: unknown) {
 
   document.addEventListener('astro:page-load', () => {
     // Pages without a map only need it to tear down one left from a map page.
-    if (!mapClient && !document.querySelector('[data-calendar-map]')) {
+    if (!mapClient && !document.querySelector('[data-trip-map]')) {
       return
     }
 
@@ -359,10 +205,15 @@ function toScriptJson(value: unknown) {
       setTimeout(() => {
         mapClient ??= import('@hyoban/trip-map/client').then((client) => (loadedClient = client))
         void mapClient.then((client) =>
-          client.initializeCalendarMap({
+          client.initializeTripMap({
+            brand: tripMapBrand,
             createLightboxMedia: initializeLightboxMedia,
+            documentTitle: `地图 · 日历 | ${SITE_TITLE}`,
+            getDocumentTitle: (trip) => getTripTitle(trip.title),
+            messages: tripMapMessages,
+            music: tripMapMusic,
             screenshotTitle: `${SITE_TITLE} 的足迹`,
-            siteLine: `${new URL(SITE_URL).host}/trip/`,
+            siteLine: tripMapSiteLine,
           }),
         )
       })
@@ -378,6 +229,6 @@ function toScriptJson(value: unknown) {
       return
     }
 
-    loadedClient?.destroyCalendarMap()
+    loadedClient?.destroyTripMap()
   })
 </script>

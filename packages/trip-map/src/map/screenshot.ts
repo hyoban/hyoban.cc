@@ -1,5 +1,5 @@
 import mapboxgl, { type Map as MapboxMap } from 'mapbox-gl'
-import { overlap, type Rect } from './player/label-placement.ts'
+import { overlap, type Rect } from '../player/label-placement.ts'
 
 // A picture of the map made for sharing rather than a copy of the screen: the view
 // framed on every place, the basemap's lesser names put away, and each place drawn
@@ -69,6 +69,8 @@ export type ScreenshotPlace = Readonly<{
 }>
 
 export type ScreenshotOptions = Readonly<{
+  /** `{count} 处`: how many places a bubble holds, drawn beside its name. */
+  formatPlaceCount: (count: number) => string
   /** What to draw once the map is framed: places, and bubbles of them, as it shows them. */
   getPlaces: (map: MapboxMap) => Promise<readonly ScreenshotPlace[]>
   /** Drawn centred along the bottom of the map. */
@@ -312,6 +314,7 @@ async function render(options: ScreenshotOptions, overview: Shot, zoomed: readon
         ...getSides(points, [], minWidth, width),
         bottom: legendStrip ? legendStrip.top - INSET_MARGIN : band.bottom,
       },
+      formatPlaceCount: options.formatPlaceCount,
       mapHeight: band.bottom - band.top,
     })
 
@@ -324,6 +327,7 @@ async function render(options: ScreenshotOptions, overview: Shot, zoomed: readon
   const labels = placeLabels(context, points, points, font, {
     blocked: [...(legendStrip ? [legendStrip] : []), ...insets.map((inset) => inset.box)],
     bounds: { bottom: band.bottom - 4, left: 4, right: width - 4, top: band.top + 4 },
+    formatPlaceCount: options.formatPlaceCount,
   })
   const crop = {
     ...band,
@@ -412,7 +416,12 @@ function layOutInset(
   shot: Shot,
   places: readonly ScreenshotPlace[],
   area: Rect,
-  view: { avoid: readonly Rect[]; bounds: Rect; mapHeight: number },
+  view: {
+    avoid: readonly Rect[]
+    bounds: Rect
+    formatPlaceCount: (count: number) => string
+    mapHeight: number
+  },
 ): Inset | undefined {
   const placeSpots = new Set(places.map(getSpot))
   const inShot = shot.points.filter((point) => placeSpots.has(getSpot(point)))
@@ -493,6 +502,7 @@ function layOutInset(
     labels: placeLabels(context, points, points, font, {
       blocked: [],
       bounds: padRect(box, -4),
+      formatPlaceCount: view.formatPlaceCount,
     }),
     points,
     scale: shot.image.width / shot.origin.width,
@@ -733,7 +743,7 @@ function placeLabels(
   named: readonly PlacePoint[],
   points: readonly PlacePoint[],
   font: string,
-  view: { blocked: readonly Rect[]; bounds: Rect },
+  view: { blocked: readonly Rect[]; bounds: Rect; formatPlaceCount: (count: number) => string },
 ) {
   const dots = points.map(getDot)
   const { bounds } = view
@@ -743,7 +753,7 @@ function placeLabels(
     // A bubble's Moments are in it already; its label says how many places it holds.
     // A single Moment goes without a number.
     const count = point.members
-      ? `${point.members.length} 处`
+      ? view.formatPlaceCount(point.members.length)
       : point.count > 1
         ? String(point.count)
         : ''

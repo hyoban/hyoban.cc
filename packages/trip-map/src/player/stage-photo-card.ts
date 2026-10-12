@@ -1,12 +1,13 @@
 import { createElement, createLiveVideo, createVideoPlayer } from './dom.ts'
-import { FADE_IN, FADE_OUT, PHOTO_SWITCH, reducedMotion } from './motion.ts'
+import { FADE_IN, FADE_OUT, PHOTO_SWITCH, prefersReducedMotion } from './motion.ts'
+import type { Messages } from '../messages.ts'
 import type { TripDataStop } from './types.ts'
 
 /**
  * The stop's photo card in the story layout: one card per stop, its words below a
  * frame that eases to each photo's shape as the photos fade through.
  */
-export function createStagePhotoCard(container: HTMLElement) {
+export function createStagePhotoCard(container: HTMLElement, messages: Messages) {
   let current: { frame?: HTMLElement; frameWidth: number; photoMax: number } | undefined
 
   /** Sends the current card off; another can come in meanwhile. */
@@ -24,7 +25,7 @@ export function createStagePhotoCard(container: HTMLElement) {
     }
 
     card.dataset.leaving = ''
-    setTimeout(() => card.remove(), reducedMotion.matches ? 0 : 300)
+    setTimeout(() => card.remove(), prefersReducedMotion() ? 0 : 300)
   }
 
   /**
@@ -35,9 +36,9 @@ export function createStagePhotoCard(container: HTMLElement) {
     const card = document.createElement('figure')
     const frame =
       stop.images.length > 0
-        ? createElement('div', 'calendar-map-trip-polaroid__frame', '')
+        ? createElement('div', 'trip-map-polaroid__frame', '')
         : stop.video
-          ? createVideoPlayer(stop.video, 'calendar-map-trip-polaroid__video')
+          ? createVideoPlayer(stop.video, 'trip-map-polaroid__video', messages.videoTitle)
           : undefined
 
     clear()
@@ -48,13 +49,13 @@ export function createStagePhotoCard(container: HTMLElement) {
       return
     }
 
-    card.className = 'calendar-map-trip-polaroid'
+    card.className = 'trip-map-polaroid'
     card.dataset.tilt = stopIndex % 2 === 0 ? 'left' : 'right'
     card.append(...(frame ? [frame] : []))
 
     if (stop.text) {
       const caption = document.createElement('figcaption')
-      caption.append(createElement('p', 'calendar-map-trip-polaroid__text', stop.text))
+      caption.append(createElement('p', 'trip-map-polaroid__text', stop.text))
       card.append(caption)
     }
 
@@ -88,7 +89,7 @@ export function createStagePhotoCard(container: HTMLElement) {
     img.style.height = `${height}px`
 
     const previous = [...frame.querySelectorAll<HTMLImageElement>('img')].at(-1)
-    const animate = !firstPhoto && !reducedMotion.matches
+    const animate = !firstPhoto && !prefersReducedMotion()
 
     // Fades through, as on the side card: the old photo goes before the new one shows.
     for (const old of frame.querySelectorAll<HTMLElement>('img, video')) {
@@ -131,7 +132,7 @@ export function createStagePhotoCard(container: HTMLElement) {
     }
 
     // A live photo moves once over its still, as on the side card.
-    if (image.video && !reducedMotion.matches) {
+    if (image.video && !prefersReducedMotion()) {
       const video = createLiveVideo(image.video, '')
 
       video.style.width = img.style.width

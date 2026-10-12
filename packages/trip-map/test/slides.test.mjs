@@ -12,17 +12,19 @@ import {
   getWaypointsBefore,
   pickCovers,
 } from '../src/player/slides.ts'
+import { zhCN } from '../src/messages.ts'
 
 const place = (name) => ({ name })
+// Day N is October N, 2026.
+const dateKey = (day) => `2026-10-${String(day).padStart(2, '0')}`
 const stop = (day, places, waypoints = [], images = []) => ({
-  date: `第 ${day} 天`,
+  dateKey: dateKey(day),
   day,
   images,
-  name: places.join('、'),
   places: places.map(place),
   text: '',
   waypoints: waypoints.map(([name, waypointDay]) => ({
-    date: `第 ${waypointDay ?? day} 天`,
+    dateKey: dateKey(waypointDay ?? day),
     day: waypointDay ?? day,
     name,
   })),
@@ -52,10 +54,10 @@ test("lists a day's places once, leaving out waypoints from the night before", (
   const days = buildSlides(stops).filter((slide) => slide.type === 'day')
 
   assert.deepEqual(
-    days.map(({ date, places, stopIndex }) => [date, places, stopIndex]),
+    days.map(({ dateKey: key, places, stopIndex }) => [key, places, stopIndex]),
     [
-      ['第 1 天', ['合肥'], 0],
-      ['第 2 天', ['南京', '合肥'], 1],
+      ['2026-10-01', ['合肥'], 0],
+      ['2026-10-02', ['南京', '合肥'], 1],
     ],
   )
 })
@@ -154,24 +156,27 @@ test('a stop later in the day passes all its waypoints itself', () => {
 })
 
 test('names slides and stops for labels', () => {
-  const [, day, first] = buildSlides([{ ...stop(2, ['烟台']), name: '烟台港' }])
+  const [, day, first] = buildSlides([stop(2, ['烟台港', '渤海'])])
 
-  assert.equal(getSlideLabel(day), '第 2 天 · 第 2 天')
-  assert.equal(getSlideLabel(first), '第 2 天 · 烟台港')
+  assert.equal(getSlideLabel(day, zhCN), '第 2 天 · 10月2日周五')
+  assert.equal(getSlideLabel(first, zhCN), '第 2 天 · 烟台港、渤海')
   assert.equal(
-    getStopEyebrow({ date: '10月1日', day: 2, time: '14:04' }),
-    '第 2 天 · 10月1日 · 14:04',
+    getStopEyebrow({ dateKey: '2026-10-01', day: 2, time: '14:04' }, zhCN),
+    '第 2 天 · 10月1日周四 · 14:04',
   )
-  assert.equal(getStopEyebrow({ date: '10月1日', day: 2, time: undefined }), '第 2 天 · 10月1日')
+  assert.equal(
+    getStopEyebrow({ dateKey: '2026-10-01', day: 2, time: undefined }, zhCN),
+    '第 2 天 · 10月1日周四',
+  )
 })
 
 test('runs the clock on with the route tip, through midnight into the next day', () => {
   const points = [
-    { date: '10月1日', day: 2, time: '9:30' },
-    { date: '10月1日', day: 2, time: '22:00' },
-    { date: '10月2日', day: 3, time: '2:00' },
-    { date: '10月2日', day: 3 },
-    { date: '10月4日', day: 5, time: '9:00' },
+    { dateKey: '2026-10-01', day: 2, time: '9:30' },
+    { dateKey: '2026-10-01', day: 2, time: '22:00' },
+    { dateKey: '2026-10-02', day: 3, time: '2:00' },
+    { dateKey: '2026-10-02', day: 3 },
+    { dateKey: '2026-10-04', day: 5, time: '9:00' },
   ]
 
   assert.deepEqual(getClock(points, 0), points[0])

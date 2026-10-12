@@ -10,7 +10,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./client": "./src/client.ts",
-    "./dom": "./src/player/dom.ts",
+    "./dom": "./src/dom.ts",
     "./preview": "./src/preview.ts",
     "./styles.css": "./src/styles.css",
     "./package.json": "./package.json"

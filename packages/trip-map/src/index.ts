@@ -1,11 +1,22 @@
 // The DOM-free part of the package: the places and trips a site defines, the trip
-// built from them and its Moments, and the helpers that shape it for the player. Safe
-// to import at build time and in Node scripts. The map and the player themselves are
-// in `@hyoban/trip-map/client`, the preview image in `@hyoban/trip-map/preview`.
+// built from them and its Moments, its shaping for the player, and the markup the
+// player drives, for a page rendered on the server. Safe to import at build time and
+// in Node scripts. The map and the player are in `@hyoban/trip-map/client`, the
+// preview image in `@hyoban/trip-map/preview`.
 
+export { formatDate, formatDateRange, getDateParts, parseDateKey } from './format.ts'
 export { type Coordinates, getDistanceKm as getCoordinateDistanceKm } from './geo.ts'
 export { renderIcon, type IconName, type WeatherIcon } from './icons.ts'
 export * from './locations.ts'
+export {
+  renderShortcuts,
+  renderTripPanel,
+  renderTripStage,
+  toScriptJson,
+  type Brand,
+  type MusicTrack,
+} from './markup.ts'
+export { resolveMessages, t, zhCN, type MessageKey, type Messages } from './messages.ts'
 export { getIntroCovers, getTripMeta, MOSAIC_CLASS, MOSAIC_IMAGE_CLASS } from './player/intro.ts'
 export {
   createChapterLog,
@@ -26,6 +37,8 @@ export {
   buildSlides,
   getSlideDuration,
   getSlideLabel,
+  getStopEyebrow,
+  getStopName,
   pickCovers,
   type TripSlide,
 } from './player/slides.ts'
@@ -33,6 +46,7 @@ export type {
   MapLabel,
   Slide,
   TripData,
+  TripDataLeg,
   TripDataStop,
   TripDataWaypoint,
   TripImage,
@@ -41,5 +55,7 @@ export type {
   TripSummary,
   TripWeather,
 } from './player/types.ts'
+export { getTripSummary, shapeTripData, type ShapeTripOptions, type StopDetails } from './shape.ts'
+export { createYearPalette, YEAR_COLORS, type Theme } from './theme.ts'
 export * from './trips.ts'
 export * from './weather.ts'

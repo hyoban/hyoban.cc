@@ -12,13 +12,13 @@ import { lineFeature, type TravelMode } from './route.ts'
 // of the frame rate. The piece being drawn is sent once and revealed by trimming it,
 // and the head is an element over the map, moved in the frame the map draws.
 
-const PLANNED_ID = 'calendar-trip-planned'
-const ROUTE_ID = 'calendar-trip-route'
-const ACTIVE_ROUTE_ID = 'calendar-trip-route-active'
-const STOPS_ID = 'calendar-trip-stops'
+const PLANNED_ID = 'trip-map-planned'
+const ROUTE_ID = 'trip-map-route'
+const ACTIVE_ROUTE_ID = 'trip-map-route-active'
+const STOPS_ID = 'trip-map-stops'
 // Blank symbols over the stop dots: circles don't take part in label placement, so
 // without these the map's own place names print right over the dots.
-const STOPS_CLEAR_ID = 'calendar-trip-stops-clear'
+const STOPS_CLEAR_ID = 'trip-map-stops-clear'
 const CLEAR_SIZE = 20
 const LAYER_IDS = [STOPS_CLEAR_ID, STOPS_ID, ACTIVE_ROUTE_ID, ROUTE_ID, PLANNED_ID]
 
@@ -162,7 +162,7 @@ export function createRouteLayers(
 
     removeHead()
 
-    const element = createElement('div', 'calendar-map-trip-head', '')
+    const element = createElement('div', 'trip-map-head', '')
     const place = () => {
       const coordinates = head?.coordinates
 

@@ -35,20 +35,36 @@ test('walks a share of the line and stops at the tip', () => {
     [2, 0],
     [2, 2],
   ])
+  const near = (actual, expected) =>
+    assert.ok(Math.abs(actual - expected) < 1e-3, `${actual} ≈ ${expected}`)
 
-  assert.equal(line.total, 4)
-  assert.deepEqual(walkLine(line, 0.25).passed, [[1, 0]])
-  assert.deepEqual(walkLine(line, 0.75), {
-    end: [2, 2],
-    passed: [
-      [2, 0],
-      [2, 1],
-    ],
-    ratio: 0.5,
-    segment: 1,
-    start: [2, 0],
-  })
+  // Measured as the map draws it: near the equator a degree is a degree either way.
+  near(line.total, 4)
+  near(walkLine(line, 0.25).passed[0][0], 1)
+  assert.equal(walkLine(line, 0.25).passed[0][1], 0)
+
+  const walked = walkLine(line, 0.75)
+
+  assert.deepEqual(walked.end, [2, 2])
+  assert.deepEqual(walked.start, [2, 0])
+  assert.equal(walked.segment, 1)
+  near(walked.ratio, 0.5)
+  assert.deepEqual(walked.passed[0], [2, 0])
+  near(walked.passed[1][1], 1)
   assert.deepEqual(walkLine(line, 2).passed.at(-1), [2, 2])
+})
+
+test('measures latitude as the map draws it, taller away from the equator', () => {
+  const flat = measureLine([
+    [0, 0],
+    [0, 1],
+  ])
+  const north = measureLine([
+    [0, 60],
+    [0, 61],
+  ])
+
+  assert.ok(north.total > flat.total * 1.8, 'a degree of latitude at 60° is about twice as tall')
 })
 
 test('tells a ferry or plane leg from driving by its straight segment', () => {

@@ -7,7 +7,7 @@ export default defineConfig({
     dts: true,
     entry: {
       client: 'src/client.ts',
-      dom: 'src/player/dom.ts',
+      dom: 'src/dom.ts',
       index: 'src/index.ts',
       preview: 'src/preview.ts',
     },
