@@ -668,11 +668,6 @@ html:has(.calendar-map-page[data-export-ratio]) body {
   right: 50%;
 }
 
-.calendar-map-trip-stage[data-slide='intro'] .calendar-map-trip-stage__header,
-.calendar-map-trip-stage[data-slide='summary'] .calendar-map-trip-stage__header {
-  opacity: 0;
-}
-
 .calendar-map-trip-stage__eyebrow {
   font-size: calc(var(--u) * 3);
   font-weight: 600;
