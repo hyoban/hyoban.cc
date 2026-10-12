@@ -23,15 +23,21 @@ export type TripDefinition = Readonly<{
    */
   sameWayBack?: readonly (readonly [string, string])[]
   start: string
-  /** Legs between two location ids taken by ferry or plane; drawn straight instead of along roads. */
-  straightLegs?: readonly (readonly [string, string, 'ferry' | 'plane'])[]
+  /**
+   * Legs between two location ids taken by ferry, plane or train; drawn dashed instead
+   * of along roads. A train leg follows its rail line once one is cached, otherwise straight.
+   */
+  straightLegs?: readonly (readonly [string, string, Exclude<TravelMode, 'car'>])[]
   title: string
   waypoints?: readonly TripWaypointDefinition[]
 }>
 
 type TripLocation = MapLocation & { id: string }
 
-/** A driving route between two places, cached in src/data/trip-routes.json. */
+/**
+ * A driving route between two places, or a rail line for a train leg, cached in
+ * src/data/trip-routes.json.
+ */
 export type TripRoute = Readonly<{
   coordinates: readonly (readonly [number, number])[]
   /** Metres along the route. */
@@ -40,7 +46,7 @@ export type TripRoute = Readonly<{
   duration?: number
 }>
 
-export type TravelMode = 'car' | 'ferry' | 'plane'
+export type TravelMode = 'car' | 'ferry' | 'plane' | 'train'
 
 export type TripLeg = Readonly<{
   by: TravelMode
@@ -118,7 +124,7 @@ export function defineTrips<const T extends readonly TripDefinition[]>(trips: T)
     }
 
     for (const leg of trip.straightLegs ?? []) {
-      if (leg[0] === leg[1] || (leg[2] !== 'ferry' && leg[2] !== 'plane')) {
+      if (leg[0] === leg[1] || !['ferry', 'plane', 'train'].includes(leg[2])) {
         throw new Error(`Invalid straight leg in trip "${trip.id}".`)
       }
     }
@@ -228,13 +234,15 @@ export function buildTrip<T extends TripMoment>(
       (trip.sameWayBack ?? []).some(([first, second]) => first === to.id && second === from.id)
     const outbound = retraced ? routes[getLegKey(to, from)] : undefined
     const route =
-      by !== 'car'
-        ? undefined
-        : outbound
-          ? { ...outbound, coordinates: [...outbound.coordinates].reverse() }
-          : retraced
-            ? undefined
-            : routes[getLegKey(from, to)]
+      by === 'train'
+        ? routes[getTrainLegKey(from, to)]
+        : by !== 'car'
+          ? undefined
+          : outbound
+            ? { ...outbound, coordinates: [...outbound.coordinates].reverse() }
+            : retraced
+              ? undefined
+              : routes[getLegKey(from, to)]
 
     return {
       by,
@@ -245,7 +253,7 @@ export function buildTrip<T extends TripMoment>(
     }
   })
   // Only what was driven: road distance where a route is cached, otherwise as the
-  // crow flies. Ferries and flights aren't driving, so they'd only inflate it.
+  // crow flies. Ferries, flights and trains aren't driving, so they'd only inflate it.
   const drivingKm = legs.reduce(
     (total, leg) =>
       leg.by !== 'car'
@@ -259,7 +267,8 @@ export function buildTrip<T extends TripMoment>(
     dayCount: getDayOffset(trip.start, trip.end) + 1,
     drivingKm: Math.round(drivingKm),
     drivingHours: Math.round(
-      legs.reduce((total, leg) => total + (leg.route?.duration ?? 0), 0) / 3600,
+      legs.reduce((total, leg) => total + (leg.by === 'car' ? (leg.route?.duration ?? 0) : 0), 0) /
+        3600,
     ),
     legs,
     path,
@@ -275,6 +284,11 @@ export function getLegKey(from: MapLocation, to: MapLocation) {
     `${location.longitude.toFixed(5)},${location.latitude.toFixed(5)}`
 
   return `${point(from)};${point(to)}`
+}
+
+/** Identifies a train leg's rail line, kept apart from a drive between the same places. */
+export function getTrainLegKey(from: MapLocation, to: MapLocation) {
+  return `train:${getLegKey(from, to)}`
 }
 
 /** Identifies a day's weather at a place, to about 1 km. */

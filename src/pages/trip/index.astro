@@ -52,7 +52,7 @@ function formatDate(dateKey: string, withYear = false) {
                   {formatDate(trip.start, true)} – {formatDate(trip.end)}
                 </span>
                 <span class="text-sm text-tx-3 tabular-nums">
-                  {trip.dayCount} 天 · {trip.placeCount} 个地点 · 自驾 {trip.drivingKm.toLocaleString('zh-CN')} 公里
+                  {trip.dayCount} 天 · {trip.placeCount} 个地点{trip.drivingKm > 0 && ` · 自驾 ${trip.drivingKm.toLocaleString('zh-CN')} 公里`}
                 </span>
               </span>
             </a>

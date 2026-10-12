@@ -25,6 +25,7 @@ const TRAVEL_ICONS: Record<TravelMode, string> = {
   car: 'i-lucide-car-front',
   ferry: 'i-lucide-ship',
   plane: 'i-lucide-plane',
+  train: 'i-lucide-train-front',
 }
 
 export type StopState = 'current' | 'upcoming' | 'visited'

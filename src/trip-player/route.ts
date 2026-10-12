@@ -3,7 +3,7 @@ import type { Coordinates } from '../geo'
 // The trip's route as a line: built from its places and the road geometry between
 // them, measured, and walked along to find where a moving tip is. DOM-free.
 
-export type TravelMode = 'car' | 'ferry' | 'plane'
+export type TravelMode = 'car' | 'ferry' | 'plane' | 'train'
 
 type RoutePoint = Readonly<{ coordinates: Coordinates }>
 
@@ -86,11 +86,13 @@ export function walkLine({ lengths, line, total }: MeasuredLine, fraction: numbe
 }
 
 /**
- * How the segment from `start` to `end` is travelled: a ferry or plane leg is drawn
- * as one straight segment between its two places; everything else is by car.
+ * How the segment from `start` to `end` is travelled: the mode of the ferry, plane or
+ * train leg it lies on, whether that leg is one straight segment between its two
+ * places or runs along a rail line; everything else is by car.
  */
 export function getTravelMode(
   points: readonly RoutePoint[],
+  legs: readonly (readonly Coordinates[] | null)[],
   legModes: readonly TravelMode[],
   start: Coordinates,
   end: Coordinates,
@@ -99,12 +101,22 @@ export function getTravelMode(
     first[0] === second[0] && first[1] === second[1]
 
   return (
-    legModes.find(
-      (mode, legIndex) =>
-        mode !== 'car' &&
-        same(points[legIndex]!.coordinates, start) &&
-        same(points[legIndex + 1]!.coordinates, end),
-    ) ?? 'car'
+    legModes.find((mode, legIndex) => {
+      if (mode === 'car') {
+        return false
+      }
+
+      const line = [
+        points[legIndex]!.coordinates,
+        ...(legs[legIndex] ?? []),
+        points[legIndex + 1]!.coordinates,
+      ]
+
+      return line.some(
+        (coordinates, index) =>
+          index > 0 && same(line[index - 1]!, start) && same(coordinates, end),
+      )
+    }) ?? 'car'
   )
 }
 

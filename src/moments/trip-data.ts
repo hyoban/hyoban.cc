@@ -38,7 +38,7 @@ export function getTripData(trip: MomentTrip) {
     trailingWaypoints: trip.trailingWaypoints.map((waypoint) =>
       toTripWaypoint(trip.start, waypoint),
     ),
-    // Road geometry from one place to the next; null means draw it straight.
+    // Road or rail geometry from one place to the next; null means draw it straight.
     legs: trip.legs.map((leg) => leg.route?.coordinates ?? null),
     legModes: trip.legs.map((leg) => leg.by),
     weather: getTripWeather(trip),

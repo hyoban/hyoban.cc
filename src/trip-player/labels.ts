@@ -9,9 +9,9 @@ type TripStats = Readonly<{
   stops: readonly unknown[]
 }>
 
-/** The summary's tiles, as `[number, unit]`. */
+/** The summary's tiles, as `[number, unit]`; the driving ones only when there was driving. */
 export function getSummaryStats(trip: TripStats) {
-  return [
+  const stats = [
     [trip.dayCount, '天'],
     [trip.stops.length, '条记录'],
     [trip.placeCount, '个地点'],
@@ -19,6 +19,8 @@ export function getSummaryStats(trip: TripStats) {
     [trip.drivingKm, '公里自驾'],
     [trip.drivingHours, '小时车程'],
   ] as const
+
+  return trip.drivingKm > 0 ? stats : stats.slice(0, 4)
 }
 
 /** `m:ss`, the timestamp format video sites read as chapters. */

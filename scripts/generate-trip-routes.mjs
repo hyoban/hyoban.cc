@@ -3,17 +3,30 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { trips } from '../src/data/trips.ts'
-import { buildTrip, getLegKey } from '../src/moments/trips.ts'
+import { buildTrip, getLegKey, getTrainLegKey } from '../src/moments/trips.ts'
 import { readTripMoments, resolveLocation } from './lib/trip-moments.mjs'
 
 // Fetches a driving route for every trip leg that isn't cached yet, so trip playback
-// can follow roads. Run it after adding a trip or moving a place; cached legs are
-// reused and legs no trip uses any more are dropped.
+// can follow roads, and a rail line for every train leg from OpenRailRouting's public
+// demo (high-speed lines, no key). Run it after adding a trip or moving a place; cached
+// legs are reused and legs no trip uses any more are dropped.
 
 const root = fileURLToPath(new URL('../', import.meta.url))
 const routesFile = join(root, 'src/data/trip-routes.json')
 // About 30 m; keeps city streets readable without storing every road vertex.
 const SIMPLIFY_TOLERANCE = 0.0003
+// Where a train leg leaves and arrives, by location id: rail lines start at stations,
+// and a city's centre may be nearer some other track. Places not listed use their own point.
+const STATIONS = {
+  beijing: { latitude: 39.8652, longitude: 116.3786, name: '北京南站' },
+  changsha: { latitude: 28.1475, longitude: 113.0646, name: '长沙南站' },
+  chengdu: { latitude: 30.6296, longitude: 104.1427, name: '成都东站' },
+  guangzhou: { latitude: 22.989, longitude: 113.269, name: '广州南站' },
+  'hong-kong': { latitude: 22.3046, longitude: 114.1653, name: '香港西九龙站' },
+  nanjing: { latitude: 31.9686, longitude: 118.7976, name: '南京南站' },
+  qingdao: { latitude: 36.1714, longitude: 120.3732, name: '青岛北站' },
+  shenzhen: { latitude: 22.6097, longitude: 114.0292, name: '深圳北站' },
+}
 
 const token = process.env.VITE_MAPBOX_TOKEN || (await readEnvToken())
 
@@ -28,6 +41,35 @@ let fetched = 0
 
 for (const trip of trips) {
   for (const leg of buildTrip(trip, moments, resolveLocation).legs) {
+    if (leg.by === 'train') {
+      const key = getTrainLegKey(leg.from, leg.to)
+
+      if (routes[key]) {
+        continue
+      }
+
+      if (cached[key]) {
+        routes[key] = cached[key]
+        continue
+      }
+
+      const from = STATIONS[leg.from.id] ?? leg.from
+      const to = STATIONS[leg.to.id] ?? leg.to
+      const route = await fetchRailRoute(from, to)
+      fetched += 1
+
+      if (route) {
+        routes[key] = route
+        console.log(
+          `${trip.id}: ${from.name} → ${to.name} ${(route.distance / 1000).toFixed(1)} km by rail`,
+        )
+      } else {
+        console.warn(`${trip.id}: no rail line for ${from.name} → ${to.name}; drawn straight`)
+      }
+
+      continue
+    }
+
     const key = getLegKey(leg.from, leg.to)
     const [from, to] = key.split(';')
 
@@ -89,6 +131,38 @@ async function fetchRoute(key) {
     ]),
     distance: Math.round(route.distance),
     duration: Math.round(route.duration),
+  }
+}
+
+async function fetchRailRoute(from, to) {
+  const url = new URL('https://routing.openrailrouting.org/route')
+  url.searchParams.append('point', `${from.latitude},${from.longitude}`)
+  url.searchParams.append('point', `${to.latitude},${to.longitude}`)
+  url.searchParams.set('profile', 'tgv_all')
+  url.searchParams.set('points_encoded', 'false')
+  url.searchParams.set('instructions', 'false')
+
+  // The demo turns away requests without a User-Agent of their own.
+  const response = await fetch(url, { headers: { 'User-Agent': 'hyoban.cc trip routes' } })
+  const body = await response.json()
+
+  if (!response.ok || !body.paths) {
+    if (body.message?.includes('not found')) {
+      return undefined
+    }
+
+    throw new Error(`Rail route request failed for ${from.name} → ${to.name}: ${body.message}`)
+  }
+
+  const [path] = body.paths
+
+  return {
+    coordinates: simplify(path.points.coordinates, SIMPLIFY_TOLERANCE).map(([lng, lat]) => [
+      Number(lng.toFixed(5)),
+      Number(lat.toFixed(5)),
+    ]),
+    distance: Math.round(path.distance),
+    duration: Math.round(path.time / 1000),
   }
 }
 
