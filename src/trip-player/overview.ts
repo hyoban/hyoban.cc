@@ -1,4 +1,5 @@
 import mapboxgl, { type Map as MapboxMap } from 'mapbox-gl'
+import { createPopupContent, MAP_POPUP_CLASS } from './dom'
 import type { TripSummary } from './types'
 
 // Every trip's route on the overview map, as the way into its playback: pointing at a
@@ -61,7 +62,7 @@ export function createTripOverview({
   // Styled like the trip's place labels (see index.css), above the pointer.
   const popup = new mapboxgl.Popup({
     anchor: 'bottom',
-    className: 'calendar-map-trip-popup',
+    className: MAP_POPUP_CLASS,
     closeButton: false,
     closeOnClick: false,
     focusAfterOpen: false,
@@ -221,7 +222,11 @@ export function createTripOverview({
         return
       }
 
-      const trip = getTripAt(event.point)
+      // A place's dot sits over the routes with a name of its own: pointing at it names
+      // the place, not the route running under it.
+      const target = event.originalEvent.target
+      const overPlace = target instanceof Element && target.closest('.mapboxgl-marker')
+      const trip = overPlace ? undefined : getTripAt(event.point)
 
       map.getCanvas().style.cursor = trip ? 'pointer' : ''
       highlight(trip?.id, event.lngLat)
@@ -247,7 +252,13 @@ export function createTripOverview({
       popup.setLngLat(at ?? middle)
 
       if (highlightedId !== id) {
-        popup.setDOMContent(createPopupContent(trip, isTouch()))
+        popup.setDOMContent(
+          createPopupContent({
+            hint: isTouch() ? '再点一次回放' : undefined,
+            meta: trip.dateRange,
+            title: trip.title,
+          }),
+        )
       }
 
       if (!popup.isOpen()) {
@@ -415,27 +426,4 @@ function densify(line: readonly [number, number][]) {
   }
 
   return dense
-}
-
-function createPopupContent(trip: TripSummary, touch: boolean) {
-  const content = document.createElement('div')
-  const date = document.createElement('p')
-  const title = document.createElement('p')
-
-  date.className = 'text-[0.6875rem] text-tx-3 tabular-nums'
-  date.textContent = trip.dateRange
-  title.className = 'font-medium'
-  title.textContent = trip.title
-  content.append(date, title)
-
-  if (touch) {
-    content.append(
-      Object.assign(document.createElement('p'), {
-        className: 'text-[0.6875rem] text-tx-3',
-        textContent: '再点一次回放',
-      }),
-    )
-  }
-
-  return content
 }

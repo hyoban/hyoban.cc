@@ -1,4 +1,9 @@
 export type MapLocation = Readonly<{
+  /**
+   * The id of the city (a prefecture-level one) the place is in, for the map's 城市
+   * grouping; a city, or a place standing on its own, leaves it out.
+   */
+  city?: string
   latitude: number
   longitude: number
   name: string
@@ -29,6 +34,14 @@ export function defineLocations<const T extends Record<string, MapLocation>>(loc
 
     if (!validLatitude || !validLongitude) {
       throw new RangeError(`Invalid coordinates for location "${id}".`)
+    }
+
+    if (location.city !== undefined) {
+      const city = (locations as Record<string, MapLocation>)[location.city]
+
+      if (!city || city.city !== undefined) {
+        throw new Error(`Location "${id}" names "${location.city}", which isn't a city.`)
+      }
     }
   }
 

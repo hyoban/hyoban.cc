@@ -20,6 +20,18 @@ test('rejects locations with coordinates outside the public map range', () => {
   )
 })
 
+test('accepts a place in a city and rejects a city that is missing or in a city itself', () => {
+  const city = { latitude: 31.35, longitude: 118.43, name: '芜湖' }
+  const place = { city: 'wuhu', latitude: 31.3, longitude: 117.91, name: '无为' }
+
+  assert.doesNotThrow(() => defineLocations({ wuhu: city, wuwei: place }))
+  assert.throws(() => defineLocations({ wuwei: place }), /isn't a city/)
+  assert.throws(
+    () => defineLocations({ wuhu: { ...city, city: 'anhui' }, anhui: city, wuwei: place }),
+    /isn't a city/,
+  )
+})
+
 test('rejects moment references to unknown location ids', () => {
   const locations = defineLocations({
     tokyo: {
