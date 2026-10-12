@@ -14,6 +14,36 @@ export function createElement(tag: string, className: string, text: string) {
   return element
 }
 
+/** The class the map's hover names share, styled in index.css. */
+export const MAP_POPUP_CLASS = 'calendar-map-popup'
+
+/**
+ * A hover name on the map, for a route, a place or a group of them: a small grey line
+ * over the name, and a hint under it when there is one.
+ */
+export function createPopupContent({
+  hint,
+  meta,
+  title,
+}: {
+  hint?: string | undefined
+  meta: string
+  title: string
+}) {
+  const content = document.createElement('div')
+
+  content.append(
+    createElement('p', 'text-[0.6875rem] text-tx-3 tabular-nums', meta),
+    createElement('p', 'font-medium', title),
+  )
+
+  if (hint) {
+    content.append(createElement('p', 'text-[0.6875rem] text-tx-3', hint))
+  }
+
+  return content
+}
+
 export function queryRequired<T extends Element>(root: ParentNode, selector: string) {
   const element = root.querySelector<T>(selector)
 

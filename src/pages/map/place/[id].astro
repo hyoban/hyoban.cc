@@ -14,8 +14,6 @@ export async function getStaticPaths() {
 }
 
 const { group } = Astro.props
-const years = [...new Set(group.moments.map(moment => Number.parseInt(moment.dateKey.slice(0, 4), 10)))]
-  .sort((a, b) => b - a)
 
 function formatDate(dateKey: string) {
   return new Intl.DateTimeFormat('zh-CN', {
@@ -28,15 +26,10 @@ function formatDate(dateKey: string) {
 }
 ---
 
-<div class="calendar-map-drawer__summary flex items-center gap-1.5 pt-4 pb-1 font-mono text-xs text-tx-3">
-  <span>{group.moments.length} 条记录</span>
-  <span aria-hidden="true">·</span>
-  <span>{years.map(year => `${year} 年`).join('、')}</span>
-</div>
 <div class="calendar-map-drawer__moments min-w-0">
   {group.moments.map(moment => (
     <section class="calendar-map-moment min-w-0 [&+&]:border-t [&+&]:border-border">
-      <a class="calendar-map-moment__date mt-5 inline-block font-mono text-xs text-tx-2 no-underline" href={getMomentPath(moment.dateKey)}>
+      <a class="calendar-map-moment__date mt-5 inline-block text-xs text-tx-3 tabular-nums no-underline hover:text-tx-2" href={getMomentPath(moment.dateKey)}>
         {formatDate(moment.dateKey)}
       </a>
       <MomentEntry class="!pt-2.5" moment={moment} showLocation={false} />
