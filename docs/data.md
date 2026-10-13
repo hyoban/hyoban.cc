@@ -34,7 +34,8 @@ The command unpacks the bundle under `.artifacts/publish/<time>/`, then:
 
 1. Matches the bundle's places to `data/places.json`. A place within 200 m of an
    existing one, or with the same name, takes the existing id; the rest are added.
-   An id already in the repository keeps the repository's coordinates.
+   An id already in the repository keeps the repository's coordinates. A place the
+   app named provisionally (`p-<ulid>`) gets an id spelled from its name's pinyin.
 2. Writes the trips, with places renamed.
 3. Gives each unpublished Moment an id: the slug the record proposes in `slug`,
    else its first place, else its first words; the order is the next one that day.

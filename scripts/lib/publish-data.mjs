@@ -3,6 +3,7 @@ import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises'
 import { basename, dirname, extname, join } from 'node:path'
 
 import { getDistanceKm } from '@hyoban/trip-map'
+import { pinyin } from 'pinyin-pro'
 
 import {
   SCHEMA_VERSION,
@@ -25,6 +26,8 @@ export const GENERATOR = 'hyoban.cc data:publish'
 /** Two places this close, or with the same name, are one place. */
 const NEARBY_KM = 0.2
 const ULID_PATTERN = /^[0-9A-HJKMNP-TV-Z]{26}$/
+/** The id the app gives a place it made, until publishing names it by its pinyin. */
+const PROVISIONAL_PLACE_PATTERN = /^p-[0-9a-hjkmnp-tv-z]{26}$/
 
 /** Reads an unpacked bundle: the records, and the media files by the uid they belong to. */
 export async function readBundle(directory) {
@@ -97,14 +100,22 @@ export async function readBundle(directory) {
 /**
  * Merges the bundle's places into the repository's: a place already there by id stays
  * as it is, one that sits within 200 m of an existing place or shares its name takes
- * that place's id, and the rest are added.
+ * that place's id, and the rest are added. A place the app named provisionally gets an
+ * id spelled from its name's pinyin.
  */
 export function planPlaces(bundlePlaces, repositoryPlaces) {
   const places = { ...repositoryPlaces }
   const renamedPlaces = {}
   const conflicts = []
 
-  for (const [id, place] of Object.entries(bundlePlaces)) {
+  for (const [bundleId, place] of Object.entries(bundlePlaces)) {
+    let id = bundleId
+
+    if (PROVISIONAL_PLACE_PATTERN.test(bundleId)) {
+      id = getPlaceId(place.name, places)
+      renamedPlaces[bundleId] = id
+    }
+
     const existing = places[id]
 
     if (existing) {
@@ -123,7 +134,7 @@ export function planPlaces(bundlePlaces, repositoryPlaces) {
     )
 
     if (match) {
-      renamedPlaces[id] = match[0]
+      renamedPlaces[bundleId] = match[0]
       continue
     }
 
@@ -310,6 +321,25 @@ export async function writeReceipt(receipt, directory) {
   for (const record of receipt.moments) {
     await writeJson(join(directory, getMomentFile(record)), record)
   }
+}
+
+/** A place id spelled from its name: pinyin for Chinese, the letters and digits of the rest. */
+export function getPlaceId(name, taken = {}) {
+  const base =
+    pinyin(name, { toneType: 'none', type: 'array', nonZh: 'consecutive' })
+      .join('-')
+      .toLowerCase()
+      .normalize('NFKD')
+      .replaceAll(/[^a-z0-9]+/g, '-')
+      .replaceAll(/^-+|-+$/g, '') || 'place'
+
+  let id = base
+
+  for (let attempt = 2; id in taken; attempt += 1) {
+    id = `${base}-${attempt}`
+  }
+
+  return id
 }
 
 /** The slug the app proposed, else the first place, else the first words, else `moment`. */
