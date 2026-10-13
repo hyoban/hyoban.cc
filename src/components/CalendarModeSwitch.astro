@@ -48,12 +48,6 @@ const modeLinkClass = 'relative z-[1] inline-flex min-h-8 min-w-[4.5rem] items-c
       selector: '[data-calendar-mode-switch]',
     },
     {
-      duration: 360,
-      easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
-      property: 'transform',
-      selector: '.calendar-back-link',
-    },
-    {
       duration: 280,
       easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
       property: 'transform',
@@ -75,7 +69,7 @@ const modeLinkClass = 'relative z-[1] inline-flex min-h-8 min-w-[4.5rem] items-c
   ]
 
   function getCalendarMode(url: URL): CalendarMode | undefined {
-    if (url.pathname === '/map') {
+    if (url.pathname === '/map' || url.pathname === '/map/') {
       return 'map'
     }
 

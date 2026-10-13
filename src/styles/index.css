@@ -97,7 +97,9 @@
   }
 }
 
-/* Only opt controls into position morphing for calendar/map mode changes. */
+/* Only opt controls into position morphing for calendar/map mode changes. The back
+   link fades with the page instead: it sits far apart on the two pages on a wide
+   screen, and sliding it across pulls the eye away from the switch. */
 html[data-calendar-mode-transition] .calendar-mode-switch {
   view-transition-name: calendar-mode-switch;
 }
@@ -112,10 +114,6 @@ html[data-calendar-mode-transition] .calendar-mode-switch a[data-mode='calendar'
 
 html[data-calendar-mode-transition] .calendar-mode-switch a[data-mode='map'] {
   view-transition-name: calendar-mode-map-label;
-}
-
-html[data-calendar-mode-transition] .calendar-back-link {
-  view-transition-name: calendar-back-link;
 }
 
 @supports (view-transition-name: none) {
@@ -136,11 +134,6 @@ html[data-calendar-mode-transition] .calendar-back-link {
     animation-duration: 360ms;
     animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
     z-index: 2;
-  }
-
-  ::view-transition-group(calendar-back-link) {
-    animation-duration: 360ms;
-    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   @media (prefers-reduced-motion: reduce) {
