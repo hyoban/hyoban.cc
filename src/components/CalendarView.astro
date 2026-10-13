@@ -155,17 +155,17 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
 <Layout title={title} description={description}>
   <main
     class:list={[
-      'calendar-page mx-auto grid h-[calc(100dvh-4rem)] w-full max-w-[60rem] grid-rows-[auto_minmax(0,1fr)] max-[56rem]:block max-[56rem]:h-auto max-[56rem]:max-w-[42rem]',
+      'calendar-page mx-auto grid h-[calc(100dvh-4rem)] w-full max-w-[60rem] grid-rows-[auto_minmax(0,1fr)] max-[56rem]:flex max-[56rem]:h-auto max-[56rem]:flex-wrap max-[56rem]:items-center max-[56rem]:max-w-[42rem]',
       {
         'calendar-page--with-drawer max-[56rem]:hidden min-[56.0625rem]:overflow-y-auto min-[56.0625rem]:overscroll-contain': selectedDate,
       },
     ]}
     style={`--calendar-weeks: ${desktopCalendarDays.length / 7}`}
   >
-    <header class="calendar-toolbar mb-4 grid grid-cols-[1fr_auto_1fr] items-center max-[56rem]:grid-cols-[1fr_auto] max-[56rem]:gap-2">
-      <CalendarBackLink class="col-start-1 justify-self-start max-[56rem]:row-start-1" />
+    <header class="calendar-toolbar mb-4 grid grid-cols-[1fr_auto_1fr] items-center max-[56rem]:contents">
+      <CalendarBackLink class="col-start-1 justify-self-start" />
 
-      <nav class="month-navigation col-start-2 flex items-center justify-center gap-5 in-[.calendar-page--with-drawer]:gap-1 max-[56rem]:col-span-full max-[56rem]:col-start-1 max-[56rem]:row-start-2 max-[40rem]:gap-2" aria-label="月份导航">
+      <nav class="month-navigation col-start-2 flex items-center justify-center gap-5 in-[.calendar-page--with-drawer]:gap-1 max-[56rem]:sticky max-[56rem]:top-0 max-[56rem]:z-10 max-[56rem]:order-1 max-[56rem]:mt-2 max-[56rem]:basis-full max-[56rem]:bg-bg max-[40rem]:gap-2" aria-label="月份导航">
         {
           previousMonth
             ? <a class="month-navigation__arrow inline-flex size-8 items-center justify-center rounded-full text-tx-2 no-underline hover:bg-inline hover:text-tx max-[56rem]:size-11" href={getMonthPath(previousMonth)} aria-label="上一个月" data-calendar-month-link data-calendar-month-prefetch="load" data-astro-prefetch="false"><span class="i-lucide-chevron-left" aria-hidden="true" /></a>
@@ -211,7 +211,7 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
         }
       </nav>
 
-      <CalendarModeSwitch class="col-start-3 justify-self-end max-[56rem]:col-start-2 max-[56rem]:row-start-1" mode="calendar" />
+      <CalendarModeSwitch class="col-start-3 justify-self-end max-[56rem]:ml-auto" mode="calendar" />
     </header>
 
     <div class="desktop-calendar grid min-h-0 content-start grid-rows-[auto_minmax(0,1fr)] [container-type:inline-size] max-[56rem]:hidden">
