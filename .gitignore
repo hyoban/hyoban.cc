@@ -44,3 +44,9 @@ src/content/moments/**/*.webp
 
 # jetbrains setting folder
 .idea/
+
+# Android app build output and machine-specific files
+apps/android/.gradle/
+apps/android/.kotlin/
+apps/android/**/build/
+apps/android/local.properties
