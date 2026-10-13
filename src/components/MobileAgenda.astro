@@ -41,12 +41,14 @@ function formatDate(dateKey: string) {
 }
 ---
 
-<section class="mobile-agenda hidden max-[56rem]:block" aria-label={`${year} 年 ${month} 月的全部记录`}>
+<section class="mobile-agenda hidden max-[56rem]:order-2 max-[56rem]:block max-[56rem]:min-w-0 max-[56rem]:basis-full" aria-label={`${year} 年 ${month} 月的全部记录`}>
   {
     days.length > 0
       ? (
           <>
-            <nav class="mobile-agenda__index mt-3 flex gap-2 overflow-x-auto border-y border-border py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-label="本月有记录的日期">
+            {/* Sticks under the month navigation (2.75rem tall), so both stay in reach down
+                the month; a day jumped to stops below the two (this row is 3.375rem). */}
+            <nav class="mobile-agenda__index sticky top-11 z-[9] mt-3 flex gap-2 bg-bg overflow-x-auto border-y border-border py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-label="本月有记录的日期">
               {days.map(day => (
                 <button
                   type="button"
@@ -61,7 +63,7 @@ function formatDate(dateKey: string) {
 
             <div class="mobile-agenda__days">
               {agendaDays.map(day => (
-                <section class="mobile-agenda__day scroll-mt-3 [&+&]:border-t [&+&]:border-border" id={`agenda-${day.dateKey}`}>
+                <section class="mobile-agenda__day scroll-mt-[calc(2.75rem+3.375rem+0.75rem)] [&+&]:border-t [&+&]:border-border" id={`agenda-${day.dateKey}`}>
                   <header class="flex items-start justify-between gap-3 pt-7">
                     <div class="mobile-agenda__date flex min-w-0 flex-wrap items-center gap-2.5">
                       <h2 class="text-lg font-medium">{formatDate(day.dateKey)}</h2>
