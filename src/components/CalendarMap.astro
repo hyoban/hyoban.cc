@@ -219,10 +219,40 @@ const description = activeTrip
     })
   })
 
+  // The map's own addresses: the map, a place's hash on it, and a trip's page.
+  const ownPathPattern = /^\/(?:map|trip\/[^/]+)\/$/
+  // Set while the router goes back or forward between them.
+  let ownTraversal = false
+
+  // Back and forward between the map's own addresses are the map's to follow, as it
+  // listens for popstate itself. The router takes them for a new page: it would fetch
+  // the page again and crossfade it in, over the drawer as it slides away. It is left
+  // nothing to load and nothing to swap, and no transition to show.
+  document.addEventListener('astro:before-preparation', (event) => {
+    const { from, navigationType, to } = event
+
+    ownTraversal = navigationType === 'traverse'
+      && Boolean(map?.page.isConnected)
+      && from.search === to.search
+      && ownPathPattern.test(from.pathname)
+      && ownPathPattern.test(to.pathname)
+
+    if (ownTraversal) {
+      event.loader = async () => {}
+    }
+  })
+
   // Leaving the map for another page takes the map down before the swap; a change of
   // hash or trip on the same map keeps it.
   document.addEventListener('astro:before-swap', (event) => {
-    const { from, to } = event as Event & { from: URL; to: URL }
+    const { from, to } = event
+
+    if (ownTraversal) {
+      ownTraversal = false
+      event.viewTransition.skipTransition()
+      event.swap = () => {}
+      return
+    }
 
     if (from.pathname === to.pathname && from.search === to.search) {
       return
