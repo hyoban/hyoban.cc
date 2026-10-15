@@ -1,0 +1,263 @@
+---
+import {
+  getDayNumber,
+  getDeviceEvents,
+  getDeviceLanes,
+  getDeviceSpans,
+  type DeviceSpan,
+  type DeviceStatus,
+} from '@/data/devices'
+import { readDevices } from '@/data/store'
+
+// The devices on the use page: one lane per category with a bar for each device on wide
+// screens, a feed of purchases and sales on narrow ones. Spans still owned end on the
+// day the site was built, and so do their daily costs.
+
+const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Shanghai' }).format(new Date())
+const spans = getDeviceSpans(readDevices(), today)
+const events = getDeviceEvents(spans)
+
+const firstYear = Number(spans[0]!.start.slice(0, 4))
+const lastYear = Number(today.slice(0, 4)) + 1
+const years = Array.from({ length: lastYear - firstYear }, (_, index) => firstYear + index)
+const origin = getDayNumber(`${firstYear}-01-01`)
+const total = getDayNumber(`${lastYear}-01-01`) - origin
+const position = (date: string) => ((getDayNumber(date) - origin) / total) * 100
+
+// A name goes inside its bar when it fits, else beside it: after the bar when there's
+// room before the track's end, else before it. Widths are guessed from the characters at
+// the bars' text-xs, against the narrowest track a wide screen gives (36rem less gutters).
+const TRACK_WIDTH = 540
+const GAP = 6
+type LabelSide = 'inside' | 'after' | 'before'
+const estimateWidth = (text: string) =>
+  [...text].reduce((width, character) => width + (character.codePointAt(0)! > 0xff ? 12 : 6.8), 0)
+const labels = new Map(
+  spans.map((span) => {
+    const start = position(span.start)
+    const end = position(span.end)
+    const width = ((estimateWidth(span.device.name) + 12) / TRACK_WIDTH) * 100
+    const outside = ((estimateWidth(span.device.name) + GAP) / TRACK_WIDTH) * 100
+    const side: LabelSide =
+      width <= end - start ? 'inside' : end + outside <= 100 ? 'after' : 'before'
+    const extent =
+      side === 'inside'
+        ? ([start, end] as const)
+        : side === 'after'
+          ? ([start, end + outside] as const)
+          : ([start - outside, end] as const)
+    return [span.id, { extent, side }]
+  }),
+)
+const lanes = getDeviceLanes(spans, (span) => labels.get(span.id)!.extent)
+
+const priceFormatter = new Intl.NumberFormat('zh-CN', {
+  currency: 'CNY',
+  maximumFractionDigits: 2,
+  minimumFractionDigits: 0,
+  style: 'currency',
+})
+const formatPrice = (value: number) => priceFormatter.format(value)
+const formatDailyCost = (span: DeviceSpan) => `¥${span.dailyCost.toFixed(2)}/天`
+
+const statusLabel: Record<DeviceStatus, string> = {
+  backup: '备用',
+  idle: '闲置',
+  'in-use': '在用',
+  sold: '已卖出',
+}
+const barClass: Record<DeviceStatus, string> = {
+  backup: 'border-border text-tx-2',
+  idle: 'border-dashed border-tx-3 text-tx-2',
+  'in-use': 'border-border text-tx',
+  sold: 'border-border text-tx-3',
+}
+const barFill: Record<DeviceStatus, string | undefined> = {
+  backup: 'var(--color-hover)',
+  idle: undefined,
+  'in-use': 'var(--color-hover)',
+  sold: 'var(--color-inline)',
+}
+
+/** A bar is filled while the device was the main one and hollow while it was a backup. */
+function getBarBackground(span: DeviceSpan) {
+  const fill = barFill[span.status]
+
+  if (!fill) {
+    return ''
+  }
+
+  const start = getDayNumber(span.start)
+  const length = getDayNumber(span.end) - start
+  const at = (date: string) => `${(((getDayNumber(date) - start) / length) * 100).toFixed(2)}%`
+  const stops = [`${fill} 0%`]
+
+  for (const period of span.backup) {
+    stops.push(`${fill} ${at(period.start)}`, `transparent ${at(period.start)}`)
+    stops.push(`transparent ${at(period.end)}`, `${fill} ${at(period.end)}`)
+  }
+
+  return `background-image: linear-gradient(to right, ${stops.join(', ')}, ${fill} 100%)`
+}
+
+const eventsByYear = Map.groupBy(events, (event) => event.date.slice(0, 4))
+const ROW = 1.75
+---
+
+<h2>数码产品</h2>
+
+<div class="hidden text-sm sm:block">
+  {
+    lanes.map((lane) => (
+      <div class="grid grid-cols-[4rem_minmax(0,1fr)] border-t border-border">
+        <span class="py-1.5 text-tx-2">{lane.category}</span>
+        <div class="relative" style={`height: ${lane.rows.length * ROW + 0.5}rem`}>
+          {years.map((year) => (
+            <div
+              class="absolute inset-y-0 border-l border-border"
+              style={`left: ${position(`${year}-01-01`)}%`}
+            />
+          ))}
+          {lane.rows.map((row, rowIndex) =>
+            row.map((span) => {
+              const left = position(span.start)
+              const { side } = labels.get(span.id)!
+              return (
+                <div
+                  class="group absolute outline-none"
+                  style={`top: ${0.375 + rowIndex * ROW}rem; left: ${left}%; width: ${position(span.end) - left}%`}
+                  tabindex="0"
+                >
+                  <div
+                    style={getBarBackground(span)}
+                    class:list={[
+                      'h-6 min-w-1 truncate rounded-md border bg-bg text-xs leading-[1.375rem] transition-colors group-hover:border-tx-3 group-focus-visible:border-tx-2',
+                      side === 'inside' && 'px-1.5',
+                      barClass[span.status],
+                    ]}
+                  >
+                    {side === 'inside' && span.device.name}
+                  </div>
+                  {side !== 'inside' && (
+                    <span
+                      class:list={[
+                        'absolute top-0 text-xs leading-6 whitespace-nowrap transition-colors group-hover:text-tx',
+                        side === 'after' ? 'left-full ml-1.5' : 'right-full mr-1.5',
+                        span.status === 'in-use' || span.status === 'backup'
+                          ? 'text-tx-2'
+                          : 'text-tx-3',
+                      ]}
+                    >
+                      {span.device.name}
+                    </span>
+                  )}
+                  <div
+                    class:list={[
+                      'pointer-events-none invisible absolute top-full z-10 mt-1.5 w-60 rounded-lg border border-border bg-bg p-3 text-xs leading-5 opacity-0 shadow-sm transition-opacity group-hover:visible group-hover:opacity-100 group-focus-visible:visible group-focus-visible:opacity-100',
+                      left > 50 ? 'right-0' : 'left-0',
+                    ]}
+                  >
+                    <div class="font-medium text-tx">{span.device.name}</div>
+                    <div class="text-tx-3">
+                      {span.device.category} · {statusLabel[span.status]}
+                    </div>
+                    <dl class="mt-2 grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 text-tx-2">
+                      <dt>购入</dt>
+                      <dd class="tabular-nums">
+                        {span.start} · {formatPrice(span.device.bought.price)}
+                      </dd>
+                      {span.device.sold && (
+                        <>
+                          <dt>卖出</dt>
+                          <dd class="tabular-nums">
+                            {span.device.sold.on} · {formatPrice(span.device.sold.price)}
+                          </dd>
+                        </>
+                      )}
+                      <dt>持有</dt>
+                      <dd class="tabular-nums">
+                        {span.days} 天{span.device.bought.price > 0 && ` · ${formatDailyCost(span)}`}
+                      </dd>
+                    </dl>
+                    {span.device.note && <div class="mt-2 text-tx-2">{span.device.note}</div>}
+                  </div>
+                </div>
+              )
+            }),
+          )}
+        </div>
+      </div>
+    ))
+  }
+  <div class="grid grid-cols-[4rem_minmax(0,1fr)] border-t border-border">
+    <span />
+    <div class="relative h-6">
+      {
+        years.map((year) => (
+          <span
+            class="absolute top-1 -translate-x-1/2 text-xs text-tx-3 tabular-nums"
+            style={`left: ${position(`${year}-01-01`)}%`}
+          >
+            {year}
+          </span>
+        ))
+      }
+    </div>
+  </div>
+  <div class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-tx-3">
+    {
+      (['in-use', 'backup', 'idle', 'sold'] as const).map((status) => (
+        <span class="inline-flex items-center gap-1.5">
+          <span
+            class:list={['inline-block h-2.5 w-4 rounded-sm border', barClass[status]]}
+            style={status === 'backup' ? '' : `background: ${barFill[status] ?? 'none'}`}
+          />
+          {statusLabel[status]}
+        </span>
+      ))
+    }
+    <span>悬停查看价格和日均成本</span>
+  </div>
+</div>
+
+<div class="sm:hidden">
+  {
+    [...eventsByYear].map(([year, yearEvents]) => (
+      <section class="mt-4 first:mt-0">
+        <div class="mb-1 font-medium">{year}</div>
+        {yearEvents.map(({ date, kind, span }) => (
+          <div class="grid grid-cols-[3rem_minmax(0,1fr)] gap-x-2 py-1">
+            <time class="text-tx-3 tabular-nums" datetime={date}>
+              {date.slice(5).replace('-', '/')}
+            </time>
+            <div>
+              <span class="text-tx-2">{kind === 'bought' ? '购入' : '卖出'}</span>{' '}
+              {span.device.name}{' '}
+              <span class="text-sm text-tx-3">
+                {formatPrice(kind === 'bought' ? span.device.bought.price : span.device.sold!.price)}
+              </span>
+              {kind === 'bought' && (span.status === 'idle' || span.status === 'backup') && (
+                <span
+                  class:list={[
+                    'ml-1 rounded border px-1 text-xs text-tx-2',
+                    span.status === 'idle' ? 'border-dashed border-tx-3' : 'border-border',
+                  ]}
+                >
+                  {statusLabel[span.status]}
+                </span>
+              )}
+              {kind === 'sold' && (
+                <div class="text-sm text-tx-3">
+                  持有 {span.days} 天 · {formatDailyCost(span)}
+                </div>
+              )}
+              {kind === 'bought' && span.device.note && (
+                <div class="text-sm text-tx-3">{span.device.note}</div>
+              )}
+            </div>
+          </div>
+        ))}
+      </section>
+    ))
+  }
+</div>

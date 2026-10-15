@@ -1,0 +1,110 @@
+{
+  "airpods-4": {
+    "name": "AirPods 4",
+    "category": "耳机",
+    "bought": {
+      "on": "2024-09-23",
+      "price": 1399
+    },
+    "note": "我习惯不了入耳式的"
+  },
+  "iphone-15": {
+    "name": "iPhone 15 128GB",
+    "category": "手机",
+    "bought": {
+      "on": "2023-09-27",
+      "price": 5999
+    },
+    "sold": {
+      "on": "2026-09-01",
+      "price": 2069.5
+    }
+  },
+  "macbook-pro-m1-pro": {
+    "name": "MacBook Pro 14' M1 Pro 16GB",
+    "category": "电脑",
+    "bought": {
+      "on": "2023-03-17",
+      "price": 9999
+    },
+    "note": "我的第一台 Mac，现在当备用机。"
+  },
+  "macbook-pro-m4-pro": {
+    "name": "MacBook Pro 14' M4 Pro 24GB",
+    "category": "电脑",
+    "bought": {
+      "on": "2025-12-17",
+      "price": 0
+    },
+    "note": "公司配的，作为主力机"
+  },
+  "nuphy-air60-v2": {
+    "name": "Nuphy Air60 v2",
+    "category": "键盘",
+    "bought": {
+      "on": "2024-09-29",
+      "price": 562.38
+    },
+    "note": "代替笔记本的内置键盘"
+  },
+  "oppo-find-x10-pro-max": {
+    "name": "OPPO Find X10 Pro Max 16+512GB",
+    "category": "手机",
+    "bought": {
+      "on": "2026-09-23",
+      "price": 7199
+    }
+  },
+  "playstation-5": {
+    "name": "PlayStation 5",
+    "category": "游戏机",
+    "bought": {
+      "on": "2024-12-19",
+      "price": 3361.51
+    },
+    "sold": {
+      "on": "2026-07-22",
+      "price": 2981.01
+    },
+    "note": "吃灰"
+  },
+  "redmi-g-pro-27u": {
+    "name": "红米 G Pro 27u",
+    "category": "显示器",
+    "bought": {
+      "on": "2025-05-11",
+      "price": 2294.15
+    },
+    "sold": {
+      "on": "2026-08-14",
+      "price": 1386.63
+    },
+    "note": "电视显示器二合一"
+  },
+  "ugreen-dxp4800": {
+    "name": "绿联 DXP 4800",
+    "category": "NAS",
+    "bought": {
+      "on": "2025-01-02",
+      "price": 3141.48
+    }
+  },
+  "vxe-r1-se": {
+    "name": "VXE 蜻蜓 R1 SE",
+    "category": "鼠标",
+    "bought": {
+      "on": "2024-10-10",
+      "price": 88.68
+    },
+    "note": "很便宜很好用"
+  },
+  "xiaomi-10": {
+    "name": "小米 10 128GB",
+    "category": "手机",
+    "bought": {
+      "on": "2021-03-01",
+      "price": 3999
+    },
+    "note": "15 卖出后短暂当回主力机，现在又回到备用机"
+  }
+}

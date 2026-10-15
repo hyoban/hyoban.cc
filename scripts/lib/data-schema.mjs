@@ -2,6 +2,7 @@ import { z } from 'astro/zod'
 
 import {
   SCHEMA_VERSION,
+  devicesSchema,
   manifestSchema,
   momentRecordSchema,
   placesSchema,
@@ -11,6 +12,7 @@ import {
 /** The spec's schemas by the name of the JSON Schema file each becomes. */
 export function getDataSchemas() {
   return {
+    devices: devicesSchema,
     manifest: manifestSchema,
     moment: momentRecordSchema,
     places: placesSchema,

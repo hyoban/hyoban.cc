@@ -201,6 +201,24 @@ export const tripRecordSchema = z
   })
   .refine((trip) => trip.start <= trip.end, 'The trip ends before it starts.')
 
+/** A price in yuan, as paid or got back. */
+const price = z.number().nonnegative()
+
+export const deviceSchema = z
+  .looseObject({
+    name: z.string().min(1),
+    /** What kind of thing it is, like 手机 or 电脑; the use page gives each its own lane. */
+    category: z.string().min(1),
+    bought: z.looseObject({ on: dateKey, price }),
+    sold: z.looseObject({ on: dateKey, price }).optional(),
+    /** Still owned but no longer used. */
+    idle: z.boolean().default(false),
+    note: z.string().optional(),
+  })
+  .refine((device) => !device.sold || device.bought.on <= device.sold.on, 'Sold before bought.')
+
+export const devicesSchema = z.record(id, deviceSchema)
+
 export const manifestSchema = z.looseObject({
   schemaVersion: z.literal(SCHEMA_VERSION),
   generator: z.string().min(1),
@@ -216,6 +234,8 @@ export type Place = z.output<typeof placeSchema>
 export type Places = z.output<typeof placesSchema>
 export type TripRecord = z.output<typeof tripRecordSchema>
 export type TripRecordInput = z.input<typeof tripRecordSchema>
+export type Device = z.output<typeof deviceSchema>
+export type Devices = z.output<typeof devicesSchema>
 export type Manifest = z.output<typeof manifestSchema>
 
 /** The directory a Moment's file sits in under `data/moments`: its year and month. */

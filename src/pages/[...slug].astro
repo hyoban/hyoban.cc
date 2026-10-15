@@ -5,7 +5,8 @@ import { formatPostFullDate, getMarkdownEntries, type PostEntry } from '@/utils'
 import { render } from 'astro:content'
 
 export async function getStaticPaths() {
-  const entries = await getMarkdownEntries()
+  // The use page has its own route, which renders its devices around the markdown.
+  const entries = (await getMarkdownEntries()).filter((entry) => entry.data.link !== 'use')
   return entries.map((entry) => ({
     params: { slug: entry.data.link },
     props: { entry },
