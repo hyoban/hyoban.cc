@@ -1,10 +1,12 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import {
+  devicesSchema,
   manifestSchema,
   momentRecordSchema,
   placesSchema,
   tripRecordSchema,
+  type Devices,
   type Manifest,
   type MomentRecord,
   type Places,
@@ -22,6 +24,10 @@ export function readManifest(root = dataRoot): Manifest {
 
 export function readPlaces(root = dataRoot): Places {
   return placesSchema.parse(readJson('places.json', root))
+}
+
+export function readDevices(root = dataRoot): Devices {
+  return devicesSchema.parse(readJson('devices.json', root))
 }
 
 export function readTripRecords(root = dataRoot): TripRecord[] {

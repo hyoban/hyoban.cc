@@ -1,0 +1,30 @@
+---
+import SitePage from '@/components/SitePage.astro'
+import UseDevices from '@/components/UseDevices.astro'
+import Layout from '@/layouts/Layout.astro'
+import { getEntry } from 'astro:content'
+
+// The use page is markdown with the devices timeline in the middle: the markdown marks
+// the spot with an HTML comment starting `<!-- devices`.
+
+const entry = (await getEntry('pages', 'use'))!
+const html = entry.rendered?.html ?? ''
+const marker = html.match(/<!--\s*devices\b[\s\S]*?-->/)
+
+if (!marker) {
+  throw new Error('src/content/pages/use.md has no <!-- devices --> marker.')
+}
+
+const before = html.slice(0, marker.index)
+const after = html.slice(marker.index! + marker[0].length)
+---
+
+<Layout title={entry.data.title} description={entry.data.description}>
+  <SitePage title={entry.data.title} description={entry.data.description}>
+    <article class="prose">
+      <Fragment set:html={before} />
+      <UseDevices />
+      <Fragment set:html={after} />
+    </article>
+  </SitePage>
+</Layout>
