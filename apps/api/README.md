@@ -56,7 +56,7 @@ Cloudflare Images resize the photos and takes each video's first frame as its po
 media item's are the server's: a request's copy
 is ignored, they are set when the Moment publishes and never change after. Saving a
 published Moment with new media publishes those as it saves, so their originals must
-be uploaded first. The rules for places, ids and file names live in `src/publish.ts`,
+be uploaded first. The rules for places, ids and file names live in `@hyoban/data-spec/publish`,
 which `pnpm data:publish` shares.
 
 A write the site shows (anything but a draft) calls the `DEPLOY_HOOK_URL` secret, when

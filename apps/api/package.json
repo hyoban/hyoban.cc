@@ -9,8 +9,7 @@
     "deploy": "wrangler deploy"
   },
   "dependencies": {
-    "@hyoban/data-spec": "workspace:*",
-    "@hyoban/trip-map": "workspace:*"
+    "@hyoban/data-spec": "workspace:*"
   },
   "devDependencies": {
     "wrangler": "^4.149.0"

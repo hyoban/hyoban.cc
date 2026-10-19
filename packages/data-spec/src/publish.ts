@@ -1,8 +1,7 @@
-import { getDistanceKm } from '@hyoban/trip-map'
-import type { MomentMedia, MomentRecord, Place, Places } from '@hyoban/data-spec'
+import type { MomentMedia, MomentRecord, Place, Places } from './index.ts'
 
 // The rules for publishing: which place a new one is, what a Moment's published id is,
-// and what its media files are called. Shared by the Worker and `pnpm data:publish`.
+// and what its media files are called. Shared by the API and `pnpm data:publish`.
 
 /** Two places this close, or with the same name, are one place. */
 export const NEARBY_KM = 0.2
@@ -28,6 +27,22 @@ export function matchPlace(
   )
 
   return match ? { id: match[0], status: 'matched' } : { id, status: 'new' }
+}
+
+const EARTH_RADIUS_KM = 6371
+
+/** The great-circle distance between two places, in kilometres. */
+export function getDistanceKm(from: Place, to: Place) {
+  const toRadians = (degrees: number) => (degrees * Math.PI) / 180
+  const latitudeDelta = toRadians(to.latitude - from.latitude)
+  const longitudeDelta = toRadians(to.longitude - from.longitude)
+  const a =
+    Math.sin(latitudeDelta / 2) ** 2 +
+    Math.cos(toRadians(from.latitude)) *
+      Math.cos(toRadians(to.latitude)) *
+      Math.sin(longitudeDelta / 2) ** 2
+
+  return 2 * EARTH_RADIUS_KM * Math.asin(Math.sqrt(a))
 }
 
 /** The slug the app proposed, else the first place, else the first words, else `moment`. */

@@ -2,6 +2,8 @@
   "name": "hyoban-cc-api",
   "main": "src/index.ts",
   "compatibility_date": "2026-01-23",
+  // The spec's Zod is most of the bundle; minifying takes it from 800 to 480 KiB.
+  "minify": true,
   "observability": { "enabled": true },
   // Created with `wrangler d1 create hyoban-cc --location apac`.
   "d1_databases": [

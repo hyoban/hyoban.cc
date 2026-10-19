@@ -2,8 +2,6 @@ import { existsSync } from 'node:fs'
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises'
 import { basename, dirname, extname, join } from 'node:path'
 
-import { getDistanceKm } from '@hyoban/trip-map'
-
 import {
   SCHEMA_VERSION,
   getMomentFile,
@@ -13,12 +11,13 @@ import {
   tripRecordSchema,
 } from '@hyoban/data-spec'
 import {
+  getDistanceKm,
   getPublishedId,
   getSlug,
   getStem,
   matchPlace,
   NEARBY_KM,
-} from '../../apps/api/src/publish.ts'
+} from '@hyoban/data-spec/publish'
 import { readMomentRecords, readPlaces } from '../../src/data/store.ts'
 import { getContentType } from './r2-assets.mjs'
 
@@ -26,7 +25,8 @@ import { getContentType } from './r2-assets.mjs'
 // against the ones already there, its trips written, and its Moments given a published
 // id and their media uploaded, keeping anything already published for the same uid. The
 // receipt carries the published records back to the app, with the places it renamed.
-// The rules for places, ids and file names are the API's, in apps/api/src/publish.ts.
+// The rules for places, ids and file names are shared with the API, in
+// @hyoban/data-spec/publish.
 
 export const GENERATOR = 'hyoban.cc data:publish'
 
