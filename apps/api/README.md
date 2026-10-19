@@ -72,10 +72,21 @@ pnpm --filter @hyoban/api dev
 Put `API_TOKENS=<token>` in `apps/api/.dev.vars` to try the token-only reads locally.
 
 It is deployed at https://hyoban-cc-api.hyoban.workers.dev, over the `hyoban-cc`
-database in APAC. Change the deployed data with `pnpm data:import --remote`, the code
-with `pnpm --filter @hyoban/api deploy`, and the tokens with
-`wrangler secret put API_TOKENS --config apps/api/wrangler.jsonc`. The site's build
-token is `MOMENTS_API_TOKEN` in the root `.env`.
+database in APAC. Workers Builds deploys it on every push to `main` that touches
+`apps/api/`, `packages/data-spec/` or `pnpm-lock.yaml`: its root directory is
+`apps/api`, it installs from the repository root and runs `wrangler deploy`. That
+build can't reach D1, so apply a new migration yourself before pushing the code that
+needs it:
+
+```sh
+pnpm exec wrangler d1 migrations apply DB --remote --config apps/api/wrangler.jsonc
+```
+
+The secrets are `API_TOKENS` and `DEPLOY_HOOK_URL`, set with
+`wrangler secret put <name> --config apps/api/wrangler.jsonc`. The site's build token
+is `MOMENTS_API_TOKEN` in the root `.env`. To write records from `data/` into the
+deployed database use `pnpm data:push`; `pnpm data:import --remote` restores the whole
+backup over it.
 
 ## Layout
 
