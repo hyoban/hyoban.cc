@@ -1,0 +1,104 @@
+---
+import CalendarAnniversaryStatus from '@/components/CalendarAnniversaryStatus.astro'
+import CalendarDayStatus from '@/components/CalendarDayStatus.astro'
+import MomentEntry from '@/components/MomentEntry.astro'
+import type { CalendarAnniversary } from '@/anniversaries'
+import type { ChinaCalendarDay } from '@/china-calendar'
+import type { Moment } from '@/moments'
+
+interface AgendaDay {
+  anniversaries: CalendarAnniversary[]
+  chinaCalendarDay: ChinaCalendarDay | undefined
+  dateKey: string
+  day: number
+  moments: Moment[]
+}
+
+interface Props {
+  days: AgendaDay[]
+  month: number
+  year: number
+}
+
+const { days, month, year } = Astro.props
+const agendaDays = days.toReversed()
+const weekdayFormatter = new Intl.DateTimeFormat('zh-CN', { timeZone: 'Asia/Singapore', weekday: 'short' })
+
+function getWeekday(dateKey: string) {
+  const [dateYear, dateMonth, dateDay] = dateKey.split('-').map(part => Number.parseInt(part, 10))
+  return weekdayFormatter.format(new Date(Date.UTC(dateYear!, dateMonth! - 1, dateDay!)))
+}
+
+function formatDate(dateKey: string) {
+  return `${Number.parseInt(dateKey.slice(5, 7), 10)} 月 ${Number.parseInt(dateKey.slice(8, 10), 10)} 日 · ${getWeekday(dateKey)}`
+}
+
+function formatShortDate(dateKey: string) {
+  return `${Number.parseInt(dateKey.slice(5, 7), 10)}/${Number.parseInt(dateKey.slice(8, 10), 10)}`
+}
+---
+
+<!-- The month as a list, newest day first: the phone's calendar, and the desktop's list view.
+     --agenda-top is how far down the sticky date index sits: below the phone's sticky month
+     navigation (2.75rem tall), and at the top in the desktop list. -->
+<section class="calendar-agenda hidden [--agenda-top:2.75rem] max-[56rem]:order-2 max-[56rem]:block max-[56rem]:min-w-0 max-[56rem]:basis-full" aria-label={`${year} 年 ${month} 月的全部记录`}>
+  {
+    days.length > 0
+      ? (
+          <>
+            <nav class="calendar-agenda__index sticky top-[var(--agenda-top)] z-[9] mx-auto mt-3 flex max-w-[42rem] gap-2 bg-bg overflow-x-auto border-y border-border py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-label="本月有记录的日期">
+              {days.map(day => (
+                <button
+                  type="button"
+                  class="flex h-11 min-w-11 flex-none cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-0 font-mono text-tx-2 hover:bg-inline hover:text-tx"
+                  data-agenda-target={`agenda-${day.dateKey}`}
+                >
+                  <span aria-hidden="true">{String(day.day).padStart(2, '0')}</span>
+                  <span class="sr-only">{`定位到 ${formatDate(day.dateKey)}${day.anniversaries.length ? '的纪念日' : ''}`}</span>
+                </button>
+              ))}
+            </nav>
+
+            {/* A thin line down the days with a dot on each; from 40rem the date sits in a rail
+                on its left and stays in view under the index (3.375rem tall) down the day. */}
+            <div class="calendar-agenda__days relative mx-auto max-w-[42rem] pb-6 [--rail:0rem] before:absolute before:top-[2.125rem] before:bottom-0 before:left-[var(--rail)] before:w-px before:bg-border sm:[--rail:5.5rem]">
+              {agendaDays.map(day => {
+                const hasStatus = day.anniversaries.length > 0 || Boolean(day.chinaCalendarDay)
+
+                return (
+                  <section class="calendar-agenda__day relative scroll-mt-[calc(var(--agenda-top)+3.375rem+0.75rem)] sm:grid sm:grid-cols-[var(--rail)_minmax(0,1fr)]" id={`agenda-${day.dateKey}`}>
+                    <span class="absolute top-[calc(1.5rem+0.625rem-0.21875rem)] left-[var(--rail)] size-[0.4375rem] -translate-x-1/2 rounded-full bg-tx-3 ring-[0.1875rem] ring-bg" aria-hidden="true" />
+                    <h2 class="pt-6 pl-5 leading-5 sm:sticky sm:top-[calc(var(--agenda-top)+3.375rem+0.75rem)] sm:self-start sm:pr-5 sm:pl-0 sm:text-right">
+                      <span class="sr-only">{formatDate(day.dateKey)}</span>
+                      <span class="inline-flex items-baseline gap-2 text-sm text-tx-2 sm:flex-col sm:items-end sm:gap-0.5" aria-hidden="true">
+                        <time class="font-mono" datetime={day.dateKey}>{formatShortDate(day.dateKey)}</time>
+                        <span class="text-xs text-tx-3">{getWeekday(day.dateKey)}</span>
+                      </span>
+                    </h2>
+                    <div class="calendar-agenda__moments min-w-0 pl-5 sm:pl-6">
+                      {hasStatus && (
+                        <div class="flex flex-wrap items-center gap-2.5 pt-2.5 sm:pt-6">
+                          {day.anniversaries.map(anniversary => (
+                            <CalendarAnniversaryStatus anniversary={anniversary} />
+                          ))}
+                          {day.chinaCalendarDay && <CalendarDayStatus day={day.chinaCalendarDay} />}
+                        </div>
+                      )}
+                      {day.moments.map((moment, index) => (
+                        <MomentEntry class:list={{ '!pt-3': index === 0 && hasStatus, 'max-sm:!pt-3': index === 0 && !hasStatus }} moment={moment} />
+                      ))}
+                      {day.moments.length === 0 && (
+                        <p class="pt-3 pb-6 text-sm text-tx-3">
+                          {day.anniversaries.map(anniversary => anniversary.description).join('、')}
+                        </p>
+                      )}
+                    </div>
+                  </section>
+                )
+              })}
+            </div>
+          </>
+        )
+      : <p class="calendar-agenda__empty py-16 text-center text-tx-3">本月没有记录。</p>
+  }
+</section>

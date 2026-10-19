@@ -154,15 +154,6 @@ export function getMonthPath(monthKey: string) {
   return `/calendar/${monthKey.replace('-', '/')}/`
 }
 
-/** The years with Moments, newest first: one timeline page each. */
-export function getTimelineYears(moments: Moment[]) {
-  return [...new Set(moments.map((moment) => moment.dateKey.slice(0, 4)))].sort().reverse()
-}
-
-export function getTimelinePath(year: string) {
-  return `/timeline/${year}/`
-}
-
 async function loadMoments() {
   const entries = await getCollection('moments', ({ data }) => !data.hidden)
 
