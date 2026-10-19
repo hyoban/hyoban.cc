@@ -3,8 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "astro dev",
-    "build": "astro build",
+    "dev": "astro dev --force",
+    "build": "astro build --force",
     "check": "astro check",
     "assets:migrate": "node scripts/migrate-assets-to-r2.mjs",
     "assets:upload": "node scripts/upload-asset-to-r2.mjs",
