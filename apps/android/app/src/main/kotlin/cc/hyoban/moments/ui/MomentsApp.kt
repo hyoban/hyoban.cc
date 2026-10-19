@@ -34,6 +34,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
@@ -155,6 +158,14 @@ fun MomentsApp(container: AppContainer) {
                     // isn't part of that page and would hang outside it as it shrank.
                     predictivePopEnterTransition = { _ -> fadeIn(tween(700)) },
                     predictivePopExitTransition = { _ -> fadeOut(tween(700)) },
+                    // From tab to tab the pages slide the way the tabs' highlight does;
+                    // anything else fades as before.
+                    enterTransition = {
+                        tabSlide()?.let { slideIntoContainer(it, TAB_SLIDE) + fadeIn(tween(TAB_SLIDE_MS)) } ?: fadeIn(tween(700))
+                    },
+                    exitTransition = {
+                        tabSlide()?.let { slideOutOfContainer(it, TAB_SLIDE) + fadeOut(tween(TAB_SLIDE_MS)) } ?: fadeOut(tween(700))
+                    },
                 ) {
                     screen<Feed> {
                         FeedScreen(container, onMoment = openMoment, onMedia = openMedia, onDay = { navController.navigate(Day(it)) })
@@ -203,6 +214,17 @@ fun MomentsApp(container: AppContainer) {
         }
     }
     }
+}
+
+private const val TAB_SLIDE_MS = 320
+private val TAB_SLIDE = tween<IntOffset>(TAB_SLIDE_MS, easing = FastOutSlowInEasing)
+
+/** Which way the pages slide between two tabs: towards the tab chosen; null when either isn't a tab. */
+private fun AnimatedContentTransitionScope<NavBackStackEntry>.tabSlide(): AnimatedContentTransitionScope.SlideDirection? {
+    val from = Tab.entries.indexOfFirst { initialState.destination.hasRoute(it.type) }
+    val to = Tab.entries.indexOfFirst { targetState.destination.hasRoute(it.type) }
+    if (from < 0 || to < 0 || from == to) return null
+    return if (to > from) AnimatedContentTransitionScope.SlideDirection.Start else AnimatedContentTransitionScope.SlideDirection.End
 }
 
 /** How far a scroll must go, in pixels a frame, to hide or bring back the tabs. */

@@ -30,6 +30,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.AnimationSpec
+import kotlin.math.roundToInt
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.layout.positionInParent
+import androidx.compose.ui.layout.onPlaced
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.clickable
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -151,37 +164,56 @@ fun DayPill(text: String) {
 
 data class NavItem(val label: String, val icon: ImageVector, val selectedIcon: ImageVector)
 
-/** The tabs as a pill floating over the content; the chosen one widens to show its name. */
+/**
+ * The tabs as a pill floating over the content: one highlight slides from tab to tab,
+ * stretching to the chosen one as it widens to show its name.
+ */
 @Composable
 fun FloatingNav(items: List<NavItem>, selected: Int, onSelect: (Int) -> Unit, modifier: Modifier = Modifier) {
+    // Where each tab sits in the row, as laid out, for the highlight to slide to.
+    val bounds = remember(items.size) { mutableStateListOf(*Array(items.size) { 0f to 0f }) }
+    val (targetX, targetWidth) = bounds.getOrElse(selected) { 0f to 0f }
+    // Placed where it belongs at first, and only slid after.
+    var placed by remember { mutableStateOf(false) }
+    val slide: AnimationSpec<Float> = if (placed) spring(dampingRatio = 0.8f, stiffness = Spring.StiffnessMediumLow) else snap()
+    val x by animateFloatAsState(targetX, slide, label = "tab highlight x")
+    val width by animateFloatAsState(targetWidth, slide, label = "tab highlight width")
+    LaunchedEffect(targetWidth > 0f) { if (targetWidth > 0f) placed = true }
+    val density = LocalDensity.current
+
     Surface(
         shape = Corners.pill,
         color = MaterialTheme.colorScheme.surfaceContainerHighest,
         shadowElevation = 6.dp,
         modifier = modifier,
     ) {
-        Row(Modifier.padding(6.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            items.forEachIndexed { index, item ->
-                val active = index == selected
-                val container by animateColorAsState(
-                    if (active) MaterialTheme.colorScheme.primary else Color.Transparent,
-                    label = "tab",
+        Box(Modifier.padding(6.dp)) {
+            if (width > 0f) {
+                Box(
+                    Modifier
+                        .offset { IntOffset(x.roundToInt(), 0) }
+                        .size(with(density) { width.toDp() }, 48.dp)
+                        .background(MaterialTheme.colorScheme.primary, Corners.pill),
                 )
-                val content by animateColorAsState(
-                    if (active) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                    label = "tab content",
-                )
-                Surface(
-                    onClick = { onSelect(index) },
-                    shape = Corners.pill,
-                    color = container,
-                    modifier = Modifier.semantics {
-                        role = Role.Tab
-                        this.selected = active
-                    },
-                ) {
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                items.forEachIndexed { index, item ->
+                    val active = index == selected
+                    val content by animateColorAsState(
+                        if (active) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        label = "tab content",
+                    )
                     Row(
-                        Modifier.height(48.dp).padding(horizontal = 16.dp),
+                        Modifier
+                            .onPlaced { bounds[index] = it.positionInParent().x to it.size.width.toFloat() }
+                            .clip(Corners.pill)
+                            .clickable { onSelect(index) }
+                            .semantics {
+                                role = Role.Tab
+                                this.selected = active
+                            }
+                            .height(48.dp)
+                            .padding(horizontal = 16.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Icon(if (active) item.selectedIcon else item.icon, contentDescription = item.label, tint = content)
