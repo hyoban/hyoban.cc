@@ -8,6 +8,7 @@
     "check": "astro check",
     "assets:migrate": "node scripts/migrate-assets-to-r2.mjs",
     "assets:upload": "node scripts/upload-asset-to-r2.mjs",
+    "data:export": "node scripts/export-data.mjs",
     "data:import": "node scripts/import-data.mjs",
     "data:publish": "node scripts/publish-data.mjs",
     "data:schema": "node scripts/generate-data-schema.mjs",

@@ -1,9 +1,10 @@
 # Data
 
-The Moments, places and trips live under `data/` as JSON records, in the shape
-`packages/data-spec` defines. The recording app is the source of these records; the
-repository keeps the copy the site is built from, and the scripts here only ever fill
-in what publishing adds.
+The Moments, places and trips live in the API's D1 database (`apps/api`), which the
+recording app writes and the site's build reads. `data/` keeps a backup of them as JSON
+records, in the shape `packages/data-spec` defines: the data-backup workflow writes
+the API's export into it every six hours and commits what changed, so edit the records
+through the API rather than here. `devices.json` is the exception: it lives only here.
 
 ```
 data/
@@ -62,16 +63,19 @@ points the store and the Moments collection there. `MOMENTS_API_URL` overrides t
 deployed address. Without a token the build reads `data/`, and a token that fails to
 fetch fails the build. The scripts always read `data/`; `devices.json` stays here.
 
-## The API's copy
-
-`apps/api` serves the same records from D1. Until the app writes to it directly,
-`data/` stays the source:
+## Backing up and restoring
 
 ```sh
-pnpm data:import            # the local database `wrangler dev` uses
-pnpm data:import --remote   # the deployed one
+pnpm data:export            # the API's export into data/, as the workflow does
+pnpm data:import            # data/ into the local database `wrangler dev` uses
+pnpm data:import --remote   # data/ into the deployed one, to restore it
 ```
 
-It applies the migrations, then writes new and changed records and marks the ones no
+`data:export` needs `MOMENTS_API_TOKEN`, in the environment or `.env`; the workflow
+reads it from the repository's secrets. It writes each record in canonical JSON and
+removes the Moments and trips the API no longer has, so a run with nothing new changes
+nothing. D1's Time Travel keeps 30 days of the database too.
+
+`data:import` applies the migrations, then writes new and changed records and marks the ones no
 longer under `data/` deleted; only those take the new revision, so the app's sync only
 sees the difference. `--dry-run` only writes the SQL under `.artifacts/import/`.
