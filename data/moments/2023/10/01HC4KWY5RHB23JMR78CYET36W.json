@@ -3,7 +3,7 @@
   "occurredAt": "2023-10-07T16:26:11+08:00",
   "places": [],
   "text": "在麦蹭网开会",
-  "hidden": false,
+  "hidden": true,
   "media": [
     {
       "uid": "01HC4KWY5SZFK4N3VWFX1DG2H2",
@@ -35,5 +35,5 @@
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2023-10-07T16:26:11+08:00",
-  "updatedAt": "2026-09-03T10:44:40+08:00"
+  "updatedAt": "2026-10-19T17:51:14+08:00"
 }

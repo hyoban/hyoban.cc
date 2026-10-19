@@ -3,7 +3,7 @@
   "occurredAt": "2023-10-13T19:54:34+08:00",
   "places": [],
   "text": "吃一下麦的新品",
-  "hidden": false,
+  "hidden": true,
   "media": [
     {
       "uid": "01HCME6T4HS4EP4G72RESPYG4C",
@@ -54,5 +54,5 @@
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2023-10-13T19:54:34+08:00",
-  "updatedAt": "2026-09-03T10:44:40+08:00"
+  "updatedAt": "2026-10-19T17:51:14+08:00"
 }

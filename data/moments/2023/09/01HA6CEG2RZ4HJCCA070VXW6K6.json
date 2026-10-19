@@ -3,7 +3,7 @@
   "occurredAt": "2023-09-13T12:23:03+08:00",
   "places": [],
   "text": "💢怒买一个 typec 的耳机，希望我的小米能用。",
-  "hidden": false,
+  "hidden": true,
   "media": [
     {
       "uid": "01HA6CEG2SFVWR40DSSH6P8TH3",
@@ -38,5 +38,5 @@
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2023-09-13T12:23:03+08:00",
-  "updatedAt": "2026-09-03T10:44:40+08:00"
+  "updatedAt": "2026-10-19T17:51:14+08:00"
 }

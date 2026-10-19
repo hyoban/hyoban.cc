@@ -3,7 +3,7 @@
   "occurredAt": "2023-10-07T22:31:22+08:00",
   "places": [],
   "text": "在我的区块链博客发布了一篇新文章《写在 24 岁之前》，快来看看吧！ https://hyoban.xlog.app/24-years via @_xLog\n\n来看看我碎碎念的小作文👇",
-  "hidden": false,
+  "hidden": true,
   "media": [],
   "published": {
     "id": "2023/10/07-02-zai-wo-de-qu-kuai-lian-bo-ke-fa-bu",
@@ -12,5 +12,5 @@
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2023-10-07T22:31:22+08:00",
-  "updatedAt": "2026-09-03T10:44:40+08:00"
+  "updatedAt": "2026-10-19T17:51:14+08:00"
 }
