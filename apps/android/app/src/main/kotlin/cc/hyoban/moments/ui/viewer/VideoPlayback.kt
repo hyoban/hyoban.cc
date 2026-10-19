@@ -104,7 +104,7 @@ fun VideoPlayback(url: String, active: Boolean, state: VideoState, modifier: Mod
 @Composable
 fun VideoWaiting(state: VideoState, modifier: Modifier = Modifier) {
     AnimatedVisibility(state.waiting && state.player != null, modifier = modifier, enter = fadeIn(), exit = fadeOut()) {
-        Box(Modifier.size(56.dp).background(Color.Black.copy(alpha = 0.35f), CircleShape), contentAlignment = Alignment.Center) {
+        Box(Modifier.size(56.dp).background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.35f), CircleShape), contentAlignment = Alignment.Center) {
             CircularProgressIndicator(Modifier.size(28.dp), color = Color.White, strokeWidth = 3.dp)
         }
     }
@@ -129,7 +129,7 @@ fun VideoControls(state: VideoState, visible: Boolean, modifier: Modifier = Modi
     AnimatedVisibility(visible && player != null, modifier = modifier, enter = fadeIn(), exit = fadeOut()) {
         Row(
             Modifier.fillMaxWidth()
-                .background(Color.Black.copy(alpha = 0.35f))
+                .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.35f))
                 .navigationBarsPadding()
                 .padding(horizontal = 4.dp, vertical = 2.dp),
             verticalAlignment = Alignment.CenterVertically,

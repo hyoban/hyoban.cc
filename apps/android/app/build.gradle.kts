@@ -90,6 +90,7 @@ dependencies {
     implementation(libs.media3.datasource.okhttp)
     implementation(libs.media3.ui.compose)
     implementation(libs.telephoto.zoomable)
+    implementation(libs.capsule)
     implementation(libs.kotlinx.serialization.json)
     debugImplementation(libs.androidx.compose.ui.tooling)
     testImplementation(libs.junit)

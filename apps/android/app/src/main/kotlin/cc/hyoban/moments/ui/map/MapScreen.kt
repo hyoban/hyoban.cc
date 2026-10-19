@@ -54,6 +54,18 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import cc.hyoban.moments.ui.theme.dividerColor
+import cc.hyoban.moments.ui.theme.fill
+import cc.hyoban.moments.ui.theme.LocalDarkTheme
+import cc.hyoban.moments.ui.theme.SurfaceLevel
+import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
+import cc.hyoban.moments.ui.components.AppColors
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.material3.Card
+import com.materialkolor.ktx.harmonizeWithPrimary
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -63,7 +75,6 @@ import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.R
 import cc.hyoban.moments.data.spec.TripRecord
 import cc.hyoban.moments.ui.LocalBottomClearance
-import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.CompactMomentRow
 import cc.hyoban.moments.ui.format.daysBetween
 import cc.hyoban.moments.ui.format.formatRange
@@ -88,7 +99,11 @@ fun MapScreen(container: AppContainer, onMoment: (String) -> Unit, onPlace: (Str
     val mapPlaces = remember(byPlace, places) {
         byPlace.mapNotNull { (id, here) -> places[id]?.let { MapPlace(id, it, here.size, here.minOf { moment -> yearOf(moment.occurredAt) }) } }
     }
-    val colors = remember(mapPlaces) { yearColors(mapPlaces.map { it.firstYear }) }
+    // The site's year colours, each turned a little towards the scheme's primary so they sit with it.
+    val scheme = MaterialTheme.colorScheme
+    val colors = remember(mapPlaces, scheme) {
+        yearColors(mapPlaces.map { it.firstYear }).mapValues { (_, color) -> scheme.harmonizeWithPrimary(color) }
+    }
     val mapRoutes = remember(trips, routes) {
         trips.sortedByDescending { it.start }.mapNotNull { trip -> routes[trip.id]?.let { MapRoute(trip.id, it) } }
     }
@@ -181,8 +196,9 @@ fun MapScreen(container: AppContainer, onMoment: (String) -> Unit, onPlace: (Str
         ModalBottomSheet(
             onDismissRequest = { selected = null },
             sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false),
-            containerColor = AppColors.page,
+            containerColor = AppColors.sheetLevel.fill(),
         ) {
+            CompositionLocalProvider(LocalSurfaceLevel provides AppColors.sheetLevel) {
             Column {
                 Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp), verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Rounded.Place, contentDescription = null, tint = colors[years.minOrNull()] ?: MaterialTheme.colorScheme.primary)
@@ -207,6 +223,7 @@ fun MapScreen(container: AppContainer, onMoment: (String) -> Unit, onPlace: (Str
                         CompactMomentRow(moment, places, container.mediaUrls, onClick = { onMoment(moment.uid) })
                     }
                 }
+                }
             }
         }
     }
@@ -217,29 +234,32 @@ private val LOCATION_PERMISSIONS = arrayOf(Manifest.permission.ACCESS_FINE_LOCAT
 /** Brings the map to where the phone is; a ring while it finds out. */
 @Composable
 private fun LocateButton(locating: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Surface(
-        onClick = onClick,
-        enabled = !locating,
-        shape = CircleShape,
-        color = MaterialTheme.colorScheme.surfaceContainerHighest,
+    // Floating like the tabs, the icon in primary as the one action the map has.
+    FloatingActionButton(
+        onClick = { if (!locating) onClick() },
+        shape = Corners.full,
+        containerColor = SurfaceLevel.floating(LocalDarkTheme.current).fill(),
         contentColor = MaterialTheme.colorScheme.primary,
-        shadowElevation = 6.dp,
-        modifier = modifier.size(48.dp),
+        modifier = modifier,
     ) {
-        Box(contentAlignment = Alignment.Center) {
-            if (locating) {
-                CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
-            } else {
-                Icon(Icons.Rounded.MyLocation, contentDescription = stringResource(R.string.action_locate))
-            }
+        if (locating) {
+            CircularProgressIndicator(Modifier.size(24.dp), color = LocalContentColor.current, strokeWidth = 2.dp)
+        } else {
+            Icon(Icons.Rounded.MyLocation, contentDescription = stringResource(R.string.action_locate))
         }
     }
 }
 
-/** A pill floating over the map, like the tabs. */
+/** A bar floating over the map, coloured and raised like the tabs. */
 @Composable
 private fun FloatingPill(content: @Composable () -> Unit) {
-    Surface(shape = CircleShape, color = MaterialTheme.colorScheme.surfaceContainerHighest, shadowElevation = 6.dp, content = content)
+    Surface(
+        shape = Corners.full,
+        color = SurfaceLevel.floating(LocalDarkTheme.current).fill(),
+        contentColor = MaterialTheme.colorScheme.onSurface,
+        shadowElevation = 3.dp,
+        content = content,
+    )
 }
 
 /** What the colours and lines mean, as on the site: each year's colour, and the routes for trips. */
@@ -253,12 +273,12 @@ private fun Legend(colors: Map<Int, Color>, trips: Boolean) {
         ) {
             colors.forEach { (year, color) ->
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                    Box(Modifier.size(10.dp).border(1.5.dp, Color.White, CircleShape).padding(1.dp).background(color, CircleShape))
+                    Box(Modifier.size(10.dp).border(1.5.dp, MaterialTheme.colorScheme.surface, CircleShape).padding(1.dp).background(color, CircleShape))
                     Text("$year", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
             if (trips) {
-                VerticalDivider(Modifier.height(14.dp))
+                VerticalDivider(Modifier.height(14.dp), color = dividerColor())
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
                     Box(Modifier.width(14.dp).height(2.dp).background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f), CircleShape))
                     Text(stringResource(R.string.legend_trips), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -271,15 +291,15 @@ private fun Legend(colors: Map<Int, Color>, trips: Boolean) {
 /** The lifted route's trip, a card that opens it. */
 @Composable
 private fun RouteCard(trip: TripRecord, onOpen: () -> Unit) {
-    Surface(
+    Card(
         onClick = onOpen,
-        shape = Corners.card,
-        color = MaterialTheme.colorScheme.surfaceContainerHighest,
-        shadowElevation = 6.dp,
+        shape = MaterialTheme.shapes.large,
+        colors = CardDefaults.cardColors(containerColor = SurfaceLevel.floating(LocalDarkTheme.current).fill()),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
         modifier = Modifier.fillMaxWidth().padding(bottom = Space.s),
     ) {
         Row(Modifier.padding(start = Space.l, end = Space.s, top = Space.m, bottom = Space.m), verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Rounded.Luggage, contentDescription = null, tint = MaterialTheme.colorScheme.tertiary)
+            Icon(Icons.Rounded.Luggage, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
             Column(Modifier.weight(1f).padding(horizontal = Space.m), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(trip.title, style = MaterialTheme.typography.titleMedium)
                 Text(

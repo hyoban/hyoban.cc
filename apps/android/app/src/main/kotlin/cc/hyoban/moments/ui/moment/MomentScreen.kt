@@ -1,7 +1,6 @@
 package cc.hyoban.moments.ui.moment
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -41,6 +40,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import cc.hyoban.moments.ui.components.NeutralChip
+import androidx.compose.material3.AssistChip
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -66,7 +67,6 @@ import cc.hyoban.moments.ui.format.daysBetween
 import cc.hyoban.moments.ui.format.formatDay
 import cc.hyoban.moments.ui.format.formatRange
 import cc.hyoban.moments.ui.format.formatTime
-import cc.hyoban.moments.ui.theme.Corners
 import cc.hyoban.moments.ui.theme.Space
 
 /** How far the page's sheet rises over the photos. */
@@ -123,17 +123,15 @@ fun MomentScreen(
                     verticalArrangement = Arrangement.spacedBy(Space.l),
                 ) {
                     Text(formatDay(moment.occurredAt), style = MaterialTheme.typography.headlineMedium)
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        formatTime(moment.occurredAt)?.let {
-                            Pill(
-                                it,
-                                icon = Icons.Rounded.Schedule,
-                                container = MaterialTheme.colorScheme.primaryContainer,
-                                content = MaterialTheme.colorScheme.onPrimaryContainer,
-                            )
-                        }
+                    // The places are assist chips, each opening its place, with the 48dp a tap needs;
+                    // the time beside them is a label, centred on the chips' row.
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(Space.s),
+                        itemVerticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        formatTime(moment.occurredAt)?.let { Pill(it, icon = Icons.Rounded.Schedule) }
                         moment.places.forEach { id ->
-                            Pill(places[id]?.name ?: id, icon = Icons.Rounded.Place, modifier = Modifier.clip(Corners.pill).clickable { onPlace(id) })
+                            NeutralChip(places[id]?.name ?: id, Icons.Rounded.Place, onClick = { onPlace(id) })
                         }
                     }
                     if (moment.text.isNotBlank()) {
@@ -149,7 +147,7 @@ fun MomentScreen(
                                 cover?.let { Thumbnail(it, urls, size = 64) }
                                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                        Icon(Icons.Rounded.Luggage, contentDescription = null, tint = MaterialTheme.colorScheme.tertiary, modifier = Modifier.size(16.dp))
+                                        Icon(Icons.Rounded.Luggage, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
                                         Text(trip.title, style = MaterialTheme.typography.titleMedium)
                                     }
                                     Text(
@@ -182,7 +180,7 @@ fun MomentScreen(
 @Composable
 private fun PageDots(pager: PagerState, modifier: Modifier = Modifier) {
     Row(
-        modifier.clip(CircleShape).background(Color.Black.copy(alpha = 0.35f)).padding(horizontal = 8.dp, vertical = 6.dp),
+        modifier.clip(CircleShape).background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.35f)).padding(horizontal = 8.dp, vertical = 6.dp),
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         repeat(pager.pageCount) { page ->

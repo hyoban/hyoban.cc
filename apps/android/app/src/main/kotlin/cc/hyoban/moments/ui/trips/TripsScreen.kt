@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -48,7 +47,6 @@ import cc.hyoban.moments.ui.feed.EmptyState
 import cc.hyoban.moments.ui.feed.rememberRefreshErrors
 import cc.hyoban.moments.ui.format.daysBetween
 import cc.hyoban.moments.ui.format.formatRange
-import cc.hyoban.moments.ui.theme.Corners
 import cc.hyoban.moments.ui.theme.Space
 
 /** The trips tab: every trip, newest first, each a card led by its photos. */
@@ -100,7 +98,7 @@ fun TripsScreen(container: AppContainer, onTrip: (String) -> Unit) {
 @Composable
 private fun TripCard(trip: TripRecord, covers: List<MomentMedia>, count: Int, urls: MediaUrls, onClick: () -> Unit, modifier: Modifier) {
     PressableCard(onClick = onClick, modifier = modifier.fillMaxWidth()) {
-        CoverCollage(covers, urls, Modifier.padding(6.dp).clip(Corners.inset))
+        CoverCollage(covers, urls, Modifier.padding(4.dp).clip(MaterialTheme.shapes.small))
         Column(Modifier.padding(start = Space.l, end = Space.l, top = Space.s, bottom = Space.l), verticalArrangement = Arrangement.spacedBy(Space.s + 2.dp)) {
             Text(trip.title, style = MaterialTheme.typography.titleLarge)
             TripPills(trip, count)
@@ -112,13 +110,8 @@ private fun TripCard(trip: TripRecord, covers: List<MomentMedia>, count: Int, ur
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun TripPills(trip: TripRecord, count: Int, places: Int? = null) {
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Pill(
-            formatRange(trip.start, trip.end),
-            icon = Icons.Rounded.CalendarMonth,
-            container = MaterialTheme.colorScheme.primaryContainer,
-            content = MaterialTheme.colorScheme.onPrimaryContainer,
-        )
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.s), verticalArrangement = Arrangement.spacedBy(Space.s)) {
+        Pill(formatRange(trip.start, trip.end), icon = Icons.Rounded.CalendarMonth)
         Pill(stringResource(R.string.count_days, daysBetween(trip.start, trip.end)))
         Pill(stringResource(R.string.count_moments, count))
         places?.let { Pill(stringResource(R.string.count_places, it)) }
@@ -129,7 +122,7 @@ fun TripPills(trip: TripRecord, count: Int, places: Int? = null) {
 @Composable
 private fun CoverCollage(covers: List<MomentMedia>, urls: MediaUrls, modifier: Modifier) {
     val gap = Arrangement.spacedBy(3.dp)
-    val tile = RoundedCornerShape(6.dp)
+    val tile = MaterialTheme.shapes.extraSmall
 
     when (covers.size) {
         0 -> Unit

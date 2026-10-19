@@ -16,6 +16,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import cc.hyoban.moments.ui.theme.fill
+import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
+import cc.hyoban.moments.ui.components.SectionHeader
+import androidx.compose.ui.res.stringResource
+import androidx.compose.material.icons.rounded.Route
+import androidx.compose.material.icons.Icons
+import androidx.compose.material3.Surface
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -29,7 +36,6 @@ import cc.hyoban.moments.ui.feed.MomentFeed
 import cc.hyoban.moments.ui.format.daysBetween
 import cc.hyoban.moments.ui.format.formatDay
 import cc.hyoban.moments.ui.map.TripMap
-import cc.hyoban.moments.ui.theme.Corners
 import cc.hyoban.moments.ui.theme.Space
 
 /** One trip: what it covered, its route on a map card, then its Moments day by day, in order. */
@@ -72,7 +78,14 @@ fun TripScreen(
                 }
             }
             item(key = "map") {
-                TripMap(stops, routes[trip.id].orEmpty(), Modifier.padding(horizontal = Space.gutter).fillMaxWidth().height(260.dp).clip(Corners.card))
+                // The route as a card of its own, headed like the photo panel's sections.
+                val level = LocalSurfaceLevel.current.raised
+                Surface(shape = MaterialTheme.shapes.large, color = level.fill(), modifier = Modifier.padding(horizontal = Space.gutter).fillMaxWidth()) {
+                    Column(Modifier.padding(Space.m), verticalArrangement = Arrangement.spacedBy(Space.m)) {
+                        SectionHeader(Icons.Rounded.Route, stringResource(R.string.section_route))
+                        TripMap(stops, routes[trip.id].orEmpty(), Modifier.fillMaxWidth().height(240.dp).clip(MaterialTheme.shapes.medium))
+                    }
+                }
             }
             item(key = "gap") { Spacer(Modifier.height(Space.s)) }
         }

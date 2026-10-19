@@ -34,6 +34,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.EnterTransition
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.AnimatedContentTransitionScope
@@ -161,10 +166,18 @@ fun MomentsApp(container: AppContainer) {
                     // From tab to tab the pages slide the way the tabs' highlight does;
                     // anything else fades as before.
                     enterTransition = {
-                        tabSlide()?.let { slideIntoContainer(it, TAB_SLIDE) + fadeIn(tween(TAB_SLIDE_MS)) } ?: fadeIn(tween(700))
+                        tabSlide()?.let { slideIntoContainer(it, TAB_SLIDE) + fadeIn(tween(TAB_SLIDE_MS)) }
+                            ?: if (involvesViewer()) fadeIn(tween(700)) else pageIn(forward = true)
                     },
                     exitTransition = {
-                        tabSlide()?.let { slideOutOfContainer(it, TAB_SLIDE) + fadeOut(tween(TAB_SLIDE_MS)) } ?: fadeOut(tween(700))
+                        tabSlide()?.let { slideOutOfContainer(it, TAB_SLIDE) + fadeOut(tween(TAB_SLIDE_MS)) }
+                            ?: if (involvesViewer()) fadeOut(tween(700)) else pageOut(forward = true)
+                    },
+                    popEnterTransition = {
+                        if (involvesViewer()) fadeIn(tween(700)) else pageIn(forward = false)
+                    },
+                    popExitTransition = {
+                        if (involvesViewer()) fadeOut(tween(700)) else pageOut(forward = false)
                     },
                 ) {
                     screen<Feed> {
@@ -218,6 +231,25 @@ fun MomentsApp(container: AppContainer) {
 
 private const val TAB_SLIDE_MS = 320
 private val TAB_SLIDE = tween<IntOffset>(TAB_SLIDE_MS, easing = FastOutSlowInEasing)
+
+// A page pushed on, a Moment, a trip, a place, a day, comes in from the side it goes
+// towards and fades in as the one under it moves off a little and fades out, Android
+// 14's forward motion as FlClash plays it: 450ms on the emphasized curve. Going back
+// plays it the other way. The viewer still fades, as its photo flies to and from its tile.
+private const val PAGE_MS = 450
+private val EMPHASIZED = CubicBezierEasing(0.2f, 0f, 0f, 1f)
+
+private fun pageIn(forward: Boolean): EnterTransition =
+    slideInHorizontally(tween(PAGE_MS, easing = EMPHASIZED)) { width -> if (forward) width / 4 else -width / 4 } +
+        fadeIn(tween(PAGE_MS / 2, delayMillis = PAGE_MS / 8))
+
+private fun pageOut(forward: Boolean): ExitTransition =
+    slideOutHorizontally(tween(PAGE_MS, easing = EMPHASIZED)) { width -> if (forward) -width / 8 else width / 4 } +
+        fadeOut(tween(PAGE_MS / 3))
+
+/** Whether the photo viewer is either end of the change. */
+private fun AnimatedContentTransitionScope<NavBackStackEntry>.involvesViewer(): Boolean =
+    initialState.destination.hasRoute(Viewer::class) || targetState.destination.hasRoute(Viewer::class)
 
 /** Which way the pages slide between two tabs: towards the tab chosen; null when either isn't a tab. */
 private fun AnimatedContentTransitionScope<NavBackStackEntry>.tabSlide(): AnimatedContentTransitionScope.SlideDirection? {

@@ -16,11 +16,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.ui.Modifier
+import cc.hyoban.moments.ui.theme.fill
+import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
+import cc.hyoban.moments.ui.theme.Corners
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import cc.hyoban.moments.R
 import cc.hyoban.moments.data.spec.MomentRecord
-import cc.hyoban.moments.ui.theme.Corners
 import cc.hyoban.moments.ui.theme.Space
 
 // Narrowing the Moments to a year, and within it to a month: a row of the years there
@@ -91,7 +95,15 @@ private fun ChipRow(options: List<Int?>, selected: Int?, label: @Composable (Int
                 selected = option == selected,
                 onClick = { onSelect(option) },
                 label = { Text(label(option)) },
-                shape = Corners.pill,
+                // The chosen one solid primary, the rest a level above the page, no borders.
+                shape = Corners.full,
+                border = null,
+                colors = FilterChipDefaults.filterChipColors(
+                    containerColor = LocalSurfaceLevel.current.raised.fill(),
+                    labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    selectedContainerColor = MaterialTheme.colorScheme.primary,
+                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                ),
             )
         }
     }

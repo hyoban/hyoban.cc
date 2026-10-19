@@ -15,13 +15,14 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import cc.hyoban.moments.ui.theme.fill
+import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -44,7 +45,6 @@ import java.time.YearMonth
 // there are; tapping it opens them.
 
 private val WEEKDAYS = listOf("一", "二", "三", "四", "五", "六", "日")
-private val CELL = RoundedCornerShape(10.dp)
 
 /** One day of a month's grid: its Moments, oldest first, and the media to show for it. */
 private data class CalendarDay(val date: LocalDate, val moments: List<MomentRecord>, val cover: MomentMedia?)
@@ -133,6 +133,7 @@ private fun WeekdayRow() {
 /** A day: its photo with the date over it when it has Moments, else just the date, faint. */
 @Composable
 private fun DayCell(day: CalendarDay, urls: MediaUrls, today: LocalDate, onClick: () -> Unit) {
+    val CELL = MaterialTheme.shapes.small
     val isToday = day.date == today
     val ring = if (isToday) Modifier.border(2.dp, MaterialTheme.colorScheme.primary, CELL) else Modifier
 
@@ -149,16 +150,16 @@ private fun DayCell(day: CalendarDay, urls: MediaUrls, today: LocalDate, onClick
 
     Box(
         Modifier.fillMaxSize().clip(CELL)
-            .background(MaterialTheme.colorScheme.primaryContainer)
+            .background(LocalSurfaceLevel.current.raised.fill())
             .clickable(onClick = onClick)
             .then(ring),
     ) {
         if (day.cover != null) {
             MediaStill(day.cover, urls, Modifier.fillMaxSize())
             // The date stays legible over any photo.
-            Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.45f), Color.Transparent, Color.Black.copy(alpha = 0.35f)))))
+            Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(MaterialTheme.colorScheme.scrim.copy(alpha = 0.45f), Color.Transparent, MaterialTheme.colorScheme.scrim.copy(alpha = 0.35f)))))
         }
-        val ink = if (day.cover != null) Color.White else MaterialTheme.colorScheme.onPrimaryContainer
+        val ink = if (day.cover != null) Color.White else MaterialTheme.colorScheme.onSurface
         Text(
             "${day.date.dayOfMonth}",
             style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),

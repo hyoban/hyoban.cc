@@ -47,7 +47,6 @@ import coil3.request.crossfade
 private val GAP = 3.dp
 
 /** A tile's corners inside a collage; the card rounds the collage's outer ones. */
-private val TILE = RoundedCornerShape(6.dp)
 
 /**
  * A media item's still at the size it is drawn: a photo, a live photo's still, a video's
@@ -128,14 +127,14 @@ fun PlayBadge(modifier: Modifier = Modifier, size: Int = 44) {
         Icons.Rounded.PlayArrow,
         contentDescription = stringResource(R.string.action_play),
         tint = Color.White,
-        modifier = modifier.size(size.dp).clip(CircleShape).background(Color.Black.copy(alpha = 0.45f)).padding(8.dp),
+        modifier = modifier.size(size.dp).clip(CircleShape).background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.45f)).padding(8.dp),
     )
 }
 
 @Composable
 fun LiveBadge(modifier: Modifier = Modifier) {
     Row(
-        modifier.clip(CircleShape).background(Color.Black.copy(alpha = 0.45f)).padding(horizontal = 8.dp, vertical = 3.dp),
+        modifier.clip(CircleShape).background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.45f)).padding(horizontal = 8.dp, vertical = 3.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
@@ -157,6 +156,7 @@ fun MediaMosaic(
     onOpen: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val TILE = MaterialTheme.shapes.extraSmall
     val tile = @Composable { index: Int, tileModifier: Modifier ->
         MediaTile(media[index], urls, tileModifier.clip(TILE), sharedKey = mediaKey(momentUid, media[index].uid), sharedShape = TILE, onClick = { onOpen(index) })
     }
@@ -184,7 +184,7 @@ fun MediaMosaic(
                             tile(index, Modifier.fillMaxSize())
                             if (index == 3 && media.size > 4) {
                                 Box(
-                                    Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.45f)).clickable { onOpen(index) },
+                                    Modifier.fillMaxSize().background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.45f)).clickable { onOpen(index) },
                                     contentAlignment = Alignment.Center,
                                 ) {
                                     Text("+${media.size - 4}", color = Color.White, style = MaterialTheme.typography.headlineSmall)
@@ -204,5 +204,5 @@ fun shapeOf(media: MomentMedia): Float = (media.width ?: 4).toFloat() / (media.h
 /** A small rounded still, for rows and covers. */
 @Composable
 fun Thumbnail(media: MomentMedia, urls: MediaUrls, size: Int, modifier: Modifier = Modifier) {
-    MediaStill(media, urls, modifier.size(size.dp).clip(RoundedCornerShape(12.dp)))
+    MediaStill(media, urls, modifier.size(size.dp).clip(MaterialTheme.shapes.medium))
 }
