@@ -45,10 +45,11 @@ pnpm --filter @hyoban/api dev
 
 Put `API_TOKENS=<token>` in `apps/api/.dev.vars` to try the token-only reads locally.
 
-For the deployed Worker, create the database once with `wrangler d1 create hyoban-cc`
-and put the id it prints into `wrangler.jsonc`, set the secret with
-`wrangler secret put API_TOKENS`, then `pnpm data:import --remote` and
-`pnpm --filter @hyoban/api deploy`.
+It is deployed at https://hyoban-cc-api.hyoban.workers.dev, over the `hyoban-cc`
+database in APAC. Change the deployed data with `pnpm data:import --remote`, the code
+with `pnpm --filter @hyoban/api deploy`, and the tokens with
+`wrangler secret put API_TOKENS --config apps/api/wrangler.jsonc`. The site's build
+token is `MOMENTS_API_TOKEN` in the root `.env`.
 
 ## Layout
 

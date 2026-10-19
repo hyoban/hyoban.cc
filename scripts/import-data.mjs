@@ -42,13 +42,17 @@ if (!options.has('--dry-run')) {
   const target = options.has('--remote') ? '--remote' : '--local'
 
   await wrangler(['d1', 'migrations', 'apply', 'DB', target])
-  // The result of every statement is printed as JSON; only how many ran is worth showing.
-  const results = JSON.parse(
-    await wrangler(['d1', 'execute', 'DB', target, '--file', file, '--yes', '--json'], {
-      quiet: true,
-    }),
-  )
-  console.log(`Ran ${results.length} statements ${target === '--remote' ? 'remotely' : 'locally'}`)
+  if (target === '--remote') {
+    await wrangler(['d1', 'execute', 'DB', target, '--file', file, '--yes'])
+  } else {
+    // Locally the result of every statement is printed; only how many ran is worth showing.
+    const results = JSON.parse(
+      await wrangler(['d1', 'execute', 'DB', target, '--file', file, '--yes', '--json'], {
+        quiet: true,
+      }),
+    )
+    console.log(`Ran ${results.length} statements locally`)
+  }
 }
 
 /** Runs wrangler against the API's config, with its prompts on this terminal; quiet keeps its output to return. */
