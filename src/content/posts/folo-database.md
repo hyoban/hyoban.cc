@@ -18,7 +18,7 @@ pubDate: '2025-06-17T10:50:53.264Z'
 
 ## 数据库的选型
 
-因为在移动端使用了 [Expo SQLite](https://docs.expo.dev/versions/latest/sdk/sqlite), 为了保持数据库 schema 一致，避免写两套数据库操作的代码，在桌面端就使用了 SQLite WASM 的方案。
+因为在移动端使用了 [Expo SQLite]（最早的尝试可以看[这篇](/react-native-follow/#local-first)）(https://docs.expo.dev/versions/latest/sdk/sqlite), 为了保持数据库 schema 一致，避免写两套数据库操作的代码，在桌面端就使用了 SQLite WASM 的方案。
 或许也可以看看 [PGlite](https://pglite.dev)。
 
 在浏览器中运行 SQLite 一般可以使用以下几个库：
