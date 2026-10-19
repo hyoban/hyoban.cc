@@ -41,13 +41,13 @@ function formatDate(dateKey: string, withYear = false) {
       {
         trips.map(trip => (
           <li>
-            <a href={`/trip/${trip.id}/`} class="-mx-3 flex items-center gap-4 rounded-md p-3 no-underline transition-colors hover:bg-hover">
+            <a href={`/trip/${trip.id}/`} class="flex items-center gap-4 py-3 no-underline">
               <picture class="contents">
                 <source srcset={`/trip/${trip.id}/thumbnail-dark.webp`} media="(prefers-color-scheme: dark)" />
                 <img class="aspect-[1200/630] w-36 shrink-0 rounded-[0.3125rem] bg-inline object-cover max-[30rem]:w-28" src={`/trip/${trip.id}/thumbnail.webp`} width="480" height="252" alt="" loading="lazy" decoding="async" />
               </picture>
               <span class="flex min-w-0 flex-col gap-1">
-                <span>{trip.title}</span>
+                <span class="link-text self-start">{trip.title}</span>
                 <span class="text-sm text-tx-2 tabular-nums">
                   {formatDate(trip.start, true)} – {formatDate(trip.end)}
                 </span>

@@ -247,7 +247,7 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
       {
         mediaWorks.map(work => (
           <li class="media-item" data-media-category={work.categories.join(' ')}>
-            <article class="-mx-3 grid items-start gap-x-3 gap-y-3 rounded-md p-3 transition-colors hover:bg-hover sm:grid-cols-[6rem_minmax(0,1fr)] sm:gap-x-5 sm:gap-y-1">
+            <article class="grid items-start gap-x-3 gap-y-3 py-3 sm:grid-cols-[6rem_minmax(0,1fr)] sm:gap-x-5 sm:gap-y-1">
               <div class="grid min-w-0 grid-cols-[5rem_minmax(0,1fr)] items-start gap-x-3 gap-y-3 sm:contents">
                 {
                   work.posterUrl && (
@@ -269,7 +269,7 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
 
                 <header class="col-start-2 row-start-1 min-w-0 space-y-2">
                   <h2 class="line-clamp-2 font-medium">
-                    <a href={work.tmdbUrl} target="_blank" rel="noopener noreferrer" class="no-underline">
+                    <a href={work.tmdbUrl} target="_blank" rel="noopener noreferrer">
                       {work.displayTitle}
                     </a>
                   </h2>
