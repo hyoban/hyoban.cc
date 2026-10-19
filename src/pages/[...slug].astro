@@ -26,7 +26,12 @@ const article = post
 const { Content } = await render(entry)
 ---
 
-<Layout title={entry.data.title} description={entry.data.description} article={article}>
+<Layout
+  title={entry.data.title}
+  description={entry.data.description}
+  image={`/og/${entry.data.link}.png`}
+  article={article}
+>
   {
     post
       ? (

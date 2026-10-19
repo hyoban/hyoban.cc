@@ -8,7 +8,7 @@ import { ClientRouter, fade } from 'astro:transitions'
 interface Props {
   title: string
   description?: string | undefined
-  /** A large share preview; pages without one fall back to the avatar. */
+  /** A large share preview; pages without one fall back to the site's card. */
   image?: string | undefined
   article?: {
     author: string
@@ -55,8 +55,8 @@ const TELETYPE_SITE_VERIFICATION = 'g7j8/rPFXfhyrq5q0QQV7EsYWv4='
     <meta property="og:site_name" content={SITE_TITLE} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonicalUrl} />
-    <meta property="og:image" content={image ? new URL(image, SITE_URL).toString() : getAssetUrl('site/avatar-cropped.png')} />
-    <meta name="twitter:card" content={image ? 'summary_large_image' : 'summary'} />
+    <meta property="og:image" content={new URL(image ?? '/og.png', SITE_URL).toString()} />
+    <meta name="twitter:card" content="summary_large_image" />
     {
       article && (
         <>
