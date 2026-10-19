@@ -1,0 +1,105 @@
+import { getAssetUrl } from './asset-url.ts'
+import type { MomentRecord, TripRecord } from './data/spec.ts'
+import { readMomentRecords, readTripRecords } from './data/store.ts'
+
+// A paragraph that is only a link to a trip, like `[国庆东北自驾](/trip/2026-national-day-road-trip/)`,
+// becomes a grid of that trip's cover photos, each linking to the trip, with the link below.
+
+const TRIP_PATH = /^\/trip\/([\w-]+)\/?$/
+// Three columns in the 40rem article column, inside the body's 1rem side padding.
+const COVER_SIZES = '(min-width: 42rem) 13rem, calc((100vw - 2rem) / 3)'
+const HTML_ESCAPES: Record<string, string> = {
+  '&': '&amp;',
+  '"': '&quot;',
+  '<': '&lt;',
+  '>': '&gt;',
+}
+
+type MdNode = { type: string; children?: MdNode[]; url?: string; value?: string }
+
+export function remarkTripCovers() {
+  let trips: Map<string, TripRecord> | undefined
+  let media: Map<string, MomentRecord['media'][number]> | undefined
+
+  return (tree: MdNode) => {
+    trips ??= new Map(readTripRecords().map((trip) => [trip.id, trip]))
+    media ??= new Map(
+      readMomentRecords().flatMap(({ record }) =>
+        record.media.map((item) => [`${record.uid}/${item.uid}`, item] as const),
+      ),
+    )
+    replaceTripLinks(tree, trips, media)
+  }
+}
+
+function replaceTripLinks(
+  node: MdNode,
+  trips: Map<string, TripRecord>,
+  media: Map<string, MomentRecord['media'][number]>,
+) {
+  for (const [index, child] of (node.children ?? []).entries()) {
+    const link = getStandaloneLink(child)
+    const tripId = link?.url && TRIP_PATH.exec(link.url)?.[1]
+
+    if (!link || !tripId) {
+      replaceTripLinks(child, trips, media)
+      continue
+    }
+
+    const trip = trips.get(tripId)
+
+    if (!trip) {
+      throw new Error(`A post links to unknown trip "${tripId}".`)
+    }
+
+    node.children![index] = {
+      type: 'html',
+      value: renderCovers(trip, link.url!, getText(link) || trip.title, media),
+    }
+  }
+}
+
+function getStandaloneLink(node: MdNode) {
+  if (node.type !== 'paragraph') {
+    return undefined
+  }
+
+  const children = (node.children ?? []).filter(
+    (child) => child.type !== 'text' || child.value?.trim() !== '',
+  )
+
+  return children.length === 1 && children[0]!.type === 'link' ? children[0] : undefined
+}
+
+function renderCovers(
+  trip: TripRecord,
+  href: string,
+  caption: string,
+  media: Map<string, MomentRecord['media'][number]>,
+) {
+  const images = trip.covers.map((cover) => {
+    const item = media.get(`${cover.moment}/${cover.media}`)
+    const still = item?.type === 'video' ? item.published?.poster : item?.published
+
+    if (!item || !still) {
+      throw new Error(`Cover ${cover.moment}/${cover.media} of trip "${trip.id}" has no photo.`)
+    }
+
+    const sources = [...still.variants, ...(still.width <= 1920 ? [still] : [])].sort(
+      (first, second) => first.width - second.width,
+    )
+    const src = sources.find((source) => source.width >= 480) ?? sources.at(-1)!
+
+    return `<img src="${escapeHtml(getAssetUrl(src.key))}" srcset="${escapeHtml(sources.map((source) => `${getAssetUrl(source.key)} ${source.width}w`).join(', '))}" sizes="${COVER_SIZES}" width="${still.width}" height="${still.height}" alt="${escapeHtml(item.alt)}" loading="lazy" decoding="async">`
+  })
+
+  return `<figure class="trip-covers"><a href="${escapeHtml(href)}" aria-label="${escapeHtml(caption)}">${images.join('')}</a><figcaption><a href="${escapeHtml(href)}">${escapeHtml(caption)}</a></figcaption></figure>`
+}
+
+function getText(node: MdNode): string {
+  return node.value ?? (node.children ?? []).map(getText).join('')
+}
+
+function escapeHtml(value: string) {
+  return value.replace(/[&"<>]/g, (char) => HTML_ESCAPES[char]!)
+}

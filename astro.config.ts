@@ -5,6 +5,7 @@ import { defineConfig } from 'astro/config'
 import { SITE_URL } from './src/consts'
 import { rehypePostImages } from './src/post-images.mjs'
 import { remarkTelegramWidgets } from './src/telegram-widget.mjs'
+import { remarkTripCovers } from './src/trip-covers.ts'
 
 // https://astro.build/config
 export default defineConfig({
@@ -17,7 +18,7 @@ export default defineConfig({
   },
   markdown: {
     processor: unified({
-      remarkPlugins: [remarkTelegramWidgets],
+      remarkPlugins: [remarkTelegramWidgets, remarkTripCovers],
       rehypePlugins: [rehypePostImages],
     }),
     shikiConfig: {

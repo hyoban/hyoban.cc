@@ -1,4 +1,4 @@
-import assetConfig from '@/data/asset-config.json'
+import assetConfig from './data/asset-config.json' with { type: 'json' }
 
 export function getAssetUrl(key: string) {
   const encodedKey = key
