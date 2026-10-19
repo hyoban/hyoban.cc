@@ -33,7 +33,11 @@ uploaded instead: the image's `published` block has `original: true` and no
 variants, and the site asks Cloudflare Images for 480, 960 and 1920 pixel
 copies in the browser's best format
 (`/cdn-cgi/image/width=…,format=auto,onerror=redirect/<key>` on the image
-origin). Transformations must be enabled for the `hyoban.cc` zone; the free
+origin). Their videos are kept as uploaded too, marked `original: true` with no
+poster, and the site takes the first frame from Media Transformations as the
+poster (`/cdn-cgi/media/mode=frame,time=0s,width=…,format=jpg/<key>`); that
+needs the video's width and height on its media item, and a source under
+100 MB, ideally MP4 with H.264. Transformations must be enabled for the `hyoban.cc` zone; the free
 plan's 5,000 unique transformations a month cover them, and past that a new
 size falls back to the original.
 

@@ -52,6 +52,11 @@ export const publishedImageSchema = r2Object.extend({
 /** An uploaded video. */
 export const publishedVideoSchema = r2Object.extend({
   contentType: z.string().startsWith('video/'),
+  /**
+   * Kept as uploaded rather than transcoded, with no poster: the site takes its first
+   * frame from Cloudflare's Media Transformations. What the API publishes.
+   */
+  original: z.boolean().optional(),
 })
 
 /** Where a media item lives on the phone; only ever in the app's own store. */

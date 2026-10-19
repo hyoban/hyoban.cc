@@ -48,8 +48,10 @@ test('what the API no longer has is removed, and devices.json is left alone', as
   )
 
   assert.deepEqual(
-    written.sort(),
-    [editedFile, goneFile, `trips/${snapshot.trips[0].id}.json`].sort(),
+    written.sort((first, second) => first.localeCompare(second)),
+    [editedFile, goneFile, `trips/${snapshot.trips[0].id}.json`].sort((first, second) =>
+      first.localeCompare(second),
+    ),
   )
   assert.deepEqual(readJson(editedFile, root), changed)
   assert.equal(await readFile(join(root, 'devices.json'), 'utf8'), devices)

@@ -8,7 +8,7 @@ import {
 } from '@hyoban/trip-map'
 import type { CollectionEntry } from 'astro:content'
 import { getCollection } from 'astro:content'
-import { getAssetUrl, getResizedSources } from '@/asset-url'
+import { getAssetUrl, getFrameSources, getResizedSources } from '@/asset-url'
 import { locations, type LocationId } from '@/data/locations'
 import type { MomentMedia, PublishedImage, PublishedVideo } from '@hyoban/data-spec'
 import { trips } from '@/data/trips'
@@ -224,10 +224,21 @@ function resolveMedia(momentUid: string, media: MomentMedia): ResolvedMomentMedi
         src: getAssetUrl(video.key),
         type: 'video',
         uid: media.uid,
-        ...(poster ? { poster: resolveRemoteImage(poster) } : {}),
+        ...(poster
+          ? { poster: resolveRemoteImage(poster) }
+          : video.original && media.width && media.height
+            ? { poster: resolveFrame(video.key, media.width, media.height) }
+            : {}),
       }
     }
   }
+}
+
+/** A kept video's first frame as its poster, the largest size standing in for the whole. */
+function resolveFrame(key: string, width: number, height: number): RemoteImage {
+  const sources = getFrameSources(key, width)
+
+  return { height, sources, src: sources.at(-1)!.src, width }
 }
 
 /**

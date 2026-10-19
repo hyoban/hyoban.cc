@@ -50,8 +50,9 @@ the manifest's `updatedAt`. The app saves in this order:
 | `DELETE /v1/moments/:uid`                    | marks it deleted                                                                                                  |
 | `PUT /v1/trips/:id`                          | saves a trip; the places it names must be known                                                                   |
 
-Published photos are kept as uploaded, marked `original: true`, and the site has
-Cloudflare Images resize them (docs/assets.md). A Moment's `published` block and each
+Published photos and videos are kept as uploaded, marked `original: true`: the site has
+Cloudflare Images resize the photos and takes each video's first frame as its poster
+(docs/assets.md). A Moment's `published` block and each
 media item's are the server's: a request's copy
 is ignored, they are set when the Moment publishes and never change after. Saving a
 published Moment with new media publishes those as it saves, so their originals must

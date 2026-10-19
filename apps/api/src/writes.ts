@@ -284,11 +284,11 @@ async function publishMedia(bucket: Bucket, record: MomentRecord) {
           height: item.height,
           variants: [],
           original: true,
-          video: await copy('video'),
+          video: { ...(await copy('video')), original: true },
         }
         break
       case 'video':
-        item.published = await copy('video')
+        item.published = { ...(await copy('video')), original: true }
         break
     }
   }
