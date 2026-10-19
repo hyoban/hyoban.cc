@@ -448,6 +448,24 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
       }, { signal })
     }
 
+    // A <details> only closes from its own summary; close the month picker from outside too.
+    const monthPicker = document.querySelector<HTMLDetailsElement>('.month-picker')
+
+    if (monthPicker) {
+      document.addEventListener('pointerdown', (event) => {
+        if (monthPicker.open && event.target instanceof Node && !monthPicker.contains(event.target)) {
+          monthPicker.open = false
+        }
+      }, { signal })
+      monthPicker.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && monthPicker.open) {
+          event.stopPropagation()
+          monthPicker.open = false
+          monthPicker.querySelector('summary')?.focus()
+        }
+      }, { signal })
+    }
+
     for (const indexButton of document.querySelectorAll<HTMLButtonElement>('[data-agenda-target]')) {
       indexButton.addEventListener('click', () => {
         const targetId = indexButton.dataset.agendaTarget
