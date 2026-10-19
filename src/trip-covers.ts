@@ -3,7 +3,9 @@ import type { MomentRecord, TripRecord } from './data/spec.ts'
 import { readMomentRecords, readTripRecords } from './data/store.ts'
 
 // A paragraph that is only a link to a trip, like `[国庆东北自驾](/trip/2026-national-day-road-trip/)`,
-// becomes a grid of that trip's cover photos, each linking to the trip, with the link below.
+// becomes a grid of that trip's cover photos with the link below. The photos sit straight in the
+// figure, not inside a link, so Telegram's automatic Instant View keeps them; the caption's link is
+// stretched over the whole figure in CSS, so the photos still lead to the trip.
 
 const TRIP_PATH = /^\/trip\/([\w-]+)\/?$/
 // Three columns in the 40rem article column, inside the body's 1rem side padding.
@@ -93,7 +95,7 @@ function renderCovers(
     return `<img src="${escapeHtml(getAssetUrl(src.key))}" srcset="${escapeHtml(sources.map((source) => `${getAssetUrl(source.key)} ${source.width}w`).join(', '))}" sizes="${COVER_SIZES}" width="${still.width}" height="${still.height}" alt="${escapeHtml(item.alt)}" loading="lazy" decoding="async">`
   })
 
-  return `<figure class="trip-covers"><a href="${escapeHtml(href)}" aria-label="${escapeHtml(caption)}">${images.join('')}</a><figcaption><a href="${escapeHtml(href)}">${escapeHtml(caption)}</a></figcaption></figure>`
+  return `<figure class="trip-covers">${images.join('')}<figcaption><a href="${escapeHtml(href)}">${escapeHtml(caption)}</a></figcaption></figure>`
 }
 
 function getText(node: MdNode): string {

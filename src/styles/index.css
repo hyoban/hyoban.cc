@@ -263,13 +263,11 @@ html[data-calendar-mode-transition] .calendar-mode-switch a[data-mode='map'] {
 
   /* A trip's cover photos, from a link that stands alone in its paragraph */
   & .trip-covers {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.375rem;
     margin: 1.6em 0;
-
-    & > a {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 0.375rem;
-    }
 
     & img {
       aspect-ratio: 1;
@@ -280,10 +278,18 @@ html[data-calendar-mode-transition] .calendar-mode-switch a[data-mode='map'] {
     }
 
     & figcaption {
+      grid-column: 1 / -1;
       margin-top: 0.6em;
       color: var(--color-tx-2);
       font-size: 0.875em;
       text-align: center;
+
+      /* The caption's link covers the photos too */
+      & a::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+      }
     }
   }
 
