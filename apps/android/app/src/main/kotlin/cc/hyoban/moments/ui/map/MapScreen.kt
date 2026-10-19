@@ -54,6 +54,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.currentStateAsState
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
 import cc.hyoban.moments.ui.theme.dividerColor
 import cc.hyoban.moments.ui.theme.fill
 import cc.hyoban.moments.ui.theme.LocalDarkTheme
@@ -188,7 +191,11 @@ fun MapScreen(container: AppContainer, onMoment: (String) -> Unit, onPlace: (Str
         }
     }
 
-    selected?.let { id ->
+    // The sheet is its own window, over everything; it shows only while the map is the page
+    // in front. A back swipe from a page opened from it draws the map under that page as a
+    // preview, and a sheet popping up there would take the swipe and stop it.
+    val resumed by LocalLifecycleOwner.current.lifecycle.currentStateAsState()
+    selected?.takeIf { resumed.isAtLeast(Lifecycle.State.RESUMED) }?.let { id ->
         val place = places[id] ?: return@let
         val here = byPlace[id].orEmpty()
         val years = remember(here) { here.map { yearOf(it.occurredAt) }.distinct().sortedDescending() }

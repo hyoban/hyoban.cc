@@ -2,6 +2,7 @@ package cc.hyoban.moments.ui.map
 
 import android.graphics.RectF
 import android.view.Gravity
+import android.view.ViewGroup
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
@@ -200,7 +201,8 @@ private fun MapLibreView(
     modifier: Modifier,
     interactive: Boolean,
     attributionPadding: IntArray? = null,
-    onReady: (MapLibreMap, Style) -> Unit,
+    retained: Boolean = false,
+    onReady: (map: MapLibreMap, style: Style, fresh: Boolean) -> Unit,
 ) {
     val context = LocalContext.current
     val dark = isSystemInDarkTheme()
@@ -208,14 +210,26 @@ private fun MapLibreView(
     val ready by rememberUpdatedState(onReady)
     var map by remember { mutableStateOf<MapLibreMap?>(null) }
 
-    val mapView = remember(dark) {
-        MapLibre.getInstance(context)
-        val options = MapLibreMapOptions.createFromAttributes(context)
-            .camera(CHINA)
-            // Drawn into a texture, so rounded corners and sheets clip it like any view.
-            .textureMode(true)
-            .localIdeographFontFamily("sans-serif")
-        MapView(context, options).apply { onCreate(null) }
+    val holder = if (retained) MainMap else null
+    val mapView = remember(dark, context) {
+        holder?.view?.takeIf { holder.dark == dark && it.context === context }
+            ?: run {
+                MapLibre.getInstance(context)
+                val options = MapLibreMapOptions.createFromAttributes(context)
+                    .camera(CHINA)
+                    // Drawn into a texture, so rounded corners and sheets clip it like any view.
+                    .textureMode(true)
+                    .localIdeographFontFamily("sans-serif")
+                MapView(context, options).apply { onCreate(null) }.also { view ->
+                    holder?.let {
+                        it.view?.onDestroy()
+                        it.view = view
+                        it.dark = dark
+                        it.map = null
+                        it.style = null
+                    }
+                }
+            }
     }
 
     DisposableEffect(lifecycle, mapView) {
@@ -233,11 +247,20 @@ private fun MapLibreView(
             lifecycle.removeObserver(observer)
             if (lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) mapView.onPause()
             if (lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) mapView.onStop()
-            mapView.onDestroy()
+            // A retained map is only stopped, to be shown again as it was.
+            if (holder == null) mapView.onDestroy()
         }
     }
 
     LaunchedEffect(mapView) {
+        // Shown again: its style, its layers and where it looked are all still there.
+        val kept = holder?.map
+        val keptStyle = holder?.style
+        if (kept != null && keptStyle != null) {
+            map = kept
+            mapView.doOnLayout { _ -> ready(kept, keptStyle, false) }
+            return@LaunchedEffect
+        }
         mapView.getMapAsync {
             it.uiSettings.apply {
                 setAllGesturesEnabled(interactive)
@@ -250,7 +273,9 @@ private fun MapLibreView(
             it.setStyle(Style.Builder().fromUri(if (dark) DARK else LIGHT)) { style ->
                 chineseLabels(style)
                 quietRoads(style)
-                mapView.doOnLayout { _ -> ready(it, style) }
+                holder?.map = it
+                holder?.style = style
+                mapView.doOnLayout { _ -> ready(it, style, true) }
             }
         }
     }
@@ -262,9 +287,21 @@ private fun MapLibreView(
     }
 
     Box(modifier) {
-        AndroidView({ mapView }, Modifier.matchParentSize())
+        // A retained map may still sit in the view it was shown in last.
+        AndroidView({ (mapView.parent as? ViewGroup)?.removeView(mapView); mapView }, Modifier.matchParentSize())
         if (!interactive) Box(Modifier.matchParentSize().pointerInput(Unit) {})
     }
+}
+
+/**
+ * The map tab's map, kept across switching tabs rather than built again with its style,
+ * its labels and its tiles each time the tab comes back. Only stopped while away.
+ */
+private object MainMap {
+    var view: MapView? = null
+    var dark = false
+    var map: MapLibreMap? = null
+    var style: Style? = null
 }
 
 /** Pixels from each edge (left, top, right, bottom). */
@@ -409,7 +446,11 @@ fun PlacesMap(
     val credit = edges(bars[0] + 8.dp, 0.dp, bars[2] + 8.dp, bars[3] + clearance + 8.dp)
     val frame = edges(bars[0] + 32.dp, bars[1] + 96.dp, bars[2] + 32.dp, bars[3] + clearance + 16.dp)
 
-    MapLibreView(modifier, interactive = true, attributionPadding = credit) { ready, style ->
+    MapLibreView(modifier, interactive = true, attributionPadding = credit, retained = true) { ready, style, fresh ->
+        // Shown again, it keeps its layers and where it was looking.
+        framed = !fresh
+        map = ready to style
+        if (!fresh) return@MapLibreView
         val below = style.labelsLayer()
         style.addSource(GeoJsonSource(ROUTE))
         val solid = LineLayer(ROUTE, ROUTE).withFilter(not(get("straight")))
@@ -463,7 +504,12 @@ fun PlacesMap(
             ),
         )
 
-        ready.addOnMapClickListener { point ->
+    }
+
+    // Taps are listened for while this map is shown, with this showing's callbacks.
+    DisposableEffect(map) {
+        val (ready, style) = map ?: return@DisposableEffect onDispose { }
+        val listener = MapLibreMap.OnMapClickListener { point ->
             val at = ready.projection.toScreenLocation(point)
             fun around(r: Float) = RectF(at.x - r, at.y - r, at.x + r, at.y + r)
             val place = ready.queryRenderedFeatures(around(reach), PLACES).firstOrNull()
@@ -482,7 +528,7 @@ fun PlacesMap(
                 } else {
                     place.getStringProperty("id")?.let(tapPlace)
                 }
-                return@addOnMapClickListener true
+                return@OnMapClickListener true
             }
             val trip = ready.queryRenderedFeatures(around(routeReach), ROUTE, ROUTES_DASHED).firstOrNull()?.getStringProperty("trip")
             when {
@@ -492,8 +538,8 @@ fun PlacesMap(
             }
             trip != null
         }
-        framed = false
-        map = ready to style
+        ready.addOnMapClickListener(listener)
+        onDispose { ready.removeOnMapClickListener(listener) }
     }
 
     LaunchedEffect(map, places) {
@@ -616,7 +662,7 @@ private fun PointsMap(points: List<LatLng>, lines: List<RouteSegment>, dot: Floa
     val line = MaterialTheme.colorScheme.primary.toArgb()
     val inset = edges(padding, padding, padding, padding)
 
-    MapLibreView(modifier, interactive) { map, style ->
+    MapLibreView(modifier, interactive) { map, style, _ ->
         if (lines.isNotEmpty()) {
             style.addSource(
                 GeoJsonSource(

@@ -34,6 +34,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import cc.hyoban.moments.ui.components.LocalInViewer
+import cc.hyoban.moments.ui.components.LocalViewerShownKey
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.listSaver
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideInHorizontally
@@ -92,6 +97,12 @@ data class Moment(val uid: String)
 @Serializable
 data class Viewer(val uid: String, val index: Int)
 
+/** Keeps the open viewer across a rotation, as its Moment and index. */
+private val ViewerSaver = listSaver<Viewer?, Any>(
+    save = { it?.let { viewer -> listOf(viewer.uid, viewer.index) }.orEmpty() },
+    restore = { if (it.isEmpty()) null else Viewer(it[0] as String, it[1] as Int) },
+)
+
 @Serializable
 data class Trip(val id: String)
 
@@ -117,7 +128,12 @@ fun MomentsApp(container: AppContainer) {
     val current = Tab.entries.firstOrNull { tab -> entry?.destination?.hasRoute(tab.type) == true }
     val back: () -> Unit = { navController.popBackStack() }
     val openMoment: (String) -> Unit = { navController.navigate(Moment(it)) }
-    val openMedia: (String, Int) -> Unit = { uid, index -> navController.navigate(Viewer(uid, index)) }
+    // The viewer opens over the page it was opened from rather than as a page of its own,
+    // so the page stays under it: a drag down to close shows it through the thinning black.
+    var viewer by rememberSaveable(stateSaver = ViewerSaver) { mutableStateOf<Viewer?>(null) }
+    var viewerKey by remember { mutableStateOf<String?>(null) }
+    val openMedia: (String, Int) -> Unit = { uid, index -> viewer = Viewer(uid, index) }
+    val closeViewer = { viewer = null }
     val openTrip: (String) -> Unit = { navController.navigate(Trip(it)) }
     val openPlace: (String) -> Unit = { navController.navigate(PlaceMoments(it)) }
 
@@ -149,12 +165,17 @@ fun MomentsApp(container: AppContainer) {
     }
     val clearance = if (current != null) 88.dp + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() else 0.dp
 
+    BackHandler(enabled = viewer != null, onBack = closeViewer)
+
     // A Surface rather than a bare background, so text without a colour of its own takes the page's on-colour in both modes.
     Surface(Modifier.fillMaxSize(), color = AppColors.page) {
     Box(Modifier.fillMaxSize().nestedScroll(hideOnScroll)) {
         CompositionLocalProvider(LocalBottomClearance provides clearance) {
         SharedTransitionLayout(Modifier.fillMaxSize()) {
-            CompositionLocalProvider(LocalSharedTransitionScope provides this) {
+            CompositionLocalProvider(
+                LocalSharedTransitionScope provides this,
+                LocalViewerShownKey provides viewerKey.takeIf { viewer != null },
+            ) {
                 NavHost(
                     navController = navController,
                     startDestination = Feed,
@@ -167,18 +188,14 @@ fun MomentsApp(container: AppContainer) {
                     // anything else fades as before.
                     enterTransition = {
                         tabSlide()?.let { slideIntoContainer(it, TAB_SLIDE) + fadeIn(tween(TAB_SLIDE_MS)) }
-                            ?: if (involvesViewer()) fadeIn(tween(700)) else pageIn(forward = true)
+                            ?: pageIn(forward = true)
                     },
                     exitTransition = {
                         tabSlide()?.let { slideOutOfContainer(it, TAB_SLIDE) + fadeOut(tween(TAB_SLIDE_MS)) }
-                            ?: if (involvesViewer()) fadeOut(tween(700)) else pageOut(forward = true)
+                            ?: pageOut(forward = true)
                     },
-                    popEnterTransition = {
-                        if (involvesViewer()) fadeIn(tween(700)) else pageIn(forward = false)
-                    },
-                    popExitTransition = {
-                        if (involvesViewer()) fadeOut(tween(700)) else pageOut(forward = false)
-                    },
+                    popEnterTransition = { pageIn(forward = false) },
+                    popExitTransition = { pageOut(forward = false) },
                 ) {
                     screen<Feed> {
                         FeedScreen(container, onMoment = openMoment, onMedia = openMedia, onDay = { navController.navigate(Day(it)) })
@@ -192,18 +209,6 @@ fun MomentsApp(container: AppContainer) {
                     screen<Moment> { entry ->
                         MomentScreen(container, entry.toRoute<Moment>().uid, onMedia = openMedia, onPlace = openPlace, onTrip = openTrip, onBack = back)
                     }
-                    screen<Viewer> { entry ->
-                        val route = entry.toRoute<Viewer>()
-                        MediaViewer(
-                            container,
-                            route.uid,
-                            route.index,
-                            onMoment = openMoment,
-                            onPlace = openPlace,
-                            onTrip = openTrip,
-                            onBack = back,
-                        )
-                    }
                     screen<Trip> { entry ->
                         TripScreen(container, entry.toRoute<Trip>().id, onMoment = openMoment, onMedia = openMedia, onBack = back)
                     }
@@ -214,11 +219,29 @@ fun MomentsApp(container: AppContainer) {
                         PlaceScreen(container, entry.toRoute<PlaceMoments>().id, onMoment = openMoment, onMedia = openMedia, onBack = back)
                     }
                 }
+                // Kept while it leaves, so the photo has somewhere to fly back from.
+                var shown by remember { mutableStateOf(viewer) }
+                if (viewer != null) shown = viewer
+                AnimatedVisibility(viewer != null, enter = fadeIn(tween(350)), exit = fadeOut(tween(350))) {
+                    val route = shown ?: return@AnimatedVisibility
+                    CompositionLocalProvider(LocalNavAnimatedScope provides this, LocalInViewer provides true) {
+                        MediaViewer(
+                            container,
+                            route.uid,
+                            route.index,
+                            onMoment = { closeViewer(); openMoment(it) },
+                            onPlace = { closeViewer(); openPlace(it) },
+                            onTrip = { closeViewer(); openTrip(it) },
+                            onBack = closeViewer,
+                            onShown = { viewerKey = it },
+                        )
+                    }
+                }
             }
         }
         }
         AnimatedVisibility(
-            current != null && tabsShown,
+            current != null && tabsShown && viewer == null,
             enter = fadeIn() + slideInVertically { it },
             exit = fadeOut() + slideOutVertically { it },
             modifier = Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(bottom = Space.m),
@@ -246,10 +269,6 @@ private fun pageIn(forward: Boolean): EnterTransition =
 private fun pageOut(forward: Boolean): ExitTransition =
     slideOutHorizontally(tween(PAGE_MS, easing = EMPHASIZED)) { width -> if (forward) -width / 8 else width / 4 } +
         fadeOut(tween(PAGE_MS / 3))
-
-/** Whether the photo viewer is either end of the change. */
-private fun AnimatedContentTransitionScope<NavBackStackEntry>.involvesViewer(): Boolean =
-    initialState.destination.hasRoute(Viewer::class) || targetState.destination.hasRoute(Viewer::class)
 
 /** Which way the pages slide between two tabs: towards the tab chosen; null when either isn't a tab. */
 private fun AnimatedContentTransitionScope<NavBackStackEntry>.tabSlide(): AnimatedContentTransitionScope.SlideDirection? {
