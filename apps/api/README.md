@@ -7,16 +7,17 @@ build and the recording app. Records come back exactly as stored, in the shape
 
 ## Reading
 
-| Path                            | Returns                                                                          |
-| ------------------------------- | -------------------------------------------------------------------------------- |
-| `GET /`                         | `{ name, revision }`                                                             |
-| `GET /v1/moments?since=&limit=` | the change feed, see below                                                       |
-| `GET /v1/moments/:uid`          | one Moment                                                                       |
-| `GET /v1/places`                | `{ revision, places }`, places by id like `data/places.json`                     |
-| `GET /v1/places/:id`            | one place                                                                        |
-| `GET /v1/trips`                 | `{ revision, trips }`, by start date                                             |
-| `GET /v1/trips/:id`             | one trip                                                                         |
-| `GET /v1/export`                | `{ revision, manifest, places, trips, moments }`, drafts included; needs a token |
+| Path                            | Returns                                                                                  |
+| ------------------------------- | ---------------------------------------------------------------------------------------- |
+| `GET /`                         | `{ name, revision }`                                                                     |
+| `GET /v1/moments?since=&limit=` | the change feed, see below                                                               |
+| `GET /v1/moments/:uid`          | one Moment                                                                               |
+| `GET /v1/places`                | `{ revision, places }`, places by id like `data/places.json`                             |
+| `GET /v1/places/:id`            | one place                                                                                |
+| `GET /v1/trips`                 | `{ revision, trips }`, by start date                                                     |
+| `GET /v1/trips/:id`             | one trip                                                                                 |
+| `GET /v1/routes`                | `{ revision, trips }`, each published trip's route as stretches, see below               |
+| `GET /v1/export`                | `{ revision, manifest, places, trips, moments, routes }`, drafts included; needs a token |
 
 Without a token everything but drafts and the export is public. A request with an
 `Authorization: Bearer <token>` header must carry one of the tokens in the
@@ -59,8 +60,31 @@ published Moment with new media publishes those as it saves, so their originals 
 be uploaded first. The rules for places, ids and file names live in `@hyoban/data-spec/publish`,
 which `pnpm data:publish` shares.
 
-A write the site shows (anything but a draft) calls the `DEPLOY_HOOK_URL` secret, when
-it is set, so the site builds again.
+A write the site shows (anything but a draft) first brings the trips' routes up to date,
+then calls the `DEPLOY_HOOK_URL` secret, when it is set, so the site builds again with
+them.
+
+## Routes
+
+Each leg between two consecutive places of a trip, as `@hyoban/trip-map`'s `buildTrip`
+works them out from the trips and the published Moments, has a route kept in the
+`routes` table by its key: a drive from Mapbox's Directions, with the `MAPBOX_TOKEN`
+secret, or for a train leg (`train:` before the key) a rail line from
+OpenRailRouting's public demo between the places' `station`s. Ferries and flights are
+drawn straight. After a write the site shows, the Worker fetches the legs it doesn't
+have, up to 30 at a time, and marks deleted the ones no trip has any more, so a moved
+place or a changed trip is fetched again; `POST /v1/routes`, with a token, does the
+same on demand and answers `{ fetched, removed, failed, left }` (`pnpm data:push`
+calls it, as it writes past the Worker). `GET /v1/routes` gives each published trip's
+route as the site's overview draws it, drives one after another as one stretch and
+each train, plane or ferry as a dashed one:
+
+```json
+{ "revision": 12, "trips": { "2026-yunnan": [{ "line": [[100.2, 26.8], …], "straight": false }] } }
+```
+
+The export carries the routes by key, which the site's build and the backup read like
+the other records (`data/routes.json`).
 
 ## Setting up
 
@@ -73,12 +97,12 @@ Put `API_TOKENS=<token>` in `apps/api/.dev.vars` to try the token-only reads loc
 
 It is deployed at https://hyoban-cc-api.hyoban.workers.dev, over the `hyoban-cc`
 database in APAC. Workers Builds deploys it on every push to `main` that touches
-`apps/api/`, `packages/data-spec/` or `pnpm-lock.yaml`: its root directory is
+`apps/api/`, `packages/data-spec/`, `packages/trip-map/` or `pnpm-lock.yaml`: its root directory is
 `apps/api`, it installs from the repository root and runs `pnpm run deploy`, which
 applies any new D1 migration before it deploys the code that needs it. The build's API
 token has D1 Edit for that; a migration that fails stops the deploy.
 
-The secrets are `API_TOKENS` and `DEPLOY_HOOK_URL`, set with
+The secrets are `API_TOKENS`, `DEPLOY_HOOK_URL` and `MAPBOX_TOKEN`, set with
 `wrangler secret put <name> --config apps/api/wrangler.jsonc`. The site's build token
 is `MOMENTS_API_TOKEN` in the root `.env`. To write records from `data/` into the
 deployed database use `pnpm data:push`; `pnpm data:import --remote` restores the whole

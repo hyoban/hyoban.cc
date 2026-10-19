@@ -20,10 +20,12 @@ class AppContainer(context: Context) {
     // only showed the site's records, and that is left as it was.
     val repository = MomentsRepository(DataStore(File(context.filesDir, "api")), MomentsApi(BuildConfig.API_URL))
     val mediaUrls = MediaUrls(BuildConfig.ASSET_ORIGIN)
-    /** The trips' routes along the roads, from the site. */
-    val routes = TripRoutes(BuildConfig.SITE_URL, File(context.filesDir, "routes"))
+    /** The trips' routes along the roads, from the API. */
+    val routes = TripRoutes(BuildConfig.API_URL, File(context.filesDir, "routes.json"))
 
     init {
+        // Routes were once kept per trip from the site's trip pages, under routes/.
+        File(context.filesDir, "routes").takeIf { it.isDirectory }?.deleteRecursively()
         scope.launch {
             repository.load()
             routes.load()
@@ -37,6 +39,6 @@ class AppContainer(context: Context) {
 
     private suspend fun refreshAll() {
         repository.refresh()
-        routes.refresh(repository.trips.value.map { it.id })
+        routes.refresh()
     }
 }

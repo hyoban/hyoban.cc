@@ -108,7 +108,7 @@ try {
 
   console.log(`Receipt: ${relative(root, join(workspace, 'receipt.zip'))}`)
   console.log(
-    'Next: write the alt texts, run pnpm trips:routes and pnpm trips:weather, then pnpm test, pnpm check and pnpm build, and push the records again:',
+    'Next: write the alt texts, run pnpm trips:weather, then pnpm test, pnpm check and pnpm build, and push the records again:',
   )
   console.log(
     `  pnpm data:push${options.local ? ' --local' : ''} ${[...records.moments, ...records.trips].map((file) => `data/${file}`).join(' ')}`,

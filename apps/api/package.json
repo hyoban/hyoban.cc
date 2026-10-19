@@ -9,7 +9,8 @@
     "deploy": "wrangler d1 migrations apply DB --remote && wrangler deploy"
   },
   "dependencies": {
-    "@hyoban/data-spec": "workspace:*"
+    "@hyoban/data-spec": "workspace:*",
+    "@hyoban/trip-map": "workspace:*"
   },
   "devDependencies": {
     "wrangler": "^4.149.0"

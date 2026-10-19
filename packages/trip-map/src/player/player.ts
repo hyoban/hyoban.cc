@@ -9,7 +9,7 @@ import {
   type MusicTrack,
 } from '../markup.ts'
 import { t, type Messages } from '../messages.ts'
-import { readTheme } from '../theme.ts'
+import { readTheme } from '../dom-theme.ts'
 import { createAmbientMusic } from './ambient-music.ts'
 import { createCamera } from './camera.ts'
 import { createDayHeading } from './day-heading.ts'

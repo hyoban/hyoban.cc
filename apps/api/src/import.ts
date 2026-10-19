@@ -2,6 +2,7 @@ import {
   manifestSchema,
   momentRecordSchema,
   placesSchema,
+  routesSchema,
   tripRecordSchema,
 } from '@hyoban/data-spec'
 import {
@@ -10,6 +11,7 @@ import {
   REVISION,
   momentRow,
   placeRow,
+  routeRow,
   tripRow,
   upsertSql,
   type Table,
@@ -28,6 +30,8 @@ export interface ImportSnapshot {
   places: Record<string, unknown>
   trips: unknown[]
   moments: unknown[]
+  /** The legs' routes; a backup from before they were kept leaves the database's alone. */
+  routes?: Record<string, unknown>
 }
 
 export function buildImportSql(snapshot: ImportSnapshot, now: string): string {
@@ -63,6 +67,16 @@ export function buildImportSql(snapshot: ImportSnapshot, now: string): string {
   })
 
   statements.push(remove('moments', momentUids, now))
+
+  if (snapshot.routes) {
+    routesSchema.parse(snapshot.routes)
+
+    for (const [key, route] of Object.entries(snapshot.routes)) {
+      statements.push(upsert('routes', routeRow(key, route)))
+    }
+
+    statements.push(remove('routes', Object.keys(snapshot.routes), now))
+  }
 
   return `${statements.join(';\n')};\n`
 }

@@ -17,7 +17,12 @@
   "beijing": {
     "name": "北京",
     "latitude": 39.9042,
-    "longitude": 116.4074
+    "longitude": 116.4074,
+    "station": {
+      "name": "北京南站",
+      "latitude": 39.8652,
+      "longitude": 116.3786
+    }
   },
   "bohai-sea": {
     "name": "渤海",
@@ -28,12 +33,22 @@
   "changsha": {
     "name": "长沙",
     "latitude": 28.2282,
-    "longitude": 112.9388
+    "longitude": 112.9388,
+    "station": {
+      "name": "长沙南站",
+      "latitude": 28.1475,
+      "longitude": 113.0646
+    }
   },
   "chengdu": {
     "name": "成都",
     "latitude": 30.5728,
-    "longitude": 104.0668
+    "longitude": 104.0668,
+    "station": {
+      "name": "成都东站",
+      "latitude": 30.6296,
+      "longitude": 104.1427
+    }
   },
   "chengkan": {
     "name": "呈坎",
@@ -98,7 +113,12 @@
   "guangzhou": {
     "name": "广州",
     "latitude": 23.1291,
-    "longitude": 113.2644
+    "longitude": 113.2644,
+    "station": {
+      "name": "广州南站",
+      "latitude": 22.989,
+      "longitude": 113.269
+    }
   },
   "guangzhou-baiyun-airport": {
     "name": "广州白云国际机场",
@@ -168,7 +188,12 @@
   "hong-kong": {
     "name": "香港",
     "latitude": 22.3193,
-    "longitude": 114.1694
+    "longitude": 114.1694,
+    "station": {
+      "name": "香港西九龙站",
+      "latitude": 22.3046,
+      "longitude": 114.1653
+    }
   },
   "honghaizi": {
     "name": "红海子",
@@ -283,7 +308,12 @@
   "nanjing": {
     "name": "南京",
     "latitude": 32.0603,
-    "longitude": 118.7969
+    "longitude": 118.7969,
+    "station": {
+      "name": "南京南站",
+      "latitude": 31.9686,
+      "longitude": 118.7976
+    }
   },
   "nanjing-jiangbei-hongyuecheng": {
     "name": "南京江北虹悦城",
@@ -318,12 +348,22 @@
   "qingdao": {
     "name": "青岛",
     "latitude": 36.0671,
-    "longitude": 120.3826
+    "longitude": 120.3826,
+    "station": {
+      "name": "青岛北站",
+      "latitude": 36.1714,
+      "longitude": 120.3732
+    }
   },
   "qingdao-tsutaya-haitian": {
     "name": "TSUTAYA BOOKSTORE 蔦屋书店（海天MALL）",
     "latitude": 36.05784,
-    "longitude": 120.36433
+    "longitude": 120.36433,
+    "station": {
+      "name": "青岛北站",
+      "latitude": 36.1714,
+      "longitude": 120.3732
+    }
   },
   "rizhao": {
     "name": "日照",
@@ -373,7 +413,12 @@
   "shenzhen": {
     "name": "深圳",
     "latitude": 22.5431,
-    "longitude": 114.0579
+    "longitude": 114.0579,
+    "station": {
+      "name": "深圳北站",
+      "latitude": 22.6097,
+      "longitude": 114.0292
+    }
   },
   "shuhe-ancient-town": {
     "name": "束河古镇",

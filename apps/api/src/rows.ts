@@ -11,9 +11,14 @@ export const REVISION = `(SELECT CAST(value AS INTEGER) FROM meta WHERE key = 'r
 export const BUMP_REVISION = `UPDATE meta SET value = CAST(value AS INTEGER) + 1 WHERE key = 'revision'`
 
 export type Value = string | number | null
-export type Table = 'moments' | 'places' | 'trips'
+export type Table = 'moments' | 'places' | 'trips' | 'routes'
 
-export const KEYS: Record<Table, string> = { moments: 'uid', places: 'id', trips: 'id' }
+export const KEYS: Record<Table, string> = {
+  moments: 'uid',
+  places: 'id',
+  trips: 'id',
+  routes: 'key',
+}
 
 export function momentRow(moment: MomentRecord, record: unknown = moment): Record<string, Value> {
   return {
@@ -29,6 +34,10 @@ export function momentRow(moment: MomentRecord, record: unknown = moment): Recor
 
 export function placeRow(id: string, record: unknown): Record<string, Value> {
   return { id, record: JSON.stringify(record) }
+}
+
+export function routeRow(key: string, record: unknown): Record<string, Value> {
+  return { key, record: JSON.stringify(record) }
 }
 
 export function tripRow(trip: TripRecord, record: unknown = trip): Record<string, Value> {

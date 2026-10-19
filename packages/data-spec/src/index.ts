@@ -176,12 +176,21 @@ export const momentRecordSchema = z
     }
   })
 
-export const placeSchema = z.looseObject({
-  name: z.string().min(1),
+const point = {
   latitude: z.number().min(-90).max(90),
   longitude: z.number().min(-180).max(180),
+}
+
+export const placeSchema = z.looseObject({
+  name: z.string().min(1),
+  ...point,
   /** A note to self; the site doesn't show it. */
   note: z.string().optional(),
+  /**
+   * Where a train leg to or from the place starts or ends: rail lines run from stations,
+   * and a city's centre may be nearer some other track. Without one, the place itself.
+   */
+  station: z.looseObject({ name: z.string().min(1), ...point }).optional(),
   createdAt: timestamp.optional(),
 })
 
@@ -210,6 +219,24 @@ export const tripRecordSchema = z
     updatedAt: timestamp,
   })
   .refine((trip) => trip.start <= trip.end, 'The trip ends before it starts.')
+
+/**
+ * A driving route between two places, or a rail line for a train leg, as the API fetched
+ * it: its points as `[longitude, latitude]`, simplified to about 30 m.
+ */
+export const routeSchema = z.looseObject({
+  coordinates: z.array(z.tuple([z.number(), z.number()])).min(2),
+  /** Metres along the route. */
+  distance: z.number().nonnegative(),
+  /** Seconds of driving without traffic, as Mapbox estimates it. */
+  duration: z.number().nonnegative().optional(),
+})
+
+/**
+ * Every leg's route by its key: `lng,lat;lng,lat` between two places' points, and
+ * `train:` before that for a rail line.
+ */
+export const routesSchema = z.record(z.string().min(1), routeSchema)
 
 /** A price in yuan, as paid or got back. */
 const price = z.number().nonnegative()
@@ -244,6 +271,8 @@ export type Place = z.output<typeof placeSchema>
 export type Places = z.output<typeof placesSchema>
 export type TripRecord = z.output<typeof tripRecordSchema>
 export type TripRecordInput = z.input<typeof tripRecordSchema>
+export type Route = z.output<typeof routeSchema>
+export type Routes = z.output<typeof routesSchema>
 export type Device = z.output<typeof deviceSchema>
 export type Devices = z.output<typeof devicesSchema>
 export type Manifest = z.output<typeof manifestSchema>

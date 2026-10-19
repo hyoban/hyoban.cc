@@ -18,4 +18,4 @@ export {
 export { createTripOverview } from './player/overview.ts'
 export { createTripPlayer, type TripPlayerOptions } from './player/player.ts'
 export type { MapStats, PlaceMarker, TripData, TripSummary } from './player/types.ts'
-export { readTheme } from './theme.ts'
+export { readTheme } from './dom-theme.ts'

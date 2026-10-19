@@ -104,7 +104,7 @@ and finds everything else by its `data-trip-map-*` attribute.
    ```
 
    Routes come from the Mapbox Directions API (and OpenRailRouting for trains); fetch
-   them once and cache them (hyoban.cc's `scripts/generate-trip-routes.mjs` shows how).
+   them once and cache them (hyoban.cc's API, `apps/api/src/routes.ts`, shows how).
    Without one a leg is drawn straight.
 
 3. **Shape the data.** `shapeTripData` turns a built trip into the `TripData` the player

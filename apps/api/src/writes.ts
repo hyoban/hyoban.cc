@@ -339,7 +339,7 @@ function getParts(item: MomentMedia): UploadPart[] {
 }
 
 /** Runs a write's statements in one transaction, after bumping the revision. */
-async function commit({ db, now }: WriteContext, statements: Statement[]) {
+export async function commit({ db, now }: WriteContext, statements: Statement[]) {
   try {
     await db.batch([
       db.prepare(BUMP_REVISION),
@@ -371,7 +371,7 @@ function momentStatements(db: Database, record: MomentRecord) {
   ]
 }
 
-function upsert(db: Database, table: Table, row: Record<string, Value>) {
+export function upsert(db: Database, table: Table, row: Record<string, Value>) {
   return db.prepare(upsertSql(table, placeholders(row))).bind(...Object.values(row))
 }
 

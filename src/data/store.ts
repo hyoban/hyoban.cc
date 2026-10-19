@@ -5,11 +5,13 @@ import {
   manifestSchema,
   momentRecordSchema,
   placesSchema,
+  routesSchema,
   tripRecordSchema,
   type Devices,
   type Manifest,
   type MomentRecord,
   type Places,
+  type Routes,
   type TripRecord,
 } from '@hyoban/data-spec'
 
@@ -34,6 +36,16 @@ export function readManifest(root = getDataRoot()): Manifest {
 
 export function readPlaces(root = getDataRoot()): Places {
   return placesSchema.parse(readJson('places.json', root))
+}
+
+/**
+ * Each trip leg's route by its key, as the API fetched them; data/'s copy when the
+ * export came from an API that doesn't keep them yet.
+ */
+export function readRoutes(root = getDataRoot()): Routes {
+  return routesSchema.parse(
+    readJson('routes.json', existsSync(join(root, 'routes.json')) ? root : dataRoot),
+  )
 }
 
 export function readDevices(root = dataRoot): Devices {

@@ -27,6 +27,7 @@ const sql = buildImportSql(
     places: /** @type {Record<string, unknown>} */ (readJson('places.json', dataRoot)),
     trips: listJsonFiles('trips', dataRoot).map((file) => readJson(file, dataRoot)),
     moments: listJsonFiles('moments', dataRoot).map((file) => readJson(file, dataRoot)),
+    routes: /** @type {Record<string, unknown>} */ (readJson('routes.json', dataRoot)),
   },
   new Date().toISOString().replace(/\.\d{3}Z$/, 'Z'),
 )
