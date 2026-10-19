@@ -19,7 +19,7 @@ const before = html.slice(0, marker.index)
 const after = html.slice(marker.index! + marker[0].length)
 ---
 
-<Layout title={entry.data.title} description={entry.data.description}>
+<Layout title={entry.data.title} description={entry.data.description} image={`/og/${entry.data.link}.png`}>
   <SitePage title={entry.data.title} description={entry.data.description}>
     <article class="prose">
       <Fragment set:html={before} />
