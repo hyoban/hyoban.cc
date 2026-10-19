@@ -54,6 +54,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.runtime.SideEffect
+import kotlin.math.roundToInt
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.layout.layout
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.animation.core.animate
 import androidx.compose.foundation.gestures.rememberDraggableState
@@ -166,11 +170,19 @@ fun MediaViewer(
         HorizontalPager(
             pager,
             Modifier.fillMaxSize()
-                .graphicsLayer {
+                // The drag moves and shrinks the photo in layout, not just in drawing, so
+                // where it is when let go is where its flight back into its tile starts.
+                .layout { measurable, constraints ->
                     val scale = 1f - 0.2f * progress()
-                    translationY = drag.coerceAtLeast(0f)
-                    scaleX = scale
-                    scaleY = scale
+                    val width = (constraints.maxWidth * scale).roundToInt()
+                    val height = (constraints.maxHeight * scale).roundToInt()
+                    val placeable = measurable.measure(Constraints.fixed(width, height))
+                    layout(constraints.maxWidth, constraints.maxHeight) {
+                        placeable.place(
+                            (constraints.maxWidth - width) / 2,
+                            (constraints.maxHeight - height) / 2 + drag.coerceAtLeast(0f).roundToInt(),
+                        )
+                    }
                 }
                 .draggable(
                     orientation = Orientation.Vertical,
@@ -392,7 +404,9 @@ private fun ZoomableStill(
             val height = constraints.maxHeight.toFloat()
             if (width / height > shape) Size(height * shape, height) else Size(width, width / shape)
         }
-        LaunchedEffect(fitted) { zoom.setContentLocation(ZoomableContentLocation.scaledInsideAndCenterAligned(fitted)) }
+        // Told before the first frame is drawn: until then the zoom keeps the photo hidden
+        // and unscaled, and the first flight into the viewer measured that instead.
+        SideEffect { zoom.setContentLocation(ZoomableContentLocation.scaledInsideAndCenterAligned(fitted)) }
 
         // The still and the motion over it zoom and pan as one.
         Box(Modifier.aspectRatio(shape)) {

@@ -34,6 +34,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import cc.hyoban.moments.ui.components.LocalBackSwipe
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
+import androidx.navigationevent.NavigationEventTransitionState
+import androidx.navigationevent.compose.LocalNavigationEventDispatcherOwner
 import cc.hyoban.moments.ui.components.LocalInViewer
 import cc.hyoban.moments.ui.components.LocalViewerShownKey
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -165,7 +170,20 @@ fun MomentsApp(container: AppContainer) {
     }
     val clearance = if (current != null) 88.dp + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() else 0.dp
 
-    BackHandler(enabled = viewer != null, onBack = closeViewer)
+    // A back swipe, from its start until a moment after the finger lifts, while the page
+    // change it started plays out: shared photos stay with their pages meanwhile.
+    val backSwipe = remember { mutableStateOf(false) }
+    val gestures = LocalNavigationEventDispatcherOwner.current?.navigationEventDispatcher
+    LaunchedEffect(gestures) {
+        gestures?.transitionState?.collectLatest { state ->
+            if (state is NavigationEventTransitionState.InProgress) {
+                backSwipe.value = true
+            } else if (backSwipe.value) {
+                delay(800)
+                backSwipe.value = false
+            }
+        }
+    }
 
     // A Surface rather than a bare background, so text without a colour of its own takes the page's on-colour in both modes.
     Surface(Modifier.fillMaxSize(), color = AppColors.page) {
@@ -175,6 +193,7 @@ fun MomentsApp(container: AppContainer) {
             CompositionLocalProvider(
                 LocalSharedTransitionScope provides this,
                 LocalViewerShownKey provides viewerKey.takeIf { viewer != null },
+                LocalBackSwipe provides backSwipe,
             ) {
                 NavHost(
                     navController = navController,
@@ -188,14 +207,14 @@ fun MomentsApp(container: AppContainer) {
                     // anything else fades as before.
                     enterTransition = {
                         tabSlide()?.let { slideIntoContainer(it, TAB_SLIDE) + fadeIn(tween(TAB_SLIDE_MS)) }
-                            ?: pageIn(forward = true)
+                            ?: if (sharesPhoto()) fadeIn(tween(PAGE_MS)) else pageIn(forward = true)
                     },
                     exitTransition = {
                         tabSlide()?.let { slideOutOfContainer(it, TAB_SLIDE) + fadeOut(tween(TAB_SLIDE_MS)) }
-                            ?: pageOut(forward = true)
+                            ?: if (sharesPhoto()) fadeOut(tween(PAGE_MS)) else pageOut(forward = true)
                     },
-                    popEnterTransition = { pageIn(forward = false) },
-                    popExitTransition = { pageOut(forward = false) },
+                    popEnterTransition = { if (sharesPhoto()) fadeIn(tween(PAGE_MS)) else pageIn(forward = false) },
+                    popExitTransition = { if (sharesPhoto()) fadeOut(tween(PAGE_MS)) else pageOut(forward = false) },
                 ) {
                     screen<Feed> {
                         FeedScreen(container, onMoment = openMoment, onMedia = openMedia, onDay = { navController.navigate(Day(it)) })
@@ -224,6 +243,8 @@ fun MomentsApp(container: AppContainer) {
                 if (viewer != null) shown = viewer
                 AnimatedVisibility(viewer != null, enter = fadeIn(tween(350)), exit = fadeOut(tween(350))) {
                     val route = shown ?: return@AnimatedVisibility
+                    // Registered after the pages' own, so back closes the viewer before it leaves a page.
+                    BackHandler(enabled = viewer != null, onBack = closeViewer)
                     CompositionLocalProvider(LocalNavAnimatedScope provides this, LocalInViewer provides true) {
                         MediaViewer(
                             container,
@@ -269,6 +290,14 @@ private fun pageIn(forward: Boolean): EnterTransition =
 private fun pageOut(forward: Boolean): ExitTransition =
     slideOutHorizontally(tween(PAGE_MS, easing = EMPHASIZED)) { width -> if (forward) -width / 8 else width / 4 } +
         fadeOut(tween(PAGE_MS / 3))
+
+/**
+ * Whether a photo flies between the two pages: a Moment's page opened from a list and
+ * back. Those fade in place, as a photo chasing a tile that slides with its page
+ * stutters and slips under the sheet.
+ */
+private fun AnimatedContentTransitionScope<NavBackStackEntry>.sharesPhoto(): Boolean =
+    initialState.destination.hasRoute(Moment::class) || targetState.destination.hasRoute(Moment::class)
 
 /** Which way the pages slide between two tabs: towards the tab chosen; null when either isn't a tab. */
 private fun AnimatedContentTransitionScope<NavBackStackEntry>.tabSlide(): AnimatedContentTransitionScope.SlideDirection? {

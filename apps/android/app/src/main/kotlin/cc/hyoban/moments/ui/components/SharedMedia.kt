@@ -9,6 +9,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
+import androidx.compose.runtime.State
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.core.view.WindowCompat
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.DisposableEffect
+import android.app.Activity
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Shape
@@ -29,6 +39,12 @@ val LocalNavAnimatedScope = staticCompositionLocalOf<AnimatedVisibilityScope?> {
  */
 val LocalViewerShownKey = staticCompositionLocalOf<String?> { null }
 
+/**
+ * Whether a back swipe is under way, or has just ended and its page change is still
+ * playing out: the app root watches the system's back gesture and sets it.
+ */
+val LocalBackSwipe = staticCompositionLocalOf<State<Boolean>> { mutableStateOf(false) }
+
 /** Whether a composable is in the viewer, whose photo shows whenever the viewer does. */
 val LocalInViewer = staticCompositionLocalOf { false }
 
@@ -48,14 +64,27 @@ fun Modifier.sharedMedia(key: String?, shape: Shape = RectangleShape): Modifier 
     if (key == null || shared == null || animated == null) return this
 
     return with(shared) {
-        val state = rememberSharedContentState(key)
         val clip = OverlayClip(shape)
         if (LocalInViewer.current) {
-            this@sharedMedia.sharedElement(state, animatedVisibilityScope = animated, clipInOverlayDuringTransition = clip)
+            this@sharedMedia.sharedElement(rememberSharedContentState(key), animatedVisibilityScope = animated, clipInOverlayDuringTransition = clip)
         } else {
+            // A back swipe previews the page under this one, following the finger, and
+            // the pages cross-fade with it as the system's own preview does; a photo
+            // flying between them as well played a second animation over the first.
+            // From the swipe's start until the page change settles, the photo stays
+            // with its page.
+            val transition = animated.transition
+            val swiped = LocalBackSwipe.current
+            val config = remember(swiped) {
+                object : SharedTransitionScope.SharedContentConfig {
+                    override val SharedTransitionScope.SharedContentState.isEnabled: Boolean get() = !swiped.value
+                    override val shouldKeepEnabledForOngoingAnimation: Boolean get() = false
+                }
+            }
+            val tileState = rememberSharedContentState(key, config)
             // A tile shows while its page does and the viewer isn't showing it.
-            val visible = animated.transition.targetState == EnterExitState.Visible && LocalViewerShownKey.current != key
-            this@sharedMedia.sharedElementWithCallerManagedVisibility(state, visible = visible, clipInOverlayDuringTransition = clip)
+            val visible = transition.targetState == EnterExitState.Visible && LocalViewerShownKey.current != key
+            this@sharedMedia.sharedElementWithCallerManagedVisibility(tileState, visible = visible, clipInOverlayDuringTransition = clip)
         }
     }
 }
@@ -78,7 +107,19 @@ fun Modifier.aboveSharedMedia(): Modifier {
         if (state == EnterExitState.Visible) 1f else 0f
     }
     return with(shared) {
-        val arriving = { isTransitionActive && transition.targetState == EnterExitState.Visible }
+        // While this page arrives, until both its own transition and the photo flying in
+        // with it have settled; a photo flying from the settled page into the viewer is
+        // another transition, and passes over the sheet.
+        var settled by remember(transition) { mutableStateOf(false) }
+        LaunchedEffect(transition, this) {
+            snapshotFlow {
+                transition.targetState == EnterExitState.Visible &&
+                    transition.currentState == EnterExitState.Visible &&
+                    !isTransitionActive
+            }.collect { if (it) settled = true }
+        }
+        LaunchedEffect(transition.targetState) { if (transition.targetState != EnterExitState.Visible) settled = false }
+        val arriving = { transition.targetState == EnterExitState.Visible && !settled }
         this@aboveSharedMedia
             .renderInSharedTransitionScopeOverlay(renderInOverlay = arriving, zIndexInOverlay = 1f)
             .graphicsLayer { this.alpha = if (arriving()) alpha else 1f }
@@ -97,4 +138,19 @@ object DrawnStills {
     }
 
     fun of(mediaUid: String): String? = urls[mediaUid]
+}
+
+/**
+ * White status bar icons while [over] is true, as over a photo running under the bar,
+ * and the theme's own otherwise; put back as they were when this leaves.
+ */
+@Composable
+fun StatusBarOverPhoto(over: Boolean) {
+    val view = LocalView.current
+    val window = (view.context as? Activity)?.window ?: return
+    val controller = remember(window, view) { WindowCompat.getInsetsController(window, view) }
+    val themeLight = remember(controller) { controller.isAppearanceLightStatusBars }
+
+    LaunchedEffect(over) { controller.isAppearanceLightStatusBars = if (over) false else themeLight }
+    DisposableEffect(controller) { onDispose { controller.isAppearanceLightStatusBars = themeLight } }
 }
