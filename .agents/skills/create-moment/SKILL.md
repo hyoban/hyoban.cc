@@ -6,12 +6,15 @@ description: Create a hyoban.cc Moment from exact user text and media. Use when 
 # Create Moment
 
 Create one Moment as a record under `data/moments` (the shape is in
-`packages/data-spec`). Never deploy the site or publish the Moment to a social
+`packages/data-spec`), then push it into the API, which holds the records;
+`data/` is their backup. Never deploy the site or publish the Moment to a social
 network. Uploading its media to the configured R2 bucket is part of preparing
 the local Moment.
 
-1. Inspect `packages/data-spec`, `data/places.json`, and a recent record under
-   `data/moments`.
+1. Run `pnpm data:export` so `data/` has what the API has; it needs
+   `MOMENTS_API_TOKEN` in `.env`, and stops if `data/` has uncommitted changes
+   (ask the user about those). Then inspect `packages/data-spec`,
+   `data/places.json`, and a recent record under `data/moments`.
 2. Preserve the user's text exactly, including errors, punctuation, paragraphs, and line breaks.
 3. Use one `occurredAt` value for when the Moment happened. Use an ISO timestamp
    with an explicit offset when the time is known, otherwise use `YYYY-MM-DD`.
@@ -41,6 +44,16 @@ file. It is safe to rerun after an interrupted upload.
    command wrote them; never edit `uid`, `published` or a media item's
    `published` by hand.
 7. Compare the saved text with the user's text, then run `pnpm test`, `pnpm check`, and `pnpm build`.
+8. Push the record, with the places it names, into the API, and any trip you
+   changed:
+
+```bash
+pnpm data:push data/moments/<YYYY>/<MM>/<uid>.json [data/trips/<id>.json]...
+```
+
+Add `--place <id>` for a place you moved that the record doesn't name. Until
+it is pushed the Moment isn't on the site, and the next backup would remove
+it from `data/`.
 
 ## Coordinates
 

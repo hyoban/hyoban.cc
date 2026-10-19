@@ -16,11 +16,12 @@ import {
   type Value,
 } from './rows.ts'
 
-// Turns a snapshot of the records, as `data/` keeps them, into SQL that makes the
-// database hold exactly that: new and changed records are written, records missing from
-// the snapshot are marked deleted, and only rows that change take the new revision, so
-// a client syncing afterwards gets just the difference. Runs in Node, by
-// `pnpm data:import`, not in the Worker.
+// Turns records, as `data/` keeps them, into SQL for the database. A snapshot import
+// makes it hold exactly the snapshot: new and changed records are written and records
+// missing from it are marked deleted (`pnpm data:import`, to restore the backup). A
+// merge only writes the records it is given, for what the scripts publish outside the
+// API (`pnpm data:push`). Either way only rows that change take the new revision, so a
+// client syncing afterwards gets just the difference. Runs in Node, not in the Worker.
 
 export interface ImportSnapshot {
   manifest: unknown
@@ -56,23 +57,51 @@ export function buildImportSql(snapshot: ImportSnapshot, now: string): string {
   statements.push(remove('trips', tripIds, now))
 
   const momentUids = snapshot.moments.map((moment) => {
-    const parsed = momentRecordSchema.parse(moment)
+    statements.push(...momentStatements(moment))
 
-    statements.push(
-      upsert('moments', momentRow(parsed, moment)),
-      `DELETE FROM moment_places WHERE moment_uid = ${quote(parsed.uid)}`,
-      ...parsed.places.map(
-        (place, position) =>
-          `INSERT INTO moment_places (moment_uid, position, place_id) VALUES (${quote(parsed.uid)}, ${position}, ${quote(place)})`,
-      ),
-    )
-
-    return parsed.uid
+    return momentRecordSchema.parse(moment).uid
   })
 
   statements.push(remove('moments', momentUids, now))
 
   return `${statements.join(';\n')};\n`
+}
+
+export interface MergeRecords {
+  places: Record<string, unknown>
+  trips: unknown[]
+  moments: unknown[]
+}
+
+/**
+ * Writes these records over whatever the database has for them, leaving every other
+ * record alone, and stamps the manifest with `generator` and `now`.
+ */
+export function buildMergeSql(records: MergeRecords, now: string, generator: string): string {
+  placesSchema.parse(records.places)
+
+  const statements = [
+    BUMP_REVISION,
+    `UPDATE meta SET value = json_set(value, '$.generator', ${quote(generator)}, '$.updatedAt', ${quote(now)}) WHERE key = 'manifest'`,
+    ...Object.entries(records.places).map(([id, place]) => upsert('places', placeRow(id, place))),
+    ...records.trips.map((trip) => upsert('trips', tripRow(tripRecordSchema.parse(trip), trip))),
+    ...records.moments.flatMap((moment) => momentStatements(moment)),
+  ]
+
+  return `${statements.join(';\n')};\n`
+}
+
+function momentStatements(moment: unknown) {
+  const parsed = momentRecordSchema.parse(moment)
+
+  return [
+    upsert('moments', momentRow(parsed, moment)),
+    `DELETE FROM moment_places WHERE moment_uid = ${quote(parsed.uid)}`,
+    ...parsed.places.map(
+      (place, position) =>
+        `INSERT INTO moment_places (moment_uid, position, place_id) VALUES (${quote(parsed.uid)}, ${position}, ${quote(place)})`,
+    ),
+  ]
 }
 
 function upsert(table: Table, row: Record<string, Value>) {
