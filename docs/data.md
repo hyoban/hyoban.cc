@@ -23,9 +23,11 @@ different photo is a new media item with a new key.
 
 ## Publishing a bundle
 
-The app exports a bundle: the records in the layout above, without their `local`
-fields, plus `media/<media uid>.<extension>` for every media item that isn't
-published yet (a live photo has an image and a video with the same uid).
+A bundle is what the Android app exported while it recorded Moments: the records in
+the layout above, without their `local` fields, plus `media/<media uid>.<extension>`
+for every media item that isn't published yet (a live photo has an image and a video
+with the same uid). The app only shows the records now, so this is for bundles made
+before, or by hand.
 
 ```sh
 pnpm data:publish <bundle.zip>
@@ -37,7 +39,8 @@ changes, which the refresh would overwrite), unpacks the bundle under
 
 1. Matches the bundle's places to `data/places.json`. A place within 200 m of an
    existing one, or with the same name, takes the existing id; the rest are added.
-   An id already in the repository keeps the repository's coordinates.
+   An id already in the repository keeps the repository's coordinates. A place the
+   app named provisionally (`p-<ulid>`) gets an id spelled from its name's pinyin.
 2. Writes the trips, with places renamed.
 3. Gives each unpublished Moment an id: the slug the record proposes in `slug`,
    else its first place, else its first words; the order is the next one that day.

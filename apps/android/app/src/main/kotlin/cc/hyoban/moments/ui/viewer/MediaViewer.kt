@@ -1,0 +1,516 @@
+package cc.hyoban.moments.ui.viewer
+
+import android.app.Activity
+import android.net.Uri
+import android.widget.MediaController
+import android.widget.VideoView
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.calculatePan
+import androidx.compose.foundation.gestures.calculateZoom
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.rounded.Place
+import androidx.compose.material3.AssistChip
+import androidx.compose.material.icons.rounded.MotionPhotosOn
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChanged
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import cc.hyoban.moments.AppContainer
+import cc.hyoban.moments.R
+import cc.hyoban.moments.data.media.MediaUrls
+import cc.hyoban.moments.data.spec.MediaType
+import cc.hyoban.moments.data.spec.MomentMedia
+import cc.hyoban.moments.data.spec.MomentRecord
+import cc.hyoban.moments.data.spec.Place
+import cc.hyoban.moments.data.trips.coversOf
+import cc.hyoban.moments.data.trips.momentsOf
+import cc.hyoban.moments.data.trips.tripOf
+import cc.hyoban.moments.ui.components.DrawnStills
+import cc.hyoban.moments.ui.components.MediaStill
+import cc.hyoban.moments.ui.components.PlayBadge
+import cc.hyoban.moments.ui.components.Thumbnail
+import cc.hyoban.moments.ui.components.mediaKey
+import cc.hyoban.moments.ui.components.sharedMedia
+import cc.hyoban.moments.ui.components.shapeOf
+import cc.hyoban.moments.ui.format.daysBetween
+import cc.hyoban.moments.ui.format.formatDay
+import cc.hyoban.moments.ui.format.formatRange
+import cc.hyoban.moments.ui.format.formatTime
+import cc.hyoban.moments.ui.map.PlacesStill
+import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
+
+/**
+ * A Moment's media full screen on black. Swipe sideways between them, down to close and
+ * up for the details; tap to hide everything but the photo; pinch or double-tap to zoom.
+ * A video or a live photo plays from its own button.
+ */
+@Composable
+fun MediaViewer(
+    container: AppContainer,
+    uid: String,
+    index: Int,
+    onMoment: (String) -> Unit,
+    onPlace: (String) -> Unit,
+    onTrip: (String) -> Unit,
+    onBack: () -> Unit,
+) {
+    val moments by container.repository.moments.collectAsStateWithLifecycle()
+    val places by container.repository.places.collectAsStateWithLifecycle()
+    val moment = remember(moments, uid) { moments.firstOrNull { it.uid == uid } } ?: return
+    val media = moment.media
+    if (media.isEmpty()) return
+
+    val pager = rememberPagerState(initialPage = index.coerceIn(0, media.lastIndex)) { media.size }
+    var zoomed by remember { mutableStateOf(false) }
+    var chrome by rememberSaveable { mutableStateOf(true) }
+    var info by rememberSaveable { mutableStateOf(false) }
+    val drag = remember { Animatable(0f) }
+    val scope = rememberCoroutineScope()
+    val density = LocalDensity.current
+    val closeAt = with(density) { 120.dp.toPx() }
+    val infoAt = with(density) { 64.dp.toPx() }
+    ViewerSystemBars(hidden = !chrome)
+
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        // How far a downward drag has gone toward closing: the photo shrinks a little and the black thins out.
+        val progress = (drag.value / (constraints.maxHeight / 3f)).coerceIn(0f, 1f)
+
+        Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 1f - progress)))
+        HorizontalPager(
+            pager,
+            Modifier.fillMaxSize()
+                .offset { IntOffset(0, drag.value.coerceAtLeast(0f).roundToInt()) }
+                .graphicsLayer {
+                    val scale = 1f - 0.2f * progress
+                    scaleX = scale
+                    scaleY = scale
+                }
+                .pointerInput(zoomed) {
+                    if (zoomed) return@pointerInput
+                    detectVerticalDragGestures(
+                        onDragEnd = {
+                            scope.launch {
+                                when {
+                                    drag.value > closeAt -> onBack()
+                                    drag.value < -infoAt -> {
+                                        info = true
+                                        drag.animateTo(0f)
+                                    }
+                                    else -> drag.animateTo(0f)
+                                }
+                            }
+                        },
+                        onDragCancel = { scope.launch { drag.animateTo(0f) } },
+                        onVerticalDrag = { change, amount ->
+                            change.consume()
+                            scope.launch { drag.snapTo(drag.value + amount) }
+                        },
+                    )
+                },
+            userScrollEnabled = !zoomed,
+            key = { media[it].uid },
+        ) { page ->
+            ViewerPage(
+                momentUid = moment.uid,
+                media = media[page],
+                urls = container.mediaUrls,
+                active = pager.currentPage == page,
+                onZoom = { zoomed = it },
+                onTap = { chrome = !chrome },
+            )
+        }
+
+        AnimatedVisibility(chrome && progress == 0f, enter = fadeIn(), exit = fadeOut()) {
+            Row(
+                Modifier.fillMaxWidth().background(Color.Black.copy(alpha = 0.25f)).statusBarsPadding().padding(4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                IconButton(onClick = onBack) {
+                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.action_back), tint = Color.White)
+                }
+                if (media.size > 1) {
+                    Text("${pager.currentPage + 1} / ${media.size}", color = Color.White, style = MaterialTheme.typography.titleMedium)
+                }
+                Spacer(Modifier.weight(1f))
+                IconButton(onClick = { info = true }) {
+                    Icon(Icons.Outlined.Info, contentDescription = stringResource(R.string.action_info), tint = Color.White)
+                }
+            }
+        }
+    }
+
+    if (info) {
+        InfoSheet(
+            container = container,
+            moment = moment,
+            media = media[pager.currentPage],
+            places = places,
+            onDismiss = { info = false },
+            onMoment = { info = false; onMoment(moment.uid) },
+            onPlace = { info = false; onPlace(it) },
+            onTrip = { info = false; onTrip(it) },
+        )
+    }
+}
+
+@Composable
+private fun ViewerPage(
+    momentUid: String,
+    media: MomentMedia,
+    urls: MediaUrls,
+    active: Boolean,
+    onZoom: (Boolean) -> Unit,
+    onTap: () -> Unit,
+) {
+    val motion = urls.motion(media)
+    var playing by remember(media.uid) { mutableStateOf(false) }
+    if (!active) playing = false
+    val live = rememberLiveMotionState(media.uid)
+    val liveMotion = motion?.takeIf { media.type == MediaType.LIVE_PHOTO }
+
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        if (playing && motion != null && media.type == MediaType.VIDEO) {
+            AndroidView(
+                factory = { context ->
+                    VideoView(context).apply {
+                        setMediaController(MediaController(context).also { it.setAnchorView(this) })
+                        setVideoURI(Uri.parse(motion))
+                        setOnPreparedListener { player -> player.isLooping = media.type == MediaType.LIVE_PHOTO }
+                        start()
+                    }
+                },
+                onRelease = { it.stopPlayback() },
+                modifier = Modifier.fillMaxSize(),
+            )
+        } else {
+            ZoomableStill(
+                momentUid,
+                media,
+                urls,
+                onZoom,
+                onTap,
+                // Held down, a live photo plays with its sound until let go.
+                onHold = if (liveMotion != null) { held -> if (held) live.play(sound = true) else live.stop() } else null,
+            ) {
+                if (liveMotion != null) LiveMotion(liveMotion, active, live, Modifier.fillMaxSize())
+            }
+            when (media.type) {
+                MediaType.VIDEO -> PlayBadge(Modifier.clip(RoundedCornerShape(50)).clickable { playing = true }, size = 64)
+                MediaType.LIVE_PHOTO -> if (liveMotion != null) {
+                    ViewerLiveBadge(
+                        live,
+                        Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(bottom = 88.dp),
+                    )
+                }
+                MediaType.IMAGE -> Unit
+            }
+        }
+    }
+}
+
+/** The LIVE badge under a live photo: a ring while its motion loads, then a tap plays it again. */
+@Composable
+private fun ViewerLiveBadge(state: LiveMotionState, modifier: Modifier = Modifier) {
+    Row(
+        modifier.clip(RoundedCornerShape(50))
+            .background(Color.Black.copy(alpha = 0.45f))
+            .clickable(enabled = state.ready) { if (state.playing) state.stop() else state.play() }
+            .padding(horizontal = 12.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        if (state.ready) {
+            Icon(Icons.Rounded.MotionPhotosOn, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+        } else {
+            CircularProgressIndicator(Modifier.size(14.dp), color = Color.White, strokeWidth = 2.dp)
+        }
+        Text(stringResource(R.string.label_live), color = Color.White, style = MaterialTheme.typography.labelMedium)
+    }
+}
+
+/**
+ * A still that zooms with two fingers or a double tap and pans once zoomed. One finger
+ * at full size is left to the pager and the swipes, so they still turn and close.
+ */
+@Composable
+private fun ZoomableStill(
+    momentUid: String,
+    media: MomentMedia,
+    urls: MediaUrls,
+    onZoom: (Boolean) -> Unit,
+    onTap: () -> Unit,
+    onHold: ((Boolean) -> Unit)? = null,
+    overlay: @Composable () -> Unit = {},
+) {
+    var scale by remember { mutableFloatStateOf(1f) }
+    var offset by remember { mutableStateOf(Offset.Zero) }
+    // The still the card drew, already in memory, stands in while the larger one loads.
+    val drawn = remember(media.uid) { DrawnStills.of(media.uid) }
+    fun zoomTo(value: Float) {
+        scale = value
+        if (value == 1f) offset = Offset.Zero
+        onZoom(value > 1f)
+    }
+
+    // The screen takes the gestures; the photo, at its own shape and no larger than the
+    // screen, is what grows out of the card's tile and back into it, so the tile's crop
+    // opens out into the whole photo rather than jumping to it.
+    Box(
+        Modifier.fillMaxSize()
+            .pointerInput(Unit) {
+                var held = false
+                detectTapGestures(
+                    onDoubleTap = { zoomTo(if (scale > 1f) 1f else 2.5f) },
+                    onTap = { onTap() },
+                    onLongPress = {
+                        if (onHold != null && scale == 1f) {
+                            held = true
+                            onHold(true)
+                        }
+                    },
+                    onPress = {
+                        tryAwaitRelease()
+                        if (held) {
+                            held = false
+                            onHold?.invoke(false)
+                        }
+                    },
+                )
+            }
+            .pointerInput(Unit) {
+                awaitEachGesture {
+                    awaitFirstDown(requireUnconsumed = false)
+                    do {
+                        val event = awaitPointerEvent()
+                        if (event.changes.size > 1 || scale > 1f) {
+                            zoomTo((scale * event.calculateZoom()).coerceIn(1f, 5f))
+                            if (scale > 1f) offset += event.calculatePan()
+                            event.changes.forEach { if (it.positionChanged()) it.consume() }
+                        }
+                    } while (event.changes.any { it.pressed })
+                }
+            },
+        contentAlignment = Alignment.Center,
+    ) {
+        // The still and the motion over it zoom and pan as one.
+        Box(
+            Modifier.aspectRatio(shapeOf(media)).graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+                translationX = offset.x
+                translationY = offset.y
+            },
+        ) {
+            MediaStill(
+                media,
+                urls,
+                placeholder = Color.Transparent,
+                placeholderUrl = drawn,
+                modifier = Modifier.fillMaxSize().sharedMedia(mediaKey(momentUid, media.uid)),
+            )
+            overlay()
+        }
+    }
+}
+
+/** What there is to know about the photo: when, where on a small map, the Moment's words, what it shows, the trip. */
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@Composable
+private fun InfoSheet(
+    container: AppContainer,
+    moment: MomentRecord,
+    media: MomentMedia,
+    places: Map<String, Place>,
+    onDismiss: () -> Unit,
+    onMoment: () -> Unit,
+    onPlace: (String) -> Unit,
+    onTrip: (String) -> Unit,
+) {
+    val trips by container.repository.trips.collectAsStateWithLifecycle()
+    val moments by container.repository.moments.collectAsStateWithLifecycle()
+    val trip = remember(moment, trips) { tripOf(moment, trips) }
+    val located = remember(moment, places) { moment.places.mapNotNull { places[it] } }
+
+    ModalBottomSheet(onDismissRequest = onDismiss) {
+        Column(
+            Modifier.verticalScroll(rememberScrollState()).padding(start = 20.dp, end = 20.dp, bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(formatDay(moment.occurredAt), style = MaterialTheme.typography.headlineSmall)
+                formatTime(moment.occurredAt)?.let {
+                    Text(it, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+            if (located.isNotEmpty()) {
+                PlacesStill(
+                    located,
+                    Modifier.fillMaxWidth().aspectRatio(2f).clip(MaterialTheme.shapes.large)
+                        .background(MaterialTheme.colorScheme.surfaceContainerHighest),
+                )
+            }
+            if (moment.places.isNotEmpty()) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    moment.places.forEach { id ->
+                        AssistChip(
+                            onClick = { onPlace(id) },
+                            label = { Text(places[id]?.name ?: id) },
+                            leadingIcon = { Icon(Icons.Rounded.Place, contentDescription = null, modifier = Modifier.size(AssistChipDefaults.IconSize)) },
+                        )
+                    }
+                }
+            }
+            if (moment.text.isNotBlank()) {
+                Text(moment.text, style = MaterialTheme.typography.bodyLarge)
+            }
+            if (media.alt.isNotBlank()) {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(stringResource(R.string.label_alt), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(media.alt, style = MaterialTheme.typography.bodyMedium)
+                }
+            }
+            if (media.width != null && media.height != null) {
+                Text(
+                    stringResource(
+                        R.string.label_media_size,
+                        stringResource(
+                            when (media.type) {
+                                MediaType.IMAGE -> R.string.media_photo
+                                MediaType.LIVE_PHOTO -> R.string.media_live
+                                MediaType.VIDEO -> R.string.media_video
+                            },
+                        ),
+                        media.width,
+                        media.height,
+                    ),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            trip?.let { trip ->
+                val cover = remember(trip, moments) { coversOf(trip, moments, trips, limit = 1).firstOrNull() }
+                val count = remember(trip, moments) { momentsOf(trip, moments, trips).size }
+                OutlinedCard(onClick = { onTrip(trip.id) }, modifier = Modifier.fillMaxWidth()) {
+                    ListItem(
+                        headlineContent = { Text(trip.title) },
+                        supportingContent = {
+                            Text(
+                                listOf(
+                                    formatRange(trip.start, trip.end),
+                                    stringResource(R.string.count_days, daysBetween(trip.start, trip.end)),
+                                    stringResource(R.string.count_moments, count),
+                                ).joinToString(" · "),
+                            )
+                        },
+                        leadingContent = cover?.let { { Thumbnail(it, container.mediaUrls, size = 48) } },
+                        trailingContent = { Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null) },
+                        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                    )
+                }
+            }
+            FilledTonalButton(onClick = onMoment, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.action_open_moment))
+            }
+        }
+    }
+}
+
+/**
+ * White status and navigation icons over the black while the viewer is open, and the
+ * bars themselves hidden when everything but the photo is; a swipe from the edge shows
+ * them for a moment.
+ */
+@Composable
+private fun ViewerSystemBars(hidden: Boolean) {
+    val view = LocalView.current
+    val window = (view.context as? Activity)?.window ?: return
+    val controller = remember(window, view) { WindowCompat.getInsetsController(window, view) }
+
+    DisposableEffect(controller) {
+        val status = controller.isAppearanceLightStatusBars
+        val navigation = controller.isAppearanceLightNavigationBars
+        controller.isAppearanceLightStatusBars = false
+        controller.isAppearanceLightNavigationBars = false
+        controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        onDispose {
+            controller.isAppearanceLightStatusBars = status
+            controller.isAppearanceLightNavigationBars = navigation
+            controller.show(WindowInsetsCompat.Type.systemBars())
+        }
+    }
+
+    LaunchedEffect(hidden) {
+        if (hidden) controller.hide(WindowInsetsCompat.Type.systemBars()) else controller.show(WindowInsetsCompat.Type.systemBars())
+    }
+}
