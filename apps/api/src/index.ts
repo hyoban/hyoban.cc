@@ -13,6 +13,7 @@ import {
   type Database,
 } from './database.ts'
 import { error, HttpError, json, readBody } from './http.ts'
+import { createRouteFetcher, fillRoutes, readTripRoutes } from './routes.ts'
 import {
   deleteMoment,
   publishMoment,
@@ -26,14 +27,17 @@ import {
 
 // The API. Reads are public except drafts, which only the owner sees, and the full
 // export; writes are the owner's. Records come back exactly as stored, in the shape
-// @hyoban/data-spec defines. A write the site shows calls DEPLOY_HOOK_URL, when there is
-// one, so the site builds again.
+// @hyoban/data-spec defines. A write the site shows first brings the trips' routes up to
+// date, when MAPBOX_TOKEN is set, then calls DEPLOY_HOOK_URL, when there is one, so the
+// site builds again with them.
 
 export interface Env {
   DB: Database
   BUCKET: Bucket
   API_TOKENS?: string
   DEPLOY_HOOK_URL?: string
+  /** For the trips' driving routes, from Mapbox's Directions. */
+  MAPBOX_TOKEN?: string
 }
 
 interface ExecutionContext {
@@ -98,17 +102,8 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
   const write = async <T>(run: (context: WriteContext) => Promise<WriteResult<T>>) => {
     const result = await run({ db, bucket: env.BUCKET, now: timestamp() })
 
-    if (result.changesSite && env.DEPLOY_HOOK_URL) {
-      const deploy = fetch(env.DEPLOY_HOOK_URL, { method: 'POST' }).then(
-        async (response) => {
-          if (!response.ok) {
-            console.error('The deploy hook answered', response.status, await response.text())
-          }
-        },
-        (caught) => console.error('The deploy hook failed', caught),
-      )
-
-      executionContext?.waitUntil(deploy)
+    if (result.changesSite) {
+      executionContext?.waitUntil(afterSiteChange(env))
     }
 
     return result.status === 204
@@ -232,6 +227,30 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
           return notAllowed('GET, PUT')
       }
     }
+    case 'routes': {
+      if (key !== undefined) {
+        return notFound()
+      }
+
+      switch (method) {
+        case 'GET':
+          return json({ revision: await readRevision(db), trips: await readTripRoutes(db) })
+        case 'POST': {
+          if (!env.MAPBOX_TOKEN) {
+            return error(503, 'MAPBOX_TOKEN is not set.')
+          }
+
+          const result = await fillRoutes(
+            { db, bucket: env.BUCKET, now: timestamp() },
+            createRouteFetcher(env.MAPBOX_TOKEN),
+          )
+
+          return json(result)
+        }
+        default:
+          return notAllowed('GET, POST')
+      }
+    }
     case 'export': {
       if (key !== undefined) {
         return notFound()
@@ -247,6 +266,39 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
     }
     default:
       return notFound()
+  }
+}
+
+/**
+ * After a write the site shows: the trips' routes first, so the build the deploy hook
+ * starts has them, then the hook. Neither failing undoes the write.
+ */
+async function afterSiteChange(env: Env) {
+  if (env.MAPBOX_TOKEN) {
+    try {
+      const result = await fillRoutes(
+        { db: env.DB, bucket: env.BUCKET, now: timestamp() },
+        createRouteFetcher(env.MAPBOX_TOKEN),
+      )
+
+      if (result.fetched || result.removed || result.failed || result.left) {
+        console.log('Routes', result)
+      }
+    } catch (caught) {
+      console.error('Bringing the routes up to date failed', caught)
+    }
+  }
+
+  if (env.DEPLOY_HOOK_URL) {
+    try {
+      const response = await fetch(env.DEPLOY_HOOK_URL, { method: 'POST' })
+
+      if (!response.ok) {
+        console.error('The deploy hook answered', response.status, await response.text())
+      }
+    } catch (caught) {
+      console.error('The deploy hook failed', caught)
+    }
   }
 }
 

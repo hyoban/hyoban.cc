@@ -1,5 +1,6 @@
 // The colours the map and the player draw with: the page's theme, read from its
-// custom properties, and a colour for each year places were visited in.
+// custom properties in the browser (dom-theme.ts), and a colour for each year places
+// were visited in.
 
 export type Theme = Readonly<{
   /** Lines and dots: the text colour. */
@@ -10,21 +11,6 @@ export type Theme = Readonly<{
   /** The background. */
   paper: string
 }>
-
-const FALLBACK: Theme = { border: '#e9e9e7', ink: '#21201c', muted: '#73736c', paper: '#fdfdfc' }
-
-/** Reads `--color-tx`, `--color-bg`, `--color-tx-3` and `--color-border` off an element. */
-export function readTheme(element: Element): Theme {
-  const style = getComputedStyle(element)
-  const read = (name: string, fallback: string) => style.getPropertyValue(name).trim() || fallback
-
-  return {
-    border: read('--color-border', FALLBACK.border),
-    ink: read('--color-tx', FALLBACK.ink),
-    muted: read('--color-tx-3', FALLBACK.muted),
-    paper: read('--color-bg', FALLBACK.paper),
-  }
-}
 
 export const YEAR_COLORS = [
   '#3b82f6',

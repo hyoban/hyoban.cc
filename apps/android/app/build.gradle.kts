@@ -22,8 +22,6 @@ android {
         // Where the records come from, and the origin their photos and videos are served from.
         buildConfigField("String", "API_URL", "\"https://hyoban-cc-api.hyoban.workers.dev\"")
         buildConfigField("String", "ASSET_ORIGIN", "\"https://image.hyoban.cc\"")
-        // The site, which publishes each trip's route along the roads with its playback.
-        buildConfigField("String", "SITE_URL", "\"https://hyoban.cc\"")
     }
 
     // A release keystore from local.properties (`release.storeFile`, `release.storePassword`,

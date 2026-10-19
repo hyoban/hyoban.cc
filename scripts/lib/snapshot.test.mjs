@@ -16,6 +16,7 @@ const snapshot = {
   places: readJson('places.json'),
   trips: listJsonFiles('trips').map((file) => readJson(file)),
   moments: listJsonFiles('moments').map((file) => readJson(file)),
+  routes: readJson('routes.json'),
 }
 
 async function copyOfData() {

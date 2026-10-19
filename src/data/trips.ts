@@ -4,8 +4,7 @@ import { readTripRecords } from './store.ts'
 
 // Each trip in data/trips plays back every located Moment between `start` and `end`
 // (inclusive) at /trip/<id>/. `waypoints` add places the route passed through without a
-// Moment. After adding a trip or moving a place, run `pnpm trips:routes` so the route
-// follows roads.
+// Moment. The API fetches each leg's route after a write, so the route follows roads.
 
 const records = readTripRecords().sort((first, second) => second.start.localeCompare(first.start))
 

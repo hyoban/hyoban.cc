@@ -83,7 +83,30 @@ export async function pushData(
 
   await executeSql(sql, { label: 'push', remote, dryRun })
 
-  return { moments: momentRecords.length, trips: tripRecords.length, places: placeIds.size }
+  // Written past the Worker, so the routes the new legs need are fetched now.
+  const routes = remote && !dryRun ? await fillRoutes(root) : undefined
+
+  return { moments: momentRecords.length, trips: tripRecords.length, places: placeIds.size, routes }
+}
+
+/** Has the API fetch the routes the trips are missing, and returns what it did. */
+async function fillRoutes(root) {
+  const response = await fetch(new URL('/v1/routes', apiUrl()), {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${apiToken(root)}` },
+    signal: AbortSignal.timeout(60_000),
+  })
+
+  if (!response.ok) {
+    console.warn(
+      `The API couldn't bring the routes up to date: ${response.status} ${await response.text()}`,
+    )
+    return undefined
+  }
+
+  return /** @type {{ fetched: number, removed: number, failed: number, left: number }} */ (
+    await response.json()
+  )
 }
 
 function apiUrl() {

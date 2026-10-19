@@ -23,6 +23,12 @@ console.log(
   `${options.dryRun ? 'Would push' : 'Pushed'} ${pushed.moments} Moment(s), ${pushed.trips} trip(s) and ${pushed.places} place(s) ${options.local ? 'locally' : 'to the API'}.`,
 )
 
+if (pushed.routes) {
+  console.log(
+    `Routes: ${pushed.routes.fetched} fetched, ${pushed.routes.removed} removed, ${pushed.routes.failed} failed, ${pushed.routes.left} left for next time.`,
+  )
+}
+
 function parseArguments(argv) {
   const options = { moments: [], trips: [], places: [], local: false, dryRun: false }
 

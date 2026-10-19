@@ -35,8 +35,8 @@ export type TripDefinition = Readonly<{
 export type TripLocation = MapLocation & { id: string }
 
 /**
- * A driving route between two places, or a rail line for a train leg, cached in
- * src/data/trip-routes.json.
+ * A driving route between two places, or a rail line for a train leg, fetched once and
+ * kept (hyoban.cc keeps them in its API).
  */
 export type TripRoute = Readonly<{
   coordinates: readonly (readonly [number, number])[]

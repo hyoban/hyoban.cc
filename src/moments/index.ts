@@ -12,7 +12,7 @@ import { getAssetUrl, getFrameSources, getResizedSources } from '@/asset-url'
 import { locations, type LocationId } from '@/data/locations'
 import type { MomentMedia, PublishedImage, PublishedVideo } from '@hyoban/data-spec'
 import { trips } from '@/data/trips'
-import tripRoutes from '@/data/trip-routes.json'
+import { readRoutes } from '@/data/store'
 
 const calendarDateFormatter = new Intl.DateTimeFormat('en-CA', {
   day: '2-digit',
@@ -126,13 +126,15 @@ export type TripPathProps = Awaited<ReturnType<typeof getTripPaths>>[number]['pr
 /** A trip with its Moments and route, as `getTrips` builds it. */
 export type MomentTrip = ReturnType<typeof getTrips>[number]
 
+/** The legs' routes the API fetched, read once; the spec's optional `duration` is only ever left out. */
+const tripRoutes = readRoutes() as Readonly<Record<string, TripRoute>>
+
 export function getTrips(moments: Moment[]) {
   return trips
     .map((trip) =>
       buildTrip(trip, moments, {
         resolveLocation: (id) => ({ id, ...getLocation(locations, id as LocationId) }),
-        // JSON coordinates are inferred as number[][]; the routes script writes pairs.
-        routes: tripRoutes as unknown as Record<string, TripRoute>,
+        routes: tripRoutes,
       }),
     )
     .filter((trip) => trip.stops.length > 0)

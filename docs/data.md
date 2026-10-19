@@ -9,7 +9,9 @@ through the API rather than here. `devices.json` is the exception: it lives only
 ```
 data/
 ├─ manifest.json           schemaVersion, generator, updatedAt
-├─ places.json             places by id: name, WGS-84 coordinates, an optional note
+├─ places.json             places by id: name, WGS-84 coordinates, an optional note,
+│                          and for a train's end the station it leaves from
+├─ routes.json             each trip leg's route by its key, as the API fetched it
 ├─ trips/<id>.json         a trip: dates, waypoints, straight legs, covers by uid
 ├─ moments/YYYY/MM/<ulid>.json
 └─ schema/*.schema.json    generated from the spec by `pnpm data:schema`
@@ -55,8 +57,9 @@ changes, which the refresh would overwrite), unpacks the bundle under
    name, and `renamedPlaces` in its manifest. Share it back to the app.
 
 Nothing is committed. Afterwards, write the alt texts the command lists, run
-`pnpm trips:routes` and `pnpm trips:weather`, then `pnpm test`, `pnpm check` and
-`pnpm build`, and push the records again with the `pnpm data:push` line it prints.
+`pnpm trips:weather`, then `pnpm test`, `pnpm check` and `pnpm build`, and push the
+records again with the `pnpm data:push` line it prints; the API then fetches the
+routes the new legs need.
 `--dry-run` only reports the place matching, without refreshing or writing anything.
 
 The rules for places, ids and file names are `@hyoban/data-spec/publish`, which the

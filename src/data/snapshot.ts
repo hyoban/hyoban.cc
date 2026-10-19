@@ -14,6 +14,8 @@ export interface Snapshot {
   places: Record<string, unknown>
   trips: { id: string }[]
   moments: { uid: string; occurredAt: string }[]
+  /** Each trip leg's route by its key; missing from an API that doesn't keep them yet. */
+  routes?: Record<string, unknown>
 }
 
 export async function fetchSnapshot(url: string, token: string): Promise<Snapshot> {
@@ -39,6 +41,7 @@ export async function writeSnapshot(snapshot: Snapshot, root: string) {
   const files = new Map<string, unknown>([
     ['manifest.json', snapshot.manifest],
     ['places.json', snapshot.places],
+    ...(snapshot.routes ? [['routes.json', snapshot.routes] as [string, unknown]] : []),
     ...snapshot.trips.map((trip): [string, unknown] => [`trips/${trip.id}.json`, trip]),
     ...snapshot.moments.map((moment): [string, unknown] => [getMomentFile(moment), moment]),
   ])
@@ -46,7 +49,10 @@ export async function writeSnapshot(snapshot: Snapshot, root: string) {
 
   for (const [file, record] of files) {
     const path = join(root, file)
-    const contents = `${JSON.stringify(record, null, 2)}\n`
+    const contents =
+      file === 'routes.json'
+        ? formatRoutes(record as Record<string, unknown>)
+        : `${JSON.stringify(record, null, 2)}\n`
 
     if ((await readFile(path, 'utf8').catch(() => null)) !== contents) {
       await mkdir(dirname(path), { recursive: true })
@@ -63,4 +69,13 @@ export async function writeSnapshot(snapshot: Snapshot, root: string) {
   }
 
   return changed
+}
+
+/** One route per line, by key, keeps routes.json diffable without spreading every point out. */
+export function formatRoutes(routes: Record<string, unknown>) {
+  const entries = Object.keys(routes)
+    .sort()
+    .map((key) => `  ${JSON.stringify(key)}: ${JSON.stringify(routes[key])}`)
+
+  return entries.length > 0 ? `{\n${entries.join(',\n')}\n}\n` : '{}\n'
 }

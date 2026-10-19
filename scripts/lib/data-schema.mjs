@@ -6,6 +6,7 @@ import {
   manifestSchema,
   momentRecordSchema,
   placesSchema,
+  routesSchema,
   tripRecordSchema,
 } from '@hyoban/data-spec'
 
@@ -16,6 +17,7 @@ export function getDataSchemas() {
     manifest: manifestSchema,
     moment: momentRecordSchema,
     places: placesSchema,
+    routes: routesSchema,
     trip: tripRecordSchema,
   }
 }

@@ -29,6 +29,8 @@ export interface Snapshot {
   places: Record<string, unknown>
   trips: unknown[]
   moments: unknown[]
+  /** Each trip leg's route by its key, as `data/routes.json` keeps them. */
+  routes: Record<string, unknown>
 }
 
 export interface MomentChanges {
@@ -130,6 +132,15 @@ export async function readTrip(db: Database, id: string) {
   return row && parseRecord(row)
 }
 
+/** Every leg's route the database has, by its key. */
+export async function readRoutes(db: Database) {
+  const { results } = await db
+    .prepare(`SELECT key, record FROM routes WHERE deleted_at IS NULL ORDER BY key`)
+    .all<RecordRow & { key: string }>()
+
+  return Object.fromEntries(results.map((row) => [row.key, parseRecord(row)]))
+}
+
 /** Everything, drafts included, in the shape `data/` keeps it. */
 export async function readSnapshot(db: Database): Promise<Snapshot> {
   const revision = await readRevision(db)
@@ -146,6 +157,7 @@ export async function readSnapshot(db: Database): Promise<Snapshot> {
     places: await readPlaces(db),
     trips: await readTrips(db),
     moments: moments.map(parseRecord),
+    routes: await readRoutes(db),
   }
 }
 

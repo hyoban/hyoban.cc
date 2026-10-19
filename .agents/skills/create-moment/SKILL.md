@@ -93,12 +93,12 @@ and regions keep an approximate centre.
 - Some older entries in `data/places.json` were stored in GCJ-02. When a
   point looks a few hundred metres off, compare it with AMap's raw and converted
   coordinates: if it sits near the raw one, convert it.
-- Trip routes are cached by coordinates. After moving a place or locating a
-  Moment inside a trip, run `pnpm trips:routes` and `pnpm trips:weather`. If the
-  new place now ends a train, plane, or ferry leg, update that trip's
-  `straightLegs` in `data/trips/<id>.json`, or the leg turns into a drive; a new
-  train endpoint also needs a station in `STATIONS` in
-  `scripts/generate-trip-routes.mjs`.
+- Trip routes are kept by coordinates in the API, which fetches the missing ones
+  after each write and after `pnpm data:push`. After moving a place or locating a
+  Moment inside a trip, run `pnpm trips:weather`. If the new place now ends a
+  train, plane, or ferry leg, update that trip's `straightLegs` in
+  `data/trips/<id>.json`, or the leg turns into a drive; a new train endpoint
+  also needs its `station` in `data/places.json`.
 - Changing an existing Moment's record, even only its `places`, makes CI
   require non-empty alt text on its visible media, so describe those images too.
 

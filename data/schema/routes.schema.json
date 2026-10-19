@@ -1,0 +1,45 @@
+{
+  "$id": "https://hyoban.cc/data/schema/v1/routes.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "propertyNames": {
+    "type": "string",
+    "minLength": 1
+  },
+  "additionalProperties": {
+    "type": "object",
+    "properties": {
+      "coordinates": {
+        "minItems": 2,
+        "type": "array",
+        "items": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "items": false,
+          "minItems": 2,
+          "maxItems": 2
+        }
+      },
+      "distance": {
+        "type": "number",
+        "minimum": 0
+      },
+      "duration": {
+        "type": "number",
+        "minimum": 0
+      }
+    },
+    "required": [
+      "coordinates",
+      "distance"
+    ],
+    "additionalProperties": {}
+  }
+}

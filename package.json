@@ -20,7 +20,6 @@
     "moments:variants": "node scripts/generate-moment-variants.mjs",
     "posts:variants": "node scripts/generate-post-variants.mjs",
     "trips:candidates": "node scripts/find-trip-candidates.mjs",
-    "trips:routes": "node scripts/generate-trip-routes.mjs",
     "trips:weather": "node scripts/generate-trip-weather.mjs",
     "test": "vp test",
     "prepare": "vp config"
