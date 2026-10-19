@@ -12,7 +12,7 @@ import {
   readPlaces,
   readTripRecords,
 } from '../../src/data/store.ts'
-import { planPlaces, publishBundle, readBundle, writeReceipt } from './publish-data.mjs'
+import { getPlaceId, planPlaces, publishBundle, readBundle, writeReceipt } from './publish-data.mjs'
 import { ulid } from './ulid.mjs'
 
 const fixture = fileURLToPath(new URL('../fixtures/bundle/', import.meta.url))
@@ -90,6 +90,28 @@ test("matches the bundle's places to the repository's by distance or name", () =
   assert.deepEqual(Object.keys(plan.places), ['nanjing', 'yantai'])
   assert.deepEqual(plan.places.nanjing, nanjing)
   assert.equal(plan.conflicts.length, 1)
+})
+
+test('names a place the app made provisionally by its pinyin', () => {
+  assert.equal(getPlaceId('翡翠华府'), 'fei-cui-hua-fu')
+  assert.equal(getPlaceId('烟台港 2号'), 'yan-tai-gang-2-hao')
+  assert.equal(getPlaceId('Yantai Port'), 'yantai-port')
+  assert.equal(getPlaceId('南京', { nanjing: nanjing, 'nan-jing': nanjing }), 'nan-jing-2')
+  assert.equal(getPlaceId('…'), 'place')
+
+  const plan = planPlaces(
+    {
+      'p-01m4rdsvhxtd80k6rsqxetn4rc': { name: '翡翠华府', latitude: 31.2829, longitude: 117.9176 },
+      'p-01m4rdsvhxtd80k6rsqxetn4rd': { name: '南京', latitude: 32.0607, longitude: 118.7972 },
+    },
+    { nanjing },
+  )
+
+  assert.deepEqual(plan.renamedPlaces, {
+    'p-01m4rdsvhxtd80k6rsqxetn4rc': 'fei-cui-hua-fu',
+    'p-01m4rdsvhxtd80k6rsqxetn4rd': 'nanjing',
+  })
+  assert.deepEqual(Object.keys(plan.places), ['fei-cui-hua-fu', 'nanjing'])
 })
 
 test("publishes a bundle: renames places, assigns ids and orders, prepares media, skips what it can't", async () => {

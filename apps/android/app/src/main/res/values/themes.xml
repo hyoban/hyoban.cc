@@ -1,0 +1,6 @@
+<resources>
+    <!-- The window's theme before Compose draws; everything visible is themed in Compose. -->
+    <style name="Theme.Moments" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+</resources>

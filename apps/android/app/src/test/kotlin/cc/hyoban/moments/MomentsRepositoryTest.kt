@@ -1,0 +1,128 @@
+package cc.hyoban.moments
+
+import cc.hyoban.moments.data.api.MomentChanges
+import cc.hyoban.moments.data.api.MomentsSource
+import cc.hyoban.moments.data.api.PlacesResponse
+import cc.hyoban.moments.data.api.TripsResponse
+import cc.hyoban.moments.data.spec.MomentRecord
+import cc.hyoban.moments.data.spec.Place
+import cc.hyoban.moments.data.spec.PublishedMoment
+import cc.hyoban.moments.data.store.DataStore
+import cc.hyoban.moments.data.store.MomentsRepository
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
+import java.io.File
+import java.nio.file.Files
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+
+/** The copy on the phone follows the API's change feed, page by page, and survives a restart. */
+class MomentsRepositoryTest {
+    /** The API's feed, as a list of changes each at its own revision. */
+    private class FakeApi : MomentsSource {
+        val changes = mutableListOf<Pair<Long, Any>>()
+        var revision = 0L
+        var places = mapOf("nanjing" to Place("南京", 32.06, 118.79))
+        var calls = 0
+
+        fun put(moment: MomentRecord) = changes.add(++revision to moment)
+        fun delete(uid: String) = changes.add(++revision to uid)
+
+        override suspend fun moments(since: Long, cursor: String?): MomentChanges {
+            calls++
+            val after = cursor?.toLong() ?: since
+            val page = changes.filter { it.first > after }.take(2)
+            val more = changes.count { it.first > after } > 2
+            return MomentChanges(
+                revision = revision,
+                moments = page.mapNotNull { it.second as? MomentRecord },
+                deleted = page.mapNotNull { it.second as? String },
+                next = if (more) page.last().first.toString() else null,
+            )
+        }
+
+        override suspend fun places() = PlacesResponse(revision, places)
+
+        override suspend fun trips() = TripsResponse(revision, emptyList())
+    }
+
+    private val directory: File = Files.createTempDirectory("moments-cache").toFile()
+    private val api = FakeApi()
+
+    private fun repository() = MomentsRepository(DataStore(directory), api, Dispatchers.Unconfined)
+
+    @Test
+    fun `the first refresh reads every page, later ones only what changed`() = runBlocking {
+        listOf("A", "B", "C", "D", "E").forEach { api.put(moment(it, "2026-10-0${it[0] - 'A' + 1}")) }
+        val repository = repository()
+
+        repository.load()
+        assertTrue(repository.refresh().isSuccess)
+        assertEquals(listOf("E", "D", "C", "B", "A"), repository.moments.value.map { it.uid })
+
+        api.calls = 0
+        api.delete("B")
+        api.put(moment("C", "2026-11-20", text = "moved to another month"))
+        api.put(moment("F", "2026-10-09", hidden = true))
+        api.put(moment("G", "2026-10-10", published = false))
+        repository.refresh()
+
+        assertEquals(listOf("C", "E", "D", "A"), repository.moments.value.map { it.uid })
+        assertEquals("moved to another month", repository.moment("C")?.text)
+        assertEquals(2, api.calls, "four changes come in two pages")
+        assertEquals(
+            listOf("moments/2026/10/A.json", "moments/2026/10/D.json", "moments/2026/10/E.json", "moments/2026/10/F.json", "moments/2026/10/G.json", "moments/2026/11/C.json"),
+            File(directory, "moments").walkTopDown().filter { it.isFile }.map { it.relativeTo(directory).path }.sorted().toList(),
+            "a removed Moment's file goes, and a moved one leaves its old month",
+        )
+
+        val restarted = repository()
+        restarted.load()
+        assertEquals(listOf("C", "E", "D", "A"), restarted.moments.value.map { it.uid })
+        assertEquals("南京", restarted.places.value["nanjing"]?.name)
+    }
+
+    @Test
+    fun `a database restored to an earlier revision is read again from the start`() = runBlocking {
+        listOf("A", "B", "C").forEach { api.put(moment(it, "2026-10-01")) }
+        val repository = repository()
+        repository.load()
+        repository.refresh()
+
+        api.changes.clear()
+        api.revision = 0
+        api.put(moment("Z", "2026-10-05"))
+        repository.refresh()
+
+        assertEquals(listOf("Z"), repository.moments.value.map { it.uid })
+    }
+
+    @Test
+    fun `a failed refresh keeps the copy and says why`() = runBlocking {
+        api.put(moment("A", "2026-10-01"))
+        val repository = repository()
+        repository.load()
+        repository.refresh()
+
+        val failing = MomentsRepository(DataStore(directory), object : MomentsSource by api {
+            override suspend fun moments(since: Long, cursor: String?): MomentChanges = error("offline")
+        }, Dispatchers.Unconfined)
+        failing.load()
+
+        assertTrue(failing.refresh().isFailure)
+        assertEquals("offline", failing.error.value)
+        assertEquals(listOf("A"), failing.moments.value.map { it.uid })
+    }
+
+    private fun moment(uid: String, day: String, text: String = "", hidden: Boolean = false, published: Boolean = true) =
+        MomentRecord(
+            uid = uid,
+            occurredAt = day,
+            text = text,
+            hidden = hidden,
+            published = if (published) PublishedMoment("${day.replace('-', '/')}-01-$uid".lowercase(), uid.lowercase(), 1, "${day}T00:00:00Z") else null,
+            createdAt = "${day}T00:00:00Z",
+            updatedAt = "${day}T00:00:00Z",
+        )
+}

@@ -37,3 +37,16 @@ jobs:
       - name: Audit remote Moment assets
         if: github.event_name == 'schedule'
         run: pnpm moments:audit --remote
+  android:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/android
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v5
+      - run: ./gradlew :app:testDebugUnitTest :app:assembleDebug --no-daemon
