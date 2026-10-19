@@ -87,9 +87,6 @@ importers:
       '@hyoban/data-spec':
         specifier: workspace:*
         version: link:../../packages/data-spec
-      '@hyoban/trip-map':
-        specifier: workspace:*
-        version: link:../../packages/trip-map
     devDependencies:
       wrangler:
         specifier: ^4.149.0

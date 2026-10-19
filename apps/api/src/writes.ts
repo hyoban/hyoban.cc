@@ -11,7 +11,13 @@ import {
 import { getUploadKey, type Bucket, type UploadPart } from './bucket.ts'
 import type { Database, Statement } from './database.ts'
 import { HttpError, validate } from './http.ts'
-import { getExtension, getPublishedId, getSlug, getStem, matchPlace } from './publish.ts'
+import {
+  getExtension,
+  getPublishedId,
+  getSlug,
+  getStem,
+  matchPlace,
+} from '@hyoban/data-spec/publish'
 import {
   BUMP_REVISION,
   REVISION,

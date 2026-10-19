@@ -1,6 +1,4 @@
 {
-  "extends": "../trip-map/tsconfig.json",
-  "compilerOptions": {
-    "lib": ["ESNext"]
-  }
+  "extends": "../../tsconfig.base.json",
+  "include": ["src"]
 }
