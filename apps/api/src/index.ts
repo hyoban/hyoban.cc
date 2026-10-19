@@ -1,4 +1,5 @@
 import { authorize } from './auth.ts'
+import type { Bucket, UploadPart } from './bucket.ts'
 import {
   parseCursor,
   readMoment,
@@ -11,14 +12,32 @@ import {
   readTrips,
   type Database,
 } from './database.ts'
+import { error, HttpError, json, readBody } from './http.ts'
+import {
+  deleteMoment,
+  publishMoment,
+  saveMoment,
+  savePlace,
+  saveTrip,
+  uploadMedia,
+  type WriteContext,
+  type WriteResult,
+} from './writes.ts'
 
-// The read side of the API. Everything is public except drafts, which only the owner
-// sees, and the full export. Records come back exactly as stored, in the shape
-// @hyoban/data-spec defines.
+// The API. Reads are public except drafts, which only the owner sees, and the full
+// export; writes are the owner's. Records come back exactly as stored, in the shape
+// @hyoban/data-spec defines. A write the site shows calls DEPLOY_HOOK_URL, when there is
+// one, so the site builds again.
 
 export interface Env {
   DB: Database
+  BUCKET: Bucket
   API_TOKENS?: string
+  DEPLOY_HOOK_URL?: string
+}
+
+interface ExecutionContext {
+  waitUntil(promise: Promise<unknown>): void
 }
 
 const DEFAULT_LIMIT = 100
@@ -30,11 +49,25 @@ export default {
   fetch: handle,
 }
 
-export async function handle(request: Request, env: Env): Promise<Response> {
-  if (request.method !== 'GET') {
-    return error(405, 'Only GET is supported.', { Allow: 'GET' })
-  }
+export async function handle(
+  request: Request,
+  env: Env,
+  executionContext?: ExecutionContext,
+): Promise<Response> {
+  try {
+    return await route(request, env, executionContext)
+  } catch (caught) {
+    if (caught instanceof HttpError) {
+      return error(caught.status, caught.message, caught.headers)
+    }
 
+    console.error(caught)
+
+    return error(500, 'Something went wrong.')
+  }
+}
+
+async function route(request: Request, env: Env, executionContext?: ExecutionContext) {
   const access = await authorize(request, env.API_TOKENS)
 
   if (access === 'denied') {
@@ -42,21 +75,49 @@ export async function handle(request: Request, env: Env): Promise<Response> {
   }
 
   const url = new URL(request.url)
-  const [version, collection, key, ...rest] = url.pathname.split('/').filter(Boolean)
+  const segments = url.pathname.split('/').filter(Boolean)
+  const [version, collection, key, ...rest] = segments
   const owner = access === 'owner'
+  const method = request.method
   const db = env.DB
 
   if (version === undefined) {
-    return json({ name: 'hyoban.cc', revision: await readRevision(db) })
+    return method === 'GET'
+      ? json({ name: 'hyoban.cc', revision: await readRevision(db) })
+      : notAllowed('GET')
   }
 
-  if (version !== 'v1' || rest.length > 0) {
+  if (version !== 'v1') {
     return notFound()
+  }
+
+  if (method !== 'GET' && !owner) {
+    throw new HttpError(401, 'Writing needs a token.', { 'WWW-Authenticate': 'Bearer' })
+  }
+
+  const write = async <T>(run: (context: WriteContext) => Promise<WriteResult<T>>) => {
+    const result = await run({ db, bucket: env.BUCKET, now: timestamp() })
+
+    if (result.changesSite && env.DEPLOY_HOOK_URL) {
+      const deploy = fetch(env.DEPLOY_HOOK_URL, { method: 'POST' }).catch((caught) =>
+        console.error('The deploy hook failed', caught),
+      )
+
+      executionContext?.waitUntil(deploy)
+    }
+
+    return result.status === 204
+      ? new Response(null, { status: 204 })
+      : json(result.body, result.status)
   }
 
   switch (collection) {
     case 'moments': {
       if (key === undefined) {
+        if (method !== 'GET') {
+          return notAllowed('GET')
+        }
+
         const query = readFeedQuery(url.searchParams)
 
         return 'error' in query
@@ -64,25 +125,115 @@ export async function handle(request: Request, env: Env): Promise<Response> {
           : json(await readMomentChanges(db, { ...query, drafts: owner }))
       }
 
-      return ULID.test(key) ? found(await readMoment(db, key, { drafts: owner })) : notFound()
+      if (!ULID.test(key)) {
+        return notFound()
+      }
+
+      if (rest.length === 0) {
+        switch (method) {
+          case 'GET':
+            return found(await readMoment(db, key, { drafts: owner }))
+          case 'PUT': {
+            const body = await readBody(request)
+
+            return write((context) => saveMoment(context, key, body))
+          }
+          case 'DELETE':
+            return write((context) => deleteMoment(context, key))
+          default:
+            return notAllowed('GET, PUT, DELETE')
+        }
+      }
+
+      if (rest.length === 1 && rest[0] === 'publish') {
+        return method === 'POST'
+          ? write((context) => publishMoment(context, key))
+          : notAllowed('POST')
+      }
+
+      const [media, mediaUid, part, ...more] = rest
+
+      if (
+        media === 'media' &&
+        mediaUid &&
+        ULID.test(mediaUid) &&
+        (part === 'image' || part === 'video') &&
+        more.length === 0
+      ) {
+        return method === 'PUT'
+          ? write((context) =>
+              uploadMedia(context, request, {
+                momentUid: key,
+                mediaUid,
+                part: part satisfies UploadPart,
+              }),
+            )
+          : notAllowed('PUT')
+      }
+
+      return notFound()
     }
     case 'places': {
-      if (key === undefined) {
-        return json({ revision: await readRevision(db), places: await readPlaces(db) })
+      if (rest.length > 0) {
+        return notFound()
       }
 
-      return ID.test(key) ? found(await readPlace(db, key)) : notFound()
+      if (key === undefined) {
+        return method === 'GET'
+          ? json({ revision: await readRevision(db), places: await readPlaces(db) })
+          : notAllowed('GET')
+      }
+
+      if (!ID.test(key)) {
+        return notFound()
+      }
+
+      switch (method) {
+        case 'GET':
+          return found(await readPlace(db, key))
+        case 'PUT': {
+          const body = await readBody(request)
+
+          return write((context) => savePlace(context, key, body))
+        }
+        default:
+          return notAllowed('GET, PUT')
+      }
     }
     case 'trips': {
-      if (key === undefined) {
-        return json({ revision: await readRevision(db), trips: await readTrips(db) })
+      if (rest.length > 0) {
+        return notFound()
       }
 
-      return ID.test(key) ? found(await readTrip(db, key)) : notFound()
+      if (key === undefined) {
+        return method === 'GET'
+          ? json({ revision: await readRevision(db), trips: await readTrips(db) })
+          : notAllowed('GET')
+      }
+
+      if (!ID.test(key)) {
+        return notFound()
+      }
+
+      switch (method) {
+        case 'GET':
+          return found(await readTrip(db, key))
+        case 'PUT': {
+          const body = await readBody(request)
+
+          return write((context) => saveTrip(context, key, body))
+        }
+        default:
+          return notAllowed('GET, PUT')
+      }
     }
     case 'export': {
       if (key !== undefined) {
         return notFound()
+      }
+
+      if (method !== 'GET') {
+        return notAllowed('GET')
       }
 
       return owner
@@ -120,6 +271,11 @@ function readFeedQuery(params: URLSearchParams) {
   return { cursor: { rev: since + 1, uid: '' }, limit }
 }
 
+/** Now, to the second, as the records stamp times. */
+function timestamp() {
+  return new Date().toISOString().replace(/\.\d{3}Z$/, 'Z')
+}
+
 function found(record: unknown) {
   return record ? json(record) : notFound()
 }
@@ -128,10 +284,6 @@ function notFound() {
   return error(404, 'Not found.')
 }
 
-function error(status: number, message: string, headers: Record<string, string> = {}) {
-  return json({ error: message }, status, headers)
-}
-
-function json(body: unknown, status = 200, headers: Record<string, string> = {}) {
-  return Response.json(body, { status, headers })
+function notAllowed(allow: string) {
+  return error(405, `Use ${allow}.`, { Allow: allow })
 }

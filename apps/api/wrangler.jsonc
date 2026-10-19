@@ -12,6 +12,9 @@
       "migrations_dir": "migrations",
     },
   ],
-  // API_TOKENS, a comma-separated list of bearer tokens, is a secret:
-  // `wrangler secret put API_TOKENS`, and `.dev.vars` locally.
+  // The bucket image.hyoban.cc serves; uploads wait under uploads/ until they publish.
+  "r2_buckets": [{ "binding": "BUCKET", "bucket_name": "blog-images" }],
+  // Secrets, set with `wrangler secret put` and in `.dev.vars` locally: API_TOKENS, a
+  // comma-separated list of bearer tokens, and DEPLOY_HOOK_URL, which a write the site
+  // shows calls so the site builds again.
 }
