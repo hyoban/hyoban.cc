@@ -8,7 +8,7 @@ import {
 } from '@hyoban/trip-map'
 import type { CollectionEntry } from 'astro:content'
 import { getCollection } from 'astro:content'
-import { getAssetUrl } from '@/asset-url'
+import { getAssetUrl, getResizedSources } from '@/asset-url'
 import { locations, type LocationId } from '@/data/locations'
 import type { MomentMedia, PublishedImage, PublishedVideo } from '@hyoban/data-spec'
 import { trips } from '@/data/trips'
@@ -230,8 +230,18 @@ function resolveMedia(momentUid: string, media: MomentMedia): ResolvedMomentMedi
   }
 }
 
-/** An image's sources for `srcset`: its variants, and the original when it isn't oversized. */
+/**
+ * An image's sources for `srcset`: its variants, and the original when it isn't
+ * oversized; or, for an original the API kept, its sizes from Cloudflare Images, the
+ * largest of them standing in for the original.
+ */
 function resolveRemoteImage(image: PublishedImage): RemoteImage {
+  if (image.original) {
+    const sources = getResizedSources(image)
+
+    return { height: image.height, sources, src: sources.at(-1)!.src, width: image.width }
+  }
+
   const sources = [
     ...image.variants.map((variant) => ({ src: getAssetUrl(variant.key), width: variant.width })),
     ...(image.width <= 1920 ? [{ src: getAssetUrl(image.key), width: image.width }] : []),

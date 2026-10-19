@@ -168,6 +168,9 @@
                       ],
                       "additionalProperties": {}
                     }
+                  },
+                  "original": {
+                    "type": "boolean"
                   }
                 },
                 "required": [
@@ -318,6 +321,9 @@
                       ],
                       "additionalProperties": {}
                     }
+                  },
+                  "original": {
+                    "type": "boolean"
                   },
                   "video": {
                     "type": "object",
@@ -520,6 +526,9 @@
                           ],
                           "additionalProperties": {}
                         }
+                      },
+                      "original": {
+                        "type": "boolean"
                       }
                     },
                     "required": [
