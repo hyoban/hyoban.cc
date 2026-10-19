@@ -46,7 +46,7 @@ function formatShortDate(dateKey: string) {
     days.length > 0
       ? (
           <>
-            <nav class="calendar-agenda__index sticky top-[var(--agenda-top)] z-[9] mx-auto mt-3 flex max-w-[42rem] gap-2 bg-bg overflow-x-auto border-y border-border py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-label="本月有记录的日期">
+            <nav class="calendar-agenda__index sticky top-[var(--agenda-top)] z-[9] mx-auto mt-3 flex max-w-[42rem] justify-center-safe gap-2 bg-bg overflow-x-auto border-y border-border py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-label="本月有记录的日期">
               {days.map(day => (
                 <button
                   type="button"
