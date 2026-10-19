@@ -61,7 +61,7 @@ fun MomentCard(
                 moment.media,
                 urls,
                 onOpen = onOpenMedia,
-                modifier = Modifier.padding(4.dp).clip(MaterialTheme.shapes.small),
+                // To the card's edges, its top corners rounding them.
             )
         }
         Column(
