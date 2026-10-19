@@ -40,8 +40,6 @@ pubDate: '2025-01-01T03:12:15.412Z'
 如我喜欢的一句话所说，Don’t do what you should do, do you want.
 （这是电视剧 Silicon Valley 中 Russ Hanneman 说的，他人虽然不靠谱，但这话还是很对的）
 
----
-
 从九月开始我就加入了 RSS3，三个月后顺利的转正。
 
 > 我是怎么找到这样一份理想自由的工作的？
@@ -94,8 +92,6 @@ pubDate: '2025-01-01T03:12:15.412Z'
 
 今年我也收到了一些人的赞助，非常感谢 [cuikaipeng](https://github.com/cuikaipeng) [Hakadao](https://afdian.com/a/Hakadao) [emiyaaaaa](https://afdian.com/a/emiyaaaaa) 对我的赞助，我会将这笔钱作为我来年赞助预算的一部分。
 
----
-
 今年我成功让自己的一点小项目被别人使用，同时在 Follow 中做出了自己的一点贡献。
 
 > 有哪些项目想要分享一下？
@@ -137,8 +133,6 @@ pubDate: '2025-01-01T03:12:15.412Z'
 
 尽管还没有变成一个很主动、外向的人，但是今年也和一些之前在网上有交流的朋友线下见了面，逐渐克服了无法在陌生环境生存的问题，很感谢愿意和我互动玩耍的朋友们（[situ](https://x.com/situ200l) [cosine](https://x.com/_cosine_x) [雪谋](https://x.com/YukiHakarigoto) [Hakadao](https://x.com/Hakadaooo) [qiuqiu](https://x.com/0xqiuqiuu)）。
 也欢迎新的朋友来和我交流，我很乐意于认识新的朋友，有机会我们一起约饭玩耍。
-
----
 
 今年逐渐开始买一些之前没买过的数码装备
 
