@@ -27,6 +27,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -98,7 +99,7 @@ fun TripsScreen(container: AppContainer, onTrip: (String) -> Unit) {
 @Composable
 private fun TripCard(trip: TripRecord, covers: List<MomentMedia>, count: Int, urls: MediaUrls, onClick: () -> Unit, modifier: Modifier) {
     PressableCard(onClick = onClick, modifier = modifier.fillMaxWidth()) {
-        CoverCollage(covers, urls, Modifier.padding(4.dp).clip(MaterialTheme.shapes.small))
+        CoverCollage(covers, urls, Modifier)
         Column(Modifier.padding(start = Space.l, end = Space.l, top = Space.s, bottom = Space.l), verticalArrangement = Arrangement.spacedBy(Space.s + 2.dp)) {
             Text(trip.title, style = MaterialTheme.typography.titleLarge)
             TripPills(trip, count)
@@ -118,11 +119,12 @@ fun TripPills(trip: TripRecord, count: Int, places: Int? = null) {
     }
 }
 
-/** A trip's photos across a card: one large and two small, or as many as it has, with small corners inside. */
+/** A trip's photos across the top of a card: one large and two small, or as many as it has. */
 @Composable
 private fun CoverCollage(covers: List<MomentMedia>, urls: MediaUrls, modifier: Modifier) {
-    val gap = Arrangement.spacedBy(3.dp)
-    val tile = MaterialTheme.shapes.extraSmall
+    // Edge to edge across the top of the card, the photos meeting without gaps.
+    val gap = Arrangement.spacedBy(0.dp)
+    val tile = RectangleShape
 
     when (covers.size) {
         0 -> Unit

@@ -44,9 +44,8 @@ import coil3.request.ImageRequest
 import coil3.size.Precision
 import coil3.request.crossfade
 
-private val GAP = 3.dp
-
-/** A tile's corners inside a collage; the card rounds the collage's outer ones. */
+// The photos of a Moment meet edge to edge, as one picture across the card.
+private val GAP = 0.dp
 
 /**
  * A media item's still at the size it is drawn: a photo, a live photo's still, a video's
@@ -156,7 +155,7 @@ fun MediaMosaic(
     onOpen: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val TILE = MaterialTheme.shapes.extraSmall
+    val TILE = RectangleShape
     val tile = @Composable { index: Int, tileModifier: Modifier ->
         MediaTile(media[index], urls, tileModifier.clip(TILE), sharedKey = mediaKey(momentUid, media[index].uid), sharedShape = TILE, onClick = { onOpen(index) })
     }
