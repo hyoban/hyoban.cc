@@ -1,17 +1,15 @@
 package cc.hyoban.moments.data.api
 
+import cc.hyoban.moments.data.Http
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.spec.Spec
 import cc.hyoban.moments.data.spec.TripRecord
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import kotlinx.serialization.KSerializer
+import okhttp3.OkHttpClient
 import kotlinx.serialization.Serializable
-import java.io.IOException
-import java.net.HttpURLConnection
-import java.net.URL
 
 // The API's public reads (apps/api in the repository): the published Moments as a change
 // feed, and the places and trips whole. No token, so no drafts.
@@ -45,6 +43,7 @@ interface MomentsSource {
 
 class MomentsApi(
     private val baseUrl: String,
+    private val client: OkHttpClient = Http.client,
     private val io: CoroutineDispatcher = Dispatchers.IO,
 ) : MomentsSource {
     override suspend fun moments(since: Long, cursor: String?): MomentChanges =
@@ -54,19 +53,6 @@ class MomentsApi(
 
     override suspend fun trips(): TripsResponse = get("/v1/trips", TripsResponse.serializer())
 
-    private suspend fun <T> get(path: String, serializer: KSerializer<T>): T = withContext(io) {
-        val connection = URL(baseUrl + path).openConnection() as HttpURLConnection
-        try {
-            connection.connectTimeout = 15_000
-            connection.readTimeout = 30_000
-            connection.setRequestProperty("Accept", "application/json")
-            val status = connection.responseCode
-            if (status !in 200..299) {
-                throw IOException("GET $path answered $status")
-            }
-            Spec.json.decodeFromString(serializer, connection.inputStream.bufferedReader().readText())
-        } finally {
-            connection.disconnect()
-        }
-    }
+    private suspend fun <T> get(path: String, serializer: KSerializer<T>): T =
+        Spec.json.decodeFromString(serializer, Http.getText(baseUrl + path, client, io))
 }

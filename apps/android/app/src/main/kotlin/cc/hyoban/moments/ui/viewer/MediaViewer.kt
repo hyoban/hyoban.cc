@@ -9,9 +9,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.calculatePan
-import androidx.compose.foundation.gestures.calculateZoom
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -57,7 +54,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -65,12 +61,18 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
+import androidx.compose.ui.geometry.Size
+import me.saket.telephoto.zoomable.zoomable
+import me.saket.telephoto.zoomable.rememberZoomableState
+import me.saket.telephoto.zoomable.ZoomableContentLocation
+import me.saket.telephoto.zoomable.ZoomSpec
+import me.saket.telephoto.zoomable.DoubleClickToZoomListener
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
@@ -287,8 +289,10 @@ private fun ViewerLiveBadge(state: LiveMotionState, modifier: Modifier = Modifie
 }
 
 /**
- * A still that zooms with two fingers or a double tap and pans once zoomed. One finger
- * at full size is left to the pager and the swipes, so they still turn and close.
+ * A still that zooms with two fingers or a double tap and pans once zoomed, with
+ * telephoto's flings and edges. One finger at full size is left to the pager and the
+ * swipes, so they still turn and close. Zoomed in, it asks for a wider file, so the
+ * detail holds up.
  */
 @Composable
 private fun ZoomableStill(
@@ -300,76 +304,75 @@ private fun ZoomableStill(
     onHold: ((Boolean) -> Unit)? = null,
     overlay: @Composable () -> Unit = {},
 ) {
-    var scale by remember { mutableFloatStateOf(1f) }
-    var offset by remember { mutableStateOf(Offset.Zero) }
+    val zoom = rememberZoomableState(ZoomSpec(maxZoomFactor = MAX_ZOOM))
+    val scale = zoom.contentTransformation.scale.scaleX.takeIf { it.isFinite() } ?: 1f
+    val zoomed = (zoom.zoomFraction ?: 0f) > 0.01f
+    LaunchedEffect(zoomed) { onZoom(zoomed) }
     // The still the card drew, already in memory, stands in while the larger one loads.
     val drawn = remember(media.uid) { DrawnStills.of(media.uid) }
-    fun zoomTo(value: Float) {
-        scale = value
-        if (value == 1f) offset = Offset.Zero
-        onZoom(value > 1f)
-    }
+    val shape = shapeOf(media)
+    var held by remember { mutableStateOf(false) }
 
     // The screen takes the gestures; the photo, at its own shape and no larger than the
     // screen, is what grows out of the card's tile and back into it, so the tile's crop
     // opens out into the whole photo rather than jumping to it.
-    Box(
+    BoxWithConstraints(
         Modifier.fillMaxSize()
-            .pointerInput(Unit) {
-                var held = false
-                detectTapGestures(
-                    onDoubleTap = { zoomTo(if (scale > 1f) 1f else 2.5f) },
-                    onTap = { onTap() },
-                    onLongPress = {
-                        if (onHold != null && scale == 1f) {
+            // Held down, the finger's lifting ends what the hold started.
+            .pointerInput(onHold) {
+                awaitEachGesture {
+                    awaitFirstDown(requireUnconsumed = false)
+                    waitForUpOrCancellation()
+                    if (held) {
+                        held = false
+                        onHold?.invoke(false)
+                    }
+                }
+            }
+            .zoomable(
+                zoom,
+                onClick = { onTap() },
+                onLongClick = if (onHold != null) {
+                    {
+                        if (!zoomed) {
                             held = true
                             onHold(true)
                         }
-                    },
-                    onPress = {
-                        tryAwaitRelease()
-                        if (held) {
-                            held = false
-                            onHold?.invoke(false)
-                        }
-                    },
-                )
-            }
-            .pointerInput(Unit) {
-                awaitEachGesture {
-                    awaitFirstDown(requireUnconsumed = false)
-                    do {
-                        val event = awaitPointerEvent()
-                        if (event.changes.size > 1 || scale > 1f) {
-                            zoomTo((scale * event.calculateZoom()).coerceIn(1f, 5f))
-                            if (scale > 1f) offset += event.calculatePan()
-                            event.changes.forEach { if (it.positionChanged()) it.consume() }
-                        }
-                    } while (event.changes.any { it.pressed })
-                }
-            },
+                    }
+                } else {
+                    null
+                },
+                onDoubleClick = DoubleClickToZoomListener.cycle(DOUBLE_TAP_ZOOM),
+            ),
         contentAlignment = Alignment.Center,
     ) {
+        // Where the photo sits inside the screen, fitted and centred as it is laid out, so
+        // a pan stops at the photo's edges rather than the screen's.
+        val fitted = remember(shape, constraints) {
+            val width = constraints.maxWidth.toFloat()
+            val height = constraints.maxHeight.toFloat()
+            if (width / height > shape) Size(height * shape, height) else Size(width, width / shape)
+        }
+        LaunchedEffect(fitted) { zoom.setContentLocation(ZoomableContentLocation.scaledInsideAndCenterAligned(fitted)) }
+
         // The still and the motion over it zoom and pan as one.
-        Box(
-            Modifier.aspectRatio(shapeOf(media)).graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-                translationX = offset.x
-                translationY = offset.y
-            },
-        ) {
+        Box(Modifier.aspectRatio(shape)) {
             MediaStill(
                 media,
                 urls,
                 placeholder = Color.Transparent,
                 placeholderUrl = drawn,
+                detail = if (scale > 1.5f) scale else 1f,
                 modifier = Modifier.fillMaxSize().sharedMedia(mediaKey(momentUid, media.uid)),
             )
             overlay()
         }
     }
 }
+
+/** As far as a photo zooms, and how far a double tap takes it. */
+private const val MAX_ZOOM = 6f
+private const val DOUBLE_TAP_ZOOM = 2.5f
 
 /** What there is to know about the photo: when, where on a small map, the Moment's words, what it shows, the trip. */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
