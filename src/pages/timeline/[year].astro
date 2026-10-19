@@ -1,0 +1,12 @@
+---
+import TimelineView from '@/components/TimelineView.astro'
+import { getMoments, getTimelineYears } from '@/moments'
+
+export async function getStaticPaths() {
+  return getTimelineYears(await getMoments()).map(year => ({ params: { year } }))
+}
+
+const { year } = Astro.params
+---
+
+<TimelineView year={year} />
