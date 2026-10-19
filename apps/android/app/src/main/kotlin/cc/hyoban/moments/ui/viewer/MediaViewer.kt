@@ -2,14 +2,12 @@ package cc.hyoban.moments.ui.viewer
 
 import android.app.Activity
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -22,7 +20,6 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -53,11 +50,17 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.animation.core.animate
+import androidx.compose.foundation.gestures.rememberDraggableState
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.runtime.derivedStateOf
 import cc.hyoban.moments.ui.theme.fill
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
@@ -88,7 +91,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.WindowCompat
@@ -116,8 +118,6 @@ import cc.hyoban.moments.ui.format.formatDay
 import cc.hyoban.moments.ui.format.formatRange
 import cc.hyoban.moments.ui.format.formatTime
 import cc.hyoban.moments.ui.map.PlacesStill
-import kotlinx.coroutines.launch
-import kotlin.math.roundToInt
 
 /**
  * A Moment's media full screen on black. Swipe sideways between them, down to close and
@@ -133,6 +133,7 @@ fun MediaViewer(
     onPlace: (String) -> Unit,
     onTrip: (String) -> Unit,
     onBack: () -> Unit,
+    onShown: (String) -> Unit = {},
 ) {
     val moments by container.repository.moments.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
@@ -144,49 +145,48 @@ fun MediaViewer(
     var zoomed by remember { mutableStateOf(false) }
     var chrome by rememberSaveable { mutableStateOf(true) }
     var info by rememberSaveable { mutableStateOf(false) }
-    val drag = remember { Animatable(0f) }
-    val scope = rememberCoroutineScope()
+    // How far the photo has been dragged down, read only where it is drawn, so a drag
+    // moves pixels rather than rebuilding the screen every frame.
+    var drag by remember { mutableFloatStateOf(0f) }
+    val dragging by remember { derivedStateOf { drag != 0f } }
     val density = LocalDensity.current
     val closeAt = with(density) { 120.dp.toPx() }
     val infoAt = with(density) { 64.dp.toPx() }
     ViewerSystemBars(hidden = !chrome)
+    // The photo shown, for its tile to step aside while it is.
+    LaunchedEffect(pager.currentPage, media) { onShown(mediaKey(moment.uid, media[pager.currentPage.coerceIn(0, media.lastIndex)].uid)) }
 
     BoxWithConstraints(Modifier.fillMaxSize()) {
-        // How far a downward drag has gone toward closing: the photo shrinks a little and the black thins out.
-        val progress = (drag.value / (constraints.maxHeight / 3f)).coerceIn(0f, 1f)
+        val fadeOver = constraints.maxHeight / 3f
+        // How far a downward drag has gone toward closing: the photo shrinks a little and
+        // the black thins out to the page under the viewer.
+        fun progress() = (drag / fadeOver).coerceIn(0f, 1f)
 
-        Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 1f - progress)))
+        Box(Modifier.fillMaxSize().drawBehind { drawRect(Color.Black.copy(alpha = 1f - progress())) })
         HorizontalPager(
             pager,
             Modifier.fillMaxSize()
-                .offset { IntOffset(0, drag.value.coerceAtLeast(0f).roundToInt()) }
                 .graphicsLayer {
-                    val scale = 1f - 0.2f * progress
+                    val scale = 1f - 0.2f * progress()
+                    translationY = drag.coerceAtLeast(0f)
                     scaleX = scale
                     scaleY = scale
                 }
-                .pointerInput(zoomed) {
-                    if (zoomed) return@pointerInput
-                    detectVerticalDragGestures(
-                        onDragEnd = {
-                            scope.launch {
-                                when {
-                                    drag.value > closeAt -> onBack()
-                                    drag.value < -infoAt -> {
-                                        info = true
-                                        drag.animateTo(0f)
-                                    }
-                                    else -> drag.animateTo(0f)
-                                }
+                .draggable(
+                    orientation = Orientation.Vertical,
+                    enabled = !zoomed,
+                    state = rememberDraggableState { delta -> drag += delta },
+                    onDragStopped = { velocity ->
+                        when {
+                            drag > closeAt || velocity > 2000f -> onBack()
+                            drag < -infoAt -> {
+                                info = true
+                                animate(drag, 0f) { value, _ -> drag = value }
                             }
-                        },
-                        onDragCancel = { scope.launch { drag.animateTo(0f) } },
-                        onVerticalDrag = { change, amount ->
-                            change.consume()
-                            scope.launch { drag.snapTo(drag.value + amount) }
-                        },
-                    )
-                },
+                            else -> animate(drag, 0f, initialVelocity = velocity) { value, _ -> drag = value }
+                        }
+                    },
+                ),
             userScrollEnabled = !zoomed,
             key = { media[it].uid },
         ) { page ->
@@ -195,13 +195,13 @@ fun MediaViewer(
                 media = media[page],
                 urls = container.mediaUrls,
                 active = pager.currentPage == page,
-                chrome = chrome && progress == 0f,
+                chrome = chrome && !dragging,
                 onZoom = { zoomed = it },
                 onTap = { chrome = !chrome },
             )
         }
 
-        AnimatedVisibility(chrome && progress == 0f, enter = fadeIn(), exit = fadeOut()) {
+        AnimatedVisibility(chrome && !dragging, enter = fadeIn(), exit = fadeOut()) {
             Row(
                 Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.25f)).statusBarsPadding().padding(4.dp),
                 verticalAlignment = Alignment.CenterVertically,

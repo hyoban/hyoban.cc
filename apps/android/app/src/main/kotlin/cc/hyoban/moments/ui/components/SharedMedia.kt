@@ -22,6 +22,16 @@ val LocalSharedTransitionScope = staticCompositionLocalOf<SharedTransitionScope?
 /** The navigation transition of the screen a composable is on. */
 val LocalNavAnimatedScope = staticCompositionLocalOf<AnimatedVisibilityScope?> { null }
 
+/**
+ * The key of the photo the viewer shows over the pages, while it is open: the tile with
+ * that key steps out of sight, so the photo seems to have lifted out of it, and steps back
+ * as the viewer closes, so the photo flies back into it.
+ */
+val LocalViewerShownKey = staticCompositionLocalOf<String?> { null }
+
+/** Whether a composable is in the viewer, whose photo shows whenever the viewer does. */
+val LocalInViewer = staticCompositionLocalOf { false }
+
 /** The key a media item shares across the screens that show it. */
 fun mediaKey(momentUid: String, mediaUid: String) = "media/$momentUid/$mediaUid"
 
@@ -38,11 +48,15 @@ fun Modifier.sharedMedia(key: String?, shape: Shape = RectangleShape): Modifier 
     if (key == null || shared == null || animated == null) return this
 
     return with(shared) {
-        this@sharedMedia.sharedElement(
-            rememberSharedContentState(key),
-            animatedVisibilityScope = animated,
-            clipInOverlayDuringTransition = OverlayClip(shape),
-        )
+        val state = rememberSharedContentState(key)
+        val clip = OverlayClip(shape)
+        if (LocalInViewer.current) {
+            this@sharedMedia.sharedElement(state, animatedVisibilityScope = animated, clipInOverlayDuringTransition = clip)
+        } else {
+            // A tile shows while its page does and the viewer isn't showing it.
+            val visible = animated.transition.targetState == EnterExitState.Visible && LocalViewerShownKey.current != key
+            this@sharedMedia.sharedElementWithCallerManagedVisibility(state, visible = visible, clipInOverlayDuringTransition = clip)
+        }
     }
 }
 
