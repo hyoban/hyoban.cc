@@ -33,9 +33,9 @@ import java.io.File
 // over the still and fades back to it; held down, it plays with its sound for as long as
 // the finger stays. Clips are kept on disk, so one seen before starts at once.
 
-/** The clips on disk, a few hundred of them; the least lately seen go first. */
+/** The clips and videos on disk, 300 MB of them; the least lately seen go first. */
 @OptIn(UnstableApi::class)
-private object MotionCache {
+internal object MotionCache {
     @Volatile private var cache: SimpleCache? = null
 
     fun of(context: Context): SimpleCache = cache ?: synchronized(this) {

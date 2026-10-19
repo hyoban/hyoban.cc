@@ -1,9 +1,6 @@
 package cc.hyoban.moments.ui.viewer
 
 import android.app.Activity
-import android.net.Uri
-import android.widget.MediaController
-import android.widget.VideoView
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.fadeIn
@@ -97,7 +94,6 @@ import cc.hyoban.moments.data.trips.momentsOf
 import cc.hyoban.moments.data.trips.tripOf
 import cc.hyoban.moments.ui.components.DrawnStills
 import cc.hyoban.moments.ui.components.MediaStill
-import cc.hyoban.moments.ui.components.PlayBadge
 import cc.hyoban.moments.ui.components.Thumbnail
 import cc.hyoban.moments.ui.components.mediaKey
 import cc.hyoban.moments.ui.components.sharedMedia
@@ -186,6 +182,7 @@ fun MediaViewer(
                 media = media[page],
                 urls = container.mediaUrls,
                 active = pager.currentPage == page,
+                chrome = chrome && progress == 0f,
                 onZoom = { zoomed = it },
                 onTap = { chrome = !chrome },
             )
@@ -230,51 +227,41 @@ private fun ViewerPage(
     media: MomentMedia,
     urls: MediaUrls,
     active: Boolean,
+    chrome: Boolean,
     onZoom: (Boolean) -> Unit,
     onTap: () -> Unit,
 ) {
     val motion = urls.motion(media)
-    var playing by remember(media.uid) { mutableStateOf(false) }
-    if (!active) playing = false
     val live = rememberLiveMotionState(media.uid)
     val liveMotion = motion?.takeIf { media.type == MediaType.LIVE_PHOTO }
+    val video = rememberVideoState(media.uid)
+    val videoUrl = motion?.takeIf { media.type == MediaType.VIDEO }
 
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        if (playing && motion != null && media.type == MediaType.VIDEO) {
-            AndroidView(
-                factory = { context ->
-                    VideoView(context).apply {
-                        setMediaController(MediaController(context).also { it.setAnchorView(this) })
-                        setVideoURI(Uri.parse(motion))
-                        setOnPreparedListener { player -> player.isLooping = media.type == MediaType.LIVE_PHOTO }
-                        start()
-                    }
-                },
-                onRelease = { it.stopPlayback() },
-                modifier = Modifier.fillMaxSize(),
-            )
-        } else {
-            ZoomableStill(
-                momentUid,
-                media,
-                urls,
-                onZoom,
-                onTap,
-                // Held down, a live photo plays with its sound until let go.
-                onHold = if (liveMotion != null) { held -> if (held) live.play(sound = true) else live.stop() } else null,
-            ) {
-                if (liveMotion != null) LiveMotion(liveMotion, active, live, Modifier.fillMaxSize())
+        ZoomableStill(
+            momentUid,
+            media,
+            urls,
+            onZoom,
+            onTap,
+            // Held down, a live photo plays with its sound until let go.
+            onHold = if (liveMotion != null) { held -> if (held) live.play(sound = true) else live.stop() } else null,
+        ) {
+            if (liveMotion != null) LiveMotion(liveMotion, active, live, Modifier.fillMaxSize())
+            if (videoUrl != null) VideoPlayback(videoUrl, active, video, Modifier.fillMaxSize())
+        }
+        when (media.type) {
+            MediaType.VIDEO -> if (videoUrl != null) {
+                VideoWaiting(video)
+                VideoControls(video, visible = chrome && active, modifier = Modifier.align(Alignment.BottomCenter))
             }
-            when (media.type) {
-                MediaType.VIDEO -> PlayBadge(Modifier.clip(RoundedCornerShape(50)).clickable { playing = true }, size = 64)
-                MediaType.LIVE_PHOTO -> if (liveMotion != null) {
-                    ViewerLiveBadge(
-                        live,
-                        Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(bottom = 88.dp),
-                    )
-                }
-                MediaType.IMAGE -> Unit
+            MediaType.LIVE_PHOTO -> if (liveMotion != null) {
+                ViewerLiveBadge(
+                    live,
+                    Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(bottom = 88.dp),
+                )
             }
+            MediaType.IMAGE -> Unit
         }
     }
 }
