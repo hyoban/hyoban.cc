@@ -31,4 +31,10 @@
     <string name="action_locate">定位到附近</string>
     <string name="error_location">没能定位，请确认定位已打开。</string>
     <string name="error_location_permission">需要定位权限才能找到附近。</string>
+    <string name="action_show_calendar">以日历查看</string>
+    <string name="action_show_feed">以列表查看</string>
+    <string name="filter_all">全部</string>
+    <string name="filter_year">%1$d 年</string>
+    <string name="filter_whole_year">全年</string>
+    <string name="filter_month">%1$d 月</string>
 </resources>

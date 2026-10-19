@@ -34,6 +34,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavBackStackEntry
@@ -50,6 +58,7 @@ import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.R
 import cc.hyoban.moments.ui.components.LocalNavAnimatedScope
 import cc.hyoban.moments.ui.components.LocalSharedTransitionScope
+import cc.hyoban.moments.ui.feed.DayScreen
 import cc.hyoban.moments.ui.feed.FeedScreen
 import cc.hyoban.moments.ui.feed.PlaceScreen
 import cc.hyoban.moments.ui.map.MapScreen
@@ -77,6 +86,10 @@ data class Viewer(val uid: String, val index: Int)
 
 @Serializable
 data class Trip(val id: String)
+
+/** One day's Moments, by its `YYYY-MM-DD`. */
+@Serializable
+data class Day(val date: String)
 
 @Serializable
 data class PlaceMoments(val id: String)
@@ -114,11 +127,23 @@ fun MomentsApp(container: AppContainer) {
             restoreState = true
         }
     }
+    // The tabs step aside while a list is scrolled down to read on, and come back on any
+    // scroll up, a change of tab or a page with nothing to scroll.
+    var tabsShown by remember { mutableStateOf(true) }
+    LaunchedEffect(current) { tabsShown = true }
+    val hideOnScroll = remember {
+        object : NestedScrollConnection {
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                if (available.y < -SCROLL_SLOP) tabsShown = false else if (available.y > SCROLL_SLOP) tabsShown = true
+                return Offset.Zero
+            }
+        }
+    }
     val clearance = if (current != null) 88.dp + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() else 0.dp
 
     // A Surface rather than a bare background, so text without a colour of its own takes the page's on-colour in both modes.
     Surface(Modifier.fillMaxSize(), color = AppColors.page) {
-    Box(Modifier.fillMaxSize()) {
+    Box(Modifier.fillMaxSize().nestedScroll(hideOnScroll)) {
         CompositionLocalProvider(LocalBottomClearance provides clearance) {
         SharedTransitionLayout(Modifier.fillMaxSize()) {
             CompositionLocalProvider(LocalSharedTransitionScope provides this) {
@@ -132,7 +157,7 @@ fun MomentsApp(container: AppContainer) {
                     predictivePopExitTransition = { _ -> fadeOut(tween(700)) },
                 ) {
                     screen<Feed> {
-                        FeedScreen(container, onMoment = openMoment, onMedia = openMedia)
+                        FeedScreen(container, onMoment = openMoment, onMedia = openMedia, onDay = { navController.navigate(Day(it)) })
                     }
                     screen<Atlas> {
                         MapScreen(container, onMoment = openMoment, onPlace = openPlace, onTrip = openTrip)
@@ -158,6 +183,9 @@ fun MomentsApp(container: AppContainer) {
                     screen<Trip> { entry ->
                         TripScreen(container, entry.toRoute<Trip>().id, onMoment = openMoment, onMedia = openMedia, onBack = back)
                     }
+                    screen<Day> { entry ->
+                        DayScreen(container, entry.toRoute<Day>().date, onMoment = openMoment, onMedia = openMedia, onBack = back)
+                    }
                     screen<PlaceMoments> { entry ->
                         PlaceScreen(container, entry.toRoute<PlaceMoments>().id, onMoment = openMoment, onMedia = openMedia, onBack = back)
                     }
@@ -166,7 +194,7 @@ fun MomentsApp(container: AppContainer) {
         }
         }
         AnimatedVisibility(
-            current != null,
+            current != null && tabsShown,
             enter = fadeIn() + slideInVertically { it },
             exit = fadeOut() + slideOutVertically { it },
             modifier = Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(bottom = Space.m),
@@ -176,6 +204,9 @@ fun MomentsApp(container: AppContainer) {
     }
     }
 }
+
+/** How far a scroll must go, in pixels a frame, to hide or bring back the tabs. */
+private const val SCROLL_SLOP = 6f
 
 /** How much of the bottom the floating tabs cover on a tab screen, to leave clear under a list's last item. */
 val LocalBottomClearance = staticCompositionLocalOf { 0.dp }
