@@ -1,0 +1,6 @@
+{
+  "extends": "../../packages/trip-map/tsconfig.json",
+  "compilerOptions": {
+    "lib": ["ESNext", "WebWorker"]
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "@hyoban/api",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The Worker that serves the Moments, places and trips from D1 to the site and the recording app.",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "@hyoban/data-spec": "workspace:*"
+  },
+  "devDependencies": {
+    "wrangler": "^4.149.0"
+  }
+}

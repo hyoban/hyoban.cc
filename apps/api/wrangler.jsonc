@@ -1,0 +1,18 @@
+{
+  "name": "hyoban-cc-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-01-23",
+  "observability": { "enabled": true },
+  // database_id is the one `wrangler d1 create hyoban-cc` prints; local dev and
+  // `pnpm data:import` without --remote don't need the real one.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "hyoban-cc",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations",
+    },
+  ],
+  // API_TOKENS, a comma-separated list of bearer tokens, is a secret:
+  // `wrangler secret put API_TOKENS`, and `.dev.vars` locally.
+}
