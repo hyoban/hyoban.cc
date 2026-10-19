@@ -74,13 +74,9 @@ Put `API_TOKENS=<token>` in `apps/api/.dev.vars` to try the token-only reads loc
 It is deployed at https://hyoban-cc-api.hyoban.workers.dev, over the `hyoban-cc`
 database in APAC. Workers Builds deploys it on every push to `main` that touches
 `apps/api/`, `packages/data-spec/` or `pnpm-lock.yaml`: its root directory is
-`apps/api`, it installs from the repository root and runs `wrangler deploy`. That
-build can't reach D1, so apply a new migration yourself before pushing the code that
-needs it:
-
-```sh
-pnpm exec wrangler d1 migrations apply DB --remote --config apps/api/wrangler.jsonc
-```
+`apps/api`, it installs from the repository root and runs `pnpm run deploy`, which
+applies any new D1 migration before it deploys the code that needs it. The build's API
+token has D1 Edit for that; a migration that fails stops the deploy.
 
 The secrets are `API_TOKENS` and `DEPLOY_HOOK_URL`, set with
 `wrangler secret put <name> --config apps/api/wrangler.jsonc`. The site's build token
