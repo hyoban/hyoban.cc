@@ -5,14 +5,17 @@ import { join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
 
+import { getMomentFile } from '@hyoban/data-spec'
+import { pushData, refreshData } from './lib/data-sync.mjs'
 import { prepareImage, prepareLivePhoto, prepareVideo, uploadAssets } from './lib/moment-media.mjs'
-import { publishBundle, readBundle, writeReceipt } from './lib/publish-data.mjs'
+import { GENERATOR, publishBundle, readBundle, writeReceipt } from './lib/publish-data.mjs'
 
-// pnpm data:publish <bundle.zip | directory> [--dry-run]
+// pnpm data:publish <bundle.zip | directory> [--local] [--dry-run]
 //
-// Publishes what the recording app exported: unpacks the bundle under .artifacts,
-// uploads the new media to R2, writes the records into data/, and leaves receipt.zip
-// beside the unpacked bundle to share back to the app. Nothing is committed.
+// Publishes what the recording app exported: refreshes data/ from the API, unpacks the
+// bundle under .artifacts, uploads the new media to R2, writes the records into data/,
+// pushes them into the API's database (the local one with --local), and leaves
+// receipt.zip beside the unpacked bundle to share back to the app. Nothing is committed.
 
 const execFile = promisify(execFileCallback)
 const root = fileURLToPath(new URL('../', import.meta.url))
@@ -41,6 +44,12 @@ if (options.dryRun) {
   console.log('Dry run: nothing uploaded or written.')
   process.exit(0)
 }
+
+const refreshed = await refreshData(root)
+
+console.log(
+  `Refreshed data/ from the API at revision ${refreshed.snapshot.revision}${refreshed.changed.length > 0 ? `: ${refreshed.changed.length} files changed` : ''}.`,
+)
 
 const temporaryPath = await mkdtemp(join(tmpdir(), 'hyoban-publish-'))
 
@@ -76,6 +85,15 @@ try {
     `Published ${result.moments.length} Moment(s) and ${result.trips.length} trip(s) into data/.`,
   )
 
+  const records = {
+    moments: result.moments.map((record) => getMomentFile(record)),
+    trips: result.trips.map((trip) => `trips/${trip.id}.json`),
+    places: Object.keys(result.receipt.places),
+  }
+
+  await pushData(root, records, { generator: GENERATOR, remote: !options.local })
+  console.log(`Pushed them ${options.local ? 'into the local database' : 'into the API'}.`)
+
   for (const [from, to] of Object.entries(result.renamedPlaces)) {
     console.log(`Renamed place ${from} to ${to}.`)
   }
@@ -90,7 +108,10 @@ try {
 
   console.log(`Receipt: ${relative(root, join(workspace, 'receipt.zip'))}`)
   console.log(
-    'Next: write the alt texts, run pnpm trips:routes and pnpm trips:weather, then pnpm test, pnpm check and pnpm build.',
+    'Next: write the alt texts, run pnpm trips:routes and pnpm trips:weather, then pnpm test, pnpm check and pnpm build, and push the records again:',
+  )
+  console.log(
+    `  pnpm data:push${options.local ? ' --local' : ''} ${[...records.moments, ...records.trips].map((file) => `data/${file}`).join(' ')}`,
   )
 } finally {
   await rm(temporaryPath, { force: true, recursive: true })
@@ -110,12 +131,14 @@ async function unpack(bundle, directory) {
 }
 
 function parseArguments(argv) {
+  const flags = ['--dry-run', '--local']
   const dryRun = argv.includes('--dry-run')
-  const [bundle] = argv.filter((argument) => argument !== '--dry-run')
+  const local = argv.includes('--local')
+  const rest = argv.filter((argument) => !flags.includes(argument))
 
-  if (!bundle || argv.length > 2) {
-    throw new Error('Usage: pnpm data:publish <bundle.zip | directory> [--dry-run]')
+  if (rest.length !== 1) {
+    throw new Error('Usage: pnpm data:publish <bundle.zip | directory> [--local] [--dry-run]')
   }
 
-  return { bundle, dryRun }
+  return { bundle: rest[0], dryRun, local }
 }
