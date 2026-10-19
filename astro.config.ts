@@ -3,6 +3,7 @@ import Sitemap from '@astrojs/sitemap'
 import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'astro/config'
 import { SITE_URL } from './src/consts'
+import { apiData } from './src/data/api-data.ts'
 import { rehypePostImages } from './src/post-images.mjs'
 import { remarkTelegramWidgets } from './src/telegram-widget.mjs'
 import { remarkTripCovers } from './src/trip-covers.ts'
@@ -11,8 +12,12 @@ import { remarkTripCovers } from './src/trip-covers.ts'
 export default defineConfig({
   site: SITE_URL,
   devToolbar: { enabled: false },
-  // Map place pages are drawer fragments, not pages to list.
-  integrations: [Sitemap({ filter: (page) => !page.includes('/map/place/') })],
+  integrations: [
+    // First, so every later read of a record sees the API's snapshot when there is one.
+    apiData(),
+    // Map place pages are drawer fragments, not pages to list.
+    Sitemap({ filter: (page) => !page.includes('/map/place/') }),
+  ],
   vite: {
     plugins: [tailwindcss() as any],
   },

@@ -53,6 +53,15 @@ Nothing is committed. Afterwards, write the alt texts the command lists, run
 `scripts/fixtures/bundle` is a sample bundle; `scripts/lib/publish-data.test.mjs`
 publishes it into a temporary repository.
 
+## Building from the API
+
+With `MOMENTS_API_TOKEN` set, in the environment or `.env`, the site is built from the
+API instead of `data/`: `src/data/api-data.ts` fetches `/v1/export` once before
+anything reads a record, writes it under `.artifacts/api-data/` in this layout, and
+points the store and the Moments collection there. `MOMENTS_API_URL` overrides the
+deployed address. Without a token the build reads `data/`, and a token that fails to
+fetch fails the build. The scripts always read `data/`; `devices.json` stays here.
+
 ## The API's copy
 
 `apps/api` serves the same records from D1. Until the app writes to it directly,

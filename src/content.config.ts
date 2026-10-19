@@ -2,6 +2,7 @@ import { glob } from 'astro/loaders'
 import { z } from 'astro/zod'
 import { defineCollection } from 'astro:content'
 import { momentRecordSchema } from '@hyoban/data-spec'
+import { getDataRoot } from '@/data/store'
 
 const description = z.string().trim().min(1)
 
@@ -24,9 +25,10 @@ const pages = defineCollection({
   }),
 })
 
-// The recording app's Moments, one JSON file each, in the shape @hyoban/data-spec gives.
+// The recording app's Moments, one JSON file each, in the shape @hyoban/data-spec gives:
+// data/moments, or the API's snapshot when the build fetched one.
 const moments = defineCollection({
-  loader: glob({ pattern: '**/*.json', base: './data/moments' }),
+  loader: glob({ pattern: '**/*.json', base: `${getDataRoot()}/moments` }),
   schema: momentRecordSchema,
 })
 

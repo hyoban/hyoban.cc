@@ -13,16 +13,26 @@ import {
   type TripRecord,
 } from '@hyoban/data-spec'
 
-// Reads the repository's `data/` directory, the committed copy of the recording app's
-// data, for the site's build and for the scripts. Everything is validated on the way in.
+// Reads the recording app's records for the site's build and for the scripts, from the
+// repository's `data/` directory or, when the build fetched one, the API's snapshot in
+// the same layout (see api-data.ts). Everything is validated on the way in.
 
+/** The repository's `data/`, the committed copy. */
 export const dataRoot = resolve(process.cwd(), 'data')
 
-export function readManifest(root = dataRoot): Manifest {
+/** Set by the build to the directory it wrote the API's snapshot to. */
+export const DATA_ROOT_VARIABLE = 'HYOBAN_DATA_ROOT'
+
+/** Where the Moments, places and trips are read from: the API's snapshot, else `data/`. */
+export function getDataRoot() {
+  return process.env[DATA_ROOT_VARIABLE] ?? dataRoot
+}
+
+export function readManifest(root = getDataRoot()): Manifest {
   return manifestSchema.parse(readJson('manifest.json', root))
 }
 
-export function readPlaces(root = dataRoot): Places {
+export function readPlaces(root = getDataRoot()): Places {
   return placesSchema.parse(readJson('places.json', root))
 }
 
@@ -30,12 +40,12 @@ export function readDevices(root = dataRoot): Devices {
   return devicesSchema.parse(readJson('devices.json', root))
 }
 
-export function readTripRecords(root = dataRoot): TripRecord[] {
+export function readTripRecords(root = getDataRoot()): TripRecord[] {
   return listJsonFiles('trips', root).map((file) => tripRecordSchema.parse(readJson(file, root)))
 }
 
 /** Every Moment with the file it came from, relative to `data/`. */
-export function readMomentRecords(root = dataRoot): { file: string; record: MomentRecord }[] {
+export function readMomentRecords(root = getDataRoot()): { file: string; record: MomentRecord }[] {
   return listJsonFiles('moments', root).map((file) => ({
     file,
     record: momentRecordSchema.parse(readJson(file, root)),
