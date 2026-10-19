@@ -3,13 +3,12 @@
   "main": "src/index.ts",
   "compatibility_date": "2026-01-23",
   "observability": { "enabled": true },
-  // database_id is the one `wrangler d1 create hyoban-cc` prints; local dev and
-  // `pnpm data:import` without --remote don't need the real one.
+  // Created with `wrangler d1 create hyoban-cc --location apac`.
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "hyoban-cc",
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "d4330b94-a98a-4a1e-ae7c-36d0570f4547",
       "migrations_dir": "migrations",
     },
   ],
