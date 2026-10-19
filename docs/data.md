@@ -52,3 +52,17 @@ Nothing is committed. Afterwards, write the alt texts the command lists, run
 
 `scripts/fixtures/bundle` is a sample bundle; `scripts/lib/publish-data.test.mjs`
 publishes it into a temporary repository.
+
+## The API's copy
+
+`apps/api` serves the same records from D1. Until the app writes to it directly,
+`data/` stays the source:
+
+```sh
+pnpm data:import            # the local database `wrangler dev` uses
+pnpm data:import --remote   # the deployed one
+```
+
+It applies the migrations, then writes new and changed records and marks the ones no
+longer under `data/` deleted; only those take the new revision, so the app's sync only
+sees the difference. `--dry-run` only writes the SQL under `.artifacts/import/`.

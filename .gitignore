@@ -17,6 +17,8 @@ pnpm-debug.log*
 # environment variables
 .env
 .env.production
+.dev.vars
+.wrangler/
 
 # media is stored in Cloudflare R2
 public/*.avif

@@ -82,6 +82,16 @@ importers:
         specifier: ^4.149.0
         version: 4.149.0(@types/node@26.6.5)(bufferutil@4.1.0)(utf-8-validate@5.0.10)
 
+  apps/api:
+    dependencies:
+      '@hyoban/data-spec':
+        specifier: workspace:*
+        version: link:../../packages/data-spec
+    devDependencies:
+      wrangler:
+        specifier: ^4.149.0
+        version: 4.149.0(@types/node@26.6.5)(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+
   packages/data-spec:
     dependencies:
       zod:
