@@ -13,7 +13,7 @@ type MappableMoment = Readonly<{
 
 export type MapLocationGroup<T extends MappableMoment> = Readonly<{
   id: string
-  latestYear: number
+  firstYear: number
   location: MapLocation
   moments: T[]
 }>
@@ -61,11 +61,12 @@ export function groupMomentsByLocation<T extends MappableMoment>(
   return [...momentGroups]
     .map(([id, groupMoments]): MapLocationGroup<T> => {
       groupMoments.sort(compareMomentsDescending)
-      const newestMoment = groupMoments[0]!
+      // Colored by the year the place first appears, so a revisit keeps its color.
+      const oldestMoment = groupMoments.at(-1)!
 
       return {
         id,
-        latestYear: Number.parseInt(newestMoment.dateKey.slice(0, 4), 10),
+        firstYear: Number.parseInt(oldestMoment.dateKey.slice(0, 4), 10),
         location: getLocation(locations, id),
         moments: groupMoments,
       }

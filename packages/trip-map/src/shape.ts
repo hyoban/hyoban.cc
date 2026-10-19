@@ -195,7 +195,7 @@ export function toTripImage(image: TripImageInput): TripImage {
 /** A place and its posts, as `groupMomentsByLocation` groups them. */
 export type PlaceGroup = Readonly<{
   id: string
-  latestYear: number
+  firstYear: number
   location: MapLocation
   moments: readonly Readonly<{ dateKey: string }>[]
 }>
@@ -209,10 +209,10 @@ export function getPlaceMarkers(
   yearColor: (year: number) => string,
 ): PlaceMarker[] {
   return groups.map((group) => ({
-    color: yearColor(group.latestYear),
+    color: yearColor(group.firstYear),
     count: group.moments.length,
     id: group.id,
-    latestYear: group.latestYear,
+    firstYear: group.firstYear,
     latitude: group.location.latitude,
     longitude: group.location.longitude,
     name: group.location.name,

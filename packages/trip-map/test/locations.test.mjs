@@ -28,7 +28,7 @@ test('rejects moment references to unknown location ids', () => {
   assert.throws(() => getLocation(locations, 'missing'), /Unknown location id "missing"/)
 })
 
-test('groups mapped moments by place and uses the newest occurrence year', () => {
+test('groups mapped moments by place and uses the first occurrence year', () => {
   const locations = defineLocations({
     paris: {
       latitude: 48.8535,
@@ -77,18 +77,18 @@ test('groups mapped moments by place and uses the newest occurrence year', () =>
   assert.deepEqual(
     groups.map((group) => ({
       id: group.id,
-      latestYear: group.latestYear,
+      firstYear: group.firstYear,
       momentIds: group.moments.map((moment) => moment.id),
     })),
     [
       {
         id: 'tokyo',
-        latestYear: 2026,
+        firstYear: 2025,
         momentIds: ['tokyo-newer', 'tokyo-older'],
       },
       {
         id: 'paris',
-        latestYear: 2024,
+        firstYear: 2024,
         momentIds: ['paris-only'],
       },
     ],

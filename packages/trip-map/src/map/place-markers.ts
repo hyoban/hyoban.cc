@@ -26,7 +26,7 @@ type MarkerEntry = {
 
 type ClusterInfo = {
   coordinates: [number, number]
-  latestYear: number
+  firstYear: number
   locationCount: number
   momentCount: number
 }
@@ -87,7 +87,7 @@ export function createPlaceMarkers({
 }) {
   const placesById = new Map(places.map((place) => [place.id, place]))
   // A cluster takes the colour of its latest year, like a place does.
-  const yearColors = new Map(places.map((place) => [place.latestYear, place.color]))
+  const yearColors = new Map(places.map((place) => [place.firstYear, place.color]))
   const markers = new Map<string, MarkerEntry>()
   const clusterMarkers = new Map<number, ClusterMarkerEntry>()
   // Focus put back on a marker as the drawer closes shouldn't pop its name up.
@@ -275,7 +275,7 @@ export function createPlaceMarkers({
       const momentCount = t(messages, 'momentCount', { count: place.count })
       const button = createDotButton(
         'trip-map-marker',
-        t(messages, 'placeLabel', { count: place.count, name: place.name, year: place.latestYear }),
+        t(messages, 'placeLabel', { count: place.count, name: place.name, year: place.firstYear }),
         place.color,
       )
       const dot = document.createElement('span')
@@ -347,7 +347,7 @@ export function createPlaceMarkers({
       clusterMaxZoom: CLUSTER_MAX_ZOOM,
       clusterMinPoints: CLUSTER_MIN_POINTS,
       clusterProperties: {
-        latestYear: ['max', ['get', 'latestYear']],
+        firstYear: ['min', ['get', 'firstYear']],
         momentCount: ['+', ['get', 'count']],
       },
       clusterRadius: CLUSTER_RADIUS,
@@ -357,7 +357,7 @@ export function createPlaceMarkers({
             coordinates: [place.longitude, place.latitude],
             type: 'Point' as const,
           },
-          properties: { count: place.count, id: place.id, latestYear: place.latestYear },
+          properties: { count: place.count, id: place.id, firstYear: place.firstYear },
           type: 'Feature' as const,
         })),
         type: 'FeatureCollection',
@@ -412,7 +412,7 @@ export function createPlaceMarkers({
         if (Number.isFinite(id) && coordinates.length >= 2) {
           clusters.set(id, {
             coordinates: [coordinates[0]!, coordinates[1]!],
-            latestYear: Number(properties.latestYear) || 0,
+            firstYear: Number(properties.firstYear) || 0,
             locationCount: Number(properties.point_count) || 0,
             momentCount: Number(properties.momentCount) || 0,
           })
@@ -519,7 +519,7 @@ export function createPlaceMarkers({
     const button = createDotButton(
       'trip-map-cluster',
       t(messages, 'clusterLabel', { count: cluster.momentCount, title }),
-      yearColors.get(cluster.latestYear) ?? 'var(--color-tx)',
+      yearColors.get(cluster.firstYear) ?? 'var(--color-tx)',
     )
     const dot = document.createElement('span')
     const popup = createPlacePopup(16, meta, title)
@@ -621,12 +621,12 @@ export function createPlaceMarkers({
 
       const members = await getClusterMembers(map, id)
       const [longitude, latitude] = feature.geometry.coordinates
-      const latestYear = Number(properties.latestYear) || 0
+      const firstYear = Number(properties.firstYear) || 0
 
       shot.push({
-        color: yearColors.get(latestYear) ?? members[0]?.color ?? '#888',
+        color: yearColors.get(firstYear) ?? members[0]?.color ?? '#888',
         count: Number(properties.momentCount) || 0,
-        latestYear,
+        firstYear,
         latitude: latitude!,
         longitude: longitude!,
         members,

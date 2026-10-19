@@ -22,7 +22,7 @@ export const zhCN = {
   mapNoToken: '尚未配置 Mapbox Token。',
   momentCount: '{count} 条记录',
   placeEyebrow: '{count} 条记录 · {years}',
-  placeLabel: '{name}，{count} 条记录，最近记录于 {year} 年',
+  placeLabel: '{name}，{count} 条记录，首次记录于 {year} 年',
   screenshotRendering: '正在生成截图…',
   statDriving: '自驾 {count} 公里',
   statMoments: '{count} 条记录',
