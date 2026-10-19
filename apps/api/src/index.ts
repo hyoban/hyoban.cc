@@ -99,8 +99,13 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
     const result = await run({ db, bucket: env.BUCKET, now: timestamp() })
 
     if (result.changesSite && env.DEPLOY_HOOK_URL) {
-      const deploy = fetch(env.DEPLOY_HOOK_URL, { method: 'POST' }).catch((caught) =>
-        console.error('The deploy hook failed', caught),
+      const deploy = fetch(env.DEPLOY_HOOK_URL, { method: 'POST' }).then(
+        async (response) => {
+          if (!response.ok) {
+            console.error('The deploy hook answered', response.status, await response.text())
+          }
+        },
+        (caught) => console.error('The deploy hook failed', caught),
       )
 
       executionContext?.waitUntil(deploy)
