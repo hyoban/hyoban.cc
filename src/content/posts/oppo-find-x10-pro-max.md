@@ -1,5 +1,5 @@
 ---
-title: OPPO Find X10 Pro Max 一个月使用体验
+title: OPPO Find X10 Pro Max 使用体验
 link: oppo-find-x10-pro-max
 pubDate: '2026-10-19T08:00:00.000Z'
 description: 从 iPhone 15 换到 OPPO Find X10 Pro Max 一个月后，聊聊配置、系统、拍照、续航和迁移的感受。
