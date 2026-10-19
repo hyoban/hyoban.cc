@@ -37,4 +37,7 @@
     <string name="filter_year">%1$d 年</string>
     <string name="filter_whole_year">全年</string>
     <string name="filter_month">%1$d 月</string>
+    <string name="action_pause">暂停</string>
+    <string name="action_mute">静音</string>
+    <string name="action_unmute">打开声音</string>
 </resources>
