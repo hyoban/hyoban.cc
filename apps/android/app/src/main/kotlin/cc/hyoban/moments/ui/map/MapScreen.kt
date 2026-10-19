@@ -159,13 +159,6 @@ fun MapScreen(container: AppContainer, onMoment: (String) -> Unit, onPlace: (Str
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(Space.s),
         ) {
-            FloatingPill {
-                Text(
-                    listOf(stringResource(R.string.count_places, mapPlaces.size), stringResource(R.string.count_moments, moments.size)).joinToString(" · "),
-                    style = MaterialTheme.typography.labelLarge,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                )
-            }
             if (colors.isNotEmpty()) Legend(colors, trips = mapRoutes.isNotEmpty())
         }
 

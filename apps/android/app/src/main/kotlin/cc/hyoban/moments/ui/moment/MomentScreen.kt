@@ -40,6 +40,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import cc.hyoban.moments.ui.components.StatusBarOverPhoto
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.foundation.layout.statusBars
 import cc.hyoban.moments.ui.components.NeutralChip
 import androidx.compose.material3.AssistChip
 import androidx.compose.ui.draw.clip
@@ -94,10 +101,22 @@ fun MomentScreen(
     val urls = container.mediaUrls
 
     Box(Modifier.fillMaxSize().background(AppColors.page)) {
-        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+        // The photo runs under the status bar: white icons while it is still under it.
+        val scroll = rememberScrollState()
+        var photoHeight by remember { mutableIntStateOf(0) }
+        val statusBar = WindowInsets.statusBars.getTop(LocalDensity.current)
+        val overPhoto by remember(moment.media.isEmpty()) {
+            derivedStateOf { moment.media.isNotEmpty() && scroll.value < photoHeight - statusBar }
+        }
+        StatusBarOverPhoto(overPhoto)
+
+        Column(Modifier.fillMaxSize().verticalScroll(scroll)) {
             if (moment.media.isNotEmpty()) {
                 val pager = rememberPagerState { moment.media.size }
-                Box(Modifier.fillMaxWidth().aspectRatio(shapeOf(moment.media.first()).coerceIn(0.75f, 1.5f))) {
+                Box(
+                    Modifier.fillMaxWidth().aspectRatio(shapeOf(moment.media.first()).coerceIn(0.75f, 1.5f))
+                        .onSizeChanged { photoHeight = it.height },
+                ) {
                     HorizontalPager(pager, Modifier.fillMaxSize(), key = { moment.media[it].uid }) { page ->
                         // The top of the photo is under the status bar and the back button.
                         MediaTile(
