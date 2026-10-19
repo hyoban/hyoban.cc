@@ -91,6 +91,20 @@
     text-decoration-color: var(--color-tx);
   }
 
+  /* A list row's link holds more than its title, so the row drops the underline and the
+     title carries it, as any text link would. */
+  .link-text {
+    text-decoration: underline;
+    text-decoration-color: var(--color-tx-3);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.25em;
+    transition: text-decoration-color 140ms ease;
+  }
+
+  a:hover .link-text {
+    text-decoration-color: var(--color-tx);
+  }
+
   :focus-visible {
     outline: 2px solid var(--color-tx);
     outline-offset: 2px;
