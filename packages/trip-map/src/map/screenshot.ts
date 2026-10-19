@@ -60,7 +60,7 @@ export type ScreenshotPlace = Readonly<{
   color: string
   /** Moments there; for a bubble, at all its places. */
   count: number
-  latestYear: number
+  firstYear: number
   latitude: number
   longitude: number
   /** A bubble's places, busiest first. */

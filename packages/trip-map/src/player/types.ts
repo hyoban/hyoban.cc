@@ -40,7 +40,7 @@ export type PlaceMarker = {
   /** Posts there. */
   count: number
   id: string
-  latestYear: number
+  firstYear: number
   latitude: number
   longitude: number
   name: string
