@@ -61,6 +61,8 @@ fun MediaStill(
     contentScale: ContentScale = ContentScale.Crop,
     placeholder: Color = MaterialTheme.colorScheme.surfaceContainerHighest,
     placeholderUrl: String? = null,
+    /** How many times wider than it is laid out to fetch it: more than 1 while zoomed in. */
+    detail: Float = 1f,
 ) {
     val context = LocalPlatformContext.current
 
@@ -69,7 +71,7 @@ fun MediaStill(
     val widest = remember(media.uid) { IntArray(1) }
 
     BoxWithConstraints(modifier.background(placeholder)) {
-        widest[0] = maxOf(widest[0], with(LocalDensity.current) { maxWidth.roundToPx() })
+        widest[0] = maxOf(widest[0], with(LocalDensity.current) { (maxWidth * detail).roundToPx() })
         val url = urls.still(media, widest[0])
         val height = if (constraints.hasBoundedHeight) constraints.maxHeight else widest[0]
         val request = remember(url, placeholderUrl) {

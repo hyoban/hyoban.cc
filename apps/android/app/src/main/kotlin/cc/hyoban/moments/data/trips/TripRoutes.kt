@@ -1,5 +1,6 @@
 package cc.hyoban.moments.data.trips
 
+import cc.hyoban.moments.data.Http
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -11,8 +12,6 @@ import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import java.io.File
 import java.io.IOException
-import java.net.HttpURLConnection
-import java.net.URL
 
 // Each trip's route as the site draws it: along the roads it drove, and straight and
 // dashed where it took a train, a plane or a ferry. The API fetches every leg's route
@@ -60,7 +59,7 @@ class TripRoutes(
     /** Fetches every trip's route; when that fails, the ones kept stay. */
     suspend fun refresh() = withContext(io) {
         val text = try {
-            fetch("$apiUrl/v1/routes")
+            Http.getText("$apiUrl/v1/routes", io = io)
         } catch (_: IOException) {
             return@withContext
         }
@@ -68,18 +67,5 @@ class TripRoutes(
         file.parentFile?.mkdirs()
         file.writeText(text)
         _routes.value = routes
-    }
-
-    private fun fetch(url: String): String {
-        val connection = URL(url).openConnection() as HttpURLConnection
-        try {
-            connection.connectTimeout = 15_000
-            connection.readTimeout = 30_000
-            connection.setRequestProperty("Accept", "application/json")
-            if (connection.responseCode !in 200..299) throw IOException("GET $url answered ${connection.responseCode}")
-            return connection.inputStream.bufferedReader().readText()
-        } finally {
-            connection.disconnect()
-        }
     }
 }
