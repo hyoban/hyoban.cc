@@ -19,14 +19,34 @@ const RESIZED_WIDTHS = [480, 960, 1920]
  * size falls back to the original instead of failing.
  */
 export function getResizedSources(image: PublishedImage) {
-  const { origin, pathname } = new URL(getAssetUrl(image.key))
+  return getTransformedSources(
+    image.key,
+    image.width,
+    (width) => `image/width=${width},format=auto,onerror=redirect`,
+  )
+}
+
+/**
+ * The first frame of a video the API kept as uploaded, as a JPEG from Cloudflare's Media
+ * Transformations at each width up to the video's own: its poster.
+ */
+export function getFrameSources(key: string, width: number) {
+  return getTransformedSources(
+    key,
+    width,
+    (frameWidth) => `media/mode=frame,time=0s,width=${frameWidth},format=jpg`,
+  )
+}
+
+function getTransformedSources(key: string, ownWidth: number, options: (width: number) => string) {
+  const { origin, pathname } = new URL(getAssetUrl(key))
   const widths = new Set([
-    ...RESIZED_WIDTHS.filter((width) => width < image.width),
-    Math.min(image.width, 1920),
+    ...RESIZED_WIDTHS.filter((width) => width < ownWidth),
+    Math.min(ownWidth, 1920),
   ])
 
   return [...widths].map((width) => ({
-    src: `${origin}/cdn-cgi/image/width=${width},format=auto,onerror=redirect${pathname}`,
+    src: `${origin}/cdn-cgi/${options(width)}${pathname}`,
     width,
   }))
 }

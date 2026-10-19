@@ -1,4 +1,4 @@
-import { getAssetUrl, getResizedSources } from './asset-url.ts'
+import { getAssetUrl, getFrameSources, getResizedSources } from './asset-url.ts'
 import type { MomentRecord, TripRecord } from '@hyoban/data-spec'
 import { readMomentRecords, readTripRecords } from './data/store.ts'
 
@@ -31,6 +31,38 @@ export function remarkTripCovers() {
       ),
     )
     replaceTripLinks(tree, trips, media)
+  }
+}
+
+/**
+ * A cover's photo, its sizes and its dimensions: a photo or live photo's still, a video's
+ * poster, or for a video the API kept, its first frame.
+ */
+function getCoverStill(item: MomentRecord['media'][number] | undefined) {
+  if (item?.type === 'video' && !item.published?.poster) {
+    return item.published?.original && item.width && item.height
+      ? {
+          sources: getFrameSources(item.published.key, item.width),
+          width: item.width,
+          height: item.height,
+        }
+      : undefined
+  }
+
+  const still = item?.type === 'video' ? item.published?.poster : item?.published
+
+  if (!still) {
+    return undefined
+  }
+
+  return {
+    sources: still.original
+      ? getResizedSources(still)
+      : [...still.variants, ...(still.width <= 1920 ? [still] : [])]
+          .sort((first, second) => first.width - second.width)
+          .map((source) => ({ src: getAssetUrl(source.key), width: source.width })),
+    width: still.width,
+    height: still.height,
   }
 }
 
@@ -81,17 +113,13 @@ function renderCovers(
 ) {
   const images = trip.covers.map((cover) => {
     const item = media.get(`${cover.moment}/${cover.media}`)
-    const still = item?.type === 'video' ? item.published?.poster : item?.published
+    const still = getCoverStill(item)
 
     if (!item || !still) {
       throw new Error(`Cover ${cover.moment}/${cover.media} of trip "${trip.id}" has no photo.`)
     }
 
-    const sources = still.original
-      ? getResizedSources(still)
-      : [...still.variants, ...(still.width <= 1920 ? [still] : [])]
-          .sort((first, second) => first.width - second.width)
-          .map((source) => ({ src: getAssetUrl(source.key), width: source.width }))
+    const { sources } = still
     const src = sources.find((source) => source.width >= 480) ?? sources.at(-1)!
 
     return `<img src="${escapeHtml(src.src)}" srcset="${escapeHtml(sources.map((source) => `${source.src} ${source.width}w`).join(', '))}" sizes="${COVER_SIZES}" width="${still.width}" height="${still.height}" alt="${escapeHtml(item.alt)}" loading="lazy" decoding="async">`
