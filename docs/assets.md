@@ -26,7 +26,7 @@ record automatically. Its preparation step is resumable and writes the record
 under `data/moments` only after every remote object has been verified. Each
 media item of a record carries its R2 key, byte size, MIME type, ETag, image
 dimensions and responsive variants in its `published` block (see
-`src/data/spec.ts`).
+`packages/data-spec`).
 
 The R2 directory mirrors the Moment's published id. Existing objects are
 immutable; replace changed media with a new semantic filename instead of

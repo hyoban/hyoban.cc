@@ -6,11 +6,11 @@ description: Create a hyoban.cc Moment from exact user text and media. Use when 
 # Create Moment
 
 Create one Moment as a record under `data/moments` (the shape is in
-`src/data/spec.ts`). Never deploy the site or publish the Moment to a social
+`packages/data-spec`). Never deploy the site or publish the Moment to a social
 network. Uploading its media to the configured R2 bucket is part of preparing
 the local Moment.
 
-1. Inspect `src/data/spec.ts`, `data/places.json`, and a recent record under
+1. Inspect `packages/data-spec`, `data/places.json`, and a recent record under
    `data/moments`.
 2. Preserve the user's text exactly, including errors, punctuation, paragraphs, and line breaks.
 3. Use one `occurredAt` value for when the Moment happened. Use an ISO timestamp

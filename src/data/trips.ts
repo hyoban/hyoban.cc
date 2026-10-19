@@ -1,5 +1,5 @@
 import { defineTrips, type TripDefinition } from '@hyoban/trip-map'
-import type { TripRecord } from './spec.ts'
+import type { TripRecord } from '@hyoban/data-spec'
 import { readTripRecords } from './store.ts'
 
 // Each trip in data/trips plays back every located Moment between `start` and `end`

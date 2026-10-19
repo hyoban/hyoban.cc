@@ -1,7 +1,7 @@
 # Data
 
 The Moments, places and trips live under `data/` as JSON records, in the shape
-`src/data/spec.ts` defines. The recording app is the source of these records; the
+`packages/data-spec` defines. The recording app is the source of these records; the
 repository keeps the copy the site is built from, and the scripts here only ever fill
 in what publishing adds.
 

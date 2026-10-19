@@ -10,7 +10,7 @@ import type { CollectionEntry } from 'astro:content'
 import { getCollection } from 'astro:content'
 import { getAssetUrl } from '@/asset-url'
 import { locations, type LocationId } from '@/data/locations'
-import type { MomentMedia, PublishedImage, PublishedVideo } from '@/data/spec'
+import type { MomentMedia, PublishedImage, PublishedVideo } from '@hyoban/data-spec'
 import { trips } from '@/data/trips'
 import tripRoutes from '@/data/trip-routes.json'
 

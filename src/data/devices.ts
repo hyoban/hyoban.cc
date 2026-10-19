@@ -1,4 +1,4 @@
-import type { Device, Devices } from './spec.ts'
+import type { Device, Devices } from '@hyoban/data-spec'
 
 // The use page's view of data/devices.json: each device as a span from the day it was
 // bought to the day it was sold (or today), packed into one lane per category, and the
