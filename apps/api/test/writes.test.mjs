@@ -284,3 +284,28 @@ test('writes need the token, a record that fits, and a type the API takes', asyn
     415,
   )
 })
+
+test('a deploy hook that turns the call down is logged', async () => {
+  const { env } = setUpWithData()
+  const pending = []
+  const logged = []
+  const context = { waitUntil: (promise) => pending.push(promise) }
+  const realFetch = globalThis.fetch
+  const realError = console.error
+
+  env.DEPLOY_HOOK_URL = 'https://deploy.test/gone'
+  globalThis.fetch = async () => new Response('no such hook', { status: 404 })
+  console.error = (...args) => logged.push(args)
+
+  try {
+    const target = snapshot.moments.find((moment) => moment.published)
+
+    await call(env, 'DELETE', `/v1/moments/${target.uid}`, { ...owner, context })
+    await Promise.all(pending)
+
+    assert.deepEqual(logged, [['The deploy hook answered', 404, 'no such hook']])
+  } finally {
+    globalThis.fetch = realFetch
+    console.error = realError
+  }
+})
