@@ -1,0 +1,101 @@
+---
+import CalendarBackLink from '@/components/CalendarBackLink.astro'
+import CalendarModeSwitch from '@/components/CalendarModeSwitch.astro'
+import MomentEntry from '@/components/MomentEntry.astro'
+import MomentLightbox from '@/components/MomentLightbox.astro'
+import Layout from '@/layouts/Layout.astro'
+import { SITE_TITLE } from '@/consts'
+import { getMomentPath, getMoments, getTimelinePath, getTimelineYears } from '@/moments'
+
+interface Props {
+  year: string
+}
+
+const { year } = Astro.props
+const moments = await getMoments()
+const years = getTimelineYears(moments)
+const yearIndex = years.indexOf(year)
+const newerYear = yearIndex > 0 ? years[yearIndex - 1] : undefined
+const olderYear = yearIndex >= 0 && yearIndex < years.length - 1 ? years[yearIndex + 1] : undefined
+// Newest day first; a day's own Moments keep the order they happened in, as in the agenda.
+const days = [...Map.groupBy(moments.filter(moment => moment.dateKey.startsWith(year)), moment => moment.dateKey)]
+  .toReversed()
+  .map(([dateKey, dayMoments]) => ({ dateKey, moments: dayMoments }))
+const months = [...Map.groupBy(days, day => day.dateKey.slice(5, 7))]
+  .map(([month, monthDays]) => ({ days: monthDays, month: Number.parseInt(month, 10) }))
+// The first photo is usually on the first screen, so it loads right away on every viewport.
+const leadMoment = days
+  .flatMap(day => day.moments)
+  .find(moment => moment.media.some(item => item.type !== 'video'))
+const title = `${year} 年 · 时间线 | ${SITE_TITLE}`
+const description = `${year} 年的零碎记录，按时间从新到旧排列。`
+const weekdayFormatter = new Intl.DateTimeFormat('zh-CN', { timeZone: 'Asia/Singapore', weekday: 'short' })
+
+function formatWeekday(dateKey: string) {
+  const [dateYear, dateMonth, dateDay] = dateKey.split('-').map(part => Number.parseInt(part, 10))
+  return weekdayFormatter.format(new Date(Date.UTC(dateYear!, dateMonth! - 1, dateDay!)))
+}
+
+function formatDay(dateKey: string) {
+  return `${Number.parseInt(dateKey.slice(5, 7), 10)}/${Number.parseInt(dateKey.slice(8, 10), 10)}`
+}
+---
+
+<Layout title={title} description={description}>
+  <main class="timeline-page mx-auto w-full max-w-[60rem]">
+    <header class="timeline-toolbar mb-6 grid grid-cols-[1fr_auto_1fr] items-center gap-x-2 gap-y-4 max-[48rem]:grid-cols-[auto_1fr] max-[48rem]:[&_.calendar-back-link]:pr-1.5 max-[48rem]:[&_.calendar-back-link>span]:sr-only">
+      <CalendarBackLink class="justify-self-start" />
+
+      <nav class="timeline-years col-start-2 flex items-center justify-center gap-1 font-mono text-[0.8125rem] max-[48rem]:col-span-2 max-[48rem]:row-start-2 max-[48rem]:col-start-1" aria-label="年份">
+        {years.map(navYear => (
+          <a
+            class="inline-flex min-h-8 items-center rounded-full px-3 text-tx-3 no-underline hover:bg-inline hover:text-tx aria-[current=page]:text-tx max-[48rem]:min-h-11"
+            href={getTimelinePath(navYear)}
+            aria-current={navYear === year ? 'page' : undefined}
+          >
+            {navYear}
+          </a>
+        ))}
+      </nav>
+
+      <CalendarModeSwitch class="col-start-3 justify-self-end max-[48rem]:col-start-2" mode="timeline" />
+    </header>
+
+    <h1 class="sr-only">{year} 年的记录</h1>
+
+    <div class="timeline relative mx-auto max-w-[42rem] [--rail:0rem] before:absolute before:top-[2.75rem] before:bottom-0 before:left-[var(--rail)] before:w-px before:bg-border sm:[--rail:5.5rem]">
+      {months.map(({ days: monthDays, month }) => (
+        <section class="timeline-month relative" aria-label={`${year} 年 ${month} 月`}>
+          <h2 class="timeline-month__label relative pt-8 pl-5 text-tx-2 tabular-nums sm:w-[var(--rail)] sm:pr-5 sm:pl-0 sm:text-right">
+            <span class="absolute top-[calc(2rem+0.75rem-0.3125rem)] left-[var(--rail)] size-2.5 -translate-x-1/2 rounded-full border border-tx-3 bg-bg" aria-hidden="true" />
+            {month} 月
+          </h2>
+
+          {monthDays.map(day => (
+            <section class="timeline-day relative sm:grid sm:grid-cols-[var(--rail)_minmax(0,1fr)]" id={`timeline-${day.dateKey}`}>
+              <span class="absolute top-[calc(1.5rem+0.625rem-0.21875rem)] left-[var(--rail)] size-[0.4375rem] -translate-x-1/2 rounded-full bg-tx-3 ring-[0.1875rem] ring-bg" aria-hidden="true" />
+              <header class="pt-6 pl-5 leading-5 sm:sticky sm:top-4 sm:self-start sm:pr-5 sm:pl-0 sm:text-right">
+                <a class="inline-flex items-baseline gap-2 text-sm leading-5 text-tx-2 no-underline hover:text-tx sm:flex-col sm:items-end sm:gap-0.5" href={getMomentPath(day.dateKey)} aria-label={`在日历中查看 ${day.dateKey}`}>
+                  <time class="font-mono" datetime={day.dateKey}>{formatDay(day.dateKey)}</time>
+                  <span class="text-xs text-tx-3">{formatWeekday(day.dateKey)}</span>
+                </a>
+              </header>
+              <div class="timeline-day__moments min-w-0 pl-5 sm:pl-6 max-sm:[&>.moment-entry:first-child]:pt-3">
+                {day.moments.map(moment => (
+                  <MomentEntry moment={moment} priorityMedia={moment === leadMoment ? '(min-width: 0px)' : undefined} />
+                ))}
+              </div>
+            </section>
+          ))}
+        </section>
+      ))}
+    </div>
+
+    <nav class="timeline-pagination mx-auto mt-10 flex max-w-[42rem] items-center justify-between border-t border-border pt-5 font-mono text-[0.8125rem] [&_a]:inline-flex [&_a]:min-h-11 [&_a]:items-center [&_a]:gap-1 [&_a]:text-tx-2 [&_a]:no-underline [&_a:hover]:text-tx" aria-label="翻页">
+      {newerYear ? <a href={getTimelinePath(newerYear)}><span class="i-lucide-chevron-left" aria-hidden="true" />{newerYear}</a> : <span />}
+      {olderYear ? <a href={getTimelinePath(olderYear)}>{olderYear}<span class="i-lucide-chevron-right" aria-hidden="true" /></a> : <span />}
+    </nav>
+  </main>
+
+  <MomentLightbox />
+</Layout>
