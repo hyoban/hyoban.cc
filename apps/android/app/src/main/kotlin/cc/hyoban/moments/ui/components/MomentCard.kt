@@ -8,20 +8,23 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.ZeroCornerSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Luggage
 import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material.icons.rounded.Schedule
-import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import cc.hyoban.moments.ui.theme.Corners
+import androidx.compose.material3.IconButton
+import cc.hyoban.moments.ui.theme.fill
+import cc.hyoban.moments.ui.theme.LocalDarkTheme
+import cc.hyoban.moments.ui.theme.SurfaceLevel
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -33,7 +36,6 @@ import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.spec.TripRecord
 import cc.hyoban.moments.ui.format.formatDate
 import cc.hyoban.moments.ui.format.formatTime
-import cc.hyoban.moments.ui.theme.Corners
 import cc.hyoban.moments.ui.theme.Space
 
 /**
@@ -59,7 +61,7 @@ fun MomentCard(
                 moment.media,
                 urls,
                 onOpen = onOpenMedia,
-                modifier = Modifier.padding(6.dp).clip(Corners.inset),
+                modifier = Modifier.padding(4.dp).clip(MaterialTheme.shapes.small),
             )
         }
         Column(
@@ -74,28 +76,18 @@ fun MomentCard(
     }
 }
 
-/** When, where and which trip, each a pill: the time in the primary colour, places neutral, the trip in the tertiary. */
+/** When, where and which trip, each a neutral pill. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun MomentPills(moment: MomentRecord, places: Map<String, Place>, trip: TripRecord?, showDate: Boolean = false) {
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.s), verticalArrangement = Arrangement.spacedBy(Space.s)) {
         val time = listOfNotNull(if (showDate) formatDate(moment.occurredAt) else null, formatTime(moment.occurredAt)).joinToString(" ")
         if (time.isNotEmpty()) {
-            Pill(
-                time,
-                icon = Icons.Rounded.Schedule,
-                container = MaterialTheme.colorScheme.primaryContainer,
-                content = MaterialTheme.colorScheme.onPrimaryContainer,
-            )
+            Pill(time, icon = Icons.Rounded.Schedule)
         }
         moment.places.forEach { id -> Pill(places[id]?.name ?: id, icon = Icons.Rounded.Place) }
         trip?.let {
-            Pill(
-                it.title,
-                icon = Icons.Rounded.Luggage,
-                container = MaterialTheme.colorScheme.tertiaryContainer,
-                content = MaterialTheme.colorScheme.onTertiaryContainer,
-            )
+            Pill(it.title, icon = Icons.Rounded.Luggage)
         }
     }
 }
@@ -110,7 +102,7 @@ fun CompactMomentRow(moment: MomentRecord, places: Map<String, Place>, urls: Med
                 Text(
                     listOfNotNull(formatDate(moment.occurredAt), formatTime(moment.occurredAt)).joinToString(" "),
                     style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
                     moment.text.ifBlank { moment.places.joinToString("、") { places[it]?.name ?: it } },
@@ -126,14 +118,17 @@ fun CompactMomentRow(moment: MomentRecord, places: Map<String, Place>, urls: Med
 /** A back button that floats over a photo or a map, legible on either. */
 @Composable
 fun FloatingBack(onBack: () -> Unit, modifier: Modifier = Modifier) {
-    FilledTonalIconButton(
-        onClick = onBack,
+    // Floating over a photo, a map or a card: the floating level with a shadow, as the tabs are.
+    Surface(
+        shape = Corners.full,
+        color = SurfaceLevel.floating(LocalDarkTheme.current).fill(),
+        contentColor = MaterialTheme.colorScheme.onSurface,
+        shadowElevation = 3.dp,
         modifier = modifier.statusBarsPadding().padding(Space.s),
-        colors = IconButtonDefaults.filledTonalIconButtonColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.9f),
-        ),
     ) {
-        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.action_back))
+        IconButton(onClick = onBack) {
+            Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.action_back))
+        }
     }
 }
 
@@ -141,7 +136,7 @@ fun FloatingBack(onBack: () -> Unit, modifier: Modifier = Modifier) {
 @Composable
 fun RisingSheet(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     Surface(
-        shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
+        shape = MaterialTheme.shapes.extraLarge.copy(bottomStart = ZeroCornerSize, bottomEnd = ZeroCornerSize),
         color = AppColors.page,
         modifier = modifier.fillMaxWidth(),
         content = content,

@@ -39,16 +39,13 @@ import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material3.AssistChip
 import androidx.compose.material.icons.rounded.MotionPhotosOn
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -61,6 +58,20 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import cc.hyoban.moments.ui.theme.fill
+import cc.hyoban.moments.ui.theme.Space
+import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
+import cc.hyoban.moments.ui.components.SectionHeader
+import cc.hyoban.moments.ui.components.PressableCard
+import cc.hyoban.moments.ui.components.NeutralChip
+import cc.hyoban.moments.ui.components.AppColors
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.material.icons.outlined.Image
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Button
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.ui.geometry.Size
 import me.saket.telephoto.zoomable.zoomable
@@ -192,7 +203,7 @@ fun MediaViewer(
 
         AnimatedVisibility(chrome && progress == 0f, enter = fadeIn(), exit = fadeOut()) {
             Row(
-                Modifier.fillMaxWidth().background(Color.Black.copy(alpha = 0.25f)).statusBarsPadding().padding(4.dp),
+                Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.25f)).statusBarsPadding().padding(4.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 IconButton(onClick = onBack) {
@@ -268,12 +279,40 @@ private fun ViewerPage(
     }
 }
 
+/** A section of the panel: a card headed by its icon and name. */
+@Composable
+private fun InfoCard(icon: ImageVector, title: String, content: @Composable ColumnScope.() -> Unit) {
+    val level = LocalSurfaceLevel.current.raised
+    Surface(shape = MaterialTheme.shapes.large, color = level.fill(), modifier = Modifier.fillMaxWidth()) {
+        CompositionLocalProvider(LocalSurfaceLevel provides level) {
+            Column(Modifier.padding(Space.m), verticalArrangement = Arrangement.spacedBy(Space.m)) {
+                SectionHeader(icon, title)
+                content()
+            }
+        }
+    }
+}
+
+/** A tile inside a card, a level into it: some text, with its [label] over it when it has one. */
+@Composable
+private fun InfoTile(text: String, label: String? = null) {
+    Column(
+        Modifier.fillMaxWidth().clip(MaterialTheme.shapes.medium).background(LocalSurfaceLevel.current.raised.fill()).padding(Space.m),
+        verticalArrangement = Arrangement.spacedBy(2.dp),
+    ) {
+        label?.let { Text(it, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+        Text(text, style = MaterialTheme.typography.bodyMedium)
+    }
+}
+
 /** The LIVE badge under a live photo: a ring while its motion loads, then a tap plays it again. */
 @Composable
 private fun ViewerLiveBadge(state: LiveMotionState, modifier: Modifier = Modifier) {
     Row(
-        modifier.clip(RoundedCornerShape(50))
-            .background(Color.Black.copy(alpha = 0.45f))
+        // A tap target of 48dp around the badge, as Material asks of anything tapped.
+        modifier.minimumInteractiveComponentSize()
+            .clip(RoundedCornerShape(50))
+            .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.45f))
             .clickable(enabled = state.ready) { if (state.playing) state.stop() else state.play() }
             .padding(horizontal = 12.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -392,85 +431,79 @@ private fun InfoSheet(
     val trip = remember(moment, trips) { tripOf(moment, trips) }
     val located = remember(moment, places) { moment.places.mapNotNull { places[it] } }
 
-    ModalBottomSheet(onDismissRequest = onDismiss) {
-        Column(
-            Modifier.verticalScroll(rememberScrollState()).padding(start = 20.dp, end = 20.dp, bottom = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(formatDay(moment.occurredAt), style = MaterialTheme.typography.headlineSmall)
-                formatTime(moment.occurredAt)?.let {
-                    Text(it, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    val level = AppColors.sheetLevel
+    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = level.fill()) {
+        CompositionLocalProvider(LocalSurfaceLevel provides level) {
+            Column(
+                Modifier.verticalScroll(rememberScrollState()).padding(start = Space.gutter, end = Space.gutter, bottom = Space.xl),
+                verticalArrangement = Arrangement.spacedBy(Space.m),
+            ) {
+                Column(Modifier.padding(horizontal = Space.xs), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(formatDay(moment.occurredAt), style = MaterialTheme.typography.headlineSmall)
+                    formatTime(moment.occurredAt)?.let {
+                        Text(it, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
                 }
-            }
-            if (located.isNotEmpty()) {
-                PlacesStill(
-                    located,
-                    Modifier.fillMaxWidth().aspectRatio(2f).clip(MaterialTheme.shapes.large)
-                        .background(MaterialTheme.colorScheme.surfaceContainerHighest),
-                )
-            }
-            if (moment.places.isNotEmpty()) {
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    moment.places.forEach { id ->
-                        AssistChip(
-                            onClick = { onPlace(id) },
-                            label = { Text(places[id]?.name ?: id) },
-                            leadingIcon = { Icon(Icons.Rounded.Place, contentDescription = null, modifier = Modifier.size(AssistChipDefaults.IconSize)) },
+                if (moment.places.isNotEmpty()) {
+                    InfoCard(Icons.Rounded.Place, stringResource(R.string.section_places)) {
+                        if (located.isNotEmpty()) {
+                            PlacesStill(located, Modifier.fillMaxWidth().aspectRatio(2f).clip(MaterialTheme.shapes.medium))
+                        }
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.s)) {
+                            moment.places.forEach { id -> NeutralChip(places[id]?.name ?: id, Icons.Rounded.Place, onClick = { onPlace(id) }) }
+                        }
+                    }
+                }
+                if (moment.text.isNotBlank()) {
+                    Text(moment.text, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = Space.xs))
+                }
+                if (media.alt.isNotBlank() || (media.width != null && media.height != null)) {
+                    InfoCard(Icons.Outlined.Image, stringResource(R.string.section_photo)) {
+                        // What the photo is and its description, each a tile a level into the card.
+                        if (media.width != null && media.height != null) {
+                            InfoTile(
+                                stringResource(
+                                    R.string.label_media_size,
+                                    stringResource(
+                                        when (media.type) {
+                                            MediaType.IMAGE -> R.string.media_photo
+                                            MediaType.LIVE_PHOTO -> R.string.media_live
+                                            MediaType.VIDEO -> R.string.media_video
+                                        },
+                                    ),
+                                    media.width,
+                                    media.height,
+                                ),
+                            )
+                        }
+                        if (media.alt.isNotBlank()) InfoTile(media.alt, label = stringResource(R.string.label_alt))
+                    }
+                }
+                trip?.let { trip ->
+                    val cover = remember(trip, moments) { coversOf(trip, moments, trips, limit = 1).firstOrNull() }
+                    val count = remember(trip, moments) { momentsOf(trip, moments, trips).size }
+                    PressableCard(onClick = { onTrip(trip.id) }, modifier = Modifier.fillMaxWidth()) {
+                        ListItem(
+                            headlineContent = { Text(trip.title) },
+                            supportingContent = {
+                                Text(
+                                    listOf(
+                                        formatRange(trip.start, trip.end),
+                                        stringResource(R.string.count_days, daysBetween(trip.start, trip.end)),
+                                        stringResource(R.string.count_moments, count),
+                                    ).joinToString(" · "),
+                                )
+                            },
+                            leadingContent = cover?.let { { Thumbnail(it, container.mediaUrls, size = 48) } },
+                            trailingContent = { Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null) },
+                            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                         )
                     }
                 }
-            }
-            if (moment.text.isNotBlank()) {
-                Text(moment.text, style = MaterialTheme.typography.bodyLarge)
-            }
-            if (media.alt.isNotBlank()) {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(stringResource(R.string.label_alt), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text(media.alt, style = MaterialTheme.typography.bodyMedium)
+                // The panel's one action, so the one thing in colour.
+                Button(onClick = onMoment, modifier = Modifier.fillMaxWidth().padding(top = Space.xs)) {
+                    Text(stringResource(R.string.action_open_moment))
                 }
-            }
-            if (media.width != null && media.height != null) {
-                Text(
-                    stringResource(
-                        R.string.label_media_size,
-                        stringResource(
-                            when (media.type) {
-                                MediaType.IMAGE -> R.string.media_photo
-                                MediaType.LIVE_PHOTO -> R.string.media_live
-                                MediaType.VIDEO -> R.string.media_video
-                            },
-                        ),
-                        media.width,
-                        media.height,
-                    ),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            trip?.let { trip ->
-                val cover = remember(trip, moments) { coversOf(trip, moments, trips, limit = 1).firstOrNull() }
-                val count = remember(trip, moments) { momentsOf(trip, moments, trips).size }
-                OutlinedCard(onClick = { onTrip(trip.id) }, modifier = Modifier.fillMaxWidth()) {
-                    ListItem(
-                        headlineContent = { Text(trip.title) },
-                        supportingContent = {
-                            Text(
-                                listOf(
-                                    formatRange(trip.start, trip.end),
-                                    stringResource(R.string.count_days, daysBetween(trip.start, trip.end)),
-                                    stringResource(R.string.count_moments, count),
-                                ).joinToString(" · "),
-                            )
-                        },
-                        leadingContent = cover?.let { { Thumbnail(it, container.mediaUrls, size = 48) } },
-                        trailingContent = { Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null) },
-                        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                    )
-                }
-            }
-            FilledTonalButton(onClick = onMoment, modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(R.string.action_open_moment))
             }
         }
     }
