@@ -33,14 +33,14 @@ description: 没挣到钱的一年
 
 ## 旅行和社交
 
-今年最大的一笔支出就是买了辆车，经常让我觉得花了太多不该花的钱。
+今年最大的一笔支出就是买了辆车（开了两万公里后写了篇[用车感受](/20-000-km/)），经常让我觉得花了太多不该花的钱。
 但现在想想还是觉得不后悔，我很享受在路上在车里的感觉。
 （甚至在车里也睡过了很多个夜晚）
 
 [![我在 X 上分享的极氪 007GT 提车照片](https://image.hyoban.cc/posts/review-2025/zeekr-007gt-delivery.jpg)](https://x.com/hyoban_cc/status/1957277366138679452)
 
 买车之后开车去了很多地方。
-最长的一段旅程就是开车从安徽去了川西，和同学一起自驾到了雪山边。
+最长的一段旅程就是开车从安徽去了[川西](/trip/2025-western-sichuan-road-trip/)，和同学一起自驾到了雪山边。
 车子保险杠第一次刮蹭之后难过得不行，底盘低导致的刮蹭也让我趴着地上看了好久。
 
 ![](https://image.hyoban.cc/posts/review-2025/western-sichuan-snow-mountains.jpg)
@@ -76,7 +76,7 @@ macOS 内置的剪切板助手勉强也能用。
 ![](https://image.hyoban.cc/posts/review-2025/macbook-pro-cost-summary.jpg)
 
 买了 PS5 并开了会员但是逐渐吃灰，这两个月在苏州也没带过来。
-NAS 倒是一直勤勤恳恳的工作着。
+[NAS](/weekly-1/) 倒是一直勤勤恳恳的工作着。
 我很喜欢当个电子仓鼠，把喜欢看的电视、电影、动漫都存在里面。
 在外面看起来也很方便，手机和车机都能看。
 
