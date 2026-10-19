@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'vite-plus/test'
 
 import { getDeviceEvents, getDeviceLanes, getDeviceSpans } from '../../src/data/devices.ts'
-import { devicesSchema } from '../../src/data/spec.ts'
+import { devicesSchema } from '@hyoban/data-spec'
 
 const devices = devicesSchema.parse({
   'old-phone': { name: 'Old', category: '手机', bought: { on: '2021-01-01', price: 1000 } },

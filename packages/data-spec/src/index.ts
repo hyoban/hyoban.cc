@@ -1,4 +1,4 @@
-import { z } from 'astro/zod'
+import { z } from 'zod'
 
 // The data spec: the format the recording app stores, the repository commits under
 // `data/` and the site reads. Every object is loose, so a field one side doesn't know

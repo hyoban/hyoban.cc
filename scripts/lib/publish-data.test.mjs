@@ -5,7 +5,7 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { test } from 'vite-plus/test'
 
-import { getMomentFile } from '../../src/data/spec.ts'
+import { getMomentFile } from '@hyoban/data-spec'
 import {
   readManifest,
   readMomentRecords,

@@ -1,5 +1,5 @@
 import { getAssetUrl } from './asset-url.ts'
-import type { MomentRecord, TripRecord } from './data/spec.ts'
+import type { MomentRecord, TripRecord } from '@hyoban/data-spec'
 import { readMomentRecords, readTripRecords } from './data/store.ts'
 
 // A paragraph that is only a link to a trip, like `[国庆东北自驾](/trip/2026-national-day-road-trip/)`,

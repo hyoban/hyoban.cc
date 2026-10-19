@@ -7,7 +7,7 @@ import {
   momentRecordSchema,
   placesSchema,
   tripRecordSchema,
-} from '../../src/data/spec.ts'
+} from '@hyoban/data-spec'
 
 /** The spec's schemas by the name of the JSON Schema file each becomes. */
 export function getDataSchemas() {

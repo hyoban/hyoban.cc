@@ -4,7 +4,7 @@ import { join } from 'node:path'
 import { test } from 'vite-plus/test'
 
 import { tripVideoMusic } from '../../src/data/music.ts'
-import { getMomentFile, momentRecordSchema, tripRecordSchema } from '../../src/data/spec.ts'
+import { getMomentFile, momentRecordSchema, tripRecordSchema } from '@hyoban/data-spec'
 import {
   dataRoot,
   readDevices,
@@ -118,7 +118,7 @@ test('places, trips, covers and music referenced by records exist', () => {
   }
 })
 
-test('the committed JSON Schema matches src/data/spec.ts', async () => {
+test('the committed JSON Schema matches @hyoban/data-spec', async () => {
   for (const [name, schema] of Object.entries(getDataSchemas())) {
     const committed = await readFile(join(dataRoot, 'schema', getSchemaFile(name)), 'utf8')
     assert.equal(committed, renderSchema(name, schema), `Run pnpm data:schema: ${name} is stale`)

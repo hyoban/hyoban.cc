@@ -30,7 +30,9 @@ const { prepareImage, prepareVideo, uploadAssets } = await fromRepository(
   'scripts/lib/moment-media.mjs',
 )
 const { ulid } = await fromRepository('scripts/lib/ulid.mjs')
-const { getMomentFile, momentRecordSchema } = await fromRepository('src/data/spec.ts')
+const { getMomentFile, momentRecordSchema } = await fromRepository(
+  'packages/data-spec/src/index.ts',
+)
 const { readMomentRecords } = await fromRepository('src/data/store.ts')
 const config = JSON.parse(
   await readFile(join(repositoryPath, 'src/data/asset-config.json'), 'utf8'),

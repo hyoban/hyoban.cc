@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url'
 
 import { getDataSchemas, getSchemaFile, renderSchema } from './lib/data-schema.mjs'
 
-// Writes src/data/spec.ts out as JSON Schema under data/schema, for the recording app
+// Writes @hyoban/data-spec out as JSON Schema under data/schema, for the recording app
 // and anything else that writes data/ without this repository's TypeScript.
 
 const root = fileURLToPath(new URL('../', import.meta.url))

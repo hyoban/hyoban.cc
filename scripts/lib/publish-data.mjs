@@ -11,7 +11,7 @@ import {
   momentRecordSchema,
   placesSchema,
   tripRecordSchema,
-} from '../../src/data/spec.ts'
+} from '@hyoban/data-spec'
 import { readMomentRecords, readPlaces } from '../../src/data/store.ts'
 import { getContentType } from './r2-assets.mjs'
 

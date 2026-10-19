@@ -1,0 +1,14 @@
+{
+  "name": "@hyoban/data-spec",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The shape of the Moments, places, trips and devices the recording app, the site and the API share.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./package.json": "./package.json"
+  },
+  "dependencies": {
+    "zod": "^4.6.6"
+  }
+}

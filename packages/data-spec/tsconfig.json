@@ -1,0 +1,6 @@
+{
+  "extends": "../trip-map/tsconfig.json",
+  "compilerOptions": {
+    "lib": ["ESNext"]
+  }
+}

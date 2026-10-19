@@ -11,7 +11,7 @@ import {
   type MomentRecord,
   type Places,
   type TripRecord,
-} from './spec.ts'
+} from '@hyoban/data-spec'
 
 // Reads the repository's `data/` directory, the committed copy of the recording app's
 // data, for the site's build and for the scripts. Everything is validated on the way in.
