@@ -28,6 +28,15 @@ media item of a record carries its R2 key, byte size, MIME type, ETag, image
 dimensions and responsive variants in its `published` block (see
 `packages/data-spec`).
 
+Moments the recording app publishes through the API keep their photos as
+uploaded instead: the image's `published` block has `original: true` and no
+variants, and the site asks Cloudflare Images for 480, 960 and 1920 pixel
+copies in the browser's best format
+(`/cdn-cgi/image/width=…,format=auto,onerror=redirect/<key>` on the image
+origin). Transformations must be enabled for the `hyoban.cc` zone; the free
+plan's 5,000 unique transformations a month cover them, and past that a new
+size falls back to the original.
+
 The R2 directory mirrors the Moment's published id. Existing objects are
 immutable; replace changed media with a new semantic filename instead of
 overwriting a key.

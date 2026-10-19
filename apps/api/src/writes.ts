@@ -274,6 +274,7 @@ async function publishMedia(bucket: Bucket, record: MomentRecord) {
           width: item.width,
           height: item.height,
           variants: [],
+          original: true,
         }
         break
       case 'live-photo':
@@ -282,6 +283,7 @@ async function publishMedia(bucket: Bucket, record: MomentRecord) {
           width: item.width,
           height: item.height,
           variants: [],
+          original: true,
           video: await copy('video'),
         }
         break

@@ -127,6 +127,7 @@ test('a draft is the owner’s until it publishes, with its media moved under it
     width: item.width,
     height: item.height,
     variants: [],
+    original: true,
   })
   assert.ok(bucket.objects.has(`moments/${id}/nanjing.jpg`))
   assert.ok(!bucket.objects.has(uploaded.body.key))
