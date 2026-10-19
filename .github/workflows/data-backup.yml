@@ -1,0 +1,47 @@
+name: Data Backup
+
+# The API's D1 database holds the Moments, places and trips; data/ is their backup.
+# This writes the API's export into data/ and commits it to main when anything changed.
+
+on:
+  schedule:
+    - cron: '41 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: data-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Export the API into data/
+        env:
+          MOMENTS_API_TOKEN: ${{ secrets.MOMENTS_API_TOKEN }}
+        run: pnpm data:export
+      - name: Commit and push changes
+        run: |
+          git add data
+          if git diff --cached --quiet; then
+            echo "data/ is already up to date."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: back up data from the API"
+          git push origin HEAD:main
