@@ -1,7 +1,7 @@
 ---
 import SitePage from '@/components/SitePage.astro'
 import Layout from '@/layouts/Layout.astro'
-import { formatPostFullDate, getMarkdownEntries, type PostEntry } from '@/utils'
+import { countPostWords, formatPostFullDate, formatPostWordCount, getMarkdownEntries, type PostEntry } from '@/utils'
 import { render } from 'astro:content'
 
 export async function getStaticPaths() {
@@ -23,6 +23,7 @@ const article = post
       telegramChannel: '@hyoban',
     }
   : undefined
+const wordCount = post ? countPostWords(post.body ?? '') : 0
 const { Content } = await render(entry)
 ---
 
@@ -45,9 +46,11 @@ const { Content } = await render(entry)
             </a>
             <header class="mb-8">
               <h1 class="font-medium">{entry.data.title}</h1>
-              <time class="text-tx-2" datetime={post.data.pubDate.toISOString()}>
-                {formatPostFullDate(post.data.pubDate)}
-              </time>
+              <p class="text-tx-2">
+                <time datetime={post.data.pubDate.toISOString()}>{formatPostFullDate(post.data.pubDate)}</time>
+                <span aria-hidden="true"> · </span>
+                <span>{formatPostWordCount(wordCount)}</span>
+              </p>
             </header>
             <article class="prose">
               <Content />
