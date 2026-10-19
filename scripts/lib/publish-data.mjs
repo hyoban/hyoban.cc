@@ -12,6 +12,13 @@ import {
   placesSchema,
   tripRecordSchema,
 } from '@hyoban/data-spec'
+import {
+  getPublishedId,
+  getSlug,
+  getStem,
+  matchPlace,
+  NEARBY_KM,
+} from '../../apps/api/src/publish.ts'
 import { readMomentRecords, readPlaces } from '../../src/data/store.ts'
 import { getContentType } from './r2-assets.mjs'
 
@@ -19,11 +26,10 @@ import { getContentType } from './r2-assets.mjs'
 // against the ones already there, its trips written, and its Moments given a published
 // id and their media uploaded, keeping anything already published for the same uid. The
 // receipt carries the published records back to the app, with the places it renamed.
+// The rules for places, ids and file names are the API's, in apps/api/src/publish.ts.
 
 export const GENERATOR = 'hyoban.cc data:publish'
 
-/** Two places this close, or with the same name, are one place. */
-const NEARBY_KM = 0.2
 const ULID_PATTERN = /^[0-9A-HJKMNP-TV-Z]{26}$/
 
 /** Reads an unpacked bundle: the records, and the media files by the uid they belong to. */
@@ -105,29 +111,17 @@ export function planPlaces(bundlePlaces, repositoryPlaces) {
   const conflicts = []
 
   for (const [id, place] of Object.entries(bundlePlaces)) {
-    const existing = places[id]
+    const match = matchPlace(id, place, places)
 
-    if (existing) {
-      if (getDistanceKm(existing, place) > NEARBY_KM) {
-        conflicts.push(
-          `Place ${id} is ${getDistanceKm(existing, place).toFixed(1)} km from where data/places.json has it; the repository's point was kept.`,
-        )
-      }
-
-      continue
+    if (match.status === 'known' && getDistanceKm(places[id], place) > NEARBY_KM) {
+      conflicts.push(
+        `Place ${id} is ${getDistanceKm(places[id], place).toFixed(1)} km from where data/places.json has it; the repository's point was kept.`,
+      )
+    } else if (match.status === 'matched') {
+      renamedPlaces[id] = match.id
+    } else if (match.status === 'new') {
+      places[id] = place
     }
-
-    const match = Object.entries(places).find(
-      ([, candidate]) =>
-        candidate.name === place.name || getDistanceKm(candidate, place) <= NEARBY_KM,
-    )
-
-    if (match) {
-      renamedPlaces[id] = match[0]
-      continue
-    }
-
-    places[id] = place
   }
 
   return {
@@ -207,16 +201,12 @@ export async function publishBundle(bundle, { dataRoot, now = timestamp(), prepa
 
     if (!record.published) {
       const dateKey = record.occurredAt.slice(0, 10)
-      const order = (ordersByDate.get(dateKey)?.at(-1) ?? 0) + 1
-      const slug = getSlug(record)
-      const prefix = `${dateKey.replaceAll('-', '/').slice(0, 7)}/${dateKey.slice(8, 10)}-${String(order).padStart(2, '0')}-`
-      let id = `${prefix}${slug}`
+      const { id, order, slug } = getPublishedId(dateKey, getSlug(record), {
+        orders: ordersByDate.get(dateKey) ?? [],
+        ids: publishedIds,
+      })
 
-      for (let attempt = 2; publishedIds.has(id); attempt += 1) {
-        id = `${prefix}${slug}-${attempt}`
-      }
-
-      record.published = { id, slug: id.slice(prefix.length), order, at: now }
+      record.published = { id, slug, order, at: now }
       publishedIds.add(id)
       noteOrder(dateKey, order)
     }
@@ -309,52 +299,6 @@ export async function writeReceipt(receipt, directory) {
 
   for (const record of receipt.moments) {
     await writeJson(join(directory, getMomentFile(record)), record)
-  }
-}
-
-/** The slug the app proposed, else the first place, else the first words, else `moment`. */
-function getSlug(record) {
-  const proposed = typeof record.slug === 'string' ? record.slug : ''
-
-  if (/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(proposed)) {
-    return proposed
-  }
-
-  if (record.places[0]) {
-    return record.places[0]
-  }
-
-  const words = record.text
-    .normalize('NFKD')
-    .toLowerCase()
-    .replaceAll(/[^a-z0-9]+/g, ' ')
-    .trim()
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 5)
-
-  return words.length > 0 ? words.join('-') : 'moment'
-}
-
-/** The file stem of a media item: the slug, numbered among the record's images or videos. */
-function getStem(record, item) {
-  const isVideo = item.type === 'video'
-  const siblings = record.media.filter((candidate) => (candidate.type === 'video') === isVideo)
-  const taken = new Set(
-    record.media.flatMap((candidate) =>
-      candidate.published
-        ? [basename(candidate.published.key, extname(candidate.published.key))]
-        : [],
-    ),
-  )
-  const base = `${record.published.slug}${isVideo ? '-video' : ''}`
-
-  for (let index = siblings.indexOf(item) + 1; ; index += 1) {
-    const stem = index === 1 ? base : `${base}-${index}`
-
-    if (!taken.has(stem)) {
-      return stem
-    }
   }
 }
 

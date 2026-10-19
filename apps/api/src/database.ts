@@ -2,12 +2,15 @@
 
 export interface Database {
   prepare(query: string): Statement
+  /** Runs the statements in one transaction. */
+  batch(statements: Statement[]): Promise<unknown[]>
 }
 
 export interface Statement {
   bind(...values: unknown[]): Statement
   all<T = Record<string, unknown>>(): Promise<{ results: T[] }>
   first<T = Record<string, unknown>>(): Promise<T | null>
+  run(): Promise<unknown>
 }
 
 interface RecordRow {

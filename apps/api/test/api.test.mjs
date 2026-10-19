@@ -1,54 +1,10 @@
 import assert from 'node:assert/strict'
-import { readdirSync, readFileSync } from 'node:fs'
-import { DatabaseSync } from 'node:sqlite'
 import { test } from 'vite-plus/test'
 
-import { listJsonFiles, readJson } from '../../../src/data/store.ts'
-import { buildImportSql } from '../src/import.ts'
 import { handle } from '../src/index.ts'
+import { get, setUp, snapshot, token } from './setup.mjs'
 
-// Runs the Worker against an in-memory SQLite shaped like D1: the migrations, an import
-// of the repository's data/, and the reads a client makes afterwards.
-
-const migrations = new URL('../migrations/', import.meta.url)
-const snapshot = {
-  manifest: readJson('manifest.json'),
-  places: readJson('places.json'),
-  trips: listJsonFiles('trips').map((file) => readJson(file)),
-  moments: listJsonFiles('moments').map((file) => readJson(file)),
-}
-const token = 'test-token'
-
-/** A database with the migrations applied, the D1 calls the API makes, and the raw SQLite. */
-function setUp() {
-  const sqlite = new DatabaseSync(':memory:')
-
-  for (const file of readdirSync(migrations).sort()) {
-    sqlite.exec(readFileSync(new URL(file, migrations), 'utf8'))
-  }
-
-  const statement = (query, values = []) => ({
-    bind: (...next) => statement(query, next),
-    all: async () => ({ results: sqlite.prepare(query).all(...values) }),
-    first: async () => sqlite.prepare(query).get(...values) ?? null,
-  })
-  const env = { DB: { prepare: (query) => statement(query) }, API_TOKENS: `other, ${token}` }
-  const importSnapshot = (value, now = '2026-10-19T12:00:00Z') =>
-    sqlite.exec(buildImportSql(value, now))
-
-  return { env, importSnapshot, sqlite }
-}
-
-async function get(env, path, { auth } = {}) {
-  const response = await handle(
-    new Request(`https://api.test${path}`, {
-      headers: auth ? { Authorization: `Bearer ${auth}` } : {},
-    }),
-    env,
-  )
-
-  return { status: response.status, body: await response.json() }
-}
+// The reads: an import of the repository's data/, and what a client reads afterwards.
 
 /** Every page of the Moments feed from a revision on. */
 async function readFeed(env, { auth, since = 0, limit = 100 } = {}) {
@@ -182,6 +138,18 @@ test('tokens, methods and queries are checked', async () => {
   assert.equal((await get(env, '/v2/moments')).status, 404)
   assert.equal(
     (await handle(new Request('https://api.test/v1/moments', { method: 'POST' }), env)).status,
+    401,
+  )
+  assert.equal(
+    (
+      await handle(
+        new Request('https://api.test/v1/moments', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        env,
+      )
+    ).status,
     405,
   )
   assert.deepEqual((await get(env, '/')).body, { name: 'hyoban.cc', revision: 1 })
