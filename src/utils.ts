@@ -28,6 +28,28 @@ export function formatPostFullDate(date: Date) {
   return `${year} 年 ${Number.parseInt(month, 10)} 月 ${Number.parseInt(day, 10)} 日`
 }
 
+// Counts a post's markdown the way a Chinese reader would: each CJK character is a word, and
+// so is each run of Latin letters or digits. Code blocks, images, link targets and HTML are
+// left out, since they are not read as prose.
+export function countPostWords(markdown: string) {
+  const prose = markdown
+    .replaceAll(/^(`{3,}|~{3,})[^\n]*\n[\s\S]*?^\1[^\S\n]*$/gm, '')
+    .replaceAll(/!\[[^\]]*\]\([^)]*\)/g, '')
+    .replaceAll(/\]\([^)]*\)/g, ']')
+    .replaceAll(/<[^>]+>/g, '')
+    .replaceAll(/https?:\/\/\S+/g, '')
+  const cjk =
+    prose.match(/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/gu)
+      ?.length ?? 0
+  const latin =
+    prose.match(/[\p{Script=Latin}\p{Nd}]+(?:[.'’-][\p{Script=Latin}\p{Nd}]+)*/gu)?.length ?? 0
+  return cjk + latin
+}
+
+export function formatPostWordCount(count: number) {
+  return `${count.toLocaleString('zh-CN')} 字`
+}
+
 export async function getSortedPosts() {
   return (await getCollection('posts')).sort(
     (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
