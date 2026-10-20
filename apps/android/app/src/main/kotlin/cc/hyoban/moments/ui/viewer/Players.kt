@@ -66,6 +66,8 @@ fun rememberCachedPlayer(url: String, active: Boolean, configure: ExoPlayer.() -
             .setUpstreamDataSourceFactory(OkHttpDataSource.Factory(Http.client))
         val made = ExoPlayer.Builder(context)
             .setMediaSourceFactory(DefaultMediaSourceFactory(context).setDataSourceFactory(source))
+            // Headphones pulled out stop it, rather than letting it go on aloud.
+            .setHandleAudioBecomingNoisy(true)
             .build()
             .apply {
                 repeatMode = Player.REPEAT_MODE_OFF

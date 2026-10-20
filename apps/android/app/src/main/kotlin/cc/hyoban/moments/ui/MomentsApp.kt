@@ -117,7 +117,9 @@ import cc.hyoban.moments.ui.settings.SettingsScreen
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.trips.TripScreen
 import cc.hyoban.moments.ui.trips.TripsScreen
+import cc.hyoban.moments.ui.viewer.LocalInPictureInPicture
 import cc.hyoban.moments.ui.viewer.MediaViewer
+import cc.hyoban.moments.ui.viewer.rememberInPictureInPicture
 import kotlin.reflect.KClass
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -265,6 +267,7 @@ fun MomentsApp(container: AppContainer) {
     }
 
     AdaptiveStatusBarIcons()
+    val inPictureInPicture = rememberInPictureInPicture()
 
     // A link opened while the app is already open, `adb shell am start -d moments://…` among
     // them, goes to its page over the one shown; the viewer, if open, closes first. Its task
@@ -299,6 +302,7 @@ fun MomentsApp(container: AppContainer) {
                         LocalViewerShowing provides viewerShowing,
                         LocalSettings provides container.settings,
                         LocalTabReselects provides tabReselects,
+                        LocalInPictureInPicture provides inPictureInPicture,
                     ) {
                         NavHost(
                             navController = navController,

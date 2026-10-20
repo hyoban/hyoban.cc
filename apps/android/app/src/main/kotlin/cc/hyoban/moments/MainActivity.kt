@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import cc.hyoban.moments.ui.MomentsApp
 import cc.hyoban.moments.ui.theme.MomentsTheme
+import cc.hyoban.moments.ui.viewer.PictureInPicture
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -20,5 +21,11 @@ class MainActivity : ComponentActivity() {
         // Compose paints the whole window, so the window's own background would only be
         // painted over on every frame.
         window.setBackgroundDrawable(null)
+    }
+
+    // Before Android 12 a playing video goes into its own window as the app is left; later the system takes it there itself.
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        PictureInPicture.enterOnLeave(this)
     }
 }

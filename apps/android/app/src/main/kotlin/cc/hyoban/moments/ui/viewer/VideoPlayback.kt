@@ -39,10 +39,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.keepScreenOn
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
+import androidx.media3.common.AudioAttributes
+import androidx.media3.common.C
 import androidx.media3.common.Player
+import androidx.media3.common.VideoSize
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.session.MediaSession
 import androidx.media3.ui.compose.state.rememberMuteButtonState
 import androidx.media3.ui.compose.state.rememberPlayPauseButtonState
 import androidx.media3.ui.compose.state.rememberProgressStateWithTickInterval
@@ -53,6 +62,9 @@ import cc.hyoban.moments.R
 // for sound, with a ring while it waits for more. Its controls come and go with the
 // viewer's, and follow the player through Media3's own state holders. Videos are kept
 // on disk with the live photos' clips; the sound, once turned on, stays on for the next.
+// With its sound on it takes the audio from other apps, and stops when the headphones
+// come out; silent, it leaves their music alone. The screen stays on while it plays; it
+// pauses when the app is left, unless it goes on in a window of its own.
 
 /** Whether videos play with their sound; on for the rest of the viewer's videos once turned on. */
 private object VideoSound {
@@ -67,6 +79,13 @@ class VideoState {
 
     var waiting by mutableStateOf(true)
         internal set
+
+    var playing by mutableStateOf(false)
+        internal set
+
+    /** The video's size in pixels once known, for the shape of its picture-in-picture window. */
+    var size by mutableStateOf(IntSize.Zero)
+        internal set
 }
 
 @Composable
@@ -78,28 +97,55 @@ fun rememberVideoState(key: Any): VideoState = remember(key) { VideoState() }
  */
 @Composable
 fun VideoPlayback(url: String, active: Boolean, state: VideoState, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
     val player = rememberCachedPlayer(url, active) {
         volume = if (VideoSound.on) 1f else 0f
+        setAudioAttributes(VIDEO_AUDIO, VideoSound.on)
         playWhenReady = true
     }
 
     DisposableEffect(player) {
         state.player = player
         state.waiting = true
+        state.playing = player?.isPlaying == true
         val listener = object : Player.Listener {
             override fun onPlaybackStateChanged(playbackState: Int) {
                 state.waiting = playbackState == Player.STATE_BUFFERING || playbackState == Player.STATE_IDLE
             }
+
+            override fun onIsPlayingChanged(isPlaying: Boolean) {
+                state.playing = isPlaying
+            }
+
+            override fun onVideoSizeChanged(videoSize: VideoSize) {
+                if (videoSize.width > 0) state.size = IntSize(videoSize.width, videoSize.height)
+            }
+
+            // Only a video with its sound takes the audio from other apps.
+            override fun onVolumeChanged(volume: Float) {
+                player?.setAudioAttributes(VIDEO_AUDIO, volume > 0f)
+            }
         }
         player?.addListener(listener)
+        // The system's play and pause, in the picture-in-picture window, come from its session.
+        val session = player?.let { MediaSession.Builder(context, it).setId("video").build() }
         onDispose {
+            session?.release()
             player?.removeListener(listener)
             state.player = null
+            state.playing = false
         }
     }
 
-    if (player != null) MediaSurface(player, modifier)
+    // Left for another app, it pauses; in a window of its own the app is only paused, not stopped.
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) { player?.pause() }
+    PictureInPicture.Offer(state.playing, state.size.width, state.size.height)
+
+    if (player != null) MediaSurface(player, if (state.playing) modifier.keepScreenOn() else modifier)
 }
+
+/** A video's sound, as a film's. */
+private val VIDEO_AUDIO = AudioAttributes.Builder().setUsage(C.USAGE_MEDIA).setContentType(C.AUDIO_CONTENT_TYPE_MOVIE).build()
 
 /** A loading indicator in the middle while the video waits for more of itself. */
 @kotlin.OptIn(ExperimentalMaterial3ExpressiveApi::class)
