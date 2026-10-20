@@ -51,6 +51,16 @@ the manifest's `updatedAt`. The app saves in this order:
 | `DELETE /v1/moments/:uid`                    | marks it deleted                                                                                                  |
 | `PUT /v1/trips/:id`                          | saves a trip; the places it names must be known                                                                   |
 
+The Android app instead uploads the originals, then sends everything it kept on the phone
+as one `POST /v1/changes`: `{ places, moments, deleted }`, the places only it knows by
+id, the Moments it wrote or changed, and the uids of those it deleted. Each place goes as
+`PUT /v1/places/:id` takes one and the Moments name it by the id it is known by; each
+Moment is saved and published, a draft taking the next order on its day after the
+others in the same write. All of it is checked first, the originals among it, then
+written in one transaction, so a request that doesn't fit changes nothing. The answer is
+`{ places, moments, deleted }`: the id each place sent is known by, the Moments as
+published, and the uids deleted, leaving out those already gone.
+
 A place the app made carries the provisional id `p-<ulid>`; the API adds it under an id
 spelled from its name's pinyin, as `pnpm data:publish` does, and the response's `id` is
 the one the Moment then names.
