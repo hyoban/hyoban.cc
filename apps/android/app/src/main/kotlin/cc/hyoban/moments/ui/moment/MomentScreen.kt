@@ -89,6 +89,7 @@ import cc.hyoban.moments.data.trips.coversOf
 import cc.hyoban.moments.data.trips.momentsOf
 import cc.hyoban.moments.data.trips.tripOf
 import cc.hyoban.moments.ui.components.AppColors
+import cc.hyoban.moments.ui.components.FLOATING_BAR
 import cc.hyoban.moments.ui.components.FloatingBack
 import cc.hyoban.moments.ui.components.FloatingButton
 import cc.hyoban.moments.ui.components.FloatingWidth
@@ -166,13 +167,14 @@ fun MomentScreen(
             // words scroll beside them, rather than a photo taller than the screen over them.
             Row(Modifier.fillMaxSize()) {
                 MomentPhotos(moment, urls, pager, onMedia, Modifier.weight(1f).fillMaxHeight())
-                Column(Modifier.weight(1f).fillMaxHeight().statusBarsPadding().padding(top = 56.dp).verticalScroll(scroll).sideInsetsPadding(WindowInsetsSides.End)) { details() }
+                Column(Modifier.weight(1f).fillMaxHeight().statusBarsPadding().padding(top = FLOATING_BAR).verticalScroll(scroll).sideInsetsPadding(WindowInsetsSides.End)) { details() }
             }
         } else {
             // The photos are as tall as the tallest of them, but no taller than a 3:4 portrait
             // one, so a screenshot is cropped rather than filling the screen. A portrait one runs
-            // under the status bar; landscape ones start below the bar, the page's colour above
-            // them. The bar's icons follow what is under them.
+            // under the status bar and the buttons; landscape ones, whole in sight, start below the
+            // buttons, the page's colour above them, so the buttons hide none of them. The bar's
+            // icons follow what is under them.
             val shape = moment.media.minOfOrNull(::shapeOf)?.coerceAtLeast(TALLEST)
             val bleeds = shape != null && shape < 1f
 
@@ -180,21 +182,23 @@ fun MomentScreen(
                 if (moment.media.isNotEmpty()) {
                     // The tallest photo whole across the width, unless it would be taller than
                     // 3:4 or the screen, where it stops there.
-                    val above = if (bleeds) 0.dp else WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+                    val above = if (bleeds) 0.dp else WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + FLOATING_BAR
                     MomentPhotos(
                         moment,
                         urls,
                         pager,
                         onMedia,
-                        Modifier.then(if (bleeds) Modifier else Modifier.statusBarsPadding())
+                        Modifier.then(if (bleeds) Modifier else Modifier.statusBarsPadding().padding(top = FLOATING_BAR))
                             .fillMaxWidth().height(minOf(screenWidth / shape!!, screenHeight - above)),
                         whole = true,
                     )
                 } else {
-                    Spacer(Modifier.statusBarsPadding().height(56.dp))
+                    Spacer(Modifier.statusBarsPadding().height(FLOATING_BAR))
                 }
 
-                RisingSheet(Modifier.offset(y = if (moment.media.isNotEmpty()) -RISE else 0.dp)) {
+                // The sheet rises over a portrait photo's foot; landscape ones it leaves whole below
+                // as the buttons do above.
+                RisingSheet(Modifier.offset(y = if (bleeds) -RISE else 0.dp)) {
                     // Centred, and clear of the sides, on a phone on its side.
                     Box(Modifier.fillMaxWidth().sideInsetsPadding().wrapContentWidth().widthIn(max = READABLE_WIDTH)) { details() }
                 }
