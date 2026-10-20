@@ -333,3 +333,76 @@ test('a deploy hook that turns the call down is logged', async () => {
     console.error = realError
   }
 })
+
+test('the changes kept on the phone go as one write: places, Moments published, deletions', async () => {
+  const { bucket, env } = setUpWithData()
+  const pending = []
+  const context = { waitUntil: (promise) => pending.push(promise) }
+  const made = 'p-01k7zq9x3m4n5p6q7r8s9t0v1w'
+  const draft = { ...dockMoment, places: ['nanjing', made] }
+  const words = { ...dockDraft(), uid: '01M3VDBHC1HW3W1Z58ARMSH2AA', places: [made], media: [] }
+  const target = snapshot.moments.find((moment) => moment.published)
+  const changes = {
+    places: { [made]: { name: '测试码头', latitude: 1.234, longitude: 5.678 } },
+    moments: [draft, words],
+    deleted: [target.uid, '01M3VDBHC1HW3W1Z58ARMSH2ZZ'],
+  }
+
+  const early = await call(env, 'POST', '/v1/changes', { ...owner, body: changes })
+
+  assert.equal(early.status, 422, 'the photo is not uploaded yet')
+  assert.equal((await get(env, '/v1/places/ce-shi-ma-tou')).status, 404, 'and nothing was written')
+  assert.equal((await get(env, `/v1/moments/${target.uid}`)).status, 200)
+
+  await upload(env, draft.uid, draft.media[0].uid, 'image', photo, 'image/jpeg')
+
+  const before = (await get(env, '/')).body.revision
+  const applied = await call(env, 'POST', '/v1/changes', { ...owner, body: changes, context })
+  const order = nextOrder('2026-10-01')
+
+  assert.equal(applied.status, 200, JSON.stringify(applied.body))
+  assert.deepEqual(applied.body.places, { [made]: 'ce-shi-ma-tou' })
+  assert.deepEqual(applied.body.deleted, [target.uid], 'one already gone is left out')
+  assert.deepEqual(
+    applied.body.moments.map((moment) => [moment.places, moment.published.id]),
+    [
+      [['nanjing', 'ce-shi-ma-tou'], `2026/10/01-${String(order).padStart(2, '0')}-nanjing`],
+      [['ce-shi-ma-tou'], `2026/10/01-${String(order + 1).padStart(2, '0')}-ce-shi-ma-tou`],
+    ],
+    'two drafts on one day take the next two orders',
+  )
+  assert.ok(bucket.objects.has(applied.body.moments[0].media[0].published.key))
+  assert.equal((await get(env, '/')).body.revision, before + 1, 'one write')
+  assert.equal(pending.length, 1, 'the site is built again once')
+  assert.equal((await get(env, `/v1/moments/${target.uid}`)).status, 404)
+  assert.deepEqual((await get(env, `/v1/moments/${words.uid}`)).body, applied.body.moments[1])
+
+  const edit = { ...applied.body.moments[1], text: '改过了' }
+  const again = await call(env, 'POST', '/v1/changes', { ...owner, body: { moments: [edit] } })
+
+  assert.equal(again.status, 200)
+  assert.equal(again.body.moments[0].text, '改过了')
+  assert.deepEqual(
+    again.body.moments[0].published,
+    applied.body.moments[1].published,
+    'a published Moment keeps its id',
+  )
+})
+
+test('changes that don’t fit are turned down whole', async () => {
+  const { env } = setUpWithData()
+  const status = async (body) => (await call(env, 'POST', '/v1/changes', { ...owner, body })).status
+  const words = { ...dockDraft(), places: ['nanjing'], media: [] }
+
+  assert.equal(await status({ moments: {} }), 422)
+  assert.equal(await status({ places: { 'Not An Id': snapshot.places.nanjing } }), 422)
+  assert.equal(
+    await status({ moments: [{ ...words, places: ['nowhere'] }] }),
+    422,
+    'an unknown place',
+  )
+  assert.equal(await status({ moments: [words, words] }), 422, 'one Moment twice')
+  assert.equal(await status({ moments: [words], deleted: [words.uid] }), 422, 'saved and deleted')
+  assert.equal((await call(env, 'POST', '/v1/changes', { body: { moments: [words] } })).status, 401)
+  assert.equal((await get(env, `/v1/moments/${words.uid}`, owner)).status, 404)
+})

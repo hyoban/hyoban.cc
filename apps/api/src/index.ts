@@ -15,6 +15,7 @@ import {
 import { error, HttpError, json, readBody } from './http.ts'
 import { createRouteFetcher, fillRoutes, readTripRoutes } from './routes.ts'
 import {
+  applyChanges,
   deleteMoment,
   publishMoment,
   saveMoment,
@@ -250,6 +251,19 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
         default:
           return notAllowed('GET, POST')
       }
+    }
+    case 'changes': {
+      if (key !== undefined) {
+        return notFound()
+      }
+
+      if (method !== 'POST') {
+        return notAllowed('POST')
+      }
+
+      const body = await readBody(request)
+
+      return write((context) => applyChanges(context, body))
     }
     case 'export': {
       if (key !== undefined) {

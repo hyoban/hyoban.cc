@@ -38,6 +38,7 @@ import {
 // it publishes, never taken from a request, and never changed afterwards.
 
 export const GENERATOR = 'hyoban.cc api'
+const PLACE_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 
 export interface WriteContext {
   db: Database
@@ -67,15 +68,7 @@ export async function saveMoment(
 
   const existing = await readMomentRow(context.db, uid)
   const prior = existing?.record
-  const record: MomentRecord = {
-    ...input,
-    media: input.media.map((item) => {
-      const published = prior?.media.find((candidate) => candidate.uid === item.uid)?.published
-
-      return (published ? { ...item, published } : item) as MomentMedia
-    }),
-    ...(prior?.published ? { published: prior.published } : {}),
-  }
+  const record = withPublished(input, prior)
 
   await assertPlaces(context.db, record.places)
 
@@ -105,18 +98,7 @@ export async function publishMoment(
 
   const record = structuredClone(existing.record)
 
-  if (!record.published) {
-    const dateKey = record.occurredAt.slice(0, 10)
-    const { results } = await context.db
-      .prepare(`SELECT published_id FROM moments WHERE day = ?1 AND published_id IS NOT NULL`)
-      .bind(dateKey)
-      .all<{ published_id: string }>()
-    const ids = new Set(results.map((row) => row.published_id))
-    const orders = [...ids].map((id) => Number(id.slice(11, 13)))
-    const { id, order, slug } = getPublishedId(dateKey, getSlug(record), { ids, orders })
-
-    record.published = { id, slug, order, at: context.now }
-  }
+  record.published ??= await newPublished(context, record)
 
   const uploads = await publishMedia(context.bucket, record)
   const saved = validate(momentRecordSchema, record)
@@ -134,13 +116,176 @@ export async function deleteMoment(context: WriteContext, uid: string): Promise<
     throw new HttpError(404, 'Not found.')
   }
 
-  await commit(context, [
-    context.db
-      .prepare(`UPDATE moments SET deleted_at = ?1, rev = ${REVISION} WHERE uid = ?2`)
-      .bind(context.now, uid),
-  ])
+  await commit(context, [deleteStatement(context, uid)])
 
   return { body: null, status: 204, changesSite: Boolean(existing.record.published) }
+}
+
+/** What `POST /v1/changes` did: the id each place sent is known by, the Moments saved, the uids deleted. */
+export interface AppliedChanges {
+  places: Record<string, string>
+  moments: MomentRecord[]
+  deleted: string[]
+}
+
+/**
+ * Everything the app kept on the phone, applied as one write: the places it made, the
+ * Moments it wrote or changed, each published, and the Moments it deleted. A place goes
+ * as `PUT /v1/places/:id` takes one, and the Moments name it by the id it is known by;
+ * a Moment's originals must be uploaded first. All of it is checked before anything is
+ * written, then committed in one transaction, so the site has all of it or none.
+ * A Moment already gone is left out of `deleted`.
+ */
+export async function applyChanges(
+  context: WriteContext,
+  body: unknown,
+): Promise<WriteResult<AppliedChanges>> {
+  const sent: Record<string, unknown> = isObject(body) ? body : { moments: null }
+  const givenPlaces = sent['places'] ?? {}
+  const givenMoments = sent['moments'] ?? []
+  const givenDeleted = sent['deleted'] ?? []
+
+  if (
+    !isObject(givenPlaces) ||
+    !Array.isArray(givenMoments) ||
+    !Array.isArray(givenDeleted) ||
+    !givenDeleted.every((uid) => typeof uid === 'string')
+  ) {
+    throw new HttpError(
+      422,
+      'Send { places, moments, deleted }: places by id, Moment records, and the uids of those deleted.',
+    )
+  }
+
+  const statements: Statement[] = []
+  const places = await readPlaceRecords(context.db)
+  const placeIds: Record<string, string> = {}
+
+  for (const [given, value] of Object.entries(givenPlaces)) {
+    const provisional = PROVISIONAL_PLACE_PATTERN.test(given)
+
+    if (!provisional && !PLACE_ID.test(given)) {
+      throw new HttpError(422, `${given} isn't a place id.`)
+    }
+
+    const place = validate(placeSchema, value)
+    const match = matchPlace(provisional ? getPlaceId(place.name, places) : given, place, places)
+
+    placeIds[given] = match.id
+
+    if (match.status === 'new') {
+      places[match.id] = place
+      statements.push(upsert(context.db, 'places', placeRow(match.id, place)))
+    }
+  }
+
+  // Each Moment checked, its uploads among them, before any is copied or written.
+  const claimed = new Set<string>()
+  const records: MomentRecord[] = []
+
+  for (const value of givenMoments) {
+    const input = validate(momentRecordSchema, withoutServerFields(value))
+
+    if (records.some((record) => record.uid === input.uid)) {
+      throw new HttpError(422, `${input.uid} is sent twice.`)
+    }
+
+    const named = { ...input, places: input.places.map((id) => placeIds[id] ?? id) }
+    const missing = [...new Set(named.places)].filter((id) => !places[id])
+
+    if (missing.length > 0) {
+      throw new HttpError(422, `Unknown places: ${missing.join(', ')}. Send them too.`)
+    }
+
+    const record = withPublished(named, (await readMomentRow(context.db, input.uid))?.record)
+
+    record.published ??= await newPublished(context, record, claimed)
+    claimed.add(record.published.id)
+    await assertUploads(context.bucket, record)
+    records.push(record)
+  }
+
+  const deleted: string[] = []
+
+  for (const uid of new Set(givenDeleted)) {
+    if (records.some((record) => record.uid === uid)) {
+      throw new HttpError(422, `${uid} is both saved and deleted.`)
+    }
+
+    const existing = await readMomentRow(context.db, uid)
+
+    if (existing && !existing.deleted) {
+      statements.push(deleteStatement(context, uid))
+      deleted.push(uid)
+    }
+  }
+
+  const uploads: string[] = []
+  const saved: MomentRecord[] = []
+
+  for (const record of records) {
+    uploads.push(...(await publishMedia(context.bucket, record)))
+
+    const checked = validate(momentRecordSchema, record)
+
+    statements.push(...momentStatements(context.db, checked))
+    saved.push(checked)
+  }
+
+  if (statements.length > 0) {
+    await commit(context, statements)
+    await deleteUploads(context.bucket, uploads)
+  }
+
+  return {
+    body: { places: placeIds, moments: saved, deleted },
+    status: 200,
+    changesSite: statements.length > 0,
+  }
+}
+
+/** A Moment as sent, with the published blocks it and its media already have. */
+function withPublished(input: MomentRecord, prior: MomentRecord | undefined): MomentRecord {
+  return {
+    ...input,
+    media: input.media.map((item) => {
+      const published = prior?.media.find((candidate) => candidate.uid === item.uid)?.published
+
+      return (published ? { ...item, published } : item) as MomentMedia
+    }),
+    ...(prior?.published ? { published: prior.published } : {}),
+  }
+}
+
+/**
+ * A draft's published block: the next order on its day and an id spelled from its slug,
+ * clear of the day's published ids and of those [claimed] by the same write.
+ */
+async function newPublished(
+  context: WriteContext,
+  record: MomentRecord,
+  claimed: Set<string> = new Set(),
+): Promise<NonNullable<MomentRecord['published']>> {
+  const dateKey = record.occurredAt.slice(0, 10)
+  const { results } = await context.db
+    .prepare(`SELECT published_id FROM moments WHERE day = ?1 AND published_id IS NOT NULL`)
+    .bind(dateKey)
+    .all<{ published_id: string }>()
+  const day = dateKey.replaceAll('-', '/')
+  const ids = new Set([
+    ...results.map((row) => row.published_id),
+    ...[...claimed].filter((id) => id.startsWith(`${day}-`)),
+  ])
+  const orders = [...ids].map((id) => Number(id.slice(11, 13)))
+  const { id, order, slug } = getPublishedId(dateKey, getSlug(record), { ids, orders })
+
+  return { id, slug, order, at: context.now }
+}
+
+function deleteStatement(context: WriteContext, uid: string) {
+  return context.db
+    .prepare(`UPDATE moments SET deleted_at = ?1, rev = ${REVISION} WHERE uid = ?2`)
+    .bind(context.now, uid)
 }
 
 /** Keeps an original until its Moment publishes. */
@@ -238,19 +383,8 @@ export async function saveTrip(
 async function publishMedia(bucket: Bucket, record: MomentRecord) {
   const published = record.published!
   const pending = record.media.filter((item) => !item.published)
-  const missing: string[] = []
 
-  for (const item of pending) {
-    for (const part of getParts(item)) {
-      if (!(await bucket.head(getUploadKey(record.uid, item.uid, part)))) {
-        missing.push(`${item.uid} (${part})`)
-      }
-    }
-  }
-
-  if (missing.length > 0) {
-    throw new HttpError(422, `Upload the media first: ${missing.join(', ')}.`)
-  }
+  await assertUploads(bucket, record)
 
   const uploads: string[] = []
 
@@ -305,6 +439,23 @@ async function publishMedia(bucket: Bucket, record: MomentRecord) {
   }
 
   return uploads
+}
+
+/** A 422 naming any of a Moment's unpublished media whose originals aren't uploaded. */
+async function assertUploads(bucket: Bucket, record: MomentRecord) {
+  const missing: string[] = []
+
+  for (const item of record.media.filter((candidate) => !candidate.published)) {
+    for (const part of getParts(item)) {
+      if (!(await bucket.head(getUploadKey(record.uid, item.uid, part)))) {
+        missing.push(`${item.uid} (${part})`)
+      }
+    }
+  }
+
+  if (missing.length > 0) {
+    throw new HttpError(422, `Upload the media first: ${missing.join(', ')}.`)
+  }
 }
 
 /**
