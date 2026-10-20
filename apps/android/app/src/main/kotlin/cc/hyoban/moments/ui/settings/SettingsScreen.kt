@@ -56,8 +56,8 @@ import androidx.compose.ui.unit.dp
 import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.R
 import cc.hyoban.moments.Setting
-import cc.hyoban.moments.ui.components.FloatingBack
-import cc.hyoban.moments.ui.components.PageHeader
+import cc.hyoban.moments.ui.components.AppColors
+import cc.hyoban.moments.ui.components.SubPage
 import cc.hyoban.moments.ui.components.PageWidth
 import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
 import cc.hyoban.moments.ui.theme.fill
@@ -80,27 +80,22 @@ fun SettingsScreen(container: AppContainer, onBack: () -> Unit) {
         Row(settings.mapStyleDark, R.string.setting_map_style_dark, Icons.Rounded.DarkMode) { settings.mapStyleDark.set(it) },
     )
 
-    Box(Modifier.fillMaxSize()) {
+    SubPage(stringResource(R.string.title_settings), onBack, Modifier.background(AppColors.page)) {
         PageWidth { columns ->
             Column(
                 Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .statusBarsPadding()
                     .navigationBarsPadding()
                     .padding(horizontal = columns.margin)
                     .padding(bottom = Space.xl),
             ) {
-                // Room for the back button, which floats over the page.
-                Spacer(Modifier.height(56.dp))
-                PageHeader(stringResource(R.string.title_settings), null)
                 ThemeSettings(settings)
                 Section(stringResource(R.string.section_sources), rows.subList(0, 2), 0, stringResource(R.string.settings_api_note)) { editing = it }
                 Section(stringResource(R.string.section_map), rows.subList(2, 4), 2, stringResource(R.string.settings_map_note)) { editing = it }
                 Credits()
             }
         }
-        FloatingBack(onBack, Modifier.align(Alignment.TopStart))
     }
 
     editing?.let { index ->
