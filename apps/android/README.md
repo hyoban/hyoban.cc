@@ -5,7 +5,8 @@ map, every Moment with its photos and videos, and each trip's route and days. It
 the API's public endpoints (`apps/api`) and keeps a copy under the app's `api/`
 directory in the layout `packages/data-spec` defines, so it opens straight away and
 works offline; each start, and each pull down on a list, asks only for what changed
-since.
+since, and reads the places, trips and routes again only when the API's revision has
+moved on.
 
 A new Moment can be written on the phone, from the ✎ in the Moments tab's header or
 `moments://new`: its words, up to nine photos from the system's documents picker, and when and

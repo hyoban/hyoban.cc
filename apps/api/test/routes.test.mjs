@@ -136,6 +136,25 @@ test('GET /v1/routes gives every trip with Moments its stretches, drives solid a
   assert.ok(body.trips['2024-code-and-travel'].some((segment) => segment.straight))
 })
 
+test('GET /v1/routes is worked out once per revision, and again once the revision moves on', async () => {
+  const { env, sqlite } = setUpWithData()
+  const kept = () =>
+    JSON.parse(sqlite.prepare(`SELECT value FROM meta WHERE key = 'trip_routes'`).get().value)
+  const first = (await get(env, '/v1/routes')).body
+
+  assert.deepEqual(kept(), first)
+
+  // A trip with nothing in it any more, as a write past the Worker (data:push) leaves it.
+  sqlite.exec(`UPDATE meta SET value = CAST(value AS INTEGER) + 1 WHERE key = 'revision'`)
+  sqlite.exec(`UPDATE trips SET deleted_at = '${now}' WHERE id = '2024-code-and-travel'`)
+
+  const second = (await get(env, '/v1/routes')).body
+
+  assert.equal(second.revision, first.revision + 1)
+  assert.ok(!('2024-code-and-travel' in second.trips))
+  assert.deepEqual(kept(), second)
+})
+
 test('POST /v1/routes is the owner’s and needs the Mapbox token', async () => {
   const { env } = setUpWithData()
 

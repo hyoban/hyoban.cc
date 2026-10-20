@@ -87,7 +87,9 @@ place or a changed trip is fetched again; `POST /v1/routes`, with a token, does 
 same on demand and answers `{ fetched, removed, failed, left }` (`pnpm data:push`
 calls it, as it writes past the Worker). `GET /v1/routes` gives each published trip's
 route as the site's overview draws it, drives one after another as one stretch and
-each train, plane or ferry as a dashed one:
+each train, plane or ferry as a dashed one. Working it out reads every Moment, so the
+answer is kept in `meta` with the revision it is of, worked out ahead after each write
+and again on a request once the revision has moved on, as after `data:push`:
 
 ```json
 { "revision": 12, "trips": { "2026-yunnan": [{ "line": [[100.2, 26.8], …], "straight": false }] } }

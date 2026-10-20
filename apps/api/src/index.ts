@@ -154,9 +154,7 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
       }
 
       if (key === undefined) {
-        return method === 'GET'
-          ? json({ revision: await readRevision(db), places: await readPlaces(db) })
-          : notAllowed('GET')
+        return method === 'GET' ? json(await readPlaces(db)) : notAllowed('GET')
       }
 
       if (!ID.test(key)) {
@@ -171,9 +169,7 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
       }
 
       if (key === undefined) {
-        return method === 'GET'
-          ? json({ revision: await readRevision(db), trips: await readTrips(db) })
-          : notAllowed('GET')
+        return method === 'GET' ? json(await readTrips(db)) : notAllowed('GET')
       }
 
       if (!ID.test(key)) {
@@ -189,7 +185,7 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
 
       switch (method) {
         case 'GET':
-          return json({ revision: await readRevision(db), trips: await readTripRoutes(db) })
+          return json(await readTripRoutes(db))
         case 'POST': {
           if (!env.MAPBOX_TOKEN) {
             return error(503, 'MAPBOX_TOKEN is not set.')
@@ -239,7 +235,8 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
 
 /**
  * After a write the site shows: the trips' routes first, so the build the deploy hook
- * starts has them, then the hook. Neither failing undoes the write.
+ * starts has them, and what `GET /v1/routes` answers worked out ahead of the app's next
+ * sync, then the hook. None of them failing undoes the write.
  */
 async function afterSiteChange(env: Env) {
   if (env.MAPBOX_TOKEN) {
@@ -255,6 +252,12 @@ async function afterSiteChange(env: Env) {
     } catch (caught) {
       console.error('Bringing the routes up to date failed', caught)
     }
+  }
+
+  try {
+    await readTripRoutes(env.DB)
+  } catch (caught) {
+    console.error("Working out the trips' routes failed", caught)
   }
 
   if (env.DEPLOY_HOOK_URL) {

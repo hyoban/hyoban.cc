@@ -214,8 +214,7 @@ class AppContainer(context: Context) {
     }
 
     private suspend fun refreshAll() {
-        repository.refresh()
-        routes.refresh()
+        repository.refresh().onSuccess { revision -> routes.refresh(revision) }
         // The widgets show what the sync brought, or what was on the phone if it failed.
         Widgets.update(appContext)
     }
