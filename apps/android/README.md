@@ -51,6 +51,77 @@ all: the places only the phone knows, named by the API from their pinyin, the Mo
 each published, and the deletions. What is published leaves the phone's store for the
 site's.
 
+A Moment's share button offers 发布到 X, 分享到 Telegram, 分享到小红书, 分享到飞书,
+发布到 Threads, 分享到抖音, 微信朋友圈（手动分享）, B 站（手动分享） and 准备图文.
+The X option opens a separate editable copy of its words and a choice of up to four
+photos, kept in their original order. Up to four are selected
+initially; with more, none are selected until they are chosen. Live photos use their
+stills; videos are not included. 打开 X 编辑器 prepares the files and hands them to the
+installed X app's post composer, where the text limit, account, audience and final
+publication are checked. It never posts automatically or marks a Moment as posted
+to X. This uses Android sharing, without an accessibility service. If X's composer
+is unavailable, the preview stays open with an error, rather than opening its
+separate direct-message share target. Each share has its own cache directory;
+directories older than a week are cleaned up on the next share.
+
+分享到 Telegram uses the installed Telegram app's Android share receiver, with all
+photos initially selected and kept in their original order. The recipient and final
+send are chosen in Telegram. Its multiple-photo receiver ignores the accompanying
+text, so the preview explains that 复制文案并打开 Telegram copies the edited text:
+paste it into Telegram's caption field after choosing a recipient. A single photo
+or text alone is handed over directly. This flow does not operate Telegram or send
+messages automatically.
+
+分享到小红书 uses its Android share receiver, with all photos initially selected in
+their original order. On Xiaohongshu 9.50.0, both single and multiple photos open
+the note editor but ignore accompanying text. 复制文案并打开小红书 copies the edited
+text first; paste it into the body and add a title in Xiaohongshu before publishing.
+Text alone opens its 写想法 editor with the text filled in. Photo and text limits are
+checked in Xiaohongshu; this app does not publish automatically.
+
+分享到飞书 uses its Android share receiver, with all photos initially selected in
+their original order. On Feishu 8.2.6, text alone is shown in the share preview.
+Single and multiple photos are previewed without the accompanying text, and the
+recipient confirmation's 留言 field starts empty. 复制文案并打开飞书 copies the edited
+text first; choose 发送给同事或群, select a recipient, paste into 留言 and confirm in
+Feishu. This app does not choose a recipient or send messages automatically.
+
+发布到 Threads uses its Android share receiver, with all photos initially selected
+in their original order. On Threads 452.0.0.33.64, text alone opens a share menu:
+choose 发布 to reach the composer with the text filled in. Single and multiple
+photos open the composer directly but leave its text empty. 复制文案并打开 Threads
+copies the edited text first; paste into the composer and review before publishing.
+The destination checks its photo and text limits. This app does not operate the
+share menu, choose a direct-message recipient or publish automatically.
+
+分享到抖音 opens the installed app's `SystemShareNewActivity` receiver explicitly.
+Douyin receives read-only access to each shared file so its internal transition to
+the editor can still read the photos after the receiving activity closes. These
+grants are revoked when the corresponding week-old share cache is cleaned up.
+It requires at least one photo. With no photos selected, the preview explains that
+text-only sharing is unsupported and offers 准备图文 with the edited text preserved.
+On Douyin 40.4.0, three photos were verified through the post form. The system
+share page offers 去发布 alongside chat recipients.
+Choose 去发布, edit the images and tap 下一步 to reach the post form. The description
+is not filled from the share text, so 复制文案并打开抖音 copies it for pasting there.
+The user reviews the destination's photo, music and publishing options and confirms
+the final post in Douyin. This app does not choose recipients or publish.
+
+微信朋友圈（手动分享） and B 站（手动分享） both open 准备图文, with a reminder to
+select the saved photos and paste the copied text in the destination app.
+准备图文 is the manual fallback for WeChat Moments, Bilibili and other apps: edit a copy of the
+text and select photos, save them to a separate `Pictures/这里分享-…` album, then copy
+the text. It also works with just text or just photos. There is no platform photo
+limit in this flow; all photos start selected. Files are numbered in their original
+order, with insertion order and timestamps arranged for newest-first galleries.
+The result shows the album name and count; the album stays on the phone for the user
+to select in the destination app and remove when no longer needed. Only Android 9
+asks for storage permission; newer Android versions use MediaStore without it.
+A failed partial save removes the rows it created. Nothing operates another app or
+publishes automatically, and no accessibility service is registered. If sharing
+to X, Telegram, Xiaohongshu, Feishu, Threads or Douyin fails, 准备图文 is offered with the edited text and
+selection preserved.
+
 On the home screen it is 这里 (here): Material 3's nine-lobed cookie shape in green on
 pale mint, with the map's "you are here" pulse in it, as an adaptive icon with its own
 monochrome layer for themed icons.

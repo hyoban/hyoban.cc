@@ -40,6 +40,7 @@ import androidx.compose.material.icons.rounded.Luggage
 import androidx.compose.material.icons.rounded.PhoneAndroid
 import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material.icons.rounded.Schedule
+import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -114,6 +115,15 @@ fun MomentScreen(
     val moment = remember(moments, uid) { moments.firstOrNull { it.uid == uid } } ?: return
     val trip = remember(moment, trips) { tripOf(moment, trips) }
     val urls = container.mediaUrls
+    var sharing by remember(uid) { mutableStateOf(false) }
+    var shareTarget by remember(uid) { mutableStateOf<ShareTarget?>(null) }
+    if (sharing) {
+        ShareMenu(
+            onSelect = { sharing = false; shareTarget = it },
+            onDismiss = { sharing = false },
+        )
+    }
+    shareTarget?.let { ShareMoment(moment, urls, it, onDismiss = { shareTarget = null }) }
 
     // The whole page is the card it was opened from, grown to the screen.
     BoxWithConstraints(Modifier.fillMaxSize().sharedCard(uid, page = true).background(AppColors.page)) {
@@ -173,15 +183,16 @@ fun MomentScreen(
         // with the API's token, and only on the phone until the changes are published.
         val local = container.repository.isLocal(uid)
         val canPublish = container.canPublish
-        if (local || canPublish) {
-            val publishing by container.publishing.collectAsStateWithLifecycle()
-            var confirming by remember { mutableStateOf(false) }
-            if (publishing == null) {
-                Row(Modifier.align(Alignment.TopEnd)) {
-                    FloatingButton(Icons.Rounded.Edit, stringResource(R.string.action_edit_moment), onClick = { onEdit(uid) }, tag = "edit")
-                    FloatingButton(Icons.Rounded.DeleteOutline, stringResource(R.string.action_delete_moment), onClick = { confirming = true }, tag = "delete")
-                }
+        val publishing by container.publishing.collectAsStateWithLifecycle()
+        var confirming by remember(uid) { mutableStateOf(false) }
+        Row(Modifier.align(Alignment.TopEnd)) {
+            FloatingButton(Icons.Rounded.Share, stringResource(R.string.action_share), onClick = { sharing = true }, tag = "share")
+            if ((local || canPublish) && publishing == null) {
+                FloatingButton(Icons.Rounded.Edit, stringResource(R.string.action_edit_moment), onClick = { onEdit(uid) }, tag = "edit")
+                FloatingButton(Icons.Rounded.DeleteOutline, stringResource(R.string.action_delete_moment), onClick = { confirming = true }, tag = "delete")
             }
+        }
+        if (local || canPublish) {
             if (confirming) {
                 AlertDialog(
                     onDismissRequest = { confirming = false },
