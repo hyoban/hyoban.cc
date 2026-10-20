@@ -22,11 +22,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.MyLocation
 import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material3.Button
-import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -48,14 +48,15 @@ import cc.hyoban.moments.R
 import cc.hyoban.moments.data.local.Fix
 import cc.hyoban.moments.data.local.Found
 import cc.hyoban.moments.data.local.NEARBY_METRES
+import cc.hyoban.moments.data.local.PlaceSearch
 import cc.hyoban.moments.data.local.coordinatesName
 import cc.hyoban.moments.data.local.currentLocation
 import cc.hyoban.moments.data.local.fix
 import cc.hyoban.moments.data.local.nearestPlaces
-import cc.hyoban.moments.data.local.PlaceSearch
 import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.FloatingBack
+import cc.hyoban.moments.ui.components.Tooltip
 import cc.hyoban.moments.ui.map.MapTarget
 import cc.hyoban.moments.ui.map.PICK_ZOOM
 import cc.hyoban.moments.ui.map.PickerMap
@@ -161,29 +162,31 @@ internal fun PlacePicker(
                 FloatingBack(onDismiss, Modifier.align(Alignment.TopStart))
                 val granted = LOCATION_PERMISSIONS.any { ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED }
                 if (granted) {
-                    FloatingActionButton(
-                        onClick = {
-                            if (!locating) {
-                                locating = true
-                                scope.launch {
-                                    // Just where the phone is becomes the choice, a new place named
-                                    // after what is around it; a known place nearby is a chip away.
-                                    currentLocation(context)?.let { location ->
-                                        val here = Fix(location.latitude, location.longitude)
-                                        named = false
-                                        pick = PlaceChoice.New(name, here)
-                                        fly(here)
+                    Tooltip(stringResource(R.string.action_locate)) {
+                        FloatingActionButton(
+                            onClick = {
+                                if (!locating) {
+                                    locating = true
+                                    scope.launch {
+                                        // Just where the phone is becomes the choice, a new place named
+                                        // after what is around it; a known place nearby is a chip away.
+                                        currentLocation(context)?.let { location ->
+                                            val here = Fix(location.latitude, location.longitude)
+                                            named = false
+                                            pick = PlaceChoice.New(name, here)
+                                            fly(here)
+                                        }
+                                        locating = false
                                     }
-                                    locating = false
                                 }
-                            }
-                        },
-                        shape = Corners.full,
-                        containerColor = SurfaceLevel.floating(LocalDarkTheme.current).fill(),
-                        contentColor = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.align(Alignment.BottomEnd).padding(Space.l).testTag("locate"),
-                    ) {
-                        Icon(Icons.Rounded.MyLocation, contentDescription = stringResource(R.string.action_locate))
+                            },
+                            shape = Corners.full,
+                            containerColor = SurfaceLevel.floating(LocalDarkTheme.current).fill(),
+                            contentColor = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.align(Alignment.BottomEnd).padding(Space.l).testTag("locate"),
+                        ) {
+                            Icon(Icons.Rounded.MyLocation, contentDescription = stringResource(R.string.action_locate))
+                        }
                     }
                 }
             }

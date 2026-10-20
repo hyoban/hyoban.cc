@@ -114,6 +114,7 @@ import cc.hyoban.moments.ui.components.NeutralChip
 import cc.hyoban.moments.ui.components.PressableCard
 import cc.hyoban.moments.ui.components.SectionHeader
 import cc.hyoban.moments.ui.components.Thumbnail
+import cc.hyoban.moments.ui.components.Tooltip
 import cc.hyoban.moments.ui.components.kindLabel
 import cc.hyoban.moments.ui.components.landscape
 import cc.hyoban.moments.ui.components.mediaKey
@@ -236,8 +237,10 @@ fun MediaViewer(
                 Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.25f)).statusBarsPadding().sideInsetsPadding().padding(4.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                IconButton(onClick = onBack, modifier = Modifier.testTag("back")) {
-                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.action_back), tint = Color.White)
+                Tooltip(stringResource(R.string.action_back), below = true) {
+                    IconButton(onClick = onBack, modifier = Modifier.testTag("back")) {
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.action_back), tint = Color.White)
+                    }
                 }
                 if (media.size > 1) {
                     Text("${pager.currentPage + 1} / ${media.size}", color = Color.White, style = MaterialTheme.typography.titleMedium)
@@ -248,33 +251,37 @@ fun MediaViewer(
                 val show = rememberShowMessage()
                 val scope = rememberCoroutineScope()
                 var sharing by remember { mutableStateOf(false) }
-                IconButton(
-                    onClick = {
-                        val shown = media[pager.currentPage]
-                        sharing = true
-                        scope.launch {
-                            try {
-                                Share.media(context, shown, container.mediaUrls)
-                            } catch (e: CancellationException) {
-                                throw e
-                            } catch (_: Exception) {
-                                show(context.getString(R.string.error_share))
-                            } finally {
-                                sharing = false
+                Tooltip(stringResource(R.string.action_share), below = true) {
+                    IconButton(
+                        onClick = {
+                            val shown = media[pager.currentPage]
+                            sharing = true
+                            scope.launch {
+                                try {
+                                    Share.media(context, shown, container.mediaUrls)
+                                } catch (e: CancellationException) {
+                                    throw e
+                                } catch (_: Exception) {
+                                    show(context.getString(R.string.error_share))
+                                } finally {
+                                    sharing = false
+                                }
                             }
+                        },
+                        enabled = !sharing,
+                        modifier = Modifier.testTag("share"),
+                    ) {
+                        if (sharing) {
+                            LoadingIndicator(Modifier.size(24.dp), color = Color.White)
+                        } else {
+                            Icon(Icons.Rounded.Share, contentDescription = stringResource(R.string.action_share), tint = Color.White)
                         }
-                    },
-                    enabled = !sharing,
-                    modifier = Modifier.testTag("share"),
-                ) {
-                    if (sharing) {
-                        LoadingIndicator(Modifier.size(24.dp), color = Color.White)
-                    } else {
-                        Icon(Icons.Rounded.Share, contentDescription = stringResource(R.string.action_share), tint = Color.White)
                     }
                 }
-                IconButton(onClick = { info = true }, modifier = Modifier.testTag("info")) {
-                    Icon(Icons.Outlined.Info, contentDescription = stringResource(R.string.action_info), tint = Color.White)
+                Tooltip(stringResource(R.string.action_info), below = true) {
+                    IconButton(onClick = { info = true }, modifier = Modifier.testTag("info")) {
+                        Icon(Icons.Outlined.Info, contentDescription = stringResource(R.string.action_info), tint = Color.White)
+                    }
                 }
             }
         }

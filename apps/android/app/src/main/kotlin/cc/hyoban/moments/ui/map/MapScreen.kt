@@ -88,6 +88,7 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -106,6 +107,7 @@ import cc.hyoban.moments.ui.components.NAV_WIDTH
 import cc.hyoban.moments.ui.components.RAIL_HEIGHT
 import cc.hyoban.moments.ui.components.RAIL_WIDTH
 import cc.hyoban.moments.ui.components.READABLE_WIDTH
+import cc.hyoban.moments.ui.components.Tooltip
 import cc.hyoban.moments.ui.components.isLandscape
 import cc.hyoban.moments.ui.components.landscape
 import cc.hyoban.moments.ui.components.sharedCard
@@ -186,10 +188,12 @@ fun MapScreen(container: AppContainer, onMoment: (String) -> Unit, onPlace: (Str
     val accessory = LocalNavAccessory.current
     val currentLocate by rememberUpdatedState(requestLocate)
     val locateBeside = remember<@Composable () -> Unit> {
-        { LocateButton(locating, onClick = { currentLocate() }, modifier = Modifier.size(NAV_HEIGHT)) }
+        { LocateButton(locating, onClick = { currentLocate() }, size = NAV_HEIGHT) }
     }
-    DisposableEffect(accessory) {
-        accessory.value = locateBeside
+    // Down the side, the map keeps locating itself, below the rail and the compass above it.
+    val landscape = isLandscape()
+    DisposableEffect(accessory, landscape) {
+        if (!landscape) accessory.value = locateBeside
         onDispose { if (accessory.value === locateBeside) accessory.value = null }
     }
 
@@ -216,7 +220,6 @@ fun MapScreen(container: AppContainer, onMoment: (String) -> Unit, onPlace: (Str
             },
         )
         // On a phone on its side, at the top of the side away from the tabs and their buttons.
-        val landscape = isLandscape()
         val rail = LocalRailSpace.current
         Column(
             Modifier.align(
@@ -351,8 +354,10 @@ fun MapScreen(container: AppContainer, onMoment: (String) -> Unit, onPlace: (Str
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
-                            IconButton(onClick = { if (!navigateTo(context, place)) show(context.getString(R.string.no_map_app)) }, modifier = Modifier.testTag("navigate")) {
-                                Icon(Icons.Rounded.Directions, contentDescription = stringResource(R.string.action_navigate), tint = MaterialTheme.colorScheme.primary)
+                            Tooltip(stringResource(R.string.action_navigate)) {
+                                IconButton(onClick = { if (!navigateTo(context, place)) show(context.getString(R.string.no_map_app)) }, modifier = Modifier.testTag("navigate")) {
+                                    Icon(Icons.Rounded.Directions, contentDescription = stringResource(R.string.action_navigate), tint = MaterialTheme.colorScheme.primary)
+                                }
                             }
                             TextButton(onClick = { selected = null; onPlace(id) }, modifier = Modifier.testTag("place_$id")) {
                                 Text(stringResource(R.string.action_all))
@@ -386,18 +391,20 @@ private val BUTTON_SIZE = 56.dp
 @Composable
 private fun CompassButton(turned: Boolean, bearing: Double, onClick: () -> Unit) {
     AnimatedVisibility(turned, enter = fadeIn() + scaleIn(), exit = fadeOut() + scaleOut()) {
-        FloatingActionButton(
-            onClick = onClick,
-            shape = Corners.full,
-            containerColor = SurfaceLevel.floating(LocalDarkTheme.current).fill(),
-            contentColor = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.testTag("north"),
-        ) {
-            Icon(
-                Icons.Rounded.Navigation,
-                contentDescription = stringResource(R.string.action_north),
-                modifier = Modifier.rotate(-bearing.toFloat()),
-            )
+        Tooltip(stringResource(R.string.action_north)) {
+            FloatingActionButton(
+                onClick = onClick,
+                shape = Corners.full,
+                containerColor = SurfaceLevel.floating(LocalDarkTheme.current).fill(),
+                contentColor = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.testTag("north"),
+            ) {
+                Icon(
+                    Icons.Rounded.Navigation,
+                    contentDescription = stringResource(R.string.action_north),
+                    modifier = Modifier.rotate(-bearing.toFloat()),
+                )
+            }
         }
     }
 }
@@ -405,21 +412,23 @@ private fun CompassButton(turned: Boolean, bearing: Double, onClick: () -> Unit)
 /** Brings the map to where the phone is; a loading indicator while it finds out. */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun LocateButton(locating: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun LocateButton(locating: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier, size: Dp? = null) {
     // Floating like the tabs, the icon in primary as the one action the map has. Named
     // on the button, so it keeps its name while the indicator stands in for the icon.
     val label = stringResource(R.string.action_locate)
-    FloatingActionButton(
-        onClick = { if (!locating) onClick() },
-        shape = Corners.full,
-        containerColor = SurfaceLevel.floating(LocalDarkTheme.current).fill(),
-        contentColor = MaterialTheme.colorScheme.primary,
-        modifier = modifier.semantics { contentDescription = label }.testTag("locate"),
-    ) {
-        if (locating) {
-            LoadingIndicator(Modifier.size(32.dp), color = LocalContentColor.current)
-        } else {
-            Icon(Icons.Rounded.MyLocation, contentDescription = null)
+    Tooltip(label, modifier = modifier) {
+        FloatingActionButton(
+            onClick = { if (!locating) onClick() },
+            shape = Corners.full,
+            containerColor = SurfaceLevel.floating(LocalDarkTheme.current).fill(),
+            contentColor = MaterialTheme.colorScheme.primary,
+            modifier = (size?.let { Modifier.size(it) } ?: Modifier).semantics { contentDescription = label }.testTag("locate"),
+        ) {
+            if (locating) {
+                LoadingIndicator(Modifier.size(32.dp), color = LocalContentColor.current)
+            } else {
+                Icon(Icons.Rounded.MyLocation, contentDescription = null)
+            }
         }
     }
 }

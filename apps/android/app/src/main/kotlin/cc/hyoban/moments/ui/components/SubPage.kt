@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.add
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
@@ -25,6 +27,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import cc.hyoban.moments.R
+import cc.hyoban.moments.ui.LocalRailSpace
 import cc.hyoban.moments.ui.OnTabReselect
 
 /**
@@ -83,11 +86,13 @@ private fun BarPage(
     val subtitleText: (@Composable () -> Unit)? = subtitle?.let { { Text(it, maxLines = 1) } }
     val back: @Composable () -> Unit = {
         if (onBack != null) {
-            IconButton(onClick = onBack, modifier = Modifier.testTag("back")) {
-                if (close) {
-                    Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.action_close))
-                } else {
-                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.action_back))
+            Tooltip(stringResource(if (close) R.string.action_close else R.string.action_back), below = true) {
+                IconButton(onClick = onBack, modifier = Modifier.testTag("back")) {
+                    if (close) {
+                        Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.action_close))
+                    } else {
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.action_back))
+                    }
                 }
             }
         }
@@ -96,11 +101,14 @@ private fun BarPage(
         containerColor = AppColors.page,
         scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
     )
+    // Clear of the tabs down the side on a phone on its side, as the page's list is.
+    val rail = LocalRailSpace.current
+    val insets = TopAppBarDefaults.windowInsets.add(WindowInsets(left = rail.left, right = rail.right))
     Column(modifier.fillMaxSize().nestedScroll(scroll.nestedScrollConnection)) {
         if (large) {
-            LargeFlexibleTopAppBar(titleText, subtitle = subtitleText, navigationIcon = back, actions = actions, colors = colors, scrollBehavior = scroll)
+            LargeFlexibleTopAppBar(titleText, subtitle = subtitleText, navigationIcon = back, actions = actions, colors = colors, windowInsets = insets, scrollBehavior = scroll)
         } else {
-            MediumFlexibleTopAppBar(titleText, subtitle = subtitleText, navigationIcon = back, actions = actions, colors = colors, scrollBehavior = scroll)
+            MediumFlexibleTopAppBar(titleText, subtitle = subtitleText, navigationIcon = back, actions = actions, colors = colors, windowInsets = insets, scrollBehavior = scroll)
         }
         Box(Modifier.weight(1f)) { content() }
     }
