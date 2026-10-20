@@ -20,6 +20,27 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.widthIn
+import cc.hyoban.moments.ui.components.READABLE_WIDTH
+import cc.hyoban.moments.ui.components.landscape
+import cc.hyoban.moments.ui.components.isLandscape
+import cc.hyoban.moments.ui.LocalRailSpace
+import androidx.compose.ui.AbsoluteAlignment
+import androidx.compose.runtime.mutableDoubleStateOf
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.material.icons.rounded.Navigation
+import androidx.compose.ui.draw.rotate
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
+import cc.hyoban.moments.ui.components.RAIL_WIDTH
+import cc.hyoban.moments.ui.components.RAIL_HEIGHT
+import androidx.compose.foundation.layout.absolutePadding
+import cc.hyoban.moments.ui.components.sideInsetsPadding
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -127,6 +148,9 @@ fun MapScreen(container: AppContainer, onMoment: (String) -> Unit, onPlace: (Str
     // Locating: each request asks for the place once more; a ring turns while it waits.
     val context = LocalContext.current
     var locate by remember { mutableIntStateOf(0) }
+    // Which way the map is turned, and each ask to turn it back to north.
+    var bearing by remember { mutableDoubleStateOf(0.0) }
+    var north by remember { mutableIntStateOf(0) }
     var locating by remember { mutableStateOf(false) }
     val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { granted ->
         if (granted.values.any { it }) {
@@ -160,13 +184,26 @@ fun MapScreen(container: AppContainer, onMoment: (String) -> Unit, onPlace: (Str
             onTrip = onTrip,
             modifier = Modifier.fillMaxSize(),
             locate = locate,
+            north = north,
+            onBearing = { bearing = it },
             onLocated = { found ->
                 locating = false
                 if (!found) Toast.makeText(context, R.string.error_location, Toast.LENGTH_SHORT).show()
             },
         )
+        // On a phone on its side, at the top of the side away from the tabs and their buttons.
+        val landscape = isLandscape()
+        val rail = LocalRailSpace.current
         Column(
-            Modifier.align(Alignment.TopCenter).statusBarsPadding().padding(top = Space.m),
+            Modifier.align(
+                when {
+                    !landscape -> Alignment.TopCenter
+                    rail.left > 0.dp -> AbsoluteAlignment.TopRight
+                    else -> AbsoluteAlignment.TopLeft
+                },
+            )
+                .statusBarsPadding().sideInsetsPadding()
+                .padding(top = Space.m, start = if (landscape) Space.gutter else 0.dp, end = if (landscape) Space.gutter else 0.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(Space.s),
         ) {
@@ -174,14 +211,38 @@ fun MapScreen(container: AppContainer, onMoment: (String) -> Unit, onPlace: (Str
         }
 
         val trip = trips.firstOrNull { it.id == highlighted }
-        // Above the trip's card while it shows, else just above the tabs.
-        val lift by animateDpAsState(if (trip != null) 96.dp else 0.dp, label = "locate")
-        LocateButton(
-            locating,
-            onClick = requestLocate,
-            modifier = Modifier.align(Alignment.BottomEnd)
-                .padding(end = Space.gutter, bottom = LocalBottomClearance.current + Space.s + lift),
-        )
+        // Turned some way from north, by more than a nudge.
+        val turned = bearing.let { minOf(it, 360 - it) } > 0.5
+        if (landscape) {
+            // Down the tabs' side, the compass above them and locating below, the three
+            // spaced evenly; the compass keeps its place while it is hidden.
+            val railLeft = rail.left > 0.dp
+            Column(
+                Modifier.align(if (railLeft) AbsoluteAlignment.CenterLeft else AbsoluteAlignment.CenterRight)
+                    .fillMaxHeight()
+                    .windowInsetsPadding(WindowInsets.safeDrawing)
+                    .absolutePadding(left = if (railLeft) Space.m else 0.dp, right = if (railLeft) 0.dp else Space.m)
+                    .width(RAIL_WIDTH),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceEvenly,
+            ) {
+                Box(Modifier.size(BUTTON_SIZE)) { CompassButton(turned, bearing, onClick = { north++ }) }
+                Spacer(Modifier.height(RAIL_HEIGHT))
+                LocateButton(locating, onClick = requestLocate)
+            }
+        } else {
+            // Above the trip's card while it shows, else just above the tabs, the compass
+            // over it while the map is turned.
+            val lift by animateDpAsState(if (trip != null) 96.dp else 0.dp, label = "locate")
+            Column(
+                Modifier.align(Alignment.BottomEnd).sideInsetsPadding()
+                    .padding(end = Space.gutter, bottom = LocalBottomClearance.current + Space.s + lift),
+                verticalArrangement = Arrangement.spacedBy(Space.m),
+            ) {
+                CompassButton(turned, bearing, onClick = { north++ })
+                LocateButton(locating, onClick = requestLocate)
+            }
+        }
         // Kept while the card leaves, after the route is let go.
         var shown by remember { mutableStateOf(trip) }
         if (trip != null) shown = trip
@@ -189,7 +250,9 @@ fun MapScreen(container: AppContainer, onMoment: (String) -> Unit, onPlace: (Str
             trip != null,
             enter = fadeIn() + slideInVertically { it / 2 },
             exit = fadeOut() + slideOutVertically { it / 2 },
-            modifier = Modifier.align(Alignment.BottomCenter).padding(start = Space.gutter, end = Space.gutter, bottom = LocalBottomClearance.current),
+            modifier = Modifier.align(Alignment.BottomCenter).sideInsetsPadding()
+                .padding(start = Space.gutter, end = Space.gutter, bottom = LocalBottomClearance.current)
+                .widthIn(max = READABLE_WIDTH),
         ) {
             shown?.let { RouteCard(it) { onTrip(it.id) } }
         }
@@ -215,16 +278,29 @@ fun MapScreen(container: AppContainer, onMoment: (String) -> Unit, onPlace: (Str
         // Dragged down by its handle past a third of its height, it closes.
         var drag by remember(id) { mutableFloatStateOf(0f) }
         var height by remember { mutableIntStateOf(1) }
-        Box(Modifier.fillMaxSize()) {
+        BoxWithConstraints(Modifier.fillMaxSize()) {
+            // On a phone on its side, a column down the side the tabs aren't,
+            // as tall as the screen, with the map beside it; else the lower half, the map above.
+            val railLeft = LocalRailSpace.current.left > 0.dp
+            val panel = if (landscape) {
+                Modifier.align(if (railLeft) AbsoluteAlignment.BottomRight else AbsoluteAlignment.BottomLeft)
+                    .statusBarsPadding()
+                    .sideInsetsPadding()
+                    .padding(start = Space.s, end = Space.s, top = Space.s, bottom = LocalBottomClearance.current + Space.s)
+                    .width(PANEL_WIDTH)
+                    .fillMaxHeight()
+            } else {
+                Modifier.align(Alignment.BottomCenter)
+                    .padding(start = Space.s, end = Space.s, bottom = LocalBottomClearance.current)
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.55f)
+            }
             Surface(
                 shape = MaterialTheme.shapes.extraLarge,
                 color = level.fill(),
                 contentColor = MaterialTheme.colorScheme.onSurface,
                 shadowElevation = 6.dp,
-                modifier = Modifier.align(Alignment.BottomCenter)
-                    .padding(start = Space.s, end = Space.s, bottom = LocalBottomClearance.current)
-                    .fillMaxWidth()
-                    .fillMaxHeight(0.55f)
+                modifier = panel
                     .onSizeChanged { height = it.height }
                     .offset { IntOffset(0, drag.coerceAtLeast(0f).roundToInt()) },
             ) {
@@ -273,7 +349,32 @@ fun MapScreen(container: AppContainer, onMoment: (String) -> Unit, onPlace: (Str
     }
 }
 
+/** How wide a place's panel is down the side of a phone on its side. */
+private val PANEL_WIDTH = 360.dp
+
 private val LOCATION_PERMISSIONS = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
+
+/** The size of the map's round buttons, a floating action button's. */
+private val BUTTON_SIZE = 56.dp
+
+/** Which way north is, shown while the map is [turned]; tapped, the map turns back to it. */
+@Composable
+private fun CompassButton(turned: Boolean, bearing: Double, onClick: () -> Unit) {
+    AnimatedVisibility(turned, enter = fadeIn() + scaleIn(), exit = fadeOut() + scaleOut()) {
+        FloatingActionButton(
+            onClick = onClick,
+            shape = Corners.full,
+            containerColor = SurfaceLevel.floating(LocalDarkTheme.current).fill(),
+            contentColor = MaterialTheme.colorScheme.primary,
+        ) {
+            Icon(
+                Icons.Rounded.Navigation,
+                contentDescription = stringResource(R.string.action_north),
+                modifier = Modifier.rotate(-bearing.toFloat()),
+            )
+        }
+    }
+}
 
 /** Brings the map to where the phone is; a ring while it finds out. */
 @Composable

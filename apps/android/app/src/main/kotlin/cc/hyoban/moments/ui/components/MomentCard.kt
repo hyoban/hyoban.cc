@@ -126,7 +126,7 @@ fun FloatingBack(onBack: () -> Unit, modifier: Modifier = Modifier) {
         color = SurfaceLevel.floating(LocalDarkTheme.current).fill(),
         contentColor = MaterialTheme.colorScheme.onSurface,
         shadowElevation = 3.dp,
-        modifier = modifier.statusBarsPadding().padding(Space.s),
+        modifier = modifier.statusBarsPadding().sideInsetsPadding().padding(Space.s),
     ) {
         IconButton(onClick = onBack) {
             Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.action_back))

@@ -168,21 +168,23 @@ fun MediaMosaic(
         MediaTile(media[index], urls, tileModifier.clip(TILE), sharedKey = mediaKey(momentUid, media[index].uid), sharedShape = TILE, onClick = { onOpen(index) })
     }
 
+    // No taller than most of the screen on a phone on its side.
+    val most = LocalMediaMaxHeight.current
     when (media.size) {
         0 -> Unit
-        1 -> tile(0, modifier.fillMaxWidth().aspectRatio(shapeOf(media[0]).coerceIn(0.8f, 1.8f)))
-        2 -> Row(modifier.fillMaxWidth().aspectRatio(2f), horizontalArrangement = Arrangement.spacedBy(GAP)) {
+        1 -> tile(0, modifier.fillMaxWidth().aspectAtMost(shapeOf(media[0]).coerceIn(0.8f, 1.8f), most))
+        2 -> Row(modifier.fillMaxWidth().aspectAtMost(2f, most), horizontalArrangement = Arrangement.spacedBy(GAP)) {
             tile(0, Modifier.weight(1f).fillMaxHeight())
             tile(1, Modifier.weight(1f).fillMaxHeight())
         }
-        3 -> Row(modifier.fillMaxWidth().aspectRatio(1.5f), horizontalArrangement = Arrangement.spacedBy(GAP)) {
+        3 -> Row(modifier.fillMaxWidth().aspectAtMost(1.5f, most), horizontalArrangement = Arrangement.spacedBy(GAP)) {
             tile(0, Modifier.weight(2f).fillMaxHeight())
             Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(GAP)) {
                 tile(1, Modifier.weight(1f).fillMaxWidth())
                 tile(2, Modifier.weight(1f).fillMaxWidth())
             }
         }
-        else -> Column(modifier.fillMaxWidth().aspectRatio(1f), verticalArrangement = Arrangement.spacedBy(GAP)) {
+        else -> Column(modifier.fillMaxWidth().aspectAtMost(1f, most), verticalArrangement = Arrangement.spacedBy(GAP)) {
             for (row in 0..1) {
                 Row(Modifier.weight(1f).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(GAP)) {
                     for (column in 0..1) {

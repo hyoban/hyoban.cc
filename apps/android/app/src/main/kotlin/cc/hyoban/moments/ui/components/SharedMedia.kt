@@ -203,18 +203,3 @@ object DrawnStills {
 
     fun of(mediaUid: String): String? = urls[mediaUid]
 }
-
-/**
- * White status bar icons while [over] is true, as over a photo running under the bar,
- * and the theme's own otherwise; put back as they were when this leaves.
- */
-@Composable
-fun StatusBarOverPhoto(over: Boolean) {
-    val view = LocalView.current
-    val window = (view.context as? Activity)?.window ?: return
-    val controller = remember(window, view) { WindowCompat.getInsetsController(window, view) }
-    val themeLight = remember(controller) { controller.isAppearanceLightStatusBars }
-
-    LaunchedEffect(over) { controller.isAppearanceLightStatusBars = if (over) false else themeLight }
-    DisposableEffect(controller) { onDispose { controller.isAppearanceLightStatusBars = themeLight } }
-}

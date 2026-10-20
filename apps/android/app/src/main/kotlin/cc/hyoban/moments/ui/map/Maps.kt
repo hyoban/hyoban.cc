@@ -61,6 +61,9 @@ import org.maplibre.android.style.layers.PropertyFactory.textIgnorePlacement
 import org.maplibre.android.style.layers.PropertyFactory.textSize
 import org.maplibre.android.style.sources.GeoJsonOptions
 import cc.hyoban.moments.ui.LocalBottomClearance
+import cc.hyoban.moments.ui.LocalRailSpace
+import cc.hyoban.moments.ui.components.isLandscape
+import androidx.compose.runtime.withFrameNanos
 import org.maplibre.android.MapLibre
 import org.maplibre.android.location.modes.RenderMode
 import org.maplibre.android.location.LocationComponentOptions
@@ -201,6 +204,8 @@ private fun MapLibreView(
     modifier: Modifier,
     interactive: Boolean,
     attributionPadding: IntArray? = null,
+    /** Whether MapLibre's own compass shows once the map is turned; off where the screen has its own. */
+    compass: Boolean = true,
     retained: Boolean = false,
     onReady: (map: MapLibreMap, style: Style, fresh: Boolean) -> Unit,
 ) {
@@ -266,7 +271,7 @@ private fun MapLibreView(
                 setAllGesturesEnabled(interactive)
                 isTiltGesturesEnabled = false
                 isLogoEnabled = false
-                isCompassEnabled = interactive
+                isCompassEnabled = interactive && compass
                 attributionGravity = Gravity.BOTTOM or Gravity.START
             }
             map = it
@@ -302,6 +307,15 @@ private object MainMap {
     var dark = false
     var map: MapLibreMap? = null
     var style: Style? = null
+
+    /** The screen's shape the places were last framed for: on its side or not, and which side the tabs stood down. */
+    var framedFor: Pair<Boolean, Boolean>? = null
+}
+
+/** Pixels from each edge, given as left and right whichever way the text runs. */
+@Composable
+private fun absoluteEdges(left: Dp, top: Dp, right: Dp, bottom: Dp): IntArray = with(LocalDensity.current) {
+    intArrayOf(left.roundToPx(), top.roundToPx(), right.roundToPx(), bottom.roundToPx())
 }
 
 /** Pixels from each edge (left, top, right, bottom). */
@@ -419,6 +433,10 @@ fun PlacesMap(
     onTrip: (String) -> Unit,
     modifier: Modifier = Modifier,
     locate: Int = 0,
+    /** Each time it goes up, the map turns back to north. */
+    north: Int = 0,
+    /** Which way the map is turned, in degrees from north, as it moves. */
+    onBearing: (Double) -> Unit = {},
     onLocated: (Boolean) -> Unit = {},
     /** A tap on the map away from any place or route. */
     onEmptyTap: () -> Unit = {},
@@ -446,10 +464,19 @@ fun PlacesMap(
         listOf(insets.getLeft(this, direction), insets.getTop(this), insets.getRight(this, direction), insets.getBottom(this)).map { it.toDp() }
     }
     val clearance = LocalBottomClearance.current
-    val credit = edges(bars[0] + 8.dp, 0.dp, bars[2] + 8.dp, bars[3] + clearance + 8.dp)
-    val frame = edges(bars[0] + 32.dp, bars[1] + 96.dp, bars[2] + 32.dp, bars[3] + clearance + 16.dp)
+    val rail = LocalRailSpace.current
+    // In past the tabs and their buttons when they stand down a side.
+    val credit = absoluteEdges(bars[0] + rail.left + 8.dp, 0.dp, bars[2] + rail.right + 8.dp, bars[3] + clearance + 8.dp)
+    // The places fill the screen but for the legend over the top and the tabs, below or,
+    // on a phone on its side, down a side.
+    val landscape = isLandscape()
+    val frame = if (landscape) {
+        absoluteEdges(bars[0] + rail.left + 24.dp, bars[1] + 56.dp, bars[2] + rail.right + 24.dp, bars[3] + clearance + 16.dp)
+    } else {
+        edges(bars[0] + 32.dp, bars[1] + 96.dp, bars[2] + 32.dp, bars[3] + clearance + 16.dp)
+    }
 
-    MapLibreView(modifier, interactive = true, attributionPadding = credit, retained = true) { ready, style, fresh ->
+    MapLibreView(modifier, interactive = true, attributionPadding = credit, compass = false, retained = true) { ready, style, fresh ->
         // Shown again, it keeps its layers and where it was looking.
         framed = !fresh
         map = ready to style
@@ -546,7 +573,8 @@ fun PlacesMap(
         onDispose { ready.removeOnMapClickListener(listener) }
     }
 
-    LaunchedEffect(map, places) {
+    val shape = landscape to (rail.left > 0.dp)
+    LaunchedEffect(map, places, shape) {
         val (ready, style) = map ?: return@LaunchedEffect
         val features = places.map { place ->
             Feature.fromGeometry(place.place.latLng.point).apply {
@@ -556,9 +584,13 @@ fun PlacesMap(
             }
         }
         style.getSourceAs<GeoJsonSource>(PLACES)?.setGeoJson(FeatureCollection.fromFeatures(features))
-        // Opens on every place once there are places, and stays where it's moved after that.
-        if (!framed && places.isNotEmpty()) {
+        // Opens on every place once there are places, and stays where it's moved after
+        // that, until the phone turns: then every place again, to fill the screen's new shape.
+        if ((!framed || MainMap.framedFor != shape) && places.isNotEmpty()) {
             framed = true
+            MainMap.framedFor = shape
+            // Once the map has been laid out at the screen's new shape.
+            withFrameNanos { }
             ready.frame(places.map { it.place.latLng }, frame)
         }
     }
@@ -593,6 +625,20 @@ fun PlacesMap(
             circleSortKey(switchCase(chosen, literal(1f), literal(0f))),
         )
         style.getLayerAs<CircleLayer>(PLACES_SHADOW)?.setProperties(circleRadius(sum(grown, literal(3f))))
+    }
+
+    // Which way the map is turned, told as it moves and once it is first shown.
+    val bearing by rememberUpdatedState(onBearing)
+    DisposableEffect(map) {
+        val ready = map?.first ?: return@DisposableEffect onDispose {}
+        val moved = MapLibreMap.OnCameraMoveListener { bearing(ready.cameraPosition.bearing) }
+        bearing(ready.cameraPosition.bearing)
+        ready.addOnCameraMoveListener(moved)
+        onDispose { ready.removeOnCameraMoveListener(moved) }
+    }
+    LaunchedEffect(map, north) {
+        val (ready, _) = map ?: return@LaunchedEffect
+        if (north > 0) ready.animateCamera(CameraUpdateFactory.bearingTo(0.0), 400)
     }
 
     // Each time [locate] goes up, with the permission granted by then: the phone's place
