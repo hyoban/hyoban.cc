@@ -92,6 +92,7 @@
     <string name="separator_list">, </string>
     <string name="section_language">Language</string>
     <string name="language_system">System</string>
+    <string name="action_system_language">Change in system settings</string>
     <string name="settings_language_note">The Moments\' own words stay as written.</string>
     <plurals name="count_moments">
         <item quantity="one">%1$d Moment</item>

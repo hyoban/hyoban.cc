@@ -1,14 +1,21 @@
 package cc.hyoban.moments.ui.settings
 
 import android.app.Activity
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.provider.Settings
 import androidx.activity.compose.LocalActivity
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.OpenInNew
 import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Translate
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
@@ -41,7 +48,25 @@ fun LanguageSettings() {
                 LanguageRow(activity, language, selected = language == current)
             }
         }
+        // The system's own page for the app's language, which ColorOS has but doesn't link to.
+        systemLanguageSettings(activity)?.let { intent ->
+            GroupDivider(56.dp)
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.action_system_language)) },
+                leadingContent = { Icon(Icons.Rounded.Settings, contentDescription = null) },
+                trailingContent = { Icon(Icons.AutoMirrored.Rounded.OpenInNew, contentDescription = null) },
+                colors = rowColors(),
+                modifier = Modifier.clickable { activity.startActivity(intent) }.testTag("language_system_settings"),
+            )
+        }
     }
+}
+
+/** The system's page for this app's language, on Android 13 and later where there is one to open. */
+private fun systemLanguageSettings(activity: Activity): Intent? {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return null
+    val intent = Intent(Settings.ACTION_APP_LOCALE_SETTINGS, Uri.fromParts("package", activity.packageName, null))
+    return intent.takeIf { it.resolveActivity(activity.packageManager) != null }
 }
 
 @Composable
