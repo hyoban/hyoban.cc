@@ -158,6 +158,10 @@ fun MomentFeed(
                         card(moment, Modifier.animateItem(), months)
                     }
                 }
+                // Across the end, so both columns end together: a column left short, a month
+                // with one Moment leaving the other empty, has the grid finding its end over
+                // and over while it is pushed against it, jumping back and forth.
+                item(key = "end", contentType = "end", span = StaggeredGridItemSpan.FullLine) { Spacer(Modifier) }
             }
         } else {
             LazyColumn(
