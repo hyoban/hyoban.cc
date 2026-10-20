@@ -45,7 +45,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.VerticalDivider
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -54,8 +53,16 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.compose.currentStateAsState
-import androidx.lifecycle.compose.LocalLifecycleOwner
+import kotlin.math.roundToInt
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.offset
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.animation.core.animate
+import androidx.compose.foundation.gestures.rememberDraggableState
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.Orientation
 import androidx.lifecycle.Lifecycle
 import cc.hyoban.moments.ui.theme.dividerColor
 import cc.hyoban.moments.ui.theme.fill
@@ -184,45 +191,78 @@ fun MapScreen(container: AppContainer, onMoment: (String) -> Unit, onPlace: (Str
         }
     }
 
-    // The sheet is its own window, over everything; it shows only while the map is the page
-    // in front. A back swipe from a page opened from it draws the map under that page as a
-    // preview, and a sheet popping up there would take the swipe and stop it.
-    val resumed by LocalLifecycleOwner.current.lifecycle.currentStateAsState()
-    selected?.takeIf { resumed.isAtLeast(Lifecycle.State.RESUMED) }?.let { id ->
-        val place = places[id] ?: return@let
+    // A place's Moments in a panel over the map, in the app's own window rather than a
+    // sheet's, so a Moment opened from it grows out of its row as from a card on a list.
+    var shownPlace by remember { mutableStateOf(selected) }
+    if (selected != null) shownPlace = selected
+    BackHandler(enabled = selected != null) { selected = null }
+    AnimatedVisibility(
+        selected != null,
+        enter = slideInVertically { it } + fadeIn(),
+        exit = slideOutVertically { it } + fadeOut(),
+        modifier = Modifier.fillMaxSize(),
+    ) {
+        val id = shownPlace ?: return@AnimatedVisibility
+        val place = places[id] ?: return@AnimatedVisibility
         val here = byPlace[id].orEmpty()
         val years = remember(here) { here.map { yearOf(it.occurredAt) }.distinct().sortedDescending() }
         val context = LocalContext.current
-        ModalBottomSheet(
-            onDismissRequest = { selected = null },
-            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false),
-            containerColor = AppColors.sheetLevel.fill(),
-        ) {
-            CompositionLocalProvider(LocalSurfaceLevel provides AppColors.sheetLevel) {
-            Column {
-                Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Rounded.Place, contentDescription = null, tint = colors[years.minOrNull()] ?: MaterialTheme.colorScheme.primary)
-                    Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
-                        Text(place.name, style = MaterialTheme.typography.titleLarge)
-                        Text(
-                            (listOf(stringResource(R.string.count_moments, here.size)) + years.joinToString("、") { context.getString(R.string.year_item, it) }).joinToString(" · "),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
+        val level = SurfaceLevel.floating(LocalDarkTheme.current)
+        // Dragged down by its handle past a third of its height, it closes.
+        var drag by remember(id) { mutableFloatStateOf(0f) }
+        var height by remember { mutableIntStateOf(1) }
+        Box(Modifier.fillMaxSize()) {
+            Surface(
+                shape = MaterialTheme.shapes.extraLarge,
+                color = level.fill(),
+                contentColor = MaterialTheme.colorScheme.onSurface,
+                shadowElevation = 6.dp,
+                modifier = Modifier.align(Alignment.BottomCenter)
+                    .padding(start = Space.s, end = Space.s, bottom = LocalBottomClearance.current)
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.55f)
+                    .onSizeChanged { height = it.height }
+                    .offset { IntOffset(0, drag.coerceAtLeast(0f).roundToInt()) },
+            ) {
+                CompositionLocalProvider(LocalSurfaceLevel provides level) {
+                    Column {
+                        Box(
+                            Modifier.fillMaxWidth().height(28.dp).draggable(
+                                orientation = Orientation.Vertical,
+                                state = rememberDraggableState { delta -> drag = (drag + delta).coerceAtLeast(0f) },
+                                onDragStopped = {
+                                    if (drag > height / 3f) selected = null
+                                    else animate(drag, 0f) { value, _ -> drag = value }
+                                },
+                            ),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Box(Modifier.size(32.dp, 4.dp).background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f), Corners.full))
+                        }
+                        Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Rounded.Place, contentDescription = null, tint = colors[years.minOrNull()] ?: MaterialTheme.colorScheme.primary)
+                            Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
+                                Text(place.name, style = MaterialTheme.typography.titleLarge)
+                                Text(
+                                    (listOf(stringResource(R.string.count_moments, here.size)) + years.joinToString("、") { context.getString(R.string.year_item, it) }).joinToString(" · "),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                            TextButton(onClick = { selected = null; onPlace(id) }) {
+                                Text(stringResource(R.string.action_all))
+                                Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null)
+                            }
+                        }
+                        LazyColumn(
+                            contentPadding = PaddingValues(Space.l),
+                            verticalArrangement = Arrangement.spacedBy(Space.s),
+                        ) {
+                            items(here, key = { it.uid }) { moment ->
+                                CompactMomentRow(moment, places, container.mediaUrls, onClick = { onMoment(moment.uid) })
+                            }
+                        }
                     }
-                    TextButton(onClick = { selected = null; onPlace(id) }) {
-                        Text(stringResource(R.string.action_all))
-                        Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null)
-                    }
-                }
-                LazyColumn(
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    items(here, key = { it.uid }) { moment ->
-                        CompactMomentRow(moment, places, container.mediaUrls, onClick = { onMoment(moment.uid) })
-                    }
-                }
                 }
             }
         }
