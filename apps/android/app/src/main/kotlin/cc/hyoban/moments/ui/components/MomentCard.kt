@@ -163,6 +163,9 @@ fun FloatingButton(
 
 private val FLOATING_HEIGHT = 48.dp
 
+/** How tall a row of floating buttons stands under the status bar, for a page to keep what it shows clear of them. */
+val FLOATING_BAR = FLOATING_HEIGHT + Space.s * 2
+
 /** Card-coloured sheet that rises over a photo or a map at the top of a page. */
 @Composable
 fun RisingSheet(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
