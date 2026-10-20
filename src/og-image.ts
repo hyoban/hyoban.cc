@@ -1,3 +1,6 @@
+import { createHash } from 'node:crypto'
+import { mkdir, readFile, rm, readdir, stat, utimes, writeFile } from 'node:fs/promises'
+import { join } from 'node:path'
 import satori from 'satori'
 import sharp from 'sharp'
 import { getAssetUrl } from '@/asset-url'
@@ -263,6 +266,46 @@ async function getPhoto(url: string, tile: Tile) {
     .jpeg({ quality: 85 })
     .toBuffer()
   return `data:image/jpeg;base64,${jpeg.toString('base64')}`
+}
+
+// Drawn cards are kept between builds in node_modules/.astro, the directory Cloudflare's
+// build cache keeps for an Astro project, named by what they draw and by this file's
+// source, so a change to either draws them again. A card that no build has used for a
+// month is removed.
+const CARD_CACHE = join(process.cwd(), 'node_modules', '.astro', 'share-cards')
+const CARD_CACHE_MAX_AGE = 30 * 24 * 60 * 60 * 1000
+
+let cardCacheReady: Promise<string> | undefined
+function getCardCacheVersion() {
+  cardCacheReady ??= (async () => {
+    await mkdir(CARD_CACHE, { recursive: true })
+    const now = Date.now()
+    for (const name of await readdir(CARD_CACHE)) {
+      const file = join(CARD_CACHE, name)
+      if (now - (await stat(file)).mtimeMs > CARD_CACHE_MAX_AGE) await rm(file, { force: true })
+    }
+    const source = await readFile(join(process.cwd(), 'src', 'og-image.ts'), 'utf8')
+    return createHash('sha256').update(source).digest('hex')
+  })()
+  return cardCacheReady
+}
+
+/** The card `render` draws for `inputs`, from an earlier build when one drew the same. */
+export async function cachedCard(name: string, inputs: unknown, render: () => Promise<Buffer>) {
+  const version = await getCardCacheVersion()
+  const key = createHash('sha256')
+    .update(JSON.stringify([version, name, inputs]))
+    .digest('hex')
+  const file = join(CARD_CACHE, `${key}-${name}`)
+  try {
+    const card = await readFile(file)
+    const now = new Date()
+    await utimes(file, now, now)
+    return card
+  } catch {}
+  const card = await render()
+  await writeFile(file, card)
+  return card
 }
 
 export function pngResponse(image: Buffer) {
