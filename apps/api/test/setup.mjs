@@ -82,6 +82,13 @@ export function setUp() {
       return describe(key) ?? null
     },
     async delete(keys) {
+      // As R2: a delete names from 1 to 1000 keys.
+      if ([keys].flat().length === 0) {
+        throw new Error(
+          'delete: The number of keys in the request must be between 1 and 1000 inclusive. (10027)',
+        )
+      }
+
       for (const key of [keys].flat()) {
         objects.delete(key)
       }
