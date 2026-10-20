@@ -9,6 +9,7 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -18,6 +19,7 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -40,6 +42,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -47,6 +50,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -58,6 +63,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toBitmap
 import cc.hyoban.moments.R
 import cc.hyoban.moments.data.media.MediaUrls
 import cc.hyoban.moments.data.media.Share
@@ -70,15 +76,18 @@ import cc.hyoban.moments.ui.components.Thumbnail
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.fill
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
-enum class ShareTarget(val tag: String, @param:StringRes val title: Int, val limit: Int = Int.MAX_VALUE) {
-    X("x", R.string.action_share_x, 4),
-    TELEGRAM("telegram", R.string.action_share_telegram),
-    XIAOHONGSHU("xiaohongshu", R.string.action_share_xiaohongshu),
-    FEISHU("feishu", R.string.action_share_feishu),
-    THREADS("threads", R.string.action_share_threads),
-    DOUYIN("douyin", R.string.action_share_douyin),
+/** Where a Moment can be shared, by the app it goes to, [app] its package, whose icon the menu shows. */
+enum class ShareTarget(val tag: String, @param:StringRes val title: Int, val limit: Int = Int.MAX_VALUE, val app: String? = null) {
+    X("x", R.string.action_share_x, 4, app = "com.twitter.android"),
+    TELEGRAM("telegram", R.string.action_share_telegram, app = "org.telegram.messenger"),
+    XIAOHONGSHU("xiaohongshu", R.string.action_share_xiaohongshu, app = "com.xingin.xhs"),
+    FEISHU("feishu", R.string.action_share_feishu, app = "com.ss.android.lark"),
+    THREADS("threads", R.string.action_share_threads, app = "com.instagram.barcelona"),
+    DOUYIN("douyin", R.string.action_share_douyin, app = "com.ss.android.ugc.aweme"),
     PREPARE("prepare", R.string.action_prepare_share),
 }
 
@@ -91,10 +100,10 @@ enum class ShareTarget(val tag: String, @param:StringRes val title: Int, val lim
 @Composable
 fun ShareMenu(onSelect: (ShareTarget) -> Unit, onDismiss: () -> Unit) {
     val level = AppColors.sheetLevel
-    val choice: @Composable (String, String, ImageVector, ShareTarget) -> Unit = { label, tag, icon, target ->
+    val choice: @Composable (String, String, String?, ImageVector, ShareTarget) -> Unit = { label, tag, app, icon, target ->
         ListItem(
             headlineContent = { Text(label) },
-            leadingContent = { Icon(icon, contentDescription = null) },
+            leadingContent = { AppIcon(app, icon) },
             colors = ListItemDefaults.colors(containerColor = Color.Transparent, leadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant),
             modifier = Modifier.clickable { onSelect(target) }.testTag("share_$tag"),
         )
@@ -112,15 +121,44 @@ fun ShareMenu(onSelect: (ShareTarget) -> Unit, onDismiss: () -> Unit) {
                 modifier = Modifier.padding(horizontal = Space.xl, vertical = Space.s).semantics { heading() },
             )
             ShareTarget.entries.filter { it != ShareTarget.PREPARE }.forEach { target ->
-                choice(stringResource(target.title), target.tag, Icons.AutoMirrored.Rounded.Send, target)
+                choice(stringResource(target.title), target.tag, target.app, Icons.AutoMirrored.Rounded.Send, target)
             }
             HorizontalDivider(Modifier.padding(vertical = Space.s), color = MaterialTheme.colorScheme.outlineVariant)
-            choice(stringResource(R.string.action_share_wechat_manual), "wechat", Icons.Rounded.PhotoLibrary, ShareTarget.PREPARE)
-            choice(stringResource(R.string.action_share_bilibili_manual), "bilibili", Icons.Rounded.PhotoLibrary, ShareTarget.PREPARE)
-            choice(stringResource(ShareTarget.PREPARE.title), "prepare", Icons.Rounded.PhotoLibrary, ShareTarget.PREPARE)
+            choice(stringResource(R.string.action_share_wechat_manual), "wechat", WECHAT, Icons.Rounded.PhotoLibrary, ShareTarget.PREPARE)
+            choice(stringResource(R.string.action_share_bilibili_manual), "bilibili", BILIBILI, Icons.Rounded.PhotoLibrary, ShareTarget.PREPARE)
+            choice(stringResource(ShareTarget.PREPARE.title), "prepare", null, Icons.Rounded.PhotoLibrary, ShareTarget.PREPARE)
         }
     }
 }
+
+private const val WECHAT = "com.tencent.mm"
+private const val BILIBILI = "tv.danmaku.bili"
+
+/**
+ * The icon of the app a choice goes to, as the phone has it, so the menu reads like the
+ * system's share sheet; [fallback] while it loads, and for an app that isn't installed.
+ */
+@Composable
+private fun AppIcon(app: String?, fallback: ImageVector) {
+    val context = LocalContext.current
+    val icon by produceState<ImageBitmap?>(null, app) {
+        value = app?.let {
+            withContext(Dispatchers.IO) {
+                runCatching { context.packageManager.getApplicationIcon(it).toBitmap().asImageBitmap() }.getOrNull()
+            }
+        }
+    }
+    Box(Modifier.size(APP_ICON), contentAlignment = Alignment.Center) {
+        val bitmap = icon
+        if (bitmap != null) {
+            Image(bitmap, contentDescription = null, modifier = Modifier.size(APP_ICON))
+        } else {
+            Icon(fallback, contentDescription = null)
+        }
+    }
+}
+
+private val APP_ICON = 40.dp
 
 /** A separate copy for another platform; the original Moment stays as written. */
 @OptIn(ExperimentalLayoutApi::class)
