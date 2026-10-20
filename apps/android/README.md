@@ -1,4 +1,4 @@
-# Moments for Android
+# 这里, Moments for Android
 
 The app that shows the site's Moments, places and trips on the phone: the places on a
 map, every Moment with its photos and videos, and each trip's route and days. It reads
@@ -6,6 +6,10 @@ the API's public endpoints (`apps/api`) and keeps a copy under the app's `api/`
 directory in the layout `packages/data-spec` defines, so it opens straight away and
 works offline; each start, and each pull down on a list, asks only for what changed
 since. It doesn't edit anything yet.
+
+On the home screen it is 这里 (here): Material 3's nine-lobed cookie shape in green on
+pale mint, with the map's "you are here" pulse in it, as an adaptive icon with its own
+monochrome layer for themed icons.
 
 ## Building
 
