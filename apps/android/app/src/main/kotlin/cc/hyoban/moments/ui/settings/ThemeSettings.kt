@@ -117,12 +117,13 @@ private fun ThemeModeGroup(settings: Settings, seed: Color) {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(Space.s),
             ) {
+                // The screen clipped to the frame's own shape and the frame drawn over its edge,
+                // so the two meet all the way round, corners and all.
                 val frame = Modifier
                     .fillMaxWidth()
                     .aspectRatio(0.75f)
-                    .border(if (selected) 2.5.dp else 1.dp, if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.medium)
-                    .padding(if (selected) 2.5.dp else 1.dp)
                     .clip(MaterialTheme.shapes.medium)
+                    .border(if (selected) 2.5.dp else 1.dp, if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.medium)
                 when (mode) {
                     ThemeMode.SYSTEM -> Row(frame) {
                         MiniScreen(light, false, Modifier.weight(1f))
