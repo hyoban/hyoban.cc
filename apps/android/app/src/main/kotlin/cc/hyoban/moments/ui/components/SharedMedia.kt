@@ -108,9 +108,9 @@ fun Modifier.sharedMedia(key: String?, shape: Shape = RectangleShape): Modifier 
 
 /**
  * A Moment's card on a list and its page, as one surface: tapping the card grows it into
- * the page, photo, words and all, as the App Store's stories open, and going back shrinks
- * the page into the card. Its corners go from the card's to none as it grows. Not during
- * a back swipe, whose own preview would play it twice, nor while the viewer shows.
+ * the page, photo, words and all, as the App Store's stories open, and going back, by a
+ * swipe too, shrinks the page into the card. Its corners go from the card's to none as it
+ * grows. Not while the viewer shows.
  */
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
@@ -119,16 +119,16 @@ fun Modifier.sharedCard(key: String, cardCorner: Dp = 16.dp, page: Boolean = fal
     val animated = LocalNavAnimatedScope.current
     if (shared == null || animated == null) return this
 
-    val swiped = LocalBackSwipe.current
     val viewerShowing = LocalViewerShowing.current
     // The page's corners round as it shrinks toward the card, and square off as it fills the screen.
     val corner by animated.transition.animateDp(label = "card corner") { state ->
         if (page && state == EnterExitState.Visible) 0.dp else cardCorner
     }
     return with(shared) {
-        val config = remember(swiped, viewerShowing) {
+        val config = remember(viewerShowing) {
             object : SharedTransitionScope.SharedContentConfig {
-                override val SharedTransitionScope.SharedContentState.isEnabled: Boolean get() = !swiped.value && !viewerShowing.value
+                // A back swipe plays it too, under the finger.
+                override val SharedTransitionScope.SharedContentState.isEnabled: Boolean get() = !viewerShowing.value
                 override val shouldKeepEnabledForOngoingAnimation: Boolean get() = false
             }
         }
