@@ -8,10 +8,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
@@ -390,7 +390,13 @@ private val BUTTON_SIZE = 56.dp
 /** Which way north is, shown while the map is [turned]; tapped, the map turns back to it. */
 @Composable
 private fun CompassButton(turned: Boolean, bearing: Double, onClick: () -> Unit) {
-    AnimatedVisibility(turned, enter = fadeIn() + scaleIn(), exit = fadeOut() + scaleOut()) {
+    // Growing along one axis rather than scaling, as Material 3 has a component enter on Android.
+    val motion = MaterialTheme.motionScheme
+    AnimatedVisibility(
+        turned,
+        enter = expandVertically(motion.fastSpatialSpec(), expandFrom = Alignment.Bottom) + fadeIn(motion.fastEffectsSpec()),
+        exit = shrinkVertically(motion.fastSpatialSpec(), shrinkTowards = Alignment.Bottom) + fadeOut(motion.fastEffectsSpec()),
+    ) {
         Tooltip(stringResource(R.string.action_north)) {
             FloatingActionButton(
                 onClick = onClick,

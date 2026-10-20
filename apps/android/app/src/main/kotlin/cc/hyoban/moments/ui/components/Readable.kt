@@ -64,7 +64,11 @@ fun PageWidth(modifier: Modifier = Modifier, content: @Composable (PageColumns) 
     val rail = LocalRailSpace.current
     val safe = WindowInsets.safeDrawing
     val side = with(LocalDensity.current) {
-        maxOf(safe.getLeft(this, LayoutDirection.Ltr).toDp() + rail.left, safe.getRight(this, LayoutDirection.Ltr).toDp() + rail.right)
+        if (rail.clearOfInsets) {
+            maxOf(rail.left, rail.right)
+        } else {
+            maxOf(safe.getLeft(this, LayoutDirection.Ltr).toDp() + rail.left, safe.getRight(this, LayoutDirection.Ltr).toDp() + rail.right)
+        }
     }
     BoxWithConstraints(modifier.fillMaxSize().padding(horizontal = side)) {
         val count = if (maxWidth >= TWO_COLUMNS_FROM) 2 else 1

@@ -84,7 +84,9 @@ fun MediaStill(
         widest[0] = maxOf(widest[0], with(LocalDensity.current) { (maxWidth * detail).roundToPx() })
         val url = urls.still(media, widest[0])
         val height = if (constraints.hasBoundedHeight) constraints.maxHeight else widest[0]
-        val request = remember(url, placeholderUrl) {
+        // A still fades in over its placeholder, unless the phone has animations removed.
+        val reduced = LocalReducedMotion.current
+        val request = remember(url, placeholderUrl, reduced) {
             ImageRequest.Builder(context)
                 .data(url)
                 .memoryCacheKey(url)
@@ -92,7 +94,7 @@ fun MediaStill(
                 // the first frame, which a photo opening out of its tile needs.
                 .size(widest[0].coerceAtLeast(1), height.coerceAtLeast(1))
                 .precision(Precision.INEXACT)
-                .crossfade(true)
+                .crossfade(!reduced)
                 // The same file too: the copy in memory was decoded for a smaller size than this, so
                 // it is read again, and stands in meanwhile.
                 .apply { if (placeholderUrl != null) placeholderMemoryCacheKey(placeholderUrl) }

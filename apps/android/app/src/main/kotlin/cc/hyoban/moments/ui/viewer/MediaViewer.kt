@@ -46,6 +46,7 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.MotionPhotosOn
 import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material.icons.rounded.Share
@@ -280,7 +281,7 @@ fun MediaViewer(
                 }
                 Tooltip(stringResource(R.string.action_info), below = true) {
                     IconButton(onClick = { info = true }, modifier = Modifier.testTag("info")) {
-                        Icon(Icons.Outlined.Info, contentDescription = stringResource(R.string.action_info), tint = Color.White)
+                        Icon(Icons.Rounded.Info, contentDescription = stringResource(R.string.action_info), tint = Color.White)
                     }
                 }
             }

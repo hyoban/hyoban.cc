@@ -89,6 +89,7 @@
     <string name="error_location_permission">Location permission is needed to find what\'s nearby.</string>
     <string name="label_view_list">List</string>
     <string name="label_view_calendar">Calendar</string>
+    <string name="label_pick_moment">Pick a Moment to see it here</string>
     <string name="filter_all">All</string>
     <string name="filter_year">%1$d</string>
     <string name="filter_whole_year">Whole year</string>

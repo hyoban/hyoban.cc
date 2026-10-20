@@ -88,6 +88,7 @@
     <string name="error_location_permission">需要定位权限才能找到附近。</string>
     <string name="label_view_list">列表</string>
     <string name="label_view_calendar">日历</string>
+    <string name="label_pick_moment">选一个时刻，在这里看它</string>
     <string name="filter_all">全部</string>
     <string name="filter_year">%1$d 年</string>
     <string name="filter_whole_year">全年</string>

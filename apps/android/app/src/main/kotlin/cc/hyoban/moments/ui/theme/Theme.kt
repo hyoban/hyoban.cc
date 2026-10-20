@@ -83,6 +83,14 @@ private val AppTypography = Typography().run {
     )
 }
 
+/**
+ * The springs a page changes on, Material 3's standard ones, which don't overshoot: a common
+ * transition, as Material 3 has it, isn't bouncy, while the components keep the theme's
+ * expressive ones.
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+val TransitionMotion: MotionScheme = MotionScheme.standard()
+
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun MomentsTheme(settings: Settings, content: @Composable () -> Unit) {
