@@ -92,8 +92,8 @@ The same page sets the look as FlClash's theme page does: light, dark or the sys
 the seed colour (the system's accent, Apple's system colours or one's own by hex), how
 much of it the scheme carries, and dark in pure black.
 
-The unit tests round-trip every record under the repository's `data/` and the sample
-bundle in `scripts/fixtures/bundle` through the app's models, so the app and the site
+The unit tests round-trip every record under the repository's `data/` through the
+app's models, so the app and the site
 can't drift apart without a test noticing; they also check the media URLs against the
 site's rules, which trip a Moment is on, and the sync against a stand-in for the API.
 

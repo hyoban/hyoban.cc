@@ -18,8 +18,6 @@ data class Manifest(
     val schemaVersion: Int,
     val generator: String,
     val updatedAt: String,
-    /** In a receipt: the bundle's place ids the publish step replaced, and with what. */
-    val renamedPlaces: Map<String, String>? = null,
     @Transient val extra: JsonObject = NoExtra,
 ) {
     object Serializer : PassthroughSerializer<Manifest>(generatedSerializer(), { v, e -> v.copy(extra = e) }, { it.extra })

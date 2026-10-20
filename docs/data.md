@@ -1,7 +1,8 @@
 # Data
 
 The Moments, places and trips live in the API's D1 database (`apps/api`), which the
-recording app writes and the site's build reads. `data/` keeps a backup of them as JSON
+recording app writes, committing what it kept on the phone as one change set, and the
+site's build reads. `data/` keeps a backup of them as JSON
 records, in the shape `packages/data-spec` defines: the data-backup workflow writes
 the API's export into it every six hours and commits what changed, so edit the records
 through the API rather than here. `devices.json` is the exception: it lives only here.
@@ -23,51 +24,6 @@ block holds the R2 key, ETag, size, dimensions and responsive variants. A record
 without `published` is a draft the site skips. Published fields never change: a
 different photo is a new media item with a new key.
 
-## Publishing a bundle
-
-A bundle is what the Android app exported while it recorded Moments: the records in
-the layout above, without their `local` fields, plus `media/<media uid>.<extension>`
-for every media item that isn't published yet (a live photo has an image and a video
-with the same uid). The app only shows the records now, so this is for bundles made
-before, or by hand.
-
-```sh
-pnpm data:publish <bundle.zip>
-```
-
-The command refreshes `data/` from the API (it stops if `data/` has uncommitted
-changes, which the refresh would overwrite), unpacks the bundle under
-`.artifacts/publish/<time>/`, then:
-
-1. Matches the bundle's places to `data/places.json`. A place within 200 m of an
-   existing one, or with the same name, takes the existing id; the rest are added.
-   An id already in the repository keeps the repository's coordinates. A place the
-   app named provisionally (`p-<ulid>`) gets an id spelled from its name's pinyin.
-2. Writes the trips, with places renamed.
-3. Gives each unpublished Moment an id: the slug the record proposes in `slug`,
-   else its first place, else its first words; the order is the next one that day.
-4. Optimizes and uploads each unpublished media item through
-   `scripts/lib/moment-media.mjs`, naming files by the slug.
-5. Writes the records into `data/`. A record whose uid is already there keeps the
-   `published` blocks it has and takes everything else from the bundle. A record
-   with media missing from `media/` is skipped and listed.
-6. Pushes those records, and the places they name, into the API's database
-   (`--local`: the one `wrangler dev` uses), as `pnpm data:push` does.
-7. Writes `receipt.zip` next to the bundle: the published records, the places they
-   name, and `renamedPlaces` in its manifest. Share it back to the app.
-
-Nothing is committed. Afterwards, write the alt texts the command lists, run
-`pnpm trips:weather`, then `pnpm test`, `pnpm check` and `pnpm build`, and push the
-records again with the `pnpm data:push` line it prints; the API then fetches the
-routes the new legs need.
-`--dry-run` only reports the place matching, without refreshing or writing anything.
-
-The rules for places, ids and file names are `@hyoban/data-spec/publish`, which the
-API's own publishing shares.
-
-`scripts/fixtures/bundle` is a sample bundle; `scripts/lib/publish-data.test.mjs`
-publishes it into a temporary repository.
-
 ## Building from the API
 
 With `MOMENTS_API_TOKEN` set, in the environment or `.env`, the site is built from the
@@ -79,9 +35,8 @@ fetch fails the build. The scripts always read `data/`; `devices.json` stays her
 
 ## Writing outside the API
 
-Anything that writes records into `data/` itself, like `data:publish` or the
-create-moment skill, has to bring `data/` up to date first and push what it wrote
-afterwards. Otherwise the site never shows it, and the next backup removes it from
+Anything that writes records into `data/` itself, like the create-moment skill, has
+to bring `data/` up to date first and push what it wrote afterwards. Otherwise the site never shows it, and the next backup removes it from
 `data/` because the API doesn't have it.
 
 ```sh

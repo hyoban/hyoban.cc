@@ -11,8 +11,7 @@ import { getContentType, uploadR2Object } from './r2-assets.mjs'
 
 // Turns a Moment's source media into what the site serves: WebP stills with 480 and
 // 960 pixel variants, H.264 videos with a poster, and a published block for the record
-// naming each object by its key under the Moment's id. Shared by the create-moment
-// skill and data:publish.
+// naming each object by its key under the Moment's id. The create-moment skill's.
 
 const execFile = promisify(execFileCallback)
 

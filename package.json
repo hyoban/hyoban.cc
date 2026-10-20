@@ -10,7 +10,6 @@
     "assets:upload": "node scripts/upload-asset-to-r2.mjs",
     "data:export": "node scripts/export-data.mjs",
     "data:import": "node scripts/import-data.mjs",
-    "data:publish": "node scripts/publish-data.mjs",
     "data:push": "node scripts/push-data.mjs",
     "data:schema": "node scripts/generate-data-schema.mjs",
     "media:generate": "node scripts/generate-media.mjs",

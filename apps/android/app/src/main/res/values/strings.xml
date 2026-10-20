@@ -170,7 +170,6 @@
     <string name="message_published">已发布</string>
     <string name="error_publish">没能发布：%1$s</string>
     <string name="confirm_delete_published">这个时刻会在发布更改时从网站上删除，之前都可以撤销。</string>
-    <string name="error_delete">没能删除：%1$s</string>
     <string name="note_published">保存后先留在这台手机上，在「发布更改」里检查后再一起发布到网站。</string>
     <string name="note_local_then_publish">保存只存在这台手机上，在「发布更改」里检查后再一起发布到网站。</string>
     <string name="label_unpublished_change">改动未发布</string>

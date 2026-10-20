@@ -20,8 +20,8 @@ import kotlin.test.assertTrue
 import kotlin.test.fail
 
 /**
- * Every record the site has, and the sample bundle, must come back out of the app's
- * models exactly as it went in: the spec is shared, and nothing may be lost on the way.
+ * Every record the site has must come back out of the app's models exactly as it went
+ * in: the spec is shared, and nothing may be lost on the way.
  */
 class SpecRoundTripTest {
     private val repository = generateSequence(File("").absoluteFile) { it.parentFile }
@@ -38,21 +38,6 @@ class SpecRoundTripTest {
         roundTripAll(File(repository, "data/trips"), TripRecord.serializer())
         roundTrip(File(repository, "data/places.json"), MapSerializer(String.serializer(), Place.serializer()))
         roundTrip(File(repository, "data/manifest.json"), Manifest.serializer())
-    }
-
-    @Test
-    fun `the sample bundle round-trips, including the slug it proposes`() {
-        val bundle = File(repository, "scripts/fixtures/bundle")
-        roundTripAll(File(bundle, "moments"), MomentRecord.serializer())
-        roundTripAll(File(bundle, "trips"), TripRecord.serializer())
-        roundTrip(File(bundle, "places.json"), MapSerializer(String.serializer(), Place.serializer()))
-        roundTrip(File(bundle, "manifest.json"), Manifest.serializer())
-
-        val proposing = File(bundle, "moments").walkTopDown()
-            .filter { it.extension == "json" }
-            .map { Spec.json.decodeFromString(MomentRecord.serializer(), it.readText()) }
-            .first { "slug" in it.extra }
-        assertEquals(JsonPrimitive("ferry-morning"), proposing.extra["slug"])
     }
 
     @Test

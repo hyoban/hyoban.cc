@@ -165,15 +165,15 @@ test('a write the site shows brings the routes up to date before calling the dep
 
   try {
     const pending = []
-    const trip = snapshot.trips[0]
+    const moment = snapshot.moments.find((record) => record.published && !record.hidden)
 
     await call(
       { ...env, MAPBOX_TOKEN: 'pk.test', DEPLOY_HOOK_URL: 'https://deploy.test/hook' },
-      'PUT',
-      `/v1/trips/${trip.id}`,
+      'POST',
+      '/v1/changes',
       {
         ...owner,
-        body: { ...trip, title: `${trip.title}!` },
+        body: { moments: [{ ...moment, text: `${moment.text}!` }] },
         context: { waitUntil: (promise) => pending.push(promise) },
       },
     )

@@ -1,12 +1,9 @@
 import {
   momentRecordSchema,
   placeSchema,
-  tripRecordSchema,
   type MomentMedia,
   type MomentRecord,
-  type Place,
   type Places,
-  type TripRecord,
 } from '@hyoban/data-spec'
 import { getUploadKey, type Bucket, type UploadPart } from './bucket.ts'
 import type { Database, Statement } from './database.ts'
@@ -26,16 +23,16 @@ import {
   momentRow,
   placeRow,
   placeholders,
-  tripRow,
   upsertSql,
   type Table,
   type Value,
 } from './rows.ts'
 
-// The write side: the recording app saves drafts, uploads originals and publishes. Every
-// write is one transaction that bumps the revision, so the change feed hands it out once.
-// A Moment's published id and every published block are the server's: they're set when
-// it publishes, never taken from a request, and never changed afterwards.
+// The write side, as the recording app commits what it kept on the phone: the originals
+// uploaded one by one, then everything else as one change set, checked whole and written
+// in one transaction that bumps the revision, so the change feed hands it out once. A
+// Moment's published id and every published block are the server's: they're set when it
+// publishes, never taken from a request, and never changed afterwards.
 
 export const GENERATOR = 'hyoban.cc api'
 const PLACE_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
@@ -52,73 +49,6 @@ export interface WriteResult<T> {
   status: number
   /** Whether the site shows what changed, so it needs building again. */
   changesSite: boolean
-}
-
-/** Saves a Moment as the app has it; a published one gets its new media published too. */
-export async function saveMoment(
-  context: WriteContext,
-  uid: string,
-  body: unknown,
-): Promise<WriteResult<MomentRecord>> {
-  const input = validate(momentRecordSchema, withoutServerFields(body))
-
-  if (input.uid !== uid) {
-    throw new HttpError(422, `The record's uid is ${input.uid}, not ${uid}.`)
-  }
-
-  const existing = await readMomentRow(context.db, uid)
-  const prior = existing?.record
-  const record = withPublished(input, prior)
-
-  await assertPlaces(context.db, record.places)
-
-  const uploads = record.published ? await publishMedia(context.bucket, record) : []
-  const saved = validate(momentRecordSchema, record)
-
-  await commit(context, momentStatements(context.db, saved))
-  await deleteUploads(context.bucket, uploads)
-
-  return {
-    body: saved,
-    status: existing ? 200 : 201,
-    changesSite: Boolean(saved.published || prior?.published),
-  }
-}
-
-/** Gives a draft its published id and publishes its media; a published one only its new media. */
-export async function publishMoment(
-  context: WriteContext,
-  uid: string,
-): Promise<WriteResult<MomentRecord>> {
-  const existing = await readMomentRow(context.db, uid)
-
-  if (!existing || existing.deleted) {
-    throw new HttpError(404, 'Not found.')
-  }
-
-  const record = structuredClone(existing.record)
-
-  record.published ??= await newPublished(context, record)
-
-  const uploads = await publishMedia(context.bucket, record)
-  const saved = validate(momentRecordSchema, record)
-
-  await commit(context, momentStatements(context.db, saved))
-  await deleteUploads(context.bucket, uploads)
-
-  return { body: saved, status: 200, changesSite: true }
-}
-
-export async function deleteMoment(context: WriteContext, uid: string): Promise<WriteResult<null>> {
-  const existing = await readMomentRow(context.db, uid)
-
-  if (!existing || existing.deleted) {
-    throw new HttpError(404, 'Not found.')
-  }
-
-  await commit(context, [deleteStatement(context, uid)])
-
-  return { body: null, status: 204, changesSite: Boolean(existing.record.published) }
 }
 
 /** What `POST /v1/changes` did: the id each place sent is known by, the Moments saved, the uids deleted. */
@@ -264,7 +194,7 @@ function withPublished(input: MomentRecord, prior: MomentRecord | undefined): Mo
 async function newPublished(
   context: WriteContext,
   record: MomentRecord,
-  claimed: Set<string> = new Set(),
+  claimed: Set<string>,
 ): Promise<NonNullable<MomentRecord['published']>> {
   const dateKey = record.occurredAt.slice(0, 10)
   const { results } = await context.db
@@ -325,57 +255,6 @@ export async function uploadMedia(
 }
 
 /**
- * Adds a place, unless it is one already known: by id, or within 200 m or by name, which
- * the response's id then names. A known place keeps the point and name it has. A place
- * the app made, under its provisional `p-<ulid>`, is added under an id spelled from its
- * name, as `pnpm data:publish` names it.
- */
-export async function savePlace(
-  context: WriteContext,
-  given: string,
-  body: unknown,
-): Promise<WriteResult<{ id: string; place: Place }>> {
-  const place = validate(placeSchema, body)
-  const places = await readPlaceRecords(context.db)
-  const id = PROVISIONAL_PLACE_PATTERN.test(given) ? getPlaceId(place.name, places) : given
-  const match = matchPlace(id, place, places)
-
-  if (match.status !== 'new') {
-    return { body: { id: match.id, place: places[match.id]! }, status: 200, changesSite: false }
-  }
-
-  await commit(context, [upsert(context.db, 'places', placeRow(id, place))])
-
-  return { body: { id, place }, status: 201, changesSite: true }
-}
-
-export async function saveTrip(
-  context: WriteContext,
-  id: string,
-  body: unknown,
-): Promise<WriteResult<TripRecord>> {
-  const trip = validate(tripRecordSchema, body)
-
-  if (trip.id !== id) {
-    throw new HttpError(422, `The trip's id is ${trip.id}, not ${id}.`)
-  }
-
-  await assertPlaces(context.db, [
-    ...trip.waypoints.map((waypoint) => waypoint.place),
-    ...[...trip.straightLegs, ...trip.sameWayBack].flatMap((leg) => [leg.from, leg.to]),
-  ])
-
-  const existing = await context.db
-    .prepare(`SELECT 1 FROM trips WHERE id = ?1 AND deleted_at IS NULL`)
-    .bind(id)
-    .first()
-
-  await commit(context, [upsert(context.db, 'trips', tripRow(trip))])
-
-  return { body: trip, status: existing ? 200 : 201, changesSite: true }
-}
-
-/**
  * Publishes a published Moment's unpublished media: copies each original from where it
  * was uploaded to the Moment's directory, named by the slug, and gives the item its
  * published block. Returns the uploads, to delete once the record is saved.
@@ -383,9 +262,6 @@ export async function saveTrip(
 async function publishMedia(bucket: Bucket, record: MomentRecord) {
   const published = record.published!
   const pending = record.media.filter((item) => !item.published)
-
-  await assertUploads(bucket, record)
-
   const uploads: string[] = []
 
   for (const item of pending) {
@@ -561,25 +437,4 @@ async function readPlaceRecords(db: Database): Promise<Places> {
   return Object.fromEntries(
     results.map((row) => [row.id, placeSchema.parse(JSON.parse(row.record))]),
   )
-}
-
-/** A 422 naming any of these places the database doesn't know. */
-async function assertPlaces(db: Database, ids: string[]) {
-  if (ids.length === 0) {
-    return
-  }
-
-  const unique = [...new Set(ids)]
-  const { results } = await db
-    .prepare(
-      `SELECT id FROM places WHERE deleted_at IS NULL AND id IN (${unique.map((_, index) => `?${index + 1}`).join(', ')})`,
-    )
-    .bind(...unique)
-    .all<{ id: string }>()
-  const known = new Set(results.map((row) => row.id))
-  const missing = unique.filter((id) => !known.has(id))
-
-  if (missing.length > 0) {
-    throw new HttpError(422, `Unknown places: ${missing.join(', ')}. Save them first.`)
-  }
 }

@@ -44,7 +44,7 @@ export const publishedImageSchema = r2Object.extend({
   variants: z.array(r2Object.extend({ width: count, height: count })).default([]),
   /**
    * Kept as uploaded rather than optimized, with no variants: the site has Cloudflare
-   * Images resize it. What the API publishes; data:publish optimizes instead.
+   * Images resize it. What the API publishes; the create-moment skill optimizes instead.
    */
   original: z.boolean().optional(),
 })

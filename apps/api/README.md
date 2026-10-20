@@ -39,42 +39,38 @@ as uids in `deleted`; nothing is ever dropped from the database, only marked del
 
 ## Writing
 
-Every write needs a token, runs as one transaction that bumps the revision, and stamps
-the manifest's `updatedAt`. The app saves in this order:
+The app writes as a commit: what it changed waits on the phone until it is looked over,
+then goes all at once. Writes need a token.
 
-| Path                                         | Does                                                                                                              |
-| -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `PUT /v1/places/:id`                         | adds a place; one within 200 m of a known place, or with its name, comes back as `{ id, place }` of the known one |
-| `PUT /v1/moments/:uid/media/:mediaUid/:part` | keeps an original, `image` or `video` (a live photo sends both), until its Moment publishes                       |
-| `PUT /v1/moments/:uid`                       | saves the Moment; the places it names must be known                                                               |
-| `POST /v1/moments/:uid/publish`              | gives a draft its `YYYY/MM/DD-NN-slug` id and moves its originals to `moments/<id>/<slug>.<ext>`                  |
-| `DELETE /v1/moments/:uid`                    | marks it deleted                                                                                                  |
-| `PUT /v1/trips/:id`                          | saves a trip; the places it names must be known                                                                   |
+| Path                                         | Does                                                                                        |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `PUT /v1/moments/:uid/media/:mediaUid/:part` | keeps an original, `image` or `video` (a live photo sends both), until its Moment publishes |
+| `POST /v1/changes`                           | applies `{ places, moments, deleted }` as one write                                         |
 
-The Android app instead uploads the originals, then sends everything it kept on the phone
-as one `POST /v1/changes`: `{ places, moments, deleted }`, the places only it knows by
-id, the Moments it wrote or changed, and the uids of those it deleted. Each place goes as
-`PUT /v1/places/:id` takes one and the Moments name it by the id it is known by; each
-Moment is saved and published, a draft taking the next order on its day after the
-others in the same write. All of it is checked first, the originals among it, then
-written in one transaction, so a request that doesn't fit changes nothing. The answer is
-`{ places, moments, deleted }`: the id each place sent is known by, the Moments as
-published, and the uids deleted, leaving out those already gone.
-
-A place the app made carries the provisional id `p-<ulid>`; the API adds it under an id
-spelled from its name's pinyin, as `pnpm data:publish` does, and the response's `id` is
-the one the Moment then names.
+A change set names the places only the app knows, by id, the Moments it wrote or changed,
+and the uids of those it deleted. A place within 200 m of a known one, or with its name,
+is that one; any other is added, and one the app made, under the provisional id
+`p-<ulid>`, gets an id spelled from its name's pinyin. The Moments name each place by
+the id it is known by. Each Moment is saved and published: a draft takes its
+`YYYY/MM/DD-NN-slug` id, the next order on its day after the others in the same write,
+slugged by its first place or else its first words, and its originals move to
+`moments/<id>/<slug>.<ext>`; a published one keeps its id and publishes any new media.
+A deleted Moment is marked deleted for the change feed. All of it is checked first, the
+uploaded originals among it, then written in one transaction that bumps the revision and
+stamps the manifest's `updatedAt`, so a change set that doesn't fit changes nothing.
+The answer is `{ places, moments, deleted }`: the id each place sent is known by, the
+Moments as published, and the uids deleted, leaving out those already gone.
 
 Published photos and videos are kept as uploaded, marked `original: true`: the site has
 Cloudflare Images resize the photos and takes each video's first frame as its poster
-(docs/assets.md). A Moment's `published` block and each
-media item's are the server's: a request's copy
-is ignored, they are set when the Moment publishes and never change after. Saving a
-published Moment with new media publishes those as it saves, so their originals must
-be uploaded first. The rules for places, ids and file names live in `@hyoban/data-spec/publish`,
-which `pnpm data:publish` shares.
+(docs/assets.md). A Moment's `published` block and each media item's are the server's:
+a request's copy is ignored, they are set when the Moment publishes and never change
+after. The rules for places, ids and file names live in `@hyoban/data-spec/publish`.
 
-A write the site shows (anything but a draft) first brings the trips' routes up to date,
+Records written outside the API, by the create-moment skill, go into the database with
+`pnpm data:push` instead (docs/data.md).
+
+A write the site shows first brings the trips' routes up to date,
 then calls the `DEPLOY_HOOK_URL` secret, when it is set, so the site builds again with
 them.
 

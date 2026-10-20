@@ -62,8 +62,8 @@ interface MomentsWriter {
     suspend fun applyChanges(changes: ChangeSet): AppliedChanges
 }
 
-/** The API answered a write with something other than 2xx: its status and what it said. */
-class ApiException(val status: Int, message: String) : IOException(message)
+/** The API turned a write down, or there was no token to write with: what it said. */
+class ApiException(message: String) : IOException(message)
 
 /** What the app reads the records from; the tests stand in for the API with their own. */
 interface MomentsSource {
@@ -109,14 +109,14 @@ class MomentsApi(
 
     /** A write with the token; its answer's body, or an [ApiException] with what the API said. */
     private suspend fun write(method: String, path: String, body: RequestBody): String = withContext(io) {
-        val token = token()?.takeIf { it.isNotBlank() } ?: throw ApiException(401, "No API token")
+        val token = token()?.takeIf { it.isNotBlank() } ?: throw ApiException("No API token")
         val request = Request.Builder().url(baseUrl() + path).method(method, body)
             .header("Authorization", "Bearer $token")
             .header("Accept", "application/json")
             .build()
         client.newCall(request).execute().use { response ->
             val text = response.body?.string().orEmpty()
-            if (!response.isSuccessful) throw ApiException(response.code, errorOf(text) ?: "$method $path answered ${response.code}")
+            if (!response.isSuccessful) throw ApiException(errorOf(text) ?: "$method $path answered ${response.code}")
             text
         }
     }
