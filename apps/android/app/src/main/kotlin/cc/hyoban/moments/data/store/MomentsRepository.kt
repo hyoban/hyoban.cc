@@ -49,6 +49,9 @@ class MomentsRepository(
     private var keptPlaces: Set<String> = emptySet()
     /** The site's Moments deleted on the phone, by uid, until the deletions are published. */
     private var removed: Set<String> = emptySet()
+
+    /** Moments set aside while their deletion can still be undone: out of sight, not yet deleted. */
+    private var setAside: Set<String> = emptySet()
     private val _moments = MutableStateFlow<List<MomentRecord>>(emptyList())
     private val _places = MutableStateFlow<Map<String, Place>>(emptyMap())
     private val _trips = MutableStateFlow<List<TripRecord>>(emptyList())
@@ -240,6 +243,7 @@ class MomentsRepository(
      */
     suspend fun delete(uid: String) = lock.withLock {
         withContext(io) {
+            setAside = setAside - uid
             phone[uid]?.let(::forgetLocal)
             if (uid in all) {
                 removed = removed + uid
@@ -248,6 +252,18 @@ class MomentsRepository(
             publishPlaces()
             publish()
         }
+    }
+
+    /** Takes a Moment out of sight while its deletion can still be undone; [delete] deletes it, [bringBack] undoes it. */
+    suspend fun setAside(uid: String) = lock.withLock {
+        setAside = setAside + uid
+        publish()
+    }
+
+    /** Brings back a Moment [setAside], its deletion undone. */
+    suspend fun bringBack(uid: String) = lock.withLock {
+        setAside = setAside - uid
+        publish()
     }
 
     /** Takes back what publishing would do to one of the site's Moments: its change, or its deletion. */
@@ -408,8 +424,9 @@ class MomentsRepository(
     fun moment(uid: String): MomentRecord? = phone[uid] ?: all[uid]?.takeIf { isShown(it) && uid !in removed }
 
     private fun publish() {
-        _moments.value = (all.values.filter { isShown(it) && it.uid !in phone && it.uid !in removed } + phone.values).sortedWith(newestFirst)
-        val (added, changed) = phone.values.sortedWith(oldestFirst).partition { it.published == null }
+        _moments.value = (all.values.filter { isShown(it) && it.uid !in phone && it.uid !in removed } + phone.values)
+            .filter { it.uid !in setAside }.sortedWith(newestFirst)
+        val (added, changed) = phone.values.filter { it.uid !in setAside }.sortedWith(oldestFirst).partition { it.published == null }
         _pending.value = PendingChanges(added, changed.map { Change(all[it.uid], it) }, removed.mapNotNull { all[it] }.sortedWith(oldestFirst))
     }
 

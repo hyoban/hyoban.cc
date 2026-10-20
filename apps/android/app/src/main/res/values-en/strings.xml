@@ -87,8 +87,8 @@
     <string name="action_north">Face north</string>
     <string name="error_location">Couldn\'t find your location. Check that location is on.</string>
     <string name="error_location_permission">Location permission is needed to find what\'s nearby.</string>
-    <string name="action_show_calendar">Show as calendar</string>
-    <string name="action_show_feed">Show as list</string>
+    <string name="label_view_list">List</string>
+    <string name="label_view_calendar">Calendar</string>
     <string name="filter_all">All</string>
     <string name="filter_year">%1$d</string>
     <string name="filter_whole_year">Whole year</string>
@@ -207,7 +207,6 @@
     <string name="error_save">Couldn\'t save: %1$s</string>
     <string name="label_on_phone">On this phone</string>
     <string name="action_delete_moment">Delete this Moment</string>
-    <string name="confirm_delete_moment">This Moment and the photos copied for it will be deleted from the phone.</string>
     <string name="label_known_place">A known place</string>
     <string name="place_new_here">A new place, at the pin</string>
     <string name="place_drag_hint">Drag the map to put the pin where this happened</string>
@@ -222,6 +221,10 @@
     <string name="title_edit_moment">Edit Moment</string>
     <string name="action_edit_moment">Edit this Moment</string>
     <string name="action_more">More</string>
+    <string name="action_close">Close</string>
+    <string name="message_moment_deleted">Moment deleted</string>
+    <string name="action_undo">Undo</string>
+    <string name="error_empty_moment">Write something, or add a photo</string>
     <string name="label_whole_day">Everything from that day</string>
     <string name="source_saved">As saved</string>
     <string name="share_as_moment">Write a Moment</string>
@@ -236,7 +239,6 @@
     <string name="settings_token_note">With the token, the site\'s Moments can be edited and deleted; those changes and the Moments written here stay on this phone until you look them over and publish them together. The token stays on this phone, out of backups.</string>
     <string name="message_published">Published</string>
     <string name="error_publish">Couldn\'t publish: %1$s</string>
-    <string name="confirm_delete_published">This Moment will be deleted from the site when you publish your changes; until then it can be undone.</string>
     <string name="note_published">Saving keeps the change on this phone; it reaches the site when you publish your changes.</string>
     <string name="note_local_then_publish">Saving keeps it on this phone; it reaches the site when you publish your changes.</string>
     <string name="label_unpublished_change">Unpublished change</string>

@@ -2,9 +2,7 @@ package cc.hyoban.moments.ui.components
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
@@ -92,7 +90,7 @@ fun PressableCard(onClick: () -> Unit, modifier: Modifier = Modifier, content: @
     val pressed by interaction.collectIsPressedAsState()
     val scale by animateFloatAsState(
         if (pressed) 0.97f else 1f,
-        spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
+        MaterialTheme.motionScheme.fastSpatialSpec(),
         label = "press",
     )
     val level = LocalSurfaceLevel.current.raised
@@ -210,8 +208,6 @@ val NAV_WIDTH = TAB_WIDTH * 3 + DOCK_PADDING * 2
 /** How big the tabs are folded into a circle while a list is read on. */
 private val NAV_FOLDED = 56.dp
 
-/** How the tabs fold into their circle and open out of it, and move aside to do so. */
-val NAV_FOLD = spring<Float>(dampingRatio = 0.8f, stiffness = Spring.StiffnessMediumLow)
 
 /** How far the platter stretches at most as it moves, of its length. */
 private const val MAX_STRETCH = 0.15f
@@ -262,11 +258,13 @@ fun FloatingNav(
     val position = remember(vertical) { Animatable(selected * step) }
     var dragging by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
-    val travel = spring<Float>(dampingRatio = 0.75f, stiffness = Spring.StiffnessMediumLow)
-    val lift by animateFloatAsState(if (dragging) 1.08f else 1f, spring(dampingRatio = 0.6f, stiffness = Spring.StiffnessMedium), label = "tab lift")
+    // The theme's springs: the platter travels on the default spatial one, lifts and settles on the fast one.
+    val motion = MaterialTheme.motionScheme
+    val travel = motion.defaultSpatialSpec<Float>()
+    val lift by animateFloatAsState(if (dragging) 1.08f else 1f, motion.fastSpatialSpec(), label = "tab lift")
     // Under a finger, how fast it last moved, settling back as it slows or stops.
     val dragStretch = remember { Animatable(0f) }
-    val fold by animateFloatAsState(if (collapsed && !vertical) 1f else 0f, NAV_FOLD, label = "tab fold")
+    val fold by animateFloatAsState(if (collapsed && !vertical) 1f else 0f, motion.defaultSpatialSpec(), label = "tab fold")
     // Off a drag, the platter goes where the chosen tab is.
     LaunchedEffect(selected) { if (!dragging) position.animateTo(selected * step, travel) }
     // While dragged, the tab under the platter shows as chosen.
@@ -290,7 +288,7 @@ fun FloatingNav(
                 scope.launch { position.snapTo((position.value + delta).coerceIn(0f, last * step)) }
                 scope.launch {
                     dragStretch.snapTo(maxOf(dragStretch.value, (abs(delta) / step * 2).coerceAtMost(MAX_STRETCH)))
-                    dragStretch.animateTo(0f, spring(stiffness = Spring.StiffnessMedium))
+                    dragStretch.animateTo(0f, motion.fastSpatialSpec())
                 }
             },
             onDragStarted = { dragging = true },

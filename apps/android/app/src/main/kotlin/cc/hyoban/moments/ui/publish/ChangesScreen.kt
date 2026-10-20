@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -30,14 +29,13 @@ import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material.icons.rounded.Remove
 import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
-import androidx.compose.material3.LoadingIndicator
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -57,7 +55,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
@@ -74,7 +71,6 @@ import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.store.Change
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.PageWidth
-import cc.hyoban.moments.ui.components.Pill
 import cc.hyoban.moments.ui.components.SubPage
 import cc.hyoban.moments.ui.components.Thumbnail
 import cc.hyoban.moments.ui.format.formatDate
@@ -158,14 +154,21 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
                         modifier = Modifier.fillMaxWidth().testTag("publish_all"),
                     ) {
                         val progress = publishing
-                        if (progress != null) {
-                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
-                                CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp, color = LocalContentColor.current)
-                                Text(stringResource(R.string.message_publishing_progress, progress.done, progress.total))
-                            }
-                        } else {
-                            Text(stringResource(R.string.action_publish_all))
-                        }
+                        Text(
+                            if (progress != null) {
+                                stringResource(R.string.message_publishing_progress, progress.done, progress.total)
+                            } else {
+                                stringResource(R.string.action_publish_all)
+                            },
+                        )
+                    }
+                    // Publishing takes a while and knows how far it has got, so a determinate
+                    // indicator, as Material 3 has for a wait of more than a few seconds.
+                    publishing?.let { progress ->
+                        LinearWavyProgressIndicator(
+                            progress = { publishedFraction(progress) },
+                            modifier = Modifier.fillMaxWidth().padding(vertical = Space.xs).testTag("publish_progress"),
+                        )
                     }
                     Text(
                         stringResource(if (container.canPublish) R.string.note_publish_all else R.string.note_publish_needs_token),
@@ -181,7 +184,7 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
 
 /**
  * The changes kept on the phone, at the head of the Moments while there are any: a tonal
- * row saying how many, a loading indicator while they publish, opening them to look over.
+ * row saying how many, how far publishing has got while it runs, opening them to look over.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -209,7 +212,12 @@ fun PendingChangesRow(container: AppContainer, onClick: () -> Unit, modifier: Mo
             },
             leadingContent = {
                 Box(Modifier.size(40.dp), contentAlignment = Alignment.Center) {
-                    if (publishing != null) LoadingIndicator(Modifier.size(32.dp), color = LocalContentColor.current) else Icon(Icons.Rounded.CloudUpload, contentDescription = null)
+                    val progress = publishing
+                    if (progress != null) {
+                        CircularWavyProgressIndicator(progress = { publishedFraction(progress) }, modifier = Modifier.size(32.dp))
+                    } else {
+                        Icon(Icons.Rounded.CloudUpload, contentDescription = null)
+                    }
                 }
             },
             trailingContent = { Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null) },
@@ -223,6 +231,10 @@ fun PendingChangesRow(container: AppContainer, onClick: () -> Unit, modifier: Mo
         )
     }
 }
+
+/** How much of the changes are published, for a determinate indicator. */
+private fun publishedFraction(progress: AppContainer.Progress): Float =
+    if (progress.total == 0) 0f else progress.done.toFloat() / progress.total
 
 /** Which Moment a change is to, as the site has it: its first photo, its first words, when and where. */
 private class Identity(val moment: MomentRecord, val places: Map<String, Place>, val urls: MediaUrls)
@@ -315,9 +327,12 @@ private fun MomentWhole(moment: MomentRecord, places: Map<String, Place>, urls: 
             PhotoRow(moment.media.map { it to null }, urls)
         }
         if (moment.places.isNotEmpty()) {
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.s), verticalArrangement = Arrangement.spacedBy(Space.s)) {
-                moment.places.forEach { Pill(places[it]?.name ?: it, icon = Icons.Rounded.Place) }
-            }
+            // Where, as a subhead rather than labels, none of them tapped on its own.
+            Text(
+                moment.places.joinToString(" · ") { places[it]?.name ?: it },
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }

@@ -2,8 +2,6 @@ package cc.hyoban.moments.ui.trips
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
@@ -14,8 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -42,7 +38,6 @@ import cc.hyoban.moments.ui.OnTabReselect
 import cc.hyoban.moments.ui.Trips
 import cc.hyoban.moments.ui.components.MediaStill
 import cc.hyoban.moments.ui.components.PageWidth
-import cc.hyoban.moments.ui.components.Pill
 import cc.hyoban.moments.ui.components.PressableCard
 import cc.hyoban.moments.ui.components.TabPage
 import cc.hyoban.moments.ui.components.sharedCard
@@ -116,22 +111,19 @@ private fun TripCard(trip: TripRecord, covers: List<MomentMedia>, count: Int, ur
         CoverCollage(covers, urls, Modifier)
         Column(Modifier.padding(start = Space.l, end = Space.l, top = Space.s, bottom = Space.l), verticalArrangement = Arrangement.spacedBy(Space.s + 2.dp)) {
             Text(trip.title, style = MaterialTheme.typography.titleLarge)
-            TripPills(trip, count)
+            TripSubhead(trip, count)
         }
     }
 }
 
-/** A trip's dates, its length and its count of Moments, as pills. */
-@OptIn(ExperimentalLayoutApi::class)
+/** A trip's dates, its length, its count of Moments and of places when given, as a card's subhead in Material 3: one line of secondary text. */
 @Composable
-fun TripPills(trip: TripRecord, count: Int, places: Int? = null) {
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.s), verticalArrangement = Arrangement.spacedBy(Space.s)) {
-        Pill(formatRange(trip.start, trip.end), icon = Icons.Rounded.CalendarMonth)
-        val days = daysBetween(trip.start, trip.end)
-        Pill(pluralStringResource(R.plurals.count_days, days, days))
-        Pill(pluralStringResource(R.plurals.count_moments, count, count))
-        places?.let { Pill(pluralStringResource(R.plurals.count_places, it, it)) }
-    }
+fun TripSubhead(trip: TripRecord, count: Int, places: Int? = null) {
+    Text(
+        (listOf(tripSummary(trip, count)) + listOfNotNull(places?.let { pluralStringResource(R.plurals.count_places, it, it) })).joinToString(" · "),
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
 }
 
 /** A trip's dates and its length, and its count of Moments when given, as one line. */

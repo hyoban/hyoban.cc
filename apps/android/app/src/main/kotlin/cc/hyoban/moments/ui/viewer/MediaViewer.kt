@@ -50,12 +50,13 @@ import androidx.compose.material.icons.rounded.MotionPhotosOn
 import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
@@ -141,6 +142,7 @@ import me.saket.telephoto.zoomable.zoomable
  * up for the details; tap to hide everything but the photo; pinch or double-tap to zoom.
  * A video or a live photo plays from its own button.
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun MediaViewer(
     container: AppContainer,
@@ -266,7 +268,7 @@ fun MediaViewer(
                     modifier = Modifier.testTag("share"),
                 ) {
                     if (sharing) {
-                        CircularProgressIndicator(Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
+                        LoadingIndicator(Modifier.size(24.dp), color = Color.White)
                     } else {
                         Icon(Icons.Rounded.Share, contentDescription = stringResource(R.string.action_share), tint = Color.White)
                     }
@@ -400,6 +402,7 @@ private fun InfoTile(text: String, label: String? = null) {
 }
 
 /** The LIVE badge under a live photo: a ring while its motion loads, then a tap plays it again. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun ViewerLiveBadge(state: LiveMotionState, modifier: Modifier = Modifier) {
     Row(
@@ -420,7 +423,7 @@ private fun ViewerLiveBadge(state: LiveMotionState, modifier: Modifier = Modifie
         if (state.ready) {
             Icon(Icons.Rounded.MotionPhotosOn, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
         } else {
-            CircularProgressIndicator(Modifier.size(14.dp), color = Color.White, strokeWidth = 2.dp)
+            LoadingIndicator(Modifier.size(16.dp), color = Color.White)
         }
         Text(stringResource(R.string.label_live), color = Color.White, style = MaterialTheme.typography.labelMedium)
     }

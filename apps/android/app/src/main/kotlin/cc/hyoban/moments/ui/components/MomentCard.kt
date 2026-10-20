@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -13,12 +12,12 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.ZeroCornerSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.rounded.Luggage
 import androidx.compose.material.icons.rounded.PhoneAndroid
 import androidx.compose.material.icons.rounded.Place
-import androidx.compose.material.icons.rounded.Schedule
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LoadingIndicator
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -47,7 +46,7 @@ import cc.hyoban.moments.ui.theme.SurfaceLevel
 import cc.hyoban.moments.ui.theme.fill
 
 /**
- * A Moment in a list: its media inset at the top of a white card, then pills for when,
+ * A Moment in a list: its media inset at the top of a white card, then a subhead of when,
  * where and the trip, then its words. Tapping anywhere, its photos too, opens the Moment.
  */
 @OptIn(ExperimentalLayoutApi::class)
@@ -71,7 +70,7 @@ fun MomentCard(
             Modifier.padding(start = Space.l, end = Space.l, top = if (moment.media.isEmpty()) Space.l else Space.s, bottom = Space.l),
             verticalArrangement = Arrangement.spacedBy(Space.s + 2.dp),
         ) {
-            MomentPills(moment, places, trip, showDate)
+            MomentSubhead(moment, places, trip, showDate)
             if (moment.text.isNotBlank()) {
                 Text(moment.text, style = MaterialTheme.typography.bodyLarge, maxLines = 8, overflow = TextOverflow.Ellipsis)
             }
@@ -79,17 +78,24 @@ fun MomentCard(
     }
 }
 
-/** When, where and which trip, each a neutral pill, and whether it is only on this phone. */
-@OptIn(ExperimentalLayoutApi::class)
+/**
+ * When, where and which trip, as a card's subhead in Material 3: one line of secondary text,
+ * as none of it is tapped on its own. Whether it is only on this phone is state, so that
+ * stays a label beside it.
+ */
 @Composable
-fun MomentPills(moment: MomentRecord, places: Map<String, Place>, trip: TripRecord?, showDate: Boolean = false) {
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.s), verticalArrangement = Arrangement.spacedBy(Space.s)) {
+fun MomentSubhead(moment: MomentRecord, places: Map<String, Place>, trip: TripRecord?, showDate: Boolean = false) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
         val time = listOfNotNull(if (showDate) formatDate(moment.occurredAt) else null, formatTime(moment.occurredAt)).joinToString(" ")
-        if (time.isNotEmpty()) {
-            Pill(time, icon = Icons.Rounded.Schedule)
-        }
-        moment.places.forEach { id -> Pill(places[id]?.name ?: id, icon = Icons.Rounded.Place) }
-        trip?.let { Pill(it.title, icon = Icons.Rounded.Luggage) }
+        val parts = listOfNotNull(time.ifEmpty { null }) + moment.places.map { places[it]?.name ?: it } + listOfNotNull(trip?.title)
+        Text(
+            parts.joinToString(" · "),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f, fill = false),
+        )
         if (moment.published == null) Pill(stringResource(R.string.label_on_phone), icon = Icons.Rounded.PhoneAndroid)
     }
 }
@@ -123,14 +129,18 @@ fun CompactMomentRow(moment: MomentRecord, places: Map<String, Place>, urls: Med
 fun FloatingBack(onBack: () -> Unit, modifier: Modifier = Modifier) =
     FloatingButton(Icons.AutoMirrored.Rounded.ArrowBack, stringResource(R.string.action_back), onBack, modifier, tag = "back", width = FloatingWidth.Narrow)
 
-/** How wide a floating button is beside its height: narrow for back, wide for the page's main action. */
-enum class FloatingWidth(val width: Dp) { Narrow(40.dp), Standard(48.dp), Wide(64.dp) }
+/**
+ * How wide a floating button is, as Material 3's small icon button comes: narrow for back,
+ * wide for the page's main action.
+ */
+enum class FloatingWidth(val width: Dp) { Narrow(32.dp), Standard(40.dp), Wide(52.dp) }
 
 /**
  * A button that floats over a photo or a map, legible on either, as the back button does.
  * The page's one main action may be [tonal], in the secondary container's colours, and
  * [width] wide; the others stay the floating level.
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun FloatingButton(
     icon: ImageVector,
@@ -142,8 +152,8 @@ fun FloatingButton(
     tonal: Boolean = false,
     width: FloatingWidth = FloatingWidth.Standard,
 ) {
-    // Floating over a photo, a map or a card: a shadow, as the tabs have. Its touch target
-    // stays 48dp however narrow it is drawn.
+    // Floating over a photo, a map or a card: a shadow, as the tabs have. Drawn at Material
+    // 3's small icon button size, its touch target still 48dp, as Compose widens a small one.
     Surface(
         onClick = onClick,
         enabled = !busy,
@@ -154,14 +164,14 @@ fun FloatingButton(
         modifier = modifier.statusBarsPadding().sideInsetsPadding().padding(Space.s)
             .size(width.width, FLOATING_HEIGHT).semantics { contentDescription = label }.testTag(tag),
     ) {
-        // Busy, it turns a spinner and takes no taps until what it started is done.
+        // Busy, a short wait, it turns Material 3 Expressive's loading indicator and takes no taps until what it started is done.
         Box(contentAlignment = Alignment.Center) {
-            if (busy) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp) else Icon(icon, contentDescription = null)
+            if (busy) LoadingIndicator(Modifier.size(24.dp), color = LocalContentColor.current) else Icon(icon, contentDescription = null)
         }
     }
 }
 
-private val FLOATING_HEIGHT = 48.dp
+private val FLOATING_HEIGHT = 40.dp
 
 /** How tall a row of floating buttons stands under the status bar, for a page to keep what it shows clear of them. */
 val FLOATING_BAR = FLOATING_HEIGHT + Space.s * 2
