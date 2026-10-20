@@ -48,6 +48,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -111,6 +112,8 @@ import cc.hyoban.moments.ui.trips.TripScreen
 import cc.hyoban.moments.ui.trips.TripsScreen
 import cc.hyoban.moments.ui.viewer.MediaViewer
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass
@@ -232,6 +235,8 @@ fun MomentsApp(container: AppContainer) {
         railLeft -> RailSpace(left = RAIL_CLEARANCE, right = 0.dp)
         else -> RailSpace(left = 0.dp, right = RAIL_CLEARANCE)
     }
+    // A tab tapped twice, told to its page: back to its top, or the map to every place.
+    val tabDoubleTaps = remember { MutableSharedFlow<Any>(extraBufferCapacity = 1) }
     // A button the map hands the tabs to stand beside them, as its one action.
     val accessorySlot = remember { mutableStateOf<(@Composable () -> Unit)?>(null) }
     val windowHeight = with(LocalDensity.current) { LocalWindowInfo.current.containerSize.height.toDp() }
@@ -270,6 +275,7 @@ fun MomentsApp(container: AppContainer) {
                         LocalBackSwipe provides backSwipe,
                         LocalViewerShowing provides viewerShowing,
                         LocalSettings provides container.settings,
+                        LocalTabDoubleTaps provides tabDoubleTaps,
                     ) {
                         NavHost(
                             navController = navController,
@@ -371,6 +377,7 @@ fun MomentsApp(container: AppContainer) {
                             vertical = landscape,
                             collapsed = folded,
                             onExpand = { tabsShown = true },
+                            onDoubleTap = { tabDoubleTaps.tryEmit(Tab.entries[it].route) },
                         )
                         // On the map, its button slides out from behind the tabs' end as they move over
                         // to make room, as the map's page slides in, and back under them as they
@@ -477,6 +484,19 @@ private const val SCROLL_SLOP = 6f
 
 /** Where the app reads from, for what draws without the container at hand, as the map. */
 val LocalSettings = staticCompositionLocalOf<Settings> { error("No settings provided") }
+
+/** The tabs double-tapped, each as its route: [Feed], [Atlas] or [Trips]. */
+val LocalTabDoubleTaps = staticCompositionLocalOf<SharedFlow<Any>> { MutableSharedFlow() }
+
+/** Runs [action] each time the tab of [route] is double-tapped while its page is shown; nothing without a [route]. */
+@Composable
+fun OnTabDoubleTap(route: Any?, action: suspend () -> Unit) {
+    val taps = LocalTabDoubleTaps.current
+    val current by rememberUpdatedState(action)
+    LaunchedEffect(taps, route) {
+        if (route != null) taps.collect { if (it == route) current() }
+    }
+}
 
 /** How much of the bottom the floating tabs cover on a tab screen, to leave clear under a list's last item. */
 val LocalBottomClearance = staticCompositionLocalOf { 0.dp }

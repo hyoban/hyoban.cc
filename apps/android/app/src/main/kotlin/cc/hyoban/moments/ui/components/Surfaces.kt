@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.components
 
+import android.os.SystemClock
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
@@ -49,6 +50,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
@@ -232,7 +234,9 @@ val RAIL_HEIGHT = RAIL_TAB_HEIGHT * 3 + RAIL_PADDING * 2
  * it goes and thins a little, as a drop would, more the faster it goes.
  *
  * [collapsed], along the bottom, the dock folds into a circle holding the chosen tab's
- * icon, the chosen tab sliding into it as the others fade; tapped, it [onExpand]s.
+ * icon, the chosen tab sliding into it as the others fade; tapped, it [onExpand]s. A tab
+ * tapped twice in quick succession reports [onDoubleTap] on the second tap, the first
+ * having chosen it as any tap does.
  */
 @Composable
 fun FloatingNav(
@@ -243,6 +247,7 @@ fun FloatingNav(
     vertical: Boolean = false,
     collapsed: Boolean = false,
     onExpand: () -> Unit = {},
+    onDoubleTap: (Int) -> Unit = {},
 ) {
     val density = LocalDensity.current
     // Down the side, the tabs stack, and the platter and a drag run up and down.
@@ -262,6 +267,20 @@ fun FloatingNav(
     LaunchedEffect(selected) { if (!dragging) position.animateTo(selected * step, travel) }
     // While dragged, the tab under the platter shows as chosen.
     val shown = if (dragging) (position.value / step).roundToInt().coerceIn(0, last) else selected
+    // The last tap, the tab and when, so a second on the same tab soon after is a double tap.
+    val doubleTapTimeout = LocalViewConfiguration.current.doubleTapTimeoutMillis
+    val lastTap = remember { longArrayOf(-1, 0) }
+    val tap: (Int) -> Unit = { index ->
+        val now = SystemClock.uptimeMillis()
+        if (lastTap[0] == index.toLong() && now - lastTap[1] <= doubleTapTimeout) {
+            lastTap[0] = -1
+            onDoubleTap(index)
+        } else {
+            lastTap[0] = index.toLong()
+            lastTap[1] = now
+            onSelect(index)
+        }
+    }
 
     val dark = LocalDarkTheme.current
     val dock = SurfaceLevel.floating(dark)
@@ -331,7 +350,7 @@ fun FloatingNav(
                             Modifier
                                 .size(tabWidth, tabHeight)
                                 .clip(Corners.full)
-                                .clickable(enabled = !collapsed, interactionSource = null, indication = null) { onSelect(index) }
+                                .clickable(enabled = !collapsed, interactionSource = null, indication = null) { tap(index) }
                                 .semantics {
                                     role = Role.Tab
                                     this.selected = index == selected
