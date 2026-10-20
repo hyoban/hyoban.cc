@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.ZeroCornerSize
 import androidx.compose.material.icons.Icons
@@ -15,6 +16,7 @@ import androidx.compose.material.icons.rounded.Luggage
 import androidx.compose.material.icons.rounded.PhoneAndroid
 import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material.icons.rounded.Schedule
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -120,7 +122,7 @@ fun FloatingBack(onBack: () -> Unit, modifier: Modifier = Modifier) =
 
 /** A button that floats over a photo or a map, legible on either, as the back button does. */
 @Composable
-fun FloatingButton(icon: ImageVector, label: String, onClick: () -> Unit, modifier: Modifier = Modifier, tag: String) {
+fun FloatingButton(icon: ImageVector, label: String, onClick: () -> Unit, modifier: Modifier = Modifier, tag: String, busy: Boolean = false) {
     // Floating over a photo, a map or a card: the floating level with a shadow, as the tabs are.
     Surface(
         shape = Corners.full,
@@ -129,8 +131,9 @@ fun FloatingButton(icon: ImageVector, label: String, onClick: () -> Unit, modifi
         shadowElevation = 3.dp,
         modifier = modifier.statusBarsPadding().sideInsetsPadding().padding(Space.s),
     ) {
-        IconButton(onClick = onClick, modifier = Modifier.testTag(tag)) {
-            Icon(icon, contentDescription = label)
+        // Busy, it turns a spinner and takes no taps until what it started is done.
+        IconButton(onClick = onClick, enabled = !busy, modifier = Modifier.testTag(tag)) {
+            if (busy) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp) else Icon(icon, contentDescription = label)
         }
     }
 }

@@ -2,8 +2,6 @@ import { existsSync } from 'node:fs'
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises'
 import { basename, dirname, extname, join } from 'node:path'
 
-import { pinyin } from 'pinyin-pro'
-
 import {
   SCHEMA_VERSION,
   getMomentFile,
@@ -13,7 +11,9 @@ import {
   tripRecordSchema,
 } from '@hyoban/data-spec'
 import {
+  PROVISIONAL_PLACE_PATTERN,
   getDistanceKm,
+  getPlaceId,
   getPublishedId,
   getSlug,
   getStem,
@@ -33,8 +33,8 @@ import { getContentType } from './r2-assets.mjs'
 export const GENERATOR = 'hyoban.cc data:publish'
 
 const ULID_PATTERN = /^[0-9A-HJKMNP-TV-Z]{26}$/
-/** The id the app gives a place it made, until publishing names it by its pinyin. */
-const PROVISIONAL_PLACE_PATTERN = /^p-[0-9a-hjkmnp-tv-z]{26}$/
+
+export { getPlaceId }
 
 /** Reads an unpacked bundle: the records, and the media files by the uid they belong to. */
 export async function readBundle(directory) {
@@ -311,25 +311,6 @@ export async function writeReceipt(receipt, directory) {
   for (const record of receipt.moments) {
     await writeJson(join(directory, getMomentFile(record)), record)
   }
-}
-
-/** A place id spelled from its name: pinyin for Chinese, the letters and digits of the rest. */
-export function getPlaceId(name, taken = {}) {
-  const base =
-    pinyin(name, { toneType: 'none', type: 'array', nonZh: 'consecutive' })
-      .join('-')
-      .toLowerCase()
-      .normalize('NFKD')
-      .replaceAll(/[^a-z0-9]+/g, '-')
-      .replaceAll(/^-+|-+$/g, '') || 'place'
-
-  let id = base
-
-  for (let attempt = 2; id in taken; attempt += 1) {
-    id = `${base}-${attempt}`
-  }
-
-  return id
 }
 
 export function timestamp(date = new Date()) {

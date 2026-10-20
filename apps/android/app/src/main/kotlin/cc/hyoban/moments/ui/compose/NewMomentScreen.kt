@@ -39,11 +39,13 @@ import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -115,10 +117,11 @@ import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
 /**
- * A Moment written on the phone and kept there: its words, the photos picked for it, and
- * when and where, worked out from the photos or else from now and where the phone is,
- * each open to change. Nothing is sent anywhere. Given one of the phone's Moments to
- * [edit], it starts from that one, as it was saved, and keeps it as changed.
+ * A Moment written on the phone: its words, the photos picked for it, and when and where,
+ * worked out from the photos or else from now and where the phone is, each open to
+ * change. Saved, it is kept on the phone; with the API's token it can be published as it
+ * is saved. Given a Moment to [edit], it starts from that one as it was saved: one of the
+ * phone's is kept as changed, one of the site's, with the token, sent to the API as changed.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -128,9 +131,14 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
     val places by container.repository.places.collectAsStateWithLifecycle()
 
     // The Moment being changed, and its photos, time and place as it was saved.
-    val original = remember(edit) { edit?.let { container.repository.moment(it) }?.takeIf { it.published == null } }
+    val canPublish = container.canPublish
+    val original = remember(edit) { edit?.let { container.repository.moment(it) }?.takeIf { it.published == null || canPublish } }
+    val published = original?.published != null
+    // Each photo it had by where it is shown from: the phone's copy, or the site's still.
     val originalMedia = remember(original) {
-        original?.media.orEmpty().mapNotNull { media -> media.local?.uri?.let { Uri.parse(it) to media } }.toMap()
+        original?.media.orEmpty().associateBy { media ->
+            Uri.parse(media.local?.uri ?: container.mediaUrls.still(media, PHOTO_WIDTH) ?: "media:${media.uid}")
+        }
     }
     val originalTime = remember(original) { original?.let { parseStamp(it.occurredAt) } }
     val originalPlace = remember(original) { original?.let { it.places.firstOrNull()?.let(PlaceChoice::Known) ?: PlaceChoice.None } }
@@ -153,7 +161,7 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
     var confirmingDiscard by remember { mutableStateOf(false) }
 
     LaunchedEffect(photos) {
-        photos.filter { it !in infos }.forEach { infos[it] = Photos.read(context, it) }
+        photos.filter { it !in infos && it !in originalMedia }.forEach { infos[it] = Photos.read(context, it) }
     }
 
     // When: the earliest photo's time, else when the page was opened.
@@ -244,7 +252,9 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
     val leave = { if (changed) confirmingDiscard = true else onBack() }
     BackHandler(enabled = changed && !saving) { confirmingDiscard = true }
 
-    val save: () -> Unit = save@{
+    // Kept on the phone, then published there when [publish]; one of the site's goes to the
+    // API as it is saved, and the page waits for it, staying open if it can't.
+    val save: (Boolean) -> Unit = save@{ publish ->
         if (saving) return@save
         saving = true
         scope.launch {
@@ -252,13 +262,24 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
                 withContext(NonCancellable) {
                     // A place left as it was keeps all the Moment's places, as it may have more than one.
                     val places = if (original != null && chosenPlace == originalPlace) original.places else null
-                    val moment = buildMoment(context, container, text, photos, infos, time, place, original, originalMedia, places)
-                    if (original == null) container.addLocal(moment.first, moment.second) else container.updateLocal(moment.first, moment.second)
+                    val (moment, newPlace) = buildMoment(context, container, text, photos, infos, time, place, original, originalMedia, places)
+                    when {
+                        published -> try {
+                            container.push(moment, newPlace)
+                        } catch (error: Exception) {
+                            deleteNewCopies(moment, originalMedia.values)
+                            throw error
+                        }
+                        original == null -> container.addLocal(moment, newPlace)
+                        else -> container.updateLocal(moment, newPlace)
+                    }
+                    if (publish) container.publish(moment)
                 }
                 onSaved()
             } catch (error: Exception) {
                 saving = false
-                Toast.makeText(context, context.getString(R.string.error_save, error.message ?: error.toString()), Toast.LENGTH_LONG).show()
+                val message = if (published) R.string.error_publish else R.string.error_save
+                Toast.makeText(context, context.getString(message, error.message ?: error.toString()), Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -269,11 +290,29 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
             onBack = leave,
             modifier = Modifier.background(AppColors.page),
             actions = {
-                Button(
-                    onClick = save,
-                    enabled = written && changed && !saving,
-                    modifier = Modifier.padding(end = Space.s).testTag("save"),
-                ) { Text(stringResource(R.string.action_save)) }
+                // With the token, a Moment not yet the site's can be kept on the phone or published.
+                if (canPublish && !published) {
+                    TextButton(onClick = { save(false) }, enabled = written && changed && !saving, modifier = Modifier.testTag("save")) {
+                        Text(stringResource(R.string.action_save))
+                    }
+                    Button(
+                        onClick = { save(true) },
+                        enabled = written && !saving,
+                        modifier = Modifier.padding(end = Space.s).testTag("publish"),
+                    ) { Text(stringResource(R.string.action_publish)) }
+                } else {
+                    Button(
+                        onClick = { save(false) },
+                        enabled = written && changed && !saving,
+                        modifier = Modifier.padding(end = Space.s).testTag("save"),
+                    ) {
+                        if (saving && published) {
+                            CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp, color = LocalContentColor.current)
+                        } else {
+                            Text(stringResource(R.string.action_save))
+                        }
+                    }
+                }
             },
         ) {
             PageWidth { columns ->
@@ -309,7 +348,12 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
                     Group(stringResource(R.string.section_photo), null) {
                         PhotoStrip(photos, onAdd = addPhotos, onRemove = { removed -> photos = photos - removed })
                     }
-                    Group(stringResource(R.string.section_when_where), stringResource(R.string.note_local_only)) {
+                    val note = when {
+                        published -> R.string.note_published
+                        canPublish -> R.string.note_local_or_publish
+                        else -> R.string.note_local_only
+                    }
+                    Group(stringResource(R.string.section_when_where), stringResource(note)) {
                         ListItem(
                             headlineContent = { Text(listOfNotNull(formatDay(stamp(time)), formatTime(stamp(time))).joinToString(" ")) },
                             supportingContent = { Text(stringResource(timeSource)) },
@@ -401,7 +445,8 @@ private fun PhotoStrip(photos: List<Uri>, onAdd: () -> Unit, onRemove: (Uri) -> 
     ) {
         itemsIndexed(photos, key = { _, uri -> uri.toString() }) { index, uri ->
             Box(Modifier.size(PHOTO_SIZE).clip(MaterialTheme.shapes.medium).testTag("photo_$index")) {
-                AsyncImage(model = uri, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+                // The site's photos by their URL, the phone's by their Uri.
+                AsyncImage(model = if (uri.scheme == "https" || uri.scheme == "http") uri.toString() else uri, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
                 Box(
                     Modifier.align(Alignment.TopEnd).padding(4.dp).size(28.dp).clip(CircleShape)
                         .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.5f))
@@ -526,5 +571,15 @@ private suspend fun buildMoment(
     return moment to newPlace
 }
 
+/** The phone's copies of the photos added to [moment], not among [kept], gone, when it couldn't be sent. */
+private fun deleteNewCopies(moment: MomentRecord, kept: Collection<MomentMedia>) {
+    val keptUids = kept.map { it.uid }.toSet()
+    moment.media.filter { it.uid !in keptUids && it.local?.copied == true }
+        .mapNotNull { media -> media.local?.uri?.let { runCatching { File(java.net.URI(it)) }.getOrNull() } }
+        .forEach(File::delete)
+}
+
 private const val MAX_PHOTOS = 9
+/** How wide the site's photos are fetched for the strip: its tiles, at a phone's density. */
+private const val PHOTO_WIDTH = 480
 private val PHOTO_SIZE = 96.dp

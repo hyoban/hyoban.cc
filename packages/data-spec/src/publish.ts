@@ -1,3 +1,5 @@
+import { pinyin } from 'pinyin-pro'
+
 import type { MomentMedia, MomentRecord, Place, Places } from './index.ts'
 
 // The rules for publishing: which place a new one is, what a Moment's published id is,
@@ -7,6 +9,28 @@ import type { MomentMedia, MomentRecord, Place, Places } from './index.ts'
 export const NEARBY_KM = 0.2
 
 const ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
+
+/** The id the app gives a place it made, `p-<ulid>`, until publishing names it by its pinyin. */
+export const PROVISIONAL_PLACE_PATTERN = /^p-[0-9a-hjkmnp-tv-z]{26}$/
+
+/** A place id spelled from its name: pinyin for Chinese, the letters and digits of the rest. */
+export function getPlaceId(name: string, taken: Record<string, unknown> = {}) {
+  const base =
+    pinyin(name, { toneType: 'none', type: 'array', nonZh: 'consecutive' })
+      .join('-')
+      .toLowerCase()
+      .normalize('NFKD')
+      .replaceAll(/[^a-z0-9]+/g, '-')
+      .replaceAll(/^-+|-+$/g, '') || 'place'
+
+  let id = base
+
+  for (let attempt = 2; id in taken; attempt += 1) {
+    id = `${base}-${attempt}`
+  }
+
+  return id
+}
 
 /**
  * Where a place goes among the known ones: a known id stays as it is, a place within

@@ -85,6 +85,18 @@ test('a place near a known one, or with its name, comes back as that one', async
   assert.equal((await get(env, '/v1/places/somewhere-else')).status, 404)
 })
 
+test('a place the app made is named by its pinyin', async () => {
+  const { env } = setUpWithData()
+  const made = await call(env, 'PUT', '/v1/places/p-01k7zq9x3m4n5p6q7r8s9t0v1w', {
+    ...owner,
+    body: { name: '测试码头', latitude: 1.234, longitude: 5.678 },
+  })
+
+  assert.equal(made.status, 201)
+  assert.equal(made.body.id, 'ce-shi-ma-tou')
+  assert.equal((await get(env, '/v1/places/ce-shi-ma-tou')).body.name, '测试码头')
+})
+
 test('a draft is the owner’s until it publishes, with its media moved under its id', async () => {
   const { bucket, env } = setUpWithData()
   const draft = dockDraft()
