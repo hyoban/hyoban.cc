@@ -22,7 +22,7 @@ import com.kyant.capsule.ContinuousRoundedRectangle
 
 // The app's look, Material 3 adapted the way FlClash adapts it: Material's type scale
 // and shape scale, with continuous corners, and every colour role made from one seed, a
-// sea blue unless the settings pick another or the system's accent (Colors.kt says how
+// the icon's green unless the settings pick another or the system's accent (Colors.kt says how
 // the scheme leaves Material's).
 
 /** The 4dp grid every gap and padding is a step of. */

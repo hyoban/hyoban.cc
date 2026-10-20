@@ -345,7 +345,7 @@ private fun HexColorDialog(onDismiss: () -> Unit, onAdd: (Int) -> Unit) {
                 OutlinedTextField(
                     value = text,
                     onValueChange = { text = it.take(7) },
-                    placeholder = { Text("#2F6B8E") },
+                    placeholder = { Text("#1F7A5C") },
                     singleLine = true,
                     isError = text.isNotBlank() && color == null,
                     keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Done),
