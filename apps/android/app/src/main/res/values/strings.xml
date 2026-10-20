@@ -6,6 +6,8 @@
     <string name="action_back">返回</string>
     <string name="action_play">播放</string>
     <string name="action_all">全部</string>
+    <string name="action_navigate">导航到这里</string>
+    <string name="no_map_app">没有可以导航的地图应用</string>
     <string name="action_info">详情</string>
     <string name="action_open_moment">打开这个时刻</string>
     <string name="label_alt">画面描述</string>
