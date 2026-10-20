@@ -54,7 +54,8 @@ fun MomentCard(
     modifier: Modifier = Modifier,
     showDate: Boolean = false,
 ) {
-    PressableCard(onClick = onOpen, modifier = modifier.fillMaxWidth()) {
+    // The card grows into the Moment's page when opened.
+    PressableCard(onClick = onOpen, modifier = modifier.fillMaxWidth().sharedCard(moment.uid)) {
         if (moment.media.isNotEmpty()) {
             MediaMosaic(
                 moment.uid,

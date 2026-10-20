@@ -34,6 +34,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.runtime.DisposableEffect
+import cc.hyoban.moments.ui.components.LocalViewerShowing
 import cc.hyoban.moments.ui.components.LocalBackSwipe
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
@@ -140,9 +142,12 @@ fun MomentsApp(container: AppContainer) {
     // The photo shown as the viewer is swiped through; its tile steps aside only as the
     // viewer closes, so a swipe sideways moves no tile and starts no flight.
     var shownKey by remember { mutableStateOf<String?>(null) }
+    // Open, or still closing: the viewer's own photo flights run only then.
+    val viewerShowing = remember { mutableStateOf(false) }
     val openMedia: (String, Int) -> Unit = { uid, index ->
         viewerKey = null
         shownKey = null
+        viewerShowing.value = true
         viewer = Viewer(uid, index)
     }
     val closeViewer = {
@@ -186,7 +191,8 @@ fun MomentsApp(container: AppContainer) {
     val gestures = LocalNavigationEventDispatcherOwner.current?.navigationEventDispatcher
     LaunchedEffect(gestures) {
         gestures?.transitionState?.collectLatest { state ->
-            if (state is NavigationEventTransitionState.InProgress) {
+            // A finger dragging from the edge; a back key reports no progress.
+            if (state is NavigationEventTransitionState.InProgress && state.latestEvent.progress > 0.01f) {
                 backSwipe.value = true
             } else if (backSwipe.value) {
                 delay(800)
@@ -204,6 +210,7 @@ fun MomentsApp(container: AppContainer) {
                 LocalSharedTransitionScope provides this,
                 LocalViewerShownKey provides viewerKey.takeIf { viewer != null },
                 LocalBackSwipe provides backSwipe,
+                LocalViewerShowing provides viewerShowing,
             ) {
                 NavHost(
                     navController = navController,
@@ -217,14 +224,14 @@ fun MomentsApp(container: AppContainer) {
                     // anything else fades as before.
                     enterTransition = {
                         tabSlide()?.let { slideIntoContainer(it, TAB_SLIDE) + fadeIn(tween(TAB_SLIDE_MS)) }
-                            ?: if (sharesPhoto()) fadeIn(tween(PAGE_MS)) else pageIn(forward = true)
+                            ?: if (opensCard()) CARD_HOLD_IN else if (sharesPhoto()) fadeIn(tween(PAGE_MS)) else pageIn(forward = true)
                     },
                     exitTransition = {
                         tabSlide()?.let { slideOutOfContainer(it, TAB_SLIDE) + fadeOut(tween(TAB_SLIDE_MS)) }
-                            ?: if (sharesPhoto()) fadeOut(tween(PAGE_MS)) else pageOut(forward = true)
+                            ?: if (opensCard()) CARD_HOLD_OUT else if (sharesPhoto()) fadeOut(tween(PAGE_MS)) else pageOut(forward = true)
                     },
-                    popEnterTransition = { if (sharesPhoto()) fadeIn(tween(PAGE_MS)) else pageIn(forward = false) },
-                    popExitTransition = { if (sharesPhoto()) fadeOut(tween(PAGE_MS)) else pageOut(forward = false) },
+                    popEnterTransition = { if (closesCard()) CARD_HOLD_IN else if (sharesPhoto()) fadeIn(tween(PAGE_MS)) else pageIn(forward = false) },
+                    popExitTransition = { if (closesCard()) CARD_HOLD_OUT else if (sharesPhoto()) fadeOut(tween(PAGE_MS)) else pageOut(forward = false) },
                 ) {
                     screen<Feed> {
                         FeedScreen(container, onMoment = openMoment, onMedia = openMedia, onDay = { navController.navigate(Day(it)) })
@@ -253,6 +260,8 @@ fun MomentsApp(container: AppContainer) {
                 if (viewer != null) shown = viewer
                 AnimatedVisibility(viewer != null, enter = fadeIn(tween(350)), exit = fadeOut(tween(350))) {
                     val route = shown ?: return@AnimatedVisibility
+                    // Gone once it has finished closing.
+                    DisposableEffect(Unit) { onDispose { if (viewer == null) viewerShowing.value = false } }
                     // Registered after the pages' own, so back closes the viewer before it leaves a page.
                     BackHandler(enabled = viewer != null, onBack = closeViewer)
                     CompositionLocalProvider(LocalNavAnimatedScope provides this, LocalInViewer provides true) {
@@ -304,6 +313,23 @@ private fun pageIn(forward: Boolean): EnterTransition =
 private fun pageOut(forward: Boolean): ExitTransition =
     slideOutHorizontally(tween(PAGE_MS, easing = EMPHASIZED)) { width -> if (forward) -width / 8 else width / 4 } +
         fadeOut(tween(PAGE_MS / 3))
+
+// While a card grows into its page or the page shrinks back, both pages stay as they are
+// for as long as it takes: the card's own bounds do all the moving.
+private const val CARD_HOLD_MS = 600
+private val CARD_HOLD_IN = fadeIn(tween(CARD_HOLD_MS), initialAlpha = 1f)
+private val CARD_HOLD_OUT = fadeOut(tween(CARD_HOLD_MS), targetAlpha = 1f)
+
+/** The pages that list Moments as cards, from which a Moment's page grows out of its card. */
+private val CARD_LISTS = listOf(Feed::class, Day::class, PlaceMoments::class, Trip::class)
+
+/** Whether a Moment's page opens from a card on a list: the card grows into it while the list stays put. */
+private fun AnimatedContentTransitionScope<NavBackStackEntry>.opensCard(): Boolean =
+    targetState.destination.hasRoute(Moment::class) && CARD_LISTS.any { initialState.destination.hasRoute(it) }
+
+/** Whether a Moment's page closes back into its card on a list. */
+private fun AnimatedContentTransitionScope<NavBackStackEntry>.closesCard(): Boolean =
+    initialState.destination.hasRoute(Moment::class) && CARD_LISTS.any { targetState.destination.hasRoute(it) }
 
 /**
  * Whether a photo flies between the two pages: a Moment's page opened from a list and
