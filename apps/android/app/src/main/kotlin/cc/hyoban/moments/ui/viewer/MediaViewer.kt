@@ -46,6 +46,7 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.rounded.Image
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.MotionPhotosOn
 import androidx.compose.material.icons.rounded.Place
@@ -569,7 +570,7 @@ private fun InfoContent(
             Text(moment.text, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = Space.xs))
         }
         if (media.alt.isNotBlank() || (media.width != null && media.height != null)) {
-            InfoCard(Icons.Outlined.Image, stringResource(R.string.section_photo)) {
+            InfoCard(Icons.Rounded.Image, stringResource(R.string.section_photo)) {
                 // What the photo is and its description, each a tile a level into the card.
                 if (media.width != null && media.height != null) {
                     InfoTile(

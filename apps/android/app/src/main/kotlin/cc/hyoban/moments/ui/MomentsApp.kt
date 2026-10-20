@@ -40,13 +40,8 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Luggage
 import androidx.compose.material.icons.outlined.Map
-import androidx.compose.material.icons.outlined.PhotoLibrary
-import androidx.compose.material.icons.rounded.Luggage
 import androidx.compose.material.icons.rounded.Map
-import androidx.compose.material.icons.rounded.PhotoLibrary
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.SnackbarDuration
@@ -119,6 +114,7 @@ import cc.hyoban.moments.ui.components.LocalViewerShownKey
 import cc.hyoban.moments.ui.components.NAV_ACCESSORY_GAP
 import cc.hyoban.moments.ui.components.NavItem
 import cc.hyoban.moments.ui.components.RAIL_WIDTH
+import cc.hyoban.moments.ui.components.Symbols
 import cc.hyoban.moments.ui.components.isLandscape
 import cc.hyoban.moments.ui.components.rememberReducedMotion
 import cc.hyoban.moments.ui.compose.NewMomentScreen
@@ -192,9 +188,9 @@ object Changes
 
 /** The three tabs at the bottom; everything else opens over them. */
 private enum class Tab(val route: Any, val type: KClass<*>, val label: Int, val icon: ImageVector, val selectedIcon: ImageVector) {
-    MOMENTS(Feed, Feed::class, R.string.tab_moments, Icons.Outlined.PhotoLibrary, Icons.Rounded.PhotoLibrary),
-    MAP(Atlas, Atlas::class, R.string.tab_map, Icons.Outlined.Map, Icons.Rounded.Map),
-    TRIPS(Trips, Trips::class, R.string.tab_trips, Icons.Outlined.Luggage, Icons.Rounded.Luggage),
+    MOMENTS(Feed, Feed::class, R.string.tab_moments, Symbols.PhotoLibraryOutlined, Symbols.PhotoLibraryFilled),
+    MAP(Atlas, Atlas::class, R.string.tab_map, Symbols.MapOutlined, Symbols.MapFilled),
+    TRIPS(Trips, Trips::class, R.string.tab_trips, Symbols.LuggageOutlined, Symbols.LuggageFilled),
 }
 
 @OptIn(ExperimentalSharedTransitionApi::class)

@@ -43,6 +43,15 @@ fun Modifier.sideInsetsPadding(sides: WindowInsetsSides = WindowInsetsSides.Hori
 @Composable
 fun isLandscape(): Boolean = LocalWindowInfo.current.containerSize.let { it.width > it.height }
 
+/**
+ * Whether the window is at least Material 3's expanded breakpoint wide, 840dp, where a list
+ * and its detail stand side by side: a phone on its side, mostly, but not a narrow one.
+ */
+@Composable
+fun isExpandedWidth(): Boolean = with(LocalDensity.current) { LocalWindowInfo.current.containerSize.width.toDp() >= EXPANDED_WIDTH }
+
+private val EXPANDED_WIDTH = 840.dp
+
 /** Whether the page is wider than it is tall. */
 val BoxWithConstraintsScope.landscape: Boolean
     get() = maxWidth > maxHeight

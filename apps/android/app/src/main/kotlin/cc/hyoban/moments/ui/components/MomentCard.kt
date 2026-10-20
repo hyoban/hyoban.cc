@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.components
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,6 +29,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -59,9 +61,17 @@ fun MomentCard(
     onOpen: () -> Unit,
     modifier: Modifier = Modifier,
     showDate: Boolean = false,
+    selected: Boolean = false,
 ) {
-    // The card grows into the Moment's page when opened.
-    PressableCard(onClick = onOpen, modifier = modifier.fillMaxWidth().sharedCard(moment.uid).testTag("moment_${moment.uid}")) {
+    // The card grows into the Moment's page when opened; shown in the detail pane beside the
+    // list, it is [selected], outlined in the primary colour, as Material 3 marks the item a
+    // two-pane layout's detail is of.
+    val outline = if (selected) Modifier.border(2.dp, MaterialTheme.colorScheme.primary, MaterialTheme.shapes.large) else Modifier
+    PressableCard(
+        onClick = onOpen,
+        modifier = modifier.fillMaxWidth().sharedCard(moment.uid).then(outline)
+            .semantics { this.selected = selected }.testTag("moment_${moment.uid}"),
+    ) {
         if (moment.media.isNotEmpty()) {
             // To the card's edges, its top corners rounding them.
             MediaMosaic(moment.uid, moment.media, urls, onOpen = { onOpen() })

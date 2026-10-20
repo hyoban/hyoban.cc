@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.theme
 
+import android.app.UiModeManager
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -9,7 +10,11 @@ import androidx.compose.material3.Shapes
 import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalContext
@@ -91,6 +96,24 @@ private val AppTypography = Typography().run {
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 val TransitionMotion: MotionScheme = MotionScheme.standard()
 
+/**
+ * The contrast the phone asks for, from Android 14's setting: 0 standard, up to 1 for high,
+ * followed as it changes; standard before Android 14, which has no such setting.
+ */
+@Composable
+private fun rememberSystemContrast(): Double {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) return 0.0
+    val context = LocalContext.current
+    val modes = remember(context) { context.getSystemService(UiModeManager::class.java) }
+    var contrast by remember(modes) { mutableFloatStateOf(modes.contrast) }
+    DisposableEffect(modes) {
+        val listener = UiModeManager.ContrastChangeListener { contrast = it }
+        modes.addContrastChangeListener(context.mainExecutor, listener)
+        onDispose { modes.removeContrastChangeListener(listener) }
+    }
+    return contrast.toDouble()
+}
+
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun MomentsTheme(settings: Settings, content: @Composable () -> Unit) {
@@ -102,7 +125,8 @@ fun MomentsTheme(settings: Settings, content: @Composable () -> Unit) {
     val seed = Color(settings.themeColor ?: systemAccent() ?: Settings.DEFAULT_THEME_COLOR)
     val style = settings.colorStyle
     val pureBlack = settings.pureBlack
-    val colorScheme = remember(seed, dark, style, pureBlack) { seededColorScheme(seed, dark, style, pureBlack) }
+    val contrast = rememberSystemContrast()
+    val colorScheme = remember(seed, dark, style, pureBlack, contrast) { seededColorScheme(seed, dark, style, pureBlack, contrast) }
 
     CompositionLocalProvider(LocalDarkTheme provides dark) {
         // Material 3 Expressive's springs, which overshoot a little, for every component and the app's own motion.

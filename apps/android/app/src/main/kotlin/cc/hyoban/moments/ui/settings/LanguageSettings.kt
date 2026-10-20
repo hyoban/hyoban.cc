@@ -12,8 +12,10 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.OpenInNew
 import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -63,6 +65,7 @@ private fun systemLanguageSettings(activity: Activity): Intent? {
     return intent.takeIf { it.resolveActivity(activity.packageManager) != null }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun LanguageRow(activity: Activity, language: AppLanguage, selected: Boolean) {
     ListItem(
@@ -73,6 +76,8 @@ private fun LanguageRow(activity: Activity, language: AppLanguage, selected: Boo
                     AppLanguage.CHINESE -> "简体中文"
                     AppLanguage.ENGLISH -> "English"
                 },
+                // The chosen one emphasized, as Material 3 sets a selected list item.
+                style = if (selected) MaterialTheme.typography.bodyLargeEmphasized else MaterialTheme.typography.bodyLarge,
             )
         },
         // One of them chosen, as Material 3 has a list choose one: a radio button at each

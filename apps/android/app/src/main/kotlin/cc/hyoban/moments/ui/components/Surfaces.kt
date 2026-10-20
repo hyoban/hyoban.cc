@@ -28,6 +28,7 @@ import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -239,6 +240,7 @@ val RAIL_HEIGHT = RAIL_TAB_HEIGHT * 3 + RAIL_PADDING * 2
  * icon, the chosen tab sliding into it as the others fade; tapped, it [onExpand]s. The
  * chosen tab tapped again reports [onReselect] rather than choosing it.
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun FloatingNav(
     items: List<NavItem>,
@@ -354,7 +356,13 @@ fun FloatingNav(
                             Icon(if (active) item.selectedIcon else item.icon, contentDescription = null, tint = content)
                             Text(
                                 item.label,
-                                style = if (vertical) MaterialTheme.typography.labelSmall else MaterialTheme.typography.labelMedium,
+                                // The chosen tab's name emphasized, as Material 3 sets a selected state.
+                                style = when {
+                                    vertical && active -> MaterialTheme.typography.labelSmallEmphasized
+                                    vertical -> MaterialTheme.typography.labelSmall
+                                    active -> MaterialTheme.typography.labelMediumEmphasized
+                                    else -> MaterialTheme.typography.labelMedium
+                                },
                                 color = content,
                                 modifier = Modifier.padding(top = 2.dp),
                             )

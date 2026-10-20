@@ -1,5 +1,6 @@
 package cc.hyoban.moments.widget
 
+import android.app.UiModeManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
@@ -290,8 +291,10 @@ private fun WidgetTheme(context: Context, content: @Composable () -> Unit) {
     val settings = (context.applicationContext as MomentsApplication).container.settings
     val accent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) context.getColor(android.R.color.system_accent1_500) else null
     val seed = Color(settings.themeColor ?: accent ?: Settings.DEFAULT_THEME_COLOR)
-    val light = seededColorScheme(seed, dark = false, settings.colorStyle)
-    val dark = seededColorScheme(seed, dark = true, settings.colorStyle, settings.pureBlack)
+    // At the contrast the phone asks for, as the app is; drawn again whenever the widgets are.
+    val contrast = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) context.getSystemService(UiModeManager::class.java).contrast.toDouble() else 0.0
+    val light = seededColorScheme(seed, dark = false, settings.colorStyle, contrast = contrast)
+    val dark = seededColorScheme(seed, dark = true, settings.colorStyle, settings.pureBlack, contrast)
     val colors = when (settings.themeMode) {
         ThemeMode.SYSTEM -> ColorProviders(light = light, dark = dark)
         ThemeMode.LIGHT -> ColorProviders(light = light, dark = light)
