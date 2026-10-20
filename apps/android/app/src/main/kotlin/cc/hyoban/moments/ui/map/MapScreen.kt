@@ -53,6 +53,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import cc.hyoban.moments.ui.components.tripCardKey
+import cc.hyoban.moments.ui.components.sharedCard
 import kotlin.math.roundToInt
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -338,7 +340,7 @@ private fun RouteCard(trip: TripRecord, onOpen: () -> Unit) {
         shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(containerColor = SurfaceLevel.floating(LocalDarkTheme.current).fill()),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
-        modifier = Modifier.fillMaxWidth().padding(bottom = Space.s),
+        modifier = Modifier.fillMaxWidth().padding(bottom = Space.s).sharedCard(tripCardKey(trip.id)),
     ) {
         Row(Modifier.padding(start = Space.l, end = Space.s, top = Space.m, bottom = Space.m), verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Rounded.Luggage, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)

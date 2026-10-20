@@ -40,6 +40,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import cc.hyoban.moments.ui.components.tripCardKey
 import cc.hyoban.moments.ui.components.sharedCard
 import cc.hyoban.moments.ui.components.StatusBarOverPhoto
 import androidx.compose.ui.platform.LocalDensity
@@ -167,7 +168,7 @@ fun MomentScreen(
                     trip?.let { trip ->
                         val cover = remember(trip, moments) { coversOf(trip, moments, trips, limit = 1).firstOrNull() }
                         val count = remember(trip, moments) { momentsOf(trip, moments, trips).size }
-                        PressableCard(onClick = { onTrip(trip.id) }, modifier = Modifier.padding(top = Space.s)) {
+                        PressableCard(onClick = { onTrip(trip.id) }, modifier = Modifier.padding(top = Space.s).sharedCard(tripCardKey(trip.id))) {
                             Row(Modifier.padding(6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.m)) {
                                 cover?.let { Thumbnail(it, urls, size = 64) }
                                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {

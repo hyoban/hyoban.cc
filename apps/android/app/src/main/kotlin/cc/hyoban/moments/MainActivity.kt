@@ -16,5 +16,8 @@ class MainActivity : ComponentActivity() {
                 MomentsApp(container = (application as MomentsApplication).container)
             }
         }
+        // Compose paints the whole window, so the window's own background would only be
+        // painted over on every frame.
+        window.setBackgroundDrawable(null)
     }
 }

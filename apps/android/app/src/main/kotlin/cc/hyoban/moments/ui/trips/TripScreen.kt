@@ -16,6 +16,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.background
+import cc.hyoban.moments.ui.components.AppColors
+import cc.hyoban.moments.ui.components.tripCardKey
+import cc.hyoban.moments.ui.components.sharedCard
 import cc.hyoban.moments.ui.theme.fill
 import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
 import cc.hyoban.moments.ui.components.SectionHeader
@@ -56,7 +60,8 @@ fun TripScreen(
     val stops = remember(trip, all, places) { stopsOf(trip, all, trips, places) }
     val context = LocalContext.current
 
-    Box(Modifier.fillMaxSize()) {
+    // The page is the trip's card grown to the screen.
+    Box(Modifier.fillMaxSize().sharedCard(tripCardKey(id), page = true).background(AppColors.page)) {
         MomentFeed(
             moments,
             places,
