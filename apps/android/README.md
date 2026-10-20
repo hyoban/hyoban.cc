@@ -25,8 +25,9 @@ other apps and stops when headphones come out, and the screen stays on while it 
 The photos and videos are SDR (WebP without gain maps, BT.709 video), so the viewer
 leaves the window's colour mode alone.
 
-The app speaks Chinese, and English on a phone set to it, or when it is chosen for this
-app alone in the system's language settings (Android 13 and later): its labels, the
+The app speaks Chinese, and English on a phone set to it, or when it is chosen on the
+settings page, which sets the system's own per-app language on Android 13 and later,
+where ColorOS doesn't offer it in its settings, and keeps it in the app before: its labels, the
 counts in each language's plurals, and the dates as each language writes them. The
 Moments' own words stay as they were written.
 

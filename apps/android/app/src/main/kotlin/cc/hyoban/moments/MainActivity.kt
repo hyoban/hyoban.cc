@@ -1,5 +1,6 @@
 package cc.hyoban.moments
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -9,6 +10,11 @@ import cc.hyoban.moments.ui.theme.MomentsTheme
 import cc.hyoban.moments.ui.viewer.PictureInPicture
 
 class MainActivity : ComponentActivity() {
+    // Before Android 13 the app keeps its own language and speaks it here; later the system does.
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(AppLanguage.wrap(newBase))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)

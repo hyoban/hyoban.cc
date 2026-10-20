@@ -80,6 +80,7 @@ fun SettingsScreen(container: AppContainer, onBack: () -> Unit) {
                     .padding(bottom = Space.xl),
             ) {
                 ThemeSettings(settings)
+                LanguageSettings()
                 Section(stringResource(R.string.section_sources), rows.subList(0, 2), 0, stringResource(R.string.settings_api_note)) { editing = it }
                 Section(stringResource(R.string.section_map), rows.subList(2, 4), 2, stringResource(R.string.settings_map_note)) { editing = it }
                 Credits()
