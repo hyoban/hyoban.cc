@@ -8,8 +8,8 @@ import cc.hyoban.moments.data.spec.TripRecord
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.serialization.KSerializer
-import okhttp3.OkHttpClient
 import kotlinx.serialization.Serializable
+import okhttp3.OkHttpClient
 
 // The API's public reads (apps/api in the repository): the published Moments as a change
 // feed, and the places and trips whole. No token, so no drafts.

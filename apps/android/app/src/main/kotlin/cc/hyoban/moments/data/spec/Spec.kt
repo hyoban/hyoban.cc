@@ -7,8 +7,6 @@ import kotlinx.serialization.json.Json
 // PassthroughSerializer), so a newer spec travels through unharmed.
 
 object Spec {
-    const val SCHEMA_VERSION = 1
-
     /** Reads and writes records the way the site's scripts do: two-space pretty JSON. */
     val json: Json = Json {
         prettyPrint = true

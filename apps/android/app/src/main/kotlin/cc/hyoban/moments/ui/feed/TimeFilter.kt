@@ -11,21 +11,20 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.saveable.listSaver
-import androidx.compose.ui.Modifier
-import cc.hyoban.moments.ui.theme.fill
-import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
-import cc.hyoban.moments.ui.theme.Corners
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import cc.hyoban.moments.R
 import cc.hyoban.moments.data.spec.MomentRecord
+import cc.hyoban.moments.ui.theme.Corners
+import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
 import cc.hyoban.moments.ui.theme.Space
+import cc.hyoban.moments.ui.theme.fill
 
 // Narrowing the Moments to a year, and within it to a month: a row of the years there
 // are Moments in, and under it, once a year is chosen, the months of that year that have
@@ -51,10 +50,11 @@ val TimeFilterSaver = listSaver<TimeFilter, Int?>(
 fun List<MomentRecord>.filtered(filter: TimeFilter): List<MomentRecord> =
     if (filter == TimeFilter()) this else filter(filter::matches)
 
-/** The years with Moments, newest first, and the months of [year] with Moments, latest first. */
+/** The years with Moments, newest first. */
 fun yearsOf(moments: List<MomentRecord>): List<Int> =
     moments.map { it.occurredAt.take(4).toInt() }.distinct().sortedDescending()
 
+/** The months of [year] with Moments, latest first. */
 fun monthsOf(moments: List<MomentRecord>, year: Int): List<Int> =
     moments.filter { it.occurredAt.take(4).toInt() == year }.map { it.occurredAt.substring(5, 7).toInt() }.distinct().sortedDescending()
 
@@ -88,7 +88,6 @@ private fun ChipRow(options: List<Int?>, selected: Int?, label: @Composable (Int
     LazyRow(
         contentPadding = PaddingValues(horizontal = Space.gutter),
         horizontalArrangement = Arrangement.spacedBy(Space.s),
-        modifier = Modifier,
     ) {
         items(options, key = { it ?: -1 }) { option ->
             FilterChip(

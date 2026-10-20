@@ -1,11 +1,11 @@
 package cc.hyoban.moments
 
 import android.app.Application
+import cc.hyoban.moments.data.Http
 import coil3.ImageLoader
 import coil3.PlatformContext
 import coil3.SingletonImageLoader
 import coil3.network.okhttp.OkHttpNetworkFetcherFactory
-import cc.hyoban.moments.data.Http
 
 class MomentsApplication : Application(), SingletonImageLoader.Factory {
     lateinit var container: AppContainer

@@ -1,11 +1,5 @@
 package cc.hyoban.moments.ui.settings
 
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.Role
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.ToggleButton
-import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -37,9 +31,11 @@ import androidx.compose.material.icons.rounded.Contrast
 import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
@@ -49,6 +45,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.ToggleButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -63,16 +60,20 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import cc.hyoban.moments.R
 import cc.hyoban.moments.Settings
 import cc.hyoban.moments.ThemeMode
 import cc.hyoban.moments.ui.theme.ColorStyle
 import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
-import cc.hyoban.moments.ui.theme.SurfaceLevel
 import cc.hyoban.moments.ui.theme.Space
+import cc.hyoban.moments.ui.theme.SurfaceLevel
 import cc.hyoban.moments.ui.theme.fill
 import cc.hyoban.moments.ui.theme.seededColorScheme
 import cc.hyoban.moments.ui.theme.systemAccent
@@ -195,29 +196,29 @@ private fun ThemeColorGroup(settings: Settings) {
         // As many to a row as fit with at least a little between them, spread across the
         // card's width so each row's ends line up with the rows' text.
         BoxWithConstraints(Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 10.dp)) {
-        val columns = ((maxWidth + MIN_GAP) / (SWATCH + MIN_GAP)).toInt().coerceAtLeast(1)
-        // Whole pixels, rounded down, so rounding doesn't push a row's last swatch onto the next.
-        val gap = with(LocalDensity.current) {
-            if (columns > 1) ((constraints.maxWidth - SWATCH.roundToPx() * columns) / (columns - 1)).toDp() else 0.dp
-        }
-        FlowRow(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(gap),
-            verticalArrangement = Arrangement.spacedBy(gap.coerceAtMost(Space.s)),
-        ) {
-            if (accent != null) {
-                Swatch(Color(accent), settings.themeColor == null, system = true, onClick = { settings.changeThemeColor(null) })
+            val columns = ((maxWidth + MIN_GAP) / (SWATCH + MIN_GAP)).toInt().coerceAtLeast(1)
+            // Whole pixels, rounded down, so rounding doesn't push a row's last swatch onto the next.
+            val gap = with(LocalDensity.current) {
+                if (columns > 1) ((constraints.maxWidth - SWATCH.roundToPx() * columns) / (columns - 1)).toDp() else 0.dp
             }
-            Settings.THEME_COLORS.forEach { color ->
-                Swatch(Color(color), settings.themeColor == color, onClick = { settings.changeThemeColor(color) })
+            FlowRow(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(gap),
+                verticalArrangement = Arrangement.spacedBy(gap.coerceAtMost(Space.s)),
+            ) {
+                if (accent != null) {
+                    Swatch(Color(accent), settings.themeColor == null, system = true, onClick = { settings.changeThemeColor(null) })
+                }
+                Settings.THEME_COLORS.forEach { color ->
+                    Swatch(Color(color), settings.themeColor == color, onClick = { settings.changeThemeColor(color) })
+                }
+                settings.customColors.forEach { color ->
+                    Swatch(Color(color), settings.themeColor == color, onClick = { settings.changeThemeColor(color) }, onDelete = { settings.removeCustomColor(color) })
+                }
+                AddSwatch { adding = true }
             }
-            settings.customColors.forEach { color ->
-                Swatch(Color(color), settings.themeColor == color, onClick = { settings.changeThemeColor(color) }, onDelete = { settings.removeCustomColor(color) })
-            }
-            AddSwatch { adding = true }
         }
-        }
-        HorizontalDivider(Modifier.padding(start = Space.l), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+        GroupDivider(Space.l)
         ListItem(
             headlineContent = { Text(stringResource(R.string.setting_color_style)) },
             leadingContent = { Icon(Icons.Rounded.Palette, contentDescription = null) },
@@ -396,6 +397,12 @@ fun Group(title: String?, note: String?, action: (@Composable () -> Unit)? = nul
             )
         }
     }
+}
+
+/** The line between two rows on a group's card, in from the start by [inset]. */
+@Composable
+fun GroupDivider(inset: Dp) {
+    HorizontalDivider(Modifier.padding(start = inset), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 }
 
 /** A row on a group's card: no fill of its own, its icon and secondary text in the secondary colour. */

@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.theme
 
+import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
@@ -9,12 +10,11 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
-import android.os.Build
-import androidx.compose.ui.platform.LocalContext
 import cc.hyoban.moments.Settings
 import cc.hyoban.moments.ThemeMode
 import com.kyant.capsule.ContinuousCapsule

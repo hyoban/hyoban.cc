@@ -1,53 +1,37 @@
 package cc.hyoban.moments.ui
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.shrinkHorizontally
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.ui.BiasAlignment
-import androidx.compose.ui.zIndex
-import cc.hyoban.moments.ui.components.NAV_FOLD
-import androidx.compose.foundation.layout.Row
-import androidx.compose.runtime.MutableState
-import androidx.compose.ui.unit.IntSize
-import cc.hyoban.moments.ui.components.NAV_ACCESSORY_GAP
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.material3.Surface
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.runtime.staticCompositionLocalOf
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.LayoutDirection
-import androidx.compose.ui.AbsoluteAlignment
-import androidx.compose.foundation.layout.absolutePadding
-import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalWindowInfo
-import cc.hyoban.moments.ui.components.LocalMediaMaxHeight
-import cc.hyoban.moments.ui.components.isLandscape
-import cc.hyoban.moments.ui.components.AdaptiveStatusBarIcons
-import cc.hyoban.moments.ui.components.RAIL_WIDTH
-import cc.hyoban.moments.ui.components.sideInsetsPadding
-import cc.hyoban.moments.ui.components.AppColors
-import cc.hyoban.moments.ui.components.FloatingNav
-import cc.hyoban.moments.ui.components.NavItem
-import cc.hyoban.moments.ui.theme.Space
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Luggage
 import androidx.compose.material.icons.outlined.Map
@@ -55,64 +39,79 @@ import androidx.compose.material.icons.outlined.PhotoLibrary
 import androidx.compose.material.icons.rounded.Luggage
 import androidx.compose.material.icons.rounded.Map
 import androidx.compose.material.icons.rounded.PhotoLibrary
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
 import androidx.compose.runtime.DisposableEffect
-import cc.hyoban.moments.ui.components.LocalViewerShowing
-import cc.hyoban.moments.ui.components.LocalBackSwipe
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collectLatest
-import androidx.navigationevent.NavigationEventTransitionState
-import androidx.navigationevent.compose.LocalNavigationEventDispatcherOwner
-import cc.hyoban.moments.ui.components.LocalInViewer
-import cc.hyoban.moments.ui.components.LocalViewerShownKey
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.saveable.listSaver
-import androidx.activity.compose.BackHandler
-import androidx.compose.animation.core.CubicBezierEasing
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.ExitTransition
-import androidx.compose.animation.EnterTransition
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.AnimatedContentTransitionScope
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.input.nestedscroll.NestedScrollSource
-import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.listSaver
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.AbsoluteAlignment
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.BiasAlignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavDestination.Companion.hasRoute
-import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavGraph
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import androidx.navigationevent.NavigationEventTransitionState
+import androidx.navigationevent.compose.LocalNavigationEventDispatcherOwner
 import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.R
+import cc.hyoban.moments.Settings
+import cc.hyoban.moments.ui.components.AdaptiveStatusBarIcons
+import cc.hyoban.moments.ui.components.AppColors
+import cc.hyoban.moments.ui.components.FloatingNav
+import cc.hyoban.moments.ui.components.LocalBackSwipe
+import cc.hyoban.moments.ui.components.LocalInViewer
+import cc.hyoban.moments.ui.components.LocalMediaMaxHeight
 import cc.hyoban.moments.ui.components.LocalNavAnimatedScope
 import cc.hyoban.moments.ui.components.LocalSharedTransitionScope
+import cc.hyoban.moments.ui.components.LocalViewerShowing
+import cc.hyoban.moments.ui.components.LocalViewerShownKey
+import cc.hyoban.moments.ui.components.NAV_ACCESSORY_GAP
+import cc.hyoban.moments.ui.components.NAV_FOLD
+import cc.hyoban.moments.ui.components.NavItem
+import cc.hyoban.moments.ui.components.RAIL_WIDTH
+import cc.hyoban.moments.ui.components.isLandscape
 import cc.hyoban.moments.ui.feed.DayScreen
 import cc.hyoban.moments.ui.feed.FeedScreen
 import cc.hyoban.moments.ui.feed.PlaceScreen
 import cc.hyoban.moments.ui.map.MapScreen
 import cc.hyoban.moments.ui.moment.MomentScreen
 import cc.hyoban.moments.ui.settings.SettingsScreen
+import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.trips.TripScreen
 import cc.hyoban.moments.ui.trips.TripsScreen
 import cc.hyoban.moments.ui.viewer.MediaViewer
-import cc.hyoban.moments.Settings
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass
 
@@ -257,151 +256,145 @@ fun MomentsApp(container: AppContainer) {
 
     // A Surface rather than a bare background, so text without a colour of its own takes the page's on-colour in both modes.
     Surface(Modifier.fillMaxSize(), color = AppColors.page) {
-    Box(Modifier.fillMaxSize().nestedScroll(hideOnScroll)) {
-        CompositionLocalProvider(
-            LocalBottomClearance provides clearance,
-            LocalRailSpace provides rail,
-            LocalNavAccessory provides accessorySlot,
-            LocalMediaMaxHeight provides if (landscape) windowHeight * 0.6f else Dp.Infinity,
-        ) {
-        SharedTransitionLayout(Modifier.fillMaxSize()) {
+        Box(Modifier.fillMaxSize().nestedScroll(hideOnScroll)) {
             CompositionLocalProvider(
-                LocalSharedTransitionScope provides this,
-                LocalViewerShownKey provides viewerKey.takeIf { viewer != null },
-                LocalBackSwipe provides backSwipe,
-                LocalViewerShowing provides viewerShowing,
-                LocalSettings provides container.settings,
+                LocalBottomClearance provides clearance,
+                LocalRailSpace provides rail,
+                LocalNavAccessory provides accessorySlot,
+                LocalMediaMaxHeight provides if (landscape) windowHeight * 0.6f else Dp.Infinity,
             ) {
-                NavHost(
-                    navController = navController,
-                    startDestination = Feed,
-                    // A back swipe plays going back as it came, under the finger: a Moment
-                    // shrinks into its card, a pushed page slides back, a tab slides over.
-                    predictivePopEnterTransition = { _ -> popEnter() },
-                    predictivePopExitTransition = { _ -> popExit() },
-                    // From tab to tab the pages slide the way the tabs' highlight does;
-                    // anything else fades as before.
-                    enterTransition = {
-                        tabSlide()?.let { slideIntoContainer(it, TAB_SLIDE) + fadeIn(tween(TAB_SLIDE_MS)) }
-                            ?: if (opensCard()) CARD_HOLD_IN else if (sharesPhoto()) fadeIn(tween(PAGE_MS)) else pageIn(forward = true)
-                    },
-                    exitTransition = {
-                        tabSlide()?.let { slideOutOfContainer(it, TAB_SLIDE) + fadeOut(tween(TAB_SLIDE_MS)) }
-                            ?: if (opensCard()) CARD_HOLD_OUT else if (sharesPhoto()) fadeOut(tween(PAGE_MS)) else pageOut(forward = true)
-                    },
-                    popEnterTransition = { popEnter() },
-                    popExitTransition = { popExit() },
-                ) {
-                    screen<Feed> {
-                        FeedScreen(
-                            container,
-                            onMoment = openMoment,
-                            onMedia = openMedia,
-                            onDay = { navController.navigate(Day(it)) },
-                            onSettings = { navController.navigate(Preferences) },
+                SharedTransitionLayout(Modifier.fillMaxSize()) {
+                    CompositionLocalProvider(
+                        LocalSharedTransitionScope provides this,
+                        LocalViewerShownKey provides viewerKey.takeIf { viewer != null },
+                        LocalBackSwipe provides backSwipe,
+                        LocalViewerShowing provides viewerShowing,
+                        LocalSettings provides container.settings,
+                    ) {
+                        NavHost(
+                            navController = navController,
+                            startDestination = Feed,
+                            // A back swipe plays going back as it came, under the finger: a Moment
+                            // shrinks into its card, a pushed page slides back, a tab slides over.
+                            predictivePopEnterTransition = { _ -> enter(forward = false) },
+                            predictivePopExitTransition = { _ -> exit(forward = false) },
+                            // From tab to tab the pages slide the way the tabs' highlight does;
+                            // anything else fades as before.
+                            enterTransition = { enter(forward = true) },
+                            exitTransition = { exit(forward = true) },
+                            popEnterTransition = { enter(forward = false) },
+                            popExitTransition = { exit(forward = false) },
+                        ) {
+                            screen<Feed> {
+                                FeedScreen(
+                                    container,
+                                    onMoment = openMoment,
+                                    onMedia = openMedia,
+                                    onDay = { navController.navigate(Day(it)) },
+                                    onSettings = { navController.navigate(Preferences) },
+                                )
+                            }
+                            screen<Atlas> {
+                                MapScreen(container, onMoment = openMoment, onPlace = openPlace, onTrip = openTrip)
+                            }
+                            screen<Trips> {
+                                TripsScreen(container, onTrip = openTrip)
+                            }
+                            screen<Moment> { entry ->
+                                MomentScreen(container, entry.toRoute<Moment>().uid, onMedia = openMedia, onPlace = openPlace, onTrip = openTrip, onBack = back)
+                            }
+                            screen<Trip> { entry ->
+                                TripScreen(container, entry.toRoute<Trip>().id, onMoment = openMoment, onMedia = openMedia, onBack = back)
+                            }
+                            screen<Day> { entry ->
+                                DayScreen(container, entry.toRoute<Day>().date, onMoment = openMoment, onMedia = openMedia, onBack = back)
+                            }
+                            screen<PlaceMoments> { entry ->
+                                PlaceScreen(container, entry.toRoute<PlaceMoments>().id, onMoment = openMoment, onMedia = openMedia, onBack = back)
+                            }
+                            screen<Preferences> {
+                                SettingsScreen(container, onBack = back)
+                            }
+                        }
+                        // Kept while it leaves, so the photo has somewhere to fly back from.
+                        var shown by remember { mutableStateOf(viewer) }
+                        if (viewer != null) shown = viewer
+                        AnimatedVisibility(viewer != null, enter = fadeIn(tween(350)), exit = fadeOut(tween(350))) {
+                            val route = shown ?: return@AnimatedVisibility
+                            // Gone once it has finished closing.
+                            DisposableEffect(Unit) { onDispose { if (viewer == null) viewerShowing.value = false } }
+                            // Registered after the pages' own, so back closes the viewer before it leaves a page.
+                            BackHandler(enabled = viewer != null, onBack = closeViewer)
+                            CompositionLocalProvider(LocalNavAnimatedScope provides this, LocalInViewer provides true) {
+                                MediaViewer(
+                                    container,
+                                    route.uid,
+                                    route.index,
+                                    onMoment = { closeViewer(); openMoment(it) },
+                                    onPlace = { closeViewer(); openPlace(it) },
+                                    onTrip = { closeViewer(); openTrip(it) },
+                                    onBack = closeViewer,
+                                    onShown = {
+                                        // The first photo's tile steps aside as the viewer opens.
+                                        if (viewerKey == null || shownKey == null) viewerKey = it
+                                        shownKey = it
+                                    },
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            AnimatedVisibility(
+                current != null && viewer == null,
+                enter = fadeIn() + if (landscape) slideInHorizontally { if (railLeft) -it else it } else slideInVertically { it },
+                exit = fadeOut() + if (landscape) slideOutHorizontally { if (railLeft) -it else it } else slideOutVertically { it },
+                modifier = if (landscape) {
+                    // In the middle of what the system bars leave, as the map's buttons above and
+                    // below it are spaced.
+                    Modifier.align(if (railLeft) AbsoluteAlignment.CenterLeft else AbsoluteAlignment.CenterRight)
+                        .windowInsetsPadding(WindowInsets.safeDrawing).absolutePadding(left = if (railLeft) Space.m else 0.dp, right = if (railLeft) 0.dp else Space.m)
+                } else {
+                    Modifier.align(Alignment.BottomCenter).fillMaxWidth().navigationBarsPadding()
+                        .padding(start = Space.gutter, end = Space.gutter, bottom = Space.m)
+                },
+            ) {
+                // Down the side, the tabs have room of their own, so they stay open as a list scrolls.
+                val folded = !landscape && !tabsShown
+                val side by animateFloatAsState(if (folded) -1f else 0f, NAV_FOLD, label = "tabs side")
+                Box(if (landscape) Modifier else Modifier.fillMaxWidth()) {
+                    Row(Modifier.align(BiasAlignment(side, 0f)), verticalAlignment = Alignment.CenterVertically) {
+                        FloatingNav(
+                            navItems,
+                            selected = current?.ordinal ?: 0,
+                            onSelect = selectTab,
+                            vertical = landscape,
+                            collapsed = folded,
+                            onExpand = { tabsShown = true },
                         )
-                    }
-                    screen<Atlas> {
-                        MapScreen(container, onMoment = openMoment, onPlace = openPlace, onTrip = openTrip)
-                    }
-                    screen<Trips> {
-                        TripsScreen(container, onTrip = openTrip)
-                    }
-                    screen<Moment> { entry ->
-                        MomentScreen(container, entry.toRoute<Moment>().uid, onMedia = openMedia, onPlace = openPlace, onTrip = openTrip, onBack = back)
-                    }
-                    screen<Trip> { entry ->
-                        TripScreen(container, entry.toRoute<Trip>().id, onMoment = openMoment, onMedia = openMedia, onBack = back)
-                    }
-                    screen<Day> { entry ->
-                        DayScreen(container, entry.toRoute<Day>().date, onMoment = openMoment, onMedia = openMedia, onBack = back)
-                    }
-                    screen<PlaceMoments> { entry ->
-                        PlaceScreen(container, entry.toRoute<PlaceMoments>().id, onMoment = openMoment, onMedia = openMedia, onBack = back)
-                    }
-                    screen<Preferences> {
-                        SettingsScreen(container, onBack = back)
-                    }
-                }
-                // Kept while it leaves, so the photo has somewhere to fly back from.
-                var shown by remember { mutableStateOf(viewer) }
-                if (viewer != null) shown = viewer
-                AnimatedVisibility(viewer != null, enter = fadeIn(tween(350)), exit = fadeOut(tween(350))) {
-                    val route = shown ?: return@AnimatedVisibility
-                    // Gone once it has finished closing.
-                    DisposableEffect(Unit) { onDispose { if (viewer == null) viewerShowing.value = false } }
-                    // Registered after the pages' own, so back closes the viewer before it leaves a page.
-                    BackHandler(enabled = viewer != null, onBack = closeViewer)
-                    CompositionLocalProvider(LocalNavAnimatedScope provides this, LocalInViewer provides true) {
-                        MediaViewer(
-                            container,
-                            route.uid,
-                            route.index,
-                            onMoment = { closeViewer(); openMoment(it) },
-                            onPlace = { closeViewer(); openPlace(it) },
-                            onTrip = { closeViewer(); openTrip(it) },
-                            onBack = closeViewer,
-                            onShown = {
-                                // The first photo's tile steps aside as the viewer opens.
-                                if (viewerKey == null || shownKey == null) viewerKey = it
-                                shownKey = it
-                            },
-                        )
+                        // On the map, its button slides out from behind the tabs' end as they move over
+                        // to make room, as the map's page slides in, and back under them as they
+                        // leave; down the side the map keeps it itself. Kept while it slides away,
+                        // after the map has let it go.
+                        var accessory by remember { mutableStateOf(accessorySlot.value) }
+                        accessorySlot.value?.let { accessory = it }
+                        AnimatedVisibility(
+                            current == Tab.MAP && !landscape && accessorySlot.value != null,
+                            enter = expandHorizontally(TAB_SLIDE_SIZE, expandFrom = Alignment.Start, clip = false) +
+                                slideInHorizontally(TAB_SLIDE) { -it } +
+                                fadeIn(tween(TAB_SLIDE_MS / 2)),
+                            exit = shrinkHorizontally(TAB_SLIDE_SIZE, shrinkTowards = Alignment.Start, clip = false) +
+                                slideOutHorizontally(TAB_SLIDE) { -it } +
+                                fadeOut(tween(TAB_SLIDE_MS / 2, delayMillis = TAB_SLIDE_MS / 2)),
+                            // Under the tabs, so it comes out from behind them.
+                            modifier = Modifier.zIndex(-1f),
+                        ) {
+                            Box(Modifier.padding(start = NAV_ACCESSORY_GAP)) { accessory?.invoke() }
+                        }
                     }
                 }
             }
         }
-        }
-        AnimatedVisibility(
-            current != null && viewer == null,
-            enter = fadeIn() + if (landscape) slideInHorizontally { if (railLeft) -it else it } else slideInVertically { it },
-            exit = fadeOut() + if (landscape) slideOutHorizontally { if (railLeft) -it else it } else slideOutVertically { it },
-            modifier = if (landscape) {
-                // In the middle of what the system bars leave, as the map's buttons above and
-                // below it are spaced.
-                Modifier.align(if (railLeft) AbsoluteAlignment.CenterLeft else AbsoluteAlignment.CenterRight)
-                    .windowInsetsPadding(WindowInsets.safeDrawing).absolutePadding(left = if (railLeft) Space.m else 0.dp, right = if (railLeft) 0.dp else Space.m)
-            } else {
-                Modifier.align(Alignment.BottomCenter).fillMaxWidth().navigationBarsPadding()
-                    .padding(start = Space.gutter, end = Space.gutter, bottom = Space.m)
-            },
-        ) {
-            // Down the side, the tabs have room of their own, so they stay open as a list scrolls.
-            val folded = !landscape && !tabsShown
-            val side by animateFloatAsState(if (folded) -1f else 0f, NAV_FOLD, label = "tabs side")
-            Box(if (landscape) Modifier else Modifier.fillMaxWidth()) {
-            Row(Modifier.align(BiasAlignment(side, 0f)), verticalAlignment = Alignment.CenterVertically) {
-                FloatingNav(
-                    navItems,
-                    selected = current?.ordinal ?: 0,
-                    onSelect = selectTab,
-                    vertical = landscape,
-                    collapsed = folded,
-                    onExpand = { tabsShown = true },
-                )
-                // On the map, its button slides out from behind the tabs' end as they move over
-                // to make room, as the map's page slides in, and back under them as they
-                // leave; down the side the map keeps it itself. Kept while it slides away,
-                // after the map has let it go.
-                var accessory by remember { mutableStateOf(accessorySlot.value) }
-                accessorySlot.value?.let { accessory = it }
-                AnimatedVisibility(
-                    current == Tab.MAP && !landscape && accessorySlot.value != null,
-                    enter = expandHorizontally(TAB_SLIDE_SIZE, expandFrom = Alignment.Start, clip = false) +
-                        slideInHorizontally(TAB_SLIDE) { -it } +
-                        fadeIn(tween(TAB_SLIDE_MS / 2)),
-                    exit = shrinkHorizontally(TAB_SLIDE_SIZE, shrinkTowards = Alignment.Start, clip = false) +
-                        slideOutHorizontally(TAB_SLIDE) { -it } +
-                        fadeOut(tween(TAB_SLIDE_MS / 2, delayMillis = TAB_SLIDE_MS / 2)),
-                    // Under the tabs, so it comes out from behind them.
-                    modifier = Modifier.zIndex(-1f),
-                ) {
-                    Box(Modifier.padding(start = NAV_ACCESSORY_GAP)) { accessory?.invoke() }
-                }
-            }
-            }
-        }
-    }
     }
 }
 
@@ -430,14 +423,18 @@ private const val CARD_HOLD_MS = 600
 private val CARD_HOLD_IN = fadeIn(tween(CARD_HOLD_MS), initialAlpha = 1f)
 private val CARD_HOLD_OUT = fadeOut(tween(CARD_HOLD_MS), targetAlpha = 1f)
 
-/** Going back, as the page came: into its card, or sliding back, or across tabs. */
-private fun AnimatedContentTransitionScope<NavBackStackEntry>.popEnter(): EnterTransition =
+/**
+ * A page coming in: across tabs, out of its card or, going back, into it, fading where a
+ * photo flies between the pages, else sliding; going back plays it as the page came.
+ */
+private fun AnimatedContentTransitionScope<NavBackStackEntry>.enter(forward: Boolean): EnterTransition =
     tabSlide()?.let { slideIntoContainer(it, TAB_SLIDE) + fadeIn(tween(TAB_SLIDE_MS)) }
-        ?: if (closesCard()) CARD_HOLD_IN else if (sharesPhoto()) fadeIn(tween(PAGE_MS)) else pageIn(forward = false)
+        ?: if (if (forward) opensCard() else closesCard()) CARD_HOLD_IN else if (sharesPhoto()) fadeIn(tween(PAGE_MS)) else pageIn(forward)
 
-private fun AnimatedContentTransitionScope<NavBackStackEntry>.popExit(): ExitTransition =
+/** The page going out, as [enter] brings the other in. */
+private fun AnimatedContentTransitionScope<NavBackStackEntry>.exit(forward: Boolean): ExitTransition =
     tabSlide()?.let { slideOutOfContainer(it, TAB_SLIDE) + fadeOut(tween(TAB_SLIDE_MS)) }
-        ?: if (closesCard()) CARD_HOLD_OUT else if (sharesPhoto()) fadeOut(tween(PAGE_MS)) else pageOut(forward = false)
+        ?: if (if (forward) opensCard() else closesCard()) CARD_HOLD_OUT else if (sharesPhoto()) fadeOut(tween(PAGE_MS)) else pageOut(forward)
 
 /**
  * Where a page grows out of a card, by the page and the pages that hold its card: a
@@ -478,10 +475,10 @@ private fun AnimatedContentTransitionScope<NavBackStackEntry>.tabSlide(): Animat
 /** How far a scroll must go, in pixels a frame, to hide or bring back the tabs. */
 private const val SCROLL_SLOP = 6f
 
-/** How much of the bottom the floating tabs cover on a tab screen, to leave clear under a list's last item. */
 /** Where the app reads from, for what draws without the container at hand, as the map. */
 val LocalSettings = staticCompositionLocalOf<Settings> { error("No settings provided") }
 
+/** How much of the bottom the floating tabs cover on a tab screen, to leave clear under a list's last item. */
 val LocalBottomClearance = staticCompositionLocalOf { 0.dp }
 
 /**

@@ -14,7 +14,7 @@ class MediaUrls(private val origin: () -> String) {
     constructor(origin: String) : this({ origin })
 
     /** The URL of an uploaded object. */
-    fun asset(key: String): String = "${origin()}/${key.split('/').joinToString("/", transform = ::encodeSegment)}"
+    fun asset(key: String): String = "${origin()}/${encodeKey(key)}"
 
     /** The still to show for a media item at [width] pixels: a photo, a live photo's still, a video's poster. */
     fun still(media: MomentMedia, width: Int): String? {
@@ -59,7 +59,7 @@ class MediaUrls(private val origin: () -> String) {
         }
 
     private fun transformed(options: String, key: String) =
-        "${origin()}/cdn-cgi/$options/${key.split('/').joinToString("/", transform = ::encodeSegment)}"
+        "${origin()}/cdn-cgi/$options/${encodeKey(key)}"
 
     companion object {
         /** The widths an original is resized to, as the site asks for them. */
@@ -70,6 +70,9 @@ class MediaUrls(private val origin: () -> String) {
             val widths = (RESIZED_WIDTHS.filter { it < ownWidth } + minOf(ownWidth, 1920)).distinct()
             return widths.firstOrNull { it >= wanted } ?: widths.last()
         }
+
+        /** An object's key in a URL, each of its segments encoded. */
+        private fun encodeKey(key: String): String = key.split('/').joinToString("/", transform = ::encodeSegment)
 
         /** As JavaScript's encodeURIComponent, which the site's URLs are built with. */
         fun encodeSegment(segment: String): String = buildString {

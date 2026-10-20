@@ -1,28 +1,18 @@
 package cc.hyoban.moments.ui.moment
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.ui.unit.Dp
-import cc.hyoban.moments.data.media.MediaUrls
-import cc.hyoban.moments.data.spec.MomentRecord
-import cc.hyoban.moments.data.spec.Place
-import cc.hyoban.moments.data.spec.TripRecord
-import cc.hyoban.moments.ui.components.landscape
-import cc.hyoban.moments.ui.components.READABLE_WIDTH
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.wrapContentWidth
-import cc.hyoban.moments.ui.components.sideInsetsPadding
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -30,8 +20,11 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsBottomHeight
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
@@ -46,48 +39,46 @@ import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import cc.hyoban.moments.ui.components.tripCardKey
-import cc.hyoban.moments.ui.components.sharedCard
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.foundation.layout.statusBars
-import cc.hyoban.moments.ui.components.NeutralChip
-import androidx.compose.material3.AssistChip
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
-import cc.hyoban.moments.R
+import cc.hyoban.moments.data.media.MediaUrls
+import cc.hyoban.moments.data.spec.MomentRecord
+import cc.hyoban.moments.data.spec.Place
+import cc.hyoban.moments.data.spec.TripRecord
 import cc.hyoban.moments.data.trips.coversOf
 import cc.hyoban.moments.data.trips.momentsOf
 import cc.hyoban.moments.data.trips.tripOf
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.FloatingBack
 import cc.hyoban.moments.ui.components.MediaTile
+import cc.hyoban.moments.ui.components.NeutralChip
 import cc.hyoban.moments.ui.components.Pill
 import cc.hyoban.moments.ui.components.PressableCard
+import cc.hyoban.moments.ui.components.READABLE_WIDTH
 import cc.hyoban.moments.ui.components.RisingSheet
 import cc.hyoban.moments.ui.components.Thumbnail
+import cc.hyoban.moments.ui.components.landscape
 import cc.hyoban.moments.ui.components.mediaKey
 import cc.hyoban.moments.ui.components.shapeOf
-import cc.hyoban.moments.ui.format.daysBetween
+import cc.hyoban.moments.ui.components.sharedCard
+import cc.hyoban.moments.ui.components.sideInsetsPadding
+import cc.hyoban.moments.ui.components.tripCardKey
 import cc.hyoban.moments.ui.format.formatDay
-import cc.hyoban.moments.ui.format.formatRange
 import cc.hyoban.moments.ui.format.formatTime
 import cc.hyoban.moments.ui.theme.Space
+import cc.hyoban.moments.ui.trips.tripSummary
 
 /** How far the page's sheet rises over the photos. */
 private val RISE = 32.dp
@@ -245,11 +236,7 @@ private fun MomentDetails(
                             Text(trip.title, style = MaterialTheme.typography.titleMedium)
                         }
                         Text(
-                            listOf(
-                                formatRange(trip.start, trip.end),
-                                stringResource(R.string.count_days, daysBetween(trip.start, trip.end)),
-                                stringResource(R.string.count_moments, count),
-                            ).joinToString(" · "),
+                            tripSummary(trip, count),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )

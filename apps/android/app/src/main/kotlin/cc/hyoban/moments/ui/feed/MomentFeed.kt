@@ -1,12 +1,16 @@
 package cc.hyoban.moments.ui.feed
 
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.LoadingIndicator
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
@@ -19,33 +23,30 @@ import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
-import androidx.compose.ui.layout.layout
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.zIndex
-import androidx.compose.ui.unit.Dp
-import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.R
@@ -59,11 +60,6 @@ import cc.hyoban.moments.ui.components.DayPill
 import cc.hyoban.moments.ui.components.MomentCard
 import cc.hyoban.moments.ui.components.MonthHeader
 import cc.hyoban.moments.ui.components.PageWidth
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import cc.hyoban.moments.ui.format.formatDayOfMonth
 import cc.hyoban.moments.ui.format.formatMonth
 import cc.hyoban.moments.ui.theme.Space
@@ -107,8 +103,6 @@ fun MomentFeed(
     months: Boolean = true,
     dayLabel: (String) -> String = ::formatDayOfMonth,
     showTrip: Boolean = true,
-    /** Room above the first row: the status bar, on a tab whose list runs up under it. */
-    top: Dp = 0.dp,
     leading: FeedLeading.() -> Unit = {},
 ) {
     val days = remember(moments) { moments.groupBy { it.dateKey }.toList() }
@@ -135,7 +129,7 @@ fun MomentFeed(
                 StaggeredGridCells.Fixed(columns.count),
                 Modifier.fillMaxSize(),
                 state = gridState,
-                contentPadding = PaddingValues(start = columns.margin + Space.gutter, top = top, end = columns.margin + Space.gutter, bottom = bottom),
+                contentPadding = PaddingValues(start = columns.margin + Space.gutter, end = columns.margin + Space.gutter, bottom = bottom),
                 horizontalArrangement = Arrangement.spacedBy(Space.m),
                 verticalItemSpacing = Space.m,
             ) {
@@ -151,7 +145,7 @@ fun MomentFeed(
                                 val (name, year) = formatMonth(here.first().dateKey)
                                 MonthHeader(name, year)
                             } else {
-                                DayPill(dayLabel(group) + if (here.size > 1) " · ${stringResource(R.string.count_moments, here.size)}" else "")
+                                DayPill(dayPillText(dayLabel(group), here.size))
                             }
                         }
                     }
@@ -168,7 +162,7 @@ fun MomentFeed(
             LazyColumn(
                 Modifier.fillMaxSize(),
                 state = state,
-                contentPadding = PaddingValues(start = columns.margin, top = top, end = columns.margin, bottom = bottom),
+                contentPadding = PaddingValues(start = columns.margin, end = columns.margin, bottom = bottom),
             ) {
                 leadingRows(leading)
                 var month: String? = null
@@ -181,7 +175,7 @@ fun MomentFeed(
                     stickyHeader(key = "day-$day", contentType = "day") {
                         // Over the cards it is held above, which come after it.
                         Box(Modifier.zIndex(1f).belowListTop(state, "day-$day")) {
-                            DayPill(dayLabel(day) + if (dayMoments.size > 1) " · ${stringResource(R.string.count_moments, dayMoments.size)}" else "")
+                            DayPill(dayPillText(dayLabel(day), dayMoments.size))
                         }
                     }
                     items(dayMoments, key = { it.uid }, contentType = { "moment" }) { moment ->
@@ -192,6 +186,11 @@ fun MomentFeed(
         }
     }
 }
+
+/** A day's pill: its label, and how many Moments it has when more than one. */
+@Composable
+private fun dayPillText(label: String, count: Int): String =
+    if (count > 1) "$label · ${stringResource(R.string.count_moments, count)}" else label
 
 /**
  * A sticky header held below the list's top padding while it is stuck, rather than at the
