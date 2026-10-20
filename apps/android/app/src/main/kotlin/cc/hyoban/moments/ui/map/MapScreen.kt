@@ -84,7 +84,10 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -346,10 +349,10 @@ fun MapScreen(container: AppContainer, onMoment: (String) -> Unit, onPlace: (Str
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
-                            IconButton(onClick = { navigateTo(context, place) }) {
+                            IconButton(onClick = { navigateTo(context, place) }, modifier = Modifier.testTag("navigate")) {
                                 Icon(Icons.Rounded.Directions, contentDescription = stringResource(R.string.action_navigate), tint = MaterialTheme.colorScheme.primary)
                             }
-                            TextButton(onClick = { selected = null; onPlace(id) }) {
+                            TextButton(onClick = { selected = null; onPlace(id) }, modifier = Modifier.testTag("place_$id")) {
                                 Text(stringResource(R.string.action_all))
                                 Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null)
                             }
@@ -386,6 +389,7 @@ private fun CompassButton(turned: Boolean, bearing: Double, onClick: () -> Unit)
             shape = Corners.full,
             containerColor = SurfaceLevel.floating(LocalDarkTheme.current).fill(),
             contentColor = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.testTag("north"),
         ) {
             Icon(
                 Icons.Rounded.Navigation,
@@ -400,18 +404,20 @@ private fun CompassButton(turned: Boolean, bearing: Double, onClick: () -> Unit)
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun LocateButton(locating: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    // Floating like the tabs, the icon in primary as the one action the map has.
+    // Floating like the tabs, the icon in primary as the one action the map has. Named
+    // on the button, so it keeps its name while the indicator stands in for the icon.
+    val label = stringResource(R.string.action_locate)
     FloatingActionButton(
         onClick = { if (!locating) onClick() },
         shape = Corners.full,
         containerColor = SurfaceLevel.floating(LocalDarkTheme.current).fill(),
         contentColor = MaterialTheme.colorScheme.primary,
-        modifier = modifier,
+        modifier = modifier.semantics { contentDescription = label }.testTag("locate"),
     ) {
         if (locating) {
             LoadingIndicator(Modifier.size(32.dp), color = LocalContentColor.current)
         } else {
-            Icon(Icons.Rounded.MyLocation, contentDescription = stringResource(R.string.action_locate))
+            Icon(Icons.Rounded.MyLocation, contentDescription = null)
         }
     }
 }
@@ -462,7 +468,7 @@ private fun RouteCard(trip: TripRecord, onOpen: () -> Unit) {
         shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(containerColor = SurfaceLevel.floating(LocalDarkTheme.current).fill()),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
-        modifier = Modifier.fillMaxWidth().padding(bottom = Space.s).sharedCard(tripCardKey(trip.id)),
+        modifier = Modifier.fillMaxWidth().padding(bottom = Space.s).sharedCard(tripCardKey(trip.id)).testTag("trip_${trip.id}"),
     ) {
         Row(Modifier.padding(start = Space.l, end = Space.s, top = Space.m, bottom = Space.m), verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Rounded.Luggage, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)

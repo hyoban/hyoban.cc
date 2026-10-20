@@ -21,6 +21,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -58,10 +61,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -93,9 +101,10 @@ fun ThemeSettings(settings: Settings) {
         ListItem(
             headlineContent = { Text(stringResource(R.string.setting_pure_black)) },
             leadingContent = { Icon(Icons.Rounded.DarkMode, contentDescription = null) },
-            trailingContent = { Switch(checked = settings.pureBlack, onCheckedChange = settings::changePureBlack) },
+            // The row is the switch, read as one with its name and state.
+            trailingContent = { Switch(checked = settings.pureBlack, onCheckedChange = null) },
             colors = rowColors(),
-            modifier = Modifier.clickable { settings.changePureBlack(!settings.pureBlack) },
+            modifier = Modifier.toggleable(settings.pureBlack, role = Role.Switch, onValueChange = settings::changePureBlack).testTag("pure_black"),
         )
     }
 }
@@ -107,7 +116,7 @@ private fun ThemeModeGroup(settings: Settings, seed: Color) {
     val dark = remember(seed, style, settings.pureBlack) { seededColorScheme(seed, true, style, settings.pureBlack) }
 
     Caption(stringResource(R.string.section_theme_mode))
-    Row(Modifier.padding(horizontal = Space.gutter), horizontalArrangement = Arrangement.spacedBy(Space.m)) {
+    Row(Modifier.padding(horizontal = Space.gutter).selectableGroup(), horizontalArrangement = Arrangement.spacedBy(Space.m)) {
         listOf(
             ThemeMode.SYSTEM to R.string.theme_mode_system,
             ThemeMode.LIGHT to R.string.theme_mode_light,
@@ -119,7 +128,8 @@ private fun ThemeModeGroup(settings: Settings, seed: Color) {
                     .weight(1f)
                     .clip(MaterialTheme.shapes.large)
                     .background(LocalSurfaceLevel.current.raised.fill())
-                    .clickable { settings.changeThemeMode(mode) }
+                    .selectable(selected, role = Role.RadioButton) { settings.changeThemeMode(mode) }
+                    .testTag("theme_mode_${mode.name.lowercase()}")
                     .padding(Space.m),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(Space.s),
@@ -202,7 +212,7 @@ private fun ThemeColorGroup(settings: Settings) {
                 if (columns > 1) ((constraints.maxWidth - SWATCH.roundToPx() * columns) / (columns - 1)).toDp() else 0.dp
             }
             FlowRow(
-                Modifier.fillMaxWidth(),
+                Modifier.fillMaxWidth().selectableGroup(),
                 horizontalArrangement = Arrangement.spacedBy(gap),
                 verticalArrangement = Arrangement.spacedBy(gap.coerceAtMost(Space.s)),
             ) {
@@ -276,11 +286,23 @@ private val MIN_GAP = 6.dp
 private fun Swatch(color: Color, selected: Boolean, system: Boolean = false, onClick: () -> Unit, onDelete: (() -> Unit)? = null) {
     var menu by remember { mutableStateOf(false) }
     val check by animateFloatAsState(if (selected) 1f else 0f, label = "check")
+    // Named by its hex, the system's accent by the eyedropper's own label; one of a group, chosen or not.
+    val hex = "#%06X".format(color.toArgb() and 0xFFFFFF)
     Box(
         Modifier
             .size(SWATCH)
             .clip(CircleShape)
-            .combinedClickable(onClick = onClick, onLongClick = onDelete?.let { { menu = true } })
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onDelete?.let { { menu = true } },
+                onLongClickLabel = onDelete?.let { stringResource(R.string.action_delete) },
+                role = Role.RadioButton,
+            )
+            .semantics {
+                this.selected = selected
+                if (!system) contentDescription = hex
+            }
+            .testTag(if (system) "swatch_system" else "swatch_${hex.drop(1)}")
             .then(if (selected) Modifier.border(2.5.dp, color, CircleShape) else Modifier),
         contentAlignment = Alignment.Center,
     ) {
@@ -314,7 +336,7 @@ private fun Swatch(color: Color, selected: Boolean, system: Boolean = false, onC
 
 @Composable
 private fun AddSwatch(onClick: () -> Unit) {
-    Box(Modifier.size(SWATCH).clip(CircleShape).clickable(onClick = onClick), contentAlignment = Alignment.Center) {
+    Box(Modifier.size(SWATCH).clip(CircleShape).clickable(onClick = onClick).testTag("swatch_add"), contentAlignment = Alignment.Center) {
         Box(
             Modifier.size(DOT).border(1.5.dp, MaterialTheme.colorScheme.outline, CircleShape),
             contentAlignment = Alignment.Center,
@@ -376,7 +398,7 @@ fun Caption(title: String, action: (@Composable () -> Unit)? = null) {
             title,
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1f).semantics { heading() },
         )
         action?.invoke()
     }

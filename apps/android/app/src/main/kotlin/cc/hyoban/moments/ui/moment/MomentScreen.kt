@@ -48,6 +48,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -177,9 +178,11 @@ private fun MomentPhotos(moment: MomentRecord, urls: MediaUrls, onMedia: (String
                 MediaTile(
                     media,
                     urls,
-                    if (whole) Modifier.fillMaxWidth().height(minOf(maxWidth / shapeOf(media), maxHeight)) else Modifier.fillMaxSize(),
+                    (if (whole) Modifier.fillMaxWidth().height(minOf(maxWidth / shapeOf(media), maxHeight)) else Modifier.fillMaxSize())
+                        .testTag("media_${uid}_$page"),
                     liveBadgeAlignment = Alignment.BottomStart,
                     sharedKey = mediaKey(uid, media.uid),
+                    position = page to moment.media.size,
                     onClick = { onMedia(uid, page) },
                 )
             }
@@ -216,7 +219,7 @@ private fun MomentDetails(
         ) {
             formatTime(moment.occurredAt)?.let { Pill(it, icon = Icons.Rounded.Schedule) }
             moment.places.forEach { id ->
-                NeutralChip(places[id]?.name ?: id, Icons.Rounded.Place, onClick = { onPlace(id) })
+                NeutralChip(places[id]?.name ?: id, Icons.Rounded.Place, onClick = { onPlace(id) }, modifier = Modifier.testTag("place_$id"))
             }
         }
         if (moment.text.isNotBlank()) {
@@ -227,7 +230,7 @@ private fun MomentDetails(
         trip?.let { trip ->
             val cover = remember(trip, moments) { coversOf(trip, moments, trips, limit = 1).firstOrNull() }
             val count = remember(trip, moments) { momentsOf(trip, moments, trips).size }
-            PressableCard(onClick = { onTrip(trip.id) }, modifier = Modifier.padding(top = Space.s).sharedCard(tripCardKey(trip.id))) {
+            PressableCard(onClick = { onTrip(trip.id) }, modifier = Modifier.padding(top = Space.s).sharedCard(tripCardKey(trip.id)).testTag("trip_${trip.id}")) {
                 Row(Modifier.padding(6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.m)) {
                     cover?.let { Thumbnail(it, urls, size = 64) }
                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {

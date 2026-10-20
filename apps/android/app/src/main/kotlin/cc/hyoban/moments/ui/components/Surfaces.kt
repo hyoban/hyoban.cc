@@ -49,22 +49,27 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
+import cc.hyoban.moments.R
 import cc.hyoban.moments.ui.theme.Corners
 import cc.hyoban.moments.ui.theme.LocalDarkTheme
 import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.SurfaceLevel
 import cc.hyoban.moments.ui.theme.fill
-import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.roundToInt
+import kotlinx.coroutines.launch
 
 /** The page every screen is laid on: grey in light, the darkest surface in dark. */
 object AppColors {
@@ -149,7 +154,7 @@ fun NeutralChip(label: String, icon: ImageVector, onClick: () -> Unit, modifier:
 fun SectionHeader(icon: ImageVector, title: String, modifier: Modifier = Modifier, action: (@Composable () -> Unit)? = null) {
     Row(modifier.fillMaxWidth().heightIn(min = 24.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
-        Text(title, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
+        Text(title, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f).semantics { heading() })
         action?.invoke()
     }
 }
@@ -158,7 +163,8 @@ fun SectionHeader(icon: ImageVector, title: String, modifier: Modifier = Modifie
 @Composable
 fun MonthHeader(month: String, year: String?) {
     Row(
-        Modifier.fillMaxWidth().padding(start = Space.xl, end = Space.xl, top = Space.xl, bottom = Space.xs),
+        // Read as one heading, the month and its year together.
+        Modifier.fillMaxWidth().padding(start = Space.xl, end = Space.xl, top = Space.xl, bottom = Space.xs).semantics(mergeDescendants = true) { heading() },
         verticalAlignment = Alignment.Bottom,
         horizontalArrangement = Arrangement.spacedBy(Space.s),
     ) {
@@ -172,7 +178,7 @@ fun MonthHeader(month: String, year: String?) {
 /** A day over its Moments, floating over them as they scroll: the floating level, with a shadow. */
 @Composable
 fun DayPill(text: String) {
-    Box(Modifier.fillMaxWidth().padding(horizontal = Space.gutter, vertical = Space.s)) {
+    Box(Modifier.fillMaxWidth().padding(horizontal = Space.gutter, vertical = Space.s).semantics(mergeDescendants = true) { heading() }) {
         Surface(
             shape = Corners.full,
             color = SurfaceLevel.floating(LocalDarkTheme.current).fill(),
@@ -188,7 +194,8 @@ fun DayPill(text: String) {
     }
 }
 
-data class NavItem(val label: String, val icon: ImageVector, val selectedIcon: ImageVector)
+/** A tab: its name, its icons, and the [tag] it goes by for tests and `uiautomator`. */
+data class NavItem(val label: String, val icon: ImageVector, val selectedIcon: ImageVector, val tag: String)
 
 private val TAB_WIDTH = 76.dp
 private val TAB_HEIGHT = 56.dp
@@ -339,7 +346,8 @@ fun FloatingNav(
                                 .semantics {
                                     role = Role.Tab
                                     this.selected = index == selected
-                                },
+                                }
+                                .testTag(item.tag),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center,
                         ) {
@@ -360,7 +368,9 @@ fun FloatingNav(
                     Box(
                         Modifier.fillMaxSize()
                             .graphicsLayer { alpha = (fold * 2f - 1f).coerceIn(0f, 1f) }
-                            .then(if (collapsed) Modifier.clickable(onClickLabel = item.label, onClick = onExpand) else Modifier),
+                            .then(if (collapsed) Modifier.clickable(onClickLabel = stringResource(R.string.action_show_tabs), onClick = onExpand) else Modifier)
+                            .semantics { contentDescription = item.label }
+                            .testTag("tabs_folded"),
                         contentAlignment = Alignment.Center,
                     ) {
                         Icon(item.selectedIcon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)

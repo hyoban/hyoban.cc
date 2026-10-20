@@ -17,6 +17,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.saveable.listSaver
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import cc.hyoban.moments.R
@@ -63,6 +65,7 @@ fun monthsOf(moments: List<MomentRecord>, year: Int): List<Int> =
 fun TimeFilterRows(filter: TimeFilter, years: List<Int>, months: List<Int>, onChange: (TimeFilter) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
         ChipRow(
+            "year_",
             listOf(null) + years,
             selected = filter.year,
             label = { it?.let { year -> stringResource(R.string.filter_year, year) } ?: stringResource(R.string.filter_all) },
@@ -74,6 +77,7 @@ fun TimeFilterRows(filter: TimeFilter, years: List<Int>, months: List<Int>, onCh
             exit = fadeOut() + shrinkVertically(),
         ) {
             ChipRow(
+                "month_",
                 listOf(null) + months,
                 selected = filter.month,
                 label = { it?.let { month -> stringResource(R.string.filter_month, month) } ?: stringResource(R.string.filter_whole_year) },
@@ -83,8 +87,9 @@ fun TimeFilterRows(filter: TimeFilter, years: List<Int>, months: List<Int>, onCh
     }
 }
 
+/** Each chip tagged [tag] and its year or month, or `all`. */
 @Composable
-private fun ChipRow(options: List<Int?>, selected: Int?, label: @Composable (Int?) -> String, onSelect: (Int?) -> Unit) {
+private fun ChipRow(tag: String, options: List<Int?>, selected: Int?, label: @Composable (Int?) -> String, onSelect: (Int?) -> Unit) {
     LazyRow(
         contentPadding = PaddingValues(horizontal = Space.gutter),
         horizontalArrangement = Arrangement.spacedBy(Space.s),
@@ -94,6 +99,7 @@ private fun ChipRow(options: List<Int?>, selected: Int?, label: @Composable (Int
                 selected = option == selected,
                 onClick = { onSelect(option) },
                 label = { Text(label(option)) },
+                modifier = Modifier.testTag("$tag${option ?: "all"}"),
                 // The chosen one solid primary, the rest a level above the page, no borders.
                 shape = Corners.full,
                 border = null,

@@ -83,7 +83,9 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
@@ -107,6 +109,7 @@ import cc.hyoban.moments.ui.components.NeutralChip
 import cc.hyoban.moments.ui.components.PressableCard
 import cc.hyoban.moments.ui.components.SectionHeader
 import cc.hyoban.moments.ui.components.Thumbnail
+import cc.hyoban.moments.ui.components.kindLabel
 import cc.hyoban.moments.ui.components.landscape
 import cc.hyoban.moments.ui.components.mediaKey
 import cc.hyoban.moments.ui.components.shapeOf
@@ -119,12 +122,12 @@ import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.fill
 import cc.hyoban.moments.ui.trips.tripSummary
+import kotlin.math.roundToInt
 import me.saket.telephoto.zoomable.DoubleClickToZoomListener
 import me.saket.telephoto.zoomable.ZoomSpec
 import me.saket.telephoto.zoomable.ZoomableContentLocation
 import me.saket.telephoto.zoomable.rememberZoomableState
 import me.saket.telephoto.zoomable.zoomable
-import kotlin.math.roundToInt
 
 /**
  * A Moment's media full screen on black. Swipe sideways between them, down to close and
@@ -221,14 +224,14 @@ fun MediaViewer(
                 Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.25f)).statusBarsPadding().sideInsetsPadding().padding(4.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                IconButton(onClick = onBack) {
+                IconButton(onClick = onBack, modifier = Modifier.testTag("back")) {
                     Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.action_back), tint = Color.White)
                 }
                 if (media.size > 1) {
                     Text("${pager.currentPage + 1} / ${media.size}", color = Color.White, style = MaterialTheme.typography.titleMedium)
                 }
                 Spacer(Modifier.weight(1f))
-                IconButton(onClick = { info = true }) {
+                IconButton(onClick = { info = true }, modifier = Modifier.testTag("info")) {
                     Icon(Icons.Outlined.Info, contentDescription = stringResource(R.string.action_info), tint = Color.White)
                 }
             }
@@ -364,7 +367,12 @@ private fun ViewerLiveBadge(state: LiveMotionState, modifier: Modifier = Modifie
         modifier.minimumInteractiveComponentSize()
             .clip(RoundedCornerShape(50))
             .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.45f))
-            .clickable(enabled = state.ready) { if (state.playing) state.stop() else state.play() }
+            .clickable(
+                enabled = state.ready,
+                onClickLabel = stringResource(if (state.playing) R.string.action_pause else R.string.action_play),
+                role = Role.Button,
+            ) { if (state.playing) state.stop() else state.play() }
+            .testTag("live")
             .padding(horizontal = 12.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -502,7 +510,7 @@ private fun InfoContent(
                     PlacesStill(located, Modifier.fillMaxWidth().aspectRatio(2f).clip(MaterialTheme.shapes.medium))
                 }
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.s)) {
-                    moment.places.forEach { id -> NeutralChip(places[id]?.name ?: id, Icons.Rounded.Place, onClick = { onPlace(id) }) }
+                    moment.places.forEach { id -> NeutralChip(places[id]?.name ?: id, Icons.Rounded.Place, onClick = { onPlace(id) }, modifier = Modifier.testTag("place_$id")) }
                 }
             }
         }
@@ -516,13 +524,7 @@ private fun InfoContent(
                     InfoTile(
                         stringResource(
                             R.string.label_media_size,
-                            stringResource(
-                                when (media.type) {
-                                    MediaType.IMAGE -> R.string.media_photo
-                                    MediaType.LIVE_PHOTO -> R.string.media_live
-                                    MediaType.VIDEO -> R.string.media_video
-                                },
-                            ),
+                            stringResource(media.kindLabel()),
                             media.width,
                             media.height,
                         ),
@@ -534,7 +536,7 @@ private fun InfoContent(
         trip?.let { trip ->
             val cover = remember(trip, moments) { coversOf(trip, moments, trips, limit = 1).firstOrNull() }
             val count = remember(trip, moments) { momentsOf(trip, moments, trips).size }
-            PressableCard(onClick = { onTrip(trip.id) }, modifier = Modifier.fillMaxWidth()) {
+            PressableCard(onClick = { onTrip(trip.id) }, modifier = Modifier.fillMaxWidth().testTag("trip_${trip.id}")) {
                 ListItem(
                     headlineContent = { Text(trip.title) },
                     supportingContent = { Text(tripSummary(trip, count)) },
@@ -545,7 +547,7 @@ private fun InfoContent(
             }
         }
         // The panel's one action, so the one thing in colour.
-        Button(onClick = onMoment, modifier = Modifier.fillMaxWidth().padding(top = Space.xs)) {
+        Button(onClick = onMoment, modifier = Modifier.fillMaxWidth().padding(top = Space.xs).testTag("open_moment")) {
             Text(stringResource(R.string.action_open_moment))
         }
     }
