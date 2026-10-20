@@ -5,7 +5,10 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,17 +23,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import cc.hyoban.moments.ui.components.dayCardKey
-import cc.hyoban.moments.ui.components.sharedCard
-import cc.hyoban.moments.ui.theme.fill
-import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.Dp
 import cc.hyoban.moments.data.media.MediaUrls
 import cc.hyoban.moments.data.spec.MomentMedia
 import cc.hyoban.moments.data.spec.MomentRecord
@@ -38,11 +36,12 @@ import cc.hyoban.moments.ui.LocalBottomClearance
 import cc.hyoban.moments.ui.components.MediaStill
 import cc.hyoban.moments.ui.components.MonthHeader
 import cc.hyoban.moments.ui.components.PageWidth
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
+import cc.hyoban.moments.ui.components.dayCardKey
+import cc.hyoban.moments.ui.components.sharedCard
 import cc.hyoban.moments.ui.format.formatMonth
+import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
 import cc.hyoban.moments.ui.theme.Space
+import cc.hyoban.moments.ui.theme.fill
 import java.time.LocalDate
 import java.time.YearMonth
 
@@ -83,8 +82,6 @@ fun CalendarView(
     onDay: (String, List<MomentRecord>) -> Unit,
     modifier: Modifier = Modifier,
     state: LazyListState = rememberLazyListState(),
-    /** Room above the first row: the status bar, on a tab whose list runs up under it. */
-    top: Dp = 0.dp,
     leading: LazyListScope.() -> Unit = {},
 ) {
     val months = remember(moments) { monthsOf(moments) }
@@ -94,7 +91,7 @@ fun CalendarView(
         LazyColumn(
             Modifier.fillMaxSize(),
             state = state,
-            contentPadding = PaddingValues(start = columns.margin, top = top, end = columns.margin, bottom = LocalBottomClearance.current + Space.xl),
+            contentPadding = PaddingValues(start = columns.margin, end = columns.margin, bottom = LocalBottomClearance.current + Space.xl),
         ) {
             leading()
             if (columns.count > 1) {

@@ -7,14 +7,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.MotionPhotosOn
 import androidx.compose.material.icons.rounded.PlayArrow
@@ -26,10 +24,10 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
@@ -42,11 +40,12 @@ import cc.hyoban.moments.data.spec.MomentMedia
 import coil3.compose.AsyncImage
 import coil3.compose.LocalPlatformContext
 import coil3.request.ImageRequest
-import coil3.size.Precision
 import coil3.request.crossfade
+import coil3.size.Precision
 
 // The photos of a Moment meet edge to edge, as one picture across the card.
 private val GAP = 0.dp
+private val TILE = RectangleShape
 
 /**
  * A media item's still at the size it is drawn: a photo, a live photo's still, a video's
@@ -129,12 +128,12 @@ fun MediaTile(
 }
 
 @Composable
-fun PlayBadge(modifier: Modifier = Modifier, size: Int = 44) {
+fun PlayBadge(modifier: Modifier = Modifier) {
     Icon(
         Icons.Rounded.PlayArrow,
         contentDescription = stringResource(R.string.action_play),
         tint = Color.White,
-        modifier = modifier.size(size.dp).clip(CircleShape).background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.45f)).padding(8.dp),
+        modifier = modifier.size(44.dp).clip(CircleShape).background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.45f)).padding(8.dp),
     )
 }
 
@@ -163,7 +162,6 @@ fun MediaMosaic(
     onOpen: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val TILE = RectangleShape
     val tile = @Composable { index: Int, tileModifier: Modifier ->
         MediaTile(media[index], urls, tileModifier.clip(TILE), sharedKey = mediaKey(momentUid, media[index].uid), sharedShape = TILE, onClick = { onOpen(index) })
     }

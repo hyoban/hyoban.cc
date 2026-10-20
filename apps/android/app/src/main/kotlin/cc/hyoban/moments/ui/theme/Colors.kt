@@ -1,6 +1,7 @@
 package cc.hyoban.moments.ui.theme
 
 import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
@@ -184,9 +185,9 @@ val LocalSurfaceLevel = staticCompositionLocalOf { SurfaceLevel.Page }
 /** The fill of [level] in the current scheme. */
 @Composable
 @ReadOnlyComposable
-fun SurfaceLevel.fill(): Color = color(androidx.compose.material3.MaterialTheme.colorScheme, LocalDarkTheme.current)
+fun SurfaceLevel.fill(): Color = color(MaterialTheme.colorScheme, LocalDarkTheme.current)
 
 /** A divider: onSurface at 14%, the same contrast on any level in either mode. */
 @Composable
 @ReadOnlyComposable
-fun dividerColor(): Color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.14f)
+fun dividerColor(): Color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.14f)

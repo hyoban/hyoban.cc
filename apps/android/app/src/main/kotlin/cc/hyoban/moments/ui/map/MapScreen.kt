@@ -1,127 +1,122 @@
 package cc.hyoban.moments.ui.map
 
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.LoadingIndicator
-import androidx.activity.compose.BackHandler
-import androidx.core.content.ContextCompat
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.material.icons.rounded.MyLocation
-import androidx.compose.animation.core.animateDpAsState
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.compose.rememberLauncherForActivityResult
-import android.widget.Toast
-import android.content.pm.PackageManager
 import android.Manifest
+import android.content.pm.PackageManager
+import android.widget.Toast
+import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animate
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.widthIn
-import cc.hyoban.moments.ui.components.READABLE_WIDTH
-import cc.hyoban.moments.ui.components.landscape
-import cc.hyoban.moments.ui.components.isLandscape
-import cc.hyoban.moments.ui.LocalRailSpace
-import cc.hyoban.moments.ui.LocalNavAccessory
-import cc.hyoban.moments.ui.components.NAV_HEIGHT
-import cc.hyoban.moments.ui.components.NAV_WIDTH
-import cc.hyoban.moments.ui.components.NAV_ACCESSORY_GAP
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.ui.AbsoluteAlignment
-import androidx.compose.runtime.mutableDoubleStateOf
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
-import androidx.compose.material.icons.rounded.Navigation
-import androidx.compose.ui.draw.rotate
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.windowInsetsPadding
-import cc.hyoban.moments.ui.components.RAIL_WIDTH
-import cc.hyoban.moments.ui.components.RAIL_HEIGHT
-import androidx.compose.foundation.layout.absolutePadding
-import cc.hyoban.moments.ui.components.sideInsetsPadding
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.absolutePadding
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
-import androidx.compose.material.icons.rounded.Luggage
 import androidx.compose.material.icons.rounded.Directions
+import androidx.compose.material.icons.rounded.Luggage
+import androidx.compose.material.icons.rounded.MyLocation
+import androidx.compose.material.icons.rounded.Navigation
 import androidx.compose.material.icons.rounded.Place
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LoadingIndicator
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableDoubleStateOf
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.AbsoluteAlignment
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import cc.hyoban.moments.ui.components.tripCardKey
-import cc.hyoban.moments.ui.components.sharedCard
-import kotlin.math.roundToInt
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.offset
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.animation.core.animate
-import androidx.compose.foundation.gestures.rememberDraggableState
-import androidx.compose.foundation.gestures.draggable
-import androidx.compose.foundation.gestures.Orientation
-import androidx.lifecycle.Lifecycle
-import cc.hyoban.moments.ui.theme.dividerColor
-import cc.hyoban.moments.ui.theme.fill
-import cc.hyoban.moments.ui.theme.LocalDarkTheme
-import cc.hyoban.moments.ui.theme.SurfaceLevel
-import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
-import cc.hyoban.moments.ui.components.AppColors
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.material3.Card
-import com.materialkolor.ktx.harmonizeWithPrimary
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FloatingActionButton
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.R
 import cc.hyoban.moments.data.spec.TripRecord
 import cc.hyoban.moments.ui.LocalBottomClearance
+import cc.hyoban.moments.ui.LocalNavAccessory
+import cc.hyoban.moments.ui.LocalRailSpace
 import cc.hyoban.moments.ui.components.CompactMomentRow
-import cc.hyoban.moments.ui.format.daysBetween
-import cc.hyoban.moments.ui.format.formatRange
+import cc.hyoban.moments.ui.components.NAV_ACCESSORY_GAP
+import cc.hyoban.moments.ui.components.NAV_HEIGHT
+import cc.hyoban.moments.ui.components.NAV_WIDTH
+import cc.hyoban.moments.ui.components.RAIL_HEIGHT
+import cc.hyoban.moments.ui.components.RAIL_WIDTH
+import cc.hyoban.moments.ui.components.READABLE_WIDTH
+import cc.hyoban.moments.ui.components.isLandscape
+import cc.hyoban.moments.ui.components.landscape
+import cc.hyoban.moments.ui.components.sharedCard
+import cc.hyoban.moments.ui.components.sideInsetsPadding
+import cc.hyoban.moments.ui.components.tripCardKey
 import cc.hyoban.moments.ui.theme.Corners
+import cc.hyoban.moments.ui.theme.LocalDarkTheme
+import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
 import cc.hyoban.moments.ui.theme.Space
+import cc.hyoban.moments.ui.theme.SurfaceLevel
+import cc.hyoban.moments.ui.theme.dividerColor
+import cc.hyoban.moments.ui.theme.fill
+import cc.hyoban.moments.ui.trips.tripSummary
+import com.materialkolor.ktx.harmonizeWithPrimary
+import kotlin.math.roundToInt
 
 /**
  * The map tab, as the site's map: every place the Moments name, coloured by the year of
@@ -161,10 +156,13 @@ fun MapScreen(container: AppContainer, onMoment: (String) -> Unit, onPlace: (Str
     var bearing by remember { mutableDoubleStateOf(0.0) }
     var north by remember { mutableIntStateOf(0) }
     var locating by remember { mutableStateOf(false) }
+    val startLocating: () -> Unit = {
+        locating = true
+        locate++
+    }
     val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { granted ->
         if (granted.values.any { it }) {
-            locating = true
-            locate++
+            startLocating()
         } else {
             Toast.makeText(context, R.string.error_location_permission, Toast.LENGTH_SHORT).show()
         }
@@ -172,8 +170,7 @@ fun MapScreen(container: AppContainer, onMoment: (String) -> Unit, onPlace: (Str
     val requestLocate: () -> Unit = {
         val granted = LOCATION_PERMISSIONS.any { ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED }
         if (granted) {
-            locating = true
-            locate++
+            startLocating()
         } else {
             permission.launch(LOCATION_PERMISSIONS)
         }
@@ -292,7 +289,6 @@ fun MapScreen(container: AppContainer, onMoment: (String) -> Unit, onPlace: (Str
         val place = places[id] ?: return@AnimatedVisibility
         val here = byPlace[id].orEmpty()
         val years = remember(here) { here.map { yearOf(it.occurredAt) }.distinct().sortedDescending() }
-        val context = LocalContext.current
         val level = SurfaceLevel.floating(LocalDarkTheme.current)
         // Dragged down by its handle past a third of its height, it closes.
         var drag by remember(id) { mutableFloatStateOf(0f) }
@@ -471,7 +467,7 @@ private fun RouteCard(trip: TripRecord, onOpen: () -> Unit) {
             Column(Modifier.weight(1f).padding(horizontal = Space.m), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(trip.title, style = MaterialTheme.typography.titleMedium)
                 Text(
-                    listOf(formatRange(trip.start, trip.end), stringResource(R.string.count_days, daysBetween(trip.start, trip.end))).joinToString(" · "),
+                    tripSummary(trip),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

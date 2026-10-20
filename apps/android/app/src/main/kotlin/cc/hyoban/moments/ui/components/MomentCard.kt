@@ -15,17 +15,12 @@ import androidx.compose.material.icons.rounded.Luggage
 import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import cc.hyoban.moments.ui.theme.Corners
-import androidx.compose.material3.IconButton
-import cc.hyoban.moments.ui.theme.fill
-import cc.hyoban.moments.ui.theme.LocalDarkTheme
-import cc.hyoban.moments.ui.theme.SurfaceLevel
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -36,7 +31,11 @@ import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.spec.TripRecord
 import cc.hyoban.moments.ui.format.formatDate
 import cc.hyoban.moments.ui.format.formatTime
+import cc.hyoban.moments.ui.theme.Corners
+import cc.hyoban.moments.ui.theme.LocalDarkTheme
 import cc.hyoban.moments.ui.theme.Space
+import cc.hyoban.moments.ui.theme.SurfaceLevel
+import cc.hyoban.moments.ui.theme.fill
 
 /**
  * A Moment in a list: its media inset at the top of a white card, then pills for when,
@@ -57,13 +56,8 @@ fun MomentCard(
     // The card grows into the Moment's page when opened.
     PressableCard(onClick = onOpen, modifier = modifier.fillMaxWidth().sharedCard(moment.uid)) {
         if (moment.media.isNotEmpty()) {
-            MediaMosaic(
-                moment.uid,
-                moment.media,
-                urls,
-                onOpen = onOpenMedia,
-                // To the card's edges, its top corners rounding them.
-            )
+            // To the card's edges, its top corners rounding them.
+            MediaMosaic(moment.uid, moment.media, urls, onOpen = onOpenMedia)
         }
         Column(
             Modifier.padding(start = Space.l, end = Space.l, top = if (moment.media.isEmpty()) Space.l else Space.s, bottom = Space.l),
@@ -87,9 +81,7 @@ fun MomentPills(moment: MomentRecord, places: Map<String, Place>, trip: TripReco
             Pill(time, icon = Icons.Rounded.Schedule)
         }
         moment.places.forEach { id -> Pill(places[id]?.name ?: id, icon = Icons.Rounded.Place) }
-        trip?.let {
-            Pill(it.title, icon = Icons.Rounded.Luggage)
-        }
+        trip?.let { Pill(it.title, icon = Icons.Rounded.Luggage) }
     }
 }
 

@@ -1,6 +1,12 @@
 package cc.hyoban.moments.ui.map
 
+import android.annotation.SuppressLint
+import android.content.Context
 import android.graphics.RectF
+import android.location.Location
+import android.location.LocationListener
+import android.location.LocationManager
+import android.os.Looper
 import android.view.Gravity
 import android.view.ViewGroup
 import androidx.compose.foundation.layout.Box
@@ -17,6 +23,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
@@ -33,86 +40,79 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import cc.hyoban.moments.data.spec.Place
-import cc.hyoban.moments.data.trips.Stop
 import cc.hyoban.moments.data.trips.RouteSegment
-import org.maplibre.android.style.expressions.Expression
-import org.maplibre.android.style.expressions.Expression.eq
-import org.maplibre.android.style.expressions.Expression.gt
-import org.maplibre.android.style.expressions.Expression.has
-import org.maplibre.android.style.expressions.Expression.interpolate
-import org.maplibre.android.style.expressions.Expression.linear
-import org.maplibre.android.style.expressions.Expression.zoom
-import org.maplibre.android.style.expressions.Expression.match
-import org.maplibre.android.style.expressions.Expression.not
-import org.maplibre.android.style.expressions.Expression.product
-import org.maplibre.android.style.expressions.Expression.stop
-import org.maplibre.android.style.expressions.Expression.sum
-import org.maplibre.android.style.expressions.Expression.toString
-import org.maplibre.android.style.layers.PropertyFactory.circleBlur
-import org.maplibre.android.style.layers.PropertyFactory.circleTranslate
-import org.maplibre.android.style.layers.PropertyFactory.fillOpacity
-import org.maplibre.android.style.layers.PropertyFactory.visibility
-import org.maplibre.android.style.layers.PropertyFactory.lineDasharray
-import org.maplibre.android.style.layers.PropertyFactory.textAllowOverlap
-import org.maplibre.android.style.layers.PropertyFactory.textColor
-import org.maplibre.android.style.layers.PropertyFactory.textFont
-import org.maplibre.android.style.layers.PropertyFactory.textIgnorePlacement
-import org.maplibre.android.style.layers.PropertyFactory.textSize
-import org.maplibre.android.style.sources.GeoJsonOptions
-import cc.hyoban.moments.ui.LocalSettings
-import cc.hyoban.moments.ui.theme.LocalDarkTheme
+import cc.hyoban.moments.data.trips.Stop
 import cc.hyoban.moments.ui.LocalBottomClearance
 import cc.hyoban.moments.ui.LocalRailSpace
+import cc.hyoban.moments.ui.LocalSettings
 import cc.hyoban.moments.ui.components.isLandscape
-import androidx.compose.runtime.withFrameNanos
-import org.maplibre.android.MapLibre
-import org.maplibre.android.location.modes.RenderMode
-import org.maplibre.android.location.LocationComponentOptions
-import org.maplibre.android.location.LocationComponentActivationOptions
-import android.annotation.SuppressLint
-import kotlin.coroutines.resume
-import kotlinx.coroutines.withTimeoutOrNull
+import cc.hyoban.moments.ui.theme.LocalDarkTheme
 import kotlinx.coroutines.suspendCancellableCoroutine
-import android.os.Looper
-import android.location.LocationManager
-import android.location.LocationListener
-import android.location.Location
-import android.content.Context
+import kotlinx.coroutines.withTimeoutOrNull
+import org.maplibre.android.MapLibre
 import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.camera.CameraUpdateFactory
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.geometry.LatLngBounds
+import org.maplibre.android.location.LocationComponentActivationOptions
+import org.maplibre.android.location.LocationComponentOptions
+import org.maplibre.android.location.modes.RenderMode
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapLibreMapOptions
 import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.Style
+import org.maplibre.android.style.expressions.Expression
 import org.maplibre.android.style.expressions.Expression.color
+import org.maplibre.android.style.expressions.Expression.eq
 import org.maplibre.android.style.expressions.Expression.get
+import org.maplibre.android.style.expressions.Expression.gt
+import org.maplibre.android.style.expressions.Expression.has
+import org.maplibre.android.style.expressions.Expression.interpolate
+import org.maplibre.android.style.expressions.Expression.linear
 import org.maplibre.android.style.expressions.Expression.literal
+import org.maplibre.android.style.expressions.Expression.match
+import org.maplibre.android.style.expressions.Expression.not
+import org.maplibre.android.style.expressions.Expression.product
 import org.maplibre.android.style.expressions.Expression.raw
+import org.maplibre.android.style.expressions.Expression.stop
+import org.maplibre.android.style.expressions.Expression.sum
 import org.maplibre.android.style.expressions.Expression.switchCase
+import org.maplibre.android.style.expressions.Expression.toString
+import org.maplibre.android.style.expressions.Expression.zoom
 import org.maplibre.android.style.layers.CircleLayer
 import org.maplibre.android.style.layers.FillLayer
 import org.maplibre.android.style.layers.LineLayer
 import org.maplibre.android.style.layers.Property
+import org.maplibre.android.style.layers.PropertyFactory.circleBlur
 import org.maplibre.android.style.layers.PropertyFactory.circleColor
 import org.maplibre.android.style.layers.PropertyFactory.circleOpacity
 import org.maplibre.android.style.layers.PropertyFactory.circleRadius
 import org.maplibre.android.style.layers.PropertyFactory.circleSortKey
 import org.maplibre.android.style.layers.PropertyFactory.circleStrokeColor
 import org.maplibre.android.style.layers.PropertyFactory.circleStrokeWidth
+import org.maplibre.android.style.layers.PropertyFactory.circleTranslate
+import org.maplibre.android.style.layers.PropertyFactory.fillOpacity
 import org.maplibre.android.style.layers.PropertyFactory.lineCap
 import org.maplibre.android.style.layers.PropertyFactory.lineColor
+import org.maplibre.android.style.layers.PropertyFactory.lineDasharray
 import org.maplibre.android.style.layers.PropertyFactory.lineJoin
 import org.maplibre.android.style.layers.PropertyFactory.lineOpacity
 import org.maplibre.android.style.layers.PropertyFactory.lineWidth
+import org.maplibre.android.style.layers.PropertyFactory.textAllowOverlap
+import org.maplibre.android.style.layers.PropertyFactory.textColor
 import org.maplibre.android.style.layers.PropertyFactory.textField
+import org.maplibre.android.style.layers.PropertyFactory.textFont
+import org.maplibre.android.style.layers.PropertyFactory.textIgnorePlacement
+import org.maplibre.android.style.layers.PropertyFactory.textSize
+import org.maplibre.android.style.layers.PropertyFactory.visibility
 import org.maplibre.android.style.layers.SymbolLayer
+import org.maplibre.android.style.sources.GeoJsonOptions
 import org.maplibre.android.style.sources.GeoJsonSource
 import org.maplibre.geojson.Feature
 import org.maplibre.geojson.FeatureCollection
 import org.maplibre.geojson.LineString
 import org.maplibre.geojson.Point
+import kotlin.coroutines.resume
 
 // A vector basemap drawn on the phone by MapLibre, the styles the settings name for light
 // and dark (OpenFreeMap's Positron and its dark twin unless changed), every name in Chinese
@@ -126,7 +126,10 @@ private val CHINA = CameraPosition.Builder().target(LatLng(32.0, 110.0)).zoom(3.
 private const val CLOSEST = 12.0
 
 private const val PLACES = "places"
+private const val PLACES_SHADOW = "places-shadow"
+private const val PLACES_COUNT = "places-count"
 private const val ROUTE = "route"
+private const val ROUTES_DASHED = "routes-dashed"
 private const val STOPS = "stops"
 
 private val Place.latLng get() = LatLng(latitude, longitude)
@@ -318,12 +321,8 @@ private fun absoluteEdges(left: Dp, top: Dp, right: Dp, bottom: Dp): IntArray = 
 
 /** Pixels from each edge (left, top, right, bottom). */
 @Composable
-private fun edges(start: Dp, top: Dp, end: Dp, bottom: Dp): IntArray = with(LocalDensity.current) {
-    val ltr = LocalLayoutDirection.current == LayoutDirection.Ltr
-    val left = if (ltr) start else end
-    val right = if (ltr) end else start
-    intArrayOf(left.roundToPx(), top.roundToPx(), right.roundToPx(), bottom.roundToPx())
-}
+private fun edges(start: Dp, top: Dp, end: Dp, bottom: Dp): IntArray =
+    if (LocalLayoutDirection.current == LayoutDirection.Ltr) absoluteEdges(start, top, end, bottom) else absoluteEdges(end, top, start, bottom)
 
 /** A place on the map: how many Moments it has, and the year of its first, which colours it. */
 data class MapPlace(val id: String, val place: Place, val count: Int, val firstYear: Int)
@@ -336,6 +335,8 @@ data class MapRoute(val id: String, val segments: List<RouteSegment>)
 private const val DOT_SINGLE = 7f
 private const val DOT_MANY = 9f
 private const val DOT_CLUSTER = 12f
+/** The ring round every dot but the one chosen. */
+private val DOT_STROKE = Color.White.copy(alpha = 0.95f).toArgb()
 // Places gather where three or more crowd within 20 pixels, up to zoom 9; opening a
 // crowd frames its places, no closer than zoom 11.
 private const val CLUSTER_RADIUS = 20
@@ -384,12 +385,9 @@ private const val RECENT_FIX_MS = 2 * 60 * 1000L
 
 /** How close the map comes to the phone's place: a town and what is around it. */
 private const val NEARBY_ZOOM = 10.0
+
 /** How long to wait for a first fix before giving up. */
 private const val LOCATE_TIMEOUT_MS = 10_000
-
-private const val PLACES_SHADOW = "places-shadow"
-private const val PLACES_COUNT = "places-count"
-private const val ROUTES_DASHED = "routes-dashed"
 
 /** A route's [width] at country zoom, growing to twice it at a town's streets. */
 private fun byZoom(width: Expression): Expression = interpolate(
@@ -512,7 +510,7 @@ fun PlacesMap(
         style.addLayer(
             CircleLayer(PLACES, PLACES).withProperties(
                 circleColor(yearColor(colors)),
-                circleStrokeColor(Color.White.copy(alpha = 0.95f).toArgb()),
+                circleStrokeColor(DOT_STROKE),
             ),
         )
         style.addLayer(
@@ -531,7 +529,6 @@ fun PlacesMap(
                 textIgnorePlacement(true),
             ),
         )
-
     }
 
     // Taps are listened for while this map is shown, with this showing's callbacks.
@@ -619,7 +616,7 @@ fun PlacesMap(
         style.getLayerAs<CircleLayer>(PLACES)?.setProperties(
             circleRadius(grown),
             circleStrokeWidth(switchCase(chosen, literal(3f), literal(2f))),
-            circleStrokeColor(switchCase(chosen, color(ink), color(Color.White.copy(alpha = 0.95f).toArgb()))),
+            circleStrokeColor(switchCase(chosen, color(ink), color(DOT_STROKE))),
             circleSortKey(switchCase(chosen, literal(1f), literal(0f))),
         )
         style.getLayerAs<CircleLayer>(PLACES_SHADOW)?.setProperties(circleRadius(sum(grown, literal(3f))))

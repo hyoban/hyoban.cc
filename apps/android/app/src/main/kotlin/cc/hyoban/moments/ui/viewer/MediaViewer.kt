@@ -1,40 +1,54 @@
 package cc.hyoban.moments.ui.viewer
 
 import android.app.Activity
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animate
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.ZeroCornerSize
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
+import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.rounded.Place
-import androidx.compose.material3.AssistChip
 import androidx.compose.material.icons.rounded.MotionPhotosOn
+import androidx.compose.material.icons.rounded.Place
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -43,69 +57,35 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.runtime.SideEffect
-import kotlin.math.roundToInt
-import androidx.compose.ui.unit.Constraints
-import androidx.compose.ui.layout.layout
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.animation.core.animate
-import androidx.compose.foundation.gestures.rememberDraggableState
-import androidx.compose.foundation.gestures.draggable
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.runtime.derivedStateOf
-import cc.hyoban.moments.ui.theme.fill
-import cc.hyoban.moments.ui.theme.Space
-import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
-import cc.hyoban.moments.ui.components.SectionHeader
-import cc.hyoban.moments.ui.components.sideInsetsPadding
-import androidx.activity.compose.BackHandler
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.ZeroCornerSize
-import cc.hyoban.moments.ui.components.landscape
-import cc.hyoban.moments.ui.components.PressableCard
-import cc.hyoban.moments.ui.components.NeutralChip
-import cc.hyoban.moments.ui.components.AppColors
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.material.icons.outlined.Image
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Button
-import androidx.compose.material3.minimumInteractiveComponentSize
-import androidx.compose.foundation.gestures.waitForUpOrCancellation
-import androidx.compose.ui.geometry.Size
-import me.saket.telephoto.zoomable.zoomable
-import me.saket.telephoto.zoomable.rememberZoomableState
-import me.saket.telephoto.zoomable.ZoomableContentLocation
-import me.saket.telephoto.zoomable.ZoomSpec
-import me.saket.telephoto.zoomable.DoubleClickToZoomListener
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -120,17 +100,31 @@ import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.trips.coversOf
 import cc.hyoban.moments.data.trips.momentsOf
 import cc.hyoban.moments.data.trips.tripOf
+import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.DrawnStills
 import cc.hyoban.moments.ui.components.MediaStill
+import cc.hyoban.moments.ui.components.NeutralChip
+import cc.hyoban.moments.ui.components.PressableCard
+import cc.hyoban.moments.ui.components.SectionHeader
 import cc.hyoban.moments.ui.components.Thumbnail
+import cc.hyoban.moments.ui.components.landscape
 import cc.hyoban.moments.ui.components.mediaKey
-import cc.hyoban.moments.ui.components.sharedMedia
 import cc.hyoban.moments.ui.components.shapeOf
-import cc.hyoban.moments.ui.format.daysBetween
+import cc.hyoban.moments.ui.components.sharedMedia
+import cc.hyoban.moments.ui.components.sideInsetsPadding
 import cc.hyoban.moments.ui.format.formatDay
-import cc.hyoban.moments.ui.format.formatRange
 import cc.hyoban.moments.ui.format.formatTime
 import cc.hyoban.moments.ui.map.PlacesStill
+import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
+import cc.hyoban.moments.ui.theme.Space
+import cc.hyoban.moments.ui.theme.fill
+import cc.hyoban.moments.ui.trips.tripSummary
+import me.saket.telephoto.zoomable.DoubleClickToZoomListener
+import me.saket.telephoto.zoomable.ZoomSpec
+import me.saket.telephoto.zoomable.ZoomableContentLocation
+import me.saket.telephoto.zoomable.rememberZoomableState
+import me.saket.telephoto.zoomable.zoomable
+import kotlin.math.roundToInt
 
 /**
  * A Moment's media full screen on black. Swipe sideways between them, down to close and
@@ -543,15 +537,7 @@ private fun InfoContent(
             PressableCard(onClick = { onTrip(trip.id) }, modifier = Modifier.fillMaxWidth()) {
                 ListItem(
                     headlineContent = { Text(trip.title) },
-                    supportingContent = {
-                        Text(
-                            listOf(
-                                formatRange(trip.start, trip.end),
-                                stringResource(R.string.count_days, daysBetween(trip.start, trip.end)),
-                                stringResource(R.string.count_moments, count),
-                            ).joinToString(" · "),
-                        )
-                    },
+                    supportingContent = { Text(tripSummary(trip, count)) },
                     leadingContent = cover?.let { { Thumbnail(it, container.mediaUrls, size = 48) } },
                     trailingContent = { Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null) },
                     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
