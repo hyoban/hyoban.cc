@@ -22,6 +22,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -123,4 +125,22 @@ fun rememberRefreshErrors(container: AppContainer): SnackbarHostState {
     }
 
     return snackbar
+}
+
+/**
+ * Pull to refresh that shows its spinner only for a refresh pulled for: the refreshes the
+ * app makes by itself, on start, go on without it.
+ */
+class PulledRefresh(val refreshing: Boolean, val onRefresh: () -> Unit)
+
+@Composable
+fun rememberPulledRefresh(container: AppContainer): PulledRefresh {
+    val syncing by container.repository.syncing.collectAsStateWithLifecycle()
+    var pulled by remember { mutableStateOf(false) }
+    // Over once the refresh it started is.
+    LaunchedEffect(syncing) { if (!syncing) pulled = false }
+    return PulledRefresh(pulled) {
+        pulled = true
+        container.refresh()
+    }
 }

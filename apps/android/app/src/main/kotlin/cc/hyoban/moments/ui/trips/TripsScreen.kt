@@ -27,6 +27,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import cc.hyoban.moments.ui.feed.rememberPulledRefresh
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
@@ -58,11 +59,12 @@ fun TripsScreen(container: AppContainer, onTrip: (String) -> Unit) {
     val moments by container.repository.moments.collectAsStateWithLifecycle()
     val loaded by container.repository.loaded.collectAsStateWithLifecycle()
     val syncing by container.repository.syncing.collectAsStateWithLifecycle()
+    val pull = rememberPulledRefresh(container)
     val snackbar = rememberRefreshErrors(container)
     val days = remember(trips) { trips.sumOf { daysBetween(it.start, it.end) } }
 
     Box(Modifier.fillMaxSize()) {
-        PullToRefreshBox(isRefreshing = syncing, onRefresh = container::refresh, modifier = Modifier.fillMaxSize().statusBarsPadding()) {
+        PullToRefreshBox(isRefreshing = pull.refreshing, onRefresh = pull.onRefresh, modifier = Modifier.fillMaxSize().statusBarsPadding()) {
             if (trips.isEmpty()) {
                 EmptyState(loading = !loaded || syncing, message = R.string.empty_trips)
             } else {
