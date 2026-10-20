@@ -22,23 +22,24 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.rounded.Undo
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.CloudUpload
 import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material.icons.rounded.Remove
 import androidx.compose.material.icons.rounded.Schedule
-import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -79,10 +80,7 @@ import cc.hyoban.moments.ui.components.Thumbnail
 import cc.hyoban.moments.ui.format.formatDate
 import cc.hyoban.moments.ui.format.formatTime
 import cc.hyoban.moments.ui.settings.Group
-import cc.hyoban.moments.ui.theme.Corners
-import cc.hyoban.moments.ui.theme.LocalDarkTheme
 import cc.hyoban.moments.ui.theme.Space
-import cc.hyoban.moments.ui.theme.SurfaceLevel
 import cc.hyoban.moments.ui.theme.fill
 
 /**
@@ -182,29 +180,47 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
 }
 
 /**
- * Opens the changes kept on the phone, floating like the tabs, the icon in primary as the
- * map's locating is, with how many there are; a loading indicator while they publish.
+ * The changes kept on the phone, at the head of the Moments while there are any: a tonal
+ * row saying how many, a loading indicator while they publish, opening them to look over.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun PublishButton(container: AppContainer, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun PendingChangesRow(container: AppContainer, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val pending by container.repository.pending.collectAsStateWithLifecycle()
     val publishing by container.publishing.collectAsStateWithLifecycle()
-    val label = stringResource(R.string.title_changes)
-    FloatingActionButton(
+    Surface(
         onClick = onClick,
-        shape = Corners.full,
-        containerColor = SurfaceLevel.floating(LocalDarkTheme.current).fill(),
-        contentColor = MaterialTheme.colorScheme.primary,
-        modifier = modifier.semantics { contentDescription = label }.testTag("changes"),
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+        modifier = modifier.fillMaxWidth().testTag("changes"),
     ) {
-        if (publishing != null) {
-            LoadingIndicator(Modifier.size(32.dp), color = LocalContentColor.current)
-        } else {
-            BadgedBox(badge = { if (pending.size > 0) Badge { Text(pending.size.toString()) } }) {
-                Icon(Icons.Rounded.CloudUpload, contentDescription = null)
-            }
-        }
+        ListItem(
+            headlineContent = { Text(stringResource(R.string.title_changes)) },
+            supportingContent = {
+                val progress = publishing
+                Text(
+                    if (progress != null) {
+                        stringResource(R.string.message_publishing_progress, progress.done, progress.total)
+                    } else {
+                        pluralStringResource(R.plurals.count_changes, pending.size, pending.size)
+                    },
+                )
+            },
+            leadingContent = {
+                Box(Modifier.size(40.dp), contentAlignment = Alignment.Center) {
+                    if (publishing != null) LoadingIndicator(Modifier.size(32.dp), color = LocalContentColor.current) else Icon(Icons.Rounded.CloudUpload, contentDescription = null)
+                }
+            },
+            trailingContent = { Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null) },
+            colors = ListItemDefaults.colors(
+                containerColor = Color.Transparent,
+                headlineColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                supportingColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                leadingIconColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                trailingIconColor = MaterialTheme.colorScheme.onSecondaryContainer,
+            ),
+        )
     }
 }
 

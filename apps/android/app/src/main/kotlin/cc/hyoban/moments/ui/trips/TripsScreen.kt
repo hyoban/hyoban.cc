@@ -18,12 +18,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.RectangleShape
@@ -53,7 +51,7 @@ import cc.hyoban.moments.ui.feed.CardRow
 import cc.hyoban.moments.ui.feed.EmptyState
 import cc.hyoban.moments.ui.feed.TabRefreshBox
 import cc.hyoban.moments.ui.feed.rememberPulledRefresh
-import cc.hyoban.moments.ui.feed.rememberRefreshErrors
+import cc.hyoban.moments.ui.feed.ShowRefreshErrors
 import cc.hyoban.moments.ui.format.daysBetween
 import cc.hyoban.moments.ui.format.formatRange
 import cc.hyoban.moments.ui.theme.Space
@@ -67,7 +65,7 @@ fun TripsScreen(container: AppContainer, onTrip: (String) -> Unit) {
     val loaded by container.repository.loaded.collectAsStateWithLifecycle()
     val syncing by container.repository.syncing.collectAsStateWithLifecycle()
     val pull = rememberPulledRefresh(container)
-    val snackbar = rememberRefreshErrors(container)
+    ShowRefreshErrors(container)
     val days = remember(trips) { trips.sumOf { daysBetween(it.start, it.end) } }
 
     val list = rememberLazyListState()
@@ -108,7 +106,6 @@ fun TripsScreen(container: AppContainer, onTrip: (String) -> Unit) {
                 }
             }
         }
-        SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = LocalBottomClearance.current))
     }
 }
 

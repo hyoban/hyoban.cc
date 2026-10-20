@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
-import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -103,18 +102,19 @@ import cc.hyoban.moments.ui.components.PageWidth
 import cc.hyoban.moments.ui.components.SubPage
 import cc.hyoban.moments.ui.format.formatDay
 import cc.hyoban.moments.ui.format.formatTime
+import cc.hyoban.moments.ui.rememberShowMessage
 import cc.hyoban.moments.ui.settings.Group
-import cc.hyoban.moments.ui.settings.GroupDivider
+import cc.hyoban.moments.ui.settings.SegmentedGroup
 import cc.hyoban.moments.ui.settings.rowColors
 import cc.hyoban.moments.ui.theme.Space
 import coil3.compose.AsyncImage
-import kotlinx.coroutines.NonCancellable
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.io.File
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * A Moment written on the phone: its words, the photos picked for it, and when and where,
@@ -128,6 +128,7 @@ import java.time.ZoneOffset
 @Composable
 fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> Unit, edit: String? = null, onDeleted: () -> Unit = onBack) {
     val context = LocalContext.current
+    val show = rememberShowMessage()
     val scope = rememberCoroutineScope()
     val places by container.repository.places.collectAsStateWithLifecycle()
 
@@ -271,7 +272,7 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
                 onSaved()
             } catch (error: Exception) {
                 saving = false
-                Toast.makeText(context, context.getString(R.string.error_save, error.message ?: error.toString()), Toast.LENGTH_LONG).show()
+                show(context.getString(R.string.error_save, error.message ?: error.toString()))
             }
         }
     }
@@ -327,7 +328,7 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
                         canPublish -> R.string.note_local_then_publish
                         else -> R.string.note_local_only
                     }
-                    Group(stringResource(R.string.section_when_where), stringResource(note)) {
+                    val whenRow: @Composable () -> Unit = {
                         ListItem(
                             headlineContent = { Text(listOfNotNull(formatDay(stamp(time)), formatTime(stamp(time))).joinToString(" ")) },
                             supportingContent = { Text(stringResource(timeSource)) },
@@ -335,7 +336,8 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
                             colors = rowColors(),
                             modifier = Modifier.clickable { editingTime = true }.testTag("moment_time"),
                         )
-                        GroupDivider(56.dp)
+                    }
+                    val whereRow: @Composable () -> Unit = {
                         ListItem(
                             headlineContent = {
                                 Text(
@@ -367,6 +369,7 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
                             modifier = Modifier.clickable { editingPlace = true }.testTag("moment_place"),
                         )
                     }
+                    SegmentedGroup(stringResource(R.string.section_when_where), stringResource(note), listOf(whenRow, whereRow))
                     // Deleting is rare and can't be undone, so it waits down here rather than over the Moment.
                     if (original != null && publishing == null) {
                         Group(null, null) {

@@ -2,7 +2,6 @@ package cc.hyoban.moments.ui.map
 
 import android.Manifest
 import android.content.pm.PackageManager
-import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -112,6 +111,7 @@ import cc.hyoban.moments.ui.components.landscape
 import cc.hyoban.moments.ui.components.sharedCard
 import cc.hyoban.moments.ui.components.sideInsetsPadding
 import cc.hyoban.moments.ui.components.tripCardKey
+import cc.hyoban.moments.ui.rememberShowMessage
 import cc.hyoban.moments.ui.theme.Corners
 import cc.hyoban.moments.ui.theme.LocalDarkTheme
 import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
@@ -156,6 +156,7 @@ fun MapScreen(container: AppContainer, onMoment: (String) -> Unit, onPlace: (Str
 
     // Locating: each request asks for the place once more; a ring turns while it waits.
     val context = LocalContext.current
+    val show = rememberShowMessage()
     var locate by remember { mutableIntStateOf(0) }
     // Which way the map is turned, and each ask to turn it back to north.
     var bearing by remember { mutableDoubleStateOf(0.0) }
@@ -169,7 +170,7 @@ fun MapScreen(container: AppContainer, onMoment: (String) -> Unit, onPlace: (Str
         if (granted.values.any { it }) {
             startLocating()
         } else {
-            Toast.makeText(context, R.string.error_location_permission, Toast.LENGTH_SHORT).show()
+            show(context.getString(R.string.error_location_permission))
         }
     }
     val requestLocate: () -> Unit = {
@@ -211,7 +212,7 @@ fun MapScreen(container: AppContainer, onMoment: (String) -> Unit, onPlace: (Str
             tab = Atlas,
             onLocated = { found ->
                 locating = false
-                if (!found) Toast.makeText(context, R.string.error_location, Toast.LENGTH_SHORT).show()
+                if (!found) show(context.getString(R.string.error_location))
             },
         )
         // On a phone on its side, at the top of the side away from the tabs and their buttons.
@@ -350,7 +351,7 @@ fun MapScreen(container: AppContainer, onMoment: (String) -> Unit, onPlace: (Str
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
-                            IconButton(onClick = { navigateTo(context, place) }, modifier = Modifier.testTag("navigate")) {
+                            IconButton(onClick = { if (!navigateTo(context, place)) show(context.getString(R.string.no_map_app)) }, modifier = Modifier.testTag("navigate")) {
                                 Icon(Icons.Rounded.Directions, contentDescription = stringResource(R.string.action_navigate), tint = MaterialTheme.colorScheme.primary)
                             }
                             TextButton(onClick = { selected = null; onPlace(id) }, modifier = Modifier.testTag("place_$id")) {

@@ -2,32 +2,30 @@ package cc.hyoban.moments.ui.feed
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CalendarMonth
-import androidx.compose.material.icons.outlined.CloudUpload
-import androidx.compose.material.icons.outlined.EditNote
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.ViewAgenda
 import androidx.compose.material.icons.rounded.Directions
-import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
+import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -40,19 +38,21 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.R
 import cc.hyoban.moments.ui.Feed
-import cc.hyoban.moments.ui.LocalBottomClearance
 import cc.hyoban.moments.ui.LocalNavAccessory
-import cc.hyoban.moments.ui.components.NAV_HEIGHT
-import cc.hyoban.moments.ui.components.isLandscape
-import cc.hyoban.moments.ui.publish.PublishButton
+import cc.hyoban.moments.ui.LocalRailSpace
 import cc.hyoban.moments.ui.calendar.CalendarView
 import cc.hyoban.moments.ui.components.AppColors
+import cc.hyoban.moments.ui.components.NAV_HEIGHT
 import cc.hyoban.moments.ui.components.SubPage
 import cc.hyoban.moments.ui.components.TabPage
 import cc.hyoban.moments.ui.components.dayCardKey
+import cc.hyoban.moments.ui.components.isLandscape
 import cc.hyoban.moments.ui.components.sharedCard
 import cc.hyoban.moments.ui.format.formatDay
 import cc.hyoban.moments.ui.map.navigateTo
+import cc.hyoban.moments.ui.publish.PendingChangesRow
+import cc.hyoban.moments.ui.rememberShowMessage
+import cc.hyoban.moments.ui.theme.Space
 
 /**
  * The Moments tab: every Moment the site shows and those written on the phone, newest
@@ -70,18 +70,19 @@ fun FeedScreen(
     onChanges: () -> Unit,
 ) {
     val pending by container.repository.pending.collectAsStateWithLifecycle()
-    // The changes kept on the phone, to look over and publish, while there are any: upright,
-    // their button stands beside the tabs, as the map's locating does.
-    val landscape = isLandscape()
+    // The changes kept on the phone, to look over and publish, head the Moments while there are any.
     val publishable = container.canPublish && pending.size > 0
+    // Writing a Moment is the tab's one floating action button: upright it stands beside the
+    // tabs, as the map's locating does; down the side, at the page's bottom end.
+    val landscape = isLandscape()
     val accessory = LocalNavAccessory.current
-    val currentOnChanges by rememberUpdatedState(onChanges)
-    val publishBeside = remember<@Composable () -> Unit> {
-        { PublishButton(container, onClick = { currentOnChanges() }, modifier = Modifier.size(NAV_HEIGHT)) }
+    val currentOnNew by rememberUpdatedState(onNew)
+    val newBeside = remember<@Composable () -> Unit> {
+        { NewMomentButton(onClick = { currentOnNew() }, modifier = Modifier.size(NAV_HEIGHT)) }
     }
-    DisposableEffect(accessory, publishable && !landscape) {
-        if (publishable && !landscape) accessory.value = publishBeside
-        onDispose { if (accessory.value === publishBeside) accessory.value = null }
+    DisposableEffect(accessory, landscape) {
+        if (!landscape) accessory.value = newBeside
+        onDispose { if (accessory.value === newBeside) accessory.value = null }
     }
     val moments by container.repository.moments.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
@@ -89,7 +90,7 @@ fun FeedScreen(
     val loaded by container.repository.loaded.collectAsStateWithLifecycle()
     val syncing by container.repository.syncing.collectAsStateWithLifecycle()
     val pull = rememberPulledRefresh(container)
-    val snackbar = rememberRefreshErrors(container)
+    ShowRefreshErrors(container)
     // The year and month the timeline is narrowed to, kept as two numbers to survive a rotation.
     var year by rememberSaveable { mutableStateOf<Int?>(null) }
     var month by rememberSaveable { mutableStateOf<Int?>(null) }
@@ -116,6 +117,11 @@ fun FeedScreen(
         }
     }
     val header: FeedLeading.() -> Unit = {
+        if (publishable) {
+            item(key = "changes") {
+                PendingChangesRow(container, onClick = onChanges, modifier = Modifier.padding(horizontal = Space.gutter, vertical = Space.s))
+            }
+        }
         if (years.size > 1) {
             item(key = "filter") {
                 TimeFilterRows(filter, years, months) { next ->
@@ -131,17 +137,7 @@ fun FeedScreen(
         tab = Feed,
         subtitle = subtitle,
         actions = {
-            // Down the side, where the tabs have no button beside them, the changes open from the header.
-            if (publishable && landscape) {
-                IconButton(onClick = onChanges, modifier = Modifier.testTag("changes")) {
-                    BadgedBox(badge = { Badge { Text(pending.size.toString()) } }) {
-                        Icon(Icons.Outlined.CloudUpload, contentDescription = stringResource(R.string.title_changes))
-                    }
-                }
-            }
-            IconButton(onClick = onNew, modifier = Modifier.testTag("new_moment")) {
-                Icon(Icons.Outlined.EditNote, contentDescription = stringResource(R.string.action_new_moment))
-            }
+            // Two actions, as Material 3 has an app bar hold at most: how the Moments are laid out, and the settings.
             IconButton(onClick = { calendar = !calendar }, modifier = Modifier.testTag("calendar_toggle")) {
                 Icon(
                     if (calendar) Icons.Outlined.ViewAgenda else Icons.Outlined.CalendarMonth,
@@ -174,7 +170,26 @@ fun FeedScreen(
                 }
             }
         }
-        SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = LocalBottomClearance.current))
+        if (landscape) {
+            NewMomentButton(
+                onClick = onNew,
+                modifier = Modifier.align(Alignment.BottomEnd).navigationBarsPadding()
+                    .padding(end = LocalRailSpace.current.right + Space.l, bottom = Space.l),
+            )
+        }
+    }
+}
+
+/** Starts a new Moment: the tab's floating action button, its container the primary one, as Material 3 has a create. */
+@Composable
+private fun NewMomentButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    FloatingActionButton(
+        onClick = onClick,
+        containerColor = MaterialTheme.colorScheme.primaryContainer,
+        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+        modifier = modifier.testTag("new_moment"),
+    ) {
+        Icon(Icons.Rounded.Edit, contentDescription = stringResource(R.string.action_new_moment))
     }
 }
 
@@ -215,7 +230,8 @@ fun PlaceScreen(container: AppContainer, id: String, onMoment: (String) -> Unit,
             // The way there, as from the map's panel of the place.
             if (place != null) {
                 val context = LocalContext.current
-                IconButton(onClick = { navigateTo(context, place) }, modifier = Modifier.testTag("navigate")) {
+                val show = rememberShowMessage()
+                IconButton(onClick = { if (!navigateTo(context, place)) show(context.getString(R.string.no_map_app)) }, modifier = Modifier.testTag("navigate")) {
                     Icon(Icons.Rounded.Directions, contentDescription = stringResource(R.string.action_navigate), tint = MaterialTheme.colorScheme.primary)
                 }
             }

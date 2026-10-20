@@ -6,10 +6,10 @@ import android.widget.Toast
 import cc.hyoban.moments.data.api.MomentsApi
 import cc.hyoban.moments.data.local.AmapShare
 import cc.hyoban.moments.data.local.Photos
-import cc.hyoban.moments.data.local.Ulid
 import cc.hyoban.moments.data.local.PlaceSearch
 import cc.hyoban.moments.data.local.SAME_PLACE_METRES
 import cc.hyoban.moments.data.local.SharedPlace
+import cc.hyoban.moments.data.local.Ulid
 import cc.hyoban.moments.data.local.coordinatesName
 import cc.hyoban.moments.data.local.nearestPlaces
 import cc.hyoban.moments.data.local.newPlaceId
@@ -21,17 +21,20 @@ import cc.hyoban.moments.data.store.DataStore
 import cc.hyoban.moments.data.store.MomentsRepository
 import cc.hyoban.moments.data.trips.TripRoutes
 import cc.hyoban.moments.widget.Widgets
+import java.io.File
+import java.time.OffsetDateTime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.getAndUpdate
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-import java.io.File
-import java.time.OffsetDateTime
 
 /** What the app shares: built once by the Application, handed to the screens. */
 class AppContainer(context: Context) {
@@ -87,6 +90,18 @@ class AppContainer(context: Context) {
         }
     }
 
+    private val _messages = Channel<String>(Channel.BUFFERED)
+
+    /**
+     * What the app has to say while it is open, shown as snackbars in the order said; kept
+     * until the app's page is up to show them, as when a share opens it.
+     */
+    val messages: Flow<String> = _messages.receiveAsFlow()
+
+    private fun say(text: String) {
+        _messages.trySend(text)
+    }
+
     private val _sharedPlace = MutableStateFlow<SharedPlace?>(null)
 
     /** A place shared into the app from a map, until a new Moment takes it. */
@@ -99,14 +114,15 @@ class AppContainer(context: Context) {
             if (place != null) {
                 _sharedPlace.value = place
             } else {
-                Toast.makeText(appContext, R.string.error_shared_place, Toast.LENGTH_LONG).show()
+                say(appContext.getString(R.string.error_shared_place))
             }
         }
     }
 
     /**
      * Keeps the place in a text shared from a map as a place of the phone's own, and says
-     * so; one of the same name close by is already kept, and isn't kept twice.
+     * so; one of the same name close by is already kept, and isn't kept twice. The app isn't
+     * opened for it, so it says so in a toast, there being no page for a snackbar.
      */
     fun saveSharedPlace(text: String) {
         scope.launch {
@@ -141,7 +157,7 @@ class AppContainer(context: Context) {
         val copies = uris.mapNotNull { uri ->
             runCatching { Photos.copy(appContext, uri, sharedDirectory, Ulid.next()).file }.getOrNull()?.let(Uri::fromFile)
         }
-        if (copies.size < uris.size) Toast.makeText(appContext, R.string.error_shared_photos, Toast.LENGTH_LONG).show()
+        if (copies.size < uris.size) say(appContext.getString(R.string.error_shared_photos))
         _sharedPhotos.value = _sharedPhotos.value + copies
     }
 
@@ -187,9 +203,9 @@ class AppContainer(context: Context) {
         scope.launch {
             try {
                 repository.publishPending { done, total -> _publishing.value = Progress(done, total) }
-                Toast.makeText(appContext, R.string.message_published, Toast.LENGTH_SHORT).show()
+                say(appContext.getString(R.string.message_published))
             } catch (error: Exception) {
-                Toast.makeText(appContext, appContext.getString(R.string.error_publish, error.message ?: error.toString()), Toast.LENGTH_LONG).show()
+                say(appContext.getString(R.string.error_publish, error.message ?: error.toString()))
             } finally {
                 _publishing.value = null
                 Widgets.update(appContext)
