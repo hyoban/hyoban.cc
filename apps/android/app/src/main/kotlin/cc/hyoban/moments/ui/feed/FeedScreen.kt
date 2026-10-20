@@ -45,6 +45,7 @@ import cc.hyoban.moments.R
 import cc.hyoban.moments.ui.LocalBottomClearance
 import cc.hyoban.moments.ui.components.FloatingBack
 import cc.hyoban.moments.ui.components.PageHeader
+import cc.hyoban.moments.ui.components.SubPage
 
 /**
  * The Moments tab: every Moment the site shows, newest first, month by month, or as a
@@ -152,13 +153,13 @@ fun DayScreen(container: AppContainer, date: String, onMoment: (String) -> Unit,
     val moments = remember(all, date) { all.filter { it.occurredAt.startsWith(date) } }
 
     // The page is the calendar's day grown to the screen.
-    Box(Modifier.fillMaxSize().sharedCard(dayCardKey(date), page = true).background(AppColors.page)) {
-        MomentFeed(moments, places, trips, container.mediaUrls, onMoment, onMedia, Modifier.statusBarsPadding(), months = false) {
-            // Room for the back button, which floats over the list.
-            item(key = "back") { Spacer(Modifier.height(56.dp)) }
-            item(key = "header") { PageHeader(formatDay(date), stringResource(R.string.count_moments, moments.size)) }
-        }
-        FloatingBack(onBack, Modifier.align(Alignment.TopStart))
+    SubPage(
+        formatDay(date),
+        onBack,
+        Modifier.sharedCard(dayCardKey(date), page = true).background(AppColors.page),
+        subtitle = stringResource(R.string.count_moments, moments.size),
+    ) {
+        MomentFeed(moments, places, trips, container.mediaUrls, onMoment, onMedia, months = false)
     }
 }
 
@@ -170,23 +171,22 @@ fun PlaceScreen(container: AppContainer, id: String, onMoment: (String) -> Unit,
     val trips by container.repository.trips.collectAsStateWithLifecycle()
     val moments = remember(all, id) { all.filter { id in it.places } }
 
-    Box(Modifier.fillMaxSize()) {
-        MomentFeed(moments, places, trips, container.mediaUrls, onMoment, onMedia, Modifier.statusBarsPadding()) {
-            // Room for the back button, which floats over the list.
-            item(key = "back") { Spacer(Modifier.height(56.dp)) }
-            item(key = "header") {
-                val place = places[id]
-                PageHeader(place?.name ?: id, stringResource(R.string.count_moments, moments.size)) {
-                    // The way there, as from the map's panel of the place.
-                    if (place != null) {
-                        val context = LocalContext.current
-                        IconButton(onClick = { navigateTo(context, place) }) {
-                            Icon(Icons.Rounded.Directions, contentDescription = stringResource(R.string.action_navigate), tint = MaterialTheme.colorScheme.primary)
-                        }
-                    }
+    val place = places[id]
+    SubPage(
+        place?.name ?: id,
+        onBack,
+        Modifier.background(AppColors.page),
+        subtitle = stringResource(R.string.count_moments, moments.size),
+        actions = {
+            // The way there, as from the map's panel of the place.
+            if (place != null) {
+                val context = LocalContext.current
+                IconButton(onClick = { navigateTo(context, place) }) {
+                    Icon(Icons.Rounded.Directions, contentDescription = stringResource(R.string.action_navigate), tint = MaterialTheme.colorScheme.primary)
                 }
             }
-        }
-        FloatingBack(onBack, Modifier.align(Alignment.TopStart))
+        },
+    ) {
+        MomentFeed(moments, places, trips, container.mediaUrls, onMoment, onMedia)
     }
 }
