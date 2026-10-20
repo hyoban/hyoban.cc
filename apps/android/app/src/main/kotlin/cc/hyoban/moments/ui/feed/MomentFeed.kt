@@ -43,6 +43,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -195,7 +196,7 @@ fun MomentFeed(
 /** A day's pill: its label, and how many Moments it has when more than one. */
 @Composable
 private fun dayPillText(label: String, count: Int): String =
-    if (count > 1) "$label · ${stringResource(R.string.count_moments, count)}" else label
+    if (count > 1) "$label · ${pluralStringResource(R.plurals.count_moments, count, count)}" else label
 
 /**
  * A sticky header held below the list's top padding while it is stuck, rather than at the

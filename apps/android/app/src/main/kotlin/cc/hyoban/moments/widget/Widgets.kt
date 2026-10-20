@@ -95,7 +95,7 @@ class MemoryWidget : GlanceAppWidget() {
 
         return Card.Photo(
             photo = photo(context, container, memory.media),
-            eyebrow = memory.yearsAgo?.let { context.getString(R.string.widget_years_ago, it) }
+            eyebrow = memory.yearsAgo?.let { context.resources.getQuantityString(R.plurals.widget_years_ago, it, it) }
                 // With its year always: a memory from this year still says which.
                 ?: formatDate(moment.dateKey, today = LocalDate.MIN),
             title = words ?: where ?: formatDate(moment.dateKey),
@@ -129,8 +129,8 @@ class TripWidget : GlanceAppWidget() {
         val total = daysBetween(trip.start, trip.end)
         val when_ = when (phase) {
             TripPhase.ONGOING -> context.getString(R.string.trip_day, daysBetween(trip.start, today.toString())) + " · " +
-                context.getString(R.string.count_days_total, total)
-            TripPhase.UPCOMING -> context.getString(R.string.widget_trip_in_days, daysBetween(today.toString(), trip.start) - 1)
+                context.resources.getQuantityString(R.plurals.count_days_total, total, total)
+            TripPhase.UPCOMING -> (daysBetween(today.toString(), trip.start) - 1).let { context.resources.getQuantityString(R.plurals.widget_trip_in_days, it, it) }
             TripPhase.PAST -> formatRange(trip.start, trip.end, today)
         }
         val count = momentsOf(trip, moments, trips).size
@@ -140,7 +140,7 @@ class TripWidget : GlanceAppWidget() {
             photo = cover?.let { photo(context, container, it) },
             eyebrow = when_,
             title = trip.title,
-            subtitle = if (count > 0) context.getString(R.string.count_moments, count) else null,
+            subtitle = if (count > 0) context.resources.getQuantityString(R.plurals.count_moments, count, count) else null,
             link = "trip/${trip.id}",
         )
     }

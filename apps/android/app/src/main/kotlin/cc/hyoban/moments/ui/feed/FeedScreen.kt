@@ -26,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
@@ -71,7 +72,7 @@ fun FeedScreen(
     val shown = remember(moments, filter) { moments.filtered(filter) }
     val placeCount = remember(shown) { shown.flatMap { it.places }.toSet().size }
     val subtitle = if (shown.isEmpty()) null else
-        stringResource(R.string.count_moments, shown.size) + " · " + stringResource(R.string.count_places, placeCount)
+        pluralStringResource(R.plurals.count_moments, shown.size, shown.size) + " · " + pluralStringResource(R.plurals.count_places, placeCount, placeCount)
     var calendar by rememberSaveable { mutableStateOf(false) }
     // Each view keeps where it was scrolled to while the other shows.
     val feedState = rememberLazyListState()
@@ -152,7 +153,7 @@ fun DayScreen(container: AppContainer, date: String, onMoment: (String) -> Unit,
         formatDay(date),
         onBack,
         Modifier.sharedCard(dayCardKey(date), page = true).background(AppColors.page),
-        subtitle = stringResource(R.string.count_moments, moments.size),
+        subtitle = pluralStringResource(R.plurals.count_moments, moments.size, moments.size),
     ) {
         MomentFeed(moments, places, trips, container.mediaUrls, onMoment, onMedia, months = false)
     }
@@ -171,7 +172,7 @@ fun PlaceScreen(container: AppContainer, id: String, onMoment: (String) -> Unit,
         place?.name ?: id,
         onBack,
         Modifier.background(AppColors.page),
-        subtitle = stringResource(R.string.count_moments, moments.size),
+        subtitle = pluralStringResource(R.plurals.count_moments, moments.size, moments.size),
         actions = {
             // The way there, as from the map's panel of the place.
             if (place != null) {

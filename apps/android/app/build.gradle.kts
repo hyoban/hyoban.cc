@@ -64,6 +64,11 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    // Chinese and English, offered in the system's per-app language settings on Android 13 and later.
+    androidResources {
+        generateLocaleConfig = true
+    }
+
     buildFeatures {
         buildConfig = true
         compose = true

@@ -1,0 +1,125 @@
+<resources>
+    <!-- The app in English, for a phone or the app set to it; the Moments' own words stay as written. -->
+    <string name="app_name">Here</string>
+    <string name="tab_moments">Moments</string>
+    <string name="tab_map">Map</string>
+    <string name="tab_trips">Trips</string>
+    <string name="action_back">Back</string>
+    <string name="action_play">Play</string>
+    <string name="action_all">All</string>
+    <string name="action_navigate">Directions</string>
+    <string name="no_map_app">No map app to give directions</string>
+    <string name="action_info">Details</string>
+    <string name="action_open_moment">Open this Moment</string>
+    <string name="label_alt">Description</string>
+    <string name="label_media_size">%1$s · %2$d × %3$d</string>
+    <string name="media_photo">Photo</string>
+    <string name="media_live">Live Photo</string>
+    <string name="media_video">Video</string>
+    <string name="title_moments">Moments</string>
+    <string name="title_trips">Trips</string>
+    <string name="label_live">LIVE</string>
+    <string name="empty_moments">No Moments yet.</string>
+    <string name="empty_trips">No trips yet.</string>
+    <string name="empty_loading">Getting Moments from the site…</string>
+    <string name="message_refresh_failed">Couldn\'t update: %1$s</string>
+    <string name="year_item">%1$d</string>
+    <string name="legend_trips">Trips</string>
+    <string name="trip_day">Day %1$d</string>
+    <string name="action_locate">Find nearby</string>
+    <string name="action_north">Face north</string>
+    <string name="error_location">Couldn\'t find your location. Check that location is on.</string>
+    <string name="error_location_permission">Location permission is needed to find what\'s nearby.</string>
+    <string name="action_show_calendar">Show as calendar</string>
+    <string name="action_show_feed">Show as list</string>
+    <string name="filter_all">All</string>
+    <string name="filter_year">%1$d</string>
+    <string name="filter_whole_year">Whole year</string>
+    <string name="action_pause">Pause</string>
+    <string name="action_mute">Mute</string>
+    <string name="action_unmute">Unmute</string>
+    <string name="section_places">Places</string>
+    <string name="section_photo">Photo</string>
+    <string name="section_route">Route</string>
+    <string name="title_settings">Settings</string>
+    <string name="section_sources">Sources</string>
+    <string name="section_map">Map</string>
+    <string name="setting_api_url">API address</string>
+    <string name="setting_asset_origin">Photo and video address</string>
+    <string name="setting_map_style_light">Light map style</string>
+    <string name="setting_map_style_dark">Dark map style</string>
+    <string name="setting_default">Default: %1$s</string>
+    <string name="settings_api_note">Changing the API address clears the copy on this phone and reads everything again from the new API.</string>
+    <string name="settings_map_note">Addresses of MapLibre styles; light and dark follow the system.</string>
+    <string name="setting_is_default">Default</string>
+    <string name="action_confirm">OK</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="error_address">The address must start with http or https</string>
+    <string name="action_restore_default">Reset</string>
+    <string name="section_theme_mode">Appearance</string>
+    <string name="theme_mode_system">System</string>
+    <string name="theme_mode_light">Light</string>
+    <string name="theme_mode_dark">Dark</string>
+    <string name="section_theme_color">Theme color</string>
+    <string name="theme_color_system">Wallpaper colors</string>
+    <string name="action_add_color">Custom color</string>
+    <string name="action_delete">Delete</string>
+    <string name="setting_color_style">Color style</string>
+    <string name="color_style_vivid">Vivid</string>
+    <string name="color_style_tinted">Tinted</string>
+    <string name="color_style_soft">Soft</string>
+    <string name="color_style_monochrome">Monochrome</string>
+    <string name="setting_pure_black">Pure black</string>
+    <string name="settings_pure_black_note">Pages are pure black in dark mode, which saves power on OLED screens.</string>
+    <string name="section_credits">Thanks</string>
+    <string name="credit_flclash_note">The app\'s design learned from it</string>
+    <string name="action_show_tabs">Show tabs</string>
+    <string name="action_view">View</string>
+    <string name="media_position">%1$s, %2$d of %3$d</string>
+    <string name="label_today">Today</string>
+    <string name="widget_memory_name">On this day</string>
+    <string name="widget_memory_description">A Moment from this day in an earlier year, or one at random</string>
+    <string name="widget_memory_empty">No Moments with photos yet.</string>
+    <string name="widget_trip_name">Trip</string>
+    <string name="widget_trip_description">The trip under way, or the last one</string>
+    <string name="widget_preview_memory_eyebrow">3 years ago today</string>
+    <string name="widget_preview_memory_title">A bookshop by the sea, finally my turn</string>
+    <string name="widget_preview_memory_subtitle">Qingdao</string>
+    <string name="widget_preview_trip_eyebrow">Day 2 of 5</string>
+    <string name="widget_preview_trip_title">Road trip to the northeast</string>
+    <string name="widget_preview_trip_subtitle">15 Moments</string>
+    <string name="separator_clause">, </string>
+    <string name="separator_list">, </string>
+    <plurals name="count_moments">
+        <item quantity="one">%1$d Moment</item>
+        <item quantity="other">%1$d Moments</item>
+    </plurals>
+    <plurals name="count_days_total">
+        <item quantity="one">%1$d day in all</item>
+        <item quantity="other">%1$d days in all</item>
+    </plurals>
+    <plurals name="count_days">
+        <item quantity="one">%1$d day</item>
+        <item quantity="other">%1$d days</item>
+    </plurals>
+    <plurals name="count_places">
+        <item quantity="one">%1$d place</item>
+        <item quantity="other">%1$d places</item>
+    </plurals>
+    <plurals name="count_trips">
+        <item quantity="one">%1$d trip</item>
+        <item quantity="other">%1$d trips</item>
+    </plurals>
+    <plurals name="media_more">
+        <item quantity="one">%1$d more</item>
+        <item quantity="other">%1$d more</item>
+    </plurals>
+    <plurals name="widget_years_ago">
+        <item quantity="one">%1$d year ago today</item>
+        <item quantity="other">%1$d years ago today</item>
+    </plurals>
+    <plurals name="widget_trip_in_days">
+        <item quantity="one">Leaving in %1$d day</item>
+        <item quantity="other">Leaving in %1$d days</item>
+    </plurals>
+</resources>
