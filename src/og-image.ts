@@ -36,9 +36,28 @@ function h(
   return { type, props: { ...props, style, children } }
 }
 
+// Thousands of cards are drawn in one build, each fetching its photos, fonts and emoji: a
+// connection reset or a server's 5xx along the way is tried again, twice, before the
+// build gives up.
+async function fetchRetrying(url: string, attempts = 3): Promise<Response> {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      const response = await fetch(url)
+      if (attempt < attempts && (response.status >= 500 || response.status === 429)) {
+        await response.body?.cancel()
+      } else {
+        return response
+      }
+    } catch (error) {
+      if (attempt >= attempts) throw error
+    }
+    await new Promise((resolve) => setTimeout(resolve, 500 * 2 ** (attempt - 1)))
+  }
+}
+
 let avatarPromise: Promise<string> | undefined
 function getAvatar() {
-  avatarPromise ??= fetch(getAssetUrl('site/avatar-cropped.png')).then(async (response) => {
+  avatarPromise ??= fetchRetrying(getAssetUrl('site/avatar-cropped.png')).then(async (response) => {
     if (!response.ok) throw new Error(`Failed to fetch the avatar: ${response.status}`)
     const png = await sharp(Buffer.from(await response.arrayBuffer()))
       .resize(320)
@@ -57,12 +76,12 @@ async function loadFont(weight: 400 | 500, text: string) {
     family: `${FONT_FAMILY}:wght@${weight}`,
     text: [...new Set(text)].join(''),
   })
-  const css = await fetch(`https://fonts.googleapis.com/css2?${query}`).then((response) =>
+  const css = await fetchRetrying(`https://fonts.googleapis.com/css2?${query}`).then((response) =>
     response.text(),
   )
   const url = css.match(/src: url\((.+?)\) format\('(?:truetype|opentype)'\)/)?.[1]
   if (!url) throw new Error(`No font in the Google Fonts response for weight ${weight}`)
-  return fetch(url).then((response) => response.arrayBuffer())
+  return fetchRetrying(url).then((response) => response.arrayBuffer())
 }
 
 const emojiCache = new Map<string, Promise<string>>()
@@ -77,7 +96,7 @@ function getEmoji(emoji: string) {
   ).join('-')
   let promise = emojiCache.get(name)
   if (!promise) {
-    promise = fetch(
+    promise = fetchRetrying(
       `https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/svg/${name}.svg`,
     ).then(async (response) => {
       if (!response.ok) throw new Error(`No Twemoji for ${emoji} (${name}): ${response.status}`)
@@ -258,7 +277,7 @@ async function renderPhotos(urls: string[]) {
 
 /** A photo cropped to its tile, at twice the tile's size, as a data URL. */
 async function getPhoto(url: string, tile: Tile) {
-  const response = await fetch(url)
+  const response = await fetchRetrying(url)
   if (!response.ok) throw new Error(`Failed to fetch ${url}: ${response.status}`)
   const jpeg = await sharp(Buffer.from(await response.arrayBuffer()))
     .rotate()
