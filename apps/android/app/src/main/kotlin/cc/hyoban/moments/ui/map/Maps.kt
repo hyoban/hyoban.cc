@@ -60,6 +60,7 @@ import org.maplibre.android.style.layers.PropertyFactory.textFont
 import org.maplibre.android.style.layers.PropertyFactory.textIgnorePlacement
 import org.maplibre.android.style.layers.PropertyFactory.textSize
 import org.maplibre.android.style.sources.GeoJsonOptions
+import cc.hyoban.moments.ui.LocalSettings
 import cc.hyoban.moments.ui.LocalBottomClearance
 import cc.hyoban.moments.ui.LocalRailSpace
 import cc.hyoban.moments.ui.components.isLandscape
@@ -113,13 +114,10 @@ import org.maplibre.geojson.FeatureCollection
 import org.maplibre.geojson.LineString
 import org.maplibre.geojson.Point
 
-// OpenFreeMap's vector basemap drawn on the phone by MapLibre: Positron in light, its dark
-// twin in dark, every name in Chinese where the map has one, the Chinese drawn with the
-// phone's own fonts. No key and no account. The dots and the route are layers over it in
-// the app's colours.
-
-private const val LIGHT = "https://tiles.openfreemap.org/styles/positron"
-private const val DARK = "https://tiles.openfreemap.org/styles/dark"
+// A vector basemap drawn on the phone by MapLibre, the styles the settings name for light
+// and dark (OpenFreeMap's Positron and its dark twin unless changed), every name in Chinese
+// where the map has one, the Chinese drawn with the phone's own fonts. The dots and the
+// route are layers over it in the app's colours.
 
 /** Where China's middle is, roughly: where the map opens before it knows better. */
 private val CHINA = CameraPosition.Builder().target(LatLng(32.0, 110.0)).zoom(3.0).build()
@@ -196,7 +194,7 @@ private fun quietRoads(style: Style) {
 
 /**
  * A MapLibre map for the theme, following the screen's lifecycle and rebuilt when the
- * theme changes; [onReady] gets it once its style has loaded and it has its size. Unless
+ * theme or the style set for it changes; [onReady] gets it once its style has loaded and it has its size. Unless
  * [interactive], it takes no touches, so a list around it still scrolls.
  */
 @Composable
@@ -210,14 +208,14 @@ private fun MapLibreView(
     onReady: (map: MapLibreMap, style: Style, fresh: Boolean) -> Unit,
 ) {
     val context = LocalContext.current
-    val dark = isSystemInDarkTheme()
+    val styleUri = LocalSettings.current.mapStyle(isSystemInDarkTheme())
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val ready by rememberUpdatedState(onReady)
     var map by remember { mutableStateOf<MapLibreMap?>(null) }
 
     val holder = if (retained) MainMap else null
-    val mapView = remember(dark, context) {
-        holder?.view?.takeIf { holder.dark == dark && it.context === context }
+    val mapView = remember(styleUri, context) {
+        holder?.view?.takeIf { holder.styleUri == styleUri && it.context === context }
             ?: run {
                 MapLibre.getInstance(context)
                 val options = MapLibreMapOptions.createFromAttributes(context)
@@ -229,7 +227,7 @@ private fun MapLibreView(
                     holder?.let {
                         it.view?.onDestroy()
                         it.view = view
-                        it.dark = dark
+                        it.styleUri = styleUri
                         it.map = null
                         it.style = null
                     }
@@ -275,7 +273,7 @@ private fun MapLibreView(
                 attributionGravity = Gravity.BOTTOM or Gravity.START
             }
             map = it
-            it.setStyle(Style.Builder().fromUri(if (dark) DARK else LIGHT)) { style ->
+            it.setStyle(Style.Builder().fromUri(styleUri)) { style ->
                 chineseLabels(style)
                 quietRoads(style)
                 holder?.map = it
@@ -304,7 +302,7 @@ private fun MapLibreView(
  */
 private object MainMap {
     var view: MapView? = null
-    var dark = false
+    var styleUri: String? = null
     var map: MapLibreMap? = null
     var style: Style? = null
 

@@ -19,9 +19,12 @@ android {
         targetSdk = 37
         versionCode = 1
         versionName = "0.1.0"
-        // Where the records come from, and the origin their photos and videos are served from.
+        // Where the records come from, the origin their photos and videos are served from, and
+        // the map's styles in light and dark: what the app reads until its settings say otherwise.
         buildConfigField("String", "API_URL", "\"https://hyoban-cc-api.hyoban.workers.dev\"")
         buildConfigField("String", "ASSET_ORIGIN", "\"https://image.hyoban.cc\"")
+        buildConfigField("String", "MAP_STYLE_LIGHT", "\"https://tiles.openfreemap.org/styles/positron\"")
+        buildConfigField("String", "MAP_STYLE_DARK", "\"https://tiles.openfreemap.org/styles/dark\"")
     }
 
     // A release keystore from local.properties (`release.storeFile`, `release.storePassword`,

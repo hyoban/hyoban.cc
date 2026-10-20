@@ -47,6 +47,11 @@ class DataStore(val root: File) {
         File(root, fileOf(moment)).delete()
     }
 
+    /** Drops the whole copy, revision and all. */
+    fun clear() {
+        root.deleteRecursively()
+    }
+
     fun clearMoments() {
         File(root, "moments").deleteRecursively()
     }

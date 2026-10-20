@@ -18,6 +18,10 @@ in `local.properties` (`sdk.dir=…`) and a JDK 17 or newer:
 
 The maps are OpenFreeMap's vector tiles drawn by MapLibre, which need no key.
 
+The API, the origin the photos and videos come from and the map's light and dark styles
+are the build's (`BuildConfig`) until changed on the settings page, opened from the
+Moments tab's header; a new API drops the copy on the phone and reads everything again.
+
 The unit tests round-trip every record under the repository's `data/` and the sample
 bundle in `scripts/fixtures/bundle` through the app's models, so the app and the site
 can't drift apart without a test noticing; they also check the media URLs against the
@@ -31,7 +35,7 @@ site's rules, which trip a Moment is on, and the sync against a stand-in for the
   and gives the screens what the site shows (no hidden Moments).
 - `data/media` — photo, poster and video URLs, picked as the site picks them.
 - `data/trips` — which trip a Moment is on, a trip's days and its stops in order.
-- `ui` — Compose screens: the map, the Moments, a Moment's page, the trips, a trip.
+- `ui` — Compose screens: the map, the Moments, a Moment's page, the trips, a trip, the settings.
 
 The app's own `data/` directory from when it recorded Moments is left on the phone as
 it was.

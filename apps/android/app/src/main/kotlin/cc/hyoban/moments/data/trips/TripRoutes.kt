@@ -43,7 +43,7 @@ fun parseRoutes(text: String): Map<String, List<RouteSegment>>? = try {
 
 /** The routes, kept in [file] as the API served them and fetched again from [apiUrl] with each refresh. */
 class TripRoutes(
-    private val apiUrl: String,
+    private val apiUrl: () -> String,
     private val file: File,
     private val io: CoroutineDispatcher = Dispatchers.IO,
 ) {
@@ -56,10 +56,16 @@ class TripRoutes(
         if (file.exists()) parseRoutes(file.readText())?.let { _routes.value = it }
     }
 
+    /** Forgets the routes, as when they are to come from another API. */
+    suspend fun clear() = withContext(io) {
+        file.delete()
+        _routes.value = emptyMap()
+    }
+
     /** Fetches every trip's route; when that fails, the ones kept stay. */
     suspend fun refresh() = withContext(io) {
         val text = try {
-            Http.getText("$apiUrl/v1/routes", io = io)
+            Http.getText("${apiUrl()}/v1/routes", io = io)
         } catch (_: IOException) {
             return@withContext
         }

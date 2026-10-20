@@ -16,12 +16,14 @@ import java.io.File
 class AppContainer(context: Context) {
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
+    val settings = Settings(context)
+
     // A directory of its own: `data/` may still hold what the app recorded before it
     // only showed the site's records, and that is left as it was.
-    val repository = MomentsRepository(DataStore(File(context.filesDir, "api")), MomentsApi(BuildConfig.API_URL))
-    val mediaUrls = MediaUrls(BuildConfig.ASSET_ORIGIN)
+    val repository = MomentsRepository(DataStore(File(context.filesDir, "api")), MomentsApi(baseUrl = { settings.apiUrl.value }))
+    val mediaUrls = MediaUrls { settings.assetOrigin.value }
     /** The trips' routes along the roads, from the API. */
-    val routes = TripRoutes(BuildConfig.API_URL, File(context.filesDir, "routes.json"))
+    val routes = TripRoutes({ settings.apiUrl.value }, File(context.filesDir, "routes.json"))
 
     init {
         // Routes were once kept per trip from the site's trip pages, under routes/.
@@ -35,6 +37,21 @@ class AppContainer(context: Context) {
 
     fun refresh() {
         scope.launch { refreshAll() }
+    }
+
+    /**
+     * Reads from another API: the copy of the one before is dropped rather than brought up
+     * to a revision it never had, and everything is read again from the new one.
+     */
+    fun changeApi(url: String) {
+        val before = settings.apiUrl.value
+        settings.apiUrl.set(url)
+        if (settings.apiUrl.value == before) return
+        scope.launch {
+            repository.clear()
+            routes.clear()
+            refreshAll()
+        }
     }
 
     private suspend fun refreshAll() {

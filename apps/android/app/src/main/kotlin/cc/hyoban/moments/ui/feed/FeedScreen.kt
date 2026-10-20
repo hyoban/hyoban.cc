@@ -14,6 +14,7 @@ import androidx.compose.ui.platform.LocalContext
 import cc.hyoban.moments.ui.map.navigateTo
 import androidx.compose.material3.Icon
 import androidx.compose.material.icons.outlined.ViewAgenda
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.Icons
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -52,7 +53,13 @@ import cc.hyoban.moments.ui.components.PageHeader
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FeedScreen(container: AppContainer, onMoment: (String) -> Unit, onMedia: (String, Int) -> Unit, onDay: (String) -> Unit) {
+fun FeedScreen(
+    container: AppContainer,
+    onMoment: (String) -> Unit,
+    onMedia: (String, Int) -> Unit,
+    onDay: (String) -> Unit,
+    onSettings: () -> Unit,
+) {
     val moments by container.repository.moments.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
     val trips by container.repository.trips.collectAsStateWithLifecycle()
@@ -93,6 +100,9 @@ fun FeedScreen(container: AppContainer, onMoment: (String) -> Unit, onMedia: (St
                         if (calendar) Icons.Outlined.ViewAgenda else Icons.Outlined.CalendarMonth,
                         contentDescription = stringResource(if (calendar) R.string.action_show_feed else R.string.action_show_calendar),
                     )
+                }
+                IconButton(onClick = onSettings) {
+                    Icon(Icons.Outlined.Settings, contentDescription = stringResource(R.string.title_settings))
                 }
             }
         }

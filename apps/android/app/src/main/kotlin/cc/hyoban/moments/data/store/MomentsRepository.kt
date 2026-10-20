@@ -113,6 +113,18 @@ class MomentsRepository(
         }
     }
 
+    /** Forgets the copy, on the phone and in memory, as when the records are to come from another API. */
+    suspend fun clear() = lock.withLock {
+        withContext(io) {
+            store.clear()
+            all = emptyMap()
+            _places.value = emptyMap()
+            _trips.value = emptyList()
+            _error.value = null
+            publish()
+        }
+    }
+
     fun moment(uid: String): MomentRecord? = all[uid]?.takeIf(::isShown)
 
     private fun publish() {
