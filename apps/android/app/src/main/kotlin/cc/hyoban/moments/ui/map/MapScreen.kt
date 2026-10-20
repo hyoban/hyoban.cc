@@ -153,6 +153,8 @@ fun MapScreen(container: AppContainer, onMoment: (String) -> Unit, onPlace: (Str
             highlighted,
             onPlace = { selected = it },
             onRoute = { highlighted = it },
+            // A tap on nothing closes the place panel.
+            onEmptyTap = { selected = null },
             onTrip = onTrip,
             modifier = Modifier.fillMaxSize(),
             locate = locate,

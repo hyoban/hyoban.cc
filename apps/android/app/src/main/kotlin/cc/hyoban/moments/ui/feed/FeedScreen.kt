@@ -50,6 +50,7 @@ fun FeedScreen(container: AppContainer, onMoment: (String) -> Unit, onMedia: (St
     val trips by container.repository.trips.collectAsStateWithLifecycle()
     val loaded by container.repository.loaded.collectAsStateWithLifecycle()
     val syncing by container.repository.syncing.collectAsStateWithLifecycle()
+    val pull = rememberPulledRefresh(container)
     val snackbar = rememberRefreshErrors(container)
     // The year and month the timeline is narrowed to, kept as two numbers to survive a rotation.
     var year by rememberSaveable { mutableStateOf<Int?>(null) }
@@ -96,7 +97,7 @@ fun FeedScreen(container: AppContainer, onMoment: (String) -> Unit, onMedia: (St
     }
 
     Box(Modifier.fillMaxSize()) {
-        PullToRefreshBox(isRefreshing = syncing, onRefresh = container::refresh, modifier = Modifier.fillMaxSize().statusBarsPadding()) {
+        PullToRefreshBox(isRefreshing = pull.refreshing, onRefresh = pull.onRefresh, modifier = Modifier.fillMaxSize().statusBarsPadding()) {
             if (moments.isEmpty()) {
                 EmptyState(loading = !loaded || syncing, message = R.string.empty_moments)
             } else {

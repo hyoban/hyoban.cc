@@ -420,9 +420,12 @@ fun PlacesMap(
     modifier: Modifier = Modifier,
     locate: Int = 0,
     onLocated: (Boolean) -> Unit = {},
+    /** A tap on the map away from any place or route. */
+    onEmptyTap: () -> Unit = {},
 ) {
     val tapPlace by rememberUpdatedState(onPlace)
     val located by rememberUpdatedState(onLocated)
+    val tapEmpty by rememberUpdatedState(onEmptyTap)
     val context = LocalContext.current
     val me = MaterialTheme.colorScheme.primary.toArgb()
     val tapRoute by rememberUpdatedState(onRoute)
@@ -536,6 +539,7 @@ fun PlacesMap(
                 trip != null -> tapRoute(trip)
                 lifted != null -> tapRoute(null)
             }
+            if (trip == null) tapEmpty()
             trip != null
         }
         ready.addOnMapClickListener(listener)
