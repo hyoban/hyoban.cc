@@ -22,6 +22,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import cc.hyoban.moments.R
+import cc.hyoban.moments.ui.format.formatMonthOnly
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.ui.theme.Corners
 import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
@@ -80,7 +81,7 @@ fun TimeFilterRows(filter: TimeFilter, years: List<Int>, months: List<Int>, onCh
                 "month_",
                 listOf(null) + months,
                 selected = filter.month,
-                label = { it?.let { month -> stringResource(R.string.filter_month, month) } ?: stringResource(R.string.filter_whole_year) },
+                label = { it?.let { month -> formatMonthOnly(month) } ?: stringResource(R.string.filter_whole_year) },
                 onSelect = { onChange(filter.copy(month = it)) },
             )
         }

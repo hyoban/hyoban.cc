@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -47,7 +48,9 @@ import cc.hyoban.moments.ui.components.MonthHeader
 import cc.hyoban.moments.ui.components.PageWidth
 import cc.hyoban.moments.ui.components.dayCardKey
 import cc.hyoban.moments.ui.components.sharedCard
+import cc.hyoban.moments.ui.format.formatDate
 import cc.hyoban.moments.ui.format.formatMonth
+import cc.hyoban.moments.ui.format.weekdayLetters
 import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.fill
@@ -58,7 +61,6 @@ import java.time.YearMonth
 // first as the site's calendar is. A day with Moments shows its first photo and how many
 // there are; tapping it opens them.
 
-private val WEEKDAYS = listOf("一", "二", "三", "四", "五", "六", "日")
 
 /** One day of a month's grid: its Moments, oldest first, and the media to show for it. */
 private data class CalendarDay(val date: LocalDate, val moments: List<MomentRecord>, val cover: MomentMedia?)
@@ -162,7 +164,7 @@ private fun WeekdayRow() {
         Modifier.fillMaxWidth().padding(start = Space.gutter, end = Space.gutter, top = Space.xs, bottom = Space.xs),
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        WEEKDAYS.forEach {
+        weekdayLetters().forEach {
             Text(
                 it,
                 style = MaterialTheme.typography.labelMedium,
@@ -181,11 +183,11 @@ private fun DayCell(day: CalendarDay, urls: MediaUrls, today: LocalDate, onClick
     val isToday = day.date == today
     val ring = if (isToday) Modifier.border(2.dp, MaterialTheme.colorScheme.primary, CELL) else Modifier
 
-    val date = stringResource(R.string.calendar_day, day.date.monthValue, day.date.dayOfMonth)
+    val date = formatDate(day.date.toString(), today = day.date)
     val today = if (isToday) stringResource(R.string.label_today) else null
     if (day.moments.isEmpty()) {
         // Its whole date rather than the bare number.
-        val description = listOfNotNull(date, today).joinToString("，")
+        val description = listOfNotNull(date, today).joinToString(stringResource(R.string.separator_clause))
         Box(Modifier.fillMaxSize().clip(CELL).then(ring).clearAndSetSemantics { contentDescription = description }, contentAlignment = Alignment.Center) {
             Text(
                 "${day.date.dayOfMonth}",
@@ -199,7 +201,7 @@ private fun DayCell(day: CalendarDay, urls: MediaUrls, today: LocalDate, onClick
     // A day grows into what it opens: its one Moment's page, or the page of its Moments.
     val opens = day.moments.singleOrNull()?.uid ?: dayCardKey(day.date.toString())
     // Read as its date and how many Moments it has, rather than two bare numbers.
-    val description = listOfNotNull(date, today, stringResource(R.string.count_moments, day.moments.size)).joinToString("，")
+    val description = listOfNotNull(date, today, pluralStringResource(R.plurals.count_moments, day.moments.size, day.moments.size)).joinToString(stringResource(R.string.separator_clause))
     Box(
         Modifier.fillMaxSize().sharedCard(opens, cardCorner = 8.dp).clip(CELL)
             .background(LocalSurfaceLevel.current.raised.fill())

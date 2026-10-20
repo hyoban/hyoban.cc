@@ -100,7 +100,7 @@ fun CompactMomentRow(moment: MomentRecord, places: Map<String, Place>, urls: Med
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
-                    moment.text.ifBlank { moment.places.joinToString("、") { places[it]?.name ?: it } },
+                    moment.text.ifBlank { moment.places.joinToString(stringResource(R.string.separator_list)) { places[it]?.name ?: it } },
                     style = MaterialTheme.typography.bodyMedium,
                     maxLines = 3,
                     overflow = TextOverflow.Ellipsis,

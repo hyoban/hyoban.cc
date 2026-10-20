@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -74,7 +75,7 @@ fun TripsScreen(container: AppContainer, onTrip: (String) -> Unit) {
     TabPage(
         stringResource(R.string.title_trips),
         tab = Trips,
-        subtitle = stringResource(R.string.count_trips, trips.size) + " · " + stringResource(R.string.count_days_total, days),
+        subtitle = pluralStringResource(R.plurals.count_trips, trips.size, trips.size) + " · " + pluralStringResource(R.plurals.count_days_total, days, days),
     ) {
         TabRefreshBox(pull) {
             if (trips.isEmpty()) {
@@ -129,20 +130,23 @@ private fun TripCard(trip: TripRecord, covers: List<MomentMedia>, count: Int, ur
 fun TripPills(trip: TripRecord, count: Int, places: Int? = null) {
     FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.s), verticalArrangement = Arrangement.spacedBy(Space.s)) {
         Pill(formatRange(trip.start, trip.end), icon = Icons.Rounded.CalendarMonth)
-        Pill(stringResource(R.string.count_days, daysBetween(trip.start, trip.end)))
-        Pill(stringResource(R.string.count_moments, count))
-        places?.let { Pill(stringResource(R.string.count_places, it)) }
+        val days = daysBetween(trip.start, trip.end)
+        Pill(pluralStringResource(R.plurals.count_days, days, days))
+        Pill(pluralStringResource(R.plurals.count_moments, count, count))
+        places?.let { Pill(pluralStringResource(R.plurals.count_places, it, it)) }
     }
 }
 
 /** A trip's dates and its length, and its count of Moments when given, as one line. */
 @Composable
-fun tripSummary(trip: TripRecord, moments: Int? = null): String =
-    listOfNotNull(
+fun tripSummary(trip: TripRecord, moments: Int? = null): String {
+    val days = daysBetween(trip.start, trip.end)
+    return listOfNotNull(
         formatRange(trip.start, trip.end),
-        stringResource(R.string.count_days, daysBetween(trip.start, trip.end)),
-        moments?.let { stringResource(R.string.count_moments, it) },
+        pluralStringResource(R.plurals.count_days, days, days),
+        moments?.let { pluralStringResource(R.plurals.count_moments, it, it) },
     ).joinToString(" · ")
+}
 
 /** A trip's photos across the top of a card: one large and two small, or as many as it has. */
 @Composable

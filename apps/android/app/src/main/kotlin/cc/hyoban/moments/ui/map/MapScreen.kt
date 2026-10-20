@@ -85,6 +85,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -344,7 +345,7 @@ fun MapScreen(container: AppContainer, onMoment: (String) -> Unit, onPlace: (Str
                             Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
                                 Text(place.name, style = MaterialTheme.typography.titleLarge)
                                 Text(
-                                    (listOf(stringResource(R.string.count_moments, here.size)) + years.joinToString("、") { context.getString(R.string.year_item, it) }).joinToString(" · "),
+                                    (listOf(pluralStringResource(R.plurals.count_moments, here.size, here.size)) + years.joinToString(context.getString(R.string.separator_list)) { context.getString(R.string.year_item, it) }).joinToString(" · "),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )

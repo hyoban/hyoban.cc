@@ -22,13 +22,8 @@
     <string name="empty_trips">还没有旅程。</string>
     <string name="empty_loading">正在从网站取时刻…</string>
     <string name="message_refresh_failed">没能更新：%1$s</string>
-    <string name="count_moments">%1$d 个时刻</string>
     <string name="year_item">%1$d 年</string>
     <string name="legend_trips">旅程</string>
-    <string name="count_days">%1$d 天</string>
-    <string name="count_places">%1$d 个地点</string>
-    <string name="count_trips">%1$d 段旅程</string>
-    <string name="count_days_total">共 %1$d 天</string>
     <string name="trip_day">第 %1$d 天</string>
     <string name="action_locate">定位到附近</string>
     <string name="action_north">回到正北</string>
@@ -39,7 +34,6 @@
     <string name="filter_all">全部</string>
     <string name="filter_year">%1$d 年</string>
     <string name="filter_whole_year">全年</string>
-    <string name="filter_month">%1$d 月</string>
     <string name="action_pause">暂停</string>
     <string name="action_mute">静音</string>
     <string name="action_unmute">打开声音</string>
@@ -80,21 +74,44 @@
     <string name="credit_flclash_note">App 的界面设计参考了它</string>
     <string name="action_show_tabs">展开标签栏</string>
     <string name="action_view">查看</string>
-    <string name="media_more">还有 %1$d 个</string>
     <string name="media_position">%1$s，第 %2$d 个，共 %3$d 个</string>
-    <string name="calendar_day">%1$d 月 %2$d 日</string>
     <string name="label_today">今天</string>
     <string name="widget_memory_name">那年今天</string>
     <string name="widget_memory_description">往年今天的一个时刻，没有的话随机一个</string>
     <string name="widget_memory_empty">还没有带照片的时刻。</string>
-    <string name="widget_years_ago">%1$d 年前的今天</string>
     <string name="widget_trip_name">旅程</string>
     <string name="widget_trip_description">正在进行的旅程，或者上一段</string>
-    <string name="widget_trip_in_days">%1$d 天后出发</string>
     <string name="widget_preview_memory_eyebrow">3 年前的今天</string>
     <string name="widget_preview_memory_title">海边的书店，终于轮到我了</string>
     <string name="widget_preview_memory_subtitle">青岛</string>
     <string name="widget_preview_trip_eyebrow">第 2 天 · 共 5 天</string>
     <string name="widget_preview_trip_title">东北自驾</string>
     <string name="widget_preview_trip_subtitle">15 个时刻</string>
+    <!-- Between clauses read out together, and between the items of a list. -->
+    <string name="separator_clause">，</string>
+    <string name="separator_list">、</string>
+    <plurals name="count_moments">
+        <item quantity="other">%1$d 个时刻</item>
+    </plurals>
+    <plurals name="count_days_total">
+        <item quantity="other">共 %1$d 天</item>
+    </plurals>
+    <plurals name="count_days">
+        <item quantity="other">%1$d 天</item>
+    </plurals>
+    <plurals name="count_places">
+        <item quantity="other">%1$d 个地点</item>
+    </plurals>
+    <plurals name="count_trips">
+        <item quantity="other">%1$d 段旅程</item>
+    </plurals>
+    <plurals name="media_more">
+        <item quantity="other">还有 %1$d 个</item>
+    </plurals>
+    <plurals name="widget_years_ago">
+        <item quantity="other">%1$d 年前的今天</item>
+    </plurals>
+    <plurals name="widget_trip_in_days">
+        <item quantity="other">%1$d 天后出发</item>
+    </plurals>
 </resources>

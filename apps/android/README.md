@@ -25,6 +25,11 @@ other apps and stops when headphones come out, and the screen stays on while it 
 The photos and videos are SDR (WebP without gain maps, BT.709 video), so the viewer
 leaves the window's colour mode alone.
 
+The app speaks Chinese, and English on a phone set to it, or when it is chosen for this
+app alone in the system's language settings (Android 13 and later): its labels, the
+counts in each language's plurals, and the dates as each language writes them. The
+Moments' own words stay as they were written.
+
 ## Building
 
 Android Studio opens `apps/android` as a project. From a shell, with the Android SDK

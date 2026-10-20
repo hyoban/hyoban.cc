@@ -32,6 +32,7 @@ import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -130,7 +131,7 @@ fun MediaTile(
     // rather than an unnamed button with "play" or "live" somewhere inside it.
     val kind = stringResource(media.kindLabel())
     val named = position?.let { (index, count) -> stringResource(R.string.media_position, kind, index + 1, count) } ?: kind
-    val description = listOfNotNull(named, media.alt.ifEmpty { null }).joinToString("，")
+    val description = listOfNotNull(named, media.alt.ifEmpty { null }).joinToString(stringResource(R.string.separator_clause))
     val view = stringResource(R.string.action_view)
     Box(
         modifier.then(
@@ -225,7 +226,7 @@ fun MediaMosaic(
                         Box(Modifier.weight(1f).fillMaxHeight().clip(TILE)) {
                             tile(index, Modifier.fillMaxSize())
                             if (index == 3 && media.size > 4) {
-                                val more = stringResource(R.string.media_more, media.size - 4)
+                                val more = pluralStringResource(R.plurals.media_more, media.size - 4, media.size - 4)
                                 val view = stringResource(R.string.action_view)
                                 Box(
                                     Modifier.fillMaxSize().background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.45f))
