@@ -46,4 +46,17 @@
     <string name="section_places">地点</string>
     <string name="section_photo">照片</string>
     <string name="section_route">路线</string>
+    <string name="title_settings">设置</string>
+    <string name="section_sources">数据来源</string>
+    <string name="section_map">地图</string>
+    <string name="setting_api_url">API 地址</string>
+    <string name="setting_asset_origin">图片与视频地址</string>
+    <string name="setting_map_style_light">浅色地图样式</string>
+    <string name="setting_map_style_dark">深色地图样式</string>
+    <string name="setting_default">默认：%1$s</string>
+    <string name="settings_api_note">换了 API 地址后，手机上的副本会清空，从新的 API 重新读取。留空即用默认地址。</string>
+    <string name="error_address">需要 http 或 https 开头的地址</string>
+    <string name="action_restore_default">恢复默认</string>
+    <string name="action_save">保存</string>
+    <string name="message_settings_saved">已保存</string>
 </resources>

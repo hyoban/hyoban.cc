@@ -10,9 +10,11 @@ import cc.hyoban.moments.data.spec.PublishedMedia
  * for an original the API kept, that width from Cloudflare Images; a video's poster, or
  * its first frame from Media Transformations.
  */
-class MediaUrls(private val origin: String) {
+class MediaUrls(private val origin: () -> String) {
+    constructor(origin: String) : this({ origin })
+
     /** The URL of an uploaded object. */
-    fun asset(key: String): String = "$origin/${key.split('/').joinToString("/", transform = ::encodeSegment)}"
+    fun asset(key: String): String = "${origin()}/${key.split('/').joinToString("/", transform = ::encodeSegment)}"
 
     /** The still to show for a media item at [width] pixels: a photo, a live photo's still, a video's poster. */
     fun still(media: MomentMedia, width: Int): String? {
@@ -57,7 +59,7 @@ class MediaUrls(private val origin: String) {
         }
 
     private fun transformed(options: String, key: String) =
-        "$origin/cdn-cgi/$options/${key.split('/').joinToString("/", transform = ::encodeSegment)}"
+        "${origin()}/cdn-cgi/$options/${key.split('/').joinToString("/", transform = ::encodeSegment)}"
 
     companion object {
         /** The widths an original is resized to, as the site asks for them. */

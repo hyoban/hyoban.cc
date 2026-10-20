@@ -41,8 +41,9 @@ interface MomentsSource {
     suspend fun trips(): TripsResponse
 }
 
+/** The API at [baseUrl], read again for each request so a change in the settings takes at once. */
 class MomentsApi(
-    private val baseUrl: String,
+    private val baseUrl: () -> String,
     private val client: OkHttpClient = Http.client,
     private val io: CoroutineDispatcher = Dispatchers.IO,
 ) : MomentsSource {
@@ -54,5 +55,5 @@ class MomentsApi(
     override suspend fun trips(): TripsResponse = get("/v1/trips", TripsResponse.serializer())
 
     private suspend fun <T> get(path: String, serializer: KSerializer<T>): T =
-        Spec.json.decodeFromString(serializer, Http.getText(baseUrl + path, client, io))
+        Spec.json.decodeFromString(serializer, Http.getText(baseUrl() + path, client, io))
 }

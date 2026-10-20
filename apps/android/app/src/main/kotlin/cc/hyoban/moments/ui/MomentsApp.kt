@@ -108,9 +108,11 @@ import cc.hyoban.moments.ui.feed.FeedScreen
 import cc.hyoban.moments.ui.feed.PlaceScreen
 import cc.hyoban.moments.ui.map.MapScreen
 import cc.hyoban.moments.ui.moment.MomentScreen
+import cc.hyoban.moments.ui.settings.SettingsScreen
 import cc.hyoban.moments.ui.trips.TripScreen
 import cc.hyoban.moments.ui.trips.TripsScreen
 import cc.hyoban.moments.ui.viewer.MediaViewer
+import cc.hyoban.moments.Settings
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass
 
@@ -144,6 +146,9 @@ data class Day(val date: String)
 
 @Serializable
 data class PlaceMoments(val id: String)
+
+@Serializable
+object Preferences
 
 /** The three tabs at the bottom; everything else opens over them. */
 private enum class Tab(val route: Any, val type: KClass<*>, val label: Int, val icon: ImageVector, val selectedIcon: ImageVector) {
@@ -265,6 +270,7 @@ fun MomentsApp(container: AppContainer) {
                 LocalViewerShownKey provides viewerKey.takeIf { viewer != null },
                 LocalBackSwipe provides backSwipe,
                 LocalViewerShowing provides viewerShowing,
+                LocalSettings provides container.settings,
             ) {
                 NavHost(
                     navController = navController,
@@ -287,7 +293,13 @@ fun MomentsApp(container: AppContainer) {
                     popExitTransition = { popExit() },
                 ) {
                     screen<Feed> {
-                        FeedScreen(container, onMoment = openMoment, onMedia = openMedia, onDay = { navController.navigate(Day(it)) })
+                        FeedScreen(
+                            container,
+                            onMoment = openMoment,
+                            onMedia = openMedia,
+                            onDay = { navController.navigate(Day(it)) },
+                            onSettings = { navController.navigate(Preferences) },
+                        )
                     }
                     screen<Atlas> {
                         MapScreen(container, onMoment = openMoment, onPlace = openPlace, onTrip = openTrip)
@@ -306,6 +318,9 @@ fun MomentsApp(container: AppContainer) {
                     }
                     screen<PlaceMoments> { entry ->
                         PlaceScreen(container, entry.toRoute<PlaceMoments>().id, onMoment = openMoment, onMedia = openMedia, onBack = back)
+                    }
+                    screen<Preferences> {
+                        SettingsScreen(container, onBack = back)
                     }
                 }
                 // Kept while it leaves, so the photo has somewhere to fly back from.
@@ -464,6 +479,9 @@ private fun AnimatedContentTransitionScope<NavBackStackEntry>.tabSlide(): Animat
 private const val SCROLL_SLOP = 6f
 
 /** How much of the bottom the floating tabs cover on a tab screen, to leave clear under a list's last item. */
+/** Where the app reads from, for what draws without the container at hand, as the map. */
+val LocalSettings = staticCompositionLocalOf<Settings> { error("No settings provided") }
+
 val LocalBottomClearance = staticCompositionLocalOf { 0.dp }
 
 /**
