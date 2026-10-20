@@ -185,7 +185,10 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
 
       switch (method) {
         case 'GET':
-          return json(await readTripRoutes(db))
+          // Kept as the text it is served as, so it goes out without being parsed again.
+          return new Response(await readTripRoutes(db), {
+            headers: { 'Content-Type': 'application/json' },
+          })
         case 'POST': {
           if (!env.MAPBOX_TOKEN) {
             return error(503, 'MAPBOX_TOKEN is not set.')

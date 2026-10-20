@@ -197,48 +197,47 @@ export async function fillRoutes(context: WriteContext, fetchRoute: RouteFetcher
   }
 }
 
-/** Where `meta` keeps the answer of `GET /v1/routes`, with the revision it is of. */
+/** Where `meta` keeps the answer of `GET /v1/routes`, with the revision it is of in it. */
 const TRIP_ROUTES = 'trip_routes'
 
 /**
  * Each published trip's route as the site's overview draws it: drives one after another
  * as one stretch, and each train, plane or ferry as a stretch of its own, drawn dashed.
- * Worked out from every Moment, so it is kept in `meta` and only worked out again once
- * the revision has moved on, by a write here or one that came past the Worker.
+ * Worked out from every Moment, so the answer is kept in `meta` as the JSON text it is
+ * served as, and only worked out again once the revision has moved on, by a write here
+ * or one that came past the Worker.
  */
 export async function readTripRoutes(db: Database) {
   const [revision, kept] = await readAll(db, [
     revisionQuery(db),
-    db.prepare(`SELECT value FROM meta WHERE key = ?1`).bind(TRIP_ROUTES),
+    db
+      .prepare(
+        `SELECT value, json_extract(value, '$.revision') AS revision FROM meta WHERE key = ?1`,
+      )
+      .bind(TRIP_ROUTES),
   ])
-  const [keptRow] = kept as { value: string }[]
-  const cached = keptRow && (JSON.parse(keptRow.value) as TripRoutes)
+  const [keptRow] = kept as { value: string; revision: number }[]
 
-  if (cached?.revision === toRevision(revision)) {
-    return cached
+  if (keptRow?.revision === toRevision(revision)) {
+    return keptRow.value
   }
 
   const inputs = await readTripInputs(db)
   const trips = buildTrips(inputs, inputs.routes)
-  const answer: TripRoutes = {
+  const answer = JSON.stringify({
     revision: inputs.revision,
     trips: Object.fromEntries(trips.map((trip) => [trip.id, getTripSummary(trip).segments])),
-  }
+  })
 
   await db
     .prepare(
       `INSERT INTO meta (key, value) VALUES (?1, ?2)
        ON CONFLICT (key) DO UPDATE SET value = excluded.value`,
     )
-    .bind(TRIP_ROUTES, JSON.stringify(answer))
+    .bind(TRIP_ROUTES, answer)
     .run()
 
   return answer
-}
-
-interface TripRoutes {
-  revision: number
-  trips: Record<string, ReturnType<typeof getTripSummary>['segments']>
 }
 
 /** Fetches legs from Mapbox's Directions with `token`, and train legs from OpenRailRouting. */
