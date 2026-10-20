@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Moments</string>
+    <string name="app_name">这里</string>
     <string name="tab_moments">时刻</string>
     <string name="tab_map">地图</string>
     <string name="tab_trips">旅程</string>
