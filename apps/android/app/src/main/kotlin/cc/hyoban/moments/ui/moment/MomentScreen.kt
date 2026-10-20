@@ -23,7 +23,6 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -116,6 +115,8 @@ fun MomentScreen(
 
     // The whole page is the card it was opened from, grown to the screen.
     BoxWithConstraints(Modifier.fillMaxSize().sharedCard(uid, page = true).background(AppColors.page)) {
+        val screenWidth = maxWidth
+        val screenHeight = maxHeight
         val scroll = rememberScrollState()
         val details: @Composable () -> Unit = {
             MomentDetails(moment, places, trip, moments, trips, urls, onPlace, onTrip)
@@ -134,21 +135,25 @@ fun MomentScreen(
                 Column(Modifier.weight(1f).fillMaxHeight().statusBarsPadding().verticalScroll(scroll).sideInsetsPadding(WindowInsetsSides.End)) { details() }
             }
         } else {
-            // A portrait photo runs under the status bar; a landscape one starts below the
-            // bar, the page's colour above it. The bar's icons follow what is under them.
-            val shape = moment.media.firstOrNull()?.let(::shapeOf)
+            // The photos are as tall as the tallest of them. A portrait one runs under the status
+            // bar; landscape ones start below the bar, the page's colour above them. The bar's
+            // icons follow what is under them.
+            val shape = moment.media.minOfOrNull(::shapeOf)
             val bleeds = shape != null && shape < 1f
 
             Column(Modifier.fillMaxSize().verticalScroll(scroll)) {
                 if (moment.media.isNotEmpty()) {
-                    // No shorter than two thirds of the width, so a wide photo isn't a strip.
+                    // The tallest photo whole across the width, unless it would be taller than
+                    // the screen, where it stops at the screen's height.
+                    val above = if (bleeds) 0.dp else WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
                     MomentPhotos(
                         moment,
                         urls,
                         onMedia,
                         Modifier.then(if (bleeds) Modifier else Modifier.statusBarsPadding())
-                            .fillMaxWidth().aspectRatio(shape!!.coerceIn(0.75f, 1.5f)),
+                            .fillMaxWidth().height(minOf(screenWidth / shape!!, screenHeight - above)),
                         dotsAbove = RISE + Space.m,
+                        whole = true,
                     )
                 } else {
                     Spacer(Modifier.statusBarsPadding().height(72.dp))
@@ -164,22 +169,29 @@ fun MomentScreen(
     }
 }
 
-/** The Moment's photos, swiped through, each opening the viewer; dots [dotsAbove] the bottom when there are several. */
+/**
+ * The Moment's photos, swiped through, each opening the viewer; dots [dotsAbove] the bottom
+ * when there are several. Each fills the space, or, when [whole], spans its width at its own
+ * shape, centred, cropped only where it is taller than the space.
+ */
 @Composable
-private fun MomentPhotos(moment: MomentRecord, urls: MediaUrls, onMedia: (String, Int) -> Unit, modifier: Modifier, dotsAbove: Dp) {
+private fun MomentPhotos(moment: MomentRecord, urls: MediaUrls, onMedia: (String, Int) -> Unit, modifier: Modifier, dotsAbove: Dp, whole: Boolean = false) {
     val uid = moment.uid
     val pager = rememberPagerState { moment.media.size }
     Box(modifier) {
         HorizontalPager(pager, Modifier.fillMaxSize(), key = { moment.media[it].uid }) { page ->
-            // The top of the photo is under the status bar and the back button.
-            MediaTile(
-                moment.media[page],
-                urls,
-                Modifier.fillMaxSize(),
-                liveBadgeAlignment = Alignment.BottomStart,
-                sharedKey = mediaKey(uid, moment.media[page].uid),
-                onClick = { onMedia(uid, page) },
-            )
+            val media = moment.media[page]
+            BoxWithConstraints(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                // The top of the photo is under the status bar and the back button.
+                MediaTile(
+                    media,
+                    urls,
+                    if (whole) Modifier.fillMaxWidth().height(minOf(maxWidth / shapeOf(media), maxHeight)) else Modifier.fillMaxSize(),
+                    liveBadgeAlignment = Alignment.BottomStart,
+                    sharedKey = mediaKey(uid, media.uid),
+                    onClick = { onMedia(uid, page) },
+                )
+            }
         }
         if (moment.media.size > 1) {
             PageDots(pager, Modifier.align(Alignment.BottomCenter).padding(bottom = dotsAbove))
