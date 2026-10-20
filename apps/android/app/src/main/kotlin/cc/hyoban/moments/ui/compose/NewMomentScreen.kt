@@ -35,6 +35,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AddPhotoAlternate
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.DeleteOutline
 import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material3.AlertDialog
@@ -44,6 +45,7 @@ import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -120,10 +122,11 @@ import java.time.ZoneOffset
  * change. Saved, it is kept on the phone, and reaches the site only when the changes are
  * published. Given a Moment to [edit], it starts from that one as it was saved: one of the
  * phone's is kept as changed, as is one of the site's, with the token, until it is published.
+ * One being changed can be deleted here too, at the foot of the page, and then [onDeleted].
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> Unit, edit: String? = null) {
+fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> Unit, edit: String? = null, onDeleted: () -> Unit = onBack) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val places by container.repository.places.collectAsStateWithLifecycle()
@@ -157,6 +160,8 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
     var editingTime by remember { mutableStateOf(false) }
     var editingPlace by remember { mutableStateOf(false) }
     var confirmingDiscard by remember { mutableStateOf(false) }
+    var confirmingDelete by remember { mutableStateOf(false) }
+    val publishing by container.publishing.collectAsStateWithLifecycle()
 
     LaunchedEffect(photos) {
         photos.filter { it !in infos && it !in originalMedia }.forEach { infos[it] = Photos.read(context, it) }
@@ -362,6 +367,21 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
                             modifier = Modifier.clickable { editingPlace = true }.testTag("moment_place"),
                         )
                     }
+                    // Deleting is rare and can't be undone, so it waits down here rather than over the Moment.
+                    if (original != null && publishing == null) {
+                        Group(null, null) {
+                            ListItem(
+                                headlineContent = { Text(stringResource(R.string.action_delete_moment)) },
+                                leadingContent = { Icon(Icons.Rounded.DeleteOutline, contentDescription = null) },
+                                colors = ListItemDefaults.colors(
+                                    containerColor = Color.Transparent,
+                                    headlineColor = MaterialTheme.colorScheme.error,
+                                    leadingIconColor = MaterialTheme.colorScheme.error,
+                                ),
+                                modifier = Modifier.clickable(enabled = !saving) { confirmingDelete = true }.testTag("delete"),
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -379,6 +399,24 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
                 editingPlace = false
             }
         }
+    }
+    if (confirmingDelete && original != null) {
+        AlertDialog(
+            onDismissRequest = { confirmingDelete = false },
+            title = { Text(stringResource(R.string.action_delete_moment)) },
+            text = { Text(stringResource(if (published) R.string.confirm_delete_published else R.string.confirm_delete_moment)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        confirmingDelete = false
+                        container.delete(original.uid)
+                        onDeleted()
+                    },
+                    modifier = Modifier.testTag("confirm_delete"),
+                ) { Text(stringResource(R.string.action_delete)) }
+            },
+            dismissButton = { TextButton(onClick = { confirmingDelete = false }) { Text(stringResource(R.string.action_cancel)) } },
+        )
     }
     if (confirmingDiscard) {
         AlertDialog(

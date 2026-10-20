@@ -221,6 +221,8 @@
     <string name="action_previous">Back</string>
     <string name="title_edit_moment">Edit Moment</string>
     <string name="action_edit_moment">Edit this Moment</string>
+    <string name="action_more">More</string>
+    <string name="label_whole_day">Everything from that day</string>
     <string name="source_saved">As saved</string>
     <string name="share_as_moment">Write a Moment</string>
     <string name="error_shared_photos">Some photos couldn\'t be read</string>

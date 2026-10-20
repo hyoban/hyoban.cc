@@ -363,6 +363,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                     onTrip = openTrip,
                                     onBack = back,
                                     onEdit = { navController.navigate(EditMoment(it)) },
+                                    onDay = { navController.navigate(Day(it)) },
                                 )
                             }
                             screen<Trip>(link = "trip/{id}") { entry ->
@@ -381,7 +382,14 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                 NewMomentScreen(container, onBack = back, onSaved = back)
                             }
                             screen<EditMoment>(link = "edit/{uid}") { entry ->
-                                NewMomentScreen(container, onBack = back, onSaved = back, edit = entry.toRoute<EditMoment>().uid)
+                                NewMomentScreen(
+                                    container,
+                                    onBack = back,
+                                    onSaved = back,
+                                    edit = entry.toRoute<EditMoment>().uid,
+                                    // Deleted, the Moment's page under the edit page goes too, when it is there.
+                                    onDeleted = { if (!navController.popBackStack<Moment>(inclusive = true)) back() },
+                                )
                             }
                             screen<Changes>(link = "changes") {
                                 ChangesScreen(container, onMoment = openMoment, onBack = back)
