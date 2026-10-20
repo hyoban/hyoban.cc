@@ -76,4 +76,6 @@
     <string name="color_style_monochrome">单色</string>
     <string name="setting_pure_black">纯黑</string>
     <string name="settings_pure_black_note">深色模式下页面用纯黑，OLED 屏幕更省电。</string>
+    <string name="section_credits">致谢</string>
+    <string name="credit_flclash_note">App 的界面设计参考了它</string>
 </resources>
