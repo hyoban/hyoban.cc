@@ -19,6 +19,7 @@ open class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        if (handOff(savedInstanceState)) return
         val container = (application as MomentsApplication).container
         val start = startRoute()
         setContent {
@@ -30,6 +31,9 @@ open class MainActivity : ComponentActivity() {
         // painted over on every frame.
         window.setBackgroundDrawable(null)
     }
+
+    /** Whether this activity has handed its work to others and finished, so it draws nothing. */
+    protected open fun handOff(savedInstanceState: Bundle?): Boolean = false
 
     /** The page the app opens on: the Moments tab, from the launcher or a link. */
     protected open fun startRoute(): Any = Feed
