@@ -28,6 +28,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.background
+import cc.hyoban.moments.ui.components.AppColors
+import cc.hyoban.moments.ui.components.dayCardKey
+import cc.hyoban.moments.ui.components.sharedCard
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -129,7 +133,8 @@ fun DayScreen(container: AppContainer, date: String, onMoment: (String) -> Unit,
     val trips by container.repository.trips.collectAsStateWithLifecycle()
     val moments = remember(all, date) { all.filter { it.occurredAt.startsWith(date) } }
 
-    Box(Modifier.fillMaxSize()) {
+    // The page is the calendar's day grown to the screen.
+    Box(Modifier.fillMaxSize().sharedCard(dayCardKey(date), page = true).background(AppColors.page)) {
         MomentFeed(moments, places, trips, container.mediaUrls, onMoment, onMedia, Modifier.statusBarsPadding(), months = false) {
             // Room for the back button, which floats over the list.
             item(key = "back") { Spacer(Modifier.height(56.dp)) }

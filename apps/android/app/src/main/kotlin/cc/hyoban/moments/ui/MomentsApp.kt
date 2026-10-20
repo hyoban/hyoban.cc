@@ -328,16 +328,25 @@ private fun AnimatedContentTransitionScope<NavBackStackEntry>.popExit(): ExitTra
     tabSlide()?.let { slideOutOfContainer(it, TAB_SLIDE) + fadeOut(tween(TAB_SLIDE_MS)) }
         ?: if (closesCard()) CARD_HOLD_OUT else if (sharesPhoto()) fadeOut(tween(PAGE_MS)) else pageOut(forward = false)
 
-/** The pages that list Moments as cards (the map in its place panel), from which a Moment's page grows out of its card. */
-private val CARD_LISTS = listOf(Feed::class, Day::class, PlaceMoments::class, Trip::class, Atlas::class)
+/**
+ * Where a page grows out of a card, by the page and the pages that hold its card: a
+ * Moment's from a list of Moments, the calendar or the map's place panel; a trip's from
+ * the trips, a Moment's trip card or the map's route card; a day's from the calendar.
+ */
+private val CARD_OPENINGS: Map<KClass<*>, List<KClass<*>>> = mapOf(
+    Moment::class to listOf(Feed::class, Day::class, PlaceMoments::class, Trip::class, Atlas::class),
+    Trip::class to listOf(Trips::class, Moment::class, Atlas::class),
+    Day::class to listOf(Feed::class),
+)
 
-/** Whether a Moment's page opens from a card on a list: the card grows into it while the list stays put. */
-private fun AnimatedContentTransitionScope<NavBackStackEntry>.opensCard(): Boolean =
-    targetState.destination.hasRoute(Moment::class) && CARD_LISTS.any { initialState.destination.hasRoute(it) }
+private fun opens(page: NavBackStackEntry, from: NavBackStackEntry): Boolean =
+    CARD_OPENINGS.any { (target, origins) -> page.destination.hasRoute(target) && origins.any { from.destination.hasRoute(it) } }
 
-/** Whether a Moment's page closes back into its card on a list. */
-private fun AnimatedContentTransitionScope<NavBackStackEntry>.closesCard(): Boolean =
-    initialState.destination.hasRoute(Moment::class) && CARD_LISTS.any { targetState.destination.hasRoute(it) }
+/** Whether a page opens from a card on the one before: the card grows into it while that page stays put. */
+private fun AnimatedContentTransitionScope<NavBackStackEntry>.opensCard(): Boolean = opens(targetState, initialState)
+
+/** Whether a page closes back into its card on the page under it. */
+private fun AnimatedContentTransitionScope<NavBackStackEntry>.closesCard(): Boolean = opens(initialState, targetState)
 
 /**
  * Whether a photo flies between the two pages: a Moment's page opened from a list and

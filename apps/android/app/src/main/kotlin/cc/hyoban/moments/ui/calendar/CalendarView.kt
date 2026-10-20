@@ -21,6 +21,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import cc.hyoban.moments.ui.components.dayCardKey
+import cc.hyoban.moments.ui.components.sharedCard
 import cc.hyoban.moments.ui.theme.fill
 import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
 import androidx.compose.ui.draw.clip
@@ -148,8 +150,10 @@ private fun DayCell(day: CalendarDay, urls: MediaUrls, today: LocalDate, onClick
         return
     }
 
+    // A day grows into what it opens: its one Moment's page, or the page of its Moments.
+    val opens = day.moments.singleOrNull()?.uid ?: dayCardKey(day.date.toString())
     Box(
-        Modifier.fillMaxSize().clip(CELL)
+        Modifier.fillMaxSize().sharedCard(opens, cardCorner = 8.dp).clip(CELL)
             .background(LocalSurfaceLevel.current.raised.fill())
             .clickable(onClick = onClick)
             .then(ring),

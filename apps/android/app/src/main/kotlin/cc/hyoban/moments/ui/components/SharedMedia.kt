@@ -147,6 +147,12 @@ fun Modifier.sharedCard(key: String, cardCorner: Dp = 16.dp, page: Boolean = fal
 
 private const val CARD_MS = 400
 
+/** The key a trip's card and its page share. */
+fun tripCardKey(id: String) = "trip-$id"
+
+/** The key a calendar day and its page of Moments share. */
+fun dayCardKey(date: String) = "day-$date"
+
 /**
  * Keeps what lies over a photo, a sheet or a button, over it as the photo comes onto its
  * screen, fading in with the screen; without this the photo would pass over it and drop

@@ -27,6 +27,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import cc.hyoban.moments.ui.components.tripCardKey
+import cc.hyoban.moments.ui.components.sharedCard
 import cc.hyoban.moments.ui.feed.rememberPulledRefresh
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.draw.clip
@@ -100,7 +102,8 @@ fun TripsScreen(container: AppContainer, onTrip: (String) -> Unit) {
 
 @Composable
 private fun TripCard(trip: TripRecord, covers: List<MomentMedia>, count: Int, urls: MediaUrls, onClick: () -> Unit, modifier: Modifier) {
-    PressableCard(onClick = onClick, modifier = modifier.fillMaxWidth()) {
+    // It grows into the trip's page when opened.
+    PressableCard(onClick = onClick, modifier = modifier.fillMaxWidth().sharedCard(tripCardKey(trip.id))) {
         CoverCollage(covers, urls, Modifier)
         Column(Modifier.padding(start = Space.l, end = Space.l, top = Space.s, bottom = Space.l), verticalArrangement = Arrangement.spacedBy(Space.s + 2.dp)) {
             Text(trip.title, style = MaterialTheme.typography.titleLarge)

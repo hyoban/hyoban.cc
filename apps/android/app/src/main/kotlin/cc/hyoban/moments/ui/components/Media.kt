@@ -30,6 +30,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
@@ -68,7 +69,11 @@ fun MediaStill(
     // the larger file it already has rather than fetching one for every size on the way.
     val widest = remember(media.uid) { IntArray(1) }
 
-    BoxWithConstraints(modifier.background(placeholder)) {
+    // The placeholder is Coil's, not a fill under the still: it fades out as the still fades
+    // in, so a loaded photo is painted once rather than over a colour no one sees.
+    val fill = remember(placeholder) { ColorPainter(placeholder) }
+
+    BoxWithConstraints(modifier) {
         widest[0] = maxOf(widest[0], with(LocalDensity.current) { (maxWidth * detail).roundToPx() })
         val url = urls.still(media, widest[0])
         val height = if (constraints.hasBoundedHeight) constraints.maxHeight else widest[0]
@@ -90,6 +95,9 @@ fun MediaStill(
         AsyncImage(
             model = request,
             contentDescription = media.alt.ifEmpty { null },
+            placeholder = fill,
+            error = fill,
+            fallback = fill,
             contentScale = contentScale,
             modifier = Modifier.fillMaxSize(),
         )
