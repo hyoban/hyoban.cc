@@ -16,6 +16,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
@@ -86,6 +87,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
@@ -102,7 +104,7 @@ import cc.hyoban.moments.ui.LocalNavAccessory
 import cc.hyoban.moments.ui.LocalRailSpace
 import cc.hyoban.moments.ui.components.CompactMomentRow
 import cc.hyoban.moments.ui.components.NAV_ACCESSORY_GAP
-import cc.hyoban.moments.ui.components.NAV_HEIGHT
+import cc.hyoban.moments.ui.components.NAV_BUTTON_SIZE
 import cc.hyoban.moments.ui.components.NAV_WIDTH
 import cc.hyoban.moments.ui.components.RAIL_HEIGHT
 import cc.hyoban.moments.ui.components.RAIL_WIDTH
@@ -188,7 +190,7 @@ fun MapScreen(container: AppContainer, onMoment: (String) -> Unit, onPlace: (Str
     val accessory = LocalNavAccessory.current
     val currentLocate by rememberUpdatedState(requestLocate)
     val locateBeside = remember<@Composable () -> Unit> {
-        { LocateButton(locating, onClick = { currentLocate() }, size = NAV_HEIGHT) }
+        { LocateButton(locating, onClick = { currentLocate() }, size = NAV_BUTTON_SIZE) }
     }
     // Down the side, the map keeps locating itself, below the rail and the compass above it.
     val landscape = isLandscape()
@@ -331,8 +333,16 @@ fun MapScreen(container: AppContainer, onMoment: (String) -> Unit, onPlace: (Str
             ) {
                 CompositionLocalProvider(LocalSurfaceLevel provides level) {
                     Column {
+                        // Dragged down to close, or tapped, focused or read out as a button that
+                        // closes it, as Material 3 gives a drag handle a single-tap way too; 48dp
+                        // tall, a target's height.
+                        val close = stringResource(R.string.action_close)
                         Box(
-                            Modifier.fillMaxWidth().height(28.dp).draggable(
+                            Modifier.fillMaxWidth().height(48.dp)
+                                .clickable(onClickLabel = close, role = Role.Button) { selected = null }
+                                .semantics { contentDescription = close }
+                                .testTag("panel_handle")
+                                .draggable(
                                 orientation = Orientation.Vertical,
                                 state = rememberDraggableState { delta -> drag = (drag + delta).coerceAtLeast(0f) },
                                 onDragStopped = {

@@ -69,7 +69,7 @@ import cc.hyoban.moments.ui.LocalRailSpace
 import cc.hyoban.moments.ui.RailSpace
 import cc.hyoban.moments.ui.calendar.CalendarView
 import cc.hyoban.moments.ui.components.AppColors
-import cc.hyoban.moments.ui.components.NAV_HEIGHT
+import cc.hyoban.moments.ui.components.NAV_BUTTON_SIZE
 import cc.hyoban.moments.ui.components.RAIL_WIDTH
 import cc.hyoban.moments.ui.components.SubPage
 import cc.hyoban.moments.ui.components.Symbols
@@ -129,7 +129,7 @@ fun FeedScreen(
     val accessory = LocalNavAccessory.current
     val currentOnNew by rememberUpdatedState(onNew)
     val newBeside = remember<@Composable () -> Unit> {
-        { NewMomentButton(onClick = { currentOnNew() }, size = if (isLandscape()) RAIL_WIDTH else NAV_HEIGHT) }
+        { NewMomentButton(onClick = { currentOnNew() }, size = if (isLandscape()) RAIL_WIDTH else NAV_BUTTON_SIZE) }
     }
     DisposableEffect(accessory) {
         accessory.value = newBeside

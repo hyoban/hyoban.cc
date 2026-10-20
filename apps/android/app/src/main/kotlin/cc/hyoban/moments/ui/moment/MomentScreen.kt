@@ -47,12 +47,12 @@ import androidx.compose.material.icons.rounded.Luggage
 import androidx.compose.material.icons.rounded.PhoneAndroid
 import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material.icons.rounded.Share
-import androidx.compose.material3.Icon
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.ListItemShapes
-import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -70,7 +70,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -99,6 +103,7 @@ import cc.hyoban.moments.ui.components.READABLE_WIDTH
 import cc.hyoban.moments.ui.components.RisingSheet
 import cc.hyoban.moments.ui.components.Thumbnail
 import cc.hyoban.moments.ui.components.dayCardKey
+import cc.hyoban.moments.ui.components.kindLabel
 import cc.hyoban.moments.ui.components.landscape
 import cc.hyoban.moments.ui.components.mediaKey
 import cc.hyoban.moments.ui.components.shapeOf
@@ -397,6 +402,7 @@ private fun Filmstrip(moment: MomentRecord, urls: MediaUrls, pager: PagerState, 
     ) {
         itemsIndexed(moment.media, key = { _, media -> media.uid }) { index, media ->
             val selected = index == current
+            val label = stringResource(R.string.media_position, stringResource(media.kindLabel()), index + 1, moment.media.size)
             // The one shown breaks from the others' shape, morphing on the motion scheme's
             // spatial spring; the others under a scrim rather than faded, so they don't turn the
             // page's grey.
@@ -405,6 +411,11 @@ private fun Filmstrip(moment: MomentRecord, urls: MediaUrls, pager: PagerState, 
             Box(
                 Modifier.size(56.dp).clip(RoundedCornerShape(corner))
                     .clickable { scope.launch { pager.animateScrollToPage(index) } }
+                    // Named as a carousel's item is, which of how many, and whether it is the one shown.
+                    .semantics {
+                        contentDescription = label
+                        this.selected = selected
+                    }
                     .testTag("thumb_$index"),
             ) {
                 Thumbnail(media, urls, size = 56)
