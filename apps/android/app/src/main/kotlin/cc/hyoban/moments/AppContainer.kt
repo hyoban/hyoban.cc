@@ -29,6 +29,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.getAndUpdate
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.File
 import java.time.OffsetDateTime
@@ -45,11 +46,8 @@ class AppContainer(context: Context) {
     // may still hold what the app recorded before it only showed the site's records, and
     // that is left as it was.
     val localStore = DataStore(File(context.filesDir, "local"))
-    val repository = MomentsRepository(
-        DataStore(File(context.filesDir, "api")),
-        MomentsApi(baseUrl = { settings.apiUrl.value }),
-        local = localStore,
-    )
+    private val api = MomentsApi(baseUrl = { settings.apiUrl.value }, token = { settings.apiToken.value })
+    val repository = MomentsRepository(DataStore(File(context.filesDir, "api")), api, local = localStore, writer = api)
     val mediaUrls = MediaUrls { settings.assetOrigin.value }
     /** Places by name and around a point, for a new Moment's place. */
     val placeSearch = PlaceSearch(BuildConfig.PLACE_SEARCH_URL)
@@ -164,6 +162,49 @@ class AppContainer(context: Context) {
     suspend fun updateLocal(moment: MomentRecord, place: Pair<String, Place>?) {
         repository.updateLocal(moment, place)
         Widgets.update(appContext)
+    }
+
+    /** Whether the app may write to the API: it has the owner's token. */
+    val canPublish get() = settings.apiToken.isSet
+
+    /**
+     * Sends a Moment to the API and publishes it, a Moment of the phone's or one of the
+     * site's as changed, and draws the widgets again with it.
+     */
+    suspend fun push(moment: MomentRecord, place: Pair<String, Place>? = null): MomentRecord =
+        repository.push(moment, place).also { Widgets.update(appContext) }
+
+    private val _publishing = MutableStateFlow<Set<String>>(emptySet())
+
+    /** The Moments of the phone's being published, by uid, so their pages say so whenever they're opened. */
+    val publishing: StateFlow<Set<String>> = _publishing.asStateFlow()
+
+    /** Publishes a Moment of the phone's, past the page that asked, and says how it went. */
+    fun publish(moment: MomentRecord) {
+        if (moment.uid in _publishing.value) return
+        _publishing.update { it + moment.uid }
+        scope.launch {
+            try {
+                push(moment)
+                Toast.makeText(appContext, R.string.message_published, Toast.LENGTH_SHORT).show()
+            } catch (error: Exception) {
+                Toast.makeText(appContext, appContext.getString(R.string.error_publish, error.message ?: error.toString()), Toast.LENGTH_LONG).show()
+            } finally {
+                _publishing.update { it - moment.uid }
+            }
+        }
+    }
+
+    /** Takes one of the site's Moments off it, past the page that asked, and says so if it couldn't. */
+    fun deletePublished(uid: String) {
+        scope.launch {
+            try {
+                repository.deletePublished(uid)
+                Widgets.update(appContext)
+            } catch (error: Exception) {
+                Toast.makeText(appContext, appContext.getString(R.string.error_delete, error.message ?: error.toString()), Toast.LENGTH_LONG).show()
+            }
+        }
     }
 
     fun deleteLocal(uid: String) {

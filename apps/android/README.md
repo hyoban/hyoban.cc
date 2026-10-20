@@ -36,7 +36,14 @@ Such a Moment stays on the phone, under the app's `local/`
 directory in the spec's layout, its photos copied in whole so it keeps them whatever
 becomes of the gallery's, and its new places with ids of their own (`p-<ulid>`); no sync
 or change of API touches it. It is shown among the site's, marked 仅本机 (on this phone),
-and can be deleted from its page; nothing is sent to the API yet.
+and can be changed or deleted from its page.
+
+With the API's token, set on the settings page (kept in a file of the app's that backups
+leave out), a Moment is published from the editor's 发布 or its page's upload button: the
+places only the phone knows go first, named by the API from their pinyin, then the
+photos' originals, then the Moment, which is then published, and it leaves the phone's
+store for the site's. The site's Moments can then be changed and deleted from their
+pages too, each change sent to the API as it is saved.
 
 On the home screen it is 这里 (here): Material 3's nine-lobed cookie shape in green on
 pale mint, with the map's "you are here" pulse in it, as an adaptive icon with its own

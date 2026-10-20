@@ -1,7 +1,10 @@
 package cc.hyoban.moments
 
 import cc.hyoban.moments.data.api.MomentChanges
+import cc.hyoban.moments.data.api.ApiException
 import cc.hyoban.moments.data.api.MomentsSource
+import cc.hyoban.moments.data.api.MomentsWriter
+import cc.hyoban.moments.data.api.SavedPlace
 import cc.hyoban.moments.data.api.PlacesResponse
 import cc.hyoban.moments.data.api.TripsResponse
 import cc.hyoban.moments.data.spec.LocalMedia
@@ -9,6 +12,7 @@ import cc.hyoban.moments.data.spec.MediaType
 import cc.hyoban.moments.data.spec.MomentMedia
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
+import cc.hyoban.moments.data.spec.PublishedMedia
 import cc.hyoban.moments.data.spec.PublishedMoment
 import cc.hyoban.moments.data.store.DataStore
 import cc.hyoban.moments.data.store.MomentsRepository
@@ -48,6 +52,41 @@ class MomentsRepositoryTest {
         override suspend fun places() = PlacesResponse(revision, places)
 
         override suspend fun trips() = TripsResponse(revision, emptyList())
+    }
+
+    /** The API's writes, as the Worker answers them: places named, photos kept, drafts published. */
+    private class FakeWriter : MomentsWriter {
+        val calls = mutableListOf<String>()
+        val uploads = mutableMapOf<String, String>()
+        var saved: MomentRecord? = null
+
+        override suspend fun savePlace(id: String, place: Place): SavedPlace {
+            calls += "place $id"
+            return SavedPlace(if (id.startsWith("p-")) "hu-bian" else id, place)
+        }
+
+        override suspend fun uploadImage(momentUid: String, mediaUid: String, file: File, contentType: String) {
+            calls += "upload $mediaUid $contentType"
+            uploads[mediaUid] = file.readText()
+        }
+
+        override suspend fun saveMoment(moment: MomentRecord): MomentRecord {
+            calls += "save ${moment.uid} ${moment.places}"
+            return moment.copy(media = moment.media.map { it.copy(local = null) }).also { saved = it }
+        }
+
+        override suspend fun publishMoment(uid: String): MomentRecord {
+            calls += "publish $uid"
+            return saved!!.copy(
+                published = PublishedMoment("2026/10/02-01-hu-bian", "hu-bian", 1, "2026-10-02T00:00:00Z"),
+                media = saved!!.media.map { it.copy(published = PublishedMedia("moments/2026/10/02-01-hu-bian/hu-bian.jpg", "image/jpeg", 5, "etag")) },
+            )
+        }
+
+        override suspend fun deleteMoment(uid: String) {
+            calls += "delete $uid"
+            if (uid == "GONE") throw ApiException(404, "Not found.")
+        }
     }
 
     private val directory: File = Files.createTempDirectory("moments-cache").toFile()
@@ -190,6 +229,50 @@ class MomentsRepositoryTest {
         restarted.load()
         assertEquals("after", restarted.moment("L")?.text)
         assertEquals("书店", restarted.places.value["p-saved"]?.name)
+    }
+
+    @Test
+    fun `a Moment of the phone's published becomes the site's, its places with it`() = runBlocking {
+        val writer = FakeWriter()
+        val repository = MomentsRepository(DataStore(directory), api, Dispatchers.Unconfined, local = DataStore(localDirectory), writer = writer)
+        api.put(moment("S", "2026-10-01"))
+        repository.load()
+        repository.refresh()
+        val copy = File(localDirectory, "media/P.jpg").apply { parentFile.mkdirs(); writeText("photo") }
+        val mine = moment("L", "2026-10-02", text = "湖边", published = false).copy(
+            places = listOf("p-made", "nanjing"),
+            media = listOf(MomentMedia("P", MediaType.IMAGE, width = 4, height = 3, local = LocalMedia(copy.toURI().toString(), copied = true))),
+        )
+        val other = moment("M", "2026-10-03", published = false).copy(places = listOf("p-made"))
+        repository.addLocal(mine, "p-made" to Place("湖边", 32.0, 118.8))
+        repository.addLocal(other)
+
+        val saved = repository.push(repository.moment("L")!!)
+
+        assertEquals(
+            listOf("place p-made", "upload P image/jpeg", "save L [hu-bian, nanjing]", "publish L"),
+            writer.calls,
+            "the phone's place first, then the photo, then the Moment, then its publishing",
+        )
+        assertEquals("photo", writer.uploads["P"])
+        assertEquals("2026/10/02-01-hu-bian", saved.published?.id)
+        assertTrue(!repository.isLocal("L"), "it leaves the phone's")
+        assertEquals("2026/10/02-01-hu-bian", repository.moment("L")?.published?.id)
+        assertTrue(!copy.exists(), "its copied photo goes")
+        assertEquals("湖边", repository.places.value["hu-bian"]?.name)
+        assertEquals(null, repository.places.value["p-made"], "the place is the API's now")
+        assertEquals(listOf("hu-bian"), repository.moment("M")?.places, "the phone's other Moment there follows it")
+
+        writer.calls.clear()
+        repository.push(repository.moment("L")!!.copy(text = "changed"))
+        assertEquals(listOf("save L [hu-bian, nanjing]"), writer.calls, "a published Moment is only saved again")
+
+        repository.deletePublished("S")
+        repository.deletePublished("GONE")
+        assertEquals(listOf("M", "L"), repository.moments.value.map { it.uid })
+        val restarted = repository()
+        restarted.load()
+        assertEquals(listOf("M", "L"), restarted.moments.value.map { it.uid }, "the copy on the phone has it too")
     }
 
     private fun moment(uid: String, day: String, text: String = "", hidden: Boolean = false, published: Boolean = true) =

@@ -12,7 +12,9 @@ import { getUploadKey, type Bucket, type UploadPart } from './bucket.ts'
 import type { Database, Statement } from './database.ts'
 import { HttpError, validate } from './http.ts'
 import {
+  PROVISIONAL_PLACE_PATTERN,
   getExtension,
+  getPlaceId,
   getPublishedId,
   getSlug,
   getStem,
@@ -179,15 +181,18 @@ export async function uploadMedia(
 
 /**
  * Adds a place, unless it is one already known: by id, or within 200 m or by name, which
- * the response's id then names. A known place keeps the point and name it has.
+ * the response's id then names. A known place keeps the point and name it has. A place
+ * the app made, under its provisional `p-<ulid>`, is added under an id spelled from its
+ * name, as `pnpm data:publish` names it.
  */
 export async function savePlace(
   context: WriteContext,
-  id: string,
+  given: string,
   body: unknown,
 ): Promise<WriteResult<{ id: string; place: Place }>> {
   const place = validate(placeSchema, body)
   const places = await readPlaceRecords(context.db)
+  const id = PROVISIONAL_PLACE_PATTERN.test(given) ? getPlaceId(place.name, places) : given
   const match = matchPlace(id, place, places)
 
   if (match.status !== 'new') {

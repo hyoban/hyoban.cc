@@ -34,6 +34,7 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
+import androidx.compose.material.icons.rounded.CloudUpload
 import androidx.compose.material.icons.rounded.DeleteOutline
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.Luggage
@@ -168,23 +169,57 @@ fun MomentScreen(
             }
         }
         FloatingBack(onBack, Modifier.align(Alignment.TopStart))
-        // Only what was written on the phone can be changed or taken back; the site's Moments are the API's.
-        if (container.repository.isLocal(uid)) {
+        // What was written on the phone can be changed, published or taken back; the site's
+        // Moments only with the API's token.
+        val local = container.repository.isLocal(uid)
+        val canPublish = container.canPublish
+        if (local || canPublish) {
+            val publishing by container.publishing.collectAsStateWithLifecycle()
+            val busy = uid in publishing
             var confirming by remember { mutableStateOf(false) }
+            var confirmingPublish by remember { mutableStateOf(false) }
             Row(Modifier.align(Alignment.TopEnd)) {
-                FloatingButton(Icons.Rounded.Edit, stringResource(R.string.action_edit_moment), onClick = { onEdit(uid) }, tag = "edit")
-                FloatingButton(Icons.Rounded.DeleteOutline, stringResource(R.string.action_delete_moment), onClick = { confirming = true }, tag = "delete")
+                if (local && canPublish) {
+                    FloatingButton(
+                        Icons.Rounded.CloudUpload,
+                        stringResource(if (busy) R.string.message_publishing else R.string.action_publish_moment),
+                        onClick = { confirmingPublish = true },
+                        tag = "publish",
+                        busy = busy,
+                    )
+                }
+                if (!busy) {
+                    FloatingButton(Icons.Rounded.Edit, stringResource(R.string.action_edit_moment), onClick = { onEdit(uid) }, tag = "edit")
+                    FloatingButton(Icons.Rounded.DeleteOutline, stringResource(R.string.action_delete_moment), onClick = { confirming = true }, tag = "delete")
+                }
+            }
+            if (confirmingPublish) {
+                AlertDialog(
+                    onDismissRequest = { confirmingPublish = false },
+                    title = { Text(stringResource(R.string.action_publish_moment)) },
+                    text = { Text(stringResource(R.string.confirm_publish_moment)) },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                confirmingPublish = false
+                                container.publish(moment)
+                            },
+                            modifier = Modifier.testTag("confirm_publish"),
+                        ) { Text(stringResource(R.string.action_publish)) }
+                    },
+                    dismissButton = { TextButton(onClick = { confirmingPublish = false }) { Text(stringResource(R.string.action_cancel)) } },
+                )
             }
             if (confirming) {
                 AlertDialog(
                     onDismissRequest = { confirming = false },
                     title = { Text(stringResource(R.string.action_delete_moment)) },
-                    text = { Text(stringResource(R.string.confirm_delete_moment)) },
+                    text = { Text(stringResource(if (local) R.string.confirm_delete_moment else R.string.confirm_delete_published)) },
                     confirmButton = {
                         TextButton(
                             onClick = {
                                 confirming = false
-                                container.deleteLocal(uid)
+                                if (local) container.deleteLocal(uid) else container.deletePublished(uid)
                                 onBack()
                             },
                             modifier = Modifier.testTag("confirm_delete"),

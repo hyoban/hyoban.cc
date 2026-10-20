@@ -159,4 +159,23 @@
     <string name="source_saved">保存时的</string>
     <string name="share_as_moment">写一个时刻</string>
     <string name="error_shared_photos">有的照片没能读取</string>
+    <string name="section_publishing">发布</string>
+    <string name="setting_api_token">API 令牌</string>
+    <string name="token_set">已设置</string>
+    <string name="token_unset">未设置，只能浏览</string>
+    <string name="token_hint">粘贴 API 的令牌</string>
+    <string name="token_replace">输入新的令牌来替换</string>
+    <string name="action_forget_token">移除令牌</string>
+    <string name="settings_token_note">有了令牌，就能把手机上写的时刻发布到网站，也能编辑和删除网站上的时刻。令牌只存在这台手机上，不进备份。</string>
+    <string name="action_publish">发布</string>
+    <string name="action_publish_moment">发布到网站</string>
+    <string name="confirm_publish_moment">这个时刻和它的照片会上传到网站，公开可见；发布后手机上的副本就移除了。</string>
+    <string name="message_published">已发布</string>
+    <string name="message_publishing">正在发布…</string>
+    <string name="error_publish">没能发布：%1$s</string>
+    <string name="error_saved_not_published">已存在本机，但没能发布：%1$s</string>
+    <string name="confirm_delete_published">这个时刻会从网站上删除。</string>
+    <string name="error_delete">没能删除：%1$s</string>
+    <string name="note_local_or_publish">保存只存在这台手机上；发布会把它和照片上传到网站。</string>
+    <string name="note_published">保存会直接更新网站上的这个时刻。</string>
 </resources>

@@ -16,6 +16,7 @@ import androidx.compose.material.icons.automirrored.rounded.OpenInNew
 import androidx.compose.material.icons.rounded.Cloud
 import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.Image
+import androidx.compose.material.icons.rounded.Key
 import androidx.compose.material.icons.rounded.LightMode
 import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.material3.AlertDialog
@@ -37,16 +38,19 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.R
 import cc.hyoban.moments.Setting
+import cc.hyoban.moments.Token
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.PageWidth
 import cc.hyoban.moments.ui.components.SubPage
@@ -62,6 +66,7 @@ fun SettingsScreen(container: AppContainer, onBack: () -> Unit) {
     val settings = container.settings
     // The setting whose dialog is open, by its place in the list, so it stays open across a rotation.
     var editing by rememberSaveable { mutableStateOf<Int?>(null) }
+    var editingToken by rememberSaveable { mutableStateOf(false) }
     val rows = listOf(
         Row(settings.apiUrl, R.string.setting_api_url, Icons.Rounded.Cloud) { container.changeApi(it) },
         Row(settings.assetOrigin, R.string.setting_asset_origin, Icons.Rounded.Image) { settings.assetOrigin.set(it) },
@@ -82,9 +87,25 @@ fun SettingsScreen(container: AppContainer, onBack: () -> Unit) {
                 ThemeSettings(settings)
                 LanguageSettings()
                 Section(stringResource(R.string.section_sources), rows.subList(0, 2), 0, stringResource(R.string.settings_api_note)) { editing = it }
+                Group(stringResource(R.string.section_publishing), stringResource(R.string.settings_token_note)) {
+                    ListItem(
+                        headlineContent = { Text(stringResource(R.string.setting_api_token)) },
+                        supportingContent = { Text(stringResource(if (settings.apiToken.isSet) R.string.token_set else R.string.token_unset)) },
+                        leadingContent = { Icon(Icons.Rounded.Key, contentDescription = null) },
+                        colors = rowColors(),
+                        modifier = Modifier.clickable { editingToken = true }.testTag("api_token"),
+                    )
+                }
                 Section(stringResource(R.string.section_map), rows.subList(2, 4), 2, stringResource(R.string.settings_map_note)) { editing = it }
                 Credits()
             }
+        }
+    }
+
+    if (editingToken) {
+        TokenDialog(settings.apiToken, onDismiss = { editingToken = false }) { text ->
+            settings.apiToken.set(text)
+            editingToken = false
         }
     }
 
@@ -187,6 +208,45 @@ private fun AddressDialog(setting: Setting, title: String, onDismiss: () -> Unit
         dismissButton = {
             if (Setting.normalize(field.text) != setting.default) {
                 TextButton(onClick = { onSave(setting.default) }) { Text(stringResource(R.string.action_restore_default)) }
+            } else {
+                TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
+            }
+        },
+    )
+}
+
+/**
+ * The API's token to type or paste, shown as dots; one already kept isn't shown again,
+ * only replaced or forgotten.
+ */
+@Composable
+private fun TokenDialog(token: Token, onDismiss: () -> Unit, onSave: (String) -> Unit) {
+    var field by remember { mutableStateOf("") }
+    val focus = remember { FocusRequester() }
+    LaunchedEffect(Unit) { focus.requestFocus() }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.setting_api_token)) },
+        text = {
+            OutlinedTextField(
+                value = field,
+                onValueChange = { field = it },
+                placeholder = { Text(stringResource(if (token.isSet) R.string.token_replace else R.string.token_hint)) },
+                singleLine = true,
+                visualTransformation = PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
+                modifier = Modifier.fillMaxWidth().focusRequester(focus).testTag("api_token_field"),
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = { onSave(field) }, enabled = field.isNotBlank(), modifier = Modifier.testTag("api_token_save")) {
+                Text(stringResource(R.string.action_confirm))
+            }
+        },
+        dismissButton = {
+            if (token.isSet) {
+                TextButton(onClick = { onSave("") }) { Text(stringResource(R.string.action_forget_token)) }
             } else {
                 TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
             }

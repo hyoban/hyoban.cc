@@ -167,4 +167,23 @@
     <string name="source_saved">As saved</string>
     <string name="share_as_moment">Write a Moment</string>
     <string name="error_shared_photos">Some photos couldn\'t be read</string>
+    <string name="section_publishing">Publishing</string>
+    <string name="setting_api_token">API token</string>
+    <string name="token_set">Set</string>
+    <string name="token_unset">Not set; reading only</string>
+    <string name="token_hint">Paste the API\'s token</string>
+    <string name="token_replace">Type a new token to replace it</string>
+    <string name="action_forget_token">Remove token</string>
+    <string name="settings_token_note">With the token, Moments written on this phone can be published to the site, and the site\'s Moments edited and deleted. It stays on this phone, out of backups.</string>
+    <string name="action_publish">Publish</string>
+    <string name="action_publish_moment">Publish to the site</string>
+    <string name="confirm_publish_moment">This Moment and its photos will be uploaded to the site, for everyone to see; the phone\'s copy goes once it is published.</string>
+    <string name="message_published">Published</string>
+    <string name="message_publishing">Publishing…</string>
+    <string name="error_publish">Couldn\'t publish: %1$s</string>
+    <string name="error_saved_not_published">Kept on this phone, but couldn\'t publish: %1$s</string>
+    <string name="confirm_delete_published">This Moment will be deleted from the site.</string>
+    <string name="error_delete">Couldn\'t delete: %1$s</string>
+    <string name="note_local_or_publish">Saving keeps it on this phone; publishing uploads it and its photos to the site.</string>
+    <string name="note_published">Saving updates this Moment on the site.</string>
 </resources>
