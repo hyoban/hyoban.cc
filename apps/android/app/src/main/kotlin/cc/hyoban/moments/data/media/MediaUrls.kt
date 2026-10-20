@@ -8,7 +8,8 @@ import cc.hyoban.moments.data.spec.PublishedMedia
  * Where a published photo or video is served, as the site picks it (src/asset-url.ts and
  * src/moments/index.ts): a photo's smallest variant at least as wide as it is shown, or
  * for an original the API kept, that width from Cloudflare Images; a video's poster, or
- * its first frame from Media Transformations.
+ * its first frame from Media Transformations. A photo not yet published is read from
+ * where it is on the phone.
  */
 class MediaUrls(private val origin: () -> String) {
     constructor(origin: String) : this({ origin })
@@ -18,7 +19,7 @@ class MediaUrls(private val origin: () -> String) {
 
     /** The still to show for a media item at [width] pixels: a photo, a live photo's still, a video's poster. */
     fun still(media: MomentMedia, width: Int): String? {
-        val published = media.published ?: return null
+        val published = media.published ?: return media.local?.uri
 
         return when (media.type) {
             MediaType.IMAGE, MediaType.LIVE_PHOTO -> image(published, width)
@@ -29,7 +30,7 @@ class MediaUrls(private val origin: () -> String) {
 
     /** The motion to play: a video, or a live photo's video. */
     fun motion(media: MomentMedia): String? {
-        val published = media.published ?: return null
+        val published = media.published ?: return media.local?.videoUri
 
         return when (media.type) {
             MediaType.IMAGE -> null

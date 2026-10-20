@@ -4,6 +4,9 @@ import cc.hyoban.moments.data.api.MomentChanges
 import cc.hyoban.moments.data.api.MomentsSource
 import cc.hyoban.moments.data.api.PlacesResponse
 import cc.hyoban.moments.data.api.TripsResponse
+import cc.hyoban.moments.data.spec.LocalMedia
+import cc.hyoban.moments.data.spec.MediaType
+import cc.hyoban.moments.data.spec.MomentMedia
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.spec.PublishedMoment
@@ -50,7 +53,9 @@ class MomentsRepositoryTest {
     private val directory: File = Files.createTempDirectory("moments-cache").toFile()
     private val api = FakeApi()
 
-    private fun repository() = MomentsRepository(DataStore(directory), api, Dispatchers.Unconfined)
+    private val localDirectory: File = Files.createTempDirectory("moments-local").toFile()
+
+    private fun repository() = MomentsRepository(DataStore(directory), api, Dispatchers.Unconfined, local = DataStore(localDirectory))
 
     @Test
     fun `the first refresh reads every page, later ones only what changed`() = runBlocking {
@@ -113,6 +118,78 @@ class MomentsRepositoryTest {
         assertTrue(failing.refresh().isFailure)
         assertEquals("offline", failing.error.value)
         assertEquals(listOf("A"), failing.moments.value.map { it.uid })
+    }
+
+    @Test
+    fun `the phone's own Moments sit among the API's and outlast a sync, a restart and another API`() = runBlocking {
+        api.put(moment("A", "2026-10-01"))
+        val repository = repository()
+        repository.load()
+        repository.refresh()
+
+        val photo = File(localDirectory, "media/P.jpg").apply { parentFile.mkdirs(); writeText("jpeg") }
+        val mine = moment("L", "2026-10-02", text = "written here", published = false).copy(
+            places = listOf("p-new", "p-kept"),
+            media = listOf(MomentMedia("P", MediaType.IMAGE, local = LocalMedia(photo.toURI().toString(), copied = true))),
+        )
+        repository.addLocal(mine, "p-new" to Place("湖边", 32.0, 118.8, createdAt = mine.createdAt))
+        repository.addLocalPlace("p-kept", Place("书店", 32.1, 118.9, createdAt = "2026-10-01T09:00:00+08:00"))
+
+        assertEquals(listOf("L", "A"), repository.moments.value.map { it.uid })
+        assertTrue(repository.isLocal("L"))
+        assertEquals("湖边", repository.places.value["p-new"]?.name)
+
+        api.put(moment("B", "2026-10-03"))
+        repository.refresh()
+        assertEquals(listOf("B", "L", "A"), repository.moments.value.map { it.uid })
+        assertEquals("湖边", repository.places.value["p-new"]?.name, "a sync keeps the phone's places")
+
+        val restarted = repository()
+        restarted.load()
+        assertEquals(listOf("B", "L", "A"), restarted.moments.value.map { it.uid })
+
+        restarted.clear()
+        assertEquals(listOf("L"), restarted.moments.value.map { it.uid }, "another API drops only its own copy")
+
+        restarted.deleteLocal("L")
+        assertEquals(emptyList(), restarted.moments.value.map { it.uid })
+        assertEquals(null, restarted.places.value["p-new"], "a place no other of the phone's Moments is at goes with it")
+        assertEquals("书店", restarted.places.value["p-kept"]?.name, "a place kept on its own stays")
+        assertTrue(!photo.exists(), "and so does the photo copied for it")
+    }
+
+    @Test
+    fun `a Moment of the phone's changed keeps its file, photos and places in step`() = runBlocking {
+        val repository = repository()
+        repository.load()
+        val kept = File(localDirectory, "media/K.jpg").apply { parentFile.mkdirs(); writeText("kept") }
+        val dropped = File(localDirectory, "media/D.jpg").apply { writeText("dropped") }
+        fun photo(uid: String, file: File) = MomentMedia(uid, MediaType.IMAGE, local = LocalMedia(file.toURI().toString(), copied = true))
+        val mine = moment("L", "2026-10-02", text = "before", published = false).copy(
+            places = listOf("p-made"),
+            media = listOf(photo("K", kept), photo("D", dropped)),
+        )
+        repository.addLocal(mine, "p-made" to Place("湖边", 32.0, 118.8))
+        repository.addLocalPlace("p-saved", Place("书店", 32.1, 118.9))
+
+        repository.updateLocal(mine.copy(occurredAt = "2026-11-03", text = "after", places = listOf("p-saved"), media = listOf(photo("K", kept))))
+
+        assertEquals("after", repository.moment("L")?.text)
+        assertEquals(
+            listOf("moments/2026/11/L.json"),
+            File(localDirectory, "moments").walkTopDown().filter { it.isFile }.map { it.relativeTo(localDirectory).path }.toList(),
+            "moved to another month, its file moves with it",
+        )
+        assertTrue(kept.exists())
+        assertTrue(!dropped.exists(), "a photo taken out goes")
+        assertEquals(null, repository.places.value["p-made"], "the place it made, now unused, goes")
+
+        repository.updateLocal(repository.moment("L")!!.copy(places = emptyList()))
+        assertEquals("书店", repository.places.value["p-saved"]?.name, "a place kept on its own stays when unused")
+        val restarted = repository()
+        restarted.load()
+        assertEquals("after", restarted.moment("L")?.text)
+        assertEquals("书店", restarted.places.value["p-saved"]?.name)
     }
 
     private fun moment(uid: String, day: String, text: String = "", hidden: Boolean = false, published: Boolean = true) =

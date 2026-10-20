@@ -45,6 +45,11 @@ class Settings(context: Context) {
 
     fun mapStyle(dark: Boolean) = (if (dark) mapStyleDark else mapStyleLight).value
 
+    /** Whether the app has asked once to see where picked photos were taken; it doesn't ask again. */
+    var askedMediaLocation: Boolean
+        get() = prefs.getBoolean("asked_media_location", false)
+        set(value) = prefs.edit { putBoolean("asked_media_location", value) }
+
     /** Light, dark, or as the system is. */
     var themeMode: ThemeMode by mutableStateOf(enumOf(prefs.getString("theme_mode", null), ThemeMode.SYSTEM))
         private set

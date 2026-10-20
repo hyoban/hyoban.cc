@@ -3,9 +3,11 @@
 
     <!-- The Moments, places and trips come from the API; the photos from the image origin. -->
     <uses-permission android:name="android.permission.INTERNET" />
-    <!-- Asked for only when the map is asked to find where the phone is. -->
+    <!-- Asked for only when the map is asked to find where the phone is, or a new Moment where it is. -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <!-- Where a photo picked for a new Moment was taken, which the gallery hides without it. -->
+    <uses-permission android:name="android.permission.ACCESS_MEDIA_LOCATION" />
 
     <application
         android:name=".MomentsApplication"
@@ -29,7 +31,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
             <!-- moments://moment/{uid}, trip/{id}, day/{date}, place/{id}, settings, map,
-                 trips and moments open their pages, from a link or from
+                 trips, moments and new open their pages, from a link or from
                  `adb shell am start -d`; one opened while the app is on screen goes over
                  the page shown rather than starting it again. -->
             <intent-filter>
@@ -49,6 +51,42 @@
             android:launchMode="singleTop"
             android:supportsPictureInPicture="true"
             android:exported="false" />
+
+        <!-- A place shared from a map, Amap's among them, or photos from the gallery: it
+             draws nothing, and opens the app on a new Moment with them, or gives them to the
+             Moment being written. -->
+        <activity
+            android:name=".ShareActivity"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:noHistory="true"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.Translucent.NoTitleBar">
+            <intent-filter android:label="@string/share_as_place">
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+            <!-- Photos from the gallery, one or several, for a new Moment. -->
+            <intent-filter android:label="@string/share_as_moment">
+                <action android:name="android.intent.action.SEND" />
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="image/*" />
+            </intent-filter>
+        </activity>
+
+        <!-- The same, keeping the shared place on its own and leaving the map in front. -->
+        <activity-alias
+            android:name=".SavePlaceActivity"
+            android:exported="true"
+            android:targetActivity=".ShareActivity">
+            <intent-filter android:label="@string/share_save_place">
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity-alias>
 
         <!-- The home screen's widgets: a Moment from this day in an earlier year, and the trip. -->
         <receiver
