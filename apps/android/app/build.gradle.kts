@@ -54,9 +54,11 @@ android {
         }
     }
 
-    // The map's native library compressed in the APK, a third of its size, and unpacked on install.
+    // The map's native library compressed in the APK, a third of its size, and the code to half
+    // of its, both unpacked on install: a smaller APK to pass around for a little more on the phone.
     packaging {
         jniLibs.useLegacyPackaging = true
+        dex.useLegacyPackaging = true
     }
 
     compileOptions {

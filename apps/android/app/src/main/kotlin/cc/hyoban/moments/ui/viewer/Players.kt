@@ -23,7 +23,14 @@ import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor
 import androidx.media3.datasource.cache.SimpleCache
 import androidx.media3.datasource.okhttp.OkHttpDataSource
 import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.exoplayer.RenderersFactory
+import androidx.media3.exoplayer.audio.MediaCodecAudioRenderer
+import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
+import androidx.media3.exoplayer.source.ProgressiveMediaSource
+import androidx.media3.exoplayer.video.MediaCodecVideoRenderer
+import androidx.media3.extractor.ExtractorsFactory
+import androidx.media3.extractor.mp4.Mp4Extractor
+import androidx.media3.extractor.text.SubtitleParser
 import androidx.media3.ui.compose.PlayerSurface
 import androidx.media3.ui.compose.SURFACE_TYPE_TEXTURE_VIEW
 import androidx.media3.ui.compose.state.rememberPresentationState
@@ -49,6 +56,22 @@ internal object MotionCache {
 }
 
 /**
+ * Every video and live photo clip the site publishes is an MP4, so the players read only
+ * that and decode only its picture and sound: the readers for other containers and the
+ * subtitle and metadata decoders stay out of the APK.
+ */
+@OptIn(UnstableApi::class)
+private val MP4_ONLY = ExtractorsFactory { arrayOf(Mp4Extractor(SubtitleParser.Factory.UNSUPPORTED)) }
+
+@OptIn(UnstableApi::class)
+private fun mp4Renderers(context: Context) = RenderersFactory { handler, video, audio, _, _ ->
+    arrayOf(
+        MediaCodecVideoRenderer(context, MediaCodecSelector.DEFAULT, 5_000, handler, video, 50),
+        MediaCodecAudioRenderer(context, MediaCodecSelector.DEFAULT, handler, audio),
+    )
+}
+
+/**
  * A player of [url] through the disk cache while [active], set up by [configure] and
  * prepared, or null while not; it is released when the page goes or stops being shown.
  */
@@ -64,8 +87,7 @@ fun rememberCachedPlayer(url: String, active: Boolean, configure: ExoPlayer.() -
         val source = CacheDataSource.Factory()
             .setCache(MotionCache.of(context))
             .setUpstreamDataSourceFactory(OkHttpDataSource.Factory(Http.client))
-        val made = ExoPlayer.Builder(context)
-            .setMediaSourceFactory(DefaultMediaSourceFactory(context).setDataSourceFactory(source))
+        val made = ExoPlayer.Builder(context, mp4Renderers(context), ProgressiveMediaSource.Factory(source, MP4_ONLY))
             // Headphones pulled out stop it, rather than letting it go on aloud.
             .setHandleAudioBecomingNoisy(true)
             .build()
