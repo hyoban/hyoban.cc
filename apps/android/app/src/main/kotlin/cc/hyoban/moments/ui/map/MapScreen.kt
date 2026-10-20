@@ -57,9 +57,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.Luggage
+import androidx.compose.material.icons.rounded.Directions
 import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
@@ -116,7 +118,7 @@ import cc.hyoban.moments.ui.theme.Space
 
 /**
  * The map tab, as the site's map: every place the Moments name, coloured by the year of
- * its first Moment, and every trip's route. Tap a place for its Moments in a sheet; tap a
+ * its first Moment, and every trip's route. Tap a place for its Moments in a panel, from which a map app shows the way there; tap a
  * route to lift it, and its card or the route again to open the trip.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -328,6 +330,9 @@ fun MapScreen(container: AppContainer, onMoment: (String) -> Unit, onPlace: (Str
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
+                            }
+                            IconButton(onClick = { navigateTo(context, place) }) {
+                                Icon(Icons.Rounded.Directions, contentDescription = stringResource(R.string.action_navigate), tint = MaterialTheme.colorScheme.primary)
                             }
                             TextButton(onClick = { selected = null; onPlace(id) }) {
                                 Text(stringResource(R.string.action_all))
