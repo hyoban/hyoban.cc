@@ -84,4 +84,11 @@
     <string name="media_position">%1$s，第 %2$d 个，共 %3$d 个</string>
     <string name="calendar_day">%1$d 月 %2$d 日</string>
     <string name="label_today">今天</string>
+    <string name="widget_memory_name">那年今天</string>
+    <string name="widget_memory_description">往年今天的一个时刻，没有的话随机一个</string>
+    <string name="widget_memory_empty">还没有带照片的时刻。</string>
+    <string name="widget_years_ago">%1$d 年前的今天</string>
+    <string name="widget_trip_name">旅程</string>
+    <string name="widget_trip_description">正在进行的旅程，或者上一段</string>
+    <string name="widget_trip_in_days">%1$d 天后出发</string>
 </resources>

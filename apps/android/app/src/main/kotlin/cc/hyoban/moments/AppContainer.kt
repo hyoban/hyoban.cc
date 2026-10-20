@@ -6,6 +6,7 @@ import cc.hyoban.moments.data.media.MediaUrls
 import cc.hyoban.moments.data.store.DataStore
 import cc.hyoban.moments.data.store.MomentsRepository
 import cc.hyoban.moments.data.trips.TripRoutes
+import cc.hyoban.moments.widget.Widgets
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -14,6 +15,7 @@ import java.io.File
 
 /** What the app shares: built once by the Application, handed to the screens. */
 class AppContainer(context: Context) {
+    private val appContext = context.applicationContext
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     val settings = Settings(context)
@@ -57,5 +59,7 @@ class AppContainer(context: Context) {
     private suspend fun refreshAll() {
         repository.refresh()
         routes.refresh()
+        // The widgets show what the sync brought, or what was on the phone if it failed.
+        Widgets.update(appContext)
     }
 }

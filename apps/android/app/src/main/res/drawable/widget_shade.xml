@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The shade at the bottom of a widget's photo, for its words to read on. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <gradient
+        android:angle="270"
+        android:centerY="0.45"
+        android:startColor="#00000000"
+        android:centerColor="#14000000"
+        android:endColor="#B3000000" />
+</shape>

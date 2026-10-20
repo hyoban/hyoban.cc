@@ -11,6 +11,12 @@ On the home screen it is 这里 (here): Material 3's nine-lobed cookie shape in 
 pale mint, with the map's "you are here" pulse in it, as an adaptive icon with its own
 monochrome layer for themed icons.
 
+Two home screen widgets read the same copy, so they draw offline: 那年今天, a Moment with
+a photo from this day in an earlier year, or one picked at random when there is none,
+the same all day; and 旅程, the trip under way, else the last one, else the next, with
+one of its photos. Each opens its page when tapped, takes the colours the theme page
+sets, and is drawn again after each sync and every three hours.
+
 ## Building
 
 Android Studio opens `apps/android` as a project. From a shell, with the Android SDK
@@ -63,6 +69,7 @@ one chosen.
   and gives the screens what the site shows (no hidden Moments).
 - `data/media` — photo, poster and video URLs, picked as the site picks them.
 - `data/trips` — which trip a Moment is on, a trip's days and its stops in order.
+- `widget` — the home screen's widgets (Glance) and what they pick for the day.
 - `ui` — Compose screens: the map, the Moments, a Moment's page, the trips, a trip, the settings.
 
 The app's own `data/` directory from when it recorded Moments is left on the phone as
