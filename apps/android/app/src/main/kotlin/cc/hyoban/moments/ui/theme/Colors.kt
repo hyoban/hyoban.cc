@@ -51,13 +51,17 @@ enum class ColorStyle {
     MONOCHROME,
 }
 
-/** The scheme for [seed] in light or [dark], in [style]; [pureBlack] takes dark's page down to black. */
-fun seededColorScheme(seed: Color, dark: Boolean, style: ColorStyle = ColorStyle.VIVID, pureBlack: Boolean = false): ColorScheme {
+/**
+ * The scheme for [seed] in light or [dark], in [style]; [pureBlack] takes dark's page down to
+ * black. [contrast] is Material's contrast level, 0 standard, 0.5 medium, 1 high, as the
+ * phone's own setting asks for.
+ */
+fun seededColorScheme(seed: Color, dark: Boolean, style: ColorStyle = ColorStyle.VIVID, pureBlack: Boolean = false, contrast: Double = 0.0): ColorScheme {
     val source = Hct.fromInt(seed.toArgb())
     val scheme: DynamicScheme = when (style) {
-        ColorStyle.VIVID, ColorStyle.TINTED -> SchemeContent(source, dark, 0.0)
-        ColorStyle.SOFT -> SchemeTonalSpot(source, dark, 0.0)
-        ColorStyle.MONOCHROME -> SchemeMonochrome(source, dark, 0.0)
+        ColorStyle.VIVID, ColorStyle.TINTED -> SchemeContent(source, dark, contrast)
+        ColorStyle.SOFT -> SchemeTonalSpot(source, dark, contrast)
+        ColorStyle.MONOCHROME -> SchemeMonochrome(source, dark, contrast)
     }
     val accent = style == ColorStyle.VIVID || style == ColorStyle.TINTED
     val tint = if (style == ColorStyle.TINTED) min(source.chroma / TINT_DIVISOR, MAX_TINT_CHROMA) else null

@@ -121,6 +121,8 @@ fun MomentFeed(
     showTrip: Boolean = true,
     /** The tab the feed is on, which, tapped again while shown, takes it back to its top. */
     tab: Any? = null,
+    /** The Moment shown in a detail pane beside the feed, marked as chosen. */
+    selected: String? = null,
     leading: FeedLeading.() -> Unit = {},
 ) {
     val days = remember(moments) { moments.groupBy { it.dateKey }.toList() }
@@ -134,6 +136,7 @@ fun MomentFeed(
             onOpen = { onMoment(moment.uid) },
             modifier = cardModifier,
             showDate = showDate,
+            selected = moment.uid == selected,
         )
     }
 

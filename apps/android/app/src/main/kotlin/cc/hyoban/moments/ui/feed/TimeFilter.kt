@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
@@ -94,6 +95,7 @@ fun TimeFilterRows(filter: TimeFilter, years: List<Int>, months: List<Int>, onCh
 }
 
 /** Each chip tagged [tag] and its year or month, or `all`. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun ChipRow(tag: String, options: List<Int?>, selected: Int?, label: @Composable (Int?) -> String, onSelect: (Int?) -> Unit) {
     LazyRow(
@@ -104,7 +106,7 @@ private fun ChipRow(tag: String, options: List<Int?>, selected: Int?, label: @Co
             FilterChip(
                 selected = option == selected,
                 onClick = { onSelect(option) },
-                label = { Text(label(option)) },
+                label = { Text(label(option), style = if (option == selected) MaterialTheme.typography.labelLargeEmphasized else MaterialTheme.typography.labelLarge) },
                 // The chosen one checked, as Material 3 has a selected filter chip.
                 leadingIcon = if (option == selected) {
                     { Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize)) }

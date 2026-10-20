@@ -23,14 +23,10 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.outlined.ViewAgenda
-import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material.icons.rounded.Directions
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.Settings
-import androidx.compose.material.icons.rounded.ViewAgenda
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -50,6 +46,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -75,9 +72,11 @@ import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.NAV_HEIGHT
 import cc.hyoban.moments.ui.components.RAIL_WIDTH
 import cc.hyoban.moments.ui.components.SubPage
+import cc.hyoban.moments.ui.components.Symbols
 import cc.hyoban.moments.ui.components.TabPage
 import cc.hyoban.moments.ui.components.Tooltip
 import cc.hyoban.moments.ui.components.dayCardKey
+import cc.hyoban.moments.ui.components.isExpandedWidth
 import cc.hyoban.moments.ui.components.isLandscape
 import cc.hyoban.moments.ui.components.sharedCard
 import cc.hyoban.moments.ui.format.formatDay
@@ -108,11 +107,12 @@ fun FeedScreen(
     onTrip: (String) -> Unit = {},
     onEdit: (String) -> Unit = {},
 ) {
-    // On a phone on its side, Material 3's list and detail: a Moment chosen opens in a pane
-    // beside the Moments rather than as a page over them. Turned upright with one chosen,
+    // From Material 3's expanded breakpoint, its list and detail: a Moment chosen opens in a
+    // pane beside the Moments rather than as a page over them. Turned upright with one chosen,
     // it goes on as its page; back clears the pane first.
-    val twoPane = isLandscape()
+    val twoPane = isExpandedWidth()
     var chosen by rememberSaveable { mutableStateOf<String?>(null) }
+    val details = rememberSaveableStateHolder()
     val open: (String) -> Unit = { uid -> if (twoPane) chosen = uid else onMoment(uid) }
     LaunchedEffect(twoPane) {
         if (!twoPane) chosen?.let { uid ->
@@ -224,7 +224,7 @@ fun FeedScreen(
                                         tab = Feed,
                                     )
                                 } else {
-                                    MomentFeed(shown, places, trips, container.mediaUrls, open, state = feedState, gridState = gridState, leading = header, tab = Feed)
+                                    MomentFeed(shown, places, trips, container.mediaUrls, open, state = feedState, gridState = gridState, leading = header, tab = Feed, selected = chosen.takeIf { twoPane })
                                 }
                             }
                         }
@@ -242,17 +242,20 @@ fun FeedScreen(
             ) {
                 val uid = chosen
                 if (uid != null && moments.any { it.uid == uid }) {
-                    MomentScreen(
-                        container,
-                        uid,
-                        onMedia = onMedia,
-                        onPlace = onPlace,
-                        onTrip = onTrip,
-                        onBack = { chosen = null },
-                        onEdit = onEdit,
-                        onDay = onDay,
-                        pane = true,
-                    )
+                    // Each Moment keeps where it was scrolled to while another is shown.
+                    details.SaveableStateProvider(uid) {
+                        MomentScreen(
+                            container,
+                            uid,
+                            onMedia = onMedia,
+                            onPlace = onPlace,
+                            onTrip = onTrip,
+                            onBack = { chosen = null },
+                            onEdit = onEdit,
+                            onDay = onDay,
+                            pane = true,
+                        )
+                    }
                 } else {
                     Box(
                         Modifier.fillMaxSize().background(LocalSurfaceLevel.current.raised.fill()).testTag("detail_placeholder"),
@@ -293,16 +296,16 @@ private fun ViewSwitch(calendar: Boolean, onChange: (Boolean) -> Unit) {
                 val checked = calendar == isCalendar
                 Icon(
                     when {
-                        isCalendar && checked -> Icons.Rounded.CalendarMonth
-                        isCalendar -> Icons.Outlined.CalendarMonth
-                        checked -> Icons.Rounded.ViewAgenda
-                        else -> Icons.Outlined.ViewAgenda
+                        isCalendar && checked -> Symbols.CalendarMonthFilled
+                        isCalendar -> Symbols.CalendarMonthOutlined
+                        checked -> Symbols.ViewAgendaFilled
+                        else -> Symbols.ViewAgendaOutlined
                     },
                     contentDescription = null,
                     modifier = Modifier.size(ToggleButtonDefaults.IconSize),
                 )
                 Spacer(Modifier.size(ToggleButtonDefaults.IconSpacing))
-                Text(stringResource(label), maxLines = 1)
+                Text(stringResource(label), maxLines = 1, style = if (checked) MaterialTheme.typography.labelLargeEmphasized else MaterialTheme.typography.labelLarge)
             }
         }
     }

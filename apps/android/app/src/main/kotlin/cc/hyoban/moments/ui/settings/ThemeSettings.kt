@@ -247,7 +247,11 @@ private fun ThemeColorGroup(settings: Settings) {
                     border = if (style == settings.colorStyle) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
                     modifier = Modifier.weight(1f).semantics { role = Role.RadioButton },
                 ) {
-                    Text(stringResource(styleLabel(style)), maxLines = 1)
+                    Text(
+                        stringResource(styleLabel(style)),
+                        maxLines = 1,
+                        style = if (style == settings.colorStyle) MaterialTheme.typography.labelLargeEmphasized else MaterialTheme.typography.labelLarge,
+                    )
                 }
             }
         }
