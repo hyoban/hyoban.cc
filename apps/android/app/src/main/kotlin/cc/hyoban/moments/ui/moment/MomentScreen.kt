@@ -1,6 +1,20 @@
 package cc.hyoban.moments.ui.moment
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.ui.unit.Dp
+import cc.hyoban.moments.data.media.MediaUrls
+import cc.hyoban.moments.data.spec.MomentRecord
+import cc.hyoban.moments.data.spec.Place
+import cc.hyoban.moments.data.spec.TripRecord
+import cc.hyoban.moments.ui.components.landscape
+import cc.hyoban.moments.ui.components.READABLE_WIDTH
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentWidth
+import cc.hyoban.moments.ui.components.sideInsetsPadding
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -42,7 +56,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import cc.hyoban.moments.ui.components.tripCardKey
 import cc.hyoban.moments.ui.components.sharedCard
-import cc.hyoban.moments.ui.components.StatusBarOverPhoto
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.runtime.setValue
@@ -102,104 +115,143 @@ fun MomentScreen(
     val urls = container.mediaUrls
 
     // The whole page is the card it was opened from, grown to the screen.
-    Box(Modifier.fillMaxSize().sharedCard(uid, page = true).background(AppColors.page)) {
-        // A portrait photo runs under the status bar, with white icons while it is still
-        // under it; a landscape one starts below the bar, the page's colour above it.
-        val shape = moment.media.firstOrNull()?.let(::shapeOf)
-        val bleeds = shape != null && shape < 1f
+    BoxWithConstraints(Modifier.fillMaxSize().sharedCard(uid, page = true).background(AppColors.page)) {
         val scroll = rememberScrollState()
-        var photoHeight by remember { mutableIntStateOf(0) }
-        val statusBar = WindowInsets.statusBars.getTop(LocalDensity.current)
-        val overPhoto by remember(bleeds) {
-            derivedStateOf { bleeds && scroll.value < photoHeight - statusBar }
+        val details: @Composable () -> Unit = {
+            MomentDetails(moment, places, trip, moments, trips, urls, onPlace, onTrip)
         }
-        StatusBarOverPhoto(overPhoto)
-
-        Column(Modifier.fillMaxSize().verticalScroll(scroll)) {
-            if (moment.media.isNotEmpty()) {
-                val pager = rememberPagerState { moment.media.size }
-                // No shorter than two thirds of the width, so a wide photo isn't a strip.
-                Box(
-                    Modifier.then(if (bleeds) Modifier else Modifier.statusBarsPadding())
-                        .fillMaxWidth().aspectRatio(shape!!.coerceIn(0.75f, 1.5f))
-                        .onSizeChanged { photoHeight = it.height },
-                ) {
-                    HorizontalPager(pager, Modifier.fillMaxSize(), key = { moment.media[it].uid }) { page ->
-                        // The top of the photo is under the status bar and the back button.
-                        MediaTile(
-                            moment.media[page],
-                            urls,
-                            Modifier.fillMaxSize(),
-                            liveBadgeAlignment = Alignment.BottomStart,
-                            sharedKey = mediaKey(uid, moment.media[page].uid),
-                            onClick = { onMedia(uid, page) },
-                        )
-                    }
-                    if (moment.media.size > 1) {
-                        PageDots(pager, Modifier.align(Alignment.BottomCenter).padding(bottom = RISE + Space.m))
-                    }
-                }
-            } else {
-                Spacer(Modifier.statusBarsPadding().height(72.dp))
+        if (landscape && moment.media.isNotEmpty()) {
+            // On its side, the photos fill the left half, up under the status bar, and the
+            // words scroll beside them, rather than a photo taller than the screen over them.
+            Row(Modifier.fillMaxSize()) {
+                MomentPhotos(
+                    moment,
+                    urls,
+                    onMedia,
+                    Modifier.weight(1f).fillMaxHeight(),
+                    dotsAbove = Space.m + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding(),
+                )
+                Column(Modifier.weight(1f).fillMaxHeight().statusBarsPadding().verticalScroll(scroll).sideInsetsPadding(WindowInsetsSides.End)) { details() }
             }
+        } else {
+            // A portrait photo runs under the status bar; a landscape one starts below the
+            // bar, the page's colour above it. The bar's icons follow what is under them.
+            val shape = moment.media.firstOrNull()?.let(::shapeOf)
+            val bleeds = shape != null && shape < 1f
 
-            RisingSheet(Modifier.offset(y = if (moment.media.isNotEmpty()) -RISE else 0.dp)) {
-                Column(
-                    Modifier.padding(start = Space.xl, end = Space.xl, top = Space.xl, bottom = Space.xxl),
-                    verticalArrangement = Arrangement.spacedBy(Space.l),
-                ) {
-                    Text(formatDay(moment.occurredAt), style = MaterialTheme.typography.headlineMedium)
-                    // The places are assist chips, each opening its place, with the 48dp a tap needs;
-                    // the time beside them is a label, centred on the chips' row.
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(Space.s),
-                        itemVerticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        formatTime(moment.occurredAt)?.let { Pill(it, icon = Icons.Rounded.Schedule) }
-                        moment.places.forEach { id ->
-                            NeutralChip(places[id]?.name ?: id, Icons.Rounded.Place, onClick = { onPlace(id) })
-                        }
-                    }
-                    if (moment.text.isNotBlank()) {
-                        SelectionContainer {
-                            Text(moment.text, style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 28.sp))
-                        }
-                    }
-                    trip?.let { trip ->
-                        val cover = remember(trip, moments) { coversOf(trip, moments, trips, limit = 1).firstOrNull() }
-                        val count = remember(trip, moments) { momentsOf(trip, moments, trips).size }
-                        PressableCard(onClick = { onTrip(trip.id) }, modifier = Modifier.padding(top = Space.s).sharedCard(tripCardKey(trip.id))) {
-                            Row(Modifier.padding(6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.m)) {
-                                cover?.let { Thumbnail(it, urls, size = 64) }
-                                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                        Icon(Icons.Rounded.Luggage, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
-                                        Text(trip.title, style = MaterialTheme.typography.titleMedium)
-                                    }
-                                    Text(
-                                        listOf(
-                                            formatRange(trip.start, trip.end),
-                                            stringResource(R.string.count_days, daysBetween(trip.start, trip.end)),
-                                            stringResource(R.string.count_moments, count),
-                                        ).joinToString(" · "),
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    )
-                                }
-                                Icon(
-                                    Icons.AutoMirrored.Rounded.KeyboardArrowRight,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.padding(end = Space.s),
-                                )
-                            }
-                        }
-                    }
-                    Spacer(Modifier.windowInsetsBottomHeight(WindowInsets.navigationBars))
+            Column(Modifier.fillMaxSize().verticalScroll(scroll)) {
+                if (moment.media.isNotEmpty()) {
+                    // No shorter than two thirds of the width, so a wide photo isn't a strip.
+                    MomentPhotos(
+                        moment,
+                        urls,
+                        onMedia,
+                        Modifier.then(if (bleeds) Modifier else Modifier.statusBarsPadding())
+                            .fillMaxWidth().aspectRatio(shape!!.coerceIn(0.75f, 1.5f)),
+                        dotsAbove = RISE + Space.m,
+                    )
+                } else {
+                    Spacer(Modifier.statusBarsPadding().height(72.dp))
+                }
+
+                RisingSheet(Modifier.offset(y = if (moment.media.isNotEmpty()) -RISE else 0.dp)) {
+                    // Centred, and clear of the sides, on a phone on its side.
+                    Box(Modifier.fillMaxWidth().sideInsetsPadding().wrapContentWidth().widthIn(max = READABLE_WIDTH)) { details() }
                 }
             }
         }
         FloatingBack(onBack, Modifier.align(Alignment.TopStart))
+    }
+}
+
+/** The Moment's photos, swiped through, each opening the viewer; dots [dotsAbove] the bottom when there are several. */
+@Composable
+private fun MomentPhotos(moment: MomentRecord, urls: MediaUrls, onMedia: (String, Int) -> Unit, modifier: Modifier, dotsAbove: Dp) {
+    val uid = moment.uid
+    val pager = rememberPagerState { moment.media.size }
+    Box(modifier) {
+        HorizontalPager(pager, Modifier.fillMaxSize(), key = { moment.media[it].uid }) { page ->
+            // The top of the photo is under the status bar and the back button.
+            MediaTile(
+                moment.media[page],
+                urls,
+                Modifier.fillMaxSize(),
+                liveBadgeAlignment = Alignment.BottomStart,
+                sharedKey = mediaKey(uid, moment.media[page].uid),
+                onClick = { onMedia(uid, page) },
+            )
+        }
+        if (moment.media.size > 1) {
+            PageDots(pager, Modifier.align(Alignment.BottomCenter).padding(bottom = dotsAbove))
+        }
+    }
+}
+
+/** When and where, the Moment's words and the trip it was on. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun MomentDetails(
+    moment: MomentRecord,
+    places: Map<String, Place>,
+    trip: TripRecord?,
+    moments: List<MomentRecord>,
+    trips: List<TripRecord>,
+    urls: MediaUrls,
+    onPlace: (String) -> Unit,
+    onTrip: (String) -> Unit,
+) {
+    Column(
+        Modifier.padding(start = Space.xl, end = Space.xl, top = Space.xl, bottom = Space.xxl),
+        verticalArrangement = Arrangement.spacedBy(Space.l),
+    ) {
+        Text(formatDay(moment.occurredAt), style = MaterialTheme.typography.headlineMedium)
+        // The places are assist chips, each opening its place, with the 48dp a tap needs;
+        // the time beside them is a label, centred on the chips' row.
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(Space.s),
+            itemVerticalAlignment = Alignment.CenterVertically,
+        ) {
+            formatTime(moment.occurredAt)?.let { Pill(it, icon = Icons.Rounded.Schedule) }
+            moment.places.forEach { id ->
+                NeutralChip(places[id]?.name ?: id, Icons.Rounded.Place, onClick = { onPlace(id) })
+            }
+        }
+        if (moment.text.isNotBlank()) {
+            SelectionContainer {
+                Text(moment.text, style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 28.sp))
+            }
+        }
+        trip?.let { trip ->
+            val cover = remember(trip, moments) { coversOf(trip, moments, trips, limit = 1).firstOrNull() }
+            val count = remember(trip, moments) { momentsOf(trip, moments, trips).size }
+            PressableCard(onClick = { onTrip(trip.id) }, modifier = Modifier.padding(top = Space.s).sharedCard(tripCardKey(trip.id))) {
+                Row(Modifier.padding(6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.m)) {
+                    cover?.let { Thumbnail(it, urls, size = 64) }
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Icon(Icons.Rounded.Luggage, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
+                            Text(trip.title, style = MaterialTheme.typography.titleMedium)
+                        }
+                        Text(
+                            listOf(
+                                formatRange(trip.start, trip.end),
+                                stringResource(R.string.count_days, daysBetween(trip.start, trip.end)),
+                                stringResource(R.string.count_moments, count),
+                            ).joinToString(" · "),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    Icon(
+                        Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(end = Space.s),
+                    )
+                }
+            }
+        }
+        Spacer(Modifier.windowInsetsBottomHeight(WindowInsets.navigationBars))
     }
 }
 

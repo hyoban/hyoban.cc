@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -30,6 +29,8 @@ import androidx.compose.ui.Modifier
 import cc.hyoban.moments.ui.components.tripCardKey
 import cc.hyoban.moments.ui.components.sharedCard
 import cc.hyoban.moments.ui.feed.rememberPulledRefresh
+import cc.hyoban.moments.ui.feed.TabRefreshBox
+import cc.hyoban.moments.ui.feed.statusBarTop
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
@@ -47,6 +48,9 @@ import cc.hyoban.moments.ui.components.MediaStill
 import cc.hyoban.moments.ui.components.PageHeader
 import cc.hyoban.moments.ui.components.Pill
 import cc.hyoban.moments.ui.components.PressableCard
+import cc.hyoban.moments.ui.components.PageWidth
+import cc.hyoban.moments.ui.feed.CardRow
+import androidx.compose.foundation.layout.PaddingValues
 import cc.hyoban.moments.ui.feed.EmptyState
 import cc.hyoban.moments.ui.feed.rememberRefreshErrors
 import cc.hyoban.moments.ui.format.daysBetween
@@ -66,32 +70,38 @@ fun TripsScreen(container: AppContainer, onTrip: (String) -> Unit) {
     val days = remember(trips) { trips.sumOf { daysBetween(it.start, it.end) } }
 
     Box(Modifier.fillMaxSize()) {
-        PullToRefreshBox(isRefreshing = pull.refreshing, onRefresh = pull.onRefresh, modifier = Modifier.fillMaxSize().statusBarsPadding()) {
+        // The list runs up under the status bar as it scrolls.
+        TabRefreshBox(pull) {
             if (trips.isEmpty()) {
                 EmptyState(loading = !loaded || syncing, message = R.string.empty_trips)
             } else {
-                LazyColumn(
-                    Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(bottom = LocalBottomClearance.current + Space.xl),
-                    verticalArrangement = Arrangement.spacedBy(Space.m),
-                ) {
-                    item(key = "header") {
-                        PageHeader(
-                            stringResource(R.string.title_trips),
-                            stringResource(R.string.count_trips, trips.size) + " · " + stringResource(R.string.count_days_total, days),
-                        )
-                    }
-                    items(trips, key = { it.id }) { trip ->
-                        val covers = remember(trip, moments) { coversOf(trip, moments, trips) }
-                        val count = remember(trip, moments) { momentsOf(trip, moments, trips).size }
-                        TripCard(
-                            trip,
-                            covers,
-                            count,
-                            container.mediaUrls,
-                            onClick = { onTrip(trip.id) },
-                            modifier = Modifier.animateItem().padding(horizontal = Space.gutter),
-                        )
+                PageWidth { columns ->
+                    LazyColumn(
+                        Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(start = columns.margin, top = statusBarTop, end = columns.margin, bottom = LocalBottomClearance.current + Space.xl),
+                        verticalArrangement = Arrangement.spacedBy(Space.m),
+                    ) {
+                        item(key = "header") {
+                            PageHeader(
+                                stringResource(R.string.title_trips),
+                                stringResource(R.string.count_trips, trips.size) + " · " + stringResource(R.string.count_days_total, days),
+                            )
+                        }
+                        // Two to a row where the width allows.
+                        items(trips.chunked(columns.count), key = { it.first().id }) { row ->
+                            CardRow(row, columns.count, Modifier.animateItem().padding(horizontal = Space.gutter)) { trip ->
+                                val covers = remember(trip, moments) { coversOf(trip, moments, trips) }
+                                val count = remember(trip, moments) { momentsOf(trip, moments, trips).size }
+                                TripCard(
+                                    trip,
+                                    covers,
+                                    count,
+                                    container.mediaUrls,
+                                    onClick = { onTrip(trip.id) },
+                                    modifier = Modifier.weight(1f),
+                                )
+                            }
+                        }
                     }
                 }
             }

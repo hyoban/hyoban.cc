@@ -206,6 +206,17 @@ private val TAB_WIDTH = 76.dp
 private val TAB_HEIGHT = 56.dp
 private val DOCK_PADDING = 6.dp
 
+// Down the side of a phone on its side, the tabs are slimmer, the screen having little width to spare.
+private val RAIL_TAB_WIDTH = 56.dp
+private val RAIL_TAB_HEIGHT = 52.dp
+private val RAIL_PADDING = 4.dp
+
+/** How wide the tabs are standing down the side. */
+val RAIL_WIDTH = RAIL_TAB_WIDTH + RAIL_PADDING * 2
+
+/** How tall the app's three tabs are standing down the side. */
+val RAIL_HEIGHT = RAIL_TAB_HEIGHT * 3 + RAIL_PADDING * 2
+
 /**
  * The tabs as a dock floating over the content, every tab its icon over its name. A
  * neutral platter, a level above the dock, sits under the chosen one, whose icon and name
@@ -214,11 +225,14 @@ private val DOCK_PADDING = 6.dp
  * it on, so tabs can be scrubbed through as well as tapped.
  */
 @Composable
-fun FloatingNav(items: List<NavItem>, selected: Int, onSelect: (Int) -> Unit, modifier: Modifier = Modifier) {
+fun FloatingNav(items: List<NavItem>, selected: Int, onSelect: (Int) -> Unit, modifier: Modifier = Modifier, vertical: Boolean = false) {
     val density = LocalDensity.current
-    val step = with(density) { TAB_WIDTH.toPx() }
+    // Down the side, the tabs stack, and the platter and a drag run up and down.
+    val tabWidth = if (vertical) RAIL_TAB_WIDTH else TAB_WIDTH
+    val tabHeight = if (vertical) RAIL_TAB_HEIGHT else TAB_HEIGHT
+    val step = with(density) { (if (vertical) tabHeight else tabWidth).toPx() }
     val last = (items.size - 1).coerceAtLeast(0)
-    val position = remember { Animatable(selected * step) }
+    val position = remember(vertical) { Animatable(selected * step) }
     var dragging by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val travel = spring<Float>(dampingRatio = 0.75f, stiffness = Spring.StiffnessMediumLow)
@@ -235,7 +249,7 @@ fun FloatingNav(items: List<NavItem>, selected: Int, onSelect: (Int) -> Unit, mo
         color = dock.fill(),
         shadowElevation = 6.dp,
         modifier = modifier.draggable(
-            orientation = Orientation.Horizontal,
+            orientation = if (vertical) Orientation.Vertical else Orientation.Horizontal,
             state = rememberDraggableState { delta ->
                 scope.launch { position.snapTo((position.value + delta).coerceIn(0f, last * step)) }
             },
@@ -250,18 +264,19 @@ fun FloatingNav(items: List<NavItem>, selected: Int, onSelect: (Int) -> Unit, mo
         ),
     ) {
         CompositionLocalProvider(LocalSurfaceLevel provides dock) {
-            Box(Modifier.padding(DOCK_PADDING)) {
+            Box(Modifier.padding(if (vertical) RAIL_PADDING else DOCK_PADDING)) {
                 Box(
                     Modifier
-                        .offset { IntOffset(position.value.roundToInt(), 0) }
-                        .size(TAB_WIDTH, TAB_HEIGHT)
+                        .offset { if (vertical) IntOffset(0, position.value.roundToInt()) else IntOffset(position.value.roundToInt(), 0) }
+                        .size(tabWidth, tabHeight)
                         .graphicsLayer {
                             scaleX = lift
                             scaleY = lift
                         }
                         .background(dock.raised.fill(), Corners.full),
                 )
-                Row {
+                val tabs: @Composable (@Composable () -> Unit) -> Unit = { tabs -> if (vertical) Column { tabs() } else Row { tabs() } }
+                tabs {
                     items.forEachIndexed { index, item ->
                         val active = index == shown
                         val content by animateColorAsState(
@@ -270,7 +285,7 @@ fun FloatingNav(items: List<NavItem>, selected: Int, onSelect: (Int) -> Unit, mo
                         )
                         Column(
                             Modifier
-                                .size(TAB_WIDTH, TAB_HEIGHT)
+                                .size(tabWidth, tabHeight)
                                 .clip(Corners.full)
                                 .clickable(interactionSource = null, indication = null) { onSelect(index) }
                                 .semantics {
@@ -281,7 +296,12 @@ fun FloatingNav(items: List<NavItem>, selected: Int, onSelect: (Int) -> Unit, mo
                             verticalArrangement = Arrangement.Center,
                         ) {
                             Icon(if (active) item.selectedIcon else item.icon, contentDescription = null, tint = content)
-                            Text(item.label, style = MaterialTheme.typography.labelMedium, color = content, modifier = Modifier.padding(top = 2.dp))
+                            Text(
+                                item.label,
+                                style = if (vertical) MaterialTheme.typography.labelSmall else MaterialTheme.typography.labelMedium,
+                                color = content,
+                                modifier = Modifier.padding(top = 2.dp),
+                            )
                         }
                     }
                 }

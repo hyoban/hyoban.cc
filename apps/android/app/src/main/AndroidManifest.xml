@@ -15,8 +15,11 @@
         android:enableOnBackInvokedCallback="true"
         android:supportsRtl="true"
         android:theme="@style/Theme.Moments">
+        <!-- Compose lays the app out again on its own when the phone turns, so the
+             activity stays: the map, a playing video and the open page carry on as they were. -->
         <activity
             android:name=".MainActivity"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden|density"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

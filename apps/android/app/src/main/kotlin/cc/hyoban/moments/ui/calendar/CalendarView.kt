@@ -5,7 +5,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -31,12 +30,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
 import cc.hyoban.moments.data.media.MediaUrls
 import cc.hyoban.moments.data.spec.MomentMedia
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.ui.LocalBottomClearance
 import cc.hyoban.moments.ui.components.MediaStill
 import cc.hyoban.moments.ui.components.MonthHeader
+import cc.hyoban.moments.ui.components.PageWidth
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import cc.hyoban.moments.ui.format.formatMonth
 import cc.hyoban.moments.ui.theme.Space
 import java.time.LocalDate
@@ -79,36 +83,65 @@ fun CalendarView(
     onDay: (String, List<MomentRecord>) -> Unit,
     modifier: Modifier = Modifier,
     state: LazyListState = rememberLazyListState(),
+    /** Room above the first row: the status bar, on a tab whose list runs up under it. */
+    top: Dp = 0.dp,
     leading: LazyListScope.() -> Unit = {},
 ) {
     val months = remember(moments) { monthsOf(moments) }
     val today = remember { LocalDate.now() }
 
-    LazyColumn(
-        modifier.fillMaxSize(),
-        state = state,
-        contentPadding = PaddingValues(bottom = LocalBottomClearance.current + Space.xl),
-    ) {
-        leading()
-        months.forEach { month ->
-            item(key = "month-${month.month}") {
-                val (name, year) = formatMonth(month.month.atDay(1).toString())
-                MonthHeader(name, year.takeIf { month.month.year != today.year })
-            }
-            item(key = "weekdays-${month.month}") { WeekdayRow() }
-            month.weeks.forEachIndexed { index, week ->
-                item(key = "week-${month.month}-$index") {
-                    Row(
-                        Modifier.fillMaxWidth().padding(horizontal = Space.gutter, vertical = 2.dp),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    ) {
-                        week.forEach { day ->
-                            Box(Modifier.weight(1f).aspectRatio(1f)) {
-                                if (day != null) DayCell(day, urls, today) { onDay(day.date.toString(), day.moments) }
+    PageWidth(modifier) { columns ->
+        LazyColumn(
+            Modifier.fillMaxSize(),
+            state = state,
+            contentPadding = PaddingValues(start = columns.margin, top = top, end = columns.margin, bottom = LocalBottomClearance.current + Space.xl),
+        ) {
+            leading()
+            if (columns.count > 1) {
+                // Where the width allows, months side by side, each whole, so a month's
+                // days fit the height of a phone on its side.
+                months.chunked(columns.count).forEach { pair ->
+                    item(key = "months-${pair.first().month}") {
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Space.l), verticalAlignment = Alignment.Top) {
+                            pair.forEach { month ->
+                                Column(Modifier.weight(1f)) {
+                                    MonthTitle(month, today)
+                                    WeekdayRow()
+                                    month.weeks.forEach { week -> WeekRow(week, urls, today, onDay) }
+                                }
                             }
+                            repeat(columns.count - pair.size) { Spacer(Modifier.weight(1f)) }
                         }
                     }
                 }
+            } else {
+                months.forEach { month ->
+                    item(key = "month-${month.month}") { MonthTitle(month, today) }
+                    item(key = "weekdays-${month.month}") { WeekdayRow() }
+                    month.weeks.forEachIndexed { index, week ->
+                        item(key = "week-${month.month}-$index") { WeekRow(week, urls, today, onDay) }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MonthTitle(month: CalendarMonth, today: LocalDate) {
+    val (name, year) = formatMonth(month.month.atDay(1).toString())
+    MonthHeader(name, year.takeIf { month.month.year != today.year })
+}
+
+@Composable
+private fun WeekRow(week: List<CalendarDay?>, urls: MediaUrls, today: LocalDate, onDay: (String, List<MomentRecord>) -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().padding(horizontal = Space.gutter, vertical = 2.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        week.forEach { day ->
+            Box(Modifier.weight(1f).aspectRatio(1f)) {
+                if (day != null) DayCell(day, urls, today) { onDay(day.date.toString(), day.moments) }
             }
         }
     }

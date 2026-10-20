@@ -69,6 +69,15 @@ import cc.hyoban.moments.ui.theme.fill
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
 import cc.hyoban.moments.ui.components.SectionHeader
+import cc.hyoban.moments.ui.components.sideInsetsPadding
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.ZeroCornerSize
+import cc.hyoban.moments.ui.components.landscape
 import cc.hyoban.moments.ui.components.PressableCard
 import cc.hyoban.moments.ui.components.NeutralChip
 import cc.hyoban.moments.ui.components.AppColors
@@ -215,7 +224,7 @@ fun MediaViewer(
 
         AnimatedVisibility(chrome && !dragging, enter = fadeIn(), exit = fadeOut()) {
             Row(
-                Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.25f)).statusBarsPadding().padding(4.dp),
+                Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.25f)).statusBarsPadding().sideInsetsPadding().padding(4.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 IconButton(onClick = onBack) {
@@ -230,21 +239,56 @@ fun MediaViewer(
                 }
             }
         }
-    }
 
-    if (info) {
-        InfoSheet(
-            container = container,
-            moment = moment,
-            media = media[pager.currentPage],
-            places = places,
-            onDismiss = { info = false },
-            onMoment = { info = false; onMoment(moment.uid) },
-            onPlace = { info = false; onPlace(it) },
-            onTrip = { info = false; onTrip(it) },
-        )
+        val details: @Composable (Modifier) -> Unit = { modifier ->
+            InfoContent(
+                container = container,
+                moment = moment,
+                media = media[pager.currentPage],
+                places = places,
+                onMoment = { info = false; onMoment(moment.uid) },
+                onPlace = { info = false; onPlace(it) },
+                onTrip = { info = false; onTrip(it) },
+                modifier = modifier,
+            )
+        }
+        // On a phone on its side, the details are a panel down the end side, the photo
+        // still showing beside it, rather than a sheet with no height to rise into.
+        val side = landscape
+        BackHandler(enabled = info && side) { info = false }
+        AnimatedVisibility(info && side, enter = fadeIn(), exit = fadeOut()) {
+            Box(
+                Modifier.fillMaxSize().background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.32f))
+                    .clickable(interactionSource = null, indication = null) { info = false },
+            )
+        }
+        AnimatedVisibility(
+            info && side,
+            enter = slideInHorizontally { it } + fadeIn(),
+            exit = slideOutHorizontally { it } + fadeOut(),
+            modifier = Modifier.align(Alignment.CenterEnd),
+        ) {
+            val level = AppColors.sheetLevel
+            Surface(
+                shape = MaterialTheme.shapes.extraLarge.copy(topEnd = ZeroCornerSize, bottomEnd = ZeroCornerSize),
+                color = level.fill(),
+                contentColor = MaterialTheme.colorScheme.onSurface,
+                // Below the status bar, whose icons are white over the viewer's black.
+                modifier = Modifier.statusBarsPadding().fillMaxHeight().width(INFO_PANEL_WIDTH),
+            ) {
+                CompositionLocalProvider(LocalSurfaceLevel provides level) {
+                    details(Modifier.sideInsetsPadding(WindowInsetsSides.End).padding(top = Space.l).navigationBarsPadding())
+                }
+            }
+        }
+        if (info && !side) {
+            InfoSheet(onDismiss = { info = false }) { details(Modifier) }
+        }
     }
 }
+
+/** How wide the details' panel is down the side of a phone on its side. */
+private val INFO_PANEL_WIDTH = 400.dp
 
 @Composable
 private fun ViewerPage(
@@ -433,101 +477,106 @@ private const val DOUBLE_TAP_ZOOM = 2.5f
 /** What there is to know about the photo: when, where on a small map, the Moment's words, what it shows, the trip. */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-private fun InfoSheet(
+private fun InfoContent(
     container: AppContainer,
     moment: MomentRecord,
     media: MomentMedia,
     places: Map<String, Place>,
-    onDismiss: () -> Unit,
     onMoment: () -> Unit,
     onPlace: (String) -> Unit,
     onTrip: (String) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val trips by container.repository.trips.collectAsStateWithLifecycle()
     val moments by container.repository.moments.collectAsStateWithLifecycle()
     val trip = remember(moment, trips) { tripOf(moment, trips) }
     val located = remember(moment, places) { moment.places.mapNotNull { places[it] } }
 
-    val level = AppColors.sheetLevel
-    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = level.fill()) {
-        CompositionLocalProvider(LocalSurfaceLevel provides level) {
-            Column(
-                Modifier.verticalScroll(rememberScrollState()).padding(start = Space.gutter, end = Space.gutter, bottom = Space.xl),
-                verticalArrangement = Arrangement.spacedBy(Space.m),
-            ) {
-                Column(Modifier.padding(horizontal = Space.xs), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(formatDay(moment.occurredAt), style = MaterialTheme.typography.headlineSmall)
-                    formatTime(moment.occurredAt)?.let {
-                        Text(it, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
+    Column(
+        modifier.verticalScroll(rememberScrollState()).padding(start = Space.gutter, end = Space.gutter, bottom = Space.xl),
+        verticalArrangement = Arrangement.spacedBy(Space.m),
+    ) {
+        Column(Modifier.padding(horizontal = Space.xs), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(formatDay(moment.occurredAt), style = MaterialTheme.typography.headlineSmall)
+            formatTime(moment.occurredAt)?.let {
+                Text(it, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+        if (moment.places.isNotEmpty()) {
+            InfoCard(Icons.Rounded.Place, stringResource(R.string.section_places)) {
+                if (located.isNotEmpty()) {
+                    PlacesStill(located, Modifier.fillMaxWidth().aspectRatio(2f).clip(MaterialTheme.shapes.medium))
                 }
-                if (moment.places.isNotEmpty()) {
-                    InfoCard(Icons.Rounded.Place, stringResource(R.string.section_places)) {
-                        if (located.isNotEmpty()) {
-                            PlacesStill(located, Modifier.fillMaxWidth().aspectRatio(2f).clip(MaterialTheme.shapes.medium))
-                        }
-                        FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.s)) {
-                            moment.places.forEach { id -> NeutralChip(places[id]?.name ?: id, Icons.Rounded.Place, onClick = { onPlace(id) }) }
-                        }
-                    }
-                }
-                if (moment.text.isNotBlank()) {
-                    Text(moment.text, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = Space.xs))
-                }
-                if (media.alt.isNotBlank() || (media.width != null && media.height != null)) {
-                    InfoCard(Icons.Outlined.Image, stringResource(R.string.section_photo)) {
-                        // What the photo is and its description, each a tile a level into the card.
-                        if (media.width != null && media.height != null) {
-                            InfoTile(
-                                stringResource(
-                                    R.string.label_media_size,
-                                    stringResource(
-                                        when (media.type) {
-                                            MediaType.IMAGE -> R.string.media_photo
-                                            MediaType.LIVE_PHOTO -> R.string.media_live
-                                            MediaType.VIDEO -> R.string.media_video
-                                        },
-                                    ),
-                                    media.width,
-                                    media.height,
-                                ),
-                            )
-                        }
-                        if (media.alt.isNotBlank()) InfoTile(media.alt, label = stringResource(R.string.label_alt))
-                    }
-                }
-                trip?.let { trip ->
-                    val cover = remember(trip, moments) { coversOf(trip, moments, trips, limit = 1).firstOrNull() }
-                    val count = remember(trip, moments) { momentsOf(trip, moments, trips).size }
-                    PressableCard(onClick = { onTrip(trip.id) }, modifier = Modifier.fillMaxWidth()) {
-                        ListItem(
-                            headlineContent = { Text(trip.title) },
-                            supportingContent = {
-                                Text(
-                                    listOf(
-                                        formatRange(trip.start, trip.end),
-                                        stringResource(R.string.count_days, daysBetween(trip.start, trip.end)),
-                                        stringResource(R.string.count_moments, count),
-                                    ).joinToString(" · "),
-                                )
-                            },
-                            leadingContent = cover?.let { { Thumbnail(it, container.mediaUrls, size = 48) } },
-                            trailingContent = { Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null) },
-                            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                        )
-                    }
-                }
-                // The panel's one action, so the one thing in colour.
-                Button(onClick = onMoment, modifier = Modifier.fillMaxWidth().padding(top = Space.xs)) {
-                    Text(stringResource(R.string.action_open_moment))
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.s)) {
+                    moment.places.forEach { id -> NeutralChip(places[id]?.name ?: id, Icons.Rounded.Place, onClick = { onPlace(id) }) }
                 }
             }
+        }
+        if (moment.text.isNotBlank()) {
+            Text(moment.text, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = Space.xs))
+        }
+        if (media.alt.isNotBlank() || (media.width != null && media.height != null)) {
+            InfoCard(Icons.Outlined.Image, stringResource(R.string.section_photo)) {
+                // What the photo is and its description, each a tile a level into the card.
+                if (media.width != null && media.height != null) {
+                    InfoTile(
+                        stringResource(
+                            R.string.label_media_size,
+                            stringResource(
+                                when (media.type) {
+                                    MediaType.IMAGE -> R.string.media_photo
+                                    MediaType.LIVE_PHOTO -> R.string.media_live
+                                    MediaType.VIDEO -> R.string.media_video
+                                },
+                            ),
+                            media.width,
+                            media.height,
+                        ),
+                    )
+                }
+                if (media.alt.isNotBlank()) InfoTile(media.alt, label = stringResource(R.string.label_alt))
+            }
+        }
+        trip?.let { trip ->
+            val cover = remember(trip, moments) { coversOf(trip, moments, trips, limit = 1).firstOrNull() }
+            val count = remember(trip, moments) { momentsOf(trip, moments, trips).size }
+            PressableCard(onClick = { onTrip(trip.id) }, modifier = Modifier.fillMaxWidth()) {
+                ListItem(
+                    headlineContent = { Text(trip.title) },
+                    supportingContent = {
+                        Text(
+                            listOf(
+                                formatRange(trip.start, trip.end),
+                                stringResource(R.string.count_days, daysBetween(trip.start, trip.end)),
+                                stringResource(R.string.count_moments, count),
+                            ).joinToString(" · "),
+                        )
+                    },
+                    leadingContent = cover?.let { { Thumbnail(it, container.mediaUrls, size = 48) } },
+                    trailingContent = { Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null) },
+                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                )
+            }
+        }
+        // The panel's one action, so the one thing in colour.
+        Button(onClick = onMoment, modifier = Modifier.fillMaxWidth().padding(top = Space.xs)) {
+            Text(stringResource(R.string.action_open_moment))
         }
     }
 }
 
+/** The details in a sheet risen from the bottom. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun InfoSheet(onDismiss: () -> Unit, content: @Composable () -> Unit) {
+    val level = AppColors.sheetLevel
+    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = level.fill()) {
+        CompositionLocalProvider(LocalSurfaceLevel provides level) { content() }
+    }
+}
+
 /**
- * White status and navigation icons over the black while the viewer is open, and the
+ * White navigation icons over the black while the viewer is open, and the
  * bars themselves hidden when everything but the photo is; a swipe from the edge shows
  * them for a moment.
  */
@@ -538,13 +587,11 @@ private fun ViewerSystemBars(hidden: Boolean) {
     val controller = remember(window, view) { WindowCompat.getInsetsController(window, view) }
 
     DisposableEffect(controller) {
-        val status = controller.isAppearanceLightStatusBars
+        // The status bar's icons follow what is under them, white over the black.
         val navigation = controller.isAppearanceLightNavigationBars
-        controller.isAppearanceLightStatusBars = false
         controller.isAppearanceLightNavigationBars = false
         controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         onDispose {
-            controller.isAppearanceLightStatusBars = status
             controller.isAppearanceLightNavigationBars = navigation
             controller.show(WindowInsetsCompat.Type.systemBars())
         }

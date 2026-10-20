@@ -18,6 +18,20 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.AbsoluteAlignment
+import androidx.compose.foundation.layout.absolutePadding
+import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
+import cc.hyoban.moments.ui.components.LocalMediaMaxHeight
+import cc.hyoban.moments.ui.components.isLandscape
+import cc.hyoban.moments.ui.components.AdaptiveStatusBarIcons
+import cc.hyoban.moments.ui.components.RAIL_WIDTH
+import cc.hyoban.moments.ui.components.sideInsetsPadding
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.FloatingNav
 import cc.hyoban.moments.ui.components.NavItem
@@ -183,7 +197,26 @@ fun MomentsApp(container: AppContainer) {
             }
         }
     }
-    val clearance = if (current != null) 88.dp + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() else 0.dp
+    // On a phone on its side the tabs stand down a side instead, where the screen has
+    // width to spare and no height.
+    val landscape = isLandscape()
+    val navBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    val clearance = when {
+        current == null -> 0.dp
+        landscape -> navBottom
+        else -> 88.dp + navBottom
+    }
+    // Down the side away from the camera's cutout, which changes sides as the phone turns
+    // one way or the other; the status bar's icons stay beside the cutout.
+    val density = LocalDensity.current
+    val cutout = WindowInsets.displayCutout
+    val railLeft = with(density) { cutout.getRight(this, LayoutDirection.Ltr) > cutout.getLeft(this, LayoutDirection.Ltr) }
+    val rail = when {
+        current == null || !landscape -> RailSpace(0.dp, 0.dp)
+        railLeft -> RailSpace(left = RAIL_CLEARANCE, right = 0.dp)
+        else -> RailSpace(left = 0.dp, right = RAIL_CLEARANCE)
+    }
+    val windowHeight = with(LocalDensity.current) { LocalWindowInfo.current.containerSize.height.toDp() }
 
     // A back swipe, from its start until a moment after the finger lifts, while the page
     // change it started plays out: shared photos stay with their pages meanwhile.
@@ -201,10 +234,16 @@ fun MomentsApp(container: AppContainer) {
         }
     }
 
+    AdaptiveStatusBarIcons()
+
     // A Surface rather than a bare background, so text without a colour of its own takes the page's on-colour in both modes.
     Surface(Modifier.fillMaxSize(), color = AppColors.page) {
     Box(Modifier.fillMaxSize().nestedScroll(hideOnScroll)) {
-        CompositionLocalProvider(LocalBottomClearance provides clearance) {
+        CompositionLocalProvider(
+            LocalBottomClearance provides clearance,
+            LocalRailSpace provides rail,
+            LocalMediaMaxHeight provides if (landscape) windowHeight * 0.6f else Dp.Infinity,
+        ) {
         SharedTransitionLayout(Modifier.fillMaxSize()) {
             CompositionLocalProvider(
                 LocalSharedTransitionScope provides this,
@@ -284,12 +323,20 @@ fun MomentsApp(container: AppContainer) {
         }
         }
         AnimatedVisibility(
-            current != null && tabsShown && viewer == null,
-            enter = fadeIn() + slideInVertically { it },
-            exit = fadeOut() + slideOutVertically { it },
-            modifier = Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(bottom = Space.m),
+            // Down the side, the tabs have room of their own, so they stay as a list scrolls.
+            current != null && (landscape || tabsShown) && viewer == null,
+            enter = fadeIn() + if (landscape) slideInHorizontally { if (railLeft) -it else it } else slideInVertically { it },
+            exit = fadeOut() + if (landscape) slideOutHorizontally { if (railLeft) -it else it } else slideOutVertically { it },
+            modifier = if (landscape) {
+                // In the middle of what the system bars leave, as the map's buttons above and
+                // below it are spaced.
+                Modifier.align(if (railLeft) AbsoluteAlignment.CenterLeft else AbsoluteAlignment.CenterRight)
+                    .windowInsetsPadding(WindowInsets.safeDrawing).absolutePadding(left = if (railLeft) Space.m else 0.dp, right = if (railLeft) 0.dp else Space.m)
+            } else {
+                Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(bottom = Space.m)
+            },
         ) {
-            FloatingNav(navItems, selected = current?.ordinal ?: 0, onSelect = selectTab)
+            FloatingNav(navItems, selected = current?.ordinal ?: 0, onSelect = selectTab, vertical = landscape)
         }
     }
     }
@@ -369,6 +416,17 @@ private const val SCROLL_SLOP = 6f
 
 /** How much of the bottom the floating tabs cover on a tab screen, to leave clear under a list's last item. */
 val LocalBottomClearance = staticCompositionLocalOf { 0.dp }
+
+/**
+ * How much of the left and the right the tabs cover on a tab screen on a phone on its
+ * side, one of them standing down one side or the other, to keep a page's content clear of.
+ */
+data class RailSpace(val left: Dp, val right: Dp)
+
+val LocalRailSpace = staticCompositionLocalOf { RailSpace(0.dp, 0.dp) }
+
+/** The tabs standing down the side, with the room around them. */
+private val RAIL_CLEARANCE = Space.m + RAIL_WIDTH + Space.s
 
 /** A destination whose screen knows its transition, so its photos can share their place with the next screen's. */
 private inline fun <reified T : Any> NavGraphBuilder.screen(noinline content: @Composable (NavBackStackEntry) -> Unit) {

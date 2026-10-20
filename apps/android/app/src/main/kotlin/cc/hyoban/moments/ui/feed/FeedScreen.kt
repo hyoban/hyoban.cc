@@ -13,7 +13,7 @@ import androidx.compose.material.icons.outlined.ViewAgenda
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.Icons
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -69,6 +69,7 @@ fun FeedScreen(container: AppContainer, onMoment: (String) -> Unit, onMedia: (St
     var calendar by rememberSaveable { mutableStateOf(false) }
     // Each view keeps where it was scrolled to while the other shows.
     val feedState = rememberLazyListState()
+    val gridState = rememberLazyStaggeredGridState()
     val calendarState = rememberLazyListState()
     // A new filter starts both views from the top; coming back to the tab doesn't.
     var lastFilter by rememberSaveable(stateSaver = TimeFilterSaver) { mutableStateOf(filter) }
@@ -76,10 +77,11 @@ fun FeedScreen(container: AppContainer, onMoment: (String) -> Unit, onMedia: (St
         if (filter != lastFilter) {
             lastFilter = filter
             feedState.scrollToItem(0)
+            gridState.scrollToItem(0)
             calendarState.scrollToItem(0)
         }
     }
-    val header: LazyListScope.() -> Unit = {
+    val header: FeedLeading.() -> Unit = {
         item(key = "header") {
             PageHeader(stringResource(R.string.title_moments), subtitle) {
                 IconButton(onClick = { calendar = !calendar }) {
@@ -101,7 +103,8 @@ fun FeedScreen(container: AppContainer, onMoment: (String) -> Unit, onMedia: (St
     }
 
     Box(Modifier.fillMaxSize()) {
-        PullToRefreshBox(isRefreshing = pull.refreshing, onRefresh = pull.onRefresh, modifier = Modifier.fillMaxSize().statusBarsPadding()) {
+        // The list runs up under the status bar as it scrolls.
+        TabRefreshBox(pull) {
             if (moments.isEmpty()) {
                 EmptyState(loading = !loaded || syncing, message = R.string.empty_moments)
             } else {
@@ -113,10 +116,11 @@ fun FeedScreen(container: AppContainer, onMoment: (String) -> Unit, onMedia: (St
                             // One Moment opens on its own; more open as the day's list.
                             onDay = { date, here -> if (here.size == 1) onMoment(here.single().uid) else onDay(date) },
                             state = calendarState,
-                            leading = header,
+                            top = statusBarTop,
+                            leading = { leadingRows(header) },
                         )
                     } else {
-                        MomentFeed(shown, places, trips, container.mediaUrls, onMoment, onMedia, state = feedState, leading = header)
+                        MomentFeed(shown, places, trips, container.mediaUrls, onMoment, onMedia, state = feedState, gridState = gridState, top = statusBarTop, leading = header)
                     }
                 }
             }
