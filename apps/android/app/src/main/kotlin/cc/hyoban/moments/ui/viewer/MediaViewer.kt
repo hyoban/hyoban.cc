@@ -162,7 +162,10 @@ fun MediaViewer(
     val density = LocalDensity.current
     val closeAt = with(density) { 120.dp.toPx() }
     val infoAt = with(density) { 64.dp.toPx() }
-    ViewerSystemBars(hidden = !chrome)
+    // In a window of its own only the video shows: no bars, no controls, no details.
+    val inPip = LocalInPictureInPicture.current
+    LaunchedEffect(inPip) { if (inPip) info = false }
+    ViewerSystemBars(hidden = !chrome || inPip)
     // The photo shown, for its tile to step aside while it is.
     LaunchedEffect(pager.currentPage, media) { onShown(mediaKey(moment.uid, media[pager.currentPage.coerceIn(0, media.lastIndex)].uid)) }
 
@@ -213,13 +216,13 @@ fun MediaViewer(
                 media = media[page],
                 urls = container.mediaUrls,
                 active = pager.currentPage == page,
-                chrome = chrome && !dragging,
+                chrome = chrome && !dragging && !inPip,
                 onZoom = { zoomed = it },
                 onTap = { chrome = !chrome },
             )
         }
 
-        AnimatedVisibility(chrome && !dragging, enter = fadeIn(), exit = fadeOut()) {
+        AnimatedVisibility(chrome && !dragging && !inPip, enter = fadeIn(), exit = fadeOut()) {
             Row(
                 Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.25f)).statusBarsPadding().sideInsetsPadding().padding(4.dp),
                 verticalAlignment = Alignment.CenterVertically,

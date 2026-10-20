@@ -16,9 +16,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Moments">
         <!-- Compose lays the app out again on its own when the phone turns, so the
-             activity stays: the map, a playing video and the open page carry on as they were. -->
+             activity stays: the map, a playing video and the open page carry on as they were.
+             A playing video goes on in a picture-in-picture window when the app is left. -->
         <activity
             android:name=".MainActivity"
+            android:supportsPictureInPicture="true"
             android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden|density"
             android:launchMode="singleTop"
             android:exported="true">

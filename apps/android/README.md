@@ -19,6 +19,12 @@ the photo beside the words and a large one with the Moment's words whole, rounds
 launcher rounds its own, opens its page when tapped, takes the colours the theme page
 sets, and is drawn again after each sync and every three hours.
 
+A video in the viewer goes on in a picture-in-picture window when the app is left while
+it plays, with the system's play and pause; with its sound on it takes the audio from
+other apps and stops when headphones come out, and the screen stays on while it plays.
+The photos and videos are SDR (WebP without gain maps, BT.709 video), so the viewer
+leaves the window's colour mode alone.
+
 ## Building
 
 Android Studio opens `apps/android` as a project. From a shell, with the Android SDK
