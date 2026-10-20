@@ -96,6 +96,7 @@ import cc.hyoban.moments.MainActivity
 import cc.hyoban.moments.R
 import cc.hyoban.moments.Settings
 import cc.hyoban.moments.ui.compose.NewMomentScreen
+import cc.hyoban.moments.ui.publish.ChangesScreen
 import cc.hyoban.moments.ui.components.AdaptiveStatusBarIcons
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.FloatingNav
@@ -171,6 +172,10 @@ object NewMoment
 /** One of the phone's Moments, to change. */
 @Serializable
 data class EditMoment(val uid: String)
+
+/** The changes kept on the phone, to look over and publish. */
+@Serializable
+object Changes
 
 /** The three tabs at the bottom; everything else opens over them. */
 private enum class Tab(val route: Any, val type: KClass<*>, val label: Int, val icon: ImageVector, val selectedIcon: ImageVector) {
@@ -341,6 +346,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                     onDay = { navController.navigate(Day(it)) },
                                     onSettings = { navController.navigate(Preferences) },
                                     onNew = { navController.navigate(NewMoment) },
+                                    onChanges = { navController.navigate(Changes) },
                                 )
                             }
                             screen<Atlas>(link = "map") {
@@ -377,6 +383,9 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                             }
                             screen<EditMoment>(link = "edit/{uid}") { entry ->
                                 NewMomentScreen(container, onBack = back, onSaved = back, edit = entry.toRoute<EditMoment>().uid)
+                            }
+                            screen<Changes>(link = "changes") {
+                                ChangesScreen(container, onMoment = openMoment, onBack = back)
                             }
                         }
                         // Kept while it leaves, so the photo has somewhere to fly back from.
@@ -436,14 +445,14 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                             onExpand = { tabsShown = true },
                             onReselect = { tabReselects.tryEmit(Tab.entries[it].route) },
                         )
-                        // On the map, its button slides out from behind the tabs' end as they move over
-                        // to make room, as the map's page slides in, and back under them as they
-                        // leave; down the side the map keeps it itself. Kept while it slides away,
-                        // after the map has let it go.
+                        // A tab's button, the map's locating or the Moments' publishing, slides out
+                        // from behind the tabs' end as they move over to make room, as its page
+                        // slides in, and back under them as they leave; down the side the map
+                        // keeps it itself. Kept while it slides away, after the tab has let it go.
                         var accessory by remember { mutableStateOf(accessorySlot.value) }
                         accessorySlot.value?.let { accessory = it }
                         AnimatedVisibility(
-                            current == Tab.MAP && !landscape && accessorySlot.value != null,
+                            current != null && !landscape && accessorySlot.value != null,
                             enter = expandHorizontally(TAB_SLIDE_SIZE, expandFrom = Alignment.Start, clip = false) +
                                 slideInHorizontally(TAB_SLIDE) { -it } +
                                 fadeIn(tween(TAB_SLIDE_MS / 2)),
@@ -590,6 +599,7 @@ fun routeOf(link: Uri): Any? {
         "settings" -> Preferences
         "new" -> NewMoment
         "edit" -> id?.let(::EditMoment)
+        "changes" -> Changes
         "moment" -> id?.let(::Moment)
         "trip" -> id?.let(::Trip)
         "day" -> id?.let(::Day)

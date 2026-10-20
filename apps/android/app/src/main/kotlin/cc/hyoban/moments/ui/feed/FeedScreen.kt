@@ -3,21 +3,28 @@ package cc.hyoban.moments.ui.feed
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.CloudUpload
 import androidx.compose.material.icons.outlined.EditNote
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.ViewAgenda
 import androidx.compose.material.icons.rounded.Directions
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,6 +41,10 @@ import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.R
 import cc.hyoban.moments.ui.Feed
 import cc.hyoban.moments.ui.LocalBottomClearance
+import cc.hyoban.moments.ui.LocalNavAccessory
+import cc.hyoban.moments.ui.components.NAV_HEIGHT
+import cc.hyoban.moments.ui.components.isLandscape
+import cc.hyoban.moments.ui.publish.PublishButton
 import cc.hyoban.moments.ui.calendar.CalendarView
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.SubPage
@@ -57,7 +68,22 @@ fun FeedScreen(
     onDay: (String) -> Unit,
     onSettings: () -> Unit,
     onNew: () -> Unit,
+    onChanges: () -> Unit,
 ) {
+    val pending by container.repository.pending.collectAsStateWithLifecycle()
+    // The changes kept on the phone, to look over and publish, while there are any: upright,
+    // their button stands beside the tabs, as the map's locating does.
+    val landscape = isLandscape()
+    val publishable = container.canPublish && pending.size > 0
+    val accessory = LocalNavAccessory.current
+    val currentOnChanges by rememberUpdatedState(onChanges)
+    val publishBeside = remember<@Composable () -> Unit> {
+        { PublishButton(container, onClick = { currentOnChanges() }, modifier = Modifier.size(NAV_HEIGHT)) }
+    }
+    DisposableEffect(accessory, publishable && !landscape) {
+        if (publishable && !landscape) accessory.value = publishBeside
+        onDispose { if (accessory.value === publishBeside) accessory.value = null }
+    }
     val moments by container.repository.moments.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
     val trips by container.repository.trips.collectAsStateWithLifecycle()
@@ -106,6 +132,14 @@ fun FeedScreen(
         tab = Feed,
         subtitle = subtitle,
         actions = {
+            // Down the side, where the tabs have no button beside them, the changes open from the header.
+            if (publishable && landscape) {
+                IconButton(onClick = onChanges, modifier = Modifier.testTag("changes")) {
+                    BadgedBox(badge = { Badge { Text(pending.size.toString()) } }) {
+                        Icon(Icons.Outlined.CloudUpload, contentDescription = stringResource(R.string.title_changes))
+                    }
+                }
+            }
             IconButton(onClick = onNew, modifier = Modifier.testTag("new_moment")) {
                 Icon(Icons.Outlined.EditNote, contentDescription = stringResource(R.string.action_new_moment))
             }

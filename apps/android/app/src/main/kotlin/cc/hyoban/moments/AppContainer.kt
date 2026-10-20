@@ -29,7 +29,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.getAndUpdate
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.File
 import java.time.OffsetDateTime
@@ -158,7 +157,10 @@ class AppContainer(context: Context) {
         Widgets.update(appContext)
     }
 
-    /** Keeps a Moment written on the phone as changed, and draws the widgets again with it. */
+    /**
+     * Keeps a Moment as changed on the phone, one written here or one of the site's until the
+     * changes are published, and draws the widgets again with it.
+     */
     suspend fun updateLocal(moment: MomentRecord, place: Pair<String, Place>?) {
         repository.updateLocal(moment, place)
         Widgets.update(appContext)
@@ -167,49 +169,46 @@ class AppContainer(context: Context) {
     /** Whether the app may write to the API: it has the owner's token. */
     val canPublish get() = settings.apiToken.isSet
 
+    /** How far publishing the changes has got, done of total, while it runs. */
+    data class Progress(val done: Int, val total: Int)
+
+    private val _publishing = MutableStateFlow<Progress?>(null)
+
+    /** How far publishing the changes has got, while it runs, so the pages say so whenever they're opened. */
+    val publishing: StateFlow<Progress?> = _publishing.asStateFlow()
+
     /**
-     * Sends a Moment to the API and publishes it, a Moment of the phone's or one of the
-     * site's as changed, and draws the widgets again with it.
+     * Publishes every change kept on the phone, past the page that asked, and says how it
+     * went; the only way the app changes the site.
      */
-    suspend fun push(moment: MomentRecord, place: Pair<String, Place>? = null): MomentRecord =
-        repository.push(moment, place).also { Widgets.update(appContext) }
-
-    private val _publishing = MutableStateFlow<Set<String>>(emptySet())
-
-    /** The Moments of the phone's being published, by uid, so their pages say so whenever they're opened. */
-    val publishing: StateFlow<Set<String>> = _publishing.asStateFlow()
-
-    /** Publishes a Moment of the phone's, past the page that asked, and says how it went. */
-    fun publish(moment: MomentRecord) {
-        if (moment.uid in _publishing.value) return
-        _publishing.update { it + moment.uid }
+    fun publishPending() {
+        if (_publishing.value != null) return
+        _publishing.value = Progress(0, repository.pending.value.size)
         scope.launch {
             try {
-                push(moment)
+                repository.publishPending { done, total -> _publishing.value = Progress(done, total) }
                 Toast.makeText(appContext, R.string.message_published, Toast.LENGTH_SHORT).show()
             } catch (error: Exception) {
                 Toast.makeText(appContext, appContext.getString(R.string.error_publish, error.message ?: error.toString()), Toast.LENGTH_LONG).show()
             } finally {
-                _publishing.update { it - moment.uid }
-            }
-        }
-    }
-
-    /** Takes one of the site's Moments off it, past the page that asked, and says so if it couldn't. */
-    fun deletePublished(uid: String) {
-        scope.launch {
-            try {
-                repository.deletePublished(uid)
+                _publishing.value = null
                 Widgets.update(appContext)
-            } catch (error: Exception) {
-                Toast.makeText(appContext, appContext.getString(R.string.error_delete, error.message ?: error.toString()), Toast.LENGTH_LONG).show()
             }
         }
     }
 
-    fun deleteLocal(uid: String) {
+    /** Deletes a Moment: one of the phone's at once, one of the site's when the changes are published. */
+    fun delete(uid: String) {
         scope.launch {
-            repository.deleteLocal(uid)
+            repository.delete(uid)
+            Widgets.update(appContext)
+        }
+    }
+
+    /** Takes back a change or a deletion of one of the site's Moments, not yet published. */
+    fun revert(uid: String) {
+        scope.launch {
+            repository.revert(uid)
             Widgets.update(appContext)
         }
     }

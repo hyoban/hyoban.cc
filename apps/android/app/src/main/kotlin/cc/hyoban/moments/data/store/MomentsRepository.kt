@@ -1,6 +1,6 @@
 package cc.hyoban.moments.data.store
 
-import cc.hyoban.moments.data.api.ApiException
+import cc.hyoban.moments.data.api.ChangeSet
 import cc.hyoban.moments.data.api.MomentsSource
 import cc.hyoban.moments.data.api.MomentsWriter
 import cc.hyoban.moments.data.spec.MomentMedia
@@ -23,7 +23,9 @@ import java.net.URI
  * date from the API. Only what the site shows is offered: hidden Moments stay in the
  * copy but not in [moments]. Beside them, the Moments written on this phone and the
  * places they made, kept in [local], a store of their own that no sync or change of
- * API touches, until they are sent to the API through [writer] and become the site's.
+ * API touches, with the site's Moments changed or deleted on the phone. None of it
+ * reaches the API until [publishPending] sends it all through [writer], as [pending]
+ * lists it for a look first.
  */
 class MomentsRepository(
     private val store: DataStore,
@@ -39,12 +41,15 @@ class MomentsRepository(
     private var phonePlaces: Map<String, Place> = emptyMap()
     /** The phone's places kept on their own, which stay when no Moment is at them. */
     private var keptPlaces: Set<String> = emptySet()
+    /** The site's Moments deleted on the phone, by uid, until the deletions are published. */
+    private var removed: Set<String> = emptySet()
     private val _moments = MutableStateFlow<List<MomentRecord>>(emptyList())
     private val _places = MutableStateFlow<Map<String, Place>>(emptyMap())
     private val _trips = MutableStateFlow<List<TripRecord>>(emptyList())
     private val _loaded = MutableStateFlow(false)
     private val _syncing = MutableStateFlow(false)
     private val _error = MutableStateFlow<String?>(null)
+    private val _pending = MutableStateFlow(PendingChanges())
 
     /** The Moments the site shows and those written on this phone, newest first. */
     val moments: StateFlow<List<MomentRecord>> = _moments.asStateFlow()
@@ -56,6 +61,8 @@ class MomentsRepository(
     val syncing: StateFlow<Boolean> = _syncing.asStateFlow()
     /** Why the last refresh failed, until one succeeds. */
     val error: StateFlow<String?> = _error.asStateFlow()
+    /** What publishing would change on the site. */
+    val pending: StateFlow<PendingChanges> = _pending.asStateFlow()
 
     /** Reads the copy on the phone. */
     suspend fun load() = lock.withLock {
@@ -66,6 +73,7 @@ class MomentsRepository(
                 phone = local.readMoments().associateBy { it.uid }
                 phonePlaces = local.readPlaces()
                 keptPlaces = local.readKeptPlaces()
+                removed = local.readRemoved()
             }
             publishPlaces()
             _trips.value = store.readTrips().sortedByDescending { it.start }
@@ -120,6 +128,11 @@ class MomentsRepository(
 
                 all = moments
                 apiPlaces = places
+                // A deletion of a Moment the site no longer has is done already.
+                if (removed.any { it !in moments }) {
+                    removed = removed.filter { it in moments }.toSet()
+                    local?.writeRemoved(removed)
+                }
                 publishPlaces()
                 _trips.value = trips.sortedByDescending { it.start }
                 publish()
@@ -136,11 +149,15 @@ class MomentsRepository(
 
     /**
      * Forgets the copy, on the phone and in memory, as when the records are to come from
-     * another API. What was written on the phone stays.
+     * another API. What was written on the phone stays; what was changed or deleted of the
+     * old API's Moments goes with them.
      */
     suspend fun clear() = lock.withLock {
         withContext(io) {
             store.clear()
+            phone.values.filter { it.published != null }.forEach(::forgetLocal)
+            removed = emptySet()
+            local?.writeRemoved(removed)
             all = emptyMap()
             apiPlaces = emptyMap()
             publishPlaces()
@@ -178,9 +195,10 @@ class MomentsRepository(
     }
 
     /**
-     * Keeps a Moment written on the phone as changed, with the place it made if it made
-     * one: a move to another month moves its file, and the photos it no longer has and the
-     * places it made that no Moment is at any more go.
+     * Keeps a Moment as changed on the phone, with the place it made if it made one: one
+     * written here, or one of the site's until the changes are published. A move to another
+     * month moves its file, and the photos it no longer has and the places it made that no
+     * Moment is at any more go.
      */
     suspend fun updateLocal(moment: MomentRecord, place: Pair<String, Place>? = null) = lock.withLock {
         val local = checkNotNull(local) { "No store for the phone's own Moments" }
@@ -202,13 +220,30 @@ class MomentsRepository(
     }
 
     /**
-     * Forgets a Moment written on the phone, with its photos the app copied in and the
-     * places it made that no other Moment is at.
+     * Deletes a Moment. One written on the phone goes, with its photos the app copied in and
+     * the places it made that no other Moment is at; one of the site's drops any change kept
+     * for it and is taken off the site when the changes are published.
      */
-    suspend fun deleteLocal(uid: String) = lock.withLock {
+    suspend fun delete(uid: String) = lock.withLock {
         withContext(io) {
-            val moment = phone[uid] ?: return@withContext
-            forgetLocal(moment)
+            phone[uid]?.let(::forgetLocal)
+            if (uid in all) {
+                removed = removed + uid
+                local?.writeRemoved(removed)
+            }
+            publishPlaces()
+            publish()
+        }
+    }
+
+    /** Takes back what publishing would do to one of the site's Moments: its change, or its deletion. */
+    suspend fun revert(uid: String) = lock.withLock {
+        withContext(io) {
+            phone[uid]?.takeIf { it.published != null }?.let(::forgetLocal)
+            if (uid in removed) {
+                removed = removed - uid
+                local?.writeRemoved(removed)
+            }
             publishPlaces()
             publish()
         }
@@ -234,61 +269,65 @@ class MomentsRepository(
     }
 
     /**
-     * Sends a Moment to the API and publishes it: one written on the phone, or one of the
-     * site's as changed here, with [place] when the change made one. The places only the
-     * phone knows go first, under the ids the API gives them, then the photos not yet
-     * published, then the Moment, which a draft follows by publishing. What comes back
-     * is the site's: a Moment of the phone's leaves the phone, its copied photos with it,
-     * and the phone's places sent are the API's from then on, for its other Moments too.
-     * The network is outside the lock, so a sync isn't held up by the photos.
+     * Publishes all that [pending] lists: the originals of the photos not yet published, one
+     * by one, then everything else in one write, which the API takes whole or not at all,
+     * the Moments written on the phone and those changed, each published, the places only
+     * the phone knows that they are at, and the deletions. One that fails stops it, all of
+     * it kept for the next time, and its error is thrown; [onProgress] hears how many steps
+     * are done of how many. What comes back is the site's: the Moments leave the phone,
+     * their copied photos with them, and the places sent are the API's from then on, for
+     * the phone's other Moments too. The network is outside the lock, so a sync isn't held
+     * up by the photos.
      */
-    suspend fun push(moment: MomentRecord, place: Pair<String, Place>? = null): MomentRecord {
+    suspend fun publishPending(onProgress: (done: Int, total: Int) -> Unit = { _, _ -> }) {
         val writer = checkNotNull(writer) { "No API to write to" }
-        val (known, own) = lock.withLock { apiPlaces to (phonePlaces + listOfNotNull(place)) }
-        val (saved, sentPlaces) = withContext(io) {
-            val sentPlaces = moment.places.distinct().filter { it !in known }.associateWith { id ->
-                writer.savePlace(id, own[id] ?: error("Unknown place $id"))
-            }
-            for (media in moment.media.filter { it.published == null }) {
+        val (moments, known, own, deletions) = lock.withLock {
+            Snapshot(phone.values.sortedWith(oldestFirst), apiPlaces, phonePlaces, removed.toList())
+        }
+        if (moments.isEmpty() && deletions.isEmpty()) return
+        val places = moments.flatMap { it.places }.distinct().filter { it !in known }
+            .associateWith { id -> own[id] ?: error("Unknown place $id") }
+        val photos = moments.flatMap { moment -> moment.media.filter { it.published == null }.map { moment.uid to it } }
+        val total = photos.size + 1
+        var done = 0
+        onProgress(done, total)
+        val applied = withContext(io) {
+            for ((uid, media) in photos) {
                 val file = media.local?.uri?.let { runCatching { File(URI(it)) }.getOrNull() }?.takeIf(File::isFile)
                     ?: error("The photo ${media.uid} isn't on the phone")
-                writer.uploadImage(moment.uid, media.uid, file, contentTypeOf(file))
+                writer.uploadImage(uid, media.uid, file, contentTypeOf(file))
+                onProgress(++done, total)
             }
-            val sent = moment.copy(places = moment.places.map { sentPlaces[it]?.id ?: it })
-            val saved = writer.saveMoment(sent).let { if (it.published == null) writer.publishMoment(it.uid) else it }
-            saved to sentPlaces
+            writer.applyChanges(ChangeSet(places, moments, deletions))
         }
         lock.withLock {
             withContext(io) {
-                apiPlaces = apiPlaces + sentPlaces.values.associate { it.id to it.place }
+                apiPlaces = apiPlaces + applied.places.filterValues { it !in apiPlaces }.entries.associate { (given, id) -> id to places.getValue(given) }
                 store.writePlaces(apiPlaces)
-                keep(saved)
-                val written = phone[moment.uid]
-                if (written != null) forgetLocal(written) else local?.let { deleteCopies(it, moment.media) }
-                adoptPlaces(sentPlaces.mapValues { it.value.id })
+                for (saved in applied.moments) {
+                    keep(saved)
+                    phone[saved.uid]?.let(::forgetLocal)
+                }
+                for (uid in deletions) {
+                    all[uid]?.let(store::deleteMoment)
+                    all = all - uid
+                }
+                removed = removed - deletions.toSet()
+                local?.writeRemoved(removed)
+                adoptPlaces(applied.places)
                 publishPlaces()
                 publish()
             }
         }
-        return saved
+        onProgress(total, total)
     }
 
-    /** Takes one of the site's Moments off it; one the API no longer has is gone already. */
-    suspend fun deletePublished(uid: String) {
-        val writer = checkNotNull(writer) { "No API to write to" }
-        try {
-            withContext(io) { writer.deleteMoment(uid) }
-        } catch (error: ApiException) {
-            if (error.status != 404) throw error
-        }
-        lock.withLock {
-            withContext(io) {
-                all[uid]?.let(store::deleteMoment)
-                all = all - uid
-                publish()
-            }
-        }
-    }
+    private data class Snapshot(
+        val moments: List<MomentRecord>,
+        val known: Map<String, Place>,
+        val own: Map<String, Place>,
+        val deletions: List<String>,
+    )
 
     /** One of the site's Moments as the API answered it, kept in the copy. */
     private fun keep(moment: MomentRecord) {
@@ -328,12 +367,17 @@ class MomentsRepository(
     }
 
     /** Whether a Moment was written on this phone rather than read from the API. */
-    fun isLocal(uid: String): Boolean = uid in phone
+    fun isLocal(uid: String): Boolean = phone[uid]?.let { it.published == null } == true
 
-    fun moment(uid: String): MomentRecord? = phone[uid] ?: all[uid]?.takeIf(::isShown)
+    /** Whether one of the site's Moments has a change on the phone not yet published. */
+    fun isChanged(uid: String): Boolean = phone[uid]?.published != null
+
+    fun moment(uid: String): MomentRecord? = phone[uid] ?: all[uid]?.takeIf { isShown(it) && uid !in removed }
 
     private fun publish() {
-        _moments.value = (all.values.filter { isShown(it) && it.uid !in phone } + phone.values).sortedWith(newestFirst)
+        _moments.value = (all.values.filter { isShown(it) && it.uid !in phone && it.uid !in removed } + phone.values).sortedWith(newestFirst)
+        val (added, changed) = phone.values.sortedWith(oldestFirst).partition { it.published == null }
+        _pending.value = PendingChanges(added, changed.map { Change(all[it.uid], it) }, removed.mapNotNull { all[it] }.sortedWith(oldestFirst))
     }
 
     private fun publishPlaces() {
@@ -355,4 +399,17 @@ class MomentsRepository(
     }
 
     private val newestFirst = compareByDescending<MomentRecord> { it.occurredAt }.thenByDescending { it.uid }
+    private val oldestFirst = compareBy<MomentRecord> { it.occurredAt }.thenBy { it.uid }
 }
+
+/** What publishing would change on the site: the Moments written on the phone, those changed, those deleted. */
+data class PendingChanges(
+    val added: List<MomentRecord> = emptyList(),
+    val changed: List<Change> = emptyList(),
+    val removed: List<MomentRecord> = emptyList(),
+) {
+    val size get() = added.size + changed.size + removed.size
+}
+
+/** One of the site's Moments as the site has it, [before] (null when the copy no longer has it), and as changed. */
+data class Change(val before: MomentRecord?, val after: MomentRecord)
