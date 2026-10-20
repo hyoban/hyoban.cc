@@ -97,6 +97,17 @@ test('a place the app made is named by its pinyin', async () => {
   assert.equal((await get(env, '/v1/places/ce-shi-ma-tou')).body.name, '测试码头')
 })
 
+test('a Moment of words alone saves and publishes', async () => {
+  const { env } = setUpWithData()
+  const words = { ...dockDraft(), places: ['nanjing'], media: [] }
+  const saved = await call(env, 'PUT', `/v1/moments/${words.uid}`, { ...owner, body: words })
+  const published = await call(env, 'POST', `/v1/moments/${words.uid}/publish`, owner)
+
+  assert.equal(saved.status, 201)
+  assert.equal(published.status, 200)
+  assert.match(published.body.published.id, /^\d{4}\/\d{2}\/\d{2}-\d{2}-nanjing$/)
+})
+
 test('a draft is the owner’s until it publishes, with its media moved under its id', async () => {
   const { bucket, env } = setUpWithData()
   const draft = dockDraft()

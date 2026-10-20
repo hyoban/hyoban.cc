@@ -83,7 +83,7 @@ export async function saveMoment(
   const saved = validate(momentRecordSchema, record)
 
   await commit(context, momentStatements(context.db, saved))
-  await context.bucket.delete(uploads)
+  await deleteUploads(context.bucket, uploads)
 
   return {
     body: saved,
@@ -122,7 +122,7 @@ export async function publishMoment(
   const saved = validate(momentRecordSchema, record)
 
   await commit(context, momentStatements(context.db, saved))
-  await context.bucket.delete(uploads)
+  await deleteUploads(context.bucket, uploads)
 
   return { body: saved, status: 200, changesSite: true }
 }
@@ -337,6 +337,13 @@ function withoutServerFields(body: unknown): unknown {
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+/** The uploads a publish copied, gone; R2 turns down a delete of no keys, as for a Moment with no media. */
+async function deleteUploads(bucket: Bucket, uploads: string[]) {
+  if (uploads.length > 0) {
+    await bucket.delete(uploads)
+  }
 }
 
 function getParts(item: MomentMedia): UploadPart[] {
