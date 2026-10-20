@@ -16,6 +16,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.OpenInNew
+import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.material.icons.rounded.Cloud
 import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.Image
@@ -43,6 +45,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
@@ -94,6 +97,7 @@ fun SettingsScreen(container: AppContainer, onBack: () -> Unit) {
                 ThemeSettings(settings)
                 Section(stringResource(R.string.section_sources), rows.subList(0, 2), 0, stringResource(R.string.settings_api_note)) { editing = it }
                 Section(stringResource(R.string.section_map), rows.subList(2, 4), 2, stringResource(R.string.settings_map_note)) { editing = it }
+                Credits()
             }
         }
         FloatingBack(onBack, Modifier.align(Alignment.TopStart))
@@ -141,6 +145,24 @@ private fun SettingRow(row: Row, onClick: () -> Unit) {
         modifier = Modifier.clickable(onClick = onClick),
     )
 }
+
+/** FlClash, whose design the app's is after, opening its repository on a tap. */
+@Composable
+private fun Credits() {
+    val uri = LocalUriHandler.current
+    Group(stringResource(R.string.section_credits), null) {
+        ListItem(
+            headlineContent = { Text("FlClash") },
+            supportingContent = { Text(stringResource(R.string.credit_flclash_note)) },
+            leadingContent = { Icon(Icons.Rounded.Palette, contentDescription = null) },
+            trailingContent = { Icon(Icons.AutoMirrored.Rounded.OpenInNew, contentDescription = null) },
+            colors = rowColors(),
+            modifier = Modifier.clickable { uri.openUri(FLCLASH) },
+        )
+    }
+}
+
+private const val FLCLASH = "https://github.com/chen08209/FlClash"
 
 /** Blank is the build's own; anything else an http or https address. */
 private fun valid(text: String) = text.isBlank() || Setting.normalize(text).toHttpUrlOrNull() != null

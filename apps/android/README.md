@@ -42,3 +42,13 @@ site's rules, which trip a Moment is on, and the sync against a stand-in for the
 
 The app's own `data/` directory from when it recorded Moments is left on the phone as
 it was.
+
+## Thanks
+
+The way this app looks is learned from [FlClash](https://github.com/chen08209/FlClash).
+Its pages showed how calm and clear an Android app can feel: rows gathered into soft
+cards under small captions, a quiet note beneath each group, a theme page where every
+choice is shown rather than named. This app grew up copying those habits, one page
+after another, and is much better for it. Thank you to chen08209 and everyone who works
+on FlClash for making something so carefully, and for making it open for others to learn
+from. The settings page carries the same thanks, with a link back to it.
