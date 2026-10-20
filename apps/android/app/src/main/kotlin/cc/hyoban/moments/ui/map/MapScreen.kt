@@ -26,21 +26,18 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -56,6 +53,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LoadingIndicator
@@ -90,7 +88,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -100,14 +97,10 @@ import cc.hyoban.moments.R
 import cc.hyoban.moments.data.spec.TripRecord
 import cc.hyoban.moments.ui.Atlas
 import cc.hyoban.moments.ui.LocalBottomClearance
+import cc.hyoban.moments.ui.LocalFabClearance
 import cc.hyoban.moments.ui.LocalNavAccessory
 import cc.hyoban.moments.ui.LocalRailSpace
 import cc.hyoban.moments.ui.components.CompactMomentRow
-import cc.hyoban.moments.ui.components.NAV_ACCESSORY_GAP
-import cc.hyoban.moments.ui.components.NAV_BUTTON_SIZE
-import cc.hyoban.moments.ui.components.NAV_WIDTH
-import cc.hyoban.moments.ui.components.RAIL_HEIGHT
-import cc.hyoban.moments.ui.components.RAIL_WIDTH
 import cc.hyoban.moments.ui.components.READABLE_WIDTH
 import cc.hyoban.moments.ui.components.Tooltip
 import cc.hyoban.moments.ui.components.isLandscape
@@ -186,16 +179,17 @@ fun MapScreen(container: AppContainer, onMoment: (String) -> Unit, onPlace: (Str
         }
     }
 
-    // Upright, locating stands beside the tabs, the app placing it as they make room.
+    // Locating is the map's floating action button, which the app places above the
+    // navigation bar or at the top of the rail.
     val accessory = LocalNavAccessory.current
     val currentLocate by rememberUpdatedState(requestLocate)
+    val currentLocating by rememberUpdatedState(locating)
     val locateBeside = remember<@Composable () -> Unit> {
-        { LocateButton(locating, onClick = { currentLocate() }, size = NAV_BUTTON_SIZE) }
+        { LocateButton(currentLocating, onClick = { currentLocate() }, inRail = isLandscape()) }
     }
-    // Down the side, the map keeps locating itself, below the rail and the compass above it.
     val landscape = isLandscape()
-    DisposableEffect(accessory, landscape) {
-        if (!landscape) accessory.value = locateBeside
+    DisposableEffect(accessory) {
+        accessory.value = locateBeside
         onDispose { if (accessory.value === locateBeside) accessory.value = null }
     }
 
@@ -242,34 +236,19 @@ fun MapScreen(container: AppContainer, onMoment: (String) -> Unit, onPlace: (Str
         val trip = trips.firstOrNull { it.id == highlighted }
         // Turned some way from north, by more than a nudge.
         val turned = bearing.let { minOf(it, 360 - it) } > 0.5
-        if (landscape) {
-            // Down the tabs' side, the compass above them and locating below, the three
-            // spaced evenly; the compass keeps its place while it is hidden.
-            val railLeft = rail.left > 0.dp
-            Column(
-                Modifier.align(if (railLeft) AbsoluteAlignment.CenterLeft else AbsoluteAlignment.CenterRight)
-                    .fillMaxHeight()
-                    .windowInsetsPadding(WindowInsets.safeDrawing)
-                    .absolutePadding(left = if (railLeft) Space.m else 0.dp, right = if (railLeft) 0.dp else Space.m)
-                    .width(RAIL_WIDTH),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.SpaceEvenly,
-            ) {
-                Box(Modifier.size(BUTTON_SIZE)) { CompassButton(turned, bearing, onClick = { north++ }) }
-                Spacer(Modifier.height(RAIL_HEIGHT))
-                LocateButton(locating, onClick = requestLocate)
-            }
-        } else {
-            // While the map is turned, the compass over locating beside the tabs, and above
-            // the trip's card while it shows.
-            val lift by animateDpAsState(if (trip != null) 96.dp else 0.dp, label = "compass")
-            Box(
-                Modifier.align(Alignment.BottomCenter)
-                    .offset(x = (NAV_WIDTH + NAV_ACCESSORY_GAP) / 2)
-                    .padding(bottom = LocalBottomClearance.current + Space.s + lift),
-            ) {
-                CompassButton(turned, bearing, onClick = { north++ })
-            }
+        // While the map is turned, the compass: upright above the floating action button, and
+        // above the trip's card while it shows; on a phone on its side, at the bottom by the rail.
+        val lift by animateDpAsState(if (trip != null && !landscape) 96.dp else 0.dp, label = "compass")
+        Box(
+            if (landscape) {
+                Modifier.align(Alignment.BottomStart).navigationBarsPadding()
+                    .absolutePadding(left = rail.left + Space.gutter, bottom = Space.gutter)
+            } else {
+                Modifier.align(Alignment.BottomEnd)
+                    .padding(end = Space.gutter, bottom = LocalBottomClearance.current + LocalFabClearance.current + lift)
+            },
+        ) {
+            CompassButton(turned, bearing, onClick = { north++ })
         }
         // Kept while the card leaves, after the route is let go.
         var shown by remember { mutableStateOf(trip) }
@@ -279,7 +258,7 @@ fun MapScreen(container: AppContainer, onMoment: (String) -> Unit, onPlace: (Str
             enter = fadeIn() + slideInVertically { it / 2 },
             exit = fadeOut() + slideOutVertically { it / 2 },
             modifier = Modifier.align(Alignment.BottomCenter).sideInsetsPadding()
-                .padding(start = Space.gutter, end = Space.gutter, bottom = LocalBottomClearance.current)
+                .padding(start = Space.gutter, end = Space.gutter, bottom = LocalBottomClearance.current + LocalFabClearance.current)
                 .widthIn(max = READABLE_WIDTH),
         ) {
             shown?.let { RouteCard(it) { onTrip(it.id) } }
@@ -407,19 +386,23 @@ private fun CompassButton(turned: Boolean, bearing: Double, onClick: () -> Unit)
         enter = expandVertically(motion.fastSpatialSpec(), expandFrom = Alignment.Bottom) + fadeIn(motion.fastEffectsSpec()),
         exit = shrinkVertically(motion.fastSpatialSpec(), shrinkTowards = Alignment.Bottom) + fadeOut(motion.fastEffectsSpec()),
     ) {
+        // A map control rather than a second floating action button: a floating round button.
         Tooltip(stringResource(R.string.action_north)) {
-            FloatingActionButton(
+            Surface(
                 onClick = onClick,
                 shape = Corners.full,
-                containerColor = SurfaceLevel.floating(LocalDarkTheme.current).fill(),
+                color = SurfaceLevel.floating(LocalDarkTheme.current).fill(),
                 contentColor = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.testTag("north"),
+                shadowElevation = 3.dp,
+                modifier = Modifier.padding(bottom = Space.m).size(48.dp).testTag("north"),
             ) {
+                Box(contentAlignment = Alignment.Center) {
                 Icon(
                     Icons.Rounded.Navigation,
                     contentDescription = stringResource(R.string.action_north),
                     modifier = Modifier.rotate(-bearing.toFloat()),
                 )
+                }
             }
         }
     }
@@ -428,17 +411,16 @@ private fun CompassButton(turned: Boolean, bearing: Double, onClick: () -> Unit)
 /** Brings the map to where the phone is; a loading indicator while it finds out. */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun LocateButton(locating: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier, size: Dp? = null) {
-    // Floating like the tabs, the icon in primary as the one action the map has. Named
-    // on the button, so it keeps its name while the indicator stands in for the icon.
+private fun LocateButton(locating: Boolean, onClick: () -> Unit, inRail: Boolean = false) {
+    // The map's one floating action button, in Material 3's own colours; level with the rail
+    // at its top. Named on the button, so it keeps its name while the indicator stands in
+    // for the icon.
     val label = stringResource(R.string.action_locate)
-    Tooltip(label, modifier = modifier) {
+    Tooltip(label) {
         FloatingActionButton(
             onClick = { if (!locating) onClick() },
-            shape = Corners.full,
-            containerColor = SurfaceLevel.floating(LocalDarkTheme.current).fill(),
-            contentColor = MaterialTheme.colorScheme.primary,
-            modifier = (size?.let { Modifier.size(it) } ?: Modifier).semantics { contentDescription = label }.testTag("locate"),
+            elevation = if (inRail) FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp) else FloatingActionButtonDefaults.elevation(),
+            modifier = Modifier.semantics { contentDescription = label }.testTag("locate"),
         ) {
             if (locating) {
                 LoadingIndicator(Modifier.size(32.dp), color = LocalContentColor.current)
@@ -449,7 +431,7 @@ private fun LocateButton(locating: Boolean, onClick: () -> Unit, modifier: Modif
     }
 }
 
-/** A bar floating over the map, coloured and raised like the tabs. */
+/** A bar floating over the map, at the floating level and raised. */
 @Composable
 private fun FloatingPill(content: @Composable () -> Unit) {
     Surface(

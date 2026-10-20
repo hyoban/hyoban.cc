@@ -31,9 +31,11 @@ import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MediumFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.ToggleButtonDefaults
@@ -58,7 +60,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
@@ -69,8 +70,6 @@ import cc.hyoban.moments.ui.LocalRailSpace
 import cc.hyoban.moments.ui.RailSpace
 import cc.hyoban.moments.ui.calendar.CalendarView
 import cc.hyoban.moments.ui.components.AppColors
-import cc.hyoban.moments.ui.components.NAV_BUTTON_SIZE
-import cc.hyoban.moments.ui.components.RAIL_WIDTH
 import cc.hyoban.moments.ui.components.SubPage
 import cc.hyoban.moments.ui.components.Symbols
 import cc.hyoban.moments.ui.components.TabPage
@@ -124,12 +123,12 @@ fun FeedScreen(
     val pending by container.repository.pending.collectAsStateWithLifecycle()
     // The changes kept on the phone, to look over and publish, head the Moments while there are any.
     val publishable = container.canPublish && pending.size > 0
-    // Writing a Moment is the tab's one floating action button: upright it stands beside the
-    // tabs, as the map's locating does; down the side, at the top of the rail.
+    // Writing a Moment is the tab's one floating action button: upright a medium one above the
+    // navigation bar, as Material 3 has a phone's FAB; down the side, at the top of the rail.
     val accessory = LocalNavAccessory.current
     val currentOnNew by rememberUpdatedState(onNew)
     val newBeside = remember<@Composable () -> Unit> {
-        { NewMomentButton(onClick = { currentOnNew() }, size = if (isLandscape()) RAIL_WIDTH else NAV_BUTTON_SIZE) }
+        { NewMomentButton(onClick = { currentOnNew() }, inRail = isLandscape()) }
     }
     DisposableEffect(accessory) {
         accessory.value = newBeside
@@ -311,17 +310,28 @@ private fun ViewSwitch(calendar: Boolean, onChange: (Boolean) -> Unit) {
     }
 }
 
-/** Starts a new Moment: the tab's floating action button, its container the primary one, as Material 3 has a create. */
+/**
+ * Starts a new Moment: the tab's floating action button, its container the primary one, as
+ * Material 3 has a create. A medium FAB above the navigation bar; [inRail], a FAB at the
+ * rail's top, level with it, as one nested in a rail rests.
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun NewMomentButton(onClick: () -> Unit, modifier: Modifier = Modifier, size: Dp? = null) {
-    Tooltip(stringResource(R.string.action_new_moment), modifier = modifier) {
-        FloatingActionButton(
-            onClick = onClick,
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-            modifier = (size?.let { Modifier.size(it) } ?: Modifier).testTag("new_moment"),
-        ) {
-            Icon(Icons.Rounded.Edit, contentDescription = stringResource(R.string.action_new_moment))
+private fun NewMomentButton(onClick: () -> Unit, inRail: Boolean = false) {
+    val label = stringResource(R.string.action_new_moment)
+    Tooltip(label) {
+        if (inRail) {
+            FloatingActionButton(
+                onClick = onClick,
+                elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp),
+                modifier = Modifier.testTag("new_moment"),
+            ) {
+                Icon(Icons.Rounded.Edit, contentDescription = label)
+            }
+        } else {
+            MediumFloatingActionButton(onClick = onClick, modifier = Modifier.testTag("new_moment")) {
+                Icon(Icons.Rounded.Edit, contentDescription = label, modifier = Modifier.size(FloatingActionButtonDefaults.MediumIconSize))
+            }
         }
     }
 }

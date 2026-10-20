@@ -162,7 +162,7 @@ fun FloatingButton(
     tonal: Boolean = false,
     width: FloatingWidth = FloatingWidth.Standard,
 ) {
-    // Floating over a photo, a map or a card: a shadow, as the tabs have. Drawn at Material
+    // Floating over a photo, a map or a card: a shadow. Drawn at Material
     // 3's small icon button size, its touch target still 48dp, as Compose widens a small one.
     Tooltip(label, below = true, modifier = modifier) {
         Surface(

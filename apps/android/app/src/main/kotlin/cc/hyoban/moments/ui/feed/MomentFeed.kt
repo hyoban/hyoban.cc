@@ -68,6 +68,7 @@ import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.spec.TripRecord
 import cc.hyoban.moments.data.trips.tripOf
 import cc.hyoban.moments.ui.LocalBottomClearance
+import cc.hyoban.moments.ui.LocalFabClearance
 import cc.hyoban.moments.ui.OnTabReselect
 import cc.hyoban.moments.ui.components.DayPill
 import cc.hyoban.moments.ui.components.MomentCard
@@ -126,7 +127,7 @@ fun MomentFeed(
     leading: FeedLeading.() -> Unit = {},
 ) {
     val days = remember(moments) { moments.groupBy { it.dateKey }.toList() }
-    val bottom = LocalBottomClearance.current + Space.xl
+    val bottom = LocalBottomClearance.current + LocalFabClearance.current + Space.xl
     val card: @Composable (MomentRecord, Modifier, Boolean) -> Unit = { moment, cardModifier, showDate ->
         MomentCard(
             moment,
