@@ -1,5 +1,11 @@
 package cc.hyoban.moments.ui.settings
 
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.Role
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.ToggleButton
+import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -173,11 +179,10 @@ private fun MiniScreen(scheme: ColorScheme, dark: Boolean, modifier: Modifier) {
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun ThemeColorGroup(settings: Settings) {
     var adding by rememberSaveable { mutableStateOf(false) }
-    var styleMenu by remember { mutableStateOf(false) }
     val accent = systemAccent()
 
     Group(
@@ -216,31 +221,29 @@ private fun ThemeColorGroup(settings: Settings) {
         ListItem(
             headlineContent = { Text(stringResource(R.string.setting_color_style)) },
             leadingContent = { Icon(Icons.Rounded.Palette, contentDescription = null) },
-            trailingContent = {
-                // The menu opens out of the value, as FlClash's pop-up rows do.
-                Box {
-                    Text(stringResource(styleLabel(settings.colorStyle)), style = MaterialTheme.typography.bodyLarge)
-                    DropdownMenu(styleMenu, onDismissRequest = { styleMenu = false }) {
-                        ColorStyle.entries.forEach { style ->
-                            DropdownMenuItem(
-                                text = { Text(stringResource(styleLabel(style))) },
-                                trailingIcon = if (style == settings.colorStyle) {
-                                    { Icon(Icons.Rounded.Check, contentDescription = null) }
-                                } else {
-                                    null
-                                },
-                                onClick = {
-                                    settings.changeColorStyle(style)
-                                    styleMenu = false
-                                },
-                            )
-                        }
-                    }
-                }
-            },
             colors = rowColors(),
-            modifier = Modifier.clickable { styleMenu = true },
         )
+        // Every style in sight, one chosen, as Material 3's connected button group.
+        Row(
+            Modifier.fillMaxWidth().padding(start = Space.l, end = Space.l, bottom = Space.l),
+            horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+        ) {
+            val styles = ColorStyle.entries
+            styles.forEachIndexed { index, style ->
+                ToggleButton(
+                    checked = style == settings.colorStyle,
+                    onCheckedChange = { settings.changeColorStyle(style) },
+                    shapes = when (index) {
+                        0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                        styles.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                        else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                    },
+                    modifier = Modifier.weight(1f).semantics { role = Role.RadioButton },
+                ) {
+                    Text(stringResource(styleLabel(style)), maxLines = 1)
+                }
+            }
+        }
     }
 
     if (adding) {

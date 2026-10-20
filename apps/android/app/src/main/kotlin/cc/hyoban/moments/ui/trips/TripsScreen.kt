@@ -30,7 +30,7 @@ import cc.hyoban.moments.ui.components.tripCardKey
 import cc.hyoban.moments.ui.components.sharedCard
 import cc.hyoban.moments.ui.feed.rememberPulledRefresh
 import cc.hyoban.moments.ui.feed.TabRefreshBox
-import cc.hyoban.moments.ui.feed.statusBarTop
+import cc.hyoban.moments.ui.components.TabPage
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
@@ -45,7 +45,6 @@ import cc.hyoban.moments.data.trips.coversOf
 import cc.hyoban.moments.data.trips.momentsOf
 import cc.hyoban.moments.ui.LocalBottomClearance
 import cc.hyoban.moments.ui.components.MediaStill
-import cc.hyoban.moments.ui.components.PageHeader
 import cc.hyoban.moments.ui.components.Pill
 import cc.hyoban.moments.ui.components.PressableCard
 import cc.hyoban.moments.ui.components.PageWidth
@@ -69,8 +68,10 @@ fun TripsScreen(container: AppContainer, onTrip: (String) -> Unit) {
     val snackbar = rememberRefreshErrors(container)
     val days = remember(trips) { trips.sumOf { daysBetween(it.start, it.end) } }
 
-    Box(Modifier.fillMaxSize()) {
-        // The list runs up under the status bar as it scrolls.
+    TabPage(
+        stringResource(R.string.title_trips),
+        subtitle = stringResource(R.string.count_trips, trips.size) + " · " + stringResource(R.string.count_days_total, days),
+    ) {
         TabRefreshBox(pull) {
             if (trips.isEmpty()) {
                 EmptyState(loading = !loaded || syncing, message = R.string.empty_trips)
@@ -78,15 +79,9 @@ fun TripsScreen(container: AppContainer, onTrip: (String) -> Unit) {
                 PageWidth { columns ->
                     LazyColumn(
                         Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(start = columns.margin, top = statusBarTop, end = columns.margin, bottom = LocalBottomClearance.current + Space.xl),
+                        contentPadding = PaddingValues(start = columns.margin, end = columns.margin, bottom = LocalBottomClearance.current + Space.xl),
                         verticalArrangement = Arrangement.spacedBy(Space.m),
                     ) {
-                        item(key = "header") {
-                            PageHeader(
-                                stringResource(R.string.title_trips),
-                                stringResource(R.string.count_trips, trips.size) + " · " + stringResource(R.string.count_days_total, days),
-                            )
-                        }
                         // Two to a row where the width allows.
                         items(trips.chunked(columns.count), key = { it.first().id }) { row ->
                             CardRow(row, columns.count, Modifier.animateItem().padding(horizontal = Space.gutter)) { trip ->
