@@ -78,4 +78,10 @@
     <string name="settings_pure_black_note">深色模式下页面用纯黑，OLED 屏幕更省电。</string>
     <string name="section_credits">致谢</string>
     <string name="credit_flclash_note">App 的界面设计参考了它</string>
+    <string name="action_show_tabs">展开标签栏</string>
+    <string name="action_view">查看</string>
+    <string name="media_more">还有 %1$d 个</string>
+    <string name="media_position">%1$s，第 %2$d 个，共 %3$d 个</string>
+    <string name="calendar_day">%1$d 月 %2$d 日</string>
+    <string name="label_today">今天</string>
 </resources>

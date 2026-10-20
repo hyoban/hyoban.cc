@@ -31,7 +31,14 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import cc.hyoban.moments.R
 import cc.hyoban.moments.data.media.MediaUrls
@@ -115,9 +122,29 @@ fun MediaTile(
     liveBadgeAlignment: Alignment = Alignment.TopStart,
     sharedKey: String? = null,
     sharedShape: Shape = RectangleShape,
+    /** Where it is among its Moment's media, as an index and a count, for a screen reader. */
+    position: Pair<Int, Int>? = null,
     onClick: (() -> Unit)? = null,
 ) {
-    Box(modifier.then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)) {
+    // Read as one thing to open: what it is, where it is among the rest, and what it shows,
+    // rather than an unnamed button with "play" or "live" somewhere inside it.
+    val kind = stringResource(media.kindLabel())
+    val named = position?.let { (index, count) -> stringResource(R.string.media_position, kind, index + 1, count) } ?: kind
+    val description = listOfNotNull(named, media.alt.ifEmpty { null }).joinToString("，")
+    val view = stringResource(R.string.action_view)
+    Box(
+        modifier.then(
+            if (onClick != null) {
+                Modifier.clickable(onClick = onClick).clearAndSetSemantics {
+                    contentDescription = description
+                    role = Role.Image
+                    onClick(label = view) { onClick(); true }
+                }
+            } else {
+                Modifier
+            },
+        ),
+    ) {
         MediaStill(media, urls, Modifier.fillMaxSize().sharedMedia(sharedKey, sharedShape))
         when (media.type) {
             MediaType.VIDEO -> PlayBadge(Modifier.align(Alignment.Center))
@@ -163,7 +190,15 @@ fun MediaMosaic(
     modifier: Modifier = Modifier,
 ) {
     val tile = @Composable { index: Int, tileModifier: Modifier ->
-        MediaTile(media[index], urls, tileModifier.clip(TILE), sharedKey = mediaKey(momentUid, media[index].uid), sharedShape = TILE, onClick = { onOpen(index) })
+        MediaTile(
+            media[index],
+            urls,
+            tileModifier.clip(TILE).testTag("media_${momentUid}_$index"),
+            sharedKey = mediaKey(momentUid, media[index].uid),
+            sharedShape = TILE,
+            position = index to media.size,
+            onClick = { onOpen(index) },
+        )
     }
 
     // No taller than most of the screen on a phone on its side.
@@ -190,8 +225,12 @@ fun MediaMosaic(
                         Box(Modifier.weight(1f).fillMaxHeight().clip(TILE)) {
                             tile(index, Modifier.fillMaxSize())
                             if (index == 3 && media.size > 4) {
+                                val more = stringResource(R.string.media_more, media.size - 4)
+                                val view = stringResource(R.string.action_view)
                                 Box(
-                                    Modifier.fillMaxSize().background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.45f)).clickable { onOpen(index) },
+                                    Modifier.fillMaxSize().background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.45f))
+                                        .clickable(onClickLabel = view) { onOpen(index) }
+                                        .semantics { contentDescription = more },
                                     contentAlignment = Alignment.Center,
                                 ) {
                                     Text("+${media.size - 4}", color = Color.White, style = MaterialTheme.typography.headlineSmall)
@@ -203,6 +242,13 @@ fun MediaMosaic(
             }
         }
     }
+}
+
+/** What the media is called: a photo, a live photo or a video. */
+fun MomentMedia.kindLabel(): Int = when (type) {
+    MediaType.IMAGE -> R.string.media_photo
+    MediaType.LIVE_PHOTO -> R.string.media_live
+    MediaType.VIDEO -> R.string.media_video
 }
 
 /** Width over height, 4:3 when the record doesn't say. */

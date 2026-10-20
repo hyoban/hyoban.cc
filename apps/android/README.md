@@ -34,6 +34,27 @@ bundle in `scripts/fixtures/bundle` through the app's models, so the app and the
 can't drift apart without a test noticing; they also check the media URLs against the
 site's rules, which trip a Moment is on, and the sync against a stand-in for the API.
 
+## On the phone, from adb
+
+Every page has a link, `moments://moments`, `map`, `trips`, `settings`,
+`moment/{uid}`, `trip/{id}`, `day/{YYYY-MM-DD}` and `place/{id}`, which
+`adb shell am start -d` opens straight away, going over the page shown when the app is
+already open. The buttons, tabs and cards carry test tags that `uiautomator dump`
+reports as resource ids (`tab_map`, `settings`, `back`, `moment_{uid}`,
+`media_{uid}_{index}`, `trip_{id}`, `day_{date}`, `year_{year}`, `locate`, …), and
+`scripts/ui.py` uses both:
+
+```sh
+scripts/ui.py open moment/01M466J3KG95G3V62CZ1C7ZZBH
+scripts/ui.py dump
+scripts/ui.py tap tab_map
+```
+
+The same names serve TalkBack: a photo is read as what it is, where it is among its
+Moment's and its description; a calendar day as its date and how many Moments it has;
+the months and days heading a list as headings; the theme's choices as a group with the
+one chosen.
+
 ## Layout
 
 - `data/spec` — the records as Kotlin, each keeping the fields it doesn't know.

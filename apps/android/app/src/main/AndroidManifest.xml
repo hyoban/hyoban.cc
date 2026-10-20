@@ -20,10 +20,21 @@
         <activity
             android:name=".MainActivity"
             android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden|density"
+            android:launchMode="singleTop"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <!-- moments://moment/{uid}, trip/{id}, day/{date}, place/{id}, settings, map,
+                 trips and moments open their pages, from a link or from
+                 `adb shell am start -d`; one opened while the app is on screen goes over
+                 the page shown rather than starting it again. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="moments" />
             </intent-filter>
         </activity>
     </application>

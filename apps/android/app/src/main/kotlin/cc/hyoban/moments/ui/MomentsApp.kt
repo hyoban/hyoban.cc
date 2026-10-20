@@ -1,6 +1,9 @@
 package cc.hyoban.moments.ui
 
+import android.content.Intent
+import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
@@ -65,12 +68,15 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import androidx.core.util.Consumer
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavGraph
@@ -80,6 +86,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
 import androidx.navigationevent.NavigationEventTransitionState
 import androidx.navigationevent.compose.LocalNavigationEventDispatcherOwner
@@ -111,12 +118,12 @@ import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.trips.TripScreen
 import cc.hyoban.moments.ui.trips.TripsScreen
 import cc.hyoban.moments.ui.viewer.MediaViewer
+import kotlin.reflect.KClass
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.serialization.Serializable
-import kotlin.reflect.KClass
 
 @Serializable
 object Feed
@@ -189,7 +196,7 @@ fun MomentsApp(container: AppContainer) {
     val openTrip: (String) -> Unit = { navController.navigate(Trip(it)) }
     val openPlace: (String) -> Unit = { navController.navigate(PlaceMoments(it)) }
 
-    val navItems = Tab.entries.map { NavItem(stringResource(it.label), it.icon, it.selectedIcon) }
+    val navItems = Tab.entries.map { NavItem(stringResource(it.label), it.icon, it.selectedIcon, tag = "tab_${it.name.lowercase()}") }
     val selectTab: (Int) -> Unit = { index ->
         navController.navigate(Tab.entries[index].route) {
             // The tab takes the place of the one before rather than going on top of it, so
@@ -259,8 +266,24 @@ fun MomentsApp(container: AppContainer) {
 
     AdaptiveStatusBarIcons()
 
+    // A link opened while the app is already open, `adb shell am start -d moments://…` among
+    // them, goes to its page over the one shown; the viewer, if open, closes first. Its task
+    // flags are dropped, as they would have the navigation start the whole task again.
+    val activity = LocalActivity.current as? ComponentActivity
+    DisposableEffect(activity, navController) {
+        val listener = Consumer<Intent> { intent ->
+            if (intent.data != null) {
+                viewer = null
+                navController.handleDeepLink(Intent(intent).setFlags(0))
+            }
+        }
+        activity?.addOnNewIntentListener(listener)
+        onDispose { activity?.removeOnNewIntentListener(listener) }
+    }
+
     // A Surface rather than a bare background, so text without a colour of its own takes the page's on-colour in both modes.
-    Surface(Modifier.fillMaxSize(), color = AppColors.page) {
+    // Its test tags are resource ids too, so `uiautomator dump` names the buttons, tabs and cards it finds.
+    Surface(Modifier.fillMaxSize().semantics { testTagsAsResourceId = true }, color = AppColors.page) {
         Box(Modifier.fillMaxSize().nestedScroll(hideOnScroll)) {
             CompositionLocalProvider(
                 LocalBottomClearance provides clearance,
@@ -291,7 +314,7 @@ fun MomentsApp(container: AppContainer) {
                             popEnterTransition = { enter(forward = false) },
                             popExitTransition = { exit(forward = false) },
                         ) {
-                            screen<Feed> {
+                            screen<Feed>(link = "moments") {
                                 FeedScreen(
                                     container,
                                     onMoment = openMoment,
@@ -300,25 +323,25 @@ fun MomentsApp(container: AppContainer) {
                                     onSettings = { navController.navigate(Preferences) },
                                 )
                             }
-                            screen<Atlas> {
+                            screen<Atlas>(link = "map") {
                                 MapScreen(container, onMoment = openMoment, onPlace = openPlace, onTrip = openTrip)
                             }
-                            screen<Trips> {
+                            screen<Trips>(link = "trips") {
                                 TripsScreen(container, onTrip = openTrip)
                             }
-                            screen<Moment> { entry ->
+                            screen<Moment>(link = "moment/{uid}") { entry ->
                                 MomentScreen(container, entry.toRoute<Moment>().uid, onMedia = openMedia, onPlace = openPlace, onTrip = openTrip, onBack = back)
                             }
-                            screen<Trip> { entry ->
+                            screen<Trip>(link = "trip/{id}") { entry ->
                                 TripScreen(container, entry.toRoute<Trip>().id, onMoment = openMoment, onMedia = openMedia, onBack = back)
                             }
-                            screen<Day> { entry ->
+                            screen<Day>(link = "day/{date}") { entry ->
                                 DayScreen(container, entry.toRoute<Day>().date, onMoment = openMoment, onMedia = openMedia, onBack = back)
                             }
-                            screen<PlaceMoments> { entry ->
+                            screen<PlaceMoments>(link = "place/{id}") { entry ->
                                 PlaceScreen(container, entry.toRoute<PlaceMoments>().id, onMoment = openMoment, onMedia = openMedia, onBack = back)
                             }
-                            screen<Preferences> {
+                            screen<Preferences>(link = "settings") {
                                 SettingsScreen(container, onBack = back)
                             }
                         }
@@ -516,8 +539,17 @@ val LocalNavAccessory = staticCompositionLocalOf<MutableState<(@Composable () ->
 private val RAIL_CLEARANCE = Space.m + RAIL_WIDTH + Space.s
 
 /** A destination whose screen knows its transition, so its photos can share their place with the next screen's. */
-private inline fun <reified T : Any> NavGraphBuilder.screen(noinline content: @Composable (NavBackStackEntry) -> Unit) {
-    composable<T> { entry ->
+/**
+ * The scheme of the app's links, `moments://moment/{uid}` and the like, opened with
+ * `adb shell am start -d` as much as from anywhere else.
+ */
+const val DEEP_LINK_SCHEME = "moments"
+
+private inline fun <reified T : Any> NavGraphBuilder.screen(
+    link: String? = null,
+    noinline content: @Composable (NavBackStackEntry) -> Unit,
+) {
+    composable<T>(deepLinks = listOfNotNull(link?.let { navDeepLink { uriPattern = "$DEEP_LINK_SCHEME://$it" } })) { entry ->
         CompositionLocalProvider(LocalNavAnimatedScope provides this) { content(entry) }
     }
 }

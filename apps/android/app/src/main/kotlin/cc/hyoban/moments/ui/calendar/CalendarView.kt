@@ -26,9 +26,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import cc.hyoban.moments.R
 import cc.hyoban.moments.data.media.MediaUrls
 import cc.hyoban.moments.data.spec.MomentMedia
 import cc.hyoban.moments.data.spec.MomentRecord
@@ -173,8 +181,12 @@ private fun DayCell(day: CalendarDay, urls: MediaUrls, today: LocalDate, onClick
     val isToday = day.date == today
     val ring = if (isToday) Modifier.border(2.dp, MaterialTheme.colorScheme.primary, CELL) else Modifier
 
+    val date = stringResource(R.string.calendar_day, day.date.monthValue, day.date.dayOfMonth)
+    val today = if (isToday) stringResource(R.string.label_today) else null
     if (day.moments.isEmpty()) {
-        Box(Modifier.fillMaxSize().clip(CELL).then(ring), contentAlignment = Alignment.Center) {
+        // Its whole date rather than the bare number.
+        val description = listOfNotNull(date, today).joinToString("，")
+        Box(Modifier.fillMaxSize().clip(CELL).then(ring).clearAndSetSemantics { contentDescription = description }, contentAlignment = Alignment.Center) {
             Text(
                 "${day.date.dayOfMonth}",
                 style = MaterialTheme.typography.labelLarge,
@@ -186,10 +198,18 @@ private fun DayCell(day: CalendarDay, urls: MediaUrls, today: LocalDate, onClick
 
     // A day grows into what it opens: its one Moment's page, or the page of its Moments.
     val opens = day.moments.singleOrNull()?.uid ?: dayCardKey(day.date.toString())
+    // Read as its date and how many Moments it has, rather than two bare numbers.
+    val description = listOfNotNull(date, today, stringResource(R.string.count_moments, day.moments.size)).joinToString("，")
     Box(
         Modifier.fillMaxSize().sharedCard(opens, cardCorner = 8.dp).clip(CELL)
             .background(LocalSurfaceLevel.current.raised.fill())
             .clickable(onClick = onClick)
+            .clearAndSetSemantics {
+                contentDescription = description
+                role = Role.Button
+                testTag = "day_${day.date}"
+                onClick { onClick(); true }
+            }
             .then(ring),
     ) {
         if (day.cover != null) {

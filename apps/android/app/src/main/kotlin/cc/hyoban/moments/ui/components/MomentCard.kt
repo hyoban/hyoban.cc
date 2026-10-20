@@ -21,6 +21,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -54,7 +55,7 @@ fun MomentCard(
     showDate: Boolean = false,
 ) {
     // The card grows into the Moment's page when opened.
-    PressableCard(onClick = onOpen, modifier = modifier.fillMaxWidth().sharedCard(moment.uid)) {
+    PressableCard(onClick = onOpen, modifier = modifier.fillMaxWidth().sharedCard(moment.uid).testTag("moment_${moment.uid}")) {
         if (moment.media.isNotEmpty()) {
             // To the card's edges, its top corners rounding them.
             MediaMosaic(moment.uid, moment.media, urls, onOpen = onOpenMedia)
@@ -89,7 +90,7 @@ fun MomentPills(moment: MomentRecord, places: Map<String, Place>, trip: TripReco
 @Composable
 fun CompactMomentRow(moment: MomentRecord, places: Map<String, Place>, urls: MediaUrls, onClick: () -> Unit) {
     // It grows into the Moment's page when opened, as a card on a list does.
-    PressableCard(onClick = onClick, modifier = Modifier.fillMaxWidth().sharedCard(moment.uid)) {
+    PressableCard(onClick = onClick, modifier = Modifier.fillMaxWidth().sharedCard(moment.uid).testTag("moment_${moment.uid}")) {
         Row(Modifier.padding(6.dp), horizontalArrangement = Arrangement.spacedBy(Space.m)) {
             moment.media.firstOrNull()?.let { Thumbnail(it, urls, size = 76) }
             Column(Modifier.weight(1f).padding(top = Space.s, end = Space.s, bottom = Space.s), verticalArrangement = Arrangement.spacedBy(Space.xs)) {
@@ -120,7 +121,7 @@ fun FloatingBack(onBack: () -> Unit, modifier: Modifier = Modifier) {
         shadowElevation = 3.dp,
         modifier = modifier.statusBarsPadding().sideInsetsPadding().padding(Space.s),
     ) {
-        IconButton(onClick = onBack) {
+        IconButton(onClick = onBack, modifier = Modifier.testTag("back")) {
             Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.action_back))
         }
     }

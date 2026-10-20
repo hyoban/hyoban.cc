@@ -25,6 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
@@ -102,13 +103,13 @@ fun FeedScreen(
         tab = Feed,
         subtitle = subtitle,
         actions = {
-            IconButton(onClick = { calendar = !calendar }) {
+            IconButton(onClick = { calendar = !calendar }, modifier = Modifier.testTag("calendar_toggle")) {
                 Icon(
                     if (calendar) Icons.Outlined.ViewAgenda else Icons.Outlined.CalendarMonth,
                     contentDescription = stringResource(if (calendar) R.string.action_show_feed else R.string.action_show_calendar),
                 )
             }
-            IconButton(onClick = onSettings) {
+            IconButton(onClick = onSettings, modifier = Modifier.testTag("settings")) {
                 Icon(Icons.Outlined.Settings, contentDescription = stringResource(R.string.title_settings))
             }
         },
@@ -175,7 +176,7 @@ fun PlaceScreen(container: AppContainer, id: String, onMoment: (String) -> Unit,
             // The way there, as from the map's panel of the place.
             if (place != null) {
                 val context = LocalContext.current
-                IconButton(onClick = { navigateTo(context, place) }) {
+                IconButton(onClick = { navigateTo(context, place) }, modifier = Modifier.testTag("navigate")) {
                     Icon(Icons.Rounded.Directions, contentDescription = stringResource(R.string.action_navigate), tint = MaterialTheme.colorScheme.primary)
                 }
             }
