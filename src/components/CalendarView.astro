@@ -17,10 +17,14 @@ import {
   getActiveDateKeys,
   getArchiveMonthKeys,
   getCalendarDateKey,
+  getMomentDateLabel,
+  getMomentExcerpt,
+  getMomentPagePath,
   getMomentPath,
   getMoments,
   getMonthPath,
   getTrips,
+  MOMENT_OG_IMAGES,
   type Moment,
   type ResolvedMomentMedia,
 } from '@/moments'
@@ -32,6 +36,8 @@ import {
 
 interface Props {
   month: number
+  /** A Moment of the selected day, shared on its own page: the page is about it. */
+  sharedMoment?: Moment | undefined
   selectedDate?: string
   year: number
 }
@@ -46,7 +52,7 @@ type CalendarDay = {
   thumbnail: ResolvedMomentMedia | undefined
 }
 
-const { month, selectedDate, year } = Astro.props
+const { month, selectedDate, sharedMoment, year } = Astro.props
 const moments = await getMoments()
 const activeDateKeys = getActiveDateKeys(moments)
 const monthKeys = getArchiveMonthKeys(moments)
@@ -111,9 +117,16 @@ const selectedTripStop = selectedTrip?.stops.find(stop => stop.dateKey >= select
 const selectedTripHref = selectedTrip
   ? `/trip/${selectedTrip.id}/${selectedTripStop ? `#${getStopAnchor(selectedTripStop.id)}` : ''}`
   : undefined
-const title = selectedDateLabel
-  ? `${selectedDateLabel} · 日历 | ${SITE_TITLE}`
-  : `${year} 年 ${month} 月 · 日历 | ${SITE_TITLE}`
+const sharedExcerpt = sharedMoment ? getMomentExcerpt(sharedMoment, 30) : undefined
+const title = sharedMoment
+  ? `${sharedExcerpt || selectedDateLabel} | ${SITE_TITLE}`
+  : selectedDateLabel
+    ? `${selectedDateLabel} · 日历 | ${SITE_TITLE}`
+    : `${year} 年 ${month} 月 · 日历 | ${SITE_TITLE}`
+const pageDescription = sharedMoment
+  ? [getMomentExcerpt(sharedMoment, 120), getMomentDateLabel(sharedMoment)].filter(Boolean).join(' · ')
+  : description
+const pageImage = sharedMoment && MOMENT_OG_IMAGES ? `${getMomentPagePath(sharedMoment)}og.jpg` : undefined
 const closePath = getMonthPath(monthKey)
 const todayNumberClass = '-mx-1 -my-0.5 rounded-full bg-tx px-1 py-0.5 !text-bg [text-shadow:none]'
 
@@ -152,7 +165,7 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
 }
 ---
 
-<Layout title={title} description={description}>
+<Layout title={title} description={pageDescription} image={pageImage}>
   <Fragment slot="head">
     <!-- Applies the remembered desktop view before the first paint, so the grid doesn't flash. -->
     <script is:inline>
@@ -400,7 +413,7 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
               )
             }
             {
-              selectedMoments.map(moment => <MomentEntry moment={moment} />)
+              selectedMoments.map(moment => <MomentEntry moment={moment} shared={moment.id === sharedMoment?.id} />)
             }
           </div>
 

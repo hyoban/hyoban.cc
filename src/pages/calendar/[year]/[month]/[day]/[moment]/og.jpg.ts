@@ -1,0 +1,32 @@
+import type { APIRoute } from 'astro'
+import sharp from 'sharp'
+import {
+  getMomentDateLabel,
+  getMomentExcerpt,
+  getMomentPagePaths,
+  MOMENT_OG_IMAGES,
+  type MomentPagePathProps,
+} from '@/moments'
+import { renderOgImage } from '@/og-image'
+
+export const getStaticPaths = async () => (MOMENT_OG_IMAGES ? getMomentPagePaths() : [])
+
+// A Moment's share card: its words, when and where, and its first photos or posters beside them.
+export const GET: APIRoute<MomentPagePathProps> = async ({ props: { moment } }) => {
+  const photos = moment.media
+    .flatMap((item) => (item.type === 'video' ? (item.poster ?? []) : item.src))
+    .slice(0, 4)
+    .map(
+      (still) => (still.sources.find((source) => source.width >= 960) ?? still.sources.at(-1)!).src,
+    )
+  const excerpt = getMomentExcerpt(moment, 120)
+  const dateLabel = getMomentDateLabel(moment)
+  const card = await renderOgImage({
+    title: excerpt || dateLabel,
+    date: excerpt ? dateLabel : undefined,
+    photos,
+  })
+  const image = await sharp(card).jpeg({ mozjpeg: true, quality: 82 }).toBuffer()
+
+  return new Response(new Uint8Array(image), { headers: { 'Content-Type': 'image/jpeg' } })
+}

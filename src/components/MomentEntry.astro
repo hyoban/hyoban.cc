@@ -1,36 +1,47 @@
 ---
 import MomentGallery from '@/components/MomentGallery.astro'
 import MomentText from '@/components/MomentText.astro'
-import type { Moment } from '@/moments'
+import { getMomentPagePath, type Moment } from '@/moments'
 
 interface Props {
   class?: string
   moment: Moment
   /** Passed to the gallery when this entry opens the page. */
   priorityMedia?: string | undefined
+  /** The Moment a shared link names, set off from the rest of its day. */
+  shared?: boolean
   showLocation?: boolean
 }
 
-const { class: className, moment, priorityMedia, showLocation = true } = Astro.props
-const showHeader = Boolean(moment.occurredLabel || (showLocation && moment.locations.length > 0))
+const { class: className, moment, priorityMedia, shared = false, showLocation = true } = Astro.props
 ---
 
-<article class:list={['moment-entry py-6 [&+&]:border-t [&+&]:border-border', className]}>
-  {
-    showHeader && (
-      <header class="mb-2.5 flex items-center gap-2 font-mono text-xs text-tx-2 [&_a]:-my-3 [&_a]:inline-flex [&_a]:min-h-11 [&_a]:min-w-11 [&_a]:items-center [&_a]:justify-center [&_a]:text-tx-3 [&_a]:no-underline">
-        {moment.occurredLabel && <time datetime={moment.occurredAt}>{moment.occurredLabel}</time>}
-        {
-          showLocation && moment.locations.map(location => (
-            <a class="moment-entry__location !mx-0 !w-auto gap-1 px-1 hover:!text-tx" href={`/map/#${location.id}`}>
-              <span class="i-lucide-map-pin text-sm" aria-hidden="true" />
-              {location.name}
-            </a>
-          ))
-        }
-      </header>
-    )
-  }
+<article
+  class:list={[
+    'moment-entry py-6 [&+&]:border-t [&+&]:border-border',
+    { '-mx-3 scroll-mt-20 rounded-[0.625rem] bg-inline px-3': shared },
+    className,
+  ]}
+  data-moment-shared={shared ? '' : undefined}
+>
+  <header class="mb-2.5 flex items-center gap-2 font-mono text-xs text-tx-2 [&_a]:-my-3 [&_a]:inline-flex [&_a]:min-h-11 [&_a]:min-w-11 [&_a]:items-center [&_a]:justify-center [&_a]:text-tx-3 [&_a]:no-underline">
+    {moment.occurredLabel && <time datetime={moment.occurredAt}>{moment.occurredLabel}</time>}
+    {
+      showLocation && moment.locations.map(location => (
+        <a class="moment-entry__location !mx-0 !w-auto gap-1 px-1 hover:!text-tx" href={`/map/#${location.id}`}>
+          <span class="i-lucide-map-pin text-sm" aria-hidden="true" />
+          {location.name}
+        </a>
+      ))
+    }
+    <a class="moment-entry__share ml-auto !justify-end hover:!text-tx" href={getMomentPagePath(moment)} aria-label="分享这条 Moment" title="分享" data-moment-share>
+      <span class="i-lucide-share text-sm" aria-hidden="true" data-moment-share-icon />
+    </a>
+  </header>
   <MomentText text={moment.text} />
   {moment.media.length > 0 && <MomentGallery media={moment.media} priorityMedia={priorityMedia} />}
 </article>
+
+<script>
+  import '@/moment-entry-client'
+</script>

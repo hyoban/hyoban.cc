@@ -1,0 +1,12 @@
+---
+import CalendarView from '@/components/CalendarView.astro'
+import { getMomentPagePaths, type MomentPagePathProps } from '@/moments'
+
+// A shared Moment opens its day in the calendar, itself marked, with its own title and card.
+export const getStaticPaths = getMomentPagePaths
+
+const { moment } = Astro.props as MomentPagePathProps
+const [year, month] = moment.dateKey.split('-').map(Number) as [number, number]
+---
+
+<CalendarView year={year} month={month} selectedDate={moment.dateKey} sharedMoment={moment} />

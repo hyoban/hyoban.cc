@@ -152,6 +152,53 @@ export function getMomentPath(dateKey: string) {
   return `/calendar/${dateKey.replaceAll('-', '/')}/`
 }
 
+/**
+ * A Moment's own page, to share: its day in the calendar with the rest of its published
+ * id, `YYYY/MM/DD-NN-slug`, which it keeps once it has one, below it.
+ */
+export function getMomentPagePath(moment: Pick<Moment, 'id'>) {
+  return `/calendar/${moment.id.replace('-', '/')}/`
+}
+
+/**
+ * Whether the build draws each Moment's share card. Fetching every photo and font subset
+ * makes a build minutes longer, so only CI's builds (Cloudflare's and the checks') draw
+ * them; elsewhere a Moment's page shares the site's card.
+ */
+export const MOMENT_OG_IMAGES = Boolean(process.env.CI)
+
+/** One static path per Moment, for /calendar/<YYYY>/<MM>/<DD>/<NN-slug>/ and its share card. */
+export async function getMomentPagePaths() {
+  return (await getMoments()).map((moment) => {
+    const [year, month, day, slug] = getMomentPagePath(moment).split('/').slice(2, 6) as [
+      string,
+      string,
+      string,
+      string,
+    ]
+    return { params: { day, month, moment: slug, year }, props: { moment } }
+  })
+}
+
+export type MomentPagePathProps = Awaited<ReturnType<typeof getMomentPagePaths>>[number]['props']
+
+/** The Moment's words on one line, cut to `length` characters, for titles and descriptions. */
+export function getMomentExcerpt(moment: Moment, length: number) {
+  const text = moment.text.replace(/\s+/g, ' ').trim()
+  const characters = Array.from(
+    new Intl.Segmenter('zh-CN').segment(text),
+    (segment) => segment.segment,
+  )
+  return characters.length > length ? `${characters.slice(0, length - 1).join('')}…` : text
+}
+
+/** When and where, as a Moment's page and share card show it: `2023 年 12 月 13 日 08:45 · 上海`. */
+export function getMomentDateLabel(moment: Moment) {
+  const [year, month, day] = moment.dateKey.split('-').map(Number)
+  const date = `${year} 年 ${month} 月 ${day} 日${moment.occurredLabel ? ` ${moment.occurredLabel}` : ''}`
+  return [date, ...moment.locations.map((location) => location.name)].join(' · ')
+}
+
 export function getMonthPath(monthKey: string) {
   return `/calendar/${monthKey.replace('-', '/')}/`
 }

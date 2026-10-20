@@ -5,6 +5,9 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '@/consts'
 
 export const OG_IMAGE_WIDTH = 1200
 export const OG_IMAGE_HEIGHT = 630
+// The photos' side of a card with photos: more than half of it, the words beside them.
+const OG_PHOTOS_WIDTH = 660
+const OG_PHOTOS_GAP = 4
 
 // The site's light theme (see index.css).
 const COLORS = { bg: '#fdfdfc', border: '#e9e9e7', tx: '#21201c', tx2: '#63635e', tx3: '#73736c' }
@@ -15,6 +18,8 @@ interface OgImageOptions {
   title?: string | undefined
   description?: string | undefined
   date?: string | undefined
+  /** Photos filling the card's right side, the first four laid out as `getPhotoTiles` says. */
+  photos?: string[] | undefined
 }
 
 type Node = { type: string; props: Record<string, unknown> }
@@ -57,6 +62,29 @@ async function loadFont(weight: 400 | 500, text: string) {
   return fetch(url).then((response) => response.arrayBuffer())
 }
 
+const emojiCache = new Map<string, Promise<string>>()
+
+// Noto Sans SC has no emoji, which a Moment's words often have: satori draws each one as
+// Twemoji's picture of it. Twemoji names a file by its code points, leaving out the
+// variation selector unless the emoji joins others.
+function getEmoji(emoji: string) {
+  const codePoints = Array.from(emoji, (character) => character.codePointAt(0)!.toString(16))
+  const name = (
+    emoji.includes('\u200d') ? codePoints : codePoints.filter((point) => point !== 'fe0f')
+  ).join('-')
+  let promise = emojiCache.get(name)
+  if (!promise) {
+    promise = fetch(
+      `https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/svg/${name}.svg`,
+    ).then(async (response) => {
+      if (!response.ok) throw new Error(`No Twemoji for ${emoji} (${name}): ${response.status}`)
+      return `data:image/svg+xml;base64,${Buffer.from(await response.arrayBuffer()).toString('base64')}`
+    })
+    emojiCache.set(name, promise)
+  }
+  return promise
+}
+
 function siteCard(avatar: string) {
   return h('div', { display: 'flex', alignItems: 'center', gap: 48 }, [
     h('img', { width: 160, height: 160, borderRadius: 9999 }, undefined, {
@@ -71,7 +99,8 @@ function siteCard(avatar: string) {
   ])
 }
 
-function pageCard(avatar: string, { title, description, date }: OgImageOptions) {
+function pageCard(avatar: string, { title, description, date, photos }: OgImageOptions) {
+  const photo = Boolean(photos?.length)
   return [
     h('div', { display: 'flex', alignItems: 'center', gap: 20 }, [
       h('img', { width: 64, height: 64, borderRadius: 9999 }, undefined, {
@@ -89,11 +118,13 @@ function pageCard(avatar: string, { title, description, date }: OgImageOptions) 
           'div',
           {
             display: 'block',
-            fontSize: 64,
+            // Beside a photo the words get less than half the card.
+            fontSize: photo ? 40 : 64,
             fontWeight: 500,
-            lineHeight: 1.3,
+            lineHeight: photo ? 1.5 : 1.3,
             color: COLORS.tx,
-            lineClamp: 2,
+            // A card without a description, a Moment's, has room for more of its words.
+            lineClamp: description ? 2 : photo ? 6 : 3,
           },
           title,
         ),
@@ -111,7 +142,10 @@ function pageCard(avatar: string, { title, description, date }: OgImageOptions) 
 
 /** A 1200×630 PNG share card in the site's quiet style. */
 export async function renderOgImage(options: OgImageOptions = {}) {
-  const avatar = await getAvatar()
+  const [avatar, photoPanel] = await Promise.all([
+    getAvatar(),
+    options.photos?.length ? renderPhotos(options.photos) : undefined,
+  ])
   const site = !options.title
   const boldText = site ? SITE_TITLE : `${SITE_TITLE}${options.title}`
   const regularText = site ? SITE_DESCRIPTION : `${options.description ?? ''}${options.date ?? ''}`
@@ -120,20 +154,30 @@ export async function renderOgImage(options: OgImageOptions = {}) {
     loadFont(500, boldText),
   ])
 
+  const content = h(
+    'div',
+    {
+      flex: 1,
+      minWidth: 0,
+      height: '100%',
+      boxSizing: 'border-box',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: site ? 'center' : 'space-between',
+      padding: photoPanel ? 56 : 80,
+    },
+    site ? siteCard(avatar) : pageCard(avatar, options),
+  )
   const root = h(
     'div',
     {
       width: OG_IMAGE_WIDTH,
       height: OG_IMAGE_HEIGHT,
-      boxSizing: 'border-box',
       display: 'flex',
-      flexDirection: 'column',
-      justifyContent: site ? 'center' : 'space-between',
-      padding: 80,
       backgroundColor: COLORS.bg,
       fontFamily: FONT_FAMILY,
     },
-    site ? siteCard(avatar) : pageCard(avatar, options),
+    [content, photoPanel].filter(Boolean),
   )
 
   const svg = await satori(root as Parameters<typeof satori>[0], {
@@ -143,8 +187,82 @@ export async function renderOgImage(options: OgImageOptions = {}) {
       { name: FONT_FAMILY, data: regular, weight: 400, style: 'normal' },
       { name: FONT_FAMILY, data: medium, weight: 500, style: 'normal' },
     ],
+    loadAdditionalAsset: async (code, segment) => (code === 'emoji' ? getEmoji(segment) : []),
   })
   return sharp(Buffer.from(svg)).png().toBuffer()
+}
+
+type Tile = { height: number; left: number; top: number; width: number }
+
+/**
+ * Where each photo sits on the photos' side: one fills it, two stand side by side, three
+ * are one tall beside two, four make a grid.
+ */
+function getPhotoTiles(count: number): Tile[] {
+  const width = OG_PHOTOS_WIDTH
+  const height = OG_IMAGE_HEIGHT
+  const halfWidth = (width - OG_PHOTOS_GAP) / 2
+  const halfHeight = (height - OG_PHOTOS_GAP) / 2
+  const right = halfWidth + OG_PHOTOS_GAP
+  const bottom = halfHeight + OG_PHOTOS_GAP
+
+  switch (Math.min(count, 4)) {
+    case 1:
+      return [{ left: 0, top: 0, width, height }]
+    case 2:
+      return [
+        { left: 0, top: 0, width: halfWidth, height },
+        { left: right, top: 0, width: halfWidth, height },
+      ]
+    case 3:
+      return [
+        { left: 0, top: 0, width: halfWidth, height },
+        { left: right, top: 0, width: halfWidth, height: halfHeight },
+        { left: right, top: bottom, width: halfWidth, height: halfHeight },
+      ]
+    default:
+      return [
+        { left: 0, top: 0, width: halfWidth, height: halfHeight },
+        { left: right, top: 0, width: halfWidth, height: halfHeight },
+        { left: 0, top: bottom, width: halfWidth, height: halfHeight },
+        { left: right, top: bottom, width: halfWidth, height: halfHeight },
+      ]
+  }
+}
+
+async function renderPhotos(urls: string[]) {
+  const tiles = getPhotoTiles(urls.length)
+  const photos = await Promise.all(tiles.map((tile, index) => getPhoto(urls[index]!, tile)))
+
+  return h(
+    'div',
+    {
+      position: 'relative',
+      display: 'flex',
+      flexShrink: 0,
+      width: OG_PHOTOS_WIDTH,
+      height: OG_IMAGE_HEIGHT,
+    },
+    tiles.map((tile, index) =>
+      h('img', { position: 'absolute', ...tile }, undefined, {
+        src: photos[index],
+        width: tile.width,
+        height: tile.height,
+      }),
+    ),
+  )
+}
+
+/** A photo cropped to its tile, at twice the tile's size, as a data URL. */
+async function getPhoto(url: string, tile: Tile) {
+  const response = await fetch(url)
+  if (!response.ok) throw new Error(`Failed to fetch ${url}: ${response.status}`)
+  const jpeg = await sharp(Buffer.from(await response.arrayBuffer()))
+    .rotate()
+    .resize(Math.round(tile.width * 2), Math.round(tile.height * 2), { fit: 'cover' })
+    .jpeg({ quality: 85 })
+    .toBuffer()
+  return `data:image/jpeg;base64,${jpeg.toString('base64')}`
 }
 
 export function pngResponse(image: Buffer) {

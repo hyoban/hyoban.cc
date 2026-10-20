@@ -167,6 +167,8 @@ const description = activeTrip
 <script>
   import { SITE_TITLE } from '@/consts'
   import { initializeLightboxMedia } from '@/moment-lightbox-client'
+  // The place drawers' Moments are fetched fragments, which bring no script of their own.
+  import '@/moment-entry-client'
   import { getTripTitle, tripMapBrand, tripMapMessages, tripMapMusic, tripMapSiteLine } from '@/trip-map'
 
   type MapClient = typeof import('@hyoban/trip-map/client')
