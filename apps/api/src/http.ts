@@ -14,6 +14,14 @@ export function json(body: unknown, status = 200, headers: Record<string, string
   return Response.json(body, { status, headers })
 }
 
+/** JSON already written out, as the reads put it together from the records as stored. */
+export function jsonText(text: string, status = 200, headers: Record<string, string> = {}) {
+  return new Response(text, {
+    status,
+    headers: { 'Content-Type': 'application/json', ...headers },
+  })
+}
+
 export function error(status: number, message: string, headers: Record<string, string> = {}) {
   return json({ error: message }, status, headers)
 }

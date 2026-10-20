@@ -106,16 +106,7 @@ export function buildMergeSql(records: MergeRecords, now: string, generator: str
 }
 
 function momentStatements(moment: unknown) {
-  const parsed = momentRecordSchema.parse(moment)
-
-  return [
-    upsert('moments', momentRow(parsed, moment)),
-    `DELETE FROM moment_places WHERE moment_uid = ${quote(parsed.uid)}`,
-    ...parsed.places.map(
-      (place, position) =>
-        `INSERT INTO moment_places (moment_uid, position, place_id) VALUES (${quote(parsed.uid)}, ${position}, ${quote(place)})`,
-    ),
-  ]
+  return [upsert('moments', momentRow(momentRecordSchema.parse(moment), moment))]
 }
 
 function upsert(table: Table, row: Record<string, Value>) {

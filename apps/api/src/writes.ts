@@ -158,17 +158,39 @@ export async function applyChanges(
 
   statements.push(...deleted.map((uid) => deleteStatement(context, uid)))
 
-  const uploads = (
-    await Promise.all(records.map((record) => publishMedia(context.bucket, record)))
-  ).flat()
-  const saved = records.map((record) => validate(momentRecordSchema, record))
+  // What a publish copied, removed again when the write doesn't go through.
+  const copied: string[] = []
+  let saved: MomentRecord[]
+  let uploads: string[]
 
-  statements.push(...saved.flatMap((record) => momentStatements(context.db, record)))
+  try {
+    uploads = (
+      await settle(records.map((record) => publishMedia(context.bucket, record, copied)))
+    ).flat()
+    saved = records.map((record) => validate(momentRecordSchema, record))
 
-  if (statements.length > 0) {
-    await commit(context, statements)
-    await deleteUploads(context.bucket, uploads)
+    // A Moment sent as it is stored isn't written again, so it takes no new revision.
+    statements.push(
+      ...saved
+        .filter((record) => {
+          const prior = stored.get(record.uid)
+
+          return !prior || prior.deleted || prior.text !== JSON.stringify(record)
+        })
+        .map((record) => upsert(context.db, 'moments', momentRow(record))),
+    )
+
+    if (statements.length > 0) {
+      await commit(context, statements)
+    }
+  } catch (caught) {
+    await deleteUploads(context.bucket, copied).catch((cleanup) =>
+      console.error('Removing the copies of a write that failed failed', cleanup),
+    )
+    throw caught
   }
+
+  await deleteUploads(context.bucket, uploads)
 
   return {
     body: { places: placeIds, moments: saved, deleted },
@@ -286,12 +308,21 @@ export async function uploadMedia(
   }
 }
 
+/** An original waiting to publish, or null when it isn't uploaded. */
+export function readUpload(
+  bucket: Bucket,
+  { momentUid, mediaUid, part }: { momentUid: string; mediaUid: string; part: UploadPart },
+) {
+  return bucket.head(getUploadKey(momentUid, mediaUid, part))
+}
+
 /**
  * Publishes a published Moment's unpublished media: copies each original from where it
  * was uploaded to the Moment's directory, named by the slug, and gives the item its
- * published block. Returns the uploads, to delete once the record is saved.
+ * published block. Returns the uploads, to delete once the record is saved; each copy's
+ * key goes in `copied` as soon as it is made, to remove if the write fails.
  */
-async function publishMedia(bucket: Bucket, record: MomentRecord) {
+async function publishMedia(bucket: Bucket, record: MomentRecord, copied: string[]) {
   const published = record.published!
   const uploads: string[] = []
   const copy = async (item: MomentMedia, part: UploadPart) => {
@@ -311,12 +342,13 @@ async function publishMedia(bucket: Bucket, record: MomentRecord) {
       throw new HttpError(500, `Copying ${upload} failed.`)
     }
 
+    copied.push(key)
     uploads.push(upload)
 
     return { key, contentType, bytes: stored.size, etag: stored.etag }
   }
 
-  await Promise.all(
+  await settle(
     record.media
       .filter((item) => !item.published)
       .map(async (item) => {
@@ -331,7 +363,7 @@ async function publishMedia(bucket: Bucket, record: MomentRecord) {
             }
             break
           case 'live-photo': {
-            const [image, video] = await Promise.all([copy(item, 'image'), copy(item, 'video')])
+            const [image, video] = await settle([copy(item, 'image'), copy(item, 'video')])
 
             item.published = {
               ...image,
@@ -434,16 +466,23 @@ export async function commit({ db, now }: WriteContext, statements: Statement[])
   }
 }
 
-function momentStatements(db: Database, record: MomentRecord) {
-  return [
-    upsert(db, 'moments', momentRow(record)),
-    db.prepare(`DELETE FROM moment_places WHERE moment_uid = ?1`).bind(record.uid),
-    ...record.places.map((place, position) =>
-      db
-        .prepare(`INSERT INTO moment_places (moment_uid, position, place_id) VALUES (?1, ?2, ?3)`)
-        .bind(record.uid, position, place),
-    ),
-  ]
+/**
+ * Every promise's result, as `Promise.all`, but only once all of them have settled: a
+ * copy that fails then leaves none still going that its cleanup would miss.
+ */
+async function settle<const T extends readonly Promise<unknown>[]>(
+  promises: T,
+): Promise<{ -readonly [K in keyof T]: Awaited<T[K]> }> {
+  const results = await Promise.allSettled(promises)
+  const failure = results.find((result) => result.status === 'rejected')
+
+  if (failure) {
+    throw failure.reason
+  }
+
+  return results.map((result) => (result as PromiseFulfilledResult<unknown>).value) as {
+    -readonly [K in keyof T]: Awaited<T[K]>
+  }
 }
 
 export function upsert(db: Database, table: Table, row: Record<string, Value>) {
@@ -456,10 +495,11 @@ interface MomentRow {
   deleted_at: string | null
 }
 
-/** A Moment as stored, removed or not. */
+/** A Moment as stored, removed or not, and the text it is stored as. */
 function toStored(row: MomentRow) {
   return {
     record: momentRecordSchema.parse(JSON.parse(row.record)),
+    text: row.record,
     deleted: row.deleted_at !== null,
   }
 }

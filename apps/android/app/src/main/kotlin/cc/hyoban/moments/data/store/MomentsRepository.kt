@@ -9,14 +9,20 @@ import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.spec.TripRecord
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.net.URI
+import java.security.MessageDigest
 
 /**
  * The records the screens show: read from the [DataStore] first, then brought up to
@@ -83,25 +89,25 @@ class MomentsRepository(
     }
 
     /**
-     * Brings the copy up to the API: the Moments changed since the last refresh, page by
-     * page, and the places and trips whole, unless the API's revision is still the copy's.
-     * A database restored to an earlier revision than the copy's is read again from the
-     * start. Gives the API's revision.
+     * Brings the copy up to the API: what changed since the last refresh, the Moments page
+     * by page and the places and trips with the first. A database restored to an earlier
+     * revision than the copy's is read again from the start. Gives the API's revision.
      */
     suspend fun refresh(): Result<Long> = lock.withLock {
         _syncing.value = true
         try {
             val revision = withContext(io) {
                 var since = store.readRevision()
-                var page = source.moments(since, cursor = null)
+                var page = source.changes(since, cursor = null)
 
                 if (page.revision < since) {
                     store.clearMoments()
                     all = emptyMap()
                     since = 0
-                    page = source.moments(since, cursor = null)
+                    page = source.changes(since, cursor = null)
                 }
 
+                val first = page
                 val revision = page.revision
                 val moments = all.toMutableMap()
 
@@ -117,16 +123,19 @@ class MomentsRepository(
                         moments[moment.uid] = moment
                         store.writeMoment(moment)
                     }
-                    page = source.moments(since, page.next ?: break)
+                    page = source.changes(since, page.next ?: break)
                 }
 
                 // The same revision, so the places and trips are as the copy has them.
                 if (revision != since) {
-                    val places = source.places().places
-                    val trips = source.trips().trips
+                    // From the start the feed has every place and trip; after a revision, what changed.
+                    val fresh = since == 0L
+                    val gone = first.deletedTrips.toSet() + first.trips.map { it.id }
+                    val places = (if (fresh) emptyMap() else apiPlaces - first.deletedPlaces.toSet()) + first.places
+                    val trips = (if (fresh) emptyList() else _trips.value.filter { it.id !in gone }) + first.trips
 
-                    store.writePlaces(places)
-                    store.replaceTrips(trips)
+                    if (fresh || first.places.isNotEmpty() || first.deletedPlaces.isNotEmpty()) store.writePlaces(places)
+                    if (fresh || first.trips.isNotEmpty() || first.deletedTrips.isNotEmpty()) store.replaceTrips(trips)
                     store.writeRevision(revision)
                     apiPlaces = places
                     _trips.value = trips.sortedByDescending { it.start }
@@ -274,8 +283,9 @@ class MomentsRepository(
     }
 
     /**
-     * Publishes all that [pending] lists: the originals of the photos not yet published, one
-     * by one, then everything else in one write, which the API takes whole or not at all,
+     * Publishes all that [pending] lists: the originals of the photos not yet published, a
+     * few at a time and none the API already has, as after a publish that failed, then
+     * everything else in one write, which the API takes whole or not at all,
      * the Moments written on the phone and those changed, each published, the places only
      * the phone knows that they are at, and the deletions. One that fails stops it, all of
      * it kept for the next time, and its error is thrown; [onProgress] hears how many steps
@@ -297,11 +307,24 @@ class MomentsRepository(
         var done = 0
         onProgress(done, total)
         val applied = withContext(io) {
-            for ((uid, media) in photos) {
+            val files = photos.map { (uid, media) ->
                 val file = media.local?.uri?.let { runCatching { File(URI(it)) }.getOrNull() }?.takeIf(File::isFile)
                     ?: error("The photo ${media.uid} isn't on the phone")
-                writer.uploadImage(uid, media.uid, file, contentTypeOf(file))
-                onProgress(++done, total)
+                Triple(uid, media, file)
+            }
+            val uploading = Semaphore(UPLOADS_AT_ONCE)
+            val progress = Mutex()
+            coroutineScope {
+                files.map { (uid, media, file) ->
+                    async {
+                        uploading.withPermit {
+                            if (writer.uploadedImage(uid, media.uid) != md5(file)) {
+                                writer.uploadImage(uid, media.uid, file, contentTypeOf(file))
+                            }
+                        }
+                        progress.withLock { onProgress(++done, total) }
+                    }
+                }.awaitAll()
             }
             writer.applyChanges(ChangeSet(places, moments, deletions))
         }
@@ -392,6 +415,20 @@ class MomentsRepository(
     private fun isShown(moment: MomentRecord) = moment.published != null && !moment.hidden
 
     /** The type the API takes a photo as, from the extension it was copied in with. */
+    /** The file's MD5, as R2 gives an object put in one piece for its ETag. */
+    private fun md5(file: File): String {
+        val digest = MessageDigest.getInstance("MD5")
+        file.inputStream().use { input ->
+            val buffer = ByteArray(64 * 1024)
+            while (true) {
+                val read = input.read(buffer)
+                if (read < 0) break
+                digest.update(buffer, 0, read)
+            }
+        }
+        return digest.digest().joinToString("") { "%02x".format(it) }
+    }
+
     private fun contentTypeOf(file: File): String = when (file.extension.lowercase()) {
         "jpg", "jpeg" -> "image/jpeg"
         "png" -> "image/png"
@@ -406,6 +443,9 @@ class MomentsRepository(
     private val newestFirst = compareByDescending<MomentRecord> { it.occurredAt }.thenByDescending { it.uid }
     private val oldestFirst = compareBy<MomentRecord> { it.occurredAt }.thenBy { it.uid }
 }
+
+/** How many photos go up at once: enough to fill the connection, few enough to keep memory and the radio calm. */
+private const val UPLOADS_AT_ONCE = 3
 
 /** What publishing would change on the site: the Moments written on the phone, those changed, those deleted. */
 data class PendingChanges(

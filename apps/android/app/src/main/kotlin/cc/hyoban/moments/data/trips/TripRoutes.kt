@@ -45,7 +45,10 @@ private fun parseAnswer(text: String): Pair<Long, Map<String, List<RouteSegment>
     null
 }
 
-/** The routes, kept in [file] as the API served them and fetched again from [apiUrl] once its revision moves on. */
+/**
+ * The routes, kept in [file] as the API served them, with their ETag beside it, and asked
+ * for again from [apiUrl] once its revision moves on: only when they changed do they come.
+ */
 class TripRoutes(
     private val apiUrl: () -> String,
     private val file: File,
@@ -56,8 +59,10 @@ class TripRoutes(
     /** Each trip's route by its id; a trip whose route hasn't come yet is missing. */
     val routes: StateFlow<Map<String, List<RouteSegment>>> = _routes.asStateFlow()
 
-    /** The API's revision the routes kept are of; null before any are. */
+    /** The API's revision the routes kept are known to be of; null before any are. */
     @Volatile private var revision: Long? = null
+
+    private val etagFile get() = File(file.path + ".etag")
 
     suspend fun load() = withContext(io) {
         if (file.exists()) parseAnswer(file.readText())?.let { (kept, routes) ->
@@ -69,24 +74,32 @@ class TripRoutes(
     /** Forgets the routes, as when they are to come from another API. */
     suspend fun clear() = withContext(io) {
         file.delete()
+        etagFile.delete()
         revision = null
         _routes.value = emptyMap()
     }
 
     /**
      * Fetches every trip's route, unless the ones kept are of [apiRevision], the API's
-     * revision as the last sync found it; when that fails, the ones kept stay.
+     * revision as the last sync found it, or the API says they haven't changed since;
+     * when that fails, the ones kept stay.
      */
     suspend fun refresh(apiRevision: Long) = withContext(io) {
         if (apiRevision == revision) return@withContext
-        val text = try {
-            Http.getText("${apiUrl()}/v1/routes", io = io)
+        val kept = etagFile.takeIf { revision != null && it.exists() }?.readText()
+        val answer = try {
+            Http.getIfChanged("${apiUrl()}/v1/routes", kept, io = io)
         } catch (_: IOException) {
             return@withContext
         }
-        val (fetched, routes) = parseAnswer(text) ?: return@withContext
+        if (answer == null) {
+            revision = apiRevision
+            return@withContext
+        }
+        val (fetched, routes) = parseAnswer(answer.text) ?: return@withContext
         file.parentFile?.mkdirs()
-        file.writeText(text)
+        file.writeText(answer.text)
+        if (answer.etag != null) etagFile.writeText(answer.etag) else etagFile.delete()
         revision = fetched
         _routes.value = routes
     }

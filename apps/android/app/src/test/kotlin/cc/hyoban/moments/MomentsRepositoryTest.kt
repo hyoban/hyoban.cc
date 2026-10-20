@@ -1,12 +1,10 @@
 package cc.hyoban.moments
 
-import cc.hyoban.moments.data.api.MomentChanges
 import cc.hyoban.moments.data.api.AppliedChanges
 import cc.hyoban.moments.data.api.ChangeSet
+import cc.hyoban.moments.data.api.Changes
 import cc.hyoban.moments.data.api.MomentsSource
 import cc.hyoban.moments.data.api.MomentsWriter
-import cc.hyoban.moments.data.api.PlacesResponse
-import cc.hyoban.moments.data.api.TripsResponse
 import cc.hyoban.moments.data.spec.LocalMedia
 import cc.hyoban.moments.data.spec.MediaType
 import cc.hyoban.moments.data.spec.MomentMedia
@@ -26,39 +24,48 @@ import kotlin.test.assertTrue
 
 /** The copy on the phone follows the API's change feed, page by page, and survives a restart. */
 class MomentsRepositoryTest {
-    /** The API's feed, as a list of changes each at its own revision. */
+    /** The API's feed, as a list of changes each at its own revision, the places' among them. */
     private class FakeApi : MomentsSource {
         val changes = mutableListOf<Pair<Long, Any>>()
         var revision = 0L
-        var places = mapOf("nanjing" to Place("南京", 32.06, 118.79))
+        /** Each place with the revision it last changed at. */
+        val places = mutableMapOf("nanjing" to (0L to Place("南京", 32.06, 118.79)))
         var calls = 0
-        var wholeReads = 0
+        /** How many places the feed handed out, all told. */
+        var placesSent = 0
 
         fun put(moment: MomentRecord) = changes.add(++revision to moment)
         fun delete(uid: String) = changes.add(++revision to uid)
+        fun putPlace(id: String, place: Place) {
+            places[id] = ++revision to place
+        }
 
-        override suspend fun moments(since: Long, cursor: String?): MomentChanges {
+        override suspend fun changes(since: Long, cursor: String?): Changes {
             calls++
             val after = cursor?.toLong() ?: since
             val page = changes.filter { it.first > after }.take(2)
             val more = changes.count { it.first > after } > 2
-            return MomentChanges(
+            val changedPlaces = if (cursor == null) places.filterValues { (rev) -> rev > since || since == 0L }.mapValues { it.value.second } else emptyMap()
+            placesSent += changedPlaces.size
+            return Changes(
                 revision = revision,
                 moments = page.mapNotNull { it.second as? MomentRecord },
                 deleted = page.mapNotNull { it.second as? String },
+                places = changedPlaces,
                 next = if (more) page.last().first.toString() else null,
             )
         }
-
-        override suspend fun places() = PlacesResponse(revision, places).also { wholeReads++ }
-
-        override suspend fun trips() = TripsResponse(revision, emptyList()).also { wholeReads++ }
     }
 
     /** The API's writes, as the Worker answers them: photos kept, places named, drafts published, all of a change set at once. */
     private class FakeWriter : MomentsWriter {
         val calls = mutableListOf<String>()
         val uploads = mutableMapOf<String, String>()
+
+        override suspend fun uploadedImage(momentUid: String, mediaUid: String): String? =
+            uploads[mediaUid]?.let { text ->
+                java.security.MessageDigest.getInstance("MD5").digest(text.toByteArray()).joinToString("") { "%02x".format(it) }
+            }
 
         override suspend fun uploadImage(momentUid: String, mediaUid: String, file: File, contentType: String) {
             calls += "upload $mediaUid $contentType"
@@ -118,23 +125,28 @@ class MomentsRepositoryTest {
     }
 
     @Test
-    fun `a refresh at the same revision reads only the feed, not the places and trips again`() = runBlocking {
+    fun `the places come whole with the first refresh, then only those that changed`() = runBlocking {
         api.put(moment("A", "2026-10-01"))
         val repository = repository()
         repository.load()
 
         assertEquals(1L, repository.refresh().getOrNull())
-        assertEquals(2, api.wholeReads)
-
-        api.places = mapOf("nanjing" to Place("金陵", 32.06, 118.79))
-        assertEquals(1L, repository.refresh().getOrNull())
-        assertEquals(2, api.wholeReads, "nothing changed, so nothing more is read")
-        assertEquals("南京", repository.places.value["nanjing"]?.name)
+        assertEquals(1, api.placesSent)
+        assertEquals(1, api.calls, "one request for the Moments, the places and the trips")
 
         api.put(moment("B", "2026-10-02"))
         assertEquals(2L, repository.refresh().getOrNull())
-        assertEquals(4, api.wholeReads)
-        assertEquals("金陵", repository.places.value["nanjing"]?.name)
+        assertEquals(1, api.placesSent, "no place changed, so none comes again")
+        assertEquals("南京", repository.places.value["nanjing"]?.name)
+
+        api.putPlace("hu-bian", Place("湖边", 31.0, 120.0))
+        assertEquals(3L, repository.refresh().getOrNull())
+        assertEquals(2, api.placesSent)
+        assertEquals(setOf("nanjing", "hu-bian"), repository.places.value.keys)
+
+        val restarted = repository()
+        restarted.load()
+        assertEquals(setOf("nanjing", "hu-bian"), restarted.places.value.keys)
     }
 
     @Test
@@ -160,7 +172,7 @@ class MomentsRepositoryTest {
         repository.refresh()
 
         val failing = MomentsRepository(DataStore(directory), object : MomentsSource by api {
-            override suspend fun moments(since: Long, cursor: String?): MomentChanges = error("offline")
+            override suspend fun changes(since: Long, cursor: String?): Changes = error("offline")
         }, Dispatchers.Unconfined)
         failing.load()
 
@@ -304,6 +316,32 @@ class MomentsRepositoryTest {
         again.load()
         assertEquals(listOf("U", "T", "M", "L"), again.moments.value.map { it.uid }, "the copy on the phone has it too")
         assertEquals(0, again.pending.value.size)
+    }
+
+    @Test
+    fun `a photo the API already has, as after a publish that failed, isn't sent again`() = runBlocking {
+        val writer = FakeWriter()
+        val repository = MomentsRepository(DataStore(directory), api, Dispatchers.Unconfined, local = DataStore(localDirectory), writer = writer)
+        api.put(moment("A", "2026-10-01"))
+        repository.load()
+        repository.refresh()
+        val copy = File(localDirectory, "media/Q.jpg").apply { parentFile.mkdirs(); writeText("same photo") }
+        val other = File(localDirectory, "media/R.jpg").apply { writeText("new photo") }
+        repository.addLocal(
+            moment("L", "2026-10-02", published = false).copy(
+                places = listOf("nanjing"),
+                media = listOf(
+                    MomentMedia("Q", MediaType.IMAGE, width = 4, height = 3, local = LocalMedia(copy.toURI().toString(), copied = true)),
+                    MomentMedia("R", MediaType.IMAGE, width = 4, height = 3, local = LocalMedia(other.toURI().toString(), copied = true)),
+                ),
+            ),
+        )
+        writer.uploads["Q"] = "same photo"
+        writer.uploads["R"] = "an older photo"
+
+        repository.publishPending()
+
+        assertEquals(listOf("upload R image/jpeg"), writer.calls.filter { it.startsWith("upload") })
     }
 
     @Test

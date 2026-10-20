@@ -21,26 +21,29 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
 import java.io.IOException
 
-// The API (apps/api in the repository). Its public reads: the published Moments as a
-// change feed, and the places and trips whole, with no token, so no drafts. Its writes,
-// with the owner's token: a photo's original, then everything the phone changed as one.
+// The API (apps/api in the repository). Its public read: the change feed, the published
+// Moments a page at a time and the places and trips beside them, with no token, so no
+// drafts. Its writes, with the owner's token: a photo's original, then everything the
+// phone changed as one.
 
-/** A page of the change feed: what changed after a revision, and where the next page starts. */
+/**
+ * A page of the change feed: what changed after a revision, and where the next page
+ * starts. The places and trips come on the first page only, every one of them on a feed
+ * from the start.
+ */
 @Serializable
-data class MomentChanges(
+data class Changes(
     val revision: Long,
     val moments: List<MomentRecord>,
     /** Moments removed since, by uid. */
     val deleted: List<String>,
+    val places: Map<String, Place> = emptyMap(),
+    val deletedPlaces: List<String> = emptyList(),
+    val trips: List<TripRecord> = emptyList(),
+    val deletedTrips: List<String> = emptyList(),
     /** Pass as `cursor` for the next page; null on the last one. */
     val next: String? = null,
 )
-
-@Serializable
-data class PlacesResponse(val revision: Long, val places: Map<String, Place>)
-
-@Serializable
-data class TripsResponse(val revision: Long, val trips: List<TripRecord>)
 
 /** Everything the phone changed, for `POST /v1/changes`: the places only it knows, the Moments to publish, the uids to delete. */
 @Serializable
@@ -52,6 +55,9 @@ data class AppliedChanges(val places: Map<String, String>, val moments: List<Mom
 
 /** What the app writes the records to, with the owner's token; the tests stand in for the API with their own. */
 interface MomentsWriter {
+    /** The MD5 of the original kept for media item [mediaUid] of Moment [momentUid], or null when none is. */
+    suspend fun uploadedImage(momentUid: String, mediaUid: String): String?
+
     /** Keeps a photo's original for media item [mediaUid] of Moment [momentUid], until it publishes. */
     suspend fun uploadImage(momentUid: String, mediaUid: String, file: File, contentType: String)
 
@@ -67,12 +73,8 @@ class ApiException(message: String) : IOException(message)
 
 /** What the app reads the records from; the tests stand in for the API with their own. */
 interface MomentsSource {
-    /** The Moments changed after revision [since], or from [cursor] when it continues a feed. */
-    suspend fun moments(since: Long, cursor: String?): MomentChanges
-
-    suspend fun places(): PlacesResponse
-
-    suspend fun trips(): TripsResponse
+    /** What changed after revision [since], or from [cursor] when it continues a feed. */
+    suspend fun changes(since: Long, cursor: String?): Changes
 }
 
 /**
@@ -85,12 +87,19 @@ class MomentsApi(
     private val client: OkHttpClient = Http.client,
     private val io: CoroutineDispatcher = Dispatchers.IO,
 ) : MomentsSource, MomentsWriter {
-    override suspend fun moments(since: Long, cursor: String?): MomentChanges =
-        get(if (cursor != null) "/v1/moments?cursor=$cursor&limit=500" else "/v1/moments?since=$since&limit=500", MomentChanges.serializer())
+    override suspend fun changes(since: Long, cursor: String?): Changes =
+        get(if (cursor != null) "/v1/changes?cursor=$cursor&limit=500" else "/v1/changes?since=$since&limit=500", Changes.serializer())
 
-    override suspend fun places(): PlacesResponse = get("/v1/places", PlacesResponse.serializer())
-
-    override suspend fun trips(): TripsResponse = get("/v1/trips", TripsResponse.serializer())
+    override suspend fun uploadedImage(momentUid: String, mediaUid: String): String? = withContext(io) {
+        val path = "/v1/moments/$momentUid/media/$mediaUid/image"
+        client.newCall(authorized(path).head().build()).execute().use { response ->
+            when {
+                response.code == 404 -> null
+                response.isSuccessful -> response.header("ETag")?.trim('"')
+                else -> throw ApiException("HEAD $path answered ${response.code}")
+            }
+        }
+    }
 
     override suspend fun uploadImage(momentUid: String, mediaUid: String, file: File, contentType: String) {
         write("PUT", "/v1/moments/$momentUid/media/$mediaUid/image", file.asRequestBody(contentType.toMediaType()))
@@ -109,16 +118,18 @@ class MomentsApi(
 
     /** A write with the token; its answer's body, or an [ApiException] with what the API said. */
     private suspend fun write(method: String, path: String, body: RequestBody): String = withContext(io) {
-        val token = token()?.takeIf { it.isNotBlank() } ?: throw ApiException("No API token")
-        val request = Request.Builder().url(baseUrl() + path).method(method, body)
-            .header("Authorization", "Bearer $token")
-            .header("Accept", "application/json")
-            .build()
+        val request = authorized(path).method(method, body).header("Accept", "application/json").build()
         client.newCall(request).execute().use { response ->
             val text = response.body?.string().orEmpty()
             if (!response.isSuccessful) throw ApiException(errorOf(text) ?: "$method $path answered ${response.code}")
             text
         }
+    }
+
+    /** A request to [path] with the owner's token, or an [ApiException] when there is none. */
+    private fun authorized(path: String): Request.Builder {
+        val token = token()?.takeIf { it.isNotBlank() } ?: throw ApiException("No API token")
+        return Request.Builder().url(baseUrl() + path).header("Authorization", "Bearer $token")
     }
 
     /** The API's `{ "error": … }`, when that is what it answered. */
