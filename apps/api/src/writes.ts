@@ -6,7 +6,14 @@ import {
   type Places,
 } from '@hyoban/data-spec'
 import { getUploadKey, type Bucket, type UploadPart } from './bucket.ts'
-import { readAll, type Database, type Statement } from './database.ts'
+import {
+  carryTripRoutes,
+  readAll,
+  revisionQuery,
+  toRevision,
+  type Database,
+  type Statement,
+} from './database.ts'
 import { HttpError, validate } from './http.ts'
 import {
   PROVISIONAL_PLACE_PATTERN,
@@ -49,13 +56,19 @@ export interface WriteResult<T> {
   status: number
   /** Whether the site shows what changed, so it needs building again. */
   changesSite: boolean
+  /** Whether it changed what the trips are built from, so their routes need working out again. */
+  changesRoutes?: boolean
 }
 
-/** What `POST /v1/changes` did: the id each place sent is known by, the Moments saved, the uids deleted. */
+/**
+ * What `POST /v1/changes` did: the id each place sent is known by, the Moments saved, the
+ * uids deleted, and the revision the write took, when it changed anything.
+ */
 export interface AppliedChanges {
   places: Record<string, string>
   moments: MomentRecord[]
   deleted: string[]
+  revision?: number
 }
 
 /**
@@ -147,9 +160,6 @@ export async function applyChanges(
     return record
   })
 
-  // Every original there, before any is copied.
-  await Promise.all(records.map((record) => assertUploads(context.bucket, record)))
-
   const deleted = deletedUids.filter((uid) => {
     const existing = stored.get(uid)
 
@@ -160,28 +170,41 @@ export async function applyChanges(
 
   // What a publish copied, removed again when the write doesn't go through.
   const copied: string[] = []
+  const missingUploads: string[] = []
   let saved: MomentRecord[]
   let uploads: string[]
+  let changesRoutes = deleted.some((uid) => tripView(live(stored.get(uid))) !== null)
+  let revision: number | undefined
 
   try {
     uploads = (
-      await settle(records.map((record) => publishMedia(context.bucket, record, copied)))
+      await settle(
+        records.map((record) => publishMedia(context.bucket, record, copied, missingUploads)),
+      )
     ).flat()
+
+    if (missingUploads.length > 0) {
+      throw new HttpError(422, `Upload the media first: ${missingUploads.join(', ')}.`)
+    }
+
     saved = records.map((record) => validate(momentRecordSchema, record))
 
     // A Moment sent as it is stored isn't written again, so it takes no new revision.
-    statements.push(
-      ...saved
-        .filter((record) => {
-          const prior = stored.get(record.uid)
+    for (const record of saved) {
+      const prior = stored.get(record.uid)
 
-          return !prior || prior.deleted || prior.text !== JSON.stringify(record)
-        })
-        .map((record) => upsert(context.db, 'moments', momentRow(record))),
-    )
+      if (!prior || prior.deleted || prior.text !== JSON.stringify(record)) {
+        statements.push(upsert(context.db, 'moments', momentRow(record)))
+        changesRoutes ||= tripView(live(prior)) !== tripView(record)
+      }
+    }
 
     if (statements.length > 0) {
-      await commit(context, statements)
+      // A write the trips don't see keeps the routes' answer, at the revision it takes.
+      revision = await commit(context, [
+        ...statements,
+        ...(changesRoutes ? [] : [carryTripRoutes(context.db)]),
+      ])
     }
   } catch (caught) {
     await deleteUploads(context.bucket, copied).catch((cleanup) =>
@@ -193,10 +216,26 @@ export async function applyChanges(
   await deleteUploads(context.bucket, uploads)
 
   return {
-    body: { places: placeIds, moments: saved, deleted },
+    body: { places: placeIds, moments: saved, deleted, ...(revision ? { revision } : {}) },
     status: 200,
     changesSite: statements.length > 0,
+    changesRoutes,
   }
+}
+
+/** A Moment as stored, unless it is marked deleted. */
+function live(stored: ReturnType<typeof toStored> | undefined) {
+  return stored && !stored.deleted ? stored.record : undefined
+}
+
+/**
+ * What of a Moment the trips are built from, as text to compare, or null when they don't
+ * take it: its day and time, its places and its order, while it is published and shown.
+ */
+function tripView(record: MomentRecord | undefined) {
+  return record?.published && !record.hidden
+    ? JSON.stringify([record.occurredAt, record.places, record.published.order])
+    : null
 }
 
 /**
@@ -320,19 +359,31 @@ export function readUpload(
  * Publishes a published Moment's unpublished media: copies each original from where it
  * was uploaded to the Moment's directory, named by the slug, and gives the item its
  * published block. Returns the uploads, to delete once the record is saved; each copy's
- * key goes in `copied` as soon as it is made, to remove if the write fails.
+ * key goes in `copied` as soon as it is made, to remove if the write fails, and each
+ * original not uploaded goes in `missing`, so the write can name all of them.
  */
-async function publishMedia(bucket: Bucket, record: MomentRecord, copied: string[]) {
+async function publishMedia(
+  bucket: Bucket,
+  record: MomentRecord,
+  copied: string[],
+  missing: string[],
+) {
   const published = record.published!
   const uploads: string[] = []
   const copy = async (item: MomentMedia, part: UploadPart) => {
     const upload = getUploadKey(record.uid, item.uid, part)
     const source = await bucket.get(upload)
-    const contentType = source?.httpMetadata?.contentType ?? ''
+
+    if (!source) {
+      missing.push(`${item.uid} (${part})`)
+      return undefined
+    }
+
+    const contentType = source.httpMetadata?.contentType ?? ''
     const extension = getExtension(contentType)
 
-    if (!source || !extension) {
-      throw new HttpError(422, `The upload ${upload} is gone or of an unknown type.`)
+    if (!extension) {
+      throw new HttpError(422, `The upload ${upload} is of an unknown type.`)
     }
 
     const key = `moments/${published.id}/${getStem({ media: record.media, published }, item)}.${extension}`
@@ -353,53 +404,48 @@ async function publishMedia(bucket: Bucket, record: MomentRecord, copied: string
       .filter((item) => !item.published)
       .map(async (item) => {
         switch (item.type) {
-          case 'image':
-            item.published = {
-              ...(await copy(item, 'image')),
-              width: item.width,
-              height: item.height,
-              variants: [],
-              original: true,
-            }
-            break
-          case 'live-photo': {
-            const [image, video] = await settle([copy(item, 'image'), copy(item, 'video')])
+          case 'image': {
+            const image = await copy(item, 'image')
 
-            item.published = {
-              ...image,
-              width: item.width,
-              height: item.height,
-              variants: [],
-              original: true,
-              video: { ...video, original: true },
+            if (image) {
+              item.published = {
+                ...image,
+                width: item.width,
+                height: item.height,
+                variants: [],
+                original: true,
+              }
             }
             break
           }
-          case 'video':
-            item.published = { ...(await copy(item, 'video')), original: true }
+          case 'live-photo': {
+            const [image, video] = await settle([copy(item, 'image'), copy(item, 'video')])
+
+            if (image && video) {
+              item.published = {
+                ...image,
+                width: item.width,
+                height: item.height,
+                variants: [],
+                original: true,
+                video: { ...video, original: true },
+              }
+            }
             break
+          }
+          case 'video': {
+            const video = await copy(item, 'video')
+
+            if (video) {
+              item.published = { ...video, original: true }
+            }
+            break
+          }
         }
       }),
   )
 
   return uploads
-}
-
-/** A 422 naming any of a Moment's unpublished media whose originals aren't uploaded. */
-async function assertUploads(bucket: Bucket, record: MomentRecord) {
-  const parts = record.media
-    .filter((item) => !item.published)
-    .flatMap((item) => getParts(item).map((part) => ({ item, part })))
-  const found = await Promise.all(
-    parts.map(({ item, part }) => bucket.head(getUploadKey(record.uid, item.uid, part))),
-  )
-  const missing = parts
-    .filter((_, index) => !found[index])
-    .map(({ item, part }) => `${item.uid} (${part})`)
-
-  if (missing.length > 0) {
-    throw new HttpError(422, `Upload the media first: ${missing.join(', ')}.`)
-  }
 }
 
 /**
@@ -441,14 +487,10 @@ async function deleteUploads(bucket: Bucket, uploads: string[]) {
   }
 }
 
-function getParts(item: MomentMedia): UploadPart[] {
-  return item.type === 'image' ? ['image'] : item.type === 'video' ? ['video'] : ['image', 'video']
-}
-
-/** Runs a write's statements in one transaction, after bumping the revision. */
+/** Runs a write's statements in one transaction, after bumping the revision; gives the revision it took. */
 export async function commit({ db, now }: WriteContext, statements: Statement[]) {
   try {
-    await db.batch([
+    const results = await db.batch([
       db.prepare(BUMP_REVISION),
       ...statements,
       db
@@ -456,7 +498,10 @@ export async function commit({ db, now }: WriteContext, statements: Statement[])
           `UPDATE meta SET value = json_set(value, '$.generator', ?1, '$.updatedAt', ?2) WHERE key = 'manifest'`,
         )
         .bind(GENERATOR, now),
+      revisionQuery(db),
     ])
+
+    return toRevision(results.at(-1)?.results ?? [])
   } catch (error) {
     if (String(error).includes('UNIQUE constraint failed')) {
       throw new HttpError(409, 'Another write took the same id; try again.')

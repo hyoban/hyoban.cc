@@ -106,6 +106,30 @@ test('importing again hands a client that synced only what changed', async () =>
   })
 })
 
+test('a feed from the start, page after page, leaves out what was removed', async () => {
+  const { env, importSnapshot } = setUp()
+  const [removed, ...rest] = snapshot.moments
+  const [placeId] = Object.keys(snapshot.places)
+  const { [placeId]: _, ...places } = snapshot.places
+  const [goneTrip, ...trips] = snapshot.trips
+
+  importSnapshot(snapshot)
+  importSnapshot({ ...snapshot, places, trips, moments: rest }, '2026-10-20T08:00:00Z')
+
+  const fresh = await readFeed(env, { limit: 7 })
+
+  assert.equal(fresh.moments.length, rest.filter((moment) => moment.published).length)
+  assert.deepEqual(fresh.deleted, [])
+  assert.deepEqual(fresh.places.deleted, [])
+  assert.deepEqual(fresh.trips.deleted, [])
+  assert.ok(!(placeId in fresh.places.places))
+  assert.ok(!fresh.trips.trips.some((trip) => trip.id === goneTrip.id))
+
+  const since = await readFeed(env, { since: 1 })
+
+  assert.deepEqual(since.deleted, [removed.uid], 'a feed after a revision still has them')
+})
+
 test('the feed hands out the places and trips whole from the start, then only what changed', async () => {
   const { env, importSnapshot } = setUp()
 

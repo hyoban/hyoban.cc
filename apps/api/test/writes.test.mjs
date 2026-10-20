@@ -225,6 +225,7 @@ test('the changes go as one write: places, Moments published, deletions, the sit
     await Promise.all(pending)
 
     assert.equal(applied.status, 200, JSON.stringify(applied.body))
+    assert.equal(applied.body.revision, before + 1, 'the revision the write took')
     assert.deepEqual(applied.body.places, { [made]: 'ce-shi-ma-tou' })
     assert.deepEqual(applied.body.deleted, [target.uid], 'one already gone is left out')
     assert.deepEqual(
@@ -372,6 +373,7 @@ test('a Moment sent as it is stored writes nothing and builds nothing', async ()
 
   assert.equal(again.status, 200)
   assert.deepEqual(again.body.moments, [published])
+  assert.ok(!('revision' in again.body), 'and takes no revision')
   assert.equal((await get(env, '/v1/changes?limit=1')).body.revision, before)
   assert.equal(pending.length, 0)
 })

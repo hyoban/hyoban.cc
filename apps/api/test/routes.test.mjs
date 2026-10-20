@@ -2,6 +2,8 @@ import assert from 'node:assert/strict'
 import { test } from 'vite-plus/test'
 
 import { handle } from '../src/index.ts'
+import { getLegKey } from '@hyoban/trip-map'
+
 import { fillRoutes, FETCHES_PER_RUN } from '../src/routes.ts'
 import { call, get, setUp, snapshot, token } from './setup.mjs'
 
@@ -17,6 +19,16 @@ function setUpWithData() {
   setup.importSnapshot()
 
   return setup
+}
+
+/** What `meta` keeps of `GET /v1/routes`, as it answers it. */
+function readKept(sqlite) {
+  const value = (key) => sqlite.prepare(`SELECT value FROM meta WHERE key = ?`).get(key)?.value
+
+  return {
+    revision: Number(value('trip_routes_revision')),
+    trips: JSON.parse(value('trip_routes')),
+  }
 }
 
 const refuse = async (leg) => {
@@ -88,6 +100,48 @@ test('a fill fetches at most a batch, and leaves the rest for the next', async (
   assert.equal(result.left, Object.keys(snapshot.routes).length - FETCHES_PER_RUN)
 })
 
+test('a leg with no route is remembered and not asked for again, and one that failed is', async () => {
+  const { env, sqlite } = setUpWithData()
+  const [noRoad, failing] = Object.keys(snapshot.routes).filter((key) => !key.startsWith('train:'))
+
+  sqlite.prepare(`DELETE FROM routes WHERE key IN (?, ?)`).run(noRoad, failing)
+
+  const asked = []
+  const fetchRoute = async (leg) => {
+    const key = getLegKey(leg.from, leg.to)
+
+    asked.push(key)
+
+    if (key === failing) {
+      throw new Error('Directions is down')
+    }
+
+    return undefined
+  }
+  const realError = console.error
+  const realWarn = console.warn
+
+  console.error = () => {}
+  console.warn = () => {}
+
+  try {
+    const first = await fillRoutes({ db: env.DB, bucket: env.BUCKET, now }, fetchRoute)
+
+    assert.deepEqual(first, { fetched: 0, removed: 0, failed: 1, left: 0 })
+    assert.deepEqual(new Set(asked), new Set([noRoad, failing]))
+
+    asked.length = 0
+
+    const second = await fillRoutes({ db: env.DB, bucket: env.BUCKET, now }, fetchRoute)
+
+    assert.equal(second.failed, 1)
+    assert.deepEqual(asked, [failing], 'only the one that failed is asked for again')
+  } finally {
+    console.error = realError
+    console.warn = realWarn
+  }
+})
+
 test('a route no trip needs any more is marked deleted', async () => {
   const fresh = setUpWithData()
 
@@ -139,8 +193,7 @@ test('GET /v1/routes gives every trip with Moments its stretches, drives solid a
 
 test('GET /v1/routes is worked out once per revision, and again once the revision moves on', async () => {
   const { env, sqlite } = setUpWithData()
-  const kept = () =>
-    JSON.parse(sqlite.prepare(`SELECT value FROM meta WHERE key = 'trip_routes'`).get().value)
+  const kept = () => readKept(sqlite)
   const first = (await get(env, '/v1/routes')).body
 
   assert.deepEqual(kept(), first)
@@ -173,12 +226,7 @@ test('GET /v1/routes has an ETag of its routes, which a new revision with the sa
 
   assert.equal(unchanged.status, 304)
   assert.equal(unchanged.headers.get('ETag'), etag)
-  assert.equal(
-    JSON.parse(sqlite.prepare(`SELECT value FROM meta WHERE key = 'trip_routes'`).get().value)
-      .revision,
-    2,
-    'worked out again for the new revision',
-  )
+  assert.equal(readKept(sqlite).revision, 2, 'worked out again for the new revision')
 
   sqlite.exec(`UPDATE meta SET value = CAST(value AS INTEGER) + 1 WHERE key = 'revision'`)
   sqlite.exec(`UPDATE trips SET deleted_at = '${now}' WHERE id = '2024-code-and-travel'`)
@@ -203,9 +251,7 @@ test('a fill keeps what GET /v1/routes answers, of the revision its own write to
   const revision = Number(
     sqlite.prepare(`SELECT value FROM meta WHERE key = 'revision'`).get().value,
   )
-  const kept = JSON.parse(
-    sqlite.prepare(`SELECT value FROM meta WHERE key = 'trip_routes'`).get().value,
-  )
+  const kept = readKept(sqlite)
 
   assert.equal(result.fetched, 1)
   assert.equal(kept.revision, revision)
@@ -229,8 +275,8 @@ test('POST /v1/routes is the owner’s and needs the Mapbox token', async () => 
   assert.deepEqual(body, { fetched: 0, removed: 0, failed: 0, left: 0 })
 })
 
-test('a write the site shows brings the routes up to date before calling the deploy hook', async () => {
-  const { env } = setUpWithData()
+test('a write the site shows brings the routes up to date before calling the deploy hook, when the trips see it', async () => {
+  const { env, sqlite } = setUpWithData()
   const order = []
   const realFetch = globalThis.fetch
 
@@ -240,23 +286,42 @@ test('a write the site shows brings the routes up to date before calling the dep
   }
 
   try {
-    const pending = []
-    const moment = snapshot.moments.find((record) => record.published && !record.hidden)
-
-    await call(
-      { ...env, MAPBOX_TOKEN: 'pk.test', DEPLOY_HOOK_URL: 'https://deploy.test/hook' },
-      'POST',
-      '/v1/changes',
-      {
-        ...owner,
-        body: { moments: [{ ...moment, text: `${moment.text}!` }] },
-        context: { waitUntil: (promise) => pending.push(promise) },
-      },
+    const before = (await get(env, '/v1/routes')).body
+    const moment = snapshot.moments.find(
+      (record) => record.published && !record.hidden && record.places.length > 0,
     )
-    await Promise.all(pending)
+    const write = async (changed) => {
+      const pending = []
 
-    // Every leg is already there, so only the hook is called.
+      order.length = 0
+      await call(
+        { ...env, MAPBOX_TOKEN: 'pk.test', DEPLOY_HOOK_URL: 'https://deploy.test/hook' },
+        'POST',
+        '/v1/changes',
+        {
+          ...owner,
+          body: { moments: [changed] },
+          context: { waitUntil: (promise) => pending.push(promise) },
+        },
+      )
+      await Promise.all(pending)
+    }
+
+    // Every leg gone, which a fill would fetch.
+    sqlite.prepare(`DELETE FROM routes`).run()
+
+    // Words alone: the trips don't see them, so the routes aren't touched and their
+    // answer is carried on to the write's revision.
+    await write({ ...moment, text: `${moment.text}!` })
+
     assert.deepEqual(order, ['deploy'])
+    assert.deepEqual(readKept(sqlite), { revision: before.revision + 1, trips: before.trips })
+
+    // Hidden, it leaves the trips, so the routes are brought up to date first.
+    await write({ ...moment, text: `${moment.text}!`, hidden: true })
+
+    assert.ok(order.includes('route'))
+    assert.equal(order.at(-1), 'deploy')
   } finally {
     globalThis.fetch = realFetch
   }
