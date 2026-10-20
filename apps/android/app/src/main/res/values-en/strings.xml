@@ -133,7 +133,6 @@
     <string name="settings_pure_black_note">Pages are pure black in dark mode, which saves power on OLED screens.</string>
     <string name="section_credits">Thanks</string>
     <string name="credit_flclash_note">The app\'s design learned from it</string>
-    <string name="action_show_tabs">Show tabs</string>
     <string name="action_view">View</string>
     <string name="media_position">%1$s, %2$d of %3$d</string>
     <string name="label_today">Today</string>

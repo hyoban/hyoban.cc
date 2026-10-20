@@ -13,42 +13,42 @@ import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.LinearOutSlowInEasing
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandHorizontally
-import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
-import androidx.compose.animation.shrinkHorizontally
-import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.outlined.Map
 import androidx.compose.material.icons.rounded.Map
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MotionScheme
+import androidx.compose.material3.NavigationRail
+import androidx.compose.material3.NavigationRailItem
+import androidx.compose.material3.ShortNavigationBar
+import androidx.compose.material3.ShortNavigationBarItem
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
@@ -65,16 +65,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.AbsoluteAlignment
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
-import androidx.compose.ui.input.nestedscroll.NestedScrollSource
-import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
@@ -83,7 +80,6 @@ import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.zIndex
 import androidx.core.util.Consumer
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavDestination.Companion.hasRoute
@@ -104,7 +100,6 @@ import cc.hyoban.moments.R
 import cc.hyoban.moments.Settings
 import cc.hyoban.moments.ui.components.AdaptiveStatusBarIcons
 import cc.hyoban.moments.ui.components.AppColors
-import cc.hyoban.moments.ui.components.FloatingNav
 import cc.hyoban.moments.ui.components.LocalBackSwipe
 import cc.hyoban.moments.ui.components.LocalInViewer
 import cc.hyoban.moments.ui.components.LocalMediaMaxHeight
@@ -113,10 +108,6 @@ import cc.hyoban.moments.ui.components.LocalReducedMotion
 import cc.hyoban.moments.ui.components.LocalSharedTransitionScope
 import cc.hyoban.moments.ui.components.LocalViewerShowing
 import cc.hyoban.moments.ui.components.LocalViewerShownKey
-import cc.hyoban.moments.ui.components.NAV_ACCESSORY_GAP
-import cc.hyoban.moments.ui.components.NAV_HEIGHT
-import cc.hyoban.moments.ui.components.NavItem
-import cc.hyoban.moments.ui.components.RAIL_WIDTH
 import cc.hyoban.moments.ui.components.Symbols
 import cc.hyoban.moments.ui.components.isLandscape
 import cc.hyoban.moments.ui.components.rememberReducedMotion
@@ -196,7 +187,7 @@ private enum class Tab(val route: Any, val type: KClass<*>, val label: Int, val 
     TRIPS(Trips, Trips::class, R.string.tab_trips, Symbols.LuggageOutlined, Symbols.LuggageFilled),
 }
 
-@OptIn(ExperimentalSharedTransitionApi::class)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun MomentsApp(container: AppContainer, start: Any = Feed) {
     val navController = rememberNavController()
@@ -226,7 +217,6 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
     val openTrip: (String) -> Unit = { navController.navigate(Trip(it)) }
     val openPlace: (String) -> Unit = { navController.navigate(PlaceMoments(it)) }
 
-    val navItems = Tab.entries.map { NavItem(stringResource(it.label), it.icon, it.selectedIcon, tag = "tab_${it.name.lowercase()}") }
     val selectTab: (Int) -> Unit = { index ->
         navController.navigate(Tab.entries[index].route) {
             // The tab takes the place of the one before rather than going on top of it, so
@@ -240,19 +230,12 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
             restoreState = true
         }
     }
-    // The tabs fold into a circle at the side while a list is scrolled down to read on,
-    // and open out again on any scroll up, a tap on the circle, a change of tab or a page
-    // with nothing to scroll.
-    var tabsShown by remember { mutableStateOf(true) }
-    LaunchedEffect(current) { tabsShown = true }
-    val hideOnScroll = remember {
-        object : NestedScrollConnection {
-            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-                if (available.y < -SCROLL_SLOP) tabsShown = false else if (available.y > SCROLL_SLOP) tabsShown = true
-                return Offset.Zero
-            }
-        }
-    }
+    // The navigation bar's height and the rail's width, as they lay themselves out, and the
+    // tab's floating action button's height above the bar, for the pages to keep clear of.
+    val density = LocalDensity.current
+    var barHeight by remember { mutableStateOf(0.dp) }
+    var railWidth by remember { mutableStateOf(0.dp) }
+    var fabHeight by remember { mutableStateOf(0.dp) }
     // On a phone on its side the tabs stand down a side instead, where the screen has
     // width to spare and no height.
     val landscape = isLandscape()
@@ -260,20 +243,21 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
     val clearance = when {
         current == null -> 0.dp
         landscape -> navBottom
-        // The tabs, the room under them and a little above, as tall as larger text makes the tabs.
-        else -> NAV_HEIGHT + 20.dp + navBottom
+        // The navigation bar, the system's navigation under it included.
+        else -> barHeight
     }
     // Down the leading side, as Material 3 places a navigation rail, whichever way the phone
     // is turned; the system's insets keep it clear of the camera's cutout there.
     val railLeft = LocalLayoutDirection.current == LayoutDirection.Ltr
     val rail = when {
         current == null || !landscape -> RailSpace(0.dp, 0.dp)
-        railLeft -> RailSpace(left = RAIL_CLEARANCE, right = 0.dp)
-        else -> RailSpace(left = 0.dp, right = RAIL_CLEARANCE)
+        railLeft -> RailSpace(left = railWidth, right = 0.dp)
+        else -> RailSpace(left = 0.dp, right = railWidth)
     }
     // A tab tapped twice, told to its page: back to its top, or the map to every place.
     val tabReselects = remember { MutableSharedFlow<Any>(extraBufferCapacity = 1) }
-    // A button the map hands the tabs to stand beside them, as its one action.
+    // A tab's floating action button, which the app places: above the navigation bar at its
+    // end, or at the top of the rail.
     val accessorySlot = remember { mutableStateOf<(@Composable () -> Unit)?>(null) }
     // Brief messages from any page, one at a time, at the foot of the screen above the tabs.
     val messages = remember { SnackbarHostState() }
@@ -341,9 +325,10 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
     // Its test tags are resource ids too, so `uiautomator dump` names the buttons, tabs and cards it finds.
     Surface(Modifier.fillMaxSize().semantics { testTagsAsResourceId = true }, color = AppColors.page) {
         // A traversal group, so the tabs below can come first to a screen reader.
-        Box(Modifier.fillMaxSize().nestedScroll(hideOnScroll).semantics { isTraversalGroup = true }) {
+        Box(Modifier.fillMaxSize().semantics { isTraversalGroup = true }) {
             CompositionLocalProvider(
                 LocalBottomClearance provides clearance,
+                LocalFabClearance provides if (current != null && !landscape && accessorySlot.value != null) fabHeight else 0.dp,
                 LocalRailSpace provides rail,
                 LocalNavAccessory provides accessorySlot,
                 LocalMessages provides messages,
@@ -463,83 +448,84 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                     }
                 }
             }
+            // Material 3's navigation: a navigation bar along the bottom, docked and filled, the
+            // tab's floating action button above it at its end; on a phone on its side, a
+            // navigation rail down the leading edge, the button at its top. Read before the
+            // page, as Material 3 has assistive technology reach navigation and the FAB first.
+            val selectedTab = current?.ordinal ?: 0
+            val onTab: (Int) -> Unit = { index -> if (index == selectedTab) tabReselects.tryEmit(Tab.entries[index].route) else selectTab(index) }
+            // Kept while it leaves, after the tab has let it go.
+            var accessory by remember { mutableStateOf(accessorySlot.value) }
+            accessorySlot.value?.let { accessory = it }
+            val navigation = Modifier.semantics {
+                isTraversalGroup = true
+                traversalIndex = -1f
+            }
             AnimatedVisibility(
-                current != null && viewer == null,
-                enter = fadeIn() + if (landscape) slideInHorizontally { if (railLeft) -it else it } else slideInVertically { it },
-                exit = fadeOut() + if (landscape) slideOutHorizontally { if (railLeft) -it else it } else slideOutVertically { it },
-                // Read before the page, the tabs and the button beside them, as Material 3 has
-                // assistive technology reach navigation and the FAB without the whole list first.
-                modifier = Modifier.semantics {
-                    isTraversalGroup = true
-                    traversalIndex = -1f
-                }.then(if (landscape) {
-                    // In the middle of what the system bars leave, as the map's buttons above and
-                    // below it are spaced.
-                    Modifier.align(if (railLeft) AbsoluteAlignment.CenterLeft else AbsoluteAlignment.CenterRight)
-                        .windowInsetsPadding(WindowInsets.safeDrawing).absolutePadding(left = if (railLeft) Space.m else 0.dp, right = if (railLeft) 0.dp else Space.m)
-                } else {
-                    Modifier.align(Alignment.BottomCenter).fillMaxWidth().navigationBarsPadding()
-                        .padding(start = Space.gutter, end = Space.gutter, bottom = Space.m)
-                }),
+                current != null && viewer == null && landscape,
+                enter = slideInHorizontally(transitions.defaultSpatialSpec()) { if (railLeft) -it else it },
+                exit = slideOutHorizontally(transitions.defaultSpatialSpec()) { if (railLeft) -it else it },
+                modifier = navigation.align(if (railLeft) AbsoluteAlignment.CenterLeft else AbsoluteAlignment.CenterRight).fillMaxHeight(),
             ) {
-                // Down the side, the tabs have room of their own, so they stay open as a list scrolls.
-                val folded = !landscape && !tabsShown
-                val side by animateFloatAsState(if (folded) -1f else 0f, motion.defaultSpatialSpec(), label = "tabs side")
-                val nav: @Composable () -> Unit = {
-                    FloatingNav(
-                        navItems,
-                        selected = current?.ordinal ?: 0,
-                        onSelect = selectTab,
-                        vertical = landscape,
-                        collapsed = folded,
-                        onExpand = { tabsShown = true },
-                        onReselect = { tabReselects.tryEmit(Tab.entries[it].route) },
-                    )
-                }
-                // A tab's button, the map's locating or the Moments' new Moment. Kept while it
-                // slides away, after the tab has let it go.
-                var accessory by remember { mutableStateOf(accessorySlot.value) }
-                accessorySlot.value?.let { accessory = it }
-                if (landscape) {
-                    // Down the side, at the top of the rail, as Material 3 anchors a rail's FAB.
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        AnimatedVisibility(
-                            current != null && accessorySlot.value != null,
-                            enter = expandVertically(motion.defaultSpatialSpec(), expandFrom = Alignment.Bottom, clip = false) + fadeIn(motion.fastEffectsSpec()),
-                            exit = shrinkVertically(motion.defaultSpatialSpec(), shrinkTowards = Alignment.Bottom, clip = false) + fadeOut(motion.defaultEffectsSpec()),
-                        ) {
-                            Box(Modifier.padding(bottom = NAV_ACCESSORY_GAP)) { accessory?.invoke() }
+                // The compact rail, its button at the top and the tabs centred under it, so all of
+                // it fits the little height a phone on its side has.
+                NavigationRail(
+                    modifier = Modifier.fillMaxHeight().onSizeChanged { railWidth = with(density) { it.width.toDp() } },
+                    header = {
+                        AnimatedVisibility(accessorySlot.value != null, enter = fadeIn() + scaleIn(), exit = fadeOut() + scaleOut()) {
+                            accessory?.invoke()
                         }
-                        nav()
+                    },
+                ) {
+                    Spacer(Modifier.weight(1f))
+                    Tab.entries.forEachIndexed { index, tab ->
+                        NavigationRailItem(
+                            selected = index == selectedTab,
+                            onClick = { onTab(index) },
+                            icon = { Icon(if (index == selectedTab) tab.selectedIcon else tab.icon, contentDescription = null) },
+                            label = { Text(stringResource(tab.label)) },
+                            modifier = Modifier.testTag("tab_${tab.name.lowercase()}"),
+                        )
                     }
-                } else {
-                    Box(Modifier.fillMaxWidth()) {
-                        Row(Modifier.align(BiasAlignment(side, 0f)), verticalAlignment = Alignment.CenterVertically) {
-                            nav()
-                            // It slides out from behind the tabs' end as they move over to make
-                            // room, as its page slides in, and back under them as they leave.
-                            AnimatedVisibility(
-                                current != null && accessorySlot.value != null,
-                                enter = expandHorizontally(motion.defaultSpatialSpec(), expandFrom = Alignment.Start, clip = false) +
-                                    slideInHorizontally(motion.defaultSpatialSpec()) { -it } +
-                                    fadeIn(motion.fastEffectsSpec()),
-                                exit = shrinkHorizontally(motion.defaultSpatialSpec(), shrinkTowards = Alignment.Start, clip = false) +
-                                    slideOutHorizontally(motion.defaultSpatialSpec()) { -it } +
-                                    fadeOut(motion.defaultEffectsSpec()),
-                                // Under the tabs, so it comes out from behind them.
-                                modifier = Modifier.zIndex(-1f),
-                            ) {
-                                Box(Modifier.padding(start = NAV_ACCESSORY_GAP)) { accessory?.invoke() }
-                            }
+                    Spacer(Modifier.weight(1f))
+                }
+            }
+            AnimatedVisibility(
+                current != null && viewer == null && !landscape,
+                enter = slideInVertically(transitions.defaultSpatialSpec()) { it },
+                exit = slideOutVertically(transitions.defaultSpatialSpec()) { it },
+                modifier = navigation.align(Alignment.BottomCenter).fillMaxWidth(),
+            ) {
+                Column(horizontalAlignment = Alignment.End) {
+                    // A FAB grows out from its middle as it comes, as Material 3 has one enter.
+                    AnimatedVisibility(accessorySlot.value != null, enter = fadeIn() + scaleIn(), exit = fadeOut() + scaleOut()) {
+                        Box(
+                            Modifier.padding(end = Space.gutter, bottom = Space.gutter)
+                                .onSizeChanged { fabHeight = with(density) { it.height.toDp() } + Space.gutter },
+                        ) { accessory?.invoke() }
+                    }
+                    ShortNavigationBar(
+                        modifier = Modifier.onSizeChanged { barHeight = with(density) { it.height.toDp() } },
+                    ) {
+                        Tab.entries.forEachIndexed { index, tab ->
+                            ShortNavigationBarItem(
+                                selected = index == selectedTab,
+                                onClick = { onTab(index) },
+                                icon = { Icon(if (index == selectedTab) tab.selectedIcon else tab.icon, contentDescription = null) },
+                                label = { Text(stringResource(tab.label)) },
+                                modifier = Modifier.testTag("tab_${tab.name.lowercase()}"),
+                            )
                         }
                     }
                 }
             }
-            // Over the tabs' clearance on a tab, the navigation bar's elsewhere, and the keyboard's while it is up.
+            // Above the navigation bar and the button over it on a tab, the system's navigation
+            // elsewhere, and the keyboard while it is up.
+            val fabRoom = if (current != null && !landscape && accessorySlot.value != null) fabHeight else 0.dp
             SnackbarHost(
                 messages,
                 Modifier.align(Alignment.BottomCenter).imePadding()
-                    .padding(bottom = if (viewer == null && current != null) clearance else navBottom),
+                    .padding(bottom = if (viewer == null && current != null) clearance + fabRoom else navBottom),
             )
         }
     }
@@ -624,9 +610,6 @@ private val FADE_THROUGH_OUT = fadeOut(tween(FADE_THROUGH_OUT_MS, easing = FastO
 private val FADE_THROUGH_IN = fadeIn(tween(FADE_THROUGH_IN_MS, delayMillis = FADE_THROUGH_OUT_MS, easing = LinearOutSlowInEasing)) +
     scaleIn(tween(FADE_THROUGH_IN_MS, delayMillis = FADE_THROUGH_OUT_MS, easing = LinearOutSlowInEasing), initialScale = 0.92f)
 
-/** How far a scroll must go, in pixels a frame, to hide or bring back the tabs. */
-private const val SCROLL_SLOP = 6f
-
 /** Where the app reads from, for what draws without the container at hand, as the map. */
 val LocalSettings = staticCompositionLocalOf<Settings> { error("No settings provided") }
 
@@ -643,8 +626,11 @@ fun OnTabReselect(route: Any?, action: suspend () -> Unit) {
     }
 }
 
-/** How much of the bottom the floating tabs cover on a tab screen, to leave clear under a list's last item. */
+/** How much of the bottom the navigation bar covers on a tab screen, to leave clear under a list's last item. */
 val LocalBottomClearance = staticCompositionLocalOf { 0.dp }
+
+/** How much more the tab's floating action button covers above the bar, for a list or a card to keep clear of. */
+val LocalFabClearance = staticCompositionLocalOf { 0.dp }
 
 /**
  * How much of the left and the right the tabs cover on a tab screen on a phone on its
@@ -673,12 +659,9 @@ fun rememberShowMessage(): (String) -> Unit {
     }
 }
 
-/** The button standing beside the tabs on a tab screen, which that screen fills in and clears. */
+/** A tab screen's floating action button, which that screen fills in and clears, and the app places. */
 val LocalNavAccessory = staticCompositionLocalOf<MutableState<(@Composable () -> Unit)?>> { mutableStateOf(null) }
 
-/** The tabs standing down the side, with the room around them. */
-private val RAIL_CLEARANCE: Dp
-    @Composable get() = Space.m + RAIL_WIDTH + Space.s
 
 /** A destination whose screen knows its transition, so its photos can share their place with the next screen's. */
 /**

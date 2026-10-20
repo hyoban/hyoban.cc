@@ -42,6 +42,7 @@ import cc.hyoban.moments.data.media.MediaUrls
 import cc.hyoban.moments.data.spec.MomentMedia
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.ui.LocalBottomClearance
+import cc.hyoban.moments.ui.LocalFabClearance
 import cc.hyoban.moments.ui.OnTabReselect
 import cc.hyoban.moments.ui.components.MediaStill
 import cc.hyoban.moments.ui.components.MonthHeader
@@ -105,7 +106,7 @@ fun CalendarView(
         LazyColumn(
             Modifier.fillMaxSize(),
             state = state,
-            contentPadding = PaddingValues(start = columns.margin, end = columns.margin, bottom = LocalBottomClearance.current + Space.xl),
+            contentPadding = PaddingValues(start = columns.margin, end = columns.margin, bottom = LocalFabClearance.current + LocalBottomClearance.current + Space.xl),
         ) {
             leading()
             if (columns.count > 1) {
