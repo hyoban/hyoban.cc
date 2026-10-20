@@ -92,8 +92,10 @@ import androidx.navigation.toRoute
 import androidx.navigationevent.NavigationEventTransitionState
 import androidx.navigationevent.compose.LocalNavigationEventDispatcherOwner
 import cc.hyoban.moments.AppContainer
+import cc.hyoban.moments.MainActivity
 import cc.hyoban.moments.R
 import cc.hyoban.moments.Settings
+import cc.hyoban.moments.ui.compose.NewMomentScreen
 import cc.hyoban.moments.ui.components.AdaptiveStatusBarIcons
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.FloatingNav
@@ -161,6 +163,14 @@ data class PlaceMoments(val id: String)
 
 @Serializable
 object Preferences
+
+/** A Moment to write, kept on the phone. */
+@Serializable
+object NewMoment
+
+/** One of the phone's Moments, to change. */
+@Serializable
+data class EditMoment(val uid: String)
 
 /** The three tabs at the bottom; everything else opens over them. */
 private enum class Tab(val route: Any, val type: KClass<*>, val label: Int, val icon: ImageVector, val selectedIcon: ImageVector) {
@@ -276,7 +286,11 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
     val activity = LocalActivity.current as? ComponentActivity
     DisposableEffect(activity, navController) {
         val listener = Consumer<Intent> { intent ->
-            if (intent.data != null) {
+            if (intent.action == MainActivity.ACTION_NEW_MOMENT) {
+                // A place shared in goes to the Moment being written, or a new one.
+                viewer = null
+                if (navController.currentDestination?.hasRoute(NewMoment::class) != true) navController.navigate(NewMoment)
+            } else if (intent.data != null) {
                 viewer = null
                 navController.handleDeepLink(Intent(intent).setFlags(0))
             }
@@ -326,6 +340,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                     onMedia = openMedia,
                                     onDay = { navController.navigate(Day(it)) },
                                     onSettings = { navController.navigate(Preferences) },
+                                    onNew = { navController.navigate(NewMoment) },
                                 )
                             }
                             screen<Atlas>(link = "map") {
@@ -335,7 +350,15 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                 TripsScreen(container, onTrip = openTrip)
                             }
                             screen<Moment>(link = "moment/{uid}") { entry ->
-                                MomentScreen(container, entry.toRoute<Moment>().uid, onMedia = openMedia, onPlace = openPlace, onTrip = openTrip, onBack = back)
+                                MomentScreen(
+                                    container,
+                                    entry.toRoute<Moment>().uid,
+                                    onMedia = openMedia,
+                                    onPlace = openPlace,
+                                    onTrip = openTrip,
+                                    onBack = back,
+                                    onEdit = { navController.navigate(EditMoment(it)) },
+                                )
                             }
                             screen<Trip>(link = "trip/{id}") { entry ->
                                 TripScreen(container, entry.toRoute<Trip>().id, onMoment = openMoment, onMedia = openMedia, onBack = back)
@@ -348,6 +371,12 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                             }
                             screen<Preferences>(link = "settings") {
                                 SettingsScreen(container, onBack = back)
+                            }
+                            screen<NewMoment>(link = "new") {
+                                NewMomentScreen(container, onBack = back, onSaved = back)
+                            }
+                            screen<EditMoment>(link = "edit/{uid}") { entry ->
+                                NewMomentScreen(container, onBack = back, onSaved = back, edit = entry.toRoute<EditMoment>().uid)
                             }
                         }
                         // Kept while it leaves, so the photo has somewhere to fly back from.
@@ -559,6 +588,8 @@ fun routeOf(link: Uri): Any? {
         "map" -> Atlas
         "trips" -> Trips
         "settings" -> Preferences
+        "new" -> NewMoment
+        "edit" -> id?.let(::EditMoment)
         "moment" -> id?.let(::Moment)
         "trip" -> id?.let(::Trip)
         "day" -> id?.let(::Day)

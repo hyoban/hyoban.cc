@@ -5,7 +5,38 @@ map, every Moment with its photos and videos, and each trip's route and days. It
 the API's public endpoints (`apps/api`) and keeps a copy under the app's `api/`
 directory in the layout `packages/data-spec` defines, so it opens straight away and
 works offline; each start, and each pull down on a list, asks only for what changed
-since. It doesn't edit anything yet.
+since.
+
+A new Moment can be written on the phone, from the ✎ in the Moments tab's header or
+`moments://new`: its words, up to nine photos from the system's documents picker, and when and
+where, worked out as it is written. The time is the earliest photo's, from its EXIF and
+the offset the camera wrote, else now; the place is where the first photo was taken,
+when the app may see that (the photo picker takes it out, the documents picker doesn't),
+else where the phone is, and the known place within 2 km of
+it, else a new place named after what is there (see below), or its coordinates.
+Both can be changed: the time with the system's date and time pickers, the place on a
+map with a pin at its middle, dragged to a new place or onto a known place's dot. A new
+place takes the name of the nearest park, sight, shop or quarter OpenStreetMap knows
+around the pin, through Photon (`BuildConfig.PLACE_SEARCH_URL`), else its street, and the
+others around it are offered as names to take instead; where Photon can't be reached, the
+system's geocoder names it. A place found in Amap comes in by sharing it: its share
+sheet's 更多 offers 这里 (作为时刻的地点), which opens a new Moment with the place, or
+gives it to the one being written; 保存为地点 beside it only keeps the place, as one of
+the phone's own, and leaves Amap in front (one of the same name within 300 m isn't kept
+twice). Amap's short link is followed to the point it
+redirects to, in GCJ-02, which is shifted back to WGS 84.
+
+Photos come in by sharing too: the gallery's share sheet (under 更多 on ColorOS, which can
+pin it) offers 这里 (写一个时刻) for one or several, which opens a new Moment with them,
+or adds them to the one being written. They are copied in at once, as they are, while the
+sharing still lets them be read; ColorOS's gallery leaves where a photo was taken in
+unless its share sheet is told to take it out (隐私和格式选项), so the Moment's place
+comes from them as from photos picked in the app.
+Such a Moment stays on the phone, under the app's `local/`
+directory in the spec's layout, its photos copied in whole so it keeps them whatever
+becomes of the gallery's, and its new places with ids of their own (`p-<ulid>`); no sync
+or change of API touches it. It is shown among the site's, marked 仅本机 (on this phone),
+and can be deleted from its page; nothing is sent to the API yet.
 
 On the home screen it is 这里 (here): Material 3's nine-lobed cookie shape in green on
 pale mint, with the map's "you are here" pulse in it, as an adaptive icon with its own
@@ -57,7 +88,7 @@ site's rules, which trip a Moment is on, and the sync against a stand-in for the
 ## On the phone, from adb
 
 Every page has a link, `moments://moments`, `map`, `trips`, `settings`,
-`moment/{uid}`, `trip/{id}`, `day/{YYYY-MM-DD}` and `place/{id}`, which
+`new`, `moment/{uid}`, `trip/{id}`, `day/{YYYY-MM-DD}` and `place/{id}`, which
 `adb shell am start -d` opens straight away, going over the page shown when the app is
 already open. The buttons, tabs and cards carry test tags that `uiautomator dump`
 reports as resource ids (`tab_map`, `settings`, `back`, `moment_{uid}`,
@@ -81,10 +112,13 @@ one chosen.
 - `data/api` — the API's change feed, places and trips.
 - `data/store` — the copy on the phone, and the repository that brings it up to date
   and gives the screens what the site shows (no hidden Moments).
-- `data/media` — photo, poster and video URLs, picked as the site picks them.
+- `data/local` — the Moments written on the phone: ULIDs, their photos' time and place,
+  where the phone is and what the place there is called.
+- `data/media` — photo, poster and video URLs, picked as the site picks them, or the
+  phone's own copy of a photo not yet published.
 - `data/trips` — which trip a Moment is on, a trip's days and its stops in order.
 - `widget` — the home screen's widgets (Glance) and what they pick for the day.
-- `ui` — Compose screens: the map, the Moments, a Moment's page, the trips, a trip, the settings.
+- `ui` — Compose screens: the map, the Moments, a Moment's page, a new Moment, the trips, a trip, the settings.
 
 The app's own `data/` directory from when it recorded Moments is left on the phone as
 it was.

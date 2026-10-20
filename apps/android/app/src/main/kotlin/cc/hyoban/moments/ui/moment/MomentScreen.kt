@@ -34,14 +34,20 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
+import androidx.compose.material.icons.rounded.DeleteOutline
+import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.Luggage
+import androidx.compose.material.icons.rounded.PhoneAndroid
 import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material.icons.rounded.Schedule
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -49,11 +55,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
+import cc.hyoban.moments.R
 import cc.hyoban.moments.data.media.MediaUrls
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
@@ -63,6 +71,7 @@ import cc.hyoban.moments.data.trips.momentsOf
 import cc.hyoban.moments.data.trips.tripOf
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.FloatingBack
+import cc.hyoban.moments.ui.components.FloatingButton
 import cc.hyoban.moments.ui.components.MediaTile
 import cc.hyoban.moments.ui.components.NeutralChip
 import cc.hyoban.moments.ui.components.Pill
@@ -97,6 +106,7 @@ fun MomentScreen(
     onPlace: (String) -> Unit,
     onTrip: (String) -> Unit,
     onBack: () -> Unit,
+    onEdit: (String) -> Unit = {},
 ) {
     val moments by container.repository.moments.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
@@ -158,6 +168,32 @@ fun MomentScreen(
             }
         }
         FloatingBack(onBack, Modifier.align(Alignment.TopStart))
+        // Only what was written on the phone can be changed or taken back; the site's Moments are the API's.
+        if (container.repository.isLocal(uid)) {
+            var confirming by remember { mutableStateOf(false) }
+            Row(Modifier.align(Alignment.TopEnd)) {
+                FloatingButton(Icons.Rounded.Edit, stringResource(R.string.action_edit_moment), onClick = { onEdit(uid) }, tag = "edit")
+                FloatingButton(Icons.Rounded.DeleteOutline, stringResource(R.string.action_delete_moment), onClick = { confirming = true }, tag = "delete")
+            }
+            if (confirming) {
+                AlertDialog(
+                    onDismissRequest = { confirming = false },
+                    title = { Text(stringResource(R.string.action_delete_moment)) },
+                    text = { Text(stringResource(R.string.confirm_delete_moment)) },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                confirming = false
+                                container.deleteLocal(uid)
+                                onBack()
+                            },
+                            modifier = Modifier.testTag("confirm_delete"),
+                        ) { Text(stringResource(R.string.action_delete)) }
+                    },
+                    dismissButton = { TextButton(onClick = { confirming = false }) { Text(stringResource(R.string.action_cancel)) } },
+                )
+            }
+        }
     }
 }
 
@@ -221,6 +257,7 @@ private fun MomentDetails(
             moment.places.forEach { id ->
                 NeutralChip(places[id]?.name ?: id, Icons.Rounded.Place, onClick = { onPlace(id) }, modifier = Modifier.testTag("place_$id"))
             }
+            if (moment.published == null) Pill(stringResource(R.string.label_on_phone), icon = Icons.Rounded.PhoneAndroid)
         }
         if (moment.text.isNotBlank()) {
             SelectionContainer {

@@ -1,12 +1,7 @@
 package cc.hyoban.moments.ui.map
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.graphics.RectF
-import android.location.Location
-import android.location.LocationListener
-import android.location.LocationManager
-import android.os.Looper
 import android.view.Gravity
 import android.view.ViewGroup
 import androidx.compose.foundation.layout.Box
@@ -39,6 +34,7 @@ import androidx.core.view.doOnLayout
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import cc.hyoban.moments.data.local.currentLocation
 import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.trips.RouteSegment
 import cc.hyoban.moments.data.trips.Stop
@@ -48,8 +44,6 @@ import cc.hyoban.moments.ui.LocalSettings
 import cc.hyoban.moments.ui.OnTabReselect
 import cc.hyoban.moments.ui.components.isLandscape
 import cc.hyoban.moments.ui.theme.LocalDarkTheme
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.coroutines.withTimeoutOrNull
 import org.maplibre.android.MapLibre
 import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.camera.CameraUpdateFactory
@@ -102,7 +96,11 @@ import org.maplibre.android.style.layers.PropertyFactory.lineWidth
 import org.maplibre.android.style.layers.PropertyFactory.textAllowOverlap
 import org.maplibre.android.style.layers.PropertyFactory.textColor
 import org.maplibre.android.style.layers.PropertyFactory.textField
+import org.maplibre.android.style.layers.PropertyFactory.textAnchor
 import org.maplibre.android.style.layers.PropertyFactory.textFont
+import org.maplibre.android.style.layers.PropertyFactory.textHaloColor
+import org.maplibre.android.style.layers.PropertyFactory.textHaloWidth
+import org.maplibre.android.style.layers.PropertyFactory.textOffset
 import org.maplibre.android.style.layers.PropertyFactory.textIgnorePlacement
 import org.maplibre.android.style.layers.PropertyFactory.textSize
 import org.maplibre.android.style.layers.PropertyFactory.visibility
@@ -113,7 +111,6 @@ import org.maplibre.geojson.Feature
 import org.maplibre.geojson.FeatureCollection
 import org.maplibre.geojson.LineString
 import org.maplibre.geojson.Point
-import kotlin.coroutines.resume
 
 // A vector basemap drawn on the phone by MapLibre, the styles the settings name for light
 // and dark (OpenFreeMap's Positron and its dark twin unless changed), every name in Chinese
@@ -363,43 +360,9 @@ private const val ROUTE_WIDTH = 2f
 private const val ROUTE_LIFTED_WIDTH = 3.5f
 private const val ROUTE_DIMMED_OPACITY = 0.15f
 
-/**
- * Where the phone is: a fix from the last few minutes if any provider has one, else a
- * fresh one from the best provider there is, or null if none comes within the timeout.
- */
-@SuppressLint("MissingPermission")
-private suspend fun currentLocation(context: Context): Location? {
-    val manager = context.getSystemService(LocationManager::class.java) ?: return null
-    val providers = manager.getProviders(true)
-    val recent = providers.mapNotNull { runCatching { manager.getLastKnownLocation(it) }.getOrNull() }
-        .filter { System.currentTimeMillis() - it.time < RECENT_FIX_MS }
-        .minByOrNull { it.accuracy }
-    if (recent != null) return recent
-
-    val provider = listOf("fused", LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER).firstOrNull { it in providers }
-        ?: return null
-    return withTimeoutOrNull(LOCATE_TIMEOUT_MS.toLong()) {
-        suspendCancellableCoroutine { continuation ->
-            val listener = object : LocationListener {
-                override fun onLocationChanged(location: Location) {
-                    manager.removeUpdates(this)
-                    if (continuation.isActive) continuation.resume(location)
-                }
-            }
-            manager.requestLocationUpdates(provider, 0L, 0f, listener, Looper.getMainLooper())
-            continuation.invokeOnCancellation { manager.removeUpdates(listener) }
-        }
-    }
-}
-
-/** How old a fix may be and still count as where the phone is now. */
-private const val RECENT_FIX_MS = 2 * 60 * 1000L
-
 /** How close the map comes to the phone's place: a town and what is around it. */
 private const val NEARBY_ZOOM = 10.0
 
-/** How long to wait for a first fix before giving up. */
-private const val LOCATE_TIMEOUT_MS = 10_000
 
 /** A route's [width] at country zoom, growing to twice it at a town's streets. */
 private fun byZoom(width: Expression): Expression = interpolate(
@@ -765,5 +728,125 @@ private fun PointsMap(points: List<LatLng>, lines: List<RouteSegment>, dot: Floa
         )
         val framed = points + lines.flatMap { segment -> segment.line.map { (longitude, latitude) -> LatLng(latitude, longitude) } }
         if (framed.isNotEmpty()) map.frame(framed, inset)
+    }
+}
+
+private const val PICK_PLACES = "pick-places"
+private const val PICK_NAMES = "pick-names"
+
+/** Where a [PickerMap] is to go, a new one each time, even to the same place. */
+data class MapTarget(val latitude: Double, val longitude: Double, val zoom: Double, val serial: Int = targets++)
+
+private var targets = 0
+
+/** A town's streets: close enough to put a pin on the right one. */
+const val PICK_ZOOM = 14.0
+
+/**
+ * A map to choose a place on, a pin standing at its middle: the known places as dots
+ * with their names, [chosen] in the theme's colour, one tapped told to [onPlace]; where
+ * the middle has come to rest told to [onCenter], with whether a finger moved it there.
+ * Each new [target] flies it there.
+ */
+@Composable
+fun PickerMap(
+    places: Map<String, Place>,
+    chosen: String?,
+    target: MapTarget?,
+    onCenter: (latitude: Double, longitude: Double, byUser: Boolean) -> Unit,
+    onPlace: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val tapPlace by rememberUpdatedState(onPlace)
+    val centered by rememberUpdatedState(onCenter)
+    var map by remember { mutableStateOf<Pair<MapLibreMap, Style>?>(null) }
+    val primary = MaterialTheme.colorScheme.primary.toArgb()
+    val dot = MaterialTheme.colorScheme.onSurfaceVariant.toArgb()
+    val ink = MaterialTheme.colorScheme.onSurface.toArgb()
+    val halo = MaterialTheme.colorScheme.surface.toArgb()
+    val reach = with(LocalDensity.current) { 14.dp.toPx() }
+    val first = remember { target }
+
+    MapLibreView(modifier, interactive = true, compass = false) { ready, style, _ ->
+        style.addSource(GeoJsonSource(PICK_PLACES))
+        style.addLayer(
+            CircleLayer(PICK_PLACES, PICK_PLACES).withProperties(
+                circleRadius(6f),
+                circleColor(dot),
+                circleStrokeWidth(2f),
+                circleStrokeColor(DOT_STROKE),
+            ),
+        )
+        style.addLayer(
+            SymbolLayer(PICK_NAMES, PICK_PLACES).withProperties(
+                textField(get("name")),
+                textFont(arrayOf("Noto Sans Regular")),
+                textSize(12f),
+                textAnchor(Property.TEXT_ANCHOR_TOP),
+                textOffset(arrayOf(0f, 0.8f)),
+                textColor(ink),
+                textHaloColor(halo),
+                textHaloWidth(1.5f),
+            ),
+        )
+        first?.let { ready.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(it.latitude, it.longitude), it.zoom)) }
+        map = ready to style
+    }
+
+    LaunchedEffect(map, places) {
+        val (_, style) = map ?: return@LaunchedEffect
+        style.getSourceAs<GeoJsonSource>(PICK_PLACES)?.setGeoJson(
+            FeatureCollection.fromFeatures(
+                places.map { (id, place) ->
+                    Feature.fromGeometry(place.latLng.point).apply {
+                        addStringProperty("id", id)
+                        addStringProperty("name", place.name)
+                    }
+                },
+            ),
+        )
+    }
+
+    LaunchedEffect(map, chosen, primary, dot) {
+        val (_, style) = map ?: return@LaunchedEffect
+        val isChosen = eq(get("id"), literal(chosen ?: ""))
+        style.getLayerAs<CircleLayer>(PICK_PLACES)?.setProperties(
+            circleColor(switchCase(isChosen, color(primary), color(dot))),
+            circleRadius(switchCase(isChosen, literal(8f), literal(6f))),
+        )
+    }
+
+    LaunchedEffect(map, target) {
+        val (ready, _) = map ?: return@LaunchedEffect
+        if (target == null || target == first) return@LaunchedEffect
+        ready.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(target.latitude, target.longitude), target.zoom), 600)
+    }
+
+    DisposableEffect(map) {
+        val (ready, _) = map ?: return@DisposableEffect onDispose { }
+        var byUser = false
+        val started = MapLibreMap.OnCameraMoveStartedListener { reason ->
+            byUser = reason == MapLibreMap.OnCameraMoveStartedListener.REASON_API_GESTURE
+        }
+        val idle = MapLibreMap.OnCameraIdleListener {
+            val center = ready.cameraPosition.target ?: return@OnCameraIdleListener
+            centered(center.latitude, center.longitude, byUser)
+            byUser = false
+        }
+        val click = MapLibreMap.OnMapClickListener { point ->
+            val at = ready.projection.toScreenLocation(point)
+            val hit = ready.queryRenderedFeatures(RectF(at.x - reach, at.y - reach, at.x + reach, at.y + reach), PICK_PLACES, PICK_NAMES)
+                .firstOrNull()?.getStringProperty("id")
+            hit?.let(tapPlace)
+            hit != null
+        }
+        ready.addOnCameraMoveStartedListener(started)
+        ready.addOnCameraIdleListener(idle)
+        ready.addOnMapClickListener(click)
+        onDispose {
+            ready.removeOnCameraMoveStartedListener(started)
+            ready.removeOnCameraIdleListener(idle)
+            ready.removeOnMapClickListener(click)
+        }
     }
 }

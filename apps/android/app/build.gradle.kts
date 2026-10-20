@@ -25,6 +25,9 @@ android {
         buildConfigField("String", "ASSET_ORIGIN", "\"https://image.hyoban.cc\"")
         buildConfigField("String", "MAP_STYLE_LIGHT", "\"https://tiles.openfreemap.org/styles/positron\"")
         buildConfigField("String", "MAP_STYLE_DARK", "\"https://tiles.openfreemap.org/styles/dark\"")
+        // Where places are searched for by name and found around a pin: Photon, over the
+        // same OpenStreetMap data the map draws.
+        buildConfigField("String", "PLACE_SEARCH_URL", "\"https://photon.komoot.io\"")
     }
 
     // A release keystore from local.properties (`release.storeFile`, `release.storePassword`,
@@ -105,6 +108,7 @@ dependencies {
     implementation(libs.glance.appwidget)
     implementation(libs.glance.material3)
     implementation(libs.work.runtime)
+    implementation(libs.exifinterface)
     implementation(libs.kotlinx.serialization.json)
     debugImplementation(libs.androidx.compose.ui.tooling)
     testImplementation(libs.junit)

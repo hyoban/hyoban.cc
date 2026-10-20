@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.EditNote
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.ViewAgenda
 import androidx.compose.material.icons.rounded.Directions
@@ -43,9 +44,9 @@ import cc.hyoban.moments.ui.format.formatDay
 import cc.hyoban.moments.ui.map.navigateTo
 
 /**
- * The Moments tab: every Moment the site shows, newest first, month by month, or as a
- * calendar of the months they're in, switched from the header. Pull down to bring them
- * up to date.
+ * The Moments tab: every Moment the site shows and those written on the phone, newest
+ * first, month by month, or as a calendar of the months they're in, switched from the
+ * header, where a new one is written too. Pull down to bring them up to date.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,6 +56,7 @@ fun FeedScreen(
     onMedia: (String, Int) -> Unit,
     onDay: (String) -> Unit,
     onSettings: () -> Unit,
+    onNew: () -> Unit,
 ) {
     val moments by container.repository.moments.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
@@ -104,6 +106,9 @@ fun FeedScreen(
         tab = Feed,
         subtitle = subtitle,
         actions = {
+            IconButton(onClick = onNew, modifier = Modifier.testTag("new_moment")) {
+                Icon(Icons.Outlined.EditNote, contentDescription = stringResource(R.string.action_new_moment))
+            }
             IconButton(onClick = { calendar = !calendar }, modifier = Modifier.testTag("calendar_toggle")) {
                 Icon(
                     if (calendar) Icons.Outlined.ViewAgenda else Icons.Outlined.CalendarMonth,

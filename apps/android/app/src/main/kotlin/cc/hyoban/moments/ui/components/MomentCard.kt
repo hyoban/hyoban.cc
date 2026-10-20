@@ -12,6 +12,7 @@ import androidx.compose.foundation.shape.ZeroCornerSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Luggage
+import androidx.compose.material.icons.rounded.PhoneAndroid
 import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material3.Icon
@@ -21,6 +22,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -72,7 +74,7 @@ fun MomentCard(
     }
 }
 
-/** When, where and which trip, each a neutral pill. */
+/** When, where and which trip, each a neutral pill, and whether it is only on this phone. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun MomentPills(moment: MomentRecord, places: Map<String, Place>, trip: TripRecord?, showDate: Boolean = false) {
@@ -83,6 +85,7 @@ fun MomentPills(moment: MomentRecord, places: Map<String, Place>, trip: TripReco
         }
         moment.places.forEach { id -> Pill(places[id]?.name ?: id, icon = Icons.Rounded.Place) }
         trip?.let { Pill(it.title, icon = Icons.Rounded.Luggage) }
+        if (moment.published == null) Pill(stringResource(R.string.label_on_phone), icon = Icons.Rounded.PhoneAndroid)
     }
 }
 
@@ -112,7 +115,12 @@ fun CompactMomentRow(moment: MomentRecord, places: Map<String, Place>, urls: Med
 
 /** A back button that floats over a photo or a map, legible on either. */
 @Composable
-fun FloatingBack(onBack: () -> Unit, modifier: Modifier = Modifier) {
+fun FloatingBack(onBack: () -> Unit, modifier: Modifier = Modifier) =
+    FloatingButton(Icons.AutoMirrored.Rounded.ArrowBack, stringResource(R.string.action_back), onBack, modifier, tag = "back")
+
+/** A button that floats over a photo or a map, legible on either, as the back button does. */
+@Composable
+fun FloatingButton(icon: ImageVector, label: String, onClick: () -> Unit, modifier: Modifier = Modifier, tag: String) {
     // Floating over a photo, a map or a card: the floating level with a shadow, as the tabs are.
     Surface(
         shape = Corners.full,
@@ -121,8 +129,8 @@ fun FloatingBack(onBack: () -> Unit, modifier: Modifier = Modifier) {
         shadowElevation = 3.dp,
         modifier = modifier.statusBarsPadding().sideInsetsPadding().padding(Space.s),
     ) {
-        IconButton(onClick = onBack, modifier = Modifier.testTag("back")) {
-            Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.action_back))
+        IconButton(onClick = onClick, modifier = Modifier.testTag(tag)) {
+            Icon(icon, contentDescription = label)
         }
     }
 }
