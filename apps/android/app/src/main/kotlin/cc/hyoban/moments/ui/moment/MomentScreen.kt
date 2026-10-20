@@ -117,7 +117,8 @@ import kotlinx.coroutines.launch
 private val RISE = 32.dp
 
 /**
- * One Moment: its media edge to edge, and over their lower edge a sheet with when, its
+ * One Moment, as a page or, beside the Moments on a phone on its side, as their detail
+ * [pane]: its media edge to edge, and over their lower edge a sheet with when, its
  * words first, a strip of its photos when there are several, and then where it was, the
  * trip it was on and the rest of its day, as one list of rows to open.
  */
@@ -131,6 +132,7 @@ fun MomentScreen(
     onBack: () -> Unit,
     onEdit: (String) -> Unit = {},
     onDay: (String) -> Unit = {},
+    pane: Boolean = false,
 ) {
     val moments by container.repository.moments.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
@@ -152,7 +154,8 @@ fun MomentScreen(
     val pager = rememberPagerState { moment.media.size }
 
     // The whole page is the card it was opened from, grown to the screen.
-    BoxWithConstraints(Modifier.fillMaxSize().sharedCard(uid, page = true).background(AppColors.page)) {
+    // As a pane beside the Moments, it neither grows out of a card nor flies its photos, the card still in sight.
+    BoxWithConstraints(Modifier.fillMaxSize().then(if (pane) Modifier else Modifier.sharedCard(uid, page = true)).background(AppColors.page)) {
         val screenWidth = maxWidth
         val screenHeight = maxHeight
         val scroll = rememberScrollState()
@@ -162,11 +165,11 @@ fun MomentScreen(
                 changed = container.repository.isChanged(moment.uid),
             )
         }
-        if (landscape && moment.media.isNotEmpty()) {
+        if (landscape && !pane && moment.media.isNotEmpty()) {
             // On its side, the photos fill the left half, up under the status bar, and the
             // words scroll beside them, rather than a photo taller than the screen over them.
             Row(Modifier.fillMaxSize()) {
-                MomentPhotos(moment, urls, pager, onMedia, Modifier.weight(1f).fillMaxHeight())
+                MomentPhotos(moment, urls, pager, onMedia, Modifier.weight(1f).fillMaxHeight(), shared = !pane)
                 Column(Modifier.weight(1f).fillMaxHeight().statusBarsPadding().padding(top = FLOATING_BAR).verticalScroll(scroll).sideInsetsPadding(WindowInsetsSides.End)) { details() }
             }
         } else {
@@ -191,6 +194,7 @@ fun MomentScreen(
                         Modifier.then(if (bleeds) Modifier else Modifier.statusBarsPadding().padding(top = FLOATING_BAR))
                             .fillMaxWidth().height(minOf(screenWidth / shape!!, screenHeight - above)),
                         whole = true,
+                        shared = !pane,
                     )
                 } else {
                     Spacer(Modifier.statusBarsPadding().height(FLOATING_BAR))
@@ -204,7 +208,8 @@ fun MomentScreen(
                 }
             }
         }
-        FloatingBack(onBack, Modifier.align(Alignment.TopStart))
+        // A pane beside the Moments has nothing to go back to: both are in sight.
+        if (!pane) FloatingBack(onBack, Modifier.align(Alignment.TopStart))
         // What was written on the phone can be changed, and deleted from its edit page; the
         // site's Moments only with the API's token, and only on the phone until the changes are
         // published. Editing is the page's main action, tonal and wide beside the share.
@@ -235,7 +240,7 @@ private const val TALLEST = 3f / 4f
  * it is taller than the space.
  */
 @Composable
-private fun MomentPhotos(moment: MomentRecord, urls: MediaUrls, pager: PagerState, onMedia: (String, Int) -> Unit, modifier: Modifier, whole: Boolean = false) {
+private fun MomentPhotos(moment: MomentRecord, urls: MediaUrls, pager: PagerState, onMedia: (String, Int) -> Unit, modifier: Modifier, whole: Boolean = false, shared: Boolean = true) {
     val uid = moment.uid
     HorizontalPager(pager, modifier, key = { moment.media[it].uid }) { page ->
         val media = moment.media[page]
@@ -247,7 +252,7 @@ private fun MomentPhotos(moment: MomentRecord, urls: MediaUrls, pager: PagerStat
                 (if (whole) Modifier.fillMaxWidth().height(minOf(maxWidth / shapeOf(media), maxHeight)) else Modifier.fillMaxSize())
                     .testTag("media_${uid}_$page"),
                 liveBadgeAlignment = Alignment.BottomStart,
-                sharedKey = mediaKey(uid, media.uid),
+                sharedKey = if (shared) mediaKey(uid, media.uid) else null,
                 position = page to moment.media.size,
                 onClick = { onMedia(uid, page) },
             )

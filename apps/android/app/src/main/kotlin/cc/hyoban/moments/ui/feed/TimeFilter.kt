@@ -22,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -112,9 +113,15 @@ private fun ChipRow(tag: String, options: List<Int?>, selected: Int?, label: @Co
                 },
                 modifier = Modifier.testTag("$tag${option ?: "all"}"),
                 // The chosen one in the secondary container, as Material 3 colours a filter
-                // chip, the rest a level above the page, no borders.
+                // chip; the rest a level above the page, outlined so each stands apart from
+                // it at the 3:1 a set of chips needs.
                 shape = Corners.full,
-                border = null,
+                border = FilterChipDefaults.filterChipBorder(
+                    enabled = true,
+                    selected = option == selected,
+                    borderColor = MaterialTheme.colorScheme.outline,
+                    selectedBorderColor = Color.Transparent,
+                ),
                 colors = FilterChipDefaults.filterChipColors(
                     containerColor = LocalSurfaceLevel.current.raised.fill(),
                     labelColor = MaterialTheme.colorScheme.onSurfaceVariant,

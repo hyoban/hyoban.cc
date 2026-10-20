@@ -1,6 +1,7 @@
 package cc.hyoban.moments.ui.settings
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -242,6 +243,8 @@ private fun ThemeColorGroup(settings: Settings) {
                         styles.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
                         else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
                     },
+                    // Those not chosen outlined, so each stands apart from the card at the 3:1 a group needs.
+                    border = if (style == settings.colorStyle) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
                     modifier = Modifier.weight(1f).semantics { role = Role.RadioButton },
                 ) {
                     Text(stringResource(styleLabel(style)), maxLines = 1)

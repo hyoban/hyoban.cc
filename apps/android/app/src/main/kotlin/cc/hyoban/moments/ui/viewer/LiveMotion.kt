@@ -9,6 +9,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.media3.common.Player
+import cc.hyoban.moments.ui.components.LocalReducedMotion
 
 // A live photo's motion, played the way a phone's gallery plays it: the still shows at
 // once while the clip loads behind it; once loaded the clip plays through once, silent,
@@ -52,6 +53,7 @@ class LiveMotionState {
 @Composable
 fun LiveMotion(url: String, active: Boolean, state: LiveMotionState, modifier: Modifier = Modifier) {
     val player = rememberCachedPlayer(url, active) { volume = 0f }
+    val reduced = LocalReducedMotion.current
 
     DisposableEffect(player) {
         if (player == null) {
@@ -65,8 +67,9 @@ fun LiveMotion(url: String, active: Boolean, state: LiveMotionState, modifier: M
                 when (playbackState) {
                     Player.STATE_READY -> {
                         state.ready = true
-                        // Once on arriving, as a gallery does, then only when asked.
-                        if (!state.played) {
+                        // Once on arriving, as a gallery does, then only when asked; never by
+                        // itself on a phone with its animations removed.
+                        if (!state.played && !reduced) {
                             state.played = true
                             state.play()
                         }

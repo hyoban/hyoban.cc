@@ -1,6 +1,12 @@
 package cc.hyoban.moments.ui.feed
 
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -9,8 +15,10 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
@@ -39,11 +47,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
@@ -64,7 +76,10 @@ import cc.hyoban.moments.ui.components.PageWidth
 import cc.hyoban.moments.ui.format.formatDayOfMonth
 import cc.hyoban.moments.ui.format.formatMonth
 import cc.hyoban.moments.ui.rememberShowMessage
+import cc.hyoban.moments.ui.theme.Corners
+import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
 import cc.hyoban.moments.ui.theme.Space
+import cc.hyoban.moments.ui.theme.fill
 
 /**
  * What goes above a feed's Moments, a row at a time, each by its key: the page's header,
@@ -233,23 +248,65 @@ fun <T> CardRow(cards: List<T>, columns: Int, modifier: Modifier = Modifier, car
 
 /** The middle of an empty screen: a loading indicator while the first refresh runs, else a line; scrollable, so it still pulls to refresh. */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
+/**
+ * A tab with nothing to show yet: while it loads, cards drawn as their shapes, pulsing
+ * softly, as Material 3 keeps a layout steady with skeleton loaders rather than letting the
+ * content pop in; once loaded and still empty, [message].
+ */
 @Composable
 fun EmptyState(loading: Boolean, message: Int) {
+    if (loading) {
+        SkeletonCards()
+        return
+    }
     LazyColumn(Modifier.fillMaxSize()) {
         item {
             Box(Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Space.l)) {
-                    if (loading) LoadingIndicator()
-                    Text(
-                        stringResource(if (loading) R.string.empty_loading else message),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodyLarge,
-                    )
+                Text(
+                    stringResource(message),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodyLarge,
+                )
+            }
+        }
+    }
+}
+
+/** A few cards' shapes, a photo, a subhead and two lines of words each, pulsing while what they stand for loads. */
+@Composable
+private fun SkeletonCards() {
+    val pulse by rememberInfiniteTransition(label = "skeleton").animateFloat(
+        initialValue = 1f,
+        targetValue = 0.5f,
+        animationSpec = infiniteRepeatable(tween(SKELETON_PULSE_MS), RepeatMode.Reverse),
+        label = "skeleton pulse",
+    )
+    val bone = MaterialTheme.colorScheme.surfaceContainerHighest
+    val loading = stringResource(R.string.empty_loading)
+    PageWidth { columns ->
+        Column(
+            Modifier.fillMaxSize().padding(horizontal = columns.margin).padding(Space.gutter)
+                .graphicsLayer { alpha = pulse }
+                .clearAndSetSemantics { contentDescription = loading }
+                .testTag("skeleton"),
+            verticalArrangement = Arrangement.spacedBy(Space.l),
+        ) {
+            repeat(3) {
+                Column(
+                    Modifier.fillMaxWidth().clip(MaterialTheme.shapes.large).background(LocalSurfaceLevel.current.raised.fill()).padding(bottom = Space.l),
+                    verticalArrangement = Arrangement.spacedBy(Space.s + 2.dp),
+                ) {
+                    Box(Modifier.fillMaxWidth().aspectRatio(4f / 3f).background(bone))
+                    Box(Modifier.padding(horizontal = Space.l).fillMaxWidth(0.45f).height(14.dp).clip(Corners.full).background(bone))
+                    Box(Modifier.padding(horizontal = Space.l).fillMaxWidth().height(16.dp).clip(Corners.full).background(bone))
+                    Box(Modifier.padding(horizontal = Space.l).fillMaxWidth(0.7f).height(16.dp).clip(Corners.full).background(bone))
                 }
             }
         }
     }
 }
+
+private const val SKELETON_PULSE_MS = 900
 
 /** Says when a refresh failed, as a snackbar in the app's host. */
 @Composable

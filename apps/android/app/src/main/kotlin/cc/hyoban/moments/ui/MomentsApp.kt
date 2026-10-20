@@ -11,12 +11,15 @@ import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInHorizontally
@@ -109,6 +112,7 @@ import cc.hyoban.moments.ui.components.LocalBackSwipe
 import cc.hyoban.moments.ui.components.LocalInViewer
 import cc.hyoban.moments.ui.components.LocalMediaMaxHeight
 import cc.hyoban.moments.ui.components.LocalNavAnimatedScope
+import cc.hyoban.moments.ui.components.LocalReducedMotion
 import cc.hyoban.moments.ui.components.LocalSharedTransitionScope
 import cc.hyoban.moments.ui.components.LocalViewerShowing
 import cc.hyoban.moments.ui.components.LocalViewerShownKey
@@ -116,6 +120,7 @@ import cc.hyoban.moments.ui.components.NAV_ACCESSORY_GAP
 import cc.hyoban.moments.ui.components.NavItem
 import cc.hyoban.moments.ui.components.RAIL_WIDTH
 import cc.hyoban.moments.ui.components.isLandscape
+import cc.hyoban.moments.ui.components.rememberReducedMotion
 import cc.hyoban.moments.ui.compose.NewMomentScreen
 import cc.hyoban.moments.ui.feed.DayScreen
 import cc.hyoban.moments.ui.feed.FeedScreen
@@ -125,6 +130,7 @@ import cc.hyoban.moments.ui.moment.MomentScreen
 import cc.hyoban.moments.ui.publish.ChangesScreen
 import cc.hyoban.moments.ui.settings.SettingsScreen
 import cc.hyoban.moments.ui.theme.Space
+import cc.hyoban.moments.ui.theme.TransitionMotion
 import cc.hyoban.moments.ui.trips.TripScreen
 import cc.hyoban.moments.ui.trips.TripsScreen
 import cc.hyoban.moments.ui.viewer.LocalInPictureInPicture
@@ -271,8 +277,9 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
     val accessorySlot = remember { mutableStateOf<(@Composable () -> Unit)?>(null) }
     // Brief messages from any page, one at a time, at the foot of the screen above the tabs.
     val messages = remember { SnackbarHostState() }
-    // The theme's springs, for the pages' comings and goings as for everything else.
+    // The theme's springs for what moves on a page; the pages themselves change on the standard ones.
     val motion = MaterialTheme.motionScheme
+    val transitions = TransitionMotion
     LaunchedEffect(container, messages) {
         // One at a time, each waiting for the one before; one with an action stays longer.
         container.messages.collect { message ->
@@ -333,6 +340,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                 LocalRailSpace provides rail,
                 LocalNavAccessory provides accessorySlot,
                 LocalMessages provides messages,
+                LocalReducedMotion provides rememberReducedMotion(),
                 LocalMediaMaxHeight provides if (landscape) windowHeight * 0.6f else Dp.Infinity,
             ) {
                 SharedTransitionLayout(Modifier.fillMaxSize()) {
@@ -349,15 +357,14 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                             navController = navController,
                             startDestination = start,
                             // A back swipe plays going back as it came, under the finger: a Moment
-                            // shrinks into its card, a pushed page slides back, a tab slides over.
-                            predictivePopEnterTransition = { _ -> enter(forward = false, motion) },
-                            predictivePopExitTransition = { _ -> exit(forward = false, motion) },
-                            // From tab to tab the pages slide the way the tabs' highlight does;
-                            // anything else fades as before.
-                            enterTransition = { enter(forward = true, motion) },
-                            exitTransition = { exit(forward = true, motion) },
-                            popEnterTransition = { enter(forward = false, motion) },
-                            popExitTransition = { exit(forward = false, motion) },
+                            // shrinks into its card, a pushed page slides back.
+                            predictivePopEnterTransition = { _ -> enter(forward = false, transitions) },
+                            predictivePopExitTransition = { _ -> exit(forward = false, transitions) },
+                            // From tab to tab the pages fade through; anything else as [enter] and [exit] say.
+                            enterTransition = { enter(forward = true, transitions) },
+                            exitTransition = { exit(forward = true, transitions) },
+                            popEnterTransition = { enter(forward = false, transitions) },
+                            popExitTransition = { exit(forward = false, transitions) },
                         ) {
                             screen<Feed>(link = "moments") {
                                 FeedScreen(
@@ -367,6 +374,10 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                     onSettings = { navController.navigate(Preferences) },
                                     onNew = { navController.navigate(NewMoment) },
                                     onChanges = { navController.navigate(Changes) },
+                                    onMedia = openMedia,
+                                    onPlace = openPlace,
+                                    onTrip = openTrip,
+                                    onEdit = { navController.navigate(EditMoment(it)) },
                                 )
                             }
                             screen<Atlas>(link = "map") {
@@ -524,7 +535,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
 
 // A page pushed on, a Moment, a trip, a place, a day, comes in from the side it goes
 // towards and fades in as the one under it moves off a little and fades out, Android
-// 14's forward motion as FlClash plays it, on the theme's springs: the default spatial
+// 14's forward motion as FlClash plays it, on the transitions' springs: the default spatial
 // one for the slide, as a page is the larger thing moving, and the effects ones for the
 // fades. Going back plays it the other way. The viewer still fades, as its photo flies to
 // and from its tile.
@@ -548,13 +559,13 @@ private val CARD_HOLD_OUT = fadeOut(tween(CARD_HOLD_MS), targetAlpha = 1f)
  * photo flies between the pages, else sliding; going back plays it as the page came.
  */
 private fun AnimatedContentTransitionScope<NavBackStackEntry>.enter(forward: Boolean, motion: MotionScheme): EnterTransition =
-    tabSlide()?.let { slideIntoContainer(it, motion.defaultSpatialSpec()) + fadeIn(motion.defaultEffectsSpec()) }
-        ?: if (if (forward) opensCard() else closesCard()) CARD_HOLD_IN else if (sharesPhoto()) fadeIn(motion.defaultEffectsSpec()) else pageIn(forward, motion)
+    if (switchesTab()) FADE_THROUGH_IN
+    else if (if (forward) opensCard() else closesCard()) CARD_HOLD_IN else if (sharesPhoto()) fadeIn(motion.defaultEffectsSpec()) else pageIn(forward, motion)
 
 /** The page going out, as [enter] brings the other in. */
 private fun AnimatedContentTransitionScope<NavBackStackEntry>.exit(forward: Boolean, motion: MotionScheme): ExitTransition =
-    tabSlide()?.let { slideOutOfContainer(it, motion.defaultSpatialSpec()) + fadeOut(motion.defaultEffectsSpec()) }
-        ?: if (if (forward) opensCard() else closesCard()) CARD_HOLD_OUT else if (sharesPhoto()) fadeOut(motion.defaultEffectsSpec()) else pageOut(forward, motion)
+    if (switchesTab()) FADE_THROUGH_OUT
+    else if (if (forward) opensCard() else closesCard()) CARD_HOLD_OUT else if (sharesPhoto()) fadeOut(motion.defaultEffectsSpec()) else pageOut(forward, motion)
 
 /**
  * Where a page grows out of a card, by the page and the pages that hold its card: a
@@ -584,13 +595,22 @@ private fun AnimatedContentTransitionScope<NavBackStackEntry>.closesCard(): Bool
 private fun AnimatedContentTransitionScope<NavBackStackEntry>.sharesPhoto(): Boolean =
     initialState.destination.hasRoute(Moment::class) || targetState.destination.hasRoute(Moment::class)
 
-/** Which way the pages slide between two tabs: towards the tab chosen; null when either isn't a tab. */
-private fun AnimatedContentTransitionScope<NavBackStackEntry>.tabSlide(): AnimatedContentTransitionScope.SlideDirection? {
+/** Whether the page changes from one tab to another. */
+private fun AnimatedContentTransitionScope<NavBackStackEntry>.switchesTab(): Boolean {
     val from = Tab.entries.indexOfFirst { initialState.destination.hasRoute(it.type) }
     val to = Tab.entries.indexOfFirst { targetState.destination.hasRoute(it.type) }
-    if (from < 0 || to < 0 || from == to) return null
-    return if (to > from) AnimatedContentTransitionScope.SlideDirection.Start else AnimatedContentTransitionScope.SlideDirection.End
+    return from >= 0 && to >= 0 && from != to
 }
+
+// From tab to tab, Material 3's top level transition, a fade through: the tabs' pages are
+// unrelated, so the one going fades out quickly and only then the other fades in, growing
+// a little into place, rather than sliding as if they lay side by side. Its timings are
+// Material's own, as its transitions still have durations rather than springs.
+private const val FADE_THROUGH_OUT_MS = 90
+private const val FADE_THROUGH_IN_MS = 210
+private val FADE_THROUGH_OUT = fadeOut(tween(FADE_THROUGH_OUT_MS, easing = FastOutLinearInEasing))
+private val FADE_THROUGH_IN = fadeIn(tween(FADE_THROUGH_IN_MS, delayMillis = FADE_THROUGH_OUT_MS, easing = LinearOutSlowInEasing)) +
+    scaleIn(tween(FADE_THROUGH_IN_MS, delayMillis = FADE_THROUGH_OUT_MS, easing = LinearOutSlowInEasing), initialScale = 0.92f)
 
 /** How far a scroll must go, in pixels a frame, to hide or bring back the tabs. */
 private const val SCROLL_SLOP = 6f
@@ -617,8 +637,9 @@ val LocalBottomClearance = staticCompositionLocalOf { 0.dp }
 /**
  * How much of the left and the right the tabs cover on a tab screen on a phone on its
  * side, one of them standing down one side or the other, to keep a page's content clear of.
+ * A pane that has kept itself clear of the system's insets says so with [clearOfInsets].
  */
-data class RailSpace(val left: Dp, val right: Dp)
+data class RailSpace(val left: Dp, val right: Dp, val clearOfInsets: Boolean = false)
 
 val LocalRailSpace = staticCompositionLocalOf { RailSpace(0.dp, 0.dp) }
 

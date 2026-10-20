@@ -42,10 +42,12 @@ import cc.hyoban.moments.ui.LocalBottomClearance
 import cc.hyoban.moments.ui.LocalRailSpace
 import cc.hyoban.moments.ui.LocalSettings
 import cc.hyoban.moments.ui.OnTabReselect
+import cc.hyoban.moments.ui.components.LocalReducedMotion
 import cc.hyoban.moments.ui.components.isLandscape
 import cc.hyoban.moments.ui.theme.LocalDarkTheme
 import org.maplibre.android.MapLibre
 import org.maplibre.android.camera.CameraPosition
+import org.maplibre.android.camera.CameraUpdate
 import org.maplibre.android.camera.CameraUpdateFactory
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.geometry.LatLngBounds
@@ -94,14 +96,14 @@ import org.maplibre.android.style.layers.PropertyFactory.lineJoin
 import org.maplibre.android.style.layers.PropertyFactory.lineOpacity
 import org.maplibre.android.style.layers.PropertyFactory.lineWidth
 import org.maplibre.android.style.layers.PropertyFactory.textAllowOverlap
+import org.maplibre.android.style.layers.PropertyFactory.textAnchor
 import org.maplibre.android.style.layers.PropertyFactory.textColor
 import org.maplibre.android.style.layers.PropertyFactory.textField
-import org.maplibre.android.style.layers.PropertyFactory.textAnchor
 import org.maplibre.android.style.layers.PropertyFactory.textFont
 import org.maplibre.android.style.layers.PropertyFactory.textHaloColor
 import org.maplibre.android.style.layers.PropertyFactory.textHaloWidth
-import org.maplibre.android.style.layers.PropertyFactory.textOffset
 import org.maplibre.android.style.layers.PropertyFactory.textIgnorePlacement
+import org.maplibre.android.style.layers.PropertyFactory.textOffset
 import org.maplibre.android.style.layers.PropertyFactory.textSize
 import org.maplibre.android.style.layers.PropertyFactory.visibility
 import org.maplibre.android.style.layers.SymbolLayer
@@ -145,14 +147,19 @@ private fun MapLibreMap.frame(points: List<LatLng>, padding: IntArray) {
 }
 
 /** Flies to [points] framed as [frame] frames them, turned back to north. */
-private fun MapLibreMap.flyToFrame(points: List<LatLng>, padding: IntArray) {
+/** Moves the camera, gliding there over [ms] unless [instant], when the phone has animations removed. */
+private fun MapLibreMap.glide(update: CameraUpdate, ms: Int, instant: Boolean) {
+    if (instant) moveCamera(update) else animateCamera(update, ms)
+}
+
+private fun MapLibreMap.flyToFrame(points: List<LatLng>, padding: IntArray, instant: Boolean = false) {
     val camera = if (points.size == 1) {
         CameraPosition.Builder().target(points.single()).zoom(CLOSEST).bearing(0.0).build()
     } else {
         val fitted = getCameraForLatLngBounds(LatLngBounds.Builder().includes(points).build(), padding, 0.0, 0.0) ?: return
         CameraPosition.Builder(fitted).zoom(minOf(fitted.zoom, CLOSEST)).build()
     }
-    animateCamera(CameraUpdateFactory.newCameraPosition(camera), 600)
+    glide(CameraUpdateFactory.newCameraPosition(camera), 600, instant)
 }
 
 /**
@@ -414,6 +421,7 @@ fun PlacesMap(
     /** The tab the map is on, which, tapped again while shown, brings every place back into view. */
     tab: Any? = null,
 ) {
+    val reduced = LocalReducedMotion.current
     val tapPlace by rememberUpdatedState(onPlace)
     val located by rememberUpdatedState(onLocated)
     val tapEmpty by rememberUpdatedState(onEmptyTap)
@@ -524,7 +532,7 @@ fun PlacesMap(
                         val camera = ready.getCameraForLatLngBounds(bounds, IntArray(4) { clusterPadding })
                         if (camera != null) {
                             val zoom = minOf(camera.zoom, CLUSTER_OPEN_MAX_ZOOM)
-                            ready.animateCamera(CameraUpdateFactory.newCameraPosition(CameraPosition.Builder(camera).zoom(zoom).build()))
+                            ready.glide(CameraUpdateFactory.newCameraPosition(CameraPosition.Builder(camera).zoom(zoom).build()), 300, reduced)
                         }
                     }
                 } else {
@@ -547,7 +555,7 @@ fun PlacesMap(
 
     OnTabReselect(tab) {
         val (ready, _) = map ?: return@OnTabReselect
-        if (places.isNotEmpty()) ready.flyToFrame(places.map { it.place.latLng }, frame)
+        if (places.isNotEmpty()) ready.flyToFrame(places.map { it.place.latLng }, frame, reduced)
     }
 
     val shape = landscape to (rail.left > 0.dp)
@@ -615,7 +623,7 @@ fun PlacesMap(
     }
     LaunchedEffect(map, north) {
         val (ready, _) = map ?: return@LaunchedEffect
-        if (north > 0) ready.animateCamera(CameraUpdateFactory.bearingTo(0.0), 400)
+        if (north > 0) ready.glide(CameraUpdateFactory.bearingTo(0.0), 400, reduced)
     }
 
     // Each time [locate] goes up, with the permission granted by then: the phone's place
@@ -649,7 +657,7 @@ fun PlacesMap(
         }
         component.forceLocationUpdate(fix)
         val zoom = maxOf(ready.cameraPosition.zoom, NEARBY_ZOOM)
-        ready.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(fix.latitude, fix.longitude), zoom), 800)
+        ready.glide(CameraUpdateFactory.newLatLngZoom(LatLng(fix.latitude, fix.longitude), zoom), 800, reduced)
         located(true)
     }
 
@@ -757,6 +765,7 @@ fun PickerMap(
     onPlace: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val reduced = LocalReducedMotion.current
     val tapPlace by rememberUpdatedState(onPlace)
     val centered by rememberUpdatedState(onCenter)
     var map by remember { mutableStateOf<Pair<MapLibreMap, Style>?>(null) }
@@ -819,7 +828,7 @@ fun PickerMap(
     LaunchedEffect(map, target) {
         val (ready, _) = map ?: return@LaunchedEffect
         if (target == null || target == first) return@LaunchedEffect
-        ready.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(target.latitude, target.longitude), target.zoom), 600)
+        ready.glide(CameraUpdateFactory.newLatLngZoom(LatLng(target.latitude, target.longitude), target.zoom), 600, reduced)
     }
 
     DisposableEffect(map) {

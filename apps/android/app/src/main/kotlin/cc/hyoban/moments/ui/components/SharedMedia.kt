@@ -8,7 +8,6 @@ import androidx.compose.animation.core.animateDp
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
@@ -26,6 +25,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import cc.hyoban.moments.ui.theme.TransitionMotion
 import com.kyant.capsule.ContinuousRoundedRectangle
 
 // A photo keeps its place between screens: the card's tile grows into the viewer and
@@ -119,8 +119,9 @@ fun Modifier.sharedCard(key: String, cardCorner: Dp = 16.dp, page: Boolean = fal
     val corner by animated.transition.animateDp(label = "card corner") { state ->
         if (page && state == EnterExitState.Visible) 0.dp else cardCorner
     }
-    // The theme's springs: the card grows on the spatial one, its two faces cross on the effects one.
-    val motion = MaterialTheme.motionScheme
+    // The transitions' springs, a card growing into its page being one: it grows on the
+    // spatial one, its two faces cross on the effects one.
+    val motion = TransitionMotion
     return with(shared) {
         val config = remember(viewerShowing) {
             object : SharedTransitionScope.SharedContentConfig {

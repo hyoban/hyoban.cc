@@ -29,7 +29,6 @@ import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material.icons.rounded.Remove
 import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -202,22 +201,28 @@ fun PendingChangesRow(container: AppContainer, onClick: () -> Unit, modifier: Mo
             headlineContent = { Text(stringResource(R.string.title_changes)) },
             supportingContent = {
                 val progress = publishing
-                Text(
-                    if (progress != null) {
-                        stringResource(R.string.message_publishing_progress, progress.done, progress.total)
-                    } else {
-                        pluralStringResource(R.plurals.count_changes, pending.size, pending.size)
-                    },
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(Space.xs)) {
+                    Text(
+                        if (progress != null) {
+                            stringResource(R.string.message_publishing_progress, progress.done, progress.total)
+                        } else {
+                            pluralStringResource(R.plurals.count_changes, pending.size, pending.size)
+                        },
+                    )
+                    // The same linear indicator as the changes' page, as Material 3 has one
+                    // process shown one way throughout.
+                    progress?.let {
+                        LinearWavyProgressIndicator(
+                            progress = { publishedFraction(it) },
+                            modifier = Modifier.fillMaxWidth(),
+                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        )
+                    }
+                }
             },
             leadingContent = {
                 Box(Modifier.size(40.dp), contentAlignment = Alignment.Center) {
-                    val progress = publishing
-                    if (progress != null) {
-                        CircularWavyProgressIndicator(progress = { publishedFraction(progress) }, modifier = Modifier.size(32.dp))
-                    } else {
-                        Icon(Icons.Rounded.CloudUpload, contentDescription = null)
-                    }
+                    Icon(Icons.Rounded.CloudUpload, contentDescription = null)
                 }
             },
             trailingContent = { Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null) },
