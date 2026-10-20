@@ -342,7 +342,6 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                 FeedScreen(
                                     container,
                                     onMoment = openMoment,
-                                    onMedia = openMedia,
                                     onDay = { navController.navigate(Day(it)) },
                                     onSettings = { navController.navigate(Preferences) },
                                     onNew = { navController.navigate(NewMoment) },
@@ -367,13 +366,13 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                 )
                             }
                             screen<Trip>(link = "trip/{id}") { entry ->
-                                TripScreen(container, entry.toRoute<Trip>().id, onMoment = openMoment, onMedia = openMedia, onBack = back)
+                                TripScreen(container, entry.toRoute<Trip>().id, onMoment = openMoment, onBack = back)
                             }
                             screen<Day>(link = "day/{date}") { entry ->
-                                DayScreen(container, entry.toRoute<Day>().date, onMoment = openMoment, onMedia = openMedia, onBack = back)
+                                DayScreen(container, entry.toRoute<Day>().date, onMoment = openMoment, onBack = back)
                             }
                             screen<PlaceMoments>(link = "place/{id}") { entry ->
-                                PlaceScreen(container, entry.toRoute<PlaceMoments>().id, onMoment = openMoment, onMedia = openMedia, onBack = back)
+                                PlaceScreen(container, entry.toRoute<PlaceMoments>().id, onMoment = openMoment, onBack = back)
                             }
                             screen<Preferences>(link = "settings") {
                                 SettingsScreen(container, onBack = back)

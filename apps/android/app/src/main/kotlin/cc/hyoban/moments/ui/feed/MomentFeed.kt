@@ -98,7 +98,6 @@ fun MomentFeed(
     trips: List<TripRecord>,
     urls: MediaUrls,
     onMoment: (String) -> Unit,
-    onMedia: (String, Int) -> Unit,
     modifier: Modifier = Modifier,
     state: LazyListState = rememberLazyListState(),
     gridState: LazyStaggeredGridState = rememberLazyStaggeredGridState(),
@@ -118,7 +117,6 @@ fun MomentFeed(
             trip = if (showTrip) tripOf(moment, trips) else null,
             urls = urls,
             onOpen = { onMoment(moment.uid) },
-            onOpenMedia = { onMedia(moment.uid, it) },
             modifier = cardModifier,
             showDate = showDate,
         )

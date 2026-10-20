@@ -1,6 +1,7 @@
 package cc.hyoban.moments.ui.viewer
 
 import android.app.Activity
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animate
@@ -48,6 +49,7 @@ import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.rounded.MotionPhotosOn
 import androidx.compose.material.icons.rounded.Place
+import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -69,6 +71,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -81,6 +84,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
@@ -95,6 +99,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.R
 import cc.hyoban.moments.data.media.MediaUrls
+import cc.hyoban.moments.data.media.Share
 import cc.hyoban.moments.data.spec.MediaType
 import cc.hyoban.moments.data.spec.MomentMedia
 import cc.hyoban.moments.data.spec.MomentRecord
@@ -123,6 +128,8 @@ import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.fill
 import cc.hyoban.moments.ui.trips.tripSummary
 import kotlin.math.roundToInt
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.launch
 import me.saket.telephoto.zoomable.DoubleClickToZoomListener
 import me.saket.telephoto.zoomable.ZoomSpec
 import me.saket.telephoto.zoomable.ZoomableContentLocation
@@ -234,6 +241,35 @@ fun MediaViewer(
                     Text("${pager.currentPage + 1} / ${media.size}", color = Color.White, style = MaterialTheme.typography.titleMedium)
                 }
                 Spacer(Modifier.weight(1f))
+                // The one shown, fetched first when it's the site's, the spinner in its place meanwhile.
+                val context = LocalContext.current
+                val scope = rememberCoroutineScope()
+                var sharing by remember { mutableStateOf(false) }
+                IconButton(
+                    onClick = {
+                        val shown = media[pager.currentPage]
+                        sharing = true
+                        scope.launch {
+                            try {
+                                Share.media(context, shown, container.mediaUrls)
+                            } catch (e: CancellationException) {
+                                throw e
+                            } catch (_: Exception) {
+                                Toast.makeText(context, R.string.error_share, Toast.LENGTH_SHORT).show()
+                            } finally {
+                                sharing = false
+                            }
+                        }
+                    },
+                    enabled = !sharing,
+                    modifier = Modifier.testTag("share"),
+                ) {
+                    if (sharing) {
+                        CircularProgressIndicator(Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
+                    } else {
+                        Icon(Icons.Rounded.Share, contentDescription = stringResource(R.string.action_share), tint = Color.White)
+                    }
+                }
                 IconButton(onClick = { info = true }, modifier = Modifier.testTag("info")) {
                     Icon(Icons.Outlined.Info, contentDescription = stringResource(R.string.action_info), tint = Color.White)
                 }
