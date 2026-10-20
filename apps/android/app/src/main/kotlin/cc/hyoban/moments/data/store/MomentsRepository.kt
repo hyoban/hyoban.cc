@@ -343,6 +343,11 @@ class MomentsRepository(
                 removed = removed - deletions.toSet()
                 local?.writeRemoved(removed)
                 adoptPlaces(applied.places)
+                // The write came right after the copy's revision, so the copy is now of the
+                // write's: the next sync doesn't hand the same Moments back.
+                if (applied.revision != null && applied.revision == store.readRevision() + 1) {
+                    store.writeRevision(applied.revision)
+                }
                 publishPlaces()
                 publish()
             }

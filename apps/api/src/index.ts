@@ -25,8 +25,8 @@ import {
 // The API. Reads are public except drafts, which only the owner sees, and the full
 // export; writes are the owner's. Records come back exactly as stored, in the shape
 // @hyoban/data-spec defines. A write the site shows first brings the trips' routes up to
-// date, when MAPBOX_TOKEN is set, then calls DEPLOY_HOOK_URL, when there is one, so the
-// site builds again with them.
+// date, when MAPBOX_TOKEN is set and the write changed what the trips are built from,
+// then calls DEPLOY_HOOK_URL, when there is one, so the site builds again with them.
 
 export interface Env {
   DB: Database
@@ -100,7 +100,7 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
     const result = await run({ db, bucket: env.BUCKET, now: timestamp() })
 
     if (result.changesSite) {
-      executionContext?.waitUntil(afterSiteChange(env))
+      executionContext?.waitUntil(afterSiteChange(env, result.changesRoutes ?? true))
     }
 
     return result.status === 204
@@ -250,14 +250,16 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
 }
 
 /**
- * After a write the site shows: the trips' routes first, so the build the deploy hook
- * starts has them, with what `GET /v1/routes` answers worked out ahead of the app's next
- * sync from the same read, then the hook. None of them failing undoes the write.
+ * After a write the site shows: the trips' routes first, when the write changed what they
+ * are built from, so the build the deploy hook starts has them, with what `GET /v1/routes`
+ * answers worked out ahead of the app's next sync from the same read, then the hook. A
+ * write the trips don't see carried that answer on itself. None of them failing undoes
+ * the write.
  */
-async function afterSiteChange(env: Env) {
-  let routesKept = false
+async function afterSiteChange(env: Env, changesRoutes: boolean) {
+  let routesKept = !changesRoutes
 
-  if (env.MAPBOX_TOKEN) {
+  if (changesRoutes && env.MAPBOX_TOKEN) {
     try {
       const result = await fillRoutes(
         { db: env.DB, bucket: env.BUCKET, now: timestamp() },

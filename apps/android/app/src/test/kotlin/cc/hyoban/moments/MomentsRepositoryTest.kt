@@ -61,6 +61,8 @@ class MomentsRepositoryTest {
     private class FakeWriter : MomentsWriter {
         val calls = mutableListOf<String>()
         val uploads = mutableMapOf<String, String>()
+        /** The revision the next write says it took. */
+        var revision: Long? = null
 
         override suspend fun uploadedImage(momentUid: String, mediaUid: String): String? =
             uploads[mediaUid]?.let { text ->
@@ -82,7 +84,7 @@ class MomentsRepositoryTest {
                     media = moment.media.map { it.copy(local = null, published = it.published ?: PublishedMedia("moments/x/${it.uid}.jpg", "image/jpeg", 5, "etag")) },
                 )
             }
-            return AppliedChanges(places, moments, changes.deleted.filter { it != "GONE" })
+            return AppliedChanges(places, moments, changes.deleted.filter { it != "GONE" }, revision)
         }
     }
 
@@ -316,6 +318,27 @@ class MomentsRepositoryTest {
         again.load()
         assertEquals(listOf("U", "T", "M", "L"), again.moments.value.map { it.uid }, "the copy on the phone has it too")
         assertEquals(0, again.pending.value.size)
+    }
+
+    @Test
+    fun `a write right after the copy's revision moves the copy on to it, one after another's doesn't`() = runBlocking {
+        val writer = FakeWriter()
+        val store = DataStore(directory)
+        val repository = MomentsRepository(store, api, Dispatchers.Unconfined, local = DataStore(localDirectory), writer = writer)
+        api.put(moment("A", "2026-10-01"))
+        repository.load()
+        repository.refresh()
+        assertEquals(1, store.readRevision())
+
+        repository.addLocal(moment("L", "2026-10-02", published = false).copy(places = listOf("nanjing")))
+        writer.revision = 2
+        repository.publishPending()
+        assertEquals(2, store.readRevision(), "the copy has all the write did")
+
+        repository.addLocal(moment("M", "2026-10-03", published = false).copy(places = listOf("nanjing")))
+        writer.revision = 5
+        repository.publishPending()
+        assertEquals(2, store.readRevision(), "writes in between are for the next sync to bring")
     }
 
     @Test

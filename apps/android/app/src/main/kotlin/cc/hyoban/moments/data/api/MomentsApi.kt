@@ -49,9 +49,17 @@ data class Changes(
 @Serializable
 data class ChangeSet(val places: Map<String, Place>, val moments: List<MomentRecord>, val deleted: List<String>)
 
-/** What the API did with a [ChangeSet]: the id each place sent is known by, the Moments as published, the uids deleted. */
+/**
+ * What the API did with a [ChangeSet]: the id each place sent is known by, the Moments as
+ * published, the uids deleted, and the revision the write took, null when it changed nothing.
+ */
 @Serializable
-data class AppliedChanges(val places: Map<String, String>, val moments: List<MomentRecord>, val deleted: List<String>)
+data class AppliedChanges(
+    val places: Map<String, String>,
+    val moments: List<MomentRecord>,
+    val deleted: List<String>,
+    val revision: Long? = null,
+)
 
 /** What the app writes the records to, with the owner's token; the tests stand in for the API with their own. */
 interface MomentsWriter {

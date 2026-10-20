@@ -46,8 +46,9 @@ the first page the places and trips that changed:
 Follow `next` with `?cursor=<next>` until it is null, then keep `revision` and pass it
 as `since` the next time. Every page is of the revision the first was read at, so a
 Moment never names a place the feed hasn't handed out yet. `since=0`, or none, is
-everything. What was removed comes back by key in `deleted`, `deletedPlaces` and
-`deletedTrips`; nothing is ever dropped from the database, only marked deleted.
+everything there is. What was removed after a revision comes back by key in `deleted`,
+`deletedPlaces` and `deletedTrips`, empty on a feed from the start, which has nothing
+to remove; nothing is ever dropped from the database, only marked deleted.
 
 The reads put their answers together from the records as stored, without parsing them.
 
@@ -70,13 +71,16 @@ the id it is known by. Each Moment is saved and published: a draft takes its
 `YYYY/MM/DD-NN-slug` id, the next order on its day after the others in the same write,
 slugged by its first place or else its first words, and its originals move to
 `moments/<id>/<slug>.<ext>`; a published one keeps its id and publishes any new media.
-A deleted Moment is marked deleted for the change feed. All of it is checked first, the
-uploaded originals among it, then written in one transaction that bumps the revision and
-stamps the manifest's `updatedAt`, so a change set that doesn't fit changes nothing, and
-the originals it had copied are removed again. A Moment sent exactly as stored isn't
-written, and a change set that changes nothing takes no revision.
-The answer is `{ places, moments, deleted }`: the id each place sent is known by, the
-Moments as published, and the uids deleted, leaving out those already gone.
+A deleted Moment is marked deleted for the change feed. All of it is checked first, then
+written in one transaction that bumps the revision and stamps the manifest's
+`updatedAt`, so a change set that doesn't fit changes nothing, and the originals it had
+copied are removed again, as when one of them isn't uploaded: the 422 names every one
+missing. A Moment sent exactly as stored isn't written, and a change set that changes
+nothing takes no revision.
+The answer is `{ places, moments, deleted, revision }`: the id each place sent is known
+by, the Moments as published, the uids deleted, leaving out those already gone, and the
+revision the write took, left out when it took none. A client whose copy is of the
+revision just before it has all the write did, and can keep that revision.
 
 Published photos and videos are kept as uploaded, marked `original: true`: the site has
 Cloudflare Images resize the photos and takes each video's first frame as its poster
@@ -87,7 +91,8 @@ after. The rules for places, ids and file names live in `@hyoban/data-spec/publi
 Records written outside the API, by the create-moment skill, go into the database with
 `pnpm data:push` instead (docs/data.md).
 
-A write the site shows first brings the trips' routes up to date,
+A write the site shows first brings the trips' routes up to date, when it changed what
+the trips are built from (a Moment's day, places or order, or whether it is shown),
 then calls the `DEPLOY_HOOK_URL` secret, when it is set, so the site builds again with
 them.
 
@@ -98,16 +103,19 @@ works them out from the trips and the published Moments, has a route kept in the
 `routes` table by its key: a drive from Mapbox's Directions, with the `MAPBOX_TOKEN`
 secret, or for a train leg (`train:` before the key) a rail line from
 OpenRailRouting's public demo between the places' `station`s. Ferries and flights are
-drawn straight. After a write the site shows, the Worker fetches the legs it doesn't
+drawn straight. After a write the trips see, the Worker fetches the legs it doesn't
 have, up to 30 a write and 6 at once, and marks deleted the ones no trip has any more, so a moved
-place or a changed trip is fetched again; `POST /v1/routes`, with a token, does the
+place or a changed trip is fetched again. A leg the router finds no way along, as a
+drive across the sea, is remembered in `meta` and drawn straight without being asked
+for again; one whose fetch failed is asked for after the next write; `POST /v1/routes`, with a token, does the
 same on demand and answers `{ fetched, removed, failed, left }` (`pnpm data:push`
 calls it, as it writes past the Worker). `GET /v1/routes` gives each published trip's
 route as the site's overview draws it, drives one after another as one stretch and
 each train, plane or ferry as a dashed one. Working it out reads every Moment, so the
-answer is kept in `meta` with the revision it is of, worked out after each write from
-the same read that fills the routes, and again on a request once the revision has moved
-on, as after `data:push`. Its `ETag` is of the routes alone, so a client sending it back
+answer is kept in `meta` with the revision it is of, worked out after a write the trips
+see from the same read that fills the routes, carried on to the new revision by a write
+they don't, and worked out again on a request once the revision has moved on otherwise,
+as after `data:push`. Its `ETag` is of the routes alone, so a client sending it back
 as `If-None-Match` gets a 304 when a write changed nothing it draws:
 
 ```json
