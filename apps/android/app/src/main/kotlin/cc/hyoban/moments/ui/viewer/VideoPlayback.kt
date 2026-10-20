@@ -1,5 +1,7 @@
 package cc.hyoban.moments.ui.viewer
 
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.LoadingIndicator
 import androidx.annotation.OptIn
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -19,7 +21,6 @@ import androidx.compose.material.icons.automirrored.rounded.VolumeUp
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Replay
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -100,12 +101,13 @@ fun VideoPlayback(url: String, active: Boolean, state: VideoState, modifier: Mod
     if (player != null) MediaSurface(player, modifier)
 }
 
-/** A ring in the middle while the video waits for more of itself. */
+/** A loading indicator in the middle while the video waits for more of itself. */
+@kotlin.OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun VideoWaiting(state: VideoState, modifier: Modifier = Modifier) {
     AnimatedVisibility(state.waiting && state.player != null, modifier = modifier, enter = fadeIn(), exit = fadeOut()) {
         Box(Modifier.size(56.dp).background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.35f), CircleShape), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator(Modifier.size(28.dp), color = Color.White, strokeWidth = 3.dp)
+            LoadingIndicator(Modifier.size(44.dp), color = Color.White)
         }
     }
 }

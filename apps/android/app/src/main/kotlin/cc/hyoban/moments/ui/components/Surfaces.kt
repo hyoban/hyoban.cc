@@ -155,21 +155,6 @@ fun SectionHeader(icon: ImageVector, title: String, modifier: Modifier = Modifie
     }
 }
 
-/** A tab screen's title and what it holds, scrolling away with its content; [action] sits at its end. */
-@Composable
-fun PageHeader(title: String, subtitle: String?, action: (@Composable () -> Unit)? = null) {
-    Row(
-        Modifier.fillMaxWidth().padding(start = Space.xl, end = Space.m, top = Space.l, bottom = Space.s),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.xs)) {
-            Text(title, style = MaterialTheme.typography.headlineMedium)
-            subtitle?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-        }
-        action?.invoke()
-    }
-}
-
 /** A month's start in a long list: the month large, its year beside it. */
 @Composable
 fun MonthHeader(month: String, year: String?) {

@@ -1,9 +1,10 @@
 package cc.hyoban.moments.ui.map
 
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.LoadingIndicator
 import androidx.activity.compose.BackHandler
 import androidx.core.content.ContextCompat
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material.icons.rounded.MyLocation
 import androidx.compose.animation.core.animateDpAsState
 import androidx.activity.result.contract.ActivityResultContracts
@@ -397,7 +398,8 @@ private fun CompassButton(turned: Boolean, bearing: Double, onClick: () -> Unit)
     }
 }
 
-/** Brings the map to where the phone is; a ring while it finds out. */
+/** Brings the map to where the phone is; a loading indicator while it finds out. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun LocateButton(locating: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     // Floating like the tabs, the icon in primary as the one action the map has.
@@ -409,7 +411,7 @@ private fun LocateButton(locating: Boolean, onClick: () -> Unit, modifier: Modif
         modifier = modifier,
     ) {
         if (locating) {
-            CircularProgressIndicator(Modifier.size(24.dp), color = LocalContentColor.current, strokeWidth = 2.dp)
+            LoadingIndicator(Modifier.size(32.dp), color = LocalContentColor.current)
         } else {
             Icon(Icons.Rounded.MyLocation, contentDescription = stringResource(R.string.action_locate))
         }

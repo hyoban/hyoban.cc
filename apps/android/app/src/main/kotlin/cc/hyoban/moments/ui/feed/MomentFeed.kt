@@ -1,5 +1,7 @@
 package cc.hyoban.moments.ui.feed
 
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,7 +32,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -227,14 +228,15 @@ fun <T> CardRow(cards: List<T>, columns: Int, modifier: Modifier = Modifier, car
     }
 }
 
-/** The middle of an empty screen: a spinner while the first refresh runs, else a line; scrollable, so it still pulls to refresh. */
+/** The middle of an empty screen: a loading indicator while the first refresh runs, else a line; scrollable, so it still pulls to refresh. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun EmptyState(loading: Boolean, message: Int) {
-    LazyColumn(Modifier.fillMaxSize().statusBarsPadding()) {
+    LazyColumn(Modifier.fillMaxSize()) {
         item {
             Box(Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Space.l)) {
-                    if (loading) CircularProgressIndicator()
+                    if (loading) LoadingIndicator()
                     Text(
                         stringResource(if (loading) R.string.empty_loading else message),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -261,17 +263,13 @@ fun rememberRefreshErrors(container: AppContainer): SnackbarHostState {
 }
 
 /**
- * Pull to refresh that shows its spinner only for a refresh pulled for: the refreshes the
+ * Pull to refresh that shows its indicator only for a refresh pulled for: the refreshes the
  * app makes by itself, on start, go on without it.
  */
 class PulledRefresh(val refreshing: Boolean, val onRefresh: () -> Unit)
 
-/**
- * A tab's list, pulled down to refresh, running up under the status bar as it scrolls,
- * the spinner coming down below the bar; the list leaves [statusBarTop] clear above its
- * first row.
- */
-@OptIn(ExperimentalMaterial3Api::class)
+/** A tab's list under its top app bar, pulled down to refresh, the indicator coming down from the bar. */
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun TabRefreshBox(pull: PulledRefresh, content: @Composable BoxScope.() -> Unit) {
     val state = rememberPullToRefreshState()
@@ -281,15 +279,11 @@ fun TabRefreshBox(pull: PulledRefresh, content: @Composable BoxScope.() -> Unit)
         modifier = Modifier.fillMaxSize(),
         state = state,
         indicator = {
-            PullToRefreshDefaults.Indicator(state = state, isRefreshing = pull.refreshing, modifier = Modifier.align(Alignment.TopCenter).statusBarsPadding())
+            PullToRefreshDefaults.LoadingIndicator(state = state, isRefreshing = pull.refreshing, modifier = Modifier.align(Alignment.TopCenter))
         },
         content = content,
     )
 }
-
-/** The status bar's height, for a list that runs up under it to leave clear above its first row. */
-val statusBarTop: Dp
-    @Composable get() = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
 
 @Composable
 fun rememberPulledRefresh(container: AppContainer): PulledRefresh {

@@ -44,8 +44,8 @@ import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.R
 import cc.hyoban.moments.ui.LocalBottomClearance
 import cc.hyoban.moments.ui.components.FloatingBack
-import cc.hyoban.moments.ui.components.PageHeader
 import cc.hyoban.moments.ui.components.SubPage
+import cc.hyoban.moments.ui.components.TabPage
 
 /**
  * The Moments tab: every Moment the site shows, newest first, month by month, or as a
@@ -94,19 +94,6 @@ fun FeedScreen(
         }
     }
     val header: FeedLeading.() -> Unit = {
-        item(key = "header") {
-            PageHeader(stringResource(R.string.title_moments), subtitle) {
-                IconButton(onClick = { calendar = !calendar }) {
-                    Icon(
-                        if (calendar) Icons.Outlined.ViewAgenda else Icons.Outlined.CalendarMonth,
-                        contentDescription = stringResource(if (calendar) R.string.action_show_feed else R.string.action_show_calendar),
-                    )
-                }
-                IconButton(onClick = onSettings) {
-                    Icon(Icons.Outlined.Settings, contentDescription = stringResource(R.string.title_settings))
-                }
-            }
-        }
         if (years.size > 1) {
             item(key = "filter") {
                 TimeFilterRows(filter, years, months) { next ->
@@ -117,8 +104,21 @@ fun FeedScreen(
         }
     }
 
-    Box(Modifier.fillMaxSize()) {
-        // The list runs up under the status bar as it scrolls.
+    TabPage(
+        stringResource(R.string.title_moments),
+        subtitle = subtitle,
+        actions = {
+            IconButton(onClick = { calendar = !calendar }) {
+                Icon(
+                    if (calendar) Icons.Outlined.ViewAgenda else Icons.Outlined.CalendarMonth,
+                    contentDescription = stringResource(if (calendar) R.string.action_show_feed else R.string.action_show_calendar),
+                )
+            }
+            IconButton(onClick = onSettings) {
+                Icon(Icons.Outlined.Settings, contentDescription = stringResource(R.string.title_settings))
+            }
+        },
+    ) {
         TabRefreshBox(pull) {
             if (moments.isEmpty()) {
                 EmptyState(loading = !loaded || syncing, message = R.string.empty_moments)
@@ -131,11 +131,10 @@ fun FeedScreen(
                             // One Moment opens on its own; more open as the day's list.
                             onDay = { date, here -> if (here.size == 1) onMoment(here.single().uid) else onDay(date) },
                             state = calendarState,
-                            top = statusBarTop,
                             leading = { leadingRows(header) },
                         )
                     } else {
-                        MomentFeed(shown, places, trips, container.mediaUrls, onMoment, onMedia, state = feedState, gridState = gridState, top = statusBarTop, leading = header)
+                        MomentFeed(shown, places, trips, container.mediaUrls, onMoment, onMedia, state = feedState, gridState = gridState, leading = header)
                     }
                 }
             }
