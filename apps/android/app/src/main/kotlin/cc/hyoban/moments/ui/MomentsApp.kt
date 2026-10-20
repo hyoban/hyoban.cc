@@ -137,8 +137,18 @@ fun MomentsApp(container: AppContainer) {
     // so the page stays under it: a drag down to close shows it through the thinning black.
     var viewer by rememberSaveable(stateSaver = ViewerSaver) { mutableStateOf<Viewer?>(null) }
     var viewerKey by remember { mutableStateOf<String?>(null) }
-    val openMedia: (String, Int) -> Unit = { uid, index -> viewer = Viewer(uid, index) }
-    val closeViewer = { viewer = null }
+    // The photo shown as the viewer is swiped through; its tile steps aside only as the
+    // viewer closes, so a swipe sideways moves no tile and starts no flight.
+    var shownKey by remember { mutableStateOf<String?>(null) }
+    val openMedia: (String, Int) -> Unit = { uid, index ->
+        viewerKey = null
+        shownKey = null
+        viewer = Viewer(uid, index)
+    }
+    val closeViewer = {
+        viewerKey = shownKey
+        viewer = null
+    }
     val openTrip: (String) -> Unit = { navController.navigate(Trip(it)) }
     val openPlace: (String) -> Unit = { navController.navigate(PlaceMoments(it)) }
 
@@ -254,7 +264,11 @@ fun MomentsApp(container: AppContainer) {
                             onPlace = { closeViewer(); openPlace(it) },
                             onTrip = { closeViewer(); openTrip(it) },
                             onBack = closeViewer,
-                            onShown = { viewerKey = it },
+                            onShown = {
+                                // The first photo's tile steps aside as the viewer opens.
+                                if (viewerKey == null || shownKey == null) viewerKey = it
+                                shownKey = it
+                            },
                         )
                     }
                 }

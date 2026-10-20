@@ -269,6 +269,7 @@ private fun ViewerPage(
             urls,
             onZoom,
             onTap,
+            shared = active,
             // Held down, a live photo plays with its sound until let go.
             onHold = if (liveMotion != null) { held -> if (held) live.play(sound = true) else live.stop() } else null,
         ) {
@@ -353,6 +354,8 @@ private fun ZoomableStill(
     onZoom: (Boolean) -> Unit,
     onTap: () -> Unit,
     onHold: ((Boolean) -> Unit)? = null,
+    /** Whether this is the page shown, the one photo that flies to and from its tile. */
+    shared: Boolean = true,
     overlay: @Composable () -> Unit = {},
 ) {
     val zoom = rememberZoomableState(ZoomSpec(maxZoomFactor = MAX_ZOOM))
@@ -416,7 +419,7 @@ private fun ZoomableStill(
                 placeholder = Color.Transparent,
                 placeholderUrl = drawn,
                 detail = if (scale > 1.5f) scale else 1f,
-                modifier = Modifier.fillMaxSize().sharedMedia(mediaKey(momentUid, media.uid)),
+                modifier = Modifier.fillMaxSize().sharedMedia(mediaKey(momentUid, media.uid).takeIf { shared }),
             )
             overlay()
         }
