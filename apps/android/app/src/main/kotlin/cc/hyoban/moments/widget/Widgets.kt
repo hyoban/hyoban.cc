@@ -1,7 +1,14 @@
 package cc.hyoban.moments.widget
 
+import android.content.Context
+import android.content.Intent
+import android.graphics.Bitmap
+import android.net.Uri
+import android.os.Build
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
@@ -9,10 +16,12 @@ import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
 import androidx.glance.Image
 import androidx.glance.ImageProvider
+import androidx.glance.LocalSize
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
+import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.appWidgetBackground
 import androidx.glance.appwidget.cornerRadius
@@ -23,19 +32,17 @@ import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
 import androidx.glance.layout.Column
 import androidx.glance.layout.ContentScale
+import androidx.glance.layout.Row
+import androidx.glance.layout.fillMaxHeight
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.padding
+import androidx.glance.layout.width
 import androidx.glance.material3.ColorProviders
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
-import android.content.Context
-import android.content.Intent
-import android.graphics.Bitmap
-import android.net.Uri
-import android.os.Build
 import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.MainActivity
 import cc.hyoban.moments.MomentsApplication
@@ -65,6 +72,8 @@ import kotlinx.coroutines.flow.first
 
 /** A Moment from this day in an earlier year, or any earlier one, with its photo. */
 class MemoryWidget : GlanceAppWidget() {
+    override val sizeMode = SIZES
+
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val card = memoryCard(context)
         provideContent { WidgetTheme(context) { WidgetCard(card) } }
@@ -92,12 +101,15 @@ class MemoryWidget : GlanceAppWidget() {
             title = words ?: where ?: formatDate(moment.dateKey),
             subtitle = if (words != null) where else null,
             link = "moment/${moment.uid}",
+            text = moment.text.trim().ifEmpty { null },
         )
     }
 }
 
 /** The trip under way, else the last one, with one of its photos. */
 class TripWidget : GlanceAppWidget() {
+    override val sizeMode = SIZES
+
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val card = tripCard(context)
         provideContent { WidgetTheme(context) { WidgetCard(card) } }
@@ -166,13 +178,25 @@ object Widgets {
 
 /** What a widget shows: a photo with its words, or a line saying there is nothing yet. */
 private sealed interface Card {
-    data class Photo(val photo: Bitmap?, val eyebrow: String, val title: String, val subtitle: String?, val link: String) : Card
+    /** [text], the Moment's words whole, is what a large widget shows in place of [title]. */
+    data class Photo(val photo: Bitmap?, val eyebrow: String, val title: String, val subtitle: String?, val link: String, val text: String? = null) : Card
     data class Empty(val message: String) : Card
 }
 
+// The sizes a widget is laid out for, as ColorOS's cards come: a row (4×1), a square
+// (2×2), a wide card (4×2) and a large one (4×4). The launcher takes the largest that fits.
+private val STRIP = DpSize(160.dp, 50.dp)
+private val SMALL = DpSize(110.dp, 110.dp)
+private val WIDE = DpSize(220.dp, 100.dp)
+private val LARGE = DpSize(220.dp, 220.dp)
+private val SIZES = SizeMode.Responsive(setOf(STRIP, SMALL, WIDE, LARGE))
+
 @Composable
 private fun WidgetCard(card: Card) {
-    val base = GlanceModifier.fillMaxSize().appWidgetBackground().cornerRadius(CORNER)
+    // The launcher's own corner on Android 12 and later, so the card rounds as the system's do.
+    val base = GlanceModifier.fillMaxSize().appWidgetBackground().let {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) it.cornerRadius(android.R.dimen.system_app_widget_background_radius) else it.cornerRadius(CORNER)
+    }
     when (card) {
         is Card.Empty -> Box(
             base.background(GlanceTheme.colors.surface).padding(PADDING).clickable(open("moments")),
@@ -180,30 +204,83 @@ private fun WidgetCard(card: Card) {
         ) {
             Text(card.message, style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 13.sp))
         }
-        is Card.Photo -> {
-            val onPhoto = card.photo != null
-            Box(base.background(GlanceTheme.colors.primaryContainer).clickable(open(card.link))) {
-                if (card.photo != null) {
-                    Image(ImageProvider(card.photo), contentDescription = card.title, modifier = GlanceModifier.fillMaxSize(), contentScale = ContentScale.Crop)
-                    // The shade the words sit on.
-                    Image(ImageProvider(R.drawable.widget_shade), contentDescription = null, modifier = GlanceModifier.fillMaxSize(), contentScale = ContentScale.FillBounds)
-                }
-                val strong = if (onPhoto) ColorProvider(Color.White) else GlanceTheme.colors.onPrimaryContainer
-                val soft = if (onPhoto) ColorProvider(Color.White.copy(alpha = 0.82f)) else GlanceTheme.colors.onPrimaryContainer
-                Column(GlanceModifier.fillMaxSize().padding(PADDING), verticalAlignment = Alignment.Bottom) {
-                    Text(card.eyebrow, style = TextStyle(color = soft, fontSize = 12.sp, fontWeight = FontWeight.Medium), maxLines = 1)
-                    Text(
-                        card.title,
-                        modifier = GlanceModifier.fillMaxWidth().padding(top = 2.dp),
-                        style = TextStyle(color = strong, fontSize = 15.sp, fontWeight = FontWeight.Medium),
-                        maxLines = 2,
-                    )
-                    card.subtitle?.let {
-                        Text(it, modifier = GlanceModifier.padding(top = 2.dp), style = TextStyle(color = soft, fontSize = 12.sp), maxLines = 1)
-                    }
-                }
-            }
+        is Card.Photo -> when (LocalSize.current) {
+            STRIP -> StripCard(card, base)
+            WIDE -> if (card.photo != null) WideCard(card, base) else OverlayCard(card, base, large = false)
+            LARGE -> OverlayCard(card, base, large = true)
+            else -> OverlayCard(card, base, large = false)
         }
+    }
+}
+
+/** The photo filling the card, the words over a shade at its foot; a large card gives the words more room. */
+@Composable
+private fun OverlayCard(card: Card.Photo, base: GlanceModifier, large: Boolean) {
+    val onPhoto = card.photo != null
+    Box(base.background(GlanceTheme.colors.primaryContainer).clickable(open(card.link))) {
+        if (card.photo != null) {
+            Image(ImageProvider(card.photo), contentDescription = card.title, modifier = GlanceModifier.fillMaxSize(), contentScale = ContentScale.Crop)
+            // The shade the words sit on.
+            Image(ImageProvider(R.drawable.widget_shade), contentDescription = null, modifier = GlanceModifier.fillMaxSize(), contentScale = ContentScale.FillBounds)
+        }
+        val strong = if (onPhoto) ColorProvider(Color.White) else GlanceTheme.colors.onPrimaryContainer
+        val soft = if (onPhoto) ColorProvider(Color.White.copy(alpha = 0.82f)) else GlanceTheme.colors.onPrimaryContainer
+        Column(GlanceModifier.fillMaxSize().padding(if (large) PADDING_LARGE else PADDING), verticalAlignment = Alignment.Bottom) {
+            Words(
+                card,
+                strong,
+                soft,
+                titleSize = if (large) 18.sp else 15.sp,
+                small = if (large) 13.sp else 12.sp,
+                title = if (large) card.text ?: card.title else card.title,
+                titleLines = if (large) 4 else 2,
+            )
+        }
+    }
+}
+
+/** The photo down the start half, the words beside it on the card's surface. */
+@Composable
+private fun WideCard(card: Card.Photo, base: GlanceModifier) {
+    Row(base.background(GlanceTheme.colors.surface).clickable(open(card.link))) {
+        Image(
+            ImageProvider(card.photo!!),
+            contentDescription = card.title,
+            modifier = GlanceModifier.defaultWeight().fillMaxHeight(),
+            contentScale = ContentScale.Crop,
+        )
+        Column(GlanceModifier.defaultWeight().fillMaxHeight().padding(PADDING), verticalAlignment = Alignment.CenterVertically) {
+            Words(card, GlanceTheme.colors.onSurface, GlanceTheme.colors.onSurfaceVariant, titleSize = 15.sp, small = 12.sp, title = card.text ?: card.title, titleLines = 3)
+        }
+    }
+}
+
+/** One row: a square of the photo, then when and what on a single line each. */
+@Composable
+private fun StripCard(card: Card.Photo, base: GlanceModifier) {
+    Row(base.background(GlanceTheme.colors.surface).clickable(open(card.link)), verticalAlignment = Alignment.CenterVertically) {
+        if (card.photo != null) {
+            Image(ImageProvider(card.photo), contentDescription = card.title, modifier = GlanceModifier.width(72.dp).fillMaxHeight(), contentScale = ContentScale.Crop)
+        }
+        Column(GlanceModifier.defaultWeight().padding(horizontal = PADDING), verticalAlignment = Alignment.CenterVertically) {
+            Text(card.eyebrow, style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 12.sp, fontWeight = FontWeight.Medium), maxLines = 1)
+            Text(card.title, style = TextStyle(color = GlanceTheme.colors.onSurface, fontSize = 14.sp, fontWeight = FontWeight.Medium), maxLines = 1)
+        }
+    }
+}
+
+/** When, what and where, stacked. */
+@Composable
+private fun Words(card: Card.Photo, strong: ColorProvider, soft: ColorProvider, titleSize: TextUnit, small: TextUnit, title: String, titleLines: Int) {
+    Text(card.eyebrow, style = TextStyle(color = soft, fontSize = small, fontWeight = FontWeight.Medium), maxLines = 1)
+    Text(
+        title,
+        modifier = GlanceModifier.fillMaxWidth().padding(top = 2.dp),
+        style = TextStyle(color = strong, fontSize = titleSize, fontWeight = FontWeight.Medium),
+        maxLines = titleLines,
+    )
+    card.subtitle?.let {
+        Text(it, modifier = GlanceModifier.padding(top = 2.dp), style = TextStyle(color = soft, fontSize = small), maxLines = 1)
     }
 }
 
@@ -242,3 +319,4 @@ private suspend fun photo(context: Context, container: AppContainer, media: Mome
 private const val PHOTO_WIDTH = 720
 private val CORNER = 24.dp
 private val PADDING = 14.dp
+private val PADDING_LARGE = 18.dp
