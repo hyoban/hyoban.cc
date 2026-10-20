@@ -545,6 +545,12 @@
     "latitude": 30.04709,
     "longitude": 101.49073
   },
+  "xing-ba-ke-ka-fei-mi-fei-guang-chang-dian": {
+    "name": "星巴克咖啡(米芾广场店)",
+    "latitude": 31.30394075646975,
+    "longitude": 117.90957434478214,
+    "createdAt": "2026-10-20T18:28:13+08:00"
+  },
   "xinghai-bay-bridge": {
     "name": "星海湾跨海大桥",
     "latitude": 38.868167,

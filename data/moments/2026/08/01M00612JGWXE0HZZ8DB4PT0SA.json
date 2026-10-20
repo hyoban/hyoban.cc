@@ -2,15 +2,15 @@
   "uid": "01M00612JGWXE0HZZ8DB4PT0SA",
   "occurredAt": "2026-08-14T21:05:22+08:00",
   "places": [
-    "wuwei-xiangan"
+    "xing-ba-ke-ka-fei-mi-fei-guang-chang-dian"
   ],
   "text": "村里开了第二家星巴克。然后就是有四个KFC，两个星巴克，但是还没有麦当劳！",
   "hidden": false,
   "media": [
     {
       "uid": "01M00612JHEW0YG863RSA3S3VC",
-      "type": "image",
       "alt": "Illuminated entrance to a new Starbucks store",
+      "type": "image",
       "width": 1440,
       "height": 1920,
       "published": {
@@ -42,8 +42,8 @@
     },
     {
       "uid": "01M00612JJ6GK9PMPBCJ8X6S32",
-      "type": "image",
       "alt": "Wooden communal table beneath a shelf of coffee cups",
+      "type": "image",
       "width": 1920,
       "height": 1440,
       "published": {
@@ -75,8 +75,8 @@
     },
     {
       "uid": "01M00612JKK350QKTPJ7HQP14E",
-      "type": "image",
       "alt": "Counter and menu boards inside the new Starbucks",
+      "type": "image",
       "width": 1920,
       "height": 1440,
       "published": {
@@ -108,8 +108,8 @@
     },
     {
       "uid": "01M00612JM647V26VY23ZAGTY5",
-      "type": "image",
       "alt": "Armchair and side table against botanical wallpaper",
+      "type": "image",
       "width": 1440,
       "height": 1920,
       "published": {
@@ -141,8 +141,8 @@
     },
     {
       "uid": "01M00612JN98XPV44R5FDZA8V7",
-      "type": "image",
       "alt": "Large pleated ceiling light inside the Starbucks",
+      "type": "image",
       "width": 1920,
       "height": 1440,
       "published": {
@@ -180,5 +180,5 @@
     "at": "2026-08-20T22:58:53+08:00"
   },
   "createdAt": "2026-08-14T21:05:22+08:00",
-  "updatedAt": "2026-09-03T10:44:40+08:00"
+  "updatedAt": "2026-10-20T18:28:55+08:00"
 }

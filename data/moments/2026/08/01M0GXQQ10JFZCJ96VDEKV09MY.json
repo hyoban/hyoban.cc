@@ -1,16 +1,14 @@
 {
   "uid": "01M0GXQQ10JFZCJ96VDEKV09MY",
   "occurredAt": "2026-08-21T09:07:32+08:00",
-  "places": [
-    "wuwei"
-  ],
+  "places": [],
   "text": "租了一台理光gr3x，感受一下它的魔力",
   "hidden": false,
   "media": [
     {
       "uid": "01M0GXQQ11SMTR2NWF9S7K8YF0",
-      "type": "image",
       "alt": "Close-up of a black Ricoh GR IIIx camera with a green lens ring",
+      "type": "image",
       "width": 1920,
       "height": 1440,
       "published": {
@@ -48,5 +46,5 @@
     "at": "2026-08-21T10:27:32+08:00"
   },
   "createdAt": "2026-08-21T09:07:32+08:00",
-  "updatedAt": "2026-09-03T10:44:40+08:00"
+  "updatedAt": "2026-10-20T19:08:41+08:00"
 }
