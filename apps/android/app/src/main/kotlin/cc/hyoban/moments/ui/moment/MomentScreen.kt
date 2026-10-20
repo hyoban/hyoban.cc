@@ -1,12 +1,16 @@
 package cc.hyoban.moments.ui.moment
 
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -25,39 +29,53 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsBottomHeight
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
-import androidx.compose.material.icons.rounded.DeleteOutline
+import androidx.compose.material.icons.rounded.CalendarToday
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.Luggage
 import androidx.compose.material.icons.rounded.PhoneAndroid
 import androidx.compose.material.icons.rounded.Place
-import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material.icons.rounded.Share
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.ListItemShapes
+import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -73,13 +91,13 @@ import cc.hyoban.moments.data.trips.tripOf
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.FloatingBack
 import cc.hyoban.moments.ui.components.FloatingButton
+import cc.hyoban.moments.ui.components.FloatingWidth
 import cc.hyoban.moments.ui.components.MediaTile
-import cc.hyoban.moments.ui.components.NeutralChip
 import cc.hyoban.moments.ui.components.Pill
-import cc.hyoban.moments.ui.components.PressableCard
 import cc.hyoban.moments.ui.components.READABLE_WIDTH
 import cc.hyoban.moments.ui.components.RisingSheet
 import cc.hyoban.moments.ui.components.Thumbnail
+import cc.hyoban.moments.ui.components.dayCardKey
 import cc.hyoban.moments.ui.components.landscape
 import cc.hyoban.moments.ui.components.mediaKey
 import cc.hyoban.moments.ui.components.shapeOf
@@ -88,17 +106,20 @@ import cc.hyoban.moments.ui.components.sideInsetsPadding
 import cc.hyoban.moments.ui.components.tripCardKey
 import cc.hyoban.moments.ui.format.formatDay
 import cc.hyoban.moments.ui.format.formatTime
+import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
 import cc.hyoban.moments.ui.theme.Space
+import cc.hyoban.moments.ui.theme.fill
 import cc.hyoban.moments.ui.trips.tripSummary
+import kotlinx.coroutines.launch
 
 /** How far the page's sheet rises over the photos. */
 private val RISE = 32.dp
 
 /**
- * One Moment: its media edge to edge, and over their lower edge a sheet with when and
- * where, its words and the trip it was on.
+ * One Moment: its media edge to edge, and over their lower edge a sheet with when, its
+ * words first, a strip of its photos when there are several, and then where it was, the
+ * trip it was on and the rest of its day, as one list of rows to open.
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun MomentScreen(
     container: AppContainer,
@@ -108,6 +129,7 @@ fun MomentScreen(
     onTrip: (String) -> Unit,
     onBack: () -> Unit,
     onEdit: (String) -> Unit = {},
+    onDay: (String) -> Unit = {},
 ) {
     val moments by container.repository.moments.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
@@ -125,26 +147,26 @@ fun MomentScreen(
     }
     shareTarget?.let { ShareMoment(moment, urls, it, onDismiss = { shareTarget = null }) }
 
+    // The photos swiped above and the strip under them are one place in the Moment's media.
+    val pager = rememberPagerState { moment.media.size }
+
     // The whole page is the card it was opened from, grown to the screen.
     BoxWithConstraints(Modifier.fillMaxSize().sharedCard(uid, page = true).background(AppColors.page)) {
         val screenWidth = maxWidth
         val screenHeight = maxHeight
         val scroll = rememberScrollState()
         val details: @Composable () -> Unit = {
-            MomentDetails(moment, places, trip, moments, trips, urls, onPlace, onTrip, changed = container.repository.isChanged(moment.uid))
+            MomentDetails(
+                moment, places, trip, moments, trips, urls, pager, onPlace, onTrip, onDay,
+                changed = container.repository.isChanged(moment.uid),
+            )
         }
         if (landscape && moment.media.isNotEmpty()) {
             // On its side, the photos fill the left half, up under the status bar, and the
             // words scroll beside them, rather than a photo taller than the screen over them.
             Row(Modifier.fillMaxSize()) {
-                MomentPhotos(
-                    moment,
-                    urls,
-                    onMedia,
-                    Modifier.weight(1f).fillMaxHeight(),
-                    dotsAbove = Space.m + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding(),
-                )
-                Column(Modifier.weight(1f).fillMaxHeight().statusBarsPadding().verticalScroll(scroll).sideInsetsPadding(WindowInsetsSides.End)) { details() }
+                MomentPhotos(moment, urls, pager, onMedia, Modifier.weight(1f).fillMaxHeight())
+                Column(Modifier.weight(1f).fillMaxHeight().statusBarsPadding().padding(top = 56.dp).verticalScroll(scroll).sideInsetsPadding(WindowInsetsSides.End)) { details() }
             }
         } else {
             // The photos are as tall as the tallest of them, but no taller than a 3:4 portrait
@@ -162,14 +184,14 @@ fun MomentScreen(
                     MomentPhotos(
                         moment,
                         urls,
+                        pager,
                         onMedia,
                         Modifier.then(if (bleeds) Modifier else Modifier.statusBarsPadding())
                             .fillMaxWidth().height(minOf(screenWidth / shape!!, screenHeight - above)),
-                        dotsAbove = RISE + Space.m,
                         whole = true,
                     )
                 } else {
-                    Spacer(Modifier.statusBarsPadding().height(72.dp))
+                    Spacer(Modifier.statusBarsPadding().height(56.dp))
                 }
 
                 RisingSheet(Modifier.offset(y = if (moment.media.isNotEmpty()) -RISE else 0.dp)) {
@@ -179,36 +201,21 @@ fun MomentScreen(
             }
         }
         FloatingBack(onBack, Modifier.align(Alignment.TopStart))
-        // What was written on the phone can be changed or deleted; the site's Moments only
-        // with the API's token, and only on the phone until the changes are published.
-        val local = container.repository.isLocal(uid)
-        val canPublish = container.canPublish
+        // What was written on the phone can be changed, and deleted from its edit page; the
+        // site's Moments only with the API's token, and only on the phone until the changes are
+        // published. Editing is the page's main action, tonal and wide beside the share.
+        val editable = container.repository.isLocal(uid) || container.canPublish
         val publishing by container.publishing.collectAsStateWithLifecycle()
-        var confirming by remember(uid) { mutableStateOf(false) }
         Row(Modifier.align(Alignment.TopEnd)) {
             FloatingButton(Icons.Rounded.Share, stringResource(R.string.action_share), onClick = { sharing = true }, tag = "share")
-            if ((local || canPublish) && publishing == null) {
-                FloatingButton(Icons.Rounded.Edit, stringResource(R.string.action_edit_moment), onClick = { onEdit(uid) }, tag = "edit")
-                FloatingButton(Icons.Rounded.DeleteOutline, stringResource(R.string.action_delete_moment), onClick = { confirming = true }, tag = "delete")
-            }
-        }
-        if (local || canPublish) {
-            if (confirming) {
-                AlertDialog(
-                    onDismissRequest = { confirming = false },
-                    title = { Text(stringResource(R.string.action_delete_moment)) },
-                    text = { Text(stringResource(if (local) R.string.confirm_delete_moment else R.string.confirm_delete_published)) },
-                    confirmButton = {
-                        TextButton(
-                            onClick = {
-                                confirming = false
-                                container.delete(uid)
-                                onBack()
-                            },
-                            modifier = Modifier.testTag("confirm_delete"),
-                        ) { Text(stringResource(R.string.action_delete)) }
-                    },
-                    dismissButton = { TextButton(onClick = { confirming = false }) { Text(stringResource(R.string.action_cancel)) } },
+            if (editable && publishing == null) {
+                FloatingButton(
+                    Icons.Rounded.Edit,
+                    stringResource(R.string.action_edit_moment),
+                    onClick = { onEdit(uid) },
+                    tag = "edit",
+                    tonal = true,
+                    width = FloatingWidth.Wide,
                 )
             }
         }
@@ -219,39 +226,36 @@ fun MomentScreen(
 private const val TALLEST = 3f / 4f
 
 /**
- * The Moment's photos, swiped through, each opening the viewer; dots [dotsAbove] the bottom
- * when there are several. Each fills the space, or, when [whole], spans its width at its own
- * shape, centred, cropped only where it is taller than the space.
+ * The Moment's photos, swiped through on [pager], each opening the viewer. Each fills the
+ * space, or, when [whole], spans its width at its own shape, centred, cropped only where
+ * it is taller than the space.
  */
 @Composable
-private fun MomentPhotos(moment: MomentRecord, urls: MediaUrls, onMedia: (String, Int) -> Unit, modifier: Modifier, dotsAbove: Dp, whole: Boolean = false) {
+private fun MomentPhotos(moment: MomentRecord, urls: MediaUrls, pager: PagerState, onMedia: (String, Int) -> Unit, modifier: Modifier, whole: Boolean = false) {
     val uid = moment.uid
-    val pager = rememberPagerState { moment.media.size }
-    Box(modifier) {
-        HorizontalPager(pager, Modifier.fillMaxSize(), key = { moment.media[it].uid }) { page ->
-            val media = moment.media[page]
-            BoxWithConstraints(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                // The top of the photo is under the status bar and the back button.
-                MediaTile(
-                    media,
-                    urls,
-                    (if (whole) Modifier.fillMaxWidth().height(minOf(maxWidth / shapeOf(media), maxHeight)) else Modifier.fillMaxSize())
-                        .testTag("media_${uid}_$page"),
-                    liveBadgeAlignment = Alignment.BottomStart,
-                    sharedKey = mediaKey(uid, media.uid),
-                    position = page to moment.media.size,
-                    onClick = { onMedia(uid, page) },
-                )
-            }
-        }
-        if (moment.media.size > 1) {
-            PageDots(pager, Modifier.align(Alignment.BottomCenter).padding(bottom = dotsAbove))
+    HorizontalPager(pager, modifier, key = { moment.media[it].uid }) { page ->
+        val media = moment.media[page]
+        BoxWithConstraints(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            // The top of the photo is under the status bar and the back button.
+            MediaTile(
+                media,
+                urls,
+                (if (whole) Modifier.fillMaxWidth().height(minOf(maxWidth / shapeOf(media), maxHeight)) else Modifier.fillMaxSize())
+                    .testTag("media_${uid}_$page"),
+                liveBadgeAlignment = Alignment.BottomStart,
+                sharedKey = mediaKey(uid, media.uid),
+                position = page to moment.media.size,
+                onClick = { onMedia(uid, page) },
+            )
         }
     }
 }
 
-/** When and where, the Moment's words and the trip it was on. */
-@OptIn(ExperimentalLayoutApi::class)
+/**
+ * When, the Moment's words, its photos small, and then the rows that lead on from it: its
+ * places, its trip and the rest of its day.
+ */
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun MomentDetails(
     moment: MomentRecord,
@@ -260,74 +264,156 @@ private fun MomentDetails(
     moments: List<MomentRecord>,
     trips: List<TripRecord>,
     urls: MediaUrls,
+    pager: PagerState,
     onPlace: (String) -> Unit,
     onTrip: (String) -> Unit,
+    onDay: (String) -> Unit,
     changed: Boolean = false,
 ) {
-    Column(
-        Modifier.padding(start = Space.xl, end = Space.xl, top = Space.xl, bottom = Space.xxl),
-        verticalArrangement = Arrangement.spacedBy(Space.l),
-    ) {
-        Text(formatDay(moment.occurredAt), style = MaterialTheme.typography.headlineMedium)
-        // The places are assist chips, each opening its place, with the 48dp a tap needs;
-        // the time beside them is a label, centred on the chips' row.
-        FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(Space.s),
-            itemVerticalAlignment = Alignment.CenterVertically,
-        ) {
-            formatTime(moment.occurredAt)?.let { Pill(it, icon = Icons.Rounded.Schedule) }
-            moment.places.forEach { id ->
-                NeutralChip(places[id]?.name ?: id, Icons.Rounded.Place, onClick = { onPlace(id) }, modifier = Modifier.testTag("place_$id"))
+    val sameDay = remember(moments, moment.dateKey) { moments.count { it.dateKey == moment.dateKey } }
+    Column(Modifier.padding(top = Space.xl, bottom = Space.xxl)) {
+        // The day emphasized, and its time beside it a shade lighter and plain: what the words are under.
+        Column(Modifier.padding(horizontal = Space.xl), verticalArrangement = Arrangement.spacedBy(Space.s)) {
+            Text(
+                buildAnnotatedString {
+                    append(formatDay(moment.occurredAt))
+                    formatTime(moment.occurredAt)?.let {
+                        withStyle(SpanStyle(color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = MaterialTheme.typography.titleLarge.fontWeight)) { append("  $it") }
+                    }
+                },
+                style = MaterialTheme.typography.titleLargeEmphasized,
+                modifier = Modifier.semantics { heading() },
+            )
+            if (moment.published == null || changed) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.s)) {
+                    if (moment.published == null) Pill(stringResource(R.string.label_on_phone), icon = Icons.Rounded.PhoneAndroid)
+                    if (changed) Pill(stringResource(R.string.label_unpublished_change), icon = Icons.Rounded.PhoneAndroid)
+                }
             }
-            if (moment.published == null) Pill(stringResource(R.string.label_on_phone), icon = Icons.Rounded.PhoneAndroid)
-            if (changed) Pill(stringResource(R.string.label_unpublished_change), icon = Icons.Rounded.PhoneAndroid)
         }
         if (moment.text.isNotBlank()) {
-            SelectionContainer {
-                Text(moment.text, style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 28.sp))
+            SelectionContainer(Modifier.padding(start = Space.xl, end = Space.xl, top = Space.l)) {
+                Text(moment.text, style = MaterialTheme.typography.bodyLarge.copy(fontSize = 17.sp, lineHeight = 30.sp))
             }
         }
-        trip?.let { trip ->
-            val cover = remember(trip, moments) { coversOf(trip, moments, trips, limit = 1).firstOrNull() }
-            val count = remember(trip, moments) { momentsOf(trip, moments, trips).size }
-            PressableCard(onClick = { onTrip(trip.id) }, modifier = Modifier.padding(top = Space.s).sharedCard(tripCardKey(trip.id)).testTag("trip_${trip.id}")) {
-                Row(Modifier.padding(6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.m)) {
-                    cover?.let { Thumbnail(it, urls, size = 64) }
-                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Icon(Icons.Rounded.Luggage, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
-                            Text(trip.title, style = MaterialTheme.typography.titleMedium)
-                        }
-                        Text(
-                            tripSummary(trip, count),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                    Icon(
-                        Icons.AutoMirrored.Rounded.KeyboardArrowRight,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(end = Space.s),
-                    )
+        if (moment.media.size > 1) {
+            Filmstrip(moment, urls, pager, Modifier.padding(top = Space.xl))
+        }
+
+        // Where it was, its trip and its day as one expressive segmented list: each row filled on
+        // its own, a small gap between, the group's outer corners round and its inner ones
+        // tight, each row's corners rounding further under the finger.
+        val rows = buildList<@Composable (ListItemShapes) -> Unit> {
+            moment.places.forEach { id ->
+                val place = places[id]
+                add { shapes ->
+                    SegmentedListItem(
+                        onClick = { onPlace(id) },
+                        shapes = shapes,
+                        colors = segmentColors(),
+                        leadingContent = { RowIcon(Icons.Rounded.Place) },
+                        trailingContent = { Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null) },
+                        supportingContent = place?.note?.takeIf { it.isNotBlank() }?.let { { Text(it, maxLines = 2, overflow = TextOverflow.Ellipsis) } },
+                        modifier = Modifier.testTag("place_$id"),
+                    ) { Text(place?.name ?: id, maxLines = 1, overflow = TextOverflow.Ellipsis) }
                 }
+            }
+            trip?.let { trip ->
+                add { shapes ->
+                    val cover = remember(trip, moments) { coversOf(trip, moments, trips, limit = 1).firstOrNull() }
+                    val count = remember(trip, moments) { momentsOf(trip, moments, trips).size }
+                    SegmentedListItem(
+                        onClick = { onTrip(trip.id) },
+                        shapes = shapes,
+                        colors = segmentColors(),
+                        leadingContent = {
+                            if (cover != null) Thumbnail(cover, urls, size = ROW_LEAD) else RowIcon(Icons.Rounded.Luggage)
+                        },
+                        trailingContent = { Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null) },
+                        supportingContent = { Text(tripSummary(trip, count), maxLines = 2) },
+                        modifier = Modifier.sharedCard(tripCardKey(trip.id)).testTag("trip_${trip.id}"),
+                    ) { Text(trip.title, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                }
+            }
+            // Only when the day has more than this one, the row grows into the day's page.
+            if (sameDay > 1) {
+                add { shapes ->
+                    SegmentedListItem(
+                        onClick = { onDay(moment.dateKey) },
+                        shapes = shapes,
+                        colors = segmentColors(),
+                        leadingContent = { RowIcon(Icons.Rounded.CalendarToday) },
+                        trailingContent = { Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null) },
+                        supportingContent = { Text(pluralStringResource(R.plurals.count_moments, sameDay, sameDay)) },
+                        modifier = Modifier.sharedCard(dayCardKey(moment.dateKey)).testTag("day_${moment.dateKey}"),
+                    ) { Text(stringResource(R.string.label_whole_day)) }
+                }
+            }
+        }
+        if (rows.isNotEmpty()) {
+            Column(
+                Modifier.padding(start = Space.l, end = Space.l, top = Space.xl),
+                verticalArrangement = Arrangement.spacedBy(ListItemDefaults.SegmentedGap),
+            ) {
+                rows.forEachIndexed { index, row -> row(ListItemDefaults.segmentedShapes(index, rows.size)) }
             }
         }
         Spacer(Modifier.windowInsetsBottomHeight(WindowInsets.navigationBars))
     }
 }
 
+/**
+ * The Moment's photos small in a row, the one shown above turned round among the squares
+ * and the rest dimmed; a tap turns the photos above to it, and a swipe above keeps the one
+ * shown in sight here.
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun PageDots(pager: PagerState, modifier: Modifier = Modifier) {
-    Row(
-        modifier.clip(CircleShape).background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.35f)).padding(horizontal = 8.dp, vertical = 6.dp),
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-    ) {
-        repeat(pager.pageCount) { page ->
-            Box(
-                Modifier.size(if (page == pager.currentPage) 8.dp else 6.dp).clip(CircleShape)
-                    .background(if (page == pager.currentPage) Color.White else Color.White.copy(alpha = 0.5f)),
-            )
+private fun Filmstrip(moment: MomentRecord, urls: MediaUrls, pager: PagerState, modifier: Modifier = Modifier) {
+    val scope = rememberCoroutineScope()
+    val list = rememberLazyListState()
+    val current = pager.currentPage
+    LaunchedEffect(current) {
+        val info = list.layoutInfo
+        val seen = info.visibleItemsInfo.firstOrNull { it.index == current }
+        if (seen == null || seen.offset < 0 || seen.offset + seen.size > info.viewportEndOffset) {
+            list.animateScrollToItem(current)
         }
     }
+    LazyRow(
+        modifier.fillMaxWidth(),
+        state = list,
+        contentPadding = PaddingValues(horizontal = Space.xl),
+        horizontalArrangement = Arrangement.spacedBy(Space.s),
+    ) {
+        itemsIndexed(moment.media, key = { _, media -> media.uid }) { index, media ->
+            val selected = index == current
+            // The one shown breaks from the others' shape, morphing on the motion scheme's
+            // spatial spring; the others under a scrim rather than faded, so they don't turn the
+            // page's grey.
+            val corner by animateDpAsState(if (selected) 28.dp else 12.dp, MaterialTheme.motionScheme.fastSpatialSpec(), label = "thumb shape")
+            val dim by animateFloatAsState(if (selected) 0f else 0.45f, MaterialTheme.motionScheme.fastEffectsSpec(), label = "thumb dim")
+            Box(
+                Modifier.size(56.dp).clip(RoundedCornerShape(corner))
+                    .clickable { scope.launch { pager.animateScrollToPage(index) } }
+                    .testTag("thumb_$index"),
+            ) {
+                Thumbnail(media, urls, size = 56)
+                Box(Modifier.matchParentSize().graphicsLayer { alpha = dim }.background(Color.Black))
+            }
+        }
+    }
+}
+
+/** A row of the segmented list, filled a level above the sheet as the app's cards are. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun segmentColors() = ListItemDefaults.segmentedColors(containerColor = LocalSurfaceLevel.current.raised.fill())
+
+/** How wide what leads a row is, a trip's cover or an icon centred in the same room, so the rows' words line up. */
+private const val ROW_LEAD = 40
+
+@Composable
+private fun RowIcon(icon: ImageVector) {
+    Box(Modifier.size(ROW_LEAD.dp), contentAlignment = Alignment.Center) { Icon(icon, contentDescription = null) }
 }

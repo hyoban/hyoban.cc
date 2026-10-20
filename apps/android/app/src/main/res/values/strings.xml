@@ -213,6 +213,8 @@
     <string name="action_previous">上一步</string>
     <string name="title_edit_moment">编辑时刻</string>
     <string name="action_edit_moment">编辑这个时刻</string>
+    <string name="action_more">更多</string>
+    <string name="label_whole_day">这一天的全部时刻</string>
     <string name="source_saved">保存时的</string>
     <string name="share_as_moment">写一个时刻</string>
     <string name="error_shared_photos">有的照片没能读取</string>

@@ -1,6 +1,7 @@
 package cc.hyoban.moments.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -18,16 +19,19 @@ import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import cc.hyoban.moments.R
 import cc.hyoban.moments.data.media.MediaUrls
@@ -114,28 +118,50 @@ fun CompactMomentRow(moment: MomentRecord, places: Map<String, Place>, urls: Med
     }
 }
 
-/** A back button that floats over a photo or a map, legible on either. */
+/** A back button that floats over a photo or a map, legible on either, narrow as M3 has a back button beside other actions. */
 @Composable
 fun FloatingBack(onBack: () -> Unit, modifier: Modifier = Modifier) =
-    FloatingButton(Icons.AutoMirrored.Rounded.ArrowBack, stringResource(R.string.action_back), onBack, modifier, tag = "back")
+    FloatingButton(Icons.AutoMirrored.Rounded.ArrowBack, stringResource(R.string.action_back), onBack, modifier, tag = "back", width = FloatingWidth.Narrow)
 
-/** A button that floats over a photo or a map, legible on either, as the back button does. */
+/** How wide a floating button is beside its height: narrow for back, wide for the page's main action. */
+enum class FloatingWidth(val width: Dp) { Narrow(40.dp), Standard(48.dp), Wide(64.dp) }
+
+/**
+ * A button that floats over a photo or a map, legible on either, as the back button does.
+ * The page's one main action may be [tonal], in the secondary container's colours, and
+ * [width] wide; the others stay the floating level.
+ */
 @Composable
-fun FloatingButton(icon: ImageVector, label: String, onClick: () -> Unit, modifier: Modifier = Modifier, tag: String, busy: Boolean = false) {
-    // Floating over a photo, a map or a card: the floating level with a shadow, as the tabs are.
+fun FloatingButton(
+    icon: ImageVector,
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    tag: String,
+    busy: Boolean = false,
+    tonal: Boolean = false,
+    width: FloatingWidth = FloatingWidth.Standard,
+) {
+    // Floating over a photo, a map or a card: a shadow, as the tabs have. Its touch target
+    // stays 48dp however narrow it is drawn.
     Surface(
+        onClick = onClick,
+        enabled = !busy,
         shape = Corners.full,
-        color = SurfaceLevel.floating(LocalDarkTheme.current).fill(),
-        contentColor = MaterialTheme.colorScheme.onSurface,
+        color = if (tonal) MaterialTheme.colorScheme.secondaryContainer else SurfaceLevel.floating(LocalDarkTheme.current).fill(),
+        contentColor = if (tonal) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurface,
         shadowElevation = 3.dp,
-        modifier = modifier.statusBarsPadding().sideInsetsPadding().padding(Space.s),
+        modifier = modifier.statusBarsPadding().sideInsetsPadding().padding(Space.s)
+            .size(width.width, FLOATING_HEIGHT).semantics { contentDescription = label }.testTag(tag),
     ) {
         // Busy, it turns a spinner and takes no taps until what it started is done.
-        IconButton(onClick = onClick, enabled = !busy, modifier = Modifier.testTag(tag)) {
-            if (busy) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp) else Icon(icon, contentDescription = label)
+        Box(contentAlignment = Alignment.Center) {
+            if (busy) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp) else Icon(icon, contentDescription = null)
         }
     }
 }
+
+private val FLOATING_HEIGHT = 48.dp
 
 /** Card-coloured sheet that rises over a photo or a map at the top of a page. */
 @Composable
