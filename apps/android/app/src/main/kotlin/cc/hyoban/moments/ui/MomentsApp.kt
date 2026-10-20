@@ -76,8 +76,10 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
+import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -112,6 +114,7 @@ import cc.hyoban.moments.ui.components.LocalSharedTransitionScope
 import cc.hyoban.moments.ui.components.LocalViewerShowing
 import cc.hyoban.moments.ui.components.LocalViewerShownKey
 import cc.hyoban.moments.ui.components.NAV_ACCESSORY_GAP
+import cc.hyoban.moments.ui.components.NAV_HEIGHT
 import cc.hyoban.moments.ui.components.NavItem
 import cc.hyoban.moments.ui.components.RAIL_WIDTH
 import cc.hyoban.moments.ui.components.Symbols
@@ -257,7 +260,8 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
     val clearance = when {
         current == null -> 0.dp
         landscape -> navBottom
-        else -> 88.dp + navBottom
+        // The tabs, the room under them and a little above, as tall as larger text makes the tabs.
+        else -> NAV_HEIGHT + 20.dp + navBottom
     }
     // Down the leading side, as Material 3 places a navigation rail, whichever way the phone
     // is turned; the system's insets keep it clear of the camera's cutout there.
@@ -277,14 +281,20 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
     val motion = MaterialTheme.motionScheme
     val transitions = TransitionMotion
     LaunchedEffect(container, messages) {
-        // One at a time, each waiting for the one before; one with an action stays longer.
+        // Each new one takes the place of the one shown. One with an action stays, with a way to
+        // close it, until it is acted on or closed, as Material 3 has an actionable snackbar
+        // wait for its reader; one without goes by itself.
         container.messages.collect { message ->
-            val result = messages.showSnackbar(
-                message.text,
-                actionLabel = message.action,
-                duration = if (message.action != null) SnackbarDuration.Long else SnackbarDuration.Short,
-            )
-            if (result == SnackbarResult.ActionPerformed) message.onAction() else message.onDismiss()
+            messages.currentSnackbarData?.dismiss()
+            launch {
+                val result = messages.showSnackbar(
+                    message.text,
+                    actionLabel = message.action,
+                    withDismissAction = message.action != null,
+                    duration = if (message.action != null) SnackbarDuration.Indefinite else SnackbarDuration.Short,
+                )
+                if (result == SnackbarResult.ActionPerformed) message.onAction() else message.onDismiss()
+            }
         }
     }
     val windowHeight = with(LocalDensity.current) { LocalWindowInfo.current.containerSize.height.toDp() }
@@ -330,7 +340,8 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
     // A Surface rather than a bare background, so text without a colour of its own takes the page's on-colour in both modes.
     // Its test tags are resource ids too, so `uiautomator dump` names the buttons, tabs and cards it finds.
     Surface(Modifier.fillMaxSize().semantics { testTagsAsResourceId = true }, color = AppColors.page) {
-        Box(Modifier.fillMaxSize().nestedScroll(hideOnScroll)) {
+        // A traversal group, so the tabs below can come first to a screen reader.
+        Box(Modifier.fillMaxSize().nestedScroll(hideOnScroll).semantics { isTraversalGroup = true }) {
             CompositionLocalProvider(
                 LocalBottomClearance provides clearance,
                 LocalRailSpace provides rail,
@@ -456,7 +467,12 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                 current != null && viewer == null,
                 enter = fadeIn() + if (landscape) slideInHorizontally { if (railLeft) -it else it } else slideInVertically { it },
                 exit = fadeOut() + if (landscape) slideOutHorizontally { if (railLeft) -it else it } else slideOutVertically { it },
-                modifier = if (landscape) {
+                // Read before the page, the tabs and the button beside them, as Material 3 has
+                // assistive technology reach navigation and the FAB without the whole list first.
+                modifier = Modifier.semantics {
+                    isTraversalGroup = true
+                    traversalIndex = -1f
+                }.then(if (landscape) {
                     // In the middle of what the system bars leave, as the map's buttons above and
                     // below it are spaced.
                     Modifier.align(if (railLeft) AbsoluteAlignment.CenterLeft else AbsoluteAlignment.CenterRight)
@@ -464,7 +480,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                 } else {
                     Modifier.align(Alignment.BottomCenter).fillMaxWidth().navigationBarsPadding()
                         .padding(start = Space.gutter, end = Space.gutter, bottom = Space.m)
-                },
+                }),
             ) {
                 // Down the side, the tabs have room of their own, so they stay open as a list scrolls.
                 val folded = !landscape && !tabsShown
@@ -661,7 +677,8 @@ fun rememberShowMessage(): (String) -> Unit {
 val LocalNavAccessory = staticCompositionLocalOf<MutableState<(@Composable () -> Unit)?>> { mutableStateOf(null) }
 
 /** The tabs standing down the side, with the room around them. */
-private val RAIL_CLEARANCE = Space.m + RAIL_WIDTH + Space.s
+private val RAIL_CLEARANCE: Dp
+    @Composable get() = Space.m + RAIL_WIDTH + Space.s
 
 /** A destination whose screen knows its transition, so its photos can share their place with the next screen's. */
 /**

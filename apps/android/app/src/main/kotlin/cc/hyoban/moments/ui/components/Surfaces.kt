@@ -57,6 +57,8 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
@@ -119,7 +121,7 @@ fun PressableCard(onClick: () -> Unit, modifier: Modifier = Modifier, content: @
 fun Pill(text: String, modifier: Modifier = Modifier, icon: ImageVector? = null) {
     Row(
         modifier.clip(Corners.full).background(LocalSurfaceLevel.current.raised.fill())
-            .height(28.dp).padding(start = if (icon != null) 8.dp else 12.dp, end = 12.dp),
+            .heightIn(min = 28.dp).padding(start = if (icon != null) 8.dp else 12.dp, end = 12.dp, top = 4.dp, bottom = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
@@ -188,7 +190,8 @@ fun DayPill(text: String) {
             Text(
                 text,
                 style = MaterialTheme.typography.labelLarge,
-                modifier = Modifier.height(32.dp).wrapContentHeight(Alignment.CenterVertically).padding(horizontal = 14.dp),
+                // At least its own height, taller with larger text rather than cutting it.
+                modifier = Modifier.heightIn(min = 32.dp).wrapContentHeight(Alignment.CenterVertically).padding(horizontal = 14.dp, vertical = 6.dp),
             )
         }
     }
@@ -201,11 +204,34 @@ private val TAB_WIDTH = 76.dp
 private val TAB_HEIGHT = 56.dp
 private val DOCK_PADDING = 6.dp
 
+/**
+ * How much a tab grows for the phone's larger text, up to twice the size: a line of its
+ * name taller, so the name stays whole, as Material 3 has a navigation bar grow with its text.
+ */
+@Composable
+private fun textGrowth(): Dp = 16.dp * (LocalDensity.current.fontScale - 1f).coerceIn(0f, 1f)
+
+/**
+ * A tab's size along the bottom or, [vertical], down the side, grown with the text: a line
+ * taller; along the bottom no wider, so the tabs and their button still fit a narrow phone,
+ * down the side wider too, where there is room.
+ */
+@Composable
+private fun tabSize(vertical: Boolean): DpSize {
+    val grow = textGrowth()
+    return if (vertical) DpSize(RAIL_TAB_WIDTH + grow * 1.5f, RAIL_TAB_HEIGHT + grow) else DpSize(TAB_WIDTH, TAB_HEIGHT + grow)
+}
+
+/** How big a button standing beside the tabs is: their height at the phone's usual text size, so it fits beside them at any. */
+val NAV_BUTTON_SIZE = TAB_HEIGHT + DOCK_PADDING * 2
+
 /** How tall the floating tabs are, and so a button standing beside them. */
-val NAV_HEIGHT = TAB_HEIGHT + DOCK_PADDING * 2
+val NAV_HEIGHT: Dp
+    @Composable get() = tabSize(vertical = false).height + DOCK_PADDING * 2
 
 /** How wide the app's three tabs are along the bottom. */
-val NAV_WIDTH = TAB_WIDTH * 3 + DOCK_PADDING * 2
+val NAV_WIDTH: Dp
+    @Composable get() = tabSize(vertical = false).width * 3 + DOCK_PADDING * 2
 
 /** How big the tabs are folded into a circle while a list is read on. */
 private val NAV_FOLDED = 56.dp
@@ -223,15 +249,19 @@ private val RAIL_TAB_HEIGHT = 52.dp
 private val RAIL_PADDING = 4.dp
 
 /** How wide the tabs are standing down the side. */
-val RAIL_WIDTH = RAIL_TAB_WIDTH + RAIL_PADDING * 2
+val RAIL_WIDTH: Dp
+    @Composable get() = tabSize(vertical = true).width + RAIL_PADDING * 2
 
 /** How tall the app's three tabs are standing down the side. */
-val RAIL_HEIGHT = RAIL_TAB_HEIGHT * 3 + RAIL_PADDING * 2
+val RAIL_HEIGHT: Dp
+    @Composable get() = tabSize(vertical = true).height * 3 + RAIL_PADDING * 2
 
 /**
  * The tabs as a dock floating over the content, every tab its icon over its name. A
  * platter in the secondary container, Material 3's active indicator, sits under the chosen
- * one, whose icon and name take its on-colour; a tab pressed ripples, as any target does. The platter follows a finger dragged along the dock, lifting a
+ * one, whose icon and name take its on-colour; a tab pressed ripples, as any target does.
+ * Larger text grows the tabs rather than cutting their names. The platter follows a finger
+ * dragged along the dock, lifting a
  * little while held and springing to the tab it is let go nearest, with a fling carrying
  * it on, so tabs can be scrubbed through as well as tapped. Moving, it stretches the way
  * it goes and thins a little, as a drop would, more the faster it goes.
@@ -254,8 +284,9 @@ fun FloatingNav(
 ) {
     val density = LocalDensity.current
     // Down the side, the tabs stack, and the platter and a drag run up and down.
-    val tabWidth = if (vertical) RAIL_TAB_WIDTH else TAB_WIDTH
-    val tabHeight = if (vertical) RAIL_TAB_HEIGHT else TAB_HEIGHT
+    val tab = tabSize(vertical)
+    val tabWidth = tab.width
+    val tabHeight = tab.height
     val step = with(density) { (if (vertical) tabHeight else tabWidth).toPx() }
     val last = (items.size - 1).coerceAtLeast(0)
     val position = remember(vertical) { Animatable(selected * step) }
@@ -277,13 +308,13 @@ fun FloatingNav(
 
     val dark = LocalDarkTheme.current
     val dock = SurfaceLevel.floating(dark)
-    val width = TAB_WIDTH * items.size + DOCK_PADDING * 2
+    val width = tabWidth * items.size + DOCK_PADDING * 2
     Surface(
         shape = Corners.full,
         color = dock.fill(),
         shadowElevation = 6.dp,
         modifier = modifier.then(
-            if (vertical) Modifier else Modifier.size(lerp(width, NAV_FOLDED, fold), lerp(NAV_HEIGHT, NAV_FOLDED, fold)),
+            if (vertical) Modifier else Modifier.size(lerp(width, NAV_FOLDED, fold), lerp(tabHeight + DOCK_PADDING * 2, NAV_FOLDED, fold)),
         ).draggable(
             enabled = !collapsed,
             orientation = if (vertical) Orientation.Vertical else Orientation.Horizontal,
@@ -306,7 +337,7 @@ fun FloatingNav(
     ) {
         CompositionLocalProvider(LocalSurfaceLevel provides dock) {
             // The chosen tab's centre, drawn towards the middle of the circle as it folds.
-            val toMiddle = with(density) { (DOCK_PADDING + TAB_WIDTH * (selected + 0.5f) - NAV_FOLDED / 2).toPx() } * fold
+            val toMiddle = with(density) { (DOCK_PADDING + tabWidth * (selected + 0.5f) - NAV_FOLDED / 2).toPx() } * fold
             Box(
                 Modifier
                     .wrapContentWidth(Alignment.Start, unbounded = true)

@@ -2,7 +2,6 @@ package cc.hyoban.moments.ui.publish
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -257,8 +256,10 @@ private fun ChangeCard(
     onRevert: (() -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
+    // Not tapped as a whole: its actions are buttons of their own, as Material 3 keeps a card
+    // either tapped or holding buttons, never both.
     Column(
-        (if (onOpen != null) Modifier.clickable(onClick = onOpen) else Modifier)
+        Modifier
             .fillMaxWidth()
             .padding(start = Space.l, end = Space.s, top = Space.s, bottom = Space.l)
             .testTag("change_${moment.uid}"),
@@ -274,6 +275,11 @@ private fun ChangeCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.weight(1f).padding(vertical = Space.m),
                 )
+            }
+            if (onOpen != null) {
+                TextButton(onClick = onOpen, modifier = Modifier.testTag("open_${moment.uid}")) {
+                    Text(stringResource(R.string.action_view))
+                }
             }
             if (onRevert != null) {
                 TextButton(onClick = onRevert, modifier = Modifier.testTag("revert_${moment.uid}")) {
