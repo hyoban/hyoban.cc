@@ -37,6 +37,30 @@
                 <data android:scheme="moments" />
             </intent-filter>
         </activity>
+
+        <!-- The home screen's widgets: a Moment from this day in an earlier year, and the trip. -->
+        <receiver
+            android:name=".widget.MemoryWidgetReceiver"
+            android:label="@string/widget_memory_name"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_memory" />
+        </receiver>
+        <receiver
+            android:name=".widget.TripWidgetReceiver"
+            android:label="@string/widget_trip_name"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_trip" />
+        </receiver>
     </application>
 
 </manifest>
