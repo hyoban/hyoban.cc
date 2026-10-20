@@ -27,6 +27,12 @@ import cc.hyoban.moments.ui.components.READABLE_WIDTH
 import cc.hyoban.moments.ui.components.landscape
 import cc.hyoban.moments.ui.components.isLandscape
 import cc.hyoban.moments.ui.LocalRailSpace
+import cc.hyoban.moments.ui.LocalNavAccessory
+import cc.hyoban.moments.ui.components.NAV_HEIGHT
+import cc.hyoban.moments.ui.components.NAV_WIDTH
+import cc.hyoban.moments.ui.components.NAV_ACCESSORY_GAP
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.AbsoluteAlignment
 import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.animation.scaleIn
@@ -172,6 +178,17 @@ fun MapScreen(container: AppContainer, onMoment: (String) -> Unit, onPlace: (Str
         }
     }
 
+    // Upright, locating stands beside the tabs, the app placing it as they make room.
+    val accessory = LocalNavAccessory.current
+    val currentLocate by rememberUpdatedState(requestLocate)
+    val locateBeside = remember<@Composable () -> Unit> {
+        { LocateButton(locating, onClick = { currentLocate() }, modifier = Modifier.size(NAV_HEIGHT)) }
+    }
+    DisposableEffect(accessory) {
+        accessory.value = locateBeside
+        onDispose { if (accessory.value === locateBeside) accessory.value = null }
+    }
+
     Box(Modifier.fillMaxSize()) {
         PlacesMap(
             mapPlaces,
@@ -233,16 +250,15 @@ fun MapScreen(container: AppContainer, onMoment: (String) -> Unit, onPlace: (Str
                 LocateButton(locating, onClick = requestLocate)
             }
         } else {
-            // Above the trip's card while it shows, else just above the tabs, the compass
-            // over it while the map is turned.
-            val lift by animateDpAsState(if (trip != null) 96.dp else 0.dp, label = "locate")
-            Column(
-                Modifier.align(Alignment.BottomEnd).sideInsetsPadding()
-                    .padding(end = Space.gutter, bottom = LocalBottomClearance.current + Space.s + lift),
-                verticalArrangement = Arrangement.spacedBy(Space.m),
+            // While the map is turned, the compass over locating beside the tabs, and above
+            // the trip's card while it shows.
+            val lift by animateDpAsState(if (trip != null) 96.dp else 0.dp, label = "compass")
+            Box(
+                Modifier.align(Alignment.BottomCenter)
+                    .offset(x = (NAV_WIDTH + NAV_ACCESSORY_GAP) / 2)
+                    .padding(bottom = LocalBottomClearance.current + Space.s + lift),
             ) {
                 CompassButton(turned, bearing, onClick = { north++ })
-                LocateButton(locating, onClick = requestLocate)
             }
         }
         // Kept while the card leaves, after the route is let go.
