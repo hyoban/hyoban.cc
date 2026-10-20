@@ -39,11 +39,16 @@ or change of API touches it. It is shown among the site's, marked 仅本机 (on 
 and can be changed or deleted from its page.
 
 With the API's token, set on the settings page (kept in a file of the app's that backups
-leave out), a Moment is published from the editor's 发布 or its page's upload button: the
-places only the phone knows go first, named by the API from their pinyin, then the
-photos' originals, then the Moment, which is then published, and it leaves the phone's
-store for the site's. The site's Moments can then be changed and deleted from their
-pages too, each change sent to the API as it is saved.
+leave out), the site's Moments can be changed and deleted from their pages too. Nothing
+reaches the site as it is saved: the phone's new Moments, the site's changed (marked
+改动未发布) and those deleted wait on the phone, past a restart, until they are
+published together. The ☁ in the Moments tab's header, with how many there are,
+opens 发布更改, which lists them, the changed with what changed, and takes back a change
+or a deletion; its 全部发布到网站 uploads the originals of the new photos, one by one,
+then sends all the rest as one `POST /v1/changes`, which the API takes whole or not at
+all: the places only the phone knows, named by the API from their pinyin, the Moments,
+each published, and the deletions. What is published leaves the phone's store for the
+site's.
 
 On the home screen it is 这里 (here): Material 3's nine-lobed cookie shape in green on
 pale mint, with the map's "you are here" pulse in it, as an adaptive icon with its own

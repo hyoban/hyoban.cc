@@ -39,13 +39,11 @@ import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -119,9 +117,9 @@ import java.time.ZoneOffset
 /**
  * A Moment written on the phone: its words, the photos picked for it, and when and where,
  * worked out from the photos or else from now and where the phone is, each open to
- * change. Saved, it is kept on the phone; with the API's token it can be published as it
- * is saved. Given a Moment to [edit], it starts from that one as it was saved: one of the
- * phone's is kept as changed, one of the site's, with the token, sent to the API as changed.
+ * change. Saved, it is kept on the phone, and reaches the site only when the changes are
+ * published. Given a Moment to [edit], it starts from that one as it was saved: one of the
+ * phone's is kept as changed, as is one of the site's, with the token, until it is published.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -252,9 +250,9 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
     val leave = { if (changed) confirmingDiscard = true else onBack() }
     BackHandler(enabled = changed && !saving) { confirmingDiscard = true }
 
-    // Kept on the phone, then published there when [publish]; one of the site's goes to the
-    // API as it is saved, and the page waits for it, staying open if it can't.
-    val save: (Boolean) -> Unit = save@{ publish ->
+    // Kept on the phone, one of the site's as changed too; none of it goes to the API until
+    // the changes are published.
+    val save: () -> Unit = save@{
         if (saving) return@save
         saving = true
         scope.launch {
@@ -263,23 +261,12 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
                     // A place left as it was keeps all the Moment's places, as it may have more than one.
                     val places = if (original != null && chosenPlace == originalPlace) original.places else null
                     val (moment, newPlace) = buildMoment(context, container, text, photos, infos, time, place, original, originalMedia, places)
-                    when {
-                        published -> try {
-                            container.push(moment, newPlace)
-                        } catch (error: Exception) {
-                            deleteNewCopies(moment, originalMedia.values)
-                            throw error
-                        }
-                        original == null -> container.addLocal(moment, newPlace)
-                        else -> container.updateLocal(moment, newPlace)
-                    }
-                    if (publish) container.publish(moment)
+                    if (original == null) container.addLocal(moment, newPlace) else container.updateLocal(moment, newPlace)
                 }
                 onSaved()
             } catch (error: Exception) {
                 saving = false
-                val message = if (published) R.string.error_publish else R.string.error_save
-                Toast.makeText(context, context.getString(message, error.message ?: error.toString()), Toast.LENGTH_LONG).show()
+                Toast.makeText(context, context.getString(R.string.error_save, error.message ?: error.toString()), Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -290,29 +277,11 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
             onBack = leave,
             modifier = Modifier.background(AppColors.page),
             actions = {
-                // With the token, a Moment not yet the site's can be kept on the phone or published.
-                if (canPublish && !published) {
-                    TextButton(onClick = { save(false) }, enabled = written && changed && !saving, modifier = Modifier.testTag("save")) {
-                        Text(stringResource(R.string.action_save))
-                    }
-                    Button(
-                        onClick = { save(true) },
-                        enabled = written && !saving,
-                        modifier = Modifier.padding(end = Space.s).testTag("publish"),
-                    ) { Text(stringResource(R.string.action_publish)) }
-                } else {
-                    Button(
-                        onClick = { save(false) },
-                        enabled = written && changed && !saving,
-                        modifier = Modifier.padding(end = Space.s).testTag("save"),
-                    ) {
-                        if (saving && published) {
-                            CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp, color = LocalContentColor.current)
-                        } else {
-                            Text(stringResource(R.string.action_save))
-                        }
-                    }
-                }
+                Button(
+                    onClick = save,
+                    enabled = written && changed && !saving,
+                    modifier = Modifier.padding(end = Space.s).testTag("save"),
+                ) { Text(stringResource(R.string.action_save)) }
             },
         ) {
             PageWidth { columns ->
@@ -350,7 +319,7 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
                     }
                     val note = when {
                         published -> R.string.note_published
-                        canPublish -> R.string.note_local_or_publish
+                        canPublish -> R.string.note_local_then_publish
                         else -> R.string.note_local_only
                     }
                     Group(stringResource(R.string.section_when_where), stringResource(note)) {
@@ -569,14 +538,6 @@ private suspend fun buildMoment(
             updatedAt = now,
         )
     return moment to newPlace
-}
-
-/** The phone's copies of the photos added to [moment], not among [kept], gone, when it couldn't be sent. */
-private fun deleteNewCopies(moment: MomentRecord, kept: Collection<MomentMedia>) {
-    val keptUids = kept.map { it.uid }.toSet()
-    moment.media.filter { it.uid !in keptUids && it.local?.copied == true }
-        .mapNotNull { media -> media.local?.uri?.let { runCatching { File(java.net.URI(it)) }.getOrNull() } }
-        .forEach(File::delete)
 }
 
 private const val MAX_PHOTOS = 9

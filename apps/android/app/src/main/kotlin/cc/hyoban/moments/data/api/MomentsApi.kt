@@ -23,7 +23,7 @@ import java.io.IOException
 
 // The API (apps/api in the repository). Its public reads: the published Moments as a
 // change feed, and the places and trips whole, with no token, so no drafts. Its writes,
-// with the owner's token: a place, a photo's original, a Moment, its publishing, its removal.
+// with the owner's token: a photo's original, then everything the phone changed as one.
 
 /** A page of the change feed: what changed after a revision, and where the next page starts. */
 @Serializable
@@ -42,25 +42,24 @@ data class PlacesResponse(val revision: Long, val places: Map<String, Place>)
 @Serializable
 data class TripsResponse(val revision: Long, val trips: List<TripRecord>)
 
-/** A place as the API keeps it: under the id given, or of a known one it is. */
+/** Everything the phone changed, for `POST /v1/changes`: the places only it knows, the Moments to publish, the uids to delete. */
 @Serializable
-data class SavedPlace(val id: String, val place: Place)
+data class ChangeSet(val places: Map<String, Place>, val moments: List<MomentRecord>, val deleted: List<String>)
+
+/** What the API did with a [ChangeSet]: the id each place sent is known by, the Moments as published, the uids deleted. */
+@Serializable
+data class AppliedChanges(val places: Map<String, String>, val moments: List<MomentRecord>, val deleted: List<String>)
 
 /** What the app writes the records to, with the owner's token; the tests stand in for the API with their own. */
 interface MomentsWriter {
-    /** Adds a place, or finds the known one it is; the id to name it by. */
-    suspend fun savePlace(id: String, place: Place): SavedPlace
-
     /** Keeps a photo's original for media item [mediaUid] of Moment [momentUid], until it publishes. */
     suspend fun uploadImage(momentUid: String, mediaUid: String, file: File, contentType: String)
 
-    /** Saves the Moment; a published one publishes its new media as it saves. */
-    suspend fun saveMoment(moment: MomentRecord): MomentRecord
-
-    /** Gives a saved draft its published id and publishes its media. */
-    suspend fun publishMoment(uid: String): MomentRecord
-
-    suspend fun deleteMoment(uid: String)
+    /**
+     * Applies all of [changes] in one write, each Moment published, its originals uploaded
+     * first; the API takes all of it or none.
+     */
+    suspend fun applyChanges(changes: ChangeSet): AppliedChanges
 }
 
 /** The API answered a write with something other than 2xx: its status and what it said. */
@@ -93,22 +92,12 @@ class MomentsApi(
 
     override suspend fun trips(): TripsResponse = get("/v1/trips", TripsResponse.serializer())
 
-    override suspend fun savePlace(id: String, place: Place): SavedPlace =
-        decode(write("PUT", "/v1/places/$id", encode(Place.serializer(), place)), SavedPlace.serializer())
-
     override suspend fun uploadImage(momentUid: String, mediaUid: String, file: File, contentType: String) {
         write("PUT", "/v1/moments/$momentUid/media/$mediaUid/image", file.asRequestBody(contentType.toMediaType()))
     }
 
-    override suspend fun saveMoment(moment: MomentRecord): MomentRecord =
-        decode(write("PUT", "/v1/moments/${moment.uid}", encode(MomentRecord.serializer(), moment)), MomentRecord.serializer())
-
-    override suspend fun publishMoment(uid: String): MomentRecord =
-        decode(write("POST", "/v1/moments/$uid/publish", ByteArray(0).toRequestBody()), MomentRecord.serializer())
-
-    override suspend fun deleteMoment(uid: String) {
-        write("DELETE", "/v1/moments/$uid", null)
-    }
+    override suspend fun applyChanges(changes: ChangeSet): AppliedChanges =
+        decode(write("POST", "/v1/changes", encode(ChangeSet.serializer(), changes)), AppliedChanges.serializer())
 
     private suspend fun <T> get(path: String, serializer: KSerializer<T>): T =
         decode(Http.getText(baseUrl() + path, client, io), serializer)
@@ -119,7 +108,7 @@ class MomentsApi(
     private fun <T> decode(text: String, serializer: KSerializer<T>): T = Spec.json.decodeFromString(serializer, text)
 
     /** A write with the token; its answer's body, or an [ApiException] with what the API said. */
-    private suspend fun write(method: String, path: String, body: RequestBody?): String = withContext(io) {
+    private suspend fun write(method: String, path: String, body: RequestBody): String = withContext(io) {
         val token = token()?.takeIf { it.isNotBlank() } ?: throw ApiException(401, "No API token")
         val request = Request.Builder().url(baseUrl() + path).method(method, body)
             .header("Authorization", "Bearer $token")

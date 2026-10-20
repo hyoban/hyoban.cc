@@ -34,7 +34,6 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
-import androidx.compose.material.icons.rounded.CloudUpload
 import androidx.compose.material.icons.rounded.DeleteOutline
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.Luggage
@@ -122,7 +121,7 @@ fun MomentScreen(
         val screenHeight = maxHeight
         val scroll = rememberScrollState()
         val details: @Composable () -> Unit = {
-            MomentDetails(moment, places, trip, moments, trips, urls, onPlace, onTrip)
+            MomentDetails(moment, places, trip, moments, trips, urls, onPlace, onTrip, changed = container.repository.isChanged(moment.uid))
         }
         if (landscape && moment.media.isNotEmpty()) {
             // On its side, the photos fill the left half, up under the status bar, and the
@@ -169,46 +168,18 @@ fun MomentScreen(
             }
         }
         FloatingBack(onBack, Modifier.align(Alignment.TopStart))
-        // What was written on the phone can be changed, published or taken back; the site's
-        // Moments only with the API's token.
+        // What was written on the phone can be changed or deleted; the site's Moments only
+        // with the API's token, and only on the phone until the changes are published.
         val local = container.repository.isLocal(uid)
         val canPublish = container.canPublish
         if (local || canPublish) {
             val publishing by container.publishing.collectAsStateWithLifecycle()
-            val busy = uid in publishing
             var confirming by remember { mutableStateOf(false) }
-            var confirmingPublish by remember { mutableStateOf(false) }
-            Row(Modifier.align(Alignment.TopEnd)) {
-                if (local && canPublish) {
-                    FloatingButton(
-                        Icons.Rounded.CloudUpload,
-                        stringResource(if (busy) R.string.message_publishing else R.string.action_publish_moment),
-                        onClick = { confirmingPublish = true },
-                        tag = "publish",
-                        busy = busy,
-                    )
-                }
-                if (!busy) {
+            if (publishing == null) {
+                Row(Modifier.align(Alignment.TopEnd)) {
                     FloatingButton(Icons.Rounded.Edit, stringResource(R.string.action_edit_moment), onClick = { onEdit(uid) }, tag = "edit")
                     FloatingButton(Icons.Rounded.DeleteOutline, stringResource(R.string.action_delete_moment), onClick = { confirming = true }, tag = "delete")
                 }
-            }
-            if (confirmingPublish) {
-                AlertDialog(
-                    onDismissRequest = { confirmingPublish = false },
-                    title = { Text(stringResource(R.string.action_publish_moment)) },
-                    text = { Text(stringResource(R.string.confirm_publish_moment)) },
-                    confirmButton = {
-                        TextButton(
-                            onClick = {
-                                confirmingPublish = false
-                                container.publish(moment)
-                            },
-                            modifier = Modifier.testTag("confirm_publish"),
-                        ) { Text(stringResource(R.string.action_publish)) }
-                    },
-                    dismissButton = { TextButton(onClick = { confirmingPublish = false }) { Text(stringResource(R.string.action_cancel)) } },
-                )
             }
             if (confirming) {
                 AlertDialog(
@@ -219,7 +190,7 @@ fun MomentScreen(
                         TextButton(
                             onClick = {
                                 confirming = false
-                                if (local) container.deleteLocal(uid) else container.deletePublished(uid)
+                                container.delete(uid)
                                 onBack()
                             },
                             modifier = Modifier.testTag("confirm_delete"),
@@ -276,6 +247,7 @@ private fun MomentDetails(
     urls: MediaUrls,
     onPlace: (String) -> Unit,
     onTrip: (String) -> Unit,
+    changed: Boolean = false,
 ) {
     Column(
         Modifier.padding(start = Space.xl, end = Space.xl, top = Space.xl, bottom = Space.xxl),
@@ -293,6 +265,7 @@ private fun MomentDetails(
                 NeutralChip(places[id]?.name ?: id, Icons.Rounded.Place, onClick = { onPlace(id) }, modifier = Modifier.testTag("place_$id"))
             }
             if (moment.published == null) Pill(stringResource(R.string.label_on_phone), icon = Icons.Rounded.PhoneAndroid)
+            if (changed) Pill(stringResource(R.string.label_unpublished_change), icon = Icons.Rounded.PhoneAndroid)
         }
         if (moment.text.isNotBlank()) {
             SelectionContainer {

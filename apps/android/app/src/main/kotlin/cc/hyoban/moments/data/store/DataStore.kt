@@ -38,6 +38,14 @@ class DataStore(val root: File) {
 
     fun writeKeptPlaces(ids: Set<String>) = write("kept-places.json", KeptPlaces.serializer(), KeptPlaces(ids.sorted()))
 
+    @Serializable
+    private data class Removed(val uids: List<String>)
+
+    /** The site's Moments deleted on the phone and not yet on the site: the app's own note, outside the spec. */
+    fun readRemoved(): Set<String> = read("removed.json", Removed.serializer())?.uids?.toSet().orEmpty()
+
+    fun writeRemoved(uids: Set<String>) = write("removed.json", Removed.serializer(), Removed(uids.sorted()))
+
     fun readTrips(): List<TripRecord> = list("trips").map { file -> decode(file, TripRecord.serializer()) }
 
     /** Makes the trips on disk exactly these. */
