@@ -24,9 +24,8 @@ import {
   readAll,
   revisionQuery,
   routesQuery,
-  toPlaces,
+  toRecordsByKey,
   toRevision,
-  toRoutes,
   tripsQuery,
   type Database,
 } from './database.ts'
@@ -58,6 +57,9 @@ const SIMPLIFY_TOLERANCE = 0.0003
  */
 export const FETCHES_PER_RUN = 30
 
+/** How many legs are fetched at once, so a run stays well inside `waitUntil`'s time. */
+const FETCHES_AT_ONCE = 6
+
 /** What the trips are built from, read at one revision. */
 export async function readTripInputs(db: Database) {
   const [revision, places, trips, moments, routes] = await readAll(db, [
@@ -73,14 +75,14 @@ export async function readTripInputs(db: Database) {
 
   return {
     revision: toRevision(revision),
-    places: placesSchema.parse(toPlaces(places)),
+    places: placesSchema.parse(toRecordsByKey(places)),
     trips: (trips as { record: string }[]).map((row) =>
       tripRecordSchema.parse(JSON.parse(row.record)),
     ),
     moments: (moments as { record: string }[]).map((row) =>
       momentRecordSchema.parse(JSON.parse(row.record)),
     ),
-    routes: toRoutes(routes) as Record<string, TripRoute>,
+    routes: toRecordsByKey(routes) as Record<string, TripRoute>,
   }
 }
 
@@ -147,38 +149,50 @@ export function getNeededLegs(trips: ReturnType<typeof buildTrips>, places: Plac
 
 /**
  * Brings the routes up to date with the trips: fetches the legs missing, up to
- * `FETCHES_PER_RUN`, and marks deleted the ones no trip needs. One transaction, and none
- * when nothing changed. Returns what it did.
+ * `FETCHES_PER_RUN`, and marks deleted the ones no trip needs, in one transaction and
+ * none when nothing changed, and keeps what `GET /v1/routes` answers from what it read,
+ * so the trips aren't read again for it. Returns what it did.
  */
 export async function fillRoutes(context: WriteContext, fetchRoute: RouteFetcher) {
   const { db } = context
   const inputs = await readTripInputs(db)
   const existing = inputs.routes
   const needed = getNeededLegs(buildTrips(inputs), inputs.places)
-  const fetched = new Map<string, Route>()
   const missing = [...needed].filter(([key]) => !(key in existing))
   let failed = 0
+  const answers = await mapConcurrently(
+    missing.slice(0, FETCHES_PER_RUN),
+    FETCHES_AT_ONCE,
+    async ([key, leg]) => {
+      try {
+        const route = await fetchRoute(leg)
 
-  for (const [key, leg] of missing.slice(0, FETCHES_PER_RUN)) {
-    try {
-      const route = await fetchRoute(leg)
+        if (route) {
+          return [key, routeSchema.parse(route)] as const
+        }
 
-      if (route) {
-        fetched.set(key, routeSchema.parse(route))
-      } else {
         console.warn(
           `No ${leg.by === 'train' ? 'rail line' : 'road'} for ${leg.from.name} → ${leg.to.name}; drawn straight`,
         )
+      } catch (caught) {
+        failed += 1
+        console.error(`Fetching ${leg.from.name} → ${leg.to.name} failed`, caught)
       }
-    } catch (caught) {
-      failed += 1
-      console.error(`Fetching ${leg.from.name} → ${leg.to.name} failed`, caught)
-    }
-  }
 
+      return undefined
+    },
+  )
+  const fetched = new Map(answers.filter((answer) => answer !== undefined))
   const unused = Object.keys(existing).filter((key) => !needed.has(key))
+  // As readTripInputs takes the routes it reads: checked, as the spec has them.
+  const routes = { ...existing, ...Object.fromEntries(fetched) } as Record<string, TripRoute>
+  const changes = fetched.size > 0 || unused.length > 0
+  // A commit takes the next revision, and the answer is of that one.
+  const revision = inputs.revision + (changes ? 1 : 0)
+  const answer = await answerTripRoutes(buildTrips(inputs, routes), revision)
+  const keep = keepTripRoutes(db, answer, revision)
 
-  if (fetched.size > 0 || unused.length > 0) {
+  if (changes) {
     await commit(context, [
       ...[...fetched].map(([key, route]) => upsert(db, 'routes', routeRow(key, route))),
       ...unused.map((key) =>
@@ -186,7 +200,10 @@ export async function fillRoutes(context: WriteContext, fetchRoute: RouteFetcher
           .prepare(`UPDATE routes SET deleted_at = ?1, rev = ${REVISION} WHERE key = ?2`)
           .bind(context.now, key),
       ),
+      ...keep,
     ])
+  } else {
+    await db.batch(keep)
   }
 
   return {
@@ -200,44 +217,99 @@ export async function fillRoutes(context: WriteContext, fetchRoute: RouteFetcher
 /** Where `meta` keeps the answer of `GET /v1/routes`, with the revision it is of in it. */
 const TRIP_ROUTES = 'trip_routes'
 
+/** Where `meta` keeps that answer's ETag, which changes only with the routes. */
+const TRIP_ROUTES_ETAG = 'trip_routes_etag'
+
+/** `GET /v1/routes`: the JSON text it answers, and an ETag of the routes in it. */
+export interface TripRoutes {
+  text: string
+  etag: string
+}
+
 /**
  * Each published trip's route as the site's overview draws it: drives one after another
  * as one stretch, and each train, plane or ferry as a stretch of its own, drawn dashed.
  * Worked out from every Moment, so the answer is kept in `meta` as the JSON text it is
  * served as, and only worked out again once the revision has moved on, by a write here
- * or one that came past the Worker.
+ * or one that came past the Worker. Its ETag is of the routes alone, so a client that
+ * has them hears they haven't changed even when the revision has.
  */
-export async function readTripRoutes(db: Database) {
-  const [revision, kept] = await readAll(db, [
-    revisionQuery(db),
-    db
-      .prepare(
-        `SELECT value, json_extract(value, '$.revision') AS revision FROM meta WHERE key = ?1`,
-      )
-      .bind(TRIP_ROUTES),
-  ])
-  const [keptRow] = kept as { value: string; revision: number }[]
+export async function readTripRoutes(db: Database): Promise<TripRoutes> {
+  const kept = await db
+    .prepare(
+      `SELECT CASE WHEN json_extract(kept.value, '$.revision') = ${REVISION} THEN kept.value END AS text,
+         etag.value AS etag
+       FROM meta AS kept LEFT JOIN meta AS etag ON etag.key = ?2
+       WHERE kept.key = ?1`,
+    )
+    .bind(TRIP_ROUTES, TRIP_ROUTES_ETAG)
+    .first<{ text: string | null; etag: string | null }>()
 
-  if (keptRow?.revision === toRevision(revision)) {
-    return keptRow.value
+  if (kept?.text && kept.etag) {
+    return { text: kept.text, etag: kept.etag }
   }
 
   const inputs = await readTripInputs(db)
-  const trips = buildTrips(inputs, inputs.routes)
-  const answer = JSON.stringify({
-    revision: inputs.revision,
-    trips: Object.fromEntries(trips.map((trip) => [trip.id, getTripSummary(trip).segments])),
-  })
+  const answer = await answerTripRoutes(buildTrips(inputs, inputs.routes), inputs.revision)
 
-  await db
-    .prepare(
-      `INSERT INTO meta (key, value) VALUES (?1, ?2)
-       ON CONFLICT (key) DO UPDATE SET value = excluded.value`,
-    )
-    .bind(TRIP_ROUTES, answer)
-    .run()
+  await db.batch(keepTripRoutes(db, answer, inputs.revision))
 
   return answer
+}
+
+async function answerTripRoutes(
+  trips: ReturnType<typeof buildTrips>,
+  revision: number,
+): Promise<TripRoutes> {
+  const routes = JSON.stringify(
+    Object.fromEntries(trips.map((trip) => [trip.id, getTripSummary(trip).segments])),
+  )
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(routes))
+  const hex = [...new Uint8Array(digest).slice(0, 16)]
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('')
+
+  return { text: `{"revision":${revision},"trips":${routes}}`, etag: `"${hex}"` }
+}
+
+/**
+ * Keeps an answer, if the database is still at the revision it is of: a write that came
+ * in since has it worked out again.
+ */
+function keepTripRoutes(db: Database, { text, etag }: TripRoutes, revision: number) {
+  return [
+    [TRIP_ROUTES, text],
+    [TRIP_ROUTES_ETAG, etag],
+  ].map(([key, value]) =>
+    db
+      .prepare(
+        `INSERT INTO meta (key, value) SELECT ?1, ?2 WHERE ${REVISION} = ?3
+         ON CONFLICT (key) DO UPDATE SET value = excluded.value`,
+      )
+      .bind(key, value, revision),
+  )
+}
+
+/** `run` over every item, at most `limit` at a time, the results in the items' order. */
+async function mapConcurrently<T, R>(
+  items: readonly T[],
+  limit: number,
+  run: (item: T) => Promise<R>,
+) {
+  const results: R[] = []
+  let next = 0
+
+  await Promise.all(
+    Array.from({ length: Math.min(limit, items.length) }, async () => {
+      while (next < items.length) {
+        const index = next++
+
+        results[index] = await run(items[index]!)
+      }
+    }),
+  )
+
+  return results
 }
 
 /** Fetches legs from Mapbox's Directions with `token`, and train legs from OpenRailRouting. */

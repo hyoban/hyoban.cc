@@ -13,38 +13,27 @@ export interface Statement {
   run(): Promise<unknown>
 }
 
+// The reads answer with JSON text put together from the records as stored, which are
+// JSON already: parsing every record only to write it out again is most of what a read
+// of all of them would cost the Worker.
+
 interface RecordRow {
   record: string
 }
 
-interface ChangeRow extends RecordRow {
-  uid: string
+interface KeyedRow extends RecordRow {
+  key: string
+}
+
+interface ChangeRow extends KeyedRow {
   rev: number
   deleted_at: string | null
 }
 
-export interface Snapshot {
-  revision: number
-  manifest: unknown
-  places: Record<string, unknown>
-  trips: unknown[]
-  moments: unknown[]
-  /** Each trip leg's route by its key, as `data/routes.json` keeps them. */
-  routes: Record<string, unknown>
-}
-
-export interface MomentChanges {
-  /** The database's revision when the page was read; pass it as `since` next time. */
-  revision: number
-  moments: unknown[]
-  /** Moments removed since, by uid. */
-  deleted: string[]
-  /** Where the next page starts, or null on the last one. */
-  next: string | null
-}
-
-/** A position in the change feed: after this revision, and after this uid within it. */
+/** A position in the change feed: after this revision, and after this uid within it, up to `upto`. */
 export interface Cursor {
+  /** The database's revision when the feed's first page was read; no page goes past it. */
+  upto: number
   rev: number
   uid: string
 }
@@ -68,7 +57,7 @@ export const revisionQuery = (db: Database) =>
   db.prepare(`SELECT value FROM meta WHERE key = 'revision'`)
 
 export const placesQuery = (db: Database) =>
-  db.prepare(`SELECT id, record FROM places WHERE deleted_at IS NULL ORDER BY id`)
+  db.prepare(`SELECT id AS key, record FROM places WHERE deleted_at IS NULL ORDER BY id`)
 
 export const tripsQuery = (db: Database) =>
   db.prepare(`SELECT record FROM trips WHERE deleted_at IS NULL ORDER BY start_date, id`)
@@ -80,22 +69,9 @@ export function toRevision(rows: unknown[]) {
   return Number((rows as { value: string }[])[0]?.value ?? 0)
 }
 
-/** Places by id, as `data/places.json` keeps them. */
-export function toPlaces(rows: unknown[]) {
-  return Object.fromEntries(
-    (rows as (RecordRow & { id: string })[]).map((row) => [row.id, parseRecord(row)]),
-  )
-}
-
-export function toRecords(rows: unknown[]) {
-  return (rows as RecordRow[]).map(parseRecord)
-}
-
-/** Each leg's route by its key, as `data/routes.json` keeps them. */
-export function toRoutes(rows: unknown[]) {
-  return Object.fromEntries(
-    (rows as (RecordRow & { key: string })[]).map((row) => [row.key, parseRecord(row)]),
-  )
+/** Records by key, as `data/places.json` and `data/routes.json` keep them. */
+export function toRecordsByKey(rows: unknown[]): Record<string, unknown> {
+  return Object.fromEntries((rows as KeyedRow[]).map((row) => [row.key, parseRecord(row)]))
 }
 
 export async function readRevision(db: Database) {
@@ -103,82 +79,97 @@ export async function readRevision(db: Database) {
 }
 
 /**
- * The Moments changed after `cursor`, oldest change first. Drafts are left out unless
- * `drafts` is set; removed Moments come back as uids in `deleted`.
+ * What changed after a revision, as JSON text: the Moments a page at a time, oldest
+ * change first, and on the first page the places and trips, all of them on a feed from
+ * the start. Drafts are left out unless `drafts` is set; what was removed comes back by
+ * key in `deleted`, `deletedPlaces` and `deletedTrips`. Every page is of the revision
+ * the first was read at, so a Moment never names a place the feed hasn't handed out.
  */
-export async function readMomentChanges(
+export async function readChanges(
   db: Database,
-  { cursor, drafts, limit }: { cursor: Cursor; drafts: boolean; limit: number },
-): Promise<MomentChanges> {
-  const [revision, rows] = await readAll(db, [
+  query: ({ since: number } | { cursor: Cursor }) & { limit: number; drafts: boolean },
+): Promise<string> {
+  const { limit, drafts } = query
+  const first = 'since' in query
+  const since = first ? query.since : 0
+  const after = first ? { rev: since + 1, uid: '' } : query.cursor
+  const upto = first
+    ? `(SELECT CAST(value AS INTEGER) FROM meta WHERE key = 'revision')`
+    : String(query.cursor.upto)
+  const changed = (table: 'places' | 'trips', key: string) =>
+    db
+      .prepare(
+        `SELECT ${key} AS key, rev, deleted_at, record FROM ${table} WHERE rev > ?1 ORDER BY ${key}`,
+      )
+      .bind(since)
+  const [revision, rows, places, trips] = await readAll(db, [
     revisionQuery(db),
     db
       .prepare(
-        `SELECT uid, rev, deleted_at, record FROM moments
-         WHERE (rev > ?1 OR (rev = ?1 AND uid > ?2))${drafts ? '' : ' AND published_id IS NOT NULL'}
+        `SELECT uid AS key, rev, deleted_at, record FROM moments
+         WHERE (rev > ?1 OR (rev = ?1 AND uid > ?2)) AND rev <= ${upto}${drafts ? '' : ' AND published_id IS NOT NULL'}
          ORDER BY rev, uid
          LIMIT ?3`,
       )
-      .bind(cursor.rev, cursor.uid, limit + 1),
+      .bind(after.rev, after.uid, limit + 1),
+    ...(first ? [changed('places', 'id'), changed('trips', 'id')] : []),
   ])
   const results = rows as ChangeRow[]
   const page = results.slice(0, limit)
   const last = page.at(-1)
+  const of = first ? toRevision(revision) : query.cursor.upto
+  const next =
+    results.length > limit && last ? formatCursor({ upto: of, rev: last.rev, uid: last.key }) : null
+  const [livePlaces, gonePlaces] = split((places ?? []) as ChangeRow[])
+  const [liveTrips, goneTrips] = split((trips ?? []) as ChangeRow[])
+  const [liveMoments, goneMoments] = split(page)
 
-  return {
-    revision: toRevision(revision),
-    moments: page.filter((row) => row.deleted_at === null).map(parseRecord),
-    deleted: page.filter((row) => row.deleted_at !== null).map((row) => row.uid),
-    next: results.length > limit && last ? formatCursor({ rev: last.rev, uid: last.uid }) : null,
-  }
+  return `{"revision":${of},"moments":${arrayText(liveMoments)},"deleted":${keysText(goneMoments)},"places":${objectText(livePlaces)},"deletedPlaces":${keysText(gonePlaces)},"trips":${arrayText(liveTrips)},"deletedTrips":${keysText(goneTrips)},"next":${JSON.stringify(next)}}`
 }
 
-export async function readMoment(db: Database, uid: string, { drafts }: { drafts: boolean }) {
-  const row = await db
-    .prepare(
-      `SELECT record FROM moments
-       WHERE uid = ?1 AND deleted_at IS NULL${drafts ? '' : ' AND published_id IS NOT NULL'}`,
-    )
-    .bind(uid)
-    .first<RecordRow>()
+/** One record as stored, or null. */
+async function readOne(db: Database, query: string, key: string) {
+  const row = await db.prepare(query).bind(key).first<RecordRow>()
 
-  return row && parseRecord(row)
+  return row?.record ?? null
+}
+
+export function readMoment(db: Database, uid: string, { drafts }: { drafts: boolean }) {
+  return readOne(
+    db,
+    `SELECT record FROM moments
+     WHERE uid = ?1 AND deleted_at IS NULL${drafts ? '' : ' AND published_id IS NOT NULL'}`,
+    uid,
+  )
 }
 
 /** `{ revision, places }`, places by id. */
 export async function readPlaces(db: Database) {
   const [revision, places] = await readAll(db, [revisionQuery(db), placesQuery(db)])
 
-  return { revision: toRevision(revision), places: toPlaces(places) }
+  return `{"revision":${toRevision(revision)},"places":${objectText(places as KeyedRow[])}}`
 }
 
-export async function readPlace(db: Database, id: string) {
-  const row = await db
-    .prepare(`SELECT record FROM places WHERE id = ?1 AND deleted_at IS NULL`)
-    .bind(id)
-    .first<RecordRow>()
-
-  return row && parseRecord(row)
+export function readPlace(db: Database, id: string) {
+  return readOne(db, `SELECT record FROM places WHERE id = ?1 AND deleted_at IS NULL`, id)
 }
 
 /** `{ revision, trips }`, by start date. */
 export async function readTrips(db: Database) {
   const [revision, trips] = await readAll(db, [revisionQuery(db), tripsQuery(db)])
 
-  return { revision: toRevision(revision), trips: toRecords(trips) }
+  return `{"revision":${toRevision(revision)},"trips":${arrayText(trips as RecordRow[])}}`
 }
 
-export async function readTrip(db: Database, id: string) {
-  const row = await db
-    .prepare(`SELECT record FROM trips WHERE id = ?1 AND deleted_at IS NULL`)
-    .bind(id)
-    .first<RecordRow>()
-
-  return row && parseRecord(row)
+export function readTrip(db: Database, id: string) {
+  return readOne(db, `SELECT record FROM trips WHERE id = ?1 AND deleted_at IS NULL`, id)
 }
 
-/** Everything, drafts included, in the shape `data/` keeps it. */
-export async function readSnapshot(db: Database): Promise<Snapshot> {
+/**
+ * Everything, drafts included, in the shape `data/` keeps it:
+ * `{ revision, manifest, places, trips, moments, routes }`.
+ */
+export async function readSnapshot(db: Database) {
   const [revision, manifest, places, trips, moments, routes] = await readAll(db, [
     revisionQuery(db),
     db.prepare(`SELECT value FROM meta WHERE key = 'manifest'`),
@@ -189,27 +180,40 @@ export async function readSnapshot(db: Database): Promise<Snapshot> {
   ])
   const [manifestRow] = manifest as { value: string }[]
 
-  return {
-    revision: toRevision(revision),
-    manifest: manifestRow ? JSON.parse(manifestRow.value) : null,
-    places: toPlaces(places),
-    trips: toRecords(trips),
-    moments: toRecords(moments),
-    routes: toRoutes(routes),
-  }
+  return `{"revision":${toRevision(revision)},"manifest":${manifestRow?.value ?? 'null'},"places":${objectText(places as KeyedRow[])},"trips":${arrayText(trips as RecordRow[])},"moments":${arrayText(moments as RecordRow[])},"routes":${objectText(routes as KeyedRow[])}}`
 }
 
-export function formatCursor({ rev, uid }: Cursor) {
-  return `${rev}.${uid}`
+export function formatCursor({ upto, rev, uid }: Cursor) {
+  return `${upto}.${rev}.${uid}`
 }
 
 /** A cursor from `formatCursor`, or null when it isn't one. */
 export function parseCursor(value: string): Cursor | null {
-  const match = value.match(/^(\d+)\.([0-9A-HJKMNP-TV-Z]{26})$/)
+  const match = value.match(/^(\d+)\.(\d+)\.([0-9A-HJKMNP-TV-Z]{26})$/)
 
-  return match ? { rev: Number(match[1]), uid: match[2]! } : null
+  return match ? { upto: Number(match[1]), rev: Number(match[2]), uid: match[3]! } : null
 }
 
-function parseRecord(row: RecordRow): unknown {
+export function parseRecord(row: RecordRow): unknown {
   return JSON.parse(row.record)
+}
+
+/** The rows still there, and those marked deleted. */
+function split(rows: ChangeRow[]) {
+  return [
+    rows.filter((row) => row.deleted_at === null),
+    rows.filter((row) => row.deleted_at !== null),
+  ] as const
+}
+
+function arrayText(rows: readonly RecordRow[]) {
+  return `[${rows.map((row) => row.record).join(',')}]`
+}
+
+function objectText(rows: readonly KeyedRow[]) {
+  return `{${rows.map((row) => `${JSON.stringify(row.key)}:${row.record}`).join(',')}}`
+}
+
+function keysText(rows: readonly KeyedRow[]) {
+  return JSON.stringify(rows.map((row) => row.key))
 }

@@ -15,7 +15,7 @@ test('a merge writes its records and leaves every other one alone', async () => 
   const [first, second] = snapshot.moments
   const changed = { ...first, text: `${first.text}（补）` }
   const place = { name: '新地方', latitude: 1, longitude: 2 }
-  const { revision } = (await get(env, '/v1/moments?limit=1')).body
+  const { revision } = (await get(env, '/v1/changes?limit=1')).body
 
   sqlite.exec(
     buildMergeSql(
@@ -25,7 +25,7 @@ test('a merge writes its records and leaves every other one alone', async () => 
     ),
   )
 
-  const since = (await get(env, `/v1/moments?since=${revision}`, { auth: token })).body
+  const since = (await get(env, `/v1/changes?since=${revision}`, { auth: token })).body
   const exported = (await get(env, '/v1/export', { auth: token })).body
 
   assert.deepEqual(since.moments, [changed])

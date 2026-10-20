@@ -2,8 +2,8 @@ import { authorize } from './auth.ts'
 import type { Bucket, UploadPart } from './bucket.ts'
 import {
   parseCursor,
+  readChanges,
   readMoment,
-  readMomentChanges,
   readPlace,
   readPlaces,
   readRevision,
@@ -12,9 +12,15 @@ import {
   readTrips,
   type Database,
 } from './database.ts'
-import { error, HttpError, json, readBody } from './http.ts'
+import { error, HttpError, json, jsonText, readBody } from './http.ts'
 import { createRouteFetcher, fillRoutes, readTripRoutes } from './routes.ts'
-import { applyChanges, uploadMedia, type WriteContext, type WriteResult } from './writes.ts'
+import {
+  applyChanges,
+  readUpload,
+  uploadMedia,
+  type WriteContext,
+  type WriteResult,
+} from './writes.ts'
 
 // The API. Reads are public except drafts, which only the owner sees, and the full
 // export; writes are the owner's. Records come back exactly as stored, in the shape
@@ -104,19 +110,7 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
 
   switch (collection) {
     case 'moments': {
-      if (key === undefined) {
-        if (method !== 'GET') {
-          return notAllowed('GET')
-        }
-
-        const query = readFeedQuery(url.searchParams)
-
-        return 'error' in query
-          ? error(400, query.error)
-          : json(await readMomentChanges(db, { ...query, drafts: owner }))
-      }
-
-      if (!ULID.test(key)) {
+      if (key === undefined || !ULID.test(key)) {
         return notFound()
       }
 
@@ -135,15 +129,23 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
         (part === 'image' || part === 'video') &&
         more.length === 0
       ) {
-        return method === 'PUT'
-          ? write((context) =>
-              uploadMedia(context, request, {
-                momentUid: key,
-                mediaUid,
-                part: part satisfies UploadPart,
-              }),
+        const upload = { momentUid: key, mediaUid, part: part satisfies UploadPart } as const
+
+        switch (method) {
+          case 'PUT':
+            return write((context) => uploadMedia(context, request, upload))
+          case 'HEAD': {
+            // Whether the original is here, and its MD5, so the app sends only what isn't.
+            const stored = await readUpload(env.BUCKET, upload)
+
+            return new Response(
+              null,
+              stored ? { headers: { ETag: `"${stored.etag}"` } } : { status: 404 },
             )
-          : notAllowed('PUT')
+          }
+          default:
+            return notAllowed('PUT, HEAD')
+        }
       }
 
       return notFound()
@@ -154,7 +156,7 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
       }
 
       if (key === undefined) {
-        return method === 'GET' ? json(await readPlaces(db)) : notAllowed('GET')
+        return method === 'GET' ? jsonText(await readPlaces(db)) : notAllowed('GET')
       }
 
       if (!ID.test(key)) {
@@ -169,7 +171,7 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
       }
 
       if (key === undefined) {
-        return method === 'GET' ? json(await readTrips(db)) : notAllowed('GET')
+        return method === 'GET' ? jsonText(await readTrips(db)) : notAllowed('GET')
       }
 
       if (!ID.test(key)) {
@@ -184,11 +186,13 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
       }
 
       switch (method) {
-        case 'GET':
-          // Kept as the text it is served as, so it goes out without being parsed again.
-          return new Response(await readTripRoutes(db), {
-            headers: { 'Content-Type': 'application/json' },
-          })
+        case 'GET': {
+          const { text, etag } = await readTripRoutes(db)
+
+          return request.headers.get('If-None-Match') === etag
+            ? new Response(null, { status: 304, headers: { ETag: etag } })
+            : jsonText(text, 200, { ETag: etag })
+        }
         case 'POST': {
           if (!env.MAPBOX_TOKEN) {
             return error(503, 'MAPBOX_TOKEN is not set.')
@@ -210,13 +214,22 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
         return notFound()
       }
 
-      if (method !== 'POST') {
-        return notAllowed('POST')
+      switch (method) {
+        case 'GET': {
+          const query = readFeedQuery(url.searchParams)
+
+          return 'error' in query
+            ? error(400, query.error)
+            : jsonText(await readChanges(db, { ...query, drafts: owner }))
+        }
+        case 'POST': {
+          const body = await readBody(request)
+
+          return write((context) => applyChanges(context, body))
+        }
+        default:
+          return notAllowed('GET, POST')
       }
-
-      const body = await readBody(request)
-
-      return write((context) => applyChanges(context, body))
     }
     case 'export': {
       if (key !== undefined) {
@@ -228,7 +241,7 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
       }
 
       return owner
-        ? json(await readSnapshot(db))
+        ? jsonText(await readSnapshot(db))
         : error(401, 'The export needs a token.', { 'WWW-Authenticate': 'Bearer' })
     }
     default:
@@ -238,16 +251,20 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
 
 /**
  * After a write the site shows: the trips' routes first, so the build the deploy hook
- * starts has them, and what `GET /v1/routes` answers worked out ahead of the app's next
- * sync, then the hook. None of them failing undoes the write.
+ * starts has them, with what `GET /v1/routes` answers worked out ahead of the app's next
+ * sync from the same read, then the hook. None of them failing undoes the write.
  */
 async function afterSiteChange(env: Env) {
+  let routesKept = false
+
   if (env.MAPBOX_TOKEN) {
     try {
       const result = await fillRoutes(
         { db: env.DB, bucket: env.BUCKET, now: timestamp() },
         createRouteFetcher(env.MAPBOX_TOKEN),
       )
+
+      routesKept = true
 
       if (result.fetched || result.removed || result.failed || result.left) {
         console.log('Routes', result)
@@ -257,10 +274,12 @@ async function afterSiteChange(env: Env) {
     }
   }
 
-  try {
-    await readTripRoutes(env.DB)
-  } catch (caught) {
-    console.error("Working out the trips' routes failed", caught)
+  if (!routesKept) {
+    try {
+      await readTripRoutes(env.DB)
+    } catch (caught) {
+      console.error("Working out the trips' routes failed", caught)
+    }
   }
 
   if (env.DEPLOY_HOOK_URL) {
@@ -276,7 +295,7 @@ async function afterSiteChange(env: Env) {
   }
 }
 
-/** `?since=<revision>` or `?cursor=<next>`, and `?limit=`. */
+/** `?since=<revision>` or `?cursor=<next>`, and `?limit=`, for the change feed. */
 function readFeedQuery(params: URLSearchParams) {
   const limit = Number(params.get('limit') ?? DEFAULT_LIMIT)
 
@@ -298,8 +317,7 @@ function readFeedQuery(params: URLSearchParams) {
     return { error: 'since is a revision, a whole number.' }
   }
 
-  // Everything after revision `since`: from the first uid of the revision after it.
-  return { cursor: { rev: since + 1, uid: '' }, limit }
+  return { since, limit }
 }
 
 /** Now, to the second, as the records stamp times. */
@@ -307,8 +325,8 @@ function timestamp() {
   return new Date().toISOString().replace(/\.\d{3}Z$/, 'Z')
 }
 
-function found(record: unknown) {
-  return record ? json(record) : notFound()
+function found(record: string | null) {
+  return record ? jsonText(record) : notFound()
 }
 
 function notFound() {

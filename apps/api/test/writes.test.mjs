@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { test } from 'vite-plus/test'
 
+import { handle } from '../src/index.ts'
 import { call, get, setUp, snapshot, token } from './setup.mjs'
 
 // The writes, as the recording app commits what it kept on the phone: the originals
@@ -217,7 +218,7 @@ test('the changes go as one write: places, Moments published, deletions, the sit
 
     await upload(env, draft.uid, draft.media[0].uid, 'image', photo, 'image/jpeg')
 
-    const before = (await get(env, '/v1/moments?limit=1')).body.revision
+    const before = (await get(env, '/v1/changes?limit=1')).body.revision
     const applied = await commit(env, changes, { context })
     const order = nextOrder('2026-10-01')
 
@@ -238,7 +239,7 @@ test('the changes go as one write: places, Moments published, deletions, the sit
     assert.deepEqual(calls, [['https://deploy.test/hook', 'POST']], 'the site is built again once')
     assert.equal((await get(env, `/v1/moments/${target.uid}`)).status, 404)
 
-    const { body: after } = await get(env, `/v1/moments?since=${before}`)
+    const { body: after } = await get(env, `/v1/changes?since=${before}`)
 
     assert.deepEqual(after.deleted, [target.uid])
     assert.deepEqual(
@@ -355,4 +356,89 @@ test('a deploy hook that turns the call down is logged', async () => {
     globalThis.fetch = realFetch
     console.error = realError
   }
+})
+
+test('a Moment sent as it is stored writes nothing and builds nothing', async () => {
+  const { env } = setUpWithData()
+  const pending = []
+  const context = { waitUntil: (promise) => pending.push(promise) }
+  const {
+    body: {
+      moments: [published],
+    },
+  } = await publishDock(env)
+  const before = (await get(env, '/v1/changes?limit=1')).body.revision
+  const again = await commit(env, { moments: [published] }, { context })
+
+  assert.equal(again.status, 200)
+  assert.deepEqual(again.body.moments, [published])
+  assert.equal((await get(env, '/v1/changes?limit=1')).body.revision, before)
+  assert.equal(pending.length, 0)
+})
+
+test('HEAD on an original says whether it is uploaded, and its MD5', async () => {
+  const { env } = setUpWithData()
+  const [item] = dockMoment.media
+  const path = `/v1/moments/${dockMoment.uid}/media/${item.uid}/image`
+
+  assert.equal((await call(env, 'HEAD', path)).status, 401)
+
+  const missing = await handle(
+    new Request(`https://api.test${path}`, {
+      method: 'HEAD',
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+    env,
+  )
+
+  assert.equal(missing.status, 404)
+
+  await upload(env, dockMoment.uid, item.uid, 'image', photo, 'image/jpeg')
+
+  const found = await handle(
+    new Request(`https://api.test${path}`, {
+      method: 'HEAD',
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+    env,
+  )
+
+  assert.equal(found.status, 200)
+  assert.equal(found.headers.get('ETag'), `"${createHash('md5').update(photo).digest('hex')}"`)
+})
+
+test('a write that fails after its media are copied removes the copies', async () => {
+  const { bucket, env } = setUpWithData()
+  const draft = dockDraft()
+
+  await upload(env, draft.uid, draft.media[0].uid, 'image', photo, 'image/jpeg')
+
+  const realBatch = env.DB.batch
+
+  env.DB.batch = async (statements) => {
+    if (
+      statements.some((statement) => statement.query.startsWith('UPDATE meta SET value = CAST'))
+    ) {
+      throw new Error('D1 is down')
+    }
+
+    return realBatch(statements)
+  }
+
+  const realError = console.error
+
+  console.error = () => {}
+
+  try {
+    assert.equal((await commit(env, { places: { [made]: dock }, moments: [draft] })).status, 500)
+  } finally {
+    console.error = realError
+    env.DB.batch = realBatch
+  }
+
+  assert.deepEqual(
+    [...bucket.objects.keys()],
+    [`uploads/${draft.uid}/${draft.media[0].uid}/image`],
+    'the upload stays for the next try, and the copy is gone',
+  )
 })

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'vite-plus/test'
 
+import { handle } from '../src/index.ts'
 import { fillRoutes, FETCHES_PER_RUN } from '../src/routes.ts'
 import { call, get, setUp, snapshot, token } from './setup.mjs'
 
@@ -153,6 +154,62 @@ test('GET /v1/routes is worked out once per revision, and again once the revisio
   assert.equal(second.revision, first.revision + 1)
   assert.ok(!('2024-code-and-travel' in second.trips))
   assert.deepEqual(kept(), second)
+})
+
+test('GET /v1/routes has an ETag of its routes, which a new revision with the same routes keeps', async () => {
+  const { env, sqlite } = setUpWithData()
+  const first = await handle(new Request('https://api.test/v1/routes'), env)
+  const etag = first.headers.get('ETag')
+
+  assert.equal(first.status, 200)
+  assert.match(etag, /^"[0-9a-f]{32}"$/)
+
+  sqlite.exec(`UPDATE meta SET value = CAST(value AS INTEGER) + 1 WHERE key = 'revision'`)
+
+  const unchanged = await handle(
+    new Request('https://api.test/v1/routes', { headers: { 'If-None-Match': etag } }),
+    env,
+  )
+
+  assert.equal(unchanged.status, 304)
+  assert.equal(unchanged.headers.get('ETag'), etag)
+  assert.equal(
+    JSON.parse(sqlite.prepare(`SELECT value FROM meta WHERE key = 'trip_routes'`).get().value)
+      .revision,
+    2,
+    'worked out again for the new revision',
+  )
+
+  sqlite.exec(`UPDATE meta SET value = CAST(value AS INTEGER) + 1 WHERE key = 'revision'`)
+  sqlite.exec(`UPDATE trips SET deleted_at = '${now}' WHERE id = '2024-code-and-travel'`)
+
+  const changed = await handle(
+    new Request('https://api.test/v1/routes', { headers: { 'If-None-Match': etag } }),
+    env,
+  )
+
+  assert.equal(changed.status, 200)
+  assert.notEqual(changed.headers.get('ETag'), etag)
+})
+
+test('a fill keeps what GET /v1/routes answers, of the revision its own write took', async () => {
+  const { env, sqlite } = setUpWithData()
+  const driveKey = Object.keys(snapshot.routes).find((key) => !key.startsWith('train:'))
+
+  sqlite.prepare(`DELETE FROM routes WHERE key = ?`).run(driveKey)
+
+  const route = snapshot.routes[driveKey]
+  const result = await fillRoutes({ db: env.DB, bucket: env.BUCKET, now }, async () => route)
+  const revision = Number(
+    sqlite.prepare(`SELECT value FROM meta WHERE key = 'revision'`).get().value,
+  )
+  const kept = JSON.parse(
+    sqlite.prepare(`SELECT value FROM meta WHERE key = 'trip_routes'`).get().value,
+  )
+
+  assert.equal(result.fetched, 1)
+  assert.equal(kept.revision, revision)
+  assert.deepEqual((await get(env, '/v1/routes')).body, kept)
 })
 
 test('POST /v1/routes is the owner’s and needs the Mapbox token', async () => {

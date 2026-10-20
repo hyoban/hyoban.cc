@@ -10,13 +10,13 @@ time; how it is deployed is in the root README.
 | Path                            | Returns                                                                                  |
 | ------------------------------- | ---------------------------------------------------------------------------------------- |
 | `GET /`                         | `{ name, revision }`                                                                     |
-| `GET /v1/moments?since=&limit=` | the change feed, see below                                                               |
+| `GET /v1/changes?since=&limit=` | the change feed, see below                                                               |
 | `GET /v1/moments/:uid`          | one Moment                                                                               |
 | `GET /v1/places`                | `{ revision, places }`, places by id like `data/places.json`                             |
 | `GET /v1/places/:id`            | one place                                                                                |
 | `GET /v1/trips`                 | `{ revision, trips }`, by start date                                                     |
 | `GET /v1/trips/:id`             | one trip                                                                                 |
-| `GET /v1/routes`                | `{ revision, trips }`, each published trip's route as stretches, see below               |
+| `GET /v1/routes`                | `{ revision, trips }`, each published trip's route as stretches, with an `ETag`, below   |
 | `GET /v1/export`                | `{ revision, manifest, places, trips, moments, routes }`, drafts included; needs a token |
 
 Without a token everything but drafts and the export is public. A request with an
@@ -26,16 +26,30 @@ Without a token everything but drafts and the export is public. A request with a
 ### The change feed
 
 Every write bumps the database's revision, and each row keeps the revision it last
-changed at. `GET /v1/moments?since=<revision>` lists the Moments changed after that
-revision, oldest change first, `limit` at a time (100 by default, at most 500):
+changed at. `GET /v1/changes?since=<revision>` lists what changed after that revision:
+the Moments oldest change first, `limit` at a time (100 by default, at most 500), and on
+the first page the places and trips that changed:
 
 ```json
-{ "revision": 12, "moments": [], "deleted": ["01K…"], "next": "11.01K…" }
+{
+  "revision": 12,
+  "moments": [],
+  "deleted": ["01K…"],
+  "places": { "nanjing": {} },
+  "deletedPlaces": [],
+  "trips": [],
+  "deletedTrips": [],
+  "next": "12.11.01K…"
+}
 ```
 
 Follow `next` with `?cursor=<next>` until it is null, then keep `revision` and pass it
-as `since` the next time. `since=0`, or none, is everything. Removed Moments come back
-as uids in `deleted`; nothing is ever dropped from the database, only marked deleted.
+as `since` the next time. Every page is of the revision the first was read at, so a
+Moment never names a place the feed hasn't handed out yet. `since=0`, or none, is
+everything. What was removed comes back by key in `deleted`, `deletedPlaces` and
+`deletedTrips`; nothing is ever dropped from the database, only marked deleted.
+
+The reads put their answers together from the records as stored, without parsing them.
 
 ## Writing
 
@@ -45,6 +59,7 @@ then goes all at once. Writes need a token.
 | Path                                         | Does                                                                                        |
 | -------------------------------------------- | ------------------------------------------------------------------------------------------- |
 | `PUT /v1/moments/:uid/media/:mediaUid/:part` | keeps an original, `image` or `video` (a live photo sends both), until its Moment publishes |
+| `HEAD` on the same path                      | 200 with the original's MD5 as its `ETag` when it is uploaded, else 404                     |
 | `POST /v1/changes`                           | applies `{ places, moments, deleted }` as one write                                         |
 
 A change set names the places only the app knows, by id, the Moments it wrote or changed,
@@ -57,7 +72,9 @@ slugged by its first place or else its first words, and its originals move to
 `moments/<id>/<slug>.<ext>`; a published one keeps its id and publishes any new media.
 A deleted Moment is marked deleted for the change feed. All of it is checked first, the
 uploaded originals among it, then written in one transaction that bumps the revision and
-stamps the manifest's `updatedAt`, so a change set that doesn't fit changes nothing.
+stamps the manifest's `updatedAt`, so a change set that doesn't fit changes nothing, and
+the originals it had copied are removed again. A Moment sent exactly as stored isn't
+written, and a change set that changes nothing takes no revision.
 The answer is `{ places, moments, deleted }`: the id each place sent is known by, the
 Moments as published, and the uids deleted, leaving out those already gone.
 
@@ -82,14 +99,16 @@ works them out from the trips and the published Moments, has a route kept in the
 secret, or for a train leg (`train:` before the key) a rail line from
 OpenRailRouting's public demo between the places' `station`s. Ferries and flights are
 drawn straight. After a write the site shows, the Worker fetches the legs it doesn't
-have, up to 30 at a time, and marks deleted the ones no trip has any more, so a moved
+have, up to 30 a write and 6 at once, and marks deleted the ones no trip has any more, so a moved
 place or a changed trip is fetched again; `POST /v1/routes`, with a token, does the
 same on demand and answers `{ fetched, removed, failed, left }` (`pnpm data:push`
 calls it, as it writes past the Worker). `GET /v1/routes` gives each published trip's
 route as the site's overview draws it, drives one after another as one stretch and
 each train, plane or ferry as a dashed one. Working it out reads every Moment, so the
-answer is kept in `meta` with the revision it is of, worked out ahead after each write
-and again on a request once the revision has moved on, as after `data:push`:
+answer is kept in `meta` with the revision it is of, worked out after each write from
+the same read that fills the routes, and again on a request once the revision has moved
+on, as after `data:push`. Its `ETag` is of the routes alone, so a client sending it back
+as `If-None-Match` gets a 304 when a write changed nothing it draws:
 
 ```json
 { "revision": 12, "trips": { "2026-yunnan": [{ "line": [[100.2, 26.8], …], "straight": false }] } }
