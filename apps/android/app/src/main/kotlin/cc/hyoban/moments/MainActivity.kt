@@ -11,9 +11,10 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        val container = (application as MomentsApplication).container
         setContent {
-            MomentsTheme {
-                MomentsApp(container = (application as MomentsApplication).container)
+            MomentsTheme(container.settings) {
+                MomentsApp(container = container)
             }
         }
         // Compose paints the whole window, so the window's own background would only be

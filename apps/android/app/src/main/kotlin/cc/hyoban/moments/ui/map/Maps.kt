@@ -3,7 +3,6 @@ package cc.hyoban.moments.ui.map
 import android.graphics.RectF
 import android.view.Gravity
 import android.view.ViewGroup
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.displayCutout
@@ -61,6 +60,7 @@ import org.maplibre.android.style.layers.PropertyFactory.textIgnorePlacement
 import org.maplibre.android.style.layers.PropertyFactory.textSize
 import org.maplibre.android.style.sources.GeoJsonOptions
 import cc.hyoban.moments.ui.LocalSettings
+import cc.hyoban.moments.ui.theme.LocalDarkTheme
 import cc.hyoban.moments.ui.LocalBottomClearance
 import cc.hyoban.moments.ui.LocalRailSpace
 import cc.hyoban.moments.ui.components.isLandscape
@@ -208,7 +208,7 @@ private fun MapLibreView(
     onReady: (map: MapLibreMap, style: Style, fresh: Boolean) -> Unit,
 ) {
     val context = LocalContext.current
-    val styleUri = LocalSettings.current.mapStyle(isSystemInDarkTheme())
+    val styleUri = LocalSettings.current.mapStyle(LocalDarkTheme.current)
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val ready by rememberUpdatedState(onReady)
     var map by remember { mutableStateOf<MapLibreMap?>(null) }

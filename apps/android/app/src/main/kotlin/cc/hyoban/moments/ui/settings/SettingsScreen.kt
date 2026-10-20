@@ -91,6 +91,7 @@ fun SettingsScreen(container: AppContainer, onBack: () -> Unit) {
                 // Room for the back button, which floats over the page.
                 Spacer(Modifier.height(56.dp))
                 PageHeader(stringResource(R.string.title_settings), null)
+                ThemeSettings(settings)
                 Section(stringResource(R.string.section_sources), rows.subList(0, 2), 0, stringResource(R.string.settings_api_note)) { editing = it }
                 Section(stringResource(R.string.section_map), rows.subList(2, 4), 2, stringResource(R.string.settings_map_note)) { editing = it }
             }
@@ -110,29 +111,13 @@ fun SettingsScreen(container: AppContainer, onBack: () -> Unit) {
 /** A setting as a row: its name, its icon, and what saving it does. */
 private class Row(val setting: Setting, val title: Int, val icon: ImageVector, val save: (String) -> Unit)
 
-/** A caption over rows grouped into one card, and a note under them. */
+/** Rows grouped into one card under a caption, and a note under them. */
 @Composable
 private fun Section(title: String, rows: List<Row>, first: Int, note: String?, onEdit: (Int) -> Unit) {
-    Column(Modifier.padding(horizontal = Space.gutter)) {
-        Text(
-            title,
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(start = Space.l, top = Space.xl, bottom = Space.s),
-        )
-        Column(Modifier.clip(MaterialTheme.shapes.large).background(LocalSurfaceLevel.current.raised.fill())) {
-            rows.forEachIndexed { index, row ->
-                if (index > 0) HorizontalDivider(Modifier.padding(start = 56.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                SettingRow(row) { onEdit(first + index) }
-            }
-        }
-        note?.let {
-            Text(
-                it,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(start = Space.l, end = Space.l, top = Space.s),
-            )
+    Group(title, note) {
+        rows.forEachIndexed { index, row ->
+            if (index > 0) HorizontalDivider(Modifier.padding(start = 56.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+            SettingRow(row) { onEdit(first + index) }
         }
     }
 }
@@ -152,12 +137,7 @@ private fun SettingRow(row: Row, onClick: () -> Unit) {
         } else {
             null
         },
-        colors = ListItemDefaults.colors(
-            containerColor = Color.Transparent,
-            leadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-            supportingColor = MaterialTheme.colorScheme.onSurfaceVariant,
-            trailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-        ),
+        colors = rowColors(),
         modifier = Modifier.clickable(onClick = onClick),
     )
 }

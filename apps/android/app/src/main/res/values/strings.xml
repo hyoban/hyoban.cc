@@ -61,4 +61,19 @@
     <string name="action_cancel">取消</string>
     <string name="error_address">需要 http 或 https 开头的地址</string>
     <string name="action_restore_default">重置</string>
+    <string name="section_theme_mode">外观</string>
+    <string name="theme_mode_system">跟随系统</string>
+    <string name="theme_mode_light">浅色</string>
+    <string name="theme_mode_dark">深色</string>
+    <string name="section_theme_color">主题色</string>
+    <string name="theme_color_system">跟随系统取色</string>
+    <string name="action_add_color">自定义颜色</string>
+    <string name="action_delete">删除</string>
+    <string name="setting_color_style">配色风格</string>
+    <string name="color_style_vivid">鲜艳</string>
+    <string name="color_style_tinted">着色</string>
+    <string name="color_style_soft">柔和</string>
+    <string name="color_style_monochrome">单色</string>
+    <string name="setting_pure_black">纯黑</string>
+    <string name="settings_pure_black_note">深色模式下页面用纯黑，OLED 屏幕更省电。</string>
 </resources>
