@@ -9,8 +9,11 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.shrinkHorizontally
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.ui.BiasAlignment
+import androidx.compose.ui.zIndex
+import cc.hyoban.moments.ui.components.NAV_FOLD
 import androidx.compose.foundation.layout.Row
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.unit.IntSize
@@ -193,8 +196,9 @@ fun MomentsApp(container: AppContainer) {
             restoreState = true
         }
     }
-    // The tabs step aside while a list is scrolled down to read on, and come back on any
-    // scroll up, a change of tab or a page with nothing to scroll.
+    // The tabs fold into a circle at the side while a list is scrolled down to read on,
+    // and open out again on any scroll up, a tap on the circle, a change of tab or a page
+    // with nothing to scroll.
     var tabsShown by remember { mutableStateOf(true) }
     LaunchedEffect(current) { tabsShown = true }
     val hideOnScroll = remember {
@@ -334,8 +338,7 @@ fun MomentsApp(container: AppContainer) {
         }
         }
         AnimatedVisibility(
-            // Down the side, the tabs have room of their own, so they stay as a list scrolls.
-            current != null && (landscape || tabsShown) && viewer == null,
+            current != null && viewer == null,
             enter = fadeIn() + if (landscape) slideInHorizontally { if (railLeft) -it else it } else slideInVertically { it },
             exit = fadeOut() + if (landscape) slideOutHorizontally { if (railLeft) -it else it } else slideOutVertically { it },
             modifier = if (landscape) {
@@ -344,27 +347,43 @@ fun MomentsApp(container: AppContainer) {
                 Modifier.align(if (railLeft) AbsoluteAlignment.CenterLeft else AbsoluteAlignment.CenterRight)
                     .windowInsetsPadding(WindowInsets.safeDrawing).absolutePadding(left = if (railLeft) Space.m else 0.dp, right = if (railLeft) 0.dp else Space.m)
             } else {
-                Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(bottom = Space.m)
+                Modifier.align(Alignment.BottomCenter).fillMaxWidth().navigationBarsPadding()
+                    .padding(start = Space.gutter, end = Space.gutter, bottom = Space.m)
             },
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                FloatingNav(navItems, selected = current?.ordinal ?: 0, onSelect = selectTab, vertical = landscape)
-                // On the map, its button opens out beside the tabs as they slide over to make
-                // room, as the map's page slides in; down the side the map keeps it itself.
-                // Kept while it folds away, after the map has let it go.
+            // Down the side, the tabs have room of their own, so they stay open as a list scrolls.
+            val folded = !landscape && !tabsShown
+            val side by animateFloatAsState(if (folded) -1f else 0f, NAV_FOLD, label = "tabs side")
+            Box(if (landscape) Modifier else Modifier.fillMaxWidth()) {
+            Row(Modifier.align(BiasAlignment(side, 0f)), verticalAlignment = Alignment.CenterVertically) {
+                FloatingNav(
+                    navItems,
+                    selected = current?.ordinal ?: 0,
+                    onSelect = selectTab,
+                    vertical = landscape,
+                    collapsed = folded,
+                    onExpand = { tabsShown = true },
+                )
+                // On the map, its button slides out from behind the tabs' end as they move over
+                // to make room, as the map's page slides in, and back under them as they
+                // leave; down the side the map keeps it itself. Kept while it slides away,
+                // after the map has let it go.
                 var accessory by remember { mutableStateOf(accessorySlot.value) }
                 accessorySlot.value?.let { accessory = it }
                 AnimatedVisibility(
                     current == Tab.MAP && !landscape && accessorySlot.value != null,
                     enter = expandHorizontally(TAB_SLIDE_SIZE, expandFrom = Alignment.Start, clip = false) +
-                        scaleIn(tween(TAB_SLIDE_MS - 80, delayMillis = 80), initialScale = 0.6f) +
-                        fadeIn(tween(TAB_SLIDE_MS - 80, delayMillis = 80)),
+                        slideInHorizontally(TAB_SLIDE) { -it } +
+                        fadeIn(tween(TAB_SLIDE_MS / 2)),
                     exit = shrinkHorizontally(TAB_SLIDE_SIZE, shrinkTowards = Alignment.Start, clip = false) +
-                        scaleOut(tween(TAB_SLIDE_MS / 2), targetScale = 0.6f) +
-                        fadeOut(tween(TAB_SLIDE_MS / 2)),
+                        slideOutHorizontally(TAB_SLIDE) { -it } +
+                        fadeOut(tween(TAB_SLIDE_MS / 2, delayMillis = TAB_SLIDE_MS / 2)),
+                    // Under the tabs, so it comes out from behind them.
+                    modifier = Modifier.zIndex(-1f),
                 ) {
                     Box(Modifier.padding(start = NAV_ACCESSORY_GAP)) { accessory?.invoke() }
                 }
+            }
             }
         }
     }
