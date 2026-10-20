@@ -38,7 +38,7 @@ import cc.hyoban.moments.data.spec.TripRecord
 import cc.hyoban.moments.data.trips.coversOf
 import cc.hyoban.moments.data.trips.momentsOf
 import cc.hyoban.moments.ui.LocalBottomClearance
-import cc.hyoban.moments.ui.OnTabDoubleTap
+import cc.hyoban.moments.ui.OnTabReselect
 import cc.hyoban.moments.ui.Trips
 import cc.hyoban.moments.ui.components.MediaStill
 import cc.hyoban.moments.ui.components.PageWidth
@@ -80,7 +80,7 @@ fun TripsScreen(container: AppContainer, onTrip: (String) -> Unit) {
                 EmptyState(loading = !loaded || syncing, message = R.string.empty_trips)
             } else {
                 PageWidth { columns ->
-                    OnTabDoubleTap(Trips) { list.animateScrollToItem(0) }
+                    OnTabReselect(Trips) { list.animateScrollToItem(0) }
                     LazyColumn(
                         Modifier.fillMaxSize(),
                         state = list,

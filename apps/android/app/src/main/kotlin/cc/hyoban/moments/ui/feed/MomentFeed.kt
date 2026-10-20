@@ -56,7 +56,7 @@ import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.spec.TripRecord
 import cc.hyoban.moments.data.trips.tripOf
 import cc.hyoban.moments.ui.LocalBottomClearance
-import cc.hyoban.moments.ui.OnTabDoubleTap
+import cc.hyoban.moments.ui.OnTabReselect
 import cc.hyoban.moments.ui.components.DayPill
 import cc.hyoban.moments.ui.components.MomentCard
 import cc.hyoban.moments.ui.components.MonthHeader
@@ -104,7 +104,7 @@ fun MomentFeed(
     months: Boolean = true,
     dayLabel: (String) -> String = ::formatDayOfMonth,
     showTrip: Boolean = true,
-    /** The tab the feed is on, whose double tap takes it back to its top. */
+    /** The tab the feed is on, which, tapped again while shown, takes it back to its top. */
     tab: Any? = null,
     leading: FeedLeading.() -> Unit = {},
 ) {
@@ -125,7 +125,7 @@ fun MomentFeed(
 
     PageWidth(modifier) { columns ->
         if (columns.count > 1) {
-            OnTabDoubleTap(tab) { gridState.animateScrollToItem(0) }
+            OnTabReselect(tab) { gridState.animateScrollToItem(0) }
             val rows = remember(leading) { FeedLeading().apply(leading).rows }
             // Headers run across both columns, out to the page's own edges.
             val across = Modifier.wide(Space.gutter)
@@ -163,7 +163,7 @@ fun MomentFeed(
                 item(key = "end", contentType = "end", span = StaggeredGridItemSpan.FullLine) { Spacer(Modifier) }
             }
         } else {
-            OnTabDoubleTap(tab) { state.animateScrollToItem(0) }
+            OnTabReselect(tab) { state.animateScrollToItem(0) }
             LazyColumn(
                 Modifier.fillMaxSize(),
                 state = state,

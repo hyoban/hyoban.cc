@@ -23,7 +23,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import cc.hyoban.moments.R
-import cc.hyoban.moments.ui.OnTabDoubleTap
+import cc.hyoban.moments.ui.OnTabReselect
 
 /**
  * A pushed page as Material 3 lays one out: a medium flexible top app bar over [content],
@@ -43,7 +43,7 @@ fun SubPage(
 
 /**
  * A tab's page as Material 3 lays one out: a large flexible top app bar with no back
- * button over [content], folding into the bar the same way. Its [tab] double-tapped, the
+ * button over [content], folding into the bar the same way. Its [tab] tapped again, the
  * bar opens out again as the page goes back to its top.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -70,7 +70,7 @@ private fun BarPage(
     tab: Any? = null,
 ) {
     val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-    OnTabDoubleTap(tab) {
+    OnTabReselect(tab) {
         animate(scroll.state.heightOffset, 0f) { value, _ -> scroll.state.heightOffset = value }
     }
     val titleText: @Composable () -> Unit = { Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis) }

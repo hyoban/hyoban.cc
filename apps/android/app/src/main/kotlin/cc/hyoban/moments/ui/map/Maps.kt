@@ -45,7 +45,7 @@ import cc.hyoban.moments.data.trips.Stop
 import cc.hyoban.moments.ui.LocalBottomClearance
 import cc.hyoban.moments.ui.LocalRailSpace
 import cc.hyoban.moments.ui.LocalSettings
-import cc.hyoban.moments.ui.OnTabDoubleTap
+import cc.hyoban.moments.ui.OnTabReselect
 import cc.hyoban.moments.ui.components.isLandscape
 import cc.hyoban.moments.ui.theme.LocalDarkTheme
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -448,7 +448,7 @@ fun PlacesMap(
     onLocated: (Boolean) -> Unit = {},
     /** A tap on the map away from any place or route. */
     onEmptyTap: () -> Unit = {},
-    /** The tab the map is on, whose double tap brings every place back into view. */
+    /** The tab the map is on, which, tapped again while shown, brings every place back into view. */
     tab: Any? = null,
 ) {
     val tapPlace by rememberUpdatedState(onPlace)
@@ -582,8 +582,8 @@ fun PlacesMap(
         onDispose { ready.removeOnMapClickListener(listener) }
     }
 
-    OnTabDoubleTap(tab) {
-        val (ready, _) = map ?: return@OnTabDoubleTap
+    OnTabReselect(tab) {
+        val (ready, _) = map ?: return@OnTabReselect
         if (places.isNotEmpty()) ready.flyToFrame(places.map { it.place.latLng }, frame)
     }
 

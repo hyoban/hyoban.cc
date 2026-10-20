@@ -236,7 +236,7 @@ fun MomentsApp(container: AppContainer) {
         else -> RailSpace(left = 0.dp, right = RAIL_CLEARANCE)
     }
     // A tab tapped twice, told to its page: back to its top, or the map to every place.
-    val tabDoubleTaps = remember { MutableSharedFlow<Any>(extraBufferCapacity = 1) }
+    val tabReselects = remember { MutableSharedFlow<Any>(extraBufferCapacity = 1) }
     // A button the map hands the tabs to stand beside them, as its one action.
     val accessorySlot = remember { mutableStateOf<(@Composable () -> Unit)?>(null) }
     val windowHeight = with(LocalDensity.current) { LocalWindowInfo.current.containerSize.height.toDp() }
@@ -275,7 +275,7 @@ fun MomentsApp(container: AppContainer) {
                         LocalBackSwipe provides backSwipe,
                         LocalViewerShowing provides viewerShowing,
                         LocalSettings provides container.settings,
-                        LocalTabDoubleTaps provides tabDoubleTaps,
+                        LocalTabReselects provides tabReselects,
                     ) {
                         NavHost(
                             navController = navController,
@@ -377,7 +377,7 @@ fun MomentsApp(container: AppContainer) {
                             vertical = landscape,
                             collapsed = folded,
                             onExpand = { tabsShown = true },
-                            onDoubleTap = { tabDoubleTaps.tryEmit(Tab.entries[it].route) },
+                            onReselect = { tabReselects.tryEmit(Tab.entries[it].route) },
                         )
                         // On the map, its button slides out from behind the tabs' end as they move over
                         // to make room, as the map's page slides in, and back under them as they
@@ -485,13 +485,13 @@ private const val SCROLL_SLOP = 6f
 /** Where the app reads from, for what draws without the container at hand, as the map. */
 val LocalSettings = staticCompositionLocalOf<Settings> { error("No settings provided") }
 
-/** The tabs double-tapped, each as its route: [Feed], [Atlas] or [Trips]. */
-val LocalTabDoubleTaps = staticCompositionLocalOf<SharedFlow<Any>> { MutableSharedFlow() }
+/** The tabs tapped again while chosen, each as its route: [Feed], [Atlas] or [Trips]. */
+val LocalTabReselects = staticCompositionLocalOf<SharedFlow<Any>> { MutableSharedFlow() }
 
-/** Runs [action] each time the tab of [route] is double-tapped while its page is shown; nothing without a [route]. */
+/** Runs [action] each time the tab of [route] is tapped again while its page is shown; nothing without a [route]. */
 @Composable
-fun OnTabDoubleTap(route: Any?, action: suspend () -> Unit) {
-    val taps = LocalTabDoubleTaps.current
+fun OnTabReselect(route: Any?, action: suspend () -> Unit) {
+    val taps = LocalTabReselects.current
     val current by rememberUpdatedState(action)
     LaunchedEffect(taps, route) {
         if (route != null) taps.collect { if (it == route) current() }
