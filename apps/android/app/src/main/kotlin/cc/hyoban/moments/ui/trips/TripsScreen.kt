@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -37,6 +38,8 @@ import cc.hyoban.moments.data.spec.TripRecord
 import cc.hyoban.moments.data.trips.coversOf
 import cc.hyoban.moments.data.trips.momentsOf
 import cc.hyoban.moments.ui.LocalBottomClearance
+import cc.hyoban.moments.ui.OnTabDoubleTap
+import cc.hyoban.moments.ui.Trips
 import cc.hyoban.moments.ui.components.MediaStill
 import cc.hyoban.moments.ui.components.PageWidth
 import cc.hyoban.moments.ui.components.Pill
@@ -65,8 +68,11 @@ fun TripsScreen(container: AppContainer, onTrip: (String) -> Unit) {
     val snackbar = rememberRefreshErrors(container)
     val days = remember(trips) { trips.sumOf { daysBetween(it.start, it.end) } }
 
+    val list = rememberLazyListState()
+
     TabPage(
         stringResource(R.string.title_trips),
+        tab = Trips,
         subtitle = stringResource(R.string.count_trips, trips.size) + " · " + stringResource(R.string.count_days_total, days),
     ) {
         TabRefreshBox(pull) {
@@ -74,8 +80,10 @@ fun TripsScreen(container: AppContainer, onTrip: (String) -> Unit) {
                 EmptyState(loading = !loaded || syncing, message = R.string.empty_trips)
             } else {
                 PageWidth { columns ->
+                    OnTabDoubleTap(Trips) { list.animateScrollToItem(0) }
                     LazyColumn(
                         Modifier.fillMaxSize(),
+                        state = list,
                         contentPadding = PaddingValues(start = columns.margin, end = columns.margin, bottom = LocalBottomClearance.current + Space.xl),
                         verticalArrangement = Arrangement.spacedBy(Space.m),
                     ) {

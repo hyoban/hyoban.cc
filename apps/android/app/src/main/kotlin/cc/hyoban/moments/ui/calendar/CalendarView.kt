@@ -33,6 +33,7 @@ import cc.hyoban.moments.data.media.MediaUrls
 import cc.hyoban.moments.data.spec.MomentMedia
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.ui.LocalBottomClearance
+import cc.hyoban.moments.ui.OnTabDoubleTap
 import cc.hyoban.moments.ui.components.MediaStill
 import cc.hyoban.moments.ui.components.MonthHeader
 import cc.hyoban.moments.ui.components.PageWidth
@@ -82,10 +83,13 @@ fun CalendarView(
     onDay: (String, List<MomentRecord>) -> Unit,
     modifier: Modifier = Modifier,
     state: LazyListState = rememberLazyListState(),
+    /** The tab the calendar is on, whose double tap takes it back to its top. */
+    tab: Any? = null,
     leading: LazyListScope.() -> Unit = {},
 ) {
     val months = remember(moments) { monthsOf(moments) }
     val today = remember { LocalDate.now() }
+    OnTabDoubleTap(tab) { state.animateScrollToItem(0) }
 
     PageWidth(modifier) { columns ->
         LazyColumn(

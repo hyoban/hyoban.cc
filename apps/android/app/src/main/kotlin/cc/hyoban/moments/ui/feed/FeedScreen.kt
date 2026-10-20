@@ -29,6 +29,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.R
+import cc.hyoban.moments.ui.Feed
 import cc.hyoban.moments.ui.LocalBottomClearance
 import cc.hyoban.moments.ui.calendar.CalendarView
 import cc.hyoban.moments.ui.components.AppColors
@@ -98,6 +99,7 @@ fun FeedScreen(
 
     TabPage(
         stringResource(R.string.title_moments),
+        tab = Feed,
         subtitle = subtitle,
         actions = {
             IconButton(onClick = { calendar = !calendar }) {
@@ -124,9 +126,10 @@ fun FeedScreen(
                             onDay = { date, here -> if (here.size == 1) onMoment(here.single().uid) else onDay(date) },
                             state = calendarState,
                             leading = { leadingRows(header) },
+                            tab = Feed,
                         )
                     } else {
-                        MomentFeed(shown, places, trips, container.mediaUrls, onMoment, onMedia, state = feedState, gridState = gridState, leading = header)
+                        MomentFeed(shown, places, trips, container.mediaUrls, onMoment, onMedia, state = feedState, gridState = gridState, leading = header, tab = Feed)
                     }
                 }
             }

@@ -45,6 +45,7 @@ import cc.hyoban.moments.data.trips.Stop
 import cc.hyoban.moments.ui.LocalBottomClearance
 import cc.hyoban.moments.ui.LocalRailSpace
 import cc.hyoban.moments.ui.LocalSettings
+import cc.hyoban.moments.ui.OnTabDoubleTap
 import cc.hyoban.moments.ui.components.isLandscape
 import cc.hyoban.moments.ui.theme.LocalDarkTheme
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -144,6 +145,17 @@ private fun MapLibreMap.frame(points: List<LatLng>, padding: IntArray) {
     val bounds = LatLngBounds.Builder().includes(points).build()
     moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding[0], padding[1], padding[2], padding[3]))
     if (cameraPosition.zoom > CLOSEST) moveCamera(CameraUpdateFactory.zoomTo(CLOSEST))
+}
+
+/** Flies to [points] framed as [frame] frames them, turned back to north. */
+private fun MapLibreMap.flyToFrame(points: List<LatLng>, padding: IntArray) {
+    val camera = if (points.size == 1) {
+        CameraPosition.Builder().target(points.single()).zoom(CLOSEST).bearing(0.0).build()
+    } else {
+        val fitted = getCameraForLatLngBounds(LatLngBounds.Builder().includes(points).build(), padding, 0.0, 0.0) ?: return
+        CameraPosition.Builder(fitted).zoom(minOf(fitted.zoom, CLOSEST)).build()
+    }
+    animateCamera(CameraUpdateFactory.newCameraPosition(camera), 600)
 }
 
 /**
@@ -436,6 +448,8 @@ fun PlacesMap(
     onLocated: (Boolean) -> Unit = {},
     /** A tap on the map away from any place or route. */
     onEmptyTap: () -> Unit = {},
+    /** The tab the map is on, whose double tap brings every place back into view. */
+    tab: Any? = null,
 ) {
     val tapPlace by rememberUpdatedState(onPlace)
     val located by rememberUpdatedState(onLocated)
@@ -566,6 +580,11 @@ fun PlacesMap(
         }
         ready.addOnMapClickListener(listener)
         onDispose { ready.removeOnMapClickListener(listener) }
+    }
+
+    OnTabDoubleTap(tab) {
+        val (ready, _) = map ?: return@OnTabDoubleTap
+        if (places.isNotEmpty()) ready.flyToFrame(places.map { it.place.latLng }, frame)
     }
 
     val shape = landscape to (rail.left > 0.dp)

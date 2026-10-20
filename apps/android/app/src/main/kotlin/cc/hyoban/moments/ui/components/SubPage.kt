@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.components
 
+import androidx.compose.animation.core.animate
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
@@ -22,6 +23,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import cc.hyoban.moments.R
+import cc.hyoban.moments.ui.OnTabDoubleTap
 
 /**
  * A pushed page as Material 3 lays one out: a medium flexible top app bar over [content],
@@ -41,17 +43,19 @@ fun SubPage(
 
 /**
  * A tab's page as Material 3 lays one out: a large flexible top app bar with no back
- * button over [content], folding into the bar the same way.
+ * button over [content], folding into the bar the same way. Its [tab] double-tapped, the
+ * bar opens out again as the page goes back to its top.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun TabPage(
     title: String,
+    tab: Any,
     modifier: Modifier = Modifier,
     subtitle: String? = null,
     actions: @Composable RowScope.() -> Unit = {},
     content: @Composable BoxScope.() -> Unit,
-) = BarPage(title, subtitle, onBack = null, large = true, modifier, actions, content)
+) = BarPage(title, subtitle, onBack = null, large = true, modifier, actions, content, tab)
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -63,8 +67,12 @@ private fun BarPage(
     modifier: Modifier,
     actions: @Composable RowScope.() -> Unit,
     content: @Composable BoxScope.() -> Unit,
+    tab: Any? = null,
 ) {
     val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    OnTabDoubleTap(tab) {
+        animate(scroll.state.heightOffset, 0f) { value, _ -> scroll.state.heightOffset = value }
+    }
     val titleText: @Composable () -> Unit = { Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis) }
     val subtitleText: (@Composable () -> Unit)? = subtitle?.let { { Text(it, maxLines = 1) } }
     val back: @Composable () -> Unit = {

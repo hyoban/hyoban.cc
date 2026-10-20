@@ -92,6 +92,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.R
 import cc.hyoban.moments.data.spec.TripRecord
+import cc.hyoban.moments.ui.Atlas
 import cc.hyoban.moments.ui.LocalBottomClearance
 import cc.hyoban.moments.ui.LocalNavAccessory
 import cc.hyoban.moments.ui.LocalRailSpace
@@ -203,6 +204,7 @@ fun MapScreen(container: AppContainer, onMoment: (String) -> Unit, onPlace: (Str
             locate = locate,
             north = north,
             onBearing = { bearing = it },
+            tab = Atlas,
             onLocated = { found ->
                 locating = false
                 if (!found) Toast.makeText(context, R.string.error_location, Toast.LENGTH_SHORT).show()
