@@ -215,11 +215,10 @@ fun MomentsApp(container: AppContainer) {
                 NavHost(
                     navController = navController,
                     startDestination = Feed,
-                    // A back swipe fades the pages as a tap on back does, rather than
-                    // shrinking the page it leaves: a photo on its way back to its tile
-                    // isn't part of that page and would hang outside it as it shrank.
-                    predictivePopEnterTransition = { _ -> fadeIn(tween(700)) },
-                    predictivePopExitTransition = { _ -> fadeOut(tween(700)) },
+                    // A back swipe plays going back as it came, under the finger: a Moment
+                    // shrinks into its card, a pushed page slides back, a tab slides over.
+                    predictivePopEnterTransition = { _ -> popEnter() },
+                    predictivePopExitTransition = { _ -> popExit() },
                     // From tab to tab the pages slide the way the tabs' highlight does;
                     // anything else fades as before.
                     enterTransition = {
@@ -230,8 +229,8 @@ fun MomentsApp(container: AppContainer) {
                         tabSlide()?.let { slideOutOfContainer(it, TAB_SLIDE) + fadeOut(tween(TAB_SLIDE_MS)) }
                             ?: if (opensCard()) CARD_HOLD_OUT else if (sharesPhoto()) fadeOut(tween(PAGE_MS)) else pageOut(forward = true)
                     },
-                    popEnterTransition = { if (closesCard()) CARD_HOLD_IN else if (sharesPhoto()) fadeIn(tween(PAGE_MS)) else pageIn(forward = false) },
-                    popExitTransition = { if (closesCard()) CARD_HOLD_OUT else if (sharesPhoto()) fadeOut(tween(PAGE_MS)) else pageOut(forward = false) },
+                    popEnterTransition = { popEnter() },
+                    popExitTransition = { popExit() },
                 ) {
                     screen<Feed> {
                         FeedScreen(container, onMoment = openMoment, onMedia = openMedia, onDay = { navController.navigate(Day(it)) })
@@ -319,6 +318,15 @@ private fun pageOut(forward: Boolean): ExitTransition =
 private const val CARD_HOLD_MS = 600
 private val CARD_HOLD_IN = fadeIn(tween(CARD_HOLD_MS), initialAlpha = 1f)
 private val CARD_HOLD_OUT = fadeOut(tween(CARD_HOLD_MS), targetAlpha = 1f)
+
+/** Going back, as the page came: into its card, or sliding back, or across tabs. */
+private fun AnimatedContentTransitionScope<NavBackStackEntry>.popEnter(): EnterTransition =
+    tabSlide()?.let { slideIntoContainer(it, TAB_SLIDE) + fadeIn(tween(TAB_SLIDE_MS)) }
+        ?: if (closesCard()) CARD_HOLD_IN else if (sharesPhoto()) fadeIn(tween(PAGE_MS)) else pageIn(forward = false)
+
+private fun AnimatedContentTransitionScope<NavBackStackEntry>.popExit(): ExitTransition =
+    tabSlide()?.let { slideOutOfContainer(it, TAB_SLIDE) + fadeOut(tween(TAB_SLIDE_MS)) }
+        ?: if (closesCard()) CARD_HOLD_OUT else if (sharesPhoto()) fadeOut(tween(PAGE_MS)) else pageOut(forward = false)
 
 /** The pages that list Moments as cards, from which a Moment's page grows out of its card. */
 private val CARD_LISTS = listOf(Feed::class, Day::class, PlaceMoments::class, Trip::class)
