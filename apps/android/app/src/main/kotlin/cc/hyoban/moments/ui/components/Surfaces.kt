@@ -32,6 +32,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -228,8 +229,8 @@ val RAIL_HEIGHT = RAIL_TAB_HEIGHT * 3 + RAIL_PADDING * 2
 
 /**
  * The tabs as a dock floating over the content, every tab its icon over its name. A
- * neutral platter, a level above the dock, sits under the chosen one, whose icon and name
- * take the primary colour. The platter follows a finger dragged along the dock, lifting a
+ * platter in the secondary container, Material 3's active indicator, sits under the chosen
+ * one, whose icon and name take its on-colour; a tab pressed ripples, as any target does. The platter follows a finger dragged along the dock, lifting a
  * little while held and springing to the tab it is let go nearest, with a fling carrying
  * it on, so tabs can be scrubbed through as well as tapped. Moving, it stretches the way
  * it goes and thins a little, as a drop would, more the faster it goes.
@@ -326,21 +327,22 @@ fun FloatingNav(
                             scaleX = if (vertical) across else along
                             scaleY = if (vertical) along else across
                         }
-                        .background(dock.raised.fill(), Corners.full),
+                        .background(MaterialTheme.colorScheme.secondaryContainer, Corners.full),
                 )
                 val tabs: @Composable (@Composable () -> Unit) -> Unit = { tabs -> if (vertical) Column { tabs() } else Row { tabs() } }
                 tabs {
                     items.forEachIndexed { index, item ->
                         val active = index == shown
                         val content by animateColorAsState(
-                            if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            if (active) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+                            MaterialTheme.motionScheme.fastEffectsSpec(),
                             label = "tab content",
                         )
                         Column(
                             Modifier
                                 .size(tabWidth, tabHeight)
                                 .clip(Corners.full)
-                                .clickable(enabled = !collapsed, interactionSource = null, indication = null) { tap(index) }
+                                .clickable(enabled = !collapsed, interactionSource = null, indication = ripple()) { tap(index) }
                                 .semantics {
                                     role = Role.Tab
                                     this.selected = index == selected

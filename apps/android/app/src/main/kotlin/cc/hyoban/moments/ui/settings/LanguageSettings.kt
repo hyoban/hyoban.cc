@@ -7,18 +7,14 @@ import android.os.Build
 import android.provider.Settings
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.OpenInNew
-import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Settings
-import androidx.compose.material.icons.rounded.Translate
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -26,7 +22,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.unit.dp
 import cc.hyoban.moments.AppLanguage
 import cc.hyoban.moments.R
 
@@ -80,17 +75,9 @@ private fun LanguageRow(activity: Activity, language: AppLanguage, selected: Boo
                 },
             )
         },
-        leadingContent = if (language == AppLanguage.SYSTEM) {
-            { Icon(Icons.Rounded.Translate, contentDescription = null) }
-        } else {
-            // Room for the first row's icon, so the three names line up.
-            { Spacer(Modifier.size(24.dp)) }
-        },
-        trailingContent = if (selected) {
-            { Icon(Icons.Rounded.Check, contentDescription = null, tint = MaterialTheme.colorScheme.primary) }
-        } else {
-            null
-        },
+        // One of them chosen, as Material 3 has a list choose one: a radio button at each
+        // row's start, the whole row the target.
+        leadingContent = { RadioButton(selected = selected, onClick = null) },
         colors = rowColors(),
         modifier = Modifier
             .selectable(selected, role = Role.RadioButton) { if (!selected) AppLanguage.change(activity, language) }

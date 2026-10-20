@@ -56,6 +56,7 @@ import androidx.media3.ui.compose.state.rememberMuteButtonState
 import androidx.media3.ui.compose.state.rememberPlayPauseButtonState
 import androidx.media3.ui.compose.state.rememberProgressStateWithTickInterval
 import cc.hyoban.moments.R
+import cc.hyoban.moments.ui.components.Tooltip
 
 // A video in the viewer, played as a phone's gallery plays it: its poster shows at once
 // while the video loads behind it, then it plays over the poster, silent until asked
@@ -183,16 +184,18 @@ fun VideoControls(state: VideoState, visible: Boolean, modifier: Modifier = Modi
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            IconButton(onClick = playPause::onClick, enabled = playPause.isEnabled) {
-                Icon(
-                    when {
-                        ended -> Icons.Rounded.Replay
-                        playPause.showPlay -> Icons.Rounded.PlayArrow
-                        else -> Icons.Rounded.Pause
-                    },
-                    contentDescription = stringResource(if (playPause.showPlay) R.string.action_play else R.string.action_pause),
-                    tint = Color.White,
-                )
+            Tooltip(stringResource(if (playPause.showPlay) R.string.action_play else R.string.action_pause)) {
+                IconButton(onClick = playPause::onClick, enabled = playPause.isEnabled) {
+                    Icon(
+                        when {
+                            ended -> Icons.Rounded.Replay
+                            playPause.showPlay -> Icons.Rounded.PlayArrow
+                            else -> Icons.Rounded.Pause
+                        },
+                        contentDescription = stringResource(if (playPause.showPlay) R.string.action_play else R.string.action_pause),
+                        tint = Color.White,
+                    )
+                }
             }
             Text(
                 formatClock(if (dragging) (dragged * duration).toLong() else progress.currentPositionMs),
@@ -217,12 +220,14 @@ fun VideoControls(state: VideoState, visible: Boolean, modifier: Modifier = Modi
                 modifier = Modifier.weight(1f),
             )
             Text(formatClock(progress.durationMs.coerceAtLeast(0L)), style = MaterialTheme.typography.labelMedium, color = Color.White.copy(alpha = 0.8f))
-            IconButton(onClick = mute::onClick, enabled = mute.isEnabled) {
-                Icon(
-                    if (mute.showMuted) Icons.AutoMirrored.Rounded.VolumeOff else Icons.AutoMirrored.Rounded.VolumeUp,
-                    contentDescription = stringResource(if (mute.showMuted) R.string.action_unmute else R.string.action_mute),
-                    tint = Color.White,
-                )
+            Tooltip(stringResource(if (mute.showMuted) R.string.action_unmute else R.string.action_mute)) {
+                IconButton(onClick = mute::onClick, enabled = mute.isEnabled) {
+                    Icon(
+                        if (mute.showMuted) Icons.AutoMirrored.Rounded.VolumeOff else Icons.AutoMirrored.Rounded.VolumeUp,
+                        contentDescription = stringResource(if (mute.showMuted) R.string.action_unmute else R.string.action_mute),
+                        tint = Color.White,
+                    )
+                }
             }
         }
     }

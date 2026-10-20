@@ -154,19 +154,21 @@ fun FloatingButton(
 ) {
     // Floating over a photo, a map or a card: a shadow, as the tabs have. Drawn at Material
     // 3's small icon button size, its touch target still 48dp, as Compose widens a small one.
-    Surface(
-        onClick = onClick,
-        enabled = !busy,
-        shape = Corners.full,
-        color = if (tonal) MaterialTheme.colorScheme.secondaryContainer else SurfaceLevel.floating(LocalDarkTheme.current).fill(),
-        contentColor = if (tonal) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurface,
-        shadowElevation = 3.dp,
-        modifier = modifier.statusBarsPadding().sideInsetsPadding().padding(Space.s)
-            .size(width.width, FLOATING_HEIGHT).semantics { contentDescription = label }.testTag(tag),
-    ) {
-        // Busy, a short wait, it turns Material 3 Expressive's loading indicator and takes no taps until what it started is done.
-        Box(contentAlignment = Alignment.Center) {
-            if (busy) LoadingIndicator(Modifier.size(24.dp), color = LocalContentColor.current) else Icon(icon, contentDescription = null)
+    Tooltip(label, below = true, modifier = modifier) {
+        Surface(
+            onClick = onClick,
+            enabled = !busy,
+            shape = Corners.full,
+            color = if (tonal) MaterialTheme.colorScheme.secondaryContainer else SurfaceLevel.floating(LocalDarkTheme.current).fill(),
+            contentColor = if (tonal) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurface,
+            shadowElevation = 3.dp,
+            modifier = Modifier.statusBarsPadding().sideInsetsPadding().padding(Space.s)
+                .size(width.width, FLOATING_HEIGHT).semantics { contentDescription = label }.testTag(tag),
+        ) {
+            // Busy, a short wait, it turns Material 3 Expressive's loading indicator and takes no taps until what it started is done.
+            Box(contentAlignment = Alignment.Center) {
+                if (busy) LoadingIndicator(Modifier.size(24.dp), color = LocalContentColor.current) else Icon(icon, contentDescription = null)
+            }
         }
     }
 }

@@ -8,10 +8,14 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,8 +26,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import cc.hyoban.moments.R
-import cc.hyoban.moments.ui.format.formatMonthOnly
 import cc.hyoban.moments.data.spec.MomentRecord
+import cc.hyoban.moments.ui.format.formatMonthOnly
 import cc.hyoban.moments.ui.theme.Corners
 import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
 import cc.hyoban.moments.ui.theme.Space
@@ -100,15 +104,23 @@ private fun ChipRow(tag: String, options: List<Int?>, selected: Int?, label: @Co
                 selected = option == selected,
                 onClick = { onSelect(option) },
                 label = { Text(label(option)) },
+                // The chosen one checked, as Material 3 has a selected filter chip.
+                leadingIcon = if (option == selected) {
+                    { Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize)) }
+                } else {
+                    null
+                },
                 modifier = Modifier.testTag("$tag${option ?: "all"}"),
-                // The chosen one solid primary, the rest a level above the page, no borders.
+                // The chosen one in the secondary container, as Material 3 colours a filter
+                // chip, the rest a level above the page, no borders.
                 shape = Corners.full,
                 border = null,
                 colors = FilterChipDefaults.filterChipColors(
                     containerColor = LocalSurfaceLevel.current.raised.fill(),
                     labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    selectedContainerColor = MaterialTheme.colorScheme.primary,
-                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                    selectedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    selectedLabelColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                    selectedLeadingIconColor = MaterialTheme.colorScheme.onSecondaryContainer,
                 ),
             )
         }

@@ -14,19 +14,21 @@ import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
@@ -73,6 +75,7 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
@@ -254,11 +257,9 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
         landscape -> navBottom
         else -> 88.dp + navBottom
     }
-    // Down the side away from the camera's cutout, which changes sides as the phone turns
-    // one way or the other; the status bar's icons stay beside the cutout.
-    val density = LocalDensity.current
-    val cutout = WindowInsets.displayCutout
-    val railLeft = with(density) { cutout.getRight(this, LayoutDirection.Ltr) > cutout.getLeft(this, LayoutDirection.Ltr) }
+    // Down the leading side, as Material 3 places a navigation rail, whichever way the phone
+    // is turned; the system's insets keep it clear of the camera's cutout there.
+    val railLeft = LocalLayoutDirection.current == LayoutDirection.Ltr
     val rail = when {
         current == null || !landscape -> RailSpace(0.dp, 0.dp)
         railLeft -> RailSpace(left = RAIL_CLEARANCE, right = 0.dp)
@@ -461,35 +462,52 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                 // Down the side, the tabs have room of their own, so they stay open as a list scrolls.
                 val folded = !landscape && !tabsShown
                 val side by animateFloatAsState(if (folded) -1f else 0f, motion.defaultSpatialSpec(), label = "tabs side")
-                Box(if (landscape) Modifier else Modifier.fillMaxWidth()) {
-                    Row(Modifier.align(BiasAlignment(side, 0f)), verticalAlignment = Alignment.CenterVertically) {
-                        FloatingNav(
-                            navItems,
-                            selected = current?.ordinal ?: 0,
-                            onSelect = selectTab,
-                            vertical = landscape,
-                            collapsed = folded,
-                            onExpand = { tabsShown = true },
-                            onReselect = { tabReselects.tryEmit(Tab.entries[it].route) },
-                        )
-                        // A tab's button, the map's locating or the Moments' new Moment, slides out
-                        // from behind the tabs' end as they move over to make room, as its page
-                        // slides in, and back under them as they leave; down the side the map
-                        // keeps it itself. Kept while it slides away, after the tab has let it go.
-                        var accessory by remember { mutableStateOf(accessorySlot.value) }
-                        accessorySlot.value?.let { accessory = it }
+                val nav: @Composable () -> Unit = {
+                    FloatingNav(
+                        navItems,
+                        selected = current?.ordinal ?: 0,
+                        onSelect = selectTab,
+                        vertical = landscape,
+                        collapsed = folded,
+                        onExpand = { tabsShown = true },
+                        onReselect = { tabReselects.tryEmit(Tab.entries[it].route) },
+                    )
+                }
+                // A tab's button, the map's locating or the Moments' new Moment. Kept while it
+                // slides away, after the tab has let it go.
+                var accessory by remember { mutableStateOf(accessorySlot.value) }
+                accessorySlot.value?.let { accessory = it }
+                if (landscape) {
+                    // Down the side, at the top of the rail, as Material 3 anchors a rail's FAB.
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         AnimatedVisibility(
-                            current != null && !landscape && accessorySlot.value != null,
-                            enter = expandHorizontally(motion.defaultSpatialSpec(), expandFrom = Alignment.Start, clip = false) +
-                                slideInHorizontally(motion.defaultSpatialSpec()) { -it } +
-                                fadeIn(motion.fastEffectsSpec()),
-                            exit = shrinkHorizontally(motion.defaultSpatialSpec(), shrinkTowards = Alignment.Start, clip = false) +
-                                slideOutHorizontally(motion.defaultSpatialSpec()) { -it } +
-                                fadeOut(motion.defaultEffectsSpec()),
-                            // Under the tabs, so it comes out from behind them.
-                            modifier = Modifier.zIndex(-1f),
+                            current != null && accessorySlot.value != null,
+                            enter = expandVertically(motion.defaultSpatialSpec(), expandFrom = Alignment.Bottom, clip = false) + fadeIn(motion.fastEffectsSpec()),
+                            exit = shrinkVertically(motion.defaultSpatialSpec(), shrinkTowards = Alignment.Bottom, clip = false) + fadeOut(motion.defaultEffectsSpec()),
                         ) {
-                            Box(Modifier.padding(start = NAV_ACCESSORY_GAP)) { accessory?.invoke() }
+                            Box(Modifier.padding(bottom = NAV_ACCESSORY_GAP)) { accessory?.invoke() }
+                        }
+                        nav()
+                    }
+                } else {
+                    Box(Modifier.fillMaxWidth()) {
+                        Row(Modifier.align(BiasAlignment(side, 0f)), verticalAlignment = Alignment.CenterVertically) {
+                            nav()
+                            // It slides out from behind the tabs' end as they move over to make
+                            // room, as its page slides in, and back under them as they leave.
+                            AnimatedVisibility(
+                                current != null && accessorySlot.value != null,
+                                enter = expandHorizontally(motion.defaultSpatialSpec(), expandFrom = Alignment.Start, clip = false) +
+                                    slideInHorizontally(motion.defaultSpatialSpec()) { -it } +
+                                    fadeIn(motion.fastEffectsSpec()),
+                                exit = shrinkHorizontally(motion.defaultSpatialSpec(), shrinkTowards = Alignment.Start, clip = false) +
+                                    slideOutHorizontally(motion.defaultSpatialSpec()) { -it } +
+                                    fadeOut(motion.defaultEffectsSpec()),
+                                // Under the tabs, so it comes out from behind them.
+                                modifier = Modifier.zIndex(-1f),
+                            ) {
+                                Box(Modifier.padding(start = NAV_ACCESSORY_GAP)) { accessory?.invoke() }
+                            }
                         }
                     }
                 }
