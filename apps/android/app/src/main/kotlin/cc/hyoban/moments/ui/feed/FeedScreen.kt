@@ -8,6 +8,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material.icons.rounded.Directions
+import androidx.compose.ui.platform.LocalContext
+import cc.hyoban.moments.ui.map.navigateTo
 import androidx.compose.material3.Icon
 import androidx.compose.material.icons.outlined.ViewAgenda
 import androidx.compose.material.icons.outlined.CalendarMonth
@@ -161,7 +165,16 @@ fun PlaceScreen(container: AppContainer, id: String, onMoment: (String) -> Unit,
             // Room for the back button, which floats over the list.
             item(key = "back") { Spacer(Modifier.height(56.dp)) }
             item(key = "header") {
-                PageHeader(places[id]?.name ?: id, stringResource(R.string.count_moments, moments.size))
+                val place = places[id]
+                PageHeader(place?.name ?: id, stringResource(R.string.count_moments, moments.size)) {
+                    // The way there, as from the map's panel of the place.
+                    if (place != null) {
+                        val context = LocalContext.current
+                        IconButton(onClick = { navigateTo(context, place) }) {
+                            Icon(Icons.Rounded.Directions, contentDescription = stringResource(R.string.action_navigate), tint = MaterialTheme.colorScheme.primary)
+                        }
+                    }
+                }
             }
         }
         FloatingBack(onBack, Modifier.align(Alignment.TopStart))
