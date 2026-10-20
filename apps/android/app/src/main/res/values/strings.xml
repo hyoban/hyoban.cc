@@ -114,4 +114,7 @@
     <plurals name="widget_trip_in_days">
         <item quantity="other">%1$d 天后出发</item>
     </plurals>
+    <string name="section_language">语言</string>
+    <string name="language_system">跟随系统</string>
+    <string name="settings_language_note">时刻里的文字保持原样。</string>
 </resources>

@@ -90,6 +90,9 @@
     <string name="widget_preview_trip_subtitle">15 Moments</string>
     <string name="separator_clause">, </string>
     <string name="separator_list">, </string>
+    <string name="section_language">Language</string>
+    <string name="language_system">System</string>
+    <string name="settings_language_note">The Moments\' own words stay as written.</string>
     <plurals name="count_moments">
         <item quantity="one">%1$d Moment</item>
         <item quantity="other">%1$d Moments</item>
