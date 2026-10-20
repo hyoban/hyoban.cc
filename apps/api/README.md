@@ -2,8 +2,8 @@
 
 A Cloudflare Worker that serves the Moments, places and trips from D1, for the site's
 build and the recording app. Records come back exactly as stored, in the shape
-`@hyoban/data-spec` defines. The recording app writes through it; until it does,
-`pnpm data:import` copies `data/` in.
+`@hyoban/data-spec` defines. The recording app writes through it, one change set at a
+time; how it is deployed is in the root README.
 
 ## Reading
 
