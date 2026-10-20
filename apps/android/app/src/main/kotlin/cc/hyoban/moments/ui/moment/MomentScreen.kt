@@ -40,6 +40,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import cc.hyoban.moments.ui.components.sharedCard
 import cc.hyoban.moments.ui.components.StatusBarOverPhoto
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.layout.onSizeChanged
@@ -67,7 +68,6 @@ import cc.hyoban.moments.ui.components.Pill
 import cc.hyoban.moments.ui.components.PressableCard
 import cc.hyoban.moments.ui.components.RisingSheet
 import cc.hyoban.moments.ui.components.Thumbnail
-import cc.hyoban.moments.ui.components.aboveSharedMedia
 import cc.hyoban.moments.ui.components.mediaKey
 import cc.hyoban.moments.ui.components.shapeOf
 import cc.hyoban.moments.ui.format.daysBetween
@@ -100,7 +100,8 @@ fun MomentScreen(
     val trip = remember(moment, trips) { tripOf(moment, trips) }
     val urls = container.mediaUrls
 
-    Box(Modifier.fillMaxSize().background(AppColors.page)) {
+    // The whole page is the card it was opened from, grown to the screen.
+    Box(Modifier.fillMaxSize().sharedCard(uid, page = true).background(AppColors.page)) {
         // The photo runs under the status bar: white icons while it is still under it.
         val scroll = rememberScrollState()
         var photoHeight by remember { mutableIntStateOf(0) }
@@ -136,7 +137,7 @@ fun MomentScreen(
                 Spacer(Modifier.statusBarsPadding().height(72.dp))
             }
 
-            RisingSheet(Modifier.offset(y = if (moment.media.isNotEmpty()) -RISE else 0.dp).aboveSharedMedia()) {
+            RisingSheet(Modifier.offset(y = if (moment.media.isNotEmpty()) -RISE else 0.dp)) {
                 Column(
                     Modifier.padding(start = Space.xl, end = Space.xl, top = Space.xl, bottom = Space.xxl),
                     verticalArrangement = Arrangement.spacedBy(Space.l),
@@ -192,7 +193,7 @@ fun MomentScreen(
                 }
             }
         }
-        FloatingBack(onBack, Modifier.align(Alignment.TopStart).aboveSharedMedia())
+        FloatingBack(onBack, Modifier.align(Alignment.TopStart))
     }
 }
 

@@ -9,6 +9,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.layout.ContentScale
+import com.kyant.capsule.ContinuousRoundedRectangle
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
+import androidx.compose.animation.core.animateDp
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.fadeIn
 import androidx.compose.runtime.State
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.setValue
@@ -45,6 +55,12 @@ val LocalViewerShownKey = staticCompositionLocalOf<String?> { null }
  */
 val LocalBackSwipe = staticCompositionLocalOf<State<Boolean>> { mutableStateOf(false) }
 
+/**
+ * Whether the photo viewer is open, or still closing: a photo flies between a tile and
+ * the viewer only then. Between pages it is the whole card that moves (see sharedCard).
+ */
+val LocalViewerShowing = staticCompositionLocalOf<State<Boolean>> { mutableStateOf(false) }
+
 /** Whether a composable is in the viewer, whose photo shows whenever the viewer does. */
 val LocalInViewer = staticCompositionLocalOf { false }
 
@@ -75,9 +91,10 @@ fun Modifier.sharedMedia(key: String?, shape: Shape = RectangleShape): Modifier 
             // with its page.
             val transition = animated.transition
             val swiped = LocalBackSwipe.current
-            val config = remember(swiped) {
+            val viewerShowing = LocalViewerShowing.current
+            val config = remember(swiped, viewerShowing) {
                 object : SharedTransitionScope.SharedContentConfig {
-                    override val SharedTransitionScope.SharedContentState.isEnabled: Boolean get() = !swiped.value
+                    override val SharedTransitionScope.SharedContentState.isEnabled: Boolean get() = !swiped.value && viewerShowing.value
                     override val shouldKeepEnabledForOngoingAnimation: Boolean get() = false
                 }
             }
@@ -88,6 +105,47 @@ fun Modifier.sharedMedia(key: String?, shape: Shape = RectangleShape): Modifier 
         }
     }
 }
+
+/**
+ * A Moment's card on a list and its page, as one surface: tapping the card grows it into
+ * the page, photo, words and all, as the App Store's stories open, and going back shrinks
+ * the page into the card. Its corners go from the card's to none as it grows. Not during
+ * a back swipe, whose own preview would play it twice, nor while the viewer shows.
+ */
+@OptIn(ExperimentalSharedTransitionApi::class)
+@Composable
+fun Modifier.sharedCard(key: String, cardCorner: Dp = 16.dp, page: Boolean = false): Modifier {
+    val shared = LocalSharedTransitionScope.current
+    val animated = LocalNavAnimatedScope.current
+    if (shared == null || animated == null) return this
+
+    val swiped = LocalBackSwipe.current
+    val viewerShowing = LocalViewerShowing.current
+    // The page's corners round as it shrinks toward the card, and square off as it fills the screen.
+    val corner by animated.transition.animateDp(label = "card corner") { state ->
+        if (page && state == EnterExitState.Visible) 0.dp else cardCorner
+    }
+    return with(shared) {
+        val config = remember(swiped, viewerShowing) {
+            object : SharedTransitionScope.SharedContentConfig {
+                override val SharedTransitionScope.SharedContentState.isEnabled: Boolean get() = !swiped.value && !viewerShowing.value
+                override val shouldKeepEnabledForOngoingAnimation: Boolean get() = false
+            }
+        }
+        this@sharedCard.sharedBounds(
+            rememberSharedContentState("card/$key", config),
+            animatedVisibilityScope = animated,
+            enter = fadeIn(tween(CARD_MS / 2)),
+            exit = fadeOut(tween(CARD_MS / 2)),
+            boundsTransform = { _, _ -> spring(dampingRatio = 0.86f, stiffness = 380f) },
+            // Scaled, not laid out again at each size, so the words keep their lines as it grows.
+            resizeMode = SharedTransitionScope.ResizeMode.scaleToBounds(ContentScale.FillWidth, Alignment.TopCenter),
+            clipInOverlayDuringTransition = OverlayClip(ContinuousRoundedRectangle(corner)),
+        )
+    }
+}
+
+private const val CARD_MS = 400
 
 /**
  * Keeps what lies over a photo, a sheet or a button, over it as the photo comes onto its
