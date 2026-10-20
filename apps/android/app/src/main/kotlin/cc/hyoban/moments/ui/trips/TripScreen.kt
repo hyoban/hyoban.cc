@@ -14,16 +14,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Route
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
@@ -35,8 +32,8 @@ import cc.hyoban.moments.R
 import cc.hyoban.moments.data.trips.momentsOf
 import cc.hyoban.moments.data.trips.stopsOf
 import cc.hyoban.moments.ui.components.AppColors
-import cc.hyoban.moments.ui.components.FloatingBack
 import cc.hyoban.moments.ui.components.SectionHeader
+import cc.hyoban.moments.ui.components.SubPage
 import cc.hyoban.moments.ui.components.landscape
 import cc.hyoban.moments.ui.components.sharedCard
 import cc.hyoban.moments.ui.components.sideInsetsPadding
@@ -49,7 +46,10 @@ import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.fill
 
-/** One trip: what it covered, its route on a map card, then its Moments day by day, in order. */
+/**
+ * One trip, a pushed page under its top app bar: what it covered, its route on a map
+ * card, then its Moments day by day, in order, each day's pill held under the bar.
+ */
 @Composable
 fun TripScreen(
     container: AppContainer,
@@ -68,9 +68,9 @@ fun TripScreen(
     val context = LocalContext.current
 
     val dayLabel = { day: String -> context.getString(R.string.trip_day, daysBetween(trip.start, day)) + " · " + formatDay(day) }
+    // The title is the bar's; under it, what the trip covered.
     val summary: @Composable () -> Unit = {
-        Column(Modifier.padding(start = Space.xl, end = Space.xl, bottom = Space.l), verticalArrangement = Arrangement.spacedBy(Space.m)) {
-            Text(trip.title, style = MaterialTheme.typography.headlineMedium)
+        Box(Modifier.padding(start = Space.gutter, end = Space.gutter, top = Space.xs, bottom = Space.l)) {
             TripPills(trip, moments.size, places = stops.distinctBy { it.placeId }.size)
         }
     }
@@ -86,17 +86,34 @@ fun TripScreen(
     }
 
     // The page is the trip's card grown to the screen.
-    BoxWithConstraints(Modifier.fillMaxSize().sharedCard(tripCardKey(id), page = true).background(AppColors.page)) {
-        if (landscape) {
-            // On its side, the route stays on the start side, as tall as the screen, and
-            // what the trip covered and its Moments scroll beside it.
-            Row(Modifier.fillMaxSize().statusBarsPadding()) {
-                Column(
-                    Modifier.weight(0.42f).fillMaxHeight().sideInsetsPadding(WindowInsetsSides.Start)
-                        .padding(top = 56.dp).navigationBarsPadding().padding(bottom = Space.l),
-                ) {
-                    routeCard(Modifier.weight(1f), Modifier.weight(1f))
+    SubPage(trip.title, onBack, Modifier.sharedCard(tripCardKey(id), page = true).background(AppColors.page)) {
+        BoxWithConstraints(Modifier.fillMaxSize()) {
+            if (landscape) {
+                // On its side, the route stays on the start side, as tall as the space under
+                // the bar, and what the trip covered and its Moments scroll beside it.
+                Row(Modifier.fillMaxSize()) {
+                    Column(
+                        Modifier.weight(0.42f).fillMaxHeight().sideInsetsPadding(WindowInsetsSides.Start)
+                            .navigationBarsPadding().padding(bottom = Space.l),
+                    ) {
+                        routeCard(Modifier.weight(1f), Modifier.weight(1f))
+                    }
+                    MomentFeed(
+                        moments,
+                        places,
+                        trips,
+                        container.mediaUrls,
+                        onMoment,
+                        onMedia,
+                        modifier = Modifier.weight(0.58f),
+                        months = false,
+                        dayLabel = dayLabel,
+                        showTrip = false,
+                    ) {
+                        item(key = "summary") { summary() }
+                    }
                 }
+            } else {
                 MomentFeed(
                     moments,
                     places,
@@ -104,34 +121,15 @@ fun TripScreen(
                     container.mediaUrls,
                     onMoment,
                     onMedia,
-                    modifier = Modifier.weight(0.58f),
                     months = false,
                     dayLabel = dayLabel,
                     showTrip = false,
                 ) {
-                    item(key = "summary") { Box(Modifier.padding(top = Space.l)) { summary() } }
+                    item(key = "summary") { summary() }
+                    item(key = "map") { routeCard(Modifier, Modifier.height(240.dp)) }
+                    item(key = "gap") { Spacer(Modifier.height(Space.s)) }
                 }
             }
-        } else {
-            MomentFeed(
-                moments,
-                places,
-                trips,
-                container.mediaUrls,
-                onMoment,
-                onMedia,
-                modifier = Modifier.statusBarsPadding(),
-                months = false,
-                dayLabel = dayLabel,
-                showTrip = false,
-            ) {
-                // Room for the back button, which floats over the list.
-                item(key = "back") { Spacer(Modifier.height(56.dp)) }
-                item(key = "summary") { summary() }
-                item(key = "map") { routeCard(Modifier, Modifier.height(240.dp)) }
-                item(key = "gap") { Spacer(Modifier.height(Space.s)) }
-            }
         }
-        FloatingBack(onBack, Modifier.align(Alignment.TopStart))
     }
 }
