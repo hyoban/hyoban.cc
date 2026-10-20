@@ -40,6 +40,16 @@
             </intent-filter>
         </activity>
 
+        <!-- A page a widget opens, over the app in its task: back closes it, and the app's
+             icon closes it too and shows the app as it was rather than the page. -->
+        <activity
+            android:name=".LinkActivity"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden|density"
+            android:finishOnTaskLaunch="true"
+            android:launchMode="singleTop"
+            android:supportsPictureInPicture="true"
+            android:exported="false" />
+
         <!-- The home screen's widgets: a Moment from this day in an earlier year, and the trip. -->
         <receiver
             android:name=".widget.MemoryWidgetReceiver"

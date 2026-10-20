@@ -44,7 +44,7 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import cc.hyoban.moments.AppContainer
-import cc.hyoban.moments.MainActivity
+import cc.hyoban.moments.LinkActivity
 import cc.hyoban.moments.MomentsApplication
 import cc.hyoban.moments.R
 import cc.hyoban.moments.Settings
@@ -302,7 +302,7 @@ private fun WidgetTheme(context: Context, content: @Composable () -> Unit) {
 
 /** Opens a page of the app by its link, as `moments://moment/{uid}`. */
 private fun open(link: String) = actionStartActivity(
-    Intent(Intent.ACTION_VIEW, Uri.parse("$DEEP_LINK_SCHEME://$link")).setClassName("cc.hyoban.moments", MainActivity::class.java.name),
+    Intent(Intent.ACTION_VIEW, Uri.parse("$DEEP_LINK_SCHEME://$link")).setClassName("cc.hyoban.moments", LinkActivity::class.java.name),
 )
 
 /** The app's container, its copy of the records read before anything is picked from it. */
