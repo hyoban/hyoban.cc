@@ -7,6 +7,14 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.layout.Row
+import androidx.compose.runtime.MutableState
+import androidx.compose.ui.unit.IntSize
+import cc.hyoban.moments.ui.components.NAV_ACCESSORY_GAP
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.material3.Surface
@@ -216,6 +224,8 @@ fun MomentsApp(container: AppContainer) {
         railLeft -> RailSpace(left = RAIL_CLEARANCE, right = 0.dp)
         else -> RailSpace(left = 0.dp, right = RAIL_CLEARANCE)
     }
+    // A button the map hands the tabs to stand beside them, as its one action.
+    val accessorySlot = remember { mutableStateOf<(@Composable () -> Unit)?>(null) }
     val windowHeight = with(LocalDensity.current) { LocalWindowInfo.current.containerSize.height.toDp() }
 
     // A back swipe, from its start until a moment after the finger lifts, while the page
@@ -242,6 +252,7 @@ fun MomentsApp(container: AppContainer) {
         CompositionLocalProvider(
             LocalBottomClearance provides clearance,
             LocalRailSpace provides rail,
+            LocalNavAccessory provides accessorySlot,
             LocalMediaMaxHeight provides if (landscape) windowHeight * 0.6f else Dp.Infinity,
         ) {
         SharedTransitionLayout(Modifier.fillMaxSize()) {
@@ -336,7 +347,25 @@ fun MomentsApp(container: AppContainer) {
                 Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(bottom = Space.m)
             },
         ) {
-            FloatingNav(navItems, selected = current?.ordinal ?: 0, onSelect = selectTab, vertical = landscape)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                FloatingNav(navItems, selected = current?.ordinal ?: 0, onSelect = selectTab, vertical = landscape)
+                // On the map, its button opens out beside the tabs as they slide over to make
+                // room, as the map's page slides in; down the side the map keeps it itself.
+                // Kept while it folds away, after the map has let it go.
+                var accessory by remember { mutableStateOf(accessorySlot.value) }
+                accessorySlot.value?.let { accessory = it }
+                AnimatedVisibility(
+                    current == Tab.MAP && !landscape && accessorySlot.value != null,
+                    enter = expandHorizontally(TAB_SLIDE_SIZE, expandFrom = Alignment.Start, clip = false) +
+                        scaleIn(tween(TAB_SLIDE_MS - 80, delayMillis = 80), initialScale = 0.6f) +
+                        fadeIn(tween(TAB_SLIDE_MS - 80, delayMillis = 80)),
+                    exit = shrinkHorizontally(TAB_SLIDE_SIZE, shrinkTowards = Alignment.Start, clip = false) +
+                        scaleOut(tween(TAB_SLIDE_MS / 2), targetScale = 0.6f) +
+                        fadeOut(tween(TAB_SLIDE_MS / 2)),
+                ) {
+                    Box(Modifier.padding(start = NAV_ACCESSORY_GAP)) { accessory?.invoke() }
+                }
+            }
         }
     }
     }
@@ -344,6 +373,7 @@ fun MomentsApp(container: AppContainer) {
 
 private const val TAB_SLIDE_MS = 320
 private val TAB_SLIDE = tween<IntOffset>(TAB_SLIDE_MS, easing = FastOutSlowInEasing)
+private val TAB_SLIDE_SIZE = tween<IntSize>(TAB_SLIDE_MS, easing = FastOutSlowInEasing)
 
 // A page pushed on, a Moment, a trip, a place, a day, comes in from the side it goes
 // towards and fades in as the one under it moves off a little and fades out, Android
@@ -424,6 +454,9 @@ val LocalBottomClearance = staticCompositionLocalOf { 0.dp }
 data class RailSpace(val left: Dp, val right: Dp)
 
 val LocalRailSpace = staticCompositionLocalOf { RailSpace(0.dp, 0.dp) }
+
+/** The button standing beside the tabs on a tab screen, which that screen fills in and clears. */
+val LocalNavAccessory = staticCompositionLocalOf<MutableState<(@Composable () -> Unit)?>> { mutableStateOf(null) }
 
 /** The tabs standing down the side, with the room around them. */
 private val RAIL_CLEARANCE = Space.m + RAIL_WIDTH + Space.s

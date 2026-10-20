@@ -206,6 +206,15 @@ private val TAB_WIDTH = 76.dp
 private val TAB_HEIGHT = 56.dp
 private val DOCK_PADDING = 6.dp
 
+/** How tall the floating tabs are, and so a button standing beside them. */
+val NAV_HEIGHT = TAB_HEIGHT + DOCK_PADDING * 2
+
+/** How wide the app's three tabs are along the bottom. */
+val NAV_WIDTH = TAB_WIDTH * 3 + DOCK_PADDING * 2
+
+/** The room between the floating tabs and a button standing beside them. */
+val NAV_ACCESSORY_GAP = Space.m
+
 // Down the side of a phone on its side, the tabs are slimmer, the screen having little width to spare.
 private val RAIL_TAB_WIDTH = 56.dp
 private val RAIL_TAB_HEIGHT = 52.dp
