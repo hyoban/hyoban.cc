@@ -13,14 +13,17 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
+import android.os.Build
+import androidx.compose.ui.platform.LocalContext
+import cc.hyoban.moments.Settings
+import cc.hyoban.moments.ThemeMode
 import com.kyant.capsule.ContinuousCapsule
 import com.kyant.capsule.ContinuousRoundedRectangle
 
 // The app's look, Material 3 adapted the way FlClash adapts it: Material's type scale
 // and shape scale, with continuous corners, and every colour role made from one seed, a
-// sea blue, the same on every phone (Colors.kt says how the scheme leaves Material's).
-
-private val Seed = Color(0xFF2F6B8E)
+// sea blue unless the settings pick another or the system's accent (Colors.kt says how
+// the scheme leaves Material's).
 
 /** The 4dp grid every gap and padding is a step of. */
 object Space {
@@ -79,11 +82,25 @@ private val AppTypography = Typography().run {
 }
 
 @Composable
-fun MomentsTheme(content: @Composable () -> Unit) {
-    val dark = isSystemInDarkTheme()
-    val colorScheme = remember(dark) { seededColorScheme(Seed, dark) }
+fun MomentsTheme(settings: Settings, content: @Composable () -> Unit) {
+    val dark = when (settings.themeMode) {
+        ThemeMode.SYSTEM -> isSystemInDarkTheme()
+        ThemeMode.LIGHT -> false
+        ThemeMode.DARK -> true
+    }
+    val seed = Color(settings.themeColor ?: systemAccent() ?: Settings.DEFAULT_THEME_COLOR)
+    val style = settings.colorStyle
+    val pureBlack = settings.pureBlack
+    val colorScheme = remember(seed, dark, style, pureBlack) { seededColorScheme(seed, dark, style, pureBlack) }
 
     CompositionLocalProvider(LocalDarkTheme provides dark) {
         MaterialTheme(colorScheme = colorScheme, typography = AppTypography, shapes = AppShapes, content = content)
     }
+}
+
+/** The system's accent from the wallpaper, on Android 12 and later; null before. */
+@Composable
+fun systemAccent(): Int? {
+    val context = LocalContext.current
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) context.getColor(android.R.color.system_accent1_500) else null
 }

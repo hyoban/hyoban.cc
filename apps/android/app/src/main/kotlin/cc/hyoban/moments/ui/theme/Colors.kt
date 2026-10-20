@@ -12,7 +12,10 @@ import com.materialkolor.dynamiccolor.DynamicColor
 import com.materialkolor.dynamiccolor.MaterialDynamicColors
 import com.materialkolor.hct.Hct
 import com.materialkolor.palettes.TonalPalette
+import com.materialkolor.scheme.DynamicScheme
 import com.materialkolor.scheme.SchemeContent
+import com.materialkolor.scheme.SchemeMonochrome
+import com.materialkolor.scheme.SchemeTonalSpot
 import kotlin.math.min
 
 // The app's colours, after FlClash's surfaces (github.com/chen08209/FlClash,
@@ -29,11 +32,34 @@ private const val SURFACE_CHROMA = 3.0
 private const val PAPER_CHROMA = 1.5
 private const val OUTLINE_VARIANT_CHROMA = 4.0
 private const val PRIMARY_CONTAINER_CHROMA = 48.0
+private const val TINT_DIVISOR = 6.0
+private const val MAX_TINT_CHROMA = 10.0
 
-/** The scheme for [seed] in light or [dark]. */
-fun seededColorScheme(seed: Color, dark: Boolean): ColorScheme {
+/** How much of the seed the scheme carries, as FlClash's colour styles. */
+enum class ColorStyle {
+    /** The seed itself as primary, the surfaces near grey: the scheme described above. */
+    VIVID,
+
+    /** As vivid, with the surfaces tinted towards the seed, a little more the more colourful it is. */
+    TINTED,
+
+    /** Material's tonal spot: a quieter primary from the seed's hue. */
+    SOFT,
+
+    /** Greys throughout. */
+    MONOCHROME,
+}
+
+/** The scheme for [seed] in light or [dark], in [style]; [pureBlack] takes dark's page down to black. */
+fun seededColorScheme(seed: Color, dark: Boolean, style: ColorStyle = ColorStyle.VIVID, pureBlack: Boolean = false): ColorScheme {
     val source = Hct.fromInt(seed.toArgb())
-    val scheme = SchemeContent(source, dark, 0.0)
+    val scheme: DynamicScheme = when (style) {
+        ColorStyle.VIVID, ColorStyle.TINTED -> SchemeContent(source, dark, 0.0)
+        ColorStyle.SOFT -> SchemeTonalSpot(source, dark, 0.0)
+        ColorStyle.MONOCHROME -> SchemeMonochrome(source, dark, 0.0)
+    }
+    val accent = style == ColorStyle.VIVID || style == ColorStyle.TINTED
+    val tint = if (style == ColorStyle.TINTED) min(source.chroma / TINT_DIVISOR, MAX_TINT_CHROMA) else null
     val roles = MaterialDynamicColors()
     val primaryPalette = scheme.primaryPalette
     val container = TonalPalette.fromHueAndChroma(primaryPalette.hue, min(primaryPalette.chroma, PRIMARY_CONTAINER_CHROMA))
@@ -41,18 +67,26 @@ fun seededColorScheme(seed: Color, dark: Boolean): ColorScheme {
     fun role(color: DynamicColor) = Color(color.getArgb(scheme))
     fun neutral(color: DynamicColor, maxChroma: Double): Color {
         val palette = color.palette(scheme)
-        return Color(Hct.from(palette.hue, min(palette.chroma, maxChroma), color.getTone(scheme)).toInt())
+        return Color(Hct.from(palette.hue, tint ?: min(palette.chroma, maxChroma), color.getTone(scheme)).toInt())
     }
 
     // The seed as primary: in light at its own tone between 35 and 60, so white text on it
     // keeps about 3:1; in dark lifted three tones, between 50 and 75.
     val tone = if (dark) (source.tone + 3).coerceIn(50.0, 75.0) else source.tone.coerceIn(35.0, 60.0)
-    val primary = if (tone == source.tone) seed else Color(Hct.from(source.hue, source.chroma, tone).toInt())
-    val onPrimary = if (tone <= 60) Color.White else Color(TonalPalette.fromHueAndChroma(source.hue, source.chroma).tone(10))
+    val primary = when {
+        !accent -> role(roles.primary())
+        tone == source.tone -> seed
+        else -> Color(Hct.from(source.hue, source.chroma, tone).toInt())
+    }
+    val onPrimary = when {
+        !accent -> role(roles.onPrimary())
+        tone <= 60 -> Color.White
+        else -> Color(TonalPalette.fromHueAndChroma(source.hue, source.chroma).tone(10))
+    }
     val paper = if (dark) SURFACE_CHROMA else PAPER_CHROMA
 
     val base = if (dark) darkColorScheme() else lightColorScheme()
-    return base.copy(
+    val colors = base.copy(
         primary = primary,
         onPrimary = onPrimary,
         surfaceTint = primary,
@@ -89,6 +123,30 @@ fun seededColorScheme(seed: Color, dark: Boolean): ColorScheme {
         surfaceContainer = neutral(roles.surfaceContainer(), SURFACE_CHROMA),
         surfaceContainerHigh = neutral(roles.surfaceContainerHigh(), SURFACE_CHROMA),
         surfaceContainerHighest = neutral(roles.surfaceContainerHighest(), SURFACE_CHROMA),
+    )
+    return if (pureBlack && dark) colors.toPureBlack() else colors
+}
+
+/**
+ * Dark with the page black, as FlClash's pure black: the deepest surfaces black and every
+ * one above taken down by as much, so the steps between the levels stay as they were.
+ */
+private fun ColorScheme.toPureBlack(): ColorScheme {
+    val shift = Hct.fromInt(surface.toArgb()).tone
+    fun lower(color: Color): Color {
+        val hct = Hct.fromInt(color.toArgb())
+        return Color(Hct.from(hct.hue, hct.chroma, (hct.tone - shift).coerceAtLeast(0.0)).toInt())
+    }
+    return copy(
+        background = Color.Black,
+        surface = Color.Black,
+        surfaceDim = Color.Black,
+        surfaceContainerLowest = Color.Black,
+        surfaceContainerLow = lower(surfaceContainerLow),
+        surfaceContainer = lower(surfaceContainer),
+        surfaceContainerHigh = lower(surfaceContainerHigh),
+        surfaceContainerHighest = lower(surfaceContainerHighest),
+        surfaceBright = lower(surfaceBright),
     )
 }
 
