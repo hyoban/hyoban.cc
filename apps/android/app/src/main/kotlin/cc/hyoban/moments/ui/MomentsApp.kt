@@ -31,6 +31,7 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -43,6 +44,8 @@ import androidx.compose.material.icons.outlined.PhotoLibrary
 import androidx.compose.material.icons.rounded.Luggage
 import androidx.compose.material.icons.rounded.Map
 import androidx.compose.material.icons.rounded.PhotoLibrary
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -52,6 +55,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -95,8 +99,6 @@ import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.MainActivity
 import cc.hyoban.moments.R
 import cc.hyoban.moments.Settings
-import cc.hyoban.moments.ui.compose.NewMomentScreen
-import cc.hyoban.moments.ui.publish.ChangesScreen
 import cc.hyoban.moments.ui.components.AdaptiveStatusBarIcons
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.FloatingNav
@@ -112,11 +114,13 @@ import cc.hyoban.moments.ui.components.NAV_FOLD
 import cc.hyoban.moments.ui.components.NavItem
 import cc.hyoban.moments.ui.components.RAIL_WIDTH
 import cc.hyoban.moments.ui.components.isLandscape
+import cc.hyoban.moments.ui.compose.NewMomentScreen
 import cc.hyoban.moments.ui.feed.DayScreen
 import cc.hyoban.moments.ui.feed.FeedScreen
 import cc.hyoban.moments.ui.feed.PlaceScreen
 import cc.hyoban.moments.ui.map.MapScreen
 import cc.hyoban.moments.ui.moment.MomentScreen
+import cc.hyoban.moments.ui.publish.ChangesScreen
 import cc.hyoban.moments.ui.settings.SettingsScreen
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.trips.TripScreen
@@ -129,6 +133,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -264,6 +269,14 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
     val tabReselects = remember { MutableSharedFlow<Any>(extraBufferCapacity = 1) }
     // A button the map hands the tabs to stand beside them, as its one action.
     val accessorySlot = remember { mutableStateOf<(@Composable () -> Unit)?>(null) }
+    // Brief messages from any page, one at a time, at the foot of the screen above the tabs.
+    val messages = remember { SnackbarHostState() }
+    LaunchedEffect(container, messages) {
+        container.messages.collect { text ->
+            messages.currentSnackbarData?.dismiss()
+            messages.showSnackbar(text)
+        }
+    }
     val windowHeight = with(LocalDensity.current) { LocalWindowInfo.current.containerSize.height.toDp() }
 
     // A back swipe, from its start until a moment after the finger lifts, while the page
@@ -312,6 +325,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                 LocalBottomClearance provides clearance,
                 LocalRailSpace provides rail,
                 LocalNavAccessory provides accessorySlot,
+                LocalMessages provides messages,
                 LocalMediaMaxHeight provides if (landscape) windowHeight * 0.6f else Dp.Infinity,
             ) {
                 SharedTransitionLayout(Modifier.fillMaxSize()) {
@@ -452,7 +466,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                             onExpand = { tabsShown = true },
                             onReselect = { tabReselects.tryEmit(Tab.entries[it].route) },
                         )
-                        // A tab's button, the map's locating or the Moments' publishing, slides out
+                        // A tab's button, the map's locating or the Moments' new Moment, slides out
                         // from behind the tabs' end as they move over to make room, as its page
                         // slides in, and back under them as they leave; down the side the map
                         // keeps it itself. Kept while it slides away, after the tab has let it go.
@@ -474,6 +488,12 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                     }
                 }
             }
+            // Over the tabs' clearance on a tab, the navigation bar's elsewhere, and the keyboard's while it is up.
+            SnackbarHost(
+                messages,
+                Modifier.align(Alignment.BottomCenter).imePadding()
+                    .padding(bottom = if (viewer == null && current != null) clearance else navBottom),
+            )
         }
     }
 }
@@ -581,6 +601,24 @@ val LocalBottomClearance = staticCompositionLocalOf { 0.dp }
 data class RailSpace(val left: Dp, val right: Dp)
 
 val LocalRailSpace = staticCompositionLocalOf { RailSpace(0.dp, 0.dp) }
+
+/** Material 3's snackbars for the whole app, rather than toasts: one host, above the tabs. */
+val LocalMessages = staticCompositionLocalOf { SnackbarHostState() }
+
+/** Shows a message as a snackbar from a tap or a callback, the one before it making way. */
+@Composable
+fun rememberShowMessage(): (String) -> Unit {
+    val host = LocalMessages.current
+    val scope = rememberCoroutineScope()
+    return remember(host, scope) {
+        { text ->
+            scope.launch {
+                host.currentSnackbarData?.dismiss()
+                host.showSnackbar(text)
+            }
+        }
+    }
+}
 
 /** The button standing beside the tabs on a tab screen, which that screen fills in and clears. */
 val LocalNavAccessory = staticCompositionLocalOf<MutableState<(@Composable () -> Unit)?>> { mutableStateOf(null) }

@@ -4,16 +4,15 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.widget.Toast
 import cc.hyoban.moments.R
 import cc.hyoban.moments.data.spec.Place
 
 /**
  * Asks a map app for the way to [place]. Amap first, told the place is in WGS-84 so it
  * shifts it onto its own map in China; else any app that takes a `geo:` link, whose
- * coordinates are WGS-84 by definition.
+ * coordinates are WGS-84 by definition. False when no app took it, for the caller to say so.
  */
-fun navigateTo(context: Context, place: Place) {
+fun navigateTo(context: Context, place: Place): Boolean {
     val amap = Uri.parse("amapuri://route/plan/").buildUpon()
         .appendQueryParameter("sourceApplication", context.getString(R.string.app_name))
         .appendQueryParameter("dlat", place.latitude.toString())
@@ -30,11 +29,11 @@ fun navigateTo(context: Context, place: Place) {
     for (intent in intents) {
         try {
             context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-            return
+            return true
         } catch (_: ActivityNotFoundException) {
         }
     }
-    Toast.makeText(context, R.string.no_map_app, Toast.LENGTH_SHORT).show()
+    return false
 }
 
 private const val AMAP = "com.autonavi.minimap"

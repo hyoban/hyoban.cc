@@ -39,7 +39,6 @@ import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
@@ -73,7 +72,6 @@ import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import cc.hyoban.moments.R
 import cc.hyoban.moments.Settings
@@ -196,13 +194,7 @@ private fun ThemeColorGroup(settings: Settings) {
     var adding by rememberSaveable { mutableStateOf(false) }
     val accent = systemAccent()
 
-    Group(
-        stringResource(R.string.section_theme_color),
-        null,
-        action = if (settings.themeIsDefault) null else {
-            { TextButton(onClick = settings::resetTheme) { Text(stringResource(R.string.action_restore_default)) } }
-        },
-    ) {
+    val swatches: @Composable () -> Unit = {
         // As many to a row as fit with at least a little between them, spread across the
         // card's width so each row's ends line up with the rows' text.
         BoxWithConstraints(Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 10.dp)) {
@@ -228,7 +220,8 @@ private fun ThemeColorGroup(settings: Settings) {
                 AddSwatch { adding = true }
             }
         }
-        GroupDivider(Space.l)
+    }
+    val colorStyle: @Composable () -> Unit = {
         ListItem(
             headlineContent = { Text(stringResource(R.string.setting_color_style)) },
             leadingContent = { Icon(Icons.Rounded.Palette, contentDescription = null) },
@@ -256,6 +249,15 @@ private fun ThemeColorGroup(settings: Settings) {
             }
         }
     }
+    // The colours, and the style they are worked out in, each a segment of the group.
+    SegmentedGroup(
+        stringResource(R.string.section_theme_color),
+        null,
+        listOf(swatches, colorStyle),
+        action = if (settings.themeIsDefault) null else {
+            { TextButton(onClick = settings::resetTheme) { Text(stringResource(R.string.action_restore_default)) } }
+        },
+    )
 
     if (adding) {
         HexColorDialog(onDismiss = { adding = false }) {
@@ -404,12 +406,33 @@ fun Caption(title: String, action: (@Composable () -> Unit)? = null) {
     }
 }
 
-/** Rows grouped in one card under a caption, with a note under them, as FlClash groups its settings. */
+/** What is grouped in one card under a caption, with a note under them, as FlClash groups its settings. */
 @Composable
-fun Group(title: String?, note: String?, action: (@Composable () -> Unit)? = null, content: @Composable () -> Unit) {
+fun Group(title: String?, note: String?, action: (@Composable () -> Unit)? = null, content: @Composable () -> Unit) =
+    SegmentedGroup(title, note, listOf(content), action = action)
+
+/**
+ * Rows grouped under a caption as Material 3's segmented list, a contained list being set
+ * apart by gaps rather than lines: each of [segments] filled on its own a level up, a small
+ * gap between, the group's outer corners round and its inner ones tight; a note under them.
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun SegmentedGroup(
+    title: String?,
+    note: String?,
+    segments: List<@Composable () -> Unit>,
+    modifier: Modifier = Modifier,
+    action: (@Composable () -> Unit)? = null,
+) {
     if (title != null) Caption(title, action) else Spacer(Modifier.height(Space.xl))
     Column(Modifier.padding(horizontal = Space.gutter)) {
-        Column(Modifier.clip(MaterialTheme.shapes.large).background(LocalSurfaceLevel.current.raised.fill())) { content() }
+        val fill = LocalSurfaceLevel.current.raised.fill()
+        Column(modifier, verticalArrangement = Arrangement.spacedBy(ListItemDefaults.SegmentedGap)) {
+            segments.forEachIndexed { index, segment ->
+                Column(Modifier.fillMaxWidth().clip(ListItemDefaults.segmentedShapes(index, segments.size).shape).background(fill)) { segment() }
+            }
+        }
         note?.let {
             Text(
                 it,
@@ -419,12 +442,6 @@ fun Group(title: String?, note: String?, action: (@Composable () -> Unit)? = nul
             )
         }
     }
-}
-
-/** The line between two rows on a group's card, in from the start by [inset]. */
-@Composable
-fun GroupDivider(inset: Dp) {
-    HorizontalDivider(Modifier.padding(start = inset), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 }
 
 /** A row on a group's card: no fill of its own, its icon and secondary text in the secondary colour. */

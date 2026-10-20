@@ -10,6 +10,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,6 +23,8 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -37,6 +40,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -68,28 +72,35 @@ enum class ShareTarget(val tag: String, @param:StringRes val title: Int, val lim
     PREPARE("prepare", R.string.action_prepare_share),
 }
 
+/**
+ * Where to share a Moment, as Material 3's simple dialog has its choices: a list of rows,
+ * one tap choosing, the dialog's only button cancelling.
+ */
 @Composable
 fun ShareMenu(onSelect: (ShareTarget) -> Unit, onDismiss: () -> Unit) {
+    val choice: @Composable (String, String, ShareTarget) -> Unit = { label, tag, target ->
+        ListItem(
+            // In line with the title, past the row's own padding.
+            headlineContent = { Text(label, Modifier.padding(start = 8.dp)) },
+            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+            modifier = Modifier.clickable { onSelect(target) }.testTag("share_$tag"),
+        )
+    }
     AlertDialog(
         modifier = Modifier.semantics { testTagsAsResourceId = true },
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.action_share)) },
         text = {
-            Column(Modifier.heightIn(max = 480.dp).verticalScroll(rememberScrollState())) {
-                ShareTarget.entries.filter { it != ShareTarget.PREPARE }.forEach { target ->
-                    TextButton(onClick = { onSelect(target) }, modifier = Modifier.testTag("share_${target.tag}")) {
-                        Text(stringResource(target.title))
-                    }
-                }
-                TextButton(onClick = { onSelect(ShareTarget.PREPARE) }, modifier = Modifier.testTag("share_wechat")) {
-                    Text(stringResource(R.string.action_share_wechat_manual))
-                }
-                TextButton(onClick = { onSelect(ShareTarget.PREPARE) }, modifier = Modifier.testTag("share_bilibili")) {
-                    Text(stringResource(R.string.action_share_bilibili_manual))
-                }
-                TextButton(onClick = { onSelect(ShareTarget.PREPARE) }, modifier = Modifier.testTag("share_prepare")) {
-                    Text(stringResource(ShareTarget.PREPARE.title))
-                }
+            // The rows run to the dialog's edges, its padding taken back.
+            Column(Modifier.heightIn(max = 480.dp).verticalScroll(rememberScrollState()).layout { measurable, constraints ->
+                val inset = 24.dp.roundToPx()
+                val placeable = measurable.measure(constraints.copy(maxWidth = constraints.maxWidth + inset * 2, minWidth = constraints.minWidth + inset * 2))
+                layout(constraints.maxWidth, placeable.height) { placeable.place(-inset, 0) }
+            }) {
+                ShareTarget.entries.filter { it != ShareTarget.PREPARE }.forEach { target -> choice(stringResource(target.title), target.tag, target) }
+                choice(stringResource(R.string.action_share_wechat_manual), "wechat", ShareTarget.PREPARE)
+                choice(stringResource(R.string.action_share_bilibili_manual), "bilibili", ShareTarget.PREPARE)
+                choice(stringResource(ShareTarget.PREPARE.title), "prepare", ShareTarget.PREPARE)
             }
         },
         confirmButton = {},

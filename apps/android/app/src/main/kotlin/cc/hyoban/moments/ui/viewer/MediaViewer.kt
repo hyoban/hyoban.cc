@@ -1,7 +1,6 @@
 package cc.hyoban.moments.ui.viewer
 
 import android.app.Activity
-import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animate
@@ -71,8 +70,8 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -123,6 +122,7 @@ import cc.hyoban.moments.ui.components.sideInsetsPadding
 import cc.hyoban.moments.ui.format.formatDay
 import cc.hyoban.moments.ui.format.formatTime
 import cc.hyoban.moments.ui.map.PlacesStill
+import cc.hyoban.moments.ui.rememberShowMessage
 import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.fill
@@ -243,6 +243,7 @@ fun MediaViewer(
                 Spacer(Modifier.weight(1f))
                 // The one shown, fetched first when it's the site's, the spinner in its place meanwhile.
                 val context = LocalContext.current
+                val show = rememberShowMessage()
                 val scope = rememberCoroutineScope()
                 var sharing by remember { mutableStateOf(false) }
                 IconButton(
@@ -255,7 +256,7 @@ fun MediaViewer(
                             } catch (e: CancellationException) {
                                 throw e
                             } catch (_: Exception) {
-                                Toast.makeText(context, R.string.error_share, Toast.LENGTH_SHORT).show()
+                                show(context.getString(R.string.error_share))
                             } finally {
                                 sharing = false
                             }

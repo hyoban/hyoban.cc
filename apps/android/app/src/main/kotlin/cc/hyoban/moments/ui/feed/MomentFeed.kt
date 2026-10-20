@@ -27,7 +27,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
@@ -64,6 +63,7 @@ import cc.hyoban.moments.ui.components.MonthHeader
 import cc.hyoban.moments.ui.components.PageWidth
 import cc.hyoban.moments.ui.format.formatDayOfMonth
 import cc.hyoban.moments.ui.format.formatMonth
+import cc.hyoban.moments.ui.rememberShowMessage
 import cc.hyoban.moments.ui.theme.Space
 
 /**
@@ -251,18 +251,16 @@ fun EmptyState(loading: Boolean, message: Int) {
     }
 }
 
-/** A snackbar host that says when a refresh failed. */
+/** Says when a refresh failed, as a snackbar in the app's host. */
 @Composable
-fun rememberRefreshErrors(container: AppContainer): SnackbarHostState {
-    val snackbar = remember { SnackbarHostState() }
+fun ShowRefreshErrors(container: AppContainer) {
+    val show = rememberShowMessage()
     val error by container.repository.error.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     LaunchedEffect(error) {
-        error?.let { snackbar.showSnackbar(context.getString(R.string.message_refresh_failed, it)) }
+        error?.let { show(context.getString(R.string.message_refresh_failed, it)) }
     }
-
-    return snackbar
 }
 
 /**

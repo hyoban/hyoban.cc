@@ -7,7 +7,6 @@ import android.os.Build
 import android.provider.Settings
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.selectable
@@ -41,25 +40,25 @@ fun LanguageSettings() {
     // Choosing brings the page back in the new language, so it is read once per page.
     val current = remember(activity) { AppLanguage.current(activity) }
 
-    Group(stringResource(R.string.section_language), stringResource(R.string.settings_language_note)) {
-        Column(Modifier.selectableGroup()) {
-            AppLanguage.entries.forEachIndexed { index, language ->
-                if (index > 0) GroupDivider(56.dp)
-                LanguageRow(activity, language, selected = language == current)
+    // Each language its own segment, and the system's own page for the app's language, which
+    // ColorOS has but doesn't link to, one more.
+    val system = systemLanguageSettings(activity)
+    val segments = AppLanguage.entries.map<AppLanguage, @Composable () -> Unit> { language ->
+        { LanguageRow(activity, language, selected = language == current) }
+    } + listOfNotNull<@Composable () -> Unit>(
+        system?.let { intent ->
+            {
+                ListItem(
+                    headlineContent = { Text(stringResource(R.string.action_system_language)) },
+                    leadingContent = { Icon(Icons.Rounded.Settings, contentDescription = null) },
+                    trailingContent = { Icon(Icons.AutoMirrored.Rounded.OpenInNew, contentDescription = null) },
+                    colors = rowColors(),
+                    modifier = Modifier.clickable { activity.startActivity(intent) }.testTag("language_system_settings"),
+                )
             }
-        }
-        // The system's own page for the app's language, which ColorOS has but doesn't link to.
-        systemLanguageSettings(activity)?.let { intent ->
-            GroupDivider(56.dp)
-            ListItem(
-                headlineContent = { Text(stringResource(R.string.action_system_language)) },
-                leadingContent = { Icon(Icons.Rounded.Settings, contentDescription = null) },
-                trailingContent = { Icon(Icons.AutoMirrored.Rounded.OpenInNew, contentDescription = null) },
-                colors = rowColors(),
-                modifier = Modifier.clickable { activity.startActivity(intent) }.testTag("language_system_settings"),
-            )
-        }
-    }
+        },
+    )
+    SegmentedGroup(stringResource(R.string.section_language), stringResource(R.string.settings_language_note), segments, Modifier.selectableGroup())
 }
 
 /** The system's page for this app's language, on Android 13 and later where there is one to open. */

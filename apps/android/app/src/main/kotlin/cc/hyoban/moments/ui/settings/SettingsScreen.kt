@@ -46,7 +46,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.R
 import cc.hyoban.moments.Setting
@@ -121,15 +120,10 @@ fun SettingsScreen(container: AppContainer, onBack: () -> Unit) {
 /** A setting as a row: its name, its icon, and what saving it does. */
 private class Row(val setting: Setting, val title: Int, val icon: ImageVector, val save: (String) -> Unit)
 
-/** Rows grouped into one card under a caption, and a note under them. */
+/** Rows as one segmented group under a caption, and a note under them. */
 @Composable
 private fun Section(title: String, rows: List<Row>, first: Int, note: String?, onEdit: (Int) -> Unit) {
-    Group(title, note) {
-        rows.forEachIndexed { index, row ->
-            if (index > 0) GroupDivider(56.dp)
-            SettingRow(row) { onEdit(first + index) }
-        }
-    }
+    SegmentedGroup(title, note, rows.mapIndexed { index, row -> { SettingRow(row) { onEdit(first + index) } } })
 }
 
 @Composable
