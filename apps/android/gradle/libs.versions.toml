@@ -13,6 +13,9 @@ serialization = "1.11.0"
 coil = "3.6.3"
 # No longer moved by the Compose BOM, so pinned to its last release.
 materialIconsExtended = "1.7.8"
+# Ahead of the BOM's 1.4 for the flexible top app bars, whose subtitle a pushed page's bar
+# needs; it is built on the same Compose 1.12 as the BOM.
+material3 = "1.5.0-beta01"
 materialKolor = "5.0.1"
 junit = "4.13.2"
 maplibre = "13.7.1"
@@ -30,7 +33,7 @@ androidx-compose-ui = { group = "androidx.compose.ui", name = "ui" }
 androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation" }
 androidx-compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 androidx-compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
-androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
+androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
 androidx-compose-material-icons-core = { group = "androidx.compose.material", name = "material-icons-core" }
 androidx-compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended", version.ref = "materialIconsExtended" }
 androidx-lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycle" }
