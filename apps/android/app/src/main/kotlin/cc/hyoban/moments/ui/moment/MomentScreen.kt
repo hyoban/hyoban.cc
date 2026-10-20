@@ -137,16 +137,17 @@ fun MomentScreen(
                 Column(Modifier.weight(1f).fillMaxHeight().statusBarsPadding().verticalScroll(scroll).sideInsetsPadding(WindowInsetsSides.End)) { details() }
             }
         } else {
-            // The photos are as tall as the tallest of them. A portrait one runs under the status
-            // bar; landscape ones start below the bar, the page's colour above them. The bar's
-            // icons follow what is under them.
-            val shape = moment.media.minOfOrNull(::shapeOf)
+            // The photos are as tall as the tallest of them, but no taller than a 3:4 portrait
+            // one, so a screenshot is cropped rather than filling the screen. A portrait one runs
+            // under the status bar; landscape ones start below the bar, the page's colour above
+            // them. The bar's icons follow what is under them.
+            val shape = moment.media.minOfOrNull(::shapeOf)?.coerceAtLeast(TALLEST)
             val bleeds = shape != null && shape < 1f
 
             Column(Modifier.fillMaxSize().verticalScroll(scroll)) {
                 if (moment.media.isNotEmpty()) {
                     // The tallest photo whole across the width, unless it would be taller than
-                    // the screen, where it stops at the screen's height.
+                    // 3:4 or the screen, where it stops there.
                     val above = if (bleeds) 0.dp else WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
                     MomentPhotos(
                         moment,
@@ -202,6 +203,9 @@ fun MomentScreen(
         }
     }
 }
+
+/** The tallest shape, width over height, the photos are shown at whole on a phone held upright. */
+private const val TALLEST = 3f / 4f
 
 /**
  * The Moment's photos, swiped through, each opening the viewer; dots [dotsAbove] the bottom
