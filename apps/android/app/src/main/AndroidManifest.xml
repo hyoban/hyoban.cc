@@ -8,6 +8,17 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <!-- Where a photo picked for a new Moment was taken, which the gallery hides without it. -->
     <uses-permission android:name="android.permission.ACCESS_MEDIA_LOCATION" />
+    <!-- Only Android 9 needs this to save photos to a shared album. -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
+
+    <queries>
+        <package android:name="com.twitter.android" />
+        <package android:name="org.telegram.messenger" />
+        <package android:name="com.xingin.xhs" />
+        <package android:name="com.ss.android.lark" />
+        <package android:name="com.instagram.barcelona" />
+        <package android:name="com.ss.android.ugc.aweme" />
+    </queries>
 
     <application
         android:name=".MomentsApplication"

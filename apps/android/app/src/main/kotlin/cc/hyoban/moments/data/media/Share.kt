@@ -1,5 +1,6 @@
 package cc.hyoban.moments.data.media
 
+import android.content.ActivityNotFoundException
 import android.content.ClipData
 import android.content.Context
 import android.content.Intent
@@ -10,35 +11,141 @@ import cc.hyoban.moments.data.Http
 import cc.hyoban.moments.data.spec.MediaType
 import cc.hyoban.moments.data.spec.MomentMedia
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import okhttp3.Request
 import java.io.File
 import java.io.IOException
+import java.util.UUID
 
 /**
  * Hands a photo or video to the share sheet: a photo, or a live photo's still, at its largest,
  * a video whole. A published one is downloaded, one on the phone copied, into the cache's
- * shared/, which the app's FileProvider serves, the last one shared replacing what was there.
+ * shared/, which the app's FileProvider serves. Each handoff has its own directory, so
+ * sharing another item doesn't remove files a receiving app may still be reading.
  */
 object Share {
     suspend fun media(context: Context, media: MomentMedia, urls: MediaUrls) {
-        val (file, type) = withContext(Dispatchers.IO) { fetch(context, media, urls) }
-        val uri = FileProvider.getUriForFile(context, "${context.packageName}.share", file)
-        val send = Intent(Intent.ACTION_SEND)
-            .setType(type)
-            .putExtra(Intent.EXTRA_STREAM, uri)
-            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        send.clipData = ClipData.newRawUri(null, uri)
+        val send = prepare(context, listOf(media), urls)
         context.startActivity(Intent.createChooser(send, null).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     }
 
-    private fun fetch(context: Context, media: MomentMedia, urls: MediaUrls): Pair<File, String> {
-        val directory = File(context.cacheDir, "shared").apply { deleteRecursively(); mkdirs() }
+    /** Opens X's post composer, never its separate direct-message share target. */
+    suspend fun toX(context: Context, text: String, photos: List<MomentMedia>, urls: MediaUrls) {
+        require(photos.size <= 4)
+        toApp(context, "com.twitter.android", text, photos, urls,
+            activity = "com.twitter.composer.ComposerActivity")
+    }
+
+    /** The recipient and final send are chosen inside Telegram. */
+    suspend fun toTelegram(context: Context, text: String, photos: List<MomentMedia>, urls: MediaUrls) =
+        toApp(context, "org.telegram.messenger", text, photos, urls)
+
+    suspend fun toXiaohongshu(context: Context, text: String, photos: List<MomentMedia>, urls: MediaUrls) =
+        toApp(context, "com.xingin.xhs", text, photos, urls)
+
+    suspend fun toFeishu(context: Context, text: String, photos: List<MomentMedia>, urls: MediaUrls) =
+        toApp(context, "com.ss.android.lark", text, photos, urls)
+
+    suspend fun toThreads(context: Context, text: String, photos: List<MomentMedia>, urls: MediaUrls) =
+        toApp(context, "com.instagram.barcelona", text, photos, urls)
+
+    suspend fun toDouyin(context: Context, text: String, photos: List<MomentMedia>, urls: MediaUrls) {
+        require(photos.isNotEmpty())
+        toApp(context, "com.ss.android.ugc.aweme", text, photos, urls,
+            activity = "com.ss.android.ugc.aweme.share.ui.SystemShareNewActivity",
+            grantToPackage = true)
+    }
+
+    private suspend fun toApp(
+        context: Context,
+        packageName: String,
+        text: String,
+        photos: List<MomentMedia>,
+        urls: MediaUrls,
+        activity: String? = null,
+        grantToPackage: Boolean = false,
+    ) {
+        require(photos.none { it.type == MediaType.VIDEO })
+        require(text.isNotBlank() || photos.isNotEmpty())
+        val probe = Intent(if (photos.size > 1) Intent.ACTION_SEND_MULTIPLE else Intent.ACTION_SEND)
+            .setType(if (photos.isEmpty()) "text/plain" else "image/*")
+            .setPackage(packageName)
+            .apply { activity?.let { setClassName(packageName, it) } }
+        if (probe.resolveActivity(context.packageManager) == null) throw ActivityNotFoundException()
+        val send = prepare(context, photos, urls)
+            .setPackage(packageName)
+            .apply { activity?.let { setClassName(packageName, it) } }
+            .putExtra(Intent.EXTRA_TEXT, text)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        // Douyin closes its receiving activity before the publishing flow reads the files.
+        // Keep read access to these individual files across that internal handoff.
+        val granted = mutableListOf<Uri>()
+        try {
+            if (grantToPackage) send.clipData?.let { clip ->
+                repeat(clip.itemCount) { index ->
+                    val uri = clip.getItemAt(index).uri
+                    context.grantUriPermission(packageName, uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    granted.add(uri)
+                }
+            }
+            context.startActivity(send)
+        } catch (e: Exception) {
+            granted.forEach { context.revokeUriPermission(packageName, it, Intent.FLAG_GRANT_READ_URI_PERMISSION) }
+            throw e
+        }
+    }
+
+    private suspend fun prepare(context: Context, media: List<MomentMedia>, urls: MediaUrls): Intent {
+        if (media.isEmpty()) return Intent(Intent.ACTION_SEND).setType("text/plain")
+        val files = files(context, media, urls)
+        val uris = ArrayList(files.map { (file, _) ->
+            FileProvider.getUriForFile(context, "${context.packageName}.share", file)
+        })
+        val types = files.map { it.second }.distinct()
+        val type = types.singleOrNull() ?: if (types.all { it.startsWith("image/") }) "image/*" else "*/*"
+        return Intent(if (uris.size == 1) Intent.ACTION_SEND else Intent.ACTION_SEND_MULTIPLE)
+            .setType(type)
+            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            .apply {
+                if (uris.size == 1) putExtra(Intent.EXTRA_STREAM, uris.single())
+                else putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris)
+                clipData = ClipData.newRawUri(null, uris.first()).apply {
+                    uris.drop(1).forEach { addItem(ClipData.Item(it)) }
+                }
+            }
+    }
+
+    internal suspend fun files(context: Context, media: List<MomentMedia>, urls: MediaUrls): List<Pair<File, String>> =
+        withContext(Dispatchers.IO) {
+            val root = File(context.cacheDir, "shared").apply { mkdirs() }
+            // Leave recent handoffs intact, including X drafts that haven't read their files yet.
+            val cutoff = System.currentTimeMillis() - 7 * 24 * 60 * 60 * 1000L
+            root.listFiles()?.filter { it.lastModified() < cutoff }?.forEach { old ->
+                old.walkTopDown().filter { it.isFile }.forEach { file ->
+                    val uri = FileProvider.getUriForFile(context, "${context.packageName}.share", file)
+                    context.revokeUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                old.deleteRecursively()
+            }
+            val directory = File(root, UUID.randomUUID().toString()).apply { mkdirs() }
+            try {
+                media.mapIndexed { index, item ->
+                    ensureActive()
+                    fetch(context, item, urls, directory, index)
+                }
+            } catch (e: Exception) {
+                directory.deleteRecursively()
+                throw e
+            }
+        }
+
+    private fun fetch(context: Context, media: MomentMedia, urls: MediaUrls, directory: File, index: Int): Pair<File, String> {
         val video = media.type == MediaType.VIDEO
         val published = media.published
         if (published != null) {
             val type = published.contentType
-            val file = File(directory, "${media.uid}.${extension(type)}")
+            val file = File(directory, "$index.${extension(type)}")
             Http.client.newCall(Request.Builder().url(urls.asset(published.key)).build()).execute().use { response ->
                 if (!response.isSuccessful) throw IOException("GET ${published.key} answered ${response.code}")
                 file.outputStream().use { response.body!!.byteStream().copyTo(it) }
@@ -50,7 +157,7 @@ object Share {
         val type = context.contentResolver.getType(uri)
             ?: MimeTypeMap.getSingleton().getMimeTypeFromExtension(MimeTypeMap.getFileExtensionFromUrl(uri.toString()))
             ?: if (video) "video/mp4" else "image/jpeg"
-        val file = File(directory, "${media.uid}.${extension(type)}")
+        val file = File(directory, "$index.${extension(type)}")
         val input = context.contentResolver.openInputStream(uri) ?: throw IOException("Can't read $uri")
         input.use { from -> file.outputStream().use { from.copyTo(it) } }
         return file to type
