@@ -2,7 +2,9 @@ package cc.hyoban.moments.ui.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.Shapes
 import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
@@ -81,6 +83,7 @@ private val AppTypography = Typography().run {
     )
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun MomentsTheme(settings: Settings, content: @Composable () -> Unit) {
     val dark = when (settings.themeMode) {
@@ -94,7 +97,8 @@ fun MomentsTheme(settings: Settings, content: @Composable () -> Unit) {
     val colorScheme = remember(seed, dark, style, pureBlack) { seededColorScheme(seed, dark, style, pureBlack) }
 
     CompositionLocalProvider(LocalDarkTheme provides dark) {
-        MaterialTheme(colorScheme = colorScheme, typography = AppTypography, shapes = AppShapes, content = content)
+        // Material 3 Expressive's springs, which overshoot a little, for every component and the app's own motion.
+        MaterialTheme(colorScheme = colorScheme, typography = AppTypography, shapes = AppShapes, motionScheme = MotionScheme.expressive(), content = content)
     }
 }
 

@@ -70,7 +70,7 @@ fun TripScreen(
     // The title is the bar's; under it, what the trip covered.
     val summary: @Composable () -> Unit = {
         Box(Modifier.padding(start = Space.gutter, end = Space.gutter, top = Space.xs, bottom = Space.l)) {
-            TripPills(trip, moments.size, places = stops.distinctBy { it.placeId }.size)
+            TripSubhead(trip, moments.size, places = stops.distinctBy { it.placeId }.size)
         }
     }
     // The route as a card of its own, headed like the photo panel's sections.

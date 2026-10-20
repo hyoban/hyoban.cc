@@ -3,7 +3,7 @@ package cc.hyoban.moments.ui.viewer
 import android.content.Context
 import androidx.annotation.OptIn
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -116,7 +116,7 @@ fun rememberCachedPlayer(url: String, active: Boolean, configure: ExoPlayer.() -
 fun MediaSurface(player: Player?, modifier: Modifier = Modifier, shown: Boolean = true) {
     val presentation = rememberPresentationState(player)
     val visible = shown && !presentation.coverSurface
-    val alpha by animateFloatAsState(if (visible) 1f else 0f, tween(if (visible) 180 else 320), label = "surface")
+    val alpha by animateFloatAsState(if (visible) 1f else 0f, if (visible) MaterialTheme.motionScheme.fastEffectsSpec() else MaterialTheme.motionScheme.defaultEffectsSpec(), label = "surface")
     // A texture rather than a surface view, so it fades, clips and zooms with the still.
     PlayerSurface(player, modifier.graphicsLayer { this.alpha = alpha }, surfaceType = SURFACE_TYPE_TEXTURE_VIEW)
 }

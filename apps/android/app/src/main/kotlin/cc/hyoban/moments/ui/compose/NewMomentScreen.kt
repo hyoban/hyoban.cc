@@ -38,7 +38,6 @@ import androidx.compose.material.icons.rounded.DeleteOutline
 import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -102,7 +101,6 @@ import cc.hyoban.moments.ui.components.PageWidth
 import cc.hyoban.moments.ui.components.SubPage
 import cc.hyoban.moments.ui.format.formatDay
 import cc.hyoban.moments.ui.format.formatTime
-import cc.hyoban.moments.ui.rememberShowMessage
 import cc.hyoban.moments.ui.settings.Group
 import cc.hyoban.moments.ui.settings.SegmentedGroup
 import cc.hyoban.moments.ui.settings.rowColors
@@ -128,7 +126,6 @@ import kotlinx.coroutines.withContext
 @Composable
 fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> Unit, edit: String? = null, onDeleted: () -> Unit = onBack) {
     val context = LocalContext.current
-    val show = rememberShowMessage()
     val scope = rememberCoroutineScope()
     val places by container.repository.places.collectAsStateWithLifecycle()
 
@@ -161,7 +158,10 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
     var editingTime by remember { mutableStateOf(false) }
     var editingPlace by remember { mutableStateOf(false) }
     var confirmingDiscard by remember { mutableStateOf(false) }
-    var confirmingDelete by remember { mutableStateOf(false) }
+    // Saving with nothing written says so at the words, as a full-screen dialog's errors
+    // are shown where they are; a save that fails says why in a dialog.
+    var emptyError by remember { mutableStateOf(false) }
+    var saveError by remember { mutableStateOf<String?>(null) }
     val publishing by container.publishing.collectAsStateWithLifecycle()
 
     LaunchedEffect(photos) {
@@ -272,20 +272,30 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
                 onSaved()
             } catch (error: Exception) {
                 saving = false
-                show(context.getString(R.string.error_save, error.message ?: error.toString()))
+                saveError = context.getString(R.string.error_save, error.message ?: error.toString())
             }
         }
     }
 
+    LaunchedEffect(written) { if (written) emptyError = false }
+    // A full-screen dialog, as Material 3 has a task with fields to fill: an X to leave, and
+    // Save, never greyed out, telling what is missing rather than refusing to be tapped.
     Box(Modifier.fillMaxSize()) {
         SubPage(
             stringResource(if (original == null) R.string.title_new_moment else R.string.title_edit_moment),
             onBack = leave,
             modifier = Modifier.background(AppColors.page),
+            close = true,
             actions = {
-                Button(
-                    onClick = save,
-                    enabled = written && changed && !saving,
+                TextButton(
+                    onClick = {
+                        when {
+                            !written -> emptyError = true
+                            !changed -> onBack()
+                            else -> save()
+                        }
+                    },
+                    enabled = !saving,
                     modifier = Modifier.padding(end = Space.s).testTag("save"),
                 ) { Text(stringResource(R.string.action_save)) }
             },
@@ -317,6 +327,12 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
                                 focusedIndicatorColor = Color.Transparent,
                                 unfocusedIndicatorColor = Color.Transparent,
                             ),
+                            isError = emptyError,
+                            supportingText = if (emptyError) {
+                                { Text(stringResource(R.string.error_empty_moment)) }
+                            } else {
+                                null
+                            },
                             modifier = Modifier.fillMaxWidth().focusRequester(focus).testTag("moment_text"),
                         )
                     }
@@ -370,7 +386,7 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
                         )
                     }
                     SegmentedGroup(stringResource(R.string.section_when_where), stringResource(note), listOf(whenRow, whereRow))
-                    // Deleting is rare and can't be undone, so it waits down here rather than over the Moment.
+                    // Deleting is rare, so it waits down here rather than over the Moment; its snackbar can undo it.
                     if (original != null && publishing == null) {
                         Group(null, null) {
                             ListItem(
@@ -381,7 +397,10 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
                                     headlineColor = MaterialTheme.colorScheme.error,
                                     leadingIconColor = MaterialTheme.colorScheme.error,
                                 ),
-                                modifier = Modifier.clickable(enabled = !saving) { confirmingDelete = true }.testTag("delete"),
+                                modifier = Modifier.clickable(enabled = !saving) {
+                                    container.delete(original.uid)
+                                    onDeleted()
+                                }.testTag("delete"),
                             )
                         }
                     }
@@ -403,22 +422,11 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
             }
         }
     }
-    if (confirmingDelete && original != null) {
+    saveError?.let { message ->
         AlertDialog(
-            onDismissRequest = { confirmingDelete = false },
-            title = { Text(stringResource(R.string.action_delete_moment)) },
-            text = { Text(stringResource(if (published) R.string.confirm_delete_published else R.string.confirm_delete_moment)) },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        confirmingDelete = false
-                        container.delete(original.uid)
-                        onDeleted()
-                    },
-                    modifier = Modifier.testTag("confirm_delete"),
-                ) { Text(stringResource(R.string.action_delete)) }
-            },
-            dismissButton = { TextButton(onClick = { confirmingDelete = false }) { Text(stringResource(R.string.action_cancel)) } },
+            onDismissRequest = { saveError = null },
+            text = { Text(message) },
+            confirmButton = { TextButton(onClick = { saveError = null }) { Text(stringResource(R.string.action_confirm)) } },
         )
     }
     if (confirmingDiscard) {

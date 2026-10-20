@@ -86,8 +86,8 @@
     <string name="action_north">回到正北</string>
     <string name="error_location">没能定位，请确认定位已打开。</string>
     <string name="error_location_permission">需要定位权限才能找到附近。</string>
-    <string name="action_show_calendar">以日历查看</string>
-    <string name="action_show_feed">以列表查看</string>
+    <string name="label_view_list">列表</string>
+    <string name="label_view_calendar">日历</string>
     <string name="filter_all">全部</string>
     <string name="filter_year">%1$d 年</string>
     <string name="filter_whole_year">全年</string>
@@ -199,7 +199,6 @@
     <string name="error_save">没能保存：%1$s</string>
     <string name="label_on_phone">仅本机</string>
     <string name="action_delete_moment">删除这个时刻</string>
-    <string name="confirm_delete_moment">这个时刻和为它复制的照片会从手机上删除。</string>
     <string name="label_known_place">已有地点</string>
     <string name="place_new_here">新地点，在图钉处</string>
     <string name="place_drag_hint">拖动地图，把图钉放到这个时刻发生的地方</string>
@@ -214,6 +213,10 @@
     <string name="title_edit_moment">编辑时刻</string>
     <string name="action_edit_moment">编辑这个时刻</string>
     <string name="action_more">更多</string>
+    <string name="action_close">关闭</string>
+    <string name="message_moment_deleted">已删除这个时刻</string>
+    <string name="action_undo">撤销</string>
+    <string name="error_empty_moment">写点什么，或者加一张照片</string>
     <string name="label_whole_day">这一天的全部时刻</string>
     <string name="source_saved">保存时的</string>
     <string name="share_as_moment">写一个时刻</string>
@@ -228,7 +231,6 @@
     <string name="settings_token_note">有了令牌，就能编辑和删除网站上的时刻；手机上写的时刻和这些改动都先留在手机上，在「发布更改」里检查后一起发布。令牌只存在这台手机上，不进备份。</string>
     <string name="message_published">已发布</string>
     <string name="error_publish">没能发布：%1$s</string>
-    <string name="confirm_delete_published">这个时刻会在发布更改时从网站上删除，之前都可以撤销。</string>
     <string name="note_published">保存后先留在这台手机上，在「发布更改」里检查后再一起发布到网站。</string>
     <string name="note_local_then_publish">保存只存在这台手机上，在「发布更改」里检查后再一起发布到网站。</string>
     <string name="label_unpublished_change">改动未发布</string>

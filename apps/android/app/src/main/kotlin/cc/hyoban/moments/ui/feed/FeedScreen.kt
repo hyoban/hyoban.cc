@@ -2,23 +2,32 @@ package cc.hyoban.moments.ui.feed
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.ViewAgenda
 import androidx.compose.material.icons.rounded.Directions
 import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.ToggleButton
+import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -34,6 +43,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.R
@@ -122,6 +134,7 @@ fun FeedScreen(
                 PendingChangesRow(container, onClick = onChanges, modifier = Modifier.padding(horizontal = Space.gutter, vertical = Space.s))
             }
         }
+        item(key = "view") { ViewSwitch(calendar, onChange = { calendar = it }) }
         if (years.size > 1) {
             item(key = "filter") {
                 TimeFilterRows(filter, years, months) { next ->
@@ -137,13 +150,7 @@ fun FeedScreen(
         tab = Feed,
         subtitle = subtitle,
         actions = {
-            // Two actions, as Material 3 has an app bar hold at most: how the Moments are laid out, and the settings.
-            IconButton(onClick = { calendar = !calendar }, modifier = Modifier.testTag("calendar_toggle")) {
-                Icon(
-                    if (calendar) Icons.Outlined.ViewAgenda else Icons.Outlined.CalendarMonth,
-                    contentDescription = stringResource(if (calendar) R.string.action_show_feed else R.string.action_show_calendar),
-                )
-            }
+            // How the Moments are laid out is chosen above them; the bar keeps the settings.
             IconButton(onClick = onSettings, modifier = Modifier.testTag("settings")) {
                 Icon(Icons.Outlined.Settings, contentDescription = stringResource(R.string.title_settings))
             }
@@ -176,6 +183,32 @@ fun FeedScreen(
                 modifier = Modifier.align(Alignment.BottomEnd).navigationBarsPadding()
                     .padding(end = LocalRailSpace.current.right + Space.l, bottom = Space.l),
             )
+        }
+    }
+}
+
+/**
+ * The Moments as a list or as a calendar, one chosen, as Material 3's connected button group
+ * switches between views: across the page, each its icon and name.
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun ViewSwitch(calendar: Boolean, onChange: (Boolean) -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().padding(horizontal = Space.gutter, vertical = Space.xs).selectableGroup(),
+        horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+    ) {
+        listOf(false to R.string.label_view_list, true to R.string.label_view_calendar).forEachIndexed { index, (isCalendar, label) ->
+            ToggleButton(
+                checked = calendar == isCalendar,
+                onCheckedChange = { onChange(isCalendar) },
+                shapes = if (index == 0) ButtonGroupDefaults.connectedLeadingButtonShapes() else ButtonGroupDefaults.connectedTrailingButtonShapes(),
+                modifier = Modifier.weight(1f).semantics { role = Role.RadioButton }.testTag(if (isCalendar) "view_calendar" else "view_list"),
+            ) {
+                Icon(if (isCalendar) Icons.Outlined.CalendarMonth else Icons.Outlined.ViewAgenda, contentDescription = null, modifier = Modifier.size(ToggleButtonDefaults.IconSize))
+                Spacer(Modifier.size(ToggleButtonDefaults.IconSpacing))
+                Text(stringResource(label), maxLines = 1)
+            }
         }
     }
 }

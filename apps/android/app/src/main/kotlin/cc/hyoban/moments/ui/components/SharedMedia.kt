@@ -6,10 +6,9 @@ import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.animateDp
 import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
@@ -120,6 +119,8 @@ fun Modifier.sharedCard(key: String, cardCorner: Dp = 16.dp, page: Boolean = fal
     val corner by animated.transition.animateDp(label = "card corner") { state ->
         if (page && state == EnterExitState.Visible) 0.dp else cardCorner
     }
+    // The theme's springs: the card grows on the spatial one, its two faces cross on the effects one.
+    val motion = MaterialTheme.motionScheme
     return with(shared) {
         val config = remember(viewerShowing) {
             object : SharedTransitionScope.SharedContentConfig {
@@ -131,9 +132,9 @@ fun Modifier.sharedCard(key: String, cardCorner: Dp = 16.dp, page: Boolean = fal
         this@sharedCard.sharedBounds(
             rememberSharedContentState("card/$key", config),
             animatedVisibilityScope = animated,
-            enter = fadeIn(tween(CARD_MS / 2)),
-            exit = fadeOut(tween(CARD_MS / 2)),
-            boundsTransform = { _, _ -> spring(dampingRatio = 0.86f, stiffness = 380f) },
+            enter = fadeIn(motion.fastEffectsSpec()),
+            exit = fadeOut(motion.fastEffectsSpec()),
+            boundsTransform = { _, _ -> motion.defaultSpatialSpec() },
             // Scaled, not laid out again at each size, so the words keep their lines as it grows.
             resizeMode = SharedTransitionScope.ResizeMode.scaleToBounds(ContentScale.FillWidth, Alignment.TopCenter),
             clipInOverlayDuringTransition = OverlayClip(ContinuousRoundedRectangle(corner)),
@@ -141,7 +142,6 @@ fun Modifier.sharedCard(key: String, cardCorner: Dp = 16.dp, page: Boolean = fal
     }
 }
 
-private const val CARD_MS = 400
 
 /** The key a trip's card and its page share. */
 fun tripCardKey(id: String) = "trip-$id"

@@ -90,16 +90,19 @@ class AppContainer(context: Context) {
         }
     }
 
-    private val _messages = Channel<String>(Channel.BUFFERED)
+    /** Something to say in a snackbar, and what its one action, if any, does; [onDismiss] when it goes without it. */
+    class Message(val text: String, val action: String? = null, val onAction: () -> Unit = {}, val onDismiss: () -> Unit = {})
+
+    private val _messages = Channel<Message>(Channel.BUFFERED)
 
     /**
      * What the app has to say while it is open, shown as snackbars in the order said; kept
      * until the app's page is up to show them, as when a share opens it.
      */
-    val messages: Flow<String> = _messages.receiveAsFlow()
+    val messages: Flow<Message> = _messages.receiveAsFlow()
 
     private fun say(text: String) {
-        _messages.trySend(text)
+        _messages.trySend(Message(text))
     }
 
     private val _sharedPlace = MutableStateFlow<SharedPlace?>(null)
@@ -213,11 +216,28 @@ class AppContainer(context: Context) {
         }
     }
 
-    /** Deletes a Moment: one of the phone's at once, one of the site's when the changes are published. */
+    /**
+     * Deletes a Moment, as Material 3 has a deletion undone from its snackbar rather than
+     * confirmed first: it goes from sight at once, and is deleted only once the snackbar
+     * saying so goes without its undo, one of the phone's then for good, one of the site's
+     * when the changes are published.
+     */
     fun delete(uid: String) {
         scope.launch {
-            repository.delete(uid)
-            Widgets.update(appContext)
+            repository.setAside(uid)
+            _messages.send(
+                Message(
+                    appContext.getString(R.string.message_moment_deleted),
+                    action = appContext.getString(R.string.action_undo),
+                    onAction = { scope.launch { repository.bringBack(uid) } },
+                    onDismiss = {
+                        scope.launch {
+                            repository.delete(uid)
+                            Widgets.update(appContext)
+                        }
+                    },
+                ),
+            )
         }
     }
 

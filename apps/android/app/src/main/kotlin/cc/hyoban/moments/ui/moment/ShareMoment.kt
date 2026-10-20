@@ -22,10 +22,17 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.Send
+import androidx.compose.material.icons.rounded.PhotoLibrary
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -40,12 +47,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.layout
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.unit.dp
@@ -57,8 +65,10 @@ import cc.hyoban.moments.data.media.ShareAlbum
 import cc.hyoban.moments.data.media.saveShareAlbum
 import cc.hyoban.moments.data.spec.MediaType
 import cc.hyoban.moments.data.spec.MomentRecord
+import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.Thumbnail
 import cc.hyoban.moments.ui.theme.Space
+import cc.hyoban.moments.ui.theme.fill
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 
@@ -73,39 +83,43 @@ enum class ShareTarget(val tag: String, @param:StringRes val title: Int, val lim
 }
 
 /**
- * Where to share a Moment, as Material 3's simple dialog has its choices: a list of rows,
- * one tap choosing, the dialog's only button cancelling.
+ * Where to share a Moment, in a modal bottom sheet, as Material 3 has a long list of
+ * actions on a phone: the apps it is sent to straight away, then those it is made ready
+ * for by hand, one tap choosing; the scrim or a swipe down closes it.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShareMenu(onSelect: (ShareTarget) -> Unit, onDismiss: () -> Unit) {
-    val choice: @Composable (String, String, ShareTarget) -> Unit = { label, tag, target ->
+    val level = AppColors.sheetLevel
+    val choice: @Composable (String, String, ImageVector, ShareTarget) -> Unit = { label, tag, icon, target ->
         ListItem(
-            // In line with the title, past the row's own padding.
-            headlineContent = { Text(label, Modifier.padding(start = 8.dp)) },
-            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+            headlineContent = { Text(label) },
+            leadingContent = { Icon(icon, contentDescription = null) },
+            colors = ListItemDefaults.colors(containerColor = Color.Transparent, leadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant),
             modifier = Modifier.clickable { onSelect(target) }.testTag("share_$tag"),
         )
     }
-    AlertDialog(
-        modifier = Modifier.semantics { testTagsAsResourceId = true },
+    ModalBottomSheet(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.action_share)) },
-        text = {
-            // The rows run to the dialog's edges, its padding taken back.
-            Column(Modifier.heightIn(max = 480.dp).verticalScroll(rememberScrollState()).layout { measurable, constraints ->
-                val inset = 24.dp.roundToPx()
-                val placeable = measurable.measure(constraints.copy(maxWidth = constraints.maxWidth + inset * 2, minWidth = constraints.minWidth + inset * 2))
-                layout(constraints.maxWidth, placeable.height) { placeable.place(-inset, 0) }
-            }) {
-                ShareTarget.entries.filter { it != ShareTarget.PREPARE }.forEach { target -> choice(stringResource(target.title), target.tag, target) }
-                choice(stringResource(R.string.action_share_wechat_manual), "wechat", ShareTarget.PREPARE)
-                choice(stringResource(R.string.action_share_bilibili_manual), "bilibili", ShareTarget.PREPARE)
-                choice(stringResource(ShareTarget.PREPARE.title), "prepare", ShareTarget.PREPARE)
+        containerColor = level.fill(),
+        // A window of its own, so its tags are resource ids again for `uiautomator`.
+        modifier = Modifier.semantics { testTagsAsResourceId = true },
+    ) {
+        Column(Modifier.verticalScroll(rememberScrollState()).padding(bottom = Space.l)) {
+            Text(
+                stringResource(R.string.action_share),
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(horizontal = Space.xl, vertical = Space.s).semantics { heading() },
+            )
+            ShareTarget.entries.filter { it != ShareTarget.PREPARE }.forEach { target ->
+                choice(stringResource(target.title), target.tag, Icons.AutoMirrored.Rounded.Send, target)
             }
-        },
-        confirmButton = {},
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
-    )
+            HorizontalDivider(Modifier.padding(vertical = Space.s), color = MaterialTheme.colorScheme.outlineVariant)
+            choice(stringResource(R.string.action_share_wechat_manual), "wechat", Icons.Rounded.PhotoLibrary, ShareTarget.PREPARE)
+            choice(stringResource(R.string.action_share_bilibili_manual), "bilibili", Icons.Rounded.PhotoLibrary, ShareTarget.PREPARE)
+            choice(stringResource(ShareTarget.PREPARE.title), "prepare", Icons.Rounded.PhotoLibrary, ShareTarget.PREPARE)
+        }
+    }
 }
 
 /** A separate copy for another platform; the original Moment stays as written. */
