@@ -43,7 +43,12 @@ export function setUp() {
       sqlite.exec('BEGIN')
 
       try {
-        const results = statements.map(({ query, values }) => sqlite.prepare(query).run(...values))
+        // As D1: a SELECT's result carries its rows.
+        const results = statements.map(({ query, values }) =>
+          /^\s*SELECT/i.test(query)
+            ? { results: sqlite.prepare(query).all(...values) }
+            : sqlite.prepare(query).run(...values),
+        )
         sqlite.exec('COMMIT')
         return results
       } catch (error) {

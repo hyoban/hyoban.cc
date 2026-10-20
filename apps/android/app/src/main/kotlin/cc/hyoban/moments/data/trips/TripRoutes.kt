@@ -29,8 +29,12 @@ private data class SegmentRecord(val line: List<List<Double>>, val straight: Boo
 private data class RoutesResponse(val revision: Long, val trips: Map<String, List<SegmentRecord>>)
 
 /** The routes in an answer from `GET /v1/routes`, or null when it isn't one. */
-fun parseRoutes(text: String): Map<String, List<RouteSegment>>? = try {
-    Json { ignoreUnknownKeys = true }.decodeFromString(RoutesResponse.serializer(), text).trips.mapValues { (_, segments) ->
+fun parseRoutes(text: String): Map<String, List<RouteSegment>>? = parseAnswer(text)?.second
+
+/** An answer from `GET /v1/routes`: the revision it is of, and the routes. */
+private fun parseAnswer(text: String): Pair<Long, Map<String, List<RouteSegment>>>? = try {
+    val answer = Json { ignoreUnknownKeys = true }.decodeFromString(RoutesResponse.serializer(), text)
+    answer.revision to answer.trips.mapValues { (_, segments) ->
         segments.map { segment ->
             RouteSegment(segment.line.filter { it.size >= 2 }.map { it[0] to it[1] }, segment.straight)
         }.filter { it.line.size >= 2 }
@@ -41,7 +45,7 @@ fun parseRoutes(text: String): Map<String, List<RouteSegment>>? = try {
     null
 }
 
-/** The routes, kept in [file] as the API served them and fetched again from [apiUrl] with each refresh. */
+/** The routes, kept in [file] as the API served them and fetched again from [apiUrl] once its revision moves on. */
 class TripRoutes(
     private val apiUrl: () -> String,
     private val file: File,
@@ -52,26 +56,38 @@ class TripRoutes(
     /** Each trip's route by its id; a trip whose route hasn't come yet is missing. */
     val routes: StateFlow<Map<String, List<RouteSegment>>> = _routes.asStateFlow()
 
+    /** The API's revision the routes kept are of; null before any are. */
+    @Volatile private var revision: Long? = null
+
     suspend fun load() = withContext(io) {
-        if (file.exists()) parseRoutes(file.readText())?.let { _routes.value = it }
+        if (file.exists()) parseAnswer(file.readText())?.let { (kept, routes) ->
+            revision = kept
+            _routes.value = routes
+        }
     }
 
     /** Forgets the routes, as when they are to come from another API. */
     suspend fun clear() = withContext(io) {
         file.delete()
+        revision = null
         _routes.value = emptyMap()
     }
 
-    /** Fetches every trip's route; when that fails, the ones kept stay. */
-    suspend fun refresh() = withContext(io) {
+    /**
+     * Fetches every trip's route, unless the ones kept are of [apiRevision], the API's
+     * revision as the last sync found it; when that fails, the ones kept stay.
+     */
+    suspend fun refresh(apiRevision: Long) = withContext(io) {
+        if (apiRevision == revision) return@withContext
         val text = try {
             Http.getText("${apiUrl()}/v1/routes", io = io)
         } catch (_: IOException) {
             return@withContext
         }
-        val routes = parseRoutes(text) ?: return@withContext
+        val (fetched, routes) = parseAnswer(text) ?: return@withContext
         file.parentFile?.mkdirs()
         file.writeText(text)
+        revision = fetched
         _routes.value = routes
     }
 }

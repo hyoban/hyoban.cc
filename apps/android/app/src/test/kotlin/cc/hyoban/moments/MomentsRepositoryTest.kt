@@ -32,6 +32,7 @@ class MomentsRepositoryTest {
         var revision = 0L
         var places = mapOf("nanjing" to Place("南京", 32.06, 118.79))
         var calls = 0
+        var wholeReads = 0
 
         fun put(moment: MomentRecord) = changes.add(++revision to moment)
         fun delete(uid: String) = changes.add(++revision to uid)
@@ -49,9 +50,9 @@ class MomentsRepositoryTest {
             )
         }
 
-        override suspend fun places() = PlacesResponse(revision, places)
+        override suspend fun places() = PlacesResponse(revision, places).also { wholeReads++ }
 
-        override suspend fun trips() = TripsResponse(revision, emptyList())
+        override suspend fun trips() = TripsResponse(revision, emptyList()).also { wholeReads++ }
     }
 
     /** The API's writes, as the Worker answers them: photos kept, places named, drafts published, all of a change set at once. */
@@ -114,6 +115,26 @@ class MomentsRepositoryTest {
         restarted.load()
         assertEquals(listOf("C", "E", "D", "A"), restarted.moments.value.map { it.uid })
         assertEquals("南京", restarted.places.value["nanjing"]?.name)
+    }
+
+    @Test
+    fun `a refresh at the same revision reads only the feed, not the places and trips again`() = runBlocking {
+        api.put(moment("A", "2026-10-01"))
+        val repository = repository()
+        repository.load()
+
+        assertEquals(1L, repository.refresh().getOrNull())
+        assertEquals(2, api.wholeReads)
+
+        api.places = mapOf("nanjing" to Place("金陵", 32.06, 118.79))
+        assertEquals(1L, repository.refresh().getOrNull())
+        assertEquals(2, api.wholeReads, "nothing changed, so nothing more is read")
+        assertEquals("南京", repository.places.value["nanjing"]?.name)
+
+        api.put(moment("B", "2026-10-02"))
+        assertEquals(2L, repository.refresh().getOrNull())
+        assertEquals(4, api.wholeReads)
+        assertEquals("金陵", repository.places.value["nanjing"]?.name)
     }
 
     @Test

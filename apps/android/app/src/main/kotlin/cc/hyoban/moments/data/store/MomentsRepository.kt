@@ -84,13 +84,14 @@ class MomentsRepository(
 
     /**
      * Brings the copy up to the API: the Moments changed since the last refresh, page by
-     * page, and the places and trips whole. A database restored to an earlier revision
-     * than the copy's is read again from the start.
+     * page, and the places and trips whole, unless the API's revision is still the copy's.
+     * A database restored to an earlier revision than the copy's is read again from the
+     * start. Gives the API's revision.
      */
-    suspend fun refresh(): Result<Unit> = lock.withLock {
+    suspend fun refresh(): Result<Long> = lock.withLock {
         _syncing.value = true
         try {
-            withContext(io) {
+            val revision = withContext(io) {
                 var since = store.readRevision()
                 var page = source.moments(since, cursor = null)
 
@@ -119,26 +120,30 @@ class MomentsRepository(
                     page = source.moments(since, page.next ?: break)
                 }
 
-                val places = source.places().places
-                val trips = source.trips().trips
+                // The same revision, so the places and trips are as the copy has them.
+                if (revision != since) {
+                    val places = source.places().places
+                    val trips = source.trips().trips
 
-                store.writePlaces(places)
-                store.replaceTrips(trips)
-                store.writeRevision(revision)
+                    store.writePlaces(places)
+                    store.replaceTrips(trips)
+                    store.writeRevision(revision)
+                    apiPlaces = places
+                    _trips.value = trips.sortedByDescending { it.start }
+                }
 
                 all = moments
-                apiPlaces = places
                 // A deletion of a Moment the site no longer has is done already.
                 if (removed.any { it !in moments }) {
                     removed = removed.filter { it in moments }.toSet()
                     local?.writeRemoved(removed)
                 }
                 publishPlaces()
-                _trips.value = trips.sortedByDescending { it.start }
                 publish()
+                revision
             }
             _error.value = null
-            Result.success(Unit)
+            Result.success(revision)
         } catch (error: Exception) {
             _error.value = error.message ?: error.toString()
             Result.failure(error)

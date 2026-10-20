@@ -19,7 +19,17 @@ import {
   type TripLocation,
   type TripRoute,
 } from '@hyoban/trip-map'
-import { readPlaces, readRoutes, readTrips, type Database } from './database.ts'
+import {
+  placesQuery,
+  readAll,
+  revisionQuery,
+  routesQuery,
+  toPlaces,
+  toRevision,
+  toRoutes,
+  tripsQuery,
+  type Database,
+} from './database.ts'
 import { REVISION, routeRow } from './rows.ts'
 import { commit, upsert, type WriteContext } from './writes.ts'
 
@@ -48,19 +58,39 @@ const SIMPLIFY_TOLERANCE = 0.0003
  */
 export const FETCHES_PER_RUN = 30
 
-/** The published trips built from the database, each with its legs' routes where it has them. */
-export async function readBuiltTrips(
-  db: Database,
-  routes: Readonly<Record<string, TripRoute>> = {},
-) {
-  const places = placesSchema.parse(await readPlaces(db))
-  const trips = (await readTrips(db)).map((trip) => tripRecordSchema.parse(trip))
-  const { results } = await db
-    .prepare(
+/** What the trips are built from, read at one revision. */
+export async function readTripInputs(db: Database) {
+  const [revision, places, trips, moments, routes] = await readAll(db, [
+    revisionQuery(db),
+    placesQuery(db),
+    tripsQuery(db),
+    db.prepare(
       `SELECT record FROM moments
        WHERE deleted_at IS NULL AND published_id IS NOT NULL AND hidden = 0`,
-    )
-    .all<{ record: string }>()
+    ),
+    routesQuery(db),
+  ])
+
+  return {
+    revision: toRevision(revision),
+    places: placesSchema.parse(toPlaces(places)),
+    trips: (trips as { record: string }[]).map((row) =>
+      tripRecordSchema.parse(JSON.parse(row.record)),
+    ),
+    moments: (moments as { record: string }[]).map((row) =>
+      momentRecordSchema.parse(JSON.parse(row.record)),
+    ),
+    routes: toRoutes(routes) as Record<string, TripRoute>,
+  }
+}
+
+type TripInputs = Awaited<ReturnType<typeof readTripInputs>>
+
+/** The published trips, each with its legs' routes where `routes` has them. */
+export function buildTrips(
+  { places, trips, moments }: TripInputs,
+  routes: Readonly<Record<string, TripRoute>> = {},
+) {
   const resolveLocation = (id: string): TripLocation & Partial<Pick<Place, 'station'>> => {
     const place = places[id]
 
@@ -71,8 +101,7 @@ export async function readBuiltTrips(
     return { id, ...place }
   }
   // As the site takes them: visible Moments with their known places, oldest first.
-  const moments = results
-    .map((row) => momentRecordSchema.parse(JSON.parse(row.record)))
+  const visible = moments
     .map((moment) => ({
       dateKey: moment.occurredAt.slice(0, 10),
       locations: moment.places.filter((id) => id in places).map(resolveLocation),
@@ -82,12 +111,12 @@ export async function readBuiltTrips(
     .sort(compareMoments)
 
   return trips
-    .map((trip) => buildTrip(toDefinition(trip), moments, { resolveLocation, routes }))
+    .map((trip) => buildTrip(toDefinition(trip), visible, { resolveLocation, routes }))
     .filter((trip) => trip.stops.length > 0)
 }
 
 /** Every leg the trips need fetched, by its key: drives not driven back the same way, and trains. */
-export function getNeededLegs(trips: Awaited<ReturnType<typeof readBuiltTrips>>, places: Places) {
+export function getNeededLegs(trips: ReturnType<typeof buildTrips>, places: Places) {
   const legs = new Map<string, Leg>()
 
   for (const trip of trips) {
@@ -123,9 +152,9 @@ export function getNeededLegs(trips: Awaited<ReturnType<typeof readBuiltTrips>>,
  */
 export async function fillRoutes(context: WriteContext, fetchRoute: RouteFetcher) {
   const { db } = context
-  const places = placesSchema.parse(await readPlaces(db))
-  const existing = await readRoutes(db)
-  const needed = getNeededLegs(await readBuiltTrips(db), places)
+  const inputs = await readTripInputs(db)
+  const existing = inputs.routes
+  const needed = getNeededLegs(buildTrips(inputs), inputs.places)
   const fetched = new Map<string, Route>()
   const missing = [...needed].filter(([key]) => !(key in existing))
   let failed = 0
@@ -168,15 +197,48 @@ export async function fillRoutes(context: WriteContext, fetchRoute: RouteFetcher
   }
 }
 
+/** Where `meta` keeps the answer of `GET /v1/routes`, with the revision it is of. */
+const TRIP_ROUTES = 'trip_routes'
+
 /**
  * Each published trip's route as the site's overview draws it: drives one after another
  * as one stretch, and each train, plane or ferry as a stretch of its own, drawn dashed.
+ * Worked out from every Moment, so it is kept in `meta` and only worked out again once
+ * the revision has moved on, by a write here or one that came past the Worker.
  */
 export async function readTripRoutes(db: Database) {
-  const routes = (await readRoutes(db)) as Record<string, TripRoute>
-  const trips = await readBuiltTrips(db, routes)
+  const [revision, kept] = await readAll(db, [
+    revisionQuery(db),
+    db.prepare(`SELECT value FROM meta WHERE key = ?1`).bind(TRIP_ROUTES),
+  ])
+  const [keptRow] = kept as { value: string }[]
+  const cached = keptRow && (JSON.parse(keptRow.value) as TripRoutes)
 
-  return Object.fromEntries(trips.map((trip) => [trip.id, getTripSummary(trip).segments]))
+  if (cached?.revision === toRevision(revision)) {
+    return cached
+  }
+
+  const inputs = await readTripInputs(db)
+  const trips = buildTrips(inputs, inputs.routes)
+  const answer: TripRoutes = {
+    revision: inputs.revision,
+    trips: Object.fromEntries(trips.map((trip) => [trip.id, getTripSummary(trip).segments])),
+  }
+
+  await db
+    .prepare(
+      `INSERT INTO meta (key, value) VALUES (?1, ?2)
+       ON CONFLICT (key) DO UPDATE SET value = excluded.value`,
+    )
+    .bind(TRIP_ROUTES, JSON.stringify(answer))
+    .run()
+
+  return answer
+}
+
+interface TripRoutes {
+  revision: number
+  trips: Record<string, ReturnType<typeof getTripSummary>['segments']>
 }
 
 /** Fetches legs from Mapbox's Directions with `token`, and train legs from OpenRailRouting. */
