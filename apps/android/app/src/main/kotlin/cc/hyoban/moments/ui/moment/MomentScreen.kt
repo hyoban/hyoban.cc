@@ -102,20 +102,25 @@ fun MomentScreen(
 
     // The whole page is the card it was opened from, grown to the screen.
     Box(Modifier.fillMaxSize().sharedCard(uid, page = true).background(AppColors.page)) {
-        // The photo runs under the status bar: white icons while it is still under it.
+        // A portrait photo runs under the status bar, with white icons while it is still
+        // under it; a landscape one starts below the bar, the page's colour above it.
+        val shape = moment.media.firstOrNull()?.let(::shapeOf)
+        val bleeds = shape != null && shape < 1f
         val scroll = rememberScrollState()
         var photoHeight by remember { mutableIntStateOf(0) }
         val statusBar = WindowInsets.statusBars.getTop(LocalDensity.current)
-        val overPhoto by remember(moment.media.isEmpty()) {
-            derivedStateOf { moment.media.isNotEmpty() && scroll.value < photoHeight - statusBar }
+        val overPhoto by remember(bleeds) {
+            derivedStateOf { bleeds && scroll.value < photoHeight - statusBar }
         }
         StatusBarOverPhoto(overPhoto)
 
         Column(Modifier.fillMaxSize().verticalScroll(scroll)) {
             if (moment.media.isNotEmpty()) {
                 val pager = rememberPagerState { moment.media.size }
+                // No shorter than two thirds of the width, so a wide photo isn't a strip.
                 Box(
-                    Modifier.fillMaxWidth().aspectRatio(shapeOf(moment.media.first()).coerceIn(0.75f, 1.5f))
+                    Modifier.then(if (bleeds) Modifier else Modifier.statusBarsPadding())
+                        .fillMaxWidth().aspectRatio(shape!!.coerceIn(0.75f, 1.5f))
                         .onSizeChanged { photoHeight = it.height },
                 ) {
                     HorizontalPager(pager, Modifier.fillMaxSize(), key = { moment.media[it].uid }) { page ->

@@ -96,7 +96,8 @@ fun MomentPills(moment: MomentRecord, places: Map<String, Place>, trip: TripReco
 /** A Moment in a sheet or a short list: its first media small, when, its first words. */
 @Composable
 fun CompactMomentRow(moment: MomentRecord, places: Map<String, Place>, urls: MediaUrls, onClick: () -> Unit) {
-    PressableCard(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
+    // It grows into the Moment's page when opened, as a card on a list does.
+    PressableCard(onClick = onClick, modifier = Modifier.fillMaxWidth().sharedCard(moment.uid)) {
         Row(Modifier.padding(6.dp), horizontalArrangement = Arrangement.spacedBy(Space.m)) {
             moment.media.firstOrNull()?.let { Thumbnail(it, urls, size = 76) }
             Column(Modifier.weight(1f).padding(top = Space.s, end = Space.s, bottom = Space.s), verticalArrangement = Arrangement.spacedBy(Space.xs)) {

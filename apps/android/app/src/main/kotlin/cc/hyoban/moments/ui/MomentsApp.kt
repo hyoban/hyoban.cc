@@ -328,8 +328,8 @@ private fun AnimatedContentTransitionScope<NavBackStackEntry>.popExit(): ExitTra
     tabSlide()?.let { slideOutOfContainer(it, TAB_SLIDE) + fadeOut(tween(TAB_SLIDE_MS)) }
         ?: if (closesCard()) CARD_HOLD_OUT else if (sharesPhoto()) fadeOut(tween(PAGE_MS)) else pageOut(forward = false)
 
-/** The pages that list Moments as cards, from which a Moment's page grows out of its card. */
-private val CARD_LISTS = listOf(Feed::class, Day::class, PlaceMoments::class, Trip::class)
+/** The pages that list Moments as cards (the map in its place panel), from which a Moment's page grows out of its card. */
+private val CARD_LISTS = listOf(Feed::class, Day::class, PlaceMoments::class, Trip::class, Atlas::class)
 
 /** Whether a Moment's page opens from a card on a list: the card grows into it while the list stays put. */
 private fun AnimatedContentTransitionScope<NavBackStackEntry>.opensCard(): Boolean =
