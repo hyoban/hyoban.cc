@@ -44,7 +44,7 @@ import cc.hyoban.moments.ui.theme.fill
 
 /**
  * A Moment in a list: its media inset at the top of a white card, then pills for when,
- * where and the trip, then its words. Tapping a photo opens it; the rest opens the Moment.
+ * where and the trip, then its words. Tapping anywhere, its photos too, opens the Moment.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -54,7 +54,6 @@ fun MomentCard(
     trip: TripRecord?,
     urls: MediaUrls,
     onOpen: () -> Unit,
-    onOpenMedia: (Int) -> Unit,
     modifier: Modifier = Modifier,
     showDate: Boolean = false,
 ) {
@@ -62,7 +61,7 @@ fun MomentCard(
     PressableCard(onClick = onOpen, modifier = modifier.fillMaxWidth().sharedCard(moment.uid).testTag("moment_${moment.uid}")) {
         if (moment.media.isNotEmpty()) {
             // To the card's edges, its top corners rounding them.
-            MediaMosaic(moment.uid, moment.media, urls, onOpen = onOpenMedia)
+            MediaMosaic(moment.uid, moment.media, urls, onOpen = { onOpen() })
         }
         Column(
             Modifier.padding(start = Space.l, end = Space.l, top = if (moment.media.isEmpty()) Space.l else Space.s, bottom = Space.l),

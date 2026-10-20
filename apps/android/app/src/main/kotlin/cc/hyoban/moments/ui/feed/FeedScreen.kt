@@ -64,7 +64,6 @@ import cc.hyoban.moments.ui.map.navigateTo
 fun FeedScreen(
     container: AppContainer,
     onMoment: (String) -> Unit,
-    onMedia: (String, Int) -> Unit,
     onDay: (String) -> Unit,
     onSettings: () -> Unit,
     onNew: () -> Unit,
@@ -170,7 +169,7 @@ fun FeedScreen(
                             tab = Feed,
                         )
                     } else {
-                        MomentFeed(shown, places, trips, container.mediaUrls, onMoment, onMedia, state = feedState, gridState = gridState, leading = header, tab = Feed)
+                        MomentFeed(shown, places, trips, container.mediaUrls, onMoment, state = feedState, gridState = gridState, leading = header, tab = Feed)
                     }
                 }
             }
@@ -181,7 +180,7 @@ fun FeedScreen(
 
 /** The Moments of one day, `YYYY-MM-DD`, as the feed shows them. */
 @Composable
-fun DayScreen(container: AppContainer, date: String, onMoment: (String) -> Unit, onMedia: (String, Int) -> Unit, onBack: () -> Unit) {
+fun DayScreen(container: AppContainer, date: String, onMoment: (String) -> Unit, onBack: () -> Unit) {
     val all by container.repository.moments.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
     val trips by container.repository.trips.collectAsStateWithLifecycle()
@@ -194,13 +193,13 @@ fun DayScreen(container: AppContainer, date: String, onMoment: (String) -> Unit,
         Modifier.sharedCard(dayCardKey(date), page = true).background(AppColors.page),
         subtitle = pluralStringResource(R.plurals.count_moments, moments.size, moments.size),
     ) {
-        MomentFeed(moments, places, trips, container.mediaUrls, onMoment, onMedia, months = false)
+        MomentFeed(moments, places, trips, container.mediaUrls, onMoment, months = false)
     }
 }
 
 /** The Moments at one place, newest first. */
 @Composable
-fun PlaceScreen(container: AppContainer, id: String, onMoment: (String) -> Unit, onMedia: (String, Int) -> Unit, onBack: () -> Unit) {
+fun PlaceScreen(container: AppContainer, id: String, onMoment: (String) -> Unit, onBack: () -> Unit) {
     val all by container.repository.moments.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
     val trips by container.repository.trips.collectAsStateWithLifecycle()
@@ -222,6 +221,6 @@ fun PlaceScreen(container: AppContainer, id: String, onMoment: (String) -> Unit,
             }
         },
     ) {
-        MomentFeed(moments, places, trips, container.mediaUrls, onMoment, onMedia)
+        MomentFeed(moments, places, trips, container.mediaUrls, onMoment)
     }
 }

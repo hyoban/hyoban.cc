@@ -111,6 +111,16 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/widget_trip" />
         </receiver>
+        <!-- Serves the photo or video the viewer shares to the app it is shared with. -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.share"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/share_paths" />
+        </provider>
     </application>
 
 </manifest>

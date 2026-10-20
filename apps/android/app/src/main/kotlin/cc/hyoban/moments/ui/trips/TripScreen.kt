@@ -55,7 +55,6 @@ fun TripScreen(
     container: AppContainer,
     id: String,
     onMoment: (String) -> Unit,
-    onMedia: (String, Int) -> Unit,
     onBack: () -> Unit,
 ) {
     val trips by container.repository.trips.collectAsStateWithLifecycle()
@@ -104,7 +103,6 @@ fun TripScreen(
                         trips,
                         container.mediaUrls,
                         onMoment,
-                        onMedia,
                         modifier = Modifier.weight(0.58f),
                         months = false,
                         dayLabel = dayLabel,
@@ -120,7 +118,6 @@ fun TripScreen(
                     trips,
                     container.mediaUrls,
                     onMoment,
-                    onMedia,
                     months = false,
                     dayLabel = dayLabel,
                     showTrip = false,
