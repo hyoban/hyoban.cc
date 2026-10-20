@@ -14,7 +14,9 @@ monochrome layer for themed icons.
 Two home screen widgets read the same copy, so they draw offline: 那年今天, a Moment with
 a photo from this day in an earlier year, or one picked at random when there is none,
 the same all day; and 旅程, the trip under way, else the last one, else the next, with
-one of its photos. Each opens its page when tapped, takes the colours the theme page
+one of its photos. Each comes in ColorOS's card sizes, a row, a square, a wide card with
+the photo beside the words and a large one with the Moment's words whole, rounds as the
+launcher rounds its own, opens its page when tapped, takes the colours the theme page
 sets, and is drawn again after each sync and every three hours.
 
 ## Building

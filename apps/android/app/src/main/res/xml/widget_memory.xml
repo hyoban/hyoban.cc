@@ -1,11 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Drawn again after each sync and every three hours, so a new day brings its own. -->
+<!-- Drawn again after each sync and every three hours, so a new day brings its own.
+     Two cells square to begin with, as small as a row of four and as large as four by four. -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:description="@string/widget_memory_description"
+    android:previewLayout="@layout/widget_preview_memory"
     android:initialLayout="@layout/glance_default_loading_layout"
     android:minWidth="110dp"
     android:minHeight="110dp"
     android:minResizeWidth="110dp"
+    android:maxResizeWidth="530dp"
+    android:maxResizeHeight="530dp"
     android:minResizeHeight="60dp"
     android:targetCellWidth="2"
     android:targetCellHeight="2"

@@ -91,4 +91,10 @@
     <string name="widget_trip_name">旅程</string>
     <string name="widget_trip_description">正在进行的旅程，或者上一段</string>
     <string name="widget_trip_in_days">%1$d 天后出发</string>
+    <string name="widget_preview_memory_eyebrow">3 年前的今天</string>
+    <string name="widget_preview_memory_title">海边的书店，终于轮到我了</string>
+    <string name="widget_preview_memory_subtitle">青岛</string>
+    <string name="widget_preview_trip_eyebrow">第 2 天 · 共 5 天</string>
+    <string name="widget_preview_trip_title">东北自驾</string>
+    <string name="widget_preview_trip_subtitle">15 个时刻</string>
 </resources>
