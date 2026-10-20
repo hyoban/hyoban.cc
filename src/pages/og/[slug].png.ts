@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro'
-import { pngResponse, renderOgImage } from '@/og-image'
+import { cachedCard, pngResponse, renderOgImage } from '@/og-image'
 import { formatPostFullDate, getMarkdownEntries, type MarkdownEntry } from '@/utils'
 
 export async function getStaticPaths() {
@@ -9,11 +9,11 @@ export async function getStaticPaths() {
   }))
 }
 
-export const GET: APIRoute<{ entry: MarkdownEntry }> = async ({ props: { entry } }) =>
-  pngResponse(
-    await renderOgImage({
-      title: entry.data.title,
-      description: entry.data.description,
-      date: entry.collection === 'posts' ? formatPostFullDate(entry.data.pubDate) : undefined,
-    }),
-  )
+export const GET: APIRoute<{ entry: MarkdownEntry }> = async ({ props: { entry } }) => {
+  const options = {
+    title: entry.data.title,
+    description: entry.data.description,
+    date: entry.collection === 'posts' ? formatPostFullDate(entry.data.pubDate) : undefined,
+  }
+  return pngResponse(await cachedCard('post.png', options, () => renderOgImage(options)))
+}
