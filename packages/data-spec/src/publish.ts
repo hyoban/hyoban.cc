@@ -3,12 +3,10 @@ import { pinyin } from 'pinyin-pro'
 import type { MomentMedia, MomentRecord, Place, Places } from './index.ts'
 
 // The rules for publishing: which place a new one is, what a Moment's published id is,
-// and what its media files are called. Shared by the API and `pnpm data:publish`.
+// and what its media files are called. The API's.
 
 /** Two places this close, or with the same name, are one place. */
-export const NEARBY_KM = 0.2
-
-const ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
+const NEARBY_KM = 0.2
 
 /** The id the app gives a place it made, `p-<ulid>`, until publishing names it by its pinyin. */
 export const PROVISIONAL_PLACE_PATTERN = /^p-[0-9a-hjkmnp-tv-z]{26}$/
@@ -56,7 +54,7 @@ export function matchPlace(
 const EARTH_RADIUS_KM = 6371
 
 /** The great-circle distance between two places, in kilometres. */
-export function getDistanceKm(from: Place, to: Place) {
+function getDistanceKm(from: Place, to: Place) {
   const toRadians = (degrees: number) => (degrees * Math.PI) / 180
   const latitudeDelta = toRadians(to.latitude - from.latitude)
   const longitudeDelta = toRadians(to.longitude - from.longitude)
@@ -69,14 +67,8 @@ export function getDistanceKm(from: Place, to: Place) {
   return 2 * EARTH_RADIUS_KM * Math.asin(Math.sqrt(a))
 }
 
-/** The slug the app proposed, else the first place, else the first words, else `moment`. */
-export function getSlug(record: Pick<MomentRecord, 'places' | 'text'> & { slug?: unknown }) {
-  const proposed = typeof record.slug === 'string' ? record.slug : ''
-
-  if (ID_PATTERN.test(proposed)) {
-    return proposed
-  }
-
+/** A Moment's slug: its first place, else its first words, else `moment`. */
+export function getSlug(record: Pick<MomentRecord, 'places' | 'text'>) {
   if (record.places[0]) {
     return record.places[0]
   }

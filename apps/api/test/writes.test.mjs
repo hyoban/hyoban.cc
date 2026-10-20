@@ -5,17 +5,18 @@ import { test } from 'vite-plus/test'
 
 import { call, get, setUp, snapshot, token } from './setup.mjs'
 
-// The writes, as the recording app makes them: places first, then the originals, the
-// Moment as a draft, and publishing; over the repository's data/, so ids and orders meet
-// the Moments already there.
+// The writes, as the recording app commits what it kept on the phone: the originals
+// uploaded first, then everything else as one POST /v1/changes; over the repository's
+// data/, so ids and orders meet the Moments already there.
 
-const fixture = (file) =>
-  JSON.parse(readFileSync(new URL(`../../../scripts/fixtures/bundle/${file}`, import.meta.url)))
-const dockMoment = fixture('moments/2026/10/01M3VDBHC042D43KWZWE67YP1T.json')
-const ferryMoment = fixture('moments/2026/10/01M3X2VJH0TR998A35TZVQ2JVX.json')
+const fixture = (file) => JSON.parse(readFileSync(new URL(`fixtures/${file}`, import.meta.url)))
+const dockMoment = fixture('dock-moment.json')
+const ferryMoment = fixture('ferry-moment.json')
 const photo = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3, 4])
 const motion = new Uint8Array([0, 0, 0, 24, 0x66, 0x74, 0x79, 0x70])
 const owner = { auth: token }
+const dock = { name: '测试码头', latitude: 1.234, longitude: 5.678 }
+const made = 'p-01k7zq9x3m4n5p6q7r8s9t0v1w'
 
 function setUpWithData() {
   const setup = setUp()
@@ -42,107 +43,85 @@ function upload(env, momentUid, mediaUid, part, body, contentType) {
   })
 }
 
-function saveTestDock(env) {
-  return call(env, 'PUT', '/v1/places/test-dock', {
-    ...owner,
-    body: { name: '测试码头', latitude: 1.234, longitude: 5.678 },
-  })
+function commit(env, changes, options = {}) {
+  return call(env, 'POST', '/v1/changes', { ...owner, body: changes, ...options })
 }
 
-/** The dock Moment with its places as the API knows them. */
+/** The dock Moment at Nanjing and a dock the app made. */
 function dockDraft() {
-  return { ...dockMoment, places: ['nanjing', 'test-dock'] }
+  return { ...dockMoment, places: ['nanjing', made] }
 }
 
-/** Saves the dock Moment, uploads its photo and publishes it. */
+/** Uploads the dock Moment's photo and publishes it, with its dock. */
 async function publishDock(env) {
   const draft = dockDraft()
 
-  await saveTestDock(env)
-  await call(env, 'PUT', `/v1/moments/${draft.uid}`, { ...owner, body: draft })
   await upload(env, draft.uid, draft.media[0].uid, 'image', photo, 'image/jpeg')
 
-  return call(env, 'POST', `/v1/moments/${draft.uid}/publish`, owner)
+  return commit(env, { places: { [made]: dock }, moments: [draft] })
 }
 
-test('a place near a known one, or with its name, comes back as that one', async () => {
+test('a place near a known one, or with its name, is that one; one the app made is named by its pinyin', async () => {
   const { env } = setUpWithData()
   const nanjing = snapshot.places.nanjing
-  const near = await call(env, 'PUT', '/v1/places/nanjing-2', {
-    ...owner,
-    body: fixture('places.json')['nanjing-2'],
+  const { status, body } = await commit(env, {
+    places: {
+      'nanjing-2': { name: '南京', latitude: 32.0607, longitude: 118.7972 },
+      'somewhere-else': { name: nanjing.name, latitude: 0, longitude: 0 },
+      [made]: dock,
+    },
   })
-  const sameName = await call(env, 'PUT', '/v1/places/somewhere-else', {
-    ...owner,
-    body: { name: nanjing.name, latitude: 0, longitude: 0 },
-  })
-  const created = await saveTestDock(env)
 
-  assert.deepEqual(near, { status: 200, body: { id: 'nanjing', place: nanjing } })
-  assert.equal(sameName.body.id, 'nanjing')
-  assert.equal(created.status, 201)
-  assert.deepEqual((await get(env, '/v1/places/test-dock')).body, created.body.place)
+  assert.equal(status, 200)
+  assert.deepEqual(body.places, {
+    'nanjing-2': 'nanjing',
+    'somewhere-else': 'nanjing',
+    [made]: 'ce-shi-ma-tou',
+  })
+  assert.deepEqual(
+    (await get(env, '/v1/places/nanjing')).body,
+    nanjing,
+    'a known place keeps its point',
+  )
+  assert.equal((await get(env, '/v1/places/ce-shi-ma-tou')).body.name, '测试码头')
   assert.equal((await get(env, '/v1/places/somewhere-else')).status, 404)
 })
 
-test('a place the app made is named by its pinyin', async () => {
+test('a Moment of words alone is published under its first words', async () => {
   const { env } = setUpWithData()
-  const made = await call(env, 'PUT', '/v1/places/p-01k7zq9x3m4n5p6q7r8s9t0v1w', {
-    ...owner,
-    body: { name: '测试码头', latitude: 1.234, longitude: 5.678 },
-  })
+  const { body } = await commit(env, { moments: [ferryMoment] })
+  const order = nextOrder('2026-10-02')
 
-  assert.equal(made.status, 201)
-  assert.equal(made.body.id, 'ce-shi-ma-tou')
-  assert.equal((await get(env, '/v1/places/ce-shi-ma-tou')).body.name, '测试码头')
+  assert.equal(
+    body.moments[0].published.id,
+    `2026/10/02-${String(order).padStart(2, '0')}-hello-world-from-the-ferry`,
+  )
 })
 
-test('a Moment of words alone saves and publishes', async () => {
-  const { env } = setUpWithData()
-  const words = { ...dockDraft(), places: ['nanjing'], media: [] }
-  const saved = await call(env, 'PUT', `/v1/moments/${words.uid}`, { ...owner, body: words })
-  const published = await call(env, 'POST', `/v1/moments/${words.uid}/publish`, owner)
-
-  assert.equal(saved.status, 201)
-  assert.equal(published.status, 200)
-  assert.match(published.body.published.id, /^\d{4}\/\d{2}\/\d{2}-\d{2}-nanjing$/)
-})
-
-test('a draft is the owner’s until it publishes, with its media moved under its id', async () => {
+test('a Moment publishes with its media moved under its id, once the originals are uploaded', async () => {
   const { bucket, env } = setUpWithData()
   const draft = dockDraft()
   const [item] = draft.media
-
-  await saveTestDock(env)
-
-  const saved = await call(env, 'PUT', `/v1/moments/${draft.uid}`, { ...owner, body: draft })
-
-  assert.equal(saved.status, 201)
-  assert.equal((await get(env, `/v1/moments/${draft.uid}`)).status, 404)
-  assert.deepEqual((await get(env, `/v1/moments/${draft.uid}`, owner)).body, saved.body)
-
-  const early = await call(env, 'POST', `/v1/moments/${draft.uid}/publish`, owner)
+  const early = await commit(env, { places: { [made]: dock }, moments: [draft] })
 
   assert.equal(early.status, 422)
   assert.match(early.body.error, new RegExp(`${item.uid} \\(image\\)`))
+  assert.equal((await get(env, `/v1/moments/${draft.uid}`, owner)).status, 404)
 
   const uploaded = await upload(env, draft.uid, item.uid, 'image', photo, 'image/jpeg')
 
   assert.equal(uploaded.status, 201)
   assert.equal(uploaded.body.bytes, photo.byteLength)
 
-  const published = await call(env, 'POST', `/v1/moments/${draft.uid}/publish`, owner)
+  const { status, body } = await publishDock(env)
+  const [published] = body.moments
   const order = nextOrder('2026-10-01')
   const id = `2026/10/01-${String(order).padStart(2, '0')}-nanjing`
 
-  assert.equal(published.status, 200)
-  assert.deepEqual(published.body.published, {
-    id,
-    slug: 'nanjing',
-    order,
-    at: published.body.published.at,
-  })
-  assert.deepEqual(published.body.media[0].published, {
+  assert.equal(status, 200)
+  assert.deepEqual(published.places, ['nanjing', 'ce-shi-ma-tou'])
+  assert.deepEqual(published.published, { id, slug: 'nanjing', order, at: published.published.at })
+  assert.deepEqual(published.media[0].published, {
     key: `moments/${id}/nanjing.jpg`,
     contentType: 'image/jpeg',
     bytes: photo.byteLength,
@@ -154,12 +133,16 @@ test('a draft is the owner’s until it publishes, with its media moved under it
   })
   assert.ok(bucket.objects.has(`moments/${id}/nanjing.jpg`))
   assert.ok(!bucket.objects.has(uploaded.body.key))
-  assert.deepEqual((await get(env, `/v1/moments/${draft.uid}`)).body, published.body)
+  assert.deepEqual((await get(env, `/v1/moments/${draft.uid}`)).body, published)
 })
 
-test('a published Moment keeps its id and blocks, and publishes new media as it saves', async () => {
+test('a published Moment keeps its id and blocks, and publishes new media as it changes', async () => {
   const { env } = setUpWithData()
-  const { body: published } = await publishDock(env)
+  const {
+    body: {
+      moments: [published],
+    },
+  } = await publishDock(env)
   const added = {
     uid: '01M3VDBHC1HW3W1Z58ARMSH299',
     type: 'live-photo',
@@ -176,45 +159,46 @@ test('a published Moment keeps its id and blocks, and publishes new media as it 
       added,
     ],
   }
-  const missing = await call(env, 'PUT', `/v1/moments/${dockMoment.uid}`, { ...owner, body: edit })
 
-  assert.equal(missing.status, 422)
+  assert.equal(
+    (await commit(env, { moments: [edit] })).status,
+    422,
+    'its new media are not uploaded',
+  )
 
   await upload(env, dockMoment.uid, added.uid, 'image', photo, 'image/jpeg')
   await upload(env, dockMoment.uid, added.uid, 'video', motion, 'video/quicktime')
 
-  const saved = await call(env, 'PUT', `/v1/moments/${dockMoment.uid}`, { ...owner, body: edit })
+  const { status, body } = await commit(env, { moments: [edit] })
+  const [saved] = body.moments
   const id = published.published.id
 
-  assert.equal(saved.status, 200, JSON.stringify(saved.body))
-  assert.equal(saved.body.text, edit.text)
-  assert.deepEqual(saved.body.published, published.published)
-  assert.deepEqual(saved.body.media[0], published.media[0])
-  assert.equal(saved.body.media[1].published.key, `moments/${id}/nanjing-2.jpg`)
-  assert.equal(saved.body.media[1].published.video.key, `moments/${id}/nanjing-2.mov`)
+  assert.equal(status, 200, JSON.stringify(body))
+  assert.equal(saved.text, edit.text)
+  assert.deepEqual(saved.published, published.published)
+  assert.deepEqual(saved.media[0], published.media[0])
+  assert.equal(saved.media[1].published.key, `moments/${id}/nanjing-2.jpg`)
+  assert.equal(saved.media[1].published.video.key, `moments/${id}/nanjing-2.mov`)
   assert.equal(
     (await upload(env, dockMoment.uid, added.uid, 'image', photo, 'image/jpeg')).status,
     409,
   )
 })
 
-test('a Moment on a day with others takes the next order and its proposed slug', async () => {
-  const { env } = setUpWithData()
-
-  await call(env, 'PUT', `/v1/moments/${ferryMoment.uid}`, { ...owner, body: ferryMoment })
-
-  const { body } = await call(env, 'POST', `/v1/moments/${ferryMoment.uid}/publish`, owner)
-  const order = nextOrder('2026-10-02')
-
-  assert.equal(body.published.id, `2026/10/02-${String(order).padStart(2, '0')}-ferry-morning`)
-})
-
-test('deleting hands the change feed a removal and calls the deploy hook', async () => {
-  const { env } = setUpWithData()
-  const calls = []
+test('the changes go as one write: places, Moments published, deletions, the site built once', async () => {
+  const { bucket, env } = setUpWithData()
   const pending = []
+  const calls = []
   const context = { waitUntil: (promise) => pending.push(promise) }
   const realFetch = globalThis.fetch
+  const draft = dockDraft()
+  const words = { ...ferryMoment, occurredAt: draft.occurredAt, places: [made] }
+  const target = snapshot.moments.find((moment) => moment.published && !moment.hidden)
+  const changes = {
+    places: { [made]: dock },
+    moments: [draft, words],
+    deleted: [target.uid, '01M3VDBHC1HW3W1Z58ARMSH2ZZ'],
+  }
 
   env.DEPLOY_HOOK_URL = 'https://deploy.test/hook'
   globalThis.fetch = async (url, init) => {
@@ -223,89 +207,128 @@ test('deleting hands the change feed a removal and calls the deploy hook', async
   }
 
   try {
-    const { body: before } = await get(env, '/v1/moments?limit=1')
-    const target = snapshot.moments.find((moment) => moment.published && !moment.hidden)
-    const removed = await call(env, 'DELETE', `/v1/moments/${target.uid}`, { ...owner, context })
+    assert.equal((await commit(env, changes)).status, 422, 'the photo is not uploaded yet')
+    assert.equal(
+      (await get(env, '/v1/places/ce-shi-ma-tou')).status,
+      404,
+      'and nothing was written',
+    )
+    assert.equal((await get(env, `/v1/moments/${target.uid}`)).status, 200)
+
+    await upload(env, draft.uid, draft.media[0].uid, 'image', photo, 'image/jpeg')
+
+    const before = (await get(env, '/v1/moments?limit=1')).body.revision
+    const applied = await commit(env, changes, { context })
+    const order = nextOrder('2026-10-01')
 
     await Promise.all(pending)
 
-    assert.equal(removed.status, 204)
-    assert.deepEqual(calls, [['https://deploy.test/hook', 'POST']])
+    assert.equal(applied.status, 200, JSON.stringify(applied.body))
+    assert.deepEqual(applied.body.places, { [made]: 'ce-shi-ma-tou' })
+    assert.deepEqual(applied.body.deleted, [target.uid], 'one already gone is left out')
+    assert.deepEqual(
+      applied.body.moments.map((moment) => [moment.places, moment.published.id]),
+      [
+        [['nanjing', 'ce-shi-ma-tou'], `2026/10/01-${String(order).padStart(2, '0')}-nanjing`],
+        [['ce-shi-ma-tou'], `2026/10/01-${String(order + 1).padStart(2, '0')}-ce-shi-ma-tou`],
+      ],
+      'two Moments on one day take the next two orders',
+    )
+    assert.ok(bucket.objects.has(applied.body.moments[0].media[0].published.key))
+    assert.deepEqual(calls, [['https://deploy.test/hook', 'POST']], 'the site is built again once')
     assert.equal((await get(env, `/v1/moments/${target.uid}`)).status, 404)
 
-    const { body: after } = await get(env, `/v1/moments?since=${before.revision}`)
+    const { body: after } = await get(env, `/v1/moments?since=${before}`)
 
     assert.deepEqual(after.deleted, [target.uid])
-    assert.equal((await call(env, 'DELETE', `/v1/moments/${target.uid}`, owner)).status, 404)
+    assert.deepEqual(
+      after.moments
+        .map((moment) => moment.uid)
+        .sort((first, second) => first.localeCompare(second)),
+      [draft.uid, words.uid].sort((first, second) => first.localeCompare(second)),
+    )
 
-    const draft = await call(env, 'PUT', `/v1/moments/${ferryMoment.uid}`, {
-      ...owner,
-      body: ferryMoment,
-      context,
-    })
+    const { body: exported } = await get(env, '/v1/export', owner)
 
-    await Promise.all(pending)
-
-    assert.equal(draft.status, 201)
-    assert.equal(calls.length, 1, 'saving a draft leaves the site alone')
+    assert.equal(exported.revision, before + 1, 'one write')
+    assert.equal(exported.manifest.generator, 'hyoban.cc api')
+    assert.notEqual(exported.manifest.updatedAt, snapshot.manifest.updatedAt)
   } finally {
     globalThis.fetch = realFetch
   }
 })
 
-test('trips name known places, and every write is stamped in the manifest', async () => {
+test('changes that don’t fit are turned down whole', async () => {
   const { env } = setUpWithData()
-  const trip = fixture('trips/2026-fixture-trip.json')
-  const unknown = await call(env, 'PUT', `/v1/trips/${trip.id}`, { ...owner, body: trip })
-  const renamed = {
-    ...trip,
-    waypoints: [{ ...trip.waypoints[0], place: 'nanjing' }],
-    straightLegs: [{ ...trip.straightLegs[0], from: 'nanjing', to: 'test-dock' }],
-  }
+  const status = async (body) => (await commit(env, body)).status
+  const words = { ...ferryMoment, places: ['nanjing'] }
 
-  await saveTestDock(env)
-
-  const saved = await call(env, 'PUT', `/v1/trips/${trip.id}`, { ...owner, body: renamed })
-  const again = await call(env, 'PUT', `/v1/trips/${trip.id}`, { ...owner, body: renamed })
-  const { body: exported } = await get(env, '/v1/export', owner)
-
-  assert.equal(unknown.status, 422)
-  assert.match(unknown.body.error, /nanjing-2/)
-  assert.equal(saved.status, 201)
-  assert.equal(again.status, 200)
-  assert.deepEqual((await get(env, `/v1/trips/${trip.id}`)).body, saved.body)
-  assert.equal(exported.manifest.generator, 'hyoban.cc api')
-  assert.notEqual(exported.manifest.updatedAt, snapshot.manifest.updatedAt)
+  assert.equal(await status({ moments: {} }), 422)
+  assert.equal(await status({ moments: [{ text: 1 }] }), 422)
+  assert.equal(await status({ places: { 'Not An Id': snapshot.places.nanjing } }), 422)
+  assert.equal(
+    await status({ moments: [{ ...words, places: ['nowhere'] }] }),
+    422,
+    'an unknown place',
+  )
+  assert.equal(await status({ moments: [words, words] }), 422, 'one Moment twice')
+  assert.equal(await status({ moments: [words], deleted: [words.uid] }), 422, 'saved and deleted')
+  assert.equal((await call(env, 'POST', '/v1/changes', { body: { moments: [words] } })).status, 401)
+  assert.equal((await get(env, `/v1/moments/${words.uid}`, owner)).status, 404)
 })
 
-test('writes need the token, a record that fits, and a type the API takes', async () => {
+test('an original needs the token and a type the API takes', async () => {
   const { env } = setUpWithData()
-  const status = async (...args) => (await call(...args)).status
+  const [item] = dockMoment.media
 
-  assert.equal(await status(env, 'PUT', '/v1/places/test-dock', { body: {} }), 401)
   assert.equal(
-    await status(env, 'PUT', `/v1/moments/${ferryMoment.uid}`, { ...owner, body: { text: 1 } }),
-    422,
+    (
+      await call(env, 'PUT', `/v1/moments/${dockMoment.uid}/media/${item.uid}/image`, {
+        body: photo,
+        headers: { 'Content-Type': 'image/jpeg' },
+      })
+    ).status,
+    401,
   )
   assert.equal(
-    await status(env, 'PUT', `/v1/moments/${dockMoment.uid}`, { ...owner, body: ferryMoment }),
-    422,
-    'the uid in the path and the record disagree',
-  )
-  assert.equal(
-    await status(env, 'PUT', `/v1/moments/${dockMoment.uid}`, { ...owner, body: dockMoment }),
-    422,
-    'its places are not known yet',
-  )
-  assert.equal(
-    (await upload(env, dockMoment.uid, dockMoment.media[0].uid, 'image', photo, 'text/plain'))
-      .status,
+    (await upload(env, dockMoment.uid, item.uid, 'image', photo, 'text/plain')).status,
     415,
   )
   assert.equal(
-    (await upload(env, dockMoment.uid, dockMoment.media[0].uid, 'video', photo, 'image/jpeg'))
-      .status,
+    (await upload(env, dockMoment.uid, item.uid, 'video', photo, 'image/jpeg')).status,
     415,
+  )
+})
+
+test('the records are read, not written, one by one', async () => {
+  const { env } = setUpWithData()
+  const [place] = Object.keys(snapshot.places)
+
+  assert.equal(
+    (await call(env, 'PUT', `/v1/moments/${ferryMoment.uid}`, { ...owner, body: ferryMoment }))
+      .status,
+    405,
+  )
+  assert.equal(
+    (await call(env, 'DELETE', `/v1/moments/${snapshot.moments[0].uid}`, owner)).status,
+    405,
+  )
+  assert.equal(
+    (await call(env, 'POST', `/v1/moments/${ferryMoment.uid}/publish`, owner)).status,
+    404,
+  )
+  assert.equal(
+    (await call(env, 'PUT', `/v1/places/${place}`, { ...owner, body: dock })).status,
+    405,
+  )
+  assert.equal(
+    (
+      await call(env, 'PUT', `/v1/trips/${snapshot.trips[0].id}`, {
+        ...owner,
+        body: snapshot.trips[0],
+      })
+    ).status,
+    405,
   )
 })
 
@@ -324,7 +347,7 @@ test('a deploy hook that turns the call down is logged', async () => {
   try {
     const target = snapshot.moments.find((moment) => moment.published)
 
-    await call(env, 'DELETE', `/v1/moments/${target.uid}`, { ...owner, context })
+    await commit(env, { deleted: [target.uid] }, { context })
     await Promise.all(pending)
 
     assert.deepEqual(logged, [['The deploy hook answered', 404, 'no such hook']])
@@ -332,77 +355,4 @@ test('a deploy hook that turns the call down is logged', async () => {
     globalThis.fetch = realFetch
     console.error = realError
   }
-})
-
-test('the changes kept on the phone go as one write: places, Moments published, deletions', async () => {
-  const { bucket, env } = setUpWithData()
-  const pending = []
-  const context = { waitUntil: (promise) => pending.push(promise) }
-  const made = 'p-01k7zq9x3m4n5p6q7r8s9t0v1w'
-  const draft = { ...dockMoment, places: ['nanjing', made] }
-  const words = { ...dockDraft(), uid: '01M3VDBHC1HW3W1Z58ARMSH2AA', places: [made], media: [] }
-  const target = snapshot.moments.find((moment) => moment.published)
-  const changes = {
-    places: { [made]: { name: '测试码头', latitude: 1.234, longitude: 5.678 } },
-    moments: [draft, words],
-    deleted: [target.uid, '01M3VDBHC1HW3W1Z58ARMSH2ZZ'],
-  }
-
-  const early = await call(env, 'POST', '/v1/changes', { ...owner, body: changes })
-
-  assert.equal(early.status, 422, 'the photo is not uploaded yet')
-  assert.equal((await get(env, '/v1/places/ce-shi-ma-tou')).status, 404, 'and nothing was written')
-  assert.equal((await get(env, `/v1/moments/${target.uid}`)).status, 200)
-
-  await upload(env, draft.uid, draft.media[0].uid, 'image', photo, 'image/jpeg')
-
-  const before = (await get(env, '/')).body.revision
-  const applied = await call(env, 'POST', '/v1/changes', { ...owner, body: changes, context })
-  const order = nextOrder('2026-10-01')
-
-  assert.equal(applied.status, 200, JSON.stringify(applied.body))
-  assert.deepEqual(applied.body.places, { [made]: 'ce-shi-ma-tou' })
-  assert.deepEqual(applied.body.deleted, [target.uid], 'one already gone is left out')
-  assert.deepEqual(
-    applied.body.moments.map((moment) => [moment.places, moment.published.id]),
-    [
-      [['nanjing', 'ce-shi-ma-tou'], `2026/10/01-${String(order).padStart(2, '0')}-nanjing`],
-      [['ce-shi-ma-tou'], `2026/10/01-${String(order + 1).padStart(2, '0')}-ce-shi-ma-tou`],
-    ],
-    'two drafts on one day take the next two orders',
-  )
-  assert.ok(bucket.objects.has(applied.body.moments[0].media[0].published.key))
-  assert.equal((await get(env, '/')).body.revision, before + 1, 'one write')
-  assert.equal(pending.length, 1, 'the site is built again once')
-  assert.equal((await get(env, `/v1/moments/${target.uid}`)).status, 404)
-  assert.deepEqual((await get(env, `/v1/moments/${words.uid}`)).body, applied.body.moments[1])
-
-  const edit = { ...applied.body.moments[1], text: '改过了' }
-  const again = await call(env, 'POST', '/v1/changes', { ...owner, body: { moments: [edit] } })
-
-  assert.equal(again.status, 200)
-  assert.equal(again.body.moments[0].text, '改过了')
-  assert.deepEqual(
-    again.body.moments[0].published,
-    applied.body.moments[1].published,
-    'a published Moment keeps its id',
-  )
-})
-
-test('changes that don’t fit are turned down whole', async () => {
-  const { env } = setUpWithData()
-  const status = async (body) => (await call(env, 'POST', '/v1/changes', { ...owner, body })).status
-  const words = { ...dockDraft(), places: ['nanjing'], media: [] }
-
-  assert.equal(await status({ moments: {} }), 422)
-  assert.equal(await status({ places: { 'Not An Id': snapshot.places.nanjing } }), 422)
-  assert.equal(
-    await status({ moments: [{ ...words, places: ['nowhere'] }] }),
-    422,
-    'an unknown place',
-  )
-  assert.equal(await status({ moments: [words, words] }), 422, 'one Moment twice')
-  assert.equal(await status({ moments: [words], deleted: [words.uid] }), 422, 'saved and deleted')
-  assert.equal((await call(env, 'POST', '/v1/changes', { body: { moments: [words] } })).status, 401)
-  assert.equal((await get(env, `/v1/moments/${words.uid}`, owner)).status, 404)
 })

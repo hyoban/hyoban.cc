@@ -10,7 +10,7 @@ import { readJson } from '../../src/data/store.ts'
 import { executeSql } from './d1.mjs'
 
 // The API holds the records and data/ backs them up, so a script that writes data/
-// itself, like data:publish or the create-moment skill, first refreshes data/ from the
+// itself, like the create-moment skill, first refreshes data/ from the
 // API and afterwards pushes what it wrote back. Pushing merges: it writes only the
 // records it names, and the places they name, and never removes anything.
 

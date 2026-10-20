@@ -14,17 +14,7 @@ import {
 } from './database.ts'
 import { error, HttpError, json, readBody } from './http.ts'
 import { createRouteFetcher, fillRoutes, readTripRoutes } from './routes.ts'
-import {
-  applyChanges,
-  deleteMoment,
-  publishMoment,
-  saveMoment,
-  savePlace,
-  saveTrip,
-  uploadMedia,
-  type WriteContext,
-  type WriteResult,
-} from './writes.ts'
+import { applyChanges, uploadMedia, type WriteContext, type WriteResult } from './writes.ts'
 
 // The API. Reads are public except drafts, which only the owner sees, and the full
 // export; writes are the owner's. Records come back exactly as stored, in the shape
@@ -131,25 +121,9 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
       }
 
       if (rest.length === 0) {
-        switch (method) {
-          case 'GET':
-            return found(await readMoment(db, key, { drafts: owner }))
-          case 'PUT': {
-            const body = await readBody(request)
-
-            return write((context) => saveMoment(context, key, body))
-          }
-          case 'DELETE':
-            return write((context) => deleteMoment(context, key))
-          default:
-            return notAllowed('GET, PUT, DELETE')
-        }
-      }
-
-      if (rest.length === 1 && rest[0] === 'publish') {
-        return method === 'POST'
-          ? write((context) => publishMoment(context, key))
-          : notAllowed('POST')
+        return method === 'GET'
+          ? found(await readMoment(db, key, { drafts: owner }))
+          : notAllowed('GET')
       }
 
       const [media, mediaUid, part, ...more] = rest
@@ -189,17 +163,7 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
         return notFound()
       }
 
-      switch (method) {
-        case 'GET':
-          return found(await readPlace(db, key))
-        case 'PUT': {
-          const body = await readBody(request)
-
-          return write((context) => savePlace(context, key, body))
-        }
-        default:
-          return notAllowed('GET, PUT')
-      }
+      return method === 'GET' ? found(await readPlace(db, key)) : notAllowed('GET')
     }
     case 'trips': {
       if (rest.length > 0) {
@@ -216,17 +180,7 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
         return notFound()
       }
 
-      switch (method) {
-        case 'GET':
-          return found(await readTrip(db, key))
-        case 'PUT': {
-          const body = await readBody(request)
-
-          return write((context) => saveTrip(context, key, body))
-        }
-        default:
-          return notAllowed('GET, PUT')
-      }
+      return method === 'GET' ? found(await readTrip(db, key)) : notAllowed('GET')
     }
     case 'routes': {
       if (key !== undefined) {

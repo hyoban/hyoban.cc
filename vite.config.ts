@@ -9,10 +9,15 @@ export default defineConfig({
   },
   fmt: {
     // data/ is written by the API's backup and the scripts in their own canonical JSON,
-    // and the Android app under apps/android is formatted by Android Studio.
-    ignorePatterns: ['data/**', 'apps/android/**'],
+    // the Android app under apps/android is formatted by Android Studio, and
+    // .claude/worktrees holds other checkouts of the repository.
+    ignorePatterns: ['data/**', 'apps/android/**', '.claude/**'],
     singleQuote: true,
     semi: false,
+  },
+  test: {
+    // .claude/worktrees holds other checkouts of the repository, each with its own tests.
+    exclude: ['**/node_modules/**', '**/.git/**', '.claude/**'],
   },
   lint: {
     jsPlugins: [{ name: 'vite-plus', specifier: 'vite-plus/oxlint-plugin' }],

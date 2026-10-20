@@ -178,7 +178,6 @@
     <string name="message_published">Published</string>
     <string name="error_publish">Couldn\'t publish: %1$s</string>
     <string name="confirm_delete_published">This Moment will be deleted from the site when you publish your changes; until then it can be undone.</string>
-    <string name="error_delete">Couldn\'t delete: %1$s</string>
     <string name="note_published">Saving keeps the change on this phone; it reaches the site when you publish your changes.</string>
     <string name="note_local_then_publish">Saving keeps it on this phone; it reaches the site when you publish your changes.</string>
     <string name="label_unpublished_change">Unpublished change</string>
