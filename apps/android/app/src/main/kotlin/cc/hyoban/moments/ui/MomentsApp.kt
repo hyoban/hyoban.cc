@@ -1,6 +1,7 @@
 package cc.hyoban.moments.ui
 
 import android.content.Intent
+import android.net.Uri
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
@@ -170,7 +171,7 @@ private enum class Tab(val route: Any, val type: KClass<*>, val label: Int, val 
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun MomentsApp(container: AppContainer) {
+fun MomentsApp(container: AppContainer, start: Any = Feed) {
     val navController = rememberNavController()
     val entry by navController.currentBackStackEntryAsState()
     val current = Tab.entries.firstOrNull { tab -> entry?.destination?.hasRoute(tab.type) == true }
@@ -306,7 +307,7 @@ fun MomentsApp(container: AppContainer) {
                     ) {
                         NavHost(
                             navController = navController,
-                            startDestination = Feed,
+                            startDestination = start,
                             // A back swipe plays going back as it came, under the finger: a Moment
                             // shrinks into its card, a pushed page slides back, a tab slides over.
                             predictivePopEnterTransition = { _ -> enter(forward = false) },
@@ -548,6 +549,23 @@ private val RAIL_CLEARANCE = Space.m + RAIL_WIDTH + Space.s
  * `adb shell am start -d` as much as from anywhere else.
  */
 const val DEEP_LINK_SCHEME = "moments"
+
+/** The page a link opens, `moments://moment/{uid}` and the rest; null for one the app has no page for. */
+fun routeOf(link: Uri): Any? {
+    if (link.scheme != DEEP_LINK_SCHEME) return null
+    val id = link.pathSegments.firstOrNull()
+    return when (link.host) {
+        "moments" -> Feed
+        "map" -> Atlas
+        "trips" -> Trips
+        "settings" -> Preferences
+        "moment" -> id?.let(::Moment)
+        "trip" -> id?.let(::Trip)
+        "day" -> id?.let(::Day)
+        "place" -> id?.let(::PlaceMoments)
+        else -> null
+    }
+}
 
 private inline fun <reified T : Any> NavGraphBuilder.screen(
     link: String? = null,
