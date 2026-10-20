@@ -34,6 +34,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.animation.core.snap
 import kotlin.math.roundToInt
+import kotlin.math.abs
+import androidx.compose.ui.unit.lerp
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.layout.offset
@@ -212,6 +216,15 @@ val NAV_HEIGHT = TAB_HEIGHT + DOCK_PADDING * 2
 /** How wide the app's three tabs are along the bottom. */
 val NAV_WIDTH = TAB_WIDTH * 3 + DOCK_PADDING * 2
 
+/** How big the tabs are folded into a circle while a list is read on. */
+private val NAV_FOLDED = 56.dp
+
+/** How the tabs fold into their circle and open out of it, and move aside to do so. */
+val NAV_FOLD = spring<Float>(dampingRatio = 0.8f, stiffness = Spring.StiffnessMediumLow)
+
+/** How far the platter stretches at most as it moves, of its length. */
+private const val MAX_STRETCH = 0.15f
+
 /** The room between the floating tabs and a button standing beside them. */
 val NAV_ACCESSORY_GAP = Space.m
 
@@ -231,10 +244,22 @@ val RAIL_HEIGHT = RAIL_TAB_HEIGHT * 3 + RAIL_PADDING * 2
  * neutral platter, a level above the dock, sits under the chosen one, whose icon and name
  * take the primary colour. The platter follows a finger dragged along the dock, lifting a
  * little while held and springing to the tab it is let go nearest, with a fling carrying
- * it on, so tabs can be scrubbed through as well as tapped.
+ * it on, so tabs can be scrubbed through as well as tapped. Moving, it stretches the way
+ * it goes and thins a little, as a drop would, more the faster it goes.
+ *
+ * [collapsed], along the bottom, the dock folds into a circle holding the chosen tab's
+ * icon, the chosen tab sliding into it as the others fade; tapped, it [onExpand]s.
  */
 @Composable
-fun FloatingNav(items: List<NavItem>, selected: Int, onSelect: (Int) -> Unit, modifier: Modifier = Modifier, vertical: Boolean = false) {
+fun FloatingNav(
+    items: List<NavItem>,
+    selected: Int,
+    onSelect: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+    vertical: Boolean = false,
+    collapsed: Boolean = false,
+    onExpand: () -> Unit = {},
+) {
     val density = LocalDensity.current
     // Down the side, the tabs stack, and the platter and a drag run up and down.
     val tabWidth = if (vertical) RAIL_TAB_WIDTH else TAB_WIDTH
@@ -246,6 +271,9 @@ fun FloatingNav(items: List<NavItem>, selected: Int, onSelect: (Int) -> Unit, mo
     val scope = rememberCoroutineScope()
     val travel = spring<Float>(dampingRatio = 0.75f, stiffness = Spring.StiffnessMediumLow)
     val lift by animateFloatAsState(if (dragging) 1.08f else 1f, spring(dampingRatio = 0.6f, stiffness = Spring.StiffnessMedium), label = "tab lift")
+    // Under a finger, how fast it last moved, settling back as it slows or stops.
+    val dragStretch = remember { Animatable(0f) }
+    val fold by animateFloatAsState(if (collapsed && !vertical) 1f else 0f, NAV_FOLD, label = "tab fold")
     // Off a drag, the platter goes where the chosen tab is.
     LaunchedEffect(selected) { if (!dragging) position.animateTo(selected * step, travel) }
     // While dragged, the tab under the platter shows as chosen.
@@ -253,14 +281,22 @@ fun FloatingNav(items: List<NavItem>, selected: Int, onSelect: (Int) -> Unit, mo
 
     val dark = LocalDarkTheme.current
     val dock = SurfaceLevel.floating(dark)
+    val width = TAB_WIDTH * items.size + DOCK_PADDING * 2
     Surface(
         shape = Corners.full,
         color = dock.fill(),
         shadowElevation = 6.dp,
-        modifier = modifier.draggable(
+        modifier = modifier.then(
+            if (vertical) Modifier else Modifier.size(lerp(width, NAV_FOLDED, fold), lerp(NAV_HEIGHT, NAV_FOLDED, fold)),
+        ).draggable(
+            enabled = !collapsed,
             orientation = if (vertical) Orientation.Vertical else Orientation.Horizontal,
             state = rememberDraggableState { delta ->
                 scope.launch { position.snapTo((position.value + delta).coerceIn(0f, last * step)) }
+                scope.launch {
+                    dragStretch.snapTo(maxOf(dragStretch.value, (abs(delta) / step * 2).coerceAtMost(MAX_STRETCH)))
+                    dragStretch.animateTo(0f, spring(stiffness = Spring.StiffnessMedium))
+                }
             },
             onDragStarted = { dragging = true },
             onDragStopped = { velocity ->
@@ -273,14 +309,29 @@ fun FloatingNav(items: List<NavItem>, selected: Int, onSelect: (Int) -> Unit, mo
         ),
     ) {
         CompositionLocalProvider(LocalSurfaceLevel provides dock) {
-            Box(Modifier.padding(if (vertical) RAIL_PADDING else DOCK_PADDING)) {
+            // The chosen tab's centre, drawn towards the middle of the circle as it folds.
+            val toMiddle = with(density) { (DOCK_PADDING + TAB_WIDTH * (selected + 0.5f) - NAV_FOLDED / 2).toPx() } * fold
+            Box(
+                Modifier
+                    .wrapContentWidth(Alignment.Start, unbounded = true)
+                    .graphicsLayer {
+                        translationX = -toMiddle
+                        alpha = (1f - fold * 2f).coerceIn(0f, 1f)
+                    }
+                    .padding(if (vertical) RAIL_PADDING else DOCK_PADDING),
+            ) {
                 Box(
                     Modifier
                         .offset { if (vertical) IntOffset(0, position.value.roundToInt()) else IntOffset(position.value.roundToInt(), 0) }
                         .size(tabWidth, tabHeight)
                         .graphicsLayer {
-                            scaleX = lift
-                            scaleY = lift
+                            // Off a finger, how fast it travels to its tab.
+                            val travelling = (abs(position.velocity) / (step * 40)).coerceAtMost(MAX_STRETCH)
+                            val stretch = maxOf(dragStretch.value, travelling)
+                            val along = lift * (1f + stretch)
+                            val across = lift * (1f - stretch * 0.4f)
+                            scaleX = if (vertical) across else along
+                            scaleY = if (vertical) along else across
                         }
                         .background(dock.raised.fill(), Corners.full),
                 )
@@ -296,7 +347,7 @@ fun FloatingNav(items: List<NavItem>, selected: Int, onSelect: (Int) -> Unit, mo
                             Modifier
                                 .size(tabWidth, tabHeight)
                                 .clip(Corners.full)
-                                .clickable(interactionSource = null, indication = null) { onSelect(index) }
+                                .clickable(enabled = !collapsed, interactionSource = null, indication = null) { onSelect(index) }
                                 .semantics {
                                     role = Role.Tab
                                     this.selected = index == selected
@@ -312,6 +363,19 @@ fun FloatingNav(items: List<NavItem>, selected: Int, onSelect: (Int) -> Unit, mo
                                 modifier = Modifier.padding(top = 2.dp),
                             )
                         }
+                    }
+                }
+            }
+            if (fold > 0f) {
+                items.getOrNull(selected)?.let { item ->
+                    // Over the tabs, so a tap on the circle opens them rather than reaching one.
+                    Box(
+                        Modifier.fillMaxSize()
+                            .graphicsLayer { alpha = (fold * 2f - 1f).coerceIn(0f, 1f) }
+                            .then(if (collapsed) Modifier.clickable(onClickLabel = item.label, onClick = onExpand) else Modifier),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(item.selectedIcon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                     }
                 }
             }
