@@ -49,6 +49,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AddPhotoAlternate
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.DeleteOutline
+import androidx.compose.material.icons.rounded.Error
 import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material3.AlertDialog
@@ -116,6 +117,7 @@ import cc.hyoban.moments.data.spec.MediaType
 import cc.hyoban.moments.data.spec.MomentMedia
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
+import cc.hyoban.moments.ui.components.isCompactHeight
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.PageWidth
 import cc.hyoban.moments.ui.components.SubPage
@@ -352,6 +354,12 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
                                 unfocusedIndicatorColor = Color.Transparent,
                             ),
                             isError = emptyError,
+                            // The error marked by an icon as well as the colour, as Material 3 asks of a field in error.
+                            trailingIcon = if (emptyError) {
+                                { Icon(Icons.Rounded.Error, contentDescription = null, tint = MaterialTheme.colorScheme.error) }
+                            } else {
+                                null
+                            },
                             supportingText = if (emptyError) {
                                 { Text(stringResource(R.string.error_empty_moment)) }
                             } else {
@@ -642,7 +650,10 @@ private fun TimeDialog(time: OffsetDateTime, onDismiss: () -> Unit, onPick: (Off
     )
     val clock = rememberTimePickerState(time.hour, time.minute, is24Hour = true)
     var onClock by remember { mutableStateOf(false) }
-    var mode by remember { mutableStateOf(TimePickerDisplayMode.Picker) }
+    // Typing the time where the window is too short for the dial, a phone on its side, as
+    // Material 3 has a time picker fall back to its input rather than scroll.
+    val short = isCompactHeight()
+    var mode by remember { mutableStateOf(if (short) TimePickerDisplayMode.Input else TimePickerDisplayMode.Picker) }
     val day = dates.selectedDateMillis?.let { Instant.ofEpochMilli(it).atOffset(ZoneOffset.UTC).toLocalDate() } ?: time.toLocalDate()
 
     if (!onClock) {

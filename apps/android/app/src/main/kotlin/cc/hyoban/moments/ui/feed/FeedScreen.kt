@@ -464,7 +464,8 @@ private fun ViewSwitch(calendar: Boolean, onChange: (Boolean) -> Unit) {
 @Composable
 private fun NewMomentButton(onClick: () -> Unit, inRail: Boolean = false, expanded: Boolean = true) {
     val label = stringResource(R.string.action_new_moment)
-    Tooltip(label) {
+    // Named by a tooltip only while it is an icon alone: its label out, it says what it does.
+    Tooltip(label, enabled = inRail || !expanded) {
         if (inRail) {
             FloatingActionButton(
                 onClick = onClick,
@@ -477,6 +478,8 @@ private fun NewMomentButton(onClick: () -> Unit, inRail: Boolean = false, expand
             MediumExtendedFloatingActionButton(
                 onClick = onClick,
                 expanded = expanded,
+                // Material 3's medium FAB corner, continuous as the theme draws every other.
+                shape = MaterialTheme.shapes.largeIncreased,
                 icon = { Icon(Icons.Rounded.Edit, contentDescription = null, modifier = Modifier.size(FloatingActionButtonDefaults.MediumIconSize)) },
                 text = { Text(stringResource(R.string.label_write_moment)) },
                 modifier = Modifier.semantics { contentDescription = label }.testTag("new_moment"),
@@ -513,7 +516,7 @@ fun DayScreen(
             if (trip != null) {
                 Tooltip(trip.title, below = true) {
                     IconButton(onClick = { onTrip(trip.id) }, modifier = Modifier.testTag("day_trip")) {
-                        Icon(Symbols.LuggageOutlined, contentDescription = trip.title)
+                        Icon(Symbols.LuggageFilled, contentDescription = trip.title)
                     }
                 }
             }
@@ -555,7 +558,7 @@ fun PlaceScreen(
                 val onMapLabel = stringResource(R.string.action_show_on_map)
                 Tooltip(onMapLabel, below = true) {
                     IconButton(onClick = { onMap(id) }, modifier = Modifier.testTag("show_on_map")) {
-                        Icon(Symbols.MapOutlined, contentDescription = onMapLabel)
+                        Icon(Symbols.MapFilled, contentDescription = onMapLabel)
                     }
                 }
                 Tooltip(stringResource(R.string.action_navigate), below = true) {

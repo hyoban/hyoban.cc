@@ -16,6 +16,7 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeFlexibleTopAppBar
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MediumFlexibleTopAppBar
 import androidx.compose.material3.Text
@@ -94,10 +95,15 @@ private fun BarPage(
         animate(scroll.state.heightOffset, 0f) { value, _ -> scroll.state.heightOffset = value }
     }
     val refreshLabel = stringResource(R.string.action_refresh)
+    val smallTitle = MaterialTheme.typography.titleLarge.fontSize
     val titleText: @Composable () -> Unit = {
+        // Opened out, a long title wraps to a second line rather than being cut, the bar growing
+        // to hold it, as Material 3 has a flexible app bar's headline; folded into the small bar,
+        // drawn at its title size, it stays on one line.
+        val expanded = LocalTextStyle.current.fontSize > smallTitle
         Text(
             title,
-            maxLines = 1,
+            maxLines = if (expanded) 2 else 1,
             overflow = TextOverflow.Ellipsis,
             modifier = if (refresh == null) Modifier else Modifier.semantics {
                 customActions = listOf(CustomAccessibilityAction(refreshLabel) { refresh(); true })

@@ -77,7 +77,6 @@ import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.FullScreenDialog
 import cc.hyoban.moments.ui.components.Thumbnail
 import cc.hyoban.moments.ui.theme.Space
-import cc.hyoban.moments.ui.theme.fill
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -102,7 +101,6 @@ enum class ShareTarget(val tag: String, @param:StringRes val title: Int, val lim
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShareMenu(onSelect: (ShareTarget) -> Unit, onDismiss: () -> Unit) {
-    val level = AppColors.sheetLevel
     // A choice made ready by hand says so under its name, rather than in brackets after it.
     val choice: @Composable (String, String, String?, ImageVector, ShareTarget) -> Unit = { label, tag, app, icon, target ->
         ListItem(
@@ -119,7 +117,7 @@ fun ShareMenu(onSelect: (ShareTarget) -> Unit, onDismiss: () -> Unit) {
     }
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        containerColor = level.fill(),
+        containerColor = AppColors.sheet,
         // A window of its own, so its tags are resource ids again for `uiautomator`.
         modifier = Modifier.semantics { testTagsAsResourceId = true },
     ) {

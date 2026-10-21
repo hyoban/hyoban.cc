@@ -79,7 +79,7 @@ fun TripsScreen(container: AppContainer, onTrip: (String) -> Unit) {
                         Modifier.fillMaxSize(),
                         state = list,
                         contentPadding = PaddingValues(start = columns.margin, end = columns.margin, bottom = LocalBottomClearance.current + Space.xl),
-                        verticalArrangement = Arrangement.spacedBy(Space.m),
+                        verticalArrangement = Arrangement.spacedBy(Space.s),
                     ) {
                         // Two to a row where the width allows.
                         items(trips.chunked(columns.count), key = { it.first().id }) { row ->

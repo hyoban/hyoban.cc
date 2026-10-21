@@ -107,6 +107,7 @@ import cc.hyoban.moments.ui.LocalBottomClearance
 import cc.hyoban.moments.ui.LocalFabClearance
 import cc.hyoban.moments.ui.LocalNavAccessory
 import cc.hyoban.moments.ui.LocalRailSpace
+import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.READABLE_WIDTH
 import cc.hyoban.moments.ui.components.Thumbnail
 import cc.hyoban.moments.ui.components.Tooltip
@@ -338,7 +339,7 @@ fun MapScreen(
             // Drawn up to the status bar at most, so the whole sheet's top stays clear of it.
             modifier = Modifier.statusBarsPadding(),
             sheetPeekHeight = maxHeight * PLACE_SHEET_SHARE,
-            sheetContainerColor = SurfaceLevel.Floating.fill(),
+            sheetContainerColor = AppColors.sheet,
             containerColor = Color.Transparent,
             sheetContent = {
                 val id = shownPlace
@@ -546,7 +547,7 @@ private fun Legend(colors: Map<Int, Color>, trips: Boolean) {
 private fun RouteCard(trip: TripRecord, onOpen: () -> Unit) {
     Card(
         onClick = onOpen,
-        shape = MaterialTheme.shapes.large,
+        shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(containerColor = SurfaceLevel.Floating.fill()),
         elevation = CardDefaults.cardElevation(defaultElevation = Elevation.level2),
         modifier = Modifier.fillMaxWidth().padding(bottom = Space.s).sharedCard(tripCardKey(trip.id)).testTag("trip_${trip.id}"),

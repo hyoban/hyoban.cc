@@ -84,12 +84,9 @@ import cc.hyoban.moments.ui.components.Tooltip
 import cc.hyoban.moments.ui.map.MapTarget
 import cc.hyoban.moments.ui.map.PICK_ZOOM
 import cc.hyoban.moments.ui.map.PickerMap
-import cc.hyoban.moments.ui.theme.Corners
 import cc.hyoban.moments.ui.theme.Elevation
 import cc.hyoban.moments.ui.theme.Radius
 import cc.hyoban.moments.ui.theme.Space
-import cc.hyoban.moments.ui.theme.SurfaceLevel
-import cc.hyoban.moments.ui.theme.fill
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -174,7 +171,7 @@ internal fun PlacePicker(
         sheetPeekHeight = sheetHeight,
         sheetSwipeEnabled = false,
         sheetDragHandle = null,
-        sheetContainerColor = AppColors.page,
+        sheetContainerColor = AppColors.sheet,
         sheetShadowElevation = Elevation.level1,
         containerColor = AppColors.page,
         sheetContent = {
@@ -249,9 +246,10 @@ internal fun PlacePicker(
                                     }
                                 }
                             },
-                            shape = Corners.full,
-                            containerColor = SurfaceLevel.Floating.fill(),
-                            contentColor = MaterialTheme.colorScheme.primary,
+                            // Material 3's secondary container FAB, as surface FABs are no longer
+                            // recommended, less emphasized than the sheet's one action in colour.
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
                             // Named on the button, so it keeps its name while the indicator stands in for the icon.
                             modifier = Modifier.semantics { contentDescription = locateLabel }.testTag("locate"),
                         ) {

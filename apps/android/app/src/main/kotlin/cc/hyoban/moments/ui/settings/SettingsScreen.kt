@@ -20,6 +20,7 @@ import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.Cloud
 import androidx.compose.material.icons.rounded.CloudUpload
 import androidx.compose.material.icons.rounded.DarkMode
+import androidx.compose.material.icons.rounded.Error
 import androidx.compose.material.icons.rounded.Image
 import androidx.compose.material.icons.rounded.Key
 import androidx.compose.material.icons.rounded.LightMode
@@ -218,6 +219,10 @@ private fun AddressDialog(setting: Setting, title: String, onDismiss: () -> Unit
                     onValueChange = { field = it },
                     placeholder = { Text(setting.default) },
                     isError = !ok,
+                    // The error marked by an icon as well as the colour, as Material 3 asks of a field in error.
+                    trailingIcon = if (ok) null else {
+                        { Icon(Icons.Rounded.Error, contentDescription = null) }
+                    },
                     supportingText = {
                         Text(if (ok) stringResource(R.string.setting_default, setting.default) else stringResource(R.string.error_address))
                     },

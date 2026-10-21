@@ -67,12 +67,17 @@ object AppColors {
     val page: Color
         @Composable get() = SurfaceLevel.Page.fill()
 
-    /** A sheet over the page: a level up from it, in light and dark alike. */
+    /** What is in a sheet over the page sits as on a card: a level up from it, in light and dark alike. */
     val sheetLevel: SurfaceLevel = SurfaceLevel.Card
+
+    /** A sheet's own fill, bottom or side: Material 3's surface container low. */
+    val sheet: Color
+        @Composable get() = MaterialTheme.colorScheme.surfaceContainerLow
 }
 
 /**
- * A card one level above what it sits on, set apart by its fill rather than a border or a
+ * A card one level above what it sits on, Material 3's card corners, 12dp, set apart by its
+ * fill rather than a border or a
  * shadow; what is inside it is a level above it in turn. Pressed anywhere, its photos too,
  * it shows Material 3's pressed state layer, a ripple, without moving. With [onLongClick], a
  * long press, or a mouse's right click, opens what more it offers, named [onLongClickLabel];
@@ -94,7 +99,7 @@ fun PressableCard(
     val currentLongClick by rememberUpdatedState(onLongClick)
 
     Card(
-        shape = MaterialTheme.shapes.large,
+        shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(containerColor = level.fill(), contentColor = MaterialTheme.colorScheme.onSurface),
         modifier = modifier,
     ) {
@@ -146,7 +151,8 @@ fun Pill(text: String, modifier: Modifier = Modifier, icon: ImageVector? = null)
 
 /**
  * A chip tapped on its own, an [AssistChip] filled a level above what it sits on and
- * without a border: a place to open. 48dp to tap, as every Material chip is.
+ * without a border: a place to open. Material 3's chip shape, 8dp corners, and 48dp to
+ * tap, as every Material chip is.
  */
 @Composable
 fun NeutralChip(label: String, icon: ImageVector, onClick: () -> Unit, modifier: Modifier = Modifier) {
@@ -154,7 +160,6 @@ fun NeutralChip(label: String, icon: ImageVector, onClick: () -> Unit, modifier:
         onClick = onClick,
         label = { Text(label) },
         leadingIcon = { Icon(icon, contentDescription = null, modifier = Modifier.size(AssistChipDefaults.IconSize)) },
-        shape = Corners.full,
         border = null,
         colors = AssistChipDefaults.assistChipColors(
             containerColor = LocalSurfaceLevel.current.raised.fill(),

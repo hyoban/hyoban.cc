@@ -9,10 +9,16 @@ import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.Luggage
 import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material.icons.rounded.Share
-import androidx.compose.material3.DropdownMenu
+import androidx.collection.intListOf
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.material3.DropdownMenuGroup
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.DropdownMenuPopup
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MenuAnchorPosition
+import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -20,6 +26,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -33,12 +41,17 @@ import cc.hyoban.moments.ui.PlaceMoments
 import cc.hyoban.moments.ui.Trip
 import cc.hyoban.moments.ui.rememberShowMessage
 
+/** One choice in a Moment's menu: its name, its icon, its test tag and what it does. */
+private class MenuChoice(val text: String, val icon: ImageVector, val tag: String, val onClick: () -> Unit)
+
 /**
  * What a Moment's card offers beyond opening it, from a long press or a right click, as
- * Material 3 has a menu open where it was pressed, at [at] from the card's bottom start:
- * sharing it, copying its words, going to its places, its trip and its day, as its page's rows
- * do, and editing it when it can be, as its page's toolbar does.
+ * Material 3 has a menu open where it was pressed, at [at] from the card's bottom start.
+ * Material 3 Expressive's vertical menu, its choices in two groups a gap apart: what can be
+ * done with it, sharing it, copying its words and editing it when it can be, as its page's
+ * toolbar does; then where it leads, its places, its trip and its day, as its page's rows do.
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun MomentMenu(moment: MomentRecord, urls: MediaUrls, at: DpOffset?, onDismiss: () -> Unit) {
     val actions = LocalMomentActions.current
@@ -51,75 +64,66 @@ fun MomentMenu(moment: MomentRecord, urls: MediaUrls, at: DpOffset?, onDismiss: 
     var shownAt by remember { mutableStateOf(DpOffset.Zero) }
     if (at != null) shownAt = at
 
-    DropdownMenu(expanded = at != null, onDismissRequest = onDismiss, offset = shownAt) {
-        DropdownMenuItem(
-            text = { Text(stringResource(R.string.action_share)) },
-            leadingIcon = { Icon(Icons.Rounded.Share, contentDescription = null) },
-            onClick = {
-                onDismiss()
-                sharing = true
-            },
-            modifier = Modifier.testTag("menu_share"),
-        )
+    val share = stringResource(R.string.action_share)
+    val copy = stringResource(R.string.action_copy_text)
+    val edit = stringResource(R.string.action_edit_moment)
+    val wholeDay = stringResource(R.string.label_whole_day)
+    val doing = buildList {
+        add(MenuChoice(share, Icons.Rounded.Share, "menu_share") { sharing = true })
         if (moment.text.isNotBlank()) {
-            DropdownMenuItem(
-                text = { Text(stringResource(R.string.action_copy_text)) },
-                leadingIcon = { Icon(Icons.Rounded.ContentCopy, contentDescription = null) },
-                onClick = {
-                    onDismiss()
+            add(
+                MenuChoice(copy, Icons.Rounded.ContentCopy, "menu_copy_text") {
                     context.getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("", moment.text))
                     show(copied)
                 },
-                modifier = Modifier.testTag("menu_copy_text"),
             )
         }
-        // Where it leads, as its page's rows do: each of its places, its trip and its day, but
-        // for the page it is on, a place's, a trip's or a day's, which it would only lead back to.
-        if (actions != null) {
-            HorizontalDivider()
-            val places = remember(actions, moment) { actions.places() }
-            moment.places.filterNot { actions.isHere(PlaceMoments(it)) }.forEach { id ->
-                DropdownMenuItem(
-                    text = { Text(places[id]?.name ?: id) },
-                    leadingIcon = { Icon(Icons.Rounded.Place, contentDescription = null) },
-                    onClick = {
-                        onDismiss()
-                        actions.onPlace(id)
-                    },
-                    modifier = Modifier.testTag("menu_place_$id"),
-                )
-            }
-            remember(actions, moment) { actions.tripOf(moment) }?.takeUnless { actions.isHere(Trip(it.id)) }?.let { trip ->
-                DropdownMenuItem(
-                    text = { Text(trip.title) },
-                    leadingIcon = { Icon(Icons.Rounded.Luggage, contentDescription = null) },
-                    onClick = {
-                        onDismiss()
-                        actions.onTrip(trip.id)
-                    },
-                    modifier = Modifier.testTag("menu_trip"),
-                )
-            }
-            if (!actions.isHere(Day(moment.dateKey))) DropdownMenuItem(
-                text = { Text(stringResource(R.string.label_whole_day)) },
-                leadingIcon = { Icon(Icons.Rounded.CalendarToday, contentDescription = null) },
-                onClick = {
-                    onDismiss()
-                    actions.onDay(moment.dateKey)
-                },
-                modifier = Modifier.testTag("menu_day"),
-            )
+        if (actions != null && actions.canEdit(moment.uid)) add(MenuChoice(edit, Icons.Rounded.Edit, "menu_edit") { actions.onEdit(moment.uid) })
+    }
+    // Where it leads, but for the page it is on, a place's, a trip's or a day's, which it would only lead back to.
+    val leading = if (actions == null) emptyList() else buildList {
+        val places = remember(actions, moment) { actions.places() }
+        moment.places.filterNot { actions.isHere(PlaceMoments(it)) }.forEach { id ->
+            add(MenuChoice(places[id]?.name ?: id, Icons.Rounded.Place, "menu_place_$id") { actions.onPlace(id) })
         }
-        if (actions != null && actions.canEdit(moment.uid)) {
-            DropdownMenuItem(
-                text = { Text(stringResource(R.string.action_edit_moment)) },
-                leadingIcon = { Icon(Icons.Rounded.Edit, contentDescription = null) },
-                onClick = {
-                    onDismiss()
-                    actions.onEdit(moment.uid)
-                },
-                modifier = Modifier.testTag("menu_edit"),
-            )
+        remember(actions, moment) { actions.tripOf(moment) }?.takeUnless { actions.isHere(Trip(it.id)) }?.let { trip ->
+            add(MenuChoice(trip.title, Icons.Rounded.Luggage, "menu_trip") { actions.onTrip(trip.id) })
+        }
+        if (!actions.isHere(Day(moment.dateKey))) add(MenuChoice(wholeDay, Icons.Rounded.CalendarToday, "menu_day") { actions.onDay(moment.dateKey) })
+    }
+    val groups = listOf(doing, leading).filter { it.isNotEmpty() }
+
+    // Its top start where the card was pressed, or, short of room, its bottom or end there.
+    val density = LocalDensity.current
+    val position = remember(shownAt, density) {
+        val x = with(density) { shownAt.x.roundToPx() }
+        val y = with(density) { shownAt.y.roundToPx() }
+        MenuAnchorPosition.Custom(
+            xCandidates = { intListOf(anchorBounds.left + x, anchorBounds.left + x - menuSize.width) },
+            yCandidates = { intListOf(anchorBounds.bottom + y, anchorBounds.bottom + y - menuSize.height) },
+        )
+    }
+    DropdownMenuPopup(
+        expanded = at != null,
+        onDismissRequest = onDismiss,
+        popupPositionProvider = MenuDefaults.rememberDropdownMenuPopupPositionProvider(position),
+    ) {
+        groups.forEachIndexed { index, choices ->
+            if (index > 0) Spacer(Modifier.height(MenuDefaults.GroupSpacing))
+            DropdownMenuGroup(shapes = MenuDefaults.groupShape(index, groups.size)) {
+                choices.forEachIndexed { i, choice ->
+                    DropdownMenuItem(
+                        onClick = {
+                            onDismiss()
+                            choice.onClick()
+                        },
+                        text = { Text(choice.text) },
+                        shape = MenuDefaults.itemShape(i, choices.size).shape,
+                        leadingIcon = { Icon(choice.icon, contentDescription = null) },
+                        modifier = Modifier.testTag(choice.tag),
+                    )
+                }
+            }
         }
     }
     if (sharing) {

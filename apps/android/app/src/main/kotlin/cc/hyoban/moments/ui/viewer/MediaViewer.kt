@@ -389,7 +389,8 @@ fun MediaViewer(
             val level = AppColors.sheetLevel
             Surface(
                 shape = MaterialTheme.shapes.extraLarge.copy(topEnd = ZeroCornerSize, bottomEnd = ZeroCornerSize),
-                color = level.fill(),
+                // A modal side sheet's fill, as Material 3 colours one.
+                color = AppColors.sheet,
                 contentColor = MaterialTheme.colorScheme.onSurface,
                 // Below the status bar, whose icons are white over the viewer's black.
                 modifier = Modifier.statusBarsPadding().fillMaxHeight().width(INFO_PANEL_WIDTH)
@@ -715,7 +716,7 @@ private fun InfoContent(
 @Composable
 private fun InfoSheet(onDismiss: () -> Unit, content: @Composable () -> Unit) {
     val level = AppColors.sheetLevel
-    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = level.fill()) {
+    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = AppColors.sheet) {
         CompositionLocalProvider(LocalSurfaceLevel provides level) { content() }
     }
 }

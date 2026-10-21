@@ -59,7 +59,10 @@ object Radius {
     val small = 8.dp
     val medium = 12.dp
     val large = 16.dp
+    val largeIncreased = 20.dp
     val extraLarge = 28.dp
+    val extraLargeIncreased = 32.dp
+    val extraExtraLarge = 48.dp
 }
 
 /** The fully rounded shape: what floats, chips, labels. A capsule with continuous ends. */
@@ -78,14 +81,18 @@ object Elevation {
     val level4 = 8.dp
 }
 
-// Material 3's shape scale, its corner sizes as they are, drawn as continuous curves
-// rather than arcs, so a corner eases into its sides as Apple's and FlClash's do.
+// Material 3's shape scale, its corner sizes as they are, Expressive's three newer steps
+// among them, drawn as continuous curves rather than arcs, so a corner eases into its sides
+// as Apple's and FlClash's do.
 private val AppShapes = Shapes(
     extraSmall = ContinuousRoundedRectangle(Radius.extraSmall),
     small = ContinuousRoundedRectangle(Radius.small),
     medium = ContinuousRoundedRectangle(Radius.medium),
     large = ContinuousRoundedRectangle(Radius.large),
     extraLarge = ContinuousRoundedRectangle(Radius.extraLarge),
+    largeIncreased = ContinuousRoundedRectangle(Radius.largeIncreased),
+    extraLargeIncreased = ContinuousRoundedRectangle(Radius.extraLargeIncreased),
+    extraExtraLarge = ContinuousRoundedRectangle(Radius.extraExtraLarge),
 )
 
 // Material 3's type scale, its sizes and weights as they are, with two changes for
