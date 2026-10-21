@@ -9,6 +9,7 @@ import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.Shapes
 import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -19,11 +20,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import cc.hyoban.moments.Settings
 import cc.hyoban.moments.ThemeMode
+import cc.hyoban.moments.ui.components.isMediumWidth
 import com.kyant.capsule.ContinuousCapsule
 import com.kyant.capsule.ContinuousRoundedRectangle
 
@@ -41,8 +44,9 @@ object Space {
     val xl = 24.dp
     val xxl = 32.dp
 
-    /** A screen's side margin. */
-    val gutter = 16.dp
+    /** A screen's side margin, as Material 3 has it at the window's breakpoint: 16dp on a compact window, 24dp from medium on. */
+    val gutter: Dp
+        @Composable @ReadOnlyComposable get() = if (isMediumWidth()) 24.dp else 16.dp
 }
 
 /** The fully rounded shape: what floats, chips, labels. A capsule with continuous ends. */

@@ -110,7 +110,10 @@ fun MomentSubhead(moment: MomentRecord, places: Map<String, Place>, trip: TripRe
     }
 }
 
-/** A back button that floats over a photo or a map, legible on either, narrow as M3 has a back button beside other actions. */
+/**
+ * A back button that floats over a photo or a map, legible on either, narrow as M3 has a back
+ * button beside other actions; its middle where a top app bar's back button has its own.
+ */
 @Composable
 fun FloatingBack(onBack: () -> Unit, modifier: Modifier = Modifier) =
     FloatingButton(Icons.AutoMirrored.Rounded.ArrowBack, stringResource(R.string.action_back), onBack, modifier, tag = "back", width = FloatingWidth.Narrow)
@@ -148,7 +151,7 @@ fun FloatingButton(
             color = if (tonal) MaterialTheme.colorScheme.secondaryContainer else SurfaceLevel.floating(LocalDarkTheme.current).fill(),
             contentColor = if (tonal) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurface,
             shadowElevation = 3.dp,
-            modifier = Modifier.statusBarsPadding().sideInsetsPadding().padding(Space.s)
+            modifier = Modifier.statusBarsPadding().sideInsetsPadding().padding(horizontal = Space.m, vertical = Space.s)
                 .size(width.width, FLOATING_HEIGHT).semantics { contentDescription = label }.testTag(tag),
         ) {
             // Busy, a short wait, it turns Material 3 Expressive's loading indicator and takes no taps until what it started is done.

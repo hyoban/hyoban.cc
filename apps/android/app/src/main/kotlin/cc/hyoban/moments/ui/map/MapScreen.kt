@@ -107,7 +107,7 @@ import cc.hyoban.moments.ui.LocalRailSpace
 import cc.hyoban.moments.ui.components.READABLE_WIDTH
 import cc.hyoban.moments.ui.components.Thumbnail
 import cc.hyoban.moments.ui.components.Tooltip
-import cc.hyoban.moments.ui.components.isLandscape
+import cc.hyoban.moments.ui.components.isMediumWidth
 import cc.hyoban.moments.ui.components.landscape
 import cc.hyoban.moments.ui.components.sharedCard
 import cc.hyoban.moments.ui.components.sideInsetsPadding
@@ -191,9 +191,10 @@ fun MapScreen(container: AppContainer, onMoment: (String) -> Unit, onPlace: (Str
     val currentLocate by rememberUpdatedState(requestLocate)
     val currentLocating by rememberUpdatedState(locating)
     val locateBeside = remember<@Composable () -> Unit> {
-        { LocateButton(currentLocating, onClick = { currentLocate() }, inRail = isLandscape()) }
+        { LocateButton(currentLocating, onClick = { currentLocate() }, inRail = isMediumWidth()) }
     }
-    val landscape = isLandscape()
+    // Whether the tabs stand down a rail, as from Material 3's medium breakpoint.
+    val railed = isMediumWidth()
     // It steps aside while a place's sheet is up, the sheet covering what it would locate.
     val placeOpen = selected != null
     DisposableEffect(accessory, placeOpen) {
@@ -228,13 +229,13 @@ fun MapScreen(container: AppContainer, onMoment: (String) -> Unit, onPlace: (Str
         Column(
             Modifier.align(
                 when {
-                    !landscape -> Alignment.TopCenter
+                    !railed -> Alignment.TopCenter
                     rail.left > 0.dp -> AbsoluteAlignment.TopRight
                     else -> AbsoluteAlignment.TopLeft
                 },
             )
                 .statusBarsPadding().sideInsetsPadding()
-                .padding(top = Space.m, start = if (landscape) Space.gutter else 0.dp, end = if (landscape) Space.gutter else 0.dp),
+                .padding(top = Space.m, start = if (railed) Space.gutter else 0.dp, end = if (railed) Space.gutter else 0.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(Space.s),
         ) {
@@ -246,9 +247,9 @@ fun MapScreen(container: AppContainer, onMoment: (String) -> Unit, onPlace: (Str
         val turned = bearing.let { minOf(it, 360 - it) } > 0.5
         // While the map is turned, the compass: upright above the floating action button, and
         // above the trip's card while it shows; on a phone on its side, at the bottom by the rail.
-        val lift by animateDpAsState(if (trip != null && !landscape) 96.dp else 0.dp, label = "compass")
+        val lift by animateDpAsState(if (trip != null && !railed) 96.dp else 0.dp, label = "compass")
         Box(
-            if (landscape) {
+            if (railed) {
                 Modifier.align(Alignment.BottomStart).navigationBarsPadding()
                     .absolutePadding(left = rail.left + Space.gutter, bottom = Space.gutter)
             } else {

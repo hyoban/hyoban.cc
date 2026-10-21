@@ -137,7 +137,7 @@ fun SectionHeader(icon: ImageVector, title: String, modifier: Modifier = Modifie
 fun MonthHeader(month: String, year: String?) {
     Row(
         // Read as one heading, the month and its year together.
-        Modifier.fillMaxWidth().padding(start = Space.xl, end = Space.xl, top = Space.xl, bottom = Space.xs).semantics(mergeDescendants = true) { heading() },
+        Modifier.fillMaxWidth().padding(start = Space.gutter, end = Space.gutter, top = Space.xl, bottom = Space.xs).semantics(mergeDescendants = true) { heading() },
         verticalAlignment = Alignment.Bottom,
         horizontalArrangement = Arrangement.spacedBy(Space.s),
     ) {

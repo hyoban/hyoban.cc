@@ -102,7 +102,7 @@ fun TripScreen(
     val photos = remember(moments) { moments.flatMap { moment -> moment.media.filter { it.type != MediaType.VIDEO }.map { moment to it } } }
     val photoCarousel: @Composable (Int) -> Unit = { momentsFrom ->
         Column(Modifier.padding(bottom = Space.l), verticalArrangement = Arrangement.spacedBy(Space.xs)) {
-            Row(Modifier.padding(start = Space.gutter + Space.xs, end = Space.xs), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.padding(start = Space.gutter, end = Space.xs), verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     stringResource(R.string.section_photo) + " · " + photos.size,
                     style = MaterialTheme.typography.titleMedium,
@@ -150,11 +150,12 @@ fun TripScreen(
         BoxWithConstraints(Modifier.fillMaxSize()) {
             if (landscape) {
                 // On its side, the route stays on the start side, as tall as the space under
-                // the bar, and what the trip covered and its Moments scroll beside it.
+                // the bar, and what the trip covered and its Moments scroll beside it, its top
+                // level with what the trip covered.
                 Row(Modifier.fillMaxSize()) {
                     Column(
                         Modifier.weight(0.42f).fillMaxHeight().sideInsetsPadding(WindowInsetsSides.Start)
-                            .navigationBarsPadding().padding(bottom = Space.l),
+                            .navigationBarsPadding().padding(top = Space.xs, bottom = Space.l),
                     ) {
                         routeCard(Modifier.weight(1f), Modifier.weight(1f))
                     }

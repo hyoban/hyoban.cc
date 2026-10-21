@@ -19,6 +19,7 @@ import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MediumFlexibleTopAppBar
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -29,9 +30,11 @@ import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import cc.hyoban.moments.R
 import cc.hyoban.moments.ui.LocalRailSpace
 import cc.hyoban.moments.ui.OnTabReselect
+import cc.hyoban.moments.ui.theme.Space
 
 /**
  * A pushed page as Material 3 lays one out: a medium flexible top app bar over [content],
@@ -117,11 +120,21 @@ private fun BarPage(
         containerColor = AppColors.page,
         scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
     )
-    // Clear of the tabs down the side on a phone on its side, as the page's list is.
+    // Clear of the tabs down the side on a phone on its side, as the page's list is, and its
+    // title on the page's margin, wider than the bar's own from Material 3's medium breakpoint.
     val rail = LocalRailSpace.current
-    val insets = TopAppBarDefaults.windowInsets.add(WindowInsets(left = rail.left, right = rail.right))
+    val margin = Space.gutter - BAR_TITLE_INSET
+    val insets = TopAppBarDefaults.windowInsets.add(WindowInsets(left = rail.left + margin, right = rail.right + margin))
     Column(modifier.fillMaxSize().nestedScroll(scroll.nestedScrollConnection)) {
-        if (large) {
+        if (isCompactHeight()) {
+            // On a window too short for it, a phone on its side, the bar starts small, its title
+            // beside the back button, rather than taking half the screen until scrolled away.
+            if (subtitleText != null) {
+                TopAppBar(titleText, subtitleText, navigationIcon = back, actions = actions, colors = colors, windowInsets = insets, scrollBehavior = scroll)
+            } else {
+                TopAppBar(titleText, navigationIcon = back, actions = actions, colors = colors, windowInsets = insets, scrollBehavior = scroll)
+            }
+        } else if (large) {
             LargeFlexibleTopAppBar(titleText, subtitle = subtitleText, navigationIcon = back, actions = actions, colors = colors, windowInsets = insets, scrollBehavior = scroll)
         } else {
             MediumFlexibleTopAppBar(titleText, subtitle = subtitleText, navigationIcon = back, actions = actions, colors = colors, windowInsets = insets, scrollBehavior = scroll)
@@ -129,3 +142,6 @@ private fun BarPage(
         Box(Modifier.weight(1f)) { content() }
     }
 }
+
+/** How far in from its edge Material 3's top app bar sets its title, the compact window's margin. */
+private val BAR_TITLE_INSET = 16.dp

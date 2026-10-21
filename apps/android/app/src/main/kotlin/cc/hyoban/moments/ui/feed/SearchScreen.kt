@@ -131,7 +131,7 @@ fun SearchScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: ()
             status,
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = Space.xl, vertical = Space.s).semantics { liveRegion = LiveRegionMode.Polite }.testTag("search_status"),
+            modifier = Modifier.padding(horizontal = Space.gutter + Space.l, vertical = Space.s).semantics { liveRegion = LiveRegionMode.Polite }.testTag("search_status"),
         )
         // The results as a list, as Material 3 has search show them: one segmented group, each
         // row its first photo, when, and its words around what was searched for, that marked.

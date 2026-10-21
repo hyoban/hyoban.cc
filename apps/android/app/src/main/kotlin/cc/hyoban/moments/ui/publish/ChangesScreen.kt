@@ -111,7 +111,7 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
         Modifier.background(AppColors.page),
         subtitle = if (pending.size == 0) null else pluralStringResource(R.plurals.count_changes, pending.size, pending.size),
     ) {
-        PageWidth { columns ->
+        PageWidth(maxColumns = 1) { columns ->
             Column(
                 Modifier
                     .fillMaxSize()
