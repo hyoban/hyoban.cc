@@ -17,9 +17,9 @@
         <package android:name="com.xingin.xhs" />
         <package android:name="com.instagram.barcelona" />
         <package android:name="com.ss.android.ugc.aweme" />
-        <!-- Not shared to straight away, but their icons are shown beside the album made ready for them. -->
         <package android:name="com.tencent.mm" />
         <package android:name="tv.danmaku.bili" />
+        <!-- Feishu uses the manual album flow; its icon appears in the share menu. -->
         <package android:name="com.ss.android.lark" />
     </queries>
 

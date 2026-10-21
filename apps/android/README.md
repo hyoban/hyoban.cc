@@ -73,8 +73,8 @@ all: the places only the phone knows, named by the API from their pinyin, the Mo
 each published, and the deletions. What is published leaves the phone's store for the
 site's.
 
-A Moment's share button offers 发布到 X, 分享到 Telegram, 分享到小红书, 分享到飞书,
-发布到 Threads, 分享到抖音, 微信朋友圈, B 站 (each marked as posted by hand) and 准备图文.
+A Moment's share button offers 发布到 X, 分享到 Telegram, 分享到小红书, 发布到 Threads,
+分享到抖音, 微信朋友圈, B 站, 飞书 (marked as posted by hand) and 准备图文.
 The X option opens a separate editable copy of its words and a choice of up to four
 photos, kept in their original order. Up to four are selected
 initially; with more, none are selected until they are chosen. Live photos use their
@@ -101,33 +101,45 @@ text first; paste it into the body and add a title in Xiaohongshu before publish
 Text alone opens its 写想法 editor with the text filled in. Photo and text limits are
 checked in Xiaohongshu; this app does not publish automatically.
 
-发布到 Threads uses its Android share receiver, with all photos initially selected
-in their original order. On Threads 452.0.0.33.64, text alone opens a share menu:
-choose 发布 to reach the composer with the text filled in. Single and multiple
-photos open the composer directly but leave its text empty. 复制文案并打开 Threads
-copies the edited text first; paste into the composer and review before publishing.
-The destination checks its photo and text limits. This app does not operate the
-share menu, choose a direct-message recipient or publish automatically.
+发布到 Threads opens `barcelona://create?text=…` for text-only posts, verified on
+Threads 452.0.0.50.64. Text is URI-encoded. If the link cannot be opened, the original
+Android share receiver is used: choose 发布 in its share menu. Photos still use that
+receiver, with all photos initially selected in their original order. It does not
+fill text alongside photos, so 复制文字并打开 Threads copies the edited text first.
+Paste into the composer and review before publishing. An already open composer can
+retain its previous text; finish that draft before starting another share.
 
-分享到抖音 opens the installed app's `SystemShareNewActivity` receiver explicitly.
-Douyin receives read-only access to each shared file so its internal transition to
-the editor can still read the photos after the receiving activity closes. These
+分享到抖音 opens `com.ss.android.ugc.aweme.share.SystemShareActivity`, verified on
+Douyin 40.6.0 to go directly to the photo editor. Edit the images and tap 下一步 to
+reach the post form. If this entry is missing or restricted, it falls back to the
+previous `com.ss.android.ugc.aweme.share.ui.SystemShareNewActivity`: choose 去发布
+there. Both use the same prepared files. The description is not filled from the
+share text, so 复制文字并打开抖音 copies it for pasting. At least one photo is required;
+with none selected, 准备图文 remains available with the edited text preserved.
+
+B 站 opens `com.bilibili.bplus.followingpublish.FollowingPublishActivity` with action
+`tv.danmaku.bili.intent.action.FOLLOWING_SHARE`, `content`, `share_publish=true`
+and photos in `ClipData`. Bilibili 9.16.0 was verified to fill text and two photos
+in the dynamic composer. Its existing composer can append text or ignore new photos,
+so finish an existing draft first; this app does not clear it. 准备图文 stays available.
+
+微信朋友圈 opens `com.tencent.mm.ui.tools.ShareToTimeLineUI` for text alone or one
+photo, verified on WeChat 8.0.79. It uses `ACTION_SEND`, an image MIME type,
+`Kdescription`, and either a single `EXTRA_STREAM` or `Ksnsupload_empty_img=true`.
+With more photos selected, the same preview saves all of them to an album and copies
+the text for manual posting. It never silently drops photos. 准备图文 also remains
+available if WeChat opens but does not accept the content.
+For Bilibili and WeChat, returning to this app keeps the edited preview and selection
+available for that fallback.
+
+Douyin, Bilibili and WeChat receive read-only grants for individual shared files,
+so their internal transitions can still read them after the receiver closes. These
 grants are revoked when the corresponding week-old share cache is cleaned up.
-It requires at least one photo. With no photos selected, the preview explains that
-text-only sharing is unsupported and offers 准备图文 with the edited text preserved.
-On Douyin 40.4.0, three photos were verified through the post form. The system
-share page offers 去发布 alongside chat recipients.
-Choose 去发布, edit the images and tap 下一步 to reach the post form. The description
-is not filled from the share text, so 复制文案并打开抖音 copies it for pasting there.
-The user reviews the destination's photo, music and publishing options and confirms
-the final post in Douyin. This app does not choose recipients or publish.
+These entries are app-version dependent; unavailable or restricted entries leave
+an error and the manual fallback with the edited text and photo selection intact.
 
-微信朋友圈, B 站 and 飞书 all open 准备图文, with a reminder to
-select the saved photos and paste the copied text in the destination app. Feishu is
-here because every way it receives a share (the system share sheet, its private
-`com.lark.android.action.SEND` and its open-SDK link) sends each photo and the text as
-separate messages; in a Feishu chat, put the photos and the pasted text in one rich-text
-post instead.
+飞书 opens 准备图文. Its share receivers send each photo and the text as separate
+messages; in a Feishu chat, put the saved photos and pasted text in one rich-text post.
 准备图文 is the manual fallback for WeChat Moments, Bilibili and other apps: edit a copy of the
 text and select photos, save them to a separate `Pictures/这里分享-…` album, then copy
 the text. It also works with just text or just photos. There is no platform photo
@@ -138,7 +150,7 @@ to select in the destination app and remove when no longer needed. Only Android 
 asks for storage permission; newer Android versions use MediaStore without it.
 A failed partial save removes the rows it created. Nothing operates another app or
 publishes automatically, and no accessibility service is registered. If sharing
-to X, Telegram, Xiaohongshu, Threads or Douyin fails, 准备图文 is offered with the edited text and
+to X, Telegram, Xiaohongshu, Threads, Douyin, Bilibili or WeChat fails, 准备图文 is offered with the edited text and
 selection preserved.
 
 On the home screen it is 这里 (here): a white cat with a grey cap split by a white blaze

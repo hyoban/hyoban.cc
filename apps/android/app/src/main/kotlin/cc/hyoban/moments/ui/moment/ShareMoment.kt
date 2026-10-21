@@ -89,6 +89,8 @@ enum class ShareTarget(val tag: String, @param:StringRes val title: Int, val lim
     XIAOHONGSHU("xiaohongshu", R.string.action_share_xiaohongshu, app = "com.xingin.xhs"),
     THREADS("threads", R.string.action_share_threads, app = "com.instagram.barcelona"),
     DOUYIN("douyin", R.string.action_share_douyin, app = "com.ss.android.ugc.aweme"),
+    WECHAT("wechat", R.string.action_share_wechat, app = "com.tencent.mm"),
+    BILIBILI("bilibili", R.string.action_share_bilibili, app = "tv.danmaku.bili"),
     PREPARE("prepare", R.string.action_prepare_share),
 }
 
@@ -130,16 +132,11 @@ fun ShareMenu(onSelect: (ShareTarget) -> Unit, onDismiss: () -> Unit) {
                 choice(stringResource(target.title), target.tag, target.app, Icons.AutoMirrored.Rounded.Send, target)
             }
             HorizontalDivider(Modifier.padding(vertical = Space.s), color = MaterialTheme.colorScheme.outlineVariant)
-            choice(stringResource(R.string.action_share_wechat_manual), "wechat", WECHAT, Icons.Rounded.PhotoLibrary, ShareTarget.PREPARE)
-            choice(stringResource(R.string.action_share_bilibili_manual), "bilibili", BILIBILI, Icons.Rounded.PhotoLibrary, ShareTarget.PREPARE)
             choice(stringResource(R.string.action_share_feishu_manual), "feishu", FEISHU, Icons.Rounded.PhotoLibrary, ShareTarget.PREPARE)
             choice(stringResource(ShareTarget.PREPARE.title), "prepare", null, Icons.Rounded.PhotoLibrary, ShareTarget.PREPARE)
         }
     }
 }
-
-private const val WECHAT = "com.tencent.mm"
-private const val BILIBILI = "tv.danmaku.bili"
 
 // Feishu sends each shared photo and the text as separate messages, so its post is put together by hand.
 private const val FEISHU = "com.ss.android.lark"
@@ -186,6 +183,7 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
     var busy by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<Int?>(null) }
     val chosen = photos.filter { it.uid in selected }
+    val prepareByHand = target == ShareTarget.PREPARE || (target == ShareTarget.WECHAT && chosen.size > 1)
     val needsPhoto = target == ShareTarget.DOUYIN && chosen.isEmpty()
     val copyTextOnOpen = text.isNotBlank() && when (target) {
         ShareTarget.TELEGRAM -> chosen.size > 1
@@ -238,7 +236,7 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                         error = R.string.error_empty_moment
                         return@TextButton
                     }
-                    if (target == ShareTarget.PREPARE && chosen.isNotEmpty() && Build.VERSION.SDK_INT < 29 &&
+                    if (prepareByHand && chosen.isNotEmpty() && Build.VERSION.SDK_INT < 29 &&
                         ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
                         storagePermission.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                         return@TextButton
@@ -251,12 +249,14 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                             if (copyTextOnOpen) {
                                 context.getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("", text))
                             }
-                            when (target) {
+                            when (if (prepareByHand) ShareTarget.PREPARE else target) {
                                 ShareTarget.X -> Share.toX(context, text, chosen, urls)
                                 ShareTarget.TELEGRAM -> Share.toTelegram(context, text, chosen, urls)
                                 ShareTarget.XIAOHONGSHU -> Share.toXiaohongshu(context, text, chosen, urls)
                                 ShareTarget.THREADS -> Share.toThreads(context, text, chosen, urls)
                                 ShareTarget.DOUYIN -> Share.toDouyin(context, text, chosen, urls)
+                                ShareTarget.WECHAT -> Share.toWeChat(context, text, chosen, urls)
+                                ShareTarget.BILIBILI -> Share.toBilibili(context, text, chosen, urls)
                                 ShareTarget.PREPARE -> {
                                     album = if (chosen.isEmpty()) null else saveShareAlbum(context, chosen, urls)
                                     if (text.isNotBlank()) {
@@ -265,7 +265,9 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                                     prepared = true
                                 }
                             }
-                            if (target != ShareTarget.PREPARE) onDismiss()
+                            // These entries can open successfully but reject the content inside
+                            // the other app. Keep the edited copy and manual fallback on return.
+                            if (!prepareByHand && target != ShareTarget.WECHAT && target != ShareTarget.BILIBILI) onDismiss()
                         } catch (e: CancellationException) {
                             throw e
                         } catch (_: ActivityNotFoundException) {
@@ -275,6 +277,8 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                                 ShareTarget.XIAOHONGSHU -> R.string.share_xiaohongshu_unavailable
                                 ShareTarget.THREADS -> R.string.share_threads_unavailable
                                 ShareTarget.DOUYIN -> R.string.share_douyin_unavailable
+                                ShareTarget.WECHAT -> R.string.share_wechat_unavailable
+                                ShareTarget.BILIBILI -> R.string.share_bilibili_unavailable
                                 ShareTarget.PREPARE -> R.string.error_share
                             }
                         } catch (_: Exception) {
@@ -296,6 +300,8 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                     target == ShareTarget.XIAOHONGSHU -> if (copyTextOnOpen) R.string.share_xiaohongshu_copy_open else R.string.share_xiaohongshu_open
                     target == ShareTarget.THREADS -> if (copyTextOnOpen) R.string.share_threads_copy_open else R.string.share_threads_open
                     target == ShareTarget.DOUYIN -> if (copyTextOnOpen) R.string.share_douyin_copy_open else R.string.share_douyin_open
+                    target == ShareTarget.WECHAT && !prepareByHand -> R.string.share_wechat_open
+                    target == ShareTarget.BILIBILI -> R.string.share_bilibili_open
                     chosen.isEmpty() -> R.string.share_copy_text
                     text.isBlank() -> R.string.share_save_photos
                     else -> R.string.share_save_and_copy
@@ -318,6 +324,8 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                     copyTextOnOpen -> R.string.share_douyin_photos_hint
                     else -> R.string.share_douyin_hint
                 }
+                ShareTarget.WECHAT -> if (prepareByHand) R.string.share_wechat_multiple_hint else R.string.share_wechat_hint
+                ShareTarget.BILIBILI -> R.string.share_bilibili_hint
                 ShareTarget.PREPARE -> R.string.share_prepare_hint
             }), style = MaterialTheme.typography.bodySmall)
             OutlinedTextField(
@@ -332,7 +340,7 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
             if (photos.isNotEmpty()) {
                 Text(
                     if (target == ShareTarget.X) stringResource(R.string.share_photos, chosen.size, target.limit)
-                    else if (target != ShareTarget.PREPARE) stringResource(R.string.share_selected_photos, chosen.size)
+                    else if (!prepareByHand) stringResource(R.string.share_selected_photos, chosen.size)
                     else stringResource(R.string.share_prepare_photos, chosen.size),
                     style = MaterialTheme.typography.labelLarge,
                 )
@@ -380,8 +388,9 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
             error?.let {
                 Text(stringResource(it), color = MaterialTheme.colorScheme.error)
             }
-            if (target != ShareTarget.PREPARE && (error != null || needsPhoto)) {
+            if (target != ShareTarget.PREPARE && (error != null || needsPhoto || target == ShareTarget.WECHAT || target == ShareTarget.BILIBILI)) {
                 TextButton(
+                    enabled = !busy,
                     onClick = { target = ShareTarget.PREPARE; error = null },
                     modifier = Modifier.testTag("share_fallback"),
                 ) { Text(stringResource(R.string.action_prepare_share)) }
