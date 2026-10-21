@@ -15,12 +15,12 @@
         <package android:name="com.twitter.android" />
         <package android:name="org.telegram.messenger" />
         <package android:name="com.xingin.xhs" />
-        <package android:name="com.ss.android.lark" />
         <package android:name="com.instagram.barcelona" />
         <package android:name="com.ss.android.ugc.aweme" />
         <!-- Not shared to straight away, but their icons are shown beside the album made ready for them. -->
         <package android:name="com.tencent.mm" />
         <package android:name="tv.danmaku.bili" />
+        <package android:name="com.ss.android.lark" />
     </queries>
 
     <application

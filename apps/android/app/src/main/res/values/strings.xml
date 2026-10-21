@@ -13,11 +13,11 @@
     <string name="action_share_x">发布到 X</string>
     <string name="action_share_telegram">分享到 Telegram</string>
     <string name="action_share_xiaohongshu">分享到小红书</string>
-    <string name="action_share_feishu">分享到飞书</string>
     <string name="action_share_threads">发布到 Threads</string>
     <string name="action_share_douyin">分享到抖音</string>
     <string name="action_share_wechat_manual">微信朋友圈</string>
     <string name="action_share_bilibili_manual">B 站</string>
+    <string name="action_share_feishu_manual">飞书</string>
     <string name="share_douyin_hint">在抖音选择「去发布」，编辑照片后点「下一步」，检查后发布。照片数量限制以抖音为准。</string>
     <string name="share_douyin_photos_hint">抖音接收照片时不会带入文字，打开前会先复制文字。选择「去发布」，编辑照片后点「下一步」，把文字粘贴到作品描述，检查后发布。</string>
     <string name="share_douyin_no_photos">抖音不接收纯文字分享。至少选一张照片，或用「准备图文」复制文字后自己编辑。</string>
@@ -29,11 +29,6 @@
     <string name="share_threads_copy_open">复制文字并打开 Threads</string>
     <string name="share_threads_open">打开 Threads</string>
     <string name="share_threads_unavailable">无法打开 Threads，确认已安装</string>
-    <string name="share_feishu_hint">在飞书中选择接收位置，检查图文后发送。这里的修改只用于这次分享。</string>
-    <string name="share_feishu_photos_hint">飞书分享照片时不会带入文字，打开前会先复制文字。选择「发送给同事或群」，选定接收方后粘贴到「留言」，检查后发送。</string>
-    <string name="share_feishu_copy_open">复制文字并打开飞书</string>
-    <string name="share_feishu_open">打开飞书</string>
-    <string name="share_feishu_unavailable">无法打开飞书，确认已安装</string>
     <string name="share_xiaohongshu_hint">在小红书中检查图文、补充标题后发布。这里的修改只用于这次分享，照片数量和字数限制以小红书为准。</string>
     <string name="share_xiaohongshu_photos_hint">小红书接收照片时不会带入文字，打开前会先复制文字。粘贴到正文，补充标题，检查后发布。照片数量和字数限制以小红书为准。</string>
     <string name="share_xiaohongshu_copy_open">复制文字并打开小红书</string>
@@ -49,7 +44,7 @@
     <string name="share_text">文字</string>
     <string name="share_photos">已选 %1$d / %2$d 张，按原顺序分享。点按照片来选择。</string>
     <string name="action_prepare_share">准备图文</string>
-    <string name="share_prepare_hint">「准备图文」会把所选照片存到一个单独的相册，并复制文字，之后到目标 App 里手动选照片、粘贴并发布。微信朋友圈、B 站和其他平台都可以用，照片数量按目标平台的限制来选。</string>
+    <string name="share_prepare_hint">「准备图文」会把所选照片存到一个单独的相册，并复制文字，之后到目标 App 里手动选照片、粘贴并发布。微信朋友圈、B 站、飞书和其他平台都可以用，照片数量按目标平台的限制来选。</string>
     <string name="share_prepare_photos">已选 %1$d 张，按原顺序保存。点按照片来选择。</string>
     <string name="share_save_and_copy">保存照片并复制文字</string>
     <string name="share_save_photos">保存照片</string>

@@ -87,7 +87,6 @@ enum class ShareTarget(val tag: String, @param:StringRes val title: Int, val lim
     X("x", R.string.action_share_x, 4, app = "com.twitter.android"),
     TELEGRAM("telegram", R.string.action_share_telegram, app = "org.telegram.messenger"),
     XIAOHONGSHU("xiaohongshu", R.string.action_share_xiaohongshu, app = "com.xingin.xhs"),
-    FEISHU("feishu", R.string.action_share_feishu, app = "com.ss.android.lark"),
     THREADS("threads", R.string.action_share_threads, app = "com.instagram.barcelona"),
     DOUYIN("douyin", R.string.action_share_douyin, app = "com.ss.android.ugc.aweme"),
     PREPARE("prepare", R.string.action_prepare_share),
@@ -133,6 +132,7 @@ fun ShareMenu(onSelect: (ShareTarget) -> Unit, onDismiss: () -> Unit) {
             HorizontalDivider(Modifier.padding(vertical = Space.s), color = MaterialTheme.colorScheme.outlineVariant)
             choice(stringResource(R.string.action_share_wechat_manual), "wechat", WECHAT, Icons.Rounded.PhotoLibrary, ShareTarget.PREPARE)
             choice(stringResource(R.string.action_share_bilibili_manual), "bilibili", BILIBILI, Icons.Rounded.PhotoLibrary, ShareTarget.PREPARE)
+            choice(stringResource(R.string.action_share_feishu_manual), "feishu", FEISHU, Icons.Rounded.PhotoLibrary, ShareTarget.PREPARE)
             choice(stringResource(ShareTarget.PREPARE.title), "prepare", null, Icons.Rounded.PhotoLibrary, ShareTarget.PREPARE)
         }
     }
@@ -140,6 +140,9 @@ fun ShareMenu(onSelect: (ShareTarget) -> Unit, onDismiss: () -> Unit) {
 
 private const val WECHAT = "com.tencent.mm"
 private const val BILIBILI = "tv.danmaku.bili"
+
+// Feishu sends each shared photo and the text as separate messages, so its post is put together by hand.
+private const val FEISHU = "com.ss.android.lark"
 
 /**
  * The icon of the app a choice goes to, as the phone has it, so the menu reads like the
@@ -186,7 +189,7 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
     val needsPhoto = target == ShareTarget.DOUYIN && chosen.isEmpty()
     val copyTextOnOpen = text.isNotBlank() && when (target) {
         ShareTarget.TELEGRAM -> chosen.size > 1
-        ShareTarget.XIAOHONGSHU, ShareTarget.FEISHU, ShareTarget.THREADS, ShareTarget.DOUYIN -> chosen.isNotEmpty()
+        ShareTarget.XIAOHONGSHU, ShareTarget.THREADS, ShareTarget.DOUYIN -> chosen.isNotEmpty()
         else -> false
     }
     var prepared by remember { mutableStateOf(false) }
@@ -252,7 +255,6 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                                 ShareTarget.X -> Share.toX(context, text, chosen, urls)
                                 ShareTarget.TELEGRAM -> Share.toTelegram(context, text, chosen, urls)
                                 ShareTarget.XIAOHONGSHU -> Share.toXiaohongshu(context, text, chosen, urls)
-                                ShareTarget.FEISHU -> Share.toFeishu(context, text, chosen, urls)
                                 ShareTarget.THREADS -> Share.toThreads(context, text, chosen, urls)
                                 ShareTarget.DOUYIN -> Share.toDouyin(context, text, chosen, urls)
                                 ShareTarget.PREPARE -> {
@@ -271,7 +273,6 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                                 ShareTarget.X -> R.string.share_x_unavailable
                                 ShareTarget.TELEGRAM -> R.string.share_telegram_unavailable
                                 ShareTarget.XIAOHONGSHU -> R.string.share_xiaohongshu_unavailable
-                                ShareTarget.FEISHU -> R.string.share_feishu_unavailable
                                 ShareTarget.THREADS -> R.string.share_threads_unavailable
                                 ShareTarget.DOUYIN -> R.string.share_douyin_unavailable
                                 ShareTarget.PREPARE -> R.string.error_share
@@ -293,7 +294,6 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                     target == ShareTarget.X -> R.string.share_x_open
                     target == ShareTarget.TELEGRAM -> if (copyTextOnOpen) R.string.share_telegram_copy_open else R.string.share_telegram_open
                     target == ShareTarget.XIAOHONGSHU -> if (copyTextOnOpen) R.string.share_xiaohongshu_copy_open else R.string.share_xiaohongshu_open
-                    target == ShareTarget.FEISHU -> if (copyTextOnOpen) R.string.share_feishu_copy_open else R.string.share_feishu_open
                     target == ShareTarget.THREADS -> if (copyTextOnOpen) R.string.share_threads_copy_open else R.string.share_threads_open
                     target == ShareTarget.DOUYIN -> if (copyTextOnOpen) R.string.share_douyin_copy_open else R.string.share_douyin_open
                     chosen.isEmpty() -> R.string.share_copy_text
@@ -312,7 +312,6 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                 ShareTarget.X -> R.string.share_x_hint
                 ShareTarget.TELEGRAM -> if (copyTextOnOpen) R.string.share_telegram_multiple_hint else R.string.share_telegram_hint
                 ShareTarget.XIAOHONGSHU -> if (copyTextOnOpen) R.string.share_xiaohongshu_photos_hint else R.string.share_xiaohongshu_hint
-                ShareTarget.FEISHU -> if (copyTextOnOpen) R.string.share_feishu_photos_hint else R.string.share_feishu_hint
                 ShareTarget.THREADS -> if (copyTextOnOpen) R.string.share_threads_photos_hint else R.string.share_threads_hint
                 ShareTarget.DOUYIN -> when {
                     needsPhoto -> R.string.share_douyin_no_photos

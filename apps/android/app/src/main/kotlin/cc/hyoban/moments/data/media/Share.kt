@@ -44,9 +44,6 @@ object Share {
     suspend fun toXiaohongshu(context: Context, text: String, photos: List<MomentMedia>, urls: MediaUrls) =
         toApp(context, "com.xingin.xhs", text, photos, urls)
 
-    suspend fun toFeishu(context: Context, text: String, photos: List<MomentMedia>, urls: MediaUrls) =
-        toApp(context, "com.ss.android.lark", text, photos, urls)
-
     suspend fun toThreads(context: Context, text: String, photos: List<MomentMedia>, urls: MediaUrls) =
         toApp(context, "com.instagram.barcelona", text, photos, urls)
 

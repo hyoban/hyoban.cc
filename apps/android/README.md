@@ -101,13 +101,6 @@ text first; paste it into the body and add a title in Xiaohongshu before publish
 Text alone opens its 写想法 editor with the text filled in. Photo and text limits are
 checked in Xiaohongshu; this app does not publish automatically.
 
-分享到飞书 uses its Android share receiver, with all photos initially selected in
-their original order. On Feishu 8.2.6, text alone is shown in the share preview.
-Single and multiple photos are previewed without the accompanying text, and the
-recipient confirmation's 留言 field starts empty. 复制文案并打开飞书 copies the edited
-text first; choose 发送给同事或群, select a recipient, paste into 留言 and confirm in
-Feishu. This app does not choose a recipient or send messages automatically.
-
 发布到 Threads uses its Android share receiver, with all photos initially selected
 in their original order. On Threads 452.0.0.33.64, text alone opens a share menu:
 choose 发布 to reach the composer with the text filled in. Single and multiple
@@ -129,8 +122,12 @@ is not filled from the share text, so 复制文案并打开抖音 copies it for 
 The user reviews the destination's photo, music and publishing options and confirms
 the final post in Douyin. This app does not choose recipients or publish.
 
-微信朋友圈 and B 站 both open 准备图文, with a reminder to
-select the saved photos and paste the copied text in the destination app.
+微信朋友圈, B 站 and 飞书 all open 准备图文, with a reminder to
+select the saved photos and paste the copied text in the destination app. Feishu is
+here because every way it receives a share (the system share sheet, its private
+`com.lark.android.action.SEND` and its open-SDK link) sends each photo and the text as
+separate messages; in a Feishu chat, put the photos and the pasted text in one rich-text
+post instead.
 准备图文 is the manual fallback for WeChat Moments, Bilibili and other apps: edit a copy of the
 text and select photos, save them to a separate `Pictures/这里分享-…` album, then copy
 the text. It also works with just text or just photos. There is no platform photo
@@ -141,7 +138,7 @@ to select in the destination app and remove when no longer needed. Only Android 
 asks for storage permission; newer Android versions use MediaStore without it.
 A failed partial save removes the rows it created. Nothing operates another app or
 publishes automatically, and no accessibility service is registered. If sharing
-to X, Telegram, Xiaohongshu, Feishu, Threads or Douyin fails, 准备图文 is offered with the edited text and
+to X, Telegram, Xiaohongshu, Threads or Douyin fails, 准备图文 is offered with the edited text and
 selection preserved.
 
 On the home screen it is 这里 (here): a white cat with a grey cap split by a white blaze
