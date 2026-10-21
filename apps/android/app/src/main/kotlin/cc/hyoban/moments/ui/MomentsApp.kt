@@ -310,7 +310,14 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
     }
     val showOnMap: (MapFocus) -> Unit = { focus ->
         mapFocus = focus
-        selectTab(Tab.MAP.ordinal)
+        // From a page pushed on the map tab itself, back down to the map: switching to the tab
+        // would only bring its pages back as they were, this one on top.
+        val bottom = navController.currentBackStack.value.firstOrNull { it.destination !is NavGraph }
+        if (bottom?.destination?.hasRoute(Atlas::class) == true) {
+            navController.popBackStack<Atlas>(inclusive = false)
+        } else {
+            selectTab(Tab.MAP.ordinal)
+        }
     }
     // The navigation bar's height and the rail's width, as they lay themselves out, and the
     // tab's floating action button's height above the bar, for the pages to keep clear of.
