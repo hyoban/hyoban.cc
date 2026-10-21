@@ -85,6 +85,12 @@ class MomentsRepository(
                 phonePlaces = local.readPlaces()
                 keptPlaces = local.readKeptPlaces()
                 removed = local.readRemoved()
+                // What a snackbar was still offering to undo when the app was last closed: done
+                // now, as the snackbar going without its undo would have done it.
+                val (deleting, reverting) = local.readHeld()
+                deleting.forEach(::deleteNow)
+                reverting.forEach(::revertNow)
+                if (deleting.isNotEmpty() || reverting.isNotEmpty()) local.writeHeld(emptySet(), emptySet())
             }
             publishPlaces()
             _trips.value = store.readTrips().sortedByDescending { it.start }
@@ -246,37 +252,53 @@ class MomentsRepository(
     suspend fun delete(uid: String) = lock.withLock {
         withContext(io) {
             setAside = setAside - uid
-            phone[uid]?.let(::forgetLocal)
-            if (uid in all) {
-                removed = removed + uid
-                local?.writeRemoved(removed)
-            }
+            deleteNow(uid)
+            writeHeld()
             publishPlaces()
             publish()
         }
     }
 
-    /** Takes a Moment out of sight while its deletion can still be undone; [delete] deletes it, [bringBack] undoes it. */
+    private fun deleteNow(uid: String) {
+        phone[uid]?.let(::forgetLocal)
+        if (uid in all) {
+            removed = removed + uid
+            local?.writeRemoved(removed)
+        }
+    }
+
+    /**
+     * Takes a Moment out of sight while its deletion can still be undone; [delete] deletes it,
+     * [bringBack] undoes it. Noted on the phone, so a deletion the app is closed on before
+     * either is done when it next starts.
+     */
     suspend fun setAside(uid: String) = lock.withLock {
         setAside = setAside + uid
+        withContext(io) { writeHeld() }
         publish()
     }
 
     /** Brings back a Moment [setAside], its deletion undone. */
     suspend fun bringBack(uid: String) = lock.withLock {
         setAside = setAside - uid
+        withContext(io) { writeHeld() }
         publish()
     }
 
-    /** Shows one of the site's Moments as the site has it while taking back its change can be undone; [revert] takes it back, [keepChange] undoes that. */
+    /**
+     * Shows one of the site's Moments as the site has it while taking back its change can be
+     * undone; [revert] takes it back, [keepChange] undoes that. Noted on the phone as [setAside] is.
+     */
     suspend fun holdRevert(uid: String) = lock.withLock {
         holding = holding + uid
+        withContext(io) { writeHeld() }
         publish()
     }
 
     /** Keeps the change [holdRevert] was taking back. */
     suspend fun keepChange(uid: String) = lock.withLock {
         holding = holding - uid
+        withContext(io) { writeHeld() }
         publish()
     }
 
@@ -284,14 +306,24 @@ class MomentsRepository(
     suspend fun revert(uid: String) = lock.withLock {
         withContext(io) {
             holding = holding - uid
-            phone[uid]?.takeIf { it.published != null }?.let(::forgetLocal)
-            if (uid in removed) {
-                removed = removed - uid
-                local?.writeRemoved(removed)
-            }
+            revertNow(uid)
+            writeHeld()
             publishPlaces()
             publish()
         }
+    }
+
+    private fun revertNow(uid: String) {
+        phone[uid]?.takeIf { it.published != null }?.let(::forgetLocal)
+        if (uid in removed) {
+            removed = removed - uid
+            local?.writeRemoved(removed)
+        }
+    }
+
+    /** What a snackbar can still undo, kept on the phone with the rest. */
+    private fun writeHeld() {
+        local?.writeHeld(setAside, holding)
     }
 
     /** The app's own copies of [media], gone from its store. */
