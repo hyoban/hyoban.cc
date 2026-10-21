@@ -38,13 +38,13 @@ object Share {
     }
 
     /** The recipient and final send are chosen inside Telegram. */
-    suspend fun toTelegram(context: Context, text: String, photos: List<MomentMedia>, urls: MediaUrls) =
-        toApp(context, "org.telegram.messenger", text, photos, urls)
+    suspend fun toTelegram(context: Context, text: String, photos: List<MomentMedia>, urls: MediaUrls, beforeOpen: () -> Unit = {}) =
+        toApp(context, "org.telegram.messenger", text, photos, urls, beforeOpen = beforeOpen)
 
     suspend fun toXiaohongshu(context: Context, text: String, photos: List<MomentMedia>, urls: MediaUrls) =
         toApp(context, "com.xingin.xhs", text, photos, urls)
 
-    suspend fun toThreads(context: Context, text: String, photos: List<MomentMedia>, urls: MediaUrls) {
+    suspend fun toThreads(context: Context, text: String, photos: List<MomentMedia>, urls: MediaUrls, beforeOpen: () -> Unit = {}) {
         if (photos.isEmpty()) {
             require(text.isNotBlank())
             val compose = Intent(Intent.ACTION_VIEW, Uri.Builder()
@@ -53,7 +53,7 @@ object Share {
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             if (tryOpen(context, compose)) return
         }
-        toApp(context, "com.instagram.barcelona", text, photos, urls)
+        toApp(context, "com.instagram.barcelona", text, photos, urls, beforeOpen = beforeOpen)
     }
 
     suspend fun toBilibili(context: Context, text: String, photos: List<MomentMedia>, urls: MediaUrls) =
@@ -94,6 +94,7 @@ object Share {
         activity: String? = null,
         fallbackActivity: String? = null,
         grantToPackage: Boolean = false,
+        beforeOpen: () -> Unit = {},
         configure: Intent.() -> Unit = {},
     ) {
         require(photos.none { it.type == MediaType.VIDEO })
@@ -123,6 +124,7 @@ object Share {
                     granted.add(uri)
                 }
             }
+            beforeOpen()
             if (!tryOpen(context, send) &&
                 (fallbackActivity == null || !tryOpen(context, Intent(send).setClassName(packageName, fallbackActivity)))) {
                 throw ActivityNotFoundException()

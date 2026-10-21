@@ -73,8 +73,11 @@ all: the places only the phone knows, named by the API from their pinyin, the Mo
 each published, and the deletions. What is published leaves the phone's store for the
 site's.
 
-A Moment's share button offers 发布到 X, 分享到 Telegram, 分享到小红书, 发布到 Threads,
-分享到抖音, 微信朋友圈, B 站, 飞书 (marked as posted by hand) and 准备图文.
+A Moment's share button orders destinations by verified text/photo support:
+发布到 X, B 站, 分享到 Telegram, 发布到 Threads, 分享到小红书,
+分享到抖音, 微信朋友圈, 飞书 (marked as posted by hand) and 准备图文.
+Complete text/photo composers come first, followed by assisted sharing, manual
+caption entry, and destinations that require manually preparing photo albums.
 The X option opens a separate editable copy of its words and a choice of up to four
 photos, kept in their original order. Up to four are selected
 initially; with more, none are selected until they are chosen. Live photos use their
@@ -91,8 +94,44 @@ photos initially selected and kept in their original order. The recipient and fi
 send are chosen in Telegram. Its multiple-photo receiver ignores the accompanying
 text, so the preview explains that 复制文案并打开 Telegram copies the edited text:
 paste it into Telegram's caption field after choosing a recipient. A single photo
-or text alone is handed over directly. This flow does not operate Telegram or send
-messages automatically.
+or text alone is handed over directly. Without the optional helper, recipient
+selection and caption entry remain manual. Nothing sends messages automatically.
+
+The optional Telegram 分享助手（试用） adds a one-shot accessibility flow for photo
+shares on Telegram 13.1.0. Enable 分享助手（试用） in Android's accessibility settings
+and enter a public `@username` or `t.me/username` in the share preview. It searches
+for the exact username, selects the matching result, verifies one recipient and
+the photo count, then fills and reads back the caption. It stops before the final
+send button; sending always remains a manual action. This currently recognizes
+the English picker verified on the device and a limited set of Chinese labels;
+other versions or layouts require the ordinary share flow with the assistant off.
+No Shizuku is used. The service only reads Telegram while a requested share is
+pending, cancels when leaving Telegram, and expires after 40 seconds. It does not
+store chat contents or resume work after process death. Only the opt-in switch and
+destination are saved locally. An unexpected existing caption is preserved; a
+failure leaves the current Telegram screen for manual completion. Text-only
+sharing continues to use the ordinary receiver.
+
+`accessibility/ShareAccessibilityService` owns node snapshots, click/text actions,
+gesture fallback, polling, and the lifecycle of one active `AssistSession`. An
+`AssistAdapter` supplies its identity, target package, supported versions, timeout,
+and result messages; each explicit share creates an `AssistRequest` with a fresh
+`AssistFlow`. `share/TelegramShareAdapter` / `TelegramAssistFlow` and
+`ThreadsShareAdapter` / `ThreadsAssistFlow` implement the two destinations.
+The service has no app-specific page rules. Its event filter follows
+only the current request's package and returns to this app when idle, with no
+third-party tree reads while idle. Status, cancellation, and reset are scoped to
+the adapter ID so another adapter cannot consume or cancel Telegram's task.
+
+To add an app, implement its adapter and flow, validate the version at its share
+entry, and call `ShareAccessibilityService.start(request)` immediately before
+launching the prepared share intent. Add fixtures for its page recognition and
+verify on device that it stops before sending. No additional accessibility service
+or permission is needed. The manifest still registers the thin
+`share/TelegramShareService` subclass solely to preserve the already granted
+Android component identity; it contains no Telegram behavior. Keep that component
+name stable when adding adapters. Existing Telegram preferences and manual
+fallback are unchanged.
 
 分享到小红书 uses its Android share receiver, with all photos initially selected in
 their original order. On Xiaohongshu 9.50.0, both single and multiple photos open
@@ -108,6 +147,22 @@ receiver, with all photos initially selected in their original order. It does no
 fill text alongside photos, so 复制文字并打开 Threads copies the edited text first.
 Paste into the composer and review before publishing. An already open composer can
 retain its previous text; finish that draft before starting another share.
+
+The optional Threads 分享助手（试用） uses the same accessibility service and has
+its own opt-in preference. On Threads 452.0.0.50.64 it recognizes the new-thread
+composer by its view IDs and title, waits for photo attachments, fills its single
+body field, and reads the exact text back twice. The horizontal photo row is
+virtualized, and its collection item count includes other items, so the assistant
+does not claim to verify the full photo count. It leaves attachments untouched
+and asks the user to review both photos and text before publishing. It never clicks
+Post, overwrites different existing text, or chooses between multiple editors. If a
+share menu appears, choose the composer manually; a label such as 发布 is not
+safe to click automatically because the final publish button has the same text.
+Unknown pages or missing photo attachments stop after 40 seconds for manual
+completion.
+Text-only shares still use the original direct composer link. Turning the helper
+off keeps the original photo-share and clipboard fallback. The service's settings
+entry, status display, and cancellation control are shared with Telegram.
 
 分享到抖音 opens `com.ss.android.ugc.aweme.share.SystemShareActivity`, verified on
 Douyin 40.6.0 to go directly to the photo editor. Edit the images and tap 下一步 to
@@ -148,8 +203,8 @@ order, with insertion order and timestamps arranged for newest-first galleries.
 The result shows the album name and count; the album stays on the phone for the user
 to select in the destination app and remove when no longer needed. Only Android 9
 asks for storage permission; newer Android versions use MediaStore without it.
-A failed partial save removes the rows it created. Nothing operates another app or
-publishes automatically, and no accessibility service is registered. If sharing
+A failed partial save removes the rows it created. Nothing publishes automatically;
+only the optional Telegram and Threads assistants operate another app's UI. If sharing
 to X, Telegram, Xiaohongshu, Threads, Douyin, Bilibili or WeChat fails, 准备图文 is offered with the edited text and
 selection preserved.
 

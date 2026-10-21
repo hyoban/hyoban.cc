@@ -90,6 +90,18 @@
             </intent-filter>
         </activity>
 
+        <!-- Stable component identity preserves existing grants; implementation is shared by adapters. -->
+        <service
+            android:name=".share.TelegramShareService"
+            android:label="@string/share_assist_service_label"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data android:name="android.accessibilityservice" android:resource="@xml/share_accessibility" />
+        </service>
+
         <!-- The same, keeping the shared place on its own and leaving the map in front. -->
         <activity-alias
             android:name=".SavePlaceActivity"
