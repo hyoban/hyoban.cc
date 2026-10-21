@@ -1,6 +1,12 @@
 package cc.hyoban.moments.ui.trips
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.toShape
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.animateDpAsState
@@ -234,6 +240,10 @@ private fun PlayerCard(
         var dragging by remember { mutableStateOf(false) }
         val settle = MaterialTheme.motionScheme.fastSpatialSpec<Offset>()
         val lift by animateDpAsState(if (dragging) Elevation.level4 else Elevation.level2, MaterialTheme.motionScheme.fastSpatialSpec(), label = "lift")
+        // Dragged, Material 3's low-emphasis state layer over it too, the content's colour at 16%.
+        val layer by animateFloatAsState(if (dragging) DRAGGED_LAYER else 0f, MaterialTheme.motionScheme.fastEffectsSpec(), label = "dragged")
+        val layerColor = MaterialTheme.colorScheme.onSurface
+        val cardShape = MaterialTheme.shapes.extraLarge
         val letGo = {
             dragging = false
             scope.launch { if (reduced) drag.snapTo(Offset.Zero) else drag.animateTo(Offset.Zero, settle) }
@@ -241,7 +251,7 @@ private fun PlayerCard(
         Surface(
             onClick = { stop?.let { onMoment(it.stop.moment.uid) } },
             enabled = stop != null,
-            shape = MaterialTheme.shapes.extraLarge,
+            shape = cardShape,
             color = SurfaceLevel.Floating.fill(),
             shadowElevation = lift,
             modifier = Modifier.fillMaxWidth()
@@ -275,6 +285,11 @@ private fun PlayerCard(
                         scope.launch { drag.snapTo(dragged * DRAG_FOLLOW) }
                     }
                 }
+                // Over the card's own shape, not past its corners.
+                .drawWithContent {
+                    drawContent()
+                    if (layer > 0f) drawOutline(cardShape.createOutline(size, layoutDirection, this), layerColor.copy(alpha = layer))
+                }
                 .testTag("trip_player"),
         ) {
             val motion = MaterialTheme.motionScheme
@@ -294,7 +309,7 @@ private fun PlayerCard(
                         PlaybackSlide.Intro -> IntroCard(trip, controller.playback, covers, urls, photoHeight, expanded)
                         is PlaybackSlide.Day -> DayCard(shown)
                         is PlaybackSlide.Stop -> StopCard(shown, controller, urls, photoHeight, expanded)
-                        PlaybackSlide.Summary -> SummaryCard(trip, controller.playback)
+                        PlaybackSlide.Summary -> SummaryCard(trip, controller.playback, covers, urls, expanded)
                     }
                 }
                 // The whole playback's progress along the card's foot, wavy while it plays, as
@@ -314,7 +329,7 @@ private fun PlayerCard(
                     )
                     Text(
                         "${index + 1} / $count",
-                        style = MaterialTheme.typography.labelMedium,
+                        style = MaterialTheme.typography.labelMedium.copy(fontFeatureSettings = "tnum"),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.clearAndSetSemantics { },
                     )
@@ -395,7 +410,7 @@ private fun StopCard(slide: PlaybackSlide.Stop, controller: PlaybackController, 
                         contentColor = MaterialTheme.colorScheme.inverseOnSurface,
                         modifier = Modifier.align(Alignment.TopEnd).padding(Space.s),
                     ) {
-                        Text("${photo + 1} / ${photos.size}", style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(horizontal = Space.s, vertical = Space.xxs))
+                        Text("${photo + 1} / ${photos.size}", style = MaterialTheme.typography.labelMedium.copy(fontFeatureSettings = "tnum"), modifier = Modifier.padding(horizontal = Space.s, vertical = Space.xxs))
                     }
                 }
             }
@@ -406,31 +421,58 @@ private fun StopCard(slide: PlaybackSlide.Stop, controller: PlaybackController, 
     }
 }
 
-/** The trip looked back on: the site's tiles, days, Moments, places, photos and the kilometres driven. */
+/**
+ * The trip looked back on, as the site's summary: its title, what it came to as tiles, each
+ * number in a display style, as Material 3 sets short important numerals, counting up from
+ * nothing as the card shows, and, while the card is open, its covers cut to Material 3's
+ * shapes, the trip's last aesthetic moment.
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun SummaryCard(trip: TripRecord, playback: TripPlayback) {
+private fun SummaryCard(trip: TripRecord, playback: TripPlayback, covers: List<MomentMedia>, urls: MediaUrls, expanded: Boolean) {
     Column(Modifier.padding(horizontal = Space.xs), verticalArrangement = Arrangement.spacedBy(Space.m)) {
-        Text(stringResource(R.string.playback_look_back), style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
-        Text(trip.title, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Column {
+            Text(stringResource(R.string.playback_look_back), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+            Text(trip.title, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
+        }
         val days = cc.hyoban.moments.ui.format.daysBetween(trip.start, trip.end)
-        val moments = playback.stops.size
-        val places = playback.points.distinctBy { it.id }.size
-        val photos = playback.stops.sumOf { it.photos.size }
         val km = remember(playback) { playback.route.drivenKm() }.roundToInt()
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.l), verticalArrangement = Arrangement.spacedBy(Space.s)) {
-            Figure(pluralStringResource(R.plurals.count_days, days, days))
-            Figure(pluralStringResource(R.plurals.count_moments, moments, moments))
-            Figure(pluralStringResource(R.plurals.count_places, places, places))
-            Figure(pluralStringResource(R.plurals.count_photos, photos, photos))
-            if (km > 0) Figure(stringResource(R.string.playback_driven, km))
+        // The driving ones only when there was driving, as the site's.
+        val stats = listOfNotNull(
+            days to R.plurals.unit_days,
+            playback.stops.size to R.plurals.unit_moments,
+            playback.points.distinctBy { it.id }.size to R.plurals.unit_places,
+            playback.stops.sumOf { it.photos.size } to R.plurals.unit_photos,
+            (km to R.plurals.unit_km_driven).takeIf { km > 0 },
+        )
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.xl), verticalArrangement = Arrangement.spacedBy(Space.m)) {
+            stats.forEach { (value, unit) -> Tile(value, pluralStringResource(unit, value)) }
+        }
+        if (expanded && covers.isNotEmpty()) {
+            val shapes = listOf(MaterialShapes.Cookie9Sided, MaterialShapes.Clover4Leaf, MaterialShapes.Sunny)
+            Row(horizontalArrangement = Arrangement.spacedBy(Space.m)) {
+                covers.take(shapes.size).forEachIndexed { n, cover ->
+                    MediaStill(cover, urls, Modifier.weight(1f).aspectRatio(1f).clip(shapes[n].toShape()))
+                }
+            }
         }
     }
 }
 
-/** One of what the trip came to, in the look back. */
+/** One of what the trip came to: its number counting up, tabular so it doesn't shift as it rolls, over its unit. */
 @Composable
-private fun Figure(text: String) {
-    Text(text, style = MaterialTheme.typography.titleMedium)
+private fun Tile(value: Int, unit: String) {
+    val reduced = LocalReducedMotion.current
+    val shown = remember { Animatable(if (reduced) value.toFloat() else 0f) }
+    val spec = MaterialTheme.motionScheme.slowEffectsSpec<Float>()
+    LaunchedEffect(value) { if (reduced) shown.snapTo(value.toFloat()) else shown.animateTo(value.toFloat(), spec) }
+    Column(Modifier.clearAndSetSemantics { contentDescription = "$value $unit" }) {
+        Text(
+            shown.value.roundToInt().toString(),
+            style = MaterialTheme.typography.displaySmall.copy(fontFeatureSettings = "tnum"),
+        )
+        Text(unit, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
 }
 
 /**
@@ -503,6 +545,9 @@ private fun DragHandle(expanded: Boolean, onExpanded: (Boolean) -> Unit) {
 
 /** How tall the handle's target is: the card's top margin and the handle, taken together. */
 private val HANDLE_TARGET = 32.dp
+
+/** The dragged state layer's opacity. */
+private const val DRAGGED_LAYER = 0.16f
 
 /** How much of a drag the card follows. */
 private const val DRAG_FOLLOW = 0.35f

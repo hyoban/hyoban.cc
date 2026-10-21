@@ -87,7 +87,6 @@
     <string name="action_next_stop">Next stop</string>
     <string name="action_replay">Replay</string>
     <string name="playback_look_back">Looking back</string>
-    <string name="playback_driven">%1$d km driven</string>
     <string name="playback_progress">Trip progress</string>
     <string name="playback_card_of">Card %1$d of %2$d</string>
     <string name="playback_route_map">Trip route</string>
@@ -192,9 +191,25 @@
         <item quantity="one">%1$d place</item>
         <item quantity="other">%1$d places</item>
     </plurals>
-    <plurals name="count_photos">
-        <item quantity="one">%1$d photo</item>
-        <item quantity="other">%1$d photos</item>
+    <plurals name="unit_days">
+        <item quantity="one">day</item>
+        <item quantity="other">days</item>
+    </plurals>
+    <plurals name="unit_moments">
+        <item quantity="one">Moment</item>
+        <item quantity="other">Moments</item>
+    </plurals>
+    <plurals name="unit_places">
+        <item quantity="one">place</item>
+        <item quantity="other">places</item>
+    </plurals>
+    <plurals name="unit_photos">
+        <item quantity="one">photo</item>
+        <item quantity="other">photos</item>
+    </plurals>
+    <plurals name="unit_km_driven">
+        <item quantity="one">km driven</item>
+        <item quantity="other">km driven</item>
     </plurals>
     <plurals name="count_trips">
         <item quantity="one">%1$d trip</item>
