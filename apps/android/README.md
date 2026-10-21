@@ -8,8 +8,9 @@ each Moment toward the next place as its card shows, a car, ship, plane or train
 tip with the day and time beside it, past each waypoint with a pause, the camera following
 on springs, letting go while the map is panned or pinched until the next card; a card
 over the map, stepped through from a floating toolbar or by a swipe, which goes through
-a Moment's photos first, folded to its words by a swipe down or its handle to leave the
-map more room, opens its Moment when tapped. The route is the stretches `GET /v1/routes` serves. It reads
+a Moment's photos first, its photos a carousel whose next one peeks and is picked by a
+tap, folded to its words by a swipe down or its handle to leave the map more room, opens
+its Moment from its words or the photo showing. The route is the stretches `GET /v1/routes` serves. It reads
 the API's public endpoints (`apps/api`) and keeps a copy under the app's `api/`
 directory in the layout `packages/data-spec` defines, so it opens straight away and
 works offline; each start, and each pull down on a list, asks only for what changed
