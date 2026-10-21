@@ -45,6 +45,7 @@ import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.NavigationRail
@@ -236,6 +237,16 @@ private fun TabIcon(tab: Tab, selected: Boolean, pending: Int) {
     } else {
         Icon(icon, contentDescription = null)
     }
+}
+
+/**
+ * A tab's name, emphasized once chosen, as Material 3 marks the chosen destination with a
+ * bold label beside its filled icon.
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun TabLabel(tab: Tab, selected: Boolean) {
+    Text(stringResource(tab.label), style = if (selected) MaterialTheme.typography.labelMediumEmphasized else LocalTextStyle.current)
 }
 
 /** The three tabs at the bottom; everything else opens over them. */
@@ -619,7 +630,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                             selected = index == selectedTab,
                             onClick = { onTab(index) },
                             icon = { TabIcon(tab, selected = index == selectedTab, pending = pending.size) },
-                            label = { Text(stringResource(tab.label)) },
+                            label = { TabLabel(tab, selected = index == selectedTab) },
                             modifier = Modifier.testTag("tab_${tab.name.lowercase()}"),
                         )
                     }
@@ -652,7 +663,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                 selected = index == selectedTab,
                                 onClick = { onTab(index) },
                                 icon = { TabIcon(tab, selected = index == selectedTab, pending = pending.size) },
-                                label = { Text(stringResource(tab.label)) },
+                                label = { TabLabel(tab, selected = index == selectedTab) },
                                 modifier = Modifier.testTag("tab_${tab.name.lowercase()}"),
                             )
                         }

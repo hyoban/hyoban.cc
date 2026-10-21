@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.feed
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -71,12 +72,12 @@ import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.fill
 
 /**
- * Searching the Moments, as Material 3's focused search on a phone: a destination of its own,
- * the field at the top in the surface container high, focused and ready to type, back leaving
+ * Searching the Moments, as Material 3's full-screen focused search on a phone: a destination of
+ * its own, the field at the top in the surface container high, focused and ready to type, back leaving
  * it; what matches below as a list, said how many, newest first. A Moment matches by its
  * words, the names of its places or its trip's title.
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SearchScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: () -> Unit) {
     val moments by container.repository.moments.collectAsStateWithLifecycle()
@@ -89,11 +90,13 @@ fun SearchScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: ()
     val keyboard = LocalSoftwareKeyboardController.current
     LaunchedEffect(Unit) { focus.requestFocus() }
 
-    Column(Modifier.fillMaxSize().imePadding()) {
+    // Material 3's full-screen contained search: the view in the surface container low, the bar
+    // in the high, 12dp from the sides as a focused bar is.
+    Column(Modifier.fillMaxSize().background(SearchBarDefaults.fullScreenContainedSearchBarColor).imePadding()) {
         Surface(
             shape = Corners.full,
-            color = MaterialTheme.colorScheme.surfaceContainerHigh,
-            modifier = Modifier.statusBarsPadding().padding(horizontal = Space.gutter, vertical = Space.s).fillMaxWidth(),
+            color = SearchBarDefaults.collapsedContainedSearchBarColor,
+            modifier = Modifier.statusBarsPadding().padding(horizontal = Space.m, vertical = Space.s).fillMaxWidth(),
         ) {
             SearchBarDefaults.InputField(
                 state = query,

@@ -79,7 +79,7 @@ fun MomentCard(
     // list, it is [selected], outlined in the primary colour, as Material 3 marks the item a
     // two-pane layout's detail is of.
     val ring by animateColorAsState(if (selected) MaterialTheme.colorScheme.primary else Color.Transparent, MaterialTheme.motionScheme.fastEffectsSpec(), label = "selected")
-    val outline = Modifier.border(2.dp, ring, MaterialTheme.shapes.large)
+    val outline = Modifier.border(2.dp, ring, MaterialTheme.shapes.medium)
     // Held, or right clicked, its menu opens where it was pressed.
     var menu by remember { mutableStateOf<DpOffset?>(null) }
     val density = LocalDensity.current

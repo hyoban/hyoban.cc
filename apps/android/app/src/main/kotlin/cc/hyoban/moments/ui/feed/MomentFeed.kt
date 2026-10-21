@@ -175,8 +175,9 @@ fun MomentFeed(
                 Modifier.fillMaxSize(),
                 state = gridState,
                 contentPadding = PaddingValues(start = columns.margin + Space.gutter, end = columns.margin + Space.gutter, bottom = bottom),
-                horizontalArrangement = Arrangement.spacedBy(Space.m),
-                verticalItemSpacing = Space.m,
+                // Material 3's gap between cards, 8dp at most.
+                horizontalArrangement = Arrangement.spacedBy(Space.s),
+                verticalItemSpacing = Space.s,
             ) {
                 rows.forEach { (key, content) ->
                     item(key = key, span = StaggeredGridItemSpan.FullLine) { Box(Modifier.animateItem().then(across)) { content() } }
@@ -225,7 +226,7 @@ fun MomentFeed(
                         }
                     }
                     items(dayMoments, key = { it.uid }, contentType = { "moment" }) { moment ->
-                        card(moment, Modifier.animateItem().padding(horizontal = Space.gutter, vertical = Space.m / 2), false)
+                        card(moment, Modifier.animateItem().padding(horizontal = Space.gutter, vertical = Space.s / 2), false)
                     }
                 }
             }
@@ -267,7 +268,7 @@ private fun Modifier.wide(by: Dp): Modifier = layout { measurable, constraints -
 /** Up to [columns] cards side by side, each as wide as the others, a short row's last place left empty. */
 @Composable
 fun <T> CardRow(cards: List<T>, columns: Int, modifier: Modifier = Modifier, card: @Composable RowScope.(T) -> Unit) {
-    Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Space.m), verticalAlignment = Alignment.Top) {
+    Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Space.s), verticalAlignment = Alignment.Top) {
         cards.forEach { card(it) }
         repeat(columns - cards.size) { Spacer(Modifier.weight(1f)) }
     }
@@ -349,11 +350,11 @@ private fun SkeletonCards() {
                 .skeletonSweep(sweep, rtl)
                 .clearAndSetSemantics { contentDescription = loading }
                 .testTag("skeleton"),
-            verticalArrangement = Arrangement.spacedBy(Space.l),
+            verticalArrangement = Arrangement.spacedBy(Space.s),
         ) {
             repeat(3) {
                 Column(
-                    Modifier.fillMaxWidth().clip(MaterialTheme.shapes.large).background(LocalSurfaceLevel.current.raised.fill()).padding(bottom = Space.l),
+                    Modifier.fillMaxWidth().clip(MaterialTheme.shapes.medium).background(LocalSurfaceLevel.current.raised.fill()).padding(bottom = Space.l),
                     verticalArrangement = Arrangement.spacedBy(Space.m),
                 ) {
                     Box(Modifier.fillMaxWidth().aspectRatio(4f / 3f).background(bone))

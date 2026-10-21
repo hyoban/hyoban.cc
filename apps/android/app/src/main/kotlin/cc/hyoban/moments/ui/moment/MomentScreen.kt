@@ -116,6 +116,7 @@ import cc.hyoban.moments.data.trips.tripOf
 import cc.hyoban.moments.ui.Day
 import cc.hyoban.moments.ui.LocalSnackbarLift
 import cc.hyoban.moments.ui.Trip
+import cc.hyoban.moments.ui.components.rememberScreenReader
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.FLOATING_BAR
 import cc.hyoban.moments.ui.components.FloatingBack
@@ -136,7 +137,6 @@ import cc.hyoban.moments.ui.format.formatDay
 import cc.hyoban.moments.ui.format.formatTime
 import cc.hyoban.moments.ui.openedFrom
 import cc.hyoban.moments.ui.rememberShowMessage
-import cc.hyoban.moments.ui.theme.Corners
 import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
 import cc.hyoban.moments.ui.theme.MediaOverlay
 import cc.hyoban.moments.ui.theme.Radius
@@ -189,12 +189,14 @@ fun MomentScreen(
     val pager = rememberPagerState { moment.media.size }
 
     // The toolbar at the foot goes down out of the way as the page is read on, and comes back
-    // as it is scrolled back, as Material 3 has a floating toolbar exit on scroll.
+    // as it is scrolled back, as Material 3 has a floating toolbar exit on scroll; it stays while
+    // a screen reader is on, which would otherwise lose it.
     val toolbarScroll = FloatingToolbarDefaults.exitAlwaysScrollBehavior(exitDirection = FloatingToolbarExitDirection.Bottom)
+    val screenReader = rememberScreenReader()
 
     // The whole page is the card it was opened from, grown to the screen.
     // As a pane beside the Moments, it neither grows out of a card nor flies its photos, the card still in sight.
-    BoxWithConstraints(Modifier.fillMaxSize().then(if (pane) Modifier else Modifier.sharedCard(uid, page = true)).background(AppColors.page).nestedScroll(toolbarScroll)) {
+    BoxWithConstraints(Modifier.fillMaxSize().then(if (pane) Modifier else Modifier.sharedCard(uid, page = true)).background(AppColors.page).then(if (screenReader) Modifier else Modifier.nestedScroll(toolbarScroll))) {
         val screenWidth = maxWidth
         val screenHeight = maxHeight
         val scroll = rememberScrollState()
@@ -300,7 +302,7 @@ fun MomentScreen(
                 if (canEdit) {
                     HorizontalFloatingToolbar(
                         expanded = true,
-                        scrollBehavior = toolbarScroll,
+                        scrollBehavior = toolbarScroll.takeUnless { screenReader },
                         floatingActionButton = {
                             val edit = stringResource(R.string.action_edit_moment)
                             Tooltip(edit) {
@@ -313,7 +315,7 @@ fun MomentScreen(
                         content = tools,
                     )
                 } else {
-                    HorizontalFloatingToolbar(expanded = true, modifier = toolbar, scrollBehavior = toolbarScroll, content = tools)
+                    HorizontalFloatingToolbar(expanded = true, modifier = toolbar, scrollBehavior = toolbarScroll.takeUnless { screenReader }, content = tools)
                 }
             }
         }
@@ -573,7 +575,6 @@ private fun StateChip(label: String, explanation: String, onChanges: (() -> Unit
             onClick = { scope.launch { state.show() } },
             label = { Text(label) },
             leadingIcon = { Icon(Icons.Rounded.PhoneAndroid, contentDescription = null, modifier = Modifier.size(AssistChipDefaults.IconSize)) },
-            shape = Corners.full,
             border = null,
             colors = AssistChipDefaults.assistChipColors(
                 containerColor = LocalSurfaceLevel.current.raised.fill(),

@@ -27,7 +27,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.carousel.CarouselItemScope
 import androidx.compose.material3.carousel.HorizontalMultiBrowseCarousel
+import androidx.compose.material3.carousel.HorizontalUncontainedCarousel
 import androidx.compose.material3.carousel.rememberCarouselState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -50,6 +52,7 @@ import cc.hyoban.moments.R
 import cc.hyoban.moments.data.spec.MediaType
 import cc.hyoban.moments.data.trips.momentsOf
 import cc.hyoban.moments.data.trips.stopsOf
+import cc.hyoban.moments.ui.components.LocalReducedMotion
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.MediaStill
 import cc.hyoban.moments.ui.components.SectionHeader
@@ -122,13 +125,9 @@ fun TripScreen(
                     }
                 }
             }
-            HorizontalMultiBrowseCarousel(
-                state = rememberCarouselState { photos.size },
-                preferredItemWidth = 188.dp,
-                itemSpacing = Space.s,
-                contentPadding = PaddingValues(horizontal = Space.gutter),
-                modifier = Modifier.fillMaxWidth().height(208.dp).testTag("trip_photos"),
-            ) { index ->
+            // With the phone's animations removed, every photo the one size, none growing as it
+            // comes into view, as Material 3 has a carousel under reduced motion.
+            val item: @Composable CarouselItemScope.(Int) -> Unit = { index ->
                 val (moment, media) = photos[index]
                 val label = stringResource(R.string.media_position, stringResource(media.kindLabel()), index + 1, photos.size)
                 MediaStill(
@@ -137,6 +136,26 @@ fun TripScreen(
                     Modifier.fillMaxSize().maskClip(MaterialTheme.shapes.extraLarge)
                         .clickable(onClickLabel = stringResource(R.string.action_open_moment)) { onMoment(moment.uid) }
                         .semantics { contentDescription = label },
+                )
+            }
+            val carousel = Modifier.fillMaxWidth().height(208.dp).testTag("trip_photos")
+            if (LocalReducedMotion.current) {
+                HorizontalUncontainedCarousel(
+                    state = rememberCarouselState { photos.size },
+                    itemWidth = 188.dp,
+                    itemSpacing = Space.s,
+                    contentPadding = PaddingValues(horizontal = Space.gutter),
+                    modifier = carousel,
+                    content = item,
+                )
+            } else {
+                HorizontalMultiBrowseCarousel(
+                    state = rememberCarouselState { photos.size },
+                    preferredItemWidth = 188.dp,
+                    itemSpacing = Space.s,
+                    contentPadding = PaddingValues(horizontal = Space.gutter),
+                    modifier = carousel,
+                    content = item,
                 )
             }
         }
@@ -148,12 +167,12 @@ fun TripScreen(
         val level = LocalSurfaceLevel.current.raised
         Surface(
             onClick = { onMap(trip.id) },
-            shape = MaterialTheme.shapes.large,
+            shape = MaterialTheme.shapes.medium,
             color = level.fill(),
             modifier = modifier.padding(horizontal = Space.gutter).fillMaxWidth()
                 .semantics { onClick(label = showOnMap) { onMap(trip.id); true } }.testTag("trip_route"),
         ) {
-            Column(Modifier.padding(Space.m), verticalArrangement = Arrangement.spacedBy(Space.m)) {
+            Column(Modifier.padding(Space.s), verticalArrangement = Arrangement.spacedBy(Space.s)) {
                 SectionHeader(Icons.Rounded.Route, stringResource(R.string.section_route))
                 // The map's corners the card's less its padding, so the two look as round.
                 TripMap(stops, routes[trip.id].orEmpty(), mapModifier.fillMaxWidth().clip(MaterialTheme.shapes.extraSmall))
@@ -166,7 +185,7 @@ fun TripScreen(
     val actions: @Composable RowScope.() -> Unit = {
         Tooltip(showOnMap, below = true) {
             IconButton(onClick = { onMap(trip.id) }, modifier = Modifier.testTag("show_on_map")) {
-                Icon(Symbols.MapOutlined, contentDescription = showOnMap)
+                Icon(Symbols.MapFilled, contentDescription = showOnMap)
             }
         }
         if (moments.isNotEmpty()) {

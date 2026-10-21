@@ -32,6 +32,10 @@ say stay out.
   (layout, tokens, interaction, styles, content design, the components in use) and
   follow them: M3 components and tokens over hand-made ones, color roles in their
   pairs, 48dp touch targets, scrims over media.
+- m3.material.io is a script-built site: read it in the built-in browser, where its pages
+  load whole in a same-origin iframe, the Guidelines, Specs and Accessibility tabs of each
+  component as well as its overview. Spec values there (card 12dp corners and 8dp gaps,
+  chips 8dp, sheets in surface container low) win over what the app had before.
 - M3 is the only reference now. FlClash shaped the early pages and is still thanked in
   the README and on the settings page, but where it and M3 differ, M3 wins.
 - Keep the smooth (continuous) corners; that has been decided twice.

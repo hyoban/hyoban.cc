@@ -42,7 +42,6 @@ import androidx.compose.ui.unit.dp
 import cc.hyoban.moments.R
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.ui.format.formatMonthOnly
-import cc.hyoban.moments.ui.theme.Corners
 import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.fill
@@ -128,7 +127,6 @@ private fun ChipRow(tag: String, options: List<Int?>, selected: Int?, label: @Co
                 Icon(if (all) Icons.Rounded.UnfoldLess else Icons.Rounded.UnfoldMore, contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize))
             },
             modifier = Modifier.testTag("${tag}toggle"),
-            shape = Corners.full,
             border = FilterChipDefaults.filterChipBorder(enabled = true, selected = all, borderColor = MaterialTheme.colorScheme.outline, selectedBorderColor = Color.Transparent),
             colors = chipColors(),
         )
@@ -168,10 +166,10 @@ private fun OptionChip(tag: String, option: Int?, selected: Int?, label: @Compos
             null
         },
         modifier = Modifier.testTag("$tag${option ?: "all"}"),
-        // The chosen one in the secondary container, as Material 3 colours a filter
-        // chip; the rest a level above the page, outlined so each stands apart from
-        // it at the 3:1 a set of chips needs.
-        shape = Corners.full,
+        // Material 3's chip, its 8dp corners; the chosen one in the secondary container, as
+        // Material 3 colours a filter chip; the rest a level above the page, outlined in the
+        // outline rather than its variant, as Material 3 shows a set of chips can be tapped
+        // at 3:1.
         border = FilterChipDefaults.filterChipBorder(
             enabled = true,
             selected = option == selected,

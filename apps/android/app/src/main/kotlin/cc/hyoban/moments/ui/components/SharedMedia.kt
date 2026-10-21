@@ -116,7 +116,7 @@ fun Modifier.sharedMedia(key: String?, shape: Shape = RectangleShape): Modifier 
  */
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun Modifier.sharedCard(key: String, cardCorner: Dp = Radius.large, page: Boolean = false, relayout: Boolean = false): Modifier {
+fun Modifier.sharedCard(key: String, cardCorner: Dp = Radius.medium, page: Boolean = false, relayout: Boolean = false): Modifier {
     val shared = LocalSharedTransitionScope.current
     val animated = LocalNavAnimatedScope.current
     if (shared == null || animated == null) return this

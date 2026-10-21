@@ -41,13 +41,14 @@ import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material.icons.rounded.Remove
 import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MediumExtendedFloatingActionButton
 import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismissBox
@@ -108,6 +109,7 @@ import cc.hyoban.moments.ui.theme.fill
  * through. A change or a deletion can be taken back; the button at the foot publishes all
  * of it, the only way the app writes to the site.
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: () -> Unit) {
     val pending by container.repository.pending.collectAsStateWithLifecycle()
@@ -185,7 +187,8 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
             }
         }
         // Publishing, the page's one action, as Material 3's extended FAB keeps a long list's
-        // main action in reach: at the bottom end, saying how far it has got while it runs.
+        // main action in reach: a medium one, as Expressive has replaced the baseline, at the
+        // bottom end, saying how far it has got while it runs.
         // Shown only when the app can publish, as a FAB isn't greyed out but goes.
         val publishShown = container.canPublish && pending.size > 0
         // Snackbars stand above the button while it shows.
@@ -205,9 +208,10 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
             modifier = Modifier.align(Alignment.BottomEnd).navigationBarsPadding().padding(Space.gutter),
         ) {
             val progress = shownProgress
-            ExtendedFloatingActionButton(
+            MediumExtendedFloatingActionButton(
                 onClick = { if (progress == null) container.publishPending() },
-                icon = { Icon(Icons.Rounded.CloudUpload, contentDescription = null) },
+                shape = MaterialTheme.shapes.largeIncreased,
+                icon = { Icon(Icons.Rounded.CloudUpload, contentDescription = null, modifier = Modifier.size(FloatingActionButtonDefaults.MediumIconSize)) },
                 text = {
                     Text(
                         if (progress != null) {
@@ -271,7 +275,7 @@ fun PendingChangesRow(container: AppContainer, onClick: () -> Unit, modifier: Mo
     val publishing by container.publishing.collectAsStateWithLifecycle()
     Surface(
         onClick = onClick,
-        shape = MaterialTheme.shapes.large,
+        shape = MaterialTheme.shapes.medium,
         color = MaterialTheme.colorScheme.secondaryContainer,
         contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
         modifier = modifier.fillMaxWidth().testTag("changes"),
@@ -340,8 +344,8 @@ private fun SwipeToRevert(onRevert: (() -> Unit)?, content: @Composable () -> Un
     }
 }
 
-/** Room under the list for the publishing button: an extended FAB and its margin. */
-private val FAB_CLEARANCE = 88.dp
+/** Room under the list for the publishing button: a medium extended FAB and its margin. */
+private val FAB_CLEARANCE = 96.dp
 
 /** How much of the changes are published, for a determinate indicator. */
 private fun publishedFraction(progress: AppContainer.Progress): Float =
