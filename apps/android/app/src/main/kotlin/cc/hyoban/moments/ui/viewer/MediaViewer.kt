@@ -463,11 +463,14 @@ private fun InfoCard(icon: ImageVector, title: String, content: @Composable Colu
     }
 }
 
-/** A tile inside a card, a level into it: some text, with its [label] over it when it has one. */
+/**
+ * A tile inside a card, a level into it: some text, with its [label] over it when it has one.
+ * Its corners the card's less the card's padding, 16dp less 12dp, so the two look as round.
+ */
 @Composable
 private fun InfoTile(text: String, label: String? = null) {
     Column(
-        Modifier.fillMaxWidth().clip(MaterialTheme.shapes.medium).background(LocalSurfaceLevel.current.raised.fill()).padding(Space.m),
+        Modifier.fillMaxWidth().clip(MaterialTheme.shapes.extraSmall).background(LocalSurfaceLevel.current.raised.fill()).padding(Space.m),
         verticalArrangement = Arrangement.spacedBy(Space.xxs),
     ) {
         label?.let { Text(it, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
@@ -624,7 +627,7 @@ private fun InfoContent(
         if (moment.places.isNotEmpty()) {
             InfoCard(Icons.Rounded.Place, stringResource(R.string.section_places)) {
                 if (located.isNotEmpty()) {
-                    PlacesStill(located, Modifier.fillMaxWidth().aspectRatio(2f).clip(MaterialTheme.shapes.medium))
+                    PlacesStill(located, Modifier.fillMaxWidth().aspectRatio(2f).clip(MaterialTheme.shapes.extraSmall))
                 }
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.s)) {
                     moment.places.forEach { id -> NeutralChip(places[id]?.name ?: id, Icons.Rounded.Place, onClick = { onPlace(id) }, modifier = Modifier.testTag("place_$id")) }

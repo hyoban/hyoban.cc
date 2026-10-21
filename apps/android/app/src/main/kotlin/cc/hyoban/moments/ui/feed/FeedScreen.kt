@@ -253,9 +253,7 @@ fun FeedScreen(
                     },
                 ) {
                     TabRefreshBox(pull) {
-                        if (moments.isEmpty()) {
-                            EmptyState(loading = !loaded || syncing, message = R.string.empty_moments)
-                        } else {
+                        LoadedContent(moments.isEmpty(), loading = !loaded || syncing, message = R.string.empty_moments) {
                             // The rows over the Moments, the changes, list or calendar and the
                             // filter, stand once above both views rather than heading each, so
                             // switching cross-fades only what changes and leaves them still.

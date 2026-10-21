@@ -43,7 +43,7 @@ import cc.hyoban.moments.ui.components.TabPage
 import cc.hyoban.moments.ui.components.sharedCard
 import cc.hyoban.moments.ui.components.tripCardKey
 import cc.hyoban.moments.ui.feed.CardRow
-import cc.hyoban.moments.ui.feed.EmptyState
+import cc.hyoban.moments.ui.feed.LoadedContent
 import cc.hyoban.moments.ui.feed.TabRefreshBox
 import cc.hyoban.moments.ui.feed.rememberPulledRefresh
 import cc.hyoban.moments.ui.feed.ShowRefreshErrors
@@ -72,9 +72,7 @@ fun TripsScreen(container: AppContainer, onTrip: (String) -> Unit) {
         subtitle = pluralStringResource(R.plurals.count_trips, trips.size, trips.size) + " · " + pluralStringResource(R.plurals.count_days_total, days, days),
     ) {
         TabRefreshBox(pull) {
-            if (trips.isEmpty()) {
-                EmptyState(loading = !loaded || syncing, message = R.string.empty_trips)
-            } else {
+            LoadedContent(trips.isEmpty(), loading = !loaded || syncing, message = R.string.empty_trips) {
                 PageWidth { columns ->
                     OnTabReselect(Trips) { list.animateScrollToItem(0) }
                     LazyColumn(

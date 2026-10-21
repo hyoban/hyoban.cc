@@ -75,7 +75,6 @@ import cc.hyoban.moments.ui.map.PICK_ZOOM
 import cc.hyoban.moments.ui.map.PickerMap
 import cc.hyoban.moments.ui.theme.Corners
 import cc.hyoban.moments.ui.theme.Elevation
-import cc.hyoban.moments.ui.theme.LocalDarkTheme
 import cc.hyoban.moments.ui.theme.Radius
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.SurfaceLevel
@@ -237,7 +236,7 @@ internal fun PlacePicker(
                                 }
                             },
                             shape = Corners.full,
-                            containerColor = SurfaceLevel.floating(LocalDarkTheme.current).fill(),
+                            containerColor = SurfaceLevel.Floating.fill(),
                             contentColor = MaterialTheme.colorScheme.primary,
                             // Named on the button, so it keeps its name while the indicator stands in for the icon.
                             modifier = Modifier.semantics { contentDescription = locateLabel }.testTag("locate"),

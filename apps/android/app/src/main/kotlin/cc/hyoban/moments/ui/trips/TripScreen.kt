@@ -140,7 +140,8 @@ fun TripScreen(
         Surface(shape = MaterialTheme.shapes.large, color = level.fill(), modifier = modifier.padding(horizontal = Space.gutter).fillMaxWidth()) {
             Column(Modifier.padding(Space.m), verticalArrangement = Arrangement.spacedBy(Space.m)) {
                 SectionHeader(Icons.Rounded.Route, stringResource(R.string.section_route))
-                TripMap(stops, routes[trip.id].orEmpty(), mapModifier.fillMaxWidth().clip(MaterialTheme.shapes.medium))
+                // The map's corners the card's less its padding, so the two look as round.
+                TripMap(stops, routes[trip.id].orEmpty(), mapModifier.fillMaxWidth().clip(MaterialTheme.shapes.extraSmall))
             }
         }
     }

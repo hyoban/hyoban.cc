@@ -520,12 +520,12 @@ private fun PhotoStrip(photos: List<Uri>, onAdd: () -> Unit, onRemove: (Uri) -> 
         itemsIndexed(photos, key = { _, uri -> uri.toString() }) { index, uri ->
             val lifted = held == uri
             val placement = if (lifted) {
-                // Lifted over the rest, a level up, with the drag's state layer over it.
+                // Lifted over the rest at the dragged level, level 4, with the drag's state layer over it.
                 Modifier.zIndex(1f).graphicsLayer {
                     translationX = offset
                     scaleX = LIFTED_SCALE
                     scaleY = LIFTED_SCALE
-                    shadowElevation = Elevation.level3.toPx()
+                    shadowElevation = Elevation.level4.toPx()
                     shape = photoShape
                     clip = true
                 }

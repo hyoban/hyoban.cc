@@ -1,12 +1,10 @@
 package cc.hyoban.moments.ui.components
 
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,7 +36,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerEventType
@@ -50,26 +47,24 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import cc.hyoban.moments.ui.theme.Corners
 import cc.hyoban.moments.ui.theme.Elevation
-import cc.hyoban.moments.ui.theme.LocalDarkTheme
 import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.SurfaceLevel
 import cc.hyoban.moments.ui.theme.fill
 
-/** The page every screen is laid on: grey in light, the darkest surface in dark. */
+/** The page every screen is laid on: Material 3's surface. */
 object AppColors {
     val page: Color
         @Composable get() = SurfaceLevel.Page.fill()
 
-    /** A sheet over the page: the page's own level in light, a level up in dark, where a scrim hardly darkens what is under it. */
-    val sheetLevel: SurfaceLevel
-        @Composable get() = if (LocalDarkTheme.current) SurfaceLevel.Card else SurfaceLevel.Page
+    /** A sheet over the page: a level up from it, in light and dark alike. */
+    val sheetLevel: SurfaceLevel = SurfaceLevel.Card
 }
 
 /**
  * A card one level above what it sits on, set apart by its fill rather than a border or a
- * shadow; what is inside it is a level above it in turn. It gives a little under the
- * finger and springs back, wherever it is pressed, its photos too. With [onLongClick], a
+ * shadow; what is inside it is a level above it in turn. Pressed anywhere, its photos too,
+ * it shows Material 3's pressed state layer, a ripple, without moving. With [onLongClick], a
  * long press, or a mouse's right click, opens what more it offers, named [onLongClickLabel];
  * [onLongClick] is told where, from the card's bottom start, as a menu over it is offset.
  */
@@ -83,12 +78,6 @@ fun PressableCard(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val interaction = remember { MutableInteractionSource() }
-    val pressed by interaction.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        if (pressed) 0.97f else 1f,
-        MaterialTheme.motionScheme.fastSpatialSpec(),
-        label = "press",
-    )
     val level = LocalSurfaceLevel.current.raised
     // Where the finger or the pointer last went down, for what a long press opens.
     val down = remember { floatArrayOf(0f, 0f) }
@@ -97,10 +86,7 @@ fun PressableCard(
     Card(
         shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(containerColor = level.fill(), contentColor = MaterialTheme.colorScheme.onSurface),
-        modifier = modifier.graphicsLayer {
-            scaleX = scale
-            scaleY = scale
-        },
+        modifier = modifier,
     ) {
         // Tapped inside the card's shape, so the ripple is clipped to it and lies over its photos.
         Column(
@@ -201,7 +187,7 @@ fun DayPill(text: String) {
     Box(Modifier.fillMaxWidth().padding(horizontal = Space.gutter, vertical = Space.s).semantics(mergeDescendants = true) { heading() }) {
         Surface(
             shape = Corners.full,
-            color = SurfaceLevel.floating(LocalDarkTheme.current).fill(),
+            color = SurfaceLevel.Floating.fill(),
             contentColor = MaterialTheme.colorScheme.onSurface,
             shadowElevation = Elevation.level2,
         ) {
