@@ -116,7 +116,7 @@ fun Modifier.sharedMedia(key: String?, shape: Shape = RectangleShape): Modifier 
  */
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun Modifier.sharedCard(key: String, cardCorner: Dp = Radius.large, page: Boolean = false): Modifier {
+fun Modifier.sharedCard(key: String, cardCorner: Dp = Radius.large, page: Boolean = false, relayout: Boolean = false): Modifier {
     val shared = LocalSharedTransitionScope.current
     val animated = LocalNavAnimatedScope.current
     if (shared == null || animated == null) return this
@@ -145,8 +145,14 @@ fun Modifier.sharedCard(key: String, cardCorner: Dp = Radius.large, page: Boolea
             enter = fadeIn(motion.fastEffectsSpec()),
             exit = fadeOut(motion.fastEffectsSpec()),
             boundsTransform = { _, _ -> motion.defaultSpatialSpec() },
-            // Scaled, not laid out again at each size, so the words keep their lines as it grows.
-            resizeMode = SharedTransitionScope.ResizeMode.scaleToBounds(ContentScale.FillWidth, Alignment.TopCenter),
+            // Scaled, not laid out again at each size, so the words keep their lines as it grows;
+            // a card far narrower than its page, a day's pill, laid out again instead, so its
+            // words keep their size rather than swelling to the page's width.
+            resizeMode = if (relayout) {
+                SharedTransitionScope.ResizeMode.RemeasureToBounds
+            } else {
+                SharedTransitionScope.ResizeMode.scaleToBounds(ContentScale.FillWidth, Alignment.TopCenter)
+            },
             clipInOverlayDuringTransition = OverlayClip(clip),
         )
     }
@@ -166,8 +172,14 @@ private class CornerClip(private val corner: State<Dp>) : Shape {
 /** The key a trip's card and its page share. */
 fun tripCardKey(id: String) = "trip-$id"
 
-/** The key a calendar day and its page of Moments share. */
+/** The key a calendar day, or a day's pill over its Moments, and its page of Moments share. */
 fun dayCardKey(date: String) = "day-$date"
+
+/**
+ * The key a Moment's row for the rest of its day and the day's page share: apart from the
+ * pill's, so a Moment opened from under its day's pill doesn't take the pill into its row.
+ */
+fun dayRowKey(date: String) = "day-row-$date"
 
 /**
  * Keeps what lies over a photo, a sheet or a button, over it as the photo comes onto its

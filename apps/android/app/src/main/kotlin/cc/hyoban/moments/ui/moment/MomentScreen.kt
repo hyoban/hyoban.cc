@@ -122,7 +122,7 @@ import cc.hyoban.moments.ui.components.READABLE_WIDTH
 import cc.hyoban.moments.ui.components.RisingSheet
 import cc.hyoban.moments.ui.components.Thumbnail
 import cc.hyoban.moments.ui.components.Tooltip
-import cc.hyoban.moments.ui.components.dayCardKey
+import cc.hyoban.moments.ui.components.dayRowKey
 import cc.hyoban.moments.ui.components.kindLabel
 import cc.hyoban.moments.ui.components.landscape
 import cc.hyoban.moments.ui.components.mediaKey
@@ -441,7 +441,7 @@ private fun MomentDetails(
                         leadingContent = { RowIcon(Icons.Rounded.CalendarToday) },
                         trailingContent = { Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null) },
                         supportingContent = { Text(pluralStringResource(R.plurals.count_moments, sameDay, sameDay)) },
-                        modifier = Modifier.sharedCard(dayCardKey(moment.dateKey)).testTag("day_${moment.dateKey}"),
+                        modifier = Modifier.sharedCard(dayRowKey(moment.dateKey)).testTag("day_${moment.dateKey}"),
                     ) { Text(stringResource(R.string.label_whole_day)) }
                 }
             }

@@ -115,6 +115,12 @@ import org.maplibre.geojson.Feature
 import org.maplibre.geojson.FeatureCollection
 import org.maplibre.geojson.LineString
 import org.maplibre.geojson.Point
+import kotlin.math.PI
+import kotlin.math.atan
+import kotlin.math.ln
+import kotlin.math.pow
+import kotlin.math.sinh
+import kotlin.math.tan
 
 // A vector basemap drawn on the phone by MapLibre, the styles the settings name for light
 // and dark (OpenFreeMap's Positron and its dark twin unless changed), every name in Chinese
@@ -162,6 +168,16 @@ private fun MapLibreMap.flyToFrame(points: List<LatLng>, padding: IntArray, inst
         CameraPosition.Builder(fitted).zoom(minOf(fitted.zoom, CLOSEST)).build()
     }
     glide(CameraUpdateFactory.newCameraPosition(camera), 600, instant)
+}
+
+/**
+ * Where to look from for this to show [dp] above the middle at [zoom]: as far south as that
+ * is on the map, its world 512 at zoom 0 and twice as wide at each zoom beyond.
+ */
+private fun LatLng.southBy(dp: Double, zoom: Double): LatLng {
+    val world = 512.0 * 2.0.pow(zoom)
+    val y = (1 - ln(tan(PI / 4 + latitude * PI / 360)) / PI) / 2 * world + dp
+    return LatLng(atan(sinh(PI * (1 - 2 * y / world))) * 180 / PI, longitude)
 }
 
 /**
@@ -437,6 +453,9 @@ fun PlacesMap(
     onEmptyTap: () -> Unit = {},
     /** The tab the map is on, which, tapped again while shown, brings every place back into view. */
     tab: Any? = null,
+    /** A place or a trip to fly to, once the map is ready, then [onFocused]. */
+    focus: MapFocus? = null,
+    onFocused: () -> Unit = {},
 ) {
     val reduced = LocalReducedMotion.current
     val tapPlace by rememberUpdatedState(onPlace)
@@ -597,11 +616,12 @@ fun PlacesMap(
         // Opens on every place once there are places, and stays where it's moved after
         // that, until the phone turns: then every place again, to fill the screen's new shape.
         if ((!framed || MainMap.framedFor != shape) && places.isNotEmpty()) {
-            framed = true
             MainMap.framedFor = shape
-            // Once the map has been laid out at the screen's new shape.
+            // Once the map has been laid out at the screen's new shape; only then framed, so a
+            // place or a trip to fly to waits for it rather than being framed over.
             withFrameNanos { }
             ready.frame(places.map { it.place.latLng }, frame)
+            framed = true
         }
     }
 
@@ -627,6 +647,35 @@ fun PlacesMap(
     // Where the place's sheet leaves the map in sight: under the legend and above the sheet's half.
     val clearTop = with(density) { (bars[1] + 72.dp).toPx() }
     val sheetMargin = with(density) { 48.dp.toPx() }
+    // A place or a trip shown from its page: the place flown to the middle of what its sheet
+    // leaves in sight, the trip's route framed above its card. The place's own nudge into
+    // sight below then leaves it be.
+    val focused by rememberUpdatedState(onFocused)
+    val flownTo = remember { arrayOfNulls<String>(1) }
+    val cardRoom = with(density) { 112.dp.roundToPx() }
+    LaunchedEffect(map, focus, framed, places, routes) {
+        val target = focus ?: return@LaunchedEffect
+        if (target is MapFocus.Place) flownTo[0] = target.id
+        val (ready, _) = map ?: return@LaunchedEffect
+        if (!framed) return@LaunchedEffect
+        when (target) {
+            is MapFocus.Place -> {
+                val at = places.firstOrNull { it.id == target.id }?.place?.latLng ?: return@LaunchedEffect
+                val zoom = maxOf(ready.cameraPosition.zoom, NEARBY_ZOOM)
+                val clearBottom = ready.height * (1f - PLACE_SHEET_SHARE) - sheetMargin
+                val above = (ready.height / 2f - (clearTop + clearBottom) / 2f) / density.density
+                val camera = CameraPosition.Builder().target(at.southBy(above.toDouble(), zoom)).zoom(zoom).bearing(0.0).build()
+                ready.glide(CameraUpdateFactory.newCameraPosition(camera), 600, reduced)
+            }
+            is MapFocus.Trip -> {
+                val route = routes.firstOrNull { it.id == target.id } ?: return@LaunchedEffect
+                val points = route.segments.flatMap { segment -> segment.line.map { (longitude, latitude) -> LatLng(latitude, longitude) } }
+                if (points.isNotEmpty()) ready.flyToFrame(points, frame.copyOf().also { it[3] += cardRoom }, reduced)
+            }
+        }
+        focused()
+    }
+
     LaunchedEffect(map, selected) {
         val (ready, style) = map ?: return@LaunchedEffect
         val previous = before[0]
@@ -649,7 +698,9 @@ fun PlacesMap(
             style.getLayerAs<CircleLayer>(PLACES_SHADOW)?.setProperties(circleRadius(sum(grown, literal(3f))))
         }
         val place = places.firstOrNull { it.id == selected }?.place?.latLng
-        if (place != null) {
+        val flown = flownTo[0] == selected
+        flownTo[0] = null
+        if (place != null && !flown) {
             // Brought up into sight when its sheet would cover it, gliding with the sheet as it rises.
             val at = ready.projection.toScreenLocation(place)
             val clearBottom = ready.height * (1f - PLACE_SHEET_SHARE) - sheetMargin
