@@ -95,6 +95,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.util.Consumer
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
+import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavGraph
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -251,7 +252,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
     val entry by navController.currentBackStackEntryAsState()
     val current = Tab.entries.firstOrNull { tab -> entry?.destination?.hasRoute(tab.type) == true }
     val back: () -> Unit = { navController.popBackStack() }
-    val openMoment: (String) -> Unit = { navController.navigate(Moment(it)) }
+    val openMoment: (String) -> Unit = { navController.goTo(Moment(it)) }
     // The viewer opens over the page it was opened from rather than as a page of its own,
     // so the page stays under it: a drag down to close shows it through the thinning black.
     var viewer by rememberSaveable(stateSaver = ViewerSaver) { mutableStateOf<Viewer?>(null) }
@@ -271,7 +272,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
         viewerKey = shownKey
         viewer = null
     }
-    val openTrip: (String) -> Unit = { navController.navigate(Trip(it)) }
+    val openTrip: (String) -> Unit = { navController.goTo(Trip(it)) }
     // Editing from a card's menu, where its page would offer it: the phone's own Moments, the
     // site's with the API's token, and none while publishing;
     // and where it leads, its places, its trip and its day, from any card's menu.
@@ -281,15 +282,16 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
             onEdit = { navController.navigate(EditMoment(it)) },
             places = { container.repository.places.value },
             tripOf = { tripOf(it, container.repository.trips.value) },
-            onPlace = { navController.navigate(PlaceMoments(it)) },
-            onTrip = { navController.navigate(Trip(it)) },
-            onDay = { navController.navigate(Day(it)) },
+            onPlace = { navController.goTo(PlaceMoments(it)) },
+            onTrip = { navController.goTo(Trip(it)) },
+            onDay = { navController.goTo(Day(it)) },
+            isHere = { route -> navController.currentBackStackEntry?.isOf(route) == true },
         )
     }
-    val openPlace: (String) -> Unit = { navController.navigate(PlaceMoments(it)) }
+    val openPlace: (String) -> Unit = { navController.goTo(PlaceMoments(it)) }
     // A day out of its calendar day or its pill, or out of a Moment's row for it.
-    val openDay: (String) -> Unit = { navController.navigate(Day(it, dayCardKey(it))) }
-    val openDayRow: (String) -> Unit = { navController.navigate(Day(it, dayRowKey(it))) }
+    val openDay: (String) -> Unit = { navController.goTo(Day(it, dayCardKey(it))) }
+    val openDayRow: (String) -> Unit = { navController.goTo(Day(it, dayRowKey(it))) }
 
     // A place or a trip shown on the map tab from its page, until the map has flown to it.
     var mapFocus by remember { mutableStateOf<MapFocus?>(null) }
@@ -434,6 +436,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                         LocalTabReselects provides tabReselects,
                         LocalInPictureInPicture provides inPictureInPicture,
                         LocalMomentActions provides momentActions,
+                        LocalNavController provides navController,
                     ) {
                         NavHost(
                             navController = navController,
@@ -558,7 +561,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                     onMoment = { closeViewer(); openMoment(it) },
                                     onPlace = { closeViewer(); openPlace(it) },
                                     onTrip = { closeViewer(); openTrip(it) },
-                                    onDay = { closeViewer(); navController.navigate(Day(it)) },
+                                    onDay = { closeViewer(); navController.goTo(Day(it)) },
                                     onBack = closeViewer,
                                     onShown = {
                                         // The first photo's tile steps aside as the viewer opens.
@@ -767,6 +770,8 @@ class MomentActions(
     val onPlace: (String) -> Unit,
     val onTrip: (String) -> Unit,
     val onDay: (String) -> Unit,
+    /** Whether a route is the page shown, which the menu needn't lead to. */
+    val isHere: (Any) -> Boolean,
 )
 
 /** The app's [MomentActions], for the cards of any list; none where the app doesn't give them. */
@@ -835,7 +840,28 @@ fun rememberShowMessage(): (String) -> Unit {
 val LocalNavAccessory = staticCompositionLocalOf<MutableState<(@Composable () -> Unit)?>> { mutableStateOf(null) }
 
 
-/** A destination whose screen knows its transition, so its photos can share their place with the next screen's. */
+/**
+ * Goes to [route] as a page over the one shown, or, when it is the page just under it, back
+ * to that, a Moment's trip from the trip's page closing into its card there rather than
+ * opening the trip again on top; and nowhere when it is the page shown, from the viewer over it.
+ */
+private fun NavController.goTo(route: Any) {
+    when {
+        currentBackStackEntry?.isOf(route) == true -> Unit
+        previousBackStackEntry?.isOf(route) == true -> popBackStack()
+        else -> navigate(route)
+    }
+}
+
+/** Whether this is the page of [route]: the same Moment, trip, place or day, whatever card a day grew from. */
+private fun NavBackStackEntry.isOf(route: Any): Boolean = when (route) {
+    is Moment -> destination.hasRoute(Moment::class) && toRoute<Moment>() == route
+    is Trip -> destination.hasRoute(Trip::class) && toRoute<Trip>() == route
+    is PlaceMoments -> destination.hasRoute(PlaceMoments::class) && toRoute<PlaceMoments>() == route
+    is Day -> destination.hasRoute(Day::class) && toRoute<Day>().date == route.date
+    else -> false
+}
+
 /**
  * The scheme of the app's links, `moments://moment/{uid}` and the like, opened with
  * `adb shell am start -d` as much as from anywhere else.
@@ -864,6 +890,29 @@ fun routeOf(link: Uri): Any? {
     }
 }
 
+/** The app's navigation, for a page to tell what it was opened from. */
+private val LocalNavController = staticCompositionLocalOf<NavController?> { null }
+
+/** The page's own entry on the back stack. */
+private val LocalPageEntry = staticCompositionLocalOf<NavBackStackEntry?> { null }
+
+/**
+ * Whether the page was opened from [route]'s page, the one just under it, as it was when the
+ * page opened: kept while it closes, when it has left the back stack. A card for that page
+ * then isn't shared with it, so going back the page doesn't grow out of the card as this one
+ * shrinks into its own.
+ */
+@Composable
+fun openedFrom(route: Any): Boolean {
+    val navController = LocalNavController.current ?: return false
+    val entry = LocalPageEntry.current ?: return false
+    val below = remember(entry) {
+        val stack = navController.currentBackStack.value.filter { it.destination !is NavGraph }
+        stack.getOrNull(stack.indexOfFirst { it.id == entry.id } - 1)
+    }
+    return below?.isOf(route) == true
+}
+
 private inline fun <reified T : Any> NavGraphBuilder.screen(
     link: String? = null,
     noinline content: @Composable (NavBackStackEntry) -> Unit,
@@ -873,6 +922,7 @@ private inline fun <reified T : Any> NavGraphBuilder.screen(
         val room = LocalTabClearance.current
         CompositionLocalProvider(
             LocalNavAnimatedScope provides this,
+            LocalPageEntry provides entry,
             LocalBottomClearance provides if (tab) room.bottom else 0.dp,
             LocalFabClearance provides if (tab) room.fab else 0.dp,
         ) { content(entry) }

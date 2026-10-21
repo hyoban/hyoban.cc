@@ -72,6 +72,8 @@ fun MomentCard(
     modifier: Modifier = Modifier,
     showDate: Boolean = false,
     selected: Boolean = false,
+    /** A place the page is already of, left out of the subhead. */
+    hidePlace: String? = null,
 ) {
     // The card grows into the Moment's page when opened; shown in the detail pane beside the
     // list, it is [selected], outlined in the primary colour, as Material 3 marks the item a
@@ -96,7 +98,7 @@ fun MomentCard(
             Modifier.padding(start = Space.l, end = Space.l, top = if (moment.media.isEmpty()) Space.l else Space.s, bottom = Space.l),
             verticalArrangement = Arrangement.spacedBy(Space.m),
         ) {
-            MomentSubhead(moment, places, trip, showDate)
+            MomentSubhead(moment, places, trip, showDate, hidePlace)
             if (moment.text.isNotBlank()) {
                 Text(moment.text, style = MaterialTheme.typography.bodyLarge, maxLines = 8, overflow = TextOverflow.Ellipsis)
             }
@@ -111,10 +113,10 @@ fun MomentCard(
  * stays a label beside it.
  */
 @Composable
-fun MomentSubhead(moment: MomentRecord, places: Map<String, Place>, trip: TripRecord?, showDate: Boolean = false) {
+fun MomentSubhead(moment: MomentRecord, places: Map<String, Place>, trip: TripRecord?, showDate: Boolean = false, hidePlace: String? = null) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
         val time = listOfNotNull(if (showDate) formatDate(moment.occurredAt) else null, formatTime(moment.occurredAt)).joinToString(" ")
-        val parts = listOfNotNull(time.ifEmpty { null }) + moment.places.map { places[it]?.name ?: it } + listOfNotNull(trip?.title)
+        val parts = listOfNotNull(time.ifEmpty { null }) + moment.places.filter { it != hidePlace }.map { places[it]?.name ?: it } + listOfNotNull(trip?.title)
         Text(
             parts.joinToString(" · "),
             style = MaterialTheme.typography.bodyMedium,

@@ -142,6 +142,10 @@ fun MomentFeed(
     selected: String? = null,
     /** Opens a day's page from its pill, `YYYY-MM-DD`; the pills stay put without it. */
     onDay: ((String) -> Unit)? = null,
+    /** Whether a pill heads each day's Moments; not on a page that is one day already. */
+    dayPills: Boolean = true,
+    /** The place the page is of, which its cards needn't name. */
+    hidePlace: String? = null,
     leading: FeedLeading.() -> Unit = {},
 ) {
     val days = remember(moments) { moments.groupBy { it.dateKey }.toList() }
@@ -156,6 +160,7 @@ fun MomentFeed(
             modifier = cardModifier,
             showDate = showDate,
             selected = moment.uid == selected,
+            hidePlace = hidePlace,
         )
     }
 
@@ -179,7 +184,7 @@ fun MomentFeed(
                 // A month at a time, or, where there are no months to head, a day at a time.
                 val groups = if (months) byMonth(moments) else days
                 groups.forEach { (group, here) ->
-                    item(key = "group-$group", contentType = "group", span = StaggeredGridItemSpan.FullLine) {
+                    if (months || dayPills) item(key = "group-$group", contentType = "group", span = StaggeredGridItemSpan.FullLine) {
                         Box(Modifier.animateItem().then(across)) {
                             if (months) {
                                 val (name, year) = formatMonth(here.first().dateKey)
@@ -213,7 +218,7 @@ fun MomentFeed(
                         val (name, year) = formatMonth(day)
                         item(key = "month-${day.take(7)}", contentType = "month") { Box(Modifier.animateItem()) { MonthHeader(name, year) } }
                     }
-                    stickyHeader(key = "day-$day", contentType = "day") {
+                    if (dayPills) stickyHeader(key = "day-$day", contentType = "day") {
                         // Over the cards it is held above, which come after it.
                         Box(Modifier.zIndex(1f).belowListTop(state, "day-$day")) {
                             DayPill(dayPillText(dayLabel(day), dayMoments.size), day, onDay?.let { { it(day) } })

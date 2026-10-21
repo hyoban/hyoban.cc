@@ -519,7 +519,10 @@ fun DayScreen(
             }
         },
     ) {
-        MomentFeed(moments, places, trips, container.mediaUrls, onMoment, months = false)
+        // The day is the page's title and its trip in the bar, so its cards say neither again:
+        // no pill heads them, and the trip goes unsaid when all of them were on it.
+        val oneTrip = trip != null && moments.all { tripOf(it, trips)?.id == trip.id }
+        MomentFeed(moments, places, trips, container.mediaUrls, onMoment, months = false, showTrip = !oneTrip, dayPills = false)
     }
 }
 
@@ -563,6 +566,7 @@ fun PlaceScreen(
             }
         },
     ) {
-        MomentFeed(moments, places, trips, container.mediaUrls, onMoment, onDay = onDay)
+        // The place is the page's title, so its cards name only the other places they were at.
+        MomentFeed(moments, places, trips, container.mediaUrls, onMoment, onDay = onDay, hidePlace = id)
     }
 }
