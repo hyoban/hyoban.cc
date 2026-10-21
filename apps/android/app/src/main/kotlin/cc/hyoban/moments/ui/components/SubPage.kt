@@ -25,6 +25,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import cc.hyoban.moments.R
 import cc.hyoban.moments.ui.LocalRailSpace
@@ -52,7 +55,8 @@ fun SubPage(
 /**
  * A tab's page as Material 3 lays one out: a large flexible top app bar with no back
  * button over [content], folding into the bar the same way. Its [tab] tapped again, the
- * bar opens out again as the page goes back to its top.
+ * bar opens out again as the page goes back to its top. A page pulled down to [refresh]
+ * has its title offer the same to a screen reader, which can't pull.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -62,8 +66,9 @@ fun TabPage(
     modifier: Modifier = Modifier,
     subtitle: String? = null,
     actions: @Composable RowScope.() -> Unit = {},
+    refresh: (() -> Unit)? = null,
     content: @Composable BoxScope.() -> Unit,
-) = BarPage(title, subtitle, onBack = null, large = true, modifier, actions, content, tab)
+) = BarPage(title, subtitle, onBack = null, large = true, modifier, actions, content, tab, refresh = refresh)
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -77,12 +82,23 @@ private fun BarPage(
     content: @Composable BoxScope.() -> Unit,
     tab: Any? = null,
     close: Boolean = false,
+    refresh: (() -> Unit)? = null,
 ) {
     val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     OnTabReselect(tab) {
         animate(scroll.state.heightOffset, 0f) { value, _ -> scroll.state.heightOffset = value }
     }
-    val titleText: @Composable () -> Unit = { Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+    val refreshLabel = stringResource(R.string.action_refresh)
+    val titleText: @Composable () -> Unit = {
+        Text(
+            title,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = if (refresh == null) Modifier else Modifier.semantics {
+                customActions = listOf(CustomAccessibilityAction(refreshLabel) { refresh(); true })
+            },
+        )
+    }
     val subtitleText: (@Composable () -> Unit)? = subtitle?.let { { Text(it, maxLines = 1) } }
     val back: @Composable () -> Unit = {
         if (onBack != null) {

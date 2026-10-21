@@ -234,6 +234,7 @@ fun FeedScreen(
                     stringResource(R.string.title_moments),
                     tab = Feed,
                     modifier = Modifier.nestedScroll(fabScroll),
+                    refresh = pull.onRefresh,
                     subtitle = subtitle,
                     actions = {
                         // How the Moments are laid out is chosen above them; the bar keeps searching

@@ -5,7 +5,6 @@
     <string name="tab_trips">旅程</string>
     <string name="action_back">返回</string>
     <string name="action_play">播放</string>
-    <string name="action_all">全部</string>
     <string name="action_navigate">导航到这里</string>
     <string name="no_map_app">没有可以导航的地图应用</string>
     <string name="action_info">详情</string>
@@ -274,4 +273,6 @@
     <string name="action_hide_token">隐藏令牌</string>
     <string name="action_delete_color">删除此颜色</string>
     <string name="message_change_reverted">已放弃这项更改</string>
+    <string name="action_navigate_short">导航</string>
+    <string name="action_refresh">刷新</string>
 </resources>

@@ -28,10 +28,12 @@ import androidx.compose.material.icons.automirrored.rounded.Send
 import androidx.compose.material.icons.rounded.PhotoLibrary
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
@@ -161,7 +163,7 @@ private fun AppIcon(app: String?, fallback: ImageVector) {
 private val APP_ICON = 40.dp
 
 /** A separate copy for another platform; the original Moment stays as written. */
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarget, onDismiss: () -> Unit) {
     val context = LocalContext.current
@@ -277,7 +279,12 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                     }
                 },
             ) {
-                Text(stringResource(when {
+                // Busy, Material 3 Expressive's loading indicator in the label's place, saying
+                // what it waits for, as a button that has started something shows it.
+                if (busy) {
+                    val preparing = stringResource(R.string.share_preparing)
+                    LoadingIndicator(Modifier.size(24.dp).semantics { contentDescription = preparing }.testTag("share_busy"))
+                } else Text(stringResource(when {
                     target == ShareTarget.X -> R.string.share_x_open
                     target == ShareTarget.TELEGRAM -> if (copyTextOnOpen) R.string.share_telegram_copy_open else R.string.share_telegram_open
                     target == ShareTarget.XIAOHONGSHU -> if (copyTextOnOpen) R.string.share_xiaohongshu_copy_open else R.string.share_xiaohongshu_open
@@ -361,7 +368,6 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
             if (moment.media.any { it.type == MediaType.VIDEO || it.type == MediaType.LIVE_PHOTO }) {
                 Text(stringResource(R.string.share_stills_only), style = MaterialTheme.typography.bodySmall)
             }
-            if (busy) Text(stringResource(R.string.share_preparing))
             error?.let {
                 Text(stringResource(it), color = MaterialTheme.colorScheme.error)
             }

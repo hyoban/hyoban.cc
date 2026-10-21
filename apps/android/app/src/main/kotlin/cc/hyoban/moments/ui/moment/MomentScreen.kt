@@ -58,6 +58,7 @@ import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingToolbarDefaults
+import androidx.compose.material3.FloatingToolbarExitDirection
 import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -85,6 +86,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
@@ -178,9 +180,13 @@ fun MomentScreen(
     // The photos swiped above and the strip under them are one place in the Moment's media.
     val pager = rememberPagerState { moment.media.size }
 
+    // The toolbar at the foot goes down out of the way as the page is read on, and comes back
+    // as it is scrolled back, as Material 3 has a floating toolbar exit on scroll.
+    val toolbarScroll = FloatingToolbarDefaults.exitAlwaysScrollBehavior(exitDirection = FloatingToolbarExitDirection.Bottom)
+
     // The whole page is the card it was opened from, grown to the screen.
     // As a pane beside the Moments, it neither grows out of a card nor flies its photos, the card still in sight.
-    BoxWithConstraints(Modifier.fillMaxSize().then(if (pane) Modifier else Modifier.sharedCard(uid, page = true)).background(AppColors.page)) {
+    BoxWithConstraints(Modifier.fillMaxSize().then(if (pane) Modifier else Modifier.sharedCard(uid, page = true)).background(AppColors.page).nestedScroll(toolbarScroll)) {
         val screenWidth = maxWidth
         val screenHeight = maxHeight
         val scroll = rememberScrollState()
@@ -271,6 +277,7 @@ fun MomentScreen(
         if (editable && publishing == null) {
             HorizontalFloatingToolbar(
                 expanded = true,
+                scrollBehavior = toolbarScroll,
                 floatingActionButton = {
                     val edit = stringResource(R.string.action_edit_moment)
                     Tooltip(edit) {
@@ -283,7 +290,7 @@ fun MomentScreen(
                 content = tools,
             )
         } else {
-            HorizontalFloatingToolbar(expanded = true, modifier = toolbar, content = tools)
+            HorizontalFloatingToolbar(expanded = true, modifier = toolbar, scrollBehavior = toolbarScroll, content = tools)
         }
     }
 }

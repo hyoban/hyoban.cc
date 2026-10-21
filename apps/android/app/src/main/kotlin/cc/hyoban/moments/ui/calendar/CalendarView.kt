@@ -190,7 +190,9 @@ private fun DayCell(day: CalendarDay, urls: MediaUrls, today: LocalDate, onClick
             Text(
                 "${day.date.dayOfMonth}",
                 style = MaterialTheme.typography.labelLarge,
-                color = if (isToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                // The secondary text colour whole, at the 4.5:1 text needs; the days with
+                // Moments stand apart by their fill and photo, not these by fading.
+                color = if (isToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
         return

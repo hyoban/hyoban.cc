@@ -18,7 +18,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowForward
+import androidx.compose.material.icons.rounded.ArrowDownward
 import androidx.compose.material.icons.rounded.Route
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -94,8 +94,8 @@ fun TripScreen(
         }
     }
     // The trip's photos as Material 3's multi-browse carousel, a large one, a medium and a
-    // small, snapping as they're swiped; each opens its Moment. Headed with an arrow down to
-    // the Moments, so all of them can be seen without swiping sideways, as a carousel on a
+    // small, snapping as they're swiped; each opens its Moment. Headed with an arrow pointing
+    // down to the Moments, which it scrolls to on this page, so all of them can be seen without swiping sideways, as a carousel on a
     // page that scrolls needs.
     val feedState = rememberLazyListState()
     val scope = rememberCoroutineScope()
@@ -111,7 +111,7 @@ fun TripScreen(
                 val see = stringResource(R.string.action_see_moments)
                 Tooltip(see) {
                     IconButton(onClick = { scope.launch { feedState.animateScrollToItem(momentsFrom) } }, modifier = Modifier.testTag("see_moments")) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowForward, contentDescription = see)
+                        Icon(Icons.Rounded.ArrowDownward, contentDescription = see)
                     }
                 }
             }

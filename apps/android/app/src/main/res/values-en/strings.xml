@@ -6,7 +6,6 @@
     <string name="tab_trips">Trips</string>
     <string name="action_back">Back</string>
     <string name="action_play">Play</string>
-    <string name="action_all">All</string>
     <string name="action_navigate">Directions</string>
     <string name="no_map_app">No map app to give directions</string>
     <string name="action_info">Details</string>
@@ -283,4 +282,6 @@
     <string name="action_hide_token">Hide token</string>
     <string name="action_delete_color">Delete colour</string>
     <string name="message_change_reverted">Change reverted</string>
+    <string name="action_navigate_short">Directions</string>
+    <string name="action_refresh">Refresh</string>
 </resources>
