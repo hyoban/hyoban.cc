@@ -241,4 +241,4 @@ on FlClash for making something so carefully, and for making it open for others 
 from. The settings page carries the same thanks, with a link back to it.
 
 The cat on the icon is 馒头 (Mantou), drawn from a photo of the real one. The settings
-page says so too, above FlClash, with the cat as the icon shows it.
+page says so too, above FlClash, with a photo of its face.
