@@ -119,6 +119,23 @@ class TripPlaybackTest {
         assertEquals(0.5, controller.drawnTo, 1e-9)
     }
 
+    @Test
+    fun `a swipe steps through a stop's photos, then on to the next card, and back to the last photo`() {
+        val controller = PlaybackController(playback, reduced = true)
+        controller.begin()
+        val second = playback.slides.indexOfFirst { it is PlaybackSlide.Stop && it.stop.moment.uid == "2" }
+        controller.goTo(second)
+        assertEquals(0, controller.photo())
+        controller.stepPhoto(1)
+        controller.stepPhoto(1)
+        assertEquals(2, controller.photo())
+        controller.stepPhoto(1)
+        assertEquals(second + 1, controller.index)
+        controller.stepPhoto(-1)
+        assertEquals(second, controller.index)
+        assertEquals(2, controller.photo())
+    }
+
     private fun moment(uid: String, occurredAt: String, place: String?, text: String = "", photos: Int = 0) = MomentRecord(
         uid,
         occurredAt,

@@ -1,6 +1,12 @@
 package cc.hyoban.moments.ui.trips
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.VectorConverter
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.graphics.graphicsLayer
+import kotlinx.coroutines.launch
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
@@ -217,33 +223,56 @@ private fun PlayerCard(
         val stop = slide as? PlaybackSlide.Stop
         val swipe = with(LocalDensity.current) { SWIPE_TO_STEP.toPx() }
         val forward = if (LocalLayoutDirection.current == LayoutDirection.Ltr) -1 else 1
-        // A Moment's card is one touch target, growing into the Moment's page as its cards do;
-        // swiped sideways, it steps to the card before or after, as the site's photo swipe does;
-        // swiped down it folds to its words, and up it opens again, as a sheet over a map does.
+        // A Moment's card is one touch target, growing into the Moment's page as its cards do.
+        // Swiped sideways it steps through the stop's photos and past them to the card before
+        // or after, as the site's photo swipe does; swiped down it folds to its words, and up
+        // it opens again, as a sheet over a map does. It follows the finger as it is dragged,
+        // lifted to the dragged elevation, and springs back as it is let go.
+        val scope = rememberCoroutineScope()
+        val reduced = LocalReducedMotion.current
+        val drag = remember { Animatable(Offset.Zero, Offset.VectorConverter) }
+        var dragging by remember { mutableStateOf(false) }
+        val settle = MaterialTheme.motionScheme.fastSpatialSpec<Offset>()
+        val lift by animateDpAsState(if (dragging) Elevation.level4 else Elevation.level2, MaterialTheme.motionScheme.fastSpatialSpec(), label = "lift")
+        val letGo = {
+            dragging = false
+            scope.launch { if (reduced) drag.snapTo(Offset.Zero) else drag.animateTo(Offset.Zero, settle) }
+        }
         Surface(
             onClick = { stop?.let { onMoment(it.stop.moment.uid) } },
             enabled = stop != null,
             shape = MaterialTheme.shapes.extraLarge,
             color = SurfaceLevel.Floating.fill(),
-            shadowElevation = Elevation.level2,
+            shadowElevation = lift,
             modifier = Modifier.fillMaxWidth()
+                .graphicsLayer {
+                    translationX = drag.value.x
+                    translationY = drag.value.y
+                }
                 .then(if (stop != null) Modifier.sharedCard(stop.stop.moment.uid, cardCorner = Radius.extraLarge) else Modifier)
                 .pointerInput(swipe, forward) {
                     var dragged = Offset.Zero
                     detectDragGestures(
-                        onDragStart = { dragged = Offset.Zero },
+                        onDragStart = {
+                            dragged = Offset.Zero
+                            dragging = true
+                        },
                         onDragEnd = {
                             val (x, y) = dragged
                             when {
-                                abs(x) >= abs(y) && x * forward > swipe -> controller.next()
-                                abs(x) >= abs(y) && -x * forward > swipe -> controller.previous()
+                                abs(x) >= abs(y) && x * forward > swipe -> controller.stepPhoto(1)
+                                abs(x) >= abs(y) && -x * forward > swipe -> controller.stepPhoto(-1)
                                 abs(y) > abs(x) && y > swipe -> onExpanded(false)
                                 abs(y) > abs(x) && -y > swipe -> onExpanded(true)
                             }
+                            letGo()
                         },
+                        onDragCancel = { letGo() },
                     ) { change, amount ->
                         change.consume()
                         dragged += amount
+                        // Held back, so the card leans the way it's pulled rather than leaving its place.
+                        scope.launch { drag.snapTo(dragged * DRAG_FOLLOW) }
                     }
                 }
                 .testTag("trip_player"),
@@ -474,6 +503,9 @@ private fun DragHandle(expanded: Boolean, onExpanded: (Boolean) -> Unit) {
 
 /** How tall the handle's target is: the card's top margin and the handle, taken together. */
 private val HANDLE_TARGET = 32.dp
+
+/** How much of a drag the card follows. */
+private const val DRAG_FOLLOW = 0.35f
 
 /** How far a card is swiped to step to the next or the one before. */
 private val SWIPE_TO_STEP = 56.dp

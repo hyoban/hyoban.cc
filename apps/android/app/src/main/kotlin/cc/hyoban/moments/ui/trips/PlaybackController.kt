@@ -164,6 +164,33 @@ class PlaybackController(val playback: TripPlayback, private val reduced: Boolea
         held = !playing
     }
 
+    /**
+     * Steps through the stop's photos, by a swipe on its card: the photo [direction] away, or
+     * past the ends the card after or before, landing on that one's last photo, as the site does.
+     */
+    fun stepPhoto(direction: Int) {
+        val count = (slide as? PlaybackSlide.Stop)?.stop?.photos?.size ?: 0
+        val next = photo() + direction
+        if (count > 1 && next in 0 until count) {
+            selectPhoto(next)
+            return
+        }
+        val from = index
+        goTo(index + direction)
+        val previous = slide as? PlaybackSlide.Stop
+        if (direction < 0 && index != from && previous != null && previous.stop.photos.size > 1) selectPhoto(previous.stop.photos.size - 1)
+    }
+
+    /**
+     * Shows one of the stop's photos, moving the card's time to where that photo shows; the
+     * drive on keeps its own pace, so picking photos never moves the map back and forth.
+     */
+    private fun selectPhoto(photo: Int) {
+        val count = (slide as? PlaybackSlide.Stop)?.stop?.photos?.size ?: return
+        val duration = duration() ?: return
+        elapsed = photoDelay + (duration - photoDelay) * photo / count + 1
+    }
+
     /** Pauses, as a Moment opened from the card is read. */
     fun pause() {
         playing = false
