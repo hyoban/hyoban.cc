@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- What the share sheet is handed: the copy of a photo or video in the cache's shared/. -->
+<!-- What the share sheet is handed: the copy of a photo or video in the cache's shared/;
+     and where the camera writes a photo taken for a new Moment, the cache's camera/. -->
 <paths>
     <cache-path name="shared" path="shared/" />
+    <cache-path name="camera" path="camera/" />
 </paths>
