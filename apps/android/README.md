@@ -28,7 +28,10 @@ leads to the changes waiting to be published. `moments://search` opens the searc
 
 A new Moment can be written on the phone, from the ✎ in the Moments tab's header or
 `moments://new`, on a page of its own, or, on a window from Material 3's medium breakpoint
-on, in a dialog over the page it was opened from: its words, up to nine photos from the system's documents picker, and when and
+on, in a dialog over the page it was opened from: its words, up to nine photos from the system's documents picker or taken
+there and then with the phone's camera app (written to a file in the app's cache it is
+lent through the FileProvider, so the app asks for no camera permission; held, that tile
+opens the camera app itself, whose photos go to the gallery), and when and
 where, worked out as it is written. The time is the earliest photo's, from its EXIF and
 the offset the camera wrote, else now; the place is where the first photo was taken,
 when the app may see that (the photo picker takes it out, the documents picker doesn't),

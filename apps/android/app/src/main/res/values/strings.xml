@@ -221,6 +221,8 @@
     <string name="action_save">保存</string>
     <string name="hint_moment_text">这一刻…</string>
     <string name="action_add_photos">添加照片</string>
+    <string name="action_take_photo">拍照</string>
+    <string name="action_open_camera">打开相机</string>
     <string name="action_remove_photo">移除照片</string>
     <string name="action_move_earlier">往前移</string>
     <string name="action_move_later">往后移</string>
@@ -240,6 +242,7 @@
     <string name="confirm_discard">放弃这个时刻？</string>
     <string name="action_discard">放弃</string>
     <string name="error_save">没能保存：%1$s</string>
+    <string name="error_no_camera">没有可以拍照的相机应用</string>
     <string name="label_on_phone">仅本机</string>
     <string name="action_delete_moment">删除这个时刻</string>
     <string name="label_known_place">已有地点</string>

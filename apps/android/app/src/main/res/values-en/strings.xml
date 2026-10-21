@@ -234,6 +234,8 @@
     <string name="action_save">Save</string>
     <string name="hint_moment_text">What’s happening…</string>
     <string name="action_add_photos">Add photos</string>
+    <string name="action_take_photo">Take photo</string>
+    <string name="action_open_camera">Open camera</string>
     <string name="action_remove_photo">Remove photo</string>
     <string name="action_move_earlier">Move earlier</string>
     <string name="action_move_later">Move later</string>
@@ -253,6 +255,7 @@
     <string name="confirm_discard">Discard this Moment?</string>
     <string name="action_discard">Discard</string>
     <string name="error_save">Couldn’t save: %1$s</string>
+    <string name="error_no_camera">No camera app to take a photo with</string>
     <string name="label_on_phone">On this phone</string>
     <string name="action_delete_moment">Delete this Moment</string>
     <string name="label_known_place">A known place</string>
