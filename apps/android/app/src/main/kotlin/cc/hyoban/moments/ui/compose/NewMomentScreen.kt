@@ -306,7 +306,7 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
                 ) { Text(stringResource(R.string.action_save)) }
             },
         ) {
-            PageWidth { columns ->
+            PageWidth(maxColumns = 1) { columns ->
                 Column(
                     Modifier
                         .fillMaxSize()

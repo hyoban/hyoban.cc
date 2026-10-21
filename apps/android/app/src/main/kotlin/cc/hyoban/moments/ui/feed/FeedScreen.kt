@@ -89,12 +89,13 @@ import cc.hyoban.moments.ui.RailSpace
 import cc.hyoban.moments.ui.calendar.CalendarView
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.SubPage
+import cc.hyoban.moments.ui.components.PageWidth
 import cc.hyoban.moments.ui.components.Symbols
 import cc.hyoban.moments.ui.components.TabPage
 import cc.hyoban.moments.ui.components.Tooltip
 import cc.hyoban.moments.ui.components.dayCardKey
 import cc.hyoban.moments.ui.components.isExpandedWidth
-import cc.hyoban.moments.ui.components.isLandscape
+import cc.hyoban.moments.ui.components.isMediumWidth
 import cc.hyoban.moments.ui.components.sharedCard
 import cc.hyoban.moments.ui.format.formatDay
 import cc.hyoban.moments.ui.map.navigateTo
@@ -159,7 +160,7 @@ fun FeedScreen(
     val accessory = LocalNavAccessory.current
     val currentOnNew by rememberUpdatedState(onNew)
     val newBeside = remember<@Composable () -> Unit> {
-        { NewMomentButton(onClick = { currentOnNew() }, inRail = isLandscape(), expanded = fabExpanded) }
+        { NewMomentButton(onClick = { currentOnNew() }, inRail = isMediumWidth(), expanded = fabExpanded) }
     }
     DisposableEffect(accessory) {
         accessory.value = newBeside
@@ -224,7 +225,7 @@ fun FeedScreen(
         // pane, starting past the cutout and the rail, which it then needn't keep clear of.
         val rail = LocalRailSpace.current
         val listPane = if (twoPane) {
-            Modifier.windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Start)).padding(start = rail.left).width(LIST_PANE_WIDTH)
+            Modifier.windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Start)).padding(start = rail.left).width(LIST_PANE_WIDTH + Space.gutter * 2)
         } else {
             Modifier.weight(1f)
         }
@@ -260,8 +261,12 @@ fun FeedScreen(
                             // switching cross-fades only what changes and leaves them still.
                             // They scroll away with either and come back at its top.
                             Column(Modifier.fillMaxSize().nestedScroll(headerScroll.connection)) {
+                                // As wide as the Moments under them and as far in, clear of the rail
+                                // and the cutout as they are.
                                 CollapsingHeader(headerScroll) {
-                                    Column { FeedLeading().apply(header).rows.forEach { (_, row) -> row() } }
+                                    PageWidth { columns ->
+                                        Column(Modifier.padding(horizontal = columns.margin)) { FeedLeading().apply(header).rows.forEach { (_, row) -> row() } }
+                                    }
                                 }
                                 // A fade through, the one going fully out before the other comes in,
                                 // as Material 3 keeps a fade clean of half-shown frames of both.
@@ -298,7 +303,7 @@ fun FeedScreen(
             Box(
                 Modifier.weight(1f).fillMaxHeight()
                     .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.End + WindowInsetsSides.Bottom))
-                    .padding(top = Space.s, end = Space.l, bottom = Space.s)
+                    .padding(top = Space.s, end = Space.gutter, bottom = Space.s)
                     .clip(MaterialTheme.shapes.extraLarge),
             ) {
                 val uid = chosen
@@ -331,8 +336,11 @@ fun FeedScreen(
     }
 }
 
-/** How wide the Moments stand beside a detail pane, Material 3's list pane. */
-private val LIST_PANE_WIDTH = 400.dp
+/**
+ * How wide the Moments stand beside a detail pane, Material 3's fixed pane; the margins each
+ * side of them make the window's margin before it and the spacer between the panes after it.
+ */
+private val LIST_PANE_WIDTH = 360.dp
 
 /**
  * How far the header over the Moments has folded away, as the views under it scroll: it goes

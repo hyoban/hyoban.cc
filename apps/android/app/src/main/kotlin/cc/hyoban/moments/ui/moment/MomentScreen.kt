@@ -198,7 +198,9 @@ fun MomentScreen(
                 onChanges = onChanges.takeIf { container.canPublish },
             )
         }
-        if (landscape && !pane && moment.media.isNotEmpty()) {
+        // On its side, the photos and the words side by side, each half the page.
+        val split = landscape && !pane && moment.media.isNotEmpty()
+        if (split) {
             // On its side, the photos fill the left half, up under the status bar, and the
             // words scroll beside them, rather than a photo taller than the screen over them.
             Row(Modifier.fillMaxSize()) {
@@ -267,30 +269,34 @@ fun MomentScreen(
                 ToolbarButton(Icons.Rounded.Fullscreen, stringResource(R.string.action_view_photo), "view_photo") { onMedia(uid, pager.currentPage) }
             }
         }
-        val toolbar = Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(bottom = Space.gutter).testTag("moment_toolbar")
+        // Under the words it acts on: in the middle of the page, or of their half beside the photos.
+        val toolbarArea = if (split) Modifier.align(Alignment.BottomEnd).fillMaxWidth(0.5f).sideInsetsPadding(WindowInsetsSides.End) else Modifier.align(Alignment.BottomCenter)
+        val toolbar = Modifier.testTag("moment_toolbar")
         // Snackbars stand above the toolbar while the page is shown.
         val lift = LocalSnackbarLift.current
         DisposableEffect(lift) {
             lift.value = TOOLBAR_CLEARANCE
             onDispose { lift.value = 0.dp }
         }
-        if (editable && publishing == null) {
-            HorizontalFloatingToolbar(
-                expanded = true,
-                scrollBehavior = toolbarScroll,
-                floatingActionButton = {
-                    val edit = stringResource(R.string.action_edit_moment)
-                    Tooltip(edit) {
-                        FloatingToolbarDefaults.StandardFloatingActionButton(onClick = { onEdit(uid) }, modifier = Modifier.testTag("edit")) {
-                            Icon(Icons.Rounded.Edit, contentDescription = edit)
+        Box(toolbarArea.navigationBarsPadding().padding(bottom = Space.gutter), contentAlignment = Alignment.BottomCenter) {
+            if (editable && publishing == null) {
+                HorizontalFloatingToolbar(
+                    expanded = true,
+                    scrollBehavior = toolbarScroll,
+                    floatingActionButton = {
+                        val edit = stringResource(R.string.action_edit_moment)
+                        Tooltip(edit) {
+                            FloatingToolbarDefaults.StandardFloatingActionButton(onClick = { onEdit(uid) }, modifier = Modifier.testTag("edit")) {
+                                Icon(Icons.Rounded.Edit, contentDescription = edit)
+                            }
                         }
-                    }
-                },
-                modifier = toolbar,
-                content = tools,
-            )
-        } else {
-            HorizontalFloatingToolbar(expanded = true, modifier = toolbar, scrollBehavior = toolbarScroll, content = tools)
+                    },
+                    modifier = toolbar,
+                    content = tools,
+                )
+            } else {
+                HorizontalFloatingToolbar(expanded = true, modifier = toolbar, scrollBehavior = toolbarScroll, content = tools)
+            }
         }
     }
 }
@@ -347,7 +353,7 @@ private fun MomentDetails(
     val sameDay = remember(moments, moment.dateKey) { moments.count { it.dateKey == moment.dateKey } }
     Column(Modifier.padding(top = Space.xl, bottom = Space.xxl)) {
         // The day emphasized, and its time beside it a shade lighter and plain: what the words are under.
-        Column(Modifier.padding(horizontal = Space.xl), verticalArrangement = Arrangement.spacedBy(Space.s)) {
+        Column(Modifier.padding(horizontal = Space.gutter + Space.l), verticalArrangement = Arrangement.spacedBy(Space.s)) {
             Text(
                 buildAnnotatedString {
                     append(formatDay(moment.occurredAt))
@@ -366,7 +372,7 @@ private fun MomentDetails(
             }
         }
         if (moment.text.isNotBlank()) {
-            SelectionContainer(Modifier.padding(start = Space.xl, end = Space.xl, top = Space.l)) {
+            SelectionContainer(Modifier.padding(start = Space.gutter + Space.l, end = Space.gutter + Space.l, top = Space.l)) {
                 Text(moment.text, style = MaterialTheme.typography.bodyLarge.copy(fontSize = 17.sp, lineHeight = 30.sp))
             }
         }
@@ -426,7 +432,7 @@ private fun MomentDetails(
         }
         if (rows.isNotEmpty()) {
             Column(
-                Modifier.padding(start = Space.l, end = Space.l, top = Space.xl),
+                Modifier.padding(start = Space.gutter, end = Space.gutter, top = Space.xl),
                 verticalArrangement = Arrangement.spacedBy(ListItemDefaults.SegmentedGap),
             ) {
                 rows.forEachIndexed { index, row -> row(ListItemDefaults.segmentedShapes(index, rows.size)) }
@@ -472,7 +478,7 @@ private fun Filmstrip(moment: MomentRecord, urls: MediaUrls, pager: PagerState, 
     LazyRow(
         modifier.fillMaxWidth(),
         state = list,
-        contentPadding = PaddingValues(horizontal = Space.xl),
+        contentPadding = PaddingValues(horizontal = Space.gutter),
         horizontalArrangement = Arrangement.spacedBy(Space.s),
     ) {
         itemsIndexed(moment.media, key = { _, media -> media.uid }) { index, media ->

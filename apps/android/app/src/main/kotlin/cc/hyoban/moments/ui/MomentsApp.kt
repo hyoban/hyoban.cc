@@ -115,6 +115,7 @@ import cc.hyoban.moments.ui.components.LocalViewerShowing
 import cc.hyoban.moments.ui.components.LocalViewerShownKey
 import cc.hyoban.moments.ui.components.Symbols
 import cc.hyoban.moments.ui.components.isLandscape
+import cc.hyoban.moments.ui.components.isMediumWidth
 import cc.hyoban.moments.ui.components.rememberReducedMotion
 import cc.hyoban.moments.ui.compose.NewMomentScreen
 import cc.hyoban.moments.ui.feed.DayScreen
@@ -267,13 +268,15 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
     var barHeight by remember { mutableStateOf(0.dp) }
     var railWidth by remember { mutableStateOf(0.dp) }
     var fabHeight by remember { mutableStateOf(0.dp) }
-    // On a phone on its side the tabs stand down a side instead, where the screen has
-    // width to spare and no height.
+    // From Material 3's medium breakpoint, a phone on its side, a tablet or an unfolded
+    // foldable, the tabs stand down a side instead, as a navigation rail; a narrower window,
+    // turned or not, keeps the navigation bar.
     val landscape = isLandscape()
+    val railed = isMediumWidth()
     val navBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     val clearance = when {
         current == null -> 0.dp
-        landscape -> navBottom
+        railed -> navBottom
         // The navigation bar, the system's navigation under it included.
         else -> barHeight
     }
@@ -281,7 +284,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
     // is turned; the system's insets keep it clear of the camera's cutout there.
     val railLeft = LocalLayoutDirection.current == LayoutDirection.Ltr
     val rail = when {
-        current == null || !landscape -> RailSpace(0.dp, 0.dp)
+        current == null || !railed -> RailSpace(0.dp, 0.dp)
         railLeft -> RailSpace(left = railWidth, right = 0.dp)
         else -> RailSpace(left = 0.dp, right = railWidth)
     }
@@ -361,7 +364,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
         Box(Modifier.fillMaxSize().semantics { isTraversalGroup = true }) {
             CompositionLocalProvider(
                 LocalBottomClearance provides clearance,
-                LocalFabClearance provides if (current != null && !landscape && accessorySlot.value != null) fabHeight else 0.dp,
+                LocalFabClearance provides if (current != null && !railed && accessorySlot.value != null) fabHeight else 0.dp,
                 LocalRailSpace provides rail,
                 LocalNavAccessory provides accessorySlot,
                 LocalMessages provides messages,
@@ -502,7 +505,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                 traversalIndex = -1f
             }
             AnimatedVisibility(
-                current != null && viewer == null && landscape,
+                current != null && viewer == null && railed,
                 enter = slideInHorizontally(transitions.defaultSpatialSpec()) { if (railLeft) -it else it },
                 exit = slideOutHorizontally(transitions.defaultSpatialSpec()) { if (railLeft) -it else it },
                 modifier = navigation.align(if (railLeft) AbsoluteAlignment.CenterLeft else AbsoluteAlignment.CenterRight).fillMaxHeight(),
@@ -531,7 +534,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                 }
             }
             AnimatedVisibility(
-                current != null && viewer == null && !landscape,
+                current != null && viewer == null && !railed,
                 enter = slideInVertically(transitions.defaultSpatialSpec()) { it },
                 exit = slideOutVertically(transitions.defaultSpatialSpec()) { it },
                 modifier = navigation.align(Alignment.BottomCenter).fillMaxWidth(),
@@ -539,9 +542,10 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                 Column(horizontalAlignment = Alignment.End) {
                     // A FAB grows out from its middle as it comes, as Material 3 has one enter.
                     AnimatedVisibility(accessorySlot.value != null, enter = fadeIn() + scaleIn(), exit = fadeOut() + scaleOut()) {
+                        val gutter = Space.gutter
                         Box(
-                            Modifier.padding(end = Space.gutter, bottom = Space.gutter)
-                                .onSizeChanged { fabHeight = with(density) { it.height.toDp() } + Space.gutter },
+                            Modifier.padding(end = gutter, bottom = gutter)
+                                .onSizeChanged { fabHeight = with(density) { it.height.toDp() } + gutter },
                         ) { accessory?.invoke() }
                     }
                     ShortNavigationBar(
@@ -561,7 +565,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
             }
             // Above the navigation bar and the button over it on a tab, the system's navigation
             // elsewhere, and the keyboard while it is up.
-            val fabRoom = if (current != null && !landscape && accessorySlot.value != null) fabHeight else 0.dp
+            val fabRoom = if (current != null && !railed && accessorySlot.value != null) fabHeight else 0.dp
             SnackbarHost(
                 messages,
                 Modifier.align(Alignment.BottomCenter).imePadding()

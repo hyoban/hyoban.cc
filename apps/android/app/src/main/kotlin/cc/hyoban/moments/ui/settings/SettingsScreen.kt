@@ -81,7 +81,7 @@ fun SettingsScreen(container: AppContainer, onBack: () -> Unit) {
     )
 
     SubPage(stringResource(R.string.title_settings), onBack, Modifier.background(AppColors.page)) {
-        PageWidth { columns ->
+        PageWidth(maxColumns = 1) { columns ->
             Column(
                 Modifier
                     .fillMaxSize()
