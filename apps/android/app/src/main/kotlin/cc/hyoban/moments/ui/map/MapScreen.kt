@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -43,14 +44,15 @@ import androidx.compose.material.icons.rounded.MyLocation
 import androidx.compose.material.icons.rounded.Navigation
 import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material3.BottomSheetScaffold
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.LocalContentColor
@@ -59,7 +61,6 @@ import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberStandardBottomSheetState
@@ -344,16 +345,20 @@ private fun PlaceSheet(
                     (listOf(pluralStringResource(R.plurals.count_moments, here.size, here.size)) + years.joinToString(context.getString(R.string.separator_list)) { context.getString(R.string.year_item, it) }).joinToString(" · "),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
-            Tooltip(stringResource(R.string.action_navigate)) {
-                IconButton(onClick = onNavigate, modifier = Modifier.testTag("navigate")) {
-                    Icon(Icons.Rounded.Directions, contentDescription = stringResource(R.string.action_navigate), tint = MaterialTheme.colorScheme.primary)
-                }
-            }
-            TextButton(onClick = onAll, modifier = Modifier.testTag("place_$id")) {
-                Text(stringResource(R.string.action_all))
-                Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null)
+            // The way there beside the name, named as well as drawn, as Material 3 keeps an
+            // icon alone for what everyone knows; all of the place waits at the list's foot.
+            FilledTonalButton(
+                onClick = onNavigate,
+                contentPadding = ButtonDefaults.ButtonWithIconContentPadding,
+                modifier = Modifier.testTag("navigate"),
+            ) {
+                Icon(Icons.Rounded.Directions, contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
+                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                Text(stringResource(R.string.action_navigate_short))
             }
         }
         LazyColumn(
@@ -365,20 +370,30 @@ private fun PlaceSheet(
                 // It grows into the Moment's page when opened, as a card on a list does.
                 SegmentedListItem(
                     onClick = { onMoment(moment.uid) },
-                    shapes = ListItemDefaults.segmentedShapes(index, here.size),
+                    shapes = ListItemDefaults.segmentedShapes(index, here.size + 1),
                     colors = ListItemDefaults.segmentedColors(containerColor = LocalSurfaceLevel.current.raised.fill()),
                     leadingContent = moment.media.firstOrNull()?.let { media -> { Thumbnail(media, urls, size = 56) } },
-                    supportingContent = {
-                        Text(
-                            moment.text.ifBlank { moment.places.joinToString(stringResource(R.string.separator_list)) { places[it]?.name ?: it } },
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    },
+                    // When over it as the overline and its words the headline, as the search's
+                    // results have it, each in the role Material 3 gives a list item's text.
+                    overlineContent = { Text(listOfNotNull(formatDate(moment.occurredAt), formatTime(moment.occurredAt)).joinToString(" ")) },
                     modifier = Modifier.sharedCard(moment.uid).testTag("moment_${moment.uid}"),
                 ) {
-                    Text(listOfNotNull(formatDate(moment.occurredAt), formatTime(moment.occurredAt)).joinToString(" "), style = MaterialTheme.typography.labelLarge)
+                    Text(
+                        moment.text.ifBlank { moment.places.joinToString(stringResource(R.string.separator_list)) { places[it]?.name ?: it } },
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
                 }
+            }
+            // The place's own page, the last segment of the list, read on to after its Moments.
+            item(key = "all") {
+                SegmentedListItem(
+                    onClick = onAll,
+                    shapes = ListItemDefaults.segmentedShapes(here.size, here.size + 1),
+                    colors = ListItemDefaults.segmentedColors(containerColor = LocalSurfaceLevel.current.raised.fill()),
+                    trailingContent = { Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null) },
+                    modifier = Modifier.testTag("place_$id"),
+                ) { Text(stringResource(R.string.action_see_moments), color = MaterialTheme.colorScheme.primary) }
             }
         }
     }

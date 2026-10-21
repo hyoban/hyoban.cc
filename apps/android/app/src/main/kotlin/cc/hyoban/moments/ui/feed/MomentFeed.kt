@@ -71,6 +71,7 @@ import cc.hyoban.moments.ui.LocalBottomClearance
 import cc.hyoban.moments.ui.LocalFabClearance
 import cc.hyoban.moments.ui.OnTabReselect
 import cc.hyoban.moments.ui.components.DayPill
+import cc.hyoban.moments.ui.components.LocalReducedMotion
 import cc.hyoban.moments.ui.components.MomentCard
 import cc.hyoban.moments.ui.components.MonthHeader
 import cc.hyoban.moments.ui.components.PageWidth
@@ -276,15 +277,22 @@ fun EmptyState(loading: Boolean, message: Int) {
     }
 }
 
-/** A few cards' shapes, a photo, a subhead and two lines of words each, pulsing while what they stand for loads. */
+/**
+ * A few cards' shapes, a photo, a subhead and two lines of words each, pulsing while what
+ * they stand for loads; still, with the phone's animations removed.
+ */
 @Composable
 private fun SkeletonCards() {
-    val pulse by rememberInfiniteTransition(label = "skeleton").animateFloat(
-        initialValue = 1f,
-        targetValue = 0.5f,
-        animationSpec = infiniteRepeatable(tween(SKELETON_PULSE_MS), RepeatMode.Reverse),
-        label = "skeleton pulse",
-    )
+    val pulse = if (LocalReducedMotion.current) {
+        1f
+    } else {
+        rememberInfiniteTransition(label = "skeleton").animateFloat(
+            initialValue = 1f,
+            targetValue = 0.5f,
+            animationSpec = infiniteRepeatable(tween(SKELETON_PULSE_MS), RepeatMode.Reverse),
+            label = "skeleton pulse",
+        ).value
+    }
     val bone = MaterialTheme.colorScheme.surfaceContainerHighest
     val loading = stringResource(R.string.empty_loading)
     PageWidth { columns ->

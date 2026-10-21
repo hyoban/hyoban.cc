@@ -68,6 +68,7 @@ fun TripsScreen(container: AppContainer, onTrip: (String) -> Unit) {
     TabPage(
         stringResource(R.string.title_trips),
         tab = Trips,
+        refresh = pull.onRefresh,
         subtitle = pluralStringResource(R.plurals.count_trips, trips.size, trips.size) + " · " + pluralStringResource(R.plurals.count_days_total, days, days),
     ) {
         TabRefreshBox(pull) {
