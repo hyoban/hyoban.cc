@@ -46,6 +46,20 @@ class DataStore(val root: File) {
 
     fun writeRemoved(uids: Set<String>) = write("removed.json", Removed.serializer(), Removed(uids.sorted()))
 
+    @Serializable
+    private data class Held(val deleting: List<String> = emptyList(), val reverting: List<String> = emptyList())
+
+    /**
+     * The Moments being deleted, and the site's Moments whose change is being taken back, while
+     * a snackbar can still undo it: the app's own note, outside the spec, so what the app was
+     * closed on before the snackbar went is done when it next starts, as the snackbar going would.
+     */
+    fun readHeld(): Pair<Set<String>, Set<String>> =
+        read("held.json", Held.serializer())?.let { it.deleting.toSet() to it.reverting.toSet() } ?: (emptySet<String>() to emptySet())
+
+    fun writeHeld(deleting: Set<String>, reverting: Set<String>) =
+        write("held.json", Held.serializer(), Held(deleting.sorted(), reverting.sorted()))
+
     fun readTrips(): List<TripRecord> = list("trips").map { file -> decode(file, TripRecord.serializer()) }
 
     /** Makes the trips on disk exactly these. */

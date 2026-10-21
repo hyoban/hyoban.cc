@@ -321,6 +321,39 @@ class MomentsRepositoryTest {
     }
 
     @Test
+    fun `a deletion or a take-back still undoable when the app is closed is done when it starts again`() = runBlocking {
+        api.put(moment("S", "2026-10-01", text = "the site's"))
+        val repository = repository()
+        repository.load()
+        repository.refresh()
+        repository.addLocal(moment("L", "2026-10-02", text = "written here", published = false))
+        repository.addLocal(moment("K", "2026-10-03", text = "kept", published = false))
+        repository.updateLocal(repository.moment("S")!!.copy(text = "changed here"))
+
+        repository.setAside("L")
+        repository.setAside("K")
+        repository.bringBack("K")
+        repository.holdRevert("S")
+        assertEquals(listOf("K", "S"), repository.moments.value.map { it.uid }, "set aside, it is out of sight")
+        assertEquals("the site's", repository.moments.value.first { it.uid == "S" }.text, "held, the site's shows")
+
+        // Closed with the snackbars still up: neither went, neither was undone.
+        val restarted = repository()
+        restarted.load()
+        assertEquals(null, restarted.moment("L"), "the deletion is done")
+        assertTrue(!restarted.isLocal("L"))
+        assertEquals("kept", restarted.moment("K")?.text, "one brought back stays")
+        assertEquals("the site's", restarted.moment("S")?.text, "the change is taken back")
+        assertTrue(!restarted.isChanged("S"))
+        assertEquals(listOf("K"), restarted.pending.value.added.map { it.uid })
+        assertEquals(emptyList(), restarted.pending.value.changed.map { it.after.uid })
+
+        val again = repository()
+        again.load()
+        assertEquals(listOf("K", "S"), again.moments.value.map { it.uid }, "and stays done")
+    }
+
+    @Test
     fun `a write right after the copy's revision moves the copy on to it, one after another's doesn't`() = runBlocking {
         val writer = FakeWriter()
         val store = DataStore(directory)
