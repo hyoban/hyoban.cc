@@ -49,6 +49,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
@@ -334,13 +336,17 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.s), verticalArrangement = Arrangement.spacedBy(Space.s)) {
                     photos.forEachIndexed { index, photo ->
                         val checked = photo.uid in selected
+                        // Once as many are chosen as the app takes, the rest can't be, and look it.
+                        val choosable = !busy && (checked || chosen.size < target.limit)
                         val label = stringResource(R.string.share_photo, index + 1)
                         Box(
                             Modifier
+                                // The ripple kept to the ring's rounded shape.
+                                .clip(MaterialTheme.shapes.large)
                                 .border(2.dp, if (checked) MaterialTheme.colorScheme.primary else Color.Transparent, MaterialTheme.shapes.large)
                                 .toggleable(
                                     value = checked,
-                                    enabled = !busy && (checked || chosen.size < target.limit),
+                                    enabled = choosable,
                                     role = Role.Checkbox,
                                     onValueChange = { select ->
                                         selected = if (select) selected + photo.uid else selected - photo.uid
@@ -351,7 +357,7 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                                 // The ring a step out from the photo, its corner the photo's and that step together.
                                 .padding(Space.xs),
                         ) {
-                            Thumbnail(photo, urls, size = 72)
+                            Thumbnail(photo, urls, size = 72, modifier = Modifier.alpha(if (choosable) 1f else DISABLED_ALPHA))
                             if (checked) {
                                 Surface(
                                     color = MaterialTheme.colorScheme.primary,
@@ -380,3 +386,6 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
         }
     }
 }
+
+/** Material 3's disabled content opacity, for a photo that can't be chosen. */
+private const val DISABLED_ALPHA = 0.38f

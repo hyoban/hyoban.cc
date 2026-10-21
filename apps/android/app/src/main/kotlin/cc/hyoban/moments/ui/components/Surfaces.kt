@@ -1,11 +1,15 @@
 package cc.hyoban.moments.ui.components
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,17 +26,24 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.isSecondaryPressed
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -58,10 +69,19 @@ object AppColors {
 /**
  * A card one level above what it sits on, set apart by its fill rather than a border or a
  * shadow; what is inside it is a level above it in turn. It gives a little under the
- * finger and springs back.
+ * finger and springs back, wherever it is pressed, its photos too. With [onLongClick], a
+ * long press, or a mouse's right click, opens what more it offers, named [onLongClickLabel];
+ * [onLongClick] is told where, from the card's bottom start, as a menu over it is offset.
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun PressableCard(onClick: () -> Unit, modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
+fun PressableCard(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    onLongClick: ((Offset) -> Unit)? = null,
+    onLongClickLabel: String? = null,
+    content: @Composable ColumnScope.() -> Unit,
+) {
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     val scale by animateFloatAsState(
@@ -70,10 +90,11 @@ fun PressableCard(onClick: () -> Unit, modifier: Modifier = Modifier, content: @
         label = "press",
     )
     val level = LocalSurfaceLevel.current.raised
+    // Where the finger or the pointer last went down, for what a long press opens.
+    val down = remember { floatArrayOf(0f, 0f) }
+    val currentLongClick by rememberUpdatedState(onLongClick)
 
     Card(
-        onClick = onClick,
-        interactionSource = interaction,
         shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(containerColor = level.fill(), contentColor = MaterialTheme.colorScheme.onSurface),
         modifier = modifier.graphicsLayer {
@@ -81,7 +102,32 @@ fun PressableCard(onClick: () -> Unit, modifier: Modifier = Modifier, content: @
             scaleY = scale
         },
     ) {
-        CompositionLocalProvider(LocalSurfaceLevel provides level) { content() }
+        // Tapped inside the card's shape, so the ripple is clipped to it and lies over its photos.
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .pointerInput(Unit) {
+                    awaitEachGesture {
+                        val event = awaitPointerEvent(PointerEventPass.Initial)
+                        if (event.type != PointerEventType.Press) return@awaitEachGesture
+                        event.changes.firstOrNull()?.position?.let { down[0] = it.x; down[1] = it.y - size.height }
+                        val open = currentLongClick
+                        if (open != null && event.buttons.isSecondaryPressed) {
+                            event.changes.forEach { it.consume() }
+                            open(Offset(down[0], down[1]))
+                        }
+                    }
+                }
+                .combinedClickable(
+                    interactionSource = interaction,
+                    indication = ripple(),
+                    onClick = onClick,
+                    onLongClick = onLongClick?.let { open -> { open(Offset(down[0], down[1])) } },
+                    onLongClickLabel = onLongClickLabel,
+                ),
+        ) {
+            CompositionLocalProvider(LocalSurfaceLevel provides level) { content() }
+        }
     }
 }
 

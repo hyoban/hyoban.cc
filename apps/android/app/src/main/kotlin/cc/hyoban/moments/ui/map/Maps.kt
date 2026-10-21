@@ -1,6 +1,7 @@
 package cc.hyoban.moments.ui.map
 
 import android.annotation.SuppressLint
+import android.graphics.PointF
 import android.graphics.RectF
 import android.view.Gravity
 import android.view.ViewGroup
@@ -351,6 +352,19 @@ data class MapRoute(val id: String, val segments: List<RouteSegment>)
 private const val DOT_SINGLE = 7f
 private const val DOT_MANY = 9f
 private const val DOT_CLUSTER = 12f
+
+/**
+ * How far from a dot's edge a tap still reaches it: with the smallest dot's radius and ring,
+ * 24dp from its middle, so every dot is a 48dp target.
+ */
+private val TAP_REACH = 16.dp
+
+/** Of [features], the one drawn nearest [at] on the screen. */
+private fun MapLibreMap.nearest(features: List<Feature>, at: PointF): Feature? = features.minByOrNull { feature ->
+    val point = feature.geometry() as? Point ?: return@minByOrNull Float.MAX_VALUE
+    val on = projection.toScreenLocation(LatLng(point.latitude(), point.longitude()))
+    (on.x - at.x) * (on.x - at.x) + (on.y - at.y) * (on.y - at.y)
+}
 // Places gather where three or more crowd within 20 pixels, up to zoom 9; opening a
 // crowd frames its places, no closer than zoom 11.
 private const val CLUSTER_RADIUS = 20
@@ -438,7 +452,8 @@ fun PlacesMap(
     val shade = MaterialTheme.colorScheme.scrim.toArgb()
     val unknown = MaterialTheme.colorScheme.outline.toArgb()
     val density = LocalDensity.current
-    val reach = with(density) { 8.dp.toPx() }
+    // Far enough round a place that the dot takes the 48dp Material 3 has anything tapped take.
+    val reach = with(density) { TAP_REACH.toPx() }
     val routeReach = with(density) { 22.dp.toPx() }
     val clusterPadding = with(density) { 80.dp.roundToPx() }
 
@@ -526,7 +541,8 @@ fun PlacesMap(
         val listener = MapLibreMap.OnMapClickListener { point ->
             val at = ready.projection.toScreenLocation(point)
             fun around(r: Float) = RectF(at.x - r, at.y - r, at.x + r, at.y + r)
-            val place = ready.queryRenderedFeatures(around(reach), PLACES).firstOrNull()
+            // The nearest of those in reach, as reaching that far takes in neighbours.
+            val place = ready.nearest(ready.queryRenderedFeatures(around(reach), PLACES), at)
             if (place != null) {
                 if (place.hasProperty("point_count")) {
                     val leaves = style.getSourceAs<GeoJsonSource>(PLACES)?.getClusterLeaves(place, Long.MAX_VALUE, 0)
@@ -778,7 +794,7 @@ fun PickerMap(
     val dot = MaterialTheme.colorScheme.onSurfaceVariant.toArgb()
     val ink = MaterialTheme.colorScheme.onSurface.toArgb()
     val halo = MaterialTheme.colorScheme.surface.toArgb()
-    val reach = with(LocalDensity.current) { 14.dp.toPx() }
+    val reach = with(LocalDensity.current) { TAP_REACH.toPx() }
     val first = remember { target }
 
     MapLibreView(modifier, interactive = true, compass = false) { ready, style, _ ->
@@ -849,8 +865,8 @@ fun PickerMap(
         }
         val click = MapLibreMap.OnMapClickListener { point ->
             val at = ready.projection.toScreenLocation(point)
-            val hit = ready.queryRenderedFeatures(RectF(at.x - reach, at.y - reach, at.x + reach, at.y + reach), PICK_PLACES, PICK_NAMES)
-                .firstOrNull()?.getStringProperty("id")
+            val hit = ready.nearest(ready.queryRenderedFeatures(RectF(at.x - reach, at.y - reach, at.x + reach, at.y + reach), PICK_PLACES, PICK_NAMES), at)
+                ?.getStringProperty("id")
             hit?.let(tapPlace)
             hit != null
         }

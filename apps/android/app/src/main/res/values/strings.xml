@@ -195,6 +195,8 @@
     <string name="hint_moment_text">这一刻…</string>
     <string name="action_add_photos">添加照片</string>
     <string name="action_remove_photo">移除照片</string>
+    <string name="action_move_earlier">往前移</string>
+    <string name="action_move_later">往后移</string>
     <string name="section_when_where">时间和地点</string>
     <string name="source_photo">来自照片</string>
     <string name="source_now">现在</string>

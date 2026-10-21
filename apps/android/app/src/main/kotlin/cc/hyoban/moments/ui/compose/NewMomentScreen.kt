@@ -14,6 +14,18 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.zIndex
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -110,6 +122,7 @@ import cc.hyoban.moments.ui.format.formatTime
 import cc.hyoban.moments.ui.settings.Group
 import cc.hyoban.moments.ui.settings.SegmentedGroup
 import cc.hyoban.moments.ui.settings.rowColors
+import cc.hyoban.moments.ui.theme.Elevation
 import cc.hyoban.moments.ui.theme.MediaOverlay
 import cc.hyoban.moments.ui.theme.Space
 import coil3.compose.AsyncImage
@@ -344,7 +357,12 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
                         )
                     }
                     Group(stringResource(R.string.section_photo), null) {
-                        PhotoStrip(photos, onAdd = addPhotos, onRemove = { removed -> photos = photos - removed })
+                        PhotoStrip(
+                            photos,
+                            onAdd = addPhotos,
+                            onRemove = { removed -> photos = photos - removed },
+                            onMove = { from, to -> photos = photos.toMutableList().apply { add(to, removeAt(from)) } },
+                        )
                     }
                     val note = when {
                         published -> R.string.note_published
@@ -460,18 +478,88 @@ private fun sharedChoice(place: SharedPlace, places: Map<String, Place>): PlaceC
     return same?.let { PlaceChoice.Known(it.first) } ?: PlaceChoice.New(place.name ?: coordinatesName(place.fix), place.fix)
 }
 
-/** The photos picked, in a row, each with a button to take it out, and a tile to pick more. */
+/**
+ * The photos picked, in a row, each with a button to take it out, and a tile to pick more.
+ * The first is the Moment's cover, so they are put in order as Material 3 has content
+ * reordered: held and then dragged, the one held lifted under the finger and the others
+ * stepping aside; a screen reader moves one earlier or later instead.
+ */
 @Composable
-private fun PhotoStrip(photos: List<Uri>, onAdd: () -> Unit, onRemove: (Uri) -> Unit) {
+private fun PhotoStrip(photos: List<Uri>, onAdd: () -> Unit, onRemove: (Uri) -> Unit, onMove: (Int, Int) -> Unit) {
+    val list = rememberLazyListState()
+    val haptics = LocalHapticFeedback.current
+    val currentMove by rememberUpdatedState(onMove)
+    // The photo held, and how far it has been dragged from where it is laid out.
+    var held by remember { mutableStateOf<Uri?>(null) }
+    var offset by remember { mutableFloatStateOf(0f) }
+    val drag: (Float) -> Unit = drag@{ by ->
+        val key = held?.toString() ?: return@drag
+        offset += by
+        val items = list.layoutInfo.visibleItemsInfo
+        val current = items.firstOrNull { it.key == key } ?: return@drag
+        val middle = (current.offset + current.size / 2 + offset).toInt()
+        val target = items.firstOrNull { it.key != key && it.key != ADD_KEY && middle in it.offset until it.offset + it.size } ?: return@drag
+        // The row keeps its place by its first item, which may be the one moving.
+        val first = list.firstVisibleItemIndex to list.firstVisibleItemScrollOffset
+        currentMove(current.index, target.index)
+        // Still under the finger once laid out where it now goes.
+        offset += current.offset - target.offset
+        haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
+        // Held where it was in the same layout, rather than following the item it was anchored to.
+        list.requestScrollToItem(first.first, first.second)
+    }
+    val photoShape = MaterialTheme.shapes.medium
+    val earlier = stringResource(R.string.action_move_earlier)
+    val later = stringResource(R.string.action_move_later)
     LazyRow(
         Modifier.fillMaxWidth(),
+        state = list,
         contentPadding = PaddingValues(Space.m),
         horizontalArrangement = Arrangement.spacedBy(Space.s),
     ) {
         itemsIndexed(photos, key = { _, uri -> uri.toString() }) { index, uri ->
-            Box(Modifier.size(PHOTO_SIZE).clip(MaterialTheme.shapes.medium).testTag("photo_$index")) {
+            val lifted = held == uri
+            val placement = if (lifted) {
+                // Lifted over the rest, a level up, with the drag's state layer over it.
+                Modifier.zIndex(1f).graphicsLayer {
+                    translationX = offset
+                    scaleX = LIFTED_SCALE
+                    scaleY = LIFTED_SCALE
+                    shadowElevation = Elevation.level3.toPx()
+                    shape = photoShape
+                    clip = true
+                }
+            } else {
+                Modifier.animateItem()
+            }
+            Box(
+                placement.size(PHOTO_SIZE).clip(photoShape)
+                    .pointerInput(uri) {
+                        detectDragGesturesAfterLongPress(
+                            onDragStart = {
+                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                held = uri
+                                offset = 0f
+                            },
+                            onDrag = { change, amount ->
+                                change.consume()
+                                drag(amount.x)
+                            },
+                            onDragEnd = { held = null; offset = 0f },
+                            onDragCancel = { held = null; offset = 0f },
+                        )
+                    }
+                    .semantics {
+                        customActions = listOfNotNull(
+                            CustomAccessibilityAction(earlier) { onMove(index, index - 1); true }.takeIf { index > 0 },
+                            CustomAccessibilityAction(later) { onMove(index, index + 1); true }.takeIf { index < photos.lastIndex },
+                        )
+                    }
+                    .testTag("photo_$index"),
+            ) {
                 // The site's photos by their URL, the phone's by their Uri.
                 AsyncImage(model = if (uri.scheme == "https" || uri.scheme == "http") uri.toString() else uri, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+                if (lifted) Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.onSurface.copy(alpha = DRAGGED_LAYER)))
                 // A small dot to see, in a corner of the 48dp Material 3 has anything tapped take.
                 Box(
                     Modifier.align(Alignment.TopEnd).size(REMOVE_TARGET)
@@ -494,7 +582,7 @@ private fun PhotoStrip(photos: List<Uri>, onAdd: () -> Unit, onRemove: (Uri) -> 
             }
         }
         if (photos.size < MAX_PHOTOS) {
-            item(key = "add") {
+            item(key = ADD_KEY) {
                 Box(
                     Modifier.size(PHOTO_SIZE).clip(MaterialTheme.shapes.medium)
                         .background(MaterialTheme.colorScheme.surfaceContainerHighest)
@@ -624,3 +712,7 @@ private const val PHOTO_WIDTH = 480
 private val PHOTO_SIZE = 96.dp
 private val REMOVE_TARGET = 48.dp
 private val REMOVE_DOT = 28.dp
+private const val ADD_KEY = "add"
+/** How much a photo held to move grows, and Material 3's dragged state layer over it. */
+private const val LIFTED_SCALE = 1.06f
+private const val DRAGGED_LAYER = 0.16f

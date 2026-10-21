@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextObfuscationMode
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -200,6 +201,8 @@ private fun AddressDialog(setting: Setting, title: String, onDismiss: () -> Unit
                         Text(if (ok) stringResource(R.string.setting_default, setting.default) else stringResource(R.string.error_address))
                     },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Done),
+                    // Done on the keyboard, or Enter on one plugged in, saves as confirm does.
+                    keyboardActions = KeyboardActions(onDone = { if (ok) onSave(field.text) }),
                     modifier = Modifier.fillMaxWidth().focusRequester(focus),
                 )
                 if (Setting.normalize(field.text) != setting.default) {
@@ -246,6 +249,7 @@ private fun TokenDialog(token: Token, onDismiss: () -> Unit, onSave: (String) ->
                         }
                     },
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    onKeyboardAction = { field.text.toString().takeIf { it.isNotBlank() }?.let(onSave) },
                     modifier = Modifier.fillMaxWidth().focusRequester(focus).testTag("api_token_field"),
                 )
                 if (token.isSet) {
