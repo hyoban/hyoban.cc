@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.components
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,6 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
@@ -74,7 +76,8 @@ fun MomentCard(
     // The card grows into the Moment's page when opened; shown in the detail pane beside the
     // list, it is [selected], outlined in the primary colour, as Material 3 marks the item a
     // two-pane layout's detail is of.
-    val outline = if (selected) Modifier.border(2.dp, MaterialTheme.colorScheme.primary, MaterialTheme.shapes.large) else Modifier
+    val ring by animateColorAsState(if (selected) MaterialTheme.colorScheme.primary else Color.Transparent, MaterialTheme.motionScheme.fastEffectsSpec(), label = "selected")
+    val outline = Modifier.border(2.dp, ring, MaterialTheme.shapes.large)
     // Held, or right clicked, its menu opens where it was pressed.
     var menu by remember { mutableStateOf<DpOffset?>(null) }
     val density = LocalDensity.current

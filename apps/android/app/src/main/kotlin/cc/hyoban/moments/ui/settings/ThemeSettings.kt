@@ -306,7 +306,7 @@ private val MIN_GAP = 6.dp
 @Composable
 private fun Swatch(color: Color, selected: Boolean, system: Boolean = false, onClick: () -> Unit, onDelete: (() -> Unit)? = null) {
     var menu by remember { mutableStateOf(false) }
-    val check by animateFloatAsState(if (selected) 1f else 0f, label = "check")
+    val check by animateFloatAsState(if (selected) 1f else 0f, MaterialTheme.motionScheme.fastSpatialSpec(), label = "check")
     // Named by its hex, the system's accent by the eyedropper's own label; one of a group, chosen or not.
     val hex = "#%06X".format(color.toArgb() and 0xFFFFFF)
     Box(
@@ -324,7 +324,8 @@ private fun Swatch(color: Color, selected: Boolean, system: Boolean = false, onC
                 if (!system) contentDescription = hex
             }
             .testTag(if (system) "swatch_system" else "swatch_${hex.drop(1)}")
-            .then(if (selected) Modifier.border(2.5.dp, color, CircleShape) else Modifier),
+            // The ring comes and goes with the check, rather than in one frame.
+            .border(2.5.dp, color.copy(alpha = color.alpha * check.coerceIn(0f, 1f)), CircleShape),
         contentAlignment = Alignment.Center,
     ) {
         Box(Modifier.size(DOT).clip(CircleShape).background(color))

@@ -5,6 +5,7 @@ import android.graphics.PointF
 import android.graphics.RectF
 import android.view.Gravity
 import android.view.ViewGroup
+import androidx.compose.animation.core.animate
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.displayCutout
@@ -352,6 +353,10 @@ data class MapRoute(val id: String, val segments: List<RouteSegment>)
 private const val DOT_SINGLE = 7f
 private const val DOT_MANY = 9f
 private const val DOT_CLUSTER = 12f
+/** How much larger the chosen dot is drawn. */
+private const val DOT_GROWTH = 0.25f
+/** How much of the map the place's sheet covers when it first rises, as the map tab peeks it. */
+internal const val PLACE_SHEET_SHARE = 0.55f
 
 /**
  * How far from a dot's edge a tap still reaches it: with the smallest dot's radius and ring,
@@ -614,22 +619,46 @@ fun PlacesMap(
         style.getSourceAs<GeoJsonSource>(ROUTE)?.setGeoJson(FeatureCollection.fromFeatures(features))
     }
 
+    // The dot chosen grows and the one let go shrinks back, and a lifted route stands out as the
+    // rest fall back, on the motion scheme's fast spatial spring a frame at a time: the map's own
+    // transitions don't reach a property that differs from dot to dot.
+    val change = MaterialTheme.motionScheme.fastSpatialSpec<Float>()
+    val before = remember { arrayOfNulls<String>(2) }
+    // Where the place's sheet leaves the map in sight: under the legend and above the sheet's half.
+    val clearTop = with(density) { (bars[1] + 72.dp).toPx() }
+    val sheetMargin = with(density) { 48.dp.toPx() }
     LaunchedEffect(map, selected) {
-        val (_, style) = map ?: return@LaunchedEffect
+        val (ready, style) = map ?: return@LaunchedEffect
+        val previous = before[0]
+        before[0] = selected
         val chosen = eq(get("id"), literal(selected ?: ""))
+        val letGo = eq(get("id"), literal(previous ?: ""))
         val radius = switchCase(
             has("point_count"), literal(DOT_CLUSTER),
             gt(get("count"), literal(1)), literal(DOT_MANY),
             literal(DOT_SINGLE),
         )
-        val grown = switchCase(chosen, product(radius, literal(1.25f)), radius)
-        style.getLayerAs<CircleLayer>(PLACES)?.setProperties(
-            circleRadius(grown),
-            circleStrokeWidth(switchCase(chosen, literal(3f), literal(2f))),
-            circleStrokeColor(switchCase(chosen, color(ink), color(ring))),
-            circleSortKey(switchCase(chosen, literal(1f), literal(0f))),
-        )
-        style.getLayerAs<CircleLayer>(PLACES_SHADOW)?.setProperties(circleRadius(sum(grown, literal(3f))))
+        fun draw(t: Float) {
+            val grown = switchCase(chosen, product(radius, literal(1f + DOT_GROWTH * t)), letGo, product(radius, literal(1f + DOT_GROWTH * (1f - t))), radius)
+            style.getLayerAs<CircleLayer>(PLACES)?.setProperties(
+                circleRadius(grown),
+                circleStrokeWidth(switchCase(chosen, literal(3f), literal(2f))),
+                circleStrokeColor(switchCase(chosen, color(ink), color(ring))),
+                circleSortKey(switchCase(chosen, literal(1f), literal(0f))),
+            )
+            style.getLayerAs<CircleLayer>(PLACES_SHADOW)?.setProperties(circleRadius(sum(grown, literal(3f))))
+        }
+        val place = places.firstOrNull { it.id == selected }?.place?.latLng
+        if (place != null) {
+            // Brought up into sight when its sheet would cover it, gliding with the sheet as it rises.
+            val at = ready.projection.toScreenLocation(place)
+            val clearBottom = ready.height * (1f - PLACE_SHEET_SHARE) - sheetMargin
+            if (at.y > clearBottom || at.y < clearTop) {
+                val center = PointF(ready.width / 2f, ready.height / 2f + at.y - (clearTop + clearBottom) / 2f)
+                ready.glide(CameraUpdateFactory.newLatLng(ready.projection.fromScreenLocation(center)), 400, reduced)
+            }
+        }
+        if (reduced || previous == selected) draw(1f) else animate(0f, 1f, animationSpec = change) { t, _ -> draw(t) }
     }
 
     // Which way the map is turned, told as it moves and once it is first shown.
@@ -683,12 +712,22 @@ fun PlacesMap(
 
     LaunchedEffect(map, highlighted) {
         val (_, style) = map ?: return@LaunchedEffect
-        val mine = eq(get("trip"), literal(highlighted ?: ""))
-        val opacity = if (highlighted == null) literal(ROUTE_OPACITY) else switchCase(mine, literal(1f), literal(ROUTE_DIMMED_OPACITY))
-        val width = if (highlighted == null) literal(ROUTE_WIDTH) else switchCase(mine, literal(ROUTE_LIFTED_WIDTH), literal(ROUTE_WIDTH))
-        for (id in listOf(ROUTE, ROUTES_DASHED)) {
-            style.getLayerAs<LineLayer>(id)?.setProperties(lineOpacity(opacity), lineWidth(byZoom(width)))
+        val previous = before[1]
+        before[1] = highlighted
+        // Each route's opacity and width with [lifted] standing out, or all alike with none.
+        fun opacity(lifted: String?) =
+            if (lifted == null) literal(ROUTE_OPACITY) else switchCase(eq(get("trip"), literal(lifted)), literal(1f), literal(ROUTE_DIMMED_OPACITY))
+        fun width(lifted: String?) =
+            if (lifted == null) literal(ROUTE_WIDTH) else switchCase(eq(get("trip"), literal(lifted)), literal(ROUTE_LIFTED_WIDTH), literal(ROUTE_WIDTH))
+        fun between(from: Expression, to: Expression, t: Float) = sum(product(from, literal(1f - t)), product(to, literal(t)))
+        fun draw(t: Float) {
+            val opacity = between(opacity(previous), opacity(highlighted), t)
+            val width = between(width(previous), width(highlighted), t)
+            for (id in listOf(ROUTE, ROUTES_DASHED)) {
+                style.getLayerAs<LineLayer>(id)?.setProperties(lineOpacity(opacity), lineWidth(byZoom(width)))
+            }
         }
+        if (reduced || previous == highlighted) draw(1f) else animate(0f, 1f, animationSpec = change) { t, _ -> draw(t) }
     }
 }
 

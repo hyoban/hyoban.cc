@@ -5,14 +5,18 @@ import android.net.Uri
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -22,6 +26,7 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -284,12 +289,11 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
     val landscape = isLandscape()
     val railed = isMediumWidth()
     val navBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
-    val clearance = when {
-        current == null -> 0.dp
-        railed -> navBottom
-        // The navigation bar, the system's navigation under it included.
-        else -> barHeight
-    }
+    // What a tab's page keeps clear of: the system's navigation beside a rail, else the
+    // navigation bar, the system's navigation under it included. A page keeps its own while it
+    // comes and goes, so a tab's list doesn't shift under a card growing out of it.
+    val tabClearance = if (railed) navBottom else barHeight
+    val clearance = if (current == null) 0.dp else tabClearance
     // Down the leading side, as Material 3 places a navigation rail, whichever way the phone
     // is turned; the system's insets keep it clear of the camera's cutout there.
     val railLeft = LocalLayoutDirection.current == LayoutDirection.Ltr
@@ -328,6 +332,8 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
         }
     }
     val windowHeight = with(LocalDensity.current) { LocalWindowInfo.current.containerSize.height.toDp() }
+    // The tab's button's room above the bar, given up and taken back as the button shrinks and grows.
+    val tabFab by animateDpAsState(if (!railed && accessorySlot.value != null) fabHeight else 0.dp, motion.fastSpatialSpec(), label = "fab clearance")
 
     // A back swipe, from its start until a moment after the finger lifts, while the page
     // change it started plays out: shared photos stay with their pages meanwhile.
@@ -374,7 +380,8 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
         Box(Modifier.fillMaxSize().semantics { isTraversalGroup = true }) {
             CompositionLocalProvider(
                 LocalBottomClearance provides clearance,
-                LocalFabClearance provides if (current != null && !railed && accessorySlot.value != null) fabHeight else 0.dp,
+                LocalFabClearance provides if (current != null) tabFab else 0.dp,
+                LocalTabClearance provides TabClearance(tabClearance, tabFab),
                 LocalRailSpace provides rail,
                 LocalNavAccessory provides accessorySlot,
                 LocalMessages provides messages,
@@ -508,9 +515,12 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
             val selectedTab = current?.ordinal ?: 0
             val pending by container.repository.pending.collectAsStateWithLifecycle()
             val onTab: (Int) -> Unit = { index -> if (index == selectedTab) tabReselects.tryEmit(Tab.entries[index].route) else selectTab(index) }
-            // Kept while it leaves, after the tab has let it go.
-            var accessory by remember { mutableStateOf(accessorySlot.value) }
-            accessorySlot.value?.let { accessory = it }
+            // A tab's button grows in from its middle, as Material 3 has a FAB enter, and from tab
+            // to tab the one going shrinks away as the other grows in, rather than one becoming the other.
+            val fabTransition: AnimatedContentTransitionScope<(@Composable () -> Unit)?>.() -> ContentTransform = {
+                (scaleIn(motion.fastSpatialSpec()) + fadeIn(motion.fastEffectsSpec())) togetherWith
+                    (scaleOut(motion.fastSpatialSpec()) + fadeOut(motion.fastEffectsSpec())) using SizeTransform(clip = false)
+            }
             val navigation = Modifier.semantics {
                 isTraversalGroup = true
                 traversalIndex = -1f
@@ -527,9 +537,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                     containerColor = SurfaceLevel.Page.raised.fill(),
                     modifier = Modifier.fillMaxHeight().onSizeChanged { railWidth = with(density) { it.width.toDp() } },
                     header = {
-                        AnimatedVisibility(accessorySlot.value != null, enter = fadeIn() + scaleIn(), exit = fadeOut() + scaleOut()) {
-                            accessory?.invoke()
-                        }
+                        AnimatedContent(accessorySlot.value, transitionSpec = fabTransition, label = "rail button") { button -> button?.invoke() }
                     },
                 ) {
                     Spacer(Modifier.weight(1f))
@@ -552,13 +560,14 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                 modifier = navigation.align(Alignment.BottomCenter).fillMaxWidth(),
             ) {
                 Column(horizontalAlignment = Alignment.End) {
-                    // A FAB grows out from its middle as it comes, as Material 3 has one enter.
-                    AnimatedVisibility(accessorySlot.value != null, enter = fadeIn() + scaleIn(), exit = fadeOut() + scaleOut()) {
-                        val gutter = Space.gutter
-                        Box(
-                            Modifier.padding(end = gutter, bottom = gutter)
-                                .onSizeChanged { fabHeight = with(density) { it.height.toDp() } + gutter },
-                        ) { accessory?.invoke() }
+                    AnimatedContent(accessorySlot.value, transitionSpec = fabTransition, contentAlignment = Alignment.BottomEnd, label = "tab button") { button ->
+                        if (button != null) {
+                            val gutter = Space.gutter
+                            Box(
+                                Modifier.padding(end = gutter, bottom = gutter)
+                                    .onSizeChanged { fabHeight = with(density) { it.height.toDp() } + gutter },
+                            ) { button() }
+                        }
                     }
                     // A level above the page, as Material 3 has the bar a container step above it.
                     ShortNavigationBar(
@@ -579,12 +588,13 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
             }
             // Above the navigation bar and the button over it on a tab, the system's navigation
             // elsewhere, and the keyboard while it is up.
-            val fabRoom = if (current != null && !railed && accessorySlot.value != null) fabHeight else 0.dp
-            SnackbarHost(
-                messages,
-                Modifier.align(Alignment.BottomCenter).imePadding()
-                    .padding(bottom = if (viewer == null && current != null) clearance + fabRoom else navBottom + if (viewer == null) snackbarLift.value else 0.dp),
+            // Moving with the bar as it comes and goes, on its spring, rather than ahead of it.
+            val snackbarBottom by animateDpAsState(
+                if (viewer == null && current != null) clearance + tabFab else navBottom + if (viewer == null) snackbarLift.value else 0.dp,
+                transitions.defaultSpatialSpec(),
+                label = "snackbar",
             )
+            SnackbarHost(messages, Modifier.align(Alignment.BottomCenter).imePadding().padding(bottom = snackbarBottom))
         }
     }
 }
@@ -594,7 +604,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
 // 14's forward motion as FlClash plays it, on the transitions' springs: the default spatial
 // one for the slide, as a page is the larger thing moving, and the effects ones for the
 // fades. Going back plays it the other way. The viewer still fades, as its photo flies to
-// and from its tile.
+// and from its tile; between pages only cards move, so a page without one slides.
 private fun pageIn(forward: Boolean, motion: MotionScheme): EnterTransition =
     slideInHorizontally(motion.defaultSpatialSpec()) { width -> if (forward) width / 4 else -width / 4 } +
         fadeIn(motion.defaultEffectsSpec())
@@ -611,27 +621,28 @@ private val CARD_HOLD_IN = fadeIn(tween(CARD_HOLD_MS), initialAlpha = 1f)
 private val CARD_HOLD_OUT = fadeOut(tween(CARD_HOLD_MS), targetAlpha = 1f)
 
 /**
- * A page coming in: across tabs, out of its card or, going back, into it, fading where a
- * photo flies between the pages, else sliding; going back plays it as the page came.
+ * A page coming in: across tabs, out of its card or, going back, into it, else sliding;
+ * going back plays it as the page came.
  */
 private fun AnimatedContentTransitionScope<NavBackStackEntry>.enter(forward: Boolean, motion: MotionScheme): EnterTransition =
     if (switchesTab()) FADE_THROUGH_IN
-    else if (if (forward) opensCard() else closesCard()) CARD_HOLD_IN else if (sharesPhoto()) fadeIn(motion.defaultEffectsSpec()) else pageIn(forward, motion)
+    else if (if (forward) opensCard() else closesCard()) CARD_HOLD_IN else pageIn(forward, motion)
 
 /** The page going out, as [enter] brings the other in. */
 private fun AnimatedContentTransitionScope<NavBackStackEntry>.exit(forward: Boolean, motion: MotionScheme): ExitTransition =
     if (switchesTab()) FADE_THROUGH_OUT
-    else if (if (forward) opensCard() else closesCard()) CARD_HOLD_OUT else if (sharesPhoto()) fadeOut(motion.defaultEffectsSpec()) else pageOut(forward, motion)
+    else if (if (forward) opensCard() else closesCard()) CARD_HOLD_OUT else pageOut(forward, motion)
 
 /**
  * Where a page grows out of a card, by the page and the pages that hold its card: a
  * Moment's from a list of Moments, the calendar or the map's place panel; a trip's from
- * the trips, a Moment's trip card or the map's route card; a day's from the calendar.
+ * the trips, a Moment's trip card or the map's route card; a day's from the calendar or
+ * a Moment's row for the rest of its day.
  */
 private val CARD_OPENINGS: Map<KClass<*>, List<KClass<*>>> = mapOf(
     Moment::class to listOf(Feed::class, Day::class, PlaceMoments::class, Trip::class, Atlas::class, Search::class),
     Trip::class to listOf(Trips::class, Moment::class, Atlas::class),
-    Day::class to listOf(Feed::class),
+    Day::class to listOf(Feed::class, Moment::class),
 )
 
 private fun opens(page: NavBackStackEntry, from: NavBackStackEntry): Boolean =
@@ -642,14 +653,6 @@ private fun AnimatedContentTransitionScope<NavBackStackEntry>.opensCard(): Boole
 
 /** Whether a page closes back into its card on the page under it. */
 private fun AnimatedContentTransitionScope<NavBackStackEntry>.closesCard(): Boolean = opens(initialState, targetState)
-
-/**
- * Whether a photo flies between the two pages: a Moment's page opened from a list and
- * back. Those fade in place, as a photo chasing a tile that slides with its page
- * stutters and slips under the sheet.
- */
-private fun AnimatedContentTransitionScope<NavBackStackEntry>.sharesPhoto(): Boolean =
-    initialState.destination.hasRoute(Moment::class) || targetState.destination.hasRoute(Moment::class)
 
 /** Whether the page changes from one tab to another. */
 private fun AnimatedContentTransitionScope<NavBackStackEntry>.switchesTab(): Boolean {
@@ -695,6 +698,11 @@ val LocalBottomClearance = staticCompositionLocalOf { 0.dp }
 
 /** How much more the tab's floating action button covers above the bar, for a list or a card to keep clear of. */
 val LocalFabClearance = staticCompositionLocalOf { 0.dp }
+
+/** What a tab's page keeps clear of, the bar and the button over it, whichever page is shown. */
+data class TabClearance(val bottom: Dp, val fab: Dp)
+
+private val LocalTabClearance = staticCompositionLocalOf { TabClearance(0.dp, 0.dp) }
 
 /**
  * How much of the left and the right the tabs cover on a tab screen on a phone on its
@@ -765,6 +773,12 @@ private inline fun <reified T : Any> NavGraphBuilder.screen(
     noinline content: @Composable (NavBackStackEntry) -> Unit,
 ) {
     composable<T>(deepLinks = listOfNotNull(link?.let { navDeepLink { uriPattern = "$DEEP_LINK_SCHEME://$it" } })) { entry ->
-        CompositionLocalProvider(LocalNavAnimatedScope provides this) { content(entry) }
+        val tab = Tab.entries.any { entry.destination.hasRoute(it.type) }
+        val room = LocalTabClearance.current
+        CompositionLocalProvider(
+            LocalNavAnimatedScope provides this,
+            LocalBottomClearance provides if (tab) room.bottom else 0.dp,
+            LocalFabClearance provides if (tab) room.fab else 0.dp,
+        ) { content(entry) }
     }
 }

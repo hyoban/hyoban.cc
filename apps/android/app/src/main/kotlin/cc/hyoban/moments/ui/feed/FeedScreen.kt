@@ -2,6 +2,10 @@ package cc.hyoban.moments.ui.feed
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animate
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -202,16 +206,23 @@ fun FeedScreen(
     // open with a new filter or the tab tapped again, as either goes back to its top.
     val headerScroll = remember { HeaderScroll() }
     LaunchedEffect(filter) { headerScroll.offset = 0f }
-    OnTabReselect(Feed) { headerScroll.offset = 0f }
+    // Opening out with the list as it goes back to its top, on the same spring.
+    val headerSpec = MaterialTheme.motionScheme.defaultSpatialSpec<Float>()
+    OnTabReselect(Feed) { animate(headerScroll.offset, 0f, animationSpec = headerSpec) { value, _ -> headerScroll.offset = value } }
+    // The rows open out as they come and fold away as they go, the Moments under them moving
+    // with them, rather than the whole list jumping.
+    val rowMotion = MaterialTheme.motionScheme
+    val rowIn = expandVertically(rowMotion.defaultSpatialSpec()) + fadeIn(rowMotion.defaultEffectsSpec())
+    val rowOut = shrinkVertically(rowMotion.defaultSpatialSpec()) + fadeOut(rowMotion.defaultEffectsSpec())
     val header: FeedLeading.() -> Unit = {
-        if (publishable) {
-            item(key = "changes") {
+        item(key = "changes") {
+            AnimatedVisibility(publishable, enter = rowIn, exit = rowOut) {
                 PendingChangesRow(container, onClick = onChanges, modifier = Modifier.padding(horizontal = Space.gutter, vertical = Space.s))
             }
         }
         item(key = "view") { ViewSwitch(calendar, onChange = { calendar = it }) }
-        if (years.size > 1) {
-            item(key = "filter") {
+        item(key = "filter") {
+            AnimatedVisibility(years.size > 1, enter = rowIn, exit = rowOut) {
                 TimeFilterRows(filter, years, months) { next ->
                     year = next.year
                     month = next.month
@@ -304,29 +315,41 @@ fun FeedScreen(
                     .padding(top = Space.s, end = Space.gutter, bottom = Space.s)
                     .clip(MaterialTheme.shapes.extraLarge),
             ) {
-                val uid = chosen
-                if (uid != null && moments.any { it.uid == uid }) {
-                    // Each Moment keeps where it was scrolled to while another is shown.
-                    details.SaveableStateProvider(uid) {
-                        MomentScreen(
-                            container,
-                            uid,
-                            onMedia = onMedia,
-                            onPlace = onPlace,
-                            onTrip = onTrip,
-                            onBack = { chosen = null },
-                            onEdit = onEdit,
-                            onDay = onDay,
-                            pane = true,
-                            onChanges = onChanges,
-                        )
-                    }
-                } else {
-                    Box(
-                        Modifier.fillMaxSize().background(LocalSurfaceLevel.current.raised.fill()).testTag("detail_placeholder"),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(stringResource(R.string.label_pick_moment), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyLarge)
+                // One Moment giving way to another, or to the placeholder, as a fade through: the
+                // pane's content changes while the pane itself stays.
+                val shownUid = chosen?.takeIf { uid -> moments.any { it.uid == uid } }
+                AnimatedContent(
+                    shownUid,
+                    Modifier.fillMaxSize(),
+                    transitionSpec = {
+                        fadeIn(tween(VIEW_FADE_IN_MS, delayMillis = VIEW_FADE_OUT_MS, easing = LinearOutSlowInEasing)) togetherWith
+                            fadeOut(tween(VIEW_FADE_OUT_MS, easing = FastOutLinearInEasing))
+                    },
+                    label = "detail",
+                ) { uid ->
+                    if (uid != null) {
+                        // Each Moment keeps where it was scrolled to while another is shown.
+                        details.SaveableStateProvider(uid) {
+                            MomentScreen(
+                                container,
+                                uid,
+                                onMedia = onMedia,
+                                onPlace = onPlace,
+                                onTrip = onTrip,
+                                onBack = { chosen = null },
+                                onEdit = onEdit,
+                                onDay = onDay,
+                                pane = true,
+                                onChanges = onChanges,
+                            )
+                        }
+                    } else {
+                        Box(
+                            Modifier.fillMaxSize().background(LocalSurfaceLevel.current.raised.fill()).testTag("detail_placeholder"),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(stringResource(R.string.label_pick_moment), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyLarge)
+                        }
                     }
                 }
             }

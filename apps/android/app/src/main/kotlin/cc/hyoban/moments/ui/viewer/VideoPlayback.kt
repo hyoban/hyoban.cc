@@ -39,6 +39,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.keepScreenOn
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntSize
@@ -53,6 +54,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaSession
 import androidx.media3.ui.compose.state.rememberMuteButtonState
 import androidx.media3.ui.compose.state.rememberPlayPauseButtonState
+import androidx.media3.ui.compose.state.rememberProgressStateWithTickCount
 import androidx.media3.ui.compose.state.rememberProgressStateWithTickInterval
 import cc.hyoban.moments.R
 import cc.hyoban.moments.ui.components.Tooltip
@@ -153,7 +155,8 @@ private val VIDEO_AUDIO = AudioAttributes.Builder().setUsage(C.USAGE_MEDIA).setC
 @kotlin.OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun VideoWaiting(state: VideoState, modifier: Modifier = Modifier) {
-    AnimatedVisibility(state.waiting && state.player != null, modifier = modifier, enter = fadeIn(), exit = fadeOut()) {
+    val motion = MaterialTheme.motionScheme
+    AnimatedVisibility(state.waiting && state.player != null, modifier = modifier, enter = fadeIn(motion.defaultEffectsSpec()), exit = fadeOut(motion.defaultEffectsSpec())) {
         Box(Modifier.size(56.dp).background(MediaOverlay.control, CircleShape), contentAlignment = Alignment.Center) {
             LoadingIndicator(Modifier.size(44.dp), color = MediaOverlay.content)
         }
@@ -167,6 +170,8 @@ fun VideoControls(state: VideoState, visible: Boolean, modifier: Modifier = Modi
     val player = state.player
     val playPause = rememberPlayPauseButtonState(player)
     val progress = rememberProgressStateWithTickInterval(player, tickIntervalMs = 250)
+    // The bar moves a pixel at a time, as often as the video covers one, rather than in quarter-second steps.
+    val bar = rememberProgressStateWithTickCount(player, totalTickCount = 1)
     val mute = rememberMuteButtonState(player)
     // Sound turned on for one video stays on for the next.
     LaunchedEffect(player, mute.showMuted) { if (player != null) VideoSound.on = !mute.showMuted }
@@ -176,7 +181,8 @@ fun VideoControls(state: VideoState, visible: Boolean, modifier: Modifier = Modi
     val duration = progress.durationMs.coerceAtLeast(1L)
     val ended = playPause.showPlay && progress.durationMs > 0 && progress.currentPositionMs >= progress.durationMs - 100
 
-    AnimatedVisibility(visible && player != null, modifier = modifier, enter = fadeIn(), exit = fadeOut()) {
+    val motion = MaterialTheme.motionScheme
+    AnimatedVisibility(visible && player != null, modifier = modifier, enter = fadeIn(motion.fastEffectsSpec()), exit = fadeOut(motion.fastEffectsSpec())) {
         Row(
             Modifier.fillMaxWidth()
                 .background(MediaOverlay.bar)
@@ -205,7 +211,7 @@ fun VideoControls(state: VideoState, visible: Boolean, modifier: Modifier = Modi
                 color = MediaOverlay.content,
             )
             Slider(
-                value = if (dragging) dragged else (progress.currentPositionMs.toFloat() / duration).coerceIn(0f, 1f),
+                value = if (dragging) dragged else bar.currentPositionProgress.coerceIn(0f, 1f),
                 onValueChange = {
                     dragging = true
                     dragged = it
@@ -219,7 +225,7 @@ fun VideoControls(state: VideoState, visible: Boolean, modifier: Modifier = Modi
                     activeTrackColor = MediaOverlay.content,
                     inactiveTrackColor = MediaOverlay.contentDisabled,
                 ),
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f).onSizeChanged { if (it.width > 0) bar.updateTotalTickCount(it.width) },
             )
             Text(formatClock(progress.durationMs.coerceAtLeast(0L)), style = MaterialTheme.typography.labelMedium, color = MediaOverlay.contentVariant)
             Tooltip(stringResource(if (mute.showMuted) R.string.action_unmute else R.string.action_mute)) {

@@ -8,6 +8,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -112,7 +113,7 @@ class FeedLeading {
 
 /** The rows of [leading] in a list. */
 fun LazyListScope.leadingRows(leading: FeedLeading.() -> Unit) {
-    FeedLeading().apply(leading).rows.forEach { (key, content) -> item(key = key) { content() } }
+    FeedLeading().apply(leading).rows.forEach { (key, content) -> item(key = key) { Box(Modifier.animateItem()) { content() } } }
 }
 
 /**
@@ -171,13 +172,13 @@ fun MomentFeed(
                 verticalItemSpacing = Space.m,
             ) {
                 rows.forEach { (key, content) ->
-                    item(key = key, span = StaggeredGridItemSpan.FullLine) { Box(across) { content() } }
+                    item(key = key, span = StaggeredGridItemSpan.FullLine) { Box(Modifier.animateItem().then(across)) { content() } }
                 }
                 // A month at a time, or, where there are no months to head, a day at a time.
                 val groups = if (months) byMonth(moments) else days
                 groups.forEach { (group, here) ->
                     item(key = "group-$group", contentType = "group", span = StaggeredGridItemSpan.FullLine) {
-                        Box(across) {
+                        Box(Modifier.animateItem().then(across)) {
                             if (months) {
                                 val (name, year) = formatMonth(here.first().dateKey)
                                 MonthHeader(name, year)
@@ -208,7 +209,7 @@ fun MomentFeed(
                     if (months && day.take(7) != month) {
                         month = day.take(7)
                         val (name, year) = formatMonth(day)
-                        item(key = "month-${day.take(7)}", contentType = "month") { MonthHeader(name, year) }
+                        item(key = "month-${day.take(7)}", contentType = "month") { Box(Modifier.animateItem()) { MonthHeader(name, year) } }
                     }
                     stickyHeader(key = "day-$day", contentType = "day") {
                         // Over the cards it is held above, which come after it.
@@ -276,7 +277,11 @@ fun LoadedContent(empty: Boolean, loading: Boolean, message: Int, content: @Comp
     val fade = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
     AnimatedContent(
         empty,
-        transitionSpec = { fadeIn(fade) togetherWith ExitTransition.KeepUntilTransitionsFinished },
+        // Emptied, the list fades out before the message fades in, rather than the two showing at once.
+        transitionSpec = {
+            if (targetState && !initialState) fadeIn(tween(EMPTY_FADE_IN_MS, delayMillis = EMPTY_FADE_OUT_MS)) togetherWith fadeOut(tween(EMPTY_FADE_OUT_MS))
+            else fadeIn(fade) togetherWith ExitTransition.KeepUntilTransitionsFinished
+        },
         label = "loaded",
     ) { nothing ->
         if (nothing) EmptyState(loading, message) else content()
@@ -373,6 +378,9 @@ private fun Modifier.skeletonSweep(sweep: State<Float>?, rtl: Boolean): Modifier
     }
 
 private const val SKELETON_SWEEP_MS = 1600
+// Material's fade-through timings, for a list emptied.
+private const val EMPTY_FADE_OUT_MS = 90
+private const val EMPTY_FADE_IN_MS = 210
 private const val SKELETON_BAND = 0.5f
 private const val SKELETON_FAINT = 0.5f
 
