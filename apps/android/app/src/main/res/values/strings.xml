@@ -81,6 +81,12 @@
     <string name="year_item">%1$d 年</string>
     <string name="legend_trips">旅程</string>
     <string name="trip_day">第 %1$d 天</string>
+    <string name="action_play_trip">回放旅程</string>
+    <string name="action_previous_stop">上一站</string>
+    <string name="action_next_stop">下一站</string>
+    <string name="action_replay">重新播放</string>
+    <string name="playback_look_back">旅程回顾</string>
+    <string name="playback_driven">自驾 %1$d 公里</string>
     <string name="action_locate">我的位置</string>
     <string name="action_north">回到正北</string>
     <string name="error_location">没能定位，确认定位已打开</string>
@@ -172,6 +178,9 @@
     </plurals>
     <plurals name="count_places">
         <item quantity="other">%1$d 个地点</item>
+    </plurals>
+    <plurals name="count_photos">
+        <item quantity="other">%1$d 张照片</item>
     </plurals>
     <plurals name="count_trips">
         <item quantity="other">%1$d 段旅程</item>

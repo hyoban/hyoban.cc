@@ -82,6 +82,12 @@
     <string name="year_item">%1$d</string>
     <string name="legend_trips">Trips</string>
     <string name="trip_day">Day %1$d</string>
+    <string name="action_play_trip">Play trip</string>
+    <string name="action_previous_stop">Previous stop</string>
+    <string name="action_next_stop">Next stop</string>
+    <string name="action_replay">Replay</string>
+    <string name="playback_look_back">Looking back</string>
+    <string name="playback_driven">%1$d km driven</string>
     <string name="action_locate">Your location</string>
     <string name="action_north">Face north</string>
     <string name="error_location">Couldn’t find your location. Check that location is on.</string>
@@ -180,6 +186,10 @@
     <plurals name="count_places">
         <item quantity="one">%1$d place</item>
         <item quantity="other">%1$d places</item>
+    </plurals>
+    <plurals name="count_photos">
+        <item quantity="one">%1$d photo</item>
+        <item quantity="other">%1$d photos</item>
     </plurals>
     <plurals name="count_trips">
         <item quantity="one">%1$d trip</item>

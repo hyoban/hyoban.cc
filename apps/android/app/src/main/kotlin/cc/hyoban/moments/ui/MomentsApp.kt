@@ -138,6 +138,7 @@ import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.SurfaceLevel
 import cc.hyoban.moments.ui.theme.TransitionMotion
 import cc.hyoban.moments.ui.theme.fill
+import cc.hyoban.moments.ui.trips.TripPlayerScreen
 import cc.hyoban.moments.ui.trips.TripScreen
 import cc.hyoban.moments.ui.trips.TripsScreen
 import cc.hyoban.moments.ui.viewer.LocalInPictureInPicture
@@ -174,6 +175,10 @@ private val ViewerSaver = listSaver<Viewer?, Any>(
 
 @Serializable
 data class Trip(val id: String)
+
+/** A trip played back along its route. */
+@Serializable
+data class TripPlay(val id: String)
 
 /** One day's Moments, by its `YYYY-MM-DD`. */
 @Serializable
@@ -453,7 +458,16 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                 )
                             }
                             screen<Trip>(link = "trip/{id}") { entry ->
-                                TripScreen(container, entry.toRoute<Trip>().id, onMoment = openMoment, onBack = back)
+                                TripScreen(
+                                    container,
+                                    entry.toRoute<Trip>().id,
+                                    onMoment = openMoment,
+                                    onPlay = { navController.navigate(TripPlay(it)) },
+                                    onBack = back,
+                                )
+                            }
+                            screen<TripPlay>(link = "play/{id}") { entry ->
+                                TripPlayerScreen(container, entry.toRoute<TripPlay>().id, onMoment = openMoment, onBack = back)
                             }
                             screen<Day>(link = "day/{date}") { entry ->
                                 DayScreen(container, entry.toRoute<Day>().date, onMoment = openMoment, onBack = back)
@@ -641,12 +655,12 @@ private fun AnimatedContentTransitionScope<NavBackStackEntry>.exit(forward: Bool
 
 /**
  * Where a page grows out of a card, by the page and the pages that hold its card: a
- * Moment's from a list of Moments, the calendar or the map's place panel; a trip's from
+ * Moment's from a list of Moments, the calendar, the map's place panel or a trip's playback; a trip's from
  * the trips, a Moment's trip card or the map's route card; a day's from the calendar or
  * a Moment's row for the rest of its day.
  */
 private val CARD_OPENINGS: Map<KClass<*>, List<KClass<*>>> = mapOf(
-    Moment::class to listOf(Feed::class, Day::class, PlaceMoments::class, Trip::class, Atlas::class, Search::class),
+    Moment::class to listOf(Feed::class, Day::class, PlaceMoments::class, Trip::class, TripPlay::class, Atlas::class, Search::class),
     Trip::class to listOf(Trips::class, Moment::class, Atlas::class),
     Day::class to listOf(Feed::class, Moment::class),
 )
@@ -770,6 +784,7 @@ fun routeOf(link: Uri): Any? {
         "changes" -> Changes
         "moment" -> id?.let(::Moment)
         "trip" -> id?.let(::Trip)
+        "play" -> id?.let(::TripPlay)
         "day" -> id?.let(::Day)
         "place" -> id?.let(::PlaceMoments)
         else -> null

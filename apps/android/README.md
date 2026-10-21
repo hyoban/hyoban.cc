@@ -1,7 +1,13 @@
 # 这里, Moments for Android
 
 The app that shows the site's Moments, places and trips on the phone: the places on a
-map, every Moment with its photos and videos, and each trip's route and days. It reads
+map, every Moment with its photos and videos, and each trip's route and days, which ▶
+on a trip's page plays back as the site's player does (`packages/trip-map/src/player`),
+with its cards, pacing and camera: the route never still while it plays, driving on from
+each Moment toward the next place as its card shows, a car, ship, plane or train at its
+tip with the day and time beside it, past each waypoint with a pause, the camera following
+on springs; a card over the map, stepped through from a floating toolbar or by a swipe,
+opens its Moment when tapped. The route is the stretches `GET /v1/routes` serves. It reads
 the API's public endpoints (`apps/api`) and keeps a copy under the app's `api/`
 directory in the layout `packages/data-spec` defines, so it opens straight away and
 works offline; each start, and each pull down on a list, asks only for what changed
@@ -172,7 +178,7 @@ site's rules, which trip a Moment is on, and the sync against a stand-in for the
 ## On the phone, from adb
 
 Every page has a link, `moments://moments`, `map`, `trips`, `settings`,
-`new`, `moment/{uid}`, `trip/{id}`, `day/{YYYY-MM-DD}` and `place/{id}`, which
+`new`, `moment/{uid}`, `trip/{id}`, `play/{id}` (a trip played back), `day/{YYYY-MM-DD}` and `place/{id}`, which
 `adb shell am start -d` opens straight away, going over the page shown when the app is
 already open. The buttons, tabs and cards carry test tags that `uiautomator dump`
 reports as resource ids (`tab_map`, `settings`, `back`, `moment_{uid}`,
@@ -200,7 +206,7 @@ one chosen.
   where the phone is and what the place there is called.
 - `data/media` — photo, poster and video URLs, picked as the site picks them, or the
   phone's own copy of a photo not yet published.
-- `data/trips` — which trip a Moment is on, a trip's days and its stops in order.
+- `data/trips` — which trip a Moment is on, a trip's days and its stops in order, and its playback: where along the route each Moment is reached and how long each card plays.
 - `widget` — the home screen's widgets (Glance) and what they pick for the day.
 - `ui` — Compose screens: the map, the Moments, a Moment's page, a new Moment, the trips, a trip, the settings.
 
