@@ -13,11 +13,11 @@
     <string name="error_share">Couldn’t share</string>
     <string name="action_share_x">Post to X</string>
     <string name="action_share_telegram">Share to Telegram</string>
-    <string name="action_share_xiaohongshu">Share to Xiaohongshu</string>
+    <string name="action_share_xiaohongshu">Post to Xiaohongshu</string>
     <string name="action_share_threads">Post to Threads</string>
-    <string name="action_share_douyin">Share to Douyin</string>
+    <string name="action_share_douyin">Post to Douyin</string>
     <string name="action_share_wechat">WeChat Moments</string>
-    <string name="action_share_bilibili">Bilibili</string>
+    <string name="action_share_bilibili">Post to Bilibili</string>
     <string name="action_share_feishu_manual">Feishu</string>
     <string name="share_bilibili_hint">Open the Bilibili dynamic composer with the text and photos, then review and post. Finish any existing draft first. If content is missing, use “Prepare text and photos.”</string>
     <string name="share_bilibili_open">Open Bilibili composer</string>

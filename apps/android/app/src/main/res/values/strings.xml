@@ -12,11 +12,11 @@
     <string name="error_share">分享失败</string>
     <string name="action_share_x">发布到 X</string>
     <string name="action_share_telegram">分享到 Telegram</string>
-    <string name="action_share_xiaohongshu">分享到小红书</string>
+    <string name="action_share_xiaohongshu">发布到小红书</string>
     <string name="action_share_threads">发布到 Threads</string>
-    <string name="action_share_douyin">分享到抖音</string>
+    <string name="action_share_douyin">发布到抖音</string>
     <string name="action_share_wechat">微信朋友圈</string>
-    <string name="action_share_bilibili">B 站</string>
+    <string name="action_share_bilibili">发布到 B 站</string>
     <string name="action_share_feishu_manual">飞书</string>
     <string name="share_bilibili_hint">将文字和照片带入 B 站动态编辑器，检查后发布。如果已有未完成的动态，请先处理；未正确带入时可用「准备图文」。</string>
     <string name="share_bilibili_open">打开 B 站动态编辑器</string>
