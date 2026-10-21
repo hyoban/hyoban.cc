@@ -1,8 +1,10 @@
 package cc.hyoban.moments.ui.map
 
 import android.annotation.SuppressLint
+import android.graphics.Bitmap
 import android.graphics.PointF
 import android.graphics.RectF
+import android.util.DisplayMetrics
 import android.view.Gravity
 import android.view.ViewGroup
 import androidx.compose.animation.core.animate
@@ -97,6 +99,11 @@ import org.maplibre.android.style.layers.PropertyFactory.lineDasharray
 import org.maplibre.android.style.layers.PropertyFactory.lineJoin
 import org.maplibre.android.style.layers.PropertyFactory.lineOpacity
 import org.maplibre.android.style.layers.PropertyFactory.lineWidth
+import org.maplibre.android.style.layers.PropertyFactory.iconAllowOverlap
+import org.maplibre.android.style.layers.PropertyFactory.iconIgnorePlacement
+import org.maplibre.android.style.layers.PropertyFactory.iconImage
+import org.maplibre.android.style.layers.PropertyFactory.iconOpacity
+import org.maplibre.android.style.layers.PropertyFactory.iconSize
 import org.maplibre.android.style.layers.PropertyFactory.textAllowOverlap
 import org.maplibre.android.style.layers.PropertyFactory.textAnchor
 import org.maplibre.android.style.layers.PropertyFactory.textColor
@@ -136,6 +143,13 @@ private const val CLOSEST = 12.0
 private const val PLACES = "places"
 private const val PLACES_SHADOW = "places-shadow"
 private const val PLACES_COUNT = "places-count"
+private const val PLACES_NAMES = "places-names"
+private const val PLACES_BLOCK = "places-block"
+private const val DOT_BLOCK = "dot-block"
+private const val DOT_BLOCK_SIZE = 32
+
+/** How much of [DOT_BLOCK]'s square covers a dot of [radius] and its ring. */
+private fun dotBlock(radius: Float) = (radius + 2f) * 2 / DOT_BLOCK_SIZE
 private const val ROUTE = "route"
 private const val ROUTES_DASHED = "routes-dashed"
 private const val STOPS = "stops"
@@ -557,6 +571,39 @@ fun PlacesMap(
                 textIgnorePlacement(true),
             ),
         )
+        // Each place's name under its dot, at any zoom, in the ink and halo of the place picker's
+        // names; a crowd's dot has none, and a name that would cover another, or the basemap's,
+        // is left out until there is room for it.
+        style.addLayer(
+            SymbolLayer(PLACES_NAMES, PLACES).withFilter(not(has("point_count"))).withProperties(
+                textField(get("name")),
+                textFont(arrayOf("Noto Sans Regular")),
+                textSize(12f),
+                textAnchor(Property.TEXT_ANCHOR_TOP),
+                textOffset(arrayOf(0f, 1.3f)),
+                textColor(ink),
+                textHaloColor(ring),
+                textHaloWidth(1.5f),
+            ),
+        )
+        // Every dot, crowds too, as a box the names keep clear of, unseen: above the names, so
+        // placed before them, as the map places the top of its labels first.
+        style.addImage(DOT_BLOCK, Bitmap.createBitmap(DOT_BLOCK_SIZE, DOT_BLOCK_SIZE, Bitmap.Config.ARGB_8888).apply { setDensity(DisplayMetrics.DENSITY_DEFAULT) })
+        style.addLayer(
+            SymbolLayer(PLACES_BLOCK, PLACES).withProperties(
+                iconImage(DOT_BLOCK),
+                iconSize(
+                    switchCase(
+                        has("point_count"), literal(dotBlock(DOT_CLUSTER)),
+                        gt(get("count"), literal(1)), literal(dotBlock(DOT_MANY)),
+                        literal(dotBlock(DOT_SINGLE)),
+                    ),
+                ),
+                iconOpacity(0f),
+                iconAllowOverlap(true),
+                iconIgnorePlacement(false),
+            ),
+        )
     }
 
     // Taps are listened for while this map is shown, with this showing's callbacks.
@@ -610,6 +657,7 @@ fun PlacesMap(
                 addStringProperty("id", place.id)
                 addNumberProperty("count", place.count)
                 addNumberProperty("firstYear", place.firstYear)
+                addStringProperty("name", place.place.name)
             }
         }
         style.getSourceAs<GeoJsonSource>(PLACES)?.setGeoJson(FeatureCollection.fromFeatures(features))
