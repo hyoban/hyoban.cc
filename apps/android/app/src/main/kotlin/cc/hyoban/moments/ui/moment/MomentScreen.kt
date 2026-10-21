@@ -1,5 +1,7 @@
 package cc.hyoban.moments.ui.moment
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
@@ -12,6 +14,7 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -21,6 +24,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -42,19 +46,33 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.CalendarToday
+import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material.icons.rounded.Fullscreen
 import androidx.compose.material.icons.rounded.Luggage
 import androidx.compose.material.icons.rounded.PhoneAndroid
 import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material.icons.rounded.Share
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FloatingToolbarDefaults
+import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.ListItemShapes
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RichTooltip
 import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -67,13 +85,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
@@ -92,16 +109,15 @@ import cc.hyoban.moments.data.spec.TripRecord
 import cc.hyoban.moments.data.trips.coversOf
 import cc.hyoban.moments.data.trips.momentsOf
 import cc.hyoban.moments.data.trips.tripOf
+import cc.hyoban.moments.ui.LocalSnackbarLift
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.FLOATING_BAR
 import cc.hyoban.moments.ui.components.FloatingBack
-import cc.hyoban.moments.ui.components.FloatingButton
-import cc.hyoban.moments.ui.components.FloatingWidth
 import cc.hyoban.moments.ui.components.MediaTile
-import cc.hyoban.moments.ui.components.Pill
 import cc.hyoban.moments.ui.components.READABLE_WIDTH
 import cc.hyoban.moments.ui.components.RisingSheet
 import cc.hyoban.moments.ui.components.Thumbnail
+import cc.hyoban.moments.ui.components.Tooltip
 import cc.hyoban.moments.ui.components.dayCardKey
 import cc.hyoban.moments.ui.components.kindLabel
 import cc.hyoban.moments.ui.components.landscape
@@ -112,6 +128,8 @@ import cc.hyoban.moments.ui.components.sideInsetsPadding
 import cc.hyoban.moments.ui.components.tripCardKey
 import cc.hyoban.moments.ui.format.formatDay
 import cc.hyoban.moments.ui.format.formatTime
+import cc.hyoban.moments.ui.rememberShowMessage
+import cc.hyoban.moments.ui.theme.Corners
 import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.fill
@@ -127,6 +145,7 @@ private val RISE = 32.dp
  * words first, a strip of its photos when there are several, and then where it was, the
  * trip it was on and the rest of its day, as one list of rows to open.
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun MomentScreen(
     container: AppContainer,
@@ -138,6 +157,7 @@ fun MomentScreen(
     onEdit: (String) -> Unit = {},
     onDay: (String) -> Unit = {},
     pane: Boolean = false,
+    onChanges: (() -> Unit)? = null,
 ) {
     val moments by container.repository.moments.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
@@ -168,6 +188,8 @@ fun MomentScreen(
             MomentDetails(
                 moment, places, trip, moments, trips, urls, pager, onPlace, onTrip, onDay,
                 changed = container.repository.isChanged(moment.uid),
+                // The way to publish, only when the app can.
+                onChanges = onChanges.takeIf { container.canPublish },
             )
         }
         if (landscape && !pane && moment.media.isNotEmpty()) {
@@ -217,21 +239,51 @@ fun MomentScreen(
         if (!pane) FloatingBack(onBack, Modifier.align(Alignment.TopStart))
         // What was written on the phone can be changed, and deleted from its edit page; the
         // site's Moments only with the API's token, and only on the phone until the changes are
-        // published. Editing is the page's main action, tonal and wide beside the share.
+        // published.
         val editable = container.repository.isLocal(uid) || container.canPublish
         val publishing by container.publishing.collectAsStateWithLifecycle()
-        Row(Modifier.align(Alignment.TopEnd)) {
-            FloatingButton(Icons.Rounded.Share, stringResource(R.string.action_share), onClick = { sharing = true }, tag = "share")
-            if (editable && publishing == null) {
-                FloatingButton(
-                    Icons.Rounded.Edit,
-                    stringResource(R.string.action_edit_moment),
-                    onClick = { onEdit(uid) },
-                    tag = "edit",
-                    tonal = true,
-                    width = FloatingWidth.Wide,
-                )
+        // The page's actions in Material 3's floating toolbar at the foot, as a page under the
+        // tabs has a toolbar where they have the navigation bar: sharing, copying the words and
+        // the photo shown at its full size; editing, when it can be, the FAB paired with it.
+        // Only back stays over the photo.
+        val context = LocalContext.current
+        val show = rememberShowMessage()
+        val copied = stringResource(R.string.message_text_copied)
+        val tools: @Composable RowScope.() -> Unit = {
+            ToolbarButton(Icons.Rounded.Share, stringResource(R.string.action_share), "share") { sharing = true }
+            if (moment.text.isNotBlank()) {
+                ToolbarButton(Icons.Rounded.ContentCopy, stringResource(R.string.action_copy_text), "copy_text") {
+                    context.getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("", moment.text))
+                    show(copied)
+                }
             }
+            if (moment.media.isNotEmpty()) {
+                ToolbarButton(Icons.Rounded.Fullscreen, stringResource(R.string.action_view_photo), "view_photo") { onMedia(uid, pager.currentPage) }
+            }
+        }
+        val toolbar = Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(bottom = Space.gutter).testTag("moment_toolbar")
+        // Snackbars stand above the toolbar while the page is shown.
+        val lift = LocalSnackbarLift.current
+        DisposableEffect(lift) {
+            lift.value = TOOLBAR_CLEARANCE
+            onDispose { lift.value = 0.dp }
+        }
+        if (editable && publishing == null) {
+            HorizontalFloatingToolbar(
+                expanded = true,
+                floatingActionButton = {
+                    val edit = stringResource(R.string.action_edit_moment)
+                    Tooltip(edit) {
+                        FloatingToolbarDefaults.StandardFloatingActionButton(onClick = { onEdit(uid) }, modifier = Modifier.testTag("edit")) {
+                            Icon(Icons.Rounded.Edit, contentDescription = edit)
+                        }
+                    }
+                },
+                modifier = toolbar,
+                content = tools,
+            )
+        } else {
+            HorizontalFloatingToolbar(expanded = true, modifier = toolbar, content = tools)
         }
     }
 }
@@ -283,6 +335,7 @@ private fun MomentDetails(
     onTrip: (String) -> Unit,
     onDay: (String) -> Unit,
     changed: Boolean = false,
+    onChanges: (() -> Unit)? = null,
 ) {
     val sameDay = remember(moments, moment.dateKey) { moments.count { it.dateKey == moment.dateKey } }
     Column(Modifier.padding(top = Space.xl, bottom = Space.xxl)) {
@@ -300,8 +353,8 @@ private fun MomentDetails(
             )
             if (moment.published == null || changed) {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.s)) {
-                    if (moment.published == null) Pill(stringResource(R.string.label_on_phone), icon = Icons.Rounded.PhoneAndroid)
-                    if (changed) Pill(stringResource(R.string.label_unpublished_change), icon = Icons.Rounded.PhoneAndroid)
+                    if (moment.published == null) StateChip(stringResource(R.string.label_on_phone), stringResource(R.string.explain_on_phone), onChanges)
+                    if (changed) StateChip(stringResource(R.string.label_unpublished_change), stringResource(R.string.explain_unpublished_change), onChanges)
                 }
             }
         }
@@ -372,7 +425,22 @@ private fun MomentDetails(
                 rows.forEachIndexed { index, row -> row(ListItemDefaults.segmentedShapes(index, rows.size)) }
             }
         }
+        // Clear of the floating toolbar at the foot.
         Spacer(Modifier.windowInsetsBottomHeight(WindowInsets.navigationBars))
+        Spacer(Modifier.height(TOOLBAR_CLEARANCE))
+    }
+}
+
+/** Room under the page's words for the floating toolbar over them: its height and margin. */
+private val TOOLBAR_CLEARANCE = 88.dp
+
+/** An action in the floating toolbar, named in a tooltip as an icon-only button is. */
+@Composable
+private fun ToolbarButton(icon: ImageVector, label: String, tag: String, onClick: () -> Unit) {
+    Tooltip(label) {
+        IconButton(onClick = onClick, modifier = Modifier.testTag(tag)) {
+            Icon(icon, contentDescription = label)
+        }
     }
 }
 
@@ -436,4 +504,49 @@ private const val ROW_LEAD = 40
 @Composable
 private fun RowIcon(icon: ImageVector) {
     Box(Modifier.size(ROW_LEAD.dp), contentAlignment = Alignment.Center) { Icon(icon, contentDescription = null) }
+}
+
+/**
+ * Where a Moment stands, only on the phone or changed there, as an assist chip that explains
+ * itself: tapped, a persistent rich tooltip says what it means, with a way to the changes to
+ * publish when [onChanges] is given, as Material 3 has a rich tooltip add context and an action.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun StateChip(label: String, explanation: String, onChanges: (() -> Unit)?) {
+    val state = rememberTooltipState(isPersistent = true)
+    val scope = rememberCoroutineScope()
+    TooltipBox(
+        positionProvider = TooltipDefaults.rememberRichTooltipPositionProvider(),
+        tooltip = {
+            RichTooltip(
+                title = { Text(label) },
+                action = onChanges?.let { open ->
+                    {
+                        TextButton(
+                            onClick = {
+                                state.dismiss()
+                                open()
+                            },
+                        ) { Text(stringResource(R.string.title_changes)) }
+                    }
+                },
+            ) { Text(explanation) }
+        },
+        state = state,
+    ) {
+        AssistChip(
+            onClick = { scope.launch { state.show() } },
+            label = { Text(label) },
+            leadingIcon = { Icon(Icons.Rounded.PhoneAndroid, contentDescription = null, modifier = Modifier.size(AssistChipDefaults.IconSize)) },
+            shape = Corners.full,
+            border = null,
+            colors = AssistChipDefaults.assistChipColors(
+                containerColor = LocalSurfaceLevel.current.raised.fill(),
+                labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                leadingIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            ),
+            modifier = Modifier.testTag("state_chip"),
+        )
+    }
 }

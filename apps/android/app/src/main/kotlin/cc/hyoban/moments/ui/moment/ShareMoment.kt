@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -72,6 +71,7 @@ import cc.hyoban.moments.data.media.saveShareAlbum
 import cc.hyoban.moments.data.spec.MediaType
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.ui.components.AppColors
+import cc.hyoban.moments.ui.components.FullScreenDialog
 import cc.hyoban.moments.ui.components.Thumbnail
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.fill
@@ -209,97 +209,25 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
         return
     }
 
-    AlertDialog(
-        modifier = Modifier.semantics { testTagsAsResourceId = true },
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(target.title)) },
-        text = {
-            Column(
-                Modifier.heightIn(max = 480.dp).verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(Space.m),
-            ) {
-                Text(stringResource(when (target) {
-                    ShareTarget.X -> R.string.share_x_hint
-                    ShareTarget.TELEGRAM -> if (copyTextOnOpen) R.string.share_telegram_multiple_hint else R.string.share_telegram_hint
-                    ShareTarget.XIAOHONGSHU -> if (copyTextOnOpen) R.string.share_xiaohongshu_photos_hint else R.string.share_xiaohongshu_hint
-                    ShareTarget.FEISHU -> if (copyTextOnOpen) R.string.share_feishu_photos_hint else R.string.share_feishu_hint
-                    ShareTarget.THREADS -> if (copyTextOnOpen) R.string.share_threads_photos_hint else R.string.share_threads_hint
-                    ShareTarget.DOUYIN -> when {
-                        needsPhoto -> R.string.share_douyin_no_photos
-                        copyTextOnOpen -> R.string.share_douyin_photos_hint
-                        else -> R.string.share_douyin_hint
-                    }
-                    ShareTarget.PREPARE -> R.string.share_prepare_hint
-                }), style = MaterialTheme.typography.bodySmall)
-                OutlinedTextField(
-                    value = text,
-                    onValueChange = { text = it },
-                    enabled = !busy,
-                    label = { Text(stringResource(R.string.share_text)) },
-                    minLines = 3,
-                    maxLines = 6,
-                    modifier = Modifier.testTag("share_${target.tag}_text"),
-                )
-                if (photos.isNotEmpty()) {
-                    Text(
-                        if (target == ShareTarget.X) stringResource(R.string.share_photos, chosen.size, target.limit)
-                        else if (target != ShareTarget.PREPARE) stringResource(R.string.share_selected_photos, chosen.size)
-                        else stringResource(R.string.share_prepare_photos, chosen.size),
-                        style = MaterialTheme.typography.labelLarge,
-                    )
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.s), verticalArrangement = Arrangement.spacedBy(Space.s)) {
-                        photos.forEachIndexed { index, photo ->
-                            val checked = photo.uid in selected
-                            val label = stringResource(R.string.share_photo, index + 1)
-                            Box(
-                                Modifier
-                                    .border(2.dp, if (checked) MaterialTheme.colorScheme.primary else Color.Transparent, RoundedCornerShape(14.dp))
-                                    .toggleable(
-                                        value = checked,
-                                        enabled = !busy && (checked || chosen.size < target.limit),
-                                        role = Role.Checkbox,
-                                        onValueChange = { select ->
-                                            selected = if (select) selected + photo.uid else selected - photo.uid
-                                        },
-                                    )
-                                    .semantics(mergeDescendants = true) { contentDescription = label }
-                                    .testTag("share_${target.tag}_photo_$index")
-                                    .padding(3.dp),
-                            ) {
-                                Thumbnail(photo, urls, size = 72)
-                                if (checked) {
-                                    Surface(
-                                        color = MaterialTheme.colorScheme.primary,
-                                        shape = RoundedCornerShape(6.dp),
-                                        modifier = Modifier.align(Alignment.BottomEnd),
-                                    ) {
-                                        Text("${chosen.indexOf(photo) + 1}", Modifier.padding(horizontal = 5.dp), style = MaterialTheme.typography.labelSmall)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                if (moment.media.any { it.type == MediaType.VIDEO || it.type == MediaType.LIVE_PHOTO }) {
-                    Text(stringResource(R.string.share_stills_only), style = MaterialTheme.typography.bodySmall)
-                }
-                if (busy) Text(stringResource(R.string.share_preparing))
-                error?.let {
-                    Text(stringResource(it), color = MaterialTheme.colorScheme.error)
-                }
-                if (target != ShareTarget.PREPARE && (error != null || needsPhoto)) {
-                    TextButton(
-                        onClick = { target = ShareTarget.PREPARE; error = null },
-                        modifier = Modifier.testTag("share_fallback"),
-                    ) { Text(stringResource(R.string.action_prepare_share)) }
-                }
-            }
-        },
-        confirmButton = {
+    // Text to edit and photos to pick: a full-screen dialog, as Material 3 has a task with
+    // fields to fill on a phone, the X leaving it and the action opening the app.
+    FullScreenDialog(
+        onDismiss = onDismiss,
+        actions = {
+            // Never greyed out, as a full-screen dialog's confirming action isn't: what is
+            // missing is said under the photos instead.
             TextButton(
-                enabled = !busy && !needsPhoto && (text.isNotBlank() || chosen.isNotEmpty()),
+                enabled = !busy,
                 modifier = Modifier.testTag("share_${target.tag}_open"),
                 onClick = {
+                    if (needsPhoto) {
+                        error = R.string.share_douyin_no_photos
+                        return@TextButton
+                    }
+                    if (text.isBlank() && chosen.isEmpty()) {
+                        error = R.string.error_empty_moment
+                        return@TextButton
+                    }
                     if (target == ShareTarget.PREPARE && chosen.isNotEmpty() && Build.VERSION.SDK_INT < 29 &&
                         ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
                         storagePermission.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
@@ -362,8 +290,87 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                 }))
             }
         },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
-        },
-    )
+    ) {
+        Column(
+            Modifier.verticalScroll(rememberScrollState()).padding(start = Space.xl, end = Space.xl, bottom = Space.xl),
+            verticalArrangement = Arrangement.spacedBy(Space.m),
+        ) {
+            Text(stringResource(target.title), style = MaterialTheme.typography.headlineSmall)
+            Text(stringResource(when (target) {
+                ShareTarget.X -> R.string.share_x_hint
+                ShareTarget.TELEGRAM -> if (copyTextOnOpen) R.string.share_telegram_multiple_hint else R.string.share_telegram_hint
+                ShareTarget.XIAOHONGSHU -> if (copyTextOnOpen) R.string.share_xiaohongshu_photos_hint else R.string.share_xiaohongshu_hint
+                ShareTarget.FEISHU -> if (copyTextOnOpen) R.string.share_feishu_photos_hint else R.string.share_feishu_hint
+                ShareTarget.THREADS -> if (copyTextOnOpen) R.string.share_threads_photos_hint else R.string.share_threads_hint
+                ShareTarget.DOUYIN -> when {
+                    needsPhoto -> R.string.share_douyin_no_photos
+                    copyTextOnOpen -> R.string.share_douyin_photos_hint
+                    else -> R.string.share_douyin_hint
+                }
+                ShareTarget.PREPARE -> R.string.share_prepare_hint
+            }), style = MaterialTheme.typography.bodySmall)
+            OutlinedTextField(
+                value = text,
+                onValueChange = { text = it },
+                enabled = !busy,
+                label = { Text(stringResource(R.string.share_text)) },
+                minLines = 3,
+                maxLines = 6,
+                modifier = Modifier.testTag("share_${target.tag}_text"),
+            )
+            if (photos.isNotEmpty()) {
+                Text(
+                    if (target == ShareTarget.X) stringResource(R.string.share_photos, chosen.size, target.limit)
+                    else if (target != ShareTarget.PREPARE) stringResource(R.string.share_selected_photos, chosen.size)
+                    else stringResource(R.string.share_prepare_photos, chosen.size),
+                    style = MaterialTheme.typography.labelLarge,
+                )
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.s), verticalArrangement = Arrangement.spacedBy(Space.s)) {
+                    photos.forEachIndexed { index, photo ->
+                        val checked = photo.uid in selected
+                        val label = stringResource(R.string.share_photo, index + 1)
+                        Box(
+                            Modifier
+                                .border(2.dp, if (checked) MaterialTheme.colorScheme.primary else Color.Transparent, RoundedCornerShape(14.dp))
+                                .toggleable(
+                                    value = checked,
+                                    enabled = !busy && (checked || chosen.size < target.limit),
+                                    role = Role.Checkbox,
+                                    onValueChange = { select ->
+                                        selected = if (select) selected + photo.uid else selected - photo.uid
+                                    },
+                                )
+                                .semantics(mergeDescendants = true) { contentDescription = label }
+                                .testTag("share_${target.tag}_photo_$index")
+                                .padding(3.dp),
+                        ) {
+                            Thumbnail(photo, urls, size = 72)
+                            if (checked) {
+                                Surface(
+                                    color = MaterialTheme.colorScheme.primary,
+                                    shape = RoundedCornerShape(6.dp),
+                                    modifier = Modifier.align(Alignment.BottomEnd),
+                                ) {
+                                    Text("${chosen.indexOf(photo) + 1}", Modifier.padding(horizontal = 5.dp), style = MaterialTheme.typography.labelSmall)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            if (moment.media.any { it.type == MediaType.VIDEO || it.type == MediaType.LIVE_PHOTO }) {
+                Text(stringResource(R.string.share_stills_only), style = MaterialTheme.typography.bodySmall)
+            }
+            if (busy) Text(stringResource(R.string.share_preparing))
+            error?.let {
+                Text(stringResource(it), color = MaterialTheme.colorScheme.error)
+            }
+            if (target != ShareTarget.PREPARE && (error != null || needsPhoto)) {
+                TextButton(
+                    onClick = { target = ShareTarget.PREPARE; error = null },
+                    modifier = Modifier.testTag("share_fallback"),
+                ) { Text(stringResource(R.string.action_prepare_share)) }
+            }
+        }
+    }
 }
