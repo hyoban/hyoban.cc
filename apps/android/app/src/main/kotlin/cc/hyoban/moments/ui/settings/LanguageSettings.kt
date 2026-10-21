@@ -6,15 +6,14 @@ import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import androidx.activity.compose.LocalActivity
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.OpenInNew
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemShapes
+import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
@@ -23,7 +22,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import cc.hyoban.moments.AppLanguage
 import cc.hyoban.moments.R
 
@@ -31,6 +29,7 @@ import cc.hyoban.moments.R
  * The app's language, the phone's or one of its own, as rows in a card with the chosen
  * one ticked. Each language is named in itself, so it can be found whatever the app speaks.
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun LanguageSettings() {
     val activity = LocalActivity.current ?: return
@@ -40,18 +39,19 @@ fun LanguageSettings() {
     // Each language its own segment, and the system's own page for the app's language, which
     // ColorOS has but doesn't link to, one more.
     val system = systemLanguageSettings(activity)
-    val segments = AppLanguage.entries.map<AppLanguage, @Composable () -> Unit> { language ->
-        { LanguageRow(activity, language, selected = language == current) }
-    } + listOfNotNull<@Composable () -> Unit>(
+    val segments = AppLanguage.entries.map<AppLanguage, Segment> { language ->
+        { shapes -> LanguageRow(activity, language, selected = language == current, shapes) }
+    } + listOfNotNull<Segment>(
         system?.let { intent ->
-            {
-                ListItem(
-                    headlineContent = { Text(stringResource(R.string.action_system_language)) },
+            { shapes ->
+                SegmentedListItem(
+                    onClick = { activity.startActivity(intent) },
+                    shapes = shapes,
+                    colors = segmentColors(),
                     leadingContent = { Icon(Icons.Rounded.Settings, contentDescription = null) },
                     trailingContent = { Icon(Icons.AutoMirrored.Rounded.OpenInNew, contentDescription = null) },
-                    colors = rowColors(),
-                    modifier = Modifier.clickable { activity.startActivity(intent) }.testTag("language_system_settings"),
-                )
+                    modifier = Modifier.testTag("language_system_settings"),
+                ) { Text(stringResource(R.string.action_system_language)) }
             }
         },
     )
@@ -67,25 +67,25 @@ private fun systemLanguageSettings(activity: Activity): Intent? {
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun LanguageRow(activity: Activity, language: AppLanguage, selected: Boolean) {
-    ListItem(
-        headlineContent = {
-            Text(
-                when (language) {
-                    AppLanguage.SYSTEM -> stringResource(R.string.language_system)
-                    AppLanguage.CHINESE -> "简体中文"
-                    AppLanguage.ENGLISH -> "English"
-                },
-                // The chosen one emphasized, as Material 3 sets a selected list item.
-                style = if (selected) MaterialTheme.typography.bodyLargeEmphasized else MaterialTheme.typography.bodyLarge,
-            )
-        },
-        // One of them chosen, as Material 3 has a list choose one: a radio button at each
-        // row's start, the whole row the target.
+private fun LanguageRow(activity: Activity, language: AppLanguage, selected: Boolean, shapes: ListItemShapes) {
+    // One of them chosen, as Material 3 has a list choose one: a radio button at each row's
+    // start, the whole row the target, the chosen one in the selected colours and shape.
+    SegmentedListItem(
+        selected = selected,
+        onClick = { if (!selected) AppLanguage.change(activity, language) },
+        shapes = shapes,
+        colors = segmentColors(),
         leadingContent = { RadioButton(selected = selected, onClick = null) },
-        colors = rowColors(),
-        modifier = Modifier
-            .selectable(selected, role = Role.RadioButton) { if (!selected) AppLanguage.change(activity, language) }
-            .testTag("language_${language.name.lowercase()}"),
-    )
+        modifier = Modifier.testTag("language_${language.name.lowercase()}"),
+    ) {
+        Text(
+            when (language) {
+                AppLanguage.SYSTEM -> stringResource(R.string.language_system)
+                AppLanguage.CHINESE -> "简体中文"
+                AppLanguage.ENGLISH -> "English"
+            },
+            // The chosen one emphasized, as Material 3 sets a selected list item.
+            style = if (selected) MaterialTheme.typography.bodyLargeEmphasized else MaterialTheme.typography.bodyLarge,
+        )
+    }
 }

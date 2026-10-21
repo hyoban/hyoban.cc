@@ -319,6 +319,8 @@
     <string name="message_change_reverted">Change discarded</string>
     <string name="action_navigate_short">Directions</string>
     <string name="action_refresh">Refresh</string>
+    <string name="refresh_note">Get the latest Moments, places and trips from the API</string>
+    <string name="refreshing">Refreshing</string>
     <string name="share_manual_note">Save the photos and copy the text, then post yourself</string>
     <string name="confirm_discard_note">Unsaved text, photos, and place will be lost</string>
     <string name="reason_no_token">no API token is set</string>

@@ -1,13 +1,13 @@
 package cc.hyoban.moments.ui.settings
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -25,13 +25,17 @@ import androidx.compose.material.icons.rounded.Image
 import androidx.compose.material.icons.rounded.Key
 import androidx.compose.material.icons.rounded.LightMode
 import androidx.compose.material.icons.rounded.Palette
+import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.ListItemShapes
+import androidx.compose.material3.LoadingIndicator
+import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedSecureTextField
 import androidx.compose.material3.OutlinedTextField
@@ -57,6 +61,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.R
@@ -73,6 +78,7 @@ import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 // caption, a note under the group, and a tap on a row opening a dialog to change it.
 
 /** Where the app reads from: the API, the photos' origin and the map's styles, each back to the build's own on a tap. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SettingsScreen(container: AppContainer, onBack: () -> Unit, onChanges: () -> Unit = {}) {
     val settings = container.settings
@@ -98,27 +104,47 @@ fun SettingsScreen(container: AppContainer, onBack: () -> Unit, onChanges: () ->
             ) {
                 ThemeSettings(settings)
                 LanguageSettings()
-                Section(stringResource(R.string.section_sources), rows.subList(0, 2), 0, stringResource(R.string.settings_api_note)) { editing = it }
+                // Where the app reads from, and reading from it again with a tap, as Material 3 asks a
+                // refresh pulled for on the tabs be had without the gesture too.
+                val syncing by container.repository.syncing.collectAsStateWithLifecycle()
+                val refresh: Segment = { shapes ->
+                    SegmentedListItem(
+                        onClick = { if (!syncing) container.refresh() },
+                        shapes = shapes,
+                        colors = segmentColors(),
+                        leadingContent = { Icon(Icons.Rounded.Refresh, contentDescription = null) },
+                        supportingContent = { Text(stringResource(if (syncing) R.string.refreshing else R.string.refresh_note)) },
+                        trailingContent = if (syncing) {
+                            { LoadingIndicator(Modifier.size(24.dp)) }
+                        } else {
+                            null
+                        },
+                        modifier = Modifier.testTag("refresh"),
+                    ) { Text(stringResource(R.string.action_refresh)) }
+                }
+                Section(stringResource(R.string.section_sources), rows.subList(0, 2), 0, stringResource(R.string.settings_api_note), extra = listOf(refresh)) { editing = it }
                 // The token, and while changes wait on the phone, the way to them, as from the Moments' header.
                 val pending by container.repository.pending.collectAsStateWithLifecycle()
-                val token: @Composable () -> Unit = {
-                    ListItem(
-                        headlineContent = { Text(stringResource(R.string.setting_api_token)) },
-                        supportingContent = { Text(stringResource(if (settings.apiToken.isSet) R.string.token_set else R.string.token_unset)) },
+                val token: Segment = { shapes ->
+                    SegmentedListItem(
+                        onClick = { editingToken = true },
+                        shapes = shapes,
+                        colors = segmentColors(),
                         leadingContent = { Icon(Icons.Rounded.Key, contentDescription = null) },
-                        colors = rowColors(),
-                        modifier = Modifier.clickable { editingToken = true }.testTag("api_token"),
-                    )
+                        supportingContent = { Text(stringResource(if (settings.apiToken.isSet) R.string.token_set else R.string.token_unset)) },
+                        modifier = Modifier.testTag("api_token"),
+                    ) { Text(stringResource(R.string.setting_api_token)) }
                 }
-                val changes: @Composable () -> Unit = {
-                    ListItem(
-                        headlineContent = { Text(stringResource(R.string.title_changes)) },
-                        supportingContent = { Text(pluralStringResource(R.plurals.count_changes, pending.size, pending.size)) },
+                val changes: Segment = { shapes ->
+                    SegmentedListItem(
+                        onClick = onChanges,
+                        shapes = shapes,
+                        colors = segmentColors(),
                         leadingContent = { Icon(Icons.Rounded.CloudUpload, contentDescription = null) },
+                        supportingContent = { Text(pluralStringResource(R.plurals.count_changes, pending.size, pending.size)) },
                         trailingContent = { Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null) },
-                        colors = rowColors(),
-                        modifier = Modifier.clickable(onClick = onChanges).testTag("settings_changes"),
-                    )
+                        modifier = Modifier.testTag("settings_changes"),
+                    ) { Text(stringResource(R.string.title_changes)) }
                 }
                 SegmentedGroup(
                     stringResource(R.string.section_publishing),
@@ -150,17 +176,20 @@ fun SettingsScreen(container: AppContainer, onBack: () -> Unit, onChanges: () ->
 /** A setting as a row: its name, its icon, and what saving it does. */
 private class Row(val setting: Setting, val title: Int, val icon: ImageVector, val save: (String) -> Unit)
 
-/** Rows as one segmented group under a caption, and a note under them. */
+/** Rows as one segmented group under a caption, and a note under them; [extra] segments after them. */
 @Composable
-private fun Section(title: String, rows: List<Row>, first: Int, note: String?, onEdit: (Int) -> Unit) {
-    SegmentedGroup(title, note, rows.mapIndexed { index, row -> { SettingRow(row) { onEdit(first + index) } } })
+private fun Section(title: String, rows: List<Row>, first: Int, note: String?, extra: List<Segment> = emptyList(), onEdit: (Int) -> Unit) {
+    SegmentedGroup(title, note, rows.mapIndexed<Row, Segment> { index, row -> { shapes -> SettingRow(row, shapes) { onEdit(first + index) } } } + extra)
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun SettingRow(row: Row, onClick: () -> Unit) {
+private fun SettingRow(row: Row, shapes: ListItemShapes, onClick: () -> Unit) {
     val setting = row.setting
-    ListItem(
-        headlineContent = { Text(stringResource(row.title)) },
+    SegmentedListItem(
+        onClick = onClick,
+        shapes = shapes,
+        colors = segmentColors(),
         supportingContent = {
             // The scheme said by the dialog; the row has room only for where it points.
             Text(setting.value.substringAfter("://"), maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -171,25 +200,28 @@ private fun SettingRow(row: Row, onClick: () -> Unit) {
         } else {
             null
         },
-        colors = rowColors(),
-        modifier = Modifier.clickable(onClick = onClick),
-    )
+    ) { Text(stringResource(row.title)) }
 }
 
 /** FlClash, whose design the app's is after, opening its repository on a tap. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun Credits() {
     val uri = LocalUriHandler.current
-    Group(stringResource(R.string.section_credits), null) {
-        ListItem(
-            headlineContent = { Text("FlClash") },
-            supportingContent = { Text(stringResource(R.string.credit_flclash_note)) },
-            leadingContent = { Icon(Icons.Rounded.Palette, contentDescription = null) },
-            trailingContent = { Icon(Icons.AutoMirrored.Rounded.OpenInNew, contentDescription = null) },
-            colors = rowColors(),
-            modifier = Modifier.clickable { uri.openUri(FLCLASH) },
-        )
-    }
+    SegmentedGroup(
+        stringResource(R.string.section_credits),
+        null,
+        listOf { shapes ->
+            SegmentedListItem(
+                onClick = { uri.openUri(FLCLASH) },
+                shapes = shapes,
+                colors = segmentColors(),
+                supportingContent = { Text(stringResource(R.string.credit_flclash_note)) },
+                leadingContent = { Icon(Icons.Rounded.Palette, contentDescription = null) },
+                trailingContent = { Icon(Icons.AutoMirrored.Rounded.OpenInNew, contentDescription = null) },
+            ) { Text("FlClash") }
+        },
+    )
 }
 
 private const val FLCLASH = "https://github.com/chen08209/FlClash"

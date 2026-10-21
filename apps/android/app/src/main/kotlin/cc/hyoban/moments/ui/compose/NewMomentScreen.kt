@@ -56,8 +56,9 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
+import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -126,10 +127,13 @@ import cc.hyoban.moments.ui.format.formatDay
 import cc.hyoban.moments.ui.format.formatTime
 import cc.hyoban.moments.ui.settings.Group
 import cc.hyoban.moments.ui.settings.SegmentedGroup
-import cc.hyoban.moments.ui.settings.rowColors
+import cc.hyoban.moments.ui.settings.Segment
+import cc.hyoban.moments.ui.settings.segmentColors
 import cc.hyoban.moments.ui.theme.Elevation
 import cc.hyoban.moments.ui.theme.MediaOverlay
 import cc.hyoban.moments.ui.theme.Space
+import cc.hyoban.moments.ui.theme.fill
+import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
 import coil3.compose.AsyncImage
 import java.io.File
 import java.time.Instant
@@ -148,7 +152,7 @@ import kotlinx.coroutines.withContext
  * phone's is kept as changed, as is one of the site's, with the token, until it is published.
  * One being changed can be deleted here too, at the foot of the page, and then [onDeleted].
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> Unit, edit: String? = null, onDeleted: () -> Unit = onBack) {
     val context = LocalContext.current
@@ -381,26 +385,21 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
                         canPublish -> R.string.note_local_then_publish
                         else -> R.string.note_local_only
                     }
-                    val whenRow: @Composable () -> Unit = {
-                        ListItem(
-                            headlineContent = { Text(listOfNotNull(formatDay(stamp(time)), formatTime(stamp(time))).joinToString(" ")) },
+                    val whenRow: Segment = { shapes ->
+                        SegmentedListItem(
+                            onClick = { editingTime = true },
+                            shapes = shapes,
+                            colors = segmentColors(),
                             supportingContent = { Text(stringResource(timeSource)) },
                             leadingContent = { Icon(Icons.Rounded.Schedule, contentDescription = null) },
-                            colors = rowColors(),
-                            modifier = Modifier.clickable { editingTime = true }.testTag("moment_time"),
-                        )
+                            modifier = Modifier.testTag("moment_time"),
+                        ) { Text(listOfNotNull(formatDay(stamp(time)), formatTime(stamp(time))).joinToString(" ")) }
                     }
-                    val whereRow: @Composable () -> Unit = {
-                        ListItem(
-                            headlineContent = {
-                                Text(
-                                    when (place) {
-                                        is PlaceChoice.Known -> places[place.id]?.name ?: place.id
-                                        is PlaceChoice.New -> place.name
-                                        PlaceChoice.None -> stringResource(R.string.place_none)
-                                    },
-                                )
-                            },
+                    val whereRow: Segment = { shapes ->
+                        SegmentedListItem(
+                            onClick = { editingPlace = true },
+                            shapes = shapes,
+                            colors = segmentColors(),
                             supportingContent = {
                                 Text(
                                     stringResource(
@@ -418,28 +417,41 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
                                 )
                             },
                             leadingContent = { Icon(Icons.Rounded.Place, contentDescription = null) },
-                            colors = rowColors(),
-                            modifier = Modifier.clickable { editingPlace = true }.testTag("moment_place"),
-                        )
+                            modifier = Modifier.testTag("moment_place"),
+                        ) {
+                            Text(
+                                when (place) {
+                                    is PlaceChoice.Known -> places[place.id]?.name ?: place.id
+                                    is PlaceChoice.New -> place.name
+                                    PlaceChoice.None -> stringResource(R.string.place_none)
+                                },
+                            )
+                        }
                     }
                     SegmentedGroup(stringResource(R.string.section_when_where), stringResource(note), listOf(whenRow, whereRow))
                     // Deleting is rare, so it waits down here rather than over the Moment; its snackbar can undo it.
                     if (original != null && publishing == null) {
-                        Group(null, null) {
-                            ListItem(
-                                headlineContent = { Text(stringResource(R.string.action_delete_moment)) },
-                                leadingContent = { Icon(Icons.Rounded.DeleteOutline, contentDescription = null) },
-                                colors = ListItemDefaults.colors(
-                                    containerColor = Color.Transparent,
-                                    headlineColor = MaterialTheme.colorScheme.error,
-                                    leadingIconColor = MaterialTheme.colorScheme.error,
-                                ),
-                                modifier = Modifier.clickable(enabled = !saving) {
-                                    container.delete(original.uid)
-                                    onDeleted()
-                                }.testTag("delete"),
-                            )
-                        }
+                        SegmentedGroup(
+                            null,
+                            null,
+                            listOf { shapes ->
+                                SegmentedListItem(
+                                    onClick = {
+                                        container.delete(original.uid)
+                                        onDeleted()
+                                    },
+                                    shapes = shapes,
+                                    enabled = !saving,
+                                    colors = ListItemDefaults.segmentedColors(
+                                        containerColor = LocalSurfaceLevel.current.raised.fill(),
+                                        contentColor = MaterialTheme.colorScheme.error,
+                                        leadingContentColor = MaterialTheme.colorScheme.error,
+                                    ),
+                                    leadingContent = { Icon(Icons.Rounded.DeleteOutline, contentDescription = null) },
+                                    modifier = Modifier.testTag("delete"),
+                                ) { Text(stringResource(R.string.action_delete_moment)) }
+                            },
+                        )
                     }
                 }
             }

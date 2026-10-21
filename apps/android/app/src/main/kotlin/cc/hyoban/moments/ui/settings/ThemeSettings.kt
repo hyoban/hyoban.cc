@@ -24,7 +24,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -49,6 +48,13 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.ToggleButton
+import androidx.compose.material3.SegmentedListItem
+import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.ListItemShapes
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.ui.semantics.toggleableState
+import androidx.compose.ui.state.ToggleableState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -91,21 +97,43 @@ import cc.hyoban.moments.ui.theme.systemAccent
 // carries; and dark's page in pure black.
 
 /** The appearance groups at the top of the settings page. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ThemeSettings(settings: Settings) {
     val seed = Color(settings.themeColor ?: systemAccent() ?: Settings.DEFAULT_THEME_COLOR)
     ThemeModeGroup(settings, seed)
     ThemeColorGroup(settings)
-    Group(null, stringResource(R.string.settings_pure_black_note)) {
-        ListItem(
-            headlineContent = { Text(stringResource(R.string.setting_pure_black)) },
-            leadingContent = { Icon(Icons.Rounded.DarkMode, contentDescription = null) },
-            // The row is the switch, read as one with its name and state.
-            trailingContent = { Switch(checked = settings.pureBlack, onCheckedChange = null) },
-            colors = rowColors(),
-            modifier = Modifier.toggleable(settings.pureBlack, role = Role.Switch, onValueChange = settings::changePureBlack).testTag("pure_black"),
-        )
-    }
+    SegmentedGroup(
+        null,
+        stringResource(R.string.settings_pure_black_note),
+        listOf { shapes ->
+            SegmentedListItem(
+                onClick = { settings.changePureBlack(!settings.pureBlack) },
+                shapes = shapes,
+                colors = segmentColors(),
+                leadingContent = { Icon(Icons.Rounded.DarkMode, contentDescription = null) },
+                // The row is the switch, read as one with its name and state; its handle ticked
+                // or crossed, as Material 3 lets a switch's icon say which it is as well as its colour.
+                trailingContent = {
+                    Switch(
+                        checked = settings.pureBlack,
+                        onCheckedChange = null,
+                        thumbContent = {
+                            Icon(
+                                if (settings.pureBlack) Icons.Rounded.Check else Icons.Rounded.Close,
+                                contentDescription = null,
+                                modifier = Modifier.size(SwitchDefaults.IconSize),
+                            )
+                        },
+                    )
+                },
+                modifier = Modifier.semantics {
+                    role = Role.Switch
+                    toggleableState = ToggleableState(settings.pureBlack)
+                }.testTag("pure_black"),
+            ) { Text(stringResource(R.string.setting_pure_black)) }
+        },
+    )
 }
 
 @Composable
@@ -195,7 +223,7 @@ private fun ThemeColorGroup(settings: Settings) {
     var adding by rememberSaveable { mutableStateOf(false) }
     val accent = systemAccent()
 
-    val swatches: @Composable () -> Unit = {
+    val swatches = boxed {
         // As many to a row as fit with at least a little between them, spread across the
         // card's width so each row's ends line up with the rows' text.
         BoxWithConstraints(Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 10.dp)) {
@@ -222,7 +250,7 @@ private fun ThemeColorGroup(settings: Settings) {
             }
         }
     }
-    val colorStyle: @Composable () -> Unit = {
+    val colorStyle = boxed {
         ListItem(
             headlineContent = { Text(stringResource(R.string.setting_color_style)) },
             leadingContent = { Icon(Icons.Rounded.Palette, contentDescription = null) },
@@ -426,32 +454,38 @@ fun Caption(title: String, action: (@Composable () -> Unit)? = null) {
     }
 }
 
+/** One segment of a group, drawn in the [ListItemShapes] its place in the group gives it. */
+typealias Segment = @Composable (ListItemShapes) -> Unit
+
+/** What isn't a row, the swatches, a field, as a segment: on the group's fill, in its shape. */
+fun boxed(content: @Composable ColumnScope.() -> Unit): Segment = { shapes ->
+    Column(Modifier.fillMaxWidth().clip(shapes.shape).background(LocalSurfaceLevel.current.raised.fill()), content = content)
+}
+
 /** What is grouped in one card under a caption, with a note under them, as FlClash groups its settings. */
 @Composable
-fun Group(title: String?, note: String?, action: (@Composable () -> Unit)? = null, content: @Composable () -> Unit) =
-    SegmentedGroup(title, note, listOf(content), action = action)
+fun Group(title: String?, note: String?, action: (@Composable () -> Unit)? = null, content: @Composable ColumnScope.() -> Unit) =
+    SegmentedGroup(title, note, listOf(boxed(content)), action = action)
 
 /**
  * Rows grouped under a caption as Material 3's segmented list, a contained list being set
  * apart by gaps rather than lines: each of [segments] filled on its own a level up, a small
  * gap between, the group's outer corners round and its inner ones tight; a note under them.
+ * A row is a [SegmentedListItem] in [segmentColors], its corners rounding under the finger.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SegmentedGroup(
     title: String?,
     note: String?,
-    segments: List<@Composable () -> Unit>,
+    segments: List<Segment>,
     modifier: Modifier = Modifier,
     action: (@Composable () -> Unit)? = null,
 ) {
     if (title != null) Caption(title, action) else Spacer(Modifier.height(Space.xl))
     Column(Modifier.padding(horizontal = Space.gutter)) {
-        val fill = LocalSurfaceLevel.current.raised.fill()
         Column(modifier, verticalArrangement = Arrangement.spacedBy(ListItemDefaults.SegmentedGap)) {
-            segments.forEachIndexed { index, segment ->
-                Column(Modifier.fillMaxWidth().clip(ListItemDefaults.segmentedShapes(index, segments.size).shape).background(fill)) { segment() }
-            }
+            segments.forEachIndexed { index, segment -> segment(ListItemDefaults.segmentedShapes(index, segments.size)) }
         }
         note?.let {
             Text(
@@ -463,6 +497,16 @@ fun SegmentedGroup(
         }
     }
 }
+
+/** A row of a group: filled a level above the page, its icons and secondary text in the secondary colour. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun segmentColors() = ListItemDefaults.segmentedColors(
+    containerColor = LocalSurfaceLevel.current.raised.fill(),
+    leadingContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+    trailingContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+    supportingContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+)
 
 /** A row on a group's card: no fill of its own, its icon and secondary text in the secondary colour. */
 @Composable

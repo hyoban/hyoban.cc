@@ -15,8 +15,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -57,9 +55,6 @@ import androidx.compose.material.icons.rounded.Luggage
 import androidx.compose.material.icons.rounded.PhoneAndroid
 import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material.icons.rounded.Share
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingToolbarDefaults
 import androidx.compose.material3.FloatingToolbarExitDirection
@@ -69,13 +64,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.ListItemShapes
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RichTooltip
 import androidx.compose.material3.SegmentedListItem
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TooltipBox
-import androidx.compose.material3.TooltipDefaults
-import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -355,7 +347,7 @@ private fun MomentPhotos(moment: MomentRecord, urls: MediaUrls, pager: PagerStat
  * When, the Moment's words, its photos small, and then the rows that lead on from it: its
  * places, its trip and the rest of its day.
  */
-@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun MomentDetails(
     moment: MomentRecord,
@@ -385,11 +377,10 @@ private fun MomentDetails(
                 style = MaterialTheme.typography.titleLargeEmphasized,
                 modifier = Modifier.semantics { heading() },
             )
-            if (moment.published == null || changed) {
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.s)) {
-                    if (moment.published == null) StateChip(stringResource(R.string.label_on_phone), stringResource(R.string.explain_on_phone), onChanges)
-                    if (changed) StateChip(stringResource(R.string.label_unpublished_change), stringResource(R.string.explain_unpublished_change), onChanges)
-                }
+            if (moment.published == null) {
+                StateNotice(Icons.Rounded.PhoneAndroid, stringResource(R.string.label_on_phone), stringResource(R.string.explain_on_phone), onChanges)
+            } else if (changed) {
+                StateNotice(Icons.Rounded.Edit, stringResource(R.string.label_unpublished_change), stringResource(R.string.explain_unpublished_change), onChanges)
             }
         }
         if (moment.text.isNotBlank()) {
@@ -543,45 +534,31 @@ private fun RowIcon(icon: ImageVector) {
 }
 
 /**
- * Where a Moment stands, only on the phone or changed there, as an assist chip that explains
- * itself: tapped, a persistent rich tooltip says what it means, with a way to the changes to
- * publish when [onChanges] is given, as Material 3 has a rich tooltip add context and an action.
+ * Where a Moment stands, only on the phone or changed there, said in the open rather than
+ * behind a chip, which Material 3 keeps for actions and never alone: a card in the secondary
+ * container, as state takes colour here, its icon, what it is and what that means, and a way
+ * to the changes to publish when [onChanges] is given, a card holding a button rather than
+ * tapped as a whole.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun StateChip(label: String, explanation: String, onChanges: (() -> Unit)?) {
-    val state = rememberTooltipState(isPersistent = true)
-    val scope = rememberCoroutineScope()
-    TooltipBox(
-        positionProvider = TooltipDefaults.rememberRichTooltipPositionProvider(),
-        tooltip = {
-            RichTooltip(
-                title = { Text(label) },
-                action = onChanges?.let { open ->
-                    {
-                        TextButton(
-                            onClick = {
-                                state.dismiss()
-                                open()
-                            },
-                        ) { Text(stringResource(R.string.title_changes)) }
-                    }
-                },
-            ) { Text(explanation) }
-        },
-        state = state,
+private fun StateNotice(icon: ImageVector, label: String, explanation: String, onChanges: (() -> Unit)?) {
+    Surface(
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+        modifier = Modifier.fillMaxWidth().padding(top = Space.xs).testTag("state_notice"),
     ) {
-        AssistChip(
-            onClick = { scope.launch { state.show() } },
-            label = { Text(label) },
-            leadingIcon = { Icon(Icons.Rounded.PhoneAndroid, contentDescription = null, modifier = Modifier.size(AssistChipDefaults.IconSize)) },
-            border = null,
-            colors = AssistChipDefaults.assistChipColors(
-                containerColor = LocalSurfaceLevel.current.raised.fill(),
-                labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                leadingIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-            ),
-            modifier = Modifier.testTag("state_chip"),
-        )
+        Row(Modifier.padding(start = Space.l, end = Space.s, top = Space.m, bottom = if (onChanges != null) Space.xs else Space.m)) {
+            Icon(icon, contentDescription = null, modifier = Modifier.padding(top = Space.xxs).size(20.dp))
+            Column(Modifier.weight(1f).padding(start = Space.m, end = Space.s)) {
+                Text(label, style = MaterialTheme.typography.titleSmall)
+                Text(explanation, style = MaterialTheme.typography.bodyMedium)
+                if (onChanges != null) {
+                    TextButton(onClick = onChanges, modifier = Modifier.offset(x = -Space.m).testTag("state_changes")) {
+                        Text(stringResource(R.string.title_changes))
+                    }
+                }
+            }
+        }
     }
 }

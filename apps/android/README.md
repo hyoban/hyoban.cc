@@ -15,8 +15,8 @@ clicked; from a keyboard or a remote, Space and the media keys play and pause, l
 right step through the cards and up and down through the photos. The route is the stretches `GET /v1/routes` serves. It reads
 the API's public endpoints (`apps/api`) and keeps a copy under the app's `api/`
 directory in the layout `packages/data-spec` defines, so it opens straight away and
-works offline; each start, and each pull down on a list, asks only for what changed
-since, the Moments, places and trips in one feed, and asks for the routes again only
+works offline; each start, each pull down on a list, and 刷新 on the settings page (the
+same without the gesture) asks only for what changed since, the Moments, places and trips in one feed, and asks for the routes again only
 when the API's revision has moved on, getting them only when they changed.
 
 The pages lead to each other wherever they can: a place's page and a trip's show it on the
@@ -27,7 +27,8 @@ its places, its trip and its day, as does the viewer's date; and the settings' �
 leads to the changes waiting to be published. `moments://search` opens the search.
 
 A new Moment can be written on the phone, from the ✎ in the Moments tab's header or
-`moments://new`: its words, up to nine photos from the system's documents picker, and when and
+`moments://new`, on a page of its own, or, on a window from Material 3's medium breakpoint
+on, in a dialog over the page it was opened from: its words, up to nine photos from the system's documents picker, and when and
 where, worked out as it is written. The time is the earliest photo's, from its EXIF and
 the offset the camera wrote, else now; the place is where the first photo was taken,
 when the app may see that (the photo picker takes it out, the documents picker doesn't),
