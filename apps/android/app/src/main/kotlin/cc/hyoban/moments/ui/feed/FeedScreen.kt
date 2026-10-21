@@ -1,11 +1,18 @@
 package cc.hyoban.moments.ui.feed
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.Crossfade
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -45,6 +52,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -54,10 +62,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
@@ -66,6 +76,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
@@ -73,6 +84,7 @@ import cc.hyoban.moments.R
 import cc.hyoban.moments.ui.Feed
 import cc.hyoban.moments.ui.LocalNavAccessory
 import cc.hyoban.moments.ui.LocalRailSpace
+import cc.hyoban.moments.ui.OnTabReselect
 import cc.hyoban.moments.ui.RailSpace
 import cc.hyoban.moments.ui.calendar.CalendarView
 import cc.hyoban.moments.ui.components.AppColors
@@ -92,6 +104,7 @@ import cc.hyoban.moments.ui.rememberShowMessage
 import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.fill
+import kotlin.math.roundToInt
 
 /**
  * The Moments tab: every Moment the site shows and those written on the phone, newest
@@ -184,6 +197,11 @@ fun FeedScreen(
             calendarState.scrollToItem(0)
         }
     }
+    // The header over the views folds away as they scroll and opens again at their top; back
+    // open with a new filter or the tab tapped again, as either goes back to its top.
+    val headerScroll = remember { HeaderScroll() }
+    LaunchedEffect(filter) { headerScroll.offset = 0f }
+    OnTabReselect(Feed) { headerScroll.offset = 0f }
     val header: FeedLeading.() -> Unit = {
         if (publishable) {
             item(key = "changes") {
@@ -236,19 +254,37 @@ fun FeedScreen(
                         if (moments.isEmpty()) {
                             EmptyState(loading = !loaded || syncing, message = R.string.empty_moments)
                         } else {
-                            Crossfade(calendar, label = "feed or calendar") { showCalendar ->
-                                if (showCalendar) {
-                                    CalendarView(
-                                        shown,
-                                        container.mediaUrls,
-                                        // One Moment opens on its own; more open as the day's list.
-                                        onDay = { date, here -> if (here.size == 1) open(here.single().uid) else onDay(date) },
-                                        state = calendarState,
-                                        leading = { leadingRows(header) },
-                                        tab = Feed,
-                                    )
-                                } else {
-                                    MomentFeed(shown, places, trips, container.mediaUrls, open, state = feedState, gridState = gridState, leading = header, tab = Feed, selected = chosen.takeIf { twoPane })
+                            // The rows over the Moments, the changes, list or calendar and the
+                            // filter, stand once above both views rather than heading each, so
+                            // switching cross-fades only what changes and leaves them still.
+                            // They scroll away with either and come back at its top.
+                            Column(Modifier.fillMaxSize().nestedScroll(headerScroll.connection)) {
+                                CollapsingHeader(headerScroll) {
+                                    Column { FeedLeading().apply(header).rows.forEach { (_, row) -> row() } }
+                                }
+                                // A fade through, the one going fully out before the other comes in,
+                                // as Material 3 keeps a fade clean of half-shown frames of both.
+                                AnimatedContent(
+                                    calendar,
+                                    Modifier.weight(1f),
+                                    transitionSpec = {
+                                        fadeIn(tween(VIEW_FADE_IN_MS, delayMillis = VIEW_FADE_OUT_MS, easing = LinearOutSlowInEasing)) togetherWith
+                                            fadeOut(tween(VIEW_FADE_OUT_MS, easing = FastOutLinearInEasing))
+                                    },
+                                    label = "feed or calendar",
+                                ) { showCalendar ->
+                                    if (showCalendar) {
+                                        CalendarView(
+                                            shown,
+                                            container.mediaUrls,
+                                            // One Moment opens on its own; more open as the day's list.
+                                            onDay = { date, here -> if (here.size == 1) open(here.single().uid) else onDay(date) },
+                                            state = calendarState,
+                                            tab = Feed,
+                                        )
+                                    } else {
+                                        MomentFeed(shown, places, trips, container.mediaUrls, open, state = feedState, gridState = gridState, tab = Feed, selected = chosen.takeIf { twoPane })
+                                    }
                                 }
                             }
                         }
@@ -296,6 +332,49 @@ fun FeedScreen(
 
 /** How wide the Moments stand beside a detail pane, Material 3's list pane. */
 private val LIST_PANE_WIDTH = 400.dp
+
+/**
+ * How far the header over the Moments has folded away, as the views under it scroll: it goes
+ * first as they scroll up, and comes back only once the view is at its top and pulled further,
+ * as an app bar that exits until collapsed does.
+ */
+class HeaderScroll {
+    var height by mutableFloatStateOf(0f)
+    var offset by mutableFloatStateOf(0f)
+
+    val connection = object : NestedScrollConnection {
+        override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset =
+            if (available.y < 0) Offset(0f, move(available.y)) else Offset.Zero
+
+        override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset =
+            if (available.y > 0) Offset(0f, move(available.y)) else Offset.Zero
+    }
+
+    /** Moves it by [delta] within its height, saying how much of that it took. */
+    private fun move(delta: Float): Float {
+        val next = (offset + delta).coerceIn(-height, 0f)
+        val taken = next - offset
+        offset = next
+        return taken
+    }
+}
+
+/** [content] laid out at its own height, less as much as [scroll] has folded it away. */
+@Composable
+private fun CollapsingHeader(scroll: HeaderScroll, content: @Composable () -> Unit) {
+    Box(
+        Modifier.clipToBounds().layout { measurable, constraints ->
+            val placeable = measurable.measure(constraints.copy(minHeight = 0, maxHeight = Constraints.Infinity))
+            scroll.height = placeable.height.toFloat()
+            val shown = (placeable.height + scroll.offset.roundToInt()).coerceIn(0, placeable.height)
+            layout(placeable.width, shown) { placeable.place(0, shown - placeable.height) }
+        },
+    ) { content() }
+}
+
+// Material's fade-through timings, as switching tabs has.
+private const val VIEW_FADE_OUT_MS = 90
+private const val VIEW_FADE_IN_MS = 210
 
 /** How far a scroll must go, in pixels a frame, to fold the FAB's label away or bring it back. */
 private const val FAB_SCROLL_SLOP = 6f
