@@ -202,8 +202,10 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
         photos.filter { it !in infos && it !in originalMedia }.forEach { infos[it] = Photos.read(context, it) }
     }
 
-    // When: the earliest photo's time, else when the page was opened.
-    val photoTime = photos.mapNotNull { infos[it]?.takenAt }.minByOrNull { it.toInstant() }
+    // When: the earliest photo's time, else, when none says, the earliest a photo's file was
+    // made, else when the page was opened.
+    val photoTime = (photos.mapNotNull { infos[it]?.takenAt }.ifEmpty { photos.mapNotNull { infos[it]?.savedAt } })
+        .minByOrNull { it.toInstant() }
     val time = chosenTime ?: photoTime ?: openedAt
     val timeSource = when {
         original != null && chosenTime == originalTime -> R.string.source_saved
