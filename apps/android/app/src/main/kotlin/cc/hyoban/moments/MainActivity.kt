@@ -1,6 +1,7 @@
 package cc.hyoban.moments
 
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -10,8 +11,17 @@ import cc.hyoban.moments.ui.NewMoment
 import cc.hyoban.moments.ui.MomentsApp
 import cc.hyoban.moments.ui.theme.MomentsTheme
 import cc.hyoban.moments.ui.viewer.PictureInPicture
+import kotlinx.coroutines.channels.Channel
 
 open class MainActivity : ComponentActivity() {
+    /**
+     * Intents given to the activity after it was made, a link opened while the app is open,
+     * kept until the app's navigation takes them. Caught from [onCreate], as one can come
+     * before the first frame: an activity made again from the recent apps for a link has it
+     * delivered straight after it is made, before Compose is listening.
+     */
+    val newIntents = Channel<Intent>(Channel.UNLIMITED)
+
     // Before Android 13 the app keeps its own language and speaks it here; later the system does.
     override fun attachBaseContext(newBase: Context) {
         super.attachBaseContext(AppLanguage.wrap(newBase))
@@ -21,6 +31,7 @@ open class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         if (handOff(savedInstanceState)) return
+        addOnNewIntentListener { newIntents.trySend(it) }
         val container = (application as MomentsApplication).container
         val start = startRoute()
         setContent {
