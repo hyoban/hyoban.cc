@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- A pale mint behind the cookie. -->
+<!-- A soft blue behind the cat, to set off her amber eyes. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <solid android:color="#DDF1E7" />
+    <solid android:color="#4F74B8" />
 </shape>

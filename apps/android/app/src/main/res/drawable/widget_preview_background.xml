@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- A widget's picker preview where there is no photo to show: the icon's green, deepening downwards. -->
+<!-- A widget's picker preview where there is no photo to show: the icon's blue, deepening downwards. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
     <corners android:radius="24dp" />
     <gradient
         android:angle="270"
-        android:startColor="#FF3D9C7C"
-        android:endColor="#FF14513D" />
+        android:startColor="#FF6A8CCB"
+        android:endColor="#FF2B4A85" />
 </shape>

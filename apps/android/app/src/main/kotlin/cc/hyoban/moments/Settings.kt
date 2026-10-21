@@ -147,8 +147,8 @@ class Settings(context: Context) {
     }
 
     companion object {
-        /** The green of the app's icon. */
-        const val DEFAULT_THEME_COLOR = 0xFF1F7A5C.toInt()
+        /** The blue behind the cat on the app's icon. */
+        const val DEFAULT_THEME_COLOR = 0xFF4F74B8.toInt()
 
         /** The colours offered: the app's own, then Apple's system colours in the order of macOS's accents, as FlClash offers them. */
         val THEME_COLORS = listOf(
