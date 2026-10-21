@@ -44,13 +44,44 @@ object Share {
     suspend fun toXiaohongshu(context: Context, text: String, photos: List<MomentMedia>, urls: MediaUrls) =
         toApp(context, "com.xingin.xhs", text, photos, urls)
 
-    suspend fun toThreads(context: Context, text: String, photos: List<MomentMedia>, urls: MediaUrls) =
+    suspend fun toThreads(context: Context, text: String, photos: List<MomentMedia>, urls: MediaUrls) {
+        if (photos.isEmpty()) {
+            require(text.isNotBlank())
+            val compose = Intent(Intent.ACTION_VIEW, Uri.Builder()
+                .scheme("barcelona").authority("create").appendQueryParameter("text", text).build())
+                .setPackage("com.instagram.barcelona")
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            if (tryOpen(context, compose)) return
+        }
         toApp(context, "com.instagram.barcelona", text, photos, urls)
+    }
+
+    suspend fun toBilibili(context: Context, text: String, photos: List<MomentMedia>, urls: MediaUrls) =
+        toApp(context, "tv.danmaku.bili", text, photos, urls,
+            activity = "com.bilibili.bplus.followingpublish.FollowingPublishActivity",
+            grantToPackage = true) {
+            action = "tv.danmaku.bili.intent.action.FOLLOWING_SHARE"
+            putExtra("content", text)
+            putExtra("share_publish", true)
+        }
+
+    suspend fun toWeChat(context: Context, text: String, photos: List<MomentMedia>, urls: MediaUrls) {
+        require(photos.size <= 1)
+        toApp(context, "com.tencent.mm", text, photos, urls,
+            activity = "com.tencent.mm.ui.tools.ShareToTimeLineUI",
+            grantToPackage = true) {
+            // This receiver requires an image MIME type even for a text-only Moment.
+            type = "image/*"
+            putExtra("Kdescription", text)
+            if (photos.isEmpty()) putExtra("Ksnsupload_empty_img", true)
+        }
+    }
 
     suspend fun toDouyin(context: Context, text: String, photos: List<MomentMedia>, urls: MediaUrls) {
         require(photos.isNotEmpty())
         toApp(context, "com.ss.android.ugc.aweme", text, photos, urls,
-            activity = "com.ss.android.ugc.aweme.share.ui.SystemShareNewActivity",
+            activity = "com.ss.android.ugc.aweme.share.SystemShareActivity",
+            fallbackActivity = "com.ss.android.ugc.aweme.share.ui.SystemShareNewActivity",
             grantToPackage = true)
     }
 
@@ -61,7 +92,9 @@ object Share {
         photos: List<MomentMedia>,
         urls: MediaUrls,
         activity: String? = null,
+        fallbackActivity: String? = null,
         grantToPackage: Boolean = false,
+        configure: Intent.() -> Unit = {},
     ) {
         require(photos.none { it.type == MediaType.VIDEO })
         require(text.isNotBlank() || photos.isNotEmpty())
@@ -69,14 +102,18 @@ object Share {
             .setType(if (photos.isEmpty()) "text/plain" else "image/*")
             .setPackage(packageName)
             .apply { activity?.let { setClassName(packageName, it) } }
-        if (probe.resolveActivity(context.packageManager) == null) throw ActivityNotFoundException()
+            .apply(configure)
+        val fallbackProbe = fallbackActivity?.let { Intent(probe).setClassName(packageName, it) }
+        if (probe.resolveActivity(context.packageManager) == null &&
+            fallbackProbe?.resolveActivity(context.packageManager) == null) throw ActivityNotFoundException()
         val send = prepare(context, photos, urls)
             .setPackage(packageName)
             .apply { activity?.let { setClassName(packageName, it) } }
             .putExtra(Intent.EXTRA_TEXT, text)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        // Douyin closes its receiving activity before the publishing flow reads the files.
-        // Keep read access to these individual files across that internal handoff.
+            .apply(configure)
+        // Some receivers close before the publishing flow reads the files. Keep read access
+        // across that internal handoff; files() revokes it when the cached files expire.
         val granted = mutableListOf<Uri>()
         try {
             if (grantToPackage) send.clipData?.let { clip ->
@@ -86,11 +123,24 @@ object Share {
                     granted.add(uri)
                 }
             }
-            context.startActivity(send)
+            if (!tryOpen(context, send) &&
+                (fallbackActivity == null || !tryOpen(context, Intent(send).setClassName(packageName, fallbackActivity)))) {
+                throw ActivityNotFoundException()
+            }
         } catch (e: Exception) {
             granted.forEach { context.revokeUriPermission(packageName, it, Intent.FLAG_GRANT_READ_URI_PERMISSION) }
             throw e
         }
+    }
+
+    /** Only an unavailable/restricted entry falls back; download failures and cancellation do not. */
+    private fun tryOpen(context: Context, intent: Intent): Boolean = try {
+        context.startActivity(intent)
+        true
+    } catch (_: ActivityNotFoundException) {
+        false
+    } catch (_: SecurityException) {
+        false
     }
 
     private suspend fun prepare(context: Context, media: List<MomentMedia>, urls: MediaUrls): Intent {
