@@ -249,6 +249,14 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
         viewer = null
     }
     val openTrip: (String) -> Unit = { navController.navigate(Trip(it)) }
+    // Editing from a card's menu, where its page would offer it: the phone's own Moments, the
+    // site's with the API's token, and none while publishing.
+    val momentActions = remember(container, navController) {
+        MomentActions(
+            canEdit = { uid -> container.publishing.value == null && (container.repository.isLocal(uid) || container.canPublish) },
+            onEdit = { navController.navigate(EditMoment(it)) },
+        )
+    }
     val openPlace: (String) -> Unit = { navController.navigate(PlaceMoments(it)) }
 
     val selectTab: (Int) -> Unit = { index ->
@@ -383,6 +391,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                         LocalSettings provides container.settings,
                         LocalTabReselects provides tabReselects,
                         LocalInPictureInPicture provides inPictureInPicture,
+                        LocalMomentActions provides momentActions,
                     ) {
                         NavHost(
                             navController = navController,
@@ -661,6 +670,12 @@ private val FADE_THROUGH_IN = fadeIn(tween(FADE_THROUGH_IN_MS, delayMillis = FAD
 
 /** Where the app reads from, for what draws without the container at hand, as the map. */
 val LocalSettings = staticCompositionLocalOf<Settings> { error("No settings provided") }
+
+/** What a Moment's card offers from its menu beyond what it holds itself: editing, when the Moment can be. */
+class MomentActions(val canEdit: (String) -> Boolean, val onEdit: (String) -> Unit)
+
+/** The app's [MomentActions], for the cards of any list; none where the app doesn't give them. */
+val LocalMomentActions = staticCompositionLocalOf<MomentActions?> { null }
 
 /** The tabs tapped again while chosen, each as its route: [Feed], [Atlas] or [Trips]. */
 val LocalTabReselects = staticCompositionLocalOf<SharedFlow<Any>> { MutableSharedFlow() }

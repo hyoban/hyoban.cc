@@ -203,6 +203,8 @@
     <string name="hint_moment_text">What\'s happening…</string>
     <string name="action_add_photos">Add photos</string>
     <string name="action_remove_photo">Remove photo</string>
+    <string name="action_move_earlier">Move earlier</string>
+    <string name="action_move_later">Move later</string>
     <string name="section_when_where">When and where</string>
     <string name="source_photo">From the photo</string>
     <string name="source_now">Now</string>

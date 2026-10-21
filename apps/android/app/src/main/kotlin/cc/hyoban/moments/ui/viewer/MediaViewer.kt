@@ -10,6 +10,7 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -80,23 +81,33 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.media3.common.Player
 import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.R
 import cc.hyoban.moments.data.media.MediaUrls
@@ -134,6 +145,8 @@ import cc.hyoban.moments.ui.theme.fill
 import cc.hyoban.moments.ui.trips.tripSummary
 import kotlin.math.roundToInt
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
 import me.saket.telephoto.zoomable.DoubleClickToZoomListener
 import me.saket.telephoto.zoomable.ZoomSpec
@@ -144,7 +157,9 @@ import me.saket.telephoto.zoomable.zoomable
 /**
  * A Moment's media full screen on black. Swipe sideways between them, down to close and
  * up for the details; tap to hide everything but the photo; pinch or double-tap to zoom.
- * A video or a live photo plays from its own button.
+ * A video or a live photo plays from its own button. With a keyboard, as Material 3 has one
+ * work alongside touch: the arrows go from one to the next, Space plays and pauses, and
+ * Escape closes the details, then the viewer.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -182,7 +197,36 @@ fun MediaViewer(
     // The photo shown, for its tile to step aside while it is.
     LaunchedEffect(pager.currentPage, media) { onShown(mediaKey(moment.uid, media[pager.currentPage.coerceIn(0, media.lastIndex)].uid)) }
 
-    BoxWithConstraints(Modifier.fillMaxSize()) {
+    // Space pressed, for the page shown to play or pause what it holds.
+    val playKeys = remember { MutableSharedFlow<Unit>(extraBufferCapacity = 1) }
+    val keyScope = rememberCoroutineScope()
+    val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+    val keys = remember { FocusRequester() }
+    LaunchedEffect(Unit) { keys.requestFocus() }
+
+    BoxWithConstraints(
+        Modifier.fillMaxSize()
+            .onKeyEvent { event ->
+                if (event.type != KeyEventType.KeyDown) return@onKeyEvent false
+                when (event.key) {
+                    Key.DirectionLeft, Key.DirectionRight -> {
+                        if (zoomed) return@onKeyEvent false
+                        val next = (event.key == Key.DirectionRight) != rtl
+                        val page = (pager.currentPage + if (next) 1 else -1).coerceIn(0, media.lastIndex)
+                        keyScope.launch { pager.animateScrollToPage(page) }
+                        true
+                    }
+                    Key.Spacebar -> playKeys.tryEmit(Unit)
+                    Key.Escape -> {
+                        if (info) info = false else onBack()
+                        true
+                    }
+                    else -> false
+                }
+            }
+            .focusRequester(keys)
+            .focusable(),
+    ) {
         val fadeOver = constraints.maxHeight / 3f
         // How far a downward drag has gone toward closing: the photo shrinks a little and
         // the black thins out to the page under the viewer.
@@ -233,6 +277,7 @@ fun MediaViewer(
                 chrome = chrome && !dragging && !inPip,
                 onZoom = { zoomed = it },
                 onTap = { chrome = !chrome },
+                playKeys = playKeys,
             )
         }
 
@@ -351,12 +396,28 @@ private fun ViewerPage(
     chrome: Boolean,
     onZoom: (Boolean) -> Unit,
     onTap: () -> Unit,
+    playKeys: SharedFlow<Unit>,
 ) {
     val motion = urls.motion(media)
     val live = rememberLiveMotionState(media.uid)
     val liveMotion = motion?.takeIf { media.type == MediaType.LIVE_PHOTO }
     val video = rememberVideoState(media.uid)
     val videoUrl = motion?.takeIf { media.type == MediaType.VIDEO }
+    // Space, while this page is the one shown: a video plays or pauses, a live photo plays or stops.
+    LaunchedEffect(active, playKeys) {
+        if (active) playKeys.collect {
+            val player = video.player
+            when {
+                videoUrl != null && player != null -> if (player.playWhenReady && player.playbackState != Player.STATE_ENDED) {
+                    player.pause()
+                } else {
+                    if (player.playbackState == Player.STATE_ENDED) player.seekToDefaultPosition()
+                    player.play()
+                }
+                liveMotion != null && live.ready -> if (live.playing) live.stop() else live.play()
+            }
+        }
+    }
 
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         ZoomableStill(

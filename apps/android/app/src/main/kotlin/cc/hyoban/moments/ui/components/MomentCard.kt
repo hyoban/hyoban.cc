@@ -23,9 +23,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -33,6 +38,7 @@ import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import cc.hyoban.moments.R
 import cc.hyoban.moments.data.media.MediaUrls
@@ -41,6 +47,7 @@ import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.spec.TripRecord
 import cc.hyoban.moments.ui.format.formatDate
 import cc.hyoban.moments.ui.format.formatTime
+import cc.hyoban.moments.ui.moment.MomentMenu
 import cc.hyoban.moments.ui.theme.Corners
 import cc.hyoban.moments.ui.theme.Elevation
 import cc.hyoban.moments.ui.theme.LocalDarkTheme
@@ -50,7 +57,8 @@ import cc.hyoban.moments.ui.theme.fill
 
 /**
  * A Moment in a list: its media inset at the top of a white card, then a subhead of when,
- * where and the trip, then its words. Tapping anywhere, its photos too, opens the Moment.
+ * where and the trip, then its words. Tapping anywhere, its photos too, opens the Moment;
+ * holding it offers sharing it, copying its words and editing it.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -68,14 +76,19 @@ fun MomentCard(
     // list, it is [selected], outlined in the primary colour, as Material 3 marks the item a
     // two-pane layout's detail is of.
     val outline = if (selected) Modifier.border(2.dp, MaterialTheme.colorScheme.primary, MaterialTheme.shapes.large) else Modifier
+    // Held, or right clicked, its menu opens where it was pressed.
+    var menu by remember { mutableStateOf<DpOffset?>(null) }
+    val density = LocalDensity.current
     PressableCard(
         onClick = onOpen,
+        onLongClick = { at -> menu = with(density) { DpOffset(at.x.toDp(), at.y.toDp()) } },
+        onLongClickLabel = stringResource(R.string.action_more),
         modifier = modifier.fillMaxWidth().sharedCard(moment.uid).then(outline)
             .semantics { this.selected = selected }.testTag("moment_${moment.uid}"),
     ) {
         if (moment.media.isNotEmpty()) {
-            // To the card's edges, its top corners rounding them.
-            MediaMosaic(moment.uid, moment.media, urls, onOpen = { onOpen() })
+            // To the card's edges, its top corners rounding them; tapped as the rest of the card is.
+            MediaMosaic(moment.uid, moment.media, urls, onOpen = null)
         }
         Column(
             Modifier.padding(start = Space.l, end = Space.l, top = if (moment.media.isEmpty()) Space.l else Space.s, bottom = Space.l),
@@ -86,6 +99,7 @@ fun MomentCard(
                 Text(moment.text, style = MaterialTheme.typography.bodyLarge, maxLines = 8, overflow = TextOverflow.Ellipsis)
             }
         }
+        MomentMenu(moment, urls, menu, onDismiss = { menu = null })
     }
 }
 

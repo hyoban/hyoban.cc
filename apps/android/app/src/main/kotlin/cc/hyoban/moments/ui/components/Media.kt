@@ -184,14 +184,15 @@ fun LiveBadge(modifier: Modifier = Modifier) {
 /**
  * A Moment's media laid out to fill a width: one as it is shaped, two side by side,
  * three as one large and two small, four or more as a two by two grid with the rest
- * counted on the last.
+ * counted on the last. Without [onOpen] the tiles aren't tapped on their own, and a tap
+ * goes to what holds them.
  */
 @Composable
 fun MediaMosaic(
     momentUid: String,
     media: List<MomentMedia>,
     urls: MediaUrls,
-    onOpen: (Int) -> Unit,
+    onOpen: ((Int) -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     val tile = @Composable { index: Int, tileModifier: Modifier ->
@@ -202,7 +203,7 @@ fun MediaMosaic(
             sharedKey = mediaKey(momentUid, media[index].uid),
             sharedShape = TILE,
             position = index to media.size,
-            onClick = { onOpen(index) },
+            onClick = onOpen?.let { open -> { open(index) } },
         )
     }
 
@@ -234,7 +235,7 @@ fun MediaMosaic(
                                 val view = stringResource(R.string.action_view)
                                 Box(
                                     Modifier.fillMaxSize().background(MediaOverlay.control)
-                                        .clickable(onClickLabel = view) { onOpen(index) }
+                                        .then(if (onOpen != null) Modifier.clickable(onClickLabel = view) { onOpen(index) } else Modifier)
                                         .semantics { contentDescription = more },
                                     contentAlignment = Alignment.Center,
                                 ) {

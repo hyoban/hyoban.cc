@@ -1,5 +1,14 @@
 package cc.hyoban.moments.ui.compose
 
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.LoadingIndicator
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.ImeAction
 import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.BackHandler
@@ -14,7 +23,6 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
@@ -46,6 +54,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import cc.hyoban.moments.R
@@ -87,7 +96,7 @@ internal sealed interface PlaceChoice {
  * typed; a known place's dot tapped chooses it. A place found in a map app comes in by
  * sharing it to the app instead.
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun PlacePicker(
     current: PlaceChoice,
@@ -208,7 +217,8 @@ internal fun PlacePicker(
                 // At the map's bottom end, clear of the sheet's corners; a box of its own places
                 // it, as the tooltip's box doesn't pass an alignment on.
                 Box(Modifier.align(Alignment.BottomEnd).padding(bottom = SHEET_CORNER).padding(Space.l)) {
-                    Tooltip(stringResource(R.string.action_locate)) {
+                    val locateLabel = stringResource(R.string.action_locate)
+                    Tooltip(locateLabel) {
                         FloatingActionButton(
                             onClick = {
                                 if (!locating) {
@@ -229,9 +239,15 @@ internal fun PlacePicker(
                             shape = Corners.full,
                             containerColor = SurfaceLevel.floating(LocalDarkTheme.current).fill(),
                             contentColor = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.testTag("locate"),
+                            // Named on the button, so it keeps its name while the indicator stands in for the icon.
+                            modifier = Modifier.semantics { contentDescription = locateLabel }.testTag("locate"),
                         ) {
-                            Icon(Icons.Rounded.MyLocation, contentDescription = stringResource(R.string.action_locate))
+                            // A loading indicator while it finds where the phone is, as the map tab's button has.
+                            if (locating) {
+                                LoadingIndicator(Modifier.size(32.dp), color = LocalContentColor.current)
+                            } else {
+                                Icon(Icons.Rounded.MyLocation, contentDescription = null)
+                            }
                         }
                     }
                 }
@@ -273,6 +289,9 @@ private fun ChoiceCard(
                         label = { Text(stringResource(R.string.place_name)) },
                         supportingText = { Text(coordinatesName(pick.fix)) },
                         singleLine = true,
+                        // Done, or Enter, keeps the place as confirm does, once it has a name.
+                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Done),
+                        keyboardActions = KeyboardActions(onDone = { if (name.isNotBlank()) onConfirm() }),
                         modifier = Modifier.fillMaxWidth().testTag("place_name"),
                     )
                     NearbyChips(pick.fix, null, places, landmarks, onKnown, onLandmark)

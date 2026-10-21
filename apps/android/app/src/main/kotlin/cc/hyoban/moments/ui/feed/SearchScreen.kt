@@ -40,6 +40,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -85,6 +86,7 @@ fun SearchScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: ()
     val text = query.text.toString().trim()
     val found = remember(moments, places, trips, text) { if (text.isEmpty()) emptyList() else moments.filter { it.matches(text, places, trips) } }
     val focus = remember { FocusRequester() }
+    val keyboard = LocalSoftwareKeyboardController.current
     LaunchedEffect(Unit) { focus.requestFocus() }
 
     Column(Modifier.fillMaxSize().imePadding()) {
@@ -95,7 +97,8 @@ fun SearchScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: ()
         ) {
             SearchBarDefaults.InputField(
                 state = query,
-                onSearch = {},
+                // Searched, the keyboard goes, so what was found has the screen.
+                onSearch = { keyboard?.hide() },
                 expanded = true,
                 onExpandedChange = { if (!it) onBack() },
                 placeholder = { Text(stringResource(R.string.hint_search_moments)) },

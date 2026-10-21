@@ -194,7 +194,8 @@ fun VideoControls(state: VideoState, visible: Boolean, modifier: Modifier = Modi
                             else -> Icons.Rounded.Pause
                         },
                         contentDescription = stringResource(if (playPause.showPlay) R.string.action_play else R.string.action_pause),
-                        tint = MediaOverlay.content,
+                        // Faded while the player can't take it yet, as a disabled button is.
+                        tint = if (playPause.isEnabled) MediaOverlay.content else MediaOverlay.contentDisabled,
                     )
                 }
             }
@@ -226,7 +227,7 @@ fun VideoControls(state: VideoState, visible: Boolean, modifier: Modifier = Modi
                     Icon(
                         if (mute.showMuted) Icons.AutoMirrored.Rounded.VolumeOff else Icons.AutoMirrored.Rounded.VolumeUp,
                         contentDescription = stringResource(if (mute.showMuted) R.string.action_unmute else R.string.action_mute),
-                        tint = MediaOverlay.content,
+                        tint = if (mute.isEnabled) MediaOverlay.content else MediaOverlay.contentDisabled,
                     )
                 }
             }
