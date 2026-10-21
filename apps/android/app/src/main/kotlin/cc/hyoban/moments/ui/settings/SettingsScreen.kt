@@ -64,15 +64,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ListItem
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import cc.hyoban.moments.Settings
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.unit.Constraints
 import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.R
 import cc.hyoban.moments.Setting
@@ -213,7 +210,7 @@ private fun SettingRow(row: Row, shapes: ListItemShapes, onClick: () -> Unit) {
     ) { Text(stringResource(row.title)) }
 }
 
-/** 馒头, the cat the icon is drawn from, shown as on the icon; then FlClash, whose design the app's is after, opening its repository on a tap. */
+/** 馒头, the cat the icon is drawn from, in a photo of its face; then FlClash, whose design the app's is after, opening its repository on a tap. */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun Credits() {
@@ -223,10 +220,19 @@ private fun Credits() {
             headlineContent = { Text(stringResource(R.string.credit_mantou)) },
             supportingContent = { Text(stringResource(R.string.credit_mantou_note)) },
             leadingContent = {
-                // The icon's two layers in a circle, the foreground at its full 108dp to the 72dp shown.
-                Box(Modifier.size(40.dp).clip(CircleShape).background(Color(Settings.DEFAULT_THEME_COLOR)), contentAlignment = Alignment.Center) {
-                    Image(painterResource(R.drawable.ic_launcher_foreground), contentDescription = null, Modifier.requiredSize(60.dp))
-                }
+                // Drawn at 32dp centred where FlClash's icon is, but taking an icon's 24dp less the
+                // 4dp more a plain list item leaves after it than a segmented one, so the words
+                // line up with FlClash's under them.
+                Image(
+                    painterResource(R.drawable.mantou),
+                    contentDescription = null,
+                    Modifier
+                        .layout { measurable, _ ->
+                            val photo = measurable.measure(Constraints.fixed(32.dp.roundToPx(), 32.dp.roundToPx()))
+                            layout(20.dp.roundToPx(), 24.dp.roundToPx()) { photo.place(-4.dp.roundToPx(), -4.dp.roundToPx()) }
+                        }
+                        .clip(CircleShape),
+                )
             },
             colors = rowColors(),
         )
