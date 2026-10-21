@@ -1,6 +1,18 @@
 package cc.hyoban.moments.ui.trips
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.unit.IntSize
+import kotlin.math.abs
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedContentTransitionScope.SlideDirection
 import androidx.compose.animation.ContentTransform
@@ -9,7 +21,6 @@ import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -129,6 +140,8 @@ fun TripPlayerScreen(container: AppContainer, id: String, onMoment: (String) -> 
     }
     val slide = controller.slide
     val index = controller.index
+    // Open, the card shows the photos; folded down, only the words and the progress, the map the rest.
+    var expanded by rememberSaveable(id) { mutableStateOf(true) }
 
     val density = LocalDensity.current
     val landscape = isLandscape()
@@ -138,7 +151,8 @@ fun TripPlayerScreen(container: AppContainer, id: String, onMoment: (String) -> 
     val clear = if (landscape) listOf(40.dp, top, card.first + 40.dp, 40.dp) else listOf(40.dp, top, 40.dp, card.second + 16.dp)
 
     Box(Modifier.fillMaxSize().then(if (controller.playing) Modifier.keepScreenOn() else Modifier)) {
-        PlaybackMap(controller, clear, Modifier.fillMaxSize())
+        val routeMap = stringResource(R.string.playback_route_map)
+        PlaybackMap(controller, clear, Modifier.fillMaxSize().semantics { contentDescription = routeMap })
         FloatingBack(onBack, Modifier.align(Alignment.TopStart))
 
         // The whole playback's progress: the cards before at their full length, this one as far as it has played.
@@ -170,6 +184,8 @@ fun TripPlayerScreen(container: AppContainer, id: String, onMoment: (String) -> 
             photoHeight = if (landscape) 140.dp else 220.dp,
             slide = slide,
             index = index,
+            expanded = expanded,
+            onExpanded = { expanded = it },
         )
     }
 }
@@ -191,6 +207,8 @@ private fun PlayerCard(
     photoHeight: Dp,
     slide: PlaybackSlide,
     index: Int,
+    expanded: Boolean,
+    onExpanded: (Boolean) -> Unit,
 ) {
     val count = controller.playback.slides.size
     val playing = controller.playing
@@ -200,7 +218,8 @@ private fun PlayerCard(
         val swipe = with(LocalDensity.current) { SWIPE_TO_STEP.toPx() }
         val forward = if (LocalLayoutDirection.current == LayoutDirection.Ltr) -1 else 1
         // A Moment's card is one touch target, growing into the Moment's page as its cards do;
-        // swiped, it steps to the card before or after, as the site's photo swipe does.
+        // swiped sideways, it steps to the card before or after, as the site's photo swipe does;
+        // swiped down it folds to its words, and up it opens again, as a sheet over a map does.
         Surface(
             onClick = { stop?.let { onMoment(it.stop.moment.uid) } },
             enabled = stop != null,
@@ -210,11 +229,17 @@ private fun PlayerCard(
             modifier = Modifier.fillMaxWidth()
                 .then(if (stop != null) Modifier.sharedCard(stop.stop.moment.uid, cardCorner = Radius.extraLarge) else Modifier)
                 .pointerInput(swipe, forward) {
-                    var dragged = 0f
-                    detectHorizontalDragGestures(
-                        onDragStart = { dragged = 0f },
+                    var dragged = Offset.Zero
+                    detectDragGestures(
+                        onDragStart = { dragged = Offset.Zero },
                         onDragEnd = {
-                            if (dragged * forward > swipe) controller.next() else if (-dragged * forward > swipe) controller.previous()
+                            val (x, y) = dragged
+                            when {
+                                abs(x) >= abs(y) && x * forward > swipe -> controller.next()
+                                abs(x) >= abs(y) && -x * forward > swipe -> controller.previous()
+                                abs(y) > abs(x) && y > swipe -> onExpanded(false)
+                                abs(y) > abs(x) && -y > swipe -> onExpanded(true)
+                            }
                         },
                     ) { change, amount ->
                         change.consume()
@@ -223,26 +248,47 @@ private fun PlayerCard(
                 }
                 .testTag("trip_player"),
         ) {
-            Column(Modifier.padding(Space.m), verticalArrangement = Arrangement.spacedBy(Space.m)) {
+            val motion = MaterialTheme.motionScheme
+            Column(
+                Modifier.padding(start = Space.m, end = Space.m, bottom = Space.m).animateContentSize(motion.defaultSpatialSpec()),
+                verticalArrangement = Arrangement.spacedBy(Space.m),
+            ) {
+                DragHandle(expanded, onExpanded)
                 AnimatedContent(
                     index to slide,
                     transitionSpec = lateral { it.first },
                     label = "player card",
-                    modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+                    // Playing on its own it stays quiet, as a carousel does; stepped through by hand, each card is read.
+                    modifier = Modifier.semantics { if (!playing) liveRegion = LiveRegionMode.Polite },
                 ) { (_, shown) ->
                     when (shown) {
-                        PlaybackSlide.Intro -> IntroCard(trip, controller.playback, covers, urls, photoHeight)
+                        PlaybackSlide.Intro -> IntroCard(trip, controller.playback, covers, urls, photoHeight, expanded)
                         is PlaybackSlide.Day -> DayCard(shown)
-                        is PlaybackSlide.Stop -> StopCard(shown, controller, urls, photoHeight)
+                        is PlaybackSlide.Stop -> StopCard(shown, controller, urls, photoHeight, expanded)
                         PlaybackSlide.Summary -> SummaryCard(trip, controller.playback)
                     }
                 }
                 // The whole playback's progress along the card's foot, wavy while it plays, as
                 // Material 3 has a long process feel under way, and flat once paused.
                 Row(Modifier.padding(horizontal = Space.xs), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.m)) {
-                    val wave by animateFloatAsState(if (playing) 1f else 0f, MaterialTheme.motionScheme.defaultEffectsSpec(), label = "wave")
-                    LinearWavyProgressIndicator(progress = progress, amplitude = { wave }, modifier = Modifier.weight(1f))
-                    Text("${index + 1} / $count", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    val wave by animateFloatAsState(if (playing) 1f else 0f, motion.defaultEffectsSpec(), label = "wave")
+                    // Named, with which card it is on, as the count beside it says to the eye.
+                    val label = stringResource(R.string.playback_progress)
+                    val position = stringResource(R.string.playback_card_of, index + 1, count)
+                    LinearWavyProgressIndicator(
+                        progress = progress,
+                        amplitude = { wave },
+                        modifier = Modifier.weight(1f).semantics {
+                            contentDescription = label
+                            stateDescription = position
+                        },
+                    )
+                    Text(
+                        "${index + 1} / $count",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.clearAndSetSemantics { },
+                    )
                 }
             }
         }
@@ -252,14 +298,14 @@ private fun PlayerCard(
 
 /** The trip's title, its dates, days and Moments, and its covers. */
 @Composable
-private fun IntroCard(trip: TripRecord, playback: TripPlayback, covers: List<MomentMedia>, urls: MediaUrls, photoHeight: Dp) {
+private fun IntroCard(trip: TripRecord, playback: TripPlayback, covers: List<MomentMedia>, urls: MediaUrls, photoHeight: Dp, expanded: Boolean) {
     Column(verticalArrangement = Arrangement.spacedBy(Space.m)) {
         Column(Modifier.padding(horizontal = Space.xs)) {
-            Text(trip.title, style = MaterialTheme.typography.headlineSmall)
+            Text(trip.title, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
             TripSubhead(trip, playback.stops.size)
         }
         // A mosaic of the covers, the first larger, as the site's intro has.
-        if (covers.isNotEmpty()) {
+        if (covers.isNotEmpty() && expanded) {
             Row(Modifier.fillMaxWidth().height(photoHeight).clip(MaterialTheme.shapes.large), horizontalArrangement = Arrangement.spacedBy(Space.xxs)) {
                 MediaStill(covers[0], urls, Modifier.weight(2f).fillMaxHeight())
                 if (covers.size > 1) {
@@ -277,7 +323,7 @@ private fun IntroCard(trip: TripRecord, playback: TripPlayback, covers: List<Mom
 private fun DayCard(slide: PlaybackSlide.Day) {
     Column(Modifier.padding(horizontal = Space.xs, vertical = Space.xs)) {
         Text(stringResource(R.string.trip_day, slide.day), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-        Text(formatDay(slide.dateKey), style = MaterialTheme.typography.headlineSmall)
+        Text(formatDay(slide.dateKey), style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
         if (slide.places.isNotEmpty()) {
             Text(slide.places.joinToString(" → "), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
@@ -290,7 +336,7 @@ private fun DayCard(slide: PlaybackSlide.Day) {
  * the card is only read out a heading of them.
  */
 @Composable
-private fun StopCard(slide: PlaybackSlide.Stop, controller: PlaybackController, urls: MediaUrls, photoHeight: Dp) {
+private fun StopCard(slide: PlaybackSlide.Stop, controller: PlaybackController, urls: MediaUrls, photoHeight: Dp, expanded: Boolean) {
     val stop = slide.stop
     val moment = stop.moment
     val photos = stop.photos
@@ -301,10 +347,13 @@ private fun StopCard(slide: PlaybackSlide.Stop, controller: PlaybackController, 
         formatTime(moment.occurredAt),
     ).joinToString(" · ") + " · " + stop.places.joinToString("、") { it.name }
     Column(
-        Modifier.fillMaxWidth().semantics { contentDescription = heading }.testTag("player_moment_${moment.uid}"),
+        Modifier.fillMaxWidth().semantics {
+            contentDescription = heading
+            heading()
+        }.testTag("player_moment_${moment.uid}"),
         verticalArrangement = Arrangement.spacedBy(Space.m),
     ) {
-        if (photos.isNotEmpty()) {
+        if (photos.isNotEmpty() && expanded) {
             Box(Modifier.clip(MaterialTheme.shapes.large)) {
                 AnimatedContent(photo, transitionSpec = lateral(), label = "player photo") { shown ->
                     MediaStill(photos[shown], urls, Modifier.fillMaxWidth().height(photoHeight))
@@ -312,7 +361,8 @@ private fun StopCard(slide: PlaybackSlide.Stop, controller: PlaybackController, 
                 if (photos.size > 1) {
                     Surface(
                         shape = MaterialTheme.shapes.small,
-                        color = MaterialTheme.colorScheme.scrim.copy(alpha = 0.5f),
+                        // Over a photo, in a pair that holds its contrast whatever is under it.
+                        color = MaterialTheme.colorScheme.inverseSurface,
                         contentColor = MaterialTheme.colorScheme.inverseOnSurface,
                         modifier = Modifier.align(Alignment.TopEnd).padding(Space.s),
                     ) {
@@ -322,7 +372,7 @@ private fun StopCard(slide: PlaybackSlide.Stop, controller: PlaybackController, 
             }
         }
         if (moment.text.isNotBlank()) {
-            Text(moment.text, style = MaterialTheme.typography.bodyMedium, maxLines = 4, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(horizontal = Space.xs))
+            Text(moment.text, style = MaterialTheme.typography.bodyMedium, maxLines = if (expanded) 4 else 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(horizontal = Space.xs))
         }
     }
 }
@@ -331,7 +381,7 @@ private fun StopCard(slide: PlaybackSlide.Stop, controller: PlaybackController, 
 @Composable
 private fun SummaryCard(trip: TripRecord, playback: TripPlayback) {
     Column(Modifier.padding(horizontal = Space.xs), verticalArrangement = Arrangement.spacedBy(Space.m)) {
-        Text(stringResource(R.string.playback_look_back), style = MaterialTheme.typography.headlineSmall)
+        Text(stringResource(R.string.playback_look_back), style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
         Text(trip.title, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         val days = cc.hyoban.moments.ui.format.daysBetween(trip.start, trip.end)
         val moments = playback.stops.size
@@ -403,6 +453,28 @@ private fun PlayerToolbar(
     }
 }
 
+/**
+ * Material 3's drag handle at the card's top, 32 by 4dp in the surface's variant ink: the
+ * card folds and opens by a swipe, and by a tap here too, as a sheet's handle cycles its
+ * heights for those who can't drag.
+ */
+@Composable
+private fun DragHandle(expanded: Boolean, onExpanded: (Boolean) -> Unit) {
+    val action = stringResource(if (expanded) R.string.action_collapse_card else R.string.action_expand_card)
+    Box(
+        Modifier.fillMaxWidth().height(HANDLE_TARGET)
+            .clickable(onClickLabel = action) { onExpanded(!expanded) }
+            .semantics { contentDescription = action }
+            .testTag("player_handle"),
+        contentAlignment = Alignment.Center,
+    ) {
+        Surface(shape = CircleShape, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f), modifier = Modifier.size(32.dp, 4.dp)) {}
+    }
+}
+
+/** How tall the handle's target is: the card's top margin and the handle, taken together. */
+private val HANDLE_TARGET = 32.dp
+
 /** How far a card is swiped to step to the next or the one before. */
 private val SWIPE_TO_STEP = 56.dp
 
@@ -414,13 +486,15 @@ private val SWIPE_TO_STEP = 56.dp
 @Composable
 private fun <T> lateral(order: (T) -> Int = { it as Int }): AnimatedContentTransitionScope<T>.() -> ContentTransform {
     val spec = MaterialTheme.motionScheme.defaultSpatialSpec<IntOffset>()
+    val size = MaterialTheme.motionScheme.defaultSpatialSpec<IntSize>()
     val reduced = LocalReducedMotion.current
     return {
         if (reduced) {
             EnterTransition.None togetherWith ExitTransition.None
         } else {
             val direction = if (order(targetState) >= order(initialState)) SlideDirection.Start else SlideDirection.End
-            slideIntoContainer(direction, spec) togetherWith slideOutOfContainer(direction, spec)
+            (slideIntoContainer(direction, spec) togetherWith slideOutOfContainer(direction, spec)) using
+                SizeTransform(clip = true) { _, _ -> size }
         }
     }
 }

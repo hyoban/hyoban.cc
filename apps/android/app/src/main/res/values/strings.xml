@@ -87,6 +87,11 @@
     <string name="action_replay">重新播放</string>
     <string name="playback_look_back">旅程回顾</string>
     <string name="playback_driven">自驾 %1$d 公里</string>
+    <string name="playback_progress">旅程进度</string>
+    <string name="playback_card_of">第 %1$d 张，共 %2$d 张</string>
+    <string name="playback_route_map">旅程路线</string>
+    <string name="action_collapse_card">收起卡片</string>
+    <string name="action_expand_card">展开卡片</string>
     <string name="action_locate">我的位置</string>
     <string name="action_north">回到正北</string>
     <string name="error_location">没能定位，确认定位已打开</string>
