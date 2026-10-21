@@ -298,7 +298,7 @@ fun MapScreen(container: AppContainer, onMoment: (String) -> Unit, onPlace: (Str
             // Drawn up to the status bar at most, so the whole sheet's top stays clear of it.
             modifier = Modifier.statusBarsPadding(),
             sheetPeekHeight = maxHeight * 0.55f,
-            sheetContainerColor = SurfaceLevel.floating(LocalDarkTheme.current).fill(),
+            sheetContainerColor = SurfaceLevel.Floating.fill(),
             containerColor = Color.Transparent,
             sheetContent = {
                 val id = shownPlace
@@ -420,7 +420,7 @@ private fun CompassButton(turned: Boolean, bearing: Double, onClick: () -> Unit)
             Surface(
                 onClick = onClick,
                 shape = Corners.full,
-                color = SurfaceLevel.floating(LocalDarkTheme.current).fill(),
+                color = SurfaceLevel.Floating.fill(),
                 contentColor = MaterialTheme.colorScheme.primary,
                 shadowElevation = Elevation.level2,
                 modifier = Modifier.padding(bottom = Space.m).size(48.dp).testTag("north"),
@@ -465,7 +465,7 @@ private fun LocateButton(locating: Boolean, onClick: () -> Unit, inRail: Boolean
 private fun FloatingPill(content: @Composable () -> Unit) {
     Surface(
         shape = Corners.full,
-        color = SurfaceLevel.floating(LocalDarkTheme.current).fill(),
+        color = SurfaceLevel.Floating.fill(),
         contentColor = MaterialTheme.colorScheme.onSurface,
         shadowElevation = Elevation.level2,
         content = content,
@@ -505,7 +505,7 @@ private fun RouteCard(trip: TripRecord, onOpen: () -> Unit) {
     Card(
         onClick = onOpen,
         shape = MaterialTheme.shapes.large,
-        colors = CardDefaults.cardColors(containerColor = SurfaceLevel.floating(LocalDarkTheme.current).fill()),
+        colors = CardDefaults.cardColors(containerColor = SurfaceLevel.Floating.fill()),
         elevation = CardDefaults.cardElevation(defaultElevation = Elevation.level2),
         modifier = Modifier.fillMaxWidth().padding(bottom = Space.s).sharedCard(tripCardKey(trip.id)).testTag("trip_${trip.id}"),
     ) {

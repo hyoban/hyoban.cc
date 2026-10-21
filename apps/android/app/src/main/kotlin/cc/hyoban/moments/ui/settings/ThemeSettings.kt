@@ -142,11 +142,11 @@ private fun ThemeModeGroup(settings: Settings, seed: Color) {
                     .border(if (selected) 2.5.dp else 1.dp, if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.medium)
                 when (mode) {
                     ThemeMode.SYSTEM -> Row(frame) {
-                        MiniScreen(light, false, Modifier.weight(1f))
-                        MiniScreen(dark, true, Modifier.weight(1f))
+                        MiniScreen(light, Modifier.weight(1f))
+                        MiniScreen(dark, Modifier.weight(1f))
                     }
-                    ThemeMode.LIGHT -> MiniScreen(light, false, frame)
-                    ThemeMode.DARK -> MiniScreen(dark, true, frame)
+                    ThemeMode.LIGHT -> MiniScreen(light, frame)
+                    ThemeMode.DARK -> MiniScreen(dark, frame)
                 }
                 Text(
                     stringResource(label),
@@ -160,10 +160,10 @@ private fun ThemeModeGroup(settings: Settings, seed: Color) {
 
 /** A page in [scheme]'s colours, small: a title, two cards with a line of text and a chip in primary, the tabs at the foot. */
 @Composable
-private fun MiniScreen(scheme: ColorScheme, dark: Boolean, modifier: Modifier) {
-    val page = SurfaceLevel.Page.color(scheme, dark)
-    val card = SurfaceLevel.Card.color(scheme, dark)
-    val floating = SurfaceLevel.floating(dark).color(scheme, dark)
+private fun MiniScreen(scheme: ColorScheme, modifier: Modifier) {
+    val page = SurfaceLevel.Page.color(scheme)
+    val card = SurfaceLevel.Card.color(scheme)
+    val floating = SurfaceLevel.Floating.color(scheme)
     val line = scheme.onSurface.copy(alpha = 0.18f)
     Column(modifier.fillMaxSize().background(page).padding(6.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
         Box(Modifier.padding(top = 4.dp).width(28.dp).height(5.dp).clip(CircleShape).background(scheme.onSurface.copy(alpha = 0.6f)))

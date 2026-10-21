@@ -166,8 +166,9 @@ val LocalDarkTheme = staticCompositionLocalOf { false }
 /**
  * How deep a surface sits. Each surface takes the level one deeper than the one it sits
  * on: a card on the page, a block (a label, a tile) in a card, an inset (a small mark)
- * in a block. Light alternates grey and near-white; dark only lightens, as a darker step
- * inside a lighter surface reads as a hole.
+ * in a block. Each is a Material 3 surface role, the same in light and dark as Material 3
+ * maps them, the roles themselves adapting to either and to more contrast: the page
+ * surface, then the surface containers up to the highest.
  */
 enum class SurfaceLevel {
     Page, Card, Block, Inset;
@@ -175,16 +176,20 @@ enum class SurfaceLevel {
     /** The level a surface on this one takes. */
     val raised: SurfaceLevel get() = entries[min(ordinal + 1, Inset.ordinal)]
 
-    fun color(scheme: ColorScheme, dark: Boolean): Color = when (this) {
-        Page -> if (dark) scheme.surface else scheme.surfaceContainer
-        Card -> if (dark) scheme.surfaceContainer else scheme.surfaceBright
-        Block -> if (dark) scheme.surfaceContainerHigh else scheme.surfaceContainer
+    fun color(scheme: ColorScheme): Color = when (this) {
+        Page -> scheme.surface
+        Card -> scheme.surfaceContainer
+        Block -> scheme.surfaceContainerHigh
         Inset -> scheme.surfaceContainerHighest
     }
 
     companion object {
-        /** What floats over content, the tabs, a date over its Moments, the map's bars: a card in light, a block in dark, where a shadow doesn't show. */
-        fun floating(dark: Boolean): SurfaceLevel = if (dark) Block else Card
+        /**
+         * What floats over content, a date over its Moments, the map's bars and buttons: a
+         * block, a role apart from the cards it passes over, as Material 3 has overlapping
+         * surfaces.
+         */
+        val Floating: SurfaceLevel = Block
     }
 }
 
@@ -194,7 +199,7 @@ val LocalSurfaceLevel = staticCompositionLocalOf { SurfaceLevel.Page }
 /** The fill of [level] in the current scheme. */
 @Composable
 @ReadOnlyComposable
-fun SurfaceLevel.fill(): Color = color(MaterialTheme.colorScheme, LocalDarkTheme.current)
+fun SurfaceLevel.fill(): Color = color(MaterialTheme.colorScheme)
 
 /** A divider: Material 3's, outline variant. */
 @Composable

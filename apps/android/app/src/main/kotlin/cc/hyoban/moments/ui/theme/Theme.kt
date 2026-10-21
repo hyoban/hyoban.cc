@@ -65,11 +65,15 @@ object Corners {
     val full: Shape = ContinuousCapsule
 }
 
-/** Material 3's elevation levels, for the shadows of what floats over content. */
+/**
+ * Material 3's elevation levels, for the shadows of what floats over content: 1 to 3 at rest,
+ * 4 only while something is interacted with, as a photo held and dragged.
+ */
 object Elevation {
     val level1 = 1.dp
     val level2 = 3.dp
     val level3 = 6.dp
+    val level4 = 8.dp
 }
 
 // Material 3's shape scale, its corner sizes as they are, drawn as continuous curves
@@ -125,13 +129,6 @@ private val AppTypography = Typography().run {
         labelMediumEmphasized = labelMediumEmphasized.forChinese(numbers = true),
         labelSmallEmphasized = labelSmallEmphasized.forChinese(numbers = true),
     )
-}
-
-/** The app's own type beyond Material's scale. */
-object AppType {
-    /** A Moment's words on its page, read at length: body large a point larger, with room between the lines. */
-    val reading: TextStyle
-        @Composable @ReadOnlyComposable get() = MaterialTheme.typography.bodyLarge.copy(fontSize = 17.sp, lineHeight = 30.sp)
 }
 
 /**

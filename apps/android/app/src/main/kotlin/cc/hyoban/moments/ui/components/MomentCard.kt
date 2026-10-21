@@ -50,7 +50,6 @@ import cc.hyoban.moments.ui.format.formatTime
 import cc.hyoban.moments.ui.moment.MomentMenu
 import cc.hyoban.moments.ui.theme.Corners
 import cc.hyoban.moments.ui.theme.Elevation
-import cc.hyoban.moments.ui.theme.LocalDarkTheme
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.SurfaceLevel
 import cc.hyoban.moments.ui.theme.fill
@@ -163,7 +162,7 @@ fun FloatingButton(
             onClick = onClick,
             enabled = !busy,
             shape = Corners.full,
-            color = if (tonal) MaterialTheme.colorScheme.secondaryContainer else SurfaceLevel.floating(LocalDarkTheme.current).fill(),
+            color = if (tonal) MaterialTheme.colorScheme.secondaryContainer else SurfaceLevel.Floating.fill(),
             contentColor = if (tonal) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurface,
             shadowElevation = Elevation.level2,
             modifier = Modifier.statusBarsPadding().sideInsetsPadding().padding(horizontal = Space.m, vertical = Space.s)

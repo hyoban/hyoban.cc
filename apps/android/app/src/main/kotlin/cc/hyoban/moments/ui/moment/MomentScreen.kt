@@ -128,7 +128,6 @@ import cc.hyoban.moments.ui.components.tripCardKey
 import cc.hyoban.moments.ui.format.formatDay
 import cc.hyoban.moments.ui.format.formatTime
 import cc.hyoban.moments.ui.rememberShowMessage
-import cc.hyoban.moments.ui.theme.AppType
 import cc.hyoban.moments.ui.theme.Corners
 import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
 import cc.hyoban.moments.ui.theme.MediaOverlay
@@ -374,7 +373,7 @@ private fun MomentDetails(
         }
         if (moment.text.isNotBlank()) {
             SelectionContainer(Modifier.padding(start = Space.gutter + Space.l, end = Space.gutter + Space.l, top = Space.l)) {
-                Text(moment.text, style = AppType.reading)
+                Text(moment.text, style = MaterialTheme.typography.bodyLarge)
             }
         }
         if (moment.media.size > 1) {
