@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- The cat, white with a grey cap split by a white blaze, peeking in from the lower left
-     as Shizuku's does, so the launcher's mask cuts her off at the corner. -->
+     as Shizuku's does, so the launcher's mask cuts it off at the corner. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
