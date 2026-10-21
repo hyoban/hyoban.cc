@@ -5,10 +5,10 @@ import android.content.ClipboardManager
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -110,10 +110,12 @@ import cc.hyoban.moments.data.media.MediaUrls
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.spec.TripRecord
-import cc.hyoban.moments.data.trips.coversOf
 import cc.hyoban.moments.data.trips.countOf
+import cc.hyoban.moments.data.trips.coversOf
 import cc.hyoban.moments.data.trips.tripOf
+import cc.hyoban.moments.ui.Day
 import cc.hyoban.moments.ui.LocalSnackbarLift
+import cc.hyoban.moments.ui.Trip
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.FLOATING_BAR
 import cc.hyoban.moments.ui.components.FloatingBack
@@ -132,6 +134,7 @@ import cc.hyoban.moments.ui.components.sideInsetsPadding
 import cc.hyoban.moments.ui.components.tripCardKey
 import cc.hyoban.moments.ui.format.formatDay
 import cc.hyoban.moments.ui.format.formatTime
+import cc.hyoban.moments.ui.openedFrom
 import cc.hyoban.moments.ui.rememberShowMessage
 import cc.hyoban.moments.ui.theme.Corners
 import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
@@ -139,8 +142,8 @@ import cc.hyoban.moments.ui.theme.MediaOverlay
 import cc.hyoban.moments.ui.theme.Radius
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.fill
-import com.kyant.capsule.ContinuousRoundedRectangle
 import cc.hyoban.moments.ui.trips.tripSummary
+import com.kyant.capsule.ContinuousRoundedRectangle
 import kotlinx.coroutines.launch
 
 /** How far the page's sheet rises over the photos. */
@@ -427,7 +430,9 @@ private fun MomentDetails(
                         },
                         trailingContent = { Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null) },
                         supportingContent = { Text(tripSummary(trip, count), maxLines = 2) },
-                        modifier = Modifier.sharedCard(tripCardKey(trip.id)).testTag("trip_${trip.id}"),
+                        // Not shared with the trip's page when it is the page under this one,
+                        // which this one shrinks back into rather than the trip growing out of the row.
+                        modifier = (if (openedFrom(Trip(trip.id))) Modifier else Modifier.sharedCard(tripCardKey(trip.id))).testTag("trip_${trip.id}"),
                     ) { Text(trip.title, maxLines = 1, overflow = TextOverflow.Ellipsis) }
                 }
             }
@@ -441,7 +446,7 @@ private fun MomentDetails(
                         leadingContent = { RowIcon(Icons.Rounded.CalendarToday) },
                         trailingContent = { Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null) },
                         supportingContent = { Text(pluralStringResource(R.plurals.count_moments, sameDay, sameDay)) },
-                        modifier = Modifier.sharedCard(dayRowKey(moment.dateKey)).testTag("day_${moment.dateKey}"),
+                        modifier = (if (openedFrom(Day(moment.dateKey))) Modifier else Modifier.sharedCard(dayRowKey(moment.dateKey))).testTag("day_${moment.dateKey}"),
                     ) { Text(stringResource(R.string.label_whole_day)) }
                 }
             }

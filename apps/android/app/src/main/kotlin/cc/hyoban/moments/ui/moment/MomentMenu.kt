@@ -27,7 +27,10 @@ import androidx.compose.ui.unit.DpOffset
 import cc.hyoban.moments.R
 import cc.hyoban.moments.data.media.MediaUrls
 import cc.hyoban.moments.data.spec.MomentRecord
+import cc.hyoban.moments.ui.Day
 import cc.hyoban.moments.ui.LocalMomentActions
+import cc.hyoban.moments.ui.PlaceMoments
+import cc.hyoban.moments.ui.Trip
 import cc.hyoban.moments.ui.rememberShowMessage
 
 /**
@@ -70,11 +73,12 @@ fun MomentMenu(moment: MomentRecord, urls: MediaUrls, at: DpOffset?, onDismiss: 
                 modifier = Modifier.testTag("menu_copy_text"),
             )
         }
-        // Where it leads, as its page's rows do: each of its places, its trip and its day.
+        // Where it leads, as its page's rows do: each of its places, its trip and its day, but
+        // for the page it is on, a place's, a trip's or a day's, which it would only lead back to.
         if (actions != null) {
             HorizontalDivider()
             val places = remember(actions, moment) { actions.places() }
-            moment.places.forEach { id ->
+            moment.places.filterNot { actions.isHere(PlaceMoments(it)) }.forEach { id ->
                 DropdownMenuItem(
                     text = { Text(places[id]?.name ?: id) },
                     leadingIcon = { Icon(Icons.Rounded.Place, contentDescription = null) },
@@ -85,7 +89,7 @@ fun MomentMenu(moment: MomentRecord, urls: MediaUrls, at: DpOffset?, onDismiss: 
                     modifier = Modifier.testTag("menu_place_$id"),
                 )
             }
-            remember(actions, moment) { actions.tripOf(moment) }?.let { trip ->
+            remember(actions, moment) { actions.tripOf(moment) }?.takeUnless { actions.isHere(Trip(it.id)) }?.let { trip ->
                 DropdownMenuItem(
                     text = { Text(trip.title) },
                     leadingIcon = { Icon(Icons.Rounded.Luggage, contentDescription = null) },
@@ -96,7 +100,7 @@ fun MomentMenu(moment: MomentRecord, urls: MediaUrls, at: DpOffset?, onDismiss: 
                     modifier = Modifier.testTag("menu_trip"),
                 )
             }
-            DropdownMenuItem(
+            if (!actions.isHere(Day(moment.dateKey))) DropdownMenuItem(
                 text = { Text(stringResource(R.string.label_whole_day)) },
                 leadingIcon = { Icon(Icons.Rounded.CalendarToday, contentDescription = null) },
                 onClick = {
