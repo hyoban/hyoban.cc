@@ -36,12 +36,15 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -76,6 +79,7 @@ import cc.hyoban.moments.ui.components.Thumbnail
 import cc.hyoban.moments.ui.format.formatDate
 import cc.hyoban.moments.ui.format.formatTime
 import cc.hyoban.moments.ui.settings.Group
+import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.fill
 
@@ -129,21 +133,31 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
                     }
                 }
                 pending.changed.forEachIndexed { index, change ->
-                    Group(if (index == 0) stringResource(R.string.section_changed) else null, null) {
-                        ChangeCard(
-                            change.after,
-                            identity = Identity(change.before ?: change.after, places, urls),
-                            onOpen = { onMoment(change.after.uid) }.takeUnless { busy },
-                            onRevert = { container.revert(change.after.uid) }.takeUnless { busy },
-                        ) {
-                            ChangedFields(change, places, urls)
+                    key(change.after.uid) {
+                        Group(if (index == 0) stringResource(R.string.section_changed) else null, null) {
+                            val revert = { container.revert(change.after.uid) }.takeUnless { busy }
+                            SwipeToRevert(revert) {
+                                ChangeCard(
+                                    change.after,
+                                    identity = Identity(change.before ?: change.after, places, urls),
+                                    onOpen = { onMoment(change.after.uid) }.takeUnless { busy },
+                                    onRevert = revert,
+                                ) {
+                                    ChangedFields(change, places, urls)
+                                }
+                            }
                         }
                     }
                 }
                 pending.removed.forEachIndexed { index, moment ->
-                    Group(if (index == 0) stringResource(R.string.section_removed) else null, null) {
-                        ChangeCard(moment, onRevert = { container.revert(moment.uid) }.takeUnless { busy }) {
-                            MomentWhole(moment, places, urls, removed = true)
+                    key(moment.uid) {
+                        Group(if (index == 0) stringResource(R.string.section_removed) else null, null) {
+                            val revert = { container.revert(moment.uid) }.takeUnless { busy }
+                            SwipeToRevert(revert) {
+                                ChangeCard(moment, onRevert = revert) {
+                                    MomentWhole(moment, places, urls, removed = true)
+                                }
+                            }
                         }
                     }
                 }
@@ -249,6 +263,36 @@ fun PendingChangesRow(container: AppContainer, onClick: () -> Unit, modifier: Mo
                 trailingIconColor = MaterialTheme.colorScheme.onSecondaryContainer,
             ),
         )
+    }
+}
+
+/**
+ * A change swiped from the end to take it back, as Material 3 has a list's item swiped for
+ * its action: the undo icon on the secondary container shows from under it as it goes, and
+ * the card's own button does the same for whoever doesn't swipe. Its snackbar can undo it.
+ */
+@Composable
+private fun SwipeToRevert(onRevert: (() -> Unit)?, content: @Composable () -> Unit) {
+    if (onRevert == null) return content()
+    val state = rememberSwipeToDismissBoxState()
+    // Under a card as filled as the group it is in, so what is beneath shows only as it moves.
+    val fill = LocalSurfaceLevel.current.raised.fill()
+    SwipeToDismissBox(
+        state,
+        enableDismissFromStartToEnd = false,
+        onDismiss = { onRevert() },
+        backgroundContent = {
+            Row(
+                Modifier.fillMaxSize().background(MaterialTheme.colorScheme.secondaryContainer).padding(horizontal = Space.xl),
+                horizontalArrangement = Arrangement.spacedBy(Space.s, Alignment.End),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(stringResource(R.string.action_revert), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSecondaryContainer)
+                Icon(Icons.AutoMirrored.Rounded.Undo, contentDescription = null, tint = MaterialTheme.colorScheme.onSecondaryContainer)
+            }
+        },
+    ) {
+        Box(Modifier.background(fill)) { content() }
     }
 }
 

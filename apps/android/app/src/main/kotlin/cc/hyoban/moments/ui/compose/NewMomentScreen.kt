@@ -49,9 +49,14 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TimeInput
 import androidx.compose.material3.TimePicker
+import androidx.compose.material3.TimePickerDialog
+import androidx.compose.material3.TimePickerDialogDefaults
+import androidx.compose.material3.TimePickerDisplayMode
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -71,6 +76,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
@@ -465,14 +471,24 @@ private fun PhotoStrip(photos: List<Uri>, onAdd: () -> Unit, onRemove: (Uri) -> 
             Box(Modifier.size(PHOTO_SIZE).clip(MaterialTheme.shapes.medium).testTag("photo_$index")) {
                 // The site's photos by their URL, the phone's by their Uri.
                 AsyncImage(model = if (uri.scheme == "https" || uri.scheme == "http") uri.toString() else uri, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+                // A small dot to see, in a corner of the 48dp Material 3 has anything tapped take.
                 Box(
-                    Modifier.align(Alignment.TopEnd).padding(4.dp).size(28.dp).clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.5f))
-                        .clickable(onClickLabel = stringResource(R.string.action_remove_photo)) { onRemove(uri) }
+                    Modifier.align(Alignment.TopEnd).size(REMOVE_TARGET)
+                        .clickable(
+                            interactionSource = null,
+                            indication = ripple(bounded = false, radius = REMOVE_TARGET / 2),
+                            role = Role.Button,
+                            onClickLabel = stringResource(R.string.action_remove_photo),
+                        ) { onRemove(uri) }
                         .testTag("remove_photo_$index"),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.action_remove_photo), tint = Color.White, modifier = Modifier.size(18.dp))
+                    Box(
+                        Modifier.size(REMOVE_DOT).clip(CircleShape).background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.5f)),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.action_remove_photo), tint = Color.White, modifier = Modifier.size(18.dp))
+                    }
                 }
             }
         }
@@ -498,7 +514,8 @@ private fun PhotoStrip(photos: List<Uri>, onAdd: () -> Unit, onRemove: (Uri) -> 
 
 /**
  * The day, then the time of day on it, keeping the offset [time] has: the date picker
- * leads on to the clock, which is titled with the day chosen and can go back to it.
+ * leads on to Material 3's time picker dialog, titled with the day chosen, which can go
+ * back to it, and turns from the dial to typing the time and back, as its toggle does.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -509,6 +526,7 @@ private fun TimeDialog(time: OffsetDateTime, onDismiss: () -> Unit, onPick: (Off
     )
     val clock = rememberTimePickerState(time.hour, time.minute, is24Hour = true)
     var onClock by remember { mutableStateOf(false) }
+    var mode by remember { mutableStateOf(TimePickerDisplayMode.Picker) }
     val day = dates.selectedDateMillis?.let { Instant.ofEpochMilli(it).atOffset(ZoneOffset.UTC).toLocalDate() } ?: time.toLocalDate()
 
     if (!onClock) {
@@ -520,17 +538,27 @@ private fun TimeDialog(time: OffsetDateTime, onDismiss: () -> Unit, onPick: (Off
             dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
         ) { DatePicker(dates) }
     } else {
-        AlertDialog(
+        TimePickerDialog(
             onDismissRequest = onDismiss,
             title = { Text(formatDay(day.toString())) },
-            text = { TimePicker(clock) },
             confirmButton = {
                 TextButton(onClick = {
                     onPick(OffsetDateTime.of(day, java.time.LocalTime.of(clock.hour, clock.minute), time.offset))
                 }) { Text(stringResource(R.string.action_confirm)) }
             },
             dismissButton = { TextButton(onClick = { onClock = false }) { Text(stringResource(R.string.action_previous)) } },
-        )
+            modeToggleButton = {
+                TimePickerDialogDefaults.DisplayModeToggle(
+                    onDisplayModeChange = {
+                        mode = if (mode == TimePickerDisplayMode.Picker) TimePickerDisplayMode.Input else TimePickerDisplayMode.Picker
+                    },
+                    displayMode = mode,
+                    modifier = Modifier.testTag("time_mode"),
+                )
+            },
+        ) {
+            if (mode == TimePickerDisplayMode.Picker) TimePicker(clock) else TimeInput(clock)
+        }
     }
 }
 
@@ -593,3 +621,5 @@ private const val MAX_PHOTOS = 9
 /** How wide the site's photos are fetched for the strip: its tiles, at a phone's density. */
 private const val PHOTO_WIDTH = 480
 private val PHOTO_SIZE = 96.dp
+private val REMOVE_TARGET = 48.dp
+private val REMOVE_DOT = 28.dp

@@ -256,13 +256,25 @@ private fun ThemeColorGroup(settings: Settings) {
             }
         }
     }
-    // The colours, and the style they are worked out in, each a segment of the group.
+    // The colours, and the style they are worked out in, each a segment of the group. A
+    // colour of one's own, chosen, can be deleted from a button by the caption as well as
+    // from its long press, as Material 3 keeps no action behind a long press alone.
+    val custom = settings.themeColor?.takeIf { it in settings.customColors }
     SegmentedGroup(
         stringResource(R.string.section_theme_color),
         null,
         listOf(swatches, colorStyle),
         action = if (settings.themeIsDefault) null else {
-            { TextButton(onClick = settings::resetTheme) { Text(stringResource(R.string.action_restore_default)) } }
+            {
+                Row {
+                    if (custom != null) {
+                        TextButton(onClick = { settings.removeCustomColor(custom) }, modifier = Modifier.testTag("delete_color")) {
+                            Text(stringResource(R.string.action_delete_color))
+                        }
+                    }
+                    TextButton(onClick = settings::resetTheme) { Text(stringResource(R.string.action_restore_default)) }
+                }
+            }
         },
     )
 

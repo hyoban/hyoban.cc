@@ -52,6 +52,8 @@ class MomentsRepository(
 
     /** Moments set aside while their deletion can still be undone: out of sight, not yet deleted. */
     private var setAside: Set<String> = emptySet()
+    /** The site's Moments whose change or deletion is being taken back while that can still be undone: shown as the site has them, the change still kept. */
+    private var holding: Set<String> = emptySet()
     private val _moments = MutableStateFlow<List<MomentRecord>>(emptyList())
     private val _places = MutableStateFlow<Map<String, Place>>(emptyMap())
     private val _trips = MutableStateFlow<List<TripRecord>>(emptyList())
@@ -266,9 +268,22 @@ class MomentsRepository(
         publish()
     }
 
+    /** Shows one of the site's Moments as the site has it while taking back its change can be undone; [revert] takes it back, [keepChange] undoes that. */
+    suspend fun holdRevert(uid: String) = lock.withLock {
+        holding = holding + uid
+        publish()
+    }
+
+    /** Keeps the change [holdRevert] was taking back. */
+    suspend fun keepChange(uid: String) = lock.withLock {
+        holding = holding - uid
+        publish()
+    }
+
     /** Takes back what publishing would do to one of the site's Moments: its change, or its deletion. */
     suspend fun revert(uid: String) = lock.withLock {
         withContext(io) {
+            holding = holding - uid
             phone[uid]?.takeIf { it.published != null }?.let(::forgetLocal)
             if (uid in removed) {
                 removed = removed - uid
@@ -313,7 +328,8 @@ class MomentsRepository(
     suspend fun publishPending(onProgress: (done: Int, total: Int) -> Unit = { _, _ -> }) {
         val writer = checkNotNull(writer) { "No API to write to" }
         val (moments, known, own, deletions) = lock.withLock {
-            Snapshot(phone.values.sortedWith(oldestFirst), apiPlaces, phonePlaces, removed.toList())
+            // A change being taken back isn't published, whatever becomes of it.
+            Snapshot(phone.values.filter { it.uid !in holding }.sortedWith(oldestFirst), apiPlaces, phonePlaces, (removed - holding).toList())
         }
         if (moments.isEmpty() && deletions.isEmpty()) return
         val places = moments.flatMap { it.places }.distinct().filter { it !in known }
@@ -419,11 +435,15 @@ class MomentsRepository(
     fun isLocal(uid: String): Boolean = phone[uid]?.let { it.published == null } == true
 
     /** Whether one of the site's Moments has a change on the phone not yet published. */
-    fun isChanged(uid: String): Boolean = phone[uid]?.published != null
+    fun isChanged(uid: String): Boolean = uid !in holding && phone[uid]?.published != null
 
-    fun moment(uid: String): MomentRecord? = phone[uid] ?: all[uid]?.takeIf { isShown(it) && uid !in removed }
+    fun moment(uid: String): MomentRecord? =
+        phone[uid]?.takeIf { uid !in holding } ?: all[uid]?.takeIf { isShown(it) && (uid !in removed || uid in holding) }
 
     private fun publish() {
+        // A change being taken back, as though it were already.
+        val phone = phone.filterKeys { it !in holding }
+        val removed = removed - holding
         _moments.value = (all.values.filter { isShown(it) && it.uid !in phone && it.uid !in removed } + phone.values)
             .filter { it.uid !in setAside }.sortedWith(newestFirst)
         val (added, changed) = phone.values.filter { it.uid !in setAside }.sortedWith(oldestFirst).partition { it.published == null }

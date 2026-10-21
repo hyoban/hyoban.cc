@@ -241,11 +241,27 @@ class AppContainer(context: Context) {
         }
     }
 
-    /** Takes back a change or a deletion of one of the site's Moments, not yet published. */
+    /**
+     * Takes back a change or a deletion of one of the site's Moments, not yet published, as
+     * a deletion is: gone from the changes at once, taken back only once the snackbar saying
+     * so goes without its undo.
+     */
     fun revert(uid: String) {
         scope.launch {
-            repository.revert(uid)
-            Widgets.update(appContext)
+            repository.holdRevert(uid)
+            _messages.send(
+                Message(
+                    appContext.getString(R.string.message_change_reverted),
+                    action = appContext.getString(R.string.action_undo),
+                    onAction = { scope.launch { repository.keepChange(uid) } },
+                    onDismiss = {
+                        scope.launch {
+                            repository.revert(uid)
+                            Widgets.update(appContext)
+                        }
+                    },
+                ),
+            )
         }
     }
 
