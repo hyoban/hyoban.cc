@@ -1,0 +1,4 @@
+# The app's own code, compiled ahead of time on install and run from the first launch
+# rather than interpreted until the JIT warms to it; the libraries bring profiles of their own.
+Lcc/hyoban/moments/**;
+HSPLcc/hyoban/moments/**;->**(**)**

@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -91,6 +92,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -251,14 +253,16 @@ fun MapScreen(container: AppContainer, onMoment: (String) -> Unit, onPlace: (Str
         val turned = bearing.let { minOf(it, 360 - it) } > 0.5
         // While the map is turned, the compass: upright above the floating action button, and
         // above the trip's card while it shows; on a phone on its side, at the bottom by the rail.
-        val lift by animateDpAsState(if (trip != null && !railed) 96.dp else 0.dp, MaterialTheme.motionScheme.defaultSpatialSpec(), label = "compass")
+        // Read as it is placed, so the map's screen isn't composed again every frame it rises.
+        val lift = animateDpAsState(if (trip != null && !railed) 96.dp else 0.dp, MaterialTheme.motionScheme.defaultSpatialSpec(), label = "compass")
         Box(
             if (railed) {
                 Modifier.align(Alignment.BottomStart).navigationBarsPadding()
                     .absolutePadding(left = rail.left + Space.gutter, bottom = Space.gutter)
             } else {
                 Modifier.align(Alignment.BottomEnd)
-                    .padding(end = Space.gutter, bottom = LocalBottomClearance.current + LocalFabClearance.current + lift)
+                    .padding(end = Space.gutter, bottom = LocalBottomClearance.current + LocalFabClearance.current)
+                    .offset { IntOffset(0, -lift.value.roundToPx()) }
             },
         ) {
             CompassButton(turned, bearing, onClick = { north++ })

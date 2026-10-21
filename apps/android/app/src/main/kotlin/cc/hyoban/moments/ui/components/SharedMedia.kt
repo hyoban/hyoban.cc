@@ -8,9 +8,11 @@ import androidx.compose.animation.core.animateDp
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -19,15 +21,18 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import cc.hyoban.moments.ui.theme.Radius
 import cc.hyoban.moments.ui.theme.TransitionMotion
-import com.kyant.capsule.ContinuousRoundedRectangle
 
 // A photo keeps its place between screens: the card's tile grows into the viewer and
 // shrinks back, by a key both screens give the same media.
@@ -43,7 +48,8 @@ val LocalNavAnimatedScope = staticCompositionLocalOf<AnimatedVisibilityScope?> {
  * that key steps out of sight, so the photo seems to have lifted out of it, and steps back
  * as the viewer closes, so the photo flies back into it.
  */
-val LocalViewerShownKey = staticCompositionLocalOf<String?> { null }
+// Not static: it changes as the viewer opens and closes, and only the tiles need know.
+val LocalViewerShownKey = compositionLocalOf<String?> { null }
 
 /**
  * Whether a back swipe is under way, or has just ended and its page change is still
@@ -116,10 +122,12 @@ fun Modifier.sharedCard(key: String, cardCorner: Dp = Radius.large, page: Boolea
     if (shared == null || animated == null) return this
 
     val viewerShowing = LocalViewerShowing.current
-    // The page's corners round as it shrinks toward the card, and square off as it fills the screen.
-    val corner by animated.transition.animateDp(label = "card corner") { state ->
+    // The page's corners round as it shrinks toward the card, and square off as it fills the
+    // screen; read as the clip is drawn, so the cards aren't composed again every frame for it.
+    val corner = animated.transition.animateDp(label = "card corner") { state ->
         if (page && state == EnterExitState.Visible) 0.dp else cardCorner
     }
+    val clip = remember(corner) { CornerClip(corner) }
     // The transitions' springs, a card growing into its page being one: it grows on the
     // spatial one, its two faces cross on the effects one.
     val motion = TransitionMotion
@@ -139,11 +147,21 @@ fun Modifier.sharedCard(key: String, cardCorner: Dp = Radius.large, page: Boolea
             boundsTransform = { _, _ -> motion.defaultSpatialSpec() },
             // Scaled, not laid out again at each size, so the words keep their lines as it grows.
             resizeMode = SharedTransitionScope.ResizeMode.scaleToBounds(ContentScale.FillWidth, Alignment.TopCenter),
-            clipInOverlayDuringTransition = OverlayClip(ContinuousRoundedRectangle(corner)),
+            clipInOverlayDuringTransition = OverlayClip(clip),
         )
     }
 }
 
+
+/**
+ * A plain rounded rectangle, its corners [corner] as they are when it is drawn: the graphics
+ * pipeline clips to one as it draws, where a continuous corner's path goes through a mask
+ * drawn in software and uploaded every frame, and on the move the two can't be told apart.
+ */
+private class CornerClip(private val corner: State<Dp>) : Shape {
+    override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline =
+        RoundedCornerShape(corner.value).createOutline(size, layoutDirection, density)
+}
 
 /** The key a trip's card and its page share. */
 fun tripCardKey(id: String) = "trip-$id"

@@ -20,9 +20,16 @@ fun tripOf(moment: MomentRecord, trips: List<TripRecord>): TripRecord? =
         trips.firstOrNull { moment.dateKey >= it.start && moment.dateKey <= it.end }
     }
 
-/** A trip's Moments, oldest first. */
+/** A trip's Moments, oldest first, each one's time read once rather than at every comparison. */
 fun momentsOf(trip: TripRecord, moments: List<MomentRecord>, trips: List<TripRecord>): List<MomentRecord> =
-    moments.filter { tripOf(it, trips)?.id == trip.id }.sortedWith(compareBy({ epochOf(it.occurredAt) }, { it.uid }))
+    moments.filter { tripOf(it, trips)?.id == trip.id }
+        .map { it to epochOf(it.occurredAt) }
+        .sortedWith(compareBy({ it.second }, { it.first.uid }))
+        .map { it.first }
+
+/** How many Moments a trip has, without putting them in order. */
+fun countOf(trip: TripRecord, moments: List<MomentRecord>, trips: List<TripRecord>): Int =
+    moments.count { tripOf(it, trips)?.id == trip.id }
 
 /** A trip's Moments by day, `YYYY-MM-DD`, in order. */
 fun daysOf(trip: TripRecord, moments: List<MomentRecord>, trips: List<TripRecord>): List<Pair<String, List<MomentRecord>>> =

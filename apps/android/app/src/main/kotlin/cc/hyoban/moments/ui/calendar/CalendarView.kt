@@ -110,7 +110,7 @@ fun CalendarView(
                 // Where the width allows, months side by side, each whole, so a month's
                 // days fit the height of a phone on its side.
                 months.chunked(columns.count).forEach { pair ->
-                    item(key = "months-${pair.first().month}") {
+                    item(key = "months-${pair.first().month}", contentType = "months") {
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Space.l), verticalAlignment = Alignment.Top) {
                             pair.forEach { month ->
                                 Column(Modifier.weight(1f)) {
@@ -125,10 +125,11 @@ fun CalendarView(
                 }
             } else {
                 months.forEach { month ->
-                    item(key = "month-${month.month}") { MonthTitle(month, today) }
-                    item(key = "weekdays-${month.month}") { WeekdayRow() }
+                    // Each kind of row its own content type, so a row scrolled away is reused for one of its kind.
+                    item(key = "month-${month.month}", contentType = "month") { MonthTitle(month, today) }
+                    item(key = "weekdays-${month.month}", contentType = "weekdays") { WeekdayRow() }
                     month.weeks.forEachIndexed { index, week ->
-                        item(key = "week-${month.month}-$index") { WeekRow(week, urls, today, onDay) }
+                        item(key = "week-${month.month}-$index", contentType = "week") { WeekRow(week, urls, today, onDay) }
                     }
                 }
             }

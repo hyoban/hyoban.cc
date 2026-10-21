@@ -1,6 +1,7 @@
 package cc.hyoban.moments.ui.feed
 
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.ReportDrawnWhen
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animate
@@ -174,6 +175,9 @@ fun FeedScreen(
     val places by container.repository.places.collectAsStateWithLifecycle()
     val trips by container.repository.trips.collectAsStateWithLifecycle()
     val loaded by container.repository.loaded.collectAsStateWithLifecycle()
+    // The app counts as started once the Moments on the phone are read, as the system measures
+    // a start to the screen people came for, not the first frame of its skeleton.
+    ReportDrawnWhen { loaded }
     val syncing by container.repository.syncing.collectAsStateWithLifecycle()
     val pull = rememberPulledRefresh(container)
     ShowRefreshErrors(container)

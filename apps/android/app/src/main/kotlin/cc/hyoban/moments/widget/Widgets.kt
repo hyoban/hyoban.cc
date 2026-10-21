@@ -51,8 +51,8 @@ import cc.hyoban.moments.R
 import cc.hyoban.moments.Settings
 import cc.hyoban.moments.ThemeMode
 import cc.hyoban.moments.data.spec.MomentMedia
+import cc.hyoban.moments.data.trips.countOf
 import cc.hyoban.moments.data.trips.coversOf
-import cc.hyoban.moments.data.trips.momentsOf
 import cc.hyoban.moments.ui.DEEP_LINK_SCHEME
 import cc.hyoban.moments.ui.format.daysBetween
 import cc.hyoban.moments.ui.format.formatDate
@@ -137,7 +137,7 @@ class TripWidget : GlanceAppWidget() {
             TripPhase.UPCOMING -> (daysBetween(today.toString(), trip.start) - 1).let { context.resources.getQuantityString(R.plurals.widget_trip_in_days, it, it) }
             TripPhase.PAST -> formatRange(trip.start, trip.end, today)
         }
-        val count = momentsOf(trip, moments, trips).size
+        val count = countOf(trip, moments, trips)
         val cover = coversOf(trip, moments, trips, limit = 1).firstOrNull()
 
         return Card.Photo(

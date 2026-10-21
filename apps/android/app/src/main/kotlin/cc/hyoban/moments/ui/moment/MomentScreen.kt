@@ -111,7 +111,7 @@ import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.spec.TripRecord
 import cc.hyoban.moments.data.trips.coversOf
-import cc.hyoban.moments.data.trips.momentsOf
+import cc.hyoban.moments.data.trips.countOf
 import cc.hyoban.moments.data.trips.tripOf
 import cc.hyoban.moments.ui.LocalSnackbarLift
 import cc.hyoban.moments.ui.components.AppColors
@@ -417,7 +417,7 @@ private fun MomentDetails(
             trip?.let { trip ->
                 add { shapes ->
                     val cover = remember(trip, moments) { coversOf(trip, moments, trips, limit = 1).firstOrNull() }
-                    val count = remember(trip, moments) { momentsOf(trip, moments, trips).size }
+                    val count = remember(trip, moments) { countOf(trip, moments, trips) }
                     SegmentedListItem(
                         onClick = { onTrip(trip.id) },
                         shapes = shapes,

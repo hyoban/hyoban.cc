@@ -21,8 +21,10 @@ import cc.hyoban.moments.data.store.DataStore
 import cc.hyoban.moments.data.store.MomentsRepository
 import cc.hyoban.moments.data.trips.TripRoutes
 import cc.hyoban.moments.ui.format.failureReason
+import cc.hyoban.moments.ui.viewer.MotionCache
 import cc.hyoban.moments.widget.Widgets
 import java.io.File
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -70,6 +72,12 @@ class AppContainer(context: Context) {
             routes.load()
             refreshAll()
         }
+        // The videos' disk cache opens its index and database off the main thread, before a
+        // video is first opened, rather than in the frame that opens it.
+        scope.launch(Dispatchers.IO) { MotionCache.of(appContext) }
+        // The map's native library, 13 MB, loaded off the main thread too, so the map tab's
+        // first showing doesn't load it in the frame that opens it.
+        scope.launch(Dispatchers.IO) { runCatching { System.loadLibrary("maplibre") } }
     }
 
     fun refresh() {
@@ -266,9 +274,17 @@ class AppContainer(context: Context) {
         }
     }
 
+    /** What the widgets were last drawn from, and on which day, so a refresh that brought nothing new leaves them be. */
+    private var widgetsDrawn: Triple<Any, Any, LocalDate>? = null
+
     private suspend fun refreshAll() {
         repository.refresh().onSuccess { revision -> routes.refresh(revision) }
-        // The widgets show what the sync brought, or what was on the phone if it failed.
+        // The widgets show what the sync brought, or what was on the phone if it failed; the
+        // same Moments and trips on the same day draw them the same, so they aren't again.
+        val drawn = Triple(repository.moments.value, repository.trips.value, LocalDate.now())
+        val last = widgetsDrawn
+        if (last != null && last.first === drawn.first && last.second === drawn.second && last.third == drawn.third) return
+        widgetsDrawn = drawn
         Widgets.update(appContext)
     }
 }
