@@ -86,6 +86,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.R
+import cc.hyoban.moments.data.trips.tripOf
 import cc.hyoban.moments.ui.Feed
 import cc.hyoban.moments.ui.LocalNavAccessory
 import cc.hyoban.moments.ui.LocalRailSpace
@@ -98,7 +99,6 @@ import cc.hyoban.moments.ui.components.PageWidth
 import cc.hyoban.moments.ui.components.Symbols
 import cc.hyoban.moments.ui.components.TabPage
 import cc.hyoban.moments.ui.components.Tooltip
-import cc.hyoban.moments.ui.components.dayCardKey
 import cc.hyoban.moments.ui.components.isExpandedWidth
 import cc.hyoban.moments.ui.components.isMediumWidth
 import cc.hyoban.moments.ui.components.sharedCard
@@ -131,6 +131,8 @@ fun FeedScreen(
     onPlace: (String) -> Unit = {},
     onTrip: (String) -> Unit = {},
     onEdit: (String) -> Unit = {},
+    /** A day opened from the row for it on the Moment beside the feed. */
+    onDayRow: (String) -> Unit = onDay,
 ) {
     // From Material 3's expanded breakpoint, its list and detail: a Moment chosen opens in a
     // pane beside the Moments rather than as a page over them. Turned upright with one chosen,
@@ -302,7 +304,7 @@ fun FeedScreen(
                                             tab = Feed,
                                         )
                                     } else {
-                                        MomentFeed(shown, places, trips, container.mediaUrls, open, state = feedState, gridState = gridState, tab = Feed, selected = chosen.takeIf { twoPane })
+                                        MomentFeed(shown, places, trips, container.mediaUrls, open, state = feedState, gridState = gridState, tab = Feed, selected = chosen.takeIf { twoPane }, onDay = onDay)
                                     }
                                 }
                             }
@@ -342,7 +344,7 @@ fun FeedScreen(
                                 onTrip = onTrip,
                                 onBack = { chosen = null },
                                 onEdit = onEdit,
-                                onDay = onDay,
+                                onDay = onDayRow,
                                 pane = true,
                                 onChanges = onChanges,
                             )
@@ -483,20 +485,39 @@ private fun NewMomentButton(onClick: () -> Unit, inRail: Boolean = false, expand
     }
 }
 
-/** The Moments of one day, `YYYY-MM-DD`, as the feed shows them. */
+/** The Moments of one day, `YYYY-MM-DD`, as the feed shows them, and the trip they were on. */
 @Composable
-fun DayScreen(container: AppContainer, date: String, onMoment: (String) -> Unit, onBack: () -> Unit) {
+fun DayScreen(
+    container: AppContainer,
+    date: String,
+    onMoment: (String) -> Unit,
+    onBack: () -> Unit,
+    onTrip: (String) -> Unit = {},
+    /** The key of the card the page grows out of; none when it was opened from elsewhere, as a menu. */
+    card: String? = null,
+) {
     val all by container.repository.moments.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
     val trips by container.repository.trips.collectAsStateWithLifecycle()
     val moments = remember(all, date) { all.filter { it.occurredAt.startsWith(date) } }
+    val trip = remember(moments, trips, date) { moments.firstNotNullOfOrNull { tripOf(it, trips) } ?: trips.firstOrNull { date >= it.start && date <= it.end } }
 
-    // The page is the calendar's day grown to the screen.
+    // The page is the calendar's day, its pill or a Moment's row for it grown to the screen.
     SubPage(
         formatDay(date),
         onBack,
-        Modifier.sharedCard(dayCardKey(date), page = true).background(AppColors.page),
+        (if (card != null) Modifier.sharedCard(card, page = true) else Modifier).background(AppColors.page),
         subtitle = pluralStringResource(R.plurals.count_moments, moments.size, moments.size),
+        actions = {
+            // The trip the day was on, as a Moment's page offers its own.
+            if (trip != null) {
+                Tooltip(trip.title, below = true) {
+                    IconButton(onClick = { onTrip(trip.id) }, modifier = Modifier.testTag("day_trip")) {
+                        Icon(Symbols.LuggageOutlined, contentDescription = trip.title)
+                    }
+                }
+            }
+        },
     ) {
         MomentFeed(moments, places, trips, container.mediaUrls, onMoment, months = false)
     }
@@ -504,7 +525,14 @@ fun DayScreen(container: AppContainer, date: String, onMoment: (String) -> Unit,
 
 /** The Moments at one place, newest first. */
 @Composable
-fun PlaceScreen(container: AppContainer, id: String, onMoment: (String) -> Unit, onBack: () -> Unit) {
+fun PlaceScreen(
+    container: AppContainer,
+    id: String,
+    onMoment: (String) -> Unit,
+    onBack: () -> Unit,
+    onDay: (String) -> Unit = {},
+    onMap: (String) -> Unit = {},
+) {
     val all by container.repository.moments.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
     val trips by container.repository.trips.collectAsStateWithLifecycle()
@@ -517,10 +545,16 @@ fun PlaceScreen(container: AppContainer, id: String, onMoment: (String) -> Unit,
         Modifier.background(AppColors.page),
         subtitle = pluralStringResource(R.plurals.count_moments, moments.size, moments.size),
         actions = {
-            // The way there, as from the map's panel of the place.
+            // On the map tab, its panel up, and the way there, as from that panel.
             if (place != null) {
                 val context = LocalContext.current
                 val show = rememberShowMessage()
+                val onMapLabel = stringResource(R.string.action_show_on_map)
+                Tooltip(onMapLabel, below = true) {
+                    IconButton(onClick = { onMap(id) }, modifier = Modifier.testTag("show_on_map")) {
+                        Icon(Symbols.MapOutlined, contentDescription = onMapLabel)
+                    }
+                }
                 Tooltip(stringResource(R.string.action_navigate), below = true) {
                     IconButton(onClick = { if (!navigateTo(context, place)) show(context.getString(R.string.no_map_app)) }, modifier = Modifier.testTag("navigate")) {
                         Icon(Icons.Rounded.Directions, contentDescription = stringResource(R.string.action_navigate), tint = MaterialTheme.colorScheme.primary)
@@ -529,6 +563,6 @@ fun PlaceScreen(container: AppContainer, id: String, onMoment: (String) -> Unit,
             }
         },
     ) {
-        MomentFeed(moments, places, trips, container.mediaUrls, onMoment)
+        MomentFeed(moments, places, trips, container.mediaUrls, onMoment, onDay = onDay)
     }
 }

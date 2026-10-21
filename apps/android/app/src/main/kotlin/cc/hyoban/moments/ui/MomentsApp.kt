@@ -111,6 +111,10 @@ import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.MainActivity
 import cc.hyoban.moments.R
 import cc.hyoban.moments.Settings
+import cc.hyoban.moments.data.spec.MomentRecord
+import cc.hyoban.moments.data.spec.Place
+import cc.hyoban.moments.data.spec.TripRecord
+import cc.hyoban.moments.data.trips.tripOf
 import cc.hyoban.moments.ui.components.AdaptiveStatusBarIcons
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.LocalBackSwipe
@@ -122,6 +126,8 @@ import cc.hyoban.moments.ui.components.LocalSharedTransitionScope
 import cc.hyoban.moments.ui.components.LocalViewerShowing
 import cc.hyoban.moments.ui.components.LocalViewerShownKey
 import cc.hyoban.moments.ui.components.Symbols
+import cc.hyoban.moments.ui.components.dayCardKey
+import cc.hyoban.moments.ui.components.dayRowKey
 import cc.hyoban.moments.ui.components.isLandscape
 import cc.hyoban.moments.ui.components.isMediumWidth
 import cc.hyoban.moments.ui.components.rememberReducedMotion
@@ -130,6 +136,7 @@ import cc.hyoban.moments.ui.feed.DayScreen
 import cc.hyoban.moments.ui.feed.FeedScreen
 import cc.hyoban.moments.ui.feed.PlaceScreen
 import cc.hyoban.moments.ui.feed.SearchScreen
+import cc.hyoban.moments.ui.map.MapFocus
 import cc.hyoban.moments.ui.map.MapScreen
 import cc.hyoban.moments.ui.moment.MomentScreen
 import cc.hyoban.moments.ui.publish.ChangesScreen
@@ -180,9 +187,12 @@ data class Trip(val id: String)
 @Serializable
 data class TripPlay(val id: String)
 
-/** One day's Moments, by its `YYYY-MM-DD`. */
+/**
+ * One day's Moments, by its `YYYY-MM-DD`, and the key of the card it grows out of: a calendar
+ * day, a day's pill or a Moment's row for it. Opened from elsewhere, a menu, it slides in.
+ */
 @Serializable
-data class Day(val date: String)
+data class Day(val date: String, val card: String? = null)
 
 @Serializable
 data class PlaceMoments(val id: String)
@@ -263,15 +273,26 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
     }
     val openTrip: (String) -> Unit = { navController.navigate(Trip(it)) }
     // Editing from a card's menu, where its page would offer it: the phone's own Moments, the
-    // site's with the API's token, and none while publishing.
+    // site's with the API's token, and none while publishing;
+    // and where it leads, its places, its trip and its day, from any card's menu.
     val momentActions = remember(container, navController) {
         MomentActions(
             canEdit = { uid -> container.publishing.value == null && (container.repository.isLocal(uid) || container.canPublish) },
             onEdit = { navController.navigate(EditMoment(it)) },
+            places = { container.repository.places.value },
+            tripOf = { tripOf(it, container.repository.trips.value) },
+            onPlace = { navController.navigate(PlaceMoments(it)) },
+            onTrip = { navController.navigate(Trip(it)) },
+            onDay = { navController.navigate(Day(it)) },
         )
     }
     val openPlace: (String) -> Unit = { navController.navigate(PlaceMoments(it)) }
+    // A day out of its calendar day or its pill, or out of a Moment's row for it.
+    val openDay: (String) -> Unit = { navController.navigate(Day(it, dayCardKey(it))) }
+    val openDayRow: (String) -> Unit = { navController.navigate(Day(it, dayRowKey(it))) }
 
+    // A place or a trip shown on the map tab from its page, until the map has flown to it.
+    var mapFocus by remember { mutableStateOf<MapFocus?>(null) }
     val selectTab: (Int) -> Unit = { index ->
         navController.navigate(Tab.entries[index].route) {
             // The tab takes the place of the one before rather than going on top of it, so
@@ -284,6 +305,10 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
             launchSingleTop = true
             restoreState = true
         }
+    }
+    val showOnMap: (MapFocus) -> Unit = { focus ->
+        mapFocus = focus
+        selectTab(Tab.MAP.ordinal)
     }
     // The navigation bar's height and the rail's width, as they lay themselves out, and the
     // tab's floating action button's height above the bar, for the pages to keep clear of.
@@ -427,7 +452,8 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                 FeedScreen(
                                     container,
                                     onMoment = openMoment,
-                                    onDay = { navController.navigate(Day(it)) },
+                                    onDay = openDay,
+                                    onDayRow = openDayRow,
                                     onSettings = { navController.navigate(Preferences) },
                                     onNew = { navController.navigate(NewMoment) },
                                     onChanges = { navController.navigate(Changes) },
@@ -439,7 +465,14 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                 )
                             }
                             screen<Atlas>(link = "map") {
-                                MapScreen(container, onMoment = openMoment, onPlace = openPlace, onTrip = openTrip)
+                                MapScreen(
+                                    container,
+                                    onMoment = openMoment,
+                                    onPlace = openPlace,
+                                    onTrip = openTrip,
+                                    focus = mapFocus,
+                                    onFocused = { mapFocus = null },
+                                )
                             }
                             screen<Trips>(link = "trips") {
                                 TripsScreen(container, onTrip = openTrip)
@@ -453,7 +486,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                     onTrip = openTrip,
                                     onBack = back,
                                     onEdit = { navController.navigate(EditMoment(it)) },
-                                    onDay = { navController.navigate(Day(it)) },
+                                    onDay = openDayRow,
                                     onChanges = { navController.navigate(Changes) },
                                 )
                             }
@@ -464,19 +497,29 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                     onMoment = openMoment,
                                     onPlay = { navController.navigate(TripPlay(it)) },
                                     onBack = back,
+                                    onDay = openDay,
+                                    onMap = { showOnMap(MapFocus.Trip(it)) },
                                 )
                             }
                             screen<TripPlay>(link = "play/{id}") { entry ->
                                 TripPlayerScreen(container, entry.toRoute<TripPlay>().id, onMoment = openMoment, onBack = back)
                             }
                             screen<Day>(link = "day/{date}") { entry ->
-                                DayScreen(container, entry.toRoute<Day>().date, onMoment = openMoment, onBack = back)
+                                val day = entry.toRoute<Day>()
+                                DayScreen(container, day.date, onMoment = openMoment, onBack = back, onTrip = openTrip, card = day.card)
                             }
                             screen<PlaceMoments>(link = "place/{id}") { entry ->
-                                PlaceScreen(container, entry.toRoute<PlaceMoments>().id, onMoment = openMoment, onBack = back)
+                                PlaceScreen(
+                                    container,
+                                    entry.toRoute<PlaceMoments>().id,
+                                    onMoment = openMoment,
+                                    onBack = back,
+                                    onDay = openDay,
+                                    onMap = { showOnMap(MapFocus.Place(it)) },
+                                )
                             }
                             screen<Preferences>(link = "settings") {
-                                SettingsScreen(container, onBack = back)
+                                SettingsScreen(container, onBack = back, onChanges = { navController.navigate(Changes) })
                             }
                             screen<NewMoment>(link = "new") {
                                 NewMomentScreen(container, onBack = back, onSaved = back)
@@ -515,6 +558,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                     onMoment = { closeViewer(); openMoment(it) },
                                     onPlace = { closeViewer(); openPlace(it) },
                                     onTrip = { closeViewer(); openTrip(it) },
+                                    onDay = { closeViewer(); navController.navigate(Day(it)) },
                                     onBack = closeViewer,
                                     onShown = {
                                         // The first photo's tile steps aside as the viewer opens.
@@ -645,28 +689,41 @@ private val CARD_HOLD_OUT = fadeOut(tween(CARD_HOLD_MS), targetAlpha = 1f)
  * going back plays it as the page came.
  */
 private fun AnimatedContentTransitionScope<NavBackStackEntry>.enter(forward: Boolean, motion: MotionScheme): EnterTransition =
-    if (switchesTab()) FADE_THROUGH_IN
-    else if (if (forward) opensCard() else closesCard()) CARD_HOLD_IN else pageIn(forward, motion)
+    if (holdsForCard(forward)) CARD_HOLD_IN
+    else if (switchesTab(forward)) FADE_THROUGH_IN
+    else pageIn(forward, motion)
 
 /** The page going out, as [enter] brings the other in. */
 private fun AnimatedContentTransitionScope<NavBackStackEntry>.exit(forward: Boolean, motion: MotionScheme): ExitTransition =
-    if (switchesTab()) FADE_THROUGH_OUT
-    else if (if (forward) opensCard() else closesCard()) CARD_HOLD_OUT else pageOut(forward, motion)
+    if (holdsForCard(forward)) CARD_HOLD_OUT
+    else if (switchesTab(forward)) FADE_THROUGH_OUT
+    else pageOut(forward, motion)
+
+/**
+ * Whether both pages hold while a card grows into its page or the page shrinks back: as
+ * the page opens or goes back, or as a page goes on to another tab holding its card, a
+ * trip's page to the map with the trip's route card up, closing into it as going back would.
+ */
+private fun AnimatedContentTransitionScope<NavBackStackEntry>.holdsForCard(forward: Boolean): Boolean =
+    if (forward) opensCard() || (switchesTab(forward) && closesCard()) else closesCard()
 
 /**
  * Where a page grows out of a card, by the page and the pages that hold its card: a
  * Moment's from a list of Moments, the calendar, the map's place panel or a trip's playback; a trip's from
- * the trips, a Moment's trip card or the map's route card; a day's from the calendar or
- * a Moment's row for the rest of its day.
+ * the trips, a Moment's trip card or the map's route card. A day's grows out of the card its
+ * route names, wherever that is: a calendar day, a day's pill or a Moment's row for it.
  */
 private val CARD_OPENINGS: Map<KClass<*>, List<KClass<*>>> = mapOf(
     Moment::class to listOf(Feed::class, Day::class, PlaceMoments::class, Trip::class, TripPlay::class, Atlas::class, Search::class),
     Trip::class to listOf(Trips::class, Moment::class, Atlas::class),
-    Day::class to listOf(Feed::class, Moment::class),
 )
 
 private fun opens(page: NavBackStackEntry, from: NavBackStackEntry): Boolean =
-    CARD_OPENINGS.any { (target, origins) -> page.destination.hasRoute(target) && origins.any { from.destination.hasRoute(it) } }
+    if (page.destination.hasRoute(Day::class)) {
+        page.toRoute<Day>().card != null
+    } else {
+        CARD_OPENINGS.any { (target, origins) -> page.destination.hasRoute(target) && origins.any { from.destination.hasRoute(it) } }
+    }
 
 /** Whether a page opens from a card on the one before: the card grows into it while that page stays put. */
 private fun AnimatedContentTransitionScope<NavBackStackEntry>.opensCard(): Boolean = opens(targetState, initialState)
@@ -674,11 +731,14 @@ private fun AnimatedContentTransitionScope<NavBackStackEntry>.opensCard(): Boole
 /** Whether a page closes back into its card on the page under it. */
 private fun AnimatedContentTransitionScope<NavBackStackEntry>.closesCard(): Boolean = opens(initialState, targetState)
 
-/** Whether the page changes from one tab to another. */
-private fun AnimatedContentTransitionScope<NavBackStackEntry>.switchesTab(): Boolean {
+/**
+ * Whether the page changes from one tab to another: from one tab's page to another's, or,
+ * [forward], from a page pushed on a tab to another tab, as a place's page to the map.
+ */
+private fun AnimatedContentTransitionScope<NavBackStackEntry>.switchesTab(forward: Boolean): Boolean {
     val from = Tab.entries.indexOfFirst { initialState.destination.hasRoute(it.type) }
     val to = Tab.entries.indexOfFirst { targetState.destination.hasRoute(it.type) }
-    return from >= 0 && to >= 0 && from != to
+    return to >= 0 && from != to && (from >= 0 || forward)
 }
 
 // From tab to tab, Material 3's top level transition, a fade through: the tabs' pages are
@@ -694,8 +754,20 @@ private val FADE_THROUGH_IN = fadeIn(tween(FADE_THROUGH_IN_MS, delayMillis = FAD
 /** Where the app reads from, for what draws without the container at hand, as the map. */
 val LocalSettings = staticCompositionLocalOf<Settings> { error("No settings provided") }
 
-/** What a Moment's card offers from its menu beyond what it holds itself: editing, when the Moment can be. */
-class MomentActions(val canEdit: (String) -> Boolean, val onEdit: (String) -> Unit)
+/**
+ * What a Moment's card offers from its menu beyond what it holds itself: editing, when the
+ * Moment can be, and going to its places, its trip and its day, read from the app's [places]
+ * and [tripOf].
+ */
+class MomentActions(
+    val canEdit: (String) -> Boolean,
+    val onEdit: (String) -> Unit,
+    val places: () -> Map<String, Place>,
+    val tripOf: (MomentRecord) -> TripRecord?,
+    val onPlace: (String) -> Unit,
+    val onTrip: (String) -> Unit,
+    val onDay: (String) -> Unit,
+)
 
 /** The app's [MomentActions], for the cards of any list; none where the app doesn't give them. */
 val LocalMomentActions = staticCompositionLocalOf<MomentActions?> { null }
@@ -782,6 +854,7 @@ fun routeOf(link: Uri): Any? {
         "new" -> NewMoment
         "edit" -> id?.let(::EditMoment)
         "changes" -> Changes
+        "search" -> Search
         "moment" -> id?.let(::Moment)
         "trip" -> id?.let(::Trip)
         "play" -> id?.let(::TripPlay)

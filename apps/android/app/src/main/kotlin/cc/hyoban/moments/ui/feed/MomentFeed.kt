@@ -140,6 +140,8 @@ fun MomentFeed(
     tab: Any? = null,
     /** The Moment shown in a detail pane beside the feed, marked as chosen. */
     selected: String? = null,
+    /** Opens a day's page from its pill, `YYYY-MM-DD`; the pills stay put without it. */
+    onDay: ((String) -> Unit)? = null,
     leading: FeedLeading.() -> Unit = {},
 ) {
     val days = remember(moments) { moments.groupBy { it.dateKey }.toList() }
@@ -183,7 +185,7 @@ fun MomentFeed(
                                 val (name, year) = formatMonth(here.first().dateKey)
                                 MonthHeader(name, year)
                             } else {
-                                DayPill(dayPillText(dayLabel(group), here.size))
+                                DayPill(dayPillText(dayLabel(group), here.size), group, onDay?.let { { it(group) } })
                             }
                         }
                     }
@@ -214,7 +216,7 @@ fun MomentFeed(
                     stickyHeader(key = "day-$day", contentType = "day") {
                         // Over the cards it is held above, which come after it.
                         Box(Modifier.zIndex(1f).belowListTop(state, "day-$day")) {
-                            DayPill(dayPillText(dayLabel(day), dayMoments.size))
+                            DayPill(dayPillText(dayLabel(day), dayMoments.size), day, onDay?.let { { it(day) } })
                         }
                     }
                     items(dayMoments, key = { it.uid }, contentType = { "moment" }) { moment ->

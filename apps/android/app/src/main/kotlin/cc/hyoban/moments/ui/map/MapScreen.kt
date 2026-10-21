@@ -130,14 +130,29 @@ import cc.hyoban.moments.ui.trips.tripSummary
 import com.materialkolor.ktx.harmonizeWithPrimary
 import kotlinx.coroutines.flow.drop
 
+/** What another page shows on the map tab: a place, with its panel up, or a trip's route, lifted with its card. */
+sealed interface MapFocus {
+    data class Place(val id: String) : MapFocus
+
+    data class Trip(val id: String) : MapFocus
+}
+
 /**
  * The map tab, as the site's map: every place the Moments name, coloured by the year of
  * its first Moment, and every trip's route. Tap a place for its Moments in a panel, from which a map app shows the way there; tap a
- * route to lift it, and its card or the route again to open the trip.
+ * route to lift it, and its card or the route again to open the trip. A place or a trip
+ * shown on it from its page, [focus], is chosen and flown to, then let go with [onFocused].
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MapScreen(container: AppContainer, onMoment: (String) -> Unit, onPlace: (String) -> Unit, onTrip: (String) -> Unit) {
+fun MapScreen(
+    container: AppContainer,
+    onMoment: (String) -> Unit,
+    onPlace: (String) -> Unit,
+    onTrip: (String) -> Unit,
+    focus: MapFocus? = null,
+    onFocused: () -> Unit = {},
+) {
     val moments by container.repository.moments.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
     val trips by container.repository.trips.collectAsStateWithLifecycle()
@@ -161,7 +176,23 @@ fun MapScreen(container: AppContainer, onMoment: (String) -> Unit, onPlace: (Str
     var selected by rememberSaveable { mutableStateOf<String?>(null) }
     var highlighted by rememberSaveable { mutableStateOf<String?>(null) }
 
-    BackHandler(enabled = highlighted != null) { highlighted = null }
+    // A trip shown from its page is lifted from the map's first frame, its card already up for
+    // the page to shrink into, as going back from the trip into its card does.
+    val lifted = (focus as? MapFocus.Trip)?.id ?: highlighted
+    BackHandler(enabled = lifted != null) { highlighted = null }
+    LaunchedEffect(focus) {
+        when (focus) {
+            is MapFocus.Place -> {
+                highlighted = null
+                selected = focus.id
+            }
+            is MapFocus.Trip -> {
+                selected = null
+                highlighted = focus.id
+            }
+            null -> Unit
+        }
+    }
 
     // Locating: each request asks for the place once more; a ring turns while it waits.
     val context = LocalContext.current
@@ -214,7 +245,7 @@ fun MapScreen(container: AppContainer, onMoment: (String) -> Unit, onPlace: (Str
             colors,
             mapRoutes,
             selected,
-            highlighted,
+            lifted,
             onPlace = { selected = it },
             onRoute = { highlighted = it },
             // A tap on nothing closes the place panel.
@@ -225,6 +256,8 @@ fun MapScreen(container: AppContainer, onMoment: (String) -> Unit, onPlace: (Str
             north = north,
             onBearing = { bearing = it },
             tab = Atlas,
+            focus = focus,
+            onFocused = onFocused,
             onLocated = { found ->
                 locating = false
                 if (!found) show(context.getString(R.string.error_location))
@@ -248,7 +281,7 @@ fun MapScreen(container: AppContainer, onMoment: (String) -> Unit, onPlace: (Str
             if (colors.isNotEmpty()) Legend(colors, trips = mapRoutes.isNotEmpty())
         }
 
-        val trip = trips.firstOrNull { it.id == highlighted }
+        val trip = trips.firstOrNull { it.id == lifted }
         // Turned some way from north, by more than a nudge.
         val turned = bearing.let { minOf(it, 360 - it) } > 0.5
         // While the map is turned, the compass: upright above the floating action button, and

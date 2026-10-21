@@ -41,6 +41,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -53,6 +54,7 @@ import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.MediaStill
 import cc.hyoban.moments.ui.components.SectionHeader
 import cc.hyoban.moments.ui.components.SubPage
+import cc.hyoban.moments.ui.components.Symbols
 import cc.hyoban.moments.ui.components.Tooltip
 import cc.hyoban.moments.ui.components.kindLabel
 import cc.hyoban.moments.ui.components.landscape
@@ -79,6 +81,8 @@ fun TripScreen(
     onMoment: (String) -> Unit,
     onPlay: (String) -> Unit,
     onBack: () -> Unit,
+    onDay: (String) -> Unit = {},
+    onMap: (String) -> Unit = {},
 ) {
     val trips by container.repository.trips.collectAsStateWithLifecycle()
     val all by container.repository.moments.collectAsStateWithLifecycle()
@@ -137,10 +141,18 @@ fun TripScreen(
             }
         }
     }
-    // The route as a card of its own, headed like the photo panel's sections.
+    // The route as a card of its own, headed like the photo panel's sections; tapped, the
+    // route on the map tab, lifted among the others.
+    val showOnMap = stringResource(R.string.action_show_on_map)
     val routeCard: @Composable (Modifier, Modifier) -> Unit = { modifier, mapModifier ->
         val level = LocalSurfaceLevel.current.raised
-        Surface(shape = MaterialTheme.shapes.large, color = level.fill(), modifier = modifier.padding(horizontal = Space.gutter).fillMaxWidth()) {
+        Surface(
+            onClick = { onMap(trip.id) },
+            shape = MaterialTheme.shapes.large,
+            color = level.fill(),
+            modifier = modifier.padding(horizontal = Space.gutter).fillMaxWidth()
+                .semantics { onClick(label = showOnMap) { onMap(trip.id); true } }.testTag("trip_route"),
+        ) {
             Column(Modifier.padding(Space.m), verticalArrangement = Arrangement.spacedBy(Space.m)) {
                 SectionHeader(Icons.Rounded.Route, stringResource(R.string.section_route))
                 // The map's corners the card's less its padding, so the two look as round.
@@ -152,6 +164,11 @@ fun TripScreen(
     // The page is the trip's card grown to the screen.
     // Played back along its route from the bar, once it has Moments to show.
     val actions: @Composable RowScope.() -> Unit = {
+        Tooltip(showOnMap, below = true) {
+            IconButton(onClick = { onMap(trip.id) }, modifier = Modifier.testTag("show_on_map")) {
+                Icon(Symbols.MapOutlined, contentDescription = showOnMap)
+            }
+        }
         if (moments.isNotEmpty()) {
             val play = stringResource(R.string.action_play_trip)
             Tooltip(play, below = true) {
@@ -185,6 +202,7 @@ fun TripScreen(
                         months = false,
                         dayLabel = dayLabel,
                         showTrip = false,
+                        onDay = onDay,
                     ) {
                         item(key = "summary") { summary() }
                         if (photos.isNotEmpty()) item(key = "photos") { photoCarousel(2) }
@@ -201,6 +219,7 @@ fun TripScreen(
                     months = false,
                     dayLabel = dayLabel,
                     showTrip = false,
+                    onDay = onDay,
                 ) {
                     item(key = "summary") { summary() }
                     if (photos.isNotEmpty()) item(key = "photos") { photoCarousel(4) }

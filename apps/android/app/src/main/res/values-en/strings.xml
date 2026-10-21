@@ -274,6 +274,7 @@
     <string name="action_undo">Undo</string>
     <string name="error_empty_moment">Write something, or add a photo</string>
     <string name="label_whole_day">Everything from that day</string>
+    <string name="action_show_on_map">Show on map</string>
     <string name="source_saved">As saved</string>
     <string name="share_as_moment">Write a Moment</string>
     <string name="error_shared_photos">Some photos couldn’t be read</string>

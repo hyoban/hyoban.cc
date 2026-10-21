@@ -175,6 +175,7 @@ fun MediaViewer(
     onTrip: (String) -> Unit,
     onBack: () -> Unit,
     onShown: (String) -> Unit = {},
+    onDay: (String) -> Unit = {},
 ) {
     val moments by container.repository.moments.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
@@ -363,6 +364,7 @@ fun MediaViewer(
                 onMoment = { info = false; onMoment(moment.uid) },
                 onPlace = { info = false; onPlace(it) },
                 onTrip = { info = false; onTrip(it) },
+                onDay = { info = false; onDay(it) },
                 modifier = modifier,
             )
         }
@@ -635,6 +637,7 @@ private fun InfoContent(
     onMoment: () -> Unit,
     onPlace: (String) -> Unit,
     onTrip: (String) -> Unit,
+    onDay: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val trips by container.repository.trips.collectAsStateWithLifecycle()
@@ -646,7 +649,13 @@ private fun InfoContent(
         modifier.verticalScroll(rememberScrollState()).padding(start = Space.gutter, end = Space.gutter, bottom = Space.xl),
         verticalArrangement = Arrangement.spacedBy(Space.m),
     ) {
-        Column(Modifier.padding(horizontal = Space.xs), verticalArrangement = Arrangement.spacedBy(Space.xxs)) {
+        // When it was, tapped for the rest of its day.
+        Column(
+            Modifier.clip(MaterialTheme.shapes.medium)
+                .clickable(onClickLabel = stringResource(R.string.label_whole_day)) { onDay(moment.dateKey) }
+                .padding(horizontal = Space.xs).testTag("info_day"),
+            verticalArrangement = Arrangement.spacedBy(Space.xxs),
+        ) {
             Text(formatDay(moment.occurredAt), style = MaterialTheme.typography.headlineSmall)
             formatTime(moment.occurredAt)?.let {
                 Text(it, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)

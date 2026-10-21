@@ -2,6 +2,7 @@ package cc.hyoban.moments.ui.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Card
@@ -35,16 +37,24 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.isSecondaryPressed
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import cc.hyoban.moments.R
 import cc.hyoban.moments.ui.theme.Corners
 import cc.hyoban.moments.ui.theme.Elevation
 import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
@@ -181,22 +191,44 @@ fun MonthHeader(month: String, year: String?) {
     }
 }
 
-/** A day over its Moments, floating over them as they scroll: the floating level, with a shadow. */
+/**
+ * A day over its Moments, floating over them as they scroll: the floating level, with a shadow.
+ * With [onClick], tapped it opens the day, growing into its page from [date]'s card.
+ */
 @Composable
-fun DayPill(text: String) {
+fun DayPill(text: String, date: String? = null, onClick: (() -> Unit)? = null) {
     Box(Modifier.fillMaxWidth().padding(horizontal = Space.gutter, vertical = Space.s).semantics(mergeDescendants = true) { heading() }) {
+        val open = if (onClick != null && date != null) {
+            Modifier.sharedCard(dayCardKey(date), cardCorner = PILL_CORNER, relayout = true).clip(PillShape)
+                .clickable(onClickLabel = stringResource(R.string.label_whole_day), onClick = onClick).testTag("day_pill_$date")
+        } else {
+            Modifier
+        }
         Surface(
-            shape = Corners.full,
+            shape = PillShape,
             color = SurfaceLevel.Floating.fill(),
             contentColor = MaterialTheme.colorScheme.onSurface,
             shadowElevation = Elevation.level2,
+            modifier = open,
         ) {
             Text(
                 text,
                 style = MaterialTheme.typography.labelLarge,
+                // One line, so springing past its width as it shrinks back from the day's page
+                // doesn't wrap its last word away for a moment.
+                softWrap = false,
                 // At least its own height, taller with larger text rather than cutting it.
                 modifier = Modifier.heightIn(min = 32.dp).wrapContentHeight(Alignment.CenterVertically).padding(horizontal = Space.l, vertical = Space.xs),
             )
         }
     }
+}
+
+/** How round a day's pill is at most: fully at its own height, a rounded page as it grows into one. */
+private val PILL_CORNER = 32.dp
+
+/** A pill's shape, round at its ends, but no rounder than [PILL_CORNER], so grown it is no oval. */
+private val PillShape = object : Shape {
+    override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline =
+        RoundedCornerShape(minOf(size.height / 2, with(density) { PILL_CORNER.toPx() })).createOutline(size, layoutDirection, density)
 }

@@ -261,6 +261,7 @@
     <string name="action_undo">撤销</string>
     <string name="error_empty_moment">写点什么，或者加一张照片</string>
     <string name="label_whole_day">这一天的全部时刻</string>
+    <string name="action_show_on_map">在地图上查看</string>
     <string name="source_saved">保存时的</string>
     <string name="share_as_moment">写一个时刻</string>
     <string name="error_shared_photos">有的照片没能读取</string>

@@ -16,7 +16,9 @@ import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.OpenInNew
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.Cloud
+import androidx.compose.material.icons.rounded.CloudUpload
 import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.Image
 import androidx.compose.material.icons.rounded.Key
@@ -47,12 +49,14 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.R
 import cc.hyoban.moments.Setting
@@ -69,7 +73,7 @@ import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 
 /** Where the app reads from: the API, the photos' origin and the map's styles, each back to the build's own on a tap. */
 @Composable
-fun SettingsScreen(container: AppContainer, onBack: () -> Unit) {
+fun SettingsScreen(container: AppContainer, onBack: () -> Unit, onChanges: () -> Unit = {}) {
     val settings = container.settings
     // The setting whose dialog is open, by its place in the list, so it stays open across a rotation.
     var editing by rememberSaveable { mutableStateOf<Int?>(null) }
@@ -94,7 +98,9 @@ fun SettingsScreen(container: AppContainer, onBack: () -> Unit) {
                 ThemeSettings(settings)
                 LanguageSettings()
                 Section(stringResource(R.string.section_sources), rows.subList(0, 2), 0, stringResource(R.string.settings_api_note)) { editing = it }
-                Group(stringResource(R.string.section_publishing), stringResource(R.string.settings_token_note)) {
+                // The token, and while changes wait on the phone, the way to them, as from the Moments' header.
+                val pending by container.repository.pending.collectAsStateWithLifecycle()
+                val token: @Composable () -> Unit = {
                     ListItem(
                         headlineContent = { Text(stringResource(R.string.setting_api_token)) },
                         supportingContent = { Text(stringResource(if (settings.apiToken.isSet) R.string.token_set else R.string.token_unset)) },
@@ -103,6 +109,21 @@ fun SettingsScreen(container: AppContainer, onBack: () -> Unit) {
                         modifier = Modifier.clickable { editingToken = true }.testTag("api_token"),
                     )
                 }
+                val changes: @Composable () -> Unit = {
+                    ListItem(
+                        headlineContent = { Text(stringResource(R.string.title_changes)) },
+                        supportingContent = { Text(pluralStringResource(R.plurals.count_changes, pending.size, pending.size)) },
+                        leadingContent = { Icon(Icons.Rounded.CloudUpload, contentDescription = null) },
+                        trailingContent = { Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null) },
+                        colors = rowColors(),
+                        modifier = Modifier.clickable(onClick = onChanges).testTag("settings_changes"),
+                    )
+                }
+                SegmentedGroup(
+                    stringResource(R.string.section_publishing),
+                    stringResource(R.string.settings_token_note),
+                    if (pending.size == 0) listOf(token) else listOf(token, changes),
+                )
                 Section(stringResource(R.string.section_map), rows.subList(2, 4), 2, stringResource(R.string.settings_map_note)) { editing = it }
                 Credits()
             }
