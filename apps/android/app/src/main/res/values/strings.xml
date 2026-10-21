@@ -325,4 +325,27 @@
     <string name="reason_unreachable">连不上网站，检查网络连接</string>
     <string name="reason_unreadable">读不懂网站返回的内容</string>
     <string name="reason_unknown">发生了意外错误</string>
+
+    <string name="share_assist_enable_service">开启分享助手无障碍服务</string>
+    <string name="share_assist_service_description">只在你从「这里」发起辅助分享时，读取此次目标应用的分享界面并执行适配步骤。完成填写后停在发送前，不保存聊天内容。目前支持 Telegram 和 Threads 照片分享，40 秒内未完成就停止。</string>
+    <string name="share_assist_photos_only">此次没有选择照片，将使用普通文字分享。</string>
+    <string name="share_assist_cancel">停止自动填写</string>
+    <string name="share_assist_service_required">请先开启无障碍服务，或关闭分享助手以手动分享</string>
+    <string name="share_assist_service_label">分享助手（试用）</string>
+    <string name="telegram_assist_label">Telegram 分享助手（试用）</string>
+    <string name="telegram_assist_note">自动搜索并选择下方用户名，核对目标和照片数量后填写说明，停在发送前。仅在你打开此次分享后运行；也可以关闭此选项，继续手动分享。</string>
+    <string name="telegram_assist_target">目标 @用户名或 t.me 链接</string>
+    <string name="telegram_assist_running">正在 Telegram 中选择目标并填写说明…</string>
+    <string name="telegram_assist_ready">已选择目标并填写说明，请在 Telegram 检查后手动发送</string>
+    <string name="telegram_assist_stopped">自动填写已停止，请在 Telegram 手动检查目标和说明；不会自动重试</string>
+    <string name="telegram_assist_invalid_target">请输入完整的公开用户名，例如 @username 或 https://t.me/username</string>
+    <string name="telegram_assist_version">分享助手目前适配 Telegram 13.1.0；其他版本请关闭助手，手动分享</string>
+    <string name="telegram_assist_open">打开 Telegram 并自动填写</string>
+    <string name="threads_assist_label">Threads 分享助手（试用）</string>
+    <string name="threads_assist_note">保留分享带入的照片，自动填写正文，停在发布前。请手动检查图文；如出现分享选项，请手动选择发布入口。已有不同正文、页面不匹配或 40 秒内未完成时会停止，可关闭助手手动分享。</string>
+    <string name="threads_assist_running">正在 Threads 中填写正文…</string>
+    <string name="threads_assist_ready">正文已填写，请在 Threads 检查图文后手动发布</string>
+    <string name="threads_assist_stopped">自动填写已停止，请在 Threads 手动检查照片和正文；已有草稿不会被覆盖，也不会自动重试</string>
+    <string name="threads_assist_version">分享助手目前适配 Threads 452.0.0.50.64；其他版本请关闭助手，手动分享</string>
+    <string name="threads_assist_open">打开 Threads 并自动填写</string>
 </resources>

@@ -339,4 +339,27 @@
     <string name="reason_unreachable">the site can’t be reached. Check your connection</string>
     <string name="reason_unreadable">the site’s answer couldn’t be read</string>
     <string name="reason_unknown">something unexpected went wrong</string>
+
+    <string name="share_assist_enable_service">Enable share assistant accessibility service</string>
+    <string name="share_assist_service_description">Only during an assisted share started in Here, reads the target app and runs its adapted steps. Stops before sending and does not store chat content. Currently supports Telegram and Threads photo shares, stopping after 40 seconds if unfinished.</string>
+    <string name="share_assist_photos_only">No photos selected. This will use ordinary text sharing.</string>
+    <string name="share_assist_cancel">Stop assistant</string>
+    <string name="share_assist_service_required">Enable the accessibility service first, or turn off the assistant to share manually.</string>
+    <string name="share_assist_service_label">Share assistant (experimental)</string>
+    <string name="telegram_assist_label">Telegram share assistant (experimental)</string>
+    <string name="telegram_assist_note">Search for the username below, select it, check the recipient and photo count, and fill the caption. Stops before sending. Runs only when you open this share; turn it off to share manually.</string>
+    <string name="telegram_assist_target">Target @username or t.me link</string>
+    <string name="telegram_assist_running">Selecting the Telegram recipient and filling the caption…</string>
+    <string name="telegram_assist_ready">Recipient and caption ready. Review in Telegram and send manually.</string>
+    <string name="telegram_assist_stopped">Assistant stopped. Check the recipient and caption manually in Telegram. It will not retry automatically.</string>
+    <string name="telegram_assist_invalid_target">Enter a public username, such as @username or https://t.me/username.</string>
+    <string name="telegram_assist_version">The assistant currently supports Telegram 13.1.0. Turn it off to share manually with another version.</string>
+    <string name="telegram_assist_open">Open Telegram and fill caption</string>
+    <string name="threads_assist_label">Threads share assistant (experimental)</string>
+    <string name="threads_assist_note">Keeps the shared photos and fills the body, stopping before Post. Review text and photos manually. If share options appear, choose the composer manually. Stops on a different draft, an unknown page, or after 40 seconds. Turn it off to share manually.</string>
+    <string name="threads_assist_running">Filling the Threads composer…</string>
+    <string name="threads_assist_ready">Text filled. Review text and photos in Threads and post manually.</string>
+    <string name="threads_assist_stopped">Assistant stopped. Check photos and text manually in Threads. Existing drafts are preserved and there is no automatic retry.</string>
+    <string name="threads_assist_version">The assistant currently supports Threads 452.0.0.50.64. Turn it off to share manually with another version.</string>
+    <string name="threads_assist_open">Open Threads and fill text</string>
 </resources>
