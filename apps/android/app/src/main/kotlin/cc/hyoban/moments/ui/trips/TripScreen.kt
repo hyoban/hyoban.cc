@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -19,6 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowDownward
+import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Route
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -75,6 +77,7 @@ fun TripScreen(
     container: AppContainer,
     id: String,
     onMoment: (String) -> Unit,
+    onPlay: (String) -> Unit,
     onBack: () -> Unit,
 ) {
     val trips by container.repository.trips.collectAsStateWithLifecycle()
@@ -147,7 +150,18 @@ fun TripScreen(
     }
 
     // The page is the trip's card grown to the screen.
-    SubPage(trip.title, onBack, Modifier.sharedCard(tripCardKey(id), page = true).background(AppColors.page)) {
+    // Played back along its route from the bar, once it has Moments to show.
+    val actions: @Composable RowScope.() -> Unit = {
+        if (moments.isNotEmpty()) {
+            val play = stringResource(R.string.action_play_trip)
+            Tooltip(play, below = true) {
+                IconButton(onClick = { onPlay(trip.id) }, modifier = Modifier.testTag("play_trip")) {
+                    Icon(Icons.Rounded.PlayArrow, contentDescription = play)
+                }
+            }
+        }
+    }
+    SubPage(trip.title, onBack, Modifier.sharedCard(tripCardKey(id), page = true).background(AppColors.page), actions = actions) {
         BoxWithConstraints(Modifier.fillMaxSize()) {
             if (landscape) {
                 // On its side, the route stays on the start side, as tall as the space under

@@ -219,7 +219,7 @@ private fun quietRoads(style: Style) {
  * [interactive], it takes no touches, so a list around it still scrolls.
  */
 @Composable
-private fun MapLibreView(
+internal fun MapLibreView(
     modifier: Modifier,
     interactive: Boolean,
     attributionPadding: IntArray? = null,
@@ -339,7 +339,7 @@ private fun absoluteEdges(left: Dp, top: Dp, right: Dp, bottom: Dp): IntArray = 
 
 /** Pixels from each edge (left, top, right, bottom). */
 @Composable
-private fun edges(start: Dp, top: Dp, end: Dp, bottom: Dp): IntArray =
+internal fun edges(start: Dp, top: Dp, end: Dp, bottom: Dp): IntArray =
     if (LocalLayoutDirection.current == LayoutDirection.Ltr) absoluteEdges(start, top, end, bottom) else absoluteEdges(end, top, start, bottom)
 
 /** A place on the map: how many Moments it has, and the year of its first, which colours it. */
@@ -406,7 +406,7 @@ private fun yearColor(colors: Map<Int, Color>, unknown: Int): Expression {
 }
 
 /** The first layer of the basemap's labels, which the routes go under. */
-private fun Style.labelsLayer(): String? = layers.firstOrNull { it is SymbolLayer }?.id
+internal fun Style.labelsLayer(): String? = layers.firstOrNull { it is SymbolLayer }?.id
 
 /**
  * The places the Moments name, coloured by the year of their first Moment, and the
