@@ -31,7 +31,6 @@ import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.zIndex
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -102,7 +101,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.R
@@ -145,7 +143,6 @@ import java.io.File
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.launch
@@ -282,35 +279,11 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
             pickPhotos()
         }
     }
-    // A photo taken now, by the phone's camera app, written to a file of the app's that it is
-    // lent; the camera puts the time in it, and where, if it is let know where it is. Kept
-    // across the camera app's time in front, in case the app is stopped meanwhile.
-    var shot by rememberSaveable { mutableStateOf<String?>(null) }
-    val camera = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { taken ->
-        val file = shot?.let(::File)
-        shot = null
-        if (file == null) return@rememberLauncherForActivityResult
-        if (taken && file.length() > 0) {
-            photos = (photos + Uri.fromFile(file)).distinct().take(MAX_PHOTOS)
-        } else {
-            file.delete()
-        }
-    }
-    val takePhoto: () -> Unit = {
-        val file = File(File(context.cacheDir, CAMERA_DIRECTORY).apply { mkdirs() }, "${Ulid.next()}.jpg")
-        shot = file.path
-        runCatching { camera.launch(FileProvider.getUriForFile(context, "${context.packageName}.share", file)) }
-            .onFailure { shot = null; saveError = context.getString(R.string.error_no_camera) }
-    }
-    // Held, the tile opens the camera app itself, with all it can do; what it takes goes to
+    // The tile opens the phone's camera app itself, with all it can do; what it takes goes to
     // the gallery, to be added from there.
     val openCamera: () -> Unit = {
         runCatching { context.startActivity(Intent(MediaStore.INTENT_ACTION_STILL_IMAGE_CAMERA)) }
             .onFailure { saveError = context.getString(R.string.error_no_camera) }
-    }
-    // Photos taken on an earlier visit are in the Moments they were saved to by now, or were left.
-    LaunchedEffect(Unit) {
-        if (shot == null) withContext(Dispatchers.IO) { File(context.cacheDir, CAMERA_DIRECTORY).listFiles()?.forEach { it.delete() } }
     }
 
     val written = text.isNotBlank() || photos.isNotEmpty()
@@ -413,7 +386,6 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
                         PhotoStrip(
                             photos,
                             onAdd = addPhotos,
-                            onTake = takePhoto,
                             onOpenCamera = openCamera,
                             onRemove = { removed -> photos = photos - removed },
                             onMove = { from, to -> photos = photos.toMutableList().apply { add(to, removeAt(from)) } },
@@ -549,13 +521,13 @@ private fun sharedChoice(place: SharedPlace, places: Map<String, Place>): PlaceC
 
 /**
  * The photos picked, in a row, each with a button to take it out, and tiles to pick more
- * or take one with the camera, or, held, open the camera app.
+ * or open the camera app to take one.
  * The first is the Moment's cover, so they are put in order as Material 3 has content
  * reordered: held and then dragged, the one held lifted under the finger and the others
  * stepping aside; a screen reader moves one earlier or later instead.
  */
 @Composable
-private fun PhotoStrip(photos: List<Uri>, onAdd: () -> Unit, onTake: () -> Unit, onOpenCamera: () -> Unit, onRemove: (Uri) -> Unit, onMove: (Int, Int) -> Unit) {
+private fun PhotoStrip(photos: List<Uri>, onAdd: () -> Unit, onOpenCamera: () -> Unit, onRemove: (Uri) -> Unit, onMove: (Int, Int) -> Unit) {
     val list = rememberLazyListState()
     val haptics = LocalHapticFeedback.current
     val currentMove by rememberUpdatedState(onMove)
@@ -583,7 +555,7 @@ private fun PhotoStrip(photos: List<Uri>, onAdd: () -> Unit, onTake: () -> Unit,
         val items = list.layoutInfo.visibleItemsInfo
         val current = items.firstOrNull { it.key == key } ?: return@drag
         val middle = (current.offset + current.size / 2 + offset).toInt()
-        val target = items.firstOrNull { it.key != key && it.key != ADD_KEY && it.key != TAKE_KEY && middle in it.offset until it.offset + it.size } ?: return@drag
+        val target = items.firstOrNull { it.key != key && it.key != ADD_KEY && it.key != CAMERA_KEY && middle in it.offset until it.offset + it.size } ?: return@drag
         // The row keeps its place by its first item, which may be the one moving.
         val first = list.firstVisibleItemIndex to list.firstVisibleItemScrollOffset
         currentMove(current.index, target.index)
@@ -672,45 +644,20 @@ private fun PhotoStrip(photos: List<Uri>, onAdd: () -> Unit, onTake: () -> Unit,
             item(key = ADD_KEY) {
                 AddTile(Icons.Rounded.AddPhotoAlternate, stringResource(R.string.action_add_photos), onAdd, Modifier.animateItem().testTag("add_photos"))
             }
-            item(key = TAKE_KEY) {
-                AddTile(
-                    Icons.Rounded.PhotoCamera,
-                    stringResource(R.string.action_take_photo),
-                    onTake,
-                    Modifier.animateItem().testTag("take_photo"),
-                    onLongClick = onOpenCamera,
-                    longClickLabel = stringResource(R.string.action_open_camera),
-                )
+            item(key = CAMERA_KEY) {
+                AddTile(Icons.Rounded.PhotoCamera, stringResource(R.string.action_open_camera), onOpenCamera, Modifier.animateItem().testTag("open_camera"))
             }
         }
     }
 }
 
-/** A tile at the end of the photos that adds more to them, and may do something else held. */
+/** A tile at the end of the photos that adds more to them. */
 @Composable
-private fun AddTile(
-    icon: ImageVector,
-    label: String,
-    onClick: () -> Unit,
-    modifier: Modifier,
-    onLongClick: (() -> Unit)? = null,
-    longClickLabel: String? = null,
-) {
-    val haptics = LocalHapticFeedback.current
+private fun AddTile(icon: ImageVector, label: String, onClick: () -> Unit, modifier: Modifier) {
     Box(
         modifier.size(PHOTO_SIZE).clip(MaterialTheme.shapes.medium)
             .background(MaterialTheme.colorScheme.surfaceContainerHighest)
-            .combinedClickable(
-                onClick = onClick,
-                role = Role.Button,
-                onLongClick = onLongClick?.let { held ->
-                    {
-                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        held()
-                    }
-                },
-                onLongClickLabel = longClickLabel,
-            ),
+            .clickable(role = Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         Icon(icon, contentDescription = label, tint = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -832,9 +779,7 @@ private val PHOTO_SIZE = 96.dp
 private val REMOVE_TARGET = 48.dp
 private val REMOVE_DOT = 28.dp
 private const val ADD_KEY = "add"
-private const val TAKE_KEY = "take"
-/** Where in the cache the camera app writes a photo taken for a Moment. */
-private const val CAMERA_DIRECTORY = "camera"
+private const val CAMERA_KEY = "camera"
 /** How much a photo held to move grows, and Material 3's dragged state layer over it. */
 private const val LIFTED_SCALE = 1.06f
 private const val DRAGGED_LAYER = 0.16f

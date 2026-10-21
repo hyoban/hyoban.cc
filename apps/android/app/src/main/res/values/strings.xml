@@ -225,7 +225,6 @@
     <string name="action_save">保存</string>
     <string name="hint_moment_text">这一刻…</string>
     <string name="action_add_photos">添加照片</string>
-    <string name="action_take_photo">拍照</string>
     <string name="action_open_camera">打开相机</string>
     <string name="action_remove_photo">移除照片</string>
     <string name="action_move_earlier">往前移</string>
