@@ -63,6 +63,16 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.requiredSize
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.ListItem
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import cc.hyoban.moments.Settings
 import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.R
 import cc.hyoban.moments.Setting
@@ -203,25 +213,35 @@ private fun SettingRow(row: Row, shapes: ListItemShapes, onClick: () -> Unit) {
     ) { Text(stringResource(row.title)) }
 }
 
-/** FlClash, whose design the app's is after, opening its repository on a tap. */
+/** 馒头, the cat the icon is drawn from, shown as on the icon; then FlClash, whose design the app's is after, opening its repository on a tap. */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun Credits() {
     val uri = LocalUriHandler.current
-    SegmentedGroup(
-        stringResource(R.string.section_credits),
-        null,
-        listOf { shapes ->
-            SegmentedListItem(
-                onClick = { uri.openUri(FLCLASH) },
-                shapes = shapes,
-                colors = segmentColors(),
-                supportingContent = { Text(stringResource(R.string.credit_flclash_note)) },
-                leadingContent = { Icon(Icons.Rounded.Palette, contentDescription = null) },
-                trailingContent = { Icon(Icons.AutoMirrored.Rounded.OpenInNew, contentDescription = null) },
-            ) { Text("FlClash") }
-        },
-    )
+    val mantou = boxed {
+        ListItem(
+            headlineContent = { Text(stringResource(R.string.credit_mantou)) },
+            supportingContent = { Text(stringResource(R.string.credit_mantou_note)) },
+            leadingContent = {
+                // The icon's two layers in a circle, the foreground at its full 108dp to the 72dp shown.
+                Box(Modifier.size(40.dp).clip(CircleShape).background(Color(Settings.DEFAULT_THEME_COLOR)), contentAlignment = Alignment.Center) {
+                    Image(painterResource(R.drawable.ic_launcher_foreground), contentDescription = null, Modifier.requiredSize(60.dp))
+                }
+            },
+            colors = rowColors(),
+        )
+    }
+    val flclash: Segment = { shapes ->
+        SegmentedListItem(
+            onClick = { uri.openUri(FLCLASH) },
+            shapes = shapes,
+            colors = segmentColors(),
+            supportingContent = { Text(stringResource(R.string.credit_flclash_note)) },
+            leadingContent = { Icon(Icons.Rounded.Palette, contentDescription = null) },
+            trailingContent = { Icon(Icons.AutoMirrored.Rounded.OpenInNew, contentDescription = null) },
+        ) { Text("FlClash") }
+    }
+    SegmentedGroup(stringResource(R.string.section_credits), null, listOf(mantou, flclash))
 }
 
 private const val FLCLASH = "https://github.com/chen08209/FlClash"
