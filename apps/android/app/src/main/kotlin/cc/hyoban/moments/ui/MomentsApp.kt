@@ -2,7 +2,6 @@ package cc.hyoban.moments.ui
 
 import android.content.Intent
 import android.net.Uri
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedContent
@@ -94,7 +93,6 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import androidx.core.util.Consumer
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
@@ -160,6 +158,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
@@ -436,9 +435,9 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
     // A link opened while the app is already open, `adb shell am start -d moments://…` among
     // them, goes to its page over the one shown; the viewer, if open, closes first. Its task
     // flags are dropped, as they would have the navigation start the whole task again.
-    val activity = LocalActivity.current as? ComponentActivity
-    DisposableEffect(activity, navController) {
-        val listener = Consumer<Intent> { intent ->
+    val activity = LocalActivity.current as? MainActivity
+    LaunchedEffect(activity, navController) {
+        activity?.newIntents?.receiveAsFlow()?.collect { intent ->
             if (intent.action == MainActivity.ACTION_NEW_MOMENT) {
                 // A place shared in goes to the Moment being written, or a new one.
                 viewer = null
@@ -451,8 +450,6 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                 navController.handleDeepLink(Intent(intent).setFlags(0))
             }
         }
-        activity?.addOnNewIntentListener(listener)
-        onDispose { activity?.removeOnNewIntentListener(listener) }
     }
 
     // A Surface rather than a bare background, so text without a colour of its own takes the page's on-colour in both modes.
