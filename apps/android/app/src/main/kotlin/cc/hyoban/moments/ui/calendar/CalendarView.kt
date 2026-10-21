@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
@@ -84,7 +83,7 @@ private fun monthsOf(moments: List<MomentRecord>): List<CalendarMonth> {
 }
 
 /**
- * The calendar, as a list under [leading] (the page's header): [onDay] gets the date
+ * The calendar, as a list: [onDay] gets the date
  * tapped, as `YYYY-MM-DD`, and the Moments that day.
  */
 @Composable
@@ -96,7 +95,6 @@ fun CalendarView(
     state: LazyListState = rememberLazyListState(),
     /** The tab the calendar is on, which, tapped again while shown, takes it back to its top. */
     tab: Any? = null,
-    leading: LazyListScope.() -> Unit = {},
 ) {
     val months = remember(moments) { monthsOf(moments) }
     val today = remember { LocalDate.now() }
@@ -108,7 +106,6 @@ fun CalendarView(
             state = state,
             contentPadding = PaddingValues(start = columns.margin, end = columns.margin, bottom = LocalFabClearance.current + LocalBottomClearance.current + Space.xl),
         ) {
-            leading()
             if (columns.count > 1) {
                 // Where the width allows, months side by side, each whole, so a month's
                 // days fit the height of a phone on its side.

@@ -13,7 +13,8 @@ import androidx.compose.ui.Modifier
 /**
  * Names an icon-only button on a long press, as Material 3's plain tooltip labels one:
  * above it, or [below] it for a button along the top of the screen. [modifier] places the
- * button among what is around it, its alignment in a box among it.
+ * button among what is around it; an alignment in a box doesn't reach through it, so a
+ * button aligned in one is put in a box of its own that is.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

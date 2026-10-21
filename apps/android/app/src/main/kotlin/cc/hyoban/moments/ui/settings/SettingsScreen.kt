@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.TextObfuscationMode
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.OpenInNew
@@ -19,10 +21,15 @@ import androidx.compose.material.icons.rounded.Image
 import androidx.compose.material.icons.rounded.Key
 import androidx.compose.material.icons.rounded.LightMode
 import androidx.compose.material.icons.rounded.Palette
+import androidx.compose.material.icons.rounded.Visibility
+import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedSecureTextField
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -43,7 +50,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import cc.hyoban.moments.AppContainer
@@ -53,6 +59,7 @@ import cc.hyoban.moments.Token
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.PageWidth
 import cc.hyoban.moments.ui.components.SubPage
+import cc.hyoban.moments.ui.components.Tooltip
 import cc.hyoban.moments.ui.theme.Space
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 
@@ -168,8 +175,9 @@ private const val FLCLASH = "https://github.com/chen08209/FlClash"
 private fun valid(text: String) = text.isBlank() || Setting.normalize(text).toHttpUrlOrNull() != null
 
 /**
- * A setting's address to change, the whole of it selected to type over. Reset while it
- * differs from the build's own, which saves that at once; cancel once it is that.
+ * A setting's address to change, the whole of it selected to type over; cancel and confirm
+ * at its foot, as Material 3 always gives a dialog a way out, and under the field, while
+ * it differs from the build's own, putting that back, which saves it at once.
  */
 @Composable
 private fun AddressDialog(setting: Setting, title: String, onDismiss: () -> Unit, onSave: (String) -> Unit) {
@@ -194,28 +202,29 @@ private fun AddressDialog(setting: Setting, title: String, onDismiss: () -> Unit
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Done),
                     modifier = Modifier.fillMaxWidth().focusRequester(focus),
                 )
+                if (Setting.normalize(field.text) != setting.default) {
+                    TextButton(onClick = { onSave(setting.default) }, modifier = Modifier.testTag("restore_default")) {
+                        Text(stringResource(R.string.action_restore_default))
+                    }
+                }
             }
         },
         confirmButton = {
             TextButton(onClick = { onSave(field.text) }, enabled = ok) { Text(stringResource(R.string.action_confirm)) }
         },
-        dismissButton = {
-            if (Setting.normalize(field.text) != setting.default) {
-                TextButton(onClick = { onSave(setting.default) }) { Text(stringResource(R.string.action_restore_default)) }
-            } else {
-                TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
-            }
-        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
     )
 }
 
 /**
- * The API's token to type or paste, shown as dots; one already kept isn't shown again,
- * only replaced or forgotten.
+ * The API's token to type or paste in Material 3's secure text field, its dots shown as
+ * what they are on the eye's tap; one already kept isn't shown again, only replaced, or
+ * forgotten from under the field, in the error colour, as it can't be had back.
  */
 @Composable
 private fun TokenDialog(token: Token, onDismiss: () -> Unit, onSave: (String) -> Unit) {
-    var field by remember { mutableStateOf("") }
+    val field = rememberTextFieldState()
+    var hidden by remember { mutableStateOf(true) }
     val focus = remember { FocusRequester() }
     LaunchedEffect(Unit) { focus.requestFocus() }
 
@@ -223,27 +232,37 @@ private fun TokenDialog(token: Token, onDismiss: () -> Unit, onSave: (String) ->
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.setting_api_token)) },
         text = {
-            OutlinedTextField(
-                value = field,
-                onValueChange = { field = it },
-                placeholder = { Text(stringResource(if (token.isSet) R.string.token_replace else R.string.token_hint)) },
-                singleLine = true,
-                visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
-                modifier = Modifier.fillMaxWidth().focusRequester(focus).testTag("api_token_field"),
-            )
+            Column(verticalArrangement = Arrangement.spacedBy(Space.s)) {
+                OutlinedSecureTextField(
+                    state = field,
+                    placeholder = { Text(stringResource(if (token.isSet) R.string.token_replace else R.string.token_hint)) },
+                    textObfuscationMode = if (hidden) TextObfuscationMode.RevealLastTyped else TextObfuscationMode.Visible,
+                    trailingIcon = {
+                        val label = stringResource(if (hidden) R.string.action_show_token else R.string.action_hide_token)
+                        Tooltip(label) {
+                            IconButton(onClick = { hidden = !hidden }, modifier = Modifier.testTag("api_token_reveal")) {
+                                Icon(if (hidden) Icons.Rounded.Visibility else Icons.Rounded.VisibilityOff, contentDescription = label)
+                            }
+                        }
+                    },
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    modifier = Modifier.fillMaxWidth().focusRequester(focus).testTag("api_token_field"),
+                )
+                if (token.isSet) {
+                    TextButton(
+                        onClick = { onSave("") },
+                        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                        modifier = Modifier.testTag("api_token_forget"),
+                    ) { Text(stringResource(R.string.action_forget_token)) }
+                }
+            }
         },
         confirmButton = {
-            TextButton(onClick = { onSave(field) }, enabled = field.isNotBlank(), modifier = Modifier.testTag("api_token_save")) {
+            val text = field.text.toString()
+            TextButton(onClick = { onSave(text) }, enabled = text.isNotBlank(), modifier = Modifier.testTag("api_token_save")) {
                 Text(stringResource(R.string.action_confirm))
             }
         },
-        dismissButton = {
-            if (token.isSet) {
-                TextButton(onClick = { onSave("") }) { Text(stringResource(R.string.action_forget_token)) }
-            } else {
-                TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
-            }
-        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
     )
 }

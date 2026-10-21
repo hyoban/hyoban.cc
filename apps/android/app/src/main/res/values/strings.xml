@@ -270,4 +270,8 @@
     <string name="label_photo_added">新加的照片</string>
     <string name="label_photo_removed">去掉的照片</string>
     <string name="label_no_words">没有文字</string>
+    <string name="action_show_token">显示令牌</string>
+    <string name="action_hide_token">隐藏令牌</string>
+    <string name="action_delete_color">删除此颜色</string>
+    <string name="message_change_reverted">已放弃这项更改</string>
 </resources>

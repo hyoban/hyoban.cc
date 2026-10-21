@@ -17,19 +17,21 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.ZeroCornerSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.MyLocation
 import androidx.compose.material.icons.rounded.Place
+import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SuggestionChip
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberBottomSheetScaffoldState
+import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -39,7 +41,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -81,6 +85,7 @@ internal sealed interface PlaceChoice {
  * typed; a known place's dot tapped chooses it. A place found in a map app comes in by
  * sharing it to the app instead.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun PlacePicker(
     current: PlaceChoice,
@@ -135,33 +140,72 @@ internal fun PlacePicker(
         }
     }
 
-    Surface(Modifier.fillMaxSize(), color = AppColors.page) {
-        Column(Modifier.fillMaxSize()) {
-            Box(Modifier.weight(1f).fillMaxWidth()) {
-                PickerMap(
-                    places = places,
-                    chosen = (pick as? PlaceChoice.Known)?.id,
-                    target = target,
-                    onCenter = { latitude, longitude, byUser ->
-                        val at = Fix(latitude, longitude)
-                        // Dragged, the pin is a new place where it stands; a new place flown to an address stays one there.
-                        if (byUser || pick is PlaceChoice.New) pick = PlaceChoice.New(name, at)
-                    },
-                    onPlace = choose,
-                    modifier = Modifier.fillMaxSize().testTag("place_map"),
+    // What is chosen in Material 3's standard bottom sheet over the map, as the map's own
+    // place is: as tall as what it holds, held there, the map reaching under its corners and
+    // the pin at the middle of what shows of it.
+    val density = LocalDensity.current
+    var sheetHeight by remember { mutableStateOf(0.dp) }
+    val sheet = rememberBottomSheetScaffoldState(rememberStandardBottomSheetState(skipHiddenState = true))
+    BottomSheetScaffold(
+        scaffoldState = sheet,
+        sheetPeekHeight = sheetHeight,
+        sheetSwipeEnabled = false,
+        sheetDragHandle = null,
+        sheetContainerColor = AppColors.page,
+        sheetShadowElevation = 6.dp,
+        containerColor = AppColors.page,
+        sheetContent = {
+            ChoiceCard(
+                pick = pick,
+                name = name,
+                places = places,
+                landmarks = landmarks,
+                onLandmark = { landmark ->
+                    named = true
+                    name = landmark.name
+                    pick = PlaceChoice.New(landmark.name, landmark.fix)
+                    fly(landmark.fix)
+                },
+                onName = {
+                    named = true
+                    name = it
+                    (pick as? PlaceChoice.New)?.let { new -> pick = new.copy(name = it) }
+                },
+                onKnown = choose,
+                onNone = { onPick(PlaceChoice.None) },
+                onConfirm = { onPick(pick) },
+                modifier = Modifier.onSizeChanged { sheetHeight = with(density) { it.height.toDp() } },
+            )
+        },
+    ) {
+        Box(Modifier.fillMaxSize().padding(bottom = (sheetHeight - SHEET_CORNER).coerceAtLeast(0.dp))) {
+            PickerMap(
+                places = places,
+                chosen = (pick as? PlaceChoice.Known)?.id,
+                target = target,
+                onCenter = { latitude, longitude, byUser ->
+                    val at = Fix(latitude, longitude)
+                    // Dragged, the pin is a new place where it stands; a new place flown to an address stays one there.
+                    if (byUser || pick is PlaceChoice.New) pick = PlaceChoice.New(name, at)
+                },
+                onPlace = choose,
+                modifier = Modifier.fillMaxSize().testTag("place_map"),
+            )
+            // The pin's point at the map's middle; a known place chosen shows as its own dot instead.
+            if (pick !is PlaceChoice.Known) {
+                Icon(
+                    Icons.Rounded.Place,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.align(Alignment.Center).offset(y = -(PIN_SIZE / 2)).size(PIN_SIZE),
                 )
-                // The pin's point at the map's middle; a known place chosen shows as its own dot instead.
-                if (pick !is PlaceChoice.Known) {
-                    Icon(
-                        Icons.Rounded.Place,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.align(Alignment.Center).offset(y = -(PIN_SIZE / 2)).size(PIN_SIZE),
-                    )
-                }
-                FloatingBack(onDismiss, Modifier.align(Alignment.TopStart))
-                val granted = LOCATION_PERMISSIONS.any { ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED }
-                if (granted) {
+            }
+            FloatingBack(onDismiss, Modifier.align(Alignment.TopStart))
+            val granted = LOCATION_PERMISSIONS.any { ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED }
+            if (granted) {
+                // At the map's bottom end, clear of the sheet's corners; a box of its own places
+                // it, as the tooltip's box doesn't pass an alignment on.
+                Box(Modifier.align(Alignment.BottomEnd).padding(bottom = SHEET_CORNER).padding(Space.l)) {
                     Tooltip(stringResource(R.string.action_locate)) {
                         FloatingActionButton(
                             onClick = {
@@ -183,33 +227,13 @@ internal fun PlacePicker(
                             shape = Corners.full,
                             containerColor = SurfaceLevel.floating(LocalDarkTheme.current).fill(),
                             contentColor = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.align(Alignment.BottomEnd).padding(Space.l).testTag("locate"),
+                            modifier = Modifier.testTag("locate"),
                         ) {
                             Icon(Icons.Rounded.MyLocation, contentDescription = stringResource(R.string.action_locate))
                         }
                     }
                 }
             }
-            ChoiceCard(
-                pick = pick,
-                name = name,
-                places = places,
-                landmarks = landmarks,
-                onLandmark = { landmark ->
-                    named = true
-                    name = landmark.name
-                    pick = PlaceChoice.New(landmark.name, landmark.fix)
-                    fly(landmark.fix)
-                },
-                onName = {
-                    named = true
-                    name = it
-                    (pick as? PlaceChoice.New)?.let { new -> pick = new.copy(name = it) }
-                },
-                onKnown = choose,
-                onNone = { onPick(PlaceChoice.None) },
-                onConfirm = { onPick(pick) },
-            )
         }
     }
 }
@@ -226,13 +250,9 @@ private fun ChoiceCard(
     onKnown: (String) -> Unit,
     onNone: () -> Unit,
     onConfirm: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    Surface(
-        shape = MaterialTheme.shapes.extraLarge.copy(bottomStart = ZeroCornerSize, bottomEnd = ZeroCornerSize),
-        color = AppColors.page,
-        shadowElevation = 6.dp,
-        modifier = Modifier.fillMaxWidth(),
-    ) {
+    Box(modifier.fillMaxWidth()) {
         Column(
             Modifier.navigationBarsPadding().imePadding().padding(start = Space.xl, end = Space.xl, top = Space.l, bottom = Space.m),
             verticalArrangement = Arrangement.spacedBy(Space.s),
@@ -320,3 +340,5 @@ internal val LOCATION_PERMISSIONS = arrayOf(Manifest.permission.ACCESS_FINE_LOCA
 private const val LANDMARKS = 8
 private const val KNOWN_NEARBY = 3
 private val PIN_SIZE = 44.dp
+/** How far the map reaches under the sheet: its corners' radius, Material 3's extra large. */
+private val SHEET_CORNER = 28.dp

@@ -279,4 +279,8 @@
     <string name="label_photo_added">Photo added</string>
     <string name="label_photo_removed">Photo removed</string>
     <string name="label_no_words">No words</string>
+    <string name="action_show_token">Show token</string>
+    <string name="action_hide_token">Hide token</string>
+    <string name="action_delete_color">Delete colour</string>
+    <string name="message_change_reverted">Change reverted</string>
 </resources>
