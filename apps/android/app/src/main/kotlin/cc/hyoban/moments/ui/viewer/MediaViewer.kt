@@ -1,8 +1,9 @@
 package cc.hyoban.moments.ui.viewer
 
 import android.app.Activity
-import androidx.activity.compose.BackHandler
+import androidx.activity.compose.PredictiveBackHandler
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.animate
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -85,6 +86,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -130,6 +132,7 @@ import cc.hyoban.moments.ui.components.Tooltip
 import cc.hyoban.moments.ui.components.kindLabel
 import cc.hyoban.moments.ui.components.landscape
 import cc.hyoban.moments.ui.components.mediaKey
+import cc.hyoban.moments.ui.components.rememberPredictiveBack
 import cc.hyoban.moments.ui.components.shapeOf
 import cc.hyoban.moments.ui.components.sharedMedia
 import cc.hyoban.moments.ui.components.sideInsetsPadding
@@ -231,6 +234,18 @@ fun MediaViewer(
         // How far a downward drag has gone toward closing: the photo shrinks a little and
         // the black thins out to the page under the viewer.
         fun progress() = (drag / fadeOver).coerceIn(0f, 1f)
+        // The system's back gesture previews closing as a drag down does, the photo following
+        // the finger; let go, the photo flies back to its tile from there, and called off it settles.
+        val settleSpec = MaterialTheme.motionScheme.fastSpatialSpec<Float>()
+        PredictiveBackHandler(enabled = !(info && landscape)) { events ->
+            try {
+                events.collect { drag = it.progress * fadeOver }
+                onBack()
+            } catch (e: CancellationException) {
+                keyScope.launch { animate(drag, 0f, animationSpec = settleSpec) { value, _ -> drag = value } }
+                throw e
+            }
+        }
 
         val backdrop = MaterialTheme.colorScheme.scrim
         Box(Modifier.fillMaxSize().drawBehind { drawRect(backdrop.copy(alpha = 1f - progress())) })
@@ -247,7 +262,8 @@ fun MediaViewer(
                     layout(constraints.maxWidth, constraints.maxHeight) {
                         placeable.place(
                             (constraints.maxWidth - width) / 2,
-                            (constraints.maxHeight - height) / 2 + drag.coerceAtLeast(0f).roundToInt(),
+                            // Up, toward the details, it follows the finger only a little, giving way.
+                            (constraints.maxHeight - height) / 2 + (if (drag > 0f) drag else drag * UP_GIVE).roundToInt(),
                         )
                     }
                 }
@@ -281,7 +297,8 @@ fun MediaViewer(
             )
         }
 
-        AnimatedVisibility(chrome && !dragging && !inPip, enter = fadeIn(), exit = fadeOut()) {
+        val motion = MaterialTheme.motionScheme
+        AnimatedVisibility(chrome && !dragging && !inPip, enter = fadeIn(motion.fastEffectsSpec()), exit = fadeOut(motion.fastEffectsSpec())) {
             Row(
                 Modifier.fillMaxWidth().background(MediaOverlay.bar).statusBarsPadding().sideInsetsPadding().padding(Space.xs),
                 verticalAlignment = Alignment.CenterVertically,
@@ -320,10 +337,12 @@ fun MediaViewer(
                         enabled = !sharing,
                         modifier = Modifier.testTag("share"),
                     ) {
-                        if (sharing) {
-                            LoadingIndicator(Modifier.size(24.dp), color = MediaOverlay.content)
-                        } else {
-                            Icon(Icons.Rounded.Share, contentDescription = stringResource(R.string.action_share), tint = MediaOverlay.content)
+                        Crossfade(sharing, animationSpec = motion.fastEffectsSpec(), label = "sharing") { busy ->
+                            if (busy) {
+                                LoadingIndicator(Modifier.size(24.dp), color = MediaOverlay.content)
+                            } else {
+                                Icon(Icons.Rounded.Share, contentDescription = stringResource(R.string.action_share), tint = MediaOverlay.content)
+                            }
                         }
                     }
                 }
@@ -350,8 +369,9 @@ fun MediaViewer(
         // On a phone on its side, the details are a panel down the end side, the photo
         // still showing beside it, rather than a sheet with no height to rise into.
         val side = landscape
-        BackHandler(enabled = info && side) { info = false }
-        AnimatedVisibility(info && side, enter = fadeIn(), exit = fadeOut()) {
+        // Back, by the gesture, draws the panel toward its edge under the finger.
+        val panelBack = rememberPredictiveBack(enabled = info && side) { info = false }
+        AnimatedVisibility(info && side, enter = fadeIn(motion.defaultEffectsSpec()), exit = fadeOut(motion.defaultEffectsSpec())) {
             Box(
                 Modifier.fillMaxSize().background(MediaOverlay.bar)
                     .clickable(interactionSource = null, indication = null) { info = false },
@@ -359,8 +379,9 @@ fun MediaViewer(
         }
         AnimatedVisibility(
             info && side,
-            enter = slideInHorizontally { it } + fadeIn(),
-            exit = slideOutHorizontally { it } + fadeOut(),
+            // From the end side it stands down, the right or, right to left, the left.
+            enter = slideInHorizontally(motion.defaultSpatialSpec()) { if (rtl) -it else it } + fadeIn(motion.defaultEffectsSpec()),
+            exit = slideOutHorizontally(motion.defaultSpatialSpec()) { if (rtl) -it else it } + fadeOut(motion.defaultEffectsSpec()),
             modifier = Modifier.align(Alignment.CenterEnd),
         ) {
             val level = AppColors.sheetLevel
@@ -369,7 +390,8 @@ fun MediaViewer(
                 color = level.fill(),
                 contentColor = MaterialTheme.colorScheme.onSurface,
                 // Below the status bar, whose icons are white over the viewer's black.
-                modifier = Modifier.statusBarsPadding().fillMaxHeight().width(INFO_PANEL_WIDTH),
+                modifier = Modifier.statusBarsPadding().fillMaxHeight().width(INFO_PANEL_WIDTH)
+                    .graphicsLayer { translationX = panelBack.progress * size.width * PANEL_BACK_SHIFT * if (rtl) -1f else 1f },
             ) {
                 CompositionLocalProvider(LocalSurfaceLevel provides level) {
                     details(Modifier.sideInsetsPadding(WindowInsetsSides.End).padding(top = Space.l).navigationBarsPadding())
@@ -381,6 +403,12 @@ fun MediaViewer(
         }
     }
 }
+
+/** How far toward its edge the details' panel goes, of its width, as back is swiped. */
+private const val PANEL_BACK_SHIFT = 0.25f
+
+/** How far a photo follows a drag up, toward the details, for each pixel dragged. */
+private const val UP_GIVE = 0.3f
 
 /** How wide the details' panel is down the side of a phone on its side. */
 private val INFO_PANEL_WIDTH = 400.dp

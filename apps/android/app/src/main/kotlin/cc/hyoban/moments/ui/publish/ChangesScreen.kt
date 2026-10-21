@@ -1,5 +1,15 @@
 package cc.hyoban.moments.ui.publish
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
@@ -7,6 +17,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,9 +26,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
@@ -35,16 +48,17 @@ import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.WavyProgressIndicatorDefaults
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -78,6 +92,7 @@ import cc.hyoban.moments.ui.components.SubPage
 import cc.hyoban.moments.ui.components.Thumbnail
 import cc.hyoban.moments.ui.format.formatDate
 import cc.hyoban.moments.ui.format.formatTime
+import cc.hyoban.moments.ui.settings.Caption
 import cc.hyoban.moments.ui.settings.Group
 import cc.hyoban.moments.ui.theme.DISABLED_ALPHA
 import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
@@ -114,71 +129,58 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
         subtitle = if (pending.size == 0) null else pluralStringResource(R.plurals.count_changes, pending.size, pending.size),
     ) {
         PageWidth(maxColumns = 1) { columns ->
-            Column(
-                Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .navigationBarsPadding()
-                    .padding(horizontal = columns.margin)
-                    // Clear of the publishing button over the list's end.
-                    .padding(bottom = Space.xl + FAB_CLEARANCE),
+            // A lazy list, so a change taken back folds away and one brought back by its
+            // snackbar opens out again, the rest stepping aside, rather than jumping.
+            LazyColumn(
+                Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(start = columns.margin, end = columns.margin, bottom = Space.xl + FAB_CLEARANCE),
             ) {
                 if (pending.size == 0) {
-                    Group(null, stringResource(R.string.empty_changes)) {}
-                    return@Column
+                    item(key = "empty") { Column(Modifier.animateItem()) { Group(null, stringResource(R.string.empty_changes)) {} } }
                 }
-                pending.added.forEachIndexed { index, moment ->
-                    Group(if (index == 0) stringResource(R.string.section_added) else null, null) {
-                        ChangeCard(moment, onOpen = { onMoment(moment.uid) }.takeUnless { busy }) {
-                            MomentWhole(moment, places, urls)
+                section(R.string.section_added, pending.added, key = { it.uid }) { moment ->
+                    ChangeCard(moment, onOpen = { onMoment(moment.uid) }.takeUnless { busy }) {
+                        MomentWhole(moment, places, urls)
+                    }
+                }
+                section(R.string.section_changed, pending.changed, key = { it.after.uid }) { change ->
+                    val revert = { container.revert(change.after.uid) }.takeUnless { busy }
+                    SwipeToRevert(revert) {
+                        ChangeCard(
+                            change.after,
+                            identity = Identity(change.before ?: change.after, places, urls),
+                            onOpen = { onMoment(change.after.uid) }.takeUnless { busy },
+                            onRevert = revert,
+                        ) {
+                            ChangedFields(change, places, urls)
                         }
                     }
                 }
-                pending.changed.forEachIndexed { index, change ->
-                    key(change.after.uid) {
-                        Group(if (index == 0) stringResource(R.string.section_changed) else null, null) {
-                            val revert = { container.revert(change.after.uid) }.takeUnless { busy }
-                            SwipeToRevert(revert) {
-                                ChangeCard(
-                                    change.after,
-                                    identity = Identity(change.before ?: change.after, places, urls),
-                                    onOpen = { onMoment(change.after.uid) }.takeUnless { busy },
-                                    onRevert = revert,
-                                ) {
-                                    ChangedFields(change, places, urls)
-                                }
-                            }
+                section(R.string.section_removed, pending.removed, key = { it.uid }) { moment ->
+                    val revert = { container.revert(moment.uid) }.takeUnless { busy }
+                    SwipeToRevert(revert) {
+                        ChangeCard(moment, onRevert = revert) {
+                            MomentWhole(moment, places, urls, removed = true)
                         }
                     }
                 }
-                pending.removed.forEachIndexed { index, moment ->
-                    key(moment.uid) {
-                        Group(if (index == 0) stringResource(R.string.section_removed) else null, null) {
-                            val revert = { container.revert(moment.uid) }.takeUnless { busy }
-                            SwipeToRevert(revert) {
-                                ChangeCard(moment, onRevert = revert) {
-                                    MomentWhole(moment, places, urls, removed = true)
-                                }
-                            }
+                if (pending.size > 0) {
+                    item(key = "foot") {
+                        Column(
+                            Modifier.animateItem().padding(start = Space.gutter, end = Space.gutter, top = Space.xl).navigationBarsPadding(),
+                            verticalArrangement = Arrangement.spacedBy(Space.s),
+                        ) {
+                            // Publishing takes a while and knows how far it has got, so a determinate
+                            // indicator, as Material 3 has for a wait of more than a few seconds.
+                            PublishProgress(publishing, Modifier.fillMaxWidth().padding(vertical = Space.xs).testTag("publish_progress"))
+                            Text(
+                                stringResource(if (container.canPublish) R.string.note_publish_all else R.string.note_publish_needs_token),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(horizontal = Space.l),
+                            )
                         }
                     }
-                }
-                Spacer(Modifier.height(Space.xl))
-                Column(Modifier.padding(horizontal = Space.gutter), verticalArrangement = Arrangement.spacedBy(Space.s)) {
-                    // Publishing takes a while and knows how far it has got, so a determinate
-                    // indicator, as Material 3 has for a wait of more than a few seconds.
-                    publishing?.let { progress ->
-                        LinearWavyProgressIndicator(
-                            progress = { publishedFraction(progress) },
-                            modifier = Modifier.fillMaxWidth().padding(vertical = Space.xs).testTag("publish_progress"),
-                        )
-                    }
-                    Text(
-                        stringResource(if (container.canPublish) R.string.note_publish_all else R.string.note_publish_needs_token),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = Space.l),
-                    )
                 }
             }
         }
@@ -192,8 +194,17 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
             lift.value = if (publishShown) FAB_CLEARANCE else 0.dp
             onDispose { lift.value = 0.dp }
         }
-        if (publishShown) {
-            val progress = publishing
+        // It grows in from its middle as a FAB enters, and its label's width follows what it says.
+        val motion = MaterialTheme.motionScheme
+        var shownProgress by remember { mutableStateOf(publishing) }
+        if (publishShown) shownProgress = publishing
+        AnimatedVisibility(
+            publishShown,
+            enter = scaleIn(motion.fastSpatialSpec()) + fadeIn(motion.fastEffectsSpec()),
+            exit = scaleOut(motion.fastSpatialSpec()) + fadeOut(motion.fastEffectsSpec()),
+            modifier = Modifier.align(Alignment.BottomEnd).navigationBarsPadding().padding(Space.gutter),
+        ) {
+            val progress = shownProgress
             ExtendedFloatingActionButton(
                 onClick = { if (progress == null) container.publishPending() },
                 icon = { Icon(Icons.Rounded.CloudUpload, contentDescription = null) },
@@ -204,11 +215,48 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
                         } else {
                             stringResource(R.string.label_publish_all)
                         },
+                        modifier = Modifier.animateContentSize(motion.fastSpatialSpec()),
                     )
                 },
-                modifier = Modifier.align(Alignment.BottomEnd).navigationBarsPadding().padding(Space.gutter).testTag("publish_all"),
+                modifier = Modifier.testTag("publish_all"),
             )
         }
+    }
+}
+
+/**
+ * A group of the changes under [title], each of [items] a card of its own that folds away
+ * when taken back and opens out when brought back; the caption goes with the last of them.
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+private fun <T> LazyListScope.section(title: Int, items: List<T>, key: (T) -> Any, card: @Composable (T) -> Unit) {
+    if (items.isEmpty()) return
+    item(key = "caption-$title") { Box(Modifier.animateItem()) { Caption(stringResource(title)) } }
+    itemsIndexed(items, key = { _, it -> key(it) }) { index, item ->
+        // Apart from the one above by the groups' gap; the first under its caption, as a group's card is.
+        val gap by animateDpAsState(if (index == 0) 0.dp else Space.xl, MaterialTheme.motionScheme.defaultSpatialSpec(), label = "gap")
+        Column(Modifier.animateItem().padding(top = gap)) {
+            Column(Modifier.padding(horizontal = Space.gutter).fillMaxWidth().clip(ListItemDefaults.segmentedShapes(0, 1).shape).background(LocalSurfaceLevel.current.raised.fill())) {
+                card(item)
+            }
+        }
+    }
+}
+
+/** How far publishing has got, growing in under what it says while it runs and moving smoothly on as each change goes. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun PublishProgress(progress: AppContainer.Progress?, modifier: Modifier = Modifier, color: Color = WavyProgressIndicatorDefaults.indicatorColor) {
+    val motion = MaterialTheme.motionScheme
+    var shown by remember { mutableStateOf(progress) }
+    if (progress != null) shown = progress
+    val fraction by animateFloatAsState(shown?.let(::publishedFraction) ?: 0f, ProgressIndicatorDefaults.ProgressAnimationSpec, label = "published")
+    AnimatedVisibility(
+        progress != null,
+        enter = expandVertically(motion.fastSpatialSpec()) + fadeIn(motion.fastEffectsSpec()),
+        exit = shrinkVertically(motion.fastSpatialSpec()) + fadeOut(motion.fastEffectsSpec()),
+    ) {
+        LinearWavyProgressIndicator(progress = { fraction }, modifier = modifier, color = color)
     }
 }
 
@@ -242,13 +290,7 @@ fun PendingChangesRow(container: AppContainer, onClick: () -> Unit, modifier: Mo
                     )
                     // The same linear indicator as the changes' page, as Material 3 has one
                     // process shown one way throughout.
-                    progress?.let {
-                        LinearWavyProgressIndicator(
-                            progress = { publishedFraction(it) },
-                            modifier = Modifier.fillMaxWidth(),
-                            color = MaterialTheme.colorScheme.onSecondaryContainer,
-                        )
-                    }
+                    PublishProgress(progress, Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.onSecondaryContainer)
                 }
             },
             leadingContent = {

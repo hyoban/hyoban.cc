@@ -2,7 +2,12 @@ package cc.hyoban.moments.ui.moment
 
 import android.content.ClipData
 import android.content.ClipboardManager
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -279,23 +284,34 @@ fun MomentScreen(
             onDispose { lift.value = 0.dp }
         }
         Box(toolbarArea.navigationBarsPadding().padding(bottom = Space.gutter), contentAlignment = Alignment.BottomCenter) {
-            if (editable && publishing == null) {
-                HorizontalFloatingToolbar(
-                    expanded = true,
-                    scrollBehavior = toolbarScroll,
-                    floatingActionButton = {
-                        val edit = stringResource(R.string.action_edit_moment)
-                        Tooltip(edit) {
-                            FloatingToolbarDefaults.StandardFloatingActionButton(onClick = { onEdit(uid) }, modifier = Modifier.testTag("edit")) {
-                                Icon(Icons.Rounded.Edit, contentDescription = edit)
+            // The edit button goes and comes back with publishing, the toolbar easing to its new width.
+            val motion = MaterialTheme.motionScheme
+            AnimatedContent(
+                editable && publishing == null,
+                transitionSpec = {
+                    fadeIn(motion.fastEffectsSpec()) togetherWith fadeOut(motion.fastEffectsSpec()) using SizeTransform { _, _ -> motion.fastSpatialSpec() }
+                },
+                contentAlignment = Alignment.BottomCenter,
+                label = "toolbar",
+            ) { canEdit ->
+                if (canEdit) {
+                    HorizontalFloatingToolbar(
+                        expanded = true,
+                        scrollBehavior = toolbarScroll,
+                        floatingActionButton = {
+                            val edit = stringResource(R.string.action_edit_moment)
+                            Tooltip(edit) {
+                                FloatingToolbarDefaults.StandardFloatingActionButton(onClick = { onEdit(uid) }, modifier = Modifier.testTag("edit")) {
+                                    Icon(Icons.Rounded.Edit, contentDescription = edit)
+                                }
                             }
-                        }
-                    },
-                    modifier = toolbar,
-                    content = tools,
-                )
-            } else {
-                HorizontalFloatingToolbar(expanded = true, modifier = toolbar, scrollBehavior = toolbarScroll, content = tools)
+                        },
+                        modifier = toolbar,
+                        content = tools,
+                    )
+                } else {
+                    HorizontalFloatingToolbar(expanded = true, modifier = toolbar, scrollBehavior = toolbarScroll, content = tools)
+                }
             }
         }
     }

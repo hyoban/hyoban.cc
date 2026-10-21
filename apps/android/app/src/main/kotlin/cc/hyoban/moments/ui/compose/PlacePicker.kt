@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.compose
 
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -11,7 +12,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import android.Manifest
 import android.content.pm.PackageManager
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,6 +36,17 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SuggestionChip
+import androidx.compose.animation.AnimatedVisibility
+import cc.hyoban.moments.ui.components.predictiveBackScale
+import cc.hyoban.moments.ui.components.rememberPredictiveBack
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.material3.SuggestionChipDefaults
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberBottomSheetScaffoldState
@@ -126,7 +137,8 @@ internal fun PlacePicker(
         places[id]?.let { fly(it.fix()) }
     }
 
-    BackHandler(onBack = onDismiss)
+    // Back, by the system's gesture, previews closing the picker under the finger.
+    val back = rememberPredictiveBack(onBack = onDismiss)
 
     // Where the pin has come to rest: what is around it, to name a new place after, and
     // the name of the nearest of them for it until one is typed.
@@ -158,6 +170,7 @@ internal fun PlacePicker(
     val sheet = rememberBottomSheetScaffoldState(rememberStandardBottomSheetState(skipHiddenState = true))
     BottomSheetScaffold(
         scaffoldState = sheet,
+        modifier = Modifier.predictiveBackScale(back),
         sheetPeekHeight = sheetHeight,
         sheetSwipeEnabled = false,
         sheetDragHandle = null,
@@ -202,13 +215,14 @@ internal fun PlacePicker(
                 modifier = Modifier.fillMaxSize().testTag("place_map"),
             )
             // The pin's point at the map's middle; a known place chosen shows as its own dot instead.
-            if (pick !is PlaceChoice.Known) {
-                Icon(
-                    Icons.Rounded.Place,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.align(Alignment.Center).offset(y = -(PIN_SIZE / 2)).size(PIN_SIZE),
-                )
+            val motion = MaterialTheme.motionScheme
+            AnimatedVisibility(
+                pick !is PlaceChoice.Known,
+                enter = scaleIn(motion.fastSpatialSpec(), transformOrigin = TransformOrigin(0.5f, 1f)) + fadeIn(motion.fastEffectsSpec()),
+                exit = scaleOut(motion.fastSpatialSpec(), transformOrigin = TransformOrigin(0.5f, 1f)) + fadeOut(motion.fastEffectsSpec()),
+                modifier = Modifier.align(Alignment.Center).offset(y = -(PIN_SIZE / 2)),
+            ) {
+                Icon(Icons.Rounded.Place, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(PIN_SIZE))
             }
             FloatingBack(onDismiss, Modifier.align(Alignment.TopStart))
             val granted = LOCATION_PERMISSIONS.any { ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED }
@@ -242,10 +256,12 @@ internal fun PlacePicker(
                             modifier = Modifier.semantics { contentDescription = locateLabel }.testTag("locate"),
                         ) {
                             // A loading indicator while it finds where the phone is, as the map tab's button has.
-                            if (locating) {
-                                LoadingIndicator(Modifier.size(32.dp), color = LocalContentColor.current)
-                            } else {
-                                Icon(Icons.Rounded.MyLocation, contentDescription = null)
+                            Crossfade(locating, animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(), label = "locating") { busy ->
+                                if (busy) {
+                                    LoadingIndicator(Modifier.size(32.dp), color = LocalContentColor.current)
+                                } else {
+                                    Icon(Icons.Rounded.MyLocation, contentDescription = null)
+                                }
                             }
                         }
                     }
@@ -269,9 +285,10 @@ private fun ChoiceCard(
     onConfirm: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // Growing or shrinking from one kind of choice to another, rather than jumping, the map above following.
     Box(modifier.fillMaxWidth()) {
         Column(
-            Modifier.navigationBarsPadding().imePadding().padding(start = Space.xl, end = Space.xl, top = Space.l, bottom = Space.m),
+            Modifier.navigationBarsPadding().imePadding().animateContentSize(MaterialTheme.motionScheme.defaultSpatialSpec()).padding(start = Space.xl, end = Space.xl, top = Space.l, bottom = Space.m),
             verticalArrangement = Arrangement.spacedBy(Space.s),
         ) {
             when (pick) {
@@ -331,24 +348,24 @@ private fun NearbyChips(
     onLandmark: (Found) -> Unit,
 ) {
     val known = nearestPlaces(places, at, limit = KNOWN_NEARBY + 1).filter { it.first != chosen && it.second <= NEARBY_METRES }.take(KNOWN_NEARBY)
-    if (known.isNotEmpty() || landmarks.isNotEmpty()) {
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(Space.s)) {
+    // The row keeps its height while what is around is looked up again, so the sheet, and the
+    // pin at the middle of the map above it, stay put as the pin moves; the chips fade in and out.
+    LazyRow(Modifier.heightIn(min = SuggestionChipDefaults.Height), horizontalArrangement = Arrangement.spacedBy(Space.s)) {
             itemsIndexed(known, key = { _, it -> "known:${it.first}" }) { _, (id, metres) ->
                 SuggestionChip(
                     onClick = { onKnown(id) },
                     label = { Text("${places.getValue(id).name} · ${formatDistance(metres)}", maxLines = 1) },
                     icon = { Icon(Icons.Rounded.Place, contentDescription = null, modifier = Modifier.size(18.dp)) },
-                    modifier = Modifier.testTag("nearby_$id"),
+                    modifier = Modifier.animateItem().testTag("nearby_$id"),
                 )
             }
             itemsIndexed(landmarks, key = { _, it -> "${it.name}@${it.fix}" }) { index, landmark ->
                 SuggestionChip(
                     onClick = { onLandmark(landmark) },
                     label = { Text(landmark.name, maxLines = 1) },
-                    modifier = Modifier.testTag("landmark_$index"),
+                    modifier = Modifier.animateItem().testTag("landmark_$index"),
                 )
             }
-        }
     }
 }
 

@@ -1,5 +1,11 @@
 package cc.hyoban.moments.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
@@ -15,8 +21,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -37,22 +49,37 @@ import cc.hyoban.moments.R
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun FullScreenDialog(onDismiss: () -> Unit, actions: @Composable RowScope.() -> Unit, content: @Composable ColumnScope.() -> Unit) {
+    // It rises from the bottom as Material 3 has a full-screen dialog enter, and sinks back
+    // as it is closed by its X or back, before it goes.
+    val shown = remember { MutableTransitionState(false) }.apply { targetState = true }
+    val close = { shown.targetState = false }
+    val dismiss by rememberUpdatedState(onDismiss)
+    LaunchedEffect(shown) {
+        snapshotFlow { shown.isIdle && !shown.currentState && !shown.targetState }.collect { if (it) dismiss() }
+    }
     // Edge to edge, its own colour under the status and navigation bars, as the pages are.
-    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
-        // A window of its own, so its tags are resource ids again for `uiautomator`.
-        Surface(Modifier.fillMaxSize().semantics { testTagsAsResourceId = true }, color = AppColors.page) {
-            Column(Modifier.fillMaxSize().systemBarsPadding().imePadding()) {
-                Row(Modifier.fillMaxWidth().height(64.dp).padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                    val close = stringResource(R.string.action_close)
-                    Tooltip(close, below = true) {
-                        IconButton(onClick = onDismiss, modifier = Modifier.testTag("dialog_close")) {
-                            Icon(Icons.Rounded.Close, contentDescription = close)
+    Dialog(onDismissRequest = close, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
+        val motion = MaterialTheme.motionScheme
+        AnimatedVisibility(
+            shown,
+            enter = slideInVertically(motion.defaultSpatialSpec()) { it / 4 } + fadeIn(motion.defaultEffectsSpec()),
+            exit = slideOutVertically(motion.fastSpatialSpec()) { it / 4 } + fadeOut(motion.fastEffectsSpec()),
+        ) {
+            // A window of its own, so its tags are resource ids again for `uiautomator`.
+            Surface(Modifier.fillMaxSize().semantics { testTagsAsResourceId = true }, color = AppColors.page) {
+                Column(Modifier.fillMaxSize().systemBarsPadding().imePadding()) {
+                    Row(Modifier.fillMaxWidth().height(64.dp).padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                        val label = stringResource(R.string.action_close)
+                        Tooltip(label, below = true) {
+                            IconButton(onClick = close, modifier = Modifier.testTag("dialog_close")) {
+                                Icon(Icons.Rounded.Close, contentDescription = label)
+                            }
                         }
+                        Spacer(Modifier.weight(1f))
+                        actions()
                     }
-                    Spacer(Modifier.weight(1f))
-                    actions()
+                    content()
                 }
-                content()
             }
         }
     }

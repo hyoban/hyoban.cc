@@ -9,6 +9,8 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animate
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -131,6 +133,7 @@ import java.io.File
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -441,7 +444,12 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
             }
         }
         // Over the whole page, back closing it before it leaves the page.
-        AnimatedVisibility(editingPlace, enter = slideInVertically { it / 4 } + fadeIn(), exit = slideOutVertically { it / 4 } + fadeOut()) {
+        val motion = MaterialTheme.motionScheme
+        AnimatedVisibility(
+            editingPlace,
+            enter = slideInVertically(motion.defaultSpatialSpec()) { it / 4 } + fadeIn(motion.defaultEffectsSpec()),
+            exit = slideOutVertically(motion.defaultSpatialSpec()) { it / 4 } + fadeOut(motion.defaultEffectsSpec()),
+        ) {
             PlacePicker(current = place, fix = fix, places = places, search = container.placeSearch, onDismiss = { editingPlace = false }) {
                 chosenPlace = it
                 editingPlace = false
@@ -494,6 +502,21 @@ private fun PhotoStrip(photos: List<Uri>, onAdd: () -> Unit, onRemove: (Uri) -> 
     // The photo held, and how far it has been dragged from where it is laid out.
     var held by remember { mutableStateOf<Uri?>(null) }
     var offset by remember { mutableFloatStateOf(0f) }
+    // The photo let go, gliding from under the finger into its place, still over the rest until it is there.
+    var settling by remember { mutableStateOf<Uri?>(null) }
+    val scope = rememberCoroutineScope()
+    var settle by remember { mutableStateOf<Job?>(null) }
+    val settleSpec = MaterialTheme.motionScheme.defaultSpatialSpec<Float>()
+    val liftSpec = MaterialTheme.motionScheme.fastSpatialSpec<Float>()
+    val letGo: () -> Unit = {
+        val dropped = held
+        held = null
+        settling = dropped
+        settle = scope.launch {
+            animate(offset, 0f, animationSpec = settleSpec) { value, _ -> offset = value }
+            if (settling == dropped) settling = null
+        }
+    }
     val drag: (Float) -> Unit = drag@{ by ->
         val key = held?.toString() ?: return@drag
         offset += by
@@ -521,18 +544,18 @@ private fun PhotoStrip(photos: List<Uri>, onAdd: () -> Unit, onRemove: (Uri) -> 
     ) {
         itemsIndexed(photos, key = { _, uri -> uri.toString() }) { index, uri ->
             val lifted = held == uri
-            val placement = if (lifted) {
-                // Lifted over the rest at the dragged level, level 4, with the drag's state layer over it.
-                Modifier.zIndex(1f).graphicsLayer {
-                    translationX = offset
-                    scaleX = LIFTED_SCALE
-                    scaleY = LIFTED_SCALE
-                    shadowElevation = Elevation.level4.toPx()
-                    shape = photoShape
-                    clip = true
-                }
-            } else {
-                Modifier.animateItem()
+            val moving = lifted || settling == uri
+            // Lifted over the rest at the dragged level, level 4, with the drag's state layer over
+            // it, growing into that as it is picked up and settling back as it is put down.
+            val lift by animateFloatAsState(if (lifted) 1f else 0f, liftSpec, label = "lift")
+            val placement = (if (moving) Modifier.zIndex(1f) else Modifier.animateItem()).graphicsLayer {
+                translationX = if (moving) offset else 0f
+                val scale = 1f + (LIFTED_SCALE - 1f) * lift
+                scaleX = scale
+                scaleY = scale
+                shadowElevation = Elevation.level4.toPx() * lift
+                shape = photoShape
+                clip = true
             }
             Box(
                 placement.size(PHOTO_SIZE).clip(photoShape)
@@ -540,6 +563,8 @@ private fun PhotoStrip(photos: List<Uri>, onAdd: () -> Unit, onRemove: (Uri) -> 
                         detectDragGesturesAfterLongPress(
                             onDragStart = {
                                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                settle?.cancel()
+                                settling = null
                                 held = uri
                                 offset = 0f
                             },
@@ -547,8 +572,8 @@ private fun PhotoStrip(photos: List<Uri>, onAdd: () -> Unit, onRemove: (Uri) -> 
                                 change.consume()
                                 drag(amount.x)
                             },
-                            onDragEnd = { held = null; offset = 0f },
-                            onDragCancel = { held = null; offset = 0f },
+                            onDragEnd = letGo,
+                            onDragCancel = letGo,
                         )
                     }
                     .semantics {
@@ -561,7 +586,7 @@ private fun PhotoStrip(photos: List<Uri>, onAdd: () -> Unit, onRemove: (Uri) -> 
             ) {
                 // The site's photos by their URL, the phone's by their Uri.
                 AsyncImage(model = if (uri.scheme == "https" || uri.scheme == "http") uri.toString() else uri, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
-                if (lifted) Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.onSurface.copy(alpha = DRAGGED_LAYER)))
+                if (lift > 0f) Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.onSurface.copy(alpha = DRAGGED_LAYER * lift)))
                 // A small dot to see, in a corner of the 48dp Material 3 has anything tapped take.
                 Box(
                     Modifier.align(Alignment.TopEnd).size(REMOVE_TARGET)
@@ -586,7 +611,7 @@ private fun PhotoStrip(photos: List<Uri>, onAdd: () -> Unit, onRemove: (Uri) -> 
         if (photos.size < MAX_PHOTOS) {
             item(key = ADD_KEY) {
                 Box(
-                    Modifier.size(PHOTO_SIZE).clip(MaterialTheme.shapes.medium)
+                    Modifier.animateItem().size(PHOTO_SIZE).clip(MaterialTheme.shapes.medium)
                         .background(MaterialTheme.colorScheme.surfaceContainerHighest)
                         .clickable(onClick = onAdd)
                         .testTag("add_photos"),

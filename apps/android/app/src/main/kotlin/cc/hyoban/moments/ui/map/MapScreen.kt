@@ -6,6 +6,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -250,7 +251,7 @@ fun MapScreen(container: AppContainer, onMoment: (String) -> Unit, onPlace: (Str
         val turned = bearing.let { minOf(it, 360 - it) } > 0.5
         // While the map is turned, the compass: upright above the floating action button, and
         // above the trip's card while it shows; on a phone on its side, at the bottom by the rail.
-        val lift by animateDpAsState(if (trip != null && !railed) 96.dp else 0.dp, label = "compass")
+        val lift by animateDpAsState(if (trip != null && !railed) 96.dp else 0.dp, MaterialTheme.motionScheme.defaultSpatialSpec(), label = "compass")
         Box(
             if (railed) {
                 Modifier.align(Alignment.BottomStart).navigationBarsPadding()
@@ -265,15 +266,17 @@ fun MapScreen(container: AppContainer, onMoment: (String) -> Unit, onPlace: (Str
         // Kept while the card leaves, after the route is let go.
         var shown by remember { mutableStateOf(trip) }
         if (trip != null) shown = trip
+        val motion = MaterialTheme.motionScheme
         AnimatedVisibility(
             trip != null,
-            enter = fadeIn() + slideInVertically { it / 2 },
-            exit = fadeOut() + slideOutVertically { it / 2 },
+            enter = fadeIn(motion.defaultEffectsSpec()) + slideInVertically(motion.defaultSpatialSpec()) { it / 2 },
+            exit = fadeOut(motion.defaultEffectsSpec()) + slideOutVertically(motion.defaultSpatialSpec()) { it / 2 },
             modifier = Modifier.align(Alignment.BottomCenter).sideInsetsPadding()
                 .padding(start = Space.gutter, end = Space.gutter, bottom = LocalBottomClearance.current + LocalFabClearance.current)
                 .widthIn(max = READABLE_WIDTH),
         ) {
-            shown?.let { RouteCard(it) { onTrip(it.id) } }
+            // One route's card giving way to another's as another is lifted.
+            Crossfade(shown, animationSpec = motion.fastEffectsSpec(), label = "route card") { card -> card?.let { RouteCard(it) { onTrip(it.id) } } }
         }
     }
 
@@ -297,7 +300,7 @@ fun MapScreen(container: AppContainer, onMoment: (String) -> Unit, onPlace: (Str
             scaffoldState = scaffold,
             // Drawn up to the status bar at most, so the whole sheet's top stays clear of it.
             modifier = Modifier.statusBarsPadding(),
-            sheetPeekHeight = maxHeight * 0.55f,
+            sheetPeekHeight = maxHeight * PLACE_SHEET_SHARE,
             sheetContainerColor = SurfaceLevel.Floating.fill(),
             containerColor = Color.Transparent,
             sheetContent = {
@@ -451,10 +454,12 @@ private fun LocateButton(locating: Boolean, onClick: () -> Unit, inRail: Boolean
             elevation = if (inRail) FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp) else FloatingActionButtonDefaults.elevation(),
             modifier = Modifier.semantics { contentDescription = label }.testTag("locate"),
         ) {
-            if (locating) {
-                LoadingIndicator(Modifier.size(32.dp), color = LocalContentColor.current)
-            } else {
-                Icon(Icons.Rounded.MyLocation, contentDescription = null)
+            Crossfade(locating, animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(), label = "locating") { busy ->
+                if (busy) {
+                    LoadingIndicator(Modifier.size(32.dp), color = LocalContentColor.current)
+                } else {
+                    Icon(Icons.Rounded.MyLocation, contentDescription = null)
+                }
             }
         }
     }

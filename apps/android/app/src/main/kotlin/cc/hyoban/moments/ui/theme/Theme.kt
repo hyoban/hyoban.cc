@@ -1,10 +1,12 @@
 package cc.hyoban.moments.ui.theme
 
+import androidx.compose.animation.animateColorAsState
 import android.app.UiModeManager
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.Shapes
 import androidx.compose.material3.Typography
@@ -169,7 +171,7 @@ fun MomentsTheme(settings: Settings, content: @Composable () -> Unit) {
     val style = settings.colorStyle
     val pureBlack = settings.pureBlack
     val contrast = rememberSystemContrast()
-    val colorScheme = remember(seed, dark, style, pureBlack, contrast) { seededColorScheme(seed, dark, style, pureBlack, contrast) }
+    val colorScheme = animatedColorScheme(remember(seed, dark, style, pureBlack, contrast) { seededColorScheme(seed, dark, style, pureBlack, contrast) })
 
     CompositionLocalProvider(LocalDarkTheme provides dark) {
         // Material 3 Expressive's springs, which overshoot a little, for every component and the app's own motion.
@@ -182,4 +184,53 @@ fun MomentsTheme(settings: Settings, content: @Composable () -> Unit) {
 fun systemAccent(): Int? {
     val context = LocalContext.current
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) context.getColor(android.R.color.system_accent1_500) else null
+}
+
+/**
+ * [target], each of its roles easing over to a new colour as the theme changes, a new seed,
+ * light to dark or another style, rather than the whole app changing in one frame.
+ */
+@Composable
+private fun animatedColorScheme(target: ColorScheme): ColorScheme {
+    val spec = MotionScheme.standard().defaultEffectsSpec<Color>()
+    @Composable
+    fun animate(color: Color): Color = animateColorAsState(color, spec, label = "theme").value
+    return target.copy(
+        primary = animate(target.primary),
+        onPrimary = animate(target.onPrimary),
+        primaryContainer = animate(target.primaryContainer),
+        onPrimaryContainer = animate(target.onPrimaryContainer),
+        inversePrimary = animate(target.inversePrimary),
+        secondary = animate(target.secondary),
+        onSecondary = animate(target.onSecondary),
+        secondaryContainer = animate(target.secondaryContainer),
+        onSecondaryContainer = animate(target.onSecondaryContainer),
+        tertiary = animate(target.tertiary),
+        onTertiary = animate(target.onTertiary),
+        tertiaryContainer = animate(target.tertiaryContainer),
+        onTertiaryContainer = animate(target.onTertiaryContainer),
+        background = animate(target.background),
+        onBackground = animate(target.onBackground),
+        surface = animate(target.surface),
+        onSurface = animate(target.onSurface),
+        surfaceVariant = animate(target.surfaceVariant),
+        onSurfaceVariant = animate(target.onSurfaceVariant),
+        surfaceTint = animate(target.surfaceTint),
+        inverseSurface = animate(target.inverseSurface),
+        inverseOnSurface = animate(target.inverseOnSurface),
+        error = animate(target.error),
+        onError = animate(target.onError),
+        errorContainer = animate(target.errorContainer),
+        onErrorContainer = animate(target.onErrorContainer),
+        outline = animate(target.outline),
+        outlineVariant = animate(target.outlineVariant),
+        scrim = animate(target.scrim),
+        surfaceBright = animate(target.surfaceBright),
+        surfaceContainer = animate(target.surfaceContainer),
+        surfaceContainerHigh = animate(target.surfaceContainerHigh),
+        surfaceContainerHighest = animate(target.surfaceContainerHighest),
+        surfaceContainerLow = animate(target.surfaceContainerLow),
+        surfaceContainerLowest = animate(target.surfaceContainerLowest),
+        surfaceDim = animate(target.surfaceDim),
+    )
 }
