@@ -1,6 +1,28 @@
 package cc.hyoban.moments.ui.trips
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.focusGroup
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.focus.focusRestorer
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.material3.ButtonGroup
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.isSecondaryPressed
+import androidx.compose.ui.unit.DpOffset
+import cc.hyoban.moments.ui.moment.MomentMenu
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.navigationBars
@@ -175,9 +197,35 @@ fun TripPlayerScreen(container: AppContainer, id: String, onMoment: (String) -> 
     var card by remember { mutableStateOf(0.dp to 0.dp) }
     val top = with(density) { WindowInsets.statusBars.getTop(this).toDp() } + FLOATING_BAR + Space.l
     // The site's camera padding on a narrow screen: 40 at the sides, clear of the card below.
-    val clear = if (landscape) listOf(40.dp, top, card.first + 40.dp, 40.dp) else listOf(40.dp, top, 40.dp, card.second + 16.dp)
+    val clear = if (landscape) listOf(40.dp, top, card.first + 40.dp, 40.dp + TOOLBAR_ROOM) else listOf(40.dp, top, 40.dp, card.second + 16.dp)
 
-    Box(Modifier.fillMaxSize().then(if (controller.playing) Modifier.keepScreenOn() else Modifier)) {
+    // From a keyboard or a remote: play and pause on Space or the media keys, the cards on
+    // left and right and the photos on up and down, as on the site, and the media keys' next
+    // and previous; focus, once a key moves it in, starts on play, the screen's main action,
+    // rather than taken at once, which would hold play's tooltip up under a finger.
+    val playFocus = remember { FocusRequester() }
+    Box(
+        Modifier.fillMaxSize().then(if (controller.playing) Modifier.keepScreenOn() else Modifier)
+            // Focus coming into the screen, as the first key is pressed, lands on play.
+            .focusRestorer(playFocus).focusGroup()
+            .onPreviewKeyEvent { event ->
+                if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+                when (event.key) {
+                    Key.Spacebar, Key.MediaPlayPause -> controller.togglePlay()
+                    Key.MediaPlay -> if (!controller.playing) controller.togglePlay()
+                    Key.MediaPause -> if (controller.playing) controller.togglePlay()
+                    // Right is next, as the controls run left to right whatever the language.
+                    Key.DirectionRight -> controller.next()
+                    Key.DirectionLeft -> controller.previous()
+                    Key.MediaNext -> controller.next()
+                    Key.MediaPrevious -> controller.previous()
+                    Key.DirectionDown -> controller.stepPhoto(1)
+                    Key.DirectionUp -> controller.stepPhoto(-1)
+                    else -> return@onPreviewKeyEvent false
+                }
+                true
+            },
+    ) {
         // Described as a map, by what it shows now: the trip's route and where it has got to.
         val here = when (slide) {
             is PlaybackSlide.Stop -> slide.stop.places.lastOrNull()?.name
@@ -201,6 +249,7 @@ fun TripPlayerScreen(container: AppContainer, id: String, onMoment: (String) -> 
         val total = remember(lengths) { lengths.sum().coerceAtLeast(1) }
         val before = remember(lengths, index) { lengths.take(index).sum() }
         PlayerCard(
+            playFocus = playFocus,
             trip = trip,
             controller = controller,
             covers = remember(trip, all) { coversOf(trip, all, trips) },
@@ -219,15 +268,44 @@ fun TripPlayerScreen(container: AppContainer, id: String, onMoment: (String) -> 
                 // The room it takes from the map, its margin and the navigation bar's included.
                 .onSizeChanged { with(density) { card = it.width.toDp() to it.height.toDp() } }
                 .navigationBarsPadding()
+                // On its side, the card and its toolbar share the height under the status bar.
+                .then(if (landscape) Modifier.statusBarsPadding() else Modifier)
                 .padding(Space.gutter)
                 // Beside the map on its side, as Material 3 has a supporting pane at 360dp.
                 // Across the foot no wider than Material 3 has a bottom sheet, 640dp.
                 .then(if (landscape) Modifier.width(360.dp + Space.gutter * 2) else Modifier.widthIn(max = 640.dp).fillMaxWidth()),
-            photoHeight = if (landscape) 140.dp else 220.dp,
+            photoHeight = if (landscape) 100.dp else 220.dp,
             slide = slide,
             index = index,
             expanded = expanded,
             onExpanded = { expanded = it },
+            // On its side, the toolbar stands under the map instead, so the card has the height.
+            toolbar = !landscape,
+        )
+        if (landscape) {
+            Box(
+                Modifier.fillMaxSize().navigationBarsPadding().padding(end = card.first, bottom = Space.gutter),
+                contentAlignment = Alignment.BottomCenter,
+            ) { PlaybackControls(controller, playFocus) }
+        }
+    }
+}
+
+/** The playback's toolbar for [controller]: a media player's controls, left to right in any language. */
+@Composable
+private fun PlaybackControls(controller: PlaybackController, playFocus: FocusRequester) {
+    val index = controller.index
+    val count = controller.playback.slides.size
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+        PlayerToolbar(
+            controller.playing,
+            atEnd = controller.duration() == null,
+            onPlay = controller::togglePlay,
+            onPrevious = controller::previous,
+            onNext = controller::next,
+            first = index == 0,
+            last = index == count - 1,
+            playFocus = playFocus,
         )
     }
 }
@@ -239,6 +317,7 @@ fun TripPlayerScreen(container: AppContainer, id: String, onMoment: (String) -> 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun PlayerCard(
+    playFocus: FocusRequester,
     trip: TripRecord,
     controller: PlaybackController,
     covers: List<MomentMedia>,
@@ -251,6 +330,7 @@ private fun PlayerCard(
     index: Int,
     expanded: Boolean,
     onExpanded: (Boolean) -> Unit,
+    toolbar: Boolean,
 ) {
     val count = controller.playback.slides.size
     val playing = controller.playing
@@ -283,7 +363,8 @@ private fun PlayerCard(
             shape = cardShape,
             color = SurfaceLevel.Floating.fill(),
             shadowElevation = lift,
-            modifier = Modifier.fillMaxWidth()
+            // No taller than the room the toolbar leaves, so it is always in sight; what doesn't fit scrolls.
+            modifier = Modifier.weight(1f, fill = false).fillMaxWidth()
                 .graphicsLayer {
                     translationX = drag.value.x
                     translationY = drag.value.y
@@ -326,7 +407,7 @@ private fun PlayerCard(
             // The handle across the card's top 48dp, as a sheet's.
             DragHandle(expanded, onExpanded)
             Column(
-                Modifier.padding(start = Space.m, end = Space.m, bottom = Space.m),
+                Modifier.verticalScroll(rememberScrollState()).padding(start = Space.m, end = Space.m, bottom = Space.m),
                 verticalArrangement = Arrangement.spacedBy(Space.m),
             ) {
                 AnimatedContent(
@@ -369,8 +450,7 @@ private fun PlayerCard(
             }
             }
         }
-        // A media player's controls run left to right in any language.
-        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) { PlayerToolbar(playing, atEnd, controller::togglePlay, controller::previous, controller::next, first = index == 0, last = index == count - 1) }
+        if (toolbar) PlaybackControls(controller, playFocus)
     }
 }
 
@@ -379,7 +459,7 @@ private fun PlayerCard(
 private fun IntroCard(trip: TripRecord, playback: TripPlayback, covers: List<MomentMedia>, urls: MediaUrls, photoHeight: Dp, expanded: Boolean) {
     Column(verticalArrangement = Arrangement.spacedBy(Space.m)) {
         Column(Modifier.padding(horizontal = Space.xs)) {
-            Text(trip.title, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
+            Text(trip.title, style = MaterialTheme.typography.headlineSmallEmphasized, modifier = Modifier.semantics { heading() })
             TripSubhead(trip, playback.stops.size)
         }
         // A mosaic of the covers, the first larger, as the site's intro has.
@@ -402,7 +482,7 @@ private fun IntroCard(trip: TripRecord, playback: TripPlayback, covers: List<Mom
 private fun DayCard(slide: PlaybackSlide.Day) {
     Column(Modifier.padding(horizontal = Space.xs, vertical = Space.xs)) {
         Text(stringResource(R.string.trip_day, slide.day), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-        Text(formatDay(slide.dateKey), style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
+        Text(formatDay(slide.dateKey), style = MaterialTheme.typography.headlineSmallEmphasized, modifier = Modifier.semantics { heading() })
         if (slide.places.isNotEmpty()) {
             Text(slide.places.joinToString(" → "), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
@@ -416,7 +496,7 @@ private fun DayCard(slide: PlaybackSlide.Day) {
  * the Moment, as its words do. As on the site, its day and time ride beside the route's head
  * and its places are named on the map, so the card is only read out a heading of them.
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 private fun StopCard(slide: PlaybackSlide.Stop, controller: PlaybackController, urls: MediaUrls, photoHeight: Dp, expanded: Boolean, onMoment: (String) -> Unit) {
     val stop = slide.stop
@@ -481,15 +561,37 @@ private fun StopCard(slide: PlaybackSlide.Stop, controller: PlaybackController, 
             }
         }
         if (moment.text.isNotBlank()) {
-            Text(
-                moment.text,
-                style = MaterialTheme.typography.bodyMedium,
-                maxLines = if (expanded) 4 else 2,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.fillMaxWidth().clip(MaterialTheme.shapes.medium)
-                    .clickable(onClickLabel = open) { onMoment(moment.uid) }
-                    .padding(horizontal = Space.xs),
-            )
+            // Held, or right clicked, the Moment's menu opens where it was pressed, as on its cards.
+            var menu by remember { mutableStateOf<DpOffset?>(null) }
+            val density = LocalDensity.current
+            val down = remember { floatArrayOf(0f, 0f) }
+            Box {
+                Text(
+                    moment.text,
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = if (expanded) 4 else 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.fillMaxWidth().clip(MaterialTheme.shapes.medium)
+                        .pointerInput(Unit) {
+                            awaitEachGesture {
+                                val event = awaitPointerEvent(PointerEventPass.Initial)
+                                if (event.type != PointerEventType.Press) return@awaitEachGesture
+                                event.changes.firstOrNull()?.position?.let { down[0] = it.x; down[1] = it.y - size.height }
+                                if (event.buttons.isSecondaryPressed) {
+                                    event.changes.forEach { it.consume() }
+                                    menu = with(density) { DpOffset(down[0].toDp(), down[1].toDp()) }
+                                }
+                            }
+                        }
+                        .combinedClickable(
+                            onClickLabel = open,
+                            onLongClickLabel = stringResource(R.string.action_more),
+                            onLongClick = { menu = with(density) { DpOffset(down[0].toDp(), down[1].toDp()) } },
+                        ) { onMoment(moment.uid) }
+                        .padding(horizontal = Space.xs),
+                )
+                MomentMenu(moment, urls, menu, onDismiss = { menu = null })
+            }
         }
     }
 }
@@ -509,7 +611,7 @@ private fun SummaryCard(trip: TripRecord, playback: TripPlayback, covers: List<M
     Column(Modifier.padding(horizontal = Space.xs), verticalArrangement = Arrangement.spacedBy(Space.m)) {
         Column {
             Text(stringResource(R.string.playback_look_back), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-            Text(trip.title, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
+            Text(trip.title, style = MaterialTheme.typography.headlineSmallEmphasized, modifier = Modifier.semantics { heading() })
         }
         val days = cc.hyoban.moments.ui.format.daysBetween(trip.start, trip.end)
         val km = remember(playback) { playback.route.drivenKm() }.roundToInt()
@@ -545,7 +647,7 @@ private fun Tile(value: Int, unit: String) {
     Column(Modifier.clearAndSetSemantics { contentDescription = "$value $unit" }) {
         Text(
             shown.value.roundToInt().toString(),
-            style = MaterialTheme.typography.displaySmall.copy(fontFeatureSettings = "tnum"),
+            style = MaterialTheme.typography.displaySmallEmphasized.copy(fontFeatureSettings = "tnum"),
         )
         Text(unit, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
@@ -566,36 +668,72 @@ private fun PlayerToolbar(
     onNext: () -> Unit,
     first: Boolean,
     last: Boolean,
+    playFocus: FocusRequester,
     modifier: Modifier = Modifier,
 ) {
     HorizontalFloatingToolbar(expanded = true, modifier = modifier) {
-        val previous = stringResource(R.string.action_previous_stop)
-        Tooltip(previous) {
-            IconButton(onClick = onPrevious, enabled = !first, shapes = IconButtonDefaults.shapes(), modifier = Modifier.testTag("player_previous")) {
-                Icon(Icons.Rounded.SkipPrevious, contentDescription = previous)
-            }
-        }
-        // At the look back, where playback ends, it plays the trip again.
-        val play = stringResource(if (atEnd && !playing) R.string.action_replay else if (playing) R.string.action_pause else R.string.action_play)
-        Tooltip(play) {
-            FilledIconButton(
-                onClick = onPlay,
-                shapes = IconButtonDefaults.shapes(),
-                // Its 48dp target kept round the wide container, so the button sits on the toolbar's
-                // middle rather than its target overflowing the container upward.
-                modifier = Modifier.minimumInteractiveComponentSize()
-                    .size(IconButtonDefaults.smallContainerSize(IconButtonDefaults.IconButtonWidthOption.Wide)).testTag("player_play"),
-            ) {
-                Crossfade(if (atEnd && !playing) Icons.Rounded.Replay else if (playing) Icons.Rounded.Pause else Icons.Rounded.PlayArrow, label = "play icon") {
-                    Icon(it, contentDescription = play)
-                }
-            }
-        }
-        val next = stringResource(R.string.action_next_stop)
-        Tooltip(next) {
-            IconButton(onClick = onNext, enabled = !last, shapes = IconButtonDefaults.shapes(), modifier = Modifier.testTag("player_next")) {
-                Icon(Icons.Rounded.SkipNext, contentDescription = next)
-            }
+        // A standard button group: the one pressed widens and morphs, its neighbours making way.
+        ButtonGroup(overflowIndicator = {}) {
+            customItem(
+                buttonGroupContent = {
+                    val previous = stringResource(R.string.action_previous_stop)
+                    val pressed = remember { MutableInteractionSource() }
+                    Tooltip(previous) {
+                        IconButton(
+                            onClick = onPrevious,
+                            enabled = !first,
+                            shapes = IconButtonDefaults.shapes(),
+                            interactionSource = pressed,
+                            modifier = Modifier.animateWidth(pressed).testTag("player_previous"),
+                        ) {
+                            Icon(Icons.Rounded.SkipPrevious, contentDescription = previous)
+                        }
+                    }
+                },
+                menuContent = {},
+            )
+            customItem(
+                buttonGroupContent = {
+                    // At the look back, where playback ends, it plays the trip again.
+                    val play = stringResource(if (atEnd && !playing) R.string.action_replay else if (playing) R.string.action_pause else R.string.action_play)
+                    val pressed = remember { MutableInteractionSource() }
+                    Tooltip(play) {
+                        FilledIconButton(
+                            onClick = onPlay,
+                            shapes = IconButtonDefaults.shapes(),
+                            interactionSource = pressed,
+                            // Its 48dp target kept round the wide container, so the button sits on the toolbar's
+                            // middle rather than its target overflowing the container upward.
+                            modifier = Modifier.animateWidth(pressed).minimumInteractiveComponentSize()
+                                .size(IconButtonDefaults.smallContainerSize(IconButtonDefaults.IconButtonWidthOption.Wide))
+                                .focusRequester(playFocus).testTag("player_play"),
+                        ) {
+                            Crossfade(if (atEnd && !playing) Icons.Rounded.Replay else if (playing) Icons.Rounded.Pause else Icons.Rounded.PlayArrow, label = "play icon") {
+                                Icon(it, contentDescription = play)
+                            }
+                        }
+                    }
+                },
+                menuContent = {},
+            )
+            customItem(
+                buttonGroupContent = {
+                    val next = stringResource(R.string.action_next_stop)
+                    val pressed = remember { MutableInteractionSource() }
+                    Tooltip(next) {
+                        IconButton(
+                            onClick = onNext,
+                            enabled = !last,
+                            shapes = IconButtonDefaults.shapes(),
+                            interactionSource = pressed,
+                            modifier = Modifier.animateWidth(pressed).testTag("player_next"),
+                        ) {
+                            Icon(Icons.Rounded.SkipNext, contentDescription = next)
+                        }
+                    }
+                },
+                menuContent = {},
+            )
         }
     }
 }
@@ -627,6 +765,9 @@ private const val DRAGGED_LAYER = 0.16f
 
 /** How much of a drag the card follows. */
 private const val DRAG_FOLLOW = 0.35f
+
+/** How much the floating toolbar takes at the foot: its 64dp and the margin under it. */
+private val TOOLBAR_ROOM = 64.dp + 16.dp
 
 /** How far a card is swiped to step to the next or the one before. */
 private val SWIPE_TO_STEP = 56.dp
