@@ -90,7 +90,11 @@ private fun BarPage(
     close: Boolean = false,
     refresh: (() -> Unit)? = null,
 ) {
-    val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    // A dialog's bar, on a window too short to open it out, stays put rather than scrolling away,
+    // so its X and its confirming action are always there, as Material 3 keeps a dialog's.
+    val folding = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val pinned = TopAppBarDefaults.pinnedScrollBehavior()
+    val scroll = if (close && isCompactHeight()) pinned else folding
     OnTabReselect(tab) {
         animate(scroll.state.heightOffset, 0f) { value, _ -> scroll.state.heightOffset = value }
     }

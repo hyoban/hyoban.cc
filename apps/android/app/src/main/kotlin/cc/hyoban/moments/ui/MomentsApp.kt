@@ -91,6 +91,7 @@ import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.core.util.Consumer
@@ -103,7 +104,7 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.dialog
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
@@ -119,6 +120,7 @@ import cc.hyoban.moments.data.spec.TripRecord
 import cc.hyoban.moments.data.trips.tripOf
 import cc.hyoban.moments.ui.components.AdaptiveStatusBarIcons
 import cc.hyoban.moments.ui.components.AppColors
+import cc.hyoban.moments.ui.components.DialogPane
 import cc.hyoban.moments.ui.components.LocalBackSwipe
 import cc.hyoban.moments.ui.components.LocalInViewer
 import cc.hyoban.moments.ui.components.LocalMediaMaxHeight
@@ -210,6 +212,14 @@ object NewMoment
 @Serializable
 data class EditMoment(val uid: String)
 
+/**
+ * A Moment to write, or one of [uid] to change, opened from the medium breakpoint on: a basic
+ * dialog over the page it was opened from, as Material 3 keeps full-screen dialogs for compact
+ * windows, where [NewMoment] and [EditMoment] are pages of their own.
+ */
+@Serializable
+data class EditorDialog(val uid: String? = null)
+
 /** The changes kept on the phone, to look over and publish. */
 @Serializable
 object Changes
@@ -260,8 +270,22 @@ private enum class Tab(val route: Any, val type: KClass<*>, val label: Int, val 
 @Composable
 fun MomentsApp(container: AppContainer, start: Any = Feed) {
     val navController = rememberNavController()
-    val entry by navController.currentBackStackEntryAsState()
+    // The page shown, under a dialog over it, as the editor is on a wide window: the tabs stay
+    // with that page rather than going as the dialog opens.
+    val stack by navController.currentBackStack.collectAsStateWithLifecycle()
+    val entry = stack.lastOrNull { it.destination !is NavGraph && it.destination.navigatorName != DIALOG_NAVIGATOR }
     val current = Tab.entries.firstOrNull { tab -> entry?.destination?.hasRoute(tab.type) == true }
+    // Writing or changing a Moment: a page on a compact window, a dialog from the medium breakpoint on.
+    val wide by rememberUpdatedState(isMediumWidth())
+    val openEditor: (String?) -> Unit = { uid ->
+        navController.navigate(
+            when {
+                wide -> EditorDialog(uid)
+                uid != null -> EditMoment(uid)
+                else -> NewMoment
+            },
+        )
+    }
     val back: () -> Unit = { navController.popBackStack() }
     val openMoment: (String) -> Unit = { navController.goTo(Moment(it)) }
     // The viewer opens over the page it was opened from rather than as a page of its own,
@@ -290,7 +314,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
     val momentActions = remember(container, navController) {
         MomentActions(
             canEdit = { uid -> container.publishing.value == null && (container.repository.isLocal(uid) || container.canPublish) },
-            onEdit = { navController.navigate(EditMoment(it)) },
+            onEdit = { openEditor(it) },
             places = { container.repository.places.value },
             tripOf = { tripOf(it, container.repository.trips.value) },
             onPlace = { navController.goTo(PlaceMoments(it)) },
@@ -418,7 +442,10 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
             if (intent.action == MainActivity.ACTION_NEW_MOMENT) {
                 // A place shared in goes to the Moment being written, or a new one.
                 viewer = null
-                if (navController.currentDestination?.hasRoute(NewMoment::class) != true) navController.navigate(NewMoment)
+                val writing = navController.currentBackStackEntry?.let { shown ->
+                    shown.destination.hasRoute(NewMoment::class) || (shown.destination.hasRoute(EditorDialog::class) && shown.toRoute<EditorDialog>().uid == null)
+                } == true
+                if (!writing) openEditor(null)
             } else if (intent.data != null) {
                 viewer = null
                 navController.handleDeepLink(Intent(intent).setFlags(0))
@@ -476,13 +503,13 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                     onDay = openDay,
                                     onDayRow = openDayRow,
                                     onSettings = { navController.navigate(Preferences) },
-                                    onNew = { navController.navigate(NewMoment) },
+                                    onNew = { openEditor(null) },
                                     onChanges = { navController.navigate(Changes) },
                                     onSearch = { navController.navigate(Search) },
                                     onMedia = openMedia,
                                     onPlace = openPlace,
                                     onTrip = openTrip,
-                                    onEdit = { navController.navigate(EditMoment(it)) },
+                                    onEdit = { openEditor(it) },
                                 )
                             }
                             screen<Atlas>(link = "map") {
@@ -506,7 +533,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                     onPlace = openPlace,
                                     onTrip = openTrip,
                                     onBack = back,
-                                    onEdit = { navController.navigate(EditMoment(it)) },
+                                    onEdit = { openEditor(it) },
                                     onDay = openDayRow,
                                     onChanges = { navController.navigate(Changes) },
                                 )
@@ -554,6 +581,24 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                     // Deleted, the Moment's page under the edit page goes too, when it is there.
                                     onDeleted = { if (!navController.popBackStack<Moment>(inclusive = true)) back() },
                                 )
+                            }
+                            dialog<EditorDialog>(
+                                // Its window edge to edge, as the pages are; a tap on the scrim doesn't throw away
+                                // what is written, which only its X or back, with their question, do.
+                                dialogProperties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false, dismissOnClickOutside = false),
+                            ) { entry ->
+                                val edit = entry.toRoute<EditorDialog>().uid
+                                CompositionLocalProvider(LocalRailSpace provides RailSpace(0.dp, 0.dp, clearOfInsets = isMediumWidth())) {
+                                    DialogPane {
+                                        NewMomentScreen(
+                                            container,
+                                            onBack = back,
+                                            onSaved = back,
+                                            edit = edit,
+                                            onDeleted = { if (!navController.popBackStack<Moment>(inclusive = true)) back() },
+                                        )
+                                    }
+                                }
                             }
                             screen<Search>(link = "search") {
                                 SearchScreen(container, onMoment = openMoment, onBack = back)
@@ -879,6 +924,9 @@ private fun NavBackStackEntry.isOf(route: Any): Boolean = when (route) {
     is Day -> destination.hasRoute(Day::class) && toRoute<Day>().date == route.date
     else -> false
 }
+
+/** The navigator name of a dialog destination, which shows over the page under it rather than in its place. */
+private const val DIALOG_NAVIGATOR = "dialog"
 
 /**
  * The scheme of the app's links, `moments://moment/{uid}` and the like, opened with

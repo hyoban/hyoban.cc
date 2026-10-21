@@ -305,6 +305,8 @@
     <string name="message_change_reverted">已放弃更改</string>
     <string name="action_navigate_short">导航</string>
     <string name="action_refresh">刷新</string>
+    <string name="refresh_note">从 API 读取最新的时刻、地点和旅程</string>
+    <string name="refreshing">正在刷新</string>
     <string name="share_manual_note">保存照片、复制文字后手动发布</string>
     <string name="confirm_discard_note">还没保存的文字、照片和地点都会丢掉</string>
     <string name="reason_no_token">还没设置 API 令牌</string>
