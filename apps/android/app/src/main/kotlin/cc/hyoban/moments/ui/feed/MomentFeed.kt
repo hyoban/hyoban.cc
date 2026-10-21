@@ -284,7 +284,9 @@ fun LoadedContent(empty: Boolean, loading: Boolean, message: Int, content: @Comp
         },
         label = "loaded",
     ) { nothing ->
-        if (nothing) EmptyState(loading, message) else content()
+        // On the page's own colour, so as it fades in it covers the skeleton under it whole,
+        // rather than the skeleton's cards showing through until they are taken away at once.
+        if (nothing) EmptyState(loading, message) else Box(Modifier.fillMaxSize().background(LocalSurfaceLevel.current.fill())) { content() }
     }
 }
 
