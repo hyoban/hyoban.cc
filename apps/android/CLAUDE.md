@@ -45,6 +45,9 @@ say stay out.
 - Words are Chinese first, with English beside them in `values-en`, both following M3's
   content design, with TalkBack descriptions for what is shown. The Moments' own words
   are never changed.
+- Share targets are named by what happens at the other end: 发布到 for one that ends in
+  a public post (X, B 站, Threads, 小红书, 抖音), 分享到 for one sent to a chat
+  (Telegram), and a destination that names itself (微信朋友圈, 飞书) alone.
 - Follow what the app should be rather than the web version, except where it is asked
   to match: the map's features and the trip playback follow the site's player in
   `packages/trip-map/src/player`, with the route always moving while it plays.

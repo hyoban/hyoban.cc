@@ -72,8 +72,8 @@ each published, and the deletions. What is published leaves the phone's store fo
 site's.
 
 A Moment's share button orders destinations by verified text/photo support:
-发布到 X, B 站, 分享到 Telegram, 发布到 Threads, 分享到小红书,
-分享到抖音, 微信朋友圈, 飞书 (marked as posted by hand) and 准备图文.
+发布到 X, 发布到 B 站, 分享到 Telegram, 发布到 Threads, 发布到小红书,
+发布到抖音, 微信朋友圈, 飞书 (marked as posted by hand) and 准备图文.
 Complete text/photo composers come first, followed by assisted sharing, manual
 caption entry, and destinations that require manually preparing photo albums.
 The X option opens a separate editable copy of its words and a choice of up to four
@@ -131,7 +131,7 @@ Android component identity; it contains no Telegram behavior. Keep that componen
 name stable when adding adapters. Existing Telegram preferences and manual
 fallback are unchanged.
 
-分享到小红书 uses its Android share receiver, with all photos initially selected in
+发布到小红书 uses its Android share receiver, with all photos initially selected in
 their original order. On Xiaohongshu 9.50.0, both single and multiple photos open
 the note editor but ignore accompanying text. 复制文案并打开小红书 copies the edited
 text first; paste it into the body and add a title in Xiaohongshu before publishing.
@@ -162,7 +162,7 @@ Text-only shares still use the original direct composer link. Turning the helper
 off keeps the original photo-share and clipboard fallback. The service's settings
 entry, status display, and cancellation control are shared with Telegram.
 
-分享到抖音 opens `com.ss.android.ugc.aweme.share.SystemShareActivity`, verified on
+发布到抖音 opens `com.ss.android.ugc.aweme.share.SystemShareActivity`, verified on
 Douyin 40.6.0 to go directly to the photo editor. Edit the images and tap 下一步 to
 reach the post form. If this entry is missing or restricted, it falls back to the
 previous `com.ss.android.ugc.aweme.share.ui.SystemShareNewActivity`: choose 去发布
@@ -170,7 +170,7 @@ there. Both use the same prepared files. The description is not filled from the
 share text, so 复制文字并打开抖音 copies it for pasting. At least one photo is required;
 with none selected, 准备图文 remains available with the edited text preserved.
 
-B 站 opens `com.bilibili.bplus.followingpublish.FollowingPublishActivity` with action
+发布到 B 站 opens `com.bilibili.bplus.followingpublish.FollowingPublishActivity` with action
 `tv.danmaku.bili.intent.action.FOLLOWING_SHARE`, `content`, `share_publish=true`
 and photos in `ClipData`. Bilibili 9.16.0 was verified to fill text and two photos
 in the dynamic composer. Its existing composer can append text or ignore new photos,
