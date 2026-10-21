@@ -31,7 +31,8 @@ A new Moment can be written on the phone, from the ✎ in the Moments tab's head
 on, in a dialog over the page it was opened from: its words, up to nine photos from the system's documents picker (a tile beside it
 opens the phone's camera app, whose photos go to the gallery to be picked from there), and when and
 where, worked out as it is written. The time is the earliest photo's, from its EXIF and
-the offset the camera wrote, else now; the place is where the first photo was taken,
+the offset the camera wrote, else, for photos whose EXIF has none (saved from WeChat), the
+earliest their files were made, else now; the place is where the first photo was taken,
 when the app may see that (the photo picker takes it out, the documents picker doesn't),
 else where the phone is, and the known place within 2 km of
 it, else a new place named after what is there (see below), or its coordinates.
