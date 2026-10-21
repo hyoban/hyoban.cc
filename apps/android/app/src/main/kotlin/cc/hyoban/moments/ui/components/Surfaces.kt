@@ -38,6 +38,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import cc.hyoban.moments.ui.theme.Corners
+import cc.hyoban.moments.ui.theme.Elevation
 import cc.hyoban.moments.ui.theme.LocalDarkTheme
 import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
 import cc.hyoban.moments.ui.theme.Space
@@ -92,9 +93,9 @@ fun PressableCard(onClick: () -> Unit, modifier: Modifier = Modifier, content: @
 fun Pill(text: String, modifier: Modifier = Modifier, icon: ImageVector? = null) {
     Row(
         modifier.clip(Corners.full).background(LocalSurfaceLevel.current.raised.fill())
-            .heightIn(min = 28.dp).padding(start = if (icon != null) 8.dp else 12.dp, end = 12.dp, top = 4.dp, bottom = 4.dp),
+            .heightIn(min = 28.dp).padding(start = if (icon != null) Space.s else Space.m, end = Space.m, top = Space.xs, bottom = Space.xs),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        horizontalArrangement = Arrangement.spacedBy(Space.s),
     ) {
         icon?.let { Icon(it, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp)) }
         Text(text, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
@@ -125,7 +126,7 @@ fun NeutralChip(label: String, icon: ImageVector, onClick: () -> Unit, modifier:
 /** A card's section: a small icon and its name over what follows, both in the secondary text colour. */
 @Composable
 fun SectionHeader(icon: ImageVector, title: String, modifier: Modifier = Modifier, action: (@Composable () -> Unit)? = null) {
-    Row(modifier.fillMaxWidth().heightIn(min = 24.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+    Row(modifier.fillMaxWidth().heightIn(min = 24.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
         Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
         Text(title, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f).semantics { heading() })
         action?.invoke()
@@ -143,7 +144,7 @@ fun MonthHeader(month: String, year: String?) {
     ) {
         Text(month, style = MaterialTheme.typography.headlineSmall)
         year?.let {
-            Text(it, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 2.dp))
+            Text(it, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = Space.xxs))
         }
     }
 }
@@ -156,13 +157,13 @@ fun DayPill(text: String) {
             shape = Corners.full,
             color = SurfaceLevel.floating(LocalDarkTheme.current).fill(),
             contentColor = MaterialTheme.colorScheme.onSurface,
-            shadowElevation = 3.dp,
+            shadowElevation = Elevation.level2,
         ) {
             Text(
                 text,
                 style = MaterialTheme.typography.labelLarge,
                 // At least its own height, taller with larger text rather than cutting it.
-                modifier = Modifier.heightIn(min = 32.dp).wrapContentHeight(Alignment.CenterVertically).padding(horizontal = 14.dp, vertical = 6.dp),
+                modifier = Modifier.heightIn(min = 32.dp).wrapContentHeight(Alignment.CenterVertically).padding(horizontal = Space.l, vertical = Space.xs),
             )
         }
     }

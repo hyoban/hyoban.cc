@@ -351,8 +351,6 @@ data class MapRoute(val id: String, val segments: List<RouteSegment>)
 private const val DOT_SINGLE = 7f
 private const val DOT_MANY = 9f
 private const val DOT_CLUSTER = 12f
-/** The ring round every dot but the one chosen. */
-private val DOT_STROKE = Color.White.copy(alpha = 0.95f).toArgb()
 // Places gather where three or more crowd within 20 pixels, up to zoom 9; opening a
 // crowd frames its places, no closer than zoom 11.
 private const val CLUSTER_RADIUS = 20
@@ -362,7 +360,7 @@ private const val CLUSTER_OPEN_MAX_ZOOM = 11.0
 // The routes: lines under the places in the site's ink, which read now the basemap's
 // streets are gone and its roads faded; a little bolder than the site's for a phone, and
 // widening as the map zooms in. The one tapped stands out, the rest fall back.
-private const val ROUTE_OPACITY = 0.6f
+internal const val ROUTE_OPACITY = 0.6f
 private const val ROUTE_WIDTH = 2f
 private const val ROUTE_LIFTED_WIDTH = 3.5f
 private const val ROUTE_DIMMED_OPACITY = 0.15f
@@ -383,9 +381,9 @@ private fun byZoom(width: Expression): Expression = interpolate(
 private val RouteSegment.lineString get() = LineString.fromLngLats(line.map { (longitude, latitude) -> Point.fromLngLat(longitude, latitude) })
 
 /** The colour of a place or a crowd: its first year's. */
-private fun yearColor(colors: Map<Int, Color>): Expression {
+private fun yearColor(colors: Map<Int, Color>, unknown: Int): Expression {
     val stops = colors.map { (year, color) -> stop(year, color(color.toArgb())) }.toTypedArray()
-    return if (stops.isEmpty()) color(Color.Gray.toArgb()) else match(get("firstYear"), color(Color.Gray.toArgb()), *stops)
+    return if (stops.isEmpty()) color(unknown) else match(get("firstYear"), color(unknown), *stops)
 }
 
 /** The first layer of the basemap's labels, which the routes go under. */
@@ -433,6 +431,12 @@ fun PlacesMap(
     var map by remember { mutableStateOf<Pair<MapLibreMap, Style>?>(null) }
     var framed by remember { mutableStateOf(false) }
     val ink = MaterialTheme.colorScheme.onSurface.toArgb()
+    // The ring round every dot but the one chosen, the page's surface; the number on a dot the
+    // inverse surface's text, light on light mode's dark dots and dark on dark mode's light ones.
+    val ring = MaterialTheme.colorScheme.surface.toArgb()
+    val onDot = MaterialTheme.colorScheme.inverseOnSurface.toArgb()
+    val shade = MaterialTheme.colorScheme.scrim.toArgb()
+    val unknown = MaterialTheme.colorScheme.outline.toArgb()
     val density = LocalDensity.current
     val reach = with(density) { 8.dp.toPx() }
     val routeReach = with(density) { 22.dp.toPx() }
@@ -486,7 +490,7 @@ fun PlacesMap(
         )
         style.addLayer(
             CircleLayer(PLACES_SHADOW, PLACES).withProperties(
-                circleColor(Color.Black.toArgb()),
+                circleColor(shade),
                 circleOpacity(0.18f),
                 circleBlur(0.6f),
                 circleTranslate(arrayOf(0f, 1.5f)),
@@ -494,8 +498,8 @@ fun PlacesMap(
         )
         style.addLayer(
             CircleLayer(PLACES, PLACES).withProperties(
-                circleColor(yearColor(colors)),
-                circleStrokeColor(DOT_STROKE),
+                circleColor(yearColor(colors, unknown)),
+                circleStrokeColor(ring),
             ),
         )
         style.addLayer(
@@ -509,7 +513,7 @@ fun PlacesMap(
                 ),
                 textFont(arrayOf("Noto Sans Bold")),
                 textSize(switchCase(has("point_count"), literal(11f), literal(10f))),
-                textColor(Color.White.toArgb()),
+                textColor(onDot),
                 textAllowOverlap(true),
                 textIgnorePlacement(true),
             ),
@@ -606,7 +610,7 @@ fun PlacesMap(
         style.getLayerAs<CircleLayer>(PLACES)?.setProperties(
             circleRadius(grown),
             circleStrokeWidth(switchCase(chosen, literal(3f), literal(2f))),
-            circleStrokeColor(switchCase(chosen, color(ink), color(DOT_STROKE))),
+            circleStrokeColor(switchCase(chosen, color(ink), color(ring))),
             circleSortKey(switchCase(chosen, literal(1f), literal(0f))),
         )
         style.getLayerAs<CircleLayer>(PLACES_SHADOW)?.setProperties(circleRadius(sum(grown, literal(3f))))
@@ -695,6 +699,7 @@ fun PlacesStill(places: List<Place>, modifier: Modifier = Modifier) {
 @Composable
 private fun PointsMap(points: List<LatLng>, lines: List<RouteSegment>, dot: Float, padding: Dp, modifier: Modifier, interactive: Boolean) {
     val line = MaterialTheme.colorScheme.primary.toArgb()
+    val ring = MaterialTheme.colorScheme.surface.toArgb()
     val inset = edges(padding, padding, padding, padding)
 
     MapLibreView(modifier, interactive) { map, style, _ ->
@@ -731,7 +736,7 @@ private fun PointsMap(points: List<LatLng>, lines: List<RouteSegment>, dot: Floa
                 circleRadius(dot),
                 circleColor(line),
                 circleStrokeWidth(2f),
-                circleStrokeColor(Color.White.toArgb()),
+                circleStrokeColor(ring),
             ),
         )
         val framed = points + lines.flatMap { segment -> segment.line.map { (longitude, latitude) -> LatLng(latitude, longitude) } }
@@ -783,7 +788,7 @@ fun PickerMap(
                 circleRadius(6f),
                 circleColor(dot),
                 circleStrokeWidth(2f),
-                circleStrokeColor(DOT_STROKE),
+                circleStrokeColor(halo),
             ),
         )
         style.addLayer(

@@ -82,7 +82,7 @@ fun monthsOf(moments: List<MomentRecord>, year: Int): List<Int> =
 /** The rows of chips choosing [filter] from [years] and, for the year chosen, [months]. */
 @Composable
 fun TimeFilterRows(filter: TimeFilter, years: List<Int>, months: List<Int>, onChange: (TimeFilter) -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(Space.xxs)) {
         ChipRow(
             "year_",
             listOf(null) + years,

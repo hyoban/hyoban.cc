@@ -57,6 +57,9 @@ import cc.hyoban.moments.ui.DEEP_LINK_SCHEME
 import cc.hyoban.moments.ui.format.daysBetween
 import cc.hyoban.moments.ui.format.formatDate
 import cc.hyoban.moments.ui.format.formatRange
+import cc.hyoban.moments.ui.theme.MediaOverlay
+import cc.hyoban.moments.ui.theme.Radius
+import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.seededColorScheme
 import coil3.SingletonImageLoader
 import coil3.request.ImageRequest
@@ -203,7 +206,7 @@ private fun WidgetCard(card: Card) {
             base.background(GlanceTheme.colors.surface).padding(PADDING).clickable(open("moments")),
             contentAlignment = Alignment.Center,
         ) {
-            Text(card.message, style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 13.sp))
+            Text(card.message, style = WidgetType.BodyMedium.style(GlanceTheme.colors.onSurfaceVariant))
         }
         is Card.Photo -> when (LocalSize.current) {
             STRIP -> StripCard(card, base)
@@ -224,15 +227,16 @@ private fun OverlayCard(card: Card.Photo, base: GlanceModifier, large: Boolean) 
             // The shade the words sit on.
             Image(ImageProvider(R.drawable.widget_shade), contentDescription = null, modifier = GlanceModifier.fillMaxSize(), contentScale = ContentScale.FillBounds)
         }
-        val strong = if (onPhoto) ColorProvider(Color.White) else GlanceTheme.colors.onPrimaryContainer
-        val soft = if (onPhoto) ColorProvider(Color.White.copy(alpha = 0.82f)) else GlanceTheme.colors.onPrimaryContainer
+        val strong = if (onPhoto) ColorProvider(MediaOverlay.content) else GlanceTheme.colors.onPrimaryContainer
+        val soft = if (onPhoto) ColorProvider(MediaOverlay.contentVariant) else GlanceTheme.colors.onPrimaryContainer
         Column(GlanceModifier.fillMaxSize().padding(if (large) PADDING_LARGE else PADDING), verticalAlignment = Alignment.Bottom) {
             Words(
                 card,
                 strong,
                 soft,
-                titleSize = if (large) 18.sp else 15.sp,
-                small = if (large) 13.sp else 12.sp,
+                titleType = if (large) WidgetType.TitleMedium else WidgetType.TitleSmall,
+                eyebrowType = if (large) WidgetType.LabelLarge else WidgetType.LabelMedium,
+                subtitleType = if (large) WidgetType.BodyMedium else WidgetType.BodySmall,
                 title = if (large) card.text ?: card.title else card.title,
                 titleLines = if (large) 4 else 2,
             )
@@ -251,7 +255,7 @@ private fun WideCard(card: Card.Photo, base: GlanceModifier) {
             contentScale = ContentScale.Crop,
         )
         Column(GlanceModifier.defaultWeight().fillMaxHeight().padding(PADDING), verticalAlignment = Alignment.CenterVertically) {
-            Words(card, GlanceTheme.colors.onSurface, GlanceTheme.colors.onSurfaceVariant, titleSize = 15.sp, small = 12.sp, title = card.text ?: card.title, titleLines = 3)
+            Words(card, GlanceTheme.colors.onSurface, GlanceTheme.colors.onSurfaceVariant, WidgetType.TitleSmall, WidgetType.LabelMedium, WidgetType.BodySmall, title = card.text ?: card.title, titleLines = 3)
         }
     }
 }
@@ -264,24 +268,33 @@ private fun StripCard(card: Card.Photo, base: GlanceModifier) {
             Image(ImageProvider(card.photo), contentDescription = card.title, modifier = GlanceModifier.width(72.dp).fillMaxHeight(), contentScale = ContentScale.Crop)
         }
         Column(GlanceModifier.defaultWeight().padding(horizontal = PADDING), verticalAlignment = Alignment.CenterVertically) {
-            Text(card.eyebrow, style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 12.sp, fontWeight = FontWeight.Medium), maxLines = 1)
-            Text(card.title, style = TextStyle(color = GlanceTheme.colors.onSurface, fontSize = 14.sp, fontWeight = FontWeight.Medium), maxLines = 1)
+            Text(card.eyebrow, style = WidgetType.LabelMedium.style(GlanceTheme.colors.onSurfaceVariant), maxLines = 1)
+            Text(card.title, style = WidgetType.TitleSmall.style(GlanceTheme.colors.onSurface), maxLines = 1)
         }
     }
 }
 
 /** When, what and where, stacked. */
 @Composable
-private fun Words(card: Card.Photo, strong: ColorProvider, soft: ColorProvider, titleSize: TextUnit, small: TextUnit, title: String, titleLines: Int) {
-    Text(card.eyebrow, style = TextStyle(color = soft, fontSize = small, fontWeight = FontWeight.Medium), maxLines = 1)
+private fun Words(
+    card: Card.Photo,
+    strong: ColorProvider,
+    soft: ColorProvider,
+    titleType: WidgetType,
+    eyebrowType: WidgetType,
+    subtitleType: WidgetType,
+    title: String,
+    titleLines: Int,
+) {
+    Text(card.eyebrow, style = eyebrowType.style(soft), maxLines = 1)
     Text(
         title,
-        modifier = GlanceModifier.fillMaxWidth().padding(top = 2.dp),
-        style = TextStyle(color = strong, fontSize = titleSize, fontWeight = FontWeight.Medium),
+        modifier = GlanceModifier.fillMaxWidth().padding(top = Space.xxs),
+        style = titleType.style(strong),
         maxLines = titleLines,
     )
     card.subtitle?.let {
-        Text(it, modifier = GlanceModifier.padding(top = 2.dp), style = TextStyle(color = soft, fontSize = small), maxLines = 1)
+        Text(it, modifier = GlanceModifier.padding(top = Space.xxs), style = subtitleType.style(soft), maxLines = 1)
     }
 }
 
@@ -320,6 +333,18 @@ private suspend fun photo(context: Context, container: AppContainer, media: Mome
 }
 
 private const val PHOTO_WIDTH = 720
-private val CORNER = 24.dp
-private val PADDING = 14.dp
-private val PADDING_LARGE = 18.dp
+private val CORNER = Radius.extraLarge
+private val PADDING = Space.l
+private val PADDING_LARGE = Space.xl
+
+/** Material 3's type scale for the widgets, which Glance has no theme typography for: its sizes and weights as they are. */
+private enum class WidgetType(val size: TextUnit, val weight: FontWeight) {
+    TitleMedium(16.sp, FontWeight.Medium),
+    TitleSmall(14.sp, FontWeight.Medium),
+    LabelLarge(14.sp, FontWeight.Medium),
+    LabelMedium(12.sp, FontWeight.Medium),
+    BodyMedium(14.sp, FontWeight.Normal),
+    BodySmall(12.sp, FontWeight.Normal);
+
+    fun style(color: ColorProvider) = TextStyle(color = color, fontSize = size, fontWeight = weight)
+}

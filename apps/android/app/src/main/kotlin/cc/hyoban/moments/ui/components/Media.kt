@@ -45,6 +45,8 @@ import cc.hyoban.moments.R
 import cc.hyoban.moments.data.media.MediaUrls
 import cc.hyoban.moments.data.spec.MediaType
 import cc.hyoban.moments.data.spec.MomentMedia
+import cc.hyoban.moments.ui.theme.MediaOverlay
+import cc.hyoban.moments.ui.theme.Space
 import coil3.compose.AsyncImage
 import coil3.compose.LocalPlatformContext
 import coil3.request.ImageRequest
@@ -151,7 +153,7 @@ fun MediaTile(
         MediaStill(media, urls, Modifier.fillMaxSize().sharedMedia(sharedKey, sharedShape))
         when (media.type) {
             MediaType.VIDEO -> PlayBadge(Modifier.align(Alignment.Center))
-            MediaType.LIVE_PHOTO -> LiveBadge(Modifier.align(liveBadgeAlignment).padding(8.dp))
+            MediaType.LIVE_PHOTO -> LiveBadge(Modifier.align(liveBadgeAlignment).padding(Space.s))
             MediaType.IMAGE -> Unit
         }
     }
@@ -162,20 +164,20 @@ fun PlayBadge(modifier: Modifier = Modifier) {
     Icon(
         Icons.Rounded.PlayArrow,
         contentDescription = stringResource(R.string.action_play),
-        tint = Color.White,
-        modifier = modifier.size(44.dp).clip(CircleShape).background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.45f)).padding(8.dp),
+        tint = MediaOverlay.content,
+        modifier = modifier.size(44.dp).clip(CircleShape).background(MediaOverlay.control).padding(Space.s),
     )
 }
 
 @Composable
 fun LiveBadge(modifier: Modifier = Modifier) {
     Row(
-        modifier.clip(CircleShape).background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.45f)).padding(horizontal = 8.dp, vertical = 3.dp),
+        modifier.clip(CircleShape).background(MediaOverlay.control).padding(horizontal = Space.s, vertical = Space.xxs),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(Space.xs),
     ) {
-        Icon(Icons.Rounded.MotionPhotosOn, contentDescription = null, tint = Color.White, modifier = Modifier.size(14.dp))
-        Text(stringResource(R.string.label_live), color = Color.White, style = MaterialTheme.typography.labelSmall)
+        Icon(Icons.Rounded.MotionPhotosOn, contentDescription = null, tint = MediaOverlay.content, modifier = Modifier.size(14.dp))
+        Text(stringResource(R.string.label_live), color = MediaOverlay.content, style = MaterialTheme.typography.labelSmall)
     }
 }
 
@@ -231,12 +233,12 @@ fun MediaMosaic(
                                 val more = pluralStringResource(R.plurals.media_more, media.size - 4, media.size - 4)
                                 val view = stringResource(R.string.action_view)
                                 Box(
-                                    Modifier.fillMaxSize().background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.45f))
+                                    Modifier.fillMaxSize().background(MediaOverlay.control)
                                         .clickable(onClickLabel = view) { onOpen(index) }
                                         .semantics { contentDescription = more },
                                     contentAlignment = Alignment.Center,
                                 ) {
-                                    Text("+${media.size - 4}", color = Color.White, style = MaterialTheme.typography.headlineSmall)
+                                    Text("+${media.size - 4}", color = MediaOverlay.content, style = MaterialTheme.typography.headlineSmall)
                                 }
                             }
                         }

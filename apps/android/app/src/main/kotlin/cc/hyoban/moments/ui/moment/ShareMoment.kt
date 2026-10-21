@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Send
@@ -338,7 +337,7 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                         val label = stringResource(R.string.share_photo, index + 1)
                         Box(
                             Modifier
-                                .border(2.dp, if (checked) MaterialTheme.colorScheme.primary else Color.Transparent, RoundedCornerShape(14.dp))
+                                .border(2.dp, if (checked) MaterialTheme.colorScheme.primary else Color.Transparent, MaterialTheme.shapes.large)
                                 .toggleable(
                                     value = checked,
                                     enabled = !busy && (checked || chosen.size < target.limit),
@@ -349,16 +348,17 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                                 )
                                 .semantics(mergeDescendants = true) { contentDescription = label }
                                 .testTag("share_${target.tag}_photo_$index")
-                                .padding(3.dp),
+                                // The ring a step out from the photo, its corner the photo's and that step together.
+                                .padding(Space.xs),
                         ) {
                             Thumbnail(photo, urls, size = 72)
                             if (checked) {
                                 Surface(
                                     color = MaterialTheme.colorScheme.primary,
-                                    shape = RoundedCornerShape(6.dp),
+                                    shape = MaterialTheme.shapes.small,
                                     modifier = Modifier.align(Alignment.BottomEnd),
                                 ) {
-                                    Text("${chosen.indexOf(photo) + 1}", Modifier.padding(horizontal = 5.dp), style = MaterialTheme.typography.labelSmall)
+                                    Text("${chosen.indexOf(photo) + 1}", Modifier.padding(horizontal = Space.xs), style = MaterialTheme.typography.labelSmall)
                                 }
                             }
                         }

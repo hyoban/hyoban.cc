@@ -49,7 +49,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -173,7 +172,7 @@ private fun SearchResult(
     shapes: ListItemShapes,
     onClick: () -> Unit,
 ) {
-    val mark = SpanStyle(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+    val mark = SpanStyle(color = MaterialTheme.colorScheme.primary, fontWeight = MaterialTheme.typography.bodyLargeEmphasized.fontWeight)
     val words = remember(moment.text) { moment.text.replace(Regex("\\s+"), " ").trim() }
     val inWords = words.contains(text, ignoreCase = true)
     // Why it was found when its words don't say: the first place, else the trip, that matches.

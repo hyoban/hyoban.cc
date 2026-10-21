@@ -37,6 +37,8 @@ import com.kyant.capsule.ContinuousRoundedRectangle
 
 /** The 4dp grid every gap and padding is a step of. */
 object Space {
+    /** Half a step, only inside small things: a label's padding, a badge's gap. */
+    val xxs = 2.dp
     val xs = 4.dp
     val s = 8.dp
     val m = 12.dp
@@ -49,24 +51,42 @@ object Space {
         @Composable @ReadOnlyComposable get() = if (isMediumWidth()) 24.dp else 16.dp
 }
 
+/** Material 3's corner sizes, for a shape that animates between them; anything else takes [MaterialTheme.shapes]. */
+object Radius {
+    val extraSmall = 4.dp
+    val small = 8.dp
+    val medium = 12.dp
+    val large = 16.dp
+    val extraLarge = 28.dp
+}
+
 /** The fully rounded shape: what floats, chips, labels. A capsule with continuous ends. */
 object Corners {
     val full: Shape = ContinuousCapsule
 }
 
+/** Material 3's elevation levels, for the shadows of what floats over content. */
+object Elevation {
+    val level1 = 1.dp
+    val level2 = 3.dp
+    val level3 = 6.dp
+}
+
 // Material 3's shape scale, its corner sizes as they are, drawn as continuous curves
 // rather than arcs, so a corner eases into its sides as Apple's and FlClash's do.
 private val AppShapes = Shapes(
-    extraSmall = ContinuousRoundedRectangle(4.dp),
-    small = ContinuousRoundedRectangle(8.dp),
-    medium = ContinuousRoundedRectangle(12.dp),
-    large = ContinuousRoundedRectangle(16.dp),
-    extraLarge = ContinuousRoundedRectangle(28.dp),
+    extraSmall = ContinuousRoundedRectangle(Radius.extraSmall),
+    small = ContinuousRoundedRectangle(Radius.small),
+    medium = ContinuousRoundedRectangle(Radius.medium),
+    large = ContinuousRoundedRectangle(Radius.large),
+    extraLarge = ContinuousRoundedRectangle(Radius.extraLarge),
 )
 
 // Material 3's type scale, its sizes and weights as they are, with two changes for
 // Chinese: no letter spacing, which spreads it out, and body text a few points more
-// between lines. Labels set their digits in columns, so times and counts line up.
+// between lines. Labels set their digits in columns, so times and counts line up. The
+// emphasized styles, Material 3 Expressive's, the same with a heavier weight.
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 private val AppTypography = Typography().run {
     fun TextStyle.forChinese(lineHeight: Int? = null, numbers: Boolean = false) = copy(
         letterSpacing = 0.em,
@@ -89,7 +109,29 @@ private val AppTypography = Typography().run {
         labelLarge = labelLarge.forChinese(numbers = true),
         labelMedium = labelMedium.forChinese(numbers = true),
         labelSmall = labelSmall.forChinese(numbers = true),
+        displayLargeEmphasized = displayLargeEmphasized.forChinese(),
+        displayMediumEmphasized = displayMediumEmphasized.forChinese(),
+        displaySmallEmphasized = displaySmallEmphasized.forChinese(numbers = true),
+        headlineLargeEmphasized = headlineLargeEmphasized.forChinese(),
+        headlineMediumEmphasized = headlineMediumEmphasized.forChinese(),
+        headlineSmallEmphasized = headlineSmallEmphasized.forChinese(),
+        titleLargeEmphasized = titleLargeEmphasized.forChinese(),
+        titleMediumEmphasized = titleMediumEmphasized.forChinese(),
+        titleSmallEmphasized = titleSmallEmphasized.forChinese(),
+        bodyLargeEmphasized = bodyLargeEmphasized.forChinese(lineHeight = 26),
+        bodyMediumEmphasized = bodyMediumEmphasized.forChinese(lineHeight = 22),
+        bodySmallEmphasized = bodySmallEmphasized.forChinese(lineHeight = 18),
+        labelLargeEmphasized = labelLargeEmphasized.forChinese(numbers = true),
+        labelMediumEmphasized = labelMediumEmphasized.forChinese(numbers = true),
+        labelSmallEmphasized = labelSmallEmphasized.forChinese(numbers = true),
     )
+}
+
+/** The app's own type beyond Material's scale. */
+object AppType {
+    /** A Moment's words on its page, read at length: body large a point larger, with room between the lines. */
+    val reading: TextStyle
+        @Composable @ReadOnlyComposable get() = MaterialTheme.typography.bodyLarge.copy(fontSize = 17.sp, lineHeight = 30.sp)
 }
 
 /**

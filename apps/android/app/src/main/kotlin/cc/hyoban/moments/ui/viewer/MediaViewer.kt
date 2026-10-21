@@ -38,7 +38,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.shape.ZeroCornerSize
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -127,7 +126,9 @@ import cc.hyoban.moments.ui.format.formatDay
 import cc.hyoban.moments.ui.format.formatTime
 import cc.hyoban.moments.ui.map.PlacesStill
 import cc.hyoban.moments.ui.rememberShowMessage
+import cc.hyoban.moments.ui.theme.Corners
 import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
+import cc.hyoban.moments.ui.theme.MediaOverlay
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.fill
 import cc.hyoban.moments.ui.trips.tripSummary
@@ -187,7 +188,8 @@ fun MediaViewer(
         // the black thins out to the page under the viewer.
         fun progress() = (drag / fadeOver).coerceIn(0f, 1f)
 
-        Box(Modifier.fillMaxSize().drawBehind { drawRect(Color.Black.copy(alpha = 1f - progress())) })
+        val backdrop = MaterialTheme.colorScheme.scrim
+        Box(Modifier.fillMaxSize().drawBehind { drawRect(backdrop.copy(alpha = 1f - progress())) })
         HorizontalPager(
             pager,
             Modifier.fillMaxSize()
@@ -236,16 +238,16 @@ fun MediaViewer(
 
         AnimatedVisibility(chrome && !dragging && !inPip, enter = fadeIn(), exit = fadeOut()) {
             Row(
-                Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.25f)).statusBarsPadding().sideInsetsPadding().padding(4.dp),
+                Modifier.fillMaxWidth().background(MediaOverlay.bar).statusBarsPadding().sideInsetsPadding().padding(Space.xs),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Tooltip(stringResource(R.string.action_back), below = true) {
                     IconButton(onClick = onBack, modifier = Modifier.testTag("back")) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.action_back), tint = Color.White)
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.action_back), tint = MediaOverlay.content)
                     }
                 }
                 if (media.size > 1) {
-                    Text("${pager.currentPage + 1} / ${media.size}", color = Color.White, style = MaterialTheme.typography.titleMedium)
+                    Text("${pager.currentPage + 1} / ${media.size}", color = MediaOverlay.content, style = MaterialTheme.typography.titleMedium)
                 }
                 Spacer(Modifier.weight(1f))
                 // The one shown, fetched first when it's the site's, the spinner in its place meanwhile.
@@ -274,15 +276,15 @@ fun MediaViewer(
                         modifier = Modifier.testTag("share"),
                     ) {
                         if (sharing) {
-                            LoadingIndicator(Modifier.size(24.dp), color = Color.White)
+                            LoadingIndicator(Modifier.size(24.dp), color = MediaOverlay.content)
                         } else {
-                            Icon(Icons.Rounded.Share, contentDescription = stringResource(R.string.action_share), tint = Color.White)
+                            Icon(Icons.Rounded.Share, contentDescription = stringResource(R.string.action_share), tint = MediaOverlay.content)
                         }
                     }
                 }
                 Tooltip(stringResource(R.string.action_info), below = true) {
                     IconButton(onClick = { info = true }, modifier = Modifier.testTag("info")) {
-                        Icon(Icons.Rounded.Info, contentDescription = stringResource(R.string.action_info), tint = Color.White)
+                        Icon(Icons.Rounded.Info, contentDescription = stringResource(R.string.action_info), tint = MediaOverlay.content)
                     }
                 }
             }
@@ -306,7 +308,7 @@ fun MediaViewer(
         BackHandler(enabled = info && side) { info = false }
         AnimatedVisibility(info && side, enter = fadeIn(), exit = fadeOut()) {
             Box(
-                Modifier.fillMaxSize().background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.32f))
+                Modifier.fillMaxSize().background(MediaOverlay.bar)
                     .clickable(interactionSource = null, indication = null) { info = false },
             )
         }
@@ -337,6 +339,8 @@ fun MediaViewer(
 
 /** How wide the details' panel is down the side of a phone on its side. */
 private val INFO_PANEL_WIDTH = 400.dp
+/** How high a live photo's badge sits over the photo's bottom, clear of the system's gesture area where a thumb rests. */
+private val LIVE_BADGE_LIFT = 88.dp
 
 @Composable
 private fun ViewerPage(
@@ -376,7 +380,7 @@ private fun ViewerPage(
             MediaType.LIVE_PHOTO -> if (liveMotion != null) {
                 ViewerLiveBadge(
                     live,
-                    Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(bottom = 88.dp),
+                    Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(bottom = LIVE_BADGE_LIFT),
                 )
             }
             MediaType.IMAGE -> Unit
@@ -403,7 +407,7 @@ private fun InfoCard(icon: ImageVector, title: String, content: @Composable Colu
 private fun InfoTile(text: String, label: String? = null) {
     Column(
         Modifier.fillMaxWidth().clip(MaterialTheme.shapes.medium).background(LocalSurfaceLevel.current.raised.fill()).padding(Space.m),
-        verticalArrangement = Arrangement.spacedBy(2.dp),
+        verticalArrangement = Arrangement.spacedBy(Space.xxs),
     ) {
         label?.let { Text(it, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
         Text(text, style = MaterialTheme.typography.bodyMedium)
@@ -417,24 +421,24 @@ private fun ViewerLiveBadge(state: LiveMotionState, modifier: Modifier = Modifie
     Row(
         // A tap target of 48dp around the badge, as Material asks of anything tapped.
         modifier.minimumInteractiveComponentSize()
-            .clip(RoundedCornerShape(50))
-            .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.45f))
+            .clip(Corners.full)
+            .background(MediaOverlay.control)
             .clickable(
                 enabled = state.ready,
                 onClickLabel = stringResource(if (state.playing) R.string.action_pause else R.string.action_play),
                 role = Role.Button,
             ) { if (state.playing) state.stop() else state.play() }
             .testTag("live")
-            .padding(horizontal = 12.dp, vertical = 6.dp),
+            .padding(horizontal = Space.m, vertical = Space.xs),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        horizontalArrangement = Arrangement.spacedBy(Space.s),
     ) {
         if (state.ready) {
-            Icon(Icons.Rounded.MotionPhotosOn, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+            Icon(Icons.Rounded.MotionPhotosOn, contentDescription = null, tint = MediaOverlay.content, modifier = Modifier.size(16.dp))
         } else {
-            LoadingIndicator(Modifier.size(16.dp), color = Color.White)
+            LoadingIndicator(Modifier.size(16.dp), color = MediaOverlay.content)
         }
-        Text(stringResource(R.string.label_live), color = Color.White, style = MaterialTheme.typography.labelMedium)
+        Text(stringResource(R.string.label_live), color = MediaOverlay.content, style = MaterialTheme.typography.labelMedium)
     }
 }
 
@@ -550,7 +554,7 @@ private fun InfoContent(
         modifier.verticalScroll(rememberScrollState()).padding(start = Space.gutter, end = Space.gutter, bottom = Space.xl),
         verticalArrangement = Arrangement.spacedBy(Space.m),
     ) {
-        Column(Modifier.padding(horizontal = Space.xs), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Column(Modifier.padding(horizontal = Space.xs), verticalArrangement = Arrangement.spacedBy(Space.xxs)) {
             Text(formatDay(moment.occurredAt), style = MaterialTheme.typography.headlineSmall)
             formatTime(moment.occurredAt)?.let {
                 Text(it, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)

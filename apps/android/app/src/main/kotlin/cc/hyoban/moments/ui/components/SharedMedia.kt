@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import cc.hyoban.moments.ui.theme.Radius
 import cc.hyoban.moments.ui.theme.TransitionMotion
 import com.kyant.capsule.ContinuousRoundedRectangle
 
@@ -109,7 +110,7 @@ fun Modifier.sharedMedia(key: String?, shape: Shape = RectangleShape): Modifier 
  */
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun Modifier.sharedCard(key: String, cardCorner: Dp = 16.dp, page: Boolean = false): Modifier {
+fun Modifier.sharedCard(key: String, cardCorner: Dp = Radius.large, page: Boolean = false): Modifier {
     val shared = LocalSharedTransitionScope.current
     val animated = LocalNavAnimatedScope.current
     if (shared == null || animated == null) return this

@@ -40,7 +40,6 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -83,7 +82,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -100,7 +98,6 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.R
@@ -131,10 +128,14 @@ import cc.hyoban.moments.ui.components.tripCardKey
 import cc.hyoban.moments.ui.format.formatDay
 import cc.hyoban.moments.ui.format.formatTime
 import cc.hyoban.moments.ui.rememberShowMessage
+import cc.hyoban.moments.ui.theme.AppType
 import cc.hyoban.moments.ui.theme.Corners
 import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
+import cc.hyoban.moments.ui.theme.MediaOverlay
+import cc.hyoban.moments.ui.theme.Radius
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.fill
+import com.kyant.capsule.ContinuousRoundedRectangle
 import cc.hyoban.moments.ui.trips.tripSummary
 import kotlinx.coroutines.launch
 
@@ -373,7 +374,7 @@ private fun MomentDetails(
         }
         if (moment.text.isNotBlank()) {
             SelectionContainer(Modifier.padding(start = Space.gutter + Space.l, end = Space.gutter + Space.l, top = Space.l)) {
-                Text(moment.text, style = MaterialTheme.typography.bodyLarge.copy(fontSize = 17.sp, lineHeight = 30.sp))
+                Text(moment.text, style = AppType.reading)
             }
         }
         if (moment.media.size > 1) {
@@ -487,10 +488,10 @@ private fun Filmstrip(moment: MomentRecord, urls: MediaUrls, pager: PagerState, 
             // The one shown breaks from the others' shape, morphing on the motion scheme's
             // spatial spring; the others under a scrim rather than faded, so they don't turn the
             // page's grey.
-            val corner by animateDpAsState(if (selected) 28.dp else 12.dp, MaterialTheme.motionScheme.fastSpatialSpec(), label = "thumb shape")
-            val dim by animateFloatAsState(if (selected) 0f else 0.45f, MaterialTheme.motionScheme.fastEffectsSpec(), label = "thumb dim")
+            val corner by animateDpAsState(if (selected) Radius.extraLarge else Radius.medium, MaterialTheme.motionScheme.fastSpatialSpec(), label = "thumb shape")
+            val dim by animateFloatAsState(if (selected) 0f else MediaOverlay.CONTROL_ALPHA, MaterialTheme.motionScheme.fastEffectsSpec(), label = "thumb dim")
             Box(
-                Modifier.size(56.dp).clip(RoundedCornerShape(corner))
+                Modifier.size(56.dp).clip(ContinuousRoundedRectangle(corner))
                     .clickable { scope.launch { pager.animateScrollToPage(index) } }
                     // Named as a carousel's item is, which of how many, and whether it is the one shown.
                     .semantics {
@@ -500,7 +501,7 @@ private fun Filmstrip(moment: MomentRecord, urls: MediaUrls, pager: PagerState, 
                     .testTag("thumb_$index"),
             ) {
                 Thumbnail(media, urls, size = 56)
-                Box(Modifier.matchParentSize().graphicsLayer { alpha = dim }.background(Color.Black))
+                Box(Modifier.matchParentSize().graphicsLayer { alpha = dim }.background(MaterialTheme.colorScheme.scrim))
             }
         }
     }

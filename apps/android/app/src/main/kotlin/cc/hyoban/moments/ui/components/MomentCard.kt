@@ -42,6 +42,7 @@ import cc.hyoban.moments.data.spec.TripRecord
 import cc.hyoban.moments.ui.format.formatDate
 import cc.hyoban.moments.ui.format.formatTime
 import cc.hyoban.moments.ui.theme.Corners
+import cc.hyoban.moments.ui.theme.Elevation
 import cc.hyoban.moments.ui.theme.LocalDarkTheme
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.SurfaceLevel
@@ -78,7 +79,7 @@ fun MomentCard(
         }
         Column(
             Modifier.padding(start = Space.l, end = Space.l, top = if (moment.media.isEmpty()) Space.l else Space.s, bottom = Space.l),
-            verticalArrangement = Arrangement.spacedBy(Space.s + 2.dp),
+            verticalArrangement = Arrangement.spacedBy(Space.m),
         ) {
             MomentSubhead(moment, places, trip, showDate)
             if (moment.text.isNotBlank()) {
@@ -150,7 +151,7 @@ fun FloatingButton(
             shape = Corners.full,
             color = if (tonal) MaterialTheme.colorScheme.secondaryContainer else SurfaceLevel.floating(LocalDarkTheme.current).fill(),
             contentColor = if (tonal) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurface,
-            shadowElevation = 3.dp,
+            shadowElevation = Elevation.level2,
             modifier = Modifier.statusBarsPadding().sideInsetsPadding().padding(horizontal = Space.m, vertical = Space.s)
                 .size(width.width, FLOATING_HEIGHT).semantics { contentDescription = label }.testTag(tag),
         ) {
