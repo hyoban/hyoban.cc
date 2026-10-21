@@ -1,6 +1,21 @@
 package cc.hyoban.moments.ui.trips
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.carousel.CarouselItemScope
+import androidx.compose.material3.carousel.HorizontalMultiBrowseCarousel
+import androidx.compose.material3.carousel.HorizontalUncontainedCarousel
+import androidx.compose.material3.carousel.rememberCarouselState
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.semantics.Role
+import cc.hyoban.moments.ui.LocalSnackbarLift
+import cc.hyoban.moments.ui.components.kindLabel
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.toShape
@@ -163,9 +178,23 @@ fun TripPlayerScreen(container: AppContainer, id: String, onMoment: (String) -> 
     val clear = if (landscape) listOf(40.dp, top, card.first + 40.dp, 40.dp) else listOf(40.dp, top, 40.dp, card.second + 16.dp)
 
     Box(Modifier.fillMaxSize().then(if (controller.playing) Modifier.keepScreenOn() else Modifier)) {
-        val routeMap = stringResource(R.string.playback_route_map)
+        // Described as a map, by what it shows now: the trip's route and where it has got to.
+        val here = when (slide) {
+            is PlaybackSlide.Stop -> slide.stop.places.lastOrNull()?.name
+            is PlaybackSlide.Day -> slide.places.firstOrNull()
+            else -> null
+        }
+        val routeMap = if (here != null) stringResource(R.string.playback_map_at, trip.title, here) else stringResource(R.string.playback_map, trip.title)
         PlaybackMap(controller, clear, Modifier.fillMaxSize().semantics { contentDescription = routeMap })
         FloatingBack(onBack, Modifier.align(Alignment.TopStart))
+
+        // Snackbars stand above the card and its toolbar while it is at the foot of the screen.
+        val lift = LocalSnackbarLift.current
+        val navBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+        DisposableEffect(lift, card, landscape) {
+            lift.value = if (landscape) 0.dp else (card.second - navBottom).coerceAtLeast(0.dp)
+            onDispose { lift.value = 0.dp }
+        }
 
         // The whole playback's progress: the cards before at their full length, this one as far as it has played.
         val lengths = remember(playback) { playback.slides.map { TripPlayback.duration(it) ?: 0L } }
@@ -192,7 +221,8 @@ fun TripPlayerScreen(container: AppContainer, id: String, onMoment: (String) -> 
                 .navigationBarsPadding()
                 .padding(Space.gutter)
                 // Beside the map on its side, as Material 3 has a supporting pane at 360dp.
-                .then(if (landscape) Modifier.width(360.dp + Space.gutter * 2) else Modifier.fillMaxWidth()),
+                // Across the foot no wider than Material 3 has a bottom sheet, 640dp.
+                .then(if (landscape) Modifier.width(360.dp + Space.gutter * 2) else Modifier.widthIn(max = 640.dp).fillMaxWidth()),
             photoHeight = if (landscape) 140.dp else 220.dp,
             slide = slide,
             index = index,
@@ -229,10 +259,11 @@ private fun PlayerCard(
         val stop = slide as? PlaybackSlide.Stop
         val swipe = with(LocalDensity.current) { SWIPE_TO_STEP.toPx() }
         val forward = if (LocalLayoutDirection.current == LayoutDirection.Ltr) -1 else 1
-        // A Moment's card is one touch target, growing into the Moment's page as its cards do.
-        // Swiped sideways it steps through the stop's photos and past them to the card before
-        // or after, as the site's photo swipe does; swiped down it folds to its words, and up
-        // it opens again, as a sheet over a map does. It follows the finger as it is dragged,
+        // The card holds its actions, the handle, the photos and the words, rather than being one,
+        // so no action sits on an actionable surface; a Moment's still grows into its page as its
+        // cards do. Swiped sideways it steps through the stop's photos and past them to the card
+        // before or after, as the site's photo swipe does; swiped down it folds to its words, and
+        // up it opens again, as a sheet over a map does. It follows the finger as it is dragged,
         // lifted to the dragged elevation, and springs back as it is let go.
         val scope = rememberCoroutineScope()
         val reduced = LocalReducedMotion.current
@@ -249,8 +280,6 @@ private fun PlayerCard(
             scope.launch { if (reduced) drag.snapTo(Offset.Zero) else drag.animateTo(Offset.Zero, settle) }
         }
         Surface(
-            onClick = { stop?.let { onMoment(it.stop.moment.uid) } },
-            enabled = stop != null,
             shape = cardShape,
             color = SurfaceLevel.Floating.fill(),
             shadowElevation = lift,
@@ -293,11 +322,13 @@ private fun PlayerCard(
                 .testTag("trip_player"),
         ) {
             val motion = MaterialTheme.motionScheme
+            Column(Modifier.animateContentSize(motion.defaultSpatialSpec())) {
+            // The handle across the card's top 48dp, as a sheet's.
+            DragHandle(expanded, onExpanded)
             Column(
-                Modifier.padding(start = Space.m, end = Space.m, bottom = Space.m).animateContentSize(motion.defaultSpatialSpec()),
+                Modifier.padding(start = Space.m, end = Space.m, bottom = Space.m),
                 verticalArrangement = Arrangement.spacedBy(Space.m),
             ) {
-                DragHandle(expanded, onExpanded)
                 AnimatedContent(
                     index to slide,
                     transitionSpec = lateral { it.first },
@@ -308,16 +339,17 @@ private fun PlayerCard(
                     when (shown) {
                         PlaybackSlide.Intro -> IntroCard(trip, controller.playback, covers, urls, photoHeight, expanded)
                         is PlaybackSlide.Day -> DayCard(shown)
-                        is PlaybackSlide.Stop -> StopCard(shown, controller, urls, photoHeight, expanded)
+                        is PlaybackSlide.Stop -> StopCard(shown, controller, urls, photoHeight, expanded, onMoment)
                         PlaybackSlide.Summary -> SummaryCard(trip, controller.playback, covers, urls, expanded)
                     }
                 }
                 // The whole playback's progress along the card's foot, wavy while it plays, as
-                // Material 3 has a long process feel under way, and flat once paused.
-                Row(Modifier.padding(horizontal = Space.xs), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.m)) {
+                // Material 3 has a long process feel under way, and flat once paused; left to right
+                // whichever way the words run, as a media player's timeline is.
+                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) { Row(Modifier.padding(horizontal = Space.xs), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.m)) {
                     val wave by animateFloatAsState(if (playing) 1f else 0f, motion.defaultEffectsSpec(), label = "wave")
                     // Named, with which card it is on, as the count beside it says to the eye.
-                    val label = stringResource(R.string.playback_progress)
+                    val label = stringResource(R.string.playback_progress, trip.title)
                     val position = stringResource(R.string.playback_card_of, index + 1, count)
                     LinearWavyProgressIndicator(
                         progress = progress,
@@ -333,10 +365,12 @@ private fun PlayerCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.clearAndSetSemantics { },
                     )
-                }
+                } }
+            }
             }
         }
-        PlayerToolbar(playing, atEnd, controller::togglePlay, controller::previous, controller::next, first = index == 0, last = index == count - 1)
+        // A media player's controls run left to right in any language.
+        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) { PlayerToolbar(playing, atEnd, controller::togglePlay, controller::previous, controller::next, first = index == 0, last = index == count - 1) }
     }
 }
 
@@ -350,7 +384,8 @@ private fun IntroCard(trip: TripRecord, playback: TripPlayback, covers: List<Mom
         }
         // A mosaic of the covers, the first larger, as the site's intro has.
         if (covers.isNotEmpty() && expanded) {
-            Row(Modifier.fillMaxWidth().height(photoHeight).clip(MaterialTheme.shapes.large), horizontalArrangement = Arrangement.spacedBy(Space.xxs)) {
+            // Decorative: the same photos show, described, on their Moments' cards.
+            Row(Modifier.fillMaxWidth().height(photoHeight).clip(MaterialTheme.shapes.large).clearAndSetSemantics { }, horizontalArrangement = Arrangement.spacedBy(Space.xxs)) {
                 MediaStill(covers[0], urls, Modifier.weight(2f).fillMaxHeight())
                 if (covers.size > 1) {
                     Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(Space.xxs)) {
@@ -375,12 +410,15 @@ private fun DayCard(slide: PlaybackSlide.Day) {
 }
 
 /**
- * A Moment as the route reaches it: its photos in turn, then its words. As on the site,
- * its day and time ride beside the route's head and its places are named on the map, so
- * the card is only read out a heading of them.
+ * A Moment as the route reaches it: its photos as Material 3's carousel, the one showing
+ * large and the next peeking, moving on as it plays; one scrolled to or tapped becomes the
+ * one showing, the single tap standing in for the swipe, and the one showing, tapped, opens
+ * the Moment, as its words do. As on the site, its day and time ride beside the route's head
+ * and its places are named on the map, so the card is only read out a heading of them.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun StopCard(slide: PlaybackSlide.Stop, controller: PlaybackController, urls: MediaUrls, photoHeight: Dp, expanded: Boolean) {
+private fun StopCard(slide: PlaybackSlide.Stop, controller: PlaybackController, urls: MediaUrls, photoHeight: Dp, expanded: Boolean, onMoment: (String) -> Unit) {
     val stop = slide.stop
     val moment = stop.moment
     val photos = stop.photos
@@ -390,6 +428,7 @@ private fun StopCard(slide: PlaybackSlide.Stop, controller: PlaybackController, 
         formatDay(moment.dateKey),
         formatTime(moment.occurredAt),
     ).joinToString(" · ") + " · " + stop.places.joinToString("、") { it.name }
+    val open = stringResource(R.string.action_open_moment)
     Column(
         Modifier.fillMaxWidth().semantics {
             contentDescription = heading
@@ -398,28 +437,65 @@ private fun StopCard(slide: PlaybackSlide.Stop, controller: PlaybackController, 
         verticalArrangement = Arrangement.spacedBy(Space.m),
     ) {
         if (photos.isNotEmpty() && expanded) {
-            Box(Modifier.clip(MaterialTheme.shapes.large)) {
-                AnimatedContent(photo, transitionSpec = lateral(), label = "player photo") { shown ->
-                    MediaStill(photos[shown], urls, Modifier.fillMaxWidth().height(photoHeight))
+            val reduced = LocalReducedMotion.current
+            val state = rememberCarouselState(initialItem = photo) { photos.size }
+            val spec = MaterialTheme.motionScheme.defaultSpatialSpec<Float>()
+            // Following the playback's photo...
+            LaunchedEffect(state, photo) {
+                if (state.currentItem != photo) if (reduced) state.scrollToItem(photo) else state.animateScrollToItem(photo, spec)
+            }
+            // ...and making the one scrolled to by hand the playback's.
+            LaunchedEffect(state) {
+                snapshotFlow { state.isScrollInProgress }.collect { scrolling ->
+                    if (!scrolling && state.currentItem != controller.photo()) controller.selectPhoto(state.currentItem)
                 }
-                if (photos.size > 1) {
-                    Surface(
-                        shape = MaterialTheme.shapes.small,
-                        // Over a photo, in a pair that holds its contrast whatever is under it.
-                        color = MaterialTheme.colorScheme.inverseSurface,
-                        contentColor = MaterialTheme.colorScheme.inverseOnSurface,
-                        modifier = Modifier.align(Alignment.TopEnd).padding(Space.s),
-                    ) {
-                        Text("${photo + 1} / ${photos.size}", style = MaterialTheme.typography.labelMedium.copy(fontFeatureSettings = "tnum"), modifier = Modifier.padding(horizontal = Space.s, vertical = Space.xxs))
-                    }
+            }
+            val view = stringResource(R.string.action_view_photo)
+            val clause = stringResource(R.string.separator_clause)
+            val item: @Composable CarouselItemScope.(Int) -> Unit = { n ->
+                val label = stringResource(R.string.media_position, stringResource(photos[n].kindLabel()), n + 1, photos.size)
+                MediaStill(
+                    photos[n],
+                    urls,
+                    Modifier.fillMaxSize().maskClip(MaterialTheme.shapes.large)
+                        .clickable(onClickLabel = if (n == photo) open else view) { if (n == photo) onMoment(moment.uid) else controller.selectPhoto(n) }
+                        .semantics { contentDescription = listOf(label, photos[n].alt).filter { it.isNotBlank() }.joinToString(clause) },
+                )
+            }
+            BoxWithConstraints(Modifier.fillMaxWidth().height(photoHeight)) {
+                if (reduced || photos.size == 1) {
+                    // With animations removed, all of a size, none growing as it comes into view.
+                    HorizontalUncontainedCarousel(state, itemWidth = if (photos.size == 1) maxWidth else maxWidth - PEEK - Space.s, itemSpacing = Space.s, modifier = Modifier.fillMaxSize(), content = item)
+                } else {
+                    // One large, the next peeking as a small one, as a hero carousel spotlights.
+                    HorizontalMultiBrowseCarousel(
+                        state,
+                        preferredItemWidth = maxWidth - PEEK - Space.s,
+                        itemSpacing = Space.s,
+                        minSmallItemWidth = 40.dp,
+                        maxSmallItemWidth = PEEK,
+                        modifier = Modifier.fillMaxSize(),
+                        content = item,
+                    )
                 }
             }
         }
         if (moment.text.isNotBlank()) {
-            Text(moment.text, style = MaterialTheme.typography.bodyMedium, maxLines = if (expanded) 4 else 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(horizontal = Space.xs))
+            Text(
+                moment.text,
+                style = MaterialTheme.typography.bodyMedium,
+                maxLines = if (expanded) 4 else 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.fillMaxWidth().clip(MaterialTheme.shapes.medium)
+                    .clickable(onClickLabel = open) { onMoment(moment.uid) }
+                    .padding(horizontal = Space.xs),
+            )
         }
     }
 }
+
+/** How wide the next photo peeks, the widest a carousel's small item is. */
+private val PEEK = 56.dp
 
 /**
  * The trip looked back on, as the site's summary: its title, what it came to as tiles, each
@@ -450,7 +526,7 @@ private fun SummaryCard(trip: TripRecord, playback: TripPlayback, covers: List<M
         }
         if (expanded && covers.isNotEmpty()) {
             val shapes = listOf(MaterialShapes.Cookie9Sided, MaterialShapes.Clover4Leaf, MaterialShapes.Sunny)
-            Row(horizontalArrangement = Arrangement.spacedBy(Space.m)) {
+            Row(Modifier.clearAndSetSemantics { }, horizontalArrangement = Arrangement.spacedBy(Space.m)) {
                 covers.take(shapes.size).forEachIndexed { n, cover ->
                     MediaStill(cover, urls, Modifier.weight(1f).aspectRatio(1f).clip(shapes[n].toShape()))
                 }
@@ -534,7 +610,7 @@ private fun DragHandle(expanded: Boolean, onExpanded: (Boolean) -> Unit) {
     val action = stringResource(if (expanded) R.string.action_collapse_card else R.string.action_expand_card)
     Box(
         Modifier.fillMaxWidth().height(HANDLE_TARGET)
-            .clickable(onClickLabel = action) { onExpanded(!expanded) }
+            .clickable(onClickLabel = action, role = Role.Button) { onExpanded(!expanded) }
             .semantics { contentDescription = action }
             .testTag("player_handle"),
         contentAlignment = Alignment.Center,
@@ -543,8 +619,8 @@ private fun DragHandle(expanded: Boolean, onExpanded: (Boolean) -> Unit) {
     }
 }
 
-/** How tall the handle's target is: the card's top margin and the handle, taken together. */
-private val HANDLE_TARGET = 32.dp
+/** How tall the handle's target is: the top 48dp of the card, as a sheet's, the handle 22dp from either edge. */
+private val HANDLE_TARGET = 48.dp
 
 /** The dragged state layer's opacity. */
 private const val DRAGGED_LAYER = 0.16f

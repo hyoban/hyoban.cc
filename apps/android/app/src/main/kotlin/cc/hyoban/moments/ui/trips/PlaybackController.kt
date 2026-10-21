@@ -185,7 +185,7 @@ class PlaybackController(val playback: TripPlayback, private val reduced: Boolea
      * Shows one of the stop's photos, moving the card's time to where that photo shows; the
      * drive on keeps its own pace, so picking photos never moves the map back and forth.
      */
-    private fun selectPhoto(photo: Int) {
+    fun selectPhoto(photo: Int) {
         val count = (slide as? PlaybackSlide.Stop)?.stop?.photos?.size ?: return
         val duration = duration() ?: return
         elapsed = photoDelay + (duration - photoDelay) * photo / count + 1

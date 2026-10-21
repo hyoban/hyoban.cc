@@ -32,6 +32,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Canvas
@@ -233,7 +235,9 @@ fun PlaybackMap(controller: PlaybackController, clear: List<Dp>, modifier: Modif
         // over the map's blank, in the room the card leaves.
         AnimatedVisibility(ready == null, enter = fadeIn(), exit = fadeOut(motion.fastEffectsSpec())) {
             Box(Modifier.fillMaxSize().padding(top = clear[1], bottom = clear[3]), contentAlignment = Alignment.Center) {
-                ContainedLoadingIndicator()
+                // Named by what it waits for, as a progress bar is.
+                val loading = stringResource(R.string.playback_loading_map)
+                ContainedLoadingIndicator(Modifier.semantics { contentDescription = loading })
             }
         }
     }

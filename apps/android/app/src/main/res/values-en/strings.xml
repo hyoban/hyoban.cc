@@ -87,9 +87,11 @@
     <string name="action_next_stop">Next stop</string>
     <string name="action_replay">Replay</string>
     <string name="playback_look_back">Looking back</string>
-    <string name="playback_progress">Trip progress</string>
+    <string name="playback_progress">Playback of %1$s</string>
     <string name="playback_card_of">Card %1$d of %2$d</string>
-    <string name="playback_route_map">Trip route</string>
+    <string name="playback_map">Map of the %1$s route</string>
+    <string name="playback_map_at">Map of the %1$s route, now at %2$s</string>
+    <string name="playback_loading_map">Loading the map</string>
     <string name="action_collapse_card">Collapse card</string>
     <string name="action_expand_card">Expand card</string>
     <string name="action_locate">Your location</string>
@@ -208,8 +210,8 @@
         <item quantity="other">photos</item>
     </plurals>
     <plurals name="unit_km_driven">
-        <item quantity="one">km driven</item>
-        <item quantity="other">km driven</item>
+        <item quantity="one">kilometer driven</item>
+        <item quantity="other">kilometers driven</item>
     </plurals>
     <plurals name="count_trips">
         <item quantity="one">%1$d trip</item>

@@ -86,9 +86,11 @@
     <string name="action_next_stop">下一站</string>
     <string name="action_replay">重新播放</string>
     <string name="playback_look_back">旅程回顾</string>
-    <string name="playback_progress">旅程进度</string>
+    <string name="playback_progress">「%1$s」回放进度</string>
     <string name="playback_card_of">第 %1$d 张，共 %2$d 张</string>
-    <string name="playback_route_map">旅程路线</string>
+    <string name="playback_map">地图：「%1$s」的路线</string>
+    <string name="playback_map_at">地图：「%1$s」的路线，现在到了%2$s</string>
+    <string name="playback_loading_map">正在加载地图</string>
     <string name="action_collapse_card">收起卡片</string>
     <string name="action_expand_card">展开卡片</string>
     <string name="action_locate">我的位置</string>
