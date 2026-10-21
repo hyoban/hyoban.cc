@@ -12,6 +12,9 @@ import java.util.concurrent.TimeUnit
 // Media3's clips and videos all go through it, so they share its connections (HTTP/2 to
 // the same few hosts) and its timeouts.
 
+/** A server answered [code], not 2xx: what the app says of a failure tells these apart. */
+open class HttpException(val code: Int, message: String) : IOException(message)
+
 object Http {
     val client: OkHttpClient by lazy {
         OkHttpClient.Builder()
@@ -20,11 +23,11 @@ object Http {
             .build()
     }
 
-    /** The body of a GET of [url] as text; an answer other than 2xx is an [IOException]. */
+    /** The body of a GET of [url] as text; an answer other than 2xx is an [HttpException]. */
     suspend fun getText(url: String, client: OkHttpClient = this.client, io: CoroutineDispatcher = Dispatchers.IO): String =
         withContext(io) {
             client.newCall(Request.Builder().url(url).header("Accept", "application/json").build()).execute().use { response ->
-                if (!response.isSuccessful) throw IOException("GET $url answered ${response.code}")
+                if (!response.isSuccessful) throw HttpException(response.code, "GET $url answered ${response.code}")
                 response.body?.string() ?: throw IOException("GET $url answered without a body")
             }
         }
@@ -34,7 +37,7 @@ object Http {
 
     /**
      * The body of a GET of [url] with its ETag, or null when the server says the one
-     * kept, of [etag], hasn't changed; an answer other than 2xx or 304 is an [IOException].
+     * kept, of [etag], hasn't changed; an answer other than 2xx or 304 is an [HttpException].
      */
     suspend fun getIfChanged(url: String, etag: String?, client: OkHttpClient = this.client, io: CoroutineDispatcher = Dispatchers.IO): Tagged? =
         withContext(io) {
@@ -43,7 +46,7 @@ object Http {
                 .build()
             client.newCall(request).execute().use { response ->
                 if (response.code == 304) return@use null
-                if (!response.isSuccessful) throw IOException("GET $url answered ${response.code}")
+                if (!response.isSuccessful) throw HttpException(response.code, "GET $url answered ${response.code}")
                 Tagged(response.body?.string() ?: throw IOException("GET $url answered without a body"), response.header("ETag"))
             }
         }

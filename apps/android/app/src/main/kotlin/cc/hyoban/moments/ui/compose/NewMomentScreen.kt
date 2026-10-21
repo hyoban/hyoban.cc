@@ -117,6 +117,7 @@ import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.PageWidth
 import cc.hyoban.moments.ui.components.SubPage
+import cc.hyoban.moments.ui.format.failureReason
 import cc.hyoban.moments.ui.format.formatDay
 import cc.hyoban.moments.ui.format.formatTime
 import cc.hyoban.moments.ui.settings.Group
@@ -292,7 +293,7 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
                 onSaved()
             } catch (error: Exception) {
                 saving = false
-                saveError = context.getString(R.string.error_save, error.message ?: error.toString())
+                saveError = context.getString(R.string.error_save, failureReason(context, error))
             }
         }
     }
@@ -458,6 +459,7 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
         AlertDialog(
             onDismissRequest = { confirmingDiscard = false },
             title = { Text(stringResource(R.string.confirm_discard)) },
+            text = { Text(stringResource(R.string.confirm_discard_note)) },
             confirmButton = {
                 TextButton(onClick = { confirmingDiscard = false; onBack() }, modifier = Modifier.testTag("discard")) {
                     Text(stringResource(R.string.action_discard))

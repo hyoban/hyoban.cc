@@ -1,6 +1,7 @@
 package cc.hyoban.moments.data.api
 
 import cc.hyoban.moments.data.Http
+import cc.hyoban.moments.data.HttpException
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.spec.Spec
@@ -76,8 +77,11 @@ interface MomentsWriter {
     suspend fun applyChanges(changes: ChangeSet): AppliedChanges
 }
 
-/** The API turned a write down, or there was no token to write with: what it said. */
-class ApiException(message: String) : IOException(message)
+/** The API turned a write down, answering [code]: what it said. */
+class ApiException(code: Int, message: String) : HttpException(code, message)
+
+/** There was no token to write with. */
+class NoTokenException : IOException("No API token")
 
 /** What the app reads the records from; the tests stand in for the API with their own. */
 interface MomentsSource {
@@ -104,7 +108,7 @@ class MomentsApi(
             when {
                 response.code == 404 -> null
                 response.isSuccessful -> response.header("ETag")?.trim('"')
-                else -> throw ApiException("HEAD $path answered ${response.code}")
+                else -> throw ApiException(response.code, "HEAD $path answered ${response.code}")
             }
         }
     }
@@ -129,14 +133,14 @@ class MomentsApi(
         val request = authorized(path).method(method, body).header("Accept", "application/json").build()
         client.newCall(request).execute().use { response ->
             val text = response.body?.string().orEmpty()
-            if (!response.isSuccessful) throw ApiException(errorOf(text) ?: "$method $path answered ${response.code}")
+            if (!response.isSuccessful) throw ApiException(response.code, errorOf(text) ?: "$method $path answered ${response.code}")
             text
         }
     }
 
-    /** A request to [path] with the owner's token, or an [ApiException] when there is none. */
+    /** A request to [path] with the owner's token, or a [NoTokenException] when there is none. */
     private fun authorized(path: String): Request.Builder {
-        val token = token()?.takeIf { it.isNotBlank() } ?: throw ApiException("No API token")
+        val token = token()?.takeIf { it.isNotBlank() } ?: throw NoTokenException()
         return Request.Builder().url(baseUrl() + path).header("Authorization", "Bearer $token")
     }
 

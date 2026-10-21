@@ -103,9 +103,15 @@ enum class ShareTarget(val tag: String, @param:StringRes val title: Int, val lim
 @Composable
 fun ShareMenu(onSelect: (ShareTarget) -> Unit, onDismiss: () -> Unit) {
     val level = AppColors.sheetLevel
+    // A choice made ready by hand says so under its name, rather than in brackets after it.
     val choice: @Composable (String, String, String?, ImageVector, ShareTarget) -> Unit = { label, tag, app, icon, target ->
         ListItem(
             headlineContent = { Text(label) },
+            supportingContent = if (app != null && target == ShareTarget.PREPARE) {
+                { Text(stringResource(R.string.share_manual_note)) }
+            } else {
+                null
+            },
             leadingContent = { AppIcon(app, icon) },
             colors = ListItemDefaults.colors(containerColor = Color.Transparent, leadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant),
             modifier = Modifier.clickable { onSelect(target) }.testTag("share_$tag"),

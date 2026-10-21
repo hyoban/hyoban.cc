@@ -179,7 +179,7 @@ class MomentsRepositoryTest {
         failing.load()
 
         assertTrue(failing.refresh().isFailure)
-        assertEquals("offline", failing.error.value)
+        assertEquals("offline", failing.error.value?.message)
         assertEquals(listOf("A"), failing.moments.value.map { it.uid })
     }
 

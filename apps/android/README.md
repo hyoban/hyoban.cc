@@ -52,7 +52,7 @@ each published, and the deletions. What is published leaves the phone's store fo
 site's.
 
 A Moment's share button offers 发布到 X, 分享到 Telegram, 分享到小红书, 分享到飞书,
-发布到 Threads, 分享到抖音, 微信朋友圈（手动分享）, B 站（手动分享） and 准备图文.
+发布到 Threads, 分享到抖音, 微信朋友圈, B 站 (each marked as posted by hand) and 准备图文.
 The X option opens a separate editable copy of its words and a choice of up to four
 photos, kept in their original order. Up to four are selected
 initially; with more, none are selected until they are chosen. Live photos use their
@@ -107,7 +107,7 @@ is not filled from the share text, so 复制文案并打开抖音 copies it for 
 The user reviews the destination's photo, music and publishing options and confirms
 the final post in Douyin. This app does not choose recipients or publish.
 
-微信朋友圈（手动分享） and B 站（手动分享） both open 准备图文, with a reminder to
+微信朋友圈 and B 站 both open 准备图文, with a reminder to
 select the saved photos and paste the copied text in the destination app.
 准备图文 is the manual fallback for WeChat Moments, Bilibili and other apps: edit a copy of the
 text and select photos, save them to a separate `Pictures/这里分享-…` album, then copy
