@@ -7,6 +7,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -14,17 +15,22 @@ import androidx.compose.material.icons.rounded.DirectionsBoat
 import androidx.compose.material.icons.rounded.DirectionsCar
 import androidx.compose.material.icons.rounded.Flight
 import androidx.compose.material.icons.rounded.Train
+import androidx.compose.material3.ContainedLoadingIndicator
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -136,6 +142,7 @@ private fun lineOf(line: List<Pair<Double, Double>>) =
  * [controller]'s trip on the map, stepped a frame at a time from here, kept clear of [clear],
  * the screen's own controls over the map, as start, top, end and bottom.
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun PlaybackMap(controller: PlaybackController, clear: List<Dp>, modifier: Modifier = Modifier) {
     var ready by remember { mutableStateOf<Pair<MapLibreMap, Style>?>(null) }
@@ -153,7 +160,10 @@ fun PlaybackMap(controller: PlaybackController, clear: List<Dp>, modifier: Modif
     var tipOnScreen by remember { mutableStateOf<Offset?>(null) }
 
     Box(modifier) {
-        MapLibreView(Modifier.matchParentSize(), interactive = false) { map, style, _ ->
+        // Panned and pinched as any map is; the camera lets go then, until the next shot.
+        MapLibreView(Modifier.matchParentSize(), interactive = true, compass = false) { map, style, _ ->
+            // Turned, it would turn back north at the next shot; it stays north.
+            map.uiSettings.isRotateGesturesEnabled = false
             val route = controller.playback.route
             val below = style.labelsLayer()
             fun under(layer: LineLayer) = if (below != null) style.addLayerBelow(layer, below) else style.addLayer(layer)
@@ -218,12 +228,29 @@ fun PlaybackMap(controller: PlaybackController, clear: List<Dp>, modifier: Modif
                 },
             )
         }
+
+        // Until the map is ready, a short wait: Material 3's loading indicator, in its container
+        // over the map's blank, in the room the card leaves.
+        AnimatedVisibility(ready == null, enter = fadeIn(), exit = fadeOut(motion.fastEffectsSpec())) {
+            Box(Modifier.fillMaxSize().padding(top = clear[1], bottom = clear[3]), contentAlignment = Alignment.Center) {
+                ContainedLoadingIndicator()
+            }
+        }
     }
 
-    val inset = padding.toList()
-    LaunchedEffect(ready, inset) {
+    val camera = remember { PlaybackCamera() }
+    val inset by rememberUpdatedState(padding)
+    // A pan or a pinch lets the camera go until the next shot, which picks up from there.
+    DisposableEffect(ready) {
+        val map = ready?.first ?: return@DisposableEffect onDispose { }
+        val moved = MapLibreMap.OnCameraMoveStartedListener { reason ->
+            if (reason == MapLibreMap.OnCameraMoveStartedListener.REASON_API_GESTURE) camera.release()
+        }
+        map.addOnCameraMoveStartedListener(moved)
+        onDispose { map.removeOnCameraMoveStartedListener(moved) }
+    }
+    LaunchedEffect(ready) {
         val (map, style) = ready ?: return@LaunchedEffect
-        val camera = PlaybackCamera()
         var drawnCount = -1
         var activeShown = false
         var stopsShown = -1
@@ -279,7 +306,7 @@ fun PlaybackMap(controller: PlaybackController, clear: List<Dp>, modifier: Modif
                 camera.setShot(shot)
             }
             // Paused by hand, the camera holds still for the frame and carries on from there.
-            if (!controller.held) camera.update(map, seconds, controller.focus, padding)
+            if (!controller.held) camera.update(map, seconds, controller.focus, inset)
             tipOnScreen = tip?.let { map.projection.toScreenLocation(it.latLng()) }?.let { Offset(it.x, it.y) }
         }
     }
@@ -344,15 +371,27 @@ private class PlaybackCamera {
     private var focusVelocity = 0.0 to 0.0
     private var lastFocus: Pair<Double, Double>? = null
     private var snap = false
+    // The viewer moved the map themselves; the camera waits until the next shot.
+    private var released = false
+
+    fun release() {
+        released = true
+    }
 
     fun setShot(next: CameraShot) {
         shot = next
         target = null
+        if (released) {
+            // Picks up from wherever the viewer left the map.
+            center = null
+            released = false
+        }
         snap = next.instant
     }
 
     fun update(map: MapLibreMap, seconds: Double, focusAt: Pair<Double, Double>?, padding: IntArray) {
         val shot = shot ?: return
+        if (released) return
         val step = seconds.coerceIn(0.0, 0.1)
         val centerOmega = 4 / CENTER_SETTLE
         val zoomOmega = 4 / ZOOM_SETTLE
