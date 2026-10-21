@@ -172,7 +172,7 @@ fun PlaybackMap(controller: PlaybackController, clear: List<Dp>, modifier: Modif
             style.addSource(GeoJsonSource(PLANNED, lineOf(route.points)))
             under(
                 LineLayer(PLANNED, PLANNED).withProperties(
-                    lineColor(ink.toArgb()), lineDasharray(arrayOf(1f, 2f)), lineOpacity(0.3f), lineWidth(2f),
+                    lineColor(ink.toArgb()), lineDasharray(arrayOf(1f, 2f)), lineOpacity(PLANNED_OPACITY), lineWidth(2f),
                     lineCap(Property.LINE_CAP_ROUND), lineJoin(Property.LINE_JOIN_ROUND),
                 ),
             )
@@ -317,6 +317,12 @@ fun PlaybackMap(controller: PlaybackController, clear: List<Dp>, modifier: Modif
 }
 
 private val HEAD_SIZE = 26.dp
+
+/**
+ * The planned route's ink, strong enough that the dashes keep 3:1 against the map, as Material 3
+ * has a graphic that carries meaning; the site draws it fainter, at 0.3.
+ */
+private const val PLANNED_OPACITY = 0.55f
 
 /** The head: the leg's car, ship, plane or train in the page's colour on an ink disc ringed in it. */
 private fun headImage(painter: VectorPainter, density: Density, ink: Color, paper: Color): Bitmap {
