@@ -238,7 +238,6 @@
     <string name="action_save">Save</string>
     <string name="hint_moment_text">What’s happening…</string>
     <string name="action_add_photos">Add photos</string>
-    <string name="action_take_photo">Take photo</string>
     <string name="action_open_camera">Open camera</string>
     <string name="action_remove_photo">Remove photo</string>
     <string name="action_move_earlier">Move earlier</string>
