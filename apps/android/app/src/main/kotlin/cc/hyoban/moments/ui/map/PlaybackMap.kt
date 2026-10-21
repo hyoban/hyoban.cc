@@ -2,12 +2,13 @@ package cc.hyoban.moments.ui.map
 
 import android.graphics.Bitmap
 import android.util.DisplayMetrics
-import androidx.compose.foundation.border
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.DirectionsBoat
 import androidx.compose.material.icons.rounded.DirectionsCar
@@ -55,6 +56,10 @@ import cc.hyoban.moments.ui.format.formatDay
 import cc.hyoban.moments.ui.trips.CameraShot
 import cc.hyoban.moments.ui.trips.PlaybackController
 import cc.hyoban.moments.ui.trips.StopState
+import cc.hyoban.moments.ui.theme.Elevation
+import cc.hyoban.moments.ui.theme.Space
+import cc.hyoban.moments.ui.theme.SurfaceLevel
+import cc.hyoban.moments.ui.theme.fill
 import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.camera.CameraUpdateFactory
 import org.maplibre.android.geometry.LatLng
@@ -195,11 +200,15 @@ fun PlaybackMap(controller: PlaybackController, clear: List<Dp>, modifier: Modif
 
         val clock = controller.clock
         val shown by remember { derivedStateOf { tipOnScreen != null } }
-        if (clock != null && shown) {
+        // Beside the head while it drives, fading in and out with it on the effects spring.
+        var kept by remember { mutableStateOf(clock) }
+        if (clock != null) kept = clock
+        val motion = MaterialTheme.motionScheme
+        AnimatedVisibility(clock != null && shown, enter = fadeIn(motion.fastEffectsSpec()), exit = fadeOut(motion.fastEffectsSpec())) {
             // Beside the head, its middle level with it.
             val beside = with(density) { (HEAD_SIZE / 2 + 8.dp).roundToPx() }
             HeadClock(
-                clock,
+                kept ?: return@AnimatedVisibility,
                 Modifier.layout { measurable, constraints ->
                     val placeable = measurable.measure(constraints.copy(minWidth = 0, minHeight = 0))
                     layout(0, 0) {
@@ -299,13 +308,14 @@ private fun Color.toHex() = "#%06X".format(toArgb() and 0xFFFFFF)
 /** The day and time the route's tip has reached, beside it: `10月2日 周五` over `第 3 天 · 19:43`. */
 @Composable
 private fun HeadClock(clock: PlaybackClock, modifier: Modifier) {
+    // Floating over the map in its container colour, solid so its words keep their contrast over any map.
     Surface(
-        shape = RoundedCornerShape(10.dp),
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.88f),
-        shadowElevation = 3.dp,
-        modifier = modifier.border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.82f), RoundedCornerShape(10.dp)),
+        shape = MaterialTheme.shapes.small,
+        color = SurfaceLevel.Floating.fill(),
+        shadowElevation = Elevation.level2,
+        modifier = modifier,
     ) {
-        Column(Modifier.padding(horizontal = 10.dp, vertical = 5.dp)) {
+        Column(Modifier.padding(horizontal = Space.s + Space.xxs, vertical = Space.xs)) {
             Text(formatDay(clock.dateKey), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text(
                 listOfNotNull(stringResource(R.string.trip_day, clock.day), clock.time).joinToString(" · "),

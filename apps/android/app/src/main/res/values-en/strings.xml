@@ -88,6 +88,11 @@
     <string name="action_replay">Replay</string>
     <string name="playback_look_back">Looking back</string>
     <string name="playback_driven">%1$d km driven</string>
+    <string name="playback_progress">Trip progress</string>
+    <string name="playback_card_of">Card %1$d of %2$d</string>
+    <string name="playback_route_map">Trip route</string>
+    <string name="action_collapse_card">Collapse card</string>
+    <string name="action_expand_card">Expand card</string>
     <string name="action_locate">Your location</string>
     <string name="action_north">Face north</string>
     <string name="error_location">Couldn’t find your location. Check that location is on.</string>
