@@ -59,7 +59,7 @@ class MomentsRepository(
     private val _trips = MutableStateFlow<List<TripRecord>>(emptyList())
     private val _loaded = MutableStateFlow(false)
     private val _syncing = MutableStateFlow(false)
-    private val _error = MutableStateFlow<String?>(null)
+    private val _error = MutableStateFlow<Throwable?>(null)
     private val _pending = MutableStateFlow(PendingChanges())
 
     /** The Moments the site shows and those written on this phone, newest first. */
@@ -71,7 +71,7 @@ class MomentsRepository(
     val loaded: StateFlow<Boolean> = _loaded.asStateFlow()
     val syncing: StateFlow<Boolean> = _syncing.asStateFlow()
     /** Why the last refresh failed, until one succeeds. */
-    val error: StateFlow<String?> = _error.asStateFlow()
+    val error: StateFlow<Throwable?> = _error.asStateFlow()
     /** What publishing would change on the site. */
     val pending: StateFlow<PendingChanges> = _pending.asStateFlow()
 
@@ -159,7 +159,7 @@ class MomentsRepository(
             _error.value = null
             Result.success(revision)
         } catch (error: Exception) {
-            _error.value = error.message ?: error.toString()
+            _error.value = error
             Result.failure(error)
         } finally {
             _syncing.value = false

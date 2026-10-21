@@ -88,6 +88,7 @@ import cc.hyoban.moments.ui.components.LocalReducedMotion
 import cc.hyoban.moments.ui.components.MomentCard
 import cc.hyoban.moments.ui.components.MonthHeader
 import cc.hyoban.moments.ui.components.PageWidth
+import cc.hyoban.moments.ui.format.failureReason
 import cc.hyoban.moments.ui.format.formatDayOfMonth
 import cc.hyoban.moments.ui.format.formatMonth
 import cc.hyoban.moments.ui.rememberShowMessage
@@ -383,7 +384,7 @@ fun ShowRefreshErrors(container: AppContainer) {
     val context = LocalContext.current
 
     LaunchedEffect(error) {
-        error?.let { show(context.getString(R.string.message_refresh_failed, it)) }
+        error?.let { show(context.getString(R.string.message_refresh_failed, failureReason(context, it))) }
     }
 }
 

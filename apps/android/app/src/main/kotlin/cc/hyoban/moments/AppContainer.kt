@@ -20,6 +20,7 @@ import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.store.DataStore
 import cc.hyoban.moments.data.store.MomentsRepository
 import cc.hyoban.moments.data.trips.TripRoutes
+import cc.hyoban.moments.ui.format.failureReason
 import cc.hyoban.moments.widget.Widgets
 import java.io.File
 import java.time.OffsetDateTime
@@ -208,7 +209,7 @@ class AppContainer(context: Context) {
                 repository.publishPending { done, total -> _publishing.value = Progress(done, total) }
                 say(appContext.getString(R.string.message_published))
             } catch (error: Exception) {
-                say(appContext.getString(R.string.error_publish, error.message ?: error.toString()))
+                say(appContext.getString(R.string.error_publish, failureReason(appContext, error)))
             } finally {
                 _publishing.value = null
                 Widgets.update(appContext)

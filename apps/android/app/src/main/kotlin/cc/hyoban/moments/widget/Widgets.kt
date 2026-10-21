@@ -223,7 +223,8 @@ private fun OverlayCard(card: Card.Photo, base: GlanceModifier, large: Boolean) 
     val onPhoto = card.photo != null
     Box(base.background(GlanceTheme.colors.primaryContainer).clickable(open(card.link))) {
         if (card.photo != null) {
-            Image(ImageProvider(card.photo), contentDescription = card.title, modifier = GlanceModifier.fillMaxSize(), contentScale = ContentScale.Crop)
+            // The words over it say what the card is, so a screen reader hears them once.
+            Image(ImageProvider(card.photo), contentDescription = null, modifier = GlanceModifier.fillMaxSize(), contentScale = ContentScale.Crop)
             // The shade the words sit on.
             Image(ImageProvider(R.drawable.widget_shade), contentDescription = null, modifier = GlanceModifier.fillMaxSize(), contentScale = ContentScale.FillBounds)
         }
@@ -250,7 +251,7 @@ private fun WideCard(card: Card.Photo, base: GlanceModifier) {
     Row(base.background(GlanceTheme.colors.surface).clickable(open(card.link))) {
         Image(
             ImageProvider(card.photo!!),
-            contentDescription = card.title,
+            contentDescription = null,
             modifier = GlanceModifier.defaultWeight().fillMaxHeight(),
             contentScale = ContentScale.Crop,
         )
@@ -265,7 +266,7 @@ private fun WideCard(card: Card.Photo, base: GlanceModifier) {
 private fun StripCard(card: Card.Photo, base: GlanceModifier) {
     Row(base.background(GlanceTheme.colors.surface).clickable(open(card.link)), verticalAlignment = Alignment.CenterVertically) {
         if (card.photo != null) {
-            Image(ImageProvider(card.photo), contentDescription = card.title, modifier = GlanceModifier.width(72.dp).fillMaxHeight(), contentScale = ContentScale.Crop)
+            Image(ImageProvider(card.photo), contentDescription = null, modifier = GlanceModifier.width(72.dp).fillMaxHeight(), contentScale = ContentScale.Crop)
         }
         Column(GlanceModifier.defaultWeight().padding(horizontal = PADDING), verticalAlignment = Alignment.CenterVertically) {
             Text(card.eyebrow, style = WidgetType.LabelMedium.style(GlanceTheme.colors.onSurfaceVariant), maxLines = 1)
