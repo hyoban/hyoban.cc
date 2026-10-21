@@ -86,7 +86,6 @@
     <string name="action_next_stop">下一站</string>
     <string name="action_replay">重新播放</string>
     <string name="playback_look_back">旅程回顾</string>
-    <string name="playback_driven">自驾 %1$d 公里</string>
     <string name="playback_progress">旅程进度</string>
     <string name="playback_card_of">第 %1$d 张，共 %2$d 张</string>
     <string name="playback_route_map">旅程路线</string>
@@ -184,8 +183,20 @@
     <plurals name="count_places">
         <item quantity="other">%1$d 个地点</item>
     </plurals>
-    <plurals name="count_photos">
-        <item quantity="other">%1$d 张照片</item>
+    <plurals name="unit_days">
+        <item quantity="other">天</item>
+    </plurals>
+    <plurals name="unit_moments">
+        <item quantity="other">个时刻</item>
+    </plurals>
+    <plurals name="unit_places">
+        <item quantity="other">个地点</item>
+    </plurals>
+    <plurals name="unit_photos">
+        <item quantity="other">张照片</item>
+    </plurals>
+    <plurals name="unit_km_driven">
+        <item quantity="other">公里自驾</item>
     </plurals>
     <plurals name="count_trips">
         <item quantity="other">%1$d 段旅程</item>
