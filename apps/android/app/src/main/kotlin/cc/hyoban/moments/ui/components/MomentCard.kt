@@ -110,30 +110,6 @@ fun MomentSubhead(moment: MomentRecord, places: Map<String, Place>, trip: TripRe
     }
 }
 
-/** A Moment in a sheet or a short list: its first media small, when, its first words. */
-@Composable
-fun CompactMomentRow(moment: MomentRecord, places: Map<String, Place>, urls: MediaUrls, onClick: () -> Unit) {
-    // It grows into the Moment's page when opened, as a card on a list does.
-    PressableCard(onClick = onClick, modifier = Modifier.fillMaxWidth().sharedCard(moment.uid).testTag("moment_${moment.uid}")) {
-        Row(Modifier.padding(6.dp), horizontalArrangement = Arrangement.spacedBy(Space.m)) {
-            moment.media.firstOrNull()?.let { Thumbnail(it, urls, size = 76) }
-            Column(Modifier.weight(1f).padding(top = Space.s, end = Space.s, bottom = Space.s), verticalArrangement = Arrangement.spacedBy(Space.xs)) {
-                Text(
-                    listOfNotNull(formatDate(moment.occurredAt), formatTime(moment.occurredAt)).joinToString(" "),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Text(
-                    moment.text.ifBlank { moment.places.joinToString(stringResource(R.string.separator_list)) { places[it]?.name ?: it } },
-                    style = MaterialTheme.typography.bodyMedium,
-                    maxLines = 3,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-        }
-    }
-}
-
 /** A back button that floats over a photo or a map, legible on either, narrow as M3 has a back button beside other actions. */
 @Composable
 fun FloatingBack(onBack: () -> Unit, modifier: Modifier = Modifier) =
