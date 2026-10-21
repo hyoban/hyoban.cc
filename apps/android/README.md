@@ -144,9 +144,10 @@ publishes automatically, and no accessibility service is registered. If sharing
 to X, Telegram, Xiaohongshu, Feishu, Threads or Douyin fails, 准备图文 is offered with the edited text and
 selection preserved.
 
-On the home screen it is 这里 (here): Material 3's nine-lobed cookie shape in green on
-pale mint, with the map's "you are here" pulse in it, as an adaptive icon with its own
-monochrome layer for themed icons.
+On the home screen it is 这里 (here): a white cat with a grey cap split by a white blaze
+and big amber eyes, peeking in from the lower left on blue as Shizuku's cat does, as an
+adaptive icon with its own monochrome layer for themed icons. The blue is also the app's
+own theme colour, the one used when neither the user nor the system picks another.
 
 Two home screen widgets read the same copy, so they draw offline: 那年今天, a Moment with
 a photo from this day in an earlier year, or one picked at random when there is none,
