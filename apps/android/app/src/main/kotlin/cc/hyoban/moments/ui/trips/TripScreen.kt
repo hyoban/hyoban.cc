@@ -117,10 +117,10 @@ fun TripScreen(
             }
             HorizontalMultiBrowseCarousel(
                 state = rememberCarouselState { photos.size },
-                preferredItemWidth = 186.dp,
+                preferredItemWidth = 188.dp,
                 itemSpacing = Space.s,
                 contentPadding = PaddingValues(horizontal = Space.gutter),
-                modifier = Modifier.fillMaxWidth().height(205.dp).testTag("trip_photos"),
+                modifier = Modifier.fillMaxWidth().height(208.dp).testTag("trip_photos"),
             ) { index ->
                 val (moment, media) = photos[index]
                 val label = stringResource(R.string.media_position, stringResource(media.kindLabel()), index + 1, photos.size)

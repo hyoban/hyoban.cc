@@ -116,6 +116,7 @@ import cc.hyoban.moments.ui.format.formatDate
 import cc.hyoban.moments.ui.format.formatTime
 import cc.hyoban.moments.ui.rememberShowMessage
 import cc.hyoban.moments.ui.theme.Corners
+import cc.hyoban.moments.ui.theme.Elevation
 import cc.hyoban.moments.ui.theme.LocalDarkTheme
 import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
 import cc.hyoban.moments.ui.theme.Space
@@ -144,10 +145,12 @@ fun MapScreen(container: AppContainer, onMoment: (String) -> Unit, onPlace: (Str
     val mapPlaces = remember(byPlace, places) {
         byPlace.mapNotNull { (id, here) -> places[id]?.let { MapPlace(id, it, here.size, here.minOf { moment -> yearOf(moment.occurredAt) }) } }
     }
-    // The site's year colours, each turned a little towards the scheme's primary so they sit with it.
+    // The site's year colours, each turned a little towards the scheme's primary so they sit with it,
+    // at Material's tones for a custom colour, so the number on a dot reads in either mode.
     val scheme = MaterialTheme.colorScheme
-    val colors = remember(mapPlaces, scheme) {
-        yearColors(mapPlaces.map { it.firstYear }).mapValues { (_, color) -> scheme.harmonizeWithPrimary(color) }
+    val dark = LocalDarkTheme.current
+    val colors = remember(mapPlaces, scheme, dark) {
+        yearColors(mapPlaces.map { it.firstYear }).mapValues { (_, color) -> scheme.harmonizeWithPrimary(color).atTone(if (dark) 80.0 else 40.0) }
     }
     val mapRoutes = remember(trips, routes) {
         trips.sortedByDescending { it.start }.mapNotNull { trip -> routes[trip.id]?.let { MapRoute(trip.id, it) } }
@@ -338,9 +341,9 @@ private fun PlaceSheet(
 ) {
     val context = LocalContext.current
     Column(Modifier.fillMaxHeight()) {
-        Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.fillMaxWidth().padding(horizontal = Space.gutter), verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Rounded.Place, contentDescription = null, tint = colors[years.minOrNull()] ?: MaterialTheme.colorScheme.primary)
-            Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
+            Column(Modifier.weight(1f).padding(horizontal = Space.m)) {
                 Text(place.name, style = MaterialTheme.typography.titleLarge, modifier = Modifier.semantics { heading() })
                 Text(
                     (listOf(pluralStringResource(R.plurals.count_moments, here.size, here.size)) + years.joinToString(context.getString(R.string.separator_list)) { context.getString(R.string.year_item, it) }).joinToString(" · "),
@@ -419,7 +422,7 @@ private fun CompassButton(turned: Boolean, bearing: Double, onClick: () -> Unit)
                 shape = Corners.full,
                 color = SurfaceLevel.floating(LocalDarkTheme.current).fill(),
                 contentColor = MaterialTheme.colorScheme.primary,
-                shadowElevation = 3.dp,
+                shadowElevation = Elevation.level2,
                 modifier = Modifier.padding(bottom = Space.m).size(48.dp).testTag("north"),
             ) {
                 Box(contentAlignment = Alignment.Center) {
@@ -464,7 +467,7 @@ private fun FloatingPill(content: @Composable () -> Unit) {
         shape = Corners.full,
         color = SurfaceLevel.floating(LocalDarkTheme.current).fill(),
         contentColor = MaterialTheme.colorScheme.onSurface,
-        shadowElevation = 3.dp,
+        shadowElevation = Elevation.level2,
         content = content,
     )
 }
@@ -474,20 +477,21 @@ private fun FloatingPill(content: @Composable () -> Unit) {
 private fun Legend(colors: Map<Int, Color>, trips: Boolean) {
     FloatingPill {
         Row(
-            Modifier.height(32.dp).padding(horizontal = 14.dp),
+            Modifier.height(32.dp).padding(horizontal = Space.l),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Space.m),
         ) {
             colors.forEach { (year, color) ->
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.xs)) {
+                    // A dot as the map draws one, ringed in the surface.
                     Box(Modifier.size(10.dp).border(1.5.dp, MaterialTheme.colorScheme.surface, CircleShape).padding(1.dp).background(color, CircleShape))
                     Text("$year", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
             if (trips) {
                 VerticalDivider(Modifier.height(14.dp), color = dividerColor())
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                    Box(Modifier.width(14.dp).height(2.dp).background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f), CircleShape))
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.xs)) {
+                    Box(Modifier.width(14.dp).height(2.dp).background(MaterialTheme.colorScheme.onSurface.copy(alpha = ROUTE_OPACITY), CircleShape))
                     Text(stringResource(R.string.legend_trips), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
@@ -502,12 +506,12 @@ private fun RouteCard(trip: TripRecord, onOpen: () -> Unit) {
         onClick = onOpen,
         shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(containerColor = SurfaceLevel.floating(LocalDarkTheme.current).fill()),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = Elevation.level2),
         modifier = Modifier.fillMaxWidth().padding(bottom = Space.s).sharedCard(tripCardKey(trip.id)).testTag("trip_${trip.id}"),
     ) {
         Row(Modifier.padding(start = Space.l, end = Space.s, top = Space.m, bottom = Space.m), verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Rounded.Luggage, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-            Column(Modifier.weight(1f).padding(horizontal = Space.m), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Column(Modifier.weight(1f).padding(horizontal = Space.m), verticalArrangement = Arrangement.spacedBy(Space.xxs)) {
                 Text(trip.title, style = MaterialTheme.typography.titleMedium)
                 Text(
                     tripSummary(trip),

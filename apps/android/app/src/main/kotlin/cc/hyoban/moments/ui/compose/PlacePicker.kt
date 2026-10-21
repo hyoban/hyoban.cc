@@ -65,7 +65,9 @@ import cc.hyoban.moments.ui.map.MapTarget
 import cc.hyoban.moments.ui.map.PICK_ZOOM
 import cc.hyoban.moments.ui.map.PickerMap
 import cc.hyoban.moments.ui.theme.Corners
+import cc.hyoban.moments.ui.theme.Elevation
 import cc.hyoban.moments.ui.theme.LocalDarkTheme
+import cc.hyoban.moments.ui.theme.Radius
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.SurfaceLevel
 import cc.hyoban.moments.ui.theme.fill
@@ -152,7 +154,7 @@ internal fun PlacePicker(
         sheetSwipeEnabled = false,
         sheetDragHandle = null,
         sheetContainerColor = AppColors.page,
-        sheetShadowElevation = 6.dp,
+        sheetShadowElevation = Elevation.level1,
         containerColor = AppColors.page,
         sheetContent = {
             ChoiceCard(
@@ -341,4 +343,4 @@ private const val LANDMARKS = 8
 private const val KNOWN_NEARBY = 3
 private val PIN_SIZE = 44.dp
 /** How far the map reaches under the sheet: its corners' radius, Material 3's extra large. */
-private val SHEET_CORNER = 28.dp
+private val SHEET_CORNER = Radius.extraLarge

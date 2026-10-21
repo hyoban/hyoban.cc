@@ -127,7 +127,9 @@ import cc.hyoban.moments.ui.moment.MomentScreen
 import cc.hyoban.moments.ui.publish.ChangesScreen
 import cc.hyoban.moments.ui.settings.SettingsScreen
 import cc.hyoban.moments.ui.theme.Space
+import cc.hyoban.moments.ui.theme.SurfaceLevel
 import cc.hyoban.moments.ui.theme.TransitionMotion
+import cc.hyoban.moments.ui.theme.fill
 import cc.hyoban.moments.ui.trips.TripScreen
 import cc.hyoban.moments.ui.trips.TripsScreen
 import cc.hyoban.moments.ui.viewer.LocalInPictureInPicture
@@ -513,6 +515,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                 // The compact rail, its button at the top and the tabs centred under it, so all of
                 // it fits the little height a phone on its side has.
                 NavigationRail(
+                    containerColor = SurfaceLevel.Page.raised.fill(),
                     modifier = Modifier.fillMaxHeight().onSizeChanged { railWidth = with(density) { it.width.toDp() } },
                     header = {
                         AnimatedVisibility(accessorySlot.value != null, enter = fadeIn() + scaleIn(), exit = fadeOut() + scaleOut()) {
@@ -548,7 +551,9 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                 .onSizeChanged { fabHeight = with(density) { it.height.toDp() } + gutter },
                         ) { accessory?.invoke() }
                     }
+                    // A level above the page, as Material 3 has the bar a container step above it.
                     ShortNavigationBar(
+                        containerColor = SurfaceLevel.Page.raised.fill(),
                         modifier = Modifier.onSizeChanged { barHeight = with(density) { it.height.toDp() } },
                     ) {
                         Tab.entries.forEachIndexed { index, tab ->

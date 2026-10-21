@@ -35,6 +35,8 @@ import cc.hyoban.moments.R
 import cc.hyoban.moments.ui.LocalRailSpace
 import cc.hyoban.moments.ui.OnTabReselect
 import cc.hyoban.moments.ui.theme.Space
+import cc.hyoban.moments.ui.theme.SurfaceLevel
+import cc.hyoban.moments.ui.theme.fill
 
 /**
  * A pushed page as Material 3 lays one out: a medium flexible top app bar over [content],
@@ -118,7 +120,8 @@ private fun BarPage(
     }
     val colors = TopAppBarDefaults.topAppBarColors(
         containerColor = AppColors.page,
-        scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+        // Scrolled, a level above the page, as Material 3 has the bar a container step above it.
+        scrolledContainerColor = SurfaceLevel.Page.raised.fill(),
     )
     // Clear of the tabs down the side on a phone on its side, as the page's list is, and its
     // title on the page's margin, wider than the bar's own from Material 3's medium breakpoint.

@@ -33,7 +33,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import cc.hyoban.moments.R
@@ -52,6 +51,7 @@ import cc.hyoban.moments.ui.format.formatDate
 import cc.hyoban.moments.ui.format.formatMonth
 import cc.hyoban.moments.ui.format.weekdayLetters
 import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
+import cc.hyoban.moments.ui.theme.MediaOverlay
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.fill
 import java.time.LocalDate
@@ -145,7 +145,7 @@ private fun MonthTitle(month: CalendarMonth, today: LocalDate) {
 @Composable
 private fun WeekRow(week: List<CalendarDay?>, urls: MediaUrls, today: LocalDate, onDay: (String, List<MomentRecord>) -> Unit) {
     Row(
-        Modifier.fillMaxWidth().padding(horizontal = Space.gutter, vertical = 2.dp),
+        Modifier.fillMaxWidth().padding(horizontal = Space.gutter, vertical = Space.xxs),
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         week.forEach { day ->
@@ -217,21 +217,21 @@ private fun DayCell(day: CalendarDay, urls: MediaUrls, today: LocalDate, onClick
         if (day.cover != null) {
             MediaStill(day.cover, urls, Modifier.fillMaxSize())
             // The date stays legible over any photo.
-            Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(MaterialTheme.colorScheme.scrim.copy(alpha = 0.45f), Color.Transparent, MaterialTheme.colorScheme.scrim.copy(alpha = 0.35f)))))
+            Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(MediaOverlay.control, Color.Transparent, MediaOverlay.bar))))
         }
-        val ink = if (day.cover != null) Color.White else MaterialTheme.colorScheme.onSurface
+        val ink = if (day.cover != null) MediaOverlay.content else MaterialTheme.colorScheme.onSurface
         Text(
             "${day.date.dayOfMonth}",
-            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
+            style = MaterialTheme.typography.labelLargeEmphasized,
             color = ink,
-            modifier = Modifier.align(Alignment.TopStart).padding(horizontal = 5.dp, vertical = 3.dp),
+            modifier = Modifier.align(Alignment.TopStart).padding(horizontal = Space.xs, vertical = Space.xxs),
         )
         if (day.moments.size > 1) {
             Text(
                 "${day.moments.size}",
                 style = MaterialTheme.typography.labelSmall,
                 color = ink,
-                modifier = Modifier.align(Alignment.BottomEnd).padding(horizontal = 5.dp, vertical = 3.dp),
+                modifier = Modifier.align(Alignment.BottomEnd).padding(horizontal = Space.xs, vertical = Space.xxs),
             )
         }
     }

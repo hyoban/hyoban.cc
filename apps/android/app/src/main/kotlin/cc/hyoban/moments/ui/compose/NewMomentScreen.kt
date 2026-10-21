@@ -110,6 +110,7 @@ import cc.hyoban.moments.ui.format.formatTime
 import cc.hyoban.moments.ui.settings.Group
 import cc.hyoban.moments.ui.settings.SegmentedGroup
 import cc.hyoban.moments.ui.settings.rowColors
+import cc.hyoban.moments.ui.theme.MediaOverlay
 import cc.hyoban.moments.ui.theme.Space
 import coil3.compose.AsyncImage
 import java.io.File
@@ -484,10 +485,10 @@ private fun PhotoStrip(photos: List<Uri>, onAdd: () -> Unit, onRemove: (Uri) -> 
                     contentAlignment = Alignment.Center,
                 ) {
                     Box(
-                        Modifier.size(REMOVE_DOT).clip(CircleShape).background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.5f)),
+                        Modifier.size(REMOVE_DOT).clip(CircleShape).background(MediaOverlay.control),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.action_remove_photo), tint = Color.White, modifier = Modifier.size(18.dp))
+                        Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.action_remove_photo), tint = MediaOverlay.content, modifier = Modifier.size(18.dp))
                     }
                 }
             }

@@ -110,7 +110,7 @@ private fun TripCard(trip: TripRecord, covers: List<MomentMedia>, count: Int, ur
     // It grows into the trip's page when opened.
     PressableCard(onClick = onClick, modifier = modifier.fillMaxWidth().sharedCard(tripCardKey(trip.id)).testTag("trip_${trip.id}")) {
         CoverCollage(covers, urls, Modifier)
-        Column(Modifier.padding(start = Space.l, end = Space.l, top = Space.s, bottom = Space.l), verticalArrangement = Arrangement.spacedBy(Space.s + 2.dp)) {
+        Column(Modifier.padding(start = Space.l, end = Space.l, top = Space.s, bottom = Space.l), verticalArrangement = Arrangement.spacedBy(Space.m)) {
             Text(trip.title, style = MaterialTheme.typography.titleLarge)
             TripSubhead(trip, count)
         }

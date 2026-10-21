@@ -25,9 +25,10 @@ import kotlin.math.min
 //
 // The scheme is Material's content scheme for the seed with three changes. Surfaces stay
 // near grey, their chroma capped, so the seed doesn't wash every page blue. The seed
-// itself is primary, as an accent colour is, its tone held where white text on it still
-// reads. And primaryContainer is primary's own hue at tone 90 and 30, so it reads as the
-// primary's light version rather than whatever tone the seed happens to have.
+// itself is primary, as an accent colour is, its tone held where the text on it keeps
+// 4.5:1. And primaryContainer is primary's own hue at tone 90 and 30, so it reads as the
+// primary's light version rather than whatever tone the seed happens to have. The last
+// two only at standard contrast: with more asked for, Material's roles are kept.
 
 private const val SURFACE_CHROMA = 3.0
 private const val PAPER_CHROMA = 1.5
@@ -75,18 +76,21 @@ fun seededColorScheme(seed: Color, dark: Boolean, style: ColorStyle = ColorStyle
         return Color(Hct.from(palette.hue, tint ?: min(palette.chroma, maxChroma), color.getTone(scheme)).toInt())
     }
 
-    // The seed as primary: in light at its own tone between 35 and 60, so white text on it
-    // keeps about 3:1; in dark lifted three tones, between 50 and 75.
-    val tone = if (dark) (source.tone + 3).coerceIn(50.0, 75.0) else source.tone.coerceIn(35.0, 60.0)
+    // The seed as primary while the phone asks for standard contrast: in light at its own
+    // tone between 35 and 48, so white text on it keeps 4.5:1; in dark lifted three tones,
+    // between 60 and 80, under text at tone 10, which keeps as much. With more contrast asked
+    // for, Material's own primary roles, which follow it.
+    val exact = accent && contrast <= 0.0
+    val tone = if (dark) (source.tone + 3).coerceIn(60.0, 80.0) else source.tone.coerceIn(35.0, 48.0)
     val primary = when {
-        !accent -> role(roles.primary())
+        !exact -> role(roles.primary())
         tone == source.tone -> seed
         else -> Color(Hct.from(source.hue, source.chroma, tone).toInt())
     }
     val onPrimary = when {
-        !accent -> role(roles.onPrimary())
-        tone <= 60 -> Color.White
-        else -> Color(TonalPalette.fromHueAndChroma(source.hue, source.chroma).tone(10))
+        !exact -> role(roles.onPrimary())
+        dark -> Color(TonalPalette.fromHueAndChroma(source.hue, source.chroma).tone(10))
+        else -> Color.White
     }
     val paper = if (dark) SURFACE_CHROMA else PAPER_CHROMA
 
@@ -95,9 +99,10 @@ fun seededColorScheme(seed: Color, dark: Boolean, style: ColorStyle = ColorStyle
         primary = primary,
         onPrimary = onPrimary,
         surfaceTint = primary,
-        primaryContainer = Color(container.tone(if (dark) 30 else 90)),
-        onPrimaryContainer = Color(container.tone(if (dark) 90 else 30)),
-        inversePrimary = role(roles.inversePrimary()),
+        primaryContainer = if (exact) Color(container.tone(if (dark) 30 else 90)) else role(roles.primaryContainer()),
+        onPrimaryContainer = if (exact) Color(container.tone(if (dark) 90 else 30)) else role(roles.onPrimaryContainer()),
+        // The primary's own hue on the inverse surface, as Material has it: tone 80 in light, 40 in dark.
+        inversePrimary = if (exact) Color(Hct.from(source.hue, source.chroma, if (dark) 40.0 else 80.0).toInt()) else role(roles.inversePrimary()),
         secondary = role(roles.secondary()),
         onSecondary = role(roles.onSecondary()),
         secondaryContainer = role(roles.secondaryContainer()),
@@ -191,7 +196,35 @@ val LocalSurfaceLevel = staticCompositionLocalOf { SurfaceLevel.Page }
 @ReadOnlyComposable
 fun SurfaceLevel.fill(): Color = color(MaterialTheme.colorScheme, LocalDarkTheme.current)
 
-/** A divider: onSurface at 14%, the same contrast on any level in either mode. */
+/** A divider: Material 3's, outline variant. */
 @Composable
 @ReadOnlyComposable
-fun dividerColor(): Color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.14f)
+fun dividerColor(): Color = MaterialTheme.colorScheme.outlineVariant
+
+/** How faint Material 3 draws what is disabled. */
+const val DISABLED_ALPHA = 0.38f
+
+/**
+ * What is drawn over a photo or a video, which stays dark in either mode: the scrim, at
+ * one strength under a bar and another under a control or a label, and white on it.
+ */
+object MediaOverlay {
+    /** Under a bar across the media, and over media set back. */
+    val bar: Color
+        @Composable @ReadOnlyComposable get() = MaterialTheme.colorScheme.scrim.copy(alpha = 0.32f)
+
+    /** Under a control or a label on the media, and over media dimmed behind one chosen. */
+    val control: Color
+        @Composable @ReadOnlyComposable get() = MaterialTheme.colorScheme.scrim.copy(alpha = CONTROL_ALPHA)
+
+    const val CONTROL_ALPHA = 0.45f
+
+    /** Text and icons on either. */
+    val content = Color.White
+
+    /** Secondary text on either. */
+    val contentVariant = Color.White.copy(alpha = 0.8f)
+
+    /** What is there but not yet reached or not on: a slider's track ahead of it. */
+    val contentDisabled = Color.White.copy(alpha = DISABLED_ALPHA)
+}

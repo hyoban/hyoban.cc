@@ -38,7 +38,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.keepScreenOn
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -57,6 +56,8 @@ import androidx.media3.ui.compose.state.rememberPlayPauseButtonState
 import androidx.media3.ui.compose.state.rememberProgressStateWithTickInterval
 import cc.hyoban.moments.R
 import cc.hyoban.moments.ui.components.Tooltip
+import cc.hyoban.moments.ui.theme.MediaOverlay
+import cc.hyoban.moments.ui.theme.Space
 
 // A video in the viewer, played as a phone's gallery plays it: its poster shows at once
 // while the video loads behind it, then it plays over the poster, silent until asked
@@ -153,8 +154,8 @@ private val VIDEO_AUDIO = AudioAttributes.Builder().setUsage(C.USAGE_MEDIA).setC
 @Composable
 fun VideoWaiting(state: VideoState, modifier: Modifier = Modifier) {
     AnimatedVisibility(state.waiting && state.player != null, modifier = modifier, enter = fadeIn(), exit = fadeOut()) {
-        Box(Modifier.size(56.dp).background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.35f), CircleShape), contentAlignment = Alignment.Center) {
-            LoadingIndicator(Modifier.size(44.dp), color = Color.White)
+        Box(Modifier.size(56.dp).background(MediaOverlay.control, CircleShape), contentAlignment = Alignment.Center) {
+            LoadingIndicator(Modifier.size(44.dp), color = MediaOverlay.content)
         }
     }
 }
@@ -178,11 +179,11 @@ fun VideoControls(state: VideoState, visible: Boolean, modifier: Modifier = Modi
     AnimatedVisibility(visible && player != null, modifier = modifier, enter = fadeIn(), exit = fadeOut()) {
         Row(
             Modifier.fillMaxWidth()
-                .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.35f))
+                .background(MediaOverlay.bar)
                 .navigationBarsPadding()
-                .padding(horizontal = 4.dp, vertical = 2.dp),
+                .padding(horizontal = Space.xs, vertical = Space.xxs),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(Space.xs),
         ) {
             Tooltip(stringResource(if (playPause.showPlay) R.string.action_play else R.string.action_pause)) {
                 IconButton(onClick = playPause::onClick, enabled = playPause.isEnabled) {
@@ -193,14 +194,14 @@ fun VideoControls(state: VideoState, visible: Boolean, modifier: Modifier = Modi
                             else -> Icons.Rounded.Pause
                         },
                         contentDescription = stringResource(if (playPause.showPlay) R.string.action_play else R.string.action_pause),
-                        tint = Color.White,
+                        tint = MediaOverlay.content,
                     )
                 }
             }
             Text(
                 formatClock(if (dragging) (dragged * duration).toLong() else progress.currentPositionMs),
                 style = MaterialTheme.typography.labelMedium,
-                color = Color.White,
+                color = MediaOverlay.content,
             )
             Slider(
                 value = if (dragging) dragged else (progress.currentPositionMs.toFloat() / duration).coerceIn(0f, 1f),
@@ -213,19 +214,19 @@ fun VideoControls(state: VideoState, visible: Boolean, modifier: Modifier = Modi
                     dragging = false
                 },
                 colors = SliderDefaults.colors(
-                    thumbColor = Color.White,
-                    activeTrackColor = Color.White,
-                    inactiveTrackColor = Color.White.copy(alpha = 0.3f),
+                    thumbColor = MediaOverlay.content,
+                    activeTrackColor = MediaOverlay.content,
+                    inactiveTrackColor = MediaOverlay.contentDisabled,
                 ),
                 modifier = Modifier.weight(1f),
             )
-            Text(formatClock(progress.durationMs.coerceAtLeast(0L)), style = MaterialTheme.typography.labelMedium, color = Color.White.copy(alpha = 0.8f))
+            Text(formatClock(progress.durationMs.coerceAtLeast(0L)), style = MaterialTheme.typography.labelMedium, color = MediaOverlay.contentVariant)
             Tooltip(stringResource(if (mute.showMuted) R.string.action_unmute else R.string.action_mute)) {
                 IconButton(onClick = mute::onClick, enabled = mute.isEnabled) {
                     Icon(
                         if (mute.showMuted) Icons.AutoMirrored.Rounded.VolumeOff else Icons.AutoMirrored.Rounded.VolumeUp,
                         contentDescription = stringResource(if (mute.showMuted) R.string.action_unmute else R.string.action_mute),
-                        tint = Color.White,
+                        tint = MediaOverlay.content,
                     )
                 }
             }

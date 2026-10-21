@@ -79,8 +79,10 @@ import cc.hyoban.moments.ui.components.Thumbnail
 import cc.hyoban.moments.ui.format.formatDate
 import cc.hyoban.moments.ui.format.formatTime
 import cc.hyoban.moments.ui.settings.Group
+import cc.hyoban.moments.ui.theme.DISABLED_ALPHA
 import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
 import cc.hyoban.moments.ui.theme.Space
+import cc.hyoban.moments.ui.theme.dividerColor
 import cc.hyoban.moments.ui.theme.fill
 
 /**
@@ -352,7 +354,7 @@ private fun ChangeCard(
                 }
             }
         }
-        if (identity != null) HorizontalDivider(Modifier.padding(end = Space.s), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+        if (identity != null) HorizontalDivider(Modifier.padding(end = Space.s), color = dividerColor())
         Column(Modifier.padding(end = Space.s), verticalArrangement = Arrangement.spacedBy(Space.m)) { content() }
     }
 }
@@ -364,7 +366,7 @@ private fun MomentIdentity(identity: Identity, modifier: Modifier = Modifier) {
     val where = moment.places.joinToString(stringResource(R.string.separator_list)) { identity.places[it]?.name ?: it }
     Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.m)) {
         moment.media.firstOrNull()?.let { Thumbnail(it, identity.urls, size = 48) }
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.xxs)) {
             Text(
                 moment.text.lineSequence().firstOrNull { it.isNotBlank() } ?: where.ifEmpty { stringResource(R.string.label_no_words) },
                 style = MaterialTheme.typography.titleSmall,
@@ -460,12 +462,12 @@ private fun Field(name: Int, content: @Composable () -> Unit) {
     }
 }
 
-/** The words as changed: what was taken out struck through in the error colour, what was put in on the primary's container. */
+/** The words as changed: what was taken out struck through on the error's container, what was put in on the primary's. */
 @Composable
 private fun TextChange(before: String, after: String) {
     val removed = SpanStyle(
-        color = MaterialTheme.colorScheme.error,
-        background = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f),
+        color = MaterialTheme.colorScheme.onErrorContainer,
+        background = MaterialTheme.colorScheme.errorContainer,
         textDecoration = TextDecoration.LineThrough,
     )
     val added = SpanStyle(color = MaterialTheme.colorScheme.onPrimaryContainer, background = MaterialTheme.colorScheme.primaryContainer)
@@ -520,7 +522,7 @@ private fun PhotoRow(photos: List<Pair<MomentMedia, Boolean?>>, urls: MediaUrls)
                     urls,
                     size = PHOTO_SIZE,
                     modifier = Modifier
-                        .alpha(if (added == false) 0.4f else 1f)
+                        .alpha(if (added == false) DISABLED_ALPHA else 1f)
                         .border(2.dp, ring, MaterialTheme.shapes.medium),
                 )
                 if (added != null) {
@@ -528,7 +530,7 @@ private fun PhotoRow(photos: List<Pair<MomentMedia, Boolean?>>, urls: MediaUrls)
                         if (added) Icons.Rounded.Add else Icons.Rounded.Remove,
                         contentDescription = stringResource(if (added) R.string.label_photo_added else R.string.label_photo_removed),
                         tint = if (added) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onError,
-                        modifier = Modifier.align(Alignment.TopEnd).padding(4.dp).size(20.dp).clip(CircleShape).background(ring).padding(2.dp),
+                        modifier = Modifier.align(Alignment.TopEnd).padding(Space.xs).size(20.dp).clip(CircleShape).background(ring).padding(Space.xxs),
                     )
                 }
             }

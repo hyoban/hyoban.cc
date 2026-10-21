@@ -203,7 +203,7 @@ fun MomentFeed(
                         }
                     }
                     items(dayMoments, key = { it.uid }, contentType = { "moment" }) { moment ->
-                        card(moment, Modifier.animateItem().padding(horizontal = Space.gutter, vertical = 6.dp), false)
+                        card(moment, Modifier.animateItem().padding(horizontal = Space.gutter, vertical = Space.m / 2), false)
                     }
                 }
             }
@@ -306,7 +306,7 @@ private fun SkeletonCards() {
             repeat(3) {
                 Column(
                     Modifier.fillMaxWidth().clip(MaterialTheme.shapes.large).background(LocalSurfaceLevel.current.raised.fill()).padding(bottom = Space.l),
-                    verticalArrangement = Arrangement.spacedBy(Space.s + 2.dp),
+                    verticalArrangement = Arrangement.spacedBy(Space.m),
                 ) {
                     Box(Modifier.fillMaxWidth().aspectRatio(4f / 3f).background(bone))
                     Box(Modifier.padding(horizontal = Space.l).fillMaxWidth(0.45f).height(14.dp).clip(Corners.full).background(bone))
