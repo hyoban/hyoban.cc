@@ -35,6 +35,8 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.outlined.Map
 import androidx.compose.material.icons.rounded.Map
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -72,7 +74,9 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
@@ -81,6 +85,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.core.util.Consumer
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavGraph
@@ -115,6 +120,7 @@ import cc.hyoban.moments.ui.compose.NewMomentScreen
 import cc.hyoban.moments.ui.feed.DayScreen
 import cc.hyoban.moments.ui.feed.FeedScreen
 import cc.hyoban.moments.ui.feed.PlaceScreen
+import cc.hyoban.moments.ui.feed.SearchScreen
 import cc.hyoban.moments.ui.map.MapScreen
 import cc.hyoban.moments.ui.moment.MomentScreen
 import cc.hyoban.moments.ui.publish.ChangesScreen
@@ -179,6 +185,31 @@ data class EditMoment(val uid: String)
 /** The changes kept on the phone, to look over and publish. */
 @Serializable
 object Changes
+
+/** Searching the Moments. */
+@Serializable
+object Search
+
+/**
+ * A tab's icon, filled once chosen; the Moments' with a badge of how many changes wait to be
+ * published while another tab is shown, as Material 3 badges a navigation item with a count
+ * and hides it once its destination is open.
+ */
+@Composable
+private fun TabIcon(tab: Tab, selected: Boolean, pending: Int) {
+    val icon = if (selected) tab.selectedIcon else tab.icon
+    if (tab == Tab.MOMENTS && !selected && pending > 0) {
+        val waiting = pluralStringResource(R.plurals.count_changes, pending, pending)
+        BadgedBox(
+            badge = { Badge { Text(if (pending > 999) "999+" else pending.toString()) } },
+            modifier = Modifier.semantics { contentDescription = waiting },
+        ) {
+            Icon(icon, contentDescription = null)
+        }
+    } else {
+        Icon(icon, contentDescription = null)
+    }
+}
 
 /** The three tabs at the bottom; everything else opens over them. */
 private enum class Tab(val route: Any, val type: KClass<*>, val label: Int, val icon: ImageVector, val selectedIcon: ImageVector) {
@@ -261,6 +292,8 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
     val accessorySlot = remember { mutableStateOf<(@Composable () -> Unit)?>(null) }
     // Brief messages from any page, one at a time, at the foot of the screen above the tabs.
     val messages = remember { SnackbarHostState() }
+    // How much a page's own controls at its foot, a floating toolbar, lift the snackbar above them.
+    val snackbarLift = remember { mutableStateOf(0.dp) }
     // The theme's springs for what moves on a page; the pages themselves change on the standard ones.
     val motion = MaterialTheme.motionScheme
     val transitions = TransitionMotion
@@ -332,6 +365,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                 LocalRailSpace provides rail,
                 LocalNavAccessory provides accessorySlot,
                 LocalMessages provides messages,
+                LocalSnackbarLift provides snackbarLift,
                 LocalReducedMotion provides rememberReducedMotion(),
                 LocalMediaMaxHeight provides if (landscape) windowHeight * 0.6f else Dp.Infinity,
             ) {
@@ -366,6 +400,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                     onSettings = { navController.navigate(Preferences) },
                                     onNew = { navController.navigate(NewMoment) },
                                     onChanges = { navController.navigate(Changes) },
+                                    onSearch = { navController.navigate(Search) },
                                     onMedia = openMedia,
                                     onPlace = openPlace,
                                     onTrip = openTrip,
@@ -388,6 +423,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                     onBack = back,
                                     onEdit = { navController.navigate(EditMoment(it)) },
                                     onDay = { navController.navigate(Day(it)) },
+                                    onChanges = { navController.navigate(Changes) },
                                 )
                             }
                             screen<Trip>(link = "trip/{id}") { entry ->
@@ -414,6 +450,9 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                     // Deleted, the Moment's page under the edit page goes too, when it is there.
                                     onDeleted = { if (!navController.popBackStack<Moment>(inclusive = true)) back() },
                                 )
+                            }
+                            screen<Search>(link = "search") {
+                                SearchScreen(container, onMoment = openMoment, onBack = back)
                             }
                             screen<Changes>(link = "changes") {
                                 ChangesScreen(container, onMoment = openMoment, onBack = back)
@@ -453,6 +492,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
             // navigation rail down the leading edge, the button at its top. Read before the
             // page, as Material 3 has assistive technology reach navigation and the FAB first.
             val selectedTab = current?.ordinal ?: 0
+            val pending by container.repository.pending.collectAsStateWithLifecycle()
             val onTab: (Int) -> Unit = { index -> if (index == selectedTab) tabReselects.tryEmit(Tab.entries[index].route) else selectTab(index) }
             // Kept while it leaves, after the tab has let it go.
             var accessory by remember { mutableStateOf(accessorySlot.value) }
@@ -482,7 +522,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                         NavigationRailItem(
                             selected = index == selectedTab,
                             onClick = { onTab(index) },
-                            icon = { Icon(if (index == selectedTab) tab.selectedIcon else tab.icon, contentDescription = null) },
+                            icon = { TabIcon(tab, selected = index == selectedTab, pending = pending.size) },
                             label = { Text(stringResource(tab.label)) },
                             modifier = Modifier.testTag("tab_${tab.name.lowercase()}"),
                         )
@@ -511,7 +551,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                             ShortNavigationBarItem(
                                 selected = index == selectedTab,
                                 onClick = { onTab(index) },
-                                icon = { Icon(if (index == selectedTab) tab.selectedIcon else tab.icon, contentDescription = null) },
+                                icon = { TabIcon(tab, selected = index == selectedTab, pending = pending.size) },
                                 label = { Text(stringResource(tab.label)) },
                                 modifier = Modifier.testTag("tab_${tab.name.lowercase()}"),
                             )
@@ -525,7 +565,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
             SnackbarHost(
                 messages,
                 Modifier.align(Alignment.BottomCenter).imePadding()
-                    .padding(bottom = if (viewer == null && current != null) clearance + fabRoom else navBottom),
+                    .padding(bottom = if (viewer == null && current != null) clearance + fabRoom else navBottom + if (viewer == null) snackbarLift.value else 0.dp),
             )
         }
     }
@@ -571,7 +611,7 @@ private fun AnimatedContentTransitionScope<NavBackStackEntry>.exit(forward: Bool
  * the trips, a Moment's trip card or the map's route card; a day's from the calendar.
  */
 private val CARD_OPENINGS: Map<KClass<*>, List<KClass<*>>> = mapOf(
-    Moment::class to listOf(Feed::class, Day::class, PlaceMoments::class, Trip::class, Atlas::class),
+    Moment::class to listOf(Feed::class, Day::class, PlaceMoments::class, Trip::class, Atlas::class, Search::class),
     Trip::class to listOf(Trips::class, Moment::class, Atlas::class),
     Day::class to listOf(Feed::class),
 )
@@ -640,6 +680,12 @@ val LocalFabClearance = staticCompositionLocalOf { 0.dp }
 data class RailSpace(val left: Dp, val right: Dp, val clearOfInsets: Boolean = false)
 
 val LocalRailSpace = staticCompositionLocalOf { RailSpace(0.dp, 0.dp) }
+
+/**
+ * How far a page's own controls at its foot lift the snackbar, which a page sets while it is
+ * shown, as Material 3 nudges a snackbar above a toolbar rather than over it.
+ */
+val LocalSnackbarLift = staticCompositionLocalOf<MutableState<Dp>> { mutableStateOf(0.dp) }
 
 /** Material 3's snackbars for the whole app, rather than toasts: one host, above the tabs. */
 val LocalMessages = staticCompositionLocalOf { SnackbarHostState() }

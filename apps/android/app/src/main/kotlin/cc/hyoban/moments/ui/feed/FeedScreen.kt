@@ -26,6 +26,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.rounded.Directions
 import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -35,7 +36,7 @@ import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MediumFloatingActionButton
+import androidx.compose.material3.MediumExtendedFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.ToggleButtonDefaults
@@ -53,11 +54,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -101,6 +107,7 @@ fun FeedScreen(
     onSettings: () -> Unit,
     onNew: () -> Unit,
     onChanges: () -> Unit,
+    onSearch: () -> Unit = {},
     onMedia: (String, Int) -> Unit = { _, _ -> },
     onPlace: (String) -> Unit = {},
     onTrip: (String) -> Unit = {},
@@ -123,12 +130,23 @@ fun FeedScreen(
     val pending by container.repository.pending.collectAsStateWithLifecycle()
     // The changes kept on the phone, to look over and publish, head the Moments while there are any.
     val publishable = container.canPublish && pending.size > 0
-    // Writing a Moment is the tab's one floating action button: upright a medium one above the
-    // navigation bar, as Material 3 has a phone's FAB; down the side, at the top of the rail.
+    // Writing a Moment is the tab's one floating action button: upright an extended one above
+    // the navigation bar, its label folding away while the list is scrolled down to read on and
+    // back on a scroll up, as Material 3 has an extended FAB over a long list; down the side, a
+    // plain one at the top of the rail.
+    var fabExpanded by remember { mutableStateOf(true) }
+    val fabScroll = remember {
+        object : NestedScrollConnection {
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                if (available.y < -FAB_SCROLL_SLOP) fabExpanded = false else if (available.y > FAB_SCROLL_SLOP) fabExpanded = true
+                return Offset.Zero
+            }
+        }
+    }
     val accessory = LocalNavAccessory.current
     val currentOnNew by rememberUpdatedState(onNew)
     val newBeside = remember<@Composable () -> Unit> {
-        { NewMomentButton(onClick = { currentOnNew() }, inRail = isLandscape()) }
+        { NewMomentButton(onClick = { currentOnNew() }, inRail = isLandscape(), expanded = fabExpanded) }
     }
     DisposableEffect(accessory) {
         accessory.value = newBeside
@@ -197,9 +215,16 @@ fun FeedScreen(
                 TabPage(
                     stringResource(R.string.title_moments),
                     tab = Feed,
+                    modifier = Modifier.nestedScroll(fabScroll),
                     subtitle = subtitle,
                     actions = {
-                        // How the Moments are laid out is chosen above them; the bar keeps the settings.
+                        // How the Moments are laid out is chosen above them; the bar keeps searching
+                        // them, a secondary action as Material 3 has a search icon button, and the settings.
+                        Tooltip(stringResource(R.string.action_search), below = true) {
+                            IconButton(onClick = onSearch, modifier = Modifier.testTag("search")) {
+                                Icon(Icons.Rounded.Search, contentDescription = stringResource(R.string.action_search))
+                            }
+                        }
                         Tooltip(stringResource(R.string.title_settings), below = true) {
                             IconButton(onClick = onSettings, modifier = Modifier.testTag("settings")) {
                                 Icon(Icons.Rounded.Settings, contentDescription = stringResource(R.string.title_settings))
@@ -253,6 +278,7 @@ fun FeedScreen(
                             onEdit = onEdit,
                             onDay = onDay,
                             pane = true,
+                            onChanges = onChanges,
                         )
                     }
                 } else {
@@ -270,6 +296,9 @@ fun FeedScreen(
 
 /** How wide the Moments stand beside a detail pane, Material 3's list pane. */
 private val LIST_PANE_WIDTH = 400.dp
+
+/** How far a scroll must go, in pixels a frame, to fold the FAB's label away or bring it back. */
+private const val FAB_SCROLL_SLOP = 6f
 
 /**
  * The Moments as a list or as a calendar, one chosen, as Material 3's connected button group
@@ -312,12 +341,13 @@ private fun ViewSwitch(calendar: Boolean, onChange: (Boolean) -> Unit) {
 
 /**
  * Starts a new Moment: the tab's floating action button, its container the primary one, as
- * Material 3 has a create. A medium FAB above the navigation bar; [inRail], a FAB at the
- * rail's top, level with it, as one nested in a rail rests.
+ * Material 3 has a create. A medium extended FAB above the navigation bar, its label shown
+ * while [expanded]; [inRail], a FAB at the rail's top, level with it, as one nested in a
+ * rail rests.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun NewMomentButton(onClick: () -> Unit, inRail: Boolean = false) {
+private fun NewMomentButton(onClick: () -> Unit, inRail: Boolean = false, expanded: Boolean = true) {
     val label = stringResource(R.string.action_new_moment)
     Tooltip(label) {
         if (inRail) {
@@ -329,9 +359,13 @@ private fun NewMomentButton(onClick: () -> Unit, inRail: Boolean = false) {
                 Icon(Icons.Rounded.Edit, contentDescription = label)
             }
         } else {
-            MediumFloatingActionButton(onClick = onClick, modifier = Modifier.testTag("new_moment")) {
-                Icon(Icons.Rounded.Edit, contentDescription = label, modifier = Modifier.size(FloatingActionButtonDefaults.MediumIconSize))
-            }
+            MediumExtendedFloatingActionButton(
+                onClick = onClick,
+                expanded = expanded,
+                icon = { Icon(Icons.Rounded.Edit, contentDescription = null, modifier = Modifier.size(FloatingActionButtonDefaults.MediumIconSize)) },
+                text = { Text(stringResource(R.string.label_write_moment)) },
+                modifier = Modifier.semantics { contentDescription = label }.testTag("new_moment"),
+            )
         }
     }
 }

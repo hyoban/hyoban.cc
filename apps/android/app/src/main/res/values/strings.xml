@@ -88,6 +88,19 @@
     <string name="error_location_permission">需要定位权限才能找到附近。</string>
     <string name="label_view_list">列表</string>
     <string name="label_view_calendar">日历</string>
+    <string name="label_write_moment">写时刻</string>
+    <string name="label_publish_all">全部发布</string>
+    <string name="action_search">搜索</string>
+    <string name="action_clear">清除</string>
+    <string name="action_copy_text">复制正文</string>
+    <string name="message_text_copied">已复制正文</string>
+    <string name="action_view_photo">看大图</string>
+    <string name="action_see_moments">查看全部时刻</string>
+    <string name="hint_search_moments">搜索时刻</string>
+    <string name="search_prompt">按正文、地点或旅程找时刻</string>
+    <string name="search_none">没有找到相关的时刻</string>
+    <string name="explain_on_phone">这个时刻还只在这台手机上，发布更改后才会出现在网站上。</string>
+    <string name="explain_unpublished_change">这个时刻在手机上改过，发布更改后网站上的才会跟着变。</string>
     <string name="action_show_all">展开</string>
     <string name="action_show_less">收起</string>
     <string name="label_pick_moment">选一个时刻，在这里看它</string>
@@ -245,7 +258,6 @@
     <string name="section_changed">改过的</string>
     <string name="section_removed">要删除的</string>
     <string name="action_revert">撤销</string>
-    <string name="action_publish_all">全部发布到网站</string>
     <string name="message_publishing_progress">正在发布 %1$d/%2$d</string>
     <string name="note_publish_all">新写的时刻和照片会上传，改过的会更新，要删除的会从网站上删掉，都公开可见。中途失败的话，没发出去的会留在这里。</string>
     <string name="note_publish_needs_token">在设置里填上 API 令牌后才能发布。</string>

@@ -27,8 +27,8 @@ import androidx.compose.material.icons.rounded.CloudUpload
 import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material.icons.rounded.Remove
 import androidx.compose.material.icons.rounded.Schedule
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearWavyProgressIndicator
@@ -39,6 +39,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -67,6 +68,7 @@ import cc.hyoban.moments.data.spec.MomentMedia
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.store.Change
+import cc.hyoban.moments.ui.LocalSnackbarLift
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.PageWidth
 import cc.hyoban.moments.ui.components.SubPage
@@ -112,7 +114,8 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
                     .verticalScroll(rememberScrollState())
                     .navigationBarsPadding()
                     .padding(horizontal = columns.margin)
-                    .padding(bottom = Space.xl),
+                    // Clear of the publishing button over the list's end.
+                    .padding(bottom = Space.xl + FAB_CLEARANCE),
             ) {
                 if (pending.size == 0) {
                     Group(null, stringResource(R.string.empty_changes)) {}
@@ -146,20 +149,6 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
                 }
                 Spacer(Modifier.height(Space.xl))
                 Column(Modifier.padding(horizontal = Space.gutter), verticalArrangement = Arrangement.spacedBy(Space.s)) {
-                    Button(
-                        onClick = container::publishPending,
-                        enabled = container.canPublish && !busy,
-                        modifier = Modifier.fillMaxWidth().testTag("publish_all"),
-                    ) {
-                        val progress = publishing
-                        Text(
-                            if (progress != null) {
-                                stringResource(R.string.message_publishing_progress, progress.done, progress.total)
-                            } else {
-                                stringResource(R.string.action_publish_all)
-                            },
-                        )
-                    }
                     // Publishing takes a while and knows how far it has got, so a determinate
                     // indicator, as Material 3 has for a wait of more than a few seconds.
                     publishing?.let { progress ->
@@ -176,6 +165,33 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
                     )
                 }
             }
+        }
+        // Publishing, the page's one action, as Material 3's extended FAB keeps a long list's
+        // main action in reach: at the bottom end, saying how far it has got while it runs.
+        // Shown only when the app can publish, as a FAB isn't greyed out but goes.
+        val publishShown = container.canPublish && pending.size > 0
+        // Snackbars stand above the button while it shows.
+        val lift = LocalSnackbarLift.current
+        DisposableEffect(lift, publishShown) {
+            lift.value = if (publishShown) FAB_CLEARANCE else 0.dp
+            onDispose { lift.value = 0.dp }
+        }
+        if (publishShown) {
+            val progress = publishing
+            ExtendedFloatingActionButton(
+                onClick = { if (progress == null) container.publishPending() },
+                icon = { Icon(Icons.Rounded.CloudUpload, contentDescription = null) },
+                text = {
+                    Text(
+                        if (progress != null) {
+                            stringResource(R.string.message_publishing_progress, progress.done, progress.total)
+                        } else {
+                            stringResource(R.string.label_publish_all)
+                        },
+                    )
+                },
+                modifier = Modifier.align(Alignment.BottomEnd).navigationBarsPadding().padding(Space.gutter).testTag("publish_all"),
+            )
         }
     }
 }
@@ -235,6 +251,9 @@ fun PendingChangesRow(container: AppContainer, onClick: () -> Unit, modifier: Mo
         )
     }
 }
+
+/** Room under the list for the publishing button: an extended FAB and its margin. */
+private val FAB_CLEARANCE = 88.dp
 
 /** How much of the changes are published, for a determinate indicator. */
 private fun publishedFraction(progress: AppContainer.Progress): Float =

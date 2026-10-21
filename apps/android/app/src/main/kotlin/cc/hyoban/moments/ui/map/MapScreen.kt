@@ -6,7 +6,6 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -16,10 +15,6 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.draggable
-import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -32,14 +27,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
@@ -48,6 +42,7 @@ import androidx.compose.material.icons.rounded.Luggage
 import androidx.compose.material.icons.rounded.MyLocation
 import androidx.compose.material.icons.rounded.Navigation
 import androidx.compose.material.icons.rounded.Place
+import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -56,58 +51,68 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SegmentedListItem
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.VerticalDivider
+import androidx.compose.material3.rememberBottomSheetScaffoldState
+import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.AbsoluteAlignment
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.R
+import cc.hyoban.moments.data.media.MediaUrls
+import cc.hyoban.moments.data.spec.MomentRecord
+import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.spec.TripRecord
 import cc.hyoban.moments.ui.Atlas
 import cc.hyoban.moments.ui.LocalBottomClearance
 import cc.hyoban.moments.ui.LocalFabClearance
 import cc.hyoban.moments.ui.LocalNavAccessory
 import cc.hyoban.moments.ui.LocalRailSpace
-import cc.hyoban.moments.ui.components.CompactMomentRow
 import cc.hyoban.moments.ui.components.READABLE_WIDTH
+import cc.hyoban.moments.ui.components.Thumbnail
 import cc.hyoban.moments.ui.components.Tooltip
 import cc.hyoban.moments.ui.components.isLandscape
 import cc.hyoban.moments.ui.components.landscape
 import cc.hyoban.moments.ui.components.sharedCard
 import cc.hyoban.moments.ui.components.sideInsetsPadding
 import cc.hyoban.moments.ui.components.tripCardKey
+import cc.hyoban.moments.ui.format.formatDate
+import cc.hyoban.moments.ui.format.formatTime
 import cc.hyoban.moments.ui.rememberShowMessage
 import cc.hyoban.moments.ui.theme.Corners
 import cc.hyoban.moments.ui.theme.LocalDarkTheme
@@ -118,7 +123,7 @@ import cc.hyoban.moments.ui.theme.dividerColor
 import cc.hyoban.moments.ui.theme.fill
 import cc.hyoban.moments.ui.trips.tripSummary
 import com.materialkolor.ktx.harmonizeWithPrimary
-import kotlin.math.roundToInt
+import kotlinx.coroutines.flow.drop
 
 /**
  * The map tab, as the site's map: every place the Moments name, coloured by the year of
@@ -188,8 +193,10 @@ fun MapScreen(container: AppContainer, onMoment: (String) -> Unit, onPlace: (Str
         { LocateButton(currentLocating, onClick = { currentLocate() }, inRail = isLandscape()) }
     }
     val landscape = isLandscape()
-    DisposableEffect(accessory) {
-        accessory.value = locateBeside
+    // It steps aside while a place's sheet is up, the sheet covering what it would locate.
+    val placeOpen = selected != null
+    DisposableEffect(accessory, placeOpen) {
+        if (!placeOpen) accessory.value = locateBeside
         onDispose { if (accessory.value === locateBeside) accessory.value = null }
     }
 
@@ -265,116 +272,119 @@ fun MapScreen(container: AppContainer, onMoment: (String) -> Unit, onPlace: (Str
         }
     }
 
-    // A place's Moments in a panel over the map, in the app's own window rather than a
-    // sheet's, so a Moment opened from it grows out of its row as from a card on a list.
+    // A place's Moments in Material 3's standard bottom sheet, the one it has for what a map
+    // shows about a place: half the screen when a place is chosen, dragged up to all of it or
+    // down and away, its handle the sheet's own, tapped or focused as well as dragged. In the
+    // app's own window, so a Moment opened from it grows out of its row as from a card.
     var shownPlace by remember { mutableStateOf(selected) }
     if (selected != null) shownPlace = selected
     BackHandler(enabled = selected != null) { selected = null }
-    AnimatedVisibility(
-        selected != null,
-        enter = slideInVertically { it } + fadeIn(),
-        exit = slideOutVertically { it } + fadeOut(),
-        modifier = Modifier.fillMaxSize(),
-    ) {
-        val id = shownPlace ?: return@AnimatedVisibility
-        val place = places[id] ?: return@AnimatedVisibility
-        val here = byPlace[id].orEmpty()
-        val years = remember(here) { here.map { yearOf(it.occurredAt) }.distinct().sortedDescending() }
-        val level = SurfaceLevel.floating(LocalDarkTheme.current)
-        // Dragged down by its handle past a third of its height, it closes.
-        var drag by remember(id) { mutableFloatStateOf(0f) }
-        var height by remember { mutableIntStateOf(1) }
-        BoxWithConstraints(Modifier.fillMaxSize()) {
-            // On a phone on its side, a column down the side the tabs aren't,
-            // as tall as the screen, with the map beside it; else the lower half, the map above.
-            val railLeft = LocalRailSpace.current.left > 0.dp
-            val panel = if (landscape) {
-                Modifier.align(if (railLeft) AbsoluteAlignment.BottomRight else AbsoluteAlignment.BottomLeft)
-                    .statusBarsPadding()
-                    .sideInsetsPadding()
-                    .padding(start = Space.s, end = Space.s, top = Space.s, bottom = LocalBottomClearance.current + Space.s)
-                    .width(PANEL_WIDTH)
-                    .fillMaxHeight()
-            } else {
-                Modifier.align(Alignment.BottomCenter)
-                    .padding(start = Space.s, end = Space.s, bottom = LocalBottomClearance.current)
-                    .fillMaxWidth()
-                    .fillMaxHeight(0.55f)
+    val sheetState = rememberStandardBottomSheetState(initialValue = SheetValue.Hidden, skipHiddenState = false)
+    val scaffold = rememberBottomSheetScaffoldState(bottomSheetState = sheetState)
+    LaunchedEffect(selected) { if (selected != null) sheetState.partialExpand() else sheetState.hide() }
+    // Swiped away, the place is let go.
+    LaunchedEffect(sheetState) {
+        snapshotFlow { sheetState.currentValue }.drop(1).collect { if (it == SheetValue.Hidden) selected = null }
+    }
+    val clearance = LocalBottomClearance.current
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        BottomSheetScaffold(
+            scaffoldState = scaffold,
+            // Drawn up to the status bar at most, so the whole sheet's top stays clear of it.
+            modifier = Modifier.statusBarsPadding(),
+            sheetPeekHeight = maxHeight * 0.55f,
+            sheetContainerColor = SurfaceLevel.floating(LocalDarkTheme.current).fill(),
+            containerColor = Color.Transparent,
+            sheetContent = {
+                val id = shownPlace
+                val place = id?.let { places[it] }
+                if (id != null && place != null) {
+                    val here = byPlace[id].orEmpty()
+                    val years = remember(here) { here.map { yearOf(it.occurredAt) }.distinct().sortedDescending() }
+                    PlaceSheet(
+                        place, id, here, years, colors, places, container.mediaUrls,
+                        bottom = clearance,
+                        onNavigate = { if (!navigateTo(context, place)) show(context.getString(R.string.no_map_app)) },
+                        onAll = { selected = null; onPlace(id) },
+                        onMoment = onMoment,
+                    )
+                }
+            },
+        ) { }
+    }
+}
+
+/**
+ * A place in the map's sheet: its name, how many Moments and in which years, the way there
+ * and all of it; then its Moments as a segmented list, each row its first photo, when and
+ * its words, kept clear of the navigation bar by [bottom].
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun PlaceSheet(
+    place: Place,
+    id: String,
+    here: List<MomentRecord>,
+    years: List<Int>,
+    colors: Map<Int, Color>,
+    places: Map<String, Place>,
+    urls: MediaUrls,
+    bottom: Dp,
+    onNavigate: () -> Unit,
+    onAll: () -> Unit,
+    onMoment: (String) -> Unit,
+) {
+    val context = LocalContext.current
+    Column(Modifier.fillMaxHeight()) {
+        Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Rounded.Place, contentDescription = null, tint = colors[years.minOrNull()] ?: MaterialTheme.colorScheme.primary)
+            Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
+                Text(place.name, style = MaterialTheme.typography.titleLarge, modifier = Modifier.semantics { heading() })
+                Text(
+                    (listOf(pluralStringResource(R.plurals.count_moments, here.size, here.size)) + years.joinToString(context.getString(R.string.separator_list)) { context.getString(R.string.year_item, it) }).joinToString(" · "),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
-            Surface(
-                shape = MaterialTheme.shapes.extraLarge,
-                color = level.fill(),
-                contentColor = MaterialTheme.colorScheme.onSurface,
-                shadowElevation = 6.dp,
-                modifier = panel
-                    .onSizeChanged { height = it.height }
-                    .offset { IntOffset(0, drag.coerceAtLeast(0f).roundToInt()) },
-            ) {
-                CompositionLocalProvider(LocalSurfaceLevel provides level) {
-                    Column {
-                        // Dragged down to close, or tapped, focused or read out as a button that
-                        // closes it, as Material 3 gives a drag handle a single-tap way too; 48dp
-                        // tall, a target's height.
-                        val close = stringResource(R.string.action_close)
-                        Box(
-                            Modifier.fillMaxWidth().height(48.dp)
-                                .clickable(onClickLabel = close, role = Role.Button) { selected = null }
-                                .semantics { contentDescription = close }
-                                .testTag("panel_handle")
-                                .draggable(
-                                orientation = Orientation.Vertical,
-                                state = rememberDraggableState { delta -> drag = (drag + delta).coerceAtLeast(0f) },
-                                onDragStopped = {
-                                    if (drag > height / 3f) selected = null
-                                    else animate(drag, 0f) { value, _ -> drag = value }
-                                },
-                            ),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Box(Modifier.size(32.dp, 4.dp).background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f), Corners.full))
-                        }
-                        Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Rounded.Place, contentDescription = null, tint = colors[years.minOrNull()] ?: MaterialTheme.colorScheme.primary)
-                            Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
-                                Text(place.name, style = MaterialTheme.typography.titleLarge)
-                                Text(
-                                    (listOf(pluralStringResource(R.plurals.count_moments, here.size, here.size)) + years.joinToString(context.getString(R.string.separator_list)) { context.getString(R.string.year_item, it) }).joinToString(" · "),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
-                            Tooltip(stringResource(R.string.action_navigate)) {
-                                IconButton(onClick = { if (!navigateTo(context, place)) show(context.getString(R.string.no_map_app)) }, modifier = Modifier.testTag("navigate")) {
-                                    Icon(Icons.Rounded.Directions, contentDescription = stringResource(R.string.action_navigate), tint = MaterialTheme.colorScheme.primary)
-                                }
-                            }
-                            TextButton(onClick = { selected = null; onPlace(id) }, modifier = Modifier.testTag("place_$id")) {
-                                Text(stringResource(R.string.action_all))
-                                Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null)
-                            }
-                        }
-                        LazyColumn(
-                            contentPadding = PaddingValues(Space.l),
-                            verticalArrangement = Arrangement.spacedBy(Space.s),
-                        ) {
-                            items(here, key = { it.uid }) { moment ->
-                                CompactMomentRow(moment, places, container.mediaUrls, onClick = { onMoment(moment.uid) })
-                            }
-                        }
-                    }
+            Tooltip(stringResource(R.string.action_navigate)) {
+                IconButton(onClick = onNavigate, modifier = Modifier.testTag("navigate")) {
+                    Icon(Icons.Rounded.Directions, contentDescription = stringResource(R.string.action_navigate), tint = MaterialTheme.colorScheme.primary)
+                }
+            }
+            TextButton(onClick = onAll, modifier = Modifier.testTag("place_$id")) {
+                Text(stringResource(R.string.action_all))
+                Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null)
+            }
+        }
+        LazyColumn(
+            Modifier.weight(1f),
+            contentPadding = PaddingValues(start = Space.l, end = Space.l, top = Space.l, bottom = Space.l + bottom),
+            verticalArrangement = Arrangement.spacedBy(ListItemDefaults.SegmentedGap),
+        ) {
+            itemsIndexed(here, key = { _, moment -> moment.uid }) { index, moment ->
+                // It grows into the Moment's page when opened, as a card on a list does.
+                SegmentedListItem(
+                    onClick = { onMoment(moment.uid) },
+                    shapes = ListItemDefaults.segmentedShapes(index, here.size),
+                    colors = ListItemDefaults.segmentedColors(containerColor = LocalSurfaceLevel.current.raised.fill()),
+                    leadingContent = moment.media.firstOrNull()?.let { media -> { Thumbnail(media, urls, size = 56) } },
+                    supportingContent = {
+                        Text(
+                            moment.text.ifBlank { moment.places.joinToString(stringResource(R.string.separator_list)) { places[it]?.name ?: it } },
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    },
+                    modifier = Modifier.sharedCard(moment.uid).testTag("moment_${moment.uid}"),
+                ) {
+                    Text(listOfNotNull(formatDate(moment.occurredAt), formatTime(moment.occurredAt)).joinToString(" "), style = MaterialTheme.typography.labelLarge)
                 }
             }
         }
     }
 }
 
-/** How wide a place's panel is down the side of a phone on its side. */
-private val PANEL_WIDTH = 360.dp
-
 private val LOCATION_PERMISSIONS = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
-
-/** The size of the map's round buttons, a floating action button's. */
-private val BUTTON_SIZE = 56.dp
 
 /** Which way north is, shown while the map is [turned]; tapped, the map turns back to it. */
 @Composable
