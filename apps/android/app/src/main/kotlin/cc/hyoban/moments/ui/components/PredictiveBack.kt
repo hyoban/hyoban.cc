@@ -3,6 +3,7 @@ package cc.hyoban.moments.ui.components
 import androidx.activity.BackEventCompat
 import androidx.activity.compose.PredictiveBackHandler
 import androidx.compose.animation.core.animate
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -16,7 +17,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
-import com.kyant.capsule.ContinuousRoundedRectangle
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 
@@ -64,7 +64,8 @@ fun Modifier.predictiveBackScale(back: PredictiveBack): Modifier = graphicsLayer
     scaleX = scale
     scaleY = scale
     translationX = (if (back.fromLeft) 1f else -1f) * PREVIEW_SHIFT.toPx() * progress
-    shape = ContinuousRoundedRectangle(PREVIEW_CORNER * progress)
+    // A plain rounded rectangle, clipped as it is drawn rather than through a mask each frame.
+    shape = RoundedCornerShape(PREVIEW_CORNER * progress)
     clip = progress > 0f
 }
 

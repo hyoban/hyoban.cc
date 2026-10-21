@@ -37,6 +37,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.outlined.Map
 import androidx.compose.material.icons.rounded.Map
@@ -61,6 +62,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -87,6 +89,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.core.util.Consumer
@@ -332,8 +335,10 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
         }
     }
     val windowHeight = with(LocalDensity.current) { LocalWindowInfo.current.containerSize.height.toDp() }
-    // The tab's button's room above the bar, given up and taken back as the button shrinks and grows.
-    val tabFab by animateDpAsState(if (!railed && accessorySlot.value != null) fabHeight else 0.dp, motion.fastSpatialSpec(), label = "fab clearance")
+    // The tab's button's room above the bar. Not animated: the pages lay their lists out with
+    // it, and a value changing every frame would lay out every list on the tab every frame; the
+    // snackbar, which moves with it, eases on its own.
+    val tabFab = if (!railed && accessorySlot.value != null) fabHeight else 0.dp
 
     // A back swipe, from its start until a moment after the finger lifts, while the page
     // change it started plays out: shared photos stay with their pages meanwhile.
@@ -588,13 +593,14 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
             }
             // Above the navigation bar and the button over it on a tab, the system's navigation
             // elsewhere, and the keyboard while it is up.
-            // Moving with the bar as it comes and goes, on its spring, rather than ahead of it.
-            val snackbarBottom by animateDpAsState(
+            // Moving with the bar as it comes and goes, on its spring, rather than ahead of it;
+            // read as it is placed, so it moves without the app being composed again.
+            val snackbarBottom = animateDpAsState(
                 if (viewer == null && current != null) clearance + tabFab else navBottom + if (viewer == null) snackbarLift.value else 0.dp,
                 transitions.defaultSpatialSpec(),
                 label = "snackbar",
             )
-            SnackbarHost(messages, Modifier.align(Alignment.BottomCenter).imePadding().padding(bottom = snackbarBottom))
+            SnackbarHost(messages, Modifier.align(Alignment.BottomCenter).imePadding().offset { IntOffset(0, -snackbarBottom.value.roundToPx()) })
         }
     }
 }
@@ -694,15 +700,17 @@ fun OnTabReselect(route: Any?, action: suspend () -> Unit) {
 }
 
 /** How much of the bottom the navigation bar covers on a tab screen, to leave clear under a list's last item. */
-val LocalBottomClearance = staticCompositionLocalOf { 0.dp }
+val LocalBottomClearance = compositionLocalOf { 0.dp }
 
 /** How much more the tab's floating action button covers above the bar, for a list or a card to keep clear of. */
-val LocalFabClearance = staticCompositionLocalOf { 0.dp }
+val LocalFabClearance = compositionLocalOf { 0.dp }
 
 /** What a tab's page keeps clear of, the bar and the button over it, whichever page is shown. */
 data class TabClearance(val bottom: Dp, val fab: Dp)
 
-private val LocalTabClearance = staticCompositionLocalOf { TabClearance(0.dp, 0.dp) }
+// Not static: they change as the bar and the button come and go, often as a page changes,
+// and only what reads them need be drawn again then, not every page under them.
+private val LocalTabClearance = compositionLocalOf { TabClearance(0.dp, 0.dp) }
 
 /**
  * How much of the left and the right the tabs cover on a tab screen on a phone on its

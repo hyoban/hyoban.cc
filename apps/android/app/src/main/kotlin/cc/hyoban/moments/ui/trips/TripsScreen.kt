@@ -32,7 +32,7 @@ import cc.hyoban.moments.data.media.MediaUrls
 import cc.hyoban.moments.data.spec.MomentMedia
 import cc.hyoban.moments.data.spec.TripRecord
 import cc.hyoban.moments.data.trips.coversOf
-import cc.hyoban.moments.data.trips.momentsOf
+import cc.hyoban.moments.data.trips.countOf
 import cc.hyoban.moments.ui.LocalBottomClearance
 import cc.hyoban.moments.ui.OnTabReselect
 import cc.hyoban.moments.ui.Trips
@@ -85,7 +85,7 @@ fun TripsScreen(container: AppContainer, onTrip: (String) -> Unit) {
                         items(trips.chunked(columns.count), key = { it.first().id }) { row ->
                             CardRow(row, columns.count, Modifier.animateItem().padding(horizontal = Space.gutter)) { trip ->
                                 val covers = remember(trip, moments) { coversOf(trip, moments, trips) }
-                                val count = remember(trip, moments) { momentsOf(trip, moments, trips).size }
+                                val count = remember(trip, moments) { countOf(trip, moments, trips) }
                                 TripCard(
                                     trip,
                                     covers,
