@@ -69,6 +69,11 @@ say stay out.
   300 ms on its own. Layers set again ahead of an animation get a source of their own.
 - Check an animation frame by frame: `adb shell screenrecord`, every frame out with
   ffmpeg, and measure each one, rather than judging from a few screenshots.
+- After a change to the map's layers, switch light and dark on the map
+  (`adb shell cmd uimode night yes`, then `no`): the style and its layers are built
+  again, and anything kept outside them, or read before they're added, must start over.
+- The site's fog (`packages/trip-map/src/map/fog-layer.ts`) and the app's sweep the same
+  way: change both together.
 
 ## What the app is
 
