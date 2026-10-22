@@ -240,7 +240,8 @@ export function createFogLayer({
   function onMoveEnd() {
     const map = getMap()
 
-    if (map && fog && map.getSource(SOURCE) && sweepFrame === undefined && !switching) {
+    // Not while a trip plays: its camera moves the map every frame, and the fog is away.
+    if (map && fog && map.getSource(SOURCE) && !hidden && sweepFrame === undefined && !switching) {
       prepareRings(map)
     }
   }
@@ -304,7 +305,9 @@ export function createFogLayer({
         ? ['literal', index === 0]
         : ['all', ['>=', distance, from], ['<', distance, to]]
 
-      map.setFilter(ring(index), inRing)
+      // Checked, a filter has the whole style written out, Standard's import and all: these
+      // are the package's own, set together after every move.
+      map.setFilter(ring(index), inRing, { validate: false })
       map.setPaintProperty(ring(index), 'fill-opacity', 0)
     }
 
