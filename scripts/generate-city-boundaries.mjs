@@ -22,6 +22,8 @@ const SIMPLIFY = '30%'
 const WORLD_LATITUDE = 85
 // The world's tiles, in degrees.
 const TILE = 10
+// Round China, where the world's tiles are smaller.
+const NEAR = { east: 150, north: 60, south: 0, west: 60 }
 
 async function fetchJson(name) {
   const response = await fetch(`${source}/${name}.json`)
@@ -117,27 +119,51 @@ try {
   await rm(work, { force: true, recursive: true })
 }
 
-/** The world in tiles of `TILE` degrees, up to `WORLD_LATITUDE` each way. */
+/**
+ * The world in tiles of `TILE` degrees, up to `WORLD_LATITUDE` each way, each a quarter
+ * the size each way round China (`NEAR`): a tile clears as one as the fog sweeps, and
+ * near China, where the map is mostly looked at, big ones show as blocks.
+ */
 function getWorldTiles() {
   const features = []
+  const square = (west, south, size) => {
+    const east = west + size
+    const north = Math.min(south + size, WORLD_LATITUDE)
+    const ring = [
+      [west, south],
+      [east, south],
+      [east, north],
+      [west, north],
+      [west, south],
+    ]
+
+    features.push({
+      geometry: { coordinates: [ring], type: 'Polygon' },
+      properties: {},
+      type: 'Feature',
+    })
+  }
 
   for (let west = -180; west < 180; west += TILE) {
     for (let south = -WORLD_LATITUDE; south < WORLD_LATITUDE; south += TILE) {
-      const east = west + TILE
-      const north = Math.min(south + TILE, WORLD_LATITUDE)
-      const ring = [
-        [west, south],
-        [east, south],
-        [east, north],
-        [west, north],
-        [west, south],
-      ]
+      const near =
+        west < NEAR.east &&
+        west + TILE > NEAR.west &&
+        south < NEAR.north &&
+        south + TILE > NEAR.south
 
-      features.push({
-        geometry: { coordinates: [ring], type: 'Polygon' },
-        properties: {},
-        type: 'Feature',
-      })
+      if (!near) {
+        square(west, south, TILE)
+        continue
+      }
+
+      const size = TILE / 4
+
+      for (let x = west; x < west + TILE; x += size) {
+        for (let y = south; y < Math.min(south + TILE, WORLD_LATITUDE); y += size) {
+          square(x, y, size)
+        }
+      }
     }
   }
 
