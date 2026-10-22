@@ -72,6 +72,8 @@ export const defaultUrls = {
   getPlaceUrl: (id: string) => `/map/place/${encodeURIComponent(id)}/moments/`,
   /** A trip's playback data, `TripData` as JSON. */
   getTripDataUrl: (id: string) => `/trip/${encodeURIComponent(id)}/data.json`,
+  /** A trip's sidebar content, an HTML fragment. */
+  getTripMomentsUrl: (id: string) => `/trip/${encodeURIComponent(id)}/moments/`,
   /** A year's Moments for the list beside the map, an HTML fragment. */
   getMomentsUrl: (year: number) => `/map/${year}/moments/`,
   /** Whether a pathname is the map's own: the map, a period of it, a place on it. */
@@ -98,10 +100,10 @@ export const defaultUrls = {
    */
   getTripPath: (id: string, stop?: string, nested?: boolean) =>
     `/trip/${getTripSegment(id, nested)}/play/${stop ? `${encodeURIComponent(stop)}/` : ''}`,
-  /** The trip a pathname picks in the trip list, if any. */
+  /** The trip whose sidebar a pathname opens, if any. */
   getPickedTripId: (pathname: string) =>
     getMatchedTripId(withSlash(pathname).match(PICKED_TRIP_PATH_PATTERN)),
-  /** The trip list with `id` picked: its route lifted, not playing yet; `nested`, as above. */
+  /** A trip's sidebar beside the map, its route lifted, not playing yet; `nested`, as above. */
   getPickedTripPath: (id: string, nested?: boolean) => `/trip/${getTripSegment(id, nested)}/`,
   /** Whether a pathname leads to a trip by its year and the rest, `/trip/2026/yunnan/`. */
   isNestedTripPath: (pathname: string) => /^\/trip\/\d{4}\/[^/]+\//.test(withSlash(pathname)),

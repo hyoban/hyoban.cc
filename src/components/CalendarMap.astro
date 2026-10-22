@@ -4,6 +4,7 @@ import '@hyoban/trip-map/styles.css'
 import CalendarBackLink from '@/components/CalendarBackLink.astro'
 import CalendarModeSwitch from '@/components/CalendarModeSwitch.astro'
 import MapMoments from '@/components/MapMoments.astro'
+import TripDetails from '@/components/TripDetails.astro'
 import MomentLightboxMedia from '@/components/MomentLightboxMedia.astro'
 import Layout from '@/layouts/Layout.astro'
 import { getActiveDateKeys, getMapYears, getMappedLocationGroups, getMoments, getMonthPath, getTrips } from '@/moments'
@@ -36,7 +37,7 @@ interface Props {
 }
 
 const { period, pickedTripId, tripId } = Astro.props
-const tripList = Astro.props.tripList || pickedTripId !== undefined
+const tripList = Astro.props.tripList ?? false
 const pickedYear = period?.year
 const moments = await getMoments()
 const locationGroups = getMappedLocationGroups(moments)
@@ -71,8 +72,10 @@ const tripListTitle = `旅程 | ${SITE_TITLE}`
 const placesJson = toScriptJson(getPlaceMarkers(locationGroups, yearColor))
 const trips = getTrips(moments).toSorted((first, second) => second.start.localeCompare(first.start))
 const activeTrip = trips.find(trip => trip.id === tripId)
-// The trip the page is about, playing or picked in the list: its title, words and image.
-const pageTrip = activeTrip ?? trips.find(trip => trip.id === pickedTripId)
+// The trip whose sidebar the page opens on.
+const pickedTrip = trips.find(trip => trip.id === pickedTripId)
+// The trip the page is about, playing or open in its sidebar: its title, words and image.
+const pageTrip = activeTrip ?? pickedTrip
 // A trip's page by its year and the rest, /trip/2026/yunnan/, is the one by its id.
 const canonicalPath = pageTrip && `/trip/${pageTrip.id}/${activeTrip ? 'play/' : ''}`
 // The totals a screenshot of the map puts in its header.
@@ -121,7 +124,7 @@ const description = pageTrip
   <main class="trip-map-page @container relative isolate h-dvh w-full overflow-hidden bg-bg" data-trip-map data-trip-map-token={mapboxToken} data-calendar-latest-months={JSON.stringify(latestMonths)} data-trip-map-active={activeTrip ? '' : undefined} transition:persist="trip-map">
     <div class="trip-map-canvas absolute inset-0" data-trip-map-canvas role="region" aria-label="Calendar 地点地图" />
 
-    <header class="trip-map-toolbar pointer-events-none absolute inset-x-4 top-4 z-[5] grid grid-cols-[1fr_auto_1fr] items-center gap-4 max-[48rem]:grid-cols-[auto_minmax(0,1fr)_auto] max-[48rem]:gap-2 [&>*]:pointer-events-auto max-[48rem]:[&_.calendar-back-link]:pr-1.5 max-[48rem]:[&_.calendar-back-link>span]:sr-only min-[48.0625rem]:max-[56rem]:[.trip-map-page:has(:is(.trip-map-drawer,.trip-map-trip-list,.trip-map-moments):not([hidden]))_&_.calendar-back-link>span]:sr-only" data-trip-map-toolbar>
+    <header class="trip-map-toolbar pointer-events-none absolute inset-x-4 top-4 z-[5] grid grid-cols-[1fr_auto_1fr] items-center gap-4 max-[48rem]:grid-cols-[auto_minmax(0,1fr)_auto] max-[48rem]:gap-2 [&>*]:pointer-events-auto max-[48rem]:[&_.calendar-back-link]:pr-1.5 max-[48rem]:[&_.calendar-back-link>span]:sr-only min-[48.0625rem]:max-[56rem]:[.trip-map-page:has(:is(.trip-map-drawer,.trip-map-trip-list,.trip-map-moments,.trip-map-trip-details):not([hidden]))_&_.calendar-back-link>span]:sr-only" data-trip-map-toolbar>
       <CalendarBackLink class="justify-self-start" />
       {
         trips.length > 0 && (
@@ -241,9 +244,25 @@ const description = pageTrip
       <div class="trip-map-drawer__content min-w-0 overflow-y-auto overscroll-contain px-5 pb-4" data-trip-map-drawer-content />
     </aside>
 
+    <!-- A trip opened from its row or its route: its Moments, and the button that plays it. -->
+    <aside class:list={['trip-map-trip-details max-[48rem]:h-[min(60dvh,36rem)]', sideClass]} data-trip-map-trip-details aria-labelledby="trip-map-trip-details-title" hidden={!pickedTrip}>
+      <header class={sideHeaderClass}>
+        <div class="min-w-0">
+          <p class="truncate text-xs text-tx-3 tabular-nums" data-trip-map-trip-details-eyebrow>{pickedTrip && formatDateRange(pickedTrip.start, pickedTrip.end, 'zh-CN')}</p>
+          <h1 class="truncate text-lg font-medium" id="trip-map-trip-details-title" data-trip-map-trip-details-title>{pickedTrip?.title}</h1>
+        </div>
+        <button class={sideCloseClass} type="button" data-trip-map-trip-details-close aria-label="关闭旅程">
+          <span class="i-lucide-x" aria-hidden="true" />
+        </button>
+      </header>
+      <div class="min-w-0 overflow-y-auto overscroll-contain px-5 pb-4" data-trip-map-trip-details-content data-trip-map-trip-details-trip={pickedTrip?.id}>
+        {pickedTrip && <TripDetails moments={moments} trip={pickedTrip} />}
+      </div>
+    </aside>
+
     {
-      // Every trip beside the map by year: clicking one, or resting on it a while, flies
-      // the map to its route and lifts it; clicking it again, or its button, plays it.
+      // Every trip beside the map by year: resting on one a while lifts its route, and
+      // clicking it opens its sidebar.
       trips.length > 0 && (
         <aside class:list={['trip-map-trip-list max-[48rem]:h-[min(60dvh,36rem)]', sideClass]} id="trip-map-trip-list" data-trip-map-trip-list aria-labelledby="trip-map-trip-list-title" hidden={!tripList}>
           <header class={sideHeaderClass}>
@@ -262,7 +281,7 @@ const description = pageTrip
                 <ul class="list-none">
                   {yearTrips.map(trip => (
                     <li class="relative" hidden={!isInPeriod(trip)}>
-                      <a class="group flex items-center gap-4 rounded-lg p-2 text-tx no-underline transition-colors duration-140 hover:bg-inline focus-visible:bg-inline focus-visible:outline-none data-trip-map-lifted:bg-inline data-trip-map-picked:bg-inline data-trip-map-picked:pr-24" href={`/trip/${trip.id}/`} data-trip-map-trip-link={trip.id}>
+                      <a class="group flex items-center gap-4 rounded-lg p-2 text-tx no-underline transition-colors duration-140 hover:bg-inline focus-visible:bg-inline focus-visible:outline-none data-trip-map-lifted:bg-inline" href={`/trip/${trip.id}/`} data-trip-map-trip-link={trip.id}>
                         <picture class="contents">
                           <source srcset={`/trip/${trip.id}/thumbnail-dark.webp`} media="(prefers-color-scheme: dark)" />
                           <img class="aspect-[1200/630] w-28 shrink-0 rounded-[0.3125rem] bg-inline object-cover outline-1 -outline-offset-1 outline-border transition-[outline-color] duration-140 group-data-trip-map-lifted:outline-2 group-data-trip-map-lifted:outline-tx" src={`/trip/${trip.id}/thumbnail.webp`} width="480" height="252" alt="" loading="lazy" decoding="async" />
@@ -274,10 +293,6 @@ const description = pageTrip
                             {trip.dayCount} 天 · {trip.placeCount} 个地点{trip.drivingKm > 0 && ` · 自驾 ${trip.drivingKm.toLocaleString('zh-CN')} 公里`}
                           </span>
                         </span>
-                      </a>
-                      <a class="absolute top-1/2 right-3 flex h-8 -translate-y-1/2 items-center gap-1 rounded-full bg-tx px-3 text-sm text-bg no-underline hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-tx [&[hidden]]:hidden" href={`/trip/${trip.id}/play/`} data-trip-map-trip-play={trip.id} hidden>
-                        <span class="i-lucide-play text-[0.75rem]" aria-hidden="true" />
-                        回放<span class="sr-only">{trip.title}</span>
                       </a>
                     </li>
                   ))}

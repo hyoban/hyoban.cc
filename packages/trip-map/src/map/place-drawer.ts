@@ -237,8 +237,10 @@ export function createPlaceDrawer({
       }
 
       const item = target.closest<HTMLElement>('[data-lightbox-item]')
-      // The Moments list beside the map shows its photos in the same lightbox.
-      const side = [drawer, elements.moments].find((element) => element?.contains(item))
+      // The Moments list and a trip's sidebar show their photos in the same lightbox.
+      const side = [drawer, elements.moments, elements.tripDetails].find((element) =>
+        element?.contains(item),
+      )
 
       if (!item || !side) {
         return

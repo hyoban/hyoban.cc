@@ -21,9 +21,11 @@ interface Props {
   showLocation?: boolean
   /** Links the trip the Moment is a stop of, picked in the trip list; off beside the trip's own link. */
   showTrip?: boolean
+  /** In the trip's own sidebar, the link plays the trip from this Moment's card instead. */
+  tripLink?: 'pick' | 'play'
 }
 
-const { class: className, date, exceptLocation, moment, priorityMedia, shared = false, showLocation = true, showTrip = true } = Astro.props
+const { class: className, date, exceptLocation, moment, priorityMedia, shared = false, showLocation = true, showTrip = true, tripLink = 'pick' } = Astro.props
 const trip = showTrip ? (await getMomentTrips()).get(moment.id) : undefined
 // A place opens on the map narrowed to the Moment's month, with its Moments beside it.
 const mapMonthPath = `/map/${moment.dateKey.slice(0, 4)}/${moment.dateKey.slice(5, 7)}/place/`
@@ -72,10 +74,19 @@ function formatDay(dateKey: string) {
   {moment.media.length > 0 && <MomentGallery media={moment.media} priorityMedia={priorityMedia} />}
   {
     trip && (
-      <a class="moment-entry__trip mt-3 inline-flex max-w-full items-center gap-1.5 rounded-full bg-inline px-3 py-1.5 text-xs text-tx-2 no-underline hover:bg-hover hover:text-tx" href={`/trip/${trip.id}/`} data-trip-map-trip-pick={trip.id} aria-label={`旅程：${trip.title}`}>
-        <span class="i-lucide-route shrink-0 text-sm" aria-hidden="true" />
-        <span class="truncate">{trip.title}</span>
-      </a>
+      tripLink === 'play'
+        ? (
+            <a class="moment-entry__trip mt-3 inline-flex max-w-full items-center gap-1.5 rounded-full bg-inline px-3 py-1.5 text-xs text-tx-2 no-underline hover:bg-hover hover:text-tx" href={`/trip/${trip.id}/play/${trip.anchor}/`} data-trip-map-stop-play={trip.id} data-trip-map-stop={trip.anchor}>
+              <span class="i-lucide-play shrink-0 text-[0.75rem]" aria-hidden="true" />
+              从这里回放
+            </a>
+          )
+        : (
+            <a class="moment-entry__trip mt-3 inline-flex max-w-full items-center gap-1.5 rounded-full bg-inline px-3 py-1.5 text-xs text-tx-2 no-underline hover:bg-hover hover:text-tx" href={`/trip/${trip.id}/`} data-trip-map-trip-pick={trip.id} aria-label={`旅程：${trip.title}`}>
+              <span class="i-lucide-route shrink-0 text-sm" aria-hidden="true" />
+              <span class="truncate">{trip.title}</span>
+            </a>
+          )
     )
   }
 </article>
