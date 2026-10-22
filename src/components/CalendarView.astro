@@ -136,7 +136,6 @@ const pageDescription = sharedMoment
   : description
 const pageImage = sharedMoment && MOMENT_OG_IMAGES ? `${getMomentPagePath(sharedMoment)}og.jpg` : undefined
 const closePath = getMonthPath(monthKey)
-const todayNumberClass = '-mx-1 -my-0.5 rounded-full bg-tx px-1 py-0.5 !text-bg [text-shadow:none]'
 
 function formatSelectedDate(dateKey: string) {
   const { dateDay, dateMonth, dateValue } = parseCalendarDate(dateKey)
@@ -175,32 +174,27 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
 
 <Layout title={title} description={pageDescription} image={pageImage}>
   <main
-    class:list={[
-      'calendar-page mx-auto grid h-[calc(100dvh-4rem)] w-full max-w-[60rem] grid-rows-[auto_minmax(0,1fr)] max-[56rem]:flex max-[56rem]:h-auto max-[56rem]:flex-wrap max-[56rem]:items-center max-[56rem]:max-w-[42rem]',
-      {
-        'calendar-page--with-drawer max-[56rem]:hidden min-[56.0625rem]:overflow-y-auto min-[56.0625rem]:overscroll-contain': selectedDate,
-      },
-    ]}
+    class:list={['calendar-page', { 'calendar-page--with-drawer': selectedDate }]}
     style={`--calendar-weeks: ${desktopCalendarDays.length / 7}`}
   >
-    <header class="calendar-toolbar mb-4 grid grid-cols-[1fr_auto_1fr] items-center max-[56rem]:contents">
-      <CalendarBackLink class="col-start-1 justify-self-start" />
+    <header class="calendar-toolbar">
+      <CalendarBackLink />
 
-      <nav class="month-navigation col-start-2 flex items-center justify-center gap-5 in-[.calendar-page--with-drawer]:gap-1 max-[56rem]:sticky max-[56rem]:top-0 max-[56rem]:z-10 max-[56rem]:order-1 max-[56rem]:mt-2 max-[56rem]:basis-full max-[56rem]:bg-bg max-[40rem]:gap-2" aria-label="月份导航">
+      <nav class="month-navigation" aria-label="月份导航">
         {
           previousMonth
-            ? <a class="month-navigation__arrow inline-flex size-8 items-center justify-center rounded-full text-tx-2 no-underline hover:bg-inline hover:text-tx max-[56rem]:size-11" href={getMonthPath(previousMonth)} aria-label="上一个月" data-calendar-month-link data-calendar-month-prefetch="load" data-astro-prefetch="false"><span class="i-lucide-chevron-left" aria-hidden="true" /></a>
-            : <span class="month-navigation__arrow month-navigation__arrow--disabled inline-flex size-8 items-center justify-center text-tx-3 opacity-35 max-[56rem]:size-11"><span class="i-lucide-chevron-left" aria-hidden="true" /></span>
+            ? <a class="month-navigation__arrow" href={getMonthPath(previousMonth)} aria-label="上一个月" data-calendar-month-link data-calendar-month-prefetch="load" data-astro-prefetch="false"><span class="i-lucide-chevron-left" aria-hidden="true" /></a>
+            : <span class="month-navigation__arrow month-navigation__arrow--disabled"><span class="i-lucide-chevron-left" aria-hidden="true" /></span>
         }
 
-        <details class="month-picker relative">
-          <summary class="flex cursor-pointer list-none items-center gap-2 rounded-full px-3 py-1.5 font-mono hover:bg-inline max-[56rem]:min-h-11 [&::-webkit-details-marker]:hidden">{year} 年 {month} 月 <span class="i-lucide-chevron-down text-sm text-tx-3" aria-hidden="true" /></summary>
-          <div class="month-picker__panel absolute top-[calc(100%+0.5rem)] left-1/2 z-20 max-h-[min(32rem,70vh)] w-[min(22rem,calc(100vw-2rem))] -translate-x-1/2 overflow-y-auto rounded-xl border border-border bg-bg p-4 shadow-[0_1rem_3rem_rgb(0_0_0/0.1)]">
+        <details class="month-picker">
+          <summary>{year} 年 {month} 月 <span class="i-lucide-chevron-down" aria-hidden="true" /></summary>
+          <div class="month-picker__panel">
             {
               [...groupedMonths].map(([pickerYear, pickerMonths]) => (
-                <section class="[&+&]:mt-4 [&+&]:border-t [&+&]:border-border [&+&]:pt-4">
-                  <h2 class="mb-2.5 font-mono text-[0.8125rem] font-medium text-tx-2">{pickerYear}</h2>
-                  <div class="grid grid-cols-6 gap-1">
+                <section class="month-picker__year">
+                  <h2>{pickerYear}</h2>
+                  <div class="month-picker__months">
                     {pickerMonths.map(key => {
                       const pickerMonth = Number.parseInt(key.slice(5), 10)
                       return (
@@ -209,9 +203,11 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
                           data-calendar-month-link
                           data-astro-prefetch="false"
                           class:list={[
-                            'flex h-8 items-center justify-center rounded-md font-mono no-underline hover:bg-inline',
-                            key === monthKey && 'is-active bg-inline shadow-[inset_0_0_0_1px_var(--color-border)]',
-                            activeMonthKeys.has(key) ? 'has-content text-tx' : 'text-tx-3',
+                            'month-picker__month',
+                            {
+                              'month-picker__month--current': key === monthKey,
+                              'month-picker__month--active': activeMonthKeys.has(key),
+                            },
                           ]}
                         >
                           {pickerMonth}
@@ -227,26 +223,26 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
 
         {
           nextMonth
-            ? <a class="month-navigation__arrow inline-flex size-8 items-center justify-center rounded-full text-tx-2 no-underline hover:bg-inline hover:text-tx max-[56rem]:size-11" href={getMonthPath(nextMonth)} aria-label="下一个月" data-calendar-month-link data-calendar-month-prefetch="load" data-astro-prefetch="false"><span class="i-lucide-chevron-right" aria-hidden="true" /></a>
-            : <span class="month-navigation__arrow month-navigation__arrow--disabled inline-flex size-8 items-center justify-center text-tx-3 opacity-35 max-[56rem]:size-11"><span class="i-lucide-chevron-right" aria-hidden="true" /></span>
+            ? <a class="month-navigation__arrow" href={getMonthPath(nextMonth)} aria-label="下一个月" data-calendar-month-link data-calendar-month-prefetch="load" data-astro-prefetch="false"><span class="i-lucide-chevron-right" aria-hidden="true" /></a>
+            : <span class="month-navigation__arrow month-navigation__arrow--disabled"><span class="i-lucide-chevron-right" aria-hidden="true" /></span>
         }
       </nav>
 
-      <div class="col-start-3 flex items-center gap-2 justify-self-end max-[56rem]:ml-auto">
+      <div class="calendar-toolbar__modes">
         <CalendarModeSwitch mode="calendar" mapHref={mapHref} />
       </div>
     </header>
 
-    <div class="desktop-calendar grid min-h-0 content-start grid-rows-[auto_minmax(0,1fr)] [container-type:inline-size] max-[56rem]:hidden">
-      <div class="weekday-row mb-2.5 grid grid-cols-7 text-center font-mono text-xs text-tx-3 [&_span:nth-last-child(-n+2)]:text-tx-2" aria-hidden="true">
+    <div class="desktop-calendar">
+      <div class="weekday-row" aria-hidden="true">
         {['一', '二', '三', '四', '五', '六', '日'].map(day => <span>{day}</span>)}
       </div>
 
-      <section class="calendar-grid grid h-full min-h-0 max-h-[calc(100cqw*var(--calendar-weeks)/7)] grid-cols-7 grid-rows-[repeat(var(--calendar-weeks),minmax(0,1fr))] gap-px overflow-hidden rounded-xl border border-border bg-border" aria-label={`${year} 年 ${month} 月`}>
+      <section class="calendar-grid" aria-label={`${year} 年 ${month} 月`}>
         {
           desktopCalendarDays.map((calendarDay) => {
           if (!calendarDay) {
-            return <div class="calendar-day calendar-day--empty relative min-h-0 min-w-0 overflow-hidden bg-inline p-3 font-mono text-tx-2" aria-hidden="true" />
+            return <div class="calendar-day calendar-day--empty" aria-hidden="true" />
           }
 
           const thumbnail = getThumbnailImage(calendarDay.thumbnail)
@@ -261,19 +257,15 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
 
           if (calendarDay.moments.length === 0) {
             return (
-              <div class:list={['calendar-day relative min-h-0 min-w-0 overflow-hidden bg-bg p-3 font-mono text-tx-3', { 'calendar-day--today': isToday }] }>
-                <span class:list={['calendar-day__number relative z-[1]', { [todayNumberClass]: isToday }]}>{String(calendarDay.day).padStart(2, '0')}</span>
+              <div class:list={['calendar-day', { 'calendar-day--today': isToday }] }>
+                <span class="calendar-day__number">{String(calendarDay.day).padStart(2, '0')}</span>
                 {(calendarDay.chinaCalendarDay || calendarDay.anniversaries.length > 0) && (
-                  <div class="absolute right-2.5 bottom-2.5 left-2.5 z-[1] flex min-w-0 flex-col items-start gap-1">
+                  <div class="calendar-day__statuses">
                     {calendarDay.anniversaries.map(anniversary => (
                       <CalendarAnniversaryStatus anniversary={anniversary} compact />
                     ))}
                     {calendarDay.chinaCalendarDay && (
-                      <CalendarDayStatus
-                        class="max-w-full"
-                        day={calendarDay.chinaCalendarDay}
-                        compact
-                      />
+                      <CalendarDayStatus day={calendarDay.chinaCalendarDay} compact />
                     )}
                   </div>
                 )}
@@ -285,9 +277,9 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
             <a
               href={getMomentPath(calendarDay.dateKey)}
               class:list={[
-                'calendar-day calendar-day--active group relative min-h-0 min-w-0 overflow-hidden bg-bg p-3 font-mono text-tx no-underline hover:bg-inline focus-visible:outline-2 focus-visible:-outline-offset-3 focus-visible:outline-tx',
+                'calendar-day calendar-day--active',
                 {
-                  'calendar-day--selected z-[2] shadow-[inset_0_0_0_2px_var(--color-tx)]': isSelected,
+                  'calendar-day--selected': isSelected,
                   'calendar-day--today': isToday,
                   'calendar-day--with-media': thumbnail,
                 },
@@ -297,7 +289,7 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
               {/* Read this in place of the visible day cell, whose parts only make sense laid out. */}
               <span class="sr-only">{`${calendarDay.dateKey}，${calendarDay.moments.length} 条记录${anniversaryDescription ? `，${anniversaryDescription}` : ''}${dayStatusDescription ? `，${dayStatusDescription}` : ''}`}</span>
               {thumbnail && (
-                <picture class="contents">
+                <picture class="calendar-day__picture">
                   <source media={`not all and ${CALENDAR_DESKTOP_MEDIA}`} srcset={BLANK_IMAGE} />
                   <img
                     src={thumbnail.sources.find(source => source.width >= 480)?.src ?? thumbnail.sources.at(-1)?.src ?? thumbnail.src}
@@ -307,29 +299,17 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
                     width={thumbnail.width}
                     height={thumbnail.height}
                     decoding="async"
-                    class="absolute inset-0 h-full w-full object-cover transition-transform duration-[180ms] ease-in-out group-hover:scale-[1.025] motion-reduce:transition-none"
                   />
                 </picture>
               )}
-              <span class:list={[
-                'calendar-day__shade pointer-events-none absolute inset-0 bg-[linear-gradient(to_bottom,rgb(0_0_0/0.2),transparent_45%,rgb(0_0_0/0.28))]',
-                thumbnail ? 'opacity-100' : 'opacity-0',
-              ]}
-              />
-              <span aria-hidden="true" class:list={[
-                'calendar-day__number relative z-[1]',
-                {
-                  'text-white [text-shadow:0_1px_0.25rem_rgb(0_0_0/0.45)]': thumbnail,
-                  [todayNumberClass]: isToday,
-                },
-              ]}
-              >
+              <span class="calendar-day__shade" />
+              <span aria-hidden="true" class="calendar-day__number">
                 {String(calendarDay.day).padStart(2, '0')}
               </span>
               {(calendarDay.chinaCalendarDay || calendarDay.anniversaries.length > 0) && (
                 <div aria-hidden="true" class:list={[
-                  'absolute bottom-2.5 left-2.5 z-[1] flex min-w-0 flex-col items-start gap-1',
-                  calendarDay.mediaCount > 1 ? 'right-10' : 'right-2.5',
+                  'calendar-day__statuses',
+                  { 'calendar-day__statuses--beside-count': calendarDay.mediaCount > 1 },
                 ]}>
                   {calendarDay.anniversaries.map(anniversary => (
                     <CalendarAnniversaryStatus
@@ -339,23 +319,14 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
                     />
                   ))}
                   {calendarDay.chinaCalendarDay && (
-                    <CalendarDayStatus
-                      class:list={[
-                        'max-w-full',
-                        {
-                          'rounded-[0.1875rem] bg-[rgb(17_17_16/0.58)] px-1 py-0.5 !text-white [text-shadow:none]': thumbnail,
-                        },
-                      ]}
-                      day={calendarDay.chinaCalendarDay}
-                      compact
-                    />
+                    <CalendarDayStatus day={calendarDay.chinaCalendarDay} compact overMedia={Boolean(thumbnail)} />
                   )}
                 </div>
               )}
               {
                 thumbnail
-                  ? calendarDay.mediaCount > 1 && <span aria-hidden="true" class="calendar-day__count absolute right-2.5 bottom-2.5 z-[1] text-[0.6875rem] text-white [text-shadow:0_1px_0.25rem_rgb(0_0_0/0.45)]">+{calendarDay.mediaCount - 1}</span>
-                  : <span aria-hidden="true" class="calendar-day__activity relative z-[1] mt-1.5 flex items-center gap-1 text-[0.6875rem] text-tx-3"><span class="size-1.5 rounded-full bg-tx-3" aria-hidden="true" />{calendarDay.moments.length}</span>
+                  ? calendarDay.mediaCount > 1 && <span aria-hidden="true" class="calendar-day__count">+{calendarDay.mediaCount - 1}</span>
+                  : <span aria-hidden="true" class="calendar-day__activity"><span class="calendar-day__dot" aria-hidden="true" />{calendarDay.moments.length}</span>
               }
             </a>
           )
@@ -374,30 +345,30 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
   {
     selectedDate && selectedDateLabel && (
       <>
-        <a class="drawer-scrim hidden" href={closePath} aria-label="关闭当天详情" />
+        <a class="drawer-scrim" href={closePath} aria-label="关闭当天详情" />
         <aside
-          class="day-drawer fixed inset-y-0 right-0 z-40 flex w-[min(var(--calendar-drawer-width),100vw)] flex-col border-l border-border bg-bg shadow-[-1rem_0_3rem_rgb(0_0_0/0.07)] max-[56rem]:static max-[56rem]:mx-auto max-[56rem]:grid max-[56rem]:min-h-[calc(100dvh-2rem)] max-[56rem]:w-full max-[56rem]:max-w-[42rem] max-[56rem]:grid-rows-[auto_1fr_auto] max-[56rem]:border-0 max-[56rem]:shadow-none"
+          class="day-drawer"
           data-calendar-drawer
           data-close-path={closePath}
           data-previous-path={previousDate ? getMomentPath(previousDate) : undefined}
           data-next-path={nextDate ? getMomentPath(nextDate) : undefined}
           aria-label={`${selectedDateLabel}的记录`}
         >
-          <header class="day-drawer__header flex items-center justify-between border-b border-border p-6 max-[56rem]:sticky max-[56rem]:top-0 max-[56rem]:z-10 max-[56rem]:grid max-[56rem]:grid-cols-[1fr_auto_1fr] max-[56rem]:bg-bg max-[56rem]:px-0 max-[56rem]:py-3">
-            <h2 class="text-base font-semibold max-[56rem]:col-start-2">{selectedDateLabel}</h2>
-            <a class="flex size-8 items-center justify-center rounded-full text-tx-2 no-underline hover:bg-inline hover:text-tx max-[56rem]:col-start-1 max-[56rem]:row-start-1 max-[56rem]:h-11 max-[56rem]:w-auto max-[56rem]:justify-self-start" href={closePath} aria-label="返回本月">
-              <span class="day-drawer__close-icon i-lucide-x max-[56rem]:hidden" aria-hidden="true" />
-              <span class="day-drawer__back-label hidden items-center gap-1 text-sm max-[56rem]:flex"><span class="i-lucide-chevron-left" aria-hidden="true" />{month} 月</span>
+          <header class="day-drawer__header">
+            <h2>{selectedDateLabel}</h2>
+            <a class="day-drawer__close" href={closePath} aria-label="返回本月">
+              <span class="day-drawer__close-icon i-lucide-x" aria-hidden="true" />
+              <span class="day-drawer__back-label"><span class="i-lucide-chevron-left" aria-hidden="true" />{month} 月</span>
             </a>
           </header>
 
-          <div class="day-drawer__content overflow-y-auto overscroll-contain px-6 pb-12 max-[56rem]:overflow-visible max-[56rem]:p-0">
+          <div class="day-drawer__content">
             {
               selectedTrip && (
-                <a class="mt-6 flex items-center gap-2 rounded-md bg-inline px-3 py-2.5 text-sm text-tx no-underline hover:bg-hover max-[56rem]:mt-4" href={selectedTripHref} aria-label={`回放旅程：${selectedTrip.title}`}>
-                  <span class="i-lucide-route text-tx-2" aria-hidden="true" />
-                  <span class="min-w-0 flex-1 truncate">{selectedTrip.title}</span>
-                  <span class="i-lucide-chevron-right text-tx-3" aria-hidden="true" />
+                <a class="day-drawer__trip" href={selectedTripHref} aria-label={`回放旅程：${selectedTrip.title}`}>
+                  <span class="i-lucide-route" aria-hidden="true" />
+                  <span class="day-drawer__trip-title">{selectedTrip.title}</span>
+                  <span class="i-lucide-chevron-right" aria-hidden="true" />
                 </a>
               )
             }
@@ -406,7 +377,7 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
             }
           </div>
 
-          <nav class="day-drawer__navigation sticky bottom-0 hidden grid-cols-3 border-t border-border bg-bg py-3.5 max-[56rem]:grid [&_a]:flex [&_a]:min-h-11 [&_a]:items-center [&_a]:gap-1 [&_a]:font-mono [&_a]:text-xs [&_a]:text-tx-2 [&_a]:no-underline [&>:first-child]:justify-self-start [&>:last-child]:justify-self-end [&>:nth-child(2)]:justify-self-center" aria-label="日期导航">
+          <nav class="day-drawer__navigation" aria-label="日期导航">
             {
               previousDate
                 ? <a href={getMomentPath(previousDate)}><span class="i-lucide-chevron-left" aria-hidden="true" />{formatCompactDate(previousDate)}</a>
@@ -506,3 +477,593 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
   })
   initializeCalendar()
 </script>
+
+<style>
+  /* The month's grid of days on a wide screen, with a day's Moments in a drawer on the
+     right; a phone lists the month instead (CalendarAgenda) and opens a day in its place. */
+  .calendar-page {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    width: 100%;
+    max-width: 60rem;
+    height: calc(100dvh - 4rem);
+    margin-inline: auto;
+
+    @media (width < 56rem) {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      max-width: 42rem;
+      height: auto;
+    }
+  }
+
+  .calendar-page--with-drawer {
+    @media (width < 56rem) {
+      display: none;
+    }
+
+    @media (width >= 56.0625rem) {
+      overflow-y: auto;
+      overscroll-behavior: contain;
+    }
+  }
+
+  .calendar-toolbar {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    margin-bottom: 1rem;
+
+    @media (width < 56rem) {
+      display: contents;
+    }
+
+    & .calendar-back-link {
+      grid-column-start: 1;
+      justify-self: start;
+    }
+  }
+
+  .calendar-toolbar__modes {
+    display: flex;
+    grid-column-start: 3;
+    align-items: center;
+    justify-self: end;
+    gap: 0.5rem;
+
+    @media (width < 56rem) {
+      margin-left: auto;
+    }
+  }
+
+  /* On a phone, a bar of its own under the toolbar that stays at the top. */
+  .month-navigation {
+    display: flex;
+    grid-column-start: 2;
+    align-items: center;
+    justify-content: center;
+    gap: 1.25rem;
+
+    .calendar-page--with-drawer & {
+      gap: 0.25rem;
+    }
+
+    @media (width < 56rem) {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      order: 1;
+      flex-basis: 100%;
+      margin-top: 0.5rem;
+      background: var(--color-bg);
+    }
+
+    @media (width < 40rem) {
+      gap: 0.5rem;
+    }
+  }
+
+  .month-navigation__arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 9999px;
+    color: var(--color-tx-2);
+    text-decoration: none;
+
+    @media (hover: hover) {
+      &:is(a):hover {
+        background: var(--color-inline);
+        color: var(--color-tx);
+      }
+    }
+
+    @media (width < 56rem) {
+      width: 2.75rem;
+      height: 2.75rem;
+    }
+  }
+
+  .month-navigation__arrow--disabled {
+    color: var(--color-tx-3);
+    opacity: 0.35;
+  }
+
+  .month-picker {
+    position: relative;
+
+    & summary {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.375rem 0.75rem;
+      border-radius: 9999px;
+      font-family: var(--font-mono);
+      list-style: none;
+      cursor: pointer;
+
+      &::-webkit-details-marker {
+        display: none;
+      }
+
+      @media (hover: hover) {
+        &:hover {
+          background: var(--color-inline);
+        }
+      }
+
+      @media (width < 56rem) {
+        min-height: 2.75rem;
+      }
+
+      & span {
+        color: var(--color-tx-3);
+        font-size: 0.875rem;
+        line-height: 1.25rem;
+      }
+    }
+  }
+
+  .month-picker__panel {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    left: 50%;
+    z-index: 20;
+    width: min(22rem, calc(100vw - 2rem));
+    max-height: min(32rem, 70vh);
+    overflow-y: auto;
+    padding: 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+    background: var(--color-bg);
+    box-shadow: 0 1rem 3rem rgb(0 0 0 / 0.1);
+    translate: -50% 0;
+  }
+
+  .month-picker__year {
+    & + & {
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--color-border);
+    }
+
+    & h2 {
+      margin-bottom: 0.625rem;
+      color: var(--color-tx-2);
+      font-family: var(--font-mono);
+      font-size: 0.8125rem;
+      font-weight: 500;
+    }
+  }
+
+  .month-picker__months {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 0.25rem;
+  }
+
+  /* Each month of the year, dimmed when it has no Moments. */
+  .month-picker__month {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 2rem;
+    border-radius: 0.375rem;
+    color: var(--color-tx-3);
+    font-family: var(--font-mono);
+    text-decoration: none;
+
+    @media (hover: hover) {
+      &:hover {
+        background: var(--color-inline);
+      }
+    }
+  }
+
+  .month-picker__month--active {
+    color: var(--color-tx);
+  }
+
+  .month-picker__month--current {
+    background: var(--color-inline);
+    box-shadow: inset 0 0 0 1px var(--color-border);
+  }
+
+  .desktop-calendar {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    align-content: start;
+    min-height: 0;
+    container-type: inline-size;
+
+    @media (width < 56rem) {
+      display: none;
+    }
+  }
+
+  /* The weekend's two days a shade darker. */
+  .weekday-row {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    margin-bottom: 0.625rem;
+    color: var(--color-tx-3);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1rem;
+    text-align: center;
+
+    & span:nth-last-child(-n + 2) {
+      color: var(--color-tx-2);
+    }
+  }
+
+  /* Square days as long as the window is tall enough for them, the lines between them
+     the grid's background showing through its gaps. */
+  .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    grid-template-rows: repeat(var(--calendar-weeks), minmax(0, 1fr));
+    gap: 1px;
+    height: 100%;
+    min-height: 0;
+    max-height: calc(100cqw * var(--calendar-weeks) / 7);
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+    background: var(--color-border);
+  }
+
+  .calendar-day {
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    padding: 0.75rem;
+    background: var(--color-bg);
+    color: var(--color-tx-3);
+    font-family: var(--font-mono);
+  }
+
+  .calendar-day--empty {
+    background: var(--color-inline);
+    color: var(--color-tx-2);
+  }
+
+  .calendar-day--active {
+    color: var(--color-tx);
+    text-decoration: none;
+
+    @media (hover: hover) {
+      &:hover {
+        background: var(--color-inline);
+      }
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-tx);
+      outline-offset: -3px;
+    }
+  }
+
+  .calendar-day--selected {
+    z-index: 2;
+    box-shadow: inset 0 0 0 2px var(--color-tx);
+  }
+
+  .calendar-day__picture {
+    display: contents;
+  }
+
+  /* The day's first photo fills it, coming a little closer on hover. */
+  .calendar-day__picture img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: scale 180ms var(--ease);
+
+    @media (hover: hover) {
+      .calendar-day:hover & {
+        scale: 1.025;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
+
+  /* Darkens the photo at the top and the bottom, behind the number and the tags. */
+  .calendar-day__shade {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, rgb(0 0 0 / 0.2), transparent 45%, rgb(0 0 0 / 0.28));
+    opacity: 0;
+    pointer-events: none;
+
+    .calendar-day--with-media & {
+      opacity: 1;
+    }
+  }
+
+  .calendar-day__number {
+    position: relative;
+    z-index: 1;
+
+    .calendar-day--with-media & {
+      color: white;
+      text-shadow: 0 1px 0.25rem rgb(0 0 0 / 0.45);
+    }
+
+    .calendar-day--today & {
+      margin: -0.125rem -0.25rem;
+      padding: 0.125rem 0.25rem;
+      border-radius: 9999px;
+      background: var(--color-tx);
+      color: var(--color-bg);
+      text-shadow: none;
+    }
+  }
+
+  .calendar-day__statuses {
+    position: absolute;
+    right: 0.625rem;
+    bottom: 0.625rem;
+    left: 0.625rem;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+    min-width: 0;
+  }
+
+  .calendar-day__statuses--beside-count {
+    right: 2.5rem;
+  }
+
+  .calendar-day__count {
+    position: absolute;
+    right: 0.625rem;
+    bottom: 0.625rem;
+    z-index: 1;
+    color: white;
+    font-size: 0.6875rem;
+    text-shadow: 0 1px 0.25rem rgb(0 0 0 / 0.45);
+  }
+
+  .calendar-day__activity {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-top: 0.375rem;
+    color: var(--color-tx-3);
+    font-size: 0.6875rem;
+  }
+
+  .calendar-day__dot {
+    width: 0.375rem;
+    height: 0.375rem;
+    border-radius: 9999px;
+    background: var(--color-tx-3);
+  }
+
+  .drawer-scrim {
+    display: none;
+  }
+
+  /* A day's Moments on the right of a wide screen, or the page itself on a phone. */
+  .day-drawer {
+    position: fixed;
+    inset-block: 0;
+    right: 0;
+    z-index: 40;
+    display: flex;
+    flex-direction: column;
+    width: min(var(--calendar-drawer-width), 100vw);
+    border-left: 1px solid var(--color-border);
+    background: var(--color-bg);
+    box-shadow: -1rem 0 3rem rgb(0 0 0 / 0.07);
+
+    @media (width < 56rem) {
+      position: static;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      width: 100%;
+      max-width: 42rem;
+      min-height: calc(100dvh - 2rem);
+      margin-inline: auto;
+      border: 0;
+      box-shadow: none;
+    }
+  }
+
+  .day-drawer__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--color-border);
+
+    @media (width < 56rem) {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      padding: 0.75rem 0;
+      background: var(--color-bg);
+    }
+
+    & h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      line-height: 1.5;
+
+      @media (width < 56rem) {
+        grid-column-start: 2;
+      }
+    }
+  }
+
+  /* A cross on a wide screen; back to the month on a phone. */
+  .day-drawer__close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 9999px;
+    color: var(--color-tx-2);
+    text-decoration: none;
+
+    @media (hover: hover) {
+      &:hover {
+        background: var(--color-inline);
+        color: var(--color-tx);
+      }
+    }
+
+    @media (width < 56rem) {
+      grid-row-start: 1;
+      grid-column-start: 1;
+      justify-self: start;
+      width: auto;
+      height: 2.75rem;
+    }
+  }
+
+  .day-drawer__close-icon {
+    @media (width < 56rem) {
+      display: none;
+    }
+  }
+
+  .day-drawer__back-label {
+    display: none;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+
+    @media (width < 56rem) {
+      display: flex;
+    }
+  }
+
+  .day-drawer__content {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 0 1.5rem 3rem;
+
+    @media (width < 56rem) {
+      overflow: visible;
+      padding: 0;
+    }
+  }
+
+  .day-drawer__trip {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1.5rem;
+    padding: 0.625rem 0.75rem;
+    border-radius: 0.375rem;
+    background: var(--color-inline);
+    color: var(--color-tx);
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    text-decoration: none;
+
+    @media (hover: hover) {
+      &:hover {
+        background: var(--color-hover);
+      }
+    }
+
+    @media (width < 56rem) {
+      margin-top: 1rem;
+    }
+
+    & > :first-child {
+      color: var(--color-tx-2);
+    }
+
+    & > :last-child {
+      color: var(--color-tx-3);
+    }
+  }
+
+  .day-drawer__trip-title {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* The day before, the month and the day after, along the foot of a phone. */
+  .day-drawer__navigation {
+    position: sticky;
+    bottom: 0;
+    display: none;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding-block: 0.875rem;
+    border-top: 1px solid var(--color-border);
+    background: var(--color-bg);
+
+    @media (width < 56rem) {
+      display: grid;
+    }
+
+    & a {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      min-height: 2.75rem;
+      color: var(--color-tx-2);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      line-height: 1rem;
+      text-decoration: none;
+    }
+
+    & > :first-child {
+      justify-self: start;
+    }
+
+    & > :nth-child(2) {
+      justify-self: center;
+    }
+
+    & > :last-child {
+      justify-self: end;
+    }
+  }
+</style>

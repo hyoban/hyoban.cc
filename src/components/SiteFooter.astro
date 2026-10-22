@@ -16,18 +16,47 @@ const links = [
 ]
 ---
 
-<footer class="mx-auto mt-20 flex max-w-[40rem] flex-wrap items-center gap-x-5 gap-y-4 pt-8">
+<footer class="site-footer">
   {
     links.map(({ href, label, icon }) => (
       <a
         href={href}
         aria-label={label}
         title={label}
-        class="text-tx-3 no-underline transition-colors hover:text-tx"
         {...(href.startsWith('http') ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
       >
-        <span class={`${icon} block size-4`} aria-hidden="true" />
+        <span class={icon} aria-hidden="true" />
       </a>
     ))
   }
 </footer>
+
+<style>
+  .site-footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem 1.25rem;
+    max-width: 40rem;
+    margin: 5rem auto 0;
+    padding-top: 2rem;
+
+    & a {
+      color: var(--color-tx-3);
+      text-decoration: none;
+      transition: color 150ms var(--ease);
+
+      @media (hover: hover) {
+        &:hover {
+          color: var(--color-tx);
+        }
+      }
+    }
+
+    & span {
+      display: block;
+      width: 1rem;
+      height: 1rem;
+    }
+  }
+</style>

@@ -1,15 +1,11 @@
 ---
-interface Props {
-  imageClass: string
-}
-
-const { imageClass } = Astro.props
+// The image or the live photo a lightbox shows, and the button that plays a live one.
+// The lightbox around it sizes the image (`[data-lightbox-image]`).
 ---
 
-<div class="relative min-h-0 min-w-0" data-lightbox-media>
-  <img class={imageClass} alt="" data-lightbox-image />
+<div class="lightbox-media" data-lightbox-media>
+  <img alt="" data-lightbox-image />
   <video
-    class="absolute inset-0 size-full object-contain"
     data-lightbox-video
     hidden
     playsinline
@@ -18,11 +14,39 @@ const { imageClass } = Astro.props
     aria-label="实况照片动态片段"
   />
 </div>
-<button
-  type="button"
-  class="fixed bottom-5 left-1/2 -translate-x-1/2 cursor-pointer rounded-full border-0 bg-white/15 px-4 py-2 text-sm text-white disabled:cursor-wait"
-  data-lightbox-live-toggle
-  aria-pressed="false"
-  hidden
->播放实况</button>
+<button type="button" class="lightbox-media__live" data-lightbox-live-toggle aria-pressed="false" hidden>播放实况</button>
 <span class="sr-only" role="status" data-lightbox-live-status />
+
+<style>
+  .lightbox-media {
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+
+    & video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+  }
+
+  .lightbox-media__live {
+    position: fixed;
+    bottom: 1.25rem;
+    left: 50%;
+    padding: 0.5rem 1rem;
+    border-radius: 9999px;
+    background: rgb(255 255 255 / 0.15);
+    color: white;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    translate: -50% 0;
+    cursor: pointer;
+
+    &:disabled {
+      cursor: wait;
+    }
+  }
+</style>

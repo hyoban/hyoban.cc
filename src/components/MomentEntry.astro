@@ -5,7 +5,6 @@ import { getMomentPagePath, getMomentPath, type Moment } from '@/moments'
 import { getMomentTrips } from '@/moments/trip-data'
 
 interface Props {
-  class?: string
   /**
    * Leads the line with its day, linking to the day in the calendar: out of the
    * calendar. `year` says the year too, for Moments of more than one.
@@ -25,7 +24,7 @@ interface Props {
   tripLink?: 'pick' | 'play'
 }
 
-const { class: className, date, exceptLocation, moment, priorityMedia, shared = false, showLocation = true, showTrip = true, tripLink = 'pick' } = Astro.props
+const { date, exceptLocation, moment, priorityMedia, shared = false, showLocation = true, showTrip = true, tripLink = 'pick' } = Astro.props
 const trip = showTrip ? (await getMomentTrips()).get(moment.id) : undefined
 // A place opens on the map narrowed to the Moment's month, with its Moments beside it.
 const mapMonthPath = `/map/${moment.dateKey.slice(0, 4)}/${moment.dateKey.slice(5, 7)}/place/`
@@ -40,19 +39,15 @@ function formatDay(dateKey: string) {
 ---
 
 <article
-  class:list={[
-    'moment-entry py-6 [&+&]:border-t [&+&]:border-border',
-    { '-mx-3 scroll-mt-20 rounded-[0.625rem] bg-inline px-3': shared },
-    className,
-  ]}
+  class:list={['moment-entry', { 'moment-entry--shared': shared }]}
   data-moment-shared={shared ? '' : undefined}
 >
   <!-- One line: the date, the time and the share button whole, and the places cut short
        when the column is too narrow for them. -->
-  <header class="mb-2.5 flex items-center gap-2 font-mono [&>*]:shrink-0 [&>*]:whitespace-nowrap text-xs text-tx-2 [&_a]:-my-3 [&_a]:inline-flex [&_a]:min-h-11 [&_a]:min-w-11 [&_a]:items-center [&_a]:justify-center [&_a]:text-tx-3 [&_a]:no-underline">
+  <header class="moment-entry__header">
     {
       date && (
-        <a class="moment-entry__date !mx-0 !w-auto !justify-start !text-tx-2 hover:!text-tx" href={getMomentPath(moment.dateKey)}>
+        <a class="moment-entry__date" href={getMomentPath(moment.dateKey)}>
           <time datetime={moment.dateKey}>{formatDay(moment.dateKey)}</time>
         </a>
       )
@@ -60,14 +55,14 @@ function formatDay(dateKey: string) {
     {moment.occurredLabel && <time datetime={moment.occurredAt}>{moment.occurredLabel}</time>}
     {
       showLocation && moment.locations.filter(location => location.id !== exceptLocation).map(location => (
-        <a class="moment-entry__location !mx-0 !w-auto !min-w-0 !shrink gap-1 px-1 hover:!text-tx" href={`${mapMonthPath}${location.id}/`} data-trip-map-place-link={location.id}>
-          <span class="i-lucide-map-pin shrink-0 text-sm" aria-hidden="true" />
-          <span class="truncate">{location.name}</span>
+        <a class="moment-entry__location" href={`${mapMonthPath}${location.id}/`} data-trip-map-place-link={location.id}>
+          <span class="i-lucide-map-pin" aria-hidden="true" />
+          <span class="moment-entry__location-name">{location.name}</span>
         </a>
       ))
     }
-    <a class="moment-entry__share ml-auto !justify-end hover:!text-tx" href={getMomentPagePath(moment)} aria-label="分享这条 Moment" title="分享" data-moment-share>
-      <span class="i-lucide-share text-sm" aria-hidden="true" data-moment-share-icon />
+    <a class="moment-entry__share" href={getMomentPagePath(moment)} aria-label="分享这条 Moment" title="分享" data-moment-share>
+      <span class="i-lucide-share" aria-hidden="true" data-moment-share-icon />
     </a>
   </header>
   <MomentText text={moment.text} />
@@ -76,15 +71,15 @@ function formatDay(dateKey: string) {
     trip && (
       tripLink === 'play'
         ? (
-            <a class="moment-entry__trip mt-3 inline-flex max-w-full items-center gap-1.5 rounded-full bg-inline px-3 py-1.5 text-xs text-tx-2 no-underline hover:bg-hover hover:text-tx" href={`/trip/${trip.id}/play/${trip.anchor}/`} data-trip-map-stop-play={trip.id} data-trip-map-stop={trip.anchor}>
-              <span class="i-lucide-play shrink-0 text-[0.75rem]" aria-hidden="true" />
+            <a class="moment-entry__trip" href={`/trip/${trip.id}/play/${trip.anchor}/`} data-trip-map-stop-play={trip.id} data-trip-map-stop={trip.anchor}>
+              <span class="i-lucide-play" aria-hidden="true" />
               从这里回放
             </a>
           )
         : (
-            <a class="moment-entry__trip mt-3 inline-flex max-w-full items-center gap-1.5 rounded-full bg-inline px-3 py-1.5 text-xs text-tx-2 no-underline hover:bg-hover hover:text-tx" href={`/trip/${trip.id}/`} data-trip-map-trip-pick={trip.id} aria-label={`旅程：${trip.title}`}>
-              <span class="i-lucide-route shrink-0 text-sm" aria-hidden="true" />
-              <span class="truncate">{trip.title}</span>
+            <a class="moment-entry__trip" href={`/trip/${trip.id}/`} data-trip-map-trip-pick={trip.id} aria-label={`旅程：${trip.title}`}>
+              <span class="i-lucide-route" aria-hidden="true" />
+              <span class="moment-entry__trip-title">{trip.title}</span>
             </a>
           )
     )
@@ -94,3 +89,126 @@ function formatDay(dateKey: string) {
 <script>
   import '@/moment-entry-client'
 </script>
+
+<style>
+  .moment-entry {
+    padding-block: 1.5rem;
+
+    & + & {
+      border-top: 1px solid var(--color-border);
+    }
+  }
+
+  /* The Moment a shared link names, on a tint reaching a little past the column. */
+  .moment-entry--shared {
+    margin-inline: -0.75rem;
+    padding-inline: 0.75rem;
+    border-radius: 0.625rem;
+    background: var(--color-inline);
+    scroll-margin-top: 5rem;
+  }
+
+  /* Its links are 44px targets, overlapping the lines around them rather than
+     spacing them out. */
+  .moment-entry__header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.625rem;
+    color: var(--color-tx-2);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1rem;
+
+    & > * {
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+
+    & a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 2.75rem;
+      min-height: 2.75rem;
+      margin-block: -0.75rem;
+      color: var(--color-tx-3);
+      text-decoration: none;
+
+      @media (hover: hover) {
+        &:hover {
+          color: var(--color-tx);
+        }
+      }
+    }
+
+    & .moment-entry__date {
+      justify-content: flex-start;
+      color: var(--color-tx-2);
+    }
+
+    & .moment-entry__location {
+      flex-shrink: 1;
+      gap: 0.25rem;
+      min-width: 0;
+      padding-inline: 0.25rem;
+    }
+
+    & .moment-entry__share {
+      justify-content: flex-end;
+      margin-left: auto;
+    }
+
+    & [class^='i-lucide-'] {
+      flex-shrink: 0;
+      font-size: 0.875rem;
+      line-height: 1.25rem;
+    }
+  }
+
+  .moment-entry__location-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* The trip the Moment is a stop of, or the way to play it from here. */
+  .moment-entry__trip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    max-width: 100%;
+    margin-top: 0.75rem;
+    padding: 0.375rem 0.75rem;
+    border-radius: 9999px;
+    background: var(--color-inline);
+    color: var(--color-tx-2);
+    font-size: 0.75rem;
+    line-height: 1rem;
+    text-decoration: none;
+
+    @media (hover: hover) {
+      &:hover {
+        background: var(--color-hover);
+        color: var(--color-tx);
+      }
+    }
+
+    & .i-lucide-route {
+      flex-shrink: 0;
+      font-size: 0.875rem;
+      line-height: 1.25rem;
+    }
+
+    & .i-lucide-play {
+      flex-shrink: 0;
+      font-size: 0.75rem;
+    }
+  }
+
+  .moment-entry__trip-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+</style>

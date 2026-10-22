@@ -20,16 +20,15 @@ const months = [...Map.groupBy(moments, getMonth)]
   .sort(([first], [second]) => second - first)
   // Newest first, down to the time of day: the Moments come oldest first.
   .map(([month, monthMoments]) => ({ month, moments: monthMoments.toReversed() }))
-const chipClass = 'flex h-8 min-w-0 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent px-2.5 font-mono text-[0.8125rem] text-tx-2 tabular-nums hover:bg-inline hover:text-tx aria-pressed:bg-tx aria-pressed:text-bg'
 ---
 
 <!-- The whole year, and its months with Moments; 3.0625rem tall, which the months'
      headings stay below. -->
-<nav class="sticky top-0 z-[2] -mx-5 flex items-center gap-0.5 overflow-x-auto border-b border-border bg-bg px-3 py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-label={`${year} 年按月份查看`}>
-  <button class:list={[chipClass, 'shrink-0']} type="button" data-trip-map-month-all aria-pressed={String(pickedMonth === undefined)}>全年</button>
+<nav class="map-moments__months" aria-label={`${year} 年按月份查看`}>
+  <button class="map-moments__month" type="button" data-trip-map-month-all aria-pressed={pickedMonth === undefined ? 'true' : 'false'}>全年</button>
   {
     months.toReversed().map(({ month, moments: monthMoments }) => (
-      <button class:list={[chipClass, 'min-w-8 shrink-0 px-1.5']} type="button" data-trip-map-month={month} aria-pressed={String(month === pickedMonth)} aria-label={`${month} 月`} title={`${month} 月 · ${monthMoments.length} 条记录`}>
+      <button class="map-moments__month map-moments__month--number" type="button" data-trip-map-month={month} aria-pressed={month === pickedMonth ? 'true' : 'false'} aria-label={`${month} 月`} title={`${month} 月 · ${monthMoments.length} 条记录`}>
         {month}
       </button>
     ))
@@ -39,11 +38,97 @@ const chipClass = 'flex h-8 min-w-0 cursor-pointer items-center justify-center r
   months.map(({ month, moments: monthMoments }) => (
     <section data-trip-map-moments-month={month} data-trip-map-count={monthMoments.length} hidden={pickedMonth !== undefined && month !== pickedMonth} aria-labelledby={`trip-map-moments-${year}-${month}`}>
       {/* Only for the whole year: a month picked is the list's own title. */}
-      <h2 class="sticky top-[3.0625rem] z-[1] -mx-5 border-b border-border bg-bg px-5 py-2 text-sm font-medium [&[hidden]]:hidden" id={`trip-map-moments-${year}-${month}`} data-trip-map-moments-heading hidden={pickedMonth !== undefined}>
-        <a class="text-inherit no-underline hover:underline" href={getMonthPath(`${year}-${String(month).padStart(2, '0')}`)} title={`在日历中查看 ${year} 年 ${month} 月`}>{month} 月</a>
-        <span class="ml-2 text-xs font-normal text-tx-3 tabular-nums">{monthMoments.length} 条记录</span>
+      <h2 class="map-moments__heading" id={`trip-map-moments-${year}-${month}`} data-trip-map-moments-heading hidden={pickedMonth !== undefined}>
+        <a href={getMonthPath(`${year}-${String(month).padStart(2, '0')}`)} title={`在日历中查看 ${year} 年 ${month} 月`}>{month} 月</a>
+        <span>{monthMoments.length} 条记录</span>
       </h2>
       {monthMoments.map(moment => <MomentEntry date="day" moment={moment} />)}
     </section>
   ))
 }
+
+<style>
+  /* Both reach out to the sidebar's edges, across its padding. */
+  .map-moments__months {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 0.125rem;
+    margin-inline: -1.25rem;
+    overflow-x: auto;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-bg);
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  .map-moments__month {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    height: 2rem;
+    padding-inline: 0.625rem;
+    border-radius: 9999px;
+    color: var(--color-tx-2);
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+
+    @media (hover: hover) {
+      &:hover {
+        background: var(--color-inline);
+        color: var(--color-tx);
+      }
+    }
+
+    &[aria-pressed='true'] {
+      background: var(--color-tx);
+      color: var(--color-bg);
+    }
+  }
+
+  .map-moments__month--number {
+    min-width: 2rem;
+  }
+
+  .map-moments__heading {
+    position: sticky;
+    top: 3.0625rem;
+    z-index: 1;
+    margin-inline: -1.25rem;
+    padding: 0.5rem 1.25rem;
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-bg);
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.25rem;
+
+    & a {
+      color: inherit;
+      text-decoration: none;
+
+      @media (hover: hover) {
+        &:hover {
+          text-decoration-line: underline;
+        }
+      }
+    }
+
+    & span {
+      margin-left: 0.5rem;
+      color: var(--color-tx-3);
+      font-size: 0.75rem;
+      font-weight: 400;
+      line-height: 1rem;
+      font-variant-numeric: tabular-nums;
+    }
+  }
+</style>

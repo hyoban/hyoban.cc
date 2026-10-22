@@ -16,7 +16,7 @@ export async function getStaticPaths() {
 const { group } = Astro.props
 ---
 
-<div class="trip-map-drawer__moments min-w-0">
+<div class="trip-map-drawer__moments">
   {group.moments.map(moment => (
     <MomentEntry date="year" exceptLocation={group.id} moment={moment} />
   ))}

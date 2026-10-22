@@ -1,7 +1,7 @@
 # hyoban.cc
 
 The source of [hyoban.cc](https://hyoban.cc): a personal site built with Astro and
-Tailwind v4, with posts, a calendar and map of Moments and trips, and the pieces
+plain CSS, with posts, a calendar and map of Moments and trips, and the pieces
 around it that record and serve them.
 
 ```

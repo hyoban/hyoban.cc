@@ -2,35 +2,100 @@
 interface Props {
   /** Where the calendar link goes: the month the map is narrowed to, say. */
   calendarHref?: string
-  class?: string
   /** Where the map link goes: the map narrowed to the calendar's month, say. */
   mapHref?: string
   mode: 'calendar' | 'map'
 }
 
-const { calendarHref = '/calendar/', class: className, mapHref = '/map/', mode } = Astro.props
-const modeLinkClass = 'relative z-[1] inline-flex min-h-8 min-w-[4.5rem] items-center justify-center gap-1.5 rounded-full px-3 text-[0.8125rem] text-tx-2 no-underline transition-colors duration-[160ms] aria-[current=page]:text-tx max-[40rem]:min-w-[4.25rem] max-[40rem]:px-2.5 motion-reduce:transition-none'
+const { calendarHref = '/calendar/', mapHref = '/map/', mode } = Astro.props
 ---
 
-<nav
-  class:list={[
-    'calendar-mode-switch group pointer-events-auto relative isolate inline-grid grid-cols-2 items-center rounded-full border border-[color-mix(in_srgb,var(--color-border)_82%,transparent)] bg-[color-mix(in_srgb,var(--color-bg)_82%,transparent)] p-[var(--mode-switch-padding)] backdrop-blur-[1rem] [--mode-switch-padding:0.1875rem]',
-    className,
-  ]}
-  aria-label="日历视图"
-  data-calendar-mode-switch
-  data-mode={mode}
->
-  <span class="calendar-mode-switch__indicator pointer-events-none absolute inset-y-[var(--mode-switch-padding)] left-[var(--mode-switch-padding)] z-0 w-[calc((100%-var(--mode-switch-padding)*2)/2)] translate-x-0 rounded-full bg-inline shadow-[0_0.0625rem_0.25rem_rgb(0_0_0/0.08)] transition-transform duration-[280ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-data-[mode=map]:translate-x-full motion-reduce:transition-none" aria-hidden="true" />
-  <a class={modeLinkClass} href={calendarHref} data-mode="calendar" aria-current={mode === 'calendar' ? 'page' : undefined}>
-    <span class="i-lucide-calendar-days text-[0.9375rem]" aria-hidden="true" />
+<nav class="calendar-mode-switch" aria-label="日历视图" data-calendar-mode-switch data-mode={mode}>
+  <span class="calendar-mode-switch__indicator" aria-hidden="true" />
+  <a href={calendarHref} data-mode="calendar" aria-current={mode === 'calendar' ? 'page' : undefined}>
+    <span class="i-lucide-calendar-days" aria-hidden="true" />
     日历
   </a>
-  <a class={modeLinkClass} href={mapHref} data-mode="map" aria-current={mode === 'map' ? 'page' : undefined}>
-    <span class="i-lucide-map text-[0.9375rem]" aria-hidden="true" />
+  <a href={mapHref} data-mode="map" aria-current={mode === 'map' ? 'page' : undefined}>
+    <span class="i-lucide-map" aria-hidden="true" />
     地图
   </a>
 </nav>
+
+<style>
+  .calendar-mode-switch {
+    --mode-switch-padding: 0.1875rem;
+
+    position: relative;
+    isolation: isolate;
+    display: inline-grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: center;
+    padding: var(--mode-switch-padding);
+    border: 1px solid var(--color-glass-border);
+    border-radius: 9999px;
+    background: var(--color-glass);
+    -webkit-backdrop-filter: blur(1rem);
+    backdrop-filter: blur(1rem);
+    pointer-events: auto;
+
+    & a {
+      position: relative;
+      z-index: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.375rem;
+      min-width: 4.5rem;
+      min-height: 2rem;
+      padding-inline: 0.75rem;
+      border-radius: 9999px;
+      color: var(--color-tx-2);
+      font-size: 0.8125rem;
+      text-decoration: none;
+      transition: color 160ms var(--ease);
+
+      &[aria-current='page'] {
+        color: var(--color-tx);
+      }
+
+      @media (width < 40rem) {
+        min-width: 4.25rem;
+        padding-inline: 0.625rem;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        transition: none;
+      }
+    }
+
+    & a span {
+      font-size: 0.9375rem;
+    }
+  }
+
+  /* The pill under the current mode, sliding across when it changes. */
+  .calendar-mode-switch__indicator {
+    position: absolute;
+    inset-block: var(--mode-switch-padding);
+    left: var(--mode-switch-padding);
+    z-index: 0;
+    width: calc((100% - var(--mode-switch-padding) * 2) / 2);
+    border-radius: 9999px;
+    background: var(--color-inline);
+    box-shadow: 0 0.0625rem 0.25rem rgb(0 0 0 / 0.08);
+    pointer-events: none;
+    transition: translate 280ms var(--ease-out);
+
+    [data-mode='map'] > & {
+      translate: 100% 0;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
+</style>
 
 <script>
   type CalendarMode = 'calendar' | 'map'

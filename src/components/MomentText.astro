@@ -91,7 +91,7 @@ function tokenize(value: string): Token[] {
   blocks.map(block => block.type === 'bilibili'
     ? (
         <iframe
-          class="moment-video mt-3 block aspect-video w-full rounded-[0.625rem] border border-border bg-inline"
+          class="moment-video"
           src={block.src}
           title="哔哩哔哩视频"
           loading="lazy"
@@ -102,14 +102,44 @@ function tokenize(value: string): Token[] {
         />
       )
     : (
-        <p class="moment-text whitespace-pre-wrap [line-height:1.7] [overflow-wrap:anywhere] [&_a]:text-tx [&+&]:mt-3">
+        <p class="moment-text">
           {
             block.tokens.map(token => token.type === 'url'
               ? <a href={token.value} target="_blank" rel="noopener noreferrer">{token.value}</a>
               : token.type === 'text'
                 ? token.value
-                : <span class="text-tx-2">{token.value}</span>)
+                : <span class="moment-text__tag">{token.value}</span>)
           }
         </p>
       ))
 }
+
+<style>
+  .moment-video {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    margin-top: 0.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.625rem;
+    background: var(--color-inline);
+  }
+
+  .moment-text {
+    line-height: 1.7;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+
+    & + & {
+      margin-top: 0.75rem;
+    }
+
+    & a {
+      color: var(--color-tx);
+    }
+  }
+
+  .moment-text__tag {
+    color: var(--color-tx-2);
+  }
+</style>
