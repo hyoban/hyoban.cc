@@ -1,4 +1,5 @@
-import mapboxgl, { type GeoJSONSource } from 'mapbox-gl'
+import mapboxgl from 'mapbox-gl'
+import Supercluster from 'supercluster'
 import { t, type Messages } from '../messages.ts'
 import { createPopupContent, MAP_POPUP_CLASS } from '../player/dom.ts'
 import type { PlaceMarker } from '../player/types.ts'
@@ -13,9 +14,11 @@ import {
 } from '../static-map.ts'
 
 // The places on the map: a dot per place, coloured by the year it was last visited,
-// gathered into clusters where they crowd at the zoom shown. Clustering is done by
-// a hidden GeoJSON source, and the dots are buttons placed over it, so they can be
-// hovered, focused and pressed like any other.
+// gathered into clusters where they crowd at the zoom shown. The clusters are worked
+// out here rather than by a clustered source, whose tiles mid-zoom mix two zooms' worth
+// of them: here they're always the zoom's own, so they part and join as a zoom goes. The
+// dots are buttons placed over the map, so they can be hovered, focused and pressed like
+// any other.
 
 export type { PlaceMarker }
 export { CLUSTER_MAX_ZOOM }
@@ -45,18 +48,16 @@ type ClusterMarkerEntry = {
   coordinates: [number, number]
   dot: HTMLElement
   marker: mapboxgl.Marker
-  /** Busiest first, once they've been looked up. */
-  members?: PlaceMarker[]
+  /** Busiest first. */
+  members: PlaceMarker[]
   nudge: Nudge
   popup: mapboxgl.Popup
   radius: number
 }
 
-const INDEX_LAYER_ID = 'trip-map-place-index'
-const SOURCE_ID = 'trip-map-places'
-// How close on screen, in pixels, places are gathered into one cluster, and how many
-// it takes: two places side by side aren't a crowd, so they stay as they are, even
-// if one covers part of the other.
+// How close on screen, in pixels of a 512-pixel tile as Mapbox draws them, places are
+// gathered into one cluster, and how many it takes: two places side by side aren't a
+// crowd, so they stay as they are, even if one covers part of the other.
 const CLUSTER_RADIUS = 20
 const CLUSTER_MIN_POINTS = 3
 // The dots' radii on screen, in pixels (a place with one Moment, one with more, and a
@@ -69,6 +70,9 @@ const CLUSTER_OPEN_MAX_ZOOM = 11
 const CLUSTER_OPEN_PADDING = 80
 // The markers are set in reading order for the keyboard, in rows this tall.
 const MARKER_ROW_HEIGHT = 48
+
+type PlaceProperties = { count: number; firstYear: number; id: string }
+type ClusterProperties = { firstYear: number; momentCount: number }
 
 export type PlaceMarkers = ReturnType<typeof createPlaceMarkers>
 
@@ -102,6 +106,8 @@ export function createPlaceMarkers({
   let period: Period | undefined
   // Focus put back on a marker as the drawer closes shouldn't pop its name up.
   let quietFocus = false
+  // The shown places, gathered at each zoom.
+  let index = createIndex()
 
   /**
    * Takes a hidden marker off the map rather than only hiding it: Mapbox repositions
@@ -356,49 +362,24 @@ export function createPlaceMarkers({
     return place !== undefined && isPlaceShown(place)
   }
 
-  function getIndexData(): GeoJSON.FeatureCollection {
-    return {
-      features: getShownPlaces().map((place) => ({
-        geometry: {
-          coordinates: [place.longitude, place.latitude],
-          type: 'Point' as const,
-        },
-        properties: { count: place.count, id: place.id, firstYear: place.firstYear },
-        type: 'Feature' as const,
-      })),
-      type: 'FeatureCollection',
-    }
-  }
-
-  /** The hidden source the map clusters the places with. Adds it unless it is there. */
-  function addIndex() {
-    const map = getMap()
-
-    if (!map || map.getSource(SOURCE_ID)) {
-      return
-    }
-
-    // A new source numbers its clusters afresh; the next sync draws them.
-    clearClusterMarkers()
-
-    map.addSource(SOURCE_ID, {
-      cluster: true,
-      clusterMaxZoom: CLUSTER_MAX_ZOOM,
-      clusterMinPoints: CLUSTER_MIN_POINTS,
-      clusterProperties: {
-        firstYear: ['min', ['get', 'firstYear']],
-        momentCount: ['+', ['get', 'count']],
+  /** Gathers the shown places at every zoom, as Mapbox's clustered sources do. */
+  function createIndex() {
+    return new Supercluster<PlaceProperties, ClusterProperties>({
+      map: (place) => ({ firstYear: place.firstYear, momentCount: place.count }),
+      maxZoom: CLUSTER_MAX_ZOOM,
+      minPoints: CLUSTER_MIN_POINTS,
+      radius: CLUSTER_RADIUS,
+      reduce: (cluster, place) => {
+        cluster.firstYear = Math.min(cluster.firstYear, place.firstYear)
+        cluster.momentCount += place.momentCount
       },
-      clusterRadius: CLUSTER_RADIUS,
-      data: getIndexData(),
-      type: 'geojson',
-    })
-    map.addLayer({
-      id: INDEX_LAYER_ID,
-      paint: { 'circle-opacity': 0, 'circle-radius': 1 },
-      source: SOURCE_ID,
-      type: 'circle',
-    })
+    }).load(
+      getShownPlaces().map((place) => ({
+        geometry: { coordinates: [place.longitude, place.latitude], type: 'Point' },
+        properties: { count: place.count, firstYear: place.firstYear, id: place.id },
+        type: 'Feature',
+      })),
+    )
   }
 
   function clearClusterMarkers() {
@@ -410,43 +391,65 @@ export function createPlaceMarkers({
     clusterMarkers.clear()
   }
 
+  /** The places and clusters within `bounds` (west, south, east, north) at the map's zoom. */
+  function getClusters(map: mapboxgl.Map, bounds: [number, number, number, number]) {
+    // The zoom whose tiles Mapbox would draw a clustered source with.
+    return index.getClusters(bounds, Math.floor(map.getZoom()))
+  }
+
   /**
-   * Puts the places and clusters the map gathers at this zoom on it, and takes off
-   * the rest. `settled` is false while a drag is under way, when only what's in view
-   * needs keeping up.
+   * What's in view and as much again around it, so the places about to come in are on
+   * the map before a drag brings them in.
+   */
+  function getNearBounds(map: mapboxgl.Map): [number, number, number, number] {
+    const bounds = map.getBounds()
+
+    if (!bounds) {
+      return [-180, -90, 180, 90]
+    }
+
+    const width = bounds.getEast() - bounds.getWest()
+    const height = bounds.getNorth() - bounds.getSouth()
+    const south = Math.max(-90, bounds.getSouth() - height / 2)
+    const north = Math.min(90, bounds.getNorth() + height / 2)
+
+    if (width * 2 >= 360) {
+      return [-180, south, 180, north]
+    }
+
+    // Wrapped into -180…180; west past east crosses the antimeridian.
+    const wrap = (longitude: number) => ((((longitude + 180) % 360) + 360) % 360) - 180
+
+    return [wrap(bounds.getWest() - width / 2), south, wrap(bounds.getEast() + width / 2), north]
+  }
+
+  /**
+   * Puts the places and clusters gathered at this zoom on the map, and takes off the
+   * rest. `settled` is false while the map moves, when only what's in view needs
+   * keeping up.
    */
   function sync(options: { settled?: boolean } = {}) {
     const map = getMap()
 
-    if (isPaused() || !map || !map.getSource(SOURCE_ID) || !map.isSourceLoaded(SOURCE_ID)) {
+    if (isPaused() || !map) {
       return
     }
 
     const visibleIds = new Set<string>()
     const clusters = new Map<number, ClusterInfo>()
 
-    // The source's loaded tiles reach past the view, so the places about to come in
-    // are on the map before a drag brings them in.
-    for (const feature of map.querySourceFeatures(SOURCE_ID)) {
-      if (feature.geometry.type !== 'Point') {
-        continue
-      }
+    for (const feature of getClusters(map, getNearBounds(map))) {
+      const [longitude, latitude] = feature.geometry.coordinates as [number, number]
+      const properties = feature.properties
 
-      const properties = feature.properties ?? {}
-
-      if (properties.cluster) {
-        const id = Number(properties.cluster_id)
-        const coordinates = feature.geometry.coordinates
-
-        if (Number.isFinite(id) && coordinates.length >= 2) {
-          clusters.set(id, {
-            coordinates: [coordinates[0]!, coordinates[1]!],
-            firstYear: Number(properties.firstYear) || 0,
-            locationCount: Number(properties.point_count) || 0,
-            momentCount: Number(properties.momentCount) || 0,
-          })
-        }
-      } else if (typeof properties.id === 'string') {
+      if ('cluster_id' in properties) {
+        clusters.set(properties.cluster_id, {
+          coordinates: [longitude, latitude],
+          firstYear: properties.firstYear,
+          locationCount: properties.point_count,
+          momentCount: properties.momentCount,
+        })
+      } else {
         visibleIds.add(properties.id)
       }
     }
@@ -479,28 +482,20 @@ export function createPlaceMarkers({
   }
 
   /** A cluster's places, busiest first. */
-  function getClusterMembers(map: mapboxgl.Map, id: number) {
-    const source = map.getSource(SOURCE_ID) as GeoJSONSource | undefined
+  function getClusterMembers(id: number) {
+    let leaves: Supercluster.PointFeature<PlaceProperties>[]
 
-    if (!source) {
-      return Promise.resolve<PlaceMarker[]>([])
+    try {
+      leaves = index.getLeaves(id, Infinity)
+    } catch {
+      // A cluster of the places before the period changed.
+      return []
     }
 
-    return new Promise<PlaceMarker[]>((resolve) =>
-      source.getClusterLeaves(id, Infinity, 0, (error, features) =>
-        resolve(
-          error
-            ? []
-            : (features ?? [])
-                .map((leaf) => placesById.get(String(leaf.properties?.id)))
-                .filter((place) => place !== undefined)
-                .sort(
-                  (first, second) =>
-                    second.count - first.count || first.name.length - second.name.length,
-                ),
-        ),
-      ),
-    )
+    return leaves
+      .map((leaf) => placesById.get(leaf.properties.id))
+      .filter((place) => place !== undefined)
+      .sort((first, second) => second.count - first.count || first.name.length - second.name.length)
   }
 
   /** A cluster goes by its busiest place: 上海等. */
@@ -508,20 +503,11 @@ export function createPlaceMarkers({
     return t(messages, 'clusterName', { name: members[0]!.name })
   }
 
-  /**
-   * Frames a cluster's places close enough to tell apart, in one move; a cluster
-   * whose places can't be looked up opens one step at a time instead.
-   */
-  async function openCluster(map: mapboxgl.Map, id: number, entry: ClusterMarkerEntry) {
-    const members = entry.members ?? (await getClusterMembers(map, id))
+  /** Frames a cluster's places close enough to tell apart, in one move. */
+  function openCluster(map: mapboxgl.Map, entry: ClusterMarkerEntry) {
+    const { members } = entry
 
     if (members.length === 0) {
-      const source = map.getSource(SOURCE_ID) as GeoJSONSource | undefined
-      source?.getClusterExpansionZoom(id, (error, zoom) => {
-        if (!error && zoom != null) {
-          map.easeTo({ center: entry.coordinates, duration: getAnimationDuration(), zoom })
-        }
-      })
       return
     }
 
@@ -548,8 +534,17 @@ export function createPlaceMarkers({
     id: number,
     cluster: ClusterInfo,
   ): ClusterMarkerEntry {
+    const members = getClusterMembers(id)
     const meta = t(messages, 'momentCount', { count: cluster.momentCount })
-    const title = t(messages, 'clusterTitle', { count: cluster.locationCount })
+    // Named after its busiest place, on the card and to the screen reader, so it tells
+    // where it is without opening it.
+    const title =
+      members.length > 0
+        ? t(messages, 'clusterNamedTitle', {
+            count: cluster.locationCount,
+            name: getClusterName(members),
+          })
+        : t(messages, 'clusterTitle', { count: cluster.locationCount })
     const button = createDotButton(
       'trip-map-cluster',
       t(messages, 'clusterLabel', { count: cluster.momentCount, title }),
@@ -570,6 +565,7 @@ export function createPlaceMarkers({
       marker: new mapboxgl.Marker({ anchor: 'center', element: button })
         .setLngLat(cluster.coordinates)
         .addTo(map),
+      members,
       nudge: { x: 0, y: 0 },
       popup,
       radius: DOT_RADIUS.cluster,
@@ -588,30 +584,10 @@ export function createPlaceMarkers({
         event.stopPropagation()
         hidePopup()
         onOpenCluster()
-        void openCluster(map, id, entry)
+        openCluster(map, entry)
       },
       { signal },
     )
-
-    // Named after its busiest place once its places are known, on the card and to
-    // the screen reader, so it tells where it is without opening it.
-    void getClusterMembers(map, id).then((members) => {
-      if (clusterMarkers.get(id) !== entry || members.length === 0) {
-        return
-      }
-
-      const namedTitle = t(messages, 'clusterNamedTitle', {
-        count: cluster.locationCount,
-        name: getClusterName(members),
-      })
-
-      entry.members = members
-      popup.setDOMContent(createPopupContent({ meta, title: namedTitle }))
-      button.setAttribute(
-        'aria-label',
-        t(messages, 'clusterLabel', { count: cluster.momentCount, title: namedTitle }),
-      )
-    })
 
     return entry
   }
@@ -623,61 +599,57 @@ export function createPlaceMarkers({
    * The places a screenshot draws, gathered as the map gathers them at its framing:
    * each cluster named after its busiest place, with every place in it.
    */
-  async function getScreenshotPlaces(map: mapboxgl.Map): Promise<ScreenshotPlace[]> {
-    const shot: ScreenshotPlace[] = []
-    const seen = new Set<string>()
+  function getScreenshotPlaces(map: mapboxgl.Map): ScreenshotPlace[] {
+    const bounds = map.getBounds()
+    const canvas = map.getCanvas()
 
-    for (const feature of map.queryRenderedFeatures({ layers: [INDEX_LAYER_ID] })) {
-      const properties = feature.properties ?? {}
-
-      if (feature.geometry.type !== 'Point') {
-        continue
-      }
-
-      if (!properties.cluster) {
-        const place = placesById.get(String(properties.id))
-
-        if (place && !seen.has(place.id)) {
-          seen.add(place.id)
-          shot.push(place)
-        }
-
-        continue
-      }
-
-      const id = Number(properties.cluster_id)
-
-      if (seen.has(`cluster-${id}`)) {
-        continue
-      }
-
-      seen.add(`cluster-${id}`)
-
-      const members = await getClusterMembers(map, id)
-      const [longitude, latitude] = feature.geometry.coordinates
-      const firstYear = Number(properties.firstYear) || 0
-
-      shot.push({
-        color: yearColors.get(firstYear) ?? members[0]?.color ?? '#888',
-        count: Number(properties.momentCount) || 0,
-        firstYear,
-        latitude: latitude!,
-        longitude: longitude!,
-        members,
-        name:
-          members.length > 0
-            ? getClusterName(members)
-            : t(messages, 'clusterTitle', { count: Number(properties.point_count) || 0 }),
-      })
+    if (!bounds) {
+      return []
     }
 
-    return shot
+    return getClusters(map, [
+      bounds.getWest(),
+      bounds.getSouth(),
+      bounds.getEast(),
+      bounds.getNorth(),
+    ]).flatMap((feature): ScreenshotPlace[] => {
+      const [longitude, latitude] = feature.geometry.coordinates as [number, number]
+      const { x, y } = map.project([longitude, latitude])
+
+      // Only what the picture shows.
+      if (x < 0 || y < 0 || x > canvas.clientWidth || y > canvas.clientHeight) {
+        return []
+      }
+
+      const properties = feature.properties
+
+      if (!('cluster_id' in properties)) {
+        const place = placesById.get(properties.id)
+        return place ? [place] : []
+      }
+
+      const members = getClusterMembers(properties.cluster_id)
+
+      return [
+        {
+          color: yearColors.get(properties.firstYear) ?? members[0]?.color ?? '#888',
+          count: properties.momentCount,
+          firstYear: properties.firstYear,
+          latitude,
+          longitude,
+          members,
+          name:
+            members.length > 0
+              ? getClusterName(members)
+              : t(messages, 'clusterTitle', { count: properties.point_count }),
+        },
+      ]
+    })
   }
 
   createMarkers()
 
   return {
-    addIndex,
     destroy() {
       for (const marker of markers.values()) {
         marker.popup.remove()
@@ -728,28 +700,15 @@ export function createPlaceMarkers({
       return period
     },
     /**
-     * Leaves only the places with Moments in `next` on the map, or every place again;
-     * the next sync, once the source has gathered them afresh, puts them on.
+     * Leaves only the places with Moments in `next` on the map, or every place again,
+     * gathered afresh.
      */
     setPeriod(next: Period | undefined) {
       period = next
-
-      const source = getMap()?.getSource(SOURCE_ID) as GeoJSONSource | undefined
-
-      if (!source) {
-        return
-      }
-
-      // The clusters are numbered afresh with the new data.
+      index = createIndex()
+      // The clusters are numbered afresh with the new places.
       clearClusterMarkers()
-
-      for (const [id, marker] of markers) {
-        if (!isShown(id)) {
-          setMarkerShown(marker, false)
-        }
-      }
-
-      source.setData(getIndexData())
+      sync()
     },
   }
 }

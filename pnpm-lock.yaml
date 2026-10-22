@@ -62,7 +62,7 @@ importers:
         version: '@voidzero-dev/vite-plus-core@1.1.0(@types/node@26.6.5)(@volar/typescript@2.4.28(typescript@6.0.3))(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.19.2)(typescript@6.0.3)(yaml@2.9.1)'
       vite-plus:
         specifier: 'catalog:'
-        version: 1.1.0(@types/node@26.6.5)(@vitest/ui@5.0.3(vitest@5.0.3))(@volar/typescript@2.4.28(typescript@6.0.3))(bufferutil@4.1.0)(esbuild@0.28.2)(happy-dom@21.0.1(bufferutil@4.1.0)(utf-8-validate@5.0.10))(jiti@2.7.0)(tsx@4.19.2)(typescript@6.0.3)(utf-8-validate@5.0.10)(yaml@2.9.1)
+        version: 1.1.0(@types/node@26.6.5)(@vitest/ui@5.0.3)(@volar/typescript@2.4.28(typescript@6.0.3))(bufferutil@4.1.0)(esbuild@0.28.2)(happy-dom@21.0.1(bufferutil@4.1.0)(utf-8-validate@5.0.10))(jiti@2.7.0)(tsx@4.19.2)(typescript@6.0.3)(utf-8-validate@5.0.10)(yaml@2.9.1)
       wrangler:
         specifier: ^4.149.0
         version: 4.149.0(@types/node@26.6.5)(bufferutil@4.1.0)(utf-8-validate@5.0.10)
@@ -103,7 +103,13 @@ importers:
       number-flow:
         specifier: ~0.6.2
         version: 0.6.2
+      supercluster:
+        specifier: ^8.0.1
+        version: 8.0.1
     devDependencies:
+      '@types/supercluster':
+        specifier: ^7.1.3
+        version: 7.1.3
       happy-dom:
         specifier: ^21.0.1
         version: 21.0.1(bufferutil@4.1.0)(utf-8-validate@5.0.10)
@@ -112,7 +118,7 @@ importers:
         version: 0.35.5(@types/node@26.6.5)
       vite-plus:
         specifier: 'catalog:'
-        version: 1.1.0(@types/node@26.6.5)(@vitest/ui@5.0.3)(@volar/typescript@2.4.28(typescript@6.0.3))(bufferutil@4.1.0)(esbuild@0.28.2)(happy-dom@21.0.1(bufferutil@4.1.0)(utf-8-validate@5.0.10))(jiti@2.7.0)(tsx@4.19.2)(typescript@6.0.3)(utf-8-validate@5.0.10)(yaml@2.9.1)
+        version: 1.1.0(@types/node@26.6.5)(@vitest/ui@5.0.3(vitest@5.0.3))(@volar/typescript@2.4.28(typescript@6.0.3))(bufferutil@4.1.0)(esbuild@0.28.2)(happy-dom@21.0.1(bufferutil@4.1.0)(utf-8-validate@5.0.10))(jiti@2.7.0)(tsx@4.19.2)(typescript@6.0.3)(utf-8-validate@5.0.10)(yaml@2.9.1)
 
 packages:
 
@@ -1417,6 +1423,9 @@ packages:
   '@types/sax@1.2.7':
     resolution: {integrity: sha512-rO73L89PJxeYM3s3pPPjiPgVVcymqU490g0YO5n5By0k2Erzj6tay/4lr1CHAAU4JyOWd1rpQ8bCf6cZfHU96A==}
 
+  '@types/supercluster@7.1.3':
+    resolution: {integrity: sha512-Z0pOY34GDFl3Q6hUFYf3HkTwKEE02e7QgtJppBt+beEAxnyOpJua+voGFvxINBHa06GwLFFym7gRPY2SiKIfIA==}
+
   '@types/unist@2.0.11':
     resolution: {integrity: sha512-CmBKiL6NNo/OqgmMn95Fk9Whlp2mtvIv+KNpQKN2F4SjvrEesubTRWGYSg+BnWZOnlCaSTU1sMpsBOzgbYhnsA==}
 
@@ -2388,6 +2397,9 @@ packages:
   jsonc-parser@3.3.1:
     resolution: {integrity: sha512-HUgH65KyejrUFPvHFPbqOY0rsFip3Bo5wb4ngvdi1EpCYWUQDC5V+Y7mZws+DLkr4M//zQJoanu1SP+87Dv1oQ==}
 
+  kdbush@4.1.0:
+    resolution: {integrity: sha512-e9vurzrXJQrFX6ckpHP3bvj5l+9CnYzkxDNnNQ1h2QTqdWsUAJgXiKdGNcOa1EY85dU8KbQ+z/FdQdB7P+9yfQ==}
+
   kleur@4.1.5:
     resolution: {integrity: sha512-o+NO+8WrRiQEE4/7nwRJhN1HWpVmJm511pBHUxPLtp0BUISzlBplORYSmTclCnJvQq2tKu/sgl3xVpkc7ZWuQQ==}
     engines: {node: '>=6'}
@@ -3045,6 +3057,9 @@ packages:
 
   style-to-object@1.0.14:
     resolution: {integrity: sha512-LIN7rULI0jBscWQYaSswptyderlarFkjQ+t79nzty8tcIAceVomEVlLzH5VP4Cmsv6MtKhs7qaAiwlcp+Mgaxw==}
+
+  supercluster@8.0.1:
+    resolution: {integrity: sha512-IiOea5kJ9iqzD2t7QJq/cREyLHTtSmUT6gQsweojg9WH2sYJqZK9SswTu6jrscO6D1G5v5vYZ9ru/eq85lXeZQ==}
 
   supports-color@10.2.2:
     resolution: {integrity: sha512-SS+jx45GF1QjgEXQx4NJZV9ImqmO2NPz5FNsIHrsDjh2YsHnawpan7SNQ1o8NuhrbHZy9AZhIoCUiCeaW/C80g==}
@@ -4517,6 +4532,10 @@ snapshots:
     dependencies:
       '@types/node': 24.19.2
 
+  '@types/supercluster@7.1.3':
+    dependencies:
+      '@types/geojson': 7946.0.16
+
   '@types/unist@2.0.11': {}
 
   '@types/unist@3.0.3': {}
@@ -5539,6 +5558,8 @@ snapshots:
   jsonc-parser@2.3.1: {}
 
   jsonc-parser@3.3.1: {}
+
+  kdbush@4.1.0: {}
 
   kleur@4.1.5: {}
 
@@ -6642,6 +6663,10 @@ snapshots:
   style-to-object@1.0.14:
     dependencies:
       inline-style-parser: 0.2.7
+
+  supercluster@8.0.1:
+    dependencies:
+      kdbush: 4.1.0
 
   supports-color@10.2.2: {}
 
