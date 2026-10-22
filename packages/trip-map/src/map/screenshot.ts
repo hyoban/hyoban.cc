@@ -73,7 +73,7 @@ export type ScreenshotOptions = Readonly<{
   /** `{count} 处`: how many places a bubble holds, drawn beside its name. */
   formatPlaceCount: (count: number) => string
   /** What to draw once the map is framed: places, and bubbles of them, as it shows them. */
-  getPlaces: (map: MapboxMap) => Promise<readonly ScreenshotPlace[]>
+  getPlaces: (map: MapboxMap) => readonly ScreenshotPlace[]
   /** Drawn centred along the bottom of the map. */
   legend?: Element | null | undefined
   /** Every place, to frame the map on. */
@@ -127,7 +127,7 @@ export async function captureMap(map: MapboxMap, options: ScreenshotOptions) {
     frame(map, options.places)
     await waitForIdle(map)
 
-    const overview = await shoot(map, await options.getPlaces(map))
+    const overview = await shoot(map, options.getPlaces(map))
 
     // Where each bubble's places are on the map, before it moves.
     for (const point of overview.points) {

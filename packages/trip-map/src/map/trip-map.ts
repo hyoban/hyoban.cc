@@ -264,7 +264,6 @@ export function createTripMap(options: TripMapOptions): TripMap {
   })
   const markers = createPlaceMarkers({
     getAnimationDuration,
-    // The index source is added as the style loads, before the map has loaded.
     getMap: () => map,
     isPaused: () => !mapLoaded || Boolean(tripPlayer.activeId),
     messages,
@@ -1663,7 +1662,6 @@ export function createTripMap(options: TripMapOptions): TripMap {
         applyFog()
         // Under the routes and the player's layers, once the map has loaded.
         fogLayer.add()
-        markers.addIndex()
         tripOverview.add()
         tripPlayer.restoreLayers()
 
@@ -1724,11 +1722,11 @@ export function createTripMap(options: TripMapOptions): TripMap {
       map.on('zoom', () => syncBasemapRoads(map!))
       map.on('idle', () => markers.sync())
       map.on('moveend', () => markers.sync())
-      // A drag keeps the places coming in as it goes; a zoom waits for its end, when
-      // the clusters have settled.
+      // A move keeps the places coming in as it goes, and a zoom's clusters parting or
+      // joining as it passes each zoom, rather than all at once as it lands.
       let moveFrame: number | undefined
       map.on('move', () => {
-        if (moveFrame !== undefined || map!.isZooming()) {
+        if (moveFrame !== undefined) {
           return
         }
 
