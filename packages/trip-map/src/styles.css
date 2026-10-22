@@ -501,7 +501,9 @@
 }
 
 /* The place drawer and the trip list slide in from the right, or up from the bottom on
-   a phone; they slide back out from script as they close (see place-drawer.ts). */
+   a phone; they slide back out from script as they close (see place-drawer.ts). One
+   rendered open with the page is there from the start: they slide in only once the
+   map has settled on the page (see trip-map.ts). */
 :is(.trip-map-drawer, .trip-map-trip-list) {
   transition:
     opacity 200ms ease,
@@ -509,7 +511,7 @@
 }
 
 @starting-style {
-  :is(.trip-map-drawer, .trip-map-trip-list):not([hidden]) {
+  .trip-map-page[data-trip-map-settled] :is(.trip-map-drawer, .trip-map-trip-list):not([hidden]) {
     opacity: 0;
     translate: 1.5rem 0;
   }
@@ -517,7 +519,7 @@
 
 @media (max-width: 48rem) {
   @starting-style {
-    :is(.trip-map-drawer, .trip-map-trip-list):not([hidden]) {
+    .trip-map-page[data-trip-map-settled] :is(.trip-map-drawer, .trip-map-trip-list):not([hidden]) {
       translate: 0 2rem;
     }
   }
