@@ -233,7 +233,6 @@ export function createTripMap(options: TripMapOptions): TripMap {
     button: elements.fogButton,
     getMap: () => (mapLoaded ? map : undefined),
     getTheme: () => readTheme(page),
-    isDark: () => darkMode.matches,
     messages,
     onError: (cause) =>
       report({ cause, kind: 'map', message: "The fog of war couldn't be fetched." }),
