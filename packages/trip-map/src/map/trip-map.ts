@@ -171,9 +171,13 @@ export function createTripMap(options: TripMapOptions): TripMap {
   // Whether the viewer has tipped the map themselves: their zooming leaves it as they set
   // it from then on, until the map frames every place again or the setting changes.
   let pitchedByHand = false
-  // Where the map was before the trip list first flew it to a route, to go back to as
-  // the list closes.
-  let viewBeforeList: { camera: mapboxgl.CameraOptions; framedOnAll: boolean } | undefined
+  // The moves the viewer has made themselves, counted: a view kept for going back to
+  // goes back only while none has been made since.
+  let handMoves = 0
+  // Where the map was before a period was picked, to go back to as it's cleared.
+  let viewBeforePeriod: SavedView | undefined
+  // Tells the views this map kept from those of one before it, as a reload had.
+  const viewKey = Math.random().toString(36).slice(2)
 
   const tripPlayer = createTripPlayer({
     brand: options.brand,
@@ -296,18 +300,11 @@ export function createTripMap(options: TripMapOptions): TripMap {
       onClose: ({ restoreView }) => {
         tripOverview.highlight(undefined)
 
-        // Back to where the map was before the list moved it, unless it has been moved
-        // by hand since: every place in view again, now the list is gone, or the view
-        // the list moved aside.
-        if (restoreView && map && mapLoaded) {
-          if (viewBeforeList ? viewBeforeList.framedOnAll : framedOnAll) {
-            fitAll()
-          } else if (viewBeforeList) {
-            map.easeTo({ ...viewBeforeList.camera, duration: getAnimationDuration() })
-          }
+        // Every place in view again, now the list is gone; going back puts the map
+        // where it was before the list instead (see `restoreView`).
+        if (restoreView && map && mapLoaded && framedOnAll) {
+          fitAll()
         }
-
-        viewBeforeList = undefined
       },
       onHighlight: (id, { frame }) => {
         tripOverview.highlight(id)
@@ -395,9 +392,8 @@ export function createTripMap(options: TripMapOptions): TripMap {
     url: options.fogUrl ?? '/map/fog.json',
   })
 
-  markers.onOpenCluster = () => {
-    framedOnAll = false
-  }
+  // A cluster opened is the viewer's own browsing, as a drag is.
+  markers.onOpenCluster = moveByHand
 
   function getSettings() {
     return settings ?? DEFAULT_MAP_SETTINGS
@@ -575,7 +571,6 @@ export function createTripMap(options: TripMapOptions): TripMap {
       return
     }
 
-    rememberViewBeforeList()
     framedOnAll = false
 
     // Wider than for a place, for the route's name above it and the legend below.
@@ -595,21 +590,63 @@ export function createTripMap(options: TripMapOptions): TripMap {
     syncSelection()
   }
 
-  function rememberViewBeforeList() {
-    if (!map || viewBeforeList) {
-      return
+  /** Where the map is now, to go back to; nothing while a trip's camera has it. */
+  function getView(): SavedView | undefined {
+    if (!map || !mapLoaded || tripPlayer.activeId) {
+      return undefined
     }
 
-    viewBeforeList = {
+    const { lat, lng } = map.getCenter()
+
+    return {
       camera: {
         bearing: map.getBearing(),
-        center: map.getCenter(),
+        center: [lng, lat],
         padding: map.getPadding(),
         pitch: map.getPitch(),
         zoom: map.getZoom(),
       },
       framedOnAll,
+      key: viewKey,
+      moves: handMoves,
+      pitchedByHand,
     }
+  }
+
+  /** Whether a view kept is still one to go back to: this page's, and not moved by hand since. */
+  function isViewCurrent(view: unknown): view is SavedView {
+    return (
+      Boolean(view) &&
+      typeof view === 'object' &&
+      (view as SavedView).key === viewKey &&
+      (view as SavedView).moves === handMoves
+    )
+  }
+
+  /** The viewer moved the map themselves: off the framing, and off the views kept to go back to. */
+  function moveByHand() {
+    framedOnAll = false
+
+    // A trip's own map is apart from the browsing going back returns to.
+    if (!tripPlayer.activeId) {
+      handMoves += 1
+    }
+  }
+
+  /** Puts the map back where it was: every place framed again if they were, or the view itself. */
+  function restoreView(view: SavedView) {
+    if (!map || !mapLoaded) {
+      return
+    }
+
+    if (view.framedOnAll) {
+      fitAll()
+      return
+    }
+
+    framedOnAll = false
+    pitchedByHand = view.pitchedByHand
+    map.easeTo({ ...view.camera, duration: getAnimationDuration() })
   }
 
   /** What of the map a list beside it covers: the trip list on its address, a trip's sidebar, or the Moments. */
@@ -668,7 +705,6 @@ export function createTripMap(options: TripMapOptions): TripMap {
 
     const { bottom = 0, right = 0 } = getListInset()
 
-    rememberViewBeforeList()
     map.panBy([right / 2, bottom / 2], { duration: getAnimationDuration() })
   }
 
@@ -824,11 +860,13 @@ export function createTripMap(options: TripMapOptions): TripMap {
 
     // A trip closed: every place in view again, beside the list if it's coming back.
     const tripClosed = syncTripFromUrl()
+    // Going back puts the map where it was itself, after the rest.
+    const moveMap = selectOptions.moveMap !== false
 
     if (tripPlayer.activeId) {
       drawer.close({ restoreFocus: false })
       tripList?.close({ restoreFocus: false, restoreView: false })
-      closeTripDetails({ restoreView: false })
+      closeTripDetails()
       return
     }
 
@@ -844,14 +882,17 @@ export function createTripMap(options: TripMapOptions): TripMap {
       tripList?.close({ restoreFocus: false, restoreView: false })
       tripDetails.show(trip, { focus: selectOptions.focus !== false })
       pickRoute(openId)
-      frameTripBeside(elements.tripDetails!, openId)
+
+      if (moveMap) {
+        frameTripBeside(elements.tripDetails!, openId)
+      }
+
       return
     }
 
-    // Back from a trip's sidebar: the view it moved aside, before anything else moves it.
-    closeTripDetails({ restoreView: !tripClosed })
+    closeTripDetails()
 
-    if (tripClosed && !isTripListUrl()) {
+    if (moveMap && tripClosed && !isTripListUrl()) {
       fitAll()
     }
 
@@ -874,6 +915,10 @@ export function createTripMap(options: TripMapOptions): TripMap {
       drawer.close({ restoreFocus: false })
       tripList?.show({ focus: selectOptions.focus !== false })
 
+      if (!moveMap) {
+        return
+      }
+
       if (tripClosed) {
         fitAll()
       } else if (opening) {
@@ -884,7 +929,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
     }
 
     drawer.close({ restoreFocus: selectOptions.focus !== false })
-    tripList?.close({ restoreFocus: selectOptions.focus !== false })
+    tripList?.close({ restoreFocus: selectOptions.focus !== false, restoreView: moveMap })
   }
 
   /** Lifts a trip's route as its sidebar opens, or lets go of it as it closes. */
@@ -898,34 +943,20 @@ export function createTripMap(options: TripMapOptions): TripMap {
     }
   }
 
-  /**
-   * Closes a trip's sidebar, letting go of its route; `restoreView` puts the map back
-   * where it was before the sidebar flew it to the route, unless moved by hand since.
-   */
-  function closeTripDetails({ restoreView }: { restoreView: boolean }) {
+  /** Closes a trip's sidebar, letting go of its route. */
+  function closeTripDetails() {
     if (!tripDetails?.isOpen) {
       return
     }
 
     tripDetails.close()
     pickRoute(undefined)
-
-    if (restoreView && map && mapLoaded && viewBeforeList) {
-      framedOnAll = viewBeforeList.framedOnAll
-
-      if (framedOnAll) {
-        fitAll()
-      } else {
-        map.easeTo({ ...viewBeforeList.camera, duration: getAnimationDuration() })
-      }
-    }
-
-    viewBeforeList = undefined
   }
 
   /**
    * Goes to a selection's address: in place of the one open, or after the map or the
-   * trip list, which stays behind what it opened for going back to.
+   * trip list, which stays behind what it opened for going back to, keeping where the
+   * map was then.
    */
   function setSelectionUrl(url: string) {
     // One trip's sidebar opened from another's replaces it, as a place does a place.
@@ -933,7 +964,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
       !isTripListUrl() &&
       Boolean(getUrlPlaceId() ?? getUrlPickedTripId() ?? getUrlTripId()) &&
       !(getUrlPickedTripId() && urls.getTripId(new URL(url, window.location.href).pathname))
-    const currentState = getHistoryState()
+    const { [VIEW_STATE_KEY]: _view, ...currentState } = getHistoryState()
     const nextState = {
       ...currentState,
       [HISTORY_STATE_KEY]: replace ? currentState[HISTORY_STATE_KEY] === true : true,
@@ -942,6 +973,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
     if (replace) {
       history.replaceState(nextState, '', url)
     } else {
+      history.replaceState({ ...currentState, [VIEW_STATE_KEY]: getView() }, '')
       history.pushState(nextState, '', url)
     }
   }
@@ -973,6 +1005,9 @@ export function createTripMap(options: TripMapOptions): TripMap {
     if (isSamePeriod(next, markers.period)) {
       return
     }
+
+    // Picked from every place, the view to go back to as it's cleared again.
+    const viewBefore = markers.period ? undefined : getView()
 
     markers.setPeriod(next)
     // A route the period hides lets go of it, which isn't a click off the routes.
@@ -1025,10 +1060,17 @@ export function createTripMap(options: TripMapOptions): TripMap {
     syncDocumentTitle()
     options.onPeriodChange?.(next)
 
-    // A place open stays the one in view; otherwise the period's places are framed.
+    // A place open stays the one in view; otherwise the period's places are framed, or
+    // cleared, the map is put back where it was before, unless moved by hand since.
     if (mapLoaded && !tripPlayer.activeId && !drawer.activeId) {
-      fitAll()
+      if (!next && isViewCurrent(viewBeforePeriod)) {
+        restoreView(viewBeforePeriod)
+      } else {
+        fitAll()
+      }
     }
+
+    viewBeforePeriod = next ? (viewBeforePeriod ?? viewBefore) : undefined
   }
 
   /** The period an address narrows the map to, if the map has places in its year. */
@@ -1341,8 +1383,17 @@ export function createTripMap(options: TripMapOptions): TripMap {
   window.addEventListener(
     'popstate',
     () => {
-      syncSelection()
+      // Back to an address the map was moved from, and not moved by hand since: the map
+      // goes back to where it was there, rather than framing what's open anew.
+      const view = getHistoryState()[VIEW_STATE_KEY]
+      const restore = isViewCurrent(view) && mapLoaded
+
+      syncSelection({ moveMap: !restore })
       syncPeriodUrl()
+
+      if (restore) {
+        restoreView(view)
+      }
     },
     { signal },
   )
@@ -1531,10 +1582,12 @@ export function createTripMap(options: TripMapOptions): TripMap {
           input instanceof KeyboardEvent ||
           (typeof TouchEvent !== 'undefined' && input instanceof TouchEvent)
         ) {
-          framedOnAll = false
-          viewBeforeList = undefined
+          moveByHand()
         }
       })
+      // A scroll's zoom may carry no event at all, as one notch of a mouse's wheel the map
+      // can't tell from a trackpad's at once does: the wheel itself tells it.
+      map.on('wheel', moveByHand)
       // The viewer's own zooming leans the map as its framing does, the closer the further,
       // once each zoom has landed: leaning it midway would stop a scroll's own easing.
       map.on('pitchstart', (event) => {
@@ -1661,6 +1714,19 @@ export function createTripMap(options: TripMapOptions): TripMap {
     page,
   }
 }
+
+/** Where the map was, kept in the history for going back to. */
+type SavedView = {
+  camera: mapboxgl.CameraOptions
+  framedOnAll: boolean
+  /** This page's own, not one kept before a reload. */
+  key: string
+  /** `handMoves` then. */
+  moves: number
+  pitchedByHand: boolean
+}
+
+const VIEW_STATE_KEY = 'tripMapView'
 
 type SetStyleOptions = NonNullable<Parameters<mapboxgl.Map['setStyle']>[1]>
 
