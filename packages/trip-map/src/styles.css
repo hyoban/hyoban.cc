@@ -974,9 +974,56 @@
   display: none;
 }
 
+/* A trip moves the map itself. */
+.trip-map-page[data-trip-map-active] :is([data-trip-map-reset-view], [data-trip-map-locate]) {
+  display: none;
+}
+
+/* The locate button's crosshair breathes while the browser looks for the viewer. */
+[data-trip-map-locate][aria-busy='true'] > * {
+  animation: trip-map-locating 1s ease-in-out infinite alternate;
+}
+
+@keyframes trip-map-locating {
+  to {
+    opacity: 0.3;
+  }
+}
+
+/* Where the viewer is: a blue dot with a ring pulsing out of it. */
+.trip-map-user-location {
+  width: 1rem;
+  height: 1rem;
+  background: #2f80ed;
+  border: 2px solid #fff;
+  border-radius: 9999px;
+  box-shadow: 0 0.125rem 0.5rem rgb(0 0 0 / 0.3);
+
+  &::after {
+    position: absolute;
+    inset: -2px;
+    content: '';
+    border-radius: inherit;
+    background: rgb(47 128 237 / 0.4);
+    animation: trip-map-user-pulse 2s ease-out infinite;
+  }
+}
+
+@keyframes trip-map-user-pulse {
+  to {
+    opacity: 0;
+    transform: scale(3);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .trip-map-toolbar {
     transition: none;
+  }
+
+  [data-trip-map-locate][aria-busy='true'] > *,
+  .trip-map-user-location::after {
+    animation: none;
   }
 }
 

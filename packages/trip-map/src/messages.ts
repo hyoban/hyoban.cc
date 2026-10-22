@@ -15,6 +15,7 @@ export const zhCN = {
   drawerFailed: '没能加载这个地点的记录。',
   drawerLoading: '加载中…',
   fogLit: '点亮 {cities} 座城市 · {provinces} 个省份',
+  locateFailed: '没能获取你的位置',
   mapInitFailed: '浏览器无法初始化地图。',
   mapLoadFailed: '地图资源加载失败。',
   mapLoadTimeout: '地图加载超时。',
@@ -35,6 +36,7 @@ export const zhCN = {
   statTrips: '{count} 段旅程',
   tapAgainToPlay: '再点一次回放',
   tripDetailsFailed: '没能加载这段旅程的记录。',
+  userLocation: '你的位置',
   yearItem: '{year} 年',
   yearSeparator: '、',
 

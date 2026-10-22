@@ -93,7 +93,7 @@ export function readMapSettingsForm(form: HTMLFormElement, current: MapSettings)
 /** Shows `settings` in `form`, the settings only Standard has unavailable in another look. */
 export function writeMapSettingsForm(form: HTMLFormElement, settings: MapSettings) {
   for (const element of form.elements) {
-    if (!(element instanceof HTMLInputElement)) {
+    if (!(element instanceof HTMLInputElement) || !isSettingField(element)) {
       continue
     }
 
@@ -109,6 +109,11 @@ export function writeMapSettingsForm(form: HTMLFormElement, settings: MapSetting
   for (const group of form.querySelectorAll<HTMLFieldSetElement>('[data-trip-map-standard]')) {
     group.disabled = settings.style === 'classic'
   }
+}
+
+/** Whether `input` is one of the settings, rather than another control beside them. */
+function isSettingField(input: HTMLInputElement) {
+  return input.name in DEFAULT_MAP_SETTINGS
 }
 
 /**
@@ -162,7 +167,12 @@ export function createMapSettings({
 
   form.addEventListener(
     'change',
-    () => {
+    (event) => {
+      // Another control in the form, as the fog's toggle, is its own.
+      if (!(event.target instanceof HTMLInputElement) || !isSettingField(event.target)) {
+        return
+      }
+
       const settings = readMapSettingsForm(form, getSettings())
 
       writeMapSettingsForm(form, settings)

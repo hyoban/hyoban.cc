@@ -184,15 +184,14 @@ const description = pageTrip
         )
       }
       <div class="trip-map-toolbar__actions">
-        <!-- Pressed, a light fog over the map, thinner over a city the more Moments it holds. -->
-        <button class="trip-map-tool trip-map-fog" type="button" data-trip-map-fog aria-pressed="false" aria-label="迷雾地图" title="迷雾地图">
-          <span class="i-lucide-cloud-fog" aria-hidden="true" />
+        <button class="trip-map-tool" type="button" data-trip-map-reset-view aria-label="回到初始视图" title="回到初始视图" disabled>
+          <span class="i-lucide-house" aria-hidden="true" />
+        </button>
+        <button class="trip-map-tool trip-map-locate" type="button" data-trip-map-locate aria-label="定位到我的位置" title="定位到我的位置" disabled>
+          <span class="i-lucide-locate-fixed" aria-hidden="true" />
         </button>
         <button class="trip-map-tool" type="button" data-trip-map-settings-open aria-haspopup="dialog" aria-label="地图设置" title="地图设置">
           <span class="i-lucide-layers" aria-hidden="true" />
-        </button>
-        <button class="trip-map-tool trip-map-screenshot" type="button" data-trip-map-screenshot aria-label="保存地图截图" title="保存地图截图" disabled>
-          <span class="i-lucide-camera" aria-hidden="true" />
         </button>
         <CalendarModeSwitch mode="map" calendarHref={getCalendarHref(period)} />
       </div>
@@ -329,7 +328,25 @@ const description = pageTrip
             ))}
           </div>
         </fieldset>
-        <button class="trip-map-settings__reset" type="button" data-trip-map-settings-reset>恢复默认</button>
+        <fieldset>
+          <legend>迷雾</legend>
+          <!-- On, a light fog over the map, thinner over a city the more Moments it holds. -->
+          <label class="trip-map-settings__switch">
+            <span>
+              迷雾地图
+              <small>去过的城市拨开迷雾，记录越多越清晰</small>
+            </span>
+            <!-- Not restored by the browser on a reload: the fog says whether it's on. -->
+            <input type="checkbox" role="switch" data-trip-map-fog autocomplete="off" />
+          </label>
+        </fieldset>
+        <div class="trip-map-settings__actions">
+          <button class="trip-map-settings__reset" type="button" data-trip-map-settings-reset>恢复默认</button>
+          <button class="trip-map-settings__reset trip-map-screenshot" type="button" data-trip-map-screenshot disabled>
+            <span class="i-lucide-camera" aria-hidden="true" />
+            保存截图
+          </button>
+        </div>
       </form>
     </dialog>
 
@@ -1269,8 +1286,16 @@ const description = pageTrip
     }
   }
 
+  .trip-map-settings__actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
   .trip-map-settings__reset {
-    justify-self: start;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
     padding: 0.375rem 0.75rem;
     border-radius: 9999px;
     color: var(--color-tx-2);
@@ -1278,10 +1303,16 @@ const description = pageTrip
     cursor: pointer;
 
     @media (hover: hover) {
-      &:hover {
+      &:hover:not(:disabled) {
         background: var(--color-inline);
         color: var(--color-tx);
       }
+    }
+
+    /* The screenshot, until the map has loaded. */
+    &:disabled {
+      cursor: default;
+      opacity: 0.4;
     }
   }
 

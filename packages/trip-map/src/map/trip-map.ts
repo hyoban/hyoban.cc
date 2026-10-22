@@ -29,6 +29,7 @@ import { CLUSTER_MAX_ZOOM, createPlaceMarkers, getAllPlacesView } from './place-
 import { captureMap, savePicture } from './screenshot.ts'
 import { createTripDetails } from './trip-details.ts'
 import { createTripList } from './trip-list.ts'
+import { createUserDot, getUserPosition } from './user-location.ts'
 import {
   defaultUrls,
   getHistoryState,
@@ -140,7 +141,18 @@ export function createTripMap(options: TripMapOptions): TripMap {
   const messages = resolveMessages(options.messages)
   const urls: Urls = { ...defaultUrls, ...options.urls }
   const elements = collectMapElements(page)
-  const { canvas, fallback, fallbackMessage, fallbackRetry, loading, screenshotButton } = elements
+  const {
+    canvas,
+    fallback,
+    fallbackMessage,
+    fallbackRetry,
+    loading,
+    locateButton,
+    resetViewButton,
+    screenshotButton,
+  } = elements
+  const locateLabel = locateButton?.title ?? ''
+  let userDot: ReturnType<typeof createUserDot> | undefined
   const controller = new AbortController()
   const { signal } = controller
   const reducedMotion = getReducedMotionQuery()
@@ -1190,7 +1202,8 @@ export function createTripMap(options: TripMapOptions): TripMap {
     return shown.length > 0 ? shown : places
   }
 
-  function fitAll() {
+  /** Frames every place shown; `upright` also turns the map back to north. */
+  function fitAll({ upright = false } = {}) {
     if (!map || places.length === 0) {
       return
     }
@@ -1199,6 +1212,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
 
     map.fitBounds(view.bounds, {
       ...view.fitBoundsOptions,
+      ...(upright && { bearing: 0 }),
       duration: getAnimationDuration(),
       pitch: getFramingPitch(map, view.bounds, view.fitBoundsOptions),
     })
@@ -1228,6 +1242,8 @@ export function createTripMap(options: TripMapOptions): TripMap {
     const number = (value: number) => value.toLocaleString(messages.locale)
 
     screenshotButton.ariaBusy = 'true'
+    // Pressed in the settings, say: out of the way of the map it saves.
+    screenshotButton.closest('dialog')?.close()
     // The map is framed on every place for the picture, then put back; this covers it.
     loading.textContent = messages.screenshotRendering
     loading.hidden = false
@@ -1289,6 +1305,60 @@ export function createTripMap(options: TripMapOptions): TripMap {
   elements.drawerClose.addEventListener('click', requestSelectionClose, { signal })
   fallbackRetry.addEventListener('click', () => window.location.reload(), { signal })
   screenshotButton?.addEventListener('click', () => void takeScreenshot(), { signal })
+
+  // Back to the view the map opened on: every place shown framed, facing north.
+  resetViewButton?.addEventListener(
+    'click',
+    () => {
+      if (map && mapLoaded && !tripPlayer.activeId) {
+        fitAll({ upright: true })
+      }
+    },
+    { signal },
+  )
+
+  if (locateButton && !('geolocation' in navigator)) {
+    locateButton.hidden = true
+  }
+
+  locateButton?.addEventListener('click', () => void locateUser(), { signal })
+
+  /** Flies the map to where the viewer is, asking the browser, and marks it with a dot. */
+  async function locateUser() {
+    if (!map || !mapLoaded || !locateButton || locateButton.ariaBusy === 'true') {
+      return
+    }
+
+    locateButton.ariaBusy = 'true'
+
+    try {
+      const { coords } = await getUserPosition()
+
+      if (signal.aborted || !map || tripPlayer.activeId) {
+        return
+      }
+
+      const center: [number, number] = [coords.longitude, coords.latitude]
+      const zoom = Math.max(map.getZoom(), 12)
+
+      userDot ??= createUserDot(map, messages.userLocation)
+      userDot.set(center)
+      locateButton.title = locateLabel
+      moveByHand()
+      map.easeTo({
+        center,
+        duration: getAnimationDuration(),
+        pitch: pitchedByHand ? map.getPitch() : getMapPitch(map, zoom),
+        zoom,
+      })
+    } catch (cause) {
+      // Refused, or not found: the button says so until it's pressed again.
+      locateButton.title = messages.locateFailed
+      report({ cause, kind: 'map', message: "The viewer's position couldn't be found." })
+    } finally {
+      locateButton.ariaBusy = null
+    }
+  }
 
   // The Moments the drawer and the lists fetch link their trips, opening their sidebars,
   // and a trip's sidebar plays it, from its start or a stop's card; the drawer's link
@@ -1626,8 +1696,10 @@ export function createTripMap(options: TripMapOptions): TripMap {
       map.on('load', () => {
         mapLoaded = true
 
-        if (screenshotButton) {
-          screenshotButton.disabled = false
+        for (const button of [screenshotButton, resetViewButton, locateButton]) {
+          if (button) {
+            button.disabled = false
+          }
         }
 
         if (loadTimeout) {
