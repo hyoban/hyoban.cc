@@ -1,9 +1,22 @@
 ---
 import CalendarMap from '@/components/CalendarMap.astro'
-import { getNestedTripPaths } from '@/moments'
+import { getMapMonthKeys, getMoments, getNestedTripPaths } from '@/moments'
 
 // /trip/<id>/ by its year and the rest of its id: /trip/2026/yunnan/ is /trip/2026-yunnan/.
-export const getStaticPaths = getNestedTripPaths
+// The same path shape, /trip/<year>/<month>/, is the trip list narrowed to a month.
+export async function getStaticPaths() {
+  const monthKeys = getMapMonthKeys(await getMoments())
+
+  return [
+    ...(await getNestedTripPaths()).map(({ params, props }) => ({ params, props: { trip: props.trip } })),
+    ...monthKeys.map(key => ({
+      params: { slug: key.slice(5, 7), year: key.slice(0, 4) },
+      props: { month: Number.parseInt(key.slice(5, 7), 10), year: Number.parseInt(key.slice(0, 4), 10) },
+    })),
+  ]
+}
+
+const { month, trip, year } = Astro.props as { month?: number, trip?: { id: string }, year?: number }
 ---
 
-<CalendarMap pickedTripId={Astro.props.trip.id} />
+{trip ? <CalendarMap pickedTripId={trip.id} /> : <CalendarMap tripList period={{ month, year: year! }} />}

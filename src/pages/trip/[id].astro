@@ -1,9 +1,19 @@
 ---
 import CalendarMap from '@/components/CalendarMap.astro'
-import { getTripPaths } from '@/moments'
+import { getMapYears, getMoments, getTripPaths } from '@/moments'
 
-// A trip picked in the list beside the map: its route lifted, to look at before playing.
-export const getStaticPaths = getTripPaths
+// A trip's sidebar beside the map, /trip/<id>/; and the same path shape, /trip/<year>/, is
+// the trip list narrowed to a year.
+export async function getStaticPaths() {
+  const years = getMapYears(await getMoments())
+
+  return [
+    ...(await getTripPaths()).map(({ params, props }) => ({ params, props: { trip: props.trip } })),
+    ...years.map(year => ({ params: { id: String(year) }, props: { year } })),
+  ]
+}
+
+const { trip, year } = Astro.props as { trip?: { id: string }, year?: number }
 ---
 
-<CalendarMap pickedTripId={Astro.params.id} />
+{trip ? <CalendarMap pickedTripId={trip.id} /> : <CalendarMap tripList period={{ year: year! }} />}
