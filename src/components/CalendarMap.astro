@@ -9,7 +9,7 @@ import TripDetails from '@/components/TripDetails.astro'
 import MomentLightboxMedia from '@/components/MomentLightboxMedia.astro'
 import Layout from '@/layouts/Layout.astro'
 import { getActiveDateKeys, getMapYears, getMappedLocationGroups, getMoments, getMonthPath, getTrips } from '@/moments'
-import { getTripData, getTripSummary } from '@/moments/trip-data'
+import { getTripData, getTripSummaries } from '@/moments/trip-data'
 import { getTripCollage } from '@/moments/trip-images'
 import {
   createYearPalette,
@@ -84,9 +84,10 @@ const pageTrip = activeTrip ?? pickedTrip
 const canonicalPath = pageTrip && `/trip/${pageTrip.id}/${activeTrip ? 'play/' : ''}`
 // The totals a screenshot of the map puts in its header.
 const statsJson = toScriptJson(getMapStats(locationGroups, trips))
-// Every trip's route and title for the overview; only the opening trip's playback data
-// is inlined, and the player fetches the rest from /trip/<id>/data.json when needed.
-const tripsJson = toScriptJson(trips.map(getTripSummary))
+// Every trip's route and title for the overview, in a file every map and trip page shares;
+// only the opening trip's playback data is inlined, and the player fetches the rest from
+// /trip/<id>/data.json when needed.
+const tripSummariesPath = (await getTripSummaries()).path
 const activeTripData = activeTrip ? getTripData(activeTrip) : undefined
 const activeTripJson = activeTripData ? toScriptJson(activeTripData) : undefined
 // The trip list's line of totals, like the trips page's.
@@ -119,7 +120,7 @@ const description = pageTrip
     <!-- The map script is large; open the connection for the style and tiles while it loads. -->
     <link rel="preconnect" href="https://api.mapbox.com" crossorigin />
   </Fragment>
-  <main class="trip-map-page" data-trip-map data-trip-map-token={mapboxToken} data-calendar-latest-months={JSON.stringify(latestMonths)} data-trip-map-active={activeTrip ? '' : undefined} transition:persist="trip-map">
+  <main class="trip-map-page" data-trip-map data-trip-map-token={mapboxToken} data-calendar-latest-months={JSON.stringify(latestMonths)} data-trip-map-active={activeTrip ? '' : undefined} data-trip-map-trips-url={tripSummariesPath} transition:persist="trip-map">
     <div class="trip-map-canvas" data-trip-map-canvas role="region" aria-label="Calendar 地点地图" />
 
     <header class="trip-map-toolbar" data-trip-map-toolbar>
@@ -313,7 +314,6 @@ const description = pageTrip
     </dialog>
 
     <script is:inline type="application/json" data-trip-map-places set:html={placesJson} />
-    <script is:inline type="application/json" data-trip-map-trips set:html={tripsJson} />
     <script is:inline type="application/json" data-trip-map-stats set:html={statsJson} />
     {activeTripJson && <script is:inline type="application/json" data-trip-map-trip set:html={activeTripJson} />}
   </main>
@@ -329,9 +329,36 @@ const description = pageTrip
 
   type MapClient = typeof import('@hyoban/trip-map/client')
   type TripMap = ReturnType<MapClient['createTripMap']>
+  type TripSummary = import('@hyoban/trip-map/client').TripSummary
 
   let mapClient: Promise<MapClient> | undefined
   let map: TripMap | undefined
+  // The trips' routes by their file's address, which names its content: fetched once.
+  const tripSummaries = new Map<string, Promise<TripSummary[]>>()
+
+  function getTripSummaries(url: string) {
+    let request = tripSummaries.get(url)
+
+    if (!request) {
+      request = fetch(url)
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`${response.status} ${response.statusText}`)
+          }
+
+          return response.json() as Promise<TripSummary[]>
+        })
+        .catch((error: unknown) => {
+          // The map goes on without its routes, and the next page tries again.
+          tripSummaries.delete(url)
+          console.warn('[trip-map] trips', error)
+          return []
+        })
+      tripSummaries.set(url, request)
+    }
+
+    return request
+  }
 
   document.addEventListener('astro:page-load', () => {
     const page = document.querySelector<HTMLElement>('[data-trip-map]')
@@ -349,12 +376,15 @@ const description = pageTrip
       return
     }
 
+    // The routes come while the map script does.
+    const trips = getTripSummaries(page.dataset.tripMapTripsUrl ?? '')
+
     // The map script is large and runs long: let the page paint first, so its
     // toolbar and a trip's intro card show while the map loads.
     requestAnimationFrame(() => {
       setTimeout(() => {
         mapClient ??= import('@hyoban/trip-map/client')
-        void mapClient.then((client) => {
+        void Promise.all([mapClient, trips]).then(([client, trips]) => {
           if (!page.isConnected || map?.page === page) {
             return
           }
@@ -384,6 +414,7 @@ const description = pageTrip
             screenshotTitle: `${SITE_TITLE} 的足迹`,
             siteLine: tripMapSiteLine,
             tripListTitle: `旅程 | ${SITE_TITLE}`,
+            trips,
           })
         })
       })

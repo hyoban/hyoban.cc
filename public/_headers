@@ -1,3 +1,7 @@
 # Vite content-hashes everything under /_astro, so a file there never changes.
 /_astro/*
   Cache-Control: public, max-age=31536000, immutable
+
+# The trips' routes for the map, named by their content (see src/moments/trip-data.ts).
+/trip/summaries/*
+  Cache-Control: public, max-age=31536000, immutable
