@@ -62,6 +62,8 @@ const CLUSTER_OPEN_PADDING = 80
 // Framing every place, or a year's, the map comes as close as their spread allows, but
 // no closer than one city's places standing apart, out of their clusters.
 const ALL_PLACES_MAX_ZOOM = CLUSTER_MAX_ZOOM + 1
+// Between the legend and the lowest place framed: a cluster's radius and some.
+const LEGEND_GAP = 28
 // The markers are set in reading order for the keyboard, in rows this tall.
 const MARKER_ROW_HEIGHT = 48
 
@@ -741,12 +743,13 @@ export function createPlaceMarkers({
 
 /**
  * The view framing every place, as close as their spread allows, leaving room for the
- * toolbar and the legend, and `inset` besides (a panel over the map).
+ * toolbar and the legend, and `inset` besides (a panel over the map). `inset.legend` is
+ * how far up from the map's foot the legend reaches, when it's over the map.
  */
 export function getAllPlacesView(
   places: readonly PlaceMarker[],
   narrow: boolean,
-  inset: { bottom?: number; right?: number } = {},
+  inset: { bottom?: number; legend?: number; right?: number } = {},
 ) {
   if (places.length === 1) {
     const place = places[0]!
@@ -770,7 +773,12 @@ export function getAllPlacesView(
     fitBoundsOptions: {
       maxZoom: ALL_PLACES_MAX_ZOOM,
       padding: {
-        bottom: 80 + (inset.bottom ?? 0),
+        // A panel along the foot is clear of the legend; otherwise a dot keeps a little
+        // way above it.
+        bottom:
+          inset.bottom === undefined
+            ? Math.max(80, (inset.legend ?? 0) + LEGEND_GAP)
+            : 80 + inset.bottom,
         left: side,
         right: side + (inset.right ?? 0),
         top: 88,
