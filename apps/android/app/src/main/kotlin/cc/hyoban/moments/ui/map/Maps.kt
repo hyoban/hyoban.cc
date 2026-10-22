@@ -183,7 +183,7 @@ private fun glowRing(index: Int) = "fog-glow-$index"
 
 /** How long the fog's sweep takes, closing in and clearing, in milliseconds, as the site's. */
 private const val FOG_SWEEP_IN = 1400L
-private const val FOG_SWEEP_OUT = 1000L
+private const val FOG_SWEEP_OUT = 900L
 
 /**
  * How wide the sweep's soft edge is, as a share of the way across what's in sight: wide, so
@@ -373,8 +373,10 @@ private suspend fun MapLibreMap.sweepFog(
         while (true) {
             val now = withFrameNanos { it }
             val progress = ((now - started) / 1_000_000.0 / duration).coerceIn(0.0, 1.0)
-            // Moving from the first frame, and slowing as it lands.
-            val reach = end * sin(progress * PI / 2)
+            // Closing in, moving from the first frame and slowing as it lands, the edges it starts at
+            // being thin; clearing, from the screen's broad middle, at an even pace, which clears the
+            // screen at about the rate the fog closes in, where easing out burst it open.
+            val reach = end * if (entering) sin(progress * PI / 2) else progress
             for (index in 0 until FOG_RINGS) {
                 val ringDistance = near + (index + 0.5) * width
                 // How far past the ring the sweep is, in edges: 0 as it arrives, 1 once it's through.

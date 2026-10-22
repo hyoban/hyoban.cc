@@ -26,7 +26,7 @@ const WATER = 'trip-map-fog-water'
 // would lighten, black, so the cities been to are the ones that stand out.
 const VEIL = { dark: { color: '#000', opacity: 0.62 }, light: { opacity: 0.5 } }
 // How long the sweep takes, closing in and clearing.
-const SWEEP = { in: 1400, out: 1000 }
+const SWEEP = { in: 1400, out: 900 }
 // How wide the sweep's soft edge is, as a share of the way across what's in sight: wide,
 // so neighbouring regions are only a little apart and the edge reads as a gradient
 // rather than steps.
@@ -252,8 +252,10 @@ export function createFogLayer({
 
     const frame = (now: number) => {
       const progress = Math.min(1, (now - started) / duration)
-      // Moving from the first frame, and slowing as it lands.
-      const reach = end * easeOutSine(progress)
+      // Closing in, moving from the first frame and slowing as it lands, the edges it starts
+      // at being thin; clearing, from the screen's broad middle, at an even pace, which clears
+      // the screen at about the rate the fog closes in, where easing out burst it open.
+      const reach = end * (entering ? easeOutSine(progress) : progress)
       // How far past each region the sweep is, in edges: 0 as it arrives, 1 once it's through.
       const past: ExpressionSpecification = entering
         ? ['/', ['-', reach, ['-', far, distance]], edge]
