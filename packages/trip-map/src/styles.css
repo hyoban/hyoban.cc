@@ -482,6 +482,9 @@
   scale: 0 1;
 }
 
+/* The cards over the map go without a blur behind them: the map under them changes every
+   frame it moves, and blurring it again each time costs the GPU more than the cards do. */
+
 /* Names the slide a progress segment jumps to, under the hovered or focused segment. */
 .trip-map-tip {
   position: absolute;
@@ -492,11 +495,10 @@
   color: var(--color-tx);
   white-space: nowrap;
   pointer-events: none;
-  background: color-mix(in srgb, var(--color-bg) 88%, transparent);
+  background: color-mix(in srgb, var(--color-bg) 94%, transparent);
   border: 1px solid color-mix(in srgb, var(--color-border) 82%, transparent);
   border-radius: 0.625rem;
   box-shadow: 0 0.25rem 1.25rem rgb(0 0 0 / 0.12);
-  backdrop-filter: blur(1rem);
 }
 
 .trip-map-tip[hidden] {
@@ -628,11 +630,10 @@
   padding: 0.4375rem 0.75rem 0.5rem;
   line-height: 1.35;
   white-space: nowrap;
-  background: color-mix(in srgb, var(--color-bg) 88%, transparent);
+  background: color-mix(in srgb, var(--color-bg) 94%, transparent);
   border-color: color-mix(in srgb, var(--color-border) 82%, transparent);
   border-radius: 0.625rem;
   box-shadow: 0 0.25rem 1.25rem rgb(0 0 0 / 0.12);
-  backdrop-filter: blur(1rem);
 }
 
 .trip-map-page .trip-map-popup .mapboxgl-popup-tip {
@@ -862,11 +863,10 @@
   line-height: 1.35;
   color: var(--color-tx);
   white-space: nowrap;
-  background: color-mix(in srgb, var(--color-bg) 88%, transparent);
+  background: color-mix(in srgb, var(--color-bg) 94%, transparent);
   border: 1px solid color-mix(in srgb, var(--color-border) 82%, transparent);
   border-radius: 0.625rem;
   box-shadow: 0 0.25rem 1.25rem rgb(0 0 0 / 0.12);
-  backdrop-filter: blur(1rem);
   translate: 0 -50%;
 }
 
@@ -903,11 +903,10 @@
   line-height: 1.35;
   color: var(--color-tx);
   white-space: nowrap;
-  background: color-mix(in srgb, var(--color-bg) 88%, transparent);
+  background: color-mix(in srgb, var(--color-bg) 94%, transparent);
   border: 1px solid color-mix(in srgb, var(--color-border) 82%, transparent);
   border-radius: 0.625rem;
   box-shadow: 0 0.25rem 1.25rem rgb(0 0 0 / 0.12);
-  backdrop-filter: blur(1rem);
   transition: opacity 200ms;
   will-change: transform;
 }
@@ -1338,7 +1337,7 @@ html:has(.trip-map-page[data-trip-map-ratio]) body {
   width: min(100%, calc(var(--u) * 80));
   padding: calc(var(--u) * 6);
   text-align: center;
-  background: color-mix(in srgb, var(--color-bg) 94%, transparent);
+  background: color-mix(in srgb, var(--color-bg) 88%, transparent);
   border: 1px solid var(--color-border);
   border-radius: calc(var(--u) * 3);
   box-shadow: 0 calc(var(--u) * 2) calc(var(--u) * 8) rgb(0 0 0 / 0.16);
