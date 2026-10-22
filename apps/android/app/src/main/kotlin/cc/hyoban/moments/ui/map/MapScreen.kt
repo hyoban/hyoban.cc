@@ -127,14 +127,12 @@ import cc.hyoban.moments.ui.format.formatTime
 import cc.hyoban.moments.ui.rememberShowMessage
 import cc.hyoban.moments.ui.theme.Corners
 import cc.hyoban.moments.ui.theme.Elevation
-import cc.hyoban.moments.ui.theme.LocalDarkTheme
 import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.SurfaceLevel
 import cc.hyoban.moments.ui.theme.dividerColor
 import cc.hyoban.moments.ui.theme.fill
 import cc.hyoban.moments.ui.trips.tripSummary
-import com.materialkolor.ktx.harmonizeWithPrimary
 import kotlinx.coroutines.flow.drop
 
 /** What another page shows on the map tab: a place, with its panel up, or a trip's route, lifted with its card. */
@@ -170,13 +168,10 @@ fun MapScreen(
     val mapPlaces = remember(byPlace, places) {
         byPlace.mapNotNull { (id, here) -> places[id]?.let { MapPlace(id, it, here.size, here.minOf { moment -> yearOf(moment.occurredAt) }) } }
     }
-    // The site's year colours, each turned a little towards the scheme's primary so they sit with it,
-    // at Material's tones for a custom colour, so the number on a dot reads in either mode.
-    val scheme = MaterialTheme.colorScheme
-    val dark = LocalDarkTheme.current
-    val colors = remember(mapPlaces, scheme, dark) {
-        yearColors(mapPlaces.map { it.firstYear }).mapValues { (_, color) -> scheme.harmonizeWithPrimary(color).atTone(if (dark) 80.0 else 40.0) }
-    }
+    // The site's year colours as they are, in either mode, so a place is the same colour on the
+    // phone as on the site's map: an exception to Material 3, which would turn them towards the
+    // scheme's primary and set them at a custom colour's tones.
+    val colors = remember(mapPlaces) { yearColors(mapPlaces.map { it.firstYear }) }
     val mapRoutes = remember(trips, routes) {
         trips.sortedByDescending { it.start }.mapNotNull { trip -> routes[trip.id]?.let { MapRoute(trip.id, it) } }
     }

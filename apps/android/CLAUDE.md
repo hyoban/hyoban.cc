@@ -51,6 +51,10 @@ say stay out.
 - Follow what the app should be rather than the web version, except where it is asked
   to match: the map's features and the trip playback follow the site's player in
   `packages/trip-map/src/player`, with the route always moving while it plays.
+- An exception to M3, asked for: the map's year colours are the site's palette as it is
+  (`ui/map/Years.kt`, from `packages/trip-map/src/theme.ts`), in both modes and with white
+  numbers on the dots, not harmonized with the primary or set at custom-colour tones.
+  Change them on both sides together.
 
 ## Motion and navigation
 
