@@ -94,6 +94,8 @@ export type TripMapOptions = {
   messages?: Partial<Messages> | undefined
   /** The tracks a video may be set to. */
   music?: readonly MusicTrack[] | undefined
+  /** The map was narrowed to a period, or to none; also as it opens on one. */
+  onPeriodChange?: ((period: Period | undefined) => void) | undefined
   /** Something couldn't be fetched or shown; the map carries on without it. */
   onError?: ((error: TripMapError) => void) | undefined
   /** The element holding the map's markup. */
@@ -732,6 +734,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
     syncPeriodUrl()
     syncMomentList()
     syncDocumentTitle()
+    options.onPeriodChange?.(next)
 
     if (mapLoaded && !tripPlayer.activeId) {
       fitAll()

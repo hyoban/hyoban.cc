@@ -6,7 +6,7 @@ import CalendarModeSwitch from '@/components/CalendarModeSwitch.astro'
 import MapMoments from '@/components/MapMoments.astro'
 import MomentLightboxMedia from '@/components/MomentLightboxMedia.astro'
 import Layout from '@/layouts/Layout.astro'
-import { getMapYears, getMappedLocationGroups, getMoments, getTrips } from '@/moments'
+import { getActiveDateKeys, getMapYears, getMappedLocationGroups, getMoments, getMonthPath, getTrips } from '@/moments'
 import { getTripData, getTripSummary } from '@/moments/trip-data'
 import {
   createYearPalette,
@@ -43,6 +43,15 @@ const yearColor = createYearPalette(years)
 const periodMoments = period
   ? moments.filter(moment => moment.dateKey.startsWith(`${period.year}-`))
   : []
+// Each year's latest month with Moments: where the calendar link goes for a whole year.
+const latestMonths = Object.fromEntries(getActiveDateKeys(moments).map(dateKey => [dateKey.slice(0, 4), dateKey.slice(0, 7)]))
+const getCalendarHref = (picked: typeof period) => {
+  const monthKey = picked?.month === undefined
+    ? picked && latestMonths[picked.year]
+    : `${picked.year}-${String(picked.month).padStart(2, '0')}`
+
+  return monthKey ? getMonthPath(monthKey) : '/calendar/'
+}
 const periodLabel = period
   ? period.month === undefined ? `${period.year} 年` : `${period.year} 年 ${period.month} 月`
   : undefined
@@ -102,7 +111,7 @@ const description = activeTrip
     <!-- The map script is large; open the connection for the style and tiles while it loads. -->
     <link rel="preconnect" href="https://api.mapbox.com" crossorigin />
   </Fragment>
-  <main class="trip-map-page @container relative isolate h-dvh w-full overflow-hidden bg-bg" data-trip-map data-trip-map-token={mapboxToken} data-trip-map-active={activeTrip ? '' : undefined} transition:persist="trip-map">
+  <main class="trip-map-page @container relative isolate h-dvh w-full overflow-hidden bg-bg" data-trip-map data-trip-map-token={mapboxToken} data-calendar-latest-months={JSON.stringify(latestMonths)} data-trip-map-active={activeTrip ? '' : undefined} transition:persist="trip-map">
     <div class="trip-map-canvas absolute inset-0" data-trip-map-canvas role="region" aria-label="Calendar 地点地图" />
 
     <header class="trip-map-toolbar pointer-events-none absolute inset-x-4 top-4 z-[5] grid grid-cols-[1fr_auto_1fr] items-center gap-4 max-[48rem]:grid-cols-[auto_minmax(0,1fr)_auto] max-[48rem]:gap-2 [&>*]:pointer-events-auto max-[48rem]:[&_.calendar-back-link]:pr-1.5 max-[48rem]:[&_.calendar-back-link>span]:sr-only min-[48.0625rem]:max-[56rem]:[.trip-map-page:has(:is(.trip-map-drawer,.trip-map-trip-list,.trip-map-moments):not([hidden]))_&_.calendar-back-link>span]:sr-only" data-trip-map-toolbar>
@@ -130,7 +139,7 @@ const description = activeTrip
         <button class="trip-map-screenshot flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--color-border)_82%,transparent)] bg-[color-mix(in_srgb,var(--color-bg)_82%,transparent)] text-tx-2 backdrop-blur-[1rem] hover:text-tx disabled:cursor-default disabled:opacity-40 aria-busy:cursor-progress" type="button" data-trip-map-screenshot aria-label="保存地图截图" title="保存地图截图" disabled>
           <span class="i-lucide-camera text-[0.9375rem]" aria-hidden="true" />
         </button>
-        <CalendarModeSwitch mode="map" />
+        <CalendarModeSwitch mode="map" calendarHref={getCalendarHref(period)} />
       </div>
     </header>
 
@@ -344,6 +353,16 @@ const description = activeTrip
             messages: tripMapMessages,
             music: tripMapMusic,
             onError: (error) => console.warn('[trip-map]', error.message, error.cause ?? ''),
+            // The calendar link goes to the month the map is narrowed to, or the year's latest.
+            onPeriodChange: (period) => {
+              const link = page.querySelector<HTMLAnchorElement>('[data-calendar-mode-switch] a[data-mode="calendar"]')
+              const months = JSON.parse(page.dataset.calendarLatestMonths ?? '{}') as Record<string, string>
+              const monthKey = period?.month === undefined
+                ? period && months[period.year]
+                : `${period.year}-${String(period.month).padStart(2, '0')}`
+
+              link?.setAttribute('href', monthKey ? `/calendar/${monthKey.replace('-', '/')}/` : '/calendar/')
+            },
             page,
             screenshotTitle: `${SITE_TITLE} 的足迹`,
             siteLine: tripMapSiteLine,
