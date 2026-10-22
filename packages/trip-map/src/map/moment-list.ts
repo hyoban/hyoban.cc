@@ -8,7 +8,8 @@ import type { Period } from './period.ts'
 // the whole year again; its places (`[data-trip-map-place-link]`) fly the map to them.
 //
 // The fragment holds a `[data-trip-map-moments-month="<month>"]` per month, with the
-// number of its Moments in `data-trip-map-count`.
+// number of its Moments in `data-trip-map-count`, and its heading, hidden while the
+// month is picked, in `[data-trip-map-moments-heading]`.
 
 // The list sliding away as it closes, like the drawer (see styles.css).
 const EXIT = { duration: 200, easing: 'cubic-bezier(0.4, 0, 1, 1)' }
@@ -134,6 +135,10 @@ export function createMomentList({
         period.month === undefined || Number(section.dataset.tripMapMomentsMonth) === period.month
 
       section.hidden = !shown
+      // A month on its own is the list's title already.
+      section
+        .querySelector<HTMLElement>('[data-trip-map-moments-heading]')
+        ?.toggleAttribute('hidden', period.month !== undefined)
 
       if (shown) {
         count += Number(section.dataset.tripMapCount) || 0

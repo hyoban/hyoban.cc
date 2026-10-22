@@ -38,7 +38,8 @@ const chipClass = 'flex h-8 min-w-0 cursor-pointer items-center justify-center r
 {
   months.map(({ month, moments: monthMoments }) => (
     <section data-trip-map-moments-month={month} data-trip-map-count={monthMoments.length} hidden={pickedMonth !== undefined && month !== pickedMonth} aria-labelledby={`trip-map-moments-${year}-${month}`}>
-      <h2 class="sticky top-[3.0625rem] z-[1] -mx-5 border-b border-border bg-bg px-5 py-2 text-sm font-medium" id={`trip-map-moments-${year}-${month}`}>
+      {/* Only for the whole year: a month picked is the list's own title. */}
+      <h2 class="sticky top-[3.0625rem] z-[1] -mx-5 border-b border-border bg-bg px-5 py-2 text-sm font-medium [&[hidden]]:hidden" id={`trip-map-moments-${year}-${month}`} data-trip-map-moments-heading hidden={pickedMonth !== undefined}>
         {month} 月<span class="ml-2 text-xs font-normal text-tx-3 tabular-nums">{monthMoments.length} 条记录</span>
       </h2>
       {monthMoments.map(moment => <MomentEntry date="day" moment={moment} />)}
