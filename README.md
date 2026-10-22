@@ -51,12 +51,13 @@ vp run build        # the static site into dist/
 
 `.env` (see `.env.example`) may hold:
 
-| Variable            | Used for                                                           |
-| ------------------- | ------------------------------------------------------------------ |
-| `VITE_MAPBOX_TOKEN` | the map page's Mapbox tiles                                        |
-| `MOMENTS_API_TOKEN` | building from the API, `data:export` and `data:push`               |
-| `MOMENTS_API_URL`   | another API than `https://hyoban-cc-api.hyoban.workers.dev`        |
-| `CI`                | set, the build draws every Moment's share card (slow; off locally) |
+| Variable              | Used for                                                              |
+| --------------------- | --------------------------------------------------------------------- |
+| `VITE_MAPBOX_TOKEN`   | the map page's Mapbox tiles                                           |
+| `MAPBOX_STATIC_TOKEN` | the map pages' placeholders, if `VITE_MAPBOX_TOKEN` is URL-restricted |
+| `MOMENTS_API_TOKEN`   | building from the API, `data:export` and `data:push`                  |
+| `MOMENTS_API_URL`     | another API than `https://hyoban-cc-api.hyoban.workers.dev`           |
+| `CI`                  | set, the build draws every Moment's share card (slow; off locally)    |
 
 The scripts that upload to R2 use Wrangler's login, or `CLOUDFLARE_API_TOKEN`;
 `media:generate` needs `TMDB_API_TOKEN` or `TMDB_API_KEY`.
@@ -75,8 +76,9 @@ deployed by **Workers Builds** from the repository root:
 
 - build command `pnpm build`, deploy command `npx wrangler deploy`;
 - build variables: `MOMENTS_API_TOKEN`, so the build reads the API rather than
-  `data/`, and `VITE_MAPBOX_TOKEN`; Workers Builds sets `CI`, which turns on the
-  Moments' share cards;
+  `data/`, `VITE_MAPBOX_TOKEN`, and `MAPBOX_STATIC_TOKEN`, a token without URL
+  restrictions that draws the map pages' placeholders (without it they're left out);
+  Workers Builds sets `CI`, which turns on the Moments' share cards;
 - share cards are cached between builds under `node_modules/.astro/share-cards`, which
   Cloudflare's build cache keeps, and redrawn only when what they show or
   `src/og-image.ts` changes.
