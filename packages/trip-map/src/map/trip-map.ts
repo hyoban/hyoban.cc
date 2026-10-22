@@ -21,6 +21,7 @@ import {
   setMapPitch,
   STANDARD_STYLE,
 } from './basemap.ts'
+import { isSlowDevice } from './device.ts'
 import { createFogLayer } from './fog-layer.ts'
 import { createMapSettings, DEFAULT_MAP_SETTINGS, type MapSettings } from './map-settings.ts'
 import { createPlaceDrawer, type LightboxMedia } from './place-drawer.ts'
@@ -175,6 +176,9 @@ export function createTripMap(options: TripMapOptions): TripMap {
   // The map's settings, from the page's sidebar and remembered; never set there, the style
   // given if there is one.
   let settings = elements.settings ? readMapSettingsPreference() : undefined
+  // What the map starts with until the viewer sets it: the flat classic map on a device
+  // too slow for Standard. Judged the first time it's asked for.
+  let defaultSettings: MapSettings | undefined
   // The style the map was last given, to catch a theme change made while it loaded.
   let mapStyle = getMapStyleKey()
   // Names in the language, for a style other than Standard, which has them itself.
@@ -408,8 +412,14 @@ export function createTripMap(options: TripMapOptions): TripMap {
   // A cluster opened is the viewer's own browsing, as a drag is.
   markers.onOpenCluster = moveByHand
 
+  function getDefaultSettings() {
+    return (defaultSettings ??= isSlowDevice()
+      ? { ...DEFAULT_MAP_SETTINGS, style: 'classic' }
+      : DEFAULT_MAP_SETTINGS)
+  }
+
   function getSettings() {
-    return settings ?? DEFAULT_MAP_SETTINGS
+    return settings ?? getDefaultSettings()
   }
 
   /** The style for the settings and the colour scheme, Standard's own, and how far it leans. */
@@ -1559,6 +1569,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
   )
   createMapSettings({
     dialog: elements.settings,
+    getDefaults: getDefaultSettings,
     getSettings,
     onChange: applySettings,
     openers: elements.settingsOpeners,
