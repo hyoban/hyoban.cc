@@ -7,9 +7,20 @@ import { parseJson } from '../player/dom.ts'
 import { getReducedMotionQuery } from '../player/motion.ts'
 import { createTripOverview } from '../player/overview.ts'
 import { createTripPlayer } from '../player/player.ts'
+import { readMapSettingsPreference, writeMapSettingsPreference } from '../player/preferences.ts'
 import type { MapStats, PlaceMarker, TripData, TripSummary } from '../player/types.ts'
 import { readTheme } from '../dom-theme.ts'
+import {
+  getBasemapStyle,
+  isBasemapDark,
+  getFramingPitch,
+  getMapPitch,
+  setBasemapConfig,
+  setMapPitch,
+  STANDARD_STYLE,
+} from './basemap.ts'
 import { createFogLayer } from './fog-layer.ts'
+import { createMapSettings, DEFAULT_MAP_SETTINGS, type MapSettings } from './map-settings.ts'
 import { createPlaceDrawer, type LightboxMedia } from './place-drawer.ts'
 import { createMomentList } from './moment-list.ts'
 import { isSamePeriod, overlapsPeriod, type Period } from './period.ts'
@@ -65,9 +76,9 @@ export type TripMapOptions = {
   /** The document title while a trip plays; without it the title is left alone. */
   getDocumentTitle?: ((trip: { id: string; title: string }) => string) | undefined
   /**
-   * The language the basemap's names are shown in, as @mapbox/mapbox-gl-language takes
-   * it (`en`, `ja`, `zh-Hans`…); `false` leaves the basemap as it is. Default: from
-   * the messages' locale.
+   * The language the basemap's names are shown in (`en`, `ja`, `zh-Hans`…), by Mapbox
+   * Standard itself or by @mapbox/mapbox-gl-language in another style; `false` leaves the
+   * basemap as it is. Default: from the messages' locale.
    */
   mapLanguage?: string | false | undefined
   /**
@@ -78,7 +89,10 @@ export type TripMapOptions = {
   urls?: Partial<Urls> | undefined
   /** The document title while the trip list is open; without it the title is left alone. */
   tripListTitle?: string | undefined
-  /** A Mapbox style URL, or one for each colour scheme. Default: Mapbox's light and dark. */
+  /**
+   * A Mapbox style URL, or one for each colour scheme. Default: Mapbox Standard, in 3D,
+   * by day or by night with the colour scheme.
+   */
   mapStyle?: string | Readonly<{ dark: string; light: string }> | undefined
   /** Otherwise read from the page's `data-trip-map-token`. */
   mapboxToken?: string | undefined
@@ -144,8 +158,13 @@ export function createTripMap(options: TripMapOptions): TripMap {
   let mapLoaded = false
   let markerTimer: ReturnType<typeof setTimeout> | undefined
   let loadTimeout: ReturnType<typeof setTimeout> | undefined
+  // The map's settings, from the page's sidebar and remembered; never set there, the style
+  // given if there is one.
+  let settings = elements.settings ? readMapSettingsPreference() : undefined
   // The style the map was last given, to catch a theme change made while it loaded.
-  let mapStyle = getMapStyle()
+  let mapStyle = getMapStyleKey()
+  // Names in the language, for a style other than Standard, which has them itself.
+  let languageControl: mapboxgl.IControl | undefined
   // Whether the view is still the one framing every place, untouched since: only then
   // does a change of width frame them again.
   let framedOnAll = true
@@ -177,6 +196,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
           return undefined
         }),
     getMap: () => (mapLoaded ? map : undefined),
+    getMapTheme,
     // The card playing is in the path, `/trip/<id>/play/<stop>/`.
     getStop: () => urls.getTripStop(window.location.pathname),
     inlineTrip,
@@ -199,7 +219,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
     trips,
   })
   const tripOverview = createTripOverview({
-    getInk: () => readTheme(page).ink,
+    getInk: () => getMapTheme().ink,
     getMap: () => map,
     messages,
     // Pointing at a route, or focusing its link, starts loading that trip.
@@ -362,7 +382,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
     areaElement: elements.fogArea,
     button: elements.fogButton,
     getMap: () => (mapLoaded ? map : undefined),
-    getTheme: () => readTheme(page),
+    getTheme: getMapTheme,
     messages,
     onError: (cause) =>
       report({ cause, kind: 'map', message: "The fog of war couldn't be fetched." }),
@@ -376,13 +396,116 @@ export function createTripMap(options: TripMapOptions): TripMap {
     framedOnAll = false
   }
 
+  function getSettings() {
+    return settings ?? DEFAULT_MAP_SETTINGS
+  }
+
+  /** The style for the settings and the colour scheme, Standard's own, and how far it leans. */
   function getMapStyle() {
-    const style = options.mapStyle ?? {
-      dark: 'mapbox://styles/mapbox/dark-v11',
-      light: 'mapbox://styles/mapbox/light-v11',
+    const dark = darkMode.matches
+
+    if (settings || !options.mapStyle) {
+      return getBasemapStyle(getSettings(), dark)
     }
 
-    return typeof style === 'string' ? style : darkMode.matches ? style.dark : style.light
+    const style = options.mapStyle
+    const url = typeof style === 'string' ? style : dark ? style.dark : style.light
+
+    return url === STANDARD_STYLE
+      ? getBasemapStyle(DEFAULT_MAP_SETTINGS, dark)
+      : { config: undefined, pitch: 0, url }
+  }
+
+  /** Whether the map is lit dark, which its own layers' colours go by. */
+  function isMapDark() {
+    return settings || !options.mapStyle
+      ? isBasemapDark(getSettings(), darkMode.matches)
+      : darkMode.matches
+  }
+
+  /**
+   * The page's colours for the package's layers on the map, ink and paper the other way
+   * round on a map lit dark under a light page, or lit by day under a dark one.
+   */
+  function getMapTheme() {
+    const theme = readTheme(page)
+
+    return isMapDark() === darkMode.matches
+      ? theme
+      : { ...theme, ink: theme.paper, paper: theme.ink }
+  }
+
+  /** The style with its settings: Standard is one style by day and by night. */
+  function getMapStyleKey() {
+    const { config, url } = getMapStyle()
+    return `${url} ${JSON.stringify(config ?? {})}`
+  }
+
+  /** Gives the map the style for the look and colour scheme, its layers and the package's again. */
+  function setMapStyle(current: mapboxgl.Map) {
+    const { config, pitch, url } = getMapStyle()
+
+    mapStyle = getMapStyleKey()
+    setMapPitch(current, pitch)
+    syncLanguage(current, !config)
+    // Built again from scratch: Standard and another style have too little in common to
+    // be changed from one to the other.
+    current.setStyle(url, {
+      diff: false,
+      ...(config && { config }),
+    } as Partial<SetStyleOptions> as SetStyleOptions)
+  }
+
+  /** The plugin puts the names in the language, in a style that doesn't do it itself. */
+  function syncLanguage(current: mapboxgl.Map, needed: boolean) {
+    if (mapLanguage && needed && !languageControl) {
+      languageControl = new MapboxLanguage({
+        defaultLanguage: mapLanguage,
+      }) as unknown as mapboxgl.IControl
+      current.addControl(languageControl)
+    } else if (!needed && languageControl) {
+      current.removeControl(languageControl)
+      languageControl = undefined
+    }
+  }
+
+  /**
+   * Shows the map as `next` has it, and remembers it: another style built again, Standard's
+   * own settings changed in place, and the map leaning and projected anew.
+   */
+  function applySettings(next: MapSettings) {
+    const before = getMapStyle()
+    const wasDark = isMapDark()
+
+    settings = next
+    writeMapSettingsPreference(next)
+
+    if (!map || !mapLoaded) {
+      return
+    }
+
+    const after = getMapStyle()
+
+    // The package's layers take their colours as they're added: lit the other way, they're
+    // added again with the style.
+    if (after.url !== before.url || isMapDark() !== wasDark) {
+      setMapStyle(map)
+    } else if (after.config) {
+      setBasemapConfig(map, after.config)
+      setMapPitch(map, after.pitch)
+      mapStyle = getMapStyleKey()
+    }
+
+    if (map.getProjection().name !== next.projection) {
+      map.setProjection(next.projection)
+    }
+
+    const pitch = getMapPitch(map, map.getZoom())
+
+    // A trip's camera leans with the map itself.
+    if (!tripPlayer.activeId && Math.abs(map.getPitch() - pitch) > 0.5) {
+      map.easeTo({ duration: getAnimationDuration(), pitch })
+    }
   }
 
   function isNarrow() {
@@ -1012,7 +1135,11 @@ export function createTripMap(options: TripMapOptions): TripMap {
 
     const view = getAllPlacesView(getFramedPlaces(), isNarrow(), getFramingInset())
 
-    map.fitBounds(view.bounds, { ...view.fitBoundsOptions, duration: getAnimationDuration() })
+    map.fitBounds(view.bounds, {
+      ...view.fitBoundsOptions,
+      duration: getAnimationDuration(),
+      pitch: getFramingPitch(map, view.bounds, view.fitBoundsOptions),
+    })
     framedOnAll = true
   }
 
@@ -1255,12 +1382,19 @@ export function createTripMap(options: TripMapOptions): TripMap {
     },
     { signal },
   )
+  createMapSettings({
+    dialog: elements.settings,
+    getSettings,
+    onChange: applySettings,
+    openers: elements.settingsOpeners,
+    signal,
+  })
+
   darkMode.addEventListener(
     'change',
     () => {
       if (map && mapLoaded) {
-        mapStyle = getMapStyle()
-        map.setStyle(mapStyle)
+        setMapStyle(map)
       }
     },
     { signal },
@@ -1317,29 +1451,34 @@ export function createTripMap(options: TripMapOptions): TripMap {
   } else {
     try {
       mapboxgl.accessToken = token
+      const view = getAllPlacesView(getFramedPlaces(), isNarrow(), getFramingInset())
+      const style = getMapStyle()
+
       // Opens already framed on the places, rather than on the globe and then flying in.
+      // It opens flat, as the picture standing in for it is, and leans back once loaded.
       map = new mapboxgl.Map({
         // Beside the trip list, on its page.
-        ...getAllPlacesView(getFramedPlaces(), isNarrow(), getFramingInset()),
+        bounds: view.bounds,
+        fitBoundsOptions: { ...view.fitBoundsOptions, pitch: 0 },
         attributionControl: false,
         container: canvas,
         dragRotate: true,
-        projection: 'globe',
-        style: mapStyle,
+        projection: getSettings().projection,
+        style: style.url,
+        ...(style.config && { config: style.config }),
+        // Standard puts its names in the language itself; another style has the plugin.
+        ...(mapLanguage && { language: mapLanguage }),
         // Chinese, Japanese and Korean names in the style's own glyphs, fetched: drawn here
         // instead, each new one costs the main thread a frame as the names come into view.
         localIdeographFontFamily: false as unknown as string,
         touchPitch: true,
       })
+      setMapPitch(map, style.pitch)
 
       // The attribution stays folded into its ⓘ button at every width, opening on a click.
       map.addControl(new mapboxgl.AttributionControl({ compact: true }))
 
-      if (mapLanguage) {
-        map.addControl(
-          new MapboxLanguage({ defaultLanguage: mapLanguage }) as unknown as mapboxgl.IControl,
-        )
-      }
+      syncLanguage(map, !style.config)
 
       map.on('style.load', () => {
         applyFog()
@@ -1411,9 +1550,8 @@ export function createTripMap(options: TripMapOptions): TripMap {
         hideFallback()
 
         // The theme changed while the map loaded.
-        if (getMapStyle() !== mapStyle) {
-          mapStyle = getMapStyle()
-          map!.setStyle(mapStyle)
+        if (getMapStyleKey() !== mapStyle) {
+          setMapStyle(map!)
         }
 
         applyFog()
@@ -1431,6 +1569,8 @@ export function createTripMap(options: TripMapOptions): TripMap {
           frameTripBeside(elements.tripDetails!, pickedTripId)
         } else if (urlPlaceId && urlPlace) {
           drawer.open(urlPlace, { focus: false, trigger: markers.getButton(urlPlaceId) })
+        } else {
+          fitAll()
         }
       })
       map.on('error', () => {
@@ -1489,6 +1629,8 @@ export function createTripMap(options: TripMapOptions): TripMap {
     page,
   }
 }
+
+type SetStyleOptions = NonNullable<Parameters<mapboxgl.Map['setStyle']>[1]>
 
 /** The basemap language for a locale: Chinese by script, anything else by its language. */
 function getMapLanguage(locale: string) {

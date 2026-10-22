@@ -1,5 +1,7 @@
 // Per-viewer playback choices, remembered in this browser when storage allows.
 
+import { parseMapSettings, type MapSettings } from '../map/map-settings.ts'
+
 const MUSIC_PREFERENCE_KEY = 'trip-map-music'
 const SPEED_PREFERENCE_KEY = 'trip-map-speed'
 const SAFE_AREA_PREFERENCE_KEY = 'trip-map-safe-area'
@@ -94,6 +96,26 @@ export function readFogPreference() {
 export function writeFogPreference(on: boolean) {
   try {
     localStorage.setItem(FOG_PREFERENCE_KEY, on ? 'on' : 'off')
+  } catch {
+    // The choice just won't be remembered.
+  }
+}
+
+const MAP_SETTINGS_PREFERENCE_KEY = 'trip-map-settings'
+
+/** The map's settings as last set, if they ever were. */
+export function readMapSettingsPreference(): MapSettings | undefined {
+  try {
+    const value = localStorage.getItem(MAP_SETTINGS_PREFERENCE_KEY)
+    return value ? parseMapSettings(JSON.parse(value)) : undefined
+  } catch {
+    return undefined
+  }
+}
+
+export function writeMapSettingsPreference(settings: MapSettings) {
+  try {
+    localStorage.setItem(MAP_SETTINGS_PREFERENCE_KEY, JSON.stringify(settings))
   } catch {
     // The choice just won't be remembered.
   }

@@ -80,6 +80,8 @@ export function collectMapElements(page: HTMLElement) {
     page,
     placeholder: page.querySelector<HTMLElement>('[data-trip-map-placeholder]'),
     screenshotButton: page.querySelector<HTMLButtonElement>('[data-trip-map-screenshot]'),
+    settings: page.querySelector<HTMLDialogElement>('dialog[data-trip-map-settings]'),
+    settingsOpeners: [...page.querySelectorAll<HTMLElement>('[data-trip-map-settings-open]')],
     tripLinks: [...page.querySelectorAll<HTMLAnchorElement>('[data-trip-map-trip-link]')],
     tripDetails: page.querySelector<HTMLElement>('[data-trip-map-trip-details]'),
     tripDetailsClose: page.querySelector<HTMLButtonElement>('[data-trip-map-trip-details-close]'),

@@ -84,7 +84,8 @@ export function createRouteLayers(
     const emptyCollection = { features: [], type: 'FeatureCollection' as const }
     const solidLine = {
       layout: { 'line-cap': 'round', 'line-join': 'round' },
-      paint: { 'line-color': ink, 'line-width': 3 },
+      // Unlit, the same colour by day and by night.
+      paint: { 'line-color': ink, 'line-emissive-strength': 1, 'line-width': 3 },
       type: 'line',
     } as const
 
@@ -96,7 +97,13 @@ export function createRouteLayers(
     map.addLayer({
       id: PLANNED_ID,
       layout: { 'line-cap': 'round', 'line-join': 'round' },
-      paint: { 'line-color': ink, 'line-dasharray': [1, 2], 'line-opacity': 0.3, 'line-width': 2 },
+      paint: {
+        'line-color': ink,
+        'line-dasharray': [1, 2],
+        'line-emissive-strength': 1,
+        'line-opacity': 0.3,
+        'line-width': 2,
+      },
       source: PLANNED_ID,
       type: 'line',
     })
@@ -111,6 +118,7 @@ export function createRouteLayers(
       id: STOPS_ID,
       paint: {
         'circle-color': ['match', ['get', 'state'], 'upcoming', paper, ink],
+        'circle-emissive-strength': 1,
         'circle-radius': [
           'match',
           ['get', 'state'],

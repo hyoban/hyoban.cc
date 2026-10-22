@@ -3,6 +3,7 @@ import type { FogOfWar } from '../fog-of-war.ts'
 import { t, type Messages } from '../messages.ts'
 import { readFogPreference, writeFogPreference } from '../player/preferences.ts'
 import type { Theme } from '../theme.ts'
+import { getBasemapWater, getUnderLabels } from './basemap.ts'
 
 // The fog of war over the map, behind a toggle: a light fog over everywhere not been to,
 // thinning over the cities been to the more Moments each holds, as they grow familiar,
@@ -124,12 +125,19 @@ export function createFogLayer({
     return loading
   }
 
-  /** The first of the package's own layers, which the fog goes under. */
-  function getBeforeId(map: MapboxMap) {
+  /**
+   * The first of the package's own layers, which the fog goes under, in the slot the fog
+   * goes in if the style has them.
+   */
+  function getBeforeId(map: MapboxMap, slot: string | undefined) {
     return map
       .getStyle()
-      ?.layers?.find((layer) => layer.id.startsWith('trip-map-') && !layer.id.startsWith(SOURCE))
-      ?.id
+      ?.layers?.find(
+        (layer) =>
+          layer.id.startsWith('trip-map-') &&
+          !layer.id.startsWith(SOURCE) &&
+          (!slot || ('slot' in layer && layer.slot === slot)),
+      )?.id
   }
 
   /** The fog's colour: the page's ink, as thick over each region as it is unfamiliar. */
@@ -166,7 +174,9 @@ export function createFogLayer({
       return
     }
 
-    const beforeId = getBeforeId(map)
+    // In Standard, over the roads and under the names, as the package's routes are.
+    const { slot } = getUnderLabels(map)
+    const beforeId = getBeforeId(map, slot)
     const none: FilterSpecification = ['literal', false]
 
     // Cut into tiles no closer than a city's streets: the boundaries are simplified past
@@ -193,23 +203,28 @@ export function createFogLayer({
           layout: { visibility },
           paint: {
             'fill-antialias': false,
+            // Unlit, the page's ink by day and by night.
+            'fill-emissive-strength': 1,
             'fill-opacity': 0,
             'fill-opacity-transition': { duration: 0 },
           },
           source,
           type: 'fill',
+          ...(slot && { slot }),
         },
         beforeId,
       )
     }
 
     // Drawn just as the basemap's, so left on the map whether the fog shows or not.
-    const water = map
-      .getStyle()
-      ?.layers?.find((layer) => layer.type === 'fill' && layer['source-layer'] === 'water')
+    const water = getBasemapWater(map, WATER)
 
     if (water) {
-      map.addLayer({ ...water, id: WATER }, beforeId)
+      if (water.source && !map.getSource(WATER)) {
+        map.addSource(WATER, water.source)
+      }
+
+      map.addLayer({ ...water.layer, id: WATER }, beforeId)
     }
 
     if (watched !== map) {

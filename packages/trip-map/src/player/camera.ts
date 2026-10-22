@@ -1,5 +1,6 @@
 import mapboxgl, { type Map as MapboxMap, type PaddingOptions } from 'mapbox-gl'
 import type { Coordinates } from '../geo.ts'
+import { getFramingPitch, getMapPitch } from '../map/basemap.ts'
 
 // One calm camera for the whole playback. While the route is drawn, the camera keeps
 // the line's moving tip in the middle, so it glides along with it: the tip eases in
@@ -7,7 +8,10 @@ import type { Coordinates } from '../geo.ts'
 // cards. The zoom is set by the stretch being driven, so a long drive is seen from
 // far enough out that the map never races past, and it changes slowly.
 //
-// Both run on critically damped springs: motion starts from rest, never overshoots,
+// The camera leans back as far as the map does at the zoom it's headed for, at the
+// zoom's pace: the closer, the further.
+//
+// All run on critically damped springs: motion starts from rest, never overshoots,
 // and a new target mid-move bends the motion instead of jolting it.
 
 type Mercator = { x: number; y: number }
@@ -42,6 +46,8 @@ export function createCamera({
   let centerVelocity: Mercator = { x: 0, y: 0 }
   let zoom: number | undefined
   let zoomVelocity = 0
+  let pitch: number | undefined
+  let pitchVelocity = 0
   let focusVelocity: Mercator = { x: 0, y: 0 }
   let lastFocus: Mercator | undefined
   let snap = false
@@ -125,30 +131,38 @@ export function createCamera({
       return
     }
 
-    if (!center || zoom === undefined || snap) {
+    // Leaning as the map does at the zoom it's headed for.
+    const goalPitch = getMapPitch(map, goal.zoom)
+
+    if (!center || zoom === undefined || pitch === undefined || snap) {
       const current = snap ? goalCenter : toMercator(map.getCenter())
 
       center = { ...current }
       zoom = snap ? goal.zoom : map.getZoom()
+      pitch = snap ? goalPitch : map.getPitch()
       centerVelocity = { x: 0, y: 0 }
       zoomVelocity = 0
+      pitchVelocity = 0
     }
 
     if (snap) {
       snap = false
-      apply(map, center, zoom, padding)
+      apply(map, center, zoom, pitch, padding)
       return
     }
 
     const x = spring(center.x, centerVelocity.x, goalCenter.x, centerOmega, seconds)
     const y = spring(center.y, centerVelocity.y, goalCenter.y, centerOmega, seconds)
     const z = spring(zoom, zoomVelocity, goal.zoom, zoomOmega, seconds)
+    const p = spring(pitch, pitchVelocity, goalPitch, zoomOmega, seconds)
     const pixel = 0.25 / (512 * 2 ** z.value)
 
     center = { x: x.value, y: y.value }
     centerVelocity = { x: x.velocity, y: y.velocity }
     zoom = z.value
     zoomVelocity = z.velocity
+    pitch = p.value
+    pitchVelocity = p.velocity
 
     // Settled to within a fraction of a pixel: leave the map be so it can go idle.
     if (
@@ -156,17 +170,23 @@ export function createCamera({
       Math.abs(y.value - goalCenter.y) < pixel &&
       Math.abs(z.value - goal.zoom) < 0.002 &&
       Math.hypot(x.velocity, y.velocity) * seconds < pixel &&
-      Math.abs(z.velocity) * seconds < 0.002
+      Math.abs(z.velocity) * seconds < 0.002 &&
+      Math.abs(p.value - goalPitch) < 0.05 &&
+      Math.abs(p.velocity) * seconds < 0.05
     ) {
-      if (Math.abs(map.getZoom() - goal.zoom) < 0.002) {
+      if (
+        Math.abs(map.getZoom() - goal.zoom) < 0.002 &&
+        Math.abs(map.getPitch() - goalPitch) < 0.05
+      ) {
         return
       }
 
       center = { ...goalCenter }
       zoom = goal.zoom
+      pitch = goalPitch
     }
 
-    apply(map, center, zoom, padding)
+    apply(map, center, zoom, pitch, padding)
 
     /**
      * Aims ahead of the tip by the distance the spring would trail it at its current
@@ -237,7 +257,11 @@ export function createCamera({
       }
     }
 
-    const camera = map.cameraForBounds(bounds, { maxZoom, padding })
+    const camera = map.cameraForBounds(bounds, {
+      maxZoom,
+      padding,
+      pitch: getFramingPitch(map, bounds, { maxZoom, padding }),
+    })
     const zoom = camera?.zoom ?? maxZoom
 
     target = {
@@ -260,6 +284,7 @@ export function createCamera({
     target = undefined
     center = undefined
     zoom = undefined
+    pitch = undefined
     lastFocus = undefined
     lastTime = undefined
 
@@ -292,6 +317,12 @@ function toMercator(lngLat: mapboxgl.LngLat): Mercator {
   return { x, y }
 }
 
-function apply(map: MapboxMap, { x, y }: Mercator, zoom: number, padding: PaddingOptions) {
-  map.jumpTo({ center: new mapboxgl.MercatorCoordinate(x, y).toLngLat(), padding, zoom })
+function apply(
+  map: MapboxMap,
+  { x, y }: Mercator,
+  zoom: number,
+  pitch: number,
+  padding: PaddingOptions,
+) {
+  map.jumpTo({ center: new mapboxgl.MercatorCoordinate(x, y).toLngLat(), padding, pitch, zoom })
 }

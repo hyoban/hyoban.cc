@@ -1,6 +1,7 @@
 import mapboxgl, { type Map as MapboxMap } from 'mapbox-gl'
 import { formatDateRange } from '../format.ts'
 import { overlapsPeriod, type Period } from '../map/period.ts'
+import { getFramingPitch, getUnderLabels } from '../map/basemap.ts'
 import type { Messages } from '../messages.ts'
 import { createPopupContent, MAP_POPUP_CLASS } from './dom.ts'
 import type { TripSummary } from './types.ts'
@@ -162,7 +163,7 @@ export function createTripOverview({
     }
 
     // Under the map's own place names, so the routes don't strike through them.
-    const beforeId = map.getStyle()?.layers?.find((layer) => layer.type === 'symbol')?.id
+    const { beforeId, slot } = getUnderLabels(map)
 
     // Oldest first, so the latest trip's route is drawn on top where routes cross.
     for (const trip of trips.toReversed()) {
@@ -170,6 +171,8 @@ export function createTripOverview({
       const look = getLook(trip.id)
       const paint = {
         'line-color': getInk(),
+        // Unlit, the same colour by day and by night.
+        'line-emissive-strength': 1,
         'line-opacity': look.opacity,
         'line-width': look.width,
       }
@@ -196,6 +199,7 @@ export function createTripOverview({
           paint,
           source: id,
           type: 'line',
+          ...(slot && { slot }),
         },
         beforeId,
       )
@@ -206,6 +210,7 @@ export function createTripOverview({
           paint: { ...paint, 'line-dasharray': [2, 2] },
           source: id,
           type: 'line',
+          ...(slot && { slot }),
         },
         beforeId,
       )
@@ -392,6 +397,7 @@ export function createTripOverview({
       duration: reducedMotion.matches ? 0 : 500,
       maxZoom: map.getZoom(),
       padding,
+      pitch: map.getPitch(),
     })
   }
 
@@ -414,6 +420,7 @@ export function createTripOverview({
       duration: reducedMotion.matches ? 0 : FRAME_DURATION,
       maxZoom: FRAME_MAX_ZOOM,
       padding,
+      pitch: getFramingPitch(map, bounds, { maxZoom: FRAME_MAX_ZOOM, padding }),
     })
   }
 

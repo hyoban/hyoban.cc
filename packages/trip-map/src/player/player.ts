@@ -10,6 +10,7 @@ import {
 } from '../markup.ts'
 import { t, type Messages } from '../messages.ts'
 import { readTheme } from '../dom-theme.ts'
+import type { Theme } from '../theme.ts'
 import { createAmbientMusic } from './ambient-music.ts'
 import { createCamera } from './camera.ts'
 import { createDayHeading } from './day-heading.ts'
@@ -65,6 +66,8 @@ export type TripPlayerOptions = {
   /** Fetches a trip's `TripData`; undefined when it can't be had. */
   fetchTrip: (id: string) => Promise<TripData | undefined>
   getMap: () => MapboxMap | undefined
+  /** The colours the route is drawn in on the map; the page's by default. */
+  getMapTheme?: (() => Theme) | undefined
   /** The card the address names, a stop's anchor; without it, the address's hash. */
   getStop?: (() => string | undefined) | undefined
   /** The trip whose data the page already carries, to play without a fetch. */
@@ -276,7 +279,7 @@ export function createTripPlayer(options: TripPlayerOptions) {
       currentWaypointPoint,
       traveling,
     }),
-    getTheme: () => readTheme(page),
+    getTheme: options.getMapTheme ?? (() => readTheme(page)),
     headClock,
     onClock: (clock, clockOptions) =>
       (stage.isStageLayout() ? stage.heading : clockHeading).set(clock, clockOptions),
