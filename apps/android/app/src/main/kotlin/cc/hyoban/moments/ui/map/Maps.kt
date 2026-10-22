@@ -299,9 +299,12 @@ private fun MapLibreMap.prepareFogRings(style: Style, regions: List<FogRegion>) 
     // whose middles are on screen, as those whose middles are off it mostly are too.
     val bounds = projection.visibleRegion.latLngBounds
     val inSight = regions.filter { bounds.contains(LatLng(it.cy, it.cx)) }.map { distanceTo(it.cx, it.cy) }
-    val near = inSight.minOrNull() ?: return
-    val far = inSight.max()
-    if (far - near < 1e-6) return
+    // Zoomed in on a region or two whose middles are off screen, there's no way across to sweep:
+    // every region then goes in the first ring, and the fog comes and goes evenly over the whole
+    // screen, over the same time.
+    val even = inSight.size < 2 || inSight.max() - inSight.min() < 1e-6
+    val near = if (even) 0.0 else inSight.min()
+    val far = if (even) 0.0 else inSight.max()
     val width = (far - near) / FOG_RINGS
     // Held within what's in sight, so a region whose middle is off screen goes with the ring
     // farthest in sight rather than ahead of the sweep or after it.
@@ -312,7 +315,10 @@ private fun MapLibreMap.prepareFogRings(style: Style, regions: List<FogRegion>) 
     for (index in 0 until FOG_RINGS) {
         val from = if (index == 0) near - 1 else near + index * width
         val to = if (index == FOG_RINGS - 1) far + 1 else near + (index + 1) * width
-        val inRing = raw("[\"all\", [\">=\", $distance, $from], [\"<\", $distance, $to]]")
+        val inRing = when {
+            even -> Expression.literal(index == 0)
+            else -> raw("[\"all\", [\">=\", $distance, $from], [\"<\", $distance, $to]]")
+        }
         style.getLayerAs<FillLayer>(fogRing(index))?.apply {
             setFilter(Expression.all(notLit, inRing))
             setProperties(fillOpacity(0f), visibility(Property.VISIBLE))
@@ -355,7 +361,7 @@ private suspend fun MapLibreMap.sweepFog(
     FogRings.sweeping = true
     withTimeoutOrNull(FOG_RINGS_READY) { while (!FogRings.ready) withFrameNanos { } }
     val (near, far) = FogRings.near to FogRings.far
-    val edge = (far - near) * FOG_EDGE
+    val edge = if (far > near) (far - near) * FOG_EDGE else 1.0
     val width = (far - near) / FOG_RINGS
     val rings = List(FOG_RINGS) { style.getLayerAs<FillLayer>(fogRing(it)) }
     val glows = List(FOG_RINGS) { style.getLayerAs<FillLayer>(glowRing(it)) }

@@ -212,33 +212,32 @@ export function createFogLayer({
             cy >= bounds.getSouth()),
       )
       .map(({ cx, cy }) => Math.hypot((cx - center.lng) * squash, cy - center.lat))
-    const near = Math.min(...inSight)
-    const far = Math.max(...inSight)
-
-    if (!Number.isFinite(near) || far - near < 1e-6) {
-      settle(map)
-      return
-    }
-
-    const edge = (far - near) * EDGE
+    // Zoomed in on a region or two whose middles are off screen, there's no way across to
+    // sweep: the fog then comes and goes evenly over the whole screen, over the same time.
+    const even = inSight.length < 2 || Math.max(...inSight) - Math.min(...inSight) < 1e-6
+    const near = even ? 0 : Math.min(...inSight)
+    const far = even ? 0 : Math.max(...inSight)
+    const edge = even ? 1 : (far - near) * EDGE
     // Held within what's in sight, so a region whose middle is off screen goes with the
     // farthest in sight rather than ahead of the sweep or after it.
-    const distance: ExpressionSpecification = [
-      'max',
-      near,
-      [
-        'min',
-        far,
-        [
-          'sqrt',
+    const distance: ExpressionSpecification | number = even
+      ? 0
+      : [
+          'max',
+          near,
           [
-            '+',
-            ['^', ['*', ['-', ['coalesce', ['get', 'cx'], center.lng], center.lng], squash], 2],
-            ['^', ['-', ['coalesce', ['get', 'cy'], center.lat], center.lat], 2],
+            'min',
+            far,
+            [
+              'sqrt',
+              [
+                '+',
+                ['^', ['*', ['-', ['coalesce', ['get', 'cx'], center.lng], center.lng], squash], 2],
+                ['^', ['-', ['coalesce', ['get', 'cy'], center.lat], center.lat], 2],
+              ],
+            ],
           ],
-        ],
-      ],
-    ]
+        ]
     const veil = getVeil()
     const duration = entering ? SWEEP.in : SWEEP.out
     // Closing in, the farthest region in sight is reached at once and the nearest's glow
