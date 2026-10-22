@@ -3,10 +3,10 @@
   "accountId": "e68c7dce80df20ff5802b9ac36f1eab6",
   "bucket": "blog-images",
   "origin": "https://image.hyoban.cc",
-  "createdAt": "2026-10-21T15:19:31.673Z",
-  "inventorySha256": "c9a03f3e1fe82547498cb4f00188d3cff69c3cb6b78e2b599c035fbb7127f8c8",
-  "objectCount": 2731,
-  "totalBytes": 678306444,
+  "createdAt": "2026-10-22T02:40:26.375Z",
+  "inventorySha256": "2349625a0be88f4384e1e2a15047e846f0022cc7c1479e4311dd75a3920e13b1",
+  "objectCount": 2732,
+  "totalBytes": 678513290,
   "objects": [
     {
       "key": "moments/2023/04/15-01-preview-dialog-for-my-blog-post-with-intercepting-amp/preview-dialog-for-my-blog-post-with-intercepting-amp-video-poster.png",
@@ -21310,6 +21310,14 @@
       "contentType": "image/webp",
       "etag": "107acb051aeb831d077c99e3647c074a",
       "lastModified": "2026-10-08T00:04:37.086Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/2026/10/16-01-moment/moment.jpg",
+      "bytes": 206846,
+      "contentType": "image/jpeg",
+      "etag": "f7b3a11dd335f2ff2ec7955ba3b5ebe5",
+      "lastModified": "2026-10-21T17:22:27.593Z",
       "storageClass": "Standard"
     },
     {
