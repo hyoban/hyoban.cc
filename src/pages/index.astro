@@ -5,8 +5,6 @@ import Layout from '@/layouts/Layout.astro'
 import { formatPostListDate, formatPostYear, getSortedPosts } from '@/utils'
 
 const posts = await getSortedPosts()
-const introLinkClass = 'whitespace-nowrap'
-const introIconClass = 'mr-1 inline-block size-[0.85em] align-[-0.08em] text-current'
 type Post = (typeof posts)[number]
 const postsByYear: Array<{ year: string; posts: Post[] }> = []
 
@@ -20,31 +18,13 @@ for (const post of posts) {
     postsByYear.push({ year, posts: [post] })
   }
 }
-
-const external = { target: '_blank', rel: 'noopener noreferrer' }
 ---
 
 <Layout title={SITE_TITLE} description={SITE_DESCRIPTION}>
   <SitePage>
-    <section class="space-y-4">
-      <p>我会在这里写一些关于工作、代码和生活的记录。</p>
-      <p>
-        你也可以在{' '}
-        <a class={introLinkClass} href="https://x.com/hyoban_cc" {...external}><span class={`${introIconClass} i-simple-icons-x`} aria-hidden="true" />X</a>、
-        <a class={introLinkClass} href="https://bsky.app/profile/hyoban.cc" {...external}><span class={`${introIconClass} i-simple-icons-bluesky`} aria-hidden="true" />Bluesky</a>、
-        <a class={introLinkClass} href="https://www.threads.com/@hyoban.cc" {...external}><span class={`${introIconClass} i-simple-icons-threads`} aria-hidden="true" />Threads</a>、
-        <a class={introLinkClass} href="https://t.me/hyoban" {...external}><span class={`${introIconClass} i-simple-icons-telegram`} aria-hidden="true" />Telegram</a>、
-        <a class={introLinkClass} href="https://github.com/hyoban" {...external}><span class={`${introIconClass} i-simple-icons-github`} aria-hidden="true" />GitHub</a>、
-        <a class={introLinkClass} href="https://t.me/s/hyoban_travel" {...external}><span class={`${introIconClass} i-simple-icons-telegram`} aria-hidden="true" />Telegram 旅行频道</a>
-        {' '}和 <a class={introLinkClass} href="https://www.xiaohongshu.com/user/profile/64085a45000000000f01228d" {...external}><span class={`${introIconClass} i-simple-icons-xiaohongshu`} aria-hidden="true" />小红书</a> 找到我，或者发邮件到 <a class={introLinkClass} href="mailto:hi@hyoban.cc"><span class={`${introIconClass} i-lucide-mail`} aria-hidden="true" />hi@hyoban.cc</a>。
-      </p>
-      <p>
-        你也可以订阅{' '}
-        <a class={introLinkClass} href="/rss.xml"><span class={`${introIconClass} i-simple-icons-rss`} aria-hidden="true" />RSS</a>、查看我的 <a class={introLinkClass} href="/use/">Use</a>、<a class={introLinkClass} href="/calendar/"><span class={`${introIconClass} i-lucide-calendar-days`} aria-hidden="true" />日历</a>、<a class={introLinkClass} href="/trip/"><span class={`${introIconClass} i-lucide-route`} aria-hidden="true" />旅程</a>、<a class={introLinkClass} href="https://photos.hyoban.cc/" {...external}><span class={`${introIconClass} i-lucide-images`} aria-hidden="true" />Photos</a> 或 <a class={introLinkClass} href="/media/"><span class={`${introIconClass} i-lucide-clapperboard`} aria-hidden="true" />影视推荐</a> 页面。
-      </p>
-    </section>
+    <p>我会在这里写一些关于工作和生活的记录。</p>
 
-    <section class="mt-12 flex flex-col gap-6" aria-label="文章">
+    <section class="mt-16 flex flex-col gap-10" aria-label="文章">
       {
         postsByYear.map((group) => (
           <section class="grid gap-x-6 gap-y-1 sm:grid-cols-[3.5rem_minmax(0,1fr)]">

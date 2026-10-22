@@ -1,4 +1,5 @@
 ---
+import SiteFooter from '@/components/SiteFooter.astro'
 import SiteHeader from '@/components/SiteHeader.astro'
 
 interface Props {
@@ -9,15 +10,18 @@ interface Props {
 const { description, title } = Astro.props
 ---
 
-<SiteHeader />
-<main class="mx-auto mt-10 max-w-[40rem] leading-7">
-  {
-    title && (
-      <header class="mb-6">
-        <h1 class="font-medium">{title}</h1>
-        {description && <p class="text-tx-2">{description}</p>}
-      </header>
-    )
-  }
-  <slot />
-</main>
+<div class="sm:pt-16">
+  <SiteHeader />
+  <main class="mx-auto mt-14 max-w-[40rem] leading-7">
+    {
+      title && (
+        <header class="mb-8">
+          <h1 class="font-medium">{title}</h1>
+          {description && <p class="text-tx-2">{description}</p>}
+        </header>
+      )
+    }
+    <slot />
+  </main>
+  <SiteFooter />
+</div>
