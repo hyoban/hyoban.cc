@@ -3,6 +3,7 @@ const links = [
   { href: 'https://x.com/hyoban_cc', label: 'X', icon: 'i-simple-icons-x' },
   { href: 'https://bsky.app/profile/hyoban.cc', label: 'Bluesky', icon: 'i-simple-icons-bluesky' },
   { href: 'https://www.threads.com/@hyoban.cc', label: 'Threads', icon: 'i-simple-icons-threads' },
+  { href: 'https://www.instagram.com/hyoban.cc/', label: 'Instagram', icon: 'i-simple-icons-instagram' },
   { href: 'https://t.me/hyoban', label: 'Telegram', icon: 'i-simple-icons-telegram' },
   { href: 'https://t.me/s/hyoban_travel', label: 'Telegram 旅行频道', icon: 'i-lucide-plane' },
   { href: 'https://www.xiaohongshu.com/user/profile/64085a45000000000f01228d', label: '小红书', icon: 'i-simple-icons-xiaohongshu' },
@@ -16,7 +17,7 @@ const links = [
 ---
 
 <!-- On a phone the icons spread across the line instead of wrapping. -->
-<footer class="mx-auto mt-20 flex max-w-[40rem] items-center justify-between gap-2 pt-8 sm:justify-start sm:gap-5">
+<footer class="mx-auto mt-20 flex max-w-[40rem] items-center justify-between gap-1.5 pt-8 sm:justify-start sm:gap-5">
   {
     links.map(({ href, label, icon }) => (
       <a
