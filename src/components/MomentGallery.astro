@@ -29,7 +29,7 @@ const imageSizes = isSingle
           >
             <span class="sr-only">{`查看${item.type === 'live-photo' ? '实况照片' : '图片'} ${index + 1}`}</span>
             <picture>
-              {priorityMedia && <source media={`not all and ${priorityMedia}`} srcset={BLANK_IMAGE} />}
+              {priorityMedia && priorityMedia !== 'all' && <source media={`not all and ${priorityMedia}`} srcset={BLANK_IMAGE} />}
               <img
                 src={item.src.sources.find(source => source.width >= 960)?.src ?? item.src.sources.at(-1)?.src ?? item.src.src}
                 srcset={item.src.sources.map(source => `${source.src} ${source.width}w`).join(', ')}
@@ -53,7 +53,7 @@ const imageSizes = isSingle
           <div class="moment-gallery__item moment-gallery__video">
             <video
               controls
-              preload="metadata"
+              preload={item.poster ? 'none' : 'metadata'}
               poster={item.poster?.src}
               aria-label={item.alt || `视频 ${index + 1}`}
             >

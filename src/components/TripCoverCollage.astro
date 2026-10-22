@@ -7,19 +7,21 @@ import type { TripImage } from '@/moments/trip-images'
 
 interface Props {
   images: TripImage[]
+  /** Shown as the page opens: the photos load at once, the first ahead of the rest. */
+  priority?: boolean
   /** How wide the collage is shown, for the photos' srcset. */
   sizes: string
 }
 
-const { images, sizes } = Astro.props
+const { images, priority = false, sizes } = Astro.props
 const tiles = images.slice(0, 3)
 ---
 
 {
   tiles.length > 0 && (
     <div class:list={['trip-cover-collage', `trip-cover-collage--${tiles.length}`]} aria-hidden="true">
-      {tiles.map(image => (
-        <img src={image.src} srcset={image.srcset} sizes={sizes} width={image.width} height={image.height} alt="" loading="lazy" decoding="async" />
+      {tiles.map((image, index) => (
+        <img src={image.src} srcset={image.srcset} sizes={sizes} width={image.width} height={image.height} alt="" loading={priority ? 'eager' : 'lazy'} fetchpriority={priority && index === 0 ? 'high' : undefined} decoding="async" />
       ))}
     </div>
   )
