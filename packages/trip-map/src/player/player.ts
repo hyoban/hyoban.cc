@@ -11,6 +11,7 @@ import {
 import { t, type Messages } from '../messages.ts'
 import { readTheme } from '../dom-theme.ts'
 import type { Theme } from '../theme.ts'
+import { cancelFrame, requestFrame } from '../frames.ts'
 import { createAmbientMusic } from './ambient-music.ts'
 import { createCamera } from './camera.ts'
 import { createDayHeading } from './day-heading.ts'
@@ -912,7 +913,7 @@ export function createTripPlayer(options: TripPlayerOptions) {
   }
 
   function tick(now: number) {
-    frame = requestAnimationFrame(tick)
+    frame = requestFrame(tick)
 
     const delta = lastFrameTime === undefined ? 0 : now - lastFrameTime
     const duration = getDuration(slides[index])
@@ -994,7 +995,7 @@ export function createTripPlayer(options: TripPlayerOptions) {
     goTo(getHashSlideIndex(), { play: !reducedMotion.matches })
     renderPlayButton()
     lastFrameTime = undefined
-    frame = requestAnimationFrame(tick)
+    frame = requestFrame(tick)
   }
 
   function stop() {
@@ -1010,7 +1011,7 @@ export function createTripPlayer(options: TripPlayerOptions) {
     page.removeAttribute('data-trip-map-playing')
 
     if (frame !== undefined) {
-      cancelAnimationFrame(frame)
+      cancelFrame(frame)
       frame = undefined
     }
 

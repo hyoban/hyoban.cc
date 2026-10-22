@@ -1,6 +1,7 @@
 import MapboxLanguage from '@mapbox/mapbox-gl-language'
 import mapboxgl, { type PaddingOptions } from 'mapbox-gl'
 import { collectMapElements } from '../elements.ts'
+import { mapFrames } from '../frames.ts'
 import type { Brand, MusicTrack } from '../markup.ts'
 import { resolveMessages, t, type Messages } from '../messages.ts'
 import { parseJson } from '../player/dom.ts'
@@ -1635,6 +1636,8 @@ export function createTripMap(options: TripMapOptions): TripMap {
         // Beside the trip list, on its page.
         bounds: view.bounds,
         fitBoundsOptions: { ...view.fitBoundsOptions, pitch: 0 },
+        // Drawn after the trip player's camera and route have moved in the frame.
+        animationFrameProvider: mapFrames,
         attributionControl: false,
         container: canvas,
         dragRotate: true,

@@ -1,4 +1,5 @@
 import type { Map as MapboxMap } from 'mapbox-gl'
+import { cancelFrame, requestFrame } from '../frames.ts'
 import type { Coordinates } from '../geo.ts'
 import type { Theme } from '../theme.ts'
 import { createRouteLayers } from './route-layers.ts'
@@ -182,7 +183,7 @@ export function createRouteDrawer({
 
   function cancelLeg() {
     if (legFrame !== undefined) {
-      cancelAnimationFrame(legFrame)
+      cancelFrame(legFrame)
       legFrame = undefined
     }
 
@@ -269,10 +270,10 @@ export function createRouteDrawer({
       }
 
       setRoute(from + 1, { fraction: start + (1 - start) * ease(t), leg, to })
-      legFrame = requestAnimationFrame(step)
+      legFrame = requestFrame(step)
     }
 
-    legFrame = requestAnimationFrame(step)
+    legFrame = requestFrame(step)
   }
 
   /**
