@@ -18,6 +18,43 @@
   inset: 0;
 }
 
+/* A picture of the map's first view, over the canvas until the map has loaded. */
+[data-trip-map-placeholder] {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  transition:
+    opacity 0.4s ease,
+    visibility 0s 0.4s;
+}
+
+/* Soft, as the picture is coarser than the map and labelled in the style's own language. */
+[data-trip-map-placeholder] img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(3px);
+}
+
+/* Scaled and placed by the page to the view the map opens on. */
+[data-trip-map-placeholder][data-trip-map-placed] img {
+  position: absolute;
+  max-width: none;
+}
+
+[data-trip-map-placeholder][data-trip-map-loaded] {
+  opacity: 0;
+  visibility: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-trip-map-placeholder] {
+    transition: none;
+  }
+}
+
 /* An inline icon, the size of the text around it (see icons.ts). */
 .trip-map-icon {
   display: inline-block;

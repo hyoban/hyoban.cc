@@ -78,6 +78,7 @@ export function collectMapElements(page: HTMLElement) {
     momentsEyebrow: page.querySelector<HTMLElement>('[data-trip-map-moments-eyebrow]'),
     momentsTitle: page.querySelector<HTMLElement>('[data-trip-map-moments-title]'),
     page,
+    placeholder: page.querySelector<HTMLElement>('[data-trip-map-placeholder]'),
     screenshotButton: page.querySelector<HTMLButtonElement>('[data-trip-map-screenshot]'),
     tripLinks: [...page.querySelectorAll<HTMLAnchorElement>('[data-trip-map-trip-link]')],
     tripDetails: page.querySelector<HTMLElement>('[data-trip-map-trip-details]'),
