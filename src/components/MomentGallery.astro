@@ -66,13 +66,12 @@ const imageSizes = isSingle
 
 <style>
   /* One photo at its own shape, or two to a row cut to 4:3, the first of three as tall
-     as the other two. */
+     as the other two. Nothing clips the grid, so a focused photo's ring shows whole. */
   .moment-gallery {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.25rem;
     margin-top: 0.875rem;
-    overflow: hidden;
   }
 
   .moment-gallery--1 {
