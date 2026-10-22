@@ -781,10 +781,10 @@ fun PlacesMap(
     var map by remember { mutableStateOf<Pair<MapLibreMap, Style>?>(null) }
     var framed by remember { mutableStateOf(false) }
     val ink = MaterialTheme.colorScheme.onSurface.toArgb()
-    // The ring round every dot but the one chosen, the page's surface; the number on a dot the
-    // inverse surface's text, light on light mode's dark dots and dark on dark mode's light ones.
+    // The ring round every dot but the one chosen, the page's surface; the number on a dot white, as
+    // on the site's map, its year colours being the site's rather than Material 3's (MapScreen).
     val ring = MaterialTheme.colorScheme.surface.toArgb()
-    val onDot = MaterialTheme.colorScheme.inverseOnSurface.toArgb()
+    val onDot = Color.White.toArgb()
     val shade = MaterialTheme.colorScheme.scrim.toArgb()
     val unknown = MaterialTheme.colorScheme.outline.toArgb()
     val density = LocalDensity.current
