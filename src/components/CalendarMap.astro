@@ -675,6 +675,14 @@ const description = pageTrip
     }
   }
 
+  /* Unseen until placed: a long page paints before the script at its end has run, and
+     the picture would jump from filling the map to the view it stands for. */
+  @media (scripting: enabled) {
+    .trip-map-placeholder:not([data-trip-map-placed]) img {
+      visibility: hidden;
+    }
+  }
+
   /* The back link, the trips by keyboard, and the map's buttons, across the top. */
   .trip-map-toolbar {
     position: absolute;

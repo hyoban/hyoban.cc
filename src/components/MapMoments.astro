@@ -22,6 +22,7 @@ const months = [...Map.groupBy(moments, getMonth)]
   .sort(([first], [second]) => second - first)
   // Newest first, down to the time of day: the Moments come oldest first.
   .map(([month, monthMoments]) => ({ month, moments: monthMoments.toReversed() }))
+const firstMoment = months.find(({ month }) => pickedMonth === undefined || month === pickedMonth)?.moments[0]
 ---
 
 <!-- The whole year, and its months with Moments; 3.0625rem tall, which the months'
@@ -44,7 +45,8 @@ const months = [...Map.groupBy(moments, getMonth)]
         <a href={getMonthPath(`${year}-${String(month).padStart(2, '0')}`)} title={`在日历中查看 ${year} 年 ${month} 月`}>{month} 月</a>
         <span>{monthMoments.length} 条记录</span>
       </h2>
-      {monthMoments.map(moment => <MomentEntry date="day" moment={moment} />)}
+      {/* The list's first Moment is in view as the sidebar opens, at any width. */}
+      {monthMoments.map(moment => <MomentEntry date="day" moment={moment} priorityMedia={moment === firstMoment ? 'all' : undefined} />)}
     </section>
   ))
 }

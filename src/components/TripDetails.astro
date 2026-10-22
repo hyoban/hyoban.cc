@@ -26,7 +26,7 @@ const totals = [
 ---
 
 <div class="trip-details">
-  <TripCoverCollage images={getTripCollage(trip, moments)} sizes="(max-width: 48rem) 100vw, 26rem" />
+  <TripCoverCollage images={getTripCollage(trip, moments)} priority sizes="(max-width: 48rem) 100vw, 26rem" />
   <p class="trip-details__totals">{totals}</p>
   <a class="trip-details__play" href={`/trip/${trip.id}/play/`} data-trip-map-stop-play={trip.id}>
     <span class="i-lucide-play" aria-hidden="true" />
