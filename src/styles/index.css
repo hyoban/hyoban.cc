@@ -87,8 +87,10 @@
       text-decoration-color 140ms ease;
   }
 
+  /* A text link turns muted on hover and its underline follows the text. */
   a:hover {
-    text-decoration-color: var(--color-tx);
+    color: var(--color-tx-2);
+    text-decoration-color: currentColor;
   }
 
   /* A list row's link holds more than its title, so the row drops the underline and the
@@ -102,7 +104,8 @@
   }
 
   a:hover .link-text {
-    text-decoration-color: var(--color-tx);
+    color: var(--color-tx-2);
+    text-decoration-color: currentColor;
   }
 
   :focus-visible {
