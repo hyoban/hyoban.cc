@@ -1326,6 +1326,9 @@ export function createTripMap(options: TripMapOptions): TripMap {
         dragRotate: true,
         projection: 'globe',
         style: mapStyle,
+        // Chinese, Japanese and Korean names in the style's own glyphs, fetched: drawn here
+        // instead, each new one costs the main thread a frame as the names come into view.
+        localIdeographFontFamily: false as unknown as string,
         touchPitch: true,
       })
 
