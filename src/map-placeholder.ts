@@ -1,4 +1,9 @@
-import { ALL_PLACES_MAX_ZOOM, getAllPlacesCamera, getPlacesExtent } from '@hyoban/trip-map'
+import {
+  ALL_PLACES_MAX_ZOOM,
+  getAllPlacesCamera,
+  getPlacesExtent,
+  getStaticMapUrl,
+} from '@hyoban/trip-map'
 import { getMapMonthKeys, getMapYears, getMappedLocationGroups, getMoments } from '@/moments'
 
 // The pictures the map pages show while their map loads, in each theme: the map around
@@ -22,6 +27,39 @@ export const mapPlaceholderThemes = [
   { name: 'dark', style: 'mapbox/dark-v11' },
 ] as const
 
+// The page's own token is kept to the site's URLs, which the Static Images API refuses
+// from a build, so the build may have one of its own.
+export const MAP_PLACEHOLDER_TOKEN =
+  import.meta.env.MAPBOX_STATIC_TOKEN || import.meta.env.VITE_MAPBOX_TOKEN || ''
+
+let drawable: Promise<boolean> | undefined
+
+/**
+ * Whether the build can draw the pictures: without a token that may, the pages go
+ * without them rather than the build failing.
+ */
+export function canDrawMapPlaceholders() {
+  drawable ??= (async () => {
+    if (!MAP_PLACEHOLDER_TOKEN) return false
+
+    const url = getStaticMapUrl(
+      { latitude: 0, longitude: 0, zoom: 0 },
+      { height: 1, style: mapPlaceholderThemes[0].style, token: MAP_PLACEHOLDER_TOKEN, width: 1 },
+    )
+    const response = await fetch(url).catch(() => undefined)
+
+    if (!response?.ok) {
+      console.warn(
+        `The map pages go without placeholders: Mapbox refused the token (${response?.status ?? 'offline'}). Set MAPBOX_STATIC_TOKEN to one without URL restrictions.`,
+      )
+    }
+
+    return response?.ok ?? false
+  })()
+
+  return drawable
+}
+
 export const getMapPlaceholderPath = (
   key: string,
   theme: (typeof mapPlaceholderThemes)[number]['name'],
@@ -43,6 +81,7 @@ async function getPeriodKeys() {
 
 /** The periods with pictures of their own: the others share one. */
 export async function getMapPlaceholderKeys() {
+  if (!(await canDrawMapPlaceholders())) return []
   return [...new Set((await getPictures()).values())].map((picture) => picture.key)
 }
 

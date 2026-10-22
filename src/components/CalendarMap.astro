@@ -24,7 +24,7 @@ import {
 } from '@hyoban/trip-map'
 import { getTripTitle, tripMapBrand, tripMapMessages, tripMapMusic } from '@/trip-map'
 import { SITE_TITLE } from '@/consts'
-import { getMapPlaceholderKey, getMapPlaceholderPath, getMapPlaceholderView, MAP_PLACEHOLDER_SIZE } from '@/map-placeholder'
+import { canDrawMapPlaceholders, getMapPlaceholderKey,getMapPlaceholderPath, getMapPlaceholderView, MAP_PLACEHOLDER_SIZE } from '@/map-placeholder'
 
 interface Props {
   /** Opens with the list of trips beside the map, this one picked (the /trip/<id>/ pages). */
@@ -75,7 +75,7 @@ const periodEyebrow = periodPlaces ? `${periodCount} 条记录 · ${periodPlaces
 const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN ?? ''
 // The map opens framed on the period's places, or every one, beside the sidebar open: a
 // picture of that view stands in while it loads.
-const showPlaceholder = mapboxToken !== ''
+const showPlaceholder = mapboxToken !== '' && (await canDrawMapPlaceholders())
 const placeholderKey = getMapPlaceholderKey(period)
 const placeholderView = showPlaceholder
   ? { ...(await getMapPlaceholderView(placeholderKey)), maxZoom: ALL_PLACES_MAX_ZOOM, size: MAP_PLACEHOLDER_SIZE }

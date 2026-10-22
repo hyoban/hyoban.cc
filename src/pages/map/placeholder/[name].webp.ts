@@ -5,6 +5,7 @@ import {
   getMapPlaceholderKeys,
   getMapPlaceholderView,
   MAP_PLACEHOLDER_SIZE,
+  MAP_PLACEHOLDER_TOKEN,
   mapPlaceholderThemes,
 } from '@/map-placeholder'
 import { cachedCard } from '@/og-image'
@@ -25,7 +26,7 @@ export const GET: APIRoute<Props> = async ({ params, props: { key, style } }) =>
   const url = getStaticMapUrl(camera, {
     height: MAP_PLACEHOLDER_SIZE,
     style,
-    token: import.meta.env.VITE_MAPBOX_TOKEN ?? '',
+    token: MAP_PLACEHOLDER_TOKEN,
     width: MAP_PLACEHOLDER_SIZE,
   })
   // Kept between builds while the places stay where they are.
