@@ -34,6 +34,7 @@ export const zhCN = {
   statPlaces: '{count} 个地点',
   statTrips: '{count} 段旅程',
   tapAgainToPlay: '再点一次回放',
+  tripDetailsFailed: '没能加载这段旅程的记录。',
   yearItem: '{year} 年',
   yearSeparator: '、',
 

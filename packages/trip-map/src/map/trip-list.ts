@@ -2,14 +2,11 @@
 // is the list's own (`/trip/`): its openers and its close button ask for the address to
 // change, and the map shows or closes the list as it follows it.
 //
-// Its rows are the page's trip links, and a row is looked at on the map before it's
-// played: clicking one picks it, the map flying to its route and lifting it, and shows
-// its play button (`[data-trip-map-trip-play]` by the row); clicking it again, or the
-// button, plays it. Resting the pointer on another row a while, or reaching it by
-// keyboard, lifts that one meanwhile, and leaving it lifts the picked one again. A route
-// picked on the map picks its row, and the other way round (see overview.ts). Only
-// after a while, so a pointer passing over the rows on its way doesn't light them all;
-// meanwhile the row fills a line along its foot (see styles.css), saying it will.
+// Its rows are the page's trip links: clicking one opens the trip's sidebar, which plays
+// it (see trip-details.ts). Resting the pointer on a row a while, or reaching it by
+// keyboard, flies the map to its route and lifts it meanwhile. Only after a while, so a
+// pointer passing over the rows on its way doesn't light them all; meanwhile the row
+// fills a line along its foot (see styles.css), saying it will.
 
 // How long the pointer rests on a row before its route is lifted.
 const DWELL = 2000
@@ -24,8 +21,7 @@ export function createTripList({
   list,
   onClose,
   onHighlight,
-  onPick,
-  onPlay,
+  onOpen,
   onRequestClose,
   onRequestOpen,
   openers,
@@ -37,15 +33,10 @@ export function createTripList({
   list: HTMLElement
   /** The list started closing; `restoreView` unless a trip is taking the map. */
   onClose: (options: { restoreView: boolean }) => void
-  /**
-   * The trip to lift on the map, or none; `frame` when the map should fly to it,
-   * rather than lift a picked trip again as the pointer leaves another.
-   */
+  /** The trip to lift on the map, or none; `frame` when the map should fly to it. */
   onHighlight: (id: string | undefined, options: { frame: boolean }) => void
-  /** A trip was picked in the list, or let go of. */
-  onPick: (id: string | undefined) => void
-  /** A picked trip was clicked again, or its play button. */
-  onPlay: (id: string) => void
+  /** A trip's row was clicked, to open its sidebar. */
+  onOpen: (id: string) => void
   /** The list's close button, or an opener while it's open, was pressed. */
   onRequestClose: () => void
   /** An opener was pressed while the list was closed. */
@@ -57,10 +48,9 @@ export function createTripList({
   let exit: Animation | undefined
   let trigger: HTMLElement | undefined
   let dwell: ReturnType<typeof setTimeout> | undefined
-  // The row filling up, the row lifted meanwhile, and the row picked.
+  // The row filling up, and the row lifted meanwhile.
   let dwelling: HTMLElement | undefined
   let previewed: HTMLElement | undefined
-  let picked: HTMLElement | undefined
   // The row whose route the map shows.
   let lifted: HTMLElement | undefined
 
@@ -72,10 +62,6 @@ export function createTripList({
 
   function getId(link: HTMLElement) {
     return link.dataset.tripMapTripLink!
-  }
-
-  function getPlayButton(link: HTMLElement) {
-    return link.parentElement?.querySelector<HTMLElement>('[data-trip-map-trip-play]') ?? null
   }
 
   function setDwelling(link: HTMLElement | undefined) {
@@ -90,9 +76,9 @@ export function createTripList({
     }
   }
 
-  /** Lifts what's previewed, or else what's picked, flying to it if it's new. */
+  /** Lifts what's previewed, flying to it if it's new. */
   function update(options: { frame: boolean }) {
-    const next = previewed ?? picked
+    const next = previewed
 
     if (next === lifted) {
       return
@@ -116,49 +102,6 @@ export function createTripList({
     setDwelling(undefined)
     previewed = link
     update({ frame: Boolean(link) })
-  }
-
-  function setPicked(link: HTMLElement | undefined) {
-    if (link === picked) {
-      return
-    }
-
-    if (picked) {
-      delete picked.dataset.tripMapPicked
-      picked.ariaCurrent = null
-      getPlayButton(picked)?.setAttribute('hidden', '')
-    }
-
-    picked = link
-
-    if (link) {
-      link.dataset.tripMapPicked = ''
-      link.ariaCurrent = 'true'
-      getPlayButton(link)?.removeAttribute('hidden')
-    }
-
-    setDwelling(undefined)
-    previewed = undefined
-    update({ frame: Boolean(link) })
-    onPick(link && getId(link))
-  }
-
-  /** Picks a trip's row, as its route was picked on the map, or lets go of it. */
-  function pick(id: string | undefined) {
-    const link = id
-      ? (list.querySelector<HTMLElement>(`[data-trip-map-trip-link="${CSS.escape(id)}"]`) ??
-        undefined)
-      : undefined
-
-    if (!isOpen()) {
-      return
-    }
-
-    setPicked(link)
-    link?.scrollIntoView({
-      behavior: reducedMotion.matches ? 'auto' : 'smooth',
-      block: 'nearest',
-    })
   }
 
   function setExpanded(expanded: boolean) {
@@ -189,7 +132,7 @@ export function createTripList({
       return
     }
 
-    setPicked(undefined)
+    setPreviewed(undefined)
     setExpanded(false)
 
     const animation = list.animate(
@@ -252,19 +195,12 @@ export function createTripList({
   list.addEventListener(
     'click',
     (event) => {
-      const target = event.target instanceof Element ? event.target : null
-      const play = target?.closest<HTMLElement>('[data-trip-map-trip-play]')
-      const link = getLink(target)
+      const link = getLink(event.target)
 
-      if (play?.dataset.tripMapTripPlay) {
+      if (link) {
         event.preventDefault()
-        onPlay(play.dataset.tripMapTripPlay)
-      } else if (link && link === picked) {
-        event.preventDefault()
-        onPlay(getId(link))
-      } else if (link) {
-        event.preventDefault()
-        setPicked(link)
+        setPreviewed(undefined)
+        onOpen(getId(link))
       }
     },
     { signal },
@@ -275,7 +211,7 @@ export function createTripList({
       const link = getLink(event.target)
 
       // Reached by keyboard: a pointer's focus comes with its click.
-      if (link && link !== picked && link.matches(':focus-visible')) {
+      if (link && link.matches(':focus-visible')) {
         setPreviewed(link)
       }
     },
@@ -327,7 +263,6 @@ export function createTripList({
     get isOpen() {
       return isOpen()
     },
-    pick,
     show,
   }
 }

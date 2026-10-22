@@ -34,17 +34,20 @@ export function getTripData(trip: MomentTrip): TripData {
   })
 }
 
-type MomentTripLink = Readonly<{ id: string; title: string }>
+type MomentTripLink = Readonly<{ anchor: string; id: string; title: string }>
 
 let momentTrips: Promise<Map<string, MomentTripLink>> | undefined
 
-/** Each Moment that's a stop of a trip, by its id: the trip's id and title. */
+/** Each Moment that's a stop of a trip, by its id: the trip's id and title, and its card's anchor. */
 export function getMomentTrips() {
   momentTrips ??= getMoments().then(
     (moments) =>
       new Map(
         getTrips(moments).flatMap((trip) =>
-          trip.stops.map((stop) => [stop.id, { id: trip.id, title: trip.title }]),
+          trip.stops.map((stop) => [
+            stop.id,
+            { anchor: getStopAnchor(stop.id), id: trip.id, title: trip.title },
+          ]),
         ),
       ),
   )

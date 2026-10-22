@@ -15,6 +15,7 @@ import { createMomentList } from './moment-list.ts'
 import { isSamePeriod, overlapsPeriod, type Period } from './period.ts'
 import { CLUSTER_MAX_ZOOM, createPlaceMarkers, getAllPlacesView } from './place-markers.ts'
 import { captureMap, savePicture } from './screenshot.ts'
+import { createTripDetails } from './trip-details.ts'
 import { createTripList } from './trip-list.ts'
 import {
   defaultUrls,
@@ -203,8 +204,18 @@ export function createTripMap(options: TripMapOptions): TripMap {
     messages,
     // Pointing at a route, or focusing its link, starts loading that trip.
     onHighlight: (id) => tripPlayer.prefetch(id),
-    // A route picked on the map picks its row in the list.
-    onPick: (id) => tripList?.pick(id),
+    // A route clicked on the map opens its sidebar; a click off the routes closes it.
+    onPick: (id) => {
+      if (pickingRoute) {
+        return
+      }
+
+      if (id) {
+        openTrip(id)
+      } else if (getUrlPickedTripId()) {
+        requestSelectionClose()
+      }
+    },
     onSelect: selectTrip,
     reducedMotion,
     signal,
@@ -279,23 +290,10 @@ export function createTripMap(options: TripMapOptions): TripMap {
         tripOverview.highlight(id)
 
         if (id && frame) {
-          frameTripBesideList(id)
+          frameTripBeside(elements.tripList!, id)
         }
       },
-      // The address says the trip picked, to come back to it picked.
-      onPick: (id) => {
-        tripOverview.pick(id)
-
-        if (isTripListUrl()) {
-          history.replaceState(
-            getHistoryState(),
-            '',
-            `${id ? urls.getPickedTripPath(id, isNestedTripUrl()) : urls.tripListPath}${window.location.search}`,
-          )
-          syncDocumentTitle()
-        }
-      },
-      onPlay: selectTrip,
+      onOpen: openTrip,
       onRequestClose: requestSelectionClose,
       onRequestOpen: () => {
         setSelectionUrl(urls.tripListPath)
@@ -305,6 +303,33 @@ export function createTripMap(options: TripMapOptions): TripMap {
       reducedMotion,
       signal,
     })
+
+  const tripDetails =
+    elements.tripDetails &&
+    elements.tripDetailsContent &&
+    createTripDetails({
+      closeButton: elements.tripDetailsClose,
+      content: elements.tripDetailsContent,
+      eyebrow: elements.tripDetailsEyebrow,
+      getUrl: urls.getTripMomentsUrl,
+      isNarrow,
+      list: elements.tripDetails,
+      messages,
+      onError: (id, cause) =>
+        report({
+          cause,
+          id,
+          kind: 'trip',
+          message: `The Moments of trip "${id}" couldn't be fetched.`,
+        }),
+      onPlace: showPlace,
+      onRequestClose: requestSelectionClose,
+      reducedMotion,
+      signal,
+      title: elements.tripDetailsTitle,
+    })
+  // Set while the map picks a route itself, as a trip's sidebar opens or closes.
+  let pickingRoute = false
 
   const momentList =
     elements.moments &&
@@ -401,8 +426,9 @@ export function createTripMap(options: TripMapOptions): TripMap {
   }
 
   /** Flies to a trip's route beside the trip list. */
-  function frameTripBesideList(id: string) {
-    if (!map || !mapLoaded || !elements.tripList) {
+  /** Flies to a trip's route beside what's on the map's side: the trip list, or its sidebar. */
+  function frameTripBeside(sideElement: HTMLElement, id: string) {
+    if (!map || !mapLoaded) {
       return
     }
 
@@ -410,7 +436,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
     framedOnAll = false
 
     // Wider than for a place, for the route's name above it and the legend below.
-    const side = getSidePadding(elements.tripList)
+    const side = getSidePadding(sideElement)
 
     tripOverview.frame(id, {
       bottom: side.bottom + 64,
@@ -420,8 +446,8 @@ export function createTripMap(options: TripMapOptions): TripMap {
     })
   }
 
-  /** Opens the trip list with a trip picked, its route lifted and framed: not playing yet. */
-  function showTripInList(id: string) {
+  /** Opens a trip's sidebar, its route lifted and framed: not playing yet. */
+  function openTrip(id: string) {
     setSelectionUrl(urls.getPickedTripPath(id, isNestedTripUrl()))
     syncSelection()
   }
@@ -443,14 +469,16 @@ export function createTripMap(options: TripMapOptions): TripMap {
     }
   }
 
-  /** What of the map a list beside it covers: the trip list on its address, or the Moments. */
+  /** What of the map a list beside it covers: the trip list on its address, a trip's sidebar, or the Moments. */
   function getListInset(): { bottom?: number; right?: number } {
     const list =
       elements.tripList && isTripListUrl() && !elements.tripList.hidden
         ? elements.tripList
-        : momentList?.isOpen
-          ? elements.moments
-          : undefined
+        : tripDetails?.isOpen
+          ? elements.tripDetails
+          : momentList?.isOpen
+            ? elements.moments
+            : undefined
 
     if (!list) {
       return {}
@@ -507,10 +535,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
   }
 
   function isTripListUrl() {
-    return (
-      Boolean(tripList) &&
-      (window.location.pathname === urls.tripListPath || getUrlPickedTripId() !== undefined)
-    )
+    return Boolean(tripList) && window.location.pathname === urls.tripListPath
   }
 
   function getUrlTripId() {
@@ -660,11 +685,28 @@ export function createTripMap(options: TripMapOptions): TripMap {
     if (tripPlayer.activeId) {
       drawer.close({ restoreFocus: false })
       tripList?.close({ restoreFocus: false, restoreView: false })
+      closeTripDetails({ restoreView: false })
       return
     }
 
     const id = getUrlPlaceId()
     const place = id ? markers.getPlace(id) : undefined
+    const openId = getUrlPickedTripId()
+
+    // A trip's sidebar takes the drawer's side of the map, flying to its route.
+    if (openId && tripDetails) {
+      const trip = tripsById.get(openId)!
+
+      drawer.close({ restoreFocus: false })
+      tripList?.close({ restoreFocus: false, restoreView: false })
+      tripDetails.show(trip, { focus: selectOptions.focus !== false })
+      pickRoute(openId)
+      frameTripBeside(elements.tripDetails!, openId)
+      return
+    }
+
+    // Back from a trip's sidebar: the view it moved aside, before anything else moves it.
+    closeTripDetails({ restoreView: !tripClosed })
 
     if (tripClosed && !isTripListUrl()) {
       fitAll()
@@ -695,13 +737,6 @@ export function createTripMap(options: TripMapOptions): TripMap {
         moveMapForTripList()
       }
 
-      // After the list's own move: the trip its address picks takes the map.
-      const pickedId = getUrlPickedTripId()
-
-      if (pickedId) {
-        tripList?.pick(pickedId)
-      }
-
       return
     }
 
@@ -709,12 +744,52 @@ export function createTripMap(options: TripMapOptions): TripMap {
     tripList?.close({ restoreFocus: selectOptions.focus !== false })
   }
 
+  /** Lifts a trip's route as its sidebar opens, or lets go of it as it closes. */
+  function pickRoute(id: string | undefined) {
+    pickingRoute = true
+
+    try {
+      tripOverview.pick(id)
+    } finally {
+      pickingRoute = false
+    }
+  }
+
+  /**
+   * Closes a trip's sidebar, letting go of its route; `restoreView` puts the map back
+   * where it was before the sidebar flew it to the route, unless moved by hand since.
+   */
+  function closeTripDetails({ restoreView }: { restoreView: boolean }) {
+    if (!tripDetails?.isOpen) {
+      return
+    }
+
+    tripDetails.close()
+    pickRoute(undefined)
+
+    if (restoreView && map && mapLoaded && viewBeforeList) {
+      framedOnAll = viewBeforeList.framedOnAll
+
+      if (framedOnAll) {
+        fitAll()
+      } else {
+        map.easeTo({ ...viewBeforeList.camera, duration: getAnimationDuration() })
+      }
+    }
+
+    viewBeforeList = undefined
+  }
+
   /**
    * Goes to a selection's address: in place of the one open, or after the map or the
    * trip list, which stays behind what it opened for going back to.
    */
   function setSelectionUrl(url: string) {
-    const replace = !isTripListUrl() && Boolean(getUrlPlaceId() ?? getUrlTripId())
+    // One trip's sidebar opened from another's replaces it, as a place does a place.
+    const replace =
+      !isTripListUrl() &&
+      Boolean(getUrlPlaceId() ?? getUrlPickedTripId() ?? getUrlTripId()) &&
+      !(getUrlPickedTripId() && urls.getTripId(new URL(url, window.location.href).pathname))
     const currentState = getHistoryState()
     const nextState = {
       ...currentState,
@@ -740,8 +815,9 @@ export function createTripMap(options: TripMapOptions): TripMap {
     drawer.open(place, { trigger })
   }
 
-  function selectTrip(id: string) {
-    setSelectionUrl(urls.getTripPath(id, undefined, isNestedTripUrl()))
+  /** Plays a trip, from the card `stop` names (a stop's anchor), or from its start. */
+  function selectTrip(id: string, stop?: string) {
+    setSelectionUrl(urls.getTripPath(id, stop, isNestedTripUrl()))
     syncSelection({ focus: false })
   }
 
@@ -873,7 +949,9 @@ export function createTripMap(options: TripMapOptions): TripMap {
   }
 
   function requestSelectionClose() {
-    if (!drawer.activeId && !tripPlayer.activeId && !isTripListUrl()) {
+    const openId = getUrlPickedTripId()
+
+    if (!drawer.activeId && !tripPlayer.activeId && !isTripListUrl() && !openId) {
       return
     }
 
@@ -882,7 +960,12 @@ export function createTripMap(options: TripMapOptions): TripMap {
       return
     }
 
-    history.replaceState(getHistoryState(), '', `${getMapPath()}${window.location.search}`)
+    // A trip's sidebar opened on its own address closes to the list it belongs to.
+    history.replaceState(
+      getHistoryState(),
+      '',
+      `${openId && tripList ? urls.tripListPath : getMapPath()}${window.location.search}`,
+    )
     syncSelection()
   }
 
@@ -1002,21 +1085,29 @@ export function createTripMap(options: TripMapOptions): TripMap {
   fallbackRetry.addEventListener('click', () => window.location.reload(), { signal })
   screenshotButton?.addEventListener('click', () => void takeScreenshot(), { signal })
 
-  // The Moments the drawer and the list fetch link their trips, picked in the trip list,
-  // and the drawer's link the other places they were at.
+  // The Moments the drawer and the lists fetch link their trips, opening their sidebars,
+  // and a trip's sidebar plays it, from its start or a stop's card; the drawer's link
+  // the other places they were at.
   page.addEventListener(
     'click',
     (event) => {
       const target = event.target instanceof Element ? event.target : null
       const trip = target?.closest<HTMLElement>('[data-trip-map-trip-pick]')
+      const play = target?.closest<HTMLElement>('[data-trip-map-stop-play]')
       const place = target?.closest<HTMLElement>('[data-trip-map-place-link]')
       const inSide = (element: Element) =>
-        elements.drawer.contains(element) || Boolean(elements.moments?.contains(element))
+        [elements.drawer, elements.moments, elements.tripDetails].some((side) =>
+          side?.contains(element),
+        )
       const tripId = trip?.dataset.tripMapTripPick
+      const playId = play?.dataset.tripMapStopPlay
 
-      if (trip && tripId && inSide(trip) && elements.tripList && tripsById.has(tripId)) {
+      if (play && playId && inSide(play) && tripPlayer.has(playId)) {
         event.preventDefault()
-        showTripInList(tripId)
+        selectTrip(playId, play.dataset.tripMapStop)
+      } else if (trip && tripId && inSide(trip) && tripDetails && tripsById.has(tripId)) {
+        event.preventDefault()
+        openTrip(tripId)
       } else if (place?.dataset.tripMapPlaceLink && elements.drawer.contains(place)) {
         const button = markers.getButton(place.dataset.tripMapPlaceLink)
 
@@ -1130,7 +1221,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
       if (
         event.key === 'Escape' &&
         !event.defaultPrevented &&
-        (drawer.activeId || tripPlayer.activeId || tripList?.isOpen) &&
+        (drawer.activeId || tripPlayer.activeId || tripList?.isOpen || tripDetails?.isOpen) &&
         !drawer.lightboxOpen
       ) {
         requestSelectionClose()
@@ -1319,7 +1410,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
           syncTripFromUrl()
         } else if (pickedTripId) {
           // Picked before the map could fly to it.
-          frameTripBesideList(pickedTripId)
+          frameTripBeside(elements.tripDetails!, pickedTripId)
         } else if (urlPlaceId && urlPlace) {
           drawer.open(urlPlace, { focus: false, trigger: markers.getButton(urlPlaceId) })
         }

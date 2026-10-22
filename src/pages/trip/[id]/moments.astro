@@ -1,0 +1,13 @@
+---
+import TripDetails from '@/components/TripDetails.astro'
+import { getMoments, getTripPaths } from '@/moments'
+
+// A trip's sidebar content: an HTML fragment the map fetches when the trip is opened there.
+export const partial = true
+
+export const getStaticPaths = getTripPaths
+
+const moments = await getMoments()
+---
+
+<TripDetails moments={moments} trip={Astro.props.trip} />
