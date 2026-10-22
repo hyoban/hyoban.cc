@@ -60,8 +60,8 @@ export function createFogLayer({
 }: {
   /** Where the cities lit are counted while the fog shows. */
   areaElement: HTMLElement | null
-  /** The toggle; without one there is no fog. */
-  button: HTMLButtonElement | null
+  /** The toggle, a button pressed or a checkbox checked; without one there is no fog. */
+  button: HTMLButtonElement | HTMLInputElement | null
   /** The map once it has loaded, its style with it. */
   getMap: () => MapboxMap | undefined
   getTheme: () => Theme
@@ -492,7 +492,9 @@ export function createFogLayer({
   }
 
   function renderControls() {
-    if (button) {
+    if (button instanceof HTMLInputElement) {
+      button.checked = on
+    } else if (button) {
       button.ariaPressed = String(on)
     }
 
@@ -536,6 +538,9 @@ export function createFogLayer({
         turnSweep()
       } else if (sweepFrame === undefined && !switching) {
         void setOn(!on, true)
+      } else {
+        // A checkbox has already changed itself.
+        renderControls()
       }
     },
     { signal },
