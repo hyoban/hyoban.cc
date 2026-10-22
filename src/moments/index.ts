@@ -132,6 +132,14 @@ export async function getTripPaths() {
 
 export type TripPathProps = Awaited<ReturnType<typeof getTripPaths>>[number]['props']
 
+/** The same pages by a trip's year and the rest of its id: /trip/2026/yunnan/. */
+export async function getNestedTripPaths() {
+  return (await getTripPaths()).flatMap(({ props }) => {
+    const [, year, slug] = props.trip.id.match(/^(\d{4})-(.+)$/) ?? []
+    return year && slug ? [{ params: { slug, year }, props }] : []
+  })
+}
+
 /** A trip with its Moments and route, as `getTrips` builds it. */
 export type MomentTrip = ReturnType<typeof getTrips>[number]
 

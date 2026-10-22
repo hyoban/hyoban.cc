@@ -1,0 +1,9 @@
+---
+import CalendarMap from '@/components/CalendarMap.astro'
+import { getNestedTripPaths } from '@/moments'
+
+// /trip/<id>/play/ by its year and the rest of its id; from a card too (public/_redirects).
+export const getStaticPaths = getNestedTripPaths
+---
+
+<CalendarMap tripId={Astro.props.trip.id} />

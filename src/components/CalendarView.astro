@@ -123,7 +123,7 @@ const selectedTrip = selectedDate
 // Opens the playback on this day, or the next day with a place when this one has none.
 const selectedTripStop = selectedTrip?.stops.find(stop => stop.dateKey >= selectedDate!)
 const selectedTripHref = selectedTrip
-  ? `/trip/${selectedTrip.id}/${selectedTripStop ? `#${getStopAnchor(selectedTripStop.id)}` : ''}`
+  ? `/trip/${selectedTrip.id}/play/${selectedTripStop ? `${getStopAnchor(selectedTripStop.id)}/` : ''}`
   : undefined
 const sharedExcerpt = sharedMoment ? getMomentExcerpt(sharedMoment, 30) : undefined
 const title = sharedMoment
@@ -402,7 +402,7 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
               )
             }
             {
-              selectedMoments.map(moment => <MomentEntry moment={moment} shared={moment.id === sharedMoment?.id} />)
+              selectedMoments.map(moment => <MomentEntry moment={moment} shared={moment.id === sharedMoment?.id} showTrip={!selectedTrip} />)
             }
           </div>
 

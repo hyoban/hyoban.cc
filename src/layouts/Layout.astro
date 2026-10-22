@@ -6,6 +6,8 @@ import { SITE_TITLE, SITE_URL } from '@/consts'
 import { ClientRouter, fade } from 'astro:transitions'
 
 interface Props {
+  /** The page's own address when another one also leads to it; this one otherwise. */
+  canonicalPath?: string | undefined
   title: string
   description?: string | undefined
   /** A large share preview; pages without one fall back to the site's card. */
@@ -17,8 +19,8 @@ interface Props {
   } | undefined
 }
 
-const { title, description, article, image } = Astro.props
-const canonicalUrl = new URL(Astro.url.pathname, SITE_URL).toString()
+const { canonicalPath, title, description, article, image } = Astro.props
+const canonicalUrl = new URL(canonicalPath ?? Astro.url.pathname, SITE_URL).toString()
 
 // Telegram Instant View fallback via Teletype's undocumented verification flow.
 // References:

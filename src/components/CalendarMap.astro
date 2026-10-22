@@ -22,7 +22,9 @@ import { getTripTitle, tripMapBrand, tripMapMessages, tripMapMusic } from '@/tri
 import { SITE_TITLE } from '@/consts'
 
 interface Props {
-  /** Starts playing this trip when the page loads (the /trip/<id>/ pages). */
+  /** Opens with the list of trips beside the map, this one picked (the /trip/<id>/ pages). */
+  pickedTripId?: string
+  /** Starts playing this trip when the page loads (the /trip/<id>/play/ pages). */
   tripId?: string
   /** Opens with the list of trips beside the map (the /trip/ page). */
   tripList?: boolean
@@ -33,7 +35,8 @@ interface Props {
   period?: { month?: number, year: number }
 }
 
-const { period, tripId, tripList = false } = Astro.props
+const { period, pickedTripId, tripId } = Astro.props
+const tripList = Astro.props.tripList || pickedTripId !== undefined
 const pickedYear = period?.year
 const moments = await getMoments()
 const locationGroups = getMappedLocationGroups(moments)
@@ -68,6 +71,10 @@ const tripListTitle = `旅程 | ${SITE_TITLE}`
 const placesJson = toScriptJson(getPlaceMarkers(locationGroups, yearColor))
 const trips = getTrips(moments).toSorted((first, second) => second.start.localeCompare(first.start))
 const activeTrip = trips.find(trip => trip.id === tripId)
+// The trip the page is about, playing or picked in the list: its title, words and image.
+const pageTrip = activeTrip ?? trips.find(trip => trip.id === pickedTripId)
+// A trip's page by its year and the rest, /trip/2026/yunnan/, is the one by its id.
+const canonicalPath = pageTrip && `/trip/${pageTrip.id}/${activeTrip ? 'play/' : ''}`
 // The totals a screenshot of the map puts in its header.
 const statsJson = toScriptJson(getMapStats(locationGroups, trips))
 // Every trip's route and title for the overview; only the opening trip's playback data
@@ -94,19 +101,19 @@ const isInPeriod = (trip: { end: string, start: string }) =>
 const sideClass = 'absolute inset-y-4 right-4 z-10 grid w-[min(28rem,calc(100vw-2rem))] min-w-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden rounded-xl border border-border bg-bg shadow-[0_1.5rem_5rem_rgb(0_0_0/0.16)] max-[48rem]:inset-x-3 max-[48rem]:bottom-[calc(0.75rem+env(safe-area-inset-bottom))] max-[48rem]:top-auto max-[48rem]:w-auto [&[hidden]]:hidden'
 const sideHeaderClass = 'flex items-center justify-between gap-3 border-b border-border py-3 pr-2 pl-5'
 const sideCloseClass = 'flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-tx-2 hover:bg-inline hover:text-tx focus-visible:bg-inline focus-visible:text-tx focus-visible:outline-none'
-const title = activeTrip
-  ? getTripTitle(activeTrip.title)
+const title = pageTrip
+  ? getTripTitle(pageTrip.title)
   : tripList
     ? tripListTitle
     : periodLabel ? `${periodLabel} · 地图 | ${SITE_TITLE}` : mapTitle
-const description = activeTrip
-  ? `${activeTrip.title}的旅程回放，按时间顺序走过每一条 Moment。`
+const description = pageTrip
+  ? `${pageTrip.title}的旅程回放，按时间顺序走过每一条 Moment。`
   : tripList
     ? '在地图上按时间回放的几段旅程。'
     : periodLabel ? `${periodLabel}的 Moment，在地图上按地点和时间浏览。` : '按地点浏览 Calendar 中记录的 Moment。'
 ---
 
-<Layout title={title} description={description} image={activeTrip ? `/trip/${activeTrip.id}/og.jpg` : undefined}>
+<Layout title={title} description={description} image={pageTrip ? `/trip/${pageTrip.id}/og.jpg` : undefined} canonicalPath={canonicalPath}>
   <Fragment slot="head">
     <!-- The map script is large; open the connection for the style and tiles while it loads. -->
     <link rel="preconnect" href="https://api.mapbox.com" crossorigin />
@@ -124,7 +131,7 @@ const description = activeTrip
             <ul class="flex max-w-full list-none gap-0.5 overflow-x-auto rounded-full border border-[color-mix(in_srgb,var(--color-border)_82%,transparent)] bg-[color-mix(in_srgb,var(--color-bg)_88%,transparent)] p-1 shadow-[0_0.5rem_2rem_rgb(0_0_0/0.08)] backdrop-blur-[1rem] [scrollbar-width:none]">
               {trips.map(trip => (
                 <li class="shrink-0">
-                  <a class="block rounded-full px-3 py-1.5 text-sm whitespace-nowrap text-tx-2 no-underline hover:bg-inline hover:text-tx focus-visible:bg-inline focus-visible:text-tx" href={`/trip/${trip.id}/`} data-trip-map-trip-link={trip.id}><span class="sr-only">回放旅程：</span>{trip.title}</a>
+                  <a class="block rounded-full px-3 py-1.5 text-sm whitespace-nowrap text-tx-2 no-underline hover:bg-inline hover:text-tx focus-visible:bg-inline focus-visible:text-tx" href={`/trip/${trip.id}/play/`} data-trip-map-trip-link={trip.id}><span class="sr-only">回放旅程：</span>{trip.title}</a>
                 </li>
               ))}
             </ul>
@@ -268,7 +275,7 @@ const description = activeTrip
                           </span>
                         </span>
                       </a>
-                      <a class="absolute top-1/2 right-3 flex h-8 -translate-y-1/2 items-center gap-1 rounded-full bg-tx px-3 text-sm text-bg no-underline hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-tx [&[hidden]]:hidden" href={`/trip/${trip.id}/`} data-trip-map-trip-play={trip.id} hidden>
+                      <a class="absolute top-1/2 right-3 flex h-8 -translate-y-1/2 items-center gap-1 rounded-full bg-tx px-3 text-sm text-bg no-underline hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-tx [&[hidden]]:hidden" href={`/trip/${trip.id}/play/`} data-trip-map-trip-play={trip.id} hidden>
                         <span class="i-lucide-play text-[0.75rem]" aria-hidden="true" />
                         回放<span class="sr-only">{trip.title}</span>
                       </a>
@@ -373,8 +380,10 @@ const description = activeTrip
     })
   })
 
-  // The map's own addresses: the map, a year or a month of it, a place's hash on it, the trip list and a trip's page.
-  const ownPathPattern = /^\/(?:map(?:\/\d{4}(?:\/\d{2})?)?|trip(?:\/[^/]+)?)\/$/
+  // The map's own addresses: the map, a year or a month of it, a place on it, the trip
+  // list with a trip picked or not, and a trip playing, from a card of it or not (a
+  // trip by its id or by its year and the rest).
+  const ownPathPattern = /^\/(?:map(?:\/\d{4}(?:\/\d{2})?)?(?:\/place\/[^/]+)?|trip(?:(?:\/\d{4})?\/[^/]+(?:\/play(?:\/[^/]+)?)?)?)\/$/
   // Set while the router goes back or forward between them.
   let ownTraversal = false
 

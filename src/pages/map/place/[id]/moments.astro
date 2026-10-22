@@ -18,6 +18,6 @@ const { group } = Astro.props
 
 <div class="trip-map-drawer__moments min-w-0">
   {group.moments.map(moment => (
-    <MomentEntry date="year" moment={moment} showLocation={false} />
+    <MomentEntry date="year" exceptLocation={group.id} moment={moment} />
   ))}
 </div>

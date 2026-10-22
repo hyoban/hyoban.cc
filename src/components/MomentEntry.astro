@@ -2,6 +2,7 @@
 import MomentGallery from '@/components/MomentGallery.astro'
 import MomentText from '@/components/MomentText.astro'
 import { getMomentPagePath, getMomentPath, type Moment } from '@/moments'
+import { getMomentTrips } from '@/moments/trip-data'
 
 interface Props {
   class?: string
@@ -15,10 +16,17 @@ interface Props {
   priorityMedia?: string | undefined
   /** The Moment a shared link names, set off from the rest of its day. */
   shared?: boolean
+  /** Leaves out one of the places: the one whose drawer the Moment shows in. */
+  exceptLocation?: string
   showLocation?: boolean
+  /** Links the trip the Moment is a stop of, picked in the trip list; off beside the trip's own link. */
+  showTrip?: boolean
 }
 
-const { class: className, date, moment, priorityMedia, shared = false, showLocation = true } = Astro.props
+const { class: className, date, exceptLocation, moment, priorityMedia, shared = false, showLocation = true, showTrip = true } = Astro.props
+const trip = showTrip ? (await getMomentTrips()).get(moment.id) : undefined
+// A place opens on the map narrowed to the Moment's month, with its Moments beside it.
+const mapMonthPath = `/map/${moment.dateKey.slice(0, 4)}/${moment.dateKey.slice(5, 7)}/place/`
 const weekdayFormatter = new Intl.DateTimeFormat('zh-CN', { timeZone: 'UTC', weekday: 'short' })
 
 function formatDay(dateKey: string) {
@@ -49,8 +57,8 @@ function formatDay(dateKey: string) {
     }
     {moment.occurredLabel && <time datetime={moment.occurredAt}>{moment.occurredLabel}</time>}
     {
-      showLocation && moment.locations.map(location => (
-        <a class="moment-entry__location !mx-0 !w-auto !min-w-0 !shrink gap-1 px-1 hover:!text-tx" href={`/map/#${location.id}`} data-trip-map-place-link={location.id}>
+      showLocation && moment.locations.filter(location => location.id !== exceptLocation).map(location => (
+        <a class="moment-entry__location !mx-0 !w-auto !min-w-0 !shrink gap-1 px-1 hover:!text-tx" href={`${mapMonthPath}${location.id}/`} data-trip-map-place-link={location.id}>
           <span class="i-lucide-map-pin shrink-0 text-sm" aria-hidden="true" />
           <span class="truncate">{location.name}</span>
         </a>
@@ -62,6 +70,14 @@ function formatDay(dateKey: string) {
   </header>
   <MomentText text={moment.text} />
   {moment.media.length > 0 && <MomentGallery media={moment.media} priorityMedia={priorityMedia} />}
+  {
+    trip && (
+      <a class="moment-entry__trip mt-3 inline-flex max-w-full items-center gap-1.5 rounded-full bg-inline px-3 py-1.5 text-xs text-tx-2 no-underline hover:bg-hover hover:text-tx" href={`/trip/${trip.id}/`} data-trip-map-trip-pick={trip.id} aria-label={`旅程：${trip.title}`}>
+        <span class="i-lucide-route shrink-0 text-sm" aria-hidden="true" />
+        <span class="truncate">{trip.title}</span>
+      </a>
+    )
+  }
 </article>
 
 <script>

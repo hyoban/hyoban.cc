@@ -1,0 +1,9 @@
+---
+import CalendarMap from '@/components/CalendarMap.astro'
+import { getTripPaths } from '@/moments'
+
+// A trip playing; /trip/<id>/play/<stop>/ is this page too, from a card (public/_redirects).
+export const getStaticPaths = getTripPaths
+---
+
+<CalendarMap tripId={Astro.params.id} />

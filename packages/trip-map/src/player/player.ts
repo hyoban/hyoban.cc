@@ -65,12 +65,16 @@ export type TripPlayerOptions = {
   /** Fetches a trip's `TripData`; undefined when it can't be had. */
   fetchTrip: (id: string) => Promise<TripData | undefined>
   getMap: () => MapboxMap | undefined
+  /** The card the address names, a stop's anchor; without it, the address's hash. */
+  getStop?: (() => string | undefined) | undefined
   /** The trip whose data the page already carries, to play without a fetch. */
   inlineTrip?: TripData | undefined
   messages: Messages
   /** The tracks a video may be set to. */
   music?: readonly MusicTrack[] | undefined
   onClose: () => void
+  /** Puts the card playing in the address (a stop's anchor, or none); without it, in the hash. */
+  setStop?: ((tripId: string, stop: string) => void) | undefined
   page: HTMLElement
   /** The side card's container; filled by `renderTripPanel` unless the page did. */
   panel: HTMLElement
@@ -655,7 +659,9 @@ export function createTripPlayer(options: TripPlayerOptions) {
     let anchor = ''
 
     try {
-      anchor = decodeURIComponent(location.hash.slice(1))
+      anchor = options.getStop
+        ? (options.getStop() ?? '')
+        : decodeURIComponent(location.hash.slice(1))
     } catch {
       // A malformed hash names no card; the trip starts from the beginning.
     }
@@ -665,6 +671,14 @@ export function createTripPlayer(options: TripPlayerOptions) {
 
   /** Keeps the address bar pointing at the current card, so it can be shared. */
   function syncHash(slide: Slide) {
+    if (options.setStop) {
+      if (trip) {
+        options.setStop(trip.id, getSlideAnchor(slide, trip.stops))
+      }
+
+      return
+    }
+
     const url = new URL(location.href)
 
     url.hash = trip ? getSlideAnchor(slide, trip.stops) : ''
