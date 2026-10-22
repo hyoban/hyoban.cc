@@ -151,27 +151,29 @@ Everything is found by attribute on the root `[data-trip-map]`:
 | `data-trip-map-shortcuts`                                                                                     | yes      | A `<dialog>` for the shortcut panel. Filled by `renderShortcuts`, or by the client.                                                                   |
 | `data-trip-map-lightbox` (+ `-lightbox-close/previous/next`)                                                  | no       | A `<dialog>` the drawer's photos open in, driven by your `createLightboxMedia`.                                                                       |
 | `data-trip-map-toolbar`, `data-trip-map-legend`, `data-trip-map-screenshot`, `data-trip-map-trip-link="<id>"` | no       | Things the player keeps clear of or wires up: a toolbar, a legend, a button that saves a screenshot, links that open trips.                           |
+| `data-trip-map-fog`, `data-trip-map-fog-area`                                                                 | no       | A toggle for the fog of war (pressed, it veils every region not lit; see `fogUrl`), and where the cities lit are counted while it shows.              |
 | `data-trip-map-token`                                                                                         | no       | The Mapbox token, unless passed as an option.                                                                                                         |
 
 ## Options
 
 `createTripMap(options)` takes:
 
-| Option                                                                 | Default                                                      | What it does                                                                                               |
-| ---------------------------------------------------------------------- | ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- |
-| `page`                                                                 | required                                                     | The root element.                                                                                          |
-| `mapboxToken`                                                          | `data-trip-map-token`                                        | The Mapbox access token.                                                                                   |
-| `places`, `trips`, `trip`, `stats`                                     | the page's JSON                                              | The places, every trip's summary, the trip the page opens on, the screenshot's totals.                     |
-| `getPlaceUrl`, `getTripDataUrl`, `getTripPath`, `getTripId`, `mapPath` | `/map/place/<id>/`, `/trip/<id>/data.json`, `/trip/<id>/`, … | Where things are fetched from and what the address bar shows.                                              |
-| `messages`                                                             | Chinese                                                      | Any of the words below, and `locale`.                                                                      |
-| `mapStyle`                                                             | Mapbox light and dark                                        | A style URL, or `{ light, dark }`.                                                                         |
-| `mapLanguage`                                                          | from `locale`                                                | The basemap's language, or `false` to leave it.                                                            |
-| `music`                                                                | none                                                         | `{ src, title }[]` a video may be set to.                                                                  |
-| `brand`                                                                | none                                                         | `{ name, image }` on the presentation's corner.                                                            |
-| `siteLine`, `screenshotTitle`                                          | the host, the document title                                 | On a video's summary card; over a saved screenshot.                                                        |
-| `documentTitle`, `getDocumentTitle`                                    | left alone                                                   | The document's title with and without a trip playing.                                                      |
-| `createLightboxMedia`                                                  | none                                                         | `(dialog, signal) => ({ show(item) })` for the drawer's photos.                                            |
-| `onError`                                                              | none                                                         | Told when a place's posts, a trip's data or the map itself couldn't be had; the map carries on without it. |
+| Option                                                                 | Default                                                      | What it does                                                                                                   |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------- |
+| `page`                                                                 | required                                                     | The root element.                                                                                              |
+| `mapboxToken`                                                          | `data-trip-map-token`                                        | The Mapbox access token.                                                                                       |
+| `places`, `trips`, `trip`, `stats`                                     | the page's JSON                                              | The places, every trip's summary, the trip the page opens on, the screenshot's totals.                         |
+| `getPlaceUrl`, `getTripDataUrl`, `getTripPath`, `getTripId`, `mapPath` | `/map/place/<id>/`, `/trip/<id>/data.json`, `/trip/<id>/`, … | Where things are fetched from and what the address bar shows.                                                  |
+| `messages`                                                             | Chinese                                                      | Any of the words below, and `locale`.                                                                          |
+| `mapStyle`                                                             | Mapbox light and dark                                        | A style URL, or `{ light, dark }`.                                                                             |
+| `mapLanguage`                                                          | from `locale`                                                | The basemap's language, or `false` to leave it.                                                                |
+| `music`                                                                | none                                                         | `{ src, title }[]` a video may be set to.                                                                      |
+| `brand`                                                                | none                                                         | `{ name, image }` on the presentation's corner.                                                                |
+| `siteLine`, `screenshotTitle`                                          | the host, the document title                                 | On a video's summary card; over a saved screenshot.                                                            |
+| `documentTitle`, `getDocumentTitle`                                    | left alone                                                   | The document's title with and without a trip playing.                                                          |
+| `createLightboxMedia`                                                  | none                                                         | `(dialog, signal) => ({ show(item) })` for the drawer's photos.                                                |
+| `fogUrl`, `fogRegionsUrl`                                              | `/map/fog.json`, `/map/cities.json`                          | `buildFogOfWar(regions, places)` as JSON, and the regions: GeoJSON features with an `id` (`fogged` never lit). |
+| `onError`                                                              | none                                                         | Told when a place's posts, a trip's data or the map itself couldn't be had; the map carries on without it.     |
 
 It returns `{ page, activeTripId, destroy() }`. One map per page: the player's shortcuts
 listen on the window.
@@ -195,6 +197,7 @@ formatted. Dates travel as `YYYY-MM-DD` keys and are formatted where they are sh
 | `clusterTitle`        | {count} 个地点                               |
 | `drawerFailed`        | 没能加载这个地点的记录。                     |
 | `drawerLoading`       | 加载中…                                      |
+| `fogLit`              | 点亮 {cities} 座城市 · {provinces} 个省份    |
 | `mapInitFailed`       | 浏览器无法初始化地图。                       |
 | `mapLoadFailed`       | 地图资源加载失败。                           |
 | `mapLoadTimeout`      | 地图加载超时。                               |

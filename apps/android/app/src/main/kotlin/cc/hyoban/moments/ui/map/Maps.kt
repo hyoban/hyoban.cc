@@ -92,6 +92,8 @@ import org.maplibre.android.style.layers.PropertyFactory.circleSortKey
 import org.maplibre.android.style.layers.PropertyFactory.circleStrokeColor
 import org.maplibre.android.style.layers.PropertyFactory.circleStrokeWidth
 import org.maplibre.android.style.layers.PropertyFactory.circleTranslate
+import org.maplibre.android.style.layers.PropertyFactory.fillAntialias
+import org.maplibre.android.style.layers.PropertyFactory.fillColor
 import org.maplibre.android.style.layers.PropertyFactory.fillOpacity
 import org.maplibre.android.style.layers.PropertyFactory.lineCap
 import org.maplibre.android.style.layers.PropertyFactory.lineColor
@@ -122,6 +124,7 @@ import org.maplibre.geojson.Feature
 import org.maplibre.geojson.FeatureCollection
 import org.maplibre.geojson.LineString
 import org.maplibre.geojson.Point
+import java.net.URI
 import kotlin.math.PI
 import kotlin.math.atan
 import kotlin.math.ln
@@ -153,6 +156,9 @@ private fun dotBlock(radius: Float) = (radius + 2f) * 2 / DOT_BLOCK_SIZE
 private const val ROUTE = "route"
 private const val ROUTES_DASHED = "routes-dashed"
 private const val STOPS = "stops"
+private const val FOG = "fog"
+private const val FOG_LIT = "fog-lit"
+private const val FOG_WATER = "fog-water"
 
 private val Place.latLng get() = LatLng(latitude, longitude)
 private val LatLng.point get() = Point.fromLngLat(longitude, latitude)
@@ -470,6 +476,8 @@ fun PlacesMap(
     /** A place or a trip to fly to, once the map is ready, then [onFocused]. */
     focus: MapFocus? = null,
     onFocused: () -> Unit = {},
+    /** The fog of war over every city not been to; none while it's off. */
+    fog: FogOfWar? = null,
 ) {
     val reduced = LocalReducedMotion.current
     val tapPlace by rememberUpdatedState(onPlace)
@@ -671,6 +679,42 @@ fun PlacesMap(
             ready.frame(places.map { it.place.latLng }, frame)
             framed = true
         }
+    }
+
+    // The site's veil: the ink over the light map, and black over the dark, which the ink would
+    // lighten. The dark map is near black already, so there the cities been to are lit up as well.
+    val dark = LocalDarkTheme.current
+    val veil = if (dark) Color.Black.toArgb() else ink
+    LaunchedEffect(map, fog, veil) {
+        val (_, style) = map ?: return@LaunchedEffect
+        if (fog == null) {
+            for (id in listOf(FOG, FOG_LIT, FOG_WATER)) style.getLayer(id)?.setProperties(visibility(Property.NONE))
+            return@LaunchedEffect
+        }
+        // Read from the asset the first time the fog shows, under the routes and the dots.
+        // Without antialiasing, the cities and the world's tiles meet without a seam. The basemap's
+        // water again over it keeps the sea, lakes and rivers clear, and the fog's coast the map's.
+        if (style.getSource(FOG) == null) {
+            style.addSource(GeoJsonSource(FOG, URI(FOG_REGIONS_URI)))
+            style.addLayerBelow(FillLayer(FOG, FOG).withProperties(fillAntialias(false)), ROUTE)
+            style.addLayerBelow(FillLayer(FOG_LIT, FOG).withProperties(fillAntialias(false)), ROUTE)
+            style.layers.filterIsInstance<FillLayer>().firstOrNull { it.sourceLayer == "water" }?.let { water ->
+                val copy = FillLayer(FOG_WATER, water.sourceId).withSourceLayer(water.sourceLayer)
+                    .withProperties(water.fillColor, water.fillOpacity, water.fillPattern)
+                water.filter?.let(copy::setFilter)
+                style.addLayerBelow(copy, ROUTE)
+            }
+        }
+        val lit = "[\"in\", [\"get\", \"id\"], [\"literal\", [${fog.lit.joinToString(",") { "\"$it\"" }}]]]"
+        style.getLayerAs<FillLayer>(FOG)?.apply {
+            setFilter(raw("[\"!\", $lit]"))
+            setProperties(fillColor(veil), fillOpacity(if (dark) 0.62f else 0.5f), visibility(Property.VISIBLE))
+        }
+        style.getLayerAs<FillLayer>(FOG_LIT)?.apply {
+            setFilter(raw(lit))
+            setProperties(fillColor(ink), fillOpacity(0.2f), visibility(if (dark) Property.VISIBLE else Property.NONE))
+        }
+        style.getLayer(FOG_WATER)?.setProperties(visibility(Property.VISIBLE))
     }
 
     LaunchedEffect(map, routes) {

@@ -67,6 +67,8 @@ export function collectMapElements(page: HTMLElement) {
       shortcuts: HTMLDialogElement
       stage: HTMLElement
     }),
+    fogArea: page.querySelector<HTMLElement>('[data-trip-map-fog-area]'),
+    fogButton: page.querySelector<HTMLButtonElement>('[data-trip-map-fog]'),
     fallbackPlaces: [...page.querySelectorAll<HTMLButtonElement>('[data-trip-map-place]')],
     legend: page.querySelector<HTMLElement>('[data-trip-map-legend]'),
     lightbox: page.querySelector<HTMLDialogElement>('[data-trip-map-lightbox]'),

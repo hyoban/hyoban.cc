@@ -39,6 +39,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
+import cc.hyoban.moments.ui.LocalSettings
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.material.icons.rounded.Explore
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.Directions
 import androidx.compose.material.icons.rounded.Luggage
@@ -177,6 +182,22 @@ fun MapScreen(
     var selected by rememberSaveable { mutableStateOf<String?>(null) }
     var highlighted by rememberSaveable { mutableStateOf<String?>(null) }
 
+    // The fog of war: the cities read from the app's assets the first time it's turned on, and
+    // those a Moment was written in, the phone's own among them, lit.
+    val settings = LocalSettings.current
+    val context = LocalContext.current
+    var fogRegions by remember { mutableStateOf<List<FogRegion>?>(null) }
+    LaunchedEffect(settings.mapFog) {
+        if (settings.mapFog && fogRegions == null) {
+            fogRegions = withContext(Dispatchers.Default) {
+                context.assets.open(FOG_REGIONS_ASSET).bufferedReader().use { parseFogRegions(it.readText()) }
+            }
+        }
+    }
+    val fog = remember(fogRegions, mapPlaces) {
+        fogRegions?.let { regions -> buildFogOfWar(regions, mapPlaces.map { it.place.longitude to it.place.latitude }) }
+    }
+
     // A trip shown from its page is lifted from the map's first frame, its card already up for
     // the page to shrink into, as going back from the trip into its card does.
     val lifted = (focus as? MapFocus.Trip)?.id ?: highlighted
@@ -196,7 +217,6 @@ fun MapScreen(
     }
 
     // Locating: each request asks for the place once more; a ring turns while it waits.
-    val context = LocalContext.current
     val show = rememberShowMessage()
     var locate by remember { mutableIntStateOf(0) }
     // Which way the map is turned, and each ask to turn it back to north.
@@ -259,6 +279,7 @@ fun MapScreen(
             tab = Atlas,
             focus = focus,
             onFocused = onFocused,
+            fog = fog.takeIf { settings.mapFog },
             onLocated = { found ->
                 locating = false
                 if (!found) show(context.getString(R.string.error_location))
@@ -279,7 +300,20 @@ fun MapScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(Space.s),
         ) {
-            if (colors.isNotEmpty()) Legend(colors, trips = mapRoutes.isNotEmpty())
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
+                if (colors.isNotEmpty()) Legend(colors, trips = mapRoutes.isNotEmpty())
+                FogButton(settings.mapFog) { settings.changeMapFog(!settings.mapFog) }
+            }
+            val shownFog = fog.takeIf { settings.mapFog }
+            AnimatedVisibility(
+                shownFog != null,
+                enter = expandVertically(MaterialTheme.motionScheme.fastSpatialSpec()) + fadeIn(MaterialTheme.motionScheme.fastEffectsSpec()),
+                exit = shrinkVertically(MaterialTheme.motionScheme.fastSpatialSpec()) + fadeOut(MaterialTheme.motionScheme.fastEffectsSpec()),
+            ) {
+                var counted by remember { mutableStateOf(shownFog) }
+                if (shownFog != null) counted = shownFog
+                counted?.let { FogCount(it) }
+            }
         }
 
         val trip = trips.firstOrNull { it.id == lifted }
@@ -500,6 +534,38 @@ private fun LocateButton(locating: Boolean, onClick: () -> Unit, inRail: Boolean
                 }
             }
         }
+    }
+}
+
+/** Turns the fog of war on and off: a floating round toggle, filled while it's on. */
+@Composable
+private fun FogButton(on: Boolean, onClick: () -> Unit) {
+    val label = stringResource(R.string.action_fog)
+    Tooltip(label) {
+        Surface(
+            checked = on,
+            onCheckedChange = { onClick() },
+            shape = Corners.full,
+            color = if (on) MaterialTheme.colorScheme.primary else SurfaceLevel.Floating.fill(),
+            contentColor = if (on) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary,
+            shadowElevation = Elevation.level2,
+            modifier = Modifier.size(48.dp).semantics { contentDescription = label }.testTag("fog"),
+        ) {
+            Box(contentAlignment = Alignment.Center) { Icon(Icons.Rounded.Explore, contentDescription = null) }
+        }
+    }
+}
+
+/** How many cities and provinces the fog leaves lit. */
+@Composable
+private fun FogCount(fog: FogOfWar) {
+    FloatingPill {
+        Text(
+            stringResource(R.string.fog_lit, fog.cities, fog.provinces),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.height(32.dp).padding(horizontal = Space.l).wrapContentHeight(),
+        )
     }
 }
 

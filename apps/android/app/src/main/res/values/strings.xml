@@ -97,6 +97,8 @@
     <string name="action_expand_card">展开卡片</string>
     <string name="action_locate">我的位置</string>
     <string name="action_north">回到正北</string>
+    <string name="action_fog">迷雾地图</string>
+    <string name="fog_lit">点亮 %1$d 座城市 · %2$d 个省份</string>
     <string name="error_location">没能定位，确认定位已打开</string>
     <string name="error_location_permission">需要定位权限才能显示所在位置</string>
     <string name="label_view_list">列表</string>

@@ -26,6 +26,13 @@ page, and a day's page its trip; a Moment's menu, on its cards and in the playba
 its places, its trip and its day, as does the viewer's date; and the settings' 发布 group
 leads to the changes waiting to be published. `moments://search` opens the search.
 
+The toggle beside the map's legend, 迷雾地图, veils every city no Moment was
+written in, as the site's map does: the prefecture-level cities of the site's
+`src/data/boundaries/cities.json` (Aliyun DataV's, simplified; `vp run map:cities` makes it),
+shipped in the APK as an asset, with the rest of the world never lit; the sea, lakes and rivers stay clear, so the fog meets the land at the basemap's own coast. A place on no city, on a
+coast the boundaries were simplified past, lights the nearest within 10 km; the phone's own
+Moments light theirs too. On the dark map, already near black, the cities lit are lightened as well. Under the toggle, how many cities and provinces are lit.
+
 A new Moment can be written on the phone, from the ✎ in the Moments tab's header or
 `moments://new`, on a page of its own, or, on a window from Material 3's medium breakpoint
 on, in a dialog over the page it was opened from: its words, up to nine photos from the system's documents picker (a tile beside it
