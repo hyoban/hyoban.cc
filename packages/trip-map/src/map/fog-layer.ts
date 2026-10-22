@@ -44,6 +44,8 @@ const SWEEP = { in: 1400, out: 900 }
 const EDGE = 0.8
 // How long a sweep waits for its rings to be laid out before it starts anyway.
 const RINGS_READY = 500
+// The closest the fog's regions are cut into tiles at.
+const MAX_ZOOM = 10
 
 export function createFogLayer({
   areaElement,
@@ -151,8 +153,10 @@ export function createFogLayer({
     const beforeId = getBeforeId(map)
     const none: FilterSpecification = ['literal', false]
 
-    map.addSource(SOURCE, { data: fog!.regions, type: 'geojson' })
-    map.addSource(RING_SOURCE, { data: fog!.regions, type: 'geojson' })
+    // Cut into tiles no closer than a city's streets: the boundaries are simplified past
+    // that, so closer tiles would only take work and memory to hold the same lines.
+    map.addSource(SOURCE, { data: fog!.regions, maxzoom: MAX_ZOOM, type: 'geojson' })
+    map.addSource(RING_SOURCE, { data: fog!.regions, maxzoom: MAX_ZOOM, type: 'geojson' })
     rings = undefined
 
     // Without antialiasing, the cities and the world's tiles meet without a seam; set at

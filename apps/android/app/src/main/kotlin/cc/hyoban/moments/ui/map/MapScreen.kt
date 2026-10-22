@@ -195,7 +195,7 @@ fun MapScreen(
     LaunchedEffect(settings.mapFog) {
         if (settings.mapFog && fogRegions == null) {
             fogRegions = withContext(Dispatchers.Default) {
-                context.assets.open(FOG_REGIONS_ASSET).bufferedReader().use { parseFogRegions(it.readText()) }
+                context.assets.open(FOG_REGIONS_ASSET).bufferedReader().use(::parseFogRegions)
             }
         }
     }
