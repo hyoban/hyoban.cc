@@ -198,7 +198,9 @@ fun MapScreen(
         }
     }
     val fog = remember(fogRegions, mapPlaces) {
-        fogRegions?.let { regions -> buildFogOfWar(regions, mapPlaces.map { it.place.longitude to it.place.latitude }) }
+        fogRegions?.let { regions ->
+            buildFogOfWar(regions, mapPlaces.map { it.place.longitude to it.place.latitude }, mapPlaces.map { it.count })
+        }
     }
 
     // A trip shown from its page is lifted from the map's first frame, its card already up for
