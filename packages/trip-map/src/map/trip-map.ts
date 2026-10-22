@@ -16,6 +16,7 @@ import {
   getFramingPitch,
   getMapPitch,
   setBasemapConfig,
+  syncBasemapRoads,
   setMapPitch,
   STANDARD_STYLE,
 } from './basemap.ts'
@@ -1552,6 +1553,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
       syncLanguage(map, !style.config)
 
       map.on('style.load', () => {
+        syncBasemapRoads(map!, true)
         applyFog()
         // Under the routes and the player's layers, once the map has loaded.
         fogLayer.add()
@@ -1600,6 +1602,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
           leanToZoom()
         }
       })
+      map.on('zoom', () => syncBasemapRoads(map!))
       map.on('idle', () => markers.sync())
       map.on('moveend', () => markers.sync())
       // A drag keeps the places coming in as it goes; a zoom waits for its end, when
