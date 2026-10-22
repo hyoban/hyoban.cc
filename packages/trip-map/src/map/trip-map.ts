@@ -168,6 +168,9 @@ export function createTripMap(options: TripMapOptions): TripMap {
   // Whether the view is still the one framing every place, untouched since: only then
   // does a change of width frame them again.
   let framedOnAll = true
+  // Whether the viewer has tipped the map themselves: their zooming leaves it as they set
+  // it from then on, until the map frames every place again or the setting changes.
+  let pitchedByHand = false
   // Where the map was before the trip list first flew it to a route, to go back to as
   // the list closes.
   let viewBeforeList: { camera: mapboxgl.CameraOptions; framedOnAll: boolean } | undefined
@@ -478,6 +481,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
     const wasDark = isMapDark()
 
     settings = next
+    pitchedByHand = false
     writeMapSettingsPreference(next)
 
     if (!map || !mapLoaded) {
@@ -506,6 +510,21 @@ export function createTripMap(options: TripMapOptions): TripMap {
     if (!tripPlayer.activeId && Math.abs(map.getPitch() - pitch) > 0.5) {
       map.easeTo({ duration: getAnimationDuration(), pitch })
     }
+  }
+
+  /** Leans the map as far as it does at its zoom, unless the viewer tipped it or a trip plays. */
+  function leanToZoom() {
+    if (!map || pitchedByHand || tripPlayer.activeId) {
+      return
+    }
+
+    const pitch = getMapPitch(map, map.getZoom())
+
+    if (Math.abs(map.getPitch() - pitch) < 0.1) {
+      return
+    }
+
+    map.easeTo({ duration: getAnimationDuration(), pitch })
   }
 
   function isNarrow() {
@@ -1141,6 +1160,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
       pitch: getFramingPitch(map, view.bounds, view.fitBoundsOptions),
     })
     framedOnAll = true
+    pitchedByHand = false
   }
 
   function applyFog() {
@@ -1515,6 +1535,18 @@ export function createTripMap(options: TripMapOptions): TripMap {
           viewBeforeList = undefined
         }
       })
+      // The viewer's own zooming leans the map as its framing does, the closer the further,
+      // once each zoom has landed: leaning it midway would stop a scroll's own easing.
+      map.on('pitchstart', (event) => {
+        if (isByViewer(event)) {
+          pitchedByHand = true
+        }
+      })
+      map.on('zoomend', (event) => {
+        if (isByViewer(event)) {
+          leanToZoom()
+        }
+      })
       map.on('idle', () => markers.sync())
       map.on('moveend', () => markers.sync())
       // A drag keeps the places coming in as it goes; a zoom waits for its end, when
@@ -1631,6 +1663,11 @@ export function createTripMap(options: TripMapOptions): TripMap {
 }
 
 type SetStyleOptions = NonNullable<Parameters<mapboxgl.Map['setStyle']>[1]>
+
+/** Whether a move came from the viewer's own input, rather than the package's moves. */
+function isByViewer(event: object) {
+  return 'originalEvent' in event && Boolean(event.originalEvent)
+}
 
 /** The basemap language for a locale: Chinese by script, anything else by its language. */
 function getMapLanguage(locale: string) {
