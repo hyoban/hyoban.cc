@@ -7,6 +7,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -187,6 +188,10 @@ fun MapScreen(
     val settings = LocalSettings.current
     val context = LocalContext.current
     var fogRegions by remember { mutableStateOf<List<FogRegion>?>(null) }
+    // Each toggle, swept on the map rather than set; a toggle while one sweeps is let be, as it
+    // would cut the sweep off.
+    var fogSweep by remember { mutableIntStateOf(0) }
+    var fogSweeping by remember { mutableStateOf(false) }
     LaunchedEffect(settings.mapFog) {
         if (settings.mapFog && fogRegions == null) {
             fogRegions = withContext(Dispatchers.Default) {
@@ -280,6 +285,9 @@ fun MapScreen(
             focus = focus,
             onFocused = onFocused,
             fog = fog.takeIf { settings.mapFog },
+            fogSweep = fogSweep,
+            onFogSettled = { fogSweeping = false },
+            fogRegions = fogRegions.orEmpty(),
             onLocated = { found ->
                 locating = false
                 if (!found) show(context.getString(R.string.error_location))
@@ -302,7 +310,13 @@ fun MapScreen(
         ) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
                 if (colors.isNotEmpty()) Legend(colors, trips = mapRoutes.isNotEmpty())
-                FogButton(settings.mapFog) { settings.changeMapFog(!settings.mapFog) }
+                FogButton(settings.mapFog) {
+                    if (!fogSweeping) {
+                        fogSweeping = true
+                        fogSweep++
+                        settings.changeMapFog(!settings.mapFog)
+                    }
+                }
             }
             val shownFog = fog.takeIf { settings.mapFog }
             AnimatedVisibility(
@@ -541,13 +555,17 @@ private fun LocateButton(locating: Boolean, onClick: () -> Unit, inRail: Boolean
 @Composable
 private fun FogButton(on: Boolean, onClick: () -> Unit) {
     val label = stringResource(R.string.action_fog)
+    // Filling and emptying as the fog comes and goes, on the motion scheme's effects spring.
+    val spec = MaterialTheme.motionScheme.defaultEffectsSpec<Color>()
+    val container by animateColorAsState(if (on) MaterialTheme.colorScheme.primary else SurfaceLevel.Floating.fill(), spec, label = "fog button")
+    val content by animateColorAsState(if (on) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary, spec, label = "fog icon")
     Tooltip(label) {
         Surface(
             checked = on,
             onCheckedChange = { onClick() },
             shape = Corners.full,
-            color = if (on) MaterialTheme.colorScheme.primary else SurfaceLevel.Floating.fill(),
-            contentColor = if (on) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary,
+            color = container,
+            contentColor = content,
             shadowElevation = Elevation.level2,
             modifier = Modifier.size(48.dp).semantics { contentDescription = label }.testTag("fog"),
         ) {

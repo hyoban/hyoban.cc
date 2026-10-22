@@ -74,7 +74,7 @@ const description = activeTrip
       }
       <div class="col-start-3 flex items-center gap-2 justify-self-end">
         <!-- Pressed, everywhere not been to goes under a veil. -->
-        <button class="trip-map-fog flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--color-border)_82%,transparent)] bg-[color-mix(in_srgb,var(--color-bg)_82%,transparent)] text-tx-2 backdrop-blur-[1rem] hover:text-tx aria-pressed:border-tx aria-pressed:bg-tx aria-pressed:text-bg" type="button" data-trip-map-fog aria-pressed="false" aria-label="迷雾地图" title="迷雾地图">
+        <button class="trip-map-fog flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--color-border)_82%,transparent)] bg-[color-mix(in_srgb,var(--color-bg)_82%,transparent)] text-tx-2 backdrop-blur-[1rem] hover:text-tx aria-pressed:border-tx aria-pressed:bg-tx aria-pressed:text-bg aria-busy:cursor-progress" type="button" data-trip-map-fog aria-pressed="false" aria-label="迷雾地图" title="迷雾地图">
           <span class="i-lucide-cloud-fog text-[0.9375rem]" aria-hidden="true" />
         </button>
         <button class="trip-map-screenshot flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--color-border)_82%,transparent)] bg-[color-mix(in_srgb,var(--color-bg)_82%,transparent)] text-tx-2 backdrop-blur-[1rem] hover:text-tx disabled:cursor-default disabled:opacity-40 aria-busy:cursor-progress" type="button" data-trip-map-screenshot aria-label="保存地图截图" title="保存地图截图" disabled>

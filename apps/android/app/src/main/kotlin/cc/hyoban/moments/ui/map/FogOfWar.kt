@@ -6,6 +6,7 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.double
+import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -28,8 +29,11 @@ private const val REACH = 0.1
 /** A ring of `[longitude, latitude]` points. */
 private typealias Ring = List<DoubleArray>
 
-/** A region to light: its id, the first two digits its province's, and its polygons, each an outer ring then its holes. */
-class FogRegion(val id: String, val fogged: Boolean, val polygons: List<List<Ring>>) {
+/**
+ * A region to light: its id, the first two digits its province's, and its polygons, each an outer
+ * ring then its holes. Its middle, [cx] and [cy], is where the fog's sweep reaches it.
+ */
+class FogRegion(val id: String, val fogged: Boolean, val polygons: List<List<Ring>>, cx: Double? = null, cy: Double? = null) {
     /** West, south, east and north. */
     internal val bounds: DoubleArray = DoubleArray(4).apply {
         this[0] = Double.POSITIVE_INFINITY
@@ -43,6 +47,9 @@ class FogRegion(val id: String, val fogged: Boolean, val polygons: List<List<Rin
             this[3] = maxOf(this[3], point[1])
         }
     }
+
+    val cx: Double = cx ?: ((bounds[0] + bounds[2]) / 2)
+    val cy: Double = cy ?: ((bounds[1] + bounds[3]) / 2)
 }
 
 /** The cities lit, by id, and how many cities and provinces they make. */
@@ -60,6 +67,8 @@ fun parseFogRegions(text: String): List<FogRegion> =
             id = properties.getValue("id").jsonPrimitive.content,
             fogged = (properties["fogged"] as? JsonPrimitive)?.booleanOrNull == true,
             polygons = polygons.map { polygon -> polygon.map { ring -> ring.jsonArray.map(::toPoint) } },
+            cx = (properties["cx"] as? JsonPrimitive)?.doubleOrNull,
+            cy = (properties["cy"] as? JsonPrimitive)?.doubleOrNull,
         )
     }
 

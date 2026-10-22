@@ -237,6 +237,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
     messages,
     onError: (cause) =>
       report({ cause, kind: 'map', message: "The fog of war couldn't be fetched." }),
+    reducedMotion,
     regionsUrl: options.fogRegionsUrl ?? '/map/cities.json',
     signal,
     url: options.fogUrl ?? '/map/fog.json',
