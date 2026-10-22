@@ -20,17 +20,16 @@ const months = [...Map.groupBy(moments, getMonth)]
   .sort(([first], [second]) => second - first)
   // Newest first, down to the time of day: the Moments come oldest first.
   .map(([month, monthMoments]) => ({ month, moments: monthMoments.toReversed() }))
-const monthCounts = new Map(months.map(({ month, moments: monthMoments }) => [month, monthMoments.length]))
-const chipClass = 'flex h-8 min-w-0 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent px-2.5 font-mono text-[0.8125rem] text-tx-2 tabular-nums hover:bg-inline hover:text-tx disabled:cursor-default disabled:bg-transparent disabled:text-tx-3 disabled:opacity-40 aria-pressed:bg-tx aria-pressed:text-bg'
+const chipClass = 'flex h-8 min-w-0 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent px-2.5 font-mono text-[0.8125rem] text-tx-2 tabular-nums hover:bg-inline hover:text-tx aria-pressed:bg-tx aria-pressed:text-bg'
 ---
 
-<!-- The year's months, every one in its place and the empty ones dimmed, and the whole
-     year; --moments-nav is how tall it is, for the months' headings to stay below. -->
-<nav class="sticky top-0 z-[2] -mx-5 grid grid-cols-[auto_repeat(12,minmax(0,1fr))] items-center gap-0.5 border-b border-border bg-bg px-3 py-2" aria-label={`${year} 年按月份查看`}>
-  <button class={chipClass} type="button" data-trip-map-month-all aria-pressed={String(pickedMonth === undefined)}>全年</button>
+<!-- The whole year, and its months with Moments; 3.0625rem tall, which the months'
+     headings stay below. -->
+<nav class="sticky top-0 z-[2] -mx-5 flex items-center gap-0.5 overflow-x-auto border-b border-border bg-bg px-3 py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-label={`${year} 年按月份查看`}>
+  <button class:list={[chipClass, 'shrink-0']} type="button" data-trip-map-month-all aria-pressed={String(pickedMonth === undefined)}>全年</button>
   {
-    Array.from({ length: 12 }, (_, index) => index + 1).map(month => (
-      <button class:list={[chipClass, 'px-0']} type="button" data-trip-map-month={month} aria-pressed={String(month === pickedMonth)} aria-label={`${month} 月`} disabled={!monthCounts.has(month)} title={monthCounts.has(month) ? `${month} 月 · ${monthCounts.get(month)} 条记录` : `${month} 月没有记录`}>
+    months.toReversed().map(({ month, moments: monthMoments }) => (
+      <button class:list={[chipClass, 'min-w-8 shrink-0 px-1.5']} type="button" data-trip-map-month={month} aria-pressed={String(month === pickedMonth)} aria-label={`${month} 月`} title={`${month} 月 · ${monthMoments.length} 条记录`}>
         {month}
       </button>
     ))
