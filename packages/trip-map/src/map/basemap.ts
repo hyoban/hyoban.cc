@@ -94,6 +94,58 @@ export function setBasemapConfig(
   }
 }
 
+// Standard draws every motorway and trunk road from a country away, a tangle over China
+// the flat map leaves out: its roads are left out too until the map comes closer, the
+// motorways first, then the trunk and the other roads. Its settings can't follow the zoom
+// themselves, so each is switched as the map crosses its zoom.
+const ROAD_ZOOMS = { colorMotorways: 6, colorRoads: 8, colorTrunks: 8 } as const
+const NO_ROAD = 'hsla(0, 0%, 0%, 0)'
+
+type RoadColor = keyof typeof ROAD_ZOOMS
+
+// Whether each map's style is Standard, as it was last set, and the roads' own colours
+// while they're hidden: checked on every frame of a zoom.
+const roads = new WeakMap<
+  MapboxMap,
+  { colors: Partial<Record<RoadColor, unknown>>; standard: boolean }
+>()
+
+/**
+ * Hides Standard's roads on `map` far out and shows them again closer in, for its zoom;
+ * `restyled` once a style is set, its roads its own again.
+ */
+export function syncBasemapRoads(map: MapboxMap, restyled = false) {
+  let state = restyled ? undefined : roads.get(map)
+
+  if (!state) {
+    state = { colors: {}, standard: Boolean(getBasemap(map)) }
+    roads.set(map, state)
+  }
+
+  if (!state.standard) {
+    return
+  }
+
+  const zoom = map.getZoom()
+
+  // Each change has Standard lay its roads' tiles out again, so it's only made crossing.
+  for (const [key, from] of Object.entries(ROAD_ZOOMS) as [RoadColor, number][]) {
+    const hidden = zoom < from
+
+    if (hidden === key in state.colors) {
+      continue
+    }
+
+    if (hidden) {
+      state.colors[key] = map.getConfigProperty(BASEMAP, key) as unknown
+      map.setConfigProperty(BASEMAP, key, NO_ROAD)
+    } else {
+      map.setConfigProperty(BASEMAP, key, state.colors[key])
+      delete state.colors[key]
+    }
+  }
+}
+
 // How far each map leans at most, as its style was last set: read every frame while a
 // trip plays, where reading the style itself would cost too much.
 const pitches = new WeakMap<MapboxMap, number>()
