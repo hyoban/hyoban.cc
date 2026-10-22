@@ -75,6 +75,9 @@ export function collectMapElements(page: HTMLElement) {
     page,
     screenshotButton: page.querySelector<HTMLButtonElement>('[data-trip-map-screenshot]'),
     tripLinks: [...page.querySelectorAll<HTMLAnchorElement>('[data-trip-map-trip-link]')],
+    tripList: page.querySelector<HTMLElement>('[data-trip-map-trip-list]'),
+    tripListClose: page.querySelector<HTMLButtonElement>('[data-trip-map-trip-list-close]'),
+    tripListOpeners: [...page.querySelectorAll<HTMLElement>('[data-trip-map-trip-list-open]')],
   }
 }
 

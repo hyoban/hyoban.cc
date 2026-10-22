@@ -1,5 +1,5 @@
 // What the map page's address means: the place a hash names, the trip a path opens,
-// and the URLs of what the client fetches. A site with other paths passes its own.
+// the path that opens the list of trips, and the URLs of what the client fetches. A site with other paths passes its own.
 
 const TRIP_PATH_PATTERN = /^\/trip\/([^/]+)\/?$/
 
@@ -38,6 +38,8 @@ export const defaultUrls = {
   getTripPath: (id: string) => `/trip/${encodeURIComponent(id)}/`,
   /** The map's own page, which closing a trip goes back to. */
   mapPath: '/map/',
+  /** The map with the list of trips open beside it. */
+  tripListPath: '/trip/',
 }
 
 export type Urls = typeof defaultUrls

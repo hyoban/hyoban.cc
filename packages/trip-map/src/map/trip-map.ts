@@ -13,6 +13,7 @@ import { createFogLayer } from './fog-layer.ts'
 import { createPlaceDrawer, type LightboxMedia } from './place-drawer.ts'
 import { CLUSTER_MAX_ZOOM, createPlaceMarkers, getAllPlacesView } from './place-markers.ts'
 import { captureMap, savePicture } from './screenshot.ts'
+import { createTripList } from './trip-list.ts'
 import { defaultUrls, getHistoryState, HISTORY_STATE_KEY, parseHash } from './selection-url.ts'
 
 // The map page: every place with posts as a dot, each opening a drawer with its
@@ -68,6 +69,10 @@ export type TripMapOptions = {
   mapLanguage?: string | false | undefined
   /** The map's own page, which closing a trip goes back to. Default: `/map/`. */
   mapPath?: string | undefined
+  /** The map with `[data-trip-map-trip-list]` open beside it. Default: `/trip/`. */
+  tripListPath?: string | undefined
+  /** The document title while the trip list is open; without it the title is left alone. */
+  tripListTitle?: string | undefined
   /** A Mapbox style URL, or one for each colour scheme. Default: Mapbox's light and dark. */
   mapStyle?: string | Readonly<{ dark: string; light: string }> | undefined
   /** Otherwise read from the page's `data-trip-map-token`. */
@@ -104,6 +109,8 @@ export type TripMapOptions = {
 // How long the markers take to fade as a trip opens (see styles.css), before they're
 // taken off the map.
 const MARKER_FADE = 200
+// The least room, in pixels, the map frames places in beside the trip list.
+const MIN_FRAMED = 240
 
 /** Sets the map up on `page`. One map per page: its shortcuts listen on the window. */
 export function createTripMap(options: TripMapOptions): TripMap {
@@ -115,6 +122,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
     getTripId: options.getTripId ?? defaultUrls.getTripId,
     getTripPath: options.getTripPath ?? defaultUrls.getTripPath,
     mapPath: options.mapPath ?? defaultUrls.mapPath,
+    tripListPath: options.tripListPath ?? defaultUrls.tripListPath,
   }
   const elements = collectMapElements(page)
   const { canvas, fallback, fallbackMessage, fallbackRetry, loading, screenshotButton } = elements
@@ -140,6 +148,9 @@ export function createTripMap(options: TripMapOptions): TripMap {
   // Whether the view is still the one framing every place, untouched since: only then
   // does a change of width frame them again.
   let framedOnAll = true
+  // Where the map was before the trip list first flew it to a route, to go back to as
+  // the list closes.
+  let viewBeforeList: { camera: mapboxgl.CameraOptions; framedOnAll: boolean } | undefined
 
   const tripPlayer = createTripPlayer({
     brand: options.brand,
@@ -183,6 +194,8 @@ export function createTripMap(options: TripMapOptions): TripMap {
     messages,
     // Pointing at a route, or focusing its link, starts loading that trip.
     onHighlight: (id) => tripPlayer.prefetch(id),
+    // A route picked on the map picks its row in the list.
+    onPick: (id) => tripList?.pick(id),
     onSelect: selectTrip,
     reducedMotion,
     signal,
@@ -218,6 +231,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
       }),
     onOpen: (place, { moveMap }) => {
       markers.setPressed(place.id)
+      tripList?.close({ restoreFocus: false, restoreView: false })
 
       if (moveMap) {
         moveMapToPlace(place)
@@ -227,6 +241,60 @@ export function createTripMap(options: TripMapOptions): TripMap {
     reducedMotion,
     signal,
   })
+
+  const tripList =
+    elements.tripList &&
+    createTripList({
+      closeButton: elements.tripListClose,
+      isNarrow,
+      list: elements.tripList,
+      onClose: ({ restoreView }) => {
+        tripOverview.highlight(undefined)
+
+        // Back to where the map was before the list moved it, unless it has been moved
+        // by hand since: every place in view again, now the list is gone, or the view
+        // the list moved aside.
+        if (restoreView && map && mapLoaded) {
+          if (viewBeforeList ? viewBeforeList.framedOnAll : framedOnAll) {
+            fitAll()
+          } else if (viewBeforeList) {
+            map.easeTo({ ...viewBeforeList.camera, duration: getAnimationDuration() })
+          }
+        }
+
+        viewBeforeList = undefined
+      },
+      onHighlight: (id, { frame }) => {
+        tripOverview.highlight(id)
+
+        if (!id || !frame || !map || !mapLoaded) {
+          return
+        }
+
+        rememberViewBeforeList()
+        framedOnAll = false
+
+        // Wider than for a place, for the route's name above it and the legend below.
+        const side = getSidePadding(elements.tripList!)
+
+        tripOverview.frame(id, {
+          bottom: side.bottom + 64,
+          left: side.left + 48,
+          right: side.right + 48,
+          top: side.top + 32,
+        })
+      },
+      onPick: (id) => tripOverview.pick(id),
+      onPlay: selectTrip,
+      onRequestClose: requestSelectionClose,
+      onRequestOpen: () => {
+        setSelectionUrl(urls.tripListPath)
+        syncSelection()
+      },
+      openers: elements.tripListOpeners,
+      reducedMotion,
+      signal,
+    })
 
   const fogLayer = createFogLayer({
     areaElement: elements.fogArea,
@@ -264,22 +332,86 @@ export function createTripMap(options: TripMapOptions): TripMap {
     return id && markers.has(id) ? id : undefined
   }
 
+  function rememberViewBeforeList() {
+    if (!map || viewBeforeList) {
+      return
+    }
+
+    viewBeforeList = {
+      camera: {
+        bearing: map.getBearing(),
+        center: map.getCenter(),
+        padding: map.getPadding(),
+        pitch: map.getPitch(),
+        zoom: map.getZoom(),
+      },
+      framedOnAll,
+    }
+  }
+
+  /** What of the map the trip list covers, while its address is open. */
+  function getTripListInset(): { bottom?: number; right?: number } {
+    const list = elements.tripList
+
+    if (!list || !isTripListUrl() || list.hidden) {
+      return {}
+    }
+
+    // The list and its margin, at the bottom on a phone and on the right otherwise;
+    // nothing if what it leaves is too small to frame anything in.
+    const inset: { bottom?: number; right?: number } = isNarrow()
+      ? { bottom: list.offsetHeight + 12 }
+      : { right: list.offsetWidth + 16 }
+    const container = map?.getContainer() ?? canvas
+    const room = Math.min(
+      container.clientWidth - (inset.right ?? 0),
+      container.clientHeight - (inset.bottom ?? 0),
+    )
+
+    return room < MIN_FRAMED ? {} : inset
+  }
+
+  /**
+   * Moves the map out from under the list as it opens: every place framed beside it, if
+   * they were in view, or else the view slid aside by half the list.
+   */
+  function moveMapForTripList() {
+    if (!map || !mapLoaded) {
+      return
+    }
+
+    if (framedOnAll) {
+      fitAll()
+      return
+    }
+
+    const { bottom = 0, right = 0 } = getTripListInset()
+
+    rememberViewBeforeList()
+    map.panBy([right / 2, bottom / 2], { duration: getAnimationDuration() })
+  }
+
+  function isTripListUrl() {
+    return Boolean(tripList) && window.location.pathname === urls.tripListPath
+  }
+
   function getUrlTripId() {
     const id = urls.getTripId(window.location.pathname)
     return id && tripPlayer.has(id) ? id : undefined
   }
 
-  function getDrawerPadding(): PaddingOptions {
+  /** Room kept on the map for what sits on its side: the drawer, or the trip list. */
+  function getSidePadding(side: HTMLElement = elements.drawer): Required<PaddingOptions> {
     if (isNarrow()) {
       return {
-        bottom: Math.min(elements.drawer.offsetHeight + 32, window.innerHeight * 0.82),
+        bottom: Math.min(side.offsetHeight + 32, window.innerHeight * 0.82),
         left: 32,
         right: 32,
         top: 80,
       }
     }
 
-    return { bottom: 32, left: 32, right: elements.drawer.offsetWidth + 32, top: 80 }
+    return { bottom: 32, left: 32, right: side.offsetWidth + 32, top: 80 }
   }
 
   function getAnimationDuration() {
@@ -295,7 +427,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
     map.easeTo({
       center: [place.longitude, place.latitude],
       duration: getAnimationDuration(),
-      padding: getDrawerPadding(),
+      padding: getSidePadding(),
       zoom: Math.max(map.getZoom(), CLUSTER_MAX_ZOOM + 1),
     })
   }
@@ -354,9 +486,10 @@ export function createTripMap(options: TripMapOptions): TripMap {
     const id = getUrlTripId()
     const title = id ? tripPlayer.getTitle(id) : undefined
 
-    if (options.getDocumentTitle) {
-      document.title =
-        id && title !== undefined ? options.getDocumentTitle({ id, title }) : documentTitle
+    if (id && title !== undefined && options.getDocumentTitle) {
+      document.title = options.getDocumentTitle({ id, title })
+    } else if (options.getDocumentTitle || options.tripListTitle) {
+      document.title = (isTripListUrl() && options.tripListTitle) || documentTitle
     }
 
     if (id) {
@@ -381,20 +514,28 @@ export function createTripMap(options: TripMapOptions): TripMap {
       tripPlayer.stop()
       tripOverview.show()
       setTripMode(false)
-      fitAll()
+      return true
     }
+
+    return false
   }
 
   function syncSelection(selectOptions: { focus?: boolean; moveMap?: boolean } = {}) {
-    syncTripFromUrl()
+    // A trip closed: every place in view again, beside the list if it's coming back.
+    const tripClosed = syncTripFromUrl()
 
     if (tripPlayer.activeId) {
       drawer.close({ restoreFocus: false })
+      tripList?.close({ restoreFocus: false, restoreView: false })
       return
     }
 
     const id = getHashPlaceId()
     const place = id ? markers.getPlace(id) : undefined
+
+    if (tripClosed && !isTripListUrl()) {
+      fitAll()
+    }
 
     if (id && place) {
       const fallbackButton = page.querySelector<HTMLButtonElement>(
@@ -408,18 +549,39 @@ export function createTripMap(options: TripMapOptions): TripMap {
       return
     }
 
+    // The list takes the drawer's side of the map.
+    if (isTripListUrl()) {
+      const opening = !tripList?.isOpen
+
+      drawer.close({ restoreFocus: false })
+      tripList?.show({ focus: selectOptions.focus !== false })
+
+      if (tripClosed) {
+        fitAll()
+      } else if (opening) {
+        moveMapForTripList()
+      }
+
+      return
+    }
+
     drawer.close({ restoreFocus: selectOptions.focus !== false })
+    tripList?.close({ restoreFocus: selectOptions.focus !== false })
   }
 
+  /**
+   * Goes to a selection's address: in place of the one open, or after the map or the
+   * trip list, which stays behind what it opened for going back to.
+   */
   function setSelectionUrl(url: string) {
-    const hasSelection = Boolean(getHashPlaceId() ?? getUrlTripId())
+    const replace = !isTripListUrl() && Boolean(getHashPlaceId() ?? getUrlTripId())
     const currentState = getHistoryState()
     const nextState = {
       ...currentState,
-      [HISTORY_STATE_KEY]: hasSelection ? currentState[HISTORY_STATE_KEY] === true : true,
+      [HISTORY_STATE_KEY]: replace ? currentState[HISTORY_STATE_KEY] === true : true,
     }
 
-    if (hasSelection) {
+    if (replace) {
       history.replaceState(nextState, '', url)
     } else {
       history.pushState(nextState, '', url)
@@ -435,7 +597,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
 
     drawer.trigger = trigger
     setSelectionUrl(
-      `${window.location.pathname}${window.location.search}#${encodeURIComponent(id)}`,
+      `${isTripListUrl() ? urls.mapPath : window.location.pathname}${window.location.search}#${encodeURIComponent(id)}`,
     )
     drawer.open(place, { trigger })
   }
@@ -446,7 +608,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
   }
 
   function requestSelectionClose() {
-    if (!drawer.activeId && !tripPlayer.activeId) {
+    if (!drawer.activeId && !tripPlayer.activeId && !isTripListUrl()) {
       return
     }
 
@@ -458,7 +620,9 @@ export function createTripMap(options: TripMapOptions): TripMap {
     history.replaceState(
       getHistoryState(),
       '',
-      getUrlTripId() ? urls.mapPath : `${window.location.pathname}${window.location.search}`,
+      getUrlTripId() || isTripListUrl()
+        ? urls.mapPath
+        : `${window.location.pathname}${window.location.search}`,
     )
     syncSelection()
   }
@@ -483,7 +647,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
       return
     }
 
-    const view = getAllPlacesView(places, isNarrow())
+    const view = getAllPlacesView(places, isNarrow(), getTripListInset())
 
     if ('bounds' in view) {
       map.fitBounds(view.bounds, { ...view.fitBoundsOptions, duration: getAnimationDuration() })
@@ -581,6 +745,11 @@ export function createTripMap(options: TripMapOptions): TripMap {
   for (const link of elements.tripLinks) {
     const id = link.dataset.tripMapTripLink!
 
+    // The trip list's rows are the list's own: picked first, then played.
+    if (elements.tripList?.contains(link)) {
+      continue
+    }
+
     link.addEventListener(
       'focus',
       () => {
@@ -638,10 +807,13 @@ export function createTripMap(options: TripMapOptions): TripMap {
       if (
         event.key === 'Escape' &&
         !event.defaultPrevented &&
-        (drawer.activeId || tripPlayer.activeId) &&
+        (drawer.activeId || tripPlayer.activeId || tripList?.isOpen) &&
         !drawer.lightboxOpen
       ) {
         requestSelectionClose()
+      } else if (event.key === 'Escape' && !event.defaultPrevented && tripOverview.pickedId) {
+        // A route picked on the map, with nothing open: let go of it.
+        tripOverview.pick(undefined)
       }
     },
     { signal },
@@ -670,7 +842,8 @@ export function createTripMap(options: TripMapOptions): TripMap {
       mapboxgl.accessToken = token
       // Opens already framed on the places, rather than on the globe and then flying in.
       map = new mapboxgl.Map({
-        ...getAllPlacesView(places, isNarrow()),
+        // Beside the trip list, on its page.
+        ...getAllPlacesView(places, isNarrow(), getTripListInset()),
         attributionControl: false,
         container: canvas,
         dragRotate: true,
@@ -720,6 +893,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
           (typeof TouchEvent !== 'undefined' && input instanceof TouchEvent)
         ) {
           framedOnAll = false
+          viewBeforeList = undefined
         }
       })
       map.on('idle', () => markers.sync())

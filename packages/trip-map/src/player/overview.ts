@@ -5,8 +5,9 @@ import { createPopupContent, MAP_POPUP_CLASS } from './dom.ts'
 import type { TripSummary } from './types.ts'
 
 // Every trip's route on the overview map, as the way into its playback: pointing at a
-// route lifts it above the others, and clicking it opens the trip. A finger has no
-// pointing, so its first tap on a route lifts it and names it, and a second opens it.
+// route lifts it above the others for a moment; clicking it picks it, keeping it lifted
+// and named, and clicking it again opens the trip. The trip list picks trips the same
+// way, the two sharing what's picked.
 //
 // Opening a trip, the other routes fade away at once while the opened one stays a
 // moment longer, so the eye follows it as the camera flies in and the trip's own route
@@ -22,6 +23,15 @@ const DENSIFY_STEP = 0.25
 const HIT_RADIUS = { mouse: 10, touch: 22 }
 // Room kept around a route brought into view for a focused trip link.
 const REVEAL_PADDING = 64
+const ALL_SIDES = {
+  bottom: REVEAL_PADDING,
+  left: REVEAL_PADDING,
+  right: REVEAL_PADDING,
+  top: REVEAL_PADDING,
+}
+// A route flown to from the trip list: no closer than a city's streets.
+const FRAME_MAX_ZOOM = 9
+const FRAME_DURATION = 800
 const BASE = { opacity: 0.5, width: 1.5 }
 const DIMMED = { opacity: 0.15, width: 1.5 }
 const LIFTED = { opacity: 1, width: 2.5 }
@@ -39,6 +49,7 @@ export function createTripOverview({
   getMap,
   messages,
   onHighlight,
+  onPick,
   onSelect,
   reducedMotion,
   signal,
@@ -49,6 +60,8 @@ export function createTripOverview({
   messages: Messages
   /** A route was lifted, a hint its trip may be opened next. */
   onHighlight?: (id: string) => void
+  /** A route was picked on the map, or let go of. */
+  onPick?: (id: string | undefined) => void
   onSelect: (id: string) => void
   reducedMotion: MediaQueryList
   signal: AbortSignal
@@ -57,6 +70,11 @@ export function createTripOverview({
   // The trip being played; its route and the others are hidden meanwhile.
   let activeId: string | undefined
   let highlightedId: string | undefined
+  // The trip picked, lifted while nothing else is pointed at, and where it was clicked.
+  let pickedId: string | undefined
+  let pickedAt: mapboxgl.LngLatLike | undefined
+  // The popup's trip and whether it says to click again, to fill it only on a change.
+  let popupKey: string | undefined
   let watched: MapboxMap | undefined
   // What last pressed or moved over the map. A tap also sends the mouse events of a
   // click, which mustn't count as pointing.
@@ -242,12 +260,34 @@ export function createTripOverview({
     })
   }
 
-  /** Lifts a route above the others, with its name by `at` or by the route's middle. */
+  /** Picks a trip, or lets go of the one picked; `at` is where its name shows. */
+  function pick(id: string | undefined, at?: mapboxgl.LngLatLike) {
+    if (id === pickedId) {
+      return
+    }
+
+    pickedId = activeId ? undefined : id
+    pickedAt = at
+    highlight(undefined)
+    onPick?.(pickedId)
+  }
+
+  /**
+   * Lifts a route above the others, with its name by `at` or by the route's middle;
+   * none lifts the picked one, if any.
+   */
   function highlight(id: string | undefined, at?: mapboxgl.LngLatLike) {
     const map = getMap()
+
+    if (!id && pickedId) {
+      id = pickedId
+      at = pickedAt
+    }
+
     const trip = id ? tripsById.get(id) : undefined
 
     if (!trip || activeId || !map) {
+      popupKey = undefined
       popup.remove()
     } else {
       const line = lines.get(trip.id)!
@@ -255,10 +295,13 @@ export function createTripOverview({
 
       popup.setLngLat(at ?? middle)
 
-      if (highlightedId !== id) {
+      const hint = trip.id === pickedId ? messages.tapAgainToPlay : undefined
+
+      if (popupKey !== `${trip.id}:${hint}`) {
+        popupKey = `${trip.id}:${hint}`
         popup.setDOMContent(
           createPopupContent({
-            hint: isTouch() ? messages.tapAgainToPlay : undefined,
+            hint,
             meta: formatDateRange(trip.start, trip.end, messages.locale),
             title: trip.title,
           }),
@@ -283,25 +326,27 @@ export function createTripOverview({
   }
 
   /**
-   * The trip under a click on the map, if any: opens it, or with a finger lifts it
-   * first unless it already is. Reports whether the click was the trip's.
+   * The trip under a click on the map, if any: opens it if it's picked, or picks it.
+   * A click off the routes lets go of the picked one. Reports whether the click was a
+   * trip's.
    */
   function click(point: mapboxgl.Point, at: mapboxgl.LngLat) {
     const trip = getTripAt(point)
 
-    if (trip && (!isTouch() || highlightedId === trip.id)) {
+    if (trip && trip.id === pickedId) {
       onSelect(trip.id)
-    } else if (trip) {
-      highlight(trip.id, at)
-    } else if (isTouch() && highlightedId) {
-      highlight(undefined)
+    } else {
+      pick(trip?.id, at)
     }
 
     return Boolean(trip)
   }
 
-  /** Brings a trip's whole route into view, if part of it is off the map. */
-  function reveal(id: string) {
+  /**
+   * Brings a trip's whole route into view, if part of it is off the map or under what
+   * `padding` keeps clear of.
+   */
+  function reveal(id: string, padding: Required<mapboxgl.PaddingOptions> = ALL_SIDES) {
     const map = getMap()
     const line = lines.get(id) ?? []
 
@@ -309,9 +354,19 @@ export function createTripOverview({
       return
     }
 
-    const view = map.getBounds()
+    const container = map.getContainer()
+    const inView = line.every((coordinates) => {
+      const { x, y } = map.project(coordinates)
 
-    if (view && line.every((coordinates) => view.contains(coordinates))) {
+      return (
+        x >= padding.left &&
+        x <= container.clientWidth - padding.right &&
+        y >= padding.top &&
+        y <= container.clientHeight - padding.bottom
+      )
+    })
+
+    if (inView) {
       return
     }
 
@@ -324,7 +379,29 @@ export function createTripOverview({
     map.fitBounds(bounds, {
       duration: reducedMotion.matches ? 0 : 500,
       maxZoom: map.getZoom(),
-      padding: REVEAL_PADDING,
+      padding,
+    })
+  }
+
+  /** Flies to a trip's route, filling the map but for what `padding` keeps clear of. */
+  function frame(id: string, padding: Required<mapboxgl.PaddingOptions>) {
+    const map = getMap()
+    const line = lines.get(id) ?? []
+
+    if (!map || activeId || line.length === 0) {
+      return
+    }
+
+    const bounds = new mapboxgl.LngLatBounds()
+
+    for (const coordinates of line) {
+      bounds.extend(coordinates)
+    }
+
+    map.fitBounds(bounds, {
+      duration: reducedMotion.matches ? 0 : FRAME_DURATION,
+      maxZoom: FRAME_MAX_ZOOM,
+      padding,
     })
   }
 
@@ -337,6 +414,8 @@ export function createTripOverview({
     settle?.()
     activeId = id
     highlightedId = undefined
+    pickedId = undefined
+    popupKey = undefined
     popup.remove()
 
     const map = getMap()
@@ -404,7 +483,20 @@ export function createTripOverview({
     popup.remove()
   })
 
-  return { add, click, hide, highlight, reveal, show }
+  return {
+    add,
+    click,
+    frame,
+    hide,
+    highlight,
+    pick,
+    /** The trip picked, if any. */
+    get pickedId() {
+      return pickedId
+    },
+    reveal,
+    show,
+  }
 }
 
 /**
