@@ -23,6 +23,15 @@ export {
   type Brand,
   type MusicTrack,
 } from './markup.ts'
+export {
+  ALL_PLACES_MAX_ZOOM,
+  getAllPlacesCamera,
+  getAllPlacesPadding,
+  getPlacesExtent,
+  getStaticMapUrl,
+  type StaticMapCamera,
+  type StaticMapOptions,
+} from './static-map.ts'
 export { resolveMessages, t, zhCN, type MessageKey, type Messages } from './messages.ts'
 export { getIntroCovers, getTripMeta, MOSAIC_CLASS, MOSAIC_IMAGE_CLASS } from './player/intro.ts'
 export {

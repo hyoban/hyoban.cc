@@ -984,6 +984,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
   function showFallback(message: string, fallbackOptions: { retry?: boolean } = {}) {
     report({ kind: 'map', message })
     loading.hidden = true
+    elements.placeholder?.setAttribute('data-trip-map-loaded', '')
     fallbackMessage.textContent = message
     fallbackRetry.hidden = !fallbackOptions.retry
     fallback.hidden = false
@@ -992,6 +993,8 @@ export function createTripMap(options: TripMapOptions): TripMap {
 
   function hideFallback() {
     loading.hidden = true
+    // The picture standing in for the map fades out from over it.
+    elements.placeholder?.setAttribute('data-trip-map-loaded', '')
     fallback.hidden = true
     canvas.removeAttribute('aria-hidden')
   }
@@ -1438,6 +1441,8 @@ export function createTripMap(options: TripMapOptions): TripMap {
       loadTimeout = setTimeout(() => {
         if (!mapLoaded) {
           loading.textContent = messages.mapLoadingSlow
+          // A page may start with the line hidden, under a picture of the map.
+          loading.hidden = false
           loadTimeout = setTimeout(() => {
             if (!mapLoaded) {
               showFallback(messages.mapLoadTimeout, { retry: true })

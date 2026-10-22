@@ -19,10 +19,12 @@ import {
   renderShortcuts,
   renderTripPanel,
   renderTripStage,
+  ALL_PLACES_MAX_ZOOM,
   toScriptJson,
 } from '@hyoban/trip-map'
 import { getTripTitle, tripMapBrand, tripMapMessages, tripMapMusic } from '@/trip-map'
 import { SITE_TITLE } from '@/consts'
+import { getMapPlaceholderKey, getMapPlaceholderPath, getMapPlaceholderView, MAP_PLACEHOLDER_SIZE } from '@/map-placeholder'
 
 interface Props {
   /** Opens with the list of trips beside the map, this one picked (the /trip/<id>/ pages). */
@@ -71,6 +73,13 @@ const periodCount = periodMoments.filter(moment => isInPeriodKey(moment.dateKey)
 const periodPlaces = locationGroups.filter(group => group.moments.some(moment => isInPeriodKey(moment.dateKey))).length
 const periodEyebrow = periodPlaces ? `${periodCount} 条记录 · ${periodPlaces} 个地点` : `${periodCount} 条记录 · 都没有地点`
 const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN ?? ''
+// The map opens framed on the period's places, or every one, beside the sidebar open: a
+// picture of that view stands in while it loads.
+const showPlaceholder = mapboxToken !== ''
+const placeholderKey = getMapPlaceholderKey(period)
+const placeholderView = showPlaceholder
+  ? { ...(await getMapPlaceholderView(placeholderKey)), maxZoom: ALL_PLACES_MAX_ZOOM, size: MAP_PLACEHOLDER_SIZE }
+  : undefined
 const mapTitle = `地图 · 日历 | ${SITE_TITLE}`
 const tripListTitle = `旅程 | ${SITE_TITLE}`
 const placesJson = toScriptJson(getPlaceMarkers(locationGroups, yearColor))
@@ -122,6 +131,14 @@ const description = pageTrip
   </Fragment>
   <main class="trip-map-page" data-trip-map data-trip-map-token={mapboxToken} data-calendar-latest-months={JSON.stringify(latestMonths)} data-trip-map-active={activeTrip ? '' : undefined} data-trip-map-trips-url={tripSummariesPath} transition:persist="trip-map">
     <div class="trip-map-canvas" data-trip-map-canvas role="region" aria-label="Calendar 地点地图" />
+    {
+      placeholderView && (
+        <picture class="trip-map-placeholder" data-trip-map-placeholder>
+          <source media="(prefers-color-scheme: dark)" srcset={getMapPlaceholderPath(placeholderView.picture, 'dark')} />
+          <img src={getMapPlaceholderPath(placeholderView.picture, 'light')} alt="" fetchpriority="high" />
+        </picture>
+      )
+    }
 
     <header class="trip-map-toolbar" data-trip-map-toolbar>
       <CalendarBackLink />
@@ -184,7 +201,8 @@ const description = pageTrip
       }
     </ol>
 
-    <p class="trip-map-loading" data-trip-map-loading>{activeTripData ? '正在加载旅程地图…' : `正在加载 ${locationGroups.length} 个地点的地图…`}</p>
+    <!-- Under the placeholder the picture says the map is coming; the line waits for a slow load. -->
+    <p class="trip-map-loading" data-trip-map-loading hidden={showPlaceholder}>{activeTripData ? '正在加载旅程地图…' : `正在加载 ${locationGroups.length} 个地点的地图…`}</p>
 
     <section class="trip-map-fallback" data-trip-map-fallback aria-live="polite" hidden>
       <p class="trip-map-fallback__message" data-trip-map-fallback-message>地图暂时无法加载。</p>
@@ -316,6 +334,50 @@ const description = pageTrip
     <script is:inline type="application/json" data-trip-map-places set:html={placesJson} />
     <script is:inline type="application/json" data-trip-map-stats set:html={statsJson} />
     {activeTripJson && <script is:inline type="application/json" data-trip-map-trip set:html={activeTripJson} />}
+    {
+      placeholderView && (
+        // Scales the picture to the view the map opens on, worked out as the map does
+        // (getAllPlacesCamera in @hyoban/trip-map): the places framed clear of the toolbar,
+        // the legend and the sidebar open, all laid out by now.
+        <script is:inline define:vars={{ view: placeholderView }}>
+          {
+            const page = document.querySelector('[data-trip-map]')
+            const picture = page.querySelector('[data-trip-map-placeholder]')
+            const image = picture.querySelector('img')
+            const box = picture.getBoundingClientRect()
+            const narrow = matchMedia('(max-width: 48rem)').matches
+            const legend = page.querySelector('[data-trip-map-legend]')?.getBoundingClientRect()
+            const list = [...page.querySelectorAll('[data-trip-map-trip-list], [data-trip-map-trip-details], [data-trip-map-moments]')]
+              .find(element => !element.hidden)
+            let inset = list ? (narrow ? { bottom: list.offsetHeight + 12 } : { right: list.offsetWidth + 16 }) : {}
+
+            // Nothing if what the list leaves is too small to frame anything in.
+            if (Math.min(box.width - (inset.right ?? 0), box.height - (inset.bottom ?? 0)) < 240) inset = {}
+
+            const side = narrow ? 20 : 56
+            const padding = {
+              bottom: inset.bottom === undefined ? Math.max(80, legend?.height ? box.bottom - legend.top + 28 : 0) : 80 + inset.bottom,
+              left: side,
+              right: side + (inset.right ?? 0),
+              top: 88,
+            }
+            const { maxX, maxY, minX, minY } = view.extent
+            const zoom = Math.min(
+              view.maxZoom,
+              Math.log2((box.width - padding.left - padding.right) / (512 * Math.max(maxX - minX, 1e-9))),
+              Math.log2((box.height - padding.top - padding.bottom) / (512 * Math.max(maxY - minY, 1e-9))),
+            )
+            const world = 512 * 2 ** zoom
+            const size = view.size * 2 ** (zoom - view.camera.zoom)
+            const x = (minX + maxX) / 2 + (padding.right - padding.left) / 2 / world
+            const y = (minY + maxY) / 2 + (padding.bottom - padding.top) / 2 / world
+
+            image.style.cssText = `width: ${size}px; height: ${size}px; left: ${box.width / 2 + (view.center.x - x) * world - size / 2}px; top: ${box.height / 2 + (view.center.y - y) * world - size / 2}px`
+            picture.dataset.tripMapPlaced = ''
+          }
+        </script>
+      )
+    }
   </main>
 </Layout>
 
