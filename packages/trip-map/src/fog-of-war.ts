@@ -1,10 +1,10 @@
 import { toCoordinates, type LngLatLike } from './geo.ts'
 
-// The fog of war over the map: every city under it but those a post was written in.
-// The cities are regions of a GeoJSON collection the site gives, each with an `id`,
-// and perhaps one `fogged`, the rest of the world, never lit; the map draws the fog as
-// those regions not lit, so it needs no geometry worked out, only which ids are lit.
-// A place on no city, on the coast the boundaries were simplified past, lights the
+// The fog of war over the map: every city under it, thinning over those a post was
+// written in by how many were. The cities are regions of a GeoJSON collection the site
+// gives, each with an `id`, and perhaps one `fogged`, the rest of the world, never lit;
+// the map draws the fog over those regions, so it needs no geometry worked out, only
+// which ids are lit and by how much. A place on no city, on the coast the boundaries were simplified past, lights the
 // nearest within reach. The Android app finds them the same way (apps/android,
 // `ui/map/FogOfWar.kt`).
 
@@ -30,11 +30,21 @@ export type FogOfWar = Readonly<{
   lit: string[]
   /** How many provinces have a city lit. */
   provinces: number
+  /** How much each city lit holds: the places' `weight` in it, 1 each without one. */
+  weights: Record<string, number>
 }>
 
-/** The regions holding any of `places`, and how many cities and provinces they make. */
-export function buildFogOfWar(regions: FogRegions, places: Iterable<LngLatLike>): FogOfWar {
-  const lit = new Set<string>()
+/** A place, and how much it counts for, as how many Moments were written there. */
+export type WeightedPlace =
+  | LngLatLike
+  | Readonly<{ latitude: number; longitude: number; weight?: number }>
+
+/**
+ * The regions holding any of `places`, how many cities and provinces they make, and how
+ * much each holds.
+ */
+export function buildFogOfWar(regions: FogRegions, places: Iterable<WeightedPlace>): FogOfWar {
+  const lit = new Map<string, number>()
   const indexed = regions.features
     .filter((region) => !region.properties.fogged)
     .map((region) => ({ bounds: getBounds(region), region }))
@@ -52,16 +62,19 @@ export function buildFogOfWar(regions: FogRegions, places: Iterable<LngLatLike>)
       ) ?? findNearest(indexed, point)
 
     if (found) {
-      lit.add(found.region.properties.id)
+      const { id } = found.region.properties
+      const weight = 'weight' in place ? (place.weight ?? 1) : 1
+      lit.set(id, (lit.get(id) ?? 0) + weight)
     }
   }
 
-  const ids = [...lit].sort()
+  const ids = [...lit.keys()].sort()
 
   return {
     cities: ids.length,
     lit: ids,
     provinces: new Set(ids.map((id) => id.slice(0, 2))).size,
+    weights: Object.fromEntries(ids.map((id) => [id, lit.get(id)!])),
   }
 }
 

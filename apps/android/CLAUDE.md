@@ -74,6 +74,10 @@ say stay out.
   again, and anything kept outside them, or read before they're added, must start over.
 - The site's fog (`packages/trip-map/src/map/fog-layer.ts`) and the app's sweep the same
   way: change both together.
+- MapLibre drops a filter or expression it can't take without throwing, leaving the layer
+  unfiltered; after setting one, look for `Error setting filter` from `Mbgl` in the app's
+  logcat. The regions of the rest of the world in the fog's asset all have the id
+  `outside`, so tell them apart by `cx` and `cy`, never by id.
 
 ## What the app is
 

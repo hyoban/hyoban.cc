@@ -4,7 +4,13 @@
 // in Node scripts. The map and the player are in `@hyoban/trip-map/client`, the
 // preview image in `@hyoban/trip-map/preview`.
 
-export { buildFogOfWar, type FogOfWar, type FogRegion, type FogRegions } from './fog-of-war.ts'
+export {
+  buildFogOfWar,
+  type FogOfWar,
+  type FogRegion,
+  type FogRegions,
+  type WeightedPlace,
+} from './fog-of-war.ts'
 export { formatDate, formatDateRange, getDateParts, parseDateKey } from './format.ts'
 export { getDistanceKm, toCoordinates, type Coordinates, type LngLatLike } from './geo.ts'
 export { renderIcon, type IconName, type WeatherIcon } from './icons.ts'

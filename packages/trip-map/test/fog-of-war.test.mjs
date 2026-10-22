@@ -44,7 +44,7 @@ const regions = {
 }
 
 test('nothing been to lights nothing', () => {
-  assert.deepEqual(buildFogOfWar(regions, []), { cities: 0, lit: [], provinces: 0 })
+  assert.deepEqual(buildFogOfWar(regions, []), { cities: 0, lit: [], provinces: 0, weights: {} })
 })
 
 test('a place lights the city it is in, once however many are there', () => {
@@ -52,7 +52,19 @@ test('a place lights the city it is in, once however many are there', () => {
     cities: 2,
     lit: ['320100', '320200'],
     provinces: 1,
+    weights: { 320100: 2, 320200: 1 },
   })
+})
+
+test('a city holds the weight of every place in it', () => {
+  assert.deepEqual(
+    buildFogOfWar(regions, [
+      { latitude: 2, longitude: 2, weight: 3 },
+      { latitude: 8, longitude: 8, weight: 4 },
+      [12, 2],
+    ]).weights,
+    { 320100: 7, 320200: 1 },
+  )
 })
 
 test('a place just off a city, on the coast, lights it', () => {
