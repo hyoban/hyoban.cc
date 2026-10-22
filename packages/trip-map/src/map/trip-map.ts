@@ -377,6 +377,17 @@ export function createTripMap(options: TripMapOptions): TripMap {
     return room < MIN_FRAMED ? {} : inset
   }
 
+  /** What framing every place keeps clear of: the trip list, and the legend. */
+  function getFramingInset() {
+    const legend = elements.legend?.getBoundingClientRect()
+    const container = (map?.getContainer() ?? canvas).getBoundingClientRect()
+
+    return {
+      ...getTripListInset(),
+      ...(legend && legend.height > 0 ? { legend: container.bottom - legend.top } : {}),
+    }
+  }
+
   /**
    * Moves the map out from under the list as it opens: every place framed beside it, if
    * they were in view, or else the view slid aside by half the list.
@@ -724,7 +735,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
       return
     }
 
-    const view = getAllPlacesView(shown, isNarrow(), getTripListInset())
+    const view = getAllPlacesView(shown, isNarrow(), getFramingInset())
 
     if ('bounds' in view) {
       map.fitBounds(view.bounds, { ...view.fitBoundsOptions, duration: getAnimationDuration() })
@@ -967,7 +978,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
       // Opens already framed on the places, rather than on the globe and then flying in.
       map = new mapboxgl.Map({
         // Beside the trip list, on its page.
-        ...getAllPlacesView(markers.getShownPlaces(), isNarrow(), getTripListInset()),
+        ...getAllPlacesView(markers.getShownPlaces(), isNarrow(), getFramingInset()),
         attributionControl: false,
         container: canvas,
         dragRotate: true,
