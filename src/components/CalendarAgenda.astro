@@ -60,8 +60,10 @@ function formatShortDate(dateKey: string) {
             </nav>
 
             {/* A thin line down the days with a dot on each; from 40rem the date sits in a rail
-                on its left and stays in view under the index (3.375rem tall) down the day. */}
-            <div class="calendar-agenda__days relative mx-auto max-w-[42rem] pb-6 [--rail:0rem] before:absolute before:top-[2.125rem] before:bottom-0 before:left-[var(--rail)] before:w-px before:bg-border sm:[--rail:5.5rem]">
+                on its left and stays in view under the index (3.375rem tall) down the day. In the
+                desktop list the rail hangs outside, so the moments line up under the index and
+                sit in the middle of the page. */}
+            <div class="calendar-agenda__days relative mx-auto max-w-[42rem] pb-6 min-[56rem]:max-w-[56rem] min-[56rem]:pr-[7rem] [--rail:0rem] before:absolute before:top-[2.125rem] before:bottom-0 before:left-[var(--rail)] before:w-px before:bg-border sm:[--rail:5.5rem]">
               {agendaDays.map(day => {
                 const hasStatus = day.anniversaries.length > 0 || Boolean(day.chinaCalendarDay)
 
