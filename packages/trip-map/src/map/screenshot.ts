@@ -1,5 +1,6 @@
 import mapboxgl, { type Map as MapboxMap } from 'mapbox-gl'
 import { overlap, type Rect } from '../player/label-placement.ts'
+import { hideBasemapLabels } from './basemap.ts'
 
 // A picture of the map made for sharing rather than a copy of the screen: the view
 // framed on every place, the basemap's lesser names put away, and each place drawn
@@ -118,7 +119,7 @@ export async function captureMap(map: MapboxMap, options: ScreenshotOptions) {
   }
   const container = map.getContainer()
   const containerStyle = container.style.cssText
-  const hiddenLabels = hideBasemapLabels(map)
+  const showLabels = hideBasemapLabels(map, KEPT_BASEMAP_LABELS)
 
   try {
     container.style.cssText += `;inset:auto;left:0;top:0;width:${SHOT_SIZE.width}px;height:${SHOT_SIZE.height}px`
@@ -151,32 +152,12 @@ export async function captureMap(map: MapboxMap, options: ScreenshotOptions) {
 
     return await render(options, overview, zoomed)
   } finally {
-    for (const id of hiddenLabels) {
-      map.setLayoutProperty(id, 'visibility', 'visible')
-    }
+    showLabels()
 
     container.style.cssText = containerStyle
     map.resize()
     map.jumpTo(camera)
   }
-}
-
-function hideBasemapLabels(map: MapboxMap) {
-  const hidden: string[] = []
-
-  for (const layer of map.getStyle()?.layers ?? []) {
-    if (
-      layer.type === 'symbol' &&
-      !layer.id.startsWith('calendar') &&
-      !KEPT_BASEMAP_LABELS.test(layer.id) &&
-      map.getLayoutProperty(layer.id, 'visibility') !== 'none'
-    ) {
-      map.setLayoutProperty(layer.id, 'visibility', 'none')
-      hidden.push(layer.id)
-    }
-  }
-
-  return hidden
 }
 
 function frame(

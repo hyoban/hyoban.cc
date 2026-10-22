@@ -26,6 +26,32 @@ import { getTripTitle, tripMapBrand, tripMapMessages, tripMapMusic } from '@/tri
 import { SITE_TITLE } from '@/consts'
 import { canDrawMapPlaceholders, getMapPlaceholderKey,getMapPlaceholderPath, getMapPlaceholderView, MAP_PLACEHOLDER_SIZE } from '@/map-placeholder'
 
+// The map's settings, by the names @hyoban/trip-map reads them by.
+const mapStyles = [
+  { id: 'standard', label: '标准', hint: '3D 地形与建筑' },
+  { id: 'faded', label: '淡雅', hint: '3D，颜色柔和' },
+  { id: 'monochrome', label: '单色', hint: '3D，黑白灰' },
+  { id: 'classic', label: '经典', hint: '2D，更流畅' },
+] as const
+const mapLights = [
+  { id: 'auto', label: '跟随主题' },
+  { id: 'day', label: '白天' },
+  { id: 'dawn', label: '黎明' },
+  { id: 'dusk', label: '黄昏' },
+  { id: 'night', label: '夜晚' },
+] as const
+const mapLayers = [
+  { id: 'buildings', label: '3D 建筑与地标', hint: '楼房、树木和地标模型' },
+  { id: 'roads', label: '道路名称', hint: '路名和道路编号' },
+  { id: 'pois', label: '商铺与场所', hint: '餐厅、商店、景点等' },
+  { id: 'transit', label: '交通站点', hint: '地铁、车站和机场' },
+  { id: 'landmarks', label: '地标图标', hint: '著名建筑的插画图标' },
+] as const
+const mapProjections = [
+  { id: 'globe', label: '地球', hint: '缩小时是球体' },
+  { id: 'mercator', label: '平面', hint: '始终展开平铺' },
+] as const
+
 interface Props {
   /** Opens with the list of trips beside the map, this one picked (the /trip/<id>/ pages). */
   pickedTripId?: string
@@ -162,6 +188,9 @@ const description = pageTrip
         <button class="trip-map-tool trip-map-fog" type="button" data-trip-map-fog aria-pressed="false" aria-label="迷雾地图" title="迷雾地图">
           <span class="i-lucide-cloud-fog" aria-hidden="true" />
         </button>
+        <button class="trip-map-tool" type="button" data-trip-map-settings-open aria-haspopup="dialog" aria-label="地图设置" title="地图设置">
+          <span class="i-lucide-layers" aria-hidden="true" />
+        </button>
         <button class="trip-map-tool trip-map-screenshot" type="button" data-trip-map-screenshot aria-label="保存地图截图" title="保存地图截图" disabled>
           <span class="i-lucide-camera" aria-hidden="true" />
         </button>
@@ -227,6 +256,82 @@ const description = pageTrip
     <div class="trip-map-stage" data-trip-map-stage set:html={renderTripStage({ brand: tripMapBrand, messages: tripMapMessages })} />
 
     <section class="trip-map-panel" data-trip-map-panel aria-labelledby="trip-map-panel-title" hidden={!activeTripData} set:html={renderTripPanel({ messages: tripMapMessages, music: tripMapMusic, trip: activeTripData })} />
+
+    <!-- The map's settings, remembered in this browser; each shows on the map behind at once. -->
+    <dialog class="trip-map-side trip-map-settings" data-trip-map-settings aria-labelledby="trip-map-settings-title" closedby="any">
+      <header class="trip-map-side__header">
+        <div>
+          <p>保存在此浏览器</p>
+          <h1 id="trip-map-settings-title">地图设置</h1>
+        </div>
+        <button class="trip-map-side__close" type="button" data-trip-map-settings-close aria-label="关闭地图设置">
+          <span class="i-lucide-x" aria-hidden="true" />
+        </button>
+      </header>
+      <form class="trip-map-side__content trip-map-settings__form">
+        <fieldset>
+          <legend>样式</legend>
+          <div class="trip-map-settings__choices">
+            {mapStyles.map(style => (
+              <label class="trip-map-settings__choice">
+                <input class="sr-only" type="radio" name="style" value={style.id} />
+                <span>{style.label}</span>
+                <small>{style.hint}</small>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+        <fieldset data-trip-map-standard>
+          <legend>光照</legend>
+          <div class="trip-map-settings__chips">
+            {mapLights.map(light => (
+              <label class="trip-map-settings__choice">
+                <input class="sr-only" type="radio" name="light" value={light.id} />
+                <span>{light.label}</span>
+              </label>
+            ))}
+          </div>
+          <p class="trip-map-settings__note">经典样式没有这项设置</p>
+        </fieldset>
+        <fieldset data-trip-map-standard>
+          <legend>显示</legend>
+          {mapLayers.map(layer => (
+            <label class="trip-map-settings__switch">
+              <span>
+                {layer.label}
+                <small>{layer.hint}</small>
+              </span>
+              <input type="checkbox" role="switch" name={layer.id} />
+            </label>
+          ))}
+          <p class="trip-map-settings__note">经典样式没有这些设置</p>
+        </fieldset>
+        <fieldset data-trip-map-standard>
+          <legend>视角</legend>
+          <label class="trip-map-settings__switch">
+            <span>
+              随缩放倾斜
+              <small>看全国时平视，靠近街道时倾斜</small>
+            </span>
+            <input type="checkbox" role="switch" name="tilt" />
+          </label>
+          <p class="trip-map-settings__note">经典样式始终平视</p>
+        </fieldset>
+        <fieldset>
+          <legend>投影</legend>
+          <div class="trip-map-settings__choices">
+            {mapProjections.map(projection => (
+              <label class="trip-map-settings__choice">
+                <input class="sr-only" type="radio" name="projection" value={projection.id} />
+                <span>{projection.label}</span>
+                <small>{projection.hint}</small>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+        <button class="trip-map-settings__reset" type="button" data-trip-map-settings-reset>恢复默认</button>
+      </form>
+    </dialog>
 
     <dialog class="trip-map-shortcuts" data-trip-map-shortcuts aria-labelledby="trip-map-shortcuts-title" closedby="any" set:html={renderShortcuts(tripMapMessages)} />
 
@@ -552,6 +657,7 @@ const description = pageTrip
       backdrop-filter: none;
     }
   }
+
   /* The back link, the trips by keyboard, and the map's buttons, across the top. */
   .trip-map-toolbar {
     position: absolute;
@@ -969,6 +1075,212 @@ const description = pageTrip
       bottom: calc(0.75rem + env(safe-area-inset-bottom));
       width: auto;
       height: min(60dvh, 36rem);
+    }
+  }
+
+  /* The map's settings, a modal sidebar over the others, the map left in sight behind it. */
+  .trip-map-settings {
+    position: fixed;
+    inset: 1rem 1rem 1rem auto;
+    z-index: 20;
+    width: min(22rem, calc(100vw - 2rem));
+    max-width: none;
+    height: auto;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    color: var(--color-tx);
+
+    &:not([open]) {
+      display: none;
+    }
+
+    &::backdrop {
+      background: transparent;
+    }
+
+    @media (width < 48rem) {
+      inset: auto 0.75rem calc(0.75rem + env(safe-area-inset-bottom));
+      width: auto;
+      height: min(70dvh, 40rem);
+    }
+  }
+
+  .trip-map-settings__form {
+    display: grid;
+    align-content: start;
+    gap: 1.25rem;
+    padding-top: 1rem;
+
+    & fieldset {
+      display: grid;
+      gap: 0.5rem;
+      min-width: 0;
+    }
+
+    & legend {
+      margin-bottom: 0.5rem;
+      color: var(--color-tx-3);
+      font-size: 0.75rem;
+      line-height: 1rem;
+    }
+
+    & fieldset:disabled > :not(legend, .trip-map-settings__note) {
+      opacity: 0.4;
+    }
+  }
+
+  .trip-map-settings__choices {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
+  .trip-map-settings__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+
+    & .trip-map-settings__choice {
+      padding: 0.375rem 0.75rem;
+      border-radius: 9999px;
+    }
+  }
+
+  /* A radio as a card: the whole of it picks, the one picked in the text's colour. */
+  .trip-map-settings__choice {
+    display: grid;
+    padding: 0.625rem 0.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.625rem;
+    cursor: pointer;
+
+    & span {
+      font-size: 0.875rem;
+      line-height: 1.25rem;
+    }
+
+    & small {
+      color: var(--color-tx-3);
+      font-size: 0.75rem;
+      line-height: 1rem;
+    }
+
+    &:has(:checked) {
+      border-color: var(--color-tx);
+      background: var(--color-tx);
+      color: var(--color-bg);
+
+      & small {
+        color: inherit;
+        opacity: 0.7;
+      }
+    }
+
+    &:has(:focus-visible) {
+      outline: 2px solid var(--color-tx);
+      outline-offset: 2px;
+    }
+
+    @media (hover: hover) {
+      &:hover:not(:has(:checked)) {
+        background: var(--color-inline);
+      }
+    }
+
+    fieldset:disabled & {
+      cursor: default;
+    }
+  }
+
+  /* A checkbox as a switch, at the end of its row. */
+  .trip-map-settings__switch {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    cursor: pointer;
+
+    & span {
+      display: grid;
+      font-size: 0.875rem;
+      line-height: 1.25rem;
+    }
+
+    & small {
+      color: var(--color-tx-3);
+      font-size: 0.75rem;
+      line-height: 1rem;
+    }
+
+    & input {
+      position: relative;
+      flex-shrink: 0;
+      width: 2.25rem;
+      height: 1.25rem;
+      border-radius: 9999px;
+      background: var(--color-border);
+      cursor: inherit;
+      appearance: none;
+      transition: background 0.15s;
+
+      &::before {
+        position: absolute;
+        top: 0.125rem;
+        left: 0.125rem;
+        width: 1rem;
+        height: 1rem;
+        border-radius: 9999px;
+        background: var(--color-bg);
+        box-shadow: 0 1px 2px rgb(0 0 0 / 0.2);
+        content: '';
+        transition: translate 0.15s;
+      }
+
+      &:checked {
+        background: var(--color-tx);
+
+        &::before {
+          translate: 1rem 0;
+        }
+      }
+
+      &:focus-visible {
+        outline: 2px solid var(--color-tx);
+        outline-offset: 2px;
+      }
+    }
+
+    fieldset:disabled & {
+      cursor: default;
+    }
+  }
+
+  /* Why a group is out of reach: only while it is. */
+  .trip-map-settings__note {
+    display: none;
+    color: var(--color-tx-3);
+    font-size: 0.75rem;
+    line-height: 1rem;
+
+    fieldset:disabled & {
+      display: block;
+    }
+  }
+
+  .trip-map-settings__reset {
+    justify-self: start;
+    padding: 0.375rem 0.75rem;
+    border-radius: 9999px;
+    color: var(--color-tx-2);
+    font-size: 0.875rem;
+    cursor: pointer;
+
+    @media (hover: hover) {
+      &:hover {
+        background: var(--color-inline);
+        color: var(--color-tx);
+      }
     }
   }
 

@@ -3,6 +3,7 @@ import { t, type Messages } from '../messages.ts'
 import { createPopupContent, MAP_POPUP_CLASS } from '../player/dom.ts'
 import type { PlaceMarker } from '../player/types.ts'
 import { isInPeriod, type Period } from './period.ts'
+import { getFramingPitch } from './basemap.ts'
 import type { ScreenshotPlace } from './screenshot.ts'
 import {
   ALL_PLACES_MAX_ZOOM,
@@ -534,6 +535,11 @@ export function createPlaceMarkers({
       duration: getAnimationDuration(),
       maxZoom: CLUSTER_OPEN_MAX_ZOOM,
       padding: CLUSTER_OPEN_PADDING,
+      // Closer in, leaning further.
+      pitch: getFramingPitch(map, bounds, {
+        maxZoom: CLUSTER_OPEN_MAX_ZOOM,
+        padding: CLUSTER_OPEN_PADDING,
+      }),
     })
   }
 
@@ -767,6 +773,9 @@ export function getAllPlacesView(
 
   return {
     bounds,
-    fitBoundsOptions: { maxZoom: ALL_PLACES_MAX_ZOOM, padding: getAllPlacesPadding(narrow, inset) },
+    fitBoundsOptions: {
+      maxZoom: ALL_PLACES_MAX_ZOOM,
+      padding: getAllPlacesPadding(narrow, inset),
+    },
   }
 }
