@@ -837,21 +837,20 @@ export function createTripMap(options: TripMapOptions): TripMap {
     canvas.removeAttribute('aria-hidden')
   }
 
-  function fitAll() {
+  /** The places the map frames: those of the period picked, or every one if it has none. */
+  function getFramedPlaces() {
     const shown = markers.getShownPlaces()
+    return shown.length > 0 ? shown : places
+  }
 
-    if (!map || shown.length === 0) {
+  function fitAll() {
+    if (!map || places.length === 0) {
       return
     }
 
-    const view = getAllPlacesView(shown, isNarrow(), getFramingInset())
+    const view = getAllPlacesView(getFramedPlaces(), isNarrow(), getFramingInset())
 
-    if ('bounds' in view) {
-      map.fitBounds(view.bounds, { ...view.fitBoundsOptions, duration: getAnimationDuration() })
-    } else {
-      map.jumpTo(view)
-    }
-
+    map.fitBounds(view.bounds, { ...view.fitBoundsOptions, duration: getAnimationDuration() })
     framedOnAll = true
   }
 
@@ -886,7 +885,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
         formatPlaceCount: (count) => t(messages, 'clusterPlaces', { count }),
         getPlaces: (current) => markers.getScreenshotPlaces(current),
         legend: elements.legend,
-        places: markers.getShownPlaces(),
+        places: getFramedPlaces(),
         site: `${window.location.host}${urls.mapPath}`,
         stats: stats
           ? [
@@ -1095,7 +1094,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
       // Opens already framed on the places, rather than on the globe and then flying in.
       map = new mapboxgl.Map({
         // Beside the trip list, on its page.
-        ...getAllPlacesView(markers.getShownPlaces(), isNarrow(), getFramingInset()),
+        ...getAllPlacesView(getFramedPlaces(), isNarrow(), getFramingInset()),
         attributionControl: false,
         container: canvas,
         dragRotate: true,
