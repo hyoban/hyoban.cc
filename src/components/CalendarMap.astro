@@ -534,6 +534,11 @@ const description = pageTrip
      page is the package's to style (@hyoban/trip-map/styles.css), which also moves some
      of these aside while a sidebar is open or a trip plays. */
   .trip-map-page {
+    /* The glass over the map is all but solid, with no blur: the map under it changes
+       every frame it moves, and blurring it again each time costs the GPU more than
+       the controls are worth. */
+    --color-glass: color-mix(in srgb, var(--color-bg) 92%, transparent);
+
     position: relative;
     isolation: isolate;
     width: 100%;
@@ -541,8 +546,12 @@ const description = pageTrip
     overflow: hidden;
     background: var(--color-bg);
     container-type: inline-size;
-  }
 
+    & :global(:is(.calendar-back-link, .calendar-mode-switch)) {
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+  }
   /* The back link, the trips by keyboard, and the map's buttons, across the top. */
   .trip-map-toolbar {
     position: absolute;
@@ -624,10 +633,8 @@ const description = pageTrip
       padding: 0.25rem;
       border: 1px solid var(--color-glass-border);
       border-radius: 9999px;
-      background: color-mix(in srgb, var(--color-bg) 88%, transparent);
+      background: var(--color-glass);
       box-shadow: 0 0.5rem 2rem rgb(0 0 0 / 0.08);
-      -webkit-backdrop-filter: blur(1rem);
-      backdrop-filter: blur(1rem);
       scrollbar-width: none;
     }
 
@@ -678,8 +685,6 @@ const description = pageTrip
     border: 1px solid var(--color-glass-border);
     border-radius: 9999px;
     background: var(--color-glass);
-    -webkit-backdrop-filter: blur(1rem);
-    backdrop-filter: blur(1rem);
     color: var(--color-tx-2);
     cursor: pointer;
 
