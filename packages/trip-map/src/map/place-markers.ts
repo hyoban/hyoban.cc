@@ -692,7 +692,12 @@ export function createPlaceMarkers({
 }
 
 /** The view that shows every place, leaving room for the toolbar and the legend. */
-export function getAllPlacesView(places: readonly PlaceMarker[], narrow: boolean) {
+/** The view framing every place, `inset` kept clear of besides (a panel over the map). */
+export function getAllPlacesView(
+  places: readonly PlaceMarker[],
+  narrow: boolean,
+  inset: { bottom?: number; right?: number } = {},
+) {
   if (places.length === 1) {
     const place = places[0]!
     return { center: [place.longitude, place.latitude] as [number, number], zoom: 4 }
@@ -711,7 +716,12 @@ export function getAllPlacesView(places: readonly PlaceMarker[], narrow: boolean
     bounds,
     fitBoundsOptions: {
       maxZoom: 4,
-      padding: { bottom: 80, left: side, right: side, top: 88 },
+      padding: {
+        bottom: 80 + (inset.bottom ?? 0),
+        left: side,
+        right: side + (inset.right ?? 0),
+        top: 88,
+      },
     },
   }
 }

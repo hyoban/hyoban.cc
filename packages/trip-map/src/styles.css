@@ -489,16 +489,27 @@
   border-left-color: var(--color-bg);
 }
 
-/* The place drawer slides in from the right, or up from the bottom on a phone; it
-   slides back out from script as it closes (see trip-map-client.ts). */
-.trip-map-drawer {
+/* The toolbar's buttons, which step aside for the drawer and the list (below). */
+.trip-map-toolbar__actions {
+  transition: translate 280ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trip-map-toolbar__actions {
+    transition: none;
+  }
+}
+
+/* The place drawer and the trip list slide in from the right, or up from the bottom on
+   a phone; they slide back out from script as they close (see place-drawer.ts). */
+:is(.trip-map-drawer, .trip-map-trip-list) {
   transition:
     opacity 200ms ease,
     translate 280ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @starting-style {
-  .trip-map-drawer:not([hidden]) {
+  :is(.trip-map-drawer, .trip-map-trip-list):not([hidden]) {
     opacity: 0;
     translate: 1.5rem 0;
   }
@@ -506,17 +517,43 @@
 
 @media (max-width: 48rem) {
   @starting-style {
-    .trip-map-drawer:not([hidden]) {
+    :is(.trip-map-drawer, .trip-map-trip-list):not([hidden]) {
       translate: 0 2rem;
     }
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .trip-map-drawer {
+  :is(.trip-map-drawer, .trip-map-trip-list) {
     translate: none;
     transition-property: opacity;
   }
+}
+
+/* A trip list's row filling a line along its foot while the pointer rests on it, until
+   its route is lifted on the map (see trip-list.ts); a pointer passing over it on its
+   way to another row draws nothing. */
+.trip-map-trip-list [data-trip-map-trip-link] {
+  position: relative;
+}
+
+.trip-map-trip-list [data-trip-map-trip-link]::after {
+  background: var(--color-tx);
+  border-radius: 1px;
+  bottom: 0.25rem;
+  content: '';
+  height: 2px;
+  inset-inline: 0.75rem;
+  opacity: 0.3;
+  pointer-events: none;
+  position: absolute;
+  scale: 0 1;
+  transform-origin: left;
+}
+
+.trip-map-trip-list [data-trip-map-trip-link][data-trip-map-dwelling]::after {
+  scale: 1 1;
+  transition: scale calc(var(--trip-map-dwell, 2000ms) - 200ms) linear 200ms;
 }
 
 /* A route's or a place's name on hover, styled like the trip's place labels, without a tip. */
@@ -818,6 +855,7 @@
    markers fade before the map script takes them off the map (MARKER_FADE). */
 .trip-map-legend {
   transition:
+    left 280ms cubic-bezier(0.22, 1, 0.36, 1),
     opacity 200ms,
     visibility 200ms;
 }
@@ -1391,19 +1429,38 @@ html:has(.trip-map-page[data-trip-map-ratio]) body {
 }
 
 @media (min-width: 48.0625rem) {
-  .trip-map-page:has(.trip-map-drawer:not([hidden])) .mapboxgl-ctrl-bottom-right {
+  .trip-map-page:has(:is(.trip-map-drawer, .trip-map-trip-list):not([hidden]))
+    .mapboxgl-ctrl-bottom-right {
     right: calc(min(28rem, calc(100vw - 2rem)) + 1.5rem);
+  }
+
+  /* The toolbar's buttons step aside to the drawer's or the list's left. */
+  .trip-map-page:has(:is(.trip-map-drawer, .trip-map-trip-list):not([hidden]))
+    .trip-map-toolbar__actions {
+    translate: calc(-1 * (min(28rem, calc(100vw - 2rem)) + 0.75rem)) 0;
+  }
+
+  /* The legend moves to the middle of the map the drawer or the list leaves showing. */
+  .trip-map-page:has(:is(.trip-map-drawer, .trip-map-trip-list):not([hidden])) .trip-map-legend {
+    left: calc((100% - min(28rem, calc(100vw - 2rem)) - 1rem) / 2);
   }
 }
 
 @media (max-width: 48rem) {
-  .trip-map-page:has(.trip-map-drawer:not([hidden]))
+  .trip-map-page:has(:is(.trip-map-drawer, .trip-map-trip-list):not([hidden]))
     :is(.mapboxgl-ctrl-bottom-left, .mapboxgl-ctrl-bottom-right) {
     bottom: calc(min(78dvh, 42rem) + 1.25rem + env(safe-area-inset-bottom));
   }
 
-  .trip-map-page:has(.trip-map-drawer:not([hidden])) .mapboxgl-ctrl-bottom-right {
+  .trip-map-page:has(:is(.trip-map-drawer, .trip-map-trip-list):not([hidden]))
+    .mapboxgl-ctrl-bottom-right {
     right: 0;
+  }
+
+  /* The list is a shorter sheet than the drawer (the site's, like its height). */
+  .trip-map-page:has(.trip-map-trip-list:not([hidden]))
+    :is(.mapboxgl-ctrl-bottom-left, .mapboxgl-ctrl-bottom-right) {
+    bottom: calc(min(60dvh, 36rem) + 1.25rem + env(safe-area-inset-bottom));
   }
 }
 
