@@ -919,6 +919,18 @@ export function createTripMap(options: TripMapOptions): TripMap {
 
   syncSelection({ focus: true, moveMap: false })
 
+  // What the page was rendered with open has been drawn by the next frame but one; only
+  // what opens after that slides in (see styles.css).
+  let settleFrame = requestAnimationFrame(() => {
+    settleFrame = requestAnimationFrame(() => {
+      page.dataset.tripMapSettled = ''
+    })
+  })
+  signal.addEventListener('abort', () => {
+    cancelAnimationFrame(settleFrame)
+    delete page.dataset.tripMapSettled
+  })
+
   // The address may pick a year to open on.
   pickYear(getUrlYear())
 
