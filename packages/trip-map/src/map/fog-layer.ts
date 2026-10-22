@@ -10,7 +10,8 @@ import type { Theme } from '../theme.ts'
 // region is reached when the sweep is as far from the screen's middle as the region's
 // `cx`, `cy` is, the sweep starting at the farthest region in sight and ending at the
 // nearest, so all of it is seen. The regions and which of them are lit are fetched the
-// first time it's shown; it goes while a trip plays, as the markers do.
+// first time it's shown; it goes while a trip plays, as the markers do. Left on, it
+// sweeps in as the map opens.
 
 const SOURCE = 'trip-map-fog'
 const FILL = 'trip-map-fog'
@@ -70,6 +71,8 @@ export function createFogLayer({
   let sweepFrame: number | undefined
   // Set while the fog is fetched for a toggle.
   let switching = false
+  // On when the page opens, the fog sweeps in the first time it's shown, as for a toggle.
+  let opening = on
 
   signal.addEventListener('abort', stopSweep)
 
@@ -300,6 +303,11 @@ export function createFogLayer({
 
     addLayers(map, fog.lit.lit)
 
+    if (opening && on && !hidden) {
+      opening = false
+      animate = true
+    }
+
     if (animate && !hidden && !reducedMotion.matches) {
       sweep(map, on)
     } else {
@@ -325,6 +333,11 @@ export function createFogLayer({
 
   async function setOn(next: boolean, animate: boolean) {
     on = next
+
+    if (animate) {
+      opening = false
+    }
+
     writeFogPreference(on)
 
     if (on && !fog) {
