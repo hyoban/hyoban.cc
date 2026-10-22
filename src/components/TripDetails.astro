@@ -1,8 +1,10 @@
 ---
 import MomentEntry from '@/components/MomentEntry.astro'
+import TripCoverCollage from '@/components/TripCoverCollage.astro'
 import { type Moment, type MomentTrip } from '@/moments'
+import { getTripCollage } from '@/moments/trip-images'
 
-// A trip's sidebar beside the map: its cover and totals, the button that plays it, and
+// A trip's sidebar beside the map: its photos and totals, the button that plays it, and
 // its days' Moments in order, each stop playing the trip from its own card. The map
 // fetches it as a fragment (see pages/trip/[id]/moments.astro); a trip's page renders
 // it in place.
@@ -24,11 +26,8 @@ const totals = [
 ---
 
 <div class="pt-4">
-  <picture class="contents">
-    <source srcset={`/trip/${trip.id}/thumbnail-dark.webp`} media="(prefers-color-scheme: dark)" />
-    <img class="aspect-[1200/630] w-full rounded-lg bg-inline object-cover outline-1 -outline-offset-1 outline-border" src={`/trip/${trip.id}/thumbnail.webp`} width="480" height="252" alt="" decoding="async" />
-  </picture>
-  <p class="mt-3 text-sm text-tx-2 tabular-nums">{totals}</p>
+  <TripCoverCollage class="mb-3 rounded-lg" images={getTripCollage(trip, moments)} sizes="(max-width: 48rem) 100vw, 26rem" />
+  <p class="text-sm text-tx-2 tabular-nums">{totals}</p>
   <a class="mt-3 flex h-10 items-center justify-center gap-1.5 rounded-full bg-tx text-sm font-medium text-bg no-underline hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-tx" href={`/trip/${trip.id}/play/`} data-trip-map-stop-play={trip.id}>
     <span class="i-lucide-play text-[0.8125rem]" aria-hidden="true" />
     回放旅程
