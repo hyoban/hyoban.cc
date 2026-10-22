@@ -1,7 +1,8 @@
 // What the map page's address means: the place a hash names, the trip a path opens,
-// the path that opens the list of trips, and the URLs of what the client fetches. A site with other paths passes its own.
+// the path that opens the list of trips, the path that picks a year, and the URLs of what the client fetches. A site with other paths passes its own.
 
 const TRIP_PATH_PATTERN = /^\/trip\/([^/]+)\/?$/
+const YEAR_PATH_PATTERN = /^\/map\/(\d{4})\/?$/
 
 /** The key in `history.state` that marks an entry the map pushed for a selection. */
 export const HISTORY_STATE_KEY = 'tripMapSelection'
@@ -34,6 +35,13 @@ export const defaultUrls = {
       return undefined
     }
   },
+  /** The year a pathname picks in the legend, if any. */
+  getYear: (pathname: string) => {
+    const match = pathname.match(YEAR_PATH_PATTERN)
+    return match ? Number(match[1]) : undefined
+  },
+  /** The map with only a year's places and trips on it. */
+  getYearPath: (year: number) => `/map/${year}/`,
   /** A trip's page. */
   getTripPath: (id: string) => `/trip/${encodeURIComponent(id)}/`,
   /** The map's own page, which closing a trip goes back to. */

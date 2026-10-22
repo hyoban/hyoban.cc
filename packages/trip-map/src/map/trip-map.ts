@@ -61,6 +61,10 @@ export type TripMapOptions = {
   getTripId?: ((pathname: string) => string | undefined) | undefined
   /** A trip's page. Default: `/trip/<id>/`. */
   getTripPath?: ((id: string) => string) | undefined
+  /** The year a pathname picks in the legend, if any. Default: the year in `/map/<year>/`. */
+  getYear?: ((pathname: string) => number | undefined) | undefined
+  /** The map with only a year's places and trips on it. Default: `/map/<year>/`. */
+  getYearPath?: ((year: number) => string) | undefined
   /**
    * The language the basemap's names are shown in, as @mapbox/mapbox-gl-language takes
    * it (`en`, `ja`, `zh-Hans`…); `false` leaves the basemap as it is. Default: from
@@ -121,6 +125,8 @@ export function createTripMap(options: TripMapOptions): TripMap {
     getTripDataUrl: options.getTripDataUrl ?? defaultUrls.getTripDataUrl,
     getTripId: options.getTripId ?? defaultUrls.getTripId,
     getTripPath: options.getTripPath ?? defaultUrls.getTripPath,
+    getYear: options.getYear ?? defaultUrls.getYear,
+    getYearPath: options.getYearPath ?? defaultUrls.getYearPath,
     mapPath: options.mapPath ?? defaultUrls.mapPath,
     tripListPath: options.tripListPath ?? defaultUrls.tripListPath,
   }
@@ -597,7 +603,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
 
     drawer.trigger = trigger
     setSelectionUrl(
-      `${isTripListUrl() ? urls.mapPath : window.location.pathname}${window.location.search}#${encodeURIComponent(id)}`,
+      `${isTripListUrl() ? getMapPath() : window.location.pathname}${window.location.search}#${encodeURIComponent(id)}`,
     )
     drawer.open(place, { trigger })
   }
@@ -605,6 +611,75 @@ export function createTripMap(options: TripMapOptions): TripMap {
   function selectTrip(id: string) {
     setSelectionUrl(urls.getTripPath(id))
     syncSelection({ focus: false })
+  }
+
+  /**
+   * Leaves only the places first recorded in `year` on the map, and the trips started
+   * then on it and in the list, or everything again, and frames the places; a place
+   * open that the year leaves off the map closes.
+   */
+  function pickYear(year: number | undefined) {
+    if (year === markers.year) {
+      return
+    }
+
+    markers.setYear(year)
+    tripOverview.setYear(year)
+
+    for (const group of elements.tripYearGroups) {
+      group.hidden = year !== undefined && Number(group.dataset.tripMapTripYear) !== year
+    }
+
+    for (const button of elements.yearButtons) {
+      button.setAttribute('aria-pressed', String(Number(button.dataset.tripMapYear) === year))
+    }
+
+    elements.legend?.toggleAttribute('data-trip-map-year-picked', year !== undefined)
+
+    // Shown, with whatever holds it, only while a year is picked.
+    const clearItem = elements.yearClear?.closest('li') ?? elements.yearClear
+
+    if (clearItem) {
+      clearItem.hidden = year === undefined
+    }
+
+    if (drawer.activeId && !markers.isShown(drawer.activeId)) {
+      requestSelectionClose()
+    }
+
+    syncYearUrl()
+
+    if (mapLoaded && !tripPlayer.activeId) {
+      fitAll()
+    }
+  }
+
+  /** The year an address picks, if the map has places first recorded then. */
+  function getUrlYear() {
+    const year = urls.getYear(window.location.pathname)
+    return year !== undefined && places.some((place) => place.firstYear === year) ? year : undefined
+  }
+
+  function isMapUrl() {
+    return window.location.pathname === urls.mapPath || getUrlYear() !== undefined
+  }
+
+  /** The map's own address, with the year picked if any. */
+  function getMapPath() {
+    return markers.year === undefined ? urls.mapPath : urls.getYearPath(markers.year)
+  }
+
+  /** On the map's own address, says the year picked, keeping the place open in the hash. */
+  function syncYearUrl() {
+    if (!isMapUrl() || window.location.pathname === getMapPath()) {
+      return
+    }
+
+    history.replaceState(
+      getHistoryState(),
+      '',
+      `${getMapPath()}${window.location.search}${window.location.hash}`,
+    )
   }
 
   function requestSelectionClose() {
@@ -621,7 +696,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
       getHistoryState(),
       '',
       getUrlTripId() || isTripListUrl()
-        ? urls.mapPath
+        ? getMapPath()
         : `${window.location.pathname}${window.location.search}`,
     )
     syncSelection()
@@ -643,11 +718,13 @@ export function createTripMap(options: TripMapOptions): TripMap {
   }
 
   function fitAll() {
-    if (!map || places.length === 0) {
+    const shown = markers.getShownPlaces()
+
+    if (!map || shown.length === 0) {
       return
     }
 
-    const view = getAllPlacesView(places, isNarrow(), getTripListInset())
+    const view = getAllPlacesView(shown, isNarrow(), getTripListInset())
 
     if ('bounds' in view) {
       map.fitBounds(view.bounds, { ...view.fitBoundsOptions, duration: getAnimationDuration() })
@@ -689,7 +766,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
         formatPlaceCount: (count) => t(messages, 'clusterPlaces', { count }),
         getPlaces: (current) => markers.getScreenshotPlaces(current),
         legend: elements.legend,
-        places,
+        places: markers.getShownPlaces(),
         site: `${window.location.host}${urls.mapPath}`,
         stats: stats
           ? [
@@ -769,7 +846,15 @@ export function createTripMap(options: TripMapOptions): TripMap {
     )
   }
 
-  window.addEventListener('popstate', () => syncSelection(), { signal })
+  // The year stays as picked going back and forward; the address follows it.
+  window.addEventListener(
+    'popstate',
+    () => {
+      syncSelection()
+      syncYearUrl()
+    },
+    { signal },
+  )
   // The map follows its container's size by itself. The open place is centred again
   // once a resize settles, and only when the width changed: a phone's address bar
   // showing and hiding only changes the height, and shouldn't keep moving the map.
@@ -814,6 +899,9 @@ export function createTripMap(options: TripMapOptions): TripMap {
       } else if (event.key === 'Escape' && !event.defaultPrevented && tripOverview.pickedId) {
         // A route picked on the map, with nothing open: let go of it.
         tripOverview.pick(undefined)
+      } else if (event.key === 'Escape' && !event.defaultPrevented && markers.year !== undefined) {
+        // Then the year picked: every place and trip again.
+        pickYear(undefined)
       }
     },
     { signal },
@@ -831,6 +919,30 @@ export function createTripMap(options: TripMapOptions): TripMap {
 
   syncSelection({ focus: true, moveMap: false })
 
+  // The address may pick a year to open on.
+  pickYear(getUrlYear())
+
+  // A year in the legend, pressed, leaves only its places; pressed again, every place.
+  for (const button of elements.yearButtons) {
+    button.addEventListener(
+      'click',
+      () => {
+        const year = Number(button.dataset.tripMapYear)
+        pickYear(markers.year === year ? undefined : year)
+      },
+      { signal },
+    )
+  }
+
+  elements.yearClear?.addEventListener(
+    'click',
+    () => {
+      pickYear(undefined)
+      elements.yearButtons[0]?.focus()
+    },
+    { signal },
+  )
+
   const token = options.mapboxToken ?? page.dataset.tripMapToken?.trim()
 
   if (!token) {
@@ -843,7 +955,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
       // Opens already framed on the places, rather than on the globe and then flying in.
       map = new mapboxgl.Map({
         // Beside the trip list, on its page.
-        ...getAllPlacesView(places, isNarrow(), getTripListInset()),
+        ...getAllPlacesView(markers.getShownPlaces(), isNarrow(), getTripListInset()),
         attributionControl: false,
         container: canvas,
         dragRotate: true,

@@ -90,6 +90,8 @@ export function createPlaceMarkers({
   const yearColors = new Map(places.map((place) => [place.firstYear, place.color]))
   const markers = new Map<string, MarkerEntry>()
   const clusterMarkers = new Map<number, ClusterMarkerEntry>()
+  // The year the legend picked: only the places first recorded then are on the map.
+  let year: number | undefined
   // Focus put back on a marker as the drawer closes shouldn't pop its name up.
   let quietFocus = false
 
@@ -331,6 +333,30 @@ export function createPlaceMarkers({
     }
   }
 
+  /** The places the picked year leaves on the map; every one without a year. */
+  function getShownPlaces() {
+    return year === undefined ? places : places.filter((place) => place.firstYear === year)
+  }
+
+  /** Whether the picked year leaves this place on the map. */
+  function isShown(id: string) {
+    return year === undefined || placesById.get(id)?.firstYear === year
+  }
+
+  function getIndexData(): GeoJSON.FeatureCollection {
+    return {
+      features: getShownPlaces().map((place) => ({
+        geometry: {
+          coordinates: [place.longitude, place.latitude],
+          type: 'Point' as const,
+        },
+        properties: { count: place.count, id: place.id, firstYear: place.firstYear },
+        type: 'Feature' as const,
+      })),
+      type: 'FeatureCollection',
+    }
+  }
+
   /** The hidden source the map clusters the places with. Adds it unless it is there. */
   function addIndex() {
     const map = getMap()
@@ -351,17 +377,7 @@ export function createPlaceMarkers({
         momentCount: ['+', ['get', 'count']],
       },
       clusterRadius: CLUSTER_RADIUS,
-      data: {
-        features: places.map((place) => ({
-          geometry: {
-            coordinates: [place.longitude, place.latitude],
-            type: 'Point' as const,
-          },
-          properties: { count: place.count, id: place.id, firstYear: place.firstYear },
-          type: 'Feature' as const,
-        })),
-        type: 'FeatureCollection',
-      },
+      data: getIndexData(),
       type: 'geojson',
     })
     map.addLayer({
@@ -665,11 +681,13 @@ export function createPlaceMarkers({
     getButton: (id: string) => markers.get(id)?.button,
     getPlace: (id: string) => placesById.get(id),
     getScreenshotPlaces,
+    getShownPlaces,
     has: (id: string) => placesById.has(id),
+    isShown,
     /** Takes every marker off the map (as a trip opens) or puts them back. */
     setHidden(hidden: boolean) {
-      for (const marker of markers.values()) {
-        setMarkerShown(marker, !hidden)
+      for (const [id, marker] of markers) {
+        setMarkerShown(marker, !hidden && isShown(id))
       }
 
       if (hidden) {
@@ -688,6 +706,33 @@ export function createPlaceMarkers({
       }
     },
     sync,
+    get year() {
+      return year
+    },
+    /**
+     * Leaves only the places first recorded in `year` on the map, or every place again;
+     * the next sync, once the source has gathered them afresh, puts them on.
+     */
+    setYear(next: number | undefined) {
+      year = next
+
+      const source = getMap()?.getSource(SOURCE_ID) as GeoJSONSource | undefined
+
+      if (!source) {
+        return
+      }
+
+      // The clusters are numbered afresh with the new data.
+      clearClusterMarkers()
+
+      for (const [id, marker] of markers) {
+        if (!isShown(id)) {
+          setMarkerShown(marker, false)
+        }
+      }
+
+      source.setData(getIndexData())
+    },
   }
 }
 

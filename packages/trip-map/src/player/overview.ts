@@ -73,6 +73,8 @@ export function createTripOverview({
   // The trip picked, lifted while nothing else is pointed at, and where it was clicked.
   let pickedId: string | undefined
   let pickedAt: mapboxgl.LngLatLike | undefined
+  // The year the legend picked: only the trips started then are on the map.
+  let year: number | undefined
   // The popup's trip and whether it says to click again, to fill it only on a change.
   let popupKey: string | undefined
   let watched: MapboxMap | undefined
@@ -103,9 +105,18 @@ export function createTripOverview({
   )
   const layerIds = [...tripIdsByLayer.keys()]
 
+  function isShown(id: string) {
+    const trip = tripsById.get(id)
+    return year === undefined || (trip !== undefined && getTripYear(trip) === year)
+  }
+
   function getLook(id: string): Look {
     if (activeId) {
       return { opacity: 0, width: PLAYING.width }
+    }
+
+    if (!isShown(id)) {
+      return { opacity: 0, width: BASE.width }
     }
 
     if (!highlightedId) {
@@ -213,7 +224,7 @@ export function createTripOverview({
       return undefined
     }
 
-    const layers = layerIds.filter((id) => map.getLayer(id))
+    const layers = layerIds.filter((id) => map.getLayer(id) && isShown(tripIdsByLayer.get(id)!))
     const radius = isTouch() ? HIT_RADIUS.touch : HIT_RADIUS.mouse
     const box: [mapboxgl.PointLike, mapboxgl.PointLike] = [
       [point.x - radius, point.y - radius],
@@ -495,8 +506,25 @@ export function createTripOverview({
       return pickedId
     },
     reveal,
+    /** Leaves only the routes of the trips started in `year` on the map, or every one. */
+    setYear(next: number | undefined) {
+      year = next
+
+      if (pickedId && !isShown(pickedId)) {
+        pick(undefined)
+      } else {
+        highlight(undefined)
+      }
+
+      paintAll(HOVER)
+    },
     show,
   }
+}
+
+/** The year a trip started, which the trip list groups it by. */
+function getTripYear(trip: TripSummary) {
+  return Number.parseInt(trip.start.slice(0, 4), 10)
 }
 
 /**
