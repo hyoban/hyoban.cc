@@ -4,7 +4,6 @@ import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonToken
 import java.io.Reader
 import java.io.StringReader
-import kotlin.math.cos
 import kotlin.math.hypot
 
 // The map's fog of war, as the site's (packages/trip-map/src/fog-of-war.ts): every city
@@ -51,7 +50,13 @@ class FogRegion(val id: String, val fogged: Boolean, val polygons: List<List<Rin
 }
 
 /** The cities lit, by id, and how many cities and provinces they make. */
-data class FogOfWar(val lit: List<String>, val cities: Int, val provinces: Int)
+data class FogOfWar(
+    val lit: List<String>,
+    val cities: Int,
+    val provinces: Int,
+    /** How much each city lit holds: the places' weights in it, as how many Moments were written there. */
+    val weights: Map<String, Int> = emptyMap(),
+)
 
 /** The regions of the site's GeoJSON collection. */
 fun parseFogRegions(text: String): List<FogRegion> = parseFogRegions(StringReader(text))
@@ -158,33 +163,27 @@ private fun toPolygons(coordinates: Coordinates): List<List<Ring>> {
     }
 }
 
-/** The regions holding any of [places], as `(longitude, latitude)`. */
-fun buildFogOfWar(regions: List<FogRegion>, places: Iterable<Pair<Double, Double>>): FogOfWar {
+/**
+ * The regions holding any of [places], as `(longitude, latitude)`, and how much each holds: the
+ * [weights] of its places, in their order, 1 each without them.
+ */
+fun buildFogOfWar(
+    regions: List<FogRegion>,
+    places: Iterable<Pair<Double, Double>>,
+    weights: Iterable<Int>? = null,
+): FogOfWar {
     val candidates = regions.filterNot { it.fogged }
-    val lit = sortedSetOf<String>()
-    for ((x, y) in places) {
+    val lit = sortedMapOf<String, Int>()
+    val weighed = places.zip(weights ?: places.map { 1 })
+    for ((place, weight) in weighed) {
+        val (x, y) = place
         val found = candidates.firstOrNull { region ->
             val b = region.bounds
             x >= b[0] && x <= b[2] && y >= b[1] && y <= b[3] && region.contains(x, y)
         } ?: nearest(candidates, x, y)
-        found?.let { lit += it.id }
+        found?.let { lit[it.id] = (lit[it.id] ?: 0) + weight }
     }
-    return FogOfWar(lit.toList(), lit.size, lit.map { it.take(2) }.toSet().size)
-}
-
-/**
- * How far each region's middle is from the middle of the nearest one [lit], in degrees as across at
- * its latitude, by id: 0 for those lit. None with none lit. The fog sweeps by it, as the site's
- * (`measureFootprints` in packages/trip-map/src/map/fog-layer.ts).
- */
-fun footprintDistances(regions: List<FogRegion>, lit: Collection<String>): Map<String, Double>? {
-    val ids = lit.toSet()
-    val footprints = regions.filter { it.id in ids }
-    if (footprints.isEmpty()) return null
-    return regions.associate { region ->
-        val squash = cos(Math.toRadians(region.cy))
-        region.id to footprints.minOf { hypot((it.cx - region.cx) * squash, it.cy - region.cy) }
-    }
+    return FogOfWar(lit.keys.toList(), lit.size, lit.keys.map { it.take(2) }.toSet().size, lit.toMap())
 }
 
 /** Inside one of the region's polygons: inside its outer ring and none of its holes. */

@@ -166,21 +166,27 @@ private const val ROUTE = "route"
 private const val ROUTES_DASHED = "routes-dashed"
 private const val STOPS = "stops"
 private const val FOG = "fog"
-private const val FOG_LIT = "fog-lit"
 private const val FOG_MAX_ZOOM = 10
 private const val FOG_WATER = "fog-water"
-private const val FOG_GLOW_COLOR = 0xFFF59E0B.toInt()
-private const val FOG_GLOW_PEAK = 0.8f
 
 /**
- * The rings the fog sweeps in by, out from the cities been to: each a layer of its own whose
+ * The fog, as the site's: the page's ink, as thick as [FOG_THICK] over everywhere not been to, and
+ * over a city been to thinner by the log of its Moments plus one, to [FOG_FIRST] of that for one
+ * and none from about twenty ([FOG_CLEAR]), on a fixed scale so a city keeps its fog as others fill
+ * up. Light, so it can be left on; on the dark map the ink is light, a haze over it.
+ */
+private const val FOG_THICK = 0.22
+private const val FOG_FIRST = 0.6
+private val FOG_CLEAR = ln(21.0)
+
+/**
+ * The rings the fog sweeps in by, out from the screen's middle: each a layer of its own whose
  * regions are set once a sweep starts, so each frame only sets a ring's opacity, which MapLibre
  * draws at once, rather than an opacity worked out region by region, which it lays the regions
  * out again for, a frame or more late.
  */
 private const val FOG_RINGS = 24
 private fun fogRing(index: Int) = "fog-ring-$index"
-private fun glowRing(index: Int) = "fog-glow-$index"
 
 /** How long the fog's sweep takes, closing in and clearing, in milliseconds, as the site's. */
 private const val FOG_SWEEP_IN = 1400L
@@ -195,9 +201,6 @@ private const val FOG_EDGE = 0.35
 /** How long a sweep waits for its rings to be laid out before it starts anyway. */
 private const val FOG_RINGS_READY = 500L
 
-/** How long the cities flaring take to come in or go out when a sweep is turned around. */
-private const val FOG_GLOW_TURN = 250L
-
 /**
  * The fog on the map as [fog] has it, none while it's off: its layers added the first time, and
  * swept in or out when [sweep], else set.
@@ -206,51 +209,40 @@ private suspend fun showFog(
     map: Pair<MapLibreMap, Style>?,
     fog: FogOfWar?,
     regions: List<FogRegion>,
-    veil: Int,
     ink: Int,
-    dark: Boolean,
     sweep: Boolean,
 ) {
     val (ready, style) = map?.live ?: return
-    val veilOpacity = if (dark) 0.62f else 0.5f
-    val litOpacity = if (dark) 0.2f else 0f
     // Read when used: on a new style they're only there once added below.
     fun rings() = List(FOG_RINGS) { style.getLayerAs<FillLayer>(fogRing(it)) }
-    // Set rather than swept, a sweep cut off is over, its glow with it.
+    // Set rather than swept, a sweep cut off is over.
     if (!sweep) {
         FogRings.waiting = false
-        if (FogRings.midway) {
-            FogRings.midway = false
-            FogRings.glows.fill(0f)
-            for (index in 0 until FOG_RINGS) style.getLayer(glowRing(index))?.setProperties(fillOpacity(0f))
-        }
+        FogRings.midway = false
     }
     if (fog == null) {
         if (style.getSource(FOG) == null) return
-        if (sweep) ready.sweepFog(style, regions, entering = false, veil, veilOpacity)
+        if (sweep) ready.sweepFog(style, regions, entering = false)
         // Clear, and left laid out for the next sweep.
         for (ring in rings()) ring?.setProperties(fillOpacity(0f))
-        style.getLayer(FOG_LIT)?.setProperties(visibility(Property.NONE))
         return
     }
     // Read from the asset the first time the fog shows, under the routes and the dots: the fog in
-    // rings, which at rest are the fog itself, so it's drawn once, and sweep it; the cities been
-    // to and their glow. Without antialiasing, the cities and the world's tiles meet without a
-    // seam. The basemap's water again over it keeps the sea, lakes and rivers clear, and the
-    // fog's coast the map's; drawn just as the basemap's, it stays on the map whether the fog
-    // shows or not.
+    // rings, which at rest are the fog itself, so it's drawn once, and sweep it. Without
+    // antialiasing, the cities and the world's tiles meet without a seam. The basemap's water again
+    // over it keeps the sea, lakes and rivers clear, and the fog's coast the map's; drawn just as
+    // the basemap's, it stays on the map whether the fog shows or not.
     if (style.getSource(FOG) == null) {
         // A new style, after the theme changed, say: its rings are set out afresh, nothing of the
         // last one's sweep carried over.
         FogRings.key = null
+        FogRings.color = null
         FogRings.waiting = false
         FogRings.midway = false
-        FogRings.glows.fill(0f)
         // Cut into tiles no closer than a city's streets: the boundaries are simplified past that,
         // so closer tiles would only take memory to hold the same lines.
         style.addSource(GeoJsonSource(FOG, URI(FOG_REGIONS_URI), GeoJsonOptions().withMaxZoom(FOG_MAX_ZOOM)))
-        val layers = List(FOG_RINGS, ::fogRing) + FOG_LIT + List(FOG_RINGS, ::glowRing)
-        for (id in layers) {
+        for (id in List(FOG_RINGS, ::fogRing)) {
             val layer = FillLayer(id, FOG).withProperties(fillAntialias(false), fillOpacity(0f), visibility(Property.NONE))
             // Set at once: the sweep sets each frame's opacity itself, and the style's own easing
             // would lag it.
@@ -264,25 +256,28 @@ private suspend fun showFog(
             style.addLayerBelow(copy, ROUTE)
         }
     }
-    style.getLayerAs<FillLayer>(FOG_LIT)?.apply {
-        setFilter(raw(litFilter(fog)))
-        setProperties(fillColor(ink), fillOpacity(litOpacity), visibility(Property.VISIBLE))
-    }
-    if (FogRings.lit != fog.lit) {
-        FogRings.lit = fog.lit
-        FogRings.distances = footprintDistances(regions, fog.lit)
-        FogRings.footprints = regions.filter { it.id in fog.lit }
+    // How thick the fog is over each region, worked out with the regions when they're laid out
+    // rather than each frame, which only sets the rings' opacity; set again only for new counts.
+    val color = fogColor(fog, ink)
+    if (FogRings.color != color) {
+        FogRings.color = color
+        for (ring in rings()) ring?.setProperties(fillColor(raw(color)))
     }
     // Turning a sweep around goes on by the rings it had, wherever the map is now.
     if (!(sweep && FogRings.turnsTo(entering = true))) ready.prepareFogRings(style, regions)
-    for (ring in rings()) ring?.setProperties(fillColor(veil))
-    if (sweep) ready.sweepFog(style, regions, entering = true, veil, veilOpacity)
-    for (ring in rings()) ring?.setProperties(fillOpacity(veilOpacity))
+    if (sweep) ready.sweepFog(style, regions, entering = true)
+    for (ring in rings()) ring?.setProperties(fillOpacity(1f))
 }
 
-/** Whether a region is one of the cities been to, as an expression. */
-private fun litFilter(fog: FogOfWar) =
-    "[\"in\", [\"get\", \"id\"], [\"literal\", [${fog.lit.joinToString(",") { "\"$it\"" }}]]]"
+/** The fog's colour: the [ink], as thick over each region as it is unfamiliar, as an expression. */
+private fun fogColor(fog: FogOfWar, ink: Int): String {
+    val counts = fog.weights.ifEmpty { fog.lit.associateWith { 1 } }
+    val count = if (counts.isEmpty()) "0" else "[\"match\", [\"get\", \"id\"], " +
+        counts.entries.joinToString(", ") { (id, weight) -> "\"$id\", $weight" } + ", 0]"
+    val thickness = "[\"interpolate\", [\"linear\"], [\"ln\", [\"+\", 1, $count]], " +
+        "0, $FOG_THICK, ${ln(2.0)}, ${FOG_THICK * FOG_FIRST}, $FOG_CLEAR, 0]"
+    return "[\"rgba\", ${(ink shr 16) and 0xFF}, ${(ink shr 8) and 0xFF}, ${ink and 0xFF}, $thickness]"
+}
 
 /** A value from 0 to 1, eased in and out: 3v² − 2v³. */
 private fun smoothstep(value: Double): Double {
@@ -292,8 +287,8 @@ private fun smoothstep(value: Double): Double {
 
 /**
  * The rings as last set: from where on screen, how near and far the regions in sight were, for
- * which fog, and whether the map has drawn them since; and the sweep going by them, or cut off
- * midway by a toggle, for the next to turn it around from where it was.
+ * which regions, in which colour, and whether the map has drawn them since; and the sweep going by
+ * them, or cut off midway by a toggle, for the next to turn it around from where it was.
  */
 private object FogRings {
     var key: String? = null
@@ -301,52 +296,34 @@ private object FogRings {
     var far = 0.0
     var ready = false
     var sweeping = false
-    /** The cities been to, and how far each city is from the nearest of them, by id. */
-    var lit: List<String>? = null
-    var distances: Map<String, Double>? = null
-    var footprints: List<FogRegion> = emptyList()
+    var color: String? = null
     /** Waiting for the rings to be laid out, nothing on the map moved yet. */
     var waiting = false
-    /** Under way or cut off, not through: which way, how far its edge had come, its glow. */
+    /** Under way or cut off, not through: which way, and how far its edge had come. */
     var midway = false
     var entering = false
     var reach = 0.0
-    val glows = FloatArray(FOG_RINGS)
 
     /** Whether a sweep [entering] or not would turn one cut off midway around. */
     fun turnsTo(entering: Boolean) = midway && this.entering != entering
 }
 
 /**
- * Sets the rings out from the cities been to, or the screen's middle with none, as what's in sight
- * is now, for the next sweep to start at once: on each toggle, and each time the map comes to
- * rest, so they're ready before the tap. Only which regions each holds changes, so the fog at
- * rest, drawn by them, stays as it is. Ready once the map has laid them out, which takes it a few
- * hundred milliseconds.
+ * Sets the rings out from the screen's middle as it is now, for the next sweep to start at once:
+ * on each toggle, and each time the map comes to rest, so they're ready before the tap. Only which
+ * regions each holds changes, so the fog at rest, drawn by them, stays as it is. Ready once the map
+ * has laid them out, which takes it a few hundred milliseconds.
  */
 private fun MapLibreMap.prepareFogRings(style: Style, regions: List<FogRegion>) {
     val center = cameraPosition.target ?: return
-    val lit = style.getLayerAs<FillLayer>(FOG_LIT)?.filter ?: return
-    val notLit = Expression.not(lit)
-    val key = "${center.latitude},${center.longitude},${cameraPosition.zoom},${regions.size},$lit"
+    val key = "${center.latitude},${center.longitude},${cameraPosition.zoom},${regions.size}"
     if (key == FogRings.key) return
     val squash = cos(Math.toRadians(center.latitude))
-    val distances = FogRings.distances
-    val footprints = FogRings.footprints
-    // The regions of the rest of the world share an id, so each is measured from its own middle,
-    // here and on the map alike.
-    fun fromFootprints(region: FogRegion) =
-        footprints.minOf { hypot((it.cx - region.cx) * cos(Math.toRadians(region.cy)), it.cy - region.cy) }
-    fun distanceOf(region: FogRegion) = when {
-        distances == null -> hypot((region.cx - center.longitude) * squash, region.cy - center.latitude)
-        region.fogged -> fromFootprints(region)
-        else -> distances[region.id] ?: fromFootprints(region)
-    }
-    // How far from the cities been to, or the screen's middle, the regions in sight are, nearest
-    // and farthest: those whose middles are on screen, as those whose middles are off it mostly
-    // are too.
+    fun distanceTo(x: Double, y: Double) = hypot((x - center.longitude) * squash, y - center.latitude)
+    // How far from the screen's middle the regions in sight are, nearest and farthest: those
+    // whose middles are on screen, as those whose middles are off it mostly are too.
     val bounds = projection.visibleRegion.latLngBounds
-    val inSight = regions.filter { bounds.contains(LatLng(it.cy, it.cx)) }.map(::distanceOf)
+    val inSight = regions.filter { bounds.contains(LatLng(it.cy, it.cx)) }.map { distanceTo(it.cx, it.cy) }
     // Zoomed in on a region or two whose middles are off screen, there's no way across to sweep:
     // every region then goes in the first ring, and the fog comes and goes evenly over the whole
     // screen, over the same time.
@@ -354,45 +331,24 @@ private fun MapLibreMap.prepareFogRings(style: Style, regions: List<FogRegion>) 
     val near = if (even) 0.0 else inSight.min()
     val far = if (even) 0.0 else inSight.max()
     val width = (far - near) / FOG_RINGS
-    // The asset's regions carry no distance from the cities been to, so each ring holds its cities'
-    // ids, and the world's regions by how far the map works out each is; held within what's in
-    // sight, so a region whose middle is off screen goes with the ring farthest in sight rather
-    // than ahead of the sweep or after it.
-    val ringIds = distances?.let {
-        regions.filterNot { it.fogged }
-            .groupBy({ ((distanceOf(it) - near) / width).toInt().coerceIn(0, FOG_RINGS - 1) }, { it.id })
-    }
+    // Held within what's in sight, so a region whose middle is off screen goes with the ring
+    // farthest in sight rather than ahead of the sweep or after it. By each region's own middle,
+    // as the world's regions share an id.
     val (x, y) = center.longitude to center.latitude
-    val distance = "[\"max\", $near, [\"min\", $far, " + when {
-        distances == null -> "[\"sqrt\", [\"+\", " +
-            "[\"^\", [\"*\", [\"-\", [\"coalesce\", [\"get\", \"cx\"], $x], $x], $squash], 2], " +
-            "[\"^\", [\"-\", [\"coalesce\", [\"get\", \"cy\"], $y], $y], 2]]]"
-        else -> "[\"min\", $far, " + footprints.joinToString(", ") {
-            "[\"sqrt\", [\"+\", [\"^\", [\"*\", [\"-\", [\"get\", \"cx\"], ${it.cx}], " +
-                "[\"cos\", [\"*\", [\"get\", \"cy\"], ${PI / 180}]]], 2], [\"^\", [\"-\", [\"get\", \"cy\"], ${it.cy}], 2]]]"
-        } + "]"
-    } + "]]"
-    val world = "[\"coalesce\", [\"get\", \"fogged\"], false]"
+    val distance = "[\"max\", $near, [\"min\", $far, [\"sqrt\", [\"+\", " +
+        "[\"^\", [\"*\", [\"-\", [\"coalesce\", [\"get\", \"cx\"], $x], $x], $squash], 2], " +
+        "[\"^\", [\"-\", [\"coalesce\", [\"get\", \"cy\"], $y], $y], 2]]]]]"
     for (index in 0 until FOG_RINGS) {
         val from = if (index == 0) near - 1 else near + index * width
         val to = if (index == FOG_RINGS - 1) far + 1 else near + (index + 1) * width
-        val inSpan = "[\">=\", $distance, $from], [\"<\", $distance, $to]"
         val inRing = when {
             even -> Expression.literal(index == 0)
-            ringIds != null -> raw(
-                "[\"any\", [\"in\", [\"get\", \"id\"], [\"literal\", [${ringIds[index].orEmpty().joinToString(",") { "\"$it\"" }}]]], " +
-                    "[\"all\", $world, $inSpan]]",
-            )
-            else -> raw("[\"all\", $inSpan]")
+            else -> raw("[\"all\", [\">=\", $distance, $from], [\"<\", $distance, $to]]")
         }
         style.getLayerAs<FillLayer>(fogRing(index))?.apply {
-            // Only which regions it holds: at rest the rings are the fog, at its opacity.
-            setFilter(Expression.all(notLit, inRing))
+            // Only which regions it holds: at rest the rings are the fog.
+            setFilter(inRing)
             setProperties(visibility(Property.VISIBLE))
-        }
-        style.getLayerAs<FillLayer>(glowRing(index))?.apply {
-            setFilter(Expression.all(lit, inRing))
-            setProperties(fillColor(FOG_GLOW_COLOR), visibility(Property.VISIBLE))
         }
     }
     FogRings.key = key
@@ -409,24 +365,17 @@ private fun MapLibreMap.prepareFogRings(style: Style, regions: List<FogRegion>) 
 }
 
 /**
- * Sweeps the fog in, closing in on the cities been to from the regions farthest from them, each
- * flaring as the fog settles round it; or out, from them outwards. A region is reached when the
- * sweep is as far from the cities been to as its middle is from the nearest of theirs (from the
- * screen's middle with none been to); the sweep starts at the farthest region in sight and ends at
- * the nearest, so all of it is seen. The regions go into rings by how far they are, set ahead of
- * the tap where the map allows, and each frame sets each ring's opacity.
+ * Sweeps the fog in, from the screen's edges to its middle, or out, from the middle to the edges,
+ * as the site's. A region is reached when the sweep is as far from the screen's middle as its
+ * middle; the sweep starts at the farthest region in sight and ends at the nearest, so all of it is
+ * seen. The regions go into rings by how far they are, set ahead of the tap where the map allows,
+ * and each frame sets each ring's opacity.
  *
  * A toggle cancels the sweep under way, and the next, going the other way, turns it around: the
  * soft edge is the same either way, so it goes on from where the edge was with each ring just as
- * clear as it was, and the cities flaring fade in or out over [FOG_GLOW_TURN] rather than jump.
+ * thick as it was.
  */
-private suspend fun MapLibreMap.sweepFog(
-    style: Style,
-    regions: List<FogRegion>,
-    entering: Boolean,
-    veil: Int,
-    veilOpacity: Float,
-) {
+private suspend fun MapLibreMap.sweepFog(style: Style, regions: List<FogRegion>, entering: Boolean) {
     // Cut off while it waited for its rings, the last sweep moved nothing: the fog is as this one
     // would leave it.
     if (FogRings.waiting && FogRings.entering != entering) {
@@ -449,14 +398,11 @@ private suspend fun MapLibreMap.sweepFog(
     val edge = if (far > near) (far - near) * FOG_EDGE else 1.0
     val width = (far - near) / FOG_RINGS
     val rings = List(FOG_RINGS) { style.getLayerAs<FillLayer>(fogRing(it)) }
-    val glows = List(FOG_RINGS) { style.getLayerAs<FillLayer>(glowRing(it)) }
-    for (ring in rings) ring?.setProperties(fillColor(veil))
-    val end = far - near + edge * (if (entering) 2 else 1)
-    // A ring is as clear with the edge come some way one way as with it come (far − near) + edge
+    // Closing in, the farthest region in sight is reached at once; clearing, the nearest.
+    val end = far - near + edge
+    // A ring is as thick with the edge come some way one way as with it come (far − near) + edge
     // less that the other.
-    val from = if (turning) (far - near + edge - FogRings.reach).coerceAtLeast(0.0) else 0.0
-    // The cities flaring as it turned, to fade out as it clears.
-    val glowsFrom = if (turning && !entering) FogRings.glows.copyOf() else null
+    val from = if (turning) (end - FogRings.reach).coerceAtLeast(0.0) else 0.0
     FogRings.midway = true
     FogRings.reach = from
     try {
@@ -472,32 +418,19 @@ private suspend fun MapLibreMap.sweepFog(
             // screen at about the rate the fog closes in, where easing out burst it open.
             val reach = end * if (entering) sin(progress * PI / 2) else progress
             FogRings.reach = reach
-            val turned = if (turning) ((now - first) / 1_000_000.0 / FOG_GLOW_TURN).coerceIn(0.0, 1.0) else 1.0
             for (index in 0 until FOG_RINGS) {
                 val ringDistance = near + (index + 0.5) * width
                 // How far past the ring the sweep is, in edges: 0 as it arrives, 1 once it's through.
                 val past = if (entering) (reach - (far - ringDistance)) / edge else (reach - (ringDistance - near)) / edge
                 val through = smoothstep(past)
-                rings[index]?.setProperties(fillOpacity((veilOpacity * if (entering) through else 1 - through).toFloat()))
-                // Flaring as the fog arrives and fading once it's through, softly at both ends.
-                val glow = when {
-                    entering -> FOG_GLOW_PEAK * (smoothstep(1 - abs(past - 1)) * turned).toFloat()
-                    glowsFrom != null -> glowsFrom[index] * (1 - turned).toFloat()
-                    else -> continue
-                }
-                FogRings.glows[index] = glow
-                glows[index]?.setProperties(fillOpacity(glow))
+                rings[index]?.setProperties(fillOpacity((if (entering) through else 1 - through).toFloat()))
             }
             if (progress >= 1.0) break
         }
         FogRings.midway = false
     } finally {
-        // Through, the glow gone; cut off, left as it is for the next sweep to turn around. The
-        // rings left as the last frame set them, the fog at rest or none.
-        if (!FogRings.midway) {
-            for (glow in glows) glow?.setProperties(fillOpacity(0f))
-            FogRings.glows.fill(0f)
-        }
+        // Through or cut off, the rings left as the last frame set them: the fog at rest or none,
+        // or midway for the next sweep to turn around.
         FogRings.sweeping = false
     }
 }
@@ -1046,16 +979,11 @@ fun PlacesMap(
         }
     }
 
-    // The site's veil: the ink over the light map, and black over the dark, which the ink would
-    // lighten. The dark map is near black already, so there the cities been to are lit up as well.
-    // Turned on, the fog closes in on the cities been to as the site's does, each flaring gold as
-    // it settles round them; turned off, it clears from them outwards. A toggle while it sweeps
-    // turns it around.
-    val dark = LocalDarkTheme.current
-    val veil = if (dark) Color.Black.toArgb() else ink
+    // The site's fog, in the ink: turned on, it closes in from the screen's edges to its middle;
+    // turned off, it clears from the middle outwards. A toggle while it sweeps turns it around.
     val sweepAsked by rememberUpdatedState(fogSweep)
     val swept = remember { intArrayOf(fogSweep) }
-    LaunchedEffect(map, fog, veil, framed) {
+    LaunchedEffect(map, fog, ink, framed) {
         // Left on, it sweeps in as the map first opens, once the places are framed.
         val opening = fog != null && !MainMap.fogOpened
         if (opening && !framed) return@LaunchedEffect
@@ -1063,7 +991,7 @@ fun PlacesMap(
         // Taken as it starts rather than once it's through, so a toggle cutting it off is swept too.
         val sweep = (sweepAsked != swept[0] || opening) && !reduced
         swept[0] = sweepAsked
-        showFog(map, fog, fogRegionsNow, veil, ink, dark, sweep)
+        showFog(map, fog, fogRegionsNow, ink, sweep)
     }
 
     LaunchedEffect(map, routes) {
