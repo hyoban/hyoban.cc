@@ -113,6 +113,7 @@ dependencies {
     implementation(libs.work.runtime)
     implementation(libs.exifinterface)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.gson)
     debugImplementation(libs.androidx.compose.ui.tooling)
     testImplementation(libs.junit)
     testImplementation(libs.kotlin.test.junit)
