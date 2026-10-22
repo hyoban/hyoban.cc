@@ -599,6 +599,9 @@ private object MainMap {
 
     /** The screen's shape the places were last framed for: on its side or not, and which side the tabs stood down. */
     var framedFor: Pair<Boolean, Boolean>? = null
+
+    /** Whether the fog has been shown since the app started; left on, it sweeps in the first time. */
+    var fogOpened = false
 }
 
 /** Pixels from each edge, given as left and right whichever way the text runs. */
@@ -939,9 +942,13 @@ fun PlacesMap(
     val sweepAsked by rememberUpdatedState(fogSweep)
     val fogSettled by rememberUpdatedState(onFogSettled)
     val swept = remember { intArrayOf(fogSweep) }
-    LaunchedEffect(map, fog, veil) {
+    LaunchedEffect(map, fog, veil, framed) {
         try {
-            showFog(map, fog, fogRegionsNow, veil, ink, dark, sweep = sweepAsked != swept[0] && !reduced)
+            // Left on, it sweeps in as the map first opens, once the places are framed.
+            val opening = fog != null && !MainMap.fogOpened
+            if (opening && !framed) return@LaunchedEffect
+            if (fog != null) MainMap.fogOpened = true
+            showFog(map, fog, fogRegionsNow, veil, ink, dark, sweep = (sweepAsked != swept[0] || opening) && !reduced)
         } finally {
             swept[0] = sweepAsked
             fogSettled()
