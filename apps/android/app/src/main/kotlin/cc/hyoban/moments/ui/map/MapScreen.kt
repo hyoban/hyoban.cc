@@ -188,10 +188,8 @@ fun MapScreen(
     val settings = LocalSettings.current
     val context = LocalContext.current
     var fogRegions by remember { mutableStateOf<List<FogRegion>?>(null) }
-    // Each toggle, swept on the map rather than set; a toggle while one sweeps is let be, as it
-    // would cut the sweep off.
+    // Each toggle, swept on the map rather than set; a toggle while one sweeps turns it around.
     var fogSweep by remember { mutableIntStateOf(0) }
-    var fogSweeping by remember { mutableStateOf(false) }
     LaunchedEffect(settings.mapFog) {
         if (settings.mapFog && fogRegions == null) {
             fogRegions = withContext(Dispatchers.Default) {
@@ -286,7 +284,6 @@ fun MapScreen(
             onFocused = onFocused,
             fog = fog.takeIf { settings.mapFog },
             fogSweep = fogSweep,
-            onFogSettled = { fogSweeping = false },
             fogRegions = fogRegions.orEmpty(),
             onLocated = { found ->
                 locating = false
@@ -311,11 +308,8 @@ fun MapScreen(
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
                 if (colors.isNotEmpty()) Legend(colors, trips = mapRoutes.isNotEmpty())
                 FogButton(settings.mapFog) {
-                    if (!fogSweeping) {
-                        fogSweeping = true
-                        fogSweep++
-                        settings.changeMapFog(!settings.mapFog)
-                    }
+                    fogSweep++
+                    settings.changeMapFog(!settings.mapFog)
                 }
             }
             val shownFog = fog.takeIf { settings.mapFog }

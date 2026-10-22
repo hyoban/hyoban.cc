@@ -2,10 +2,12 @@ package cc.hyoban.moments
 
 import cc.hyoban.moments.ui.map.FogOfWar
 import cc.hyoban.moments.ui.map.buildFogOfWar
+import cc.hyoban.moments.ui.map.footprintDistances
 import cc.hyoban.moments.ui.map.parseFogRegions
 import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /** A city is lit by a place inside it, as on the site's map; the rest of the world never is. */
@@ -45,6 +47,15 @@ class FogOfWarTest {
     @Test
     fun `cities in two provinces count two`() {
         assertEquals(2, buildFogOfWar(regions, listOf(1.0 to 1.0, 1.0 to 11.0)).provinces)
+    }
+
+    @Test
+    fun `the fog sweeps by how far each city is from the nearest one lit`() {
+        val distances = footprintDistances(regions, listOf("320100"))!!
+        assertEquals(0.0, distances["320100"])
+        assertEquals(10.0, distances["340100"]!!, 1e-9)
+        assertTrue(distances["320200"]!! < 15.5)
+        assertNull(footprintDistances(regions, emptyList()))
     }
 
     @Test

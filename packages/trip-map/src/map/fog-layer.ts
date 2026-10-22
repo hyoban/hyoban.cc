@@ -5,15 +5,16 @@ import { readFogPreference, writeFogPreference } from '../player/preferences.ts'
 import type { Theme } from '../theme.ts'
 
 // The fog of war over the map, behind a toggle: every city not been to under a veil.
-// Turned on, the fog closes in from the edges of the screen to its middle, and each city
-// been to flares gold as it passes; turned off, it clears from the middle outwards. Each
-// region is reached when the sweep is as far from the screen's middle as the region's
-// `cx`, `cy` is, the sweep starting at the farthest region in sight and ending at the
-// nearest, so all of it is seen. The regions and which of them are lit are fetched the
+// Turned on, the fog closes in on the cities been to from those farthest from them, and
+// they flare gold as it settles round them; turned off, it clears from them outwards.
+// Each region is reached when the sweep is as far from the cities been to as the region's
+// `cx`, `cy` is from the nearest of theirs, the sweep starting at the farthest region in
+// sight and ending at the nearest, so all of it is seen. With none been to, it goes by
+// the screen's middle instead. The regions and which of them are lit are fetched the
 // first time it's shown; it goes while a trip plays, as the markers do. Left on, it
 // sweeps in as the map opens.
 //
-// The sweep goes by rings out from the screen's middle, each a layer of its own whose
+// The sweep goes by rings out from the cities been to, each a layer of its own whose
 // regions are set ahead, as the map comes to rest: each frame then only sets a ring's
 // opacity, which Mapbox draws at once. An opacity worked out region by region would have
 // it lay the regions out again every frame, falling behind, and further behind while it's
@@ -24,7 +25,7 @@ const FILL = 'trip-map-fog'
 // The rings read the same regions from a source of their own: setting them lays out only
 // their source again, leaving the fog at rest drawn as it is meanwhile.
 const RING_SOURCE = 'trip-map-fog-rings'
-const RINGS = 16
+const RINGS = 24
 const ring = (index: number) => `trip-map-fog-ring-${index}`
 // The cities been to, flaring as the fog reaches them, by the same rings.
 const glow = (index: number) => `trip-map-fog-glow-${index}`
@@ -38,14 +39,19 @@ const WATER = 'trip-map-fog-water'
 const VEIL = { dark: { color: '#000', opacity: 0.62 }, light: { opacity: 0.5 } }
 // How long the sweep takes, closing in and clearing.
 const SWEEP = { in: 1400, out: 900 }
-// How wide the sweep's soft edge is, as a share of the way across what's in sight: wide,
-// so neighbouring regions are only a little apart and the edge reads as a gradient
-// rather than steps.
-const EDGE = 0.8
+// How wide the sweep's soft edge is, as a share of the way across what's in sight: narrow
+// enough that the fog is seen taking a city at a time, with rings enough that it doesn't
+// step.
+const EDGE = 0.35
 // How long a sweep waits for its rings to be laid out before it starts anyway.
 const RINGS_READY = 500
+// How far apart, as a share of the sweep's soft edge, the cities and the rest of the world
+// are swept: enough for the line between them to show as it passes, without a stop.
+const APART = 0.5
 // The closest the fog's regions are cut into tiles at.
 const MAX_ZOOM = 10
+// How long the cities flaring take to come in or go out when a sweep is turned around.
+const GLOW_TURN = 250
 
 export function createFogLayer({
   areaElement,
@@ -84,6 +90,8 @@ export function createFogLayer({
   let on = Boolean(button) && readFogPreference()
   let hidden = false
   let sweepFrame: number | undefined
+  // Set while a sweep runs: turns it around, to go back the way it came from where it is.
+  let turnSweep: (() => void) | undefined
   // Set while the fog is fetched for a toggle, and while a sweep waits for its rings.
   let switching = false
   // On when the page opens, the fog sweeps in the first time it's shown, as for a toggle.
@@ -115,7 +123,9 @@ export function createFogLayer({
       fetchJson<GeoJSON.FeatureCollection>(regionsUrl),
     ])
       .then(([lit, regions]) => {
-        fog = { centres: regions.features.map(getRegionCentre), lit, regions }
+        const centres = regions.features.map(getRegionCentre)
+        measureFootprints(regions, centres, lit.lit)
+        fog = { centres, lit, regions }
       })
       .catch((cause: unknown) => {
         loading = undefined
@@ -219,8 +229,8 @@ export function createFogLayer({
   }
 
   /**
-   * Sets the rings out from the screen's middle as it is now, clear, for the next sweep to
-   * start at once. Ready once Mapbox has laid them out.
+   * Sets the rings out from the cities been to, or the screen's middle, as what's in sight
+   * is now, clear, for the next sweep to start at once. Ready once Mapbox has laid them out.
    */
   function prepareRings(map: MapboxMap) {
     const center = map.getCenter()
@@ -232,18 +242,42 @@ export function createFogLayer({
 
     const bounds = map.getBounds()
     const squash = Math.cos((center.lat * Math.PI) / 180)
-    // How far from the screen's middle the regions in sight are, nearest and farthest: those
-    // whose middles are on screen, as those whose middles are off it mostly are too.
-    const inSight = fog!.centres
-      .filter(
-        ({ cx, cy }) =>
-          !bounds ||
-          (cx <= bounds.getEast() &&
-            cx >= bounds.getWest() &&
-            cy <= bounds.getNorth() &&
-            cy >= bounds.getSouth()),
+    const footprints = fog!.centres.some(({ d }) => d !== undefined)
+    // Those whose middles are on screen, as those whose middles are off it mostly are too.
+    const seen = fog!.centres.filter(
+      ({ cx, cy }) =>
+        !bounds ||
+        (cx <= bounds.getEast() &&
+          cx >= bounds.getWest() &&
+          cy <= bounds.getNorth() &&
+          cy >= bounds.getSouth()),
+    )
+    // Going by the cities been to, the rest of the world comes after every city in sight,
+    // `APART` of a soft edge further on, so the line where the cities end shows as the sweep
+    // crosses it: the cities' span and the world's, and the gap a share of an edge of the
+    // whole, (span + gap) × EDGE × APART.
+    const cities = footprints ? seen.flatMap(({ d, fogged }) => (fogged ? [] : (d ?? []))) : []
+    const world = footprints ? seen.flatMap(({ d, fogged }) => (fogged ? (d ?? []) : [])) : []
+    const split = cities.length > 0 && world.length > 0
+    const citiesFar = split ? Math.max(...cities) : 0
+    const worldNear = split ? Math.min(...world) : 0
+    const gap = split
+      ? ((citiesFar - Math.min(...cities) + Math.max(...world) - worldNear) * EDGE * APART) /
+        (1 - EDGE * APART)
+      : 0
+    const apart = (d: number, fogged: boolean) =>
+      split && fogged ? citiesFar + gap + Math.max(0, d - worldNear) : d
+    // How far from the cities been to, or the screen's middle, the regions in sight are,
+    // nearest and farthest.
+    const inSight = seen
+      .map(({ cx, cy, d, fogged }) =>
+        footprints
+          ? d === undefined
+            ? undefined
+            : apart(d, fogged)
+          : Math.hypot((cx - center.lng) * squash, cy - center.lat),
       )
-      .map(({ cx, cy }) => Math.hypot((cx - center.lng) * squash, cy - center.lat))
+      .filter((value) => value !== undefined)
     // Zoomed in on a region or two whose middles are off screen, there's no way across to
     // sweep: every region then goes in the first ring, and the fog comes and goes evenly
     // over the whole screen, over the same time.
@@ -259,14 +293,21 @@ export function createFogLayer({
       [
         'min',
         far,
-        [
-          'sqrt',
-          [
-            '+',
-            ['^', ['*', ['-', ['coalesce', ['get', 'cx'], center.lng], center.lng], squash], 2],
-            ['^', ['-', ['coalesce', ['get', 'cy'], center.lat], center.lat], 2],
-          ],
-        ],
+        footprints
+          ? [
+              'case',
+              ['all', split, ['coalesce', ['get', 'fogged'], false]],
+              ['+', citiesFar + gap, ['max', 0, ['-', ['coalesce', ['get', 'd'], far], worldNear]]],
+              ['coalesce', ['get', 'd'], far],
+            ]
+          : [
+              'sqrt',
+              [
+                '+',
+                ['^', ['*', ['-', ['coalesce', ['get', 'cx'], center.lng], center.lng], squash], 2],
+                ['^', ['-', ['coalesce', ['get', 'cy'], center.lat], center.lat], 2],
+              ],
+            ],
       ],
     ]
     const lit = isLit()
@@ -284,7 +325,12 @@ export function createFogLayer({
       map.setPaintProperty(glow(index), 'fill-opacity', 0)
     }
 
-    const prepared = { far, key, near, ready: false }
+    const prepared = {
+      far,
+      key,
+      near,
+      ready: false,
+    }
     rings = prepared
     map.once('idle', () => {
       prepared.ready = true
@@ -312,10 +358,11 @@ export function createFogLayer({
       sweepFrame = undefined
     }
 
+    turnSweep = undefined
     setSweeping(false)
   }
 
-  /** The toggle says it's busy while the fog sweeps, and is let be until it's done. */
+  /** The toggle says it's busy while a sweep waits for its rings; once it runs, a click turns it around. */
   function setSweeping(sweeping: boolean) {
     if (button) {
       button.ariaBusy = String(sweeping)
@@ -347,14 +394,7 @@ export function createFogLayer({
     }
 
     const start = () => {
-      const { near, far } = prepared
-      const edge = far > near ? (far - near) * EDGE : 1
-      const width = (far - near) / RINGS
-      const duration = entering ? SWEEP.in : SWEEP.out
-      // Closing in, the farthest region in sight is reached at once and the nearest's
-      // glow fades last; clearing, the nearest clears at once and the farthest last.
-      const end = far - near + edge * (entering ? 2 : 1)
-      const started = performance.now()
+      setSweeping(false)
 
       // Clearing, the rings take over from the fog at rest in one frame.
       if (!entering) {
@@ -365,49 +405,7 @@ export function createFogLayer({
         map.setPaintProperty(FILL, 'fill-opacity', 0)
       }
 
-      const frame = (now: number) => {
-        const progress = Math.min(1, (now - started) / duration)
-        // Closing in, moving from the first frame and slowing as it lands, the edges it
-        // starts at being thin; clearing, from the screen's broad middle, at an even pace,
-        // which clears the screen at about the rate the fog closes in, where easing out
-        // burst it open.
-        const reach = end * (entering ? easeOutSine(progress) : progress)
-
-        for (let index = 0; index < RINGS; index += 1) {
-          const distance = near + (index + 0.5) * width
-          // How far past the ring the sweep is, in edges: 0 as it arrives, 1 once it's through.
-          const past = entering
-            ? (reach - (far - distance)) / edge
-            : (reach - (distance - near)) / edge
-          const through = smoothstep(past)
-
-          map.setPaintProperty(
-            ring(index),
-            'fill-opacity',
-            veil.opacity * (entering ? through : 1 - through),
-          )
-
-          if (entering) {
-            // Flaring as the fog arrives and fading once it's through, softly at both ends.
-            map.setPaintProperty(
-              glow(index),
-              'fill-opacity',
-              GLOW_PEAK * smoothstep(1 - Math.abs(past - 1)),
-            )
-          }
-        }
-
-        if (progress < 1) {
-          sweepFrame = requestAnimationFrame(frame)
-          return
-        }
-
-        sweepFrame = undefined
-        setSweeping(false)
-        settle(map)
-      }
-
-      sweepFrame = requestAnimationFrame(frame)
+      run(map, prepared, veil, entering, 0, false)
     }
 
     // Waits for the rings to be laid out, a frame at a time, or `RINGS_READY` at most.
@@ -421,6 +419,91 @@ export function createFogLayer({
     }
 
     sweepFrame = requestAnimationFrame(wait)
+  }
+
+  /**
+   * Runs the sweep by its rings, the way `entering` says, its edge having come `reach`
+   * already. Turned around, the soft edge is the same either way, so the sweep goes on
+   * from where its edge is with each ring just as clear as it was, and the cities
+   * flaring fade in or out over `GLOW_TURN` rather than jump.
+   */
+  function run(
+    map: MapboxMap,
+    prepared: NonNullable<typeof rings>,
+    veil: { color: string; opacity: number },
+    entering: boolean,
+    reach: number,
+    turned: boolean,
+  ) {
+    const { near, far } = prepared
+    const edge = far > near ? (far - near) * EDGE : 1
+    const width = (far - near) / RINGS
+    const duration = entering ? SWEEP.in : SWEEP.out
+    // Closing in, the farthest region in sight is reached at once and the nearest's
+    // glow fades last; clearing, the nearest clears at once and the farthest last.
+    const end = far - near + edge * (entering ? 2 : 1)
+    // Closing in, moving from the first frame and slowing as it lands, the edges it
+    // starts at being thin; clearing, from the screen's broad middle, at an even pace,
+    // which clears the screen at about the rate the fog closes in, where easing out
+    // burst it open. Turned around, it starts as far in as `reach` is.
+    const share = Math.min(1, reach / end)
+    const turnedAt = performance.now()
+    const started = turnedAt - duration * (entering ? Math.asin(share) / (Math.PI / 2) : share)
+    // The cities flaring as the sweep turned, to fade out as it clears.
+    const glows = Array.from({ length: RINGS }, (_, index) =>
+      turned && !entering ? Number(map.getPaintProperty(glow(index), 'fill-opacity') ?? 0) : 0,
+    )
+    let current = reach
+
+    // A ring is as clear with the edge come `current` one way as with it come
+    // (far − near) + edge less that the other.
+    turnSweep = () => {
+      cancelAnimationFrame(sweepFrame!)
+      run(map, prepared, veil, !entering, Math.max(0, far - near + edge - current), true)
+    }
+
+    const frame = (now: number) => {
+      const progress = Math.min(1, (now - started) / duration)
+      current = end * (entering ? easeOutSine(progress) : progress)
+      const turning = turned ? Math.min(1, (now - turnedAt) / GLOW_TURN) : 1
+
+      for (let index = 0; index < RINGS; index += 1) {
+        const distance = near + (index + 0.5) * width
+        // How far past the ring the sweep is, in edges: 0 as it arrives, 1 once it's through.
+        const past = entering
+          ? (current - (far - distance)) / edge
+          : (current - (distance - near)) / edge
+        const through = smoothstep(past)
+
+        map.setPaintProperty(
+          ring(index),
+          'fill-opacity',
+          veil.opacity * (entering ? through : 1 - through),
+        )
+
+        if (entering) {
+          // Flaring as the fog arrives and fading once it's through, softly at both ends.
+          map.setPaintProperty(
+            glow(index),
+            'fill-opacity',
+            GLOW_PEAK * smoothstep(1 - Math.abs(past - 1)) * turning,
+          )
+        } else if (turned) {
+          map.setPaintProperty(glow(index), 'fill-opacity', glows[index]! * (1 - turning))
+        }
+      }
+
+      if (progress < 1) {
+        sweepFrame = requestAnimationFrame(frame)
+        return
+      }
+
+      sweepFrame = undefined
+      turnSweep = undefined
+      settle(map)
+    }
+
+    sweepFrame = requestAnimationFrame(frame)
   }
 
   /** Puts the fog on the map: once it loads, each time its style does, and on each toggle, swept when `animate`. */
@@ -451,6 +534,11 @@ export function createFogLayer({
   }
 
   function render(animate = false) {
+    renderControls()
+    sync(animate)
+  }
+
+  function renderControls() {
     if (button) {
       button.ariaPressed = String(on)
     }
@@ -461,8 +549,6 @@ export function createFogLayer({
         ? t(messages, 'fogLit', { cities: fog.lit.cities, provinces: fog.lit.provinces })
         : ''
     }
-
-    sync(animate)
   }
 
   async function setOn(next: boolean, animate: boolean) {
@@ -484,12 +570,18 @@ export function createFogLayer({
     render(animate)
   }
 
-  // A toggle mid-sweep would cut it off, and one while the fog first loads would race it;
-  // either is let finish first.
+  // A toggle mid-sweep turns it around where it is. One while the fog first loads would
+  // race it, and one while a sweep waits for its rings has nothing to turn; either is let
+  // finish first.
   button?.addEventListener(
     'click',
     () => {
-      if (sweepFrame === undefined && !switching) {
+      if (turnSweep) {
+        on = !on
+        writeFogPreference(on)
+        renderControls()
+        turnSweep()
+      } else if (sweepFrame === undefined && !switching) {
         void setOn(!on, true)
       }
     },
@@ -517,11 +609,58 @@ function easeOutSine(progress: number) {
   return Math.sin((progress * Math.PI) / 2)
 }
 
-/** A region's middle, `cx` and `cy`, as the boundaries' script wrote it. */
-type RegionCentre = { cx: number; cy: number }
+/**
+ * A region's middle, `cx` and `cy`, as the boundaries' script wrote it, and `d`, how far it
+ * is from the nearest city been to's.
+ */
+type RegionCentre = { cx: number; cy: number; d?: number; fogged: boolean }
+
+/**
+ * Sets each region's `d`, in its centre and its properties: how far its middle is from the
+ * middle of the nearest region lit, in degrees as across at its latitude, so 0 for those
+ * lit. Left unset with none lit, or for a region without a middle.
+ */
+function measureFootprints(
+  regions: GeoJSON.FeatureCollection,
+  centres: RegionCentre[],
+  lit: readonly string[],
+) {
+  const ids = new Set(lit)
+  const footprints = centres.filter(
+    ({ cx, cy }, index) =>
+      ids.has(String(regions.features[index]!.properties?.id)) &&
+      Number.isFinite(cx) &&
+      Number.isFinite(cy),
+  )
+
+  if (footprints.length === 0) {
+    return
+  }
+
+  for (const [index, centre] of centres.entries()) {
+    if (!Number.isFinite(centre.cx) || !Number.isFinite(centre.cy)) {
+      continue
+    }
+
+    const squash = Math.cos((centre.cy * Math.PI) / 180)
+    let d = Infinity
+
+    for (const { cx, cy } of footprints) {
+      d = Math.min(d, Math.hypot((cx - centre.cx) * squash, cy - centre.cy))
+    }
+
+    centre.d = d
+    const feature = regions.features[index]!
+    feature.properties = { ...feature.properties, d }
+  }
+}
 
 function getRegionCentre(feature: GeoJSON.Feature): RegionCentre {
-  return { cx: Number(feature.properties?.cx), cy: Number(feature.properties?.cy) }
+  return {
+    cx: Number(feature.properties?.cx),
+    cy: Number(feature.properties?.cy),
+    fogged: Boolean(feature.properties?.fogged),
+  }
 }
 
 /** `value`, held from 0 to 1 and eased in and out: 3v² − 2v³. */

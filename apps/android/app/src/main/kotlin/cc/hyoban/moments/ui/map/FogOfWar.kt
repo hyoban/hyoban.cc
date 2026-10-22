@@ -4,6 +4,7 @@ import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonToken
 import java.io.Reader
 import java.io.StringReader
+import kotlin.math.cos
 import kotlin.math.hypot
 
 // The map's fog of war, as the site's (packages/trip-map/src/fog-of-war.ts): every city
@@ -169,6 +170,21 @@ fun buildFogOfWar(regions: List<FogRegion>, places: Iterable<Pair<Double, Double
         found?.let { lit += it.id }
     }
     return FogOfWar(lit.toList(), lit.size, lit.map { it.take(2) }.toSet().size)
+}
+
+/**
+ * How far each region's middle is from the middle of the nearest one [lit], in degrees as across at
+ * its latitude, by id: 0 for those lit. None with none lit. The fog sweeps by it, as the site's
+ * (`measureFootprints` in packages/trip-map/src/map/fog-layer.ts).
+ */
+fun footprintDistances(regions: List<FogRegion>, lit: Collection<String>): Map<String, Double>? {
+    val ids = lit.toSet()
+    val footprints = regions.filter { it.id in ids }
+    if (footprints.isEmpty()) return null
+    return regions.associate { region ->
+        val squash = cos(Math.toRadians(region.cy))
+        region.id to footprints.minOf { hypot((it.cx - region.cx) * squash, it.cy - region.cy) }
+    }
 }
 
 /** Inside one of the region's polygons: inside its outer ring and none of its holes. */
