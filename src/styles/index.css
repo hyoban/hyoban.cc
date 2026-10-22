@@ -114,23 +114,6 @@
   }
 }
 
-/* The desktop calendar's list view (its switch sets data-calendar-view): the month shows as
-   the phone's agenda instead of the grid. A day's page keeps the grid under its drawer. */
-@media (min-width: 56.0625rem) {
-  html[data-calendar-view='list'] .calendar-page:not(.calendar-page--with-drawer) {
-    height: auto;
-
-    & .desktop-calendar {
-      display: none;
-    }
-
-    & .calendar-agenda {
-      display: block;
-      --agenda-top: 0rem;
-    }
-  }
-}
-
 /* Only opt controls into position morphing for calendar/map mode changes. The back
    link fades with the page instead: it sits far apart on the two pages on a wide
    screen, and sliding it across pulls the eye away from the switch. */

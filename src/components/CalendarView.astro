@@ -174,14 +174,6 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
 ---
 
 <Layout title={title} description={pageDescription} image={pageImage}>
-  <Fragment slot="head">
-    <!-- Applies the remembered desktop view before the first paint, so the grid doesn't flash. -->
-    <script is:inline>
-      try {
-        if (localStorage.getItem('calendar-view') === 'list') document.documentElement.dataset.calendarView = 'list'
-      } catch {}
-    </script>
-  </Fragment>
   <main
     class:list={[
       'calendar-page mx-auto grid h-[calc(100dvh-4rem)] w-full max-w-[60rem] grid-rows-[auto_minmax(0,1fr)] max-[56rem]:flex max-[56rem]:h-auto max-[56rem]:flex-wrap max-[56rem]:items-center max-[56rem]:max-w-[42rem]',
@@ -241,17 +233,6 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
       </nav>
 
       <div class="col-start-3 flex items-center gap-2 justify-self-end max-[56rem]:ml-auto">
-        {/* The desktop month as its grid or as the phone's list; a day's drawer always opens over the grid. */}
-        <div class="calendar-view-switch inline-flex items-center rounded-full border border-[color-mix(in_srgb,var(--color-border)_82%,transparent)] bg-[color-mix(in_srgb,var(--color-bg)_82%,transparent)] p-[0.1875rem] backdrop-blur-[1rem] max-[56rem]:hidden in-[.calendar-page--with-drawer]:hidden" role="group" aria-label="显示方式">
-          <button type="button" class="inline-flex size-8 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-0 text-tx-2 transition-colors duration-[160ms] hover:text-tx aria-pressed:bg-inline aria-pressed:text-tx aria-pressed:shadow-[0_0.0625rem_0.25rem_rgb(0_0_0/0.08)] motion-reduce:transition-none" data-calendar-view-option="grid" aria-pressed="true" title="网格">
-            <span class="i-lucide-layout-grid text-[0.9375rem]" aria-hidden="true" />
-            <span class="sr-only">网格</span>
-          </button>
-          <button type="button" class="inline-flex size-8 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-0 text-tx-2 transition-colors duration-[160ms] hover:text-tx aria-pressed:bg-inline aria-pressed:text-tx aria-pressed:shadow-[0_0.0625rem_0.25rem_rgb(0_0_0/0.08)] motion-reduce:transition-none" data-calendar-view-option="list" aria-pressed="false" title="列表">
-            <span class="i-lucide-list text-[0.9375rem]" aria-hidden="true" />
-            <span class="sr-only">列表</span>
-          </button>
-        </div>
         <CalendarModeSwitch mode="calendar" mapHref={mapHref} />
       </div>
     </header>
@@ -452,23 +433,6 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
   import { navigate } from 'astro:transitions/client'
 
   let calendarController: AbortController | undefined
-  const calendarViewKey = 'calendar-view'
-
-  function readCalendarView() {
-    try {
-      return localStorage.getItem(calendarViewKey) === 'list' ? 'list' : 'grid'
-    } catch {
-      return 'grid'
-    }
-  }
-
-  function applyCalendarView(root: HTMLElement, view = readCalendarView()) {
-    if (view === 'list') {
-      root.dataset.calendarView = 'list'
-    } else {
-      delete root.dataset.calendarView
-    }
-  }
 
   function initializeCalendar() {
     calendarController?.abort()
@@ -525,29 +489,6 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
       }, { signal })
     }
 
-    const viewOptions = [...document.querySelectorAll<HTMLButtonElement>('[data-calendar-view-option]')]
-    const showCalendarView = (view: 'grid' | 'list') => {
-      applyCalendarView(document.documentElement, view)
-
-      for (const option of viewOptions) {
-        option.setAttribute('aria-pressed', String(option.dataset.calendarViewOption === view))
-      }
-    }
-
-    showCalendarView(readCalendarView())
-
-    for (const option of viewOptions) {
-      option.addEventListener('click', () => {
-        const view = option.dataset.calendarViewOption === 'list' ? 'list' : 'grid'
-
-        try {
-          localStorage.setItem(calendarViewKey, view)
-        } catch {}
-
-        showCalendarView(view)
-      }, { signal })
-    }
-
     for (const indexButton of document.querySelectorAll<HTMLButtonElement>('[data-agenda-target]')) {
       indexButton.addEventListener('click', () => {
         const targetId = indexButton.dataset.agendaTarget
@@ -560,10 +501,8 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
   }
 
   document.addEventListener('astro:page-load', initializeCalendar)
-  document.addEventListener('astro:before-swap', (event) => {
+  document.addEventListener('astro:before-swap', () => {
     calendarController?.abort()
-    // The swap takes the new page's <html> attributes; keep the view across month changes.
-    applyCalendarView((event as Event & { newDocument: Document }).newDocument.documentElement)
   })
   initializeCalendar()
 </script>
