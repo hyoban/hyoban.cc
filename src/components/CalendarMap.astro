@@ -4,11 +4,13 @@ import '@hyoban/trip-map/styles.css'
 import CalendarBackLink from '@/components/CalendarBackLink.astro'
 import CalendarModeSwitch from '@/components/CalendarModeSwitch.astro'
 import MapMoments from '@/components/MapMoments.astro'
+import TripCoverCollage from '@/components/TripCoverCollage.astro'
 import TripDetails from '@/components/TripDetails.astro'
 import MomentLightboxMedia from '@/components/MomentLightboxMedia.astro'
 import Layout from '@/layouts/Layout.astro'
 import { getActiveDateKeys, getMapYears, getMappedLocationGroups, getMoments, getMonthPath, getTrips } from '@/moments'
 import { getTripData, getTripSummary } from '@/moments/trip-data'
+import { getTripCollage } from '@/moments/trip-images'
 import {
   createYearPalette,
   formatDateRange,
@@ -261,8 +263,8 @@ const description = pageTrip
     </aside>
 
     {
-      // Every trip beside the map by year: resting on one a while lifts its route, and
-      // clicking it opens its sidebar.
+      // Every trip beside the map by year, a card with its photos as the app has them:
+      // resting on one a while lifts its route, and clicking it opens its sidebar.
       trips.length > 0 && (
         <aside class:list={['trip-map-trip-list max-[48rem]:h-[min(60dvh,36rem)]', sideClass]} id="trip-map-trip-list" data-trip-map-trip-list aria-labelledby="trip-map-trip-list-title" hidden={!tripList}>
           <header class={sideHeaderClass}>
@@ -281,12 +283,9 @@ const description = pageTrip
                 <ul class="list-none">
                   {yearTrips.map(trip => (
                     <li class="relative" hidden={!isInPeriod(trip)}>
-                      <a class="group flex items-center gap-4 rounded-lg p-2 text-tx no-underline transition-colors duration-140 hover:bg-inline focus-visible:bg-inline focus-visible:outline-none data-trip-map-lifted:bg-inline" href={`/trip/${trip.id}/`} data-trip-map-trip-link={trip.id}>
-                        <picture class="contents">
-                          <source srcset={`/trip/${trip.id}/thumbnail-dark.webp`} media="(prefers-color-scheme: dark)" />
-                          <img class="aspect-[1200/630] w-28 shrink-0 rounded-[0.3125rem] bg-inline object-cover outline-1 -outline-offset-1 outline-border transition-[outline-color] duration-140 group-data-trip-map-lifted:outline-2 group-data-trip-map-lifted:outline-tx" src={`/trip/${trip.id}/thumbnail.webp`} width="480" height="252" alt="" loading="lazy" decoding="async" />
-                        </picture>
-                        <span class="flex min-w-0 flex-col gap-0.5">
+                      <a class="flex flex-col rounded-xl p-2 text-tx no-underline transition-colors duration-140 hover:bg-inline focus-visible:bg-inline focus-visible:outline-none data-trip-map-lifted:bg-inline" href={`/trip/${trip.id}/`} data-trip-map-trip-link={trip.id}>
+                        <TripCoverCollage class="rounded-lg" images={getTripCollage(trip, moments)} sizes="(max-width: 48rem) 100vw, 26rem" />
+                        <span class="flex min-w-0 flex-col gap-0.5 px-1 pt-2">
                           <span class="truncate font-medium">{trip.title}</span>
                           <span class="truncate text-sm text-tx-2 tabular-nums">{formatDateRange(trip.start, trip.end, 'zh-CN')}</span>
                           <span class="truncate text-sm text-tx-3 tabular-nums">

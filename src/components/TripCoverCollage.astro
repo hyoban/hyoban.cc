@@ -1,0 +1,32 @@
+---
+import type { TripImage } from '@/moments/trip-images'
+
+// A trip's photos across the top of its card, as the app lays them out (`CoverCollage`):
+// one, two side by side, or one large beside two small, meeting without gaps.
+
+interface Props {
+  class?: string
+  images: TripImage[]
+  /** How wide the collage is shown, for the photos' srcset. */
+  sizes: string
+}
+
+const { class: className, images, sizes } = Astro.props
+const tiles = images.slice(0, 3)
+const layout = [
+  '',
+  'aspect-video',
+  'aspect-video grid-cols-2',
+  'aspect-[16/10] grid-cols-[2fr_1fr] grid-rows-2 [&>img:first-child]:row-span-2',
+][tiles.length]
+---
+
+{
+  tiles.length > 0 && (
+    <div class:list={['grid overflow-hidden bg-inline', layout, className]} aria-hidden="true">
+      {tiles.map(image => (
+        <img class="size-full min-h-0 object-cover" src={image.src} srcset={image.srcset} sizes={sizes} width={image.width} height={image.height} alt="" loading="lazy" decoding="async" />
+      ))}
+    </div>
+  )
+}

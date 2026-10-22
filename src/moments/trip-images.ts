@@ -47,3 +47,20 @@ export function getTripCovers(trip: Trip<Moment>) {
     return image
   })
 }
+
+/**
+ * Up to three photos across the top of a trip's card, as the app has them (`coversOf`):
+ * its chosen covers, or else the first photo of each of its days' Moments, oldest first.
+ */
+export function getTripCollage(trip: Trip<Moment>, moments: readonly Moment[], limit = 3) {
+  const covers = getTripCovers(trip)
+
+  if (covers.length > 0) {
+    return covers.slice(0, limit)
+  }
+
+  return moments
+    .filter((moment) => moment.dateKey >= trip.start && moment.dateKey <= trip.end)
+    .flatMap((moment) => getTripImages(moment.media.slice(0, 1)))
+    .slice(0, limit)
+}
