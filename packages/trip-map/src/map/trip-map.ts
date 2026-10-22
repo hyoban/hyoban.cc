@@ -1317,9 +1317,37 @@ export function createTripMap(options: TripMapOptions): TripMap {
     { signal },
   )
 
-  if (locateButton && !('geolocation' in navigator)) {
-    locateButton.hidden = true
+  const canLocate = 'geolocation' in navigator
+  // Whether the map is still where locating put it, untouched since.
+  let atUser = false
+
+  /**
+   * Each quick move is out of the way while it would do nothing: the reset while every
+   * place is framed facing north, as the map opens, and the locate button while the map
+   * is where it last flew to, until something moves it.
+   */
+  function syncQuickMoves() {
+    const framed = framedOnAll && Math.abs(map?.getBearing() ?? 0) < 0.5
+
+    setToolHidden(resetViewButton, framed)
+    setToolHidden(locateButton, !canLocate || atUser)
   }
+
+  /** Hides a toolbar button, passing its focus on to the settings, where the keyboard was. */
+  function setToolHidden(button: HTMLButtonElement | null, hidden: boolean) {
+    if (!button || button.hidden === hidden) {
+      return
+    }
+
+    const focused = button === document.activeElement
+    button.hidden = hidden
+
+    if (focused) {
+      elements.settingsOpeners[0]?.focus()
+    }
+  }
+
+  syncQuickMoves()
 
   locateButton?.addEventListener('click', () => void locateUser(), { signal })
 
@@ -1345,12 +1373,17 @@ export function createTripMap(options: TripMapOptions): TripMap {
       userDot.set(center)
       locateButton.title = locateLabel
       moveByHand()
-      map.easeTo({
-        center,
-        duration: getAnimationDuration(),
-        pitch: pitchedByHand ? map.getPitch() : getMapPitch(map, zoom),
-        zoom,
-      })
+      atUser = true
+      map.easeTo(
+        {
+          center,
+          duration: getAnimationDuration(),
+          pitch: pitchedByHand ? map.getPitch() : getMapPitch(map, zoom),
+          zoom,
+        },
+        // Told apart from every other move, which takes the map off the viewer.
+        { tripMapLocate: true },
+      )
     } catch (cause) {
       // Refused, or not found: the button says so until it's pressed again.
       locateButton.title = messages.locateFailed
@@ -1660,6 +1693,19 @@ export function createTripMap(options: TripMapOptions): TripMap {
       // A scroll's zoom may carry no event at all, as one notch of a mouse's wheel the map
       // can't tell from a trackpad's at once does: the wheel itself tells it.
       map.on('wheel', moveByHand)
+      // After the framing's own handler above, which a move by hand changes.
+      map.on('movestart', (event) => {
+        if (!(event as { tripMapLocate?: boolean }).tripMapLocate) {
+          atUser = false
+        }
+
+        syncQuickMoves()
+      })
+      map.on('moveend', syncQuickMoves)
+      map.on('wheel', () => {
+        atUser = false
+        syncQuickMoves()
+      })
       // The viewer's own zooming leans the map as its framing does, the closer the further,
       // once each zoom has landed: leaning it midway would stop a scroll's own easing.
       map.on('pitchstart', (event) => {
