@@ -1,0 +1,8 @@
+# One page answers each of these addresses, and the map reads the rest of the path: a
+# place open on the map (or on a period of it), and the card a trip plays from. Served
+# by the Worker's static assets; src/dev-rewrites.ts follows them in development.
+/map/place/:place/ /map/ 200
+/map/:year/place/:place/ /map/:year/ 200
+/map/:year/:month/place/:place/ /map/:year/:month/ 200
+/trip/:id/play/:stop/ /trip/:id/play/ 200
+/trip/:year/:slug/play/:stop/ /trip/:year/:slug/play/ 200

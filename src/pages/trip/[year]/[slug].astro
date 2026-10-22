@@ -1,0 +1,9 @@
+---
+import CalendarMap from '@/components/CalendarMap.astro'
+import { getNestedTripPaths } from '@/moments'
+
+// /trip/<id>/ by its year and the rest of its id: /trip/2026/yunnan/ is /trip/2026-yunnan/.
+export const getStaticPaths = getNestedTripPaths
+---
+
+<CalendarMap pickedTripId={Astro.props.trip.id} />

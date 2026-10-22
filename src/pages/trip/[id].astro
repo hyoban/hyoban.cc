@@ -2,7 +2,8 @@
 import CalendarMap from '@/components/CalendarMap.astro'
 import { getTripPaths } from '@/moments'
 
+// A trip picked in the list beside the map: its route lifted, to look at before playing.
 export const getStaticPaths = getTripPaths
 ---
 
-<CalendarMap tripId={Astro.params.id} />
+<CalendarMap pickedTripId={Astro.params.id} />

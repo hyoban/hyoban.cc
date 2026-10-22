@@ -23,6 +23,7 @@ export function createPlaceDrawer({
   onClosed,
   onError,
   onOpen,
+  onPickYear,
   onRestoreFocus,
   reducedMotion,
   signal,
@@ -40,6 +41,8 @@ export function createPlaceDrawer({
   onError: (id: string, cause: unknown) => void
   /** A place opened; the map may move to it. */
   onOpen: (place: PlaceMarker, options: { moveMap: boolean }) => void
+  /** A year in the drawer's line of totals was pressed, to narrow the map to it. */
+  onPickYear: (year: number) => void
   /** Puts focus back on what opened the drawer. */
   onRestoreFocus: (trigger: HTMLButtonElement) => void
   reducedMotion: MediaQueryList
@@ -110,6 +113,26 @@ export function createPlaceDrawer({
     drawerContent.removeAttribute('aria-busy')
   }
 
+  /** The place's totals, each of its years a button narrowing the map to that year. */
+  function setEyebrow(place: PlaceMarker) {
+    const [before = '', after = ''] = t(messages, 'placeEyebrow', { count: place.count }).split(
+      '{years}',
+    )
+    const parts: (Node | string)[] = [before]
+
+    for (const [index, year] of place.years.entries()) {
+      const button = document.createElement('button')
+
+      button.type = 'button'
+      button.className = 'trip-map-drawer__year'
+      button.dataset.tripMapDrawerYear = String(year)
+      button.textContent = t(messages, 'yearItem', { year })
+      parts.push(...(index > 0 ? [messages.yearSeparator] : []), button)
+    }
+
+    drawerEyebrow.replaceChildren(...parts, after)
+  }
+
   function closeLightbox() {
     if (lightbox?.open) {
       lightbox.close()
@@ -125,12 +148,7 @@ export function createPlaceDrawer({
     activeId = place.id
     activeTrigger = options.trigger ?? activeTrigger
     drawerTitle.textContent = place.name
-    drawerEyebrow.textContent = t(messages, 'placeEyebrow', {
-      count: place.count,
-      years: place.years
-        .map((year) => t(messages, 'yearItem', { year }))
-        .join(messages.yearSeparator),
-    })
+    setEyebrow(place)
     exit?.cancel()
     exit = undefined
     drawer.hidden = false
@@ -228,6 +246,20 @@ export function createPlaceDrawer({
 
       lightboxItems = [...side.querySelectorAll<HTMLElement>('[data-lightbox-item]')]
       showLightboxItem(lightboxItems.indexOf(item))
+    },
+    { signal },
+  )
+
+  drawerEyebrow.addEventListener(
+    'click',
+    (event) => {
+      const year = (event.target as Element | null)?.closest<HTMLElement>(
+        '[data-trip-map-drawer-year]',
+      )?.dataset.tripMapDrawerYear
+
+      if (year) {
+        onPickYear(Number(year))
+      }
     },
     { signal },
   )

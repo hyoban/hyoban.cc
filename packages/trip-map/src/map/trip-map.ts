@@ -16,7 +16,13 @@ import { isSamePeriod, overlapsPeriod, type Period } from './period.ts'
 import { CLUSTER_MAX_ZOOM, createPlaceMarkers, getAllPlacesView } from './place-markers.ts'
 import { captureMap, savePicture } from './screenshot.ts'
 import { createTripList } from './trip-list.ts'
-import { defaultUrls, getHistoryState, HISTORY_STATE_KEY, parseHash } from './selection-url.ts'
+import {
+  defaultUrls,
+  getHistoryState,
+  HISTORY_STATE_KEY,
+  parseHash,
+  type Urls,
+} from './selection-url.ts'
 
 // The map page: every place with posts as a dot, each opening a drawer with its
 // posts; and every trip's route, each opening its playback. The page's own markup
@@ -57,33 +63,18 @@ export type TripMapOptions = {
   getPeriodTitle?: ((period: Period) => string) | undefined
   /** The document title while a trip plays; without it the title is left alone. */
   getDocumentTitle?: ((trip: { id: string; title: string }) => string) | undefined
-  /** A place's drawer content, an HTML fragment. Default: `/map/place/<id>/`. */
-  getPlaceUrl?: ((id: string) => string) | undefined
-  /** A trip's playback data, `TripData` as JSON. Default: `/trip/<id>/data.json`. */
-  getTripDataUrl?: ((id: string) => string) | undefined
-  /** The trip a pathname opens, if any. Default: the id in `/trip/<id>/`. */
-  getTripId?: ((pathname: string) => string | undefined) | undefined
-  /** A trip's page. Default: `/trip/<id>/`. */
-  getTripPath?: ((id: string) => string) | undefined
-  /** A year's Moments for `[data-trip-map-moments]`, an HTML fragment. Default: `/map/<year>/moments/`. */
-  getMomentsUrl?: ((year: number) => string) | undefined
-  /**
-   * The year, or the month of one, a pathname narrows the map to, if any. Default: from
-   * `/map/<year>/` and `/map/<year>/<month>/`.
-   */
-  getPeriod?: ((pathname: string) => Period | undefined) | undefined
-  /** The map narrowed to a year or a month. Default: `/map/<year>/`, `/map/<year>/<month>/`. */
-  getPeriodPath?: ((period: Period) => string) | undefined
   /**
    * The language the basemap's names are shown in, as @mapbox/mapbox-gl-language takes
    * it (`en`, `ja`, `zh-Hans`…); `false` leaves the basemap as it is. Default: from
    * the messages' locale.
    */
   mapLanguage?: string | false | undefined
-  /** The map's own page, which closing a trip goes back to. Default: `/map/`. */
-  mapPath?: string | undefined
-  /** The map with `[data-trip-map-trip-list]` open beside it. Default: `/trip/`. */
-  tripListPath?: string | undefined
+  /**
+   * What the addresses mean and where things are fetched from, any of `defaultUrls`:
+   * `/map/[<year>/[<month>/]][place/<id>/]`, `/trip/[<id>/]`, `/trip/<id>/play/[<stop>/]`,
+   * and the fragments and data under them.
+   */
+  urls?: Partial<Urls> | undefined
   /** The document title while the trip list is open; without it the title is left alone. */
   tripListTitle?: string | undefined
   /** A Mapbox style URL, or one for each colour scheme. Default: Mapbox's light and dark. */
@@ -131,17 +122,7 @@ const MIN_FRAMED = 240
 export function createTripMap(options: TripMapOptions): TripMap {
   const { page } = options
   const messages = resolveMessages(options.messages)
-  const urls = {
-    getPlaceUrl: options.getPlaceUrl ?? defaultUrls.getPlaceUrl,
-    getTripDataUrl: options.getTripDataUrl ?? defaultUrls.getTripDataUrl,
-    getTripId: options.getTripId ?? defaultUrls.getTripId,
-    getTripPath: options.getTripPath ?? defaultUrls.getTripPath,
-    getMomentsUrl: options.getMomentsUrl ?? defaultUrls.getMomentsUrl,
-    getPeriod: options.getPeriod ?? defaultUrls.getPeriod,
-    getPeriodPath: options.getPeriodPath ?? defaultUrls.getPeriodPath,
-    mapPath: options.mapPath ?? defaultUrls.mapPath,
-    tripListPath: options.tripListPath ?? defaultUrls.tripListPath,
-  }
+  const urls: Urls = { ...defaultUrls, ...options.urls }
   const elements = collectMapElements(page)
   const { canvas, fallback, fallbackMessage, fallbackRetry, loading, screenshotButton } = elements
   const controller = new AbortController()
@@ -195,12 +176,21 @@ export function createTripMap(options: TripMapOptions): TripMap {
           return undefined
         }),
     getMap: () => (mapLoaded ? map : undefined),
+    // The card playing is in the path, `/trip/<id>/play/<stop>/`.
+    getStop: () => urls.getTripStop(window.location.pathname),
     inlineTrip,
     messages,
     music: options.music,
     onClose: requestSelectionClose,
     page,
     panel: elements.panel,
+    setStop: (tripId, stop) => {
+      const path = urls.getTripPath(tripId, stop || undefined, isNestedTripUrl())
+
+      if (getUrlTripId() === tripId && window.location.pathname !== path) {
+        history.replaceState(getHistoryState(), '', `${path}${window.location.search}`)
+      }
+    },
     shortcuts: elements.shortcuts,
     signal,
     siteLine: options.siteLine ?? window.location.host,
@@ -256,6 +246,8 @@ export function createTripMap(options: TripMapOptions): TripMap {
         moveMapToPlace(place)
       }
     },
+    // The drawer's place stays in view: it has Moments in every year it lists.
+    onPickYear: (year) => pickPeriod({ year }),
     onRestoreFocus: (button) => markers.focusQuietly(button),
     reducedMotion,
     signal,
@@ -286,24 +278,23 @@ export function createTripMap(options: TripMapOptions): TripMap {
       onHighlight: (id, { frame }) => {
         tripOverview.highlight(id)
 
-        if (!id || !frame || !map || !mapLoaded) {
-          return
+        if (id && frame) {
+          frameTripBesideList(id)
         }
-
-        rememberViewBeforeList()
-        framedOnAll = false
-
-        // Wider than for a place, for the route's name above it and the legend below.
-        const side = getSidePadding(elements.tripList!)
-
-        tripOverview.frame(id, {
-          bottom: side.bottom + 64,
-          left: side.left + 48,
-          right: side.right + 48,
-          top: side.top + 32,
-        })
       },
-      onPick: (id) => tripOverview.pick(id),
+      // The address says the trip picked, to come back to it picked.
+      onPick: (id) => {
+        tripOverview.pick(id)
+
+        if (isTripListUrl()) {
+          history.replaceState(
+            getHistoryState(),
+            '',
+            `${id ? urls.getPickedTripPath(id, isNestedTripUrl()) : urls.tripListPath}${window.location.search}`,
+          )
+          syncDocumentTitle()
+        }
+      },
       onPlay: selectTrip,
       onRequestClose: requestSelectionClose,
       onRequestOpen: () => {
@@ -372,9 +363,67 @@ export function createTripMap(options: TripMapOptions): TripMap {
     return window.matchMedia('(max-width: 48rem)').matches
   }
 
-  function getHashPlaceId() {
+  /**
+   * Older addresses kept a selection in the hash: a place on the map (`/map/#<id>`), or
+   * the card a trip played from (`/trip/<id>/#<stop>`). Puts it in the path instead.
+   */
+  function upgradeHashUrl() {
     const id = parseHash(window.location.hash)
+    const { pathname, search } = window.location
+    const pickedTripId = urls.getPickedTripId(pathname)
+    let path: string | undefined
+
+    if (!id) {
+      return
+    }
+
+    if (urls.isMapPath(pathname) && markers.has(id)) {
+      path = urls.getMapPath(urls.getPeriod(pathname), id)
+    } else if (pickedTripId && tripsById.has(pickedTripId)) {
+      path = urls.getTripPath(pickedTripId, id, urls.isNestedTripPath(pathname))
+    }
+
+    if (path) {
+      history.replaceState(getHistoryState(), '', `${path}${search}`)
+    }
+  }
+
+  /** The place whose drawer the address opens, on the map. */
+  function getUrlPlaceId() {
+    const id = urls.getPlaceId(window.location.pathname)
     return id && markers.has(id) ? id : undefined
+  }
+
+  /** The trip the trip list's address picks, `/trip/<id>/`. */
+  function getUrlPickedTripId() {
+    const id = urls.getPickedTripId(window.location.pathname)
+    return id && tripsById.has(id) ? id : undefined
+  }
+
+  /** Flies to a trip's route beside the trip list. */
+  function frameTripBesideList(id: string) {
+    if (!map || !mapLoaded || !elements.tripList) {
+      return
+    }
+
+    rememberViewBeforeList()
+    framedOnAll = false
+
+    // Wider than for a place, for the route's name above it and the legend below.
+    const side = getSidePadding(elements.tripList)
+
+    tripOverview.frame(id, {
+      bottom: side.bottom + 64,
+      left: side.left + 48,
+      right: side.right + 48,
+      top: side.top + 32,
+    })
+  }
+
+  /** Opens the trip list with a trip picked, its route lifted and framed: not playing yet. */
+  function showTripInList(id: string) {
+    setSelectionUrl(urls.getPickedTripPath(id, isNestedTripUrl()))
+    syncSelection()
   }
 
   function rememberViewBeforeList() {
@@ -452,8 +501,16 @@ export function createTripMap(options: TripMapOptions): TripMap {
     map.panBy([right / 2, bottom / 2], { duration: getAnimationDuration() })
   }
 
+  /** Whether the address leads to its trip by year and the rest; trips opened from it do too. */
+  function isNestedTripUrl() {
+    return urls.isNestedTripPath(window.location.pathname)
+  }
+
   function isTripListUrl() {
-    return Boolean(tripList) && window.location.pathname === urls.tripListPath
+    return (
+      Boolean(tripList) &&
+      (window.location.pathname === urls.tripListPath || getUrlPickedTripId() !== undefined)
+    )
   }
 
   function getUrlTripId() {
@@ -545,7 +602,8 @@ export function createTripMap(options: TripMapOptions): TripMap {
 
   /** The title for what the address shows: a trip, the trip list, a period, or the map. */
   function syncDocumentTitle() {
-    const id = getUrlTripId()
+    // A trip picked in the list is the page's subject as much as one playing.
+    const id = getUrlTripId() ?? getUrlPickedTripId()
     const title = id ? tripPlayer.getTitle(id) : undefined
     const period = isMapUrl() ? markers.period : undefined
 
@@ -605,7 +663,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
       return
     }
 
-    const id = getHashPlaceId()
+    const id = getUrlPlaceId()
     const place = id ? markers.getPlace(id) : undefined
 
     if (tripClosed && !isTripListUrl()) {
@@ -637,6 +695,13 @@ export function createTripMap(options: TripMapOptions): TripMap {
         moveMapForTripList()
       }
 
+      // After the list's own move: the trip its address picks takes the map.
+      const pickedId = getUrlPickedTripId()
+
+      if (pickedId) {
+        tripList?.pick(pickedId)
+      }
+
       return
     }
 
@@ -649,7 +714,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
    * trip list, which stays behind what it opened for going back to.
    */
   function setSelectionUrl(url: string) {
-    const replace = !isTripListUrl() && Boolean(getHashPlaceId() ?? getUrlTripId())
+    const replace = !isTripListUrl() && Boolean(getUrlPlaceId() ?? getUrlTripId())
     const currentState = getHistoryState()
     const nextState = {
       ...currentState,
@@ -671,14 +736,12 @@ export function createTripMap(options: TripMapOptions): TripMap {
     }
 
     drawer.trigger = trigger
-    setSelectionUrl(
-      `${isTripListUrl() ? getMapPath() : window.location.pathname}${window.location.search}#${encodeURIComponent(id)}`,
-    )
+    setSelectionUrl(`${urls.getMapPath(markers.period, id)}${window.location.search}`)
     drawer.open(place, { trigger })
   }
 
   function selectTrip(id: string) {
-    setSelectionUrl(urls.getTripPath(id))
+    setSelectionUrl(urls.getTripPath(id, undefined, isNestedTripUrl()))
     syncSelection({ focus: false })
   }
 
@@ -736,7 +799,8 @@ export function createTripMap(options: TripMapOptions): TripMap {
     syncDocumentTitle()
     options.onPeriodChange?.(next)
 
-    if (mapLoaded && !tripPlayer.activeId) {
+    // A place open stays the one in view; otherwise the period's places are framed.
+    if (mapLoaded && !tripPlayer.activeId && !drawer.activeId) {
       fitAll()
     }
   }
@@ -749,25 +813,28 @@ export function createTripMap(options: TripMapOptions): TripMap {
   }
 
   function isMapUrl() {
-    return window.location.pathname === urls.mapPath || getUrlPeriod() !== undefined
+    const period = urls.getPeriod(window.location.pathname)
+
+    return (
+      urls.isMapPath(window.location.pathname) &&
+      (!period || places.some((place) => place.years.includes(period.year)))
+    )
   }
 
-  /** The map's own address, narrowed to the period picked if any. */
+  /** The map's own address, narrowed to the period picked if any, and no place open. */
   function getMapPath() {
-    return markers.period ? urls.getPeriodPath(markers.period) : urls.mapPath
+    return urls.getMapPath(markers.period)
   }
 
-  /** On the map's own address, says the period picked, keeping the place open in the hash. */
+  /** On the map's own address, says the period picked, keeping the place open. */
   function syncPeriodUrl() {
-    if (!isMapUrl() || window.location.pathname === getMapPath()) {
+    const path = urls.getMapPath(markers.period, getUrlPlaceId())
+
+    if (!isMapUrl() || window.location.pathname === path) {
       return
     }
 
-    history.replaceState(
-      getHistoryState(),
-      '',
-      `${getMapPath()}${window.location.search}${window.location.hash}`,
-    )
+    history.replaceState(getHistoryState(), '', `${path}${window.location.search}`)
   }
 
   /**
@@ -815,13 +882,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
       return
     }
 
-    history.replaceState(
-      getHistoryState(),
-      '',
-      getUrlTripId() || isTripListUrl()
-        ? getMapPath()
-        : `${window.location.pathname}${window.location.search}`,
-    )
+    history.replaceState(getHistoryState(), '', `${getMapPath()}${window.location.search}`)
     syncSelection()
   }
 
@@ -941,6 +1002,61 @@ export function createTripMap(options: TripMapOptions): TripMap {
   fallbackRetry.addEventListener('click', () => window.location.reload(), { signal })
   screenshotButton?.addEventListener('click', () => void takeScreenshot(), { signal })
 
+  // The Moments the drawer and the list fetch link their trips, picked in the trip list,
+  // and the drawer's link the other places they were at.
+  page.addEventListener(
+    'click',
+    (event) => {
+      const target = event.target instanceof Element ? event.target : null
+      const trip = target?.closest<HTMLElement>('[data-trip-map-trip-pick]')
+      const place = target?.closest<HTMLElement>('[data-trip-map-place-link]')
+      const inSide = (element: Element) =>
+        elements.drawer.contains(element) || Boolean(elements.moments?.contains(element))
+      const tripId = trip?.dataset.tripMapTripPick
+
+      if (trip && tripId && inSide(trip) && elements.tripList && tripsById.has(tripId)) {
+        event.preventDefault()
+        showTripInList(tripId)
+      } else if (place?.dataset.tripMapPlaceLink && elements.drawer.contains(place)) {
+        const button = markers.getButton(place.dataset.tripMapPlaceLink)
+
+        if (button) {
+          event.preventDefault()
+          selectPlace(place.dataset.tripMapPlaceLink, button)
+        }
+      }
+    },
+    { signal },
+  )
+  // Pointing at a Moment's trip lifts its route and starts loading it.
+  page.addEventListener(
+    'pointerover',
+    (event) => {
+      const stop = (event.target as Element | null)?.closest<HTMLElement>(
+        '[data-trip-map-stop-link]',
+      )
+      const id = stop?.dataset.tripMapStopLink
+
+      if (id && !tripPlayer.activeId && tripPlayer.has(id)) {
+        tripPlayer.prefetch(id)
+        tripOverview.highlight(id)
+      }
+    },
+    { signal },
+  )
+  page.addEventListener(
+    'pointerout',
+    (event) => {
+      const from = (event.target as Element | null)?.closest('[data-trip-map-trip-pick]')
+      const to = (event.relatedTarget as Element | null)?.closest?.('[data-trip-map-trip-pick]')
+
+      if (from && from !== to && !tripPlayer.activeId) {
+        tripOverview.highlight(undefined)
+      }
+    },
+    { signal },
+  )
+
   for (const link of elements.tripLinks) {
     const id = link.dataset.tripMapTripLink!
 
@@ -1044,6 +1160,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
     { signal },
   )
 
+  upgradeHashUrl()
   syncSelection({ focus: true, moveMap: false })
 
   // What the page was rendered with open has been drawn by the next frame but one; only
@@ -1194,13 +1311,17 @@ export function createTripMap(options: TripMapOptions): TripMap {
         fogLayer.add()
         markers.sync()
 
-        const hashPlaceId = getHashPlaceId()
-        const hashPlace = hashPlaceId ? markers.getPlace(hashPlaceId) : undefined
+        const urlPlaceId = getUrlPlaceId()
+        const urlPlace = urlPlaceId ? markers.getPlace(urlPlaceId) : undefined
+        const pickedTripId = getUrlPickedTripId()
 
         if (getUrlTripId()) {
           syncTripFromUrl()
-        } else if (hashPlaceId && hashPlace) {
-          drawer.open(hashPlace, { focus: false, trigger: markers.getButton(hashPlaceId) })
+        } else if (pickedTripId) {
+          // Picked before the map could fly to it.
+          frameTripBesideList(pickedTripId)
+        } else if (urlPlaceId && urlPlace) {
+          drawer.open(urlPlace, { focus: false, trigger: markers.getButton(urlPlaceId) })
         }
       })
       map.on('error', () => {

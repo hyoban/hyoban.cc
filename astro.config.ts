@@ -4,6 +4,7 @@ import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'astro/config'
 import { SITE_URL } from './src/consts'
 import { apiData } from './src/data/api-data.ts'
+import { devRewrites } from './src/dev-rewrites.ts'
 import { rehypePostImages } from './src/post-images.mjs'
 import { remarkTelegramWidgets } from './src/telegram-widget.mjs'
 import { remarkTripCovers } from './src/trip-covers.ts'
@@ -15,11 +16,11 @@ export default defineConfig({
   integrations: [
     // First, so every later read of a record sees the API's snapshot when there is one.
     apiData(),
-    // Map place pages are drawer fragments, not pages to list.
-    Sitemap({ filter: (page) => !page.includes('/map/place/') }),
+    // The map's drawer and Moments fragments aren't pages to list.
+    Sitemap({ filter: (page) => !/\/map\/.*\/moments\/$/.test(page) }),
   ],
   vite: {
-    plugins: [tailwindcss() as any],
+    plugins: [tailwindcss() as any, devRewrites()],
   },
   markdown: {
     processor: unified({

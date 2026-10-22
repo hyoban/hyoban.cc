@@ -7,7 +7,7 @@ import {
 } from '@hyoban/trip-map'
 import { tripVideoMusic } from '@/data/music'
 import tripWeather from '@/data/trip-weather.json'
-import { getMomentPath, type MomentTrip } from '@/moments'
+import { getMomentPath, getMoments, getTrips, type MomentTrip } from '@/moments'
 import { takeBilibiliVideo } from '@/moments/bilibili'
 import { getTripCovers, getTripImages } from '@/moments/trip-images'
 import { tripMapMessages } from '@/trip-map'
@@ -32,6 +32,23 @@ export function getTripData(trip: MomentTrip): TripData {
     weather: (dateKey, place) =>
       (tripWeather as Record<string, DayWeather>)[getWeatherKey(dateKey, place)],
   })
+}
+
+type MomentTripLink = Readonly<{ id: string; title: string }>
+
+let momentTrips: Promise<Map<string, MomentTripLink>> | undefined
+
+/** Each Moment that's a stop of a trip, by its id: the trip's id and title. */
+export function getMomentTrips() {
+  momentTrips ??= getMoments().then(
+    (moments) =>
+      new Map(
+        getTrips(moments).flatMap((trip) =>
+          trip.stops.map((stop) => [stop.id, { id: trip.id, title: trip.title }]),
+        ),
+      ),
+  )
+  return momentTrips
 }
 
 /** The URL hash that opens a trip on this Moment's card, like `01-02-ferry-sunset`. */
