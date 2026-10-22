@@ -211,7 +211,7 @@ private suspend fun showFog(
     dark: Boolean,
     sweep: Boolean,
 ) {
-    val (ready, style) = map ?: return
+    val (ready, style) = map?.live ?: return
     val veilOpacity = if (dark) 0.62f else 0.5f
     val litOpacity = if (dark) 0.2f else 0f
     // Read when used: on a new style they're only there once added below.
@@ -271,6 +271,7 @@ private suspend fun showFog(
     if (FogRings.lit != fog.lit) {
         FogRings.lit = fog.lit
         FogRings.distances = footprintDistances(regions, fog.lit)
+        FogRings.footprints = regions.filter { it.id in fog.lit }
     }
     // Turning a sweep around goes on by the rings it had, wherever the map is now.
     if (!(sweep && FogRings.turnsTo(entering = true))) ready.prepareFogRings(style, regions)
@@ -300,9 +301,10 @@ private object FogRings {
     var far = 0.0
     var ready = false
     var sweeping = false
-    /** The cities been to, and how far each region is from the nearest of them, by id. */
+    /** The cities been to, and how far each city is from the nearest of them, by id. */
     var lit: List<String>? = null
     var distances: Map<String, Double>? = null
+    var footprints: List<FogRegion> = emptyList()
     /** Waiting for the rings to be laid out, nothing on the map moved yet. */
     var waiting = false
     /** Under way or cut off, not through: which way, how far its edge had come, its glow. */
@@ -330,8 +332,16 @@ private fun MapLibreMap.prepareFogRings(style: Style, regions: List<FogRegion>) 
     if (key == FogRings.key) return
     val squash = cos(Math.toRadians(center.latitude))
     val distances = FogRings.distances
-    fun distanceOf(region: FogRegion) =
-        distances?.get(region.id) ?: hypot((region.cx - center.longitude) * squash, region.cy - center.latitude)
+    val footprints = FogRings.footprints
+    // The regions of the rest of the world share an id, so each is measured from its own middle,
+    // here and on the map alike.
+    fun fromFootprints(region: FogRegion) =
+        footprints.minOf { hypot((it.cx - region.cx) * cos(Math.toRadians(region.cy)), it.cy - region.cy) }
+    fun distanceOf(region: FogRegion) = when {
+        distances == null -> hypot((region.cx - center.longitude) * squash, region.cy - center.latitude)
+        region.fogged -> fromFootprints(region)
+        else -> distances[region.id] ?: fromFootprints(region)
+    }
     // How far from the cities been to, or the screen's middle, the regions in sight are, nearest
     // and farthest: those whose middles are on screen, as those whose middles are off it mostly
     // are too.
@@ -344,26 +354,36 @@ private fun MapLibreMap.prepareFogRings(style: Style, regions: List<FogRegion>) 
     val near = if (even) 0.0 else inSight.min()
     val far = if (even) 0.0 else inSight.max()
     val width = (far - near) / FOG_RINGS
-    // The asset's regions carry no distance from the cities been to, so each ring holds its ids;
-    // held within what's in sight, so a region whose middle is off screen goes with the ring
-    // farthest in sight rather than ahead of the sweep or after it.
+    // The asset's regions carry no distance from the cities been to, so each ring holds its cities'
+    // ids, and the world's regions by how far the map works out each is; held within what's in
+    // sight, so a region whose middle is off screen goes with the ring farthest in sight rather
+    // than ahead of the sweep or after it.
     val ringIds = distances?.let {
-        regions.groupBy({ ((distanceOf(it) - near) / width).toInt().coerceIn(0, FOG_RINGS - 1) }, { it.id })
+        regions.filterNot { it.fogged }
+            .groupBy({ ((distanceOf(it) - near) / width).toInt().coerceIn(0, FOG_RINGS - 1) }, { it.id })
     }
-    // Held within what's in sight, as above.
     val (x, y) = center.longitude to center.latitude
-    val distance = "[\"max\", $near, [\"min\", $far, [\"sqrt\", [\"+\", " +
-        "[\"^\", [\"*\", [\"-\", [\"coalesce\", [\"get\", \"cx\"], $x], $x], $squash], 2], " +
-        "[\"^\", [\"-\", [\"coalesce\", [\"get\", \"cy\"], $y], $y], 2]]]]]"
+    val distance = "[\"max\", $near, [\"min\", $far, " + when {
+        distances == null -> "[\"sqrt\", [\"+\", " +
+            "[\"^\", [\"*\", [\"-\", [\"coalesce\", [\"get\", \"cx\"], $x], $x], $squash], 2], " +
+            "[\"^\", [\"-\", [\"coalesce\", [\"get\", \"cy\"], $y], $y], 2]]]"
+        else -> "[\"min\", $far, " + footprints.joinToString(", ") {
+            "[\"sqrt\", [\"+\", [\"^\", [\"*\", [\"-\", [\"get\", \"cx\"], ${it.cx}], " +
+                "[\"cos\", [\"*\", [\"get\", \"cy\"], ${PI / 180}]]], 2], [\"^\", [\"-\", [\"get\", \"cy\"], ${it.cy}], 2]]]"
+        } + "]"
+    } + "]]"
+    val world = "[\"coalesce\", [\"get\", \"fogged\"], false]"
     for (index in 0 until FOG_RINGS) {
         val from = if (index == 0) near - 1 else near + index * width
         val to = if (index == FOG_RINGS - 1) far + 1 else near + (index + 1) * width
+        val inSpan = "[\">=\", $distance, $from], [\"<\", $distance, $to]"
         val inRing = when {
             even -> Expression.literal(index == 0)
             ringIds != null -> raw(
-                "[\"in\", [\"get\", \"id\"], [\"literal\", [${ringIds[index].orEmpty().joinToString(",") { "\"$it\"" }}]]]",
+                "[\"any\", [\"in\", [\"get\", \"id\"], [\"literal\", [${ringIds[index].orEmpty().joinToString(",") { "\"$it\"" }}]]], " +
+                    "[\"all\", $world, $inSpan]]",
             )
-            else -> raw("[\"all\", [\">=\", $distance, $from], [\"<\", $distance, $to]]")
+            else -> raw("[\"all\", $inSpan]")
         }
         style.getLayerAs<FillLayer>(fogRing(index))?.apply {
             // Only which regions it holds: at rest the rings are the fog, at its opacity.
@@ -481,6 +501,13 @@ private suspend fun MapLibreMap.sweepFog(
         FogRings.sweeping = false
     }
 }
+
+/**
+ * The map and its style while the style is still the map's: a new view, after the theme changed or
+ * the activity came back, loads its own, and the old one, still held until the new is ready,
+ * throws on use.
+ */
+private val Pair<MapLibreMap, Style>.live get() = takeIf { it.second.isFullyLoaded }
 
 private val Place.latLng get() = LatLng(latitude, longitude)
 private val LatLng.point get() = Point.fromLngLat(longitude, latitude)
@@ -946,7 +973,7 @@ fun PlacesMap(
 
     // Taps are listened for while this map is shown, with this showing's callbacks.
     DisposableEffect(map) {
-        val (ready, style) = map ?: return@DisposableEffect onDispose { }
+        val (ready, style) = map?.live ?: return@DisposableEffect onDispose { }
         val listener = MapLibreMap.OnMapClickListener { point ->
             val at = ready.projection.toScreenLocation(point)
             fun around(r: Float) = RectF(at.x - r, at.y - r, at.x + r, at.y + r)
@@ -997,7 +1024,7 @@ fun PlacesMap(
 
     val shape = landscape to (rail.left > 0.dp)
     LaunchedEffect(map, places, shape) {
-        val (ready, style) = map ?: return@LaunchedEffect
+        val (ready, style) = map?.live ?: return@LaunchedEffect
         val features = places.map { place ->
             Feature.fromGeometry(place.place.latLng.point).apply {
                 addStringProperty("id", place.id)
@@ -1040,7 +1067,7 @@ fun PlacesMap(
     }
 
     LaunchedEffect(map, routes) {
-        val (_, style) = map ?: return@LaunchedEffect
+        val (_, style) = map?.live ?: return@LaunchedEffect
         // Oldest first, so the latest trip's route is drawn on top where routes cross.
         val features = routes.reversed().flatMap { route ->
             route.segments.map { segment ->
@@ -1091,7 +1118,7 @@ fun PlacesMap(
     }
 
     LaunchedEffect(map, selected) {
-        val (ready, style) = map ?: return@LaunchedEffect
+        val (ready, style) = map?.live ?: return@LaunchedEffect
         val previous = before[0]
         before[0] = selected
         val chosen = eq(get("id"), literal(selected ?: ""))
@@ -1143,7 +1170,7 @@ fun PlacesMap(
     // Each time [locate] goes up, with the permission granted by then: the phone's place
     // as a dot, and the map brought to it at a town's scale, its nearby places around it.
     LaunchedEffect(map, locate) {
-        val (ready, style) = map ?: return@LaunchedEffect
+        val (ready, style) = map?.live ?: return@LaunchedEffect
         if (locate == 0) return@LaunchedEffect
         val component = ready.locationComponent
         if (!component.isLocationComponentActivated) {
@@ -1176,7 +1203,7 @@ fun PlacesMap(
     }
 
     LaunchedEffect(map, highlighted) {
-        val (_, style) = map ?: return@LaunchedEffect
+        val (_, style) = map?.live ?: return@LaunchedEffect
         val previous = before[1]
         before[1] = highlighted
         // Each route's opacity and width with [lifted] standing out, or all alike with none.
@@ -1328,7 +1355,7 @@ fun PickerMap(
     }
 
     LaunchedEffect(map, places) {
-        val (_, style) = map ?: return@LaunchedEffect
+        val (_, style) = map?.live ?: return@LaunchedEffect
         style.getSourceAs<GeoJsonSource>(PICK_PLACES)?.setGeoJson(
             FeatureCollection.fromFeatures(
                 places.map { (id, place) ->
@@ -1342,7 +1369,7 @@ fun PickerMap(
     }
 
     LaunchedEffect(map, chosen, primary, dot) {
-        val (_, style) = map ?: return@LaunchedEffect
+        val (_, style) = map?.live ?: return@LaunchedEffect
         val isChosen = eq(get("id"), literal(chosen ?: ""))
         style.getLayerAs<CircleLayer>(PICK_PLACES)?.setProperties(
             circleColor(switchCase(isChosen, color(primary), color(dot))),
