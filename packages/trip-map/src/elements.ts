@@ -78,6 +78,9 @@ export function collectMapElements(page: HTMLElement) {
     tripList: page.querySelector<HTMLElement>('[data-trip-map-trip-list]'),
     tripListClose: page.querySelector<HTMLButtonElement>('[data-trip-map-trip-list-close]'),
     tripListOpeners: [...page.querySelectorAll<HTMLElement>('[data-trip-map-trip-list-open]')],
+    tripYearGroups: [...page.querySelectorAll<HTMLElement>('[data-trip-map-trip-year]')],
+    yearClear: page.querySelector<HTMLButtonElement>('[data-trip-map-year-clear]'),
+    yearButtons: [...page.querySelectorAll<HTMLButtonElement>('[data-trip-map-year]')],
   }
 }
 

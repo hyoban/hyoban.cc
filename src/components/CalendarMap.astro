@@ -25,9 +25,11 @@ interface Props {
   tripId?: string
   /** Opens with the list of trips beside the map (the /trip/ page). */
   tripList?: boolean
+  /** Opens with only this year's places and trips (the /map/<year>/ pages). */
+  year?: number
 }
 
-const { tripId, tripList = false } = Astro.props
+const { tripId, tripList = false, year: pickedYear } = Astro.props
 const moments = await getMoments()
 const locationGroups = getMappedLocationGroups(moments)
 const years = [...new Set(locationGroups.map(group => group.firstYear))].sort((a, b) => a - b)
@@ -104,15 +106,23 @@ const description = activeTrip
       </div>
     </header>
 
-    <ol class="trip-map-legend [&[hidden]]:hidden absolute bottom-10 left-1/2 z-[4] flex w-max -translate-x-1/2 list-none items-center gap-3 rounded-full border border-[color-mix(in_srgb,var(--color-border)_82%,transparent)] bg-[color-mix(in_srgb,var(--color-bg)_82%,transparent)] px-3.5 py-2.5 font-mono text-xs shadow-[0_0.5rem_2rem_rgb(0_0_0/0.08)] max-[48rem]:bottom-[calc(1rem+env(safe-area-inset-bottom))]" aria-label="图例：地点按首次记录年份着色" data-trip-map-legend>
+    <ol class="trip-map-legend [&[hidden]]:hidden absolute bottom-10 left-1/2 z-[4] flex w-max -translate-x-1/2 list-none items-center gap-3 rounded-full border border-[color-mix(in_srgb,var(--color-border)_82%,transparent)] bg-[color-mix(in_srgb,var(--color-bg)_82%,transparent)] px-3.5 py-2.5 font-mono text-xs shadow-[0_0.5rem_2rem_rgb(0_0_0/0.08)] max-[48rem]:bottom-[calc(1rem+env(safe-area-inset-bottom))]" aria-label="图例：地点按首次记录年份着色" data-trip-map-legend data-trip-map-year-picked={pickedYear !== undefined}>
       {
+        // Pressing a year leaves only the places first recorded then on the map.
         years.map(year => (
-          <li class="flex items-center gap-[0.35rem]">
-            <span class="block size-2.5 rounded-full border border-white/90 bg-[var(--year-color)] shadow-[0_0_0_1px_rgb(0_0_0/0.12)]" style={`--year-color: ${yearColor(year)}`} aria-hidden="true" />
-            {year}
+          <li class="flex items-center">
+            <button class="flex cursor-pointer items-center gap-[0.35rem] border-0 bg-transparent p-0 font-inherit text-inherit hover:text-tx-2" type="button" data-trip-map-year={year} aria-pressed={String(year === pickedYear)} title={`只看 ${year} 年首次记录的地点`}>
+              <span class="block size-2.5 rounded-full border border-white/90 bg-[var(--year-color)] shadow-[0_0_0_1px_rgb(0_0_0/0.12)]" style={`--year-color: ${yearColor(year)}`} aria-hidden="true" />
+              {year}
+            </button>
           </li>
         ))
       }
+      <li class="flex items-center [&[hidden]]:hidden" hidden={pickedYear === undefined}>
+        <button class="flex size-4 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-0 text-tx-2 hover:text-tx" type="button" data-trip-map-year-clear aria-label="显示全部年份" title="显示全部年份">
+          <span class="i-lucide-x text-[0.75rem]" aria-hidden="true" />
+        </button>
+      </li>
       <li class="border-l border-border pl-3 whitespace-nowrap tabular-nums [&[hidden]]:hidden" data-trip-map-fog-area hidden />
       {
         // The grey lines are trips: say so, and open their list beside the map (the
@@ -186,7 +196,7 @@ const description = activeTrip
           </header>
           <div class="min-w-0 overflow-y-auto overscroll-contain px-2 pb-2">
             {tripsByYear.map(([year, yearTrips]) => (
-              <section aria-labelledby={`trip-map-trip-list-${year}`}>
+              <section aria-labelledby={`trip-map-trip-list-${year}`} data-trip-map-trip-year={year} hidden={pickedYear !== undefined && Number(year) !== pickedYear}>
                 <h2 class="sticky top-0 z-[1] bg-bg px-3 pt-3 pb-1 font-mono text-xs text-tx-3 tabular-nums" id={`trip-map-trip-list-${year}`}>{year}</h2>
                 <ul class="list-none">
                   {yearTrips.map(trip => (
@@ -296,8 +306,8 @@ const description = activeTrip
     })
   })
 
-  // The map's own addresses: the map, a place's hash on it, the trip list and a trip's page.
-  const ownPathPattern = /^\/(?:map|trip(?:\/[^/]+)?)\/$/
+  // The map's own addresses: the map, a year of it, a place's hash on it, the trip list and a trip's page.
+  const ownPathPattern = /^\/(?:map(?:\/\d{4})?|trip(?:\/[^/]+)?)\/$/
   // Set while the router goes back or forward between them.
   let ownTraversal = false
 

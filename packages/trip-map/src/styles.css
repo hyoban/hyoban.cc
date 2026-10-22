@@ -860,6 +860,11 @@
     visibility 200ms;
 }
 
+/* With a year picked, the other years in the legend step back. */
+.trip-map-legend[data-trip-map-year-picked] [data-trip-map-year]:not([aria-pressed='true']) {
+  opacity: 0.4;
+}
+
 /* Keeps the markers' own hover transitions alongside the fade. */
 .trip-map-page :is(.trip-map-marker__dot, .trip-map-cluster > span) {
   transition:
