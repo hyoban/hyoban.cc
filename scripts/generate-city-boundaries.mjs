@@ -95,25 +95,23 @@ try {
   )
 
   const { features } = JSON.parse(await readFile(simplified, 'utf8'))
-  // Written as bare geometries, having no properties left to keep.
+  // Written as bare geometries, having no properties left to keep: each piece of the
+  // world a region of its own, so the fog sweeps across the world as across the cities.
   const erased = JSON.parse(await readFile(outline, 'utf8'))
-  const pieces = erased.geometries ?? erased.features.map((feature) => feature.geometry)
-  const outside = {
-    geometry: {
-      coordinates: pieces.flatMap((piece) =>
-        piece.type === 'Polygon' ? [piece.coordinates] : piece.coordinates,
-      ),
-      type: 'MultiPolygon',
-    },
-    properties: { fogged: true, id: 'outside', name: '' },
-    type: 'Feature',
-  }
+  const outside = (erased.geometries ?? erased.features.map((feature) => feature.geometry)).map(
+    (geometry) => ({
+      geometry,
+      properties: { fogged: true, id: 'outside', name: '' },
+      type: 'Feature',
+    }),
+  )
+  const centred = [...features, ...outside].map((feature) => ({
+    ...feature,
+    properties: { ...feature.properties, ...getCentre(feature.geometry) },
+  }))
 
   await mkdir(join(root, 'src/data/boundaries'), { recursive: true })
-  await writeFile(
-    output,
-    `${JSON.stringify({ features: [...features, outside], type: 'FeatureCollection' })}\n`,
-  )
+  await writeFile(output, `${JSON.stringify({ features: centred, type: 'FeatureCollection' })}\n`)
   console.log(`${features.length} cities written to ${output}`)
 } finally {
   await rm(work, { force: true, recursive: true })
@@ -144,4 +142,21 @@ function getWorldTiles() {
   }
 
   return { features, type: 'FeatureCollection' }
+}
+
+/**
+ * The middle of the box round a region, `cx` and `cy`: where the fog's sweep reaches it,
+ * as far from the middle of the screen as that is.
+ */
+function getCentre(geometry) {
+  const polygons = geometry.type === 'Polygon' ? [geometry.coordinates] : geometry.coordinates
+  const points = polygons.flatMap(([outer]) => outer)
+  const longitudes = points.map(([longitude]) => longitude)
+  const latitudes = points.map(([, latitude]) => latitude)
+  const round = (value) => Math.round(value * 1000) / 1000
+
+  return {
+    cx: round((Math.min(...longitudes) + Math.max(...longitudes)) / 2),
+    cy: round((Math.min(...latitudes) + Math.max(...latitudes)) / 2),
+  }
 }

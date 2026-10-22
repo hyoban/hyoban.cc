@@ -63,6 +63,12 @@ say stay out.
 - Pages lead to each other wherever they can, and a link to a page already under the
   current one goes back to it rather than opening it again.
 - Show a refresh indicator only for a refresh the user pulled for.
+- Animate map layers a frame at a time with constant paint values, each layer's
+  transition set to 0: MapLibre lays a source out again for a data-driven value, a
+  frame or more late and drawing the default meanwhile, and eases every change over
+  300 ms on its own. Layers set again ahead of an animation get a source of their own.
+- Check an animation frame by frame: `adb shell screenrecord`, every frame out with
+  ffmpeg, and measure each one, rather than judging from a few screenshots.
 
 ## What the app is
 
