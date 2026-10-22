@@ -61,13 +61,20 @@ export function createMomentList({
   let period: Period | undefined
   // The year whose Moments are in the list.
   let shownYear: number | undefined
+  // The one month of it the list holds, while it holds no other: the rest come with the
+  // year's fragment.
+  let onlyMonth: number | undefined
 
-  // The page may come with a year's Moments in it already.
+  // The page may come with a year's Moments in it already, or just a month's.
   const renderedYear = Number(content.dataset.tripMapMomentsYear)
 
   if (renderedYear) {
     shownYear = renderedYear
-    html.set(renderedYear, content.innerHTML)
+    onlyMonth = Number(content.dataset.tripMapMomentsMonthOnly) || undefined
+
+    if (onlyMonth === undefined) {
+      html.set(renderedYear, content.innerHTML)
+    }
   }
 
   function isOpen() {
@@ -179,6 +186,7 @@ export function createMomentList({
     template.innerHTML = text
     content.replaceChildren(template.content)
     shownYear = year
+    onlyMonth = undefined
     applyMonth()
   }
 
@@ -187,6 +195,9 @@ export function createMomentList({
     const opening = !isOpen()
     const yearChanged = next.year !== period?.year || shownYear !== next.year
     const monthChanged = next.month !== period?.month
+    // The list holds only another month of the year, or of a year shown whole.
+    const yearNeeded =
+      shownYear !== next.year || (onlyMonth !== undefined && next.month !== onlyMonth)
 
     period = next
     exit?.cancel()
@@ -200,13 +211,17 @@ export function createMomentList({
           : t(messages, 'monthItem', { month: next.month, year: next.year })
     }
 
-    if (yearChanged && shownYear !== next.year) {
-      if (eyebrow) {
-        eyebrow.textContent = ''
+    if (yearNeeded) {
+      // The month in the list stays meanwhile; another year's give way to a message.
+      if (shownYear !== next.year) {
+        if (eyebrow) {
+          eyebrow.textContent = ''
+        }
+
+        setMessage(messages.drawerLoading)
       }
 
       content.setAttribute('aria-busy', 'true')
-      setMessage(messages.drawerLoading)
       void load(next.year).then((text) => {
         if (period?.year === next.year) {
           render(next.year, text)

@@ -4,10 +4,12 @@ import { getMonthPath, type Moment } from '@/moments'
 
 // A year's Moments for the list beside the map, newest first: its months to pick one
 // by (or the whole year), then each month's, each with its day and time on one line. The map fetches it as a fragment for a year picked there
-// (see pages/map/[year]/moments.astro), and a year's page renders it in place.
+// (see pages/map/[year]/moments.astro), and a year's page renders it in place. A month's
+// page renders only that month's, leaving the rest to the fragment, which the map
+// fetches once another is picked (`data-trip-map-moments-month-only`).
 
 interface Props {
-  /** The month shown, of those of the year; every month without one. */
+  /** The one month rendered, of those of the year; every month without one. */
   month?: number | undefined
   /** The year's Moments. */
   moments: Moment[]
@@ -35,8 +37,8 @@ const months = [...Map.groupBy(moments, getMonth)]
   }
 </nav>
 {
-  months.map(({ month, moments: monthMoments }) => (
-    <section data-trip-map-moments-month={month} data-trip-map-count={monthMoments.length} hidden={pickedMonth !== undefined && month !== pickedMonth} aria-labelledby={`trip-map-moments-${year}-${month}`}>
+  months.filter(({ month }) => pickedMonth === undefined || month === pickedMonth).map(({ month, moments: monthMoments }) => (
+    <section data-trip-map-moments-month={month} data-trip-map-count={monthMoments.length} aria-labelledby={`trip-map-moments-${year}-${month}`}>
       {/* Only for the whole year: a month picked is the list's own title. */}
       <h2 class="map-moments__heading" id={`trip-map-moments-${year}-${month}`} data-trip-map-moments-heading hidden={pickedMonth !== undefined}>
         <a href={getMonthPath(`${year}-${String(month).padStart(2, '0')}`)} title={`在日历中查看 ${year} 年 ${month} 月`}>{month} 月</a>
