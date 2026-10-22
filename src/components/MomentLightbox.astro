@@ -92,9 +92,10 @@ import MomentLightboxMedia from '@/components/MomentLightboxMedia.astro'
       padding-inline: 1rem;
     }
 
+    /* Clear of the close button above and of the live button and a phone's arrows below. */
     & [data-lightbox-image] {
       max-width: calc(100vw - 10rem);
-      max-height: calc(100dvh - 6rem);
+      max-height: calc(100dvh - 9rem);
       object-fit: contain;
 
       @media (width < 40rem) {
