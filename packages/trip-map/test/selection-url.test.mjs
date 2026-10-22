@@ -59,3 +59,18 @@ test('leads to a trip by its id or by its year and the rest, either way', () => 
     '/trip/code-and-travel/play/',
   )
 })
+
+test('knows the trip list narrowed to a year or a month, apart from a trip', () => {
+  assert.equal(defaultUrls.isTripListPath('/trip/'), true)
+  assert.equal(defaultUrls.isTripListPath('/trip/2025/'), true)
+  assert.equal(defaultUrls.isTripListPath('/trip/2025/06/'), true)
+  assert.equal(defaultUrls.isTripListPath('/trip/2025-yunnan/'), false)
+  assert.equal(defaultUrls.isTripListPath('/trip/2025/yunnan/'), false)
+  assert.deepEqual(defaultUrls.getTripListPeriod('/trip/2025/'), { month: undefined, year: 2025 })
+  assert.deepEqual(defaultUrls.getTripListPeriod('/trip/2025/06/'), { month: 6, year: 2025 })
+  assert.equal(defaultUrls.getTripListPeriod('/trip/'), undefined)
+  assert.equal(defaultUrls.getTripListPath(), '/trip/')
+  assert.equal(defaultUrls.getTripListPath({ year: 2025 }), '/trip/2025/')
+  assert.equal(defaultUrls.getTripListPath({ month: 6, year: 2025 }), '/trip/2025/06/')
+  assert.equal(defaultUrls.isNestedTripPath('/trip/2025/06/'), false)
+})

@@ -116,6 +116,14 @@ export function getMappedLocationGroups(moments: Moment[]) {
   return groupMomentsByLocation(locations, moments)
 }
 
+/** The months the map can be narrowed to, `2025-06`: those with Moments, in its years. */
+export function getMapMonthKeys(moments: Moment[]) {
+  const years = new Set(getMapYears(moments))
+  const monthKeys = new Set(getActiveDateKeys(moments).map((dateKey) => dateKey.slice(0, 7)))
+
+  return [...monthKeys].filter((key) => years.has(Number.parseInt(key.slice(0, 4), 10)))
+}
+
 /** The years the map can be narrowed to: those with Moments at a place on it, oldest first. */
 export function getMapYears(moments: Moment[]) {
   const years = getMappedLocationGroups(moments).flatMap((group) =>

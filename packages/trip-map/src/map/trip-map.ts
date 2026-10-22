@@ -296,7 +296,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
       onOpen: openTrip,
       onRequestClose: requestSelectionClose,
       onRequestOpen: () => {
-        setSelectionUrl(urls.tripListPath)
+        setSelectionUrl(urls.getTripListPath(markers.period))
         syncSelection()
       },
       openers: elements.tripListOpeners,
@@ -328,7 +328,8 @@ export function createTripMap(options: TripMapOptions): TripMap {
       signal,
       title: elements.tripDetailsTitle,
     })
-  // Set while the map picks a route itself, as a trip's sidebar opens or closes.
+  // Set while the map picks a route itself, as a trip's sidebar opens or closes, or a
+  // period hides it.
   let pickingRoute = false
 
   const momentList =
@@ -535,7 +536,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
   }
 
   function isTripListUrl() {
-    return Boolean(tripList) && window.location.pathname === urls.tripListPath
+    return Boolean(tripList) && urls.isTripListPath(window.location.pathname)
   }
 
   function getUrlTripId() {
@@ -832,7 +833,14 @@ export function createTripMap(options: TripMapOptions): TripMap {
     }
 
     markers.setPeriod(next)
-    tripOverview.setPeriod(next)
+    // A route the period hides lets go of it, which isn't a click off the routes.
+    pickingRoute = true
+
+    try {
+      tripOverview.setPeriod(next)
+    } finally {
+      pickingRoute = false
+    }
     markers.setPressed(drawer.activeId)
 
     if (elements.tripList) {
@@ -882,8 +890,10 @@ export function createTripMap(options: TripMapOptions): TripMap {
   }
 
   /** The period an address narrows the map to, if the map has places in its year. */
+  /** The period the map's address, or the trip list's, narrows the map to. */
   function getUrlPeriod() {
-    const period = urls.getPeriod(window.location.pathname)
+    const { pathname } = window.location
+    const period = urls.getPeriod(pathname) ?? (tripList && urls.getTripListPeriod(pathname))
 
     return period && places.some((place) => place.years.includes(period.year)) ? period : undefined
   }
@@ -902,11 +912,13 @@ export function createTripMap(options: TripMapOptions): TripMap {
     return urls.getMapPath(markers.period)
   }
 
-  /** On the map's own address, says the period picked, keeping the place open. */
+  /** On the map's own address, or the trip list's, says the period picked, keeping the place open. */
   function syncPeriodUrl() {
-    const path = urls.getMapPath(markers.period, getUrlPlaceId())
+    const path = isTripListUrl()
+      ? urls.getTripListPath(markers.period)
+      : urls.getMapPath(markers.period, getUrlPlaceId())
 
-    if (!isMapUrl() || window.location.pathname === path) {
+    if ((!isMapUrl() && !isTripListUrl()) || window.location.pathname === path) {
       return
     }
 
@@ -964,7 +976,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
     history.replaceState(
       getHistoryState(),
       '',
-      `${openId && tripList ? urls.tripListPath : getMapPath()}${window.location.search}`,
+      `${openId && tripList ? urls.getTripListPath(markers.period) : getMapPath()}${window.location.search}`,
     )
     syncSelection()
   }
