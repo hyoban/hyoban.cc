@@ -31,7 +31,7 @@ written in, as the site's map does: the prefecture-level cities of the site's
 `src/data/boundaries/cities.json` (Aliyun DataV's, simplified; `vp run map:cities` makes it),
 shipped in the APK as an asset, with the rest of the world never lit; the sea, lakes and rivers stay clear, so the fog meets the land at the basemap's own coast. A place on no city, on a
 coast the boundaries were simplified past, lights the nearest within 10 km; the phone's own
-Moments light theirs too. On the dark map, already near black, the cities lit are lightened as well. Turned on, the fog closes in on the cities been to from those farthest from them, the line where the cities end and the rest of the world begins showing as it passes, and they flare gold as it settles round them; turned off, it clears from them outwards. A tap while it sweeps turns it around from where it is. Left on, it sweeps in the same way the first time the map opens after the app starts. Under the toggle, how many cities and provinces are lit.
+Moments light theirs too. On the dark map, already near black, the cities lit are lightened as well. Turned on, the fog closes in on the cities been to from those farthest from them, and they flare gold as it settles round them; turned off, it clears from them outwards. A tap while it sweeps turns it around from where it is. Left on, it sweeps in the same way the first time the map opens after the app starts. Under the toggle, how many cities and provinces are lit.
 
 A new Moment can be written on the phone, from the ✎ in the Moments tab's header or
 `moments://new`, on a page of its own, or, on a window from Material 3's medium breakpoint

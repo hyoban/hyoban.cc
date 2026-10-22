@@ -45,9 +45,6 @@ const SWEEP = { in: 1400, out: 900 }
 const EDGE = 0.35
 // How long a sweep waits for its rings to be laid out before it starts anyway.
 const RINGS_READY = 500
-// How far apart, as a share of the sweep's soft edge, the cities and the rest of the world
-// are swept: enough for the line between them to show as it passes, without a stop.
-const APART = 0.5
 // The closest the fog's regions are cut into tiles at.
 const MAX_ZOOM = 10
 // How long the cities flaring take to come in or go out when a sweep is turned around.
@@ -252,30 +249,11 @@ export function createFogLayer({
           cy <= bounds.getNorth() &&
           cy >= bounds.getSouth()),
     )
-    // Going by the cities been to, the rest of the world comes after every city in sight,
-    // `APART` of a soft edge further on, so the line where the cities end shows as the sweep
-    // crosses it: the cities' span and the world's, and the gap a share of an edge of the
-    // whole, (span + gap) × EDGE × APART.
-    const cities = footprints ? seen.flatMap(({ d, fogged }) => (fogged ? [] : (d ?? []))) : []
-    const world = footprints ? seen.flatMap(({ d, fogged }) => (fogged ? (d ?? []) : [])) : []
-    const split = cities.length > 0 && world.length > 0
-    const citiesFar = split ? Math.max(...cities) : 0
-    const worldNear = split ? Math.min(...world) : 0
-    const gap = split
-      ? ((citiesFar - Math.min(...cities) + Math.max(...world) - worldNear) * EDGE * APART) /
-        (1 - EDGE * APART)
-      : 0
-    const apart = (d: number, fogged: boolean) =>
-      split && fogged ? citiesFar + gap + Math.max(0, d - worldNear) : d
     // How far from the cities been to, or the screen's middle, the regions in sight are,
     // nearest and farthest.
     const inSight = seen
-      .map(({ cx, cy, d, fogged }) =>
-        footprints
-          ? d === undefined
-            ? undefined
-            : apart(d, fogged)
-          : Math.hypot((cx - center.lng) * squash, cy - center.lat),
+      .map(({ cx, cy, d }) =>
+        footprints ? d : Math.hypot((cx - center.lng) * squash, cy - center.lat),
       )
       .filter((value) => value !== undefined)
     // Zoomed in on a region or two whose middles are off screen, there's no way across to
@@ -294,12 +272,7 @@ export function createFogLayer({
         'min',
         far,
         footprints
-          ? [
-              'case',
-              ['all', split, ['coalesce', ['get', 'fogged'], false]],
-              ['+', citiesFar + gap, ['max', 0, ['-', ['coalesce', ['get', 'd'], far], worldNear]]],
-              ['coalesce', ['get', 'd'], far],
-            ]
+          ? ['coalesce', ['get', 'd'], far]
           : [
               'sqrt',
               [
@@ -613,7 +586,7 @@ function easeOutSine(progress: number) {
  * A region's middle, `cx` and `cy`, as the boundaries' script wrote it, and `d`, how far it
  * is from the nearest city been to's.
  */
-type RegionCentre = { cx: number; cy: number; d?: number; fogged: boolean }
+type RegionCentre = { cx: number; cy: number; d?: number }
 
 /**
  * Sets each region's `d`, in its centre and its properties: how far its middle is from the
@@ -656,11 +629,7 @@ function measureFootprints(
 }
 
 function getRegionCentre(feature: GeoJSON.Feature): RegionCentre {
-  return {
-    cx: Number(feature.properties?.cx),
-    cy: Number(feature.properties?.cy),
-    fogged: Boolean(feature.properties?.fogged),
-  }
+  return { cx: Number(feature.properties?.cx), cy: Number(feature.properties?.cy) }
 }
 
 /** `value`, held from 0 to 1 and eased in and out: 3v² − 2v³. */

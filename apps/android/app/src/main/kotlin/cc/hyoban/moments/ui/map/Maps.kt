@@ -195,12 +195,6 @@ private const val FOG_EDGE = 0.35
 /** How long a sweep waits for its rings to be laid out before it starts anyway. */
 private const val FOG_RINGS_READY = 500L
 
-/**
- * How far apart, as a share of the sweep's soft edge, the cities and the rest of the world are
- * swept: enough for the line between them to show as it passes, without a stop.
- */
-private const val FOG_APART = 0.5
-
 /** How long the cities flaring take to come in or go out when a sweep is turned around. */
 private const val FOG_GLOW_TURN = 250L
 
@@ -336,29 +330,13 @@ private fun MapLibreMap.prepareFogRings(style: Style, regions: List<FogRegion>) 
     if (key == FogRings.key) return
     val squash = cos(Math.toRadians(center.latitude))
     val distances = FogRings.distances
-    fun rawDistanceOf(region: FogRegion) =
+    fun distanceOf(region: FogRegion) =
         distances?.get(region.id) ?: hypot((region.cx - center.longitude) * squash, region.cy - center.latitude)
-    // Those whose middles are on screen, as those whose middles are off it mostly are too.
-    val bounds = projection.visibleRegion.latLngBounds
-    val seen = regions.filter { bounds.contains(LatLng(it.cy, it.cx)) }
-    // Going by the cities been to, the rest of the world comes after every city in sight,
-    // [FOG_APART] of a soft edge further on, so the line where the cities end shows as the sweep
-    // crosses it: the cities' span and the world's, and the gap a share of an edge of the whole,
-    // (span + gap) × FOG_EDGE × FOG_APART.
-    val cities = seen.filterNot { it.fogged }.map(::rawDistanceOf)
-    val world = seen.filter { it.fogged }.map(::rawDistanceOf)
-    val split = distances != null && cities.isNotEmpty() && world.isNotEmpty()
-    val citiesFar = cities.maxOrNull() ?: 0.0
-    val worldNear = world.minOrNull() ?: 0.0
-    val apart = FOG_EDGE * FOG_APART
-    val gap = if (split) (citiesFar - cities.min() + world.max() - worldNear) * apart / (1 - apart) else 0.0
-    fun distanceOf(region: FogRegion) = when {
-        split && region.fogged -> citiesFar + gap + (rawDistanceOf(region) - worldNear).coerceAtLeast(0.0)
-        else -> rawDistanceOf(region)
-    }
     // How far from the cities been to, or the screen's middle, the regions in sight are, nearest
-    // and farthest.
-    val inSight = seen.map(::distanceOf)
+    // and farthest: those whose middles are on screen, as those whose middles are off it mostly
+    // are too.
+    val bounds = projection.visibleRegion.latLngBounds
+    val inSight = regions.filter { bounds.contains(LatLng(it.cy, it.cx)) }.map(::distanceOf)
     // Zoomed in on a region or two whose middles are off screen, there's no way across to sweep:
     // every region then goes in the first ring, and the fog comes and goes evenly over the whole
     // screen, over the same time.
