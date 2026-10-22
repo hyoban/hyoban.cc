@@ -189,7 +189,7 @@ private const val FOG_SWEEP_OUT = 900L
  * How wide the sweep's soft edge is, as a share of the way across what's in sight: wide, so
  * neighbouring rings are only a little apart and the edge reads as a gradient rather than steps.
  */
-private const val FOG_EDGE = 0.5
+private const val FOG_EDGE = 0.8
 
 /** How long a sweep waits for its rings to be laid out before it starts anyway. */
 private const val FOG_RINGS_READY = 500L

@@ -30,7 +30,7 @@ const SWEEP = { in: 1400, out: 900 }
 // How wide the sweep's soft edge is, as a share of the way across what's in sight: wide,
 // so neighbouring regions are only a little apart and the edge reads as a gradient
 // rather than steps.
-const EDGE = 0.5
+const EDGE = 0.8
 
 export function createFogLayer({
   areaElement,
