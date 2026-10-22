@@ -116,7 +116,10 @@ export function createPlaceMarkers({
   function setMarkerShown(entry: MarkerEntry, shown: boolean) {
     const map = getMap()
 
-    entry.button.hidden = !shown
+    // Synced every frame of a move: only what changes is touched.
+    if (entry.button.hidden === shown) {
+      entry.button.hidden = !shown
+    }
 
     if (!map || shown === Boolean(entry.marker.getElement().isConnected)) {
       return
@@ -156,6 +159,11 @@ export function createPlaceMarkers({
     }
   }
 
+  // How wide each kind of dot is with a number of so many digits, measured the first
+  // time one is shown: measuring every new cluster as a zoom goes would have the page
+  // laid out again in the middle of its frames.
+  const dotRadii = new Map<string, number>()
+
   /**
    * Pushes dots that would cover one another apart on screen, each a little, until
    * every one shows: two places side by side stay two dots, and a place beside a
@@ -166,11 +174,18 @@ export function createPlaceMarkers({
       .filter((entry) => !entry.button.hidden && entry.button.isConnected)
       .map((entry) => {
         const point = map.project(entry.coordinates)
+        const key = `${entry.dot.className}:${entry.dot.textContent.length}`
+        let radius = dotRadii.get(key)
+
+        if (radius === undefined) {
+          // A cluster's number widens its dot.
+          radius = Math.max(entry.radius, entry.dot.offsetWidth / 2)
+          dotRadii.set(key, radius)
+        }
 
         return {
           entry,
-          // A cluster's number widens its dot.
-          radius: Math.max(entry.radius, entry.dot.offsetWidth / 2),
+          radius,
           x: point.x,
           x0: point.x,
           y: point.y,
