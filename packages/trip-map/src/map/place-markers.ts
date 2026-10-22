@@ -59,6 +59,9 @@ const DOT_SPREAD_ROUNDS = 8
 // Opening a cluster frames its places, no closer than this.
 const CLUSTER_OPEN_MAX_ZOOM = 11
 const CLUSTER_OPEN_PADDING = 80
+// Framing every place, or a year's, the map comes as close as their spread allows, but
+// no closer than one city's places standing apart, out of their clusters.
+const ALL_PLACES_MAX_ZOOM = CLUSTER_MAX_ZOOM + 1
 // The markers are set in reading order for the keyboard, in rows this tall.
 const MARKER_ROW_HEIGHT = 48
 
@@ -736,8 +739,10 @@ export function createPlaceMarkers({
   }
 }
 
-/** The view that shows every place, leaving room for the toolbar and the legend. */
-/** The view framing every place, `inset` kept clear of besides (a panel over the map). */
+/**
+ * The view framing every place, as close as their spread allows, leaving room for the
+ * toolbar and the legend, and `inset` besides (a panel over the map).
+ */
 export function getAllPlacesView(
   places: readonly PlaceMarker[],
   narrow: boolean,
@@ -745,7 +750,10 @@ export function getAllPlacesView(
 ) {
   if (places.length === 1) {
     const place = places[0]!
-    return { center: [place.longitude, place.latitude] as [number, number], zoom: 4 }
+    return {
+      center: [place.longitude, place.latitude] as [number, number],
+      zoom: ALL_PLACES_MAX_ZOOM,
+    }
   }
 
   const bounds = new mapboxgl.LngLatBounds()
@@ -760,7 +768,7 @@ export function getAllPlacesView(
   return {
     bounds,
     fitBoundsOptions: {
-      maxZoom: 4,
+      maxZoom: ALL_PLACES_MAX_ZOOM,
       padding: {
         bottom: 80 + (inset.bottom ?? 0),
         left: side,
