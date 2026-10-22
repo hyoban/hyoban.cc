@@ -20,7 +20,7 @@ const PITCHES: readonly (readonly [zoom: number, pitch: number])[] = [
   [3, 0],
   [6, 20],
   [9, 40],
-  [13, 55],
+  [13, 50],
 ]
 const MAP_PITCH = PITCHES.at(-1)![1]
 // Every look but the flat one leans, up to `MAP_PITCH`.
