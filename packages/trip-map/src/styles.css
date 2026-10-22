@@ -186,6 +186,13 @@
   color: var(--color-tx-3);
 }
 
+/* A year's Moments are hundreds of photos: only those scrolled near are laid out, so
+   the list opening beside a move doesn't hold up its first frame. */
+[data-trip-map-moments-month] > * {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 16rem;
+}
+
 /* A hover name: a small grey line over the name, and a hint under it. */
 .trip-map-popup__meta,
 .trip-map-popup__hint {
