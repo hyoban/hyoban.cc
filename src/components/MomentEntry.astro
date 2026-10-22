@@ -24,7 +24,8 @@ const weekdayFormatter = new Intl.DateTimeFormat('zh-CN', { timeZone: 'UTC', wee
 function formatDay(dateKey: string) {
   const [year, month, day] = dateKey.split('-').map(part => Number.parseInt(part, 10))
   const weekday = weekdayFormatter.format(new Date(`${dateKey}T00:00:00Z`))
-  return `${date === 'year' ? `${year} 年 ` : ''}${month} 月 ${day} 日 ${weekday}`
+  const monthDay = [month, day].join('/')
+  return date === 'year' ? `${year}/${monthDay} ${weekday}` : `${monthDay} ${weekday}`
 }
 ---
 
@@ -36,7 +37,9 @@ function formatDay(dateKey: string) {
   ]}
   data-moment-shared={shared ? '' : undefined}
 >
-  <header class="mb-2.5 flex items-center gap-2 font-mono text-xs text-tx-2 [&_a]:-my-3 [&_a]:inline-flex [&_a]:min-h-11 [&_a]:min-w-11 [&_a]:items-center [&_a]:justify-center [&_a]:text-tx-3 [&_a]:no-underline">
+  <!-- One line: the date, the time and the share button whole, and the places cut short
+       when the column is too narrow for them. -->
+  <header class="mb-2.5 flex items-center gap-2 font-mono [&>*]:shrink-0 [&>*]:whitespace-nowrap text-xs text-tx-2 [&_a]:-my-3 [&_a]:inline-flex [&_a]:min-h-11 [&_a]:min-w-11 [&_a]:items-center [&_a]:justify-center [&_a]:text-tx-3 [&_a]:no-underline">
     {
       date && (
         <a class="moment-entry__date !mx-0 !w-auto !justify-start !text-tx-2 hover:!text-tx" href={getMomentPath(moment.dateKey)}>
@@ -47,9 +50,9 @@ function formatDay(dateKey: string) {
     {moment.occurredLabel && <time datetime={moment.occurredAt}>{moment.occurredLabel}</time>}
     {
       showLocation && moment.locations.map(location => (
-        <a class="moment-entry__location !mx-0 !w-auto gap-1 px-1 hover:!text-tx" href={`/map/#${location.id}`} data-trip-map-place-link={location.id}>
-          <span class="i-lucide-map-pin text-sm" aria-hidden="true" />
-          {location.name}
+        <a class="moment-entry__location !mx-0 !w-auto !min-w-0 !shrink gap-1 px-1 hover:!text-tx" href={`/map/#${location.id}`} data-trip-map-place-link={location.id}>
+          <span class="i-lucide-map-pin shrink-0 text-sm" aria-hidden="true" />
+          <span class="truncate">{location.name}</span>
         </a>
       ))
     }
