@@ -9,9 +9,6 @@ import Layout from '@/layouts/Layout.astro'
 const pageTitle = `Media | ${SITE_TITLE}`
 const pageDescription = '我推荐的电影、剧集和动画'
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p'
-const posterImageClass = 'aspect-[2/3] w-full rounded bg-inline object-cover shadow-[0_0_0_1px_var(--color-border)]'
-const sourceLinkClass = 'inline-flex items-center no-underline hover:text-tx'
-const sourceIconClass = 'inline-block size-[1em] text-current'
 const ANIMATION_GENRE_ID = 16
 const mediaCategories = [
   { label: '动漫', value: 'anime' },
@@ -223,7 +220,7 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
   <SitePage title="影视推荐" description="一些我觉得值得看的电影、剧集和动画，持续整理更新中。">
 
     <nav
-      class="mb-4 flex w-fit max-w-full items-center gap-5 overflow-x-auto [scrollbar-width:none]"
+      class="media-filters"
       aria-label="分类过滤"
       data-media-filters
     >
@@ -231,59 +228,58 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
         mediaCategories.map(category => (
           <a
             href={`/media/?category=${category.value}`}
-            class="inline-flex min-h-9 shrink-0 items-center gap-1.5 text-tx-2 no-underline transition-colors hover:text-tx"
+            class="media-filter"
             aria-controls="media-list"
             aria-current={category.value === 'anime' ? 'page' : undefined}
             data-media-filter={category.value}
           >
             {category.label}
-            <span class="tabular-nums">{mediaCategoryCounts.get(category.value)}</span>
+            <span class="media-filter__count">{mediaCategoryCounts.get(category.value)}</span>
           </a>
         ))
       }
     </nav>
 
-    <ol id="media-list" class="flex flex-col gap-1">
+    <ol id="media-list" class="media-list">
       {
         mediaWorks.map(work => (
           <li class="media-item" data-media-category={work.categories.join(' ')}>
-            <article class="grid items-start gap-x-3 gap-y-3 py-3 sm:grid-cols-[6rem_minmax(0,1fr)] sm:gap-x-5 sm:gap-y-1">
-              <div class="grid min-w-0 grid-cols-[5rem_minmax(0,1fr)] items-start gap-x-3 gap-y-3 sm:contents">
+            <article class="media-work">
+              <div class="media-work__body">
                 {
                   work.posterUrl && (
                     <a
                       href={work.tmdbUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      class="col-start-1 row-span-2 row-start-1 block w-full self-start"
+                      class="media-work__poster"
                     >
                       <img
                         src={work.posterUrl}
                         alt={`${work.displayTitle} poster`}
-                        class={posterImageClass}
                         loading="lazy"
                       />
                     </a>
                   )
                 }
 
-                <header class="col-start-2 row-start-1 min-w-0 space-y-2">
-                  <h2 class="line-clamp-2 font-medium">
+                <header class="media-work__header">
+                  <h2>
                     <a href={work.tmdbUrl} target="_blank" rel="noopener noreferrer">
                       {work.displayTitle}
                     </a>
                   </h2>
                   {(work.creator || work.year || work.doubanUrl || work.playbackSources.length > 0) && (
-                    <p class="flex flex-wrap items-center gap-x-3 gap-y-1 text-tx-2">
+                    <p class="media-work__meta">
                       {work.creator && <span>{work.creator}</span>}
                       {work.year && <span>{work.year}</span>}
                       {work.doubanUrl && (
-                        <a href={work.doubanUrl} target="_blank" rel="noopener noreferrer" class={sourceLinkClass} aria-label="豆瓣" title="豆瓣">
-                          <span class={`${sourceIconClass} i-simple-icons-douban`} aria-hidden="true" />
+                        <a href={work.doubanUrl} target="_blank" rel="noopener noreferrer" class="media-work__source" aria-label="豆瓣" title="豆瓣">
+                          <span class="i-simple-icons-douban" aria-hidden="true" />
                         </a>
                       )}
                       {work.playbackSources.map(source => (
-                        <a href={source.url} target="_blank" rel="noopener noreferrer" class={sourceLinkClass} aria-label={source.name} title={source.name}>
+                        <a href={source.url} target="_blank" rel="noopener noreferrer" class="media-work__source" aria-label={source.name} title={source.name}>
                           <MediaSourceIcon name={source.name} />
                         </a>
                       ))}
@@ -292,11 +288,11 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
                 </header>
 
                 {work.note && (
-                  <p class="col-start-2 self-end line-clamp-2 sm:line-clamp-3">{work.note}</p>
+                  <p class="media-work__text">{work.note}</p>
                 )}
 
                 {work.overview && (
-                  <p class="col-start-2 self-end line-clamp-2 text-tx-2 sm:line-clamp-3">{work.overview}</p>
+                  <p class="media-work__text media-work__text--overview">{work.overview}</p>
                 )}
               </div>
             </article>
@@ -353,6 +349,144 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
   document.addEventListener('astro:page-load', initializeMediaFilters)
   initializeMediaFilters()
 </script>
+
+<style>
+  .media-filters {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    width: fit-content;
+    max-width: 100%;
+    margin-bottom: 1rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  /* The current one is set dark by the global styles below, from the page's category. */
+  .media-filter {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 0.375rem;
+    min-height: 2.25rem;
+    color: var(--color-tx-2);
+    text-decoration: none;
+    transition: color 150ms var(--ease);
+
+    @media (hover: hover) {
+      &:hover {
+        color: var(--color-tx);
+      }
+    }
+  }
+
+  .media-filter__count {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .media-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  /* The poster on the left of the title, and from 40rem of the words below it too. */
+  .media-work {
+    display: grid;
+    align-items: start;
+    gap: 0.75rem;
+    padding-block: 0.75rem;
+
+    @media (width >= 40rem) {
+      grid-template-columns: 6rem minmax(0, 1fr);
+      gap: 0.25rem 1.25rem;
+    }
+  }
+
+  .media-work__body {
+    display: grid;
+    grid-template-columns: 5rem minmax(0, 1fr);
+    align-items: start;
+    gap: 0.75rem;
+    min-width: 0;
+
+    @media (width >= 40rem) {
+      display: contents;
+    }
+  }
+
+  .media-work__poster {
+    display: block;
+    grid-row: 1 / span 2;
+    grid-column-start: 1;
+    align-self: start;
+    width: 100%;
+
+    & img {
+      width: 100%;
+      aspect-ratio: 2 / 3;
+      border-radius: 0.25rem;
+      background: var(--color-inline);
+      object-fit: cover;
+      box-shadow: 0 0 0 1px var(--color-border);
+    }
+  }
+
+  .media-work__header {
+    grid-row-start: 1;
+    grid-column-start: 2;
+    min-width: 0;
+
+    & > :not(:last-child) {
+      margin-bottom: 0.5rem;
+    }
+
+    & h2 {
+      display: -webkit-box;
+      overflow: hidden;
+      font-weight: 500;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+    }
+  }
+
+  .media-work__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.75rem;
+    color: var(--color-tx-2);
+  }
+
+  .media-work__source {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+
+    @media (hover: hover) {
+      &:hover {
+        color: var(--color-tx);
+      }
+    }
+  }
+
+  .media-work__text {
+    display: -webkit-box;
+    grid-column-start: 2;
+    align-self: end;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+
+    @media (width >= 40rem) {
+      -webkit-line-clamp: 3;
+    }
+  }
+
+  .media-work__text--overview {
+    color: var(--color-tx-2);
+  }
+</style>
 
 <style is:global>
   html:not([data-media-category]) [data-media-category]:not([data-media-category~='anime']),

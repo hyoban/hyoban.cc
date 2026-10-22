@@ -24,20 +24,17 @@ for (const post of posts) {
   <SitePage>
     <p>我会在这里写一些关于工作和生活的记录。</p>
 
-    <section class="mt-16 flex flex-col gap-10" aria-label="文章">
+    <section class="post-years" aria-label="文章">
       {
         postsByYear.map((group) => (
-          <section class="grid gap-x-6 gap-y-1 sm:grid-cols-[3.5rem_minmax(0,1fr)]">
-            <h2 class="py-1 text-tx-2 tabular-nums sm:sticky sm:top-4 sm:self-start">{group.year}</h2>
-            <ul class="flex flex-col">
+          <section class="post-year">
+            <h2>{group.year}</h2>
+            <ul>
               {group.posts.map((post) => (
                 <li>
-                  <a
-                    href={`/${post.data.link}/`}
-                    class="flex items-baseline justify-between gap-4 py-1 no-underline sm:block"
-                  >
-                    <span class="link-text min-w-0">{post.data.title}</span>
-                    <time class="shrink-0 whitespace-nowrap text-tx-2 tabular-nums sm:ml-2" datetime={post.data.pubDate.toISOString()}>{formatPostListDate(post.data.pubDate)}</time>
+                  <a href={`/${post.data.link}/`}>
+                    <span class="link-text">{post.data.title}</span>
+                    <time datetime={post.data.pubDate.toISOString()}>{formatPostListDate(post.data.pubDate)}</time>
                   </a>
                 </li>
               ))}
@@ -48,3 +45,67 @@ for (const post of posts) {
     </section>
   </SitePage>
 </Layout>
+
+<style>
+  .post-years {
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+    margin-top: 4rem;
+  }
+
+  /* A year's posts, its number in a column on the left from 40rem that stays in view. */
+  .post-year {
+    display: grid;
+    gap: 0.25rem 1.5rem;
+
+    @media (width >= 40rem) {
+      grid-template-columns: 3.5rem minmax(0, 1fr);
+    }
+
+    & h2 {
+      padding-block: 0.25rem;
+      color: var(--color-tx-2);
+      font-variant-numeric: tabular-nums;
+
+      @media (width >= 40rem) {
+        position: sticky;
+        top: 1rem;
+        align-self: start;
+      }
+    }
+
+    & ul {
+      display: flex;
+      flex-direction: column;
+    }
+
+    & a {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 1rem;
+      padding-block: 0.25rem;
+      text-decoration: none;
+
+      @media (width >= 40rem) {
+        display: block;
+      }
+    }
+
+    & .link-text {
+      min-width: 0;
+    }
+
+    & time {
+      flex-shrink: 0;
+      color: var(--color-tx-2);
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+
+      @media (width >= 40rem) {
+        margin-left: 0.5rem;
+      }
+    }
+  }
+</style>

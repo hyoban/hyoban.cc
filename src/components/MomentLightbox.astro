@@ -2,11 +2,11 @@
 import MomentLightboxMedia from '@/components/MomentLightboxMedia.astro'
 ---
 
-<dialog class="moment-lightbox m-auto h-full max-h-none w-full max-w-none border-0 bg-transparent p-12 backdrop:bg-[rgb(17_17_16/0.92)] [&[open]]:flex [&[open]]:items-center [&[open]]:justify-center max-[40rem]:px-4" data-moment-lightbox aria-label="图片查看器">
-  <button type="button" class="moment-lightbox__close fixed top-5 right-5 flex size-10 cursor-pointer items-center justify-center rounded-full border-0 bg-[rgb(255_255_255/0.08)] text-white" data-lightbox-close aria-label="关闭图片"><span class="i-lucide-x" aria-hidden="true" /></button>
-  <button type="button" class="moment-lightbox__previous fixed top-[calc(50%-1.25rem)] left-5 flex size-10 cursor-pointer items-center justify-center rounded-full border-0 bg-[rgb(255_255_255/0.08)] text-white max-[40rem]:top-auto max-[40rem]:bottom-4" data-lightbox-previous aria-label="上一张图片"><span class="i-lucide-chevron-left" aria-hidden="true" /></button>
-  <MomentLightboxMedia imageClass="max-h-[calc(100dvh-6rem)] max-w-[calc(100vw-10rem)] object-contain max-[40rem]:max-w-[calc(100vw-2rem)]" />
-  <button type="button" class="moment-lightbox__next fixed top-[calc(50%-1.25rem)] right-5 flex size-10 cursor-pointer items-center justify-center rounded-full border-0 bg-[rgb(255_255_255/0.08)] text-white max-[40rem]:top-auto max-[40rem]:bottom-4" data-lightbox-next aria-label="下一张图片"><span class="i-lucide-chevron-right" aria-hidden="true" /></button>
+<dialog class="moment-lightbox" data-moment-lightbox aria-label="图片查看器">
+  <button type="button" class="moment-lightbox__close" data-lightbox-close aria-label="关闭图片"><span class="i-lucide-x" aria-hidden="true" /></button>
+  <button type="button" class="moment-lightbox__previous" data-lightbox-previous aria-label="上一张图片"><span class="i-lucide-chevron-left" aria-hidden="true" /></button>
+  <MomentLightboxMedia />
+  <button type="button" class="moment-lightbox__next" data-lightbox-next aria-label="下一张图片"><span class="i-lucide-chevron-right" aria-hidden="true" /></button>
 </dialog>
 
 <script>
@@ -67,3 +67,75 @@ import MomentLightboxMedia from '@/components/MomentLightboxMedia.astro'
   document.addEventListener('astro:before-swap', () => lightboxController?.abort())
   initializeLightbox()
 </script>
+
+<style>
+  .moment-lightbox {
+    width: 100%;
+    max-width: none;
+    height: 100%;
+    max-height: none;
+    margin: auto;
+    padding: 3rem;
+    background: transparent;
+
+    &[open] {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    &::backdrop {
+      background: rgb(17 17 16 / 0.92);
+    }
+
+    @media (width < 40rem) {
+      padding-inline: 1rem;
+    }
+
+    & [data-lightbox-image] {
+      max-width: calc(100vw - 10rem);
+      max-height: calc(100dvh - 6rem);
+      object-fit: contain;
+
+      @media (width < 40rem) {
+        max-width: calc(100vw - 2rem);
+      }
+    }
+  }
+
+  :is(.moment-lightbox__close, .moment-lightbox__previous, .moment-lightbox__next) {
+    position: fixed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 9999px;
+    background: rgb(255 255 255 / 0.08);
+    color: white;
+    cursor: pointer;
+  }
+
+  .moment-lightbox__close {
+    top: 1.25rem;
+    right: 1.25rem;
+  }
+
+  /* Halfway down the sides, or along the foot on a phone. */
+  :is(.moment-lightbox__previous, .moment-lightbox__next) {
+    top: calc(50% - 1.25rem);
+
+    @media (width < 40rem) {
+      top: auto;
+      bottom: 1rem;
+    }
+  }
+
+  .moment-lightbox__previous {
+    left: 1.25rem;
+  }
+
+  .moment-lightbox__next {
+    right: 1.25rem;
+  }
+</style>

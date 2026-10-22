@@ -3,32 +3,61 @@ import type { CalendarAnniversary } from '@/anniversaries'
 
 interface Props {
   anniversary: CalendarAnniversary
-  class?: string
   compact?: boolean
   overMedia?: boolean
 }
 
-const {
-  anniversary,
-  class: className,
-  compact = false,
-  overMedia = false,
-} = Astro.props
-const icon = anniversary.icon
+const { anniversary, compact = false, overMedia = false } = Astro.props
 ---
 
 <span
   class:list={[
-    'calendar-anniversary-status inline-flex max-w-full items-center gap-1 overflow-hidden rounded-full border px-1.5 py-0.5 font-mono whitespace-nowrap',
-    compact ? 'text-[0.625rem] leading-[1.25]' : 'text-[0.6875rem]',
-    overMedia
-      ? 'border-white/25 bg-[rgb(17_17_16/0.62)] text-white [text-shadow:none]'
-      : 'border-border bg-inline text-tx-2',
-    className,
+    'calendar-anniversary-status',
+    { 'calendar-anniversary-status--compact': compact, 'calendar-anniversary-status--over-media': overMedia },
   ]}
   aria-label={anniversary.description}
   title={anniversary.description}
 >
-  <span class:list={['flex-none text-[0.75rem]', icon]} aria-hidden="true" />
-  <span class="overflow-hidden text-ellipsis">{anniversary.label}</span>
+  <span class={anniversary.icon} aria-hidden="true" />
+  <span class="calendar-anniversary-status__label">{anniversary.label}</span>
 </span>
+
+<style>
+  .calendar-anniversary-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    max-width: 100%;
+    overflow: hidden;
+    padding: 0.125rem 0.375rem;
+    border: 1px solid var(--color-border);
+    border-radius: 9999px;
+    background: var(--color-inline);
+    color: var(--color-tx-2);
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    white-space: nowrap;
+
+    & > [aria-hidden] {
+      flex: none;
+      font-size: 0.75rem;
+    }
+  }
+
+  .calendar-anniversary-status--compact {
+    font-size: 0.625rem;
+    line-height: 1.25;
+  }
+
+  .calendar-anniversary-status--over-media {
+    border-color: rgb(255 255 255 / 0.25);
+    background: rgb(17 17 16 / 0.62);
+    color: white;
+    text-shadow: none;
+  }
+
+  .calendar-anniversary-status__label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+</style>

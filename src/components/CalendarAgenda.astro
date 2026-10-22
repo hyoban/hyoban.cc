@@ -39,56 +39,47 @@ function formatShortDate(dateKey: string) {
 ---
 
 <!-- The month as a list, newest day first: the phone's calendar (a wide screen's timeline is
-     the map's, see MapMoments). --agenda-top is how far down the sticky date index sits:
-     below the phone's sticky month navigation, 2.75rem tall. -->
-<section class="calendar-agenda hidden [--agenda-top:2.75rem] max-[56rem]:order-2 max-[56rem]:block max-[56rem]:min-w-0 max-[56rem]:basis-full" aria-label={`${year} 年 ${month} 月的全部记录`}>
+     the map's, see MapMoments). -->
+<section class="calendar-agenda" aria-label={`${year} 年 ${month} 月的全部记录`}>
   {
     days.length > 0
       ? (
           <>
-            <nav class="calendar-agenda__index sticky top-[var(--agenda-top)] z-[9] mx-auto mt-3 flex max-w-[42rem] justify-center-safe gap-2 bg-bg overflow-x-auto border-y border-border py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-label="本月有记录的日期">
+            <nav class="calendar-agenda__index" aria-label="本月有记录的日期">
               {days.map(day => (
-                <button
-                  type="button"
-                  class="flex h-11 min-w-11 flex-none cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-0 font-mono text-tx-2 hover:bg-inline hover:text-tx"
-                  data-agenda-target={`agenda-${day.dateKey}`}
-                >
+                <button type="button" data-agenda-target={`agenda-${day.dateKey}`}>
                   <span aria-hidden="true">{String(day.day).padStart(2, '0')}</span>
                   <span class="sr-only">{`定位到 ${formatDate(day.dateKey)}${day.anniversaries.length ? '的纪念日' : ''}`}</span>
                 </button>
               ))}
             </nav>
 
-            {/* A thin line down the days with a dot on each; from 40rem the date sits in a rail
-                on its left and stays in view under the index (3.375rem tall) down the day. */}
-            <div class="calendar-agenda__days relative mx-auto max-w-[42rem] pb-6 [--rail:0rem] before:absolute before:top-[2.125rem] before:bottom-0 before:left-[var(--rail)] before:w-px before:bg-border sm:[--rail:5.5rem]">
+            <div class="calendar-agenda__days">
               {agendaDays.map(day => {
                 const hasStatus = day.anniversaries.length > 0 || Boolean(day.chinaCalendarDay)
 
                 return (
-                  <section class="calendar-agenda__day relative scroll-mt-[calc(var(--agenda-top)+3.375rem+0.75rem)] sm:grid sm:grid-cols-[var(--rail)_minmax(0,1fr)]" id={`agenda-${day.dateKey}`}>
-                    <span class="absolute top-[calc(1.5rem+0.625rem-0.21875rem)] left-[var(--rail)] size-[0.4375rem] -translate-x-1/2 rounded-full bg-tx-3 ring-[0.1875rem] ring-bg" aria-hidden="true" />
-                    <h2 class="pt-6 pl-5 leading-5 sm:sticky sm:top-[calc(var(--agenda-top)+3.375rem+0.75rem)] sm:self-start sm:pr-5 sm:pl-0 sm:text-right">
+                  <section class="calendar-agenda__day" id={`agenda-${day.dateKey}`}>
+                    <span class="calendar-agenda__dot" aria-hidden="true" />
+                    <h2>
                       <span class="sr-only">{formatDate(day.dateKey)}</span>
-                      <span class="inline-flex items-baseline gap-2 text-sm text-tx-2 sm:flex-col sm:items-end sm:gap-0.5" aria-hidden="true">
-                        <time class="font-mono" datetime={day.dateKey}>{formatShortDate(day.dateKey)}</time>
-                        <span class="text-xs text-tx-3">{getWeekday(day.dateKey)}</span>
+                      <span class="calendar-agenda__date" aria-hidden="true">
+                        <time datetime={day.dateKey}>{formatShortDate(day.dateKey)}</time>
+                        <span>{getWeekday(day.dateKey)}</span>
                       </span>
                     </h2>
-                    <div class="calendar-agenda__moments min-w-0 pl-5 sm:pl-6">
+                    <div class="calendar-agenda__moments">
                       {hasStatus && (
-                        <div class="flex flex-wrap items-center gap-2.5 pt-2.5 sm:pt-6">
+                        <div class="calendar-agenda__statuses">
                           {day.anniversaries.map(anniversary => (
                             <CalendarAnniversaryStatus anniversary={anniversary} />
                           ))}
                           {day.chinaCalendarDay && <CalendarDayStatus day={day.chinaCalendarDay} />}
                         </div>
                       )}
-                      {day.moments.map((moment, index) => (
-                        <MomentEntry class:list={{ '!pt-3': index === 0 && hasStatus, 'max-sm:!pt-3': index === 0 && !hasStatus }} moment={moment} />
-                      ))}
+                      {day.moments.map(moment => <MomentEntry moment={moment} />)}
                       {day.moments.length === 0 && (
-                        <p class="pt-3 pb-6 text-sm text-tx-3">
+                        <p class="calendar-agenda__note">
                           {day.anniversaries.map(anniversary => anniversary.description).join('、')}
                         </p>
                       )}
@@ -99,6 +90,195 @@ function formatShortDate(dateKey: string) {
             </div>
           </>
         )
-      : <p class="calendar-agenda__empty py-16 text-center text-tx-3">本月没有记录。</p>
+      : <p class="calendar-agenda__empty">本月没有记录。</p>
   }
 </section>
+
+<style>
+  /* --agenda-top is how far down the sticky date index sits: below the phone's sticky
+     month navigation, 2.75rem tall. */
+  .calendar-agenda {
+    --agenda-top: 2.75rem;
+
+    display: none;
+
+    @media (width < 56rem) {
+      display: block;
+      flex-basis: 100%;
+      order: 2;
+      min-width: 0;
+    }
+  }
+
+  /* The month's days with Moments, 3.375rem tall, each scrolling the list to its day. */
+  .calendar-agenda__index {
+    position: sticky;
+    top: var(--agenda-top);
+    z-index: 9;
+    display: flex;
+    justify-content: safe center;
+    gap: 0.5rem;
+    max-width: 42rem;
+    margin: 0.75rem auto 0;
+    overflow-x: auto;
+    padding-block: 0.25rem;
+    border-block: 1px solid var(--color-border);
+    background: var(--color-bg);
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    & button {
+      display: flex;
+      flex: none;
+      align-items: center;
+      justify-content: center;
+      min-width: 2.75rem;
+      height: 2.75rem;
+      border-radius: 9999px;
+      color: var(--color-tx-2);
+      font-family: var(--font-mono);
+      cursor: pointer;
+
+      @media (hover: hover) {
+        &:hover {
+          background: var(--color-inline);
+          color: var(--color-tx);
+        }
+      }
+    }
+  }
+
+  /* A thin line down the days with a dot on each; from 40rem the date sits in a rail on
+     its left and stays in view under the index down the day. */
+  .calendar-agenda__days {
+    --rail: 0rem;
+
+    position: relative;
+    max-width: 42rem;
+    margin-inline: auto;
+    padding-bottom: 1.5rem;
+
+    @media (width >= 40rem) {
+      --rail: 5.5rem;
+    }
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 2.125rem;
+      bottom: 0;
+      left: var(--rail);
+      width: 1px;
+      background: var(--color-border);
+    }
+  }
+
+  .calendar-agenda__day {
+    position: relative;
+    scroll-margin-top: calc(var(--agenda-top) + 3.375rem + 0.75rem);
+
+    @media (width >= 40rem) {
+      display: grid;
+      grid-template-columns: var(--rail) minmax(0, 1fr);
+    }
+
+    & h2 {
+      padding: 1.5rem 0 0 1.25rem;
+      line-height: 1.25rem;
+
+      @media (width >= 40rem) {
+        position: sticky;
+        top: calc(var(--agenda-top) + 3.375rem + 0.75rem);
+        align-self: start;
+        padding-right: 1.25rem;
+        padding-left: 0;
+        text-align: right;
+      }
+    }
+  }
+
+  .calendar-agenda__dot {
+    position: absolute;
+    top: calc(1.5rem + 0.625rem - 0.21875rem);
+    left: var(--rail);
+    width: 0.4375rem;
+    height: 0.4375rem;
+    border-radius: 9999px;
+    background: var(--color-tx-3);
+    box-shadow: 0 0 0 0.1875rem var(--color-bg);
+    translate: -50% 0;
+  }
+
+  .calendar-agenda__date {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    color: var(--color-tx-2);
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+
+    @media (width >= 40rem) {
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.125rem;
+    }
+
+    & time {
+      font-family: var(--font-mono);
+    }
+
+    & span {
+      color: var(--color-tx-3);
+      font-size: 0.75rem;
+      line-height: 1rem;
+    }
+  }
+
+  .calendar-agenda__moments {
+    min-width: 0;
+    padding-left: 1.25rem;
+
+    @media (width >= 40rem) {
+      padding-left: 1.5rem;
+    }
+
+    /* The day's first Moment closer to its tags, or on a phone to its date. */
+    & :global(.calendar-agenda__statuses ~ .moment-entry:first-of-type) {
+      padding-top: 0.75rem;
+    }
+
+    @media (width < 40rem) {
+      & :global(.moment-entry:first-of-type) {
+        padding-top: 0.75rem;
+      }
+    }
+  }
+
+  .calendar-agenda__statuses {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.625rem;
+    padding-top: 0.625rem;
+
+    @media (width >= 40rem) {
+      padding-top: 1.5rem;
+    }
+  }
+
+  .calendar-agenda__note {
+    padding: 0.75rem 0 1.5rem;
+    color: var(--color-tx-3);
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+
+  .calendar-agenda__empty {
+    padding-block: 4rem;
+    color: var(--color-tx-3);
+    text-align: center;
+  }
+</style>

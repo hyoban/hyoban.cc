@@ -35,7 +35,7 @@ interface Props {
    * Opens narrowed to this year, or a month of it, with its Moments beside the map (the
    * /map/<year>/ and /map/<year>/<month>/ pages).
    */
-  period?: { month?: number, year: number }
+  period?: { month?: number | undefined, year: number }
 }
 
 const { period, pickedTripId, tripId } = Astro.props
@@ -102,12 +102,6 @@ const periodStart = period ? `${period.year}-${String(period.month ?? 1).padStar
 const periodEnd = period ? `${period.year}-${String(period.month ?? 12).padStart(2, '0')}` : ''
 const isInPeriod = (trip: { end: string, start: string }) =>
   !period || (trip.start.slice(0, 7) <= periodEnd && trip.end.slice(0, 7) >= periodStart)
-// The box the place drawer and the trip list share, the map's right side from top to
-// bottom (the toolbar's buttons step aside for it, see styles.css), or a phone's bottom:
-// most of the screen for a place, and less for the trips, so their routes show above.
-const sideClass = 'absolute inset-y-4 right-4 z-10 grid w-[min(28rem,calc(100vw-2rem))] min-w-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden rounded-xl border border-border bg-bg shadow-[0_1.5rem_5rem_rgb(0_0_0/0.16)] max-[48rem]:inset-x-3 max-[48rem]:bottom-[calc(0.75rem+env(safe-area-inset-bottom))] max-[48rem]:top-auto max-[48rem]:w-auto [&[hidden]]:hidden'
-const sideHeaderClass = 'flex items-center justify-between gap-3 border-b border-border py-3 pr-2 pl-5'
-const sideCloseClass = 'flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-tx-2 hover:bg-inline hover:text-tx focus-visible:bg-inline focus-visible:text-tx focus-visible:outline-none'
 const title = pageTrip
   ? getTripTitle(pageTrip.title)
   : tripList
@@ -125,63 +119,63 @@ const description = pageTrip
     <!-- The map script is large; open the connection for the style and tiles while it loads. -->
     <link rel="preconnect" href="https://api.mapbox.com" crossorigin />
   </Fragment>
-  <main class="trip-map-page @container relative isolate h-dvh w-full overflow-hidden bg-bg" data-trip-map data-trip-map-token={mapboxToken} data-calendar-latest-months={JSON.stringify(latestMonths)} data-trip-map-active={activeTrip ? '' : undefined} transition:persist="trip-map">
-    <div class="trip-map-canvas absolute inset-0" data-trip-map-canvas role="region" aria-label="Calendar 地点地图" />
+  <main class="trip-map-page" data-trip-map data-trip-map-token={mapboxToken} data-calendar-latest-months={JSON.stringify(latestMonths)} data-trip-map-active={activeTrip ? '' : undefined} transition:persist="trip-map">
+    <div class="trip-map-canvas" data-trip-map-canvas role="region" aria-label="Calendar 地点地图" />
 
-    <header class="trip-map-toolbar pointer-events-none absolute inset-x-4 top-4 z-[5] grid grid-cols-[1fr_auto_1fr] items-center gap-4 max-[48rem]:grid-cols-[auto_minmax(0,1fr)_auto] max-[48rem]:gap-2 [&>*]:pointer-events-auto max-[48rem]:[&_.calendar-back-link]:pr-1.5 max-[48rem]:[&_.calendar-back-link>span]:sr-only min-[48.0625rem]:max-[56rem]:[.trip-map-page:has(:is(.trip-map-drawer,.trip-map-trip-list,.trip-map-moments,.trip-map-trip-details):not([hidden]))_&_.calendar-back-link>span]:sr-only" data-trip-map-toolbar>
-      <CalendarBackLink class="justify-self-start" />
+    <header class="trip-map-toolbar" data-trip-map-toolbar>
+      <CalendarBackLink />
       {
         trips.length > 0 && (
           // The routes are drawn on the map; these reach the same trips by keyboard,
           // showing up while one is focused and lifting its route into view.
-          <nav class="sr-only min-w-0 justify-self-center focus-within:not-sr-only" aria-label="旅程回放">
-            <ul class="flex max-w-full list-none gap-0.5 overflow-x-auto rounded-full border border-[color-mix(in_srgb,var(--color-border)_82%,transparent)] bg-[color-mix(in_srgb,var(--color-bg)_88%,transparent)] p-1 shadow-[0_0.5rem_2rem_rgb(0_0_0/0.08)] backdrop-blur-[1rem] [scrollbar-width:none]">
+          <nav class="trip-map-toolbar__trips" aria-label="旅程回放">
+            <ul>
               {trips.map(trip => (
-                <li class="shrink-0">
-                  <a class="block rounded-full px-3 py-1.5 text-sm whitespace-nowrap text-tx-2 no-underline hover:bg-inline hover:text-tx focus-visible:bg-inline focus-visible:text-tx" href={`/trip/${trip.id}/play/`} data-trip-map-trip-link={trip.id}><span class="sr-only">回放旅程：</span>{trip.title}</a>
+                <li>
+                  <a href={`/trip/${trip.id}/play/`} data-trip-map-trip-link={trip.id}><span class="sr-only">回放旅程：</span>{trip.title}</a>
                 </li>
               ))}
             </ul>
           </nav>
         )
       }
-      <div class="trip-map-toolbar__actions col-start-3 flex items-center gap-2 justify-self-end">
+      <div class="trip-map-toolbar__actions">
         <!-- Pressed, a light fog over the map, thinner over a city the more Moments it holds. -->
-        <button class="trip-map-fog flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--color-border)_82%,transparent)] bg-[color-mix(in_srgb,var(--color-bg)_82%,transparent)] text-tx-2 backdrop-blur-[1rem] hover:text-tx aria-pressed:border-tx aria-pressed:bg-tx aria-pressed:text-bg aria-busy:cursor-progress" type="button" data-trip-map-fog aria-pressed="false" aria-label="迷雾地图" title="迷雾地图">
-          <span class="i-lucide-cloud-fog text-[0.9375rem]" aria-hidden="true" />
+        <button class="trip-map-tool trip-map-fog" type="button" data-trip-map-fog aria-pressed="false" aria-label="迷雾地图" title="迷雾地图">
+          <span class="i-lucide-cloud-fog" aria-hidden="true" />
         </button>
-        <button class="trip-map-screenshot flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--color-border)_82%,transparent)] bg-[color-mix(in_srgb,var(--color-bg)_82%,transparent)] text-tx-2 backdrop-blur-[1rem] hover:text-tx disabled:cursor-default disabled:opacity-40 aria-busy:cursor-progress" type="button" data-trip-map-screenshot aria-label="保存地图截图" title="保存地图截图" disabled>
-          <span class="i-lucide-camera text-[0.9375rem]" aria-hidden="true" />
+        <button class="trip-map-tool trip-map-screenshot" type="button" data-trip-map-screenshot aria-label="保存地图截图" title="保存地图截图" disabled>
+          <span class="i-lucide-camera" aria-hidden="true" />
         </button>
         <CalendarModeSwitch mode="map" calendarHref={getCalendarHref(period)} />
       </div>
     </header>
 
-    <ol class="trip-map-legend [&[hidden]]:hidden absolute bottom-10 left-1/2 z-[4] flex w-max -translate-x-1/2 list-none items-center gap-3 rounded-full border border-[color-mix(in_srgb,var(--color-border)_82%,transparent)] bg-[color-mix(in_srgb,var(--color-bg)_82%,transparent)] px-3.5 py-2.5 font-mono text-xs shadow-[0_0.5rem_2rem_rgb(0_0_0/0.08)] max-[48rem]:bottom-[calc(1rem+env(safe-area-inset-bottom))]" aria-label="图例：地点按首次记录年份着色" data-trip-map-legend data-trip-map-year-picked={pickedYear !== undefined}>
+    <ol class="trip-map-legend" aria-label="图例：地点按首次记录年份着色" data-trip-map-legend data-trip-map-year-picked={pickedYear !== undefined}>
       {
         // Pressing a year leaves only the places first recorded then on the map.
         years.map(year => (
-          <li class="flex items-center">
-            <button class="flex cursor-pointer items-center gap-[0.35rem] border-0 bg-transparent p-0 font-inherit text-inherit hover:text-tx-2" type="button" data-trip-map-year={year} aria-pressed={String(year === pickedYear)} title={`只看 ${year} 年的记录`}>
-              <span class="block size-2.5 rounded-full border border-white/90 bg-[var(--year-color)] shadow-[0_0_0_1px_rgb(0_0_0/0.12)]" style={`--year-color: ${yearColor(year)}`} aria-hidden="true" />
+          <li>
+            <button class="trip-map-legend__year" type="button" data-trip-map-year={year} aria-pressed={year === pickedYear ? 'true' : 'false'} title={`只看 ${year} 年的记录`}>
+              <span class="trip-map-year-dot" style={`--year-color: ${yearColor(year)}`} aria-hidden="true" />
               {year}
             </button>
           </li>
         ))
       }
-      <li class="flex items-center [&[hidden]]:hidden" hidden={pickedYear === undefined}>
-        <button class="flex size-4 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-0 text-tx-2 hover:text-tx" type="button" data-trip-map-year-clear aria-label="显示全部年份" title="显示全部年份">
-          <span class="i-lucide-x text-[0.75rem]" aria-hidden="true" />
+      <li hidden={pickedYear === undefined}>
+        <button class="trip-map-legend__clear" type="button" data-trip-map-year-clear aria-label="显示全部年份" title="显示全部年份">
+          <span class="i-lucide-x" aria-hidden="true" />
         </button>
       </li>
-      <li class="border-l border-border pl-3 whitespace-nowrap tabular-nums [&[hidden]]:hidden" data-trip-map-fog-area hidden />
+      <li class="trip-map-legend__fog-area" data-trip-map-fog-area hidden />
       {
         // The grey lines are trips: say so, and open their list beside the map (the
         // trips page without scripts).
         trips.length > 0 && (
-          <li class="flex items-center border-l border-border pl-3">
-            <a class="flex items-center gap-[0.35rem] whitespace-nowrap text-inherit no-underline hover:text-tx-2" href="/trip/" data-trip-map-trip-list-open aria-controls="trip-map-trip-list">
-              <span class="block h-0.5 w-3.5 rounded-full bg-tx opacity-50" aria-hidden="true" />
+          <li class="trip-map-legend__trips">
+            <a href="/trip/" data-trip-map-trip-list-open aria-controls="trip-map-trip-list">
+              <span aria-hidden="true" />
               旅程
             </a>
           </li>
@@ -189,21 +183,21 @@ const description = pageTrip
       }
     </ol>
 
-    <p class="trip-map-loading absolute left-1/2 top-1/2 z-[3] -translate-1/2 rounded-full border border-border bg-[color-mix(in_srgb,var(--color-bg)_88%,transparent)] px-3.5 py-2.5 [&[hidden]]:hidden" data-trip-map-loading>{activeTripData ? '正在加载旅程地图…' : `正在加载 ${locationGroups.length} 个地点的地图…`}</p>
+    <p class="trip-map-loading" data-trip-map-loading>{activeTripData ? '正在加载旅程地图…' : `正在加载 ${locationGroups.length} 个地点的地图…`}</p>
 
-    <section class="trip-map-fallback absolute left-1/2 top-1/2 z-[6] max-h-[min(36rem,calc(100dvh-8rem))] w-[min(28rem,calc(100vw-2rem))] -translate-1/2 overflow-y-auto rounded-xl border border-border bg-[color-mix(in_srgb,var(--color-bg)_94%,transparent)] p-5 shadow-[0_1rem_4rem_rgb(0_0_0/0.12)] [&[hidden]]:hidden" data-trip-map-fallback aria-live="polite" hidden>
-      <p class="mb-4 leading-[1.6] text-tx-2" data-trip-map-fallback-message>地图暂时无法加载。</p>
-      <button class="-mt-2 mb-4 inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-full border border-border bg-transparent px-3.5 text-[0.8125rem] text-tx hover:bg-inline [&[hidden]]:hidden" type="button" data-trip-map-fallback-retry hidden>
+    <section class="trip-map-fallback" data-trip-map-fallback aria-live="polite" hidden>
+      <p class="trip-map-fallback__message" data-trip-map-fallback-message>地图暂时无法加载。</p>
+      <button class="trip-map-fallback__retry" type="button" data-trip-map-fallback-retry hidden>
         <span class="i-lucide-rotate-ccw" aria-hidden="true" />
         重新加载
       </button>
-      <div class="grid grid-cols-2 gap-1">
+      <div class="trip-map-fallback__places">
         {
           locationGroups.map(group => (
-            <button class="grid min-h-11 cursor-pointer grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-md border-0 bg-transparent px-2 text-left text-tx hover:bg-inline focus-visible:bg-inline" type="button" data-trip-map-place={group.id}>
-              <span class="block size-2.5 rounded-full border border-white/90 bg-[var(--year-color)] shadow-[0_0_0_1px_rgb(0_0_0/0.12)]" style={`--year-color: ${yearColor(group.firstYear)}`} aria-hidden="true" />
-              <strong class="truncate font-medium">{group.location.name}</strong>
-              <small class="text-tx-3">{group.moments.length} 条</small>
+            <button type="button" data-trip-map-place={group.id}>
+              <span class="trip-map-year-dot" style={`--year-color: ${yearColor(group.firstYear)}`} aria-hidden="true" />
+              <strong>{group.location.name}</strong>
+              <small>{group.moments.length} 条</small>
             </button>
           ))
         }
@@ -213,53 +207,53 @@ const description = pageTrip
     <!-- The player's parts are the package's: rendered here so a trip page opens on its intro card at once. -->
     <div class="trip-map-stage" data-trip-map-stage set:html={renderTripStage({ brand: tripMapBrand, messages: tripMapMessages })} />
 
-    <section class="trip-map-panel absolute bottom-4 left-4 z-10 flex max-h-[calc(100%-7rem)] w-[min(22rem,calc(100%-2rem))] flex-col overflow-hidden rounded-xl border border-border bg-bg shadow-[0_1.5rem_5rem_rgb(0_0_0/0.16)] @max-[48rem]:inset-x-3 @max-[48rem]:bottom-[calc(0.75rem+env(safe-area-inset-bottom))] @max-[48rem]:max-h-[calc(100%-1.5rem)] @max-[48rem]:w-auto [&[hidden]]:hidden" data-trip-map-panel aria-labelledby="trip-map-panel-title" hidden={!activeTripData} set:html={renderTripPanel({ messages: tripMapMessages, music: tripMapMusic, trip: activeTripData })} />
+    <section class="trip-map-panel" data-trip-map-panel aria-labelledby="trip-map-panel-title" hidden={!activeTripData} set:html={renderTripPanel({ messages: tripMapMessages, music: tripMapMusic, trip: activeTripData })} />
 
     <dialog class="trip-map-shortcuts" data-trip-map-shortcuts aria-labelledby="trip-map-shortcuts-title" closedby="any" set:html={renderShortcuts(tripMapMessages)} />
 
     <!-- A year's Moments, or a month's, while the map is narrowed to it; before the drawer,
          which a place opens over it. -->
-    <aside class:list={['trip-map-moments max-[48rem]:h-[min(60dvh,36rem)]', sideClass]} data-trip-map-moments aria-labelledby="trip-map-moments-title" hidden={!momentsPeriod}>
-      <header class={sideHeaderClass}>
-        <div class="min-w-0">
-          <p class="truncate text-xs text-tx-3 tabular-nums" data-trip-map-moments-eyebrow>{momentsPeriod && periodEyebrow}</p>
-          <h1 class="truncate text-lg font-medium" id="trip-map-moments-title" data-trip-map-moments-title>{momentsPeriod && periodLabel}</h1>
+    <aside class="trip-map-side trip-map-moments" data-trip-map-moments aria-labelledby="trip-map-moments-title" hidden={!momentsPeriod}>
+      <header class="trip-map-side__header">
+        <div>
+          <p data-trip-map-moments-eyebrow>{momentsPeriod && periodEyebrow}</p>
+          <h1 id="trip-map-moments-title" data-trip-map-moments-title>{momentsPeriod && periodLabel}</h1>
         </div>
-        <button class={sideCloseClass} type="button" data-trip-map-moments-close aria-label="关闭记录，显示全部年份">
+        <button class="trip-map-side__close" type="button" data-trip-map-moments-close aria-label="关闭记录，显示全部年份">
           <span class="i-lucide-x" aria-hidden="true" />
         </button>
       </header>
-      <div class="min-w-0 overflow-y-auto overscroll-contain px-5 pb-4" data-trip-map-moments-content data-trip-map-moments-year={momentsPeriod?.year}>
+      <div class="trip-map-side__content" data-trip-map-moments-content data-trip-map-moments-year={momentsPeriod?.year}>
         {momentsPeriod && <MapMoments month={momentsPeriod.month} moments={periodMoments} year={momentsPeriod.year} />}
       </div>
     </aside>
 
-    <aside class:list={['trip-map-drawer max-[48rem]:h-[min(78dvh,42rem)]', sideClass]} data-trip-map-drawer role="dialog" aria-labelledby="trip-map-drawer-title" hidden>
+    <aside class="trip-map-side trip-map-drawer" data-trip-map-drawer role="dialog" aria-labelledby="trip-map-drawer-title" hidden>
       <!-- Laid out like the trip card's header: a grey line of totals over the name. -->
-      <header class={sideHeaderClass}>
-        <div class="min-w-0">
-          <p class="truncate text-xs text-tx-3 tabular-nums" data-trip-map-drawer-eyebrow />
-          <h1 class="truncate text-lg font-medium" id="trip-map-drawer-title" data-trip-map-drawer-title />
+      <header class="trip-map-side__header">
+        <div>
+          <p data-trip-map-drawer-eyebrow />
+          <h1 id="trip-map-drawer-title" data-trip-map-drawer-title />
         </div>
-        <button class={sideCloseClass} type="button" data-trip-map-drawer-close aria-label="关闭地点详情">
+        <button class="trip-map-side__close" type="button" data-trip-map-drawer-close aria-label="关闭地点详情">
           <span class="i-lucide-x" aria-hidden="true" />
         </button>
       </header>
-      <div class="trip-map-drawer__content min-w-0 overflow-y-auto overscroll-contain px-5 pb-4" data-trip-map-drawer-content />
+      <div class="trip-map-side__content trip-map-drawer__content" data-trip-map-drawer-content />
     </aside>
 
     <!-- A trip opened from its row or its route: its Moments, and the button that plays it. -->
-    <aside class:list={['trip-map-trip-details max-[48rem]:h-[min(60dvh,36rem)]', sideClass]} data-trip-map-trip-details aria-labelledby="trip-map-trip-details-title" hidden={!pickedTrip}>
-      <header class={sideHeaderClass}>
-        <div class="min-w-0">
-          <p class="truncate text-xs text-tx-3 tabular-nums" data-trip-map-trip-details-eyebrow>{pickedTrip && formatDateRange(pickedTrip.start, pickedTrip.end, 'zh-CN')}</p>
-          <h1 class="truncate text-lg font-medium" id="trip-map-trip-details-title" data-trip-map-trip-details-title>{pickedTrip?.title}</h1>
+    <aside class="trip-map-side trip-map-trip-details" data-trip-map-trip-details aria-labelledby="trip-map-trip-details-title" hidden={!pickedTrip}>
+      <header class="trip-map-side__header">
+        <div>
+          <p data-trip-map-trip-details-eyebrow>{pickedTrip && formatDateRange(pickedTrip.start, pickedTrip.end, 'zh-CN')}</p>
+          <h1 id="trip-map-trip-details-title" data-trip-map-trip-details-title>{pickedTrip?.title}</h1>
         </div>
-        <button class={sideCloseClass} type="button" data-trip-map-trip-details-close aria-label="关闭旅程">
+        <button class="trip-map-side__close" type="button" data-trip-map-trip-details-close aria-label="关闭旅程">
           <span class="i-lucide-x" aria-hidden="true" />
         </button>
       </header>
-      <div class="min-w-0 overflow-y-auto overscroll-contain px-5 pb-4" data-trip-map-trip-details-content data-trip-map-trip-details-trip={pickedTrip?.id}>
+      <div class="trip-map-side__content" data-trip-map-trip-details-content data-trip-map-trip-details-trip={pickedTrip?.id}>
         {pickedTrip && <TripDetails moments={moments} trip={pickedTrip} />}
       </div>
     </aside>
@@ -268,29 +262,29 @@ const description = pageTrip
       // Every trip beside the map by year, a card with its photos as the app has them:
       // resting on one a while lifts its route, and clicking it opens its sidebar.
       trips.length > 0 && (
-        <aside class:list={['trip-map-trip-list max-[48rem]:h-[min(60dvh,36rem)]', sideClass]} id="trip-map-trip-list" data-trip-map-trip-list aria-labelledby="trip-map-trip-list-title" hidden={!tripList}>
-          <header class={sideHeaderClass}>
-            <div class="min-w-0">
-              <p class="truncate text-xs text-tx-3 tabular-nums">{tripTotals}</p>
-              <h1 class="truncate text-lg font-medium" id="trip-map-trip-list-title">旅程</h1>
+        <aside class="trip-map-side trip-map-trip-list" id="trip-map-trip-list" data-trip-map-trip-list aria-labelledby="trip-map-trip-list-title" hidden={!tripList}>
+          <header class="trip-map-side__header">
+            <div>
+              <p>{tripTotals}</p>
+              <h1 id="trip-map-trip-list-title">旅程</h1>
             </div>
-            <button class={sideCloseClass} type="button" data-trip-map-trip-list-close aria-label="关闭旅程列表">
+            <button class="trip-map-side__close" type="button" data-trip-map-trip-list-close aria-label="关闭旅程列表">
               <span class="i-lucide-x" aria-hidden="true" />
             </button>
           </header>
-          <div class="min-w-0 overflow-y-auto overscroll-contain px-2 pb-2">
+          <div class="trip-map-side__content trip-map-trip-list__content">
             {tripsByYear.map(([year, yearTrips]) => (
               <section aria-labelledby={`trip-map-trip-list-${year}`} data-trip-map-trip-year={year} hidden={!yearTrips.some(isInPeriod)}>
-                <h2 class="sticky top-0 z-[1] bg-bg px-3 pt-3 pb-1 font-mono text-xs text-tx-3 tabular-nums" id={`trip-map-trip-list-${year}`}>{year}</h2>
-                <ul class="list-none">
+                <h2 class="trip-map-trip-list__year" id={`trip-map-trip-list-${year}`}>{year}</h2>
+                <ul>
                   {yearTrips.map(trip => (
-                    <li class="relative" hidden={!isInPeriod(trip)}>
-                      <a class="flex flex-col rounded-xl p-2 text-tx no-underline transition-colors duration-140 hover:bg-inline focus-visible:bg-inline focus-visible:outline-none data-trip-map-lifted:bg-inline" href={`/trip/${trip.id}/`} data-trip-map-trip-link={trip.id}>
-                        <TripCoverCollage class="rounded-lg" images={getTripCollage(trip, moments)} sizes="(max-width: 48rem) 100vw, 26rem" />
-                        <span class="flex min-w-0 flex-col gap-0.5 px-1 pt-2">
-                          <span class="truncate font-medium">{trip.title}</span>
-                          <span class="truncate text-sm text-tx-2 tabular-nums">{formatDateRange(trip.start, trip.end, 'zh-CN')}</span>
-                          <span class="truncate text-sm text-tx-3 tabular-nums">
+                    <li hidden={!isInPeriod(trip)}>
+                      <a class="trip-map-trip-list__trip" href={`/trip/${trip.id}/`} data-trip-map-trip-link={trip.id}>
+                        <TripCoverCollage images={getTripCollage(trip, moments)} sizes="(max-width: 48rem) 100vw, 26rem" />
+                        <span class="trip-map-trip-list__text">
+                          <span class="trip-map-trip-list__title">{trip.title}</span>
+                          <span class="trip-map-trip-list__dates">{formatDateRange(trip.start, trip.end, 'zh-CN')}</span>
+                          <span class="trip-map-trip-list__totals">
                             {trip.dayCount} 天 · {trip.placeCount} 个地点{trip.drivingKm > 0 && ` · 自驾 ${trip.drivingKm.toLocaleString('zh-CN')} 公里`}
                           </span>
                         </span>
@@ -305,15 +299,15 @@ const description = pageTrip
       )
     }
 
-    <dialog class="trip-map-lightbox m-0 h-dvh max-h-none w-screen max-w-none border-0 bg-black/88 p-16 backdrop:bg-transparent max-[48rem]:px-4 max-[48rem]:py-12" data-trip-map-lightbox aria-label="图片查看器">
-      <button type="button" class="fixed right-4 top-4 z-[1] flex size-11 cursor-pointer items-center justify-center border-0 bg-transparent text-white" data-trip-map-lightbox-close aria-label="关闭图片">
+    <dialog class="trip-map-lightbox" data-trip-map-lightbox aria-label="图片查看器">
+      <button type="button" class="trip-map-lightbox__close" data-trip-map-lightbox-close aria-label="关闭图片">
         <span class="i-lucide-x" aria-hidden="true" />
       </button>
-      <button type="button" class="fixed left-2 top-1/2 z-[1] flex size-11 -translate-y-1/2 cursor-pointer items-center justify-center border-0 bg-transparent text-white max-[48rem]:bottom-4 max-[48rem]:top-auto max-[48rem]:translate-y-0" data-trip-map-lightbox-previous aria-label="上一张图片">
+      <button type="button" class="trip-map-lightbox__previous" data-trip-map-lightbox-previous aria-label="上一张图片">
         <span class="i-lucide-chevron-left" aria-hidden="true" />
       </button>
-      <MomentLightboxMedia imageClass="mx-auto max-h-[calc(100dvh-8rem)] max-w-full object-contain" />
-      <button type="button" class="fixed right-2 top-1/2 z-[1] flex size-11 -translate-y-1/2 cursor-pointer items-center justify-center border-0 bg-transparent text-white max-[48rem]:bottom-4 max-[48rem]:top-auto max-[48rem]:translate-y-0" data-trip-map-lightbox-next aria-label="下一张图片">
+      <MomentLightboxMedia />
+      <button type="button" class="trip-map-lightbox__next" data-trip-map-lightbox-next aria-label="下一张图片">
         <span class="i-lucide-chevron-right" aria-hidden="true" />
       </button>
     </dialog>
@@ -441,3 +435,654 @@ const description = pageTrip
     map = undefined
   })
 </script>
+
+<style>
+  /* The page's own parts around the map; what the map client and the player put on the
+     page is the package's to style (@hyoban/trip-map/styles.css), which also moves some
+     of these aside while a sidebar is open or a trip plays. */
+  .trip-map-page {
+    position: relative;
+    isolation: isolate;
+    width: 100%;
+    height: 100dvh;
+    overflow: hidden;
+    background: var(--color-bg);
+    container-type: inline-size;
+  }
+
+  /* The back link, the trips by keyboard, and the map's buttons, across the top. */
+  .trip-map-toolbar {
+    position: absolute;
+    inset-inline: 1rem;
+    top: 1rem;
+    z-index: 5;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 1rem;
+    pointer-events: none;
+
+    & > :global(*) {
+      pointer-events: auto;
+    }
+
+    & .calendar-back-link {
+      justify-self: start;
+    }
+
+    /* On a narrow screen, or beside a sidebar on a middling one, the back link is just
+       the avatar. */
+    @media (width < 48rem) {
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: 0.5rem;
+
+      & .calendar-back-link {
+        padding-right: 0.375rem;
+      }
+    }
+  }
+
+  @media (width < 48rem) {
+    .trip-map-toolbar :global(.calendar-back-link > span) {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      margin: -1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+  }
+
+  @media (width >= 48.0625rem) and (width < 56rem) {
+    .trip-map-page:has(:is(.trip-map-drawer, .trip-map-trip-list, .trip-map-moments, .trip-map-trip-details):not([hidden]))
+      .trip-map-toolbar
+      :global(.calendar-back-link > span) {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      margin: -1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+  }
+
+  /* Kept for screen readers until one of its links has focus. */
+  .trip-map-toolbar__trips {
+    justify-self: center;
+    min-width: 0;
+
+    &:not(:focus-within) {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      margin: -1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+
+    & ul {
+      display: flex;
+      gap: 0.125rem;
+      max-width: 100%;
+      overflow-x: auto;
+      padding: 0.25rem;
+      border: 1px solid var(--color-glass-border);
+      border-radius: 9999px;
+      background: color-mix(in srgb, var(--color-bg) 88%, transparent);
+      box-shadow: 0 0.5rem 2rem rgb(0 0 0 / 0.08);
+      -webkit-backdrop-filter: blur(1rem);
+      backdrop-filter: blur(1rem);
+      scrollbar-width: none;
+    }
+
+    & li {
+      flex-shrink: 0;
+    }
+
+    & a {
+      display: block;
+      padding: 0.375rem 0.75rem;
+      border-radius: 9999px;
+      color: var(--color-tx-2);
+      font-size: 0.875rem;
+      line-height: 1.25rem;
+      white-space: nowrap;
+      text-decoration: none;
+
+      &:focus-visible {
+        background: var(--color-inline);
+        color: var(--color-tx);
+      }
+
+      @media (hover: hover) {
+        &:hover {
+          background: var(--color-inline);
+          color: var(--color-tx);
+        }
+      }
+    }
+  }
+
+  .trip-map-toolbar__actions {
+    display: flex;
+    grid-column-start: 3;
+    align-items: center;
+    justify-self: end;
+    gap: 0.5rem;
+  }
+
+  /* A round button on the glass, like the back link. */
+  .trip-map-tool {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 1px solid var(--color-glass-border);
+    border-radius: 9999px;
+    background: var(--color-glass);
+    -webkit-backdrop-filter: blur(1rem);
+    backdrop-filter: blur(1rem);
+    color: var(--color-tx-2);
+    cursor: pointer;
+
+    @media (hover: hover) {
+      &:hover {
+        color: var(--color-tx);
+      }
+    }
+
+    &[aria-pressed='true'] {
+      border-color: var(--color-tx);
+      background: var(--color-tx);
+      color: var(--color-bg);
+    }
+
+    &:disabled {
+      cursor: default;
+      opacity: 0.4;
+    }
+
+    &[aria-busy='true'] {
+      cursor: progress;
+    }
+
+    & span {
+      font-size: 0.9375rem;
+    }
+  }
+
+  /* The years the places are colored by, along the foot of the map. */
+  .trip-map-legend {
+    position: absolute;
+    bottom: 2.5rem;
+    left: 50%;
+    z-index: 4;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: max-content;
+    padding: 0.625rem 0.875rem;
+    border: 1px solid var(--color-glass-border);
+    border-radius: 9999px;
+    background: var(--color-glass);
+    box-shadow: 0 0.5rem 2rem rgb(0 0 0 / 0.08);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1rem;
+    translate: -50% 0;
+
+    @media (width < 48rem) {
+      bottom: calc(1rem + env(safe-area-inset-bottom));
+    }
+
+    & > li {
+      display: flex;
+      align-items: center;
+    }
+  }
+
+  .trip-map-legend__year {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    cursor: pointer;
+
+    @media (hover: hover) {
+      &:hover {
+        color: var(--color-tx-2);
+      }
+    }
+  }
+
+  .trip-map-legend__clear {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 9999px;
+    color: var(--color-tx-2);
+    cursor: pointer;
+
+    @media (hover: hover) {
+      &:hover {
+        color: var(--color-tx);
+      }
+    }
+
+    & span {
+      font-size: 0.75rem;
+    }
+  }
+
+  .trip-map-legend__fog-area {
+    padding-left: 0.75rem;
+    border-left: 1px solid var(--color-border);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .trip-map-legend__trips {
+    padding-left: 0.75rem;
+    border-left: 1px solid var(--color-border);
+
+    & a {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      color: inherit;
+      white-space: nowrap;
+      text-decoration: none;
+
+      @media (hover: hover) {
+        &:hover {
+          color: var(--color-tx-2);
+        }
+      }
+    }
+
+    /* A short grey line, like the routes on the map. */
+    & span {
+      display: block;
+      width: 0.875rem;
+      height: 0.125rem;
+      border-radius: 9999px;
+      background: var(--color-tx);
+      opacity: 0.5;
+    }
+  }
+
+  /* A place's or a year's dot, in the year's color. */
+  .trip-map-year-dot {
+    display: block;
+    width: 0.625rem;
+    height: 0.625rem;
+    border: 1px solid rgb(255 255 255 / 0.9);
+    border-radius: 9999px;
+    background: var(--year-color);
+    box-shadow: 0 0 0 1px rgb(0 0 0 / 0.12);
+  }
+
+  .trip-map-loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 3;
+    padding: 0.625rem 0.875rem;
+    border: 1px solid var(--color-border);
+    border-radius: 9999px;
+    background: color-mix(in srgb, var(--color-bg) 88%, transparent);
+    translate: -50% -50%;
+  }
+
+  /* The places as a list, when the map can't load. */
+  .trip-map-fallback {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 6;
+    width: min(28rem, calc(100vw - 2rem));
+    max-height: min(36rem, calc(100dvh - 8rem));
+    overflow-y: auto;
+    padding: 1.25rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+    background: color-mix(in srgb, var(--color-bg) 94%, transparent);
+    box-shadow: 0 1rem 4rem rgb(0 0 0 / 0.12);
+    translate: -50% -50%;
+  }
+
+  .trip-map-fallback__message {
+    margin-bottom: 1rem;
+    color: var(--color-tx-2);
+    line-height: 1.6;
+  }
+
+  .trip-map-fallback__retry {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    min-height: 2.25rem;
+    margin: -0.5rem 0 1rem;
+    padding-inline: 0.875rem;
+    border: 1px solid var(--color-border);
+    border-radius: 9999px;
+    color: var(--color-tx);
+    font-size: 0.8125rem;
+    cursor: pointer;
+
+    @media (hover: hover) {
+      &:hover {
+        background: var(--color-inline);
+      }
+    }
+  }
+
+  .trip-map-fallback__places {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.25rem;
+
+    & button {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 0.5rem;
+      min-height: 2.75rem;
+      padding-inline: 0.5rem;
+      border-radius: 0.375rem;
+      color: var(--color-tx);
+      text-align: left;
+      cursor: pointer;
+
+      &:focus-visible {
+        background: var(--color-inline);
+      }
+
+      @media (hover: hover) {
+        &:hover {
+          background: var(--color-inline);
+        }
+      }
+    }
+
+    & strong {
+      overflow: hidden;
+      font-weight: 500;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    & small {
+      color: var(--color-tx-3);
+    }
+  }
+
+  /* A trip's card in the bottom left, or across the foot of a narrow map. */
+  .trip-map-panel {
+    position: absolute;
+    bottom: 1rem;
+    left: 1rem;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    width: min(22rem, calc(100% - 2rem));
+    max-height: calc(100% - 7rem);
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+    background: var(--color-bg);
+    box-shadow: 0 1.5rem 5rem rgb(0 0 0 / 0.16);
+
+    @container (width < 48rem) {
+      inset-inline: 0.75rem;
+      bottom: calc(0.75rem + env(safe-area-inset-bottom));
+      width: auto;
+      max-height: calc(100% - 1.5rem);
+    }
+  }
+
+  /* The box the place drawer and the lists share, the map's right side from top to
+     bottom (the toolbar's buttons step aside for it, see styles.css), or a phone's bottom:
+     most of the screen for a place, and less for the lists, so their routes show above. */
+  .trip-map-side {
+    position: absolute;
+    inset-block: 1rem;
+    right: 1rem;
+    z-index: 10;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    width: min(28rem, calc(100vw - 2rem));
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+    background: var(--color-bg);
+    box-shadow: 0 1.5rem 5rem rgb(0 0 0 / 0.16);
+
+    @media (width < 48rem) {
+      inset-inline: 0.75rem;
+      top: auto;
+      bottom: calc(0.75rem + env(safe-area-inset-bottom));
+      width: auto;
+      height: min(60dvh, 36rem);
+    }
+  }
+
+  .trip-map-drawer {
+    @media (width < 48rem) {
+      height: min(78dvh, 42rem);
+    }
+  }
+
+  /* A grey line of totals over the name, like the trip card's. */
+  .trip-map-side__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.75rem 0.5rem 0.75rem 1.25rem;
+    border-bottom: 1px solid var(--color-border);
+
+    & div {
+      min-width: 0;
+    }
+
+    & :is(p, h1) {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    & p {
+      color: var(--color-tx-3);
+      font-size: 0.75rem;
+      line-height: 1rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    & h1 {
+      font-size: 1.125rem;
+      font-weight: 500;
+      line-height: 1.75rem;
+    }
+  }
+
+  .trip-map-side__close {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 9999px;
+    color: var(--color-tx-2);
+    cursor: pointer;
+
+    &:focus-visible {
+      outline: none;
+      background: var(--color-inline);
+      color: var(--color-tx);
+    }
+
+    @media (hover: hover) {
+      &:hover {
+        background: var(--color-inline);
+        color: var(--color-tx);
+      }
+    }
+  }
+
+  .trip-map-side__content {
+    min-width: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 0 1.25rem 1rem;
+  }
+
+  .trip-map-trip-list__content {
+    padding: 0 0.5rem 0.5rem;
+  }
+
+  .trip-map-trip-list__year {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    padding: 0.75rem 0.75rem 0.25rem;
+    background: var(--color-bg);
+    color: var(--color-tx-3);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .trip-map-trip-list__content li {
+    position: relative;
+  }
+
+  /* A trip's card, lit while the pointer is on it or its route is lifted on the map. */
+  .trip-map-trip-list__trip {
+    display: flex;
+    flex-direction: column;
+    padding: 0.5rem;
+    border-radius: 0.75rem;
+    color: var(--color-tx);
+    text-decoration: none;
+    transition: background-color 140ms var(--ease);
+
+    &:focus-visible {
+      outline: none;
+    }
+
+    &:focus-visible,
+    &[data-trip-map-lifted] {
+      background: var(--color-inline);
+    }
+
+    @media (hover: hover) {
+      &:hover {
+        background: var(--color-inline);
+      }
+    }
+  }
+
+  .trip-map-trip-list__text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    min-width: 0;
+    padding: 0.5rem 0.25rem 0;
+
+    & > span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  .trip-map-trip-list__title {
+    font-weight: 500;
+  }
+
+  .trip-map-trip-list__dates {
+    color: var(--color-tx-2);
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .trip-map-trip-list__totals {
+    color: var(--color-tx-3);
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .trip-map-lightbox {
+    width: 100vw;
+    max-width: none;
+    height: 100dvh;
+    max-height: none;
+    margin: 0;
+    padding: 4rem;
+    background: rgb(0 0 0 / 0.88);
+
+    &::backdrop {
+      background: transparent;
+    }
+
+    @media (width < 48rem) {
+      padding: 3rem 1rem;
+    }
+
+    & [data-lightbox-image] {
+      max-width: 100%;
+      max-height: calc(100dvh - 8rem);
+      margin-inline: auto;
+      object-fit: contain;
+    }
+  }
+
+  :is(.trip-map-lightbox__close, .trip-map-lightbox__previous, .trip-map-lightbox__next) {
+    position: fixed;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    color: white;
+    cursor: pointer;
+  }
+
+  .trip-map-lightbox__close {
+    top: 1rem;
+    right: 1rem;
+  }
+
+  /* Halfway down the sides, or along the foot on a phone. */
+  :is(.trip-map-lightbox__previous, .trip-map-lightbox__next) {
+    top: 50%;
+    translate: 0 -50%;
+
+    @media (width < 48rem) {
+      top: auto;
+      bottom: 1rem;
+      translate: none;
+    }
+  }
+
+  .trip-map-lightbox__previous {
+    left: 0.5rem;
+  }
+
+  .trip-map-lightbox__next {
+    right: 0.5rem;
+  }
+</style>

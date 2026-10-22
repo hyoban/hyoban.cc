@@ -10,14 +10,14 @@ interface Props {
 const { description, title } = Astro.props
 ---
 
-<div class="sm:pt-16">
+<div class="site-page">
   <SiteHeader />
-  <main class="mx-auto mt-14 max-w-[40rem] leading-7">
+  <main class="site-page__main">
     {
       title && (
-        <header class="mb-8">
-          <h1 class="font-medium">{title}</h1>
-          {description && <p class="text-tx-2">{description}</p>}
+        <header class="site-page__header">
+          <h1 class="site-page__title">{title}</h1>
+          {description && <p class="site-page__description">{description}</p>}
         </header>
       )
     }
@@ -25,3 +25,29 @@ const { description, title } = Astro.props
   </main>
   <SiteFooter />
 </div>
+
+<style>
+  @media (width >= 40rem) {
+    .site-page {
+      padding-top: 4rem;
+    }
+  }
+
+  .site-page__main {
+    max-width: 40rem;
+    margin: 3.5rem auto 0;
+    line-height: 1.75rem;
+  }
+
+  .site-page__header {
+    margin-bottom: 2rem;
+  }
+
+  .site-page__title {
+    font-weight: 500;
+  }
+
+  .site-page__description {
+    color: var(--color-tx-2);
+  }
+</style>

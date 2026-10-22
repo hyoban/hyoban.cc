@@ -1,12 +1,12 @@
 # Design
 
-hyoban.cc is a quiet, text-first personal site built with Astro and Tailwind v4. The design principle is "one size, one column, almost no decoration."
+hyoban.cc is a quiet, text-first personal site built with Astro and plain CSS: each component styles itself in a scoped `<style>`, over a small reset and the shared tokens in [index.css](src/styles/index.css). The design principle is "one size, one column, almost no decoration."
 
 ## Layout
 
-- **One column for everything.** Home, posts, `/media` and `/use` all sit in a centered `max-w-[40rem]` column with `leading-7`. The shared wrapper is [SitePage.astro](src/components/SitePage.astro).
+- **One column for everything.** Home, posts, `/media` and `/use` all sit in a centered `40rem` column with a `1.75rem` line height. The shared wrapper is [SitePage.astro](src/components/SitePage.astro).
 - **Identity header instead of a nav bar.** [SiteHeader.astro](src/components/SiteHeader.astro) shows just the avatar, name and bio, and links back home. There's no menu. Other sections are linked from sentences in the home intro.
-- **Posts are stripped back.** A post shows only the title, the date and the prose. On screens 64rem and wider, the "返回" (back) link moves out into the left margin (`right-full mr-16`), so the reading column stays clean ([[...slug].astro](src/pages/[...slug].astro)).
+- **Posts are stripped back.** A post shows only the title, the date and the prose. On screens 64rem and wider, the "返回" (back) link moves out into the left margin, `4rem` from the text, so the reading column stays clean ([[...slug].astro](src/pages/[...slug].astro)).
 - **Posts are grouped by year.** On the home page, each year label sits in a narrow `3.5rem` column that stays pinned while you scroll its posts. Each row is title plus date, with a soft background on hover instead of an underline.
 - **The calendar and map are the exception.** They use the full width: a rounded grid with photo thumbnails, a side drawer, and a pill-shaped home button ([CalendarBackLink.astro](src/components/CalendarBackLink.astro)). Switching between calendar and map uses view transitions. A month can also be read as a list ([CalendarAgenda.astro](src/components/CalendarAgenda.astro)): newest day first along a thin line with a dot per day, the date pinned in a narrow rail on its left (above the Moments on a phone). Phones always show the list; on a desktop a small grid/list switch beside the mode switch picks one and remembers it, and a day's drawer always opens over the grid. On the map, every trip from [data/trips](data/trips) is drawn as a thin route; clicking one replays it stop by stop: the other routes and the markers fade, the route draws in `tx`, and a card in the drawer's style slides in for each stop.
 
@@ -18,13 +18,13 @@ hyoban.cc is a quiet, text-first personal site built with Astro and Tailwind v4.
 
 ## Color
 
-- **A small set of neutral colors.** Tailwind's default palette is removed (`--color-*: initial`). What's left is four surface colors (`bg`, `border`, `inline`, `hover`) and three text levels (`tx`, `tx-2`, `tx-3`), all warm off-white/off-black grays ([index.css](src/styles/index.css)).
+- **A small set of neutral colors.** The palette is four surface colors (`bg`, `border`, `inline`, `hover`) and three text levels (`tx`, `tx-2`, `tx-3`), all warm off-white/off-black grays ([index.css](src/styles/index.css)).
 - **No accent color.** Links are told apart by a thin `tx-3` underline that turns full-strength on hover. The active filter on `/media` is marked by text color alone.
 - **Dark mode follows the system.** It uses `prefers-color-scheme`, with no toggle, and the code highlighting (Shiki's Vitesse light/dark themes) follows the same setting.
 
 ## Details
 
-- **Small icons inline with text.** Lucide and Simple Icons (via `tailwindcss-icons`) sit before link text at `0.85em`, rather than as separate buttons.
+- **Small icons inline with text.** Lucide and Simple Icons, as CSS masks in [icons.css](src/styles/icons.css), sit before link text at `0.85em`, rather than as separate buttons.
 - **Light framing on code, tables and images.** They get a 1px border, a `0.625rem` radius and the `inline` background color. A horizontal rule is drawn as `· · ·`.
 - **Small, quick motion.** Page changes fade over 200ms, colors change over 140ms, and thumbnails scale up 2.5% on hover. All of it, including view transitions, respects reduced-motion.
 - **Chinese-first.** Copy, ARIA labels and date formats are written for Chinese readers.

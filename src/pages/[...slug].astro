@@ -36,17 +36,14 @@ const { Content } = await render(entry)
   {
     post
       ? (
-          <main class="relative mx-auto mt-6 max-w-[40rem] leading-7">
-            <a
-              href="/"
-              class="mb-8 inline-flex items-center gap-1.5 whitespace-nowrap text-tx-2 no-underline transition-colors hover:text-tx min-[64rem]:absolute min-[64rem]:top-0 min-[64rem]:right-full min-[64rem]:mr-16 min-[64rem]:mb-0"
-            >
-              <span class="i-lucide-undo-2 size-3.5" aria-hidden="true" />
+          <main class="post">
+            <a href="/" class="post__back">
+              <span class="i-lucide-undo-2" aria-hidden="true" />
               返回
             </a>
-            <header class="mb-8">
-              <h1 class="font-medium">{entry.data.title}</h1>
-              <p class="text-tx-2">
+            <header class="post__header">
+              <h1>{entry.data.title}</h1>
+              <p>
                 <time datetime={post.data.pubDate.toISOString()}>{formatPostFullDate(post.data.pubDate)}</time>
                 <span aria-hidden="true"> · </span>
                 <span>{formatPostWordCount(wordCount)}</span>
@@ -66,3 +63,54 @@ const { Content } = await render(entry)
         )
   }
 </Layout>
+
+<style>
+  .post {
+    position: relative;
+    max-width: 40rem;
+    margin: 1.5rem auto 0;
+    line-height: 1.75rem;
+  }
+
+  /* Above the title, or out in the margin on its left once the window is wide enough. */
+  .post__back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    margin-bottom: 2rem;
+    color: var(--color-tx-2);
+    white-space: nowrap;
+    text-decoration: none;
+    transition: color 150ms var(--ease);
+
+    @media (hover: hover) {
+      &:hover {
+        color: var(--color-tx);
+      }
+    }
+
+    @media (width >= 64rem) {
+      position: absolute;
+      top: 0;
+      right: 100%;
+      margin: 0 4rem 0 0;
+    }
+
+    & span {
+      width: 0.875rem;
+      height: 0.875rem;
+    }
+  }
+
+  .post__header {
+    margin-bottom: 2rem;
+
+    & h1 {
+      font-weight: 500;
+    }
+
+    & p {
+      color: var(--color-tx-2);
+    }
+  }
+</style>

@@ -2,28 +2,58 @@
 import { getChinaCalendarDayDescription, type ChinaCalendarDay } from '@/china-calendar'
 
 interface Props {
-  class?: string
   compact?: boolean
   day: ChinaCalendarDay
+  /** On a day's photo, a dark tag so it reads over it. */
+  overMedia?: boolean
 }
 
-const { class: className, compact = false, day } = Astro.props
+const { compact = false, day, overMedia = false } = Astro.props
 const label = day.kind === 'day-off' ? day.name : `${day.name}调休`
 const description = getChinaCalendarDayDescription(day)
 ---
 
 <span
   class:list={[
-    'calendar-day-status flex-none items-center whitespace-nowrap font-mono',
+    'calendar-day-status',
     `calendar-day-status--${day.kind}`,
-    compact
-      ? 'calendar-day-status--compact block max-w-full overflow-hidden text-ellipsis box-border text-[0.625rem] leading-[1.25]'
-      : 'inline-flex text-[0.6875rem]',
-    day.kind === 'day-off' ? 'text-tx' : 'text-tx-2',
-    className,
+    { 'calendar-day-status--compact': compact, 'calendar-day-status--over-media': overMedia },
   ]}
   aria-label={description}
   title={description}
 >
   {label}
 </span>
+
+<style>
+  .calendar-day-status {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    color: var(--color-tx-2);
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    white-space: nowrap;
+  }
+
+  .calendar-day-status--day-off {
+    color: var(--color-tx);
+  }
+
+  .calendar-day-status--compact {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    font-size: 0.625rem;
+    line-height: 1.25;
+    text-overflow: ellipsis;
+  }
+
+  .calendar-day-status--over-media {
+    padding: 0.125rem 0.25rem;
+    border-radius: 0.1875rem;
+    background: rgb(17 17 16 / 0.58);
+    color: white;
+    text-shadow: none;
+  }
+</style>
