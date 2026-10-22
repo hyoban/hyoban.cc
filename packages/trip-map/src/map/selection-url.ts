@@ -1,8 +1,11 @@
+import type { Period } from './period.ts'
+
 // What the map page's address means: the place a hash names, the trip a path opens,
-// the path that opens the list of trips, the path that picks a year, and the URLs of what the client fetches. A site with other paths passes its own.
+// the path that opens the list of trips, the one that narrows the map to a year or a
+// month, and the URLs of what the client fetches. A site with other paths passes its own.
 
 const TRIP_PATH_PATTERN = /^\/trip\/([^/]+)\/?$/
-const YEAR_PATH_PATTERN = /^\/map\/(\d{4})\/?$/
+const PERIOD_PATH_PATTERN = /^\/map\/(\d{4})\/(?:(\d{2})\/?)?$/
 
 /** The key in `history.state` that marks an entry the map pushed for a selection. */
 export const HISTORY_STATE_KEY = 'tripMapSelection'
@@ -35,13 +38,24 @@ export const defaultUrls = {
       return undefined
     }
   },
-  /** The year a pathname picks in the legend, if any. */
-  getYear: (pathname: string) => {
-    const match = pathname.match(YEAR_PATH_PATTERN)
-    return match ? Number(match[1]) : undefined
+  /** A year's Moments for the list beside the map, an HTML fragment. */
+  getMomentsUrl: (year: number) => `/map/${year}/moments/`,
+  /** The year, or the month of one, a pathname narrows the map to, if any. */
+  getPeriod: (pathname: string): Period | undefined => {
+    const match = pathname.match(PERIOD_PATH_PATTERN)
+    const month = match?.[2] === undefined ? undefined : Number(match[2])
+
+    if (!match || (month !== undefined && (month < 1 || month > 12))) {
+      return undefined
+    }
+
+    return { month, year: Number(match[1]) }
   },
-  /** The map with only a year's places and trips on it. */
-  getYearPath: (year: number) => `/map/${year}/`,
+  /** The map narrowed to a year, or a month of one, with its Moments beside it. */
+  getPeriodPath: (period: Period) =>
+    period.month === undefined
+      ? `/map/${period.year}/`
+      : `/map/${period.year}/${String(period.month).padStart(2, '0')}/`,
   /** A trip's page. */
   getTripPath: (id: string) => `/trip/${encodeURIComponent(id)}/`,
   /** The map's own page, which closing a trip goes back to. */

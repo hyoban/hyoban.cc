@@ -1,5 +1,6 @@
 import mapboxgl, { type Map as MapboxMap } from 'mapbox-gl'
 import { formatDateRange } from '../format.ts'
+import { overlapsPeriod, type Period } from '../map/period.ts'
 import type { Messages } from '../messages.ts'
 import { createPopupContent, MAP_POPUP_CLASS } from './dom.ts'
 import type { TripSummary } from './types.ts'
@@ -73,8 +74,8 @@ export function createTripOverview({
   // The trip picked, lifted while nothing else is pointed at, and where it was clicked.
   let pickedId: string | undefined
   let pickedAt: mapboxgl.LngLatLike | undefined
-  // The year the legend picked: only the trips started then are on the map.
-  let year: number | undefined
+  // The year or month picked: only the trips under way then are on the map.
+  let period: Period | undefined
   // The popup's trip and whether it says to click again, to fill it only on a change.
   let popupKey: string | undefined
   let watched: MapboxMap | undefined
@@ -107,7 +108,7 @@ export function createTripOverview({
 
   function isShown(id: string) {
     const trip = tripsById.get(id)
-    return year === undefined || (trip !== undefined && getTripYear(trip) === year)
+    return trip !== undefined && (!period || overlapsPeriod(trip.start, trip.end, period))
   }
 
   function getLook(id: string): Look {
@@ -506,9 +507,9 @@ export function createTripOverview({
       return pickedId
     },
     reveal,
-    /** Leaves only the routes of the trips started in `year` on the map, or every one. */
-    setYear(next: number | undefined) {
-      year = next
+    /** Leaves only the routes of the trips under way in `next` on the map, or every one. */
+    setPeriod(next: Period | undefined) {
+      period = next
 
       if (pickedId && !isShown(pickedId)) {
         pick(undefined)
@@ -520,11 +521,6 @@ export function createTripOverview({
     },
     show,
   }
-}
-
-/** The year a trip started, which the trip list groups it by. */
-function getTripYear(trip: TripSummary) {
-  return Number.parseInt(trip.start.slice(0, 4), 10)
 }
 
 /**

@@ -69,7 +69,8 @@ const modeLinkClass = 'relative z-[1] inline-flex min-h-8 min-w-[4.5rem] items-c
   ]
 
   function getCalendarMode(url: URL): CalendarMode | undefined {
-    if (url.pathname === '/map' || url.pathname === '/map/') {
+    // The map, narrowed to a year or a month or not.
+    if (url.pathname === '/map' || /^\/map\/(?:\d{4}\/(?:\d{2}\/)?)?$/.test(url.pathname)) {
       return 'map'
     }
 

@@ -216,6 +216,10 @@ export function getPlaceMarkers(
     latitude: group.location.latitude,
     longitude: group.location.longitude,
     name: group.location.name,
+    // Newest first, for narrowing the map to a month.
+    months: [...new Set(group.moments.map((moment) => moment.dateKey.slice(0, 7)))].sort(
+      (first, second) => second.localeCompare(first),
+    ),
     // Newest first, for the drawer's line of totals.
     years: [...new Set(group.moments.map((moment) => getYear(moment.dateKey)))].sort(
       (first, second) => second - first,

@@ -1,10 +1,15 @@
 ---
 import MomentGallery from '@/components/MomentGallery.astro'
 import MomentText from '@/components/MomentText.astro'
-import { getMomentPagePath, type Moment } from '@/moments'
+import { getMomentPagePath, getMomentPath, type Moment } from '@/moments'
 
 interface Props {
   class?: string
+  /**
+   * Leads the line with its day, linking to the day in the calendar: out of the
+   * calendar. `year` says the year too, for Moments of more than one.
+   */
+  date?: 'day' | 'year' | undefined
   moment: Moment
   /** Passed to the gallery when this entry opens the page. */
   priorityMedia?: string | undefined
@@ -13,7 +18,14 @@ interface Props {
   showLocation?: boolean
 }
 
-const { class: className, moment, priorityMedia, shared = false, showLocation = true } = Astro.props
+const { class: className, date, moment, priorityMedia, shared = false, showLocation = true } = Astro.props
+const weekdayFormatter = new Intl.DateTimeFormat('zh-CN', { timeZone: 'UTC', weekday: 'short' })
+
+function formatDay(dateKey: string) {
+  const [year, month, day] = dateKey.split('-').map(part => Number.parseInt(part, 10))
+  const weekday = weekdayFormatter.format(new Date(`${dateKey}T00:00:00Z`))
+  return `${date === 'year' ? `${year} 年 ` : ''}${month} 月 ${day} 日 ${weekday}`
+}
 ---
 
 <article
@@ -25,10 +37,17 @@ const { class: className, moment, priorityMedia, shared = false, showLocation = 
   data-moment-shared={shared ? '' : undefined}
 >
   <header class="mb-2.5 flex items-center gap-2 font-mono text-xs text-tx-2 [&_a]:-my-3 [&_a]:inline-flex [&_a]:min-h-11 [&_a]:min-w-11 [&_a]:items-center [&_a]:justify-center [&_a]:text-tx-3 [&_a]:no-underline">
+    {
+      date && (
+        <a class="moment-entry__date !mx-0 !w-auto !justify-start !text-tx-2 hover:!text-tx" href={getMomentPath(moment.dateKey)}>
+          <time datetime={moment.dateKey}>{formatDay(moment.dateKey)}</time>
+        </a>
+      )
+    }
     {moment.occurredLabel && <time datetime={moment.occurredAt}>{moment.occurredLabel}</time>}
     {
       showLocation && moment.locations.map(location => (
-        <a class="moment-entry__location !mx-0 !w-auto gap-1 px-1 hover:!text-tx" href={`/map/#${location.id}`}>
+        <a class="moment-entry__location !mx-0 !w-auto gap-1 px-1 hover:!text-tx" href={`/map/#${location.id}`} data-trip-map-place-link={location.id}>
           <span class="i-lucide-map-pin text-sm" aria-hidden="true" />
           {location.name}
         </a>

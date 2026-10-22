@@ -3,7 +3,8 @@ import { t, type Messages } from '../messages.ts'
 import type { PlaceMarker } from './place-markers.ts'
 
 // The drawer a place opens with its Moments: an HTML fragment fetched from the site
-// the first time, and a lightbox for its photos when the site provides one.
+// the first time, and a lightbox for its photos (and the Moments list's) when the site
+// provides one.
 
 /** Shows a drawer item's media in the lightbox: a still, or a live photo's clip. */
 export type LightboxMedia = { show: (item: HTMLElement) => void }
@@ -218,12 +219,14 @@ export function createPlaceDrawer({
       }
 
       const item = target.closest<HTMLElement>('[data-lightbox-item]')
+      // The Moments list beside the map shows its photos in the same lightbox.
+      const side = [drawer, elements.moments].find((element) => element?.contains(item))
 
-      if (!item || !drawer.contains(item)) {
+      if (!item || !side) {
         return
       }
 
-      lightboxItems = [...drawer.querySelectorAll<HTMLElement>('[data-lightbox-item]')]
+      lightboxItems = [...side.querySelectorAll<HTMLElement>('[data-lightbox-item]')]
       showLightboxItem(lightboxItems.indexOf(item))
     },
     { signal },

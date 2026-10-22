@@ -2,6 +2,7 @@ import mapboxgl, { type GeoJSONSource } from 'mapbox-gl'
 import { t, type Messages } from '../messages.ts'
 import { createPopupContent, MAP_POPUP_CLASS } from '../player/dom.ts'
 import type { PlaceMarker } from '../player/types.ts'
+import { isInPeriod, type Period } from './period.ts'
 import type { ScreenshotPlace } from './screenshot.ts'
 
 // The places on the map: a dot per place, coloured by the year it was last visited,
@@ -59,7 +60,7 @@ const DOT_SPREAD_ROUNDS = 8
 // Opening a cluster frames its places, no closer than this.
 const CLUSTER_OPEN_MAX_ZOOM = 11
 const CLUSTER_OPEN_PADDING = 80
-// Framing every place, or a year's, the map comes as close as their spread allows, but
+// Framing every place, or a period's, the map comes as close as their spread allows, but
 // no closer than one city's places standing apart, out of their clusters.
 const ALL_PLACES_MAX_ZOOM = CLUSTER_MAX_ZOOM + 1
 // Between the legend and the lowest place framed: a cluster's radius and some.
@@ -95,8 +96,8 @@ export function createPlaceMarkers({
   const yearColors = new Map(places.map((place) => [place.firstYear, place.color]))
   const markers = new Map<string, MarkerEntry>()
   const clusterMarkers = new Map<number, ClusterMarkerEntry>()
-  // The year the legend picked: only the places first recorded then are on the map.
-  let year: number | undefined
+  // The year or month picked: only the places with Moments then are on the map.
+  let period: Period | undefined
   // Focus put back on a marker as the drawer closes shouldn't pop its name up.
   let quietFocus = false
 
@@ -338,14 +339,19 @@ export function createPlaceMarkers({
     }
   }
 
-  /** The places the picked year leaves on the map; every one without a year. */
-  function getShownPlaces() {
-    return year === undefined ? places : places.filter((place) => place.firstYear === year)
+  function isPlaceShown(place: PlaceMarker) {
+    return !period || place.months.some((month) => isInPeriod(month, period!))
   }
 
-  /** Whether the picked year leaves this place on the map. */
+  /** The places the picked period leaves on the map; every one without a period. */
+  function getShownPlaces() {
+    return period ? places.filter(isPlaceShown) : places
+  }
+
+  /** Whether the picked period leaves this place on the map. */
   function isShown(id: string) {
-    return year === undefined || placesById.get(id)?.firstYear === year
+    const place = placesById.get(id)
+    return place !== undefined && isPlaceShown(place)
   }
 
   function getIndexData(): GeoJSON.FeatureCollection {
@@ -711,15 +717,15 @@ export function createPlaceMarkers({
       }
     },
     sync,
-    get year() {
-      return year
+    get period() {
+      return period
     },
     /**
-     * Leaves only the places first recorded in `year` on the map, or every place again;
+     * Leaves only the places with Moments in `next` on the map, or every place again;
      * the next sync, once the source has gathered them afresh, puts them on.
      */
-    setYear(next: number | undefined) {
-      year = next
+    setPeriod(next: Period | undefined) {
+      period = next
 
       const source = getMap()?.getSource(SOURCE_ID) as GeoJSONSource | undefined
 
