@@ -1,6 +1,6 @@
 ---
 import MomentEntry from '@/components/MomentEntry.astro'
-import { getMappedLocationGroups, getMomentPath, getMoments } from '@/moments'
+import { getMappedLocationGroups, getMoments } from '@/moments'
 
 // The drawer content for one map place: an HTML fragment the map fetches when the
 // place opens, so the map page doesn't carry every place's Moments up front.
@@ -14,25 +14,10 @@ export async function getStaticPaths() {
 }
 
 const { group } = Astro.props
-
-function formatDate(dateKey: string) {
-  return new Intl.DateTimeFormat('zh-CN', {
-    day: 'numeric',
-    month: 'long',
-    timeZone: 'UTC',
-    weekday: 'short',
-    year: 'numeric',
-  }).format(new Date(`${dateKey}T00:00:00Z`))
-}
 ---
 
 <div class="trip-map-drawer__moments min-w-0">
   {group.moments.map(moment => (
-    <section class="trip-map-moment min-w-0 [&+&]:border-t [&+&]:border-border">
-      <a class="trip-map-moment__date mt-5 inline-block text-xs text-tx-3 tabular-nums no-underline hover:text-tx-2" href={getMomentPath(moment.dateKey)}>
-        {formatDate(moment.dateKey)}
-      </a>
-      <MomentEntry class="!pt-2.5" moment={moment} showLocation={false} />
-    </section>
+    <MomentEntry date="year" moment={moment} showLocation={false} />
   ))}
 </div>

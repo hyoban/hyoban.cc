@@ -1,0 +1,21 @@
+---
+import MapMoments from '@/components/MapMoments.astro'
+import { getMapYears, getMoments } from '@/moments'
+
+// A year's Moments for the list beside the map: an HTML fragment the map fetches when
+// the year is picked there.
+export const partial = true
+
+export async function getStaticPaths() {
+  const moments = await getMoments()
+
+  return getMapYears(moments).map(year => ({
+    params: { year: String(year) },
+    props: { moments: moments.filter(moment => moment.dateKey.startsWith(`${year}-`)), year },
+  }))
+}
+
+const { moments, year } = Astro.props
+---
+
+<MapMoments moments={moments} year={year} />

@@ -11,6 +11,8 @@ import type { MapStats, PlaceMarker, TripData, TripSummary } from '../player/typ
 import { readTheme } from '../dom-theme.ts'
 import { createFogLayer } from './fog-layer.ts'
 import { createPlaceDrawer, type LightboxMedia } from './place-drawer.ts'
+import { createMomentList } from './moment-list.ts'
+import { isSamePeriod, overlapsPeriod, type Period } from './period.ts'
 import { CLUSTER_MAX_ZOOM, createPlaceMarkers, getAllPlacesView } from './place-markers.ts'
 import { captureMap, savePicture } from './screenshot.ts'
 import { createTripList } from './trip-list.ts'
@@ -51,6 +53,8 @@ export type TripMapOptions = {
     | undefined
   /** The document title while no trip plays; the title at start otherwise. */
   documentTitle?: string | undefined
+  /** The document title while the map is narrowed to a period; without it, `documentTitle`. */
+  getPeriodTitle?: ((period: Period) => string) | undefined
   /** The document title while a trip plays; without it the title is left alone. */
   getDocumentTitle?: ((trip: { id: string; title: string }) => string) | undefined
   /** A place's drawer content, an HTML fragment. Default: `/map/place/<id>/`. */
@@ -61,10 +65,15 @@ export type TripMapOptions = {
   getTripId?: ((pathname: string) => string | undefined) | undefined
   /** A trip's page. Default: `/trip/<id>/`. */
   getTripPath?: ((id: string) => string) | undefined
-  /** The year a pathname picks in the legend, if any. Default: the year in `/map/<year>/`. */
-  getYear?: ((pathname: string) => number | undefined) | undefined
-  /** The map with only a year's places and trips on it. Default: `/map/<year>/`. */
-  getYearPath?: ((year: number) => string) | undefined
+  /** A year's Moments for `[data-trip-map-moments]`, an HTML fragment. Default: `/map/<year>/moments/`. */
+  getMomentsUrl?: ((year: number) => string) | undefined
+  /**
+   * The year, or the month of one, a pathname narrows the map to, if any. Default: from
+   * `/map/<year>/` and `/map/<year>/<month>/`.
+   */
+  getPeriod?: ((pathname: string) => Period | undefined) | undefined
+  /** The map narrowed to a year or a month. Default: `/map/<year>/`, `/map/<year>/<month>/`. */
+  getPeriodPath?: ((period: Period) => string) | undefined
   /**
    * The language the basemap's names are shown in, as @mapbox/mapbox-gl-language takes
    * it (`en`, `ja`, `zh-Hans`…); `false` leaves the basemap as it is. Default: from
@@ -125,8 +134,9 @@ export function createTripMap(options: TripMapOptions): TripMap {
     getTripDataUrl: options.getTripDataUrl ?? defaultUrls.getTripDataUrl,
     getTripId: options.getTripId ?? defaultUrls.getTripId,
     getTripPath: options.getTripPath ?? defaultUrls.getTripPath,
-    getYear: options.getYear ?? defaultUrls.getYear,
-    getYearPath: options.getYearPath ?? defaultUrls.getYearPath,
+    getMomentsUrl: options.getMomentsUrl ?? defaultUrls.getMomentsUrl,
+    getPeriod: options.getPeriod ?? defaultUrls.getPeriod,
+    getPeriodPath: options.getPeriodPath ?? defaultUrls.getPeriodPath,
     mapPath: options.mapPath ?? defaultUrls.mapPath,
     tripListPath: options.tripListPath ?? defaultUrls.tripListPath,
   }
@@ -138,6 +148,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
   const darkMode = window.matchMedia('(prefers-color-scheme: dark)')
   const places = options.places ?? parseJson<PlaceMarker[]>(page, '[data-trip-map-places]', [])
   const trips = options.trips ?? parseJson<TripSummary[]>(page, '[data-trip-map-trips]', [])
+  const tripsById = new Map(trips.map((trip) => [trip.id, trip]))
   const inlineTrip =
     options.trip ?? parseJson<TripData | null>(page, '[data-trip-map-trip]', null) ?? undefined
   const stats =
@@ -302,6 +313,32 @@ export function createTripMap(options: TripMapOptions): TripMap {
       signal,
     })
 
+  const momentList =
+    elements.moments &&
+    elements.momentsContent &&
+    createMomentList({
+      closeButton: elements.momentsClose,
+      content: elements.momentsContent,
+      eyebrow: elements.momentsEyebrow,
+      getMomentsUrl: urls.getMomentsUrl,
+      getPlaceCount: () => markers.getShownPlaces().length,
+      isNarrow,
+      list: elements.moments,
+      messages,
+      onError: (year, cause) =>
+        report({ cause, kind: 'map', message: `The Moments of ${year} couldn't be fetched.` }),
+      onPickMonth: (month) => {
+        if (markers.period) {
+          pickPeriod({ month, year: markers.period.year })
+        }
+      },
+      onPlace: showPlace,
+      onRequestClose: () => pickPeriod(undefined),
+      reducedMotion,
+      signal,
+      title: elements.momentsTitle,
+    })
+
   const fogLayer = createFogLayer({
     areaElement: elements.fogArea,
     button: elements.fogButton,
@@ -355,11 +392,16 @@ export function createTripMap(options: TripMapOptions): TripMap {
     }
   }
 
-  /** What of the map the trip list covers, while its address is open. */
-  function getTripListInset(): { bottom?: number; right?: number } {
-    const list = elements.tripList
+  /** What of the map a list beside it covers: the trip list on its address, or the Moments. */
+  function getListInset(): { bottom?: number; right?: number } {
+    const list =
+      elements.tripList && isTripListUrl() && !elements.tripList.hidden
+        ? elements.tripList
+        : momentList?.isOpen
+          ? elements.moments
+          : undefined
 
-    if (!list || !isTripListUrl() || list.hidden) {
+    if (!list) {
       return {}
     }
 
@@ -377,13 +419,13 @@ export function createTripMap(options: TripMapOptions): TripMap {
     return room < MIN_FRAMED ? {} : inset
   }
 
-  /** What framing every place keeps clear of: the trip list, and the legend. */
+  /** What framing every place keeps clear of: a list beside the map, and the legend. */
   function getFramingInset() {
     const legend = elements.legend?.getBoundingClientRect()
     const container = (map?.getContainer() ?? canvas).getBoundingClientRect()
 
     return {
-      ...getTripListInset(),
+      ...getListInset(),
       ...(legend && legend.height > 0 ? { legend: container.bottom - legend.top } : {}),
     }
   }
@@ -402,7 +444,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
       return
     }
 
-    const { bottom = 0, right = 0 } = getTripListInset()
+    const { bottom = 0, right = 0 } = getListInset()
 
     rememberViewBeforeList()
     map.panBy([right / 2, bottom / 2], { duration: getAnimationDuration() })
@@ -499,15 +541,26 @@ export function createTripMap(options: TripMapOptions): TripMap {
     })
   }
 
-  function syncTripFromUrl() {
+  /** The title for what the address shows: a trip, the trip list, a period, or the map. */
+  function syncDocumentTitle() {
     const id = getUrlTripId()
     const title = id ? tripPlayer.getTitle(id) : undefined
+    const period = isMapUrl() ? markers.period : undefined
 
     if (id && title !== undefined && options.getDocumentTitle) {
       document.title = options.getDocumentTitle({ id, title })
-    } else if (options.getDocumentTitle || options.tripListTitle) {
-      document.title = (isTripListUrl() && options.tripListTitle) || documentTitle
+    } else if (options.getDocumentTitle || options.tripListTitle || options.getPeriodTitle) {
+      document.title =
+        (isTripListUrl() && options.tripListTitle) ||
+        (period && options.getPeriodTitle?.(period)) ||
+        documentTitle
     }
+  }
+
+  function syncTripFromUrl() {
+    const id = getUrlTripId()
+
+    syncDocumentTitle()
 
     if (id) {
       // Set before the map loads too, so its routes are added hidden.
@@ -538,6 +591,9 @@ export function createTripMap(options: TripMapOptions): TripMap {
   }
 
   function syncSelection(selectOptions: { focus?: boolean; moveMap?: boolean } = {}) {
+    // Before the rest, so a trip closing frames the places beside the Moments.
+    syncMomentList()
+
     // A trip closed: every place in view again, beside the list if it's coming back.
     const tripClosed = syncTripFromUrl()
 
@@ -625,63 +681,81 @@ export function createTripMap(options: TripMapOptions): TripMap {
   }
 
   /**
-   * Leaves only the places first recorded in `year` on the map, and the trips started
-   * then on it and in the list, or everything again, and frames the places; a place
-   * open that the year leaves off the map closes.
+   * Narrows the map to a year, or a month of one: only the places with Moments then and
+   * the trips under way then on it and in the trip list, with the Moments beside it; or
+   * everything again. Frames the places; a place open that's left off the map closes.
    */
-  function pickYear(year: number | undefined) {
-    if (year === markers.year) {
+  function pickPeriod(next: Period | undefined) {
+    if (isSamePeriod(next, markers.period)) {
       return
     }
 
-    markers.setYear(year)
-    tripOverview.setYear(year)
+    markers.setPeriod(next)
+    tripOverview.setPeriod(next)
+    markers.setPressed(drawer.activeId)
 
-    for (const group of elements.tripYearGroups) {
-      group.hidden = year !== undefined && Number(group.dataset.tripMapTripYear) !== year
+    if (elements.tripList) {
+      for (const link of elements.tripList.querySelectorAll<HTMLElement>(
+        '[data-trip-map-trip-link]',
+      )) {
+        const trip = tripsById.get(link.dataset.tripMapTripLink!)
+        const row = link.closest('li') ?? link
+
+        row.hidden = Boolean(next && trip && !overlapsPeriod(trip.start, trip.end, next))
+      }
+
+      // A year's group of trips goes with its last one.
+      for (const group of elements.tripYearGroups) {
+        group.hidden = [...group.querySelectorAll<HTMLElement>('[data-trip-map-trip-link]')].every(
+          (link) => (link.closest('li') ?? link).hidden,
+        )
+      }
     }
 
     for (const button of elements.yearButtons) {
-      button.setAttribute('aria-pressed', String(Number(button.dataset.tripMapYear) === year))
+      button.setAttribute('aria-pressed', String(Number(button.dataset.tripMapYear) === next?.year))
     }
 
-    elements.legend?.toggleAttribute('data-trip-map-year-picked', year !== undefined)
+    elements.legend?.toggleAttribute('data-trip-map-year-picked', next !== undefined)
 
-    // Shown, with whatever holds it, only while a year is picked.
+    // Shown, with whatever holds it, only while a period is picked.
     const clearItem = elements.yearClear?.closest('li') ?? elements.yearClear
 
     if (clearItem) {
-      clearItem.hidden = year === undefined
+      clearItem.hidden = next === undefined
     }
 
     if (drawer.activeId && !markers.isShown(drawer.activeId)) {
       requestSelectionClose()
     }
 
-    syncYearUrl()
+    syncPeriodUrl()
+    syncMomentList()
+    syncDocumentTitle()
 
     if (mapLoaded && !tripPlayer.activeId) {
       fitAll()
     }
   }
 
-  /** The year an address picks, if the map has places first recorded then. */
-  function getUrlYear() {
-    const year = urls.getYear(window.location.pathname)
-    return year !== undefined && places.some((place) => place.firstYear === year) ? year : undefined
+  /** The period an address narrows the map to, if the map has places in its year. */
+  function getUrlPeriod() {
+    const period = urls.getPeriod(window.location.pathname)
+
+    return period && places.some((place) => place.years.includes(period.year)) ? period : undefined
   }
 
   function isMapUrl() {
-    return window.location.pathname === urls.mapPath || getUrlYear() !== undefined
+    return window.location.pathname === urls.mapPath || getUrlPeriod() !== undefined
   }
 
-  /** The map's own address, with the year picked if any. */
+  /** The map's own address, narrowed to the period picked if any. */
   function getMapPath() {
-    return markers.year === undefined ? urls.mapPath : urls.getYearPath(markers.year)
+    return markers.period ? urls.getPeriodPath(markers.period) : urls.mapPath
   }
 
-  /** On the map's own address, says the year picked, keeping the place open in the hash. */
-  function syncYearUrl() {
+  /** On the map's own address, says the period picked, keeping the place open in the hash. */
+  function syncPeriodUrl() {
     if (!isMapUrl() || window.location.pathname === getMapPath()) {
       return
     }
@@ -691,6 +765,41 @@ export function createTripMap(options: TripMapOptions): TripMap {
       '',
       `${getMapPath()}${window.location.search}${window.location.hash}`,
     )
+  }
+
+  /**
+   * The Moments beside the map while it's narrowed, on its own address: under a place's
+   * drawer, and away for the trip list or a trip.
+   */
+  function syncMomentList() {
+    if (markers.period && isMapUrl()) {
+      momentList?.show(markers.period, { focus: false })
+    } else {
+      momentList?.close()
+    }
+  }
+
+  /** Flies the map to a place a Moment in the list was at, and lifts its dot. */
+  function showPlace(id: string) {
+    const place = markers.getPlace(id)
+
+    if (!place || !map || !mapLoaded) {
+      return false
+    }
+
+    // To the middle of what the list leaves of the map.
+    const { bottom = 0, right = 0 } = getListInset()
+
+    framedOnAll = false
+    markers.setPressed(id)
+    map.easeTo({
+      center: [place.longitude, place.latitude],
+      duration: getAnimationDuration(),
+      offset: [-right / 2, -bottom / 2],
+      zoom: Math.max(map.getZoom(), CLUSTER_MAX_ZOOM + 1),
+    })
+
+    return true
   }
 
   function requestSelectionClose() {
@@ -857,12 +966,12 @@ export function createTripMap(options: TripMapOptions): TripMap {
     )
   }
 
-  // The year stays as picked going back and forward; the address follows it.
+  // The period stays as picked going back and forward; the address follows it.
   window.addEventListener(
     'popstate',
     () => {
       syncSelection()
-      syncYearUrl()
+      syncPeriodUrl()
     },
     { signal },
   )
@@ -910,9 +1019,14 @@ export function createTripMap(options: TripMapOptions): TripMap {
       } else if (event.key === 'Escape' && !event.defaultPrevented && tripOverview.pickedId) {
         // A route picked on the map, with nothing open: let go of it.
         tripOverview.pick(undefined)
-      } else if (event.key === 'Escape' && !event.defaultPrevented && markers.year !== undefined) {
-        // Then the year picked: every place and trip again.
-        pickYear(undefined)
+      } else if (
+        event.key === 'Escape' &&
+        !event.defaultPrevented &&
+        markers.period &&
+        !drawer.lightboxOpen
+      ) {
+        // Then the period picked: every place and trip again, and the Moments away.
+        pickPeriod(undefined)
       }
     },
     { signal },
@@ -942,16 +1056,19 @@ export function createTripMap(options: TripMapOptions): TripMap {
     delete page.dataset.tripMapSettled
   })
 
-  // The address may pick a year to open on.
-  pickYear(getUrlYear())
+  // The address may narrow the map to a period to open on.
+  pickPeriod(getUrlPeriod())
 
-  // A year in the legend, pressed, leaves only its places; pressed again, every place.
+  // A year in the legend, pressed, narrows the map to it; pressed again, every place
+  // again, or the whole year from one of its months.
   for (const button of elements.yearButtons) {
     button.addEventListener(
       'click',
       () => {
         const year = Number(button.dataset.tripMapYear)
-        pickYear(markers.year === year ? undefined : year)
+        const picked = markers.period
+
+        pickPeriod(picked?.year === year && picked.month === undefined ? undefined : { year })
       },
       { signal },
     )
@@ -960,7 +1077,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
   elements.yearClear?.addEventListener(
     'click',
     () => {
-      pickYear(undefined)
+      pickPeriod(undefined)
       elements.yearButtons[0]?.focus()
     },
     { signal },

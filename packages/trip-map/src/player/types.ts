@@ -44,6 +44,8 @@ export type PlaceMarker = {
   latitude: number
   longitude: number
   name: string
+  /** The months it has posts in (`2025-06`), newest first. */
+  months: string[]
   /** The years it has posts in, newest first. */
   years: number[]
 }

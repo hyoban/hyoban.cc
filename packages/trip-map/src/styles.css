@@ -500,18 +500,19 @@
   }
 }
 
-/* The place drawer and the trip list slide in from the right, or up from the bottom on
+/* The place drawer and the lists slide in from the right, or up from the bottom on
    a phone; they slide back out from script as they close (see place-drawer.ts). One
    rendered open with the page is there from the start: they slide in only once the
    map has settled on the page (see trip-map.ts). */
-:is(.trip-map-drawer, .trip-map-trip-list) {
+:is(.trip-map-drawer, .trip-map-trip-list, .trip-map-moments) {
   transition:
     opacity 200ms ease,
     translate 280ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @starting-style {
-  .trip-map-page[data-trip-map-settled] :is(.trip-map-drawer, .trip-map-trip-list):not([hidden]) {
+  .trip-map-page[data-trip-map-settled]
+    :is(.trip-map-drawer, .trip-map-trip-list, .trip-map-moments):not([hidden]) {
     opacity: 0;
     translate: 1.5rem 0;
   }
@@ -519,14 +520,15 @@
 
 @media (max-width: 48rem) {
   @starting-style {
-    .trip-map-page[data-trip-map-settled] :is(.trip-map-drawer, .trip-map-trip-list):not([hidden]) {
+    .trip-map-page[data-trip-map-settled]
+      :is(.trip-map-drawer, .trip-map-trip-list, .trip-map-moments):not([hidden]) {
       translate: 0 2rem;
     }
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  :is(.trip-map-drawer, .trip-map-trip-list) {
+  :is(.trip-map-drawer, .trip-map-trip-list, .trip-map-moments) {
     translate: none;
     transition-property: opacity;
   }
@@ -1436,37 +1438,41 @@ html:has(.trip-map-page[data-trip-map-ratio]) body {
 }
 
 @media (min-width: 48.0625rem) {
-  .trip-map-page:has(:is(.trip-map-drawer, .trip-map-trip-list):not([hidden]))
+  .trip-map-page:has(:is(.trip-map-drawer, .trip-map-trip-list, .trip-map-moments):not([hidden]))
     .mapboxgl-ctrl-bottom-right {
     right: calc(min(28rem, calc(100vw - 2rem)) + 1.5rem);
   }
 
   /* The toolbar's buttons step aside to the drawer's or the list's left. */
-  .trip-map-page:has(:is(.trip-map-drawer, .trip-map-trip-list):not([hidden]))
+  .trip-map-page:has(:is(.trip-map-drawer, .trip-map-trip-list, .trip-map-moments):not([hidden]))
     .trip-map-toolbar__actions {
     translate: calc(-1 * (min(28rem, calc(100vw - 2rem)) + 0.75rem)) 0;
   }
 
   /* The legend moves to the middle of the map the drawer or the list leaves showing. */
-  .trip-map-page:has(:is(.trip-map-drawer, .trip-map-trip-list):not([hidden])) .trip-map-legend {
+  .trip-map-page:has(:is(.trip-map-drawer, .trip-map-trip-list, .trip-map-moments):not([hidden]))
+    .trip-map-legend {
     left: calc((100% - min(28rem, calc(100vw - 2rem)) - 1rem) / 2);
   }
 }
 
 @media (max-width: 48rem) {
-  .trip-map-page:has(:is(.trip-map-drawer, .trip-map-trip-list):not([hidden]))
+  .trip-map-page:has(:is(.trip-map-drawer, .trip-map-trip-list, .trip-map-moments):not([hidden]))
     :is(.mapboxgl-ctrl-bottom-left, .mapboxgl-ctrl-bottom-right) {
     bottom: calc(min(78dvh, 42rem) + 1.25rem + env(safe-area-inset-bottom));
   }
 
-  .trip-map-page:has(:is(.trip-map-drawer, .trip-map-trip-list):not([hidden]))
+  .trip-map-page:has(:is(.trip-map-drawer, .trip-map-trip-list, .trip-map-moments):not([hidden]))
     .mapboxgl-ctrl-bottom-right {
     right: 0;
   }
 
-  /* The list is a shorter sheet than the drawer (the site's, like its height). */
-  .trip-map-page:has(.trip-map-trip-list:not([hidden]))
-    :is(.mapboxgl-ctrl-bottom-left, .mapboxgl-ctrl-bottom-right) {
+  /* The lists are a shorter sheet than the drawer (the site's, like its height), and the
+     legend sits above them, to pick another year. */
+  .trip-map-page:has(:is(.trip-map-trip-list, .trip-map-moments):not([hidden])):not(
+      :has(.trip-map-drawer:not([hidden]))
+    )
+    :is(.mapboxgl-ctrl-bottom-left, .mapboxgl-ctrl-bottom-right, .trip-map-legend) {
     bottom: calc(min(60dvh, 36rem) + 1.25rem + env(safe-area-inset-bottom));
   }
 }

@@ -1,0 +1,22 @@
+---
+import CalendarMap from '@/components/CalendarMap.astro'
+import { getActiveDateKeys, getMapYears, getMoments } from '@/moments'
+
+// The map narrowed to a month with Moments: its places and trips, and its Moments.
+export async function getStaticPaths() {
+  const moments = await getMoments()
+  const years = new Set(getMapYears(moments))
+  const monthKeys = new Set(getActiveDateKeys(moments).map(dateKey => dateKey.slice(0, 7)))
+
+  return [...monthKeys]
+    .filter(key => years.has(Number.parseInt(key.slice(0, 4), 10)))
+    .map(key => ({
+      params: { month: key.slice(5, 7), year: key.slice(0, 4) },
+      props: { month: Number.parseInt(key.slice(5, 7), 10), year: Number.parseInt(key.slice(0, 4), 10) },
+    }))
+}
+
+const { month, year } = Astro.props
+---
+
+<CalendarMap period={{ month, year }} />

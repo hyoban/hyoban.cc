@@ -8,6 +8,7 @@ export {
   type ScreenshotOptions,
   type ScreenshotPlace,
 } from './map/screenshot.ts'
+export type { Period } from './map/period.ts'
 export { defaultUrls, type Urls } from './map/selection-url.ts'
 export {
   createTripMap,

@@ -1,0 +1,13 @@
+---
+import CalendarMap from '@/components/CalendarMap.astro'
+import { getMapYears, getMoments } from '@/moments'
+
+// The map narrowed to a year: its places and trips, and its Moments beside them.
+export async function getStaticPaths() {
+  return getMapYears(await getMoments()).map(year => ({ params: { year: String(year) }, props: { year } }))
+}
+
+const { year } = Astro.props
+---
+
+<CalendarMap period={{ year }} />

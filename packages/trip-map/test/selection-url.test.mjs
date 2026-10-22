@@ -17,3 +17,14 @@ test('knows the trip a path opens and the URLs of what the client fetches', () =
   assert.equal(defaultUrls.getTripDataUrl('x'), '/trip/x/data.json')
   assert.equal(defaultUrls.getPlaceUrl('x'), '/map/place/x/')
 })
+
+test('knows the year or the month a path narrows the map to, and the path of one', () => {
+  assert.deepEqual(defaultUrls.getPeriod('/map/2025/'), { month: undefined, year: 2025 })
+  assert.deepEqual(defaultUrls.getPeriod('/map/2025/06/'), { month: 6, year: 2025 })
+  assert.equal(defaultUrls.getPeriod('/map/2025/13/'), undefined)
+  assert.equal(defaultUrls.getPeriod('/map/'), undefined)
+  assert.equal(defaultUrls.getPeriod('/map/place/x/'), undefined)
+  assert.equal(defaultUrls.getPeriodPath({ year: 2025 }), '/map/2025/')
+  assert.equal(defaultUrls.getPeriodPath({ month: 6, year: 2025 }), '/map/2025/06/')
+  assert.equal(defaultUrls.getMomentsUrl(2025), '/map/2025/moments/')
+})

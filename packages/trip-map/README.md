@@ -48,6 +48,7 @@ needs Chromium's Region Capture).
         longitude: 118.8,
         count: 2,
         firstYear: 2026,
+        months: ['2026-05', '2024-10'],
         years: [2026, 2024],
         color: '#3b82f6',
       },
@@ -142,42 +143,43 @@ on the toolbar's buttons moves them aside while either is open.
 
 Everything is found by attribute on the root `[data-trip-map]`:
 
-| Attribute                                                                                                     | Required | What it is                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| ------------------------------------------------------------------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `data-trip-map-canvas`                                                                                        | yes      | The map's container.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| `data-trip-map-loading`                                                                                       | yes      | A line shown while the map loads.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| `data-trip-map-fallback`, `-fallback-message`, `-fallback-retry`                                              | yes      | What's shown when the map can't load; add a `[data-trip-map-place="<id>"]` button per place to still reach them.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| `data-trip-map-drawer`, `-drawer-title`, `-drawer-eyebrow`, `-drawer-content`, `-drawer-close`                | yes      | The drawer a place opens with its posts.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| `data-trip-map-panel`                                                                                         | yes      | The trip player's side card. Filled by `renderTripPanel` (on the server, so a trip page opens on its intro card at once) or by the client when empty.                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| `data-trip-map-stage`                                                                                         | yes      | The presentation layout. Filled by `renderTripStage`, or by the client.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| `data-trip-map-shortcuts`                                                                                     | yes      | A `<dialog>` for the shortcut panel. Filled by `renderShortcuts`, or by the client.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| `data-trip-map-lightbox` (+ `-lightbox-close/previous/next`)                                                  | no       | A `<dialog>` the drawer's photos open in, driven by your `createLightboxMedia`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| `data-trip-map-toolbar`, `data-trip-map-legend`, `data-trip-map-screenshot`, `data-trip-map-trip-link="<id>"` | no       | Things the player keeps clear of or wires up: a toolbar, a legend, a button that saves a screenshot, links that open trips.                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| `data-trip-map-fog`, `data-trip-map-fog-area`                                                                 | no       | A toggle for the fog of war (pressed, it lays a light fog over the map, thinner over a city the more it holds; see `fogUrl`), and where the cities lit are counted while it shows.                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| `data-trip-map-trip-list` (+ `-trip-list-close`), `data-trip-map-trip-list-open`                              | no       | A list of the trips beside the map, where the drawer sits, holding their `data-trip-map-trip-link`s, and what opens it. It's open while the address is `tripListPath`; render it without `hidden` on that page. Clicking a trip there, or resting the pointer on it for two seconds, flies the map to its route and lifts it; clicking it again, or a `[data-trip-map-trip-play="<id>"]` beside it (shown once it's picked), plays it.                                                                                                                                                                |
-| `data-trip-map-year="<year>"`, `data-trip-map-year-clear`, `data-trip-map-trip-year="<year>"`                 | no       | Buttons, in the legend, that leave only the places first recorded in that year on the map, and the trips started then on it and in the list, and frame the places; pressed again, a `-year-clear` button (shown, with the `<li>` holding it, while a year is picked) or Esc, everything again. The pressed one has `aria-pressed="true"`, and the legend `data-trip-map-year-picked` meanwhile; the trip list's groups of a year's trips are hidden for another year. The address says the year picked, `getYearPath(year)` on the map, and opening on one picks it: render that page already picked. |
-| `data-trip-map-token`                                                                                         | no       | The Mapbox token, unless passed as an option.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| Attribute                                                                                                     | Required | What it is                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ------------------------------------------------------------------------------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `data-trip-map-canvas`                                                                                        | yes      | The map's container.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `data-trip-map-loading`                                                                                       | yes      | A line shown while the map loads.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `data-trip-map-fallback`, `-fallback-message`, `-fallback-retry`                                              | yes      | What's shown when the map can't load; add a `[data-trip-map-place="<id>"]` button per place to still reach them.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `data-trip-map-drawer`, `-drawer-title`, `-drawer-eyebrow`, `-drawer-content`, `-drawer-close`                | yes      | The drawer a place opens with its posts.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `data-trip-map-panel`                                                                                         | yes      | The trip player's side card. Filled by `renderTripPanel` (on the server, so a trip page opens on its intro card at once) or by the client when empty.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `data-trip-map-stage`                                                                                         | yes      | The presentation layout. Filled by `renderTripStage`, or by the client.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `data-trip-map-shortcuts`                                                                                     | yes      | A `<dialog>` for the shortcut panel. Filled by `renderShortcuts`, or by the client.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `data-trip-map-lightbox` (+ `-lightbox-close/previous/next`)                                                  | no       | A `<dialog>` the drawer's photos open in, driven by your `createLightboxMedia`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `data-trip-map-toolbar`, `data-trip-map-legend`, `data-trip-map-screenshot`, `data-trip-map-trip-link="<id>"` | no       | Things the player keeps clear of or wires up: a toolbar, a legend, a button that saves a screenshot, links that open trips.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `data-trip-map-fog`, `data-trip-map-fog-area`                                                                 | no       | A toggle for the fog of war (pressed, it lays a light fog over the map, thinner over a city the more it holds; see `fogUrl`), and where the cities lit are counted while it shows.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `data-trip-map-trip-list` (+ `-trip-list-close`), `data-trip-map-trip-list-open`                              | no       | A list of the trips beside the map, where the drawer sits, holding their `data-trip-map-trip-link`s, and what opens it. It's open while the address is `tripListPath`; render it without `hidden` on that page. Clicking a trip there, or resting the pointer on it for two seconds, flies the map to its route and lifts it; clicking it again, or a `[data-trip-map-trip-play="<id>"]` beside it (shown once it's picked), plays it.                                                                                                                                                                                                                                                             |
+| `data-trip-map-year="<year>"`, `data-trip-map-year-clear`, `data-trip-map-trip-year="<year>"`                 | no       | Buttons, in the legend, that narrow the map to a year: only the places with Moments then, and the trips under way then, on it and in the trip list, framed beside `data-trip-map-moments`. Pressed again (or from one of its months), a `-year-clear` button (shown, with the `<li>` holding it, while a period is picked), the Moments' close button or Esc, everything again. The pressed one has `aria-pressed="true"`, and the legend `data-trip-map-year-picked` meanwhile; the trip list's rows, and its groups (`-trip-year`) once empty, are hidden. The address says the period picked, `getPeriodPath(period)` on the map, and opening on one picks it: render that page already picked. |
+| `data-trip-map-moments` (+ `-moments-close`, `-moments-title`, `-moments-eyebrow`, `-moments-content`)        | no       | The Moments of the period picked beside the map, under the drawer: the fragment `getMomentsUrl(year)` gives for its year, which `-moments-content` holds already if its `data-trip-map-moments-year` says so. The fragment has a `[data-trip-map-moments-month="<month>"]` per month, with `data-trip-map-count` Moments, and `[data-trip-map-month="<month>"]` buttons narrowing the map to one (`-month-all` to the whole year); a `[data-trip-map-place-link="<id>"]` in it flies the map to that place.                                                                                                                                                                                        |
+| `data-trip-map-token`                                                                                         | no       | The Mapbox token, unless passed as an option.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 
 ## Options
 
 `createTripMap(options)` takes:
 
-| Option                                                                                                           | Default                                                                | What it does                                                                                                                                                                                           |
-| ---------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `page`                                                                                                           | required                                                               | The root element.                                                                                                                                                                                      |
-| `mapboxToken`                                                                                                    | `data-trip-map-token`                                                  | The Mapbox access token.                                                                                                                                                                               |
-| `places`, `trips`, `trip`, `stats`                                                                               | the page's JSON                                                        | The places, every trip's summary, the trip the page opens on, the screenshot's totals.                                                                                                                 |
-| `getPlaceUrl`, `getTripDataUrl`, `getTripPath`, `getTripId`, `getYear`, `getYearPath`, `mapPath`, `tripListPath` | `/map/place/<id>/`, `/trip/<id>/data.json`, `/trip/<id>/`, …, `/trip/` | Where things are fetched from and what the address bar shows.                                                                                                                                          |
-| `messages`                                                                                                       | Chinese                                                                | Any of the words below, and `locale`.                                                                                                                                                                  |
-| `mapStyle`                                                                                                       | Mapbox light and dark                                                  | A style URL, or `{ light, dark }`.                                                                                                                                                                     |
-| `mapLanguage`                                                                                                    | from `locale`                                                          | The basemap's language, or `false` to leave it.                                                                                                                                                        |
-| `music`                                                                                                          | none                                                                   | `{ src, title }[]` a video may be set to.                                                                                                                                                              |
-| `brand`                                                                                                          | none                                                                   | `{ name, image }` on the presentation's corner.                                                                                                                                                        |
-| `siteLine`, `screenshotTitle`                                                                                    | the host, the document title                                           | On a video's summary card; over a saved screenshot.                                                                                                                                                    |
-| `documentTitle`, `getDocumentTitle`, `tripListTitle`                                                             | left alone                                                             | The document's title with and without a trip playing, and with the trip list open.                                                                                                                     |
-| `createLightboxMedia`                                                                                            | none                                                                   | `(dialog, signal) => ({ show(item) })` for the drawer's photos.                                                                                                                                        |
-| `fogUrl`, `fogRegionsUrl`                                                                                        | `/map/fog.json`, `/map/cities.json`                                    | `buildFogOfWar(regions, places)` as JSON, its `weights` (each place's `weight`, say its Moments) thinning the fog over each city, and the regions: GeoJSON features with an `id` (`fogged` never lit). |
-| `onError`                                                                                                        | none                                                                   | Told when a place's posts, a trip's data or the map itself couldn't be had; the map carries on without it.                                                                                             |
+| Option                                                                                                                                | Default                                                                                                                         | What it does                                                                                                                                                                                           |
+| ------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `page`                                                                                                                                | required                                                                                                                        | The root element.                                                                                                                                                                                      |
+| `mapboxToken`                                                                                                                         | `data-trip-map-token`                                                                                                           | The Mapbox access token.                                                                                                                                                                               |
+| `places`, `trips`, `trip`, `stats`                                                                                                    | the page's JSON                                                                                                                 | The places, every trip's summary, the trip the page opens on, the screenshot's totals.                                                                                                                 |
+| `getPlaceUrl`, `getTripDataUrl`, `getMomentsUrl`, `getTripPath`, `getTripId`, `getPeriod`, `getPeriodPath`, `mapPath`, `tripListPath` | `/map/place/<id>/`, `/trip/<id>/data.json`, `/map/<year>/moments/`, `/trip/<id>/`, …, `/map/<year>/<month>/`, `/map/`, `/trip/` | Where things are fetched from and what the address bar shows.                                                                                                                                          |
+| `messages`                                                                                                                            | Chinese                                                                                                                         | Any of the words below, and `locale`.                                                                                                                                                                  |
+| `mapStyle`                                                                                                                            | Mapbox light and dark                                                                                                           | A style URL, or `{ light, dark }`.                                                                                                                                                                     |
+| `mapLanguage`                                                                                                                         | from `locale`                                                                                                                   | The basemap's language, or `false` to leave it.                                                                                                                                                        |
+| `music`                                                                                                                               | none                                                                                                                            | `{ src, title }[]` a video may be set to.                                                                                                                                                              |
+| `brand`                                                                                                                               | none                                                                                                                            | `{ name, image }` on the presentation's corner.                                                                                                                                                        |
+| `siteLine`, `screenshotTitle`                                                                                                         | the host, the document title                                                                                                    | On a video's summary card; over a saved screenshot.                                                                                                                                                    |
+| `documentTitle`, `getDocumentTitle`, `tripListTitle`, `getPeriodTitle`                                                                | left alone                                                                                                                      | The document's title with and without a trip playing, with the trip list open, and with the map narrowed to a period.                                                                                  |
+| `createLightboxMedia`                                                                                                                 | none                                                                                                                            | `(dialog, signal) => ({ show(item) })` for the drawer's photos.                                                                                                                                        |
+| `fogUrl`, `fogRegionsUrl`                                                                                                             | `/map/fog.json`, `/map/cities.json`                                                                                             | `buildFogOfWar(regions, places)` as JSON, its `weights` (each place's `weight`, say its Moments) thinning the fog over each city, and the regions: GeoJSON features with an `id` (`fogged` never lit). |
+| `onError`                                                                                                                             | none                                                                                                                            | Told when a place's posts, a trip's data or the map itself couldn't be had; the map carries on without it.                                                                                             |
 
 It returns `{ page, activeTripId, destroy() }`. One map per page: the player's shortcuts
 listen on the window.
@@ -191,106 +193,110 @@ formatted. Dates travel as `YYYY-MM-DD` keys and are formatted where they are sh
 <details>
 <summary>All messages and their defaults</summary>
 
-| Message               | Default                                      |
-| --------------------- | -------------------------------------------- |
-| `locale`              | zh-CN                                        |
-| `clusterLabel`        | {title}，共 {count} 条记录                   |
-| `clusterName`         | {name}等                                     |
-| `clusterNamedTitle`   | {name} {count} 个地点                        |
-| `clusterPlaces`       | {count} 处                                   |
-| `clusterTitle`        | {count} 个地点                               |
-| `drawerFailed`        | 没能加载这个地点的记录。                     |
-| `drawerLoading`       | 加载中…                                      |
-| `fogLit`              | 点亮 {cities} 座城市 · {provinces} 个省份    |
-| `mapInitFailed`       | 浏览器无法初始化地图。                       |
-| `mapLoadFailed`       | 地图资源加载失败。                           |
-| `mapLoadTimeout`      | 地图加载超时。                               |
-| `mapLoadingSlow`      | 地图加载得有点慢，再等等…                    |
-| `mapNoPlaces`         | 还没有带地点的记录。                         |
-| `mapNoToken`          | 尚未配置 Mapbox Token。                      |
-| `momentCount`         | {count} 条记录                               |
-| `placeEyebrow`        | {count} 条记录 · {years}                     |
-| `placeLabel`          | {name}，{count} 条记录，首次记录于 {year} 年 |
-| `screenshotRendering` | 正在生成截图…                                |
-| `statDriving`         | 自驾 {count} 公里                            |
-| `statMoments`         | {count} 条记录                               |
-| `statPlaces`          | {count} 个地点                               |
-| `statTrips`           | {count} 段旅程                               |
-| `tapAgainToPlay`      | 再点一次回放                                 |
-| `yearItem`            | {year} 年                                    |
-| `yearSeparator`       | 、                                           |
-| `dayLabel`            | 第 {day} 天                                  |
-| `intro`               | 开头                                         |
-| `placeSeparator`      | 、                                           |
-| `playbackSpeed`       | 播放速度 {speed}×                            |
-| `replay`              | 重新播放                                     |
-| `separator`           | ·                                            |
-| `summary`             | 旅程回顾                                     |
-| `tripMeta`            | {range} · {days} 天 · {moments} 条记录       |
-| `unitDays`            | 天                                           |
-| `unitDrivingHours`    | 小时车程                                     |
-| `unitDrivingKm`       | 公里自驾                                     |
-| `unitMoments`         | 条记录                                       |
-| `unitPhotos`          | 张照片                                       |
-| `unitPlaces`          | 个地点                                       |
-| `videoTitle`          | 视频                                         |
-| `viewDayLink`         | 查看当天记录                                 |
-| `viewDayMoments`      | 查看 {date}的记录                            |
-| `viewPhoto`           | 查看第 {index} 张照片                        |
-| `cancel`              | 取消                                         |
-| `chaptersFile`        | {name}-章节.txt                              |
-| `close`               | 关闭                                         |
-| `closePlayback`       | 退出旅程回放                                 |
-| `exitPresentation`    | 退出放映                                     |
-| `exportVideo`         | 导出视频                                     |
-| `landscape`           | 横屏 16:9                                    |
-| `landscapeFile`       | 横屏                                         |
-| `music`               | 背景音乐                                     |
-| `next`                | 下一站                                       |
-| `noMusic`             | 无音乐                                       |
-| `pause`               | 暂停                                         |
-| `play`                | 播放                                         |
-| `portrait`            | 竖屏 9:16                                    |
-| `portraitFile`        | 竖屏                                         |
-| `present`             | 放映                                         |
-| `presentStart`        | 开始放映                                     |
-| `previous`            | 上一站                                       |
-| `progress`            | 旅程进度                                     |
-| `ratio`               | 画面                                         |
-| `recordStart`         | 开始录制                                     |
-| `safeArea`            | 为社交平台留边                               |
-| `withKey`             | {action}（{key}）                            |
-| `keyEnd`              | End                                          |
-| `keyEscape`           | Esc                                          |
-| `keyHome`             | Home                                         |
-| `keyShift`            | Shift                                        |
-| `keySpace`            | 空格                                         |
-| `shortcutCards`       | 上一张 / 下一张卡片                          |
-| `shortcutDays`        | 上一天 / 下一天                              |
-| `shortcutEnds`        | 回到开头 / 跳到回顾                          |
-| `shortcutEscape`      | 退出放映 / 关闭回放                          |
-| `shortcutExport`      | 导出视频                                     |
-| `shortcutFullscreen`  | 全屏放映                                     |
-| `shortcutHelp`        | 显示快捷键                                   |
-| `shortcutMusic`       | 背景音乐                                     |
-| `shortcutPhotos`      | 上一张 / 下一张照片                          |
-| `shortcutPlay`        | 播放 / 暂停                                  |
-| `shortcutSpeed`       | 减速 / 加速                                  |
-| `shortcuts`           | 快捷键                                       |
-| `shortcutsPlayback`   | 播放                                         |
-| `shortcutsPresenting` | 放映与导出                                   |
-| `shortcutsSpeedSound` | 速度与声音                                   |
-| `weatherClear`        | 晴                                           |
-| `weatherDrizzle`      | 毛毛雨                                       |
-| `weatherFog`          | 雾                                           |
-| `weatherLabel`        | {kind} · {min}–{max}°C                       |
-| `weatherOvercast`     | 阴                                           |
-| `weatherPartlyCloudy` | 多云                                         |
-| `weatherRain`         | 雨                                           |
-| `weatherShowers`      | 阵雨                                         |
-| `weatherSnow`         | 雪                                           |
-| `weatherSnowShowers`  | 阵雪                                         |
-| `weatherThunderstorm` | 雷雨                                         |
+| Message                  | Default                                      |
+| ------------------------ | -------------------------------------------- |
+| `locale`                 | zh-CN                                        |
+| `clusterLabel`           | {title}，共 {count} 条记录                   |
+| `clusterName`            | {name}等                                     |
+| `clusterNamedTitle`      | {name} {count} 个地点                        |
+| `clusterPlaces`          | {count} 处                                   |
+| `clusterTitle`           | {count} 个地点                               |
+| `drawerFailed`           | 没能加载这个地点的记录。                     |
+| `drawerLoading`          | 加载中…                                      |
+| `fogLit`                 | 点亮 {cities} 座城市 · {provinces} 个省份    |
+| `mapInitFailed`          | 浏览器无法初始化地图。                       |
+| `mapLoadFailed`          | 地图资源加载失败。                           |
+| `mapLoadTimeout`         | 地图加载超时。                               |
+| `mapLoadingSlow`         | 地图加载得有点慢，再等等…                    |
+| `mapNoPlaces`            | 还没有带地点的记录。                         |
+| `mapNoToken`             | 尚未配置 Mapbox Token。                      |
+| `momentCount`            | {count} 条记录                               |
+| `momentsEyebrow`         | {count} 条记录 · {places} 个地点             |
+| `momentsEyebrowNoPlaces` | {count} 条记录 · 都没有地点                  |
+| `momentsFailed`          | 没能加载这段时间的记录。                     |
+| `monthItem`              | {year} 年 {month} 月                         |
+| `placeEyebrow`           | {count} 条记录 · {years}                     |
+| `placeLabel`             | {name}，{count} 条记录，首次记录于 {year} 年 |
+| `screenshotRendering`    | 正在生成截图…                                |
+| `statDriving`            | 自驾 {count} 公里                            |
+| `statMoments`            | {count} 条记录                               |
+| `statPlaces`             | {count} 个地点                               |
+| `statTrips`              | {count} 段旅程                               |
+| `tapAgainToPlay`         | 再点一次回放                                 |
+| `yearItem`               | {year} 年                                    |
+| `yearSeparator`          | 、                                           |
+| `dayLabel`               | 第 {day} 天                                  |
+| `intro`                  | 开头                                         |
+| `placeSeparator`         | 、                                           |
+| `playbackSpeed`          | 播放速度 {speed}×                            |
+| `replay`                 | 重新播放                                     |
+| `separator`              | ·                                            |
+| `summary`                | 旅程回顾                                     |
+| `tripMeta`               | {range} · {days} 天 · {moments} 条记录       |
+| `unitDays`               | 天                                           |
+| `unitDrivingHours`       | 小时车程                                     |
+| `unitDrivingKm`          | 公里自驾                                     |
+| `unitMoments`            | 条记录                                       |
+| `unitPhotos`             | 张照片                                       |
+| `unitPlaces`             | 个地点                                       |
+| `videoTitle`             | 视频                                         |
+| `viewDayLink`            | 查看当天记录                                 |
+| `viewDayMoments`         | 查看 {date}的记录                            |
+| `viewPhoto`              | 查看第 {index} 张照片                        |
+| `cancel`                 | 取消                                         |
+| `chaptersFile`           | {name}-章节.txt                              |
+| `close`                  | 关闭                                         |
+| `closePlayback`          | 退出旅程回放                                 |
+| `exitPresentation`       | 退出放映                                     |
+| `exportVideo`            | 导出视频                                     |
+| `landscape`              | 横屏 16:9                                    |
+| `landscapeFile`          | 横屏                                         |
+| `music`                  | 背景音乐                                     |
+| `next`                   | 下一站                                       |
+| `noMusic`                | 无音乐                                       |
+| `pause`                  | 暂停                                         |
+| `play`                   | 播放                                         |
+| `portrait`               | 竖屏 9:16                                    |
+| `portraitFile`           | 竖屏                                         |
+| `present`                | 放映                                         |
+| `presentStart`           | 开始放映                                     |
+| `previous`               | 上一站                                       |
+| `progress`               | 旅程进度                                     |
+| `ratio`                  | 画面                                         |
+| `recordStart`            | 开始录制                                     |
+| `safeArea`               | 为社交平台留边                               |
+| `withKey`                | {action}（{key}）                            |
+| `keyEnd`                 | End                                          |
+| `keyEscape`              | Esc                                          |
+| `keyHome`                | Home                                         |
+| `keyShift`               | Shift                                        |
+| `keySpace`               | 空格                                         |
+| `shortcutCards`          | 上一张 / 下一张卡片                          |
+| `shortcutDays`           | 上一天 / 下一天                              |
+| `shortcutEnds`           | 回到开头 / 跳到回顾                          |
+| `shortcutEscape`         | 退出放映 / 关闭回放                          |
+| `shortcutExport`         | 导出视频                                     |
+| `shortcutFullscreen`     | 全屏放映                                     |
+| `shortcutHelp`           | 显示快捷键                                   |
+| `shortcutMusic`          | 背景音乐                                     |
+| `shortcutPhotos`         | 上一张 / 下一张照片                          |
+| `shortcutPlay`           | 播放 / 暂停                                  |
+| `shortcutSpeed`          | 减速 / 加速                                  |
+| `shortcuts`              | 快捷键                                       |
+| `shortcutsPlayback`      | 播放                                         |
+| `shortcutsPresenting`    | 放映与导出                                   |
+| `shortcutsSpeedSound`    | 速度与声音                                   |
+| `weatherClear`           | 晴                                           |
+| `weatherDrizzle`         | 毛毛雨                                       |
+| `weatherFog`             | 雾                                           |
+| `weatherLabel`           | {kind} · {min}–{max}°C                       |
+| `weatherOvercast`        | 阴                                           |
+| `weatherPartlyCloudy`    | 多云                                         |
+| `weatherRain`            | 雨                                           |
+| `weatherShowers`         | 阵雨                                         |
+| `weatherSnow`            | 雪                                           |
+| `weatherSnowShowers`     | 阵雪                                         |
+| `weatherThunderstorm`    | 雷雨                                         |
 
 </details>
 

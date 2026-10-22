@@ -116,6 +116,15 @@ export function getMappedLocationGroups(moments: Moment[]) {
   return groupMomentsByLocation(locations, moments)
 }
 
+/** The years the map can be narrowed to: those with Moments at a place on it, oldest first. */
+export function getMapYears(moments: Moment[]) {
+  const years = getMappedLocationGroups(moments).flatMap((group) =>
+    group.moments.map((moment) => Number.parseInt(moment.dateKey.slice(0, 4), 10)),
+  )
+
+  return [...new Set(years)].sort((first, second) => first - second)
+}
+
 /** One static path per trip, for the /trip/<id>/ page and the files beside it. */
 export async function getTripPaths() {
   return getTrips(await getMoments()).map((trip) => ({ params: { id: trip.id }, props: { trip } }))
