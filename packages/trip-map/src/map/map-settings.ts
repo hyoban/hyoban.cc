@@ -122,12 +122,15 @@ function isSettingField(input: HTMLInputElement) {
  */
 export function createMapSettings({
   dialog,
+  getDefaults,
   getSettings,
   onChange,
   openers,
   signal,
 }: {
   dialog: HTMLDialogElement | null
+  /** What the reset goes back to: the defaults, or the classic map on a slow device. */
+  getDefaults: () => MapSettings
   getSettings: () => MapSettings
   onChange: (settings: MapSettings) => void
   openers: readonly HTMLElement[]
@@ -187,8 +190,10 @@ export function createMapSettings({
     button.addEventListener(
       'click',
       () => {
-        writeMapSettingsForm(form, DEFAULT_MAP_SETTINGS)
-        onChange({ ...DEFAULT_MAP_SETTINGS })
+        const defaults = getDefaults()
+
+        writeMapSettingsForm(form, defaults)
+        onChange({ ...defaults })
       },
       { signal },
     )
