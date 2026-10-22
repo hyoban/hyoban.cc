@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import {
   getTripSummary,
   getWeatherKey,
@@ -16,6 +17,26 @@ import { tripMapMessages } from '@/trip-map'
 // opens on and fetches /trip/<id>/data.json for the others.
 
 export { getTripSummary }
+
+let tripSummaries: Promise<{ json: string; path: string }> | undefined
+
+/**
+ * Every trip's route and title, newest first, for the map's overview: one file the map
+ * and trip pages share, named by its content so it's cached for good (public/_headers).
+ */
+export function getTripSummaries() {
+  tripSummaries ??= getMoments().then((moments) => {
+    const trips = getTrips(moments).toSorted((first, second) =>
+      second.start.localeCompare(first.start),
+    )
+    const json = JSON.stringify(trips.map(getTripSummary))
+    const hash = createHash('sha256').update(json).digest('hex').slice(0, 12)
+
+    return { json, path: `/trip/summaries/${hash}.json` }
+  })
+
+  return tripSummaries
+}
 
 export function getTripData(trip: MomentTrip): TripData {
   return shapeTripData(trip, {
