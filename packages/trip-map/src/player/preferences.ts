@@ -79,3 +79,22 @@ export function writeRatioPreference(ratio: 'landscape' | 'portrait') {
     // The choice just won't be remembered.
   }
 }
+
+const FOG_PREFERENCE_KEY = 'trip-map-fog'
+
+/** Whether the map is under its fog of war; off by default. */
+export function readFogPreference() {
+  try {
+    return localStorage.getItem(FOG_PREFERENCE_KEY) === 'on'
+  } catch {
+    return false
+  }
+}
+
+export function writeFogPreference(on: boolean) {
+  try {
+    localStorage.setItem(FOG_PREFERENCE_KEY, on ? 'on' : 'off')
+  } catch {
+    // The choice just won't be remembered.
+  }
+}

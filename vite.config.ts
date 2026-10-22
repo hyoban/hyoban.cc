@@ -9,9 +9,10 @@ export default defineConfig({
   },
   fmt: {
     // data/ is written by the API's backup and the scripts in their own canonical JSON,
+    // src/data/boundaries by its script, kept on one line,
     // the Android app under apps/android is formatted by Android Studio, and
     // .claude/worktrees holds other checkouts of the repository.
-    ignorePatterns: ['data/**', 'apps/android/**', '.claude/**'],
+    ignorePatterns: ['data/**', 'src/data/boundaries/**', 'apps/android/**', '.claude/**'],
     singleQuote: true,
     semi: false,
   },

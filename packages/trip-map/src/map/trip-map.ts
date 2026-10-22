@@ -9,6 +9,7 @@ import { createTripOverview } from '../player/overview.ts'
 import { createTripPlayer } from '../player/player.ts'
 import type { MapStats, PlaceMarker, TripData, TripSummary } from '../player/types.ts'
 import { readTheme } from '../dom-theme.ts'
+import { createFogLayer } from './fog-layer.ts'
 import { createPlaceDrawer, type LightboxMedia } from './place-drawer.ts'
 import { CLUSTER_MAX_ZOOM, createPlaceMarkers, getAllPlacesView } from './place-markers.ts'
 import { captureMap, savePicture } from './screenshot.ts'
@@ -79,6 +80,13 @@ export type TripMapOptions = {
   onError?: ((error: TripMapError) => void) | undefined
   /** The element holding the map's markup. */
   page: HTMLElement
+  /**
+   * The fog of war, shown by the `[data-trip-map-fog]` toggle: which regions are lit,
+   * `FogOfWar` as JSON (see `buildFogOfWar`), and the regions, GeoJSON features with an
+   * `id` each. Default: `/map/fog.json` and `/map/cities.json`.
+   */
+  fogUrl?: string | undefined
+  fogRegionsUrl?: string | undefined
   /** The places to show. Otherwise read from the page's `[data-trip-map-places]` JSON. */
   places?: readonly PlaceMarker[] | undefined
   /** The title over a saved screenshot. Default: the document's title. */
@@ -220,6 +228,20 @@ export function createTripMap(options: TripMapOptions): TripMap {
     signal,
   })
 
+  const fogLayer = createFogLayer({
+    areaElement: elements.fogArea,
+    button: elements.fogButton,
+    getMap: () => (mapLoaded ? map : undefined),
+    getTheme: () => readTheme(page),
+    isDark: () => darkMode.matches,
+    messages,
+    onError: (cause) =>
+      report({ cause, kind: 'map', message: "The fog of war couldn't be fetched." }),
+    regionsUrl: options.fogRegionsUrl ?? '/map/cities.json',
+    signal,
+    url: options.fogUrl ?? '/map/fog.json',
+  })
+
   markers.onOpenCluster = () => {
     framedOnAll = false
   }
@@ -304,6 +326,8 @@ export function createTripMap(options: TripMapOptions): TripMap {
       clearTimeout(markerTimer)
       markerTimer = undefined
     }
+
+    fogLayer.setHidden(on)
 
     if (on) {
       page.dataset.tripMapActive = ''
@@ -666,6 +690,8 @@ export function createTripMap(options: TripMapOptions): TripMap {
 
       map.on('style.load', () => {
         applyFog()
+        // Under the routes and the player's layers, once the map has loaded.
+        fogLayer.add()
         markers.addIndex()
         tripOverview.add()
         tripPlayer.restoreLayers()
@@ -737,6 +763,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
         }
 
         applyFog()
+        fogLayer.add()
         markers.sync()
 
         const hashPlaceId = getHashPlaceId()

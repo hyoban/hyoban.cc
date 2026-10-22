@@ -14,6 +14,7 @@ export const zhCN = {
   clusterTitle: '{count} 个地点',
   drawerFailed: '没能加载这个地点的记录。',
   drawerLoading: '加载中…',
+  fogLit: '点亮 {cities} 座城市 · {provinces} 个省份',
   mapInitFailed: '浏览器无法初始化地图。',
   mapLoadFailed: '地图资源加载失败。',
   mapLoadTimeout: '地图加载超时。',

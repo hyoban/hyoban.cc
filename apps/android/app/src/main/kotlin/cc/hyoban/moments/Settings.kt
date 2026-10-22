@@ -71,6 +71,15 @@ class Settings(context: Context) {
         get() = prefs.getBoolean("asked_media_location", false)
         set(value) = prefs.edit { putBoolean("asked_media_location", value) }
 
+    /** Whether the map is under its fog of war, every city not been to veiled. */
+    var mapFog: Boolean by mutableStateOf(prefs.getBoolean("map_fog", false))
+        private set
+
+    fun changeMapFog(on: Boolean) {
+        mapFog = on
+        prefs.edit { putBoolean("map_fog", on) }
+    }
+
     /** Light, dark, or as the system is. */
     var themeMode: ThemeMode by mutableStateOf(enumOf(prefs.getString("theme_mode", null), ThemeMode.SYSTEM))
         private set
