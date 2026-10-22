@@ -11,7 +11,7 @@ import { DEFAULT_MAP_SETTINGS, parseMapSettings } from '../src/map/map-settings.
 test('gives the settings their style, Standard its own and how far it leans', () => {
   const faded = getBasemapStyle({ ...DEFAULT_MAP_SETTINGS, style: 'faded' }, true)
   assert.equal(faded.url, STANDARD_STYLE)
-  assert.equal(faded.pitch, 55)
+  assert.equal(faded.pitch, 50)
   assert.equal(faded.config.basemap.lightPreset, 'night')
   assert.equal(faded.config.basemap.theme, 'faded')
   // As plain as the flat map, by default.
@@ -53,8 +53,8 @@ test('leans further the closer the map is', () => {
   assert.equal(getPitchAtZoom(2), 0)
   assert.equal(getPitchAtZoom(3), 0)
   assert.equal(getPitchAtZoom(7.5), 30)
-  assert.equal(getPitchAtZoom(13), 55)
-  assert.equal(getPitchAtZoom(18), 55)
+  assert.equal(getPitchAtZoom(13), 50)
+  assert.equal(getPitchAtZoom(18), 50)
   // A map that leans no further than flat stays flat.
   assert.equal(getPitchAtZoom(12, 0), 0)
 })
