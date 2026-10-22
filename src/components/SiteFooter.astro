@@ -15,7 +15,8 @@ const links = [
 ]
 ---
 
-<footer class="mx-auto mt-20 flex max-w-[40rem] items-center gap-5 pt-8">
+<!-- On a phone the icons spread across the line instead of wrapping. -->
+<footer class="mx-auto mt-20 flex max-w-[40rem] items-center justify-between gap-2 pt-8 sm:justify-start sm:gap-5">
   {
     links.map(({ href, label, icon }) => (
       <a
