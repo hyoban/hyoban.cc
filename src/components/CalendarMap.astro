@@ -223,7 +223,7 @@ const description = pageTrip
           <span class="i-lucide-x" aria-hidden="true" />
         </button>
       </header>
-      <div class="trip-map-side__content" data-trip-map-moments-content data-trip-map-moments-year={momentsPeriod?.year}>
+      <div class="trip-map-side__content" data-trip-map-moments-content data-trip-map-moments-year={momentsPeriod?.year} data-trip-map-moments-month-only={momentsPeriod?.month}>
         {momentsPeriod && <MapMoments month={momentsPeriod.month} moments={periodMoments} year={momentsPeriod.year} />}
       </div>
     </aside>
