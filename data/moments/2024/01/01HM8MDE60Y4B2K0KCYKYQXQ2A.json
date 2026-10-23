@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01HM8MDE61B6WWFEP1EZF9XDDF",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1468,
       "height": 1128,
       "published": {
-        "key": "moments/2024/01/16-02-cli-version/cli-version.jpg",
+        "key": "moments/01hm8mde60y4b2k0kcykyqxq2a/01hm8mde61b6wwfep1ezf9xddf.jpg",
         "contentType": "image/jpeg",
         "bytes": 183862,
         "etag": "2ab0f49f07c9fb06d4b37eba17c18f81",
@@ -21,7 +21,7 @@
         "height": 1128,
         "variants": [
           {
-            "key": "moments/2024/01/16-02-cli-version/cli-version-480w.webp",
+            "key": "moments/01hm8mde60y4b2k0kcykyqxq2a/01hm8mde61b6wwfep1ezf9xddf-480w.webp",
             "contentType": "image/webp",
             "bytes": 20452,
             "etag": "f3c56ba425cc02c3537137deca7e565a",
@@ -29,7 +29,7 @@
             "height": 369
           },
           {
-            "key": "moments/2024/01/16-02-cli-version/cli-version-960w.webp",
+            "key": "moments/01hm8mde60y4b2k0kcykyqxq2a/01hm8mde61b6wwfep1ezf9xddf-960w.webp",
             "contentType": "image/webp",
             "bytes": 50498,
             "etag": "8b83cbaf2bdbb6b2ed22aa07e1d0ff45",
@@ -40,10 +40,8 @@
       }
     }
   ],
+  "order": 2,
   "published": {
-    "id": "2024/01/16-02-cli-version",
-    "slug": "cli-version",
-    "order": 2,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2024-01-16T15:57:44+08:00",

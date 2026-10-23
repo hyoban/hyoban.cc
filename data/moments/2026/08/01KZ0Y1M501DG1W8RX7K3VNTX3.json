@@ -10,12 +10,12 @@
   "media": [
     {
       "uid": "01KZ0Y1M51F4AMWQQ85DDZGWXA",
-      "type": "image",
       "alt": "Dark map showing a driving route from Wuhu to Rizhao",
+      "type": "image",
       "width": 976,
       "height": 1920,
       "published": {
-        "key": "moments/2026/08/02-02-solo-trip-600-km/solo-trip-600-km.webp",
+        "key": "moments/01kz0y1m501dg1w8rx7k3vntx3/01kz0y1m51f4amwqq85ddzgwxa.webp",
         "contentType": "image/webp",
         "bytes": 82496,
         "etag": "482e12d628cb55b6786d06dc5f348541",
@@ -23,7 +23,7 @@
         "height": 1920,
         "variants": [
           {
-            "key": "moments/2026/08/02-02-solo-trip-600-km/solo-trip-600-km-480w.webp",
+            "key": "moments/01kz0y1m501dg1w8rx7k3vntx3/01kz0y1m51f4amwqq85ddzgwxa-480w.webp",
             "contentType": "image/webp",
             "bytes": 24456,
             "etag": "cc5c772b3f5d76360cc142785ea90399",
@@ -31,7 +31,7 @@
             "height": 944
           },
           {
-            "key": "moments/2026/08/02-02-solo-trip-600-km/solo-trip-600-km-960w.webp",
+            "key": "moments/01kz0y1m501dg1w8rx7k3vntx3/01kz0y1m51f4amwqq85ddzgwxa-960w.webp",
             "contentType": "image/webp",
             "bytes": 59898,
             "etag": "71f65023da67c5fc27b2a217c38b62e2",
@@ -42,10 +42,8 @@
       }
     }
   ],
+  "order": 2,
   "published": {
-    "id": "2026/08/02-02-solo-trip-600-km",
-    "slug": "solo-trip-600-km",
-    "order": 2,
     "at": "2026-08-20T22:58:53+08:00"
   },
   "createdAt": "2026-08-02T17:49:24+08:00",

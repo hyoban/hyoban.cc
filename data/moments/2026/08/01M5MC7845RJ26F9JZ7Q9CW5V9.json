@@ -15,7 +15,7 @@
       "width": 1280,
       "height": 960,
       "published": {
-        "key": "moments/2026/08/29-03-yushan-lake/yushan-lake.webp",
+        "key": "moments/01m5mc7845rj26f9jz7q9cw5v9/01m1677ep615tkc1s7anna4mkt.webp",
         "contentType": "image/webp",
         "bytes": 167382,
         "etag": "512f09963b6dc6fcf2eb57545937da87",
@@ -32,7 +32,7 @@
       "width": 960,
       "height": 1280,
       "published": {
-        "key": "moments/2026/08/29-03-yushan-lake/yushan-lake-2.webp",
+        "key": "moments/01m5mc7845rj26f9jz7q9cw5v9/01m1677ep7fv2xjv46jfexqbga.webp",
         "contentType": "image/webp",
         "bytes": 423522,
         "etag": "2703a2cffab2730edb1b4564c21c9ed2",
@@ -49,7 +49,7 @@
       "width": 960,
       "height": 1280,
       "published": {
-        "key": "moments/2026/08/29-03-yushan-lake/yushan-lake-3.webp",
+        "key": "moments/01m5mc7845rj26f9jz7q9cw5v9/01m1677ep84rznbw1grr6sjnv2.webp",
         "contentType": "image/webp",
         "bytes": 364816,
         "etag": "5e5e6a8e07622823d66faf77eae97d57",
@@ -66,7 +66,7 @@
       "width": 960,
       "height": 1280,
       "published": {
-        "key": "moments/2026/08/29-03-yushan-lake/yushan-lake-4.webp",
+        "key": "moments/01m5mc7845rj26f9jz7q9cw5v9/01m1677ep9zvyx0d29vwt5an8t.webp",
         "contentType": "image/webp",
         "bytes": 78856,
         "etag": "2214896dff37e9ccaf18dde0f5ab8bd8",
@@ -77,10 +77,8 @@
       }
     }
   ],
+  "order": 3,
   "published": {
-    "id": "2026/08/29-03-yushan-lake",
-    "slug": "yushan-lake",
-    "order": 3,
     "at": "2026-10-23T12:40:21Z"
   },
   "createdAt": "2026-10-23T12:36:53Z",

@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01HPG2J5T1MRF1DQEPQYYFNS4P",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1048,
       "height": 1458,
       "published": {
-        "key": "moments/2024/02/13-01-update-my-eslint-config/update-my-eslint-config.jpg",
+        "key": "moments/01hpg2j5t0vtzr5nav4624sy5x/01hpg2j5t1mrf1dqepqyyfns4p.jpg",
         "contentType": "image/jpeg",
         "bytes": 101016,
         "etag": "ada471c8758770bfea527adc6441e012",
@@ -21,7 +21,7 @@
         "height": 1458,
         "variants": [
           {
-            "key": "moments/2024/02/13-01-update-my-eslint-config/update-my-eslint-config-480w.webp",
+            "key": "moments/01hpg2j5t0vtzr5nav4624sy5x/01hpg2j5t1mrf1dqepqyyfns4p-480w.webp",
             "contentType": "image/webp",
             "bytes": 18004,
             "etag": "3d0ba31c64101a5114881508a67076e8",
@@ -29,7 +29,7 @@
             "height": 668
           },
           {
-            "key": "moments/2024/02/13-01-update-my-eslint-config/update-my-eslint-config-960w.webp",
+            "key": "moments/01hpg2j5t0vtzr5nav4624sy5x/01hpg2j5t1mrf1dqepqyyfns4p-960w.webp",
             "contentType": "image/webp",
             "bytes": 40548,
             "etag": "3a93ce3f6c4e656332884cb2686cbe84",
@@ -40,10 +40,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2024/02/13-01-update-my-eslint-config",
-    "slug": "update-my-eslint-config",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2024-02-13T09:51:04+08:00",

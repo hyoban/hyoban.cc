@@ -6,10 +6,8 @@
   "hidden": false,
   "topic": "tech",
   "media": [],
+  "order": 2,
   "published": {
-    "id": "2025/05/24-02-sqlocal-de-lian-jie-shi",
-    "slug": "sqlocal-de-lian-jie-shi",
-    "order": 2,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2025-05-24T08:32:15+08:00",

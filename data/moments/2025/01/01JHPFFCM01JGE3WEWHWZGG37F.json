@@ -6,10 +6,8 @@
   "hidden": false,
   "topic": "tech",
   "media": [],
+  "order": 1,
   "published": {
-    "id": "2025/01/16-01-guan-yu-bao-gao-bug-you-shi-hou-zhi-yao",
-    "slug": "guan-yu-bao-gao-bug-you-shi-hou-zhi-yao",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2025-01-16T10:36:00+08:00",

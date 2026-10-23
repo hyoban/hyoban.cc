@@ -6,10 +6,8 @@
   "hidden": false,
   "topic": "tech",
   "media": [],
+  "order": 2,
   "published": {
-    "id": "2025/04/01-02-tai-hao-le-xcode-ye-bu-neng-sheng-ji-wo",
-    "slug": "tai-hao-le-xcode-ye-bu-neng-sheng-ji-wo",
-    "order": 2,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2025-04-01T19:02:32+08:00",

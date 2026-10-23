@@ -10,12 +10,12 @@
   "media": [
     {
       "uid": "01KDX0KF19CN6RARCMY2KWJXAJ",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 2048,
       "height": 1536,
       "published": {
-        "key": "moments/2026/01/01-02-jian-dan-pa-ge-shan/jian-dan-pa-ge-shan.jpg",
+        "key": "moments/01kdx0kf18psv2jcwyn1xdcm4m/01kdx0kf19cn6rarcmy2kwjxaj.jpg",
         "contentType": "image/jpeg",
         "bytes": 794270,
         "etag": "a1572d43d2c750fac243b7fde65becc9",
@@ -23,7 +23,7 @@
         "height": 1536,
         "variants": [
           {
-            "key": "moments/2026/01/01-02-jian-dan-pa-ge-shan/jian-dan-pa-ge-shan-480w.webp",
+            "key": "moments/01kdx0kf18psv2jcwyn1xdcm4m/01kdx0kf19cn6rarcmy2kwjxaj-480w.webp",
             "contentType": "image/webp",
             "bytes": 49808,
             "etag": "38c06f25fdeb201343146e9e697cefd4",
@@ -31,7 +31,7 @@
             "height": 360
           },
           {
-            "key": "moments/2026/01/01-02-jian-dan-pa-ge-shan/jian-dan-pa-ge-shan-960w.webp",
+            "key": "moments/01kdx0kf18psv2jcwyn1xdcm4m/01kdx0kf19cn6rarcmy2kwjxaj-960w.webp",
             "contentType": "image/webp",
             "bytes": 183336,
             "etag": "68f013b50f2a7f6b8fc3b4312b7e2733",
@@ -39,7 +39,7 @@
             "height": 720
           },
           {
-            "key": "moments/2026/01/01-02-jian-dan-pa-ge-shan/jian-dan-pa-ge-shan-1920w.webp",
+            "key": "moments/01kdx0kf18psv2jcwyn1xdcm4m/01kdx0kf19cn6rarcmy2kwjxaj-1920w.webp",
             "contentType": "image/webp",
             "bytes": 554356,
             "etag": "e4e32faae3867787e45069e96ffc4df3",
@@ -51,12 +51,12 @@
     },
     {
       "uid": "01KDX0KF1AD84W9QHDHGAPB0Q7",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1536,
       "height": 2048,
       "published": {
-        "key": "moments/2026/01/01-02-jian-dan-pa-ge-shan/jian-dan-pa-ge-shan-2.jpg",
+        "key": "moments/01kdx0kf18psv2jcwyn1xdcm4m/01kdx0kf1ad84w9qhdhgapb0q7.jpg",
         "contentType": "image/jpeg",
         "bytes": 402795,
         "etag": "fb9f604ed4f0e9a651fed6bbb7a59a1a",
@@ -64,7 +64,7 @@
         "height": 2048,
         "variants": [
           {
-            "key": "moments/2026/01/01-02-jian-dan-pa-ge-shan/jian-dan-pa-ge-shan-2-480w.webp",
+            "key": "moments/01kdx0kf18psv2jcwyn1xdcm4m/01kdx0kf1ad84w9qhdhgapb0q7-480w.webp",
             "contentType": "image/webp",
             "bytes": 36398,
             "etag": "da65b0ba2eb9eab37470f51092a6e888",
@@ -72,7 +72,7 @@
             "height": 640
           },
           {
-            "key": "moments/2026/01/01-02-jian-dan-pa-ge-shan/jian-dan-pa-ge-shan-2-960w.webp",
+            "key": "moments/01kdx0kf18psv2jcwyn1xdcm4m/01kdx0kf1ad84w9qhdhgapb0q7-960w.webp",
             "contentType": "image/webp",
             "bytes": 116036,
             "etag": "2eed861af3a5b8a83955e295b33fc35b",
@@ -84,12 +84,12 @@
     },
     {
       "uid": "01KDX0KF1BNK0D7D3Z64X2W9KG",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1536,
       "height": 2048,
       "published": {
-        "key": "moments/2026/01/01-02-jian-dan-pa-ge-shan/jian-dan-pa-ge-shan-3.jpg",
+        "key": "moments/01kdx0kf18psv2jcwyn1xdcm4m/01kdx0kf1bnk0d7d3z64x2w9kg.jpg",
         "contentType": "image/jpeg",
         "bytes": 560193,
         "etag": "c3d1a97178c4d5dfeca127838965be57",
@@ -97,7 +97,7 @@
         "height": 2048,
         "variants": [
           {
-            "key": "moments/2026/01/01-02-jian-dan-pa-ge-shan/jian-dan-pa-ge-shan-3-480w.webp",
+            "key": "moments/01kdx0kf18psv2jcwyn1xdcm4m/01kdx0kf1bnk0d7d3z64x2w9kg-480w.webp",
             "contentType": "image/webp",
             "bytes": 58688,
             "etag": "fc52de93132bc9d37ed9de5f87ad12f8",
@@ -105,7 +105,7 @@
             "height": 640
           },
           {
-            "key": "moments/2026/01/01-02-jian-dan-pa-ge-shan/jian-dan-pa-ge-shan-3-960w.webp",
+            "key": "moments/01kdx0kf18psv2jcwyn1xdcm4m/01kdx0kf1bnk0d7d3z64x2w9kg-960w.webp",
             "contentType": "image/webp",
             "bytes": 186780,
             "etag": "4ca774e561f887ef3486f9748ba1600e",
@@ -116,10 +116,8 @@
       }
     }
   ],
+  "order": 2,
   "published": {
-    "id": "2026/01/01-02-jian-dan-pa-ge-shan",
-    "slug": "jian-dan-pa-ge-shan",
-    "order": 2,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-01-01T22:50:17+08:00",

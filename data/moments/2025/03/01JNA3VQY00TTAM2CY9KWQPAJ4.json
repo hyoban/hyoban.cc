@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01JNA3VQY1NTQ75B9R9S6QJHE5",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 2048,
       "height": 1152,
       "published": {
-        "key": "moments/2025/03/02-01-rang-tong-xue-zhuan-yun-dao-wo-shou-li-la/rang-tong-xue-zhuan-yun-dao-wo-shou-li-la.jpg",
+        "key": "moments/01jna3vqy00ttam2cy9kwqpaj4/01jna3vqy1ntq75b9r9s6qjhe5.jpg",
         "contentType": "image/jpeg",
         "bytes": 202401,
         "etag": "dfb505b25f831f04ac9f6618d4d862c2",
@@ -21,7 +21,7 @@
         "height": 1152,
         "variants": [
           {
-            "key": "moments/2025/03/02-01-rang-tong-xue-zhuan-yun-dao-wo-shou-li-la/rang-tong-xue-zhuan-yun-dao-wo-shou-li-la-480w.webp",
+            "key": "moments/01jna3vqy00ttam2cy9kwqpaj4/01jna3vqy1ntq75b9r9s6qjhe5-480w.webp",
             "contentType": "image/webp",
             "bytes": 9320,
             "etag": "3cc12ea4403a7c3a4476697222e4b888",
@@ -29,7 +29,7 @@
             "height": 270
           },
           {
-            "key": "moments/2025/03/02-01-rang-tong-xue-zhuan-yun-dao-wo-shou-li-la/rang-tong-xue-zhuan-yun-dao-wo-shou-li-la-960w.webp",
+            "key": "moments/01jna3vqy00ttam2cy9kwqpaj4/01jna3vqy1ntq75b9r9s6qjhe5-960w.webp",
             "contentType": "image/webp",
             "bytes": 29506,
             "etag": "63b7ed26cd3dfca1bd2385f7a2664d30",
@@ -37,7 +37,7 @@
             "height": 540
           },
           {
-            "key": "moments/2025/03/02-01-rang-tong-xue-zhuan-yun-dao-wo-shou-li-la/rang-tong-xue-zhuan-yun-dao-wo-shou-li-la-1920w.webp",
+            "key": "moments/01jna3vqy00ttam2cy9kwqpaj4/01jna3vqy1ntq75b9r9s6qjhe5-1920w.webp",
             "contentType": "image/webp",
             "bytes": 84766,
             "etag": "fad57757bcb576f43b8635b418e50531",
@@ -48,10 +48,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2025/03/02-01-rang-tong-xue-zhuan-yun-dao-wo-shou-li-la",
-    "slug": "rang-tong-xue-zhuan-yun-dao-wo-shou-li-la",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2025-03-02T08:24:56+08:00",

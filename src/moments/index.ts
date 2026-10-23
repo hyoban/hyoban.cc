@@ -56,14 +56,15 @@ export type Moment = {
   dateKey: string
   /** What was eaten, when the record says. */
   food?: MomentFood
-  /** The published id, `YYYY/MM/DD-NN-slug`: the R2 directory and the page anchor. */
+  /** Its uid in lowercase, as its page (`/m/<id>/`), its anchors and its R2 directory name it. */
   id: string
   /** Its place, one at most; empty when the Moment has no location. */
   locations: ResolvedMomentLocation[]
   media: ResolvedMomentMedia[]
   occurredAt: string
   occurredLabel?: string
-  order: number
+  /** Where it sits among its day's Moments when times don't say (see `compareMoments`). */
+  order?: number
   text: string
   /** What it is about, when the record says; never `tech`, which isn't shown. */
   topic?: MomentTopic
@@ -200,11 +201,11 @@ export function getMomentPath(dateKey: string) {
 }
 
 /**
- * A Moment's own page, to share: its day in the calendar with the rest of its published
- * id, `YYYY/MM/DD-NN-slug`, which it keeps once it has one, below it.
+ * A Moment's own page, to share: its day in the calendar with it marked, at an address
+ * named by its uid alone, so it stays the same whatever day, place or words it moves to.
  */
 export function getMomentPagePath(moment: Pick<Moment, 'id'>) {
-  return `/calendar/${moment.id.replace('-', '/')}/`
+  return `/m/${moment.id}/`
 }
 
 /**
@@ -214,17 +215,9 @@ export function getMomentPagePath(moment: Pick<Moment, 'id'>) {
  */
 export const MOMENT_OG_IMAGES = Boolean(process.env.CI)
 
-/** One static path per Moment, for /calendar/<YYYY>/<MM>/<DD>/<NN-slug>/ and its share card. */
+/** One static path per Moment, for /m/<id>/ and its share card. */
 export async function getMomentPagePaths() {
-  return (await getMoments()).map((moment) => {
-    const [year, month, day, slug] = getMomentPagePath(moment).split('/').slice(2, 6) as [
-      string,
-      string,
-      string,
-      string,
-    ]
-    return { params: { day, month, moment: slug, year }, props: { moment } }
-  })
+  return (await getMoments()).map((moment) => ({ params: { id: moment.id }, props: { moment } }))
 }
 
 export type MomentPagePathProps = Awaited<ReturnType<typeof getMomentPagePaths>>[number]['props']
@@ -345,14 +338,14 @@ function resolveMoment(entry: MomentEntry): Moment | undefined {
   const moment: Moment = {
     dateKey,
     ...(record.food ? { food: record.food } : {}),
-    id: record.published.id,
+    id: record.uid.toLowerCase(),
     locations: record.places.map((id) => {
       const locationId = id as LocationId
       return { id: locationId, ...getLocation(locations, locationId) }
     }),
     media: record.media.map((media) => resolveMedia(record.uid, media)),
     occurredAt: record.occurredAt,
-    order: record.published.order,
+    ...(record.order === undefined ? {} : { order: record.order }),
     text: record.text,
     ...(record.topic ? { topic: record.topic } : {}),
     uid: record.uid,

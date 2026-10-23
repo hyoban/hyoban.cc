@@ -8,17 +8,17 @@
   "media": [
     {
       "uid": "01H0CBRZ8HFXCHQ87EW2X11G1N",
-      "type": "video",
       "alt": "",
+      "type": "video",
       "width": 1106,
       "height": 720,
       "published": {
-        "key": "moments/2023/05/14-01-obsidian-zhen-shi-tai-you-ya-la-xie-cha-jian/obsidian-zhen-shi-tai-you-ya-la-xie-cha-jian-video.mp4",
+        "key": "moments/01h0cbrz8gh69rv4z0vrftwp52/01h0cbrz8hfxchq87ew2x11g1n.mp4",
         "contentType": "video/mp4",
         "bytes": 424938,
         "etag": "e8ea4b88d4bc769214fac7bf1606bf4d",
         "poster": {
-          "key": "moments/2023/05/14-01-obsidian-zhen-shi-tai-you-ya-la-xie-cha-jian/obsidian-zhen-shi-tai-you-ya-la-xie-cha-jian-video-poster.png",
+          "key": "moments/01h0cbrz8gh69rv4z0vrftwp52/01h0cbrz8hfxchq87ew2x11g1n-poster.png",
           "contentType": "image/png",
           "bytes": 206093,
           "etag": "84f1b34b2737584ef632ac0e07e017d5",
@@ -29,10 +29,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2023/05/14-01-obsidian-zhen-shi-tai-you-ya-la-xie-cha-jian",
-    "slug": "obsidian-zhen-shi-tai-you-ya-la-xie-cha-jian",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2023-05-14T13:29:46+08:00",

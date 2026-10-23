@@ -6,10 +6,8 @@
   "hidden": false,
   "topic": "car",
   "media": [],
+  "order": 1,
   "published": {
-    "id": "2026/07/19-01-zeekr-insurance",
-    "slug": "zeekr-insurance",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-07-19T00:00:00+08:00",

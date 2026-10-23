@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01H738JSV9KH9QNGNQ5G5PN7XH",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 680,
       "height": 592,
       "published": {
-        "key": "moments/2023/08/06-05-1-kai-qi-hou-de-bao-cuo/1-kai-qi-hou-de-bao-cuo.png",
+        "key": "moments/01h738jsv8v6jdda5b7tg5xcdh/01h738jsv9kh9qngnq5g5pn7xh.png",
         "contentType": "image/png",
         "bytes": 76098,
         "etag": "1f344a80bfa457626a82f41e70632569",
@@ -21,7 +21,7 @@
         "height": 592,
         "variants": [
           {
-            "key": "moments/2023/08/06-05-1-kai-qi-hou-de-bao-cuo/1-kai-qi-hou-de-bao-cuo-480w.webp",
+            "key": "moments/01h738jsv8v6jdda5b7tg5xcdh/01h738jsv9kh9qngnq5g5pn7xh-480w.webp",
             "contentType": "image/webp",
             "bytes": 16910,
             "etag": "fca4e6a037987fdee2bbeef7116693ee",
@@ -33,12 +33,12 @@
     },
     {
       "uid": "01H738JSVAAYAJ72W7GZJAPAT9",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 500,
       "height": 412,
       "published": {
-        "key": "moments/2023/08/06-05-1-kai-qi-hou-de-bao-cuo/1-kai-qi-hou-de-bao-cuo-2.png",
+        "key": "moments/01h738jsv8v6jdda5b7tg5xcdh/01h738jsvaayaj72w7gzjapat9.png",
         "contentType": "image/png",
         "bytes": 29450,
         "etag": "05fdce1d2f72668af689ff73cf9cef91",
@@ -46,7 +46,7 @@
         "height": 412,
         "variants": [
           {
-            "key": "moments/2023/08/06-05-1-kai-qi-hou-de-bao-cuo/1-kai-qi-hou-de-bao-cuo-2-480w.webp",
+            "key": "moments/01h738jsv8v6jdda5b7tg5xcdh/01h738jsvaayaj72w7gzjapat9-480w.webp",
             "contentType": "image/webp",
             "bytes": 7424,
             "etag": "68508af883e6a3d522273208d248ac5d",
@@ -57,10 +57,8 @@
       }
     }
   ],
+  "order": 5,
   "published": {
-    "id": "2023/08/06-05-1-kai-qi-hou-de-bao-cuo",
-    "slug": "1-kai-qi-hou-de-bao-cuo",
-    "order": 5,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2023-08-06T00:30:41+08:00",

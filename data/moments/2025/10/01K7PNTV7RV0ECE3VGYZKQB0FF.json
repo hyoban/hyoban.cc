@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01K7PNTV7S0BWXC0SJ59Q3NE39",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1080,
       "height": 1440,
       "published": {
-        "key": "moments/2025/10/16-01-xiang-cong-wu-hu-zi-jia-dao-cheng-du-ran/xiang-cong-wu-hu-zi-jia-dao-cheng-du-ran.webp",
+        "key": "moments/01k7pntv7rv0ece3vgyzkqb0ff/01k7pntv7s0bwxc0sj59q3ne39.webp",
         "contentType": "image/webp",
         "bytes": 97116,
         "etag": "50d7fb66d2435d4ab91e91a1526380d8",
@@ -21,7 +21,7 @@
         "height": 1440,
         "variants": [
           {
-            "key": "moments/2025/10/16-01-xiang-cong-wu-hu-zi-jia-dao-cheng-du-ran/xiang-cong-wu-hu-zi-jia-dao-cheng-du-ran-480w.webp",
+            "key": "moments/01k7pntv7rv0ece3vgyzkqb0ff/01k7pntv7s0bwxc0sj59q3ne39-480w.webp",
             "contentType": "image/webp",
             "bytes": 23684,
             "etag": "f6d502fe92b71ff5a997127ac882b7b5",
@@ -29,7 +29,7 @@
             "height": 640
           },
           {
-            "key": "moments/2025/10/16-01-xiang-cong-wu-hu-zi-jia-dao-cheng-du-ran/xiang-cong-wu-hu-zi-jia-dao-cheng-du-ran-960w.webp",
+            "key": "moments/01k7pntv7rv0ece3vgyzkqb0ff/01k7pntv7s0bwxc0sj59q3ne39-960w.webp",
             "contentType": "image/webp",
             "bytes": 46558,
             "etag": "c9b6b2fefa4f132c8039f011b8dc76d5",
@@ -40,10 +40,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2025/10/16-01-xiang-cong-wu-hu-zi-jia-dao-cheng-du-ran",
-    "slug": "xiang-cong-wu-hu-zi-jia-dao-cheng-du-ran",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2025-10-16T22:12:27+08:00",

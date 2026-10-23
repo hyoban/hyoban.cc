@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01KXE0PA4SKY64C3415X8KHSAQ",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1280,
       "height": 959,
       "published": {
-        "key": "moments/2026/07/13-05-tie-ban-guo/tie-ban-guo.webp",
+        "key": "moments/01kxe0pa4r5dq0kvrkf613t6y5/01kxe0pa4sky64c3415x8khsaq.webp",
         "contentType": "image/webp",
         "bytes": 180596,
         "etag": "3a5bcb264f28675bac6fc6fc1033d02e",
@@ -21,7 +21,7 @@
         "height": 959,
         "variants": [
           {
-            "key": "moments/2026/07/13-05-tie-ban-guo/tie-ban-guo-480w.webp",
+            "key": "moments/01kxe0pa4r5dq0kvrkf613t6y5/01kxe0pa4sky64c3415x8khsaq-480w.webp",
             "contentType": "image/webp",
             "bytes": 40580,
             "etag": "7ef14ca8d471bbf271d64b9476eff042",
@@ -29,7 +29,7 @@
             "height": 360
           },
           {
-            "key": "moments/2026/07/13-05-tie-ban-guo/tie-ban-guo-960w.webp",
+            "key": "moments/01kxe0pa4r5dq0kvrkf613t6y5/01kxe0pa4sky64c3415x8khsaq-960w.webp",
             "contentType": "image/webp",
             "bytes": 118998,
             "etag": "3d8a8ca66e1d8532a8325a49f7fc087f",
@@ -40,10 +40,8 @@
       }
     }
   ],
+  "order": 5,
   "published": {
-    "id": "2026/07/13-05-tie-ban-guo",
-    "slug": "tie-ban-guo",
-    "order": 5,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-07-13T23:14:23+08:00",

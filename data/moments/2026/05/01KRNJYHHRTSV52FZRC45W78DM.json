@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01KRNJYHHSFTS8H1BC2KZVZJA5",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1280,
       "height": 960,
       "published": {
-        "key": "moments/2026/05/15-01-wo-de-che-che-lai-la-zi-xing-che-zhen/wo-de-che-che-lai-la-zi-xing-che-zhen.jpg",
+        "key": "moments/01krnjyhhrtsv52fzrc45w78dm/01krnjyhhsfts8h1bc2kzvzja5.jpg",
         "contentType": "image/jpeg",
         "bytes": 242794,
         "etag": "31bbde08807e5c846ab23fcad37e9a4b",
@@ -21,7 +21,7 @@
         "height": 960,
         "variants": [
           {
-            "key": "moments/2026/05/15-01-wo-de-che-che-lai-la-zi-xing-che-zhen/wo-de-che-che-lai-la-zi-xing-che-zhen-480w.webp",
+            "key": "moments/01krnjyhhrtsv52fzrc45w78dm/01krnjyhhsfts8h1bc2kzvzja5-480w.webp",
             "contentType": "image/webp",
             "bytes": 36766,
             "etag": "faa5c67b4676834cdac942aa587a9886",
@@ -29,7 +29,7 @@
             "height": 360
           },
           {
-            "key": "moments/2026/05/15-01-wo-de-che-che-lai-la-zi-xing-che-zhen/wo-de-che-che-lai-la-zi-xing-che-zhen-960w.webp",
+            "key": "moments/01krnjyhhrtsv52fzrc45w78dm/01krnjyhhsfts8h1bc2kzvzja5-960w.webp",
             "contentType": "image/webp",
             "bytes": 152126,
             "etag": "ab7dabb1508cdb5e21570ffa537e9030",
@@ -40,10 +40,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2026/05/15-01-wo-de-che-che-lai-la-zi-xing-che-zhen",
-    "slug": "wo-de-che-che-lai-la-zi-xing-che-zhen",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-05-15T18:29:39+08:00",

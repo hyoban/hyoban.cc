@@ -10,12 +10,12 @@
   "media": [
     {
       "uid": "01KQGTFKD1BPH6Z5VYN1ECYC67",
-      "type": "image",
       "alt": "Fruit drinks and a bowl of jelly dessert with tapioca pearls.",
+      "type": "image",
       "width": 1280,
       "height": 960,
       "published": {
-        "key": "moments/2026/05/01-02-yi-ci-he-san-zhong-zhe-ge-kao-yu-hao/yi-ci-he-san-zhong-zhe-ge-kao-yu-hao.jpg",
+        "key": "moments/01kqgtfkd0n5m8eqzvgvavjd1h/01kqgtfkd1bph6z5vyn1ecyc67.jpg",
         "contentType": "image/jpeg",
         "bytes": 163432,
         "etag": "6dec57e3dc029a057f42d751fcda0251",
@@ -23,7 +23,7 @@
         "height": 960,
         "variants": [
           {
-            "key": "moments/2026/05/01-02-yi-ci-he-san-zhong-zhe-ge-kao-yu-hao/yi-ci-he-san-zhong-zhe-ge-kao-yu-hao-480w.webp",
+            "key": "moments/01kqgtfkd0n5m8eqzvgvavjd1h/01kqgtfkd1bph6z5vyn1ecyc67-480w.webp",
             "contentType": "image/webp",
             "bytes": 31534,
             "etag": "0543bffbdc49a536e2ab864ef777da2d",
@@ -31,7 +31,7 @@
             "height": 360
           },
           {
-            "key": "moments/2026/05/01-02-yi-ci-he-san-zhong-zhe-ge-kao-yu-hao/yi-ci-he-san-zhong-zhe-ge-kao-yu-hao-960w.webp",
+            "key": "moments/01kqgtfkd0n5m8eqzvgvavjd1h/01kqgtfkd1bph6z5vyn1ecyc67-960w.webp",
             "contentType": "image/webp",
             "bytes": 90098,
             "etag": "4a07f7a34b81485889b6fe982cc38906",
@@ -43,12 +43,12 @@
     },
     {
       "uid": "01KQGTFKD2H1NTZMMC3CKW20X8",
-      "type": "image",
       "alt": "A hanging sign wishing Xu Song a happy birthday on May 14.",
+      "type": "image",
       "width": 1280,
       "height": 960,
       "published": {
-        "key": "moments/2026/05/01-02-yi-ci-he-san-zhong-zhe-ge-kao-yu-hao/yi-ci-he-san-zhong-zhe-ge-kao-yu-hao-2.jpg",
+        "key": "moments/01kqgtfkd0n5m8eqzvgvavjd1h/01kqgtfkd2h1ntzmmc3ckw20x8.jpg",
         "contentType": "image/jpeg",
         "bytes": 114316,
         "etag": "de5efc5760593a2c80cfc765dfaf31ca",
@@ -56,7 +56,7 @@
         "height": 960,
         "variants": [
           {
-            "key": "moments/2026/05/01-02-yi-ci-he-san-zhong-zhe-ge-kao-yu-hao/yi-ci-he-san-zhong-zhe-ge-kao-yu-hao-2-480w.webp",
+            "key": "moments/01kqgtfkd0n5m8eqzvgvavjd1h/01kqgtfkd2h1ntzmmc3ckw20x8-480w.webp",
             "contentType": "image/webp",
             "bytes": 19120,
             "etag": "2e3a9da41b180b4a5a4aec187acf91c2",
@@ -64,7 +64,7 @@
             "height": 360
           },
           {
-            "key": "moments/2026/05/01-02-yi-ci-he-san-zhong-zhe-ge-kao-yu-hao/yi-ci-he-san-zhong-zhe-ge-kao-yu-hao-2-960w.webp",
+            "key": "moments/01kqgtfkd0n5m8eqzvgvavjd1h/01kqgtfkd2h1ntzmmc3ckw20x8-960w.webp",
             "contentType": "image/webp",
             "bytes": 50488,
             "etag": "e209a5555b5412704847f0c5a19f8abb",
@@ -75,10 +75,8 @@
       }
     }
   ],
+  "order": 2,
   "published": {
-    "id": "2026/05/01-02-yi-ci-he-san-zhong-zhe-ge-kao-yu-hao",
-    "slug": "yi-ci-he-san-zhong-zhe-ge-kao-yu-hao",
-    "order": 2,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-05-01T11:49:24+08:00",

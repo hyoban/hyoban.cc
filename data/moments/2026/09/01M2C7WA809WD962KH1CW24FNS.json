@@ -10,12 +10,12 @@
   "media": [
     {
       "uid": "01M2C7WA81N7D589ZFR4JCN07D",
-      "type": "live-photo",
       "alt": "An orange mushroom grows among pine needles and small green plants.",
+      "type": "live-photo",
       "width": 1920,
       "height": 1080,
       "published": {
-        "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-live-1.webp",
+        "key": "moments/01m2c7wa809wd962kh1cw24fns/01m2c7wa81n7d589zfr4jcn07d.webp",
         "contentType": "image/webp",
         "bytes": 232660,
         "etag": "a6d41e5fd2d144bb0f0a276616a713eb",
@@ -23,7 +23,7 @@
         "height": 1080,
         "variants": [
           {
-            "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-live-1-480w.webp",
+            "key": "moments/01m2c7wa809wd962kh1cw24fns/01m2c7wa81n7d589zfr4jcn07d-480w.webp",
             "contentType": "image/webp",
             "bytes": 34248,
             "etag": "d26e90952ffab64eaa75b9f5c348681a",
@@ -31,7 +31,7 @@
             "height": 270
           },
           {
-            "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-live-1-960w.webp",
+            "key": "moments/01m2c7wa809wd962kh1cw24fns/01m2c7wa81n7d589zfr4jcn07d-960w.webp",
             "contentType": "image/webp",
             "bytes": 90862,
             "etag": "b38cf6b437f64bbe2f3ce8efa4124972",
@@ -40,7 +40,7 @@
           }
         ],
         "video": {
-          "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-live-1-motion.mp4",
+          "key": "moments/01m2c7wa809wd962kh1cw24fns/01m2c7wa81n7d589zfr4jcn07d-video.mp4",
           "contentType": "video/mp4",
           "bytes": 1529182,
           "etag": "b5a2fcc31e2750123400f4dd4091410f"
@@ -49,12 +49,12 @@
     },
     {
       "uid": "01M2C7WA82D0BDCCBR3X2VGPV9",
-      "type": "live-photo",
       "alt": "Tall dark tree trunks and branches disappear into a misty forest.",
+      "type": "live-photo",
       "width": 1920,
       "height": 1080,
       "published": {
-        "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-live-2.webp",
+        "key": "moments/01m2c7wa809wd962kh1cw24fns/01m2c7wa82d0bdccbr3x2vgpv9.webp",
         "contentType": "image/webp",
         "bytes": 379264,
         "etag": "6704aecf2756da61bf7ebfd30024e7e6",
@@ -62,7 +62,7 @@
         "height": 1080,
         "variants": [
           {
-            "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-live-2-480w.webp",
+            "key": "moments/01m2c7wa809wd962kh1cw24fns/01m2c7wa82d0bdccbr3x2vgpv9-480w.webp",
             "contentType": "image/webp",
             "bytes": 41576,
             "etag": "962c5138f75dd3bf18116b5309a6ef82",
@@ -70,7 +70,7 @@
             "height": 270
           },
           {
-            "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-live-2-960w.webp",
+            "key": "moments/01m2c7wa809wd962kh1cw24fns/01m2c7wa82d0bdccbr3x2vgpv9-960w.webp",
             "contentType": "image/webp",
             "bytes": 133226,
             "etag": "3df8215c7d4d36889146b7e0253c6205",
@@ -79,7 +79,7 @@
           }
         ],
         "video": {
-          "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-live-2-motion.mp4",
+          "key": "moments/01m2c7wa809wd962kh1cw24fns/01m2c7wa82d0bdccbr3x2vgpv9-video.mp4",
           "contentType": "video/mp4",
           "bytes": 2276699,
           "etag": "baeb271d3eadef25bf015bfa92a8d156"
@@ -88,12 +88,12 @@
     },
     {
       "uid": "01M2C7WA83JBQY2R9FY2G9AZY0",
-      "type": "live-photo",
       "alt": "Dense green undergrowth covers a damp, misty forest floor.",
+      "type": "live-photo",
       "width": 1920,
       "height": 1080,
       "published": {
-        "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-live-3.webp",
+        "key": "moments/01m2c7wa809wd962kh1cw24fns/01m2c7wa83jbqy2r9fy2g9azy0.webp",
         "contentType": "image/webp",
         "bytes": 547920,
         "etag": "55bfa7d1c018501be61a6301af4abf31",
@@ -101,7 +101,7 @@
         "height": 1080,
         "variants": [
           {
-            "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-live-3-480w.webp",
+            "key": "moments/01m2c7wa809wd962kh1cw24fns/01m2c7wa83jbqy2r9fy2g9azy0-480w.webp",
             "contentType": "image/webp",
             "bytes": 49542,
             "etag": "785269e661aa5a8f882a08b8cf2d872f",
@@ -109,7 +109,7 @@
             "height": 270
           },
           {
-            "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-live-3-960w.webp",
+            "key": "moments/01m2c7wa809wd962kh1cw24fns/01m2c7wa83jbqy2r9fy2g9azy0-960w.webp",
             "contentType": "image/webp",
             "bytes": 176034,
             "etag": "b69a2cf5419a79a5f7dd6f3d38c87ceb",
@@ -118,7 +118,7 @@
           }
         ],
         "video": {
-          "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-live-3-motion.mp4",
+          "key": "moments/01m2c7wa809wd962kh1cw24fns/01m2c7wa83jbqy2r9fy2g9azy0-video.mp4",
           "contentType": "video/mp4",
           "bytes": 2298580,
           "etag": "93eab3c3e0ece8b52ef684b7ee45feed"
@@ -127,12 +127,12 @@
     },
     {
       "uid": "01M2C7WA84HP8BK6Z74ETJWTD9",
-      "type": "live-photo",
       "alt": "A narrow earthy trail leads downhill through lush woodland.",
+      "type": "live-photo",
       "width": 1920,
       "height": 1080,
       "published": {
-        "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-live-4.webp",
+        "key": "moments/01m2c7wa809wd962kh1cw24fns/01m2c7wa84hp8bk6z74etjwtd9.webp",
         "contentType": "image/webp",
         "bytes": 531026,
         "etag": "060b0975f9d36613df49a44174e2072f",
@@ -140,7 +140,7 @@
         "height": 1080,
         "variants": [
           {
-            "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-live-4-480w.webp",
+            "key": "moments/01m2c7wa809wd962kh1cw24fns/01m2c7wa84hp8bk6z74etjwtd9-480w.webp",
             "contentType": "image/webp",
             "bytes": 47740,
             "etag": "d05faa240150252eafca3544603c3470",
@@ -148,7 +148,7 @@
             "height": 270
           },
           {
-            "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-live-4-960w.webp",
+            "key": "moments/01m2c7wa809wd962kh1cw24fns/01m2c7wa84hp8bk6z74etjwtd9-960w.webp",
             "contentType": "image/webp",
             "bytes": 169100,
             "etag": "7e2abca9f5e0d921534e4aef355f4160",
@@ -157,7 +157,7 @@
           }
         ],
         "video": {
-          "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-live-4-motion.mp4",
+          "key": "moments/01m2c7wa809wd962kh1cw24fns/01m2c7wa84hp8bk6z74etjwtd9-video.mp4",
           "contentType": "video/mp4",
           "bytes": 2340054,
           "etag": "d71177bb39eeba02926211c30d9b5a98"
@@ -166,12 +166,12 @@
     },
     {
       "uid": "01M2C7WA85YW9RTB6ZATNQZSWJ",
-      "type": "live-photo",
       "alt": "Yellow wildflowers grow beside a forest trail.",
+      "type": "live-photo",
       "width": 1920,
       "height": 1080,
       "published": {
-        "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-live-5.webp",
+        "key": "moments/01m2c7wa809wd962kh1cw24fns/01m2c7wa85yw9rtb6zatnqzswj.webp",
         "contentType": "image/webp",
         "bytes": 93580,
         "etag": "10bb69353e5445deaa691be8588a212c",
@@ -179,7 +179,7 @@
         "height": 1080,
         "variants": [
           {
-            "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-live-5-480w.webp",
+            "key": "moments/01m2c7wa809wd962kh1cw24fns/01m2c7wa85yw9rtb6zatnqzswj-480w.webp",
             "contentType": "image/webp",
             "bytes": 15758,
             "etag": "9ab1e37fdf58250d5db749eee1608cde",
@@ -187,7 +187,7 @@
             "height": 270
           },
           {
-            "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-live-5-960w.webp",
+            "key": "moments/01m2c7wa809wd962kh1cw24fns/01m2c7wa85yw9rtb6zatnqzswj-960w.webp",
             "contentType": "image/webp",
             "bytes": 36340,
             "etag": "10f741c61125fc7da27bbb5ee519ca61",
@@ -196,7 +196,7 @@
           }
         ],
         "video": {
-          "key": "moments/2026/09/13-01-yunnan-mushroom-foraging/yunnan-mushroom-foraging-live-5-motion.mp4",
+          "key": "moments/01m2c7wa809wd962kh1cw24fns/01m2c7wa85yw9rtb6zatnqzswj-video.mp4",
           "contentType": "video/mp4",
           "bytes": 1798635,
           "etag": "e29db218e4c80a0241e88e0bf57abbc6"
@@ -204,10 +204,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2026/09/13-01-yunnan-mushroom-foraging",
-    "slug": "yunnan-mushroom-foraging",
-    "order": 1,
     "at": "2026-10-08T08:10:00+08:00"
   },
   "createdAt": "2026-09-13T10:00:00+08:00",

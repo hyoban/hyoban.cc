@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01HYA81VW94HYH9NBZ0EBHRCE4",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 3248,
       "height": 2112,
       "published": {
-        "key": "moments/2024/05/20-01-xue-dao-le-che-di-shu-fu-la/xue-dao-le-che-di-shu-fu-la.jpg",
+        "key": "moments/01hya81vw8f3h4qpwhf811cxye/01hya81vw94hyh9nbz0ebhrce4.jpg",
         "contentType": "image/jpeg",
         "bytes": 266981,
         "etag": "8020bc92aa72071fe3459524b8cd5a9d",
@@ -21,7 +21,7 @@
         "height": 2112,
         "variants": [
           {
-            "key": "moments/2024/05/20-01-xue-dao-le-che-di-shu-fu-la/xue-dao-le-che-di-shu-fu-la-480w.webp",
+            "key": "moments/01hya81vw8f3h4qpwhf811cxye/01hya81vw94hyh9nbz0ebhrce4-480w.webp",
             "contentType": "image/webp",
             "bytes": 6692,
             "etag": "184b00c7aac29d7f0de9801a8b8c5446",
@@ -29,7 +29,7 @@
             "height": 312
           },
           {
-            "key": "moments/2024/05/20-01-xue-dao-le-che-di-shu-fu-la/xue-dao-le-che-di-shu-fu-la-960w.webp",
+            "key": "moments/01hya81vw8f3h4qpwhf811cxye/01hya81vw94hyh9nbz0ebhrce4-960w.webp",
             "contentType": "image/webp",
             "bytes": 21148,
             "etag": "3f8deed7fab1698fb1f8bb49e26da2ca",
@@ -37,7 +37,7 @@
             "height": 624
           },
           {
-            "key": "moments/2024/05/20-01-xue-dao-le-che-di-shu-fu-la/xue-dao-le-che-di-shu-fu-la-1920w.webp",
+            "key": "moments/01hya81vw8f3h4qpwhf811cxye/01hya81vw94hyh9nbz0ebhrce4-1920w.webp",
             "contentType": "image/webp",
             "bytes": 59244,
             "etag": "0f291d4b91e5ed42fbedbcbf7c30aa6e",
@@ -48,10 +48,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2024/05/20-01-xue-dao-le-che-di-shu-fu-la",
-    "slug": "xue-dao-le-che-di-shu-fu-la",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2024-05-20T13:37:09+08:00",

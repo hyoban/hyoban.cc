@@ -80,7 +80,7 @@ class MomentsRepositoryTest {
             val moments = changes.moments.map { moment ->
                 moment.copy(
                     places = moment.places.map { places[it] ?: it },
-                    published = moment.published ?: PublishedMoment("2026/10/02-01-${moment.uid.lowercase()}", moment.uid.lowercase(), 1, "2026-10-02T00:00:00Z"),
+                    published = moment.published ?: PublishedMoment("2026-10-02T00:00:00Z"),
                     media = moment.media.map { it.copy(local = null, published = it.published ?: PublishedMedia("moments/x/${it.uid}.jpg", "image/jpeg", 5, "etag")) },
                 )
             }
@@ -423,7 +423,7 @@ class MomentsRepositoryTest {
             occurredAt = day,
             text = text,
             hidden = hidden,
-            published = if (published) PublishedMoment("${day.replace('-', '/')}-01-$uid".lowercase(), uid.lowercase(), 1, "${day}T00:00:00Z") else null,
+            published = if (published) PublishedMoment("${day}T00:00:00Z") else null,
             createdAt = "${day}T00:00:00Z",
             updatedAt = "${day}T00:00:00Z",
         )

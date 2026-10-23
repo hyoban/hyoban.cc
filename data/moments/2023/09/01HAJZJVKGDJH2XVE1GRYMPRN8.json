@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01HAJZJVKHQS7957WFK2RVQDR7",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1040,
       "height": 496,
       "published": {
-        "key": "moments/2023/09/18-01-jin-tian-cai-zhi-dao-npx-you-ge-p-de/jin-tian-cai-zhi-dao-npx-you-ge-p-de.jpg",
+        "key": "moments/01hajzjvkgdjh2xve1grymprn8/01hajzjvkhqs7957wfk2rvqdr7.jpg",
         "contentType": "image/jpeg",
         "bytes": 18355,
         "etag": "abad22e94bf19ec1833ead636d1c0d37",
@@ -21,7 +21,7 @@
         "height": 496,
         "variants": [
           {
-            "key": "moments/2023/09/18-01-jin-tian-cai-zhi-dao-npx-you-ge-p-de/jin-tian-cai-zhi-dao-npx-you-ge-p-de-480w.webp",
+            "key": "moments/01hajzjvkgdjh2xve1grymprn8/01hajzjvkhqs7957wfk2rvqdr7-480w.webp",
             "contentType": "image/webp",
             "bytes": 2718,
             "etag": "878a2f69cd3c9e9b911f4e3adbca90fa",
@@ -29,7 +29,7 @@
             "height": 229
           },
           {
-            "key": "moments/2023/09/18-01-jin-tian-cai-zhi-dao-npx-you-ge-p-de/jin-tian-cai-zhi-dao-npx-you-ge-p-de-960w.webp",
+            "key": "moments/01hajzjvkgdjh2xve1grymprn8/01hajzjvkhqs7957wfk2rvqdr7-960w.webp",
             "contentType": "image/webp",
             "bytes": 6196,
             "etag": "58d9bfd958e651db259d809955e9da07",
@@ -40,10 +40,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2023/09/18-01-jin-tian-cai-zhi-dao-npx-you-ge-p-de",
-    "slug": "jin-tian-cai-zhi-dao-npx-you-ge-p-de",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2023-09-18T09:48:22+08:00",

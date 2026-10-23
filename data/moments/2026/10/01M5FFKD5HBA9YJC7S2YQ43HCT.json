@@ -14,7 +14,7 @@
       "width": 1271,
       "height": 946,
       "published": {
-        "key": "moments/2026/10/21-01-app/app.jpg",
+        "key": "moments/01m5ffkd5hba9yjc7s2yq43hct/01m5ffkd3s54kr5adtfdnbnbbh.jpg",
         "contentType": "image/jpeg",
         "bytes": 589518,
         "etag": "36b3a769dcdc8c690cf1c2d18c0e3d2e",
@@ -32,7 +32,7 @@
       "width": 1272,
       "height": 415,
       "published": {
-        "key": "moments/2026/10/21-01-app/app-2.jpg",
+        "key": "moments/01m5ffkd5hba9yjc7s2yq43hct/01m5ffkd579bcefgem2rvt91a9.jpg",
         "contentType": "image/jpeg",
         "bytes": 57337,
         "etag": "1c6860a9464fbc649bf7eb74ee4559be",
@@ -43,10 +43,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2026/10/21-01-app",
-    "slug": "app",
-    "order": 1,
     "at": "2026-10-21T15:00:00Z"
   },
   "createdAt": "2026-10-21T22:59:45+08:00",

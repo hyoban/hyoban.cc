@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01KGW5R3HSQM4NK5KMQNQPMW43",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1667,
       "height": 438,
       "published": {
-        "key": "moments/2026/02/07-01-fei-chang-gan-xie-hakadaooo-emiya-cuikaipeng-hooray/fei-chang-gan-xie-hakadaooo-emiya-cuikaipeng-hooray.png",
+        "key": "moments/01kgw5r3hrbvkxf0ecn3tgtbt8/01kgw5r3hsqm4nk5kmqnqpmw43.png",
         "contentType": "image/png",
         "bytes": 21414,
         "etag": "6d67ba6d770f6680b16b7d87a4661a9e",
@@ -21,7 +21,7 @@
         "height": 438,
         "variants": [
           {
-            "key": "moments/2026/02/07-01-fei-chang-gan-xie-hakadaooo-emiya-cuikaipeng-hooray/fei-chang-gan-xie-hakadaooo-emiya-cuikaipeng-hooray-480w.webp",
+            "key": "moments/01kgw5r3hrbvkxf0ecn3tgtbt8/01kgw5r3hsqm4nk5kmqnqpmw43-480w.webp",
             "contentType": "image/webp",
             "bytes": 5692,
             "etag": "aea7832fed99fcf170a0d667475764a5",
@@ -29,7 +29,7 @@
             "height": 126
           },
           {
-            "key": "moments/2026/02/07-01-fei-chang-gan-xie-hakadaooo-emiya-cuikaipeng-hooray/fei-chang-gan-xie-hakadaooo-emiya-cuikaipeng-hooray-960w.webp",
+            "key": "moments/01kgw5r3hrbvkxf0ecn3tgtbt8/01kgw5r3hsqm4nk5kmqnqpmw43-960w.webp",
             "contentType": "image/webp",
             "bytes": 15020,
             "etag": "ad79f4edcdb6d8e6cf9bfc7e7441eb6e",
@@ -40,10 +40,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2026/02/07-01-fei-chang-gan-xie-hakadaooo-emiya-cuikaipeng-hooray",
-    "slug": "fei-chang-gan-xie-hakadaooo-emiya-cuikaipeng-hooray",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-02-07T21:48:03+08:00",

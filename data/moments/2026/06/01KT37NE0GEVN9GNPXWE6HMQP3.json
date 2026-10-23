@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01KT37NE0H8X3AP1NA9V31EEY0",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1440,
       "height": 1080,
       "published": {
-        "key": "moments/2026/06/02-01-ji-ke-007gt-liang-wan-gong-li-shou-bao/ji-ke-007gt-liang-wan-gong-li-shou-bao.webp",
+        "key": "moments/01kt37ne0gevn9gnpxwe6hmqp3/01kt37ne0h8x3ap1na9v31eey0.webp",
         "contentType": "image/webp",
         "bytes": 170022,
         "etag": "30b287d609249138b684b40c24031856",
@@ -21,7 +21,7 @@
         "height": 1080,
         "variants": [
           {
-            "key": "moments/2026/06/02-01-ji-ke-007gt-liang-wan-gong-li-shou-bao/ji-ke-007gt-liang-wan-gong-li-shou-bao-480w.webp",
+            "key": "moments/01kt37ne0gevn9gnpxwe6hmqp3/01kt37ne0h8x3ap1na9v31eey0-480w.webp",
             "contentType": "image/webp",
             "bytes": 24308,
             "etag": "eef713c7dae47d32dbabafabbe026edf",
@@ -29,7 +29,7 @@
             "height": 360
           },
           {
-            "key": "moments/2026/06/02-01-ji-ke-007gt-liang-wan-gong-li-shou-bao/ji-ke-007gt-liang-wan-gong-li-shou-bao-960w.webp",
+            "key": "moments/01kt37ne0gevn9gnpxwe6hmqp3/01kt37ne0h8x3ap1na9v31eey0-960w.webp",
             "contentType": "image/webp",
             "bytes": 64498,
             "etag": "64e459adc07e8a42dbaba02b2f2862a8",
@@ -41,12 +41,12 @@
     },
     {
       "uid": "01KT37NE0JVKY09573PYK3PJA2",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 356,
       "height": 236,
       "published": {
-        "key": "moments/2026/06/02-01-ji-ke-007gt-liang-wan-gong-li-shou-bao/ji-ke-007gt-liang-wan-gong-li-shou-bao-2.webp",
+        "key": "moments/01kt37ne0gevn9gnpxwe6hmqp3/01kt37ne0jvky09573pyk3pja2.webp",
         "contentType": "image/webp",
         "bytes": 8730,
         "etag": "96dfb5bfafec3f43eccb424baa3a50be",
@@ -57,12 +57,12 @@
     },
     {
       "uid": "01KT37NE0KQJKJE9AYA3K8F3H9",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 960,
       "height": 1280,
       "published": {
-        "key": "moments/2026/06/02-01-ji-ke-007gt-liang-wan-gong-li-shou-bao/ji-ke-007gt-liang-wan-gong-li-shou-bao-3.webp",
+        "key": "moments/01kt37ne0gevn9gnpxwe6hmqp3/01kt37ne0kqjkje9aya3k8f3h9.webp",
         "contentType": "image/webp",
         "bytes": 48632,
         "etag": "d4d2219c49c52a4a252da0ffab8c8b27",
@@ -70,7 +70,7 @@
         "height": 1280,
         "variants": [
           {
-            "key": "moments/2026/06/02-01-ji-ke-007gt-liang-wan-gong-li-shou-bao/ji-ke-007gt-liang-wan-gong-li-shou-bao-3-480w.webp",
+            "key": "moments/01kt37ne0gevn9gnpxwe6hmqp3/01kt37ne0kqjkje9aya3k8f3h9-480w.webp",
             "contentType": "image/webp",
             "bytes": 15566,
             "etag": "6a8128798b280605ac06fb8eef7bbdf0",
@@ -82,12 +82,12 @@
     },
     {
       "uid": "01KT37NE0M62Q43G98KRB2XAPA",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 960,
       "height": 1280,
       "published": {
-        "key": "moments/2026/06/02-01-ji-ke-007gt-liang-wan-gong-li-shou-bao/ji-ke-007gt-liang-wan-gong-li-shou-bao-4.webp",
+        "key": "moments/01kt37ne0gevn9gnpxwe6hmqp3/01kt37ne0m62q43g98krb2xapa.webp",
         "contentType": "image/webp",
         "bytes": 48376,
         "etag": "16665eea2c26ba61c7ca84f51483ce48",
@@ -95,7 +95,7 @@
         "height": 1280,
         "variants": [
           {
-            "key": "moments/2026/06/02-01-ji-ke-007gt-liang-wan-gong-li-shou-bao/ji-ke-007gt-liang-wan-gong-li-shou-bao-4-480w.webp",
+            "key": "moments/01kt37ne0gevn9gnpxwe6hmqp3/01kt37ne0m62q43g98krb2xapa-480w.webp",
             "contentType": "image/webp",
             "bytes": 16302,
             "etag": "48c3d87c80ad3fdc09f6214a8b011d8b",
@@ -107,12 +107,12 @@
     },
     {
       "uid": "01KT37NE0NK4NTF0AEBN3MX7CX",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1080,
       "height": 1440,
       "published": {
-        "key": "moments/2026/06/02-01-ji-ke-007gt-liang-wan-gong-li-shou-bao/ji-ke-007gt-liang-wan-gong-li-shou-bao-5.webp",
+        "key": "moments/01kt37ne0gevn9gnpxwe6hmqp3/01kt37ne0nk4ntf0aebn3mx7cx.webp",
         "contentType": "image/webp",
         "bytes": 58870,
         "etag": "e1e3e5d1970dbe6031dd4459895581f2",
@@ -120,7 +120,7 @@
         "height": 1440,
         "variants": [
           {
-            "key": "moments/2026/06/02-01-ji-ke-007gt-liang-wan-gong-li-shou-bao/ji-ke-007gt-liang-wan-gong-li-shou-bao-5-480w.webp",
+            "key": "moments/01kt37ne0gevn9gnpxwe6hmqp3/01kt37ne0nk4ntf0aebn3mx7cx-480w.webp",
             "contentType": "image/webp",
             "bytes": 16536,
             "etag": "6bc16b79bec0f80682dc82c29568b505",
@@ -128,7 +128,7 @@
             "height": 640
           },
           {
-            "key": "moments/2026/06/02-01-ji-ke-007gt-liang-wan-gong-li-shou-bao/ji-ke-007gt-liang-wan-gong-li-shou-bao-5-960w.webp",
+            "key": "moments/01kt37ne0gevn9gnpxwe6hmqp3/01kt37ne0nk4ntf0aebn3mx7cx-960w.webp",
             "contentType": "image/webp",
             "bytes": 37250,
             "etag": "aa002218b5e1b2116cdcfccb0f71f1e9",
@@ -140,12 +140,12 @@
     },
     {
       "uid": "01KT37NE0PR1A9GPBW7HFA902N",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1080,
       "height": 1440,
       "published": {
-        "key": "moments/2026/06/02-01-ji-ke-007gt-liang-wan-gong-li-shou-bao/ji-ke-007gt-liang-wan-gong-li-shou-bao-6.webp",
+        "key": "moments/01kt37ne0gevn9gnpxwe6hmqp3/01kt37ne0pr1a9gpbw7hfa902n.webp",
         "contentType": "image/webp",
         "bytes": 53308,
         "etag": "0fe56b37215ca2d317cf7f6e94da458a",
@@ -153,7 +153,7 @@
         "height": 1440,
         "variants": [
           {
-            "key": "moments/2026/06/02-01-ji-ke-007gt-liang-wan-gong-li-shou-bao/ji-ke-007gt-liang-wan-gong-li-shou-bao-6-480w.webp",
+            "key": "moments/01kt37ne0gevn9gnpxwe6hmqp3/01kt37ne0pr1a9gpbw7hfa902n-480w.webp",
             "contentType": "image/webp",
             "bytes": 14828,
             "etag": "c79bf87d066221a4eb41d6b40fde22d0",
@@ -161,7 +161,7 @@
             "height": 640
           },
           {
-            "key": "moments/2026/06/02-01-ji-ke-007gt-liang-wan-gong-li-shou-bao/ji-ke-007gt-liang-wan-gong-li-shou-bao-6-960w.webp",
+            "key": "moments/01kt37ne0gevn9gnpxwe6hmqp3/01kt37ne0pr1a9gpbw7hfa902n-960w.webp",
             "contentType": "image/webp",
             "bytes": 33816,
             "etag": "510fcf7c3899aba1a9fd554919aec41a",
@@ -172,10 +172,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2026/06/02-01-ji-ke-007gt-liang-wan-gong-li-shou-bao",
-    "slug": "ji-ke-007gt-liang-wan-gong-li-shou-bao",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-06-02T11:57:30+08:00",

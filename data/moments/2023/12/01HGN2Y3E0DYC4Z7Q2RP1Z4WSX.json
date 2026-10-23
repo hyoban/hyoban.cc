@@ -6,10 +6,8 @@
   "hidden": false,
   "topic": "tech",
   "media": [],
+  "order": 1,
   "published": {
-    "id": "2023/12/02-01-you-can-use-github-style-alerts-on-nextra-with-remark",
-    "slug": "you-can-use-github-style-alerts-on-nextra-with-remark",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2023-12-02T18:59:36+08:00",

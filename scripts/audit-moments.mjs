@@ -8,7 +8,6 @@ import { promisify } from 'node:util'
 import {
   getReferencedAssetFiles,
   getReferencedR2Objects,
-  momentIdPattern,
   readMomentRecords,
 } from './lib/moment-assets.mjs'
 
@@ -18,21 +17,12 @@ const config = JSON.parse(await readFile(join(root, 'src/data/asset-config.json'
 const options = parseArguments(process.argv.slice(2))
 const records = await readMomentRecords()
 const objects = getReferencedR2Objects(records)
-const ordersByDate = new Map()
 const blankAltIds = []
 const changedMomentFiles = options.changedFrom
   ? await getChangedMomentFiles(options.changedFrom)
   : new Set()
 
 for (const record of records) {
-  const idMatch = record.id.match(momentIdPattern)
-
-  assert.ok(idMatch, `Invalid Moment id: ${record.id}`)
-  const idDate = `${idMatch[1]}-${idMatch[2]}-${idMatch[3]}`
-  const order = Number.parseInt(idMatch[4], 10)
-  assert.equal(record.moment.occurredAt.slice(0, 10), idDate)
-  ordersByDate.set(idDate, [...(ordersByDate.get(idDate) ?? []), order])
-
   const directFiles = new Set()
 
   for (const media of record.moment.media) {
@@ -67,12 +57,6 @@ for (const record of records) {
     getReferencedAssetFiles(record),
     `Unreferenced or missing asset metadata in ${record.id}`,
   )
-}
-
-// A published id never changes, so a Moment moved to another day or deleted leaves a gap
-// in its old day's orders; a new one takes the day's highest order plus one.
-for (const [date, orders] of ordersByDate) {
-  assert.equal(new Set(orders).size, orders.length, `Moment orders repeat for ${date}`)
 }
 
 if (options.remote) {

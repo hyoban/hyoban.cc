@@ -10,12 +10,12 @@
   "media": [
     {
       "uid": "01KHX8ZPQHD1BNYJNYHW5BJAA3",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1152,
       "height": 2048,
       "published": {
-        "key": "moments/2026/02/20-01-shi-de-lu-xing-jiu-shi-huan-ge-di-fang/shi-de-lu-xing-jiu-shi-huan-ge-di-fang.jpg",
+        "key": "moments/01khx8zpqg9w6xdty0a445dkkp/01khx8zpqhd1bnyjnyhw5bjaa3.jpg",
         "contentType": "image/jpeg",
         "bytes": 280279,
         "etag": "dc28e9ded90d073f5cfc31a0ff646439",
@@ -23,7 +23,7 @@
         "height": 2048,
         "variants": [
           {
-            "key": "moments/2026/02/20-01-shi-de-lu-xing-jiu-shi-huan-ge-di-fang/shi-de-lu-xing-jiu-shi-huan-ge-di-fang-480w.webp",
+            "key": "moments/01khx8zpqg9w6xdty0a445dkkp/01khx8zpqhd1bnyjnyhw5bjaa3-480w.webp",
             "contentType": "image/webp",
             "bytes": 46412,
             "etag": "a7399b2bc1b5fc4aed9e12cb53555406",
@@ -31,7 +31,7 @@
             "height": 853
           },
           {
-            "key": "moments/2026/02/20-01-shi-de-lu-xing-jiu-shi-huan-ge-di-fang/shi-de-lu-xing-jiu-shi-huan-ge-di-fang-960w.webp",
+            "key": "moments/01khx8zpqg9w6xdty0a445dkkp/01khx8zpqhd1bnyjnyhw5bjaa3-960w.webp",
             "contentType": "image/webp",
             "bytes": 118830,
             "etag": "865810194630f064a6fa1135fa89d657",
@@ -43,12 +43,12 @@
     },
     {
       "uid": "01KHX8ZPQJV1ZJ8X5HB1P4432T",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1920,
       "height": 1080,
       "published": {
-        "key": "moments/2026/02/20-01-shi-de-lu-xing-jiu-shi-huan-ge-di-fang/shi-de-lu-xing-jiu-shi-huan-ge-di-fang-2.jpg",
+        "key": "moments/01khx8zpqg9w6xdty0a445dkkp/01khx8zpqjv1zj8x5hb1p4432t.jpg",
         "contentType": "image/jpeg",
         "bytes": 232151,
         "etag": "544cc3a0ec3ca14e1bf3a8850a9cbe20",
@@ -56,7 +56,7 @@
         "height": 1080,
         "variants": [
           {
-            "key": "moments/2026/02/20-01-shi-de-lu-xing-jiu-shi-huan-ge-di-fang/shi-de-lu-xing-jiu-shi-huan-ge-di-fang-2-480w.webp",
+            "key": "moments/01khx8zpqg9w6xdty0a445dkkp/01khx8zpqjv1zj8x5hb1p4432t-480w.webp",
             "contentType": "image/webp",
             "bytes": 19632,
             "etag": "fc81e8ffd429711900411c6407329f38",
@@ -64,7 +64,7 @@
             "height": 270
           },
           {
-            "key": "moments/2026/02/20-01-shi-de-lu-xing-jiu-shi-huan-ge-di-fang/shi-de-lu-xing-jiu-shi-huan-ge-di-fang-2-960w.webp",
+            "key": "moments/01khx8zpqg9w6xdty0a445dkkp/01khx8zpqjv1zj8x5hb1p4432t-960w.webp",
             "contentType": "image/webp",
             "bytes": 56866,
             "etag": "0dbab9687bdcaa07d2f06d75430a8869",
@@ -75,10 +75,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2026/02/20-01-shi-de-lu-xing-jiu-shi-huan-ge-di-fang",
-    "slug": "shi-de-lu-xing-jiu-shi-huan-ge-di-fang",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-02-20T18:19:34+08:00",

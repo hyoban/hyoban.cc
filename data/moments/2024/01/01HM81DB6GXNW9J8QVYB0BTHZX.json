@@ -8,17 +8,17 @@
   "media": [
     {
       "uid": "01HM81DB6H2E1KQ6TA73T94EB3",
-      "type": "video",
       "alt": "",
+      "type": "video",
       "width": 626,
       "height": 800,
       "published": {
-        "key": "moments/2024/01/16-01-zhi-chi-le-zhi-jie-sou-suo-github-cang-ku/zhi-chi-le-zhi-jie-sou-suo-github-cang-ku-video.mp4",
+        "key": "moments/01hm81db6gxnw9j8qvyb0bthzx/01hm81db6h2e1kq6ta73t94eb3.mp4",
         "contentType": "video/mp4",
         "bytes": 97652,
         "etag": "477441916bfaea31125ff6a180e69dc3",
         "poster": {
-          "key": "moments/2024/01/16-01-zhi-chi-le-zhi-jie-sou-suo-github-cang-ku/zhi-chi-le-zhi-jie-sou-suo-github-cang-ku-video-poster.png",
+          "key": "moments/01hm81db6gxnw9j8qvyb0bthzx/01hm81db6h2e1kq6ta73t94eb3-poster.png",
           "contentType": "image/png",
           "bytes": 84154,
           "etag": "2abb74e9c2767c95902f70ab8a27b9cf",
@@ -29,10 +29,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2024/01/16-01-zhi-chi-le-zhi-jie-sou-suo-github-cang-ku",
-    "slug": "zhi-chi-le-zhi-jie-sou-suo-github-cang-ku",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2024-01-16T10:25:38+08:00",

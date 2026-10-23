@@ -14,7 +14,7 @@
       "width": 230,
       "height": 320,
       "published": {
-        "key": "moments/2024/04/18-01-o-ye-bei-zan-shui-bi-ye-le/o-ye-bei-zan-shui-bi-ye-le.jpg",
+        "key": "moments/01hvqf6d7058wv8ha0sygshbqt/01hvqf6d714zvt7atvc0bf6ftd.jpg",
         "contentType": "image/jpeg",
         "bytes": 7641,
         "etag": "6eda639fb6ac5ea73f01e859edc874fd",
@@ -24,10 +24,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2024/04/18-01-o-ye-bei-zan-shui-bi-ye-le",
-    "slug": "o-ye-bei-zan-shui-bi-ye-le",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2024-04-18T10:05:00+08:00",

@@ -8,17 +8,17 @@
   "media": [
     {
       "uid": "01J3G1SKYSM8T813NQDPGG7MVY",
-      "type": "video",
       "alt": "",
+      "type": "video",
       "width": 560,
       "height": 1080,
       "published": {
-        "key": "moments/2024/07/23-01-react-native-dynamic-theme-made-with-unistyles-and-radix/react-native-dynamic-theme-made-with-unistyles-and-radix-video.mp4",
+        "key": "moments/01j3g1skyr1yj14z9j5c3sdbhg/01j3g1skysm8t813nqdpgg7mvy.mp4",
         "contentType": "video/mp4",
         "bytes": 122922,
         "etag": "fd94ec3562e73938ab6c83c82ba5fa65",
         "poster": {
-          "key": "moments/2024/07/23-01-react-native-dynamic-theme-made-with-unistyles-and-radix/react-native-dynamic-theme-made-with-unistyles-and-radix-video-poster.png",
+          "key": "moments/01j3g1skyr1yj14z9j5c3sdbhg/01j3g1skysm8t813nqdpgg7mvy-poster.png",
           "contentType": "image/png",
           "bytes": 217397,
           "etag": "9c57192171ebbcb85a2321441f7fb60c",
@@ -29,10 +29,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2024/07/23-01-react-native-dynamic-theme-made-with-unistyles-and-radix",
-    "slug": "react-native-dynamic-theme-made-with-unistyles-and-radix",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2024-07-23T23:01:43+08:00",

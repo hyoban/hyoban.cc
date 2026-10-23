@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01KVGA4WHSQPDBZVYE71PENQRC",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1440,
       "height": 1080,
       "published": {
-        "key": "moments/2026/06/20-02-wen-xin-ti-shi/wen-xin-ti-shi.webp",
+        "key": "moments/01kvga4whrcxzh8f2zyg5dtxwj/01kvga4whsqpdbzvye71penqrc.webp",
         "contentType": "image/webp",
         "bytes": 57202,
         "etag": "ec2adb3afd4dcd252662b392d7b1684b",
@@ -21,7 +21,7 @@
         "height": 1080,
         "variants": [
           {
-            "key": "moments/2026/06/20-02-wen-xin-ti-shi/wen-xin-ti-shi-480w.webp",
+            "key": "moments/01kvga4whrcxzh8f2zyg5dtxwj/01kvga4whsqpdbzvye71penqrc-480w.webp",
             "contentType": "image/webp",
             "bytes": 9048,
             "etag": "0afba2ab2328bf9b9408e2bc4e9a2205",
@@ -29,7 +29,7 @@
             "height": 360
           },
           {
-            "key": "moments/2026/06/20-02-wen-xin-ti-shi/wen-xin-ti-shi-960w.webp",
+            "key": "moments/01kvga4whrcxzh8f2zyg5dtxwj/01kvga4whsqpdbzvye71penqrc-960w.webp",
             "contentType": "image/webp",
             "bytes": 22202,
             "etag": "c38e0d0bac89c25aafdb9e2e6a4e786a",
@@ -40,10 +40,8 @@
       }
     }
   ],
+  "order": 2,
   "published": {
-    "id": "2026/06/20-02-wen-xin-ti-shi",
-    "slug": "wen-xin-ti-shi",
-    "order": 2,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-06-20T00:06:43+08:00",

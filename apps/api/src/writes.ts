@@ -1,4 +1,5 @@
 import {
+  getMediaKey,
   isMomentShown,
   momentRecordSchema,
   placeSchema,
@@ -22,9 +23,6 @@ import {
   PROVISIONAL_PLACE_PATTERN,
   getExtension,
   getPlaceId,
-  getPublishedId,
-  getSlug,
-  getStem,
   matchPlace,
 } from '@hyoban/data-spec/publish'
 import {
@@ -41,8 +39,9 @@ import {
 // The write side, as the recording app commits what it kept on the phone: the originals
 // uploaded one by one, then everything else as one change set, checked whole and written
 // in one transaction that bumps the revision, so the change feed hands it out once. A
-// Moment's published id and every published block are the server's: they're set when it
-// publishes, never taken from a request, and never changed afterwards.
+// Moment's published block and every media item's are the server's: they're set when it
+// publishes, never taken from a request, and never changed afterwards. Nothing in them
+// names the Moment, which is its uid, so a published one can move to another day.
 
 export const GENERATOR = 'hyoban.cc api'
 const PLACE_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
@@ -123,11 +122,10 @@ export async function applyChanges(
     throw new HttpError(422, `${both} is both saved and deleted.`)
   }
 
-  const { places, stored, taken } = await readWriteState(
-    context.db,
-    [...inputs.map((input) => input.uid), ...deletedUids],
-    inputs.map((input) => input.occurredAt.slice(0, 10)),
-  )
+  const { places, stored } = await readWriteState(context.db, [
+    ...inputs.map((input) => input.uid),
+    ...deletedUids,
+  ])
   const statements: Statement[] = []
   const placeIds: Record<string, string> = {}
 
@@ -161,8 +159,7 @@ export async function applyChanges(
 
     const record = withPublished(named, stored.get(input.uid)?.record)
 
-    record.published ??= newPublished(context, record, taken)
-    taken.add(record.published.id)
+    record.published ??= { at: context.now }
 
     return record
   })
@@ -237,11 +234,11 @@ function live(stored: ReturnType<typeof toStored> | undefined) {
 
 /**
  * What of a Moment the trips are built from, as text to compare, or null when they don't
- * take it: its day and time, its places and its order, while it is published and shown.
+ * take it: its day and time and its places, while it is published and shown.
  */
 function tripView(record: MomentRecord | undefined) {
   return record?.published && isMomentShown(record)
-    ? JSON.stringify([record.occurredAt, record.places, record.published.order])
+    ? JSON.stringify([record.occurredAt, record.places])
     : null
 }
 
@@ -276,11 +273,11 @@ async function withDivision(context: WriteContext, place: Place): Promise<Place>
 }
 
 /**
- * What a change set is checked against, in one read: the places, the Moments it names
- * as stored, removed or not, and the published ids already taken on its days.
+ * What a change set is checked against, in one read: the places, and the Moments it
+ * names as stored, removed or not.
  */
-async function readWriteState(db: Database, uids: string[], days: string[]) {
-  const [places, moments, published] = await readAll(db, [
+async function readWriteState(db: Database, uids: string[]) {
+  const [places, moments] = await readAll(db, [
     db.prepare(`SELECT id, record FROM places WHERE deleted_at IS NULL`),
     db
       .prepare(
@@ -288,12 +285,6 @@ async function readWriteState(db: Database, uids: string[], days: string[]) {
          WHERE uid IN (SELECT value FROM json_each(?1))`,
       )
       .bind(JSON.stringify(uids)),
-    db
-      .prepare(
-        `SELECT published_id FROM moments
-         WHERE published_id IS NOT NULL AND day IN (SELECT value FROM json_each(?1))`,
-      )
-      .bind(JSON.stringify([...new Set(days)])),
   ])
 
   return {
@@ -304,7 +295,6 @@ async function readWriteState(db: Database, uids: string[], days: string[]) {
       ]),
     ) as Places,
     stored: new Map((moments as MomentRow[]).map((row) => [row.uid, toStored(row)])),
-    taken: new Set((published as { published_id: string }[]).map((row) => row.published_id)),
   }
 }
 
@@ -319,24 +309,6 @@ function withPublished(input: MomentRecord, prior: MomentRecord | undefined): Mo
     }),
     ...(prior?.published ? { published: prior.published } : {}),
   }
-}
-
-/**
- * A draft's published block: the next order on its day and an id spelled from its slug,
- * clear of the published ids [taken], those stored and those of the same write.
- */
-function newPublished(
-  context: WriteContext,
-  record: MomentRecord,
-  taken: ReadonlySet<string>,
-): NonNullable<MomentRecord['published']> {
-  const dateKey = record.occurredAt.slice(0, 10)
-  const day = dateKey.replaceAll('-', '/')
-  const ids = new Set([...taken].filter((id) => id.startsWith(`${day}-`)))
-  const orders = [...ids].map((id) => Number(id.slice(11, 13)))
-  const { id, order, slug } = getPublishedId(dateKey, getSlug(record), { ids, orders })
-
-  return { id, slug, order, at: context.now }
 }
 
 function deleteStatement(context: WriteContext, uid: string) {
@@ -394,7 +366,7 @@ export function readUpload(
 
 /**
  * Publishes a published Moment's unpublished media: copies each original from where it
- * was uploaded to the Moment's directory, named by the slug, and gives the item its
+ * was uploaded to the Moment's directory, named by its uid (`getMediaKey`), and gives the item its
  * published block. Returns the uploads, to delete once the record is saved; each copy's
  * key goes in `copied` as soon as it is made, to remove if the write fails, and each
  * original not uploaded goes in `missing`, so the write can name all of them.
@@ -405,7 +377,6 @@ async function publishMedia(
   copied: string[],
   missing: string[],
 ) {
-  const published = record.published!
   const uploads: string[] = []
   const copy = async (item: MomentMedia, part: UploadPart) => {
     const upload = getUploadKey(record.uid, item.uid, part)
@@ -423,7 +394,13 @@ async function publishMedia(
       throw new HttpError(422, `The upload ${upload} is of an unknown type.`)
     }
 
-    const key = `moments/${published.id}/${getStem({ media: record.media, published }, item)}.${extension}`
+    // A live photo's video sits beside its still; anything else is the item itself.
+    const key = getMediaKey(
+      record.uid,
+      item.uid,
+      extension,
+      item.type === 'live-photo' && part === 'video' ? 'video' : undefined,
+    )
     const stored = await bucket.put(key, source.body, { httpMetadata: { contentType } })
 
     if (!stored) {

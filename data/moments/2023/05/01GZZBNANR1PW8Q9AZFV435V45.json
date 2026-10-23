@@ -6,10 +6,8 @@
   "hidden": false,
   "topic": "tech",
   "media": [],
+  "order": 1,
   "published": {
-    "id": "2023/05/09-01-next-js-app-router-for-site-pages-router-for-app",
-    "slug": "next-js-app-router-for-site-pages-router-for-app",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2023-05-09T12:17:39+08:00",

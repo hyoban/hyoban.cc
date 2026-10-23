@@ -10,12 +10,12 @@
   "media": [
     {
       "uid": "01KK6HPA1SNZRPTPQQTS26182Y",
-      "type": "image",
       "alt": "A bowl of spicy malatang with instant noodles, meatballs, and luncheon meat.",
+      "type": "image",
       "width": 2048,
       "height": 1152,
       "published": {
-        "key": "moments/2026/03/08-01-chi-ge-ma-la-tang/chi-ge-ma-la-tang.jpg",
+        "key": "moments/01kk6hpa1rh0deh6ftm6j2ry6d/01kk6hpa1snzrptpqqts26182y.jpg",
         "contentType": "image/jpeg",
         "bytes": 528035,
         "etag": "5ca6d74e2c0549d3b5b7ce2ff8827ea2",
@@ -23,7 +23,7 @@
         "height": 1152,
         "variants": [
           {
-            "key": "moments/2026/03/08-01-chi-ge-ma-la-tang/chi-ge-ma-la-tang-480w.webp",
+            "key": "moments/01kk6hpa1rh0deh6ftm6j2ry6d/01kk6hpa1snzrptpqqts26182y-480w.webp",
             "contentType": "image/webp",
             "bytes": 31926,
             "etag": "e5ea36c8705d7ecf4c643a9694ef22ba",
@@ -31,7 +31,7 @@
             "height": 270
           },
           {
-            "key": "moments/2026/03/08-01-chi-ge-ma-la-tang/chi-ge-ma-la-tang-960w.webp",
+            "key": "moments/01kk6hpa1rh0deh6ftm6j2ry6d/01kk6hpa1snzrptpqqts26182y-960w.webp",
             "contentType": "image/webp",
             "bytes": 115226,
             "etag": "bdda83b1ee183b6faa1f1e756054e80d",
@@ -39,7 +39,7 @@
             "height": 540
           },
           {
-            "key": "moments/2026/03/08-01-chi-ge-ma-la-tang/chi-ge-ma-la-tang-1920w.webp",
+            "key": "moments/01kk6hpa1rh0deh6ftm6j2ry6d/01kk6hpa1snzrptpqqts26182y-1920w.webp",
             "contentType": "image/webp",
             "bytes": 343100,
             "etag": "bb60d55235ddceace101f760af2f640d",
@@ -55,10 +55,8 @@
       "麻辣烫"
     ]
   },
+  "order": 1,
   "published": {
-    "id": "2026/03/08-01-chi-ge-ma-la-tang",
-    "slug": "chi-ge-ma-la-tang",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-03-08T19:00:35+08:00",

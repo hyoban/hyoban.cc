@@ -8,17 +8,17 @@
   "media": [
     {
       "uid": "01J49KS45HHDCKKQGXQVKYZYVV",
-      "type": "video",
       "alt": "",
+      "type": "video",
       "width": 553,
       "height": 1200,
       "published": {
-        "key": "moments/2024/08/02-02-jin-tian-de-jin-zhan-shi-ji-chu-de-tu/jin-tian-de-jin-zhan-shi-ji-chu-de-tu-video.mp4",
+        "key": "moments/01j49ks45gth48axtxqv3vdj1e/01j49ks45hhdckkqgxqvkyzyvv.mp4",
         "contentType": "video/mp4",
         "bytes": 1608908,
         "etag": "1e02f95dc3c45a6ec304caa1eb2dd421",
         "poster": {
-          "key": "moments/2024/08/02-02-jin-tian-de-jin-zhan-shi-ji-chu-de-tu/jin-tian-de-jin-zhan-shi-ji-chu-de-tu-video-poster.png",
+          "key": "moments/01j49ks45gth48axtxqv3vdj1e/01j49ks45hhdckkqgxqvkyzyvv-poster.png",
           "contentType": "image/png",
           "bytes": 445993,
           "etag": "0b4cede135e7898e72a75bc52c6bd019",
@@ -29,10 +29,8 @@
       }
     }
   ],
+  "order": 2,
   "published": {
-    "id": "2024/08/02-02-jin-tian-de-jin-zhan-shi-ji-chu-de-tu",
-    "slug": "jin-tian-de-jin-zhan-shi-ji-chu-de-tu",
-    "order": 2,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2024-08-02T21:17:02+08:00",

@@ -10,12 +10,12 @@
   "media": [
     {
       "uid": "01KQ03GB01RMH2W5N903F9DM2V",
-      "type": "image",
       "alt": "A teppanyaki pan of noodles, vegetables, and meatballs on foil.",
+      "type": "image",
       "width": 1280,
       "height": 959,
       "published": {
-        "key": "moments/2026/04/25-04-zuo-tian-lu-ying-jie-shu-zhi-hou-qu-shi/zuo-tian-lu-ying-jie-shu-zhi-hou-qu-shi.jpg",
+        "key": "moments/01kq03gb00zz9wysdkfe0ect8w/01kq03gb01rmh2w5n903f9dm2v.jpg",
         "contentType": "image/jpeg",
         "bytes": 223529,
         "etag": "c4eb7563563b1b48519bb31aa33de1ce",
@@ -23,7 +23,7 @@
         "height": 959,
         "variants": [
           {
-            "key": "moments/2026/04/25-04-zuo-tian-lu-ying-jie-shu-zhi-hou-qu-shi/zuo-tian-lu-ying-jie-shu-zhi-hou-qu-shi-480w.webp",
+            "key": "moments/01kq03gb00zz9wysdkfe0ect8w/01kq03gb01rmh2w5n903f9dm2v-480w.webp",
             "contentType": "image/webp",
             "bytes": 44154,
             "etag": "b8462e8590a02f3507256d99a10028a3",
@@ -31,7 +31,7 @@
             "height": 360
           },
           {
-            "key": "moments/2026/04/25-04-zuo-tian-lu-ying-jie-shu-zhi-hou-qu-shi/zuo-tian-lu-ying-jie-shu-zhi-hou-qu-shi-960w.webp",
+            "key": "moments/01kq03gb00zz9wysdkfe0ect8w/01kq03gb01rmh2w5n903f9dm2v-960w.webp",
             "contentType": "image/webp",
             "bytes": 140408,
             "etag": "0bbec641c032dd8b3ae65448c1bf5d0a",
@@ -52,10 +52,8 @@
       "people": 5
     }
   },
+  "order": 4,
   "published": {
-    "id": "2026/04/25-04-zuo-tian-lu-ying-jie-shu-zhi-hou-qu-shi",
-    "slug": "zuo-tian-lu-ying-jie-shu-zhi-hou-qu-shi",
-    "order": 4,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-04-25T00:00:00+08:00",

@@ -15,7 +15,7 @@
       "width": 1080,
       "height": 1440,
       "published": {
-        "key": "moments/2025/11/04-02-kangding/kangding.webp",
+        "key": "moments/01m5mc7844ndj1fth35sq6jrm8/01k96fsvq3bkhe0seeaz2tx35d.webp",
         "contentType": "image/webp",
         "bytes": 265668,
         "etag": "02e8f6d747193a1c7fc07b91daf6494b",
@@ -32,7 +32,7 @@
       "width": 1440,
       "height": 1080,
       "published": {
-        "key": "moments/2025/11/04-02-kangding/kangding-2.webp",
+        "key": "moments/01m5mc7844ndj1fth35sq6jrm8/01k96fsvq462xxb24sz9qpt9my.webp",
         "contentType": "image/webp",
         "bytes": 421438,
         "etag": "e1cfdcd5f182539c2df446f7c10810e6",
@@ -49,7 +49,7 @@
       "width": 1440,
       "height": 1080,
       "published": {
-        "key": "moments/2025/11/04-02-kangding/kangding-3.webp",
+        "key": "moments/01m5mc7844ndj1fth35sq6jrm8/01k96fsvq5ag4f6f90fyqg5v2m.webp",
         "contentType": "image/webp",
         "bytes": 488344,
         "etag": "5436814138628d31e1f15d91c8495268",
@@ -66,7 +66,7 @@
       "width": 1080,
       "height": 1440,
       "published": {
-        "key": "moments/2025/11/04-02-kangding/kangding-4.webp",
+        "key": "moments/01m5mc7844ndj1fth35sq6jrm8/01k96fsvq6zmpcc9ywtgxny11f.webp",
         "contentType": "image/webp",
         "bytes": 411930,
         "etag": "ef84fde2c8d7905026949c80e42e844e",
@@ -77,10 +77,8 @@
       }
     }
   ],
+  "order": 2,
   "published": {
-    "id": "2025/11/04-02-kangding",
-    "slug": "kangding",
-    "order": 2,
     "at": "2026-10-23T12:40:21Z"
   },
   "createdAt": "2026-10-23T12:36:53Z",

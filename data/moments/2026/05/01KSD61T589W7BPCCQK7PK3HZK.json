@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01KSD61T59E99STCA72ARC6YF0",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1080,
       "height": 1440,
       "published": {
-        "key": "moments/2026/05/24-02-di-yi-ge-liang-wan-gong-li-de-kai-xiao/di-yi-ge-liang-wan-gong-li-de-kai-xiao.webp",
+        "key": "moments/01ksd61t589w7bpccqk7pk3hzk/01ksd61t59e99stca72arc6yf0.webp",
         "contentType": "image/webp",
         "bytes": 136074,
         "etag": "ce0bb6754eda2d6ffb24f568aeefba72",
@@ -21,7 +21,7 @@
         "height": 1440,
         "variants": [
           {
-            "key": "moments/2026/05/24-02-di-yi-ge-liang-wan-gong-li-de-kai-xiao/di-yi-ge-liang-wan-gong-li-de-kai-xiao-480w.webp",
+            "key": "moments/01ksd61t589w7bpccqk7pk3hzk/01ksd61t59e99stca72arc6yf0-480w.webp",
             "contentType": "image/webp",
             "bytes": 23738,
             "etag": "6ebd19515c12470c8c49a2a725dcae16",
@@ -29,7 +29,7 @@
             "height": 640
           },
           {
-            "key": "moments/2026/05/24-02-di-yi-ge-liang-wan-gong-li-de-kai-xiao/di-yi-ge-liang-wan-gong-li-de-kai-xiao-960w.webp",
+            "key": "moments/01ksd61t589w7bpccqk7pk3hzk/01ksd61t59e99stca72arc6yf0-960w.webp",
             "contentType": "image/webp",
             "bytes": 61438,
             "etag": "0921724c3fd4fb11f755c0ae9c7546f5",
@@ -40,10 +40,8 @@
       }
     }
   ],
+  "order": 2,
   "published": {
-    "id": "2026/05/24-02-di-yi-ge-liang-wan-gong-li-de-kai-xiao",
-    "slug": "di-yi-ge-liang-wan-gong-li-de-kai-xiao",
-    "order": 2,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-05-24T22:26:01+08:00",

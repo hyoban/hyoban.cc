@@ -8,17 +8,17 @@
   "media": [
     {
       "uid": "01J57KZEBHQVQW9QHZG1DE8GPZ",
-      "type": "video",
       "alt": "",
+      "type": "video",
       "width": 553,
       "height": 1200,
       "published": {
-        "key": "moments/2024/08/14-01-ke-yi-zai-shou-ji-shang-tian-jia-he-shan/ke-yi-zai-shou-ji-shang-tian-jia-he-shan-video.mp4",
+        "key": "moments/01j57kzebgxphjsyhpxagjgp0s/01j57kzebhqvqw9qhzg1de8gpz.mp4",
         "contentType": "video/mp4",
         "bytes": 733691,
         "etag": "431e7cf91029692e1242c937a2b5ae26",
         "poster": {
-          "key": "moments/2024/08/14-01-ke-yi-zai-shou-ji-shang-tian-jia-he-shan/ke-yi-zai-shou-ji-shang-tian-jia-he-shan-video-poster.png",
+          "key": "moments/01j57kzebgxphjsyhpxagjgp0s/01j57kzebhqvqw9qhzg1de8gpz-poster.png",
           "contentType": "image/png",
           "bytes": 356675,
           "etag": "694f2f9ca3119b5105a3f2ae3f7b6960",
@@ -29,10 +29,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2024/08/14-01-ke-yi-zai-shou-ji-shang-tian-jia-he-shan",
-    "slug": "ke-yi-zai-shou-ji-shang-tian-jia-he-shan",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2024-08-14T12:57:42+08:00",

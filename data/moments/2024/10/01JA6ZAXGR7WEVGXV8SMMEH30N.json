@@ -8,17 +8,17 @@
   "media": [
     {
       "uid": "01JA6ZAXGSVZKMP6ZJH4ZKQM0A",
-      "type": "video",
       "alt": "",
+      "type": "video",
       "width": 1152,
       "height": 720,
       "published": {
-        "key": "moments/2024/10/15-01-xia-ge-ban-ben-zhong-follow-app-zhi-chi-jiang/xia-ge-ban-ben-zhong-follow-app-zhi-chi-jiang-video.mp4",
+        "key": "moments/01ja6zaxgr7wevgxv8smmeh30n/01ja6zaxgsvzkmp6zjh4zkqm0a.mp4",
         "contentType": "video/mp4",
         "bytes": 876191,
         "etag": "a9799169fd09058d9b232a06c7d58ce7",
         "poster": {
-          "key": "moments/2024/10/15-01-xia-ge-ban-ben-zhong-follow-app-zhi-chi-jiang/xia-ge-ban-ben-zhong-follow-app-zhi-chi-jiang-video-poster.png",
+          "key": "moments/01ja6zaxgr7wevgxv8smmeh30n/01ja6zaxgsvzkmp6zjh4zkqm0a-poster.png",
           "contentType": "image/png",
           "bytes": 191914,
           "etag": "e25148a638bf2b08aff9d88595fce272",
@@ -29,10 +29,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2024/10/15-01-xia-ge-ban-ben-zhong-follow-app-zhi-chi-jiang",
-    "slug": "xia-ge-ban-ben-zhong-follow-app-zhi-chi-jiang",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2024-10-15T10:15:27+08:00",

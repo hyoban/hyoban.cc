@@ -6,10 +6,8 @@
   "hidden": false,
   "topic": "tech",
   "media": [],
+  "order": 2,
   "published": {
-    "id": "2023/10/03-02-kan-qi-lai-wo-xiu-fu-le-tailwindcss-icons-de",
-    "slug": "kan-qi-lai-wo-xiu-fu-le-tailwindcss-icons-de",
-    "order": 2,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2023-10-03T16:55:55+08:00",

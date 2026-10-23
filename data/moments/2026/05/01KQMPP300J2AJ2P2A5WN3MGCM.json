@@ -15,7 +15,7 @@
       "width": 960,
       "height": 1280,
       "published": {
-        "key": "moments/2026/05/03-01-wu-yi-de-di-san-tian-qu-de-shi-san/wu-yi-de-di-san-tian-qu-de-shi-san.jpg",
+        "key": "moments/01kqmpp300j2aj2p2a5wn3mgcm/01kqmpp301ep7842wtjwfnche0.jpg",
         "contentType": "image/jpeg",
         "bytes": 181290,
         "etag": "ef001927995129acae0904cc5e2a55a7",
@@ -23,7 +23,7 @@
         "height": 1280,
         "variants": [
           {
-            "key": "moments/2026/05/03-01-wu-yi-de-di-san-tian-qu-de-shi-san/wu-yi-de-di-san-tian-qu-de-shi-san-480w.webp",
+            "key": "moments/01kqmpp300j2aj2p2a5wn3mgcm/01kqmpp301ep7842wtjwfnche0-480w.webp",
             "contentType": "image/webp",
             "bytes": 49240,
             "etag": "71061a4dbf598cccdf93b88c221d7590",
@@ -40,7 +40,7 @@
       "width": 960,
       "height": 1280,
       "published": {
-        "key": "moments/2026/05/03-01-wu-yi-de-di-san-tian-qu-de-shi-san/wu-yi-de-di-san-tian-qu-de-shi-san-2.jpg",
+        "key": "moments/01kqmpp300j2aj2p2a5wn3mgcm/01kqmpp302fkxwktwggdprawyb.jpg",
         "contentType": "image/jpeg",
         "bytes": 326831,
         "etag": "0e138866ef6c22d8f694dad7627e5553",
@@ -48,7 +48,7 @@
         "height": 1280,
         "variants": [
           {
-            "key": "moments/2026/05/03-01-wu-yi-de-di-san-tian-qu-de-shi-san/wu-yi-de-di-san-tian-qu-de-shi-san-2-480w.webp",
+            "key": "moments/01kqmpp300j2aj2p2a5wn3mgcm/01kqmpp302fkxwktwggdprawyb-480w.webp",
             "contentType": "image/webp",
             "bytes": 102080,
             "etag": "401a6787aefc0fd4d6d428b0a07cafaa",
@@ -65,7 +65,7 @@
       "width": 960,
       "height": 1280,
       "published": {
-        "key": "moments/2026/05/03-01-wu-yi-de-di-san-tian-qu-de-shi-san/wu-yi-de-di-san-tian-qu-de-shi-san-3.jpg",
+        "key": "moments/01kqmpp300j2aj2p2a5wn3mgcm/01kqmpp3030dvvcjaqe0yxtqzk.jpg",
         "contentType": "image/jpeg",
         "bytes": 94240,
         "etag": "8d3355d5bbe7336d305e94e6df5a4c26",
@@ -73,7 +73,7 @@
         "height": 1280,
         "variants": [
           {
-            "key": "moments/2026/05/03-01-wu-yi-de-di-san-tian-qu-de-shi-san/wu-yi-de-di-san-tian-qu-de-shi-san-3-480w.webp",
+            "key": "moments/01kqmpp300j2aj2p2a5wn3mgcm/01kqmpp3030dvvcjaqe0yxtqzk-480w.webp",
             "contentType": "image/webp",
             "bytes": 24288,
             "etag": "0e0817864a553d136972f48f8ba4d113",
@@ -94,10 +94,8 @@
       "people": 1
     }
   },
+  "order": 1,
   "published": {
-    "id": "2026/05/03-01-wu-yi-de-di-san-tian-qu-de-shi-san",
-    "slug": "wu-yi-de-di-san-tian-qu-de-shi-san",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-05-03T00:00:00+08:00",

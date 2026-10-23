@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01H0W7GQZ9ZVPFYDMZ8AWK8NQZ",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 600,
       "height": 832,
       "published": {
-        "key": "moments/2023/05/20-01-wo-you-ge-qiang-po-zheng-bu-xiang-yi-zhi/wo-you-ge-qiang-po-zheng-bu-xiang-yi-zhi.jpg",
+        "key": "moments/01h0w7gqz8kafsd2rhf0jx4f7a/01h0w7gqz9zvpfydmz8awk8nqz.jpg",
         "contentType": "image/jpeg",
         "bytes": 187643,
         "etag": "a4c65bf9cb4bbcabec0cecfdf162b42b",
@@ -21,7 +21,7 @@
         "height": 832,
         "variants": [
           {
-            "key": "moments/2023/05/20-01-wo-you-ge-qiang-po-zheng-bu-xiang-yi-zhi/wo-you-ge-qiang-po-zheng-bu-xiang-yi-zhi-480w.webp",
+            "key": "moments/01h0w7gqz8kafsd2rhf0jx4f7a/01h0w7gqz9zvpfydmz8awk8nqz-480w.webp",
             "contentType": "image/webp",
             "bytes": 23904,
             "etag": "ae7eecf431f68dcf0c35e335c9f60549",
@@ -32,10 +32,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2023/05/20-01-wo-you-ge-qiang-po-zheng-bu-xiang-yi-zhi",
-    "slug": "wo-you-ge-qiang-po-zheng-bu-xiang-yi-zhi",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2023-05-20T17:23:13+08:00",

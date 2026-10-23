@@ -14,7 +14,8 @@ export async function readTripMoments() {
       id,
       locations: (moment.location ?? []).map(resolveLocation),
       occurredAt: moment.occurredAt,
-      order: record.published.order,
+      order: record.order,
+      uid: record.uid,
     }))
     .sort(compareMoments)
 }

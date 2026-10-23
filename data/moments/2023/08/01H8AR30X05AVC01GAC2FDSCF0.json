@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01H8AR30X1N9047ZCG7DJZMMT3",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1920,
       "height": 1080,
       "published": {
-        "key": "moments/2023/08/21-01-jia-ru-mai-men/jia-ru-mai-men.jpg",
+        "key": "moments/01h8ar30x05avc01gac2fdscf0/01h8ar30x1n9047zcg7djzmmt3.jpg",
         "contentType": "image/jpeg",
         "bytes": 224284,
         "etag": "8ca18933adf79910115ca7096c9d2e90",
@@ -21,7 +21,7 @@
         "height": 1080,
         "variants": [
           {
-            "key": "moments/2023/08/21-01-jia-ru-mai-men/jia-ru-mai-men-480w.webp",
+            "key": "moments/01h8ar30x05avc01gac2fdscf0/01h8ar30x1n9047zcg7djzmmt3-480w.webp",
             "contentType": "image/webp",
             "bytes": 8710,
             "etag": "c7f4797ef902f79cb8e33bd938b26c97",
@@ -29,7 +29,7 @@
             "height": 270
           },
           {
-            "key": "moments/2023/08/21-01-jia-ru-mai-men/jia-ru-mai-men-960w.webp",
+            "key": "moments/01h8ar30x05avc01gac2fdscf0/01h8ar30x1n9047zcg7djzmmt3-960w.webp",
             "contentType": "image/webp",
             "bytes": 33348,
             "etag": "e9bf8affbdcfeee5a35a088779923ffa",
@@ -41,12 +41,12 @@
     },
     {
       "uid": "01H8AR30X2NY1873M6Z8REM093",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1080,
       "height": 1920,
       "published": {
-        "key": "moments/2023/08/21-01-jia-ru-mai-men/jia-ru-mai-men-2.jpg",
+        "key": "moments/01h8ar30x05avc01gac2fdscf0/01h8ar30x2ny1873m6z8rem093.jpg",
         "contentType": "image/jpeg",
         "bytes": 197073,
         "etag": "ce7f6d6cc6ab116bedbba51d6b9cada3",
@@ -54,7 +54,7 @@
         "height": 1920,
         "variants": [
           {
-            "key": "moments/2023/08/21-01-jia-ru-mai-men/jia-ru-mai-men-2-480w.webp",
+            "key": "moments/01h8ar30x05avc01gac2fdscf0/01h8ar30x2ny1873m6z8rem093-480w.webp",
             "contentType": "image/webp",
             "bytes": 22766,
             "etag": "33dd8736ce261fab603922010038b4aa",
@@ -62,7 +62,7 @@
             "height": 853
           },
           {
-            "key": "moments/2023/08/21-01-jia-ru-mai-men/jia-ru-mai-men-2-960w.webp",
+            "key": "moments/01h8ar30x05avc01gac2fdscf0/01h8ar30x2ny1873m6z8rem093-960w.webp",
             "contentType": "image/webp",
             "bytes": 59560,
             "etag": "dbd2264159801767ef5f4303ee444769",
@@ -73,10 +73,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2023/08/21-01-jia-ru-mai-men",
-    "slug": "jia-ru-mai-men",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2023-08-21T08:32:04+08:00",

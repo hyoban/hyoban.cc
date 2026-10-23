@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01JQGYVH9SJW23W15HWK7FPZQ4",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 2150,
       "height": 1530,
       "published": {
-        "key": "moments/2025/03/29-01-folo-mcp/folo-mcp.jpg",
+        "key": "moments/01jqgyvh9rzbqad1wryta7vy0s/01jqgyvh9sjw23w15hwk7fpzq4.jpg",
         "contentType": "image/jpeg",
         "bytes": 222959,
         "etag": "87b861ed2da37fcc2f422ac67de27a4b",
@@ -21,7 +21,7 @@
         "height": 1530,
         "variants": [
           {
-            "key": "moments/2025/03/29-01-folo-mcp/folo-mcp-480w.webp",
+            "key": "moments/01jqgyvh9rzbqad1wryta7vy0s/01jqgyvh9sjw23w15hwk7fpzq4-480w.webp",
             "contentType": "image/webp",
             "bytes": 13586,
             "etag": "8396b82951b692a25c2b071bae41e0b8",
@@ -29,7 +29,7 @@
             "height": 342
           },
           {
-            "key": "moments/2025/03/29-01-folo-mcp/folo-mcp-960w.webp",
+            "key": "moments/01jqgyvh9rzbqad1wryta7vy0s/01jqgyvh9sjw23w15hwk7fpzq4-960w.webp",
             "contentType": "image/webp",
             "bytes": 43742,
             "etag": "95ea0ed6634a382425b701356a8a5ec9",
@@ -37,7 +37,7 @@
             "height": 683
           },
           {
-            "key": "moments/2025/03/29-01-folo-mcp/folo-mcp-1920w.webp",
+            "key": "moments/01jqgyvh9rzbqad1wryta7vy0s/01jqgyvh9sjw23w15hwk7fpzq4-1920w.webp",
             "contentType": "image/webp",
             "bytes": 107798,
             "etag": "1b1125b71143b767b87247f410436eda",
@@ -48,10 +48,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2025/03/29-01-folo-mcp",
-    "slug": "folo-mcp",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2025-03-29T20:43:31+08:00",

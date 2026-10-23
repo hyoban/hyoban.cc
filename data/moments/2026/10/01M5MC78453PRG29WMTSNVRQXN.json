@@ -15,7 +15,7 @@
       "width": 1440,
       "height": 1080,
       "published": {
-        "key": "moments/2026/10/02-06-dalian-datongjie-tram-stop/dalian-datongjie-tram-stop.webp",
+        "key": "moments/01m5mc78453prg29wmtsnvrqxn/01m3xajrp5ppdxc3z51330jd3f.webp",
         "contentType": "image/webp",
         "bytes": 232114,
         "etag": "bf85f9cb31a372fc600b7e7e27e2ec53",
@@ -24,7 +24,7 @@
         "variants": [],
         "original": true,
         "video": {
-          "key": "moments/2026/10/02-06-dalian-datongjie-tram-stop/dalian-datongjie-tram-stop.mp4",
+          "key": "moments/01m5mc78453prg29wmtsnvrqxn/01m3xajrp5ppdxc3z51330jd3f-video.mp4",
           "contentType": "video/mp4",
           "bytes": 2183481,
           "etag": "347f4a1a56d4600f85ef1ffe7b96005a",
@@ -39,7 +39,7 @@
       "width": 1440,
       "height": 1080,
       "published": {
-        "key": "moments/2026/10/02-06-dalian-datongjie-tram-stop/dalian-datongjie-tram-stop-2.webp",
+        "key": "moments/01m5mc78453prg29wmtsnvrqxn/01m3xajrp6c41zm865an46258h.webp",
         "contentType": "image/webp",
         "bytes": 232708,
         "etag": "5c635c39270f7c73ef811ed13f5c019a",
@@ -48,7 +48,7 @@
         "variants": [],
         "original": true,
         "video": {
-          "key": "moments/2026/10/02-06-dalian-datongjie-tram-stop/dalian-datongjie-tram-stop-2.mp4",
+          "key": "moments/01m5mc78453prg29wmtsnvrqxn/01m3xajrp6c41zm865an46258h-video.mp4",
           "contentType": "video/mp4",
           "bytes": 1457343,
           "etag": "cf520f3ddb8de9ad910afd7c5d365452",
@@ -57,10 +57,8 @@
       }
     }
   ],
+  "order": 6,
   "published": {
-    "id": "2026/10/02-06-dalian-datongjie-tram-stop",
-    "slug": "dalian-datongjie-tram-stop",
-    "order": 6,
     "at": "2026-10-23T12:40:21Z"
   },
   "createdAt": "2026-10-23T12:36:53Z",

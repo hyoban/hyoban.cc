@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01HV8R0D41R0HF7F7KMY4EESJP",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1634,
       "height": 1436,
       "published": {
-        "key": "moments/2024/04/12-03-executing-release-it-pnpm-will-help-you-generate-the/executing-release-it-pnpm-will-help-you-generate-the.jpg",
+        "key": "moments/01hv8r0d40zqsn7gbw7rqen4n8/01hv8r0d41r0hf7f7kmy4eesjp.jpg",
         "contentType": "image/jpeg",
         "bytes": 137609,
         "etag": "13f5a03482c0bfeb2e6c942b7bb99bb3",
@@ -21,7 +21,7 @@
         "height": 1436,
         "variants": [
           {
-            "key": "moments/2024/04/12-03-executing-release-it-pnpm-will-help-you-generate-the/executing-release-it-pnpm-will-help-you-generate-the-480w.webp",
+            "key": "moments/01hv8r0d40zqsn7gbw7rqen4n8/01hv8r0d41r0hf7f7kmy4eesjp-480w.webp",
             "contentType": "image/webp",
             "bytes": 15736,
             "etag": "4120a9b7d1bee3c70bc5b91b12e4c3c4",
@@ -29,7 +29,7 @@
             "height": 422
           },
           {
-            "key": "moments/2024/04/12-03-executing-release-it-pnpm-will-help-you-generate-the/executing-release-it-pnpm-will-help-you-generate-the-960w.webp",
+            "key": "moments/01hv8r0d40zqsn7gbw7rqen4n8/01hv8r0d41r0hf7f7kmy4eesjp-960w.webp",
             "contentType": "image/webp",
             "bytes": 41318,
             "etag": "4acd208ed3c6f90dbaa04db36adff74b",
@@ -40,10 +40,8 @@
       }
     }
   ],
+  "order": 3,
   "published": {
-    "id": "2024/04/12-03-executing-release-it-pnpm-will-help-you-generate-the",
-    "slug": "executing-release-it-pnpm-will-help-you-generate-the",
-    "order": 3,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2024-04-12T16:50:24+08:00",

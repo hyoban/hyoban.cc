@@ -10,12 +10,12 @@
   "media": [
     {
       "uid": "01JMPE4H29PP0040ER326387WR",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1152,
       "height": 2048,
       "published": {
-        "key": "moments/2025/02/22-01-zhong-yu-dao-hang-zhou-le/zhong-yu-dao-hang-zhou-le.jpg",
+        "key": "moments/01jmpe4h28hznt4y12c1qcvp8y/01jmpe4h29pp0040er326387wr.jpg",
         "contentType": "image/jpeg",
         "bytes": 400909,
         "etag": "96a87947b8ca83adc9897325ef9bb043",
@@ -23,7 +23,7 @@
         "height": 2048,
         "variants": [
           {
-            "key": "moments/2025/02/22-01-zhong-yu-dao-hang-zhou-le/zhong-yu-dao-hang-zhou-le-480w.webp",
+            "key": "moments/01jmpe4h28hznt4y12c1qcvp8y/01jmpe4h29pp0040er326387wr-480w.webp",
             "contentType": "image/webp",
             "bytes": 58570,
             "etag": "f378b95c8e6b45156a29e89e1e4e2c6e",
@@ -31,7 +31,7 @@
             "height": 853
           },
           {
-            "key": "moments/2025/02/22-01-zhong-yu-dao-hang-zhou-le/zhong-yu-dao-hang-zhou-le-960w.webp",
+            "key": "moments/01jmpe4h28hznt4y12c1qcvp8y/01jmpe4h29pp0040er326387wr-960w.webp",
             "contentType": "image/webp",
             "bytes": 188494,
             "etag": "2f65e6a909ea95aa84cbe598f5cb2c56",
@@ -42,10 +42,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2025/02/22-01-zhong-yu-dao-hang-zhou-le",
-    "slug": "zhong-yu-dao-hang-zhou-le",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2025-02-22T16:59:41+08:00",

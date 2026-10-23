@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01HV8QQE0HTPYPCH0WA9Z0SCP0",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1778,
       "height": 892,
       "published": {
-        "key": "moments/2024/04/12-02-when-you-execute-release-it-from-the-terminal-it-will/when-you-execute-release-it-from-the-terminal-it-will.jpg",
+        "key": "moments/01hv8qqe0gwfbsy37160j8z8nr/01hv8qqe0htpypch0wa9z0scp0.jpg",
         "contentType": "image/jpeg",
         "bytes": 72398,
         "etag": "9a72c075f988ad678508340cf0fc8314",
@@ -21,7 +21,7 @@
         "height": 892,
         "variants": [
           {
-            "key": "moments/2024/04/12-02-when-you-execute-release-it-from-the-terminal-it-will/when-you-execute-release-it-from-the-terminal-it-will-480w.webp",
+            "key": "moments/01hv8qqe0gwfbsy37160j8z8nr/01hv8qqe0htpypch0wa9z0scp0-480w.webp",
             "contentType": "image/webp",
             "bytes": 7776,
             "etag": "8556a6cffea439fbd6dcab21828879f4",
@@ -29,7 +29,7 @@
             "height": 241
           },
           {
-            "key": "moments/2024/04/12-02-when-you-execute-release-it-from-the-terminal-it-will/when-you-execute-release-it-from-the-terminal-it-will-960w.webp",
+            "key": "moments/01hv8qqe0gwfbsy37160j8z8nr/01hv8qqe0htpypch0wa9z0scp0-960w.webp",
             "contentType": "image/webp",
             "bytes": 19144,
             "etag": "00a45b5311a3e186e632f91d45757390",
@@ -40,10 +40,8 @@
       }
     }
   ],
+  "order": 2,
   "published": {
-    "id": "2024/04/12-02-when-you-execute-release-it-from-the-terminal-it-will",
-    "slug": "when-you-execute-release-it-from-the-terminal-it-will",
-    "order": 2,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2024-04-12T16:45:30+08:00",

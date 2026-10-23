@@ -15,7 +15,7 @@
       "width": 1920,
       "height": 1080,
       "published": {
-        "key": "moments/2026/09/16-03-zhongyi-market/zhongyi-market.webp",
+        "key": "moments/01m5mc78452yjqhw41y9c9vf1y/01m2m2gaw5kcc2q6bcm1sybs9s.webp",
         "contentType": "image/webp",
         "bytes": 370558,
         "etag": "7257290513de0ca66f71acb1499e5f38",
@@ -24,7 +24,7 @@
         "variants": [],
         "original": true,
         "video": {
-          "key": "moments/2026/09/16-03-zhongyi-market/zhongyi-market.mp4",
+          "key": "moments/01m5mc78452yjqhw41y9c9vf1y/01m2m2gaw5kcc2q6bcm1sybs9s-video.mp4",
           "contentType": "video/mp4",
           "bytes": 2097113,
           "etag": "a71e48a9e8eebd474749ad5ed0d0aab4",
@@ -39,7 +39,7 @@
       "width": 1920,
       "height": 1080,
       "published": {
-        "key": "moments/2026/09/16-03-zhongyi-market/zhongyi-market-2.webp",
+        "key": "moments/01m5mc78452yjqhw41y9c9vf1y/01m2m2gaw6n8wac68tryb2gzrc.webp",
         "contentType": "image/webp",
         "bytes": 151308,
         "etag": "df9e624261068aee60445ca5b1ddc871",
@@ -48,7 +48,7 @@
         "variants": [],
         "original": true,
         "video": {
-          "key": "moments/2026/09/16-03-zhongyi-market/zhongyi-market-2.mp4",
+          "key": "moments/01m5mc78452yjqhw41y9c9vf1y/01m2m2gaw6n8wac68tryb2gzrc-video.mp4",
           "contentType": "video/mp4",
           "bytes": 660155,
           "etag": "d4d77e529ac0cbb62cfa054fe48ad9c1",
@@ -63,10 +63,8 @@
     ],
     "verdict": "good"
   },
+  "order": 3,
   "published": {
-    "id": "2026/09/16-03-zhongyi-market",
-    "slug": "zhongyi-market",
-    "order": 3,
     "at": "2026-10-23T12:40:21Z"
   },
   "createdAt": "2026-10-23T12:36:53Z",

@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01HQB3AAK9YNTKNVEPZB4RBKGF",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1048,
       "height": 758,
       "published": {
-        "key": "moments/2024/02/23-01-eslint-vscode-you-ge-eslint-codeactionsonsave-rules-de/eslint-vscode-you-ge-eslint-codeactionsonsave-rules-de.jpg",
+        "key": "moments/01hqb3aak873xfa0tdkcjcksef/01hqb3aak9yntknvepzb4rbkgf.jpg",
         "contentType": "image/jpeg",
         "bytes": 33500,
         "etag": "2064e19c3eac0f24949cdcc9b5b148c6",
@@ -21,7 +21,7 @@
         "height": 758,
         "variants": [
           {
-            "key": "moments/2024/02/23-01-eslint-vscode-you-ge-eslint-codeactionsonsave-rules-de/eslint-vscode-you-ge-eslint-codeactionsonsave-rules-de-480w.webp",
+            "key": "moments/01hqb3aak873xfa0tdkcjcksef/01hqb3aak9yntknvepzb4rbkgf-480w.webp",
             "contentType": "image/webp",
             "bytes": 5046,
             "etag": "c1ad9a5c710e62735eab372f4e2e0631",
@@ -29,7 +29,7 @@
             "height": 347
           },
           {
-            "key": "moments/2024/02/23-01-eslint-vscode-you-ge-eslint-codeactionsonsave-rules-de/eslint-vscode-you-ge-eslint-codeactionsonsave-rules-de-960w.webp",
+            "key": "moments/01hqb3aak873xfa0tdkcjcksef/01hqb3aak9yntknvepzb4rbkgf-960w.webp",
             "contentType": "image/webp",
             "bytes": 12002,
             "etag": "e5d31f08d4b1a5a1b04a720e3a31829c",
@@ -40,10 +40,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2024/02/23-01-eslint-vscode-you-ge-eslint-codeactionsonsave-rules-de",
-    "slug": "eslint-vscode-you-ge-eslint-codeactionsonsave-rules-de",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2024-02-23T21:43:45+08:00",

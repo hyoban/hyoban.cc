@@ -10,12 +10,12 @@
   "media": [
     {
       "uid": "01KE1XXRP9A4G3AS6FWC51JEQ7",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1080,
       "height": 1305,
       "published": {
-        "key": "moments/2026/01/03-02-2026-zi-ji-kan-wan-de-di-yi-bu-dian/2026-zi-ji-kan-wan-de-di-yi-bu-dian.jpg",
+        "key": "moments/01ke1xxrp88sfz6psyw9pskghw/01ke1xxrp9a4g3as6fwc51jeq7.jpg",
         "contentType": "image/jpeg",
         "bytes": 63432,
         "etag": "26e31afd67dff7d72dab60df62e9664d",
@@ -23,7 +23,7 @@
         "height": 1305,
         "variants": [
           {
-            "key": "moments/2026/01/03-02-2026-zi-ji-kan-wan-de-di-yi-bu-dian/2026-zi-ji-kan-wan-de-di-yi-bu-dian-480w.webp",
+            "key": "moments/01ke1xxrp88sfz6psyw9pskghw/01ke1xxrp9a4g3as6fwc51jeq7-480w.webp",
             "contentType": "image/webp",
             "bytes": 8868,
             "etag": "45bc2d79b94191bdf08c5b70eb6df402",
@@ -31,7 +31,7 @@
             "height": 580
           },
           {
-            "key": "moments/2026/01/03-02-2026-zi-ji-kan-wan-de-di-yi-bu-dian/2026-zi-ji-kan-wan-de-di-yi-bu-dian-960w.webp",
+            "key": "moments/01ke1xxrp88sfz6psyw9pskghw/01ke1xxrp9a4g3as6fwc51jeq7-960w.webp",
             "contentType": "image/webp",
             "bytes": 21430,
             "etag": "ff14e9d9c23a0c6cc5db380e53fd97b8",
@@ -42,10 +42,8 @@
       }
     }
   ],
+  "order": 2,
   "published": {
-    "id": "2026/01/03-02-2026-zi-ji-kan-wan-de-di-yi-bu-dian",
-    "slug": "2026-zi-ji-kan-wan-de-di-yi-bu-dian",
-    "order": 2,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-01-03T20:39:41+08:00",

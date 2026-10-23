@@ -10,12 +10,12 @@
   "media": [
     {
       "uid": "01GY4C1RKSPA5C6YFNWZPTEZPB",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 3072,
       "height": 4096,
       "published": {
-        "key": "moments/2023/04/16-01-bei-an-tong-xue-han-chu-lai-wan/bei-an-tong-xue-han-chu-lai-wan.jpg",
+        "key": "moments/01gy4c1rkrxr9pmerf4aewm7pr/01gy4c1rkspa5c6yfnwzptezpb.jpg",
         "contentType": "image/jpeg",
         "bytes": 1536615,
         "etag": "138d411f8da870cf2f8b457f923485b7",
@@ -23,7 +23,7 @@
         "height": 4096,
         "variants": [
           {
-            "key": "moments/2023/04/16-01-bei-an-tong-xue-han-chu-lai-wan/bei-an-tong-xue-han-chu-lai-wan-480w.webp",
+            "key": "moments/01gy4c1rkrxr9pmerf4aewm7pr/01gy4c1rkspa5c6yfnwzptezpb-480w.webp",
             "contentType": "image/webp",
             "bytes": 28776,
             "etag": "21ac8960b83b10b38169d551db2d2247",
@@ -31,7 +31,7 @@
             "height": 640
           },
           {
-            "key": "moments/2023/04/16-01-bei-an-tong-xue-han-chu-lai-wan/bei-an-tong-xue-han-chu-lai-wan-960w.webp",
+            "key": "moments/01gy4c1rkrxr9pmerf4aewm7pr/01gy4c1rkspa5c6yfnwzptezpb-960w.webp",
             "contentType": "image/webp",
             "bytes": 104454,
             "etag": "66a9db5049c928d3dc67013dbc48f8af",
@@ -39,7 +39,7 @@
             "height": 1280
           },
           {
-            "key": "moments/2023/04/16-01-bei-an-tong-xue-han-chu-lai-wan/bei-an-tong-xue-han-chu-lai-wan-1920w.webp",
+            "key": "moments/01gy4c1rkrxr9pmerf4aewm7pr/01gy4c1rkspa5c6yfnwzptezpb-1920w.webp",
             "contentType": "image/webp",
             "bytes": 375004,
             "etag": "edcbb60471c535584aef3438563ddf56",
@@ -50,10 +50,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2023/04/16-01-bei-an-tong-xue-han-chu-lai-wan",
-    "slug": "bei-an-tong-xue-han-chu-lai-wan",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2023-04-16T14:29:15+08:00",

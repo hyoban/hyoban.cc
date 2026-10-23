@@ -15,7 +15,7 @@
       "width": 1920,
       "height": 1080,
       "published": {
-        "key": "moments/2025/11/04-04-xinduqiao/xinduqiao.webp",
+        "key": "moments/01m5mc7845r2t1e05jvf41q2k2/01k96fsvqaf0h7rww7f26n11q1.webp",
         "contentType": "image/webp",
         "bytes": 160652,
         "etag": "a77182bca73a7d6584554000fa2af0e3",
@@ -26,10 +26,8 @@
       }
     }
   ],
+  "order": 4,
   "published": {
-    "id": "2025/11/04-04-xinduqiao",
-    "slug": "xinduqiao",
-    "order": 4,
     "at": "2026-10-23T12:40:21Z"
   },
   "createdAt": "2026-10-23T12:36:53Z",

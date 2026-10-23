@@ -10,12 +10,12 @@
   "media": [
     {
       "uid": "01J7091X5S81A573PQZ5NXNJD4",
-      "type": "image",
       "alt": "A laptop on a bookstore desk beside a window overlooking the sea and a round seaside plaza.",
+      "type": "image",
       "width": 1536,
       "height": 2048,
       "published": {
-        "key": "moments/2024/09/05-01-zhong-yu-lun-dao-wo-le/zhong-yu-lun-dao-wo-le.jpg",
+        "key": "moments/01j7091x5rce7sccp2w9ydrq11/01j7091x5s81a573pqz5nxnjd4.jpg",
         "contentType": "image/jpeg",
         "bytes": 236146,
         "etag": "4a47b9628429129d8d9906119813ffaa",
@@ -23,7 +23,7 @@
         "height": 2048,
         "variants": [
           {
-            "key": "moments/2024/09/05-01-zhong-yu-lun-dao-wo-le/zhong-yu-lun-dao-wo-le-480w.webp",
+            "key": "moments/01j7091x5rce7sccp2w9ydrq11/01j7091x5s81a573pqz5nxnjd4-480w.webp",
             "contentType": "image/webp",
             "bytes": 19202,
             "etag": "5d0f0b8490e66997c9c69f2ec2046902",
@@ -31,7 +31,7 @@
             "height": 640
           },
           {
-            "key": "moments/2024/09/05-01-zhong-yu-lun-dao-wo-le/zhong-yu-lun-dao-wo-le-960w.webp",
+            "key": "moments/01j7091x5rce7sccp2w9ydrq11/01j7091x5s81a573pqz5nxnjd4-960w.webp",
             "contentType": "image/webp",
             "bytes": 57060,
             "etag": "f886ee6552b5556b12edeb8647130129",
@@ -42,10 +42,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2024/09/05-01-zhong-yu-lun-dao-wo-le",
-    "slug": "zhong-yu-lun-dao-wo-le",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2024-09-05T13:03:31+08:00",

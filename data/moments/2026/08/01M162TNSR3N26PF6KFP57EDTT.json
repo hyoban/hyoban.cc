@@ -10,12 +10,12 @@
   "media": [
     {
       "uid": "01M162TNSS96D2R0N216KECMTQ",
-      "type": "image",
       "alt": "Cars parked outside a modern metro station beneath a blue sky.",
+      "type": "image",
       "width": 1920,
       "height": 1440,
       "published": {
-        "key": "moments/2026/08/29-01-maanshan-metro/maanshan-metro.webp",
+        "key": "moments/01m162tnsr3n26pf6kfp57edtt/01m162tnss96d2r0n216kecmtq.webp",
         "contentType": "image/webp",
         "bytes": 357608,
         "etag": "d03985028a695d8aae7821780cef840e",
@@ -23,7 +23,7 @@
         "height": 1440,
         "variants": [
           {
-            "key": "moments/2026/08/29-01-maanshan-metro/maanshan-metro-480w.webp",
+            "key": "moments/01m162tnsr3n26pf6kfp57edtt/01m162tnss96d2r0n216kecmtq-480w.webp",
             "contentType": "image/webp",
             "bytes": 25486,
             "etag": "39983c854ab81ac368a4385d00fe9f38",
@@ -31,7 +31,7 @@
             "height": 360
           },
           {
-            "key": "moments/2026/08/29-01-maanshan-metro/maanshan-metro-960w.webp",
+            "key": "moments/01m162tnsr3n26pf6kfp57edtt/01m162tnss96d2r0n216kecmtq-960w.webp",
             "contentType": "image/webp",
             "bytes": 89078,
             "etag": "42fad4a0c40b14e29f6e9fe32cf824cf",
@@ -43,12 +43,12 @@
     },
     {
       "uid": "01M162TNSTY43R3FJE26CGMT7Q",
-      "type": "image",
       "alt": "A bright metro station concourse with ticket gates and angular ceiling lights.",
+      "type": "image",
       "width": 1920,
       "height": 1440,
       "published": {
-        "key": "moments/2026/08/29-01-maanshan-metro/maanshan-metro-2.webp",
+        "key": "moments/01m162tnsr3n26pf6kfp57edtt/01m162tnsty43r3fje26cgmt7q.webp",
         "contentType": "image/webp",
         "bytes": 492384,
         "etag": "e2fea5abaeec8561ff2257db7e83799b",
@@ -56,7 +56,7 @@
         "height": 1440,
         "variants": [
           {
-            "key": "moments/2026/08/29-01-maanshan-metro/maanshan-metro-2-480w.webp",
+            "key": "moments/01m162tnsr3n26pf6kfp57edtt/01m162tnsty43r3fje26cgmt7q-480w.webp",
             "contentType": "image/webp",
             "bytes": 36210,
             "etag": "b2a8164076bdfa8dc2cfd77e7bff9d90",
@@ -64,7 +64,7 @@
             "height": 360
           },
           {
-            "key": "moments/2026/08/29-01-maanshan-metro/maanshan-metro-2-960w.webp",
+            "key": "moments/01m162tnsr3n26pf6kfp57edtt/01m162tnsty43r3fje26cgmt7q-960w.webp",
             "contentType": "image/webp",
             "bytes": 135418,
             "etag": "8b794e61b144be30c45e8aeceb20a8f8",
@@ -76,17 +76,17 @@
     },
     {
       "uid": "01M162TNSVBM7ANQ1C42Q04Z23",
-      "type": "video",
       "alt": "A red metro train arrives behind platform screen doors at an elevated station.",
+      "type": "video",
       "width": 720,
       "height": 1280,
       "published": {
-        "key": "moments/2026/08/29-01-maanshan-metro/maanshan-metro-video.mp4",
+        "key": "moments/01m162tnsr3n26pf6kfp57edtt/01m162tnsvbm7anq1c42q04z23.mp4",
         "contentType": "video/mp4",
         "bytes": 5800266,
         "etag": "a376708c3270ba95aa70f66476013c8d",
         "poster": {
-          "key": "moments/2026/08/29-01-maanshan-metro/maanshan-metro-video-poster.webp",
+          "key": "moments/01m162tnsr3n26pf6kfp57edtt/01m162tnsvbm7anq1c42q04z23-poster.webp",
           "contentType": "image/webp",
           "bytes": 64884,
           "etag": "56dff9abe5cc9ecded1dcea1b6622dc7",
@@ -98,12 +98,12 @@
     },
     {
       "uid": "01M162TNSWKKXEHTNCNRPCD008",
-      "type": "image",
       "alt": "An empty metro carriage with red seats and stainless steel handrails.",
+      "type": "image",
       "width": 1920,
       "height": 1440,
       "published": {
-        "key": "moments/2026/08/29-01-maanshan-metro/maanshan-metro-3.webp",
+        "key": "moments/01m162tnsr3n26pf6kfp57edtt/01m162tnswkkxehtncnrpcd008.webp",
         "contentType": "image/webp",
         "bytes": 354902,
         "etag": "0f40675a341b34d78fa300064d458086",
@@ -111,7 +111,7 @@
         "height": 1440,
         "variants": [
           {
-            "key": "moments/2026/08/29-01-maanshan-metro/maanshan-metro-3-480w.webp",
+            "key": "moments/01m162tnsr3n26pf6kfp57edtt/01m162tnswkkxehtncnrpcd008-480w.webp",
             "contentType": "image/webp",
             "bytes": 29550,
             "etag": "91cbaa26763dabd8cd7639e80bea1d89",
@@ -119,7 +119,7 @@
             "height": 360
           },
           {
-            "key": "moments/2026/08/29-01-maanshan-metro/maanshan-metro-3-960w.webp",
+            "key": "moments/01m162tnsr3n26pf6kfp57edtt/01m162tnswkkxehtncnrpcd008-960w.webp",
             "contentType": "image/webp",
             "bytes": 94776,
             "etag": "00c8233453a69b97f946457b83e46915",
@@ -131,17 +131,17 @@
     },
     {
       "uid": "01M162TNSXVNQTT5C6S0RPR5NT",
-      "type": "video",
       "alt": "Green fields, small greenhouses, and an elevated railway pass outside a moving train window.",
+      "type": "video",
       "width": 1280,
       "height": 720,
       "published": {
-        "key": "moments/2026/08/29-01-maanshan-metro/maanshan-metro-video-2.mp4",
+        "key": "moments/01m162tnsr3n26pf6kfp57edtt/01m162tnsxvnqtt5c6s0rpr5nt.mp4",
         "contentType": "video/mp4",
         "bytes": 8701323,
         "etag": "dfc4c8949d47756c60271f10e94443f4",
         "poster": {
-          "key": "moments/2026/08/29-01-maanshan-metro/maanshan-metro-video-2-poster.webp",
+          "key": "moments/01m162tnsr3n26pf6kfp57edtt/01m162tnsxvnqtt5c6s0rpr5nt-poster.webp",
           "contentType": "image/webp",
           "bytes": 69080,
           "etag": "b2d94dd28c33e0c066d6f6769181b0dd",
@@ -153,17 +153,17 @@
     },
     {
       "uid": "01M162TNSYM2EHWZDREVN62J6R",
-      "type": "video",
       "alt": "Water and green fields pass outside a metro window above a row of red seats.",
+      "type": "video",
       "width": 1280,
       "height": 720,
       "published": {
-        "key": "moments/2026/08/29-01-maanshan-metro/maanshan-metro-video-3.mp4",
+        "key": "moments/01m162tnsr3n26pf6kfp57edtt/01m162tnsym2ehwzdrevn62j6r.mp4",
         "contentType": "video/mp4",
         "bytes": 1836585,
         "etag": "2af2575efc27592939d45b071b8537c4",
         "poster": {
-          "key": "moments/2026/08/29-01-maanshan-metro/maanshan-metro-video-3-poster.webp",
+          "key": "moments/01m162tnsr3n26pf6kfp57edtt/01m162tnsym2ehwzdrevn62j6r-poster.webp",
           "contentType": "image/webp",
           "bytes": 43272,
           "etag": "984b23a5a444cf8edaa42f2317444887",
@@ -175,12 +175,12 @@
     },
     {
       "uid": "01M162TNSZNR925B78QF02G8NB",
-      "type": "image",
       "alt": "An escalator descends from an elevated metro platform beside a stopped train.",
+      "type": "image",
       "width": 1440,
       "height": 1920,
       "published": {
-        "key": "moments/2026/08/29-01-maanshan-metro/maanshan-metro-4.webp",
+        "key": "moments/01m162tnsr3n26pf6kfp57edtt/01m162tnsznr925b78qf02g8nb.webp",
         "contentType": "image/webp",
         "bytes": 407626,
         "etag": "f4898e1beb80eb3b1fd9ee80569f1a4b",
@@ -188,7 +188,7 @@
         "height": 1920,
         "variants": [
           {
-            "key": "moments/2026/08/29-01-maanshan-metro/maanshan-metro-4-480w.webp",
+            "key": "moments/01m162tnsr3n26pf6kfp57edtt/01m162tnsznr925b78qf02g8nb-480w.webp",
             "contentType": "image/webp",
             "bytes": 62776,
             "etag": "abedc986c658861d0d020a25b90c0a31",
@@ -196,7 +196,7 @@
             "height": 640
           },
           {
-            "key": "moments/2026/08/29-01-maanshan-metro/maanshan-metro-4-960w.webp",
+            "key": "moments/01m162tnsr3n26pf6kfp57edtt/01m162tnsznr925b78qf02g8nb-960w.webp",
             "contentType": "image/webp",
             "bytes": 186160,
             "etag": "3d6d8865e6df6385a4ff517d2e9e51aa",
@@ -208,12 +208,12 @@
     },
     {
       "uid": "01M162TNT0D4KNJA1BVKA2YJ9V",
-      "type": "image",
       "alt": "Electric scooters parked along a separated lane beside the road.",
+      "type": "image",
       "width": 1920,
       "height": 1440,
       "published": {
-        "key": "moments/2026/08/29-01-maanshan-metro/maanshan-metro-5.webp",
+        "key": "moments/01m162tnsr3n26pf6kfp57edtt/01m162tnt0d4knja1bvka2yj9v.webp",
         "contentType": "image/webp",
         "bytes": 605780,
         "etag": "68efdadfdbe71c2d09146ebd40477d4c",
@@ -221,7 +221,7 @@
         "height": 1440,
         "variants": [
           {
-            "key": "moments/2026/08/29-01-maanshan-metro/maanshan-metro-5-480w.webp",
+            "key": "moments/01m162tnsr3n26pf6kfp57edtt/01m162tnt0d4knja1bvka2yj9v-480w.webp",
             "contentType": "image/webp",
             "bytes": 45616,
             "etag": "99e429f64fe10dda2ebbcb30ccb8053d",
@@ -229,7 +229,7 @@
             "height": 360
           },
           {
-            "key": "moments/2026/08/29-01-maanshan-metro/maanshan-metro-5-960w.webp",
+            "key": "moments/01m162tnsr3n26pf6kfp57edtt/01m162tnt0d4knja1bvka2yj9v-960w.webp",
             "contentType": "image/webp",
             "bytes": 162768,
             "etag": "fbdec500e0c3622285146a3bec1ba0ff",
@@ -241,12 +241,12 @@
     },
     {
       "uid": "01M162TNT1G2W8BTG5VY8T8TMG",
-      "type": "image",
       "alt": "A wide intersection beneath an elevated metro viaduct.",
+      "type": "image",
       "width": 1920,
       "height": 1440,
       "published": {
-        "key": "moments/2026/08/29-01-maanshan-metro/maanshan-metro-6.webp",
+        "key": "moments/01m162tnsr3n26pf6kfp57edtt/01m162tnt1g2w8btg5vy8t8tmg.webp",
         "contentType": "image/webp",
         "bytes": 470074,
         "etag": "d866db1deeeba4aa5b21a47f5fcceb61",
@@ -254,7 +254,7 @@
         "height": 1440,
         "variants": [
           {
-            "key": "moments/2026/08/29-01-maanshan-metro/maanshan-metro-6-480w.webp",
+            "key": "moments/01m162tnsr3n26pf6kfp57edtt/01m162tnt1g2w8btg5vy8t8tmg-480w.webp",
             "contentType": "image/webp",
             "bytes": 30988,
             "etag": "1c0361c6209963210920590a2e818841",
@@ -262,7 +262,7 @@
             "height": 360
           },
           {
-            "key": "moments/2026/08/29-01-maanshan-metro/maanshan-metro-6-960w.webp",
+            "key": "moments/01m162tnsr3n26pf6kfp57edtt/01m162tnt1g2w8btg5vy8t8tmg-960w.webp",
             "contentType": "image/webp",
             "bytes": 127094,
             "etag": "eef5da869d773b9ed785ddc25112e2a8",
@@ -273,10 +273,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2026/08/29-01-maanshan-metro",
-    "slug": "maanshan-metro",
-    "order": 1,
     "at": "2026-10-08T08:10:00+08:00"
   },
   "createdAt": "2026-08-29T14:20:35+08:00",

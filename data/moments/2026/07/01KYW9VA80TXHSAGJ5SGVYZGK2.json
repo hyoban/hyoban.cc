@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01KYW9VA81PR1NEB0DMXB8JQ6W",
-      "type": "image",
       "alt": "White Zeekr 007 GT covered in foam at a self-service car wash",
+      "type": "image",
       "width": 1920,
       "height": 1440,
       "published": {
-        "key": "moments/2026/07/31-01-pre-trip-car-wash/pre-trip-car-wash.webp",
+        "key": "moments/01kyw9va80txhsagj5sgvyzgk2/01kyw9va81pr1neb0dmxb8jq6w.webp",
         "contentType": "image/webp",
         "bytes": 419980,
         "etag": "13a49f17cc82d40391184a08cc46830b",
@@ -21,7 +21,7 @@
         "height": 1440,
         "variants": [
           {
-            "key": "moments/2026/07/31-01-pre-trip-car-wash/pre-trip-car-wash-480w.webp",
+            "key": "moments/01kyw9va80txhsagj5sgvyzgk2/01kyw9va81pr1neb0dmxb8jq6w-480w.webp",
             "contentType": "image/webp",
             "bytes": 29216,
             "etag": "250275c824df6b4a42eb30812289c05d",
@@ -29,7 +29,7 @@
             "height": 360
           },
           {
-            "key": "moments/2026/07/31-01-pre-trip-car-wash/pre-trip-car-wash-960w.webp",
+            "key": "moments/01kyw9va80txhsagj5sgvyzgk2/01kyw9va81pr1neb0dmxb8jq6w-960w.webp",
             "contentType": "image/webp",
             "bytes": 111576,
             "etag": "548950948237dca9ea46a269a5bd5348",
@@ -40,10 +40,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2026/07/31-01-pre-trip-car-wash",
-    "slug": "pre-trip-car-wash",
-    "order": 1,
     "at": "2026-08-20T22:58:53+08:00"
   },
   "createdAt": "2026-07-31T22:39:28+08:00",

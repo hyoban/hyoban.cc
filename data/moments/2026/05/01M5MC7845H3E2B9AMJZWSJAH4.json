@@ -15,7 +15,7 @@
       "width": 1280,
       "height": 959,
       "published": {
-        "key": "moments/2026/05/03-02-wuyuan-huji-sichu/wuyuan-huji-sichu.jpg",
+        "key": "moments/01m5mc7845h3e2b9amjzwsjah4/01kqmpp304yf9g9mesq1qayp24.jpg",
         "contentType": "image/jpeg",
         "bytes": 220523,
         "etag": "c12211b25cee35bb954313ad7e39aae6",
@@ -26,10 +26,8 @@
       }
     }
   ],
+  "order": 2,
   "published": {
-    "id": "2026/05/03-02-wuyuan-huji-sichu",
-    "slug": "wuyuan-huji-sichu",
-    "order": 2,
     "at": "2026-10-23T12:40:21Z"
   },
   "createdAt": "2026-10-23T12:36:53Z",

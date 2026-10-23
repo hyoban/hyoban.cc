@@ -10,12 +10,12 @@
   "media": [
     {
       "uid": "01K2XJ55PSKXBSPKYAS52TR0XN",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 2048,
       "height": 1536,
       "published": {
-        "key": "moments/2025/08/18-01-yong-you-le-zi-ji-de-che-che-o-ye/yong-you-le-zi-ji-de-che-che-o-ye.jpg",
+        "key": "moments/01k2xj55pr6sxt47kn8mf245er/01k2xj55pskxbspkyas52tr0xn.jpg",
         "contentType": "image/jpeg",
         "bytes": 350721,
         "etag": "6b042d433a9ebe73190f2a4beade160d",
@@ -23,7 +23,7 @@
         "height": 1536,
         "variants": [
           {
-            "key": "moments/2025/08/18-01-yong-you-le-zi-ji-de-che-che-o-ye/yong-you-le-zi-ji-de-che-che-o-ye-480w.webp",
+            "key": "moments/01k2xj55pr6sxt47kn8mf245er/01k2xj55pskxbspkyas52tr0xn-480w.webp",
             "contentType": "image/webp",
             "bytes": 24918,
             "etag": "6c67c01b14a1c1f5c00f448b1b798091",
@@ -31,7 +31,7 @@
             "height": 360
           },
           {
-            "key": "moments/2025/08/18-01-yong-you-le-zi-ji-de-che-che-o-ye/yong-you-le-zi-ji-de-che-che-o-ye-960w.webp",
+            "key": "moments/01k2xj55pr6sxt47kn8mf245er/01k2xj55pskxbspkyas52tr0xn-960w.webp",
             "contentType": "image/webp",
             "bytes": 68248,
             "etag": "01c0e2db70e73a03ed59674901d8b6f7",
@@ -39,7 +39,7 @@
             "height": 720
           },
           {
-            "key": "moments/2025/08/18-01-yong-you-le-zi-ji-de-che-che-o-ye/yong-you-le-zi-ji-de-che-che-o-ye-1920w.webp",
+            "key": "moments/01k2xj55pr6sxt47kn8mf245er/01k2xj55pskxbspkyas52tr0xn-1920w.webp",
             "contentType": "image/webp",
             "bytes": 166220,
             "etag": "370352f74fc1b326f849207cc1456f7d",
@@ -50,10 +50,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2025/08/18-01-yong-you-le-zi-ji-de-che-che-o-ye",
-    "slug": "yong-you-le-zi-ji-de-che-che-o-ye",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2025-08-18T11:04:23+08:00",

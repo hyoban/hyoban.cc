@@ -6,10 +6,8 @@
   "hidden": false,
   "topic": "tech",
   "media": [],
+  "order": 1,
   "published": {
-    "id": "2023/06/06-01-wei-shen-me-next-js-shi-la-ji-ta-xiu",
-    "slug": "wei-shen-me-next-js-shi-la-ji-ta-xiu",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2023-06-06T19:24:37+08:00",

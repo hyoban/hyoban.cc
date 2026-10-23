@@ -10,12 +10,12 @@
   "media": [
     {
       "uid": "01M42M0PMHV6S21DZ4YRD7PHM8",
-      "type": "live-photo",
       "alt": "A bubbling pot of tofu topped with scallions and golden crumbs.",
+      "type": "live-photo",
       "width": 1440,
       "height": 1080,
       "published": {
-        "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-1.webp",
+        "key": "moments/01m42m0pmgqkxh52hsrg1x1et1/01m42m0pmhv6s21dz4yrd7phm8.webp",
         "contentType": "image/webp",
         "bytes": 195440,
         "etag": "b15a8f8bb1598e43396dd8fc39fb9e15",
@@ -23,7 +23,7 @@
         "height": 1080,
         "variants": [
           {
-            "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-1-480w.webp",
+            "key": "moments/01m42m0pmgqkxh52hsrg1x1et1/01m42m0pmhv6s21dz4yrd7phm8-480w.webp",
             "contentType": "image/webp",
             "bytes": 33792,
             "etag": "92e6e6ba31be1424f58e60b595e16ef1",
@@ -31,7 +31,7 @@
             "height": 360
           },
           {
-            "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-1-960w.webp",
+            "key": "moments/01m42m0pmgqkxh52hsrg1x1et1/01m42m0pmhv6s21dz4yrd7phm8-960w.webp",
             "contentType": "image/webp",
             "bytes": 86754,
             "etag": "d5425215b5001c577e0682e81b91c68d",
@@ -40,7 +40,7 @@
           }
         ],
         "video": {
-          "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-1.mp4",
+          "key": "moments/01m42m0pmgqkxh52hsrg1x1et1/01m42m0pmhv6s21dz4yrd7phm8-video.mp4",
           "contentType": "video/mp4",
           "bytes": 2785231,
           "etag": "6ba6ca7387a08c980aeb6105c45b2331"
@@ -49,12 +49,12 @@
     },
     {
       "uid": "01M42M0PMJE5Z3ZF55W1NQYFJB",
-      "type": "live-photo",
       "alt": "Golden battered pieces of fried food on a patterned plate.",
+      "type": "live-photo",
       "width": 1440,
       "height": 1080,
       "published": {
-        "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-2.webp",
+        "key": "moments/01m42m0pmgqkxh52hsrg1x1et1/01m42m0pmje5z3zf55w1nqyfjb.webp",
         "contentType": "image/webp",
         "bytes": 112688,
         "etag": "73c8a5543d5f580e91144fd1411f0489",
@@ -62,7 +62,7 @@
         "height": 1080,
         "variants": [
           {
-            "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-2-480w.webp",
+            "key": "moments/01m42m0pmgqkxh52hsrg1x1et1/01m42m0pmje5z3zf55w1nqyfjb-480w.webp",
             "contentType": "image/webp",
             "bytes": 23236,
             "etag": "2ac9fcd641de04184abf35ed5413a565",
@@ -70,7 +70,7 @@
             "height": 360
           },
           {
-            "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-2-960w.webp",
+            "key": "moments/01m42m0pmgqkxh52hsrg1x1et1/01m42m0pmje5z3zf55w1nqyfjb-960w.webp",
             "contentType": "image/webp",
             "bytes": 55372,
             "etag": "3154fb27f13b8a645f1364e3ae99ad2a",
@@ -79,7 +79,7 @@
           }
         ],
         "video": {
-          "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-2.mp4",
+          "key": "moments/01m42m0pmgqkxh52hsrg1x1et1/01m42m0pmje5z3zf55w1nqyfjb-video.mp4",
           "contentType": "video/mp4",
           "bytes": 1275079,
           "etag": "d5dd7fd00f383bee3e21c0ca1c42df3d"
@@ -88,12 +88,12 @@
     },
     {
       "uid": "01M42M0PMKW3AKJHD9XBMCYTCZ",
-      "type": "live-photo",
       "alt": "Four airy red-bean-paste desserts dusted with sugar and pink powder.",
+      "type": "live-photo",
       "width": 1440,
       "height": 1080,
       "published": {
-        "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-3.webp",
+        "key": "moments/01m42m0pmgqkxh52hsrg1x1et1/01m42m0pmkw3akjhd9xbmcytcz.webp",
         "contentType": "image/webp",
         "bytes": 82852,
         "etag": "e8352686a9cf6677bd877f5b1a372e67",
@@ -101,7 +101,7 @@
         "height": 1080,
         "variants": [
           {
-            "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-3-480w.webp",
+            "key": "moments/01m42m0pmgqkxh52hsrg1x1et1/01m42m0pmkw3akjhd9xbmcytcz-480w.webp",
             "contentType": "image/webp",
             "bytes": 15164,
             "etag": "700f642601e3ac106770c74d2266ded2",
@@ -109,7 +109,7 @@
             "height": 360
           },
           {
-            "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-3-960w.webp",
+            "key": "moments/01m42m0pmgqkxh52hsrg1x1et1/01m42m0pmkw3akjhd9xbmcytcz-960w.webp",
             "contentType": "image/webp",
             "bytes": 38086,
             "etag": "75daa2d0d1cca40fc453b92b5b57a3ec",
@@ -118,7 +118,7 @@
           }
         ],
         "video": {
-          "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-3.mp4",
+          "key": "moments/01m42m0pmgqkxh52hsrg1x1et1/01m42m0pmkw3akjhd9xbmcytcz-video.mp4",
           "contentType": "video/mp4",
           "bytes": 1740423,
           "etag": "e5fdd2d78407650587ea0b285892af9b"
@@ -127,12 +127,12 @@
     },
     {
       "uid": "01M42M0PMM2Z7RDEXF0GY9HZK8",
-      "type": "live-photo",
       "alt": "Large sheets of golden-brown flatbread cut into rectangles.",
+      "type": "live-photo",
       "width": 1440,
       "height": 1080,
       "published": {
-        "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-4.webp",
+        "key": "moments/01m42m0pmgqkxh52hsrg1x1et1/01m42m0pmm2z7rdexf0gy9hzk8.webp",
         "contentType": "image/webp",
         "bytes": 336500,
         "etag": "73af211f1e4e5b62d1a43d88f5e93c9c",
@@ -140,7 +140,7 @@
         "height": 1080,
         "variants": [
           {
-            "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-4-480w.webp",
+            "key": "moments/01m42m0pmgqkxh52hsrg1x1et1/01m42m0pmm2z7rdexf0gy9hzk8-480w.webp",
             "contentType": "image/webp",
             "bytes": 44416,
             "etag": "50c43e3b25db3c5eb906df8adbcf06a6",
@@ -148,7 +148,7 @@
             "height": 360
           },
           {
-            "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-4-960w.webp",
+            "key": "moments/01m42m0pmgqkxh52hsrg1x1et1/01m42m0pmm2z7rdexf0gy9hzk8-960w.webp",
             "contentType": "image/webp",
             "bytes": 137514,
             "etag": "2afbc33dbe823c3e4f3e96eee3b9c02d",
@@ -157,7 +157,7 @@
           }
         ],
         "video": {
-          "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-4.mp4",
+          "key": "moments/01m42m0pmgqkxh52hsrg1x1et1/01m42m0pmm2z7rdexf0gy9hzk8-video.mp4",
           "contentType": "video/mp4",
           "bytes": 2577124,
           "etag": "a7168ca2fd8b88f0adf3ef397cbaedb9"
@@ -166,12 +166,12 @@
     },
     {
       "uid": "01M42M0PMNESWKEJ2YC8D86C63",
-      "type": "live-photo",
       "alt": "Glazed fried pieces with green and red peppers on a white plate.",
+      "type": "live-photo",
       "width": 1440,
       "height": 1080,
       "published": {
-        "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-5.webp",
+        "key": "moments/01m42m0pmgqkxh52hsrg1x1et1/01m42m0pmneswkej2yc8d86c63.webp",
         "contentType": "image/webp",
         "bytes": 135528,
         "etag": "ebc15f2796fdb652379073f717478e4b",
@@ -179,7 +179,7 @@
         "height": 1080,
         "variants": [
           {
-            "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-5-480w.webp",
+            "key": "moments/01m42m0pmgqkxh52hsrg1x1et1/01m42m0pmneswkej2yc8d86c63-480w.webp",
             "contentType": "image/webp",
             "bytes": 24340,
             "etag": "5383a1fd7ffcc0205be643f95bbb67f8",
@@ -187,7 +187,7 @@
             "height": 360
           },
           {
-            "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-5-960w.webp",
+            "key": "moments/01m42m0pmgqkxh52hsrg1x1et1/01m42m0pmneswkej2yc8d86c63-960w.webp",
             "contentType": "image/webp",
             "bytes": 62180,
             "etag": "a03e7ea77783b1e315d0eb5ecc2990b3",
@@ -196,7 +196,7 @@
           }
         ],
         "video": {
-          "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-5.mp4",
+          "key": "moments/01m42m0pmgqkxh52hsrg1x1et1/01m42m0pmneswkej2yc8d86c63-video.mp4",
           "contentType": "video/mp4",
           "bytes": 1440344,
           "etag": "a3d9b896f7c8a9bbe02913644ecd7308"
@@ -205,12 +205,12 @@
     },
     {
       "uid": "01M42M0PMPQ7R5YK4DW7YCC5K7",
-      "type": "live-photo",
       "alt": "Fried vegetable pieces tossed with green and red peppers.",
+      "type": "live-photo",
       "width": 1440,
       "height": 1080,
       "published": {
-        "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-6.webp",
+        "key": "moments/01m42m0pmgqkxh52hsrg1x1et1/01m42m0pmpq7r5yk4dw7ycc5k7.webp",
         "contentType": "image/webp",
         "bytes": 100814,
         "etag": "d9743c0ea5d23bb6b6b2d276d581b2aa",
@@ -218,7 +218,7 @@
         "height": 1080,
         "variants": [
           {
-            "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-6-480w.webp",
+            "key": "moments/01m42m0pmgqkxh52hsrg1x1et1/01m42m0pmpq7r5yk4dw7ycc5k7-480w.webp",
             "contentType": "image/webp",
             "bytes": 18068,
             "etag": "896c2dde6a607f2dca7f74d0d960055e",
@@ -226,7 +226,7 @@
             "height": 360
           },
           {
-            "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-6-960w.webp",
+            "key": "moments/01m42m0pmgqkxh52hsrg1x1et1/01m42m0pmpq7r5yk4dw7ycc5k7-960w.webp",
             "contentType": "image/webp",
             "bytes": 46116,
             "etag": "2998373fd2f2471d580a6066c91da4c8",
@@ -235,7 +235,7 @@
           }
         ],
         "video": {
-          "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-6.mp4",
+          "key": "moments/01m42m0pmgqkxh52hsrg1x1et1/01m42m0pmpq7r5yk4dw7ycc5k7-video.mp4",
           "contentType": "video/mp4",
           "bytes": 1489370,
           "etag": "fd14eeef9401d169b6e725cdcda5f64b"
@@ -244,12 +244,12 @@
     },
     {
       "uid": "01M42M0PMQVDP945VEBSRRT523",
-      "type": "live-photo",
       "alt": "A green patterned shopping bag resting on a metal bench.",
+      "type": "live-photo",
       "width": 1080,
       "height": 1440,
       "published": {
-        "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-7.webp",
+        "key": "moments/01m42m0pmgqkxh52hsrg1x1et1/01m42m0pmqvdp945vebsrrt523.webp",
         "contentType": "image/webp",
         "bytes": 137816,
         "etag": "1f8c22deffada046227c243007d05c66",
@@ -257,7 +257,7 @@
         "height": 1440,
         "variants": [
           {
-            "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-7-480w.webp",
+            "key": "moments/01m42m0pmgqkxh52hsrg1x1et1/01m42m0pmqvdp945vebsrrt523-480w.webp",
             "contentType": "image/webp",
             "bytes": 33548,
             "etag": "6a596858fbbc549b578cdf2402525f1e",
@@ -265,7 +265,7 @@
             "height": 640
           },
           {
-            "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-7-960w.webp",
+            "key": "moments/01m42m0pmgqkxh52hsrg1x1et1/01m42m0pmqvdp945vebsrrt523-960w.webp",
             "contentType": "image/webp",
             "bytes": 84318,
             "etag": "fee33dd80b7a9b501f8e77fb556f4810",
@@ -274,7 +274,7 @@
           }
         ],
         "video": {
-          "key": "moments/2026/10/04-01-shenyang-dongbei-food/shenyang-dongbei-food-live-7.mp4",
+          "key": "moments/01m42m0pmgqkxh52hsrg1x1et1/01m42m0pmqvdp945vebsrrt523-video.mp4",
           "contentType": "video/mp4",
           "bytes": 1117991,
           "etag": "7e7d300b018bd69891b2014702c5ade9"
@@ -289,10 +289,8 @@
     ],
     "verdict": "good"
   },
+  "order": 1,
   "published": {
-    "id": "2026/10/04-01-shenyang-dongbei-food",
-    "slug": "shenyang-dongbei-food",
-    "order": 1,
     "at": "2026-10-08T08:10:00+08:00"
   },
   "createdAt": "2026-10-04T12:51:06+08:00",

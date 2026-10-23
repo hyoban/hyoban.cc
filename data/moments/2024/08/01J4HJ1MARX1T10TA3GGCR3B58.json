@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01J4HJ1MASPZKSJXSVGV78ZGFS",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 945,
       "height": 2048,
       "published": {
-        "key": "moments/2024/08/05-01-jin-tian-jian-dan-feng-fu-yi-xia-xiang-qing/jin-tian-jian-dan-feng-fu-yi-xia-xiang-qing.jpg",
+        "key": "moments/01j4hj1marx1t10ta3ggcr3b58/01j4hj1maspzksjxsvgv78zgfs.jpg",
         "contentType": "image/jpeg",
         "bytes": 179289,
         "etag": "d45566fa7ccd6256cd64f135cdc7d26e",
@@ -21,7 +21,7 @@
         "height": 2048,
         "variants": [
           {
-            "key": "moments/2024/08/05-01-jin-tian-jian-dan-feng-fu-yi-xia-xiang-qing/jin-tian-jian-dan-feng-fu-yi-xia-xiang-qing-480w.webp",
+            "key": "moments/01j4hj1marx1t10ta3ggcr3b58/01j4hj1maspzksjxsvgv78zgfs-480w.webp",
             "contentType": "image/webp",
             "bytes": 46660,
             "etag": "a2098fb33f2104f63f41aba904812f96",
@@ -32,10 +32,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2024/08/05-01-jin-tian-jian-dan-feng-fu-yi-xia-xiang-qing",
-    "slug": "jin-tian-jian-dan-feng-fu-yi-xia-xiang-qing",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2024-08-05T23:20:39+08:00",

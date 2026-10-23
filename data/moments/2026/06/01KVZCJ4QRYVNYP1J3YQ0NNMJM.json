@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01KVZCJ4QS7HXS1FN8F4GJFEJ4",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1080,
       "height": 1440,
       "published": {
-        "key": "moments/2026/06/25-01-hao-peng-you-gei-wo-ji-le-hao-chi-de/hao-peng-you-gei-wo-ji-le-hao-chi-de.webp",
+        "key": "moments/01kvzcj4qryvnyp1j3yq0nnmjm/01kvzcj4qs7hxs1fn8f4gjfej4.webp",
         "contentType": "image/webp",
         "bytes": 197882,
         "etag": "130bb41fdb97cd734dba217ac94879f3",
@@ -21,7 +21,7 @@
         "height": 1440,
         "variants": [
           {
-            "key": "moments/2026/06/25-01-hao-peng-you-gei-wo-ji-le-hao-chi-de/hao-peng-you-gei-wo-ji-le-hao-chi-de-480w.webp",
+            "key": "moments/01kvzcj4qryvnyp1j3yq0nnmjm/01kvzcj4qs7hxs1fn8f4gjfej4-480w.webp",
             "contentType": "image/webp",
             "bytes": 36476,
             "etag": "f646566e58f8adcbf98d31676cf72ecf",
@@ -29,7 +29,7 @@
             "height": 640
           },
           {
-            "key": "moments/2026/06/25-01-hao-peng-you-gei-wo-ji-le-hao-chi-de/hao-peng-you-gei-wo-ji-le-hao-chi-de-960w.webp",
+            "key": "moments/01kvzcj4qryvnyp1j3yq0nnmjm/01kvzcj4qs7hxs1fn8f4gjfej4-960w.webp",
             "contentType": "image/webp",
             "bytes": 100226,
             "etag": "2a5b80701b318a3fa5e0bd4689ff71c5",
@@ -46,10 +46,8 @@
     ],
     "verdict": "good"
   },
+  "order": 1,
   "published": {
-    "id": "2026/06/25-01-hao-peng-you-gei-wo-ji-le-hao-chi-de",
-    "slug": "hao-peng-you-gei-wo-ji-le-hao-chi-de",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-06-25T20:37:31+08:00",

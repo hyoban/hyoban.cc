@@ -6,10 +6,8 @@
   "hidden": false,
   "topic": "tech",
   "media": [],
+  "order": 1,
   "published": {
-    "id": "2023/11/28-01-zhe-ge-publicdir-zai-rspack-rsbuild-zhong-dui-ying-shen",
-    "slug": "zhe-ge-publicdir-zai-rspack-rsbuild-zhong-dui-ying-shen",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2023-11-28T17:39:33+08:00",

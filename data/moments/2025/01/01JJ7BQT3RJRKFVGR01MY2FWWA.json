@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01JJ7BQT3S3R4BGFE1XZ4J3YHG",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1538,
       "height": 284,
       "published": {
-        "key": "moments/2025/01/22-02-reng-diao-jiu-de-guang-mao-huan-shang-you-2/reng-diao-jiu-de-guang-mao-huan-shang-you-2.jpg",
+        "key": "moments/01jj7bqt3rjrkfvgr01my2fwwa/01jj7bqt3s3r4bgfe1xz4j3yhg.jpg",
         "contentType": "image/jpeg",
         "bytes": 21089,
         "etag": "7921ff8a2f29609a1518f2bdb0cb62ea",
@@ -21,7 +21,7 @@
         "height": 284,
         "variants": [
           {
-            "key": "moments/2025/01/22-02-reng-diao-jiu-de-guang-mao-huan-shang-you-2/reng-diao-jiu-de-guang-mao-huan-shang-you-2-480w.webp",
+            "key": "moments/01jj7bqt3rjrkfvgr01my2fwwa/01jj7bqt3s3r4bgfe1xz4j3yhg-480w.webp",
             "contentType": "image/webp",
             "bytes": 2444,
             "etag": "8cee68a11a7391bc6bbb5f952809d0f3",
@@ -29,7 +29,7 @@
             "height": 89
           },
           {
-            "key": "moments/2025/01/22-02-reng-diao-jiu-de-guang-mao-huan-shang-you-2/reng-diao-jiu-de-guang-mao-huan-shang-you-2-960w.webp",
+            "key": "moments/01jj7bqt3rjrkfvgr01my2fwwa/01jj7bqt3s3r4bgfe1xz4j3yhg-960w.webp",
             "contentType": "image/webp",
             "bytes": 5442,
             "etag": "feea969b03506d57da2efaae3b222258",
@@ -40,10 +40,8 @@
       }
     }
   ],
+  "order": 2,
   "published": {
-    "id": "2025/01/22-02-reng-diao-jiu-de-guang-mao-huan-shang-you-2",
-    "slug": "reng-diao-jiu-de-guang-mao-huan-shang-you-2",
-    "order": 2,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2025-01-22T23:57:47+08:00",

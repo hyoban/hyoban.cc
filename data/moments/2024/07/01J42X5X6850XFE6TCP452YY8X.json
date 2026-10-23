@@ -8,17 +8,17 @@
   "media": [
     {
       "uid": "01J42X5X69Q8T5MKNY80FC6JRE",
-      "type": "video",
       "alt": "",
+      "type": "video",
       "width": 1108,
       "height": 720,
       "published": {
-        "key": "moments/2024/07/31-03-wei-bu-tong-lei-xing-ding-yue-she-ji-bu/wei-bu-tong-lei-xing-ding-yue-she-ji-bu-video.mp4",
+        "key": "moments/01j42x5x6850xfe6tcp452yy8x/01j42x5x69q8t5mkny80fc6jre.mp4",
         "contentType": "video/mp4",
         "bytes": 664896,
         "etag": "a8ff04b6b57059823da8fc0f113b02af",
         "poster": {
-          "key": "moments/2024/07/31-03-wei-bu-tong-lei-xing-ding-yue-she-ji-bu/wei-bu-tong-lei-xing-ding-yue-she-ji-bu-video-poster.png",
+          "key": "moments/01j42x5x6850xfe6tcp452yy8x/01j42x5x69q8t5mkny80fc6jre-poster.png",
           "contentType": "image/png",
           "bytes": 748155,
           "etag": "b9e3c01d34a762b87f88a10e55aa74cb",
@@ -29,10 +29,8 @@
       }
     }
   ],
+  "order": 3,
   "published": {
-    "id": "2024/07/31-03-wei-bu-tong-lei-xing-ding-yue-she-ji-bu",
-    "slug": "wei-bu-tong-lei-xing-ding-yue-she-ji-bu",
-    "order": 3,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2024-07-31T06:46:37+08:00",

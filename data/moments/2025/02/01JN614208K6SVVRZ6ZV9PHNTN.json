@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01JN614209YN1X0G6SGRS41WNM",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 801,
       "height": 428,
       "published": {
-        "key": "moments/2025/02/28-01-mai-le-32-256-de-mac-mini-hao-pian-yi/mai-le-32-256-de-mac-mini-hao-pian-yi.jpg",
+        "key": "moments/01jn614208k6svvrz6zv9phntn/01jn614209yn1x0g6sgrs41wnm.jpg",
         "contentType": "image/jpeg",
         "bytes": 33231,
         "etag": "5815b1a72996df1dbb5de7e3214c22f5",
@@ -21,7 +21,7 @@
         "height": 428,
         "variants": [
           {
-            "key": "moments/2025/02/28-01-mai-le-32-256-de-mac-mini-hao-pian-yi/mai-le-32-256-de-mac-mini-hao-pian-yi-480w.webp",
+            "key": "moments/01jn614208k6svvrz6zv9phntn/01jn614209yn1x0g6sgrs41wnm-480w.webp",
             "contentType": "image/webp",
             "bytes": 10154,
             "etag": "ba73c7a81a061b68b67338088bf89a50",
@@ -32,10 +32,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2025/02/28-01-mai-le-32-256-de-mac-mini-hao-pian-yi",
-    "slug": "mai-le-32-256-de-mac-mini-hao-pian-yi",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2025-02-28T18:20:05+08:00",

@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01KY51K9Y9X3SDAD6Z68A8E392",
-      "type": "image",
       "alt": "An ETC device fitting snugly in the right compartment of a black car storage box.",
+      "type": "image",
       "width": 1440,
       "height": 1920,
       "published": {
-        "key": "moments/2026/07/22-01-etc-storage/etc-storage.webp",
+        "key": "moments/01ky51k9y8ekq6gps6zf9jdt27/01ky51k9y9x3sdad6z68a8e392.webp",
         "contentType": "image/webp",
         "bytes": 112236,
         "etag": "29a4c6dadbcd1ea1e2877e88129ed990",
@@ -21,7 +21,7 @@
         "height": 1920,
         "variants": [
           {
-            "key": "moments/2026/07/22-01-etc-storage/etc-storage-480w.webp",
+            "key": "moments/01ky51k9y8ekq6gps6zf9jdt27/01ky51k9y9x3sdad6z68a8e392-480w.webp",
             "contentType": "image/webp",
             "bytes": 14986,
             "etag": "934fcc323e824cb6c57ae8ec061d3f49",
@@ -29,7 +29,7 @@
             "height": 640
           },
           {
-            "key": "moments/2026/07/22-01-etc-storage/etc-storage-960w.webp",
+            "key": "moments/01ky51k9y8ekq6gps6zf9jdt27/01ky51k9y9x3sdad6z68a8e392-960w.webp",
             "contentType": "image/webp",
             "bytes": 40018,
             "etag": "6a6abae0a58ee71ea9378df414e3f1e5",
@@ -40,10 +40,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2026/07/22-01-etc-storage",
-    "slug": "etc-storage",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-07-22T21:52:45+08:00",

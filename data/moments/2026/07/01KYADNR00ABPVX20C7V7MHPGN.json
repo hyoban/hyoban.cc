@@ -10,12 +10,12 @@
   "media": [
     {
       "uid": "01KYADNR01N5TE538YRQ2A449A",
-      "type": "image",
       "alt": "Clean public restroom beside vending machines at night",
+      "type": "image",
       "width": 1920,
       "height": 1440,
       "published": {
-        "key": "moments/2026/07/25-02-west-lake-car-camping/west-lake-car-camping.webp",
+        "key": "moments/01kyadnr00abpvx20c7v7mhpgn/01kyadnr01n5te538yrq2a449a.webp",
         "contentType": "image/webp",
         "bytes": 169422,
         "etag": "5eca3d3ed3d6373be674a3c699779263",
@@ -23,7 +23,7 @@
         "height": 1440,
         "variants": [
           {
-            "key": "moments/2026/07/25-02-west-lake-car-camping/west-lake-car-camping-480w.webp",
+            "key": "moments/01kyadnr00abpvx20c7v7mhpgn/01kyadnr01n5te538yrq2a449a-480w.webp",
             "contentType": "image/webp",
             "bytes": 14668,
             "etag": "cb8e0ea3f3f7013967ca0edcd57b05ec",
@@ -31,7 +31,7 @@
             "height": 360
           },
           {
-            "key": "moments/2026/07/25-02-west-lake-car-camping/west-lake-car-camping-960w.webp",
+            "key": "moments/01kyadnr00abpvx20c7v7mhpgn/01kyadnr01n5te538yrq2a449a-960w.webp",
             "contentType": "image/webp",
             "bytes": 47910,
             "etag": "648a34ba5813d8d832ef555091211787",
@@ -43,12 +43,12 @@
     },
     {
       "uid": "01KYADNR02HKXPQHJ3FCJ7ZVJ7",
-      "type": "image",
       "alt": "Illuminated Lawson convenience store near West Lake at night",
+      "type": "image",
       "width": 1920,
       "height": 1440,
       "published": {
-        "key": "moments/2026/07/25-02-west-lake-car-camping/west-lake-car-camping-2.webp",
+        "key": "moments/01kyadnr00abpvx20c7v7mhpgn/01kyadnr02hkxpqhj3fcj7zvj7.webp",
         "contentType": "image/webp",
         "bytes": 244134,
         "etag": "979b99bb8193e2fca37bf9603823820d",
@@ -56,7 +56,7 @@
         "height": 1440,
         "variants": [
           {
-            "key": "moments/2026/07/25-02-west-lake-car-camping/west-lake-car-camping-2-480w.webp",
+            "key": "moments/01kyadnr00abpvx20c7v7mhpgn/01kyadnr02hkxpqhj3fcj7zvj7-480w.webp",
             "contentType": "image/webp",
             "bytes": 22548,
             "etag": "24a6d56704bc0e54eb8a0bb17318a7b5",
@@ -64,7 +64,7 @@
             "height": 360
           },
           {
-            "key": "moments/2026/07/25-02-west-lake-car-camping/west-lake-car-camping-2-960w.webp",
+            "key": "moments/01kyadnr00abpvx20c7v7mhpgn/01kyadnr02hkxpqhj3fcj7zvj7-960w.webp",
             "contentType": "image/webp",
             "bytes": 72360,
             "etag": "80525e41dbfecac11fd486020c6b78e9",
@@ -76,12 +76,12 @@
     },
     {
       "uid": "01KYADNR03F4QC98ZGDHBR5F9Q",
-      "type": "image",
       "alt": "Crowded lakeside parking lot before sunrise",
+      "type": "image",
       "width": 1920,
       "height": 1440,
       "published": {
-        "key": "moments/2026/07/25-02-west-lake-car-camping/west-lake-car-camping-3.webp",
+        "key": "moments/01kyadnr00abpvx20c7v7mhpgn/01kyadnr03f4qc98zgdhbr5f9q.webp",
         "contentType": "image/webp",
         "bytes": 211078,
         "etag": "8da28cc02072c3ccec84da40eebaf20b",
@@ -89,7 +89,7 @@
         "height": 1440,
         "variants": [
           {
-            "key": "moments/2026/07/25-02-west-lake-car-camping/west-lake-car-camping-3-480w.webp",
+            "key": "moments/01kyadnr00abpvx20c7v7mhpgn/01kyadnr03f4qc98zgdhbr5f9q-480w.webp",
             "contentType": "image/webp",
             "bytes": 23848,
             "etag": "5a22bc243263954b6f33f5a3b2e14740",
@@ -97,7 +97,7 @@
             "height": 360
           },
           {
-            "key": "moments/2026/07/25-02-west-lake-car-camping/west-lake-car-camping-3-960w.webp",
+            "key": "moments/01kyadnr00abpvx20c7v7mhpgn/01kyadnr03f4qc98zgdhbr5f9q-960w.webp",
             "contentType": "image/webp",
             "bytes": 70498,
             "etag": "de977b7f75af6f5dce4342e1d80c814d",
@@ -109,12 +109,12 @@
     },
     {
       "uid": "01KYADNR04Z4TJZN16HM3YQCRN",
-      "type": "image",
       "alt": "Camera on a tripod facing the sunrise over West Lake",
+      "type": "image",
       "width": 1920,
       "height": 1440,
       "published": {
-        "key": "moments/2026/07/25-02-west-lake-car-camping/west-lake-car-camping-4.webp",
+        "key": "moments/01kyadnr00abpvx20c7v7mhpgn/01kyadnr04z4tjzn16hm3yqcrn.webp",
         "contentType": "image/webp",
         "bytes": 471268,
         "etag": "f53b4b69500aeb3f09ccfb7e796eaabf",
@@ -122,7 +122,7 @@
         "height": 1440,
         "variants": [
           {
-            "key": "moments/2026/07/25-02-west-lake-car-camping/west-lake-car-camping-4-480w.webp",
+            "key": "moments/01kyadnr00abpvx20c7v7mhpgn/01kyadnr04z4tjzn16hm3yqcrn-480w.webp",
             "contentType": "image/webp",
             "bytes": 35996,
             "etag": "7febac1f9fa0384e7526561083237d8c",
@@ -130,7 +130,7 @@
             "height": 360
           },
           {
-            "key": "moments/2026/07/25-02-west-lake-car-camping/west-lake-car-camping-4-960w.webp",
+            "key": "moments/01kyadnr00abpvx20c7v7mhpgn/01kyadnr04z4tjzn16hm3yqcrn-960w.webp",
             "contentType": "image/webp",
             "bytes": 130864,
             "etag": "7493e523f8dbe45ba78a15c169149b50",
@@ -141,10 +141,8 @@
       }
     }
   ],
+  "order": 2,
   "published": {
-    "id": "2026/07/25-02-west-lake-car-camping",
-    "slug": "west-lake-car-camping",
-    "order": 2,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-07-25T00:00:00+08:00",

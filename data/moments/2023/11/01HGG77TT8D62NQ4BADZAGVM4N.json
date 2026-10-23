@@ -6,10 +6,8 @@
   "hidden": false,
   "topic": "tech",
   "media": [],
+  "order": 2,
   "published": {
-    "id": "2023/11/30-02-wo-xie-le-ge-unocss-preset-shadcn-ji-yu-zouhangoo",
-    "slug": "wo-xie-le-ge-unocss-preset-shadcn-ji-yu-zouhangoo",
-    "order": 2,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2023-11-30T21:38:37+08:00",

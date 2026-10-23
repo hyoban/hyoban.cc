@@ -8,17 +8,17 @@
   "media": [
     {
       "uid": "01KVAR7XR19BB0NSVTZ0HS42J1",
-      "type": "video",
       "alt": "",
+      "type": "video",
       "width": 1080,
       "height": 1920,
       "published": {
-        "key": "moments/2026/06/17-03-mai-le-ge-xin-wan-ju-lai-da-yin-zhao/mai-le-ge-xin-wan-ju-lai-da-yin-zhao-video.mp4",
+        "key": "moments/01kvar7xr01xt2f007zkyzj076/01kvar7xr19bb0nsvtz0hs42j1.mp4",
         "contentType": "video/mp4",
         "bytes": 6757225,
         "etag": "8102413e547852c12a25742598dcde00",
         "poster": {
-          "key": "moments/2026/06/17-03-mai-le-ge-xin-wan-ju-lai-da-yin-zhao/mai-le-ge-xin-wan-ju-lai-da-yin-zhao-video-poster.webp",
+          "key": "moments/01kvar7xr01xt2f007zkyzj076/01kvar7xr19bb0nsvtz0hs42j1-poster.webp",
           "contentType": "image/webp",
           "bytes": 197394,
           "etag": "6c19bcaa2849aa2d43a4c9031ae0af60",
@@ -29,10 +29,8 @@
       }
     }
   ],
+  "order": 3,
   "published": {
-    "id": "2026/06/17-03-mai-le-ge-xin-wan-ju-lai-da-yin-zhao",
-    "slug": "mai-le-ge-xin-wan-ju-lai-da-yin-zhao",
-    "order": 3,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-06-17T20:17:36+08:00",

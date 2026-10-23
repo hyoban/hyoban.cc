@@ -10,12 +10,12 @@
   "media": [
     {
       "uid": "01M48Y93TH3AFCMHF54R7P9TTJ",
-      "type": "image",
       "alt": "A car trip summary showing 3,951.6 kilometers driven in 52 hours and 33 minutes.",
+      "type": "image",
       "width": 1919,
       "height": 1080,
       "published": {
-        "key": "moments/2026/10/06-01-national-day-road-trip-home/national-day-road-trip-home.webp",
+        "key": "moments/01m48y93tgxdmrq8yscvz812q0/01m48y93th3afcmhf54r7p9ttj.webp",
         "contentType": "image/webp",
         "bytes": 58074,
         "etag": "107acb051aeb831d077c99e3647c074a",
@@ -23,7 +23,7 @@
         "height": 1080,
         "variants": [
           {
-            "key": "moments/2026/10/06-01-national-day-road-trip-home/national-day-road-trip-home-480w.webp",
+            "key": "moments/01m48y93tgxdmrq8yscvz812q0/01m48y93th3afcmhf54r7p9ttj-480w.webp",
             "contentType": "image/webp",
             "bytes": 9066,
             "etag": "3c00080e51dccea8427e05abbeed4daf",
@@ -31,7 +31,7 @@
             "height": 270
           },
           {
-            "key": "moments/2026/10/06-01-national-day-road-trip-home/national-day-road-trip-home-960w.webp",
+            "key": "moments/01m48y93tgxdmrq8yscvz812q0/01m48y93th3afcmhf54r7p9ttj-960w.webp",
             "contentType": "image/webp",
             "bytes": 21974,
             "etag": "1edc02a885711a613264393b86ebb322",
@@ -42,10 +42,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2026/10/06-01-national-day-road-trip-home",
-    "slug": "national-day-road-trip-home",
-    "order": 1,
     "at": "2026-10-08T08:10:00+08:00"
   },
   "createdAt": "2026-10-06T23:45:54+08:00",

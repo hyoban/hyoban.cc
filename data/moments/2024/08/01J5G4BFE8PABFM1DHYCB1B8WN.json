@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01J5G4BFE9GFF33JCPTRMJMJSQ",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 2048,
       "height": 1536,
       "published": {
-        "key": "moments/2024/08/17-02-mai-le-ge-24-cun-4k-de-xian-shi-qi/mai-le-ge-24-cun-4k-de-xian-shi-qi.jpg",
+        "key": "moments/01j5g4bfe8pabfm1dhycb1b8wn/01j5g4bfe9gff33jcptrmjmjsq.jpg",
         "contentType": "image/jpeg",
         "bytes": 271217,
         "etag": "72ffcb30ec92fb79d410aa1c91b9be56",
@@ -21,7 +21,7 @@
         "height": 1536,
         "variants": [
           {
-            "key": "moments/2024/08/17-02-mai-le-ge-24-cun-4k-de-xian-shi-qi/mai-le-ge-24-cun-4k-de-xian-shi-qi-480w.webp",
+            "key": "moments/01j5g4bfe8pabfm1dhycb1b8wn/01j5g4bfe9gff33jcptrmjmjsq-480w.webp",
             "contentType": "image/webp",
             "bytes": 17074,
             "etag": "4edebde7abf248678a58506c6dfafdd9",
@@ -29,7 +29,7 @@
             "height": 360
           },
           {
-            "key": "moments/2024/08/17-02-mai-le-ge-24-cun-4k-de-xian-shi-qi/mai-le-ge-24-cun-4k-de-xian-shi-qi-960w.webp",
+            "key": "moments/01j5g4bfe8pabfm1dhycb1b8wn/01j5g4bfe9gff33jcptrmjmjsq-960w.webp",
             "contentType": "image/webp",
             "bytes": 44398,
             "etag": "ccd55e2b866b517cd31d7e1b289d828b",
@@ -37,7 +37,7 @@
             "height": 720
           },
           {
-            "key": "moments/2024/08/17-02-mai-le-ge-24-cun-4k-de-xian-shi-qi/mai-le-ge-24-cun-4k-de-xian-shi-qi-1920w.webp",
+            "key": "moments/01j5g4bfe8pabfm1dhycb1b8wn/01j5g4bfe9gff33jcptrmjmjsq-1920w.webp",
             "contentType": "image/webp",
             "bytes": 111566,
             "etag": "eabb01873588675856e711a47f9659cf",
@@ -48,10 +48,8 @@
       }
     }
   ],
+  "order": 2,
   "published": {
-    "id": "2024/08/17-02-mai-le-ge-24-cun-4k-de-xian-shi-qi",
-    "slug": "mai-le-ge-24-cun-4k-de-xian-shi-qi",
-    "order": 2,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2024-08-17T20:17:49+08:00",

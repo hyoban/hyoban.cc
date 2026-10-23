@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01JBP7AKV1F4P39YVMFBN17R3V",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1882,
       "height": 2344,
       "published": {
-        "key": "moments/2024/11/02-01-tu-ran-bao-fu/tu-ran-bao-fu.jpg",
+        "key": "moments/01jbp7akv0wpvnk63fd1cq73f0/01jbp7akv1f4p39yvmfbn17r3v.jpg",
         "contentType": "image/jpeg",
         "bytes": 201475,
         "etag": "782ca920c6d9ff197967b7aa7fc1e01a",
@@ -21,7 +21,7 @@
         "height": 2344,
         "variants": [
           {
-            "key": "moments/2024/11/02-01-tu-ran-bao-fu/tu-ran-bao-fu-480w.webp",
+            "key": "moments/01jbp7akv0wpvnk63fd1cq73f0/01jbp7akv1f4p39yvmfbn17r3v-480w.webp",
             "contentType": "image/webp",
             "bytes": 19352,
             "etag": "fe784773335a4327a57bd26d6b92d697",
@@ -29,7 +29,7 @@
             "height": 598
           },
           {
-            "key": "moments/2024/11/02-01-tu-ran-bao-fu/tu-ran-bao-fu-960w.webp",
+            "key": "moments/01jbp7akv0wpvnk63fd1cq73f0/01jbp7akv1f4p39yvmfbn17r3v-960w.webp",
             "contentType": "image/webp",
             "bytes": 47452,
             "etag": "663ed5c4460706124d56c08cf179b0d4",
@@ -40,10 +40,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2024/11/02-01-tu-ran-bao-fu",
-    "slug": "tu-ran-bao-fu",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2024-11-02T18:39:24+08:00",

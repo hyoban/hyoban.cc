@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01H05HVQPSNGJPMA9B8XQYD87P",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1080,
       "height": 2340,
       "published": {
-        "key": "moments/2023/05/11-01-mei-tian-qing-diao-liao-tian-ji-lu-rong-yi/mei-tian-qing-diao-liao-tian-ji-lu-rong-yi.jpg",
+        "key": "moments/01h05hvqprd5nf1k9t89pcarpf/01h05hvqpsngjpma9b8xqyd87p.jpg",
         "contentType": "image/jpeg",
         "bytes": 63583,
         "etag": "33982d8fc8c564424f6184d33c5a333b",
@@ -21,7 +21,7 @@
         "height": 2340,
         "variants": [
           {
-            "key": "moments/2023/05/11-01-mei-tian-qing-diao-liao-tian-ji-lu-rong-yi/mei-tian-qing-diao-liao-tian-ji-lu-rong-yi-480w.webp",
+            "key": "moments/01h05hvqprd5nf1k9t89pcarpf/01h05hvqpsngjpma9b8xqyd87p-480w.webp",
             "contentType": "image/webp",
             "bytes": 5832,
             "etag": "a71883c15c39c38c4076983192eae933",
@@ -29,7 +29,7 @@
             "height": 1040
           },
           {
-            "key": "moments/2023/05/11-01-mei-tian-qing-diao-liao-tian-ji-lu-rong-yi/mei-tian-qing-diao-liao-tian-ji-lu-rong-yi-960w.webp",
+            "key": "moments/01h05hvqprd5nf1k9t89pcarpf/01h05hvqpsngjpma9b8xqyd87p-960w.webp",
             "contentType": "image/webp",
             "bytes": 13552,
             "etag": "0790270a6373a3691426f470f092f4a8",
@@ -40,10 +40,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2023/05/11-01-mei-tian-qing-diao-liao-tian-ji-lu-rong-yi",
-    "slug": "mei-tian-qing-diao-liao-tian-ji-lu-rong-yi",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2023-05-11T22:01:27+08:00",

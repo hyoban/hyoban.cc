@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01H9FKY9V93XSJSC4BJFSDD9KC",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 494,
       "height": 254,
       "published": {
-        "key": "moments/2023/09/04-01-jiu-gan-jue-hen-ku-cai-zhu-yi-dao-shi/jiu-gan-jue-hen-ku-cai-zhu-yi-dao-shi.png",
+        "key": "moments/01h9fky9v85rdrjyvc8mkvwbt4/01h9fky9v93xsjsc4bjfsdd9kc.png",
         "contentType": "image/png",
         "bytes": 43679,
         "etag": "e4fa1a199c442fee6b94436a46bb6589",
@@ -21,7 +21,7 @@
         "height": 254,
         "variants": [
           {
-            "key": "moments/2023/09/04-01-jiu-gan-jue-hen-ku-cai-zhu-yi-dao-shi/jiu-gan-jue-hen-ku-cai-zhu-yi-dao-shi-480w.webp",
+            "key": "moments/01h9fky9v85rdrjyvc8mkvwbt4/01h9fky9v93xsjsc4bjfsdd9kc-480w.webp",
             "contentType": "image/webp",
             "bytes": 8474,
             "etag": "535c85c1d7402837f8d42b9902a8ee52",
@@ -32,10 +32,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2023/09/04-01-jiu-gan-jue-hen-ku-cai-zhu-yi-dao-shi",
-    "slug": "jiu-gan-jue-hen-ku-cai-zhu-yi-dao-shi",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2023-09-04T16:11:29+08:00",

@@ -10,12 +10,12 @@
   "media": [
     {
       "uid": "01KYXY3QTHMZHRHPNN5EER84RT",
-      "type": "image",
       "alt": "Bowl of shrimp and beef noodles with peppers and onions",
+      "type": "image",
       "width": 1920,
       "height": 1440,
       "published": {
-        "key": "moments/2026/08/01-01-nanjing-jiangbei-hongyuecheng/nanjing-jiangbei-hongyuecheng.webp",
+        "key": "moments/01kyxy3qtg3rktv2f5b2gwskjq/01kyxy3qthmzhrhpnn5eer84rt.webp",
         "contentType": "image/webp",
         "bytes": 431420,
         "etag": "4cad00be0d33b03364b6f342bf56e2e7",
@@ -23,7 +23,7 @@
         "height": 1440,
         "variants": [
           {
-            "key": "moments/2026/08/01-01-nanjing-jiangbei-hongyuecheng/nanjing-jiangbei-hongyuecheng-480w.webp",
+            "key": "moments/01kyxy3qtg3rktv2f5b2gwskjq/01kyxy3qthmzhrhpnn5eer84rt-480w.webp",
             "contentType": "image/webp",
             "bytes": 43174,
             "etag": "84a7f45a3c32943aee1dc9cdcc8fd00c",
@@ -31,7 +31,7 @@
             "height": 360
           },
           {
-            "key": "moments/2026/08/01-01-nanjing-jiangbei-hongyuecheng/nanjing-jiangbei-hongyuecheng-960w.webp",
+            "key": "moments/01kyxy3qtg3rktv2f5b2gwskjq/01kyxy3qthmzhrhpnn5eer84rt-960w.webp",
             "contentType": "image/webp",
             "bytes": 134614,
             "etag": "1de9d8ff0e214ba949431cc0237a9369",
@@ -48,10 +48,8 @@
     ],
     "verdict": "good"
   },
+  "order": 1,
   "published": {
-    "id": "2026/08/01-01-nanjing-jiangbei-hongyuecheng",
-    "slug": "nanjing-jiangbei-hongyuecheng",
-    "order": 1,
     "at": "2026-08-20T22:58:53+08:00"
   },
   "createdAt": "2026-08-01T13:52:50+08:00",

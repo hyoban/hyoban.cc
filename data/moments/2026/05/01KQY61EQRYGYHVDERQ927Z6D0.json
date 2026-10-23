@@ -15,7 +15,7 @@
       "width": 1280,
       "height": 960,
       "published": {
-        "key": "moments/2026/05/03-03-wu-yuan-you-ge-gong-yuan-wen-bo-yi-shu/wu-yuan-you-ge-gong-yuan-wen-bo-yi-shu.jpg",
+        "key": "moments/01kqy61eqrygyhvderq927z6d0/01kqy61eqsc3bhme94ps66tcdm.jpg",
         "contentType": "image/jpeg",
         "bytes": 323441,
         "etag": "72516db8a1c97dc8d327c9ce7e266beb",
@@ -23,7 +23,7 @@
         "height": 960,
         "variants": [
           {
-            "key": "moments/2026/05/03-03-wu-yuan-you-ge-gong-yuan-wen-bo-yi-shu/wu-yuan-you-ge-gong-yuan-wen-bo-yi-shu-480w.webp",
+            "key": "moments/01kqy61eqrygyhvderq927z6d0/01kqy61eqsc3bhme94ps66tcdm-480w.webp",
             "contentType": "image/webp",
             "bytes": 55798,
             "etag": "235b43c2d3b2c0433504ac7a8c8a7ccc",
@@ -31,7 +31,7 @@
             "height": 360
           },
           {
-            "key": "moments/2026/05/03-03-wu-yuan-you-ge-gong-yuan-wen-bo-yi-shu/wu-yuan-you-ge-gong-yuan-wen-bo-yi-shu-960w.webp",
+            "key": "moments/01kqy61eqrygyhvderq927z6d0/01kqy61eqsc3bhme94ps66tcdm-960w.webp",
             "contentType": "image/webp",
             "bytes": 220536,
             "etag": "fe2b781eafd44b3714eef50b4887c7e3",
@@ -48,7 +48,7 @@
       "width": 1280,
       "height": 960,
       "published": {
-        "key": "moments/2026/05/03-03-wu-yuan-you-ge-gong-yuan-wen-bo-yi-shu/wu-yuan-you-ge-gong-yuan-wen-bo-yi-shu-2.jpg",
+        "key": "moments/01kqy61eqrygyhvderq927z6d0/01kqy61eqt4vdb1z5t13qhn1bm.jpg",
         "contentType": "image/jpeg",
         "bytes": 244397,
         "etag": "fdf67b5224577b75d80f6ff55eba5b02",
@@ -56,7 +56,7 @@
         "height": 960,
         "variants": [
           {
-            "key": "moments/2026/05/03-03-wu-yuan-you-ge-gong-yuan-wen-bo-yi-shu/wu-yuan-you-ge-gong-yuan-wen-bo-yi-shu-2-480w.webp",
+            "key": "moments/01kqy61eqrygyhvderq927z6d0/01kqy61eqt4vdb1z5t13qhn1bm-480w.webp",
             "contentType": "image/webp",
             "bytes": 41908,
             "etag": "9bb8fd8bac891bdda0cd79b25c2e41a5",
@@ -64,7 +64,7 @@
             "height": 360
           },
           {
-            "key": "moments/2026/05/03-03-wu-yuan-you-ge-gong-yuan-wen-bo-yi-shu/wu-yuan-you-ge-gong-yuan-wen-bo-yi-shu-2-960w.webp",
+            "key": "moments/01kqy61eqrygyhvderq927z6d0/01kqy61eqt4vdb1z5t13qhn1bm-960w.webp",
             "contentType": "image/webp",
             "bytes": 154352,
             "etag": "a940f1cedb64b4fdc46df0bc55a16f67",
@@ -81,7 +81,7 @@
       "width": 1280,
       "height": 960,
       "published": {
-        "key": "moments/2026/05/03-03-wu-yuan-you-ge-gong-yuan-wen-bo-yi-shu/wu-yuan-you-ge-gong-yuan-wen-bo-yi-shu-3.jpg",
+        "key": "moments/01kqy61eqrygyhvderq927z6d0/01kqy61eqvbg2bk3xhtcmmrxj4.jpg",
         "contentType": "image/jpeg",
         "bytes": 323027,
         "etag": "d277131dccb939e83b9d32b4eaaee421",
@@ -89,7 +89,7 @@
         "height": 960,
         "variants": [
           {
-            "key": "moments/2026/05/03-03-wu-yuan-you-ge-gong-yuan-wen-bo-yi-shu/wu-yuan-you-ge-gong-yuan-wen-bo-yi-shu-3-480w.webp",
+            "key": "moments/01kqy61eqrygyhvderq927z6d0/01kqy61eqvbg2bk3xhtcmmrxj4-480w.webp",
             "contentType": "image/webp",
             "bytes": 57802,
             "etag": "bd6c9ae9d8fa80831c278484be5ecc1a",
@@ -97,7 +97,7 @@
             "height": 360
           },
           {
-            "key": "moments/2026/05/03-03-wu-yuan-you-ge-gong-yuan-wen-bo-yi-shu/wu-yuan-you-ge-gong-yuan-wen-bo-yi-shu-3-960w.webp",
+            "key": "moments/01kqy61eqrygyhvderq927z6d0/01kqy61eqvbg2bk3xhtcmmrxj4-960w.webp",
             "contentType": "image/webp",
             "bytes": 231260,
             "etag": "970fa3223dd9ae7a0a70fa22580626f5",
@@ -108,10 +108,8 @@
       }
     }
   ],
+  "order": 3,
   "published": {
-    "id": "2026/05/03-03-wu-yuan-you-ge-gong-yuan-wen-bo-yi-shu",
-    "slug": "wu-yuan-you-ge-gong-yuan-wen-bo-yi-shu",
-    "order": 3,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-05-06T16:21:31+08:00",

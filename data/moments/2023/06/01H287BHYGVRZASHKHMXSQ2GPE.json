@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01H287BHYHKWMWVR3JJT6HQ069",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1808,
       "height": 188,
       "published": {
-        "key": "moments/2023/06/06-02-ru-tu/ru-tu.jpg",
+        "key": "moments/01h287bhygvrzashkhmxsq2gpe/01h287bhyhkwmwvr3jjt6hq069.jpg",
         "contentType": "image/jpeg",
         "bytes": 62175,
         "etag": "1f27c834e971be07f14d7b14a1d0137f",
@@ -21,7 +21,7 @@
         "height": 188,
         "variants": [
           {
-            "key": "moments/2023/06/06-02-ru-tu/ru-tu-480w.webp",
+            "key": "moments/01h287bhygvrzashkhmxsq2gpe/01h287bhyhkwmwvr3jjt6hq069-480w.webp",
             "contentType": "image/webp",
             "bytes": 5026,
             "etag": "753c5fe76ae18fe6e2e3dd29773558b3",
@@ -29,7 +29,7 @@
             "height": 50
           },
           {
-            "key": "moments/2023/06/06-02-ru-tu/ru-tu-960w.webp",
+            "key": "moments/01h287bhygvrzashkhmxsq2gpe/01h287bhyhkwmwvr3jjt6hq069-960w.webp",
             "contentType": "image/webp",
             "bytes": 14316,
             "etag": "0ead997a150fe9500a892c3544dfff32",
@@ -40,10 +40,8 @@
       }
     }
   ],
+  "order": 2,
   "published": {
-    "id": "2023/06/06-02-ru-tu",
-    "slug": "ru-tu",
-    "order": 2,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2023-06-06T19:26:58+08:00",

@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01KF5ZG3FHEZ9WFNGM3JNBK3TN",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 2620,
       "height": 1052,
       "published": {
-        "key": "moments/2026/01/17-02-di-er-ge-shi-multithread-linting-ke-yi-rang-ni/di-er-ge-shi-multithread-linting-ke-yi-rang-ni.jpg",
+        "key": "moments/01kf5zg3fgt5tpe7446waqeb9w/01kf5zg3fhez9wfngm3jnbk3tn.jpg",
         "contentType": "image/jpeg",
         "bytes": 288316,
         "etag": "993b35673dea9fd57d5c9213ffc26864",
@@ -21,7 +21,7 @@
         "height": 1052,
         "variants": [
           {
-            "key": "moments/2026/01/17-02-di-er-ge-shi-multithread-linting-ke-yi-rang-ni/di-er-ge-shi-multithread-linting-ke-yi-rang-ni-480w.webp",
+            "key": "moments/01kf5zg3fgt5tpe7446waqeb9w/01kf5zg3fhez9wfngm3jnbk3tn-480w.webp",
             "contentType": "image/webp",
             "bytes": 17312,
             "etag": "3afa84a386dd747af591ba98adced7ef",
@@ -29,7 +29,7 @@
             "height": 193
           },
           {
-            "key": "moments/2026/01/17-02-di-er-ge-shi-multithread-linting-ke-yi-rang-ni/di-er-ge-shi-multithread-linting-ke-yi-rang-ni-960w.webp",
+            "key": "moments/01kf5zg3fgt5tpe7446waqeb9w/01kf5zg3fhez9wfngm3jnbk3tn-960w.webp",
             "contentType": "image/webp",
             "bytes": 50308,
             "etag": "8aefff1e2c9fb350b37446fc05ffb050",
@@ -37,7 +37,7 @@
             "height": 385
           },
           {
-            "key": "moments/2026/01/17-02-di-er-ge-shi-multithread-linting-ke-yi-rang-ni/di-er-ge-shi-multithread-linting-ke-yi-rang-ni-1920w.webp",
+            "key": "moments/01kf5zg3fgt5tpe7446waqeb9w/01kf5zg3fhez9wfngm3jnbk3tn-1920w.webp",
             "contentType": "image/webp",
             "bytes": 113366,
             "etag": "5d337bc24494a30fc294335db0d33432",
@@ -48,10 +48,8 @@
       }
     }
   ],
+  "order": 2,
   "published": {
-    "id": "2026/01/17-02-di-er-ge-shi-multithread-linting-ke-yi-rang-ni",
-    "slug": "di-er-ge-shi-multithread-linting-ke-yi-rang-ni",
-    "order": 2,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-01-17T20:39:50+08:00",

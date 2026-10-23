@@ -8,17 +8,17 @@
   "media": [
     {
       "uid": "01HC4KWY5SZFK4N3VWFX1DG2H2",
-      "type": "video",
       "alt": "",
+      "type": "video",
       "width": 854,
       "height": 640,
       "published": {
-        "key": "moments/2023/10/07-01-zai-mai-ceng-wang-kai-hui/zai-mai-ceng-wang-kai-hui-video.mp4",
+        "key": "moments/01hc4kwy5rhb23jmr78cyet36w/01hc4kwy5szfk4n3vwfx1dg2h2.mp4",
         "contentType": "video/mp4",
         "bytes": 65421,
         "etag": "ecc383dbc4e773437517b7c739f42c2f",
         "poster": {
-          "key": "moments/2023/10/07-01-zai-mai-ceng-wang-kai-hui/zai-mai-ceng-wang-kai-hui-video-poster.png",
+          "key": "moments/01hc4kwy5rhb23jmr78cyet36w/01hc4kwy5szfk4n3vwfx1dg2h2-poster.png",
           "contentType": "image/png",
           "bytes": 600201,
           "etag": "89823480aca6bce4279d505ca861db1e",
@@ -29,10 +29,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2023/10/07-01-zai-mai-ceng-wang-kai-hui",
-    "slug": "zai-mai-ceng-wang-kai-hui",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2023-10-07T16:26:11+08:00",

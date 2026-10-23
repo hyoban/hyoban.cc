@@ -8,17 +8,17 @@
   "media": [
     {
       "uid": "01J5F7V721Q854E8MTD73K1YHK",
-      "type": "video",
       "alt": "",
+      "type": "video",
       "width": 553,
       "height": 1200,
       "published": {
-        "key": "moments/2024/08/17-01-yi-xia-shi-mu-qian-wei-zhi-app-de-qing/yi-xia-shi-mu-qian-wei-zhi-app-de-qing-video.mp4",
+        "key": "moments/01j5f7v720qx343k962rwqbkdt/01j5f7v721q854e8mtd73k1yhk.mp4",
         "contentType": "video/mp4",
         "bytes": 6313896,
         "etag": "160994632702b35d7450fddab7e93063",
         "poster": {
-          "key": "moments/2024/08/17-01-yi-xia-shi-mu-qian-wei-zhi-app-de-qing/yi-xia-shi-mu-qian-wei-zhi-app-de-qing-video-poster.png",
+          "key": "moments/01j5f7v720qx343k962rwqbkdt/01j5f7v721q854e8mtd73k1yhk-poster.png",
           "contentType": "image/png",
           "bytes": 61568,
           "etag": "3d786386651aa93d16e9f3a1108806ad",
@@ -29,10 +29,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2024/08/17-01-yi-xia-shi-mu-qian-wei-zhi-app-de-qing",
-    "slug": "yi-xia-shi-mu-qian-wei-zhi-app-de-qing",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2024-08-17T11:59:36+08:00",

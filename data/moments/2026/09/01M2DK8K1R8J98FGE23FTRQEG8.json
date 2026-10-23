@@ -10,12 +10,12 @@
   "media": [
     {
       "uid": "01M2DK8K1SY1YM5W74FGX960VP",
-      "type": "image",
       "alt": "A person holds a small birthday cake with pale blue and yellow frosting.",
+      "type": "image",
       "width": 960,
       "height": 1280,
       "published": {
-        "key": "moments/2026/09/13-02-yunnan-birthday-surprise/yunnan-birthday-surprise.webp",
+        "key": "moments/01m2dk8k1r8j98fge23ftrqeg8/01m2dk8k1sy1ym5w74fgx960vp.webp",
         "contentType": "image/webp",
         "bytes": 53158,
         "etag": "e893856029f3ab36ed49e27ff77dd228",
@@ -23,7 +23,7 @@
         "height": 1280,
         "variants": [
           {
-            "key": "moments/2026/09/13-02-yunnan-birthday-surprise/yunnan-birthday-surprise-480w.webp",
+            "key": "moments/01m2dk8k1r8j98fge23ftrqeg8/01m2dk8k1sy1ym5w74fgx960vp-480w.webp",
             "contentType": "image/webp",
             "bytes": 20862,
             "etag": "94cc5c414237ae9d0a8c98c86bb8df39",
@@ -34,10 +34,8 @@
       }
     }
   ],
+  "order": 2,
   "published": {
-    "id": "2026/09/13-02-yunnan-birthday-surprise",
-    "slug": "yunnan-birthday-surprise",
-    "order": 2,
     "at": "2026-10-08T08:10:00+08:00"
   },
   "createdAt": "2026-09-13T22:38:11+08:00",

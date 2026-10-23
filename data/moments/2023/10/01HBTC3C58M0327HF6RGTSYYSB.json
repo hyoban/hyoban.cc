@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01HBTC3C59N8ZQSZ09TR2CRNHR",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1840,
       "height": 1524,
       "published": {
-        "key": "moments/2023/10/03-03-zai-ran-hou-wo-jie-zhu-ta-caller-path-de/zai-ran-hou-wo-jie-zhu-ta-caller-path-de.jpg",
+        "key": "moments/01hbtc3c58m0327hf6rgtsyysb/01hbtc3c59n8zqsz09tr2crnhr.jpg",
         "contentType": "image/jpeg",
         "bytes": 131031,
         "etag": "ed42b484dcbaccff2a3d4c32e5a000a7",
@@ -21,7 +21,7 @@
         "height": 1524,
         "variants": [
           {
-            "key": "moments/2023/10/03-03-zai-ran-hou-wo-jie-zhu-ta-caller-path-de/zai-ran-hou-wo-jie-zhu-ta-caller-path-de-480w.webp",
+            "key": "moments/01hbtc3c58m0327hf6rgtsyysb/01hbtc3c59n8zqsz09tr2crnhr-480w.webp",
             "contentType": "image/webp",
             "bytes": 10750,
             "etag": "70d9709fb6ca4ebfcb692d63d782e4b5",
@@ -29,7 +29,7 @@
             "height": 398
           },
           {
-            "key": "moments/2023/10/03-03-zai-ran-hou-wo-jie-zhu-ta-caller-path-de/zai-ran-hou-wo-jie-zhu-ta-caller-path-de-960w.webp",
+            "key": "moments/01hbtc3c58m0327hf6rgtsyysb/01hbtc3c59n8zqsz09tr2crnhr-960w.webp",
             "contentType": "image/webp",
             "bytes": 28400,
             "etag": "6f772698758868a6cc0ba0ed1179d9a9",
@@ -40,10 +40,8 @@
       }
     }
   ],
+  "order": 3,
   "published": {
-    "id": "2023/10/03-03-zai-ran-hou-wo-jie-zhu-ta-caller-path-de",
-    "slug": "zai-ran-hou-wo-jie-zhu-ta-caller-path-de",
-    "order": 3,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2023-10-03T16:57:29+08:00",

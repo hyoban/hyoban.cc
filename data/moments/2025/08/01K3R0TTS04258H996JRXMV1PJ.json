@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01K3R0TTS1MSFRK97T617HPK8D",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1920,
       "height": 1080,
       "published": {
-        "key": "moments/2025/08/28-01-dang-ni-mai-le-liang-hou-bei-xiang-ke-yi/dang-ni-mai-le-liang-hou-bei-xiang-ke-yi.jpg",
+        "key": "moments/01k3r0tts04258h996jrxmv1pj/01k3r0tts1msfrk97t617hpk8d.jpg",
         "contentType": "image/jpeg",
         "bytes": 128438,
         "etag": "4bd30c1168bbe2edf7280b4fc3ee3d53",
@@ -21,7 +21,7 @@
         "height": 1080,
         "variants": [
           {
-            "key": "moments/2025/08/28-01-dang-ni-mai-le-liang-hou-bei-xiang-ke-yi/dang-ni-mai-le-liang-hou-bei-xiang-ke-yi-480w.webp",
+            "key": "moments/01k3r0tts04258h996jrxmv1pj/01k3r0tts1msfrk97t617hpk8d-480w.webp",
             "contentType": "image/webp",
             "bytes": 9510,
             "etag": "a6e82613a6f119ed18fc2fc95b8180aa",
@@ -29,7 +29,7 @@
             "height": 270
           },
           {
-            "key": "moments/2025/08/28-01-dang-ni-mai-le-liang-hou-bei-xiang-ke-yi/dang-ni-mai-le-liang-hou-bei-xiang-ke-yi-960w.webp",
+            "key": "moments/01k3r0tts04258h996jrxmv1pj/01k3r0tts1msfrk97t617hpk8d-960w.webp",
             "contentType": "image/webp",
             "bytes": 23686,
             "etag": "ac136653cbf0306afcc46eb3b426ec4e",
@@ -41,12 +41,12 @@
     },
     {
       "uid": "01K3R0TTS2300ERPRSCHQY60P4",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1920,
       "height": 1080,
       "published": {
-        "key": "moments/2025/08/28-01-dang-ni-mai-le-liang-hou-bei-xiang-ke-yi/dang-ni-mai-le-liang-hou-bei-xiang-ke-yi-2.jpg",
+        "key": "moments/01k3r0tts04258h996jrxmv1pj/01k3r0tts2300erprschqy60p4.jpg",
         "contentType": "image/jpeg",
         "bytes": 189250,
         "etag": "737989e66a65903b89c0751ddad3ea57",
@@ -54,7 +54,7 @@
         "height": 1080,
         "variants": [
           {
-            "key": "moments/2025/08/28-01-dang-ni-mai-le-liang-hou-bei-xiang-ke-yi/dang-ni-mai-le-liang-hou-bei-xiang-ke-yi-2-480w.webp",
+            "key": "moments/01k3r0tts04258h996jrxmv1pj/01k3r0tts2300erprschqy60p4-480w.webp",
             "contentType": "image/webp",
             "bytes": 11238,
             "etag": "88c89eb870bf00afa8df4c1b1986d6b2",
@@ -62,7 +62,7 @@
             "height": 270
           },
           {
-            "key": "moments/2025/08/28-01-dang-ni-mai-le-liang-hou-bei-xiang-ke-yi/dang-ni-mai-le-liang-hou-bei-xiang-ke-yi-2-960w.webp",
+            "key": "moments/01k3r0tts04258h996jrxmv1pj/01k3r0tts2300erprschqy60p4-960w.webp",
             "contentType": "image/webp",
             "bytes": 29290,
             "etag": "d09fa84eab9a21e19cff672d06fe755a",
@@ -73,10 +73,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2025/08/28-01-dang-ni-mai-le-liang-hou-bei-xiang-ke-yi",
-    "slug": "dang-ni-mai-le-liang-hou-bei-xiang-ke-yi",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2025-08-28T17:41:08+08:00",

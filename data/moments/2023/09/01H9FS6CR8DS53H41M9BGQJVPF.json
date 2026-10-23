@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01H9FS6CR9ACW73K6GDPQDJRXZ",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 470,
       "height": 152,
       "published": {
-        "key": "moments/2023/09/04-02-hao-ye-shi-ou-xiang-de-guan-zhu/hao-ye-shi-ou-xiang-de-guan-zhu.png",
+        "key": "moments/01h9fs6cr8ds53h41m9bgqjvpf/01h9fs6cr9acw73k6gdpqdjrxz.png",
         "contentType": "image/png",
         "bytes": 22705,
         "etag": "ed3f1a3886af24e6c67856fd773a9ad7",
@@ -23,10 +23,8 @@
       }
     }
   ],
+  "order": 2,
   "published": {
-    "id": "2023/09/04-02-hao-ye-shi-ou-xiang-de-guan-zhu",
-    "slug": "hao-ye-shi-ou-xiang-de-guan-zhu",
-    "order": 2,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2023-09-04T17:43:17+08:00",

@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01KE8P3361VB897CW78WAAT4M6",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1540,
       "height": 1090,
       "published": {
-        "key": "moments/2026/01/06-01-shi-yong-an-li/shi-yong-an-li.jpg",
+        "key": "moments/01ke8p33605ccynz141hjbkamc/01ke8p3361vb897cw78waat4m6.jpg",
         "contentType": "image/jpeg",
         "bytes": 156044,
         "etag": "56e76ed8a388713b0306229cd2999d16",
@@ -21,7 +21,7 @@
         "height": 1090,
         "variants": [
           {
-            "key": "moments/2026/01/06-01-shi-yong-an-li/shi-yong-an-li-480w.webp",
+            "key": "moments/01ke8p33605ccynz141hjbkamc/01ke8p3361vb897cw78waat4m6-480w.webp",
             "contentType": "image/webp",
             "bytes": 18156,
             "etag": "c8058fc771d67df0fc420f83a0af01a9",
@@ -29,7 +29,7 @@
             "height": 340
           },
           {
-            "key": "moments/2026/01/06-01-shi-yong-an-li/shi-yong-an-li-960w.webp",
+            "key": "moments/01ke8p33605ccynz141hjbkamc/01ke8p3361vb897cw78waat4m6-960w.webp",
             "contentType": "image/webp",
             "bytes": 47952,
             "etag": "803018e10a140539f287ea544cdcd7fb",
@@ -40,10 +40,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2026/01/06-01-shi-yong-an-li",
-    "slug": "shi-yong-an-li",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-01-06T11:37:28+08:00",

@@ -10,12 +10,12 @@
   "media": [
     {
       "uid": "01JR0RFM013DK2GSFEK50Y2RG9",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 4096,
       "height": 3072,
       "published": {
-        "key": "moments/2025/04/05-01-zhou-liu-qu-le-xi-hu-he-alinpan1-yi-qi/zhou-liu-qu-le-xi-hu-he-alinpan1-yi-qi.jpg",
+        "key": "moments/01jr0rfm00jmjh4d70b52bhzzd/01jr0rfm013dk2gsfek50y2rg9.jpg",
         "contentType": "image/jpeg",
         "bytes": 929812,
         "etag": "3b399d77fbbe07aebecfdd7d28b66969",
@@ -23,7 +23,7 @@
         "height": 3072,
         "variants": [
           {
-            "key": "moments/2025/04/05-01-zhou-liu-qu-le-xi-hu-he-alinpan1-yi-qi/zhou-liu-qu-le-xi-hu-he-alinpan1-yi-qi-480w.webp",
+            "key": "moments/01jr0rfm00jmjh4d70b52bhzzd/01jr0rfm013dk2gsfek50y2rg9-480w.webp",
             "contentType": "image/webp",
             "bytes": 5754,
             "etag": "d5b92f2cb49bc01266d8fcb565d1decd",
@@ -31,7 +31,7 @@
             "height": 360
           },
           {
-            "key": "moments/2025/04/05-01-zhou-liu-qu-le-xi-hu-he-alinpan1-yi-qi/zhou-liu-qu-le-xi-hu-he-alinpan1-yi-qi-960w.webp",
+            "key": "moments/01jr0rfm00jmjh4d70b52bhzzd/01jr0rfm013dk2gsfek50y2rg9-960w.webp",
             "contentType": "image/webp",
             "bytes": 17494,
             "etag": "cd1f2bd981c9586002aa6acfc6973177",
@@ -39,7 +39,7 @@
             "height": 720
           },
           {
-            "key": "moments/2025/04/05-01-zhou-liu-qu-le-xi-hu-he-alinpan1-yi-qi/zhou-liu-qu-le-xi-hu-he-alinpan1-yi-qi-1920w.webp",
+            "key": "moments/01jr0rfm00jmjh4d70b52bhzzd/01jr0rfm013dk2gsfek50y2rg9-1920w.webp",
             "contentType": "image/webp",
             "bytes": 55262,
             "etag": "d7a3680cf288651003c0d2263e71b5f1",
@@ -51,12 +51,12 @@
     },
     {
       "uid": "01JR0RFM02JPZG11VNZSJYTMJJ",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 3072,
       "height": 4096,
       "published": {
-        "key": "moments/2025/04/05-01-zhou-liu-qu-le-xi-hu-he-alinpan1-yi-qi/zhou-liu-qu-le-xi-hu-he-alinpan1-yi-qi-2.jpg",
+        "key": "moments/01jr0rfm00jmjh4d70b52bhzzd/01jr0rfm02jpzg11vnzsjytmjj.jpg",
         "contentType": "image/jpeg",
         "bytes": 1604574,
         "etag": "a6111362f381405fa1e54ae7e25bd2d4",
@@ -64,7 +64,7 @@
         "height": 4096,
         "variants": [
           {
-            "key": "moments/2025/04/05-01-zhou-liu-qu-le-xi-hu-he-alinpan1-yi-qi/zhou-liu-qu-le-xi-hu-he-alinpan1-yi-qi-2-480w.webp",
+            "key": "moments/01jr0rfm00jmjh4d70b52bhzzd/01jr0rfm02jpzg11vnzsjytmjj-480w.webp",
             "contentType": "image/webp",
             "bytes": 50810,
             "etag": "80d1ee2b52c527205638121a9ca6bc58",
@@ -72,7 +72,7 @@
             "height": 640
           },
           {
-            "key": "moments/2025/04/05-01-zhou-liu-qu-le-xi-hu-he-alinpan1-yi-qi/zhou-liu-qu-le-xi-hu-he-alinpan1-yi-qi-2-960w.webp",
+            "key": "moments/01jr0rfm00jmjh4d70b52bhzzd/01jr0rfm02jpzg11vnzsjytmjj-960w.webp",
             "contentType": "image/webp",
             "bytes": 152704,
             "etag": "8ab6c2c57684e2f62d566df3165e86db",
@@ -80,7 +80,7 @@
             "height": 1280
           },
           {
-            "key": "moments/2025/04/05-01-zhou-liu-qu-le-xi-hu-he-alinpan1-yi-qi/zhou-liu-qu-le-xi-hu-he-alinpan1-yi-qi-2-1920w.webp",
+            "key": "moments/01jr0rfm00jmjh4d70b52bhzzd/01jr0rfm02jpzg11vnzsjytmjj-1920w.webp",
             "contentType": "image/webp",
             "bytes": 424700,
             "etag": "f98b1bbb47b7597e3d5da8fcbe2206e2",
@@ -96,10 +96,8 @@
       "沙茶面"
     ]
   },
+  "order": 1,
   "published": {
-    "id": "2025/04/05-01-zhou-liu-qu-le-xi-hu-he-alinpan1-yi-qi",
-    "slug": "zhou-liu-qu-le-xi-hu-he-alinpan1-yi-qi",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2025-04-05T00:00:00+08:00",

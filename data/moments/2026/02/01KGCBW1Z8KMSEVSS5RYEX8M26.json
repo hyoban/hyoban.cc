@@ -10,12 +10,12 @@
   "media": [
     {
       "uid": "01KGCBW1Z95Y4C9A9KDZWDHR9Q",
-      "type": "image",
       "alt": "Two phones showing social profiles beside a My Little Pony card on a restaurant table.",
+      "type": "image",
       "width": 2048,
       "height": 1536,
       "published": {
-        "key": "moments/2026/02/01-01-he-rxliuli-yi-qi-chi-hai-di-lao-na-zhou/he-rxliuli-yi-qi-chi-hai-di-lao-na-zhou.jpg",
+        "key": "moments/01kgcbw1z8kmsevss5ryex8m26/01kgcbw1z95y4c9a9kdzwdhr9q.jpg",
         "contentType": "image/jpeg",
         "bytes": 480248,
         "etag": "cb07a482efc86beeb7179f4eb1da2d08",
@@ -23,7 +23,7 @@
         "height": 1536,
         "variants": [
           {
-            "key": "moments/2026/02/01-01-he-rxliuli-yi-qi-chi-hai-di-lao-na-zhou/he-rxliuli-yi-qi-chi-hai-di-lao-na-zhou-480w.webp",
+            "key": "moments/01kgcbw1z8kmsevss5ryex8m26/01kgcbw1z95y4c9a9kdzwdhr9q-480w.webp",
             "contentType": "image/webp",
             "bytes": 36424,
             "etag": "e5b81037d020b9338dc358c4aedd7d39",
@@ -31,7 +31,7 @@
             "height": 360
           },
           {
-            "key": "moments/2026/02/01-01-he-rxliuli-yi-qi-chi-hai-di-lao-na-zhou/he-rxliuli-yi-qi-chi-hai-di-lao-na-zhou-960w.webp",
+            "key": "moments/01kgcbw1z8kmsevss5ryex8m26/01kgcbw1z95y4c9a9kdzwdhr9q-960w.webp",
             "contentType": "image/webp",
             "bytes": 106600,
             "etag": "745d0cc1250ad11a4b0fc9809b52b4a4",
@@ -39,7 +39,7 @@
             "height": 720
           },
           {
-            "key": "moments/2026/02/01-01-he-rxliuli-yi-qi-chi-hai-di-lao-na-zhou/he-rxliuli-yi-qi-chi-hai-di-lao-na-zhou-1920w.webp",
+            "key": "moments/01kgcbw1z8kmsevss5ryex8m26/01kgcbw1z95y4c9a9kdzwdhr9q-1920w.webp",
             "contentType": "image/webp",
             "bytes": 260494,
             "etag": "7c415954f7bc76754bd98e4d70bb2c9b",
@@ -55,10 +55,8 @@
       "火锅"
     ]
   },
+  "order": 1,
   "published": {
-    "id": "2026/02/01-01-he-rxliuli-yi-qi-chi-hai-di-lao-na-zhou",
-    "slug": "he-rxliuli-yi-qi-chi-hai-di-lao-na-zhou",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-02-01T18:27:13+08:00",

@@ -222,10 +222,7 @@ data class MomentMedia(
 @Serializable(with = PublishedMoment.Serializer::class)
 @KeepGeneratedSerializer
 data class PublishedMoment(
-    /** `YYYY/MM/DD-NN-slug`. */
-    val id: String,
-    val slug: String,
-    val order: Int,
+    /** When it was published. Nothing here names the Moment, which is its uid alone. */
     val at: String,
     @Transient val extra: JsonObject = NoExtra,
 ) {
@@ -247,6 +244,8 @@ data class MomentRecord(
     val topic: String? = null,
     val media: List<MomentMedia> = emptyList(),
     val trip: String? = null,
+    /** Where it sits among its day's Moments when their times don't say, lower first. */
+    val order: Int? = null,
     val published: PublishedMoment? = null,
     val createdAt: String,
     val updatedAt: String,

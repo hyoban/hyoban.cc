@@ -10,12 +10,12 @@
   "media": [
     {
       "uid": "01KDFEWG2S8WWFMY9MF777F86K",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1152,
       "height": 2048,
       "published": {
-        "key": "moments/2025/12/27-01-di-yi-ci-lai-yu-niao-ji/di-yi-ci-lai-yu-niao-ji.jpg",
+        "key": "moments/01kdfewg2r4x60mn8wk5ga1n8j/01kdfewg2s8wwfmy9mf777f86k.jpg",
         "contentType": "image/jpeg",
         "bytes": 296207,
         "etag": "3e4a2e5e99a90f45c9172ff55216c1ad",
@@ -23,7 +23,7 @@
         "height": 2048,
         "variants": [
           {
-            "key": "moments/2025/12/27-01-di-yi-ci-lai-yu-niao-ji/di-yi-ci-lai-yu-niao-ji-480w.webp",
+            "key": "moments/01kdfewg2r4x60mn8wk5ga1n8j/01kdfewg2s8wwfmy9mf777f86k-480w.webp",
             "contentType": "image/webp",
             "bytes": 44442,
             "etag": "de7ffee89e9dc03c49e4e2cbb335325a",
@@ -31,7 +31,7 @@
             "height": 853
           },
           {
-            "key": "moments/2025/12/27-01-di-yi-ci-lai-yu-niao-ji/di-yi-ci-lai-yu-niao-ji-960w.webp",
+            "key": "moments/01kdfewg2r4x60mn8wk5ga1n8j/01kdfewg2s8wwfmy9mf777f86k-960w.webp",
             "contentType": "image/webp",
             "bytes": 130890,
             "etag": "3424bbb88335ee663cc9ed755d31b57e",
@@ -42,10 +42,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2025/12/27-01-di-yi-ci-lai-yu-niao-ji",
-    "slug": "di-yi-ci-lai-yu-niao-ji",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2025-12-27T16:30:31+08:00",

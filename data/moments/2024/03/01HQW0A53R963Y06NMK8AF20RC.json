@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01HQW0A53SCAM2DY4289AW3ENZ",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 2500,
       "height": 3324,
       "published": {
-        "key": "moments/2024/03/01-01-zheng-li-le-yi-xia-dai-ma-xian-zai-da/zheng-li-le-yi-xia-dai-ma-xian-zai-da.jpg",
+        "key": "moments/01hqw0a53r963y06nmk8af20rc/01hqw0a53scam2dy4289aw3enz.jpg",
         "contentType": "image/jpeg",
         "bytes": 314260,
         "etag": "f950b589857d2907a1f3b17883c866b0",
@@ -21,7 +21,7 @@
         "height": 3324,
         "variants": [
           {
-            "key": "moments/2024/03/01-01-zheng-li-le-yi-xia-dai-ma-xian-zai-da/zheng-li-le-yi-xia-dai-ma-xian-zai-da-480w.webp",
+            "key": "moments/01hqw0a53r963y06nmk8af20rc/01hqw0a53scam2dy4289aw3enz-480w.webp",
             "contentType": "image/webp",
             "bytes": 9542,
             "etag": "44c6240a7c500f9187b04d4924d0b04e",
@@ -29,7 +29,7 @@
             "height": 638
           },
           {
-            "key": "moments/2024/03/01-01-zheng-li-le-yi-xia-dai-ma-xian-zai-da/zheng-li-le-yi-xia-dai-ma-xian-zai-da-960w.webp",
+            "key": "moments/01hqw0a53r963y06nmk8af20rc/01hqw0a53scam2dy4289aw3enz-960w.webp",
             "contentType": "image/webp",
             "bytes": 41660,
             "etag": "c8e0b34ce2094dd52e6c636bf3a399f5",
@@ -37,7 +37,7 @@
             "height": 1276
           },
           {
-            "key": "moments/2024/03/01-01-zheng-li-le-yi-xia-dai-ma-xian-zai-da/zheng-li-le-yi-xia-dai-ma-xian-zai-da-1920w.webp",
+            "key": "moments/01hqw0a53r963y06nmk8af20rc/01hqw0a53scam2dy4289aw3enz-1920w.webp",
             "contentType": "image/webp",
             "bytes": 93614,
             "etag": "434c74915e86250d6736c681db644043",
@@ -48,10 +48,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2024/03/01-01-zheng-li-le-yi-xia-dai-ma-xian-zai-da",
-    "slug": "zheng-li-le-yi-xia-dai-ma-xian-zai-da",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2024-03-01T11:18:19+08:00",

@@ -9,11 +9,12 @@
     {
       "uid": "01K4SG2F0SBJ3EG74GAFHND473",
       "alt": "",
+      "utility": true,
       "type": "image",
       "width": 1080,
       "height": 1775,
       "published": {
-        "key": "moments/2025/09/10-01-jin-jiang-qu-gou-che-bu-tie-zui-hou-hai/jin-jiang-qu-gou-che-bu-tie-zui-hou-hai.webp",
+        "key": "moments/01k4sg2f0rje5y409szkzt16k6/01k4sg2f0sbj3eg74gafhnd473.webp",
         "contentType": "image/webp",
         "bytes": 62692,
         "etag": "1c9e91eae850b183d7ee15143fdfe047",
@@ -21,7 +22,7 @@
         "height": 1775,
         "variants": [
           {
-            "key": "moments/2025/09/10-01-jin-jiang-qu-gou-che-bu-tie-zui-hou-hai/jin-jiang-qu-gou-che-bu-tie-zui-hou-hai-480w.webp",
+            "key": "moments/01k4sg2f0rje5y409szkzt16k6/01k4sg2f0sbj3eg74gafhnd473-480w.webp",
             "contentType": "image/webp",
             "bytes": 16938,
             "etag": "ab9d94bda943132088469a2e75800e98",
@@ -29,7 +30,7 @@
             "height": 789
           },
           {
-            "key": "moments/2025/09/10-01-jin-jiang-qu-gou-che-bu-tie-zui-hou-hai/jin-jiang-qu-gou-che-bu-tie-zui-hou-hai-960w.webp",
+            "key": "moments/01k4sg2f0rje5y409szkzt16k6/01k4sg2f0sbj3eg74gafhnd473-960w.webp",
             "contentType": "image/webp",
             "bytes": 34640,
             "etag": "58bb2be0bab409550b28f06e860eee63",
@@ -37,14 +38,11 @@
             "height": 1578
           }
         ]
-      },
-      "utility": true
+      }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2025/09/10-01-jin-jiang-qu-gou-che-bu-tie-zui-hou-hai",
-    "slug": "jin-jiang-qu-gou-che-bu-tie-zui-hou-hai",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2025-09-10T17:42:23+08:00",

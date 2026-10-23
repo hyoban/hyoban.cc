@@ -6,10 +6,8 @@
   "hidden": true,
   "topic": "food",
   "media": [],
+  "order": 1,
   "published": {
-    "id": "2023/09/29-01-mai-men",
-    "slug": "mai-men",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2023-09-29T18:16:25+08:00",

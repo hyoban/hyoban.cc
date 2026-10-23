@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01JQ95WA492PDDG23VKT9XH36Z",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1024,
       "height": 1536,
       "published": {
-        "key": "moments/2025/03/26-01-ba-wo-de-tou-xiang-yong-ri-chang-de-hua/ba-wo-de-tou-xiang-yong-ri-chang-de-hua.jpg",
+        "key": "moments/01jq95wa48qybcemcx5ey5v5r3/01jq95wa492pddg23vkt9xh36z.jpg",
         "contentType": "image/jpeg",
         "bytes": 128531,
         "etag": "73b1fac11ea03ef75964736d8784164e",
@@ -21,7 +21,7 @@
         "height": 1536,
         "variants": [
           {
-            "key": "moments/2025/03/26-01-ba-wo-de-tou-xiang-yong-ri-chang-de-hua/ba-wo-de-tou-xiang-yong-ri-chang-de-hua-480w.webp",
+            "key": "moments/01jq95wa48qybcemcx5ey5v5r3/01jq95wa492pddg23vkt9xh36z-480w.webp",
             "contentType": "image/webp",
             "bytes": 21566,
             "etag": "2260f8e6df36c084a276cb74ff02cc69",
@@ -29,7 +29,7 @@
             "height": 720
           },
           {
-            "key": "moments/2025/03/26-01-ba-wo-de-tou-xiang-yong-ri-chang-de-hua/ba-wo-de-tou-xiang-yong-ri-chang-de-hua-960w.webp",
+            "key": "moments/01jq95wa48qybcemcx5ey5v5r3/01jq95wa492pddg23vkt9xh36z-960w.webp",
             "contentType": "image/webp",
             "bytes": 59148,
             "etag": "90cbb18b1c381996db446b294ecce143",
@@ -40,10 +40,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2025/03/26-01-ba-wo-de-tou-xiang-yong-ri-chang-de-hua",
-    "slug": "ba-wo-de-tou-xiang-yong-ri-chang-de-hua",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2025-03-26T20:12:21+08:00",

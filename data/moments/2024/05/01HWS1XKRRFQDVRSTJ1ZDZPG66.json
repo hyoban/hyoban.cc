@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01HWS1XKRS6QAW4SKEAGKWBJRK",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 945,
       "height": 2048,
       "published": {
-        "key": "moments/2024/05/01-01-zheng-ting-hao-moimoi-app/zheng-ting-hao-moimoi-app.jpg",
+        "key": "moments/01hws1xkrrfqdvrstj1zdzpg66/01hws1xkrs6qaw4skeagkwbjrk.jpg",
         "contentType": "image/jpeg",
         "bytes": 110700,
         "etag": "273006df816efd6d2fe392d084e77f29",
@@ -21,7 +21,7 @@
         "height": 2048,
         "variants": [
           {
-            "key": "moments/2024/05/01-01-zheng-ting-hao-moimoi-app/zheng-ting-hao-moimoi-app-480w.webp",
+            "key": "moments/01hws1xkrrfqdvrstj1zdzpg66/01hws1xkrs6qaw4skeagkwbjrk-480w.webp",
             "contentType": "image/webp",
             "bytes": 21634,
             "etag": "8a13147eedbb4cc2f755e5c06227df8d",
@@ -32,10 +32,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2024/05/01-01-zheng-ting-hao-moimoi-app",
-    "slug": "zheng-ting-hao-moimoi-app",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2024-05-01T11:07:11+08:00",

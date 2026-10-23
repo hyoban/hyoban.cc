@@ -25,7 +25,7 @@ export function momentRow(moment: MomentRecord, record: unknown = moment): Recor
     uid: moment.uid,
     occurred_at: moment.occurredAt,
     day: moment.occurredAt.slice(0, 10),
-    published_id: moment.published?.id ?? null,
+    published: moment.published ? 1 : 0,
     trip: moment.trip ?? null,
     hidden: moment.hidden ? 1 : 0,
     record: JSON.stringify(record),

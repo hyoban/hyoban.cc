@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01J1EV4PJ186TZW61VXS83RYE0",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 945,
       "height": 2048,
       "published": {
-        "key": "moments/2024/06/28-01-gang-shou-dao-copilot-guo-qi-de-you-jian-xue/gang-shou-dao-copilot-guo-qi-de-you-jian-xue.jpg",
+        "key": "moments/01j1ev4pj0pqaxywx2cdfwm1eq/01j1ev4pj186tzw61vxs83rye0.jpg",
         "contentType": "image/jpeg",
         "bytes": 162686,
         "etag": "17f7ce442396369f49bdba5d0bc33893",
@@ -21,7 +21,7 @@
         "height": 2048,
         "variants": [
           {
-            "key": "moments/2024/06/28-01-gang-shou-dao-copilot-guo-qi-de-you-jian-xue/gang-shou-dao-copilot-guo-qi-de-you-jian-xue-480w.webp",
+            "key": "moments/01j1ev4pj0pqaxywx2cdfwm1eq/01j1ev4pj186tzw61vxs83rye0-480w.webp",
             "contentType": "image/webp",
             "bytes": 38464,
             "etag": "c1a0634fbac4868e5fead3d48a6d7b28",
@@ -32,10 +32,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2024/06/28-01-gang-shou-dao-copilot-guo-qi-de-you-jian-xue",
-    "slug": "gang-shou-dao-copilot-guo-qi-de-you-jian-xue",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2024-06-28T15:14:48+08:00",

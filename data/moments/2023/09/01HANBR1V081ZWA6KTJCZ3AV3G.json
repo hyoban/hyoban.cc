@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01HANBR1V1WRC0KS8ZRZZT2FE8",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 945,
       "height": 2048,
       "published": {
-        "key": "moments/2023/09/19-02-mei-hao-de-yi-tian-cong-kai-yuan-she-qu/mei-hao-de-yi-tian-cong-kai-yuan-she-qu.jpg",
+        "key": "moments/01hanbr1v081zwa6ktjcz3av3g/01hanbr1v1wrc0ks8zrzzt2fe8.jpg",
         "contentType": "image/jpeg",
         "bytes": 155438,
         "etag": "1b14e0e61e1732eb1cde361bb4393f43",
@@ -21,7 +21,7 @@
         "height": 2048,
         "variants": [
           {
-            "key": "moments/2023/09/19-02-mei-hao-de-yi-tian-cong-kai-yuan-she-qu/mei-hao-de-yi-tian-cong-kai-yuan-she-qu-480w.webp",
+            "key": "moments/01hanbr1v081zwa6ktjcz3av3g/01hanbr1v1wrc0ks8zrzzt2fe8-480w.webp",
             "contentType": "image/webp",
             "bytes": 34186,
             "etag": "2f2cb7a99201d177f83c7fc3b297bf99",
@@ -32,10 +32,8 @@
       }
     }
   ],
+  "order": 2,
   "published": {
-    "id": "2023/09/19-02-mei-hao-de-yi-tian-cong-kai-yuan-she-qu",
-    "slug": "mei-hao-de-yi-tian-cong-kai-yuan-she-qu",
-    "order": 2,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2023-09-19T07:59:24+08:00",

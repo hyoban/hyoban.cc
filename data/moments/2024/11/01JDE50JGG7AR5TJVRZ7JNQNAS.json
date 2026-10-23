@@ -10,12 +10,12 @@
   "media": [
     {
       "uid": "01JDE50JGHBFB9AJ7KHQXAGCPZ",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1152,
       "height": 2048,
       "published": {
-        "key": "moments/2024/11/24-01-zai-guang-zhou-shua-xin-de-fu-huo-dian/zai-guang-zhou-shua-xin-de-fu-huo-dian.jpg",
+        "key": "moments/01jde50jgg7ar5tjvrz7jnqnas/01jde50jghbfb9aj7khqxagcpz.jpg",
         "contentType": "image/jpeg",
         "bytes": 726890,
         "etag": "fd0450fd5cca12ef8c020531fd5b3467",
@@ -23,7 +23,7 @@
         "height": 2048,
         "variants": [
           {
-            "key": "moments/2024/11/24-01-zai-guang-zhou-shua-xin-de-fu-huo-dian/zai-guang-zhou-shua-xin-de-fu-huo-dian-480w.webp",
+            "key": "moments/01jde50jgg7ar5tjvrz7jnqnas/01jde50jghbfb9aj7khqxagcpz-480w.webp",
             "contentType": "image/webp",
             "bytes": 121256,
             "etag": "50feaa71cbbfe67011b5e3b6e8bb3b3b",
@@ -31,7 +31,7 @@
             "height": 853
           },
           {
-            "key": "moments/2024/11/24-01-zai-guang-zhou-shua-xin-de-fu-huo-dian/zai-guang-zhou-shua-xin-de-fu-huo-dian-960w.webp",
+            "key": "moments/01jde50jgg7ar5tjvrz7jnqnas/01jde50jghbfb9aj7khqxagcpz-960w.webp",
             "contentType": "image/webp",
             "bytes": 461844,
             "etag": "4150073ef6e3195384f1593f91cd71d3",
@@ -42,10 +42,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2024/11/24-01-zai-guang-zhou-shua-xin-de-fu-huo-dian",
-    "slug": "zai-guang-zhou-shua-xin-de-fu-huo-dian",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2024-11-24T11:56:26+08:00",

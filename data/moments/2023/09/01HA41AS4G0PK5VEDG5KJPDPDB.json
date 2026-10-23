@@ -6,10 +6,8 @@
   "hidden": false,
   "topic": "tech",
   "media": [],
+  "order": 1,
   "published": {
-    "id": "2023/09/12-01-kan-qi-lai-he-pnpm-bu-yi-yang-de-shi",
-    "slug": "kan-qi-lai-he-pnpm-bu-yi-yang-de-shi",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2023-09-12T14:30:18+08:00",

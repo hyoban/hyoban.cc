@@ -8,10 +8,8 @@
   "hidden": false,
   "topic": "travel",
   "media": [],
+  "order": 2,
   "published": {
-    "id": "2026/09/16-02-leaving-lijiang",
-    "slug": "leaving-lijiang",
-    "order": 2,
     "at": "2026-10-08T08:10:00+08:00"
   },
   "createdAt": "2026-09-16T17:32:48+08:00",

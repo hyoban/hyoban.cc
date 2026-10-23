@@ -15,7 +15,7 @@
       "width": 1280,
       "height": 853,
       "published": {
-        "key": "moments/2026/06/14-01-mo-gan-shan/mo-gan-shan-6.jpg",
+        "key": "moments/01kv4t018041ernv873v547nkz/01kv4t0186dp8dhkczjrkfwrxt.jpg",
         "contentType": "image/jpeg",
         "bytes": 244717,
         "etag": "8414b2a126f470974f38cee9ae1a94eb",
@@ -23,7 +23,7 @@
         "height": 853,
         "variants": [
           {
-            "key": "moments/2026/06/14-01-mo-gan-shan/mo-gan-shan-6-480w.webp",
+            "key": "moments/01kv4t018041ernv873v547nkz/01kv4t0186dp8dhkczjrkfwrxt-480w.webp",
             "contentType": "image/webp",
             "bytes": 46144,
             "etag": "61b3524bd57fbd51c7d5658f0538dfc4",
@@ -31,7 +31,7 @@
             "height": 320
           },
           {
-            "key": "moments/2026/06/14-01-mo-gan-shan/mo-gan-shan-6-960w.webp",
+            "key": "moments/01kv4t018041ernv873v547nkz/01kv4t0186dp8dhkczjrkfwrxt-960w.webp",
             "contentType": "image/webp",
             "bytes": 158370,
             "etag": "6ad38fa2ba56a10a7850e9b69c7b19c7",
@@ -48,7 +48,7 @@
       "width": 1280,
       "height": 853,
       "published": {
-        "key": "moments/2026/06/14-01-mo-gan-shan/mo-gan-shan-7.jpg",
+        "key": "moments/01kv4t018041ernv873v547nkz/01kv4t01876pqm7ffhv54wbbwc.jpg",
         "contentType": "image/jpeg",
         "bytes": 258032,
         "etag": "884fdef05841b70e57f1de1d8e0ee998",
@@ -56,7 +56,7 @@
         "height": 853,
         "variants": [
           {
-            "key": "moments/2026/06/14-01-mo-gan-shan/mo-gan-shan-7-480w.webp",
+            "key": "moments/01kv4t018041ernv873v547nkz/01kv4t01876pqm7ffhv54wbbwc-480w.webp",
             "contentType": "image/webp",
             "bytes": 48764,
             "etag": "34267204e6ee935b6b945f2d059df9ac",
@@ -64,7 +64,7 @@
             "height": 320
           },
           {
-            "key": "moments/2026/06/14-01-mo-gan-shan/mo-gan-shan-7-960w.webp",
+            "key": "moments/01kv4t018041ernv873v547nkz/01kv4t01876pqm7ffhv54wbbwc-960w.webp",
             "contentType": "image/webp",
             "bytes": 167430,
             "etag": "49d4809181d13d8aa1ea57525aef6def",
@@ -81,7 +81,7 @@
       "width": 1280,
       "height": 853,
       "published": {
-        "key": "moments/2026/06/14-01-mo-gan-shan/mo-gan-shan-9.jpg",
+        "key": "moments/01kv4t018041ernv873v547nkz/01kv4t0189p1ftc7x22v3rbsn5.jpg",
         "contentType": "image/jpeg",
         "bytes": 218376,
         "etag": "851b120744733f7a21fdde98d7147d6a",
@@ -89,7 +89,7 @@
         "height": 853,
         "variants": [
           {
-            "key": "moments/2026/06/14-01-mo-gan-shan/mo-gan-shan-9-480w.webp",
+            "key": "moments/01kv4t018041ernv873v547nkz/01kv4t0189p1ftc7x22v3rbsn5-480w.webp",
             "contentType": "image/webp",
             "bytes": 40840,
             "etag": "0706298f1d0355eaba28ef93bd743091",
@@ -97,7 +97,7 @@
             "height": 320
           },
           {
-            "key": "moments/2026/06/14-01-mo-gan-shan/mo-gan-shan-9-960w.webp",
+            "key": "moments/01kv4t018041ernv873v547nkz/01kv4t0189p1ftc7x22v3rbsn5-960w.webp",
             "contentType": "image/webp",
             "bytes": 135726,
             "etag": "8ebe37d3badf82d9ea4b0719ddebc5ed",
@@ -108,10 +108,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2026/06/14-01-mo-gan-shan",
-    "slug": "mo-gan-shan",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-06-15T12:52:48+08:00",

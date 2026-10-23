@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01HBXTNDY1TX7Y4FJ0T5986WPD",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 2194,
       "height": 1168,
       "published": {
-        "key": "moments/2023/10/05-01-ai-next-js-xie-xlog-de-pr-xie-zhe-xie/ai-next-js-xie-xlog-de-pr-xie-zhe-xie.png",
+        "key": "moments/01hbxtndy0hn1avsx7nfk2pez4/01hbxtndy1tx7y4fj0t5986wpd.png",
         "contentType": "image/png",
         "bytes": 144664,
         "etag": "b1186340a0829e2f84db6924f24d16c5",
@@ -21,7 +21,7 @@
         "height": 1168,
         "variants": [
           {
-            "key": "moments/2023/10/05-01-ai-next-js-xie-xlog-de-pr-xie-zhe-xie/ai-next-js-xie-xlog-de-pr-xie-zhe-xie-480w.webp",
+            "key": "moments/01hbxtndy0hn1avsx7nfk2pez4/01hbxtndy1tx7y4fj0t5986wpd-480w.webp",
             "contentType": "image/webp",
             "bytes": 34256,
             "etag": "1947d2c35f678d8da474e620df4e85a5",
@@ -29,7 +29,7 @@
             "height": 256
           },
           {
-            "key": "moments/2023/10/05-01-ai-next-js-xie-xlog-de-pr-xie-zhe-xie/ai-next-js-xie-xlog-de-pr-xie-zhe-xie-960w.webp",
+            "key": "moments/01hbxtndy0hn1avsx7nfk2pez4/01hbxtndy1tx7y4fj0t5986wpd-960w.webp",
             "contentType": "image/webp",
             "bytes": 95256,
             "etag": "ff1ce067399fb9259838f7098e7747ab",
@@ -37,7 +37,7 @@
             "height": 511
           },
           {
-            "key": "moments/2023/10/05-01-ai-next-js-xie-xlog-de-pr-xie-zhe-xie/ai-next-js-xie-xlog-de-pr-xie-zhe-xie-1920w.webp",
+            "key": "moments/01hbxtndy0hn1avsx7nfk2pez4/01hbxtndy1tx7y4fj0t5986wpd-1920w.webp",
             "contentType": "image/webp",
             "bytes": 219202,
             "etag": "ca46c871ea963a8b013c60aacd978250",
@@ -48,10 +48,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2023/10/05-01-ai-next-js-xie-xlog-de-pr-xie-zhe-xie",
-    "slug": "ai-next-js-xie-xlog-de-pr-xie-zhe-xie",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2023-10-05T01:09:44+08:00",

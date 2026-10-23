@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01KXDYJK519DGCZC2YAF01M9VS",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1080,
       "height": 1440,
       "published": {
-        "key": "moments/2026/07/13-01-zai-nan-jing-gei-tong-xue-pai-ling-zheng-zhao/zai-nan-jing-gei-tong-xue-pai-ling-zheng-zhao.webp",
+        "key": "moments/01kxdyjk506er1m4d5gp7emkyk/01kxdyjk519dgczc2yaf01m9vs.webp",
         "contentType": "image/webp",
         "bytes": 72012,
         "etag": "a892fe941cade01bd57420938767cbb5",
@@ -21,7 +21,7 @@
         "height": 1440,
         "variants": [
           {
-            "key": "moments/2026/07/13-01-zai-nan-jing-gei-tong-xue-pai-ling-zheng-zhao/zai-nan-jing-gei-tong-xue-pai-ling-zheng-zhao-480w.webp",
+            "key": "moments/01kxdyjk506er1m4d5gp7emkyk/01kxdyjk519dgczc2yaf01m9vs-480w.webp",
             "contentType": "image/webp",
             "bytes": 19356,
             "etag": "89f16ffe3ddac27b04836bea294d533d",
@@ -29,7 +29,7 @@
             "height": 640
           },
           {
-            "key": "moments/2026/07/13-01-zai-nan-jing-gei-tong-xue-pai-ling-zheng-zhao/zai-nan-jing-gei-tong-xue-pai-ling-zheng-zhao-960w.webp",
+            "key": "moments/01kxdyjk506er1m4d5gp7emkyk/01kxdyjk519dgczc2yaf01m9vs-960w.webp",
             "contentType": "image/webp",
             "bytes": 43216,
             "etag": "b905eaec89c4b0bc554632b5da93b0fb",
@@ -41,12 +41,12 @@
     },
     {
       "uid": "01KXDYJK52WAB1PF1E4B0Q24G2",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1620,
       "height": 1080,
       "published": {
-        "key": "moments/2026/07/13-01-zai-nan-jing-gei-tong-xue-pai-ling-zheng-zhao/zai-nan-jing-gei-tong-xue-pai-ling-zheng-zhao-2.webp",
+        "key": "moments/01kxdyjk506er1m4d5gp7emkyk/01kxdyjk52wab1pf1e4b0q24g2.webp",
         "contentType": "image/webp",
         "bytes": 278274,
         "etag": "147bf699eb384dd000f7b226eb0dba8e",
@@ -54,7 +54,7 @@
         "height": 1080,
         "variants": [
           {
-            "key": "moments/2026/07/13-01-zai-nan-jing-gei-tong-xue-pai-ling-zheng-zhao/zai-nan-jing-gei-tong-xue-pai-ling-zheng-zhao-2-480w.webp",
+            "key": "moments/01kxdyjk506er1m4d5gp7emkyk/01kxdyjk52wab1pf1e4b0q24g2-480w.webp",
             "contentType": "image/webp",
             "bytes": 28548,
             "etag": "f6d3f0c3da593b98184c4af99ae51899",
@@ -62,7 +62,7 @@
             "height": 320
           },
           {
-            "key": "moments/2026/07/13-01-zai-nan-jing-gei-tong-xue-pai-ling-zheng-zhao/zai-nan-jing-gei-tong-xue-pai-ling-zheng-zhao-2-960w.webp",
+            "key": "moments/01kxdyjk506er1m4d5gp7emkyk/01kxdyjk52wab1pf1e4b0q24g2-960w.webp",
             "contentType": "image/webp",
             "bytes": 84070,
             "etag": "66988750d6f3b69b9497bed8bc2854e8",
@@ -73,10 +73,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2026/07/13-01-zai-nan-jing-gei-tong-xue-pai-ling-zheng-zhao",
-    "slug": "zai-nan-jing-gei-tong-xue-pai-ling-zheng-zhao",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-07-13T22:37:24+08:00",

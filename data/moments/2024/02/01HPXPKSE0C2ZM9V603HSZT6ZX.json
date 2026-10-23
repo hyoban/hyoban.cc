@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01HPXPKSE1XP0CN8174KQ1V3GD",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1286,
       "height": 810,
       "published": {
-        "key": "moments/2024/02/18-01-gei-ou-xiang-fa-ge-dian-yin-wei-cong-antfu/gei-ou-xiang-fa-ge-dian-yin-wei-cong-antfu.jpg",
+        "key": "moments/01hpxpkse0c2zm9v603hszt6zx/01hpxpkse1xp0cn8174kq1v3gd.jpg",
         "contentType": "image/jpeg",
         "bytes": 41197,
         "etag": "15714be452521278ecfbb336d945fd73",
@@ -21,7 +21,7 @@
         "height": 810,
         "variants": [
           {
-            "key": "moments/2024/02/18-01-gei-ou-xiang-fa-ge-dian-yin-wei-cong-antfu/gei-ou-xiang-fa-ge-dian-yin-wei-cong-antfu-480w.webp",
+            "key": "moments/01hpxpkse0c2zm9v603hszt6zx/01hpxpkse1xp0cn8174kq1v3gd-480w.webp",
             "contentType": "image/webp",
             "bytes": 5294,
             "etag": "daf9112a16d7aa16fad9c0de3f69f319",
@@ -29,7 +29,7 @@
             "height": 302
           },
           {
-            "key": "moments/2024/02/18-01-gei-ou-xiang-fa-ge-dian-yin-wei-cong-antfu/gei-ou-xiang-fa-ge-dian-yin-wei-cong-antfu-960w.webp",
+            "key": "moments/01hpxpkse0c2zm9v603hszt6zx/01hpxpkse1xp0cn8174kq1v3gd-960w.webp",
             "contentType": "image/webp",
             "bytes": 11992,
             "etag": "51f1897525b9b9b445609f67451e2928",
@@ -40,10 +40,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2024/02/18-01-gei-ou-xiang-fa-ge-dian-yin-wei-cong-antfu",
-    "slug": "gei-ou-xiang-fa-ge-dian-yin-wei-cong-antfu",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2024-02-18T16:51:36+08:00",

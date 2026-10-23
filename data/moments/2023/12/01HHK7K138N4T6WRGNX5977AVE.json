@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01HHK7K139JN8ZDPQ80HQYEPTG",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 2748,
       "height": 1740,
       "published": {
-        "key": "moments/2023/12/14-01-an-de-hao-wu-yi-wen-zui-zhong-du-shi/an-de-hao-wu-yi-wen-zui-zhong-du-shi.jpg",
+        "key": "moments/01hhk7k138n4t6wrgnx5977ave/01hhk7k139jn8zdpq80hqyeptg.jpg",
         "contentType": "image/jpeg",
         "bytes": 257309,
         "etag": "ac10780ca25a022e1c0e77e69eb683a2",
@@ -21,7 +21,7 @@
         "height": 1740,
         "variants": [
           {
-            "key": "moments/2023/12/14-01-an-de-hao-wu-yi-wen-zui-zhong-du-shi/an-de-hao-wu-yi-wen-zui-zhong-du-shi-480w.webp",
+            "key": "moments/01hhk7k138n4t6wrgnx5977ave/01hhk7k139jn8zdpq80hqyeptg-480w.webp",
             "contentType": "image/webp",
             "bytes": 11404,
             "etag": "549c55084bb1200fd9fe64fd2aab09cc",
@@ -29,7 +29,7 @@
             "height": 304
           },
           {
-            "key": "moments/2023/12/14-01-an-de-hao-wu-yi-wen-zui-zhong-du-shi/an-de-hao-wu-yi-wen-zui-zhong-du-shi-960w.webp",
+            "key": "moments/01hhk7k138n4t6wrgnx5977ave/01hhk7k139jn8zdpq80hqyeptg-960w.webp",
             "contentType": "image/webp",
             "bytes": 29824,
             "etag": "8b7c707be8b4ad0627992a68f6a92927",
@@ -37,7 +37,7 @@
             "height": 608
           },
           {
-            "key": "moments/2023/12/14-01-an-de-hao-wu-yi-wen-zui-zhong-du-shi/an-de-hao-wu-yi-wen-zui-zhong-du-shi-1920w.webp",
+            "key": "moments/01hhk7k138n4t6wrgnx5977ave/01hhk7k139jn8zdpq80hqyeptg-1920w.webp",
             "contentType": "image/webp",
             "bytes": 67942,
             "etag": "b5fe58d119c9fdd1c25eedf2bbdb4c5b",
@@ -48,10 +48,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2023/12/14-01-an-de-hao-wu-yi-wen-zui-zhong-du-shi",
-    "slug": "an-de-hao-wu-yi-wen-zui-zhong-du-shi",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2023-12-14T11:58:09+08:00",

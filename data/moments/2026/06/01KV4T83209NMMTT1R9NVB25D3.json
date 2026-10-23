@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01KV4T83212WVY42N1T899HF5T",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1620,
       "height": 1080,
       "published": {
-        "key": "moments/2026/06/15-02-mo-gan-shan/mo-gan-shan.webp",
+        "key": "moments/01kv4t83209nmmtt1r9nvb25d3/01kv4t83212wvy42n1t899hf5t.webp",
         "contentType": "image/webp",
         "bytes": 588452,
         "etag": "5a85f632e2c38293314a34b7ac26aed0",
@@ -21,7 +21,7 @@
         "height": 1080,
         "variants": [
           {
-            "key": "moments/2026/06/15-02-mo-gan-shan/mo-gan-shan-480w.webp",
+            "key": "moments/01kv4t83209nmmtt1r9nvb25d3/01kv4t83212wvy42n1t899hf5t-480w.webp",
             "contentType": "image/webp",
             "bytes": 45980,
             "etag": "80cd50ccdcdef401a1c068200be9d3bc",
@@ -29,7 +29,7 @@
             "height": 320
           },
           {
-            "key": "moments/2026/06/15-02-mo-gan-shan/mo-gan-shan-960w.webp",
+            "key": "moments/01kv4t83209nmmtt1r9nvb25d3/01kv4t83212wvy42n1t899hf5t-960w.webp",
             "contentType": "image/webp",
             "bytes": 153962,
             "etag": "42d9496a26e396059289bbab75b54b47",
@@ -41,12 +41,12 @@
     },
     {
       "uid": "01KV4T8322XASXT13RHVP3Z80Q",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1620,
       "height": 1080,
       "published": {
-        "key": "moments/2026/06/15-02-mo-gan-shan/mo-gan-shan-2.webp",
+        "key": "moments/01kv4t83209nmmtt1r9nvb25d3/01kv4t8322xasxt13rhvp3z80q.webp",
         "contentType": "image/webp",
         "bytes": 535770,
         "etag": "6d6b0b23c721698472a86fadbcdf1c4c",
@@ -54,7 +54,7 @@
         "height": 1080,
         "variants": [
           {
-            "key": "moments/2026/06/15-02-mo-gan-shan/mo-gan-shan-2-480w.webp",
+            "key": "moments/01kv4t83209nmmtt1r9nvb25d3/01kv4t8322xasxt13rhvp3z80q-480w.webp",
             "contentType": "image/webp",
             "bytes": 43686,
             "etag": "9d68ed843e99e4df7eabfc038da6c8b2",
@@ -62,7 +62,7 @@
             "height": 320
           },
           {
-            "key": "moments/2026/06/15-02-mo-gan-shan/mo-gan-shan-2-960w.webp",
+            "key": "moments/01kv4t83209nmmtt1r9nvb25d3/01kv4t8322xasxt13rhvp3z80q-960w.webp",
             "contentType": "image/webp",
             "bytes": 143476,
             "etag": "422a8bbd78ef9408c84b42336592f62c",
@@ -74,12 +74,12 @@
     },
     {
       "uid": "01KV4T8323Q58DH41873NWZDVA",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1620,
       "height": 1080,
       "published": {
-        "key": "moments/2026/06/15-02-mo-gan-shan/mo-gan-shan-3.webp",
+        "key": "moments/01kv4t83209nmmtt1r9nvb25d3/01kv4t8323q58dh41873nwzdva.webp",
         "contentType": "image/webp",
         "bytes": 489082,
         "etag": "d449aa55e83ba62aa70f4f7af70f095e",
@@ -87,7 +87,7 @@
         "height": 1080,
         "variants": [
           {
-            "key": "moments/2026/06/15-02-mo-gan-shan/mo-gan-shan-3-480w.webp",
+            "key": "moments/01kv4t83209nmmtt1r9nvb25d3/01kv4t8323q58dh41873nwzdva-480w.webp",
             "contentType": "image/webp",
             "bytes": 38378,
             "etag": "6981d19c135f6592e2f7711307bc41db",
@@ -95,7 +95,7 @@
             "height": 320
           },
           {
-            "key": "moments/2026/06/15-02-mo-gan-shan/mo-gan-shan-3-960w.webp",
+            "key": "moments/01kv4t83209nmmtt1r9nvb25d3/01kv4t8323q58dh41873nwzdva-960w.webp",
             "contentType": "image/webp",
             "bytes": 125558,
             "etag": "c27b2538d85a2d0f154ca3b4359f22f9",
@@ -107,12 +107,12 @@
     },
     {
       "uid": "01KV4T83242QD2TK369Y8KBB3W",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1620,
       "height": 1080,
       "published": {
-        "key": "moments/2026/06/15-02-mo-gan-shan/mo-gan-shan-4.webp",
+        "key": "moments/01kv4t83209nmmtt1r9nvb25d3/01kv4t83242qd2tk369y8kbb3w.webp",
         "contentType": "image/webp",
         "bytes": 194188,
         "etag": "4e948a2cd3df37ae81fd91dec8eebbb1",
@@ -120,7 +120,7 @@
         "height": 1080,
         "variants": [
           {
-            "key": "moments/2026/06/15-02-mo-gan-shan/mo-gan-shan-4-480w.webp",
+            "key": "moments/01kv4t83209nmmtt1r9nvb25d3/01kv4t83242qd2tk369y8kbb3w-480w.webp",
             "contentType": "image/webp",
             "bytes": 17422,
             "etag": "c0a13330f8144fe39b26db5d9e3fb1da",
@@ -128,7 +128,7 @@
             "height": 320
           },
           {
-            "key": "moments/2026/06/15-02-mo-gan-shan/mo-gan-shan-4-960w.webp",
+            "key": "moments/01kv4t83209nmmtt1r9nvb25d3/01kv4t83242qd2tk369y8kbb3w-960w.webp",
             "contentType": "image/webp",
             "bytes": 46146,
             "etag": "02a7a2634cef25a47ac3819f3858a051",
@@ -140,12 +140,12 @@
     },
     {
       "uid": "01KV4T83251RK1WEGXD97MKPQM",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1620,
       "height": 1080,
       "published": {
-        "key": "moments/2026/06/15-02-mo-gan-shan/mo-gan-shan-5.webp",
+        "key": "moments/01kv4t83209nmmtt1r9nvb25d3/01kv4t83251rk1wegxd97mkpqm.webp",
         "contentType": "image/webp",
         "bytes": 276800,
         "etag": "fd5f408fd9a8d6679a4846ec4df2e861",
@@ -153,7 +153,7 @@
         "height": 1080,
         "variants": [
           {
-            "key": "moments/2026/06/15-02-mo-gan-shan/mo-gan-shan-5-480w.webp",
+            "key": "moments/01kv4t83209nmmtt1r9nvb25d3/01kv4t83251rk1wegxd97mkpqm-480w.webp",
             "contentType": "image/webp",
             "bytes": 30420,
             "etag": "85a810251744cdc47d0edac2a2a03ca4",
@@ -161,7 +161,7 @@
             "height": 320
           },
           {
-            "key": "moments/2026/06/15-02-mo-gan-shan/mo-gan-shan-5-960w.webp",
+            "key": "moments/01kv4t83209nmmtt1r9nvb25d3/01kv4t83251rk1wegxd97mkpqm-960w.webp",
             "contentType": "image/webp",
             "bytes": 76346,
             "etag": "ba3945d8ef8cfb93c13135af27f14ada",
@@ -173,12 +173,12 @@
     },
     {
       "uid": "01KV4T83260QG1BFBNWPM4T92G",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1620,
       "height": 1080,
       "published": {
-        "key": "moments/2026/06/15-02-mo-gan-shan/mo-gan-shan-6.webp",
+        "key": "moments/01kv4t83209nmmtt1r9nvb25d3/01kv4t83260qg1bfbnwpm4t92g.webp",
         "contentType": "image/webp",
         "bytes": 579666,
         "etag": "a37a0b5aa54f307f03535a2dc5cfdde9",
@@ -186,7 +186,7 @@
         "height": 1080,
         "variants": [
           {
-            "key": "moments/2026/06/15-02-mo-gan-shan/mo-gan-shan-6-480w.webp",
+            "key": "moments/01kv4t83209nmmtt1r9nvb25d3/01kv4t83260qg1bfbnwpm4t92g-480w.webp",
             "contentType": "image/webp",
             "bytes": 42084,
             "etag": "4c8a2ea79f4b8b207db9b6de132460c1",
@@ -194,7 +194,7 @@
             "height": 320
           },
           {
-            "key": "moments/2026/06/15-02-mo-gan-shan/mo-gan-shan-6-960w.webp",
+            "key": "moments/01kv4t83209nmmtt1r9nvb25d3/01kv4t83260qg1bfbnwpm4t92g-960w.webp",
             "contentType": "image/webp",
             "bytes": 145500,
             "etag": "f5595f8b7b36f611826737f584f3fe14",
@@ -206,12 +206,12 @@
     },
     {
       "uid": "01KV4T8327YE2NZJC2H7MBTVYD",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1620,
       "height": 1080,
       "published": {
-        "key": "moments/2026/06/15-02-mo-gan-shan/mo-gan-shan-7.webp",
+        "key": "moments/01kv4t83209nmmtt1r9nvb25d3/01kv4t8327ye2nzjc2h7mbtvyd.webp",
         "contentType": "image/webp",
         "bytes": 355042,
         "etag": "27783835f67e81e2231928c25d8669ed",
@@ -219,7 +219,7 @@
         "height": 1080,
         "variants": [
           {
-            "key": "moments/2026/06/15-02-mo-gan-shan/mo-gan-shan-7-480w.webp",
+            "key": "moments/01kv4t83209nmmtt1r9nvb25d3/01kv4t8327ye2nzjc2h7mbtvyd-480w.webp",
             "contentType": "image/webp",
             "bytes": 32758,
             "etag": "1bd08caf7e7b8e5045d043dba32a08e8",
@@ -227,7 +227,7 @@
             "height": 320
           },
           {
-            "key": "moments/2026/06/15-02-mo-gan-shan/mo-gan-shan-7-960w.webp",
+            "key": "moments/01kv4t83209nmmtt1r9nvb25d3/01kv4t8327ye2nzjc2h7mbtvyd-960w.webp",
             "contentType": "image/webp",
             "bytes": 95980,
             "etag": "8c5c9bce708980d1bf269e846a844feb",
@@ -239,12 +239,12 @@
     },
     {
       "uid": "01KV4T8328DMZDBC5DE4X3C76A",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1620,
       "height": 1080,
       "published": {
-        "key": "moments/2026/06/15-02-mo-gan-shan/mo-gan-shan-8.webp",
+        "key": "moments/01kv4t83209nmmtt1r9nvb25d3/01kv4t8328dmzdbc5de4x3c76a.webp",
         "contentType": "image/webp",
         "bytes": 214230,
         "etag": "9f981e4b2f028b8e50142e8396d74b65",
@@ -252,7 +252,7 @@
         "height": 1080,
         "variants": [
           {
-            "key": "moments/2026/06/15-02-mo-gan-shan/mo-gan-shan-8-480w.webp",
+            "key": "moments/01kv4t83209nmmtt1r9nvb25d3/01kv4t8328dmzdbc5de4x3c76a-480w.webp",
             "contentType": "image/webp",
             "bytes": 20618,
             "etag": "479bdf92c26de60a823f6a20b0cf192b",
@@ -260,7 +260,7 @@
             "height": 320
           },
           {
-            "key": "moments/2026/06/15-02-mo-gan-shan/mo-gan-shan-8-960w.webp",
+            "key": "moments/01kv4t83209nmmtt1r9nvb25d3/01kv4t8328dmzdbc5de4x3c76a-960w.webp",
             "contentType": "image/webp",
             "bytes": 54422,
             "etag": "e2ea58c925f88fb84b8f5e1f6263e458",
@@ -272,12 +272,12 @@
     },
     {
       "uid": "01KV4T83291FR3MHFZCPY1BN8T",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1620,
       "height": 1080,
       "published": {
-        "key": "moments/2026/06/15-02-mo-gan-shan/mo-gan-shan-9.webp",
+        "key": "moments/01kv4t83209nmmtt1r9nvb25d3/01kv4t83291fr3mhfzcpy1bn8t.webp",
         "contentType": "image/webp",
         "bytes": 324246,
         "etag": "0e4f465024fb498d4fa9ed3bd306e9a3",
@@ -285,7 +285,7 @@
         "height": 1080,
         "variants": [
           {
-            "key": "moments/2026/06/15-02-mo-gan-shan/mo-gan-shan-9-480w.webp",
+            "key": "moments/01kv4t83209nmmtt1r9nvb25d3/01kv4t83291fr3mhfzcpy1bn8t-480w.webp",
             "contentType": "image/webp",
             "bytes": 30302,
             "etag": "a0cd69976688d5af8bf355efb76775c0",
@@ -293,7 +293,7 @@
             "height": 320
           },
           {
-            "key": "moments/2026/06/15-02-mo-gan-shan/mo-gan-shan-9-960w.webp",
+            "key": "moments/01kv4t83209nmmtt1r9nvb25d3/01kv4t83291fr3mhfzcpy1bn8t-960w.webp",
             "contentType": "image/webp",
             "bytes": 84106,
             "etag": "a2cab23cc51e2ba826af804048aa683e",
@@ -304,10 +304,8 @@
       }
     }
   ],
+  "order": 2,
   "published": {
-    "id": "2026/06/15-02-mo-gan-shan",
-    "slug": "mo-gan-shan",
-    "order": 2,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-06-15T12:57:12+08:00",

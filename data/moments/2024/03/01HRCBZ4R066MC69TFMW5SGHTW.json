@@ -6,10 +6,8 @@
   "hidden": false,
   "topic": "tech",
   "media": [],
+  "order": 1,
   "published": {
-    "id": "2024/03/07-01-zhi-chi-le-tailwind-v4",
-    "slug": "zhi-chi-le-tailwind-v4",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2024-03-07T19:49:52+08:00",

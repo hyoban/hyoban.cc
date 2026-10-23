@@ -8,7 +8,10 @@ type MappableMoment = Readonly<{
   dateKey: string
   locations: readonly { id: string }[]
   occurredAt: string
-  order: number
+  /** Breaks a tie first: where it sits among its day's Moments, lower first. */
+  order?: number | undefined
+  /** Then this: a ULID, so the Moment made first comes first. */
+  uid: string
 }>
 
 export type MapLocationGroup<T extends MappableMoment> = Readonly<{
@@ -74,7 +77,10 @@ export function groupMomentsByLocation<T extends MappableMoment>(
     .sort((first, second) => compareMomentsDescending(first.moments[0]!, second.moments[0]!))
 }
 
-/** Oldest first; timed Moments on the same day sort by time, then by `order`. */
+/**
+ * Oldest first; timed Moments on the same day sort by time, then by `order`, those without
+ * one last, then by `uid`, the one made first first.
+ */
 export function compareMoments(first: MappableMoment, second: MappableMoment) {
   const dateComparison = first.dateKey.localeCompare(second.dateKey)
 
@@ -84,11 +90,17 @@ export function compareMoments(first: MappableMoment, second: MappableMoment) {
 
   if (first.occurredAt.length > 10 && second.occurredAt.length > 10) {
     return (
-      Date.parse(first.occurredAt) - Date.parse(second.occurredAt) || first.order - second.order
+      Date.parse(first.occurredAt) - Date.parse(second.occurredAt) || compareOrder(first, second)
     )
   }
 
-  return first.order - second.order
+  return compareOrder(first, second)
+}
+
+function compareOrder(first: MappableMoment, second: MappableMoment) {
+  return (
+    (first.order ?? Infinity) - (second.order ?? Infinity) || first.uid.localeCompare(second.uid)
+  )
 }
 
 function compareMomentsDescending(first: MappableMoment, second: MappableMoment) {

@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01JFHRDVDSWQZYVDZDWNP78PD2",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 2048,
       "height": 1152,
       "published": {
-        "key": "moments/2024/12/20-01-wo-de-di-yi-tai-you-xi-zhu-ji-huan/wo-de-di-yi-tai-you-xi-zhu-ji-huan.jpg",
+        "key": "moments/01jfhrdvdrvs4fnk4pq0pycp6y/01jfhrdvdswqzyvdzdwnp78pd2.jpg",
         "contentType": "image/jpeg",
         "bytes": 214301,
         "etag": "28908e0ca19b9df7d4c3204e6f7e09a5",
@@ -21,7 +21,7 @@
         "height": 1152,
         "variants": [
           {
-            "key": "moments/2024/12/20-01-wo-de-di-yi-tai-you-xi-zhu-ji-huan/wo-de-di-yi-tai-you-xi-zhu-ji-huan-480w.webp",
+            "key": "moments/01jfhrdvdrvs4fnk4pq0pycp6y/01jfhrdvdswqzyvdzdwnp78pd2-480w.webp",
             "contentType": "image/webp",
             "bytes": 14744,
             "etag": "df23385431ac553a4bad170bf48df1be",
@@ -29,7 +29,7 @@
             "height": 270
           },
           {
-            "key": "moments/2024/12/20-01-wo-de-di-yi-tai-you-xi-zhu-ji-huan/wo-de-di-yi-tai-you-xi-zhu-ji-huan-960w.webp",
+            "key": "moments/01jfhrdvdrvs4fnk4pq0pycp6y/01jfhrdvdswqzyvdzdwnp78pd2-960w.webp",
             "contentType": "image/webp",
             "bytes": 38486,
             "etag": "92ae5b234e82670ccdc027ce00a75176",
@@ -37,7 +37,7 @@
             "height": 540
           },
           {
-            "key": "moments/2024/12/20-01-wo-de-di-yi-tai-you-xi-zhu-ji-huan/wo-de-di-yi-tai-you-xi-zhu-ji-huan-1920w.webp",
+            "key": "moments/01jfhrdvdrvs4fnk4pq0pycp6y/01jfhrdvdswqzyvdzdwnp78pd2-1920w.webp",
             "contentType": "image/webp",
             "bytes": 90236,
             "etag": "6b6d29f2a7c9ed4c64e03237dc621ad2",
@@ -48,10 +48,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2024/12/20-01-wo-de-di-yi-tai-you-xi-zhu-ji-huan",
-    "slug": "wo-de-di-yi-tai-you-xi-zhu-ji-huan",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2024-12-20T18:04:51+08:00",

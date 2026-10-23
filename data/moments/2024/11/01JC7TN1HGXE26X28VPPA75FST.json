@@ -10,12 +10,12 @@
   "media": [
     {
       "uid": "01JC7TN1HHYVSTJQZNAPMP7QRN",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1152,
       "height": 2048,
       "published": {
-        "key": "moments/2024/11/09-01-zai-chang-sha-de-chu-sheng-dian/zai-chang-sha-de-chu-sheng-dian.jpg",
+        "key": "moments/01jc7tn1hgxe26x28vppa75fst/01jc7tn1hhyvstjqznapmp7qrn.jpg",
         "contentType": "image/jpeg",
         "bytes": 641883,
         "etag": "3db20adc55cd670a6bc792853b2702ed",
@@ -23,7 +23,7 @@
         "height": 2048,
         "variants": [
           {
-            "key": "moments/2024/11/09-01-zai-chang-sha-de-chu-sheng-dian/zai-chang-sha-de-chu-sheng-dian-480w.webp",
+            "key": "moments/01jc7tn1hgxe26x28vppa75fst/01jc7tn1hhyvstjqznapmp7qrn-480w.webp",
             "contentType": "image/webp",
             "bytes": 104618,
             "etag": "1598b5e68843851f4552335fa0890991",
@@ -31,7 +31,7 @@
             "height": 853
           },
           {
-            "key": "moments/2024/11/09-01-zai-chang-sha-de-chu-sheng-dian/zai-chang-sha-de-chu-sheng-dian-960w.webp",
+            "key": "moments/01jc7tn1hgxe26x28vppa75fst/01jc7tn1hhyvstjqznapmp7qrn-960w.webp",
             "contentType": "image/webp",
             "bytes": 402638,
             "etag": "aa4bd6b37a3f698e4a578bf8ae15c42e",
@@ -42,10 +42,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2024/11/09-01-zai-chang-sha-de-chu-sheng-dian",
-    "slug": "zai-chang-sha-de-chu-sheng-dian",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2024-11-09T14:44:14+08:00",

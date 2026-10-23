@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01GZ85QN91VJYRMV7DJ2P99ZDQ",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1280,
       "height": 960,
       "published": {
-        "key": "moments/2023/04/30-01-wu-yi-mei-you-chu-qu-ye-mei-zuo-shen/wu-yi-mei-you-chu-qu-ye-mei-zuo-shen.jpg",
+        "key": "moments/01gz85qn905tqfcr97hr6q0vry/01gz85qn91vjyrmv7dj2p99zdq.jpg",
         "contentType": "image/jpeg",
         "bytes": 141810,
         "etag": "82e79858f804275b27cd58fc08f46603",
@@ -21,7 +21,7 @@
         "height": 960,
         "variants": [
           {
-            "key": "moments/2023/04/30-01-wu-yi-mei-you-chu-qu-ye-mei-zuo-shen/wu-yi-mei-you-chu-qu-ye-mei-zuo-shen-480w.webp",
+            "key": "moments/01gz85qn905tqfcr97hr6q0vry/01gz85qn91vjyrmv7dj2p99zdq-480w.webp",
             "contentType": "image/webp",
             "bytes": 16848,
             "etag": "b01473f1208ce701535e6ea49efcb3f1",
@@ -29,7 +29,7 @@
             "height": 360
           },
           {
-            "key": "moments/2023/04/30-01-wu-yi-mei-you-chu-qu-ye-mei-zuo-shen/wu-yi-mei-you-chu-qu-ye-mei-zuo-shen-960w.webp",
+            "key": "moments/01gz85qn905tqfcr97hr6q0vry/01gz85qn91vjyrmv7dj2p99zdq-960w.webp",
             "contentType": "image/webp",
             "bytes": 45526,
             "etag": "e4e2fdc426c5da2c6e2f7222e8e65c8f",
@@ -40,10 +40,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2023/04/30-01-wu-yi-mei-you-chu-qu-ye-mei-zuo-shen",
-    "slug": "wu-yi-mei-you-chu-qu-ye-mei-zuo-shen",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2023-04-30T12:11:32+08:00",

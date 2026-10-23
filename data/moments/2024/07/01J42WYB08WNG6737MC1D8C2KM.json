@@ -8,17 +8,17 @@
   "media": [
     {
       "uid": "01J42WYB099SA9ZDV9PPTD7GF8",
-      "type": "video",
       "alt": "",
+      "type": "video",
       "width": 1108,
       "height": 720,
       "published": {
-        "key": "moments/2024/07/31-02-ta-hai-ti-dai-le-wo-de-bo-ke-yue/ta-hai-ti-dai-le-wo-de-bo-ke-yue-video.mp4",
+        "key": "moments/01j42wyb08wng6737mc1d8c2km/01j42wyb099sa9zdv9pptd7gf8.mp4",
         "contentType": "video/mp4",
         "bytes": 1392176,
         "etag": "82117d13e7c097c6f69288d4517d473f",
         "poster": {
-          "key": "moments/2024/07/31-02-ta-hai-ti-dai-le-wo-de-bo-ke-yue/ta-hai-ti-dai-le-wo-de-bo-ke-yue-video-poster.png",
+          "key": "moments/01j42wyb08wng6737mc1d8c2km/01j42wyb099sa9zdv9pptd7gf8-poster.png",
           "contentType": "image/png",
           "bytes": 396965,
           "etag": "52601c458a3b484305df5c9e68f3737e",
@@ -29,10 +29,8 @@
       }
     }
   ],
+  "order": 2,
   "published": {
-    "id": "2024/07/31-02-ta-hai-ti-dai-le-wo-de-bo-ke-yue",
-    "slug": "ta-hai-ti-dai-le-wo-de-bo-ke-yue",
-    "order": 2,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2024-07-31T06:42:29+08:00",

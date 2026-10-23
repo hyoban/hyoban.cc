@@ -10,12 +10,12 @@
   "media": [
     {
       "uid": "01K7TYA271DBZWTANA76DTFK3R",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1440,
       "height": 1080,
       "published": {
-        "key": "moments/2025/10/18-01-zi-jia-cheng-du-di-yi-zhan-zai-he-fei/zi-jia-cheng-du-di-yi-zhan-zai-he-fei.webp",
+        "key": "moments/01k7tya270cffqrxn6m58xarsb/01k7tya271dbzwtana76dtfk3r.webp",
         "contentType": "image/webp",
         "bytes": 235956,
         "etag": "a5e8b12cc9dbe21b2dac344e43851d20",
@@ -23,7 +23,7 @@
         "height": 1080,
         "variants": [
           {
-            "key": "moments/2025/10/18-01-zi-jia-cheng-du-di-yi-zhan-zai-he-fei/zi-jia-cheng-du-di-yi-zhan-zai-he-fei-480w.webp",
+            "key": "moments/01k7tya270cffqrxn6m58xarsb/01k7tya271dbzwtana76dtfk3r-480w.webp",
             "contentType": "image/webp",
             "bytes": 33380,
             "etag": "222797340c85accc7e2f33878cc051d0",
@@ -31,7 +31,7 @@
             "height": 360
           },
           {
-            "key": "moments/2025/10/18-01-zi-jia-cheng-du-di-yi-zhan-zai-he-fei/zi-jia-cheng-du-di-yi-zhan-zai-he-fei-960w.webp",
+            "key": "moments/01k7tya270cffqrxn6m58xarsb/01k7tya271dbzwtana76dtfk3r-960w.webp",
             "contentType": "image/webp",
             "bytes": 92100,
             "etag": "74b0140b889296597bac7b3e45ac1382",
@@ -43,12 +43,12 @@
     },
     {
       "uid": "01K7TYA272MW2GSDT7J1MHP0FF",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1440,
       "height": 1080,
       "published": {
-        "key": "moments/2025/10/18-01-zi-jia-cheng-du-di-yi-zhan-zai-he-fei/zi-jia-cheng-du-di-yi-zhan-zai-he-fei-2.webp",
+        "key": "moments/01k7tya270cffqrxn6m58xarsb/01k7tya272mw2gsdt7j1mhp0ff.webp",
         "contentType": "image/webp",
         "bytes": 205346,
         "etag": "1e5fcefacf71dcf139e94803c53adf14",
@@ -56,7 +56,7 @@
         "height": 1080,
         "variants": [
           {
-            "key": "moments/2025/10/18-01-zi-jia-cheng-du-di-yi-zhan-zai-he-fei/zi-jia-cheng-du-di-yi-zhan-zai-he-fei-2-480w.webp",
+            "key": "moments/01k7tya270cffqrxn6m58xarsb/01k7tya272mw2gsdt7j1mhp0ff-480w.webp",
             "contentType": "image/webp",
             "bytes": 29760,
             "etag": "b5b54e24708d122c54d8e2b970a5bdbb",
@@ -64,7 +64,7 @@
             "height": 360
           },
           {
-            "key": "moments/2025/10/18-01-zi-jia-cheng-du-di-yi-zhan-zai-he-fei/zi-jia-cheng-du-di-yi-zhan-zai-he-fei-2-960w.webp",
+            "key": "moments/01k7tya270cffqrxn6m58xarsb/01k7tya272mw2gsdt7j1mhp0ff-960w.webp",
             "contentType": "image/webp",
             "bytes": 78414,
             "etag": "f845231eaee723b0894c899c420c1994",
@@ -76,12 +76,12 @@
     },
     {
       "uid": "01K7TYA273WBEX3F5V7EVBAM4K",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1440,
       "height": 1080,
       "published": {
-        "key": "moments/2025/10/18-01-zi-jia-cheng-du-di-yi-zhan-zai-he-fei/zi-jia-cheng-du-di-yi-zhan-zai-he-fei-3.webp",
+        "key": "moments/01k7tya270cffqrxn6m58xarsb/01k7tya273wbex3f5v7evbam4k.webp",
         "contentType": "image/webp",
         "bytes": 316904,
         "etag": "8608044019a66e78bca8d2858601f1cd",
@@ -89,7 +89,7 @@
         "height": 1080,
         "variants": [
           {
-            "key": "moments/2025/10/18-01-zi-jia-cheng-du-di-yi-zhan-zai-he-fei/zi-jia-cheng-du-di-yi-zhan-zai-he-fei-3-480w.webp",
+            "key": "moments/01k7tya270cffqrxn6m58xarsb/01k7tya273wbex3f5v7evbam4k-480w.webp",
             "contentType": "image/webp",
             "bytes": 33536,
             "etag": "e837dfb5dac94eb6f5d07afb03e9274b",
@@ -97,7 +97,7 @@
             "height": 360
           },
           {
-            "key": "moments/2025/10/18-01-zi-jia-cheng-du-di-yi-zhan-zai-he-fei/zi-jia-cheng-du-di-yi-zhan-zai-he-fei-3-960w.webp",
+            "key": "moments/01k7tya270cffqrxn6m58xarsb/01k7tya273wbex3f5v7evbam4k-960w.webp",
             "contentType": "image/webp",
             "bytes": 103182,
             "etag": "51a28785c9eff4d88941920445205d94",
@@ -118,10 +118,8 @@
       "people": 1
     }
   },
+  "order": 1,
   "published": {
-    "id": "2025/10/18-01-zi-jia-cheng-du-di-yi-zhan-zai-he-fei",
-    "slug": "zi-jia-cheng-du-di-yi-zhan-zai-he-fei",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2025-10-18T13:57:32+08:00",

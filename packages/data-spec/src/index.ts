@@ -9,12 +9,10 @@ export * from './vehicle.ts'
 // stored record already keeps (a Moment at one place at most); any other change bumps
 // SCHEMA_VERSION.
 
-export const SCHEMA_VERSION = 1
+export const SCHEMA_VERSION = 2
 
 /** A kebab-case id: a place, a trip, a music track or a Moment's slug. */
 export const ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
-/** A published Moment's id: its date, its order that day and its slug. */
-export const MOMENT_ID_PATTERN = /^(\d{4})\/(\d{2})\/(\d{2})-(\d{2})-([a-z0-9]+(?:-[a-z0-9]+)*)$/
 const ULID_PATTERN = /^[0-9A-HJKMNP-TV-Z]{26}$/
 const DATE_KEY_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 const TIMESTAMP_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2})?(?:Z|[+-]\d{2}:\d{2})$/
@@ -32,7 +30,7 @@ const count = z.int().positive()
 const unique = (values: readonly string[]) => new Set(values).size === values.length
 
 const r2Object = z.looseObject({
-  /** The object's key in the bucket, like `moments/2026/10/01-02-ferry-sunset/ferry-sunset-live-1.webp`. */
+  /** The object's key in the bucket, like `moments/<moment uid>/<media uid>-960w.webp` (see `getMediaKey`). */
   key: z.string().min(1),
   contentType: z.string().min(1),
   bytes: count,
@@ -165,38 +163,22 @@ export const momentRecordSchema = z
     food: momentFoodSchema.optional(),
     /** The trip it belongs to; without one, the trip whose dates include it. */
     trip: id.optional(),
-    /** Set when the Moment is published, and never changed after. */
-    published: z
-      .looseObject({
-        id: z.string().regex(MOMENT_ID_PATTERN, 'Use a YYYY/MM/DD-NN-slug id.'),
-        slug: id,
-        order: count,
-        at: timestamp,
-      })
-      .optional(),
+    /**
+     * Where it sits among its day's Moments when their times don't say, lower first; one
+     * without comes after those with one, the one made first first. Only a way to sort:
+     * it names nothing, and needn't be unique or follow on.
+     */
+    order: count.optional(),
+    /**
+     * Set when the Moment is published: when it was. Nothing about it names the Moment,
+     * which is its uid, so its day, places and words can all change afterwards.
+     */
+    published: z.looseObject({ at: timestamp }).optional(),
     createdAt: timestamp,
     updatedAt: timestamp,
   })
   .superRefine((moment, context) => {
-    if (!moment.published) {
-      return
-    }
-
-    const match = moment.published.id.match(MOMENT_ID_PATTERN)!
-    const [, year, month, day, order, slug] = match
-
-    if (`${year}-${month}-${day}` !== moment.occurredAt.slice(0, 10)) {
-      context.addIssue({ code: 'custom', message: 'The published id is on another day.' })
-    }
-
-    if (Number.parseInt(order!, 10) !== moment.published.order || slug !== moment.published.slug) {
-      context.addIssue({
-        code: 'custom',
-        message: 'The published id disagrees with its order or slug.',
-      })
-    }
-
-    // Every uploaded object of the Moment lives under its published id.
+    // Every uploaded object of the Moment lives under its uid (see `getMediaKey`).
     const keys: string[] = []
     const collectKeys = (value: unknown) => {
       if (value && typeof value === 'object') {
@@ -215,7 +197,7 @@ export const momentRecordSchema = z
     }
 
     for (const key of keys) {
-      if (!key.startsWith(`moments/${moment.published.id}/`)) {
+      if (!key.startsWith(getMediaDirectory(moment.uid))) {
         context.addIssue({
           code: 'custom',
           message: `Media key outside the Moment's directory: ${key}`,
@@ -358,6 +340,25 @@ export type Routes = z.output<typeof routesSchema>
 export type Device = z.output<typeof deviceSchema>
 export type Devices = z.output<typeof devicesSchema>
 export type Manifest = z.output<typeof manifestSchema>
+
+/** Where a Moment's media live in the bucket: `moments/<its uid, lowercase>/`. */
+export function getMediaDirectory(momentUid: string) {
+  return `moments/${momentUid.toLowerCase()}/`
+}
+
+/**
+ * A media item's key in the bucket, named by uids alone so it never moves: the file
+ * itself, or a `part` of it, a responsive variant (`960w`), a live photo's `video` or a
+ * video's `poster`. Like `moments/01kv4t…/01kv4t…-960w.webp`.
+ */
+export function getMediaKey(
+  momentUid: string,
+  mediaUid: string,
+  extension: string,
+  part?: 'video' | 'poster' | `${number}w`,
+) {
+  return `${getMediaDirectory(momentUid)}${mediaUid.toLowerCase()}${part ? `-${part}` : ''}.${extension}`
+}
 
 /** The directory a Moment's file sits in under `data/moments`: its year and month. */
 export function getMomentDirectory(occurredAt: string) {

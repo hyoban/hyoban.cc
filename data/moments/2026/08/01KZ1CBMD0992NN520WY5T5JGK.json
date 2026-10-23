@@ -10,17 +10,17 @@
   "media": [
     {
       "uid": "01KZ1CBMD11C08NKA3RXBWCDQ3",
-      "type": "video",
       "alt": "Waves rolling beside a seaside road at night",
+      "type": "video",
       "width": 1280,
       "height": 720,
       "published": {
-        "key": "moments/2026/08/02-04-ready-for-sea-sunrise/ready-for-sea-sunrise-video.mp4",
+        "key": "moments/01kz1cbmd0992nn520wy5t5jgk/01kz1cbmd11c08nka3rxbwcdq3.mp4",
         "contentType": "video/mp4",
         "bytes": 1632140,
         "etag": "ae34cba462258dbbfa3b4a5b29b0eca6",
         "poster": {
-          "key": "moments/2026/08/02-04-ready-for-sea-sunrise/ready-for-sea-sunrise-video-poster.webp",
+          "key": "moments/01kz1cbmd0992nn520wy5t5jgk/01kz1cbmd11c08nka3rxbwcdq3-poster.webp",
           "contentType": "image/webp",
           "bytes": 10426,
           "etag": "b22702fdc88a465fa2a1270e68219e8a",
@@ -32,17 +32,17 @@
     },
     {
       "uid": "01KZ1CBMD2WBGGWTSRB33H89YV",
-      "type": "video",
       "alt": "Moonlight reflecting across the sea beyond a concrete seawall",
+      "type": "video",
       "width": 720,
       "height": 1280,
       "published": {
-        "key": "moments/2026/08/02-04-ready-for-sea-sunrise/ready-for-sea-sunrise-video-2.mp4",
+        "key": "moments/01kz1cbmd0992nn520wy5t5jgk/01kz1cbmd2wbggwtsrb33h89yv.mp4",
         "contentType": "video/mp4",
         "bytes": 1131049,
         "etag": "1abc439d5bca3d495191c3b848a03089",
         "poster": {
-          "key": "moments/2026/08/02-04-ready-for-sea-sunrise/ready-for-sea-sunrise-video-2-poster.webp",
+          "key": "moments/01kz1cbmd0992nn520wy5t5jgk/01kz1cbmd2wbggwtsrb33h89yv-poster.webp",
           "contentType": "image/webp",
           "bytes": 8894,
           "etag": "e7d9ba893942a16044918125335e2ef4",
@@ -53,10 +53,8 @@
       }
     }
   ],
+  "order": 4,
   "published": {
-    "id": "2026/08/02-04-ready-for-sea-sunrise",
-    "slug": "ready-for-sea-sunrise",
-    "order": 4,
     "at": "2026-08-20T22:58:53+08:00"
   },
   "createdAt": "2026-08-02T21:59:32+08:00",

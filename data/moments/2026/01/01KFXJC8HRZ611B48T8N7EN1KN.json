@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01KFXJC8HSNXFWD5PFVE7PPGT0",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 3024,
       "height": 1724,
       "published": {
-        "key": "moments/2026/01/27-01-rang-ai-bang-mang-xie-le-ge-kan-github-timeline/rang-ai-bang-mang-xie-le-ge-kan-github-timeline.jpg",
+        "key": "moments/01kfxjc8hrz611b48t8n7en1kn/01kfxjc8hsnxfwd5pfve7ppgt0.jpg",
         "contentType": "image/jpeg",
         "bytes": 309191,
         "etag": "a98c8488b374ddcc9ec6c4f39e0c7776",
@@ -21,7 +21,7 @@
         "height": 1724,
         "variants": [
           {
-            "key": "moments/2026/01/27-01-rang-ai-bang-mang-xie-le-ge-kan-github-timeline/rang-ai-bang-mang-xie-le-ge-kan-github-timeline-480w.webp",
+            "key": "moments/01kfxjc8hrz611b48t8n7en1kn/01kfxjc8hsnxfwd5pfve7ppgt0-480w.webp",
             "contentType": "image/webp",
             "bytes": 10678,
             "etag": "5114ee45d5fd4501678294570f0c0db6",
@@ -29,7 +29,7 @@
             "height": 274
           },
           {
-            "key": "moments/2026/01/27-01-rang-ai-bang-mang-xie-le-ge-kan-github-timeline/rang-ai-bang-mang-xie-le-ge-kan-github-timeline-960w.webp",
+            "key": "moments/01kfxjc8hrz611b48t8n7en1kn/01kfxjc8hsnxfwd5pfve7ppgt0-960w.webp",
             "contentType": "image/webp",
             "bytes": 34520,
             "etag": "96822aee3789e1d37f8e2bbcbda55dac",
@@ -37,7 +37,7 @@
             "height": 547
           },
           {
-            "key": "moments/2026/01/27-01-rang-ai-bang-mang-xie-le-ge-kan-github-timeline/rang-ai-bang-mang-xie-le-ge-kan-github-timeline-1920w.webp",
+            "key": "moments/01kfxjc8hrz611b48t8n7en1kn/01kfxjc8hsnxfwd5pfve7ppgt0-1920w.webp",
             "contentType": "image/webp",
             "bytes": 89812,
             "etag": "78670251927c8a912f15e1de358b0342",
@@ -49,12 +49,12 @@
     },
     {
       "uid": "01KFXJC8HT0BT99C4WAGSG1HZ6",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1606,
       "height": 1200,
       "published": {
-        "key": "moments/2026/01/27-01-rang-ai-bang-mang-xie-le-ge-kan-github-timeline/rang-ai-bang-mang-xie-le-ge-kan-github-timeline-2.jpg",
+        "key": "moments/01kfxjc8hrz611b48t8n7en1kn/01kfxjc8ht0bt99c4wagsg1hz6.jpg",
         "contentType": "image/jpeg",
         "bytes": 99443,
         "etag": "12a0a5497788de67d447f639e8a28bb5",
@@ -62,7 +62,7 @@
         "height": 1200,
         "variants": [
           {
-            "key": "moments/2026/01/27-01-rang-ai-bang-mang-xie-le-ge-kan-github-timeline/rang-ai-bang-mang-xie-le-ge-kan-github-timeline-2-480w.webp",
+            "key": "moments/01kfxjc8hrz611b48t8n7en1kn/01kfxjc8ht0bt99c4wagsg1hz6-480w.webp",
             "contentType": "image/webp",
             "bytes": 8678,
             "etag": "d902d40d0de247a76d07175061eb1916",
@@ -70,7 +70,7 @@
             "height": 359
           },
           {
-            "key": "moments/2026/01/27-01-rang-ai-bang-mang-xie-le-ge-kan-github-timeline/rang-ai-bang-mang-xie-le-ge-kan-github-timeline-2-960w.webp",
+            "key": "moments/01kfxjc8hrz611b48t8n7en1kn/01kfxjc8ht0bt99c4wagsg1hz6-960w.webp",
             "contentType": "image/webp",
             "bytes": 22014,
             "etag": "d59c1fd601ae4a58245f122fe39d41fb",
@@ -81,10 +81,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2026/01/27-01-rang-ai-bang-mang-xie-le-ge-kan-github-timeline",
-    "slug": "rang-ai-bang-mang-xie-le-ge-kan-github-timeline",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-01-27T00:32:19+08:00",

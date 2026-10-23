@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01JNBKEMBHRNTHMD7AP33QG990",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 726,
       "height": 250,
       "published": {
-        "key": "moments/2025/03/02-04-zhi-mai-le-yi-fen-surge-de-wo-de-yi/zhi-mai-le-yi-fen-surge-de-wo-de-yi.png",
+        "key": "moments/01jnbkembga77pg46978g0a9ab/01jnbkembhrnthmd7ap33qg990.png",
         "contentType": "image/png",
         "bytes": 32164,
         "etag": "1cd00463c4f1e79208e4bb02d1599149",
@@ -21,7 +21,7 @@
         "height": 250,
         "variants": [
           {
-            "key": "moments/2025/03/02-04-zhi-mai-le-yi-fen-surge-de-wo-de-yi/zhi-mai-le-yi-fen-surge-de-wo-de-yi-480w.webp",
+            "key": "moments/01jnbkembga77pg46978g0a9ab/01jnbkembhrnthmd7ap33qg990-480w.webp",
             "contentType": "image/webp",
             "bytes": 5826,
             "etag": "dcc408ee0a0a7654e0ee92b02ddcd0ef",
@@ -32,10 +32,8 @@
       }
     }
   ],
+  "order": 4,
   "published": {
-    "id": "2025/03/02-04-zhi-mai-le-yi-fen-surge-de-wo-de-yi",
-    "slug": "zhi-mai-le-yi-fen-surge-de-wo-de-yi",
-    "order": 4,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2025-03-02T22:16:38+08:00",

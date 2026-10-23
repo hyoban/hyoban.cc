@@ -15,7 +15,7 @@
       "width": 1440,
       "height": 1080,
       "published": {
-        "key": "moments/2025/11/04-03-honghaizi/honghaizi.webp",
+        "key": "moments/01m5mc7845wc83zpbm3jftkna3/01k96fsvq7z4hyjx4zxfxcmpsf.webp",
         "contentType": "image/webp",
         "bytes": 462320,
         "etag": "55e6e46718ca61f09d75200618fb346b",
@@ -32,7 +32,7 @@
       "width": 1440,
       "height": 1080,
       "published": {
-        "key": "moments/2025/11/04-03-honghaizi/honghaizi-2.webp",
+        "key": "moments/01m5mc7845wc83zpbm3jftkna3/01k96fsvq8nghgeb1nhswb7jan.webp",
         "contentType": "image/webp",
         "bytes": 285268,
         "etag": "d0aae7993ffda003938758e859395e67",
@@ -49,7 +49,7 @@
       "width": 1080,
       "height": 1920,
       "published": {
-        "key": "moments/2025/11/04-03-honghaizi/honghaizi-3.webp",
+        "key": "moments/01m5mc7845wc83zpbm3jftkna3/01k96fsvq98v9dgaecheqk1deq.webp",
         "contentType": "image/webp",
         "bytes": 274852,
         "etag": "bdeba1a92a284f1430dcfa49e325158e",
@@ -60,10 +60,8 @@
       }
     }
   ],
+  "order": 3,
   "published": {
-    "id": "2025/11/04-03-honghaizi",
-    "slug": "honghaizi",
-    "order": 3,
     "at": "2026-10-23T12:40:21Z"
   },
   "createdAt": "2026-10-23T12:36:53Z",

@@ -8,17 +8,17 @@
   "media": [
     {
       "uid": "01HHGA5D49XK8B3CPRBG7NFFSF",
-      "type": "video",
       "alt": "",
+      "type": "video",
       "width": 720,
       "height": 720,
       "published": {
-        "key": "moments/2023/12/13-01-check-out-my-githubunwrapped-2023-get-yours-now-on/check-out-my-githubunwrapped-2023-get-yours-now-on-video.mp4",
+        "key": "moments/01hhga5d48113vnh1xn97b10r7/01hhga5d49xk8b3cprbg7nffsf.mp4",
         "contentType": "video/mp4",
         "bytes": 3068746,
         "etag": "e503bf2db1b255791fe3e76d2a4ea629",
         "poster": {
-          "key": "moments/2023/12/13-01-check-out-my-githubunwrapped-2023-get-yours-now-on/check-out-my-githubunwrapped-2023-get-yours-now-on-video-poster.png",
+          "key": "moments/01hhga5d48113vnh1xn97b10r7/01hhga5d49xk8b3cprbg7nffsf-poster.png",
           "contentType": "image/png",
           "bytes": 118593,
           "etag": "25b50189edb3384ebefaaee8969ea4fd",
@@ -29,10 +29,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2023/12/13-01-check-out-my-githubunwrapped-2023-get-yours-now-on",
-    "slug": "check-out-my-githubunwrapped-2023-get-yours-now-on",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2023-12-13T08:45:25+08:00",

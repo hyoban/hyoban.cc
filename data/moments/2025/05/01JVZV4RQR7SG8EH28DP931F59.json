@@ -6,10 +6,8 @@
   "hidden": false,
   "topic": "tech",
   "media": [],
+  "order": 1,
   "published": {
-    "id": "2025/05/24-01-xie-le-yi-ge-sqlocal-de-demo-ke-yi-wei",
-    "slug": "xie-le-yi-ge-sqlocal-de-demo-ke-yi-wei",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2025-05-24T08:30:03+08:00",

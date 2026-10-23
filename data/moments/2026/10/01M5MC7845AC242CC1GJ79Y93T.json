@@ -15,7 +15,7 @@
       "width": 1080,
       "height": 1440,
       "published": {
-        "key": "moments/2026/10/03-04-jinjiangshan-park/jinjiangshan-park.webp",
+        "key": "moments/01m5mc7845ac242cc1gj79y93t/01m3ztebznqyzvs0kmsemm54yx.webp",
         "contentType": "image/webp",
         "bytes": 345198,
         "etag": "af7b24225b528ac43d04aff9ed62871c",
@@ -24,7 +24,7 @@
         "variants": [],
         "original": true,
         "video": {
-          "key": "moments/2026/10/03-04-jinjiangshan-park/jinjiangshan-park.mp4",
+          "key": "moments/01m5mc7845ac242cc1gj79y93t/01m3ztebznqyzvs0kmsemm54yx-video.mp4",
           "contentType": "video/mp4",
           "bytes": 1618278,
           "etag": "c25d64bbb534e6b750a64e99b0176874",
@@ -39,7 +39,7 @@
       "width": 1080,
       "height": 1440,
       "published": {
-        "key": "moments/2026/10/03-04-jinjiangshan-park/jinjiangshan-park-2.webp",
+        "key": "moments/01m5mc7845ac242cc1gj79y93t/01m3ztebzpvgnfwb9a0at5skc1.webp",
         "contentType": "image/webp",
         "bytes": 530004,
         "etag": "338c82a636276dea655a0fddf2fdf937",
@@ -48,7 +48,7 @@
         "variants": [],
         "original": true,
         "video": {
-          "key": "moments/2026/10/03-04-jinjiangshan-park/jinjiangshan-park-2.mp4",
+          "key": "moments/01m5mc7845ac242cc1gj79y93t/01m3ztebzpvgnfwb9a0at5skc1-video.mp4",
           "contentType": "video/mp4",
           "bytes": 2646147,
           "etag": "59ebfef4f10bc2276470cd59202e8b52",
@@ -63,7 +63,7 @@
       "width": 1440,
       "height": 1080,
       "published": {
-        "key": "moments/2026/10/03-04-jinjiangshan-park/jinjiangshan-park-3.webp",
+        "key": "moments/01m5mc7845ac242cc1gj79y93t/01m3ztebzqeejeyfxw14s5ka2a.webp",
         "contentType": "image/webp",
         "bytes": 193738,
         "etag": "bbe3ce5da48c988515ec5c8838b2719a",
@@ -72,7 +72,7 @@
         "variants": [],
         "original": true,
         "video": {
-          "key": "moments/2026/10/03-04-jinjiangshan-park/jinjiangshan-park-3.mp4",
+          "key": "moments/01m5mc7845ac242cc1gj79y93t/01m3ztebzqeejeyfxw14s5ka2a-video.mp4",
           "contentType": "video/mp4",
           "bytes": 1087014,
           "etag": "129bb58b379eebd47a4f84a24abdc23b",
@@ -87,7 +87,7 @@
       "width": 1080,
       "height": 1440,
       "published": {
-        "key": "moments/2026/10/03-04-jinjiangshan-park/jinjiangshan-park-4.webp",
+        "key": "moments/01m5mc7845ac242cc1gj79y93t/01m3ztebzreygs97jyfkygb3e2.webp",
         "contentType": "image/webp",
         "bytes": 340914,
         "etag": "c15a224c6867a9f547248c3c1bcb4fa3",
@@ -96,7 +96,7 @@
         "variants": [],
         "original": true,
         "video": {
-          "key": "moments/2026/10/03-04-jinjiangshan-park/jinjiangshan-park-4.mp4",
+          "key": "moments/01m5mc7845ac242cc1gj79y93t/01m3ztebzreygs97jyfkygb3e2-video.mp4",
           "contentType": "video/mp4",
           "bytes": 2226997,
           "etag": "68862870134a5cbba01789b90efad5e3",
@@ -105,10 +105,8 @@
       }
     }
   ],
+  "order": 4,
   "published": {
-    "id": "2026/10/03-04-jinjiangshan-park",
-    "slug": "jinjiangshan-park",
-    "order": 4,
     "at": "2026-10-23T12:40:21Z"
   },
   "createdAt": "2026-10-23T12:36:53Z",

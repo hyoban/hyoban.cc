@@ -15,10 +15,8 @@
     ],
     "verdict": "good"
   },
+  "order": 1,
   "published": {
-    "id": "2026/09/15-01-lugu-lake-trip",
-    "slug": "lugu-lake-trip",
-    "order": 1,
     "at": "2026-10-08T08:10:00+08:00"
   },
   "createdAt": "2026-09-15T16:00:00+08:00",

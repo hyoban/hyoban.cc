@@ -132,7 +132,7 @@ export async function readChanges(
     db
       .prepare(
         `SELECT uid AS key, rev, deleted_at, record FROM moments
-         WHERE (rev > ?1 OR (rev = ?1 AND uid > ?2)) AND rev <= ${upto}${onlyLive}${drafts ? '' : ' AND published_id IS NOT NULL'}
+         WHERE (rev > ?1 OR (rev = ?1 AND uid > ?2)) AND rev <= ${upto}${onlyLive}${drafts ? '' : ' AND published = 1'}
          ORDER BY rev, uid
          LIMIT ?3`,
       )
@@ -165,7 +165,7 @@ export function readMoment(db: Database, uid: string, { drafts }: { drafts: bool
   return readOne(
     db,
     `SELECT record FROM moments
-     WHERE uid = ?1 AND deleted_at IS NULL${drafts ? '' : ' AND published_id IS NOT NULL'}`,
+     WHERE uid = ?1 AND deleted_at IS NULL${drafts ? '' : ' AND published = 1'}`,
     uid,
   )
 }

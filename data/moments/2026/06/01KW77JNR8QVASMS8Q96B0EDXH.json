@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01KW77JNR93P2PKFGR1MYAYX3R",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1620,
       "height": 1080,
       "published": {
-        "key": "moments/2026/06/28-01-xi-che-jie-ya/xi-che-jie-ya.webp",
+        "key": "moments/01kw77jnr8qvasms8q96b0edxh/01kw77jnr93p2pkfgr1myayx3r.webp",
         "contentType": "image/webp",
         "bytes": 376106,
         "etag": "0912eacdd2f7168254450b9e72e477aa",
@@ -21,7 +21,7 @@
         "height": 1080,
         "variants": [
           {
-            "key": "moments/2026/06/28-01-xi-che-jie-ya/xi-che-jie-ya-480w.webp",
+            "key": "moments/01kw77jnr8qvasms8q96b0edxh/01kw77jnr93p2pkfgr1myayx3r-480w.webp",
             "contentType": "image/webp",
             "bytes": 29890,
             "etag": "ab38b5184e1658396188d0ea991219f3",
@@ -29,7 +29,7 @@
             "height": 320
           },
           {
-            "key": "moments/2026/06/28-01-xi-che-jie-ya/xi-che-jie-ya-960w.webp",
+            "key": "moments/01kw77jnr8qvasms8q96b0edxh/01kw77jnr93p2pkfgr1myayx3r-960w.webp",
             "contentType": "image/webp",
             "bytes": 101616,
             "etag": "606da7158b62244b0c13f9d3c8ad12ba",
@@ -41,12 +41,12 @@
     },
     {
       "uid": "01KW77JNRAM5NTV3HNQYY413JY",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1242,
       "height": 1080,
       "published": {
-        "key": "moments/2026/06/28-01-xi-che-jie-ya/xi-che-jie-ya-2.webp",
+        "key": "moments/01kw77jnr8qvasms8q96b0edxh/01kw77jnram5ntv3hnqyy413jy.webp",
         "contentType": "image/webp",
         "bytes": 174506,
         "etag": "24dc4d2072b90097946f0fc0c46fbf65",
@@ -54,7 +54,7 @@
         "height": 1080,
         "variants": [
           {
-            "key": "moments/2026/06/28-01-xi-che-jie-ya/xi-che-jie-ya-2-480w.webp",
+            "key": "moments/01kw77jnr8qvasms8q96b0edxh/01kw77jnram5ntv3hnqyy413jy-480w.webp",
             "contentType": "image/webp",
             "bytes": 31984,
             "etag": "8ee14011644b9815bb5ff61f4963e41f",
@@ -62,7 +62,7 @@
             "height": 417
           },
           {
-            "key": "moments/2026/06/28-01-xi-che-jie-ya/xi-che-jie-ya-2-960w.webp",
+            "key": "moments/01kw77jnr8qvasms8q96b0edxh/01kw77jnram5ntv3hnqyy413jy-960w.webp",
             "contentType": "image/webp",
             "bytes": 82240,
             "etag": "40121a2919d801ad10e25adad248ae78",
@@ -74,12 +74,12 @@
     },
     {
       "uid": "01KW77JNRBANG5PG0TWCN7A4YY",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1439,
       "height": 1080,
       "published": {
-        "key": "moments/2026/06/28-01-xi-che-jie-ya/xi-che-jie-ya-3.webp",
+        "key": "moments/01kw77jnr8qvasms8q96b0edxh/01kw77jnrbang5pg0twcn7a4yy.webp",
         "contentType": "image/webp",
         "bytes": 174798,
         "etag": "d48a6706de3b89adceda9444fab71bd6",
@@ -87,7 +87,7 @@
         "height": 1080,
         "variants": [
           {
-            "key": "moments/2026/06/28-01-xi-che-jie-ya/xi-che-jie-ya-3-480w.webp",
+            "key": "moments/01kw77jnr8qvasms8q96b0edxh/01kw77jnrbang5pg0twcn7a4yy-480w.webp",
             "contentType": "image/webp",
             "bytes": 27664,
             "etag": "93d7a01e1fca77a3fba45a4819ff4738",
@@ -95,7 +95,7 @@
             "height": 360
           },
           {
-            "key": "moments/2026/06/28-01-xi-che-jie-ya/xi-che-jie-ya-3-960w.webp",
+            "key": "moments/01kw77jnr8qvasms8q96b0edxh/01kw77jnrbang5pg0twcn7a4yy-960w.webp",
             "contentType": "image/webp",
             "bytes": 73274,
             "etag": "bd563f1bf0262c95c88d52baee6dcebb",
@@ -107,12 +107,12 @@
     },
     {
       "uid": "01KW77JNRCME3G6DR1XV1K4WXY",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1080,
       "height": 1620,
       "published": {
-        "key": "moments/2026/06/28-01-xi-che-jie-ya/xi-che-jie-ya-4.webp",
+        "key": "moments/01kw77jnr8qvasms8q96b0edxh/01kw77jnrcme3g6dr1xv1k4wxy.webp",
         "contentType": "image/webp",
         "bytes": 128520,
         "etag": "77b84919e9eef87f0a002561086b17b5",
@@ -120,7 +120,7 @@
         "height": 1620,
         "variants": [
           {
-            "key": "moments/2026/06/28-01-xi-che-jie-ya/xi-che-jie-ya-4-480w.webp",
+            "key": "moments/01kw77jnr8qvasms8q96b0edxh/01kw77jnrcme3g6dr1xv1k4wxy-480w.webp",
             "contentType": "image/webp",
             "bytes": 30034,
             "etag": "a93eeb3a004d022564f8abf3448e3d37",
@@ -128,7 +128,7 @@
             "height": 720
           },
           {
-            "key": "moments/2026/06/28-01-xi-che-jie-ya/xi-che-jie-ya-4-960w.webp",
+            "key": "moments/01kw77jnr8qvasms8q96b0edxh/01kw77jnrcme3g6dr1xv1k4wxy-960w.webp",
             "contentType": "image/webp",
             "bytes": 69256,
             "etag": "be4c62df8f42749acf9dfe5f2ff1df28",
@@ -139,10 +139,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2026/06/28-01-xi-che-jie-ya",
-    "slug": "xi-che-jie-ya",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-06-28T21:44:21+08:00",

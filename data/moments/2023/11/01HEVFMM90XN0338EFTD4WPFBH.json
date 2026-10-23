@@ -6,10 +6,8 @@
   "hidden": false,
   "topic": "tech",
   "media": [],
+  "order": 1,
   "published": {
-    "id": "2023/11/10-01-chu-le-xiang-bi-yuan-ben-de-eslint-plugin-react",
-    "slug": "chu-le-xiang-bi-yuan-ben-de-eslint-plugin-react",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2023-11-10T10:05:40+08:00",

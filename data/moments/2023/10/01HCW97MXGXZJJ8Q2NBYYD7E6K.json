@@ -6,10 +6,8 @@
   "hidden": false,
   "topic": "tech",
   "media": [],
+  "order": 1,
   "published": {
-    "id": "2023/10/16-01-wo-jue-de-eslint-tai-ying-xiang-vs-code-de",
-    "slug": "wo-jue-de-eslint-tai-ying-xiang-vs-code-de",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2023-10-16T21:01:34+08:00",

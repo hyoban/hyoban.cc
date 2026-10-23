@@ -8,17 +8,17 @@
   "media": [
     {
       "uid": "01HZWD97QSEACYSF6WXYVPNQAV",
-      "type": "video",
       "alt": "",
+      "type": "video",
       "width": 800,
       "height": 258,
       "published": {
-        "key": "moments/2024/06/09-01-xie-le-ge-eslint-cha-jian-lai-zai-shi-yong/xie-le-ge-eslint-cha-jian-lai-zai-shi-yong-video.mp4",
+        "key": "moments/01hzwd97qre0nh9xph3ybcbcw7/01hzwd97qseacysf6wxyvpnqav.mp4",
         "contentType": "video/mp4",
         "bytes": 156550,
         "etag": "8e799a1bd3e1f25bc307aab2c1019b6a",
         "poster": {
-          "key": "moments/2024/06/09-01-xie-le-ge-eslint-cha-jian-lai-zai-shi-yong/xie-le-ge-eslint-cha-jian-lai-zai-shi-yong-video-poster.png",
+          "key": "moments/01hzwd97qre0nh9xph3ybcbcw7/01hzwd97qseacysf6wxyvpnqav-poster.png",
           "contentType": "image/png",
           "bytes": 210354,
           "etag": "6d49eaa296a2239054048a18af5a83ba",
@@ -29,10 +29,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2024/06/09-01-xie-le-ge-eslint-cha-jian-lai-zai-shi-yong",
-    "slug": "xie-le-ge-eslint-cha-jian-lai-zai-shi-yong",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2024-06-09T01:10:35+08:00",

@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01KVGA2P7SRDMZDNCJWPNC4H2E",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1280,
       "height": 960,
       "published": {
-        "key": "moments/2026/06/20-01-zai-gao-su-shang-chong-le-yi-kuai-qi-de/zai-gao-su-shang-chong-le-yi-kuai-qi-de.jpg",
+        "key": "moments/01kvga2p7r58be2n95eytxzdzd/01kvga2p7srdmzdncjwpnc4h2e.jpg",
         "contentType": "image/jpeg",
         "bytes": 55070,
         "etag": "d7ddb2d35a4ebed2e58143a94d866dbf",
@@ -21,7 +21,7 @@
         "height": 960,
         "variants": [
           {
-            "key": "moments/2026/06/20-01-zai-gao-su-shang-chong-le-yi-kuai-qi-de/zai-gao-su-shang-chong-le-yi-kuai-qi-de-480w.webp",
+            "key": "moments/01kvga2p7r58be2n95eytxzdzd/01kvga2p7srdmzdncjwpnc4h2e-480w.webp",
             "contentType": "image/webp",
             "bytes": 9252,
             "etag": "eae576696a3de292cf47b7abcbfca698",
@@ -29,7 +29,7 @@
             "height": 360
           },
           {
-            "key": "moments/2026/06/20-01-zai-gao-su-shang-chong-le-yi-kuai-qi-de/zai-gao-su-shang-chong-le-yi-kuai-qi-de-960w.webp",
+            "key": "moments/01kvga2p7r58be2n95eytxzdzd/01kvga2p7srdmzdncjwpnc4h2e-960w.webp",
             "contentType": "image/webp",
             "bytes": 23434,
             "etag": "274324af5d41bfe93a8c59fdda2c0eb8",
@@ -40,10 +40,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2026/06/20-01-zai-gao-su-shang-chong-le-yi-kuai-qi-de",
-    "slug": "zai-gao-su-shang-chong-le-yi-kuai-qi-de",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-06-20T00:05:31+08:00",

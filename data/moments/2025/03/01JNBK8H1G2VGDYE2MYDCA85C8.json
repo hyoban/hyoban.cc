@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01JNBK8H1H18910B4TDAVNXWJE",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1222,
       "height": 208,
       "published": {
-        "key": "moments/2025/03/02-03-nei-cun-de-ya-li-zai-ri-chang-de-zhuang/nei-cun-de-ya-li-zai-ri-chang-de-zhuang.jpg",
+        "key": "moments/01jnbk8h1g2vgdye2mydca85c8/01jnbk8h1h18910b4tdavnxwje.jpg",
         "contentType": "image/jpeg",
         "bytes": 29422,
         "etag": "2742155da318cbe7e22c9b641381f1da",
@@ -21,7 +21,7 @@
         "height": 208,
         "variants": [
           {
-            "key": "moments/2025/03/02-03-nei-cun-de-ya-li-zai-ri-chang-de-zhuang/nei-cun-de-ya-li-zai-ri-chang-de-zhuang-480w.webp",
+            "key": "moments/01jnbk8h1g2vgdye2mydca85c8/01jnbk8h1h18910b4tdavnxwje-480w.webp",
             "contentType": "image/webp",
             "bytes": 4622,
             "etag": "46e55e7f4efd6c50373319f79a4306a2",
@@ -29,7 +29,7 @@
             "height": 82
           },
           {
-            "key": "moments/2025/03/02-03-nei-cun-de-ya-li-zai-ri-chang-de-zhuang/nei-cun-de-ya-li-zai-ri-chang-de-zhuang-960w.webp",
+            "key": "moments/01jnbk8h1g2vgdye2mydca85c8/01jnbk8h1h18910b4tdavnxwje-960w.webp",
             "contentType": "image/webp",
             "bytes": 10928,
             "etag": "460be97b3626f16b955ec2ffe5bb5870",
@@ -40,10 +40,8 @@
       }
     }
   ],
+  "order": 3,
   "published": {
-    "id": "2025/03/02-03-nei-cun-de-ya-li-zai-ri-chang-de-zhuang",
-    "slug": "nei-cun-de-ya-li-zai-ri-chang-de-zhuang",
-    "order": 3,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2025-03-02T22:13:18+08:00",

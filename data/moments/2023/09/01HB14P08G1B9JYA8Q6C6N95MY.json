@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01HB14P08H86CPGWEQ0K58JYF6",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1840,
       "height": 450,
       "published": {
-        "key": "moments/2023/09/23-02-how-to-deploy-a-static-website-using-nginx-on-railway/how-to-deploy-a-static-website-using-nginx-on-railway.jpg",
+        "key": "moments/01hb14p08g1b9jya8q6c6n95my/01hb14p08h86cpgweq0k58jyf6.jpg",
         "contentType": "image/jpeg",
         "bytes": 45542,
         "etag": "2cb9165e9faeb561011fe80be20d8e37",
@@ -21,7 +21,7 @@
         "height": 450,
         "variants": [
           {
-            "key": "moments/2023/09/23-02-how-to-deploy-a-static-website-using-nginx-on-railway/how-to-deploy-a-static-website-using-nginx-on-railway-480w.webp",
+            "key": "moments/01hb14p08g1b9jya8q6c6n95my/01hb14p08h86cpgweq0k58jyf6-480w.webp",
             "contentType": "image/webp",
             "bytes": 3612,
             "etag": "3bb30c2976f03758643d999dc8ed6d8a",
@@ -29,7 +29,7 @@
             "height": 117
           },
           {
-            "key": "moments/2023/09/23-02-how-to-deploy-a-static-website-using-nginx-on-railway/how-to-deploy-a-static-website-using-nginx-on-railway-960w.webp",
+            "key": "moments/01hb14p08g1b9jya8q6c6n95my/01hb14p08h86cpgweq0k58jyf6-960w.webp",
             "contentType": "image/webp",
             "bytes": 9480,
             "etag": "c4745199425b88b468610b79c4e607f6",
@@ -40,10 +40,8 @@
       }
     }
   ],
+  "order": 2,
   "published": {
-    "id": "2023/09/23-02-how-to-deploy-a-static-website-using-nginx-on-railway",
-    "slug": "how-to-deploy-a-static-website-using-nginx-on-railway",
-    "order": 2,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2023-09-23T21:46:50+08:00",

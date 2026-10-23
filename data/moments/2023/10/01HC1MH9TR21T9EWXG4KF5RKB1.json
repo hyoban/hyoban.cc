@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01HC1MH9TSYP35ZHTFMDKPAD55",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1288,
       "height": 402,
       "published": {
-        "key": "moments/2023/10/06-01-nice-yi-kou-qi-zai-xlog-shui-san-ge-pr/nice-yi-kou-qi-zai-xlog-shui-san-ge-pr.jpg",
+        "key": "moments/01hc1mh9tr21t9ewxg4kf5rkb1/01hc1mh9tsyp35zhtfmdkpad55.jpg",
         "contentType": "image/jpeg",
         "bytes": 50971,
         "etag": "b07456aa2790081dc46daf2d72ffe453",
@@ -21,7 +21,7 @@
         "height": 402,
         "variants": [
           {
-            "key": "moments/2023/10/06-01-nice-yi-kou-qi-zai-xlog-shui-san-ge-pr/nice-yi-kou-qi-zai-xlog-shui-san-ge-pr-480w.webp",
+            "key": "moments/01hc1mh9tr21t9ewxg4kf5rkb1/01hc1mh9tsyp35zhtfmdkpad55-480w.webp",
             "contentType": "image/webp",
             "bytes": 7404,
             "etag": "bd0166e28c4f0c521edb4fb57a8f8795",
@@ -29,7 +29,7 @@
             "height": 150
           },
           {
-            "key": "moments/2023/10/06-01-nice-yi-kou-qi-zai-xlog-shui-san-ge-pr/nice-yi-kou-qi-zai-xlog-shui-san-ge-pr-960w.webp",
+            "key": "moments/01hc1mh9tr21t9ewxg4kf5rkb1/01hc1mh9tsyp35zhtfmdkpad55-960w.webp",
             "contentType": "image/webp",
             "bytes": 17512,
             "etag": "95a1076385785fe7aca223db8e1da7ed",
@@ -40,10 +40,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2023/10/06-01-nice-yi-kou-qi-zai-xlog-shui-san-ge-pr",
-    "slug": "nice-yi-kou-qi-zai-xlog-shui-san-ge-pr",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2023-10-06T12:39:35+08:00",

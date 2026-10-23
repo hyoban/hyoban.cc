@@ -10,12 +10,12 @@
   "media": [
     {
       "uid": "01KQVX5PH1DVT63MHTQ4ZJQFK6",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1280,
       "height": 1280,
       "published": {
-        "key": "moments/2026/05/05-01-dan-ri-800-wu-yi-2000-zhi-jie-ba-shang/dan-ri-800-wu-yi-2000-zhi-jie-ba-shang.jpg",
+        "key": "moments/01kqvx5ph0xxhscsk810ww1q04/01kqvx5ph1dvt63mhtq4zjqfk6.jpg",
         "contentType": "image/jpeg",
         "bytes": 127915,
         "etag": "47f838f2f071668bfb041de3049ad6b6",
@@ -23,7 +23,7 @@
         "height": 1280,
         "variants": [
           {
-            "key": "moments/2026/05/05-01-dan-ri-800-wu-yi-2000-zhi-jie-ba-shang/dan-ri-800-wu-yi-2000-zhi-jie-ba-shang-480w.webp",
+            "key": "moments/01kqvx5ph0xxhscsk810ww1q04/01kqvx5ph1dvt63mhtq4zjqfk6-480w.webp",
             "contentType": "image/webp",
             "bytes": 21636,
             "etag": "81067e0ca8dfedaf585dab0f7a464b88",
@@ -31,7 +31,7 @@
             "height": 480
           },
           {
-            "key": "moments/2026/05/05-01-dan-ri-800-wu-yi-2000-zhi-jie-ba-shang/dan-ri-800-wu-yi-2000-zhi-jie-ba-shang-960w.webp",
+            "key": "moments/01kqvx5ph0xxhscsk810ww1q04/01kqvx5ph1dvt63mhtq4zjqfk6-960w.webp",
             "contentType": "image/webp",
             "bytes": 57372,
             "etag": "f92e188a1e150049fb7ab91008c82e80",
@@ -43,12 +43,12 @@
     },
     {
       "uid": "01KQVX5PH23WBSYQHFSB82F2HQ",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1280,
       "height": 1280,
       "published": {
-        "key": "moments/2026/05/05-01-dan-ri-800-wu-yi-2000-zhi-jie-ba-shang/dan-ri-800-wu-yi-2000-zhi-jie-ba-shang-2.jpg",
+        "key": "moments/01kqvx5ph0xxhscsk810ww1q04/01kqvx5ph23wbsyqhfsb82f2hq.jpg",
         "contentType": "image/jpeg",
         "bytes": 171965,
         "etag": "1c525d9990ca1531a308e283b2f88717",
@@ -56,7 +56,7 @@
         "height": 1280,
         "variants": [
           {
-            "key": "moments/2026/05/05-01-dan-ri-800-wu-yi-2000-zhi-jie-ba-shang/dan-ri-800-wu-yi-2000-zhi-jie-ba-shang-2-480w.webp",
+            "key": "moments/01kqvx5ph0xxhscsk810ww1q04/01kqvx5ph23wbsyqhfsb82f2hq-480w.webp",
             "contentType": "image/webp",
             "bytes": 29336,
             "etag": "132e7e6f218c0e321635ba4bd1412132",
@@ -64,7 +64,7 @@
             "height": 480
           },
           {
-            "key": "moments/2026/05/05-01-dan-ri-800-wu-yi-2000-zhi-jie-ba-shang/dan-ri-800-wu-yi-2000-zhi-jie-ba-shang-2-960w.webp",
+            "key": "moments/01kqvx5ph0xxhscsk810ww1q04/01kqvx5ph23wbsyqhfsb82f2hq-960w.webp",
             "contentType": "image/webp",
             "bytes": 88548,
             "etag": "281041a6a868e30146a82d50d35ba40e",
@@ -75,10 +75,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2026/05/05-01-dan-ri-800-wu-yi-2000-zhi-jie-ba-shang",
-    "slug": "dan-ri-800-wu-yi-2000-zhi-jie-ba-shang",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-05-05T19:08:04+08:00",

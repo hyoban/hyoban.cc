@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01KHCPMSCSKBK6BZKS22VHHJQ7",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1152,
       "height": 2048,
       "published": {
-        "key": "moments/2026/02/14-01-su-zhou-dao-wu-xi-zhe-duan-jing-hu-gao/su-zhou-dao-wu-xi-zhe-duan-jing-hu-gao.jpg",
+        "key": "moments/01khcpmscr1v2k5f2x9tw8x9e2/01khcpmscskbk6bzks22vhhjq7.jpg",
         "contentType": "image/jpeg",
         "bytes": 493604,
         "etag": "d111f2fba90070beef013273a080b8af",
@@ -21,7 +21,7 @@
         "height": 2048,
         "variants": [
           {
-            "key": "moments/2026/02/14-01-su-zhou-dao-wu-xi-zhe-duan-jing-hu-gao/su-zhou-dao-wu-xi-zhe-duan-jing-hu-gao-480w.webp",
+            "key": "moments/01khcpmscr1v2k5f2x9tw8x9e2/01khcpmscskbk6bzks22vhhjq7-480w.webp",
             "contentType": "image/webp",
             "bytes": 94018,
             "etag": "07f92643eac82152ff63fe18ded37f6c",
@@ -29,7 +29,7 @@
             "height": 853
           },
           {
-            "key": "moments/2026/02/14-01-su-zhou-dao-wu-xi-zhe-duan-jing-hu-gao/su-zhou-dao-wu-xi-zhe-duan-jing-hu-gao-960w.webp",
+            "key": "moments/01khcpmscr1v2k5f2x9tw8x9e2/01khcpmscskbk6bzks22vhhjq7-960w.webp",
             "contentType": "image/webp",
             "bytes": 283094,
             "etag": "74958db628e84bf717bea6514ad46579",
@@ -41,12 +41,12 @@
     },
     {
       "uid": "01KHCPMSCTJ78PCQFEMK6RPJ8A",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1152,
       "height": 2048,
       "published": {
-        "key": "moments/2026/02/14-01-su-zhou-dao-wu-xi-zhe-duan-jing-hu-gao/su-zhou-dao-wu-xi-zhe-duan-jing-hu-gao-2.jpg",
+        "key": "moments/01khcpmscr1v2k5f2x9tw8x9e2/01khcpmsctj78pcqfemk6rpj8a.jpg",
         "contentType": "image/jpeg",
         "bytes": 173978,
         "etag": "687b337f929ec8ae182538670fc476fc",
@@ -54,7 +54,7 @@
         "height": 2048,
         "variants": [
           {
-            "key": "moments/2026/02/14-01-su-zhou-dao-wu-xi-zhe-duan-jing-hu-gao/su-zhou-dao-wu-xi-zhe-duan-jing-hu-gao-2-480w.webp",
+            "key": "moments/01khcpmscr1v2k5f2x9tw8x9e2/01khcpmsctj78pcqfemk6rpj8a-480w.webp",
             "contentType": "image/webp",
             "bytes": 24690,
             "etag": "39aaabc9b0f86529f15e04b952ea8d0c",
@@ -62,7 +62,7 @@
             "height": 853
           },
           {
-            "key": "moments/2026/02/14-01-su-zhou-dao-wu-xi-zhe-duan-jing-hu-gao/su-zhou-dao-wu-xi-zhe-duan-jing-hu-gao-2-960w.webp",
+            "key": "moments/01khcpmscr1v2k5f2x9tw8x9e2/01khcpmsctj78pcqfemk6rpj8a-960w.webp",
             "contentType": "image/webp",
             "bytes": 61362,
             "etag": "1d8e25e77f35d12df536f5e1ee23e7ab",
@@ -74,12 +74,12 @@
     },
     {
       "uid": "01KHCPMSCV9335RQQA1RY4HF2C",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1152,
       "height": 2048,
       "published": {
-        "key": "moments/2026/02/14-01-su-zhou-dao-wu-xi-zhe-duan-jing-hu-gao/su-zhou-dao-wu-xi-zhe-duan-jing-hu-gao-3.jpg",
+        "key": "moments/01khcpmscr1v2k5f2x9tw8x9e2/01khcpmscv9335rqqa1ry4hf2c.jpg",
         "contentType": "image/jpeg",
         "bytes": 177801,
         "etag": "3e4e7a8c6633ac903c9e0d070035e5ae",
@@ -87,7 +87,7 @@
         "height": 2048,
         "variants": [
           {
-            "key": "moments/2026/02/14-01-su-zhou-dao-wu-xi-zhe-duan-jing-hu-gao/su-zhou-dao-wu-xi-zhe-duan-jing-hu-gao-3-480w.webp",
+            "key": "moments/01khcpmscr1v2k5f2x9tw8x9e2/01khcpmscv9335rqqa1ry4hf2c-480w.webp",
             "contentType": "image/webp",
             "bytes": 25176,
             "etag": "168d279d59e36f24cbb5f5c0c79a4a76",
@@ -95,7 +95,7 @@
             "height": 853
           },
           {
-            "key": "moments/2026/02/14-01-su-zhou-dao-wu-xi-zhe-duan-jing-hu-gao/su-zhou-dao-wu-xi-zhe-duan-jing-hu-gao-3-960w.webp",
+            "key": "moments/01khcpmscr1v2k5f2x9tw8x9e2/01khcpmscv9335rqqa1ry4hf2c-960w.webp",
             "contentType": "image/webp",
             "bytes": 64006,
             "etag": "c12b389e575da58d386501b281598ad8",
@@ -106,10 +106,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2026/02/14-01-su-zhou-dao-wu-xi-zhe-duan-jing-hu-gao",
-    "slug": "su-zhou-dao-wu-xi-zhe-duan-jing-hu-gao",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-02-14T07:51:11+08:00",

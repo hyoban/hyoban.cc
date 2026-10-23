@@ -10,12 +10,12 @@
   "media": [
     {
       "uid": "01KNA15801BDS5JG27Y4G2W8HV",
-      "type": "image",
       "alt": "A white car parked in the visitor center lot with green hills behind.",
+      "type": "image",
       "width": 1536,
       "height": 2048,
       "published": {
-        "key": "moments/2026/04/04-03-zuo-tian-shi-shui-zai-yu-cun-de-you-ke/zuo-tian-shi-shui-zai-yu-cun-de-you-ke.jpg",
+        "key": "moments/01kna158005ssn291bw446n88e/01kna15801bds5jg27y4g2w8hv.jpg",
         "contentType": "image/jpeg",
         "bytes": 695162,
         "etag": "13ec2fe7aba370c6df3f51d6eb5707d8",
@@ -23,7 +23,7 @@
         "height": 2048,
         "variants": [
           {
-            "key": "moments/2026/04/04-03-zuo-tian-shi-shui-zai-yu-cun-de-you-ke/zuo-tian-shi-shui-zai-yu-cun-de-you-ke-480w.webp",
+            "key": "moments/01kna158005ssn291bw446n88e/01kna15801bds5jg27y4g2w8hv-480w.webp",
             "contentType": "image/webp",
             "bytes": 49710,
             "etag": "c331c40fa89a53858da2bfb2cf4c4527",
@@ -31,7 +31,7 @@
             "height": 640
           },
           {
-            "key": "moments/2026/04/04-03-zuo-tian-shi-shui-zai-yu-cun-de-you-ke/zuo-tian-shi-shui-zai-yu-cun-de-you-ke-960w.webp",
+            "key": "moments/01kna158005ssn291bw446n88e/01kna15801bds5jg27y4g2w8hv-960w.webp",
             "contentType": "image/webp",
             "bytes": 223804,
             "etag": "77a6a38194303ed31c799c983170c456",
@@ -43,12 +43,12 @@
     },
     {
       "uid": "01KNA158021NKWXF4BEB238S3Z",
-      "type": "image",
       "alt": "The public toilet entrance at the Yucun visitor center.",
+      "type": "image",
       "width": 2048,
       "height": 1536,
       "published": {
-        "key": "moments/2026/04/04-03-zuo-tian-shi-shui-zai-yu-cun-de-you-ke/zuo-tian-shi-shui-zai-yu-cun-de-you-ke-2.jpg",
+        "key": "moments/01kna158005ssn291bw446n88e/01kna158021nkwxf4beb238s3z.jpg",
         "contentType": "image/jpeg",
         "bytes": 730610,
         "etag": "a168ace88a74171563271434ee4338f5",
@@ -56,7 +56,7 @@
         "height": 1536,
         "variants": [
           {
-            "key": "moments/2026/04/04-03-zuo-tian-shi-shui-zai-yu-cun-de-you-ke/zuo-tian-shi-shui-zai-yu-cun-de-you-ke-2-480w.webp",
+            "key": "moments/01kna158005ssn291bw446n88e/01kna158021nkwxf4beb238s3z-480w.webp",
             "contentType": "image/webp",
             "bytes": 19862,
             "etag": "9520142fbe6807ef9bd19ce749b507a6",
@@ -64,7 +64,7 @@
             "height": 360
           },
           {
-            "key": "moments/2026/04/04-03-zuo-tian-shi-shui-zai-yu-cun-de-you-ke/zuo-tian-shi-shui-zai-yu-cun-de-you-ke-2-960w.webp",
+            "key": "moments/01kna158005ssn291bw446n88e/01kna158021nkwxf4beb238s3z-960w.webp",
             "contentType": "image/webp",
             "bytes": 100028,
             "etag": "6551fd40fe31805a3aad6cb2544872ed",
@@ -72,7 +72,7 @@
             "height": 720
           },
           {
-            "key": "moments/2026/04/04-03-zuo-tian-shi-shui-zai-yu-cun-de-you-ke/zuo-tian-shi-shui-zai-yu-cun-de-you-ke-2-1920w.webp",
+            "key": "moments/01kna158005ssn291bw446n88e/01kna158021nkwxf4beb238s3z-1920w.webp",
             "contentType": "image/webp",
             "bytes": 503042,
             "etag": "4aa72fb4b3569e7f47f724e623e4299f",
@@ -84,12 +84,12 @@
     },
     {
       "uid": "01KNA15803AKG9B6PXS5T843WD",
-      "type": "image",
       "alt": "A blue drinking water dispenser outside the visitor center.",
+      "type": "image",
       "width": 1536,
       "height": 2048,
       "published": {
-        "key": "moments/2026/04/04-03-zuo-tian-shi-shui-zai-yu-cun-de-you-ke/zuo-tian-shi-shui-zai-yu-cun-de-you-ke-3.jpg",
+        "key": "moments/01kna158005ssn291bw446n88e/01kna15803akg9b6pxs5t843wd.jpg",
         "contentType": "image/jpeg",
         "bytes": 663619,
         "etag": "b5f1236cde9b71521f1ef35f2616c38a",
@@ -97,7 +97,7 @@
         "height": 2048,
         "variants": [
           {
-            "key": "moments/2026/04/04-03-zuo-tian-shi-shui-zai-yu-cun-de-you-ke/zuo-tian-shi-shui-zai-yu-cun-de-you-ke-3-480w.webp",
+            "key": "moments/01kna158005ssn291bw446n88e/01kna15803akg9b6pxs5t843wd-480w.webp",
             "contentType": "image/webp",
             "bytes": 55122,
             "etag": "b74077edf0dbb3d494b8f2809f37db93",
@@ -105,7 +105,7 @@
             "height": 640
           },
           {
-            "key": "moments/2026/04/04-03-zuo-tian-shi-shui-zai-yu-cun-de-you-ke/zuo-tian-shi-shui-zai-yu-cun-de-you-ke-3-960w.webp",
+            "key": "moments/01kna158005ssn291bw446n88e/01kna15803akg9b6pxs5t843wd-960w.webp",
             "contentType": "image/webp",
             "bytes": 234668,
             "etag": "5421f184d7b4a37ab7bdcca19422e6b4",
@@ -117,12 +117,12 @@
     },
     {
       "uid": "01KNA15804CWVCRMXSP1XXSXBX",
-      "type": "image",
       "alt": "A fridge, drinks vending machine, power bank kiosk, and parcel lockers along a wall.",
+      "type": "image",
       "width": 1536,
       "height": 2048,
       "published": {
-        "key": "moments/2026/04/04-03-zuo-tian-shi-shui-zai-yu-cun-de-you-ke/zuo-tian-shi-shui-zai-yu-cun-de-you-ke-4.jpg",
+        "key": "moments/01kna158005ssn291bw446n88e/01kna15804cwvcrmxsp1xxsxbx.jpg",
         "contentType": "image/jpeg",
         "bytes": 861701,
         "etag": "53657c3d55af183457de969e7fb81888",
@@ -130,7 +130,7 @@
         "height": 2048,
         "variants": [
           {
-            "key": "moments/2026/04/04-03-zuo-tian-shi-shui-zai-yu-cun-de-you-ke/zuo-tian-shi-shui-zai-yu-cun-de-you-ke-4-480w.webp",
+            "key": "moments/01kna158005ssn291bw446n88e/01kna15804cwvcrmxsp1xxsxbx-480w.webp",
             "contentType": "image/webp",
             "bytes": 53130,
             "etag": "d1fb00ecee3d4e5fdcf6bcead28fbf28",
@@ -138,7 +138,7 @@
             "height": 640
           },
           {
-            "key": "moments/2026/04/04-03-zuo-tian-shi-shui-zai-yu-cun-de-you-ke/zuo-tian-shi-shui-zai-yu-cun-de-you-ke-4-960w.webp",
+            "key": "moments/01kna158005ssn291bw446n88e/01kna15804cwvcrmxsp1xxsxbx-960w.webp",
             "contentType": "image/webp",
             "bytes": 273156,
             "etag": "b3c4810f6047c7190280fec92de66d82",
@@ -149,10 +149,8 @@
       }
     }
   ],
+  "order": 3,
   "published": {
-    "id": "2026/04/04-03-zuo-tian-shi-shui-zai-yu-cun-de-you-ke",
-    "slug": "zuo-tian-shi-shui-zai-yu-cun-de-you-ke",
-    "order": 3,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-04-04T00:00:00+08:00",

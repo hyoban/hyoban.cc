@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01KKFMXTN9WZE2XWCQ4ZHWC2RW",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1179,
       "height": 665,
       "published": {
-        "key": "moments/2026/03/12-02-guai-xian-you-de-plus-nan-dao-ye-yao-deng/guai-xian-you-de-plus-nan-dao-ye-yao-deng.jpg",
+        "key": "moments/01kkfmxtn8rqg41nx4t4tnfeep/01kkfmxtn9wze2xwcq4zhwc2rw.jpg",
         "contentType": "image/jpeg",
         "bytes": 33871,
         "etag": "d6453867bde0b7e0815e2a0265f8cb7e",
@@ -21,7 +21,7 @@
         "height": 665,
         "variants": [
           {
-            "key": "moments/2026/03/12-02-guai-xian-you-de-plus-nan-dao-ye-yao-deng/guai-xian-you-de-plus-nan-dao-ye-yao-deng-480w.webp",
+            "key": "moments/01kkfmxtn8rqg41nx4t4tnfeep/01kkfmxtn9wze2xwcq4zhwc2rw-480w.webp",
             "contentType": "image/webp",
             "bytes": 5492,
             "etag": "1b42dd83c03a03b0914091fec720b022",
@@ -29,7 +29,7 @@
             "height": 271
           },
           {
-            "key": "moments/2026/03/12-02-guai-xian-you-de-plus-nan-dao-ye-yao-deng/guai-xian-you-de-plus-nan-dao-ye-yao-deng-960w.webp",
+            "key": "moments/01kkfmxtn8rqg41nx4t4tnfeep/01kkfmxtn9wze2xwcq4zhwc2rw-960w.webp",
             "contentType": "image/webp",
             "bytes": 11246,
             "etag": "dd8c46d7b8d3fd4d05468426e6f8fbde",
@@ -40,10 +40,8 @@
       }
     }
   ],
+  "order": 2,
   "published": {
-    "id": "2026/03/12-02-guai-xian-you-de-plus-nan-dao-ye-yao-deng",
-    "slug": "guai-xian-you-de-plus-nan-dao-ye-yao-deng",
-    "order": 2,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-03-12T07:50:17+08:00",

@@ -36,11 +36,14 @@ data/
 ```
 
 A Moment names its place (one at most), carries its words and media, and once published has a
-`published` block with its `YYYY/MM/DD-NN-slug` id; each media item's `published`
-block holds the R2 key, ETag, size, dimensions and responsive variants. A Moment that
+`published` block with when it was; each media item's `published` block holds the R2
+key, ETag, size, dimensions and responsive variants. A Moment is named by its uid
+alone: its page is `/m/<uid>/` and its media sit under `moments/<uid>/`, each file
+named by its media item's uid (`getMediaKey`), so its day, places and words can all
+change after it is published. A Moment that
 tells of a meal may carry a `food` block: the dishes as its words name them, a verdict
 (`good`, `ok` or `bad`) and the bill with how many it fed. A record
-without `published` is a draft the site skips. Published fields never change: a
+without `published` is a draft the site skips. Published blocks never change: a
 different photo is a new media item with a new key.
 
 ## Building from the API

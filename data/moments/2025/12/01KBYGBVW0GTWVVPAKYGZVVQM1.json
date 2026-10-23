@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01KBYGBVW1XCV5S6N19YY7VM5Y",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 2644,
       "height": 2216,
       "published": {
-        "key": "moments/2025/12/08-02-vecel-json-zhi-chi-gei-function-pei-zhi-includefiles-bu/vecel-json-zhi-chi-gei-function-pei-zhi-includefiles-bu.jpg",
+        "key": "moments/01kbygbvw0gtwvvpakygzvvqm1/01kbygbvw1xcv5s6n19yy7vm5y.jpg",
         "contentType": "image/jpeg",
         "bytes": 190166,
         "etag": "90ad83394867c7d8b0db034c4a26604d",
@@ -21,7 +21,7 @@
         "height": 2216,
         "variants": [
           {
-            "key": "moments/2025/12/08-02-vecel-json-zhi-chi-gei-function-pei-zhi-includefiles-bu/vecel-json-zhi-chi-gei-function-pei-zhi-includefiles-bu-480w.webp",
+            "key": "moments/01kbygbvw0gtwvvpakygzvvqm1/01kbygbvw1xcv5s6n19yy7vm5y-480w.webp",
             "contentType": "image/webp",
             "bytes": 9416,
             "etag": "30c705fc9035a083739c934f310e44f5",
@@ -29,7 +29,7 @@
             "height": 402
           },
           {
-            "key": "moments/2025/12/08-02-vecel-json-zhi-chi-gei-function-pei-zhi-includefiles-bu/vecel-json-zhi-chi-gei-function-pei-zhi-includefiles-bu-960w.webp",
+            "key": "moments/01kbygbvw0gtwvvpakygzvvqm1/01kbygbvw1xcv5s6n19yy7vm5y-960w.webp",
             "contentType": "image/webp",
             "bytes": 24308,
             "etag": "5fe64e04ae22cd95fd466c096272b44a",
@@ -37,7 +37,7 @@
             "height": 805
           },
           {
-            "key": "moments/2025/12/08-02-vecel-json-zhi-chi-gei-function-pei-zhi-includefiles-bu/vecel-json-zhi-chi-gei-function-pei-zhi-includefiles-bu-1920w.webp",
+            "key": "moments/01kbygbvw0gtwvvpakygzvvqm1/01kbygbvw1xcv5s6n19yy7vm5y-1920w.webp",
             "contentType": "image/webp",
             "bytes": 54776,
             "etag": "1fe42d600636597203e6408374cb254e",
@@ -48,10 +48,8 @@
       }
     }
   ],
+  "order": 2,
   "published": {
-    "id": "2025/12/08-02-vecel-json-zhi-chi-gei-function-pei-zhi-includefiles-bu",
-    "slug": "vecel-json-zhi-chi-gei-function-pei-zhi-includefiles-bu",
-    "order": 2,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2025-12-08T16:13:36+08:00",

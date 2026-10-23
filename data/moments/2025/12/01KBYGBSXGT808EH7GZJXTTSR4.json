@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01KBYGBSXHAPKRQH3S2DDQRWE9",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1034,
       "height": 650,
       "published": {
-        "key": "moments/2025/12/08-01-zui-jin-xiu-le-yi-xia-rsshub-de-npm-bao/zui-jin-xiu-le-yi-xia-rsshub-de-npm-bao.jpg",
+        "key": "moments/01kbygbsxgt808eh7gzjxttsr4/01kbygbsxhapkrqh3s2ddqrwe9.jpg",
         "contentType": "image/jpeg",
         "bytes": 76771,
         "etag": "389571e173e9f01bf0e3c98a491ae0d8",
@@ -21,7 +21,7 @@
         "height": 650,
         "variants": [
           {
-            "key": "moments/2025/12/08-01-zui-jin-xiu-le-yi-xia-rsshub-de-npm-bao/zui-jin-xiu-le-yi-xia-rsshub-de-npm-bao-480w.webp",
+            "key": "moments/01kbygbsxgt808eh7gzjxttsr4/01kbygbsxhapkrqh3s2ddqrwe9-480w.webp",
             "contentType": "image/webp",
             "bytes": 17494,
             "etag": "03bbb5099dead035685cfd7d61f2279b",
@@ -29,7 +29,7 @@
             "height": 302
           },
           {
-            "key": "moments/2025/12/08-01-zui-jin-xiu-le-yi-xia-rsshub-de-npm-bao/zui-jin-xiu-le-yi-xia-rsshub-de-npm-bao-960w.webp",
+            "key": "moments/01kbygbsxgt808eh7gzjxttsr4/01kbygbsxhapkrqh3s2ddqrwe9-960w.webp",
             "contentType": "image/webp",
             "bytes": 37802,
             "etag": "1c5f52fceff5afbed8e36df3a90c9d22",
@@ -40,10 +40,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2025/12/08-01-zui-jin-xiu-le-yi-xia-rsshub-de-npm-bao",
-    "slug": "zui-jin-xiu-le-yi-xia-rsshub-de-npm-bao",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2025-12-08T16:13:34+08:00",

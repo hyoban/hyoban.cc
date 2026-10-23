@@ -6,10 +6,8 @@
   "hidden": false,
   "topic": "tech",
   "media": [],
+  "order": 1,
   "published": {
-    "id": "2023/08/11-01-eagerly-waiting-for-viteconf-get-your-free-ticket",
-    "slug": "eagerly-waiting-for-viteconf-get-your-free-ticket",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2023-08-11T06:56:16+08:00",

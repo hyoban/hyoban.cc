@@ -6,10 +6,8 @@
   "hidden": false,
   "topic": "tech",
   "media": [],
+  "order": 2,
   "published": {
-    "id": "2026/01/29-02-dai-ma-zai",
-    "slug": "dai-ma-zai",
-    "order": 2,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-01-29T00:03:48+08:00",

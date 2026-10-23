@@ -8,17 +8,17 @@
   "media": [
     {
       "uid": "01HHVCK3PHJC0P7Z55PE2VWDPG",
-      "type": "video",
       "alt": "",
+      "type": "video",
       "width": 800,
       "height": 274,
       "published": {
-        "key": "moments/2023/12/17-01-jia-le-duo-zhu-ti-de-gong-neng/jia-le-duo-zhu-ti-de-gong-neng-video.mp4",
+        "key": "moments/01hhvck3pgmp3nk0xmfew6krpe/01hhvck3phjc0p7z55pe2vwdpg.mp4",
         "contentType": "video/mp4",
         "bytes": 46786,
         "etag": "dd2b8140b394ec889a2b4041311cce0b",
         "poster": {
-          "key": "moments/2023/12/17-01-jia-le-duo-zhu-ti-de-gong-neng/jia-le-duo-zhu-ti-de-gong-neng-video-poster.png",
+          "key": "moments/01hhvck3pgmp3nk0xmfew6krpe/01hhvck3phjc0p7z55pe2vwdpg-poster.png",
           "contentType": "image/png",
           "bytes": 30686,
           "etag": "ac73b55a4f61250501368298d20bcd8d",
@@ -29,10 +29,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2023/12/17-01-jia-le-duo-zhu-ti-de-gong-neng",
-    "slug": "jia-le-duo-zhu-ti-de-gong-neng",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2023-12-17T15:59:30+08:00",

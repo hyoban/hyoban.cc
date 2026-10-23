@@ -4,7 +4,7 @@ import { join } from 'node:path'
 import { test } from 'vite-plus/test'
 
 import { tripVideoMusic } from '../../src/data/music.ts'
-import { getMomentFile, momentRecordSchema, tripRecordSchema } from '@hyoban/data-spec'
+import { getMediaKey, getMomentFile, momentRecordSchema, tripRecordSchema } from '@hyoban/data-spec'
 import {
   dataRoot,
   readDevices,
@@ -25,7 +25,7 @@ const moments = readMomentRecords()
 const devices = readDevices()
 
 test('every record under data/ fits the spec and sits where its name says', () => {
-  assert.equal(manifest.schemaVersion, 1)
+  assert.equal(manifest.schemaVersion, 2)
   assert.ok(Object.keys(places).length > 0)
   assert.ok(trips.length > 0)
   assert.ok(moments.length > 0)
@@ -40,35 +40,12 @@ test('every record under data/ fits the spec and sits where its name says', () =
   }
 })
 
-test("uids and published ids are unique, and each day's orders are contiguous", () => {
+test('uids are unique, of the Moments and of their media', () => {
   const uids = moments.flatMap(({ record }) => [
     record.uid,
     ...record.media.map((media) => media.uid),
   ])
   assert.equal(new Set(uids).size, uids.length)
-
-  const ordersByDate = new Map()
-  const ids = new Set()
-
-  for (const { record } of moments) {
-    if (!record.published) {
-      continue
-    }
-
-    assert.ok(!ids.has(record.published.id), `Duplicate published id ${record.published.id}`)
-    ids.add(record.published.id)
-    const date = record.occurredAt.slice(0, 10)
-    ordersByDate.set(date, [...(ordersByDate.get(date) ?? []), record.published.order])
-  }
-
-  for (const [date, orders] of ordersByDate) {
-    orders.sort((first, second) => first - second)
-    assert.deepEqual(
-      orders,
-      Array.from({ length: orders.length }, (_, index) => index + 1),
-      `Moment orders are not contiguous for ${date}`,
-    )
-  }
 })
 
 test('places, trips, covers and music referenced by records exist', () => {
@@ -125,7 +102,7 @@ test('the committed JSON Schema matches @hyoban/data-spec', async () => {
   }
 })
 
-test('rejects a published id that disagrees with the record', () => {
+test("takes a published Moment on any day, its media under its uid's directory", () => {
   const base = {
     uid: ulid(),
     occurredAt: '2026-10-01T17:40:00+08:00',
@@ -133,38 +110,41 @@ test('rejects a published id that disagrees with the record', () => {
     createdAt: '2026-10-01T17:41:00+08:00',
     updatedAt: '2026-10-01T17:41:00+08:00',
   }
-  const published = {
-    id: '2026/10/01-02-ferry-sunset',
-    slug: 'ferry-sunset',
-    order: 2,
-    at: base.createdAt,
-  }
+  const published = { at: base.createdAt }
+  const photo = (key) => ({
+    uid: ulid(),
+    type: 'image',
+    width: 10,
+    height: 10,
+    published: {
+      key,
+      contentType: 'image/webp',
+      bytes: 1,
+      etag: '0'.repeat(32),
+      width: 10,
+      height: 10,
+    },
+  })
+  const mediaUid = ulid()
 
   assert.ok(momentRecordSchema.safeParse({ ...base, published }).success)
-  assert.ok(!momentRecordSchema.safeParse({ ...base, occurredAt: '2026-10-02', published }).success)
+  assert.ok(momentRecordSchema.safeParse({ ...base, occurredAt: '2026-10-02', published }).success)
+  assert.equal(
+    getMediaKey(base.uid, mediaUid, 'webp', '960w'),
+    `moments/${base.uid.toLowerCase()}/${mediaUid.toLowerCase()}-960w.webp`,
+  )
   assert.ok(
-    !momentRecordSchema.safeParse({ ...base, published: { ...published, order: 3 } }).success,
+    momentRecordSchema.safeParse({
+      ...base,
+      published,
+      media: [photo(getMediaKey(base.uid, mediaUid, 'webp'))],
+    }).success,
   )
   assert.ok(
     !momentRecordSchema.safeParse({
       ...base,
       published,
-      media: [
-        {
-          uid: ulid(),
-          type: 'image',
-          width: 10,
-          height: 10,
-          published: {
-            key: 'moments/2026/10/01-01-elsewhere/photo.webp',
-            contentType: 'image/webp',
-            bytes: 1,
-            etag: '0'.repeat(32),
-            width: 10,
-            height: 10,
-          },
-        },
-      ],
+      media: [photo(getMediaKey(ulid(), mediaUid, 'webp'))],
     }).success,
   )
   assert.ok(!momentRecordSchema.safeParse({ ...base, places: ['nanjing', 'nanjing'] }).success)

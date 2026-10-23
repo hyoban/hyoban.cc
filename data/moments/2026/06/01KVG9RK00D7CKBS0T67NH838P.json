@@ -15,7 +15,7 @@
       "width": 2560,
       "height": 1707,
       "published": {
-        "key": "moments/2026/06/20-04-duan-wu-zi-jia-luo-yang-lao-jun-shan/duan-wu-zi-jia-luo-yang-lao-jun-shan.jpg",
+        "key": "moments/01kvg9rk00d7ckbs0t67nh838p/01kvg9rk01emn7xeqcqa7x3pc2.jpg",
         "contentType": "image/jpeg",
         "bytes": 756565,
         "etag": "766cdc63b9d03cade7b302ac7f97992b",
@@ -23,7 +23,7 @@
         "height": 1707,
         "variants": [
           {
-            "key": "moments/2026/06/20-04-duan-wu-zi-jia-luo-yang-lao-jun-shan/duan-wu-zi-jia-luo-yang-lao-jun-shan-480w.webp",
+            "key": "moments/01kvg9rk00d7ckbs0t67nh838p/01kvg9rk01emn7xeqcqa7x3pc2-480w.webp",
             "contentType": "image/webp",
             "bytes": 42104,
             "etag": "91b5f0f9bf4cad6f42550c46bc2769f2",
@@ -31,7 +31,7 @@
             "height": 320
           },
           {
-            "key": "moments/2026/06/20-04-duan-wu-zi-jia-luo-yang-lao-jun-shan/duan-wu-zi-jia-luo-yang-lao-jun-shan-960w.webp",
+            "key": "moments/01kvg9rk00d7ckbs0t67nh838p/01kvg9rk01emn7xeqcqa7x3pc2-960w.webp",
             "contentType": "image/webp",
             "bytes": 150014,
             "etag": "a0a11b408aac299690289a4bec46b521",
@@ -39,7 +39,7 @@
             "height": 640
           },
           {
-            "key": "moments/2026/06/20-04-duan-wu-zi-jia-luo-yang-lao-jun-shan/duan-wu-zi-jia-luo-yang-lao-jun-shan-1920w.webp",
+            "key": "moments/01kvg9rk00d7ckbs0t67nh838p/01kvg9rk01emn7xeqcqa7x3pc2-1920w.webp",
             "contentType": "image/webp",
             "bytes": 440196,
             "etag": "c919e43016bd09405fddbc30510edaf3",
@@ -56,7 +56,7 @@
       "width": 1707,
       "height": 2560,
       "published": {
-        "key": "moments/2026/06/20-04-duan-wu-zi-jia-luo-yang-lao-jun-shan/duan-wu-zi-jia-luo-yang-lao-jun-shan-2.jpg",
+        "key": "moments/01kvg9rk00d7ckbs0t67nh838p/01kvg9rk02mszd5gmaqqgykzzq.jpg",
         "contentType": "image/jpeg",
         "bytes": 313971,
         "etag": "929bca4622b32662fb7d6cd58b0df752",
@@ -64,7 +64,7 @@
         "height": 2560,
         "variants": [
           {
-            "key": "moments/2026/06/20-04-duan-wu-zi-jia-luo-yang-lao-jun-shan/duan-wu-zi-jia-luo-yang-lao-jun-shan-2-480w.webp",
+            "key": "moments/01kvg9rk00d7ckbs0t67nh838p/01kvg9rk02mszd5gmaqqgykzzq-480w.webp",
             "contentType": "image/webp",
             "bytes": 27918,
             "etag": "3679265b555eb418f5aa9d22bb64ac34",
@@ -72,7 +72,7 @@
             "height": 720
           },
           {
-            "key": "moments/2026/06/20-04-duan-wu-zi-jia-luo-yang-lao-jun-shan/duan-wu-zi-jia-luo-yang-lao-jun-shan-2-960w.webp",
+            "key": "moments/01kvg9rk00d7ckbs0t67nh838p/01kvg9rk02mszd5gmaqqgykzzq-960w.webp",
             "contentType": "image/webp",
             "bytes": 79170,
             "etag": "4e39389dbd0be24a6537012257a9eeae",
@@ -83,10 +83,8 @@
       }
     }
   ],
+  "order": 4,
   "published": {
-    "id": "2026/06/20-04-duan-wu-zi-jia-luo-yang-lao-jun-shan",
-    "slug": "duan-wu-zi-jia-luo-yang-lao-jun-shan",
-    "order": 4,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-06-20T00:00:00+08:00",

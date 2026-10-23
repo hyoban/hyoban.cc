@@ -6,10 +6,8 @@
   "hidden": false,
   "topic": "tech",
   "media": [],
+  "order": 1,
   "published": {
-    "id": "2023/12/15-01-vite-glob-import-jue-dui-shi-wo-zui-xi-huan",
-    "slug": "vite-glob-import-jue-dui-shi-wo-zui-xi-huan",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2023-12-15T15:16:58+08:00",

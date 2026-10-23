@@ -8,10 +8,8 @@
   "hidden": true,
   "topic": "travel",
   "media": [],
+  "order": 2,
   "published": {
-    "id": "2026/09/12-02-flight-technical-delay",
-    "slug": "flight-technical-delay",
-    "order": 2,
     "at": "2026-10-08T08:10:00+08:00"
   },
   "createdAt": "2026-09-12T10:06:17+08:00",

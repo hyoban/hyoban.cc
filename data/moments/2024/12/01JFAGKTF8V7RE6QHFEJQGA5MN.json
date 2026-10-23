@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01JFAGKTF96SYTKNHSF338ZY8Q",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1476,
       "height": 1284,
       "published": {
-        "key": "moments/2024/12/17-01-xue-xi-qian-duan-de-di-san-nian-quan-zhi/xue-xi-qian-duan-de-di-san-nian-quan-zhi.jpg",
+        "key": "moments/01jfagktf8v7re6qhfejqga5mn/01jfagktf96sytknhsf338zy8q.jpg",
         "contentType": "image/jpeg",
         "bytes": 173223,
         "etag": "0c86e81162a66dcefb35e345336508a9",
@@ -21,7 +21,7 @@
         "height": 1284,
         "variants": [
           {
-            "key": "moments/2024/12/17-01-xue-xi-qian-duan-de-di-san-nian-quan-zhi/xue-xi-qian-duan-de-di-san-nian-quan-zhi-480w.webp",
+            "key": "moments/01jfagktf8v7re6qhfejqga5mn/01jfagktf96sytknhsf338zy8q-480w.webp",
             "contentType": "image/webp",
             "bytes": 19324,
             "etag": "7b4c6a3c1a0919f57774d83ae2ca2a88",
@@ -29,7 +29,7 @@
             "height": 418
           },
           {
-            "key": "moments/2024/12/17-01-xue-xi-qian-duan-de-di-san-nian-quan-zhi/xue-xi-qian-duan-de-di-san-nian-quan-zhi-960w.webp",
+            "key": "moments/01jfagktf8v7re6qhfejqga5mn/01jfagktf96sytknhsf338zy8q-960w.webp",
             "contentType": "image/webp",
             "bytes": 48306,
             "etag": "609bab547a1048d9c52c95b68487ebbb",
@@ -40,10 +40,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2024/12/17-01-xue-xi-qian-duan-de-di-san-nian-quan-zhi",
-    "slug": "xue-xi-qian-duan-de-di-san-nian-quan-zhi",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2024-12-17T22:33:37+08:00",

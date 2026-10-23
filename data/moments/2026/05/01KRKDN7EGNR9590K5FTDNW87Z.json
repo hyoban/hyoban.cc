@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01KRKDN7EHSCEW43SF80YPJ49S",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1179,
       "height": 879,
       "published": {
-        "key": "moments/2026/05/14-02-hai-mai-le-xiang-ji-xi-wang-zi-ji-bu/hai-mai-le-xiang-ji-xi-wang-zi-ji-bu.jpg",
+        "key": "moments/01krkdn7egnr9590k5ftdnw87z/01krkdn7ehscew43sf80ypj49s.jpg",
         "contentType": "image/jpeg",
         "bytes": 77841,
         "etag": "f44d8214a5afc8e3706c9734c411ef7d",
@@ -21,7 +21,7 @@
         "height": 879,
         "variants": [
           {
-            "key": "moments/2026/05/14-02-hai-mai-le-xiang-ji-xi-wang-zi-ji-bu/hai-mai-le-xiang-ji-xi-wang-zi-ji-bu-480w.webp",
+            "key": "moments/01krkdn7egnr9590k5ftdnw87z/01krkdn7ehscew43sf80ypj49s-480w.webp",
             "contentType": "image/webp",
             "bytes": 17644,
             "etag": "560bef7b4aeb3d1a64c87709562e1fed",
@@ -29,7 +29,7 @@
             "height": 358
           },
           {
-            "key": "moments/2026/05/14-02-hai-mai-le-xiang-ji-xi-wang-zi-ji-bu/hai-mai-le-xiang-ji-xi-wang-zi-ji-bu-960w.webp",
+            "key": "moments/01krkdn7egnr9590k5ftdnw87z/01krkdn7ehscew43sf80ypj49s-960w.webp",
             "contentType": "image/webp",
             "bytes": 41112,
             "etag": "954e3aa0dc76ef5f109ef0e655b0502c",
@@ -40,10 +40,8 @@
       }
     }
   ],
+  "order": 2,
   "published": {
-    "id": "2026/05/14-02-hai-mai-le-xiang-ji-xi-wang-zi-ji-bu",
-    "slug": "hai-mai-le-xiang-ji-xi-wang-zi-ji-bu",
-    "order": 2,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-05-14T22:18:42+08:00",

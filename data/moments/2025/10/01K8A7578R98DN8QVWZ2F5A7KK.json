@@ -10,12 +10,12 @@
   "media": [
     {
       "uid": "01K8A7578S0N8F4KHQ6YJQCWZZ",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1440,
       "height": 1080,
       "published": {
-        "key": "moments/2025/10/24-01-zi-jia-cheng-du-di-san-zhan-zai-xiang-yang/zi-jia-cheng-du-di-san-zhan-zai-xiang-yang.webp",
+        "key": "moments/01k8a7578r98dn8qvwz2f5a7kk/01k8a7578s0n8f4khq6yjqcwzz.webp",
         "contentType": "image/webp",
         "bytes": 182258,
         "etag": "26336bf8723a62c00e2c69d8b85417b4",
@@ -23,7 +23,7 @@
         "height": 1080,
         "variants": [
           {
-            "key": "moments/2025/10/24-01-zi-jia-cheng-du-di-san-zhan-zai-xiang-yang/zi-jia-cheng-du-di-san-zhan-zai-xiang-yang-480w.webp",
+            "key": "moments/01k8a7578r98dn8qvwz2f5a7kk/01k8a7578s0n8f4khq6yjqcwzz-480w.webp",
             "contentType": "image/webp",
             "bytes": 30094,
             "etag": "a9366ef15588fce317b2af3d7b05eb92",
@@ -31,7 +31,7 @@
             "height": 360
           },
           {
-            "key": "moments/2025/10/24-01-zi-jia-cheng-du-di-san-zhan-zai-xiang-yang/zi-jia-cheng-du-di-san-zhan-zai-xiang-yang-960w.webp",
+            "key": "moments/01k8a7578r98dn8qvwz2f5a7kk/01k8a7578s0n8f4khq6yjqcwzz-960w.webp",
             "contentType": "image/webp",
             "bytes": 75680,
             "etag": "8819beb5d3e980b19eda8bd5bfce9e75",
@@ -43,12 +43,12 @@
     },
     {
       "uid": "01K8A7578TJBK7THNGM5863HZZ",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1440,
       "height": 1080,
       "published": {
-        "key": "moments/2025/10/24-01-zi-jia-cheng-du-di-san-zhan-zai-xiang-yang/zi-jia-cheng-du-di-san-zhan-zai-xiang-yang-2.webp",
+        "key": "moments/01k8a7578r98dn8qvwz2f5a7kk/01k8a7578tjbk7thngm5863hzz.webp",
         "contentType": "image/webp",
         "bytes": 137136,
         "etag": "98a1696186141156ca6910856fd4d65d",
@@ -56,7 +56,7 @@
         "height": 1080,
         "variants": [
           {
-            "key": "moments/2025/10/24-01-zi-jia-cheng-du-di-san-zhan-zai-xiang-yang/zi-jia-cheng-du-di-san-zhan-zai-xiang-yang-2-480w.webp",
+            "key": "moments/01k8a7578r98dn8qvwz2f5a7kk/01k8a7578tjbk7thngm5863hzz-480w.webp",
             "contentType": "image/webp",
             "bytes": 22428,
             "etag": "674fd4bde156e91a1c052cdf66b65658",
@@ -64,7 +64,7 @@
             "height": 360
           },
           {
-            "key": "moments/2025/10/24-01-zi-jia-cheng-du-di-san-zhan-zai-xiang-yang/zi-jia-cheng-du-di-san-zhan-zai-xiang-yang-2-960w.webp",
+            "key": "moments/01k8a7578r98dn8qvwz2f5a7kk/01k8a7578tjbk7thngm5863hzz-960w.webp",
             "contentType": "image/webp",
             "bytes": 55926,
             "etag": "ce74de77f2baca80aa9d735008ed23d8",
@@ -81,10 +81,8 @@
     ],
     "verdict": "good"
   },
+  "order": 1,
   "published": {
-    "id": "2025/10/24-01-zi-jia-cheng-du-di-san-zhan-zai-xiang-yang",
-    "slug": "zi-jia-cheng-du-di-san-zhan-zai-xiang-yang",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2025-10-24T12:20:47+08:00",

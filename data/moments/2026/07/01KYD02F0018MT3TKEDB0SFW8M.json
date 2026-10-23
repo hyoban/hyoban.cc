@@ -10,17 +10,17 @@
   "media": [
     {
       "uid": "01KYD02F01NFA0XWJZWPRSNDCC",
-      "type": "video",
       "alt": "Sunrise timelapse over West Lake with a tree-covered island obscuring the sun",
+      "type": "video",
       "width": 1600,
       "height": 1066,
       "published": {
-        "key": "moments/2026/07/26-01-west-lake-sunrise/west-lake-sunrise-video.mp4",
+        "key": "moments/01kyd02f0018mt3tkedb0sfw8m/01kyd02f01nfa0xwjzwprsndcc.mp4",
         "contentType": "video/mp4",
         "bytes": 54638328,
         "etag": "8c048a45b8f10806211c7e1297e9f118",
         "poster": {
-          "key": "moments/2026/07/26-01-west-lake-sunrise/west-lake-sunrise-video-poster.webp",
+          "key": "moments/01kyd02f0018mt3tkedb0sfw8m/01kyd02f01nfa0xwjzwprsndcc-poster.webp",
           "contentType": "image/webp",
           "bytes": 135556,
           "etag": "f35fda05e72460d698b09426d992e456",
@@ -31,10 +31,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2026/07/26-01-west-lake-sunrise",
-    "slug": "west-lake-sunrise",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-07-26T00:00:00+08:00",

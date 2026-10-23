@@ -6,10 +6,8 @@
   "hidden": false,
   "topic": "car",
   "media": [],
+  "order": 1,
   "published": {
-    "id": "2026/05/24-01-di-yi-ge-liang-wan-gong-li-de-kai-xiao",
-    "slug": "di-yi-ge-liang-wan-gong-li-de-kai-xiao",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-05-24T22:17:58+08:00",

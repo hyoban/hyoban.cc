@@ -10,12 +10,12 @@
   "media": [
     {
       "uid": "01KPJFJX5958KYGP5XWH9V492E",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 2048,
       "height": 1536,
       "published": {
-        "key": "moments/2026/04/19-02-mo-ming-tan-le-liang-ge-shi-he-lu-ying/mo-ming-tan-le-liang-ge-shi-he-lu-ying.jpg",
+        "key": "moments/01kpjfjx588ete6vz114p5j22q/01kpjfjx5958kygp5xwh9v492e.jpg",
         "contentType": "image/jpeg",
         "bytes": 931257,
         "etag": "b7d961d1a73d8c082df11fd29799ad83",
@@ -23,7 +23,7 @@
         "height": 1536,
         "variants": [
           {
-            "key": "moments/2026/04/19-02-mo-ming-tan-le-liang-ge-shi-he-lu-ying/mo-ming-tan-le-liang-ge-shi-he-lu-ying-480w.webp",
+            "key": "moments/01kpjfjx588ete6vz114p5j22q/01kpjfjx5958kygp5xwh9v492e-480w.webp",
             "contentType": "image/webp",
             "bytes": 45704,
             "etag": "a66fb35b6b4ebfb8493fd8982b28b4a6",
@@ -31,7 +31,7 @@
             "height": 360
           },
           {
-            "key": "moments/2026/04/19-02-mo-ming-tan-le-liang-ge-shi-he-lu-ying/mo-ming-tan-le-liang-ge-shi-he-lu-ying-960w.webp",
+            "key": "moments/01kpjfjx588ete6vz114p5j22q/01kpjfjx5958kygp5xwh9v492e-960w.webp",
             "contentType": "image/webp",
             "bytes": 188330,
             "etag": "d5e506b043efcab20568178d6601d6d0",
@@ -39,7 +39,7 @@
             "height": 720
           },
           {
-            "key": "moments/2026/04/19-02-mo-ming-tan-le-liang-ge-shi-he-lu-ying/mo-ming-tan-le-liang-ge-shi-he-lu-ying-1920w.webp",
+            "key": "moments/01kpjfjx588ete6vz114p5j22q/01kpjfjx5958kygp5xwh9v492e-1920w.webp",
             "contentType": "image/webp",
             "bytes": 713246,
             "etag": "590de3b046938914dcfba075e58764be",
@@ -51,12 +51,12 @@
     },
     {
       "uid": "01KPJFJX5AGKSX209JHG6N4V0Z",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 2048,
       "height": 1536,
       "published": {
-        "key": "moments/2026/04/19-02-mo-ming-tan-le-liang-ge-shi-he-lu-ying/mo-ming-tan-le-liang-ge-shi-he-lu-ying-2.jpg",
+        "key": "moments/01kpjfjx588ete6vz114p5j22q/01kpjfjx5agksx209jhg6n4v0z.jpg",
         "contentType": "image/jpeg",
         "bytes": 786554,
         "etag": "9cf3bba4bdfc13f80ecb09b25699500a",
@@ -64,7 +64,7 @@
         "height": 1536,
         "variants": [
           {
-            "key": "moments/2026/04/19-02-mo-ming-tan-le-liang-ge-shi-he-lu-ying/mo-ming-tan-le-liang-ge-shi-he-lu-ying-2-480w.webp",
+            "key": "moments/01kpjfjx588ete6vz114p5j22q/01kpjfjx5agksx209jhg6n4v0z-480w.webp",
             "contentType": "image/webp",
             "bytes": 45126,
             "etag": "2547e9140b49102f88ed756ee84f9755",
@@ -72,7 +72,7 @@
             "height": 360
           },
           {
-            "key": "moments/2026/04/19-02-mo-ming-tan-le-liang-ge-shi-he-lu-ying/mo-ming-tan-le-liang-ge-shi-he-lu-ying-2-960w.webp",
+            "key": "moments/01kpjfjx588ete6vz114p5j22q/01kpjfjx5agksx209jhg6n4v0z-960w.webp",
             "contentType": "image/webp",
             "bytes": 175798,
             "etag": "3c620b94a608d2b6e21606ea0acf921b",
@@ -80,7 +80,7 @@
             "height": 720
           },
           {
-            "key": "moments/2026/04/19-02-mo-ming-tan-le-liang-ge-shi-he-lu-ying/mo-ming-tan-le-liang-ge-shi-he-lu-ying-2-1920w.webp",
+            "key": "moments/01kpjfjx588ete6vz114p5j22q/01kpjfjx5agksx209jhg6n4v0z-1920w.webp",
             "contentType": "image/webp",
             "bytes": 564014,
             "etag": "892202809ed0e020e5aa19cedee98c21",
@@ -92,12 +92,12 @@
     },
     {
       "uid": "01KPJFJX5BJS0SSX2TZMMQSANY",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 2048,
       "height": 1536,
       "published": {
-        "key": "moments/2026/04/19-02-mo-ming-tan-le-liang-ge-shi-he-lu-ying/mo-ming-tan-le-liang-ge-shi-he-lu-ying-3.jpg",
+        "key": "moments/01kpjfjx588ete6vz114p5j22q/01kpjfjx5bjs0ssx2tzmmqsany.jpg",
         "contentType": "image/jpeg",
         "bytes": 387248,
         "etag": "43afe31eee252ac7b3353f27c6e752f8",
@@ -105,7 +105,7 @@
         "height": 1536,
         "variants": [
           {
-            "key": "moments/2026/04/19-02-mo-ming-tan-le-liang-ge-shi-he-lu-ying/mo-ming-tan-le-liang-ge-shi-he-lu-ying-3-480w.webp",
+            "key": "moments/01kpjfjx588ete6vz114p5j22q/01kpjfjx5bjs0ssx2tzmmqsany-480w.webp",
             "contentType": "image/webp",
             "bytes": 16764,
             "etag": "427532715287d51bf63afb19b9f4e07d",
@@ -113,7 +113,7 @@
             "height": 360
           },
           {
-            "key": "moments/2026/04/19-02-mo-ming-tan-le-liang-ge-shi-he-lu-ying/mo-ming-tan-le-liang-ge-shi-he-lu-ying-3-960w.webp",
+            "key": "moments/01kpjfjx588ete6vz114p5j22q/01kpjfjx5bjs0ssx2tzmmqsany-960w.webp",
             "contentType": "image/webp",
             "bytes": 63520,
             "etag": "2eb6814095d1d22250e09ddb1d839d77",
@@ -121,7 +121,7 @@
             "height": 720
           },
           {
-            "key": "moments/2026/04/19-02-mo-ming-tan-le-liang-ge-shi-he-lu-ying/mo-ming-tan-le-liang-ge-shi-he-lu-ying-3-1920w.webp",
+            "key": "moments/01kpjfjx588ete6vz114p5j22q/01kpjfjx5bjs0ssx2tzmmqsany-1920w.webp",
             "contentType": "image/webp",
             "bytes": 234122,
             "etag": "bdee3d307fd953fe03ce6be3bf8ffeee",
@@ -133,12 +133,12 @@
     },
     {
       "uid": "01KPJFJX5CM73RW7GC6A1B36FZ",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1536,
       "height": 2048,
       "published": {
-        "key": "moments/2026/04/19-02-mo-ming-tan-le-liang-ge-shi-he-lu-ying/mo-ming-tan-le-liang-ge-shi-he-lu-ying-4.jpg",
+        "key": "moments/01kpjfjx588ete6vz114p5j22q/01kpjfjx5cm73rw7gc6a1b36fz.jpg",
         "contentType": "image/jpeg",
         "bytes": 314851,
         "etag": "46c2a1bc41993e73a21bf8bfb859b320",
@@ -146,7 +146,7 @@
         "height": 2048,
         "variants": [
           {
-            "key": "moments/2026/04/19-02-mo-ming-tan-le-liang-ge-shi-he-lu-ying/mo-ming-tan-le-liang-ge-shi-he-lu-ying-4-480w.webp",
+            "key": "moments/01kpjfjx588ete6vz114p5j22q/01kpjfjx5cm73rw7gc6a1b36fz-480w.webp",
             "contentType": "image/webp",
             "bytes": 25136,
             "etag": "d3b5a2f058202b93f6fe4dd9a8a7868e",
@@ -154,7 +154,7 @@
             "height": 640
           },
           {
-            "key": "moments/2026/04/19-02-mo-ming-tan-le-liang-ge-shi-he-lu-ying/mo-ming-tan-le-liang-ge-shi-he-lu-ying-4-960w.webp",
+            "key": "moments/01kpjfjx588ete6vz114p5j22q/01kpjfjx5cm73rw7gc6a1b36fz-960w.webp",
             "contentType": "image/webp",
             "bytes": 78176,
             "etag": "e4778d3feb90cb02c8576ab9d6f69cc9",
@@ -165,10 +165,8 @@
       }
     }
   ],
+  "order": 2,
   "published": {
-    "id": "2026/04/19-02-mo-ming-tan-le-liang-ge-shi-he-lu-ying",
-    "slug": "mo-ming-tan-le-liang-ge-shi-he-lu-ying",
-    "order": 2,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-04-19T17:01:45+08:00",

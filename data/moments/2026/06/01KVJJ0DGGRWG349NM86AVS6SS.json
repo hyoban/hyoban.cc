@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01KVJJ0DGH6M47J2WNVV3VEV4S",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1440,
       "height": 1080,
       "published": {
-        "key": "moments/2026/06/20-03-zai-lao-jun-shan-chi-shen-me/zai-lao-jun-shan-chi-shen-me.webp",
+        "key": "moments/01kvjj0dggrwg349nm86avs6ss/01kvjj0dgh6m47j2wnvv3vev4s.webp",
         "contentType": "image/webp",
         "bytes": 305584,
         "etag": "51a7a1daaf34351a059d696990262f1f",
@@ -21,7 +21,7 @@
         "height": 1080,
         "variants": [
           {
-            "key": "moments/2026/06/20-03-zai-lao-jun-shan-chi-shen-me/zai-lao-jun-shan-chi-shen-me-480w.webp",
+            "key": "moments/01kvjj0dggrwg349nm86avs6ss/01kvjj0dgh6m47j2wnvv3vev4s-480w.webp",
             "contentType": "image/webp",
             "bytes": 40972,
             "etag": "c4971e9e6477c1930bb97ca89bf22a0f",
@@ -29,7 +29,7 @@
             "height": 360
           },
           {
-            "key": "moments/2026/06/20-03-zai-lao-jun-shan-chi-shen-me/zai-lao-jun-shan-chi-shen-me-960w.webp",
+            "key": "moments/01kvjj0dggrwg349nm86avs6ss/01kvjj0dgh6m47j2wnvv3vev4s-960w.webp",
             "contentType": "image/webp",
             "bytes": 114136,
             "etag": "9df30c6abc2a2abde0c69a80a845c5e4",
@@ -41,12 +41,12 @@
     },
     {
       "uid": "01KVJJ0DGJDWBANNTJMWGD898V",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1440,
       "height": 1080,
       "published": {
-        "key": "moments/2026/06/20-03-zai-lao-jun-shan-chi-shen-me/zai-lao-jun-shan-chi-shen-me-2.webp",
+        "key": "moments/01kvjj0dggrwg349nm86avs6ss/01kvjj0dgjdwbanntjmwgd898v.webp",
         "contentType": "image/webp",
         "bytes": 211572,
         "etag": "9100a92f7bf82d751e47d0a964522dde",
@@ -54,7 +54,7 @@
         "height": 1080,
         "variants": [
           {
-            "key": "moments/2026/06/20-03-zai-lao-jun-shan-chi-shen-me/zai-lao-jun-shan-chi-shen-me-2-480w.webp",
+            "key": "moments/01kvjj0dggrwg349nm86avs6ss/01kvjj0dgjdwbanntjmwgd898v-480w.webp",
             "contentType": "image/webp",
             "bytes": 29430,
             "etag": "2dacf6bf69afd18271c3c1c196d31845",
@@ -62,7 +62,7 @@
             "height": 360
           },
           {
-            "key": "moments/2026/06/20-03-zai-lao-jun-shan-chi-shen-me/zai-lao-jun-shan-chi-shen-me-2-960w.webp",
+            "key": "moments/01kvjj0dggrwg349nm86avs6ss/01kvjj0dgjdwbanntjmwgd898v-960w.webp",
             "contentType": "image/webp",
             "bytes": 79812,
             "etag": "0f1c714f9d436479e8419ab6b26d0ac7",
@@ -74,12 +74,12 @@
     },
     {
       "uid": "01KVJJ0DGKFQXQYYHRZ3K61ES3",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1440,
       "height": 1080,
       "published": {
-        "key": "moments/2026/06/20-03-zai-lao-jun-shan-chi-shen-me/zai-lao-jun-shan-chi-shen-me-3.webp",
+        "key": "moments/01kvjj0dggrwg349nm86avs6ss/01kvjj0dgkfqxqyyhrz3k61es3.webp",
         "contentType": "image/webp",
         "bytes": 383134,
         "etag": "2c3f4aa785b1dea02c535765e3b755cc",
@@ -87,7 +87,7 @@
         "height": 1080,
         "variants": [
           {
-            "key": "moments/2026/06/20-03-zai-lao-jun-shan-chi-shen-me/zai-lao-jun-shan-chi-shen-me-3-480w.webp",
+            "key": "moments/01kvjj0dggrwg349nm86avs6ss/01kvjj0dgkfqxqyyhrz3k61es3-480w.webp",
             "contentType": "image/webp",
             "bytes": 46440,
             "etag": "191805d850ec073d5467634fa76dd74e",
@@ -95,7 +95,7 @@
             "height": 360
           },
           {
-            "key": "moments/2026/06/20-03-zai-lao-jun-shan-chi-shen-me/zai-lao-jun-shan-chi-shen-me-3-960w.webp",
+            "key": "moments/01kvjj0dggrwg349nm86avs6ss/01kvjj0dgkfqxqyyhrz3k61es3-960w.webp",
             "contentType": "image/webp",
             "bytes": 136366,
             "etag": "a8834e5fa3179fe0c55859c7b875606d",
@@ -106,10 +106,8 @@
       }
     }
   ],
+  "order": 3,
   "published": {
-    "id": "2026/06/20-03-zai-lao-jun-shan-chi-shen-me",
-    "slug": "zai-lao-jun-shan-chi-shen-me",
-    "order": 3,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-06-20T21:02:34+08:00",

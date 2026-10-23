@@ -8,17 +8,17 @@
   "media": [
     {
       "uid": "01J2NH1SPH57RZ3SEZ25JSYMVZ",
-      "type": "video",
       "alt": "",
+      "type": "video",
       "width": 800,
       "height": 466,
       "published": {
-        "key": "moments/2024/07/13-01-you-can-now-check-if-your-local-dependency-versions-are/you-can-now-check-if-your-local-dependency-versions-are-video.mp4",
+        "key": "moments/01j2nh1spgyvsdjxjybh6fym1j/01j2nh1sph57rz3sez25jsymvz.mp4",
         "contentType": "video/mp4",
         "bytes": 213422,
         "etag": "693e227b77f55793bfe0b1d99a566c34",
         "poster": {
-          "key": "moments/2024/07/13-01-you-can-now-check-if-your-local-dependency-versions-are/you-can-now-check-if-your-local-dependency-versions-are-video-poster.png",
+          "key": "moments/01j2nh1spgyvsdjxjybh6fym1j/01j2nh1sph57rz3sez25jsymvz-poster.png",
           "contentType": "image/png",
           "bytes": 236767,
           "etag": "c68daa9923182154c2fa3ea80555c8c0",
@@ -29,10 +29,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2024/07/13-01-you-can-now-check-if-your-local-dependency-versions-are",
-    "slug": "you-can-now-check-if-your-local-dependency-versions-are",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2024-07-13T15:48:50+08:00",

@@ -6,10 +6,8 @@
   "hidden": false,
   "topic": "tech",
   "media": [],
+  "order": 1,
   "published": {
-    "id": "2024/08/10-01-if-you-upgrade-to-eslint-9-9-0-and-want",
-    "slug": "if-you-upgrade-to-eslint-9-9-0-and-want",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2024-08-10T16:42:27+08:00",

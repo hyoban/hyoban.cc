@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01HXR1R2M94NBCZ9GF55FYZ4A0",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 944,
       "height": 2048,
       "published": {
-        "key": "moments/2024/05/13-01-wo-de-ocbc-zhong-yu-ke-yi-yong-le-wo/wo-de-ocbc-zhong-yu-ke-yi-yong-le-wo.jpg",
+        "key": "moments/01hxr1r2m846k4zghp5wf8zefk/01hxr1r2m94nbcz9gf55fyz4a0.jpg",
         "contentType": "image/jpeg",
         "bytes": 74132,
         "etag": "13a60f89f9501ca0f6fdd7fa1ef5eb00",
@@ -21,7 +21,7 @@
         "height": 2048,
         "variants": [
           {
-            "key": "moments/2024/05/13-01-wo-de-ocbc-zhong-yu-ke-yi-yong-le-wo/wo-de-ocbc-zhong-yu-ke-yi-yong-le-wo-480w.webp",
+            "key": "moments/01hxr1r2m846k4zghp5wf8zefk/01hxr1r2m94nbcz9gf55fyz4a0-480w.webp",
             "contentType": "image/webp",
             "bytes": 14164,
             "etag": "e90058885cd7c4c632831b77235d62ab",
@@ -32,10 +32,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2024/05/13-01-wo-de-ocbc-zhong-yu-ke-yi-yong-le-wo",
-    "slug": "wo-de-ocbc-zhong-yu-ke-yi-yong-le-wo",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2024-05-13T12:00:37+08:00",

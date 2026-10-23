@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01KEPKCQF1W2HSXMXB15M9ATYR",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1179,
       "height": 636,
       "published": {
-        "key": "moments/2026/01/11-02-ji-ke-de-hui-yuan-yi-qi-san-bai-du/ji-ke-de-hui-yuan-yi-qi-san-bai-du.jpg",
+        "key": "moments/01kepkcqf0n5n0g1z1pam55znf/01kepkcqf1w2hsxmxb15m9atyr.jpg",
         "contentType": "image/jpeg",
         "bytes": 48902,
         "etag": "39d2904aa352e7e5d9e19ae1a912ce09",
@@ -21,7 +21,7 @@
         "height": 636,
         "variants": [
           {
-            "key": "moments/2026/01/11-02-ji-ke-de-hui-yuan-yi-qi-san-bai-du/ji-ke-de-hui-yuan-yi-qi-san-bai-du-480w.webp",
+            "key": "moments/01kepkcqf0n5n0g1z1pam55znf/01kepkcqf1w2hsxmxb15m9atyr-480w.webp",
             "contentType": "image/webp",
             "bytes": 8542,
             "etag": "c8a01ede396e20e90e0dfa760e9f856b",
@@ -29,7 +29,7 @@
             "height": 259
           },
           {
-            "key": "moments/2026/01/11-02-ji-ke-de-hui-yuan-yi-qi-san-bai-du/ji-ke-de-hui-yuan-yi-qi-san-bai-du-960w.webp",
+            "key": "moments/01kepkcqf0n5n0g1z1pam55znf/01kepkcqf1w2hsxmxb15m9atyr-960w.webp",
             "contentType": "image/webp",
             "bytes": 19624,
             "etag": "befc0ba16270167b9e3f2ad6b3ec8caa",
@@ -40,10 +40,8 @@
       }
     }
   ],
+  "order": 2,
   "published": {
-    "id": "2026/01/11-02-ji-ke-de-hui-yuan-yi-qi-san-bai-du",
-    "slug": "ji-ke-de-hui-yuan-yi-qi-san-bai-du",
-    "order": 2,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-01-11T21:19:40+08:00",

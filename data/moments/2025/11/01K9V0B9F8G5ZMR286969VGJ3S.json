@@ -10,12 +10,12 @@
   "media": [
     {
       "uid": "01K9V0B9F96NPWZD9C3DMDCKM0",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1440,
       "height": 1080,
       "published": {
-        "key": "moments/2025/11/12-01-mai-le-ge-dian-dong-die-you-gua-di-pan/mai-le-ge-dian-dong-die-you-gua-di-pan.webp",
+        "key": "moments/01k9v0b9f8g5zmr286969vgj3s/01k9v0b9f96npwzd9c3dmdckm0.webp",
         "contentType": "image/webp",
         "bytes": 78366,
         "etag": "add74e8616ac951c5e9be6c80fa29362",
@@ -23,7 +23,7 @@
         "height": 1080,
         "variants": [
           {
-            "key": "moments/2025/11/12-01-mai-le-ge-dian-dong-die-you-gua-di-pan/mai-le-ge-dian-dong-die-you-gua-di-pan-480w.webp",
+            "key": "moments/01k9v0b9f8g5zmr286969vgj3s/01k9v0b9f96npwzd9c3dmdckm0-480w.webp",
             "contentType": "image/webp",
             "bytes": 10668,
             "etag": "fd25c110d119dd9dfdba8a996240ef8c",
@@ -31,7 +31,7 @@
             "height": 360
           },
           {
-            "key": "moments/2025/11/12-01-mai-le-ge-dian-dong-die-you-gua-di-pan/mai-le-ge-dian-dong-die-you-gua-di-pan-960w.webp",
+            "key": "moments/01k9v0b9f8g5zmr286969vgj3s/01k9v0b9f96npwzd9c3dmdckm0-960w.webp",
             "contentType": "image/webp",
             "bytes": 28480,
             "etag": "57e95725ab8924709728fb8bce668fbe",
@@ -43,12 +43,12 @@
     },
     {
       "uid": "01K9V0B9FAM9EDD12BRBSSX3GV",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1440,
       "height": 1080,
       "published": {
-        "key": "moments/2025/11/12-01-mai-le-ge-dian-dong-die-you-gua-di-pan/mai-le-ge-dian-dong-die-you-gua-di-pan-2.webp",
+        "key": "moments/01k9v0b9f8g5zmr286969vgj3s/01k9v0b9fam9edd12brbssx3gv.webp",
         "contentType": "image/webp",
         "bytes": 75034,
         "etag": "2ac03278ca14f18d916b059eeb7a9016",
@@ -56,7 +56,7 @@
         "height": 1080,
         "variants": [
           {
-            "key": "moments/2025/11/12-01-mai-le-ge-dian-dong-die-you-gua-di-pan/mai-le-ge-dian-dong-die-you-gua-di-pan-2-480w.webp",
+            "key": "moments/01k9v0b9f8g5zmr286969vgj3s/01k9v0b9fam9edd12brbssx3gv-480w.webp",
             "contentType": "image/webp",
             "bytes": 13760,
             "etag": "aaebd952030ba838e20745f70ecf91c3",
@@ -64,7 +64,7 @@
             "height": 360
           },
           {
-            "key": "moments/2025/11/12-01-mai-le-ge-dian-dong-die-you-gua-di-pan/mai-le-ge-dian-dong-die-you-gua-di-pan-2-960w.webp",
+            "key": "moments/01k9v0b9f8g5zmr286969vgj3s/01k9v0b9fam9edd12brbssx3gv-960w.webp",
             "contentType": "image/webp",
             "bytes": 32290,
             "etag": "591d299f5c68d0937c76f8f1bde83ef0",
@@ -76,12 +76,12 @@
     },
     {
       "uid": "01K9V0B9FBBZCFG3BZKQBKXA89",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1440,
       "height": 1080,
       "published": {
-        "key": "moments/2025/11/12-01-mai-le-ge-dian-dong-die-you-gua-di-pan/mai-le-ge-dian-dong-die-you-gua-di-pan-3.webp",
+        "key": "moments/01k9v0b9f8g5zmr286969vgj3s/01k9v0b9fbbzcfg3bzkqbkxa89.webp",
         "contentType": "image/webp",
         "bytes": 89154,
         "etag": "29315d0d0586fbcf0f7e1d56a3e527aa",
@@ -89,7 +89,7 @@
         "height": 1080,
         "variants": [
           {
-            "key": "moments/2025/11/12-01-mai-le-ge-dian-dong-die-you-gua-di-pan/mai-le-ge-dian-dong-die-you-gua-di-pan-3-480w.webp",
+            "key": "moments/01k9v0b9f8g5zmr286969vgj3s/01k9v0b9fbbzcfg3bzkqbkxa89-480w.webp",
             "contentType": "image/webp",
             "bytes": 13154,
             "etag": "d3c321d05ca406f3a801927f2cd86d2e",
@@ -97,7 +97,7 @@
             "height": 360
           },
           {
-            "key": "moments/2025/11/12-01-mai-le-ge-dian-dong-die-you-gua-di-pan/mai-le-ge-dian-dong-die-you-gua-di-pan-3-960w.webp",
+            "key": "moments/01k9v0b9f8g5zmr286969vgj3s/01k9v0b9fbbzcfg3bzkqbkxa89-960w.webp",
             "contentType": "image/webp",
             "bytes": 33936,
             "etag": "24fca33246749c0927885ab15db64822",
@@ -109,12 +109,12 @@
     },
     {
       "uid": "01K9V0B9FCBVHTMP7QKQ6HDAQ3",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1080,
       "height": 1920,
       "published": {
-        "key": "moments/2025/11/12-01-mai-le-ge-dian-dong-die-you-gua-di-pan/mai-le-ge-dian-dong-die-you-gua-di-pan-4.webp",
+        "key": "moments/01k9v0b9f8g5zmr286969vgj3s/01k9v0b9fcbvhtmp7qkq6hdaq3.webp",
         "contentType": "image/webp",
         "bytes": 274730,
         "etag": "3e60d88236698b35f96eeed130e0b45b",
@@ -122,7 +122,7 @@
         "height": 1920,
         "variants": [
           {
-            "key": "moments/2025/11/12-01-mai-le-ge-dian-dong-die-you-gua-di-pan/mai-le-ge-dian-dong-die-you-gua-di-pan-4-480w.webp",
+            "key": "moments/01k9v0b9f8g5zmr286969vgj3s/01k9v0b9fcbvhtmp7qkq6hdaq3-480w.webp",
             "contentType": "image/webp",
             "bytes": 70070,
             "etag": "fd230a0fa0f6625c6bca086c3d1e772b",
@@ -130,7 +130,7 @@
             "height": 853
           },
           {
-            "key": "moments/2025/11/12-01-mai-le-ge-dian-dong-die-you-gua-di-pan/mai-le-ge-dian-dong-die-you-gua-di-pan-4-960w.webp",
+            "key": "moments/01k9v0b9f8g5zmr286969vgj3s/01k9v0b9fcbvhtmp7qkq6hdaq3-960w.webp",
             "contentType": "image/webp",
             "bytes": 210464,
             "etag": "da431803e0ab8ef9fb0cd1301de4895e",
@@ -141,10 +141,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2025/11/12-01-mai-le-ge-dian-dong-die-you-gua-di-pan",
-    "slug": "mai-le-ge-dian-dong-die-you-gua-di-pan",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2025-11-12T11:04:33+08:00",

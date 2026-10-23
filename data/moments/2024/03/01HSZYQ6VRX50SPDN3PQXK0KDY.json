@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01HSZYQ6VSZ4BKRHH16187WTCY",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1432,
       "height": 1018,
       "published": {
-        "key": "moments/2024/03/27-01-this-is-super-useful-i-include-this-in-my-personal/this-is-super-useful-i-include-this-in-my-personal.jpg",
+        "key": "moments/01hszyq6vrx50spdn3pqxk0kdy/01hszyq6vsz4bkrhh16187wtcy.jpg",
         "contentType": "image/jpeg",
         "bytes": 145809,
         "etag": "10b9ed7f63ca068bf523087259eec6f6",
@@ -21,7 +21,7 @@
         "height": 1018,
         "variants": [
           {
-            "key": "moments/2024/03/27-01-this-is-super-useful-i-include-this-in-my-personal/this-is-super-useful-i-include-this-in-my-personal-480w.webp",
+            "key": "moments/01hszyq6vrx50spdn3pqxk0kdy/01hszyq6vsz4bkrhh16187wtcy-480w.webp",
             "contentType": "image/webp",
             "bytes": 20440,
             "etag": "3f35aa9223692f29fb14abade9642bdd",
@@ -29,7 +29,7 @@
             "height": 341
           },
           {
-            "key": "moments/2024/03/27-01-this-is-super-useful-i-include-this-in-my-personal/this-is-super-useful-i-include-this-in-my-personal-960w.webp",
+            "key": "moments/01hszyq6vrx50spdn3pqxk0kdy/01hszyq6vsz4bkrhh16187wtcy-960w.webp",
             "contentType": "image/webp",
             "bytes": 47928,
             "etag": "58672414889da982416eb801b28f89d9",
@@ -40,10 +40,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2024/03/27-01-this-is-super-useful-i-include-this-in-my-personal",
-    "slug": "this-is-super-useful-i-include-this-in-my-personal",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2024-03-27T20:38:51+08:00",

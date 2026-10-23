@@ -15,7 +15,7 @@
       "width": 2560,
       "height": 1707,
       "published": {
-        "key": "moments/2026/06/20-05-laojunshan/laojunshan.jpg",
+        "key": "moments/01m5mc7845689qfge5q5836t72/01kvg9rk0334ane8cxbxmrbd1t.jpg",
         "contentType": "image/jpeg",
         "bytes": 282713,
         "etag": "16813391c13769bdddadaf7bdc098bda",
@@ -32,7 +32,7 @@
       "width": 2560,
       "height": 1707,
       "published": {
-        "key": "moments/2026/06/20-05-laojunshan/laojunshan-2.jpg",
+        "key": "moments/01m5mc7845689qfge5q5836t72/01kvg9rk04n4d5av5z572hevr3.jpg",
         "contentType": "image/jpeg",
         "bytes": 780564,
         "etag": "3c10a99edad50f131c4c57d3b230be5e",
@@ -49,7 +49,7 @@
       "width": 1707,
       "height": 2560,
       "published": {
-        "key": "moments/2026/06/20-05-laojunshan/laojunshan-3.jpg",
+        "key": "moments/01m5mc7845689qfge5q5836t72/01kvg9rk05p1wfynvwf8vj7646.jpg",
         "contentType": "image/jpeg",
         "bytes": 209860,
         "etag": "705b0eaeaa3d9dd61dd1d70bc5d3ef2c",
@@ -66,7 +66,7 @@
       "width": 2560,
       "height": 1707,
       "published": {
-        "key": "moments/2026/06/20-05-laojunshan/laojunshan-4.jpg",
+        "key": "moments/01m5mc7845689qfge5q5836t72/01kvg9rk06xjedwh4ygbwtgdrx.jpg",
         "contentType": "image/jpeg",
         "bytes": 566668,
         "etag": "62fd2210b795601c9a51d483dc2e80e0",
@@ -83,7 +83,7 @@
       "width": 2560,
       "height": 1707,
       "published": {
-        "key": "moments/2026/06/20-05-laojunshan/laojunshan-5.jpg",
+        "key": "moments/01m5mc7845689qfge5q5836t72/01kvg9rk07vfdx826h1ps0bjff.jpg",
         "contentType": "image/jpeg",
         "bytes": 464228,
         "etag": "dc780ac784bbf6d56f86aa48cef43064",
@@ -100,7 +100,7 @@
       "width": 2560,
       "height": 1707,
       "published": {
-        "key": "moments/2026/06/20-05-laojunshan/laojunshan-6.jpg",
+        "key": "moments/01m5mc7845689qfge5q5836t72/01kvg9rk08y0e1e9fz2h5eg2hy.jpg",
         "contentType": "image/jpeg",
         "bytes": 357185,
         "etag": "b990201378610cbc49c7a2e0325229d7",
@@ -111,10 +111,8 @@
       }
     }
   ],
+  "order": 5,
   "published": {
-    "id": "2026/06/20-05-laojunshan",
-    "slug": "laojunshan",
-    "order": 5,
     "at": "2026-10-23T12:40:21Z"
   },
   "createdAt": "2026-10-23T12:36:53Z",

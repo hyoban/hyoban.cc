@@ -6,10 +6,8 @@
   "hidden": false,
   "topic": "tech",
   "media": [],
+  "order": 1,
   "published": {
-    "id": "2025/03/24-01-github-action-mo-ren-shi-bu-rang-wai-bu-de",
-    "slug": "github-action-mo-ren-shi-bu-rang-wai-bu-de",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2025-03-24T11:40:18+08:00",

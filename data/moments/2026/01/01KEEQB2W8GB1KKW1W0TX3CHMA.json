@@ -10,12 +10,12 @@
   "media": [
     {
       "uid": "01KEEQB2W9AJV4S1X4Y43XRW9D",
-      "type": "image",
       "alt": "A hand pointing into the open compartment of a delivery robot.",
+      "type": "image",
       "width": 640,
       "height": 853,
       "published": {
-        "key": "moments/2026/01/08-01-te-di-xia-le-yi-dan-rang-ji-qi-ren/te-di-xia-le-yi-dan-rang-ji-qi-ren.jpg",
+        "key": "moments/01keeqb2w8gb1kkw1w0tx3chma/01keeqb2w9ajv4s1x4y43xrw9d.jpg",
         "contentType": "image/jpeg",
         "bytes": 53618,
         "etag": "8923ef172329c3de6800696517d0e26a",
@@ -23,7 +23,7 @@
         "height": 853,
         "variants": [
           {
-            "key": "moments/2026/01/08-01-te-di-xia-le-yi-dan-rang-ji-qi-ren/te-di-xia-le-yi-dan-rang-ji-qi-ren-480w.webp",
+            "key": "moments/01keeqb2w8gb1kkw1w0tx3chma/01keeqb2w9ajv4s1x4y43xrw9d-480w.webp",
             "contentType": "image/webp",
             "bytes": 16050,
             "etag": "808b8c905660d0b52b876877aa1a124d",
@@ -34,10 +34,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2026/01/08-01-te-di-xia-le-yi-dan-rang-ji-qi-ren",
-    "slug": "te-di-xia-le-yi-dan-rang-ji-qi-ren",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-01-08T19:54:45+08:00",

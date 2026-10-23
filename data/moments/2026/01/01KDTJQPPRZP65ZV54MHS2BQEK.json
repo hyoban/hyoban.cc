@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01KDTJQPPSJS9N5R0TKF6H4H41",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 212,
       "height": 238,
       "published": {
-        "key": "moments/2026/01/01-01-da-jia-xin-nian-hao/da-jia-xin-nian-hao.png",
+        "key": "moments/01kdtjqpprzp65zv54mhs2bqek/01kdtjqppsjs9n5r0tkf6h4h41.png",
         "contentType": "image/png",
         "bytes": 73504,
         "etag": "d7a4d0a9b5fd4bba5760372d8dc9dfb6",
@@ -23,10 +23,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2026/01/01-01-da-jia-xin-nian-hao",
-    "slug": "da-jia-xin-nian-hao",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-01-01T00:09:27+08:00",

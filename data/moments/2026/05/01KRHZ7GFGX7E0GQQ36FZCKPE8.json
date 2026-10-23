@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01KRHZ7GFHY2NVJPQDTRXA3X7C",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1179,
       "height": 436,
       "published": {
-        "key": "moments/2026/05/14-01-mai-le-liang-zhe-die-zi-xing-che-ke-yi/mai-le-liang-zhe-die-zi-xing-che-ke-yi.jpg",
+        "key": "moments/01krhz7gfgx7e0gqq36fzckpe8/01krhz7gfhy2nvjpqdtrxa3x7c.jpg",
         "contentType": "image/jpeg",
         "bytes": 42064,
         "etag": "29f5eaee6c6cd472da2505bfb3a0c659",
@@ -21,7 +21,7 @@
         "height": 436,
         "variants": [
           {
-            "key": "moments/2026/05/14-01-mai-le-liang-zhe-die-zi-xing-che-ke-yi/mai-le-liang-zhe-die-zi-xing-che-ke-yi-480w.webp",
+            "key": "moments/01krhz7gfgx7e0gqq36fzckpe8/01krhz7gfhy2nvjpqdtrxa3x7c-480w.webp",
             "contentType": "image/webp",
             "bytes": 9762,
             "etag": "74c136d0a22c4ecc197c47a2305ae9fa",
@@ -29,7 +29,7 @@
             "height": 178
           },
           {
-            "key": "moments/2026/05/14-01-mai-le-liang-zhe-die-zi-xing-che-ke-yi/mai-le-liang-zhe-die-zi-xing-che-ke-yi-960w.webp",
+            "key": "moments/01krhz7gfgx7e0gqq36fzckpe8/01krhz7gfhy2nvjpqdtrxa3x7c-960w.webp",
             "contentType": "image/webp",
             "bytes": 22972,
             "etag": "aeb5fb60f30dd5f4376047dfa74342ae",
@@ -40,10 +40,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2026/05/14-01-mai-le-liang-zhe-die-zi-xing-che-ke-yi",
-    "slug": "mai-le-liang-zhe-die-zi-xing-che-ke-yi",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-05-14T08:47:18+08:00",

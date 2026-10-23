@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01KDSX5JQ9SPJSW8RV0GABDJNW",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 662,
       "height": 4096,
       "published": {
-        "key": "moments/2025/12/31-02-nian-zhong-zong-jie-kan-shuang-le-you-nian-zhong/nian-zhong-zong-jie-kan-shuang-le-you-nian-zhong.jpg",
+        "key": "moments/01kdsx5jq8nak7r0e5zsa3q1m1/01kdsx5jq9spjsw8rv0gabdjnw.jpg",
         "contentType": "image/jpeg",
         "bytes": 411680,
         "etag": "853e37fbfbd47c9160058e0195b8fc25",
@@ -21,7 +21,7 @@
         "height": 4096,
         "variants": [
           {
-            "key": "moments/2025/12/31-02-nian-zhong-zong-jie-kan-shuang-le-you-nian-zhong/nian-zhong-zong-jie-kan-shuang-le-you-nian-zhong-480w.webp",
+            "key": "moments/01kdsx5jq8nak7r0e5zsa3q1m1/01kdsx5jq9spjsw8rv0gabdjnw-480w.webp",
             "contentType": "image/webp",
             "bytes": 167928,
             "etag": "273b00b4f1cdf0bc0e43e675959426e3",
@@ -32,10 +32,8 @@
       }
     }
   ],
+  "order": 2,
   "published": {
-    "id": "2025/12/31-02-nian-zhong-zong-jie-kan-shuang-le-you-nian-zhong",
-    "slug": "nian-zhong-zong-jie-kan-shuang-le-you-nian-zhong",
-    "order": 2,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2025-12-31T17:52:33+08:00",

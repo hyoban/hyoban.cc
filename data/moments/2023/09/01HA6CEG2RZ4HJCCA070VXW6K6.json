@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01HA6CEG2SFVWR40DSSH6P8TH3",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 945,
       "height": 2048,
       "published": {
-        "key": "moments/2023/09/13-01-nu-mai-yi-ge-typec-de-er-ji-xi-wang/nu-mai-yi-ge-typec-de-er-ji-xi-wang.jpg",
+        "key": "moments/01ha6ceg2rz4hjcca070vxw6k6/01ha6ceg2sfvwr40dssh6p8th3.jpg",
         "contentType": "image/jpeg",
         "bytes": 108732,
         "etag": "d979229eee5bbd47dbf5000c04fa5d60",
@@ -21,7 +21,7 @@
         "height": 2048,
         "variants": [
           {
-            "key": "moments/2023/09/13-01-nu-mai-yi-ge-typec-de-er-ji-xi-wang/nu-mai-yi-ge-typec-de-er-ji-xi-wang-480w.webp",
+            "key": "moments/01ha6ceg2rz4hjcca070vxw6k6/01ha6ceg2sfvwr40dssh6p8th3-480w.webp",
             "contentType": "image/webp",
             "bytes": 24490,
             "etag": "e77add65cbd900935188d03845bbb576",
@@ -32,10 +32,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2023/09/13-01-nu-mai-yi-ge-typec-de-er-ji-xi-wang",
-    "slug": "nu-mai-yi-ge-typec-de-er-ji-xi-wang",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2023-09-13T12:23:03+08:00",

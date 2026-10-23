@@ -8,17 +8,17 @@
   "media": [
     {
       "uid": "01J2FDR9AHCTK2MV7CRF9Z9TF1",
-      "type": "video",
       "alt": "",
+      "type": "video",
       "width": 1200,
       "height": 655,
       "published": {
-        "key": "moments/2024/07/11-02-ni-ke-neng-hui-shuo-zhe-ge-ding-yue-hui/ni-ke-neng-hui-shuo-zhe-ge-ding-yue-hui-video.mp4",
+        "key": "moments/01j2fdr9agrvkn7nt14fmwzxp8/01j2fdr9ahctk2mv7crf9z9tf1.mp4",
         "contentType": "video/mp4",
         "bytes": 631032,
         "etag": "c3551ee7ca2912461cf3ad09e9a95e4b",
         "poster": {
-          "key": "moments/2024/07/11-02-ni-ke-neng-hui-shuo-zhe-ge-ding-yue-hui/ni-ke-neng-hui-shuo-zhe-ge-ding-yue-hui-video-poster.png",
+          "key": "moments/01j2fdr9agrvkn7nt14fmwzxp8/01j2fdr9ahctk2mv7crf9z9tf1-poster.png",
           "contentType": "image/png",
           "bytes": 221449,
           "etag": "40b3da1face341878798c4c2fd10faaf",
@@ -29,10 +29,8 @@
       }
     }
   ],
+  "order": 2,
   "published": {
-    "id": "2024/07/11-02-ni-ke-neng-hui-shuo-zhe-ge-ding-yue-hui",
-    "slug": "ni-ke-neng-hui-shuo-zhe-ge-ding-yue-hui",
-    "order": 2,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2024-07-11T06:55:46+08:00",

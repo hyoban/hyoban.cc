@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01H287DGEHX8T9Z79XQFJC7K5C",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1284,
       "height": 638,
       "published": {
-        "key": "moments/2023/06/06-03-yao-jie-jue-ye-hen-jian-dan-jiu-shi-xiu/yao-jie-jue-ye-hen-jian-dan-jiu-shi-xiu.jpg",
+        "key": "moments/01h287dgeg1jrha3m519j0176k/01h287dgehx8t9z79xqfjc7k5c.jpg",
         "contentType": "image/jpeg",
         "bytes": 75628,
         "etag": "5ebe81cfff0a0e395d3645fd2ff4e83e",
@@ -21,7 +21,7 @@
         "height": 638,
         "variants": [
           {
-            "key": "moments/2023/06/06-03-yao-jie-jue-ye-hen-jian-dan-jiu-shi-xiu/yao-jie-jue-ye-hen-jian-dan-jiu-shi-xiu-480w.webp",
+            "key": "moments/01h287dgeg1jrha3m519j0176k/01h287dgehx8t9z79xqfjc7k5c-480w.webp",
             "contentType": "image/webp",
             "bytes": 10472,
             "etag": "b6efb8ddee874d0084dd2414a31f172e",
@@ -29,7 +29,7 @@
             "height": 239
           },
           {
-            "key": "moments/2023/06/06-03-yao-jie-jue-ye-hen-jian-dan-jiu-shi-xiu/yao-jie-jue-ye-hen-jian-dan-jiu-shi-xiu-960w.webp",
+            "key": "moments/01h287dgeg1jrha3m519j0176k/01h287dgehx8t9z79xqfjc7k5c-960w.webp",
             "contentType": "image/webp",
             "bytes": 24620,
             "etag": "f18c125b1da7cb74b8a9b844a02c6101",
@@ -40,10 +40,8 @@
       }
     }
   ],
+  "order": 3,
   "published": {
-    "id": "2023/06/06-03-yao-jie-jue-ye-hen-jian-dan-jiu-shi-xiu",
-    "slug": "yao-jie-jue-ye-hen-jian-dan-jiu-shi-xiu",
-    "order": 3,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2023-06-06T19:28:02+08:00",

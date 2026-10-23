@@ -6,10 +6,8 @@
   "hidden": false,
   "topic": "tech",
   "media": [],
+  "order": 1,
   "published": {
-    "id": "2025/03/31-01-xcode-de-derived-data-hui-bu-duan-lei-ji-suo",
-    "slug": "xcode-de-derived-data-hui-bu-duan-lei-ji-suo",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2025-03-31T10:58:28+08:00",

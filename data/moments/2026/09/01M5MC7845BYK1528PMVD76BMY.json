@@ -15,7 +15,7 @@
       "width": 1920,
       "height": 1440,
       "published": {
-        "key": "moments/2026/09/05-01-wuhu-intime-inpark/wuhu-intime-inpark.webp",
+        "key": "moments/01m5mc7845byk1528pmvd76bmy/01m1vjkynswergg688a3jmagez.webp",
         "contentType": "image/webp",
         "bytes": 234526,
         "etag": "4eb8f43c61a992b70bffda0d715bcc81",
@@ -32,7 +32,7 @@
       "width": 1920,
       "height": 1440,
       "published": {
-        "key": "moments/2026/09/05-01-wuhu-intime-inpark/wuhu-intime-inpark-2.webp",
+        "key": "moments/01m5mc7845byk1528pmvd76bmy/01m1vjkynt9ja6prbrkmeymptf.webp",
         "contentType": "image/webp",
         "bytes": 189382,
         "etag": "920dd0dda2cfecd7a0bf1e50c701b2b6",
@@ -49,10 +49,8 @@
     ],
     "verdict": "bad"
   },
+  "order": 1,
   "published": {
-    "id": "2026/09/05-01-wuhu-intime-inpark",
-    "slug": "wuhu-intime-inpark",
-    "order": 1,
     "at": "2026-10-23T12:40:21Z"
   },
   "createdAt": "2026-10-23T12:36:53Z",

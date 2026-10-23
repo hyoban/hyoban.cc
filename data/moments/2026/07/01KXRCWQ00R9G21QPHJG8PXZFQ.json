@@ -15,7 +15,7 @@
       "width": 1920,
       "height": 1280,
       "published": {
-        "key": "moments/2026/07/18-03-hefei-food/hefei-food.webp",
+        "key": "moments/01kxrcwq00r9g21qphjg8pxzfq/01kxrcwq01yvyat4gm2a3thpqv.webp",
         "contentType": "image/webp",
         "bytes": 259980,
         "etag": "246f371388cfbfb0c5620a355b270a4a",
@@ -23,7 +23,7 @@
         "height": 1280,
         "variants": [
           {
-            "key": "moments/2026/07/18-03-hefei-food/hefei-food-480w.webp",
+            "key": "moments/01kxrcwq00r9g21qphjg8pxzfq/01kxrcwq01yvyat4gm2a3thpqv-480w.webp",
             "contentType": "image/webp",
             "bytes": 34278,
             "etag": "fed90ff381072df7ae853fd4c6f5d7cd",
@@ -31,7 +31,7 @@
             "height": 320
           },
           {
-            "key": "moments/2026/07/18-03-hefei-food/hefei-food-960w.webp",
+            "key": "moments/01kxrcwq00r9g21qphjg8pxzfq/01kxrcwq01yvyat4gm2a3thpqv-960w.webp",
             "contentType": "image/webp",
             "bytes": 97410,
             "etag": "9f7d6974fc94b64256d525ca41a870a4",
@@ -48,7 +48,7 @@
       "width": 1920,
       "height": 1280,
       "published": {
-        "key": "moments/2026/07/18-03-hefei-food/hefei-food-2.webp",
+        "key": "moments/01kxrcwq00r9g21qphjg8pxzfq/01kxrcwq0267q4tajymdm11dkp.webp",
         "contentType": "image/webp",
         "bytes": 111250,
         "etag": "8166d3abc3305fe266eb9133fb561e31",
@@ -56,7 +56,7 @@
         "height": 1280,
         "variants": [
           {
-            "key": "moments/2026/07/18-03-hefei-food/hefei-food-2-480w.webp",
+            "key": "moments/01kxrcwq00r9g21qphjg8pxzfq/01kxrcwq0267q4tajymdm11dkp-480w.webp",
             "contentType": "image/webp",
             "bytes": 15878,
             "etag": "dade41e5869594d368aee9c03fb53404",
@@ -64,7 +64,7 @@
             "height": 320
           },
           {
-            "key": "moments/2026/07/18-03-hefei-food/hefei-food-2-960w.webp",
+            "key": "moments/01kxrcwq00r9g21qphjg8pxzfq/01kxrcwq0267q4tajymdm11dkp-960w.webp",
             "contentType": "image/webp",
             "bytes": 37930,
             "etag": "bd90b5e96a9373d5b6276d910a480e56",
@@ -81,7 +81,7 @@
       "width": 1920,
       "height": 1280,
       "published": {
-        "key": "moments/2026/07/18-03-hefei-food/hefei-food-3.webp",
+        "key": "moments/01kxrcwq00r9g21qphjg8pxzfq/01kxrcwq03bbpm7jvdgtpty8k4.webp",
         "contentType": "image/webp",
         "bytes": 146832,
         "etag": "753a9a0ef2140d5cd1296fb5987cc659",
@@ -89,7 +89,7 @@
         "height": 1280,
         "variants": [
           {
-            "key": "moments/2026/07/18-03-hefei-food/hefei-food-3-480w.webp",
+            "key": "moments/01kxrcwq00r9g21qphjg8pxzfq/01kxrcwq03bbpm7jvdgtpty8k4-480w.webp",
             "contentType": "image/webp",
             "bytes": 19442,
             "etag": "d26745bb44adb29f8d0b3fc74fad4fe4",
@@ -97,7 +97,7 @@
             "height": 320
           },
           {
-            "key": "moments/2026/07/18-03-hefei-food/hefei-food-3-960w.webp",
+            "key": "moments/01kxrcwq00r9g21qphjg8pxzfq/01kxrcwq03bbpm7jvdgtpty8k4-960w.webp",
             "contentType": "image/webp",
             "bytes": 48444,
             "etag": "80a06ed5b27cb19d256a39a1fc0612ad",
@@ -113,10 +113,8 @@
       "烧肉"
     ]
   },
+  "order": 3,
   "published": {
-    "id": "2026/07/18-03-hefei-food",
-    "slug": "hefei-food",
-    "order": 3,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-07-18T00:00:00+08:00",

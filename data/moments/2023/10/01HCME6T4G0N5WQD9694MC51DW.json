@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01HCME6T4HS4EP4G72RESPYG4C",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 2048,
       "height": 1152,
       "published": {
-        "key": "moments/2023/10/13-01-chi-yi-xia-mai-de-xin-pin/chi-yi-xia-mai-de-xin-pin.jpg",
+        "key": "moments/01hcme6t4g0n5wqd9694mc51dw/01hcme6t4hs4ep4g72respyg4c.jpg",
         "contentType": "image/jpeg",
         "bytes": 289852,
         "etag": "c5f67176b704a65b2ee657550a917526",
@@ -21,7 +21,7 @@
         "height": 1152,
         "variants": [
           {
-            "key": "moments/2023/10/13-01-chi-yi-xia-mai-de-xin-pin/chi-yi-xia-mai-de-xin-pin-480w.webp",
+            "key": "moments/01hcme6t4g0n5wqd9694mc51dw/01hcme6t4hs4ep4g72respyg4c-480w.webp",
             "contentType": "image/webp",
             "bytes": 17632,
             "etag": "049b68a2da030946295b5728499788f8",
@@ -29,7 +29,7 @@
             "height": 270
           },
           {
-            "key": "moments/2023/10/13-01-chi-yi-xia-mai-de-xin-pin/chi-yi-xia-mai-de-xin-pin-960w.webp",
+            "key": "moments/01hcme6t4g0n5wqd9694mc51dw/01hcme6t4hs4ep4g72respyg4c-960w.webp",
             "contentType": "image/webp",
             "bytes": 51160,
             "etag": "ce59284411ddfd50639be6d4e7975f8e",
@@ -37,7 +37,7 @@
             "height": 540
           },
           {
-            "key": "moments/2023/10/13-01-chi-yi-xia-mai-de-xin-pin/chi-yi-xia-mai-de-xin-pin-1920w.webp",
+            "key": "moments/01hcme6t4g0n5wqd9694mc51dw/01hcme6t4hs4ep4g72respyg4c-1920w.webp",
             "contentType": "image/webp",
             "bytes": 134142,
             "etag": "61ce9918ed1b67a7f6df18edffc5f1a4",
@@ -48,10 +48,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2023/10/13-01-chi-yi-xia-mai-de-xin-pin",
-    "slug": "chi-yi-xia-mai-de-xin-pin",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2023-10-13T19:54:34+08:00",

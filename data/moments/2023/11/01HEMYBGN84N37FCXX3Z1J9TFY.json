@@ -6,10 +6,8 @@
   "hidden": false,
   "topic": "tech",
   "media": [],
+  "order": 1,
   "published": {
-    "id": "2023/11/07-01-cong-he-vite-he-nitro-xie-yi-ge-react-de",
-    "slug": "cong-he-vite-he-nitro-xie-yi-ge-react-de",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2023-11-07T21:08:09+08:00",

@@ -13,7 +13,7 @@
       "width": 1260,
       "height": 2720,
       "published": {
-        "key": "moments/2026/10/16-01-moment/moment.jpg",
+        "key": "moments/01m5fqqmvpyd5whbafcjx2pgea/01m5fqqmts5c3ggvghtf1t31x4.jpg",
         "contentType": "image/jpeg",
         "bytes": 206846,
         "etag": "f7b3a11dd335f2ff2ec7955ba3b5ebe5",
@@ -24,10 +24,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2026/10/16-01-moment",
-    "slug": "moment",
-    "order": 1,
     "at": "2026-10-21T17:22:27Z"
   },
   "createdAt": "2026-10-22T01:21:52+08:00",

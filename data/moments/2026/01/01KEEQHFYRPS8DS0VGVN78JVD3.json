@@ -10,12 +10,12 @@
   "media": [
     {
       "uid": "01KEEQHFYS59V0PHZBVM4N0DD0",
-      "type": "image",
       "alt": "A delivery robot arriving at an apartment doorway.",
+      "type": "image",
       "width": 1536,
       "height": 2048,
       "published": {
-        "key": "moments/2026/01/08-02-tai-hao-wan-le-ta-song-shang-lai-zhi-hou/tai-hao-wan-le-ta-song-shang-lai-zhi-hou.jpg",
+        "key": "moments/01keeqhfyrps8ds0vgvn78jvd3/01keeqhfys59v0phzbvm4n0dd0.jpg",
         "contentType": "image/jpeg",
         "bytes": 337224,
         "etag": "f47016c159c2343df3f9c71668a1e3a0",
@@ -23,7 +23,7 @@
         "height": 2048,
         "variants": [
           {
-            "key": "moments/2026/01/08-02-tai-hao-wan-le-ta-song-shang-lai-zhi-hou/tai-hao-wan-le-ta-song-shang-lai-zhi-hou-480w.webp",
+            "key": "moments/01keeqhfyrps8ds0vgvn78jvd3/01keeqhfys59v0phzbvm4n0dd0-480w.webp",
             "contentType": "image/webp",
             "bytes": 22114,
             "etag": "d0410c78322e284ac249fbff58c101c8",
@@ -31,7 +31,7 @@
             "height": 640
           },
           {
-            "key": "moments/2026/01/08-02-tai-hao-wan-le-ta-song-shang-lai-zhi-hou/tai-hao-wan-le-ta-song-shang-lai-zhi-hou-960w.webp",
+            "key": "moments/01keeqhfyrps8ds0vgvn78jvd3/01keeqhfys59v0phzbvm4n0dd0-960w.webp",
             "contentType": "image/webp",
             "bytes": 78506,
             "etag": "bb1e2e2a34e15bb57fab9d2cfa488298",
@@ -42,10 +42,8 @@
       }
     }
   ],
+  "order": 2,
   "published": {
-    "id": "2026/01/08-02-tai-hao-wan-le-ta-song-shang-lai-zhi-hou",
-    "slug": "tai-hao-wan-le-ta-song-shang-lai-zhi-hou",
-    "order": 2,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-01-08T19:58:15+08:00",

@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01KWVKA7P1MWMCXG0RP95FWN4H",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 2560,
       "height": 1920,
       "published": {
-        "key": "moments/2026/07/06-03-ji-ke-7-2-fen-ping/ji-ke-7-2-fen-ping.jpg",
+        "key": "moments/01kwvka7p0cv3kj9cdv6jehvbb/01kwvka7p1mwmcxg0rp95fwn4h.jpg",
         "contentType": "image/jpeg",
         "bytes": 266253,
         "etag": "489b7bc64399c94db8f5b16ec300d683",
@@ -21,7 +21,7 @@
         "height": 1920,
         "variants": [
           {
-            "key": "moments/2026/07/06-03-ji-ke-7-2-fen-ping/ji-ke-7-2-fen-ping-480w.webp",
+            "key": "moments/01kwvka7p0cv3kj9cdv6jehvbb/01kwvka7p1mwmcxg0rp95fwn4h-480w.webp",
             "contentType": "image/webp",
             "bytes": 10520,
             "etag": "376069899919da41139d66c49a06430a",
@@ -29,7 +29,7 @@
             "height": 360
           },
           {
-            "key": "moments/2026/07/06-03-ji-ke-7-2-fen-ping/ji-ke-7-2-fen-ping-960w.webp",
+            "key": "moments/01kwvka7p0cv3kj9cdv6jehvbb/01kwvka7p1mwmcxg0rp95fwn4h-960w.webp",
             "contentType": "image/webp",
             "bytes": 27850,
             "etag": "750809b82b76157a0a99ba299b48615f",
@@ -37,7 +37,7 @@
             "height": 720
           },
           {
-            "key": "moments/2026/07/06-03-ji-ke-7-2-fen-ping/ji-ke-7-2-fen-ping-1920w.webp",
+            "key": "moments/01kwvka7p0cv3kj9cdv6jehvbb/01kwvka7p1mwmcxg0rp95fwn4h-1920w.webp",
             "contentType": "image/webp",
             "bytes": 83896,
             "etag": "c52cc784f6beb1bda5ca98fc15f65d56",
@@ -48,10 +48,8 @@
       }
     }
   ],
+  "order": 3,
   "published": {
-    "id": "2026/07/06-03-ji-ke-7-2-fen-ping",
-    "slug": "ji-ke-7-2-fen-ping",
-    "order": 3,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-07-06T19:34:16+08:00",

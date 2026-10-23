@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01JV1BMPNSD71GD5979DAD4S3T",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 2048,
       "height": 1152,
       "published": {
-        "key": "moments/2025/05/12-01-wo-de-hong-mi-g-pro-27u-ye-dao-la/wo-de-hong-mi-g-pro-27u-ye-dao-la.jpg",
+        "key": "moments/01jv1bmpnr7f2vjhq6y2fjgvx9/01jv1bmpnsd71gd5979dad4s3t.jpg",
         "contentType": "image/jpeg",
         "bytes": 458941,
         "etag": "240d6bcb77d2badbbf1eeb115ecc8001",
@@ -21,7 +21,7 @@
         "height": 1152,
         "variants": [
           {
-            "key": "moments/2025/05/12-01-wo-de-hong-mi-g-pro-27u-ye-dao-la/wo-de-hong-mi-g-pro-27u-ye-dao-la-480w.webp",
+            "key": "moments/01jv1bmpnr7f2vjhq6y2fjgvx9/01jv1bmpnsd71gd5979dad4s3t-480w.webp",
             "contentType": "image/webp",
             "bytes": 19382,
             "etag": "36a010ae77c7a03967de9cda2c233243",
@@ -29,7 +29,7 @@
             "height": 270
           },
           {
-            "key": "moments/2025/05/12-01-wo-de-hong-mi-g-pro-27u-ye-dao-la/wo-de-hong-mi-g-pro-27u-ye-dao-la-960w.webp",
+            "key": "moments/01jv1bmpnr7f2vjhq6y2fjgvx9/01jv1bmpnsd71gd5979dad4s3t-960w.webp",
             "contentType": "image/webp",
             "bytes": 80664,
             "etag": "ea2ac94e43f5e43b98d647832d6e9f4b",
@@ -37,7 +37,7 @@
             "height": 540
           },
           {
-            "key": "moments/2025/05/12-01-wo-de-hong-mi-g-pro-27u-ye-dao-la/wo-de-hong-mi-g-pro-27u-ye-dao-la-1920w.webp",
+            "key": "moments/01jv1bmpnr7f2vjhq6y2fjgvx9/01jv1bmpnsd71gd5979dad4s3t-1920w.webp",
             "contentType": "image/webp",
             "bytes": 277242,
             "etag": "06ce0955567e0fded7962223c4784e58",
@@ -48,10 +48,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2025/05/12-01-wo-de-hong-mi-g-pro-27u-ye-dao-la",
-    "slug": "wo-de-hong-mi-g-pro-27u-ye-dao-la",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2025-05-12T12:21:55+08:00",

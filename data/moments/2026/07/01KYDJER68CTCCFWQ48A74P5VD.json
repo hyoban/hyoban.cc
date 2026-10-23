@@ -10,12 +10,12 @@
   "media": [
     {
       "uid": "01KYDJER69Q6BMB3Y3ZMXGVK6G",
-      "type": "image",
       "alt": "Camera on a tripod beside West Lake at dawn",
+      "type": "image",
       "width": 1920,
       "height": 1440,
       "published": {
-        "key": "moments/2026/07/26-02-good-morning-west-lake/good-morning-west-lake.webp",
+        "key": "moments/01kydjer68ctccfwq48a74p5vd/01kydjer69q6bmb3y3zmxgvk6g.webp",
         "contentType": "image/webp",
         "bytes": 426478,
         "etag": "3cfd2a9e4070bf1ff85b30b7740c1dc5",
@@ -23,7 +23,7 @@
         "height": 1440,
         "variants": [
           {
-            "key": "moments/2026/07/26-02-good-morning-west-lake/good-morning-west-lake-480w.webp",
+            "key": "moments/01kydjer68ctccfwq48a74p5vd/01kydjer69q6bmb3y3zmxgvk6g-480w.webp",
             "contentType": "image/webp",
             "bytes": 32058,
             "etag": "5f2bd960c28aed2f4a4909b06b60efc8",
@@ -31,7 +31,7 @@
             "height": 360
           },
           {
-            "key": "moments/2026/07/26-02-good-morning-west-lake/good-morning-west-lake-960w.webp",
+            "key": "moments/01kydjer68ctccfwq48a74p5vd/01kydjer69q6bmb3y3zmxgvk6g-960w.webp",
             "contentType": "image/webp",
             "bytes": 117310,
             "etag": "3a03c73a2a01524190fb363f92e39035",
@@ -42,10 +42,8 @@
       }
     }
   ],
+  "order": 2,
   "published": {
-    "id": "2026/07/26-02-good-morning-west-lake",
-    "slug": "good-morning-west-lake",
-    "order": 2,
     "at": "2026-08-20T22:58:53+08:00"
   },
   "createdAt": "2026-07-26T05:21:17+08:00",

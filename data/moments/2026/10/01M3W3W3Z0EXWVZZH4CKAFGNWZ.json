@@ -10,12 +10,12 @@
   "media": [
     {
       "uid": "01M3W3W3Z18YRQ7CW1DGQW2EN8",
-      "type": "image",
       "alt": "Tables and colorful decorations inside a Japanese restaurant.",
+      "type": "image",
       "width": 1920,
       "height": 1440,
       "published": {
-        "key": "moments/2026/10/02-01-dalian-japanese-dinner/dalian-japanese-dinner.webp",
+        "key": "moments/01m3w3w3z0exwvzzh4ckafgnwz/01m3w3w3z18yrq7cw1dgqw2en8.webp",
         "contentType": "image/webp",
         "bytes": 283386,
         "etag": "bc975cc130e3328044773d1dd05f82ef",
@@ -23,7 +23,7 @@
         "height": 1440,
         "variants": [
           {
-            "key": "moments/2026/10/02-01-dalian-japanese-dinner/dalian-japanese-dinner-480w.webp",
+            "key": "moments/01m3w3w3z0exwvzzh4ckafgnwz/01m3w3w3z18yrq7cw1dgqw2en8-480w.webp",
             "contentType": "image/webp",
             "bytes": 34416,
             "etag": "c3c7e21bfc593514eae62a2aff2becac",
@@ -31,7 +31,7 @@
             "height": 360
           },
           {
-            "key": "moments/2026/10/02-01-dalian-japanese-dinner/dalian-japanese-dinner-960w.webp",
+            "key": "moments/01m3w3w3z0exwvzzh4ckafgnwz/01m3w3w3z18yrq7cw1dgqw2en8-960w.webp",
             "contentType": "image/webp",
             "bytes": 98208,
             "etag": "c414715432734e07419a1148424d58e9",
@@ -43,12 +43,12 @@
     },
     {
       "uid": "01M3W3W3Z2Y62RS8YDEES1RKGG",
-      "type": "image",
       "alt": "Fried shrimp, salad, skewers, and beer on a restaurant table.",
+      "type": "image",
       "width": 1920,
       "height": 1440,
       "published": {
-        "key": "moments/2026/10/02-01-dalian-japanese-dinner/dalian-japanese-dinner-2.webp",
+        "key": "moments/01m3w3w3z0exwvzzh4ckafgnwz/01m3w3w3z2y62rs8ydees1rkgg.webp",
         "contentType": "image/webp",
         "bytes": 263702,
         "etag": "1d6363eee9b5ec0d98deed9cb4678489",
@@ -56,7 +56,7 @@
         "height": 1440,
         "variants": [
           {
-            "key": "moments/2026/10/02-01-dalian-japanese-dinner/dalian-japanese-dinner-2-480w.webp",
+            "key": "moments/01m3w3w3z0exwvzzh4ckafgnwz/01m3w3w3z2y62rs8ydees1rkgg-480w.webp",
             "contentType": "image/webp",
             "bytes": 33940,
             "etag": "35cf1581d3d50fee7435fe2f4b14e37e",
@@ -64,7 +64,7 @@
             "height": 360
           },
           {
-            "key": "moments/2026/10/02-01-dalian-japanese-dinner/dalian-japanese-dinner-2-960w.webp",
+            "key": "moments/01m3w3w3z0exwvzzh4ckafgnwz/01m3w3w3z2y62rs8ydees1rkgg-960w.webp",
             "contentType": "image/webp",
             "bytes": 92946,
             "etag": "9ae054d7f83d5c1ef95209692c151520",
@@ -81,10 +81,8 @@
     ],
     "verdict": "good"
   },
+  "order": 1,
   "published": {
-    "id": "2026/10/02-01-dalian-japanese-dinner",
-    "slug": "dalian-japanese-dinner",
-    "order": 1,
     "at": "2026-10-08T08:10:00+08:00"
   },
   "createdAt": "2026-10-02T00:13:32+08:00",

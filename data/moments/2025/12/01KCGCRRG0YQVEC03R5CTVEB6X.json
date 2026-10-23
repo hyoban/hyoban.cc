@@ -6,10 +6,8 @@
   "hidden": true,
   "topic": "car",
   "media": [],
+  "order": 1,
   "published": {
-    "id": "2025/12/15-01-bu-zhi-dao-wei-shen-me-xian-zai-wo-de",
-    "slug": "bu-zhi-dao-wei-shen-me-xian-zai-wo-de",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2025-12-15T14:57:04+08:00",

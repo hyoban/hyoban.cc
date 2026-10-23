@@ -10,12 +10,12 @@
   "media": [
     {
       "uid": "01KEC51X59FPYR15F9R8HKHQMZ",
-      "type": "image",
       "alt": "A delivery robot lid with a sign saying it delivers one order per trip.",
+      "type": "image",
       "width": 1536,
       "height": 2048,
       "published": {
-        "key": "moments/2026/01/07-01-gong-yu-jia-le-wai-mai-ji-qi-ren-zhe/gong-yu-jia-le-wai-mai-ji-qi-ren-zhe.jpg",
+        "key": "moments/01kec51x58bc62ar22anbeq992/01kec51x59fpyr15f9r8hkhqmz.jpg",
         "contentType": "image/jpeg",
         "bytes": 345045,
         "etag": "9edcdc6d8b0f9730c92121b7772a45e4",
@@ -23,7 +23,7 @@
         "height": 2048,
         "variants": [
           {
-            "key": "moments/2026/01/07-01-gong-yu-jia-le-wai-mai-ji-qi-ren-zhe/gong-yu-jia-le-wai-mai-ji-qi-ren-zhe-480w.webp",
+            "key": "moments/01kec51x58bc62ar22anbeq992/01kec51x59fpyr15f9r8hkhqmz-480w.webp",
             "contentType": "image/webp",
             "bytes": 27484,
             "etag": "d4c810fb4fb679e3d20e3964f1ca2e20",
@@ -31,7 +31,7 @@
             "height": 640
           },
           {
-            "key": "moments/2026/01/07-01-gong-yu-jia-le-wai-mai-ji-qi-ren-zhe/gong-yu-jia-le-wai-mai-ji-qi-ren-zhe-960w.webp",
+            "key": "moments/01kec51x58bc62ar22anbeq992/01kec51x59fpyr15f9r8hkhqmz-960w.webp",
             "contentType": "image/webp",
             "bytes": 79714,
             "etag": "036ed650c3556d17882f1e62ca988008",
@@ -43,12 +43,12 @@
     },
     {
       "uid": "01KEC51X5ABWJ3VF4H2D4R88TY",
-      "type": "image",
       "alt": "A white delivery robot waiting on a tiled apartment floor.",
+      "type": "image",
       "width": 1536,
       "height": 2048,
       "published": {
-        "key": "moments/2026/01/07-01-gong-yu-jia-le-wai-mai-ji-qi-ren-zhe/gong-yu-jia-le-wai-mai-ji-qi-ren-zhe-2.jpg",
+        "key": "moments/01kec51x58bc62ar22anbeq992/01kec51x5abwj3vf4h2d4r88ty.jpg",
         "contentType": "image/jpeg",
         "bytes": 230608,
         "etag": "d75bbce8d91f810c5aec96839d1a9225",
@@ -56,7 +56,7 @@
         "height": 2048,
         "variants": [
           {
-            "key": "moments/2026/01/07-01-gong-yu-jia-le-wai-mai-ji-qi-ren-zhe/gong-yu-jia-le-wai-mai-ji-qi-ren-zhe-2-480w.webp",
+            "key": "moments/01kec51x58bc62ar22anbeq992/01kec51x5abwj3vf4h2d4r88ty-480w.webp",
             "contentType": "image/webp",
             "bytes": 10484,
             "etag": "e62d03051fc7be60ec5b115da1cb7ced",
@@ -64,7 +64,7 @@
             "height": 640
           },
           {
-            "key": "moments/2026/01/07-01-gong-yu-jia-le-wai-mai-ji-qi-ren-zhe/gong-yu-jia-le-wai-mai-ji-qi-ren-zhe-2-960w.webp",
+            "key": "moments/01kec51x58bc62ar22anbeq992/01kec51x5abwj3vf4h2d4r88ty-960w.webp",
             "contentType": "image/webp",
             "bytes": 28980,
             "etag": "f6db313923b7706a1a24bca361e556b7",
@@ -75,10 +75,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2026/01/07-01-gong-yu-jia-le-wai-mai-ji-qi-ren-zhe",
-    "slug": "gong-yu-jia-le-wai-mai-ji-qi-ren-zhe",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-01-07T19:56:41+08:00",

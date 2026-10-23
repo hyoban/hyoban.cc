@@ -6,10 +6,8 @@
   "hidden": false,
   "topic": "travel",
   "media": [],
+  "order": 1,
   "published": {
-    "id": "2026/09/25-01-national-day-road-trip-plan",
-    "slug": "national-day-road-trip-plan",
-    "order": 1,
     "at": "2026-10-08T08:10:00+08:00"
   },
   "createdAt": "2026-09-25T20:41:20+08:00",

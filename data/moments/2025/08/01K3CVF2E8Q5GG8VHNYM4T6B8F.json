@@ -9,11 +9,12 @@
     {
       "uid": "01K3CVF2E98PNK587Y1W2VATGA",
       "alt": "",
+      "utility": true,
       "type": "image",
       "width": 1080,
       "height": 1920,
       "published": {
-        "key": "moments/2025/08/24-01-lun-tai-zhe-yang-ya-dao-ding-zi-xu-yao/lun-tai-zhe-yang-ya-dao-ding-zi-xu-yao.webp",
+        "key": "moments/01k3cvf2e8q5gg8vhnym4t6b8f/01k3cvf2e98pnk587y1w2vatga.webp",
         "contentType": "image/webp",
         "bytes": 67002,
         "etag": "adafb223478b0b395c288362b5417d1f",
@@ -21,7 +22,7 @@
         "height": 1920,
         "variants": [
           {
-            "key": "moments/2025/08/24-01-lun-tai-zhe-yang-ya-dao-ding-zi-xu-yao/lun-tai-zhe-yang-ya-dao-ding-zi-xu-yao-480w.webp",
+            "key": "moments/01k3cvf2e8q5gg8vhnym4t6b8f/01k3cvf2e98pnk587y1w2vatga-480w.webp",
             "contentType": "image/webp",
             "bytes": 16416,
             "etag": "5675b6500e983f147afc5cda2a60dbe4",
@@ -29,7 +30,7 @@
             "height": 853
           },
           {
-            "key": "moments/2025/08/24-01-lun-tai-zhe-yang-ya-dao-ding-zi-xu-yao/lun-tai-zhe-yang-ya-dao-ding-zi-xu-yao-960w.webp",
+            "key": "moments/01k3cvf2e8q5gg8vhnym4t6b8f/01k3cvf2e98pnk587y1w2vatga-960w.webp",
             "contentType": "image/webp",
             "bytes": 38786,
             "etag": "f7be1da82c818c247e01adb09fb7e833",
@@ -37,17 +38,17 @@
             "height": 1707
           }
         ]
-      },
-      "utility": true
+      }
     },
     {
       "uid": "01K3CVF2EAEAR1W09F0KE6Y8EC",
       "alt": "",
+      "utility": true,
       "type": "image",
       "width": 1080,
       "height": 1920,
       "published": {
-        "key": "moments/2025/08/24-01-lun-tai-zhe-yang-ya-dao-ding-zi-xu-yao/lun-tai-zhe-yang-ya-dao-ding-zi-xu-yao-2.webp",
+        "key": "moments/01k3cvf2e8q5gg8vhnym4t6b8f/01k3cvf2eaear1w09f0ke6y8ec.webp",
         "contentType": "image/webp",
         "bytes": 103076,
         "etag": "85fa411d48ac9b76c4c81fa3829de6ee",
@@ -55,7 +56,7 @@
         "height": 1920,
         "variants": [
           {
-            "key": "moments/2025/08/24-01-lun-tai-zhe-yang-ya-dao-ding-zi-xu-yao/lun-tai-zhe-yang-ya-dao-ding-zi-xu-yao-2-480w.webp",
+            "key": "moments/01k3cvf2e8q5gg8vhnym4t6b8f/01k3cvf2eaear1w09f0ke6y8ec-480w.webp",
             "contentType": "image/webp",
             "bytes": 27936,
             "etag": "2108a788acee29acd8405dac2e729b95",
@@ -63,7 +64,7 @@
             "height": 853
           },
           {
-            "key": "moments/2025/08/24-01-lun-tai-zhe-yang-ya-dao-ding-zi-xu-yao/lun-tai-zhe-yang-ya-dao-ding-zi-xu-yao-2-960w.webp",
+            "key": "moments/01k3cvf2e8q5gg8vhnym4t6b8f/01k3cvf2eaear1w09f0ke6y8ec-960w.webp",
             "contentType": "image/webp",
             "bytes": 62960,
             "etag": "88c62c06bff1a7d1f75ef0eb1966dde6",
@@ -71,14 +72,11 @@
             "height": 1707
           }
         ]
-      },
-      "utility": true
+      }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2025/08/24-01-lun-tai-zhe-yang-ya-dao-ding-zi-xu-yao",
-    "slug": "lun-tai-zhe-yang-ya-dao-ding-zi-xu-yao",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2025-08-24T09:35:41+08:00",

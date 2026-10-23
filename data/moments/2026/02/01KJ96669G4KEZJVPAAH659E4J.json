@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01KJ96669HB8G7G9YGQWH8NY6T",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 2412,
       "height": 1826,
       "published": {
-        "key": "moments/2026/02/25-01-it-really-works-in-dify-ai/it-really-works-in-dify-ai.jpg",
+        "key": "moments/01kj96669g4kezjvpaah659e4j/01kj96669hb8g7g9ygqwh8ny6t.jpg",
         "contentType": "image/jpeg",
         "bytes": 104008,
         "etag": "be26e1ee8cd67a55fd185766265f2b6d",
@@ -21,7 +21,7 @@
         "height": 1826,
         "variants": [
           {
-            "key": "moments/2026/02/25-01-it-really-works-in-dify-ai/it-really-works-in-dify-ai-480w.webp",
+            "key": "moments/01kj96669g4kezjvpaah659e4j/01kj96669hb8g7g9ygqwh8ny6t-480w.webp",
             "contentType": "image/webp",
             "bytes": 3762,
             "etag": "56e398d1ae47c9be49c6046e09033ca9",
@@ -29,7 +29,7 @@
             "height": 363
           },
           {
-            "key": "moments/2026/02/25-01-it-really-works-in-dify-ai/it-really-works-in-dify-ai-960w.webp",
+            "key": "moments/01kj96669g4kezjvpaah659e4j/01kj96669hb8g7g9ygqwh8ny6t-960w.webp",
             "contentType": "image/webp",
             "bytes": 12066,
             "etag": "828d125f1ed335425732ab50b052e386",
@@ -37,7 +37,7 @@
             "height": 727
           },
           {
-            "key": "moments/2026/02/25-01-it-really-works-in-dify-ai/it-really-works-in-dify-ai-1920w.webp",
+            "key": "moments/01kj96669g4kezjvpaah659e4j/01kj96669hb8g7g9ygqwh8ny6t-1920w.webp",
             "contentType": "image/webp",
             "bytes": 29836,
             "etag": "c666aae54143a3aece767f6cba2e5533",
@@ -48,10 +48,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2026/02/25-01-it-really-works-in-dify-ai",
-    "slug": "it-really-works-in-dify-ai",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-02-25T09:21:34+08:00",

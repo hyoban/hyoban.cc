@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01KCP136SHSJN4V5RMHPNXEBJX",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1548,
       "height": 1062,
       "published": {
-        "key": "moments/2025/12/17-01-zuo-le-yi-ge-duo-lin-guo-de-kao-shi/zuo-le-yi-ge-duo-lin-guo-de-kao-shi.jpg",
+        "key": "moments/01kcp136sgsc5db9erfxdeg7x1/01kcp136shsjn4v5rmhpnxebjx.jpg",
         "contentType": "image/jpeg",
         "bytes": 69443,
         "etag": "0a0ad22681b244f4dd59e706703f427a",
@@ -21,7 +21,7 @@
         "height": 1062,
         "variants": [
           {
-            "key": "moments/2025/12/17-01-zuo-le-yi-ge-duo-lin-guo-de-kao-shi/zuo-le-yi-ge-duo-lin-guo-de-kao-shi-480w.webp",
+            "key": "moments/01kcp136sgsc5db9erfxdeg7x1/01kcp136shsjn4v5rmhpnxebjx-480w.webp",
             "contentType": "image/webp",
             "bytes": 7278,
             "etag": "ef506ea19b91fe9cf33f8d7aec8cfe80",
@@ -29,7 +29,7 @@
             "height": 329
           },
           {
-            "key": "moments/2025/12/17-01-zuo-le-yi-ge-duo-lin-guo-de-kao-shi/zuo-le-yi-ge-duo-lin-guo-de-kao-shi-960w.webp",
+            "key": "moments/01kcp136sgsc5db9erfxdeg7x1/01kcp136shsjn4v5rmhpnxebjx-960w.webp",
             "contentType": "image/webp",
             "bytes": 16266,
             "etag": "e01bb087d50c805ea52be02354921653",
@@ -40,10 +40,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2025/12/17-01-zuo-le-yi-ge-duo-lin-guo-de-kao-shi",
-    "slug": "zuo-le-yi-ge-duo-lin-guo-de-kao-shi",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2025-12-17T19:28:30+08:00",

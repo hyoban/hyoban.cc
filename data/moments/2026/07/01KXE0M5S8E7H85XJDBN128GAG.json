@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01KXE0M5S93S3J4ZXWN681CVJW",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 960,
       "height": 1280,
       "published": {
-        "key": "moments/2026/07/13-04-jie-shao-yi-xia-wo-de-chuang-che-fang-an/jie-shao-yi-xia-wo-de-chuang-che-fang-an.webp",
+        "key": "moments/01kxe0m5s8e7h85xjdbn128gag/01kxe0m5s93s3j4zxwn681cvjw.webp",
         "contentType": "image/webp",
         "bytes": 95282,
         "etag": "a713ec7ef8e81b3c920815eaa72beb23",
@@ -21,7 +21,7 @@
         "height": 1280,
         "variants": [
           {
-            "key": "moments/2026/07/13-04-jie-shao-yi-xia-wo-de-chuang-che-fang-an/jie-shao-yi-xia-wo-de-chuang-che-fang-an-480w.webp",
+            "key": "moments/01kxe0m5s8e7h85xjdbn128gag/01kxe0m5s93s3j4zxwn681cvjw-480w.webp",
             "contentType": "image/webp",
             "bytes": 36734,
             "etag": "30b9d92b1be333afeb1a9e49eac029f8",
@@ -33,12 +33,12 @@
     },
     {
       "uid": "01KXE0M5SA6VM6CCCW71CBJ3VP",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1280,
       "height": 960,
       "published": {
-        "key": "moments/2026/07/13-04-jie-shao-yi-xia-wo-de-chuang-che-fang-an/jie-shao-yi-xia-wo-de-chuang-che-fang-an-2.webp",
+        "key": "moments/01kxe0m5s8e7h85xjdbn128gag/01kxe0m5sa6vm6cccw71cbj3vp.webp",
         "contentType": "image/webp",
         "bytes": 157102,
         "etag": "77650518bec73bdcfed2cf94370b9f84",
@@ -46,7 +46,7 @@
         "height": 960,
         "variants": [
           {
-            "key": "moments/2026/07/13-04-jie-shao-yi-xia-wo-de-chuang-che-fang-an/jie-shao-yi-xia-wo-de-chuang-che-fang-an-2-480w.webp",
+            "key": "moments/01kxe0m5s8e7h85xjdbn128gag/01kxe0m5sa6vm6cccw71cbj3vp-480w.webp",
             "contentType": "image/webp",
             "bytes": 21258,
             "etag": "933c6c761e0cf7c9b2db34e188f3993a",
@@ -54,7 +54,7 @@
             "height": 360
           },
           {
-            "key": "moments/2026/07/13-04-jie-shao-yi-xia-wo-de-chuang-che-fang-an/jie-shao-yi-xia-wo-de-chuang-che-fang-an-2-960w.webp",
+            "key": "moments/01kxe0m5s8e7h85xjdbn128gag/01kxe0m5sa6vm6cccw71cbj3vp-960w.webp",
             "contentType": "image/webp",
             "bytes": 79606,
             "etag": "4cf31ff6e7fd20af374b0a71eff0690b",
@@ -66,12 +66,12 @@
     },
     {
       "uid": "01KXE0M5SBQKKP7P6YCW1RWRPE",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1280,
       "height": 960,
       "published": {
-        "key": "moments/2026/07/13-04-jie-shao-yi-xia-wo-de-chuang-che-fang-an/jie-shao-yi-xia-wo-de-chuang-che-fang-an-3.webp",
+        "key": "moments/01kxe0m5s8e7h85xjdbn128gag/01kxe0m5sbqkkp7p6ycw1rwrpe.webp",
         "contentType": "image/webp",
         "bytes": 130614,
         "etag": "975fc0a9e5d5e21a30fa24f417f44d20",
@@ -79,7 +79,7 @@
         "height": 960,
         "variants": [
           {
-            "key": "moments/2026/07/13-04-jie-shao-yi-xia-wo-de-chuang-che-fang-an/jie-shao-yi-xia-wo-de-chuang-che-fang-an-3-480w.webp",
+            "key": "moments/01kxe0m5s8e7h85xjdbn128gag/01kxe0m5sbqkkp7p6ycw1rwrpe-480w.webp",
             "contentType": "image/webp",
             "bytes": 21020,
             "etag": "79ad61f30f1f8670e00680fe4eb4834a",
@@ -87,7 +87,7 @@
             "height": 360
           },
           {
-            "key": "moments/2026/07/13-04-jie-shao-yi-xia-wo-de-chuang-che-fang-an/jie-shao-yi-xia-wo-de-chuang-che-fang-an-3-960w.webp",
+            "key": "moments/01kxe0m5s8e7h85xjdbn128gag/01kxe0m5sbqkkp7p6ycw1rwrpe-960w.webp",
             "contentType": "image/webp",
             "bytes": 71826,
             "etag": "b5b8590ca3b5d03c1bde20c86510b7e5",
@@ -98,10 +98,8 @@
       }
     }
   ],
+  "order": 4,
   "published": {
-    "id": "2026/07/13-04-jie-shao-yi-xia-wo-de-chuang-che-fang-an",
-    "slug": "jie-shao-yi-xia-wo-de-chuang-che-fang-an",
-    "order": 4,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-07-13T23:13:13+08:00",

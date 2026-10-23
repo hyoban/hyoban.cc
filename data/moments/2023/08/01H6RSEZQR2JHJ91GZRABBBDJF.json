@@ -6,10 +6,8 @@
   "hidden": false,
   "topic": "tech",
   "media": [],
+  "order": 1,
   "published": {
-    "id": "2023/08/01-01-hen-hao-kan-de-yi-ge-vscode-zhu-ti",
-    "slug": "hen-hao-kan-de-yi-ge-vscode-zhu-ti",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2023-08-01T22:54:03+08:00",

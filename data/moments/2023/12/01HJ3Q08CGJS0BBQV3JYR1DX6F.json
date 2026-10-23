@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01HJ3Q08CHB2F4KWAW6DGBWN80",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1466,
       "height": 862,
       "published": {
-        "key": "moments/2023/12/20-01-wo-xiang-shuo-wo-kai-shi-xue-qian-duan-jiu/wo-xiang-shuo-wo-kai-shi-xue-qian-duan-jiu.png",
+        "key": "moments/01hj3q08cgjs0bbqv3jyr1dx6f/01hj3q08chb2f4kwaw6dgbwn80.png",
         "contentType": "image/png",
         "bytes": 94464,
         "etag": "c7ff580ac4a46cbd5c68538563756d0c",
@@ -21,7 +21,7 @@
         "height": 862,
         "variants": [
           {
-            "key": "moments/2023/12/20-01-wo-xiang-shuo-wo-kai-shi-xue-qian-duan-jiu/wo-xiang-shuo-wo-kai-shi-xue-qian-duan-jiu-480w.webp",
+            "key": "moments/01hj3q08cgjs0bbqv3jyr1dx6f/01hj3q08chb2f4kwaw6dgbwn80-480w.webp",
             "contentType": "image/webp",
             "bytes": 15140,
             "etag": "b9f82044520089e24cded8932ad12fa5",
@@ -29,7 +29,7 @@
             "height": 282
           },
           {
-            "key": "moments/2023/12/20-01-wo-xiang-shuo-wo-kai-shi-xue-qian-duan-jiu/wo-xiang-shuo-wo-kai-shi-xue-qian-duan-jiu-960w.webp",
+            "key": "moments/01hj3q08cgjs0bbqv3jyr1dx6f/01hj3q08chb2f4kwaw6dgbwn80-960w.webp",
             "contentType": "image/webp",
             "bytes": 34344,
             "etag": "cbee1fb41f02be46cc2ebe636011a0c1",
@@ -40,10 +40,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2023/12/20-01-wo-xiang-shuo-wo-kai-shi-xue-qian-duan-jiu",
-    "slug": "wo-xiang-shuo-wo-kai-shi-xue-qian-duan-jiu",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2023-12-20T21:35:22+08:00",

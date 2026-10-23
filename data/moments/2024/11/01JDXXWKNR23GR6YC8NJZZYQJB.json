@@ -10,12 +10,12 @@
   "media": [
     {
       "uid": "01JDXXWKNSXVS84TVJFJHVHJK4",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 2048,
       "height": 1152,
       "published": {
-        "key": "moments/2024/11/30-02-guangzhou-dim-sum/guangzhou-dim-sum.jpg",
+        "key": "moments/01jdxxwknr23gr6yc8njzzyqjb/01jdxxwknsxvs84tvjfjhvhjk4.jpg",
         "contentType": "image/jpeg",
         "bytes": 325131,
         "etag": "24d3227c6b9177d626f7a293e57af611",
@@ -23,7 +23,7 @@
         "height": 1152,
         "variants": [
           {
-            "key": "moments/2024/11/30-02-guangzhou-dim-sum/guangzhou-dim-sum-480w.webp",
+            "key": "moments/01jdxxwknr23gr6yc8njzzyqjb/01jdxxwknsxvs84tvjfjhvhjk4-480w.webp",
             "contentType": "image/webp",
             "bytes": 18430,
             "etag": "544ce33f67e7f907d2556d24d795d503",
@@ -31,7 +31,7 @@
             "height": 270
           },
           {
-            "key": "moments/2024/11/30-02-guangzhou-dim-sum/guangzhou-dim-sum-960w.webp",
+            "key": "moments/01jdxxwknr23gr6yc8njzzyqjb/01jdxxwknsxvs84tvjfjhvhjk4-960w.webp",
             "contentType": "image/webp",
             "bytes": 57006,
             "etag": "e851a2956e072aac15536cfa2f95c8de",
@@ -39,7 +39,7 @@
             "height": 540
           },
           {
-            "key": "moments/2024/11/30-02-guangzhou-dim-sum/guangzhou-dim-sum-1920w.webp",
+            "key": "moments/01jdxxwknr23gr6yc8njzzyqjb/01jdxxwknsxvs84tvjfjhvhjk4-1920w.webp",
             "contentType": "image/webp",
             "bytes": 166730,
             "etag": "dcc6ce6955260354c55cf5bbab5c1b6e",
@@ -50,10 +50,8 @@
       }
     }
   ],
+  "order": 2,
   "published": {
-    "id": "2024/11/30-02-guangzhou-dim-sum",
-    "slug": "guangzhou-dim-sum",
-    "order": 2,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2024-11-30T14:59:47+08:00",

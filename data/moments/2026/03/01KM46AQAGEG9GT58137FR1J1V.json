@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01KM46AQAH7H7M0K5HNT8WCV7K",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1179,
       "height": 248,
       "published": {
-        "key": "moments/2026/03/20-01-wow/wow.jpg",
+        "key": "moments/01km46aqageg9gt58137fr1j1v/01km46aqah7h7m0k5hnt8wcv7k.jpg",
         "contentType": "image/jpeg",
         "bytes": 14946,
         "etag": "e0f8b36fd931641d102fe0982e0e6c68",
@@ -21,7 +21,7 @@
         "height": 248,
         "variants": [
           {
-            "key": "moments/2026/03/20-01-wow/wow-480w.webp",
+            "key": "moments/01km46aqageg9gt58137fr1j1v/01km46aqah7h7m0k5hnt8wcv7k-480w.webp",
             "contentType": "image/webp",
             "bytes": 2432,
             "etag": "da54e2cdd618fa56c7f8740ff85f1cd3",
@@ -29,7 +29,7 @@
             "height": 101
           },
           {
-            "key": "moments/2026/03/20-01-wow/wow-960w.webp",
+            "key": "moments/01km46aqageg9gt58137fr1j1v/01km46aqah7h7m0k5hnt8wcv7k-960w.webp",
             "contentType": "image/webp",
             "bytes": 5180,
             "etag": "f8581c6692572c9d979f1332346d8e78",
@@ -40,10 +40,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2026/03/20-01-wow",
-    "slug": "wow",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-03-20T07:19:14+08:00",

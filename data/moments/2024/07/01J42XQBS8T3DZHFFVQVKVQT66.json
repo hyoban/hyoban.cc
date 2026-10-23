@@ -8,17 +8,17 @@
   "media": [
     {
       "uid": "01J42XQBS9ZRGYCTTEQM99FS9Q",
-      "type": "video",
       "alt": "",
+      "type": "video",
       "width": 1108,
       "height": 720,
       "published": {
-        "key": "moments/2024/07/31-04-ps-zai-follow-zhong-ding-yue-rsshub-de-nei-rong/ps-zai-follow-zhong-ding-yue-rsshub-de-nei-rong-video.mp4",
+        "key": "moments/01j42xqbs8t3dzhffvqvkvqt66/01j42xqbs9zrgyctteqm99fs9q.mp4",
         "contentType": "video/mp4",
         "bytes": 656589,
         "etag": "2552800fe2654613c56dd2dc960956bd",
         "poster": {
-          "key": "moments/2024/07/31-04-ps-zai-follow-zhong-ding-yue-rsshub-de-nei-rong/ps-zai-follow-zhong-ding-yue-rsshub-de-nei-rong-video-poster.png",
+          "key": "moments/01j42xqbs8t3dzhffvqvkvqt66/01j42xqbs9zrgyctteqm99fs9q-poster.png",
           "contentType": "image/png",
           "bytes": 182724,
           "etag": "823f1ac375b2c62581e3f182b5c01d25",
@@ -29,10 +29,8 @@
       }
     }
   ],
+  "order": 4,
   "published": {
-    "id": "2024/07/31-04-ps-zai-follow-zhong-ding-yue-rsshub-de-nei-rong",
-    "slug": "ps-zai-follow-zhong-ding-yue-rsshub-de-nei-rong",
-    "order": 4,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2024-07-31T06:56:09+08:00",

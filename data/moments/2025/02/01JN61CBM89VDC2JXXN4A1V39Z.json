@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01JN61CBM9JKE2KG2DGX21RM68",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 2048,
       "height": 1080,
       "published": {
-        "key": "moments/2025/02/28-02-zui-hou-mai-le-jie-yin-xing-guang-xian-ba/zui-hou-mai-le-jie-yin-xing-guang-xian-ba.jpg",
+        "key": "moments/01jn61cbm89vdc2jxxn4a1v39z/01jn61cbm9jke2kg2dgx21rm68.jpg",
         "contentType": "image/jpeg",
         "bytes": 177259,
         "etag": "4ca5e97d74d5cce80b90b95354ad0352",
@@ -21,7 +21,7 @@
         "height": 1080,
         "variants": [
           {
-            "key": "moments/2025/02/28-02-zui-hou-mai-le-jie-yin-xing-guang-xian-ba/zui-hou-mai-le-jie-yin-xing-guang-xian-ba-480w.webp",
+            "key": "moments/01jn61cbm89vdc2jxxn4a1v39z/01jn61cbm9jke2kg2dgx21rm68-480w.webp",
             "contentType": "image/webp",
             "bytes": 9614,
             "etag": "4b46b39b6e0f527b57d113453a71dd19",
@@ -29,7 +29,7 @@
             "height": 253
           },
           {
-            "key": "moments/2025/02/28-02-zui-hou-mai-le-jie-yin-xing-guang-xian-ba/zui-hou-mai-le-jie-yin-xing-guang-xian-ba-960w.webp",
+            "key": "moments/01jn61cbm89vdc2jxxn4a1v39z/01jn61cbm9jke2kg2dgx21rm68-960w.webp",
             "contentType": "image/webp",
             "bytes": 23986,
             "etag": "bea98feaaef385860dcf5441dfae8732",
@@ -37,7 +37,7 @@
             "height": 506
           },
           {
-            "key": "moments/2025/02/28-02-zui-hou-mai-le-jie-yin-xing-guang-xian-ba/zui-hou-mai-le-jie-yin-xing-guang-xian-ba-1920w.webp",
+            "key": "moments/01jn61cbm89vdc2jxxn4a1v39z/01jn61cbm9jke2kg2dgx21rm68-1920w.webp",
             "contentType": "image/webp",
             "bytes": 61570,
             "etag": "158144ab8a0873074b602e173b5b6921",
@@ -48,10 +48,8 @@
       }
     }
   ],
+  "order": 2,
   "published": {
-    "id": "2025/02/28-02-zui-hou-mai-le-jie-yin-xing-guang-xian-ba",
-    "slug": "zui-hou-mai-le-jie-yin-xing-guang-xian-ba",
-    "order": 2,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2025-02-28T18:24:37+08:00",

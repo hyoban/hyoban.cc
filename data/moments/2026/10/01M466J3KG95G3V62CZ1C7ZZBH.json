@@ -10,12 +10,12 @@
   "media": [
     {
       "uid": "01M466J3KHVQBSM17836NMCKTK",
-      "type": "image",
       "alt": "Stars scattered across a dark sky with faint clouds near the horizon.",
+      "type": "image",
       "width": 1920,
       "height": 1440,
       "published": {
-        "key": "moments/2026/10/05-02-linzhou-stargazing/linzhou-stargazing.webp",
+        "key": "moments/01m466j3kg95g3v62cz1c7zzbh/01m466j3khvqbsm17836nmcktk.webp",
         "contentType": "image/webp",
         "bytes": 16062,
         "etag": "3d89b9bedd39430212109a198eec2e91",
@@ -23,7 +23,7 @@
         "height": 1440,
         "variants": [
           {
-            "key": "moments/2026/10/05-02-linzhou-stargazing/linzhou-stargazing-480w.webp",
+            "key": "moments/01m466j3kg95g3v62cz1c7zzbh/01m466j3khvqbsm17836nmcktk-480w.webp",
             "contentType": "image/webp",
             "bytes": 1646,
             "etag": "7f5ccfbed8a9160815b7f40cae5ef533",
@@ -31,7 +31,7 @@
             "height": 360
           },
           {
-            "key": "moments/2026/10/05-02-linzhou-stargazing/linzhou-stargazing-960w.webp",
+            "key": "moments/01m466j3kg95g3v62cz1c7zzbh/01m466j3khvqbsm17836nmcktk-960w.webp",
             "contentType": "image/webp",
             "bytes": 4972,
             "etag": "bc878ed966a6d6a3134ed935126e8f37",
@@ -43,12 +43,12 @@
     },
     {
       "uid": "01M466J3KJ00DAKYZ0KWJ4HRTZ",
-      "type": "image",
       "alt": "A field of stars above dark clouds in the night sky.",
+      "type": "image",
       "width": 1920,
       "height": 1440,
       "published": {
-        "key": "moments/2026/10/05-02-linzhou-stargazing/linzhou-stargazing-2.webp",
+        "key": "moments/01m466j3kg95g3v62cz1c7zzbh/01m466j3kj00dakyz0kwj4hrtz.webp",
         "contentType": "image/webp",
         "bytes": 15494,
         "etag": "312d80d42673ff750ee135b751d56dc7",
@@ -56,7 +56,7 @@
         "height": 1440,
         "variants": [
           {
-            "key": "moments/2026/10/05-02-linzhou-stargazing/linzhou-stargazing-2-480w.webp",
+            "key": "moments/01m466j3kg95g3v62cz1c7zzbh/01m466j3kj00dakyz0kwj4hrtz-480w.webp",
             "contentType": "image/webp",
             "bytes": 1436,
             "etag": "b069fe10464c7dccfb8290d7f5fb9e92",
@@ -64,7 +64,7 @@
             "height": 360
           },
           {
-            "key": "moments/2026/10/05-02-linzhou-stargazing/linzhou-stargazing-2-960w.webp",
+            "key": "moments/01m466j3kg95g3v62cz1c7zzbh/01m466j3kj00dakyz0kwj4hrtz-960w.webp",
             "contentType": "image/webp",
             "bytes": 4674,
             "etag": "3060ee4260a68f3754b4744979b29cda",
@@ -76,12 +76,12 @@
     },
     {
       "uid": "01M466J3KKRN89N10SS5M6D6VB",
-      "type": "image",
       "alt": "Stars and a faint cloudy band stretching across the night sky.",
+      "type": "image",
       "width": 1920,
       "height": 1440,
       "published": {
-        "key": "moments/2026/10/05-02-linzhou-stargazing/linzhou-stargazing-3.webp",
+        "key": "moments/01m466j3kg95g3v62cz1c7zzbh/01m466j3kkrn89n10ss5m6d6vb.webp",
         "contentType": "image/webp",
         "bytes": 14916,
         "etag": "97d2dfa916e79b3ca3711a661fa12cf6",
@@ -89,7 +89,7 @@
         "height": 1440,
         "variants": [
           {
-            "key": "moments/2026/10/05-02-linzhou-stargazing/linzhou-stargazing-3-480w.webp",
+            "key": "moments/01m466j3kg95g3v62cz1c7zzbh/01m466j3kkrn89n10ss5m6d6vb-480w.webp",
             "contentType": "image/webp",
             "bytes": 1554,
             "etag": "b8004b1d355bcf22c878e36d08b2ae6c",
@@ -97,7 +97,7 @@
             "height": 360
           },
           {
-            "key": "moments/2026/10/05-02-linzhou-stargazing/linzhou-stargazing-3-960w.webp",
+            "key": "moments/01m466j3kg95g3v62cz1c7zzbh/01m466j3kkrn89n10ss5m6d6vb-960w.webp",
             "contentType": "image/webp",
             "bytes": 4644,
             "etag": "60ad7660be06355254b59b68eebb4a8e",
@@ -108,10 +108,8 @@
       }
     }
   ],
+  "order": 2,
   "published": {
-    "id": "2026/10/05-02-linzhou-stargazing",
-    "slug": "linzhou-stargazing",
-    "order": 2,
     "at": "2026-10-08T08:10:00+08:00"
   },
   "createdAt": "2026-10-05T22:12:54+08:00",

@@ -10,12 +10,12 @@
   "media": [
     {
       "uid": "01KXRCWQ011K82FZB6SVC3SXER",
-      "type": "image",
       "alt": "An open car hatch revealing a mattress, bedding, and bags arranged for sleeping.",
+      "type": "image",
       "width": 1280,
       "height": 960,
       "published": {
-        "key": "moments/2026/07/18-02-luogang-park/luogang-park.webp",
+        "key": "moments/01kxrcwq00y9n9dbts7aff7pwe/01kxrcwq011k82fzb6svc3sxer.webp",
         "contentType": "image/webp",
         "bytes": 165838,
         "etag": "6ff224586e92537550ff2d9010e1cb11",
@@ -23,7 +23,7 @@
         "height": 960,
         "variants": [
           {
-            "key": "moments/2026/07/18-02-luogang-park/luogang-park-480w.webp",
+            "key": "moments/01kxrcwq00y9n9dbts7aff7pwe/01kxrcwq011k82fzb6svc3sxer-480w.webp",
             "contentType": "image/webp",
             "bytes": 30214,
             "etag": "e663a17a22ba1eefc769cc830a8e3e22",
@@ -31,7 +31,7 @@
             "height": 360
           },
           {
-            "key": "moments/2026/07/18-02-luogang-park/luogang-park-960w.webp",
+            "key": "moments/01kxrcwq00y9n9dbts7aff7pwe/01kxrcwq011k82fzb6svc3sxer-960w.webp",
             "contentType": "image/webp",
             "bytes": 88182,
             "etag": "2fd02f473e94e7b185980b5e98b07d90",
@@ -43,12 +43,12 @@
     },
     {
       "uid": "01KXRCWQ02HGBN23E0VDBSPZTC",
-      "type": "image",
       "alt": "A dark car interior viewed from the sleeping area toward the front seats.",
+      "type": "image",
       "width": 1280,
       "height": 960,
       "published": {
-        "key": "moments/2026/07/18-02-luogang-park/luogang-park-2.webp",
+        "key": "moments/01kxrcwq00y9n9dbts7aff7pwe/01kxrcwq02hgbn23e0vdbspztc.webp",
         "contentType": "image/webp",
         "bytes": 47164,
         "etag": "1dfb26fe4ab5c5dc23ed3806b4389e20",
@@ -56,7 +56,7 @@
         "height": 960,
         "variants": [
           {
-            "key": "moments/2026/07/18-02-luogang-park/luogang-park-2-480w.webp",
+            "key": "moments/01kxrcwq00y9n9dbts7aff7pwe/01kxrcwq02hgbn23e0vdbspztc-480w.webp",
             "contentType": "image/webp",
             "bytes": 10760,
             "etag": "66832d24d31cfe9290e153407ae1cb60",
@@ -64,7 +64,7 @@
             "height": 360
           },
           {
-            "key": "moments/2026/07/18-02-luogang-park/luogang-park-2-960w.webp",
+            "key": "moments/01kxrcwq00y9n9dbts7aff7pwe/01kxrcwq02hgbn23e0vdbspztc-960w.webp",
             "contentType": "image/webp",
             "bytes": 25968,
             "etag": "f7f4129a60eb7474a7a65b96e624cd72",
@@ -76,12 +76,12 @@
     },
     {
       "uid": "01KXRCWQ03AF5ETHG5JXY8438Y",
-      "type": "image",
       "alt": "A video playing on the central display between the front seats at night.",
+      "type": "image",
       "width": 1440,
       "height": 1920,
       "published": {
-        "key": "moments/2026/07/18-02-luogang-park/luogang-park-3.webp",
+        "key": "moments/01kxrcwq00y9n9dbts7aff7pwe/01kxrcwq03af5ethg5jxy8438y.webp",
         "contentType": "image/webp",
         "bytes": 52664,
         "etag": "d4d76ddf6a59fb3e3a3e2469debfffed",
@@ -89,7 +89,7 @@
         "height": 1920,
         "variants": [
           {
-            "key": "moments/2026/07/18-02-luogang-park/luogang-park-3-480w.webp",
+            "key": "moments/01kxrcwq00y9n9dbts7aff7pwe/01kxrcwq03af5ethg5jxy8438y-480w.webp",
             "contentType": "image/webp",
             "bytes": 10514,
             "etag": "7add3de4c35b4b282dd5031cc9b36c67",
@@ -97,7 +97,7 @@
             "height": 640
           },
           {
-            "key": "moments/2026/07/18-02-luogang-park/luogang-park-3-960w.webp",
+            "key": "moments/01kxrcwq00y9n9dbts7aff7pwe/01kxrcwq03af5ethg5jxy8438y-960w.webp",
             "contentType": "image/webp",
             "bytes": 26118,
             "etag": "f9db0294fe6d85bf1386f8627aa700bf",
@@ -109,12 +109,12 @@
     },
     {
       "uid": "01KXRCWQ04FFMPGN4M7M70HYD7",
-      "type": "image",
       "alt": "A clean restroom counter with two sinks, a toothbrush, and a toiletry bag.",
+      "type": "image",
       "width": 1440,
       "height": 1920,
       "published": {
-        "key": "moments/2026/07/18-02-luogang-park/luogang-park-4.webp",
+        "key": "moments/01kxrcwq00y9n9dbts7aff7pwe/01kxrcwq04ffmpgn4m7m70hyd7.webp",
         "contentType": "image/webp",
         "bytes": 182248,
         "etag": "b6612a2f14a176620097761f1f0ca101",
@@ -122,7 +122,7 @@
         "height": 1920,
         "variants": [
           {
-            "key": "moments/2026/07/18-02-luogang-park/luogang-park-4-480w.webp",
+            "key": "moments/01kxrcwq00y9n9dbts7aff7pwe/01kxrcwq04ffmpgn4m7m70hyd7-480w.webp",
             "contentType": "image/webp",
             "bytes": 22392,
             "etag": "193c27d51444fbe2bc8055282ce68d9a",
@@ -130,7 +130,7 @@
             "height": 640
           },
           {
-            "key": "moments/2026/07/18-02-luogang-park/luogang-park-4-960w.webp",
+            "key": "moments/01kxrcwq00y9n9dbts7aff7pwe/01kxrcwq04ffmpgn4m7m70hyd7-960w.webp",
             "contentType": "image/webp",
             "bytes": 80016,
             "etag": "535d65b2f9b3daa934207892a2f0ed97",
@@ -142,12 +142,12 @@
     },
     {
       "uid": "01KXRCWQ055AQ3V3CHFBB6T1WC",
-      "type": "image",
       "alt": "The entrance to a men's restroom beside ventilation equipment and trees.",
+      "type": "image",
       "width": 1440,
       "height": 1920,
       "published": {
-        "key": "moments/2026/07/18-02-luogang-park/luogang-park-5.webp",
+        "key": "moments/01kxrcwq00y9n9dbts7aff7pwe/01kxrcwq055aq3v3chfbb6t1wc.webp",
         "contentType": "image/webp",
         "bytes": 205104,
         "etag": "c19d84fa62edfbfbfbc5ce7c68a1d473",
@@ -155,7 +155,7 @@
         "height": 1920,
         "variants": [
           {
-            "key": "moments/2026/07/18-02-luogang-park/luogang-park-5-480w.webp",
+            "key": "moments/01kxrcwq00y9n9dbts7aff7pwe/01kxrcwq055aq3v3chfbb6t1wc-480w.webp",
             "contentType": "image/webp",
             "bytes": 34292,
             "etag": "4104144571253ee5e21f9156bb31e934",
@@ -163,7 +163,7 @@
             "height": 640
           },
           {
-            "key": "moments/2026/07/18-02-luogang-park/luogang-park-5-960w.webp",
+            "key": "moments/01kxrcwq00y9n9dbts7aff7pwe/01kxrcwq055aq3v3chfbb6t1wc-960w.webp",
             "contentType": "image/webp",
             "bytes": 92930,
             "etag": "7517328e573071cc4bbef543480be5fc",
@@ -174,10 +174,8 @@
       }
     }
   ],
+  "order": 2,
   "published": {
-    "id": "2026/07/18-02-luogang-park",
-    "slug": "luogang-park",
-    "order": 2,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-07-18T00:00:00+08:00",

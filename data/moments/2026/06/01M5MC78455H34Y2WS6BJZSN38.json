@@ -15,7 +15,7 @@
       "width": 2560,
       "height": 1707,
       "published": {
-        "key": "moments/2026/06/19-02-xuchang-caowei-ancient-city/xuchang-caowei-ancient-city.jpg",
+        "key": "moments/01m5mc78455h34y2ws6bjzsn38/01kvdqbw0443frmyzbyhrg2s5d.jpg",
         "contentType": "image/jpeg",
         "bytes": 313987,
         "etag": "50a2170285da315f5a1e0b1d6b3b2208",
@@ -32,7 +32,7 @@
       "width": 2560,
       "height": 1707,
       "published": {
-        "key": "moments/2026/06/19-02-xuchang-caowei-ancient-city/xuchang-caowei-ancient-city-2.jpg",
+        "key": "moments/01m5mc78455h34y2ws6bjzsn38/01kvdqbw05n91kt96cqkmt5kj1.jpg",
         "contentType": "image/jpeg",
         "bytes": 176808,
         "etag": "75b00ce5fffd434984a9f65a945d1009",
@@ -49,7 +49,7 @@
       "width": 2560,
       "height": 1707,
       "published": {
-        "key": "moments/2026/06/19-02-xuchang-caowei-ancient-city/xuchang-caowei-ancient-city-3.jpg",
+        "key": "moments/01m5mc78455h34y2ws6bjzsn38/01kvdqbw06gfhtpfct5606t1g2.jpg",
         "contentType": "image/jpeg",
         "bytes": 452632,
         "etag": "83c7e0bcf8775583f34bfe0842fa8dca",
@@ -66,7 +66,7 @@
       "width": 1707,
       "height": 2560,
       "published": {
-        "key": "moments/2026/06/19-02-xuchang-caowei-ancient-city/xuchang-caowei-ancient-city-4.jpg",
+        "key": "moments/01m5mc78455h34y2ws6bjzsn38/01kvdqbw07yapx6q125ztjr2tr.jpg",
         "contentType": "image/jpeg",
         "bytes": 429830,
         "etag": "ca00a30e12ffa4dc99cb827c0f5328f0",
@@ -77,10 +77,8 @@
       }
     }
   ],
+  "order": 2,
   "published": {
-    "id": "2026/06/19-02-xuchang-caowei-ancient-city",
-    "slug": "xuchang-caowei-ancient-city",
-    "order": 2,
     "at": "2026-10-23T12:40:21Z"
   },
   "createdAt": "2026-10-23T12:36:53Z",

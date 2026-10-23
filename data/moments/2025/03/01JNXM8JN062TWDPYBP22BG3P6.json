@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01JNXM8JN107Z3721096C74RS4",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 3296,
       "height": 1968,
       "published": {
-        "key": "moments/2025/03/09-02-yong-nativewind-he-eslint-plugin-tailwindcss-ke-neng-hui/yong-nativewind-he-eslint-plugin-tailwindcss-ke-neng-hui.jpg",
+        "key": "moments/01jnxm8jn062twdpybp22bg3p6/01jnxm8jn107z3721096c74rs4.jpg",
         "contentType": "image/jpeg",
         "bytes": 269784,
         "etag": "31e9cf25ccaf90271978a0c2c1817f6e",
@@ -21,7 +21,7 @@
         "height": 1968,
         "variants": [
           {
-            "key": "moments/2025/03/09-02-yong-nativewind-he-eslint-plugin-tailwindcss-ke-neng-hui/yong-nativewind-he-eslint-plugin-tailwindcss-ke-neng-hui-480w.webp",
+            "key": "moments/01jnxm8jn062twdpybp22bg3p6/01jnxm8jn107z3721096c74rs4-480w.webp",
             "contentType": "image/webp",
             "bytes": 10874,
             "etag": "416e164dfa0dcb734a077248f155a28d",
@@ -29,7 +29,7 @@
             "height": 287
           },
           {
-            "key": "moments/2025/03/09-02-yong-nativewind-he-eslint-plugin-tailwindcss-ke-neng-hui/yong-nativewind-he-eslint-plugin-tailwindcss-ke-neng-hui-960w.webp",
+            "key": "moments/01jnxm8jn062twdpybp22bg3p6/01jnxm8jn107z3721096c74rs4-960w.webp",
             "contentType": "image/webp",
             "bytes": 29124,
             "etag": "af42886b3d6707820d19c8ad82bc4bce",
@@ -37,7 +37,7 @@
             "height": 573
           },
           {
-            "key": "moments/2025/03/09-02-yong-nativewind-he-eslint-plugin-tailwindcss-ke-neng-hui/yong-nativewind-he-eslint-plugin-tailwindcss-ke-neng-hui-1920w.webp",
+            "key": "moments/01jnxm8jn062twdpybp22bg3p6/01jnxm8jn107z3721096c74rs4-1920w.webp",
             "contentType": "image/webp",
             "bytes": 65996,
             "etag": "1bd2671d143b9341f9976d970e063d7e",
@@ -48,10 +48,8 @@
       }
     }
   ],
+  "order": 2,
   "published": {
-    "id": "2025/03/09-02-yong-nativewind-he-eslint-plugin-tailwindcss-ke-neng-hui",
-    "slug": "yong-nativewind-he-eslint-plugin-tailwindcss-ke-neng-hui",
-    "order": 2,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2025-03-09T22:17:08+08:00",

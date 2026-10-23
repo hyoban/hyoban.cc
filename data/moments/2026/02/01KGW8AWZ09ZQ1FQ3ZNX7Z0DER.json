@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01KGW8AWZ133C0XS2YKDFN9VHH",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1667,
       "height": 800,
       "published": {
-        "key": "moments/2026/02/07-02-hakadaooo-cuikaipeng-meanc-p-pacexy-shirouzu-ref-cosine/hakadaooo-cuikaipeng-meanc-p-pacexy-shirouzu-ref-cosine.png",
+        "key": "moments/01kgw8awz09zq1fq3znx7z0der/01kgw8awz133c0xs2ykdfn9vhh.png",
         "contentType": "image/png",
         "bytes": 139781,
         "etag": "2c7a139732adc469df7391f84fda30fa",
@@ -21,7 +21,7 @@
         "height": 800,
         "variants": [
           {
-            "key": "moments/2026/02/07-02-hakadaooo-cuikaipeng-meanc-p-pacexy-shirouzu-ref-cosine/hakadaooo-cuikaipeng-meanc-p-pacexy-shirouzu-ref-cosine-480w.webp",
+            "key": "moments/01kgw8awz09zq1fq3znx7z0der/01kgw8awz133c0xs2ykdfn9vhh-480w.webp",
             "contentType": "image/webp",
             "bytes": 30042,
             "etag": "cf199cf9f08a53f3eea79e8f6285355a",
@@ -29,7 +29,7 @@
             "height": 230
           },
           {
-            "key": "moments/2026/02/07-02-hakadaooo-cuikaipeng-meanc-p-pacexy-shirouzu-ref-cosine/hakadaooo-cuikaipeng-meanc-p-pacexy-shirouzu-ref-cosine-960w.webp",
+            "key": "moments/01kgw8awz09zq1fq3znx7z0der/01kgw8awz133c0xs2ykdfn9vhh-960w.webp",
             "contentType": "image/webp",
             "bytes": 68742,
             "etag": "a8dd29c5cdd09fb70841de7935d040ff",
@@ -40,10 +40,8 @@
       }
     }
   ],
+  "order": 2,
   "published": {
-    "id": "2026/02/07-02-hakadaooo-cuikaipeng-meanc-p-pacexy-shirouzu-ref-cosine",
-    "slug": "hakadaooo-cuikaipeng-meanc-p-pacexy-shirouzu-ref-cosine",
-    "order": 2,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-02-07T22:33:16+08:00",

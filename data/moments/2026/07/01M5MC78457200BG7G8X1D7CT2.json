@@ -15,7 +15,7 @@
       "width": 1920,
       "height": 1440,
       "published": {
-        "key": "moments/2026/07/18-04-hefei-yangjia-huoguo/hefei-yangjia-huoguo.webp",
+        "key": "moments/01m5mc78457200bg7g8x1d7ct2/01kxrcwq04z39rmk9aspekwbed.webp",
         "contentType": "image/webp",
         "bytes": 612598,
         "etag": "27e6fb60500efebf72d87a203d2461bb",
@@ -32,7 +32,7 @@
       "width": 1920,
       "height": 1440,
       "published": {
-        "key": "moments/2026/07/18-04-hefei-yangjia-huoguo/hefei-yangjia-huoguo-2.webp",
+        "key": "moments/01m5mc78457200bg7g8x1d7ct2/01kxrcwq05we4bwmhgj9r521jq.webp",
         "contentType": "image/webp",
         "bytes": 125350,
         "etag": "cd6dc4f413ae75c67226a2771ddc4495",
@@ -48,10 +48,8 @@
       "火锅"
     ]
   },
+  "order": 4,
   "published": {
-    "id": "2026/07/18-04-hefei-yangjia-huoguo",
-    "slug": "hefei-yangjia-huoguo",
-    "order": 4,
     "at": "2026-10-23T12:40:21Z"
   },
   "createdAt": "2026-10-23T12:36:53Z",

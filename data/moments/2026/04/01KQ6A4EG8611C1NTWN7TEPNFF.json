@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01KQ6A4EG99ABGMKQD5JZTV9QJ",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 590,
       "height": 1280,
       "published": {
-        "key": "moments/2026/04/27-01-xia-zhou-jiu-wu-yi-le-suo-yi-si-yue/xia-zhou-jiu-wu-yi-le-suo-yi-si-yue.jpg",
+        "key": "moments/01kq6a4eg8611c1ntwn7tepnff/01kq6a4eg99abgmkqd5jztv9qj.jpg",
         "contentType": "image/jpeg",
         "bytes": 36809,
         "etag": "e576bb65d3325a12639346d0539a9e83",
@@ -21,7 +21,7 @@
         "height": 1280,
         "variants": [
           {
-            "key": "moments/2026/04/27-01-xia-zhou-jiu-wu-yi-le-suo-yi-si-yue/xia-zhou-jiu-wu-yi-le-suo-yi-si-yue-480w.webp",
+            "key": "moments/01kq6a4eg8611c1ntwn7tepnff/01kq6a4eg99abgmkqd5jztv9qj-480w.webp",
             "contentType": "image/webp",
             "bytes": 19500,
             "etag": "9a58101a5f7c2478182edc50188af38f",
@@ -33,12 +33,12 @@
     },
     {
       "uid": "01KQ6A4EGATEZ3B918GEWCGR3B",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 590,
       "height": 1280,
       "published": {
-        "key": "moments/2026/04/27-01-xia-zhou-jiu-wu-yi-le-suo-yi-si-yue/xia-zhou-jiu-wu-yi-le-suo-yi-si-yue-2.jpg",
+        "key": "moments/01kq6a4eg8611c1ntwn7tepnff/01kq6a4egatez3b918gewcgr3b.jpg",
         "contentType": "image/jpeg",
         "bytes": 33153,
         "etag": "078dba3ff005b7e6d151856dddcda4c5",
@@ -46,7 +46,7 @@
         "height": 1280,
         "variants": [
           {
-            "key": "moments/2026/04/27-01-xia-zhou-jiu-wu-yi-le-suo-yi-si-yue/xia-zhou-jiu-wu-yi-le-suo-yi-si-yue-2-480w.webp",
+            "key": "moments/01kq6a4eg8611c1ntwn7tepnff/01kq6a4egatez3b918gewcgr3b-480w.webp",
             "contentType": "image/webp",
             "bytes": 12664,
             "etag": "3a5f645ec705e111a2b151001bda0682",
@@ -57,10 +57,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2026/04/27-01-xia-zhou-jiu-wu-yi-le-suo-yi-si-yue",
-    "slug": "xia-zhou-jiu-wu-yi-le-suo-yi-si-yue",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-04-27T09:51:17+08:00",

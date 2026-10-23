@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01HS3TQ87HX4VE7MWDA24SCSW7",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1179,
       "height": 1171,
       "published": {
-        "key": "moments/2024/03/16-01-im-basically-still-in-the-first-stage-of-the-picture/im-basically-still-in-the-first-stage-of-the-picture.jpg",
+        "key": "moments/01hs3tq87gc7e36fae1b2h71hn/01hs3tq87hx4ve7mwda24scsw7.jpg",
         "contentType": "image/jpeg",
         "bytes": 134176,
         "etag": "9b958f0094712faf0cb52e609a18e97b",
@@ -21,7 +21,7 @@
         "height": 1171,
         "variants": [
           {
-            "key": "moments/2024/03/16-01-im-basically-still-in-the-first-stage-of-the-picture/im-basically-still-in-the-first-stage-of-the-picture-480w.webp",
+            "key": "moments/01hs3tq87gc7e36fae1b2h71hn/01hs3tq87hx4ve7mwda24scsw7-480w.webp",
             "contentType": "image/webp",
             "bytes": 28224,
             "etag": "bc7ca707fa9af1ba2f3685e414683095",
@@ -29,7 +29,7 @@
             "height": 477
           },
           {
-            "key": "moments/2024/03/16-01-im-basically-still-in-the-first-stage-of-the-picture/im-basically-still-in-the-first-stage-of-the-picture-960w.webp",
+            "key": "moments/01hs3tq87gc7e36fae1b2h71hn/01hs3tq87hx4ve7mwda24scsw7-960w.webp",
             "contentType": "image/webp",
             "bytes": 58732,
             "etag": "cb5fb38c51394f75f79604e54c4d654f",
@@ -40,10 +40,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2024/03/16-01-im-basically-still-in-the-first-stage-of-the-picture",
-    "slug": "im-basically-still-in-the-first-stage-of-the-picture",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2024-03-16T22:30:14+08:00",

@@ -8,12 +8,12 @@
   "media": [
     {
       "uid": "01JNBK8G29AFGVWYS8BC32KF2Y",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1920,
       "height": 1440,
       "published": {
-        "key": "moments/2025/03/02-02-ba-xi-tong-zhuang-zai-le-wai-jie-de-ying/ba-xi-tong-zhuang-zai-le-wai-jie-de-ying.jpg",
+        "key": "moments/01jnbk8g286ekd8qx19v6g86gw/01jnbk8g29afgvwys8bc32kf2y.jpg",
         "contentType": "image/jpeg",
         "bytes": 620381,
         "etag": "a3462460a4b5bb98715d18fc0bba9402",
@@ -21,7 +21,7 @@
         "height": 1440,
         "variants": [
           {
-            "key": "moments/2025/03/02-02-ba-xi-tong-zhuang-zai-le-wai-jie-de-ying/ba-xi-tong-zhuang-zai-le-wai-jie-de-ying-480w.webp",
+            "key": "moments/01jnbk8g286ekd8qx19v6g86gw/01jnbk8g29afgvwys8bc32kf2y-480w.webp",
             "contentType": "image/webp",
             "bytes": 13784,
             "etag": "bb854ca5acc67036dfed2d834bae3fee",
@@ -29,7 +29,7 @@
             "height": 360
           },
           {
-            "key": "moments/2025/03/02-02-ba-xi-tong-zhuang-zai-le-wai-jie-de-ying/ba-xi-tong-zhuang-zai-le-wai-jie-de-ying-960w.webp",
+            "key": "moments/01jnbk8g286ekd8qx19v6g86gw/01jnbk8g29afgvwys8bc32kf2y-960w.webp",
             "contentType": "image/webp",
             "bytes": 39232,
             "etag": "7796eb3ee50cfc12cc42e73cb844adc7",
@@ -40,10 +40,8 @@
       }
     }
   ],
+  "order": 2,
   "published": {
-    "id": "2025/03/02-02-ba-xi-tong-zhuang-zai-le-wai-jie-de-ying",
-    "slug": "ba-xi-tong-zhuang-zai-le-wai-jie-de-ying",
-    "order": 2,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2025-03-02T22:13:17+08:00",

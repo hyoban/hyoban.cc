@@ -10,12 +10,12 @@
   "media": [
     {
       "uid": "01J82NHRD1YXB5FK8DQDF4VHVP",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1920,
       "height": 1080,
       "published": {
-        "key": "moments/2024/09/18-01-nan-jing-de-di-yi-tian-du-guo-wo-25/nan-jing-de-di-yi-tian-du-guo-wo-25.jpg",
+        "key": "moments/01j82nhrd0enz2dksdgg24ck78/01j82nhrd1yxb5fk8dqdf4vhvp.jpg",
         "contentType": "image/jpeg",
         "bytes": 360321,
         "etag": "f50af390d34514b13b53385cfc2220f8",
@@ -23,7 +23,7 @@
         "height": 1080,
         "variants": [
           {
-            "key": "moments/2024/09/18-01-nan-jing-de-di-yi-tian-du-guo-wo-25/nan-jing-de-di-yi-tian-du-guo-wo-25-480w.webp",
+            "key": "moments/01j82nhrd0enz2dksdgg24ck78/01j82nhrd1yxb5fk8dqdf4vhvp-480w.webp",
             "contentType": "image/webp",
             "bytes": 29714,
             "etag": "7d04aa186855e32d5baae0858dc7f337",
@@ -31,7 +31,7 @@
             "height": 270
           },
           {
-            "key": "moments/2024/09/18-01-nan-jing-de-di-yi-tian-du-guo-wo-25/nan-jing-de-di-yi-tian-du-guo-wo-25-960w.webp",
+            "key": "moments/01j82nhrd0enz2dksdgg24ck78/01j82nhrd1yxb5fk8dqdf4vhvp-960w.webp",
             "contentType": "image/webp",
             "bytes": 88454,
             "etag": "2b14f9c963f9023db7f495e77f32e351",
@@ -42,10 +42,8 @@
       }
     }
   ],
+  "order": 1,
   "published": {
-    "id": "2024/09/18-01-nan-jing-de-di-yi-tian-du-guo-wo-25",
-    "slug": "nan-jing-de-di-yi-tian-du-guo-wo-25",
-    "order": 1,
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2024-09-18T21:36:04+08:00",
