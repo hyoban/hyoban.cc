@@ -1,13 +1,14 @@
 /*! @license MIT
- * Ported from shadcn/ui's Drawer, base-nova style (registry item styles/base-nova/drawer,
- * https://github.com/shadcn-ui/ui), Copyright (c) 2023 shadcn, its Tailwind classes written
- * out as CSS. Changes Copyright (c) 2026 Stephen Zhou. See LICENSE and THIRD-PARTY-NOTICES.md.
+ * Ported from shadcn/ui's Drawer and ScrollArea, base-nova style (registry items
+ * styles/base-nova/drawer and styles/base-nova/scroll-area, https://github.com/shadcn-ui/ui),
+ * Copyright (c) 2023 shadcn, their Tailwind classes written out as CSS. Changes Copyright (c) 2026 Stephen Zhou. See LICENSE and THIRD-PARTY-NOTICES.md.
  */
 
 /* shadcn/ui's Drawer (base-nova, on Base UI) as plain CSS, over the attributes and
    variables createDrawer writes. Two parts: how it moves, which the drawer needs, and how
    it looks, in :where() so a page's own rules win without trying. Colours come from
-   --drawer-background, --drawer-foreground, --drawer-border and --drawer-overlay. */
+   --drawer-background, --drawer-foreground, --drawer-border and --drawer-overlay, and the
+   scroll area's thumb from --scroll-area-thumb. */
 
 @layer drawer {
   /* How it moves. */
@@ -360,5 +361,64 @@
     [data-swipe-direction='right'] > & {
       justify-content: flex-end;
     }
+  }
+
+  /* The scroll area (createScrollArea): the viewport's own scrollbar hidden, ... */
+
+  [data-scroll-area-viewport] {
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  [data-scroll-area-scrollbar] {
+    position: absolute;
+    z-index: 10;
+    display: flex;
+    box-sizing: border-box;
+    padding: 1px;
+    touch-action: none;
+    user-select: none;
+
+    &[hidden] {
+      display: none;
+    }
+  }
+
+  [data-scroll-area-thumb] {
+    position: relative;
+    flex: 1;
+
+    [data-orientation='vertical'] > & {
+      height: var(--scroll-area-thumb-height);
+    }
+
+    [data-orientation='horizontal'] > & {
+      width: var(--scroll-area-thumb-width);
+    }
+  }
+
+  /* ... and its own drawn over its edge, shadcn's: a thin rounded thumb on a clear track. */
+
+  :where([data-scroll-area-scrollbar]) {
+    transition: background-color 150ms;
+
+    &:where([data-orientation='vertical']) {
+      width: 0.625rem;
+      border-left: 1px solid transparent;
+    }
+
+    &:where([data-orientation='horizontal']) {
+      flex-direction: column;
+      height: 0.625rem;
+      border-top: 1px solid transparent;
+    }
+  }
+
+  :where([data-scroll-area-thumb]) {
+    border-radius: 9999px;
+    background: var(--scroll-area-thumb, color-mix(in srgb, currentColor 15%, transparent));
   }
 }

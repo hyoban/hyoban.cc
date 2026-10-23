@@ -42,18 +42,22 @@ const drawer = createDrawer({
   above 1 pixels, or a `'px'` / `'rem'` string. `data-expanded` at 1.
 - **Nesting**: `parent` (a drawer, or a function asked as it opens) steps that drawer back
   while this one is open, as shadcn's stack.
+- **Scroll area**: `createScrollArea({ viewport, root })` hides an element's own scrollbar
+  and draws shadcn's over its edge in `root` (a drawer's popup, say), the thumb dragged,
+  the track pressed, a wheel over it scrolling. The thumb's colour is `--scroll-area-thumb`.
 
 ## The port
 
 Ported from `@base-ui/react` 1.9.0 and shadcn/ui's base-nova Drawer, as of October 2026.
 Each source file says at its top which upstream files it comes from.
 
-| Here                 | Upstream                                                                                                                                                           |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `src/drawer.ts`      | Base UI `drawer/root/DrawerRoot`, `drawer/popup/DrawerPopup`, `drawer/backdrop/DrawerBackdrop`, and the release and snap logic of `drawer/viewport/DrawerViewport` |
-| `src/swipe.ts`       | Base UI `utils/useSwipeDismiss`, `utils/scrollable`, and the touch handling of `drawer/viewport/DrawerViewport`                                                    |
-| `src/snap-points.ts` | Base UI `drawer/root/useDrawerSnapPoints`                                                                                                                          |
-| `src/styles.css`     | shadcn/ui `styles/base-nova/drawer` (its Tailwind classes, written out as CSS)                                                                                     |
+| Here                 | Upstream                                                                                                                                                               |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/drawer.ts`      | Base UI `drawer/root/DrawerRoot`, `drawer/popup/DrawerPopup`, `drawer/backdrop/DrawerBackdrop`, and the release and snap logic of `drawer/viewport/DrawerViewport`     |
+| `src/swipe.ts`       | Base UI `utils/useSwipeDismiss`, `utils/scrollable`, and the touch handling of `drawer/viewport/DrawerViewport`                                                        |
+| `src/scroll-area.ts` | Base UI `scroll-area/root/ScrollAreaRoot`, `scroll-area/viewport/ScrollAreaViewport`, `scroll-area/scrollbar/ScrollAreaScrollbar`, `scroll-area/thumb/ScrollAreaThumb` |
+| `src/snap-points.ts` | Base UI `drawer/root/useDrawerSnapPoints`                                                                                                                              |
+| `src/styles.css`     | shadcn/ui `styles/base-nova/drawer` and `styles/base-nova/scroll-area` (their Tailwind classes, written out as CSS)                                                    |
 
 What changed on the way:
 

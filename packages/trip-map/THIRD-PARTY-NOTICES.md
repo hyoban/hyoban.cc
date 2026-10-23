@@ -11,7 +11,7 @@
 
 ## Base UI
 
-@hyoban/drawer's behaviour is ported from [Base UI](https://github.com/mui/base-ui)'s Drawer, `@base-ui/react` 1.9.0.
+@hyoban/drawer's behaviour is ported from [Base UI](https://github.com/mui/base-ui)'s Drawer and ScrollArea, `@base-ui/react` 1.9.0.
 
 ```text
 MIT License
@@ -40,7 +40,8 @@ SOFTWARE.
 ## shadcn/ui
 
 @hyoban/drawer's stylesheet is ported from [shadcn/ui](https://github.com/shadcn-ui/ui)'s
-Drawer in the base-nova style (registry item `styles/base-nova/drawer`).
+Drawer and ScrollArea in the base-nova style (registry items `styles/base-nova/drawer` and
+`styles/base-nova/scroll-area`).
 
 ```text
 MIT License

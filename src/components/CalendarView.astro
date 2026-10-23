@@ -402,19 +402,24 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
 
 <script>
   import '@/calendar-prefetch-client'
-  import { createDrawer, type Drawer } from '@hyoban/drawer'
+  import { createDrawer, createScrollArea, type Drawer, type ScrollArea } from '@hyoban/drawer'
   import { navigate } from 'astro:transitions/client'
 
   let calendarController: AbortController | undefined
   // A day's Moments are a drawer beside the month on a wide screen, swiped right to close;
   // on a phone they're the page itself.
   const wide = matchMedia('(width >= 56.0625rem)')
+  // A mouse or a trackpad: a finger keeps the device's own scrollbar.
+  const finePointer = matchMedia('(hover: hover) and (pointer: fine)')
   let dayDrawer: Drawer | undefined
+  let dayScrollArea: ScrollArea | undefined
 
   /** Makes `element` the day's drawer while the screen is wide; it closes to the month. */
   function setUpDayDrawer(element: HTMLElement, open: boolean, signal: AbortSignal) {
     dayDrawer?.destroy()
     dayDrawer = undefined
+    dayScrollArea?.destroy()
+    dayScrollArea = undefined
     element.hidden = false
 
     if (!wide.matches || signal.aborted) {
@@ -450,6 +455,13 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
       swipeDirection: 'right',
     })
     dayDrawer.open()
+
+    // Its Moments scroll under the drawer's thin scrollbar, drawn over their edge.
+    const content = element.querySelector<HTMLElement>('.day-drawer__content')
+
+    if (content && finePointer.matches) {
+      dayScrollArea = createScrollArea({ root: element, signal, viewport: content })
+    }
   }
 
   function initializeCalendar() {
@@ -472,6 +484,7 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
 
     if (drawer) {
       wide.addEventListener('change', () => setUpDayDrawer(drawer, true, signal), { signal })
+      finePointer.addEventListener('change', () => setUpDayDrawer(drawer, true, signal), { signal })
 
       // The links back to the month let the drawer slide away first.
       for (const link of document.querySelectorAll<HTMLAnchorElement>('.day-drawer__close, .drawer-scrim')) {

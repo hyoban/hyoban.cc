@@ -173,6 +173,38 @@ body {
   }
 }
 
+/* The drawers' scrollbars (createScrollArea, where there's a mouse): as quiet as the rest,
+   a slim grey pill that shows while the pointer is over the drawer or it's scrolling, and
+   stops short of the drawer's rounded corners. */
+[data-scroll-area-scrollbar] {
+  padding: 0.5rem 0.1875rem;
+  border: 0;
+  opacity: 0;
+  transition: opacity 140ms ease;
+
+  &[data-orientation='vertical'] {
+    width: 0.75rem;
+  }
+
+  &:is([data-hovering], [data-scrolling]) {
+    opacity: 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+[data-scroll-area-thumb] {
+  background: color-mix(in srgb, var(--color-tx-3) 35%, transparent);
+  transition: background-color 140ms ease;
+
+  [data-scroll-area-scrollbar]:hover > &,
+  [data-scroll-area-scrollbar]:active > & {
+    background: color-mix(in srgb, var(--color-tx-3) 60%, transparent);
+  }
+}
+
 /* Kept for screen readers only. */
 .sr-only {
   position: absolute;

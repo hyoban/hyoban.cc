@@ -1,4 +1,4 @@
-import { createDrawer, type Drawer } from '@hyoban/drawer'
+import { createDrawer, createScrollArea, type Drawer, type ScrollArea } from '@hyoban/drawer'
 
 // The map's sheets (a place, the lists, a trip, the settings) as drawers: beside the map
 // on a wide screen, swiped right to close, and along a phone's bottom, swiped down. The map
@@ -8,6 +8,9 @@ import { createDrawer, type Drawer } from '@hyoban/drawer'
 // going back closes the sheet only once the browser gets there.
 
 export type Sheet = Drawer
+
+// A mouse or a trackpad, rather than a finger.
+const FINE_POINTER = window.matchMedia('(hover: hover) and (pointer: fine)')
 
 export function createSheet(
   element: HTMLElement,
@@ -59,7 +62,32 @@ export function createSheet(
     swipeDirection: getDirection(),
   })
 
-  narrow.addEventListener('change', () => sheet.setSwipeDirection(getDirection()), { signal })
+  // What scrolls in it gets the drawer's thin scrollbar, drawn over its edge in the sheet,
+  // where a mouse scrolls it beside the map; a phone keeps its own.
+  const content = element.querySelector<HTMLElement>('[data-drawer-content]')
+  let scrollArea: ScrollArea | undefined
+
+  function syncScrollArea() {
+    const wanted = Boolean(content) && !narrow.matches && FINE_POINTER.matches
+
+    if (wanted && !scrollArea && content) {
+      scrollArea = createScrollArea({ root: element, signal, viewport: content })
+    } else if (!wanted && scrollArea) {
+      scrollArea.destroy()
+      scrollArea = undefined
+    }
+  }
+
+  syncScrollArea()
+  narrow.addEventListener(
+    'change',
+    () => {
+      sheet.setSwipeDirection(getDirection())
+      syncScrollArea()
+    },
+    { signal },
+  )
+  FINE_POINTER.addEventListener('change', syncScrollArea, { signal })
 
   return sheet
 }

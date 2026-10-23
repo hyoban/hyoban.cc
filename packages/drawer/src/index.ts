@@ -8,6 +8,12 @@ export {
   type SwipeDirection,
 } from './drawer.ts'
 export {
+  createScrollArea,
+  type ScrollArea,
+  type ScrollAreaOptions,
+  type ScrollAreaOrientation,
+} from './scroll-area.ts'
+export {
   getSnapPointSwipeMovement,
   resolveSnapPoints,
   type ResolvedSnapPoint,
