@@ -393,6 +393,41 @@ async function cropPhoto(photo: Photo, tile: Tile) {
   return `data:image/jpeg;base64,${jpeg.toString('base64')}`
 }
 
+/**
+ * Photos in a grid of `columns`, each cropped to fill its tile, as one `width` × `height`
+ * WebP: what a year's numerals show through. A last row short of photos is left clear.
+ */
+export async function renderCollage(
+  photos: string[],
+  columns: number,
+  width: number,
+  height: number,
+) {
+  const rows = Math.ceil(photos.length / columns)
+  const tile = { width: Math.round(width / columns), height: Math.round(height / rows) }
+  const tiles = await Promise.all(
+    photos.map(async (url, index) => ({
+      input: await sharp((await fetchPhoto(url)).data)
+        .rotate()
+        .resize(tile.width, tile.height, { fit: 'cover' })
+        .toBuffer(),
+      left: (index % columns) * tile.width,
+      top: Math.floor(index / columns) * tile.height,
+    })),
+  )
+  return sharp({
+    create: {
+      width: tile.width * columns,
+      height: tile.height * rows,
+      channels: 4,
+      background: '#0000',
+    },
+  })
+    .composite(tiles)
+    .webp({ quality: 80 })
+    .toBuffer()
+}
+
 async function loadPanelImage(
   url: string,
   width: number,
