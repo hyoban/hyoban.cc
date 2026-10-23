@@ -3,7 +3,8 @@ import { getSeed, SEED_PARAMETER } from './year-random.ts'
 // A year review as pictures to share: the page's own content drawn in the browser by
 // modern-screenshot, everything shown at once as it ends up. As one long picture with the
 // site's mark at the foot; or cut between its parts and laid out on squares, a few short
-// parts to a square and a tall one shrunk to fit its own, each marked and numbered. A long
+// parts to a square and a tall one shrunk to fit its own, nine at most where shrinking a
+// little more gets there, each marked and numbered. A long
 // picture on a phone is the page as the phone lays it out; everything else is drawn from
 // the page loaded again out of sight at the narrowest wide layout, where the footprint and
 // the days, which spread wider than the words on a big screen, keep to their column, and
@@ -26,6 +27,10 @@ const SQUARE_GAP = 40
  * numerals and the clock's labels lean out of it a little, and keep their edges.
  */
 const SQUARE_BLEED = 24
+/** As many squares as a post takes in a grid of nine. */
+const MAX_SQUARES = 9
+/** How much more than a square holds a run may take to keep within MAX_SQUARES, shrunk. */
+const MAX_STRETCH = 1.6
 
 export type Mode = 'long' | 'square'
 /** A part of the page, from the heading down: where it lies in the drawing, in CSS pixels. */
@@ -143,8 +148,20 @@ async function drawYear(content: HTMLElement): Promise<Drawing> {
   }
 }
 
-/** The parts in runs that fit one square each, in order; a part too tall for one has its own. */
+/**
+ * The parts in runs of squares, no more than MAX_SQUARES when they can be: packed into
+ * `room`, and if that takes too many, into a little more room each time, a run then
+ * shrunk to fit its square, as far as MAX_STRETCH.
+ */
 function packSquares(blocks: Block[], room: number) {
+  for (let stretch = 1; ; stretch += 0.05) {
+    const squares = packRuns(blocks, room * stretch)
+    if (squares.length <= MAX_SQUARES || stretch >= MAX_STRETCH) return squares
+  }
+}
+
+/** The parts in runs that fit `room` each, in order; a part too tall for one has its own. */
+function packRuns(blocks: Block[], room: number) {
   const squares: Block[][] = []
   let height = Infinity
   for (const block of blocks) {
@@ -175,10 +192,11 @@ function drawSquares({ canvas, scale, width, blocks }: Drawing, mark: string) {
     context.fillStyle = style.backgroundColor
     context.fillRect(0, 0, side, side)
 
-    // The run in the middle of the room above the mark, a part too tall shrunk to fit.
-    const fit = Math.min(1, room / run.reduce((total, block) => total + block.height, 0))
+    // The run in the middle of the room above the mark, shrunk to fit it with its gaps.
+    const gaps = SQUARE_GAP * (run.length - 1)
+    const fit = Math.min(1, (room - gaps) / run.reduce((total, block) => total + block.height, 0))
     const height = run.reduce((total, block) => total + block.height * fit, 0)
-    let y = PADDING.y + (room - height - SQUARE_GAP * (run.length - 1)) / 2
+    let y = PADDING.y + (room - height - gaps) / 2
     for (const block of run) {
       const taken = width + SQUARE_BLEED * 2
       const drawn = { width: taken * fit, height: block.height * fit }
