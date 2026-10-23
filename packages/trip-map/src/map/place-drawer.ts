@@ -49,8 +49,16 @@ export function createPlaceDrawer({
   parent: () => Sheet | undefined
   signal: AbortSignal
 }) {
-  const { drawer, drawerClose, drawerContent, drawerEyebrow, drawerTitle, lightbox, page } =
-    elements
+  const {
+    drawer,
+    drawerClose,
+    drawerContent,
+    drawerDetail,
+    drawerEyebrow,
+    drawerTitle,
+    lightbox,
+    page,
+  } = elements
   // Each place's drawer content, its file fetched once (places may share one); a failed
   // fetch is tried again next time.
   const html = new Map<string, string>()
@@ -188,6 +196,10 @@ export function createPlaceDrawer({
     activeId = place.id
     activeTrigger = options.trigger ?? activeTrigger
     drawerTitle.textContent = place.name
+    if (drawerDetail) {
+      drawerDetail.textContent = place.detail ?? ''
+      drawerDetail.hidden = !place.detail
+    }
     setEyebrow(place)
     shown = true
     sheet.open()

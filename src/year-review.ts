@@ -1,3 +1,4 @@
+import type { Place, PlaceKind, Places } from '@hyoban/data-spec'
 import { buildFogOfWar, type FogRegions } from '@hyoban/trip-map'
 import type { Moment, MomentTrip } from './moments/index.ts'
 
@@ -118,6 +119,46 @@ export function buildYearReview<M extends ReviewMoment, T extends ReviewTrip>(
     },
     firstVisits: [...firstVisits.values()],
   }
+}
+
+/** A place the year's Moments were at: how many, and the day of its first. */
+export type YearPlaceVisit = {
+  id: string
+  name: string
+  kind?: PlaceKind
+  division?: Place['division']
+  count: number
+  dateKey: string
+}
+
+/** The places the Moments name, in the order the year first reached them, kinds and divisions from `places`. */
+export function getYearPlaces(
+  moments: readonly Pick<Moment, 'dateKey' | 'locations'>[],
+  places: Places,
+): YearPlaceVisit[] {
+  const visits = new Map<string, YearPlaceVisit>()
+
+  for (const moment of moments) {
+    for (const { id, name } of moment.locations) {
+      const visit = visits.get(id)
+
+      if (visit) {
+        visit.count += 1
+      } else {
+        const { kind, division } = places[id] ?? {}
+        visits.set(id, {
+          id,
+          name,
+          ...(kind && { kind }),
+          ...(division && { division }),
+          count: 1,
+          dateKey: moment.dateKey,
+        })
+      }
+    }
+  }
+
+  return [...visits.values()]
 }
 
 /** The longest run of consecutive days among sorted `YYYY-MM-DD` keys. */

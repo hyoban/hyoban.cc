@@ -18,14 +18,17 @@ import { getShowcaseMedia } from '@/moments/showcase'
 import { getTripCollage } from '@/moments/trip-images'
 import { getPageCardPath, getPageTitle } from '@/page-cards'
 import { buildRouteGlyph, buildYearMap, getTripLine } from '@/year-map'
-import { buildYearReview, getReviewYears } from '@/year-review'
+import { buildYearReview, getCityName, getReviewYears, getYearPlaces } from '@/year-review'
 import YearClock from '@/components/YearClock.astro'
-import { readDevices } from '@/data/store'
+import { readDevices, readPlaces } from '@/data/store'
+import { getDivisionLabel, placeKindLabels } from '@/data/place-info'
 import { getSortedPosts } from '@/utils'
-import type { FogRegions } from '@hyoban/trip-map'
+import { getShortPlaceName, type FogRegions } from '@hyoban/trip-map'
+import type { PlaceKind } from '@hyoban/data-spec'
 
 // A year at a glance (src/year-review.ts): its counts against the year before, its
 // footprint on a map drawn at build time (src/year-map.ts), the cities it first reached,
+// the places it went to by their kind,
 // every day of it as a tile, its trips by the shapes of their routes, a few days worth
 // going back to, the devices bought, and when it was written.
 export async function getStaticPaths() {
@@ -76,6 +79,31 @@ const trips = review.trips.map((trip) => ({
 }))
 const topCities = review.cities.lit.slice(0, 6)
 const firstVisits = Map.groupBy(review.firstVisits, (visit) => Number(visit.dateKey.slice(5, 7)))
+// The places gone to by their kind, the cities being the footprint's and the stations and
+// the like only on the way; each in the order the year reached it, with its city.
+const yearPlaces = getYearPlaces(review.moments, readPlaces())
+const placeKinds: PlaceKind[] = ['scenic', 'food', 'stay', 'shopping', 'town']
+const placesByKind = placeKinds
+  .map((kind) => ({
+    kind,
+    places: yearPlaces
+      .filter((place) => place.kind === kind)
+      .map((place) => {
+        const name = getShortPlaceName(place.name)
+        const city = place.division?.city && getCityName(place.division.city)
+        return {
+          ...place,
+          name,
+          // Its city, unless the name already says it.
+          city: city && !name.includes(city) ? city : undefined,
+          title: [place.division && getDivisionLabel(place.division), formatDay(place.dateKey)]
+            .filter(Boolean)
+            .join(' · '),
+        }
+      }),
+  }))
+  .filter((group) => group.places.length > 0)
+const placeProvinces = new Set(yearPlaces.flatMap((place) => place.division?.province ?? [])).size
 const postLinks = new Set((await getSortedPosts()).map((post) => post.data.link))
 const devices = Object.entries(readDevices())
   .filter(([, device]) => device.bought.on.startsWith(String(year)))
@@ -247,6 +275,39 @@ const highlights = [
               </li>
             ))}
           </ol>
+        </section>
+      )
+    }
+
+    {
+      placesByKind.length > 0 && (
+        <section class="year-section" aria-labelledby="year-places">
+          <h2 id="year-places">去过的地方</h2>
+          <p class="year-places__total">
+            {placeProvinces} 个省份的 {yearPlaces.length} 个地点
+          </p>
+          <dl class="year-places">
+            {placesByKind.map((group, index) => (
+              <div style={`--index: ${index}`}>
+                <dt>
+                  {placeKindLabels[group.kind]}
+                  <span class="year-places__count">{group.places.length}</span>
+                </dt>
+                <dd>
+                  <ul>
+                    {group.places.map((place) => (
+                      <li>
+                        <a href={`/map/${year}/place/${place.id}/`} title={place.title}>
+                          {place.name}
+                          {place.city && <span class="year-places__city">{place.city}</span>}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </dd>
+              </div>
+            ))}
+          </dl>
         </section>
       )
     }
@@ -721,6 +782,68 @@ const highlights = [
     font-weight: 500;
   }
 
+  /* The places by kind, each kind a row of names linking to them on the map. */
+  .year-places__total {
+    margin-top: -0.5rem;
+    margin-bottom: 1rem;
+    color: var(--color-tx-2);
+    font-size: 0.875rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .year-places {
+    display: grid;
+    gap: 1rem;
+
+    & > div {
+      display: grid;
+      gap: 0.375rem;
+      padding-top: 0.5rem;
+      border-top: 1px solid var(--color-border);
+
+      @media (width >= 40rem) {
+        grid-template-columns: 6rem minmax(0, 1fr);
+        gap: 1rem;
+      }
+    }
+
+    & dt {
+      display: flex;
+      align-items: baseline;
+      gap: 0.375rem;
+      font-weight: 500;
+    }
+
+    & ul {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.25rem 1rem;
+    }
+
+    & a {
+      text-decoration: none;
+
+      @media (hover: hover) {
+        &:hover {
+          text-decoration: underline;
+          text-underline-offset: 0.2em;
+        }
+      }
+    }
+  }
+
+  .year-places__count,
+  .year-places__city {
+    color: var(--color-tx-3);
+    font-size: 0.75rem;
+    font-weight: 400;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .year-places__city {
+    margin-left: 0.25rem;
+  }
+
   .year-devices {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
@@ -803,6 +926,11 @@ const highlights = [
       & .year-first__city {
         animation: year-rise 500ms var(--ease-out) backwards;
         animation-delay: calc(350ms + var(--month) * 60ms + var(--index) * 70ms);
+      }
+
+      & .year-places > div {
+        animation: year-rise 600ms var(--ease-out) backwards;
+        animation-delay: calc(150ms + var(--index) * 90ms);
       }
 
       & .year-trips li,

@@ -1,6 +1,12 @@
 import { describe, expect, test } from 'vite-plus/test'
 import type { FogRegions } from '@hyoban/trip-map'
-import { buildYearReview, getCityName, getLongestStreak, getReviewYears } from './year-review.ts'
+import {
+  buildYearReview,
+  getCityName,
+  getLongestStreak,
+  getReviewYears,
+  getYearPlaces,
+} from './year-review.ts'
 
 const square = (id: string, name: string, x: number): FogRegions['features'][number] => ({
   geometry: {
@@ -120,4 +126,38 @@ describe('buildYearReview', () => {
     expect(review.cities.newNames).toEqual(['合肥'])
     expect(review.firstVisits).toEqual([{ name: '合肥', dateKey: '2026-01-02' }])
   })
+})
+
+test('getYearPlaces counts each place once per Moment, in the order first reached, with its kind and division', () => {
+  const lake = { id: 'lake', name: '湖', latitude: 0.5, longitude: 0.6 }
+  const places = {
+    suzhou: {
+      ...suzhou,
+      kind: 'city' as const,
+      division: { code: '320500', province: '江苏省', city: '苏州市' },
+    },
+    lake: { ...lake, kind: 'scenic' as const },
+  }
+
+  expect(
+    getYearPlaces(
+      [
+        moment('2026-03-01', [suzhou]),
+        moment('2026-03-02', [lake, suzhou]),
+        moment('2026-03-05', [hefei]),
+      ],
+      places,
+    ),
+  ).toEqual([
+    {
+      id: 'suzhou',
+      name: '苏州',
+      kind: 'city',
+      division: { code: '320500', province: '江苏省', city: '苏州市' },
+      count: 2,
+      dateKey: '2026-03-01',
+    },
+    { id: 'lake', name: '湖', kind: 'scenic', count: 1, dateKey: '2026-03-02' },
+    { id: 'hefei', name: '合肥', count: 1, dateKey: '2026-03-05' },
+  ])
 })
