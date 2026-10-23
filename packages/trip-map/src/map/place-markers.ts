@@ -80,6 +80,7 @@ export type PlaceMarkers = ReturnType<typeof createPlaceMarkers>
 
 export function createPlaceMarkers({
   getAnimationDuration,
+  getClearPadding,
   getMap,
   isPaused,
   messages,
@@ -89,6 +90,8 @@ export function createPlaceMarkers({
   signal,
 }: {
   getAnimationDuration: () => number
+  /** Room kept on the map for what's open on its side, and around the rest. */
+  getClearPadding: () => Required<mapboxgl.PaddingOptions>
   getMap: () => mapboxgl.Map | undefined
   /** Until the map has loaded, and while a trip plays, the markers stay off the map. */
   isPaused: () => boolean
@@ -567,11 +570,20 @@ export function createPlaceMarkers({
     })
   }
 
-  /** Room around a cluster's places as it opens: little at the sides of a phone held upright. */
+  /**
+   * Room around a cluster's places as it opens: little at the sides of a phone held
+   * upright, and clear of what's open on the map's side.
+   */
   function getClusterOpenPadding(map: mapboxgl.Map) {
     const side = map.getContainer().clientWidth <= NARROW_WIDTH ? 32 : CLUSTER_OPEN_PADDING
+    const clear = getClearPadding()
 
-    return { bottom: CLUSTER_OPEN_PADDING, left: side, right: side, top: CLUSTER_OPEN_PADDING }
+    return {
+      bottom: Math.max(CLUSTER_OPEN_PADDING, clear.bottom),
+      left: Math.max(side, clear.left),
+      right: Math.max(side, clear.right),
+      top: Math.max(CLUSTER_OPEN_PADDING, clear.top),
+    }
   }
 
   function createClusterMarker(
