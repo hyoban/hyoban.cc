@@ -155,7 +155,6 @@ async function loadPageCards(): Promise<Array<{ path: string; card: PageCard }>>
   const moments = await getMoments()
   const momentsByDate = Map.groupBy(moments, (moment) => moment.dateKey)
   const monthKeys = getArchiveMonthKeys(moments)
-  const toCard = ({ heading, description }: PageText): PageCard => ({ title: heading, description })
   const parseMonth = (key: string) => ({
     year: Number.parseInt(key.slice(0, 4), 10),
     month: Number.parseInt(key.slice(5, 7), 10),
@@ -179,11 +178,12 @@ async function loadPageCards(): Promise<Array<{ path: string; card: PageCard }>>
     const photos = getCardPhotos(records)
     return photos.length ? photos : undefined
   }
+  // A card with a picture, a calendar, a map or photos, lets it speak: beside it only the
+  // title and one line of counts, with no description.
   const calendarCard = (year: number, month: number): PageCard => {
     const records = getPeriodRecords({ year, month })
     return {
       title: `${year} 年 ${month} 月\n日历`,
-      description: '照片和日常小事。',
       // A month with no Moments keeps its page between those with them.
       detail: records.length
         ? `${new Set(records.map((moment) => moment.dateKey)).size} 天 · ${records.length} 条记录`
@@ -194,32 +194,30 @@ async function loadPageCards(): Promise<Array<{ path: string; card: PageCard }>>
   const mapCard = (period?: Period): PageCard => {
     const key = getMapPlaceholderKey(period)
     const places = getMapCardPlaces(key, moments)
-    const card = { title: getMapText(period).heading, description: '去过的地方，留下的记录。' }
-    if (places.length) return { ...card, map: key, detail: `${places.length} 个地点` }
+    const title = getMapText(period).heading
+    if (places.length) return { title, map: key, detail: `${places.length} 个地点` }
     const records = getPeriodRecords(period)
     return {
-      ...card,
+      title,
       detail: `${records.length} 条记录 · 都没有地点`,
       photos: getPeriodPhotos(records),
     }
   }
   const tripCard = (period?: Period): PageCard => {
     const selected = trips.filter((trip) => isTripInPeriod(trip, period))
-    const card = {
-      title: getMapText(period, true).heading.replace(' · ', '\n'),
-      description: '沿途的风景和小事。',
-    }
+    const title = getMapText(period, true).heading.replace(' · ', '\n')
     if (!selected.length) {
       const records = getPeriodRecords(period)
       return {
-        ...card,
+        title,
         detail: `没有出门 · ${records.length} 条记录`,
         photos: getPeriodPhotos(records),
       }
     }
+    const days = selected.reduce((total, trip) => total + trip.dayCount, 0)
     return {
-      ...card,
-      detail: `${selected.length} 段旅程`,
+      title,
+      detail: `${selected.length} 段旅程 · ${days} 天`,
       panel: {
         kind: 'trips',
         trips: selected.slice(0, 3).map((trip) => ({
@@ -278,7 +276,7 @@ async function loadPageCards(): Promise<Array<{ path: string; card: PageCard }>>
   cards.push({
     path: '/media/',
     card: {
-      ...toCard(MEDIA_TEXT),
+      title: MEDIA_TEXT.heading,
       detail: `${media.count} 部作品`,
       panel: media.photos.length ? { kind: 'posters', photos: media.photos } : undefined,
     },

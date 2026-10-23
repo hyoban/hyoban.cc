@@ -7,7 +7,13 @@ import {
   renderOgImage,
   type CardFormat,
 } from '@/og-image'
-import { formatPostFullDate, getMarkdownEntries, type MarkdownEntry } from '@/utils'
+import {
+  countPostWords,
+  formatPostFullDate,
+  formatPostWordCount,
+  getMarkdownEntries,
+  type MarkdownEntry,
+} from '@/utils'
 
 // The share cards of the posts and the pages written in markdown: /og/<link>.jpg for one
 // with a cover photo, /og/<link>.png for one of words alone.
@@ -17,7 +23,11 @@ function getPostCard(entry: MarkdownEntry) {
     title: entry.data.title,
     description: entry.data.ogDescription ?? entry.data.description,
     photos: entry.data.ogImage ? [entry.data.ogImage] : undefined,
-    date: entry.collection === 'posts' ? formatPostFullDate(entry.data.pubDate) : undefined,
+    // When it was written and how long it is, as the post's page heads it.
+    date:
+      entry.collection === 'posts'
+        ? `${formatPostFullDate(entry.data.pubDate)} · ${formatPostWordCount(countPostWords(entry.body ?? ''))}`
+        : undefined,
   }
 }
 
