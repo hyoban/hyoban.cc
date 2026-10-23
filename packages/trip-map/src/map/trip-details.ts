@@ -1,15 +1,13 @@
 import { formatDateRange } from '../format.ts'
 import type { Messages } from '../messages.ts'
 import type { TripSummary } from '../player/types.ts'
+import { createSheet } from './sheet.ts'
 
 // A trip's sidebar, opened from its row in the trip list or its route on the map while
 // the address is the trip's own (`/trip/<id>/`): the site's HTML fragment for it, fetched
 // the first time, with its dates and title above. Its `[data-trip-map-stop-play]` links
 // play it (see trip-map.ts), and its places (`[data-trip-map-place-link]`) fly the map
 // to them.
-
-// The sidebar sliding away as it closes, like the drawer (see styles.css).
-const EXIT = { duration: 200, easing: 'cubic-bezier(0.4, 0, 1, 1)' }
 
 export type TripDetails = ReturnType<typeof createTripDetails>
 
@@ -18,13 +16,12 @@ export function createTripDetails({
   content,
   eyebrow,
   getUrl,
-  isNarrow,
+  narrow,
   list,
   messages,
   onError,
   onPlace,
   onRequestClose,
-  reducedMotion,
   signal,
   title,
 }: {
@@ -33,7 +30,8 @@ export function createTripDetails({
   eyebrow: HTMLElement | null
   /** A trip's sidebar content, an HTML fragment. */
   getUrl: (id: string) => string
-  isNarrow: () => boolean
+  /** Whether the screen is a phone's, where the list comes up from the bottom. */
+  narrow: MediaQueryList
   list: HTMLElement
   messages: Messages
   /** A trip's content couldn't be fetched. */
@@ -42,17 +40,19 @@ export function createTripDetails({
   onPlace: (id: string) => boolean
   /** The close button was pressed. */
   onRequestClose: () => void
-  reducedMotion: MediaQueryList
   signal: AbortSignal
   title: HTMLElement | null
 }) {
   // Each trip's fragment, fetched once; a failed fetch is tried again next time.
   const html = new Map<string, string>()
   const requests = new Map<string, Promise<string | undefined>>()
-  let exit: Animation | undefined
   let activeId: string | undefined
   // The trip whose content is in the sidebar.
   let shownId: string | undefined
+
+  let shown = !list.hidden
+  // Swiped away, it closes as its close button does.
+  const sheet = createSheet(list, { narrow, onSwipeClose: onRequestClose, signal })
 
   // The page may come with a trip's content in it already.
   const renderedId = content.dataset.tripMapTripDetailsTrip
@@ -63,7 +63,7 @@ export function createTripDetails({
   }
 
   function isOpen() {
-    return !list.hidden && !exit
+    return shown
   }
 
   function load(id: string) {
@@ -131,9 +131,8 @@ export function createTripDetails({
     const changed = trip.id !== activeId
 
     activeId = trip.id
-    exit?.cancel()
-    exit = undefined
-    list.hidden = false
+    shown = true
+    sheet.open()
 
     if (title) {
       title.textContent = trip.title
@@ -169,22 +168,8 @@ export function createTripDetails({
 
     activeId = undefined
 
-    const animation = list.animate(
-      [{}, { opacity: 0, translate: isNarrow() ? '0 2rem' : '1.5rem 0' }],
-      { ...EXIT, duration: reducedMotion.matches ? 0 : EXIT.duration },
-    )
-
-    exit = animation
-    animation.finished.then(
-      () => {
-        if (exit === animation) {
-          exit = undefined
-          list.hidden = true
-          animation.cancel()
-        }
-      },
-      () => {},
-    )
+    shown = false
+    sheet.close()
   }
 
   closeButton?.addEventListener('click', onRequestClose, { signal })
@@ -201,7 +186,6 @@ export function createTripDetails({
     },
     { signal },
   )
-  signal.addEventListener('abort', () => exit?.cancel())
 
   return {
     /** The trip open, if any. */
@@ -214,6 +198,8 @@ export function createTripDetails({
     get isOpen() {
       return isOpen()
     },
+    /** The drawer it is, for one to open over it. */
+    sheet,
     show,
   }
 }

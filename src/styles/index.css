@@ -43,6 +43,12 @@
   /* The translucent surface the map's and the calendar's floating controls share. */
   --color-glass-border: color-mix(in srgb, var(--color-border) 82%, transparent);
   --color-glass: color-mix(in srgb, var(--color-bg) 82%, transparent);
+
+  /* The drawers' colours (@hyoban/drawer): the map's sheets, a day of the calendar's. */
+  --drawer-background: var(--color-bg);
+  --drawer-foreground: var(--color-tx);
+  --drawer-border: var(--color-border);
+  --drawer-handle: var(--color-border);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -136,10 +142,27 @@ body {
     }
   }
 
-  /* A day open in the calendar's drawer, which the page makes room for on its right. */
+  /* A day open in the calendar's drawer, which the page makes room for on its right: as
+     the drawer comes in and goes, with its easing, so the month moves with it. */
   @media (width >= 56.0625rem) {
     &:has(.day-drawer) {
       padding-right: calc(var(--calendar-drawer-width) + 1rem);
+      transition: padding-right 450ms var(--ease-out);
+
+      @media (prefers-reduced-motion: reduce) {
+        transition: none;
+      }
+    }
+
+    &:has(.day-drawer[data-starting-style]),
+    html[data-calendar-day-entering] & {
+      padding-right: 1rem;
+    }
+
+    /* Going, and gone while the month is on its way. */
+    &:has(.day-drawer:is([data-ending-style], [hidden])) {
+      padding-right: 1rem;
+      transition-duration: var(--calendar-drawer-exit, 400ms);
     }
   }
 }

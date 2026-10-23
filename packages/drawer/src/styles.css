@@ -1,0 +1,364 @@
+/*! @license MIT
+ * Ported from shadcn/ui's Drawer, base-nova style (registry item styles/base-nova/drawer,
+ * https://github.com/shadcn-ui/ui), Copyright (c) 2023 shadcn, its Tailwind classes written
+ * out as CSS. Changes Copyright (c) 2026 Stephen Zhou. See LICENSE and THIRD-PARTY-NOTICES.md.
+ */
+
+/* shadcn/ui's Drawer (base-nova, on Base UI) as plain CSS, over the attributes and
+   variables createDrawer writes. Two parts: how it moves, which the drawer needs, and how
+   it looks, in :where() so a page's own rules win without trying. Colours come from
+   --drawer-background, --drawer-foreground, --drawer-border and --drawer-overlay. */
+
+@layer drawer {
+  /* How it moves. */
+
+  [data-drawer-popup] {
+    --bleed: 3rem;
+    --peek: 1rem;
+    --stack-step: 0.05;
+    --stack-height: var(--drawer-frontmost-height, var(--drawer-height, 0px));
+    --stack-progress: clamp(0, var(--drawer-swipe-progress, 0), 1);
+    --stack-peek-offset: max(
+      0px,
+      calc((var(--nested-drawers, 0) - var(--stack-progress)) * var(--peek))
+    );
+    --stack-scale-base: max(0, calc(1 - (var(--nested-drawers, 0) * var(--stack-step))));
+    --stack-scale: clamp(
+      0,
+      calc(var(--stack-scale-base) + (var(--stack-step) * var(--stack-progress))),
+      1
+    );
+    --stack-shrink: calc(1 - var(--stack-scale));
+    --drawer-enter-duration: 450ms;
+    --drawer-exit-duration: 400ms;
+
+    transform: translate3d(var(--translate-x, 0px), var(--translate-y, 0px), 0)
+      scale(var(--stack-scale));
+    transition-property: transform, height, opacity, filter;
+    transition-duration: var(--drawer-enter-duration);
+    transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: transform;
+    interpolate-size: allow-keywords;
+
+    &[data-swipe-direction='down'] {
+      --closed-transform: translate3d(0, calc(100% + var(--drawer-inset, 0px) + 2px), 0);
+      --translate-y: calc(
+        var(--drawer-snap-point-offset, 0px) + var(--drawer-swipe-movement-y, 0px) -
+          var(--stack-peek-offset) - (var(--stack-shrink) * var(--stack-height))
+      );
+      transform-origin: bottom;
+    }
+
+    &[data-swipe-direction='up'] {
+      --closed-transform: translate3d(0, calc(-100% - var(--drawer-inset, 0px) - 2px), 0);
+      --translate-y: calc(
+        var(--drawer-snap-point-offset, 0px) + var(--drawer-swipe-movement-y, 0px) +
+          var(--stack-peek-offset) + (var(--stack-shrink) * var(--stack-height))
+      );
+      transform-origin: top;
+    }
+
+    &[data-swipe-direction='left'] {
+      --closed-transform: translate3d(calc(-100% - var(--drawer-inset, 0px) - 2px), 0, 0);
+      --translate-x: calc(
+        var(--drawer-swipe-movement-x, 0px) + var(--stack-peek-offset) +
+          (var(--stack-shrink) * 100%)
+      );
+      transform-origin: left;
+    }
+
+    &[data-swipe-direction='right'] {
+      --closed-transform: translate3d(calc(100% + var(--drawer-inset, 0px) + 2px), 0, 0);
+      --translate-x: calc(
+        var(--drawer-swipe-movement-x, 0px) - var(--stack-peek-offset) -
+          (var(--stack-shrink) * 100%)
+      );
+      transform-origin: right;
+    }
+
+    /* Under a drawer opened over it, as tall as that one, darker, its content faded. */
+    &[data-nested-drawer-open] {
+      overflow: hidden;
+      filter: brightness(0.95);
+    }
+
+    &[data-swipe-axis='y'][data-nested-drawer-open] {
+      height: var(--stack-height);
+    }
+
+    &:is([data-starting-style], [data-ending-style]) {
+      transform: var(--closed-transform);
+    }
+
+    &[data-ending-style] {
+      /* Not quite 1, so the browser keeps a transition running to wait for. */
+      opacity: 0.9999;
+      transition-duration: calc(var(--drawer-swipe-strength, 1) * var(--drawer-exit-duration));
+    }
+
+    &:is([data-swiping], [data-nested-drawer-swiping]):not([data-ending-style]) {
+      transition-duration: 0ms;
+    }
+  }
+
+  [data-drawer-content] {
+    transition: opacity 300ms cubic-bezier(0.45, 1.005, 0, 1.005);
+
+    [data-nested-drawer-open]:not([data-nested-drawer-swiping]) > & {
+      opacity: 0;
+    }
+  }
+
+  [data-drawer-backdrop] {
+    --drawer-enter-duration: 450ms;
+    --drawer-exit-duration: 400ms;
+
+    opacity: max(var(--drawer-overlay-min-opacity, 0), calc(1 - var(--drawer-swipe-progress, 0)));
+    transition: opacity var(--drawer-enter-duration) cubic-bezier(0.32, 0.72, 0, 1);
+    user-select: none;
+
+    &[data-snap-points] {
+      --drawer-overlay-min-opacity: 0.5;
+    }
+
+    &:is([data-starting-style], [data-ending-style]) {
+      opacity: 0;
+    }
+
+    &[data-ending-style] {
+      pointer-events: none;
+      transition-duration: calc(var(--drawer-swipe-strength, 1) * var(--drawer-exit-duration));
+    }
+
+    &[data-swiping]:not([data-ending-style]) {
+      transition-duration: 0ms;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :is([data-drawer-popup], [data-drawer-backdrop]) {
+      --drawer-enter-duration: 0ms;
+      --drawer-exit-duration: 0ms;
+    }
+  }
+
+  /* How it looks. */
+
+  :where([data-drawer-viewport]) {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    pointer-events: none;
+    user-select: none;
+
+    &:where([data-modal]) {
+      pointer-events: auto;
+    }
+  }
+
+  :where([data-drawer-backdrop]) {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    min-height: 100dvh;
+    background: var(--drawer-overlay, rgb(0 0 0 / 0.1));
+
+    @supports (backdrop-filter: blur(0)) {
+      backdrop-filter: blur(4px);
+    }
+
+    /* iOS Safari leaves a gap under a fixed backdrop as its toolbar hides. */
+    @supports (-webkit-touch-callout: none) {
+      position: absolute;
+    }
+  }
+
+  :where([data-drawer-popup]) {
+    --drawer-content-height: var(--drawer-height, auto);
+
+    position: fixed;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    width: var(--drawer-content-width, auto);
+    height: var(--drawer-content-height);
+    min-height: 0;
+    max-height: var(--drawer-content-max-height, none);
+    margin: var(--drawer-inset, 0px);
+    padding: 0;
+    border: 0 solid var(--drawer-border, rgb(0 0 0 / 0.1));
+    background: var(--drawer-background, Canvas);
+    color: var(--drawer-foreground, CanvasText);
+    outline: none;
+    user-select: none;
+
+    &:where(dialog) {
+      max-width: none;
+    }
+
+    &:where(dialog)::backdrop {
+      background: transparent;
+    }
+
+    /* Its background carried on past its edge, for a drag that pulls it from there. */
+    &::after {
+      position: absolute;
+      background: var(--drawer-bleed-background, var(--drawer-background, Canvas));
+      content: '';
+      pointer-events: none;
+    }
+
+    &:where([data-swipe-axis='y']) {
+      --drawer-content-max-height: calc(100dvh - 6rem);
+
+      inset-inline: 0;
+
+      &::after {
+        inset-inline: 0;
+        height: var(--bleed);
+      }
+    }
+
+    &:where([data-swipe-axis='y'][data-snap-points]) {
+      --drawer-content-height: 100dvh;
+    }
+
+    &:where([data-swipe-axis='x']) {
+      --drawer-content-width: 75%;
+
+      inset-block: 0;
+      flex-direction: row;
+
+      &::after {
+        inset-block: 0;
+        width: var(--bleed);
+      }
+
+      @media (width >= 40rem) {
+        --drawer-content-width: 24rem;
+      }
+    }
+
+    &:where([data-swipe-direction='down']) {
+      bottom: 0;
+      border-top-width: 1px;
+      border-radius: 0.75rem 0.75rem 0 0;
+
+      &::after {
+        top: 100%;
+      }
+    }
+
+    &:where([data-swipe-direction='up']) {
+      top: 0;
+      border-bottom-width: 1px;
+      border-radius: 0 0 0.75rem 0.75rem;
+
+      &::after {
+        bottom: 100%;
+      }
+    }
+
+    &:where([data-swipe-direction='left']) {
+      left: 0;
+      border-right-width: 1px;
+      border-radius: 0 0.75rem 0.75rem 0;
+
+      &::after {
+        right: 100%;
+      }
+    }
+
+    &:where([data-swipe-direction='right']) {
+      right: 0;
+      border-left-width: 1px;
+      border-radius: 0.75rem 0 0 0.75rem;
+
+      &::after {
+        left: 100%;
+      }
+    }
+  }
+
+  :where([data-drawer-content]) {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+    overscroll-behavior: contain;
+    border-radius: inherit;
+    user-select: text;
+
+    :where([data-swiping]) > & {
+      user-select: none;
+    }
+  }
+
+  /* A grabber, at the edge the drawer is pulled from. */
+  :where([data-drawer-handle]) {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    flex-shrink: 0;
+    cursor: grab;
+    transition: opacity 200ms;
+
+    &:active {
+      cursor: grabbing;
+    }
+
+    &::after {
+      display: block;
+      flex-shrink: 0;
+      border-radius: 9999px;
+      background: var(--drawer-handle, color-mix(in srgb, currentColor 15%, transparent));
+      content: '';
+    }
+
+    [data-nested-drawer-open]:not([data-nested-drawer-swiping]) > & {
+      opacity: 0;
+    }
+
+    [data-swipe-axis='y'] > & {
+      justify-content: center;
+      width: 100%;
+      height: 0.75rem;
+
+      &::after {
+        width: 6rem;
+        height: 0.25rem;
+      }
+    }
+
+    [data-swipe-axis='x'] > & {
+      align-items: center;
+      width: 0.75rem;
+      height: 100%;
+
+      &::after {
+        width: 0.25rem;
+        height: 6rem;
+      }
+    }
+
+    [data-swipe-direction='down'] > & {
+      align-items: flex-end;
+    }
+
+    [data-swipe-direction='up'] > & {
+      order: 999;
+      align-items: flex-start;
+    }
+
+    [data-swipe-direction='left'] > & {
+      order: 999;
+      justify-content: flex-start;
+    }
+
+    [data-swipe-direction='right'] > & {
+      justify-content: flex-end;
+    }
+  }
+}

@@ -158,6 +158,8 @@ export function createTripMap(options: TripMapOptions): TripMap {
   const controller = new AbortController()
   const { signal } = controller
   const reducedMotion = getReducedMotionQuery()
+  // A phone's screen, where the sheets come up from the bottom.
+  const narrow = window.matchMedia('(max-width: 48rem)')
   const darkMode = window.matchMedia('(prefers-color-scheme: dark)')
   const places = options.places ?? parseJson<PlaceMarker[]>(page, '[data-trip-map-places]', [])
   const trips = options.trips ?? parseJson<TripSummary[]>(page, '[data-trip-map-trips]', [])
@@ -280,7 +282,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
     createLightboxMedia: options.createLightboxMedia,
     elements,
     getPlaceUrl: urls.getPlaceUrl,
-    isNarrow,
+    narrow,
     messages,
     onClosed: () => {
       clearDrawerPadding()
@@ -304,7 +306,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
     // The drawer's place stays in view: it has Moments in every year it lists.
     onPickYear: (year) => pickPeriod({ year }),
     onRestoreFocus: (button) => markers.focusQuietly(button),
-    reducedMotion,
+    parent: () => momentList?.sheet,
     signal,
   })
 
@@ -312,7 +314,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
     elements.tripList &&
     createTripList({
       closeButton: elements.tripListClose,
-      isNarrow,
+      narrow,
       list: elements.tripList,
       onClose: ({ restoreView }) => {
         tripOverview.highlight(undefined)
@@ -337,7 +339,6 @@ export function createTripMap(options: TripMapOptions): TripMap {
         syncSelection()
       },
       openers: elements.tripListOpeners,
-      reducedMotion,
       signal,
     })
 
@@ -349,7 +350,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
       content: elements.tripDetailsContent,
       eyebrow: elements.tripDetailsEyebrow,
       getUrl: urls.getTripMomentsUrl,
-      isNarrow,
+      narrow,
       list: elements.tripDetails,
       messages,
       onError: (id, cause) =>
@@ -361,7 +362,6 @@ export function createTripMap(options: TripMapOptions): TripMap {
         }),
       onPlace: showPlace,
       onRequestClose: requestSelectionClose,
-      reducedMotion,
       signal,
       title: elements.tripDetailsTitle,
     })
@@ -378,7 +378,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
       eyebrow: elements.momentsEyebrow,
       getMomentsUrl: urls.getMomentsUrl,
       getPlaceCount: () => markers.getShownPlaces().length,
-      isNarrow,
+      narrow,
       list: elements.moments,
       messages,
       onError: (year, cause) =>
@@ -390,7 +390,6 @@ export function createTripMap(options: TripMapOptions): TripMap {
       },
       onPlace: showPlace,
       onRequestClose: () => pickPeriod(undefined),
-      reducedMotion,
       signal,
       title: elements.momentsTitle,
     })
@@ -550,7 +549,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
   }
 
   function isNarrow() {
-    return window.matchMedia('(max-width: 48rem)').matches
+    return narrow.matches
   }
 
   /**
@@ -1585,8 +1584,14 @@ export function createTripMap(options: TripMapOptions): TripMap {
     dialog: elements.settings,
     getDefaults: getDefaultSettings,
     getSettings,
+    narrow,
     onChange: applySettings,
     openers: elements.settingsOpeners,
+    // The sheet in front, which the settings open over.
+    parent: () =>
+      [drawer.sheet, tripDetails?.sheet, tripList?.sheet, momentList?.sheet].find(
+        (sheet) => sheet?.isOpen,
+      ),
     signal,
   })
 
@@ -1603,8 +1608,8 @@ export function createTripMap(options: TripMapOptions): TripMap {
   upgradeHashUrl()
   syncSelection({ focus: true, moveMap: false })
 
-  // What the page was rendered with open has been drawn by the next frame but one; only
-  // what opens after that slides in (see styles.css).
+  // What the page was rendered with open, or opened for the address, has been drawn by
+  // the next frame but one; only what opens after that comes in (see styles.css).
   let settleFrame = requestAnimationFrame(() => {
     settleFrame = requestAnimationFrame(() => {
       page.dataset.tripMapSettled = ''
