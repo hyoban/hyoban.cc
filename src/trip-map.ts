@@ -1,6 +1,7 @@
 import { resolveMessages } from '@hyoban/trip-map'
 import { SITE_TITLE, SITE_URL } from '@/consts'
 import { getAssetUrl } from '@/asset-url'
+import type { MomentTrip } from '@/moments'
 import { tripVideoMusic } from '@/data/music'
 
 // How the site sets up @hyoban/trip-map: its words, its music, and who it is. Shared
@@ -23,8 +24,18 @@ export function getTripTitle(tripTitle: string, playing = false) {
   return `${tripTitle} · ${playing ? '旅程回放' : '旅程'} | ${SITE_TITLE}`
 }
 
-export function getTripDescription(tripTitle: string, playing = false) {
-  return playing
-    ? `沿${tripTitle}的路线一站站回放，看每天的照片和见闻。`
-    : `${tripTitle}的路线、照片和见闻。`
+/**
+ * What a trip's page says beside its title, and not again what the title or its card does:
+ * how far it was driven, and how many records and photos it has.
+ */
+export function getTripDescription(trip: MomentTrip, playing = false) {
+  const photos = trip.stops.reduce((total, stop) => total + stop.media.length, 0)
+  const totals = [
+    trip.drivingKm > 0 && `自驾 ${trip.drivingKm.toLocaleString('zh-CN')} 公里`,
+    `${trip.stops.length} 条记录`,
+    photos > 0 && `${photos} 张照片`,
+  ]
+    .filter(Boolean)
+    .join('、')
+  return playing ? `沿路线一站站回放，${totals}。` : `${totals}。`
 }
