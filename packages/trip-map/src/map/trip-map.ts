@@ -648,14 +648,17 @@ export function createTripMap(options: TripMapOptions): TripMap {
       return
     }
 
-    // Folded into its button, the attribution's own box is empty.
+    // Folded into its button, the attribution's own box is empty. Moved up out of the
+    // logo's row, as on a phone (see styles.css), it leaves the row to the map's edge.
+    const logoBox = logo.getBoundingClientRect()
     const attributionBox = attribution.getBoundingClientRect()
-    const right =
-      attributionBox.width > 0
-        ? attributionBox.left
-        : (attribution.querySelector('.mapboxgl-ctrl-attrib-button')?.getBoundingClientRect()
-            .left ?? attributionBox.left)
-    const room = right - logo.getBoundingClientRect().right
+    const buttonBox = attribution
+      .querySelector('.mapboxgl-ctrl-attrib-button')
+      ?.getBoundingClientRect()
+    const shown = attributionBox.width > 0 ? attributionBox : (buttonBox ?? attributionBox)
+    const inRow = shown.bottom > logoBox.top - legend.offsetHeight && shown.top < logoBox.bottom
+    const right = inRow ? shown.left : container!.getBoundingClientRect().right
+    const room = right - logoBox.right
 
     legend.toggleAttribute('data-trip-map-legend-raised', legend.offsetWidth + 16 > room)
   }
@@ -1835,7 +1838,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
 
         legendRoom.observe(elements.legend)
         legendRoom.observe(canvas)
-        attributionChange.observe(canvas.querySelector('.mapboxgl-ctrl-bottom-right') ?? canvas, {
+        attributionChange.observe(canvas.querySelector('.mapboxgl-control-container') ?? canvas, {
           attributeFilter: ['class'],
           subtree: true,
         })
