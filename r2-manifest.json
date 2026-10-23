@@ -3,11 +3,19 @@
   "accountId": "e68c7dce80df20ff5802b9ac36f1eab6",
   "bucket": "blog-images",
   "origin": "https://image.hyoban.cc",
-  "createdAt": "2026-10-23T12:44:43.114Z",
-  "inventorySha256": "35ef141e7c024bda2299e9feda2faa31452143ce141ba0f6facec31ff49c7038",
-  "objectCount": 2826,
-  "totalBytes": 734460116,
+  "createdAt": "2026-10-23T15:08:32.898Z",
+  "inventorySha256": "8a03196e4e44023ebd9179409212d75a00f76fad511442585e27734c46954937",
+  "objectCount": 2832,
+  "totalBytes": 734630675,
   "objects": [
+    {
+      "key": "devices/oppo-find-x10-pro-max.webp",
+      "bytes": 53068,
+      "contentType": "image/webp",
+      "etag": "43ff24df7371ffd4ee83d8f2c016b9fb",
+      "lastModified": "2026-10-23T14:58:43.654Z",
+      "storageClass": "Standard"
+    },
     {
       "key": "moments/2023/04/15-01-preview-dialog-for-my-blog-post-with-intercepting-amp/preview-dialog-for-my-blog-post-with-intercepting-amp-video-poster.png",
       "bytes": 322511,
@@ -21830,6 +21838,46 @@
       "contentType": "image/png",
       "etag": "dad2acf4fb0665749dc3476acb45c8c4",
       "lastModified": "2026-07-29T15:19:14.624Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "posts/oppo-find-x10-pro-max/oppo-find-x10-pro-max-camera.jpg",
+      "bytes": 51904,
+      "contentType": "image/jpeg",
+      "etag": "18feb9ba36c096cbaa25d30fc1cb4743",
+      "lastModified": "2026-10-23T15:05:57.330Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "posts/oppo-find-x10-pro-max/oppo-find-x10-pro-max-moon-white-1280w.webp",
+      "bytes": 10804,
+      "contentType": "image/webp",
+      "etag": "87ae0f37ce9e9e1d440aa826ea79ed0a",
+      "lastModified": "2026-10-23T14:59:33.717Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "posts/oppo-find-x10-pro-max/oppo-find-x10-pro-max-moon-white-640w.webp",
+      "bytes": 3672,
+      "contentType": "image/webp",
+      "etag": "9414f6dd1865a5f4fbe4f59d0475f496",
+      "lastModified": "2026-10-23T14:59:26.402Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "posts/oppo-find-x10-pro-max/oppo-find-x10-pro-max-moon-white-960w.webp",
+      "bytes": 6098,
+      "contentType": "image/webp",
+      "etag": "fece4b35ce2e125803c62d7fa19f2e35",
+      "lastModified": "2026-10-23T14:59:30.542Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "posts/oppo-find-x10-pro-max/oppo-find-x10-pro-max-moon-white.jpg",
+      "bytes": 45013,
+      "contentType": "image/jpeg",
+      "etag": "72ba73718d328a1fcc82962f59f81758",
+      "lastModified": "2026-10-23T14:58:39.979Z",
       "storageClass": "Standard"
     },
     {
