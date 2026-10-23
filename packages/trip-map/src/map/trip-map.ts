@@ -832,11 +832,11 @@ export function createTripMap(options: TripMapOptions): TripMap {
   }
 
   /**
-   * Moves the map out from under the list as it opens: every place framed beside it, if
-   * they were in view, or else the places on screen brought out from under it, as little
-   * as it takes. If none is under it, the map stays.
+   * Moves the map out from under a list as it opens, or as the window's resized beside
+   * it: every place framed beside it, if they were in view, or else the places on screen
+   * brought out from under it, as little as it takes. If none is under it, the map stays.
    */
-  function moveMapForTripList() {
+  function moveMapFromUnder(list: HTMLElement) {
     if (!map || !mapLoaded) {
       return
     }
@@ -859,7 +859,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
       return
     }
 
-    const padding = getSidePadding(elements.tripList!)
+    const padding = getSidePadding(list)
 
     bringIntoClearArea(
       map,
@@ -931,7 +931,8 @@ export function createTripMap(options: TripMapOptions): TripMap {
 
   /**
    * Has a place in what `padding` leaves of the map, close enough to stand apart from
-   * its cluster: left as it is if it already is, and otherwise to the middle of it.
+   * its cluster: left as it is if it already is, nudged in off an edge it's by or under,
+   * and otherwise to the middle of it.
    */
   function bringPlaceIntoView(place: PlaceMarker, padding: Required<PaddingOptions>) {
     if (!map || !mapLoaded) {
@@ -941,8 +942,18 @@ export function createTripMap(options: TripMapOptions): TripMap {
     const center: [number, number] = [place.longitude, place.latitude]
     const zoom = CLUSTER_MAX_ZOOM + 1
 
-    if (map.getZoom() >= zoom && planOnMap(map, [center], padding).kind === 'stay') {
-      return
+    if (map.getZoom() >= zoom) {
+      const plan = planOnMap(map, [center], padding)
+
+      if (plan.kind === 'stay') {
+        return
+      }
+
+      if (plan.kind === 'pan') {
+        framedOnAll = false
+        bringIntoClearArea(map, [center], padding, plan, getAnimationDuration())
+        return
+      }
     }
 
     framedOnAll = false
@@ -1129,7 +1140,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
       if (tripClosed) {
         fitAll()
       } else if (opening) {
-        moveMapForTripList()
+        moveMapFromUnder(elements.tripList!)
       }
 
       return
@@ -1569,6 +1580,8 @@ export function createTripMap(options: TripMapOptions): TripMap {
         {
           center,
           duration: getAnimationDuration(),
+          // In the middle of what's clear of whatever is open on the map's side.
+          padding: getClearPadding(),
           pitch: pitchedByHand ? map.getPitch() : getMapPitch(map, zoom),
           zoom,
         },
@@ -1659,7 +1672,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
       'focus',
       () => {
         tripOverview.highlight(id)
-        tripOverview.reveal(id)
+        tripOverview.reveal(id, getClearPadding())
       },
       { signal },
     )
@@ -1692,9 +1705,35 @@ export function createTripMap(options: TripMapOptions): TripMap {
     },
     { signal },
   )
-  // The map follows its container's size by itself. The open place is centred again
-  // once a resize settles, and only when the width changed: a phone's address bar
-  // showing and hiding only changes the height, and shouldn't keep moving the map.
+  /** Brings what's open back clear of what's beside it, the window's width changed. */
+  function keepClearOnResize() {
+    // A trip's own camera has the map.
+    if (!mapLoaded || tripPlayer.activeId) {
+      return
+    }
+
+    const place = drawer.activeId ? markers.getPlace(drawer.activeId) : undefined
+    const list = getOpenList()
+
+    if (place) {
+      moveMapToPlace(place)
+    } else if (tripDetails?.activeId && list === elements.tripDetails) {
+      // Read along, the sidebar's camera follows the route itself.
+      if (!tripScroll?.drawn) {
+        frameTripBeside(elements.tripDetails!, tripDetails.activeId)
+      }
+    } else if (list) {
+      moveMapFromUnder(list)
+    } else if (framedOnAll) {
+      // A phone turned sideways, or a window narrowed: every place back in view.
+      fitAll()
+    }
+  }
+
+  // The map follows its container's size by itself. What's open is brought back clear of
+  // what's beside it once a resize settles, and only when the width changed: a phone's
+  // address bar showing and hiding only changes the height, and shouldn't keep moving
+  // the map.
   let resizeTimer: ReturnType<typeof setTimeout> | undefined
   let lastWidth = window.innerWidth
 
@@ -1703,18 +1742,8 @@ export function createTripMap(options: TripMapOptions): TripMap {
     () => {
       clearTimeout(resizeTimer)
       resizeTimer = setTimeout(() => {
-        const place = drawer.activeId ? markers.getPlace(drawer.activeId) : undefined
-
-        if (window.innerWidth !== lastWidth && place) {
-          moveMapToPlace(place)
-        } else if (
-          window.innerWidth !== lastWidth &&
-          framedOnAll &&
-          !drawer.activeId &&
-          !tripPlayer.activeId
-        ) {
-          // A phone turned sideways, or a window narrowed: every place back in view.
-          fitAll()
+        if (window.innerWidth !== lastWidth) {
+          keepClearOnResize()
         }
 
         lastWidth = window.innerWidth

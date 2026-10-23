@@ -31,17 +31,33 @@ test('frames anew what is clear but too small to make out', () => {
   assert.equal(needsFraming(plan), true)
 })
 
-test('slides out from under the sidebar only as far as it takes', () => {
-  assert.deepEqual(
-    planClearArea(
-      [
-        { x: 300, y: 300 },
-        { x: 700, y: 400 },
-      ],
-      BOX,
-    ),
-    { dx: 132, dy: 0, fill: 400 / 536, kind: 'pan' },
+test('slides out from under the sidebar only as far as it takes, off its edge', () => {
+  const plan = planClearArea(
+    [
+      { x: 300, y: 300 },
+      { x: 700, y: 400 },
+    ],
+    BOX,
   )
+
+  assert.equal(plan.kind, 'pan')
+  // To 10% of the clear area's width in from its right edge.
+  assert.ok(Math.abs(plan.dx - (700 - (568 - 53.6))) < 1e-9)
+  assert.equal(plan.dy, 0)
+})
+
+test('nudges in what is clear but hard by an edge', () => {
+  const plan = planClearArea(
+    [
+      { x: 200, y: 300 },
+      { x: 550, y: 400 },
+    ],
+    BOX,
+  )
+
+  assert.equal(plan.kind, 'pan')
+  assert.ok(Math.abs(plan.dx - (550 - (568 - 53.6))) < 1e-9)
+  assert.equal(needsFraming(plan), false)
 })
 
 test('zooms out for what is partly clear but wider than the clear area', () => {
