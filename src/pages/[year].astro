@@ -170,15 +170,9 @@ const stats = statsOf(review)
     return { ...stat, change }
   })
   .filter((stat) => stat.label !== '公里自驾' || stat.value > 100)
-/** `+36%`, or `×5.6` once it's more than doubled, where a percentage stops meaning much. */
+/** `+36%`, `−12%` or `持平`, as the topics under the clock give theirs. */
 const formatChange = (change: number) =>
-  change >= 100
-    ? `×${Number((1 + change / 100).toFixed(1))}`
-    : change > 0
-      ? `+${change}%`
-      : change < 0
-        ? `−${-change}%`
-        : '持平'
+  change > 0 ? `+${formatNumber(change)}%` : change < 0 ? `−${formatNumber(-change)}%` : '持平'
 const highlights = [
   firstMoment && {
     kicker: '第一条',
