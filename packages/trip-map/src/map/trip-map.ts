@@ -97,8 +97,11 @@ export type TripMapOptions = {
    * and the fragments and data under them.
    */
   urls?: Partial<Urls> | undefined
-  /** The document title while the trip list is open; without it the title is left alone. */
-  tripListTitle?: string | undefined
+  /**
+   * The document title while the trip list is open, or one for the period it is narrowed
+   * to (none for every trip); without it the title is left alone.
+   */
+  tripListTitle?: string | ((period: Period | undefined) => string) | undefined
   /**
    * A Mapbox style URL, or one for each colour scheme. Default: Mapbox Standard, in 3D,
    * by day or by night with the colour scheme.
@@ -1029,8 +1032,12 @@ export function createTripMap(options: TripMapOptions): TripMap {
     if (id && title !== undefined && options.getDocumentTitle) {
       document.title = options.getDocumentTitle({ id, playing: id === playingId, title })
     } else if (options.getDocumentTitle || options.tripListTitle || options.getPeriodTitle) {
+      const { tripListTitle } = options
       document.title =
-        (isTripListUrl() && options.tripListTitle) ||
+        (isTripListUrl() &&
+          (typeof tripListTitle === 'function'
+            ? tripListTitle(urls.getTripListPeriod(window.location.pathname))
+            : tripListTitle)) ||
         (period && options.getPeriodTitle?.(period)) ||
         documentTitle
     }

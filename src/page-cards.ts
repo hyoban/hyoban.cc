@@ -1,9 +1,9 @@
-import { SITE_TITLE } from '@/consts'
 import { getCardPhotos, getCalendarPanel, isTripInPeriod } from '@/card-data'
 import { getTripCovers } from '@/moments/trip-images'
 import { getMediaPosters } from '@/media-card'
 import type { APIRoute } from 'astro'
 import { createHash } from 'node:crypto'
+import { getDocumentTitle, getMapHeading, getTripListHeading } from '@/trip-map'
 import { getMapCardBackground, getMapCardPlaces } from '@/map-card'
 import {
   cachedCard,
@@ -46,7 +46,7 @@ export const MEDIA_TEXT: PageText = {
 }
 
 export function getPageTitle({ heading }: Pick<PageText, 'heading'>) {
-  return `${heading} | ${SITE_TITLE}`
+  return getDocumentTitle(heading)
 }
 
 const trimSlashes = (path: string) => path.replace(/^\/+|\/+$/g, '')
@@ -100,21 +100,9 @@ export function getMapText(
   period?: { month?: number | undefined; year: number },
   tripList = false,
 ): PageText {
-  const periodLabel = period
-    ? period.month === undefined
-      ? `${period.year} 年`
-      : `${period.year} 年 ${period.month} 月`
-    : undefined
-  if (tripList) {
-    return {
-      heading: periodLabel ? `${periodLabel} · 旅程` : '旅程',
-      description: '出门走走，记下沿途的风景和小事。',
-    }
-  }
-  return {
-    heading: periodLabel ? `${periodLabel} · 地图` : '地图',
-    description: '去过的地方，留下的记录。',
-  }
+  return tripList
+    ? { heading: getTripListHeading(period), description: '出门走走，记下沿途的风景和小事。' }
+    : { heading: getMapHeading(period), description: '去过的地方，留下的记录。' }
 }
 
 export interface PageCard extends OgImageOptions {
