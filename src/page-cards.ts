@@ -4,6 +4,7 @@ import { buildYearReview, getReviewYears } from '@/year-review'
 import type { FogRegions } from '@hyoban/trip-map'
 import { getTripCovers } from '@/moments/trip-images'
 import { getMediaPosters } from '@/media-card'
+import { formatKilometers, getCarSummary } from '@/car'
 import type { APIRoute } from 'astro'
 import { createHash } from 'node:crypto'
 import { getDocumentTitle, getMapHeading, getTripListHeading } from '@/trip-map'
@@ -44,6 +45,10 @@ export interface PageText {
 }
 
 export const CALENDAR_DESCRIPTION = '随手拍的照片，和想记住的小事。'
+export const CAR_TEXT: PageText = {
+  heading: '用车',
+  description: '极氪 007GT 每天开了多远，和开车去过的地方。',
+}
 export const MEDIA_TEXT: PageText = {
   heading: '影视推荐',
   description: '我喜欢的电影、剧集和动画。',
@@ -281,6 +286,16 @@ async function loadPageCards(): Promise<Array<{ path: string; card: PageCard }>>
       },
     })
   }
+
+  const car = await getCarSummary()
+  cards.push({
+    path: '/car/',
+    card: {
+      title: CAR_TEXT.heading,
+      description: CAR_TEXT.description,
+      detail: `${formatKilometers(car.distanceMeters)} · ${car.outings.length} 次出行`,
+    },
+  })
 
   const media = getMediaPosters()
   cards.push({

@@ -10,6 +10,7 @@ const nav = [
   { href: '/trip/', label: '旅程' },
   { href: '/media/', label: '影视' },
   ...(latestYear ? [{ href: `/${latestYear}/`, label: '回顾', match: /^\/\d{4}\/$/ }] : []),
+  { href: '/car/', label: '用车' },
   { href: '/use/', label: 'Use' },
 ]
 const pathname = Astro.url.pathname
