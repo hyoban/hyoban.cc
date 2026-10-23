@@ -33,6 +33,12 @@ import type { PlaceKind } from '@hyoban/data-spec'
 // by the shapes of their routes down to the cities it first reached and the places; then
 // how it went, every day of it as a tile, a few days worth going back to and when it was
 // written; and last the devices bought.
+//
+// Everything here stays inside the page's column at the narrowest wide layout (a 672px
+// screen): the share pictures (src/year-share.ts) draw the column alone at that width and
+// cut the squares between its children, so what spills past it, sideways or out of its
+// part, is cut off or lands on the wrong square. A part that spreads wider on a big screen,
+// like .year-wide, must come back to the column's width there.
 export async function getStaticPaths() {
   const years = getReviewYears(await getMoments())
   return years.map((year, index) => ({
@@ -583,7 +589,8 @@ const highlights = [
     }
   }
 
-  /* The drawings take more than the column where there's room: up to 56rem, centred on it. */
+  /* The drawings take more than the column where there's room: up to 56rem, centred on it;
+     at 672px they are the column's width, which the share pictures rely on. */
   .year-wide {
     --wide: min(56rem, 100vw - 2rem);
     width: var(--wide);
