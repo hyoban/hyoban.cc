@@ -150,9 +150,7 @@ const collage = getYearCollage(year, moments)
 
 const headline = (moment: Moment) => getMomentHeadline(moment, 24)?.headline ?? '一张照片'
 
-const description = ongoing
-  ? `${year} 年到 ${formatDay(lastDateKey)}为止，记下了什么，去了哪里。`
-  : `${year} 年记下了什么，去了哪里。`
+const description = `${year} 年记下了什么，去了哪里。`
 const [firstMoment] = review.moments
 const lastMoment = review.moments.at(-1)
 const statsOf = (of: typeof review) => [
