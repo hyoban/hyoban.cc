@@ -78,11 +78,6 @@ const months = Array.from({ length: 12 }, (_, index) => {
     ))
   }
 </div>
-<p class="year-mosaic__legend" aria-hidden="true">
-  <span><i class="has-photo" />有照片</span>
-  <span><i class="has-words" />只有文字</span>
-  <span><i class="is-trip" />在路上</span>
-</p>
 
 <style>
   /* One grid for the year, each tile placed by its month and day: rows of months here,
@@ -243,41 +238,6 @@ const months = Array.from({ length: 12 }, (_, index) => {
       & > a {
         transition: none;
       }
-    }
-  }
-
-  .year-mosaic__legend {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.25rem 1.25rem;
-    margin-top: 0.75rem;
-    color: var(--color-tx-2);
-    font-size: 0.75rem;
-
-    & span {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.375rem;
-    }
-
-    & i {
-      display: inline-block;
-      width: 0.625rem;
-      height: 0.625rem;
-      border-radius: 22%;
-    }
-
-    & .has-photo {
-      background: linear-gradient(135deg, #e7b46a, #6d8fb3);
-    }
-
-    & .has-words {
-      background: var(--color-tx-3);
-    }
-
-    & .is-trip {
-      width: 1.25rem;
-      background: color-mix(in srgb, var(--color-tx) 16%, transparent);
     }
   }
 
