@@ -29,6 +29,9 @@ importers:
       '@hyoban/trip-map':
         specifier: workspace:*
         version: link:packages/trip-map
+      fflate:
+        specifier: 0.8.3
+        version: 0.8.3
       modern-screenshot:
         specifier: 4.7.0
         version: 4.7.0

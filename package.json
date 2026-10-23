@@ -30,6 +30,7 @@
     "@hyoban/data-spec": "workspace:*",
     "@hyoban/drawer": "workspace:*",
     "@hyoban/trip-map": "workspace:*",
+    "fflate": "0.8.3",
     "modern-screenshot": "4.7.0",
     "yaml": "^2.9.1"
   },

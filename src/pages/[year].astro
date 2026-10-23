@@ -465,9 +465,10 @@ const highlights = [
       </div>
       {next !== undefined ? <a class="year-nav__next" href={`/${next}/`}>{next} →</a> : <span />}
     </nav>
-    {/* The site's mark at the foot of the share picture, seen only while it is drawn. */}
+    {/* The site's mark at the foot of the share picture, seen only while it is drawn: its
+        avatar waits, hidden, until then, when the drawing has it loaded. */}
     <footer class="year-share-mark" aria-hidden="true">
-      <img src={getAssetUrl('site/avatar-80.webp')} alt="" width="40" height="40" />
+      <img src={getAssetUrl('site/avatar-80.webp')} alt="" width="40" height="40" loading="lazy" />
       <span>Hyoban</span>
       <span class="year-share-mark__url">hyoban.cc/{year}</span>
     </footer>
