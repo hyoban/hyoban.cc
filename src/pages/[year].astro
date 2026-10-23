@@ -14,7 +14,7 @@ import {
   type Moment,
 } from '@/moments'
 import { getTripCollage } from '@/moments/trip-images'
-import { getPageTitle } from '@/page-cards'
+import { getPageCardPath, getPageTitle } from '@/page-cards'
 import { buildRouteGlyph, buildYearMap, getTripLine } from '@/year-map'
 import { buildYearReview, getReviewYears } from '@/year-review'
 import YearClock from '@/components/YearClock.astro'
@@ -194,7 +194,12 @@ const highlights = [
 ].filter((highlight) => highlight !== undefined && highlight !== false)
 ---
 
-<Layout title={getPageTitle({ heading: String(year) })} shareTitle={`${year} 年`} description={description}>
+<Layout
+  title={getPageTitle({ heading: String(year) })}
+  shareTitle={`${year} 年`}
+  description={description}
+  image={await getPageCardPath(Astro.url.pathname)}
+>
   <SitePage>
     {/* Hides what's still to come in until the script below reveals it; without it, all shows. */}
     <script is:inline>document.documentElement.classList.add('year-motion')</script>
