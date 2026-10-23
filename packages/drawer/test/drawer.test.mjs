@@ -213,3 +213,14 @@ test('leaves Escape to a dialog open over it', () => {
   button.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
   assert.equal(drawer.isOpen, true)
 })
+
+test('stands at full height under a nested drawer, whatever point it rests on', () => {
+  const { popup } = setUp('<aside id="child" hidden></aside>')
+  const parent = createDrawer({ modal: false, popup, snapPoints: ['200px', 1] })
+  const nested = createDrawer({ modal: false, parent, popup: popup.querySelector('#child') })
+
+  parent.open()
+  nested.open()
+  assert.equal(popup.style.getPropertyValue('--drawer-snap-point-offset'), '0px')
+  assert.ok(popup.hasAttribute('data-nested-drawer-open'))
+})

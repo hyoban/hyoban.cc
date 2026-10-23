@@ -404,7 +404,8 @@ export function createDrawer(options: DrawerOptions): Drawer {
     )
     setVar(popup, '--drawer-frontmost-height', frontmostHeight ? `${frontmostHeight}px` : undefined)
 
-    const offset = hasSnapPoints() ? getActiveSnapPointOffset() : null
+    // Under a nested drawer it stands as tall as that one, whatever point it rests on.
+    const offset = hasSnapPoints() && nestedCount === 0 ? getActiveSnapPointOffset() : null
     setVar(
       popup,
       '--drawer-snap-point-offset',
@@ -480,13 +481,21 @@ export function createDrawer(options: DrawerOptions): Drawer {
     popupHeight = height
 
     if (!nestedFrontmostOpen && height > 0) {
-      setFrontmostHeight(height)
+      setFrontmostHeight(getOwnVisibleHeight())
     }
 
     renderState()
     applyRestingProgress()
   }
 
+  /** How much of it shows: all of it, or the part a snap point rests it at. */
+  function getOwnVisibleHeight() {
+    const offset = hasSnapPoints() ? (getActiveSnapPointOffset() ?? 0) : 0
+
+    return Math.max(0, popupHeight - offset)
+  }
+
+  /** The height a drawer under this one matches to peek out above it: what of it shows. */
   function setFrontmostHeight(height: number) {
     frontmostHeight = height
 
@@ -1197,6 +1206,11 @@ export function createDrawer(options: DrawerOptions): Drawer {
     }
 
     activeSnapPoint = value
+
+    if (!nestedFrontmostOpen && popupHeight > 0) {
+      setFrontmostHeight(getOwnVisibleHeight())
+    }
+
     renderState()
     applyRestingProgress()
   }
@@ -1361,7 +1375,7 @@ export function createDrawer(options: DrawerOptions): Drawer {
         nestedFrontmostOpen = false
 
         if (popupHeight > 0) {
-          setFrontmostHeight(popupHeight)
+          setFrontmostHeight(getOwnVisibleHeight())
         }
       }
 
