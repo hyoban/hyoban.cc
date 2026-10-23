@@ -152,7 +152,7 @@ function parseArguments(argv) {
   const optionArguments = separator === -1 ? argv : argv.slice(0, separator)
   const media = separator === -1 ? [] : argv.slice(separator + 1)
   const usage =
-    'Usage: prepare-media.mjs --repo <path> --id <YYYY/MM/DD-NN-slug> --occurred-at <when> [--place <id>]... -- <media...>'
+    'Usage: prepare-media.mjs --repo <path> --id <YYYY/MM/DD-NN-slug> --occurred-at <when> [--place <id>] -- <media...>'
   const values = { places: [] }
 
   for (let index = 0; index < optionArguments.length; index += 2) {
@@ -170,6 +170,9 @@ function parseArguments(argv) {
     } else if (flag === '--occurred-at') {
       values.occurredAt = value
     } else if (flag === '--place') {
+      if (values.places.length > 0) {
+        throw new Error('A Moment is at one place at most: write one Moment for each place.')
+      }
       values.places.push(value)
     } else {
       throw new Error(usage)

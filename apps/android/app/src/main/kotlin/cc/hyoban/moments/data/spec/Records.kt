@@ -239,7 +239,7 @@ data class MomentRecord(
     val uid: String,
     /** A timestamp with its offset, or just the day. */
     val occurredAt: String,
-    /** Place ids in visiting order. */
+    /** Its place's id, one at most; a list as the spec keeps it. */
     val places: List<String> = emptyList(),
     val text: String,
     val hidden: Boolean = false,
