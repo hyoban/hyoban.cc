@@ -31,6 +31,8 @@ export type YearReview<M, T> = {
   favoriteHour?: { hour: number; count: number }
   /** How many Moments with a time were written in each hour of the day, 0 to 23. */
   hours: number[]
+  /** How many Moments were written on each day of the week, Monday first. */
+  weekdays: number[]
   trips: T[]
   tripDays: number
   drivingKm: number
@@ -69,6 +71,11 @@ export function buildYearReview<M extends ReviewMoment, T extends ReviewTrip>(
   )
   const hours = Array.from({ length: 24 }, (_, hour) => timed.get(hour) ?? 0)
   const favoriteHour = Math.max(...hours)
+  const byWeekday = countBy(yearMoments, (moment) => {
+    const [year, month, day] = moment.dateKey.split('-').map(Number) as [number, number, number]
+    return (new Date(Date.UTC(year, month - 1, day)).getUTCDay() + 6) % 7
+  })
+  const weekdays = Array.from({ length: 7 }, (_, weekday) => byWeekday.get(weekday) ?? 0)
 
   const fog = litCities(cities, yearMoments)
   const litBefore = new Set(
@@ -109,6 +116,7 @@ export function buildYearReview<M extends ReviewMoment, T extends ReviewTrip>(
       ? { favoriteHour: { hour: hours.indexOf(favoriteHour), count: favoriteHour } }
       : {}),
     hours,
+    weekdays,
     trips: yearTrips,
     tripDays: yearTrips.reduce((total, trip) => total + trip.dayCount, 0),
     drivingKm: yearTrips.reduce((total, trip) => total + trip.drivingKm, 0),
