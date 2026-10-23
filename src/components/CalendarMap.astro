@@ -222,9 +222,9 @@ const description = pageTrip
         // Pressing a year leaves only the places first recorded then on the map.
         years.map(year => (
           <li>
-            <button class="trip-map-legend__year" type="button" data-trip-map-year={year} aria-pressed={year === pickedYear ? 'true' : 'false'} title={`只看 ${year} 年的记录`}>
+            <button class="trip-map-legend__year" type="button" data-trip-map-year={year} aria-pressed={year === pickedYear ? 'true' : 'false'} aria-label={String(year)} title={`只看 ${year} 年的记录`}>
               <span class="trip-map-year-dot" style={`--year-color: ${yearColor(year)}`} aria-hidden="true" />
-              {year}
+              <span class="trip-map-legend__label"><span class="trip-map-legend__century">{String(year).slice(0, 2)}</span>{String(year).slice(2)}</span>
             </button>
           </li>
         ))
@@ -915,12 +915,12 @@ const description = pageTrip
     line-height: 1rem;
     translate: -50% 0;
 
-    /* On a phone, in the row of the map's logo (5.5rem wide) and its ⓘ (1.5rem), in the
-       middle of the room between them, its years a little closer to fit there; above
-       them where it doesn't (placeLegend in @hyoban/trip-map). */
+    /* On a phone, in the row of the map's logo (5.5rem wide), in the middle of the room it
+       leaves (the attribution's ⓘ goes to the top), its years a little closer to fit
+       there; above the logo where it doesn't (placeLegend in @hyoban/trip-map). */
     @media (width < 48rem) {
       bottom: calc(0.5rem + env(safe-area-inset-bottom));
-      left: calc(5.5rem + (100% - 7rem) / 2);
+      left: calc(5.5rem + (100% - 5.5rem) / 2);
       gap: 0.5rem;
 
       &[data-trip-map-legend-raised] {
@@ -945,6 +945,18 @@ const description = pageTrip
       &:hover {
         color: var(--color-tx-2);
       }
+    }
+  }
+
+  /* On a phone a year is its last two digits, ’24, so the legend fits beside the map's
+     logo; its button keeps the whole year for its name. */
+  @media (width < 48rem) {
+    .trip-map-legend__century {
+      display: none;
+    }
+
+    .trip-map-legend__label::before {
+      content: '’';
     }
   }
 

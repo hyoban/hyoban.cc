@@ -1588,6 +1588,14 @@ html:has(.trip-map-page[data-trip-map-ratio]) body {
     right: 0;
   }
 
+  /* The attribution's ⓘ at the top right, under the page's toolbar, leaving the bottom
+     row to the logo and the legend; back at the bottom while a trip is open, where the
+     legend steps aside and the player places it. */
+  .trip-map-page:not([data-trip-map-active]) .mapboxgl-ctrl-bottom-right {
+    top: 4rem;
+    bottom: auto;
+  }
+
   /* The lists are a shorter sheet than the drawer (the site's, like its height), and the
      legend sits above them, to pick another year, in the row of the map's logo. */
   .trip-map-page:has(
