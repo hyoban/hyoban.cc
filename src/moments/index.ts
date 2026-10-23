@@ -207,21 +207,90 @@ export async function getMomentPagePaths() {
 
 export type MomentPagePathProps = Awaited<ReturnType<typeof getMomentPagePaths>>[number]['props']
 
+const segmenter = new Intl.Segmenter('zh-CN')
+const toCharacters = (text: string) =>
+  Array.from(segmenter.segment(text), (segment) => segment.segment)
+const SENTENCE_ENDS = new Set(['。', '！', '？', '!', '?'])
+const CLAUSE_ENDS = new Set(['，', '、', '；', '：', ',', ';'])
+
+/** The Moment's words on one line. */
+function getMomentText(moment: Moment) {
+  return moment.text.replace(/\s+/g, ' ').trim()
+}
+
+/** The Moment's words on one line, cut to `length` characters, for share cards. */
+export function getMomentExcerpt(moment: Moment, length: number) {
+  const text = getMomentText(moment)
+  const characters = toCharacters(text)
+  return characters.length > length ? `${characters.slice(0, length - 1).join('')}…` : text
+}
+
 /**
- * The Moment's words on one line, cut to `length` characters, for titles and descriptions;
- * from the `start`th character on, after an ellipsis, to carry on where a shorter one stopped.
+ * `text` cut to `length` characters at the end of its last sentence that fits, when one
+ * ends past half of it; with an ellipsis where none does.
  */
-export function getMomentExcerpt(moment: Moment, length: number, start = 0) {
-  const text = moment.text.replace(/\s+/g, ' ').trim()
-  const characters = Array.from(
-    new Intl.Segmenter('zh-CN').segment(text),
-    (segment) => segment.segment,
-  ).slice(start)
-  const excerpt =
-    characters.length > length
-      ? `${characters.slice(0, length - 1).join('')}…`
-      : characters.join('')
-  return start && excerpt ? `…${excerpt}` : excerpt
+export function truncateAtSentence(text: string, length: number) {
+  const characters = toCharacters(text)
+  if (characters.length <= length) return text
+  for (let index = length - 1; index >= length / 2; index--) {
+    if (SENTENCE_ENDS.has(characters[index]!)) return characters.slice(0, index + 1).join('')
+  }
+  return `${characters.slice(0, length - 1).join('')}…`
+}
+
+/** A day's words for its description: its first Moment's with any, cut at a sentence. */
+export function getMomentsSummary(moments: Moment[], length: number) {
+  const text = moments.map(getMomentText).find(Boolean)
+  return text && truncateAtSentence(text, length)
+}
+
+/**
+ * A Moment's words as a page title and the rest: its first line when that is a short
+ * headline, `极氪 007gt 终于要提车了`; its first sentence when that is short; its first
+ * `length` characters otherwise, the rest carrying on after an ellipsis. None without words.
+ */
+export function getMomentHeadline(moment: Moment, length = 30) {
+  const lines = moment.text
+    .split(/\n+/)
+    .map((line) => line.replace(/\s+/g, ' ').trim())
+    .filter(Boolean)
+  if (lines.length === 0) return undefined
+  if (lines.length > 1 && toCharacters(lines[0]!).length <= length) {
+    return { headline: lines[0]!, rest: lines.slice(1).join(' ') }
+  }
+  const characters = toCharacters(lines.join(' '))
+  let end = characters.findIndex((character) => SENTENCE_ENDS.has(character))
+  if (end >= 0 && end < length) {
+    while (SENTENCE_ENDS.has(characters[end + 1]!)) end++
+    return {
+      // A title doesn't end with a full stop; it keeps a question or an exclamation.
+      headline: characters
+        .slice(0, end + 1)
+        .join('')
+        .replace(/。$/, ''),
+      rest: characters
+        .slice(end + 1)
+        .join('')
+        .trim(),
+    }
+  }
+  if (characters.length <= length) return { headline: characters.join(''), rest: '' }
+  // A long first sentence is cut at its last pause that fits, not inside a word.
+  let cut = length - 1
+  for (let index = length - 2; index >= length / 2; index--) {
+    if (CLAUSE_ENDS.has(characters[index]!)) {
+      cut = index
+      break
+    }
+  }
+  const pause = CLAUSE_ENDS.has(characters[cut]!)
+  return {
+    headline: `${characters.slice(0, cut).join('')}…`,
+    rest: `…${characters
+      .slice(pause ? cut + 1 : cut)
+      .join('')
+      .trim()}`,
+  }
 }
 
 /** When and where, as a Moment's page and share card show it: `2023 年 12 月 13 日 08:45 · 上海`. */

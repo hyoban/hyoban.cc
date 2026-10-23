@@ -21,13 +21,14 @@ import {
   getCalendarDateKey,
   getMapYears,
   getMomentDateLabel,
-  getMomentExcerpt,
+  getMomentHeadline,
   getMomentPagePath,
   getMomentPath,
   getMoments,
   getMonthPath,
   getTrips,
   MOMENT_OG_IMAGES,
+  truncateAtSentence,
   type Moment,
   type ResolvedMomentMedia,
 } from '@/moments'
@@ -129,20 +130,15 @@ const selectedTripStop = selectedTrip?.stops.find(stop => stop.dateKey >= select
 const selectedTripHref = selectedTrip
   ? `/trip/${selectedTrip.id}/play/${selectedTripStop ? `${getStopAnchor(selectedTripStop.id)}/` : ''}`
   : undefined
-const SHARED_TITLE_LENGTH = 30
-const sharedExcerpt = sharedMoment ? getMomentExcerpt(sharedMoment, SHARED_TITLE_LENGTH) : undefined
-// A Moment of photos alone is titled by when and where, and described by its photos.
+// A shared Moment is titled by its headline, and described by the words after it; one of
+// photos alone by when and where, and its photos.
+const sharedHeadline = sharedMoment && getMomentHeadline(sharedMoment)
 const title = sharedMoment
-  ? `${sharedExcerpt || getMomentDateLabel(sharedMoment)} | ${SITE_TITLE}`
+  ? `${sharedHeadline?.headline ?? getMomentDateLabel(sharedMoment)} | ${SITE_TITLE}`
   : getPageTitle(pageText)
-// A preview shows the description under the title: it leads with when and where, then
-// carries on with the words the title cut short, never saying the title's again.
-const sharedRest = sharedMoment && sharedExcerpt !== getMomentExcerpt(sharedMoment, Infinity)
-  ? getMomentExcerpt(sharedMoment, 90, SHARED_TITLE_LENGTH - 1)
-  : undefined
 const pageDescription = sharedMoment
-  ? sharedExcerpt
-    ? [getMomentDateLabel(sharedMoment), sharedRest].filter(Boolean).join(' · ')
+  ? sharedHeadline
+    ? sharedHeadline.rest ? truncateAtSentence(sharedHeadline.rest, 100) : getMomentDateLabel(sharedMoment)
     : sharedMoment.media.length ? `${sharedMoment.media.length} 张照片` : undefined
   : selectedDate ? getCalendarDayDescription(selectedMoments) : pageText.description
 // A shared Moment's page has its own card where the build draws them, the site's otherwise.

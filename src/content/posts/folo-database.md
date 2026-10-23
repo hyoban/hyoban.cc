@@ -1,5 +1,5 @@
 ---
-title: Folo 中的状态管理 - 数据库篇
+title: Folo 中的状态管理：数据库篇
 link: folo-database
 description: 把 Folo 桌面端和移动端的数据库代码合到一起：SQLite 的选型、浏览器里的限制，以及迁移时踩过的坑。
 pubDate: '2025-06-17T10:50:53.264Z'
