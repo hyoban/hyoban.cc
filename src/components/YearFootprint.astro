@@ -37,7 +37,7 @@ const { map, label } = Astro.props
     }
     {map.dots.map((dot) => <circle class="year-footprint__dot" cx={dot.x} cy={dot.y} r="3" />)}
   </svg>
-  <figcaption><slot /></figcaption>
+  {Astro.slots.has('default') && <figcaption><slot /></figcaption>}
 </figure>
 
 <style>

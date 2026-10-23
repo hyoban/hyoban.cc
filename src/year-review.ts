@@ -35,6 +35,8 @@ export type YearReview<M, T> = {
   drivingKm: number
   /** The cities lit, most Moments first, and those lit for the first time this year. */
   cities: { lit: YearPlace[]; provinces: number; newNames: string[] }
+  /** The cities checked in at for the first time, by their first Moment, in the order the year reached them. */
+  firstVisits: { name: string; dateKey: string }[]
 }
 
 /** The years with a Moment, oldest first. */
@@ -53,7 +55,6 @@ export function buildYearReview<M extends ReviewMoment, T extends ReviewTrip>(
 ): YearReview<M, T> {
   const prefix = String(year)
   const yearMoments = moments.filter((moment) => moment.dateKey.startsWith(prefix))
-  const before = moments.filter((moment) => moment.dateKey < prefix)
   const yearTrips = trips
     .filter((trip) => trip.start.startsWith(prefix))
     .sort((first, second) => first.start.localeCompare(second.start))
@@ -69,13 +70,28 @@ export function buildYearReview<M extends ReviewMoment, T extends ReviewTrip>(
   const favoriteHour = Math.max(...hours)
 
   const fog = litCities(cities, yearMoments)
-  const litBefore = new Set(litCities(cities, before).lit)
+  const litBefore = new Set(
+    litCities(
+      cities,
+      moments.filter((moment) => moment.dateKey < prefix),
+    ).lit,
+  )
   const names = new Map(
     cities.features.map(({ properties }) => [properties.id, getCityName(properties.name)]),
   )
   const lit = fog.lit
     .map((id) => ({ id, name: names.get(id) ?? id, count: fog.weights[id] ?? 0 }))
     .sort((first, second) => second.count - first.count)
+
+  const firstVisits = new Map<string, { name: string; dateKey: string }>()
+  for (const moment of yearMoments) {
+    for (const location of moment.locations) {
+      const [id] = buildFogOfWar(cities, [location]).lit
+      if (id && !litBefore.has(id) && !firstVisits.has(id)) {
+        firstVisits.set(id, { name: names.get(id) ?? id, dateKey: moment.dateKey })
+      }
+    }
+  }
 
   return {
     year,
@@ -100,6 +116,7 @@ export function buildYearReview<M extends ReviewMoment, T extends ReviewTrip>(
       provinces: fog.provinces,
       newNames: lit.filter(({ id }) => !litBefore.has(id)).map(({ name }) => name),
     },
+    firstVisits: [...firstVisits.values()],
   }
 }
 
@@ -129,9 +146,19 @@ function litCities(cities: FogRegions, moments: readonly ReviewMoment[]) {
   )
 }
 
-/** `苏州市` as people say it, `苏州`; a name that'd be one character keeps its suffix. */
+// The peoples an autonomous prefecture can be named for, as `迪庆藏族自治州` names its.
+const PEOPLES =
+  '藏|白|彝|苗|侗|朝鲜|哈尼|傣|景颇|傈僳|壮|土家|回|蒙古|哈萨克|柯尔克孜|布依|羌|黎|纳西|拉祜|佤'
+
+/**
+ * A city as people say it: `苏州市` is `苏州`, `迪庆藏族自治州` is `迪庆`, `阿里地区` is
+ * `阿里`; a name that'd be one character keeps its suffix.
+ */
 export function getCityName(name: string) {
-  return name.length > 2 ? name.replace(/市$/, '') : name
+  const short = name
+    .replace(new RegExp(`(?:(?:${PEOPLES})族)+自治州$`), '')
+    .replace(/(?:市|地区)$/, '')
+  return short.length > 1 ? short : name
 }
 
 function countBy<T, K>(items: readonly T[], key: (item: T) => K) {
