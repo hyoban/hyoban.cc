@@ -30,6 +30,7 @@ import { createMomentList } from './moment-list.ts'
 import { isSamePeriod, overlapsPeriod, type Period } from './period.ts'
 import { CLUSTER_MAX_ZOOM, createPlaceMarkers, getAllPlacesView } from './place-markers.ts'
 import { captureMap, savePicture } from './screenshot.ts'
+import { bringIntoClearArea, planOnMap } from './clear-area.ts'
 import { createTripDetails } from './trip-details.ts'
 import { createTripScroll } from './trip-scroll.ts'
 import { createTripList } from './trip-list.ts'
@@ -278,6 +279,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
   })
   const markers = createPlaceMarkers({
     getAnimationDuration,
+    getClearPadding: () => getClearPadding(),
     getMap: () => map,
     isPaused: () => !mapLoaded || Boolean(tripPlayer.activeId) || Boolean(tripScroll?.drawn),
     messages,
@@ -785,16 +787,20 @@ export function createTripMap(options: TripMapOptions): TripMap {
     map.easeTo({ ...view.camera, duration: getAnimationDuration() })
   }
 
-  /** What of the map a list beside it covers: the trip list on its address, a trip's sidebar, or the Moments. */
+  /** The list open beside the map: the trip list on its address, a trip's sidebar, or the Moments. */
+  function getOpenList() {
+    return elements.tripList && isTripListUrl() && tripList?.isOpen
+      ? elements.tripList
+      : tripDetails?.isOpen
+        ? elements.tripDetails
+        : momentList?.isOpen
+          ? elements.moments
+          : undefined
+  }
+
+  /** What of the map a list beside it covers. */
   function getListInset(): { bottom?: number; right?: number } {
-    const list =
-      elements.tripList && isTripListUrl() && tripList?.isOpen
-        ? elements.tripList
-        : tripDetails?.isOpen
-          ? elements.tripDetails
-          : momentList?.isOpen
-            ? elements.moments
-            : undefined
+    const list = getOpenList()
 
     if (!list) {
       return {}
@@ -827,7 +833,8 @@ export function createTripMap(options: TripMapOptions): TripMap {
 
   /**
    * Moves the map out from under the list as it opens: every place framed beside it, if
-   * they were in view, or else the view slid aside by half the list.
+   * they were in view, or else the places on screen brought out from under it, as little
+   * as it takes. If none is under it, the map stays.
    */
   function moveMapForTripList() {
     if (!map || !mapLoaded) {
@@ -839,9 +846,28 @@ export function createTripMap(options: TripMapOptions): TripMap {
       return
     }
 
-    const { bottom = 0, right = 0 } = getListInset()
+    const container = map.getContainer()
+    const onScreen = markers
+      .getShownPlaces()
+      .map((place): [number, number] => [place.longitude, place.latitude])
+      .filter((coordinates) => {
+        const { x, y } = map!.project(coordinates)
+        return x >= 0 && x <= container.clientWidth && y >= 0 && y <= container.clientHeight
+      })
 
-    map.panBy([right / 2, bottom / 2], { duration: getAnimationDuration() })
+    if (onScreen.length === 0) {
+      return
+    }
+
+    const padding = getSidePadding(elements.tripList!)
+
+    bringIntoClearArea(
+      map,
+      onScreen,
+      padding,
+      planOnMap(map, onScreen, padding),
+      getAnimationDuration(),
+    )
   }
 
   /** Whether the address leads to its trip by year and the rest; trips opened from it do too. */
@@ -870,8 +896,19 @@ export function createTripMap(options: TripMapOptions): TripMap {
     return sheet ? sheet.getVisibleSize() : side.offsetHeight
   }
 
-  /** Room kept on the map for what sits on its side: the drawer, or the trip list. */
-  function getSidePadding(side: HTMLElement = elements.drawer): Required<PaddingOptions> {
+  /** What's open on the map's side, if anything: a place's drawer, or a list. */
+  function getOpenSide() {
+    return drawer.activeId ? elements.drawer : getOpenList()
+  }
+
+  /** Room kept on the map for what's open on its side, and around the rest. */
+  function getClearPadding(): Required<PaddingOptions> {
+    const side = getOpenSide()
+    return side ? getSidePadding(side) : { bottom: 32, left: 32, right: 32, top: 80 }
+  }
+
+  /** Room kept on the map for what sits on its side: the drawer, or a list. */
+  function getSidePadding(side: HTMLElement): Required<PaddingOptions> {
     if (isNarrow()) {
       return {
         bottom: Math.min(getShownHeight(side) + 32, window.innerHeight * 0.82),
@@ -889,16 +926,31 @@ export function createTripMap(options: TripMapOptions): TripMap {
   }
 
   function moveMapToPlace(place: PlaceMarker) {
+    bringPlaceIntoView(place, getSidePadding(elements.drawer))
+  }
+
+  /**
+   * Has a place in what `padding` leaves of the map, close enough to stand apart from
+   * its cluster: left as it is if it already is, and otherwise to the middle of it.
+   */
+  function bringPlaceIntoView(place: PlaceMarker, padding: Required<PaddingOptions>) {
     if (!map || !mapLoaded) {
+      return
+    }
+
+    const center: [number, number] = [place.longitude, place.latitude]
+    const zoom = CLUSTER_MAX_ZOOM + 1
+
+    if (map.getZoom() >= zoom && planOnMap(map, [center], padding).kind === 'stay') {
       return
     }
 
     framedOnAll = false
     map.easeTo({
-      center: [place.longitude, place.latitude],
+      center,
       duration: getAnimationDuration(),
-      padding: getSidePadding(),
-      zoom: Math.max(map.getZoom(), CLUSTER_MAX_ZOOM + 1),
+      padding,
+      zoom: Math.max(map.getZoom(), zoom),
     })
   }
 
@@ -1083,19 +1135,9 @@ export function createTripMap(options: TripMapOptions): TripMap {
       return
     }
 
-    const closing = drawer.activeId ? markers.getPlace(drawer.activeId) : undefined
-
+    // The place stays where it is as the drawer goes: only more of the map is clear.
     drawer.close({ restoreFocus: selectOptions.focus !== false })
     tripList?.close({ restoreFocus: selectOptions.focus !== false, restoreView: moveMap })
-
-    // On a phone the drawer kept the place up in the top of the screen: it goes back
-    // down to the middle as the drawer slides away, as it came up when it opened.
-    if (closing && moveMap && isNarrow() && map && mapLoaded) {
-      map.easeTo({
-        center: [closing.longitude, closing.latitude],
-        duration: getAnimationDuration(),
-      })
-    }
   }
 
   /** Lifts a trip's route as its sidebar opens, or lets go of it as it closes. */
@@ -1296,17 +1338,8 @@ export function createTripMap(options: TripMapOptions): TripMap {
       return false
     }
 
-    // To the middle of what the list leaves of the map.
-    const { bottom = 0, right = 0 } = getListInset()
-
-    framedOnAll = false
     markers.setPressed(id)
-    map.easeTo({
-      center: [place.longitude, place.latitude],
-      duration: getAnimationDuration(),
-      offset: [-right / 2, -bottom / 2],
-      zoom: Math.max(map.getZoom(), CLUSTER_MAX_ZOOM + 1),
-    })
+    bringPlaceIntoView(place, getClearPadding())
 
     return true
   }

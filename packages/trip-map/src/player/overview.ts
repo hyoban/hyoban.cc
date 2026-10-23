@@ -2,6 +2,7 @@ import mapboxgl, { type Map as MapboxMap } from 'mapbox-gl'
 import { formatDateRange } from '../format.ts'
 import { overlapsPeriod, type Period } from '../map/period.ts'
 import { getFramingPitch, getUnderLabels } from '../map/basemap.ts'
+import { bringIntoClearArea, needsFraming, planOnMap } from '../map/clear-area.ts'
 import type { Messages } from '../messages.ts'
 import { createPopupContent, MAP_POPUP_CLASS } from './dom.ts'
 import type { TripSummary } from './types.ts'
@@ -31,7 +32,7 @@ const ALL_SIDES = {
   right: REVEAL_PADDING,
   top: REVEAL_PADDING,
 }
-// A route flown to from the trip list: no closer than a city's streets.
+// A route flown to beside the trip list or its sidebar: no closer than a city's streets.
 const FRAME_MAX_ZOOM = 9
 const FRAME_DURATION = 800
 const BASE = { opacity: 0.5, width: 1.5 }
@@ -364,7 +365,7 @@ export function createTripOverview({
 
   /**
    * Brings a trip's whole route into view, if part of it is off the map or under what
-   * `padding` keeps clear of.
+   * `padding` keeps clear of, moving as little as it takes.
    */
   function reveal(id: string, padding: Required<mapboxgl.PaddingOptions> = ALL_SIDES) {
     const map = getMap()
@@ -374,37 +375,14 @@ export function createTripOverview({
       return
     }
 
-    const container = map.getContainer()
-    const inView = line.every((coordinates) => {
-      const { x, y } = map.project(coordinates)
-
-      return (
-        x >= padding.left &&
-        x <= container.clientWidth - padding.right &&
-        y >= padding.top &&
-        y <= container.clientHeight - padding.bottom
-      )
-    })
-
-    if (inView) {
-      return
-    }
-
-    const bounds = new mapboxgl.LngLatBounds()
-
-    for (const coordinates of line) {
-      bounds.extend(coordinates)
-    }
-
-    map.fitBounds(bounds, {
-      duration: reducedMotion.matches ? 0 : 500,
-      maxZoom: map.getZoom(),
-      padding,
-      pitch: map.getPitch(),
-    })
+    bringIntoClearArea(map, line, padding, planOnMap(map, line, padding), getDuration(500))
   }
 
-  /** Flies to a trip's route, filling the map but for what `padding` keeps clear of. */
+  /**
+   * Shows a trip's route in what `padding` leaves of the map: left as it is if it's in
+   * view there and not too small, brought in as little as it takes if part of it is,
+   * and flown to, filling it, if none is or it's too small to make out.
+   */
   function frame(id: string, padding: Required<mapboxgl.PaddingOptions>) {
     const map = getMap()
     const line = lines.get(id) ?? []
@@ -413,6 +391,14 @@ export function createTripOverview({
       return
     }
 
+    const plan = planOnMap(map, line, padding)
+
+    // Too small to make out, but already as close as framing would go: left as it is too.
+    if (!needsFraming(plan) || (plan.kind !== 'away' && map.getZoom() >= FRAME_MAX_ZOOM)) {
+      bringIntoClearArea(map, line, padding, plan, getDuration(500))
+      return
+    }
+
     const bounds = new mapboxgl.LngLatBounds()
 
     for (const coordinates of line) {
@@ -420,11 +406,15 @@ export function createTripOverview({
     }
 
     map.fitBounds(bounds, {
-      duration: reducedMotion.matches ? 0 : FRAME_DURATION,
+      duration: getDuration(FRAME_DURATION),
       maxZoom: FRAME_MAX_ZOOM,
       padding,
       pitch: getFramingPitch(map, bounds, { maxZoom: FRAME_MAX_ZOOM, padding }),
     })
+  }
+
+  function getDuration(duration: number) {
+    return reducedMotion.matches ? 0 : duration
   }
 
   /** Hides the routes as trip `id` opens, its own route staying a moment longer. */
