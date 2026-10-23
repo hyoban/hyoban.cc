@@ -67,6 +67,8 @@ export function createPlaceDrawer({
     },
     onSwipeClose: () => drawerClose.click(),
     parent,
+    // As the site's CSS sets it: most of the screen.
+    phoneHeight: { max: 42, share: 0.78 },
     signal,
   })
   let lightboxIndex = 0

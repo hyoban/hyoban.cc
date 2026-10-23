@@ -803,7 +803,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
     // The list and its margin, at the bottom on a phone and on the right otherwise;
     // nothing if what it leaves is too small to frame anything in.
     const inset: { bottom?: number; right?: number } = isNarrow()
-      ? { bottom: list.offsetHeight + 12 }
+      ? { bottom: getShownHeight(list) + 12 }
       : { right: list.offsetWidth + 16 }
     const container = map?.getContainer() ?? canvas
     const room = Math.min(
@@ -858,11 +858,23 @@ export function createTripMap(options: TripMapOptions): TripMap {
     return id && tripPlayer.has(id) ? id : undefined
   }
 
+  /**
+   * What of a sheet shows on a phone: as tall as the screen once it can be pulled up, only
+   * the part it rests at is in front of the map (see sheet.ts).
+   */
+  function getShownHeight(side: HTMLElement) {
+    const sheet = [drawer.sheet, tripList?.sheet, tripDetails?.sheet, momentList?.sheet].find(
+      (each) => each?.popup === side,
+    )
+
+    return sheet ? sheet.getVisibleSize() : side.offsetHeight
+  }
+
   /** Room kept on the map for what sits on its side: the drawer, or the trip list. */
   function getSidePadding(side: HTMLElement = elements.drawer): Required<PaddingOptions> {
     if (isNarrow()) {
       return {
-        bottom: Math.min(side.offsetHeight + 32, window.innerHeight * 0.82),
+        bottom: Math.min(getShownHeight(side) + 32, window.innerHeight * 0.82),
         left: 32,
         right: 32,
         top: 80,

@@ -55,7 +55,13 @@ export function createTripList({
 
   let shown = !list.hidden
   // Swiped away, it closes as its close button does.
-  const sheet = createSheet(list, { narrow, onSwipeClose: onRequestClose, signal })
+  const sheet = createSheet(list, {
+    narrow,
+    onSwipeClose: onRequestClose,
+    // As the site's CSS sets it: shorter than a place's, its routes in view above it.
+    phoneHeight: { max: 36, share: 0.6 },
+    signal,
+  })
 
   function isOpen() {
     return shown

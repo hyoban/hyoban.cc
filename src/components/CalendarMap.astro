@@ -1181,8 +1181,16 @@ const description = pageTrip
       width: auto;
       height: min(60dvh, 36rem);
 
+      /* One that can be pulled up to the whole screen (see the trip map's sheet.ts) is as
+         tall as it all along: the part below its resting height is out of sight. */
+      &[data-snap-points] {
+        top: calc(0.75rem + env(safe-area-inset-top));
+        height: auto;
+      }
+
       /* Under another, as tall as it, so it peeks out above it. */
       &[data-nested-drawer-open] {
+        top: auto;
         height: var(--stack-height);
       }
     }
@@ -1497,15 +1505,17 @@ const description = pageTrip
     display: block;
   }
 
+  /* --sheet-hidden: what of the sheet is out of sight below the screen, resting short of
+     pulled up, which its end scrolls clear of. */
   .trip-map-side__content {
     min-width: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
-    padding: 0 1.25rem 1rem;
+    padding: 0 1.25rem calc(1rem + var(--sheet-hidden, 0px));
   }
 
   .trip-map-trip-list__content {
-    padding: 0 0.5rem 0.5rem;
+    padding: 0 0.5rem calc(0.5rem + var(--sheet-hidden, 0px));
   }
 
   .trip-map-trip-list__year {
