@@ -69,7 +69,8 @@ is that one; any other is added, and one the app made, under the provisional id
 `p-<ulid>`, gets an id spelled from its name's pinyin. A place added without a division
 has the province, city and district its point is in looked up from DataV's GeoAtlas
 (`DIVISIONS_URL`) and kept on it; when that fails it is kept without, for
-`pnpm places:locate` to fill in. The Moments name each place by the id it is known by. Each Moment is saved and published: a draft takes its
+`pnpm places:locate` to fill in. The Moments name each place by the id it is known by, one place at most: a Moment naming
+two is turned down. Each Moment is saved and published: a draft takes its
 `YYYY/MM/DD-NN-slug` id, the next order on its day after the others in the same write,
 slugged by its first place or else its first words, and its originals move to
 `moments/<id>/<slug>.<ext>`; a published one keeps its id and publishes any new media.

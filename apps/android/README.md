@@ -23,7 +23,7 @@ The pages lead to each other wherever they can: a place's page and a trip's show
 map tab, the place with its panel up and the trip's route lifted with its card, which the
 trip's page shrinks into; a day's pill over its Moments opens the day, growing into its
 page, and a day's page its trip; a Moment's menu, on its cards and in the playback, goes to
-its places, its trip and its day, as does the viewer's date; and the settings' 发布 group
+its place, its trip and its day, as does the viewer's date; and the settings' 发布 group
 leads to the changes waiting to be published. `moments://search` opens the search.
 
 The toggle beside the map's legend, 迷雾地图, lays a light fog over the map, as the site's

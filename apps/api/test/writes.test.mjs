@@ -48,9 +48,9 @@ function commit(env, changes, options = {}) {
   return call(env, 'POST', '/v1/changes', { ...owner, body: changes, ...options })
 }
 
-/** The dock Moment at Nanjing and a dock the app made. */
+/** The dock Moment at Nanjing, sent with a dock the app made. */
 function dockDraft() {
-  return { ...dockMoment, places: ['nanjing', made] }
+  return { ...dockMoment, places: ['nanjing'] }
 }
 
 /** Uploads the dock Moment's photo and publishes it, with its dock. */
@@ -155,6 +155,16 @@ test('a new place is kept with the division it is in, and without one when that 
   }
 })
 
+test('a Moment is at one place at most', async () => {
+  const { env } = setUpWithData()
+  const { status, body } = await commit(env, {
+    moments: [{ ...ferryMoment, places: ['nanjing', 'yantai-port'] }],
+  })
+
+  assert.equal(status, 422)
+  assert.match(body.error, /one place at most/)
+})
+
 test('a Moment of words alone is published under its first words', async () => {
   const { env } = setUpWithData()
   const { body } = await commit(env, { moments: [ferryMoment] })
@@ -187,7 +197,7 @@ test('a Moment publishes with its media moved under its id, once the originals a
   const id = `2026/10/01-${String(order).padStart(2, '0')}-nanjing`
 
   assert.equal(status, 200)
-  assert.deepEqual(published.places, ['nanjing', 'ce-shi-ma-tou'])
+  assert.deepEqual(published.places, ['nanjing'])
   assert.deepEqual(published.published, { id, slug: 'nanjing', order, at: published.published.at })
   assert.deepEqual(published.media[0].published, {
     key: `moments/${id}/nanjing.jpg`,
@@ -298,7 +308,7 @@ test('the changes go as one write: places, Moments published, deletions, the sit
     assert.deepEqual(
       applied.body.moments.map((moment) => [moment.places, moment.published.id]),
       [
-        [['nanjing', 'ce-shi-ma-tou'], `2026/10/01-${String(order).padStart(2, '0')}-nanjing`],
+        [['nanjing'], `2026/10/01-${String(order).padStart(2, '0')}-nanjing`],
         [['ce-shi-ma-tou'], `2026/10/01-${String(order + 1).padStart(2, '0')}-ce-shi-ma-tou`],
       ],
       'two Moments on one day take the next two orders',

@@ -321,9 +321,7 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
         scope.launch {
             try {
                 withContext(NonCancellable) {
-                    // A place left as it was keeps all the Moment's places, as it may have more than one.
-                    val places = if (original != null && chosenPlace == originalPlace) original.places else null
-                    val (moment, newPlace) = buildMoment(context, container, text, photos, utility, infos, time, place, original, originalMedia, places)
+                    val (moment, newPlace) = buildMoment(context, container, text, photos, utility, infos, time, place, original, originalMedia)
                     if (original == null) container.addLocal(moment, newPlace) else container.updateLocal(moment, newPlace)
                 }
                 onSaved()
@@ -778,7 +776,7 @@ private fun TimeDialog(time: OffsetDateTime, onDismiss: () -> Unit, onPick: (Off
  * The Moment as a record, its photos copied into the app's store first so it keeps them
  * whatever becomes of the gallery's, and the place it makes, if it makes one. Changing
  * [original], it keeps its id, when it was made and the photos it already had as they
- * were, and [keepPlaces] in place of the one chosen.
+ * were. Its place is the one chosen, as a Moment is at one place at most.
  */
 private suspend fun buildMoment(
     context: Context,
@@ -791,7 +789,6 @@ private suspend fun buildMoment(
     place: PlaceChoice,
     original: MomentRecord? = null,
     originalMedia: Map<Uri, MomentMedia> = emptyMap(),
-    keepPlaces: List<String>? = null,
 ): Pair<MomentRecord, Pair<String, Place>?> {
     val now = stamp(OffsetDateTime.now())
     val directory = File(container.localStore.root, "media")
@@ -814,7 +811,7 @@ private suspend fun buildMoment(
     val newPlace = (place as? PlaceChoice.New)?.let {
         newPlaceId() to Place(it.name.trim().ifEmpty { coordinatesName(it.fix) }, it.fix.latitude, it.fix.longitude, kind = it.kind?.value, createdAt = now)
     }
-    val placeIds = keepPlaces ?: when (place) {
+    val placeIds = when (place) {
         is PlaceChoice.Known -> listOf(place.id)
         is PlaceChoice.New -> listOfNotNull(newPlace?.first)
         PlaceChoice.None -> emptyList()

@@ -20,15 +20,16 @@ the local Moment.
    with an explicit offset when the time is known, otherwise use `YYYY-MM-DD`.
    Never add publication or source fields. If the text names a specific place,
    use that place instead of its city; reuse or add it in `data/places.json`
-   and verify new coordinates (see Coordinates below). When the Moment covers
-   several places, list their ids in visiting order. Use
+   and verify new coordinates (see Coordinates below). A Moment is at one place
+   at most: when the text covers several, write one Moment for each, splitting
+   its words and media between them in visiting order. Use
    `YYYY/MM/DD-NN-short-slug` for the published id, where `NN` is the next
    available two-digit order for that occurrence date (check the records of
    that day under `data/moments/YYYY/MM`).
 4. Process and upload images or videos in order from the repository root:
 
 ```bash
-node .agents/skills/create-moment/scripts/prepare-media.mjs --repo <repo> --id <YYYY/MM/DD-NN-short-slug> --occurred-at <occurredAt> [--place <id>]... -- <media...>
+node .agents/skills/create-moment/scripts/prepare-media.mjs --repo <repo> --id <YYYY/MM/DD-NN-short-slug> --occurred-at <occurredAt> [--place <id>] -- <media...>
 ```
 
 The command optimizes images and responsive variants, transcodes videos to

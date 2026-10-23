@@ -48,7 +48,7 @@ export type Moment = {
   dateKey: string
   /** The published id, `YYYY/MM/DD-NN-slug`: the R2 directory and the page anchor. */
   id: string
-  /** Places in visiting order; empty when the Moment has no location. */
+  /** Its place, one at most; empty when the Moment has no location. */
   locations: ResolvedMomentLocation[]
   media: ResolvedMomentMedia[]
   occurredAt: string

@@ -3,8 +3,9 @@ import { z } from 'zod'
 // The data spec: the format the recording app stores, the repository commits under
 // `data/` and the site reads. Every object is loose, so a field one side doesn't know
 // yet travels through the other untouched; `pnpm data:schema` writes these schemas out
-// as JSON Schema for the app. Changes only add optional fields; a change that doesn't
-// bumps SCHEMA_VERSION.
+// as JSON Schema for the app. Changes only add optional fields, or tighten a rule every
+// stored record already keeps (a Moment at one place at most); any other change bumps
+// SCHEMA_VERSION.
 
 export const SCHEMA_VERSION = 1
 
@@ -111,8 +112,12 @@ export const momentRecordSchema = z
   .looseObject({
     uid: ulid,
     occurredAt,
-    /** Place ids in visiting order. */
-    places: z.array(id).refine(unique, 'Duplicate place id.').default([]),
+    /**
+     * The place it was at, if any: one at most, so each place's Moments, photos and map
+     * drawer hold only what happened there. A day at several places is one Moment each.
+     * Still a list, as it was when a Moment could name several.
+     */
+    places: z.array(id).max(1, 'A Moment is at one place at most.').default([]),
     /** The words as written, with their line breaks. */
     text: z.string(),
     hidden: z.boolean().default(false),

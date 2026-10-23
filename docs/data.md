@@ -19,7 +19,7 @@ data/
 └─ schema/*.schema.json    generated from the spec by `pnpm data:schema`
 ```
 
-A Moment names its places, carries its words and media, and once published has a
+A Moment names its place (one at most), carries its words and media, and once published has a
 `published` block with its `YYYY/MM/DD-NN-slug` id; each media item's `published`
 block holds the R2 key, ETag, size, dimensions and responsive variants. A record
 without `published` is a draft the site skips. Published fields never change: a
