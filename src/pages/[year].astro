@@ -1065,7 +1065,8 @@ const highlights = [
     }
 
     /* Each item a step of the scroller, its card the large size, moved and masked to its
-       place by the script; the words keep to what the mask shows. */
+       place by the script; the words keep to what the mask shows. No will-change: a layer
+       for each of a row's dozens of cards costs a phone more than repainting the few shown. */
     &.is-multi-browse {
       & ul {
         position: relative;
@@ -1084,7 +1085,6 @@ const highlights = [
         inset: 0 auto 0 0;
         width: var(--large);
         aspect-ratio: auto;
-        will-change: translate, clip-path;
       }
 
       & .year-places__words {
@@ -1658,7 +1658,9 @@ const highlights = [
         animation-delay: calc(350ms + var(--month) * 60ms + var(--index) * 70ms);
       }
 
-      & .year-places li,
+      /* A row's first few are all that show as it rises in; the rest come in as it scrolls,
+         and animating them too would make dozens of layers at once for nothing. */
+      & .year-places li:nth-child(-n + 8),
       & .year-menu li {
         animation: year-rise 600ms var(--ease-out) backwards;
         animation-delay: calc(150ms + min(var(--order), 8) * 60ms);

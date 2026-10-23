@@ -116,12 +116,22 @@ export function initializeCarousels(root: ParentNode = document) {
     const links = items.map((item) => item.querySelector<HTMLElement>('a')!)
     const [previous, next] = nav?.querySelectorAll<HTMLButtonElement>('[data-carousel-step]') ?? []
     let keylines: Keylines | undefined
+    /** Each item's left edge in the track, read once its width is set, not every frame. */
+    let offsets: number[] = []
     let frame = 0
+
+    // What each link was last given, so a frame writes only what changed: most of a row
+    // sits out of sight, and every style written costs the frame a restyle and a relayer.
+    const drawn = links.map(() => ({ hidden: false, translate: '', clip: '', words: '' }))
+    // With focus in the row every item stays shown, so Tab and the arrows reach them all.
+    let focused = false
 
     const multiBrowse = () => !reduce.matches && !carousel.classList.contains('is-expanded')
 
     // Sizes the items' boxes so the row scrolls exactly as far as it turns round.
     const measure = () => {
+      for (const last of drawn)
+        Object.assign(last, { hidden: false, translate: '', clip: '', words: '' })
       if (!multiBrowse()) {
         keylines = undefined
         carousel.classList.remove('is-multi-browse')
@@ -138,25 +148,40 @@ export function initializeCarousels(root: ParentNode = document) {
       items.forEach((item, index) => {
         item.style.width = `${index < steps ? keylines!.stride : rest}px`
       })
+      offsets = items.map((item) => item.offsetLeft)
       draw()
     }
 
     const draw = () => {
       frame = 0
       if (!keylines) return
-      const position = track.scrollLeft / keylines.stride
-      const placed = placeItems(items.length, keylines, position)
+      const scrollLeft = track.scrollLeft
+      const width = track.clientWidth
+      const placed = placeItems(items.length, keylines, scrollLeft / keylines.stride)
       const { large, medium } = keylines
 
       placed.forEach(({ x, size }, index) => {
         const link = links[index]!
+        const last = drawn[index]!
+        const hidden = !focused && (x + size <= 0 || x >= width)
+        if (hidden !== last.hidden) {
+          last.hidden = hidden
+          link.style.visibility = hidden ? 'hidden' : ''
+        }
+        if (hidden) return
+
         const inset = (large - size) / 2
-        const left = items[index]!.offsetLeft - track.scrollLeft
-        link.style.translate = `${x - left - inset}px 0`
-        link.style.clipPath = `inset(0 ${inset}px round 0.75rem)`
-        link.style.setProperty('--inset', `${inset}px`)
+        const left = offsets[index]! - scrollLeft
+        const translate = `${(x - left - inset).toFixed(1)}px 0`
+        const clip = `${inset.toFixed(1)}px`
         // The words show on the large items, fading out by the time one is medium.
-        link.style.setProperty('--words', String(clamp((size - medium) / (large - medium), 0, 1)))
+        const words = clamp((size - medium) / (large - medium), 0, 1).toFixed(3)
+        if (translate !== last.translate) link.style.translate = last.translate = translate
+        if (clip !== last.clip) {
+          link.style.clipPath = `inset(0 ${clip} round 0.75rem)`
+          link.style.setProperty('--inset', (last.clip = clip))
+        }
+        if (words !== last.words) link.style.setProperty('--words', (last.words = words))
       })
     }
 
@@ -213,8 +238,17 @@ export function initializeCarousels(root: ParentNode = document) {
       target.focus({ preventScroll: true })
     })
     track.addEventListener('focusin', (event) => {
+      if (!focused) {
+        focused = true
+        draw()
+      }
       const index = links.indexOf(event.target as HTMLElement)
       if (index >= 0) scrollToItem(index)
+    })
+    track.addEventListener('focusout', (event) => {
+      if (track.contains(event.relatedTarget as Node | null)) return
+      focused = false
+      draw()
     })
 
     // A wheel turned over the row scrolls it sideways, until it reaches that end and the
