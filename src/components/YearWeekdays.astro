@@ -1,6 +1,7 @@
 ---
-// Which days of the week the year was written on, Monday first: a bar for each as long as
-// how much was written on it, the weekend shaded behind, the busiest day dark.
+// Which days of the week the year was written on, a companion to the clock: a column for
+// each day, Monday first, as tall as how much was written on it, the weekend shaded
+// behind like the clock's night, the busiest day dark.
 
 interface Props {
   weekdays: number[]
@@ -9,93 +10,100 @@ interface Props {
 const { weekdays } = Astro.props
 const names = ['一', '二', '三', '四', '五', '六', '日']
 const max = Math.max(1, ...weekdays)
-const top = weekdays.indexOf(Math.max(...weekdays))
+const busiest = Math.max(...weekdays)
 const days = weekdays.map((count, index) => ({
   count,
   index,
   name: names[index]!,
-  weekend: index >= 5,
-  width: `${Math.max(count / max, 0.02) * 100}%`,
+  top: busiest > 0 && count === busiest,
+  height: `${Math.max(count / max, 0.04) * 100}%`,
 }))
+const label = `每周各天记下的条数：${days.map((day) => `周${day.name} ${day.count} 条`).join('，')}`
 ---
 
-<ul class="year-weekdays" aria-label={`每周各天记下的条数，最常在周${names[top]}`}>
+<div class="year-weekdays" role="img" aria-label={label}>
+  <span class="year-weekdays__weekend" aria-hidden="true"></span>
   {
     days.map((day) => (
-      <li class:list={{ 'is-weekend': day.weekend, 'is-top': day.index === top && day.count > 0 }} style={`--day: ${day.index}`}>
-        <span class="year-weekdays__name">周{day.name}</span>
-        <span class="year-weekdays__track">
-          <span class="year-weekdays__bar" style={`width: ${day.width}`} />
-        </span>
-        <span class="year-weekdays__count">{day.count}</span>
-      </li>
+      <span class:list={['year-weekdays__column', { 'is-top': day.top }]} title={`周${day.name} · ${day.count} 条`} style={`grid-column: ${day.index + 1}; --day: ${day.index}`}>
+        <span class="year-weekdays__bar" style={`height: ${day.height}`} />
+      </span>
     ))
   }
-</ul>
+  {
+    days.map((day) => (
+      <span class:list={['year-weekdays__name', { 'is-top': day.top }]} style={`grid-column: ${day.index + 1}`} aria-hidden="true">
+        {day.name}
+      </span>
+    ))
+  }
+</div>
 
 <style>
   .year-weekdays {
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    gap: 0.25rem 0.75rem;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    font-size: 0.875rem;
-    font-variant-numeric: tabular-nums;
-
-    & li {
-      display: grid;
-      grid-template-columns: subgrid;
-      grid-column: 1 / -1;
-      align-items: center;
-      padding: 0.125rem 0.5rem;
-      border-radius: 0.375rem;
-    }
-
-    & li.is-weekend {
-      background: var(--color-inline);
-    }
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    grid-template-rows: 9rem auto;
+    column-gap: 0.375rem;
+    row-gap: 0.5rem;
+    width: min(100%, 17rem);
+    margin-inline: auto;
   }
 
-  .year-weekdays__name,
-  .year-weekdays__count {
-    color: var(--color-tx-3);
+  /* Saturday and Sunday, shaded the way the clock shades the night. */
+  .year-weekdays__weekend {
+    grid-column: 6 / 8;
+    grid-row: 1 / 3;
+    margin: -0.375rem -0.1875rem;
+    border: 0.5px solid var(--color-border);
+    border-radius: 0.5rem;
+    background: var(--color-inline);
   }
 
-  .year-weekdays__count {
-    text-align: end;
-  }
-
-  .year-weekdays__track {
-    display: block;
+  .year-weekdays__column {
+    grid-row: 1;
+    display: flex;
+    align-items: end;
+    justify-content: center;
+    height: 100%;
   }
 
   .year-weekdays__bar {
     display: block;
-    height: 0.625rem;
-    border-radius: 999px;
+    width: min(100%, 1rem);
+    border-radius: 3px;
     background: var(--color-tx-3);
     opacity: 0.45;
+    transition: opacity 140ms var(--ease);
   }
 
-  .is-top {
-    & .year-weekdays__bar {
-      background: var(--color-tx);
-      opacity: 1;
-    }
+  .year-weekdays__column:hover .year-weekdays__bar {
+    opacity: 0.8;
+  }
 
-    & .year-weekdays__name,
-    & .year-weekdays__count {
+  .year-weekdays__column.is-top .year-weekdays__bar {
+    background: var(--color-tx);
+    opacity: 1;
+  }
+
+  .year-weekdays__name {
+    grid-row: 2;
+    position: relative;
+    color: var(--color-tx-3);
+    font-size: 10px;
+    line-height: 1;
+    text-align: center;
+
+    &.is-top {
       color: var(--color-tx);
       font-weight: 600;
     }
   }
 
-  /* The bars grow out from the left, Monday first, when the section is first seen. */
+  /* The columns grow up from the bottom, Monday first, as the clock's petals grow round it. */
   @media (prefers-reduced-motion: no-preference) {
     :global(.is-revealed) .year-weekdays__bar {
-      transform-origin: left center;
+      transform-origin: bottom;
       animation: year-weekdays-grow 700ms var(--ease-out) backwards;
       animation-delay: calc(300ms + var(--day) * 60ms);
     }
@@ -103,7 +111,8 @@ const days = weekdays.map((count, index) => ({
 
   @keyframes year-weekdays-grow {
     from {
-      scale: 0 1;
+      opacity: 0;
+      scale: 1 0.2;
     }
   }
 </style>
