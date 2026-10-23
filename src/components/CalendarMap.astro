@@ -915,17 +915,18 @@ const description = pageTrip
     line-height: 1rem;
     translate: -50% 0;
 
-    /* On a phone, in the row of the map's logo (5.5rem wide), in the middle of the room it
-       leaves (the attribution's ⓘ goes to the top), its years a little closer to fit
-       there; above the logo where it doesn't (placeLegend in @hyoban/trip-map). */
+    /* On a phone, in the row of the map's logo, at its right end (the attribution's ⓘ goes
+       to the top), in line with the sheets' edge, its years a little closer to fit there;
+       above the logo where it doesn't (placeLegend in @hyoban/trip-map). */
     @media (width < 48rem) {
+      right: 0.75rem;
       bottom: calc(0.5rem + env(safe-area-inset-bottom));
-      left: calc(5.5rem + (100% - 5.5rem) / 2);
+      left: auto;
       gap: 0.5rem;
+      translate: none;
 
       &[data-trip-map-legend-raised] {
         bottom: calc(2.25rem + env(safe-area-inset-bottom));
-        left: 50%;
       }
     }
 
