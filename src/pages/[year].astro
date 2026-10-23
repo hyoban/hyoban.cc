@@ -86,36 +86,48 @@ const photosOf = (dayMoments: Moment[], width: number) =>
     .map((item) => (item.type === 'video' ? item.poster : item.src))
     .filter((image) => image !== undefined)
     .map((image) => getThumbnailUrl(image.sources[0]?.src ?? image.src, width))
-// The places gone to by their kind, the cities being the footprint's and the stations and
-// the like only on the way; each in the order the year reached it, with its city.
+// The places gone to, the sights in one row and where to eat, stay or shop in another,
+// each in the order the year reached it, with its city; the cities are the footprint's,
+// and the towns and stations only on the way.
 const yearPlaces = getYearPlaces(review.moments, readPlaces())
-const placeKinds: PlaceKind[] = ['scenic', 'food', 'stay', 'shopping', 'town']
-const placesByKind = placeKinds
-  .map((kind) => ({
-    kind,
-    places: yearPlaces
-      .filter((place) => place.kind === kind)
-      .map((place) => {
-        const name = getShortPlaceName(place.name)
-        const city = place.division?.city && getCityName(place.division.city)
-        return {
-          ...place,
-          name,
-          // Its city, unless the name already says it.
-          city: city && !name.includes(city) ? city : undefined,
-          title: [place.division && getDivisionLabel(place.division), formatDay(place.dateKey)]
-            .filter(Boolean)
-            .join(' · '),
-          // A photo from the year's Moments there, when one has any.
-          photo: photosOf(
-            review.moments.filter((moment) => moment.locations.some(({ id }) => id === place.id)),
-            320,
-          )[0],
-        }
-      }),
+const placeKinds: PlaceKind[] = ['scenic', 'food', 'shopping', 'stay']
+const places = yearPlaces
+  .filter((place) => place.kind && placeKinds.includes(place.kind))
+  .map((place) => {
+    const name = getShortPlaceName(place.name)
+    const city = place.division?.city && getCityName(place.division.city)
+    return {
+      ...place,
+      name,
+      // Its city, unless the name already says it.
+      city: city && !name.includes(city) ? city : undefined,
+      title: [place.division && getDivisionLabel(place.division), formatDay(place.dateKey)]
+        .filter(Boolean)
+        .join(' · '),
+      // A photo from the year's Moments there, when one has any.
+      photo: photosOf(
+        review.moments.filter((moment) => moment.locations.some(({ id }) => id === place.id)),
+        320,
+      )[0],
+    }
+  })
+const placeRows = [
+  { title: '景点', kinds: ['scenic'] },
+  { title: '吃住逛', kinds: ['food', 'stay', 'shopping'] },
+]
+  .map((row) => ({
+    ...row,
+    places: places
+      .filter((place) => row.kinds.includes(place.kind!))
+      .map((place) => ({
+        ...place,
+        // A row of more than one kind says each card's.
+        meta: [row.kinds.length > 1 && placeKindLabels[place.kind!], place.city]
+          .filter(Boolean)
+          .join(' · '),
+      })),
   }))
-  .filter((group) => group.places.length > 0)
-const placeProvinces = new Set(yearPlaces.flatMap((place) => place.division?.province ?? [])).size
+  .filter((row) => row.places.length > 0)
 const postLinks = new Set((await getSortedPosts()).map((post) => post.data.link))
 const devices = Object.entries(readDevices())
   .filter(([, device]) => device.bought.on.startsWith(String(year)))
@@ -285,55 +297,52 @@ const highlights = [
     }
 
     {
-      placesByKind.length > 0 && (
+      places.length > 0 && (
         <section class="year-section" aria-labelledby="year-places">
           <h2 id="year-places">去过的地方</h2>
-          <p class="year-places__total">
-            {placeProvinces} 个省份的 {yearPlaces.length} 个地点
-          </p>
-          {placesByKind.map((group, index) => (
-            <div class="year-places" style={`--index: ${index}`} data-carousel>
+          {placeRows.map((row) => (
+            <div class="year-places" data-carousel>
               <div class="year-places__head">
                 <h3>
-                  {placeKindLabels[group.kind]}
-                  <span class="year-places__count">{group.places.length}</span>
+                  {row.title}
+                  <span class="year-places__count">{row.places.length}</span>
                 </h3>
                 <div class="year-places__actions">
-                <div class="year-places__nav" data-carousel-nav hidden>
-                  <button type="button" data-carousel-step="-1" aria-label={`上一组${placeKindLabels[group.kind]}`} disabled>
-                    <span class="i-lucide-chevron-left" aria-hidden="true" />
-                  </button>
-                  <button type="button" data-carousel-step="1" aria-label={`下一组${placeKindLabels[group.kind]}`}>
-                    <span class="i-lucide-chevron-right" aria-hidden="true" />
-                  </button>
-                </div>
-                {group.places.length > 2 && (
-                  <button
-                    class="year-places__all"
-                    type="button"
-                    data-carousel-all
-                    aria-expanded="false"
-                    aria-label={`全部${group.places.length}个${placeKindLabels[group.kind]}`}
-                  >
-                    <span class="year-places__all-show">全部</span>
-                    <span class="year-places__all-hide">收起</span>
-                  </button>
-                )}
+                  <div class="year-places__nav" data-carousel-nav hidden>
+                    <button type="button" data-carousel-step="-1" aria-label={`上一组${row.title}`} disabled>
+                      <span class="i-lucide-chevron-left" aria-hidden="true" />
+                    </button>
+                    <button type="button" data-carousel-step="1" aria-label={`下一组${row.title}`}>
+                      <span class="i-lucide-chevron-right" aria-hidden="true" />
+                    </button>
+                  </div>
+                  {row.places.length > 2 && (
+                    <button
+                      class="year-places__all"
+                      type="button"
+                      data-carousel-all
+                      aria-expanded="false"
+                      aria-label={`全部 ${row.places.length} 个${row.title}`}
+                    >
+                      <span class="year-places__all-show">全部</span>
+                      <span class="year-places__all-hide">收起</span>
+                    </button>
+                  )}
                 </div>
               </div>
-              <ul data-carousel-track aria-label={`${placeKindLabels[group.kind]}，${group.places.length} 个`}>
-                {group.places.map((place, order) => (
+              <ul data-carousel-track aria-label={`${row.title}，${row.places.length} 个`}>
+                {row.places.map((place, order) => (
                   <li style={`--order: ${order}`}>
                     <a
                       class:list={{ 'has-photo': place.photo }}
                       href={`/map/${year}/place/${place.id}/`}
                       title={place.title}
-                      aria-label={`${[place.name, place.city].filter(Boolean).join('，')}，第 ${order + 1} 个，共 ${group.places.length} 个`}
+                      aria-label={`${[place.name, place.meta].filter(Boolean).join('，')}，第 ${order + 1} 个，共 ${row.places.length} 个`}
                     >
                       {place.photo && <img src={place.photo} alt="" loading="lazy" decoding="async" />}
                       <span class="year-places__words">
                         <span class="year-places__name">{place.name}</span>
-                        {place.city && <span class="year-places__city">{place.city}</span>}
+                        {place.meta && <span class="year-places__city">{place.meta}</span>}
                       </span>
                     </a>
                   </li>
@@ -821,13 +830,6 @@ const highlights = [
   /* The places by kind, each kind a carousel of cards (src/year-carousel.ts): a photo
      from there behind its name, linking to the place on the map. Without the script, or
      with reduced motion, a row of same-sized cards scrolled sideways. */
-  .year-places__total {
-    margin-top: -0.5rem;
-    color: var(--color-tx-2);
-    font-size: 0.875rem;
-    font-variant-numeric: tabular-nums;
-  }
-
   .year-places {
     margin-top: 1.5rem;
 
@@ -955,18 +957,21 @@ const highlights = [
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 0.75rem;
     min-height: 2rem;
     margin-bottom: 0.625rem;
   }
 
   .year-places__actions {
     display: flex;
+    flex-shrink: 0;
     align-items: center;
     gap: 0.5rem;
   }
 
   .year-places__all {
     min-height: 2.25rem;
+    white-space: nowrap;
     padding: 0.25rem 0.75rem;
     border-radius: 9999px;
     color: var(--color-tx-2);
@@ -1037,10 +1042,10 @@ const highlights = [
     }
   }
 
-  .year-places__name,
-  .year-places__city {
-    position: relative;
-    z-index: 1;
+  .year-places__count {
+    color: var(--color-tx-3);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
   }
 
   .year-places__name {
@@ -1060,13 +1065,6 @@ const highlights = [
     .has-photo & {
       color: rgb(255 255 255 / 0.8);
     }
-  }
-
-  .year-places__count {
-    color: var(--color-tx-3);
-    font-size: 0.75rem;
-    font-weight: 400;
-    font-variant-numeric: tabular-nums;
   }
 
   .year-devices {
@@ -1155,7 +1153,7 @@ const highlights = [
 
       & .year-places li {
         animation: year-rise 600ms var(--ease-out) backwards;
-        animation-delay: calc(150ms + var(--index) * 120ms + min(var(--order), 8) * 50ms);
+        animation-delay: calc(150ms + min(var(--order), 8) * 60ms);
       }
 
       & .year-trips li,
