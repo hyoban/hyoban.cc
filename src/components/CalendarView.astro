@@ -1000,8 +1000,8 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
     align-items: center;
     justify-content: space-between;
     padding: 1.5rem;
-    border-bottom: 1px solid var(--color-border);
 
+    /* The page's own header on a phone, kept apart from the Moments scrolling under it. */
     @media (width < 56rem) {
       position: sticky;
       top: 0;
@@ -1009,6 +1009,7 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
       display: grid;
       grid-template-columns: 1fr auto 1fr;
       padding: 0.75rem 0;
+      border-bottom: 1px solid var(--color-border);
       background: var(--color-bg);
     }
 
