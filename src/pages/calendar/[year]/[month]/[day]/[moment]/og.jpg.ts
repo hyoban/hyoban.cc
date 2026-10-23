@@ -8,17 +8,13 @@ import {
   type MomentPagePathProps,
 } from '@/moments'
 import { cachedCard, renderOgImage } from '@/og-image'
+import { getCardPhotos } from '@/page-cards'
 
 export const getStaticPaths = async () => (MOMENT_OG_IMAGES ? getMomentPagePaths() : [])
 
 // A Moment's share card: its words, when and where, and its first photos or posters beside them.
 export const GET: APIRoute<MomentPagePathProps> = async ({ props: { moment } }) => {
-  const photos = moment.media
-    .flatMap((item) => (item.type === 'video' ? (item.poster ?? []) : item.src))
-    .slice(0, 4)
-    .map(
-      (still) => (still.sources.find((source) => source.width >= 960) ?? still.sources.at(-1)!).src,
-    )
+  const photos = getCardPhotos([moment])
   const excerpt = getMomentExcerpt(moment, 120)
   const dateLabel = getMomentDateLabel(moment)
   const options = { title: excerpt || dateLabel, date: excerpt ? dateLabel : undefined, photos }
