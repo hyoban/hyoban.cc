@@ -14,7 +14,7 @@ import {
 } from '@/china-calendar'
 import { getStopAnchor } from '@/moments/trip-data'
 import Layout from '@/layouts/Layout.astro'
-import { formatCalendarDay, getCalendarText, getPageCardPath, getPageTitle } from '@/page-cards'
+import { formatCalendarDay, getCalendarDayDescription, getCalendarText, getPageCardPath, getPageTitle } from '@/page-cards'
 import {
   getActiveDateKeys,
   getArchiveMonthKeys,
@@ -133,7 +133,7 @@ const title = sharedMoment
   : getPageTitle(pageText)
 const pageDescription = sharedMoment
   ? [getMomentExcerpt(sharedMoment, 120), getMomentDateLabel(sharedMoment)].filter(Boolean).join(' · ')
-  : pageText.description
+  : selectedDate ? getCalendarDayDescription(selectedMoments) : pageText.description
 // A shared Moment's page has its own card where the build draws them, the site's otherwise.
 const pageImage = sharedMoment
   ? MOMENT_OG_IMAGES ? `${getMomentPagePath(sharedMoment)}og.jpg` : undefined

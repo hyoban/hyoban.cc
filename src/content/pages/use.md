@@ -1,7 +1,7 @@
 ---
 title: Use
 link: use
-description: 我在用的东西
+description: 我用过的设备、常用的软件和订阅的服务。
 ---
 
 ## 开发

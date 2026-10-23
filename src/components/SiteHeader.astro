@@ -1,6 +1,6 @@
 ---
 import { getAssetUrl } from '@/asset-url'
-import { SITE_DESCRIPTION, SITE_TITLE } from '@/consts'
+import { SITE_TAGLINE, SITE_TITLE } from '@/consts'
 
 const nav = [
   { href: '/calendar/', label: '日历' },
@@ -22,7 +22,7 @@ const pathname = Astro.url.pathname
     />
     <span class="site-header__name">
       <span class="site-header__title">{SITE_TITLE}<span class="sr-only"> 首页</span></span>
-      <span class="site-header__description" aria-hidden="true">{SITE_DESCRIPTION}</span>
+      <span class="site-header__description" aria-hidden="true">{SITE_TAGLINE}</span>
     </span>
   </a>
   <nav aria-label="主导航" class="site-header__nav">

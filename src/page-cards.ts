@@ -21,8 +21,11 @@ export interface PageText {
   description: string
 }
 
-export const CALENDAR_DESCRIPTION = '一些零碎记录，按发生的日期归档。'
-export const MEDIA_TEXT: PageText = { heading: 'Media', description: '我推荐的电影、剧集和动画' }
+export const CALENDAR_DESCRIPTION = '随手拍的照片，和想记住的小事。'
+export const MEDIA_TEXT: PageText = {
+  heading: '影视推荐',
+  description: '我喜欢的电影、剧集和动画。',
+}
 
 export function getPageTitle({ heading }: PageText) {
   return `${heading} | ${SITE_TITLE}`
@@ -53,6 +56,13 @@ export function getCalendarText(year: number, month: number, selectedDate?: stri
   }
 }
 
+/** The day's own words, shared by its metadata and image. */
+export function getCalendarDayDescription(moments: Moment[]) {
+  return (
+    moments.map((moment) => getMomentExcerpt(moment, 120)).find(Boolean) || CALENDAR_DESCRIPTION
+  )
+}
+
 /** The map's pages, narrowed to a year or a month of it or not, and the trip lists. */
 export function getMapText(
   period?: { month?: number | undefined; year: number },
@@ -63,13 +73,20 @@ export function getMapText(
       ? `${period.year} 年`
       : `${period.year} 年 ${period.month} 月`
     : undefined
-  if (tripList) return { heading: '旅程', description: '在地图上按时间回放的几段旅程。' }
+  if (tripList) {
+    return {
+      heading: periodLabel ? `${periodLabel} · 旅程` : '旅程',
+      description: periodLabel
+        ? `${periodLabel}的旅程，和一路上的照片与见闻。`
+        : '出门走走，记下沿途的风景和小事。',
+    }
+  }
   return periodLabel
     ? {
         heading: `${periodLabel} · 地图`,
-        description: `${periodLabel}的 Moment，在地图上按地点和时间浏览。`,
+        description: `${periodLabel}的足迹和沿途记录。`,
       }
-    : { heading: '地图 · 日历', description: '按地点浏览 Calendar 中记录的 Moment。' }
+    : { heading: '地图', description: '去过的地方，留下的记录。' }
 }
 
 /** The first four photos or video posters of `moments`, at a size a card draws them at. */
@@ -119,12 +136,11 @@ export async function getPageCards(): Promise<Array<{ path: string; card: PageCa
   // A day's card leads with its first words and, where Moment cards are drawn, its photos.
   for (const dateKey of getActiveDateKeys(moments)) {
     const dayMoments = momentsByDate.get(dateKey) ?? []
-    const excerpt = dayMoments.map((moment) => getMomentExcerpt(moment, 120)).find(Boolean)
     cards.push({
       path: `/calendar/${dateKey.replaceAll('-', '/')}/`,
       card: {
         title: `${dateKey.slice(0, 4)} 年 ${formatCalendarDay(dateKey)}`,
-        description: excerpt || CALENDAR_DESCRIPTION,
+        description: getCalendarDayDescription(dayMoments),
         photos: MOMENT_OG_IMAGES ? getCardPhotos(dayMoments) : undefined,
       },
     })

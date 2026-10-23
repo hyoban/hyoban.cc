@@ -140,7 +140,7 @@ const isInPeriod = (trip: { end: string, start: string }) =>
   !period || (trip.start.slice(0, 7) <= periodEnd && trip.end.slice(0, 7) >= periodStart)
 const title = pageTrip ? getTripTitle(pageTrip.title) : getPageTitle(pageText)
 const description = pageTrip
-  ? `${pageTrip.title}的旅程回放，按时间顺序走过每一条 Moment。`
+  ? `${pageTrip.title}的路线、照片和见闻。`
   : pageText.description
 const image = pageTrip ? `/trip/${pageTrip.id}/og.jpg` : getPageCardPath(Astro.url.pathname)
 ---

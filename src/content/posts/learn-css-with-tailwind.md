@@ -1,7 +1,7 @@
 ---
 title: 你可以用 Tailwind 来学习 CSS
 link: learn-css-with-tailwind
-description: 介绍如何借助 Tailwind 的工具类和文档体系理解 HTML/CSS，并把它当作学习 CSS 的入口。
+description: 从 Tailwind 的工具类、文档和 Playground 入手，弄懂它们背后的 CSS。
 pubDate: '2023-08-16T13:06:42.431Z'
 ---
 

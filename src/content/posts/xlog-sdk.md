@@ -1,7 +1,7 @@
 ---
 title: xLog SDK 的一些进展
 link: xlog-sdk
-description: 记录 xLog SDK sakuin 的进展，以及它在静态博客、编辑器插件和内容同步中的可能性。
+description: 为了自己搭博客、在 VS Code 里写文章，我做了 xLog SDK sakuin，也想让更多工具能用上 xLog 的数据。
 pubDate: '2024-03-19T09:51:53.710Z'
 ---
 

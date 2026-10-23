@@ -1,7 +1,7 @@
 ---
 title: 'Re: 从零开始的 React Native 之旅'
 link: react-native-follow
-description: 记录用 Expo 和 React Native 复刻 Follow 移动端的过程，包括登录、主题、Local First 和测试分发。
+description: 想学 React Native，就用 Expo 给 Follow 写个移动端。从登录和主题，一路折腾到离线数据与测试分发。
 pubDate: '2024-07-21T16:48:51.143Z'
 ---
 
