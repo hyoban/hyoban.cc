@@ -3,8 +3,10 @@ import {
   placeSchema,
   type MomentMedia,
   type MomentRecord,
+  type Place,
   type Places,
 } from '@hyoban/data-spec'
+import type { Division } from '@hyoban/data-spec/division'
 import { getUploadKey, type Bucket, type UploadPart } from './bucket.ts'
 import {
   carryTripRoutes,
@@ -49,6 +51,8 @@ export interface WriteContext {
   bucket: Bucket
   /** When the write happens, as the records stamp it. */
   now: string
+  /** The division a new place sent without one is in; none is looked up without it. */
+  locate?: (place: Place) => Promise<Division | undefined>
 }
 
 export interface WriteResult<T> {
@@ -139,8 +143,10 @@ export async function applyChanges(
     placeIds[given] = match.id
 
     if (match.status === 'new') {
-      places[match.id] = place
-      statements.push(upsert(context.db, 'places', placeRow(match.id, place)))
+      const located = await withDivision(context, place)
+
+      places[match.id] = located
+      statements.push(upsert(context.db, 'places', placeRow(match.id, located)))
     }
   }
 
@@ -236,6 +242,36 @@ function tripView(record: MomentRecord | undefined) {
   return record?.published && !record.hidden
     ? JSON.stringify([record.occurredAt, record.places, record.published.order])
     : null
+}
+
+/**
+ * A new place with the division it is in, placed after its kind as the spec orders it.
+ * One that can't be looked up, DataV being out of reach, is kept without; the
+ * `places:locate` script fills it in later.
+ */
+async function withDivision(context: WriteContext, place: Place): Promise<Place> {
+  if (place.division || !context.locate) {
+    return place
+  }
+
+  let division: Division | undefined
+
+  try {
+    division = await context.locate(place)
+  } catch (caught) {
+    console.error(`Locating ${place.name} failed`, caught)
+  }
+
+  if (!division) {
+    return place
+  }
+
+  const entries = Object.entries(place)
+  const at = entries.findIndex(([key]) => key === (place.kind ? 'kind' : 'longitude')) + 1
+
+  entries.splice(at, 0, ['division', division])
+
+  return Object.fromEntries(entries) as Place
 }
 
 /**

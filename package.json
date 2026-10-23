@@ -14,6 +14,7 @@
     "data:schema": "node scripts/generate-data-schema.mjs",
     "map:bench": "node scripts/bench-map.mjs",
     "map:cities": "node scripts/generate-city-boundaries.mjs",
+    "places:locate": "node scripts/locate-places.mjs",
     "media:generate": "node scripts/generate-media.mjs",
     "moments:audit": "node scripts/audit-moments.mjs",
     "moments:gc": "node scripts/gc-moment-assets.mjs --dry-run",

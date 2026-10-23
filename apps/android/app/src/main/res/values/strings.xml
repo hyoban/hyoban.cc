@@ -254,6 +254,15 @@
     <string name="action_delete_moment">删除这个时刻</string>
     <string name="label_known_place">已有地点</string>
     <string name="place_new_here">新地点，在图钉处</string>
+    <string name="place_kind">类型</string>
+    <string name="place_kind_city">城市</string>
+    <string name="place_kind_town">城镇乡村</string>
+    <string name="place_kind_region">区域</string>
+    <string name="place_kind_scenic">景点</string>
+    <string name="place_kind_food">餐饮</string>
+    <string name="place_kind_shopping">购物</string>
+    <string name="place_kind_stay">住宿</string>
+    <string name="place_kind_transport">交通</string>
     <string name="place_drag_hint">拖动地图，把图钉放到这个时刻发生的地方</string>
     <string name="share_as_place">作为时刻的地点</string>
     <string name="error_shared_place">没能从分享里认出地点</string>

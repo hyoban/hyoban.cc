@@ -2,6 +2,7 @@ package cc.hyoban.moments.data.local
 
 import android.content.Context
 import cc.hyoban.moments.data.Http
+import cc.hyoban.moments.data.spec.PlaceKind
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
@@ -45,7 +46,7 @@ class PlaceSearch(private val baseUrl: () -> String, private val client: OkHttpC
         val found = runCatching { nearby(fix) }.getOrNull()
         if (found != null) {
             val name = nameAt(found)
-            if (name != null) return Around(name, landmarks(found))
+            if (name != null) return Around(name, landmarks(found), landmarks(found).firstOrNull()?.let(::kindOf))
         }
         return Around(placeName(context, fix), emptyList())
     }
@@ -68,8 +69,8 @@ class PlaceSearch(private val baseUrl: () -> String, private val client: OkHttpC
 /** A place OpenStreetMap knows near a point: what it is called, where, and what kind of thing it is (`leisure`, `park`). */
 data class Found(val name: String, val fix: Fix, val kind: String? = null, val type: String? = null)
 
-/** What a place is called, and the named places around it to call it instead. */
-data class Around(val name: String?, val landmarks: List<Found>)
+/** What a place is called, the named places around it to call it instead, and what sort of place the name is of. */
+data class Around(val name: String?, val landmarks: List<Found>, val kind: PlaceKind? = null)
 
 /** Photon's GeoJSON answer as places, those without a name left out. */
 fun parsePhoton(json: String): List<Found> {
@@ -94,3 +95,40 @@ fun landmarks(found: List<Found>): List<Found> =
 /** The name for a point from what is around it: the nearest landmark, else the nearest street. */
 fun nameAt(found: List<Found>): String? =
     landmarks(found).firstOrNull()?.name ?: found.firstOrNull { it.kind == "highway" }?.name
+
+/** What sort of place an OpenStreetMap feature is, by its key and value; null where that says too little. */
+fun kindOf(found: Found): PlaceKind? = when (found.kind) {
+    "place" -> when (found.type) {
+        "city" -> PlaceKind.CITY
+        "town", "village", "hamlet", "county", "municipality" -> PlaceKind.TOWN
+        "region", "state", "province", "sea", "island", "archipelago" -> PlaceKind.REGION
+        else -> null
+    }
+    "amenity" -> when (found.type) {
+        "restaurant", "cafe", "fast_food", "food_court", "bar", "pub", "biergarten", "ice_cream" -> PlaceKind.FOOD
+        "marketplace" -> PlaceKind.SHOPPING
+        "parking", "bus_station", "ferry_terminal", "charging_station", "fuel" -> PlaceKind.TRANSPORT
+        "place_of_worship", "theatre", "arts_centre", "university" -> PlaceKind.SCENIC
+        else -> null
+    }
+    "shop" -> PlaceKind.SHOPPING
+    "tourism" -> when (found.type) {
+        "hotel", "hostel", "guest_house", "motel", "apartment", "chalet", "camp_site", "caravan_site" -> PlaceKind.STAY
+        "information" -> null
+        else -> PlaceKind.SCENIC
+    }
+    "leisure" -> when (found.type) {
+        "park", "garden", "nature_reserve", "beach_resort", "marina" -> PlaceKind.SCENIC
+        else -> null
+    }
+    "natural", "historic", "waterway", "mountain_pass" -> PlaceKind.SCENIC
+    "aeroway", "railway", "public_transport" -> PlaceKind.TRANSPORT
+    "building" -> when (found.type) {
+        "train_station", "transportation" -> PlaceKind.TRANSPORT
+        "hotel" -> PlaceKind.STAY
+        "retail", "commercial" -> PlaceKind.SHOPPING
+        "temple", "church", "museum" -> PlaceKind.SCENIC
+        else -> null
+    }
+    else -> null
+}

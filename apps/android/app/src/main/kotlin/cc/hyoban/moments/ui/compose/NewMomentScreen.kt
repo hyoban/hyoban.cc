@@ -112,6 +112,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.R
+import cc.hyoban.moments.data.local.Around
 import cc.hyoban.moments.data.local.Fix
 import cc.hyoban.moments.data.local.PhotoInfo
 import cc.hyoban.moments.data.local.Photos
@@ -199,7 +200,7 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
     var deviceFix by remember { mutableStateOf<Fix?>(null) }
     var locating by remember { mutableStateOf(false) }
     var locationDenied by remember { mutableStateOf(false) }
-    var geocoded by remember { mutableStateOf<Pair<Fix, String?>?>(null) }
+    var geocoded by remember { mutableStateOf<Pair<Fix, Around>?>(null) }
     var saving by remember { mutableStateOf(false) }
     var editingTime by remember { mutableStateOf(false) }
     var editingPlace by remember { mutableStateOf(false) }
@@ -231,10 +232,11 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
     val photoFix = photos.firstNotNullOfOrNull { infos[it]?.fix }
     val fix = photoFix ?: deviceFix
     LaunchedEffect(fix) {
-        if (fix != null && geocoded?.first != fix) geocoded = fix to container.placeSearch.around(context, fix).name
+        if (fix != null && geocoded?.first != fix) geocoded = fix to container.placeSearch.around(context, fix)
     }
-    val suggestedName = fix?.let { at -> geocoded?.takeIf { it.first == at }?.second ?: coordinatesName(at) }
-    val place: PlaceChoice = chosenPlace ?: if (fix != null && suggestedName != null) PlaceChoice.New(suggestedName, fix) else PlaceChoice.None
+    val around = geocoded?.takeIf { it.first == fix }?.second
+    val suggestedName = fix?.let { at -> around?.name ?: coordinatesName(at) }
+    val place: PlaceChoice = chosenPlace ?: if (fix != null && suggestedName != null) PlaceChoice.New(suggestedName, fix, around?.kind) else PlaceChoice.None
 
     // A place shared in from a map, now or while this page is open, is the Moment's place.
     val shared by container.sharedPlace.collectAsStateWithLifecycle()
@@ -810,7 +812,7 @@ private suspend fun buildMoment(
         )
     }
     val newPlace = (place as? PlaceChoice.New)?.let {
-        newPlaceId() to Place(it.name.trim().ifEmpty { coordinatesName(it.fix) }, it.fix.latitude, it.fix.longitude, createdAt = now)
+        newPlaceId() to Place(it.name.trim().ifEmpty { coordinatesName(it.fix) }, it.fix.latitude, it.fix.longitude, kind = it.kind?.value, createdAt = now)
     }
     val placeIds = keepPlaces ?: when (place) {
         is PlaceChoice.Known -> listOf(place.id)

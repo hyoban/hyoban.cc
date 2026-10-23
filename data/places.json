@@ -2,22 +2,49 @@
   "anji": {
     "name": "安吉",
     "latitude": 30.638,
-    "longitude": 119.68
+    "longitude": 119.68,
+    "kind": "town",
+    "division": {
+      "code": "330523",
+      "province": "浙江省",
+      "city": "湖州市",
+      "district": "安吉县"
+    }
   },
   "baimao": {
     "name": "白茆",
     "latitude": 31.29263,
-    "longitude": 118.05873
+    "longitude": 118.05873,
+    "kind": "town",
+    "division": {
+      "code": "340207",
+      "province": "安徽省",
+      "city": "芜湖市",
+      "district": "鸠江区"
+    }
   },
   "bangchuidao": {
     "name": "棒棰岛",
     "latitude": 38.88773,
-    "longitude": 121.70625
+    "longitude": 121.70625,
+    "kind": "scenic",
+    "division": {
+      "code": "210202",
+      "province": "辽宁省",
+      "city": "大连市",
+      "district": "中山区"
+    }
   },
   "beijing": {
     "name": "北京",
     "latitude": 39.9042,
     "longitude": 116.4074,
+    "kind": "city",
+    "division": {
+      "code": "110000",
+      "province": "北京市",
+      "city": "北京市"
+    },
     "station": {
       "name": "北京南站",
       "latitude": 39.8652,
@@ -28,12 +55,19 @@
     "name": "渤海",
     "latitude": 38.24,
     "longitude": 121.52,
+    "kind": "region",
     "note": "A point on the Yantai–Dalian ferry route across the Bohai Strait."
   },
   "changsha": {
     "name": "长沙",
     "latitude": 28.2282,
     "longitude": 112.9388,
+    "kind": "city",
+    "division": {
+      "code": "430100",
+      "province": "湖南省",
+      "city": "长沙市"
+    },
     "station": {
       "name": "长沙南站",
       "latitude": 28.1475,
@@ -44,6 +78,12 @@
     "name": "成都",
     "latitude": 30.5728,
     "longitude": 104.0668,
+    "kind": "city",
+    "division": {
+      "code": "510100",
+      "province": "四川省",
+      "city": "成都市"
+    },
     "station": {
       "name": "成都东站",
       "latitude": 30.6296,
@@ -53,67 +93,155 @@
   "chengkan": {
     "name": "呈坎",
     "latitude": 29.92305,
-    "longitude": 118.27875
+    "longitude": 118.27875,
+    "kind": "scenic",
+    "division": {
+      "code": "341004",
+      "province": "安徽省",
+      "city": "黄山市",
+      "district": "徽州区"
+    }
   },
   "dalian": {
     "name": "大连",
     "latitude": 38.9,
-    "longitude": 121.6
+    "longitude": 121.6,
+    "kind": "city",
+    "division": {
+      "code": "210200",
+      "province": "辽宁省",
+      "city": "大连市"
+    }
   },
   "dalian-datongjie-tram-stop": {
     "name": "大同街有轨电车站",
     "latitude": 38.91815,
-    "longitude": 121.60193
+    "longitude": 121.60193,
+    "kind": "transport",
+    "division": {
+      "code": "210203",
+      "province": "辽宁省",
+      "city": "大连市",
+      "district": "西岗区"
+    }
   },
   "dalian-huozhang-niaogengzuo": {
     "name": "火長鳥耕作·燒鳥專門店（高新三号店）",
     "latitude": 38.85751,
-    "longitude": 121.51893
+    "longitude": 121.51893,
+    "kind": "food",
+    "division": {
+      "code": "210211",
+      "province": "辽宁省",
+      "city": "大连市",
+      "district": "甘井子区"
+    }
   },
   "dalian-riyuesheng-yujiacai": {
     "name": "日月昇渔家菜（万达华府店）",
     "latitude": 38.91026,
-    "longitude": 121.60186
+    "longitude": 121.60186,
+    "kind": "food",
+    "division": {
+      "code": "210204",
+      "province": "辽宁省",
+      "city": "大连市",
+      "district": "沙河口区"
+    }
   },
   "dalongwan-beach": {
     "name": "芜湖大龙湾沙滩",
     "latitude": 31.3126,
-    "longitude": 118.3407
+    "longitude": 118.3407,
+    "kind": "scenic",
+    "division": {
+      "code": "340207",
+      "province": "安徽省",
+      "city": "芜湖市",
+      "district": "鸠江区"
+    }
   },
   "dandong": {
     "name": "丹东",
     "latitude": 40.1211,
-    "longitude": 124.3943
+    "longitude": 124.3943,
+    "kind": "city",
+    "division": {
+      "code": "210600",
+      "province": "辽宁省",
+      "city": "丹东市"
+    }
   },
   "dandong-gaoshezhang-tangfan": {
     "name": "高社长汤饭（三部六纬路店）",
     "latitude": 40.12989,
-    "longitude": 124.38169
+    "longitude": 124.38169,
+    "kind": "food",
+    "division": {
+      "code": "210603",
+      "province": "辽宁省",
+      "city": "丹东市",
+      "district": "振兴区"
+    }
   },
   "dandong-yanjing-kaorou": {
     "name": "眼镜烤肉（老街店）",
     "latitude": 40.10392,
-    "longitude": 124.35867
+    "longitude": 124.35867,
+    "kind": "food",
+    "division": {
+      "code": "210603",
+      "province": "辽宁省",
+      "city": "丹东市",
+      "district": "振兴区"
+    }
   },
   "dashu-mountain": {
     "name": "大蜀山森林公园",
     "latitude": 31.84407,
-    "longitude": 117.16501
+    "longitude": 117.16501,
+    "kind": "scenic",
+    "division": {
+      "code": "340104",
+      "province": "安徽省",
+      "city": "合肥市",
+      "district": "蜀山区"
+    }
   },
   "dougou": {
     "name": "陡沟",
     "latitude": 31.36055,
-    "longitude": 118.01416
+    "longitude": 118.01416,
+    "kind": "town",
+    "division": {
+      "code": "340281",
+      "province": "安徽省",
+      "city": "芜湖市",
+      "district": "无为市"
+    }
   },
   "fangxing-lake": {
     "name": "方兴湖公园",
     "latitude": 31.72648,
-    "longitude": 117.32394
+    "longitude": 117.32394,
+    "kind": "scenic",
+    "division": {
+      "code": "340111",
+      "province": "安徽省",
+      "city": "合肥市",
+      "district": "包河区"
+    }
   },
   "guangzhou": {
     "name": "广州",
     "latitude": 23.1291,
     "longitude": 113.2644,
+    "kind": "city",
+    "division": {
+      "code": "440100",
+      "province": "广东省",
+      "city": "广州市"
+    },
     "station": {
       "name": "广州南站",
       "latitude": 22.989,
@@ -123,72 +251,167 @@
   "guangzhou-baiyun-airport": {
     "name": "广州白云国际机场",
     "latitude": 23.38005,
-    "longitude": 113.29883
+    "longitude": 113.29883,
+    "kind": "transport",
+    "division": {
+      "code": "440111",
+      "province": "广东省",
+      "city": "广州市",
+      "district": "白云区"
+    }
   },
   "haiyan": {
     "name": "海盐",
     "latitude": 30.5254,
-    "longitude": 120.9458
+    "longitude": 120.9458,
+    "kind": "town",
+    "division": {
+      "code": "330424",
+      "province": "浙江省",
+      "city": "嘉兴市",
+      "district": "海盐县"
+    }
   },
   "hangzhou": {
     "name": "杭州",
     "latitude": 30.2741,
-    "longitude": 120.1551
+    "longitude": 120.1551,
+    "kind": "city",
+    "division": {
+      "code": "330100",
+      "province": "浙江省",
+      "city": "杭州市"
+    }
   },
   "hangzhou-city-balcony": {
     "name": "杭州城市阳台",
     "latitude": 30.24425,
-    "longitude": 120.21258
+    "longitude": 120.21258,
+    "kind": "scenic",
+    "division": {
+      "code": "330102",
+      "province": "浙江省",
+      "city": "杭州市",
+      "district": "上城区"
+    }
   },
   "hangzhou-national-edition-museum": {
     "name": "杭州国家版本馆",
     "latitude": 30.38352,
-    "longitude": 120.01225
+    "longitude": 120.01225,
+    "kind": "scenic",
+    "division": {
+      "code": "330110",
+      "province": "浙江省",
+      "city": "杭州市",
+      "district": "余杭区"
+    }
   },
   "hanshan-temple": {
     "name": "寒山寺",
     "latitude": 31.3125,
-    "longitude": 120.5643
+    "longitude": 120.5643,
+    "kind": "scenic",
+    "division": {
+      "code": "320508",
+      "province": "江苏省",
+      "city": "苏州市",
+      "district": "姑苏区"
+    }
   },
   "hechai-1972": {
     "name": "合柴1972",
     "latitude": 31.79987,
-    "longitude": 117.23945
+    "longitude": 117.23945,
+    "kind": "scenic",
+    "division": {
+      "code": "340111",
+      "province": "安徽省",
+      "city": "合肥市",
+      "district": "包河区"
+    }
   },
   "hefei": {
     "name": "合肥",
     "latitude": 31.8206,
-    "longitude": 117.2272
+    "longitude": 117.2272,
+    "kind": "city",
+    "division": {
+      "code": "340100",
+      "province": "安徽省",
+      "city": "合肥市"
+    }
   },
   "hefei-binhu-national-forest-park": {
     "name": "合肥滨湖国家森林公园",
     "latitude": 31.72307,
-    "longitude": 117.38307
+    "longitude": 117.38307,
+    "kind": "scenic",
+    "division": {
+      "code": "340111",
+      "province": "安徽省",
+      "city": "合肥市",
+      "district": "包河区"
+    }
   },
   "hefei-jiangheli-kaoyu": {
     "name": "江河里麻辣烤鱼（高新龙湖天街店）",
     "latitude": 31.85161,
-    "longitude": 117.12054
+    "longitude": 117.12054,
+    "kind": "food",
+    "division": {
+      "code": "340104",
+      "province": "安徽省",
+      "city": "合肥市",
+      "district": "蜀山区"
+    }
   },
   "hefei-qianxun-shaorou": {
     "name": "千寻烧肉·黑金店（滨湖银泰店）",
     "latitude": 31.71487,
-    "longitude": 117.29583
+    "longitude": 117.29583,
+    "kind": "food",
+    "division": {
+      "code": "340111",
+      "province": "安徽省",
+      "city": "合肥市",
+      "district": "包河区"
+    }
   },
   "hefei-xinqiao-airport": {
     "name": "合肥新桥国际机场",
     "latitude": 31.98862,
-    "longitude": 116.96378
+    "longitude": 116.96378,
+    "kind": "transport",
+    "division": {
+      "code": "340104",
+      "province": "安徽省",
+      "city": "合肥市",
+      "district": "蜀山区"
+    }
   },
   "hefei-yangjia-huoguo": {
     "name": "杨家火锅（滨湖店）",
     "latitude": 31.74412,
-    "longitude": 117.30583
+    "longitude": 117.30583,
+    "kind": "food",
+    "division": {
+      "code": "340111",
+      "province": "安徽省",
+      "city": "合肥市",
+      "district": "包河区"
+    }
   },
   "hong-kong": {
     "name": "香港",
     "latitude": 22.3193,
     "longitude": 114.1694,
+    "kind": "city",
+    "division": {
+      "code": "810000",
+      "province": "香港特别行政区",
+      "city": "香港特别行政区"
+    },
     "station": {
       "name": "香港西九龙站",
       "latitude": 22.3046,
@@ -198,117 +421,274 @@
   "honghaizi": {
     "name": "红海子",
     "latitude": 30.18532,
-    "longitude": 101.77422
+    "longitude": 101.77422,
+    "kind": "scenic",
+    "division": {
+      "code": "513301",
+      "province": "四川省",
+      "city": "甘孜藏族自治州",
+      "district": "康定市"
+    }
   },
   "huaian": {
     "name": "淮安",
     "latitude": 33.6065,
-    "longitude": 119.0302
+    "longitude": 119.0302,
+    "kind": "city",
+    "division": {
+      "code": "320800",
+      "province": "江苏省",
+      "city": "淮安市"
+    }
   },
   "jiangnan-tianchi": {
     "name": "江南天池",
     "latitude": 30.4707,
-    "longitude": 119.5943
+    "longitude": 119.5943,
+    "kind": "scenic",
+    "division": {
+      "code": "330523",
+      "province": "浙江省",
+      "city": "湖州市",
+      "district": "安吉县"
+    }
   },
   "jiangxinzhou": {
     "name": "江心洲",
     "latitude": 32.027,
-    "longitude": 118.6926
+    "longitude": 118.6926,
+    "kind": "scenic",
+    "division": {
+      "code": "320105",
+      "province": "江苏省",
+      "city": "南京市",
+      "district": "建邺区"
+    }
   },
   "jiguan-cave": {
     "name": "鸡冠洞",
     "latitude": 33.78488,
-    "longitude": 111.5647
+    "longitude": 111.5647,
+    "kind": "scenic",
+    "division": {
+      "code": "410324",
+      "province": "河南省",
+      "city": "洛阳市",
+      "district": "栾川县"
+    }
   },
   "jinjiangshan-park": {
     "name": "锦江山公园",
     "latitude": 40.13248,
-    "longitude": 124.36754
+    "longitude": 124.36754,
+    "kind": "scenic",
+    "division": {
+      "code": "210603",
+      "province": "辽宁省",
+      "city": "丹东市",
+      "district": "振兴区"
+    }
   },
   "kangding": {
     "name": "康定",
     "latitude": 30.0507,
-    "longitude": 101.9601
+    "longitude": 101.9601,
+    "kind": "town",
+    "division": {
+      "code": "513301",
+      "province": "四川省",
+      "city": "甘孜藏族自治州",
+      "district": "康定市"
+    }
   },
   "laojunshan": {
     "name": "老君山",
     "latitude": 33.758,
-    "longitude": 111.641
+    "longitude": 111.641,
+    "kind": "scenic",
+    "division": {
+      "code": "410324",
+      "province": "河南省",
+      "city": "洛阳市",
+      "district": "栾川县"
+    }
   },
   "lenggacuo": {
     "name": "冷嘎措",
     "latitude": 29.6511,
-    "longitude": 101.6836
+    "longitude": 101.6836,
+    "kind": "scenic",
+    "division": {
+      "code": "513301",
+      "province": "四川省",
+      "city": "甘孜藏族自治州",
+      "district": "康定市"
+    }
   },
   "liandao": {
     "name": "连岛景区",
     "latitude": 34.76627,
-    "longitude": 119.42922
+    "longitude": 119.42922,
+    "kind": "scenic",
+    "division": {
+      "code": "320703",
+      "province": "江苏省",
+      "city": "连云港市",
+      "district": "连云区"
+    }
   },
   "lijiang": {
     "name": "丽江",
     "latitude": 26.8552,
-    "longitude": 100.2259
+    "longitude": 100.2259,
+    "kind": "city",
+    "division": {
+      "code": "530700",
+      "province": "云南省",
+      "city": "丽江市"
+    }
   },
   "lijiang-sanyi-airport": {
     "name": "丽江三义国际机场",
     "latitude": 26.66944,
-    "longitude": 100.24766
+    "longitude": 100.24766,
+    "kind": "transport",
+    "division": {
+      "code": "530702",
+      "province": "云南省",
+      "city": "丽江市",
+      "district": "古城区"
+    }
   },
   "lingbi": {
     "name": "灵璧",
     "latitude": 33.541,
-    "longitude": 117.552
+    "longitude": 117.552,
+    "kind": "town",
+    "division": {
+      "code": "341323",
+      "province": "安徽省",
+      "city": "宿州市",
+      "district": "灵璧县"
+    }
   },
   "lingyanshan-temple": {
     "name": "灵岩山寺",
     "latitude": 31.2643,
-    "longitude": 120.4971
+    "longitude": 120.4971,
+    "kind": "scenic",
+    "division": {
+      "code": "320506",
+      "province": "江苏省",
+      "city": "苏州市",
+      "district": "吴中区"
+    }
   },
   "linzhou-dongyao": {
     "name": "林州东姚镇",
     "latitude": 35.91412,
-    "longitude": 113.95249
+    "longitude": 113.95249,
+    "kind": "town",
+    "division": {
+      "code": "410581",
+      "province": "河南省",
+      "city": "安阳市",
+      "district": "林州市"
+    }
   },
   "longwo-lake": {
     "name": "外龙窝湖",
     "latitude": 31.27082,
-    "longitude": 118.33063
+    "longitude": 118.33063,
+    "kind": "scenic",
+    "division": {
+      "code": "340209",
+      "province": "安徽省",
+      "city": "芜湖市",
+      "district": "弋江区"
+    }
   },
   "lugu-lake": {
     "name": "泸沽湖风景区观景台",
     "latitude": 27.65928,
-    "longitude": 100.80689
+    "longitude": 100.80689,
+    "kind": "scenic",
+    "division": {
+      "code": "530724",
+      "province": "云南省",
+      "city": "丽江市",
+      "district": "宁蒗彝族自治县"
+    }
   },
   "luogang-park": {
     "name": "骆岗公园",
     "latitude": 31.77691,
-    "longitude": 117.29361
+    "longitude": 117.29361,
+    "kind": "scenic",
+    "division": {
+      "code": "340111",
+      "province": "安徽省",
+      "city": "合肥市",
+      "district": "包河区"
+    }
   },
   "maanshan": {
     "name": "马鞍山",
     "latitude": 31.669,
-    "longitude": 118.507
+    "longitude": 118.507,
+    "kind": "city",
+    "division": {
+      "code": "340500",
+      "province": "安徽省",
+      "city": "马鞍山市"
+    }
   },
   "maanshan-rail-coffee": {
     "name": "第三铁道咖啡（健康路店）",
     "latitude": 31.70842,
-    "longitude": 118.50324
+    "longitude": 118.50324,
+    "kind": "food",
+    "division": {
+      "code": "340503",
+      "province": "安徽省",
+      "city": "马鞍山市",
+      "district": "花山区"
+    }
   },
   "maogongshan": {
     "name": "毛公山",
     "latitude": 31.2926,
-    "longitude": 117.6091
+    "longitude": 117.6091,
+    "kind": "scenic",
+    "division": {
+      "code": "340281",
+      "province": "安徽省",
+      "city": "芜湖市",
+      "district": "无为市"
+    }
   },
   "moganshan": {
     "name": "莫干山",
     "latitude": 30.60868,
-    "longitude": 119.86261
+    "longitude": 119.86261,
+    "kind": "scenic",
+    "division": {
+      "code": "330521",
+      "province": "浙江省",
+      "city": "湖州市",
+      "district": "德清县"
+    }
   },
   "nanjing": {
     "name": "南京",
     "latitude": 32.0603,
     "longitude": 118.7969,
+    "kind": "city",
+    "division": {
+      "code": "320100",
+      "province": "江苏省",
+      "city": "南京市"
+    },
     "station": {
       "name": "南京南站",
       "latitude": 31.9686,
@@ -318,37 +698,85 @@
   "nanjing-jiangbei-hongyuecheng": {
     "name": "南京江北虹悦城",
     "latitude": 32.06926,
-    "longitude": 118.63504
+    "longitude": 118.63504,
+    "kind": "shopping",
+    "division": {
+      "code": "320111",
+      "province": "江苏省",
+      "city": "南京市",
+      "district": "浦口区"
+    }
   },
   "nanjing-kinglomo-ifcx": {
     "name": "金粒门KINGLOMO（新街口国际金融中心IFCX店）",
     "latitude": 32.04305,
-    "longitude": 118.77797
+    "longitude": 118.77797,
+    "kind": "food",
+    "division": {
+      "code": "320104",
+      "province": "江苏省",
+      "city": "南京市",
+      "district": "秦淮区"
+    }
   },
   "nanjing-lukou-airport": {
     "name": "南京禄口国际机场",
     "latitude": 31.74203,
-    "longitude": 118.86202
+    "longitude": 118.86202,
+    "kind": "transport",
+    "division": {
+      "code": "320115",
+      "province": "江苏省",
+      "city": "南京市",
+      "district": "江宁区"
+    }
   },
   "nanxun": {
     "name": "南浔古镇",
     "latitude": 30.87193,
-    "longitude": 120.4241
+    "longitude": 120.4241,
+    "kind": "scenic",
+    "division": {
+      "code": "330503",
+      "province": "浙江省",
+      "city": "湖州市",
+      "district": "南浔区"
+    }
   },
   "pingtian-lake": {
     "name": "平天湖",
     "latitude": 30.6551,
-    "longitude": 117.5217
+    "longitude": 117.5217,
+    "kind": "scenic",
+    "division": {
+      "code": "341702",
+      "province": "安徽省",
+      "city": "池州市",
+      "district": "贵池区"
+    }
   },
   "qiandao-lake": {
     "name": "千岛湖",
     "latitude": 29.5694,
-    "longitude": 119.07
+    "longitude": 119.07,
+    "kind": "scenic",
+    "division": {
+      "code": "330127",
+      "province": "浙江省",
+      "city": "杭州市",
+      "district": "淳安县"
+    }
   },
   "qingdao": {
     "name": "青岛",
     "latitude": 36.0671,
     "longitude": 120.3826,
+    "kind": "city",
+    "division": {
+      "code": "370200",
+      "province": "山东省",
+      "city": "青岛市"
+    },
     "station": {
       "name": "青岛北站",
       "latitude": 36.1714,
@@ -359,6 +787,13 @@
     "name": "TSUTAYA BOOKSTORE 蔦屋书店（海天MALL）",
     "latitude": 36.05784,
     "longitude": 120.36433,
+    "kind": "shopping",
+    "division": {
+      "code": "370202",
+      "province": "山东省",
+      "city": "青岛市",
+      "district": "市南区"
+    },
     "station": {
       "name": "青岛北站",
       "latitude": 36.1714,
@@ -368,52 +803,119 @@
   "rizhao": {
     "name": "日照",
     "latitude": 35.4154,
-    "longitude": 119.5267
+    "longitude": 119.5267,
+    "kind": "city",
+    "division": {
+      "code": "371100",
+      "province": "山东省",
+      "city": "日照市"
+    }
   },
   "sanhe": {
     "name": "三河古镇",
     "latitude": 31.5135,
-    "longitude": 117.23935
+    "longitude": 117.23935,
+    "kind": "scenic",
+    "division": {
+      "code": "340123",
+      "province": "安徽省",
+      "city": "合肥市",
+      "district": "肥西县"
+    }
   },
   "sanqingshan": {
     "name": "三清山",
     "latitude": 28.917,
-    "longitude": 118.065
+    "longitude": 118.065,
+    "kind": "scenic",
+    "division": {
+      "code": "361123",
+      "province": "江西省",
+      "city": "上饶市",
+      "district": "玉山县"
+    }
   },
   "shanghai-haidilao-jingan-dayuecheng": {
     "name": "海底捞火锅（静安大融城店）",
     "latitude": 31.282,
-    "longitude": 121.42464
+    "longitude": 121.42464,
+    "kind": "food",
+    "division": {
+      "code": "310106",
+      "province": "上海市",
+      "city": "上海市",
+      "district": "静安区"
+    }
   },
   "shenyang": {
     "name": "沈阳",
     "latitude": 41.8025,
-    "longitude": 123.42806
+    "longitude": 123.42806,
+    "kind": "city",
+    "division": {
+      "code": "210100",
+      "province": "辽宁省",
+      "city": "沈阳市"
+    }
   },
   "shenyang-laoma-jijia": {
     "name": "老马鸡架（总店）",
     "latitude": 41.78392,
-    "longitude": 123.42449
+    "longitude": 123.42449,
+    "kind": "food",
+    "division": {
+      "code": "210103",
+      "province": "辽宁省",
+      "city": "沈阳市",
+      "district": "沈河区"
+    }
   },
   "shenyang-mixc": {
     "name": "沈阳万象城",
     "latitude": 41.77405,
-    "longitude": 123.42831
+    "longitude": 123.42831,
+    "kind": "shopping",
+    "division": {
+      "code": "210102",
+      "province": "辽宁省",
+      "city": "沈阳市",
+      "district": "和平区"
+    }
   },
   "shenyang-qinghe-bandao-hot-spring": {
     "name": "沈阳清河半岛温泉度假酒店",
     "latitude": 41.93376,
-    "longitude": 123.42725
+    "longitude": 123.42725,
+    "kind": "stay",
+    "division": {
+      "code": "210113",
+      "province": "辽宁省",
+      "city": "沈阳市",
+      "district": "沈北新区"
+    }
   },
   "shenyang-yuyue-kaoya": {
     "name": "遇约烤鸭（中粮店）",
     "latitude": 41.85344,
-    "longitude": 123.41149
+    "longitude": 123.41149,
+    "kind": "food",
+    "division": {
+      "code": "210105",
+      "province": "辽宁省",
+      "city": "沈阳市",
+      "district": "皇姑区"
+    }
   },
   "shenzhen": {
     "name": "深圳",
     "latitude": 22.5431,
     "longitude": 114.0579,
+    "kind": "city",
+    "division": {
+      "code": "440300",
+      "province": "广东省",
+      "city": "深圳市"
+    },
     "station": {
       "name": "深圳北站",
       "latitude": 22.6097,
@@ -423,202 +925,472 @@
   "shuhe-ancient-town": {
     "name": "束河古镇",
     "latitude": 26.92349,
-    "longitude": 100.20393
+    "longitude": 100.20393,
+    "kind": "scenic",
+    "division": {
+      "code": "530702",
+      "province": "云南省",
+      "city": "丽江市",
+      "district": "古城区"
+    }
   },
   "soochow-university": {
     "name": "苏州大学",
     "latitude": 31.30699,
-    "longitude": 120.63644
+    "longitude": 120.63644,
+    "kind": "scenic",
+    "division": {
+      "code": "320508",
+      "province": "江苏省",
+      "city": "苏州市",
+      "district": "姑苏区"
+    }
   },
   "suzhou": {
     "name": "苏州",
     "latitude": 31.2989,
-    "longitude": 120.5853
+    "longitude": 120.5853,
+    "kind": "city",
+    "division": {
+      "code": "320500",
+      "province": "江苏省",
+      "city": "苏州市"
+    }
   },
   "suzhou-guanyu-dushu-lake": {
     "name": "冠寓（苏州腾飞创新园独墅湖店）",
     "latitude": 31.25566,
-    "longitude": 120.7328
+    "longitude": 120.7328,
+    "kind": "stay",
+    "division": {
+      "code": "320506",
+      "province": "江苏省",
+      "city": "苏州市",
+      "district": "吴中区"
+    }
   },
   "suzhou-museum": {
     "name": "苏州博物馆",
     "latitude": 31.3252,
-    "longitude": 120.6236
+    "longitude": 120.6236,
+    "kind": "scenic",
+    "division": {
+      "code": "320508",
+      "province": "江苏省",
+      "city": "苏州市",
+      "district": "姑苏区"
+    }
   },
   "tianjin": {
     "name": "天津",
     "latitude": 39.1336,
-    "longitude": 117.2054
+    "longitude": 117.2054,
+    "kind": "city",
+    "division": {
+      "code": "120000",
+      "province": "天津市",
+      "city": "天津市"
+    }
   },
   "tianjin-meisu-guobacai": {
     "name": "美素锅巴菜（华捷道）",
     "latitude": 39.13629,
-    "longitude": 117.21053
+    "longitude": 117.21053,
+    "kind": "food",
+    "division": {
+      "code": "120102",
+      "province": "天津市",
+      "city": "天津市",
+      "district": "河东区"
+    }
   },
   "tianquan": {
     "name": "天全",
     "latitude": 30.06051,
-    "longitude": 102.77066
+    "longitude": 102.77066,
+    "kind": "town",
+    "division": {
+      "code": "511825",
+      "province": "四川省",
+      "city": "雅安市",
+      "district": "天全县"
+    }
   },
   "tiger-leaping-gorge": {
     "name": "虎跳峡",
     "latitude": 27.23,
-    "longitude": 100.14
+    "longitude": 100.14,
+    "kind": "scenic",
+    "division": {
+      "code": "533401",
+      "province": "云南省",
+      "city": "迪庆藏族自治州",
+      "district": "香格里拉市"
+    }
   },
   "universe-is-a-granary": {
     "name": "宇宙是个粮仓",
     "latitude": 30.54845,
-    "longitude": 118.55118
+    "longitude": 118.55118,
+    "kind": "scenic",
+    "division": {
+      "code": "341823",
+      "province": "安徽省",
+      "city": "宣城市",
+      "district": "泾县"
+    }
   },
   "wenhai-village": {
     "name": "文海村",
     "latitude": 26.99094,
-    "longitude": 100.16106
+    "longitude": 100.16106,
+    "kind": "town",
+    "division": {
+      "code": "530721",
+      "province": "云南省",
+      "city": "丽江市",
+      "district": "玉龙纳西族自治县"
+    }
   },
   "west-lake": {
     "name": "西湖",
     "latitude": 30.246,
-    "longitude": 120.1431
+    "longitude": 120.1431,
+    "kind": "scenic",
+    "division": {
+      "code": "330106",
+      "province": "浙江省",
+      "city": "杭州市",
+      "district": "西湖区"
+    }
   },
   "west-lake-yuemiao-parking": {
     "name": "印象西湖岳庙停车场",
     "latitude": 30.25245,
-    "longitude": 120.12933
+    "longitude": 120.12933,
+    "kind": "transport",
+    "division": {
+      "code": "330106",
+      "province": "浙江省",
+      "city": "杭州市",
+      "district": "西湖区"
+    }
   },
   "western-sichuan": {
     "name": "川西",
     "latitude": 30,
-    "longitude": 101.8
+    "longitude": 101.8,
+    "kind": "region",
+    "division": {
+      "code": "510000",
+      "province": "四川省"
+    }
   },
   "wuhu": {
     "name": "芜湖",
     "latitude": 31.3529,
-    "longitude": 118.4331
+    "longitude": 118.4331,
+    "kind": "city",
+    "division": {
+      "code": "340200",
+      "province": "安徽省",
+      "city": "芜湖市"
+    }
   },
   "wuhu-intime-inpark": {
     "name": "芜湖银泰inPARK",
     "latitude": 31.33242,
-    "longitude": 118.36518
+    "longitude": 118.36518,
+    "kind": "shopping",
+    "division": {
+      "code": "340202",
+      "province": "安徽省",
+      "city": "芜湖市",
+      "district": "镜湖区"
+    }
   },
   "wuhu-shejian-dashi-tieban": {
     "name": "舌尖大师铁板香锅（万达金街店）",
     "latitude": 31.33899,
-    "longitude": 118.39405
+    "longitude": 118.39405,
+    "kind": "food",
+    "division": {
+      "code": "340202",
+      "province": "安徽省",
+      "city": "芜湖市",
+      "district": "镜湖区"
+    }
   },
   "wuhu-tianmen-mountain": {
     "name": "芜湖天门山",
     "latitude": 31.498,
-    "longitude": 118.365
+    "longitude": 118.365,
+    "kind": "scenic",
+    "division": {
+      "code": "340207",
+      "province": "安徽省",
+      "city": "芜湖市",
+      "district": "鸠江区"
+    }
   },
   "wuwei": {
     "name": "无为",
     "latitude": 31.2999,
-    "longitude": 117.9127
+    "longitude": 117.9127,
+    "kind": "town",
+    "division": {
+      "code": "340281",
+      "province": "安徽省",
+      "city": "芜湖市",
+      "district": "无为市"
+    }
   },
   "wuwei-xiangan": {
     "name": "无为襄安",
     "latitude": 31.19798,
-    "longitude": 117.79478
+    "longitude": 117.79478,
+    "kind": "town",
+    "division": {
+      "code": "340281",
+      "province": "安徽省",
+      "city": "芜湖市",
+      "district": "无为市"
+    }
   },
   "wuyuan-cultural-park": {
     "name": "文博艺术公园",
     "latitude": 29.26454,
-    "longitude": 117.83176
+    "longitude": 117.83176,
+    "kind": "scenic",
+    "division": {
+      "code": "361130",
+      "province": "江西省",
+      "city": "上饶市",
+      "district": "婺源县"
+    }
   },
   "wuyuan-huji-sichu": {
     "name": "胡记私厨（七里湖岸店）",
     "latitude": 29.26089,
-    "longitude": 117.83104
+    "longitude": 117.83104,
+    "kind": "food",
+    "division": {
+      "code": "361130",
+      "province": "江西省",
+      "city": "上饶市",
+      "district": "婺源县"
+    }
   },
   "xiangyang": {
     "name": "襄阳",
     "latitude": 32.009,
-    "longitude": 112.1224
+    "longitude": 112.1224,
+    "kind": "city",
+    "division": {
+      "code": "420600",
+      "province": "湖北省",
+      "city": "襄阳市"
+    }
   },
   "xianhai-lake": {
     "name": "仙海湖",
     "latitude": 31.5306,
-    "longitude": 104.85757
+    "longitude": 104.85757,
+    "kind": "scenic",
+    "division": {
+      "code": "510704",
+      "province": "四川省",
+      "city": "绵阳市",
+      "district": "游仙区"
+    }
   },
   "xinduqiao": {
     "name": "新都桥",
     "latitude": 30.04709,
-    "longitude": 101.49073
+    "longitude": 101.49073,
+    "kind": "town",
+    "division": {
+      "code": "513301",
+      "province": "四川省",
+      "city": "甘孜藏族自治州",
+      "district": "康定市"
+    }
   },
   "xing-ba-ke-ka-fei-mi-fei-guang-chang-dian": {
     "name": "星巴克咖啡(米芾广场店)",
     "latitude": 31.30394075646975,
     "longitude": 117.90957434478214,
+    "kind": "food",
+    "division": {
+      "code": "340281",
+      "province": "安徽省",
+      "city": "芜湖市",
+      "district": "无为市"
+    },
     "createdAt": "2026-10-20T18:28:13+08:00"
   },
   "xinghai-bay-bridge": {
     "name": "星海湾跨海大桥",
     "latitude": 38.868167,
-    "longitude": 121.576917
+    "longitude": 121.576917,
+    "kind": "scenic",
+    "division": {
+      "code": "210204",
+      "province": "辽宁省",
+      "city": "大连市",
+      "district": "沙河口区"
+    }
   },
   "xinyang": {
     "name": "信阳",
     "latitude": 32.147,
-    "longitude": 114.091
+    "longitude": 114.091,
+    "kind": "city",
+    "division": {
+      "code": "411500",
+      "province": "河南省",
+      "city": "信阳市"
+    }
   },
   "xuanwu-lake": {
     "name": "玄武湖",
     "latitude": 32.0744,
-    "longitude": 118.7955
+    "longitude": 118.7955,
+    "kind": "scenic",
+    "division": {
+      "code": "320102",
+      "province": "江苏省",
+      "city": "南京市",
+      "district": "玄武区"
+    }
   },
   "xuchang-caowei-ancient-city": {
     "name": "曹魏古城",
     "latitude": 34.03032,
-    "longitude": 113.82162
+    "longitude": 113.82162,
+    "kind": "scenic",
+    "division": {
+      "code": "411002",
+      "province": "河南省",
+      "city": "许昌市",
+      "district": "魏都区"
+    }
   },
   "xuchang-pangdonglai-times-square": {
     "name": "胖东来时代广场",
     "latitude": 34.01996,
-    "longitude": 113.8272
+    "longitude": 113.8272,
+    "kind": "shopping",
+    "division": {
+      "code": "411002",
+      "province": "河南省",
+      "city": "许昌市",
+      "district": "魏都区"
+    }
   },
   "yalu-river": {
     "name": "鸭绿江",
     "latitude": 40.1161,
-    "longitude": 124.3898
+    "longitude": 124.3898,
+    "kind": "scenic",
+    "division": {
+      "code": "210603",
+      "province": "辽宁省",
+      "city": "丹东市",
+      "district": "振兴区"
+    }
   },
   "yangzhou": {
     "name": "扬州",
     "latitude": 32.3942,
-    "longitude": 119.4127
+    "longitude": 119.4127,
+    "kind": "city",
+    "division": {
+      "code": "321000",
+      "province": "江苏省",
+      "city": "扬州市"
+    }
   },
   "yantai": {
     "name": "烟台",
     "latitude": 37.4646,
-    "longitude": 121.4478
+    "longitude": 121.4478,
+    "kind": "city",
+    "division": {
+      "code": "370600",
+      "province": "山东省",
+      "city": "烟台市"
+    }
   },
   "yantai-port-passenger-terminal": {
     "name": "烟台港客运站",
     "latitude": 37.5555,
-    "longitude": 121.3718
+    "longitude": 121.3718,
+    "kind": "transport",
+    "division": {
+      "code": "370602",
+      "province": "山东省",
+      "city": "烟台市",
+      "district": "芝罘区"
+    }
   },
   "yucun-visitor-center": {
     "name": "安吉余村游客中心",
     "latitude": 30.51977,
-    "longitude": 119.61293
+    "longitude": 119.61293,
+    "kind": "scenic",
+    "division": {
+      "code": "330523",
+      "province": "浙江省",
+      "city": "湖州市",
+      "district": "安吉县"
+    }
   },
   "yunniaoji": {
     "name": "玉鸟集",
     "latitude": 30.36787,
-    "longitude": 120.02407
+    "longitude": 120.02407,
+    "kind": "shopping",
+    "division": {
+      "code": "330110",
+      "province": "浙江省",
+      "city": "杭州市",
+      "district": "余杭区"
+    }
   },
   "yushan-lake": {
     "name": "雨山湖公园",
     "latitude": 31.69371,
-    "longitude": 118.49787
+    "longitude": 118.49787,
+    "kind": "scenic",
+    "division": {
+      "code": "340503",
+      "province": "安徽省",
+      "city": "马鞍山市",
+      "district": "花山区"
+    }
   },
   "zhenjiang": {
     "name": "镇江",
     "latitude": 32.188,
-    "longitude": 119.424
+    "longitude": 119.424,
+    "kind": "city",
+    "division": {
+      "code": "321100",
+      "province": "江苏省",
+      "city": "镇江市"
+    }
   },
   "zhongyi-market": {
     "name": "古城忠义市场",
     "latitude": 26.87027,
-    "longitude": 100.23449
+    "longitude": 100.23449,
+    "kind": "shopping",
+    "division": {
+      "code": "530702",
+      "province": "云南省",
+      "city": "丽江市",
+      "district": "古城区"
+    }
   }
 }

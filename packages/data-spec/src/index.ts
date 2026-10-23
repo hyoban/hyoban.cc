@@ -186,9 +186,40 @@ const point = {
   longitude: z.number().min(-180).max(180),
 }
 
+/**
+ * What sort of place it is: a city; a county, town or village passed through; an area
+ * too wide for one point, like a sea; somewhere to see, eat, shop or stay; or a station,
+ * airport, port or car park.
+ */
+export const placeKindSchema = z.enum([
+  'city',
+  'town',
+  'region',
+  'scenic',
+  'food',
+  'shopping',
+  'stay',
+  'transport',
+])
+
 export const placeSchema = z.looseObject({
   name: z.string().min(1),
   ...point,
+  kind: placeKindSchema.optional(),
+  /**
+   * The administrative division the point falls in, from Aliyun DataV's boundaries, as
+   * `locateDivision` in `./division.ts` finds it: the deepest adcode and its names. A city stops above
+   * the district and a region at its province; Beijing, Shanghai, Tianjin, Chongqing and
+   * Hong Kong are their own city. Left out where no division holds it, like a point at sea.
+   */
+  division: z
+    .looseObject({
+      code: z.string().regex(/^\d{6}$/, 'Use a six-digit adcode.'),
+      province: z.string().min(1),
+      city: z.string().min(1).optional(),
+      district: z.string().min(1).optional(),
+    })
+    .optional(),
   /** A note to self; the site doesn't show it. */
   note: z.string().optional(),
   /**
@@ -273,6 +304,7 @@ export type MomentMedia = MomentRecord['media'][number]
 export type PublishedImage = z.output<typeof publishedImageSchema>
 export type PublishedVideo = z.output<typeof publishedVideoSchema>
 export type Place = z.output<typeof placeSchema>
+export type PlaceKind = z.output<typeof placeKindSchema>
 export type Places = z.output<typeof placesSchema>
 export type TripRecord = z.output<typeof tripRecordSchema>
 export type TripRecordInput = z.input<typeof tripRecordSchema>

@@ -10,8 +10,9 @@ through the API rather than here. `devices.json` is the exception: it lives only
 ```
 data/
 ├─ manifest.json           schemaVersion, generator, updatedAt
-├─ places.json             places by id: name, WGS-84 coordinates, an optional note,
-│                          and for a train's end the station it leaves from
+├─ places.json             places by id: name, WGS-84 coordinates, a kind, the province,
+│                          city and district it is in (pnpm places:locate), an optional
+│                          note, and for a train's end the station it leaves from
 ├─ routes.json             each trip leg's route by its key, as the API fetched it
 ├─ trips/<id>.json         a trip: dates, waypoints, straight legs, covers by uid
 ├─ moments/YYYY/MM/<ulid>.json

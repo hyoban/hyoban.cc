@@ -24,13 +24,17 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.MyLocation
 import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -76,8 +80,10 @@ import cc.hyoban.moments.data.local.PlaceSearch
 import cc.hyoban.moments.data.local.coordinatesName
 import cc.hyoban.moments.data.local.currentLocation
 import cc.hyoban.moments.data.local.fix
+import cc.hyoban.moments.data.local.kindOf
 import cc.hyoban.moments.data.local.nearestPlaces
 import cc.hyoban.moments.data.spec.Place
+import cc.hyoban.moments.data.spec.PlaceKind
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.FloatingBack
 import cc.hyoban.moments.ui.components.Tooltip
@@ -93,7 +99,7 @@ import kotlinx.coroutines.launch
 /** Where a Moment is: a known place, a new one at [New.fix] under a name, or none. */
 internal sealed interface PlaceChoice {
     data class Known(val id: String) : PlaceChoice
-    data class New(val name: String, val fix: Fix) : PlaceChoice
+    data class New(val name: String, val fix: Fix, val kind: PlaceKind? = null) : PlaceChoice
     data object None : PlaceChoice
 }
 
@@ -119,6 +125,8 @@ internal fun PlacePicker(
     var pick by remember { mutableStateOf(current) }
     var named by remember { mutableStateOf(current is PlaceChoice.New) }
     var name by remember { mutableStateOf((current as? PlaceChoice.New)?.name.orEmpty()) }
+    // A kind chosen by hand stays; until then it follows what the pin is named after.
+    var kindChosen by remember { mutableStateOf((current as? PlaceChoice.New)?.kind != null) }
     val opening = remember {
         when (current) {
             is PlaceChoice.Known -> places[current.id]?.fix()
@@ -155,7 +163,7 @@ internal fun PlacePicker(
         val new = pick as? PlaceChoice.New
         if (!named && new != null && new.fix == at) {
             name = around.name ?: coordinatesName(at)
-            pick = new.copy(name = name)
+            pick = new.copy(name = name, kind = if (kindChosen) new.kind else around.kind)
         }
     }
 
@@ -183,8 +191,14 @@ internal fun PlacePicker(
                 onLandmark = { landmark ->
                     named = true
                     name = landmark.name
-                    pick = PlaceChoice.New(landmark.name, landmark.fix)
+                    val kind = kindOf(landmark)
+                    if (kind != null) kindChosen = false
+                    pick = PlaceChoice.New(landmark.name, landmark.fix, kind ?: (pick as? PlaceChoice.New)?.kind)
                     fly(landmark.fix)
+                },
+                onKind = { kind ->
+                    kindChosen = kind != null
+                    (pick as? PlaceChoice.New)?.let { new -> pick = new.copy(kind = kind) }
                 },
                 onName = {
                     named = true
@@ -206,7 +220,7 @@ internal fun PlacePicker(
                 onCenter = { latitude, longitude, byUser ->
                     val at = Fix(latitude, longitude)
                     // Dragged, the pin is a new place where it stands; a new place flown to an address stays one there.
-                    if (byUser || pick is PlaceChoice.New) pick = PlaceChoice.New(name, at)
+                    if (byUser || pick is PlaceChoice.New) pick = PlaceChoice.New(name, at, (pick as? PlaceChoice.New)?.kind)
                 },
                 onPlace = choose,
                 modifier = Modifier.fillMaxSize().testTag("place_map"),
@@ -239,6 +253,7 @@ internal fun PlacePicker(
                                         currentLocation(context)?.let { location ->
                                             val here = Fix(location.latitude, location.longitude)
                                             named = false
+                                            kindChosen = false
                                             pick = PlaceChoice.New(name, here)
                                             fly(here)
                                         }
@@ -277,6 +292,7 @@ private fun ChoiceCard(
     places: Map<String, Place>,
     landmarks: List<Found>,
     onLandmark: (Found) -> Unit,
+    onKind: (PlaceKind?) -> Unit,
     onName: (String) -> Unit,
     onKnown: (String) -> Unit,
     onNone: () -> Unit,
@@ -308,6 +324,7 @@ private fun ChoiceCard(
                         keyboardActions = KeyboardActions(onDone = { if (name.isNotBlank()) onConfirm() }),
                         modifier = Modifier.fillMaxWidth().testTag("place_name"),
                     )
+                    KindChips(pick.kind, onKind)
                     NearbyChips(pick.fix, null, places, landmarks, onKnown, onLandmark)
                 }
                 PlaceChoice.None -> {
@@ -366,6 +383,41 @@ private fun NearbyChips(
             }
     }
 }
+
+/** The place's kind, one of Material 3's filter chips in a row; the chosen one tapped again leaves it unset. */
+@Composable
+private fun KindChips(kind: PlaceKind?, onKind: (PlaceKind?) -> Unit) {
+    val label = stringResource(R.string.place_kind)
+    LazyRow(Modifier.semantics { contentDescription = label }, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
+        items(PlaceKind.entries, key = { it.value }) { entry ->
+            val selected = entry == kind
+            FilterChip(
+                selected = selected,
+                onClick = { onKind(if (selected) null else entry) },
+                label = { Text(stringResource(entry.label)) },
+                leadingIcon = if (selected) {
+                    { Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize)) }
+                } else {
+                    null
+                },
+                modifier = Modifier.testTag("kind_${entry.value}"),
+            )
+        }
+    }
+}
+
+/** What the kind is called on screen. */
+internal val PlaceKind.label: Int
+    get() = when (this) {
+        PlaceKind.CITY -> R.string.place_kind_city
+        PlaceKind.TOWN -> R.string.place_kind_town
+        PlaceKind.REGION -> R.string.place_kind_region
+        PlaceKind.SCENIC -> R.string.place_kind_scenic
+        PlaceKind.FOOD -> R.string.place_kind_food
+        PlaceKind.SHOPPING -> R.string.place_kind_shopping
+        PlaceKind.STAY -> R.string.place_kind_stay
+        PlaceKind.TRANSPORT -> R.string.place_kind_transport
+    }
 
 @Composable
 internal fun formatDistance(metres: Double): String =

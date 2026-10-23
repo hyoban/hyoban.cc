@@ -52,7 +52,10 @@ map with a pin at its middle, dragged to a new place or onto a known place's dot
 place takes the name of the nearest park, sight, shop or quarter OpenStreetMap knows
 around the pin, through Photon (`BuildConfig.PLACE_SEARCH_URL`), else its street, and the
 others around it are offered as names to take instead; where Photon can't be reached, the
-system's geocoder names it. A place found in Amap comes in by sharing it: its share
+system's geocoder names it. Its kind (城市, 景点, 餐饮 and the rest of the spec's) follows
+what OpenStreetMap calls the place it is named after, and a row of chips under the name
+changes it; the API adds the province, city and district it is in when it is sent, and a
+place's page shows them above its Moments' count. A place found in Amap comes in by sharing it: its share
 sheet's 更多 offers 这里 (作为时刻的地点), which opens a new Moment with the place, or
 gives it to the one being written; 保存为地点 beside it only keeps the place, as one of
 the phone's own, and leaves Amap in front (one of the same name within 300 m isn't kept

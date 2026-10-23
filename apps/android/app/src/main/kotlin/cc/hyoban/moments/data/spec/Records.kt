@@ -30,11 +30,48 @@ data class Place(
     val name: String,
     val latitude: Double,
     val longitude: Double,
+    /** A [PlaceKind]'s value, kept as text so a kind a newer spec adds still reads. */
+    val kind: String? = null,
+    /** The province, city and district it is in, which the API looks up for a new place. */
+    val division: Division? = null,
     val note: String? = null,
     val createdAt: String? = null,
     @Transient val extra: JsonObject = NoExtra,
 ) {
     object Serializer : PassthroughSerializer<Place>(generatedSerializer(), { v, e -> v.copy(extra = e) }, { it.extra })
+}
+
+/** What sort of place it is, as the spec names it. */
+enum class PlaceKind(val value: String) {
+    CITY("city"),
+    TOWN("town"),
+    REGION("region"),
+    SCENIC("scenic"),
+    FOOD("food"),
+    SHOPPING("shopping"),
+    STAY("stay"),
+    TRANSPORT("transport");
+
+    companion object {
+        fun of(value: String?): PlaceKind? = entries.firstOrNull { it.value == value }
+    }
+}
+
+@OptIn(ExperimentalSerializationApi::class)
+@Serializable(with = Division.Serializer::class)
+@KeepGeneratedSerializer
+data class Division(
+    /** The deepest adcode it is known to. */
+    val code: String,
+    val province: String,
+    val city: String? = null,
+    val district: String? = null,
+    @Transient val extra: JsonObject = NoExtra,
+) {
+    /** Its two most particular names, `芜湖市 镜湖区`, Beijing's city not repeating its province. */
+    fun label(): String = listOfNotNull(province, city, district).distinct().takeLast(2).joinToString(" ")
+
+    object Serializer : PassthroughSerializer<Division>(generatedSerializer(), { v, e -> v.copy(extra = e) }, { it.extra })
 }
 
 @Serializable
