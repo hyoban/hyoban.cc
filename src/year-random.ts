@@ -74,5 +74,8 @@ export function dealYear() {
       }
     })
     list.append(...items)
+    // A row that snaps as it scrolls follows the item it had snapped to into its new place;
+    // dealt anew, it starts from its first again.
+    list.scrollLeft = 0
   }
 }
