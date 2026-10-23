@@ -33,28 +33,16 @@ type RemoteImage = {
   width: number
 }
 
-export type ResolvedMomentMedia =
-  | {
-      alt: string
-      src: RemoteImage
-      type: 'live-photo'
-      uid: string
-      video: { src: string; contentType: string }
-    }
-  | {
-      alt: string
-      src: RemoteImage
-      type: 'image'
-      uid: string
-    }
-  | {
-      alt: string
-      contentType: string
-      poster?: RemoteImage
-      src: string
-      type: 'video'
-      uid: string
-    }
+export type ResolvedMomentMedia = {
+  alt: string
+  /** Kept for the record rather than worth showing off; see getShowcaseMedia. */
+  utility?: true
+  uid: string
+} & (
+  | { src: RemoteImage; type: 'live-photo'; video: { src: string; contentType: string } }
+  | { src: RemoteImage; type: 'image' }
+  | { contentType: string; poster?: RemoteImage; src: string; type: 'video' }
+)
 
 export type Moment = {
   dateKey: string
@@ -346,10 +334,13 @@ function resolveMedia(momentUid: string, media: MomentMedia): ResolvedMomentMedi
     throw new Error(`Published Moment ${momentUid} has unpublished media ${media.uid}.`)
   }
 
+  const utility = media.utility ? { utility: true as const } : {}
+
   switch (media.type) {
     case 'image':
       return {
         alt: media.alt,
+        ...utility,
         src: resolveRemoteImage(media.published),
         type: 'image',
         uid: media.uid,
@@ -359,6 +350,7 @@ function resolveMedia(momentUid: string, media: MomentMedia): ResolvedMomentMedi
 
       return {
         alt: media.alt,
+        ...utility,
         src: resolveRemoteImage(still),
         type: 'live-photo',
         uid: media.uid,
@@ -370,6 +362,7 @@ function resolveMedia(momentUid: string, media: MomentMedia): ResolvedMomentMedi
 
       return {
         alt: media.alt,
+        ...utility,
         contentType: video.contentType,
         src: getAssetUrl(video.key),
         type: 'video',

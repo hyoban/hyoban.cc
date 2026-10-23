@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict'
 import { test } from 'vite-plus/test'
-import { getCalendarPanel, getCardPhotos, isTripInPeriod } from '../../src/card-data.ts'
+import {
+  getCalendarPanel,
+  getCardPhotos,
+  getYearPanel,
+  isTripInPeriod,
+} from '../../src/card-data.ts'
 
 const image = (id) => ({
   alt: id,
@@ -33,6 +38,18 @@ test('collages take photos from different records before returning to the first'
     moment('2026-10-02', [image('d'), image('e')]),
   ]
   assert.deepEqual(getCardPhotos(records), ['a-960.jpg', 'd-960.jpg', 'b-960.jpg', 'e-960.jpg'])
+})
+
+test('utility photos are never picked, and a month of only them is left empty', () => {
+  const receipt = { ...image('receipt'), utility: true }
+  const records = [
+    moment('2025-08-01', [receipt, image('sea')]),
+    moment('2025-09-10', [{ ...image('screenshot'), utility: true }]),
+  ]
+  assert.deepEqual(getCardPhotos(records), ['sea-960.jpg'])
+  const { months } = getYearPanel(2025, records)
+  assert.equal(months[7].photo, 'sea-480.jpg')
+  assert.equal(months[8].photo, undefined)
 })
 
 test('duplicate originals never fill multiple tiles, including a video poster', () => {

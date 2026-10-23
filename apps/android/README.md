@@ -38,7 +38,10 @@ A new Moment can be written on the phone, from the ✎ in the Moments tab's head
 `moments://new`, on a page of its own, or, on a window from Material 3's medium breakpoint
 on, in a dialog over the page it was opened from: its words, up to nine photos from the system's documents picker (a tile beside it
 opens the phone's camera app, whose photos go to the gallery to be picked from there), and when and
-where, worked out as it is written. The time is the earliest photo's, from its EXIF and
+where, worked out as it is written. A photo tapped there can be marked 不用作封面, one kept
+for the record (a screenshot, a flat tyre): it stays in its Moment, but neither the app's
+trip covers, calendar days and widget nor the site's covers, collages and share cards
+pick it. The time is the earliest photo's, from its EXIF and
 the offset the camera wrote, else, for photos whose EXIF has none (saved from WeChat), the
 earliest their files were made, else now; the place is where the first photo was taken,
 when the app may see that (the photo picker takes it out, the documents picker doesn't),

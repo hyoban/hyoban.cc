@@ -229,6 +229,8 @@
     <string name="action_add_photos">添加照片</string>
     <string name="action_open_camera">打开相机</string>
     <string name="action_remove_photo">移除照片</string>
+    <string name="action_photo_options">照片选项</string>
+    <string name="action_photo_utility">不用作封面</string>
     <string name="action_move_earlier">往前移</string>
     <string name="action_move_later">往后移</string>
     <string name="section_when_where">时间和地点</string>
@@ -300,11 +302,15 @@
     <string name="note_publish_needs_token">在设置里填上 API 令牌后才能发布</string>
     <string name="change_text">文字</string>
     <string name="change_photos">照片</string>
+    <string name="change_cover">封面</string>
+    <string name="change_cover_off">不再用作封面</string>
+    <string name="change_cover_on">重新用作封面</string>
     <string name="change_time">时间</string>
     <string name="change_place">地点</string>
     <string name="note_change_recreates">网站上已经没有这个时刻了。发布后会按下面的样子重新放上去。</string>
     <string name="note_change_nothing">内容和网站上的一样</string>
     <string name="label_photo_added">新加的照片</string>
+    <string name="label_photo_utility">不用作封面</string>
     <string name="label_photo_removed">去掉的照片</string>
     <string name="label_no_words">没有文字</string>
     <string name="action_show_token">显示令牌</string>

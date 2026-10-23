@@ -242,6 +242,8 @@
     <string name="action_add_photos">Add photos</string>
     <string name="action_open_camera">Open camera</string>
     <string name="action_remove_photo">Remove photo</string>
+    <string name="action_photo_options">Photo options</string>
+    <string name="action_photo_utility">Don\'t use as a cover</string>
     <string name="action_move_earlier">Move earlier</string>
     <string name="action_move_later">Move later</string>
     <string name="section_when_where">When and where</string>
@@ -314,11 +316,15 @@
     <string name="note_publish_needs_token">Add an API token in settings to publish</string>
     <string name="change_text">text</string>
     <string name="change_photos">photos</string>
+    <string name="change_cover">covers</string>
+    <string name="change_cover_off">No longer used as covers</string>
+    <string name="change_cover_on">Used as covers again</string>
     <string name="change_time">time</string>
     <string name="change_place">place</string>
     <string name="note_change_recreates">The site no longer has this Moment. Publishing puts it back as shown below.</string>
     <string name="note_change_nothing">Same as on the site</string>
     <string name="label_photo_added">Photo added</string>
+    <string name="label_photo_utility">Not used as a cover</string>
     <string name="label_photo_removed">Photo removed</string>
     <string name="label_no_words">No text</string>
     <string name="action_show_token">Show token</string>

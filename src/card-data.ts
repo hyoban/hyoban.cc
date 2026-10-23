@@ -1,10 +1,11 @@
 import type { Moment } from '@/moments'
+import { getShowcaseMedia } from './moments/showcase.ts'
 import type { OgPanel } from '@/og-panels'
 
 /** Round robin keeps one record from filling a collage; duplicate originals are skipped. */
 export function getCardPhotos(moments: readonly Moment[], limit = 4, width = 960) {
   const rows = moments.map((moment) =>
-    moment.media.flatMap((media) => {
+    getShowcaseMedia(moment.media).flatMap((media) => {
       const still = media.type === 'video' ? media.poster : media.src
       return still ? [still] : []
     }),
@@ -67,7 +68,10 @@ export function getYearPanel(year: number, moments: Moment[]): OgPanel {
       const prefix = `${year}-${String(index + 1).padStart(2, '0')}-`
       const records = moments
         .filter((moment) => moment.dateKey.startsWith(prefix))
-        .sort((first, second) => second.media.length - first.media.length)
+        .sort(
+          (first, second) =>
+            getShowcaseMedia(second.media).length - getShowcaseMedia(first.media).length,
+        )
       return {
         photo: getCardPhotos(records, 1, 480)[0],
       }

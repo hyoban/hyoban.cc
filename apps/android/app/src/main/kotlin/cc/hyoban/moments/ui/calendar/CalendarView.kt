@@ -39,6 +39,7 @@ import cc.hyoban.moments.R
 import cc.hyoban.moments.data.media.MediaUrls
 import cc.hyoban.moments.data.spec.MomentMedia
 import cc.hyoban.moments.data.spec.MomentRecord
+import cc.hyoban.moments.data.spec.showcase
 import cc.hyoban.moments.ui.LocalBottomClearance
 import cc.hyoban.moments.ui.LocalFabClearance
 import cc.hyoban.moments.ui.OnTabReselect
@@ -76,7 +77,7 @@ private fun monthsOf(moments: List<MomentRecord>): List<CalendarMonth> {
         val days = List(lead) { null } + (1..month.lengthOfMonth()).map { day ->
             val date = month.atDay(day)
             val here = byDay[date].orEmpty().sortedBy { it.occurredAt }
-            CalendarDay(date, here, here.firstNotNullOfOrNull { it.media.firstOrNull() })
+            CalendarDay(date, here, here.firstNotNullOfOrNull { moment -> moment.media.firstOrNull { it.showcase } })
         }
         CalendarMonth(month, days.chunked(7).map { week -> week + List(7 - week.size) { null } })
     }

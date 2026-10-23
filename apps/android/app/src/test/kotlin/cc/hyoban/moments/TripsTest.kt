@@ -1,9 +1,12 @@
 package cc.hyoban.moments
 
+import cc.hyoban.moments.data.spec.MediaType
+import cc.hyoban.moments.data.spec.MomentMedia
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.spec.TripRecord
 import cc.hyoban.moments.data.spec.Waypoint
+import cc.hyoban.moments.data.trips.coversOf
 import cc.hyoban.moments.data.trips.daysOf
 import cc.hyoban.moments.data.trips.stopsOf
 import cc.hyoban.moments.data.trips.tripOf
@@ -43,6 +46,18 @@ class TripsTest {
             daysOf(ferry, moments, trips).map { (day, list) -> day to list.map { it.uid } },
         )
         assertEquals(listOf("nanjing", "yantai", "dalian"), stopsOf(ferry, moments, trips, places).map { it.placeId })
+    }
+
+    @Test
+    fun `its covers pass over the photos kept for the record`() {
+        val receipt = MomentMedia("receipt", MediaType.IMAGE, utility = true)
+        val sea = MomentMedia("sea", MediaType.IMAGE)
+        val moments = listOf(
+            moment("A", "2026-10-01T09:00:00+08:00").copy(media = listOf(receipt, sea)),
+            moment("B", "2026-10-02T09:00:00+08:00").copy(media = listOf(receipt.copy(uid = "screenshot"))),
+        )
+
+        assertEquals(listOf("sea"), coversOf(ferry, moments, trips).map { it.uid })
     }
 
     private fun trip(id: String, start: String, end: String, waypoints: List<Waypoint> = emptyList()) =

@@ -169,6 +169,11 @@ data class MomentMedia(
     val width: Int? = null,
     val height: Int? = null,
     val takenAt: String? = null,
+    /**
+     * Kept for the record, a screenshot or a flat tyre, rather than worth showing off: shown
+     * in its own Moment, never picked for a cover, a calendar day or a widget.
+     */
+    val utility: Boolean? = null,
     val local: LocalMedia? = null,
     val published: PublishedMedia? = null,
     @Transient val extra: JsonObject = NoExtra,
@@ -213,3 +218,6 @@ data class MomentRecord(
 
     object Serializer : PassthroughSerializer<MomentRecord>(generatedSerializer(), { v, e -> v.copy(extra = e) }, { it.extra })
 }
+
+/** Whether a cover, a calendar day or a widget may pick this photo: all but the utility ones. */
+val MomentMedia.showcase: Boolean get() = utility != true

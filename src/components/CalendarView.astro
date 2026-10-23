@@ -12,6 +12,7 @@ import {
   getChinaCalendarDayDescription,
   type ChinaCalendarDay,
 } from '@/china-calendar'
+import { getShowcaseMedia } from '@/moments/showcase'
 import { getStopAnchor } from '@/moments/trip-data'
 import Layout from '@/layouts/Layout.astro'
 import { formatCalendarDay, getCalendarDayDescription, getCalendarText, getDayMomentCard, getPageCardPath, getPageTitle } from '@/page-cards'
@@ -77,7 +78,7 @@ for (let day = 1; day <= daysInMonth; day += 1) {
   const dateKey = `${monthKey}-${String(day).padStart(2, '0')}`
   const dayMoments = momentsByDate.get(dateKey) ?? []
   const allMedia = dayMoments.flatMap(moment => moment.media)
-  const thumbnail = allMedia.find(item => item.type !== 'video' || item.poster)
+  const thumbnail = getShowcaseMedia(allMedia).find(item => item.type !== 'video' || item.poster)
 
   calendarDays.push({
     anniversaries: getCalendarAnniversaries(dateKey),

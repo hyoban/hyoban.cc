@@ -4,6 +4,7 @@ import cc.hyoban.moments.data.spec.MomentMedia
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.spec.TripRecord
+import cc.hyoban.moments.data.spec.showcase
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -64,12 +65,12 @@ fun stopsOf(trip: TripRecord, moments: List<MomentRecord>, trips: List<TripRecor
         .fold(emptyList()) { stops, stop -> if (stops.lastOrNull()?.placeId == stop.placeId) stops else stops + stop }
 }
 
-/** The photos to show for a trip: its chosen covers, else its Moments' first media. */
+/** The photos to show for a trip: its chosen covers, else its Moments' first showcase media. */
 fun coversOf(trip: TripRecord, moments: List<MomentRecord>, trips: List<TripRecord>, limit: Int = 3): List<MomentMedia> {
     val byUid = moments.associateBy { it.uid }
     val chosen = trip.covers.mapNotNull { cover -> byUid[cover.moment]?.media?.firstOrNull { it.uid == cover.media } }
 
-    return chosen.ifEmpty { momentsOf(trip, moments, trips).mapNotNull { it.media.firstOrNull() } }.take(limit)
+    return chosen.ifEmpty { momentsOf(trip, moments, trips).mapNotNull { moment -> moment.media.firstOrNull { it.showcase } } }.take(limit)
 }
 
 /** Milliseconds since the epoch of a timestamp or, for a day, its start in UTC+8, where the site keeps its days. */
