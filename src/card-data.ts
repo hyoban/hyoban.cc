@@ -61,7 +61,10 @@ export function isTripInPeriod(
 }
 
 /** A year's months, each with the photo of its Moment with the most media. */
-export function getYearPanel(year: number, moments: Moment[]): OgPanel {
+export function getYearPanel(
+  year: number,
+  moments: Moment[],
+): Extract<OgPanel, { kind: 'months' }> {
   return {
     kind: 'months',
     months: Array.from({ length: 12 }, (_, index) => {
@@ -77,4 +80,13 @@ export function getYearPanel(year: number, moments: Moment[]): OgPanel {
       }
     }),
   }
+}
+
+/**
+ * The photos a year's numerals show, a month's each, in two rows, drawn by
+ * /<year>/collage.webp: with fewer than four, the numerals stay plain.
+ */
+export function getYearCollage(year: number, moments: Moment[]) {
+  const photos = getYearPanel(year, moments).months.flatMap(({ photo }) => (photo ? [photo] : []))
+  return photos.length >= 4 ? { photos, columns: Math.ceil(photos.length / 2) } : undefined
 }

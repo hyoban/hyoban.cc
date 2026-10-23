@@ -13,6 +13,7 @@ import {
   getTrips,
   type Moment,
 } from '@/moments'
+import { getYearCollage } from '@/card-data'
 import { getShowcaseMedia } from '@/moments/showcase'
 import { getTripCollage } from '@/moments/trip-images'
 import { getPageCardPath, getPageTitle } from '@/page-cards'
@@ -96,32 +97,9 @@ const photoOf = (dayMoments: Moment[], width: number) => photosOf(dayMoments, wi
 const between = (start: string, end: string) =>
   review.moments.filter((moment) => moment.dateKey >= start && moment.dateKey <= end)
 
-// The year's numerals cut out of its photos: each month's fullest Moment, two rows of them.
-const collage = Array.from({ length: 12 }, (_, index) => {
-  const key = `${year}-${String(index + 1).padStart(2, '0')}`
-  const month = review.moments
-    .filter((moment) => moment.dateKey.startsWith(key))
-    .sort(
-      (first, second) =>
-        getShowcaseMedia(second.media).length - getShowcaseMedia(first.media).length,
-    )
-  return photoOf(month, 480)
-}).filter((photo) => photo !== undefined)
-const collageColumns = Math.ceil(collage.length / 2)
-const collageStyle =
-  collage.length >= 4
-    ? [
-        `background-image: ${collage.map((photo) => `url("${photo}")`).join(', ')}`,
-        `background-position: ${collage
-          .map((_, index) => {
-            const column = index % collageColumns
-            const row = Math.floor(index / collageColumns)
-            return `${collageColumns > 1 ? (column / (collageColumns - 1)) * 100 : 0}% ${row * 100}%`
-          })
-          .join(', ')}`,
-        `background-size: ${100 / collageColumns}% 50%`,
-      ].join('; ')
-    : undefined
+// The year's numerals cut out of its photos, a month's each in two rows, drawn as one
+// picture by ./[year]/collage.webp.ts.
+const collage = getYearCollage(year, moments)
 
 const headline = (moment: Moment) => getMomentHeadline(moment, 24)?.headline ?? '一张照片'
 
@@ -208,7 +186,7 @@ const highlights = [
     {/* Hides what's still to come in until the script below reveals it; without it, all shows. */}
     <script is:inline>document.documentElement.classList.add('year-motion')</script>
     <header class="year-hero">
-      <h1 class:list={{ 'is-collage': collageStyle }} style={collageStyle}>{year}</h1>
+      <h1 class:list={{ 'is-collage': collage }} style={collage && `background-image: url("/${year}/collage.webp")`}>{year}</h1>
       <dl class="year-stats">
         {
           stats.map((stat, index) => (
@@ -438,7 +416,8 @@ const highlights = [
         font-weight: 900;
         color: transparent;
         background-color: var(--color-tx);
-        background-repeat: no-repeat;
+        background-position: center;
+        background-size: cover;
         background-clip: text;
         -webkit-background-clip: text;
       }
