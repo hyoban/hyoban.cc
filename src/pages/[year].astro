@@ -444,7 +444,19 @@ const highlights = [
 
     <nav class="year-nav" aria-label="其他年份" data-share-skip>
       {previous !== undefined ? <a href={`/${previous}/`}>← {previous}</a> : <span />}
-      <button class="year-nav__share" type="button" data-year-share={year}>分享图片</button>
+      <div class="year-share" data-year-share={year}>
+        <button class="year-share__toggle" type="button" aria-haspopup="true" aria-expanded="false" data-share-toggle>
+          分享图片
+        </button>
+        <div class="year-share__options" data-share-options hidden>
+          <button type="button" data-share-mode="long">
+            长图<span>整页一张</span>
+          </button>
+          <button type="button" data-share-mode="square">
+            方图<span>拆成几张方形</span>
+          </button>
+        </div>
+      </div>
       {next !== undefined ? <a class="year-nav__next" href={`/${next}/`}>{next} →</a> : <span />}
     </nav>
     {/* The site's mark at the foot of the share picture, seen only while it is drawn. */}
@@ -1117,7 +1129,11 @@ const highlights = [
     justify-self: end;
   }
 
-  .year-nav__share {
+  .year-share {
+    position: relative;
+  }
+
+  .year-share__toggle {
     padding: 0.25rem 0.875rem;
     border: 1px solid var(--color-border);
     border-radius: 999px;
@@ -1142,6 +1158,61 @@ const highlights = [
 
     &:disabled {
       cursor: progress;
+    }
+  }
+
+  /* The two ways to share, above the button. */
+  .year-share__options {
+    position: absolute;
+    bottom: calc(100% + 0.5rem);
+    left: 50%;
+    z-index: 1;
+    display: grid;
+    width: max-content;
+    padding: 0.25rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+    background: var(--color-bg);
+    box-shadow: 0 8px 24px rgb(0 0 0 / 0.08);
+    translate: -50% 0;
+    transform-origin: bottom center;
+
+    &:not([hidden]) {
+      animation: year-share-open 160ms var(--ease-out);
+    }
+
+    & button {
+      display: flex;
+      align-items: baseline;
+      gap: 0.75rem;
+      padding: 0.375rem 0.75rem;
+      border-radius: 0.5rem;
+      color: var(--color-tx);
+      font: inherit;
+      font-size: 0.875rem;
+      text-align: start;
+
+      @media (hover: hover) and (pointer: fine) {
+        &:hover {
+          background: var(--color-hover);
+        }
+      }
+
+      &:focus-visible {
+        background: var(--color-hover);
+      }
+    }
+
+    & span {
+      color: var(--color-tx-3);
+      font-size: 0.75rem;
+    }
+  }
+
+  @keyframes year-share-open {
+    from {
+      opacity: 0;
+      scale: 0.96;
     }
   }
 
