@@ -127,11 +127,11 @@ describe('buildYearReview', () => {
     expect(review.weekdays).toEqual([0, 1, 0, 1, 2, 0, 0])
   })
 
-  test('counts the topics against the year before, without one counting as life', () => {
+  test('counts the topics, a Moment without one as life', () => {
     expect(review.topics).toEqual([
-      { topic: 'travel', count: 1, previous: 0 },
-      { topic: 'food', count: 1, previous: 0 },
-      { topic: 'life', count: 2, previous: 1 },
+      { topic: 'travel', count: 1 },
+      { topic: 'food', count: 1 },
+      { topic: 'life', count: 2 },
     ])
   })
 

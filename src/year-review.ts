@@ -20,8 +20,8 @@ export type YearPlace = { id: string; name: string; count: number }
 export const REVIEW_TOPICS = ['travel', 'food', 'car', 'photo', 'life'] as const
 export type ReviewTopic = (typeof REVIEW_TOPICS)[number]
 
-/** A topic's Moments in the year, and how many the year before. */
-export type YearTopic = { topic: ReviewTopic; count: number; previous: number }
+/** How many of the year's Moments are about a topic. */
+export type YearTopic = { topic: ReviewTopic; count: number }
 
 export type YearReview<M, T> = {
   year: number
@@ -40,7 +40,7 @@ export type YearReview<M, T> = {
   hours: number[]
   /** How many Moments were written on each day of the week, Monday first. */
   weekdays: number[]
-  /** The topics written about this year, in REVIEW_TOPICS' order, beside the year before. */
+  /** The topics written about this year, in REVIEW_TOPICS' order. */
   topics: YearTopic[]
   trips: T[]
   tripDays: number
@@ -81,11 +81,9 @@ export function buildYearReview<M extends ReviewMoment, T extends ReviewTrip>(
   const hours = Array.from({ length: 24 }, (_, hour) => timed.get(hour) ?? 0)
   const favoriteHour = Math.max(...hours)
   const weekdays = countWeekdays(yearMoments)
-  const previousMoments = moments.filter((moment) => moment.dateKey.startsWith(String(year - 1)))
   const topics = REVIEW_TOPICS.map((topic) => ({
     topic,
     count: yearMoments.filter((moment) => getReviewTopic(moment) === topic).length,
-    previous: previousMoments.filter((moment) => getReviewTopic(moment) === topic).length,
   })).filter((topic) => topic.count > 0)
 
   const fog = litCities(cities, yearMoments)

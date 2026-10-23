@@ -54,15 +54,15 @@ const allTrips = getTrips(moments)
 const review = buildYearReview(year, moments, allTrips, regions)
 const lastDateKey = moments.at(-1)?.dateKey ?? ''
 const ongoing = lastDateKey.startsWith(String(year)) && year >= new Date().getFullYear()
-// The year before, up to the same day while this one isn't over, to compare the counts with.
-const sameDayBefore = ongoing ? `${previous}-${lastDateKey.slice(5)}` : `${previous}-12-31`
+// The whole year before, to compare the counts with, even while this one isn't over.
+const yearBeforeEnd = `${previous}-12-31`
 const before =
   previous === undefined
     ? undefined
     : buildYearReview(
         previous,
-        moments.filter((moment) => moment.dateKey <= sameDayBefore),
-        allTrips.filter((trip) => trip.start <= sameDayBefore),
+        moments.filter((moment) => moment.dateKey <= yearBeforeEnd),
+        allTrips.filter((trip) => trip.start <= yearBeforeEnd),
         regions,
       )
 
@@ -170,6 +170,11 @@ const stats = statsOf(review)
     return { ...stat, change }
   })
   .filter((stat) => stat.label !== '公里自驾' || stat.value > 100)
+// Each topic beside the whole year before, as the stats are.
+const topics = review.topics.map((topic) => ({
+  ...topic,
+  previous: before?.topics.find((was) => was.topic === topic.topic)?.count ?? 0,
+}))
 const highlights = [
   firstMoment && {
     kicker: '第一条',
@@ -239,7 +244,7 @@ const highlights = [
                 {stat.change !== undefined && (
                   <span
                     class:list={['year-stats__change', { 'is-up': stat.change > 0 }]}
-                    title={ongoing ? `比 ${previous} 年同期` : `比 ${previous} 年`}
+                    title={`比 ${previous} 年`}
                   >
                     {formatChange(stat.change)}
                   </span>
@@ -411,7 +416,9 @@ const highlights = [
           <YearClock hours={review.hours} favorite={review.favoriteHour}>
             <YearWeekdays weekdays={review.weekdays} />
           </YearClock>
-          {review.topics.length > 0 && <YearTopics topics={review.topics} />}
+          {review.topics.length > 0 && (
+            <YearTopics topics={topics} compared={`比 ${previous} 年`} />
+          )}
         </section>
       )
     }

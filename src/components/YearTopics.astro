@@ -3,13 +3,16 @@ import { formatChange, type YearTopic } from '@/year-review'
 
 // What the year was written about, under the clock: a bar for each topic as long as how
 // much was written on it, the most written dark, with its count and how it moved from the
-// year before.
+// year before, compared as the year's stats are.
 
 interface Props {
-  topics: YearTopic[]
+  /** Each topic, with how many the whole year before had. */
+  topics: (YearTopic & { previous: number })[]
+  /** What the change is against, like `比 2025 年`. */
+  compared?: string
 }
 
-const { topics } = Astro.props
+const { topics, compared } = Astro.props
 const names: Record<YearTopic['topic'], string> = {
   travel: '旅行',
   food: '吃喝',
@@ -40,7 +43,9 @@ const rows = topics.map((topic, index) => ({
           <span class="year-topics__bar" style={`width: ${row.width}`} />
         </span>
         <span class="year-topics__count">{row.count}</span>
-        <span class="year-topics__change">{row.change}</span>
+        <span class="year-topics__change" title={row.change && compared}>
+          {row.change}
+        </span>
       </li>
     ))
   }
