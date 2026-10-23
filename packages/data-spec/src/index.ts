@@ -324,6 +324,8 @@ export const deviceSchema = z
     sold: z.looseObject({ on: dateKey, price }).optional(),
     /** Still owned but no longer used. */
     idle: z.boolean().default(false),
+    /** A picture of it on a clear background, its key in the bucket, like `devices/<id>.webp`. */
+    image: z.string().min(1).optional(),
     note: z.string().optional(),
   })
   .refine((device) => !device.sold || device.bought.on <= device.sold.on, 'Sold before bought.')

@@ -63,6 +63,24 @@
     ],
     "width": 1582
   },
+  "posts/oppo-find-x10-pro-max/oppo-find-x10-pro-max-moon-white.jpg": {
+    "height": 516,
+    "variants": [
+      {
+        "key": "posts/oppo-find-x10-pro-max/oppo-find-x10-pro-max-moon-white-640w.webp",
+        "width": 640
+      },
+      {
+        "key": "posts/oppo-find-x10-pro-max/oppo-find-x10-pro-max-moon-white-960w.webp",
+        "width": 960
+      },
+      {
+        "key": "posts/oppo-find-x10-pro-max/oppo-find-x10-pro-max-moon-white-1280w.webp",
+        "width": 1280
+      }
+    ],
+    "width": 1600
+  },
   "posts/review-2025/claude-browser-extension.png": {
     "height": 1664,
     "variants": [

@@ -1,11 +1,14 @@
 ---
 title: OPPO Find X10 Pro Max 使用体验
 link: oppo-find-x10-pro-max
+ogImage: https://image.hyoban.cc/posts/oppo-find-x10-pro-max/oppo-find-x10-pro-max-camera.jpg
 pubDate: '2026-10-19T08:00:00.000Z'
 description: 从 iPhone 15 换回安卓，有喜欢的拍照和自定义，也有放不下的 iOS 软件与互联体验。
 ---
 
 最近把手机从之前的 iPhone 15 换成了 OPPO Find X10 Pro Max，有一些感受想分享出来。
+
+![月白色的 OPPO Find X10 Pro Max](https://image.hyoban.cc/posts/oppo-find-x10-pro-max/oppo-find-x10-pro-max-moon-white.jpg)
 
 ## 为啥要换安卓
 
