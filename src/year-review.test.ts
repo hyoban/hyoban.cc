@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vite-plus/test'
 import type { FogRegions } from '@hyoban/trip-map'
 import {
   buildYearReview,
+  formatChange,
   getCityName,
   getLongestStreak,
   getReviewYears,
@@ -66,6 +67,14 @@ test('getReviewYears lists the years with a Moment', () => {
   expect(getReviewYears([{ dateKey: '2026-01-01' }, { dateKey: '2024-05-01' }])).toEqual([
     2024, 2026,
   ])
+})
+
+test('formatChange gives a percentage, and a multiple once it runs to four digits', () => {
+  expect(formatChange(36)).toBe('+36%')
+  expect(formatChange(-12)).toBe('−12%')
+  expect(formatChange(0)).toBe('持平')
+  expect(formatChange(999)).toBe('+999%')
+  expect(formatChange(1550)).toBe('×16.5')
 })
 
 describe('buildYearReview', () => {
