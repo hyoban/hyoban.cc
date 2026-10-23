@@ -869,9 +869,18 @@ const description = pageTrip
     line-height: 1rem;
     translate: -50% 0;
 
-    /* Above the map's logo, which the legend would cover at a phone's width. */
+    /* On a phone, in the row of the map's logo (5.5rem wide) and its ⓘ (1.5rem), in the
+       middle of the room between them, its years a little closer to fit there; above
+       them where it doesn't (placeLegend in @hyoban/trip-map). */
     @media (width < 48rem) {
-      bottom: calc(2.25rem + env(safe-area-inset-bottom));
+      bottom: calc(0.5rem + env(safe-area-inset-bottom));
+      left: calc(5.5rem + (100% - 7rem) / 2);
+      gap: 0.5rem;
+
+      &[data-trip-map-legend-raised] {
+        bottom: calc(2.25rem + env(safe-area-inset-bottom));
+        left: 50%;
+      }
     }
 
     & > li {

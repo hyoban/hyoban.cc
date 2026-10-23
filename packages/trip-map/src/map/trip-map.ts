@@ -553,6 +553,40 @@ export function createTripMap(options: TripMapOptions): TripMap {
   }
 
   /**
+   * On a phone the legend sits in the row of the map's logo and its attribution, in the
+   * room between them, rather than in a row of its own above (see styles.css). Where it
+   * doesn't fit, as with a year picked on a narrow phone or the attribution opened, it's
+   * raised above them again. Measured by the legend's own width against the room, which
+   * doesn't change with where the legend is.
+   */
+  function placeLegend() {
+    const legend = elements.legend
+    const container = map?.getContainer()
+    const logo = container?.querySelector('.mapboxgl-ctrl-logo')
+    const attribution = container?.querySelector('.mapboxgl-ctrl-attrib')
+
+    if (!legend) {
+      return
+    }
+
+    if (!isNarrow() || !logo || !attribution) {
+      legend.removeAttribute('data-trip-map-legend-raised')
+      return
+    }
+
+    // Folded into its button, the attribution's own box is empty.
+    const attributionBox = attribution.getBoundingClientRect()
+    const right =
+      attributionBox.width > 0
+        ? attributionBox.left
+        : (attribution.querySelector('.mapboxgl-ctrl-attrib-button')?.getBoundingClientRect()
+            .left ?? attributionBox.left)
+    const room = right - logo.getBoundingClientRect().right
+
+    legend.toggleAttribute('data-trip-map-legend-raised', legend.offsetWidth + 16 > room)
+  }
+
+  /**
    * Older addresses kept a selection in the hash: a place on the map (`/map/#<id>`), or
    * the card a trip played from (`/trip/<id>/#<stop>`). Puts it in the path instead.
    */
@@ -1684,6 +1718,26 @@ export function createTripMap(options: TripMapOptions): TripMap {
 
       // The attribution stays folded into its ⓘ button at every width, opening on a click.
       map.addControl(new mapboxgl.AttributionControl({ compact: true }))
+
+      // The legend beside the logo as long as it fits there: measured again as it or the
+      // map changes size, and as the attribution opens or folds.
+      placeLegend()
+
+      if (elements.legend && typeof ResizeObserver === 'function') {
+        const legendRoom = new ResizeObserver(() => placeLegend())
+        const attributionChange = new MutationObserver(() => placeLegend())
+
+        legendRoom.observe(elements.legend)
+        legendRoom.observe(canvas)
+        attributionChange.observe(canvas.querySelector('.mapboxgl-ctrl-bottom-right') ?? canvas, {
+          attributeFilter: ['class'],
+          subtree: true,
+        })
+        signal.addEventListener('abort', () => {
+          legendRoom.disconnect()
+          attributionChange.disconnect()
+        })
+      }
 
       syncLanguage(map, !style.config)
 
