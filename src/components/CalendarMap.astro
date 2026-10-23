@@ -23,7 +23,7 @@ import {
   toScriptJson,
 } from '@hyoban/trip-map'
 import { getTripTitle, tripMapBrand, tripMapMessages, tripMapMusic } from '@/trip-map'
-import { SITE_TITLE } from '@/consts'
+import { getMapText, getPageCardPath, getPageTitle } from '@/page-cards'
 import { canDrawMapPlaceholders, getMapPlaceholderKey,getMapPlaceholderPath, getMapPlaceholderView, MAP_PLACEHOLDER_SIZE } from '@/map-placeholder'
 
 // The map's settings, by the names @hyoban/trip-map reads them by.
@@ -107,8 +107,7 @@ const placeholderKey = getMapPlaceholderKey(period)
 const placeholderView = showPlaceholder
   ? { ...(await getMapPlaceholderView(placeholderKey)), maxZoom: ALL_PLACES_MAX_ZOOM, size: MAP_PLACEHOLDER_SIZE }
   : undefined
-const mapTitle = `地图 · 日历 | ${SITE_TITLE}`
-const tripListTitle = `旅程 | ${SITE_TITLE}`
+const pageText = getMapText(period, tripList)
 const placesJson = toScriptJson(getPlaceMarkers(locationGroups, yearColor))
 const trips = getTrips(moments).toSorted((first, second) => second.start.localeCompare(first.start))
 const activeTrip = trips.find(trip => trip.id === tripId)
@@ -139,19 +138,14 @@ const periodStart = period ? `${period.year}-${String(period.month ?? 1).padStar
 const periodEnd = period ? `${period.year}-${String(period.month ?? 12).padStart(2, '0')}` : ''
 const isInPeriod = (trip: { end: string, start: string }) =>
   !period || (trip.start.slice(0, 7) <= periodEnd && trip.end.slice(0, 7) >= periodStart)
-const title = pageTrip
-  ? getTripTitle(pageTrip.title)
-  : tripList
-    ? tripListTitle
-    : periodLabel ? `${periodLabel} · 地图 | ${SITE_TITLE}` : mapTitle
+const title = pageTrip ? getTripTitle(pageTrip.title) : getPageTitle(pageText)
 const description = pageTrip
   ? `${pageTrip.title}的旅程回放，按时间顺序走过每一条 Moment。`
-  : tripList
-    ? '在地图上按时间回放的几段旅程。'
-    : periodLabel ? `${periodLabel}的 Moment，在地图上按地点和时间浏览。` : '按地点浏览 Calendar 中记录的 Moment。'
+  : pageText.description
+const image = pageTrip ? `/trip/${pageTrip.id}/og.jpg` : getPageCardPath(Astro.url.pathname)
 ---
 
-<Layout title={title} description={description} image={pageTrip ? `/trip/${pageTrip.id}/og.jpg` : undefined} canonicalPath={canonicalPath}>
+<Layout title={title} description={description} image={image} canonicalPath={canonicalPath}>
   <Fragment slot="head">
     <!-- The map script is large; open the connection for the style and tiles while it loads. -->
     <link rel="preconnect" href="https://api.mapbox.com" crossorigin />

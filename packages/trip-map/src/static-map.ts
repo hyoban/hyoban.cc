@@ -94,6 +94,8 @@ export type StaticMapCamera = Readonly<{ latitude: number; longitude: number; zo
 
 export type StaticMapOptions = Readonly<{
   height: number
+  /** Drawn at twice the size, `width` by `height` at the screen's pixels. */
+  retina?: boolean | undefined
   /** A Mapbox style, `mapbox/light-v11` or `mapbox/dark-v11` as the map uses. */
   style: string
   token: string
@@ -108,7 +110,7 @@ export type StaticMapOptions = Readonly<{
 export function getStaticMapUrl(camera: StaticMapCamera, options: StaticMapOptions) {
   const view = [camera.longitude.toFixed(5), camera.latitude.toFixed(5), camera.zoom.toFixed(2)]
   const url = new URL(
-    `https://api.mapbox.com/styles/v1/${options.style}/static/${view.join(',')}/${options.width}x${options.height}`,
+    `https://api.mapbox.com/styles/v1/${options.style}/static/${view.join(',')}/${options.width}x${options.height}${options.retina ? '@2x' : ''}`,
   )
 
   // The map that replaces it carries the attribution.

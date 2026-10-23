@@ -14,6 +14,7 @@ import {
 } from '@/china-calendar'
 import { getStopAnchor } from '@/moments/trip-data'
 import Layout from '@/layouts/Layout.astro'
+import { formatCalendarDay, getCalendarText, getPageCardPath, getPageTitle } from '@/page-cards'
 import {
   getActiveDateKeys,
   getArchiveMonthKeys,
@@ -115,8 +116,8 @@ const mapHref = getMapYears(moments).includes(year)
     : `/map/${year}/`
   : '/map/'
 const activeMonthKeys = new Set(activeDateKeys.map(key => key.slice(0, 7)))
-const description = '一些零碎记录，按发生的日期归档。'
-const selectedDateLabel = selectedDate ? formatSelectedDate(selectedDate) : undefined
+const pageText = getCalendarText(year, month, selectedDate)
+const selectedDateLabel = selectedDate ? formatCalendarDay(selectedDate) : undefined
 // A day inside a trip links to that trip's playback.
 const selectedTrip = selectedDate
   ? getTrips(moments).find(trip => trip.start <= selectedDate && selectedDate <= trip.end)
@@ -129,39 +130,18 @@ const selectedTripHref = selectedTrip
 const sharedExcerpt = sharedMoment ? getMomentExcerpt(sharedMoment, 30) : undefined
 const title = sharedMoment
   ? `${sharedExcerpt || selectedDateLabel} | ${SITE_TITLE}`
-  : selectedDateLabel
-    ? `${selectedDateLabel} · 日历 | ${SITE_TITLE}`
-    : `${year} 年 ${month} 月 · 日历 | ${SITE_TITLE}`
+  : getPageTitle(pageText)
 const pageDescription = sharedMoment
   ? [getMomentExcerpt(sharedMoment, 120), getMomentDateLabel(sharedMoment)].filter(Boolean).join(' · ')
-  : description
-const pageImage = sharedMoment && MOMENT_OG_IMAGES ? `${getMomentPagePath(sharedMoment)}og.jpg` : undefined
+  : pageText.description
+// A shared Moment's page has its own card where the build draws them, the site's otherwise.
+const pageImage = sharedMoment
+  ? MOMENT_OG_IMAGES ? `${getMomentPagePath(sharedMoment)}og.jpg` : undefined
+  : getPageCardPath(Astro.url.pathname)
 const closePath = getMonthPath(monthKey)
-
-function formatSelectedDate(dateKey: string) {
-  const { dateDay, dateMonth, dateValue } = parseCalendarDate(dateKey)
-  const weekday = new Intl.DateTimeFormat('zh-CN', {
-    timeZone: 'Asia/Singapore',
-    weekday: 'long',
-  }).format(dateValue)
-
-  return `${dateMonth} 月 ${dateDay} 日 · ${weekday}`
-}
 
 function formatCompactDate(dateKey: string) {
   return `${Number.parseInt(dateKey.slice(5, 7), 10)}/${Number.parseInt(dateKey.slice(8, 10), 10)}`
-}
-
-function parseCalendarDate(dateKey: string) {
-  const dateYear = Number.parseInt(dateKey.slice(0, 4), 10)
-  const dateMonth = Number.parseInt(dateKey.slice(5, 7), 10)
-  const dateDay = Number.parseInt(dateKey.slice(8, 10), 10)
-
-  return {
-    dateDay,
-    dateMonth,
-    dateValue: new Date(Date.UTC(dateYear, dateMonth - 1, dateDay)),
-  }
 }
 
 function getThumbnailImage(media?: ResolvedMomentMedia) {

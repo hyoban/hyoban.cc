@@ -23,6 +23,11 @@ interface OgImageOptions {
   date?: string | undefined
   /** Photos on the card's right side, the first four laid out as `getPhotoTiles` says. */
   photos?: string[] | undefined
+  /**
+   * A picture under the whole card, a map's, its left side faded into the card's colour
+   * for the words, which keep to that side.
+   */
+  background?: Buffer | undefined
 }
 
 type Node = { type: string; props: Record<string, unknown> }
@@ -121,7 +126,10 @@ function siteCard(avatar: string) {
   ])
 }
 
-function pageCard(avatar: string, { title, description, date, photos }: OgImageOptions) {
+function pageCard(
+  avatar: string,
+  { title, description, date, photos, background }: OgImageOptions,
+) {
   const photo = Boolean(photos?.length)
   return [
     h('div', { display: 'flex', alignItems: 'center', gap: 20 }, [
@@ -140,8 +148,8 @@ function pageCard(avatar: string, { title, description, date, photos }: OgImageO
           'div',
           {
             display: 'block',
-            // Beside a photo the words get less than half the card.
-            fontSize: photo ? 40 : 64,
+            // Photos and maps leave less room for the words.
+            fontSize: photo ? 40 : background ? 48 : 64,
             fontWeight: 500,
             lineHeight: photo ? 1.5 : 1.3,
             color: COLORS.tx,
@@ -169,8 +177,9 @@ export async function renderOgImage(options: OgImageOptions = {}) {
     options.photos?.length ? renderPhotos(options.photos) : undefined,
   ])
   const site = !options.title
-  const boldText = site ? SITE_TITLE : `${SITE_TITLE}${options.title}`
-  const regularText = site ? SITE_DESCRIPTION : `${options.description ?? ''}${options.date ?? ''}`
+  // With the ellipsis satori ends a clamped line with, which the words may not have.
+  const boldText = site ? SITE_TITLE : `${SITE_TITLE}${options.title}…`
+  const regularText = site ? SITE_DESCRIPTION : `${options.description ?? ''}${options.date ?? ''}…`
   const [regular, medium] = await Promise.all([
     loadFont(400, regularText || ' '),
     loadFont(500, boldText),
@@ -179,7 +188,9 @@ export async function renderOgImage(options: OgImageOptions = {}) {
   const content = h(
     'div',
     {
-      flex: 1,
+      position: 'relative',
+      flex: options.background ? undefined : 1,
+      width: options.background ? 640 : undefined,
       minWidth: 0,
       height: '100%',
       boxSizing: 'border-box',
@@ -190,16 +201,29 @@ export async function renderOgImage(options: OgImageOptions = {}) {
     },
     site ? siteCard(avatar) : pageCard(avatar, options),
   )
+  const background = options.background && [
+    h('img', { position: 'absolute', left: 0, top: 0 }, undefined, {
+      src: `data:image/png;base64,${options.background.toString('base64')}`,
+      width: OG_IMAGE_WIDTH,
+      height: OG_IMAGE_HEIGHT,
+    }),
+    h('div', {
+      position: 'absolute',
+      inset: 0,
+      backgroundImage: `linear-gradient(to right, ${COLORS.bg} 0%, ${COLORS.bg} 36%, ${COLORS.bg}00 58%)`,
+    }),
+  ]
   const root = h(
     'div',
     {
+      position: 'relative',
       width: OG_IMAGE_WIDTH,
       height: OG_IMAGE_HEIGHT,
       display: 'flex',
       backgroundColor: COLORS.bg,
       fontFamily: FONT_FAMILY,
     },
-    [content, photoPanel].filter(Boolean),
+    [...(background ?? []), content, photoPanel].filter(Boolean),
   )
 
   const svg = await satori(root as Parameters<typeof satori>[0], {

@@ -24,11 +24,11 @@ test(
     assert.ok(mediaUrls.visible.length > 0, 'Expected at least one visible moment fixture.')
 
     try {
-      // Without CI, so the build leaves out the Moments' share cards, which fetch every
-      // photo and font subset and are none of this test's business.
+      // This checks calendar HTML; leave out Moment and page share cards, which fetch
+      // photos, font subsets and maps unrelated to visibility.
       await execFile('pnpm', ['exec', 'astro', 'build', '--outDir', outputRoot], {
         cwd: root,
-        env: { ...process.env, CI: '' },
+        env: { ...process.env, CI: '', SKIP_PAGE_OG_IMAGES: '1' },
         maxBuffer: 10 * 1024 * 1024,
       })
 

@@ -1,13 +1,13 @@
 ---
-import { SITE_TITLE } from '@/consts'
 import MediaSourceIcon from '@/components/MediaSourceIcon.astro'
 import SitePage from '@/components/SitePage.astro'
 import generatedMedia from '@/data/media.generated.json'
 import mediaRecommendations from '@/data/media-recommendations.json'
 import Layout from '@/layouts/Layout.astro'
+import { getPageCardPath, getPageTitle, MEDIA_TEXT } from '@/page-cards'
 
-const pageTitle = `Media | ${SITE_TITLE}`
-const pageDescription = '我推荐的电影、剧集和动画'
+const pageTitle = getPageTitle(MEDIA_TEXT)
+const pageDescription = MEDIA_TEXT.description
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p'
 const ANIMATION_GENRE_ID = 16
 const mediaCategories = [
@@ -207,7 +207,7 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
 
 ---
 
-<Layout title={pageTitle} description={pageDescription}>
+<Layout title={pageTitle} description={pageDescription} image={getPageCardPath(Astro.url.pathname)}>
   <Fragment slot="head">
     <script is:inline data-astro-rerun>
       const mediaCategory = new URL(window.location.href).searchParams.get('category')
