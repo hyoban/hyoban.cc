@@ -30,6 +30,7 @@
     "@hyoban/data-spec": "workspace:*",
     "@hyoban/drawer": "workspace:*",
     "@hyoban/trip-map": "workspace:*",
+    "modern-screenshot": "4.7.0",
     "yaml": "^2.9.1"
   },
   "devDependencies": {
