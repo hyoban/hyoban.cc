@@ -50,6 +50,27 @@ export function getThumbnailUrl(src: string, width: number) {
   return `${origin}/cdn-cgi/image/width=${width},format=auto,onerror=redirect${pathname}`
 }
 
+/**
+ * A thumbnail `width` wide for a tile that covers a box `aspect` times as tall as it is
+ * wide: an image taller than the box comes cropped to it around its middle, as the tile
+ * would cut it, so none of what's cut off is fetched; a wider one is as getThumbnailUrl
+ * gives it.
+ */
+export function getCoverThumbnailUrl(
+  image: { src: string; width: number; height: number; sources?: { src: string }[] },
+  width: number,
+  aspect: number,
+) {
+  const src = image.sources?.[0]?.src ?? image.src
+  if (image.height / image.width <= aspect || src.includes('/cdn-cgi/media/')) {
+    return getThumbnailUrl(src, width)
+  }
+  return getThumbnailUrl(src, width).replace(
+    `width=${width},`,
+    `width=${width},height=${Math.round(width * aspect)},fit=cover,`,
+  )
+}
+
 function getTransformedSources(key: string, ownWidth: number, options: (width: number) => string) {
   const { origin, pathname } = new URL(getAssetUrl(key))
   const widths = new Set([

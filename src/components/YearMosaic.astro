@@ -1,5 +1,5 @@
 ---
-import { getThumbnailUrl } from '@/asset-url'
+import { getCoverThumbnailUrl } from '@/asset-url'
 import { getMomentPath, type Moment } from '@/moments'
 import { getShowcaseMedia } from '@/moments/showcase'
 
@@ -25,12 +25,13 @@ const months = Array.from({ length: 12 }, (_, index) => {
     const dateKey = `${year}-${String(month).padStart(2, '0')}-${String(dayIndex + 1).padStart(2, '0')}`
     const dayMoments = byDay.get(dateKey) ?? []
     const media = dayMoments.flatMap((moment) => getShowcaseMedia(moment.media))
-    // The day's stills, one of them shown each visit (src/year-random.ts).
+    // The day's stills, one of them shown each visit (src/year-random.ts), cropped square
+    // like their tiles.
     const photos = media
       .map((item) => (item.type === 'video' ? item.poster : item.src))
       .filter((image) => image !== undefined)
       .slice(0, 6)
-      .map((still) => getThumbnailUrl(still.sources[0]?.src ?? still.src, 160))
+      .map((still) => getCoverThumbnailUrl(still, 160, 1))
     return {
       dateKey,
       day: dayIndex + 1,
