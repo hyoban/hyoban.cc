@@ -6,6 +6,7 @@
       "on": "2024-09-23",
       "price": 1399
     },
+    "image": "devices/airpods-4.webp",
     "note": "我习惯不了入耳式的"
   },
   "iphone-15": {
@@ -15,6 +16,7 @@
       "on": "2023-09-27",
       "price": 5999
     },
+    "image": "devices/iphone-15.webp",
     "sold": {
       "on": "2026-09-01",
       "price": 2069.5
@@ -27,6 +29,7 @@
       "on": "2023-03-17",
       "price": 9999
     },
+    "image": "devices/macbook-pro-m1-pro.webp",
     "note": "我的第一台 Mac，现在当备用机。"
   },
   "macbook-pro-m4-pro": {
@@ -36,6 +39,7 @@
       "on": "2025-12-17",
       "price": 0
     },
+    "image": "devices/macbook-pro-m4-pro.webp",
     "note": "公司配的，作为主力机"
   },
   "nuphy-air60-v2": {
@@ -45,6 +49,7 @@
       "on": "2024-09-29",
       "price": 562.38
     },
+    "image": "devices/nuphy-air60-v2.webp",
     "note": "代替笔记本的内置键盘"
   },
   "oppo-find-x10-pro-max": {
@@ -63,6 +68,7 @@
       "on": "2024-12-19",
       "price": 3361.51
     },
+    "image": "devices/playstation-5.webp",
     "sold": {
       "on": "2026-07-22",
       "price": 2981.01
@@ -76,6 +82,7 @@
       "on": "2025-05-11",
       "price": 2294.15
     },
+    "image": "devices/redmi-g-pro-27u.webp",
     "sold": {
       "on": "2026-08-14",
       "price": 1386.63
@@ -88,7 +95,8 @@
     "bought": {
       "on": "2025-01-02",
       "price": 3141.48
-    }
+    },
+    "image": "devices/ugreen-dxp4800.webp"
   },
   "vxe-r1-se": {
     "name": "VXE 蜻蜓 R1 SE",
@@ -97,6 +105,7 @@
       "on": "2024-10-10",
       "price": 88.68
     },
+    "image": "devices/vxe-r1-se.webp",
     "note": "很便宜很好用"
   },
   "xiaomi-10": {
@@ -106,6 +115,7 @@
       "on": "2021-03-01",
       "price": 3999
     },
+    "image": "devices/xiaomi-10.webp",
     "note": "15 卖出后短暂当回主力机，现在又回到备用机"
   },
   "zeekr-007gt": {
@@ -114,6 +124,7 @@
     "bought": {
       "on": "2025-08-17",
       "price": 202900
-    }
+    },
+    "image": "devices/zeekr-007gt.webp"
   }
 }
