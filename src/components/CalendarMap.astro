@@ -728,7 +728,7 @@ const description = pageTrip
   }
 
   @media (width >= 48.0625rem) and (width < 56rem) {
-    .trip-map-page:has(:is(.trip-map-drawer, .trip-map-trip-list, .trip-map-moments, .trip-map-trip-details):not([hidden]))
+    .trip-map-page:has(:is(.trip-map-drawer, .trip-map-trip-list, .trip-map-moments, .trip-map-trip-details):not([hidden], [data-closed]))
       .trip-map-toolbar
       :global(.calendar-back-link > span) {
       position: absolute;

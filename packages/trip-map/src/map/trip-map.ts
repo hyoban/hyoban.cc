@@ -677,7 +677,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
   /** What of the map a list beside it covers: the trip list on its address, a trip's sidebar, or the Moments. */
   function getListInset(): { bottom?: number; right?: number } {
     const list =
-      elements.tripList && isTripListUrl() && !elements.tripList.hidden
+      elements.tripList && isTripListUrl() && tripList?.isOpen
         ? elements.tripList
         : tripDetails?.isOpen
           ? elements.tripDetails

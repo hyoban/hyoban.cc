@@ -1530,10 +1530,14 @@ html:has(.trip-map-page[data-trip-map-ratio]) body {
   }
 }
 
+/* What makes way for an open sheet makes way for it as it starts closing, not once it's
+   gone: a sheet sliding away is `data-closed` (see map/sheet.ts), and the map frames the
+   places by where the legend is then. */
 @media (min-width: 48.0625rem) {
   .trip-map-page:has(
       :is(.trip-map-drawer, .trip-map-trip-list, .trip-map-moments, .trip-map-trip-details):not(
-        [hidden]
+        [hidden],
+        [data-closed]
       )
     )
     .mapboxgl-ctrl-bottom-right {
@@ -1543,7 +1547,8 @@ html:has(.trip-map-page[data-trip-map-ratio]) body {
   /* The toolbar's buttons step aside to the drawer's or the list's left. */
   .trip-map-page:has(
       :is(.trip-map-drawer, .trip-map-trip-list, .trip-map-moments, .trip-map-trip-details):not(
-        [hidden]
+        [hidden],
+        [data-closed]
       )
     )
     .trip-map-toolbar__actions {
@@ -1553,7 +1558,8 @@ html:has(.trip-map-page[data-trip-map-ratio]) body {
   /* The legend moves to the middle of the map the drawer or the list leaves showing. */
   .trip-map-page:has(
       :is(.trip-map-drawer, .trip-map-trip-list, .trip-map-moments, .trip-map-trip-details):not(
-        [hidden]
+        [hidden],
+        [data-closed]
       )
     )
     .trip-map-legend {
@@ -1564,7 +1570,8 @@ html:has(.trip-map-page[data-trip-map-ratio]) body {
 @media (max-width: 48rem) {
   .trip-map-page:has(
       :is(.trip-map-drawer, .trip-map-trip-list, .trip-map-moments, .trip-map-trip-details):not(
-        [hidden]
+        [hidden],
+        [data-closed]
       )
     )
     :is(.mapboxgl-ctrl-bottom-left, .mapboxgl-ctrl-bottom-right) {
@@ -1573,7 +1580,8 @@ html:has(.trip-map-page[data-trip-map-ratio]) body {
 
   .trip-map-page:has(
       :is(.trip-map-drawer, .trip-map-trip-list, .trip-map-moments, .trip-map-trip-details):not(
-        [hidden]
+        [hidden],
+        [data-closed]
       )
     )
     .mapboxgl-ctrl-bottom-right {
@@ -1583,15 +1591,21 @@ html:has(.trip-map-page[data-trip-map-ratio]) body {
   /* The lists are a shorter sheet than the drawer (the site's, like its height), and the
      legend sits above them, to pick another year, clear of the map's logo. */
   .trip-map-page:has(
-      :is(.trip-map-trip-list, .trip-map-moments, .trip-map-trip-details):not([hidden])
-    ):not(:has(.trip-map-drawer:not([hidden])))
+      :is(.trip-map-trip-list, .trip-map-moments, .trip-map-trip-details):not(
+        [hidden],
+        [data-closed]
+      )
+    ):not(:has(.trip-map-drawer:not([hidden], [data-closed])))
     :is(.mapboxgl-ctrl-bottom-left, .mapboxgl-ctrl-bottom-right) {
     bottom: calc(min(60dvh, 36rem) + 1.25rem + env(safe-area-inset-bottom));
   }
 
   .trip-map-page:has(
-      :is(.trip-map-trip-list, .trip-map-moments, .trip-map-trip-details):not([hidden])
-    ):not(:has(.trip-map-drawer:not([hidden])))
+      :is(.trip-map-trip-list, .trip-map-moments, .trip-map-trip-details):not(
+        [hidden],
+        [data-closed]
+      )
+    ):not(:has(.trip-map-drawer:not([hidden], [data-closed])))
     .trip-map-legend {
     bottom: calc(min(60dvh, 36rem) + 3.5rem + env(safe-area-inset-bottom));
   }
