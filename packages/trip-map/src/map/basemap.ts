@@ -6,7 +6,7 @@ import type {
   PaddingOptions,
   SourceSpecification,
 } from 'mapbox-gl'
-import type { MapSettings } from './map-settings.ts'
+import { getLightAtTime, type MapSettings } from './map-settings.ts'
 
 // The map in 3D: Mapbox Standard, with terrain, buildings and landmarks of its own, lit
 // for the time of day. Its basemap comes in as an import, out of reach of the package's
@@ -36,10 +36,10 @@ export function isMapStyleId(value: unknown): value is MapStyleId {
 }
 
 /**
- * The style for `settings` in a colour scheme, Standard's own settings if it's Standard,
- * and how far it leans at most.
+ * The style for `settings` in a colour scheme at `now`, Standard's own settings if it's
+ * Standard, and how far it leans at most.
  */
-export function getBasemapStyle(settings: MapSettings, dark: boolean) {
+export function getBasemapStyle(settings: MapSettings, dark: boolean, now = new Date()) {
   if (settings.style === 'classic') {
     return {
       config: undefined,
@@ -49,27 +49,51 @@ export function getBasemapStyle(settings: MapSettings, dark: boolean) {
   }
 
   return {
-    config: { [BASEMAP]: getStandardConfig(settings, dark) },
+    config: { [BASEMAP]: getStandardConfig(settings, dark, now) },
     pitch: settings.tilt ? MAP_PITCH : 0,
     url: STANDARD_STYLE,
   }
 }
 
-/** Whether the map is lit dark: by night or at dusk, or by the colour scheme. */
-export function isBasemapDark(settings: MapSettings, dark: boolean) {
+/** Whether the map is lit dark at `now`: by night or at dusk, or by the colour scheme. */
+export function isBasemapDark(settings: MapSettings, dark: boolean, now = new Date()) {
   if (settings.style === 'classic' || settings.light === 'auto') {
     return dark
   }
 
-  return settings.light === 'dusk' || settings.light === 'night'
+  const light = getLightPreset(settings, dark, now)
+  return light === 'dusk' || light === 'night'
+}
+
+/**
+ * The colour scheme the page takes from the map at `now`: dark at dusk and by night when
+ * the map is lit by the clock, so the page around it doesn't glare; its own otherwise.
+ */
+export function getBasemapScheme(settings: MapSettings, now = new Date()) {
+  if (settings.style === 'classic' || settings.light !== 'time') {
+    return undefined
+  }
+
+  return isBasemapDark(settings, false, now) ? 'dark' : 'light'
+}
+
+function getLightPreset(settings: MapSettings, dark: boolean, now: Date) {
+  switch (settings.light) {
+    case 'auto':
+      return dark ? 'night' : 'day'
+    case 'time':
+      return getLightAtTime(now)
+    default:
+      return settings.light
+  }
 }
 
 /** Standard's settings for `settings`: its colour theme, light and what it shows. */
-function getStandardConfig(settings: MapSettings, dark: boolean) {
+function getStandardConfig(settings: MapSettings, dark: boolean, now: Date) {
   const landmarks = settings.landmarks
 
   return {
-    lightPreset: settings.light === 'auto' ? (dark ? 'night' : 'day') : settings.light,
+    lightPreset: getLightPreset(settings, dark, now),
     show3dObjects: settings.buildings,
     showLandmarkIconLabels: landmarks,
     showLandmarkIcons: landmarks,

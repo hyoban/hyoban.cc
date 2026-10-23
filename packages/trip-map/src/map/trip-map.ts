@@ -12,6 +12,7 @@ import { readMapSettingsPreference, writeMapSettingsPreference } from '../player
 import type { MapStats, PlaceMarker, TripData, TripSummary } from '../player/types.ts'
 import { readTheme } from '../dom-theme.ts'
 import {
+  getBasemapScheme,
   getBasemapStyle,
   isBasemapDark,
   getFramingPitch,
@@ -182,8 +183,11 @@ export function createTripMap(options: TripMapOptions): TripMap {
   // What the map starts with until the viewer sets it: the flat classic map on a device
   // too slow for Standard. Judged the first time it's asked for.
   let defaultSettings: MapSettings | undefined
-  // The style the map was last given, to catch a theme change made while it loaded.
+  // The style the map was last given, to catch a theme change made while it loaded, its
+  // address, and whether it was lit dark.
   let mapStyle = getMapStyleKey()
+  let mapUrl = getMapStyle().url
+  let mapDark = isMapDark()
   // Names in the language, for a style other than Standard, which has them itself.
   let languageControl: mapboxgl.IControl | undefined
   // Whether the view is still the one framing every place, untouched since: only then
@@ -465,9 +469,34 @@ export function createTripMap(options: TripMapOptions): TripMap {
     return settings ?? getDefaultSettings()
   }
 
+  /**
+   * The colour scheme the page takes from a map lit by the clock, marked on it as
+   * `data-trip-map-scheme` for its styles to follow; none while it keeps its own.
+   */
+  function getPageScheme() {
+    return settings || !options.mapStyle ? getBasemapScheme(getSettings()) : undefined
+  }
+
+  function isPageDark() {
+    const scheme = getPageScheme()
+    return scheme ? scheme === 'dark' : darkMode.matches
+  }
+
+  function syncPageScheme() {
+    const scheme = getPageScheme()
+
+    if (page.dataset.tripMapScheme !== scheme) {
+      if (scheme) {
+        page.dataset.tripMapScheme = scheme
+      } else {
+        delete page.dataset.tripMapScheme
+      }
+    }
+  }
+
   /** The style for the settings and the colour scheme, Standard's own, and how far it leans. */
   function getMapStyle() {
-    const dark = darkMode.matches
+    const dark = isPageDark()
 
     if (settings || !options.mapStyle) {
       return getBasemapStyle(getSettings(), dark)
@@ -483,9 +512,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
 
   /** Whether the map is lit dark, which its own layers' colours go by. */
   function isMapDark() {
-    return settings || !options.mapStyle
-      ? isBasemapDark(getSettings(), darkMode.matches)
-      : darkMode.matches
+    return settings || !options.mapStyle ? isBasemapDark(getSettings(), isPageDark()) : isPageDark()
   }
 
   /**
@@ -495,9 +522,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
   function getMapTheme() {
     const theme = readTheme(page)
 
-    return isMapDark() === darkMode.matches
-      ? theme
-      : { ...theme, ink: theme.paper, paper: theme.ink }
+    return isMapDark() === isPageDark() ? theme : { ...theme, ink: theme.paper, paper: theme.ink }
   }
 
   /** The style with its settings: Standard is one style by day and by night. */
@@ -511,6 +536,8 @@ export function createTripMap(options: TripMapOptions): TripMap {
     const { config, pitch, url } = getMapStyle()
 
     mapStyle = getMapStyleKey()
+    mapUrl = url
+    mapDark = isMapDark()
     setMapPitch(current, pitch)
     syncLanguage(current, !config)
     // Built again from scratch: Standard and another style have too little in common to
@@ -539,28 +566,16 @@ export function createTripMap(options: TripMapOptions): TripMap {
    * own settings changed in place, and the map leaning and projected anew.
    */
   function applySettings(next: MapSettings) {
-    const before = getMapStyle()
-    const wasDark = isMapDark()
-
     settings = next
     pitchedByHand = false
     writeMapSettingsPreference(next)
+    syncPageScheme()
 
     if (!map || !mapLoaded) {
       return
     }
 
-    const after = getMapStyle()
-
-    // The package's layers take their colours as they're added: lit the other way, they're
-    // added again with the style.
-    if (after.url !== before.url || isMapDark() !== wasDark) {
-      setMapStyle(map)
-    } else if (after.config) {
-      setBasemapConfig(map, after.config)
-      setMapPitch(map, after.pitch)
-      mapStyle = getMapStyleKey()
-    }
+    restyleMap(map)
 
     if (map.getProjection().name !== next.projection) {
       map.setProjection(next.projection)
@@ -571,6 +586,24 @@ export function createTripMap(options: TripMapOptions): TripMap {
     // A trip's camera leans with the map itself.
     if (!tripPlayer.activeId && Math.abs(map.getPitch() - pitch) > 0.5) {
       map.easeTo({ duration: getAnimationDuration(), pitch })
+    }
+  }
+
+  /**
+   * Gives the map its style anew for a change of settings or of the time of day: another
+   * style built again, Standard's own settings changed in place.
+   */
+  function restyleMap(current: mapboxgl.Map) {
+    const { config, pitch, url } = getMapStyle()
+
+    // The package's layers take their colours as they're added: lit the other way, they're
+    // added again with the style.
+    if (url !== mapUrl || isMapDark() !== mapDark) {
+      setMapStyle(current)
+    } else if (config) {
+      setBasemapConfig(current, config)
+      setMapPitch(current, pitch)
+      mapStyle = getMapStyleKey()
     }
   }
 
@@ -1685,12 +1718,28 @@ export function createTripMap(options: TripMapOptions): TripMap {
   darkMode.addEventListener(
     'change',
     () => {
-      if (map && mapLoaded) {
+      // A page dark or light by the clock stays as it is.
+      if (map && mapLoaded && !getPageScheme()) {
         setMapStyle(map)
       }
     },
     { signal },
   )
+
+  // A map lit by the clock, and the page with it, follow it into the next time of day.
+  syncPageScheme()
+  const clock = setInterval(() => {
+    if (getSettings().light !== 'time') {
+      return
+    }
+
+    syncPageScheme()
+
+    if (map && mapLoaded && getMapStyleKey() !== mapStyle) {
+      restyleMap(map)
+    }
+  }, 60_000)
+  signal.addEventListener('abort', () => clearInterval(clock))
 
   upgradeHashUrl()
   syncSelection({ focus: true, moveMap: false })
@@ -1745,6 +1794,10 @@ export function createTripMap(options: TripMapOptions): TripMap {
       mapboxgl.accessToken = token
       const view = getAllPlacesView(getFramedPlaces(), isNarrow(), getFramingInset())
       const style = getMapStyle()
+
+      mapStyle = getMapStyleKey()
+      mapUrl = style.url
+      mapDark = isMapDark()
 
       // Opens already framed on the places, rather than on the globe and then flying in.
       // It opens flat, as the picture standing in for it is, and leans back once loaded.

@@ -51,8 +51,10 @@
   --drawer-handle: var(--color-border);
 }
 
+/* Dark by the colour scheme, unless the map lit by the clock has the page light, and dark
+   whenever it has it dark (@hyoban/trip-map's `data-trip-map-scheme`). */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not(:has([data-trip-map-scheme='light'])) {
     color-scheme: dark;
 
     --color-bg: #111110;
@@ -64,6 +66,19 @@
     --color-tx-2: #b5b3ad;
     --color-tx-3: #85837c;
   }
+}
+
+:root:has([data-trip-map-scheme='dark']) {
+  color-scheme: dark;
+
+  --color-bg: #111110;
+  --color-border: #2a2a28;
+  --color-inline: #191918;
+  --color-hover: #1d1d1b;
+
+  --color-tx: #eeeeec;
+  --color-tx-2: #b5b3ad;
+  --color-tx-3: #85837c;
 }
 
 @layer base {

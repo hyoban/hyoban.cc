@@ -35,6 +35,7 @@ const mapStyles = [
 ] as const
 const mapLights = [
   { id: 'auto', label: '跟随主题' },
+  { id: 'time', label: '按时间' },
   { id: 'day', label: '白天' },
   { id: 'dawn', label: '黎明' },
   { id: 'dusk', label: '黄昏' },
@@ -165,6 +166,25 @@ const description = pageTrip
         </picture>
       )
     }
+    <script is:inline>
+      // The page dark or light by the clock, as the map lit by it will have it, before
+      // it's painted (getBasemapScheme in @hyoban/trip-map: dark at dusk, from 18, and
+      // by night, until 5), and the picture standing in for the map with it.
+      try {
+        const page = document.querySelector('[data-trip-map]')
+        const settings = JSON.parse(localStorage.getItem('trip-map-settings') ?? 'null')
+
+        if (settings?.light === 'time' && settings.style !== 'classic') {
+          const hour = new Date().getHours()
+          const scheme = hour >= 5 && hour < 18 ? 'light' : 'dark'
+
+          page.dataset.tripMapScheme = scheme
+          page.querySelector('[data-trip-map-placeholder] source')?.setAttribute('media', scheme === 'dark' ? 'all' : 'not all')
+        }
+      } catch {
+        // The page keeps its colour scheme until the map sets it.
+      }
+    </script>
 
     <header class="trip-map-toolbar" data-trip-map-toolbar>
       <CalendarBackLink />
@@ -544,6 +564,22 @@ const description = pageTrip
     return request
   }
 
+  // The pages the browser's bar is kept the colour of, as the map sets them dark or light.
+  const schemedPages = new WeakSet<HTMLElement>()
+
+  /** Gives the browser's bar the colour of the page, dark or light by the map's clock. */
+  function syncThemeColor(page: HTMLElement) {
+    const scheme = page.dataset.tripMapScheme
+
+    for (const meta of document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')) {
+      meta.dataset.media ??= meta.media
+
+      const dark = meta.dataset.media.includes('dark')
+
+      meta.media = scheme ? (dark === (scheme === 'dark') ? 'all' : 'not all') : meta.dataset.media
+    }
+  }
+
   document.addEventListener('astro:page-load', () => {
     const page = document.querySelector<HTMLElement>('[data-trip-map]')
 
@@ -553,6 +589,16 @@ const description = pageTrip
       map?.destroy()
       map = undefined
       return
+    }
+
+    // The head is the new page's, with the bar's colours by the colour scheme again.
+    syncThemeColor(page)
+
+    if (!schemedPages.has(page)) {
+      schemedPages.add(page)
+      new MutationObserver(() => syncThemeColor(page)).observe(page, {
+        attributeFilter: ['data-trip-map-scheme'],
+      })
     }
 
     // Closing a place through history fires page-load for the same persisted map.
