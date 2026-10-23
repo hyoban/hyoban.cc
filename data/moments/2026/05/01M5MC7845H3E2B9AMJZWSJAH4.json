@@ -1,0 +1,36 @@
+{
+  "uid": "01M5MC7845H3E2B9AMJZWSJAH4",
+  "occurredAt": "2026-05-03",
+  "places": [
+    "wuyuan-huji-sichu"
+  ],
+  "text": "下山后去婺源的一家小馆吃的晚饭，县城里吃饭价格不贵。",
+  "hidden": false,
+  "media": [
+    {
+      "uid": "01KQMPP304YF9G9MESQ1QAYP24",
+      "alt": "Home-style dishes including braised fish, celery stir-fry, and chives with egg.",
+      "type": "image",
+      "width": 1280,
+      "height": 959,
+      "published": {
+        "key": "moments/2026/05/03-02-wuyuan-huji-sichu/wuyuan-huji-sichu.jpg",
+        "contentType": "image/jpeg",
+        "bytes": 220523,
+        "etag": "c12211b25cee35bb954313ad7e39aae6",
+        "width": 1280,
+        "height": 959,
+        "variants": [],
+        "original": true
+      }
+    }
+  ],
+  "published": {
+    "id": "2026/05/03-02-wuyuan-huji-sichu",
+    "slug": "wuyuan-huji-sichu",
+    "order": 2,
+    "at": "2026-10-23T12:40:21Z"
+  },
+  "createdAt": "2026-10-23T12:36:53Z",
+  "updatedAt": "2026-10-23T12:36:53Z"
+}

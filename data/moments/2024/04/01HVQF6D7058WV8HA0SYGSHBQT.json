@@ -7,8 +7,9 @@
   "media": [
     {
       "uid": "01HVQF6D714ZVT7ATVC0BF6FTD",
-      "type": "image",
       "alt": "",
+      "utility": true,
+      "type": "image",
       "width": 230,
       "height": 320,
       "published": {
@@ -29,5 +30,5 @@
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2024-04-18T10:05:00+08:00",
-  "updatedAt": "2026-09-03T10:44:40+08:00"
+  "updatedAt": "2026-10-23T19:21:47+08:00"
 }

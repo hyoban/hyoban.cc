@@ -7,8 +7,8 @@
   "media": [
     {
       "uid": "01K3CVF2E98PNK587Y1W2VATGA",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1080,
       "height": 1920,
       "published": {
@@ -36,12 +36,13 @@
             "height": 1707
           }
         ]
-      }
+      },
+      "utility": true
     },
     {
       "uid": "01K3CVF2EAEAR1W09F0KE6Y8EC",
-      "type": "image",
       "alt": "",
+      "type": "image",
       "width": 1080,
       "height": 1920,
       "published": {
@@ -69,7 +70,8 @@
             "height": 1707
           }
         ]
-      }
+      },
+      "utility": true
     }
   ],
   "published": {
@@ -79,5 +81,5 @@
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2025-08-24T09:35:41+08:00",
-  "updatedAt": "2026-09-03T10:44:40+08:00"
+  "updatedAt": "2026-10-23T19:13:53+08:00"
 }

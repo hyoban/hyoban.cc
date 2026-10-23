@@ -1,0 +1,36 @@
+{
+  "uid": "01M5MC7845R2T1E05JVF41Q2K2",
+  "occurredAt": "2025-11-04T11:50:36+08:00",
+  "places": [
+    "xinduqiao"
+  ],
+  "text": "自驾川西第一天 新都桥\n\n晚上在新都桥吃饭加休息。",
+  "hidden": false,
+  "media": [
+    {
+      "uid": "01K96FSVQAF0H7RWW7F26N11Q1",
+      "alt": "Yaks crossing the road in front of the car at Xinduqiao.",
+      "type": "image",
+      "width": 1920,
+      "height": 1080,
+      "published": {
+        "key": "moments/2025/11/04-04-xinduqiao/xinduqiao.webp",
+        "contentType": "image/webp",
+        "bytes": 160652,
+        "etag": "a77182bca73a7d6584554000fa2af0e3",
+        "width": 1920,
+        "height": 1080,
+        "variants": [],
+        "original": true
+      }
+    }
+  ],
+  "published": {
+    "id": "2025/11/04-04-xinduqiao",
+    "slug": "xinduqiao",
+    "order": 4,
+    "at": "2026-10-23T12:40:21Z"
+  },
+  "createdAt": "2026-10-23T12:36:53Z",
+  "updatedAt": "2026-10-23T12:36:53Z"
+}

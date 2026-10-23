@@ -2,16 +2,15 @@
   "uid": "01KQMPP300J2AJ2P2A5WN3MGCM",
   "occurredAt": "2026-05-03",
   "places": [
-    "sanqingshan",
-    "wuyuan-huji-sichu"
+    "sanqingshan"
   ],
-  "text": "五一的第三天去的是三清山。上午刚下完雨，山上雾很大，啥也看不见。等走完一半下午到山另一半就好很多。一天把一整圈全走了，大概两万步出头。山上有一元的素粉卖，还挺好吃的。下山后去婺源的一家小馆吃的晚饭，县城里吃饭价格不贵。",
+  "text": "五一的第三天去的是三清山。上午刚下完雨，山上雾很大，啥也看不见。等走完一半下午到山另一半就好很多。一天把一整圈全走了，大概两万步出头。山上有一元的素粉卖，还挺好吃的。",
   "hidden": false,
   "media": [
     {
       "uid": "01KQMPP301EP7842WTJWFNCHE0",
-      "type": "image",
       "alt": "A rock pillar beside pine trees in the mist at Sanqingshan.",
+      "type": "image",
       "width": 960,
       "height": 1280,
       "published": {
@@ -35,8 +34,8 @@
     },
     {
       "uid": "01KQMPP302FKXWKTWGGDPRAWYB",
-      "type": "image",
       "alt": "A reddish bird perched among bare branches on the mountain.",
+      "type": "image",
       "width": 960,
       "height": 1280,
       "published": {
@@ -60,8 +59,8 @@
     },
     {
       "uid": "01KQMPP3030DVVCJAQE0YXTQZK",
-      "type": "image",
       "alt": "A paper cup of plain rice noodles held in hand.",
+      "type": "image",
       "width": 960,
       "height": 1280,
       "published": {
@@ -82,39 +81,6 @@
           }
         ]
       }
-    },
-    {
-      "uid": "01KQMPP304YF9G9MESQ1QAYP24",
-      "type": "image",
-      "alt": "Home-style dishes including braised fish, celery stir-fry, and chives with egg.",
-      "width": 1280,
-      "height": 959,
-      "published": {
-        "key": "moments/2026/05/03-01-wu-yi-de-di-san-tian-qu-de-shi-san/wu-yi-de-di-san-tian-qu-de-shi-san-4.jpg",
-        "contentType": "image/jpeg",
-        "bytes": 220523,
-        "etag": "c12211b25cee35bb954313ad7e39aae6",
-        "width": 1280,
-        "height": 959,
-        "variants": [
-          {
-            "key": "moments/2026/05/03-01-wu-yi-de-di-san-tian-qu-de-shi-san/wu-yi-de-di-san-tian-qu-de-shi-san-4-480w.webp",
-            "contentType": "image/webp",
-            "bytes": 45096,
-            "etag": "2945115893cda30b70c03438eb053c4f",
-            "width": 480,
-            "height": 360
-          },
-          {
-            "key": "moments/2026/05/03-01-wu-yi-de-di-san-tian-qu-de-shi-san/wu-yi-de-di-san-tian-qu-de-shi-san-4-960w.webp",
-            "contentType": "image/webp",
-            "bytes": 135444,
-            "etag": "90a69d642e26cc4950b64edabc93c053",
-            "width": 960,
-            "height": 719
-          }
-        ]
-      }
     }
   ],
   "published": {
@@ -124,5 +90,5 @@
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-05-03T00:00:00+08:00",
-  "updatedAt": "2026-10-12T18:09:45+08:00"
+  "updatedAt": "2026-10-23T12:36:53Z"
 }

@@ -1,0 +1,67 @@
+{
+  "uid": "01M5MC78452YJQHW41Y9C9VF1Y",
+  "occurredAt": "2026-09-16T11:00:00+08:00",
+  "places": [
+    "zhongyi-market"
+  ],
+  "text": "忠义市场\n也是在这里买到了好吃的鲜花饼。",
+  "hidden": false,
+  "media": [
+    {
+      "uid": "01M2M2GAW5KCC2Q6BCM1SYBS9S",
+      "alt": "A cobbled lane passes traditional shops with wooden doors and red lanterns.",
+      "type": "live-photo",
+      "width": 1920,
+      "height": 1080,
+      "published": {
+        "key": "moments/2026/09/16-03-zhongyi-market/zhongyi-market.webp",
+        "contentType": "image/webp",
+        "bytes": 370558,
+        "etag": "7257290513de0ca66f71acb1499e5f38",
+        "width": 1920,
+        "height": 1080,
+        "variants": [],
+        "original": true,
+        "video": {
+          "key": "moments/2026/09/16-03-zhongyi-market/zhongyi-market.mp4",
+          "contentType": "video/mp4",
+          "bytes": 2097113,
+          "etag": "a71e48a9e8eebd474749ad5ed0d0aab4",
+          "original": true
+        }
+      }
+    },
+    {
+      "uid": "01M2M2GAW6N8WAC68TRYB2GZRC",
+      "alt": "Traditional tiled rooftops frame a distant mountain beneath an overcast sky.",
+      "type": "live-photo",
+      "width": 1920,
+      "height": 1080,
+      "published": {
+        "key": "moments/2026/09/16-03-zhongyi-market/zhongyi-market-2.webp",
+        "contentType": "image/webp",
+        "bytes": 151308,
+        "etag": "df9e624261068aee60445ca5b1ddc871",
+        "width": 1920,
+        "height": 1080,
+        "variants": [],
+        "original": true,
+        "video": {
+          "key": "moments/2026/09/16-03-zhongyi-market/zhongyi-market-2.mp4",
+          "contentType": "video/mp4",
+          "bytes": 660155,
+          "etag": "d4d77e529ac0cbb62cfa054fe48ad9c1",
+          "original": true
+        }
+      }
+    }
+  ],
+  "published": {
+    "id": "2026/09/16-03-zhongyi-market",
+    "slug": "zhongyi-market",
+    "order": 3,
+    "at": "2026-10-23T12:40:21Z"
+  },
+  "createdAt": "2026-10-23T12:36:53Z",
+  "updatedAt": "2026-10-23T12:36:53Z"
+}

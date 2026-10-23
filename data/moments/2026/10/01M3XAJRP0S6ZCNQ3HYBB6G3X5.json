@@ -2,16 +2,15 @@
   "uid": "01M3XAJRP0S6ZCNQ3HYBB6G3X5",
   "occurredAt": "2026-10-02T11:30:00+08:00",
   "places": [
-    "bangchuidao",
-    "dalian-datongjie-tram-stop"
+    "bangchuidao"
   ],
-  "text": "上午在大连棒棰岛海边就这样躺了一上午，整个人都放松下来了。下午去打卡了有轨电车之后光速出发去了丹东。",
+  "text": "上午在大连棒棰岛海边就这样躺了一上午，整个人都放松下来了。",
   "hidden": false,
   "media": [
     {
       "uid": "01M3XAJRP1EQHK046DGZXZRS0Y",
-      "type": "live-photo",
       "alt": "Clear waves washing over the pebbles at Bangchuidao Beach.",
+      "type": "live-photo",
       "width": 1080,
       "height": 1440,
       "published": {
@@ -49,8 +48,8 @@
     },
     {
       "uid": "01M3XAJRP2R18PRKJTMHXRPQK3",
-      "type": "live-photo",
       "alt": "A person relaxing in a folding chair on the pebble beach.",
+      "type": "live-photo",
       "width": 1440,
       "height": 1080,
       "published": {
@@ -88,8 +87,8 @@
     },
     {
       "uid": "01M3XAJRP3W8J44AQ5FZZ0AN71",
-      "type": "live-photo",
       "alt": "A person in a sun hat pointing toward an island from the beach.",
+      "type": "live-photo",
       "width": 1440,
       "height": 1080,
       "published": {
@@ -127,8 +126,8 @@
     },
     {
       "uid": "01M3XAJRP4SPBFCR52D7Y8YXBH",
-      "type": "image",
       "alt": "A small rocky island surrounded by bright blue water.",
+      "type": "image",
       "width": 1920,
       "height": 710,
       "published": {
@@ -157,84 +156,6 @@
           }
         ]
       }
-    },
-    {
-      "uid": "01M3XAJRP5PPDXC3Z51330JD3F",
-      "type": "live-photo",
-      "alt": "A vintage green tram approaching a street-side stop in Dalian.",
-      "width": 1440,
-      "height": 1080,
-      "published": {
-        "key": "moments/2026/10/02-03-bangchuidao-seaside/bangchuidao-seaside-live-5.webp",
-        "contentType": "image/webp",
-        "bytes": 232114,
-        "etag": "bf85f9cb31a372fc600b7e7e27e2ec53",
-        "width": 1440,
-        "height": 1080,
-        "variants": [
-          {
-            "key": "moments/2026/10/02-03-bangchuidao-seaside/bangchuidao-seaside-live-5-480w.webp",
-            "contentType": "image/webp",
-            "bytes": 32890,
-            "etag": "3562addb6046a539c243835467809a30",
-            "width": 480,
-            "height": 360
-          },
-          {
-            "key": "moments/2026/10/02-03-bangchuidao-seaside/bangchuidao-seaside-live-5-960w.webp",
-            "contentType": "image/webp",
-            "bytes": 95830,
-            "etag": "27f5b306bc2ac4e8d13d2d27e6a3f8cf",
-            "width": 960,
-            "height": 720
-          }
-        ],
-        "video": {
-          "key": "moments/2026/10/02-03-bangchuidao-seaside/bangchuidao-seaside-live-5.mp4",
-          "contentType": "video/mp4",
-          "bytes": 2183481,
-          "etag": "347f4a1a56d4600f85ef1ffe7b96005a"
-        }
-      }
-    },
-    {
-      "uid": "01M3XAJRP6C41ZM865AN46258H",
-      "type": "live-photo",
-      "alt": "A vintage yellow tram beside a green-roofed tram stop.",
-      "width": 1440,
-      "height": 1080,
-      "published": {
-        "key": "moments/2026/10/02-03-bangchuidao-seaside/bangchuidao-seaside-live-6.webp",
-        "contentType": "image/webp",
-        "bytes": 232708,
-        "etag": "5c635c39270f7c73ef811ed13f5c019a",
-        "width": 1440,
-        "height": 1080,
-        "variants": [
-          {
-            "key": "moments/2026/10/02-03-bangchuidao-seaside/bangchuidao-seaside-live-6-480w.webp",
-            "contentType": "image/webp",
-            "bytes": 35398,
-            "etag": "721780b0640078834919706a44585818",
-            "width": 480,
-            "height": 360
-          },
-          {
-            "key": "moments/2026/10/02-03-bangchuidao-seaside/bangchuidao-seaside-live-6-960w.webp",
-            "contentType": "image/webp",
-            "bytes": 96060,
-            "etag": "25c1b9041e28f6cc676f5ee5c931d8be",
-            "width": 960,
-            "height": 720
-          }
-        ],
-        "video": {
-          "key": "moments/2026/10/02-03-bangchuidao-seaside/bangchuidao-seaside-live-6.mp4",
-          "contentType": "video/mp4",
-          "bytes": 1457343,
-          "etag": "cf520f3ddb8de9ad910afd7c5d365452"
-        }
-      }
     }
   ],
   "published": {
@@ -244,5 +165,5 @@
     "at": "2026-10-08T08:10:00+08:00"
   },
   "createdAt": "2026-10-02T11:30:00+08:00",
-  "updatedAt": "2026-10-12T18:09:45+08:00"
+  "updatedAt": "2026-10-23T12:36:53Z"
 }

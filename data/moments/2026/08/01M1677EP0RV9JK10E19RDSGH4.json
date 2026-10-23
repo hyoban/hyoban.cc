@@ -2,16 +2,15 @@
   "uid": "01M1677EP0RV9JK10E19RDSGH4",
   "occurredAt": "2026-08-29T15:37:28+08:00",
   "places": [
-    "maanshan-rail-coffee",
-    "yushan-lake"
+    "maanshan-rail-coffee"
   ],
-  "text": "马鞍山逛吃三小时\n这次走的是经典湖北路二中站经大肉面、铁道咖啡、雨山湖公园、金鹰中心到湖南路安工大站。\n马鞍山对小电驴很友好，道路划分合理，一路骑行很舒服。甚至他们有个南哥畅骑四小时6.9套餐。\n大肉面汤很奇妙，但是肉不够吃。刚到铁道咖啡就赶上火车经过，打卡时间不超过十分钟。雨山湖公园里很凉爽，感觉可以睡一觉。最后是金鹰附近的一家本土奶茶店，味道尚可。",
+  "text": "马鞍山逛吃三小时\n这次走的是经典湖北路二中站经大肉面、铁道咖啡、雨山湖公园、金鹰中心到湖南路安工大站。\n马鞍山对小电驴很友好，道路划分合理，一路骑行很舒服。甚至他们有个南哥畅骑四小时6.9套餐。\n大肉面汤很奇妙，但是肉不够吃。刚到铁道咖啡就赶上火车经过，打卡时间不超过十分钟。",
   "hidden": false,
   "media": [
     {
       "uid": "01M1677EP1KK4P3KZM4821CKHJ",
-      "type": "image",
       "alt": "A bowl of noodle soup topped with thick slices of braised pork and scallions.",
+      "type": "image",
       "width": 1280,
       "height": 960,
       "published": {
@@ -43,8 +42,8 @@
     },
     {
       "uid": "01M1677EP2RWEWY5731XR2BEKF",
-      "type": "image",
       "alt": "A yellow shared electric scooter parked on a shaded sidewalk.",
+      "type": "image",
       "width": 960,
       "height": 1280,
       "published": {
@@ -68,8 +67,8 @@
     },
     {
       "uid": "01M1677EP313RQRB58M8GKQX6G",
-      "type": "image",
       "alt": "A shared scooter app offers a four-hour riding pass for 6.9 yuan.",
+      "type": "image",
       "width": 886,
       "height": 1920,
       "published": {
@@ -93,8 +92,8 @@
     },
     {
       "uid": "01M1677EP41DNA5F8FXAZTMY5R",
-      "type": "image",
       "alt": "A railway crossing signal beside a tree-lined street.",
+      "type": "image",
       "width": 960,
       "height": 1280,
       "published": {
@@ -118,8 +117,8 @@
     },
     {
       "uid": "01M1677EP5ZJB48BJWCFVAXKHP",
-      "type": "image",
       "alt": "A small coffee shop beside railway tracks beneath leafy trees.",
+      "type": "image",
       "width": 1280,
       "height": 960,
       "published": {
@@ -148,114 +147,6 @@
           }
         ]
       }
-    },
-    {
-      "uid": "01M1677EP615TKC1S7ANNA4MKT",
-      "type": "image",
-      "alt": "Large colorful Chinese characters mark the entrance to Yushan Lake Park.",
-      "width": 1280,
-      "height": 960,
-      "published": {
-        "key": "moments/2026/08/29-02-maanshan-walk-and-food/maanshan-walk-and-food-6.webp",
-        "contentType": "image/webp",
-        "bytes": 167382,
-        "etag": "512f09963b6dc6fcf2eb57545937da87",
-        "width": 1280,
-        "height": 960,
-        "variants": [
-          {
-            "key": "moments/2026/08/29-02-maanshan-walk-and-food/maanshan-walk-and-food-6-480w.webp",
-            "contentType": "image/webp",
-            "bytes": 25558,
-            "etag": "3fa17bb9fb9f7d67f46f0f3cae99a731",
-            "width": 480,
-            "height": 360
-          },
-          {
-            "key": "moments/2026/08/29-02-maanshan-walk-and-food/maanshan-walk-and-food-6-960w.webp",
-            "contentType": "image/webp",
-            "bytes": 78414,
-            "etag": "781eb0fddda4b6af9ea5762b25172f93",
-            "width": 960,
-            "height": 720
-          }
-        ]
-      }
-    },
-    {
-      "uid": "01M1677EP7FV2XJV46JFEXQBGA",
-      "type": "image",
-      "alt": "A shaded lakeside path with trees, rocks, and reflections on the water.",
-      "width": 960,
-      "height": 1280,
-      "published": {
-        "key": "moments/2026/08/29-02-maanshan-walk-and-food/maanshan-walk-and-food-7.webp",
-        "contentType": "image/webp",
-        "bytes": 423522,
-        "etag": "2703a2cffab2730edb1b4564c21c9ed2",
-        "width": 960,
-        "height": 1280,
-        "variants": [
-          {
-            "key": "moments/2026/08/29-02-maanshan-walk-and-food/maanshan-walk-and-food-7-480w.webp",
-            "contentType": "image/webp",
-            "bytes": 108204,
-            "etag": "556a85a385e6dee239fb59b800c12fb1",
-            "width": 480,
-            "height": 640
-          }
-        ]
-      }
-    },
-    {
-      "uid": "01M1677EP84RZNBW1GRR6SJNV2",
-      "type": "image",
-      "alt": "Tree trunks painted with colorful bands and cartoon faces.",
-      "width": 960,
-      "height": 1280,
-      "published": {
-        "key": "moments/2026/08/29-02-maanshan-walk-and-food/maanshan-walk-and-food-8.webp",
-        "contentType": "image/webp",
-        "bytes": 364816,
-        "etag": "5e5e6a8e07622823d66faf77eae97d57",
-        "width": 960,
-        "height": 1280,
-        "variants": [
-          {
-            "key": "moments/2026/08/29-02-maanshan-walk-and-food/maanshan-walk-and-food-8-480w.webp",
-            "contentType": "image/webp",
-            "bytes": 91220,
-            "etag": "195a25f38e2598f3a624aee9d97f0647",
-            "width": 480,
-            "height": 640
-          }
-        ]
-      }
-    },
-    {
-      "uid": "01M1677EP9ZVYX0D29VWT5AN8T",
-      "type": "image",
-      "alt": "A hand holds a green drink in a printed cup on a metro platform.",
-      "width": 960,
-      "height": 1280,
-      "published": {
-        "key": "moments/2026/08/29-02-maanshan-walk-and-food/maanshan-walk-and-food-9.webp",
-        "contentType": "image/webp",
-        "bytes": 78856,
-        "etag": "2214896dff37e9ccaf18dde0f5ab8bd8",
-        "width": 960,
-        "height": 1280,
-        "variants": [
-          {
-            "key": "moments/2026/08/29-02-maanshan-walk-and-food/maanshan-walk-and-food-9-480w.webp",
-            "contentType": "image/webp",
-            "bytes": 27208,
-            "etag": "d281fac0a8b20aa72d3065f6036367d8",
-            "width": 480,
-            "height": 640
-          }
-        ]
-      }
     }
   ],
   "published": {
@@ -265,5 +156,5 @@
     "at": "2026-10-08T08:10:00+08:00"
   },
   "createdAt": "2026-08-29T15:37:28+08:00",
-  "updatedAt": "2026-10-12T18:09:45+08:00"
+  "updatedAt": "2026-10-23T12:36:53Z"
 }

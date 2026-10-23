@@ -1,0 +1,87 @@
+{
+  "uid": "01M5MC7845RJ26F9JZ7Q9CW5V9",
+  "occurredAt": "2026-08-29T15:37:28+08:00",
+  "places": [
+    "yushan-lake"
+  ],
+  "text": "马鞍山逛吃 雨山湖公园\n雨山湖公园里很凉爽，感觉可以睡一觉。最后是金鹰附近的一家本土奶茶店，味道尚可。",
+  "hidden": false,
+  "media": [
+    {
+      "uid": "01M1677EP615TKC1S7ANNA4MKT",
+      "alt": "Large colorful Chinese characters mark the entrance to Yushan Lake Park.",
+      "type": "image",
+      "width": 1280,
+      "height": 960,
+      "published": {
+        "key": "moments/2026/08/29-03-yushan-lake/yushan-lake.webp",
+        "contentType": "image/webp",
+        "bytes": 167382,
+        "etag": "512f09963b6dc6fcf2eb57545937da87",
+        "width": 1280,
+        "height": 960,
+        "variants": [],
+        "original": true
+      }
+    },
+    {
+      "uid": "01M1677EP7FV2XJV46JFEXQBGA",
+      "alt": "A shaded lakeside path with trees, rocks, and reflections on the water.",
+      "type": "image",
+      "width": 960,
+      "height": 1280,
+      "published": {
+        "key": "moments/2026/08/29-03-yushan-lake/yushan-lake-2.webp",
+        "contentType": "image/webp",
+        "bytes": 423522,
+        "etag": "2703a2cffab2730edb1b4564c21c9ed2",
+        "width": 960,
+        "height": 1280,
+        "variants": [],
+        "original": true
+      }
+    },
+    {
+      "uid": "01M1677EP84RZNBW1GRR6SJNV2",
+      "alt": "Tree trunks painted with colorful bands and cartoon faces.",
+      "type": "image",
+      "width": 960,
+      "height": 1280,
+      "published": {
+        "key": "moments/2026/08/29-03-yushan-lake/yushan-lake-3.webp",
+        "contentType": "image/webp",
+        "bytes": 364816,
+        "etag": "5e5e6a8e07622823d66faf77eae97d57",
+        "width": 960,
+        "height": 1280,
+        "variants": [],
+        "original": true
+      }
+    },
+    {
+      "uid": "01M1677EP9ZVYX0D29VWT5AN8T",
+      "alt": "A hand holds a green drink in a printed cup on a metro platform.",
+      "type": "image",
+      "width": 960,
+      "height": 1280,
+      "published": {
+        "key": "moments/2026/08/29-03-yushan-lake/yushan-lake-4.webp",
+        "contentType": "image/webp",
+        "bytes": 78856,
+        "etag": "2214896dff37e9ccaf18dde0f5ab8bd8",
+        "width": 960,
+        "height": 1280,
+        "variants": [],
+        "original": true
+      }
+    }
+  ],
+  "published": {
+    "id": "2026/08/29-03-yushan-lake",
+    "slug": "yushan-lake",
+    "order": 3,
+    "at": "2026-10-23T12:40:21Z"
+  },
+  "createdAt": "2026-10-23T12:36:53Z",
+  "updatedAt": "2026-10-23T12:36:53Z"
+}

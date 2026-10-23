@@ -1,0 +1,67 @@
+{
+  "uid": "01M5MC78453PRG29WMTSNVRQXN",
+  "occurredAt": "2026-10-02T11:30:00+08:00",
+  "places": [
+    "dalian-datongjie-tram-stop"
+  ],
+  "text": "下午去打卡了有轨电车之后光速出发去了丹东。",
+  "hidden": false,
+  "media": [
+    {
+      "uid": "01M3XAJRP5PPDXC3Z51330JD3F",
+      "alt": "A vintage green tram approaching a street-side stop in Dalian.",
+      "type": "live-photo",
+      "width": 1440,
+      "height": 1080,
+      "published": {
+        "key": "moments/2026/10/02-06-dalian-datongjie-tram-stop/dalian-datongjie-tram-stop.webp",
+        "contentType": "image/webp",
+        "bytes": 232114,
+        "etag": "bf85f9cb31a372fc600b7e7e27e2ec53",
+        "width": 1440,
+        "height": 1080,
+        "variants": [],
+        "original": true,
+        "video": {
+          "key": "moments/2026/10/02-06-dalian-datongjie-tram-stop/dalian-datongjie-tram-stop.mp4",
+          "contentType": "video/mp4",
+          "bytes": 2183481,
+          "etag": "347f4a1a56d4600f85ef1ffe7b96005a",
+          "original": true
+        }
+      }
+    },
+    {
+      "uid": "01M3XAJRP6C41ZM865AN46258H",
+      "alt": "A vintage yellow tram beside a green-roofed tram stop.",
+      "type": "live-photo",
+      "width": 1440,
+      "height": 1080,
+      "published": {
+        "key": "moments/2026/10/02-06-dalian-datongjie-tram-stop/dalian-datongjie-tram-stop-2.webp",
+        "contentType": "image/webp",
+        "bytes": 232708,
+        "etag": "5c635c39270f7c73ef811ed13f5c019a",
+        "width": 1440,
+        "height": 1080,
+        "variants": [],
+        "original": true,
+        "video": {
+          "key": "moments/2026/10/02-06-dalian-datongjie-tram-stop/dalian-datongjie-tram-stop-2.mp4",
+          "contentType": "video/mp4",
+          "bytes": 1457343,
+          "etag": "cf520f3ddb8de9ad910afd7c5d365452",
+          "original": true
+        }
+      }
+    }
+  ],
+  "published": {
+    "id": "2026/10/02-06-dalian-datongjie-tram-stop",
+    "slug": "dalian-datongjie-tram-stop",
+    "order": 6,
+    "at": "2026-10-23T12:40:21Z"
+  },
+  "createdAt": "2026-10-23T12:36:53Z",
+  "updatedAt": "2026-10-23T12:36:53Z"
+}

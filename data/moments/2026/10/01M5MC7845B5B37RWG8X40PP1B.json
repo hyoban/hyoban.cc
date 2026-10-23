@@ -1,0 +1,77 @@
+{
+  "uid": "01M5MC7845B5B37RWG8X40PP1B",
+  "occurredAt": "2026-10-03T22:10:07+08:00",
+  "places": [
+    "shenyang-qinghe-bandao-hot-spring"
+  ],
+  "text": "洗浴中心人太多，搓澡都得排两小时队，晚上更是找不到好的床铺过夜。如果是平时的话，这应该都是顶级体验。",
+  "hidden": false,
+  "media": [
+    {
+      "uid": "01M411KJGX0MJ8NXY6GFJ752MX",
+      "alt": "Turquoise outdoor pools glowing beside landscaped paths at night.",
+      "type": "image",
+      "width": 1920,
+      "height": 1440,
+      "published": {
+        "key": "moments/2026/10/03-05-shenyang-qinghe-bandao-hot-spring/shenyang-qinghe-bandao-hot-spring.webp",
+        "contentType": "image/webp",
+        "bytes": 350198,
+        "etag": "7bc9e66b8c7fcce2084c37365f3108fb",
+        "width": 1920,
+        "height": 1440,
+        "variants": [],
+        "original": true
+      }
+    },
+    {
+      "uid": "01M411KJGY9DGQ4ZGYBE2AC961",
+      "alt": "A wide night view of illuminated pools and distant city buildings.",
+      "type": "image",
+      "width": 1920,
+      "height": 710,
+      "published": {
+        "key": "moments/2026/10/03-05-shenyang-qinghe-bandao-hot-spring/shenyang-qinghe-bandao-hot-spring-2.webp",
+        "contentType": "image/webp",
+        "bytes": 162652,
+        "etag": "21a268a2876104df60939fad0b349e4b",
+        "width": 1920,
+        "height": 710,
+        "variants": [],
+        "original": true
+      }
+    },
+    {
+      "uid": "01M411KJGZZNKZZAYNRDGARZH3",
+      "alt": "Blue pool water and illuminated steps beside a covered terrace at night.",
+      "type": "live-photo",
+      "width": 1440,
+      "height": 1080,
+      "published": {
+        "key": "moments/2026/10/03-05-shenyang-qinghe-bandao-hot-spring/shenyang-qinghe-bandao-hot-spring-3.webp",
+        "contentType": "image/webp",
+        "bytes": 204074,
+        "etag": "9a40b0976946fa9935b095f4fbb5dbce",
+        "width": 1440,
+        "height": 1080,
+        "variants": [],
+        "original": true,
+        "video": {
+          "key": "moments/2026/10/03-05-shenyang-qinghe-bandao-hot-spring/shenyang-qinghe-bandao-hot-spring-3.mp4",
+          "contentType": "video/mp4",
+          "bytes": 1661517,
+          "etag": "f7bb61f41921f2e1a302c66d376bd3d5",
+          "original": true
+        }
+      }
+    }
+  ],
+  "published": {
+    "id": "2026/10/03-05-shenyang-qinghe-bandao-hot-spring",
+    "slug": "shenyang-qinghe-bandao-hot-spring",
+    "order": 5,
+    "at": "2026-10-23T12:40:21Z"
+  },
+  "createdAt": "2026-10-23T12:36:53Z",
+  "updatedAt": "2026-10-23T12:36:53Z"
+}

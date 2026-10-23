@@ -2,16 +2,15 @@
   "uid": "01KVG9RK00D7CKBS0T67NH838P",
   "occurredAt": "2026-06-20",
   "places": [
-    "jiguan-cave",
-    "laojunshan"
+    "jiguan-cave"
   ],
-  "text": "2026 w25 端午自驾 洛阳老君山\n端午的第二天按照计划就是上老君山，不过下午上山的我们选择了先去鸡冠洞看一下。洞里超级凉爽。\n老君山上的人特别多，如果想去两边的高处的话，排队至少一个半小时。加上没带外套有些冷，就没等到晚上的灯光秀果断下撤了。\n在山里徒步的感觉还是很好的，不过下次想去像武功山那样的山，可以不是围着山转或者一直往上爬。",
+  "text": "2026 w25 端午自驾 洛阳老君山\n端午的第二天按照计划就是上老君山，不过下午上山的我们选择了先去鸡冠洞看一下。洞里超级凉爽。",
   "hidden": false,
   "media": [
     {
       "uid": "01KVG9RK01EMN7XEQCQA7X3PC2",
-      "type": "image",
       "alt": "Colorfully lit stalactites inside Jiguan Cave.",
+      "type": "image",
       "width": 2560,
       "height": 1707,
       "published": {
@@ -51,8 +50,8 @@
     },
     {
       "uid": "01KVG9RK02MSZD5GMAQQGYKZZQ",
-      "type": "image",
       "alt": "A tunnel walkway glowing in blue and orange light.",
+      "type": "image",
       "width": 1707,
       "height": 2560,
       "published": {
@@ -81,244 +80,6 @@
           }
         ]
       }
-    },
-    {
-      "uid": "01KVG9RK0334ANE8CXBXMRBD1T",
-      "type": "image",
-      "alt": "Red and blue apple-shaped wishing tags tied to a rope.",
-      "width": 2560,
-      "height": 1707,
-      "published": {
-        "key": "moments/2026/06/20-04-duan-wu-zi-jia-luo-yang-lao-jun-shan/duan-wu-zi-jia-luo-yang-lao-jun-shan-3.jpg",
-        "contentType": "image/jpeg",
-        "bytes": 282713,
-        "etag": "16813391c13769bdddadaf7bdc098bda",
-        "width": 2560,
-        "height": 1707,
-        "variants": [
-          {
-            "key": "moments/2026/06/20-04-duan-wu-zi-jia-luo-yang-lao-jun-shan/duan-wu-zi-jia-luo-yang-lao-jun-shan-3-480w.webp",
-            "contentType": "image/webp",
-            "bytes": 13148,
-            "etag": "6943f005fbad2249769b5500829acab9",
-            "width": 480,
-            "height": 320
-          },
-          {
-            "key": "moments/2026/06/20-04-duan-wu-zi-jia-luo-yang-lao-jun-shan/duan-wu-zi-jia-luo-yang-lao-jun-shan-3-960w.webp",
-            "contentType": "image/webp",
-            "bytes": 36168,
-            "etag": "2c47997b6f111a89b804fd556966e627",
-            "width": 960,
-            "height": 640
-          },
-          {
-            "key": "moments/2026/06/20-04-duan-wu-zi-jia-luo-yang-lao-jun-shan/duan-wu-zi-jia-luo-yang-lao-jun-shan-3-1920w.webp",
-            "contentType": "image/webp",
-            "bytes": 115662,
-            "etag": "e280865ad7089198ecf1c207f0945f13",
-            "width": 1920,
-            "height": 1280
-          }
-        ]
-      }
-    },
-    {
-      "uid": "01KVG9RK04N4D5AV5Z572HEVR3",
-      "type": "image",
-      "alt": "A squirrel foraging on a rock slope.",
-      "width": 2560,
-      "height": 1707,
-      "published": {
-        "key": "moments/2026/06/20-04-duan-wu-zi-jia-luo-yang-lao-jun-shan/duan-wu-zi-jia-luo-yang-lao-jun-shan-4.jpg",
-        "contentType": "image/jpeg",
-        "bytes": 780564,
-        "etag": "3c10a99edad50f131c4c57d3b230be5e",
-        "width": 2560,
-        "height": 1707,
-        "variants": [
-          {
-            "key": "moments/2026/06/20-04-duan-wu-zi-jia-luo-yang-lao-jun-shan/duan-wu-zi-jia-luo-yang-lao-jun-shan-4-480w.webp",
-            "contentType": "image/webp",
-            "bytes": 50636,
-            "etag": "b5c944d83aaa8628fe1d3404fa4e95f5",
-            "width": 480,
-            "height": 320
-          },
-          {
-            "key": "moments/2026/06/20-04-duan-wu-zi-jia-luo-yang-lao-jun-shan/duan-wu-zi-jia-luo-yang-lao-jun-shan-4-960w.webp",
-            "contentType": "image/webp",
-            "bytes": 168110,
-            "etag": "f488c07757efce40036318151c22e483",
-            "width": 960,
-            "height": 640
-          },
-          {
-            "key": "moments/2026/06/20-04-duan-wu-zi-jia-luo-yang-lao-jun-shan/duan-wu-zi-jia-luo-yang-lao-jun-shan-4-1920w.webp",
-            "contentType": "image/webp",
-            "bytes": 480212,
-            "etag": "c1206c8d4c8b194a2c14248da4fcdd06",
-            "width": 1920,
-            "height": 1280
-          }
-        ]
-      }
-    },
-    {
-      "uid": "01KVG9RK05P1WFYNVWF8VJ7646",
-      "type": "image",
-      "alt": "Red wishing tags hanging from a pine branch above misty cliffs.",
-      "width": 1707,
-      "height": 2560,
-      "published": {
-        "key": "moments/2026/06/20-04-duan-wu-zi-jia-luo-yang-lao-jun-shan/duan-wu-zi-jia-luo-yang-lao-jun-shan-5.jpg",
-        "contentType": "image/jpeg",
-        "bytes": 209860,
-        "etag": "705b0eaeaa3d9dd61dd1d70bc5d3ef2c",
-        "width": 1707,
-        "height": 2560,
-        "variants": [
-          {
-            "key": "moments/2026/06/20-04-duan-wu-zi-jia-luo-yang-lao-jun-shan/duan-wu-zi-jia-luo-yang-lao-jun-shan-5-480w.webp",
-            "contentType": "image/webp",
-            "bytes": 22898,
-            "etag": "ad64902e42908b1c5490de60a98d35c5",
-            "width": 480,
-            "height": 720
-          },
-          {
-            "key": "moments/2026/06/20-04-duan-wu-zi-jia-luo-yang-lao-jun-shan/duan-wu-zi-jia-luo-yang-lao-jun-shan-5-960w.webp",
-            "contentType": "image/webp",
-            "bytes": 61734,
-            "etag": "59ce2d60624b5754b3b98bf0318e2178",
-            "width": 960,
-            "height": 1440
-          }
-        ]
-      }
-    },
-    {
-      "uid": "01KVG9RK06XJEDWH4YGBWTGDRX",
-      "type": "image",
-      "alt": "Red temple halls and a pagoda beside a rocky peak on Laojunshan.",
-      "width": 2560,
-      "height": 1707,
-      "published": {
-        "key": "moments/2026/06/20-04-duan-wu-zi-jia-luo-yang-lao-jun-shan/duan-wu-zi-jia-luo-yang-lao-jun-shan-6.jpg",
-        "contentType": "image/jpeg",
-        "bytes": 566668,
-        "etag": "62fd2210b795601c9a51d483dc2e80e0",
-        "width": 2560,
-        "height": 1707,
-        "variants": [
-          {
-            "key": "moments/2026/06/20-04-duan-wu-zi-jia-luo-yang-lao-jun-shan/duan-wu-zi-jia-luo-yang-lao-jun-shan-6-480w.webp",
-            "contentType": "image/webp",
-            "bytes": 24240,
-            "etag": "63c254389f67e16af9259fa63a907673",
-            "width": 480,
-            "height": 320
-          },
-          {
-            "key": "moments/2026/06/20-04-duan-wu-zi-jia-luo-yang-lao-jun-shan/duan-wu-zi-jia-luo-yang-lao-jun-shan-6-960w.webp",
-            "contentType": "image/webp",
-            "bytes": 91706,
-            "etag": "908c0ec6db9b3f08137ebfde41e5d196",
-            "width": 960,
-            "height": 640
-          },
-          {
-            "key": "moments/2026/06/20-04-duan-wu-zi-jia-luo-yang-lao-jun-shan/duan-wu-zi-jia-luo-yang-lao-jun-shan-6-1920w.webp",
-            "contentType": "image/webp",
-            "bytes": 307292,
-            "etag": "8863ad0305a6671fd7e30a96b4c38de5",
-            "width": 1920,
-            "height": 1280
-          }
-        ]
-      }
-    },
-    {
-      "uid": "01KVG9RK07VFDX826H1PS0BJFF",
-      "type": "image",
-      "alt": "The golden-roofed Jinding hall on the summit of Laojunshan.",
-      "width": 2560,
-      "height": 1707,
-      "published": {
-        "key": "moments/2026/06/20-04-duan-wu-zi-jia-luo-yang-lao-jun-shan/duan-wu-zi-jia-luo-yang-lao-jun-shan-7.jpg",
-        "contentType": "image/jpeg",
-        "bytes": 464228,
-        "etag": "dc780ac784bbf6d56f86aa48cef43064",
-        "width": 2560,
-        "height": 1707,
-        "variants": [
-          {
-            "key": "moments/2026/06/20-04-duan-wu-zi-jia-luo-yang-lao-jun-shan/duan-wu-zi-jia-luo-yang-lao-jun-shan-7-480w.webp",
-            "contentType": "image/webp",
-            "bytes": 24684,
-            "etag": "06312266f212e196e31f62b2d3921f74",
-            "width": 480,
-            "height": 320
-          },
-          {
-            "key": "moments/2026/06/20-04-duan-wu-zi-jia-luo-yang-lao-jun-shan/duan-wu-zi-jia-luo-yang-lao-jun-shan-7-960w.webp",
-            "contentType": "image/webp",
-            "bytes": 78472,
-            "etag": "4c6de75cde162a3e7ee2203f232c714b",
-            "width": 960,
-            "height": 640
-          },
-          {
-            "key": "moments/2026/06/20-04-duan-wu-zi-jia-luo-yang-lao-jun-shan/duan-wu-zi-jia-luo-yang-lao-jun-shan-7-1920w.webp",
-            "contentType": "image/webp",
-            "bytes": 225072,
-            "etag": "107e3fe9440ed6010c1bb4c83a9606f8",
-            "width": 1920,
-            "height": 1280
-          }
-        ]
-      }
-    },
-    {
-      "uid": "01KVG9RK08Y0E1E9FZ2H5EG2HY",
-      "type": "image",
-      "alt": "Golden eaves and bells on a summit temple roof.",
-      "width": 2560,
-      "height": 1707,
-      "published": {
-        "key": "moments/2026/06/20-04-duan-wu-zi-jia-luo-yang-lao-jun-shan/duan-wu-zi-jia-luo-yang-lao-jun-shan-8.jpg",
-        "contentType": "image/jpeg",
-        "bytes": 357185,
-        "etag": "b990201378610cbc49c7a2e0325229d7",
-        "width": 2560,
-        "height": 1707,
-        "variants": [
-          {
-            "key": "moments/2026/06/20-04-duan-wu-zi-jia-luo-yang-lao-jun-shan/duan-wu-zi-jia-luo-yang-lao-jun-shan-8-480w.webp",
-            "contentType": "image/webp",
-            "bytes": 21588,
-            "etag": "c02f866443c854623dbc53ed640a3889",
-            "width": 480,
-            "height": 320
-          },
-          {
-            "key": "moments/2026/06/20-04-duan-wu-zi-jia-luo-yang-lao-jun-shan/duan-wu-zi-jia-luo-yang-lao-jun-shan-8-960w.webp",
-            "contentType": "image/webp",
-            "bytes": 60772,
-            "etag": "80a9f31cdfe95bc7c7d979acb87d771f",
-            "width": 960,
-            "height": 640
-          },
-          {
-            "key": "moments/2026/06/20-04-duan-wu-zi-jia-luo-yang-lao-jun-shan/duan-wu-zi-jia-luo-yang-lao-jun-shan-8-1920w.webp",
-            "contentType": "image/webp",
-            "bytes": 154010,
-            "etag": "a9fe43524ed030d836e40e957921ef9f",
-            "width": 1920,
-            "height": 1280
-          }
-        ]
-      }
     }
   ],
   "published": {
@@ -328,5 +89,5 @@
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-06-20T00:00:00+08:00",
-  "updatedAt": "2026-10-12T18:09:45+08:00"
+  "updatedAt": "2026-10-23T12:36:53Z"
 }

@@ -1,0 +1,121 @@
+{
+  "uid": "01M5MC7845689QFGE5Q5836T72",
+  "occurredAt": "2026-06-20",
+  "places": [
+    "laojunshan"
+  ],
+  "text": "2026 w25 端午自驾 老君山\n老君山上的人特别多，如果想去两边的高处的话，排队至少一个半小时。加上没带外套有些冷，就没等到晚上的灯光秀果断下撤了。\n在山里徒步的感觉还是很好的，不过下次想去像武功山那样的山，可以不是围着山转或者一直往上爬。",
+  "hidden": false,
+  "media": [
+    {
+      "uid": "01KVG9RK0334ANE8CXBXMRBD1T",
+      "alt": "Red and blue apple-shaped wishing tags tied to a rope.",
+      "type": "image",
+      "width": 2560,
+      "height": 1707,
+      "published": {
+        "key": "moments/2026/06/20-05-laojunshan/laojunshan.jpg",
+        "contentType": "image/jpeg",
+        "bytes": 282713,
+        "etag": "16813391c13769bdddadaf7bdc098bda",
+        "width": 2560,
+        "height": 1707,
+        "variants": [],
+        "original": true
+      }
+    },
+    {
+      "uid": "01KVG9RK04N4D5AV5Z572HEVR3",
+      "alt": "A squirrel foraging on a rock slope.",
+      "type": "image",
+      "width": 2560,
+      "height": 1707,
+      "published": {
+        "key": "moments/2026/06/20-05-laojunshan/laojunshan-2.jpg",
+        "contentType": "image/jpeg",
+        "bytes": 780564,
+        "etag": "3c10a99edad50f131c4c57d3b230be5e",
+        "width": 2560,
+        "height": 1707,
+        "variants": [],
+        "original": true
+      }
+    },
+    {
+      "uid": "01KVG9RK05P1WFYNVWF8VJ7646",
+      "alt": "Red wishing tags hanging from a pine branch above misty cliffs.",
+      "type": "image",
+      "width": 1707,
+      "height": 2560,
+      "published": {
+        "key": "moments/2026/06/20-05-laojunshan/laojunshan-3.jpg",
+        "contentType": "image/jpeg",
+        "bytes": 209860,
+        "etag": "705b0eaeaa3d9dd61dd1d70bc5d3ef2c",
+        "width": 1707,
+        "height": 2560,
+        "variants": [],
+        "original": true
+      }
+    },
+    {
+      "uid": "01KVG9RK06XJEDWH4YGBWTGDRX",
+      "alt": "Red temple halls and a pagoda beside a rocky peak on Laojunshan.",
+      "type": "image",
+      "width": 2560,
+      "height": 1707,
+      "published": {
+        "key": "moments/2026/06/20-05-laojunshan/laojunshan-4.jpg",
+        "contentType": "image/jpeg",
+        "bytes": 566668,
+        "etag": "62fd2210b795601c9a51d483dc2e80e0",
+        "width": 2560,
+        "height": 1707,
+        "variants": [],
+        "original": true
+      }
+    },
+    {
+      "uid": "01KVG9RK07VFDX826H1PS0BJFF",
+      "alt": "The golden-roofed Jinding hall on the summit of Laojunshan.",
+      "type": "image",
+      "width": 2560,
+      "height": 1707,
+      "published": {
+        "key": "moments/2026/06/20-05-laojunshan/laojunshan-5.jpg",
+        "contentType": "image/jpeg",
+        "bytes": 464228,
+        "etag": "dc780ac784bbf6d56f86aa48cef43064",
+        "width": 2560,
+        "height": 1707,
+        "variants": [],
+        "original": true
+      }
+    },
+    {
+      "uid": "01KVG9RK08Y0E1E9FZ2H5EG2HY",
+      "alt": "Golden eaves and bells on a summit temple roof.",
+      "type": "image",
+      "width": 2560,
+      "height": 1707,
+      "published": {
+        "key": "moments/2026/06/20-05-laojunshan/laojunshan-6.jpg",
+        "contentType": "image/jpeg",
+        "bytes": 357185,
+        "etag": "b990201378610cbc49c7a2e0325229d7",
+        "width": 2560,
+        "height": 1707,
+        "variants": [],
+        "original": true
+      }
+    }
+  ],
+  "published": {
+    "id": "2026/06/20-05-laojunshan",
+    "slug": "laojunshan",
+    "order": 5,
+    "at": "2026-10-23T12:40:21Z"
+  },
+  "createdAt": "2026-10-23T12:36:53Z",
+  "updatedAt": "2026-10-23T12:36:53Z"
+}

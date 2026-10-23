@@ -2,16 +2,15 @@
   "uid": "01M411KJGRY8AHT4PHDS8DJAWY",
   "occurredAt": "2026-10-03T22:10:07+08:00",
   "places": [
-    "shenyang-laoma-jijia",
-    "shenyang-qinghe-bandao-hot-spring"
+    "shenyang-laoma-jijia"
   ],
-  "text": "来沈阳先办两件事，整一个鸡架，搓一把澡。说到底还是尽量不要节假日出来乱跑，体验大打折扣了。鸡架我等了半天，结果上来的还是半凉的。洗浴中心人太多，搓澡都得排两小时队，晚上更是找不到好的床铺过夜。如果是平时的话，这应该都是顶级体验。",
+  "text": "来沈阳先办两件事，整一个鸡架，搓一把澡。说到底还是尽量不要节假日出来乱跑，体验大打折扣了。鸡架我等了半天，结果上来的还是半凉的。",
   "hidden": false,
   "media": [
     {
       "uid": "01M411KJGS97QQGCR0PNQSARNB",
-      "type": "live-photo",
       "alt": "Diners seated outside a busy barbecue restaurant in Shenyang.",
+      "type": "live-photo",
       "width": 1440,
       "height": 1080,
       "published": {
@@ -49,8 +48,8 @@
     },
     {
       "uid": "01M411KJGTA3Y950VA0038Y8YJ",
-      "type": "live-photo",
       "alt": "A tray of assorted grilled skewers with dipping sauces.",
+      "type": "live-photo",
       "width": 1440,
       "height": 1080,
       "published": {
@@ -88,8 +87,8 @@
     },
     {
       "uid": "01M411KJGVW5E1EKY2GA66558V",
-      "type": "live-photo",
       "alt": "A close-up of a glazed grilled skewer held beside a window.",
+      "type": "live-photo",
       "width": 1080,
       "height": 1440,
       "published": {
@@ -127,8 +126,8 @@
     },
     {
       "uid": "01M411KJGWQ398KD8ENQ5FAHRY",
-      "type": "live-photo",
       "alt": "A seasoned grilled chicken frame on a metal tray.",
+      "type": "live-photo",
       "width": 1440,
       "height": 1080,
       "published": {
@@ -163,111 +162,6 @@
           "etag": "03587dae3f2c870182189fc74c09d6c3"
         }
       }
-    },
-    {
-      "uid": "01M411KJGX0MJ8NXY6GFJ752MX",
-      "type": "image",
-      "alt": "Turquoise outdoor pools glowing beside landscaped paths at night.",
-      "width": 1920,
-      "height": 1440,
-      "published": {
-        "key": "moments/2026/10/03-03-shenyang-chicken-and-bathhouse/shenyang-chicken-and-bathhouse-5.webp",
-        "contentType": "image/webp",
-        "bytes": 350198,
-        "etag": "7bc9e66b8c7fcce2084c37365f3108fb",
-        "width": 1920,
-        "height": 1440,
-        "variants": [
-          {
-            "key": "moments/2026/10/03-03-shenyang-chicken-and-bathhouse/shenyang-chicken-and-bathhouse-5-480w.webp",
-            "contentType": "image/webp",
-            "bytes": 28488,
-            "etag": "18c12dc475f7e02417995fba43d319f3",
-            "width": 480,
-            "height": 360
-          },
-          {
-            "key": "moments/2026/10/03-03-shenyang-chicken-and-bathhouse/shenyang-chicken-and-bathhouse-5-960w.webp",
-            "contentType": "image/webp",
-            "bytes": 99244,
-            "etag": "bb8bd3df043e0e42755ce33e37c69e13",
-            "width": 960,
-            "height": 720
-          }
-        ]
-      }
-    },
-    {
-      "uid": "01M411KJGY9DGQ4ZGYBE2AC961",
-      "type": "image",
-      "alt": "A wide night view of illuminated pools and distant city buildings.",
-      "width": 1920,
-      "height": 710,
-      "published": {
-        "key": "moments/2026/10/03-03-shenyang-chicken-and-bathhouse/shenyang-chicken-and-bathhouse-6.webp",
-        "contentType": "image/webp",
-        "bytes": 162652,
-        "etag": "21a268a2876104df60939fad0b349e4b",
-        "width": 1920,
-        "height": 710,
-        "variants": [
-          {
-            "key": "moments/2026/10/03-03-shenyang-chicken-and-bathhouse/shenyang-chicken-and-bathhouse-6-480w.webp",
-            "contentType": "image/webp",
-            "bytes": 16032,
-            "etag": "fad360a1894b2136b6300e36e5edfc2b",
-            "width": 480,
-            "height": 178
-          },
-          {
-            "key": "moments/2026/10/03-03-shenyang-chicken-and-bathhouse/shenyang-chicken-and-bathhouse-6-960w.webp",
-            "contentType": "image/webp",
-            "bytes": 51048,
-            "etag": "6d7f38a1b910b28754ff9cb2ad7e951b",
-            "width": 960,
-            "height": 355
-          }
-        ]
-      }
-    },
-    {
-      "uid": "01M411KJGZZNKZZAYNRDGARZH3",
-      "type": "live-photo",
-      "alt": "Blue pool water and illuminated steps beside a covered terrace at night.",
-      "width": 1440,
-      "height": 1080,
-      "published": {
-        "key": "moments/2026/10/03-03-shenyang-chicken-and-bathhouse/shenyang-chicken-and-bathhouse-live-7.webp",
-        "contentType": "image/webp",
-        "bytes": 204074,
-        "etag": "9a40b0976946fa9935b095f4fbb5dbce",
-        "width": 1440,
-        "height": 1080,
-        "variants": [
-          {
-            "key": "moments/2026/10/03-03-shenyang-chicken-and-bathhouse/shenyang-chicken-and-bathhouse-live-7-480w.webp",
-            "contentType": "image/webp",
-            "bytes": 29436,
-            "etag": "7e56f805344628474ad1e2571a85bbb2",
-            "width": 480,
-            "height": 360
-          },
-          {
-            "key": "moments/2026/10/03-03-shenyang-chicken-and-bathhouse/shenyang-chicken-and-bathhouse-live-7-960w.webp",
-            "contentType": "image/webp",
-            "bytes": 87302,
-            "etag": "9f2997f104e0688d42fac90c1dd4c251",
-            "width": 960,
-            "height": 720
-          }
-        ],
-        "video": {
-          "key": "moments/2026/10/03-03-shenyang-chicken-and-bathhouse/shenyang-chicken-and-bathhouse-live-7.mp4",
-          "contentType": "video/mp4",
-          "bytes": 1661517,
-          "etag": "f7bb61f41921f2e1a302c66d376bd3d5"
-        }
-      }
     }
   ],
   "published": {
@@ -277,5 +171,5 @@
     "at": "2026-10-08T08:10:00+08:00"
   },
   "createdAt": "2026-10-03T22:10:07+08:00",
-  "updatedAt": "2026-10-11T11:34:40+08:00"
+  "updatedAt": "2026-10-23T12:36:53Z"
 }

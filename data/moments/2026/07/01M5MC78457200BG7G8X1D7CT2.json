@@ -1,0 +1,53 @@
+{
+  "uid": "01M5MC78457200BG7G8X1D7CT2",
+  "occurredAt": "2026-07-18",
+  "places": [
+    "hefei-yangjia-huoguo"
+  ],
+  "text": "2026 w29 合肥 杨家火锅(滨湖店)",
+  "hidden": false,
+  "media": [
+    {
+      "uid": "01KXRCWQ04Z39RMK9ASPEKWBED",
+      "alt": "A divided pot of spicy hot pot surrounded by side dishes and fruit.",
+      "type": "image",
+      "width": 1920,
+      "height": 1440,
+      "published": {
+        "key": "moments/2026/07/18-04-hefei-yangjia-huoguo/hefei-yangjia-huoguo.webp",
+        "contentType": "image/webp",
+        "bytes": 612598,
+        "etag": "27e6fb60500efebf72d87a203d2461bb",
+        "width": 1920,
+        "height": 1440,
+        "variants": [],
+        "original": true
+      }
+    },
+    {
+      "uid": "01KXRCWQ05WE4BWMHGJ9R521JQ",
+      "alt": "A mango dessert topped with cream and fruit.",
+      "type": "image",
+      "width": 1920,
+      "height": 1440,
+      "published": {
+        "key": "moments/2026/07/18-04-hefei-yangjia-huoguo/hefei-yangjia-huoguo-2.webp",
+        "contentType": "image/webp",
+        "bytes": 125350,
+        "etag": "cd6dc4f413ae75c67226a2771ddc4495",
+        "width": 1920,
+        "height": 1440,
+        "variants": [],
+        "original": true
+      }
+    }
+  ],
+  "published": {
+    "id": "2026/07/18-04-hefei-yangjia-huoguo",
+    "slug": "hefei-yangjia-huoguo",
+    "order": 4,
+    "at": "2026-10-23T12:40:21Z"
+  },
+  "createdAt": "2026-10-23T12:36:53Z",
+  "updatedAt": "2026-10-23T12:36:53Z"
+}

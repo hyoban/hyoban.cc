@@ -2,16 +2,15 @@
   "uid": "01M3ZTEBZG9Q5ZMV91RJZX9C5F",
   "occurredAt": "2026-10-03T10:45:42+08:00",
   "places": [
-    "yalu-river",
-    "jinjiangshan-park"
+    "yalu-river"
   ],
-  "text": "早起看了鸭绿江和锦江山公园。东北真是个太适合养老的地方，物价很低，生活很休闲。看见一对老人边猜拳边下楼梯。",
+  "text": "早起看了鸭绿江和锦江山公园。",
   "hidden": false,
   "media": [
     {
       "uid": "01M3ZTEBZH8Y2AX7ZMFXRDGV48",
-      "type": "live-photo",
       "alt": "A tall white clock tower beneath a clear blue sky.",
+      "type": "live-photo",
       "width": 1080,
       "height": 1440,
       "published": {
@@ -49,8 +48,8 @@
     },
     {
       "uid": "01M3ZTEBZJW7JSB64K3JWWV2Q0",
-      "type": "live-photo",
       "alt": "A commercial building covered with colorful restaurant and hotel signs.",
+      "type": "live-photo",
       "width": 1440,
       "height": 1080,
       "published": {
@@ -88,8 +87,8 @@
     },
     {
       "uid": "01M3ZTEBZKN2STE2QQD8HXXGH3",
-      "type": "live-photo",
       "alt": "A steel arch bridge lined with flags over the Yalu River.",
+      "type": "live-photo",
       "width": 1440,
       "height": 1080,
       "published": {
@@ -127,8 +126,8 @@
     },
     {
       "uid": "01M3ZTEBZMZ7WHFJJ8XBVHT5W9",
-      "type": "image",
       "alt": "Two steel bridges spanning the blue Yalu River.",
+      "type": "image",
       "width": 1920,
       "height": 710,
       "published": {
@@ -157,162 +156,6 @@
           }
         ]
       }
-    },
-    {
-      "uid": "01M3ZTEBZNQYZVS0KMSEMM54YX",
-      "type": "live-photo",
-      "alt": "Two older people playing rock-paper-scissors on a park staircase.",
-      "width": 1080,
-      "height": 1440,
-      "published": {
-        "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-live-5.webp",
-        "contentType": "image/webp",
-        "bytes": 345198,
-        "etag": "af7b24225b528ac43d04aff9ed62871c",
-        "width": 1080,
-        "height": 1440,
-        "variants": [
-          {
-            "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-live-5-480w.webp",
-            "contentType": "image/webp",
-            "bytes": 61906,
-            "etag": "dfb587251932070de29785602a67ae0a",
-            "width": 480,
-            "height": 640
-          },
-          {
-            "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-live-5-960w.webp",
-            "contentType": "image/webp",
-            "bytes": 193810,
-            "etag": "e1b5be8c5e50e3c8cddf46758bf69411",
-            "width": 960,
-            "height": 1280
-          }
-        ],
-        "video": {
-          "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-live-5.mp4",
-          "contentType": "video/mp4",
-          "bytes": 1618278,
-          "etag": "c25d64bbb534e6b750a64e99b0176874"
-        }
-      }
-    },
-    {
-      "uid": "01M3ZTEBZPVGNFWB9A0AT5SKC1",
-      "type": "live-photo",
-      "alt": "Sunlight filtering through dense green trees in a park.",
-      "width": 1080,
-      "height": 1440,
-      "published": {
-        "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-live-6.webp",
-        "contentType": "image/webp",
-        "bytes": 530004,
-        "etag": "338c82a636276dea655a0fddf2fdf937",
-        "width": 1080,
-        "height": 1440,
-        "variants": [
-          {
-            "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-live-6-480w.webp",
-            "contentType": "image/webp",
-            "bytes": 101562,
-            "etag": "308758285a5314ede9757a2e41c2e6f5",
-            "width": 480,
-            "height": 640
-          },
-          {
-            "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-live-6-960w.webp",
-            "contentType": "image/webp",
-            "bytes": 323248,
-            "etag": "4b7ef6b9d79dd80f845c8fb457886ba1",
-            "width": 960,
-            "height": 1280
-          }
-        ],
-        "video": {
-          "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-live-6.mp4",
-          "contentType": "video/mp4",
-          "bytes": 2646147,
-          "etag": "59ebfef4f10bc2276470cd59202e8b52"
-        }
-      }
-    },
-    {
-      "uid": "01M3ZTEBZQEEJEYFXW14S5KA2A",
-      "type": "live-photo",
-      "alt": "A traditional multi-level pavilion with ornate curved roofs.",
-      "width": 1440,
-      "height": 1080,
-      "published": {
-        "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-live-7.webp",
-        "contentType": "image/webp",
-        "bytes": 193738,
-        "etag": "bbe3ce5da48c988515ec5c8838b2719a",
-        "width": 1440,
-        "height": 1080,
-        "variants": [
-          {
-            "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-live-7-480w.webp",
-            "contentType": "image/webp",
-            "bytes": 28120,
-            "etag": "bebb5414880462a411d19ac7962da5cc",
-            "width": 480,
-            "height": 360
-          },
-          {
-            "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-live-7-960w.webp",
-            "contentType": "image/webp",
-            "bytes": 81080,
-            "etag": "b5bca09b4f4d1f378296258a36524500",
-            "width": 960,
-            "height": 720
-          }
-        ],
-        "video": {
-          "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-live-7.mp4",
-          "contentType": "video/mp4",
-          "bytes": 1087014,
-          "etag": "129bb58b379eebd47a4f84a24abdc23b"
-        }
-      }
-    },
-    {
-      "uid": "01M3ZTEBZREYGS97JYFKYGB3E2",
-      "type": "live-photo",
-      "alt": "People gathered around a stone table beneath the park's trees.",
-      "width": 1080,
-      "height": 1440,
-      "published": {
-        "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-live-8.webp",
-        "contentType": "image/webp",
-        "bytes": 340914,
-        "etag": "c15a224c6867a9f547248c3c1bcb4fa3",
-        "width": 1080,
-        "height": 1440,
-        "variants": [
-          {
-            "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-live-8-480w.webp",
-            "contentType": "image/webp",
-            "bytes": 71588,
-            "etag": "493a9577bc4c1df2be9b4b40e992399c",
-            "width": 480,
-            "height": 640
-          },
-          {
-            "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-live-8-960w.webp",
-            "contentType": "image/webp",
-            "bytes": 206024,
-            "etag": "53186be17c1f613951fb3371fb0fe25a",
-            "width": 960,
-            "height": 1280
-          }
-        ],
-        "video": {
-          "key": "moments/2026/10/03-01-dandong-morning/dandong-morning-live-8.mp4",
-          "contentType": "video/mp4",
-          "bytes": 2226997,
-          "etag": "68862870134a5cbba01789b90efad5e3"
-        }
-      }
     }
   ],
   "published": {
@@ -322,5 +165,5 @@
     "at": "2026-10-08T08:10:00+08:00"
   },
   "createdAt": "2026-10-03T10:45:42+08:00",
-  "updatedAt": "2026-10-11T11:34:40+08:00"
+  "updatedAt": "2026-10-23T12:36:53Z"
 }

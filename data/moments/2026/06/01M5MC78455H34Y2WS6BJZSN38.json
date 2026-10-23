@@ -1,0 +1,87 @@
+{
+  "uid": "01M5MC78455H34Y2WS6BJZSN38",
+  "occurredAt": "2026-06-19",
+  "places": [
+    "xuchang-caowei-ancient-city"
+  ],
+  "text": "2026 w25 端午自驾 曹魏古城\n逛完超市就是在附近的曹魏古城找了些小吃，然后连夜直奔老君山下。",
+  "hidden": false,
+  "media": [
+    {
+      "uid": "01KVDQBW0443FRMYZBYHRG2S5D",
+      "alt": "Rows of grilled sausages behind a priced display counter.",
+      "type": "image",
+      "width": 2560,
+      "height": 1707,
+      "published": {
+        "key": "moments/2026/06/19-02-xuchang-caowei-ancient-city/xuchang-caowei-ancient-city.jpg",
+        "contentType": "image/jpeg",
+        "bytes": 313987,
+        "etag": "50a2170285da315f5a1e0b1d6b3b2208",
+        "width": 2560,
+        "height": 1707,
+        "variants": [],
+        "original": true
+      }
+    },
+    {
+      "uid": "01KVDQBW05N91KT96CQKMT5KJ1",
+      "alt": "A lantern hanging from the eaves of a gate at Caowei Ancient City.",
+      "type": "image",
+      "width": 2560,
+      "height": 1707,
+      "published": {
+        "key": "moments/2026/06/19-02-xuchang-caowei-ancient-city/xuchang-caowei-ancient-city-2.jpg",
+        "contentType": "image/jpeg",
+        "bytes": 176808,
+        "etag": "75b00ce5fffd434984a9f65a945d1009",
+        "width": 2560,
+        "height": 1707,
+        "variants": [],
+        "original": true
+      }
+    },
+    {
+      "uid": "01KVDQBW06GFHTPFCT5606T1G2",
+      "alt": "Neon food stall signs advertising squid and meter-long skewers.",
+      "type": "image",
+      "width": 2560,
+      "height": 1707,
+      "published": {
+        "key": "moments/2026/06/19-02-xuchang-caowei-ancient-city/xuchang-caowei-ancient-city-3.jpg",
+        "contentType": "image/jpeg",
+        "bytes": 452632,
+        "etag": "83c7e0bcf8775583f34bfe0842fa8dca",
+        "width": 2560,
+        "height": 1707,
+        "variants": [],
+        "original": true
+      }
+    },
+    {
+      "uid": "01KVDQBW07YAPX6Q125ZTJR2TR",
+      "alt": "A Lemon Town tricycle cart selling Chongqing glutinous rice cakes.",
+      "type": "image",
+      "width": 1707,
+      "height": 2560,
+      "published": {
+        "key": "moments/2026/06/19-02-xuchang-caowei-ancient-city/xuchang-caowei-ancient-city-4.jpg",
+        "contentType": "image/jpeg",
+        "bytes": 429830,
+        "etag": "ca00a30e12ffa4dc99cb827c0f5328f0",
+        "width": 1707,
+        "height": 2560,
+        "variants": [],
+        "original": true
+      }
+    }
+  ],
+  "published": {
+    "id": "2026/06/19-02-xuchang-caowei-ancient-city",
+    "slug": "xuchang-caowei-ancient-city",
+    "order": 2,
+    "at": "2026-10-23T12:40:21Z"
+  },
+  "createdAt": "2026-10-23T12:36:53Z",
+  "updatedAt": "2026-10-23T12:36:53Z"
+}
