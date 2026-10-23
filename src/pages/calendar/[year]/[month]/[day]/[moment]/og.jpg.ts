@@ -1,5 +1,4 @@
 import type { APIRoute } from 'astro'
-import sharp from 'sharp'
 import {
   getMomentDateLabel,
   getMomentExcerpt,
@@ -7,7 +6,7 @@ import {
   MOMENT_OG_IMAGES,
   type MomentPagePathProps,
 } from '@/moments'
-import { cachedCard, renderOgImage } from '@/og-image'
+import { cachedCard, cardResponse, encodeCard, renderOgImage } from '@/og-image'
 import { getCardPhotos } from '@/card-data'
 
 export const getStaticPaths = async () => (MOMENT_OG_IMAGES ? getMomentPagePaths() : [])
@@ -19,10 +18,8 @@ export const GET: APIRoute<MomentPagePathProps> = async ({ props: { moment } }) 
   const dateLabel = getMomentDateLabel(moment)
   const options = { title: excerpt || dateLabel, date: excerpt ? dateLabel : undefined, photos }
   const image = await cachedCard('moment.jpg', options, async () =>
-    sharp(await renderOgImage(options))
-      .jpeg({ mozjpeg: true, quality: 82 })
-      .toBuffer(),
+    encodeCard(await renderOgImage(options), 'jpg'),
   )
 
-  return new Response(new Uint8Array(image), { headers: { 'Content-Type': 'image/jpeg' } })
+  return cardResponse(image, 'jpg')
 }

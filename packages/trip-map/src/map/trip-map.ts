@@ -80,8 +80,11 @@ export type TripMapOptions = {
   documentTitle?: string | undefined
   /** The document title while the map is narrowed to a period; without it, `documentTitle`. */
   getPeriodTitle?: ((period: Period) => string) | undefined
-  /** The document title while a trip plays; without it the title is left alone. */
-  getDocumentTitle?: ((trip: { id: string; title: string }) => string) | undefined
+  /**
+   * The document title while a trip plays (`playing`) or is picked in the trip list;
+   * without it the title is left alone.
+   */
+  getDocumentTitle?: ((trip: { id: string; playing: boolean; title: string }) => string) | undefined
   /**
    * The language the basemap's names are shown in (`en`, `ja`, `zh-Hans`…), by Mapbox
    * Standard itself or by @mapbox/mapbox-gl-language in another style; `false` leaves the
@@ -1018,12 +1021,13 @@ export function createTripMap(options: TripMapOptions): TripMap {
   /** The title for what the address shows: a trip, the trip list, a period, or the map. */
   function syncDocumentTitle() {
     // A trip picked in the list is the page's subject as much as one playing.
-    const id = getUrlTripId() ?? getUrlPickedTripId()
+    const playingId = getUrlTripId()
+    const id = playingId ?? getUrlPickedTripId()
     const title = id ? tripPlayer.getTitle(id) : undefined
     const period = isMapUrl() ? markers.period : undefined
 
     if (id && title !== undefined && options.getDocumentTitle) {
-      document.title = options.getDocumentTitle({ id, title })
+      document.title = options.getDocumentTitle({ id, playing: id === playingId, title })
     } else if (options.getDocumentTitle || options.tripListTitle || options.getPeriodTitle) {
       document.title =
         (isTripListUrl() && options.tripListTitle) ||

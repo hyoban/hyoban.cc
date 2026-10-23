@@ -15,8 +15,15 @@ export default defineConfig({
   integrations: [
     // First, so every later read of a record sees the API's snapshot when there is one.
     apiData(),
-    // The map's drawer and Moments fragments aren't pages to list.
-    Sitemap({ filter: (page) => !/\/map\/(.*\/moments|places\/\d+)\/$/.test(page) }),
+    // The map's and trips' drawer and Moments fragments aren't pages to list, nor the pages
+    // whose canonical is another's: a trip by its year and the rest, /trip/2026/yunnan/, and
+    // /calendar/, the latest month.
+    Sitemap({
+      filter: (page) =>
+        !/\/(calendar|map\/(.*\/moments|places\/\d+)|trip\/[^/]+\/moments|trip\/\d{4}\/(?!\d{2}\/$)[^/]+(\/play)?)\/$/.test(
+          page,
+        ),
+    }),
   ],
   vite: {
     plugins: [devRewrites()],

@@ -1,3 +1,6 @@
+export const OG_IMAGE_WIDTH = 1200
+export const OG_IMAGE_HEIGHT = 630
+
 export const OG_COLORS = {
   bg: '#fdfdfc',
   border: '#e9e9e7',

@@ -22,7 +22,7 @@ import {
   ALL_PLACES_MAX_ZOOM,
   toScriptJson,
 } from '@hyoban/trip-map'
-import { getTripTitle, tripMapBrand, tripMapMessages, tripMapMusic } from '@/trip-map'
+import { getTripDescription, getTripTitle, tripMapBrand, tripMapMessages, tripMapMusic } from '@/trip-map'
 import { getMapText, getPageCardPath, getPageTitle } from '@/page-cards'
 import { canDrawMapPlaceholders, getMapPlaceholderKey,getMapPlaceholderPath, getMapPlaceholderView, MAP_PLACEHOLDER_SIZE } from '@/map-placeholder'
 
@@ -138,11 +138,9 @@ const periodStart = period ? `${period.year}-${String(period.month ?? 1).padStar
 const periodEnd = period ? `${period.year}-${String(period.month ?? 12).padStart(2, '0')}` : ''
 const isInPeriod = (trip: { end: string, start: string }) =>
   !period || (trip.start.slice(0, 7) <= periodEnd && trip.end.slice(0, 7) >= periodStart)
-const title = pageTrip ? getTripTitle(pageTrip.title) : getPageTitle(pageText)
-const description = pageTrip
-  ? `${pageTrip.title}的路线、照片和见闻。`
-  : pageText.description
-const image = pageTrip ? `/trip/${pageTrip.id}/og.jpg` : getPageCardPath(Astro.url.pathname)
+const title = pageTrip ? getTripTitle(pageTrip.title, Boolean(activeTrip)) : getPageTitle(pageText)
+const description = pageTrip ? getTripDescription(pageTrip.title, Boolean(activeTrip)) : pageText.description
+const image = pageTrip ? `/trip/${pageTrip.id}/og.jpg` : await getPageCardPath(Astro.url.pathname)
 ---
 
 <Layout title={title} description={description} image={image} canonicalPath={canonicalPath}>
@@ -618,7 +616,7 @@ const image = pageTrip ? `/trip/${pageTrip.id}/og.jpg` : getPageCardPath(Astro.u
             brand: tripMapBrand,
             createLightboxMedia: initializeLightboxMedia,
             documentTitle: `地图 · 日历 | ${SITE_TITLE}`,
-            getDocumentTitle: (trip) => getTripTitle(trip.title),
+            getDocumentTitle: (trip) => getTripTitle(trip.title, trip.playing),
             getPeriodTitle: ({ month, year }) =>
               `${month === undefined ? `${year} 年` : `${year} 年 ${month} 月`} · 地图 | ${SITE_TITLE}`,
             messages: tripMapMessages,

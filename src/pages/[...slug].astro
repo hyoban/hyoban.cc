@@ -1,6 +1,8 @@
 ---
 import SitePage from '@/components/SitePage.astro'
 import Layout from '@/layouts/Layout.astro'
+import { getPageTitle } from '@/page-cards'
+import { getPostCardPath } from '@/post-cards'
 import { countPostWords, formatPostFullDate, formatPostWordCount, getMarkdownEntries, type PostEntry } from '@/utils'
 import { render } from 'astro:content'
 
@@ -28,9 +30,10 @@ const { Content } = await render(entry)
 ---
 
 <Layout
-  title={entry.data.title}
+  title={getPageTitle({ heading: entry.data.title })}
+  shareTitle={entry.data.title}
   description={entry.data.description}
-  image={`/og/${entry.data.link}.png`}
+  image={getPostCardPath(entry)}
   article={article}
 >
   {

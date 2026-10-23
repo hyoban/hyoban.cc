@@ -207,7 +207,7 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
 
 ---
 
-<Layout title={pageTitle} description={pageDescription} image={getPageCardPath(Astro.url.pathname)}>
+<Layout title={pageTitle} description={pageDescription} image={await getPageCardPath(Astro.url.pathname)}>
   <Fragment slot="head">
     <script is:inline data-astro-rerun>
       const mediaCategory = new URL(window.location.href).searchParams.get('category')

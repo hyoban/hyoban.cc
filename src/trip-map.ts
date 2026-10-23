@@ -18,6 +18,13 @@ export const tripMapMusic = tripVideoMusic.map(({ src, title }) => ({ src, title
 /** Where a video's viewers can find the trips, on its summary card. */
 export const tripMapSiteLine = `${new URL(SITE_URL).host}/trip/`
 
-export function getTripTitle(tripTitle: string) {
-  return `${tripTitle} · 旅程 | ${SITE_TITLE}`
+/** A trip's page title, or its playback's, which shares the trip's card but not its words. */
+export function getTripTitle(tripTitle: string, playing = false) {
+  return `${tripTitle} · ${playing ? '旅程回放' : '旅程'} | ${SITE_TITLE}`
+}
+
+export function getTripDescription(tripTitle: string, playing = false) {
+  return playing
+    ? `沿${tripTitle}的路线一站站回放，看每天的照片和见闻。`
+    : `${tripTitle}的路线、照片和见闻。`
 }
