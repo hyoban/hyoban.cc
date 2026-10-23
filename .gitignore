@@ -1,6 +1,13 @@
 # build output
 dist/
 .artifacts/
+.private/
+outputs/
+
+# Unredacted phone captures and report-access links stay local.
+/data/zeekr/zeekr-*.json
+/data/zeekr/current-*.json
+/data/zeekr/share-links.json
 # generated types
 .astro/
 
@@ -52,3 +59,6 @@ apps/android/.gradle/
 apps/android/.kotlin/
 apps/android/**/build/
 apps/android/local.properties
+
+# Python capture and validation scripts
+__pycache__/

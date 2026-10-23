@@ -1,0 +1,16 @@
+[
+  {
+    "file": "sources/zeekr-2026-10-24.json",
+    "deviceId": "zeekr-007gt",
+    "timezone": "Asia/Shanghai",
+    "offset": "+08:00",
+    "sha256": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69"
+  },
+  {
+    "file": "sources/current-2026-10-20261024-032204.json",
+    "deviceId": "zeekr-007gt",
+    "timezone": "Asia/Shanghai",
+    "offset": "+08:00",
+    "sha256": "b470d708c6428af199e380661915c3b7ace8ec812fb0a66ebb4c8c14d37dab50"
+  }
+]

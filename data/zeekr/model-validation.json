@@ -1,0 +1,117 @@
+{
+  "captures": [
+    {
+      "id": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
+      "file": "sources/zeekr-2026-10-24.json",
+      "sha256": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69"
+    },
+    {
+      "id": "b470d708c6428af199e380661915c3b7ace8ec812fb0a66ebb4c8c14d37dab50",
+      "file": "sources/current-2026-10-20261024-032204.json",
+      "sha256": "b470d708c6428af199e380661915c3b7ace8ec812fb0a66ebb4c8c14d37dab50"
+    }
+  ],
+  "counts": {
+    "captures": 2,
+    "months": 15,
+    "days": 264,
+    "chargingSessions": 94,
+    "monthlyAssistance": 3,
+    "cumulativeAssistance": 1
+  },
+  "checksPassed": 1965,
+  "warnings": [
+    {
+      "scope": "zeekr-007gt/2025-11",
+      "message": "Some daily drivingEnergyWh values are absent; no zero was substituted."
+    },
+    {
+      "scope": "zeekr-007gt/2025-12",
+      "message": "Source daily energy differs from the monthly report.",
+      "dailyWh": 212600,
+      "reportedWh": 212300,
+      "differenceWh": 300
+    },
+    {
+      "scope": "zeekr-007gt/2026-01",
+      "message": "Source daily energy differs from the monthly report.",
+      "dailyWh": 139700,
+      "reportedWh": 139500,
+      "differenceWh": 200
+    },
+    {
+      "scope": "zeekr-007gt/2026-01",
+      "message": "Trip report and charging page have different counts.",
+      "tripReport": 3,
+      "chargingPage": 2
+    },
+    {
+      "scope": "zeekr-007gt/2026-02",
+      "message": "Source daily energy differs from the monthly report.",
+      "dailyWh": 351100,
+      "reportedWh": 350700,
+      "differenceWh": 400
+    },
+    {
+      "scope": "zeekr-007gt/2026-02",
+      "message": "Trip report and charging page have different counts.",
+      "tripReport": 11,
+      "chargingPage": 12
+    },
+    {
+      "scope": "zeekr-007gt/2026-04",
+      "message": "Identical source charging rows retained.",
+      "first": {
+        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
+        "pointer": "/charging/months/5/sessions/4",
+        "method": "screen"
+      },
+      "duplicate": {
+        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
+        "pointer": "/charging/months/5/sessions/5",
+        "method": "screen"
+      }
+    },
+    {
+      "scope": "zeekr-007gt/2026-04",
+      "message": "Trip report and charging page have different counts.",
+      "tripReport": 8,
+      "chargingPage": 9
+    },
+    {
+      "scope": "zeekr-007gt/2026-05",
+      "message": "Trip report and charging page have different counts.",
+      "tripReport": 12,
+      "chargingPage": 11
+    },
+    {
+      "scope": "zeekr-007gt/2026-06",
+      "message": "Trip report and charging page have different counts.",
+      "tripReport": 15,
+      "chargingPage": 17
+    }
+  ],
+  "omissions": {
+    "chargingMonths": [
+      "zeekr-007gt/2025-08",
+      "zeekr-007gt/2025-09",
+      "zeekr-007gt/2025-10",
+      "zeekr-007gt/2025-11",
+      "zeekr-007gt/2025-12"
+    ],
+    "assistedDrivingMonths": [
+      "zeekr-007gt/2025-08",
+      "zeekr-007gt/2025-09",
+      "zeekr-007gt/2025-10",
+      "zeekr-007gt/2025-11",
+      "zeekr-007gt/2025-12",
+      "zeekr-007gt/2026-01",
+      "zeekr-007gt/2026-02",
+      "zeekr-007gt/2026-03",
+      "zeekr-007gt/2026-04",
+      "zeekr-007gt/2026-05",
+      "zeekr-007gt/2026-06",
+      "zeekr-007gt/2026-10"
+    ]
+  }
+}
