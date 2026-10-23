@@ -113,6 +113,10 @@ describe('buildYearReview', () => {
     expect(review.hours[9]).toBe(1)
   })
 
+  test('counts the Moments by day of the week, Monday first', () => {
+    expect(review.weekdays).toEqual([0, 1, 0, 1, 2, 0, 0])
+  })
+
   test('keeps the trips started in the year', () => {
     expect(review.trips.map((trip) => trip.id)).toEqual(['2026-anhui'])
     expect(review.drivingKm).toBe(210)
