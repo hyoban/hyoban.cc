@@ -99,7 +99,7 @@ describe('buildYearMap', () => {
 
   test('draws each leg and one dot a place', () => {
     expect(map.routes[0]!.legs).toHaveLength(1)
-    expect(map.routes[0]!.legs[0]!.d).toMatch(/^M[\d.]+ [\d.]+L/)
+    expect(map.routes[0]!.legs[0]!.d).toMatch(/^M[\d.]+ [\d.]+l/)
     expect(map.dots).toHaveLength(2)
   })
 

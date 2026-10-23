@@ -1,5 +1,5 @@
 ---
-import { getAssetUrl, getThumbnailUrl } from '@/asset-url'
+import { getAssetUrl, getCoverThumbnailUrl, getThumbnailUrl } from '@/asset-url'
 import SitePage from '@/components/SitePage.astro'
 import YearFootprint from '@/components/YearFootprint.astro'
 import YearMosaic from '@/components/YearMosaic.astro'
@@ -102,13 +102,16 @@ const trips = review.trips.map((trip) => ({
 }))
 const topCities = review.cities.lit.slice(0, 6)
 const firstVisits = Map.groupBy(review.firstVisits, (visit) => Number(visit.dateKey.slice(5, 7)))
-/** The stills of these Moments, photos and videos' posters but no utility ones, `width` wide. */
-const photosOf = (dayMoments: Moment[], width: number) =>
+/**
+ * The stills of these Moments, photos and videos' posters but no utility ones, `width` wide;
+ * those taller than the `aspect` of the box they cover come cropped to it.
+ */
+const photosOf = (dayMoments: Moment[], width: number, aspect = Infinity) =>
   dayMoments
     .flatMap((moment) => getShowcaseMedia(moment.media))
     .map((item) => (item.type === 'video' ? item.poster : item.src))
     .filter((image) => image !== undefined)
-    .map((image) => getThumbnailUrl(image.sources[0]?.src ?? image.src, width))
+    .map((image) => getCoverThumbnailUrl(image, width, aspect))
 // The places gone to, the sights in one row and where to eat, stay or shop in another,
 // each in the order the year reached it, with its city; the cities are the footprint's,
 // and the towns and stations only on the way.
@@ -132,6 +135,7 @@ const places = yearPlaces
       photos: photosOf(
         review.moments.filter((moment) => moment.locations.some(({ id }) => id === place.id)),
         320,
+        5 / 4,
       ),
     }
   })
@@ -163,7 +167,7 @@ const meals = getYearMeals(review.moments).map((meal) => {
     ...meal,
     city: city && !meal.name.includes(city) ? city : undefined,
     fullCity: city,
-    photo: photosOf([meal.moment], 96)[0],
+    photo: photosOf([meal.moment], 96, 1)[0],
     price: bill && `¥${formatNumber(Math.round((bill.amount / (bill.people ?? 1)) * 10) / 10)}${bill.people ? '/人' : ''}`,
   }
 })
@@ -223,7 +227,7 @@ const highlights = [
     date: formatDay(firstMoment.dateKey),
     href: getMomentPagePath(firstMoment),
     layout: 'single',
-    pictures: [photosOf([firstMoment], 480)],
+    pictures: [photosOf([firstMoment], 480, 1)],
   },
   review.busiestDay.count > 1 && {
     kicker: '最满的一天',
@@ -232,10 +236,10 @@ const highlights = [
     href: getMomentPath(review.busiestDay.dateKey),
     // Four of the day's photos in a grid, a different four each visit.
     layout: 'grid',
-    pictures: photosOf(between(review.busiestDay.dateKey, review.busiestDay.dateKey), 320)
+    pictures: photosOf(between(review.busiestDay.dateKey, review.busiestDay.dateKey), 320, 2)
       .slice(0, 4)
       .map((photo) => [photo]),
-    set: photosOf(between(review.busiestDay.dateKey, review.busiestDay.dateKey), 320).slice(0, 12),
+    set: photosOf(between(review.busiestDay.dateKey, review.busiestDay.dateKey), 320, 2).slice(0, 12),
   },
   review.streak.days > 1 && {
     kicker: '最长连续记录',
@@ -258,7 +262,7 @@ const highlights = [
       date: formatDay(lastMoment.dateKey),
       href: getMomentPagePath(lastMoment),
       layout: 'single',
-      pictures: [photosOf([lastMoment], 480)],
+      pictures: [photosOf([lastMoment], 480, 1)],
     },
 ]
   .filter((highlight) => highlight !== undefined && highlight !== false)

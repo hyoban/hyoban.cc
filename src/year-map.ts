@@ -65,7 +65,7 @@ export function buildYearMap(
   return {
     width,
     height: project.height,
-    outline: inView.map((region) => toRingsPath(getRings(region), project.point, 3)).join(''),
+    outline: inView.map((region) => toRingsPath(getRings(region), project.point, 1.5)).join(''),
     lit: litCities.map((region) => ({
       d: toRingsPath(getRings(region), project.point),
       id: region.properties.id,
@@ -100,7 +100,7 @@ export function buildRouteGlyph(lines: readonly TripLine[], size = 100) {
   const shown = (there.length > 0 ? there : lines).map((line) => line.points)
   const project = fit(shown.flat(), size, 0.1, size)
   return {
-    d: shown.map((line) => toLinePath(line, project.point, 0.5)).join(''),
+    d: shown.map((line) => toLinePath(line, project.point, 0.3)).join(''),
     width: size,
     height: project.height,
   }
@@ -155,19 +155,19 @@ function getBounds(region: FogRegion) {
   return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)] as const
 }
 
-function toRingsPath(rings: Ring[], project: (point: Point) => Point, tolerance = 1.5) {
+function toRingsPath(rings: Ring[], project: (point: Point) => Point, tolerance = 0.75) {
   return rings
     .map((ring) => {
       const points = simplify(
         ring.map((point) => project(point as unknown as Point)),
         tolerance,
       )
-      return points.length > 2 ? `${toPath(points)}Z` : ''
+      return points.length > 2 ? `${toPath(points)}z` : ''
     })
     .join('')
 }
 
-function toLinePath(line: readonly Point[], project: (point: Point) => Point, tolerance = 1) {
+function toLinePath(line: readonly Point[], project: (point: Point) => Point, tolerance = 0.5) {
   const points = simplify(line.map(project), tolerance)
   return points.length > 1 ? toPath(points) : ''
 }
@@ -183,24 +183,56 @@ function toArcPath(points: readonly Point[]) {
   return `M${start[0]} ${start[1]}Q${control[0]} ${control[1]} ${end[0]} ${end[1]}`
 }
 
+/**
+ * The points as path data, as short as it goes: the first absolute, the rest relative to
+ * the one before under one `l`, and a space only where no minus sign parts two numbers.
+ */
 function toPath(points: readonly Point[]) {
-  return points.map(([x, y], index) => `${index === 0 ? 'M' : 'L'}${x} ${y}`).join('')
+  const [[startX, startY], ...rest] = points as [Point, ...Point[]]
+  let d = `M${startX} ${startY}l`
+  let [lastX, lastY] = [startX, startY]
+  for (const [x, y] of rest) {
+    for (const delta of [round(x - lastX, 10), round(y - lastY, 10)]) {
+      d += `${delta < 0 || d.endsWith('l') ? '' : ' '}${delta}`
+    }
+    ;[lastX, lastY] = [x, y]
+  }
+  return d
 }
 
-/** Drops each point closer than `tolerance` to the last one kept, keeping the ends. */
+/**
+ * Douglas–Peucker: keeps the ends and each point that strays more than `tolerance` from
+ * the line between the points kept around it, so straight runs fall away and corners stay.
+ */
 function simplify(points: readonly Point[], tolerance: number) {
-  const kept: Point[] = []
-  for (const [index, point] of points.entries()) {
-    const last = kept.at(-1)
-    if (
-      !last ||
-      index === points.length - 1 ||
-      Math.hypot(point[0] - last[0], point[1] - last[1]) >= tolerance
-    ) {
-      kept.push(point)
+  if (points.length < 3) return [...points]
+  const keep = new Uint8Array(points.length)
+  keep[0] = keep[points.length - 1] = 1
+  const stack: [number, number][] = [[0, points.length - 1]]
+  while (stack.length > 0) {
+    const [first, last] = stack.pop()!
+    let [farthest, distance] = [-1, tolerance]
+    for (let index = first + 1; index < last; index++) {
+      const away = getDistance(points[index]!, points[first]!, points[last]!)
+      if (away > distance) [farthest, distance] = [index, away]
+    }
+    if (farthest >= 0) {
+      keep[farthest] = 1
+      stack.push([first, farthest], [farthest, last])
     }
   }
-  return kept
+  return points.filter((_, index) => keep[index])
+}
+
+/** How far `point` is from the segment from `start` to `end`. */
+function getDistance(point: Point, start: Point, end: Point) {
+  const [dx, dy] = [end[0] - start[0], end[1] - start[1]]
+  const length = dx * dx + dy * dy
+  const along =
+    length === 0
+      ? 0
+      : Math.max(0, Math.min(1, ((point[0] - start[0]) * dx + (point[1] - start[1]) * dy) / length))
+  return Math.hypot(point[0] - start[0] - along * dx, point[1] - start[1] - along * dy)
 }
 
 function dedupe(points: readonly Point[]) {

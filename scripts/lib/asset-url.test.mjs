@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'vite-plus/test'
 
-import { getFrameSources, getResizedSources } from '../../src/asset-url.ts'
+import { getCoverThumbnailUrl, getFrameSources, getResizedSources } from '../../src/asset-url.ts'
 
 // An original the API kept is resized by Cloudflare Images to the widths the pipeline
 // gives its own images, never wider than the original or 1920; a kept video's poster is
@@ -67,4 +67,26 @@ test('a kept video’s poster is its first frame at each width', () => {
       width: 1080,
     },
   ])
+})
+
+test('a still taller than its tile comes cropped to it, a wider one whole', () => {
+  const still = (width, height) => ({
+    src: 'https://image.hyoban.cc/moments/2025/12/31-02-x/x.webp',
+    width,
+    height,
+    sources: [{ src: 'https://image.hyoban.cc/moments/2025/12/31-02-x/x-480w.webp', width: 480 }],
+  })
+
+  assert.equal(
+    getCoverThumbnailUrl(still(480, 2970), 320, 1),
+    'https://image.hyoban.cc/cdn-cgi/image/width=320,height=320,fit=cover,format=auto,onerror=redirect/moments/2025/12/31-02-x/x-480w.webp',
+  )
+  assert.equal(
+    getCoverThumbnailUrl(still(1920, 1440), 320, 1),
+    'https://image.hyoban.cc/cdn-cgi/image/width=320,format=auto,onerror=redirect/moments/2025/12/31-02-x/x-480w.webp',
+  )
+  assert.equal(
+    getCoverThumbnailUrl(still(1440, 1920), 320, 5 / 4),
+    'https://image.hyoban.cc/cdn-cgi/image/width=320,height=400,fit=cover,format=auto,onerror=redirect/moments/2025/12/31-02-x/x-480w.webp',
+  )
 })
