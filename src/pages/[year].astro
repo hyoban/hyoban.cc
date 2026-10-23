@@ -1,5 +1,5 @@
 ---
-import { getThumbnailUrl } from '@/asset-url'
+import { getAssetUrl, getThumbnailUrl } from '@/asset-url'
 import SitePage from '@/components/SitePage.astro'
 import YearFootprint from '@/components/YearFootprint.astro'
 import YearMosaic from '@/components/YearMosaic.astro'
@@ -330,7 +330,7 @@ const highlights = [
                   {row.title}
                   <span class="year-places__count">{row.places.length}</span>
                 </h3>
-                <div class="year-places__actions">
+                <div class="year-places__actions" data-share-skip>
                   <div class="year-places__nav" data-carousel-nav hidden>
                     <button type="button" data-carousel-step="-1" aria-label={`上一组${row.title}`} disabled>
                       <span class="i-lucide-chevron-left" aria-hidden="true" />
@@ -442,19 +442,23 @@ const highlights = [
       )
     }
 
-    {
-      (previous !== undefined || next !== undefined) && (
-        <nav class="year-nav" aria-label="其他年份">
-          {previous !== undefined ? <a href={`/${previous}/`}>← {previous}</a> : <span />}
-          {next !== undefined && <a href={`/${next}/`}>{next} →</a>}
-        </nav>
-      )
-    }
+    <nav class="year-nav" aria-label="其他年份" data-share-skip>
+      {previous !== undefined ? <a href={`/${previous}/`}>← {previous}</a> : <span />}
+      <button class="year-nav__share" type="button" data-year-share={year}>分享图片</button>
+      {next !== undefined ? <a class="year-nav__next" href={`/${next}/`}>{next} →</a> : <span />}
+    </nav>
+    {/* The site's mark at the foot of the share picture, seen only while it is drawn. */}
+    <footer class="year-share-mark" aria-hidden="true">
+      <img src={getAssetUrl('site/avatar-80.webp')} alt="" width="40" height="40" />
+      <span>Hyoban</span>
+      <span class="year-share-mark__url">hyoban.cc/{year}</span>
+    </footer>
   </SitePage>
 </Layout>
 
 <script>
   import { initializeCarousels } from '@/year-carousel'
+  import { initializeYearShare } from '@/year-share'
 
   // The page's motion, each piece once: the counts roll up from nothing as it opens, and
   // each section rises in the first time it scrolls into view, its parts following on.
@@ -505,6 +509,7 @@ const highlights = [
 
   document.addEventListener('astro:page-load', initializeMotion)
   document.addEventListener('astro:page-load', () => initializeCarousels())
+  document.addEventListener('astro:page-load', initializeYearShare)
 </script>
 
 <style>
@@ -1101,10 +1106,79 @@ const highlights = [
   }
 
   .year-nav {
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
     margin-top: 4rem;
     font-variant-numeric: tabular-nums;
+  }
+
+  .year-nav__next {
+    justify-self: end;
+  }
+
+  .year-nav__share {
+    padding: 0.25rem 0.875rem;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    color: var(--color-tx-2);
+    font: inherit;
+    font-size: 0.875rem;
+    transition:
+      background-color 140ms var(--ease),
+      color 140ms var(--ease),
+      scale 140ms var(--ease-out);
+
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        background: var(--color-hover);
+        color: var(--color-tx);
+      }
+    }
+
+    &:active {
+      scale: 0.97;
+    }
+
+    &:disabled {
+      cursor: progress;
+    }
+  }
+
+  .year-share-mark {
+    display: none;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 4rem;
+    color: var(--color-tx-2);
+
+    & img {
+      border-radius: 999px;
+    }
+
+    & span:first-of-type {
+      color: var(--color-tx);
+      font-weight: 500;
+    }
+  }
+
+  .year-share-mark__url {
+    margin-left: auto;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* While the share picture is drawn: its mark shown, and nothing caught mid-motion. */
+  :global(.is-sharing) {
+    & .year-share-mark {
+      display: flex;
+    }
+
+    & *,
+    & *::before,
+    & *::after {
+      animation: none !important;
+      transition: none !important;
+    }
   }
 
   /* Motion, once each: the year rises in as the page opens and its counts follow; every

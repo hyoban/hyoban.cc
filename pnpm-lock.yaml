@@ -29,6 +29,9 @@ importers:
       '@hyoban/trip-map':
         specifier: workspace:*
         version: link:packages/trip-map
+      modern-screenshot:
+        specifier: 4.7.0
+        version: 4.7.0
       yaml:
         specifier: ^2.9.1
         version: 2.9.1
@@ -2691,6 +2694,9 @@ packages:
   miniflare@5.20261006.1-alpha:
     resolution: {integrity: sha512-6ylv8tamkrspDI2R/cAYfv+YWmfGNdXe76Pi9TauEUWsFVXn3LNF9Yk8oduzf1a+TYsSRYTqlOE7+nGGRsMHdw==}
     engines: {node: '>=22.0.0'}
+
+  modern-screenshot@4.7.0:
+    resolution: {integrity: sha512-9YxN+ddPSMMlhylOv25VHzXrl9u67QRxoh7+SEewGtgUw7t6hHTrjptSDJUSne9oG4Xk/h2cwG15nIt4Hc9ujg==}
 
   mrmime@2.0.1:
     resolution: {integrity: sha512-Y3wQdFg2Va6etvQ5I82yUhGdsKrcYox6p7FfL1LbK2J4V01F9TGlepTIhnK24t7koZibmg82KGglhA1XK5IsLQ==}
@@ -6111,6 +6117,8 @@ snapshots:
       - '@types/node'
       - bufferutil
       - utf-8-validate
+
+  modern-screenshot@4.7.0: {}
 
   mrmime@2.0.1: {}
 
