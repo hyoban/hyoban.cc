@@ -38,7 +38,11 @@ const labels = [0, 6, 12, 18].map((hour) => ({ hour, at: point(outer + 14, hour 
     <path class="year-clock__night" d={night} />
     {
       petals.map((petal) => (
-        <path class:list={['year-clock__petal', { 'is-top': petal.hour === favorite.hour }]} d={petal.d}>
+        <path
+          class:list={['year-clock__petal', { 'is-top': petal.hour === favorite.hour }]}
+          d={petal.d}
+          style={`--hour: ${petal.hour}`}
+        >
           <title>{`${petal.hour} 点 · ${petal.count} 条`}</title>
         </path>
       ))
@@ -119,5 +123,37 @@ const labels = [0, 6, 12, 18].map((hour) => ({ hour, at: point(outer + 14, hour 
     fill: var(--color-tx);
     font-size: 22px;
     font-weight: 600;
+  }
+
+  /* The petals grow out from the middle, round the clock from midnight, when the section
+     is first seen, and the busiest hour fades in once they have. */
+  @media (prefers-reduced-motion: no-preference) {
+    :global(.is-revealed) {
+      & .year-clock__petal {
+        transform-box: view-box;
+        transform-origin: 50% 50%;
+        animation: year-clock-grow 700ms var(--ease-out) backwards;
+        animation-delay: calc(300ms + var(--hour) * 45ms);
+      }
+
+      & .year-clock__hour,
+      & .year-clock__unit {
+        animation: year-clock-fade 600ms var(--ease) backwards;
+        animation-delay: 1500ms;
+      }
+    }
+  }
+
+  @keyframes year-clock-grow {
+    from {
+      opacity: 0;
+      scale: 0.2;
+    }
+  }
+
+  @keyframes year-clock-fade {
+    from {
+      opacity: 0;
+    }
   }
 </style>

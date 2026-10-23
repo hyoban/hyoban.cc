@@ -274,4 +274,36 @@ const months = Array.from({ length: 12 }, (_, index) => {
       background: color-mix(in srgb, var(--color-tx) 16%, transparent);
     }
   }
+
+  /* The wall fills in when its section is first seen: a month after another, a day after
+     another, each tile popping up from a dot; a trip's band fades in under its days. */
+  @media (prefers-reduced-motion: no-preference) {
+    :global(.is-revealed) .year-mosaic__day {
+      --delay: calc(200ms + (var(--month) - 1) * 70ms + (var(--day) - 1) * 14ms);
+
+      & > a,
+      & > span {
+        animation: year-mosaic-pop 450ms var(--ease-out) backwards;
+        animation-delay: var(--delay);
+      }
+
+      &.is-trip::before {
+        animation: year-mosaic-fade 600ms var(--ease) backwards;
+        animation-delay: var(--delay);
+      }
+    }
+  }
+
+  @keyframes year-mosaic-pop {
+    from {
+      opacity: 0;
+      scale: 0.3;
+    }
+  }
+
+  @keyframes year-mosaic-fade {
+    from {
+      opacity: 0;
+    }
+  }
 </style>
