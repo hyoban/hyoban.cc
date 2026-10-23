@@ -26,11 +26,11 @@ import { getSortedPosts } from '@/utils'
 import { getShortPlaceName, type FogRegions } from '@hyoban/trip-map'
 import type { PlaceKind } from '@hyoban/data-spec'
 
-// A year at a glance (src/year-review.ts): its counts against the year before, its
-// footprint on a map drawn at build time (src/year-map.ts), the cities it first reached,
-// the places it went to by their kind,
-// every day of it as a tile, its trips by the shapes of their routes, a few days worth
-// going back to, the devices bought, and when it was written.
+// A year at a glance (src/year-review.ts): its counts against the year before; then where
+// it went, from its footprint on a map drawn at build time (src/year-map.ts) and its trips
+// by the shapes of their routes down to the cities it first reached and the places; then
+// how it went, every day of it as a tile, a few days worth going back to and when it was
+// written; and last the devices bought.
 export async function getStaticPaths() {
   const years = getReviewYears(await getMoments())
   return years.map((year, index) => ({
@@ -277,6 +277,33 @@ const highlights = [
     }
 
     {
+      trips.length > 0 && (
+        <section class="year-section" aria-labelledby="year-trips">
+          <h2 id="year-trips">出行</h2>
+          <ul class="year-trips">
+            {trips.map(({ trip, glyph, cover }, index) => (
+              <li style={`--index: ${index}`}>
+                <a href={`/trip/${trip.id.slice(0, 4)}/${trip.id.slice(5)}/`}>
+                  <span class="year-trips__art">
+                    {cover && <img src={cover.thumbnail} alt="" loading="lazy" decoding="async" />}
+                    <svg viewBox={`0 0 ${glyph.width} ${glyph.width}`} aria-hidden="true">
+                      <path d={glyph.d} transform={`translate(0 ${(glyph.width - glyph.height) / 2})`} pathLength="1" />
+                    </svg>
+                  </span>
+                  <span class="year-trips__title">{trip.title}</span>
+                  <span class="year-trips__meta">
+                    {formatDay(trip.start)} · {trip.dayCount} 天
+                    {trip.drivingKm > 0 && ` · ${formatNumber(trip.drivingKm)} 公里`}
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+
+    {
       before && review.firstVisits.length > 0 && (
         <section class="year-section" aria-labelledby="year-first">
           <h2 id="year-first">第一次去</h2>
@@ -359,54 +386,6 @@ const highlights = [
       <YearMosaic year={year} moments={review.moments} trips={review.trips} />
     </section>
 
-    {
-      trips.length > 0 && (
-        <section class="year-section" aria-labelledby="year-trips">
-          <h2 id="year-trips">出行</h2>
-          <ul class="year-trips">
-            {trips.map(({ trip, glyph, cover }, index) => (
-              <li style={`--index: ${index}`}>
-                <a href={`/trip/${trip.id.slice(0, 4)}/${trip.id.slice(5)}/`}>
-                  <span class="year-trips__art">
-                    {cover && <img src={cover.thumbnail} alt="" loading="lazy" decoding="async" />}
-                    <svg viewBox={`0 0 ${glyph.width} ${glyph.width}`} aria-hidden="true">
-                      <path d={glyph.d} transform={`translate(0 ${(glyph.width - glyph.height) / 2})`} pathLength="1" />
-                    </svg>
-                  </span>
-                  <span class="year-trips__title">{trip.title}</span>
-                  <span class="year-trips__meta">
-                    {formatDay(trip.start)} · {trip.dayCount} 天
-                    {trip.drivingKm > 0 && ` · ${formatNumber(trip.drivingKm)} 公里`}
-                  </span>
-                </a>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )
-    }
-
-    {
-      devices.length > 0 && (
-        <section class="year-section" aria-labelledby="year-devices">
-          <h2 id="year-devices">添置的</h2>
-          <ul class="year-devices">
-            {devices.map((device) => (
-              <li>
-                <a href={device.href}>
-                  <span class="year-devices__category">{device.category}</span>
-                  <span class="year-devices__name">{device.name}</span>
-                  <span class="year-devices__meta">
-                    {formatDay(device.bought.on)} · ¥{formatNumber(device.bought.price)}
-                  </span>
-                </a>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )
-    }
-
     <section class="year-section" aria-labelledby="year-moments">
       <h2 id="year-moments">一些瞬间</h2>
       <ul class="year-highlights">
@@ -437,6 +416,27 @@ const highlights = [
         <section class="year-section" aria-labelledby="year-hours">
           <h2 id="year-hours">什么时候记</h2>
           <YearClock hours={review.hours} favorite={review.favoriteHour} />
+        </section>
+      )
+    }
+
+    {
+      devices.length > 0 && (
+        <section class="year-section" aria-labelledby="year-devices">
+          <h2 id="year-devices">添置的</h2>
+          <ul class="year-devices">
+            {devices.map((device) => (
+              <li>
+                <a href={device.href}>
+                  <span class="year-devices__category">{device.category}</span>
+                  <span class="year-devices__name">{device.name}</span>
+                  <span class="year-devices__meta">
+                    {formatDay(device.bought.on)} · ¥{formatNumber(device.bought.price)}
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
         </section>
       )
     }
