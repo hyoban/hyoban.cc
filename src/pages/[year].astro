@@ -1,4 +1,5 @@
 ---
+import { getThumbnailUrl } from '@/asset-url'
 import SitePage from '@/components/SitePage.astro'
 import YearFootprint from '@/components/YearFootprint.astro'
 import YearMosaic from '@/components/YearMosaic.astro'
@@ -12,6 +13,7 @@ import {
   getTrips,
   type Moment,
 } from '@/moments'
+import { getTripCollage } from '@/moments/trip-images'
 import { getPageTitle } from '@/page-cards'
 import { buildRouteGlyph, buildYearMap, getTripLine } from '@/year-map'
 import { buildYearReview, getReviewYears } from '@/year-review'
@@ -43,8 +45,50 @@ const map = buildYearMap(
     moment.locations.map(({ latitude, longitude }) => [longitude, latitude] as const),
   ),
 )
-const trips = review.trips.map((trip) => ({ trip, glyph: buildRouteGlyph(getTripLine(trip.legs)) }))
+const trips = review.trips.map((trip) => ({
+  trip,
+  glyph: buildRouteGlyph(getTripLine(trip.legs)),
+  cover: getTripCollage(trip, review.moments, 1)[0],
+}))
 const maxHour = Math.max(1, ...review.hours)
+const topCities = review.cities.lit.slice(0, 6)
+
+/** The stills of these Moments, photos and videos' posters, `width` wide. */
+const photosOf = (dayMoments: Moment[], width: number) =>
+  dayMoments
+    .flatMap((moment) => moment.media)
+    .map((item) => (item.type === 'video' ? item.poster : item.src))
+    .filter((image) => image !== undefined)
+    .map((image) => getThumbnailUrl(image.sources[0]?.src ?? image.src, width))
+/** The first still of these Moments, `width` wide. */
+const photoOf = (dayMoments: Moment[], width: number) => photosOf(dayMoments, width)[0]
+const between = (start: string, end: string) =>
+  review.moments.filter((moment) => moment.dateKey >= start && moment.dateKey <= end)
+
+// The year's numerals cut out of its photos: each month's fullest Moment, two rows of them.
+const collage = Array.from({ length: 12 }, (_, index) => {
+  const key = `${year}-${String(index + 1).padStart(2, '0')}`
+  const month = review.moments
+    .filter((moment) => moment.dateKey.startsWith(key))
+    .sort((first, second) => second.media.length - first.media.length)
+  return photoOf(month, 480)
+}).filter((photo) => photo !== undefined)
+const collageColumns = Math.ceil(collage.length / 2)
+const collageStyle =
+  collage.length >= 4
+    ? [
+        `background-image: ${collage.map((photo) => `url("${photo}")`).join(', ')}`,
+        `background-position: ${collage
+          .map((_, index) => {
+            const column = index % collageColumns
+            const row = Math.floor(index / collageColumns)
+            return `${collageColumns > 1 ? (column / (collageColumns - 1)) * 100 : 0}% ${row * 100}%`
+          })
+          .join(', ')}`,
+        `background-size: ${100 / collageColumns}% 50%`,
+        `--columns: ${collageColumns}`,
+      ].join('; ')
+    : undefined
 
 const numberFormat = new Intl.NumberFormat('zh-CN')
 const formatNumber = (value: number) => numberFormat.format(value)
@@ -62,12 +106,54 @@ const description = ongoing
 const [firstMoment] = review.moments
 const lastMoment = review.moments.at(-1)
 const firstTime = previous !== undefined
+const highlights = [
+  firstMoment && {
+    kicker: '第一条',
+    title: headline(firstMoment),
+    date: formatDay(firstMoment.dateKey),
+    href: getMomentPagePath(firstMoment),
+    layout: 'single',
+    photos: photosOf([firstMoment], 480).slice(0, 1),
+  },
+  review.busiestDay.count > 1 && {
+    kicker: '最满的一天',
+    title: `记了 ${review.busiestDay.count} 条`,
+    date: formatDay(review.busiestDay.dateKey),
+    href: getMomentPath(review.busiestDay.dateKey),
+    // The day's photos, four of them in a grid.
+    layout: 'grid',
+    photos: photosOf(between(review.busiestDay.dateKey, review.busiestDay.dateKey), 320).slice(0, 4),
+  },
+  review.streak.days > 1 && {
+    kicker: '最长连续记录',
+    title: `连续 ${review.streak.days} 天`,
+    date: `${formatDay(review.streak.start)}起`,
+    href: getMomentPath(review.streak.start),
+    // A strip for each day of the run, its first photo in it.
+    layout: 'strips',
+    photos: Map.groupBy(between(review.streak.start, review.streak.end), (moment) => moment.dateKey)
+      .values()
+      .map((dayMoments) => photoOf(dayMoments, 320))
+      .filter((photo) => photo !== undefined)
+      .take(7)
+      .toArray(),
+  },
+  lastMoment &&
+    lastMoment !== firstMoment && {
+      kicker: ongoing ? '最近一条' : '最后一条',
+      title: headline(lastMoment),
+      date: formatDay(lastMoment.dateKey),
+      href: getMomentPagePath(lastMoment),
+      layout: 'single',
+      photos: photosOf([lastMoment], 480).slice(0, 1),
+    },
+].filter((highlight) => highlight !== undefined && highlight !== false)
 ---
 
 <Layout title={getPageTitle({ heading: String(year) })} shareTitle={`${year} 年`} description={description}>
   <SitePage>
     <header class="year-hero">
-      <h1>{year}</h1>
+      <h1 class:list={{ 'is-collage': collageStyle }} style={collageStyle}>{year}</h1>
       <p>
         {ongoing ? `到 ${formatDay(lastDateKey)}，` : '这一年，'}记下了 <b>{formatNumber(review.moments.length)}</b> 条 Moments、
         <b>{formatNumber(review.photoCount)}</b> 张照片{review.videoCount > 0 && <>和 <b>{review.videoCount}</b> 段视频</>}，
@@ -93,6 +179,15 @@ const firstTime = previous !== undefined
             )}{' '}
             <a href={`/map/${year}/`}>在地图上看</a>
           </YearFootprint>
+          <ol class="year-cities" aria-label="记下最多的城市">
+            {topCities.map((city) => (
+              <li style={`--share: ${city.count / topCities[0]!.count}`}>
+                <span class="year-cities__name">{city.name}</span>
+                <span class="year-cities__bar" />
+                <span class="year-cities__count">{city.count}</span>
+              </li>
+            ))}
+          </ol>
         </section>
       )
     }
@@ -128,12 +223,15 @@ const firstTime = previous !== undefined
         <section class="year-section" aria-labelledby="year-trips">
           <h2 id="year-trips">出行</h2>
           <ul class="year-trips">
-            {trips.map(({ trip, glyph }) => (
+            {trips.map(({ trip, glyph, cover }) => (
               <li>
                 <a href={`/trip/${trip.id.slice(0, 4)}/${trip.id.slice(5)}/`}>
-                  <svg viewBox={`0 0 ${glyph.width} ${glyph.width}`} aria-hidden="true">
-                    <path d={glyph.d} transform={`translate(0 ${(glyph.width - glyph.height) / 2})`} pathLength="1" />
-                  </svg>
+                  <span class="year-trips__art">
+                    {cover && <img src={cover.thumbnail} alt="" loading="lazy" decoding="async" />}
+                    <svg viewBox={`0 0 ${glyph.width} ${glyph.width}`} aria-hidden="true">
+                      <path d={glyph.d} transform={`translate(0 ${(glyph.width - glyph.height) / 2})`} pathLength="1" />
+                    </svg>
+                  </span>
                   <span class="year-trips__title">{trip.title}</span>
                   <span class="year-trips__meta">
                     {formatDay(trip.start)} · {trip.dayCount} 天
@@ -149,48 +247,25 @@ const firstTime = previous !== undefined
 
     <section class="year-section" aria-labelledby="year-moments">
       <h2 id="year-moments">一些瞬间</h2>
-      <ul class="year-list">
+      <ul class="year-highlights">
         {
-          firstMoment && (
+          highlights.map((highlight) => (
             <li>
-              <a href={getMomentPagePath(firstMoment)}>
-                <span class="link-text">{headline(firstMoment)}</span>
-                <span class="year-list__meta">第一条 · {formatDay(firstMoment.dateKey)}</span>
-              </a>
-            </li>
-          )
-        }
-        {
-          review.busiestDay.count > 1 && (
-            <li>
-              <a href={getMomentPath(review.busiestDay.dateKey)}>
-                <span class="link-text">{formatDay(review.busiestDay.dateKey)}记了 {review.busiestDay.count} 条</span>
-                <span class="year-list__meta">最满的一天</span>
-              </a>
-            </li>
-          )
-        }
-        {
-          review.streak.days > 1 && (
-            <li>
-              <a href={getMomentPath(review.streak.start)}>
-                <span class="link-text">
-                  {formatDay(review.streak.start)}起，连续 {review.streak.days} 天
+              <a href={highlight.href}>
+                <span
+                  class:list={['year-highlights__art', `is-${highlight.layout}`]}
+                  style={`--count: ${highlight.photos.length}`}
+                >
+                  {highlight.photos.map((photo) => (
+                    <img src={photo} alt="" loading="lazy" decoding="async" />
+                  ))}
                 </span>
-                <span class="year-list__meta">最长连续记录</span>
+                <span class="year-highlights__kicker">{highlight.kicker}</span>
+                <span class="year-highlights__title">{highlight.title}</span>
+                <span class="year-highlights__date">{highlight.date}</span>
               </a>
             </li>
-          )
-        }
-        {
-          lastMoment && lastMoment !== firstMoment && (
-            <li>
-              <a href={getMomentPagePath(lastMoment)}>
-                <span class="link-text">{headline(lastMoment)}</span>
-                <span class="year-list__meta">{ongoing ? '最近一条' : '最后一条'} · {formatDay(lastMoment.dateKey)}</span>
-              </a>
-            </li>
-          )
+          ))
         }
       </ul>
     </section>
@@ -209,12 +284,27 @@ const firstTime = previous !== undefined
 <style>
   .year-hero {
     & h1 {
+      width: fit-content;
       margin-left: -0.06em;
-      font-size: clamp(6rem, 30vw, 11rem);
+      font-size: clamp(6rem, 31vw, 13rem);
       font-weight: 600;
       line-height: 0.9;
       letter-spacing: -0.06em;
       font-variant-numeric: tabular-nums;
+
+      /* The numerals as windows onto the year's photos, which drift slowly behind them. */
+      &.is-collage {
+        font-weight: 900;
+        color: transparent;
+        background-color: var(--color-tx);
+        background-repeat: no-repeat;
+        background-clip: text;
+        -webkit-background-clip: text;
+
+        @media (prefers-reduced-motion: no-preference) {
+          animation: year-hero-drift 24s ease-in-out infinite alternate;
+        }
+      }
     }
 
     & p {
@@ -227,6 +317,12 @@ const firstTime = previous !== undefined
       color: var(--color-tx);
       font-weight: 500;
       font-variant-numeric: tabular-nums;
+    }
+  }
+
+  @keyframes year-hero-drift {
+    to {
+      background-size: calc(100% / var(--columns, 6) * 1.15) 57.5%;
     }
   }
 
@@ -297,28 +393,13 @@ const firstTime = previous !== undefined
       display: flex;
       flex-direction: column;
       height: 100%;
-      padding: 0.75rem;
-      border: 1px solid var(--color-border);
-      border-radius: 0.625rem;
       text-decoration: none;
-      transition: background-color 140ms var(--ease);
-
-      &:hover {
-        background: var(--color-hover);
-      }
-    }
-
-    & svg {
-      width: 100%;
-      aspect-ratio: 1;
-      margin-bottom: 0.5rem;
-      overflow: visible;
     }
 
     & path {
       fill: none;
-      stroke: var(--color-tx);
-      stroke-width: 1.75;
+      stroke: #fff;
+      stroke-width: 2;
       stroke-linecap: round;
       stroke-linejoin: round;
       stroke-dasharray: 1;
@@ -338,35 +419,153 @@ const firstTime = previous !== undefined
     }
   }
 
+  /* The trip's cover, dimmed, with the shape of its route drawn over it in white. */
+  .year-trips__art {
+    position: relative;
+    display: block;
+    aspect-ratio: 1;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+    border-radius: 0.625rem;
+    background: var(--color-tx-2);
+
+    & img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: brightness(0.55) saturate(1.1);
+      transition:
+        scale 400ms var(--ease-out),
+        filter 400ms var(--ease-out);
+    }
+
+    & svg {
+      position: absolute;
+      inset: 16%;
+      width: 68%;
+      height: 68%;
+      overflow: visible;
+      filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.4));
+    }
+
+    a:hover & img {
+      scale: 1.05;
+      filter: brightness(0.45) saturate(1.1);
+    }
+  }
+
   .year-trips__meta {
     color: var(--color-tx-2);
     font-size: 0.875rem;
     font-variant-numeric: tabular-nums;
   }
 
-  .year-list {
-    display: flex;
-    flex-direction: column;
+  /* Cities by how much was written in each, as bars under the map. */
+  .year-cities {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 0.375rem 0.75rem;
+    align-items: center;
+    max-width: 40rem;
+    margin: 1.5rem auto 0;
+    font-variant-numeric: tabular-nums;
 
-    & a {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: baseline;
-      justify-content: space-between;
-      gap: 0 1rem;
-      padding-block: 0.25rem;
-      text-decoration: none;
-    }
-
-    & .link-text {
-      min-width: 0;
+    & li {
+      display: contents;
     }
   }
 
-  .year-list__meta {
-    flex-shrink: 0;
+  .year-cities__bar {
+    width: calc(var(--share) * 100%);
+    height: 0.625rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--color-tx) calc(25% + var(--share) * 55%), transparent);
+  }
+
+  .year-cities__count {
     color: var(--color-tx-2);
+    text-align: right;
+  }
+
+  /* The days worth going back to, as cards like the trips': their photos above, laid out
+     by what they are (one Moment, a full day, a run of days), the words below. */
+  .year-highlights {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem 0.75rem;
+
+    @media (width >= 40rem) {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    & a {
+      display: flex;
+      flex-direction: column;
+      text-decoration: none;
+    }
+
+    & img {
+      width: 100%;
+      height: 100%;
+      min-width: 0;
+      min-height: 0;
+      object-fit: cover;
+      transition: scale 400ms var(--ease-out);
+    }
+
+    & a:hover img {
+      scale: 1.04;
+    }
+  }
+
+  .year-highlights__art {
+    display: grid;
+    gap: 2px;
+    aspect-ratio: 1;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+    border-radius: 0.625rem;
+    background: var(--color-inline);
+    border: 1px solid var(--color-border);
+
+    &:has(img) {
+      border: none;
+    }
+
+    &.is-grid {
+      grid-template-columns: repeat(min(var(--count), 2), minmax(0, 1fr));
+    }
+
+    &.is-grid:has(img:nth-child(3):last-child) img:first-child {
+      grid-row: span 2;
+    }
+
+    &.is-strips {
+      grid-template-columns: repeat(var(--count), minmax(0, 1fr));
+    }
+  }
+
+  .year-highlights__kicker,
+  .year-highlights__date {
+    color: var(--color-tx-2);
+    font-size: 0.875rem;
     font-variant-numeric: tabular-nums;
+  }
+
+  .year-highlights__title {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .year-highlights img,
+    .year-trips__art img {
+      transition: none;
+    }
   }
 
   .year-nav {
