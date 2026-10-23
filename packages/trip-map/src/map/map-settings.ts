@@ -5,10 +5,12 @@ import { createSheet, type Sheet } from './sheet.ts'
 // lit, what the basemap shows besides the places, whether it leans as it comes closer,
 // and the globe or a flat map. Remembered in this browser.
 
-export const MAP_LIGHTS = ['auto', 'day', 'dawn', 'dusk', 'night'] as const
+export const MAP_LIGHTS = ['auto', 'time', 'day', 'dawn', 'dusk', 'night'] as const
 export const MAP_PROJECTIONS = ['globe', 'mercator'] as const
 
 export type MapLight = (typeof MAP_LIGHTS)[number]
+/** One time of day, as Standard lights it. */
+export type MapLightPreset = Exclude<MapLight, 'auto' | 'time'>
 export type MapProjection = (typeof MAP_PROJECTIONS)[number]
 
 export type MapSettings = {
@@ -16,7 +18,10 @@ export type MapSettings = {
   buildings: boolean
   /** Standard's landmarks as icons, with their names. */
   landmarks: boolean
-  /** Standard's light: by the colour scheme (day, or night in the dark), or one time of day. */
+  /**
+   * Standard's light: by the colour scheme (day, or night in the dark), by the viewer's
+   * clock (the page dark with it at dusk and by night), or one time of day.
+   */
   light: MapLight
   /** Standard's shops, restaurants and the rest. */
   pois: boolean
@@ -42,6 +47,21 @@ export const DEFAULT_MAP_SETTINGS: MapSettings = {
   style: 'standard',
   tilt: true,
   transit: false,
+}
+
+// When each time of day begins on the viewer's clock, by the hour.
+const LIGHT_HOURS: readonly (readonly [hour: number, light: MapLightPreset])[] = [
+  [5, 'dawn'],
+  [7, 'day'],
+  [18, 'dusk'],
+  [20, 'night'],
+]
+
+/** The time of day `date` falls in on its own clock. */
+export function getLightAtTime(date: Date): MapLightPreset {
+  const hour = date.getHours()
+
+  return LIGHT_HOURS.findLast(([start]) => hour >= start)?.[1] ?? LIGHT_HOURS.at(-1)![1]
 }
 
 const SWITCHES = ['buildings', 'landmarks', 'pois', 'roads', 'tilt', 'transit'] as const

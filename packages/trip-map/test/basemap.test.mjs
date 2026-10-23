@@ -1,12 +1,13 @@
 import assert from 'node:assert/strict'
 import { test } from 'vite-plus/test'
 import {
+  getBasemapScheme,
   getBasemapStyle,
   getPitchAtZoom,
   isMapStyleId,
   STANDARD_STYLE,
 } from '../src/map/basemap.ts'
-import { DEFAULT_MAP_SETTINGS, parseMapSettings } from '../src/map/map-settings.ts'
+import { DEFAULT_MAP_SETTINGS, getLightAtTime, parseMapSettings } from '../src/map/map-settings.ts'
 
 test('gives the settings their style, Standard its own and how far it leans', () => {
   const faded = getBasemapStyle({ ...DEFAULT_MAP_SETTINGS, style: 'faded' }, true)
@@ -33,6 +34,22 @@ test('gives the settings their style, Standard its own and how far it leans', ()
     pitch: 0,
     url: 'mapbox://styles/mapbox/dark-v11',
   })
+})
+
+test('lights the map by the clock, and the page dark with it at dusk and by night', () => {
+  const at = (hour) => new Date(2026, 9, 23, hour, 30)
+  assert.deepEqual(
+    [0, 4, 5, 6, 7, 12, 17, 18, 19, 20, 23].map((hour) => getLightAtTime(at(hour))),
+    ['night', 'night', 'dawn', 'dawn', 'day', 'day', 'day', 'dusk', 'dusk', 'night', 'night'],
+  )
+
+  const time = { ...DEFAULT_MAP_SETTINGS, light: 'time' }
+  assert.equal(getBasemapStyle(time, true, at(6)).config.basemap.lightPreset, 'dawn')
+  assert.equal(getBasemapScheme(time, at(12)), 'light')
+  assert.equal(getBasemapScheme(time, at(18)), 'dark')
+  // The page keeps its own scheme otherwise.
+  assert.equal(getBasemapScheme(DEFAULT_MAP_SETTINGS, at(23)), undefined)
+  assert.equal(getBasemapScheme({ ...time, style: 'classic' }, at(23)), undefined)
 })
 
 test('reads stored settings, leaving what it does not understand at its default', () => {
