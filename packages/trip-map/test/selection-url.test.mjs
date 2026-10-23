@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'vite-plus/test'
+import { getPlaceShard } from '../src/place-shards.ts'
 import { defaultUrls, parseHash } from '../src/map/selection-url.ts'
 
 test('reads the place an old hash names, decoded, and nothing from a bad one', () => {
@@ -41,7 +42,7 @@ test('knows the period and the place a map path opens, and the path of each', ()
   assert.equal(defaultUrls.getMapPath({ year: 2025 }), '/map/2025/')
   assert.equal(defaultUrls.getMapPath({ month: 6, year: 2025 }, 'x'), '/map/2025/06/place/x/')
   assert.equal(defaultUrls.getMapPath(undefined, 'x'), '/map/place/x/')
-  assert.equal(defaultUrls.getPlaceUrl('x'), '/map/place/x/moments/')
+  assert.match(defaultUrls.getPlaceUrl('x'), /^\/map\/places\/[0-7]\/$/)
   assert.equal(defaultUrls.getMomentsUrl(2025), '/map/2025/moments/')
 })
 
@@ -73,4 +74,12 @@ test('knows the trip list narrowed to a year or a month, apart from a trip', () 
   assert.equal(defaultUrls.getTripListPath({ year: 2025 }), '/trip/2025/')
   assert.equal(defaultUrls.getTripListPath({ month: 6, year: 2025 }), '/trip/2025/06/')
   assert.equal(defaultUrls.isNestedTripPath('/trip/2025/06/'), false)
+})
+
+test('puts a place in the same shard every time, and spreads places over all of them', () => {
+  assert.equal(getPlaceShard('nanjing'), getPlaceShard('nanjing'))
+  assert.equal(
+    new Set(Array.from({ length: 200 }, (_, index) => getPlaceShard(`p${index}`))).size,
+    8,
+  )
 })

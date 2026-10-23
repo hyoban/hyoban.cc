@@ -32,6 +32,7 @@ export {
   type StaticMapCamera,
   type StaticMapOptions,
 } from './static-map.ts'
+export { getPlaceShard, PLACE_SHARDS } from './place-shards.ts'
 export { resolveMessages, t, zhCN, type MessageKey, type Messages } from './messages.ts'
 export { getIntroCovers, getTripMeta, MOSAIC_CLASS, MOSAIC_IMAGE_CLASS } from './player/intro.ts'
 export {

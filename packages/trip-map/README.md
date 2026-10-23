@@ -55,7 +55,7 @@ needs Chromium's Region Capture).
     ],
     trips: [], // getTripSummary(trip) for each trip
     urls: {
-      getPlaceUrl: (id) => `/places/${id}.html`, // an HTML fragment per place
+      getPlaceUrl: (id) => `/places/${id}.html`, // an HTML fragment per place, or a file of several
       getTripDataUrl: (id) => `/trips/${id}.json`, // shapeTripData(trip, …) as JSON
     },
   })
@@ -128,7 +128,8 @@ dragging. `trip-map-toolbar__actions` on the toolbar's buttons moves them aside 
    ```
 
    Serve each trip's data as JSON (`urls.getTripDataUrl`), each place's posts as an HTML
-   fragment (`urls.getPlaceUrl`), and pass the places and trip summaries to `createTripMap`
+   fragment (`urls.getPlaceUrl`), or several places to a file as a
+   `<template data-trip-map-place="<id>">` each (by default `/map/places/<getPlaceShard(id)>/`), and pass the places and trip summaries to `createTripMap`
    or inline them in the page as `<script type="application/json" data-trip-map-places>`
    (and `-trips`, `-stats`, `-trip` for the trip the page opens on). `toScriptJson` makes
    JSON safe to inline.
