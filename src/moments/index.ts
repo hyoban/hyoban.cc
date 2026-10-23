@@ -10,7 +10,12 @@ import type { CollectionEntry } from 'astro:content'
 import { getCollection } from 'astro:content'
 import { getAssetUrl, getFrameSources, getResizedSources } from '@/asset-url'
 import { locations, type LocationId } from '@/data/locations'
-import type { MomentMedia, PublishedImage, PublishedVideo } from '@hyoban/data-spec'
+import {
+  isMomentShown,
+  type MomentMedia,
+  type PublishedImage,
+  type PublishedVideo,
+} from '@hyoban/data-spec'
 import { trips } from '@/data/trips'
 import { readRoutes } from '@/data/store'
 
@@ -293,7 +298,7 @@ export function getMonthPath(monthKey: string) {
 }
 
 async function loadMoments() {
-  const entries = await getCollection('moments', ({ data }) => !data.hidden)
+  const entries = await getCollection('moments', ({ data }) => isMomentShown(data))
 
   return entries.flatMap((entry) => resolveMoment(entry) ?? []).sort(compareMoments)
 }

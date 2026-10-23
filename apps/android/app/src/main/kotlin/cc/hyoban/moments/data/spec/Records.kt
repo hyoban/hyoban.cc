@@ -243,6 +243,8 @@ data class MomentRecord(
     val places: List<String> = emptyList(),
     val text: String,
     val hidden: Boolean = false,
+    /** What it is about, like `travel`; a `tech` one is never shown, as if hidden. */
+    val topic: String? = null,
     val media: List<MomentMedia> = emptyList(),
     val trip: String? = null,
     val published: PublishedMoment? = null,
