@@ -21,6 +21,7 @@ import {
   getMapMonthKeys,
   getMapYears,
   getMomentExcerpt,
+  getMomentPagePath,
   getMoments,
   getTrips,
   MOMENT_OG_IMAGES,
@@ -54,7 +55,19 @@ const trimSlashes = (path: string) => path.replace(/^\/+|\/+$/g, '')
 export async function getPageCardPath(pathname: string) {
   const path = trimSlashes(pathname)
   const card = (await getPageCards()).find((entry) => trimSlashes(entry.path) === path)?.card
-  return `/og/pages/${path}.${card ? getCardFormat(card) : 'png'}`
+  if (!card) throw new Error(`No share card is drawn for ${pathname}`)
+  return `/og/pages/${path}.${getCardFormat(card)}`
+}
+
+/**
+ * A day of one Moment shares that Moment's card, where Moment cards are drawn: a card of
+ * its own would show the same words and photos.
+ */
+export function getDayMomentCard(dayMoments: Moment[]) {
+  const [moment] = dayMoments
+  return MOMENT_OG_IMAGES && dayMoments.length === 1 && moment
+    ? `${getMomentPagePath(moment)}og.jpg`
+    : undefined
 }
 
 /** A day as the calendar heads it: `10 月 23 日 · 星期四`. */
@@ -229,11 +242,7 @@ async function loadPageCards(): Promise<Array<{ path: string; card: PageCard }>>
     }
   }
 
-  const latestMonth = monthKeys.at(-1)
-  if (latestMonth) {
-    const { month, year } = parseMonth(latestMonth)
-    cards.push({ path: '/calendar/', card: calendarCard(year, month) })
-  }
+  // /calendar/ is the latest month and shares its card (see getPageCardPath's callers).
   for (const key of monthKeys) {
     const { month, year } = parseMonth(key)
     cards.push({
@@ -244,6 +253,7 @@ async function loadPageCards(): Promise<Array<{ path: string; card: PageCard }>>
   // A day's card leads with its first words and, where Moment cards are drawn, its photos.
   for (const dateKey of getActiveDateKeys(moments)) {
     const dayMoments = momentsByDate.get(dateKey) ?? []
+    if (getDayMomentCard(dayMoments)) continue
     cards.push({
       path: `/calendar/${dateKey.replaceAll('-', '/')}/`,
       card: {

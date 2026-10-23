@@ -14,7 +14,7 @@ import {
 } from '@/china-calendar'
 import { getStopAnchor } from '@/moments/trip-data'
 import Layout from '@/layouts/Layout.astro'
-import { formatCalendarDay, getCalendarDayDescription, getCalendarText, getPageCardPath, getPageTitle } from '@/page-cards'
+import { formatCalendarDay, getCalendarDayDescription, getCalendarText, getDayMomentCard, getPageCardPath, getPageTitle } from '@/page-cards'
 import {
   getActiveDateKeys,
   getArchiveMonthKeys,
@@ -145,7 +145,8 @@ const pageDescription = sharedMoment
 // A shared Moment's page has its own card where the build draws them, the site's otherwise.
 const pageImage = sharedMoment
   ? MOMENT_OG_IMAGES ? `${getMomentPagePath(sharedMoment)}og.jpg` : undefined
-  : await getPageCardPath(Astro.url.pathname)
+  : (selectedDate && getDayMomentCard(selectedMoments)) ||
+    await getPageCardPath(canonicalPath ?? Astro.url.pathname)
 const closePath = getMonthPath(monthKey)
 
 function formatCompactDate(dateKey: string) {
