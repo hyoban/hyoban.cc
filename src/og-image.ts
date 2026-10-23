@@ -4,7 +4,7 @@ import { join } from 'node:path'
 import satori from 'satori'
 import sharp from 'sharp'
 import { getAssetUrl } from '@/asset-url'
-import { SITE_DESCRIPTION, SITE_TITLE, SITE_URL } from '@/consts'
+import { SITE_DESCRIPTION, SITE_TITLE } from '@/consts'
 import { h, OG_COLORS as COLORS, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from '@/og-layout'
 import { getPanelText, renderOgPanel, type OgPanel } from '@/og-panels'
 import { cachedOgAsset } from '@/og-cache'
@@ -15,8 +15,6 @@ const OG_PHOTOS_GAP = 4
 
 // The site's light theme (see index.css).
 const FONT_FAMILY = 'Noto Sans SC'
-// Where a card shared without its link, a screenshot of a chat say, leads back to.
-const SITE_HOST = new URL(SITE_URL).host
 
 export interface OgImageOptions {
   panel?: OgPanel | undefined
@@ -120,7 +118,6 @@ function siteCard(avatar: string) {
     h('div', { display: 'flex', flexDirection: 'column', gap: 8 }, [
       h('div', { fontSize: 72, fontWeight: 500, color: COLORS.tx }, SITE_TITLE),
       h('div', { fontSize: 40, color: COLORS.tx2 }, SITE_DESCRIPTION),
-      h('div', { marginTop: 16, fontSize: 32, color: COLORS.tx3 }, SITE_HOST),
     ]),
   ])
 }
@@ -138,7 +135,6 @@ function pageCard(
         height: 64,
       }),
       h('div', { fontSize: 32, fontWeight: 500, color: COLORS.tx }, SITE_TITLE),
-      h('div', { fontSize: 28, color: COLORS.tx3 }, SITE_HOST),
     ]),
     h(
       'div',
@@ -189,8 +185,8 @@ export async function renderOgImage(options: OgImageOptions = {}) {
     ? SITE_TITLE
     : `${SITE_TITLE}${options.title}${options.detail ?? ''}${panelText}…`
   const regularText = site
-    ? `${SITE_DESCRIPTION}${SITE_HOST}`
-    : `${SITE_HOST}${options.description ?? ''}${options.date ?? ''}${panelText}…`
+    ? SITE_DESCRIPTION
+    : `${options.description ?? ''}${options.date ?? ''}${panelText}…`
   const [regular, medium] = await Promise.all([
     loadFont(400, regularText || ' '),
     loadFont(500, boldText),
