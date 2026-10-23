@@ -44,6 +44,8 @@ export type PlaceMarker = {
   latitude: number
   longitude: number
   name: string
+  /** What and where it is, like `景点 · 合肥市 肥西县`, shown under its name in the drawer. */
+  detail?: string | undefined
   /** The months it has posts in (`2025-06`), newest first. */
   months: string[]
   /** The years it has posts in, newest first. */

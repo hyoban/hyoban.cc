@@ -24,6 +24,8 @@ import {
 } from '@hyoban/trip-map'
 import { getTripDescription, getTripTitle, tripMapBrand, tripMapMessages, tripMapMusic } from '@/trip-map'
 import { getMapText, getPageCardPath, getPageTitle } from '@/page-cards'
+import { getPlaceDetail } from '@/data/place-info'
+import { readPlaces } from '@/data/store'
 import { canDrawMapPlaceholders, getMapPlaceholderKey,getMapPlaceholderPath, getMapPlaceholderView, MAP_PLACEHOLDER_SIZE } from '@/map-placeholder'
 
 // The map's settings, by the names @hyoban/trip-map reads them by.
@@ -108,7 +110,14 @@ const placeholderView = showPlaceholder
   ? { ...(await getMapPlaceholderView(placeholderKey)), maxZoom: ALL_PLACES_MAX_ZOOM, size: MAP_PLACEHOLDER_SIZE }
   : undefined
 const pageText = getMapText(period, tripList)
-const placesJson = toScriptJson(getPlaceMarkers(locationGroups, yearColor))
+// Each place with what and where it is, under its name in the drawer.
+const placeRecords = readPlaces()
+const placesJson = toScriptJson(
+  getPlaceMarkers(locationGroups, yearColor).map(marker => {
+    const record = placeRecords[marker.id]
+    return { ...marker, detail: record && getPlaceDetail(record) }
+  }),
+)
 const trips = getTrips(moments).toSorted((first, second) => second.start.localeCompare(first.start))
 const activeTrip = trips.find(trip => trip.id === tripId)
 // The trip whose sidebar the page opens on.
@@ -392,6 +401,7 @@ const image = pageTrip ? `/trip/${pageTrip.id}/og.jpg` : await getPageCardPath(A
         <div>
           <p data-trip-map-drawer-eyebrow />
           <h1 id="trip-map-drawer-title" data-trip-map-drawer-title />
+          <p data-trip-map-drawer-detail hidden />
         </div>
         <button class="trip-map-side__close" type="button" data-trip-map-drawer-close aria-label="关闭地点详情">
           <span class="i-lucide-x" aria-hidden="true" />
