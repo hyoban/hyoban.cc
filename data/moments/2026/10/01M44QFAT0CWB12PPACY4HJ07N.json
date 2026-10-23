@@ -237,6 +237,11 @@
       }
     }
   ],
+  "food": {
+    "dishes": [
+      "锅巴菜"
+    ]
+  },
   "published": {
     "id": "2026/10/05-01-tianjin-guobacai",
     "slug": "tianjin-guobacai",
@@ -244,5 +249,5 @@
     "at": "2026-10-08T08:10:00+08:00"
   },
   "createdAt": "2026-10-05T08:30:00+08:00",
-  "updatedAt": "2026-10-11T19:01:43+08:00"
+  "updatedAt": "2026-10-23T14:31:56Z"
 }

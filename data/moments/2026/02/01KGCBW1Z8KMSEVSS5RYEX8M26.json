@@ -50,6 +50,11 @@
       }
     }
   ],
+  "food": {
+    "dishes": [
+      "火锅"
+    ]
+  },
   "published": {
     "id": "2026/02/01-01-he-rxliuli-yi-qi-chi-hai-di-lao-na-zhou",
     "slug": "he-rxliuli-yi-qi-chi-hai-di-lao-na-zhou",
@@ -57,5 +62,5 @@
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-02-01T18:27:13+08:00",
-  "updatedAt": "2026-10-12T18:12:05+08:00"
+  "updatedAt": "2026-10-23T14:31:56Z"
 }

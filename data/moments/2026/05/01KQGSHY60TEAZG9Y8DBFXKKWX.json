@@ -75,6 +75,12 @@
       }
     }
   ],
+  "food": {
+    "dishes": [
+      "麻辣烤鱼",
+      "卡旺卡"
+    ]
+  },
   "published": {
     "id": "2026/05/01-01-wu-yi-di-yi-tian-zai-he-fei-chi-kao",
     "slug": "wu-yi-di-yi-tian-zai-he-fei-chi-kao",
@@ -82,5 +88,5 @@
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-05-01T11:33:12+08:00",
-  "updatedAt": "2026-10-12T18:09:45+08:00"
+  "updatedAt": "2026-10-23T14:31:56Z"
 }

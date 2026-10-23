@@ -57,6 +57,12 @@
       }
     }
   ],
+  "food": {
+    "dishes": [
+      "鲜花饼"
+    ],
+    "verdict": "good"
+  },
   "published": {
     "id": "2026/09/16-03-zhongyi-market",
     "slug": "zhongyi-market",
@@ -64,5 +70,5 @@
     "at": "2026-10-23T12:40:21Z"
   },
   "createdAt": "2026-10-23T12:36:53Z",
-  "updatedAt": "2026-10-23T12:36:53Z"
+  "updatedAt": "2026-10-23T14:31:56Z"
 }

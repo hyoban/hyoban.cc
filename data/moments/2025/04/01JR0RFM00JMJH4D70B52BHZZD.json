@@ -91,6 +91,11 @@
       }
     }
   ],
+  "food": {
+    "dishes": [
+      "沙茶面"
+    ]
+  },
   "published": {
     "id": "2025/04/05-01-zhou-liu-qu-le-xi-hu-he-alinpan1-yi-qi",
     "slug": "zhou-liu-qu-le-xi-hu-he-alinpan1-yi-qi",
@@ -98,5 +103,5 @@
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2025-04-05T00:00:00+08:00",
-  "updatedAt": "2026-09-03T10:44:40+08:00"
+  "updatedAt": "2026-10-23T14:31:56Z"
 }

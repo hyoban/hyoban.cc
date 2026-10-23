@@ -43,6 +43,12 @@
       }
     }
   ],
+  "food": {
+    "dishes": [
+      "自助烤肉"
+    ],
+    "verdict": "bad"
+  },
   "published": {
     "id": "2026/09/05-01-wuhu-intime-inpark",
     "slug": "wuhu-intime-inpark",
@@ -50,5 +56,5 @@
     "at": "2026-10-23T12:40:21Z"
   },
   "createdAt": "2026-10-23T12:36:53Z",
-  "updatedAt": "2026-10-23T12:36:53Z"
+  "updatedAt": "2026-10-23T14:31:56Z"
 }

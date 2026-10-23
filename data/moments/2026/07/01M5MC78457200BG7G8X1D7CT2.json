@@ -43,6 +43,11 @@
       }
     }
   ],
+  "food": {
+    "dishes": [
+      "火锅"
+    ]
+  },
   "published": {
     "id": "2026/07/18-04-hefei-yangjia-huoguo",
     "slug": "hefei-yangjia-huoguo",
@@ -50,5 +55,5 @@
     "at": "2026-10-23T12:40:21Z"
   },
   "createdAt": "2026-10-23T12:36:53Z",
-  "updatedAt": "2026-10-23T12:36:53Z"
+  "updatedAt": "2026-10-23T14:31:56Z"
 }

@@ -282,6 +282,13 @@
       }
     }
   ],
+  "food": {
+    "dishes": [
+      "东北菜",
+      "雪绵豆沙"
+    ],
+    "verdict": "good"
+  },
   "published": {
     "id": "2026/10/04-01-shenyang-dongbei-food",
     "slug": "shenyang-dongbei-food",
@@ -289,5 +296,5 @@
     "at": "2026-10-08T08:10:00+08:00"
   },
   "createdAt": "2026-10-04T12:51:06+08:00",
-  "updatedAt": "2026-10-11T11:34:40+08:00"
+  "updatedAt": "2026-10-23T14:31:56Z"
 }

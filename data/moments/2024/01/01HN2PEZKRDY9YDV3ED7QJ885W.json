@@ -32,6 +32,12 @@
       }
     }
   ],
+  "food": {
+    "dishes": [
+      "蛋炒饭"
+    ],
+    "verdict": "good"
+  },
   "published": {
     "id": "2024/01/26-02-ke-neng-shi-quan-shi-jie-zui-hao-chi-de",
     "slug": "ke-neng-shi-quan-shi-jie-zui-hao-chi-de",
@@ -39,5 +45,5 @@
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2024-01-26T18:53:47+08:00",
-  "updatedAt": "2026-09-03T10:44:40+08:00"
+  "updatedAt": "2026-10-23T14:31:56Z"
 }

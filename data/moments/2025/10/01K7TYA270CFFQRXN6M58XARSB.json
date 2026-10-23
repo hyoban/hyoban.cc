@@ -108,6 +108,16 @@
       }
     }
   ],
+  "food": {
+    "dishes": [
+      "烤鱼"
+    ],
+    "verdict": "good",
+    "bill": {
+      "amount": 77.5,
+      "people": 1
+    }
+  },
   "published": {
     "id": "2025/10/18-01-zi-jia-cheng-du-di-yi-zhan-zai-he-fei",
     "slug": "zi-jia-cheng-du-di-yi-zhan-zai-he-fei",
@@ -115,5 +125,5 @@
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2025-10-18T13:57:32+08:00",
-  "updatedAt": "2026-09-03T10:44:40+08:00"
+  "updatedAt": "2026-10-23T14:31:56Z"
 }

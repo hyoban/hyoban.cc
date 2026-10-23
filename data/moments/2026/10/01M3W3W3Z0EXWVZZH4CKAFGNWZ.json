@@ -75,6 +75,12 @@
       }
     }
   ],
+  "food": {
+    "dishes": [
+      "日料"
+    ],
+    "verdict": "good"
+  },
   "published": {
     "id": "2026/10/02-01-dalian-japanese-dinner",
     "slug": "dalian-japanese-dinner",
@@ -82,5 +88,5 @@
     "at": "2026-10-08T08:10:00+08:00"
   },
   "createdAt": "2026-10-02T00:13:32+08:00",
-  "updatedAt": "2026-10-11T11:34:40+08:00"
+  "updatedAt": "2026-10-23T14:31:56Z"
 }

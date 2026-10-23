@@ -165,6 +165,12 @@
       }
     }
   ],
+  "food": {
+    "dishes": [
+      "鸡架"
+    ],
+    "verdict": "bad"
+  },
   "published": {
     "id": "2026/10/03-03-shenyang-chicken-and-bathhouse",
     "slug": "shenyang-chicken-and-bathhouse",
@@ -172,5 +178,5 @@
     "at": "2026-10-08T08:10:00+08:00"
   },
   "createdAt": "2026-10-03T22:10:07+08:00",
-  "updatedAt": "2026-10-23T12:36:53Z"
+  "updatedAt": "2026-10-23T14:31:56Z"
 }

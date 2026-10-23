@@ -84,6 +84,12 @@
       }
     }
   ],
+  "food": {
+    "dishes": [
+      "素粉"
+    ],
+    "verdict": "good"
+  },
   "published": {
     "id": "2026/05/03-01-wu-yi-de-di-san-tian-qu-de-shi-san",
     "slug": "wu-yi-de-di-san-tian-qu-de-shi-san",
@@ -91,5 +97,5 @@
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-05-03T00:00:00+08:00",
-  "updatedAt": "2026-10-23T12:36:53Z"
+  "updatedAt": "2026-10-23T14:31:56Z"
 }

@@ -8,6 +8,10 @@
   "hidden": false,
   "topic": "food",
   "media": [],
+  "food": {
+    "dishes": [],
+    "verdict": "good"
+  },
   "published": {
     "id": "2025/12/21-01-jin-tian-ye-shi-chi-dao-hao-chi-de-le",
     "slug": "jin-tian-ye-shi-chi-dao-hao-chi-de-le",
@@ -15,5 +19,5 @@
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2025-12-21T21:17:05+08:00",
-  "updatedAt": "2026-09-03T10:44:40+08:00"
+  "updatedAt": "2026-10-23T14:31:56Z"
 }

@@ -21,7 +21,9 @@ data/
 
 A Moment names its place (one at most), carries its words and media, and once published has a
 `published` block with its `YYYY/MM/DD-NN-slug` id; each media item's `published`
-block holds the R2 key, ETag, size, dimensions and responsive variants. A record
+block holds the R2 key, ETag, size, dimensions and responsive variants. A Moment that
+tells of a meal may carry a `food` block: the dishes as its words name them, a verdict
+(`good`, `ok` or `bad`) and the bill with how many it fed. A record
 without `published` is a draft the site skips. Published fields never change: a
 different photo is a new media item with a new key.
 

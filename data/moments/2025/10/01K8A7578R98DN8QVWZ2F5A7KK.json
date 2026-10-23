@@ -75,6 +75,12 @@
       }
     }
   ],
+  "food": {
+    "dishes": [
+      "牛肉面"
+    ],
+    "verdict": "good"
+  },
   "published": {
     "id": "2025/10/24-01-zi-jia-cheng-du-di-san-zhan-zai-xiang-yang",
     "slug": "zi-jia-cheng-du-di-san-zhan-zai-xiang-yang",
@@ -82,5 +88,5 @@
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2025-10-24T12:20:47+08:00",
-  "updatedAt": "2026-09-03T10:44:40+08:00"
+  "updatedAt": "2026-10-23T14:31:56Z"
 }

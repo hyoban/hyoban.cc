@@ -141,6 +141,10 @@
       }
     }
   ],
+  "food": {
+    "dishes": [],
+    "verdict": "ok"
+  },
   "published": {
     "id": "2026/09/06-01-weekend-food-queues",
     "slug": "weekend-food-queues",
@@ -148,5 +152,5 @@
     "at": "2026-10-08T08:10:00+08:00"
   },
   "createdAt": "2026-09-06T22:40:35+08:00",
-  "updatedAt": "2026-10-23T12:36:53Z"
+  "updatedAt": "2026-10-23T14:31:56Z"
 }
