@@ -1,0 +1,26 @@
+{
+  "name": "@hyoban/drawer",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A drawer without a framework: Base UI's Drawer (swiped away, snap points, nested drawers) ported to plain DOM, with shadcn/ui's look as plain CSS.",
+  "license": "MIT",
+  "author": "Stephen Zhou",
+  "files": [
+    "src",
+    "LICENSE",
+    "THIRD-PARTY-NOTICES.md"
+  ],
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./styles.css": "./src/styles.css",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "test": "vp test"
+  },
+  "devDependencies": {
+    "happy-dom": "^21.0.1",
+    "vite-plus": "catalog:"
+  }
+}

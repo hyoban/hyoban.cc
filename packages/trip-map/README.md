@@ -64,9 +64,10 @@ needs Chromium's Region Capture).
 
 The page's layout (where the drawer and the trip panel sit, what they look like) is
 yours; the package renders the panel's, the stage's and the shortcut panel's insides,
-and finds everything else by its `data-trip-map-*` attribute. A few classes of yours get the package's motion: `trip-map-drawer` and
-`trip-map-trip-list` on the drawer and the list slide them in, and `trip-map-toolbar__actions`
-on the toolbar's buttons moves them aside while either is open.
+and finds everything else by its `data-trip-map-*` attribute. The drawer, the lists and the settings are drawers ([`@hyoban/drawer`](../drawer), bundled in):
+they slide in from the right, or up from the bottom below 48rem, and are swiped back that way;
+mark a sheet's scrolling part `data-drawer-content` so a mouse selects text there rather than
+dragging. `trip-map-toolbar__actions` on the toolbar's buttons moves them aside while one is open.
 
 ## What's in it
 
@@ -336,4 +337,4 @@ published. See [CHANGELOG.md](./CHANGELOG.md) for versions.
 
 ## License
 
-[MIT](./LICENSE)
+[MIT](./LICENSE). `dist` bundles [@hyoban/drawer](../drawer), a port of Base UI and shadcn/ui (both MIT), and mapbox-gl's stylesheet; their notices are in [THIRD-PARTY-NOTICES.md](./THIRD-PARTY-NOTICES.md).

@@ -1,5 +1,6 @@
 import { t, type Messages } from '../messages.ts'
 import type { Period } from './period.ts'
+import { createSheet } from './sheet.ts'
 
 // The Moments of a year, or a month of one, beside the map where a place's drawer sits,
 // while the address narrows the map to that period: the site's HTML fragment for the
@@ -11,9 +12,6 @@ import type { Period } from './period.ts'
 // number of its Moments in `data-trip-map-count`, and its heading, hidden while the
 // month is picked, in `[data-trip-map-moments-heading]`.
 
-// The list sliding away as it closes, like the drawer (see styles.css).
-const EXIT = { duration: 200, easing: 'cubic-bezier(0.4, 0, 1, 1)' }
-
 export type MomentList = ReturnType<typeof createMomentList>
 
 export function createMomentList({
@@ -22,14 +20,13 @@ export function createMomentList({
   eyebrow,
   getMomentsUrl,
   getPlaceCount,
-  isNarrow,
+  narrow,
   list,
   messages,
   onError,
   onPickMonth,
   onPlace,
   onRequestClose,
-  reducedMotion,
   signal,
   title,
 }: {
@@ -39,7 +36,8 @@ export function createMomentList({
   getMomentsUrl: (year: number) => string
   /** How many places the map shows for the period. */
   getPlaceCount: () => number
-  isNarrow: () => boolean
+  /** Whether the screen is a phone's, where the list comes up from the bottom. */
+  narrow: MediaQueryList
   list: HTMLElement
   messages: Messages
   /** A year's Moments couldn't be fetched. */
@@ -50,20 +48,22 @@ export function createMomentList({
   onPlace: (id: string) => boolean
   /** The close button was pressed. */
   onRequestClose: () => void
-  reducedMotion: MediaQueryList
   signal: AbortSignal
   title: HTMLElement | null
 }) {
   // Each year's fragment, fetched once; a failed fetch is tried again next time.
   const html = new Map<number, string>()
   const requests = new Map<number, Promise<string | undefined>>()
-  let exit: Animation | undefined
   let period: Period | undefined
   // The year whose Moments are in the list.
   let shownYear: number | undefined
   // The one month of it the list holds, while it holds no other: the rest come with the
   // year's fragment.
   let onlyMonth: number | undefined
+
+  let shown = !list.hidden
+  // Swiped away, it closes as its close button does.
+  const sheet = createSheet(list, { narrow, onSwipeClose: onRequestClose, signal })
 
   // The page may come with a year's Moments in it already, or just a month's.
   const renderedYear = Number(content.dataset.tripMapMomentsYear)
@@ -78,7 +78,7 @@ export function createMomentList({
   }
 
   function isOpen() {
-    return !list.hidden && !exit
+    return shown
   }
 
   function load(year: number) {
@@ -200,9 +200,8 @@ export function createMomentList({
       shownYear !== next.year || (onlyMonth !== undefined && next.month !== onlyMonth)
 
     period = next
-    exit?.cancel()
-    exit = undefined
-    list.hidden = false
+    shown = true
+    sheet.open()
 
     if (title) {
       title.textContent =
@@ -247,22 +246,8 @@ export function createMomentList({
 
     period = undefined
 
-    const animation = list.animate(
-      [{}, { opacity: 0, translate: isNarrow() ? '0 2rem' : '1.5rem 0' }],
-      { ...EXIT, duration: reducedMotion.matches ? 0 : EXIT.duration },
-    )
-
-    exit = animation
-    animation.finished.then(
-      () => {
-        if (exit === animation) {
-          exit = undefined
-          list.hidden = true
-          animation.cancel()
-        }
-      },
-      () => {},
-    )
+    shown = false
+    sheet.close()
   }
 
   closeButton?.addEventListener('click', onRequestClose, { signal })
@@ -288,13 +273,14 @@ export function createMomentList({
     },
     { signal },
   )
-  signal.addEventListener('abort', () => exit?.cancel())
 
   return {
     close,
     get isOpen() {
       return isOpen()
     },
+    /** The drawer it is, for one to open over it. */
+    sheet,
     show,
   }
 }

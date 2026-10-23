@@ -257,7 +257,7 @@ const description = pageTrip
     <section class="trip-map-panel" data-trip-map-panel aria-labelledby="trip-map-panel-title" hidden={!activeTripData} set:html={renderTripPanel({ messages: tripMapMessages, music: tripMapMusic, trip: activeTripData })} />
 
     <!-- The map's settings, remembered in this browser; each shows on the map behind at once. -->
-    <dialog class="trip-map-side trip-map-settings" data-trip-map-settings aria-labelledby="trip-map-settings-title" closedby="any">
+    <dialog class="trip-map-side trip-map-settings" data-trip-map-settings aria-labelledby="trip-map-settings-title">
       <header class="trip-map-side__header">
         <div>
           <p>保存在此浏览器</p>
@@ -267,7 +267,7 @@ const description = pageTrip
           <span class="i-lucide-x" aria-hidden="true" />
         </button>
       </header>
-      <form class="trip-map-side__content trip-map-settings__form">
+      <form class="trip-map-side__content trip-map-settings__form" data-drawer-content>
         <fieldset>
           <legend>样式</legend>
           <div class="trip-map-settings__choices">
@@ -364,7 +364,7 @@ const description = pageTrip
           <span class="i-lucide-x" aria-hidden="true" />
         </button>
       </header>
-      <div class="trip-map-side__content" data-trip-map-moments-content data-trip-map-moments-year={momentsPeriod?.year} data-trip-map-moments-month-only={momentsPeriod?.month}>
+      <div class="trip-map-side__content" data-drawer-content data-trip-map-moments-content data-trip-map-moments-year={momentsPeriod?.year} data-trip-map-moments-month-only={momentsPeriod?.month}>
         {momentsPeriod && <MapMoments month={momentsPeriod.month} moments={periodMoments} year={momentsPeriod.year} />}
       </div>
     </aside>
@@ -380,7 +380,7 @@ const description = pageTrip
           <span class="i-lucide-x" aria-hidden="true" />
         </button>
       </header>
-      <div class="trip-map-side__content trip-map-drawer__content" data-trip-map-drawer-content />
+      <div class="trip-map-side__content trip-map-drawer__content" data-drawer-content data-trip-map-drawer-content />
     </aside>
 
     <!-- A trip opened from its row or its route: its Moments, and the button that plays it. -->
@@ -394,7 +394,7 @@ const description = pageTrip
           <span class="i-lucide-x" aria-hidden="true" />
         </button>
       </header>
-      <div class="trip-map-side__content" data-trip-map-trip-details-content data-trip-map-trip-details-trip={pickedTrip?.id}>
+      <div class="trip-map-side__content" data-drawer-content data-trip-map-trip-details-content data-trip-map-trip-details-trip={pickedTrip?.id}>
         {pickedTrip && <TripDetails moments={moments} trip={pickedTrip} />}
       </div>
     </aside>
@@ -413,7 +413,7 @@ const description = pageTrip
               <span class="i-lucide-x" aria-hidden="true" />
             </button>
           </header>
-          <div class="trip-map-side__content trip-map-trip-list__content">
+          <div class="trip-map-side__content trip-map-trip-list__content" data-drawer-content>
             {tripsByYear.map(([year, yearTrips]) => (
               <section aria-labelledby={`trip-map-trip-list-${year}`} data-trip-map-trip-year={year} hidden={!yearTrips.some(isInPeriod)}>
                 <h2 class="trip-map-trip-list__year" id={`trip-map-trip-list-${year}`}>{year}</h2>
@@ -509,7 +509,6 @@ const description = pageTrip
   // The place drawers' Moments, and a year's, are fetched fragments, which bring no
   // script of their own.
   import '@/moment-entry-client'
-  import '@/map-sheet-swipe-client'
   import { getTripTitle, tripMapBrand, tripMapMessages, tripMapMusic, tripMapSiteLine } from '@/trip-map'
 
   type MapClient = typeof import('@hyoban/trip-map/client')
@@ -1080,8 +1079,11 @@ const description = pageTrip
 
   /* The box the place drawer and the lists share, the map's right side from top to
      bottom (the toolbar's buttons step aside for it, see styles.css), or a phone's bottom:
-     most of the screen for a place, and less for the lists, so their routes show above. */
+     most of the screen for a place, and less for the lists, so their routes show above.
+     Each is a drawer (@hyoban/drawer), swiped back off that edge, `--drawer-inset` past it. */
   .trip-map-side {
+    --drawer-inset: 1rem;
+
     position: absolute;
     inset-block: 1rem;
     right: 1rem;
@@ -1090,6 +1092,8 @@ const description = pageTrip
     grid-template-rows: auto minmax(0, 1fr);
     width: min(28rem, calc(100vw - 2rem));
     min-width: 0;
+    max-height: none;
+    margin: 0;
     overflow: hidden;
     border: 1px solid var(--color-border);
     border-radius: 0.75rem;
@@ -1097,11 +1101,18 @@ const description = pageTrip
     box-shadow: 0 1.5rem 5rem rgb(0 0 0 / 0.16);
 
     @media (width < 48rem) {
+      --drawer-inset: calc(0.75rem + env(safe-area-inset-bottom));
+
       inset-inline: 0.75rem;
       top: auto;
       bottom: calc(0.75rem + env(safe-area-inset-bottom));
       width: auto;
       height: min(60dvh, 36rem);
+
+      /* Under another, as tall as it, so it peeks out above it. */
+      &[data-nested-drawer-open] {
+        height: var(--stack-height);
+      }
     }
   }
 
@@ -1341,7 +1352,7 @@ const description = pageTrip
     padding: 0.75rem 0.5rem 0.75rem 1.25rem;
     border-bottom: 1px solid var(--color-border);
 
-    /* On a phone a grabber says the sheet is pulled down to close (map-sheet-swipe-client). */
+    /* On a phone a grabber says the sheet is pulled down to close. */
     @media (width < 48rem) {
       position: relative;
       padding-top: 1.25rem;
@@ -1406,6 +1417,13 @@ const description = pageTrip
         color: var(--color-tx);
       }
     }
+  }
+
+  /* A block of its own: data-drawer-content (which keeps a mouse selecting text here
+     rather than dragging the sheet) would make it the drawer's flex column. The settings'
+     form is a grid of its own. */
+  .trip-map-side__content:not(.trip-map-settings__form) {
+    display: block;
   }
 
   .trip-map-side__content {

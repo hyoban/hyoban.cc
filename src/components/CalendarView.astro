@@ -1,4 +1,5 @@
 ---
+import '@hyoban/drawer/styles.css'
 import CalendarBackLink from '@/components/CalendarBackLink.astro'
 import CalendarAnniversaryStatus from '@/components/CalendarAnniversaryStatus.astro'
 import CalendarDayStatus from '@/components/CalendarDayStatus.astro'
@@ -362,7 +363,7 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
             </a>
           </header>
 
-          <div class="day-drawer__content">
+          <div class="day-drawer__content" data-drawer-content>
             {
               selectedTrip && (
                 <a class="day-drawer__trip" href={selectedTripHref} aria-label={`回放旅程：${selectedTrip.title}`}>
@@ -401,9 +402,55 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
 
 <script>
   import '@/calendar-prefetch-client'
+  import { createDrawer, type Drawer } from '@hyoban/drawer'
   import { navigate } from 'astro:transitions/client'
 
   let calendarController: AbortController | undefined
+  // A day's Moments are a drawer beside the month on a wide screen, swiped right to close;
+  // on a phone they're the page itself.
+  const wide = matchMedia('(width >= 56.0625rem)')
+  let dayDrawer: Drawer | undefined
+
+  /** Makes `element` the day's drawer while the screen is wide; it closes to the month. */
+  function setUpDayDrawer(element: HTMLElement, open: boolean, signal: AbortSignal) {
+    dayDrawer?.destroy()
+    dayDrawer = undefined
+    element.hidden = false
+
+    if (!wide.matches || signal.aborted) {
+      return
+    }
+
+    const closePath = element.dataset.closePath ?? '/calendar'
+
+    dayDrawer = createDrawer({
+      defaultOpen: open,
+      disablePointerDismissal: true,
+      finalFocus: false,
+      initialFocus: false,
+      modal: false,
+      // Gone, by its close button, Escape or a swipe: the month it was over.
+      onOpenChangeComplete: (isOpen) => {
+        if (!isOpen) {
+          void navigate(closePath)
+        }
+      },
+      // The month gives back the room it made for the day as long as the day takes to go,
+      // less after a quick swipe (see index.css).
+      onOpenChange: (isOpen) => {
+        const strength = Number(element.style.getPropertyValue('--drawer-swipe-strength')) || 1
+
+        document.documentElement.style.setProperty(
+          '--calendar-drawer-exit',
+          isOpen ? '' : `${strength * 400}ms`,
+        )
+      },
+      popup: element,
+      signal,
+      swipeDirection: 'right',
+    })
+    dayDrawer.open()
+  }
 
   function initializeCalendar() {
     calendarController?.abort()
@@ -413,11 +460,34 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
 
     document.documentElement.classList.toggle('calendar-drawer-open', Boolean(drawer))
 
+    // Arrived from the month, the day slides in as the month makes room for it; from another
+    // day, or loaded as it is, it's there at once.
+    const entering = document.documentElement.hasAttribute('data-calendar-day-entering')
+
     if (drawer) {
+      setUpDayDrawer(drawer, !entering, signal)
+    }
+
+    document.documentElement.removeAttribute('data-calendar-day-entering')
+
+    if (drawer) {
+      wide.addEventListener('change', () => setUpDayDrawer(drawer, true, signal), { signal })
+
+      // The links back to the month let the drawer slide away first.
+      for (const link of document.querySelectorAll<HTMLAnchorElement>('.day-drawer__close, .drawer-scrim')) {
+        link.addEventListener('click', (event) => {
+          if (dayDrawer?.isOpen && !event.metaKey && !event.ctrlKey && !event.shiftKey) {
+            event.preventDefault()
+            dayDrawer.close(event, 'close-press')
+          }
+        }, { signal })
+      }
+
       window.addEventListener('keydown', (event) => {
         const lightbox = document.querySelector<HTMLDialogElement>('[data-moment-lightbox]')
 
-        if (lightbox?.open || event.metaKey || event.ctrlKey || event.altKey) {
+        // While the day is a drawer, Escape is the drawer's.
+        if (lightbox?.open || event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) {
           return
         }
 
@@ -472,8 +542,18 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
   }
 
   document.addEventListener('astro:page-load', initializeCalendar)
-  document.addEventListener('astro:before-swap', () => {
+  document.addEventListener('astro:before-swap', (event) => {
     calendarController?.abort()
+
+    // A day opening over the month starts with the month as it was and the day out of
+    // sight, so the page swapping in shows no jump (see index.css).
+    if (
+      wide.matches &&
+      !document.querySelector('[data-calendar-drawer]') &&
+      event.newDocument.querySelector('[data-calendar-drawer]')
+    ) {
+      event.newDocument.documentElement.setAttribute('data-calendar-day-entering', '')
+    }
   })
   initializeCalendar()
 </script>
@@ -904,6 +984,11 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
     }
   }
 
+  /* Out of sight until it slides in over the month (see the script). */
+  :global(html[data-calendar-day-entering]) .day-drawer {
+    transform: translate3d(calc(100% + 2px), 0, 0);
+  }
+
   .day-drawer__header {
     display: flex;
     align-items: center;
@@ -977,7 +1062,9 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
     }
   }
 
+  /* A block, not the flex column data-drawer-content would make it. */
   .day-drawer__content {
+    display: block;
     overflow-y: auto;
     overscroll-behavior: contain;
     padding: 0 1.5rem 3rem;

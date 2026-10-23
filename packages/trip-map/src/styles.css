@@ -6,6 +6,7 @@
 /* In a cascade layer, so the page's own styles (utilities in Tailwind's layers included)
    win over mapbox-gl's, such as the `position: relative` it puts on the map's container. */
 @import 'mapbox-gl/dist/mapbox-gl.css' layer(components);
+@import '@hyoban/drawer/styles.css';
 
 /* The cards and the mosaic adapt to the page's width, not the viewport's. */
 .trip-map-page {
@@ -562,42 +563,24 @@
   }
 }
 
-/* The place drawer and the lists slide in from the right, or up from the bottom on
-   a phone; they slide back out from script as they close (see place-drawer.ts). One
-   rendered open with the page is there from the start: they slide in only once the
-   map has settled on the page (see trip-map.ts). */
-:is(.trip-map-drawer, .trip-map-trip-list, .trip-map-moments, .trip-map-trip-details) {
-  transition:
-    opacity 200ms ease,
-    translate 280ms cubic-bezier(0.22, 1, 0.36, 1);
+/* The place drawer, the lists and the settings are drawers (@hyoban/drawer, imported
+   above): they come in from the right, or up from the bottom on a phone, and are swiped
+   back that way (see map/sheet.ts). Quicker than the drawer's own, as befits a sidebar. */
+:is(
+  .trip-map-drawer,
+  .trip-map-trip-list,
+  .trip-map-moments,
+  .trip-map-trip-details,
+  .trip-map-settings
+) {
+  --drawer-enter-duration: 320ms;
+  --drawer-exit-duration: 240ms;
 }
 
-@starting-style {
-  .trip-map-page[data-trip-map-settled]
-    :is(.trip-map-drawer, .trip-map-trip-list, .trip-map-moments, .trip-map-trip-details):not(
-      [hidden]
-    ) {
-    opacity: 0;
-    translate: 1.5rem 0;
-  }
-}
-
-@media (max-width: 48rem) {
-  @starting-style {
-    .trip-map-page[data-trip-map-settled]
-      :is(.trip-map-drawer, .trip-map-trip-list, .trip-map-moments, .trip-map-trip-details):not(
-        [hidden]
-      ) {
-      translate: 0 2rem;
-    }
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  :is(.trip-map-drawer, .trip-map-trip-list, .trip-map-moments, .trip-map-trip-details) {
-    translate: none;
-    transition-property: opacity;
-  }
+/* One open as the map comes, from the page or the address, is there from the start: they
+   come in only once the map has settled on the page (see trip-map.ts). */
+.trip-map-page:not([data-trip-map-settled]) [data-drawer-popup] {
+  transition: none;
 }
 
 /* A trip list's row filling a line along its foot while the pointer rests on it, until

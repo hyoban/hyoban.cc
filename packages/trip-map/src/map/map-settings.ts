@@ -1,4 +1,5 @@
 import { isMapStyleId, type MapStyleId } from './basemap.ts'
+import { createSheet, type Sheet } from './sheet.ts'
 
 // What a viewer may set about the map, in a sidebar of the page's: its look, how it's
 // lit, what the basemap shows besides the places, whether it leans as it comes closer,
@@ -124,16 +125,22 @@ export function createMapSettings({
   dialog,
   getDefaults,
   getSettings,
+  narrow,
   onChange,
   openers,
+  parent,
   signal,
 }: {
   dialog: HTMLDialogElement | null
   /** What the reset goes back to: the defaults, or the classic map on a slow device. */
   getDefaults: () => MapSettings
   getSettings: () => MapSettings
+  /** Whether the screen is a phone's, where the sidebar comes up from the bottom. */
+  narrow: MediaQueryList
   onChange: (settings: MapSettings) => void
   openers: readonly HTMLElement[]
+  /** The sheet open beside the map, which steps back behind the settings. */
+  parent: () => Sheet | undefined
   signal: AbortSignal
 }) {
   const form = dialog?.querySelector('form')
@@ -142,30 +149,22 @@ export function createMapSettings({
     return
   }
 
+  // A drawer of its own: closed by Escape, a press beside it, or a swipe.
+  const sheet = createSheet(dialog, { modal: true, narrow, parent, signal })
+
   for (const opener of openers) {
     opener.addEventListener(
       'click',
       () => {
         writeMapSettingsForm(form, getSettings())
-        dialog.showModal()
+        sheet.open()
       },
       { signal },
     )
   }
 
-  // A click beside the sidebar closes it, where the browser doesn't already.
-  dialog.addEventListener(
-    'click',
-    (event) => {
-      if (event.target === dialog) {
-        dialog.close()
-      }
-    },
-    { signal },
-  )
-
   for (const button of dialog.querySelectorAll('[data-trip-map-settings-close]')) {
-    button.addEventListener('click', () => dialog.close(), { signal })
+    button.addEventListener('click', () => sheet.close(), { signal })
   }
 
   form.addEventListener(

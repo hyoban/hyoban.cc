@@ -1,6 +1,7 @@
 import type { MapElements } from '../elements.ts'
 import { t, type Messages } from '../messages.ts'
 import type { PlaceMarker } from './place-markers.ts'
+import { createSheet, type Sheet } from './sheet.ts'
 
 // The drawer a place opens with its Moments: an HTML fragment fetched from the site
 // the first time, and a lightbox for its photos (and the Moments list's) when the site
@@ -9,23 +10,20 @@ import type { PlaceMarker } from './place-markers.ts'
 /** Shows a drawer item's media in the lightbox: a still, or a live photo's clip. */
 export type LightboxMedia = { show: (item: HTMLElement) => void }
 
-// The drawer sliding away as it closes; it slides in from the same spot (see styles.css).
-const DRAWER_EXIT = { duration: 200, easing: 'cubic-bezier(0.4, 0, 1, 1)' }
-
 export type PlaceDrawer = ReturnType<typeof createPlaceDrawer>
 
 export function createPlaceDrawer({
   createLightboxMedia,
   elements,
   getPlaceUrl,
-  isNarrow,
+  narrow,
   messages,
   onClosed,
   onError,
   onOpen,
   onPickYear,
   onRestoreFocus,
-  reducedMotion,
+  parent,
   signal,
 }: {
   createLightboxMedia?:
@@ -33,7 +31,8 @@ export function createPlaceDrawer({
     | undefined
   elements: MapElements
   getPlaceUrl: (id: string) => string
-  isNarrow: () => boolean
+  /** Whether the screen is a phone's, where the drawer comes up from the bottom. */
+  narrow: MediaQueryList
   messages: Messages
   /** The drawer started closing: the map can drop the room it left for it. */
   onClosed: () => void
@@ -45,7 +44,8 @@ export function createPlaceDrawer({
   onPickYear: (year: number) => void
   /** Puts focus back on what opened the drawer. */
   onRestoreFocus: (trigger: HTMLButtonElement) => void
-  reducedMotion: MediaQueryList
+  /** The sheet the drawer opens over, which steps back behind it. */
+  parent: () => Sheet | undefined
   signal: AbortSignal
 }) {
   const { drawer, drawerClose, drawerContent, drawerEyebrow, drawerTitle, lightbox, page } =
@@ -56,7 +56,19 @@ export function createPlaceDrawer({
   const lightboxMedia = lightbox && createLightboxMedia?.(lightbox, signal)
   let activeId: string | undefined
   let activeTrigger: HTMLButtonElement | undefined
-  let exit: Animation | undefined
+  let shown = !drawer.hidden
+  // Swiped away, it closes as its close button does; gone, it lets go of its content.
+  const sheet = createSheet(drawer, {
+    narrow,
+    onClosed: () => {
+      if (!shown) {
+        drawerContent.replaceChildren()
+      }
+    },
+    onSwipeClose: () => drawerClose.click(),
+    parent,
+    signal,
+  })
   let lightboxIndex = 0
   let lightboxItems: HTMLElement[] = []
 
@@ -149,9 +161,8 @@ export function createPlaceDrawer({
     activeTrigger = options.trigger ?? activeTrigger
     drawerTitle.textContent = place.name
     setEyebrow(place)
-    exit?.cancel()
-    exit = undefined
-    drawer.hidden = false
+    shown = true
+    sheet.open()
 
     if (html.has(place.id)) {
       renderContent(html.get(place.id))
@@ -173,34 +184,15 @@ export function createPlaceDrawer({
   }
 
   function close(options: { restoreFocus?: boolean } = {}) {
-    if (drawer.hidden || exit) {
+    if (!shown) {
       return
     }
 
     closeLightbox()
     activeId = undefined
 
-    // Slides away first, then hides and lets go of its content; a place opened
-    // meanwhile cancels the slide and keeps the drawer. A script animation, as going
-    // back to the map page has the router put the map back into the page, which would
-    // end a CSS transition on the spot.
-    const animation = drawer.animate(
-      [{}, { opacity: 0, translate: isNarrow() ? '0 2rem' : '1.5rem 0' }],
-      { ...DRAWER_EXIT, duration: reducedMotion.matches ? 0 : DRAWER_EXIT.duration },
-    )
-
-    exit = animation
-    animation.finished.then(
-      () => {
-        if (exit === animation) {
-          exit = undefined
-          drawer.hidden = true
-          drawerContent.replaceChildren()
-          animation.cancel()
-        }
-      },
-      () => {},
-    )
+    shown = false
+    sheet.close()
     onClosed()
 
     if (options.restoreFocus !== false && activeTrigger?.isConnected && !activeTrigger.hidden) {
@@ -298,8 +290,6 @@ export function createPlaceDrawer({
     )
   }
 
-  signal.addEventListener('abort', () => exit?.cancel())
-
   return {
     get activeId() {
       return activeId
@@ -311,6 +301,8 @@ export function createPlaceDrawer({
     },
     load,
     open,
+    /** The drawer it is, for one to open over it. */
+    sheet,
     /** Remembers what to put focus back on; set before a place opens from the URL. */
     set trigger(button: HTMLButtonElement | undefined) {
       activeTrigger = button ?? activeTrigger

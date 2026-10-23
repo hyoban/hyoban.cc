@@ -1,3 +1,4 @@
+import { createSheet } from './sheet.ts'
 // The list of every trip, beside the map where a place's drawer sits, while the address
 // is the list's own (`/trip/`): its openers and its close button ask for the address to
 // change, and the map shows or closes the list as it follows it.
@@ -10,14 +11,12 @@
 
 // How long the pointer rests on a row before its route is lifted.
 const DWELL = 2000
-// The list sliding away as it closes, like the drawer (see styles.css).
-const EXIT = { duration: 200, easing: 'cubic-bezier(0.4, 0, 1, 1)' }
 
 export type TripList = ReturnType<typeof createTripList>
 
 export function createTripList({
   closeButton,
-  isNarrow,
+  narrow,
   list,
   onClose,
   onHighlight,
@@ -25,11 +24,11 @@ export function createTripList({
   onRequestClose,
   onRequestOpen,
   openers,
-  reducedMotion,
   signal,
 }: {
   closeButton: HTMLButtonElement | null
-  isNarrow: () => boolean
+  /** Whether the screen is a phone's, where the list comes up from the bottom. */
+  narrow: MediaQueryList
   list: HTMLElement
   /** The list started closing; `restoreView` unless a trip is taking the map. */
   onClose: (options: { restoreView: boolean }) => void
@@ -42,10 +41,8 @@ export function createTripList({
   /** An opener was pressed while the list was closed. */
   onRequestOpen: () => void
   openers: readonly HTMLElement[]
-  reducedMotion: MediaQueryList
   signal: AbortSignal
 }) {
-  let exit: Animation | undefined
   let trigger: HTMLElement | undefined
   let dwell: ReturnType<typeof setTimeout> | undefined
   // The row filling up, and the row lifted meanwhile.
@@ -56,8 +53,12 @@ export function createTripList({
 
   list.style.setProperty('--trip-map-dwell', `${DWELL}ms`)
 
+  let shown = !list.hidden
+  // Swiped away, it closes as its close button does.
+  const sheet = createSheet(list, { narrow, onSwipeClose: onRequestClose, signal })
+
   function isOpen() {
-    return !list.hidden && !exit
+    return shown
   }
 
   function getId(link: HTMLElement) {
@@ -115,9 +116,8 @@ export function createTripList({
       return
     }
 
-    exit?.cancel()
-    exit = undefined
-    list.hidden = false
+    shown = true
+    sheet.open()
     setExpanded(true)
 
     if (options.focus !== false) {
@@ -135,22 +135,8 @@ export function createTripList({
     setPreviewed(undefined)
     setExpanded(false)
 
-    const animation = list.animate(
-      [{}, { opacity: 0, translate: isNarrow() ? '0 2rem' : '1.5rem 0' }],
-      { ...EXIT, duration: reducedMotion.matches ? 0 : EXIT.duration },
-    )
-
-    exit = animation
-    animation.finished.then(
-      () => {
-        if (exit === animation) {
-          exit = undefined
-          list.hidden = true
-          animation.cancel()
-        }
-      },
-      () => {},
-    )
+    shown = false
+    sheet.close()
     onClose({ restoreView: options.restoreView !== false })
 
     if (options.restoreFocus !== false && trigger?.isConnected) {
@@ -253,16 +239,15 @@ export function createTripList({
     },
     { signal },
   )
-  signal.addEventListener('abort', () => {
-    clearTimeout(dwell)
-    exit?.cancel()
-  })
+  signal.addEventListener('abort', () => clearTimeout(dwell))
 
   return {
     close,
     get isOpen() {
       return isOpen()
     },
+    /** The drawer it is, for one to open over it. */
+    sheet,
     show,
   }
 }
