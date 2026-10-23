@@ -322,6 +322,7 @@ export const manifestSchema = z.looseObject({
 export type MomentRecord = z.output<typeof momentRecordSchema>
 export type MomentRecordInput = z.input<typeof momentRecordSchema>
 export type MomentMedia = MomentRecord['media'][number]
+export type MomentTopic = z.output<typeof momentTopicSchema>
 export type PublishedImage = z.output<typeof publishedImageSchema>
 export type PublishedVideo = z.output<typeof publishedVideoSchema>
 export type Place = z.output<typeof placeSchema>

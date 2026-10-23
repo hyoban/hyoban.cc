@@ -21,6 +21,7 @@ import { buildRouteGlyph, buildYearMap, getTripLine } from '@/year-map'
 import { buildYearReview, getCityName, getReviewYears, getYearPlaces } from '@/year-review'
 import YearClock from '@/components/YearClock.astro'
 import YearWeekdays from '@/components/YearWeekdays.astro'
+import YearTopics from '@/components/YearTopics.astro'
 import { readDevices, readPlaces } from '@/data/store'
 import { getDivisionLabel, placeKindLabels } from '@/data/place-info'
 import { getSortedPosts } from '@/utils'
@@ -415,10 +416,11 @@ const highlights = [
     {
       review.favoriteHour && (
         <section class="year-section" aria-labelledby="year-hours">
-          <h2 id="year-hours">什么时候记</h2>
+          <h2 id="year-hours">什么时候记了什么</h2>
           <YearClock hours={review.hours} favorite={review.favoriteHour}>
             <YearWeekdays weekdays={review.weekdays} />
           </YearClock>
+          {review.topics.length > 0 && <YearTopics topics={review.topics} />}
         </section>
       )
     }
