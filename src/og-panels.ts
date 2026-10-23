@@ -132,36 +132,43 @@ export async function renderOgPanel(panel: OgPanel, load: LoadImage) {
     )
   } else if (panel.kind === 'trips') {
     const trips = panel.trips.slice(0, 3)
-    const top = (630 - trips.length * 164 - (trips.length - 1) * 20) / 2
+    // One trip has the panel to itself, its photo above its words; more share it in rows,
+    // their photos as large as the rows let them be.
+    const single = trips.length === 1
+    const rowHeight = single ? 531 : trips.length === 2 ? 240 : 164
+    const gap = trips.length === 2 ? 24 : 20
+    const photo = single
+      ? { width: 612, height: 420 }
+      : { width: Math.round(rowHeight * 1.27), height: rowHeight }
+    const top = (630 - trips.length * rowHeight - (trips.length - 1) * gap) / 2
     children.push(
       ...(await Promise.all(
         trips.map(async (trip, index) => {
-          const image = trip.photo ? await load(trip.photo, 208, 164) : undefined
+          const image = trip.photo ? await load(trip.photo, photo.width, photo.height) : undefined
           return h(
             'div',
             {
               position: 'absolute',
               left: 24,
-              top: top + index * 184,
+              top: top + index * (rowHeight + gap),
               width: 612,
-              height: 164,
+              height: rowHeight,
               display: 'flex',
-              alignItems: 'center',
-              gap: 24,
+              flexDirection: single ? 'column' : 'row',
+              alignItems: single ? 'stretch' : 'center',
+              gap: single ? 20 : 24,
             },
             [
               image
-                ? h(
-                    'img',
-                    { width: 208, height: 164, borderRadius: 12, flexShrink: 0 },
-                    undefined,
-                    { src: image, width: 208, height: 164 },
-                  )
+                ? h('img', { ...photo, borderRadius: 12, flexShrink: 0 }, undefined, {
+                    src: image,
+                    ...photo,
+                  })
                 : h(
                     'div',
                     {
-                      width: 208,
-                      height: 164,
+                      ...photo,
+                      display: 'flex',
                       borderRadius: 12,
                       flexShrink: 0,
                       backgroundColor: colors.border,
@@ -174,16 +181,22 @@ export async function renderOgPanel(panel: OgPanel, load: LoadImage) {
                   ),
               h(
                 'div',
-                { display: 'flex', flex: 1, minWidth: 0, flexDirection: 'column', gap: 12 },
+                {
+                  display: 'flex',
+                  flex: 1,
+                  minWidth: 0,
+                  flexDirection: 'column',
+                  gap: single ? 8 : 12,
+                },
                 [
                   h(
                     'div',
                     {
                       display: 'block',
-                      fontSize: 34,
+                      fontSize: single || trips.length === 2 ? 36 : 34,
                       lineHeight: 1.3,
                       fontWeight: 500,
-                      lineClamp: 2,
+                      lineClamp: single ? 1 : 2,
                       color: colors.tx,
                     },
                     trip.title,
