@@ -6,8 +6,9 @@ including bundles that include it (such as @hyoban/trip-map's `dist`).
 
 ## Base UI
 
-The drawer's behaviour (`src/drawer.ts`, `src/swipe.ts`, `src/snap-points.ts`) is ported
-from [Base UI](https://github.com/mui/base-ui)'s Drawer, `@base-ui/react` 1.9.0.
+The drawer's behaviour (`src/drawer.ts`, `src/swipe.ts`, `src/snap-points.ts`) and the
+scroll area's (`src/scroll-area.ts`) are ported from [Base UI](https://github.com/mui/base-ui)'s
+Drawer and ScrollArea, `@base-ui/react` 1.9.0.
 
 ```text
 MIT License
@@ -36,7 +37,8 @@ SOFTWARE.
 ## shadcn/ui
 
 The stylesheet (`src/styles.css`) is ported from [shadcn/ui](https://github.com/shadcn-ui/ui)'s
-Drawer in the base-nova style (registry item `styles/base-nova/drawer`).
+Drawer and ScrollArea in the base-nova style (registry items `styles/base-nova/drawer` and
+`styles/base-nova/scroll-area`).
 
 ```text
 MIT License
