@@ -1,0 +1,32 @@
+---
+import { getPlaceShard, PLACE_SHARDS } from '@hyoban/trip-map'
+import MomentEntry from '@/components/MomentEntry.astro'
+import { getMappedLocationGroups, getMoments } from '@/moments'
+
+// The drawer content for the map's places, a few to a file rather than a file each: a
+// `<template>` per place, in the file getPlaceShard puts it in, which the map fetches
+// the first time one of them opens, so the map page doesn't carry every place's
+// Moments up front.
+export const partial = true
+
+export async function getStaticPaths() {
+  const groups = getMappedLocationGroups(await getMoments())
+
+  return Array.from({ length: PLACE_SHARDS }, (_, shard) => ({
+    params: { shard: String(shard) },
+    props: { groups: groups.filter(group => getPlaceShard(group.id) === shard) },
+  }))
+}
+
+const { groups } = Astro.props
+---
+
+{groups.map(group => (
+  <template data-trip-map-place={group.id}>
+    <div class="trip-map-drawer__moments">
+      {group.moments.map(moment => (
+        <MomentEntry date="year" exceptLocation={group.id} moment={moment} />
+      ))}
+    </div>
+  </template>
+))}

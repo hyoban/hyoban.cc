@@ -1,4 +1,5 @@
 import type { Period } from './period.ts'
+import { getPlaceShard } from '../place-shards.ts'
 
 // What the map page's address means, all in its path: the map, narrowed to a year or a
 // month of one or not, with a place's drawer open over it or not; the list of trips,
@@ -83,8 +84,8 @@ function parseMapPath(pathname: string) {
 }
 
 export const defaultUrls = {
-  /** A place's drawer content, an HTML fragment. */
-  getPlaceUrl: (id: string) => `/map/place/${encodeURIComponent(id)}/moments/`,
+  /** A place's drawer content: an HTML fragment, or a file of them (see place-shards.ts). */
+  getPlaceUrl: (id: string) => `/map/places/${getPlaceShard(id)}/`,
   /** A trip's playback data, `TripData` as JSON. */
   getTripDataUrl: (id: string) => `/trip/${encodeURIComponent(id)}/data.json`,
   /** A trip's sidebar content, an HTML fragment. */

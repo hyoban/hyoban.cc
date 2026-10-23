@@ -16,7 +16,7 @@ export default defineConfig({
     // First, so every later read of a record sees the API's snapshot when there is one.
     apiData(),
     // The map's drawer and Moments fragments aren't pages to list.
-    Sitemap({ filter: (page) => !/\/map\/.*\/moments\/$/.test(page) }),
+    Sitemap({ filter: (page) => !/\/map\/(.*\/moments|places\/\d+)\/$/.test(page) }),
   ],
   vite: {
     plugins: [devRewrites()],

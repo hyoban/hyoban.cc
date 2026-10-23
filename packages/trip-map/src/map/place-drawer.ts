@@ -4,7 +4,8 @@ import type { PlaceMarker } from './place-markers.ts'
 import { createSheet, type Sheet } from './sheet.ts'
 
 // The drawer a place opens with its Moments: an HTML fragment fetched from the site
-// the first time, and a lightbox for its photos (and the Moments list's) when the site
+// the first time, or the place's `<template data-trip-map-place>` in a file of several
+// (see place-shards.ts), and a lightbox for its photos (and the Moments list's) when the site
 // provides one.
 
 /** Shows a drawer item's media in the lightbox: a still, or a live photo's clip. */
@@ -50,9 +51,10 @@ export function createPlaceDrawer({
 }) {
   const { drawer, drawerClose, drawerContent, drawerEyebrow, drawerTitle, lightbox, page } =
     elements
-  // Each place's drawer content, fetched once; a failed fetch is tried again next time.
+  // Each place's drawer content, its file fetched once (places may share one); a failed
+  // fetch is tried again next time.
   const html = new Map<string, string>()
-  const requests = new Map<string, Promise<string | undefined>>()
+  const requests = new Map<string, Promise<void>>()
   const lightboxMedia = lightbox && createLightboxMedia?.(lightbox, signal)
   let activeId: string | undefined
   let activeTrigger: HTMLButtonElement | undefined
@@ -74,11 +76,33 @@ export function createPlaceDrawer({
   let lightboxIndex = 0
   let lightboxItems: HTMLElement[] = []
 
-  function load(id: string) {
-    let request = requests.get(id)
+  /** Keeps the places a file holds, or the whole of it as `id`'s when it holds just one. */
+  function store(id: string, text: string) {
+    const template = document.createElement('template')
+    template.innerHTML = text
+    const places = template.content.querySelectorAll<HTMLTemplateElement>(
+      'template[data-trip-map-place]',
+    )
+
+    if (places.length === 0) {
+      html.set(id, text)
+    }
+
+    for (const place of places) {
+      html.set(place.dataset.tripMapPlace ?? '', place.innerHTML)
+    }
+  }
+
+  function load(id: string): Promise<string | undefined> {
+    if (html.has(id)) {
+      return Promise.resolve(html.get(id))
+    }
+
+    const url = getPlaceUrl(id)
+    let request = requests.get(url)
 
     if (!request) {
-      request = fetch(getPlaceUrl(id), { signal })
+      request = fetch(url, { signal })
         .then((response) => {
           if (!response.ok) {
             throw new Error(`${response.status} ${response.statusText}`)
@@ -86,25 +110,27 @@ export function createPlaceDrawer({
 
           return response.text()
         })
-        .then(
-          (text) => {
-            html.set(id, text)
-            return text
-          },
-          (cause: unknown) => {
-            requests.delete(id)
-
-            if (!signal.aborted) {
-              onError(id, cause)
-            }
-
-            return undefined
-          },
-        )
-      requests.set(id, request)
+        .then((text) => store(id, text))
+      requests.set(url, request)
     }
 
     return request
+      .then(() => {
+        if (!html.has(id)) {
+          throw new Error(`${url} has no content for ${id}`)
+        }
+
+        return html.get(id)
+      })
+      .catch((cause: unknown) => {
+        requests.delete(url)
+
+        if (!signal.aborted) {
+          onError(id, cause)
+        }
+
+        return undefined
+      })
   }
 
   function createMessage(text: string) {
