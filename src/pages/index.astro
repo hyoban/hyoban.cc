@@ -2,9 +2,12 @@
 import SitePage from '@/components/SitePage.astro'
 import { SITE_DESCRIPTION, SITE_TITLE } from '@/consts'
 import Layout from '@/layouts/Layout.astro'
+import { getMoments } from '@/moments'
 import { formatPostListDate, formatPostYear, getSortedPosts } from '@/utils'
+import { getReviewYears } from '@/year-review'
 
 const posts = await getSortedPosts()
+const reviewYears = new Set(getReviewYears(await getMoments()).map(String))
 type Post = (typeof posts)[number]
 const postsByYear: Array<{ year: string; posts: Post[] }> = []
 
@@ -28,7 +31,7 @@ for (const post of posts) {
       {
         postsByYear.map((group) => (
           <section class="post-year">
-            <h2>{group.year}</h2>
+            <h2>{reviewYears.has(group.year) ? <a href={`/${group.year}/`} aria-label={`${group.year} 年回顾`}>{group.year}</a> : group.year}</h2>
             <ul>
               {group.posts.map((post) => (
                 <li>
@@ -80,7 +83,12 @@ for (const post of posts) {
       flex-direction: column;
     }
 
-    & a {
+    & h2 a {
+      display: inline;
+      color: inherit;
+    }
+
+    & li a {
       display: flex;
       align-items: baseline;
       justify-content: space-between;

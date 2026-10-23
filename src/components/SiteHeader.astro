@@ -1,14 +1,20 @@
 ---
 import { getAssetUrl } from '@/asset-url'
 import { SITE_TAGLINE, SITE_TITLE } from '@/consts'
+import { getMoments } from '@/moments'
+import { getReviewYears } from '@/year-review'
 
+const latestYear = getReviewYears(await getMoments()).at(-1)
 const nav = [
   { href: '/calendar/', label: '日历' },
   { href: '/trip/', label: '旅程' },
   { href: '/media/', label: '影视' },
+  ...(latestYear ? [{ href: `/${latestYear}/`, label: '回顾', match: /^\/\d{4}\/$/ }] : []),
   { href: '/use/', label: 'Use' },
 ]
 const pathname = Astro.url.pathname
+const isCurrent = (item: { href: string; match?: RegExp }) =>
+  item.match ? item.match.test(pathname) : pathname.startsWith(item.href)
 ---
 
 <header class="site-header">
@@ -27,9 +33,9 @@ const pathname = Astro.url.pathname
   </a>
   <nav aria-label="主导航" class="site-header__nav">
     {
-      nav.map(({ href, label }) => (
-        <a href={href} aria-current={pathname.startsWith(href) ? 'page' : undefined}>
-          {label}
+      nav.map((item) => (
+        <a href={item.href} aria-current={isCurrent(item) ? 'page' : undefined}>
+          {item.label}
         </a>
       ))
     }

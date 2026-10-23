@@ -38,6 +38,18 @@ export function getFrameSources(key: string, width: number) {
   )
 }
 
+/**
+ * A small copy of an image the site serves, `width` wide, for a tile too small for its
+ * smallest variant: resized by Cloudflare Images, or by Media Transformations for a frame.
+ */
+export function getThumbnailUrl(src: string, width: number) {
+  if (src.includes('/cdn-cgi/')) {
+    return src.replace(/width=\d+/, `width=${width}`)
+  }
+  const { origin, pathname } = new URL(src)
+  return `${origin}/cdn-cgi/image/width=${width},format=auto,onerror=redirect${pathname}`
+}
+
 function getTransformedSources(key: string, ownWidth: number, options: (width: number) => string) {
   const { origin, pathname } = new URL(getAssetUrl(key))
   const widths = new Set([
