@@ -1,9 +1,13 @@
 package cc.hyoban.moments
 
 import cc.hyoban.moments.data.local.Fix
+import cc.hyoban.moments.data.local.Found
+import cc.hyoban.moments.data.local.kindOf
 import cc.hyoban.moments.data.local.landmarks
 import cc.hyoban.moments.data.local.nameAt
 import cc.hyoban.moments.data.local.parsePhoton
+import cc.hyoban.moments.data.spec.Division
+import cc.hyoban.moments.data.spec.PlaceKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -43,5 +47,26 @@ class PlaceSearchTest {
         assertEquals("九江路", nameAt(found.filter { it.kind == "highway" }))
         assertNull(nameAt(emptyList()))
         assertEquals(emptyList(), parsePhoton("""{"type":"FeatureCollection"}"""))
+    }
+
+    @Test
+    fun `a landmark's kind follows from what OpenStreetMap calls it`() {
+        fun kind(key: String, value: String) = kindOf(Found("x", Fix(0.0, 0.0), key, value))
+        assertEquals(PlaceKind.SCENIC, kind("tourism", "attraction"))
+        assertEquals(PlaceKind.FOOD, kind("amenity", "restaurant"))
+        assertEquals(PlaceKind.SHOPPING, kind("shop", "mall"))
+        assertEquals(PlaceKind.STAY, kind("tourism", "hotel"))
+        assertEquals(PlaceKind.TRANSPORT, kind("railway", "station"))
+        assertEquals(PlaceKind.TOWN, kind("place", "village"))
+        assertNull(kind("amenity", "bank"))
+        assertNull(kind("building", "yes"))
+    }
+
+    @Test
+    fun `a division is shown by its two most particular names`() {
+        assertEquals("芜湖市 镜湖区", Division("340202", "安徽省", "芜湖市", "镜湖区").label())
+        assertEquals("安徽省 芜湖市", Division("340200", "安徽省", "芜湖市").label())
+        assertEquals("北京市", Division("110000", "北京市", "北京市").label())
+        assertEquals("四川省", Division("510000", "四川省").label())
     }
 }

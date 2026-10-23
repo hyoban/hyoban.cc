@@ -25,6 +25,8 @@ say stay out.
   phone is already paired.
 - A `DropdownMenu` or dialog is a window of its own, where `ui.py` can't see test tags:
   tap its items by their words.
+- The new Moment page opens with the keyboard up, and `ui.py dump` still lists what is
+  under it, so a tap there types instead: close the keyboard first.
 - Look at it, don't just build it: `scripts/ui.py open|dump|tap|back`, the `moments://`
   links and screenshots. Check dark mode and landscape when a change touches colour or
   layout, and watch for dropped frames when it touches motion.

@@ -88,6 +88,73 @@ test('a place near a known one, or with its name, is that one; one the app made 
   assert.equal((await get(env, '/v1/places/somewhere-else')).status, 404)
 })
 
+test('a new place is kept with the division it is in, and without one when that can’t be looked up', async () => {
+  const { env } = setUpWithData()
+  const square = (x, y) => [
+    [
+      [x - 1, y - 1],
+      [x + 1, y - 1],
+      [x + 1, y + 1],
+      [x - 1, y + 1],
+      [x - 1, y - 1],
+    ],
+  ]
+  const outlines = {
+    100000: { adcode: 340000, name: '安徽省' },
+    340000: { adcode: 340200, name: '芜湖市' },
+    340200: { adcode: 340202, name: '镜湖区' },
+  }
+  let reachable = true
+  const realFetch = globalThis.fetch
+
+  globalThis.fetch = async (url) => {
+    const code = /(\d+)_full\.json$/.exec(url)?.[1]
+    const properties = outlines[code]
+
+    if (!reachable) {
+      return new Response('', { status: 503 })
+    }
+
+    return Response.json({
+      features: properties
+        ? [{ properties, geometry: { type: 'Polygon', coordinates: square(118.44, 31.35) } }]
+        : [],
+    })
+  }
+
+  try {
+    const located = { ...env, DIVISIONS_URL: 'https://datav.test' }
+    const lake = {
+      name: '镜湖',
+      latitude: 31.35,
+      longitude: 118.43,
+      kind: 'scenic',
+      note: 'a lake',
+    }
+    const first = await commit(located, { places: { 'p-01k7zq9x3m4n5p6q7r8s9t0v1a': lake } })
+
+    assert.equal(first.status, 200)
+    assert.deepEqual((await get(env, '/v1/places/jing-hu')).body, {
+      name: '镜湖',
+      latitude: 31.35,
+      longitude: 118.43,
+      kind: 'scenic',
+      division: { code: '340202', province: '安徽省', city: '芜湖市', district: '镜湖区' },
+      note: 'a lake',
+    })
+
+    // DataV out of reach: kept as sent.
+    reachable = false
+    const plaza = { name: '中山广场', latitude: 31.3, longitude: 118.4 }
+    const second = await commit(located, { places: { 'p-01k7zq9x3m4n5p6q7r8s9t0v1b': plaza } })
+
+    assert.equal(second.status, 200)
+    assert.deepEqual((await get(env, '/v1/places/zhong-shan-guang-chang')).body, plaza)
+  } finally {
+    globalThis.fetch = realFetch
+  }
+})
+
 test('a Moment of words alone is published under its first words', async () => {
   const { env } = setUpWithData()
   const { body } = await commit(env, { moments: [ferryMoment] })

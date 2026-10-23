@@ -1,3 +1,5 @@
+import type { Place } from '@hyoban/data-spec'
+import { createDataVChildren, locateDivision } from '@hyoban/data-spec/division'
 import { authorize } from './auth.ts'
 import type { Bucket, UploadPart } from './bucket.ts'
 import {
@@ -35,6 +37,8 @@ export interface Env {
   DEPLOY_HOOK_URL?: string
   /** For the trips' driving routes, from Mapbox's Directions. */
   MAPBOX_TOKEN?: string
+  /** Where new places' divisions are looked up, DataV's GeoAtlas; none without it. */
+  DIVISIONS_URL?: string
 }
 
 interface ExecutionContext {
@@ -96,8 +100,15 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
     throw new HttpError(401, 'Writing needs a token.', { 'WWW-Authenticate': 'Bearer' })
   }
 
+  const childrenOf = env.DIVISIONS_URL ? createDataVChildren(env.DIVISIONS_URL) : undefined
+  const locate = childrenOf && ((place: Place) => locateDivision(place, childrenOf))
   const write = async <T>(run: (context: WriteContext) => Promise<WriteResult<T>>) => {
-    const result = await run({ db, bucket: env.BUCKET, now: timestamp() })
+    const result = await run({
+      db,
+      bucket: env.BUCKET,
+      now: timestamp(),
+      ...(locate && { locate }),
+    })
 
     if (result.changesSite) {
       executionContext?.waitUntil(afterSiteChange(env, result.changesRoutes ?? true))

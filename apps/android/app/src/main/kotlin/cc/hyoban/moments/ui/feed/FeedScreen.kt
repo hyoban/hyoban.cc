@@ -549,7 +549,8 @@ fun PlaceScreen(
         place?.name ?: id,
         onBack,
         Modifier.background(AppColors.page),
-        subtitle = pluralStringResource(R.plurals.count_moments, moments.size, moments.size),
+        // Where it is, then how many Moments are there.
+        subtitle = listOfNotNull(place?.division?.label(), pluralStringResource(R.plurals.count_moments, moments.size, moments.size)).joinToString(" · "),
         actions = {
             // On the map tab, its panel up, and the way there, as from that panel.
             if (place != null) {

@@ -66,8 +66,10 @@ then goes all at once. Writes need a token.
 A change set names the places only the app knows, by id, the Moments it wrote or changed,
 and the uids of those it deleted. A place within 200 m of a known one, or with its name,
 is that one; any other is added, and one the app made, under the provisional id
-`p-<ulid>`, gets an id spelled from its name's pinyin. The Moments name each place by
-the id it is known by. Each Moment is saved and published: a draft takes its
+`p-<ulid>`, gets an id spelled from its name's pinyin. A place added without a division
+has the province, city and district its point is in looked up from DataV's GeoAtlas
+(`DIVISIONS_URL`) and kept on it; when that fails it is kept without, for
+`pnpm places:locate` to fill in. The Moments name each place by the id it is known by. Each Moment is saved and published: a draft takes its
 `YYYY/MM/DD-NN-slug` id, the next order on its day after the others in the same write,
 slugged by its first place or else its first words, and its originals move to
 `moments/<id>/<slug>.<ext>`; a published one keeps its id and publishes any new media.

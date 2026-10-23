@@ -267,6 +267,15 @@
     <string name="action_delete_moment">Delete this Moment</string>
     <string name="label_known_place">A known place</string>
     <string name="place_new_here">A new place, at the pin</string>
+    <string name="place_kind">Kind</string>
+    <string name="place_kind_city">City</string>
+    <string name="place_kind_town">Town</string>
+    <string name="place_kind_region">Region</string>
+    <string name="place_kind_scenic">Sight</string>
+    <string name="place_kind_food">Food</string>
+    <string name="place_kind_shopping">Shopping</string>
+    <string name="place_kind_stay">Stay</string>
+    <string name="place_kind_transport">Transport</string>
     <string name="place_drag_hint">Drag the map to put the pin where this happened</string>
     <string name="share_as_place">As a Moment’s place</string>
     <string name="error_shared_place">Couldn’t find a place in what was shared</string>
