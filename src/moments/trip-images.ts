@@ -1,6 +1,7 @@
 import type { Trip, TripImage } from '@hyoban/trip-map'
 import { tripCovers } from '@/data/trips'
 import type { Moment, ResolvedMomentMedia } from '@/moments'
+import { getShowcaseMedia } from '@/moments/showcase'
 
 export type { TripImage }
 
@@ -50,7 +51,8 @@ export function getTripCovers(trip: Trip<Moment>) {
 
 /**
  * Up to three photos across the top of a trip's card, as the app has them (`coversOf`):
- * its chosen covers, or else the first photo of each of its days' Moments, oldest first.
+ * its chosen covers, or else the first photo of each of its days' Moments, oldest first,
+ * leaving out utility ones.
  */
 export function getTripCollage(trip: Trip<Moment>, moments: readonly Moment[], limit = 3) {
   const covers = getTripCovers(trip)
@@ -61,6 +63,6 @@ export function getTripCollage(trip: Trip<Moment>, moments: readonly Moment[], l
 
   return moments
     .filter((moment) => moment.dateKey >= trip.start && moment.dateKey <= trip.end)
-    .flatMap((moment) => getTripImages(moment.media.slice(0, 1)))
+    .flatMap((moment) => getTripImages(getShowcaseMedia(moment.media).slice(0, 1)))
     .slice(0, limit)
 }

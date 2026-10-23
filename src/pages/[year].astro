@@ -13,6 +13,7 @@ import {
   getTrips,
   type Moment,
 } from '@/moments'
+import { getShowcaseMedia } from '@/moments/showcase'
 import { getTripCollage } from '@/moments/trip-images'
 import { getPageCardPath, getPageTitle } from '@/page-cards'
 import { buildRouteGlyph, buildYearMap, getTripLine } from '@/year-map'
@@ -83,10 +84,10 @@ const devices = Object.entries(readDevices())
     // Its own post, when one was written about it.
     href: postLinks.has(id) ? `/${id}/` : '/use/',
   }))
-/** The stills of these Moments, photos and videos' posters, `width` wide. */
+/** The stills of these Moments, photos and videos' posters but no utility ones, `width` wide. */
 const photosOf = (dayMoments: Moment[], width: number) =>
   dayMoments
-    .flatMap((moment) => moment.media)
+    .flatMap((moment) => getShowcaseMedia(moment.media))
     .map((item) => (item.type === 'video' ? item.poster : item.src))
     .filter((image) => image !== undefined)
     .map((image) => getThumbnailUrl(image.sources[0]?.src ?? image.src, width))
@@ -100,7 +101,10 @@ const collage = Array.from({ length: 12 }, (_, index) => {
   const key = `${year}-${String(index + 1).padStart(2, '0')}`
   const month = review.moments
     .filter((moment) => moment.dateKey.startsWith(key))
-    .sort((first, second) => second.media.length - first.media.length)
+    .sort(
+      (first, second) =>
+        getShowcaseMedia(second.media).length - getShowcaseMedia(first.media).length,
+    )
   return photoOf(month, 480)
 }).filter((photo) => photo !== undefined)
 const collageColumns = Math.ceil(collage.length / 2)

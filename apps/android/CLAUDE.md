@@ -19,6 +19,12 @@ say stay out.
 - The phone is usually on wireless adb. Take its serial from `adb devices`, leaving out
   `emulator-*`, and never start the emulator while the phone is there. If the phone is
   locked or adb has dropped, say so instead of working around it.
+- When `adb devices` is empty, `adb mdns services` may still show the phone's address
+  (its pairing service, say) without the connect service: scan that address's ports
+  30000–50000 for the open one besides the pairing port and `adb connect` to it; the
+  phone is already paired.
+- A `DropdownMenu` or dialog is a window of its own, where `ui.py` can't see test tags:
+  tap its items by their words.
 - Look at it, don't just build it: `scripts/ui.py open|dump|tap|back`, the `moments://`
   links and screenshots. Check dark mode and landscape when a change touches colour or
   layout, and watch for dropped frames when it touches motion.

@@ -1,6 +1,7 @@
 ---
 import { getThumbnailUrl } from '@/asset-url'
 import { getMomentPath, type Moment } from '@/moments'
+import { getShowcaseMedia } from '@/moments/showcase'
 
 // The year as a wall of days: a row per month, a tile per day. A day with a photo shows
 // it, one with only words is filled, the rest are dots; days on the road sit on a band.
@@ -23,7 +24,7 @@ const months = Array.from({ length: 12 }, (_, index) => {
   const days = Array.from({ length }, (_, dayIndex) => {
     const dateKey = `${year}-${String(month).padStart(2, '0')}-${String(dayIndex + 1).padStart(2, '0')}`
     const dayMoments = byDay.get(dateKey) ?? []
-    const media = dayMoments.flatMap((moment) => moment.media)
+    const media = dayMoments.flatMap((moment) => getShowcaseMedia(moment.media))
     const still = media
       .map((item) => (item.type === 'video' ? item.poster : item.src))
       .find((image) => image !== undefined)

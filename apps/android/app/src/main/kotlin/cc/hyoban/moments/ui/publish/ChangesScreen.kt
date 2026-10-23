@@ -37,6 +37,8 @@ import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.rounded.Undo
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.CloudUpload
+import androidx.compose.material.icons.rounded.HideImage
+import androidx.compose.material.icons.rounded.Image
 import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material.icons.rounded.Remove
 import androidx.compose.material.icons.rounded.Schedule
@@ -85,6 +87,7 @@ import cc.hyoban.moments.data.media.MediaUrls
 import cc.hyoban.moments.data.spec.MomentMedia
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
+import cc.hyoban.moments.data.spec.showcase
 import cc.hyoban.moments.data.store.Change
 import cc.hyoban.moments.ui.LocalSnackbarLift
 import cc.hyoban.moments.ui.components.AppColors
@@ -97,6 +100,7 @@ import cc.hyoban.moments.ui.settings.Caption
 import cc.hyoban.moments.ui.settings.Group
 import cc.hyoban.moments.ui.theme.DISABLED_ALPHA
 import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
+import cc.hyoban.moments.ui.theme.MediaOverlay
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.dividerColor
 import cc.hyoban.moments.ui.theme.fill
@@ -482,6 +486,19 @@ private fun ChangedFields(change: Change, places: Map<String, Place>, urls: Medi
             before.media.filter { it.uid !in now }.map { it to false }
         Field(R.string.change_photos) { PhotoRow(photos, urls) }
     }
+    // The photos kept, marked out of covers or back into them, each set under what became of it.
+    val was = before.media.associate { it.uid to it.showcase }
+    val marked = after.media.filter { !it.showcase && was[it.uid] == true }
+    val unmarked = after.media.filter { it.showcase && was[it.uid] == false }
+    if (marked.isNotEmpty() || unmarked.isNotEmpty()) {
+        any = true
+        Field(R.string.change_cover) {
+            Column(verticalArrangement = Arrangement.spacedBy(Space.s)) {
+                if (marked.isNotEmpty()) CoverChange(Icons.Rounded.HideImage, R.string.change_cover_off, marked, urls)
+                if (unmarked.isNotEmpty()) CoverChange(Icons.Rounded.Image, R.string.change_cover_on, unmarked, urls)
+            }
+        }
+    }
     if (before.occurredAt != after.occurredAt) {
         any = true
         val whenOf = { moment: MomentRecord -> listOfNotNull(formatDate(moment.occurredAt), formatTime(moment.occurredAt)).joinToString(" ") }
@@ -496,6 +513,18 @@ private fun ChangedFields(change: Change, places: Map<String, Place>, urls: Medi
     }
     if (!any) {
         Text(stringResource(R.string.note_change_nothing), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+/** Photos whose use as covers changed, under what it changed to. */
+@Composable
+private fun CoverChange(icon: androidx.compose.ui.graphics.vector.ImageVector, label: Int, photos: List<MomentMedia>, urls: MediaUrls) {
+    Column(verticalArrangement = Arrangement.spacedBy(Space.xs)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
+            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
+            Text(stringResource(label), style = MaterialTheme.typography.bodyMedium)
+        }
+        PhotoRow(photos.map { it to null }, urls, badges = false)
     }
 }
 
@@ -552,9 +581,10 @@ private fun FromTo(from: String, to: String, icon: androidx.compose.ui.graphics.
 /**
  * Photos in a row, each marked by what became of it: null as it was, true put in, ringed
  * in primary with a plus, false taken out, faded, ringed in the error colour with a minus.
+ * A photo not used as a cover says so in its corner, unless [badges] is false.
  */
 @Composable
-private fun PhotoRow(photos: List<Pair<MomentMedia, Boolean?>>, urls: MediaUrls) {
+private fun PhotoRow(photos: List<Pair<MomentMedia, Boolean?>>, urls: MediaUrls, badges: Boolean = true) {
     Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(Space.s)) {
         for ((media, added) in photos) {
             val ring = when (added) {
@@ -571,6 +601,15 @@ private fun PhotoRow(photos: List<Pair<MomentMedia, Boolean?>>, urls: MediaUrls)
                         .alpha(if (added == false) DISABLED_ALPHA else 1f)
                         .border(2.dp, ring, MaterialTheme.shapes.medium),
                 )
+                if (badges && !media.showcase) {
+                    Icon(
+                        Icons.Rounded.HideImage,
+                        contentDescription = stringResource(R.string.label_photo_utility),
+                        tint = MediaOverlay.content,
+                        modifier = Modifier.align(Alignment.BottomStart).padding(Space.xs).size(20.dp).clip(CircleShape)
+                            .background(MediaOverlay.control).padding(Space.xxs),
+                    )
+                }
                 if (added != null) {
                     Icon(
                         if (added) Icons.Rounded.Add else Icons.Rounded.Remove,

@@ -3,6 +3,7 @@ package cc.hyoban.moments.widget
 import cc.hyoban.moments.data.spec.MomentMedia
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.TripRecord
+import cc.hyoban.moments.data.spec.showcase
 import java.time.LocalDate
 import kotlin.random.Random
 
@@ -20,7 +21,7 @@ fun memoryFor(moments: List<MomentRecord>, today: LocalDate, hasStill: (MomentMe
     val todayKey = today.toString()
     val withPhoto = moments
         .filter { it.dateKey < todayKey }
-        .mapNotNull { moment -> moment.media.firstOrNull(hasStill)?.let { moment to it } }
+        .mapNotNull { moment -> moment.media.firstOrNull { it.showcase && hasStill(it) }?.let { moment to it } }
         .sortedBy { it.first.uid }
     if (withPhoto.isEmpty()) return null
 

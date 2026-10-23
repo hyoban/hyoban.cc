@@ -75,6 +75,11 @@ const mediaBase = {
   /** English alt text; empty until someone writes it. */
   alt: z.string().default(''),
   takenAt: timestamp.optional(),
+  /**
+   * Kept for the record, a screenshot or a flat tyre, rather than worth showing off: it
+   * shows in its own Moment but is never picked for a cover, a collage or a share card.
+   */
+  utility: z.boolean().optional(),
   local: localMediaSchema.optional(),
 }
 

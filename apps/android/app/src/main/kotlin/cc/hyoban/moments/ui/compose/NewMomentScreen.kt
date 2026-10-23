@@ -31,6 +31,7 @@ import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.zIndex
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -49,15 +50,19 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AddPhotoAlternate
+import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.DeleteOutline
 import androidx.compose.material.icons.rounded.Error
+import androidx.compose.material.icons.rounded.HideImage
 import androidx.compose.material.icons.rounded.PhotoCamera
 import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -97,6 +102,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.toggleableState
+import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
@@ -122,6 +130,7 @@ import cc.hyoban.moments.data.spec.MediaType
 import cc.hyoban.moments.data.spec.MomentMedia
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
+import cc.hyoban.moments.data.spec.showcase
 import cc.hyoban.moments.ui.components.isCompactHeight
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.PageWidth
@@ -178,6 +187,9 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
 
     var text by rememberSaveable { mutableStateOf(original?.text.orEmpty()) }
     var photos by remember { mutableStateOf(originalMedia.keys.toList()) }
+    // The photos kept for the record, never picked for a cover: see MomentMedia.utility.
+    val originalUtility = remember(originalMedia) { originalMedia.filterValues { !it.showcase }.keys }
+    var utility by remember { mutableStateOf(originalUtility) }
     val infos = remember { mutableStateMapOf<Uri, PhotoInfo>() }
     val openedAt = remember { OffsetDateTime.now() }
     var chosenTime by remember { mutableStateOf(originalTime) }
@@ -293,7 +305,8 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
     val changed = if (original == null) {
         written
     } else {
-        text != original.text || photos != originalMedia.keys.toList() || chosenTime != originalTime || chosenPlace != originalPlace
+        text != original.text || photos != originalMedia.keys.toList() || utility.intersect(photos.toSet()) != originalUtility ||
+            chosenTime != originalTime || chosenPlace != originalPlace
     }
     val leave = { if (changed) confirmingDiscard = true else onBack() }
     BackHandler(enabled = changed && !saving) { confirmingDiscard = true }
@@ -308,7 +321,7 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
                 withContext(NonCancellable) {
                     // A place left as it was keeps all the Moment's places, as it may have more than one.
                     val places = if (original != null && chosenPlace == originalPlace) original.places else null
-                    val (moment, newPlace) = buildMoment(context, container, text, photos, infos, time, place, original, originalMedia, places)
+                    val (moment, newPlace) = buildMoment(context, container, text, photos, utility, infos, time, place, original, originalMedia, places)
                     if (original == null) container.addLocal(moment, newPlace) else container.updateLocal(moment, newPlace)
                 }
                 onSaved()
@@ -389,6 +402,8 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
                             photos,
                             onAdd = addPhotos,
                             onOpenCamera = openCamera,
+                            utility = utility,
+                            onToggleUtility = { uri -> utility = if (uri in utility) utility - uri else utility + uri },
                             onRemove = { removed -> photos = photos - removed },
                             onMove = { from, to -> photos = photos.toMutableList().apply { add(to, removeAt(from)) } },
                         )
@@ -529,7 +544,15 @@ private fun sharedChoice(place: SharedPlace, places: Map<String, Place>): PlaceC
  * stepping aside; a screen reader moves one earlier or later instead.
  */
 @Composable
-private fun PhotoStrip(photos: List<Uri>, onAdd: () -> Unit, onOpenCamera: () -> Unit, onRemove: (Uri) -> Unit, onMove: (Int, Int) -> Unit) {
+private fun PhotoStrip(
+    photos: List<Uri>,
+    onAdd: () -> Unit,
+    onOpenCamera: () -> Unit,
+    utility: Set<Uri>,
+    onToggleUtility: (Uri) -> Unit,
+    onRemove: (Uri) -> Unit,
+    onMove: (Int, Int) -> Unit,
+) {
     val list = rememberLazyListState()
     val haptics = LocalHapticFeedback.current
     val currentMove by rememberUpdatedState(onMove)
@@ -570,6 +593,9 @@ private fun PhotoStrip(photos: List<Uri>, onAdd: () -> Unit, onOpenCamera: () ->
     val photoShape = MaterialTheme.shapes.medium
     val earlier = stringResource(R.string.action_move_earlier)
     val later = stringResource(R.string.action_move_later)
+    val options = stringResource(R.string.action_photo_options)
+    // The photo whose menu is open, from a tap on it.
+    var menuFor by remember { mutableStateOf<Uri?>(null) }
     LazyRow(
         Modifier.fillMaxWidth(),
         state = list,
@@ -610,7 +636,10 @@ private fun PhotoStrip(photos: List<Uri>, onAdd: () -> Unit, onOpenCamera: () ->
                             onDragCancel = letGo,
                         )
                     }
+                    // A tap opens its menu; a long press is left to the drag above.
+                    .pointerInput(uri) { detectTapGestures(onLongPress = {}, onTap = { menuFor = uri }) }
                     .semantics {
+                        onClick(options) { menuFor = uri; true }
                         customActions = listOfNotNull(
                             CustomAccessibilityAction(earlier) { onMove(index, index - 1); true }.takeIf { index > 0 },
                             CustomAccessibilityAction(later) { onMove(index, index + 1); true }.takeIf { index < photos.lastIndex },
@@ -621,6 +650,30 @@ private fun PhotoStrip(photos: List<Uri>, onAdd: () -> Unit, onOpenCamera: () ->
                 // The site's photos by their URL, the phone's by their Uri.
                 AsyncImage(model = if (uri.scheme == "https" || uri.scheme == "http") uri.toString() else uri, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
                 if (lift > 0f) Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.onSurface.copy(alpha = DRAGGED_LAYER * lift)))
+                if (uri in utility) {
+                    Box(
+                        Modifier.align(Alignment.BottomStart).padding(Space.s).size(UTILITY_DOT).clip(CircleShape).background(MediaOverlay.control),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(Icons.Rounded.HideImage, contentDescription = stringResource(R.string.label_photo_utility), tint = MediaOverlay.content, modifier = Modifier.size(16.dp))
+                    }
+                }
+                DropdownMenu(menuFor == uri, onDismissRequest = { menuFor = null }) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.action_photo_utility)) },
+                        leadingIcon = { Icon(Icons.Rounded.HideImage, contentDescription = null) },
+                        trailingIcon = if (uri in utility) {
+                            { Icon(Icons.Rounded.Check, contentDescription = null) }
+                        } else {
+                            null
+                        },
+                        onClick = {
+                            menuFor = null
+                            onToggleUtility(uri)
+                        },
+                        modifier = Modifier.semantics { toggleableState = ToggleableState(uri in utility) }.testTag("photo_utility_$index"),
+                    )
+                }
                 // A small dot to see, in a corner of the 48dp Material 3 has anything tapped take.
                 Box(
                     Modifier.align(Alignment.TopEnd).size(REMOVE_TARGET)
@@ -730,6 +783,7 @@ private suspend fun buildMoment(
     container: AppContainer,
     text: String,
     photos: List<Uri>,
+    utility: Set<Uri>,
     infos: Map<Uri, PhotoInfo>,
     time: OffsetDateTime,
     place: PlaceChoice,
@@ -740,7 +794,8 @@ private suspend fun buildMoment(
     val now = stamp(OffsetDateTime.now())
     val directory = File(container.localStore.root, "media")
     val media = photos.map { uri ->
-        originalMedia[uri]?.let { return@map it }
+        val kept = (uri in utility).takeIf { it }
+        originalMedia[uri]?.let { return@map it.copy(utility = kept) }
         val uid = Ulid.next()
         val info = infos[uri] ?: Photos.read(context, uri)
         val copied = Photos.copy(context, uri, directory, uid)
@@ -750,6 +805,7 @@ private suspend fun buildMoment(
             width = info.width,
             height = info.height,
             takenAt = info.takenAt?.let(::stamp),
+            utility = kept,
             local = LocalMedia(uri = Uri.fromFile(copied.file).toString(), sha256 = copied.sha256, copied = true),
         )
     }
@@ -780,6 +836,7 @@ private const val PHOTO_WIDTH = 480
 private val PHOTO_SIZE = 96.dp
 private val REMOVE_TARGET = 48.dp
 private val REMOVE_DOT = 28.dp
+private val UTILITY_DOT = 28.dp
 private const val ADD_KEY = "add"
 private const val CAMERA_KEY = "camera"
 /** How much a photo held to move grows, and Material 3's dragged state layer over it. */

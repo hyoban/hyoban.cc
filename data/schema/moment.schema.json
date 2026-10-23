@@ -54,6 +54,9 @@
                 "type": "string",
                 "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(?::\\d{2})?(?:Z|[+-]\\d{2}:\\d{2})$"
               },
+              "utility": {
+                "type": "boolean"
+              },
               "local": {
                 "type": "object",
                 "properties": {
@@ -206,6 +209,9 @@
               "takenAt": {
                 "type": "string",
                 "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(?::\\d{2})?(?:Z|[+-]\\d{2}:\\d{2})$"
+              },
+              "utility": {
+                "type": "boolean"
               },
               "local": {
                 "type": "object",
@@ -393,6 +399,9 @@
               "takenAt": {
                 "type": "string",
                 "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(?::\\d{2})?(?:Z|[+-]\\d{2}:\\d{2})$"
+              },
+              "utility": {
+                "type": "boolean"
               },
               "local": {
                 "type": "object",
