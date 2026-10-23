@@ -1,0 +1,277 @@
+---
+import { getThumbnailUrl } from '@/asset-url'
+import { getMomentPath, type Moment } from '@/moments'
+
+// The year as a wall of days: a row per month, a tile per day. A day with a photo shows
+// it, one with only words is filled, the rest are dots; days on the road sit on a band.
+// Hovering a tile lifts it to a size its photo can be seen at. On a phone the wall turns
+// on its side, a column per month, so the tiles stay big enough to tell apart.
+
+interface Props {
+  year: number
+  moments: Moment[]
+  trips: { start: string; end: string; title: string }[]
+}
+
+const { year, moments, trips } = Astro.props
+const byDay = Map.groupBy(moments, (moment) => moment.dateKey)
+const tripOn = (dateKey: string) => trips.find((trip) => trip.start <= dateKey && dateKey <= trip.end)
+
+const months = Array.from({ length: 12 }, (_, index) => {
+  const month = index + 1
+  const length = new Date(Date.UTC(year, month, 0)).getUTCDate()
+  const days = Array.from({ length }, (_, dayIndex) => {
+    const dateKey = `${year}-${String(month).padStart(2, '0')}-${String(dayIndex + 1).padStart(2, '0')}`
+    const dayMoments = byDay.get(dateKey) ?? []
+    const media = dayMoments.flatMap((moment) => moment.media)
+    const still = media
+      .map((item) => (item.type === 'video' ? item.poster : item.src))
+      .find((image) => image !== undefined)
+    return {
+      dateKey,
+      day: dayIndex + 1,
+      count: dayMoments.length,
+      photo: still && getThumbnailUrl(still.sources[0]?.src ?? still.src, 160),
+      trip: tripOn(dateKey)?.title,
+    }
+  })
+  return { month, days, count: days.reduce((total, day) => total + day.count, 0) }
+})
+---
+
+<div class="year-mosaic" role="list" aria-label={`${year} 年的每一天`}>
+  {
+    months.map(({ month, days, count }) => (
+      <div class="year-mosaic__row" role="listitem" style={`--month: ${month}`}>
+        <span class="year-mosaic__month">{month}<span class="year-mosaic__unit">月</span></span>
+        <ol class="year-mosaic__days">
+          {days.map((day) => {
+            const label = `${month} 月 ${day.day} 日${day.count > 0 ? `，${day.count} 条` : ''}${day.trip ? `，${day.trip}` : ''}`
+            return (
+              <li
+                class:list={[
+                  'year-mosaic__day',
+                  day.photo ? 'has-photo' : day.count > 0 ? 'has-words' : 'is-empty',
+                  { 'is-trip': day.trip },
+                ]}
+                style={`--day: ${day.day}`}
+              >
+                {day.count > 0 ? (
+                  <a href={getMomentPath(day.dateKey)} aria-label={label} title={label}>
+                    {day.photo && <img src={day.photo} alt="" loading="lazy" decoding="async" />}
+                  </a>
+                ) : (
+                  <span title={label} />
+                )}
+              </li>
+            )
+          })}
+        </ol>
+        <span class="year-mosaic__count">{count || ''}</span>
+      </div>
+    ))
+  }
+</div>
+<p class="year-mosaic__legend" aria-hidden="true">
+  <span><i class="has-photo" />有照片</span>
+  <span><i class="has-words" />只有文字</span>
+  <span><i class="is-trip" />在路上</span>
+</p>
+
+<style>
+  /* One grid for the year, each tile placed by its month and day: rows of months here,
+     columns of them on a phone. */
+  .year-mosaic {
+    --gap: 3px;
+    display: grid;
+    grid-template-columns: 2.5rem repeat(31, minmax(0, 1fr)) 2.5rem;
+    gap: calc(var(--gap) * 2) var(--gap);
+    font-variant-numeric: tabular-nums;
+
+    @media (width < 40rem) {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: var(--gap) calc(var(--gap) * 2);
+    }
+  }
+
+  .year-mosaic__row,
+  .year-mosaic__days {
+    display: contents;
+  }
+
+  .year-mosaic__month,
+  .year-mosaic__count {
+    align-self: center;
+    color: var(--color-tx-3);
+    font-size: 0.75rem;
+    line-height: 1;
+  }
+
+  .year-mosaic__month {
+    grid-area: var(--month) / 1;
+  }
+
+  .year-mosaic__count {
+    grid-area: var(--month) / 33;
+    text-align: right;
+  }
+
+  @media (width < 40rem) {
+    .year-mosaic__month,
+    .year-mosaic__count {
+      grid-area: 1 / var(--month);
+      padding-block: 0.25rem;
+      text-align: center;
+    }
+
+    .year-mosaic__count {
+      grid-row: 33;
+    }
+
+    .year-mosaic__unit {
+      display: none;
+    }
+  }
+
+  .year-mosaic__day {
+    --along: calc((var(--day) - 1) / 30 * 100%);
+    position: relative;
+    grid-area: var(--month) / calc(var(--day) + 1);
+    aspect-ratio: 1;
+
+    @media (width < 40rem) {
+      --along: calc((var(--month) - 1) / 11 * 100%);
+      grid-area: calc(var(--day) + 1) / var(--month);
+    }
+
+    & > a,
+    & > span {
+      position: absolute;
+      inset: 0;
+      display: block;
+      overflow: hidden;
+      border-radius: 22%;
+      transition:
+        scale 180ms var(--ease-out),
+        box-shadow 180ms var(--ease-out);
+    }
+
+    & img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    &.is-empty > span {
+      inset: 38%;
+      border-radius: 50%;
+      background: var(--color-border);
+    }
+
+    &.has-words > a {
+      background: var(--color-tx-3);
+    }
+
+    &.has-photo > a {
+      background: var(--color-hover);
+    }
+
+    /* A trip's days joined by a band behind them, across the gaps between. */
+    &.is-trip::before {
+      content: '';
+      position: absolute;
+      inset: -2px calc(var(--gap) / -2 - 0.5px);
+      background: color-mix(in srgb, var(--color-tx) 16%, transparent);
+    }
+
+    &.is-trip:not(.is-trip + .is-trip)::before {
+      left: -2px;
+      border-start-start-radius: 30%;
+      border-end-start-radius: 30%;
+    }
+
+    &.is-trip:not(:has(+ .is-trip))::before {
+      right: -2px;
+      border-start-end-radius: 30%;
+      border-end-end-radius: 30%;
+    }
+
+    @media (width < 40rem) {
+      &.is-trip::before,
+      &.is-trip:not(.is-trip + .is-trip)::before,
+      &.is-trip:not(:has(+ .is-trip))::before {
+        inset: -1.5px -2px;
+        border-radius: 0;
+      }
+
+      &.is-trip:not(.is-trip + .is-trip)::before {
+        border-start-start-radius: 30%;
+        border-start-end-radius: 30%;
+      }
+
+      &.is-trip:not(:has(+ .is-trip))::before {
+        border-end-start-radius: 30%;
+        border-end-end-radius: 30%;
+      }
+    }
+
+    /* Lifted over its neighbours, from the side it won't spill off the wall. */
+    & > a:hover,
+    & > a:focus-visible {
+      z-index: 2;
+      scale: 4;
+      border-radius: 12%;
+      box-shadow: 0 2px 8px rgb(0 0 0 / 0.25);
+      transform-origin: var(--along) 50%;
+    }
+
+    @media (width < 40rem) {
+      & > a:hover,
+      & > a:focus-visible {
+        scale: 2.5;
+        transform-origin: var(--along) 50%;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      & > a {
+        transition: none;
+      }
+    }
+  }
+
+  .year-mosaic__legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1.25rem;
+    margin-top: 0.75rem;
+    color: var(--color-tx-2);
+    font-size: 0.75rem;
+
+    & span {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+    }
+
+    & i {
+      display: inline-block;
+      width: 0.625rem;
+      height: 0.625rem;
+      border-radius: 22%;
+    }
+
+    & .has-photo {
+      background: linear-gradient(135deg, #e7b46a, #6d8fb3);
+    }
+
+    & .has-words {
+      background: var(--color-tx-3);
+    }
+
+    & .is-trip {
+      width: 1.25rem;
+      background: color-mix(in srgb, var(--color-tx) 16%, transparent);
+    }
+  }
+</style>

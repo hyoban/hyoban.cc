@@ -1,0 +1,119 @@
+---
+import type { YearMap } from '@/year-map'
+
+// The year's footprint: the cities in view as faint outlines, those it lit filled by how
+// much was written there, its trips' routes drawn in as the map scrolls into view, and a
+// dot at each place.
+
+interface Props {
+  map: YearMap
+  label: string
+}
+
+const { map, label } = Astro.props
+---
+
+<figure class="year-footprint">
+  <svg viewBox={`0 0 ${map.width} ${map.height}`} role="img" aria-label={label}>
+    <path class="year-footprint__outline" d={map.outline} />
+    {
+      map.lit.map((city) => (
+        <path class="year-footprint__city" d={city.d} style={`--weight: ${city.weight.toFixed(2)}`}>
+          <title>{city.name}</title>
+        </path>
+      ))
+    }
+    {
+      map.routes.map((route, index) =>
+        route.legs.map((leg) => (
+          <path
+            class:list={['year-footprint__route', `is-${leg.by}`]}
+            d={leg.d}
+            pathLength="1"
+            style={`--trip: ${index}`}
+          />
+        )),
+      )
+    }
+    {map.dots.map((dot) => <circle class="year-footprint__dot" cx={dot.x} cy={dot.y} r="3" />)}
+  </svg>
+  <figcaption><slot /></figcaption>
+</figure>
+
+<style>
+  .year-footprint {
+    position: relative;
+
+    & svg {
+      display: block;
+      width: 100%;
+      height: auto;
+      max-height: 80svh;
+      overflow: visible;
+    }
+
+    & figcaption {
+      margin-top: 0.75rem;
+      color: var(--color-tx-2);
+    }
+  }
+
+  .year-footprint__outline {
+    fill: none;
+    stroke: var(--color-border);
+    stroke-width: 0.75;
+    stroke-linejoin: round;
+  }
+
+  .year-footprint__city {
+    fill: var(--color-tx);
+    fill-opacity: calc(0.1 + var(--weight) * 0.4);
+    stroke: var(--color-bg);
+    stroke-width: 0.75;
+    transition: fill-opacity 140ms var(--ease);
+
+    &:hover {
+      fill-opacity: 0.7;
+    }
+  }
+
+  .year-footprint__route {
+    fill: none;
+    stroke: var(--color-tx);
+    stroke-width: 2.25;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 0;
+  }
+
+  /* Flights and ferries weren't a way through the land, so they're only hinted at. */
+  .year-footprint__route.is-plane,
+  .year-footprint__route.is-ferry {
+    stroke: var(--color-tx-3);
+    stroke-width: 1.25;
+  }
+
+  .year-footprint__dot {
+    fill: var(--color-bg);
+    stroke: var(--color-tx);
+    stroke-width: 1.5;
+  }
+
+  /* The routes draw themselves in as the map scrolls up, one trip a little after another. */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .year-footprint__route {
+        animation: year-footprint-draw linear both;
+        animation-timeline: view();
+        animation-range: entry calc(20% + var(--trip) * 4%) cover calc(45% + var(--trip) * 4%);
+      }
+    }
+  }
+
+  @keyframes year-footprint-draw {
+    from {
+      stroke-dashoffset: 1;
+    }
+  }
+</style>

@@ -1,0 +1,378 @@
+---
+import SitePage from '@/components/SitePage.astro'
+import YearFootprint from '@/components/YearFootprint.astro'
+import YearMosaic from '@/components/YearMosaic.astro'
+import cities from '@/data/boundaries/cities.json'
+import Layout from '@/layouts/Layout.astro'
+import {
+  getMomentHeadline,
+  getMomentPagePath,
+  getMomentPath,
+  getMoments,
+  getTrips,
+  type Moment,
+} from '@/moments'
+import { getPageTitle } from '@/page-cards'
+import { buildRouteGlyph, buildYearMap, getTripLine } from '@/year-map'
+import { buildYearReview, getReviewYears } from '@/year-review'
+import type { FogRegions } from '@hyoban/trip-map'
+
+// A year at a glance (src/year-review.ts): its footprint on a map drawn at build time
+// (src/year-map.ts), every day of it as a tile, when it was written, its trips by the
+// shapes of their routes, and a few days worth going back to.
+export async function getStaticPaths() {
+  const years = getReviewYears(await getMoments())
+  return years.map((year, index) => ({
+    params: { year: String(year) },
+    props: { year, previous: years[index - 1], next: years[index + 1] },
+  }))
+}
+
+const { year, previous, next } = Astro.props as { year: number; previous?: number; next?: number }
+const moments = await getMoments()
+const regions = cities as FogRegions
+const review = buildYearReview(year, moments, getTrips(moments), regions)
+const lastDateKey = moments.at(-1)?.dateKey ?? ''
+const ongoing = lastDateKey.startsWith(String(year)) && year >= new Date().getFullYear()
+
+const map = buildYearMap(
+  regions,
+  Object.fromEntries(review.cities.lit.map((city) => [city.id, city.count])),
+  review.trips.map((trip) => ({ id: trip.id, lines: getTripLine(trip.legs) })),
+  review.moments.flatMap((moment) =>
+    moment.locations.map(({ latitude, longitude }) => [longitude, latitude] as const),
+  ),
+)
+const trips = review.trips.map((trip) => ({ trip, glyph: buildRouteGlyph(getTripLine(trip.legs)) }))
+const maxHour = Math.max(1, ...review.hours)
+
+const numberFormat = new Intl.NumberFormat('zh-CN')
+const formatNumber = (value: number) => numberFormat.format(value)
+const formatDay = (dateKey: string) => {
+  const [, month, day] = dateKey.split('-').map(Number)
+  return `${month} 月 ${day} 日`
+}
+const listNames = (names: string[], limit = 8) =>
+  names.length > limit ? `${names.slice(0, limit).join('、')}等` : names.join('、')
+const headline = (moment: Moment) => getMomentHeadline(moment, 24)?.headline ?? '一张照片'
+
+const description = ongoing
+  ? `${year} 年到 ${formatDay(lastDateKey)}为止，记下了什么，去了哪里。`
+  : `${year} 年记下了什么，去了哪里。`
+const [firstMoment] = review.moments
+const lastMoment = review.moments.at(-1)
+const firstTime = previous !== undefined
+---
+
+<Layout title={getPageTitle({ heading: String(year) })} shareTitle={`${year} 年`} description={description}>
+  <SitePage>
+    <header class="year-hero">
+      <h1>{year}</h1>
+      <p>
+        {ongoing ? `到 ${formatDay(lastDateKey)}，` : '这一年，'}记下了 <b>{formatNumber(review.moments.length)}</b> 条 Moments、
+        <b>{formatNumber(review.photoCount)}</b> 张照片{review.videoCount > 0 && <>和 <b>{review.videoCount}</b> 段视频</>}，
+        <b>{review.dayCount}</b> 天有记录。
+        {review.trips.length > 0 && (
+          <>
+            出门 <b>{review.trips.length}</b> 次，在路上 <b>{review.tripDays}</b> 天
+            {review.drivingKm > 100 && <>，自驾 <b>{formatNumber(review.drivingKm)}</b> 公里</>}；
+          </>
+        )}
+        走过 <b>{review.cities.provinces}</b> 个省份的 <b>{review.cities.lit.length}</b> 个城市。
+      </p>
+    </header>
+
+    {
+      review.cities.lit.length > 0 && (
+        <section class="year-section year-wide" aria-labelledby="year-footprint">
+          <h2 id="year-footprint">足迹</h2>
+          <YearFootprint map={map} label={`${year} 年去过的 ${review.cities.lit.length} 个城市和走过的路线`}>
+            颜色越深，在那里记下的越多：{listNames(review.cities.lit.slice(0, 4).map((city) => city.name))}最多。
+            {firstTime && review.cities.newNames.length > 0 && (
+              <>第一次去的有 {review.cities.newNames.length} 个：{listNames(review.cities.newNames, 10)}。</>
+            )}{' '}
+            <a href={`/map/${year}/`}>在地图上看</a>
+          </YearFootprint>
+        </section>
+      )
+    }
+
+    <section class="year-section year-wide" aria-labelledby="year-days">
+      <h2 id="year-days">每一天</h2>
+      <YearMosaic year={year} moments={review.moments} trips={review.trips} />
+    </section>
+
+    {
+      review.favoriteHour && (
+        <section class="year-section" aria-labelledby="year-hours">
+          <h2 id="year-hours">什么时候记</h2>
+          <div class="year-hours" role="img" aria-label={`最常在 ${review.favoriteHour.hour} 点记下，共 ${review.favoriteHour.count} 条`}>
+            {review.hours.map((count, hour) => (
+              <span
+                class:list={['year-hours__bar', { 'is-top': hour === review.favoriteHour?.hour }]}
+                style={`--value: ${count / maxHour}`}
+                title={`${hour} 点 · ${count} 条`}
+              />
+            ))}
+          </div>
+          <div class="year-hours__axis" aria-hidden="true">
+            <span>0</span><span>6</span><span>12</span><span>18</span><span>24</span>
+          </div>
+          <p>最常在 {review.favoriteHour.hour} 点前后拿起手机，这一小时记下了 {review.favoriteHour.count} 条。</p>
+        </section>
+      )
+    }
+
+    {
+      trips.length > 0 && (
+        <section class="year-section" aria-labelledby="year-trips">
+          <h2 id="year-trips">出行</h2>
+          <ul class="year-trips">
+            {trips.map(({ trip, glyph }) => (
+              <li>
+                <a href={`/trip/${trip.id.slice(0, 4)}/${trip.id.slice(5)}/`}>
+                  <svg viewBox={`0 0 ${glyph.width} ${glyph.width}`} aria-hidden="true">
+                    <path d={glyph.d} transform={`translate(0 ${(glyph.width - glyph.height) / 2})`} pathLength="1" />
+                  </svg>
+                  <span class="year-trips__title">{trip.title}</span>
+                  <span class="year-trips__meta">
+                    {formatDay(trip.start)} · {trip.dayCount} 天
+                    {trip.drivingKm > 0 && ` · ${formatNumber(trip.drivingKm)} 公里`}
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+
+    <section class="year-section" aria-labelledby="year-moments">
+      <h2 id="year-moments">一些瞬间</h2>
+      <ul class="year-list">
+        {
+          firstMoment && (
+            <li>
+              <a href={getMomentPagePath(firstMoment)}>
+                <span class="link-text">{headline(firstMoment)}</span>
+                <span class="year-list__meta">第一条 · {formatDay(firstMoment.dateKey)}</span>
+              </a>
+            </li>
+          )
+        }
+        {
+          review.busiestDay.count > 1 && (
+            <li>
+              <a href={getMomentPath(review.busiestDay.dateKey)}>
+                <span class="link-text">{formatDay(review.busiestDay.dateKey)}记了 {review.busiestDay.count} 条</span>
+                <span class="year-list__meta">最满的一天</span>
+              </a>
+            </li>
+          )
+        }
+        {
+          review.streak.days > 1 && (
+            <li>
+              <a href={getMomentPath(review.streak.start)}>
+                <span class="link-text">
+                  {formatDay(review.streak.start)}起，连续 {review.streak.days} 天
+                </span>
+                <span class="year-list__meta">最长连续记录</span>
+              </a>
+            </li>
+          )
+        }
+        {
+          lastMoment && lastMoment !== firstMoment && (
+            <li>
+              <a href={getMomentPagePath(lastMoment)}>
+                <span class="link-text">{headline(lastMoment)}</span>
+                <span class="year-list__meta">{ongoing ? '最近一条' : '最后一条'} · {formatDay(lastMoment.dateKey)}</span>
+              </a>
+            </li>
+          )
+        }
+      </ul>
+    </section>
+
+    {
+      (previous !== undefined || next !== undefined) && (
+        <nav class="year-nav" aria-label="其他年份">
+          {previous !== undefined ? <a href={`/${previous}/`}>← {previous}</a> : <span />}
+          {next !== undefined && <a href={`/${next}/`}>{next} →</a>}
+        </nav>
+      )
+    }
+  </SitePage>
+</Layout>
+
+<style>
+  .year-hero {
+    & h1 {
+      margin-left: -0.06em;
+      font-size: clamp(6rem, 30vw, 11rem);
+      font-weight: 600;
+      line-height: 0.9;
+      letter-spacing: -0.06em;
+      font-variant-numeric: tabular-nums;
+    }
+
+    & p {
+      margin-top: 1.5rem;
+      color: var(--color-tx-2);
+      text-wrap: pretty;
+    }
+
+    & b {
+      color: var(--color-tx);
+      font-weight: 500;
+      font-variant-numeric: tabular-nums;
+    }
+  }
+
+  .year-section {
+    margin-top: 4rem;
+
+    & > h2 {
+      margin-bottom: 1rem;
+      font-weight: 500;
+    }
+  }
+
+  /* The drawings take more than the column where there's room: up to 56rem, centred on it. */
+  .year-wide {
+    --wide: min(56rem, 100vw - 2rem);
+    width: var(--wide);
+    margin-inline: calc((100% - var(--wide)) / 2);
+
+    & > h2 {
+      max-width: 40rem;
+      margin-inline: auto;
+    }
+  }
+
+  .year-wide :global(figcaption) {
+    max-width: 40rem;
+    margin-inline: auto;
+  }
+
+  .year-hours {
+    display: grid;
+    grid-template-columns: repeat(24, minmax(0, 1fr));
+    align-items: end;
+    gap: 3px;
+    height: 5rem;
+  }
+
+  .year-hours__bar {
+    height: max(2px, calc(var(--value) * 100%));
+    border-radius: 2px;
+    background: var(--color-border);
+
+    &.is-top {
+      background: var(--color-tx);
+    }
+  }
+
+  .year-hours__axis {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.25rem;
+    margin-bottom: 0.75rem;
+    color: var(--color-tx-3);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .year-trips {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+
+    @media (width >= 40rem) {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    & a {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      padding: 0.75rem;
+      border: 1px solid var(--color-border);
+      border-radius: 0.625rem;
+      text-decoration: none;
+      transition: background-color 140ms var(--ease);
+
+      &:hover {
+        background: var(--color-hover);
+      }
+    }
+
+    & svg {
+      width: 100%;
+      aspect-ratio: 1;
+      margin-bottom: 0.5rem;
+      overflow: visible;
+    }
+
+    & path {
+      fill: none;
+      stroke: var(--color-tx);
+      stroke-width: 1.75;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 1;
+      stroke-dashoffset: 0;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      & a:hover path {
+        animation: year-trip-draw 1.2s var(--ease-out);
+      }
+    }
+  }
+
+  @keyframes year-trip-draw {
+    from {
+      stroke-dashoffset: 1;
+    }
+  }
+
+  .year-trips__meta {
+    color: var(--color-tx-2);
+    font-size: 0.875rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .year-list {
+    display: flex;
+    flex-direction: column;
+
+    & a {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 0 1rem;
+      padding-block: 0.25rem;
+      text-decoration: none;
+    }
+
+    & .link-text {
+      min-width: 0;
+    }
+  }
+
+  .year-list__meta {
+    flex-shrink: 0;
+    color: var(--color-tx-2);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .year-nav {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 4rem;
+    font-variant-numeric: tabular-nums;
+  }
+</style>
