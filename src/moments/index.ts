@@ -207,14 +207,21 @@ export async function getMomentPagePaths() {
 
 export type MomentPagePathProps = Awaited<ReturnType<typeof getMomentPagePaths>>[number]['props']
 
-/** The Moment's words on one line, cut to `length` characters, for titles and descriptions. */
-export function getMomentExcerpt(moment: Moment, length: number) {
+/**
+ * The Moment's words on one line, cut to `length` characters, for titles and descriptions;
+ * from the `start`th character on, after an ellipsis, to carry on where a shorter one stopped.
+ */
+export function getMomentExcerpt(moment: Moment, length: number, start = 0) {
   const text = moment.text.replace(/\s+/g, ' ').trim()
   const characters = Array.from(
     new Intl.Segmenter('zh-CN').segment(text),
     (segment) => segment.segment,
-  )
-  return characters.length > length ? `${characters.slice(0, length - 1).join('')}…` : text
+  ).slice(start)
+  const excerpt =
+    characters.length > length
+      ? `${characters.slice(0, length - 1).join('')}…`
+      : characters.join('')
+  return start && excerpt ? `…${excerpt}` : excerpt
 }
 
 /** When and where, as a Moment's page and share card show it: `2023 年 12 月 13 日 08:45 · 上海`. */

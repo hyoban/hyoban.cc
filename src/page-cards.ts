@@ -1,9 +1,19 @@
 import { SITE_TITLE } from '@/consts'
 import { getCardPhotos, getCalendarPanel, isTripInPeriod } from '@/card-data'
-import { getMapCardPlaces } from '@/map-card'
 import { getTripCovers } from '@/moments/trip-images'
 import { getMediaPosters } from '@/media-card'
-import type { OgImageOptions } from '@/og-image'
+import type { APIRoute } from 'astro'
+import { createHash } from 'node:crypto'
+import { getMapCardBackground, getMapCardPlaces } from '@/map-card'
+import {
+  cachedCard,
+  cardResponse,
+  encodeCard,
+  getCardFormat,
+  renderOgImage,
+  type CardFormat,
+  type OgImageOptions,
+} from '@/og-image'
 import { getMapPlaceholderKey } from '@/map-placeholder'
 import {
   getActiveDateKeys,
@@ -19,7 +29,8 @@ import {
 
 // The share cards of the pages without one of their own, a post's, a trip's or a
 // Moment's: the calendar's months and days, the map's, the trip lists and the media page.
-// Drawn by /og/pages/<path>.png, with shorter text beside their visual panels.
+// Drawn by /og/pages/<path>.jpg, or .png for a card of words alone, with shorter text
+// beside their visual panels.
 
 export interface PageText {
   /** The page's title without the site's name, which the card shows apart. */
@@ -33,13 +44,17 @@ export const MEDIA_TEXT: PageText = {
   description: '我喜欢的电影、剧集和动画。',
 }
 
-export function getPageTitle({ heading }: PageText) {
+export function getPageTitle({ heading }: Pick<PageText, 'heading'>) {
   return `${heading} | ${SITE_TITLE}`
 }
 
-/** The share card of the page at `pathname`: /calendar/2026/10/ has /og/pages/calendar/2026/10.png. */
-export function getPageCardPath(pathname: string) {
-  return `/og/pages/${pathname.replace(/^\/+|\/+$/g, '')}.png`
+const trimSlashes = (path: string) => path.replace(/^\/+|\/+$/g, '')
+
+/** The share card of the page at `pathname`: /calendar/2026/10/ has /og/pages/calendar/2026/10.jpg. */
+export async function getPageCardPath(pathname: string) {
+  const path = trimSlashes(pathname)
+  const card = (await getPageCards()).find((entry) => trimSlashes(entry.path) === path)?.card
+  return `/og/pages/${path}.${card ? getCardFormat(card) : 'png'}`
 }
 
 /** A day as the calendar heads it: `10 月 23 日 · 星期四`. */
@@ -56,7 +71,7 @@ export function formatCalendarDay(dateKey: string) {
 export function getCalendarText(year: number, month: number, selectedDate?: string): PageText {
   return {
     heading: selectedDate
-      ? `${formatCalendarDay(selectedDate)} · 日历`
+      ? `${selectedDate.slice(0, 4)} 年 ${formatCalendarDay(selectedDate)} · 日历`
       : `${year} 年 ${month} 月 · 日历`,
     description: CALENDAR_DESCRIPTION,
   }
@@ -101,8 +116,42 @@ export interface PageCard extends OgImageOptions {
   map?: string | undefined
 }
 
+let pageCards: Promise<Array<{ path: string; card: PageCard }>> | undefined
+
 /** Every page that shows its own card from getPageCardPath, by its path, and what it draws. */
-export async function getPageCards(): Promise<Array<{ path: string; card: PageCard }>> {
+export function getPageCards() {
+  pageCards ??= loadPageCards()
+  return pageCards
+}
+
+/** The route of the cards in `format`, which /og/pages/[...page].png.ts and .jpg.ts export. */
+export function pageCardRoute(format: CardFormat) {
+  const getStaticPaths = async () => {
+    // HTML-only integration builds do not need to fetch fonts and maps for these cards.
+    if (process.env.SKIP_PAGE_OG_IMAGES === '1') return []
+    return (await getPageCards())
+      .filter(({ card }) => getCardFormat(card) === format)
+      .map(({ card, path }) => ({ params: { page: trimSlashes(path) }, props: { card } }))
+  }
+  const GET: APIRoute<{ card: PageCard }> = async ({ props: { card } }) => {
+    const { map, ...options } = card
+    // A map page's card draws on its map, where the build can draw maps.
+    const background = map ? await getMapCardBackground(map) : undefined
+    const inputs = {
+      ...options,
+      background: background && createHash('sha256').update(background).digest('hex'),
+    }
+    return cardResponse(
+      await cachedCard(`page.${format}`, inputs, async () =>
+        encodeCard(await renderOgImage({ ...options, background }), format),
+      ),
+      format,
+    )
+  }
+  return { getStaticPaths, GET }
+}
+
+async function loadPageCards(): Promise<Array<{ path: string; card: PageCard }>> {
   const moments = await getMoments()
   const momentsByDate = Map.groupBy(moments, (moment) => moment.dateKey)
   const monthKeys = getArchiveMonthKeys(moments)
@@ -113,42 +162,72 @@ export async function getPageCards(): Promise<Array<{ path: string; card: PageCa
   })
   const cards: Array<{ path: string; card: PageCard }> = []
   const trips = getTrips(moments).toSorted((a, b) => b.start.localeCompare(a.start))
+  type Period = { year: number; month?: number | undefined }
+  const getPeriodRecords = (period?: Period) =>
+    period
+      ? moments.filter((moment) =>
+          moment.dateKey.startsWith(
+            period.month === undefined
+              ? `${period.year}-`
+              : `${period.year}-${String(period.month).padStart(2, '0')}-`,
+          ),
+        )
+      : moments
+  // A period with no places or no trips has a page all the same, the map's and the trip
+  // list's narrowed to it: its card says so and shows the period's photos instead.
+  const getPeriodPhotos = (records: Moment[]) => {
+    const photos = getCardPhotos(records)
+    return photos.length ? photos : undefined
+  }
   const calendarCard = (year: number, month: number): PageCard => {
-    const key = `${year}-${String(month).padStart(2, '0')}`
-    const records = moments.filter((moment) => moment.dateKey.startsWith(key))
+    const records = getPeriodRecords({ year, month })
     return {
       title: `${year} 年 ${month} 月\n日历`,
       description: '照片和日常小事。',
-      detail: `${new Set(records.map((moment) => moment.dateKey)).size} 天 · ${records.length} 条记录`,
+      // A month with no Moments keeps its page between those with them.
+      detail: records.length
+        ? `${new Set(records.map((moment) => moment.dateKey)).size} 天 · ${records.length} 条记录`
+        : '这个月没有记录',
       panel: getCalendarPanel(year, month, records),
     }
   }
-  const mapCard = (period?: { year: number; month?: number | undefined }): PageCard => {
+  const mapCard = (period?: Period): PageCard => {
     const key = getMapPlaceholderKey(period)
     const places = getMapCardPlaces(key, moments)
+    const card = { title: getMapText(period).heading, description: '去过的地方，留下的记录。' }
+    if (places.length) return { ...card, map: key, detail: `${places.length} 个地点` }
+    const records = getPeriodRecords(period)
     return {
-      title: getMapText(period).heading,
-      description: '去过的地方，留下的记录。',
-      map: key,
-      detail: `${places.length} 个地点`,
+      ...card,
+      detail: `${records.length} 条记录 · 都没有地点`,
+      photos: getPeriodPhotos(records),
     }
   }
-  const tripCard = (period?: { year: number; month?: number | undefined }): PageCard => {
+  const tripCard = (period?: Period): PageCard => {
     const selected = trips.filter((trip) => isTripInPeriod(trip, period))
-    return {
+    const card = {
       title: getMapText(period, true).heading.replace(' · ', '\n'),
       description: '沿途的风景和小事。',
+    }
+    if (!selected.length) {
+      const records = getPeriodRecords(period)
+      return {
+        ...card,
+        detail: `没有出门 · ${records.length} 条记录`,
+        photos: getPeriodPhotos(records),
+      }
+    }
+    return {
+      ...card,
       detail: `${selected.length} 段旅程`,
-      panel: selected.length
-        ? {
-            kind: 'trips',
-            trips: selected.slice(0, 3).map((trip) => ({
-              title: trip.title,
-              detail: `${trip.start.replaceAll('-', '.')} · ${trip.dayCount} 天`,
-              photo: getTripCovers(trip)[0]?.src ?? getCardPhotos(trip.stops, 1)[0],
-            })),
-          }
-        : undefined,
+      panel: {
+        kind: 'trips',
+        trips: selected.slice(0, 3).map((trip) => ({
+          title: trip.title,
+          detail: `${trip.start.replaceAll('-', '.')} · ${trip.dayCount} 天`,
+          photo: getTripCovers(trip)[0]?.src ?? getCardPhotos(trip.stops, 1)[0],
+        })),
+      },
     }
   }
 

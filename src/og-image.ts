@@ -5,12 +5,10 @@ import satori from 'satori'
 import sharp from 'sharp'
 import { getAssetUrl } from '@/asset-url'
 import { SITE_DESCRIPTION, SITE_TITLE } from '@/consts'
-import { h, OG_COLORS as COLORS } from '@/og-layout'
+import { h, OG_COLORS as COLORS, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from '@/og-layout'
 import { getPanelText, renderOgPanel, type OgPanel } from '@/og-panels'
 import { cachedOgAsset } from '@/og-cache'
 
-export const OG_IMAGE_WIDTH = 1200
-export const OG_IMAGE_HEIGHT = 630
 // The most the photos' side of a card may take: more than half of it, the words beside them.
 const OG_PHOTOS_WIDTH = 660
 const OG_PHOTOS_GAP = 4
@@ -460,6 +458,23 @@ export async function cachedCard(name: string, inputs: unknown, render: () => Pr
   return card
 }
 
-export function pngResponse(image: Buffer) {
-  return new Response(new Uint8Array(image), { headers: { 'Content-Type': 'image/png' } })
+export type CardFormat = 'png' | 'jpg'
+
+/**
+ * Photos and maps make a PNG card of most of a megabyte, more than some apps load for a
+ * preview: a card with them is a JPEG, one of words alone stays a crisp, small PNG.
+ */
+export function getCardFormat(options: OgImageOptions & { map?: unknown }): CardFormat {
+  return options.photos?.length || options.panel || options.map ? 'jpg' : 'png'
+}
+
+/** A card `renderOgImage` drew, in `format`. */
+export async function encodeCard(png: Buffer, format: CardFormat) {
+  return format === 'jpg' ? sharp(png).jpeg({ mozjpeg: true, quality: 82 }).toBuffer() : png
+}
+
+export function cardResponse(image: Buffer, format: CardFormat = 'png') {
+  return new Response(new Uint8Array(image), {
+    headers: { 'Content-Type': format === 'jpg' ? 'image/jpeg' : 'image/png' },
+  })
 }

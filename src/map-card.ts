@@ -7,7 +7,7 @@ import {
 import sharp from 'sharp'
 import { canDrawMapPlaceholders, MAP_PLACEHOLDER_TOKEN } from '@/map-placeholder'
 import { getMappedLocationGroups, getMapYears, getMoments, type Moment } from '@/moments'
-import { OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from '@/og-image'
+import { OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from '@/og-layout'
 import { cachedOgAsset } from '@/og-cache'
 
 // The map pages' share cards draw on a picture of the map: the period's places, every
