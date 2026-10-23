@@ -9,9 +9,6 @@ import { createDrawer, createScrollArea, type Drawer, type ScrollArea } from '@h
 
 export type Sheet = Drawer
 
-// A mouse or a trackpad, rather than a finger.
-const FINE_POINTER = window.matchMedia('(hover: hover) and (pointer: fine)')
-
 export function createSheet(
   element: HTMLElement,
   {
@@ -65,10 +62,12 @@ export function createSheet(
   // What scrolls in it gets the drawer's thin scrollbar, drawn over its edge in the sheet,
   // where a mouse scrolls it beside the map; a phone keeps its own.
   const content = element.querySelector<HTMLElement>('[data-drawer-content]')
+  // A mouse or a trackpad, rather than a finger.
+  const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)')
   let scrollArea: ScrollArea | undefined
 
   function syncScrollArea() {
-    const wanted = Boolean(content) && !narrow.matches && FINE_POINTER.matches
+    const wanted = Boolean(content) && !narrow.matches && finePointer.matches
 
     if (wanted && !scrollArea && content) {
       scrollArea = createScrollArea({ root: element, signal, viewport: content })
@@ -87,7 +86,7 @@ export function createSheet(
     },
     { signal },
   )
-  FINE_POINTER.addEventListener('change', syncScrollArea, { signal })
+  finePointer.addEventListener('change', syncScrollArea, { signal })
 
   return sheet
 }

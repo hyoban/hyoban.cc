@@ -77,9 +77,10 @@ function getLayoutOffset(element: HTMLElement, root: HTMLElement) {
  * The inline style of `element`. Read through HTMLElement's own getter, as a form's
  * `style` is its control named so, if it has one (the map's settings choose a style).
  */
-const styleProperty = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'style')
-
 function getInlineStyle(element: HTMLElement): CSSStyleDeclaration {
+  // Looked up here rather than as the module loads, which may be where there's no DOM.
+  const styleProperty = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'style')
+
   return (styleProperty?.get?.call(element) ?? element.style) as CSSStyleDeclaration
 }
 
