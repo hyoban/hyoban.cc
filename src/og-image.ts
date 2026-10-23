@@ -128,14 +128,12 @@ function pageCard(
 ) {
   const photo = Boolean(photos?.length)
   return [
-    h('div', { display: 'flex', alignItems: 'center', gap: 20 }, [
-      h('img', { width: 64, height: 64, borderRadius: 9999 }, undefined, {
-        src: avatar,
-        width: 64,
-        height: 64,
-      }),
-      h('div', { fontSize: 32, fontWeight: 500, color: COLORS.tx }, SITE_TITLE),
-    ]),
+    // The avatar alone marks the card as the site's: a preview names the site beside it.
+    h('img', { width: 64, height: 64, borderRadius: 9999 }, undefined, {
+      src: avatar,
+      width: 64,
+      height: 64,
+    }),
     h(
       'div',
       { display: 'flex', flexDirection: 'column', gap: 24, width: '100%' },
@@ -181,9 +179,7 @@ export async function renderOgImage(options: OgImageOptions = {}) {
   const site = !options.title
   // With the ellipsis satori ends a clamped line with, which the words may not have.
   const panelText = getPanelText(options.panel)
-  const boldText = site
-    ? SITE_TITLE
-    : `${SITE_TITLE}${options.title}${options.detail ?? ''}${panelText}…`
+  const boldText = site ? SITE_TITLE : `${options.title}${options.detail ?? ''}${panelText}…`
   const regularText = site
     ? SITE_DESCRIPTION
     : `${options.description ?? ''}${options.date ?? ''}${panelText}…`

@@ -110,17 +110,13 @@ export function getMapText(
   if (tripList) {
     return {
       heading: periodLabel ? `${periodLabel} · 旅程` : '旅程',
-      description: periodLabel
-        ? `${periodLabel}的旅程，和一路上的照片与见闻。`
-        : '出门走走，记下沿途的风景和小事。',
+      description: '出门走走，记下沿途的风景和小事。',
     }
   }
-  return periodLabel
-    ? {
-        heading: `${periodLabel} · 地图`,
-        description: `${periodLabel}的足迹和沿途记录。`,
-      }
-    : { heading: '地图', description: '去过的地方，留下的记录。' }
+  return {
+    heading: periodLabel ? `${periodLabel} · 地图` : '地图',
+    description: '去过的地方，留下的记录。',
+  }
 }
 
 export interface PageCard extends OgImageOptions {

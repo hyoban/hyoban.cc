@@ -139,7 +139,7 @@ const periodEnd = period ? `${period.year}-${String(period.month ?? 12).padStart
 const isInPeriod = (trip: { end: string, start: string }) =>
   !period || (trip.start.slice(0, 7) <= periodEnd && trip.end.slice(0, 7) >= periodStart)
 const title = pageTrip ? getTripTitle(pageTrip.title, Boolean(activeTrip)) : getPageTitle(pageText)
-const description = pageTrip ? getTripDescription(pageTrip.title, Boolean(activeTrip)) : pageText.description
+const description = pageTrip ? getTripDescription(pageTrip, Boolean(activeTrip)) : pageText.description
 const image = pageTrip ? `/trip/${pageTrip.id}/og.jpg` : await getPageCardPath(Astro.url.pathname)
 ---
 
