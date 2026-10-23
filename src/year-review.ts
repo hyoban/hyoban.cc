@@ -222,6 +222,18 @@ export function getCityName(name: string) {
   return short.length > 1 ? short : name
 }
 
+/**
+ * A change from the year before, in percent: `+36%`, `−12%` or `持平`, and `×16.5` once
+ * it runs to four digits, where a percentage stops reading at a glance.
+ */
+export function formatChange(change: number) {
+  if (change >= 1000) {
+    return `×${Number((1 + change / 100).toFixed(1))}`
+  }
+
+  return change > 0 ? `+${change}%` : change < 0 ? `−${-change}%` : '持平'
+}
+
 /** A Moment's topic as the review counts it: one without, or a tech one, goes with life. */
 function getReviewTopic(moment: Pick<ReviewMoment, 'topic'>): ReviewTopic {
   return moment.topic && moment.topic !== 'tech' ? moment.topic : 'life'

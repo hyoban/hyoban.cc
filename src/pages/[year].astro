@@ -18,7 +18,7 @@ import { getShowcaseMedia } from '@/moments/showcase'
 import { getTripCollage } from '@/moments/trip-images'
 import { getPageCardPath, getPageTitle } from '@/page-cards'
 import { buildRouteGlyph, buildYearMap, getTripLine } from '@/year-map'
-import { buildYearReview, getCityName, getReviewYears, getYearPlaces } from '@/year-review'
+import { buildYearReview, formatChange, getCityName, getReviewYears, getYearPlaces } from '@/year-review'
 import YearClock from '@/components/YearClock.astro'
 import YearWeekdays from '@/components/YearWeekdays.astro'
 import YearTopics from '@/components/YearTopics.astro'
@@ -170,9 +170,6 @@ const stats = statsOf(review)
     return { ...stat, change }
   })
   .filter((stat) => stat.label !== '公里自驾' || stat.value > 100)
-/** `+36%`, `−12%` or `持平`, as the topics under the clock give theirs. */
-const formatChange = (change: number) =>
-  change > 0 ? `+${formatNumber(change)}%` : change < 0 ? `−${formatNumber(-change)}%` : '持平'
 const highlights = [
   firstMoment && {
     kicker: '第一条',

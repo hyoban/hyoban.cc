@@ -1,5 +1,5 @@
 ---
-import type { YearTopic } from '@/year-review'
+import { formatChange, type YearTopic } from '@/year-review'
 
 // What the year was written about, under the clock: a bar for each topic as long as how
 // much was written on it, the most written dark, with its count and how it moved from the
@@ -27,9 +27,7 @@ const rows = topics.map((topic, index) => ({
   change:
     topic.previous === 0
       ? undefined
-      : topic.count === topic.previous
-        ? '持平'
-        : `${topic.count > topic.previous ? '+' : '−'}${Math.round((Math.abs(topic.count - topic.previous) / topic.previous) * 100)}%`,
+      : formatChange(Math.round(((topic.count - topic.previous) / topic.previous) * 100)),
 }))
 ---
 
