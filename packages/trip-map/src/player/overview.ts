@@ -37,6 +37,8 @@ const FRAME_DURATION = 800
 const BASE = { opacity: 0.5, width: 1.5 }
 const DIMMED = { opacity: 0.15, width: 1.5 }
 const LIFTED = { opacity: 1, width: 2.5 }
+// The picked route's part still ahead while its sidebar draws the part read so far.
+const AHEAD = { opacity: 0.3, width: 2.5 }
 // The width the trip player draws its route at, so the two meet without a jump.
 const PLAYING = { opacity: 1, width: 3 }
 const HOVER = 160
@@ -75,6 +77,8 @@ export function createTripOverview({
   // The trip picked, lifted while nothing else is pointed at, and where it was clicked.
   let pickedId: string | undefined
   let pickedAt: mapboxgl.LngLatLike | undefined
+  // Whether the picked route is drawn over as far as its sidebar has been read.
+  let pickedRead = false
   // The year or month picked: only the trips under way then are on the map.
   let period: Period | undefined
   // The popup's trip and whether it says to click again, to fill it only on a change.
@@ -125,7 +129,11 @@ export function createTripOverview({
       return BASE
     }
 
-    return id === highlightedId ? LIFTED : DIMMED
+    if (id !== highlightedId) {
+      return DIMMED
+    }
+
+    return id === pickedId && pickedRead ? AHEAD : LIFTED
   }
 
   function paint(id: string, look: Look, transition: { delay?: number; duration: number }) {
@@ -303,7 +311,8 @@ export function createTripOverview({
 
     const trip = id ? tripsById.get(id) : undefined
 
-    if (!trip || activeId || !map) {
+    // Its name would sit over the part drawn as its sidebar is read.
+    if (!trip || activeId || !map || (trip.id === pickedId && pickedRead)) {
       popupKey = undefined
       popup.remove()
     } else {
@@ -514,6 +523,14 @@ export function createTripOverview({
       return pickedId
     },
     reveal,
+    /** Fades the picked route, drawn over as far as its sidebar has been read, or not. */
+    setPickedRead(read: boolean) {
+      if (read !== pickedRead) {
+        pickedRead = read
+        highlight(undefined)
+        paintAll(HOVER)
+      }
+    },
     /** Leaves only the routes of the trips under way in `next` on the map, or every one. */
     setPeriod(next: Period | undefined) {
       period = next
@@ -534,7 +551,7 @@ export function createTripOverview({
  * A straight leg with points every so often along it. On the globe, Mapbox stretches
  * the dashes of a long line with only its two ends until it looks solid.
  */
-function densify(line: readonly [number, number][]) {
+export function densify(line: readonly [number, number][]) {
   const dense: [number, number][] = []
 
   for (const [index, [x2, y2]] of line.entries()) {
