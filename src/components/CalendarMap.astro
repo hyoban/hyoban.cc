@@ -637,6 +637,10 @@ const description = pageTrip
 
     if (ownTraversal) {
       ownTraversal = false
+      // Skipped on purpose: its promises rejecting for it is no error.
+      for (const promise of [event.viewTransition.ready, event.viewTransition.finished, event.viewTransition.updateCallbackDone]) {
+        promise.catch(() => {})
+      }
       event.viewTransition.skipTransition()
       event.swap = () => {}
       return

@@ -73,12 +73,24 @@ function getLayoutOffset(element: HTMLElement, root: HTMLElement) {
   }
 }
 
+/**
+ * The inline style of `element`. Read through HTMLElement's own getter, as a form's
+ * `style` is its control named so, if it has one (the map's settings choose a style).
+ */
+const styleProperty = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'style')
+
+function getInlineStyle(element: HTMLElement): CSSStyleDeclaration {
+  return (styleProperty?.get?.call(element) ?? element.style) as CSSStyleDeclaration
+}
+
 export function createScrollArea(options: ScrollAreaOptions): ScrollArea {
   const { viewport } = options
   const root = options.root ?? viewport.parentElement ?? viewport
   const orientations = options.orientations ?? ['vertical']
   const controller = new AbortController()
   const { signal } = controller
+  const viewportStyle = getInlineStyle(viewport)
+  const rootStyle = getInlineStyle(root)
 
   options.signal?.addEventListener('abort', () => destroy(), { once: true })
 
@@ -98,7 +110,7 @@ export function createScrollArea(options: ScrollAreaOptions): ScrollArea {
   )
 
   if (rootWasStatic) {
-    root.style.position = 'relative'
+    rootStyle.position = 'relative'
   }
 
   root.setAttribute('data-scroll-area-root', '')
@@ -192,7 +204,7 @@ export function createScrollArea(options: ScrollAreaOptions): ScrollArea {
     }
 
     for (const [name, value] of Object.entries(edges)) {
-      viewport.style.setProperty(name, `${value}px`)
+      viewportStyle.setProperty(name, `${value}px`)
     }
 
     for (const { orientation, scrollbar, thumb } of axes) {
@@ -252,9 +264,9 @@ export function createScrollArea(options: ScrollAreaOptions): ScrollArea {
       axis,
       start: vertical ? event.clientY : event.clientX,
       startScroll: vertical ? viewport.scrollTop : viewport.scrollLeft,
-      snapType: drag?.snapType ?? viewport.style.scrollSnapType,
+      snapType: drag?.snapType ?? viewportStyle.scrollSnapType,
     }
-    viewport.style.scrollSnapType = 'none'
+    viewportStyle.scrollSnapType = 'none'
     axis.thumb.setPointerCapture(event.pointerId)
   }
 
@@ -265,7 +277,7 @@ export function createScrollArea(options: ScrollAreaOptions): ScrollArea {
 
     const { axis, snapType } = drag
     drag = undefined
-    viewport.style.scrollSnapType = snapType
+    viewportStyle.scrollSnapType = snapType
     setScrolling(axis.orientation, false)
 
     if (axis.thumb.hasPointerCapture(event.pointerId)) {
@@ -343,7 +355,7 @@ export function createScrollArea(options: ScrollAreaOptions): ScrollArea {
             ? viewport.scrollHeight - viewport.clientHeight
             : viewport.scrollWidth - viewport.clientWidth
 
-          viewport.style.scrollSnapType = 'none'
+          viewportStyle.scrollSnapType = 'none'
 
           if (vertical) {
             viewport.scrollTop = (position / maxThumbOffset) * scrollable
@@ -483,14 +495,14 @@ export function createScrollArea(options: ScrollAreaOptions): ScrollArea {
 
     viewport.removeAttribute('data-scroll-area-viewport')
 
-    for (const name of Array.from(viewport.style)) {
+    for (const name of Array.from(viewportStyle)) {
       if (name.startsWith('--scroll-area-')) {
-        viewport.style.removeProperty(name)
+        viewportStyle.removeProperty(name)
       }
     }
 
     if (rootWasStatic) {
-      root.style.position = ''
+      rootStyle.position = ''
     }
   }
 
