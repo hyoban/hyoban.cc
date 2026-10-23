@@ -1,418 +1,378 @@
-import type { GeoJSONSource, Map as MapboxMap } from 'mapbox-gl'
-import { getDistanceKm, type Coordinates } from '../geo.ts'
-import { densify } from '../player/overview.ts'
-import type { TripSummary } from '../player/types.ts'
-import { getUnderLabels } from './basemap.ts'
+import type { Map as MapboxMap, PaddingOptions } from 'mapbox-gl'
+import type { Coordinates } from '../geo.ts'
+import type { Messages } from '../messages.ts'
+import type { Theme } from '../theme.ts'
+import { createCamera } from '../player/camera.ts'
+import { createDayHeading } from '../player/day-heading.ts'
+import { createElement } from '../player/dom.ts'
+import { getShortPlaceName } from '../player/labels.ts'
+import { createMapLabels } from '../player/map-labels.ts'
+import { NEARBY_MAX_ZOOM, STOP_ZOOM } from '../player/player.ts'
+import { measureLine, walkLine, type MeasuredLine } from '../player/route.ts'
+import { createRouteLayers } from '../player/route-layers.ts'
+import { createRoutePlan, type RoutePlan } from '../player/route-plan.ts'
+import { getClock } from '../player/slides.ts'
+import type { TripData } from '../player/types.ts'
 
-// A trip's route drawn as far as its sidebar has been read: each Moment in it marks
-// where it was (`[data-trip-map-stop-at="<longitude>,<latitude>"]`), placed along the
-// route, and the line a little above the sidebar's middle stands for where the reader
-// is, so scrolling down draws the route on to the next Moment's place and scrolling up
-// takes it back. Between two Moments the route goes on as far as the first has been
-// read past; after the last, to the route's end.
+// A trip played along as its sidebar is read, drawn as the player draws it: the route
+// planned, the route driven so far with the car, ship or plane at its tip and the day
+// and time beside it, the stop dots, the names of the places of the Moment being read,
+// and the player's camera gliding after the tip. Each Moment in the sidebar names its
+// stop (`[data-trip-map-stop-entry="<anchor>"]`), and the line a little above the
+// sidebar's middle stands for where the reader is: reaching a Moment arrives at its
+// stop, and reading on drives on to the next one, back again scrolling up. After the
+// last Moment the route drives on to its end.
 
-const SOURCE = 'trip-map-trip-scroll'
-const LINE_LAYER = `${SOURCE}-line`
-const STRAIGHT_LAYER = `${SOURCE}-straight`
-const HEAD_LAYER = `${SOURCE}-head`
 // How far down the sidebar the reader is taken to be reading, as a share of its height.
 const READING_LINE = 0.4
 
-type RoutePoint = {
-  coordinates: Coordinates
-  /** Along the route from its start, in kilometres; a gap between stretches adds none. */
-  distance: number
-  /** Which stretch of the route it's on. */
-  segment: number
-}
-
-export type MeasuredRoute = {
-  length: number
-  points: RoutePoint[]
-  /** Whether each stretch is a ferry or a flight, drawn dashed. */
-  straight: boolean[]
-}
-
-/** A trip's route as one run of points, each with how far along the route it is. */
-export function measureRoute(trip: Pick<TripSummary, 'segments'>): MeasuredRoute {
-  const points: RoutePoint[] = []
-  let distance = 0
-
-  for (const [segment, { line, straight }] of trip.segments.entries()) {
-    // Points along a flight, so its drawn part follows the line the overview draws.
-    for (const [index, coordinates] of (straight ? densify(line) : line).entries()) {
-      const previous = points.at(-1)
-
-      if (index > 0 && previous) {
-        distance += getDistanceKm(previous.coordinates, coordinates)
-      }
-
-      points.push({ coordinates, distance, segment })
-    }
-  }
-
-  return { length: distance, points, straight: trip.segments.map(({ straight }) => straight) }
-}
-
 /**
- * How far along the route the point nearest `coordinates` is, no earlier than `from`:
- * a trip's places come in the order the route passes them, also where it comes back
- * the way it went.
+ * Where along a run of marks (each at an offset) `offset` falls: the pair of marks it's
+ * between, by the first's index, and how far from the first to the second, or `index`
+ * -1 before the first mark.
  */
-export function locateOnRoute(route: MeasuredRoute, coordinates: Coordinates, from = 0) {
-  const [longitude, latitude] = coordinates
-  // Near enough flat over the length of an edge: a degree of longitude, narrowed.
-  const scale = Math.cos((latitude * Math.PI) / 180)
-  let best = from
-  let bestSquared = Infinity
+export function findBetweenMarks(offsets: readonly number[], offset: number) {
+  const last = offsets.length - 1
 
-  const consider = (distance: number, point: Coordinates) => {
-    const dx = (point[0] - longitude) * scale
-    const dy = point[1] - latitude
-    const squared = dx * dx + dy * dy
+  if (last < 0 || offset < offsets[0]!) {
+    return { fraction: 0, index: -1 }
+  }
 
-    if (squared < bestSquared) {
-      best = distance
-      bestSquared = squared
+  for (let index = 0; index < last; index += 1) {
+    const start = offsets[index]!
+    const end = offsets[index + 1]!
+
+    if (offset < end) {
+      return { fraction: end > start ? (offset - start) / (end - start) : 1, index }
     }
   }
 
-  for (const [index, start] of route.points.entries()) {
-    if (start.distance >= from) {
-      consider(start.distance, start.coordinates)
-    }
-
-    const end = route.points[index + 1]
-
-    if (!end || end.segment !== start.segment || end.distance <= from) {
-      continue
-    }
-
-    const [x1, y1] = start.coordinates
-    const [x2, y2] = end.coordinates
-    const ex = (x2 - x1) * scale
-    const ey = y2 - y1
-    const squaredLength = ex * ex + ey * ey
-
-    if (squaredLength === 0) {
-      continue
-    }
-
-    const length = end.distance - start.distance
-    // No earlier on the edge than `from`.
-    const lowest = length > 0 ? Math.max(0, (from - start.distance) / length) : 0
-    const t = Math.min(
-      1,
-      Math.max(lowest, ((longitude - x1) * scale * ex + (latitude - y1) * ey) / squaredLength),
-    )
-
-    consider(start.distance + length * t, [x1 + (x2 - x1) * t, y1 + (y2 - y1) * t])
-  }
-
-  return best
-}
-
-/** The route up to `distance`: each stretch's drawn part, and the point it has reached. */
-export function sliceRoute(route: MeasuredRoute, distance: number) {
-  const lines: { line: Coordinates[]; straight: boolean }[] = []
-  let head: Coordinates | undefined
-
-  for (const [index, point] of route.points.entries()) {
-    const previous = route.points[index - 1]
-    const sameSegment = previous?.segment === point.segment
-
-    if (point.distance > distance) {
-      // Partway along the edge it's reached.
-      if (previous && sameSegment && previous.distance < distance) {
-        const t = (distance - previous.distance) / (point.distance - previous.distance)
-        const [x1, y1] = previous.coordinates
-        const [x2, y2] = point.coordinates
-
-        head = [x1 + (x2 - x1) * t, y1 + (y2 - y1) * t]
-        lines.at(-1)?.line.push(head)
-      }
-
-      break
-    }
-
-    if (!sameSegment) {
-      lines.push({ line: [], straight: route.straight[point.segment] ?? false })
-    }
-
-    lines.at(-1)!.line.push(point.coordinates)
-    head = point.coordinates
-  }
-
-  return { head, lines: lines.filter(({ line }) => line.length > 1) }
-}
-
-/** The route's points from `from` to `to`, both ends included. */
-export function getStretch(route: MeasuredRoute, from: number, to: number) {
-  const { head: start } = sliceRoute(route, from)
-  const { head: end } = sliceRoute(route, to)
-  const between = route.points
-    .filter(({ distance }) => distance > from && distance < to)
-    .map(({ coordinates }) => coordinates)
-
-  return [start, ...between, end].filter((point) => point !== undefined)
-}
-
-/**
- * Where along a run of marks (each at an offset, for a distance) `offset` falls: the
- * distance there, and the pair of marks it's between, by the first's index.
- */
-export function interpolateMarks(
-  marks: readonly { distance: number; offset: number }[],
-  offset: number,
-) {
-  const last = Math.max(0, marks.length - 2)
-
-  for (const [index, mark] of marks.entries()) {
-    const next = marks[index + 1]
-
-    if (offset <= mark.offset || !next) {
-      return { distance: mark.distance, index: Math.min(Math.max(0, index - 1), last) }
-    }
-
-    if (offset < next.offset) {
-      const span = next.offset - mark.offset
-      const distance =
-        span > 0
-          ? mark.distance + ((next.distance - mark.distance) * (offset - mark.offset)) / span
-          : next.distance
-
-      return { distance, index }
-    }
-  }
-
-  return { distance: 0, index: 0 }
+  return { fraction: 1, index: Math.max(last - 1, 0) }
 }
 
 export function createTripScroll({
   content,
-  getColors,
+  getBlocked,
   getMap,
+  getPadding,
+  getTheme,
+  loadTrip,
+  messages,
   onDrawn,
-  onStretch,
+  reducedMotion,
   signal,
 }: {
   /** The trip sidebar's scrolling part. */
   content: HTMLElement
-  getColors: () => { ink: string; paper: string }
+  /** What's over the map that labels keep out from under: the sidebar, the toolbar. */
+  getBlocked: () => DOMRect[]
   getMap: () => MapboxMap | undefined
-  /** Some of the route is drawn, or none of it is again. */
+  /** The camera's room around what it shows, clear of the sidebar. */
+  getPadding: () => PaddingOptions
+  getTheme: () => Theme
+  /** A trip's playback data, as the player loads it. */
+  loadTrip: (id: string) => Promise<TripData | undefined>
+  messages: Messages
+  /** The trip is being played along, or isn't any more (back at the top). */
   onDrawn: (drawn: boolean) => void
-  /**
-   * The reader came to another Moment: the way from its place to the next one's, to
-   * bring into view. A Moment at the same place as the next keeps the view it has.
-   */
-  onStretch: (stretch: Coordinates[]) => void
+  reducedMotion: MediaQueryList
   signal: AbortSignal
 }) {
-  let route: MeasuredRoute | undefined
-  // The places of the Moments last placed along the route, and how far along each is.
-  let placedKey: string | undefined
-  let placed: number[] = []
+  let tripId: string | undefined
+  let trip: TripData | undefined
+  let plan: RoutePlan | undefined
   let drawn = false
-  // The stretch last brought into view, by its ends.
-  let stretchKey: string | undefined
+  // The stretch being driven, measured once: from `points[from]` to `points[to]`, and
+  // how far along it, as a share, each point after the first is.
+  let leg: (MeasuredLine & { from: number; passed: number[]; to: number }) | undefined
+  let tip: Coordinates | undefined
+  // The stop whose places are named.
+  let labelledStop: number | undefined
   let frame = 0
+  let cameraFrame = 0
 
-  function readPlaces(entries: HTMLElement[]) {
-    const key = entries.map((entry) => entry.dataset.tripMapStopAt).join(' ')
+  const headClock = createElement('div', 'trip-map-head__clock', '')
+  const headClockDate = createElement('p', 'trip-map-head__date', '')
+  const headClockTime = createElement('p', 'trip-map-head__time', '')
+  const clockHeading = createDayHeading(headClockDate, headClockTime, messages)
 
-    if (key !== placedKey && route) {
-      let from = 0
+  headClock.append(headClockDate, headClockTime)
 
-      placedKey = key
-      placed = entries.map((entry) => {
-        const [longitude, latitude] = entry.dataset.tripMapStopAt!.split(',').map(Number)
+  const layers = createRouteLayers(getMap, getTheme, headClock)
+  const mapLabels = createMapLabels({
+    getLayout: () => ({
+      avoid: headClock.getClientRects().length > 0 ? [headClock.getBoundingClientRect()] : [],
+      blocked: getBlocked(),
+      container: getMap()?.getContainer().getBoundingClientRect(),
+    }),
+    getMap,
+    getMarkers: () => [
+      ...(plan?.points ?? []).map((point) => ({
+        coordinates: point.coordinates,
+        radius: point.waypoint ? 7 : 10,
+      })),
+      ...(tip ? [{ coordinates: tip, radius: 16 }] : []),
+    ],
+  })
+  const camera = createCamera({
+    getFocus: () => tip ?? (leg && plan?.points[leg.from]?.coordinates),
+    getMap,
+    getPadding,
+    getSpeed: () => 1,
+    reducedMotion,
+  })
 
-        from = locateOnRoute(route!, [longitude!, latitude!], from)
-        return from
+  /** The Moments that are the trip's stops, in order, with their stops' first places. */
+  function readEntries() {
+    const top = content.getBoundingClientRect().top - content.scrollTop
+    const entries: { bottom: number; point: number; stopIndex: number; top: number }[] = []
+
+    for (const element of content.querySelectorAll<HTMLElement>('[data-trip-map-stop-entry]')) {
+      const stopIndex =
+        trip?.stops.findIndex((stop) => stop.anchor === element.dataset.tripMapStopEntry) ?? -1
+      const previous = entries.at(-1)
+
+      if (!plan || stopIndex < 0 || (previous && stopIndex <= previous.stopIndex)) {
+        continue
+      }
+
+      const rect = element.getBoundingClientRect()
+
+      entries.push({
+        bottom: rect.bottom - top,
+        point: plan.placeStart(stopIndex),
+        stopIndex,
+        top: rect.top - top,
       })
     }
 
-    return placed
+    return entries
   }
 
-  /** How far along the route the reader is, and the Moments' places before and after. */
+  /**
+   * Where the reader is: the stretch from `points[from]` to `points[to]`, `fraction`
+   * of the way along it, and the stop being read; undefined above the first Moment.
+   */
   function getPosition() {
-    const entries = [...content.querySelectorAll<HTMLElement>('[data-trip-map-stop-at]')]
+    const entries = readEntries()
     const last = entries.at(-1)
 
-    if (!route || !last) {
-      return { distance: 0, from: 0, to: 0 }
+    if (!plan || !last) {
+      return undefined
     }
 
-    const distances = readPlaces(entries)
-    const top = content.getBoundingClientRect().top - content.scrollTop
     const readingLine = content.clientHeight * READING_LINE
-    const end = last.getBoundingClientRect().bottom - top
     const maxScroll = content.scrollHeight - content.clientHeight
     // The last Moments may be too near the bottom to reach the reading line: the line
-    // runs on faster, so the route is drawn whole at the bottom.
-    const short = Math.max(0, end - (maxScroll + readingLine))
+    // runs on faster, so the route is driven to its end at the bottom.
+    const short = Math.max(0, last.bottom - (maxScroll + readingLine))
     const offset =
       content.scrollTop +
       readingLine +
       (maxScroll > 0 ? (short * content.scrollTop) / maxScroll : 0)
-    const marks = [{ distance: 0, offset: readingLine }]
+    const marks = [
+      ...entries,
+      { ...last, point: Math.max(plan.points.length - 1, last.point), top: last.bottom },
+    ]
+    let previousOffset = -Infinity
+    const offsets = marks.map((mark) => (previousOffset = Math.max(previousOffset, mark.top)))
+    const { fraction, index } = findBetweenMarks(offsets, offset)
 
-    for (const [index, entry] of entries.entries()) {
-      marks.push({
-        distance: distances[index]!,
-        offset: Math.max(marks.at(-1)!.offset, entry.getBoundingClientRect().top - top),
-      })
+    if (index < 0) {
+      return undefined
     }
 
-    marks.push({ distance: route.length, offset: Math.max(marks.at(-1)!.offset, end) })
-
-    const { distance, index } = interpolateMarks(marks, offset)
-
-    return { distance, from: marks[index]!.distance, to: marks[index + 1]?.distance ?? distance }
+    return {
+      fraction,
+      from: marks[index]!.point,
+      stopIndex: marks[index]!.stopIndex,
+      to: Math.max(marks[index + 1]!.point, marks[index]!.point),
+    }
   }
 
-  function getSource() {
-    return getMap()?.getSource<GeoJSONSource>(SOURCE)
+  function measureLeg(from: number, to: number) {
+    if (leg?.from === from && leg.to === to) {
+      return leg
+    }
+
+    const line = (end: number) => plan!.line(from, end + 1)
+    const measured = measureLine(line(to))
+    const passed = []
+
+    for (let point = from + 1; point <= to; point += 1) {
+      passed.push(measured.total > 0 ? measureLine(line(point)).total / measured.total : 1)
+    }
+
+    leg = { ...measured, from, passed, to }
+    return leg
   }
 
   function draw() {
     frame = 0
 
-    const source = getSource()
-    const { distance, from, to } = source ? getPosition() : { distance: 0, from: 0, to: 0 }
-    const next = distance > 0
+    const position = plan && getMap() ? getPosition() : undefined
 
-    if (source) {
-      const { head, lines } = next && route ? sliceRoute(route, distance) : { lines: [] }
-
-      source.setData({
-        features: [
-          ...lines.map(({ line, straight }) => ({
-            geometry: { coordinates: line as [number, number][], type: 'LineString' as const },
-            properties: { straight },
-            type: 'Feature' as const,
-          })),
-          ...(head
-            ? [
-                {
-                  geometry: { coordinates: head as [number, number], type: 'Point' as const },
-                  properties: {},
-                  type: 'Feature' as const,
-                },
-              ]
-            : []),
-        ],
-        type: 'FeatureCollection',
-      })
+    if (!position || !plan) {
+      clear()
+      return
     }
 
-    if (next !== drawn) {
-      drawn = next
-      stretchKey = undefined
-      onDrawn(drawn)
+    if (!drawn) {
+      drawn = true
+      onDrawn(true)
     }
 
-    // Under a kilometre: the same place, or as good as.
-    const key = `${from}:${to}`
+    layers.add(plan.line(0, plan.points.length))
 
-    if (drawn && route && key !== stretchKey && (to - from >= 1 || stretchKey === undefined)) {
-      stretchKey = key
-      onStretch(getStretch(route, from, to))
+    const current = plan
+    const { fraction, from, stopIndex, to } = position
+    const stretch = measureLeg(from, to)
+    const arrived = fraction >= 1 || stretch.total === 0
+    const walked = !arrived && fraction > 0 ? walkLine(stretch, fraction) : undefined
+    // The places passed on the way, and the one arrived at once the stretch is driven.
+    const reached = from + 1 + stretch.passed.filter((share) => arrived || share <= fraction).length
+    const drawnTo = arrived && fraction > 0 ? to + 1 : from + 1
+
+    tip = walked?.passed.at(-1)
+    layers.setRoute(
+      drawnTo,
+      () => current.line(0, drawnTo),
+      walked
+        ? {
+            line: stretch.line,
+            mode: current.travelMode(walked.start, walked.end),
+            ratio: walked.ratio,
+            segment: walked.segment,
+          }
+        : undefined,
+    )
+    layers.setStops(
+      current.points.map((point, pointIndex) => ({
+        coordinates: point.coordinates,
+        state:
+          point.stopIndex === stopIndex && !point.waypoint && !walked
+            ? 'current'
+            : pointIndex < reached
+              ? 'visited'
+              : 'upcoming',
+        waypoint: point.waypoint,
+      })),
+    )
+    // The clock ticks on while the route is driven, and rolls when it jumps.
+    clockHeading.set(getClock(current.points, from, to, walked ? fraction : 0), {
+      animate: !walked,
+    })
+
+    if (labelledStop !== stopIndex) {
+      labelledStop = stopIndex
+      // The day and time ride beside the tip, so labels are just short names.
+      mapLabels.show(
+        (trip?.stops[stopIndex]?.places ?? []).map((place) => ({
+          coordinates: [place.longitude, place.latitude],
+          name: getShortPlaceName(place.name),
+        })),
+        { alignLeft: false },
+      )
+      followStretch(from, to)
+    }
+
+    if (!cameraFrame) {
+      cameraFrame = requestAnimationFrame(stepCamera)
     }
   }
 
+  /** As the player follows a stop's drive on: a place with nowhere to go at a city's scale. */
+  function followStretch(from: number, to: number) {
+    const stretch = plan?.line(from, to + 1) ?? []
+    const spread = stretch.some(
+      ([longitude, latitude]) => longitude !== stretch[0]![0] || latitude !== stretch[0]![1],
+    )
+
+    camera.follow(stretch, spread ? NEARBY_MAX_ZOOM : STOP_ZOOM)
+  }
+
+  function stepCamera(now: number) {
+    camera.update(now)
+    cameraFrame = drawn ? requestAnimationFrame(stepCamera) : 0
+  }
+
+  /** Takes everything off the map: the reader is above the first Moment, or gone. */
+  function clear() {
+    leg = undefined
+    tip = undefined
+    labelledStop = undefined
+
+    // The player draws on the same layers: they're only this one's while it's drawn.
+    if (!drawn) {
+      return
+    }
+
+    cancelAnimationFrame(cameraFrame)
+    cameraFrame = 0
+    camera.stop()
+    mapLabels.clear()
+    layers.remove()
+    drawn = false
+    onDrawn(false)
+  }
+
   function schedule() {
-    if (route && !frame) {
+    if (plan && !frame) {
       frame = requestAnimationFrame(draw)
     }
   }
 
-  /** Adds the layers unless they're there already, also after the style changes. */
+  /** Puts the layers back after the map's style changes and drops them. */
   function add() {
-    const map = getMap()
+    if (drawn) {
+      layers.remove()
+      schedule()
+    }
+  }
 
-    if (!map || map.getSource(SOURCE)) {
+  /** Follows the sidebar's scrolling for a trip, once its playback data is here. */
+  function start(id: string) {
+    if (tripId === id) {
+      schedule()
       return
     }
 
-    const { ink, paper } = getColors()
-    const { beforeId, slot } = getUnderLabels(map)
-    const line = {
-      'line-color': ink,
-      'line-emissive-strength': 1,
-      // The trip player's width, the route drawn as it draws it.
-      'line-width': 3,
-    }
-
-    map.addSource(SOURCE, { data: { features: [], type: 'FeatureCollection' }, type: 'geojson' })
-    map.addLayer(
-      {
-        filter: ['all', ['==', ['geometry-type'], 'LineString'], ['!', ['get', 'straight']]],
-        id: LINE_LAYER,
-        layout: { 'line-cap': 'round', 'line-join': 'round' },
-        paint: line,
-        source: SOURCE,
-        type: 'line',
-        ...(slot && { slot }),
-      },
-      beforeId,
-    )
-    map.addLayer(
-      {
-        filter: ['all', ['==', ['geometry-type'], 'LineString'], ['get', 'straight']],
-        id: STRAIGHT_LAYER,
-        paint: { ...line, 'line-dasharray': [2, 2] },
-        source: SOURCE,
-        type: 'line',
-        ...(slot && { slot }),
-      },
-      beforeId,
-    )
-    map.addLayer(
-      {
-        filter: ['==', ['geometry-type'], 'Point'],
-        id: HEAD_LAYER,
-        paint: {
-          'circle-color': ink,
-          'circle-emissive-strength': 1,
-          'circle-radius': 6,
-          'circle-stroke-color': paper,
-          'circle-stroke-width': 2,
-        },
-        source: SOURCE,
-        type: 'circle',
-        ...(slot && { slot }),
-      },
-      beforeId,
-    )
-    schedule()
+    stop()
+    tripId = id
+    void loadTrip(id).then((data) => {
+      if (data && tripId === id) {
+        trip = data
+        plan = createRoutePlan(data)
+        schedule()
+      }
+    })
   }
 
-  /** Follows the sidebar's scrolling for `trip`, drawing its route as far as it's read. */
-  function start(trip: TripSummary) {
-    route = measureRoute(trip)
-    placedKey = undefined
-    stretchKey = undefined
-    schedule()
-  }
-
-  /** Takes the drawn route away. */
+  /** Stops following, taking the trip off the map. */
   function stop() {
-    if (!route) {
-      return
-    }
-
-    route = undefined
+    tripId = undefined
+    trip = undefined
+    plan = undefined
     cancelAnimationFrame(frame)
     frame = 0
-    draw()
+    clear()
   }
 
   content.addEventListener('scroll', schedule, { passive: true, signal })
   window.addEventListener('resize', schedule, { passive: true, signal })
-  signal.addEventListener('abort', () => cancelAnimationFrame(frame))
+  signal.addEventListener('abort', () => {
+    cancelAnimationFrame(frame)
+    cancelAnimationFrame(cameraFrame)
+    mapLabels.destroy()
+  })
 
-  return { add, start, stop }
+  return {
+    add,
+    /** Whether the trip is being played along, its route on the map. */
+    get drawn() {
+      return drawn
+    },
+    start,
+    stop,
+  }
 }

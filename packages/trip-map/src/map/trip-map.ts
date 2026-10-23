@@ -31,7 +31,6 @@ import { CLUSTER_MAX_ZOOM, createPlaceMarkers, getAllPlacesView } from './place-
 import { captureMap, savePicture } from './screenshot.ts'
 import { createTripDetails } from './trip-details.ts'
 import { createTripScroll } from './trip-scroll.ts'
-import type { Coordinates } from '../geo.ts'
 import { createTripList } from './trip-list.ts'
 import { createUserDot, getUserPosition } from './user-location.ts'
 import {
@@ -138,8 +137,6 @@ export type TripMapOptions = {
 const MARKER_FADE = 200
 // The least room, in pixels, the map frames places in beside the trip list.
 const MIN_FRAMED = 240
-// A stretch of a trip read in its sidebar, framed no closer than a town's streets.
-const STRETCH_MAX_ZOOM = 12
 
 /** Sets the map up on `page`. One map per page: its shortcuts listen on the window. */
 export function createTripMap(options: TripMapOptions): TripMap {
@@ -275,7 +272,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
   const markers = createPlaceMarkers({
     getAnimationDuration,
     getMap: () => map,
-    isPaused: () => !mapLoaded || Boolean(tripPlayer.activeId),
+    isPaused: () => !mapLoaded || Boolean(tripPlayer.activeId) || Boolean(tripScroll?.drawn),
     messages,
     onPrefetch: (id) => void drawer.load(id),
     onSelect: selectPlace,
@@ -369,22 +366,41 @@ export function createTripMap(options: TripMapOptions): TripMap {
       signal,
       title: elements.tripDetailsTitle,
     })
-  // Scrolling a trip's sidebar draws its route as far as its Moments have been read.
+  // Reading a trip's sidebar plays it along on the map, as the player would.
   const tripScroll =
     elements.tripDetailsContent &&
     createTripScroll({
       content: elements.tripDetailsContent,
-      getColors: getMapTheme,
-      getMap: () => map,
+      getBlocked: () =>
+        [elements.tripDetails, page.querySelector('[data-trip-map-toolbar]')]
+          .filter((element) => element && element.getClientRects().length > 0)
+          .map((element) => element!.getBoundingClientRect()),
+      getMap: () => (mapLoaded ? map : undefined),
+      getPadding: () => {
+        const side = getSidePadding(elements.tripDetails!)
+
+        return {
+          bottom: side.bottom + 32,
+          left: side.left + 32,
+          right: side.right + 32,
+          top: side.top + 16,
+        }
+      },
+      getTheme: getMapTheme,
+      loadTrip: (id) => tripPlayer.load(id),
+      messages,
       onDrawn: (drawn) => {
+        // The places give way to the trip's stops, as they do while it plays.
         tripOverview.setPickedRead(drawn)
+        fogLayer.setHidden(drawn)
+        markers.setHidden(drawn)
 
         // Back at the top: the whole route in view again.
         if (!drawn && tripDetails?.activeId) {
           frameTripBeside(elements.tripDetails!, tripDetails.activeId)
         }
       },
-      onStretch: (stretch) => frameStretch(stretch),
+      reducedMotion,
       signal,
     })
   // Set while the map picks a route itself, as a trip's sidebar opens or closes, or a
@@ -665,34 +681,6 @@ export function createTripMap(options: TripMapOptions): TripMap {
     })
   }
 
-  /** Flies to the stretch of a trip's route its sidebar is being read at, beside it. */
-  function frameStretch(stretch: readonly Coordinates[]) {
-    if (!map || !mapLoaded || stretch.length === 0) {
-      return
-    }
-
-    const side = getSidePadding(elements.tripDetails!)
-    const padding = {
-      bottom: side.bottom + 64,
-      left: side.left + 64,
-      right: side.right + 64,
-      top: side.top + 64,
-    }
-    const bounds = new mapboxgl.LngLatBounds()
-
-    for (const coordinates of stretch) {
-      bounds.extend(coordinates as [number, number])
-    }
-
-    framedOnAll = false
-    map.fitBounds(bounds, {
-      duration: getAnimationDuration(),
-      maxZoom: STRETCH_MAX_ZOOM,
-      padding,
-      pitch: getFramingPitch(map, bounds, { maxZoom: STRETCH_MAX_ZOOM, padding }),
-    })
-  }
-
   /** Opens a trip's sidebar, its route lifted and framed: not playing yet. */
   function openTrip(id: string) {
     setSelectionUrl(urls.getPickedTripPath(id, isNestedTripUrl()))
@@ -939,6 +927,8 @@ export function createTripMap(options: TripMapOptions): TripMap {
       // Set before the map loads too, so its routes are added hidden.
       tripOverview.hide(id)
       page.dataset.tripMapActive = ''
+      // Its sidebar's play-along goes first: the player draws on the same layers.
+      tripScroll?.stop()
 
       if (!mapLoaded) {
         return
@@ -991,7 +981,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
       tripList?.close({ restoreFocus: false, restoreView: false })
       tripDetails.show(trip, { focus: selectOptions.focus !== false })
       pickRoute(openId)
-      tripScroll?.start(trip)
+      tripScroll?.start(openId)
 
       if (moveMap) {
         frameTripBeside(elements.tripDetails!, openId)

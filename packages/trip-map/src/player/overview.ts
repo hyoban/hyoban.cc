@@ -37,8 +37,6 @@ const FRAME_DURATION = 800
 const BASE = { opacity: 0.5, width: 1.5 }
 const DIMMED = { opacity: 0.15, width: 1.5 }
 const LIFTED = { opacity: 1, width: 2.5 }
-// The picked route's part still ahead while its sidebar draws the part read so far.
-const AHEAD = { opacity: 0.3, width: 2.5 }
 // The width the trip player draws its route at, so the two meet without a jump.
 const PLAYING = { opacity: 1, width: 3 }
 const HOVER = 160
@@ -77,7 +75,8 @@ export function createTripOverview({
   // The trip picked, lifted while nothing else is pointed at, and where it was clicked.
   let pickedId: string | undefined
   let pickedAt: mapboxgl.LngLatLike | undefined
-  // Whether the picked route is drawn over as far as its sidebar has been read.
+  // Whether the picked trip is played along as its sidebar is read: the routes give way
+  // to its own, drawn as the player draws it, as they do while it plays.
   let pickedRead = false
   // The year or month picked: only the trips under way then are on the map.
   let period: Period | undefined
@@ -117,7 +116,7 @@ export function createTripOverview({
   }
 
   function getLook(id: string): Look {
-    if (activeId) {
+    if (activeId || pickedRead) {
       return { opacity: 0, width: PLAYING.width }
     }
 
@@ -129,11 +128,7 @@ export function createTripOverview({
       return BASE
     }
 
-    if (id !== highlightedId) {
-      return DIMMED
-    }
-
-    return id === pickedId && pickedRead ? AHEAD : LIFTED
+    return id === highlightedId ? LIFTED : DIMMED
   }
 
   function paint(id: string, look: Look, transition: { delay?: number; duration: number }) {
@@ -234,7 +229,7 @@ export function createTripOverview({
   function getTripAt(point: mapboxgl.Point) {
     const map = getMap()
 
-    if (activeId || !map) {
+    if (activeId || pickedRead || !map) {
       return undefined
     }
 
@@ -311,8 +306,7 @@ export function createTripOverview({
 
     const trip = id ? tripsById.get(id) : undefined
 
-    // Its name would sit over the part drawn as its sidebar is read.
-    if (!trip || activeId || !map || (trip.id === pickedId && pickedRead)) {
+    if (!trip || activeId || pickedRead || !map) {
       popupKey = undefined
       popup.remove()
     } else {
@@ -523,7 +517,7 @@ export function createTripOverview({
       return pickedId
     },
     reveal,
-    /** Fades the picked route, drawn over as far as its sidebar has been read, or not. */
+    /** Hides the routes while the picked trip is played along in its sidebar, or not. */
     setPickedRead(read: boolean) {
       if (read !== pickedRead) {
         pickedRead = read
@@ -551,7 +545,7 @@ export function createTripOverview({
  * A straight leg with points every so often along it. On the globe, Mapbox stretches
  * the dashes of a long line with only its two ends until it looks solid.
  */
-export function densify(line: readonly [number, number][]) {
+function densify(line: readonly [number, number][]) {
   const dense: [number, number][] = []
 
   for (const [index, [x2, y2]] of line.entries()) {
