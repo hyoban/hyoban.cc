@@ -88,7 +88,11 @@
     "dishes": [
       "素粉"
     ],
-    "verdict": "good"
+    "verdict": "good",
+    "bill": {
+      "amount": 1,
+      "people": 1
+    }
   },
   "published": {
     "id": "2026/05/03-01-wu-yi-de-di-san-tian-qu-de-shi-san",
@@ -97,5 +101,5 @@
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-05-03T00:00:00+08:00",
-  "updatedAt": "2026-10-23T14:31:56Z"
+  "updatedAt": "2026-10-23T14:35:20Z"
 }

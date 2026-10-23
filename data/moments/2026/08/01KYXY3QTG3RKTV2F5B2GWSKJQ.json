@@ -45,7 +45,8 @@
   "food": {
     "dishes": [
       "虾仁牛肉拌面"
-    ]
+    ],
+    "verdict": "good"
   },
   "published": {
     "id": "2026/08/01-01-nanjing-jiangbei-hongyuecheng",
@@ -54,5 +55,5 @@
     "at": "2026-08-20T22:58:53+08:00"
   },
   "createdAt": "2026-08-01T13:52:50+08:00",
-  "updatedAt": "2026-10-23T14:31:56Z"
+  "updatedAt": "2026-10-23T14:35:20Z"
 }

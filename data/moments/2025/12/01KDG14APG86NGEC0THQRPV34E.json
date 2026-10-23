@@ -119,7 +119,8 @@
   "food": {
     "dishes": [
       "印度菜"
-    ]
+    ],
+    "verdict": "ok"
   },
   "published": {
     "id": "2025/12/27-02-ye-shi-he-oquery-astraorsa-yi-qi-chi-shang-zheng",
@@ -128,5 +129,5 @@
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2025-12-27T21:49:22+08:00",
-  "updatedAt": "2026-10-23T14:31:56Z"
+  "updatedAt": "2026-10-23T14:35:20Z"
 }
