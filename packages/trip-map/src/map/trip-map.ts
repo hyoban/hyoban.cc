@@ -954,8 +954,19 @@ export function createTripMap(options: TripMapOptions): TripMap {
       return
     }
 
+    const closing = drawer.activeId ? markers.getPlace(drawer.activeId) : undefined
+
     drawer.close({ restoreFocus: selectOptions.focus !== false })
     tripList?.close({ restoreFocus: selectOptions.focus !== false, restoreView: moveMap })
+
+    // On a phone the drawer kept the place up in the top of the screen: it goes back
+    // down to the middle as the drawer slides away, as it came up when it opened.
+    if (closing && moveMap && isNarrow() && map && mapLoaded) {
+      map.easeTo({
+        center: [closing.longitude, closing.latitude],
+        duration: getAnimationDuration(),
+      })
+    }
   }
 
   /** Lifts a trip's route as its sidebar opens, or lets go of it as it closes. */
