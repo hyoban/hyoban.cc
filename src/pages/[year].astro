@@ -79,6 +79,13 @@ const trips = review.trips.map((trip) => ({
 }))
 const topCities = review.cities.lit.slice(0, 6)
 const firstVisits = Map.groupBy(review.firstVisits, (visit) => Number(visit.dateKey.slice(5, 7)))
+/** The stills of these Moments, photos and videos' posters but no utility ones, `width` wide. */
+const photosOf = (dayMoments: Moment[], width: number) =>
+  dayMoments
+    .flatMap((moment) => getShowcaseMedia(moment.media))
+    .map((item) => (item.type === 'video' ? item.poster : item.src))
+    .filter((image) => image !== undefined)
+    .map((image) => getThumbnailUrl(image.sources[0]?.src ?? image.src, width))
 // The places gone to by their kind, the cities being the footprint's and the stations and
 // the like only on the way; each in the order the year reached it, with its city.
 const yearPlaces = getYearPlaces(review.moments, readPlaces())
@@ -99,6 +106,11 @@ const placesByKind = placeKinds
           title: [place.division && getDivisionLabel(place.division), formatDay(place.dateKey)]
             .filter(Boolean)
             .join(' · '),
+          // A photo from the year's Moments there, when one has any.
+          photo: photosOf(
+            review.moments.filter((moment) => moment.locations.some(({ id }) => id === place.id)),
+            320,
+          )[0],
         }
       }),
   }))
@@ -113,13 +125,6 @@ const devices = Object.entries(readDevices())
     // Its own post, when one was written about it.
     href: postLinks.has(id) ? `/${id}/` : '/use/',
   }))
-/** The stills of these Moments, photos and videos' posters but no utility ones, `width` wide. */
-const photosOf = (dayMoments: Moment[], width: number) =>
-  dayMoments
-    .flatMap((moment) => getShowcaseMedia(moment.media))
-    .map((item) => (item.type === 'video' ? item.poster : item.src))
-    .filter((image) => image !== undefined)
-    .map((image) => getThumbnailUrl(image.sources[0]?.src ?? image.src, width))
 /** The first still of these Moments, `width` wide. */
 const photoOf = (dayMoments: Moment[], width: number) => photosOf(dayMoments, width)[0]
 const between = (start: string, end: string) =>
@@ -281,33 +286,44 @@ const highlights = [
 
     {
       placesByKind.length > 0 && (
-        <section class="year-section" aria-labelledby="year-places">
+        <section class="year-section year-wide" aria-labelledby="year-places">
           <h2 id="year-places">去过的地方</h2>
           <p class="year-places__total">
             {placeProvinces} 个省份的 {yearPlaces.length} 个地点
           </p>
-          <dl class="year-places">
-            {placesByKind.map((group, index) => (
-              <div style={`--index: ${index}`}>
-                <dt>
+          {placesByKind.map((group, index) => (
+            <div class="year-places" style={`--index: ${index}`} data-carousel>
+              <div class="year-places__head">
+                <h3>
                   {placeKindLabels[group.kind]}
                   <span class="year-places__count">{group.places.length}</span>
-                </dt>
-                <dd>
-                  <ul>
-                    {group.places.map((place) => (
-                      <li>
-                        <a href={`/map/${year}/place/${place.id}/`} title={place.title}>
-                          {place.name}
-                          {place.city && <span class="year-places__city">{place.city}</span>}
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                </dd>
+                </h3>
+                <div class="year-places__nav" data-carousel-nav hidden>
+                  <button type="button" data-carousel-step="-1" aria-label={`上一组${placeKindLabels[group.kind]}`} disabled>
+                    <span class="i-lucide-chevron-left" aria-hidden="true" />
+                  </button>
+                  <button type="button" data-carousel-step="1" aria-label={`下一组${placeKindLabels[group.kind]}`}>
+                    <span class="i-lucide-chevron-right" aria-hidden="true" />
+                  </button>
+                </div>
               </div>
-            ))}
-          </dl>
+              <ul data-carousel-track>
+                {group.places.map((place, order) => (
+                  <li style={`--order: ${order}`}>
+                    <a
+                      class:list={{ 'has-photo': place.photo }}
+                      href={`/map/${year}/place/${place.id}/`}
+                      title={place.title}
+                    >
+                      {place.photo && <img src={place.photo} alt="" loading="lazy" decoding="async" />}
+                      <span class="year-places__name">{place.name}</span>
+                      {place.city && <span class="year-places__city">{place.city}</span>}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </section>
       )
     }
@@ -458,7 +474,38 @@ const highlights = [
     for (const section of sections) observer.observe(section)
   }
 
+  // The places' rows: their buttons page a row by what of it shows, each stopping at its
+  // end, and show only on a row longer than it.
+  function initializeCarousels() {
+    for (const carousel of document.querySelectorAll<HTMLElement>('[data-carousel]')) {
+      const track = carousel.querySelector<HTMLElement>('[data-carousel-track]')
+      const nav = carousel.querySelector<HTMLElement>('[data-carousel-nav]')
+      if (!track || !nav) continue
+      const [previous, next] = nav.querySelectorAll<HTMLButtonElement>('[data-carousel-step]')
+      const update = () => {
+        const end = track.scrollWidth - track.clientWidth
+        nav.hidden = end <= 1
+        if (previous) previous.disabled = track.scrollLeft <= 1
+        if (next) next.disabled = track.scrollLeft >= end - 1
+      }
+      nav.addEventListener('click', (event) => {
+        const button = (event.target as Element).closest<HTMLButtonElement>('[data-carousel-step]')
+        if (!button) return
+        const inset = Number.parseFloat(getComputedStyle(track).paddingLeft)
+        const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches
+        track.scrollBy({
+          left: Number(button.dataset.carouselStep) * (track.clientWidth - inset * 2),
+          behavior: reduce ? 'auto' : 'smooth',
+        })
+      })
+      track.addEventListener('scroll', update, { passive: true })
+      new ResizeObserver(update).observe(track)
+      update()
+    }
+  }
+
   document.addEventListener('astro:page-load', initializeMotion)
+  document.addEventListener('astro:page-load', initializeCarousels)
 </script>
 
 <style>
@@ -782,32 +829,20 @@ const highlights = [
     font-weight: 500;
   }
 
-  /* The places by kind, each kind a row of names linking to them on the map. */
+  /* The places by kind: each kind a row of cards, a photo from there behind its name,
+     scrolled sideways, linking to the place on the map. */
   .year-places__total {
-    margin-top: -0.5rem;
-    margin-bottom: 1rem;
+    max-width: 40rem;
+    margin: -0.5rem auto 0;
     color: var(--color-tx-2);
     font-size: 0.875rem;
     font-variant-numeric: tabular-nums;
   }
 
   .year-places {
-    display: grid;
-    gap: 1rem;
+    margin-top: 1.5rem;
 
-    & > div {
-      display: grid;
-      gap: 0.375rem;
-      padding-top: 0.5rem;
-      border-top: 1px solid var(--color-border);
-
-      @media (width >= 40rem) {
-        grid-template-columns: 6rem minmax(0, 1fr);
-        gap: 1rem;
-      }
-    }
-
-    & dt {
+    & h3 {
       display: flex;
       align-items: baseline;
       gap: 0.375rem;
@@ -815,33 +850,175 @@ const highlights = [
     }
 
     & ul {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.25rem 1rem;
+      display: grid;
+      grid-auto-columns: 7.5rem;
+      grid-auto-flow: column;
+      gap: 0.5rem;
+      overflow-x: auto;
+      /* A gutter wider than the drawings, so its ends can fade out there; the first card
+         lines up with the column the words are in, and scrolled, the row runs out to them. */
+      --inset: calc((100% - min(40rem, 100% - 2rem)) / 2);
+      margin-inline: -1rem;
+      padding: 0 var(--inset) 0.25rem;
+      scroll-padding-inline: var(--inset);
+      /* Cards fade out at the row's ends rather than being cut off there. */
+      mask-image: linear-gradient(
+        to right,
+        transparent,
+        #000 1rem,
+        #000 calc(100% - 1rem),
+        transparent
+      );
+      overscroll-behavior-x: contain;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: none;
+
+      &::-webkit-scrollbar {
+        display: none;
+      }
+
+      @media (width >= 40rem) {
+        grid-auto-columns: 8.5rem;
+      }
+    }
+
+    & li {
+      scroll-snap-align: start;
     }
 
     & a {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      aspect-ratio: 4 / 5;
+      overflow: hidden;
+      padding: 0.625rem;
+      border: 1px solid var(--color-border);
+      border-radius: 0.625rem;
+      background: var(--color-inline);
       text-decoration: none;
+      transition: background-color 140ms var(--ease);
 
       @media (hover: hover) {
         &:hover {
-          text-decoration: underline;
-          text-underline-offset: 0.2em;
+          background: var(--color-hover);
+        }
+      }
+
+      /* A photo darkened at the foot, where the name sits on it. */
+      &.has-photo {
+        border-color: transparent;
+        background: var(--color-border);
+        color: #fff;
+
+        &::after {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(to top, rgb(0 0 0 / 0.65), rgb(0 0 0 / 0) 60%);
+          content: '';
+        }
+      }
+
+      & img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: scale 180ms var(--ease);
+      }
+
+      @media (hover: hover) {
+        &:hover img {
+          scale: 1.04;
         }
       }
     }
   }
 
-  .year-places__count,
+  .year-places__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 40rem;
+    min-height: 2rem;
+    margin: 0 auto 0.625rem;
+  }
+
+  /* Paging by a row's width, for a mouse; a finger swipes it instead. */
+  .year-places__nav {
+    display: flex;
+    gap: 0.25rem;
+
+    &[hidden] {
+      display: none;
+    }
+
+    @media (hover: none) {
+      display: none;
+    }
+
+    & button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 2rem;
+      height: 2rem;
+      border: 1px solid var(--color-border);
+      border-radius: 9999px;
+      color: var(--color-tx-2);
+      cursor: pointer;
+      transition:
+        background-color 140ms var(--ease),
+        opacity 140ms var(--ease);
+
+      &:hover:not(:disabled) {
+        background: var(--color-hover);
+        color: var(--color-tx);
+      }
+
+      &:active:not(:disabled) {
+        scale: 0.95;
+      }
+
+      &:disabled {
+        opacity: 0.35;
+        cursor: default;
+      }
+    }
+  }
+
+  .year-places__name,
   .year-places__city {
+    position: relative;
+    z-index: 1;
+  }
+
+  .year-places__name {
+    display: -webkit-box;
+    overflow: hidden;
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.25rem;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
+
+  .year-places__city {
+    color: var(--color-tx-3);
+    font-size: 0.75rem;
+
+    .has-photo & {
+      color: rgb(255 255 255 / 0.8);
+    }
+  }
+
+  .year-places__count {
     color: var(--color-tx-3);
     font-size: 0.75rem;
     font-weight: 400;
     font-variant-numeric: tabular-nums;
-  }
-
-  .year-places__city {
-    margin-left: 0.25rem;
   }
 
   .year-devices {
@@ -928,9 +1105,9 @@ const highlights = [
         animation-delay: calc(350ms + var(--month) * 60ms + var(--index) * 70ms);
       }
 
-      & .year-places > div {
+      & .year-places li {
         animation: year-rise 600ms var(--ease-out) backwards;
-        animation-delay: calc(150ms + var(--index) * 90ms);
+        animation-delay: calc(150ms + var(--index) * 120ms + min(var(--order), 8) * 50ms);
       }
 
       & .year-trips li,
