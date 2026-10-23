@@ -8,6 +8,7 @@ import {
   type DeviceStatus,
 } from '@/data/devices'
 import { readDevices } from '@/data/store'
+import { getAssetUrl, getThumbnailUrl } from '@/asset-url'
 
 // The devices on the use page: one lane per category with a bar for each device on wide
 // screens, a feed of purchases and sales on narrow ones. Spans still owned end on the
@@ -137,9 +138,16 @@ const ROW = 1.75
                     </span>
                   )}
                   <div class:list={['device__card', left > 50 ? 'device__card--end' : 'device__card--start']}>
-                    <div class="device__card-title">{span.device.name}</div>
-                    <div class="device__card-status">
-                      {span.device.category} · {statusLabel[span.status]}
+                    <div class="device__card-head">
+                      <div>
+                        <div class="device__card-title">{span.device.name}</div>
+                        <div class="device__card-status">
+                          {span.device.category} · {statusLabel[span.status]}
+                        </div>
+                      </div>
+                      {span.device.image && (
+                        <img src={getThumbnailUrl(getAssetUrl(span.device.image), 160)} alt="" loading="lazy" decoding="async" />
+                      )}
                     </div>
                     <dl>
                       <dt>购入</dt>
@@ -443,6 +451,21 @@ const ROW = 1.75
 
   .device__card--end {
     right: 0;
+  }
+
+  /* Its name and status, with its picture beside them when it has one. */
+  .device__card-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+
+    & img {
+      flex-shrink: 0;
+      width: auto;
+      height: 4rem;
+      margin-block: -0.25rem;
+    }
   }
 
   .device__card-title {

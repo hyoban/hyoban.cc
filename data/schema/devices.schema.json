@@ -57,6 +57,10 @@
         "default": false,
         "type": "boolean"
       },
+      "image": {
+        "type": "string",
+        "minLength": 1
+      },
       "note": {
         "type": "string"
       }

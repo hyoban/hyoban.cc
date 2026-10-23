@@ -551,7 +551,16 @@ const highlights = [
           <ul class="year-devices">
             {devices.map((device) => (
               <li>
-                <a href={device.href}>
+                <a class:list={{ 'has-image': device.image }} href={device.href}>
+                  {device.image && (
+                    <img
+                      class="year-devices__image"
+                      src={getThumbnailUrl(getAssetUrl(device.image), 240)}
+                      alt=""
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  )}
                   <span class="year-devices__category">{device.category}</span>
                   <span class="year-devices__name">{device.name}</span>
                   <span class="year-devices__meta">
@@ -1426,6 +1435,29 @@ const highlights = [
 
       &:hover {
         background: var(--color-hover);
+      }
+    }
+  }
+
+  /* Its picture, when it has one, tilted in from the card's corner and lifting on hover. */
+  .year-devices .has-image {
+    position: relative;
+    overflow: hidden;
+    padding-right: 4.25rem;
+  }
+
+  .year-devices__image {
+    position: absolute;
+    right: 0.75rem;
+    bottom: -1.5rem;
+    width: auto;
+    height: 5.5rem;
+    rotate: 12deg;
+    transition: translate 300ms var(--ease-out);
+
+    @media (hover: hover) {
+      a:hover > & {
+        translate: 0 -0.5rem;
       }
     }
   }
