@@ -18,7 +18,14 @@ import { getShowcaseMedia } from '@/moments/showcase'
 import { getTripCollage } from '@/moments/trip-images'
 import { getPageCardPath, getPageTitle } from '@/page-cards'
 import { buildRouteGlyph, buildYearMap, getTripLine } from '@/year-map'
-import { buildYearReview, formatChange, getCityName, getReviewYears, getYearPlaces } from '@/year-review'
+import {
+  buildYearReview,
+  formatChange,
+  getCityName,
+  getReviewYears,
+  getYearMeals,
+  getYearPlaces,
+} from '@/year-review'
 import YearClock from '@/components/YearClock.astro'
 import YearWeekdays from '@/components/YearWeekdays.astro'
 import YearTopics from '@/components/YearTopics.astro'
@@ -30,7 +37,8 @@ import type { PlaceKind } from '@hyoban/data-spec'
 
 // A year at a glance (src/year-review.ts): its counts against the year before; then where
 // it went, from its footprint on a map drawn at build time (src/year-map.ts) and its trips
-// by the shapes of their routes down to the cities it first reached and the places; then
+// by the shapes of their routes down to the cities it first reached, the places and what it
+// ate; then
 // how it went, every day of it as a tile, a few days worth going back to and when it was
 // written; and last the devices bought.
 //
@@ -104,7 +112,8 @@ const photosOf = (dayMoments: Moment[], width: number) =>
 // The places gone to, the sights in one row and where to eat, stay or shop in another,
 // each in the order the year reached it, with its city; the cities are the footprint's,
 // and the towns and stations only on the way.
-const yearPlaces = getYearPlaces(review.moments, readPlaces())
+const allPlaces = readPlaces()
+const yearPlaces = getYearPlaces(review.moments, allPlaces)
 const placeKinds: PlaceKind[] = ['scenic', 'food', 'shopping', 'stay']
 const places = yearPlaces
   .filter((place) => place.kind && placeKinds.includes(place.kind))
@@ -143,6 +152,29 @@ const placeRows = [
       })),
   }))
   .filter((row) => row.places.length > 0)
+// The year's meals as a menu: the ones worth having again as its specials, the rest as
+// its everyday dishes and the bad ones struck out; each with a photo of it, what it cost
+// a head when the bill was kept, and its city unless its name says it, linking to its Moment.
+const meals = getYearMeals(review.moments).map((meal) => {
+  const division = allPlaces[meal.moment.locations[0]?.id ?? '']?.division
+  const city = division?.city && getCityName(division.city)
+  const bill = meal.moment.food?.bill
+  return {
+    ...meal,
+    city: city && !meal.name.includes(city) ? city : undefined,
+    fullCity: city,
+    photo: photosOf([meal.moment], 96)[0],
+    price: bill && `¥${formatNumber(Math.round((bill.amount / (bill.people ?? 1)) * 10) / 10)}${bill.people ? '/人' : ''}`,
+  }
+})
+const menuCities = new Set(meals.map((meal) => meal.fullCity).filter(Boolean)).size
+const menuRows = [
+  { title: '招牌', verdicts: ['good'] },
+  { title: '家常', verdicts: ['ok', undefined] },
+  { title: '避雷', verdicts: ['bad'] },
+]
+  .map((row) => ({ ...row, meals: meals.filter((meal) => row.verdicts.includes(meal.verdict)) }))
+  .filter((row) => row.meals.length > 0)
 const postLinks = new Set((await getSortedPosts()).map((post) => post.data.link))
 const devices = Object.entries(readDevices())
   .filter(([, device]) => device.bought.on.startsWith(String(year)))
@@ -410,6 +442,59 @@ const highlights = [
               </ul>
             </div>
           ))}
+        </section>
+      )
+    }
+
+    {
+      menuRows.length > 0 && (
+        <section class="year-section" aria-labelledby="year-food">
+          <h2 id="year-food" class="sr-only">吃了什么</h2>
+          <div class="year-menu">
+            <header class="year-menu__head">
+              <span class="year-menu__year">{year}</span>
+              <span class="year-menu__title">年度菜单</span>
+              <span class="year-menu__count">
+                {meals.length} 道{menuCities > 1 && ` · ${menuCities} 城`}
+              </span>
+            </header>
+            {menuRows.map((row) => (
+              <div class="year-menu__course">
+                <h3>
+                  {row.title}
+                  <span class="year-menu__rule" aria-hidden="true" />
+                  <span class="year-menu__note">{row.meals.length} 道</span>
+                </h3>
+                <ul class:list={{ 'is-struck': row.title === '避雷' }}>
+                  {row.meals.map((meal, order) => (
+                    <li style={`--order: ${order}`}>
+                      <a href={getMomentPagePath(meal.moment)}>
+                        <span class="year-menu__plate">
+                          {meal.photo ? (
+                            <img src={meal.photo} alt="" loading="lazy" decoding="async" />
+                          ) : (
+                            <span class="i-lucide-utensils" aria-hidden="true" />
+                          )}
+                        </span>
+                        <span class="year-menu__dish">
+                          <span class="year-menu__name">{meal.name}</span>
+                          <span class="year-menu__meta">
+                            {[formatDay(meal.moment.dateKey), meal.price].filter(Boolean).join(' · ')}
+                          </span>
+                        </span>
+                        {meal.city && (
+                          <>
+                            <span class="year-menu__leader" aria-hidden="true" />
+                            <span class="year-menu__city">{meal.city}</span>
+                          </>
+                        )}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
         </section>
       )
     }
@@ -1128,6 +1213,202 @@ const highlights = [
     }
   }
 
+  /* The meals as a menu card: a framed page with its year and title set like a
+     restaurant's, the courses under it, each dish a photo on a plate with its name, day
+     and price, dots leading to its city; the bad ones struck out. Two columns where
+     there's room. */
+  .year-menu {
+    --menu-serif: 'Songti SC', 'Noto Serif SC', 'Source Han Serif SC', serif;
+    padding: 2.25rem 1.25rem 1.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+    background: var(--color-inline);
+    box-shadow:
+      inset 0 0 0 0.375rem var(--color-bg),
+      inset 0 0 0 calc(0.375rem + 1px) var(--color-border);
+
+    @media (width >= 40rem) {
+      padding-inline: 2.25rem;
+    }
+  }
+
+  .year-menu__head {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.375rem;
+    margin-bottom: 2rem;
+    text-align: center;
+  }
+
+  .year-menu__year {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--color-tx-3);
+    font-size: 0.75rem;
+    letter-spacing: 0.3em;
+    text-indent: 0.3em;
+    font-variant-numeric: tabular-nums;
+
+    &::before,
+    &::after {
+      width: 2.5rem;
+      height: 1px;
+      background: currentColor;
+      opacity: 0.5;
+      content: '';
+    }
+  }
+
+  .year-menu__title {
+    font-family: var(--menu-serif);
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 2.25rem;
+    letter-spacing: 0.5em;
+    text-indent: 0.5em;
+  }
+
+  .year-menu__count {
+    color: var(--color-tx-2);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .year-menu__course {
+    & + & {
+      margin-top: 1.75rem;
+    }
+
+    & h3 {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+      font-family: var(--menu-serif);
+      font-size: 1.125rem;
+      font-weight: 700;
+      letter-spacing: 0.25em;
+    }
+
+    & ul {
+      display: grid;
+      column-gap: 2.25rem;
+
+      @media (width >= 40rem) {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    & a {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding-block: 0.5rem;
+      text-decoration: none;
+
+      @media (hover: hover) {
+        &:hover .year-menu__plate {
+          rotate: -12deg;
+          scale: 1.08;
+        }
+
+        &:hover .year-menu__name {
+          text-decoration: underline;
+          text-underline-offset: 0.2em;
+        }
+      }
+    }
+  }
+
+  .year-menu__note {
+    flex-shrink: 0;
+    color: var(--color-tx-3);
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    font-weight: 400;
+    letter-spacing: 0;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .year-menu__rule {
+    flex: 1;
+    height: 1px;
+    background: var(--color-border);
+  }
+
+  /* A photo of the dish on a plate: round, with a rim. */
+  .year-menu__plate {
+    display: grid;
+    flex-shrink: 0;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 3px;
+    border: 1px solid var(--color-border);
+    border-radius: 9999px;
+    background: var(--color-bg);
+    color: var(--color-tx-3);
+    transition:
+      rotate 300ms var(--ease-out),
+      scale 300ms var(--ease-out);
+
+    & img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: inherit;
+      object-fit: cover;
+    }
+  }
+
+  .year-menu__dish {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .year-menu__name {
+    overflow: hidden;
+    line-height: 1.375rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .year-menu__meta,
+  .year-menu__city {
+    flex-shrink: 0;
+    color: var(--color-tx-3);
+    font-size: 0.75rem;
+    line-height: 1rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .year-menu__city {
+    color: var(--color-tx-2);
+  }
+
+  .year-menu__leader {
+    flex: 1;
+    min-width: 1rem;
+    align-self: center;
+    border-bottom: 1px dotted var(--color-tx-3);
+    opacity: 0.6;
+  }
+
+  .is-struck {
+    & .year-menu__name {
+      color: var(--color-tx-2);
+      text-decoration: line-through;
+      text-decoration-thickness: 1px;
+    }
+
+    & .year-menu__plate img {
+      filter: grayscale(1);
+    }
+  }
+
   .year-devices {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
@@ -1340,7 +1621,8 @@ const highlights = [
         animation-delay: calc(350ms + var(--month) * 60ms + var(--index) * 70ms);
       }
 
-      & .year-places li {
+      & .year-places li,
+      & .year-menu li {
         animation: year-rise 600ms var(--ease-out) backwards;
         animation-delay: calc(150ms + min(var(--order), 8) * 60ms);
       }

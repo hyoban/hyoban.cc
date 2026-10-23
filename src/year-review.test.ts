@@ -6,6 +6,7 @@ import {
   getCityName,
   getLongestStreak,
   getReviewYears,
+  getYearMeals,
   getYearPlaces,
 } from './year-review.ts'
 
@@ -181,5 +182,25 @@ test('getYearPlaces counts each place once per Moment, in the order first reache
     },
     { id: 'lake', name: '湖', kind: 'scenic', count: 1, dateKey: '2026-03-02' },
     { id: 'hefei', name: '合肥', count: 1, dateKey: '2026-03-05' },
+  ])
+})
+
+test('getYearMeals names each meal by its dishes, or by its place when it has only a verdict', () => {
+  const meals = [
+    {
+      id: 'fish',
+      locations: [hefei],
+      food: { dishes: ['烤鱼', '卡旺卡'], verdict: 'good' as const },
+    },
+    { id: 'island', locations: [suzhou], food: { dishes: [], verdict: 'bad' as const } },
+    { id: 'noodles', locations: [], food: { dishes: ['面'] } },
+    { id: 'empty', locations: [suzhou], food: { dishes: [] } },
+    { id: 'none', locations: [suzhou] },
+  ]
+
+  expect(getYearMeals(meals).map(({ moment, ...meal }) => ({ id: moment.id, ...meal }))).toEqual([
+    { id: 'fish', name: '烤鱼、卡旺卡', verdict: 'good' },
+    { id: 'island', name: '苏州', verdict: 'bad' },
+    { id: 'noodles', name: '面' },
   ])
 })
