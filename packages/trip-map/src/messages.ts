@@ -108,6 +108,10 @@ export const zhCN = {
   shortcutsPresenting: '放映与导出',
   shortcutsSpeedSound: '速度与声音',
 
+  // What the car recorded of a day, on the day cards
+  drivingDayHoursLabel: '开了 {km} 公里 · {hours} 小时',
+  drivingDayLabel: '开了 {km} 公里',
+
   // Weather on the day cards
   weatherClear: '晴',
   weatherDrizzle: '毛毛雨',

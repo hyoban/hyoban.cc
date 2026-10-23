@@ -18,6 +18,7 @@ const OUTING_GAP_DAYS = 2
 export interface VehicleDistanceDay {
   date: string
   distanceMeters: number
+  durationSeconds?: number
 }
 
 export interface OutingTrip {
@@ -58,10 +59,10 @@ export function readVehicleMonths(root = dataRoot): VehicleMonth[] {
 export function getVehicleDays(months: VehicleMonth[]): VehicleDistanceDay[] {
   return months
     .flatMap((month) => month.days ?? [])
-    .flatMap((day) =>
-      day.distanceMeters === undefined
+    .flatMap(({ date, distanceMeters, durationSeconds }) =>
+      distanceMeters === undefined
         ? []
-        : [{ date: day.date, distanceMeters: day.distanceMeters }],
+        : [{ date, distanceMeters, ...(durationSeconds === undefined ? {} : { durationSeconds }) }],
     )
     .sort((first, second) => first.date.localeCompare(second.date))
 }
@@ -141,6 +142,33 @@ export function findOutings(
     })
     .filter((outing) => outing.trip || outing.distanceMeters >= OUTING_METERS)
     .reverse()
+}
+
+/**
+ * A trip's days as the car recorded them, when the car drove all of it: every day within
+ * the records' span, and no leg by plane or train, which leaves the car at home or at an
+ * airport while a rental drives the routes. A ferry carries the car along.
+ */
+export function getTripOdometer(
+  trip: { start: string; end: string; legs: readonly { by: string }[] },
+  days: VehicleDistanceDay[],
+  span: { start: string; end: string },
+) {
+  if (
+    trip.start < span.start ||
+    trip.end > span.end ||
+    trip.legs.some((leg) => leg.by === 'plane' || leg.by === 'train')
+  ) {
+    return undefined
+  }
+
+  const tripDays = days.filter((day) => trip.start <= day.date && day.date <= trip.end)
+
+  return {
+    days: new Map(tripDays.map((day) => [day.date, day])),
+    distanceMeters: tripDays.reduce((total, day) => total + day.distanceMeters, 0),
+    durationSeconds: tripDays.reduce((total, day) => total + (day.durationSeconds ?? 0), 0),
+  }
 }
 
 /** How dark a day's square is, 0 for a day parked to 4 for one of 300 km or more. */

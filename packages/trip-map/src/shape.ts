@@ -1,5 +1,5 @@
 import type { MapLocation } from './locations.ts'
-import { type Messages, zhCN } from './messages.ts'
+import { type Messages, t, zhCN } from './messages.ts'
 import { getRouteLine, simplifyLine } from './player/route.ts'
 import type {
   MapStats,
@@ -9,6 +9,7 @@ import type {
   TripDataWaypoint,
   TripImage,
   TripImageInput,
+  TripDriving,
   TripSummary,
   TripWeather,
 } from './player/types.ts'
@@ -24,7 +25,14 @@ import { describeWeather, type DayWeather } from './weather.ts'
 
 // Turns a built trip into what the player plays (`TripData`) and what the overview
 // draws (`TripSummary`). The site adds what only it knows: each stop's photos, words
-// and links, the cover photos, the music and the cached weather.
+// and links, the cover photos, the music, the cached weather and what the car recorded.
+
+/** A day's driving as the car recorded it. */
+export type DayDriving = {
+  distanceKm: number
+  /** Hours at the wheel, when the car says. */
+  hours?: number | undefined
+}
 
 /** What a site says about a stop beyond its places: its photos, words and where it lives. */
 export type StopDetails = {
@@ -50,6 +58,8 @@ export type ShapeTripOptions<T extends TripMoment> = {
   music?: string | undefined
   /** A day's cached weather at a place (see `getWeatherKey`), when the site has it. */
   weather?: (dateKey: string, place: MapLocation) => DayWeather | undefined
+  /** A day's driving as the car recorded it, when the site has it; days not driven are left out. */
+  driving?: (dateKey: string) => DayDriving | undefined
 }
 
 export function shapeTripData<T extends TripMoment>(
@@ -75,6 +85,7 @@ export function shapeTripData<T extends TripMoment>(
   return {
     covers: options.covers.map(toTripImage),
     dayCount: trip.dayCount,
+    ...(options.driving ? { driving: getTripDriving(trip, options.driving, messages) } : {}),
     drivingHours: trip.drivingHours,
     drivingKm: trip.drivingKm,
     end: trip.end,
@@ -177,6 +188,33 @@ function getTripWeather(
   }
 
   return days
+}
+
+/** Each trip day's driving as a label, by day number; days without a distance are left out. */
+function getTripDriving(
+  trip: Trip<TripMoment>,
+  lookup: NonNullable<ShapeTripOptions<TripMoment>['driving']>,
+  messages: Messages,
+) {
+  const days: TripDriving = {}
+  const format = new Intl.NumberFormat(messages.locale, { maximumFractionDigits: 1 })
+
+  for (let day = 1; day <= trip.dayCount; day += 1) {
+    const driving = lookup(getDateKey(trip.start, day - 1))
+
+    if (driving && driving.distanceKm > 0) {
+      days[day] = t(messages, driving.hours ? 'drivingDayHoursLabel' : 'drivingDayLabel', {
+        hours: format.format(driving.hours ?? 0),
+        km: Math.round(driving.distanceKm).toLocaleString(messages.locale),
+      })
+    }
+  }
+
+  return days
+}
+
+function getDateKey(start: string, offset: number) {
+  return new Date(Date.parse(`${start}T00:00:00Z`) + offset * 86_400_000).toISOString().slice(0, 10)
 }
 
 /** Fills in what a site left out of an image: one source for every width, itself as its thumbnail. */
