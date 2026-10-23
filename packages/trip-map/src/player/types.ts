@@ -103,10 +103,15 @@ export type TripDataLeg = {
 /** Each trip day's weather by day number; days without data are left out. */
 export type TripWeather = Record<number, { icon: WeatherIcon; label: string }>
 
+/** What each trip day was driven by day number, as its label; days without data are left out. */
+export type TripDriving = Record<number, string>
+
 export type TripData = {
   /** Photos for the intro and summary cards, best first. */
   covers: TripImage[]
   dayCount: number
+  /** What the car's odometer says of each day, when the site has it. */
+  driving?: TripDriving | undefined
   drivingHours: number
   drivingKm: number
   /** The last day, as `YYYY-MM-DD`. */

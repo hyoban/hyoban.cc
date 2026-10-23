@@ -8,7 +8,13 @@ import {
 } from '@hyoban/trip-map'
 import { tripVideoMusic } from '@/data/music'
 import tripWeather from '@/data/trip-weather.json'
-import { getMomentPath, getMoments, getTrips, type MomentTrip } from '@/moments'
+import {
+  getMomentPath,
+  getMoments,
+  getMomentTripOdometer,
+  getTrips,
+  type MomentTrip,
+} from '@/moments'
 import { takeBilibiliVideo } from '@/moments/bilibili'
 import { getTripCovers, getTripImages } from '@/moments/trip-images'
 import { tripMapMessages } from '@/trip-map'
@@ -39,6 +45,8 @@ export function getTripSummaries() {
 }
 
 export function getTripData(trip: MomentTrip): TripData {
+  const odometer = getMomentTripOdometer(trip)
+
   return shapeTripData(trip, {
     covers: getTripCovers(trip),
     describeStop: (stop) => ({
@@ -50,6 +58,19 @@ export function getTripData(trip: MomentTrip): TripData {
     }),
     messages: tripMapMessages,
     music: getTripMusic(trip),
+    ...(odometer
+      ? {
+          driving: (dateKey: string) => {
+            const day = odometer.days.get(dateKey)
+            return (
+              day && {
+                distanceKm: day.distanceMeters / 1000,
+                hours: (day.durationSeconds ?? 0) / 3600,
+              }
+            )
+          },
+        }
+      : {}),
     weather: (dateKey, place) =>
       (tripWeather as Record<string, DayWeather>)[getWeatherKey(dateKey, place)],
   })

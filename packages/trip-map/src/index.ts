@@ -68,6 +68,7 @@ export type {
   TripDataLeg,
   TripDataStop,
   TripDataWaypoint,
+  TripDriving,
   TripImage,
   TripImageInput,
   TripPlace,
@@ -80,6 +81,7 @@ export {
   getPlaceMarkers,
   getTripSummary,
   shapeTripData,
+  type DayDriving,
   type ShapeTripOptions,
   type StopDetails,
 } from './shape.ts'

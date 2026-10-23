@@ -126,6 +126,7 @@ dragging. `trip-map-toolbar__actions` on the toolbar's buttons moves them aside 
      describeStop: (stop) => ({ anchor, href, images, text, time, video }),
      music: '/music/apple-cider.mp3',
      weather: (dateKey, place) => cache[getWeatherKey(dateKey, place)],
+     driving: (dateKey) => odometer[dateKey], // { distanceKm, hours? }, for the day cards
    })
    ```
 
@@ -300,6 +301,8 @@ formatted. Dates travel as `YYYY-MM-DD` keys and are formatted where they are sh
 | `shortcutsPlayback`      | 播放                                         |
 | `shortcutsPresenting`    | 放映与导出                                   |
 | `shortcutsSpeedSound`    | 速度与声音                                   |
+| `drivingDayHoursLabel`   | 开了 {km} 公里 · {hours} 小时                |
+| `drivingDayLabel`        | 开了 {km} 公里                               |
 | `weatherClear`           | 晴                                           |
 | `weatherDrizzle`         | 毛毛雨                                       |
 | `weatherFog`             | 雾                                           |

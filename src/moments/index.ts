@@ -20,6 +20,7 @@ import {
 } from '@hyoban/data-spec'
 import { trips } from '@/data/trips'
 import { readRoutes } from '@/data/store'
+import { getTripOdometer, getVehicleDays, getVehicleSpan, readVehicleMonths } from '@/data/vehicle'
 
 const calendarDateFormatter = new Intl.DateTimeFormat('en-CA', {
   day: '2-digit',
@@ -153,14 +154,36 @@ export type MomentTrip = ReturnType<typeof getTrips>[number]
 /** The legs' routes the API fetched, read once; the spec's optional `duration` is only ever left out. */
 const tripRoutes = readRoutes() as Readonly<Record<string, TripRoute>>
 
+const vehicleMonths = readVehicleMonths()
+const vehicleDays = getVehicleDays(vehicleMonths)
+const vehicleSpan = getVehicleSpan(vehicleMonths, vehicleDays)
+
+/**
+ * A trip's days as the car recorded them, when the car drove all of it (getTripOdometer):
+ * its distance and hours then come from the odometer rather than the routes, which miss
+ * the detours, the driving around town and the wrong turns.
+ */
+export function getMomentTripOdometer(trip: Parameters<typeof getTripOdometer>[0]) {
+  return getTripOdometer(trip, vehicleDays, vehicleSpan)
+}
+
 export function getTrips(moments: Moment[]) {
   return trips
-    .map((trip) =>
-      buildTrip(trip, moments, {
+    .map((trip) => {
+      const built = buildTrip(trip, moments, {
         resolveLocation: (id) => ({ id, ...getLocation(locations, id as LocationId) }),
         routes: tripRoutes,
-      }),
-    )
+      })
+      const odometer = getMomentTripOdometer(built)
+
+      return odometer
+        ? {
+            ...built,
+            drivingHours: Math.round(odometer.durationSeconds / 3600),
+            drivingKm: Math.round(odometer.distanceMeters / 1000),
+          }
+        : built
+    })
     .filter((trip) => trip.stops.length > 0)
 }
 
