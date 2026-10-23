@@ -197,6 +197,9 @@ export function createTripMap(options: TripMapOptions): TripMap {
   let handMoves = 0
   // Where the map was before a period was picked, to go back to as it's cleared.
   let viewBeforePeriod: SavedView | undefined
+  // The period picked as a trip's sidebar opened: one picked while it's open is undone
+  // as it closes, so closing leaves the trip rather than landing on that period's list.
+  let periodBeforeTrip: Period | undefined
   // Tells the views this map kept from those of one before it, as a reload had.
   const viewKey = Math.random().toString(36).slice(2)
 
@@ -977,6 +980,10 @@ export function createTripMap(options: TripMapOptions): TripMap {
     if (openId && tripDetails) {
       const trip = tripsById.get(openId)!
 
+      if (!tripDetails.isOpen) {
+        periodBeforeTrip = markers.period
+      }
+
       drawer.close({ restoreFocus: false })
       tripList?.close({ restoreFocus: false, restoreView: false })
       tripDetails.show(trip, { focus: selectOptions.focus !== false })
@@ -1261,6 +1268,10 @@ export function createTripMap(options: TripMapOptions): TripMap {
 
     if (!drawer.activeId && !tripPlayer.activeId && !isTripListUrl() && !openId) {
       return
+    }
+
+    if (openId && tripDetails?.isOpen && !isSamePeriod(markers.period, periodBeforeTrip)) {
+      pickPeriod(periodBeforeTrip)
     }
 
     if (getHistoryState()[HISTORY_STATE_KEY]) {
