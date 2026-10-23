@@ -286,7 +286,7 @@ const highlights = [
 
     {
       placesByKind.length > 0 && (
-        <section class="year-section year-wide" aria-labelledby="year-places">
+        <section class="year-section" aria-labelledby="year-places">
           <h2 id="year-places">去过的地方</h2>
           <p class="year-places__total">
             {placeProvinces} 个省份的 {yearPlaces.length} 个地点
@@ -298,6 +298,7 @@ const highlights = [
                   {placeKindLabels[group.kind]}
                   <span class="year-places__count">{group.places.length}</span>
                 </h3>
+                <div class="year-places__actions">
                 <div class="year-places__nav" data-carousel-nav hidden>
                   <button type="button" data-carousel-step="-1" aria-label={`上一组${placeKindLabels[group.kind]}`} disabled>
                     <span class="i-lucide-chevron-left" aria-hidden="true" />
@@ -306,18 +307,34 @@ const highlights = [
                     <span class="i-lucide-chevron-right" aria-hidden="true" />
                   </button>
                 </div>
+                {group.places.length > 2 && (
+                  <button
+                    class="year-places__all"
+                    type="button"
+                    data-carousel-all
+                    aria-expanded="false"
+                    aria-label={`全部${group.places.length}个${placeKindLabels[group.kind]}`}
+                  >
+                    <span class="year-places__all-show">全部</span>
+                    <span class="year-places__all-hide">收起</span>
+                  </button>
+                )}
+                </div>
               </div>
-              <ul data-carousel-track>
+              <ul data-carousel-track aria-label={`${placeKindLabels[group.kind]}，${group.places.length} 个`}>
                 {group.places.map((place, order) => (
                   <li style={`--order: ${order}`}>
                     <a
                       class:list={{ 'has-photo': place.photo }}
                       href={`/map/${year}/place/${place.id}/`}
                       title={place.title}
+                      aria-label={`${[place.name, place.city].filter(Boolean).join('，')}，第 ${order + 1} 个，共 ${group.places.length} 个`}
                     >
                       {place.photo && <img src={place.photo} alt="" loading="lazy" decoding="async" />}
-                      <span class="year-places__name">{place.name}</span>
-                      {place.city && <span class="year-places__city">{place.city}</span>}
+                      <span class="year-places__words">
+                        <span class="year-places__name">{place.name}</span>
+                        {place.city && <span class="year-places__city">{place.city}</span>}
+                      </span>
                     </a>
                   </li>
                 ))}
@@ -427,6 +444,8 @@ const highlights = [
 </Layout>
 
 <script>
+  import { initializeCarousels } from '@/year-carousel'
+
   // The page's motion, each piece once: the counts roll up from nothing as it opens, and
   // each section rises in the first time it scrolls into view, its parts following on.
   const DELAY = 250
@@ -474,38 +493,8 @@ const highlights = [
     for (const section of sections) observer.observe(section)
   }
 
-  // The places' rows: their buttons page a row by what of it shows, each stopping at its
-  // end, and show only on a row longer than it.
-  function initializeCarousels() {
-    for (const carousel of document.querySelectorAll<HTMLElement>('[data-carousel]')) {
-      const track = carousel.querySelector<HTMLElement>('[data-carousel-track]')
-      const nav = carousel.querySelector<HTMLElement>('[data-carousel-nav]')
-      if (!track || !nav) continue
-      const [previous, next] = nav.querySelectorAll<HTMLButtonElement>('[data-carousel-step]')
-      const update = () => {
-        const end = track.scrollWidth - track.clientWidth
-        nav.hidden = end <= 1
-        if (previous) previous.disabled = track.scrollLeft <= 1
-        if (next) next.disabled = track.scrollLeft >= end - 1
-      }
-      nav.addEventListener('click', (event) => {
-        const button = (event.target as Element).closest<HTMLButtonElement>('[data-carousel-step]')
-        if (!button) return
-        const inset = Number.parseFloat(getComputedStyle(track).paddingLeft)
-        const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches
-        track.scrollBy({
-          left: Number(button.dataset.carouselStep) * (track.clientWidth - inset * 2),
-          behavior: reduce ? 'auto' : 'smooth',
-        })
-      })
-      track.addEventListener('scroll', update, { passive: true })
-      new ResizeObserver(update).observe(track)
-      update()
-    }
-  }
-
   document.addEventListener('astro:page-load', initializeMotion)
-  document.addEventListener('astro:page-load', initializeCarousels)
+  document.addEventListener('astro:page-load', () => initializeCarousels())
 </script>
 
 <style>
@@ -829,11 +818,11 @@ const highlights = [
     font-weight: 500;
   }
 
-  /* The places by kind: each kind a row of cards, a photo from there behind its name,
-     scrolled sideways, linking to the place on the map. */
+  /* The places by kind, each kind a carousel of cards (src/year-carousel.ts): a photo
+     from there behind its name, linking to the place on the map. Without the script, or
+     with reduced motion, a row of same-sized cards scrolled sideways. */
   .year-places__total {
-    max-width: 40rem;
-    margin: -0.5rem auto 0;
+    margin-top: -0.5rem;
     color: var(--color-tx-2);
     font-size: 0.875rem;
     font-variant-numeric: tabular-nums;
@@ -855,30 +844,12 @@ const highlights = [
       grid-auto-flow: column;
       gap: 0.5rem;
       overflow-x: auto;
-      /* A gutter wider than the drawings, so its ends can fade out there; the first card
-         lines up with the column the words are in, and scrolled, the row runs out to them. */
-      --inset: calc((100% - min(40rem, 100% - 2rem)) / 2);
-      margin-inline: -1rem;
-      padding: 0 var(--inset) 0.25rem;
-      scroll-padding-inline: var(--inset);
-      /* Cards fade out at the row's ends rather than being cut off there. */
-      mask-image: linear-gradient(
-        to right,
-        transparent,
-        #000 1rem,
-        #000 calc(100% - 1rem),
-        transparent
-      );
       overscroll-behavior-x: contain;
       scroll-snap-type: x mandatory;
       scrollbar-width: none;
 
       &::-webkit-scrollbar {
         display: none;
-      }
-
-      @media (width >= 40rem) {
-        grid-auto-columns: 8.5rem;
       }
     }
 
@@ -894,21 +865,17 @@ const highlights = [
       aspect-ratio: 4 / 5;
       overflow: hidden;
       padding: 0.625rem;
-      border: 1px solid var(--color-border);
-      border-radius: 0.625rem;
-      background: var(--color-inline);
+      border-radius: 0.75rem;
+      background: var(--color-hover);
       text-decoration: none;
-      transition: background-color 140ms var(--ease);
 
-      @media (hover: hover) {
-        &:hover {
-          background: var(--color-hover);
-        }
+      &:focus-visible {
+        outline: 2px solid var(--color-tx);
+        outline-offset: -2px;
       }
 
       /* A photo darkened at the foot, where the name sits on it. */
       &.has-photo {
-        border-color: transparent;
         background: var(--color-border);
         color: #fff;
 
@@ -935,18 +902,99 @@ const highlights = [
         }
       }
     }
+
+    /* Each item a step of the scroller, its card the large size, moved and masked to its
+       place by the script; the words keep to what the mask shows. */
+    &.is-multi-browse {
+      & ul {
+        position: relative;
+        display: flex;
+        gap: 0;
+        height: min(calc(var(--large) * 1.2), 15rem);
+      }
+
+      & li {
+        position: relative;
+        flex: none;
+      }
+
+      & a {
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: var(--large);
+        aspect-ratio: auto;
+        will-change: translate, clip-path;
+      }
+
+      & .year-places__words {
+        position: absolute;
+        right: calc(var(--inset) + 0.625rem);
+        bottom: 0.625rem;
+        left: calc(var(--inset) + 0.625rem);
+        opacity: var(--words);
+      }
+    }
+
+    /* All of a kind at once, wrapping, as Material asks for a carousel on a scrolling page. */
+    &.is-expanded ul {
+      grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
+      grid-auto-flow: row;
+      overflow: visible;
+    }
+  }
+
+  .year-places__words {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
   }
 
   .year-places__head {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    max-width: 40rem;
     min-height: 2rem;
-    margin: 0 auto 0.625rem;
+    margin-bottom: 0.625rem;
   }
 
-  /* Paging by a row's width, for a mouse; a finger swipes it instead. */
+  .year-places__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .year-places__all {
+    min-height: 2.25rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    color: var(--color-tx-2);
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: background-color 140ms var(--ease);
+
+    &:hover {
+      background: var(--color-hover);
+      color: var(--color-tx);
+    }
+
+    & .year-places__all-hide {
+      display: none;
+    }
+
+    .is-expanded & {
+      & .year-places__all-show {
+        display: none;
+      }
+
+      & .year-places__all-hide {
+        display: inline;
+      }
+    }
+  }
+
+  /* Paging by what shows, for a mouse; a finger swipes instead. */
   .year-places__nav {
     display: flex;
     gap: 0.25rem;
