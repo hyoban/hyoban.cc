@@ -3,7 +3,8 @@
   "occurredAt": "2023-05-13T03:06:15+08:00",
   "places": [],
   "text": "Added a new tab Timeline on https://kodoku.hyoban.cc , you can browse the posts of people you follow on different platforms in real time.\nMany thanks to @DIYgod for https://github.com/DIYgod/RSSHub and @shadcn for https://ui.shadcn.com",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [
     {
       "uid": "01H08NPJ2ST7KDENCTTZF7NWAF",

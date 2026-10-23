@@ -3,7 +3,8 @@
   "occurredAt": "2026-01-29T00:03:47+08:00",
   "places": [],
   "text": "自己用\n@fuma_nama\n的 fumadocs 部署了一版 Dify 的文档来用，感觉比 mintlify 好。\nhttps://docs-dify-ai.vercel.app/",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [],
   "published": {
     "id": "2026/01/29-01-zi-ji-yong",

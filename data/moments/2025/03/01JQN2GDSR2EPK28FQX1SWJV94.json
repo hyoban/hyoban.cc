@@ -3,7 +3,8 @@
   "occurredAt": "2025-03-31T11:04:19+08:00",
   "places": [],
   "text": "还可以 check 是否能访问 secret，if: github.secret_source != 'None'",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [],
   "published": {
     "id": "2025/03/31-02-hai-ke-yi-check-shi-fou-neng-fang-wen-secret",

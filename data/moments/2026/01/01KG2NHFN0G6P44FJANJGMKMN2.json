@@ -3,7 +3,8 @@
   "occurredAt": "2026-01-29T00:03:48+08:00",
   "places": [],
   "text": "代码在 https://github.com/hyoban/dify-docs",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [],
   "published": {
     "id": "2026/01/29-02-dai-ma-zai",

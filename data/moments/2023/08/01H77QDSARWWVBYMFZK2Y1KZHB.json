@@ -3,7 +3,8 @@
   "occurredAt": "2023-08-07T18:07:03+08:00",
   "places": [],
   "text": "Published a new post on my blockchain blog: 远程兼职一年后. Check it out now! https://blog.hyoban.cc/work-one-year via @_xLog",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [],
   "published": {
     "id": "2023/08/07-01-published-a-new-post-on-my-blockchain-blog-yuan-cheng",

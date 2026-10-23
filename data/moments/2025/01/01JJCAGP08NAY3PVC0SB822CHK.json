@@ -3,7 +3,8 @@
   "occurredAt": "2025-01-24T22:12:37+08:00",
   "places": [],
   "text": "One-line CSS configuration to use https://github.com/egoist/tailwindcss-icons in TailwindCSS v4",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [
     {
       "uid": "01JJCAGP09XH5EB0V7M9CZGHQ6",

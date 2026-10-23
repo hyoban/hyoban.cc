@@ -3,7 +3,8 @@
   "occurredAt": "2023-04-15T21:09:08+08:00",
   "places": [],
   "text": "Preview dialog for my blog post with intercepting &amp; parallel routes in nextjs.",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [
     {
       "uid": "01GY2GH8913E31DN1WTF6R46CJ",

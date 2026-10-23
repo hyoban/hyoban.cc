@@ -3,7 +3,8 @@
   "occurredAt": "2023-09-21T11:05:29+08:00",
   "places": [],
   "text": "搞了一下自己用来开始一个新 React 项目的模板。\n\nhttps://restarter.vercel.app/",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [],
   "published": {
     "id": "2023/09/21-01-gao-le-yi-xia-zi-ji-yong-lai-kai-shi",

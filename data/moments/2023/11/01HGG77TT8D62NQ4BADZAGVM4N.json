@@ -3,7 +3,8 @@
   "occurredAt": "2023-11-30T21:38:37+08:00",
   "places": [],
   "text": "我写了个 unocss-preset-shadcn，基于 @zouhangoo 的工作，封成了包。\n\nhttps://github.com/hyoban/unocss-preset-shadcn",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [],
   "published": {
     "id": "2023/11/30-02-wo-xie-le-ge-unocss-preset-shadcn-ji-yu-zouhangoo",

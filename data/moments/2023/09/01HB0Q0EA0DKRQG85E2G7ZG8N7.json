@@ -3,7 +3,8 @@
   "occurredAt": "2023-09-23T17:47:52+08:00",
   "places": [],
   "text": "确实，除非不用 tailwindcss",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [],
   "published": {
     "id": "2023/09/23-01-que-shi-chu-fei-bu-yong-tailwindcss",

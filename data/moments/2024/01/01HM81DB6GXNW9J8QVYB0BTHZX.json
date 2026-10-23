@@ -3,7 +3,8 @@
   "occurredAt": "2024-01-16T10:25:38+08:00",
   "places": [],
   "text": "支持了直接搜索GitHub仓库",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [
     {
       "uid": "01HM81DB6H2E1KQ6TA73T94EB3",

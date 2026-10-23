@@ -3,7 +3,8 @@
   "occurredAt": "2023-04-20T21:05:10+08:00",
   "places": [],
   "text": "Include an example animation using framer motion in my react template",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [
     {
       "uid": "01GYFC9JVHATT8YTPCK12NRMMC",

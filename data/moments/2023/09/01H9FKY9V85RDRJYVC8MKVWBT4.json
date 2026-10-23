@@ -3,7 +3,8 @@
   "occurredAt": "2023-09-04T16:11:29+08:00",
   "places": [],
   "text": "就感觉很酷，才注意到是 @_xLog 的 contributor 的话，评论会有标识。",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [
     {
       "uid": "01H9FKY9V93XSJSC4BJFSDD9KC",

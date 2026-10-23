@@ -108,6 +108,17 @@ export const momentMediaSchema = z.discriminatedUnion('type', [
   }),
 ])
 
+/**
+ * What a Moment is about: code and software; a trip or somewhere been to; eating; the car,
+ * its charging and upkeep; a camera and taking photos; or the rest of life.
+ */
+export const momentTopicSchema = z.enum(['tech', 'travel', 'food', 'car', 'photo', 'life'])
+
+/** Whether the site shows a Moment: published, not hidden and not about tech. */
+export function isMomentShown(moment: Pick<MomentRecord, 'published' | 'hidden' | 'topic'>) {
+  return Boolean(moment.published) && !moment.hidden && moment.topic !== 'tech'
+}
+
 export const momentRecordSchema = z
   .looseObject({
     uid: ulid,
@@ -121,6 +132,11 @@ export const momentRecordSchema = z
     /** The words as written, with their line breaks. */
     text: z.string(),
     hidden: z.boolean().default(false),
+    /**
+     * What it is mostly about. A tech one is never shown, like a hidden one; `hidden` is
+     * kept for whatever else shouldn't be, a Moment posted twice.
+     */
+    topic: momentTopicSchema.optional(),
     media: z
       .array(momentMediaSchema)
       .refine((media) => unique(media.map((item) => item.uid)), 'Duplicate media uid.')

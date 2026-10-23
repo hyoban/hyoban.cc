@@ -3,7 +3,8 @@
   "occurredAt": "2025-04-01T19:02:32+08:00",
   "places": [],
   "text": "太好了，xcode 也不能升级，我的更新强迫症可能要被迫被治好了。\nhttps://github.com/expo/expo/pull/35811",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [],
   "published": {
     "id": "2025/04/01-02-tai-hao-le-xcode-ye-bu-neng-sheng-ji-wo",

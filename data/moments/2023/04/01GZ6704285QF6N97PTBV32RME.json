@@ -3,7 +3,8 @@
   "occurredAt": "2023-04-29T17:55:09+08:00",
   "places": [],
   "text": "Very excited, for the first time, I merged a pr of my project.\nhttps://github.com/hyoban/kodoku/pull/1",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [],
   "published": {
     "id": "2023/04/29-01-very-excited-for-the-first-time-i-merged-a-pr",

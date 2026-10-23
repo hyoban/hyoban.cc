@@ -3,7 +3,8 @@
   "occurredAt": "2024-06-09T01:10:35+08:00",
   "places": [],
   "text": "写了个 eslint 插件，来在使用相对路径以及 path alias 两种导入方式之间反复横跳。",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [
     {
       "uid": "01HZWD97QSEACYSF6WXYVPNQAV",

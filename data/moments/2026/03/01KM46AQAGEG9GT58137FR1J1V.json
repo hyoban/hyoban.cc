@@ -3,7 +3,8 @@
   "occurredAt": "2026-03-20T07:19:14+08:00",
   "places": [],
   "text": "Wow !!!!!!!!!!",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [
     {
       "uid": "01KM46AQAH7H7M0K5HNT8WCV7K",

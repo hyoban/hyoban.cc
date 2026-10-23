@@ -3,7 +3,8 @@
   "occurredAt": "2026-03-20T07:48:55+08:00",
   "places": [],
   "text": "Can I get an early access to https://void.cloud 🥹",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [],
   "published": {
     "id": "2026/03/20-02-can-i-get-an-early-access-to",

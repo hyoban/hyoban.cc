@@ -3,7 +3,8 @@
   "occurredAt": "2025-03-29T21:49:25+08:00",
   "places": [],
   "text": "在 https://github.com/hyoban/folo-mcp 开源，你可以反馈给我你需要的能力，我会优先实现。",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [],
   "published": {
     "id": "2025/03/29-02-zai-kai-yuan-ni-ke-yi-fan-kui-gei-wo",

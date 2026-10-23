@@ -3,7 +3,8 @@
   "occurredAt": "2024-02-14T18:53:35+08:00",
   "places": [],
   "text": "TIL eslint config 的 files 可以传函数\n\nhttps://github.com/typescript-eslint/typescript-eslint/issues/8467",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [],
   "published": {
     "id": "2024/02/14-01-til-eslint-config-de-files-ke-yi-chuan-han-shu",

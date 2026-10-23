@@ -3,7 +3,8 @@
   "occurredAt": "2023-11-03T01:26:28+08:00",
   "places": [],
   "text": "感谢智子指路，学到很多东西，太酷了",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [],
   "published": {
     "id": "2023/11/03-01-gan-xie-zhi-zi-zhi-lu-xue-dao-hen-duo",

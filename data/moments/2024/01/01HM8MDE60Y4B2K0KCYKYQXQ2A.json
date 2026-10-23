@@ -3,7 +3,8 @@
   "occurredAt": "2024-01-16T15:57:44+08:00",
   "places": [],
   "text": "cli version",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [
     {
       "uid": "01HM8MDE61B6WWFEP1EZF9XDDF",

@@ -3,7 +3,8 @@
   "occurredAt": "2024-07-24T23:42:44+08:00",
   "places": [],
   "text": "无法导入 hono client，需要用 require\nhttps://github.com/honojs/hono/issues/1773",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [],
   "published": {
     "id": "2024/07/24-03-wu-fa-dao-ru-hono-client-xu-yao-yong-require",

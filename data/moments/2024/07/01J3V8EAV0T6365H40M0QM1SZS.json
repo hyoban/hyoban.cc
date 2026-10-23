@@ -3,7 +3,8 @@
   "occurredAt": "2024-07-28T07:29:32+08:00",
   "places": [],
   "text": "本周学习 React Native 的一点进展",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [
     {
       "uid": "01J3V8EAV1V7X3PR32Q2AE7VF7",

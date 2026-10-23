@@ -3,7 +3,8 @@
   "occurredAt": "2026-02-25T09:21:34+08:00",
   "places": [],
   "text": "It really works in @dify_ai",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [
     {
       "uid": "01KJ96669HB8G7G9YGQWH8NY6T",

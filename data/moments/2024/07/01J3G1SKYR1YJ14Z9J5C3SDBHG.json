@@ -3,7 +3,8 @@
   "occurredAt": "2024-07-23T23:01:43+08:00",
   "places": [],
   "text": "React Native dynamic theme made with Unistyles and Radix Color",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [
     {
       "uid": "01J3G1SKYSM8T813NQDPGG7MVY",

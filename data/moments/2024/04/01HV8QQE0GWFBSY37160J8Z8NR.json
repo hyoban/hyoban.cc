@@ -3,7 +3,8 @@
   "occurredAt": "2024-04-12T16:45:30+08:00",
   "places": [],
   "text": "When you execute release-it from the terminal, it will use bumpp to determine the next version, update the version number of the package under pnpm workspace for you, and then use pnpm publish to publish the package.",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [
     {
       "uid": "01HV8QQE0HTPYPCH0WA9Z0SCP0",

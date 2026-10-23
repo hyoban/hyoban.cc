@@ -3,7 +3,8 @@
   "occurredAt": "2024-05-16T19:08:50+08:00",
   "places": [],
   "text": "看了一天 React Conf，React Compiler 太有意思了。 https://www.youtube.com/live/T8TZQ6k4SLE?si=SDWgt8DaRAO3VBMw",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [],
   "published": {
     "id": "2024/05/16-01-kan-le-yi-tian-react-conf-react-compiler-tai-you",

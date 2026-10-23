@@ -3,7 +3,8 @@
   "occurredAt": "2023-09-19T05:33:01+08:00",
   "places": [],
   "text": "Just got my ticket for @Nextjs Conf — claim yours!\n\nhttps://nextjs.org/conf/ticket/hyoban?utm_source=twitter&utm_medium=hyoban&utm_campaign=conf_ticket",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [],
   "published": {
     "id": "2023/09/19-01-just-got-my-ticket-for-nextjs-conf-claim-yours",

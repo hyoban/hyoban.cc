@@ -3,7 +3,8 @@
   "occurredAt": "2023-10-05T01:09:44+08:00",
   "places": [],
   "text": "唉，Next.js。写 xLog 的 PR 写着写着就突然没反应了，然后一看，果然爆了。",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [
     {
       "uid": "01HBXTNDY1TX7Y4FJ0T5986WPD",

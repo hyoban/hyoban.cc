@@ -3,7 +3,8 @@
   "occurredAt": "2026-01-15T19:22:36+08:00",
   "places": [],
   "text": "他还录了个小视频\nhttps://www.bilibilibb.com/video/BV1bmrfBSEqf",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [],
   "published": {
     "id": "2026/01/15-02-ta-hai-lu-le-ge-xiao-shi-pin",

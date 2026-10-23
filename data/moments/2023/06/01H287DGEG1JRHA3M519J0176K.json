@@ -3,7 +3,8 @@
   "occurredAt": "2023-06-06T19:28:02+08:00",
   "places": [],
   "text": "要解决也很简单，就是修改配置不缓存，或者是缩短重新验证的时间。",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [
     {
       "uid": "01H287DGEHX8T9Z79XQFJC7K5C",

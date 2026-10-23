@@ -3,7 +3,8 @@
   "occurredAt": "2023-12-15T15:16:58+08:00",
   "places": [],
   "text": "Vite Glob Import 绝对是我最喜欢的 Vite 的功能，我爱说实话。\nhttps://vitejs.dev/guide/features.html#glob-import",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [],
   "published": {
     "id": "2023/12/15-01-vite-glob-import-jue-dui-shi-wo-zui-xi-huan",

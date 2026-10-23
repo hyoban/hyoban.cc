@@ -3,7 +3,8 @@
   "occurredAt": "2023-09-19T07:59:24+08:00",
   "places": [],
   "text": "美好的一天从开源社区里的鼓励开始，终于给自己日常用的库提过贡献了。\nhttps://github.com/emilkowalski/sonner/pull/134",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [
     {
       "uid": "01HANBR1V1WRC0KS8ZRZZT2FE8",

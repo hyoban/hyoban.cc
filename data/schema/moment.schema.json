@@ -35,6 +35,17 @@
       "default": false,
       "type": "boolean"
     },
+    "topic": {
+      "type": "string",
+      "enum": [
+        "tech",
+        "travel",
+        "food",
+        "car",
+        "photo",
+        "life"
+      ]
+    },
     "media": {
       "default": [],
       "type": "array",

@@ -3,7 +3,8 @@
   "occurredAt": "2024-04-12T16:50:24+08:00",
   "places": [],
   "text": "Executing release-it-pnpm will help you generate the required release-it configuration and GitHub actions for release. You can publish a package on GitHub with one click, and it will automatically determine the version based on your commit message.",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [
     {
       "uid": "01HV8R0D41R0HF7F7KMY4EESJP",

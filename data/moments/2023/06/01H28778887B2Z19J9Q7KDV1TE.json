@@ -3,7 +3,8 @@
   "occurredAt": "2023-06-06T19:24:37+08:00",
   "places": [],
   "text": "为什么 Next.js 是垃圾？它修改原生 fetch 的行为。",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [],
   "published": {
     "id": "2023/06/06-01-wei-shen-me-next-js-shi-la-ji-ta-xiu",

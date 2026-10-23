@@ -3,7 +3,8 @@
   "occurredAt": "2024-03-01T11:18:19+08:00",
   "places": [],
   "text": "整理了一下代码，现在大家都可以用 https://github.com/hyoban/hyoban.cc 轻松为你的 xLog 站点部署一个简单的首页。\n\n这是 @DIYgod 的页面的样子。",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [
     {
       "uid": "01HQW0A53SCAM2DY4289AW3ENZ",

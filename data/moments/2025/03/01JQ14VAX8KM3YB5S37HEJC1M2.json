@@ -3,7 +3,8 @@
   "occurredAt": "2025-03-23T17:20:25+08:00",
   "places": [],
   "text": "一些值得分享的用 self hosted runner来跑 eas build 的 tips",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [],
   "published": {
     "id": "2025/03/23-01-yi-xie-zhi-de-fen-xiang-de-yong-self-hosted",

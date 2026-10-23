@@ -3,7 +3,8 @@
   "occurredAt": "2023-05-21T17:55:30+08:00",
   "places": [],
   "text": "https://github.com/hyoban/burogu",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [],
   "published": {
     "id": "2023/05/21-02-github-burogu",

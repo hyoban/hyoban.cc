@@ -486,7 +486,7 @@ class MomentsRepository(
         _places.value = phonePlaces + apiPlaces
     }
 
-    private fun isShown(moment: MomentRecord) = moment.published != null && !moment.hidden
+    private fun isShown(moment: MomentRecord) = moment.published != null && !moment.hidden && moment.topic != "tech"
 
     /** The type the API takes a photo as, from the extension it was copied in with. */
     /** The file's MD5, as R2 gives an object put in one piece for its ETag. */

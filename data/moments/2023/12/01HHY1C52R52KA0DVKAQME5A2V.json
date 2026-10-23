@@ -3,7 +3,8 @@
   "occurredAt": "2023-12-18T16:41:11+08:00",
   "places": [],
   "text": "preview https://unocss-preset-shadcn.vercel.app",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [],
   "published": {
     "id": "2023/12/18-01-preview",

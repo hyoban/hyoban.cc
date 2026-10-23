@@ -3,7 +3,8 @@
   "occurredAt": "2024-07-31T06:32:48+08:00",
   "places": [],
   "text": "拿到了 @follow_app_ 的内测邀请码，马上跳起来从 NetNewsWire 迁移，现在已经完成。聊聊我的体验。",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [
     {
       "uid": "01J42WCKM160TJ24WP8HTDFAYR",

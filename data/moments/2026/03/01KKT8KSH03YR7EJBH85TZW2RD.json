@@ -3,7 +3,8 @@
   "occurredAt": "2026-03-16T10:46:44+08:00",
   "places": [],
   "text": "在 vite plus 水到自己的第一个 rust 相关 pr，欧耶✌️\n但是偷懒没有完全解决问题，第 n + 1 次想学 rust 了。\nhttps://github.com/voidzero-dev/vite-plus/pull/914",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [],
   "published": {
     "id": "2026/03/16-01-zai-vite-plus-shui-dao-zi-ji-de-di-yi",

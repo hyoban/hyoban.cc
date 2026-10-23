@@ -3,7 +3,8 @@
   "occurredAt": "2023-08-06T00:33:06+08:00",
   "places": [],
   "text": "1. 开启之前\n2. 开启之后",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [
     {
       "uid": "01H738Q7EHBS29MCM8GZF6WB9S",

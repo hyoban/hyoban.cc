@@ -3,7 +3,8 @@
   "occurredAt": "2023-08-11T06:56:16+08:00",
   "places": [],
   "text": "Eagerly waiting for @ViteConf! Get your free ticket! https://viteconf.org/23/tickets/hyoban?t=React",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [],
   "published": {
     "id": "2023/08/11-01-eagerly-waiting-for-viteconf-get-your-free-ticket",

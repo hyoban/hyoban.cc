@@ -3,7 +3,8 @@
   "occurredAt": "2026-03-12T07:21:56+08:00",
   "places": [],
   "text": "我将继续保持不用 Claude Code！",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [
     {
       "uid": "01KKFK9XH1W0Q0305FFF6STXNC",

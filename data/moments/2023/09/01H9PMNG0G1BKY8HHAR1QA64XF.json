@@ -3,7 +3,8 @@
   "occurredAt": "2023-09-07T09:38:50+08:00",
   "places": [],
   "text": "我写了个 demo，得易于 Vite 方便的 ssr 支持，这并不复杂。",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [
     {
       "uid": "01H9PMNG0HB847YX6P6YHBMYZF",

@@ -3,7 +3,8 @@
   "occurredAt": "2023-11-10T10:07:44+08:00",
   "places": [],
   "text": "我已经在项目里使用并开启全部规则了，等不及它到 1.0 正式版🤩",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [],
   "published": {
     "id": "2023/11/10-02-wo-yi-jing-zai-xiang-mu-li-shi-yong-bing",

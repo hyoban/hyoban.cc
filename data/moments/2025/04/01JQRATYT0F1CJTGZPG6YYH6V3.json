@@ -3,7 +3,8 @@
   "occurredAt": "2025-04-01T17:27:36+08:00",
   "places": [],
   "text": "我再也不在非空闲时候更新系统了，Mac mini 外置硬盘里的系统更新搞了一下午都没成功更上去，内置的就没问题。😵",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [],
   "published": {
     "id": "2025/04/01-01-wo-zai-ye-bu-zai-fei-kong-xian-shi-hou",

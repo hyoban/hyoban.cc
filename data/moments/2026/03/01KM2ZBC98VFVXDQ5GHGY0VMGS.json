@@ -3,7 +3,8 @@
   "occurredAt": "2026-03-19T19:58:01+08:00",
   "places": [],
   "text": "I pushed the migration of the two in the picture.",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [],
   "published": {
     "id": "2026/03/19-01-i-pushed-the-migration-of-the-two-in-the-picture",

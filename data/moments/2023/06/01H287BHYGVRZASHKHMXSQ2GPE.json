@@ -3,7 +3,8 @@
   "occurredAt": "2023-06-06T19:26:58+08:00",
   "places": [],
   "text": "如图",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [
     {
       "uid": "01H287BHYHKWMWVR3JJT6HQ069",

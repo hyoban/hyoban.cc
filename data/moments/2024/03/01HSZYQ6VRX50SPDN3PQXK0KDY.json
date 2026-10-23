@@ -3,7 +3,8 @@
   "occurredAt": "2024-03-27T20:38:51+08:00",
   "places": [],
   "text": "This is super useful, I include this in my personal eslint config.",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [
     {
       "uid": "01HSZYQ6VSZ4BKRHH16187WTCY",

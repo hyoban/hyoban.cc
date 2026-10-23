@@ -3,7 +3,8 @@
   "occurredAt": "2023-12-02T18:59:36+08:00",
   "places": [],
   "text": "You can use GitHub-style alerts on Nextra with remark-github-alerts.\n\nhttps://remark-github-alerts.vercel.app",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [],
   "published": {
     "id": "2023/12/02-01-you-can-use-github-style-alerts-on-nextra-with-remark",

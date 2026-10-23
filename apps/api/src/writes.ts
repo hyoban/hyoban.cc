@@ -1,4 +1,5 @@
 import {
+  isMomentShown,
   momentRecordSchema,
   placeSchema,
   type MomentMedia,
@@ -239,7 +240,7 @@ function live(stored: ReturnType<typeof toStored> | undefined) {
  * take it: its day and time, its places and its order, while it is published and shown.
  */
 function tripView(record: MomentRecord | undefined) {
-  return record?.published && !record.hidden
+  return record?.published && isMomentShown(record)
     ? JSON.stringify([record.occurredAt, record.places, record.published.order])
     : null
 }

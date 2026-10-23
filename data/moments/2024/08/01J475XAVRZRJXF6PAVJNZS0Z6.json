@@ -3,7 +3,8 @@
   "occurredAt": "2024-08-01T22:36:11+08:00",
   "places": [],
   "text": "今天调整一下不同 view 的布局",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [
     {
       "uid": "01J475XAVSDKBVGEJMP5JCYC6Z",

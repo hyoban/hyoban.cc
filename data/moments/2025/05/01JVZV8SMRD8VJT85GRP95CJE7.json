@@ -3,7 +3,8 @@
   "occurredAt": "2025-05-24T08:32:15+08:00",
   "places": [],
   "text": "sqlocal 的链接是https://github.com/DallasHoff/sqlocal",
-  "hidden": true,
+  "hidden": false,
+  "topic": "tech",
   "media": [],
   "published": {
     "id": "2025/05/24-02-sqlocal-de-lian-jie-shi",
