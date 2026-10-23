@@ -79,6 +79,55 @@ const months = Array.from({ length: 12 }, (_, index) => {
   }
 </div>
 
+<script>
+  // Pops the wall's tiles in turn once its section is revealed, each at its own moment, so
+  // only those mid-pop are animating at any time, not every one still waiting its turn.
+  const START = 200
+  const MONTH = 70
+  const DAY = 14
+
+  function popDays() {
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    for (const mosaic of document.querySelectorAll<HTMLElement>('.year-mosaic')) {
+      const section = mosaic.closest('.year-section')
+      const days = [...mosaic.querySelectorAll<HTMLElement>('.year-mosaic__row')]
+        .flatMap((row, month) =>
+          [...row.querySelectorAll<HTMLElement>('.year-mosaic__day')].map((day, index) => ({
+            day,
+            at: START + month * MONTH + index * DAY,
+          })),
+        )
+        .sort((a, b) => a.at - b.at)
+
+      const pop = () => {
+        const start = performance.now()
+        let next = 0
+        const frame = (now: number) => {
+          while (next < days.length && days[next]!.at <= now - start) {
+            days[next]!.day.classList.add('is-popped')
+            next += 1
+          }
+          if (next < days.length) requestAnimationFrame(frame)
+        }
+        requestAnimationFrame(frame)
+      }
+
+      if (!section || section.classList.contains('is-revealed')) {
+        pop()
+        continue
+      }
+      const observer = new MutationObserver(() => {
+        if (!section.classList.contains('is-revealed')) return
+        observer.disconnect()
+        pop()
+      })
+      observer.observe(section, { attributes: true, attributeFilter: ['class'] })
+    }
+  }
+
+  document.addEventListener('astro:page-load', popDays)
+</script>
+
 <style>
   /* One grid for the year, each tile placed by its month and day: rows of months here,
      columns of them on a phone. */
@@ -134,11 +183,19 @@ const months = Array.from({ length: 12 }, (_, index) => {
     }
   }
 
+  /* Each day a stacking context of its own, lifted whole when hovered: Safari otherwise
+     works out how every tile after a popping one overlaps it, a long frame as the wall
+     starts to fill in. */
   .year-mosaic__day {
     --along: calc((var(--day) - 1) / 30 * 100%);
     position: relative;
+    isolation: isolate;
     grid-area: var(--month) / calc(var(--day) + 1);
     aspect-ratio: 1;
+
+    &:has(> a:hover, > a:focus-visible) {
+      z-index: 2;
+    }
 
     @media (width < 40rem) {
       --along: calc((var(--month) - 1) / 11 * 100%);
@@ -242,20 +299,26 @@ const months = Array.from({ length: 12 }, (_, index) => {
   }
 
   /* The wall fills in when its section is first seen: a month after another, a day after
-     another, each tile popping up from a dot; a trip's band fades in under its days. */
+     another, each tile popping up from a dot; a trip's band fades in under its days. Each
+     waits as it is until the script below pops it, not on an animation delay: a delayed
+     animation holds a layer from the start, and the wall would ask for hundreds at once. */
   @media (prefers-reduced-motion: no-preference) {
-    :global(.is-revealed) .year-mosaic__day {
-      --delay: calc(200ms + (var(--month) - 1) * 70ms + (var(--day) - 1) * 14ms);
+    :global(.year-motion:not(.is-sharing)) .year-mosaic__day:not(.is-popped) {
+      & > a,
+      & > span,
+      &.is-trip::before {
+        opacity: 0;
+      }
+    }
 
+    .year-mosaic__day.is-popped {
       & > a,
       & > span {
-        animation: year-mosaic-pop 450ms var(--ease-out) backwards;
-        animation-delay: var(--delay);
+        animation: year-mosaic-pop 450ms var(--ease-out);
       }
 
       &.is-trip::before {
-        animation: year-mosaic-fade 600ms var(--ease) backwards;
-        animation-delay: var(--delay);
+        animation: year-mosaic-fade 600ms var(--ease);
       }
     }
   }
