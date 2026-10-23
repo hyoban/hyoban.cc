@@ -25,11 +25,15 @@ test(
 
     try {
       // This checks calendar HTML; leave out Moment and page share cards, which fetch
-      // photos, font subsets and maps unrelated to visibility.
-      await execFile('pnpm', ['exec', 'astro', 'build', '--outDir', outputRoot], {
+      // photos, font subsets and maps unrelated to visibility. Astro runs directly, not
+      // under pnpm, and is killed short of the test's timeout: a build the test gave up
+      // on would otherwise run on, orphaned.
+      await execFile(join(root, 'node_modules/.bin/astro'), ['build', '--outDir', outputRoot], {
         cwd: root,
         env: { ...process.env, CI: '', SKIP_PAGE_OG_IMAGES: '1' },
         maxBuffer: 10 * 1024 * 1024,
+        signal: AbortSignal.timeout(85_000),
+        killSignal: 'SIGKILL',
       })
 
       const calendarHtml = await readCalendarHtml(outputRoot)
