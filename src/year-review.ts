@@ -1,5 +1,5 @@
-import type { Place, PlaceKind, Places } from '@hyoban/data-spec'
-import { buildFogOfWar, type FogRegions } from '@hyoban/trip-map'
+import type { FoodVerdict, Place, PlaceKind, Places } from '@hyoban/data-spec'
+import { buildFogOfWar, getShortPlaceName, type FogRegions } from '@hyoban/trip-map'
 import type { Moment, MomentTrip } from './moments/index.ts'
 
 // A year at a glance, for /<year>/: what its Moments, trips and cities add up to. Worked
@@ -177,6 +177,25 @@ export function getYearPlaces(
   }
 
   return [...visits.values()]
+}
+
+/** A meal the year's Moments tell of: what was eaten, or else where, and how it was. */
+export type YearMeal<M> = { moment: M; name: string; verdict?: FoodVerdict }
+
+/**
+ * The meals among these Moments, in their order: each Moment whose food names a dish or
+ * a verdict, called by its dishes, or by its place when it names none.
+ */
+export function getYearMeals<M extends Pick<Moment, 'food' | 'locations'>>(
+  moments: readonly M[],
+): YearMeal<M>[] {
+  return moments.flatMap((moment) => {
+    const { food } = moment
+    const place = moment.locations[0]
+    const name = food?.dishes.join('、') || (place && getShortPlaceName(place.name))
+    if (!food || !name || (food.dishes.length === 0 && !food.verdict)) return []
+    return [{ moment, name, ...(food.verdict && { verdict: food.verdict }) }]
+  })
 }
 
 /** The longest run of consecutive days among sorted `YYYY-MM-DD` keys. */
