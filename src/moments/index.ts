@@ -12,6 +12,7 @@ import { getAssetUrl, getFrameSources, getResizedSources } from '@/asset-url'
 import { locations, type LocationId } from '@/data/locations'
 import {
   isMomentShown,
+  type MomentFood,
   type MomentMedia,
   type MomentTopic,
   type PublishedImage,
@@ -52,6 +53,8 @@ export type ResolvedMomentMedia = {
 
 export type Moment = {
   dateKey: string
+  /** What was eaten, when the record says. */
+  food?: MomentFood
   /** The published id, `YYYY/MM/DD-NN-slug`: the R2 directory and the page anchor. */
   id: string
   /** Its place, one at most; empty when the Moment has no location. */
@@ -318,6 +321,7 @@ function resolveMoment(entry: MomentEntry): Moment | undefined {
   const dateKey = record.occurredAt.slice(0, 10)
   const moment: Moment = {
     dateKey,
+    ...(record.food ? { food: record.food } : {}),
     id: record.published.id,
     locations: record.places.map((id) => {
       const locationId = id as LocationId
