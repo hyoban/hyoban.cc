@@ -1,0 +1,123 @@
+---
+// When the year was written, as a clock face of 24 hours: midnight at the top, noon at
+// the bottom, a petal for each hour as long as how much was written in it, the night
+// hours shaded behind, the busiest hour dark and named in the middle.
+
+interface Props {
+  hours: number[]
+  favorite: { hour: number; count: number }
+}
+
+const { hours, favorite } = Astro.props
+const size = 240
+const center = size / 2
+const inner = 30
+const outer = 104
+const max = Math.max(1, ...hours)
+
+const point = (radius: number, angle: number) => {
+  const radians = ((angle - 90) * Math.PI) / 180
+  return `${(center + radius * Math.cos(radians)).toFixed(1)} ${(center + radius * Math.sin(radians)).toFixed(1)}`
+}
+/** The ring between two radii from one angle to another, in degrees clockwise from the top. */
+const sector = (from: number, to: number, start: number, end: number) =>
+  `M${point(from, start)}L${point(to, start)}A${to} ${to} 0 ${end - start > 180 ? 1 : 0} 1 ${point(to, end)}L${point(from, end)}A${from} ${from} 0 ${end - start > 180 ? 1 : 0} 0 ${point(from, start)}Z`
+
+const petals = hours.map((count, hour) => ({
+  count,
+  hour,
+  d: sector(inner, inner + (outer - inner) * Math.max(count / max, 0.04), hour * 15 + 1.5, hour * 15 + 13.5),
+}))
+// From 18:00 to 6:00, the half of the face above the middle.
+const night = sector(inner - 4, outer + 6, 270, 450)
+const labels = [0, 6, 12, 18].map((hour) => ({ hour, at: point(outer + 14, hour * 15).split(' ') }))
+---
+
+<figure class="year-clock">
+  <svg viewBox={`0 0 ${size} ${size}`} role="img" aria-label={`每小时记下的条数，最常在 ${favorite.hour} 点，共 ${favorite.count} 条`}>
+    <path class="year-clock__night" d={night} />
+    {
+      petals.map((petal) => (
+        <path class:list={['year-clock__petal', { 'is-top': petal.hour === favorite.hour }]} d={petal.d}>
+          <title>{`${petal.hour} 点 · ${petal.count} 条`}</title>
+        </path>
+      ))
+    }
+    {
+      labels.map((label) => (
+        <text class="year-clock__label" x={label.at[0]} y={label.at[1]}>
+          {label.hour}
+        </text>
+      ))
+    }
+    <text class="year-clock__hour" x={center} y={center - 2}>{favorite.hour}</text>
+    <text class="year-clock__unit" x={center} y={center + 14}>点</text>
+  </svg>
+  {Astro.slots.has('default') && <figcaption><slot /></figcaption>}
+</figure>
+
+<style>
+  .year-clock {
+    display: grid;
+    align-items: center;
+    gap: 1rem 2rem;
+
+    @media (width >= 40rem) {
+      &:has(figcaption) {
+        grid-template-columns: 15rem minmax(0, 1fr);
+      }
+    }
+
+    & svg {
+      display: block;
+      width: min(100%, 17rem);
+      margin-inline: auto;
+      overflow: visible;
+    }
+
+    & figcaption {
+      color: var(--color-tx-2);
+    }
+  }
+
+  .year-clock__night {
+    fill: var(--color-inline);
+    stroke: var(--color-border);
+    stroke-width: 0.5;
+  }
+
+  .year-clock__petal {
+    fill: var(--color-tx-3);
+    fill-opacity: 0.45;
+    transition: fill-opacity 140ms var(--ease);
+
+    &:hover {
+      fill-opacity: 0.8;
+    }
+
+    &.is-top {
+      fill: var(--color-tx);
+      fill-opacity: 1;
+    }
+  }
+
+  .year-clock__label,
+  .year-clock__hour,
+  .year-clock__unit {
+    text-anchor: middle;
+    dominant-baseline: middle;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .year-clock__label,
+  .year-clock__unit {
+    fill: var(--color-tx-3);
+    font-size: 10px;
+  }
+
+  .year-clock__hour {
+    fill: var(--color-tx);
+    font-size: 22px;
+    font-weight: 600;
+  }
+</style>

@@ -47,8 +47,11 @@ describe('getLongestStreak', () => {
   })
 })
 
-test('getCityName drops 市 unless that leaves one character', () => {
+test('getCityName drops a city’s suffix unless that leaves one character', () => {
   expect(getCityName('苏州市')).toBe('苏州')
+  expect(getCityName('迪庆藏族自治州')).toBe('迪庆')
+  expect(getCityName('黔东南苗族侗族自治州')).toBe('黔东南')
+  expect(getCityName('阿里地区')).toBe('阿里')
   expect(getCityName('沙市')).toBe('沙市')
 })
 
@@ -115,5 +118,6 @@ describe('buildYearReview', () => {
       ['苏州', 1],
     ])
     expect(review.cities.newNames).toEqual(['合肥'])
+    expect(review.firstVisits).toEqual([{ name: '合肥', dateKey: '2026-01-02' }])
   })
 })

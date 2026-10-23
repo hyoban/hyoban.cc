@@ -17,11 +17,15 @@ import { getTripCollage } from '@/moments/trip-images'
 import { getPageTitle } from '@/page-cards'
 import { buildRouteGlyph, buildYearMap, getTripLine } from '@/year-map'
 import { buildYearReview, getReviewYears } from '@/year-review'
+import YearClock from '@/components/YearClock.astro'
+import { readDevices } from '@/data/store'
+import { getSortedPosts } from '@/utils'
 import type { FogRegions } from '@hyoban/trip-map'
 
-// A year at a glance (src/year-review.ts): its footprint on a map drawn at build time
-// (src/year-map.ts), every day of it as a tile, when it was written, its trips by the
-// shapes of their routes, and a few days worth going back to.
+// A year at a glance (src/year-review.ts): its counts against the year before, its
+// footprint on a map drawn at build time (src/year-map.ts), the cities it first reached,
+// every day of it as a tile, its trips by the shapes of their routes, a few days worth
+// going back to, the devices bought, and when it was written.
 export async function getStaticPaths() {
   const years = getReviewYears(await getMoments())
   return years.map((year, index) => ({
@@ -33,9 +37,27 @@ export async function getStaticPaths() {
 const { year, previous, next } = Astro.props as { year: number; previous?: number; next?: number }
 const moments = await getMoments()
 const regions = cities as FogRegions
-const review = buildYearReview(year, moments, getTrips(moments), regions)
+const numberFormat = new Intl.NumberFormat('zh-CN')
+const formatNumber = (value: number) => numberFormat.format(value)
+const formatDay = (dateKey: string) => {
+  const [, month, day] = dateKey.split('-').map(Number)
+  return `${month} 月 ${day} 日`
+}
+const allTrips = getTrips(moments)
+const review = buildYearReview(year, moments, allTrips, regions)
 const lastDateKey = moments.at(-1)?.dateKey ?? ''
 const ongoing = lastDateKey.startsWith(String(year)) && year >= new Date().getFullYear()
+// The year before, up to the same day while this one isn't over, to compare the counts with.
+const sameDayBefore = ongoing ? `${previous}-${lastDateKey.slice(5)}` : `${previous}-12-31`
+const before =
+  previous === undefined
+    ? undefined
+    : buildYearReview(
+        previous,
+        moments.filter((moment) => moment.dateKey <= sameDayBefore),
+        allTrips.filter((trip) => trip.start <= sameDayBefore),
+        regions,
+      )
 
 const map = buildYearMap(
   regions,
@@ -50,9 +72,17 @@ const trips = review.trips.map((trip) => ({
   glyph: buildRouteGlyph(getTripLine(trip.legs)),
   cover: getTripCollage(trip, review.moments, 1)[0],
 }))
-const maxHour = Math.max(1, ...review.hours)
 const topCities = review.cities.lit.slice(0, 6)
-
+const firstVisits = Map.groupBy(review.firstVisits, (visit) => Number(visit.dateKey.slice(5, 7)))
+const postLinks = new Set((await getSortedPosts()).map((post) => post.data.link))
+const devices = Object.entries(readDevices())
+  .filter(([, device]) => device.bought.on.startsWith(String(year)))
+  .sort(([, first], [, second]) => first.bought.on.localeCompare(second.bought.on))
+  .map(([id, device]) => ({
+    ...device,
+    // Its own post, when one was written about it.
+    href: postLinks.has(id) ? `/${id}/` : '/use/',
+  }))
 /** The stills of these Moments, photos and videos' posters, `width` wide. */
 const photosOf = (dayMoments: Moment[], width: number) =>
   dayMoments
@@ -86,18 +116,9 @@ const collageStyle =
           })
           .join(', ')}`,
         `background-size: ${100 / collageColumns}% 50%`,
-        `--columns: ${collageColumns}`,
       ].join('; ')
     : undefined
 
-const numberFormat = new Intl.NumberFormat('zh-CN')
-const formatNumber = (value: number) => numberFormat.format(value)
-const formatDay = (dateKey: string) => {
-  const [, month, day] = dateKey.split('-').map(Number)
-  return `${month} 月 ${day} 日`
-}
-const listNames = (names: string[], limit = 8) =>
-  names.length > limit ? `${names.slice(0, limit).join('、')}等` : names.join('、')
 const headline = (moment: Moment) => getMomentHeadline(moment, 24)?.headline ?? '一张照片'
 
 const description = ongoing
@@ -105,7 +126,30 @@ const description = ongoing
   : `${year} 年记下了什么，去了哪里。`
 const [firstMoment] = review.moments
 const lastMoment = review.moments.at(-1)
-const firstTime = previous !== undefined
+const statsOf = (of: typeof review) => [
+  { value: of.moments.length, label: '个时刻' },
+  { value: of.photoCount, label: '张照片' },
+  { value: of.dayCount, label: '天有记录' },
+  { value: of.cities.lit.length, label: '个城市' },
+  { value: of.drivingKm, label: '公里自驾' },
+]
+const beforeStats = before && statsOf(before)
+const stats = statsOf(review)
+  .map((stat, index) => {
+    const was = beforeStats?.[index]?.value
+    const change = was ? Math.round(((stat.value - was) / was) * 100) : undefined
+    return { ...stat, change }
+  })
+  .filter((stat) => stat.label !== '公里自驾' || stat.value > 100)
+/** `+36%`, or `×5.6` once it's more than doubled, where a percentage stops meaning much. */
+const formatChange = (change: number) =>
+  change >= 100
+    ? `×${Number((1 + change / 100).toFixed(1))}`
+    : change > 0
+      ? `+${change}%`
+      : change < 0
+        ? `−${-change}%`
+        : '持平'
 const highlights = [
   firstMoment && {
     kicker: '第一条',
@@ -154,31 +198,33 @@ const highlights = [
   <SitePage>
     <header class="year-hero">
       <h1 class:list={{ 'is-collage': collageStyle }} style={collageStyle}>{year}</h1>
-      <p>
-        {ongoing ? `到 ${formatDay(lastDateKey)}，` : '这一年，'}记下了 <b>{formatNumber(review.moments.length)}</b> 条 Moments、
-        <b>{formatNumber(review.photoCount)}</b> 张照片{review.videoCount > 0 && <>和 <b>{review.videoCount}</b> 段视频</>}，
-        <b>{review.dayCount}</b> 天有记录。
-        {review.trips.length > 0 && (
-          <>
-            出门 <b>{review.trips.length}</b> 次，在路上 <b>{review.tripDays}</b> 天
-            {review.drivingKm > 100 && <>，自驾 <b>{formatNumber(review.drivingKm)}</b> 公里</>}；
-          </>
-        )}
-        走过 <b>{review.cities.provinces}</b> 个省份的 <b>{review.cities.lit.length}</b> 个城市。
-      </p>
+      <dl class="year-stats">
+        {
+          stats.map((stat) => (
+            <div>
+              <dt>{stat.label}</dt>
+              <dd>
+                {formatNumber(stat.value)}
+                {stat.change !== undefined && (
+                  <span
+                    class:list={['year-stats__change', { 'is-up': stat.change > 0 }]}
+                    title={ongoing ? `比 ${previous} 年同期` : `比 ${previous} 年`}
+                  >
+                    {formatChange(stat.change)}
+                  </span>
+                )}
+              </dd>
+            </div>
+          ))
+        }
+      </dl>
     </header>
 
     {
       review.cities.lit.length > 0 && (
         <section class="year-section year-wide" aria-labelledby="year-footprint">
           <h2 id="year-footprint">足迹</h2>
-          <YearFootprint map={map} label={`${year} 年去过的 ${review.cities.lit.length} 个城市和走过的路线`}>
-            颜色越深，在那里记下的越多：{listNames(review.cities.lit.slice(0, 4).map((city) => city.name))}最多。
-            {firstTime && review.cities.newNames.length > 0 && (
-              <>第一次去的有 {review.cities.newNames.length} 个：{listNames(review.cities.newNames, 10)}。</>
-            )}{' '}
-            <a href={`/map/${year}/`}>在地图上看</a>
-          </YearFootprint>
+          <YearFootprint map={map} label={`${year} 年去过的 ${review.cities.lit.length} 个城市和走过的路线`} />
           <ol class="year-cities" aria-label="记下最多的城市">
             {topCities.map((city) => (
               <li style={`--share: ${city.count / topCities[0]!.count}`}>
@@ -192,31 +238,28 @@ const highlights = [
       )
     }
 
+    {
+      before && review.firstVisits.length > 0 && (
+        <section class="year-section" aria-labelledby="year-first">
+          <h2 id="year-first">第一次去</h2>
+          <ol class="year-first">
+            {Array.from({ length: 12 }, (_, index) => (
+              <li class:list={{ 'is-empty': !firstVisits.has(index + 1) }}>
+                <span class="year-first__month">{index + 1}月</span>
+                {(firstVisits.get(index + 1) ?? []).map((visit) => (
+                  <span class="year-first__city" title={formatDay(visit.dateKey)}>{visit.name}</span>
+                ))}
+              </li>
+            ))}
+          </ol>
+        </section>
+      )
+    }
+
     <section class="year-section year-wide" aria-labelledby="year-days">
       <h2 id="year-days">每一天</h2>
       <YearMosaic year={year} moments={review.moments} trips={review.trips} />
     </section>
-
-    {
-      review.favoriteHour && (
-        <section class="year-section" aria-labelledby="year-hours">
-          <h2 id="year-hours">什么时候记</h2>
-          <div class="year-hours" role="img" aria-label={`最常在 ${review.favoriteHour.hour} 点记下，共 ${review.favoriteHour.count} 条`}>
-            {review.hours.map((count, hour) => (
-              <span
-                class:list={['year-hours__bar', { 'is-top': hour === review.favoriteHour?.hour }]}
-                style={`--value: ${count / maxHour}`}
-                title={`${hour} 点 · ${count} 条`}
-              />
-            ))}
-          </div>
-          <div class="year-hours__axis" aria-hidden="true">
-            <span>0</span><span>6</span><span>12</span><span>18</span><span>24</span>
-          </div>
-          <p>最常在 {review.favoriteHour.hour} 点前后拿起手机，这一小时记下了 {review.favoriteHour.count} 条。</p>
-        </section>
-      )
-    }
 
     {
       trips.length > 0 && (
@@ -236,6 +279,27 @@ const highlights = [
                   <span class="year-trips__meta">
                     {formatDay(trip.start)} · {trip.dayCount} 天
                     {trip.drivingKm > 0 && ` · ${formatNumber(trip.drivingKm)} 公里`}
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+
+    {
+      devices.length > 0 && (
+        <section class="year-section" aria-labelledby="year-devices">
+          <h2 id="year-devices">添置的</h2>
+          <ul class="year-devices">
+            {devices.map((device) => (
+              <li>
+                <a href={device.href}>
+                  <span class="year-devices__category">{device.category}</span>
+                  <span class="year-devices__name">{device.name}</span>
+                  <span class="year-devices__meta">
+                    {formatDay(device.bought.on)} · ¥{formatNumber(device.bought.price)}
                   </span>
                 </a>
               </li>
@@ -271,6 +335,15 @@ const highlights = [
     </section>
 
     {
+      review.favoriteHour && (
+        <section class="year-section" aria-labelledby="year-hours">
+          <h2 id="year-hours">什么时候记</h2>
+          <YearClock hours={review.hours} favorite={review.favoriteHour} />
+        </section>
+      )
+    }
+
+    {
       (previous !== undefined || next !== undefined) && (
         <nav class="year-nav" aria-label="其他年份">
           {previous !== undefined ? <a href={`/${previous}/`}>← {previous}</a> : <span />}
@@ -292,7 +365,7 @@ const highlights = [
       letter-spacing: -0.06em;
       font-variant-numeric: tabular-nums;
 
-      /* The numerals as windows onto the year's photos, which drift slowly behind them. */
+      /* The numerals as windows onto the year's photos. */
       &.is-collage {
         font-weight: 900;
         color: transparent;
@@ -300,29 +373,33 @@ const highlights = [
         background-repeat: no-repeat;
         background-clip: text;
         -webkit-background-clip: text;
-
-        @media (prefers-reduced-motion: no-preference) {
-          animation: year-hero-drift 24s ease-in-out infinite alternate;
-        }
       }
     }
 
-    & p {
-      margin-top: 1.5rem;
-      color: var(--color-tx-2);
-      text-wrap: pretty;
-    }
-
-    & b {
-      color: var(--color-tx);
-      font-weight: 500;
-      font-variant-numeric: tabular-nums;
-    }
   }
 
-  @keyframes year-hero-drift {
-    to {
-      background-size: calc(100% / var(--columns, 6) * 1.15) 57.5%;
+  .year-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem 2.25rem;
+    margin-top: 2rem;
+
+    & div {
+      display: flex;
+      flex-direction: column-reverse;
+    }
+
+    & dt {
+      color: var(--color-tx-2);
+      font-size: 0.875rem;
+    }
+
+    & dd {
+      font-size: 1.5rem;
+      font-weight: 600;
+      line-height: 2rem;
+      letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums;
     }
   }
 
@@ -352,34 +429,6 @@ const highlights = [
     margin-inline: auto;
   }
 
-  .year-hours {
-    display: grid;
-    grid-template-columns: repeat(24, minmax(0, 1fr));
-    align-items: end;
-    gap: 3px;
-    height: 5rem;
-  }
-
-  .year-hours__bar {
-    height: max(2px, calc(var(--value) * 100%));
-    border-radius: 2px;
-    background: var(--color-border);
-
-    &.is-top {
-      background: var(--color-tx);
-    }
-  }
-
-  .year-hours__axis {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 0.25rem;
-    margin-bottom: 0.75rem;
-    color: var(--color-tx-3);
-    font-size: 0.75rem;
-    font-variant-numeric: tabular-nums;
-  }
-
   .year-trips {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -396,7 +445,7 @@ const highlights = [
       text-decoration: none;
     }
 
-    & path {
+    & .year-trips__art path {
       fill: none;
       stroke: #fff;
       stroke-width: 2;
@@ -407,7 +456,7 @@ const highlights = [
     }
 
     @media (prefers-reduced-motion: no-preference) {
-      & a:hover path {
+      & a:hover .year-trips__art path {
         animation: year-trip-draw 1.2s var(--ease-out);
       }
     }
@@ -566,6 +615,84 @@ const highlights = [
     .year-trips__art img {
       transition: none;
     }
+  }
+
+  .year-stats__change {
+    margin-left: 0.375rem;
+    color: var(--color-tx-3);
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0;
+    vertical-align: 0.5rem;
+
+    &.is-up {
+      color: var(--color-tx-2);
+    }
+  }
+
+  /* The cities first reached, under the month they were reached in. */
+  .year-first {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem 0.75rem;
+
+    @media (width >= 40rem) {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+
+    & li {
+      display: flex;
+      flex-direction: column;
+      gap: 0.125rem;
+      padding-top: 0.5rem;
+      border-top: 2px solid var(--color-tx);
+
+      &.is-empty {
+        border-top-color: var(--color-border);
+      }
+    }
+  }
+
+  .year-first__month {
+    color: var(--color-tx-3);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .year-first__city {
+    font-weight: 500;
+  }
+
+  .year-devices {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+    gap: 0.75rem;
+
+    & a {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      padding: 0.875rem 1rem;
+      border: 1px solid var(--color-border);
+      border-radius: 0.625rem;
+      text-decoration: none;
+      transition: background-color 140ms var(--ease);
+
+      &:hover {
+        background: var(--color-hover);
+      }
+    }
+  }
+
+  .year-devices__category,
+  .year-devices__meta {
+    color: var(--color-tx-2);
+    font-size: 0.875rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .year-devices__name {
+    font-weight: 500;
   }
 
   .year-nav {
