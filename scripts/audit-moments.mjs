@@ -69,13 +69,10 @@ for (const record of records) {
   )
 }
 
+// A published id never changes, so a Moment moved to another day or deleted leaves a gap
+// in its old day's orders; a new one takes the day's highest order plus one.
 for (const [date, orders] of ordersByDate) {
-  orders.sort((first, second) => first - second)
-  assert.deepEqual(
-    orders,
-    Array.from({ length: orders.length }, (_, index) => index + 1),
-    `Moment orders are not contiguous for ${date}`,
-  )
+  assert.equal(new Set(orders).size, orders.length, `Moment orders repeat for ${date}`)
 }
 
 if (options.remote) {

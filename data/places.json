@@ -934,6 +934,19 @@
       "district": "古城区"
     }
   },
+  "siguniang-mountain": {
+    "name": "四姑娘山",
+    "latitude": 31.0006,
+    "longitude": 102.8395,
+    "kind": "scenic",
+    "division": {
+      "code": "513227",
+      "province": "四川省",
+      "city": "阿坝藏族羌族自治州",
+      "district": "小金县"
+    },
+    "createdAt": "2026-10-24T05:30:00+08:00"
+  },
   "soochow-university": {
     "name": "苏州大学",
     "latitude": 31.30699,

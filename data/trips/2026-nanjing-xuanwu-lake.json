@@ -2,8 +2,7 @@
   "id": "2026-nanjing-xuanwu-lake",
   "title": "南京玄武湖床车",
   "start": "2026-04-11",
-  "end": "2026-04-13",
-  "note": "Driven on the weekend; the Moment was posted the Monday after.",
+  "end": "2026-04-12",
   "waypoints": [
     {
       "at": "2026-04-11T09:00:00+08:00",
@@ -31,5 +30,5 @@
     }
   ],
   "createdAt": "2026-10-24T04:30:00+08:00",
-  "updatedAt": "2026-10-24T04:30:00+08:00"
+  "updatedAt": "2026-10-24T05:30:00+08:00"
 }
