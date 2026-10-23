@@ -94,7 +94,8 @@ export async function prepareVideo({ inputPath, momentId, stem, temporaryPath })
 /** A live photo: the still as an image, and its motion transcoded without a poster. */
 export async function prepareLivePhoto({ inputPath, momentId, stem, temporaryPath, videoPath }) {
   const still = await prepareImage({ inputPath, momentId, stem, temporaryPath })
-  const outputPath = join(temporaryPath, `${stem}.mp4`)
+  // Beside its still, as `getMediaKey` names a live photo's video.
+  const outputPath = join(temporaryPath, `${stem}-video.mp4`)
 
   await transcodeVideo(videoPath, outputPath)
   const video = await describeAsset(outputPath, momentId)

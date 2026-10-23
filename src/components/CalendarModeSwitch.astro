@@ -143,7 +143,8 @@ const { calendarHref = '/calendar/', mapHref = '/map/', mode } = Astro.props
       return 'map'
     }
 
-    if (url.pathname === '/calendar' || url.pathname.startsWith('/calendar/')) {
+    // A Moment's own page, /m/<id>/, is its day in the calendar.
+    if (url.pathname === '/calendar' || url.pathname.startsWith('/calendar/') || url.pathname.startsWith('/m/')) {
       return 'calendar'
     }
 

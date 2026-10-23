@@ -8,7 +8,7 @@ import { call, get, setUp, snapshot, token } from './setup.mjs'
 
 // The writes, as the recording app commits what it kept on the phone: the originals
 // uploaded first, then everything else as one POST /v1/changes; over the repository's
-// data/, so ids and orders meet the Moments already there.
+// data/, so they meet the Moments already there.
 
 const fixture = (file) => JSON.parse(readFileSync(new URL(`fixtures/${file}`, import.meta.url)))
 const dockMoment = fixture('dock-moment.json')
@@ -27,14 +27,9 @@ function setUpWithData() {
   return setup
 }
 
-/** The order the next Moment on a day takes, so the test needn't know data/. */
-function nextOrder(dateKey) {
-  const orders = snapshot.moments
-    .filter((moment) => moment.published && moment.occurredAt.startsWith(dateKey))
-    .map((moment) => moment.published.order)
-
-  return Math.max(0, ...orders) + 1
-}
+/** Where a media file of a Moment goes: under its uid, named by the item's. */
+const keyOf = (momentUid, mediaUid, extension, part) =>
+  `moments/${momentUid.toLowerCase()}/${mediaUid.toLowerCase()}${part ? `-${part}` : ''}.${extension}`
 
 function upload(env, momentUid, mediaUid, part, body, contentType) {
   return call(env, 'PUT', `/v1/moments/${momentUid}/media/${mediaUid}/${part}`, {
@@ -165,18 +160,15 @@ test('a Moment is at one place at most', async () => {
   assert.match(body.error, /one place at most/)
 })
 
-test('a Moment of words alone is published under its first words', async () => {
+test('a Moment of words alone is published with the time, and named by its uid alone', async () => {
   const { env } = setUpWithData()
   const { body } = await commit(env, { moments: [ferryMoment] })
-  const order = nextOrder('2026-10-02')
 
-  assert.equal(
-    body.moments[0].published.id,
-    `2026/10/02-${String(order).padStart(2, '0')}-hello-world-from-the-ferry`,
-  )
+  assert.deepEqual(Object.keys(body.moments[0].published), ['at'])
+  assert.equal(body.moments[0].uid, ferryMoment.uid)
 })
 
-test('a Moment publishes with its media moved under its id, once the originals are uploaded', async () => {
+test('a Moment publishes with its media moved under its uid, once the originals are uploaded', async () => {
   const { bucket, env } = setUpWithData()
   const draft = dockDraft()
   const [item] = draft.media
@@ -193,14 +185,13 @@ test('a Moment publishes with its media moved under its id, once the originals a
 
   const { status, body } = await publishDock(env)
   const [published] = body.moments
-  const order = nextOrder('2026-10-01')
-  const id = `2026/10/01-${String(order).padStart(2, '0')}-nanjing`
+  const key = keyOf(draft.uid, item.uid, 'jpg')
 
   assert.equal(status, 200)
   assert.deepEqual(published.places, ['nanjing'])
-  assert.deepEqual(published.published, { id, slug: 'nanjing', order, at: published.published.at })
+  assert.deepEqual(published.published, { at: published.published.at })
   assert.deepEqual(published.media[0].published, {
-    key: `moments/${id}/nanjing.jpg`,
+    key,
     contentType: 'image/jpeg',
     bytes: photo.byteLength,
     etag: createHash('md5').update(photo).digest('hex'),
@@ -209,12 +200,12 @@ test('a Moment publishes with its media moved under its id, once the originals a
     variants: [],
     original: true,
   })
-  assert.ok(bucket.objects.has(`moments/${id}/nanjing.jpg`))
+  assert.ok(bucket.objects.has(key))
   assert.ok(!bucket.objects.has(uploaded.body.key))
   assert.deepEqual((await get(env, `/v1/moments/${draft.uid}`)).body, published)
 })
 
-test('a published Moment keeps its id and blocks, and publishes new media as it changes', async () => {
+test('a published Moment keeps its blocks, and publishes new media as it changes', async () => {
   const { env } = setUpWithData()
   const {
     body: {
@@ -231,7 +222,7 @@ test('a published Moment keeps its id and blocks, and publishes new media as it 
   const edit = {
     ...published,
     text: '在码头等船，船晚点了。',
-    published: { ...published.published, slug: 'changed' },
+    published: { at: '2020-01-01T00:00:00Z' },
     media: [
       { ...published.media[0], published: { ...published.media[0].published, bytes: 1 } },
       added,
@@ -249,18 +240,33 @@ test('a published Moment keeps its id and blocks, and publishes new media as it 
 
   const { status, body } = await commit(env, { moments: [edit] })
   const [saved] = body.moments
-  const id = published.published.id
 
   assert.equal(status, 200, JSON.stringify(body))
   assert.equal(saved.text, edit.text)
   assert.deepEqual(saved.published, published.published)
   assert.deepEqual(saved.media[0], published.media[0])
-  assert.equal(saved.media[1].published.key, `moments/${id}/nanjing-2.jpg`)
-  assert.equal(saved.media[1].published.video.key, `moments/${id}/nanjing-2.mov`)
+  assert.equal(saved.media[1].published.key, keyOf(dockMoment.uid, added.uid, 'jpg'))
+  assert.equal(saved.media[1].published.video.key, keyOf(dockMoment.uid, added.uid, 'mov', 'video'))
   assert.equal(
     (await upload(env, dockMoment.uid, added.uid, 'image', photo, 'image/jpeg')).status,
     409,
   )
+})
+
+test('a published Moment moves to another day and keeps its media where they are', async () => {
+  const { env } = setUpWithData()
+  const {
+    body: {
+      moments: [published],
+    },
+  } = await publishDock(env)
+  const moved = { ...published, occurredAt: '2025-01-05', places: [] }
+  const { status, body } = await commit(env, { moments: [moved] })
+
+  assert.equal(status, 200, JSON.stringify(body))
+  assert.equal(body.moments[0].occurredAt, '2025-01-05')
+  assert.deepEqual(body.moments[0].published, published.published)
+  assert.deepEqual(body.moments[0].media, published.media)
 })
 
 test('the changes go as one write: places, Moments published, deletions, the site built once', async () => {
@@ -297,7 +303,6 @@ test('the changes go as one write: places, Moments published, deletions, the sit
 
     const before = (await get(env, '/v1/changes?limit=1')).body.revision
     const applied = await commit(env, changes, { context })
-    const order = nextOrder('2026-10-01')
 
     await Promise.all(pending)
 
@@ -306,12 +311,11 @@ test('the changes go as one write: places, Moments published, deletions, the sit
     assert.deepEqual(applied.body.places, { [made]: 'ce-shi-ma-tou' })
     assert.deepEqual(applied.body.deleted, [target.uid], 'one already gone is left out')
     assert.deepEqual(
-      applied.body.moments.map((moment) => [moment.places, moment.published.id]),
+      applied.body.moments.map((moment) => [moment.uid, moment.places]),
       [
-        [['nanjing'], `2026/10/01-${String(order).padStart(2, '0')}-nanjing`],
-        [['ce-shi-ma-tou'], `2026/10/01-${String(order + 1).padStart(2, '0')}-ce-shi-ma-tou`],
+        [draft.uid, ['nanjing']],
+        [words.uid, ['ce-shi-ma-tou']],
       ],
-      'two Moments on one day take the next two orders',
     )
     assert.ok(bucket.objects.has(applied.body.moments[0].media[0].published.key))
     assert.deepEqual(calls, [['https://deploy.test/hook', 'POST']], 'the site is built again once')

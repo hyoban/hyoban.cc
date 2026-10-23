@@ -70,10 +70,10 @@ is that one; any other is added, and one the app made, under the provisional id
 has the province, city and district its point is in looked up from DataV's GeoAtlas
 (`DIVISIONS_URL`) and kept on it; when that fails it is kept without, for
 `pnpm places:locate` to fill in. The Moments name each place by the id it is known by, one place at most: a Moment naming
-two is turned down. Each Moment is saved and published: a draft takes its
-`YYYY/MM/DD-NN-slug` id, the next order on its day after the others in the same write,
-slugged by its first place or else its first words, and its originals move to
-`moments/<id>/<slug>.<ext>`; a published one keeps its id and publishes any new media.
+two is turned down. Each Moment is saved and published: a draft takes a `published`
+block with the time, and its originals move to `moments/<uid>/<media uid>.<ext>`
+(`getMediaKey`); a published one keeps its blocks and publishes any new media. Nothing
+names a Moment but its uid, so a published one can move to another day.
 A deleted Moment is marked deleted for the change feed. All of it is checked first, then
 written in one transaction that bumps the revision and stamps the manifest's
 `updatedAt`, so a change set that doesn't fit changes nothing, and the originals it had

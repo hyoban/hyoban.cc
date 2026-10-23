@@ -20,7 +20,7 @@ the full `description`.
 
 Use these object key prefixes:
 
-- `moments/YYYY/MM/DD-NN-short-slug/<semantic-file>` for Moment media
+- `moments/<moment uid>/<media uid>[-960w|-video|-poster].<ext>` for Moment media, all lowercase (`getMediaKey`)
 - `posts/<post-slug>/<semantic-file>` for article media
 - `site/<file>` for global site assets
 
@@ -55,9 +55,9 @@ needs the video's width and height on its media item, and a source under
 plan's 5,000 unique transformations a month cover them, and past that a new
 size falls back to the original.
 
-The R2 directory mirrors the Moment's published id. Existing objects are
-immutable; replace changed media with a new semantic filename instead of
-overwriting a key.
+The R2 directory is the Moment's uid and each file its media item's, so nothing moves
+when a Moment changes day, place or words. Existing objects are immutable; a changed
+photo is a new media item with a new uid, never an overwritten key.
 
 Audit every Moment record and its published media:
 

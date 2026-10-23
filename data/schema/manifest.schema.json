@@ -1,11 +1,11 @@
 {
-  "$id": "https://hyoban.cc/data/schema/v1/manifest.schema.json",
+  "$id": "https://hyoban.cc/data/schema/v2/manifest.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "properties": {
     "schemaVersion": {
       "type": "number",
-      "const": 1
+      "const": 2
     },
     "generator": {
       "type": "string",

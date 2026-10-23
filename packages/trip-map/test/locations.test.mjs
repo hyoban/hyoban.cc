@@ -47,28 +47,28 @@ test('groups mapped moments by place and uses the first occurrence year', () => 
       id: 'tokyo-older',
       locations: [{ id: 'tokyo' }],
       occurredAt: '2025-04-01T16:00:00+08:00',
-      order: 1,
+      uid: 'tokyo-older',
     },
     {
       dateKey: '2026-03-10',
       id: 'tokyo-newer',
       locations: [{ id: 'tokyo' }],
       occurredAt: '2026-03-10T16:00:00+08:00',
-      order: 1,
+      uid: 'tokyo-newer',
     },
     {
       dateKey: '2024-06-20',
       id: 'paris-only',
       locations: [{ id: 'paris' }],
       occurredAt: '2024-06-20',
-      order: 1,
+      uid: 'paris-only',
     },
     {
       dateKey: '2026-06-01',
       id: 'unmapped',
       locations: [],
       occurredAt: '2026-06-01',
-      order: 1,
+      uid: 'unmapped',
     },
   ]
 
@@ -106,7 +106,7 @@ test('adds a Moment with several places to each place group', () => {
       id: 'both',
       locations: [{ id: 'tokyo' }, { id: 'paris' }],
       occurredAt: '2026-03-10',
-      order: 1,
+      uid: 'both',
     },
   ])
 

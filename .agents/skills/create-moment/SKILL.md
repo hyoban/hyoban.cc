@@ -22,22 +22,21 @@ the local Moment.
    use that place instead of its city; reuse or add it in `data/places.json`
    and verify new coordinates (see Coordinates below). A Moment is at one place
    at most: when the text covers several, write one Moment for each, splitting
-   its words and media between them in visiting order. Use
-   `YYYY/MM/DD-NN-short-slug` for the published id, where `NN` is the next
-   available two-digit order for that occurrence date (check the records of
-   that day under `data/moments/YYYY/MM`).
+   its words and media between them in visiting order. A Moment is named by its
+   uid alone, which the command below makes; its page is `/m/<uid>/`.
 4. Process and upload images or videos in order from the repository root:
 
 ```bash
-node .agents/skills/create-moment/scripts/prepare-media.mjs --repo <repo> --id <YYYY/MM/DD-NN-short-slug> --occurred-at <occurredAt> [--place <id>] -- <media...>
+node .agents/skills/create-moment/scripts/prepare-media.mjs --repo <repo> --occurred-at <occurredAt> [--place <id>] [--uid <uid>] -- <media...>
 ```
 
 The command optimizes images and responsive variants, transcodes videos to
-web-compatible MP4 with a poster, gives files semantic names from the slug,
-uploads or safely reuses and verifies them in the matching R2 directory, and
+web-compatible MP4 with a poster, names each file by its media item's uid,
+uploads or safely reuses and verifies them under `moments/<uid>/` in R2, and
 then writes the Moment's record under `data/moments` with every media item
 published, its places set, and empty `text` and `alt`. It prints the record's
-file. It is safe to rerun after an interrupted upload.
+file and uid. To resume an interrupted run, rerun it with `--uid <uid>` from
+the record it wrote.
 
 5. Inspect each source media item and replace every empty `alt` in the record
    with concise English alt text. Visible new Moments must never use an empty alt.

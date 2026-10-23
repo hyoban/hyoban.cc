@@ -514,8 +514,8 @@ class MomentsRepository(
         else -> error("The API doesn't take .${file.extension} photos")
     }
 
-    private val newestFirst = compareByDescending<MomentRecord> { it.occurredAt }.thenByDescending { it.uid }
-    private val oldestFirst = compareBy<MomentRecord> { it.occurredAt }.thenBy { it.uid }
+    private val newestFirst = compareByDescending<MomentRecord> { it.occurredAt }.thenByDescending { it.order ?: Int.MAX_VALUE }.thenByDescending { it.uid }
+    private val oldestFirst = compareBy<MomentRecord> { it.occurredAt }.thenBy { it.order ?: Int.MAX_VALUE }.thenBy { it.uid }
 }
 
 /** How many photos go up at once: enough to fill the connection, few enough to keep memory and the radio calm. */

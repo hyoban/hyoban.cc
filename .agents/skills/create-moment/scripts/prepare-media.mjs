@@ -1,29 +1,19 @@
+import { createHash } from 'node:crypto'
 import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { basename, dirname, join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
 // Prepares a Moment's media for the site: optimizes images with responsive variants,
-// transcodes videos with a poster, uploads everything to R2 under the Moment's id, and
-// writes the Moment's record under data/moments with its media published and its words
-// and alt text left for the skill to fill in.
+// transcodes videos with a poster, uploads everything to R2 under the Moment's uid
+// (`getMediaKey`), and writes the Moment's record under data/moments with its media
+// published and its words and alt text left for the skill to fill in. `--uid` resumes an
+// interrupted run with the uid it printed first: the media's uids follow from it, so
+// their files have the same keys and the uploads are reused.
 
+const ULID_ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ'
 const options = parseArguments(process.argv.slice(2))
 const repositoryPath = resolve(options.repo)
-const targetMatch = options.id.match(
-  /^(\d{4})\/(\d{2})\/(\d{2})-(\d{2})-([a-z0-9]+(?:-[a-z0-9]+)*)$/,
-)
-
-if (!targetMatch) {
-  throw new Error(`The id must be YYYY/MM/DD-NN-slug, not "${options.id}"`)
-}
-
-if (options.occurredAt.slice(0, 10) !== `${targetMatch[1]}-${targetMatch[2]}-${targetMatch[3]}`) {
-  throw new Error(`The id "${options.id}" is on another day than ${options.occurredAt}`)
-}
-
-const slug = targetMatch[5]
-const order = Number.parseInt(targetMatch[4], 10)
 const fromRepository = (file) => import(pathToFileURL(join(repositoryPath, file)))
 const { getContentType } = await fromRepository('scripts/lib/r2-assets.mjs')
 const { prepareImage, prepareVideo, uploadAssets } = await fromRepository(
@@ -55,28 +45,39 @@ const inputs = await Promise.all(
     return { contentType, path }
   }),
 )
-const existing = readMomentRecords().find(({ record }) => record.published?.id === options.id)
+const time = Date.parse(
+  options.occurredAt.length > 10 ? options.occurredAt : `${options.occurredAt}T00:00:00+08:00`,
+)
+const uid = options.uid ?? ulid(time)
+const existing = readMomentRecords().find(({ record }) => record.uid === uid)
+// Each media item's uid: its time after the Moment's, and the rest from the Moment's uid.
+const mediaUids = inputs.map((_input, index) => {
+  const random = createHash('sha256').update(`${uid}/${index}`).digest()
+  const suffix = Array.from(random.subarray(0, 16), (byte) => ULID_ALPHABET[byte % 32]).join('')
+  return `${ulid(time + index + 1).slice(0, 10)}${suffix}`
+})
+
+console.error(`Preparing Moment ${uid}; rerun with --uid ${uid} to resume.`)
 const temporaryPath = await mkdtemp(join(tmpdir(), 'hyoban-moment-media-'))
 
 try {
   const assets = []
   const media = []
-  let imageIndex = 0
-  let videoIndex = 0
 
-  for (const input of inputs) {
+  for (const [index, input] of inputs.entries()) {
     const isImage = input.contentType.startsWith('image/')
-    const index = isImage ? (imageIndex += 1) : (videoIndex += 1)
-    const stem = `${slug}${isImage ? '' : '-video'}${index === 1 ? '' : `-${index}`}`
+    // Each file is named by the media item's uid in the Moment's directory, as
+    // `getMediaKey` names it.
     const prepared = await (isImage ? prepareImage : prepareVideo)({
       inputPath: input.path,
-      momentId: options.id,
-      stem,
+      momentId: uid.toLowerCase(),
+      stem: mediaUids[index].toLowerCase(),
       temporaryPath,
     })
     const size = isImage ? prepared.published : prepared.published.poster
     assets.push(...prepared.assets)
     media.push({
+      uid: mediaUids[index],
       alt: '',
       height: size.height,
       published: prepared.published,
@@ -87,7 +88,7 @@ try {
   }
 
   const uploads = await uploadAssets(assets, { config, root: repositoryPath })
-  const { action, file, uid } = await writeRecord(media)
+  const { action, file } = await writeRecord(media)
 
   console.log(
     JSON.stringify(
@@ -106,20 +107,14 @@ try {
   /** Writes the Moment's record, or leaves an identical one from an interrupted run alone. */
   async function writeRecord(media) {
     const now = new Date().toISOString().replace(/\.\d{3}Z$/, 'Z')
-    const time = Date.parse(
-      options.occurredAt.length > 10 ? options.occurredAt : `${options.occurredAt}T00:00:00+08:00`,
-    )
     const record = momentRecordSchema.parse({
-      uid: ulid(time),
+      uid,
       occurredAt: options.occurredAt,
       places: options.places,
       text: '',
       hidden: false,
-      media: media.map(({ source: _source, ...item }, index) => ({
-        uid: ulid(time + index + 1),
-        ...item,
-      })),
-      published: { id: options.id, slug, order, at: now },
+      media: media.map(({ source: _source, ...item }) => item),
+      published: { at: now },
       createdAt: now,
       updatedAt: now,
     })
@@ -129,19 +124,17 @@ try {
         JSON.stringify(item.media.map(({ published }) => [published.key, published.etag]))
 
       if (publishedKeys(existing.record) !== publishedKeys(record)) {
-        throw new Error(
-          `Moment ${options.id} already exists with different media: ${existing.file}`,
-        )
+        throw new Error(`Moment ${uid} already exists with different media: ${existing.file}`)
       }
 
-      return { action: 'reused', file: existing.file, uid: existing.record.uid }
+      return { action: 'reused', file: existing.file }
     }
 
     const file = getMomentFile(record)
     const path = join(repositoryPath, 'data', file)
     await mkdir(dirname(path), { recursive: true })
     await writeFile(path, `${JSON.stringify(record, null, 2)}\n`)
-    return { action: 'created', file, uid: record.uid }
+    return { action: 'created', file }
   }
 } finally {
   await rm(temporaryPath, { force: true, recursive: true })
@@ -152,7 +145,7 @@ function parseArguments(argv) {
   const optionArguments = separator === -1 ? argv : argv.slice(0, separator)
   const media = separator === -1 ? [] : argv.slice(separator + 1)
   const usage =
-    'Usage: prepare-media.mjs --repo <path> --id <YYYY/MM/DD-NN-slug> --occurred-at <when> [--place <id>] -- <media...>'
+    'Usage: prepare-media.mjs --repo <path> --occurred-at <when> [--place <id>] [--uid <ulid>] -- <media...>'
   const values = { places: [] }
 
   for (let index = 0; index < optionArguments.length; index += 2) {
@@ -165,8 +158,8 @@ function parseArguments(argv) {
 
     if (flag === '--repo') {
       values.repo = value
-    } else if (flag === '--id') {
-      values.id = value
+    } else if (flag === '--uid') {
+      values.uid = value
     } else if (flag === '--occurred-at') {
       values.occurredAt = value
     } else if (flag === '--place') {
@@ -179,7 +172,7 @@ function parseArguments(argv) {
     }
   }
 
-  if (!values.repo || !values.id || !values.occurredAt || media.length === 0) {
+  if (!values.repo || !values.occurredAt || media.length === 0) {
     throw new Error(usage)
   }
 

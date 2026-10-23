@@ -96,9 +96,9 @@ export function getMomentTrips() {
   return momentTrips
 }
 
-/** The URL hash that opens a trip on this Moment's card, like `01-02-ferry-sunset`. */
+/** What opens a trip on this Moment's card, in its address: the Moment's id, its uid. */
 export function getStopAnchor(momentId: string) {
-  return momentId.slice(momentId.lastIndexOf('/') + 1)
+  return momentId
 }
 
 function getTripMusic(trip: { id: string; music?: string }) {

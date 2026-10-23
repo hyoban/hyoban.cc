@@ -3,8 +3,6 @@ import { basename, join } from 'node:path'
 
 import { dataRoot, readMomentRecords as readRecords } from '../../src/data/store.ts'
 
-export const momentIdPattern = /^(\d{4})\/(\d{2})\/(\d{2})-(\d{2})-[a-z0-9]+(?:-[a-z0-9]+)*$/
-
 /**
  * Every published Moment under data/moments, with its media's R2 metadata keyed by file
  * name, the way the audit, the garbage collector and the variants generator read them.
@@ -49,7 +47,8 @@ export async function readMomentRecords() {
       {
         assets,
         file,
-        id: record.published.id,
+        // Its media's directory in the bucket, `moments/<id>/`: its uid in lowercase.
+        id: record.uid.toLowerCase(),
         moment: {
           hidden: record.hidden,
           location: record.places.length === 0 ? undefined : record.places,

@@ -11,7 +11,7 @@ import kotlin.test.assertNull
 /** The app asks for the same files the site does (src/asset-url.ts, src/moments/index.ts). */
 class MediaUrlsTest {
     private val urls = MediaUrls("https://image.hyoban.cc")
-    private val dir = "moments/2026/10/01-02-ferry-sunset"
+    private val dir = "moments/01m3v1176rb1zr10tyfbak5wnk"
 
     private fun image(name: String, width: Int, variants: List<PublishedMedia>? = null, original: Boolean? = null) =
         PublishedMedia("$dir/$name", "image/webp", 1, "0".repeat(32), width, width * 3 / 4, variants, original)
