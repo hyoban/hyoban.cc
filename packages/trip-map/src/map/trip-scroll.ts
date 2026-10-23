@@ -50,6 +50,33 @@ export function findBetweenMarks(offsets: readonly number[], offset: number) {
   return { fraction: 1, index: Math.max(last - 1, 0) }
 }
 
+/**
+ * Where in the sidebar the reader is, scrolled `scrollTop` down: at the reading line,
+ * kept in step with the scrolling. The last Moments may be too near the bottom to reach
+ * the line, which then runs on faster over the last screen's scrolling only, so the
+ * route is driven to its end (`end`) at the bottom but doesn't run ahead before.
+ */
+export function getReadingOffset({
+  end,
+  maxScroll,
+  readingLine,
+  scrollTop,
+  viewport,
+}: {
+  end: number
+  maxScroll: number
+  readingLine: number
+  scrollTop: number
+  viewport: number
+}) {
+  const short = Math.max(0, end - (maxScroll + readingLine))
+  // Over a screen, or longer for a long way to make up: no more than half as fast again.
+  const span = Math.min(maxScroll, Math.max(viewport, short * 2))
+  const caughtUp = span > 0 ? Math.min(Math.max((scrollTop - (maxScroll - span)) / span, 0), 1) : 1
+
+  return scrollTop + readingLine + short * caughtUp
+}
+
 export function createTripScroll({
   content,
   getBlocked,
@@ -163,13 +190,13 @@ export function createTripScroll({
 
     const readingLine = content.clientHeight * READING_LINE
     const maxScroll = content.scrollHeight - content.clientHeight
-    // The last Moments may be too near the bottom to reach the reading line: the line
-    // runs on faster, so the route is driven to its end at the bottom.
-    const short = Math.max(0, last.bottom - (maxScroll + readingLine))
-    const offset =
-      content.scrollTop +
-      readingLine +
-      (maxScroll > 0 ? (short * content.scrollTop) / maxScroll : 0)
+    const offset = getReadingOffset({
+      end: last.bottom,
+      maxScroll,
+      readingLine,
+      scrollTop: content.scrollTop,
+      viewport: content.clientHeight,
+    })
     const marks = [
       ...entries,
       { ...last, point: Math.max(plan.points.length - 1, last.point), top: last.bottom },
