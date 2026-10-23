@@ -28,6 +28,9 @@ const { date, exceptLocation, moment, priorityMedia, shared = false, showLocatio
 const trip = showTrip ? (await getMomentTrips()).get(moment.id) : undefined
 // A place opens on the map narrowed to the Moment's month, with its Moments beside it.
 const mapMonthPath = `/map/${moment.dateKey.slice(0, 4)}/${moment.dateKey.slice(5, 7)}/place/`
+// In the trip's own sidebar, where the Moment was, its last place: scrolling the sidebar
+// moves the map along the route through it (see trip-map's trip-scroll.ts).
+const lastLocation = tripLink === 'play' ? moment.locations.at(-1) : undefined
 const weekdayFormatter = new Intl.DateTimeFormat('zh-CN', { timeZone: 'UTC', weekday: 'short' })
 
 function formatDay(dateKey: string) {
@@ -41,6 +44,7 @@ function formatDay(dateKey: string) {
 <article
   class:list={['moment-entry', { 'moment-entry--shared': shared }]}
   data-moment-shared={shared ? '' : undefined}
+  data-trip-map-stop-at={lastLocation && `${lastLocation.longitude},${lastLocation.latitude}`}
 >
   <!-- One line: the date, the time and the share button whole, and the places cut short
        when the column is too narrow for them. -->
