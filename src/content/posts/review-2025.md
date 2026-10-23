@@ -2,7 +2,7 @@
 title: 2025 年终总结
 link: review-2025
 pubDate: '2025-12-26T08:00:00.000Z'
-description: 没挣到钱的一年
+description: 告别 Folo、加入 Dify，也买了车、开到了川西。没挣到钱的一年，有很多舍不得的人和事。
 ---
 
 ## 工作和开源

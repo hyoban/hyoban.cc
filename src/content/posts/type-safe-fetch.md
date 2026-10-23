@@ -1,7 +1,7 @@
 ---
 title: 如何让 fetch 变得类型安全
 link: type-safe-fetch
-description: 总所周知，发网络请求传递参数和获取返回值时只能凭感觉，但是我们可以做一点类型体操来解决这个问题
+description: 用 TypeScript 和 Zod 定义接口，让请求路径、参数和返回值都有类型提示。
 pubDate: '2023-08-09T04:56:48.915Z'
 ---
 

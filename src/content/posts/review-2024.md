@@ -1,7 +1,7 @@
 ---
 title: 2024 年终总结
 link: review-2024
-description: 实现梦想的一年，希望未来自己能持续进步。
+description: 毕业、离开美团、加入 Follow，开始边工作边旅居。终于过上了向往的远程开源生活。
 pubDate: '2025-01-01T03:12:15.412Z'
 ---
 
