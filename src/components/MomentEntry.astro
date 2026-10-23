@@ -3,6 +3,7 @@ import MomentGallery from '@/components/MomentGallery.astro'
 import MomentText from '@/components/MomentText.astro'
 import { getMomentPagePath, getMomentPath, type Moment } from '@/moments'
 import { getMomentTrips } from '@/moments/trip-data'
+import type { FoodVerdict } from '@hyoban/data-spec'
 
 interface Props {
   /**
@@ -32,6 +33,18 @@ const mapMonthPath = `/map/${moment.dateKey.slice(0, 4)}/${moment.dateKey.slice(
 // along on the map, arriving there as it's reached (see trip-map's trip-scroll.ts).
 const stopEntry = tripLink === 'play' ? trip?.anchor : undefined
 const weekdayFormatter = new Intl.DateTimeFormat('zh-CN', { timeZone: 'UTC', weekday: 'short' })
+const priceFormatter = new Intl.NumberFormat('zh-CN', { maximumFractionDigits: 2 })
+const verdictLabels: Record<FoodVerdict, string> = { good: '好吃', ok: '一般', bad: '踩雷' }
+// What was eaten, how it was and what it cost, each left out when the record doesn't say.
+const food = moment.food
+const bill = food?.bill
+const foodParts = food
+  ? [
+      food.dishes.join('、'),
+      food.verdict && verdictLabels[food.verdict],
+      bill && [`¥${priceFormatter.format(bill.amount)}`, bill.people && `${bill.people} 人`].filter(Boolean).join(' · '),
+    ].filter(Boolean)
+  : []
 
 function formatDay(dateKey: string) {
   const [year, month, day] = dateKey.split('-').map(part => Number.parseInt(part, 10))
@@ -71,6 +84,14 @@ function formatDay(dateKey: string) {
   </header>
   <MomentText text={moment.text} />
   {moment.media.length > 0 && <MomentGallery media={moment.media} priorityMedia={priorityMedia} />}
+  {
+    foodParts.length > 0 && (
+      <p class="moment-entry__food">
+        <span class="i-lucide-utensils" aria-hidden="true" />
+        {foodParts.map(part => <span>{part}</span>)}
+      </p>
+    )
+  }
   {
     trip && (
       tripLink === 'play'
@@ -174,6 +195,30 @@ function formatDay(dateKey: string) {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  /* What was eaten, how it was and what it cost, quiet beside the words. */
+  .moment-entry__food {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.5rem;
+    margin-top: 0.75rem;
+    color: var(--color-tx-2);
+    font-size: 0.75rem;
+    line-height: 1rem;
+
+    & .i-lucide-utensils {
+      flex-shrink: 0;
+      color: var(--color-tx-3);
+      font-size: 0.875rem;
+    }
+
+    & span:not([class]) + span::before {
+      margin-right: 0.5rem;
+      color: var(--color-tx-3);
+      content: '·';
+    }
   }
 
   /* The trip the Moment is a stop of, or the way to play it from here. */
