@@ -30,8 +30,9 @@ const suzhou = { id: 'suzhou', name: '苏州', latitude: 0.5, longitude: 0.5 }
 const hefei = { id: 'hefei', name: '合肥', latitude: 0.5, longitude: 2.5 }
 const photo = { type: 'image' as const }
 
-const moment = (occurredAt: string, locations = [suzhou], media: object[] = []) =>
+const moment = (occurredAt: string, locations = [suzhou], media: object[] = [], topic?: string) =>
   ({
+    ...(topic ? { topic } : {}),
     dateKey: occurredAt.slice(0, 10),
     id: occurredAt,
     locations,
@@ -71,8 +72,8 @@ describe('buildYearReview', () => {
   const moments = [
     moment('2025-06-01', [suzhou]),
     moment('2026-01-01T22:10:00+08:00', [suzhou], [photo]),
-    moment('2026-01-02T22:40:00+08:00', [hefei], [photo, photo, { type: 'video' }]),
-    moment('2026-01-02', []),
+    moment('2026-01-02T22:40:00+08:00', [hefei], [photo, photo, { type: 'video' }], 'travel'),
+    moment('2026-01-02', [], [], 'food'),
     moment('2026-03-10T09:00:00+08:00', [hefei]),
   ]
   const trips = [
@@ -115,6 +116,14 @@ describe('buildYearReview', () => {
 
   test('counts the Moments by day of the week, Monday first', () => {
     expect(review.weekdays).toEqual([0, 1, 0, 1, 2, 0, 0])
+  })
+
+  test('counts the topics against the year before, without one counting as life', () => {
+    expect(review.topics).toEqual([
+      { topic: 'travel', count: 1, previous: 0 },
+      { topic: 'food', count: 1, previous: 0 },
+      { topic: 'life', count: 2, previous: 1 },
+    ])
   })
 
   test('keeps the trips started in the year', () => {

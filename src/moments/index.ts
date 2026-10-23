@@ -13,6 +13,7 @@ import { locations, type LocationId } from '@/data/locations'
 import {
   isMomentShown,
   type MomentMedia,
+  type MomentTopic,
   type PublishedImage,
   type PublishedVideo,
 } from '@hyoban/data-spec'
@@ -60,6 +61,8 @@ export type Moment = {
   occurredLabel?: string
   order: number
   text: string
+  /** What it is about, when the record says; never `tech`, which isn't shown. */
+  topic?: MomentTopic
   /** The record's ULID, as trips' covers name it. */
   uid: string
 }
@@ -324,6 +327,7 @@ function resolveMoment(entry: MomentEntry): Moment | undefined {
     occurredAt: record.occurredAt,
     order: record.published.order,
     text: record.text,
+    ...(record.topic ? { topic: record.topic } : {}),
     uid: record.uid,
   }
 

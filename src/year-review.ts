@@ -7,7 +7,7 @@ import type { Moment, MomentTrip } from './moments/index.ts'
 
 type ReviewMoment = Pick<
   Moment,
-  'dateKey' | 'id' | 'locations' | 'media' | 'occurredAt' | 'occurredLabel' | 'text'
+  'dateKey' | 'id' | 'locations' | 'media' | 'occurredAt' | 'occurredLabel' | 'text' | 'topic'
 >
 type ReviewTrip = Pick<
   MomentTrip,
@@ -15,6 +15,13 @@ type ReviewTrip = Pick<
 >
 
 export type YearPlace = { id: string; name: string; count: number }
+
+/** The topics a year review shows, in the order it lists them; tech is never shown. */
+export const REVIEW_TOPICS = ['travel', 'food', 'car', 'photo', 'life'] as const
+export type ReviewTopic = (typeof REVIEW_TOPICS)[number]
+
+/** A topic's Moments in the year, and how many the year before. */
+export type YearTopic = { topic: ReviewTopic; count: number; previous: number }
 
 export type YearReview<M, T> = {
   year: number
@@ -33,6 +40,8 @@ export type YearReview<M, T> = {
   hours: number[]
   /** How many Moments were written on each day of the week, Monday first. */
   weekdays: number[]
+  /** The topics written about this year, in REVIEW_TOPICS' order, beside the year before. */
+  topics: YearTopic[]
   trips: T[]
   tripDays: number
   drivingKm: number
@@ -71,11 +80,13 @@ export function buildYearReview<M extends ReviewMoment, T extends ReviewTrip>(
   )
   const hours = Array.from({ length: 24 }, (_, hour) => timed.get(hour) ?? 0)
   const favoriteHour = Math.max(...hours)
-  const byWeekday = countBy(yearMoments, (moment) => {
-    const [year, month, day] = moment.dateKey.split('-').map(Number) as [number, number, number]
-    return (new Date(Date.UTC(year, month - 1, day)).getUTCDay() + 6) % 7
-  })
-  const weekdays = Array.from({ length: 7 }, (_, weekday) => byWeekday.get(weekday) ?? 0)
+  const weekdays = countWeekdays(yearMoments)
+  const previousMoments = moments.filter((moment) => moment.dateKey.startsWith(String(year - 1)))
+  const topics = REVIEW_TOPICS.map((topic) => ({
+    topic,
+    count: yearMoments.filter((moment) => getReviewTopic(moment) === topic).length,
+    previous: previousMoments.filter((moment) => getReviewTopic(moment) === topic).length,
+  })).filter((topic) => topic.count > 0)
 
   const fog = litCities(cities, yearMoments)
   const litBefore = new Set(
@@ -117,6 +128,7 @@ export function buildYearReview<M extends ReviewMoment, T extends ReviewTrip>(
       : {}),
     hours,
     weekdays,
+    topics,
     trips: yearTrips,
     tripDays: yearTrips.reduce((total, trip) => total + trip.dayCount, 0),
     drivingKm: yearTrips.reduce((total, trip) => total + trip.drivingKm, 0),
@@ -208,6 +220,20 @@ export function getCityName(name: string) {
     .replace(new RegExp(`(?:(?:${PEOPLES})族)+自治州$`), '')
     .replace(/(?:市|地区)$/, '')
   return short.length > 1 ? short : name
+}
+
+/** A Moment's topic as the review counts it: one without, or a tech one, goes with life. */
+function getReviewTopic(moment: Pick<ReviewMoment, 'topic'>): ReviewTopic {
+  return moment.topic && moment.topic !== 'tech' ? moment.topic : 'life'
+}
+
+/** How many of these Moments fall on each day of the week, Monday first. */
+function countWeekdays(moments: readonly Pick<ReviewMoment, 'dateKey'>[]) {
+  const byWeekday = countBy(moments, (moment) => {
+    const [year, month, day] = moment.dateKey.split('-').map(Number) as [number, number, number]
+    return (new Date(Date.UTC(year, month - 1, day)).getUTCDay() + 6) % 7
+  })
+  return Array.from({ length: 7 }, (_, weekday) => byWeekday.get(weekday) ?? 0)
 }
 
 function countBy<T, K>(items: readonly T[], key: (item: T) => K) {
