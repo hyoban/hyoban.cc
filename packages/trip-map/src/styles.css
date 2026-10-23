@@ -1598,12 +1598,19 @@ html:has(.trip-map-page[data-trip-map-ratio]) body {
   }
 
   /* The lists are a shorter sheet than the drawer (the site's, like its height), and the
-     legend sits above them, to pick another year. */
+     legend sits above them, to pick another year, clear of the map's logo. */
   .trip-map-page:has(
       :is(.trip-map-trip-list, .trip-map-moments, .trip-map-trip-details):not([hidden])
     ):not(:has(.trip-map-drawer:not([hidden])))
-    :is(.mapboxgl-ctrl-bottom-left, .mapboxgl-ctrl-bottom-right, .trip-map-legend) {
+    :is(.mapboxgl-ctrl-bottom-left, .mapboxgl-ctrl-bottom-right) {
     bottom: calc(min(60dvh, 36rem) + 1.25rem + env(safe-area-inset-bottom));
+  }
+
+  .trip-map-page:has(
+      :is(.trip-map-trip-list, .trip-map-moments, .trip-map-trip-details):not([hidden])
+    ):not(:has(.trip-map-drawer:not([hidden])))
+    .trip-map-legend {
+    bottom: calc(min(60dvh, 36rem) + 3.5rem + env(safe-area-inset-bottom));
   }
 }
 
