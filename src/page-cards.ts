@@ -1,4 +1,7 @@
-import { getCardPhotos, getCalendarPanel, isTripInPeriod } from '@/card-data'
+import { getCardPhotos, getCalendarPanel, getYearPanel, isTripInPeriod } from '@/card-data'
+import cities from '@/data/boundaries/cities.json'
+import { buildYearReview, getReviewYears } from '@/year-review'
+import type { FogRegions } from '@hyoban/trip-map'
 import { getTripCovers } from '@/moments/trip-images'
 import { getMediaPosters } from '@/media-card'
 import type { APIRoute } from 'astro'
@@ -29,7 +32,8 @@ import {
 } from '@/moments'
 
 // The share cards of the pages without one of their own, a post's, a trip's or a
-// Moment's: the calendar's months and days, the map's, the trip lists and the media page.
+// Moment's: the calendar's months and days, the map's, the trip lists, the year reviews
+// and the media page.
 // Drawn by /og/pages/<path>.jpg, or .png for a card of words alone, with shorter text
 // beside their visual panels.
 
@@ -262,6 +266,20 @@ async function loadPageCards(): Promise<Array<{ path: string; card: PageCard }>>
       card: mapCard(period),
     })
     cards.push({ path: `/trip/${key.replace('-', '/')}/`, card: tripCard(period) })
+  }
+
+  // A year's review shows its twelve months, a photo each.
+  const allTrips = getTrips(moments)
+  for (const year of getReviewYears(moments)) {
+    const review = buildYearReview(year, moments, allTrips, cities as FogRegions)
+    cards.push({
+      path: `/${year}/`,
+      card: {
+        title: `${year} 年\n年度回顾`,
+        detail: `${review.dayCount} 天 · ${review.cities.lit.length} 个城市`,
+        panel: getYearPanel(year, review.moments),
+      },
+    })
   }
 
   const media = getMediaPosters()

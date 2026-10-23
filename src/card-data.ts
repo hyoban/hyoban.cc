@@ -58,3 +58,19 @@ export function isTripInPeriod(
   const end = `${period.year}-${String(period.month ?? 12).padStart(2, '0')}`
   return trip.start.slice(0, 7) <= end && trip.end.slice(0, 7) >= start
 }
+
+/** A year's months, each with the photo of its Moment with the most media. */
+export function getYearPanel(year: number, moments: Moment[]): OgPanel {
+  return {
+    kind: 'months',
+    months: Array.from({ length: 12 }, (_, index) => {
+      const prefix = `${year}-${String(index + 1).padStart(2, '0')}-`
+      const records = moments
+        .filter((moment) => moment.dateKey.startsWith(prefix))
+        .sort((first, second) => second.media.length - first.media.length)
+      return {
+        photo: getCardPhotos(records, 1, 480)[0],
+      }
+    }),
+  }
+}

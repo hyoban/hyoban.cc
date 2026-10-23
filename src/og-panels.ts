@@ -8,6 +8,7 @@ export type OgPanel =
       days: { day: number; active: boolean; photo?: string | undefined }[]
     }
   | { kind: 'posters'; photos: string[] }
+  | { kind: 'months'; months: { photo?: string | undefined }[] }
   | { kind: 'trips'; trips: { title: string; detail: string; photo?: string | undefined }[] }
   | { kind: 'route'; route: string; photo?: string | undefined }
 
@@ -113,6 +114,31 @@ export async function renderOgPanel(panel: OgPanel, load: LoadImage) {
       }),
     )
     children.push(...cells)
+  } else if (panel.kind === 'months') {
+    // A year's twelve months, four to a row, each its fullest Moment's photo alone; a month
+    // without one keeps its place, empty.
+    const width = 147
+    const height = 190
+    const gap = 8
+    children.push(
+      ...(await Promise.all(
+        panel.months.map(async (month, index) => {
+          const left = 24 + (index % 4) * (width + gap)
+          const top = 24 + Math.floor(index / 4) * (height + gap)
+          if (month.photo)
+            return picture(await load(month.photo, width, height), left, top, width, height)
+          return h('div', {
+            position: 'absolute',
+            left,
+            top,
+            width,
+            height,
+            borderRadius: 12,
+            backgroundColor: '#f2f2ef',
+          })
+        }),
+      )),
+    )
   } else if (panel.kind === 'posters') {
     const photos = panel.photos.slice(0, 6)
     const columns = Math.min(3, photos.length)
