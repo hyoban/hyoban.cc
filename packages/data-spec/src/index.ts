@@ -119,6 +119,25 @@ export function isMomentShown(moment: Pick<MomentRecord, 'published' | 'hidden' 
   return Boolean(moment.published) && !moment.hidden && moment.topic !== 'tech'
 }
 
+/** A price in yuan, as paid or got back. */
+const price = z.number().nonnegative()
+
+/** How something eaten turned out: worth having again, passable, or not. */
+export const foodVerdictSchema = z.enum(['good', 'ok', 'bad'])
+
+/**
+ * What was eaten or drunk in a Moment, whatever its topic: a trip's day can name its
+ * meal too. Told by the Moment rather than its place, since a place is eaten at more
+ * than once and most meals are only placed in their city.
+ */
+export const momentFoodSchema = z.looseObject({
+  /** The dishes and drinks as the words name them, like 沙茶面 or 卡旺卡. */
+  dishes: z.array(z.string().min(1)).default([]),
+  verdict: foodVerdictSchema.optional(),
+  /** What the meal cost all told, and how many it fed. */
+  bill: z.looseObject({ amount: price, people: count.optional() }).optional(),
+})
+
 export const momentRecordSchema = z
   .looseObject({
     uid: ulid,
@@ -141,6 +160,7 @@ export const momentRecordSchema = z
       .array(momentMediaSchema)
       .refine((media) => unique(media.map((item) => item.uid)), 'Duplicate media uid.')
       .default([]),
+    food: momentFoodSchema.optional(),
     /** The trip it belongs to; without one, the trip whose dates include it. */
     trip: id.optional(),
     /** Set when the Moment is published, and never changed after. */
@@ -295,9 +315,6 @@ export const routeSchema = z.looseObject({
  */
 export const routesSchema = z.record(z.string().min(1), routeSchema)
 
-/** A price in yuan, as paid or got back. */
-const price = z.number().nonnegative()
-
 export const deviceSchema = z
   .looseObject({
     name: z.string().min(1),
@@ -323,6 +340,8 @@ export type MomentRecord = z.output<typeof momentRecordSchema>
 export type MomentRecordInput = z.input<typeof momentRecordSchema>
 export type MomentMedia = MomentRecord['media'][number]
 export type MomentTopic = z.output<typeof momentTopicSchema>
+export type MomentFood = z.output<typeof momentFoodSchema>
+export type FoodVerdict = z.output<typeof foodVerdictSchema>
 export type PublishedImage = z.output<typeof publishedImageSchema>
 export type PublishedVideo = z.output<typeof publishedVideoSchema>
 export type Place = z.output<typeof placeSchema>
