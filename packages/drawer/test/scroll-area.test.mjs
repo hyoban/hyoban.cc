@@ -43,3 +43,14 @@ test('gives each way it scrolls a scrollbar of its own', () => {
     ['vertical', 'horizontal'],
   )
 })
+
+test('takes a form with a control named style for its viewport', () => {
+  document.body.innerHTML =
+    '<aside id="root"><form id="viewport"><input type="radio" name="style" value="a" /></form></aside>'
+  const viewport = document.querySelector('#viewport')
+  const area = createScrollArea({ root: document.querySelector('#root'), viewport })
+
+  assert.equal(viewport.getAttribute('style')?.includes('--scroll-area-overflow-y-end'), true)
+  area.destroy()
+  assert.equal(viewport.getAttribute('style')?.includes('--scroll-area-') ?? false, false)
+})
