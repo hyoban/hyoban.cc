@@ -31,7 +31,9 @@ export function getTripTitle(tripTitle: string, playing = false) {
 export function getTripDescription(trip: MomentTrip, playing = false) {
   const photos = trip.stops.reduce((total, stop) => total + stop.media.length, 0)
   const totals = [
-    trip.drivingKm > 0 && `自驾 ${trip.drivingKm.toLocaleString('zh-CN')} 公里`,
+    // A trip mostly flown or by train drives a few kilometres to and from stations: not
+    // worth naming as if it were a road trip.
+    trip.drivingKm >= 100 && `自驾 ${trip.drivingKm.toLocaleString('zh-CN')} 公里`,
     `${trip.stops.length} 条记录`,
     photos > 0 && `${photos} 张照片`,
   ]

@@ -139,7 +139,12 @@ const periodEnd = period ? `${period.year}-${String(period.month ?? 12).padStart
 const isInPeriod = (trip: { end: string, start: string }) =>
   !period || (trip.start.slice(0, 7) <= periodEnd && trip.end.slice(0, 7) >= periodStart)
 const title = pageTrip ? getTripTitle(pageTrip.title, Boolean(activeTrip)) : getPageTitle(pageText)
-const description = pageTrip ? getTripDescription(pageTrip, Boolean(activeTrip)) : pageText.description
+// A month or a year of the trip list with no trips says so, as its card does.
+const description = pageTrip
+  ? getTripDescription(pageTrip, Boolean(activeTrip))
+  : tripList && period && !trips.some(isInPeriod)
+    ? `${period.month === undefined ? '这一年' : '这个月'}没有出门。`
+    : pageText.description
 const image = pageTrip ? `/trip/${pageTrip.id}/og.jpg` : await getPageCardPath(Astro.url.pathname)
 ---
 

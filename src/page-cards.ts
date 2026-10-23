@@ -20,8 +20,8 @@ import {
   getArchiveMonthKeys,
   getMapMonthKeys,
   getMapYears,
-  getMomentExcerpt,
   getMomentPagePath,
+  getMomentsSummary,
   getMoments,
   getTrips,
   MOMENT_OG_IMAGES,
@@ -84,7 +84,7 @@ export function formatCalendarDay(dateKey: string) {
 export function getCalendarText(year: number, month: number, selectedDate?: string): PageText {
   return {
     heading: selectedDate
-      ? `${selectedDate.slice(0, 4)} 年 ${formatCalendarDay(selectedDate)} · 日历`
+      ? `${selectedDate.slice(0, 4)} 年 ${formatCalendarDay(selectedDate)}`
       : `${year} 年 ${month} 月 · 日历`,
     description: CALENDAR_DESCRIPTION,
   }
@@ -92,9 +92,7 @@ export function getCalendarText(year: number, month: number, selectedDate?: stri
 
 /** The day's own words, shared by its metadata and image. */
 export function getCalendarDayDescription(moments: Moment[]) {
-  return (
-    moments.map((moment) => getMomentExcerpt(moment, 120)).find(Boolean) || CALENDAR_DESCRIPTION
-  )
+  return getMomentsSummary(moments, 100) || CALENDAR_DESCRIPTION
 }
 
 /** The map's pages, narrowed to a year or a month of it or not, and the trip lists. */
