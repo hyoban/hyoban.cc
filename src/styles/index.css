@@ -141,7 +141,11 @@
 }
 
 body {
-  padding: 2rem 1rem;
+  /* For a drawer's backdrop, absolute rather than fixed where iOS Safari's bars float over
+     the page, to cover it beneath them as it scrolls (Base UI's iOS 26 note). */
+  position: relative;
+  padding: calc(2rem + env(safe-area-inset-top)) calc(1rem + env(safe-area-inset-right))
+    calc(2rem + env(safe-area-inset-bottom)) calc(1rem + env(safe-area-inset-left));
   color: var(--color-tx);
   background: var(--color-bg);
 
@@ -153,7 +157,8 @@ body {
 
   @media (width < 56rem) {
     &:has(.calendar-page, .day-drawer) {
-      padding-block: 1rem;
+      padding-top: calc(1rem + env(safe-area-inset-top));
+      padding-bottom: calc(1rem + env(safe-area-inset-bottom));
     }
   }
 
@@ -171,12 +176,12 @@ body {
 
     &:has(.day-drawer[data-starting-style]),
     html[data-calendar-day-entering] & {
-      padding-right: 1rem;
+      padding-right: calc(1rem + env(safe-area-inset-right));
     }
 
     /* Going, and gone while the month is on its way. */
     &:has(.day-drawer:is([data-ending-style], [hidden])) {
-      padding-right: 1rem;
+      padding-right: calc(1rem + env(safe-area-inset-right));
       transition-duration: var(--calendar-drawer-exit, 400ms);
     }
   }

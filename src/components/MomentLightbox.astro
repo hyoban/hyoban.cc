@@ -118,8 +118,8 @@ import MomentLightboxMedia from '@/components/MomentLightboxMedia.astro'
   }
 
   .moment-lightbox__close {
-    top: 1.25rem;
-    right: 1.25rem;
+    top: calc(1.25rem + env(safe-area-inset-top));
+    right: calc(1.25rem + env(safe-area-inset-right));
   }
 
   /* Halfway down the sides, or along the foot on a phone. */
@@ -128,15 +128,15 @@ import MomentLightboxMedia from '@/components/MomentLightboxMedia.astro'
 
     @media (width < 40rem) {
       top: auto;
-      bottom: 1rem;
+      bottom: calc(1rem + env(safe-area-inset-bottom));
     }
   }
 
   .moment-lightbox__previous {
-    left: 1.25rem;
+    left: calc(1.25rem + env(safe-area-inset-left));
   }
 
   .moment-lightbox__next {
-    right: 1.25rem;
+    right: calc(1.25rem + env(safe-area-inset-right));
   }
 </style>

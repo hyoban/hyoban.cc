@@ -37,7 +37,9 @@ const TELETYPE_SITE_VERIFICATION = 'g7j8/rPFXfhyrq5q0QQV7EsYWv4='
   <head>
     <!-- Global Metadata -->
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <!-- Drawn under the notch and the browser's bars too (iOS 26 Safari's floating bar, Chrome
+         edge to edge), what sits by an edge kept clear of them with env(safe-area-inset-*). -->
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
     <link rel="icon" type="image/png" href={getAssetUrl('site/avatar-64.png')} />
     <meta name="generator" content={Astro.generator} />
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#fdfdfc" />
