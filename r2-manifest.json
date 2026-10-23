@@ -3,17 +3,105 @@
   "accountId": "e68c7dce80df20ff5802b9ac36f1eab6",
   "bucket": "blog-images",
   "origin": "https://image.hyoban.cc",
-  "createdAt": "2026-10-23T15:08:32.898Z",
-  "inventorySha256": "8a03196e4e44023ebd9179409212d75a00f76fad511442585e27734c46954937",
-  "objectCount": 2832,
-  "totalBytes": 734630675,
+  "createdAt": "2026-10-23T15:27:49.984Z",
+  "inventorySha256": "f750fc5ff1a1cac5d24076361fe8630041b2b89bf6bc9f4799e16879fd915ccb",
+  "objectCount": 2843,
+  "totalBytes": 734958721,
   "objects": [
+    {
+      "key": "devices/airpods-4.webp",
+      "bytes": 12672,
+      "contentType": "image/webp",
+      "etag": "63946bae74c89ce28ec29db1ef64aa42",
+      "lastModified": "2026-10-23T15:19:07.178Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "devices/iphone-15.webp",
+      "bytes": 31002,
+      "contentType": "image/webp",
+      "etag": "d03b0c8966c2d668fbd8e99bd059fb83",
+      "lastModified": "2026-10-23T15:19:10.402Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "devices/macbook-pro-m1-pro.webp",
+      "bytes": 24030,
+      "contentType": "image/webp",
+      "etag": "74403bb02528ff6bc65fef23d679d623",
+      "lastModified": "2026-10-23T15:19:13.984Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "devices/macbook-pro-m4-pro.webp",
+      "bytes": 22842,
+      "contentType": "image/webp",
+      "etag": "99e6e3e6fcb028d337e51efcba0ad303",
+      "lastModified": "2026-10-23T15:19:17.538Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "devices/nuphy-air60-v2.webp",
+      "bytes": 58006,
+      "contentType": "image/webp",
+      "etag": "c5c2c788dd2e12727dc09ae6acfda197",
+      "lastModified": "2026-10-23T15:19:20.898Z",
+      "storageClass": "Standard"
+    },
     {
       "key": "devices/oppo-find-x10-pro-max.webp",
       "bytes": 53068,
       "contentType": "image/webp",
       "etag": "43ff24df7371ffd4ee83d8f2c016b9fb",
       "lastModified": "2026-10-23T14:58:43.654Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "devices/playstation-5.webp",
+      "bytes": 23272,
+      "contentType": "image/webp",
+      "etag": "d9aa78c40a3ecdbe4a93dd0baebbd26e",
+      "lastModified": "2026-10-23T15:19:24.287Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "devices/redmi-g-pro-27u.webp",
+      "bytes": 30250,
+      "contentType": "image/webp",
+      "etag": "755996ead1ae30087d1caa5ad6a3e51a",
+      "lastModified": "2026-10-23T15:19:28.395Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "devices/ugreen-dxp4800.webp",
+      "bytes": 44604,
+      "contentType": "image/webp",
+      "etag": "b5b34fbc6018b2f17f16370665af21ca",
+      "lastModified": "2026-10-23T15:19:32.027Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "devices/vxe-r1-se.webp",
+      "bytes": 27704,
+      "contentType": "image/webp",
+      "etag": "e18d75da495ecf9a7edbdee943190ebc",
+      "lastModified": "2026-10-23T15:19:38.008Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "devices/xiaomi-10.webp",
+      "bytes": 7230,
+      "contentType": "image/webp",
+      "etag": "36d8cf5ab8eb66c1204126985295cbb9",
+      "lastModified": "2026-10-23T15:19:41.405Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "devices/zeekr-007gt.webp",
+      "bytes": 46434,
+      "contentType": "image/webp",
+      "etag": "37c809b71fd75a6bb39f9afe2b295152",
+      "lastModified": "2026-10-23T15:19:46.191Z",
       "storageClass": "Standard"
     },
     {
