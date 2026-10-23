@@ -4,7 +4,7 @@ import { t, type Messages } from '../messages.ts'
 import { createPopupContent, MAP_POPUP_CLASS } from '../player/dom.ts'
 import type { PlaceMarker } from '../player/types.ts'
 import { isInPeriod, type Period } from './period.ts'
-import { getFramingPitch } from './basemap.ts'
+import { getFramingPitch, getMapPitch } from './basemap.ts'
 import type { ScreenshotPlace } from './screenshot.ts'
 import {
   ALL_PLACES_MAX_ZOOM,
@@ -68,6 +68,8 @@ const DOT_SPREAD_ROUNDS = 8
 // Opening a cluster frames its places, no closer than this.
 const CLUSTER_OPEN_MAX_ZOOM = 11
 const CLUSTER_OPEN_PADDING = 80
+// The map's width up to which it's a phone's, as the page's styles have it (48rem).
+const NARROW_WIDTH = 768
 // The markers are set in reading order for the keyboard, in rows this tall.
 const MARKER_ROW_HEIGHT = 48
 
@@ -518,8 +520,12 @@ export function createPlaceMarkers({
     return t(messages, 'clusterName', { name: members[0]!.name })
   }
 
-  /** Frames a cluster's places close enough to tell apart, in one move. */
-  function openCluster(map: mapboxgl.Map, entry: ClusterMarkerEntry) {
+  /**
+   * Frames a cluster's places close enough to tell apart, in one move, and never short
+   * of the zoom it parts at: framing places spread wide, on a phone's narrow screen
+   * above all, would leave them gathered as they were.
+   */
+  function openCluster(map: mapboxgl.Map, id: number, entry: ClusterMarkerEntry) {
     const { members } = entry
 
     if (members.length === 0) {
@@ -532,16 +538,40 @@ export function createPlaceMarkers({
       bounds.extend([member.longitude, member.latitude])
     }
 
-    map.fitBounds(bounds, {
-      duration: getAnimationDuration(),
+    const padding = getClusterOpenPadding(map)
+    const pitch = getFramingPitch(map, bounds, { maxZoom: CLUSTER_OPEN_MAX_ZOOM, padding })
+    const framed = map.cameraForBounds(bounds, {
       maxZoom: CLUSTER_OPEN_MAX_ZOOM,
-      padding: CLUSTER_OPEN_PADDING,
-      // Closer in, leaning further.
-      pitch: getFramingPitch(map, bounds, {
-        maxZoom: CLUSTER_OPEN_MAX_ZOOM,
-        padding: CLUSTER_OPEN_PADDING,
-      }),
+      padding,
+      pitch,
     })
+    let partZoom = 0
+
+    try {
+      // Past it by a little: the places are gathered at the zoom rounded down.
+      partZoom = index.getClusterExpansionZoom(id) + 0.01
+    } catch {
+      // A cluster of the places before the period changed: framed as it is.
+    }
+
+    const framedZoom = framed?.zoom ?? map.getZoom()
+    const parting = framedZoom < partZoom
+
+    map.easeTo({
+      // Closer than its places' frame, around the cluster, where its parts gather.
+      center: parting || !framed?.center ? entry.coordinates : framed.center,
+      duration: getAnimationDuration(),
+      padding,
+      pitch: parting ? getMapPitch(map, partZoom) : pitch,
+      zoom: Math.max(framedZoom, partZoom),
+    })
+  }
+
+  /** Room around a cluster's places as it opens: little at the sides of a phone held upright. */
+  function getClusterOpenPadding(map: mapboxgl.Map) {
+    const side = map.getContainer().clientWidth <= NARROW_WIDTH ? 32 : CLUSTER_OPEN_PADDING
+
+    return { bottom: CLUSTER_OPEN_PADDING, left: side, right: side, top: CLUSTER_OPEN_PADDING }
   }
 
   function createClusterMarker(
@@ -599,7 +629,7 @@ export function createPlaceMarkers({
         event.stopPropagation()
         hidePopup()
         onOpenCluster()
-        openCluster(map, entry)
+        openCluster(map, id, entry)
       },
       { signal },
     )
