@@ -34,7 +34,7 @@
 
   .lightbox-media__live {
     position: fixed;
-    bottom: 1.25rem;
+    bottom: calc(1.25rem + env(safe-area-inset-bottom));
     left: 50%;
     padding: 0.5rem 1rem;
     border-radius: 9999px;

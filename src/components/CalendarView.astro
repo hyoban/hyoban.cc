@@ -986,6 +986,7 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
     display: flex;
     flex-direction: column;
     width: min(var(--calendar-drawer-width), 100vw);
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) 0;
     border-left: 1px solid var(--color-border);
     background: var(--color-bg);
     box-shadow: -1rem 0 3rem rgb(0 0 0 / 0.07);
@@ -994,6 +995,7 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
       position: static;
       display: grid;
       grid-template-rows: auto 1fr auto;
+      padding: 0;
       width: 100%;
       max-width: 42rem;
       min-height: calc(100dvh - 2rem);

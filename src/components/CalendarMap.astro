@@ -736,8 +736,9 @@ const description = pageTrip
   /* The back link, the trips by keyboard, and the map's buttons, across the top. */
   .trip-map-toolbar {
     position: absolute;
-    inset-inline: 1rem;
-    top: 1rem;
+    top: calc(1rem + env(safe-area-inset-top));
+    right: calc(1rem + env(safe-area-inset-right));
+    left: calc(1rem + env(safe-area-inset-left));
     z-index: 5;
     display: grid;
     grid-template-columns: 1fr auto 1fr;
@@ -898,7 +899,7 @@ const description = pageTrip
   /* The years the places are colored by, along the foot of the map. */
   .trip-map-legend {
     position: absolute;
-    bottom: 2.5rem;
+    bottom: calc(2.5rem + env(safe-area-inset-bottom));
     left: 50%;
     z-index: 4;
     display: flex;
@@ -1128,8 +1129,8 @@ const description = pageTrip
   /* A trip's card in the bottom left, or across the foot of a narrow map. */
   .trip-map-panel {
     position: absolute;
-    bottom: 1rem;
-    left: 1rem;
+    bottom: calc(1rem + env(safe-area-inset-bottom));
+    left: calc(1rem + env(safe-area-inset-left));
     z-index: 10;
     display: flex;
     flex-direction: column;
@@ -1142,8 +1143,9 @@ const description = pageTrip
     box-shadow: 0 1.5rem 5rem rgb(0 0 0 / 0.16);
 
     @container (width < 48rem) {
-      inset-inline: 0.75rem;
+      right: calc(0.75rem + env(safe-area-inset-right));
       bottom: calc(0.75rem + env(safe-area-inset-bottom));
+      left: calc(0.75rem + env(safe-area-inset-left));
       width: auto;
       max-height: calc(100% - 1.5rem);
     }
@@ -1157,8 +1159,9 @@ const description = pageTrip
     --drawer-inset: 1rem;
 
     position: absolute;
-    inset-block: 1rem;
-    right: 1rem;
+    top: calc(1rem + env(safe-area-inset-top));
+    right: calc(1rem + env(safe-area-inset-right));
+    bottom: calc(1rem + env(safe-area-inset-bottom));
     z-index: 10;
     display: grid;
     grid-template-rows: auto minmax(0, 1fr);
@@ -1199,7 +1202,8 @@ const description = pageTrip
   /* The map's settings, a modal sidebar over the others, the map left in sight behind it. */
   .trip-map-settings {
     position: fixed;
-    inset: 1rem 1rem 1rem auto;
+    inset: calc(1rem + env(safe-area-inset-top)) calc(1rem + env(safe-area-inset-right))
+      calc(1rem + env(safe-area-inset-bottom)) auto;
     z-index: 20;
     /* Wide enough for the five lights in one row. */
     width: min(24rem, calc(100vw - 2rem));
@@ -1631,8 +1635,8 @@ const description = pageTrip
   }
 
   .trip-map-lightbox__close {
-    top: 1rem;
-    right: 1rem;
+    top: calc(1rem + env(safe-area-inset-top));
+    right: calc(1rem + env(safe-area-inset-right));
   }
 
   /* Halfway down the sides, or along the foot on a phone. */
@@ -1642,16 +1646,16 @@ const description = pageTrip
 
     @media (width < 48rem) {
       top: auto;
-      bottom: 1rem;
+      bottom: calc(1rem + env(safe-area-inset-bottom));
       translate: none;
     }
   }
 
   .trip-map-lightbox__previous {
-    left: 0.5rem;
+    left: calc(0.5rem + env(safe-area-inset-left));
   }
 
   .trip-map-lightbox__next {
-    right: 0.5rem;
+    right: calc(0.5rem + env(safe-area-inset-right));
   }
 </style>
