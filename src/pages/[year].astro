@@ -80,10 +80,17 @@ const map = buildYearMap(
     moment.locations.map(({ latitude, longitude }) => [longitude, latitude] as const),
   ),
 )
+/** The most photos a picture chooses among each visit (src/year-random.ts). */
+const PICKS = 6
+/** What a picture with others to choose from names for src/year-random.ts. */
+const pickFrom = (photos: string[]) =>
+  photos.length > 1 ? JSON.stringify(photos.slice(0, PICKS)) : undefined
+/** A picture showing the first of `photos` until src/year-random.ts picks one of them. */
+const pictureOf = (photos: string[]) => ({ src: photos[0]!, pick: pickFrom(photos) })
 const trips = review.trips.map((trip) => ({
   trip,
   glyph: buildRouteGlyph(getTripLine(trip.legs)),
-  cover: getTripCollage(trip, review.moments, 1)[0],
+  covers: getTripCollage(trip, review.moments, PICKS),
 }))
 const topCities = review.cities.lit.slice(0, 6)
 const firstVisits = Map.groupBy(review.firstVisits, (visit) => Number(visit.dateKey.slice(5, 7)))
@@ -112,11 +119,11 @@ const places = yearPlaces
       title: [place.division && getDivisionLabel(place.division), formatDay(place.dateKey)]
         .filter(Boolean)
         .join(' · '),
-      // A photo from the year's Moments there, when one has any.
-      photo: photosOf(
+      // The photos from the year's Moments there, one of them shown each visit.
+      photos: photosOf(
         review.moments.filter((moment) => moment.locations.some(({ id }) => id === place.id)),
         320,
-      )[0],
+      ),
     }
   })
 const placeRows = [
@@ -145,8 +152,6 @@ const devices = Object.entries(readDevices())
     // Its own post, when one was written about it.
     href: postLinks.has(id) ? `/${id}/` : '/use/',
   }))
-/** The first still of these Moments, `width` wide. */
-const photoOf = (dayMoments: Moment[], width: number) => photosOf(dayMoments, width)[0]
 const between = (start: string, end: string) =>
   review.moments.filter((moment) => moment.dateKey >= start && moment.dateKey <= end)
 
@@ -186,28 +191,31 @@ const highlights = [
     date: formatDay(firstMoment.dateKey),
     href: getMomentPagePath(firstMoment),
     layout: 'single',
-    photos: photosOf([firstMoment], 480).slice(0, 1),
+    pictures: [photosOf([firstMoment], 480)],
   },
   review.busiestDay.count > 1 && {
     kicker: '最满的一天',
     title: `记了 ${review.busiestDay.count} 条`,
     date: formatDay(review.busiestDay.dateKey),
     href: getMomentPath(review.busiestDay.dateKey),
-    // The day's photos, four of them in a grid.
+    // Four of the day's photos in a grid, a different four each visit.
     layout: 'grid',
-    photos: photosOf(between(review.busiestDay.dateKey, review.busiestDay.dateKey), 320).slice(0, 4),
+    pictures: photosOf(between(review.busiestDay.dateKey, review.busiestDay.dateKey), 320)
+      .slice(0, 4)
+      .map((photo) => [photo]),
+    set: photosOf(between(review.busiestDay.dateKey, review.busiestDay.dateKey), 320).slice(0, 12),
   },
   review.streak.days > 1 && {
     kicker: '最长连续记录',
     title: `连续 ${review.streak.days} 天`,
     date: `${formatDay(review.streak.start)}起`,
     href: getMomentPath(review.streak.start),
-    // A strip for each day of the run, its first photo in it.
+    // A strip for each day of the run, one of its photos in it.
     layout: 'strips',
-    photos: Map.groupBy(between(review.streak.start, review.streak.end), (moment) => moment.dateKey)
+    pictures: Map.groupBy(between(review.streak.start, review.streak.end), (moment) => moment.dateKey)
       .values()
-      .map((dayMoments) => photoOf(dayMoments, 320))
-      .filter((photo) => photo !== undefined)
+      .map((dayMoments) => photosOf(dayMoments, 320))
+      .filter((photos) => photos.length > 0)
       .take(7)
       .toArray(),
   },
@@ -218,9 +226,16 @@ const highlights = [
       date: formatDay(lastMoment.dateKey),
       href: getMomentPagePath(lastMoment),
       layout: 'single',
-      photos: photosOf([lastMoment], 480).slice(0, 1),
+      pictures: [photosOf([lastMoment], 480)],
     },
-].filter((highlight) => highlight !== undefined && highlight !== false)
+]
+  .filter((highlight) => highlight !== undefined && highlight !== false)
+  // Each picture with the photos it may show; a set's share theirs, dealt without repeats.
+  .map((highlight) => ({
+    ...highlight,
+    pictures: highlight.pictures.filter((photos) => photos.length > 0).map(pictureOf),
+    set: 'set' in highlight && highlight.set.length > 4 ? JSON.stringify(highlight.set) : undefined,
+  }))
 ---
 
 <Layout
@@ -283,11 +298,19 @@ const highlights = [
         <section class="year-section" aria-labelledby="year-trips">
           <h2 id="year-trips">出行</h2>
           <ul class="year-trips">
-            {trips.map(({ trip, glyph, cover }, index) => (
+            {trips.map(({ trip, glyph, covers }, index) => (
               <li style={`--index: ${index}`}>
                 <a href={`/trip/${trip.id.slice(0, 4)}/${trip.id.slice(5)}/`}>
                   <span class="year-trips__art">
-                    {cover && <img src={cover.thumbnail} alt="" loading="lazy" decoding="async" />}
+                    {covers[0] && (
+                      <img
+                        src={covers[0].thumbnail}
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                        data-pick={pickFrom(covers.map((cover) => cover.thumbnail))}
+                      />
+                    )}
                     <svg viewBox={`0 0 ${glyph.width} ${glyph.width}`} aria-hidden="true">
                       <path d={glyph.d} transform={`translate(0 ${(glyph.width - glyph.height) / 2})`} pathLength="1" />
                     </svg>
@@ -359,16 +382,24 @@ const highlights = [
                   )}
                 </div>
               </div>
-              <ul data-carousel-track aria-label={`${row.title}，${row.places.length} 个`}>
+              <ul data-carousel-track data-shuffle aria-label={`${row.title}，${row.places.length} 个`}>
                 {row.places.map((place, order) => (
                   <li style={`--order: ${order}`}>
                     <a
-                      class:list={{ 'has-photo': place.photo }}
+                      class:list={{ 'has-photo': place.photos[0] }}
                       href={`/map/${year}/place/${place.id}/`}
                       title={place.title}
                       aria-label={`${[place.name, place.meta].filter(Boolean).join('，')}，第 ${order + 1} 个，共 ${row.places.length} 个`}
                     >
-                      {place.photo && <img src={place.photo} alt="" loading="lazy" decoding="async" />}
+                      {place.photos[0] && (
+                        <img
+                          src={place.photos[0]}
+                          alt=""
+                          loading="lazy"
+                          decoding="async"
+                          data-pick={pickFrom(place.photos)}
+                        />
+                      )}
                       <span class="year-places__words">
                         <span class="year-places__name">{place.name}</span>
                         {place.meta && <span class="year-places__city">{place.meta}</span>}
@@ -397,10 +428,11 @@ const highlights = [
               <a href={highlight.href}>
                 <span
                   class:list={['year-highlights__art', `is-${highlight.layout}`]}
-                  style={`--count: ${highlight.photos.length}`}
+                  style={`--count: ${highlight.pictures.length}`}
+                  data-pick-set={highlight.set}
                 >
-                  {highlight.photos.map((photo) => (
-                    <img src={photo} alt="" loading="lazy" decoding="async" />
+                  {highlight.pictures.map((picture) => (
+                    <img src={picture.src} alt="" loading="lazy" decoding="async" data-pick={picture.pick} />
                   ))}
                 </span>
                 <span class="year-highlights__kicker">{highlight.kicker}</span>
@@ -477,6 +509,7 @@ const highlights = [
 
 <script>
   import { initializeCarousels } from '@/year-carousel'
+  import { dealYear } from '@/year-random'
   import { initializeYearShare } from '@/year-share'
 
   // The page's motion, each piece once: the counts roll up from nothing as it opens, and
@@ -526,6 +559,8 @@ const highlights = [
     for (const section of sections) observer.observe(section)
   }
 
+  // First, so the carousels and the motion see the places in their new order.
+  document.addEventListener('astro:page-load', dealYear)
   document.addEventListener('astro:page-load', initializeMotion)
   document.addEventListener('astro:page-load', () => initializeCarousels())
   document.addEventListener('astro:page-load', initializeYearShare)

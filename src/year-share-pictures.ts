@@ -1,3 +1,5 @@
+import { getSeed, SEED_PARAMETER } from './year-random.ts'
+
 // A year review as pictures to share: the page's own content drawn in the browser by
 // modern-screenshot, everything shown at once as it ends up. As one long picture with the
 // site's mark at the foot; or cut between its parts and laid out on squares, a few short
@@ -62,7 +64,10 @@ async function openWide() {
     pointerEvents: 'none',
   })
   const loaded = new Promise((resolve) => frame.addEventListener('load', resolve, { once: true }))
-  frame.src = location.href
+  // This visit's seed, so the frame shows the same photos in the same order as the page.
+  const url = new URL(location.href)
+  url.searchParams.set(SEED_PARAMETER, String(getSeed()))
+  frame.src = url.href
   document.body.append(frame)
   await loaded
   const page = frame.contentDocument
