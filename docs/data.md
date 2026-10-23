@@ -5,7 +5,23 @@ recording app writes, committing what it kept on the phone as one change set, an
 site's build reads. `data/` keeps a backup of them as JSON
 records, in the shape `packages/data-spec` defines: the data-backup workflow writes
 the API's export into it every six hours and commits what changed, so edit the records
-through the API rather than here. `devices.json` is the exception: it lives only here.
+through the API rather than here. `devices.json` and the Zeekr captures in
+`data/zeekr/` live only in the repository. The latter keep the car app's redacted
+monthly reports, daily figures, charging sessions and assisted-driving statistics;
+see `data/zeekr/README.md` for coverage and validation. The API backup leaves this
+directory alone.
+
+The vehicle schemas in `packages/data-spec/src/vehicle.ts` define the normalized
+month records and cumulative assisted-driving observations. `vp run zeekr:convert`
+rebuilds them from the statistical sources registered in `data/zeekr/imports.json`
+without rewriting sources. `vp run zeekr:check` verifies privacy rules, hashes, source
+values, schema, reconciliations and exact reproducibility of the saved conversion.
+Unmodified captures and report-access links stay in the ignored, owner-only
+`.private/zeekr/` directory. `vp run zeekr:prepare <private-capture.json> <device-id>`
+creates a statistical projection with identity, location and access links removed.
+Daily statistics and precise charging times are published with the owner's
+authorization. Vehicle state stays only in private originals; the model stores
+usage, charging and assistance. These records continue to live only in the repository.
 
 ```
 data/

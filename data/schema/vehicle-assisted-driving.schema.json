@@ -1,0 +1,150 @@
+{
+  "$id": "https://hyoban.cc/data/schema/v1/vehicle-assisted-driving.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "deviceId": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "capturedAt": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+        },
+        {
+          "type": "string",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+        }
+      ]
+    },
+    "statistics": {
+      "type": "object",
+      "properties": {
+        "distanceMeters": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "durationSeconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "nzp": {
+          "type": "object",
+          "properties": {
+            "distanceMeters": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "durationSeconds": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "reportedDistancePercent": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "reportedDurationPercent": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            }
+          },
+          "additionalProperties": {}
+        },
+        "accLcc": {
+          "type": "object",
+          "properties": {
+            "distanceMeters": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "durationSeconds": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "reportedDistancePercent": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "reportedDurationPercent": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            }
+          },
+          "additionalProperties": {}
+        },
+        "parkingCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "parkingAverageSeconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "daysOwned": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "beatsPercent": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        }
+      },
+      "required": [
+        "nzp",
+        "accLcc"
+      ],
+      "additionalProperties": {}
+    },
+    "source": {
+      "type": "object",
+      "properties": {
+        "captureId": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "pointer": {
+          "type": "string",
+          "pattern": "^\\/"
+        },
+        "method": {
+          "type": "string",
+          "enum": [
+            "screen",
+            "screen_tap",
+            "share_report"
+          ]
+        }
+      },
+      "required": [
+        "captureId",
+        "pointer",
+        "method"
+      ],
+      "additionalProperties": {}
+    }
+  },
+  "required": [
+    "deviceId",
+    "capturedAt",
+    "statistics",
+    "source"
+  ],
+  "additionalProperties": {}
+}

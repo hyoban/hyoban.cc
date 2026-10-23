@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+export * from './vehicle.ts'
+
 // The data spec: the format the recording app stores, the repository commits under
 // `data/` and the site reads. Every object is loose, so a field one side doesn't know
 // yet travels through the other untouched; `pnpm data:schema` writes these schemas out

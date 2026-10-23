@@ -1,0 +1,390 @@
+{
+  "deviceId": "zeekr-007gt",
+  "month": "2025-10",
+  "capturedAt": "2026-10-24T03:10:00+08:00",
+  "report": {
+    "distanceMeters": 3150000,
+    "durationSeconds": 208440,
+    "tripCount": 118,
+    "longestTripMeters": 354000,
+    "longestTripDurationSeconds": 15840,
+    "energyWh": 551800,
+    "drivingEnergyWh": 467300,
+    "reportedConsumption": {
+      "whPer100Km": 14800,
+      "basis": "driving"
+    },
+    "chargeCount": 13,
+    "distanceBeatsPercent": 88.3
+  },
+  "days": [
+    {
+      "date": "2025-10-01",
+      "distanceMeters": 575000,
+      "durationSeconds": 37740,
+      "energyWh": 88500,
+      "drivingEnergyWh": 83900,
+      "parkedEnergyWh": 4600,
+      "source": {
+        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
+        "pointer": "/trips/months/11/daily/0",
+        "method": "share_report"
+      }
+    },
+    {
+      "date": "2025-10-02",
+      "distanceMeters": 14000,
+      "durationSeconds": 3900,
+      "energyWh": 3800,
+      "drivingEnergyWh": 2500,
+      "parkedEnergyWh": 1300,
+      "source": {
+        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
+        "pointer": "/trips/months/11/daily/1",
+        "method": "share_report"
+      }
+    },
+    {
+      "date": "2025-10-03",
+      "distanceMeters": 113000,
+      "durationSeconds": 11040,
+      "energyWh": 15800,
+      "drivingEnergyWh": 15100,
+      "parkedEnergyWh": 700,
+      "source": {
+        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
+        "pointer": "/trips/months/11/daily/2",
+        "method": "share_report"
+      }
+    },
+    {
+      "date": "2025-10-04",
+      "distanceMeters": 90000,
+      "durationSeconds": 8940,
+      "energyWh": 14300,
+      "drivingEnergyWh": 11300,
+      "parkedEnergyWh": 3000,
+      "source": {
+        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
+        "pointer": "/trips/months/11/daily/3",
+        "method": "share_report"
+      }
+    },
+    {
+      "date": "2025-10-05",
+      "distanceMeters": 390000,
+      "durationSeconds": 24060,
+      "energyWh": 56000,
+      "drivingEnergyWh": 56000,
+      "parkedEnergyWh": 0,
+      "source": {
+        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
+        "pointer": "/trips/months/11/daily/4",
+        "method": "share_report"
+      }
+    },
+    {
+      "date": "2025-10-06",
+      "distanceMeters": 108000,
+      "durationSeconds": 10980,
+      "energyWh": 15000,
+      "drivingEnergyWh": 14700,
+      "parkedEnergyWh": 300,
+      "source": {
+        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
+        "pointer": "/trips/months/11/daily/5",
+        "method": "share_report"
+      }
+    },
+    {
+      "date": "2025-10-07",
+      "distanceMeters": 71000,
+      "durationSeconds": 6420,
+      "energyWh": 9800,
+      "drivingEnergyWh": 8400,
+      "parkedEnergyWh": 1400,
+      "source": {
+        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
+        "pointer": "/trips/months/11/daily/6",
+        "method": "share_report"
+      }
+    },
+    {
+      "date": "2025-10-09",
+      "distanceMeters": 0,
+      "durationSeconds": 0,
+      "energyWh": 800,
+      "drivingEnergyWh": 0,
+      "parkedEnergyWh": 800,
+      "source": {
+        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
+        "pointer": "/trips/months/11/daily/7",
+        "method": "share_report"
+      }
+    },
+    {
+      "date": "2025-10-10",
+      "distanceMeters": 21000,
+      "durationSeconds": 2880,
+      "energyWh": 3000,
+      "drivingEnergyWh": 3000,
+      "parkedEnergyWh": 0,
+      "source": {
+        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
+        "pointer": "/trips/months/11/daily/8",
+        "method": "share_report"
+      }
+    },
+    {
+      "date": "2025-10-11",
+      "distanceMeters": 0,
+      "durationSeconds": 2640,
+      "energyWh": 800,
+      "drivingEnergyWh": 0,
+      "parkedEnergyWh": 800,
+      "source": {
+        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
+        "pointer": "/trips/months/11/daily/9",
+        "method": "share_report"
+      }
+    },
+    {
+      "date": "2025-10-13",
+      "distanceMeters": 0,
+      "durationSeconds": 0,
+      "energyWh": 800,
+      "drivingEnergyWh": 0,
+      "parkedEnergyWh": 800,
+      "source": {
+        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
+        "pointer": "/trips/months/11/daily/10",
+        "method": "share_report"
+      }
+    },
+    {
+      "date": "2025-10-14",
+      "distanceMeters": 0,
+      "durationSeconds": 0,
+      "energyWh": 0,
+      "drivingEnergyWh": 0,
+      "parkedEnergyWh": 0,
+      "source": {
+        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
+        "pointer": "/trips/months/11/daily/11",
+        "method": "share_report"
+      }
+    },
+    {
+      "date": "2025-10-16",
+      "distanceMeters": 0,
+      "durationSeconds": 0,
+      "energyWh": 0,
+      "drivingEnergyWh": 0,
+      "parkedEnergyWh": 0,
+      "source": {
+        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
+        "pointer": "/trips/months/11/daily/12",
+        "method": "share_report"
+      }
+    },
+    {
+      "date": "2025-10-18",
+      "distanceMeters": 463000,
+      "durationSeconds": 24720,
+      "energyWh": 78200,
+      "drivingEnergyWh": 74300,
+      "parkedEnergyWh": 3900,
+      "source": {
+        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
+        "pointer": "/trips/months/11/daily/13",
+        "method": "share_report"
+      }
+    },
+    {
+      "date": "2025-10-19",
+      "distanceMeters": 280000,
+      "durationSeconds": 15360,
+      "energyWh": 55500,
+      "drivingEnergyWh": 46000,
+      "parkedEnergyWh": 9500,
+      "source": {
+        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
+        "pointer": "/trips/months/11/daily/14",
+        "method": "share_report"
+      }
+    },
+    {
+      "date": "2025-10-20",
+      "distanceMeters": 0,
+      "durationSeconds": 0,
+      "energyWh": 5300,
+      "drivingEnergyWh": 0,
+      "parkedEnergyWh": 5300,
+      "source": {
+        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
+        "pointer": "/trips/months/11/daily/15",
+        "method": "share_report"
+      }
+    },
+    {
+      "date": "2025-10-21",
+      "distanceMeters": 0,
+      "durationSeconds": 0,
+      "energyWh": 4500,
+      "drivingEnergyWh": 0,
+      "parkedEnergyWh": 4500,
+      "source": {
+        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
+        "pointer": "/trips/months/11/daily/16",
+        "method": "share_report"
+      }
+    },
+    {
+      "date": "2025-10-22",
+      "distanceMeters": 1000,
+      "durationSeconds": 720,
+      "energyWh": 5300,
+      "drivingEnergyWh": 0,
+      "parkedEnergyWh": 5300,
+      "source": {
+        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
+        "pointer": "/trips/months/11/daily/17",
+        "method": "share_report"
+      }
+    },
+    {
+      "date": "2025-10-23",
+      "distanceMeters": 0,
+      "durationSeconds": 0,
+      "energyWh": 4500,
+      "drivingEnergyWh": 0,
+      "parkedEnergyWh": 4500,
+      "source": {
+        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
+        "pointer": "/trips/months/11/daily/18",
+        "method": "share_report"
+      }
+    },
+    {
+      "date": "2025-10-24",
+      "distanceMeters": 7000,
+      "durationSeconds": 2460,
+      "energyWh": 6000,
+      "drivingEnergyWh": 1100,
+      "parkedEnergyWh": 4900,
+      "source": {
+        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
+        "pointer": "/trips/months/11/daily/19",
+        "method": "share_report"
+      }
+    },
+    {
+      "date": "2025-10-25",
+      "distanceMeters": 939000,
+      "durationSeconds": 44280,
+      "energyWh": 141000,
+      "drivingEnergyWh": 140900,
+      "parkedEnergyWh": 100,
+      "source": {
+        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
+        "pointer": "/trips/months/11/daily/20",
+        "method": "share_report"
+      }
+    },
+    {
+      "date": "2025-10-26",
+      "distanceMeters": 64000,
+      "durationSeconds": 9180,
+      "energyWh": 12800,
+      "drivingEnergyWh": 7800,
+      "parkedEnergyWh": 5000,
+      "source": {
+        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
+        "pointer": "/trips/months/11/daily/21",
+        "method": "share_report"
+      }
+    },
+    {
+      "date": "2025-10-27",
+      "distanceMeters": 0,
+      "durationSeconds": 360,
+      "energyWh": 5300,
+      "drivingEnergyWh": 0,
+      "parkedEnergyWh": 5300,
+      "source": {
+        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
+        "pointer": "/trips/months/11/daily/22",
+        "method": "share_report"
+      }
+    },
+    {
+      "date": "2025-10-28",
+      "distanceMeters": 0,
+      "durationSeconds": 0,
+      "energyWh": 4500,
+      "drivingEnergyWh": 0,
+      "parkedEnergyWh": 4500,
+      "source": {
+        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
+        "pointer": "/trips/months/11/daily/23",
+        "method": "share_report"
+      }
+    },
+    {
+      "date": "2025-10-29",
+      "distanceMeters": 0,
+      "durationSeconds": 0,
+      "energyWh": 5300,
+      "drivingEnergyWh": 0,
+      "parkedEnergyWh": 5300,
+      "source": {
+        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
+        "pointer": "/trips/months/11/daily/24",
+        "method": "share_report"
+      }
+    },
+    {
+      "date": "2025-10-30",
+      "distanceMeters": 0,
+      "durationSeconds": 0,
+      "energyWh": 6000,
+      "drivingEnergyWh": 0,
+      "parkedEnergyWh": 6000,
+      "source": {
+        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
+        "pointer": "/trips/months/11/daily/25",
+        "method": "share_report"
+      }
+    },
+    {
+      "date": "2025-10-31",
+      "distanceMeters": 14000,
+      "durationSeconds": 2700,
+      "energyWh": 9000,
+      "drivingEnergyWh": 2300,
+      "parkedEnergyWh": 6700,
+      "source": {
+        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
+        "pointer": "/trips/months/11/daily/26",
+        "method": "share_report"
+      }
+    }
+  ],
+  "sources": [
+    {
+      "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
+      "pointer": "/trips/months/11/report",
+      "method": "screen"
+    },
+    {
+      "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
+      "pointer": "/trips/months/11/daily",
+      "method": "share_report"
+    },
+    {
+      "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
+      "pointer": "/trips/months/11/share_data",
+      "method": "share_report"
+    }
+  ]
+}

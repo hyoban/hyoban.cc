@@ -1,0 +1,208 @@
+{
+  "deviceId": "zeekr-007gt",
+  "month": "2025-12",
+  "capturedAt": "2026-10-24T03:10:00+08:00",
+  "report": {
+    "distanceMeters": 1137000,
+    "durationSeconds": 89280,
+    "tripCount": 49,
+    "longestTripMeters": 226000,
+    "longestTripDurationSeconds": 10800,
+    "energyWh": 212300,
+    "drivingEnergyWh": 180100,
+    "reportedConsumption": {
+      "whPer100Km": 15800,
+      "basis": "driving"
+    },
+    "chargeCount": 4,
+    "distanceBeatsPercent": 39.6
+  },
+  "days": [
+    {
+      "date": "2025-12-03",
+      "distanceMeters": 0,
+      "durationSeconds": 0,
+      "energyWh": 800,
+      "drivingEnergyWh": 0,
+      "parkedEnergyWh": 800,
+      "source": {
+        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
+        "pointer": "/trips/months/9/daily/0",
+        "method": "share_report"
+      }
+    },
+    {
+      "date": "2025-12-05",
+      "distanceMeters": 0,
+      "durationSeconds": 0,
+      "energyWh": 0,
+      "drivingEnergyWh": 0,
+      "parkedEnergyWh": 0,
+      "source": {
+        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
+        "pointer": "/trips/months/9/daily/1",
+        "method": "share_report"
+      }
+    },
+    {
+      "date": "2025-12-06",
+      "distanceMeters": 168000,
+      "durationSeconds": 13020,
+      "energyWh": 24000,
+      "drivingEnergyWh": 22900,
+      "parkedEnergyWh": 1100,
+      "source": {
+        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
+        "pointer": "/trips/months/9/daily/2",
+        "method": "share_report"
+      }
+    },
+    {
+      "date": "2025-12-09",
+      "distanceMeters": 45000,
+      "durationSeconds": 5280,
+      "energyWh": 6000,
+      "drivingEnergyWh": 5700,
+      "parkedEnergyWh": 300,
+      "source": {
+        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
+        "pointer": "/trips/months/9/daily/3",
+        "method": "share_report"
+      }
+    },
+    {
+      "date": "2025-12-13",
+      "distanceMeters": 153000,
+      "durationSeconds": 18180,
+      "energyWh": 29300,
+      "drivingEnergyWh": 26400,
+      "parkedEnergyWh": 2900,
+      "source": {
+        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
+        "pointer": "/trips/months/9/daily/4",
+        "method": "share_report"
+      }
+    },
+    {
+      "date": "2025-12-14",
+      "distanceMeters": 405000,
+      "durationSeconds": 24720,
+      "energyWh": 69000,
+      "drivingEnergyWh": 65600,
+      "parkedEnergyWh": 3400,
+      "source": {
+        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
+        "pointer": "/trips/months/9/daily/5",
+        "method": "share_report"
+      }
+    },
+    {
+      "date": "2025-12-15",
+      "distanceMeters": 0,
+      "durationSeconds": 0,
+      "energyWh": 6800,
+      "drivingEnergyWh": 0,
+      "parkedEnergyWh": 6800,
+      "source": {
+        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
+        "pointer": "/trips/months/9/daily/6",
+        "method": "share_report"
+      }
+    },
+    {
+      "date": "2025-12-16",
+      "distanceMeters": 0,
+      "durationSeconds": 0,
+      "energyWh": 2300,
+      "drivingEnergyWh": 0,
+      "parkedEnergyWh": 2300,
+      "source": {
+        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
+        "pointer": "/trips/months/9/daily/7",
+        "method": "share_report"
+      }
+    },
+    {
+      "date": "2025-12-17",
+      "distanceMeters": 0,
+      "durationSeconds": 0,
+      "energyWh": 1500,
+      "drivingEnergyWh": 0,
+      "parkedEnergyWh": 1500,
+      "source": {
+        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
+        "pointer": "/trips/months/9/daily/8",
+        "method": "share_report"
+      }
+    },
+    {
+      "date": "2025-12-18",
+      "distanceMeters": 1000,
+      "durationSeconds": 540,
+      "energyWh": 5300,
+      "drivingEnergyWh": 300,
+      "parkedEnergyWh": 5000,
+      "source": {
+        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
+        "pointer": "/trips/months/9/daily/9",
+        "method": "share_report"
+      }
+    },
+    {
+      "date": "2025-12-19",
+      "distanceMeters": 4000,
+      "durationSeconds": 1620,
+      "energyWh": 6800,
+      "drivingEnergyWh": 600,
+      "parkedEnergyWh": 6200,
+      "source": {
+        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
+        "pointer": "/trips/months/9/daily/10",
+        "method": "share_report"
+      }
+    },
+    {
+      "date": "2025-12-21",
+      "distanceMeters": 27000,
+      "durationSeconds": 4560,
+      "energyWh": 5300,
+      "drivingEnergyWh": 3700,
+      "parkedEnergyWh": 1600,
+      "source": {
+        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
+        "pointer": "/trips/months/9/daily/11",
+        "method": "share_report"
+      }
+    },
+    {
+      "date": "2025-12-27",
+      "distanceMeters": 334000,
+      "durationSeconds": 21300,
+      "energyWh": 55500,
+      "drivingEnergyWh": 54900,
+      "parkedEnergyWh": 600,
+      "source": {
+        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
+        "pointer": "/trips/months/9/daily/12",
+        "method": "share_report"
+      }
+    }
+  ],
+  "sources": [
+    {
+      "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
+      "pointer": "/trips/months/9/report",
+      "method": "screen"
+    },
+    {
+      "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
+      "pointer": "/trips/months/9/daily",
+      "method": "share_report"
+    },
+    {
+      "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
+      "pointer": "/trips/months/9/share_data",
+      "method": "share_report"
+    }
+  ]
+}
