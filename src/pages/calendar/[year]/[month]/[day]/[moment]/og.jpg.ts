@@ -8,7 +8,7 @@ import {
   type MomentPagePathProps,
 } from '@/moments'
 import { cachedCard, renderOgImage } from '@/og-image'
-import { getCardPhotos } from '@/page-cards'
+import { getCardPhotos } from '@/card-data'
 
 export const getStaticPaths = async () => (MOMENT_OG_IMAGES ? getMomentPagePaths() : [])
 

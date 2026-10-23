@@ -4,6 +4,20 @@ Images and videos are stored in the Cloudflare R2 bucket configured in
 `src/data/asset-config.json`. Production files are served from
 `https://image.hyoban.cc`.
 
+An article or Markdown page can opt into a photo on its share card with an
+absolute image URL in its frontmatter:
+
+```yaml
+ogImage: https://image.hyoban.cc/posts/my-article/cover.jpg
+ogDescription: A short summary that fits beside the photo.
+```
+
+Choose a photo that still works when cropped beside the title. Without `ogImage`,
+the card keeps its text layout; the first image in the article is never chosen
+automatically. Optional `ogDescription` shortens just the text drawn on the card;
+without it the card uses `description`. Search, Open Graph metadata and RSS keep
+the full `description`.
+
 Use these object key prefixes:
 
 - `moments/YYYY/MM/DD-NN-short-slug/<semantic-file>` for Moment media

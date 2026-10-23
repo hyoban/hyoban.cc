@@ -12,7 +12,8 @@ export async function getStaticPaths() {
 export const GET: APIRoute<{ entry: MarkdownEntry }> = async ({ props: { entry } }) => {
   const options = {
     title: entry.data.title,
-    description: entry.data.description,
+    description: entry.data.ogDescription ?? entry.data.description,
+    photos: entry.data.ogImage ? [entry.data.ogImage] : undefined,
     date: entry.collection === 'posts' ? formatPostFullDate(entry.data.pubDate) : undefined,
   }
   return pngResponse(await cachedCard('post.png', options, () => renderOgImage(options)))

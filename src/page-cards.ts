@@ -1,4 +1,9 @@
 import { SITE_TITLE } from '@/consts'
+import { getCardPhotos, getCalendarPanel, isTripInPeriod } from '@/card-data'
+import { getMapCardPlaces } from '@/map-card'
+import { getTripCovers } from '@/moments/trip-images'
+import { getMediaPosters } from '@/media-card'
+import type { OgImageOptions } from '@/og-image'
 import { getMapPlaceholderKey } from '@/map-placeholder'
 import {
   getActiveDateKeys,
@@ -7,13 +12,14 @@ import {
   getMapYears,
   getMomentExcerpt,
   getMoments,
+  getTrips,
   MOMENT_OG_IMAGES,
   type Moment,
 } from '@/moments'
 
 // The share cards of the pages without one of their own, a post's, a trip's or a
 // Moment's: the calendar's months and days, the map's, the trip lists and the media page.
-// Each says what its page's title and description say, drawn by /og/pages/<path>.png.
+// Drawn by /og/pages/<path>.png, with shorter text beside their visual panels.
 
 export interface PageText {
   /** The page's title without the site's name, which the card shows apart. */
@@ -89,23 +95,9 @@ export function getMapText(
     : { heading: '地图', description: '去过的地方，留下的记录。' }
 }
 
-/** The first four photos or video posters of `moments`, at a size a card draws them at. */
-export function getCardPhotos(moments: Moment[]) {
-  return moments
-    .flatMap((moment) => moment.media)
-    .flatMap((item) => (item.type === 'video' ? (item.poster ?? []) : item.src))
-    .slice(0, 4)
-    .map(
-      (still) => (still.sources.find((source) => source.width >= 960) ?? still.sources.at(-1)!).src,
-    )
-}
-
-export interface PageCard {
+export interface PageCard extends OgImageOptions {
   title: string
-  description?: string | undefined
-  date?: string | undefined
-  photos?: string[] | undefined
-  /** The period whose map the card draws on, as getMapPlaceholderKey gives it. */
+  /** The map period, as getMapPlaceholderKey gives it. */
   map?: string | undefined
 }
 
@@ -120,17 +112,56 @@ export async function getPageCards(): Promise<Array<{ path: string; card: PageCa
     month: Number.parseInt(key.slice(5, 7), 10),
   })
   const cards: Array<{ path: string; card: PageCard }> = []
+  const trips = getTrips(moments).toSorted((a, b) => b.start.localeCompare(a.start))
+  const calendarCard = (year: number, month: number): PageCard => {
+    const key = `${year}-${String(month).padStart(2, '0')}`
+    const records = moments.filter((moment) => moment.dateKey.startsWith(key))
+    return {
+      title: `${year} 年 ${month} 月\n日历`,
+      description: '照片和日常小事。',
+      detail: `${new Set(records.map((moment) => moment.dateKey)).size} 天 · ${records.length} 条记录`,
+      panel: getCalendarPanel(year, month, records),
+    }
+  }
+  const mapCard = (period?: { year: number; month?: number | undefined }): PageCard => {
+    const key = getMapPlaceholderKey(period)
+    const places = getMapCardPlaces(key, moments)
+    return {
+      title: getMapText(period).heading,
+      description: '去过的地方，留下的记录。',
+      map: key,
+      detail: `${places.length} 个地点`,
+    }
+  }
+  const tripCard = (period?: { year: number; month?: number | undefined }): PageCard => {
+    const selected = trips.filter((trip) => isTripInPeriod(trip, period))
+    return {
+      title: getMapText(period, true).heading.replace(' · ', '\n'),
+      description: '沿途的风景和小事。',
+      detail: `${selected.length} 段旅程`,
+      panel: selected.length
+        ? {
+            kind: 'trips',
+            trips: selected.slice(0, 3).map((trip) => ({
+              title: trip.title,
+              detail: `${trip.start.replaceAll('-', '.')} · ${trip.dayCount} 天`,
+              photo: getTripCovers(trip)[0]?.src ?? getCardPhotos(trip.stops, 1)[0],
+            })),
+          }
+        : undefined,
+    }
+  }
 
   const latestMonth = monthKeys.at(-1)
   if (latestMonth) {
     const { month, year } = parseMonth(latestMonth)
-    cards.push({ path: '/calendar/', card: toCard(getCalendarText(year, month)) })
+    cards.push({ path: '/calendar/', card: calendarCard(year, month) })
   }
   for (const key of monthKeys) {
     const { month, year } = parseMonth(key)
     cards.push({
       path: `/calendar/${key.replace('-', '/')}/`,
-      card: toCard(getCalendarText(year, month)),
+      card: calendarCard(year, month),
     })
   }
   // A day's card leads with its first words and, where Moment cards are drawn, its photos.
@@ -146,24 +177,32 @@ export async function getPageCards(): Promise<Array<{ path: string; card: PageCa
     })
   }
 
-  cards.push({ path: '/map/', card: { ...toCard(getMapText()), map: getMapPlaceholderKey() } })
-  cards.push({ path: '/trip/', card: toCard(getMapText(undefined, true)) })
+  cards.push({ path: '/map/', card: mapCard() })
+  cards.push({ path: '/trip/', card: tripCard() })
   for (const year of getMapYears(moments)) {
     cards.push({
       path: `/map/${year}/`,
-      card: { ...toCard(getMapText({ year })), map: getMapPlaceholderKey({ year }) },
+      card: mapCard({ year }),
     })
-    cards.push({ path: `/trip/${year}/`, card: toCard(getMapText({ year }, true)) })
+    cards.push({ path: `/trip/${year}/`, card: tripCard({ year }) })
   }
   for (const key of getMapMonthKeys(moments)) {
     const period = parseMonth(key)
     cards.push({
       path: `/map/${key.replace('-', '/')}/`,
-      card: { ...toCard(getMapText(period)), map: getMapPlaceholderKey(period) },
+      card: mapCard(period),
     })
-    cards.push({ path: `/trip/${key.replace('-', '/')}/`, card: toCard(getMapText(period, true)) })
+    cards.push({ path: `/trip/${key.replace('-', '/')}/`, card: tripCard(period) })
   }
 
-  cards.push({ path: '/media/', card: toCard(MEDIA_TEXT) })
+  const media = getMediaPosters()
+  cards.push({
+    path: '/media/',
+    card: {
+      ...toCard(MEDIA_TEXT),
+      detail: `${media.count} 部作品`,
+      panel: media.photos.length ? { kind: 'posters', photos: media.photos } : undefined,
+    },
+  })
   return cards
 }

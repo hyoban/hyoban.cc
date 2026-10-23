@@ -1,10 +1,13 @@
-import { createHash } from 'node:crypto'
-import { mkdir, readFile, rm, readdir, stat, utimes, writeFile } from 'node:fs/promises'
+import { createHash, randomUUID } from 'node:crypto'
+import { mkdir, readFile, rename, rm, readdir, stat, utimes, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import satori from 'satori'
 import sharp from 'sharp'
 import { getAssetUrl } from '@/asset-url'
 import { SITE_DESCRIPTION, SITE_TITLE } from '@/consts'
+import { h, OG_COLORS as COLORS } from '@/og-layout'
+import { getPanelText, renderOgPanel, type OgPanel } from '@/og-panels'
+import { cachedOgAsset } from '@/og-cache'
 
 export const OG_IMAGE_WIDTH = 1200
 export const OG_IMAGE_HEIGHT = 630
@@ -13,10 +16,11 @@ const OG_PHOTOS_WIDTH = 660
 const OG_PHOTOS_GAP = 4
 
 // The site's light theme (see index.css).
-const COLORS = { bg: '#fdfdfc', border: '#e9e9e7', tx: '#21201c', tx2: '#63635e', tx3: '#73736c' }
 const FONT_FAMILY = 'Noto Sans SC'
 
-interface OgImageOptions {
+export interface OgImageOptions {
+  panel?: OgPanel | undefined
+  detail?: string | undefined
   /** Left out for the site's own card, which shows the avatar, name and bio large. */
   title?: string | undefined
   description?: string | undefined
@@ -28,17 +32,6 @@ interface OgImageOptions {
    * for the words, which keep to that side.
    */
   background?: Buffer | undefined
-}
-
-type Node = { type: string; props: Record<string, unknown> }
-
-function h(
-  type: string,
-  style: Record<string, unknown>,
-  children?: unknown,
-  props: Record<string, unknown> = {},
-): Node {
-  return { type, props: { ...props, style, children } }
 }
 
 // Thousands of cards are drawn in one build, each fetching its photos, fonts and emoji: a
@@ -77,16 +70,21 @@ function getAvatar() {
 // glyphs it draws. Without a browser user agent the CSS points at a TrueType file,
 // which satori can read (it cannot read woff2).
 async function loadFont(weight: 400 | 500, text: string) {
-  const query = new URLSearchParams({
-    family: `${FONT_FAMILY}:wght@${weight}`,
-    text: [...new Set(text)].join(''),
+  const characters = [...new Set(text)].sort().join('')
+  return cachedOgAsset('font.ttf', [FONT_FAMILY, weight, characters], async () => {
+    const query = new URLSearchParams({
+      family: `${FONT_FAMILY}:wght@${weight}`,
+      text: characters,
+    })
+    const css = await fetchRetrying(`https://fonts.googleapis.com/css2?${query}`).then((response) =>
+      response.text(),
+    )
+    const url = css.match(/src: url\((.+?)\) format\('(?:truetype|opentype)'\)/)?.[1]
+    if (!url) throw new Error(`No font in the Google Fonts response for weight ${weight}`)
+    const response = await fetchRetrying(url)
+    if (!response.ok) throw new Error(`Failed to fetch font: ${response.status}`)
+    return Buffer.from(await response.arrayBuffer())
   })
-  const css = await fetchRetrying(`https://fonts.googleapis.com/css2?${query}`).then((response) =>
-    response.text(),
-  )
-  const url = css.match(/src: url\((.+?)\) format\('(?:truetype|opentype)'\)/)?.[1]
-  if (!url) throw new Error(`No font in the Google Fonts response for weight ${weight}`)
-  return fetchRetrying(url).then((response) => response.arrayBuffer())
 }
 
 const emojiCache = new Map<string, Promise<string>>()
@@ -128,7 +126,7 @@ function siteCard(avatar: string) {
 
 function pageCard(
   avatar: string,
-  { title, description, date, photos, background }: OgImageOptions,
+  { title, description, date, photos, background, panel, detail }: OgImageOptions,
 ) {
   const photo = Boolean(photos?.length)
   return [
@@ -148,8 +146,9 @@ function pageCard(
           'div',
           {
             display: 'block',
+            whiteSpace: 'pre-wrap',
             // Photos and maps leave less room for the words.
-            fontSize: photo ? 40 : background ? 48 : 64,
+            fontSize: photo ? 40 : background || panel ? 48 : 64,
             fontWeight: 500,
             lineHeight: photo ? 1.5 : 1.3,
             color: COLORS.tx,
@@ -165,6 +164,7 @@ function pageCard(
             description,
           ),
         date && h('div', { fontSize: 28, color: COLORS.tx3 }, date),
+        detail && h('div', { fontSize: 32, fontWeight: 500, color: COLORS.tx }, detail),
       ].filter(Boolean),
     ),
   ]
@@ -174,12 +174,21 @@ function pageCard(
 export async function renderOgImage(options: OgImageOptions = {}) {
   const [avatar, photoPanel] = await Promise.all([
     getAvatar(),
-    options.photos?.length ? renderPhotos(options.photos) : undefined,
+    options.panel
+      ? renderOgPanel(options.panel, loadPanelImage)
+      : options.photos?.length
+        ? renderPhotos(options.photos)
+        : undefined,
   ])
   const site = !options.title
   // With the ellipsis satori ends a clamped line with, which the words may not have.
-  const boldText = site ? SITE_TITLE : `${SITE_TITLE}${options.title}…`
-  const regularText = site ? SITE_DESCRIPTION : `${options.description ?? ''}${options.date ?? ''}…`
+  const panelText = getPanelText(options.panel)
+  const boldText = site
+    ? SITE_TITLE
+    : `${SITE_TITLE}${options.title}${options.detail ?? ''}${panelText}…`
+  const regularText = site
+    ? SITE_DESCRIPTION
+    : `${options.description ?? ''}${options.date ?? ''}${panelText}…`
   const [regular, medium] = await Promise.all([
     loadFont(400, regularText || ' '),
     loadFont(500, boldText),
@@ -371,9 +380,11 @@ async function renderPhotos(urls: string[]) {
 
 /** A photo and its shape as it is shown, turned by its EXIF orientation. */
 async function fetchPhoto(url: string): Promise<Photo> {
-  const response = await fetchRetrying(url)
-  if (!response.ok) throw new Error(`Failed to fetch ${url}: ${response.status}`)
-  const data = Buffer.from(await response.arrayBuffer())
+  const data = await cachedOgAsset('photo', url, async () => {
+    const response = await fetchRetrying(url)
+    if (!response.ok) throw new Error(`Failed to fetch ${url}: ${response.status}`)
+    return Buffer.from(await response.arrayBuffer())
+  })
   const { height, width } = (await sharp(data).metadata()).autoOrient
   return { aspect: width / height, data }
 }
@@ -388,10 +399,24 @@ async function cropPhoto(photo: Photo, tile: Tile) {
   return `data:image/jpeg;base64,${jpeg.toString('base64')}`
 }
 
+async function loadPanelImage(
+  url: string,
+  width: number,
+  height: number,
+  fit: 'cover' | 'contain' = 'cover',
+) {
+  const { data } = await fetchPhoto(url)
+  const image = await sharp(data)
+    .rotate()
+    .resize(width * 2, height * 2, { fit, background: COLORS.bg })
+    .jpeg({ quality: 85 })
+    .toBuffer()
+  return `data:image/jpeg;base64,${image.toString('base64')}`
+}
+
 // Drawn cards are kept between builds in node_modules/.astro, the directory Cloudflare's
-// build cache keeps for an Astro project, named by what they draw and by this file's
-// source, so a change to either draws them again. A card that no build has used for a
-// month is removed.
+// build cache keeps for an Astro project, named by their inputs and rendering sources,
+// so a change to either draws them again. A card unused for a month is removed.
 const CARD_CACHE = join(process.cwd(), 'node_modules', '.astro', 'share-cards')
 const CARD_CACHE_MAX_AGE = 30 * 24 * 60 * 60 * 1000
 
@@ -402,10 +427,15 @@ function getCardCacheVersion() {
     const now = Date.now()
     for (const name of await readdir(CARD_CACHE)) {
       const file = join(CARD_CACHE, name)
-      if (now - (await stat(file)).mtimeMs > CARD_CACHE_MAX_AGE) await rm(file, { force: true })
+      const info = await stat(file).catch(() => undefined)
+      if (info && now - info.mtimeMs > CARD_CACHE_MAX_AGE) await rm(file, { force: true })
     }
-    const source = await readFile(join(process.cwd(), 'src', 'og-image.ts'), 'utf8')
-    return createHash('sha256').update(source).digest('hex')
+    const sources = await Promise.all(
+      ['og-image.ts', 'og-panels.ts', 'og-layout.ts', 'trip-card.ts', 'consts.ts'].map((name) =>
+        readFile(join(process.cwd(), 'src', name), 'utf8'),
+      ),
+    )
+    return createHash('sha256').update(sources.join('\n')).digest('hex')
   })()
   return cardCacheReady
 }
@@ -424,7 +454,9 @@ export async function cachedCard(name: string, inputs: unknown, render: () => Pr
     return card
   } catch {}
   const card = await render()
-  await writeFile(file, card)
+  const temporary = `${file}.${randomUUID()}.tmp`
+  await writeFile(temporary, card)
+  await rename(temporary, file)
   return card
 }
 

@@ -8,7 +8,7 @@ import {
   MAP_PLACEHOLDER_TOKEN,
   mapPlaceholderThemes,
 } from '@/map-placeholder'
-import { cachedCard } from '@/og-image'
+import { cachedOgAsset } from '@/og-cache'
 
 export async function getStaticPaths() {
   return (await getMapPlaceholderKeys()).flatMap((key) =>
@@ -30,7 +30,7 @@ export const GET: APIRoute<Props> = async ({ params, props: { key, style } }) =>
     width: MAP_PLACEHOLDER_SIZE,
   })
   // Kept between builds while the places stay where they are.
-  const image = await cachedCard(
+  const image = await cachedOgAsset(
     `map-${params.name}.webp`,
     url.replace(/access_token=[^&]*/, ''),
     async () => {

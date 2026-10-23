@@ -6,8 +6,9 @@ import {
 } from '@hyoban/trip-map'
 import sharp from 'sharp'
 import { canDrawMapPlaceholders, MAP_PLACEHOLDER_TOKEN } from '@/map-placeholder'
-import { getMappedLocationGroups, getMapYears, getMoments } from '@/moments'
-import { cachedCard, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from '@/og-image'
+import { getMappedLocationGroups, getMapYears, getMoments, type Moment } from '@/moments'
+import { OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from '@/og-image'
+import { cachedOgAsset } from '@/og-cache'
 
 // The map pages' share cards draw on a picture of the map: the period's places, every
 // one for `all`, dotted in their years' colours as the map dots them, framed on the
@@ -30,15 +31,8 @@ export async function getMapCardBackground(key: string) {
   if (!(await canDrawMapPlaceholders())) return undefined
 
   const moments = await getMoments()
-  const groups = getMappedLocationGroups(moments)
   const yearColor = createYearPalette(getMapYears(moments))
-  const inPeriod = groups.filter((group) =>
-    group.moments.some((moment) => key === 'all' || moment.dateKey.startsWith(key)),
-  )
-  // The oldest years' dots under the newest, as the map stacks them.
-  const shown = (inPeriod.length > 0 ? inPeriod : groups).toSorted(
-    (first, second) => first.firstYear - second.firstYear,
-  )
+  const shown = getMapCardPlaces(key, moments)
   if (shown.length === 0) return undefined
 
   const { maxX, maxY, minX, minY } = getPlacesExtent(shown.map((group) => group.location))
@@ -82,7 +76,7 @@ export async function getMapCardBackground(key: string) {
     .join('')
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${OG_IMAGE_WIDTH * 2}" height="${OG_IMAGE_HEIGHT * 2}">${circles}</svg>`
 
-  return cachedCard('map-card.png', [url.replace(/access_token=[^&]*/, ''), svg], async () => {
+  return cachedOgAsset('map-card.png', [url.replace(/access_token=[^&]*/, ''), svg], async () => {
     const response = await fetch(url)
     if (!response.ok) {
       throw new Error(`The map card ${key} failed: ${response.status} ${await response.text()}`)
@@ -92,4 +86,13 @@ export async function getMapCardBackground(key: string) {
       .png()
       .toBuffer()
   })
+}
+
+/** Actual places in the period; an empty period must not claim every place was visited. */
+export function getMapCardPlaces(key: string, moments: Moment[]) {
+  return getMappedLocationGroups(moments)
+    .filter((group) =>
+      group.moments.some((moment) => key === 'all' || moment.dateKey.startsWith(key)),
+    )
+    .toSorted((first, second) => first.firstYear - second.firstYear)
 }
