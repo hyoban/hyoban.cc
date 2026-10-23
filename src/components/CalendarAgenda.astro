@@ -124,6 +124,15 @@ function formatShortDate(dateKey: string) {
     padding-block: 0.25rem;
     border-block: 1px solid var(--color-border);
     background: var(--color-bg);
+    /* Over the page's sides too: a day's dot, on the line at the index's edge, reaches past
+       it. And a little way up under the month navigation, so a fraction of a pixel between
+       them, as a phone may round it, shows nothing scrolling behind. */
+    box-shadow:
+      -1rem 0 var(--color-bg),
+      1rem 0 var(--color-bg),
+      -1rem -2px var(--color-bg),
+      0 -2px var(--color-bg),
+      1rem -2px var(--color-bg);
     scrollbar-width: none;
 
     &::-webkit-scrollbar {

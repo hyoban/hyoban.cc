@@ -635,8 +635,14 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
       z-index: 10;
       order: 1;
       flex-basis: 100%;
+      /* As tall as the agenda's index takes it to be, which sticks right under it. */
+      height: 2.75rem;
       margin-top: 0.5rem;
       background: var(--color-bg);
+      /* Over the page's sides too, where the agenda's dots reach past its line. */
+      box-shadow:
+        -1rem 0 var(--color-bg),
+        1rem 0 var(--color-bg);
     }
 
     @media (width < 40rem) {
