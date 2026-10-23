@@ -2,7 +2,7 @@
 import type { YearMap } from '@/year-map'
 
 // The year's footprint: the cities in view as faint outlines, those it lit filled by how
-// much was written there, its trips' routes drawn in as the map scrolls into view, and a
+// much was written there, its trips' routes drawn in once the map is first seen, and a
 // dot at each place.
 
 interface Props {
@@ -100,14 +100,12 @@ const { map, label } = Astro.props
     stroke-width: 1.5;
   }
 
-  /* The routes draw themselves in as the map scrolls up, one trip a little after another. */
-  @supports (animation-timeline: view()) {
-    @media (prefers-reduced-motion: no-preference) {
-      .year-footprint__route {
-        animation: year-footprint-draw linear both;
-        animation-timeline: view();
-        animation-range: entry calc(20% + var(--trip) * 4%) cover calc(45% + var(--trip) * 4%);
-      }
+  /* The routes draw themselves in once the map's section is first seen, one trip a little
+     after another, like the trip cards' routes. */
+  @media (prefers-reduced-motion: no-preference) {
+    :global(.is-revealed) .year-footprint__route {
+      animation: year-footprint-draw 1400ms var(--ease-out) backwards;
+      animation-delay: calc(400ms + min(var(--trip), 6) * 150ms);
     }
   }
 
