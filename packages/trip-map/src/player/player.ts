@@ -94,9 +94,9 @@ export type TripPlayerOptions = {
 
 // Long enough to read a waypoint's name before driving on.
 const WAYPOINT_PAUSE = 1000
-const STOP_ZOOM = 9
+export const STOP_ZOOM = 9
 // The closest the camera comes in while following a short drive.
-const NEARBY_MAX_ZOOM = 13
+export const NEARBY_MAX_ZOOM = 13
 // Presenting or recording, a stop's photo card pops up this soon when the route is
 // already there; otherwise once the drive there is drawn.
 const CARD_POP = 400
@@ -1078,6 +1078,8 @@ export function createTripPlayer(options: TripPlayerOptions) {
     },
     getTitle: (id: string) => loader.getTitle(id),
     has: (id: string) => loader.has(id),
+    /** A trip's playback data, fetched once. */
+    load: (id: string) => Promise.resolve(loader.get(id) ?? loader.load(id)),
     prefetch: (id: string) => loader.prefetch(id),
     /** Re-adds the route layers after the map style changes. */
     restoreLayers: () => drawer.addLayers(),
