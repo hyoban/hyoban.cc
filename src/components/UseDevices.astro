@@ -460,11 +460,13 @@ const ROW = 1.75
     justify-content: space-between;
     gap: 0.75rem;
 
+    /* Fits a box, so a car is as wide as a phone is tall. */
     & img {
       flex-shrink: 0;
-      width: auto;
-      height: 4rem;
+      max-width: 4.5rem;
+      max-height: 4rem;
       margin-block: -0.25rem;
+      object-fit: contain;
     }
   }
 
