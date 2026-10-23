@@ -526,7 +526,16 @@ const image = pageTrip ? `/trip/${pageTrip.id}/og.jpg` : await getPageCardPath(A
   // The place drawers' Moments, and a year's, are fetched fragments, which bring no
   // script of their own.
   import '@/moment-entry-client'
-  import { getTripTitle, tripMapBrand, tripMapMessages, tripMapMusic, tripMapSiteLine } from '@/trip-map'
+  import {
+    getDocumentTitle,
+    getMapHeading,
+    getTripListHeading,
+    getTripTitle,
+    tripMapBrand,
+    tripMapMessages,
+    tripMapMusic,
+    tripMapSiteLine,
+  } from '@/trip-map'
 
   type MapClient = typeof import('@hyoban/trip-map/client')
   type TripMap = ReturnType<MapClient['createTripMap']>
@@ -620,10 +629,9 @@ const image = pageTrip ? `/trip/${pageTrip.id}/og.jpg` : await getPageCardPath(A
           map = client.createTripMap({
             brand: tripMapBrand,
             createLightboxMedia: initializeLightboxMedia,
-            documentTitle: `地图 · 日历 | ${SITE_TITLE}`,
+            documentTitle: getDocumentTitle(getMapHeading()),
             getDocumentTitle: (trip) => getTripTitle(trip.title, trip.playing),
-            getPeriodTitle: ({ month, year }) =>
-              `${month === undefined ? `${year} 年` : `${year} 年 ${month} 月`} · 地图 | ${SITE_TITLE}`,
+            getPeriodTitle: (period) => getDocumentTitle(getMapHeading(period)),
             messages: tripMapMessages,
             music: tripMapMusic,
             onError: (error) => console.warn('[trip-map]', error.message, error.cause ?? ''),
@@ -640,7 +648,7 @@ const image = pageTrip ? `/trip/${pageTrip.id}/og.jpg` : await getPageCardPath(A
             page,
             screenshotTitle: `${SITE_TITLE} 的足迹`,
             siteLine: tripMapSiteLine,
-            tripListTitle: `旅程 | ${SITE_TITLE}`,
+            tripListTitle: (period) => getDocumentTitle(getTripListHeading(period)),
             trips,
           })
         })

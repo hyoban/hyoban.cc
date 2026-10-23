@@ -19,9 +19,31 @@ export const tripMapMusic = tripVideoMusic.map(({ src, title }) => ({ src, title
 /** Where a video's viewers can find the trips, on its summary card. */
 export const tripMapSiteLine = `${new URL(SITE_URL).host}/trip/`
 
-/** A trip's page title, or its playback's, which shares the trip's card but not its words. */
+// The site's document titles are a page's name, then the site's: `<name> | Hyoban`. A name
+// says its section, `2026 年 6 月 · 地图`, only when another section's page has the same
+// one: a period names a calendar month, a map and a trip list alike. The map's client
+// script sets them too as its address changes, so they are built here, for both.
+
+type Period = { month?: number | undefined; year: number }
+
+const formatPeriod = ({ month, year }: Period) =>
+  month === undefined ? `${year} 年` : `${year} 年 ${month} 月`
+
+export function getDocumentTitle(name: string) {
+  return `${name} | ${SITE_TITLE}`
+}
+
+export function getMapHeading(period?: Period) {
+  return period ? `${formatPeriod(period)} · 地图` : '地图'
+}
+
+export function getTripListHeading(period?: Period) {
+  return period ? `${formatPeriod(period)} · 旅程` : '旅程'
+}
+
+/** A trip's page title, or its playback's, which shares the trip's name. */
 export function getTripTitle(tripTitle: string, playing = false) {
-  return `${tripTitle} · ${playing ? '旅程回放' : '旅程'} | ${SITE_TITLE}`
+  return getDocumentTitle(playing ? `${tripTitle} · 回放` : tripTitle)
 }
 
 /**
