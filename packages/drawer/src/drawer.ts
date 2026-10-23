@@ -1084,6 +1084,13 @@ export function createDrawer(options: DrawerOptions): Drawer {
       internals.get(parent)?.onNestedPresenceChange(api, true)
     }
 
+    // Styled as closed before it's shown: a <dialog>'s showModal() takes its style at
+    // once, and would take it where it rests, leaving nothing to come in from.
+    if (!wasMounted) {
+      setFlag(popup, 'data-starting-style', true)
+      setFlag(backdrop, 'data-starting-style', true)
+    }
+
     showPopup()
     swipe.reset()
     setMovement(0, 0)
@@ -1093,8 +1100,6 @@ export function createDrawer(options: DrawerOptions): Drawer {
 
     if (!wasMounted) {
       // Comes in from where it would be closed: styled so, the style taken, then let go.
-      setFlag(popup, 'data-starting-style', true)
-      setFlag(backdrop, 'data-starting-style', true)
       renderState()
       void popup.offsetHeight
 
