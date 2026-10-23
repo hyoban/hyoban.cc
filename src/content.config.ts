@@ -12,6 +12,8 @@ const posts = defineCollection({
     title: z.string(),
     link: z.string(),
     description,
+    ogImage: z.url({ protocol: /^https?$/ }).optional(),
+    ogDescription: description.optional(),
     pubDate: z.coerce.date(),
   }),
 })
@@ -22,6 +24,8 @@ const pages = defineCollection({
     title: z.string(),
     link: z.string(),
     description,
+    ogImage: z.url({ protocol: /^https?$/ }).optional(),
+    ogDescription: description.optional(),
   }),
 })
 

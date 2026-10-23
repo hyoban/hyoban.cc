@@ -1,6 +1,8 @@
 ---
 title: 2025 年终总结
 link: review-2025
+ogImage: https://image.hyoban.cc/posts/review-2025/western-sichuan-snow-mountains.jpg
+ogDescription: 换了工作，开车去了川西。
 pubDate: '2025-12-26T08:00:00.000Z'
 description: 告别 Folo、加入 Dify，也买了车、开到了川西。没挣到钱的一年，有很多舍不得的人和事。
 ---
