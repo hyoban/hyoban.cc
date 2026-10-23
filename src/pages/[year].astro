@@ -196,15 +196,21 @@ const highlights = [
 
 <Layout title={getPageTitle({ heading: String(year) })} shareTitle={`${year} 年`} description={description}>
   <SitePage>
+    {/* Hides what's still to come in until the script below reveals it; without it, all shows. */}
+    <script is:inline>document.documentElement.classList.add('year-motion')</script>
     <header class="year-hero">
       <h1 class:list={{ 'is-collage': collageStyle }} style={collageStyle}>{year}</h1>
       <dl class="year-stats">
         {
-          stats.map((stat) => (
-            <div>
+          stats.map((stat, index) => (
+            <div style={`--index: ${index}`}>
               <dt>{stat.label}</dt>
               <dd>
-                {formatNumber(stat.value)}
+                <span class="year-stats__value">
+                  {/* The final count, unseen, holds its width while the shown one rolls up to it. */}
+                  <span class="year-stats__final" aria-hidden="true">{formatNumber(stat.value)}</span>
+                  <span data-value={stat.value}>{formatNumber(stat.value)}</span>
+                </span>
                 {stat.change !== undefined && (
                   <span
                     class:list={['year-stats__change', { 'is-up': stat.change > 0 }]}
@@ -226,8 +232,8 @@ const highlights = [
           <h2 id="year-footprint">足迹</h2>
           <YearFootprint map={map} label={`${year} 年去过的 ${review.cities.lit.length} 个城市和走过的路线`} />
           <ol class="year-cities" aria-label="记下最多的城市">
-            {topCities.map((city) => (
-              <li style={`--share: ${city.count / topCities[0]!.count}`}>
+            {topCities.map((city, index) => (
+              <li style={`--share: ${city.count / topCities[0]!.count}; --index: ${index}`}>
                 <span class="year-cities__name">{city.name}</span>
                 <span class="year-cities__bar" />
                 <span class="year-cities__count">{city.count}</span>
@@ -244,10 +250,12 @@ const highlights = [
           <h2 id="year-first">第一次去</h2>
           <ol class="year-first">
             {Array.from({ length: 12 }, (_, index) => (
-              <li class:list={{ 'is-empty': !firstVisits.has(index + 1) }}>
+              <li class:list={{ 'is-empty': !firstVisits.has(index + 1) }} style={`--month: ${index}`}>
                 <span class="year-first__month">{index + 1}月</span>
-                {(firstVisits.get(index + 1) ?? []).map((visit) => (
-                  <span class="year-first__city" title={formatDay(visit.dateKey)}>{visit.name}</span>
+                {(firstVisits.get(index + 1) ?? []).map((visit, order) => (
+                  <span class="year-first__city" title={formatDay(visit.dateKey)} style={`--index: ${order}`}>
+                    {visit.name}
+                  </span>
                 ))}
               </li>
             ))}
@@ -266,8 +274,8 @@ const highlights = [
         <section class="year-section" aria-labelledby="year-trips">
           <h2 id="year-trips">出行</h2>
           <ul class="year-trips">
-            {trips.map(({ trip, glyph, cover }) => (
-              <li>
+            {trips.map(({ trip, glyph, cover }, index) => (
+              <li style={`--index: ${index}`}>
                 <a href={`/trip/${trip.id.slice(0, 4)}/${trip.id.slice(5)}/`}>
                   <span class="year-trips__art">
                     {cover && <img src={cover.thumbnail} alt="" loading="lazy" decoding="async" />}
@@ -313,8 +321,8 @@ const highlights = [
       <h2 id="year-moments">一些瞬间</h2>
       <ul class="year-highlights">
         {
-          highlights.map((highlight) => (
-            <li>
+          highlights.map((highlight, index) => (
+            <li style={`--index: ${index}`}>
               <a href={highlight.href}>
                 <span
                   class:list={['year-highlights__art', `is-${highlight.layout}`]}
@@ -353,6 +361,49 @@ const highlights = [
     }
   </SitePage>
 </Layout>
+
+<script>
+  // The page's motion, each piece once: the counts roll up from nothing as it opens, and
+  // each section rises in the first time it scrolls into view, its parts following on.
+  const DURATION = 1400
+  const easeOut = (progress: number) => 1 - (1 - progress) ** 3
+
+  function countUp(values: HTMLElement[]) {
+    const format = new Intl.NumberFormat('zh-CN')
+    const start = performance.now()
+    const frame = (now: number) => {
+      const progress = easeOut(Math.min(1, (now - start) / DURATION))
+      for (const element of values) {
+        element.textContent = format.format(Math.round(Number(element.dataset.value) * progress))
+      }
+      if (progress < 1) requestAnimationFrame(frame)
+    }
+    requestAnimationFrame(frame)
+  }
+
+  function initializeMotion() {
+    const sections = document.querySelectorAll<HTMLElement>('.year-section')
+    if (sections.length === 0) return
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      for (const section of sections) section.classList.add('is-revealed')
+      return
+    }
+    countUp([...document.querySelectorAll<HTMLElement>('.year-stats__value [data-value]')])
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue
+          entry.target.classList.add('is-revealed')
+          observer.unobserve(entry.target)
+        }
+      },
+      { rootMargin: '0px 0px -12% 0px' },
+    )
+    for (const section of sections) observer.observe(section)
+  }
+
+  document.addEventListener('astro:page-load', initializeMotion)
+</script>
 
 <style>
   .year-hero {
@@ -617,6 +668,19 @@ const highlights = [
     }
   }
 
+  .year-stats__value {
+    display: inline-grid;
+
+    & > span {
+      grid-area: 1 / 1;
+      text-align: right;
+    }
+  }
+
+  .year-stats__final {
+    visibility: hidden;
+  }
+
   .year-stats__change {
     margin-left: 0.375rem;
     color: var(--color-tx-3);
@@ -700,5 +764,88 @@ const highlights = [
     justify-content: space-between;
     margin-top: 4rem;
     font-variant-numeric: tabular-nums;
+  }
+
+  /* Motion, once each: the year rises in as the page opens and its counts follow; every
+     section rises in the first time it scrolls into view, then its parts in turn. A
+     section waits hidden only while the page's script is there to reveal it. */
+  @media (prefers-reduced-motion: no-preference) {
+    .year-hero h1 {
+      animation: year-rise 900ms var(--ease-out) backwards;
+    }
+
+    .year-stats div {
+      animation: year-rise 700ms var(--ease-out) backwards;
+      animation-delay: calc(250ms + var(--index) * 80ms);
+    }
+
+    .year-stats__change {
+      animation: year-fade 500ms var(--ease) backwards;
+      animation-delay: 1500ms;
+    }
+
+    .year-section {
+      transition:
+        opacity 700ms var(--ease-out),
+        translate 700ms var(--ease-out);
+    }
+
+    :global(.year-motion) .year-section:not(.is-revealed) {
+      opacity: 0;
+      translate: 0 2rem;
+    }
+
+    .is-revealed {
+      & .year-cities__bar {
+        animation: year-grow 900ms var(--ease-out) backwards;
+        animation-delay: calc(500ms + var(--index) * 90ms);
+      }
+
+      & .year-first li {
+        animation: year-wipe 700ms var(--ease-out) backwards;
+        animation-delay: calc(150ms + var(--month) * 60ms);
+      }
+
+      & .year-first__city {
+        animation: year-rise 500ms var(--ease-out) backwards;
+        animation-delay: calc(350ms + var(--month) * 60ms + var(--index) * 70ms);
+      }
+
+      & .year-trips li,
+      & .year-highlights li {
+        animation: year-rise 600ms var(--ease-out) backwards;
+        animation-delay: calc(150ms + var(--index) * 90ms);
+      }
+
+      & .year-trips__art path {
+        animation: year-trip-draw 1600ms var(--ease-out) backwards;
+        animation-delay: calc(500ms + var(--index) * 150ms);
+      }
+    }
+  }
+
+  @keyframes year-rise {
+    from {
+      opacity: 0;
+      translate: 0 1.25rem;
+    }
+  }
+
+  @keyframes year-fade {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @keyframes year-grow {
+    from {
+      width: 0;
+    }
+  }
+
+  @keyframes year-wipe {
+    from {
+      clip-path: inset(0 100% 0 0);
+    }
   }
 </style>
