@@ -412,10 +412,13 @@ export function createTripMap(options: TripMapOptions): TripMap {
   // A cluster opened is the viewer's own browsing, as a drag is.
   markers.onOpenCluster = moveByHand
 
+  // A phone starts on the flat map, a globe's edge wasting most of its narrow screen.
   function getDefaultSettings() {
-    return (defaultSettings ??= isSlowDevice()
-      ? { ...DEFAULT_MAP_SETTINGS, style: 'classic' }
-      : DEFAULT_MAP_SETTINGS)
+    return (defaultSettings ??= {
+      ...DEFAULT_MAP_SETTINGS,
+      ...(isSlowDevice() && { style: 'classic' }),
+      ...(isNarrow() && { projection: 'mercator' }),
+    })
   }
 
   function getSettings() {
