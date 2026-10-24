@@ -68,7 +68,9 @@ pnpm data:push data/moments/2026/10/<uid>.json     # then the records written, a
 
 `data:push` merges: it writes the Moments and trips it is given, every place they
 name and any `--place <id>`, over what the database has for them, and removes
-nothing, so what the app published meanwhile stays. It writes the deployed database;
+nothing, so what the app published meanwhile stays. It writes the deployed database, then
+has the API fetch the new legs' routes and call the site's deploy hook (`POST /v1/build`),
+since a write past the Worker starts no build of its own;
 `--local` writes the one `wrangler dev` uses and `--dry-run` only the SQL.
 
 ## Backing up and restoring

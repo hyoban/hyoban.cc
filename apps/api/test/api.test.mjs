@@ -224,3 +224,33 @@ test('tokens, methods and queries are checked', async () => {
   )
   assert.deepEqual((await get(env, '/')).body, { name: 'hyoban.cc', revision: 1 })
 })
+
+test('POST /v1/build has the site built again, with a token', async () => {
+  const { env } = setUp()
+  const realFetch = globalThis.fetch
+  const calls = []
+  const build = (headers = {}) =>
+    handle(new Request('https://api.test/v1/build', { method: 'POST', headers }), env)
+
+  globalThis.fetch = async (url, init) => {
+    calls.push([url, init?.method])
+    return new Response(null, { status: 200 })
+  }
+
+  try {
+    assert.equal((await build()).status, 401)
+
+    const withoutHook = await build({ Authorization: `Bearer ${token}` })
+
+    assert.equal(withoutHook.status, 202)
+    assert.deepEqual(await withoutHook.json(), { started: false })
+
+    env.DEPLOY_HOOK_URL = 'https://deploy.test/hook'
+    const started = await build({ Authorization: `Bearer ${token}` })
+
+    assert.deepEqual(await started.json(), { started: true })
+    assert.deepEqual(calls, [['https://deploy.test/hook', 'POST']])
+  } finally {
+    globalThis.fetch = realFetch
+  }
+})
