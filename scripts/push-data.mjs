@@ -29,6 +29,10 @@ if (pushed.routes) {
   )
 }
 
+if (pushed.built !== undefined) {
+  console.log(pushed.built ? 'The site is building again.' : "The site isn't building: see above.")
+}
+
 function parseArguments(argv) {
   const options = { moments: [], trips: [], places: [], local: false, dryRun: false }
 

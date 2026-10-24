@@ -83,10 +83,42 @@ export async function pushData(
 
   await executeSql(sql, { label: 'push', remote, dryRun })
 
-  // Written past the Worker, so the routes the new legs need are fetched now.
+  // Written past the Worker, so the routes the new legs need are fetched now, and then
+  // the site is built again with them, as the Worker's own writes have it.
   const routes = remote && !dryRun ? await fillRoutes(root) : undefined
+  const built = remote && !dryRun ? await startBuild(root) : undefined
 
-  return { moments: momentRecords.length, trips: tripRecords.length, places: placeIds.size, routes }
+  return {
+    moments: momentRecords.length,
+    trips: tripRecords.length,
+    places: placeIds.size,
+    routes,
+    built,
+  }
+}
+
+/**
+ * Has the API call the site's deploy hook (`POST /v1/build`), for a write that went past
+ * the Worker; whether a build started. A failure is only reported: the write stands.
+ */
+export async function startBuild(root) {
+  try {
+    const response = await fetch(new URL('/v1/build', apiUrl()), {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${apiToken(root)}` },
+      signal: AbortSignal.timeout(30_000),
+    })
+
+    if (!response.ok) {
+      console.warn(`The API couldn't start a build: ${response.status} ${await response.text()}`)
+      return false
+    }
+
+    return /** @type {{ started: boolean }} */ (await response.json()).started
+  } catch (caught) {
+    console.warn("The API couldn't start a build:", caught)
+    return false
+  }
 }
 
 /** Has the API fetch the routes the trips are missing, and returns what it did. */

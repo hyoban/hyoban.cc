@@ -2,6 +2,7 @@ import { fileURLToPath } from 'node:url'
 
 import { buildImportSql } from '../apps/api/src/import.ts'
 import { listJsonFiles, readJson } from '../src/data/store.ts'
+import { startBuild } from './lib/data-sync.mjs'
 import { executeSql } from './lib/d1.mjs'
 
 // pnpm data:import [--remote] [--dry-run]
@@ -38,3 +39,8 @@ await executeSql(sql, {
   dryRun: options.has('--dry-run'),
   migrate: true,
 })
+
+// Written past the Worker, so the site is asked to build again from what it now holds.
+if (options.has('--remote') && !options.has('--dry-run')) {
+  console.log((await startBuild(root)) ? 'The site is building again.' : "The site isn't building.")
+}

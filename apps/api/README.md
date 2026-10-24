@@ -62,6 +62,7 @@ then goes all at once. Writes need a token.
 | `PUT /v1/moments/:uid/media/:mediaUid/:part` | keeps an original, `image` or `video` (a live photo sends both), until its Moment publishes |
 | `HEAD` on the same path                      | 200 with the original's MD5 as its `ETag` when it is uploaded, else 404                     |
 | `POST /v1/changes`                           | applies `{ places, moments, deleted }` as one write                                         |
+| `POST /v1/build`                             | calls the site's deploy hook; `{ started }`, for a write past the Worker (`data:push`)      |
 
 A change set names the places only the app knows, by id, the Moments it wrote or changed,
 and the uids of those it deleted. A place within 200 m of a known one, or with its name,

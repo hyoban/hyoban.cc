@@ -220,6 +220,17 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
           return notAllowed('GET, POST')
       }
     }
+    case 'build': {
+      if (key !== undefined) {
+        return notFound()
+      }
+
+      // For a write that went past the Worker, `pnpm data:push` or an import: it calls
+      // no deploy hook of its own, so the site would wait for the next change to build.
+      return method === 'POST'
+        ? json({ started: await callDeployHook(env) }, 202)
+        : notAllowed('POST')
+    }
     case 'changes': {
       if (key !== undefined) {
         return notFound()
@@ -295,16 +306,26 @@ async function afterSiteChange(env: Env, changesRoutes: boolean) {
     }
   }
 
-  if (env.DEPLOY_HOOK_URL) {
-    try {
-      const response = await fetch(env.DEPLOY_HOOK_URL, { method: 'POST' })
+  await callDeployHook(env)
+}
 
-      if (!response.ok) {
-        console.error('The deploy hook answered', response.status, await response.text())
-      }
-    } catch (caught) {
-      console.error('The deploy hook failed', caught)
+/** Has the site build again, when there is a deploy hook; whether the hook took it. */
+async function callDeployHook(env: Env) {
+  if (!env.DEPLOY_HOOK_URL) {
+    return false
+  }
+
+  try {
+    const response = await fetch(env.DEPLOY_HOOK_URL, { method: 'POST' })
+
+    if (!response.ok) {
+      console.error('The deploy hook answered', response.status, await response.text())
     }
+
+    return response.ok
+  } catch (caught) {
+    console.error('The deploy hook failed', caught)
+    return false
   }
 }
 
