@@ -2,6 +2,7 @@ package cc.hyoban.moments
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import android.widget.Toast
 import cc.hyoban.moments.data.api.MomentsApi
 import cc.hyoban.moments.data.local.AmapShare
@@ -19,6 +20,7 @@ import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.store.DataStore
 import cc.hyoban.moments.data.store.MomentsRepository
+import cc.hyoban.moments.data.store.PublishProgress
 import cc.hyoban.moments.data.trips.TripRoutes
 import cc.hyoban.moments.ui.format.failureReason
 import cc.hyoban.moments.ui.viewer.MotionCache
@@ -198,12 +200,10 @@ class AppContainer(context: Context) {
     val canPublish get() = settings.apiToken.isSet
 
     /** How far publishing the changes has got, done of total, while it runs. */
-    data class Progress(val done: Int, val total: Int)
-
-    private val _publishing = MutableStateFlow<Progress?>(null)
+    private val _publishing = MutableStateFlow<PublishProgress?>(null)
 
     /** How far publishing the changes has got, while it runs, so the pages say so whenever they're opened. */
-    val publishing: StateFlow<Progress?> = _publishing.asStateFlow()
+    val publishing: StateFlow<PublishProgress?> = _publishing.asStateFlow()
 
     /**
      * Publishes every change kept on the phone, past the page that asked, and says how it
@@ -211,12 +211,13 @@ class AppContainer(context: Context) {
      */
     fun publishPending() {
         if (_publishing.value != null) return
-        _publishing.value = Progress(0, repository.pending.value.size)
+        _publishing.value = PublishProgress(0, repository.pending.value.size)
         scope.launch {
             try {
-                repository.publishPending { done, total -> _publishing.value = Progress(done, total) }
+                repository.publishPending { _publishing.value = it }
                 say(appContext.getString(R.string.message_published))
             } catch (error: Exception) {
+                Log.w("Moments", "Publishing failed", error)
                 say(appContext.getString(R.string.error_publish, failureReason(appContext, error)))
             } finally {
                 _publishing.value = null

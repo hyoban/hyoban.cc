@@ -18,6 +18,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.database.StandaloneDatabaseProvider
+import androidx.media3.datasource.FileDataSource
 import androidx.media3.datasource.cache.CacheDataSource
 import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor
 import androidx.media3.datasource.cache.SimpleCache
@@ -72,7 +73,7 @@ private fun mp4Renderers(context: Context) = RenderersFactory { handler, video, 
 }
 
 /**
- * A player of [url] through the disk cache while [active], set up by [configure] and
+ * A player of [url] through the disk cache, or of its file on the phone, while [active], set up by [configure] and
  * prepared, or null while not; it is released when the page goes or stops being shown.
  */
 @OptIn(UnstableApi::class)
@@ -84,9 +85,14 @@ fun rememberCachedPlayer(url: String, active: Boolean, configure: ExoPlayer.() -
 
     DisposableEffect(url, active) {
         if (!active) return@DisposableEffect onDispose { }
-        val source = CacheDataSource.Factory()
-            .setCache(MotionCache.of(context))
-            .setUpstreamDataSourceFactory(OkHttpDataSource.Factory(Http.client))
+        // A clip still only on the phone, a live photo not yet published, is read from its file.
+        val source = if (url.startsWith("file:")) {
+            FileDataSource.Factory()
+        } else {
+            CacheDataSource.Factory()
+                .setCache(MotionCache.of(context))
+                .setUpstreamDataSourceFactory(OkHttpDataSource.Factory(Http.client))
+        }
         val made = ExoPlayer.Builder(context, mp4Renderers(context), ProgressiveMediaSource.Factory(source, MP4_ONLY))
             // Headphones pulled out stop it, rather than letting it go on aloud.
             .setHandleAudioBecomingNoisy(true)

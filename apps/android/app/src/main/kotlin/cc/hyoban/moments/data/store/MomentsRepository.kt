@@ -1,8 +1,12 @@
 package cc.hyoban.moments.data.store
 
+import cc.hyoban.moments.data.HttpException
 import cc.hyoban.moments.data.api.ChangeSet
 import cc.hyoban.moments.data.api.MomentsSource
 import cc.hyoban.moments.data.api.MomentsWriter
+import cc.hyoban.moments.data.api.NoTokenException
+import cc.hyoban.moments.data.api.UploadPart
+import cc.hyoban.moments.data.spec.MediaType
 import cc.hyoban.moments.data.spec.MomentMedia
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
@@ -12,6 +16,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,6 +26,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.IOException
 import java.net.URI
 import java.security.MessageDigest
 
@@ -366,7 +372,7 @@ class MomentsRepository(
 
     /** The app's own copies of [media], gone from its store. */
     private fun deleteCopies(local: DataStore, media: List<MomentMedia>) {
-        media.mapNotNull { it.local?.takeIf { copy -> copy.copied }?.uri }
+        media.flatMap { it.local?.takeIf { copy -> copy.copied }?.let { copy -> listOfNotNull(copy.uri, copy.videoUri) }.orEmpty() }
             .mapNotNull { runCatching { File(URI(it)) }.getOrNull() }
             .filter { it.startsWith(local.root) }
             .forEach { it.delete() }
@@ -390,12 +396,12 @@ class MomentsRepository(
      * the Moments written on the phone and those changed, each published, the places only
      * the phone knows that they are at, and the deletions. One that fails stops it, all of
      * it kept for the next time, and its error is thrown; [onProgress] hears how many steps
-     * are done of how many. What comes back is the site's: the Moments leave the phone,
+     * are done of how many, and how many of the originals' bytes have gone. What comes back is the site's: the Moments leave the phone,
      * their copied photos with them, and the places sent are the API's from then on, for
      * the phone's other Moments too. The network is outside the lock, so a sync isn't held
      * up by the photos.
      */
-    suspend fun publishPending(onProgress: (done: Int, total: Int) -> Unit = { _, _ -> }) {
+    suspend fun publishPending(onProgress: (PublishProgress) -> Unit = {}) {
         val writer = checkNotNull(writer) { "No API to write to" }
         val (moments, known, own, deletions, kinds) = lock.withLock {
             // A change being taken back isn't published, whatever becomes of it.
@@ -405,27 +411,62 @@ class MomentsRepository(
         // The site's places with a changed kind go under their own ids, which the API takes the kind of.
         val places = moments.flatMap { it.places }.distinct().filter { it !in known }
             .associateWith { id -> own[id] ?: error("Unknown place $id") } + kinds
-        val photos = moments.flatMap { moment -> moment.media.filter { it.published == null }.map { moment.uid to it } }
-        val total = photos.size + 1
-        var done = 0
-        onProgress(done, total)
-        val applied = withContext(io) {
-            val files = photos.map { (uid, media) ->
-                val file = media.local?.uri?.let { runCatching { File(URI(it)) }.getOrNull() }?.takeIf(File::isFile)
-                    ?: error("The photo ${media.uid} isn't on the phone")
-                Triple(uid, media, file)
+        // A live photo sends its still and its motion, each an upload of its own.
+        val originals = moments.flatMap { moment ->
+            moment.media.filter { it.published == null }.flatMap { media ->
+                listOfNotNull(
+                    Triple(moment.uid, media, UploadPart.IMAGE),
+                    Triple(moment.uid, media, UploadPart.VIDEO).takeIf { media.type == MediaType.LIVE_PHOTO },
+                )
             }
+        }
+        val total = originals.size + 1
+        val applied = withContext(io) {
+            val files = originals.map { (uid, media, part) ->
+                val uri = if (part == UploadPart.VIDEO) media.local?.videoUri else media.local?.uri
+                val file = uri?.let { runCatching { File(URI(it)) }.getOrNull() }?.takeIf(File::isFile)
+                    ?: error("The ${part.path} of ${media.uid} isn't on the phone")
+                Triple(uid to part, media, file)
+            }
+            val size = files.sumOf { (_, _, file) -> file.length() }
+            var done = 0
+            var sent = 0L
+            val progress = Any()
+            // Said as each stretch of bytes goes, so a big photo shows it is on its way.
+            fun report(steps: Int = 0, bytes: Long = 0) = synchronized(progress) {
+                done += steps
+                sent = minOf(size, sent + bytes)
+                onProgress(PublishProgress(done, total, sent, size))
+            }
+            report()
             val uploading = Semaphore(UPLOADS_AT_ONCE)
-            val progress = Mutex()
             coroutineScope {
-                files.map { (uid, media, file) ->
+                files.map { (key, media, file) ->
+                    val (uid, part) = key
                     async {
+                        var counted = 0L
                         uploading.withPermit {
-                            if (writer.uploadedImage(uid, media.uid) != md5(file)) {
-                                writer.uploadImage(uid, media.uid, file, contentTypeOf(file))
+                            // A link that drops now and then, as a proxy's does, gets a few tries
+                            // before the whole publish gives up; what the API answers doesn't.
+                            for (attempt in 1..UPLOAD_TRIES) {
+                                try {
+                                    if (writer.uploaded(uid, media.uid, part) != md5(file)) {
+                                        writer.upload(uid, media.uid, part, file, contentTypeOf(file)) { bytes ->
+                                            counted += bytes
+                                            report(bytes = bytes)
+                                        }
+                                    }
+                                    break
+                                } catch (error: IOException) {
+                                    if (error is HttpException || error is NoTokenException || attempt == UPLOAD_TRIES) throw error
+                                    report(bytes = -counted)
+                                    counted = 0
+                                    delay(RETRY_WAIT_MS shl (attempt - 1))
+                                }
                             }
                         }
-                        progress.withLock { onProgress(++done, total) }
+                        // One the API had already, or a retry that sent it again, counts as all of it once.
+                        report(steps = 1, bytes = file.length() - counted)
                     }
                 }.awaitAll()
             }
@@ -459,7 +500,7 @@ class MomentsRepository(
                 publish()
             }
         }
-        onProgress(total, total)
+        onProgress(PublishProgress(total, total))
     }
 
     private data class Snapshot(
@@ -560,7 +601,8 @@ class MomentsRepository(
         "heif" -> "image/heif"
         "avif" -> "image/avif"
         "gif" -> "image/gif"
-        else -> error("The API doesn't take .${file.extension} photos")
+        "mp4" -> "video/mp4"
+        else -> error("The API doesn't take .${file.extension} files")
     }
 
     private val newestFirst = compareByDescending<MomentRecord> { it.occurredAt }.thenByDescending { it.order ?: Int.MAX_VALUE }.thenByDescending { it.uid }
@@ -569,6 +611,15 @@ class MomentsRepository(
 
 /** How many photos go up at once: enough to fill the connection, few enough to keep memory and the radio calm. */
 private const val UPLOADS_AT_ONCE = 3
+private const val UPLOAD_TRIES = 3
+/** The wait before an upload's second try, doubled before each after. */
+private const val RETRY_WAIT_MS = 2_000L
+
+/**
+ * How far publishing has got: [done] of its [total] steps, an upload for each original and
+ * the write after them, and [sent] of the originals' [size] bytes.
+ */
+data class PublishProgress(val done: Int, val total: Int, val sent: Long = 0, val size: Long = 0)
 
 /** What publishing would change on the site: the Moments written on the phone, those changed, those deleted. */
 data class PendingChanges(

@@ -22,8 +22,8 @@ import java.time.ZoneId
  */
 data class PhotoInfo(val width: Int?, val height: Int?, val takenAt: OffsetDateTime?, val fix: Fix?, val savedAt: OffsetDateTime? = null)
 
-/** A photo copied into the app's own store, and the SHA-256 of its bytes. */
-data class CopiedPhoto(val file: File, val sha256: String)
+/** A photo copied into the app's own store, the SHA-256 of its bytes, and a motion photo's clip. */
+data class CopiedPhoto(val file: File, val sha256: String, val video: File? = null)
 
 /** Photos picked for a Moment written on the phone: read for their time and place, and copied in. */
 object Photos {
@@ -70,25 +70,32 @@ object Photos {
         return Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).toOffsetDateTime()
     }
 
-    /** Copies [uri] into [directory] as `<name>.<its extension>`, as it is, its EXIF and all. */
-    suspend fun copy(context: Context, uri: Uri, directory: File, name: String): CopiedPhoto = withContext(Dispatchers.IO) {
+    /**
+     * Copies [uri] into [directory] as `<name>.<its extension>`, as it is, its EXIF and all;
+     * with [splitMotion] a motion photo is split, its still there and its clip beside it as
+     * `<name>.mp4`.
+     */
+    suspend fun copy(context: Context, uri: Uri, directory: File, name: String, splitMotion: Boolean = false): CopiedPhoto = withContext(Dispatchers.IO) {
         val resolver = context.contentResolver
         val extension = resolver.getType(uri)?.let { MimeTypeMap.getSingleton().getExtensionFromMimeType(it) } ?: "jpg"
         directory.mkdirs()
         val file = File(directory, "$name.$extension")
-        val digest = MessageDigest.getInstance("SHA-256")
         val input = resolver.openInputStream(uri) ?: error("Can't read $uri")
-        input.use { source ->
-            file.outputStream().use { sink ->
-                val buffer = ByteArray(64 * 1024)
-                while (true) {
-                    val read = source.read(buffer)
-                    if (read < 0) break
-                    digest.update(buffer, 0, read)
-                    sink.write(buffer, 0, read)
-                }
+        input.use { source -> file.outputStream().use { source.copyTo(it, 64 * 1024) } }
+        val video = File(directory, "$name.mp4").takeIf { splitMotion && MotionPhotos.split(file, it) }
+        CopiedPhoto(file, sha256(file), video)
+    }
+
+    private fun sha256(file: File): String {
+        val digest = MessageDigest.getInstance("SHA-256")
+        file.inputStream().use { input ->
+            val buffer = ByteArray(64 * 1024)
+            while (true) {
+                val read = input.read(buffer)
+                if (read < 0) break
+                digest.update(buffer, 0, read)
             }
         }
-        CopiedPhoto(file, digest.digest().joinToString("") { "%02x".format(it) })
+        return digest.digest().joinToString("") { "%02x".format(it) }
     }
 }

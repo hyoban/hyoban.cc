@@ -79,7 +79,9 @@ unless its share sheet is told to take it out (隐私和格式选项), so the Mo
 comes from them as from photos picked in the app.
 Such a Moment stays on the phone, under the app's `local/`
 directory in the spec's layout, its photos copied in whole so it keeps them whatever
-becomes of the gallery's, and its new places with ids of their own (`p-<ulid>`); no sync
+becomes of the gallery's (a motion photo, its clip appended to the JPEG as the camera
+writes it, is split there into a live photo's still and video, which its page plays from
+the phone until it is published), and its new places with ids of their own (`p-<ulid>`); no sync
 or change of API touches it. It is shown among the site's, marked 仅本机 (on this phone),
 and can be changed or deleted from its page.
 
@@ -89,7 +91,7 @@ reaches the site as it is saved: the phone's new Moments, the site's changed (ma
 改动未发布) and those deleted wait on the phone, past a restart, until they are
 published together. The ☁ in the Moments tab's header, with how many there are,
 opens 发布更改, which lists them, the changed with what changed, and takes back a change
-or a deletion; its 全部发布到网站 uploads the originals of the new photos, one by one,
+or a deletion; its 全部发布到网站 uploads the originals of the new photos, a live photo's still and video each, a few at a time,
 then sends all the rest as one `POST /v1/changes`, which the API takes whole or not at
 all: the places only the phone knows, named by the API from their pinyin, the Moments,
 each published, and the deletions. What is published leaves the phone's store for the

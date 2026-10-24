@@ -5,6 +5,7 @@ import cc.hyoban.moments.data.api.ChangeSet
 import cc.hyoban.moments.data.api.Changes
 import cc.hyoban.moments.data.api.MomentsSource
 import cc.hyoban.moments.data.api.MomentsWriter
+import cc.hyoban.moments.data.api.UploadPart
 import cc.hyoban.moments.data.spec.LocalMedia
 import cc.hyoban.moments.data.spec.MediaType
 import cc.hyoban.moments.data.spec.MomentMedia
@@ -14,6 +15,7 @@ import cc.hyoban.moments.data.spec.PublishedMedia
 import cc.hyoban.moments.data.spec.PublishedMoment
 import cc.hyoban.moments.data.store.DataStore
 import cc.hyoban.moments.data.store.MomentsRepository
+import cc.hyoban.moments.data.store.PublishProgress
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import java.io.File
@@ -61,17 +63,28 @@ class MomentsRepositoryTest {
     private class FakeWriter : MomentsWriter {
         val calls = mutableListOf<String>()
         val uploads = mutableMapOf<String, String>()
+        /** How many uploads to drop, as a proxy closes a connection, before they go through. */
+        var drops = 0
         /** The revision the next write says it took. */
         var revision: Long? = null
 
-        override suspend fun uploadedImage(momentUid: String, mediaUid: String): String? =
-            uploads[mediaUid]?.let { text ->
+        /** A photo's original by its uid, a live photo's motion as `<uid>/video`. */
+        private fun key(mediaUid: String, part: UploadPart) = if (part == UploadPart.IMAGE) mediaUid else "$mediaUid/${part.path}"
+
+        override suspend fun uploaded(momentUid: String, mediaUid: String, part: UploadPart): String? =
+            uploads[key(mediaUid, part)]?.let { text ->
                 java.security.MessageDigest.getInstance("MD5").digest(text.toByteArray()).joinToString("") { "%02x".format(it) }
             }
 
-        override suspend fun uploadImage(momentUid: String, mediaUid: String, file: File, contentType: String) {
-            calls += "upload $mediaUid $contentType"
-            uploads[mediaUid] = file.readText()
+        override suspend fun upload(momentUid: String, mediaUid: String, part: UploadPart, file: File, contentType: String, onSent: (Long) -> Unit) {
+            calls += "upload ${key(mediaUid, part)} $contentType"
+            if (drops > 0) {
+                drops--
+                onSent(2)
+                throw java.io.IOException("connection closed")
+            }
+            uploads[key(mediaUid, part)] = file.readText()
+            onSent(file.length())
         }
 
         override suspend fun applyChanges(changes: ChangeSet): AppliedChanges {
@@ -293,8 +306,8 @@ class MomentsRepositoryTest {
         restarted.load()
         assertEquals(4, restarted.pending.value.size, "the changes outlast a restart")
 
-        val progress = mutableListOf<Pair<Int, Int>>()
-        restarted.publishPending { done, total -> progress += done to total }
+        val progress = mutableListOf<PublishProgress>()
+        restarted.publishPending { progress += it }
 
         assertEquals(
             listOf(
@@ -304,7 +317,11 @@ class MomentsRepositoryTest {
             writer.calls,
             "the photo first, then everything else in one write, oldest first, the phone's place with it",
         )
-        assertEquals(listOf(0 to 2, 1 to 2, 2 to 2), progress)
+        assertEquals(
+            listOf(PublishProgress(0, 2, 0, 5), PublishProgress(0, 2, 5, 5), PublishProgress(1, 2, 5, 5), PublishProgress(2, 2)),
+            progress,
+            "the photo's bytes as they go, then each step",
+        )
         assertEquals("photo", writer.uploads["P"])
         assertEquals(0, restarted.pending.value.size)
         assertTrue(!restarted.isLocal("L"), "it leaves the phone's")
@@ -429,6 +446,51 @@ class MomentsRepositoryTest {
         repository.publishPending()
 
         assertEquals(listOf("upload R image/jpeg"), writer.calls.filter { it.startsWith("upload") })
+    }
+
+    @Test
+    fun `an upload whose connection drops is tried again, its bytes counted once`() = runBlocking {
+        val writer = FakeWriter().apply { drops = 1 }
+        val repository = MomentsRepository(DataStore(directory), api, Dispatchers.Unconfined, local = DataStore(localDirectory), writer = writer)
+        repository.load()
+        val copy = File(localDirectory, "media/D.jpg").apply { parentFile.mkdirs(); writeText("photo") }
+        repository.addLocal(
+            moment("L", "2026-10-02", published = false).copy(
+                media = listOf(MomentMedia("D", MediaType.IMAGE, width = 4, height = 3, local = LocalMedia(copy.toURI().toString(), copied = true))),
+            ),
+        )
+        val progress = mutableListOf<PublishProgress>()
+
+        repository.publishPending { progress += it }
+
+        assertEquals(listOf("upload D image/jpeg", "upload D image/jpeg"), writer.calls.filter { it.startsWith("upload") })
+        assertEquals("photo", writer.uploads["D"])
+        assertEquals(listOf(0L, 2L, 0L, 5L, 5L, 0L), progress.map { it.sent }, "the dropped try's bytes are taken back")
+    }
+
+    @Test
+    fun `a live photo sends its still and its motion, and both copies go once published`() = runBlocking {
+        val writer = FakeWriter()
+        val repository = MomentsRepository(DataStore(directory), api, Dispatchers.Unconfined, local = DataStore(localDirectory), writer = writer)
+        repository.load()
+        val still = File(localDirectory, "media/V.jpg").apply { parentFile.mkdirs(); writeText("still") }
+        val motion = File(localDirectory, "media/V.mp4").apply { writeText("motion") }
+        repository.addLocal(
+            moment("L", "2026-10-02", published = false).copy(
+                media = listOf(
+                    MomentMedia(
+                        "V", MediaType.LIVE_PHOTO, width = 3, height = 4,
+                        local = LocalMedia(still.toURI().toString(), videoUri = motion.toURI().toString(), copied = true),
+                    ),
+                ),
+            ),
+        )
+
+        repository.publishPending()
+
+        assertEquals(listOf("upload V image/jpeg", "upload V/video video/mp4"), writer.calls.filter { it.startsWith("upload") })
+        assertEquals("motion", writer.uploads["V/video"])
+        assertTrue(!still.exists() && !motion.exists(), "the copies go with the Moment")
     }
 
     @Test

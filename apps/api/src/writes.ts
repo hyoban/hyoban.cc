@@ -186,10 +186,15 @@ export async function applyChanges(
   let changesRoutes = deleted.some((uid) => tripView(live(stored.get(uid))) !== null)
   let revision: number | undefined
 
+  // Every copy holds two connections, its read and its write, and a Worker has six.
+  const copying = limiter(COPIES_AT_ONCE)
+
   try {
     uploads = (
       await settle(
-        records.map((record) => publishMedia(context.bucket, record, copied, missingUploads)),
+        records.map((record) =>
+          publishMedia(context.bucket, record, copied, missingUploads, copying),
+        ),
       )
     ).flat()
 
@@ -389,16 +394,19 @@ export function readUpload(
  * was uploaded to the Moment's directory, named by its uid (`getMediaKey`), and gives the item its
  * published block. Returns the uploads, to delete once the record is saved; each copy's
  * key goes in `copied` as soon as it is made, to remove if the write fails, and each
- * original not uploaded goes in `missing`, so the write can name all of them.
+ * original not uploaded goes in `missing`, so the write can name all of them. The copies
+ * go through `copying`, which keeps how many run at once within the Worker's connections.
  */
 async function publishMedia(
   bucket: Bucket,
   record: MomentRecord,
   copied: string[],
   missing: string[],
+  copying: Limiter,
 ) {
   const uploads: string[] = []
-  const copy = async (item: MomentMedia, part: UploadPart) => {
+  const copy = (item: MomentMedia, part: UploadPart) => copying(() => copyOne(item, part))
+  const copyOne = async (item: MomentMedia, part: UploadPart) => {
     const upload = getUploadKey(record.uid, item.uid, part)
     const source = await bucket.get(upload)
 
@@ -549,6 +557,37 @@ export async function commit({ db, now }: WriteContext, statements: Statement[])
  * Every promise's result, as `Promise.all`, but only once all of them have settled: a
  * copy that fails then leaves none still going that its cleanup would miss.
  */
+/**
+ * How many originals a write copies at once. A Worker keeps six connections open at a time
+ * and holds back the rest; a copy waiting on its write while its read stays open loses the
+ * read, so eight copies at once, a Moment of four live photos, fail with "Network
+ * connection lost".
+ */
+const COPIES_AT_ONCE = 2
+
+type Limiter = <T>(task: () => Promise<T>) => Promise<T>
+
+/** Runs the tasks given it, at most `count` of them at once, the rest in the order given. */
+function limiter(count: number): Limiter {
+  let running = 0
+  const waiting: (() => void)[] = []
+
+  return async (task) => {
+    while (running >= count) {
+      await new Promise<void>((resolve) => waiting.push(resolve))
+    }
+
+    running++
+
+    try {
+      return await task()
+    } finally {
+      running--
+      waiting.shift()?.()
+    }
+  }
+}
+
 async function settle<const T extends readonly Promise<unknown>[]>(
   promises: T,
 ): Promise<{ -readonly [K in keyof T]: Awaited<T[K]> }> {

@@ -319,7 +319,8 @@
     <string name="section_changed_places">改过的地点</string>
     <string name="section_removed">要删除的</string>
     <string name="action_revert">放弃更改</string>
-    <string name="message_publishing_progress">正在发布 %1$d / %2$d</string>
+    <string name="message_uploading_progress">正在上传 %1$s / %2$s MB</string>
+    <string name="message_publishing">正在发布</string>
     <string name="note_publish_all">发布后所有人都能看到：新写的时刻和照片会上传，改过的会更新，要删除的会从网站上删掉。中途失败的话，没发出去的会留在这里。</string>
     <string name="note_publish_needs_token">在设置里填上 API 令牌后才能发布</string>
     <string name="change_text">文字</string>

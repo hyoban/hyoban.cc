@@ -36,6 +36,10 @@ say stay out.
 - When a spec change drops or renames a field the app requires (as `published.id` went
   when Moments came to be named by uid alone), install the new app on the phone before
   pushing: a push deploys the API, and the app on the phone would stop syncing.
+- A publish that fails says why only in a toast that soon goes; the exception is in
+  `adb logcat -s Moments:W`, and the API's side in `npx wrangler tail hyoban-cc-api`
+  (read-only) from `apps/api`. The phone's traffic goes through FlClash, whose link
+  drops and stalls now and then, so uploads have to ride that out.
 - Before committing run what CI runs (`.github/workflows/verify.yml`):
   `./gradlew :app:testDebugUnitTest :app:assembleDebug`.
 

@@ -17,8 +17,9 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
-import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
+import okio.BufferedSink
+import okio.source
 import java.io.File
 import java.io.IOException
 
@@ -62,13 +63,19 @@ data class AppliedChanges(
     val revision: Long? = null,
 )
 
+/** An original of a media item: a photo, a live photo's still, or a video or a live photo's motion. */
+enum class UploadPart(val path: String) { IMAGE("image"), VIDEO("video") }
+
 /** What the app writes the records to, with the owner's token; the tests stand in for the API with their own. */
 interface MomentsWriter {
-    /** The MD5 of the original kept for media item [mediaUid] of Moment [momentUid], or null when none is. */
-    suspend fun uploadedImage(momentUid: String, mediaUid: String): String?
+    /** The MD5 of the original [part] kept for media item [mediaUid] of Moment [momentUid], or null when none is. */
+    suspend fun uploaded(momentUid: String, mediaUid: String, part: UploadPart): String?
 
-    /** Keeps a photo's original for media item [mediaUid] of Moment [momentUid], until it publishes. */
-    suspend fun uploadImage(momentUid: String, mediaUid: String, file: File, contentType: String)
+    /**
+     * Keeps an original [part] of media item [mediaUid] of Moment [momentUid], until it
+     * publishes, telling [onSent] of each stretch of its bytes as they go out.
+     */
+    suspend fun upload(momentUid: String, mediaUid: String, part: UploadPart, file: File, contentType: String, onSent: (Long) -> Unit = {})
 
     /**
      * Applies all of [changes] in one write, each Moment published, its originals uploaded
@@ -102,8 +109,8 @@ class MomentsApi(
     override suspend fun changes(since: Long, cursor: String?): Changes =
         get(if (cursor != null) "/v1/changes?cursor=$cursor&limit=500" else "/v1/changes?since=$since&limit=500", Changes.serializer())
 
-    override suspend fun uploadedImage(momentUid: String, mediaUid: String): String? = withContext(io) {
-        val path = "/v1/moments/$momentUid/media/$mediaUid/image"
+    override suspend fun uploaded(momentUid: String, mediaUid: String, part: UploadPart): String? = withContext(io) {
+        val path = "/v1/moments/$momentUid/media/$mediaUid/${part.path}"
         client.newCall(authorized(path).head().build()).execute().use { response ->
             when {
                 response.code == 404 -> null
@@ -113,12 +120,21 @@ class MomentsApi(
         }
     }
 
-    override suspend fun uploadImage(momentUid: String, mediaUid: String, file: File, contentType: String) {
-        write("PUT", "/v1/moments/$momentUid/media/$mediaUid/image", file.asRequestBody(contentType.toMediaType()))
+    override suspend fun upload(momentUid: String, mediaUid: String, part: UploadPart, file: File, contentType: String, onSent: (Long) -> Unit) {
+        write("PUT", "/v1/moments/$momentUid/media/$mediaUid/${part.path}", CountedFileBody(file, contentType.toMediaType(), onSent), uploads)
     }
 
+    /**
+     * The client for originals, with room to wait: on a slow link, a proxy's in particular,
+     * a write can stall well past OkHttp's 10 seconds and still get through.
+     */
+    private val uploads by lazy { client.newBuilder().writeTimeout(UPLOAD_TIMEOUT).readTimeout(UPLOAD_TIMEOUT).build() }
+
+    /** The client for the change set, whose answer waits on the API copying every original into place. */
+    private val publishing by lazy { client.newBuilder().readTimeout(PUBLISH_TIMEOUT).build() }
+
     override suspend fun applyChanges(changes: ChangeSet): AppliedChanges =
-        decode(write("POST", "/v1/changes", encode(ChangeSet.serializer(), changes)), AppliedChanges.serializer())
+        decode(write("POST", "/v1/changes", encode(ChangeSet.serializer(), changes), publishing), AppliedChanges.serializer())
 
     private suspend fun <T> get(path: String, serializer: KSerializer<T>): T =
         decode(Http.getText(baseUrl() + path, client, io), serializer)
@@ -129,7 +145,7 @@ class MomentsApi(
     private fun <T> decode(text: String, serializer: KSerializer<T>): T = Spec.json.decodeFromString(serializer, text)
 
     /** A write with the token; its answer's body, or an [ApiException] with what the API said. */
-    private suspend fun write(method: String, path: String, body: RequestBody): String = withContext(io) {
+    private suspend fun write(method: String, path: String, body: RequestBody, client: OkHttpClient = this.client): String = withContext(io) {
         val request = authorized(path).method(method, body).header("Accept", "application/json").build()
         client.newCall(request).execute().use { response ->
             val text = response.body?.string().orEmpty()
@@ -151,5 +167,37 @@ class MomentsApi(
 
     private companion object {
         val JSON = "application/json".toMediaType()
+    }
+}
+
+private val UPLOAD_TIMEOUT = java.time.Duration.ofSeconds(60)
+private val PUBLISH_TIMEOUT = java.time.Duration.ofMinutes(3)
+
+/** A file sent as it is, telling [onSent] of every [STRETCH] or so of it written to the network. */
+private class CountedFileBody(private val file: File, private val type: okhttp3.MediaType, private val onSent: (Long) -> Unit) : RequestBody() {
+    override fun contentType() = type
+
+    override fun contentLength() = file.length()
+
+    override fun writeTo(sink: BufferedSink) {
+        file.source().use { source ->
+            var unsaid = 0L
+            while (true) {
+                val read = source.read(sink.buffer, SEGMENT)
+                if (read < 0) break
+                sink.emit()
+                unsaid += read
+                if (unsaid >= STRETCH) {
+                    onSent(unsaid)
+                    unsaid = 0
+                }
+            }
+            if (unsaid > 0) onSent(unsaid)
+        }
+    }
+
+    private companion object {
+        const val SEGMENT = 64L * 1024
+        const val STRETCH = 256L * 1024
     }
 }

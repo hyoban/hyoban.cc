@@ -91,6 +91,7 @@ import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.spec.PlaceKind
 import cc.hyoban.moments.data.store.PlaceChange
+import cc.hyoban.moments.data.store.PublishProgress
 import cc.hyoban.moments.ui.compose.label
 import cc.hyoban.moments.data.spec.showcase
 import cc.hyoban.moments.ui.format.foodLine
@@ -188,7 +189,7 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
                         ) {
                             // Publishing takes a while and knows how far it has got, so a determinate
                             // indicator, as Material 3 has for a wait of more than a few seconds.
-                            PublishProgress(publishing, Modifier.fillMaxWidth().padding(vertical = Space.xs).testTag("publish_progress"))
+                            PublishingIndicator(publishing, Modifier.fillMaxWidth().padding(vertical = Space.xs).testTag("publish_progress"))
                             Text(
                                 stringResource(if (container.canPublish) R.string.note_publish_all else R.string.note_publish_needs_token),
                                 style = MaterialTheme.typography.bodySmall,
@@ -229,7 +230,7 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
                 text = {
                     Text(
                         if (progress != null) {
-                            stringResource(R.string.message_publishing_progress, progress.done, progress.total)
+                            publishingLabel(progress)
                         } else {
                             stringResource(R.string.label_publish_all)
                         },
@@ -264,7 +265,7 @@ private fun <T> LazyListScope.section(title: Int, items: List<T>, key: (T) -> An
 /** How far publishing has got, growing in under what it says while it runs and moving smoothly on as each change goes. */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun PublishProgress(progress: AppContainer.Progress?, modifier: Modifier = Modifier, color: Color = WavyProgressIndicatorDefaults.indicatorColor) {
+private fun PublishingIndicator(progress: PublishProgress?, modifier: Modifier = Modifier, color: Color = WavyProgressIndicatorDefaults.indicatorColor) {
     val motion = MaterialTheme.motionScheme
     var shown by remember { mutableStateOf(progress) }
     if (progress != null) shown = progress
@@ -301,14 +302,14 @@ fun PendingChangesRow(container: AppContainer, onClick: () -> Unit, modifier: Mo
                 Column(verticalArrangement = Arrangement.spacedBy(Space.xs)) {
                     Text(
                         if (progress != null) {
-                            stringResource(R.string.message_publishing_progress, progress.done, progress.total)
+                            publishingLabel(progress)
                         } else {
                             pluralStringResource(R.plurals.count_changes, pending.size, pending.size)
                         },
                     )
                     // The same linear indicator as the changes' page, as Material 3 has one
                     // process shown one way throughout.
-                    PublishProgress(progress, Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.onSecondaryContainer)
+                    PublishingIndicator(progress, Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.onSecondaryContainer)
                 }
             },
             leadingContent = {
@@ -362,8 +363,29 @@ private fun SwipeToRevert(onRevert: (() -> Unit)?, content: @Composable () -> Un
 private val FAB_CLEARANCE = 96.dp
 
 /** How much of the changes are published, for a determinate indicator. */
-private fun publishedFraction(progress: AppContainer.Progress): Float =
-    if (progress.total == 0) 0f else progress.done.toFloat() / progress.total
+/**
+ * How far publishing has got, by the originals' bytes while they upload, which is most of
+ * the time it takes, and the write after them the last bit.
+ */
+private fun publishedFraction(progress: PublishProgress): Float = when {
+    progress.size > 0 -> progress.sent.toFloat() / progress.size * UPLOADED_SHARE + if (progress.done == progress.total) 1 - UPLOADED_SHARE else 0f
+    progress.total == 0 -> 0f
+    else -> progress.done.toFloat() / progress.total
+}
+
+/** What publishing is doing: how much of the originals has gone while they upload, then the write. */
+@Composable
+private fun publishingLabel(progress: PublishProgress): String {
+    return if (progress.size > 0 && progress.sent < progress.size) {
+        // In MB, the unit once, so it fits the button on one line.
+        stringResource(R.string.message_uploading_progress, "%.1f".format(progress.sent / 1e6), "%.0f".format(progress.size / 1e6))
+    } else {
+        stringResource(R.string.message_publishing)
+    }
+}
+
+/** How much of the bar the uploads fill; the write after them is the rest. */
+private const val UPLOADED_SHARE = 0.95f
 
 /** Which Moment a change is to, as the site has it: its first photo, its first words, when and where. */
 private class Identity(val moment: MomentRecord, val places: Map<String, Place>, val urls: MediaUrls)

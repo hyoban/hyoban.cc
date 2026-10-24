@@ -270,6 +270,41 @@ test('a published Moment keeps its blocks, and publishes new media as it changes
   )
 })
 
+test('a Moment of four live photos copies its eight originals two at a time', async () => {
+  const { bucket, env } = setUpWithData()
+  const draft = {
+    ...dockDraft(),
+    media: [
+      '01M3VDBHC1HW3W1Z58ARMSH201',
+      '01M3VDBHC1HW3W1Z58ARMSH202',
+      '01M3VDBHC1HW3W1Z58ARMSH203',
+      '01M3VDBHC1HW3W1Z58ARMSH204',
+    ].map((uid) => ({ uid, type: 'live-photo', alt: '', width: 3024, height: 4032 })),
+  }
+
+  for (const item of draft.media) {
+    await upload(env, draft.uid, item.uid, 'image', photo, 'image/jpeg')
+    await upload(env, draft.uid, item.uid, 'video', motion, 'video/mp4')
+  }
+
+  // As R2 does, a put takes a while, long enough for the others to start beside it.
+  const put = bucket.put.bind(bucket)
+  let running = 0
+  let most = 0
+  bucket.put = async (...args) => {
+    most = Math.max(most, ++running)
+    await new Promise((resolve) => setTimeout(resolve, 5))
+    running--
+    return put(...args)
+  }
+
+  const { status, body } = await commit(env, { places: { [made]: dock }, moments: [draft] })
+
+  assert.equal(status, 200, JSON.stringify(body))
+  assert.equal(most, 2)
+  assert.ok(body.moments[0].media.every((item) => item.published.video))
+})
+
 test('a published Moment moves to another day and keeps its media where they are', async () => {
   const { env } = setUpWithData()
   const {

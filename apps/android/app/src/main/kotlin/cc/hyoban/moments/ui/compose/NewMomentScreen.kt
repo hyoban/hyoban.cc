@@ -945,15 +945,20 @@ private suspend fun buildMoment(
         originalMedia[uri]?.let { return@map it.copy(utility = kept) }
         val uid = Ulid.next()
         val info = infos[uri] ?: Photos.read(context, uri)
-        val copied = Photos.copy(context, uri, directory, uid)
+        val copied = Photos.copy(context, uri, directory, uid, splitMotion = true)
         MomentMedia(
             uid = uid,
-            type = MediaType.IMAGE,
+            type = if (copied.video != null) MediaType.LIVE_PHOTO else MediaType.IMAGE,
             width = info.width,
             height = info.height,
             takenAt = info.takenAt?.let(::stamp),
             utility = kept,
-            local = LocalMedia(uri = Uri.fromFile(copied.file).toString(), sha256 = copied.sha256, copied = true),
+            local = LocalMedia(
+                uri = Uri.fromFile(copied.file).toString(),
+                videoUri = copied.video?.let { Uri.fromFile(it).toString() },
+                sha256 = copied.sha256,
+                copied = true,
+            ),
         )
     }
     val newPlace = (place as? PlaceChoice.New)?.let {

@@ -334,7 +334,8 @@
     <string name="section_changed_places">Edited places</string>
     <string name="section_removed">To delete</string>
     <string name="action_revert">Discard change</string>
-    <string name="message_publishing_progress">Publishing %1$d of %2$d</string>
+    <string name="message_uploading_progress">Uploading %1$s of %2$s MB</string>
+    <string name="message_publishing">Publishing</string>
     <string name="note_publish_all">Publishing makes everything here public. New Moments and their photos are uploaded, edited ones are updated, and deleted ones are taken off the site. If publishing stops partway, anything not sent stays here.</string>
     <string name="note_publish_needs_token">Add an API token in settings to publish</string>
     <string name="change_text">text</string>
