@@ -609,8 +609,8 @@ const highlights = [
             </p>
           )}
           <ul class="year-devices">
-            {devices.map((device) => (
-              <li>
+            {devices.map((device, index) => (
+              <li style={`--index: ${index}`}>
                 <a class:list={{ 'has-image': device.image }} href={device.href}>
                   {device.image && (
                     <img
@@ -1865,6 +1865,11 @@ const highlights = [
         animation-delay: calc(150ms + var(--index) * 90ms);
       }
 
+      & .year-devices__image {
+        animation: year-device-peek 900ms var(--ease-out) backwards;
+        animation-delay: calc(300ms + var(--index) * 120ms);
+      }
+
       & .year-trips path {
         animation: year-trip-draw 1600ms var(--ease-out) backwards;
         animation-delay: calc(500ms + var(--index) * 150ms);
@@ -1941,6 +1946,18 @@ const highlights = [
           animation-range: entry 50% cover 30%;
         }
 
+        /* A device's picture peeks up out of its card's corner as the card comes up; the
+           card clips it, so it follows the card's place rather than the card's box. */
+        & .year-devices li {
+          view-timeline: --device;
+        }
+
+        & .year-devices__image {
+          animation: year-device-peek linear both;
+          animation-timeline: --device;
+          animation-range: entry 40% cover 40%;
+        }
+
         /* Each trip's route draws as its card comes up, and again on hover. */
         & .year-trips li {
           view-timeline: --trip;
@@ -1964,6 +1981,18 @@ const highlights = [
           }
         }
       }
+    }
+  }
+
+  /* From below the card's edge, upright, up past its place and tilted, then settling. */
+  @keyframes year-device-peek {
+    from {
+      translate: 0 5rem;
+      rotate: -8deg;
+    }
+    70% {
+      translate: 0 -0.5rem;
+      rotate: 16deg;
     }
   }
 
