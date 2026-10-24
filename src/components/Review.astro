@@ -2035,16 +2035,6 @@ const highlights = [
         animation: year-trip-draw 1600ms var(--ease-out) backwards;
         animation-delay: calc(500ms + min(var(--index), 12) * 150ms);
       }
-
-      /* Hovering a trip draws its route again: the reveal stays first in the list, unchanged,
-         so it isn't replayed; only the redraw starts, and leaving drops just that. */
-      @media (hover: hover) {
-        & .year-trips a:hover path {
-          animation:
-            year-trip-draw 1600ms var(--ease-out) calc(500ms + min(var(--index), 12) * 150ms) backwards,
-            year-trip-redraw 1.2s var(--ease-out);
-        }
-      }
     }
   }
 
@@ -2136,7 +2126,7 @@ const highlights = [
           animation-range: entry 40% cover 40%;
         }
 
-        /* Each trip's route draws as its card comes up, and again on hover. */
+        /* Each trip's route draws as its card comes up. */
         & .year-trips li {
           view-timeline: --trip;
         }
@@ -2147,19 +2137,6 @@ const highlights = [
           animation-fill-mode: both;
           animation-timeline: --trip;
           animation-range: entry 50% cover 45%;
-        }
-
-        @media (hover: hover) {
-          & .year-trips a:hover path {
-            animation-name: year-trip-draw, year-trip-redraw;
-            animation-duration: auto, 1.2s;
-            animation-timing-function: linear, var(--ease-out);
-            animation-fill-mode: both, none;
-            animation-timeline: --trip, auto;
-            animation-range:
-              entry 50% cover 45%,
-              normal;
-          }
         }
       }
     }
@@ -2188,12 +2165,6 @@ const highlights = [
   @keyframes year-fade {
     from {
       opacity: 0;
-    }
-  }
-
-  @keyframes year-trip-redraw {
-    from {
-      stroke-dashoffset: 1;
     }
   }
 
