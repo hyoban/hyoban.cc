@@ -136,7 +136,21 @@ const heatmaps = heatYears.map((at) => {
     const first = week.find((cell) => cell?.date.endsWith('-01'))
     return first ? Number(first.date.slice(5, 7)) : undefined
   })
-  return { year: at, weeks, months }
+  // The year in two halves from the week July starts in, side by side as one row where
+  // there's room and one over the other on a phone, where a whole year's days would be
+  // too small to see.
+  const july = months.indexOf(7)
+  const split = july > 0 ? july : Math.ceil(weeks.length / 2)
+  // A half the records don't reach into at all, before the car, is left out on a phone;
+  // in a row it keeps the year whole.
+  const halves = [
+    { weeks: weeks.slice(0, split), months: months.slice(0, split) },
+    { weeks: weeks.slice(split), months: months.slice(split) },
+  ].map((half) => ({
+    ...half,
+    blank: !half.weeks.some((week) => week.some((cell) => cell?.distanceMeters !== undefined)),
+  }))
+  return { year: at, weeks, halves }
 })
 // What the graph's readout says while no day is pointed at.
 const farthest =
@@ -183,68 +197,75 @@ const spendingTiles: Tile[] = [
 </p>
 <div class="year-driving__years">
   {
-    heatmaps.map(({ year: at, weeks, months }) => (
+    heatmaps.map(({ year: at, weeks, halves }) => (
       <>
         {heatmaps.length > 1 && <h3 class="year-driving__year">{at}</h3>}
-      <div class="year-driving" style={`--weeks: ${weeks.length}`}>
-        <div class="year-driving__months" aria-hidden="true">
-          {
-            months.map((month) => (
-              <span>
-                {month}
-                {month && <span class="year-driving__month-unit"> 月</span>}
-              </span>
-            ))
-          }
+        <div
+          class="year-driving"
+          style={`--weeks: ${weeks.length}; --half-weeks: ${Math.max(...halves.map((half) => half.weeks.length))}`}
+        >
+          {halves.map((half, index) => (
+            <div
+              class:list={['year-driving__half', { 'is-blank': half.blank }]}
+              data-half={index}
+              style={`--weeks: ${half.weeks.length}`}
+            >
+              <div class="year-driving__months" aria-hidden="true">
+                {half.months.map((month) => (
+                  <span>
+                    {month}
+                    {month && <span class="year-driving__month-unit"> 月</span>}
+                  </span>
+                ))}
+              </div>
+              <div class="year-driving__weekdays" aria-hidden="true">
+                {weekdayLabels.map((label) => (
+                  <span>{label}</span>
+                ))}
+              </div>
+              <div class="year-driving__grid">
+                {half.weeks.flatMap((week) =>
+                  week.map((cell) => {
+                    if (!cell) return <span class="year-driving__cell" data-outside />
+                    if (cell.distanceMeters === undefined) {
+                      return (
+                        <span class="year-driving__cell" data-empty title={`${formatDay(cell.date)}\u2003没有记录`} />
+                      )
+                    }
+                    const title = `${formatDay(cell.date)}\u2003${cell.distanceMeters ? formatKilometers(cell.distanceMeters) : '没开'}`
+                    const outing = outingByDate.get(cell.date)
+                    const href = outing && getOutingHref(outing, cell.date)
+                    const tabbed = href !== undefined && tabbedHrefs.has(href)
+                    if (href) tabbedHrefs.add(href)
+                    return href ? (
+                      <a
+                        class="year-driving__cell"
+                        data-level={getDistanceLevel(cell.distanceMeters)}
+                        href={href}
+                        tabindex={tabbed ? -1 : undefined}
+                        title={outing.trip ? `${title}\u2003${outing.trip.title}` : title}
+                        aria-label={outing.trip ? `${title}，${outing.trip.title}` : title}
+                      />
+                    ) : (
+                      <span class="year-driving__cell" data-level={getDistanceLevel(cell.distanceMeters)} title={title} />
+                    )
+                  }),
+                )}
+              </div>
+            </div>
+          ))}
         </div>
-        <div class="year-driving__weekdays" aria-hidden="true">
-          {weekdayLabels.map((label) => <span>{label}</span>)}
-        </div>
-        <div class="year-driving__grid">
-          {
-            weeks.flatMap((week) =>
-              week.map((cell) => {
-                      if (!cell) return <span class="year-driving__cell" data-outside />
-                if (cell.distanceMeters === undefined) {
-                  return (
-                    <span class="year-driving__cell" data-empty title={`${formatDay(cell.date)}\u2003没有记录`} />
-                  )
-                }
-                const title = `${formatDay(cell.date)}\u2003${cell.distanceMeters ? formatKilometers(cell.distanceMeters) : '没开'}`
-                const outing = outingByDate.get(cell.date)
-                const href = outing && getOutingHref(outing, cell.date)
-                const tabbed = href !== undefined && tabbedHrefs.has(href)
-                if (href) tabbedHrefs.add(href)
-                return href ? (
-                  <a
-                    class="year-driving__cell"
-                    data-level={getDistanceLevel(cell.distanceMeters)}
-                          href={href}
-                    tabindex={tabbed ? -1 : undefined}
-                    title={outing.trip ? `${title}\u2003${outing.trip.title}` : title}
-                    aria-label={outing.trip ? `${title}，${outing.trip.title}` : title}
-                  />
-                ) : (
-                  <span
-                    class="year-driving__cell"
-                    data-level={getDistanceLevel(cell.distanceMeters)}
-                    title={title}
-                        />
-                )
-              }),
-            )
-          }
-        </div>
-      </div>
       </>
     ))
   }
 </div>
 <div class="year-driving__legend" aria-hidden="true">
   <span class="year-driving__readout" data-readout={farthest}>{farthest}</span>
-  <span>没开</span>
-  {[0, 1, 2, 3, 4].map((level) => <span class="year-driving__cell" data-level={level} />)}
-  <span>300 km+</span>
+  <span class="year-driving__key">
+    <span>没开</span>
+    {[0, 1, 2, 3, 4].map((level) => <span class="year-driving__cell" data-level={level} />)}
+    <span>300 km+</span>
+  </span>
 </div>
 {
   charges.length > 0 && (
@@ -287,10 +308,12 @@ const spendingTiles: Tile[] = [
         <span class="year-driving__readout" data-readout={`最多在 ${busiestHour.hour} 点`}>
           最多在 {busiestHour.hour} 点
         </span>
-        <span class="year-driving__swatch is-dc" />
-        <span>快充</span>
-        <span class="year-driving__swatch is-ac" />
-        <span>家充</span>
+        <span class="year-driving__key">
+          <span class="year-driving__swatch is-dc" />
+          <span>快充</span>
+          <span class="year-driving__swatch is-ac" />
+          <span>家充</span>
+        </span>
       </div>
     </>
   )
@@ -465,38 +488,65 @@ const spendingTiles: Tile[] = [
     }
   }
 
+  /* A year's graph: a column for the weekdays' names, then a column a week, which each
+     half takes its share of. On a phone the halves are one over the other, as wide as the
+     longer; where there's room, side by side, the second without the names again. */
   .year-driving {
-    --gap: 1px;
+    --gap: 2px;
     display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 0.25rem;
+    grid-template-columns: auto repeat(var(--half-weeks), minmax(0, 1fr));
+    column-gap: var(--gap);
+    row-gap: 0.875rem;
     color: var(--color-tx-3);
     font-size: 0.625rem;
     line-height: 1;
 
     @media (width >= 40rem) {
-      --gap: 2px;
+      grid-template-columns: auto repeat(var(--weeks), minmax(0, 1fr));
+    }
+  }
+
+  .year-driving__half {
+    display: grid;
+    grid-template-columns: subgrid;
+    grid-column: 1 / -1;
+    row-gap: 0.25rem;
+
+    @media (width < 40rem) {
+      &.is-blank {
+        display: none;
+      }
+    }
+
+    @media (width >= 40rem) {
+      &[data-half='0'] {
+        grid-column: 1 / span calc(var(--weeks) + 1);
+      }
+
+      &[data-half='1'] {
+        grid-row: 1;
+        grid-column: span var(--weeks) / -1;
+
+        & .year-driving__weekdays {
+          display: none;
+        }
+
+        & :is(.year-driving__months, .year-driving__grid) {
+          grid-column: 1 / -1;
+        }
+      }
     }
   }
 
   .year-driving__months,
   .year-driving__grid {
     display: grid;
-    grid-template-columns: repeat(var(--weeks), minmax(0, 1fr));
-    column-gap: var(--gap);
-    grid-column: 2;
+    grid-template-columns: subgrid;
+    grid-column: 2 / span var(--weeks);
   }
 
   .year-driving__months span {
     white-space: nowrap;
-  }
-
-  .year-driving__month-unit {
-    display: none;
-
-    @media (width >= 40rem) {
-      display: inline;
-    }
   }
 
   .year-driving__weekdays {
@@ -504,6 +554,7 @@ const spendingTiles: Tile[] = [
     grid-template-rows: repeat(7, 1fr);
     row-gap: var(--gap);
     grid-row: 2;
+    padding-right: 0.25rem;
   }
 
   .year-driving__grid {
@@ -658,26 +709,40 @@ const spendingTiles: Tile[] = [
     outline-offset: 1px;
   }
 
+  /* On one line, or where the readout is too long for it, the key on its own under it. */
+  /* The readout, then the key at the end, on one line or, where the readout is too long
+     for both, the key whole on its own under it. */
   .year-driving__legend {
     display: flex;
-    gap: 3px;
+    flex-wrap: wrap;
+    gap: 0.375rem 0.75rem;
     align-items: center;
     justify-content: flex-end;
     margin-top: 0.75rem;
     color: var(--color-tx-3);
     font-size: 0.75rem;
+    white-space: nowrap;
 
     .year-driving__cell {
       width: 0.625rem;
     }
+  }
 
-    span:first-child,
-    .year-driving__readout + span {
+  .year-driving__key {
+    display: flex;
+    gap: 3px;
+    align-items: center;
+
+    & > span:first-child {
       margin-right: 0.25rem;
     }
 
-    span:last-child {
+    & > span:last-child {
       margin-left: 0.25rem;
+    }
+
+    & > .year-driving__swatch:first-child + span {
+      margin-right: 0.5rem;
     }
   }
 
