@@ -1,6 +1,6 @@
 {
   "uid": "01M5MC7845BYK1528PMVD76BMY",
-  "occurredAt": "2026-09-05",
+  "occurredAt": "2026-09-05T19:01:00+08:00",
   "places": [
     "wuhu-intime-inpark"
   ],
@@ -54,5 +54,5 @@
     "at": "2026-10-23T12:40:21Z"
   },
   "createdAt": "2026-10-23T12:36:53Z",
-  "updatedAt": "2026-10-23T14:31:56Z"
+  "updatedAt": "2026-10-24T12:20:11+08:00"
 }
