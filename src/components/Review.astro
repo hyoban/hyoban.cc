@@ -22,7 +22,6 @@ import {
   buildYearReview,
   formatChange,
   getCityName,
-  getReviewYears,
   getYearMeals,
   getYearPlaces,
 } from '@/year-review'
@@ -55,8 +54,8 @@ import type { PlaceKind } from '@hyoban/data-spec'
 interface Props {
   /** The year, or none for every year. */
   year?: number
-  previous?: number
-  next?: number
+  previous?: number | undefined
+  next?: number | undefined
   /** Every year with a review, oldest first. */
   years: number[]
 }
