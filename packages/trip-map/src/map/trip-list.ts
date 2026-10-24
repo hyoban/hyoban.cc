@@ -1,3 +1,4 @@
+import { isPlainClick } from './link-click.ts'
 import { createSheet } from './sheet.ts'
 // The list of every trip, beside the map where a place's drawer sits, while the address
 // is the list's own (`/trip/`): its openers and its close button ask for the address to
@@ -170,6 +171,10 @@ export function createTripList({
     opener.addEventListener(
       'click',
       (event) => {
+        if (!isPlainClick(event)) {
+          return
+        }
+
         event.preventDefault()
 
         if (isOpen()) {
@@ -189,7 +194,7 @@ export function createTripList({
     (event) => {
       const link = getLink(event.target)
 
-      if (link) {
+      if (link && isPlainClick(event)) {
         event.preventDefault()
         setPreviewed(undefined)
         onOpen(getId(link))

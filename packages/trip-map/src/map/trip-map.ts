@@ -26,6 +26,7 @@ import { isSlowDevice } from './device.ts'
 import { createFogLayer } from './fog-layer.ts'
 import { createMapSettings, DEFAULT_MAP_SETTINGS, type MapSettings } from './map-settings.ts'
 import { createPlaceDrawer, type LightboxMedia } from './place-drawer.ts'
+import { isPlainClick } from './link-click.ts'
 import { createMomentList } from './moment-list.ts'
 import { isSamePeriod, overlapsPeriod, type Period } from './period.ts'
 import { CLUSTER_MAX_ZOOM, createPlaceMarkers, getAllPlacesView } from './place-markers.ts'
@@ -429,6 +430,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
       closeButton: elements.momentsClose,
       content: elements.momentsContent,
       eyebrow: elements.momentsEyebrow,
+      getMapPath: (period) => urls.getMapPath(period),
       getMomentsUrl: urls.getMomentsUrl,
       getPlaceCount: () => markers.getShownPlaces().length,
       narrow,
@@ -1081,6 +1083,8 @@ export function createTripMap(options: TripMapOptions): TripMap {
   function syncSelection(selectOptions: { focus?: boolean; moveMap?: boolean } = {}) {
     // Before the rest, so a trip closing frames the places beside the Moments.
     syncMomentList()
+    // The legend's years link to the map's addresses or the trip list's, as it's open.
+    syncYearLinks()
 
     // A trip closed: every place in view again, beside the list if it's coming back.
     const tripClosed = syncTripFromUrl()
@@ -1126,13 +1130,13 @@ export function createTripMap(options: TripMapOptions): TripMap {
     }
 
     if (id && place) {
-      const fallbackButton = page.querySelector<HTMLButtonElement>(
+      const fallbackLink = page.querySelector<HTMLElement>(
         `[data-trip-map-place="${CSS.escape(id)}"]`,
       )
 
       drawer.open(place, {
         ...selectOptions,
-        trigger: markers.getButton(id) ?? fallbackButton ?? undefined,
+        trigger: markers.getButton(id) ?? fallbackLink ?? undefined,
       })
       return
     }
@@ -1209,7 +1213,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
     }
   }
 
-  function selectPlace(id: string, trigger: HTMLButtonElement) {
+  function selectPlace(id: string, trigger: HTMLElement) {
     const place = markers.getPlace(id)
 
     if (!place) {
@@ -1292,9 +1296,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
       }
     }
 
-    for (const button of elements.yearButtons) {
-      button.setAttribute('aria-pressed', String(Number(button.dataset.tripMapYear) === next?.year))
-    }
+    syncYearLinks()
 
     elements.legend?.toggleAttribute('data-trip-map-year-picked', next !== undefined)
 
@@ -1361,6 +1363,27 @@ export function createTripMap(options: TripMapOptions): TripMap {
     }
 
     history.replaceState(getHistoryState(), '', `${path}${window.location.search}`)
+  }
+
+  /**
+   * Each year in the legend links to where pressing it goes: to that year, or from the
+   * year picked to every year again, on the trip list's addresses while it's open.
+   */
+  function syncYearLinks() {
+    const picked = markers.period
+
+    for (const link of elements.yearLinks) {
+      const year = Number(link.dataset.tripMapYear)
+      const next = picked?.year === year && picked.month === undefined ? undefined : { year }
+
+      link.href = isTripListUrl() ? urls.getTripListPath(next) : urls.getMapPath(next)
+
+      if (picked?.year === year) {
+        link.setAttribute('aria-current', 'true')
+      } else {
+        link.removeAttribute('aria-current')
+      }
+    }
   }
 
   /**
@@ -1524,14 +1547,15 @@ export function createTripMap(options: TripMapOptions): TripMap {
     }
   }
 
-  for (const button of elements.fallbackPlaces) {
-    button.addEventListener(
+  for (const link of elements.fallbackPlaces) {
+    link.addEventListener(
       'click',
-      () => {
-        const id = button.dataset.tripMapPlace
+      (event) => {
+        const id = link.dataset.tripMapPlace
 
-        if (id) {
-          selectPlace(id, button)
+        if (id && isPlainClick(event)) {
+          event.preventDefault()
+          selectPlace(id, link)
         }
       },
       { signal },
@@ -1637,6 +1661,10 @@ export function createTripMap(options: TripMapOptions): TripMap {
   page.addEventListener(
     'click',
     (event) => {
+      if (!isPlainClick(event)) {
+        return
+      }
+
       const target = event.target instanceof Element ? event.target : null
       const trip = target?.closest<HTMLElement>('[data-trip-map-trip-pick]')
       const play = target?.closest<HTMLElement>('[data-trip-map-stop-play]')
@@ -1714,8 +1742,10 @@ export function createTripMap(options: TripMapOptions): TripMap {
     link.addEventListener(
       'click',
       (event) => {
-        event.preventDefault()
-        selectTrip(id)
+        if (isPlainClick(event)) {
+          event.preventDefault()
+          selectTrip(id)
+        }
       },
       { signal },
     )
@@ -1872,13 +1902,18 @@ export function createTripMap(options: TripMapOptions): TripMap {
 
   // A year in the legend, pressed, narrows the map to it; pressed again, every place
   // again, or the whole year from one of its months.
-  for (const button of elements.yearButtons) {
-    button.addEventListener(
+  for (const link of elements.yearLinks) {
+    link.addEventListener(
       'click',
-      () => {
-        const year = Number(button.dataset.tripMapYear)
+      (event) => {
+        if (!isPlainClick(event)) {
+          return
+        }
+
+        const year = Number(link.dataset.tripMapYear)
         const picked = markers.period
 
+        event.preventDefault()
         pickPeriod(picked?.year === year && picked.month === undefined ? undefined : { year })
       },
       { signal },
@@ -1889,7 +1924,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
     'click',
     () => {
       pickPeriod(undefined)
-      elements.yearButtons[0]?.focus()
+      elements.yearLinks[0]?.focus()
     },
     { signal },
   )

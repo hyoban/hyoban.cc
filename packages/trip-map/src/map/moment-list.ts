@@ -1,4 +1,5 @@
 import { t, type Messages } from '../messages.ts'
+import { isPlainClick } from './link-click.ts'
 import type { Period } from './period.ts'
 import { createSheet } from './sheet.ts'
 
@@ -6,7 +7,8 @@ import { createSheet } from './sheet.ts'
 // while the address narrows the map to that period: the site's HTML fragment for the
 // year, newest first, fetched the first time and shown a month at a time once one is
 // picked. Its months (`[data-trip-map-month]`) pick one, and `[data-trip-map-month-all]`
-// the whole year again; its places (`[data-trip-map-place-link]`) fly the map to them.
+// the whole year again, each a link to the address it goes to; its places
+// (`[data-trip-map-place-link]`) fly the map to them.
 //
 // The fragment holds a `[data-trip-map-moments-month="<month>"]` per month, with the
 // number of its Moments in `data-trip-map-count`, and its heading, hidden while the
@@ -18,6 +20,7 @@ export function createMomentList({
   closeButton,
   content,
   eyebrow,
+  getMapPath,
   getMomentsUrl,
   getPlaceCount,
   narrow,
@@ -33,6 +36,8 @@ export function createMomentList({
   closeButton: HTMLButtonElement | null
   content: HTMLElement
   eyebrow: HTMLElement | null
+  /** The map's address narrowed to a period, which the months link to. */
+  getMapPath: (period: Period) => string
   getMomentsUrl: (year: number) => string
   /** How many places the map shows for the period. */
   getPlaceCount: () => number
@@ -158,15 +163,20 @@ export function createMomentList({
       }
     }
 
-    content
-      .querySelector('[data-trip-map-month-all]')
-      ?.setAttribute('aria-pressed', String(period.month === undefined))
+    const { month: pickedMonth, year } = period
+    const all = content.querySelector<HTMLAnchorElement>('[data-trip-map-month-all]')
 
-    for (const button of content.querySelectorAll<HTMLElement>('[data-trip-map-month]')) {
-      button.setAttribute(
-        'aria-pressed',
-        String(Number(button.dataset.tripMapMonth) === period.month),
-      )
+    if (all) {
+      all.href = getMapPath({ year })
+      setCurrent(all, pickedMonth === undefined)
+    }
+
+    // The month picked links back to the whole year, as pressing it again goes.
+    for (const link of content.querySelectorAll<HTMLAnchorElement>('[data-trip-map-month]')) {
+      const month = Number(link.dataset.tripMapMonth)
+
+      link.href = getMapPath(month === pickedMonth ? { year } : { month, year })
+      setCurrent(link, month === pickedMonth)
     }
 
     if (eyebrow) {
@@ -260,12 +270,17 @@ export function createMomentList({
   content.addEventListener(
     'click',
     (event) => {
+      if (!isPlainClick(event)) {
+        return
+      }
+
       const target = event.target instanceof Element ? event.target : null
       const month = target?.closest<HTMLElement>('[data-trip-map-month]')
       const all = target?.closest('[data-trip-map-month-all]')
       const place = target?.closest<HTMLElement>('[data-trip-map-place-link]')
 
       if (all) {
+        event.preventDefault()
         onPickMonth(undefined)
       } else if (month) {
         event.preventDefault()
@@ -288,5 +303,14 @@ export function createMomentList({
     /** The drawer it is, for one to open over it. */
     sheet,
     show,
+  }
+}
+
+/** Marks the link to the period shown as the current one, or not. */
+function setCurrent(link: HTMLElement, current: boolean) {
+  if (current) {
+    link.setAttribute('aria-current', 'true')
+  } else {
+    link.removeAttribute('aria-current')
   }
 }
