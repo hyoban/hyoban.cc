@@ -20,14 +20,25 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.Canvas
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
@@ -50,8 +61,16 @@ import cc.hyoban.moments.ui.theme.Space
 import coil3.compose.AsyncImage
 import coil3.compose.LocalPlatformContext
 import coil3.request.ImageRequest
+import coil3.SingletonImageLoader
+import coil3.request.SuccessResult
+import coil3.request.allowHardware
 import coil3.request.crossfade
 import coil3.size.Precision
+import coil3.size.Scale
+import coil3.toBitmap
+import kotlin.math.roundToInt
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 // The photos of a Moment meet edge to edge, as one picture across the card.
 private val GAP = 0.dp
@@ -113,6 +132,78 @@ fun MediaStill(
             modifier = Modifier.fillMaxSize(),
         )
     }
+}
+
+/**
+ * The colours along a still's top and bottom edges drawn out over the space above and
+ * below it, where a photo wider than its frame, centred across it, leaves some: the photo
+ * seems to run on to the frame's edges rather than sit on a band of the page's colour.
+ */
+@Composable
+fun MediaEdges(media: MomentMedia, urls: MediaUrls, modifier: Modifier = Modifier) {
+    val context = LocalPlatformContext.current
+    var edges by remember(media.uid) { mutableStateOf<Pair<ImageBitmap, ImageBitmap>?>(null) }
+    val shown by animateFloatAsState(if (edges != null) 1f else 0f, MaterialTheme.motionScheme.defaultEffectsSpec(), label = "edges")
+    BoxWithConstraints(modifier) {
+        // The file the still is drawn from, already on disk, read again small: each edge is
+        // the band along it averaged into a few colours, blended into one another across the
+        // width as they are stretched, so its colours run on without its detail.
+        val url = urls.still(media, constraints.maxWidth)
+        LaunchedEffect(url) {
+            if (url == null || edges != null) return@LaunchedEffect
+            val request = ImageRequest.Builder(context)
+                .data(url)
+                .memoryCacheKey("$url#edges")
+                .size(EDGE_READ, EDGE_READ)
+                .scale(Scale.FIT)
+                .allowHardware(false)
+                .build()
+            val bitmap = (SingletonImageLoader.get(context).execute(request) as? SuccessResult)?.image?.toBitmap() ?: return@LaunchedEffect
+            edges = withContext(Dispatchers.Default) { edgeColors(bitmap, top = true) to edgeColors(bitmap, top = false) }
+        }
+        val shape = shapeOf(media)
+        Canvas(Modifier.fillMaxSize()) {
+            val (top, bottom) = edges ?: return@Canvas
+            val width = size.width.roundToInt()
+            val gap = ((size.height - minOf(size.width / shape, size.height)) / 2).roundToInt()
+            if (gap <= 0) return@Canvas
+            // A pixel into the photo too, so no seam shows where the two meet.
+            val band = IntSize(width, gap + 1)
+            drawImage(top, srcSize = IntSize(top.width, 1), dstSize = band, alpha = shown, filterQuality = FilterQuality.Low)
+            drawImage(bottom, srcSize = IntSize(bottom.width, 1), dstOffset = IntOffset(0, size.height.roundToInt() - gap - 1), dstSize = band, alpha = shown, filterQuality = FilterQuality.Low)
+        }
+    }
+}
+
+/** How many pixels across a still is read at for its edges. */
+private const val EDGE_READ = 48
+
+/** How many colours an edge is averaged into across the width. */
+private const val EDGE_COLOURS = 6
+
+/** The band along a still's top or bottom edge, a quarter of its height, averaged into a row of [EDGE_COLOURS]. */
+private fun edgeColors(bitmap: android.graphics.Bitmap, top: Boolean): ImageBitmap {
+    val width = bitmap.width
+    val rows = (bitmap.height / 4).coerceAtLeast(1)
+    val pixels = IntArray(width * rows)
+    bitmap.getPixels(pixels, 0, width, 0, if (top) 0 else bitmap.height - rows, width, rows)
+    val row = IntArray(EDGE_COLOURS) { n ->
+        var r = 0L
+        var g = 0L
+        var b = 0L
+        var count = 0
+        for (x in (n * width / EDGE_COLOURS) until maxOf((n + 1) * width / EDGE_COLOURS, n * width / EDGE_COLOURS + 1).coerceAtMost(width)) {
+            for (y in 0 until rows) {
+                val pixel = pixels[y * width + x]
+                r += (pixel shr 16) and 0xFF
+                g += (pixel shr 8) and 0xFF
+                b += pixel and 0xFF
+                count++
+            }
+        }
+        if (count == 0) 0xFF000000.toInt() else (0xFF shl 24) or ((r / count).toInt() shl 16) or ((g / count).toInt() shl 8) or (b / count).toInt()
+    }
+    return android.graphics.Bitmap.createBitmap(row, EDGE_COLOURS, 1, android.graphics.Bitmap.Config.ARGB_8888).asImageBitmap()
 }
 
 /**
