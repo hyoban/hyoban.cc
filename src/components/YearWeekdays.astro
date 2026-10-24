@@ -26,7 +26,9 @@ const label = `每周各天记下的条数：${days.map((day) => `周${day.name}
   {
     days.map((day) => (
       <span class:list={['year-weekdays__column', { 'is-top': day.top }]} title={`周${day.name} · ${day.count} 条`} style={`grid-column: ${day.index + 1}; --day: ${day.index}`}>
-        <span class="year-weekdays__bar" style={`height: ${day.height}`} />
+        <span class="year-weekdays__bar" style={`height: ${day.height}`}>
+          <span class="year-weekdays__count">{day.count}</span>
+        </span>
       </span>
     ))
   }
@@ -79,6 +81,33 @@ const label = `每周各天记下的条数：${days.map((day) => `周${day.name}
 
   .year-weekdays__column:hover .year-weekdays__bar {
     opacity: 0.8;
+  }
+
+  /* Each day's count over its column, the busiest's always and the others' when pointed at. */
+  .year-weekdays__bar {
+    position: relative;
+  }
+
+  .year-weekdays__count {
+    position: absolute;
+    bottom: calc(100% + 0.25rem);
+    left: 50%;
+    color: var(--color-tx);
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    opacity: 0;
+    translate: -50% 0.25rem;
+    transition:
+      opacity 140ms var(--ease),
+      translate 140ms var(--ease-out);
+
+    .year-weekdays__column:hover &,
+    .is-top & {
+      opacity: 1;
+      translate: -50% 0;
+    }
   }
 
   .year-weekdays__column.is-top .year-weekdays__bar {

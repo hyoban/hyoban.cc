@@ -10,7 +10,6 @@ import {
   getMomentPagePath,
   getMomentPath,
   getMoments,
-  getMomentTripOdometer,
   getTrips,
   type Moment,
 } from '@/moments'
@@ -105,9 +104,8 @@ const trips = review.trips.map((trip) => ({
   trip,
   glyph: buildRouteGlyph(getTripLine(trip.legs)),
   covers: getTripCollage(trip, review.moments, PICKS),
-  // How often the car charged on its days, when it drove all of it and the records have it.
-  chargeCount: getMomentTripOdometer(trip)?.charges.length ?? 0,
 }))
+const tripDays = review.trips.reduce((total, trip) => total + trip.dayCount, 0)
 const topCities = review.cities.lit.slice(0, 6)
 const firstVisits = Map.groupBy(review.firstVisits, (visit) => Number(visit.dateKey.slice(5, 7)))
 /**
@@ -196,6 +194,7 @@ const devices = Object.entries(readDevices())
     // Its own post, when one was written about it.
     href: postLinks.has(id) ? `/${id}/` : '/use/',
   }))
+const devicesSpent = devices.reduce((total, device) => total + device.bought.price, 0)
 const between = (start: string, end: string) =>
   review.moments.filter((moment) => moment.dateKey >= start && moment.dateKey <= end)
 
@@ -222,7 +221,8 @@ const stats = statsOf(review)
     const change = was ? Math.round(((stat.value - was) / was) * 100) : undefined
     return { ...stat, change }
   })
-  .filter((stat) => stat.label !== '公里自驾' || stat.value > 100)
+  // The car's own distance leads its section in the years it drove, so not here as well.
+  .filter((stat) => stat.label !== '公里自驾' || (stat.value > 100 && !drove))
 // Each topic beside the whole year before, as the stats are.
 const topics = review.topics.map((topic) => ({
   ...topic,
@@ -323,10 +323,13 @@ const highlights = [
       review.cities.lit.length > 0 && (
         <section class="year-section year-wide" aria-labelledby="year-footprint">
           <h2 id="year-footprint">足迹</h2>
+          <p class="year-lead">
+            {review.cities.provinces}<small>个省</small>
+          </p>
           <YearFootprint map={map} label={`${year} 年去过的 ${review.cities.lit.length} 个城市和走过的路线`} />
           <ol class="year-cities" aria-label="记下最多的城市">
             {topCities.map((city, index) => (
-              <li style={`--share: ${city.count / topCities[0]!.count}; --index: ${index}`}>
+              <li data-city={city.id} style={`--share: ${city.count / topCities[0]!.count}; --index: ${index}`}>
                 <span class="year-cities__name">{city.name}</span>
                 <span class="year-cities__bar" />
                 <span class="year-cities__count">{city.count}</span>
@@ -341,29 +344,31 @@ const highlights = [
       trips.length > 0 && (
         <section class="year-section" aria-labelledby="year-trips">
           <h2 id="year-trips">出行</h2>
+          <p class="year-lead">
+            {trips.length}<small>次</small>{tripDays}<small>天在路上</small>
+          </p>
           <ul class="year-trips">
-            {trips.map(({ trip, glyph, covers, chargeCount }, index) => (
+            {trips.map(({ trip, glyph, covers }, index) => (
               <li style={`--index: ${index}`}>
-                <a href={`/trip/${trip.id.slice(0, 4)}/${trip.id.slice(5)}/`}>
-                  <span class="year-trips__art">
-                    {covers[0] && (
-                      <img
-                        src={covers[0].thumbnail}
-                        alt=""
-                        loading="lazy"
-                        decoding="async"
-                        data-pick={pickFrom(covers.map((cover) => cover.thumbnail))}
-                      />
-                    )}
-                    <svg viewBox={`0 0 ${glyph.width} ${glyph.width}`} aria-hidden="true">
-                      <path d={glyph.d} transform={`translate(0 ${(glyph.width - glyph.height) / 2})`} pathLength="1" />
-                    </svg>
-                  </span>
-                  <span class="year-trips__title">{trip.title}</span>
-                  <span class="year-trips__meta">
-                    {formatDay(trip.start)} · {trip.dayCount} 天
-                    {trip.drivingKm > 0 && ` · ${formatNumber(trip.drivingKm)} 公里`}
-                    {chargeCount > 0 && ` · 充电 ${chargeCount} 次`}
+                <a href={`/trip/${trip.id.slice(0, 4)}/${trip.id.slice(5)}/`} title={trip.title}>
+                  {covers[0] && (
+                    <img
+                      src={covers[0].thumbnail}
+                      alt=""
+                      loading="lazy"
+                      decoding="async"
+                      data-pick={pickFrom(covers.map((cover) => cover.thumbnail))}
+                    />
+                  )}
+                  <svg viewBox={`0 0 ${glyph.width} ${glyph.width}`} aria-hidden="true">
+                    <path d={glyph.d} transform={`translate(0 ${(glyph.width - glyph.height) / 2})`} pathLength="1" />
+                  </svg>
+                  <span class="year-trips__date">{`${Number(trip.start.slice(5, 7))}.${Number(trip.start.slice(8, 10))}`}</span>
+                  <span class="year-trips__words">
+                    <span class="year-trips__title">{trip.title}</span>
+                    <span class="year-trips__meta">
+                      {trip.dayCount} 天{trip.drivingKm > 0 && ` · ${formatNumber(trip.drivingKm)} km`}
+                    </span>
                   </span>
                 </a>
               </li>
@@ -386,6 +391,9 @@ const highlights = [
       before && review.firstVisits.length > 0 && (
         <section class="year-section" aria-labelledby="year-first">
           <h2 id="year-first">第一次去</h2>
+          <p class="year-lead">
+            {review.firstVisits.length}<small>座新城市</small>
+          </p>
           <ol class="year-first">
             {Array.from({ length: 12 }, (_, index) => (
               <li class:list={{ 'is-empty': !firstVisits.has(index + 1) }} style={`--month: ${index}`}>
@@ -555,7 +563,7 @@ const highlights = [
     {
       review.favoriteHour && (
         <section class="year-section" aria-labelledby="year-hours">
-          <h2 id="year-hours">什么时候记了什么</h2>
+          <h2 id="year-hours">节奏</h2>
           <YearClock hours={review.hours} favorite={review.favoriteHour}>
             <YearWeekdays weekdays={review.weekdays} />
           </YearClock>
@@ -570,6 +578,11 @@ const highlights = [
       devices.length > 0 && (
         <section class="year-section" aria-labelledby="year-devices">
           <h2 id="year-devices">添置的</h2>
+          {devices.length > 1 && (
+            <p class="year-lead">
+              {devices.length}<small>件 · ¥{formatNumber(Math.round(devicesSpent))}</small>
+            </p>
+          )}
           <ul class="year-devices">
             {devices.map((device) => (
               <li>
@@ -654,6 +667,20 @@ const highlights = [
     requestAnimationFrame(frame)
   }
 
+  // Pointing at a city in the list or on the map marks it in both.
+  function initializeCityLinks() {
+    const section = document.querySelector<HTMLElement>('[aria-labelledby="year-footprint"]')
+    if (!section) return
+    const mark = (id?: string) => {
+      for (const element of section.querySelectorAll<HTMLElement | SVGElement>('[data-city]'))
+        element.classList.toggle('is-active', element.dataset.city === id)
+    }
+    section.addEventListener('pointerover', (event) => {
+      mark((event.target as Element).closest<HTMLElement>('[data-city]')?.dataset.city)
+    })
+    section.addEventListener('pointerleave', () => mark())
+  }
+
   function initializeMotion() {
     const sections = document.querySelectorAll<HTMLElement>('.year-section')
     if (sections.length === 0) return
@@ -678,6 +705,7 @@ const highlights = [
   // First, so the carousels and the motion see the places in their new order.
   document.addEventListener('astro:page-load', dealYear)
   document.addEventListener('astro:page-load', initializeMotion)
+  document.addEventListener('astro:page-load', initializeCityLinks)
   document.addEventListener('astro:page-load', () => initializeCarousels())
   document.addEventListener('astro:page-load', initializeYearShare)
 </script>
@@ -710,8 +738,8 @@ const highlights = [
   .year-stats {
     display: flex;
     flex-wrap: wrap;
-    gap: 1rem 2.25rem;
-    margin-top: 2rem;
+    gap: 1.25rem 2.5rem;
+    margin-top: 2.5rem;
 
     & div {
       display: flex;
@@ -724,20 +752,112 @@ const highlights = [
     }
 
     & dd {
-      font-size: 1.5rem;
-      font-weight: 600;
-      line-height: 2rem;
-      letter-spacing: -0.02em;
+      font-size: 2.25rem;
+      font-weight: 700;
+      line-height: 2.75rem;
+      letter-spacing: -0.04em;
       font-variant-numeric: tabular-nums;
     }
   }
 
   .year-section {
-    margin-top: 4rem;
+    margin-top: 5rem;
 
     & > h2 {
       margin-bottom: 1rem;
+      color: var(--color-tx-2);
+      font-size: 0.875rem;
       font-weight: 500;
+      letter-spacing: 0.08em;
+    }
+
+    & > h2:has(+ :global(.year-lead)) {
+      margin-bottom: 0.25rem;
+    }
+  }
+
+  /* A section's figure, set large under its name; global, for the parts' own leads. */
+  :global(.year-lead) {
+    margin-bottom: 1.25rem;
+    font-size: clamp(2.5rem, 10vw, 3.5rem);
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.04em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  :global(.year-lead small) {
+    margin-inline: 0.25rem 1rem;
+    color: var(--color-tx-2);
+    font-size: 1rem;
+    font-weight: 500;
+    letter-spacing: 0;
+  }
+
+  .year-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem 2.5rem;
+    margin-top: 2.5rem;
+
+    & div {
+      display: flex;
+      flex-direction: column-reverse;
+    }
+
+    & dt {
+      color: var(--color-tx-2);
+      font-size: 0.875rem;
+    }
+
+    & dd {
+      font-size: 2.25rem;
+      font-weight: 700;
+      line-height: 2.75rem;
+      letter-spacing: -0.04em;
+      font-variant-numeric: tabular-nums;
+    }
+  }
+
+  .year-section {
+    margin-top: 5rem;
+
+    & > h2 {
+      margin-bottom: 1rem;
+      color: var(--color-tx-2);
+      font-size: 0.875rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+    }
+
+    & > h2:has(+ :global(.year-lead)) {
+      margin-bottom: 0.25rem;
+    }
+  }
+
+  /* A section's figure, set large under its name; global, for the parts' own leads. */
+  :global(.year-lead) {
+    margin-bottom: 1.25rem;
+    font-size: clamp(2.5rem, 10vw, 3.5rem);
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.04em;
+    font-variant-numeric: tabular-nums;
+
+    & small {
+      margin-inline: 0.25rem 0.75rem;
+      color: var(--color-tx-2);
+      font-size: 1rem;
+      font-weight: 500;
+      letter-spacing: 0;
+
+      &:first-child {
+        margin-inline: 0 0.125rem;
+      }
+
+      &:last-child {
+        margin-right: 0;
+      }
     }
   }
 
@@ -748,7 +868,8 @@ const highlights = [
     width: var(--wide);
     margin-inline: calc((100% - var(--wide)) / 2);
 
-    & > h2 {
+    & > h2,
+    & > .year-lead {
       max-width: 40rem;
       margin-inline: auto;
     }
@@ -759,23 +880,63 @@ const highlights = [
     margin-inline: auto;
   }
 
+  /* The trips as a wall of covers, each dimmed with its route drawn over it in white and
+     its name at the foot. */
   .year-trips {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.75rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.375rem;
 
     @media (width >= 40rem) {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.5rem;
     }
 
     & a {
+      position: relative;
       display: flex;
       flex-direction: column;
-      height: 100%;
+      justify-content: flex-end;
+      aspect-ratio: 4 / 5;
+      overflow: hidden;
+      padding: 0.5rem 0.625rem;
+      border-radius: 0.625rem;
+      background: var(--color-tx-2);
+      color: #fff;
       text-decoration: none;
+
+      &::after {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to top, rgb(0 0 0 / 0.7), rgb(0 0 0 / 0) 45%);
+        content: '';
+      }
     }
 
-    & .year-trips__art path {
+    & img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: brightness(0.6) saturate(1.1);
+      transition:
+        scale 240ms var(--ease-out),
+        filter 240ms var(--ease);
+    }
+
+    & svg {
+      position: absolute;
+      top: 12%;
+      left: 20%;
+      z-index: 1;
+      width: 60%;
+      height: 54%;
+      overflow: visible;
+      filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.4));
+    }
+
+    & path {
       fill: none;
       stroke: #fff;
       stroke-width: 2;
@@ -783,6 +944,13 @@ const highlights = [
       stroke-linejoin: round;
       stroke-dasharray: 1;
       stroke-dashoffset: 0;
+    }
+
+    @media (hover: hover) {
+      & a:hover img {
+        scale: 1.06;
+        filter: brightness(0.45) saturate(1.1);
+      }
     }
   }
 
@@ -792,48 +960,37 @@ const highlights = [
     }
   }
 
-  /* The trip's cover, dimmed, with the shape of its route drawn over it in white. */
-  .year-trips__art {
+  .year-trips__date {
+    position: absolute;
+    top: 0.5rem;
+    left: 0.625rem;
+    z-index: 1;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    opacity: 0.85;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .year-trips__words {
     position: relative;
-    display: block;
-    aspect-ratio: 1;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .year-trips__title {
     overflow: hidden;
-    margin-bottom: 0.5rem;
-    border-radius: 0.625rem;
-    background: var(--color-tx-2);
-
-    & img {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      filter: brightness(0.55) saturate(1.1);
-      transition:
-        scale 180ms var(--ease),
-        filter 180ms var(--ease);
-    }
-
-    & svg {
-      position: absolute;
-      inset: 16%;
-      width: 68%;
-      height: 68%;
-      overflow: visible;
-      filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.4));
-    }
-
-    @media (hover: hover) {
-      a:hover & img {
-        scale: 1.025;
-        filter: brightness(0.45) saturate(1.1);
-      }
-    }
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.125rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .year-trips__meta {
-    color: var(--color-tx-2);
-    font-size: 0.875rem;
+    color: rgb(255 255 255 / 0.75);
+    font-size: 0.6875rem;
     font-variant-numeric: tabular-nums;
   }
 
@@ -862,6 +1019,25 @@ const highlights = [
   .year-cities__count {
     color: var(--color-tx-2);
     text-align: right;
+  }
+
+  /* A city pointed at, in the list or on the map, stands out in both. */
+  .year-cities li {
+    cursor: default;
+
+    & > * {
+      transition:
+        opacity 160ms var(--ease),
+        color 160ms var(--ease);
+    }
+  }
+
+  .year-cities:has(.is-active) li:not(.is-active) > * {
+    opacity: 0.35;
+  }
+
+  .year-cities li.is-active .year-cities__bar {
+    background: var(--color-tx);
   }
 
   /* The days worth going back to, as cards like the trips': their photos above, laid out
@@ -940,7 +1116,7 @@ const highlights = [
 
   @media (prefers-reduced-motion: reduce) {
     .year-highlights img,
-    .year-trips__art img {
+    .year-trips img {
       transition: none;
     }
   }
@@ -958,16 +1134,21 @@ const highlights = [
     visibility: hidden;
   }
 
+  /* How it moved from the year before, as a chip by the count: dark when it grew. */
   .year-stats__change {
     margin-left: 0.375rem;
-    color: var(--color-tx-3);
-    font-size: 0.75rem;
-    font-weight: 500;
+    padding: 0.0625rem 0.375rem;
+    border-radius: 999px;
+    background: var(--color-hover);
+    color: var(--color-tx-2);
+    font-size: 0.6875rem;
+    font-weight: 600;
     letter-spacing: 0;
-    vertical-align: 0.5rem;
+    vertical-align: 0.875rem;
 
     &.is-up {
-      color: var(--color-tx-2);
+      background: var(--color-tx);
+      color: var(--color-bg);
     }
   }
 
@@ -1690,7 +1871,7 @@ const highlights = [
         animation-delay: calc(150ms + var(--index) * 90ms);
       }
 
-      & .year-trips__art path {
+      & .year-trips path {
         animation: year-trip-draw 1600ms var(--ease-out) backwards;
         animation-delay: calc(500ms + var(--index) * 150ms);
       }
@@ -1698,7 +1879,7 @@ const highlights = [
       /* Hovering a trip draws its route again: the reveal stays first in the list, unchanged,
          so it isn't replayed; only the redraw starts, and leaving drops just that. */
       @media (hover: hover) {
-        & .year-trips a:hover .year-trips__art path {
+        & .year-trips a:hover path {
           animation:
             year-trip-draw 1600ms var(--ease-out) calc(500ms + var(--index) * 150ms) backwards,
             year-trip-redraw 1.2s var(--ease-out);
