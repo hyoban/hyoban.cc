@@ -238,7 +238,7 @@ export function getSlideLabel(slide: TripSlide<SlideStop>, messages: Messages) {
   return `${day}${messages.separator}${name}`
 }
 
-/** `第 N 天 · date · time`, naming a stop for screen readers. */
+/** `第 N 天\u2003date\u2003time`, naming a stop for screen readers. */
 export function getStopEyebrow(
   { dateKey, day, time }: { dateKey: string; day: number; time?: string | undefined },
   messages: Messages,

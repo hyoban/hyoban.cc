@@ -45,7 +45,7 @@ const labels = [0, 6, 12, 18].map((hour) => ({ hour, at: point(outer + 14, hour 
           data-count={petal.count}
           style={`--hour: ${petal.hour}`}
         >
-          <title>{`${petal.hour} 点 · ${petal.count} 条`}</title>
+          <title>{`${petal.hour} 点\u2003${petal.count} 条`}</title>
         </path>
       ))
     }
@@ -71,7 +71,7 @@ const labels = [0, 6, 12, 18].map((hour) => ({ hour, at: point(outer + 14, hour 
       const unit = svg.querySelector<SVGTextElement>('.year-clock__unit')!
       const show = (petal?: SVGElement | null) => {
         hour.textContent = petal?.dataset.hour ?? hour.dataset.default ?? ''
-        unit.textContent = petal ? `点 · ${petal.dataset.count} 条` : (unit.dataset.default ?? '')
+        unit.textContent = petal ? `点\u2003${petal.dataset.count} 条` : (unit.dataset.default ?? '')
         for (const other of svg.querySelectorAll('.year-clock__petal'))
           other.classList.toggle('is-pointed', other === petal)
       }

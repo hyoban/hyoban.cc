@@ -425,7 +425,7 @@ private fun MomentIdentity(identity: Identity, modifier: Modifier = Modifier) {
             )
             Text(
                 listOfNotNull(formatDate(moment.occurredAt), formatTime(moment.occurredAt), where.takeIf { moment.text.isNotBlank() && it.isNotEmpty() })
-                    .joinToString(" · "),
+                    .joinToString("\u2003"),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
@@ -455,7 +455,7 @@ private fun MomentWhole(moment: MomentRecord, places: Map<String, Place>, urls: 
         if (moment.places.isNotEmpty()) {
             // Where, as a subhead rather than labels, none of them tapped on its own.
             Text(
-                moment.places.joinToString(" · ") { places[it]?.name ?: it },
+                moment.places.joinToString("\u2003") { places[it]?.name ?: it },
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

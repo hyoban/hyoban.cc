@@ -30,7 +30,7 @@ function getWeekday(dateKey: string) {
 }
 
 function formatDate(dateKey: string) {
-  return `${Number.parseInt(dateKey.slice(5, 7), 10)} 月 ${Number.parseInt(dateKey.slice(8, 10), 10)} 日 · ${getWeekday(dateKey)}`
+  return `${Number.parseInt(dateKey.slice(5, 7), 10)} 月 ${Number.parseInt(dateKey.slice(8, 10), 10)} 日\u2003${getWeekday(dateKey)}`
 }
 
 function formatShortDate(dateKey: string) {

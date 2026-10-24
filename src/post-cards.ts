@@ -26,7 +26,7 @@ function getPostCard(entry: MarkdownEntry) {
     // When it was written and how long it is, as the post's page heads it.
     date:
       entry.collection === 'posts'
-        ? `${formatPostFullDate(entry.data.pubDate)} · ${formatPostWordCount(countPostWords(entry.body ?? ''))}`
+        ? `${formatPostFullDate(entry.data.pubDate)}\u2003${formatPostWordCount(countPostWords(entry.body ?? ''))}`
         : undefined,
   }
 }

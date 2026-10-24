@@ -426,7 +426,7 @@ private fun PlaceSheet(
             Column(Modifier.weight(1f).padding(horizontal = Space.m)) {
                 Text(place.name, style = MaterialTheme.typography.titleLarge, modifier = Modifier.semantics { heading() })
                 Text(
-                    (listOf(pluralStringResource(R.plurals.count_moments, here.size, here.size)) + years.joinToString(context.getString(R.string.separator_list)) { context.getString(R.string.year_item, it) }).joinToString(" · "),
+                    (listOf(pluralStringResource(R.plurals.count_moments, here.size, here.size)) + years.joinToString(context.getString(R.string.separator_list)) { context.getString(R.string.year_item, it) }).joinToString("\u2003"),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,

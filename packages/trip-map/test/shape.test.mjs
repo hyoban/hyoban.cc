@@ -71,9 +71,9 @@ test('shapes a built trip into what the player plays', () => {
     data.legs.map((leg) => leg.mode),
     ['car', 'train'],
   )
-  assert.deepEqual(data.weather, { 2: { icon: 'cloud-rain', label: '雨 · 24–30°C' } })
-  assert.deepEqual(data.driving, { 1: '开了 336 公里 · 7.3 小时', 3: '开了 20 公里' })
-  assert.deepEqual(data.charging, { 2: '充电 2 次 · 45.3 kWh' })
+  assert.deepEqual(data.weather, { 2: { icon: 'cloud-rain', label: '雨\u200324–30°C' } })
+  assert.deepEqual(data.driving, { 1: '开了 336 公里\u20037.3 小时', 3: '开了 20 公里' })
+  assert.deepEqual(data.charging, { 2: '充电 2 次\u200345.3 kWh' })
 })
 
 test('summarises a trip for the overview, dashing the legs not driven', () => {

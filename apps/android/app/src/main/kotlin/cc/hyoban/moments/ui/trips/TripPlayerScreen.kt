@@ -507,7 +507,7 @@ private fun StopCard(slide: PlaybackSlide.Stop, controller: PlaybackController, 
         stringResource(R.string.trip_day, stop.day),
         formatDay(moment.dateKey),
         formatTime(moment.occurredAt),
-    ).joinToString(" · ") + " · " + stop.places.joinToString("、") { it.name }
+    ).joinToString("\u2003") + "\u2003" + stop.places.joinToString("、") { it.name }
     val open = stringResource(R.string.action_open_moment)
     Column(
         Modifier.fillMaxWidth().semantics {

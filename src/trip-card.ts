@@ -16,7 +16,7 @@ export async function renderTripCard(trip: MomentTrip) {
     const card = await renderOgImage({
       title: trip.title,
       date: `${trip.start.replaceAll('-', '.')} — ${trip.end.replaceAll('-', '.')}`,
-      detail: `${trip.dayCount} 天 · ${trip.placeCount} 个地点`,
+      detail: `${trip.dayCount} 天\u2003${trip.placeCount} 个地点`,
       panel: {
         kind: 'route',
         route: `data:image/png;base64,${Buffer.from(route).toString('base64')}`,

@@ -17,7 +17,7 @@ export function getIntroCovers(trip: TripData) {
   return pickCovers(trip.covers, trip.stops, INTRO_COVER_COUNT)
 }
 
-/** `date range · N 天 · N 条记录`, under the trip's title on both intro cards. */
+/** `date range\u2003N 天\u2003N 条记录`, under the trip's title on both intro cards. */
 export function getTripMeta(trip: TripData, messages: Messages) {
   return t(messages, 'tripMeta', {
     days: trip.dayCount,

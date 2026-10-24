@@ -192,7 +192,7 @@ fun FeedScreen(
     val shown = remember(moments, filter) { moments.filtered(filter) }
     val placeCount = remember(shown) { shown.flatMap { it.places }.toSet().size }
     val subtitle = if (shown.isEmpty()) null else
-        pluralStringResource(R.plurals.count_moments, shown.size, shown.size) + " · " + pluralStringResource(R.plurals.count_places, placeCount, placeCount)
+        pluralStringResource(R.plurals.count_moments, shown.size, shown.size) + "\u2003" + pluralStringResource(R.plurals.count_places, placeCount, placeCount)
     var calendar by rememberSaveable { mutableStateOf(false) }
     // Each view keeps where it was scrolled to while the other shows.
     val feedState = rememberLazyListState()
@@ -550,7 +550,7 @@ fun PlaceScreen(
         onBack,
         Modifier.background(AppColors.page),
         // Where it is, then how many Moments are there.
-        subtitle = listOfNotNull(place?.division?.label(), pluralStringResource(R.plurals.count_moments, moments.size, moments.size)).joinToString(" · "),
+        subtitle = listOfNotNull(place?.division?.label(), pluralStringResource(R.plurals.count_moments, moments.size, moments.size)).joinToString("\u2003"),
         actions = {
             // On the map tab, its panel up, and the way there, as from that panel.
             if (place != null) {

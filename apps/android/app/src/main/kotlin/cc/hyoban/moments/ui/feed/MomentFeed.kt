@@ -237,7 +237,7 @@ fun MomentFeed(
 /** A day's pill: its label, and how many Moments it has when more than one. */
 @Composable
 private fun dayPillText(label: String, count: Int): String =
-    if (count > 1) "$label · ${pluralStringResource(R.plurals.count_moments, count, count)}" else label
+    if (count > 1) "$label\u2003${pluralStringResource(R.plurals.count_moments, count, count)}" else label
 
 /**
  * A sticky header held below the list's top padding while it is stuck, rather than at the

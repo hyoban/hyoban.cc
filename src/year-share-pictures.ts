@@ -221,7 +221,7 @@ function drawSquares({ canvas, scale, width, blocks }: Drawing, mark: string) {
     context.textAlign = 'left'
     context.fillText('Hyoban', PADDING.x, baseline)
     context.textAlign = 'right'
-    context.fillText(`${mark} · ${index + 1}/${squares.length}`, side - PADDING.x, baseline)
+    context.fillText(`${mark}\u2003${index + 1}/${squares.length}`, side - PADDING.x, baseline)
     return square
   })
 }

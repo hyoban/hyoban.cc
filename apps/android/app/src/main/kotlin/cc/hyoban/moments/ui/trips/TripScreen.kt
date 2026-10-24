@@ -96,7 +96,7 @@ fun TripScreen(
     val stops = remember(trip, all, places) { stopsOf(trip, all, trips, places) }
     val context = LocalContext.current
 
-    val dayLabel = { day: String -> context.getString(R.string.trip_day, daysBetween(trip.start, day)) + " · " + formatDay(day) }
+    val dayLabel = { day: String -> context.getString(R.string.trip_day, daysBetween(trip.start, day)) + "\u2003" + formatDay(day) }
     // The title is the bar's; under it, what the trip covered.
     val summary: @Composable () -> Unit = {
         Box(Modifier.padding(start = Space.gutter, end = Space.gutter, top = Space.xs, bottom = Space.l)) {
@@ -114,7 +114,7 @@ fun TripScreen(
         Column(Modifier.padding(bottom = Space.l), verticalArrangement = Arrangement.spacedBy(Space.xs)) {
             Row(Modifier.padding(start = Space.gutter, end = Space.xs), verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    stringResource(R.string.section_photo) + " · " + photos.size,
+                    stringResource(R.string.section_photo) + "\u2003" + photos.size,
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.weight(1f).semantics { heading() },
                 )

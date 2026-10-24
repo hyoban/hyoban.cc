@@ -338,11 +338,11 @@ export function getMomentHeadline(moment: Moment, length = 30) {
   }
 }
 
-/** When and where, as a Moment's page and share card show it: `2023 年 12 月 13 日 08:45 · 上海`. */
+/** When and where, as a Moment's page and share card show it: `2023 年 12 月 13 日 08:45\u2003上海`. */
 export function getMomentDateLabel(moment: Moment) {
   const [year, month, day] = moment.dateKey.split('-').map(Number)
   const date = `${year} 年 ${month} 月 ${day} 日${moment.occurredLabel ? ` ${moment.occurredLabel}` : ''}`
-  return [date, ...moment.locations.map((location) => location.name)].join(' · ')
+  return [date, ...moment.locations.map((location) => location.name)].join('\u2003')
 }
 
 export function getMonthPath(monthKey: string) {

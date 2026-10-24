@@ -22,7 +22,7 @@ const WEATHER_KINDS: [maxCode: number, kind: MessageKey, icon: WeatherIcon][] = 
   [99, 'weatherThunderstorm', 'cloud-lightning'],
 ]
 
-/** `晴 · 12–20°C` with its icon, or nothing for a code outside the table. */
+/** `晴\u200312–20°C` with its icon, or nothing for a code outside the table. */
 export function describeWeather(
   day: DayWeather,
   messages: Messages = zhCN,

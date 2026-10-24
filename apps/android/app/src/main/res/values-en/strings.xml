@@ -70,7 +70,7 @@
     <string name="share_x_unavailable">Couldn’t open the X composer. Make sure X is installed and up to date.</string>
     <string name="action_open_moment">Open this Moment</string>
     <string name="label_alt">Image description</string>
-    <string name="label_media_size">%1$s · %2$d × %3$d</string>
+    <string name="label_media_size">%1$s\u2003%2$d × %3$d</string>
     <string name="media_photo">Photo</string>
     <string name="media_live">Live Photo</string>
     <string name="media_video">Video</string>
@@ -99,7 +99,7 @@
     <string name="action_locate">Your location</string>
     <string name="action_north">Face north</string>
     <string name="action_fog">Fog of war</string>
-    <string name="fog_lit">Cities lit: %1$d · Provinces: %2$d</string>
+    <string name="fog_lit">Cities lit: %1$d\u2003Provinces: %2$d</string>
     <string name="error_location">Couldn’t find your location. Check that location is on.</string>
     <string name="error_location_permission">Location permission is needed to show where you are</string>
     <string name="label_view_list">List</string>

@@ -42,7 +42,7 @@ const foodParts = food
   ? [
       food.dishes.join('、'),
       food.verdict && verdictLabels[food.verdict],
-      bill && [`¥${priceFormatter.format(bill.amount)}`, bill.people && `${bill.people} 人`].filter(Boolean).join(' · '),
+      bill && [`¥${priceFormatter.format(bill.amount)}`, bill.people && `${bill.people} 人`].filter(Boolean).join('\u2003'),
     ].filter(Boolean)
   : []
 
@@ -214,10 +214,8 @@ function formatDay(dateKey: string) {
       font-size: 0.875rem;
     }
 
-    & span:not([class]) + span::before {
-      margin-right: 0.5rem;
-      color: var(--color-tx-3);
-      content: '·';
+    & span:not([class]) + span {
+      margin-left: 1em;
     }
   }
 

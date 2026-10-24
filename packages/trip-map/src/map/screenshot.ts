@@ -612,13 +612,13 @@ function drawHeader(
   }
 }
 
-/** Joins `phrases` with ` · ` into as few lines as fit `width`. */
+/** Joins `phrases` with `\u2003` into as few lines as fit `width`. */
 function wrapPhrases(context: CanvasRenderingContext2D, phrases: readonly string[], width: number) {
   const lines: string[] = []
 
   for (const phrase of phrases) {
     const last = lines.at(-1)
-    const joined = last === undefined ? phrase : `${last} · ${phrase}`
+    const joined = last === undefined ? phrase : `${last}\u2003${phrase}`
 
     if (last !== undefined && context.measureText(joined).width <= width) {
       lines[lines.length - 1] = joined

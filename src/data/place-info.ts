@@ -21,12 +21,12 @@ export function getDivisionLabel(division: NonNullable<Place['division']>) {
     .join(' ')
 }
 
-/** What and where a place is, `景点 · 合肥市 肥西县`; undefined when it has neither. */
+/** What and where a place is, `景点\u2003合肥市 肥西县`; undefined when it has neither. */
 export function getPlaceDetail(place: Place) {
   const parts = [
     place.kind && placeKindLabels[place.kind],
     place.division && getDivisionLabel(place.division),
   ].filter(Boolean)
 
-  return parts.length > 0 ? parts.join(' · ') : undefined
+  return parts.length > 0 ? parts.join('\u2003') : undefined
 }

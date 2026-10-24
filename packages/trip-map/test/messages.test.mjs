@@ -6,7 +6,7 @@ import { describeWeather } from '../src/weather.ts'
 
 test("fills a message's slots, leaving unknown ones alone", () => {
   assert.equal(t(zhCN, 'dayLabel', { day: 3 }), '第 3 天')
-  assert.equal(t(zhCN, 'placeEyebrow', { count: 2 }), '2 条记录 · {years}')
+  assert.equal(t(zhCN, 'placeEyebrow', { count: 2 }), '2 条记录\u2003{years}')
 })
 
 test('a site replaces some words and keeps the rest', () => {
@@ -35,7 +35,7 @@ test('formats dates in the locale, in UTC, and takes them apart for rolling digi
 test("describes a day's weather in words, from its WMO code", () => {
   assert.deepEqual(describeWeather({ code: 0, max: 20, min: 12 }), {
     icon: 'sun',
-    label: '晴 · 12–20°C',
+    label: '晴\u200312–20°C',
   })
   assert.equal(describeWeather({ code: 100, max: 1, min: 0 }), undefined)
 })
