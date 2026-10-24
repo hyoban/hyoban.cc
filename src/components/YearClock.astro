@@ -169,6 +169,33 @@ const labels = [0, 6, 12, 18].map((hour) => ({ hour, at: point(outer + 14, hour 
     }
   }
 
+  /* Scrolled, where animations can follow it: the petals grow round the clock as the face
+     comes up through the screen, the busiest hour named once they have (the year's page). */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      :global(.year-scroll) {
+        & .year-clock svg {
+          view-timeline: --clock;
+        }
+
+        & .year-clock__petal {
+          transform-box: view-box;
+          transform-origin: 50% 50%;
+          animation: year-clock-grow linear both;
+          animation-timeline: --clock;
+          animation-range: entry calc(30% + var(--hour) * 2%) cover calc(30% + var(--hour) * 1%);
+        }
+
+        & .year-clock__hour,
+        & .year-clock__unit {
+          animation: year-clock-fade linear both;
+          animation-timeline: --clock;
+          animation-range: cover 50% cover 60%;
+        }
+      }
+    }
+  }
+
   @keyframes year-clock-grow {
     from {
       opacity: 0;

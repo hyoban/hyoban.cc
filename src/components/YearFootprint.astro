@@ -110,6 +110,24 @@ const { map, label } = Astro.props
     }
   }
 
+  /* Scrolled, where animations can follow it: the routes draw as the map comes up through
+     the screen, one trip a little after another (the year's page). */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      :global(.year-scroll) {
+        & .year-footprint svg {
+          view-timeline: --map;
+        }
+
+        & .year-footprint__route {
+          animation: year-footprint-draw linear both;
+          animation-timeline: --map;
+          animation-range: cover calc(10% + min(var(--trip), 6) * 3%) cover calc(40% + min(var(--trip), 6) * 3%);
+        }
+      }
+    }
+  }
+
   @keyframes year-footprint-draw {
     from {
       stroke-dashoffset: 1;
