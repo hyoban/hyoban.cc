@@ -89,13 +89,20 @@ const ownedDriving = [...car.days].filter(([date]) => date <= ownedUntil)
 const ownedMeters = ownedDriving.reduce((total, [, meters]) => total + meters, 0)
 // Shared out over the days it was driven, not every day it was owned.
 const ownedDrivenDays = ownedDriving.filter(([, meters]) => meters > 0).length
-const ownership = ownedCost.total > 0 && [
-  { value: formatYuan(ownedCost.total), label: `${formatNumber(ownedDays)} 天花费` },
+const ownership: Tile[] | false = ownedCost.total > 0 && [
+  { label: `提车 ${formatNumber(ownedDays)} 天`, value: formatYuan(ownedCost.total), note: '含购车' },
   ...(ownedDrivenDays > 0
-    ? [{ value: formatYuan(ownedCost.total / ownedDrivenDays), label: `开车的 ${ownedDrivenDays} 天，每天` }]
+    ? [
+        {
+          label: '开车的日子',
+          value: formatNumber(ownedDrivenDays),
+          unit: '天',
+          note: `每天 ${formatYuan(ownedCost.total / ownedDrivenDays)}`,
+        },
+      ]
     : []),
   ...(ownedMeters > 0
-    ? [{ value: formatRate(ownedCost.total / 100 / (ownedMeters / 1000)), label: '每公里' }]
+    ? [{ label: '每公里', value: formatRate(ownedCost.total / 100 / (ownedMeters / 1000)), note: '含购车' }]
     : []),
 ]
 
@@ -134,15 +141,34 @@ const heatmaps = heatYears.map((at) => {
 // What the graph's readout says while no day is pointed at.
 const farthest =
   longest && longest[1] > 0 ? `最远一天 ${formatKilometers(longest[1])}\u2003${formatDay(longest[0])}` : ''
-const chargingTiles = [
-  { value: formatNumber(charges.length), label: `次充电\u2003快充 ${fast}` },
-  { value: formatNumber(chargedKwh), label: 'kWh' },
-  ...(averageKwhYuan !== undefined ? [{ value: formatRate(averageKwhYuan), label: '平均每 kWh' }] : []),
+/** A figure under what it counts, with what it's in and a word more under it. */
+type Tile = { label: string; value: string; unit?: string; note?: string }
+// Fast charges on the road and slow ones at home, each with what a kWh of it cost, then
+// all that went in.
+const chargingTiles: Tile[] = [
+  {
+    label: '快充',
+    value: formatNumber(fast),
+    unit: '次',
+    ...(fastPrice.yuanPerKwh !== undefined && { note: `每 kWh ${formatRate(fastPrice.yuanPerKwh)}` }),
+  },
+  {
+    label: '家充',
+    value: formatNumber(charges.length - fast),
+    unit: '次',
+    note: `每 kWh ${formatRate(HOME_KWH_YUAN)}`,
+  },
+  {
+    label: '充入',
+    value: formatNumber(chargedKwh),
+    unit: 'kWh',
+    ...(averageKwhYuan !== undefined && { note: `平均每 kWh ${formatRate(averageKwhYuan)}` }),
+  },
 ]
-const spendingTiles = [
-  { value: formatYuan(spending.total), label: '用车花费' },
+const spendingTiles: Tile[] = [
+  { label: '用车花费', value: formatYuan(spending.total), note: '不含购车' },
   ...(distance > 0 && running.total > 0
-    ? [{ value: formatRate(running.total / 100 / (distance / 1000)), label: '开一公里' }]
+    ? [{ label: '开一公里', value: formatRate(running.total / 100 / (distance / 1000)), note: '不含保险' }]
     : []),
 ]
 ---
@@ -228,7 +254,11 @@ const spendingTiles = [
         {chargingTiles.map((tile) => (
           <div>
             <dt>{tile.label}</dt>
-            <dd>{tile.value}</dd>
+            <dd>
+              {tile.value}
+              {tile.unit && <small>{tile.unit}</small>}
+            </dd>
+            {tile.note && <dd class="year-driving__note">{tile.note}</dd>}
           </div>
         ))}
       </dl>
@@ -240,7 +270,7 @@ const spendingTiles = [
         {hours.map((hour) => (
           <span
             class:list={['year-driving__hour', { 'is-top': hour.total === busiestHour.total && hour.total > 0 }]}
-            title={`${hour.hour} 点\u2003快充 ${hour.dc} 次\u2003慢充 ${hour.ac} 次`}
+            title={`${hour.hour} 点\u2003快充 ${hour.dc} 次\u2003家充 ${hour.ac} 次`}
             style={`--hour: ${hour.hour}`}
           >
             <span class="year-driving__hour-ac" style={`height: ${(hour.ac / hourMax) * 100}%`} />
@@ -258,9 +288,9 @@ const spendingTiles = [
           最多在 {busiestHour.hour} 点
         </span>
         <span class="year-driving__swatch is-dc" />
-        <span>快充{fastPrice.yuanPerKwh !== undefined && ` ${formatRate(fastPrice.yuanPerKwh)}`}</span>
+        <span>快充</span>
         <span class="year-driving__swatch is-ac" />
-        <span>家充 {formatRate(HOME_KWH_YUAN)}</span>
+        <span>家充</span>
       </div>
     </>
   )
@@ -273,7 +303,11 @@ const spendingTiles = [
         {spendingTiles.map((tile) => (
           <div>
             <dt>{tile.label}</dt>
-            <dd>{tile.value}</dd>
+            <dd>
+              {tile.value}
+              {tile.unit && <small>{tile.unit}</small>}
+            </dd>
+            {tile.note && <dd class="year-driving__note">{tile.note}</dd>}
           </div>
         ))}
       </dl>
@@ -311,7 +345,11 @@ const spendingTiles = [
         {ownership.map((tile) => (
           <div>
             <dt>{tile.label}</dt>
-            <dd>{tile.value}</dd>
+            <dd>
+              {tile.value}
+              {tile.unit && <small>{tile.unit}</small>}
+            </dd>
+            {tile.note && <dd class="year-driving__note">{tile.note}</dd>}
           </div>
         ))}
       </dl>
@@ -368,13 +406,12 @@ const spendingTiles = [
 
     & div {
       display: flex;
-      flex-direction: column-reverse;
-      gap: 0.125rem;
+      flex-direction: column;
     }
 
     & dt {
-      color: var(--color-tx-3);
-      font-size: 0.75rem;
+      color: var(--color-tx-2);
+      font-size: 0.8125rem;
     }
 
     & dd {
@@ -384,6 +421,22 @@ const spendingTiles = [
       letter-spacing: -0.03em;
       white-space: nowrap;
     }
+
+    & small {
+      margin-left: 0.25rem;
+      color: var(--color-tx-2);
+      font-size: 0.8125rem;
+      font-weight: 500;
+      letter-spacing: 0;
+    }
+  }
+
+  .year-driving__tiles .year-driving__note {
+    color: var(--color-tx-3);
+    font-size: 0.75rem;
+    font-weight: 400;
+    line-height: 1rem;
+    letter-spacing: 0;
   }
 
   /* What the chart's pointer is on, in the legend's empty start. */
