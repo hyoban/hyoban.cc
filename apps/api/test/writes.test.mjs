@@ -83,6 +83,23 @@ test('a place near a known one, or with its name, is that one; one the app made 
   assert.equal((await get(env, '/v1/places/somewhere-else')).status, 404)
 })
 
+test('a known place sent under its own id takes the kind it is sent with, and nothing else', async () => {
+  const { env } = setUpWithData()
+  const nanjing = snapshot.places.nanjing
+  const kind = nanjing.kind === 'scenic' ? 'food' : 'scenic'
+  const changed = await commit(env, {
+    places: { nanjing: { ...nanjing, name: '别的名字', latitude: 0, kind } },
+  })
+
+  assert.equal(changed.status, 200)
+  assert.ok(changed.body.revision, 'and takes a revision')
+  assert.deepEqual((await get(env, '/v1/places/nanjing')).body, { ...nanjing, kind })
+
+  const again = await commit(env, { places: { nanjing: { ...nanjing, kind } } })
+
+  assert.ok(!('revision' in again.body), 'sent as it is, it writes nothing')
+})
+
 test('a new place is kept with the division it is in, and without one when that can’t be looked up', async () => {
   const { env } = setUpWithData()
   const square = (x, y) => [

@@ -54,6 +54,7 @@ import androidx.compose.material.icons.rounded.Fullscreen
 import androidx.compose.material.icons.rounded.Luggage
 import androidx.compose.material.icons.rounded.PhoneAndroid
 import androidx.compose.material.icons.rounded.Place
+import androidx.compose.material.icons.rounded.Restaurant
 import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingToolbarDefaults
@@ -61,6 +62,7 @@ import androidx.compose.material3.FloatingToolbarExitDirection
 import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.ListItemShapes
 import androidx.compose.material3.MaterialTheme
@@ -99,8 +101,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.R
 import cc.hyoban.moments.data.media.MediaUrls
+import cc.hyoban.moments.data.spec.FoodVerdict
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
+import cc.hyoban.moments.data.spec.PlaceKind
+import cc.hyoban.moments.ui.compose.label
+import cc.hyoban.moments.ui.format.VerdictBadge
+import cc.hyoban.moments.ui.format.billLine
 import cc.hyoban.moments.data.spec.TripRecord
 import cc.hyoban.moments.data.trips.countOf
 import cc.hyoban.moments.data.trips.coversOf
@@ -396,6 +403,28 @@ private fun MomentDetails(
         // its own, a small gap between, the group's outer corners round and its inner ones
         // tight, each row's corners rounding further under the finger.
         val rows = buildList<@Composable (ListItemShapes) -> Unit> {
+            // What was eaten heads them, as it is of the Moment itself: the dishes, what the
+            // meal cost and each one's share, and how it went as a badge at the end. Not a
+            // link, so a plain row on the group's fill rather than one that answers a tap.
+            moment.food?.let { food ->
+                val verdict = FoodVerdict.of(food.verdict)
+                add { shapes ->
+                    ListItem(
+                        headlineContent = {
+                            Text(
+                                food.dishes.joinToString(stringResource(R.string.separator_list)).ifEmpty { stringResource(R.string.section_food) },
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        },
+                        supportingContent = food.bill?.let { bill -> { Text(billLine(bill)) } },
+                        leadingContent = { RowIcon(Icons.Rounded.Restaurant) },
+                        trailingContent = verdict?.let { { VerdictBadge(it) } },
+                        colors = ListItemDefaults.colors(containerColor = LocalSurfaceLevel.current.raised.fill()),
+                        modifier = Modifier.clip(shapes.shape).testTag("food"),
+                    )
+                }
+            }
             moment.places.forEach { id ->
                 val place = places[id]
                 add { shapes ->
@@ -405,7 +434,11 @@ private fun MomentDetails(
                         colors = segmentColors(),
                         leadingContent = { RowIcon(Icons.Rounded.Place) },
                         trailingContent = { Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null) },
-                        supportingContent = place?.note?.takeIf { it.isNotBlank() }?.let { { Text(it, maxLines = 2, overflow = TextOverflow.Ellipsis) } },
+                        // Its kind, then a note if it has one.
+                        supportingContent = listOfNotNull(
+                            PlaceKind.of(place?.kind)?.let { stringResource(it.label) },
+                            place?.note?.takeIf { it.isNotBlank() },
+                        ).joinToString("\u2003").takeIf { it.isNotEmpty() }?.let { { Text(it, maxLines = 2, overflow = TextOverflow.Ellipsis) } },
                         modifier = Modifier.testTag("place_$id"),
                     ) { Text(place?.name ?: id, maxLines = 1, overflow = TextOverflow.Ellipsis) }
                 }

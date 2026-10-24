@@ -86,6 +86,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.R
+import cc.hyoban.moments.data.spec.PlaceKind
+import cc.hyoban.moments.ui.compose.label
 import cc.hyoban.moments.data.trips.tripOf
 import cc.hyoban.moments.ui.Feed
 import cc.hyoban.moments.ui.LocalNavAccessory
@@ -549,8 +551,8 @@ fun PlaceScreen(
         place?.name ?: id,
         onBack,
         Modifier.background(AppColors.page),
-        // Where it is, then how many Moments are there.
-        subtitle = listOfNotNull(place?.division?.label(), pluralStringResource(R.plurals.count_moments, moments.size, moments.size)).joinToString("\u2003"),
+        // What sort of place, where it is, then how many Moments are there.
+        subtitle = listOfNotNull(PlaceKind.of(place?.kind)?.let { stringResource(it.label) }, place?.division?.label(), pluralStringResource(R.plurals.count_moments, moments.size, moments.size)).joinToString("\u2003"),
         actions = {
             // On the map tab, its panel up, and the way there, as from that panel.
             if (place != null) {

@@ -47,6 +47,8 @@ class MomentsRepository(
     private var phonePlaces: Map<String, Place> = emptyMap()
     /** The phone's places kept on their own, which stay when no Moment is at them. */
     private var keptPlaces: Set<String> = emptySet()
+    /** The site's places whose kind was changed on the phone, as they will be, until it is published. */
+    private var changedPlaces: Map<String, Place> = emptyMap()
     /** The site's Moments deleted on the phone, by uid, until the deletions are published. */
     private var removed: Set<String> = emptySet()
 
@@ -84,6 +86,7 @@ class MomentsRepository(
                 phone = local.readMoments().associateBy { it.uid }
                 phonePlaces = local.readPlaces()
                 keptPlaces = local.readKeptPlaces()
+                changedPlaces = local.readChangedPlaces()
                 removed = local.readRemoved()
                 // What a snackbar was still offering to undo when the app was last closed: done
                 // now, as the snackbar going without its undo would have done it.
@@ -216,6 +219,41 @@ class MomentsRepository(
             local.writePlaces(phonePlaces)
             local.writeKeptPlaces(keptPlaces)
             publishPlaces()
+        }
+    }
+
+    /**
+     * Sets a place's kind: one the phone made at once, one of the site's as a change kept
+     * until it is published, taken back when it is set to the site's kind again.
+     */
+    suspend fun setPlaceKind(id: String, kind: String) = lock.withLock {
+        val local = checkNotNull(local) { "No store for the phone's own places" }
+        withContext(io) {
+            val own = phonePlaces[id]
+            val site = apiPlaces[id]
+            when {
+                own != null -> {
+                    phonePlaces = phonePlaces + (id to own.copy(kind = kind))
+                    local.writePlaces(phonePlaces)
+                }
+                site != null -> {
+                    changedPlaces = if (site.kind == kind) changedPlaces - id else changedPlaces + (id to site.copy(kind = kind))
+                    local.writeChangedPlaces(changedPlaces)
+                }
+                else -> error("Unknown place $id")
+            }
+            publishPlaces()
+            publish()
+        }
+    }
+
+    /** Takes back a site's place's changed kind. */
+    suspend fun revertPlace(id: String) = lock.withLock {
+        withContext(io) {
+            changedPlaces = changedPlaces - id
+            local?.writeChangedPlaces(changedPlaces)
+            publishPlaces()
+            publish()
         }
     }
 
@@ -359,13 +397,14 @@ class MomentsRepository(
      */
     suspend fun publishPending(onProgress: (done: Int, total: Int) -> Unit = { _, _ -> }) {
         val writer = checkNotNull(writer) { "No API to write to" }
-        val (moments, known, own, deletions) = lock.withLock {
+        val (moments, known, own, deletions, kinds) = lock.withLock {
             // A change being taken back isn't published, whatever becomes of it.
-            Snapshot(phone.values.filter { it.uid !in holding }.sortedWith(oldestFirst), apiPlaces, phonePlaces, (removed - holding).toList())
+            Snapshot(phone.values.filter { it.uid !in holding }.sortedWith(oldestFirst), apiPlaces, phonePlaces, (removed - holding).toList(), changedPlaces)
         }
-        if (moments.isEmpty() && deletions.isEmpty()) return
+        if (moments.isEmpty() && deletions.isEmpty() && kinds.isEmpty()) return
+        // The site's places with a changed kind go under their own ids, which the API takes the kind of.
         val places = moments.flatMap { it.places }.distinct().filter { it !in known }
-            .associateWith { id -> own[id] ?: error("Unknown place $id") }
+            .associateWith { id -> own[id] ?: error("Unknown place $id") } + kinds
         val photos = moments.flatMap { moment -> moment.media.filter { it.published == null }.map { moment.uid to it } }
         val total = photos.size + 1
         var done = 0
@@ -394,8 +433,12 @@ class MomentsRepository(
         }
         lock.withLock {
             withContext(io) {
-                apiPlaces = apiPlaces + applied.places.filterValues { it !in apiPlaces }.entries.associate { (given, id) -> id to places.getValue(given) }
+                apiPlaces = apiPlaces + applied.places.filterValues { it !in apiPlaces }.entries.associate { (given, id) -> id to places.getValue(given) } +
+                    kinds.mapValues { (id, place) -> apiPlaces[id]?.copy(kind = place.kind) ?: place }
                 store.writePlaces(apiPlaces)
+                // A kind changed again while this was sent stays to be published.
+                changedPlaces = changedPlaces.filter { (id, place) -> kinds[id] != place }
+                local?.writeChangedPlaces(changedPlaces)
                 for (saved in applied.moments) {
                     keep(saved)
                     phone[saved.uid]?.let(::forgetLocal)
@@ -424,6 +467,7 @@ class MomentsRepository(
         val known: Map<String, Place>,
         val own: Map<String, Place>,
         val deletions: List<String>,
+        val kinds: Map<String, Place>,
     )
 
     /** One of the site's Moments as the API answered it, kept in the copy. */
@@ -479,11 +523,16 @@ class MomentsRepository(
         _moments.value = (all.values.filter { isShown(it) && it.uid !in phone && it.uid !in removed } + phone.values)
             .filter { it.uid !in setAside }.sortedWith(newestFirst)
         val (added, changed) = phone.values.filter { it.uid !in setAside }.sortedWith(oldestFirst).partition { it.published == null }
-        _pending.value = PendingChanges(added, changed.map { Change(all[it.uid], it) }, removed.mapNotNull { all[it] }.sortedWith(oldestFirst))
+        _pending.value = PendingChanges(
+            added,
+            changed.map { Change(all[it.uid], it) },
+            removed.mapNotNull { all[it] }.sortedWith(oldestFirst),
+            changedPlaces.mapNotNull { (id, place) -> apiPlaces[id]?.let { PlaceChange(id, it, place) } }.sortedBy { it.after.name },
+        )
     }
 
     private fun publishPlaces() {
-        _places.value = phonePlaces + apiPlaces
+        _places.value = phonePlaces + apiPlaces + changedPlaces
     }
 
     private fun isShown(moment: MomentRecord) = moment.published != null && !moment.hidden && moment.topic != "tech"
@@ -526,9 +575,13 @@ data class PendingChanges(
     val added: List<MomentRecord> = emptyList(),
     val changed: List<Change> = emptyList(),
     val removed: List<MomentRecord> = emptyList(),
+    val places: List<PlaceChange> = emptyList(),
 ) {
-    val size get() = added.size + changed.size + removed.size
+    val size get() = added.size + changed.size + removed.size + places.size
 }
+
+/** One of the site's places as the site has it, [before], and with the kind changed on the phone. */
+data class PlaceChange(val id: String, val before: Place, val after: Place)
 
 /** One of the site's Moments as the site has it, [before] (null when the copy no longer has it), and as changed. */
 data class Change(val before: MomentRecord?, val after: MomentRecord)

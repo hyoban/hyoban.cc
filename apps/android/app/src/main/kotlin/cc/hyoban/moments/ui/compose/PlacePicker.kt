@@ -96,9 +96,12 @@ import cc.hyoban.moments.ui.theme.Space
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-/** Where a Moment is: a known place, a new one at [New.fix] under a name, or none. */
+/**
+ * Where a Moment is: a known place, with the kind it is to take when that is changed, a new
+ * one at [New.fix] under a name, or none.
+ */
 internal sealed interface PlaceChoice {
-    data class Known(val id: String) : PlaceChoice
+    data class Known(val id: String, val kind: PlaceKind? = null) : PlaceChoice
     data class New(val name: String, val fix: Fix, val kind: PlaceKind? = null) : PlaceChoice
     data object None : PlaceChoice
 }
@@ -197,8 +200,17 @@ internal fun PlacePicker(
                     fly(landmark.fix)
                 },
                 onKind = { kind ->
-                    kindChosen = kind != null
-                    (pick as? PlaceChoice.New)?.let { new -> pick = new.copy(kind = kind) }
+                    when (val chosen = pick) {
+                        is PlaceChoice.New -> {
+                            kindChosen = kind != null
+                            pick = chosen.copy(kind = kind)
+                        }
+                        // A known place keeps a kind: the one it has chosen again is no change.
+                        is PlaceChoice.Known -> if (kind != null) {
+                            pick = chosen.copy(kind = kind.takeUnless { it == PlaceKind.of(places[chosen.id]?.kind) })
+                        }
+                        PlaceChoice.None -> Unit
+                    }
                 },
                 onName = {
                     named = true
@@ -309,7 +321,10 @@ private fun ChoiceCard(
                 is PlaceChoice.Known -> {
                     Text(stringResource(R.string.label_known_place), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Text(places[pick.id]?.name ?: pick.id, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.testTag("chosen_place"))
-                    places[pick.id]?.let { NearbyChips(it.fix(), pick.id, places, landmarks, onKnown, onLandmark) }
+                    places[pick.id]?.let { known ->
+                        KindChips(pick.kind ?: PlaceKind.of(known.kind), onKind)
+                        NearbyChips(known.fix(), pick.id, places, landmarks, onKnown, onLandmark)
+                    }
                 }
                 is PlaceChoice.New -> {
                     Text(stringResource(R.string.place_new_here), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -388,7 +403,15 @@ private fun NearbyChips(
 @Composable
 private fun KindChips(kind: PlaceKind?, onKind: (PlaceKind?) -> Unit) {
     val label = stringResource(R.string.place_kind)
-    LazyRow(Modifier.semantics { contentDescription = label }, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
+    // Opened on a kind out of sight, the row starts with it in view, the one before it peeking.
+    val row = androidx.compose.foundation.lazy.rememberLazyListState()
+    LaunchedEffect(Unit) {
+        val index = kind?.let(PlaceKind.entries::indexOf) ?: return@LaunchedEffect
+        val info = row.layoutInfo
+        val shown = info.visibleItemsInfo.any { it.index == index && it.offset + it.size <= info.viewportEndOffset }
+        if (!shown) row.scrollToItem((index - 1).coerceAtLeast(0))
+    }
+    LazyRow(Modifier.semantics { contentDescription = label }, state = row, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
         items(PlaceKind.entries, key = { it.value }) { entry ->
             val selected = entry == kind
             FilterChip(

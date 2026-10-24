@@ -146,6 +146,12 @@ export async function applyChanges(
 
       places[match.id] = located
       statements.push(upsert(context.db, 'places', placeRow(match.id, located)))
+    } else if (match.status === 'known' && place.kind && place.kind !== places[match.id]?.kind) {
+      // A known place sent under its own id takes the kind it is sent with, and nothing else.
+      const kinded = withKind(places[match.id]!, place.kind)
+
+      places[match.id] = kinded
+      statements.push(upsert(context.db, 'places', placeRow(match.id, kinded)))
     }
   }
 
@@ -240,6 +246,20 @@ function tripView(record: MomentRecord | undefined) {
   return record?.published && isMomentShown(record)
     ? JSON.stringify([record.occurredAt, record.places])
     : null
+}
+
+/** A place with another kind, the kind where the spec orders it, after the point. */
+function withKind(place: Place, kind: NonNullable<Place['kind']>): Place {
+  if (place.kind) {
+    return { ...place, kind }
+  }
+
+  const entries = Object.entries(place)
+  const at = entries.findIndex(([key]) => key === 'longitude') + 1
+
+  entries.splice(at, 0, ['kind', kind])
+
+  return Object.fromEntries(entries) as Place
 }
 
 /**

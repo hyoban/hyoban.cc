@@ -17,6 +17,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -36,6 +37,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
@@ -56,9 +58,11 @@ import androidx.compose.material.icons.rounded.DeleteOutline
 import androidx.compose.material.icons.rounded.Error
 import androidx.compose.material.icons.rounded.HideImage
 import androidx.compose.material.icons.rounded.PhotoCamera
+import androidx.compose.material.icons.rounded.Restaurant
 import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenu
@@ -78,6 +82,7 @@ import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TimePickerDialog
 import androidx.compose.material3.TimePickerDialogDefaults
 import androidx.compose.material3.TimePickerDisplayMode
+import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.material3.ripple
@@ -103,10 +108,12 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.toggleableState
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -126,20 +133,27 @@ import cc.hyoban.moments.data.local.nearestPlaces
 import cc.hyoban.moments.data.local.newPlaceId
 import cc.hyoban.moments.data.local.parseStamp
 import cc.hyoban.moments.data.local.stamp
+import cc.hyoban.moments.data.spec.FoodBill
+import cc.hyoban.moments.data.spec.FoodVerdict
 import cc.hyoban.moments.data.spec.LocalMedia
 import cc.hyoban.moments.data.spec.MediaType
 import cc.hyoban.moments.data.spec.MomentMedia
+import cc.hyoban.moments.data.spec.MomentFood
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
+import cc.hyoban.moments.data.spec.PlaceKind
 import cc.hyoban.moments.data.spec.showcase
 import cc.hyoban.moments.ui.components.isCompactHeight
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.PageWidth
 import cc.hyoban.moments.ui.components.SubPage
 import cc.hyoban.moments.ui.format.failureReason
+import cc.hyoban.moments.ui.format.formatAmount
 import cc.hyoban.moments.ui.format.formatDay
 import cc.hyoban.moments.ui.format.formatTime
+import cc.hyoban.moments.ui.format.verdictLabel
 import cc.hyoban.moments.ui.settings.Group
+import cc.hyoban.moments.ui.settings.boxed
 import cc.hyoban.moments.ui.settings.SegmentedGroup
 import cc.hyoban.moments.ui.settings.Segment
 import cc.hyoban.moments.ui.settings.segmentColors
@@ -192,6 +206,13 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
     val originalUtility = remember(originalMedia) { originalMedia.filterValues { !it.showcase }.keys }
     var utility by remember { mutableStateOf(originalUtility) }
     val infos = remember { mutableStateMapOf<Uri, PhotoInfo>() }
+    // What was eaten, as typed: the dishes in one field, the bill's yuan and people in two.
+    val originalFood = original?.food
+    var dishes by rememberSaveable { mutableStateOf(originalFood?.dishes.orEmpty().joinToString("、")) }
+    var verdict by rememberSaveable { mutableStateOf(originalFood?.verdict) }
+    var amount by rememberSaveable { mutableStateOf(originalFood?.bill?.amount?.let(::formatAmount).orEmpty()) }
+    var people by rememberSaveable { mutableStateOf(originalFood?.bill?.people?.toString().orEmpty()) }
+    val food = foodOf(dishes, verdict, amount, people, originalFood)
     val openedAt = remember { OffsetDateTime.now() }
     var chosenTime by remember { mutableStateOf(originalTime) }
     var chosenPlace by remember { mutableStateOf(originalPlace) }
@@ -303,13 +324,13 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
     }
 
     val written = text.isNotBlank() || photos.isNotEmpty()
-    // What leaving would lose: anything written, or, for a Moment being changed, any change.
-    val changed = if (original == null) {
-        written
-    } else {
+    // A known place's kind is the place's to change, not the Moment's.
+    val newKind = (chosenPlace as? PlaceChoice.Known)?.kind
+    val momentChanged = original == null ||
         text != original.text || photos != originalMedia.keys.toList() || utility.intersect(photos.toSet()) != originalUtility ||
-            chosenTime != originalTime || chosenPlace != originalPlace
-    }
+        chosenTime != originalTime || ((chosenPlace as? PlaceChoice.Known)?.copy(kind = null) ?: chosenPlace) != originalPlace || food != originalFood
+    // What leaving would lose: anything written, or, for a Moment being changed, any change.
+    val changed = if (original == null) written || food != null else momentChanged || newKind != null
     val leave = { if (changed) confirmingDiscard = true else onBack() }
     BackHandler(enabled = changed && !saving) { confirmingDiscard = true }
 
@@ -321,8 +342,13 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
         scope.launch {
             try {
                 withContext(NonCancellable) {
-                    val (moment, newPlace) = buildMoment(context, container, text, photos, utility, infos, time, place, original, originalMedia)
-                    if (original == null) container.addLocal(moment, newPlace) else container.updateLocal(moment, newPlace)
+                    val (moment, newPlace) = buildMoment(context, container, text, photos, utility, infos, time, place, food, original, originalMedia)
+                    when {
+                        original == null -> container.addLocal(moment, newPlace)
+                        momentChanged -> container.updateLocal(moment, newPlace)
+                    }
+                    // A known place's kind changed in the picker, kept as a change of its own.
+                    (place as? PlaceChoice.Known)?.kind?.let { container.repository.setPlaceKind(place.id, it.value) }
                 }
                 onSaved()
             } catch (error: Exception) {
@@ -429,8 +455,14 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
                             shapes = shapes,
                             colors = segmentColors(),
                             supportingContent = {
+                                // Its kind, as it will be once saved, then where the place came from.
+                                val kind = when (place) {
+                                    is PlaceChoice.Known -> place.kind ?: PlaceKind.of(places[place.id]?.kind)
+                                    is PlaceChoice.New -> place.kind
+                                    PlaceChoice.None -> null
+                                }
                                 Text(
-                                    stringResource(
+                                    listOfNotNull(kind?.let { stringResource(it.label) }, stringResource(
                                         when {
                                             original != null && chosenPlace == originalPlace -> R.string.source_saved
                                             chosenPlace != null && chosenPlace == sharedFrom -> R.string.source_shared
@@ -441,7 +473,7 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
                                             locationDenied -> R.string.place_no_permission
                                             else -> R.string.place_unknown
                                         },
-                                    ),
+                                    )).joinToString("\u2003"),
                                 )
                             },
                             leadingContent = { Icon(Icons.Rounded.Place, contentDescription = null) },
@@ -457,6 +489,16 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
                         }
                     }
                     SegmentedGroup(stringResource(R.string.section_when_where), stringResource(note), listOf(whenRow, whereRow))
+                    FoodGroup(
+                        dishes = dishes,
+                        onDishes = { dishes = it },
+                        verdict = verdict,
+                        onVerdict = { verdict = it },
+                        amount = amount,
+                        onAmount = { amount = it },
+                        people = people,
+                        onPeople = { people = it },
+                    )
                     // Deleting is rare, so it waits down here rather than over the Moment; its snackbar can undo it.
                     if (original != null && publishing == null) {
                         SegmentedGroup(
@@ -706,6 +748,111 @@ private fun PhotoStrip(
     }
 }
 
+/**
+ * What was eaten: the dishes, how they were, one of three in a connected button group that
+ * a second tap clears, and what the meal cost and how many it fed.
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun FoodGroup(
+    dishes: String,
+    onDishes: (String) -> Unit,
+    verdict: String?,
+    onVerdict: (String?) -> Unit,
+    amount: String,
+    onAmount: (String) -> Unit,
+    people: String,
+    onPeople: (String) -> Unit,
+) {
+    val plain = TextFieldDefaults.colors(
+        focusedContainerColor = Color.Transparent,
+        unfocusedContainerColor = Color.Transparent,
+        focusedIndicatorColor = Color.Transparent,
+        unfocusedIndicatorColor = Color.Transparent,
+    )
+    val dishesField = boxed {
+        TextField(
+            value = dishes,
+            onValueChange = onDishes,
+            placeholder = { Text(stringResource(R.string.hint_food_dishes)) },
+            leadingIcon = { Icon(Icons.Rounded.Restaurant, contentDescription = null) },
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+            colors = plain,
+            modifier = Modifier.fillMaxWidth().testTag("food_dishes"),
+        )
+    }
+    val verdicts = boxed {
+        Row(
+            Modifier.fillMaxWidth().padding(Space.l),
+            horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+        ) {
+            val choices = FoodVerdict.entries
+            choices.forEachIndexed { index, choice ->
+                val checked = choice.value == verdict
+                ToggleButton(
+                    checked = checked,
+                    onCheckedChange = { onVerdict(if (it) choice.value else null) },
+                    shapes = when (index) {
+                        0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                        choices.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                        else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                    },
+                    // Those not chosen outlined, so each stands apart from the card at the 3:1 a group needs.
+                    border = if (checked) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                    modifier = Modifier.weight(1f).semantics { role = Role.RadioButton }.testTag("food_${choice.value}"),
+                ) {
+                    Text(
+                        stringResource(verdictLabel(choice)),
+                        maxLines = 1,
+                        style = if (checked) MaterialTheme.typography.labelLargeEmphasized else MaterialTheme.typography.labelLarge,
+                    )
+                }
+            }
+        }
+    }
+    val bill = boxed {
+        Row(Modifier.fillMaxWidth()) {
+            TextField(
+                value = amount,
+                onValueChange = { typed -> onAmount(typed.filter { it.isDigit() || it == '.' }) },
+                label = { Text(stringResource(R.string.label_food_amount)) },
+                prefix = { Text("¥") },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Next),
+                colors = plain,
+                modifier = Modifier.weight(1f).testTag("food_amount"),
+            )
+            TextField(
+                value = people,
+                onValueChange = { typed -> onPeople(typed.filter { it.isDigit() }.take(3)) },
+                label = { Text(stringResource(R.string.label_food_people)) },
+                suffix = { Text(stringResource(R.string.unit_food_people)) },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
+                colors = plain,
+                modifier = Modifier.weight(1f).testTag("food_people"),
+            )
+        }
+    }
+    SegmentedGroup(stringResource(R.string.section_food), stringResource(R.string.note_food), listOf(dishesField, verdicts, bill))
+}
+
+/**
+ * The food as typed, kept with whatever else [original] said: the dishes split at commas,
+ * enumeration commas and new lines, a bill only with its yuan, and nothing when nothing is said.
+ */
+internal fun foodOf(dishes: String, verdict: String?, amount: String, people: String, original: MomentFood?): MomentFood? {
+    val names = dishes.split(DISH_SEPARATORS).map { it.trim() }.filter { it.isNotEmpty() }
+    val bill = amount.toDoubleOrNull()?.takeIf { it >= 0 }?.let { yuan ->
+        val fed = people.toIntOrNull()?.takeIf { it > 0 }
+        original?.bill?.copy(amount = yuan, people = fed) ?: FoodBill(yuan, fed)
+    }
+    if (names.isEmpty() && verdict == null && bill == null) return null
+    return original?.copy(dishes = names, verdict = verdict, bill = bill) ?: MomentFood(names, verdict, bill)
+}
+
+private val DISH_SEPARATORS = Regex("[,，、;；\\n]")
+
 /** A tile at the end of the photos that adds more to them. */
 @Composable
 private fun AddTile(icon: ImageVector, label: String, onClick: () -> Unit, modifier: Modifier) {
@@ -787,6 +934,7 @@ private suspend fun buildMoment(
     infos: Map<Uri, PhotoInfo>,
     time: OffsetDateTime,
     place: PlaceChoice,
+    food: MomentFood?,
     original: MomentRecord? = null,
     originalMedia: Map<Uri, MomentMedia> = emptyMap(),
 ): Pair<MomentRecord, Pair<String, Place>?> {
@@ -816,13 +964,14 @@ private suspend fun buildMoment(
         is PlaceChoice.New -> listOfNotNull(newPlace?.first)
         PlaceChoice.None -> emptyList()
     }
-    val moment = original?.copy(occurredAt = stamp(time), places = placeIds, text = text.trim(), media = media, updatedAt = now)
+    val moment = original?.copy(occurredAt = stamp(time), places = placeIds, text = text.trim(), media = media, food = food, updatedAt = now)
         ?: MomentRecord(
             uid = Ulid.next(),
             occurredAt = stamp(time),
             places = placeIds,
             text = text.trim(),
             media = media,
+            food = food,
             createdAt = now,
             updatedAt = now,
         )

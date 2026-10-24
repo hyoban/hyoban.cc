@@ -321,6 +321,37 @@ class MomentsRepositoryTest {
     }
 
     @Test
+    fun `a site's place's kind changes on the phone and goes with the changes, under its own id`() = runBlocking {
+        val writer = FakeWriter()
+        fun repository() = MomentsRepository(DataStore(directory), api, Dispatchers.Unconfined, local = DataStore(localDirectory), writer = writer)
+        val repository = repository()
+        api.put(moment("S", "2026-10-01"))
+        repository.load()
+        repository.refresh()
+
+        repository.setPlaceKind("nanjing", "city")
+        repository.setPlaceKind("nanjing", "scenic")
+        assertEquals("scenic", repository.places.value["nanjing"]?.kind, "shown as changed at once")
+        assertEquals(listOf("nanjing" to "scenic"), repository.pending.value.places.map { it.id to it.after.kind })
+        assertEquals(null, repository.pending.value.places.single().before.kind, "with what it was")
+        assertEquals(emptyList(), writer.calls)
+
+        val restarted = repository()
+        restarted.load()
+        assertEquals(1, restarted.pending.value.size, "it outlasts a restart")
+        restarted.publishPending()
+
+        assertEquals(listOf("changes places=[nanjing] moments=[] deleted=[]"), writer.calls)
+        assertEquals(0, restarted.pending.value.size)
+        assertEquals("scenic", restarted.places.value["nanjing"]?.kind, "the site's now")
+
+        restarted.setPlaceKind("nanjing", "food")
+        restarted.revertPlace("nanjing")
+        assertEquals("scenic", restarted.places.value["nanjing"]?.kind, "taken back, it is the site's again")
+        assertEquals(0, restarted.pending.value.size)
+    }
+
+    @Test
     fun `a deletion or a take-back still undoable when the app is closed is done when it starts again`() = runBlocking {
         api.put(moment("S", "2026-10-01", text = "the site's"))
         val repository = repository()
