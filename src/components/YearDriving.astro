@@ -19,7 +19,7 @@ import { getActiveDateKeys, getMomentPath, getMoments } from '@/moments'
 // the records have it: how often and how much, and the hours the charges started, fast
 // ones on the road over slow ones at home, with what a kWh cost. Then the ledger: what
 // the year spent on the car besides buying it, by kind, and a kilometre's running cost;
-// and what owning it has cost from the first payment to the year's end.
+// and on a life's page, what owning it has cost from the first payment on.
 
 interface Props {
   /** The year, or none for every year the car's records reach into. */
@@ -76,22 +76,24 @@ const bands = [
     : []),
 ]
 
-// Owning it so far: everything paid up to the year's end, or the latest capture this year
-// or of all, less what had come back by then, counted from the day it was handed over.
-const ownedUntil =
-  year === undefined || car.span.end < `${year}-12-31` ? car.span.end : `${year}-12-31`
+// Owning it so far, on a life's page only: everything paid up to the latest capture, less
+// what had come back by then, counted from the day it was handed over.
+const ownedUntil = car.span.end
 const owned =
-  DELIVERED_ON <= ownedUntil
+  year === undefined && DELIVERED_ON <= ownedUntil
     ? car.expenses.filter((expense) => expense.at.slice(0, 10) <= ownedUntil)
     : []
 const ownedCost = getCostBreakdown(owned, undefined, ownedUntil)
 const ownedDays = Math.round((Date.parse(ownedUntil) - Date.parse(DELIVERED_ON)) / 86_400_000) + 1
-const ownedMeters = [...car.days]
-  .filter(([date]) => date <= ownedUntil)
-  .reduce((total, [, meters]) => total + meters, 0)
+const ownedDriving = [...car.days].filter(([date]) => date <= ownedUntil)
+const ownedMeters = ownedDriving.reduce((total, [, meters]) => total + meters, 0)
+// Shared out over the days it was driven, not every day it was owned.
+const ownedDrivenDays = ownedDriving.filter(([, meters]) => meters > 0).length
 const ownership = ownedCost.total > 0 && [
   { value: formatYuan(ownedCost.total), label: `${formatNumber(ownedDays)} 天花费` },
-  { value: formatYuan(ownedCost.total / ownedDays), label: '每天' },
+  ...(ownedDrivenDays > 0
+    ? [{ value: formatYuan(ownedCost.total / ownedDrivenDays), label: `开车的 ${ownedDrivenDays} 天，每天` }]
+    : []),
   ...(ownedMeters > 0
     ? [{ value: formatRate(ownedCost.total / 100 / (ownedMeters / 1000)), label: '每公里' }]
     : []),
