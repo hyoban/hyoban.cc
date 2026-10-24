@@ -2,8 +2,9 @@ import type { FoodVerdict, Place, PlaceKind, Places } from '@hyoban/data-spec'
 import { buildFogOfWar, getShortPlaceName, type FogRegions } from '@hyoban/trip-map'
 import type { Moment, MomentTrip } from './moments/index.ts'
 
-// A year at a glance, for /<year>/: what its Moments, trips and cities add up to. Worked
-// out from what the pages already have, so it needs nothing kept apart.
+// A year at a glance, for /<year>/, or every year at once, for /life/: what its Moments,
+// trips and cities add up to. Worked out from what the pages already have, so it needs
+// nothing kept apart.
 
 type ReviewMoment = Pick<
   Moment,
@@ -24,7 +25,8 @@ export type ReviewTopic = (typeof REVIEW_TOPICS)[number]
 export type YearTopic = { topic: ReviewTopic; count: number }
 
 export type YearReview<M, T> = {
-  year: number
+  /** The year, or none for every year. */
+  year?: number
   moments: M[]
   photoCount: number
   videoCount: number
@@ -58,14 +60,17 @@ export function getReviewYears(moments: readonly Pick<Moment, 'dateKey'>[]) {
   ].sort((first, second) => first - second)
 }
 
-/** `moments` are every Moment, oldest first, so the year can tell what it saw for the first time. */
+/**
+ * `moments` are every Moment, oldest first, so the year can tell what it saw for the first
+ * time; without a year, it's every year, and all it saw it saw for the first time.
+ */
 export function buildYearReview<M extends ReviewMoment, T extends ReviewTrip>(
-  year: number,
+  year: number | undefined,
   moments: readonly M[],
   trips: readonly T[],
   cities: FogRegions,
 ): YearReview<M, T> {
-  const prefix = String(year)
+  const prefix = year === undefined ? '' : String(year)
   const yearMoments = moments.filter((moment) => moment.dateKey.startsWith(prefix))
   const yearTrips = trips
     .filter((trip) => trip.start.startsWith(prefix))
@@ -111,7 +116,7 @@ export function buildYearReview<M extends ReviewMoment, T extends ReviewTrip>(
   }
 
   return {
-    year,
+    ...(year === undefined ? {} : { year }),
     moments: yearMoments,
     photoCount: media.filter((item) => item.type !== 'video').length,
     videoCount: media.filter((item) => item.type === 'video').length,

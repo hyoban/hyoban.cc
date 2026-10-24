@@ -24,8 +24,9 @@ export function initializeYearShare() {
   if (!menu || !content || !toggle || !options) return
 
   const label = toggle.textContent
+  // What the pictures are named and stamped for, a year or `life`, and what they're shared as.
   const year = menu.dataset.yearShare!
-  const title = `${year} 年`
+  const title = menu.dataset.shareTitle!
   // Pictures kept for a second tap, when the share sheet wouldn't open after the wait.
   let ready: File[] | undefined
 

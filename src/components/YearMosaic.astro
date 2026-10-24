@@ -329,25 +329,42 @@ const months = Array.from({ length: 12 }, (_, index) => {
     }
   }
 
-  /* Scrolled, where animations can follow it: each tile pops up as it comes into view, a
-     month filling in day after day, and a trip's band fades in under its days. */
+  /* Scrolled, where animations can follow it: the wall is uncovered day by day as it comes
+     up through the screen, the year running left to right, down a phone's columns. One
+     animation for the wall, not one a tile: hundreds of tiles moving each on its own layer
+     cost a scroll more than a frame. Its edges reach past the wall, so a tile lifted over its
+     neighbours isn't cut off. */
   @supports (animation-timeline: view()) {
     @media (prefers-reduced-motion: no-preference) {
-      :global(.year-scroll) .year-mosaic__day {
-        & > a,
-        & > span,
-        &.is-trip::before {
-          animation-name: year-mosaic-pop;
-          animation-timing-function: linear;
-          animation-fill-mode: both;
-          animation-timeline: view();
-          animation-range: entry calc(var(--day) * 2%) cover calc(12% + var(--day) * 0.4%);
-        }
+      :global(.year-scroll) .year-mosaic {
+        animation-name: year-mosaic-wipe;
+        animation-timing-function: linear;
+        animation-fill-mode: both;
+        animation-timeline: view();
+        animation-range: entry 30% cover 45%;
 
-        &.is-trip::before {
-          animation-name: year-mosaic-fade;
+        @media (width < 40rem) {
+          animation-name: year-mosaic-wipe-down;
         }
       }
+    }
+  }
+
+  @keyframes year-mosaic-wipe {
+    from {
+      clip-path: inset(-6rem 100% -6rem -6rem);
+    }
+    to {
+      clip-path: inset(-6rem);
+    }
+  }
+
+  @keyframes year-mosaic-wipe-down {
+    from {
+      clip-path: inset(-6rem -6rem 100% -6rem);
+    }
+    to {
+      clip-path: inset(-6rem);
     }
   }
 

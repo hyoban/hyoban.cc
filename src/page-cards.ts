@@ -281,6 +281,17 @@ async function loadPageCards(): Promise<Array<{ path: string; card: PageCard }>>
       },
     })
   }
+  // Every year's: the years and what they add up to, over their photos.
+  const years = getReviewYears(moments)
+  const life = buildYearReview(undefined, moments, allTrips, cities as FogRegions)
+  cards.push({
+    path: '/life/',
+    card: {
+      title: '人生\n回顾',
+      detail: `${years.length} 年 · ${life.dayCount} 天 · ${life.cities.lit.length} 个城市`,
+      photos: getPeriodPhotos(moments),
+    },
+  })
 
   const media = getMediaPosters()
   cards.push({
