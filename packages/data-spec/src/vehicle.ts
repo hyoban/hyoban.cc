@@ -138,9 +138,45 @@ export const vehicleAssistedDrivingCaptureSchema = z.looseObject({
   source: vehicleSourceSchema,
 })
 
+const yuan = z.number().nonnegative()
+
+/** A payment for the car, in yuan, as the bookkeeping app recorded it. */
+export const vehicleExpenseSchema = z.looseObject({
+  at: timestamp,
+  amount: yuan,
+  category: z.enum([
+    'purchase',
+    'insurance',
+    'charging',
+    'parking',
+    'toll',
+    'car-wash',
+    'maintenance',
+    'repair',
+    'inspection',
+    'accessories',
+    'fine',
+  ]),
+  subcategory: z
+    .enum(['fast-charging', 'home-charging', 'self-service-wash', 'shop-wash', 'wash-supplies'])
+    .optional(),
+  note: z.string().min(1).optional(),
+  /** What came back of `amount` later, a refund, subsidy or cashback, each when it did. */
+  refunds: z.array(z.looseObject({ at: timestamp, amount: yuan })).optional(),
+})
+
+export const vehicleExpensesSchema = z.looseObject({
+  deviceId,
+  source: z.looseObject({ app: z.string().min(1), exportedAt: timestamp }),
+  /** In the order the app exported them, oldest first. */
+  entries: z.array(vehicleExpenseSchema),
+})
+
 export type VehicleCapture = z.output<typeof vehicleCaptureSchema>
 export type VehicleMonth = z.output<typeof vehicleMonthSchema>
 export type VehicleDay = z.output<typeof vehicleDaySchema>
 export type VehicleCharge = z.output<typeof vehicleChargeSchema>
 export type VehicleSource = z.output<typeof vehicleSourceSchema>
 export type VehicleAssistedDrivingCapture = z.output<typeof vehicleAssistedDrivingCaptureSchema>
+export type VehicleExpense = z.output<typeof vehicleExpenseSchema>
+export type VehicleExpenses = z.output<typeof vehicleExpensesSchema>

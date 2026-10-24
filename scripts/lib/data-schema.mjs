@@ -11,6 +11,7 @@ import {
   vehicleCaptureSchema,
   vehicleMonthSchema,
   vehicleAssistedDrivingCaptureSchema,
+  vehicleExpensesSchema,
 } from '@hyoban/data-spec'
 
 /** The spec's schemas by the name of the JSON Schema file each becomes. */
@@ -25,6 +26,7 @@ export function getDataSchemas() {
     'vehicle-capture': vehicleCaptureSchema,
     'vehicle-month': vehicleMonthSchema,
     'vehicle-assisted-driving': vehicleAssistedDrivingCaptureSchema,
+    'vehicle-expenses': vehicleExpensesSchema,
   }
 }
 

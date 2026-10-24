@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'vite-plus/test'
 
-import { vehicleMonthSchema } from '@hyoban/data-spec'
+import { vehicleExpensesSchema, vehicleMonthSchema } from '@hyoban/data-spec'
 import { canonicalJson, convertZeekrCaptures, hashBytes, scale } from './zeekr-data.mjs'
 
 const directory = new URL('../../data/zeekr/', import.meta.url)
@@ -164,4 +164,39 @@ test('unit conversions preserve precision and reject invalid source quantities',
   assert.equal(scale(4.6, 3600), 16560)
   assert.throws(() => scale(0.0001, 1000), /cannot be represented/)
   assert.throws(() => scale(-1, 1000), /Invalid quantity/)
+})
+
+test('the expense ledger parses, oldest first, refunding no more than was paid', () => {
+  const raw = JSON.parse(readFileSync(new URL('expenses/zeekr-007gt.json', directory), 'utf8'))
+  const { entries } = vehicleExpensesSchema.parse(raw)
+  const fen = (yuan) => Math.round(yuan * 100)
+  assert.equal(entries.length, 338)
+  assert.ok(entries.every((entry, i) => i === 0 || entries[i - 1].at <= entry.at))
+  for (const { amount, at, refunds = [] } of entries) {
+    assert.ok(refunds.reduce((total, refund) => total + fen(refund.amount), 0) <= fen(amount))
+    assert.ok(refunds.every((refund) => refund.at >= at))
+  }
+  // The schema lets unknown fields through; this ledger keeps only these, so accounts,
+  // tags and discounts can't come back with a re-import.
+  assert.deepEqual(Object.keys(raw).sort(), ['deviceId', 'entries', 'source'])
+  const allowed = new Set(['at', 'amount', 'category', 'subcategory', 'note', 'refunds'])
+  for (const entry of raw.entries) {
+    assert.deepEqual(
+      Object.keys(entry).filter((key) => !allowed.has(key)),
+      [],
+      `unexpected fields at ${entry.at}`,
+    )
+    for (const refund of entry.refunds ?? []) {
+      assert.deepEqual(Object.keys(refund).sort(), ['amount', 'at'])
+    }
+  }
+  // Where the car was stays out of the public ledger, as it does from the app's records:
+  // parking, toll and charging notes name car parks, stations and chargers.
+  assert.ok(
+    entries.every(
+      (entry) => !entry.note || !['parking', 'toll', 'charging'].includes(entry.category),
+    ),
+  )
+  // Parking notes can carry the car's plate; it stays out of the public ledger.
+  assert.ok(entries.every((entry) => !/[\u4e00-\u9fa5][A-Z][A-Z0-9]{5,6}/.test(entry.note ?? '')))
 })

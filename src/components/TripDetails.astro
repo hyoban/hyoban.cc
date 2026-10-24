@@ -1,7 +1,8 @@
 ---
 import MomentEntry from '@/components/MomentEntry.astro'
 import TripCoverCollage from '@/components/TripCoverCollage.astro'
-import { getMomentTripOdometer, type Moment, type MomentTrip } from '@/moments'
+import { CATEGORY_LABELS, formatRate, formatYuan } from '@/data/vehicle-costs'
+import { getMomentTripCosts, getMomentTripOdometer, type Moment, type MomentTrip } from '@/moments'
 import { getTripCollage } from '@/moments/trip-images'
 
 // A trip's sidebar beside the map: its photos and totals, the button that plays it, and
@@ -25,7 +26,8 @@ const totals = [
 ].join(' · ')
 // What the car charged on the way, when it drove the whole trip and the records have it:
 // how often, how much, and how often fast.
-const charges = getMomentTripOdometer(trip)?.charges ?? []
+const odometer = getMomentTripOdometer(trip)
+const charges = odometer?.charges ?? []
 const fastCharges = charges.filter(charge => charge.type === 'DC').length
 const chargedKwh = charges.reduce((total, charge) => total + charge.energyWh, 0) / 1000
 const charging = charges.length > 0 && [
@@ -33,12 +35,20 @@ const charging = charges.length > 0 && [
   `${chargedKwh.toLocaleString('zh-CN', { maximumFractionDigits: 1 })} kWh`,
   ...(fastCharges > 0 ? [fastCharges === charges.length ? '都是快充' : `快充 ${fastCharges} 次`] : []),
 ].join(' · ')
+// And what it spent on the road, from the car's ledger: in all, by kind, and a kilometre.
+const costs = odometer && getMomentTripCosts(trip, odometer)
+const spending = costs && [
+  `花费 ${formatYuan(costs.total)}`,
+  ...costs.categories.map(({ category, fen }) => `${CATEGORY_LABELS[category]} ${formatYuan(fen)}`),
+  ...(costs.distanceMeters > 0 ? [`每公里 ${formatRate(costs.total / 100 / (costs.distanceMeters / 1000))}`] : []),
+].join(' · ')
 ---
 
 <div class="trip-details">
   <TripCoverCollage images={getTripCollage(trip, moments)} priority sizes="(max-width: 48rem) 100vw, 26rem" />
   <p class="trip-details__totals">{totals}</p>
   {charging && <p class="trip-details__totals">{charging}</p>}
+  {spending && <p class="trip-details__totals">{spending}</p>}
   <a class="trip-details__play" href={`/trip/${trip.id}/play/`} data-trip-map-stop-play={trip.id}>
     <span class="i-lucide-play" aria-hidden="true" />
     回放旅程
