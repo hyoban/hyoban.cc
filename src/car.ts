@@ -10,15 +10,15 @@ import { readPlaces, readTripRecords } from '@/data/store'
 import { getMoments } from '@/moments'
 import type { Place } from '@hyoban/data-spec'
 
-// The car page's figures, shared with its share card: the days driven, from the records
-// in data/zeekr, and the outings found in them against the trips and the shown Moments.
+// What the car recorded, for the year review's driving and the trip list's outings: the
+// days driven, from the records in data/zeekr, and the outings found in them against the
+// trips and the shown Moments.
 
 export interface CarSummary {
   days: Map<string, number>
   span: { start: string; end: string }
-  distanceMeters: number
-  drivenDays: number
-  chargeCount: number
+  /** The day each charge started, oldest first. */
+  chargeDates: string[]
   outings: Outing[]
 }
 
@@ -41,10 +41,8 @@ async function loadCarSummary(): Promise<CarSummary> {
   }))
 
   return {
-    chargeCount: charges.length,
+    chargeDates: charges.map((charge) => charge.startedAt.slice(0, 10)),
     days: new Map(days.map((day) => [day.date, day.distanceMeters])),
-    distanceMeters: days.reduce((total, day) => total + day.distanceMeters, 0),
-    drivenDays: days.filter((day) => day.distanceMeters > 0).length,
     outings: findOutings(days, charges, trips, moments),
     span: getVehicleSpan(months, days),
   }

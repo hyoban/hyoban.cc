@@ -8,11 +8,13 @@ import TripCoverCollage from '@/components/TripCoverCollage.astro'
 import TripDetails from '@/components/TripDetails.astro'
 import MomentLightboxMedia from '@/components/MomentLightboxMedia.astro'
 import Layout from '@/layouts/Layout.astro'
-import { getActiveDateKeys, getMapYears, getMappedLocationGroups, getMoments, getMonthPath, getTrips } from '@/moments'
+import { getActiveDateKeys, getMapYears, getMappedLocationGroups, getMomentPath, getMoments, getMonthPath, getTrips } from '@/moments'
+import { formatKilometers, getCarSummary } from '@/car'
 import { getTripData, getTripSummaries } from '@/moments/trip-data'
 import { getTripCollage } from '@/moments/trip-images'
 import {
   createYearPalette,
+  formatDate,
   formatDateRange,
   getMapStats,
   getPlaceMarkers,
@@ -142,6 +144,13 @@ const tripTotals = [
 ].join(' · ')
 // The trip list's trips by the year they started, newest first, like the home page's posts.
 const tripsByYear = [...Map.groupBy(trips, trip => trip.start.slice(0, 4))]
+// The outings the car drove that aren't written up as a trip, newest first, under their
+// year's trips: where its Moments were then, if any, and how far it went.
+const activeDates = new Set(getActiveDateKeys(moments))
+const outingsByYear = Map.groupBy(
+  (await getCarSummary()).outings.filter(outing => !outing.trip),
+  outing => outing.start.slice(0, 4),
+)
 // The months a period runs from and to, for the trips under way in it.
 const periodStart = period ? `${period.year}-${String(period.month ?? 1).padStart(2, '0')}` : ''
 const periodEnd = period ? `${period.year}-${String(period.month ?? 12).padStart(2, '0')}` : ''
@@ -442,7 +451,7 @@ const image = pageTrip ? `/trip/${pageTrip.id}/og.jpg` : await getPageCardPath(A
           </header>
           <div class="trip-map-side__content trip-map-trip-list__content" data-drawer-content>
             {tripsByYear.map(([year, yearTrips]) => (
-              <section aria-labelledby={`trip-map-trip-list-${year}`} data-trip-map-trip-year={year} hidden={!yearTrips.some(isInPeriod)}>
+              <section aria-labelledby={`trip-map-trip-list-${year}`} data-trip-map-trip-year={year} hidden={!yearTrips.some(isInPeriod) && !(outingsByYear.get(year) ?? []).some(isInPeriod)}>
                 <h2 class="trip-map-trip-list__year" id={`trip-map-trip-list-${year}`}>{year}</h2>
                 <ul>
                   {yearTrips.map(trip => (
@@ -460,6 +469,29 @@ const image = pageTrip ? `/trip/${pageTrip.id}/og.jpg` : await getPageCardPath(A
                     </li>
                   ))}
                 </ul>
+                {(outingsByYear.get(year) ?? []).length > 0 && (
+                  <div class="trip-map-trip-list__outings" data-trip-map-dates-group hidden={!(outingsByYear.get(year) ?? []).some(isInPeriod)}>
+                    <h3>没写成旅程的出行</h3>
+                    <ul>
+                      {outingsByYear.get(year)!.map(outing => {
+                        const where = outing.cities.length > 0 ? outing.cities.join('、') : '没有记录'
+                        // Its first day with Moments, in the calendar; none, and the row links nowhere.
+                        const day = [...activeDates].sort().find(date => outing.start <= date && date <= outing.end)
+                        const text = (
+                          <>
+                            <span class:list={['trip-map-trip-list__outing-where', { 'is-unknown': outing.cities.length === 0 }]}>{where}</span>
+                            <span class="trip-map-trip-list__outing-meta">{outing.start === outing.end ? formatDate(outing.start, 'zh-CN') : formatDateRange(outing.start, outing.end, 'zh-CN')} · {formatKilometers(outing.distanceMeters)}</span>
+                          </>
+                        )
+                        return (
+                          <li data-trip-map-dates={`${outing.start}/${outing.end}`} hidden={!isInPeriod(outing)}>
+                            {day ? <a class="trip-map-trip-list__outing" href={getMomentPath(day)}>{text}</a> : <span class="trip-map-trip-list__outing">{text}</span>}
+                          </li>
+                        )
+                      })}
+                    </ul>
+                  </div>
+                )}
               </section>
             ))}
           </div>
@@ -1602,6 +1634,59 @@ const image = pageTrip ? `/trip/${pageTrip.id}/og.jpg` : await getPageCardPath(A
     color: var(--color-tx-2);
     font-size: 0.875rem;
     line-height: 1.25rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* The car's outings without a trip: a row each, no route to lift, after the year's trips. */
+  .trip-map-trip-list__outings {
+    margin: 0.5rem 0 0.75rem;
+
+    & h3 {
+      padding: 0.5rem 0.75rem 0.25rem;
+      color: var(--color-tx-3);
+      font-size: 0.75rem;
+      font-weight: 400;
+      line-height: 1rem;
+    }
+  }
+
+  .trip-map-trip-list__outing {
+    display: flex;
+    gap: 0.75rem;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 0.375rem 0.75rem;
+    border-radius: 0.5rem;
+    color: var(--color-tx);
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    text-decoration: none;
+
+    &:is(a):focus-visible {
+      outline: none;
+      background: var(--color-inline);
+    }
+
+    @media (hover: hover) {
+      &:is(a):hover {
+        background: var(--color-inline);
+      }
+    }
+  }
+
+  .trip-map-trip-list__outing-where {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    &.is-unknown {
+      color: var(--color-tx-3);
+    }
+  }
+
+  .trip-map-trip-list__outing-meta {
+    flex-shrink: 0;
+    color: var(--color-tx-3);
     font-variant-numeric: tabular-nums;
   }
 

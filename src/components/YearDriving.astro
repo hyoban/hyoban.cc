@@ -1,0 +1,217 @@
+---
+import { formatKilometers, getCarSummary } from '@/car'
+import { getDistanceLevel, getYearWeeks, type Outing } from '@/data/vehicle'
+import { getActiveDateKeys, getMomentPath, getMoments } from '@/moments'
+
+// The year as the car drove it, from data/zeekr: its totals, and a contribution graph of
+// every day, darker the farther it went, Monday first. A day of an outing links to its
+// trip, or to its day in the calendar when it has Moments; one the records don't cover,
+// before the car or after the latest capture, is left hollow.
+
+interface Props {
+  year: number
+}
+
+const { year } = Astro.props
+const car = await getCarSummary()
+const activeDates = new Set(getActiveDateKeys(await getMoments()))
+const weeks = getYearWeeks(year, car.days, car.span)
+const inYear = (date: string) => date.startsWith(`${year}-`)
+const days = [...car.days].filter(([date]) => inYear(date))
+const distance = days.reduce((total, [, meters]) => total + meters, 0)
+const drivenDays = days.filter(([, meters]) => meters > 0).length
+const charges = car.chargeDates.filter(inYear).length
+const longest = days.reduce<[string, number] | undefined>(
+  (best, day) => (!best || day[1] > best[1] ? day : best),
+  undefined,
+)
+
+const outingByDate = new Map<string, Outing>()
+for (const outing of car.outings) {
+  for (const [date] of days) {
+    if (outing.start <= date && date <= outing.end) outingByDate.set(date, outing)
+  }
+}
+const getOutingHref = (outing: Outing, date: string) =>
+  outing.trip
+    ? `/trip/${outing.trip.id}/`
+    : activeDates.has(date)
+      ? getMomentPath(date)
+      : undefined
+
+const formatDay = (date: string) => `${Number(date.slice(5, 7))} 月 ${Number(date.slice(8))} 日`
+const weekdayLabels = ['一', '', '三', '', '五', '', '日']
+const monthLabels = weeks.map((week) => {
+  const first = week.find((cell) => cell?.date.endsWith('-01'))
+  return first ? Number(first.date.slice(5, 7)) : undefined
+})
+const totals = [
+  formatKilometers(distance),
+  `开车 ${drivenDays} 天`,
+  charges > 0 && `充电 ${charges} 次`,
+  longest && longest[1] > 0 && `最远一天 ${formatKilometers(longest[1])}（${formatDay(longest[0])}）`,
+].filter(Boolean)
+---
+
+<p class="year-driving__totals">{totals.join(' · ')}</p>
+<div class="year-driving" style={`--weeks: ${weeks.length}`}>
+  <div class="year-driving__months" aria-hidden="true">
+    {
+      monthLabels.map((month) => (
+        <span>
+          {month}
+          {month && <span class="year-driving__month-unit"> 月</span>}
+        </span>
+      ))
+    }
+  </div>
+  <div class="year-driving__weekdays" aria-hidden="true">
+    {weekdayLabels.map((label) => <span>{label}</span>)}
+  </div>
+  <div class="year-driving__grid">
+    {
+      weeks.flatMap((week) =>
+        week.map((cell) => {
+          if (!cell) return <span class="year-driving__cell" data-outside />
+          if (cell.distanceMeters === undefined) {
+            return <span class="year-driving__cell" data-empty title={`${formatDay(cell.date)} · 没有记录`} />
+          }
+          const title = `${formatDay(cell.date)} · ${cell.distanceMeters ? formatKilometers(cell.distanceMeters) : '没开'}`
+          const outing = outingByDate.get(cell.date)
+          const href = outing && getOutingHref(outing, cell.date)
+          return href ? (
+            <a
+              class="year-driving__cell"
+              data-level={getDistanceLevel(cell.distanceMeters)}
+              href={href}
+              title={outing.trip ? `${title} · ${outing.trip.title}` : title}
+              aria-label={outing.trip ? `${title}，${outing.trip.title}` : title}
+            />
+          ) : (
+            <span class="year-driving__cell" data-level={getDistanceLevel(cell.distanceMeters)} title={title} />
+          )
+        }),
+      )
+    }
+  </div>
+</div>
+<div class="year-driving__legend" aria-hidden="true">
+  <span>没开</span>
+  {[0, 1, 2, 3, 4].map((level) => <span class="year-driving__cell" data-level={level} />)}
+  <span>300 km+</span>
+</div>
+
+<style>
+  .year-driving__totals {
+    margin-bottom: 0.75rem;
+    color: var(--color-tx-2);
+    font-size: 0.875rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .year-driving {
+    --gap: 1px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.25rem;
+    color: var(--color-tx-3);
+    font-size: 0.625rem;
+    line-height: 1;
+
+    @media (width >= 40rem) {
+      --gap: 2px;
+    }
+  }
+
+  .year-driving__months,
+  .year-driving__grid {
+    display: grid;
+    grid-template-columns: repeat(var(--weeks), minmax(0, 1fr));
+    column-gap: var(--gap);
+    grid-column: 2;
+  }
+
+  .year-driving__months span {
+    white-space: nowrap;
+  }
+
+  .year-driving__month-unit {
+    display: none;
+
+    @media (width >= 40rem) {
+      display: inline;
+    }
+  }
+
+  .year-driving__weekdays {
+    display: grid;
+    grid-template-rows: repeat(7, 1fr);
+    row-gap: var(--gap);
+    grid-row: 2;
+  }
+
+  .year-driving__grid {
+    grid-template-rows: repeat(7, auto);
+    grid-auto-flow: column;
+    row-gap: var(--gap);
+  }
+
+  .year-driving__cell {
+    display: block;
+    aspect-ratio: 1;
+    border-radius: 1px;
+    background: var(--color-hover);
+
+    &[data-outside] {
+      background: none;
+    }
+
+    &[data-empty] {
+      background: none;
+      box-shadow: inset 0 0 0 1px var(--color-hover);
+    }
+
+    &[data-level='1'] {
+      background: color-mix(in srgb, var(--color-tx) 20%, var(--color-hover));
+    }
+
+    &[data-level='2'] {
+      background: color-mix(in srgb, var(--color-tx) 40%, var(--color-hover));
+    }
+
+    &[data-level='3'] {
+      background: color-mix(in srgb, var(--color-tx) 65%, var(--color-hover));
+    }
+
+    &[data-level='4'] {
+      background: var(--color-tx);
+    }
+  }
+
+  a.year-driving__cell:hover {
+    outline: 1px solid var(--color-tx);
+    outline-offset: 1px;
+  }
+
+  .year-driving__legend {
+    display: flex;
+    gap: 3px;
+    align-items: center;
+    justify-content: flex-end;
+    margin-top: 0.75rem;
+    color: var(--color-tx-3);
+    font-size: 0.75rem;
+
+    .year-driving__cell {
+      width: 0.625rem;
+    }
+
+    span:first-child {
+      margin-right: 0.25rem;
+    }
+
+    span:last-child {
+      margin-left: 0.25rem;
+    }
+  }
+</style>

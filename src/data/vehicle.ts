@@ -1,7 +1,7 @@
 import { vehicleMonthSchema, type VehicleCharge, type VehicleMonth } from '@hyoban/data-spec'
 import { dataRoot, listJsonFiles, readJson } from './store.ts'
 
-// The car page's view of data/zeekr: each day's distance from the monthly records, and
+// The site's view of data/zeekr: each day's distance from the monthly records, and
 // the outings found in them, runs of long days that were a trip somewhere. An outing is
 // the trip whose dates it overlaps when one was written up, else it's told by the places
 // of the Moments on its days. The records stay in the repository; the API doesn't keep them.
