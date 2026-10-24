@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.OpenInNew
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.Cloud
+import androidx.compose.material.icons.rounded.Code
 import androidx.compose.material.icons.rounded.CloudUpload
 import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.Error
@@ -111,6 +112,15 @@ fun SettingsScreen(container: AppContainer, onBack: () -> Unit, onChanges: () ->
             ) {
                 ThemeSettings(settings)
                 LanguageSettings()
+                SegmentedGroup(
+                    stringResource(R.string.section_moments),
+                    stringResource(R.string.settings_show_tech_note),
+                    listOf { shapes ->
+                        SwitchRow(settings.showTech, Icons.Rounded.Code, stringResource(R.string.setting_show_tech), "show_tech", shapes) {
+                            container.changeShowTech(!settings.showTech)
+                        }
+                    },
+                )
                 // Where the app reads from, and reading from it again with a tap, as Material 3 asks a
                 // refresh pulled for on the tabs be had without the gesture too.
                 val syncing by container.repository.syncing.collectAsStateWithLifecycle()

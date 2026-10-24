@@ -33,7 +33,7 @@ import java.security.MessageDigest
 /**
  * The records the screens show: read from the [DataStore] first, then brought up to
  * date from the API. Only what the site shows is offered: hidden Moments stay in the
- * copy but not in [moments]. Beside them, the Moments written on this phone and the
+ * copy but not in [moments], and those about tech too unless [showTech] says otherwise. Beside them, the Moments written on this phone and the
  * places they made, kept in [local], a store of their own that no sync or change of
  * API touches, with the site's Moments changed or deleted on the phone. None of it
  * reaches the API until [publishPending] sends it all through [writer], as [pending]
@@ -45,6 +45,7 @@ class MomentsRepository(
     private val io: CoroutineDispatcher = Dispatchers.IO,
     private val local: DataStore? = null,
     private val writer: MomentsWriter? = null,
+    private var showTech: Boolean = false,
 ) {
     private val lock = Mutex()
     private var all: Map<String, MomentRecord> = emptyMap()
@@ -179,6 +180,12 @@ class MomentsRepository(
         } finally {
             _syncing.value = false
         }
+    }
+
+    /** Shows the Moments about tech beside what the site shows, or leaves them out again. */
+    suspend fun changeShowTech(on: Boolean) = lock.withLock {
+        showTech = on
+        publish()
     }
 
     /**
@@ -576,7 +583,7 @@ class MomentsRepository(
         _places.value = phonePlaces + apiPlaces + changedPlaces
     }
 
-    private fun isShown(moment: MomentRecord) = moment.published != null && !moment.hidden && moment.topic != "tech"
+    private fun isShown(moment: MomentRecord) = moment.published != null && !moment.hidden && (showTech || moment.topic != "tech")
 
     /** The type the API takes a photo as, from the extension it was copied in with. */
     /** The file's MD5, as R2 gives an object put in one piece for its ETag. */

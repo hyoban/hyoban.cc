@@ -72,6 +72,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.role
@@ -107,33 +108,42 @@ fun ThemeSettings(settings: Settings) {
         null,
         stringResource(R.string.settings_pure_black_note),
         listOf { shapes ->
-            SegmentedListItem(
-                onClick = { settings.changePureBlack(!settings.pureBlack) },
-                shapes = shapes,
-                colors = segmentColors(),
-                leadingContent = { Icon(Icons.Rounded.DarkMode, contentDescription = null) },
-                // The row is the switch, read as one with its name and state; its handle ticked
-                // or crossed, as Material 3 lets a switch's icon say which it is as well as its colour.
-                trailingContent = {
-                    Switch(
-                        checked = settings.pureBlack,
-                        onCheckedChange = null,
-                        thumbContent = {
-                            Icon(
-                                if (settings.pureBlack) Icons.Rounded.Check else Icons.Rounded.Close,
-                                contentDescription = null,
-                                modifier = Modifier.size(SwitchDefaults.IconSize),
-                            )
-                        },
-                    )
-                },
-                modifier = Modifier.semantics {
-                    role = Role.Switch
-                    toggleableState = ToggleableState(settings.pureBlack)
-                }.testTag("pure_black"),
-            ) { Text(stringResource(R.string.setting_pure_black)) }
+            SwitchRow(settings.pureBlack, Icons.Rounded.DarkMode, stringResource(R.string.setting_pure_black), "pure_black", shapes) {
+                settings.changePureBlack(!settings.pureBlack)
+            }
         },
     )
+}
+
+/** A row that is a switch, read as one with its name and state. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun SwitchRow(checked: Boolean, icon: ImageVector, title: String, tag: String, shapes: ListItemShapes, onClick: () -> Unit) {
+    SegmentedListItem(
+        onClick = onClick,
+        shapes = shapes,
+        colors = segmentColors(),
+        leadingContent = { Icon(icon, contentDescription = null) },
+        // Its handle ticked or crossed, as Material 3 lets a switch's icon say which it is as
+        // well as its colour.
+        trailingContent = {
+            Switch(
+                checked = checked,
+                onCheckedChange = null,
+                thumbContent = {
+                    Icon(
+                        if (checked) Icons.Rounded.Check else Icons.Rounded.Close,
+                        contentDescription = null,
+                        modifier = Modifier.size(SwitchDefaults.IconSize),
+                    )
+                },
+            )
+        },
+        modifier = Modifier.semantics {
+            role = Role.Switch
+            toggleableState = ToggleableState(checked)
+        }.testTag(tag),
+    ) { Text(title) }
 }
 
 @Composable

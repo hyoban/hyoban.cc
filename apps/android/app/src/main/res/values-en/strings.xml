@@ -131,6 +131,9 @@
     <string name="section_route">Route</string>
     <string name="title_settings">Settings</string>
     <string name="section_sources">Sources</string>
+    <string name="section_moments">Moments</string>
+    <string name="setting_show_tech">Show tech Moments</string>
+    <string name="settings_show_tech_note">Moments about tech never appear on the site. Turn this on to see them here.</string>
     <string name="section_map">Map</string>
     <string name="setting_api_url">API address</string>
     <string name="setting_asset_origin">Photo and video address</string>

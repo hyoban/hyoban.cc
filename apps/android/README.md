@@ -310,7 +310,8 @@ one chosen.
 - `data/spec` — the records as Kotlin, each keeping the fields it doesn't know.
 - `data/api` — the API's change feed, the Moments with the places and trips that changed, and its writes.
 - `data/store` — the copy on the phone, and the repository that brings it up to date
-  and gives the screens what the site shows (no hidden Moments).
+  and gives the screens what the site shows (no hidden Moments, and none about tech
+  unless 显示技术时刻 is on in the settings).
 - `data/local` — the Moments written on the phone: ULIDs, their photos' time and place,
   where the phone is and what the place there is called.
 - `data/media` — photo, poster and video URLs, picked as the site picks them, or the
