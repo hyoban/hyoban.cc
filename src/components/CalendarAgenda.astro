@@ -59,7 +59,7 @@ function formatShortDate(dateKey: string) {
                 const hasStatus = day.anniversaries.length > 0 || Boolean(day.chinaCalendarDay)
 
                 return (
-                  <section class="calendar-agenda__day" id={`agenda-${day.dateKey}`}>
+                  <section class="calendar-agenda__day" id={`agenda-${day.dateKey}`} tabindex="-1">
                     <span class="calendar-agenda__dot" aria-hidden="true" />
                     <h2>
                       <span class="sr-only">{formatDate(day.dateKey)}</span>
@@ -188,6 +188,11 @@ function formatShortDate(dateKey: string) {
   .calendar-agenda__day {
     position: relative;
     scroll-margin-top: calc(var(--agenda-top) + 3.375rem + 0.75rem);
+
+    /* Focused by the index above only so the next Tab starts from the day; no ring. */
+    &:focus {
+      outline: none;
+    }
 
     @media (width >= 40rem) {
       display: grid;

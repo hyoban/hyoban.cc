@@ -1729,19 +1729,40 @@ export function createTripMap(options: TripMapOptions): TripMap {
     { signal },
   )
 
-  for (const link of elements.tripLinks) {
-    const id = link.dataset.tripMapTripLink!
+  // The trip list's rows are the list's own: picked first, then played.
+  const toolbarTripLinks = elements.tripLinks.filter((link) => !elements.tripList?.contains(link))
 
-    // The trip list's rows are the list's own: picked first, then played.
-    if (elements.tripList?.contains(link)) {
-      continue
-    }
+  for (const [linkIndex, link] of toolbarTripLinks.entries()) {
+    const id = link.dataset.tripMapTripLink!
 
     link.addEventListener(
       'focus',
       () => {
+        // The one Tab comes back to.
+        for (const other of toolbarTripLinks) {
+          other.tabIndex = other === link ? 0 : -1
+        }
+
         tripOverview.highlight(id)
         tripOverview.reveal(id, getClearPadding())
+      },
+      { signal },
+    )
+    link.addEventListener(
+      'keydown',
+      (event) => {
+        const last = toolbarTripLinks.length - 1
+        const next = {
+          ArrowLeft: Math.max(linkIndex - 1, 0),
+          ArrowRight: Math.min(linkIndex + 1, last),
+          End: last,
+          Home: 0,
+        }[event.key]
+
+        if (next !== undefined) {
+          event.preventDefault()
+          toolbarTripLinks[next]?.focus()
+        }
       },
       { signal },
     )
@@ -1971,6 +1992,11 @@ export function createTripMap(options: TripMapOptions): TripMap {
         // Chinese, Japanese and Korean names in the style's own glyphs, fetched: drawn here
         // instead, each new one costs the main thread a frame as the names come into view.
         localIdeographFontFamily: false as unknown as string,
+        locale: {
+          'AttributionControl.ToggleAttribution': messages.mapAttribution,
+          'LogoControl.Title': messages.mapLogo,
+          'Map.Title': messages.mapTitle,
+        },
         touchPitch: true,
       })
       setMapPitch(map, style.pitch)

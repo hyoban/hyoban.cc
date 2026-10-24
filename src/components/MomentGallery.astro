@@ -1,5 +1,6 @@
 ---
 import { BLANK_IMAGE } from '@/consts'
+import { getTextLang } from '@hyoban/trip-map'
 import type { ResolvedMomentMedia } from '@/moments'
 
 interface Props {
@@ -35,6 +36,7 @@ const imageSizes = isSingle
                 srcset={item.src.sources.map(source => `${source.src} ${source.width}w`).join(', ')}
                 sizes={imageSizes}
                 alt={item.alt}
+                lang={getTextLang(item.alt)}
                 width={item.src.width}
                 height={item.src.height}
                 loading={priorityMedia ? 'eager' : 'lazy'}
@@ -56,6 +58,7 @@ const imageSizes = isSingle
               preload={item.poster ? 'none' : 'metadata'}
               poster={item.poster?.src}
               aria-label={item.alt || `视频 ${index + 1}`}
+              lang={getTextLang(item.alt)}
             >
               <source src={item.src} type={item.contentType} />
             </video>

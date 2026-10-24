@@ -38,3 +38,24 @@ function formatter(locale: string, weekday: boolean | undefined) {
     ...(weekday ? { weekday: 'short' as const } : {}),
   })
 }
+
+/**
+ * `en` for a picture's description written in English, which a page in Chinese would
+ * have read out in a Chinese voice; nothing for the rest.
+ */
+export function getTextLang(text: string | undefined) {
+  return text && /[a-z]/i.test(text) && !/[\u3000-\u9fff\uac00-\ud7af]/.test(text)
+    ? 'en'
+    : undefined
+}
+
+/** Gives `element` the language of `text`, or the page's again: an empty lang would be none. */
+export function setTextLang(element: HTMLElement, text: string | undefined) {
+  const lang = getTextLang(text)
+
+  if (lang) {
+    element.lang = lang
+  } else {
+    element.removeAttribute('lang')
+  }
+}

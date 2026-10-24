@@ -996,6 +996,16 @@ export function createTripPlayer(options: TripPlayerOptions) {
     renderPlayButton()
     lastFrameTime = undefined
     frame = requestFrame(tick)
+    // What started it, a trip's link or its card, has gone from the page by the next
+    // frame: the focus goes on to the controls rather than back to the top of the page.
+    requestAnimationFrame(() => {
+      if (
+        trip === nextTrip &&
+        (!document.activeElement || document.activeElement === document.body)
+      ) {
+        panel.play.focus({ preventScroll: true })
+      }
+    })
   }
 
   function stop() {

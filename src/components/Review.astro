@@ -710,10 +710,11 @@ const highlights = [
     <nav class="year-nav" aria-label="其他年份" data-share-skip>
       {previous !== undefined ? <a href={`/${previous}/`}>← {previous}</a> : <span />}
       <div class="year-share" data-year-share={shareKey} data-share-title={shareTitle}>
-        <button class="year-share__toggle" type="button" aria-haspopup="true" aria-expanded="false" data-share-toggle>
+        <button class="year-share__toggle" type="button" aria-controls="year-share-options" aria-expanded="false" data-share-toggle>
           分享图片
         </button>
-        <div class="year-share__options" data-share-options hidden>
+        <span class="sr-only" role="status" data-share-status />
+        <div class="year-share__options" id="year-share-options" data-share-options hidden>
           <button type="button" data-share-mode="long">
             长图<span>整页一张</span>
           </button>
@@ -1857,7 +1858,7 @@ const highlights = [
       scale: 0.97;
     }
 
-    &:disabled {
+    &[aria-disabled='true'] {
       cursor: progress;
     }
   }

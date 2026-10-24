@@ -241,6 +241,22 @@ const ROW = 1.75
   }
 </div>
 
+<script>
+  // Escape puts a bar's card away, as it would a tooltip; leaving the bar brings it back.
+  function initializeDeviceCards() {
+    for (const device of document.querySelectorAll<HTMLElement>('.device')) {
+      const restore = () => device.removeAttribute('data-card-dismissed')
+      device.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') device.setAttribute('data-card-dismissed', '')
+      })
+      device.addEventListener('blur', restore)
+      device.addEventListener('pointerleave', restore)
+    }
+  }
+
+  document.addEventListener('astro:page-load', initializeDeviceCards)
+</script>
+
 <style>
   /* A device's border and text by its status: solid for one in use or kept as a backup,
      dashed for one lying idle, and faint for one sold. */
@@ -357,6 +373,8 @@ const ROW = 1.75
 
     .device:focus-visible & {
       border-color: var(--color-tx-2);
+      outline: 2px solid var(--color-tx);
+      outline-offset: 1px;
     }
 
     @media (hover: hover) {
@@ -430,6 +448,12 @@ const ROW = 1.75
         visibility: visible;
         opacity: 1;
       }
+    }
+
+    /* Put away with Escape, until the bar is left. */
+    .device[data-card-dismissed] & {
+      visibility: hidden;
+      opacity: 0;
     }
 
     & dl {

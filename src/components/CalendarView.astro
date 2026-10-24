@@ -170,6 +170,7 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
     class:list={['calendar-page', { 'calendar-page--with-drawer': selectedDate }]}
     style={`--calendar-weeks: ${desktopCalendarDays.length / 7}`}
   >
+    <h1 class="sr-only">{year} 年 {month} 月日历</h1>
     <header class="calendar-toolbar">
       <CalendarBackLink />
 
@@ -193,6 +194,8 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
                       return (
                         <a
                           href={getMonthPath(key)}
+                          aria-label={`${pickerYear} 年 ${pickerMonth} 月`}
+                          aria-current={key === monthKey ? 'date' : undefined}
                           data-calendar-month-link
                           data-astro-prefetch="false"
                           class:list={[
@@ -346,6 +349,7 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
           data-previous-path={previousDate ? getMomentPath(previousDate) : undefined}
           data-next-path={nextDate ? getMomentPath(nextDate) : undefined}
           aria-label={`${selectedDateLabel}的记录`}
+          tabindex="-1"
         >
           <header class="day-drawer__header">
             <h2>{selectedDateLabel}</h2>
@@ -405,6 +409,12 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
   const finePointer = matchMedia('(hover: hover) and (pointer: fine)')
   let dayDrawer: Drawer | undefined
   let dayScrollArea: ScrollArea | undefined
+  // Whether the last way in was the keyboard, and the page the router came from: a day
+  // opened, left or stepped to by key takes the focus with it, which the swap drops.
+  let byKeyboard = false
+  let cameFrom: string | undefined
+  window.addEventListener('keydown', () => (byKeyboard = true), { capture: true })
+  window.addEventListener('pointerdown', () => (byKeyboard = false), { capture: true })
 
   /** Makes `element` the day's drawer while the screen is wide; it closes to the month. */
   function setUpDayDrawer(element: HTMLElement, open: boolean, signal: AbortSignal) {
@@ -474,6 +484,19 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
 
     document.documentElement.removeAttribute('data-calendar-day-entering')
 
+    // Into the day; or back on the day just closed, in the month's grid or its list.
+    const from = cameFrom
+    cameFrom = undefined
+
+    if (byKeyboard && from) {
+      const day = from.match(/(\d{4})\/(\d{2})\/(\d{2})\/$/)
+      const target = drawer
+        ?? document.querySelector<HTMLElement>(`.calendar-grid a[href="${from}"]`)
+        ?? (day && document.getElementById(`agenda-${day.slice(1).join('-')}`))
+
+      target?.focus({ preventScroll: true })
+    }
+
     if (drawer) {
       wide.addEventListener('change', () => setUpDayDrawer(drawer, true, signal), { signal })
       finePointer.addEventListener('change', () => setUpDayDrawer(drawer, true, signal), { signal })
@@ -539,8 +562,12 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
       indexButton.addEventListener('click', () => {
         const targetId = indexButton.dataset.agendaTarget
 
-        if (targetId) {
-          document.getElementById(targetId)?.scrollIntoView({ behavior: 'auto', block: 'start' })
+        const target = targetId ? document.getElementById(targetId) : null
+
+        if (target) {
+          target.scrollIntoView({ behavior: 'auto', block: 'start' })
+          // The reader and the next Tab go on from the day too.
+          target.focus({ preventScroll: true })
         }
       }, { signal })
     }
@@ -549,6 +576,7 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
   document.addEventListener('astro:page-load', initializeCalendar)
   document.addEventListener('astro:before-swap', (event) => {
     calendarController?.abort()
+    cameFrom = event.from.pathname
 
     // A day opening over the month starts with the month as it was and the day out of
     // sight, so the page swapping in shows no jump (see index.css).
