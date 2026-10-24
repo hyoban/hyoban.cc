@@ -1,4 +1,10 @@
-import { getCardPhotos, getCalendarPanel, getYearPanel, isTripInPeriod } from '@/card-data'
+import {
+  getCardPhotos,
+  getCalendarPanel,
+  getLifePanel,
+  getYearPanel,
+  isTripInPeriod,
+} from '@/card-data'
 import cities from '@/data/boundaries/cities.json'
 import { buildYearReview, getReviewYears } from '@/year-review'
 import type { FogRegions } from '@hyoban/trip-map'
@@ -281,15 +287,16 @@ async function loadPageCards(): Promise<Array<{ path: string; card: PageCard }>>
       },
     })
   }
-  // Every year's: the years and what they add up to, over their photos.
+  // Every year's, as a year's is: the years it spans, what they add up to, and twelve of
+  // their months' photos.
   const years = getReviewYears(moments)
   const life = buildYearReview(undefined, moments, allTrips, cities as FogRegions)
   cards.push({
     path: '/life/',
     card: {
-      title: '人生\n回顾',
+      title: `${years[0]}–${years.at(-1)}\n人生回顾`,
       detail: `${years.length} 年 · ${life.dayCount} 天 · ${life.cities.lit.length} 个城市`,
-      photos: getPeriodPhotos(moments),
+      panel: getLifePanel(years, moments),
     },
   })
 

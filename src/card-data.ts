@@ -91,18 +91,32 @@ export function getYearCollage(year: number, moments: Moment[]) {
   return photos.length >= 4 ? { photos, columns: Math.ceil(photos.length / 2) } : undefined
 }
 
+/** Every year's month photos (getYearPanel), oldest first, spread evenly to at most `count`. */
+function getLifePhotos(years: readonly number[], moments: Moment[], count: number) {
+  const all = years.flatMap((year) =>
+    getYearPanel(year, moments).months.flatMap(({ photo }) => (photo ? [photo] : [])),
+  )
+  const taken = Math.min(all.length, count)
+  return Array.from({ length: taken }, (_, index) => all[Math.floor((index * all.length) / taken)]!)
+}
+
 /**
  * The photos the whole life's title shows, drawn by /life/collage.webp: each year's months
  * taken in turn, spread evenly to at most 24, in two rows.
  */
 export function getLifeCollage(years: readonly number[], moments: Moment[]) {
-  const all = years.flatMap((year) =>
-    getYearPanel(year, moments).months.flatMap(({ photo }) => (photo ? [photo] : [])),
-  )
-  const count = Math.min(all.length, 24)
-  const photos = Array.from(
-    { length: count },
-    (_, index) => all[Math.floor((index * all.length) / count)]!,
-  )
+  const photos = getLifePhotos(years, moments, 24)
   return photos.length >= 4 ? { photos, columns: Math.ceil(photos.length / 2) } : undefined
+}
+
+/** The whole life's card: twelve of its years' month photos, laid out as a year's are. */
+export function getLifePanel(
+  years: readonly number[],
+  moments: Moment[],
+): Extract<OgPanel, { kind: 'months' }> {
+  const photos = getLifePhotos(years, moments, 12)
+  return {
+    kind: 'months',
+    months: Array.from({ length: 12 }, (_, index) => ({ photo: photos[index] })),
+  }
 }
