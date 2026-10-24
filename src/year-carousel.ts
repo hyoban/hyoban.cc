@@ -325,30 +325,6 @@ export function initializeCarousels() {
       draw()
     })
 
-    // A wheel turned over the row scrolls it sideways, until it reaches that end and the
-    // page takes over. Snapping waits while the wheel turns, so it moves as far as turned,
-    // then settles the row on the nearest item.
-    let settle = 0
-    track.addEventListener(
-      'wheel',
-      (event) => {
-        if (carousel.classList.contains('is-expanded') || event.ctrlKey) return
-        if (Math.abs(event.deltaX) >= Math.abs(event.deltaY)) return
-        const end = track.scrollWidth - track.clientWidth
-        const delta =
-          event.deltaMode === WheelEvent.DOM_DELTA_LINE ? event.deltaY * 40 : event.deltaY
-        if ((delta < 0 && track.scrollLeft <= 0) || (delta > 0 && track.scrollLeft >= end - 1))
-          return
-        event.preventDefault()
-        track.style.scrollSnapType = 'none'
-        track.scrollLeft += delta
-        clearTimeout(settle)
-        settle = window.setTimeout(() => {
-          track.style.scrollSnapType = ''
-        }, 150)
-      },
-      { passive: false },
-    )
     track.addEventListener('scroll', update, { passive: true })
     reduce.addEventListener('change', () => {
       measure()
