@@ -35,6 +35,8 @@ import { readDevices, readPlaces } from '@/data/store'
 import { getDivisionLabel, placeKindLabels } from '@/data/place-info'
 import { getSortedPosts } from '@/utils'
 import { getShortPlaceName, type FogRegions } from '@hyoban/trip-map'
+import { carouselGeometry } from '@/year-carousel'
+import { dealYear } from '@/year-random'
 import type { PlaceKind } from '@hyoban/data-spec'
 
 // A year at a glance (src/year-review.ts): its counts against the year before; then where
@@ -289,13 +291,16 @@ const highlights = [
   image={await getPageCardPath(Astro.url.pathname)}
 >
   <SitePage>
-    {/* Hides what's still to come in until the script below reveals it; without it, all shows.
-        Not on a page coming back to where it was part way down (the layout's script): what's
-        on screen is there at once, rather than rising in after the page has scrolled. */}
-    <script is:inline>
-      if (!(history.state?.scrollY > 0)) document.documentElement.classList.add('year-motion')
-    </script>
-    <header class="year-hero">
+    {/* Before the page is read: what's still to come hidden until the script below reveals
+        it, unless the page is coming back to where it was part way down (the layout's
+        script), what's on screen there at once rather than rising in once it has scrolled;
+        and the year's hand begun, ahead of its first picture (src/year-random.ts). Without
+        script, all shows as it is. */}
+    <script
+      is:inline
+      set:html={`if (!(history.state?.scrollY > 0)) document.documentElement.classList.add('year-motion');(${dealYear})('start')`}
+    />
+    <header class="year-hero" data-year-deal>
       <h1 class:list={{ 'is-collage': collage }} style={collage && `background-image: url("/${year}/collage.webp")`}>{year}</h1>
       <dl class="year-stats">
         {
@@ -652,12 +657,15 @@ const highlights = [
       <span>Hyoban</span>
       <span class="year-share-mark__url">hyoban.cc/{year}</span>
     </footer>
+    {/* As soon as the page is read: the year's hand finished (src/year-random.ts), then the
+        places' rows laid out in it (src/year-carousel.ts). */}
+    <script is:inline set:html={`(${dealYear})('finish');(${carouselGeometry})().layOutRows()`} />
   </SitePage>
 </Layout>
 
 <script>
   import { initializeCarousels } from '@/year-carousel'
-  import { dealYear } from '@/year-random'
+  import { dealYear, keepSeed } from '@/year-random'
   import { initializeYearShare } from '@/year-share'
 
   // The page's motion, each piece once: the counts roll up from nothing as it opens, and
@@ -726,11 +734,15 @@ const highlights = [
     for (const section of sections) observer.observe(section)
   }
 
-  // First, so the carousels and the motion see the places in their new order.
-  document.addEventListener('astro:page-load', dealYear)
+  // First, so the carousels and the motion see the places in their new order: dealing a page
+  // the router swapped in, the rest dealt inline already; then keeping the seed.
+  document.addEventListener('astro:page-load', () => {
+    dealYear()
+    keepSeed()
+  })
   document.addEventListener('astro:page-load', initializeMotion)
   document.addEventListener('astro:page-load', initializeCityLinks)
-  document.addEventListener('astro:page-load', () => initializeCarousels())
+  document.addEventListener('astro:page-load', initializeCarousels)
   document.addEventListener('astro:page-load', initializeYearShare)
 </script>
 
