@@ -1083,8 +1083,8 @@ export function createTripMap(options: TripMapOptions): TripMap {
   function syncSelection(selectOptions: { focus?: boolean; moveMap?: boolean } = {}) {
     // Before the rest, so a trip closing frames the places beside the Moments.
     syncMomentList()
-    // The legend's years link to the map's addresses or the trip list's, as it's open.
-    syncYearLinks()
+    // The legend's links go to the map's addresses or the trip list's, as it's open.
+    syncPeriodLinks()
 
     // A trip closed: every place in view again, beside the list if it's coming back.
     const tripClosed = syncTripFromUrl()
@@ -1296,7 +1296,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
       }
     }
 
-    syncYearLinks()
+    syncPeriodLinks()
 
     elements.legend?.toggleAttribute('data-trip-map-year-picked', next !== undefined)
 
@@ -1366,11 +1366,18 @@ export function createTripMap(options: TripMapOptions): TripMap {
   }
 
   /**
-   * Each year in the legend links to where pressing it goes: to that year, or from the
-   * year picked to every year again, on the trip list's addresses while it's open.
+   * The legend's links go where pressing them does. Each year: to that year, or from the
+   * year picked to every year again, on the trip list's addresses while it's open. The
+   * trip list's openers: to the list for the period picked, or back to the map from it.
    */
-  function syncYearLinks() {
+  function syncPeriodLinks() {
     const picked = markers.period
+
+    for (const opener of elements.tripListOpeners) {
+      if (opener instanceof HTMLAnchorElement) {
+        opener.href = isTripListUrl() ? getMapPath() : urls.getTripListPath(picked)
+      }
+    }
 
     for (const link of elements.yearLinks) {
       const year = Number(link.dataset.tripMapYear)
