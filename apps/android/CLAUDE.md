@@ -19,6 +19,9 @@ say stay out.
 - The phone is usually on wireless adb. Take its serial from `adb devices`, leaving out
   `emulator-*`, and never start the emulator while the phone is there. If the phone is
   locked or adb has dropped, say so instead of working around it.
+- When `adb devices` and `adb mdns services` are both empty, restart the adb server
+  (`adb kill-server`, `adb start-server`) first: the connect service often shows up then,
+  and `adb connect` to it works.
 - When `adb devices` is empty, `adb mdns services` may still show the phone's address
   (its pairing service, say) without the connect service: scan that address's ports
   30000–50000 for the open one besides the pairing port and `adb connect` to it; the

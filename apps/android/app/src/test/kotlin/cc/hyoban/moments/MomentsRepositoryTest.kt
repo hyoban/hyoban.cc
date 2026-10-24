@@ -140,6 +140,25 @@ class MomentsRepositoryTest {
     }
 
     @Test
+    fun `the Moments about tech are left out unless asked for, hidden ones always`() = runBlocking {
+        api.put(moment("A", "2026-10-01"))
+        api.put(moment("B", "2026-10-02", topic = "tech"))
+        api.put(moment("C", "2026-10-03", topic = "tech", hidden = true))
+        val repository = repository()
+        repository.load()
+        repository.refresh()
+        assertEquals(listOf("A"), repository.moments.value.map { it.uid })
+        assertEquals(null, repository.moment("B"))
+
+        repository.changeShowTech(true)
+        assertEquals(listOf("B", "A"), repository.moments.value.map { it.uid })
+        assertEquals("B", repository.moment("B")?.uid)
+
+        repository.changeShowTech(false)
+        assertEquals(listOf("A"), repository.moments.value.map { it.uid })
+    }
+
+    @Test
     fun `the places come whole with the first refresh, then only those that changed`() = runBlocking {
         api.put(moment("A", "2026-10-01"))
         val repository = repository()
@@ -510,12 +529,13 @@ class MomentsRepositoryTest {
         assertEquals(emptyList(), repository.moments.value.map { it.uid })
     }
 
-    private fun moment(uid: String, day: String, text: String = "", hidden: Boolean = false, published: Boolean = true) =
+    private fun moment(uid: String, day: String, text: String = "", hidden: Boolean = false, published: Boolean = true, topic: String? = null) =
         MomentRecord(
             uid = uid,
             occurredAt = day,
             text = text,
             hidden = hidden,
+            topic = topic,
             published = if (published) PublishedMoment("${day}T00:00:00Z") else null,
             createdAt = "${day}T00:00:00Z",
             updatedAt = "${day}T00:00:00Z",

@@ -130,6 +130,9 @@
     <string name="section_route">路线</string>
     <string name="title_settings">设置</string>
     <string name="section_sources">数据来源</string>
+    <string name="section_moments">时刻</string>
+    <string name="setting_show_tech">显示技术时刻</string>
+    <string name="settings_show_tech_note">关于技术的时刻不会在网站上显示，打开后会在这里显示</string>
     <string name="section_map">地图</string>
     <string name="setting_api_url">API 地址</string>
     <string name="setting_asset_origin">图片与视频地址</string>
