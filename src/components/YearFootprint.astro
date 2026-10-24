@@ -122,13 +122,17 @@ const { map, label } = Astro.props
         /* The cities light up first, then the routes draw between them and the places
            pop up along them. */
         & .year-footprint__city {
-          animation: year-footprint-fade linear both;
+          animation-name: year-footprint-fade;
+          animation-timing-function: linear;
+          animation-fill-mode: both;
           animation-timeline: --map;
           animation-range: cover 5% cover 25%;
         }
 
         & .year-footprint__route {
-          animation: year-footprint-draw linear both;
+          animation-name: year-footprint-draw;
+          animation-timing-function: linear;
+          animation-fill-mode: both;
           animation-timeline: --map;
           animation-range: cover calc(10% + min(var(--trip), 6) * 3%) cover calc(40% + min(var(--trip), 6) * 3%);
         }
@@ -136,7 +140,9 @@ const { map, label } = Astro.props
         & .year-footprint__dot {
           transform-box: fill-box;
           transform-origin: center;
-          animation: year-footprint-pop linear both;
+          animation-name: year-footprint-pop;
+          animation-timing-function: linear;
+          animation-fill-mode: both;
           animation-timeline: --map;
           animation-range: cover 30% cover 45%;
         }

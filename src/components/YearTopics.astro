@@ -121,7 +121,9 @@ const rows = topics.map((topic, index) => ({
     @media (prefers-reduced-motion: no-preference) {
       :global(.year-scroll) .year-topics__bar {
         transform-origin: left center;
-        animation: year-topics-grow linear both;
+        animation-name: year-topics-grow;
+        animation-timing-function: linear;
+        animation-fill-mode: both;
         animation-timeline: view();
         animation-range: entry 100% cover 35%;
       }

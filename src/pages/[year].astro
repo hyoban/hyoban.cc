@@ -1891,12 +1891,16 @@ const highlights = [
      (the page's script leaves them to it): each part rises, wipes or draws in as it comes
      into view, by how far it has, and goes back the same way scrolled back up. Nothing waits
      hidden for a script, and a page restored part way down is simply as far along as it's
-     scrolled. */
+     scrolled. Here and in the parts, each is written out property by property, never as the
+     animation shorthand: the build's minifier folds a timeline into the shorthand, which
+     browsers don't take yet, dropping the whole declaration. */
   @supports (animation-timeline: view()) {
     @media (prefers-reduced-motion: no-preference) {
       :global(.year-scroll) {
         & .year-section {
-          animation: year-rise linear both;
+          animation-name: year-rise;
+          animation-timing-function: linear;
+          animation-fill-mode: both;
           animation-timeline: view();
           animation-range: entry 0% entry 12rem;
         }
@@ -1906,7 +1910,9 @@ const highlights = [
         & .year-menu li,
         & .year-devices li,
         & .year-first__city {
-          animation: year-rise linear both;
+          animation-name: year-rise;
+          animation-timing-function: linear;
+          animation-fill-mode: both;
           animation-timeline: view();
           animation-range: entry 0% entry 100%;
         }
@@ -1918,14 +1924,18 @@ const highlights = [
         }
 
         & .year-places li {
-          animation: year-rise linear both;
+          animation-name: year-rise;
+          animation-timing-function: linear;
+          animation-fill-mode: both;
           animation-timeline: --places;
           animation-range: entry calc(min(var(--order), 6) * 8%) entry calc(60% + min(var(--order), 6) * 8%);
         }
 
         /* A section's figures rise one after the other, the parts' own leads too. */
         & :global(.year-lead > span) {
-          animation: year-rise linear both;
+          animation-name: year-rise;
+          animation-timing-function: linear;
+          animation-fill-mode: both;
           animation-timeline: view();
           animation-range: entry 0% entry 100%;
         }
@@ -1935,13 +1945,17 @@ const highlights = [
         }
 
         & .year-cities__bar {
-          animation: year-bar-wipe linear both;
+          animation-name: year-bar-wipe;
+          animation-timing-function: linear;
+          animation-fill-mode: both;
           animation-timeline: view();
           animation-range: cover calc(8% + var(--index) * 3%) cover calc(30% + var(--index) * 3%);
         }
 
         & .year-first li {
-          animation: year-wipe linear both;
+          animation-name: year-wipe;
+          animation-timing-function: linear;
+          animation-fill-mode: both;
           animation-timeline: view();
           animation-range: entry 50% cover 30%;
         }
@@ -1953,7 +1967,9 @@ const highlights = [
         }
 
         & .year-devices__image {
-          animation: year-device-peek linear both;
+          animation-name: year-device-peek;
+          animation-timing-function: linear;
+          animation-fill-mode: both;
           animation-timeline: --device;
           animation-range: entry 40% cover 40%;
         }
@@ -1964,16 +1980,19 @@ const highlights = [
         }
 
         & .year-trips path {
-          animation: year-trip-draw linear both;
+          animation-name: year-trip-draw;
+          animation-timing-function: linear;
+          animation-fill-mode: both;
           animation-timeline: --trip;
           animation-range: entry 50% cover 45%;
         }
 
         @media (hover: hover) {
           & .year-trips a:hover path {
-            animation:
-              year-trip-draw linear both,
-              year-trip-redraw 1.2s var(--ease-out);
+            animation-name: year-trip-draw, year-trip-redraw;
+            animation-duration: auto, 1.2s;
+            animation-timing-function: linear, var(--ease-out);
+            animation-fill-mode: both, none;
             animation-timeline: --trip, auto;
             animation-range:
               entry 50% cover 45%,

@@ -592,7 +592,9 @@ const spendingTiles = [
     @media (prefers-reduced-motion: no-preference) {
       :global(.year-scroll) {
         & .year-driving__tiles > div {
-          animation: year-driving-rise linear both;
+          animation-name: year-driving-rise;
+          animation-timing-function: linear;
+          animation-fill-mode: both;
           animation-timeline: view();
           animation-range: entry 0% entry 100%;
         }
@@ -602,7 +604,9 @@ const spendingTiles = [
         }
 
         & .year-driving__grid .year-driving__cell {
-          animation: year-driving-pop linear both;
+          animation-name: year-driving-pop;
+          animation-timing-function: linear;
+          animation-fill-mode: both;
           animation-timeline: --days;
           animation-range: entry calc(20% + var(--week) * 1.5%) cover calc(30% + var(--week) * 0.6%);
         }
@@ -613,13 +617,17 @@ const spendingTiles = [
 
         & .year-driving__hour {
           transform-origin: bottom;
-          animation: year-driving-grow linear both;
+          animation-name: year-driving-grow;
+          animation-timing-function: linear;
+          animation-fill-mode: both;
           animation-timeline: --hours;
           animation-range: entry calc(40% + var(--hour) * 2%) cover calc(30% + var(--hour) * 0.8%);
         }
 
         & .year-driving__bar {
-          animation: year-driving-wipe linear both;
+          animation-name: year-driving-wipe;
+          animation-timing-function: linear;
+          animation-fill-mode: both;
           animation-timeline: view();
           animation-range: entry 100% cover 40%;
         }
