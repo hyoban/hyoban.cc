@@ -48,7 +48,7 @@ const { Content } = await render(entry)
               <h1>{entry.data.title}</h1>
               <p>
                 <time datetime={post.data.pubDate.toISOString()}>{formatPostFullDate(post.data.pubDate)}</time>
-                <span aria-hidden="true"> · </span>
+                <span aria-hidden="true">&emsp;</span>
                 <span>{formatPostWordCount(wordCount)}</span>
               </p>
             </header>

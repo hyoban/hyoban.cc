@@ -72,6 +72,6 @@ for (const run of candidates) {
   )
 
   console.log(
-    `${run.start} – ${run.end}  ${getDayOffset(run.start, run.end) + 1} 天 · ${momentCount} 条记录\n  ${[...places].join('、')}`,
+    `${run.start} – ${run.end}  ${getDayOffset(run.start, run.end) + 1} 天\u2003${momentCount} 条记录\n  ${[...places].join('、')}`,
   )
 }

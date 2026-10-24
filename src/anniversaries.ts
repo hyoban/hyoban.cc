@@ -153,7 +153,7 @@ function defineBirthday(options: BirthdayOptions): AnniversaryDefinition {
     describe: ({ date, years }) => `${years} 岁${name}（${formatAnnualDate(date)}）`,
     icon: options.icon ?? 'i-lucide-cake-slice',
     id: options.id,
-    label: ({ years }) => `${name} · ${years} 岁`,
+    label: ({ years }) => `${name}\u2003${years} 岁`,
     startYear: options.birthYear,
   }
 }

@@ -142,7 +142,7 @@ const ROW = 1.75
                       <div>
                         <div class="device__card-title">{span.device.name}</div>
                         <div class="device__card-status">
-                          {span.device.category} · {statusLabel[span.status]}
+                          {span.device.category}&emsp;{statusLabel[span.status]}
                         </div>
                       </div>
                       {span.device.image && (
@@ -152,19 +152,19 @@ const ROW = 1.75
                     <dl>
                       <dt>购入</dt>
                       <dd>
-                        {span.start} · {formatPrice(span.device.bought.price)}
+                        {span.start}&emsp;{formatPrice(span.device.bought.price)}
                       </dd>
                       {span.device.sold && (
                         <>
                           <dt>卖出</dt>
                           <dd>
-                            {span.device.sold.on} · {formatPrice(span.device.sold.price)}
+                            {span.device.sold.on}&emsp;{formatPrice(span.device.sold.price)}
                           </dd>
                         </>
                       )}
                       <dt>持有</dt>
                       <dd>
-                        {span.days} 天{span.device.bought.price > 0 && ` · ${formatDailyCost(span)}`}
+                        {span.days} 天{span.device.bought.price > 0 && `\u2003${formatDailyCost(span)}`}
                       </dd>
                     </dl>
                     {span.device.note && <div class="device__card-note">{span.device.note}</div>}
@@ -227,7 +227,7 @@ const ROW = 1.75
               )}
               {kind === 'sold' && (
                 <div class="devices-feed__aside">
-                  持有 {span.days} 天 · {formatDailyCost(span)}
+                  持有 {span.days} 天&emsp;{formatDailyCost(span)}
                 </div>
               )}
               {kind === 'bought' && span.device.note && (

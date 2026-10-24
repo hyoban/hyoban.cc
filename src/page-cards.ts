@@ -80,7 +80,7 @@ export function getDayMomentCard(dayMoments: Moment[]) {
     : undefined
 }
 
-/** A day as the calendar heads it: `10 月 23 日 · 星期四`. */
+/** A day as the calendar heads it: `10 月 23 日\u2003星期四`. */
 export function formatCalendarDay(dateKey: string) {
   const [year, month, day] = dateKey.split('-').map(Number) as [number, number, number]
   const weekday = new Intl.DateTimeFormat('zh-CN', {
@@ -88,14 +88,14 @@ export function formatCalendarDay(dateKey: string) {
     weekday: 'long',
   }).format(new Date(Date.UTC(year, month - 1, day)))
 
-  return `${month} 月 ${day} 日 · ${weekday}`
+  return `${month} 月 ${day} 日\u2003${weekday}`
 }
 
 export function getCalendarText(year: number, month: number, selectedDate?: string): PageText {
   return {
     heading: selectedDate
       ? `${selectedDate.slice(0, 4)} 年 ${formatCalendarDay(selectedDate)}`
-      : `${year} 年 ${month} 月 · 日历`,
+      : `${year} 年 ${month} 月\u2003日历`,
     description: CALENDAR_DESCRIPTION,
   }
 }
@@ -191,7 +191,7 @@ async function loadPageCards(): Promise<Array<{ path: string; card: PageCard }>>
       title: `${year} 年 ${month} 月\n日历`,
       // A month with no Moments keeps its page between those with them.
       detail: records.length
-        ? `${new Set(records.map((moment) => moment.dateKey)).size} 天 · ${records.length} 条记录`
+        ? `${new Set(records.map((moment) => moment.dateKey)).size} 天\u2003${records.length} 条记录`
         : '这个月没有记录',
       panel: getCalendarPanel(year, month, records),
     }
@@ -204,30 +204,30 @@ async function loadPageCards(): Promise<Array<{ path: string; card: PageCard }>>
     const records = getPeriodRecords(period)
     return {
       title,
-      detail: `${records.length} 条记录 · 都没有地点`,
+      detail: `${records.length} 条记录\u2003都没有地点`,
       photos: getPeriodPhotos(records),
     }
   }
   const tripCard = (period?: Period): PageCard => {
     const selected = trips.filter((trip) => isTripInPeriod(trip, period))
-    const title = getMapText(period, true).heading.replace(' · ', '\n')
+    const title = getMapText(period, true).heading.replace('\u2003', '\n')
     if (!selected.length) {
       const records = getPeriodRecords(period)
       return {
         title,
-        detail: `没有出门 · ${records.length} 条记录`,
+        detail: `没有出门\u2003${records.length} 条记录`,
         photos: getPeriodPhotos(records),
       }
     }
     const days = selected.reduce((total, trip) => total + trip.dayCount, 0)
     return {
       title,
-      detail: `${selected.length} 段旅程 · ${days} 天`,
+      detail: `${selected.length} 段旅程\u2003${days} 天`,
       panel: {
         kind: 'trips',
         trips: selected.slice(0, 3).map((trip) => ({
           title: trip.title,
-          detail: `${trip.start.replaceAll('-', '.')} · ${trip.dayCount} 天`,
+          detail: `${trip.start.replaceAll('-', '.')}\u2003${trip.dayCount} 天`,
           photo: getTripCovers(trip)[0]?.src ?? getCardPhotos(trip.stops, 1)[0],
         })),
       },
@@ -282,7 +282,7 @@ async function loadPageCards(): Promise<Array<{ path: string; card: PageCard }>>
       path: `/${year}/`,
       card: {
         title: `${year} 年\n年度回顾`,
-        detail: `${review.dayCount} 天 · ${review.cities.lit.length} 个城市`,
+        detail: `${review.dayCount} 天\u2003${review.cities.lit.length} 个城市`,
         panel: getYearPanel(year, review.moments),
       },
     })
@@ -295,7 +295,7 @@ async function loadPageCards(): Promise<Array<{ path: string; card: PageCard }>>
     path: '/life/',
     card: {
       title: `${years[0]}–${years.at(-1)}\n人生回顾`,
-      detail: `${years.length} 年 · ${life.dayCount} 天 · ${life.cities.lit.length} 个城市`,
+      detail: `${years.length} 年\u2003${life.dayCount} 天\u2003${life.cities.lit.length} 个城市`,
       panel: getLifePanel(years, moments),
     },
   })

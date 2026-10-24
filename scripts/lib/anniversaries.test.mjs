@@ -9,7 +9,7 @@ test('marks the lunar birthday on its Gregorian date each year', () => {
       description: '25 岁生日（农历八月十六）',
       icon: 'i-lucide-cake-slice',
       id: 'birthday',
-      label: '生日 · 25 岁',
+      label: '生日\u200325 岁',
     },
   ])
   assert.deepEqual(getCalendarAnniversaries('2025-10-07'), [
@@ -17,7 +17,7 @@ test('marks the lunar birthday on its Gregorian date each year', () => {
       description: '26 岁生日（农历八月十六）',
       icon: 'i-lucide-cake-slice',
       id: 'birthday',
-      label: '生日 · 26 岁',
+      label: '生日\u200326 岁',
     },
   ])
   assert.equal(getCalendarAnniversaries('2025-10-08').length, 0)

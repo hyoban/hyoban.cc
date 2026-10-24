@@ -69,7 +69,7 @@
     <string name="share_x_unavailable">无法打开 X 的发帖编辑器，确认 X 已安装并更新到最新版</string>
     <string name="action_open_moment">打开这个时刻</string>
     <string name="label_alt">画面描述</string>
-    <string name="label_media_size">%1$s · %2$d × %3$d</string>
+    <string name="label_media_size">%1$s\u2003%2$d × %3$d</string>
     <string name="media_photo">照片</string>
     <string name="media_live">实况照片</string>
     <string name="media_video">视频</string>
@@ -98,7 +98,7 @@
     <string name="action_locate">我的位置</string>
     <string name="action_north">回到正北</string>
     <string name="action_fog">迷雾地图</string>
-    <string name="fog_lit">点亮 %1$d 座城市 · %2$d 个省份</string>
+    <string name="fog_lit">点亮 %1$d 座城市\u2003%2$d 个省份</string>
     <string name="error_location">没能定位，确认定位已打开</string>
     <string name="error_location_permission">需要定位权限才能显示所在位置</string>
     <string name="label_view_list">列表</string>
@@ -173,7 +173,7 @@
     <string name="widget_preview_memory_eyebrow">3 年前的今天</string>
     <string name="widget_preview_memory_title">海边的书店，终于轮到我了</string>
     <string name="widget_preview_memory_subtitle">青岛</string>
-    <string name="widget_preview_trip_eyebrow">第 2 天 · 共 5 天</string>
+    <string name="widget_preview_trip_eyebrow">第 2 天\u2003共 5 天</string>
     <string name="widget_preview_trip_title">东北自驾</string>
     <string name="widget_preview_trip_subtitle">15 个时刻</string>
     <!-- Between clauses read out together, and between the items of a list. -->

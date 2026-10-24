@@ -129,9 +129,9 @@ const heatmaps = heatYears.map((at) => {
 })
 // What the graph's readout says while no day is pointed at.
 const farthest =
-  longest && longest[1] > 0 ? `最远一天 ${formatKilometers(longest[1])} · ${formatDay(longest[0])}` : ''
+  longest && longest[1] > 0 ? `最远一天 ${formatKilometers(longest[1])}\u2003${formatDay(longest[0])}` : ''
 const chargingTiles = [
-  { value: formatNumber(charges.length), label: `次充电 · 快充 ${fast}` },
+  { value: formatNumber(charges.length), label: `次充电\u2003快充 ${fast}` },
   { value: formatNumber(chargedKwh), label: 'kWh' },
   ...(averageKwhYuan !== undefined ? [{ value: formatRate(averageKwhYuan), label: '平均每 kWh' }] : []),
   ...(homeKwh > 0 ? [{ value: formatYuan(homeYuan * 100), label: '家充电费' }] : []),
@@ -178,10 +178,10 @@ const spendingTiles = [
                       if (!cell) return <span class="year-driving__cell" data-outside />
                 if (cell.distanceMeters === undefined) {
                   return (
-                    <span class="year-driving__cell" data-empty title={`${formatDay(cell.date)} · 没有记录`} />
+                    <span class="year-driving__cell" data-empty title={`${formatDay(cell.date)}\u2003没有记录`} />
                   )
                 }
-                const title = `${formatDay(cell.date)} · ${cell.distanceMeters ? formatKilometers(cell.distanceMeters) : '没开'}`
+                const title = `${formatDay(cell.date)}\u2003${cell.distanceMeters ? formatKilometers(cell.distanceMeters) : '没开'}`
                 const outing = outingByDate.get(cell.date)
                 const href = outing && getOutingHref(outing, cell.date)
                 return href ? (
@@ -189,7 +189,7 @@ const spendingTiles = [
                     class="year-driving__cell"
                     data-level={getDistanceLevel(cell.distanceMeters)}
                           href={href}
-                    title={outing.trip ? `${title} · ${outing.trip.title}` : title}
+                    title={outing.trip ? `${title}\u2003${outing.trip.title}` : title}
                     aria-label={outing.trip ? `${title}，${outing.trip.title}` : title}
                   />
                 ) : (
@@ -233,7 +233,7 @@ const spendingTiles = [
         {hours.map((hour) => (
           <span
             class:list={['year-driving__hour', { 'is-top': hour.total === busiestHour.total && hour.total > 0 }]}
-            title={`${hour.hour} 点 · 快充 ${hour.dc} 次 · 慢充 ${hour.ac} 次`}
+            title={`${hour.hour} 点\u2003快充 ${hour.dc} 次\u2003慢充 ${hour.ac} 次`}
             style={`--hour: ${hour.hour}`}
           >
             <span class="year-driving__hour-ac" style={`height: ${(hour.ac / hourMax) * 100}%`} />

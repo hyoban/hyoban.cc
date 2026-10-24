@@ -342,7 +342,7 @@ private fun headImage(painter: VectorPainter, density: Density, ink: Color, pape
 
 private fun Color.toHex() = "#%06X".format(toArgb() and 0xFFFFFF)
 
-/** The day and time the route's tip has reached, beside it: `10月2日 周五` over `第 3 天 · 19:43`. */
+/** The day and time the route's tip has reached, beside it: `10月2日 周五` over `第 3 天\u200319:43`. */
 @Composable
 private fun HeadClock(clock: PlaybackClock, modifier: Modifier) {
     // Floating over the map in its container colour, solid so its words keep their contrast over any map.
@@ -355,7 +355,7 @@ private fun HeadClock(clock: PlaybackClock, modifier: Modifier) {
         Column(Modifier.padding(horizontal = Space.s + Space.xxs, vertical = Space.xs)) {
             Text(formatDay(clock.dateKey), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text(
-                listOfNotNull(stringResource(R.string.trip_day, clock.day), clock.time).joinToString(" · "),
+                listOfNotNull(stringResource(R.string.trip_day, clock.day), clock.time).joinToString("\u2003"),
                 style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Medium, fontFeatureSettings = "tnum", fontSize = 13.sp),
                 textAlign = TextAlign.Start,
             )

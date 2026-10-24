@@ -369,7 +369,7 @@ private fun NearbyChips(
             itemsIndexed(known, key = { _, it -> "known:${it.first}" }) { _, (id, metres) ->
                 SuggestionChip(
                     onClick = { onKnown(id) },
-                    label = { Text("${places.getValue(id).name} · ${formatDistance(metres)}", maxLines = 1) },
+                    label = { Text("${places.getValue(id).name}\u2003${formatDistance(metres)}", maxLines = 1) },
                     icon = { Icon(Icons.Rounded.Place, contentDescription = null, modifier = Modifier.size(18.dp)) },
                     modifier = Modifier.animateItem().testTag("nearby_$id"),
                 )

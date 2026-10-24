@@ -4,7 +4,7 @@ import type { ClockMoment } from './slides.ts'
 
 /**
  * A day, date and time: `date` gets the date (10月2日周五), `title` the day and time
- * (第 3 天 · 19:43). Their numbers roll (number-flow) from one moment to the next, or
+ * (第 3 天\u200319:43). Their numbers roll (number-flow) from one moment to the next, or
  * just tick on while the clock runs with the route, so moving on reads as time passing.
  */
 export function createDayHeading(date: HTMLElement, title: HTMLElement, messages: Messages) {

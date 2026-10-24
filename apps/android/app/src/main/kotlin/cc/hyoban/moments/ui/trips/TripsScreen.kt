@@ -69,7 +69,7 @@ fun TripsScreen(container: AppContainer, onTrip: (String) -> Unit) {
         stringResource(R.string.title_trips),
         tab = Trips,
         refresh = pull.onRefresh,
-        subtitle = pluralStringResource(R.plurals.count_trips, trips.size, trips.size) + " · " + pluralStringResource(R.plurals.count_days_total, days, days),
+        subtitle = pluralStringResource(R.plurals.count_trips, trips.size, trips.size) + "\u2003" + pluralStringResource(R.plurals.count_days_total, days, days),
     ) {
         TabRefreshBox(pull) {
             LoadedContent(trips.isEmpty(), loading = !loaded || syncing, message = R.string.empty_trips) {
@@ -119,7 +119,7 @@ private fun TripCard(trip: TripRecord, covers: List<MomentMedia>, count: Int, ur
 @Composable
 fun TripSubhead(trip: TripRecord, count: Int, places: Int? = null) {
     Text(
-        (listOf(tripSummary(trip, count)) + listOfNotNull(places?.let { pluralStringResource(R.plurals.count_places, it, it) })).joinToString(" · "),
+        (listOf(tripSummary(trip, count)) + listOfNotNull(places?.let { pluralStringResource(R.plurals.count_places, it, it) })).joinToString("\u2003"),
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
@@ -133,7 +133,7 @@ fun tripSummary(trip: TripRecord, moments: Int? = null): String {
         formatRange(trip.start, trip.end),
         pluralStringResource(R.plurals.count_days, days, days),
         moments?.let { pluralStringResource(R.plurals.count_moments, it, it) },
-    ).joinToString(" · ")
+    ).joinToString("\u2003")
 }
 
 /** A trip's photos across the top of a card: one large and two small, or as many as it has. */

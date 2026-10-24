@@ -25,7 +25,7 @@ const label = `每周各天记下的条数：${days.map((day) => `周${day.name}
   <span class="year-weekdays__weekend" aria-hidden="true"></span>
   {
     days.map((day) => (
-      <span class:list={['year-weekdays__column', { 'is-top': day.top }]} title={`周${day.name} · ${day.count} 条`} style={`grid-column: ${day.index + 1}; --day: ${day.index}`}>
+      <span class:list={['year-weekdays__column', { 'is-top': day.top }]} title={`周${day.name}\u2003${day.count} 条`} style={`grid-column: ${day.index + 1}; --day: ${day.index}`}>
         <span class="year-weekdays__bar" style={`height: ${day.height}`}>
           <span class="year-weekdays__count">{day.count}</span>
         </span>

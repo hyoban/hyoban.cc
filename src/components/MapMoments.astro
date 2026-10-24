@@ -31,7 +31,7 @@ const firstMoment = months.find(({ month }) => pickedMonth === undefined || mont
   <button class="map-moments__month" type="button" data-trip-map-month-all aria-pressed={pickedMonth === undefined ? 'true' : 'false'}>全年</button>
   {
     months.toReversed().map(({ month, moments: monthMoments }) => (
-      <button class="map-moments__month map-moments__month--number" type="button" data-trip-map-month={month} aria-pressed={month === pickedMonth ? 'true' : 'false'} aria-label={`${month} 月`} title={`${month} 月 · ${monthMoments.length} 条记录`}>
+      <button class="map-moments__month map-moments__month--number" type="button" data-trip-map-month={month} aria-pressed={month === pickedMonth ? 'true' : 'false'} aria-label={`${month} 月`} title={`${month} 月\u2003${monthMoments.length} 条记录`}>
         {month}
       </button>
     ))

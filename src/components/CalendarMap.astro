@@ -102,7 +102,7 @@ const isInPeriodKey = (dateKey: string) => !period || dateKey.startsWith(
 const periodCount = periodMoments.filter(moment => isInPeriodKey(moment.dateKey)).length
 // The places the map shows for the period, as the map's own line says once it runs.
 const periodPlaces = locationGroups.filter(group => group.moments.some(moment => isInPeriodKey(moment.dateKey))).length
-const periodEyebrow = periodPlaces ? `${periodCount} 条记录 · ${periodPlaces} 个地点` : `${periodCount} 条记录 · 都没有地点`
+const periodEyebrow = periodPlaces ? `${periodCount} 条记录\u2003${periodPlaces} 个地点` : `${periodCount} 条记录\u2003都没有地点`
 const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN ?? ''
 // The map opens framed on the period's places, or every one, beside the sidebar open: a
 // picture of that view stands in while it loads.
@@ -141,7 +141,7 @@ const tripTotals = [
   `${trips.length} 段旅程`,
   `${trips.reduce((total, trip) => total + trip.dayCount, 0)} 天`,
   `${trips.reduce((total, trip) => total + trip.drivingKm, 0).toLocaleString('zh-CN')} 公里自驾`,
-].join(' · ')
+].join('\u2003')
 // The trip list's trips by the year they started, newest first, like the home page's posts.
 const tripsByYear = [...Map.groupBy(trips, trip => trip.start.slice(0, 4))]
 // The outings the car drove that aren't written up as a trip, newest first, under their
@@ -462,7 +462,7 @@ const image = pageTrip ? `/trip/${pageTrip.id}/og.jpg` : await getPageCardPath(A
                           <span class="trip-map-trip-list__title">{trip.title}</span>
                           <span class="trip-map-trip-list__dates">{formatDateRange(trip.start, trip.end, 'zh-CN')}</span>
                           <span class="trip-map-trip-list__totals">
-                            {trip.dayCount} 天 · {trip.placeCount} 个地点{trip.drivingKm > 0 && ` · 自驾 ${trip.drivingKm.toLocaleString('zh-CN')} 公里`}
+                            {trip.dayCount} 天&emsp;{trip.placeCount} 个地点{trip.drivingKm > 0 && `\u2003自驾 ${trip.drivingKm.toLocaleString('zh-CN')} 公里`}
                           </span>
                         </span>
                       </a>
@@ -480,7 +480,7 @@ const image = pageTrip ? `/trip/${pageTrip.id}/og.jpg` : await getPageCardPath(A
                         const text = (
                           <>
                             <span class:list={['trip-map-trip-list__outing-where', { 'is-unknown': outing.cities.length === 0 }]}>{where}</span>
-                            <span class="trip-map-trip-list__outing-meta">{outing.start === outing.end ? formatDate(outing.start, 'zh-CN') : formatDateRange(outing.start, outing.end, 'zh-CN')} · {formatKilometers(outing.distanceMeters)}</span>
+                            <span class="trip-map-trip-list__outing-meta">{outing.start === outing.end ? formatDate(outing.start, 'zh-CN') : formatDateRange(outing.start, outing.end, 'zh-CN')}&emsp;{formatKilometers(outing.distanceMeters)}</span>
                           </>
                         )
                         return (

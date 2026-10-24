@@ -158,15 +158,15 @@ test('a stop later in the day passes all its waypoints itself', () => {
 test('names slides and stops for labels', () => {
   const [, day, first] = buildSlides([stop(2, ['烟台港', '渤海'])])
 
-  assert.equal(getSlideLabel(day, zhCN), '第 2 天 · 10月2日周五')
-  assert.equal(getSlideLabel(first, zhCN), '第 2 天 · 烟台港、渤海')
+  assert.equal(getSlideLabel(day, zhCN), '第 2 天\u200310月2日周五')
+  assert.equal(getSlideLabel(first, zhCN), '第 2 天\u2003烟台港、渤海')
   assert.equal(
     getStopEyebrow({ dateKey: '2026-10-01', day: 2, time: '14:04' }, zhCN),
-    '第 2 天 · 10月1日周四 · 14:04',
+    '第 2 天\u200310月1日周四\u200314:04',
   )
   assert.equal(
     getStopEyebrow({ dateKey: '2026-10-01', day: 2, time: undefined }, zhCN),
-    '第 2 天 · 10月1日周四',
+    '第 2 天\u200310月1日周四',
   )
 })
 
