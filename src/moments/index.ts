@@ -20,7 +20,13 @@ import {
 } from '@hyoban/data-spec'
 import { trips } from '@/data/trips'
 import { readRoutes } from '@/data/store'
-import { getTripOdometer, getVehicleDays, getVehicleSpan, readVehicleMonths } from '@/data/vehicle'
+import {
+  getTripOdometer,
+  getVehicleCharges,
+  getVehicleDays,
+  getVehicleSpan,
+  readVehicleMonths,
+} from '@/data/vehicle'
 
 const calendarDateFormatter = new Intl.DateTimeFormat('en-CA', {
   day: '2-digit',
@@ -157,6 +163,7 @@ const tripRoutes = readRoutes() as Readonly<Record<string, TripRoute>>
 
 const vehicleMonths = readVehicleMonths()
 const vehicleDays = getVehicleDays(vehicleMonths)
+const vehicleCharges = getVehicleCharges(vehicleMonths)
 const vehicleSpan = getVehicleSpan(vehicleMonths, vehicleDays)
 
 /**
@@ -165,7 +172,7 @@ const vehicleSpan = getVehicleSpan(vehicleMonths, vehicleDays)
  * the detours, the driving around town and the wrong turns.
  */
 export function getMomentTripOdometer(trip: Parameters<typeof getTripOdometer>[0]) {
-  return getTripOdometer(trip, vehicleDays, vehicleSpan)
+  return getTripOdometer(trip, vehicleDays, vehicleSpan, vehicleCharges)
 }
 
 export function getTrips(moments: Moment[]) {

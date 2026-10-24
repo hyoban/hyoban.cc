@@ -9,6 +9,7 @@ import type {
   TripDataWaypoint,
   TripImage,
   TripImageInput,
+  TripCharging,
   TripDriving,
   TripSummary,
   TripWeather,
@@ -26,6 +27,12 @@ import { describeWeather, type DayWeather } from './weather.ts'
 // Turns a built trip into what the player plays (`TripData`) and what the overview
 // draws (`TripSummary`). The site adds what only it knows: each stop's photos, words
 // and links, the cover photos, the music, the cached weather and what the car recorded.
+
+/** A day's charging as the car recorded it: how many times and how much it took. */
+export type DayCharging = {
+  count: number
+  energyKwh: number
+}
 
 /** A day's driving as the car recorded it. */
 export type DayDriving = {
@@ -60,6 +67,8 @@ export type ShapeTripOptions<T extends TripMoment> = {
   weather?: (dateKey: string, place: MapLocation) => DayWeather | undefined
   /** A day's driving as the car recorded it, when the site has it; days not driven are left out. */
   driving?: (dateKey: string) => DayDriving | undefined
+  /** A day's charging as the car recorded it, when the site has it; days without one are left out. */
+  charging?: (dateKey: string) => DayCharging | undefined
 }
 
 export function shapeTripData<T extends TripMoment>(
@@ -86,6 +95,7 @@ export function shapeTripData<T extends TripMoment>(
     covers: options.covers.map(toTripImage),
     dayCount: trip.dayCount,
     ...(options.driving ? { driving: getTripDriving(trip, options.driving, messages) } : {}),
+    ...(options.charging ? { charging: getTripCharging(trip, options.charging, messages) } : {}),
     drivingHours: trip.drivingHours,
     drivingKm: trip.drivingKm,
     end: trip.end,
@@ -206,6 +216,29 @@ function getTripDriving(
       days[day] = t(messages, driving.hours ? 'drivingDayHoursLabel' : 'drivingDayLabel', {
         hours: format.format(driving.hours ?? 0),
         km: Math.round(driving.distanceKm).toLocaleString(messages.locale),
+      })
+    }
+  }
+
+  return days
+}
+
+/** Each trip day's charging as a label, by day number; days without a charge are left out. */
+function getTripCharging(
+  trip: Trip<TripMoment>,
+  lookup: NonNullable<ShapeTripOptions<TripMoment>['charging']>,
+  messages: Messages,
+) {
+  const days: TripCharging = {}
+  const format = new Intl.NumberFormat(messages.locale, { maximumFractionDigits: 1 })
+
+  for (let day = 1; day <= trip.dayCount; day += 1) {
+    const charging = lookup(getDateKey(trip.start, day - 1))
+
+    if (charging && charging.count > 0) {
+      days[day] = t(messages, 'chargingDayLabel', {
+        count: charging.count,
+        kwh: format.format(charging.energyKwh),
       })
     }
   }

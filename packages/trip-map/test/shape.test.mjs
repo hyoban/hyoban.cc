@@ -47,6 +47,7 @@ test('shapes a built trip into what the player plays', () => {
         '2026-08-02': { distanceKm: 0, hours: 0 },
         '2026-08-03': { distanceKm: 20 },
       })[dateKey],
+    charging: (dateKey) => (dateKey === '2026-08-02' ? { count: 2, energyKwh: 45.25 } : undefined),
   })
 
   assert.equal(data.start, '2026-08-01')
@@ -72,6 +73,7 @@ test('shapes a built trip into what the player plays', () => {
   )
   assert.deepEqual(data.weather, { 2: { icon: 'cloud-rain', label: '雨 · 24–30°C' } })
   assert.deepEqual(data.driving, { 1: '开了 336 公里 · 7.3 小时', 3: '开了 20 公里' })
+  assert.deepEqual(data.charging, { 2: '充电 2 次 · 45.3 kWh' })
 })
 
 test('summarises a trip for the overview, dashing the legs not driven', () => {

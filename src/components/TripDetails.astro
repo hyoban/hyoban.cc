@@ -1,7 +1,7 @@
 ---
 import MomentEntry from '@/components/MomentEntry.astro'
 import TripCoverCollage from '@/components/TripCoverCollage.astro'
-import { type Moment, type MomentTrip } from '@/moments'
+import { getMomentTripOdometer, type Moment, type MomentTrip } from '@/moments'
 import { getTripCollage } from '@/moments/trip-images'
 
 // A trip's sidebar beside the map: its photos and totals, the button that plays it, and
@@ -23,11 +23,22 @@ const totals = [
   ...(trip.drivingKm > 0 ? [`自驾 ${trip.drivingKm.toLocaleString('zh-CN')} 公里`] : []),
   `${tripMoments.length} 条记录`,
 ].join(' · ')
+// What the car charged on the way, when it drove the whole trip and the records have it:
+// how often, how much, and how often fast.
+const charges = getMomentTripOdometer(trip)?.charges ?? []
+const fastCharges = charges.filter(charge => charge.type === 'DC').length
+const chargedKwh = charges.reduce((total, charge) => total + charge.energyWh, 0) / 1000
+const charging = charges.length > 0 && [
+  `充电 ${charges.length} 次`,
+  `${chargedKwh.toLocaleString('zh-CN', { maximumFractionDigits: 1 })} kWh`,
+  ...(fastCharges > 0 ? [fastCharges === charges.length ? '都是快充' : `快充 ${fastCharges} 次`] : []),
+].join(' · ')
 ---
 
 <div class="trip-details">
   <TripCoverCollage images={getTripCollage(trip, moments)} priority sizes="(max-width: 48rem) 100vw, 26rem" />
   <p class="trip-details__totals">{totals}</p>
+  {charging && <p class="trip-details__totals">{charging}</p>}
   <a class="trip-details__play" href={`/trip/${trip.id}/play/`} data-trip-map-stop-play={trip.id}>
     <span class="i-lucide-play" aria-hidden="true" />
     回放旅程
