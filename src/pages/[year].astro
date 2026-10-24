@@ -27,6 +27,8 @@ import {
   getYearPlaces,
 } from '@/year-review'
 import YearClock from '@/components/YearClock.astro'
+import YearDriving from '@/components/YearDriving.astro'
+import { getCarSummary } from '@/car'
 import YearWeekdays from '@/components/YearWeekdays.astro'
 import YearTopics from '@/components/YearTopics.astro'
 import { readDevices, readPlaces } from '@/data/store'
@@ -37,8 +39,8 @@ import type { PlaceKind } from '@hyoban/data-spec'
 
 // A year at a glance (src/year-review.ts): its counts against the year before; then where
 // it went, from its footprint on a map drawn at build time (src/year-map.ts) and its trips
-// by the shapes of their routes down to the cities it first reached, the places and what it
-// ate; then
+// by the shapes of their routes, how the car drove it, down to the cities it first reached,
+// the places and what it ate; then
 // how it went, every day of it as a tile, a few days worth going back to and when it was
 // written; and last the devices bought.
 //
@@ -57,6 +59,9 @@ export async function getStaticPaths() {
 
 const { year, previous, next } = Astro.props as { year: number; previous?: number; next?: number }
 const moments = await getMoments()
+const { span: carSpan } = await getCarSummary()
+// Only the years the car's records reach into, from its first day to the latest capture.
+const drove = carSpan.start.slice(0, 4) <= String(year) && String(year) <= carSpan.end.slice(0, 4)
 const regions = cities as FogRegions
 const numberFormat = new Intl.NumberFormat('zh-CN')
 const formatNumber = (value: number) => numberFormat.format(value)
@@ -360,6 +365,15 @@ const highlights = [
               </li>
             ))}
           </ul>
+        </section>
+      )
+    }
+
+    {
+      drove && (
+        <section class="year-section" aria-labelledby="year-driving">
+          <h2 id="year-driving">开车</h2>
+          <YearDriving year={year} />
         </section>
       )
     }

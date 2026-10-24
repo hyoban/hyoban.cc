@@ -1261,11 +1261,34 @@ export function createTripMap(options: TripMapOptions): TripMap {
         row.hidden = Boolean(next && trip && !overlapsPeriod(trip.start, trip.end, next))
       }
 
-      // A year's group of trips goes with its last one.
-      for (const group of elements.tripYearGroups) {
-        group.hidden = [...group.querySelectorAll<HTMLElement>('[data-trip-map-trip-link]')].every(
-          (link) => (link.closest('li') ?? link).hidden,
+      // Rows of something else under way between two days, `<start>/<end>`, go the same way,
+      // and a group of them with its last one.
+      const datedRows = [
+        ...elements.tripList.querySelectorAll<HTMLElement>('[data-trip-map-dates]'),
+      ]
+
+      for (const row of datedRows) {
+        const [start = '', end = start] = row.dataset.tripMapDates!.split('/')
+
+        row.hidden = Boolean(next && !overlapsPeriod(start, end, next))
+      }
+
+      for (const group of elements.tripList.querySelectorAll<HTMLElement>(
+        '[data-trip-map-dates-group]',
+      )) {
+        group.hidden = [...group.querySelectorAll<HTMLElement>('[data-trip-map-dates]')].every(
+          (row) => row.hidden,
         )
+      }
+
+      // A year's group of trips goes with its last one, and its last dated row.
+      for (const group of elements.tripYearGroups) {
+        group.hidden = [
+          ...[...group.querySelectorAll<HTMLElement>('[data-trip-map-trip-link]')].map(
+            (link) => link.closest('li') ?? link,
+          ),
+          ...group.querySelectorAll<HTMLElement>('[data-trip-map-dates]'),
+        ].every((row) => row.hidden)
       }
     }
 
