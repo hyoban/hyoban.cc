@@ -1,4 +1,5 @@
 ---
+import { SITE_URL } from '@/consts'
 import { getBilibiliPlayer } from '@/moments/bilibili'
 
 interface Props {
@@ -44,6 +45,22 @@ function splitBlocks(value: string): Block[] {
 
   flush()
   return blocks
+}
+
+/**
+ * A link to one of the site's own pages opens it in place, at its path with the trailing
+ * slash the site's addresses end in; undefined for one elsewhere.
+ */
+function getSitePath(url: string) {
+  const parsed = URL.parse(url)
+
+  if (!parsed || parsed.host !== new URL(SITE_URL).host) {
+    return undefined
+  }
+
+  const { hash, pathname, search } = parsed
+  const path = pathname.endsWith('/') || /\.\w+$/.test(pathname) ? pathname : `${pathname}/`
+  return `${path}${search}${hash}`
 }
 
 function tokenize(value: string): Token[] {
@@ -105,7 +122,9 @@ function tokenize(value: string): Token[] {
         <p class="moment-text">
           {
             block.tokens.map(token => token.type === 'url'
-              ? <a href={token.value} target="_blank" rel="noopener noreferrer">{token.value}</a>
+              ? getSitePath(token.value)
+                ? <a href={getSitePath(token.value)}>{token.value}</a>
+                : <a href={token.value} target="_blank" rel="noopener noreferrer">{token.value}</a>
               : token.type === 'text'
                 ? token.value
                 : <span class="moment-text__tag">{token.value}</span>)

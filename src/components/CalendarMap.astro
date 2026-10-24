@@ -93,6 +93,11 @@ const getCalendarHref = (picked: typeof period) => {
 }
 // The Moments beside the map are the map's own pages' alone: the trip list takes that side.
 const momentsPeriod = tripList ? undefined : period
+// The period's part of an address, `2025/` or `2025/07/`: the trip list's opener goes to
+// the list for it, or back to the map from the list.
+const periodSegment = period
+  ? `${period.year}/${period.month === undefined ? '' : `${String(period.month).padStart(2, '0')}/`}`
+  : ''
 const periodLabel = period
   ? period.month === undefined ? `${period.year} 年` : `${period.year} 年 ${period.month} 月`
   : undefined
@@ -256,7 +261,7 @@ const image = pageTrip ? `/trip/${pageTrip.id}/og.jpg` : await getPageCardPath(A
         // trips page without scripts).
         trips.length > 0 && (
           <li class="trip-map-legend__trips">
-            <a href="/trip/" data-trip-map-trip-list-open aria-controls="trip-map-trip-list">
+            <a href={`${tripList ? '/map/' : '/trip/'}${periodSegment}`} data-trip-map-trip-list-open aria-controls="trip-map-trip-list">
               <span aria-hidden="true" />
               旅程
             </a>
