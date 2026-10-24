@@ -39,7 +39,7 @@ npx create-expo-stack@latest follow-app --expo-router --tabs --tamagui --pnpm --
 ### 处理深色模式
 
 脚手架默认为只支持浅色模式，强迫症表示不能接受，所以首先处理一下先。
-参考这个 [issue](https://github.com/facebook/react-native/issues/31806)，我需要修改 expo 的设置为：
+参考这个 [issue](https://github.com/react/react-native/issues/31806)，我需要修改 expo 的设置为：
 
 ```json
 {
@@ -127,7 +127,7 @@ function useSession() {
 ```
 
 这里我暂时做了一点反常的设置，是因为 rn 中基于 cookie 的身份验证存在一些 [已知的问题](https://reactnative.dev/docs/network#known-issues-with-fetch-and-cookie-based-authentication)，如果不设置 `credentials: 'omit'` 的话，就会在第二次请求时设置不正确的 cookie，导致请求失败。
-这里是参考 https://github.com/facebook/react-native/issues/23185#issuecomment-1148130842 的做法。
+这里是参考 https://github.com/react/react-native/issues/23185#issuecomment-1148130842 的做法。
 
 有了数据我们就可以渲染页面，这里先简单写写：
 
@@ -171,7 +171,7 @@ export default function UserInfo() {
 ## 主题系统
 
 初始化项目的时候我选的 Tamagui，但是当我要开始自定义主题系统的时候，看文档看得我头晕😵‍💫。
-加上它大包大揽的风格，让我切换到了 [Unistyles](https://reactnativeunistyles.vercel.app/start/introduction/)。
+加上它大包大揽的风格，让我切换到了 [Unistyles](https://v2.unistyl.es/start/introduction/)。
 
 它的主题系统就是普通的对象，我只需要将我十分喜欢的 Radix Color 传递给它就好。
 和 Tailwind 的配色不同的是，它为每个颜色都设计了对应的深色，支持深色主题变得十分简单。
