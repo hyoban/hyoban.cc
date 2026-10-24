@@ -10,8 +10,10 @@ if (!scope[listening]) {
 }
 
 // A shared link's Moment may be far down its day: bring it into view, in the drawer's
-// own scroll on a desktop and the page's on a phone.
+// own scroll on a desktop and the page's on a phone; not on a page coming back to where
+// it was (the layout's script), which may be elsewhere by now.
 function revealSharedMoment() {
+  if (history.state?.scrollY > 0) return
   document.querySelector('[data-moment-shared]')?.scrollIntoView({ block: 'start' })
 }
 

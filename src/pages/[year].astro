@@ -289,8 +289,12 @@ const highlights = [
   image={await getPageCardPath(Astro.url.pathname)}
 >
   <SitePage>
-    {/* Hides what's still to come in until the script below reveals it; without it, all shows. */}
-    <script is:inline>document.documentElement.classList.add('year-motion')</script>
+    {/* Hides what's still to come in until the script below reveals it; without it, all shows.
+        Not on a page coming back to where it was part way down (the layout's script): what's
+        on screen is there at once, rather than rising in after the page has scrolled. */}
+    <script is:inline>
+      if (!(history.state?.scrollY > 0)) document.documentElement.classList.add('year-motion')
+    </script>
     <header class="year-hero">
       <h1 class:list={{ 'is-collage': collage }} style={collage && `background-image: url("/${year}/collage.webp")`}>{year}</h1>
       <dl class="year-stats">
@@ -699,6 +703,11 @@ const highlights = [
   function initializeMotion() {
     const sections = document.querySelectorAll<HTMLElement>('.year-section')
     if (sections.length === 0) return
+    // Back where it was part way down it keeps still, as the inline script above left it,
+    // or as the router swapped it in, its inline script not run again, hiding nothing.
+    if (!document.documentElement.classList.contains('year-motion') && history.state?.scrollY > 0) {
+      return
+    }
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
       for (const section of sections) section.classList.add('is-revealed')
       return
@@ -1150,6 +1159,9 @@ const highlights = [
      from there behind its name, linking to the place on the map. Without the script, or
      with reduced motion, a row of same-sized cards scrolled sideways. */
   .year-places {
+    /* One height before the script and after it, so the page doesn't move when it takes
+       the row over, or when a reload has already scrolled past it. */
+    --row: 12rem;
     margin-top: 1.5rem;
 
     & h3 {
@@ -1161,7 +1173,7 @@ const highlights = [
 
     & ul {
       display: grid;
-      grid-auto-columns: 7.5rem;
+      grid-auto-columns: calc(var(--row) * 0.8);
       grid-auto-flow: column;
       gap: 0.5rem;
       overflow-x: auto;
@@ -1232,7 +1244,7 @@ const highlights = [
         position: relative;
         display: flex;
         gap: 0;
-        height: min(calc(var(--large) * 1.2), 15rem);
+        height: var(--row);
       }
 
       & li {

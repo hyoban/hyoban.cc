@@ -318,7 +318,8 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
   function updateMediaCategoryUrl(category: string) {
     const url = new URL(window.location.href)
     url.searchParams.set('category', category)
-    window.history.replaceState({}, '', url)
+    // Keeping the router's state, where the page was among the rest.
+    window.history.replaceState(history.state, '', url)
   }
 
   function initializeMediaFilters() {
