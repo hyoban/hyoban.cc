@@ -119,6 +119,7 @@ import cc.hyoban.moments.ui.components.rememberScreenReader
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.FLOATING_BAR
 import cc.hyoban.moments.ui.components.FloatingBack
+import cc.hyoban.moments.ui.components.MediaEdges
 import cc.hyoban.moments.ui.components.MediaTile
 import cc.hyoban.moments.ui.components.READABLE_WIDTH
 import cc.hyoban.moments.ui.components.RisingSheet
@@ -335,6 +336,8 @@ private fun MomentPhotos(moment: MomentRecord, urls: MediaUrls, pager: PagerStat
     HorizontalPager(pager, modifier, key = { moment.media[it].uid }) { page ->
         val media = moment.media[page]
         BoxWithConstraints(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            // A photo wider than the space runs on above and below it in its edges' colours.
+            if (whole) MediaEdges(media, urls, Modifier.fillMaxSize())
             // The top of the photo is under the status bar and the back button.
             MediaTile(
                 media,
