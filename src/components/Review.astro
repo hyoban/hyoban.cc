@@ -783,6 +783,35 @@ const highlights = [
     section.addEventListener('pointerleave', () => mark())
   }
 
+  // A part that has played all the way in stays in, rather than going back out scrolled
+  // back up: cancelled, a CSS animation leaves the part as it is at its end, and isn't
+  // started again while its name stays the same.
+  function keepPlayed() {
+    let playing = document.getAnimations().filter((animation) => !(animation.timeline instanceof DocumentTimeline))
+    const controller = new AbortController()
+    let frame = 0
+    let settle = 0
+    const check = () => {
+      frame = 0
+      playing = playing.filter((animation) => {
+        if (animation.effect?.getComputedTiming().progress !== 1) return true
+        animation.cancel()
+        return false
+      })
+      if (playing.length === 0) controller.abort()
+    }
+    // Every frame while it scrolls, and once more after: the timelines can catch up a frame
+    // behind the last scroll.
+    const schedule = () => {
+      frame ||= requestAnimationFrame(check)
+      clearTimeout(settle)
+      settle = setTimeout(check, 150)
+    }
+    document.addEventListener('scroll', schedule, { capture: true, passive: true, signal: controller.signal })
+    document.addEventListener('astro:before-swap', () => controller.abort(), { once: true, signal: controller.signal })
+    schedule()
+  }
+
   function initializeMotion() {
     const sections = document.querySelectorAll<HTMLElement>('.year-section')
     if (sections.length === 0) return
@@ -790,7 +819,10 @@ const highlights = [
     // The motion follows the scroll where the browser can do that, as the inline script
     // above decided, or here for a page the router swapped in, its inline script not run.
     const scrolled = CSS.supports('animation-timeline: view()')
-    if (scrolled) root.add('year-scroll')
+    if (scrolled) {
+      root.add('year-scroll')
+      keepPlayed()
+    }
     // Back where it was part way down it keeps still, as the inline script above left it,
     // or as the router swapped it in, hiding nothing.
     if (!root.contains('year-motion') && history.state?.scrollY > 0) return
@@ -2040,7 +2072,7 @@ const highlights = [
 
   /* Where the browser ties animations to scrolling, all below the top moves with it instead
      (the page's script leaves them to it): each part rises, wipes or draws in as it comes
-     into view, by how far it has, and goes back the same way scrolled back up. Nothing waits
+     into view, by how far it has, and once all the way in stays so (keepPlayed). Nothing waits
      hidden for a script, and a page restored part way down is simply as far along as it's
      scrolled. Here and in the parts, each is written out property by property, never as the
      animation shorthand: the build's minifier folds a timeline into the shorthand, which
