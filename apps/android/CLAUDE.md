@@ -23,6 +23,12 @@ say stay out.
   (its pairing service, say) without the connect service: scan that address's ports
   30000–50000 for the open one besides the pairing port and `adb connect` to it; the
   phone is already paired.
+- When the scan finds the port open and `adb connect` still says "No route to host",
+  restart the adb server (`adb kill-server`) and connect again.
+- Publishing is tried with a test Moment written on the phone (text "test", 不加地点 so
+  no place of the user's reaches the site), published, then deleted and the deletion
+  published. The place row defaults to where the phone is: close the keyboard before
+  tapping it, or the tap types into the text.
 - A `DropdownMenu` or dialog is a window of its own, where `ui.py` can't see test tags:
   tap its items by their words.
 - The new Moment page opens with the keyboard up, and `ui.py dump` still lists what is

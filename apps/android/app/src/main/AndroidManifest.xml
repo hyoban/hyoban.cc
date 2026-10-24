@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!-- The Moments, places and trips come from the API; the photos from the image origin. -->
     <uses-permission android:name="android.permission.INTERNET" />
@@ -10,6 +11,11 @@
     <uses-permission android:name="android.permission.ACCESS_MEDIA_LOCATION" />
     <!-- Only Android 9 needs this to save photos to a shared album. -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
+    <!-- Publishing runs as a foreground service with its progress in a notification, so it
+         goes on once the app is left; Android 13 and later ask before it is shown. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <queries>
         <package android:name="com.twitter.android" />
@@ -148,6 +154,11 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/share_paths" />
         </provider>
+        <!-- WorkManager's foreground service, which publishing runs in, as a data sync. -->
+        <service
+            android:name="androidx.work.impl.foreground.SystemForegroundService"
+            android:foregroundServiceType="dataSync"
+            tools:node="merge" />
     </application>
 
 </manifest>

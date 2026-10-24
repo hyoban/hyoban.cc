@@ -1,5 +1,10 @@
 package cc.hyoban.moments.ui.publish
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateDpAsState
@@ -36,11 +41,11 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.rounded.Undo
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Category
 import androidx.compose.material.icons.rounded.CloudUpload
 import androidx.compose.material.icons.rounded.HideImage
 import androidx.compose.material.icons.rounded.Image
 import androidx.compose.material.icons.rounded.Place
-import androidx.compose.material.icons.rounded.Category
 import androidx.compose.material.icons.rounded.Remove
 import androidx.compose.material.icons.rounded.Restaurant
 import androidx.compose.material.icons.rounded.Schedule
@@ -72,6 +77,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -82,6 +88,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.R
@@ -90,17 +97,18 @@ import cc.hyoban.moments.data.spec.MomentMedia
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.spec.PlaceKind
+import cc.hyoban.moments.data.spec.showcase
+import cc.hyoban.moments.data.store.Change
 import cc.hyoban.moments.data.store.PlaceChange
 import cc.hyoban.moments.data.store.PublishProgress
-import cc.hyoban.moments.ui.compose.label
-import cc.hyoban.moments.data.spec.showcase
-import cc.hyoban.moments.ui.format.foodLine
-import cc.hyoban.moments.data.store.Change
+import cc.hyoban.moments.publish.publishingText
 import cc.hyoban.moments.ui.LocalSnackbarLift
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.PageWidth
 import cc.hyoban.moments.ui.components.SubPage
 import cc.hyoban.moments.ui.components.Thumbnail
+import cc.hyoban.moments.ui.compose.label
+import cc.hyoban.moments.ui.format.foodLine
 import cc.hyoban.moments.ui.format.formatDate
 import cc.hyoban.moments.ui.format.formatTime
 import cc.hyoban.moments.ui.settings.Caption
@@ -128,6 +136,8 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
     val publishing by container.publishing.collectAsStateWithLifecycle()
     val urls = container.mediaUrls
     val busy = publishing != null
+    val context = LocalContext.current
+    val notifications = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { container.publishPending() }
 
     // Back to where it was opened from once everything is published.
     var started by remember { mutableStateOf(false) }
@@ -224,13 +234,25 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
         ) {
             val progress = shownProgress
             MediumExtendedFloatingActionButton(
-                onClick = { if (progress == null) container.publishPending() },
+                onClick = {
+                    if (progress == null) {
+                        // The notification that keeps publishing going in the background asks
+                        // once, on Android 13 and later; it publishes whatever the answer.
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+                        ) {
+                            notifications.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        } else {
+                            container.publishPending()
+                        }
+                    }
+                },
                 shape = MaterialTheme.shapes.largeIncreased,
                 icon = { Icon(Icons.Rounded.CloudUpload, contentDescription = null, modifier = Modifier.size(FloatingActionButtonDefaults.MediumIconSize)) },
                 text = {
                     Text(
                         if (progress != null) {
-                            publishingLabel(progress)
+                            publishingText(LocalContext.current, progress)
                         } else {
                             stringResource(R.string.label_publish_all)
                         },
@@ -269,7 +291,7 @@ private fun PublishingIndicator(progress: PublishProgress?, modifier: Modifier =
     val motion = MaterialTheme.motionScheme
     var shown by remember { mutableStateOf(progress) }
     if (progress != null) shown = progress
-    val fraction by animateFloatAsState(shown?.let(::publishedFraction) ?: 0f, ProgressIndicatorDefaults.ProgressAnimationSpec, label = "published")
+    val fraction by animateFloatAsState(shown?.fraction ?: 0f, ProgressIndicatorDefaults.ProgressAnimationSpec, label = "published")
     AnimatedVisibility(
         progress != null,
         enter = expandVertically(motion.fastSpatialSpec()) + fadeIn(motion.fastEffectsSpec()),
@@ -302,7 +324,7 @@ fun PendingChangesRow(container: AppContainer, onClick: () -> Unit, modifier: Mo
                 Column(verticalArrangement = Arrangement.spacedBy(Space.xs)) {
                     Text(
                         if (progress != null) {
-                            publishingLabel(progress)
+                            publishingText(LocalContext.current, progress)
                         } else {
                             pluralStringResource(R.plurals.count_changes, pending.size, pending.size)
                         },
@@ -363,29 +385,6 @@ private fun SwipeToRevert(onRevert: (() -> Unit)?, content: @Composable () -> Un
 private val FAB_CLEARANCE = 96.dp
 
 /** How much of the changes are published, for a determinate indicator. */
-/**
- * How far publishing has got, by the originals' bytes while they upload, which is most of
- * the time it takes, and the write after them the last bit.
- */
-private fun publishedFraction(progress: PublishProgress): Float = when {
-    progress.size > 0 -> progress.sent.toFloat() / progress.size * UPLOADED_SHARE + if (progress.done == progress.total) 1 - UPLOADED_SHARE else 0f
-    progress.total == 0 -> 0f
-    else -> progress.done.toFloat() / progress.total
-}
-
-/** What publishing is doing: how much of the originals has gone while they upload, then the write. */
-@Composable
-private fun publishingLabel(progress: PublishProgress): String {
-    return if (progress.size > 0 && progress.sent < progress.size) {
-        // In MB, the unit once, so it fits the button on one line.
-        stringResource(R.string.message_uploading_progress, "%.1f".format(progress.sent / 1e6), "%.0f".format(progress.size / 1e6))
-    } else {
-        stringResource(R.string.message_publishing)
-    }
-}
-
-/** How much of the bar the uploads fill; the write after them is the rest. */
-private const val UPLOADED_SHARE = 0.95f
 
 /** Which Moment a change is to, as the site has it: its first photo, its first words, when and where. */
 private class Identity(val moment: MomentRecord, val places: Map<String, Place>, val urls: MediaUrls)
