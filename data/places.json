@@ -307,6 +307,19 @@
       "district": "余杭区"
     }
   },
+  "hangzhou-tonys-house": {
+    "name": "Tony's House托尼家泰国菜",
+    "latitude": 30.31278,
+    "longitude": 120.07758,
+    "kind": "food",
+    "division": {
+      "code": "330106",
+      "province": "浙江省",
+      "city": "杭州市",
+      "district": "西湖区"
+    },
+    "createdAt": "2026-10-24T01:07:10Z"
+  },
   "hanshan-temple": {
     "name": "寒山寺",
     "latitude": 31.3125,
