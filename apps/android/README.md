@@ -47,7 +47,8 @@ opens the phone's camera app, whose photos go to the gallery to be picked from t
 where, worked out as it is written. A photo tapped there can be marked 不用作封面, one kept
 for the record (a screenshot, a flat tyre): it stays in its Moment, but neither the app's
 trip covers, calendar days and widget nor the site's covers, collages and share cards
-pick it. Under 美食 it can say what was eaten, as the site shows it under the Moment: the
+pick it. Under 类型 it can say what it is mostly about, one of 技术, 旅行, 美食, 用车,
+摄影 and 生活, a second tap leaving it unset; a 技术 one the site doesn't show. Under 美食 it can say what was eaten, as the site shows it under the Moment: the
 dishes, split at commas, 好吃, 一般 or 踩雷, and what the meal cost and how many it fed;
 the review before publishing shows a change to it in a line. The time is the earliest photo's, from its EXIF and
 the offset the camera wrote, else, for photos whose EXIF has none (saved from WeChat), the

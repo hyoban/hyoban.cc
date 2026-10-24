@@ -240,6 +240,16 @@
     <string name="action_move_earlier">往前移</string>
     <string name="action_move_later">往后移</string>
     <string name="section_when_where">时间和地点</string>
+    <string name="section_topic">类型</string>
+    <string name="note_topic">技术类的时刻不会在网站上显示；再点一次可以取消</string>
+    <string name="topic_tech">技术</string>
+    <string name="topic_travel">旅行</string>
+    <string name="topic_food">美食</string>
+    <string name="topic_car">用车</string>
+    <string name="topic_photo">摄影</string>
+    <string name="topic_life">生活</string>
+    <string name="topic_none">没有</string>
+    <string name="change_topic">类型</string>
     <string name="section_food">美食</string>
     <string name="hint_food_dishes">吃了什么</string>
     <string name="note_food">几样菜用逗号或顿号分开；评价再点一次可以取消</string>
