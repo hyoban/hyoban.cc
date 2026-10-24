@@ -3,10 +3,10 @@
   "accountId": "e68c7dce80df20ff5802b9ac36f1eab6",
   "bucket": "blog-images",
   "origin": "https://image.hyoban.cc",
-  "createdAt": "2026-10-24T15:35:04.324Z",
-  "inventorySha256": "1b3c7f4e9bff5dc2e544e99c821cc7c271a0bef3d4ceb50282a2a6e8deff9277",
-  "objectCount": 5367,
-  "totalBytes": 1496612307,
+  "createdAt": "2026-10-24T16:08:49.026Z",
+  "inventorySha256": "3583897fa1e78fa146b4d87f7c478eca857fdbc8baf1bbcf046c8e0715f78b06",
+  "objectCount": 5369,
+  "totalBytes": 1510842905,
   "objects": [
     {
       "key": "devices/airpods-4.webp",
@@ -19110,6 +19110,86 @@
       "contentType": "image/jpeg",
       "etag": "04d29253fd999fccd751c1b06e8b9a85",
       "lastModified": "2026-10-24T11:28:12.459Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/01m5psx1sjhd1qrmwkf1p0z4t7/01m5q5s0js80nfzayfpq6ek6rf-video.mp4",
+      "bytes": 10083042,
+      "contentType": "video/mp4",
+      "etag": "77234cdf18a8625a34a1d75b276b8e52",
+      "lastModified": "2026-10-24T15:40:24.073Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/01m5psx1sjhd1qrmwkf1p0z4t7/01m5q5s0js80nfzayfpq6ek6rf.jpg",
+      "bytes": 9271075,
+      "contentType": "image/jpeg",
+      "etag": "37ca4f6d7acf6492a607f5b04611dcea",
+      "lastModified": "2026-10-24T15:40:24.439Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/01m5psx1sjhd1qrmwkf1p0z4t7/01m5q5s0mygdnhnmpa60prey39-video.mp4",
+      "bytes": 11063451,
+      "contentType": "video/mp4",
+      "etag": "60abecda11614a5124499e0d981148c9",
+      "lastModified": "2026-10-24T15:40:25.738Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/01m5psx1sjhd1qrmwkf1p0z4t7/01m5q5s0mygdnhnmpa60prey39.jpg",
+      "bytes": 9492276,
+      "contentType": "image/jpeg",
+      "etag": "66760f3fdf281fdb19680ab9496a8860",
+      "lastModified": "2026-10-24T15:40:24.714Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/01m5psx1sjhd1qrmwkf1p0z4t7/01m5q5s0pjs46sbbgc17w7thfy-video.mp4",
+      "bytes": 8253685,
+      "contentType": "video/mp4",
+      "etag": "e26b927c9c678aac59758fdc900b439d",
+      "lastModified": "2026-10-24T15:40:26.120Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/01m5psx1sjhd1qrmwkf1p0z4t7/01m5q5s0pjs46sbbgc17w7thfy.jpg",
+      "bytes": 5976913,
+      "contentType": "image/jpeg",
+      "etag": "8b130a3041f2c851bc372510c2751295",
+      "lastModified": "2026-10-24T15:40:25.545Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/01m5psx1sjhd1qrmwkf1p0z4t7/01m5q5s0qr634ydnj2c87e08jc-video.mp4",
+      "bytes": 7876171,
+      "contentType": "video/mp4",
+      "etag": "78e3aa796bb0274b9f2428ce9653c544",
+      "lastModified": "2026-10-24T15:40:26.809Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/01m5psx1sjhd1qrmwkf1p0z4t7/01m5q5s0qr634ydnj2c87e08jc.jpg",
+      "bytes": 7401683,
+      "contentType": "image/jpeg",
+      "etag": "59a912b6a0680a47b678c09cd5cb71ca",
+      "lastModified": "2026-10-24T15:40:26.663Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/01m5q9rnr7fenjt40gc4q1x2s6/01m5q9rnpq2ffzyy6nqzchdkhx-video.mp4",
+      "bytes": 8253685,
+      "contentType": "video/mp4",
+      "etag": "e26b927c9c678aac59758fdc900b439d",
+      "lastModified": "2026-10-24T16:00:20.911Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/01m5q9rnr7fenjt40gc4q1x2s6/01m5q9rnpq2ffzyy6nqzchdkhx.jpg",
+      "bytes": 5976913,
+      "contentType": "image/jpeg",
+      "etag": "8b130a3041f2c851bc372510c2751295",
+      "lastModified": "2026-10-24T16:00:20.170Z",
       "storageClass": "Standard"
     },
     {
@@ -42878,70 +42958,6 @@
       "contentType": "image/webp",
       "etag": "bdeba1a92a284f1430dcfa49e325158e",
       "lastModified": "2026-10-23T12:33:07.668Z",
-      "storageClass": "Standard"
-    },
-    {
-      "key": "uploads/01M5PSX1SJHD1QRMWKF1P0Z4T7/01M5Q5S0JS80NFZAYFPQ6EK6RF/image",
-      "bytes": 9271075,
-      "contentType": "image/jpeg",
-      "etag": "37ca4f6d7acf6492a607f5b04611dcea",
-      "lastModified": "2026-10-24T15:00:48.461Z",
-      "storageClass": "Standard"
-    },
-    {
-      "key": "uploads/01M5PSX1SJHD1QRMWKF1P0Z4T7/01M5Q5S0JS80NFZAYFPQ6EK6RF/video",
-      "bytes": 10083042,
-      "contentType": "video/mp4",
-      "etag": "77234cdf18a8625a34a1d75b276b8e52",
-      "lastModified": "2026-10-24T15:01:12.985Z",
-      "storageClass": "Standard"
-    },
-    {
-      "key": "uploads/01M5PSX1SJHD1QRMWKF1P0Z4T7/01M5Q5S0MYGDNHNMPA60PREY39/image",
-      "bytes": 9492276,
-      "contentType": "image/jpeg",
-      "etag": "66760f3fdf281fdb19680ab9496a8860",
-      "lastModified": "2026-10-24T15:00:54.213Z",
-      "storageClass": "Standard"
-    },
-    {
-      "key": "uploads/01M5PSX1SJHD1QRMWKF1P0Z4T7/01M5Q5S0MYGDNHNMPA60PREY39/video",
-      "bytes": 11063451,
-      "contentType": "video/mp4",
-      "etag": "60abecda11614a5124499e0d981148c9",
-      "lastModified": "2026-10-24T15:26:06.388Z",
-      "storageClass": "Standard"
-    },
-    {
-      "key": "uploads/01M5PSX1SJHD1QRMWKF1P0Z4T7/01M5Q5S0PJS46SBBGC17W7THFY/image",
-      "bytes": 5976913,
-      "contentType": "image/jpeg",
-      "etag": "8b130a3041f2c851bc372510c2751295",
-      "lastModified": "2026-10-24T15:19:28.284Z",
-      "storageClass": "Standard"
-    },
-    {
-      "key": "uploads/01M5PSX1SJHD1QRMWKF1P0Z4T7/01M5Q5S0PJS46SBBGC17W7THFY/video",
-      "bytes": 8253685,
-      "contentType": "video/mp4",
-      "etag": "e26b927c9c678aac59758fdc900b439d",
-      "lastModified": "2026-10-24T15:08:29.876Z",
-      "storageClass": "Standard"
-    },
-    {
-      "key": "uploads/01M5PSX1SJHD1QRMWKF1P0Z4T7/01M5Q5S0QR634YDNJ2C87E08JC/image",
-      "bytes": 7401683,
-      "contentType": "image/jpeg",
-      "etag": "59a912b6a0680a47b678c09cd5cb71ca",
-      "lastModified": "2026-10-24T15:09:12.590Z",
-      "storageClass": "Standard"
-    },
-    {
-      "key": "uploads/01M5PSX1SJHD1QRMWKF1P0Z4T7/01M5Q5S0QR634YDNJ2C87E08JC/video",
-      "bytes": 7876171,
-      "contentType": "video/mp4",
-      "etag": "78e3aa796bb0274b9f2428ce9653c544",
-      "lastModified": "2026-10-24T15:22:17.038Z",
       "storageClass": "Standard"
     }
   ]
