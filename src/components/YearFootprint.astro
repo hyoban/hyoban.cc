@@ -18,7 +18,7 @@ const { map, label } = Astro.props
     <path class="year-footprint__outline" d={map.outline} />
     {
       map.lit.map((city) => (
-        <path class="year-footprint__city" d={city.d} style={`--weight: ${city.weight.toFixed(2)}`}>
+        <path class="year-footprint__city" d={city.d} data-city={city.id} style={`--weight: ${city.weight.toFixed(2)}`}>
           <title>{city.name}</title>
         </path>
       ))
@@ -72,8 +72,9 @@ const { map, label } = Astro.props
     stroke-width: 0.75;
     transition: fill-opacity 140ms var(--ease);
 
-    &:hover {
-      fill-opacity: 0.7;
+    &:hover,
+    &.is-active {
+      fill-opacity: 0.85;
     }
   }
 

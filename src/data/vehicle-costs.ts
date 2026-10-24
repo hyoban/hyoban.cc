@@ -37,6 +37,9 @@ export const RUNNING_CATEGORIES: readonly ExpenseCategory[] = [
 /** What a trip spends on the road. */
 export const TRIP_CATEGORIES: readonly ExpenseCategory[] = ['toll', 'charging', 'parking']
 
+/** What a kWh costs at the home charger, where every slow charge is, at its off-peak rate, in yuan. */
+export const HOME_KWH_YUAN = 0.3353
+
 const ledgers = new Map<string, VehicleExpense[]>()
 
 /** The ledger, from the car's first payment on, oldest first; read once per root. */

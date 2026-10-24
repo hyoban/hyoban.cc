@@ -41,6 +41,8 @@ const labels = [0, 6, 12, 18].map((hour) => ({ hour, at: point(outer + 14, hour 
         <path
           class:list={['year-clock__petal', { 'is-top': petal.hour === favorite.hour }]}
           d={petal.d}
+          data-hour={petal.hour}
+          data-count={petal.count}
           style={`--hour: ${petal.hour}`}
         >
           <title>{`${petal.hour} 点 · ${petal.count} 条`}</title>
@@ -54,11 +56,34 @@ const labels = [0, 6, 12, 18].map((hour) => ({ hour, at: point(outer + 14, hour 
         </text>
       ))
     }
-    <text class="year-clock__hour" x={center} y={center - 2}>{favorite.hour}</text>
-    <text class="year-clock__unit" x={center} y={center + 14}>点</text>
+    <text class="year-clock__hour" x={center} y={center - 2} data-default={favorite.hour}>{favorite.hour}</text>
+    <text class="year-clock__unit" x={center} y={center + 14} data-default="点">点</text>
   </svg>
   {Astro.slots.has('default') && <figcaption><slot /></figcaption>}
 </figure>
+
+<script>
+  // The middle names the hour pointed at and how much was written in it, then the busiest
+  // hour again once the pointer leaves the face.
+  function initializeClocks() {
+    for (const svg of document.querySelectorAll<SVGSVGElement>('.year-clock svg')) {
+      const hour = svg.querySelector<SVGTextElement>('.year-clock__hour')!
+      const unit = svg.querySelector<SVGTextElement>('.year-clock__unit')!
+      const show = (petal?: SVGElement | null) => {
+        hour.textContent = petal?.dataset.hour ?? hour.dataset.default ?? ''
+        unit.textContent = petal ? `点 · ${petal.dataset.count} 条` : (unit.dataset.default ?? '')
+        for (const other of svg.querySelectorAll('.year-clock__petal'))
+          other.classList.toggle('is-pointed', other === petal)
+      }
+      svg.addEventListener('pointerover', (event) =>
+        show((event.target as Element).closest<SVGElement>('.year-clock__petal')),
+      )
+      svg.addEventListener('pointerleave', () => show())
+    }
+  }
+
+  document.addEventListener('astro:page-load', initializeClocks)
+</script>
 
 <style>
   .year-clock {
@@ -95,8 +120,8 @@ const labels = [0, 6, 12, 18].map((hour) => ({ hour, at: point(outer + 14, hour 
     fill-opacity: 0.45;
     transition: fill-opacity 140ms var(--ease);
 
-    &:hover {
-      fill-opacity: 0.8;
+    &.is-pointed {
+      fill-opacity: 0.9;
     }
 
     &.is-top {

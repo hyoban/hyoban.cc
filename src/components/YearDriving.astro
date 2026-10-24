@@ -3,6 +3,7 @@ import { formatKilometers, getCarSummary } from '@/car'
 import { DELIVERED_ON, getDistanceLevel, getYearWeeks, type Outing } from '@/data/vehicle'
 import {
   CATEGORY_LABELS,
+  HOME_KWH_YUAN,
   RUNNING_CATEGORIES,
   formatRate,
   formatYuan,
@@ -50,9 +51,14 @@ const spending = getCostBreakdown(expenses.filter((expense) => expense.category 
 const running = getCostBreakdown(expenses, RUNNING_CATEGORIES)
 // Paired over the whole ledger, so a session late on Dec 31 keeps its payment after midnight.
 const fastPrice = getChargePrice(car.chargePayments.filter(({ charge }) => inYear(charge.startedAt)))
-const homeCharging = getCostBreakdown(
-  expenses.filter((expense) => expense.subcategory === 'home-charging'),
-).total
+// The slow charges are all at home, at its off-peak rate; with the fast ones that were paid
+// for, what a kWh cost on average.
+const homeKwh =
+  charges.filter((charge) => charge.type === 'AC').reduce((total, charge) => total + charge.energyWh, 0) /
+  1000
+const homeYuan = homeKwh * HOME_KWH_YUAN
+const pricedKwh = fastPrice.energyWh / 1000 + homeKwh
+const averageKwhYuan = pricedKwh > 0 ? (fastPrice.fen / 100 + homeYuan) / pricedKwh : undefined
 // The biggest kinds each get a band of the bar, and two or more left over one band
 // together; a single one left keeps its name.
 const BANDS = 5
@@ -73,16 +79,17 @@ const owned =
     ? car.expenses.filter((expense) => expense.at.slice(0, 10) <= ownedUntil)
     : []
 const ownedCost = getCostBreakdown(owned, undefined, ownedUntil)
-const purchaseFen = ownedCost.categories.find(({ category }) => category === 'purchase')?.fen ?? 0
 const ownedDays = Math.round((Date.parse(ownedUntil) - Date.parse(DELIVERED_ON)) / 86_400_000) + 1
 const ownedMeters = [...car.days]
   .filter(([date]) => date <= ownedUntil)
   .reduce((total, [, meters]) => total + meters, 0)
 const ownership = ownedCost.total > 0 && [
-  `提车 ${formatNumber(ownedDays)} 天`,
-  `累计花费 ${formatYuan(ownedCost.total)}（购车 ${formatYuan(purchaseFen)}）`,
-  `每天 ${formatYuan(ownedCost.total / ownedDays)}`,
-  ...(ownedMeters > 0 ? [`每公里 ${formatRate(ownedCost.total / 100 / (ownedMeters / 1000))}`] : []),
+  { value: formatNumber(ownedDays), label: '提车天数' },
+  { value: formatYuan(ownedCost.total), label: '提车以来花费' },
+  { value: formatYuan(ownedCost.total / ownedDays), label: '每天' },
+  ...(ownedMeters > 0
+    ? [{ value: formatRate(ownedCost.total / 100 / (ownedMeters / 1000)), label: '每公里' }]
+    : []),
 ]
 
 const longest = days.reduce<[string, number] | undefined>(
@@ -109,14 +116,26 @@ const monthLabels = weeks.map((week) => {
   const first = week.find((cell) => cell?.date.endsWith('-01'))
   return first ? Number(first.date.slice(5, 7)) : undefined
 })
-const totals = [
-  formatKilometers(distance),
-  `开车 ${drivenDays} 天`,
-  longest && longest[1] > 0 && `最远一天 ${formatKilometers(longest[1])}（${formatDay(longest[0])}）`,
-].filter(Boolean)
+// What the graph's readout says while no day is pointed at.
+const farthest =
+  longest && longest[1] > 0 ? `最远一天 ${formatKilometers(longest[1])} · ${formatDay(longest[0])}` : ''
+const chargingTiles = [
+  { value: formatNumber(charges.length), label: `次充电 · 快充 ${fast}` },
+  { value: formatNumber(chargedKwh), label: 'kWh' },
+  ...(averageKwhYuan !== undefined ? [{ value: formatRate(averageKwhYuan), label: '平均每 kWh' }] : []),
+  ...(homeKwh > 0 ? [{ value: formatYuan(homeYuan * 100), label: '家充电费' }] : []),
+]
+const spendingTiles = [
+  { value: formatYuan(spending.total), label: '用车花费' },
+  ...(distance > 0 && running.total > 0
+    ? [{ value: formatRate(running.total / 100 / (distance / 1000)), label: '开一公里' }]
+    : []),
+]
 ---
 
-<p class="year-driving__totals">{totals.join(' · ')}</p>
+<p class="year-lead">
+  {formatNumber(distance / 1000)}<small>km</small>{drivenDays}<small>天开了车</small>
+</p>
 <div class="year-driving" style={`--weeks: ${weeks.length}`}>
   <div class="year-driving__months" aria-hidden="true">
     {
@@ -159,6 +178,7 @@ const totals = [
   </div>
 </div>
 <div class="year-driving__legend" aria-hidden="true">
+  <span class="year-driving__readout" data-readout={farthest}>{farthest}</span>
   <span>没开</span>
   {[0, 1, 2, 3, 4].map((level) => <span class="year-driving__cell" data-level={level} />)}
   <span>300 km+</span>
@@ -166,9 +186,14 @@ const totals = [
 {
   charges.length > 0 && (
     <>
-      <p class="year-driving__totals year-driving__charging">
-        充电 {charges.length} 次 · {formatNumber(chargedKwh)} kWh · 快充 {fast} 次 · 慢充 {charges.length - fast} 次
-      </p>
+      <dl class="year-driving__tiles year-driving__charging">
+        {chargingTiles.map((tile) => (
+          <div>
+            <dt>{tile.label}</dt>
+            <dd>{tile.value}</dd>
+          </div>
+        ))}
+      </dl>
       <div
         class="year-driving__hours"
         role="img"
@@ -190,39 +215,28 @@ const totals = [
         ))}
       </div>
       <div class="year-driving__legend" aria-hidden="true">
+        <span class="year-driving__readout" data-readout={`最多在 ${busiestHour.hour} 点`}>
+          最多在 {busiestHour.hour} 点
+        </span>
         <span class="year-driving__swatch is-dc" />
-        <span>快充</span>
+        <span>快充{fastPrice.yuanPerKwh !== undefined && ` ${formatRate(fastPrice.yuanPerKwh)}`}</span>
         <span class="year-driving__swatch is-ac" />
-        <span>慢充</span>
-        <span>· 最多在 {busiestHour.hour} 点</span>
+        <span>家充 {formatRate(HOME_KWH_YUAN)}</span>
       </div>
-      {(fastPrice.count > 0 || homeCharging > 0) && (
-        <p class="year-driving__totals year-driving__note">
-          {[
-            fastPrice.yuanPerKwh !== undefined &&
-              `快充 ${fastPrice.count} 次付了 ${formatYuan(fastPrice.fen)}，合 ${formatRate(fastPrice.yuanPerKwh)}/kWh`,
-            homeCharging > 0 && `家充充值 ${formatYuan(homeCharging)}`,
-          ]
-            .filter(Boolean)
-            .join(' · ')}
-        </p>
-      )}
     </>
   )
 }
 {
   spending.total > 0 && (
     <>
-      <p class="year-driving__totals year-driving__spending">
-        {[
-          `用车花费 ${formatYuan(spending.total)}`,
-          distance > 0 &&
-            running.total > 0 &&
-            `开一公里 ${formatRate(running.total / 100 / (distance / 1000))}`,
-        ]
-          .filter(Boolean)
-          .join(' · ')}
-      </p>
+      <dl class="year-driving__tiles year-driving__spending">
+        {spendingTiles.map((tile) => (
+          <div>
+            <dt>{tile.label}</dt>
+            <dd>{tile.value}</dd>
+          </div>
+        ))}
+      </dl>
       <div
         class="year-driving__bar"
         role="img"
@@ -249,14 +263,93 @@ const totals = [
     </>
   )
 }
-{ownership && <p class="year-driving__totals year-driving__note">{ownership.join(' · ')}</p>}
+{
+  ownership && (
+    <dl class="year-driving__tiles year-driving__owned">
+      {ownership.map((tile) => (
+        <div>
+          <dt>{tile.label}</dt>
+          <dd>{tile.value}</dd>
+        </div>
+      ))}
+    </dl>
+  )
+}
+
+<script>
+  // The legend's readout says what the day or hour pointed at was, and goes back to its
+  // own words when the pointer leaves.
+  function initializeReadouts() {
+    for (const readout of document.querySelectorAll<HTMLElement>('.year-driving__readout')) {
+      const chart = readout.parentElement?.previousElementSibling
+      if (!chart) continue
+      const show = (event: Event) => {
+        const target = (event.target as Element).closest<HTMLElement>('[title]')
+        readout.textContent = target?.title || readout.dataset.readout || ''
+        readout.classList.toggle('is-live', Boolean(target))
+      }
+      chart.addEventListener('pointerover', show)
+      chart.addEventListener('focusin', show)
+      chart.addEventListener('pointerleave', () => {
+        readout.textContent = readout.dataset.readout ?? ''
+        readout.classList.remove('is-live')
+      })
+    }
+  }
+
+  document.addEventListener('astro:page-load', initializeReadouts)
+</script>
 
 <style>
-  .year-driving__totals {
-    margin-bottom: 0.75rem;
-    color: var(--color-tx-2);
-    font-size: 0.875rem;
+  /* A row of figures, each over what it counts. */
+  .year-driving__tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
+    gap: 1px;
+    overflow: hidden;
+    margin: 2rem 0 0.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+    background: var(--color-border);
     font-variant-numeric: tabular-nums;
+
+    & div {
+      display: flex;
+      flex-direction: column-reverse;
+      gap: 0.125rem;
+      padding: 0.75rem 0.875rem;
+      background: var(--color-bg);
+    }
+
+    & dt {
+      color: var(--color-tx-3);
+      font-size: 0.75rem;
+    }
+
+    & dd {
+      font-size: 1.375rem;
+      font-weight: 700;
+      line-height: 1.75rem;
+      letter-spacing: -0.03em;
+      white-space: nowrap;
+    }
+  }
+
+  .year-driving__owned {
+    margin-top: 1rem;
+  }
+
+  /* What the chart's pointer is on, in the legend's empty start. */
+  .year-driving__legend .year-driving__readout {
+    margin-right: auto;
+    color: var(--color-tx-2);
+    font-variant-numeric: tabular-nums;
+    transition: color 140ms var(--ease);
+
+    &.is-live {
+      color: var(--color-tx);
+      font-weight: 500;
+    }
   }
 
   .year-driving {
@@ -338,15 +431,6 @@ const totals = [
     }
   }
 
-  .year-driving__charging,
-  .year-driving__spending {
-    margin-top: 1.5rem;
-  }
-
-  .year-driving__note {
-    margin-top: 0.75rem;
-    margin-bottom: 0;
-  }
 
   /* What the year spent, a band a kind, the biggest darkest. */
   .year-driving__bar {
@@ -474,7 +558,8 @@ const totals = [
       width: 0.625rem;
     }
 
-    span:first-child {
+    span:first-child,
+    .year-driving__readout + span {
       margin-right: 0.25rem;
     }
 
