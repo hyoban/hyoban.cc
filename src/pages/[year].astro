@@ -291,14 +291,15 @@ const highlights = [
   image={await getPageCardPath(Astro.url.pathname)}
 >
   <SitePage>
-    {/* Before the page is read: what's still to come hidden until the script below reveals
-        it, unless the page is coming back to where it was part way down (the layout's
-        script), what's on screen there at once rather than rising in once it has scrolled;
-        and the year's hand begun, ahead of its first picture (src/year-random.ts). Without
-        script, all shows as it is. */}
+    {/* Before the page is read: its motion following the scroll where the browser can do
+        that; else what's still to come hidden until the script below reveals it, unless the
+        page is coming back to where it was part way down (the layout's script), what's on
+        screen there at once rather than rising in once it has scrolled. And the year's hand
+        begun, ahead of its first picture (src/year-random.ts). Without script, all shows as
+        it is. */}
     <script
       is:inline
-      set:html={`if (!(history.state?.scrollY > 0)) document.documentElement.classList.add('year-motion');(${dealYear})('start')`}
+      set:html={`if (CSS.supports('animation-timeline: view()')) document.documentElement.classList.add('year-scroll'); else if (!(history.state?.scrollY > 0)) document.documentElement.classList.add('year-motion');(${dealYear})('start')`}
     />
     <header class="year-hero" data-year-deal>
       <h1 class:list={{ 'is-collage': collage }} style={collage && `background-image: url("/${year}/collage.webp")`}>{year}</h1>
@@ -711,16 +712,20 @@ const highlights = [
   function initializeMotion() {
     const sections = document.querySelectorAll<HTMLElement>('.year-section')
     if (sections.length === 0) return
+    const root = document.documentElement.classList
+    // The motion follows the scroll where the browser can do that, as the inline script
+    // above decided, or here for a page the router swapped in, its inline script not run.
+    const scrolled = CSS.supports('animation-timeline: view()')
+    if (scrolled) root.add('year-scroll')
     // Back where it was part way down it keeps still, as the inline script above left it,
-    // or as the router swapped it in, its inline script not run again, hiding nothing.
-    if (!document.documentElement.classList.contains('year-motion') && history.state?.scrollY > 0) {
-      return
-    }
+    // or as the router swapped it in, hiding nothing.
+    if (!root.contains('year-motion') && history.state?.scrollY > 0) return
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
       for (const section of sections) section.classList.add('is-revealed')
       return
     }
     countUp([...document.querySelectorAll<HTMLElement>('.year-stats__value [data-value]')])
+    if (scrolled) return
     // A section rises in once a good part of it is in sight, of it or of the screen, which
     // ever is less: one only peeking in from the bottom would draw its pictures out of sight.
     const SEEN = 0.3
@@ -1872,6 +1877,68 @@ const highlights = [
           animation:
             year-trip-draw 1600ms var(--ease-out) calc(500ms + var(--index) * 150ms) backwards,
             year-trip-redraw 1.2s var(--ease-out);
+        }
+      }
+    }
+  }
+
+  /* Where the browser ties animations to scrolling, all below the top moves with it instead
+     (the page's script leaves them to it): each part rises, wipes or draws in as it comes
+     into view, by how far it has, and goes back the same way scrolled back up. Nothing waits
+     hidden for a script, and a page restored part way down is simply as far along as it's
+     scrolled. */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      :global(.year-scroll) {
+        & .year-section {
+          animation: year-rise linear both;
+          animation-timeline: view();
+          animation-range: entry 0% entry 12rem;
+        }
+
+        & .year-trips li,
+        & .year-highlights li,
+        & .year-places li,
+        & .year-menu li,
+        & .year-first__city {
+          animation: year-rise linear both;
+          animation-timeline: view();
+          animation-range: entry 0% entry 100%;
+        }
+
+        & .year-cities__bar {
+          animation: year-bar-wipe linear both;
+          animation-timeline: view();
+          animation-range: cover calc(8% + var(--index) * 3%) cover calc(30% + var(--index) * 3%);
+        }
+
+        & .year-first li {
+          animation: year-wipe linear both;
+          animation-timeline: view();
+          animation-range: entry 50% cover 30%;
+        }
+
+        /* Each trip's route draws as its card comes up, and again on hover. */
+        & .year-trips li {
+          view-timeline: --trip;
+        }
+
+        & .year-trips path {
+          animation: year-trip-draw linear both;
+          animation-timeline: --trip;
+          animation-range: entry 50% cover 45%;
+        }
+
+        @media (hover: hover) {
+          & .year-trips a:hover path {
+            animation:
+              year-trip-draw linear both,
+              year-trip-redraw 1.2s var(--ease-out);
+            animation-timeline: --trip, auto;
+            animation-range:
+              entry 50% cover 45%,
+              normal;
+          }
         }
       }
     }

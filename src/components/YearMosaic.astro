@@ -87,7 +87,13 @@ const months = Array.from({ length: 12 }, (_, index) => {
   const DAY = 14
 
   function popDays() {
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    // Where the tiles follow the scroll instead (below), or keep still, there's none to pop.
+    if (
+      matchMedia('(prefers-reduced-motion: reduce)').matches ||
+      CSS.supports('animation-timeline: view()')
+    ) {
+      return
+    }
     for (const mosaic of document.querySelectorAll<HTMLElement>('.year-mosaic')) {
       const section = mosaic.closest('.year-section')
       const days = [...mosaic.querySelectorAll<HTMLElement>('.year-mosaic__row')]
@@ -319,6 +325,26 @@ const months = Array.from({ length: 12 }, (_, index) => {
 
       &.is-trip::before {
         animation: year-mosaic-fade 600ms var(--ease);
+      }
+    }
+  }
+
+  /* Scrolled, where animations can follow it: each tile pops up as it comes into view, a
+     month filling in day after day, and a trip's band fades in under its days. */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      :global(.year-scroll) .year-mosaic__day {
+        & > a,
+        & > span,
+        &.is-trip::before {
+          animation: year-mosaic-pop linear both;
+          animation-timeline: view();
+          animation-range: entry calc(var(--day) * 2%) cover calc(12% + var(--day) * 0.4%);
+        }
+
+        &.is-trip::before {
+          animation-name: year-mosaic-fade;
+        }
       }
     }
   }

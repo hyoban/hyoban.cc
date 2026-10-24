@@ -138,6 +138,25 @@ const label = `每周各天记下的条数：${days.map((day) => `周${day.name}
     }
   }
 
+  /* Scrolled, where animations can follow it: the columns grow, Monday first, as the chart
+     comes up through the screen. */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      :global(.year-scroll) {
+        & .year-weekdays {
+          view-timeline: --week;
+        }
+
+        & .year-weekdays__bar {
+          transform-origin: bottom;
+          animation: year-weekdays-grow linear both;
+          animation-timeline: --week;
+          animation-range: entry calc(40% + var(--day) * 4%) cover calc(30% + var(--day) * 2%);
+        }
+      }
+    }
+  }
+
   @keyframes year-weekdays-grow {
     from {
       opacity: 0;

@@ -116,6 +116,18 @@ const rows = topics.map((topic, index) => ({
     }
   }
 
+  /* Scrolled, where animations can follow it: each bar grows as it comes up. */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      :global(.year-scroll) .year-topics__bar {
+        transform-origin: left center;
+        animation: year-topics-grow linear both;
+        animation-timeline: view();
+        animation-range: entry 100% cover 35%;
+      }
+    }
+  }
+
   @keyframes year-topics-grow {
     from {
       opacity: 0;
