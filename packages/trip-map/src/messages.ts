@@ -111,6 +111,7 @@ export const zhCN = {
   // What the car recorded of a day, on the day cards
   drivingDayHoursLabel: '开了 {km} 公里 · {hours} 小时',
   drivingDayLabel: '开了 {km} 公里',
+  chargingDayLabel: '充电 {count} 次 · {kwh} kWh',
 
   // Weather on the day cards
   weatherClear: '晴',

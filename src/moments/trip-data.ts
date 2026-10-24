@@ -60,6 +60,17 @@ export function getTripData(trip: MomentTrip): TripData {
     music: getTripMusic(trip),
     ...(odometer
       ? {
+          charging: (dateKey: string) => {
+            const charges = odometer.charges.filter((charge) =>
+              charge.startedAt.startsWith(dateKey),
+            )
+            return charges.length > 0
+              ? {
+                  count: charges.length,
+                  energyKwh: charges.reduce((total, charge) => total + charge.energyWh, 0) / 1000,
+                }
+              : undefined
+          },
           driving: (dateKey: string) => {
             const day = odometer.days.get(dateKey)
             return (

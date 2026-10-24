@@ -147,12 +147,14 @@ export function findOutings(
 /**
  * A trip's days as the car recorded them, when the car drove all of it: every day within
  * the records' span, and no leg by plane or train, which leaves the car at home or at an
- * airport while a rental drives the routes. A ferry carries the car along.
+ * airport while a rental drives the routes. A ferry carries the car along. With them, the
+ * charges it took on those days, oldest first.
  */
 export function getTripOdometer(
   trip: { start: string; end: string; legs: readonly { by: string }[] },
   days: VehicleDistanceDay[],
   span: { start: string; end: string },
+  charges: VehicleCharge[] = [],
 ) {
   if (
     trip.start < span.start ||
@@ -162,9 +164,11 @@ export function getTripOdometer(
     return undefined
   }
 
-  const tripDays = days.filter((day) => trip.start <= day.date && day.date <= trip.end)
+  const inTrip = (date: string) => trip.start <= date && date <= trip.end
+  const tripDays = days.filter((day) => inTrip(day.date))
 
   return {
+    charges: charges.filter((charge) => inTrip(charge.startedAt.slice(0, 10))),
     days: new Map(tripDays.map((day) => [day.date, day])),
     distanceMeters: tripDays.reduce((total, day) => total + day.distanceMeters, 0),
     durationSeconds: tripDays.reduce((total, day) => total + (day.durationSeconds ?? 0), 0),

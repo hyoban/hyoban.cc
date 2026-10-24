@@ -287,6 +287,7 @@ export function createSideCard({
     } else if (slide.type === 'day') {
       const weather = trip.weather[slide.day]
       const driving = trip.driving?.[slide.day]
+      const charging = trip.charging?.[slide.day]
 
       eyebrow.textContent = t(messages, 'dayLabel', { day: slide.day })
       title.textContent = formatDate(slide.dateKey, messages.locale, { weekday: true })
@@ -294,6 +295,9 @@ export function createSideCard({
         ...(weather ? [createWeather(weather, 'trip-map-card__weather')] : []),
         ...(driving
           ? [createWeather({ icon: 'car-front', label: driving }, 'trip-map-card__weather')]
+          : []),
+        ...(charging
+          ? [createWeather({ icon: 'plug-zap', label: charging }, 'trip-map-card__weather')]
           : []),
         createElement('p', 'trip-map-card__meta', slide.places.join(' → ')),
       )
