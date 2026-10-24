@@ -62,6 +62,14 @@ const { map, label } = Astro.props
     }
   }
 
+  /* Only the cities answer the pointer: the outline reaches out past the map over what's
+     below it, and the routes and dots lie over the cities. */
+  .year-footprint__outline,
+  .year-footprint__route,
+  .year-footprint__dots {
+    pointer-events: none;
+  }
+
   .year-footprint__outline {
     fill: none;
     stroke: var(--color-border);
