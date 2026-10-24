@@ -230,7 +230,7 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
             href={`/media/?category=${category.value}`}
             class="media-filter"
             aria-controls="media-list"
-            aria-current={category.value === 'anime' ? 'page' : undefined}
+            aria-current={category.value === 'anime' ? 'true' : undefined}
             data-media-filter={category.value}
           >
             {category.label}
@@ -253,10 +253,12 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
                       target="_blank"
                       rel="noopener noreferrer"
                       class="media-work__poster"
+                      tabindex="-1"
+                      aria-hidden="true"
                     >
                       <img
                         src={work.posterUrl}
-                        alt={`${work.displayTitle} poster`}
+                        alt=""
                         loading="lazy"
                       />
                     </a>
@@ -336,7 +338,7 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
 
     filterLinks.forEach((link) => {
       if (link.dataset.mediaFilter === initialCategory) {
-        link.setAttribute('aria-current', 'page')
+        link.setAttribute('aria-current', 'true')
       } else {
         link.removeAttribute('aria-current')
       }

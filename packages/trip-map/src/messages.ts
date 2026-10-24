@@ -16,6 +16,10 @@ export const zhCN = {
   drawerLoading: '加载中…',
   fogLit: '点亮 {cities} 座城市\u2003{provinces} 个省份',
   locateFailed: '没能获取你的位置',
+  // Mapbox's own: the map to a screen reader, its attribution button and logo.
+  mapAttribution: '显示或隐藏地图署名',
+  mapLogo: 'Mapbox 主页',
+  mapTitle: '地图，方向键平移，加减键缩放',
   mapInitFailed: '浏览器无法初始化地图。',
   mapLoadFailed: '地图资源加载失败。',
   mapLoadTimeout: '地图加载超时。',

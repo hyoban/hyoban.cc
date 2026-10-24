@@ -474,14 +474,28 @@ export function createPlaceMarkers({
       }
     }
 
+    // The places whose dot had the focus as it went off the map: a cluster opened from
+    // the keyboard, or a place gathered into one.
+    let focusedIds: string[] | undefined
+
     for (const [id, marker] of markers) {
-      setMarkerShown(marker, visibleIds.has(id))
+      const shown = visibleIds.has(id)
+
+      if (!shown && marker.button === document.activeElement) {
+        focusedIds = [id]
+      }
+
+      setMarkerShown(marker, shown)
     }
 
     // A cluster's id stands for the same places at the same spot, so the ones still
     // shown are kept: a focused cluster keeps its focus, and a hovered one its name.
     for (const [id, cluster] of clusterMarkers) {
       if (!clusters.has(id)) {
+        if (cluster.button === document.activeElement) {
+          focusedIds = cluster.members.map((member) => member.id)
+        }
+
         cluster.popup.remove()
         cluster.marker.remove()
         clusterMarkers.delete(id)
@@ -494,10 +508,33 @@ export function createPlaceMarkers({
       }
     }
 
+    if (focusedIds) {
+      passFocus(focusedIds, visibleIds)
+    }
+
     spreadDots(map)
 
     if (options.settled !== false) {
       orderMarkers(map)
+    }
+  }
+
+  /**
+   * Hands the focus on from a dot gone off the map to its busiest place still on it, or
+   * to the cluster that place has gathered into, rather than dropping it on the page.
+   */
+  function passFocus(ids: string[], visibleIds: Set<string>) {
+    for (const id of ids) {
+      const button = visibleIds.has(id)
+        ? markers.get(id)?.button
+        : [...clusterMarkers.values()].find((cluster) =>
+            cluster.members.some((member) => member.id === id),
+          )?.button
+
+      if (button) {
+        button.focus({ preventScroll: true })
+        return
+      }
     }
   }
 

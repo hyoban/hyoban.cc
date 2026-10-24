@@ -11,8 +11,9 @@ const { description, title } = Astro.props
 ---
 
 <div class="site-page">
+  <a class="site-page__skip" href="#main">跳到正文</a>
   <SiteHeader />
-  <main class="site-page__main">
+  <main class="site-page__main" id="main" tabindex="-1">
     {
       title && (
         <header class="site-page__header">
@@ -33,10 +34,36 @@ const { description, title } = Astro.props
     }
   }
 
+  /* Out of sight until Tab comes to it first. */
+  .site-page__skip {
+    position: absolute;
+    top: calc(0.5rem + env(safe-area-inset-top));
+    left: calc(1rem + env(safe-area-inset-left));
+    z-index: 10;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    background: var(--color-hover);
+    font-size: 0.875rem;
+    text-decoration: none;
+
+    &:not(:focus) {
+      clip-path: inset(50%);
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+  }
+
   .site-page__main {
     max-width: 40rem;
     margin: 3.5rem auto 0;
     line-height: 1.75rem;
+
+    /* Reached by the skip link: the next Tab goes on from here, without a ring round it all. */
+    &:focus {
+      outline: none;
+    }
   }
 
   .site-page__header {

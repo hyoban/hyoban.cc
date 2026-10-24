@@ -1,5 +1,5 @@
 import type { PanelElements } from '../elements.ts'
-import { formatDate } from '../format.ts'
+import { formatDate, setTextLang } from '../format.ts'
 import { t, type Messages } from '../messages.ts'
 import {
   createCountUp,
@@ -183,6 +183,7 @@ export function createSideCard({
     photo.width = image.width
     photo.height = image.height
     photo.alt = image.alt
+    setTextLang(photo, image.alt)
     sizePhoto(photo, image)
     playLivePhoto(image)
 

@@ -177,7 +177,8 @@ const image = pageTrip ? `/trip/${pageTrip.id}/og.jpg` : await getPageCardPath(A
     <link rel="preconnect" href="https://api.mapbox.com" crossorigin />
   </Fragment>
   <main class="trip-map-page" data-trip-map data-trip-map-token={mapboxToken} data-calendar-latest-months={JSON.stringify(latestMonths)} data-trip-map-active={activeTrip ? '' : undefined} data-trip-map-trips-url={tripSummariesPath} transition:persist="trip-map">
-    <div class="trip-map-canvas" data-trip-map-canvas role="region" aria-label="Calendar 地点地图" />
+    <h1 class="sr-only">地图</h1>
+    <div class="trip-map-canvas" data-trip-map-canvas role="region" aria-label="地点地图" />
     {
       placeholderView && (
         <picture class="trip-map-placeholder" data-trip-map-placeholder>
@@ -211,12 +212,13 @@ const image = pageTrip ? `/trip/${pageTrip.id}/og.jpg` : await getPageCardPath(A
       {
         trips.length > 0 && (
           // The routes are drawn on the map; these reach the same trips by keyboard,
-          // showing up while one is focused and lifting its route into view.
+          // showing up while one is focused and lifting its route into view. One stop for
+          // Tab, the arrow keys going along them (@hyoban/trip-map's trip-map.ts).
           <nav class="trip-map-toolbar__trips" aria-label="旅程回放">
             <ul>
-              {trips.map(trip => (
+              {trips.map((trip, index) => (
                 <li>
-                  <a href={`/trip/${trip.id}/play/`} data-trip-map-trip-link={trip.id}><span class="sr-only">回放旅程：</span>{trip.title}</a>
+                  <a href={`/trip/${trip.id}/play/`} data-trip-map-trip-link={trip.id} tabindex={index === 0 ? undefined : -1}><span class="sr-only">回放旅程：</span>{trip.title}</a>
                 </li>
               ))}
             </ul>

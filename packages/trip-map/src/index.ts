@@ -11,7 +11,14 @@ export {
   type FogRegions,
   type WeightedPlace,
 } from './fog-of-war.ts'
-export { formatDate, formatDateRange, getDateParts, parseDateKey } from './format.ts'
+export {
+  formatDate,
+  formatDateRange,
+  getDateParts,
+  getTextLang,
+  parseDateKey,
+  setTextLang,
+} from './format.ts'
 export { getDistanceKm, toCoordinates, type Coordinates, type LngLatLike } from './geo.ts'
 export { renderIcon, type IconName, type WeatherIcon } from './icons.ts'
 export * from './locations.ts'

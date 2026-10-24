@@ -1,3 +1,5 @@
+import { setTextLang } from '@hyoban/trip-map'
+
 // Both the calendar and map use the same still/Live Photo playback lifecycle.
 export function initializeLightboxMedia(dialog: HTMLDialogElement, signal: AbortSignal) {
   const image = dialog.querySelector<HTMLImageElement>('[data-lightbox-image]')!
@@ -83,6 +85,7 @@ export function initializeLightboxMedia(dialog: HTMLDialogElement, signal: Abort
       status.textContent = ''
       image.src = item.dataset.lightboxSrc ?? ''
       image.alt = item.dataset.lightboxAlt ?? ''
+      setTextLang(image, image.alt)
       source = item.dataset.lightboxVideo
       toggle.hidden = !source
     },

@@ -40,6 +40,7 @@ function onShareClick(event: MouseEvent) {
       const label = link.getAttribute('aria-label')
       icon?.classList.replace('i-lucide-share', 'i-lucide-check')
       link.setAttribute('aria-label', '已复制链接')
+      announce('已复制链接')
       setTimeout(() => {
         icon?.classList.replace('i-lucide-check', 'i-lucide-share')
         if (label) link.setAttribute('aria-label', label)
@@ -49,4 +50,20 @@ function onShareClick(event: MouseEvent) {
       location.href = link.href
     },
   )
+}
+
+// A label changed under the focus isn't read out by most screen readers: a status is. One
+// for the page, made the first time, then filled a moment later so it's heard as news.
+function announce(text: string) {
+  let status = document.querySelector<HTMLElement>('[data-moment-share-status]')
+
+  if (!status) {
+    status = Object.assign(document.createElement('p'), { className: 'sr-only' })
+    status.setAttribute('role', 'status')
+    status.setAttribute('data-moment-share-status', '')
+    document.body.append(status)
+  }
+
+  status.textContent = ''
+  setTimeout(() => (status.textContent = text), 100)
 }

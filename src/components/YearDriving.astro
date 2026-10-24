@@ -109,6 +109,9 @@ for (const outing of car.outings) {
     if (outing.start <= date && date <= outing.end) outingByDate.set(date, outing)
   }
 }
+// A trip's days all lead to it: Tab stops at its first only, the rest kept for the pointer
+// and the screen reader's list of links.
+const tabbedHrefs = new Set<string>()
 const getOutingHref = (outing: Outing, date: string) =>
   outing.trip
     ? `/trip/${outing.trip.id}/`
@@ -184,11 +187,14 @@ const spendingTiles = [
                 const title = `${formatDay(cell.date)}\u2003${cell.distanceMeters ? formatKilometers(cell.distanceMeters) : '没开'}`
                 const outing = outingByDate.get(cell.date)
                 const href = outing && getOutingHref(outing, cell.date)
+                const tabbed = href !== undefined && tabbedHrefs.has(href)
+                if (href) tabbedHrefs.add(href)
                 return href ? (
                   <a
                     class="year-driving__cell"
                     data-level={getDistanceLevel(cell.distanceMeters)}
                           href={href}
+                    tabindex={tabbed ? -1 : undefined}
                     title={outing.trip ? `${title}\u2003${outing.trip.title}` : title}
                     aria-label={outing.trip ? `${title}，${outing.trip.title}` : title}
                   />
@@ -322,9 +328,13 @@ const spendingTiles = [
       }
       chart.addEventListener('pointerover', show)
       chart.addEventListener('focusin', show)
-      chart.addEventListener('pointerleave', () => {
+      const reset = () => {
         readout.textContent = readout.dataset.readout ?? ''
         readout.classList.remove('is-live')
+      }
+      chart.addEventListener('pointerleave', reset)
+      chart.addEventListener('focusout', (event) => {
+        if (!chart.contains((event as FocusEvent).relatedTarget as Node | null)) reset()
       })
     }
   }

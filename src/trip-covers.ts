@@ -1,4 +1,5 @@
 import { getAssetUrl, getFrameSources, getResizedSources } from './asset-url.ts'
+import { getTextLang } from '@hyoban/trip-map'
 import type { MomentRecord, TripRecord } from '@hyoban/data-spec'
 import { readMomentRecords, readTripRecords } from './data/store.ts'
 
@@ -122,7 +123,7 @@ function renderCovers(
     const { sources } = still
     const src = sources.find((source) => source.width >= 480) ?? sources.at(-1)!
 
-    return `<img src="${escapeHtml(src.src)}" srcset="${escapeHtml(sources.map((source) => `${source.src} ${source.width}w`).join(', '))}" sizes="${COVER_SIZES}" width="${still.width}" height="${still.height}" alt="${escapeHtml(item.alt)}" loading="lazy" decoding="async">`
+    return `<img src="${escapeHtml(src.src)}" srcset="${escapeHtml(sources.map((source) => `${source.src} ${source.width}w`).join(', '))}" sizes="${COVER_SIZES}" width="${still.width}" height="${still.height}" alt="${escapeHtml(item.alt)}"${getTextLang(item.alt) ? ' lang="en"' : ''} loading="lazy" decoding="async">`
   })
 
   return `<figure class="trip-covers">${images.join('')}<figcaption><a href="${escapeHtml(href)}">${escapeHtml(caption)}</a></figcaption></figure>`

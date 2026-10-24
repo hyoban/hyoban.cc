@@ -21,7 +21,8 @@ export function initializeYearShare() {
   const content = document.querySelector<HTMLElement>('.site-page__main')
   const toggle = menu?.querySelector<HTMLButtonElement>('[data-share-toggle]')
   const options = menu?.querySelector<HTMLElement>('[data-share-options]')
-  if (!menu || !content || !toggle || !options) return
+  const status = menu?.querySelector<HTMLElement>('[data-share-status]')
+  if (!menu || !content || !toggle || !options || !status) return
 
   const label = toggle.textContent
   // What the pictures are named and stamped for, a year or `life`, and what they're shared as.
@@ -45,6 +46,8 @@ export function initializeYearShare() {
   })
 
   toggle.addEventListener('click', async () => {
+    // Busy drawing: marked rather than disabled, which would drop the focus off it.
+    if (toggle.getAttribute('aria-disabled') === 'true') return
     if (ready) {
       const files = ready
       ready = undefined
@@ -60,10 +63,13 @@ export function initializeYearShare() {
       .shareMode as Mode | undefined
     if (!mode) return
     setOpen(false)
+    // The option picked goes with the menu: the focus comes back to the button.
+    toggle.focus()
 
     const phone = matchMedia('(pointer: coarse)').matches
-    toggle.disabled = true
+    toggle.setAttribute('aria-disabled', 'true')
     toggle.textContent = '生成中…'
+    status.textContent = '正在生成图片'
     try {
       const { download, drawPictures } = await import('./year-share-pictures.ts')
       const files = await drawPictures(mode, content, year)
@@ -71,17 +77,21 @@ export function initializeYearShare() {
         if (!(await share(files, title))) {
           ready = files
           toggle.textContent = '分享图片 ↗'
+          status.textContent = '图片已生成，再按一次分享'
           return
         }
+        status.textContent = ''
       } else {
         await download(files, `hyoban-${year}.zip`)
+        status.textContent = '图片已下载'
       }
       toggle.textContent = label
     } catch (error) {
       console.error(error)
       toggle.textContent = '生成失败，再试一次'
+      status.textContent = '图片生成失败'
     } finally {
-      toggle.disabled = false
+      toggle.removeAttribute('aria-disabled')
     }
   })
 }
