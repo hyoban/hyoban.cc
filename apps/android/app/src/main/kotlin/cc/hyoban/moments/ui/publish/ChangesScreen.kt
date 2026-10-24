@@ -382,40 +382,48 @@ private fun ChangeCard(
     content: @Composable () -> Unit,
 ) {
     // Not tapped as a whole: its actions are buttons of their own, as Material 3 keeps a card
-    // either tapped or holding buttons, never both.
+    // either tapped or holding buttons, never both, at its foot, so what it is of has the
+    // whole width at its head.
     Column(
         Modifier
             .fillMaxWidth()
-            .padding(start = Space.l, end = Space.s, top = Space.s, bottom = Space.l)
+            .padding(start = Space.l, end = Space.l, top = Space.l, bottom = if (onOpen != null || onRevert != null) Space.s else Space.l)
             .testTag("change_${moment.uid}"),
         verticalArrangement = Arrangement.spacedBy(Space.m),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            if (identity != null) {
-                MomentIdentity(identity, Modifier.weight(1f).padding(top = Space.s))
-            } else {
-                Text(
-                    listOfNotNull(formatDate(moment.occurredAt), formatTime(moment.occurredAt)).joinToString(" "),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.weight(1f).padding(vertical = Space.m),
-                )
-            }
-            if (onOpen != null) {
-                TextButton(onClick = onOpen, modifier = Modifier.testTag("open_${moment.uid}")) {
-                    Text(stringResource(R.string.action_view))
-                }
-            }
-            if (onRevert != null) {
-                TextButton(onClick = onRevert, modifier = Modifier.testTag("revert_${moment.uid}")) {
-                    Icon(Icons.AutoMirrored.Rounded.Undo, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.size(Space.xs))
-                    Text(stringResource(R.string.action_revert))
-                }
-            }
+        if (identity != null) {
+            MomentIdentity(identity)
+            HorizontalDivider(color = dividerColor())
+        } else {
+            Text(
+                listOfNotNull(formatDate(moment.occurredAt), formatTime(moment.occurredAt)).joinToString(" "),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
-        if (identity != null) HorizontalDivider(Modifier.padding(end = Space.s), color = dividerColor())
-        Column(Modifier.padding(end = Space.s), verticalArrangement = Arrangement.spacedBy(Space.m)) { content() }
+        Column(verticalArrangement = Arrangement.spacedBy(Space.m)) { content() }
+        CardActions(
+            onOpen?.let { open -> { TextButton(onClick = open, modifier = Modifier.testTag("open_${moment.uid}")) { Text(stringResource(R.string.action_view)) } } },
+            onRevert?.let { revert -> { RevertButton(revert, Modifier.testTag("revert_${moment.uid}")) } },
+        )
+    }
+}
+
+/** A card's actions, at its foot on the end side, as Material 3 sets a card's buttons; nothing when it has none. */
+@Composable
+private fun CardActions(vararg actions: (@Composable () -> Unit)?) {
+    val shown = actions.filterNotNull()
+    if (shown.isEmpty()) return
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) { shown.forEach { it() } }
+}
+
+/** Takes back a change, its undo icon beside the words. */
+@Composable
+private fun RevertButton(onRevert: () -> Unit, modifier: Modifier = Modifier) {
+    TextButton(onClick = onRevert, modifier = modifier) {
+        Icon(Icons.AutoMirrored.Rounded.Undo, contentDescription = null, modifier = Modifier.size(18.dp))
+        Spacer(Modifier.size(Space.xs))
+        Text(stringResource(R.string.action_revert))
     }
 }
 
@@ -425,22 +433,15 @@ private fun PlaceChangeCard(change: PlaceChange, onRevert: (() -> Unit)?) {
     Column(
         Modifier
             .fillMaxWidth()
-            .padding(start = Space.l, end = Space.s, top = Space.s, bottom = Space.l)
+            .padding(start = Space.l, end = Space.l, top = Space.l, bottom = if (onRevert != null) Space.s else Space.l)
             .testTag("place_change_${change.id}"),
-        verticalArrangement = Arrangement.spacedBy(Space.s),
+        verticalArrangement = Arrangement.spacedBy(Space.m),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(change.after.name, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-            if (onRevert != null) {
-                TextButton(onClick = onRevert, modifier = Modifier.testTag("revert_place_${change.id}")) {
-                    Icon(Icons.AutoMirrored.Rounded.Undo, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.size(Space.xs))
-                    Text(stringResource(R.string.action_revert))
-                }
-            }
-        }
-        val kindOf = @Composable { place: Place -> PlaceKind.of(place.kind)?.let { stringResource(it.label) } ?: place.kind ?: stringResource(R.string.food_none) }
-        Field(R.string.change_place_kind) { FromTo(kindOf(change.before), kindOf(change.after), Icons.Rounded.Category) }
+        Text(change.after.name, style = MaterialTheme.typography.titleSmall)
+        HorizontalDivider(color = dividerColor())
+        val kindOf = @Composable { place: Place -> PlaceKind.of(place.kind)?.let { stringResource(it.label) } ?: place.kind }
+        Field(R.string.change_place_kind) { FromTo(kindOf(change.before), kindOf(change.after).orEmpty(), Icons.Rounded.Category) }
+        CardActions(onRevert?.let { revert -> { RevertButton(revert, Modifier.testTag("revert_place_${change.id}")) } })
     }
 }
 
@@ -549,7 +550,10 @@ private fun ChangedFields(change: Change, places: Map<String, Place>, urls: Medi
     if (before.food != after.food) {
         any = true
         val none = stringResource(R.string.food_none)
-        Field(R.string.change_food) { FromTo(foodLine(before.food) ?: none, foodLine(after.food) ?: none, Icons.Rounded.Restaurant) }
+        Field(R.string.change_food) {
+            val after = foodLine(after.food)
+            if (after == null) FromTo(foodLine(before.food), none, Icons.Rounded.Restaurant) else FromTo(foodLine(before.food), after, Icons.Rounded.Restaurant)
+        }
     }
     if (!any) {
         Text(stringResource(R.string.note_change_nothing), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -603,17 +607,20 @@ private fun TextChange(before: String, after: String) {
 
 /** What a field was, struck through, and what it is now. */
 @Composable
-private fun FromTo(from: String, to: String, icon: androidx.compose.ui.graphics.vector.ImageVector) {
+private fun FromTo(from: String?, to: String, icon: androidx.compose.ui.graphics.vector.ImageVector) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
         Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
-        Text(
-            from,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textDecoration = TextDecoration.LineThrough,
-            modifier = Modifier.weight(1f, fill = false),
-        )
-        Icon(Icons.AutoMirrored.Rounded.ArrowForward, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
+        // Something that wasn't said before is just what it is now, rather than from nothing.
+        if (from != null) {
+            Text(
+                from,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textDecoration = TextDecoration.LineThrough,
+                modifier = Modifier.weight(1f, fill = false),
+            )
+            Icon(Icons.AutoMirrored.Rounded.ArrowForward, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
+        }
         Text(to, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f, fill = false))
     }
 }
