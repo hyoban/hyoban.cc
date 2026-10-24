@@ -1364,6 +1364,7 @@
     "name": "野摊烧烤",
     "latitude": 31.30615805555555,
     "longitude": 117.9689407222222,
+    "kind": "food",
     "division": {
       "code": "340281",
       "province": "安徽省",

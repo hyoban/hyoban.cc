@@ -4,85 +4,123 @@
   "places": [
     "ye-tan-shao-kao"
   ],
-  "text": "村里路边的野摊烧烤\n口味尚可，就是肉有点老有点硬\n人均45",
+  "text": "村里路边的野摊烧烤\n肉有点老有点硬",
   "hidden": false,
   "media": [
     {
-      "uid": "01M5PT0ME25ZY06AKYG805G32W",
+      "uid": "01M5Q5S0JS80NFZAYFPQ6EK6RF",
       "alt": "",
       "takenAt": "2026-10-24T18:36:32+08:00",
-      "type": "image",
+      "type": "live-photo",
       "width": 4416,
       "height": 5888,
       "published": {
-        "key": "moments/01m5psx1sjhd1qrmwkf1p0z4t7/01m5pt0me25zy06akyg805g32w.jpg",
+        "key": "moments/01m5psx1sjhd1qrmwkf1p0z4t7/01m5q5s0js80nfzayfpq6ek6rf.jpg",
         "contentType": "image/jpeg",
-        "bytes": 19354117,
-        "etag": "8af71b8e42eae810f59d68d8471489eb",
+        "bytes": 9271075,
+        "etag": "37ca4f6d7acf6492a607f5b04611dcea",
         "width": 4416,
         "height": 5888,
         "variants": [],
-        "original": true
+        "original": true,
+        "video": {
+          "key": "moments/01m5psx1sjhd1qrmwkf1p0z4t7/01m5q5s0js80nfzayfpq6ek6rf-video.mp4",
+          "contentType": "video/mp4",
+          "bytes": 10083042,
+          "etag": "77234cdf18a8625a34a1d75b276b8e52",
+          "original": true
+        }
       }
     },
     {
-      "uid": "01M5PT0MGGA1XEGV5M4EMERHEN",
+      "uid": "01M5Q5S0MYGDNHNMPA60PREY39",
       "alt": "",
       "takenAt": "2026-10-24T18:49:22+08:00",
-      "type": "image",
+      "type": "live-photo",
       "width": 4416,
       "height": 5888,
       "published": {
-        "key": "moments/01m5psx1sjhd1qrmwkf1p0z4t7/01m5pt0mgga1xegv5m4emerhen.jpg",
+        "key": "moments/01m5psx1sjhd1qrmwkf1p0z4t7/01m5q5s0mygdnhnmpa60prey39.jpg",
         "contentType": "image/jpeg",
-        "bytes": 20555727,
-        "etag": "1296b08398f24568cd3e5ae61339daa4",
+        "bytes": 9492276,
+        "etag": "66760f3fdf281fdb19680ab9496a8860",
         "width": 4416,
         "height": 5888,
         "variants": [],
-        "original": true
+        "original": true,
+        "video": {
+          "key": "moments/01m5psx1sjhd1qrmwkf1p0z4t7/01m5q5s0mygdnhnmpa60prey39-video.mp4",
+          "contentType": "video/mp4",
+          "bytes": 11063451,
+          "etag": "60abecda11614a5124499e0d981148c9",
+          "original": true
+        }
       }
     },
     {
-      "uid": "01M5PT0MJ675HM8H7V4ES4RGDZ",
+      "uid": "01M5Q5S0PJS46SBBGC17W7THFY",
       "alt": "",
       "takenAt": "2026-10-24T18:09:50+08:00",
-      "type": "image",
+      "type": "live-photo",
       "width": 4096,
       "height": 3072,
       "published": {
-        "key": "moments/01m5psx1sjhd1qrmwkf1p0z4t7/01m5pt0mj675hm8h7v4es4rgdz.jpg",
+        "key": "moments/01m5psx1sjhd1qrmwkf1p0z4t7/01m5q5s0pjs46sbbgc17w7thfy.jpg",
         "contentType": "image/jpeg",
-        "bytes": 14230598,
-        "etag": "331012df3aba4ad6efbbe20850381e8b",
+        "bytes": 5976913,
+        "etag": "8b130a3041f2c851bc372510c2751295",
         "width": 4096,
         "height": 3072,
         "variants": [],
-        "original": true
+        "original": true,
+        "video": {
+          "key": "moments/01m5psx1sjhd1qrmwkf1p0z4t7/01m5q5s0pjs46sbbgc17w7thfy-video.mp4",
+          "contentType": "video/mp4",
+          "bytes": 8253685,
+          "etag": "e26b927c9c678aac59758fdc900b439d",
+          "original": true
+        }
       }
     },
     {
-      "uid": "01M5PT0MKGD2WNV5M50W0PBTKY",
+      "uid": "01M5Q5S0QR634YDNJ2C87E08JC",
       "alt": "",
       "takenAt": "2026-10-24T18:09:12+08:00",
-      "type": "image",
+      "type": "live-photo",
       "width": 5888,
       "height": 4416,
       "published": {
-        "key": "moments/01m5psx1sjhd1qrmwkf1p0z4t7/01m5pt0mkgd2wnv5m50w0pbtky.jpg",
+        "key": "moments/01m5psx1sjhd1qrmwkf1p0z4t7/01m5q5s0qr634ydnj2c87e08jc.jpg",
         "contentType": "image/jpeg",
-        "bytes": 15277854,
-        "etag": "04d29253fd999fccd751c1b06e8b9a85",
+        "bytes": 7401683,
+        "etag": "59a912b6a0680a47b678c09cd5cb71ca",
         "width": 5888,
         "height": 4416,
         "variants": [],
-        "original": true
+        "original": true,
+        "video": {
+          "key": "moments/01m5psx1sjhd1qrmwkf1p0z4t7/01m5q5s0qr634ydnj2c87e08jc-video.mp4",
+          "contentType": "video/mp4",
+          "bytes": 7876171,
+          "etag": "78e3aa796bb0274b9f2428ce9653c544",
+          "original": true
+        }
       }
     }
   ],
+  "food": {
+    "dishes": [
+      "烧烤"
+    ],
+    "verdict": "ok",
+    "bill": {
+      "amount": 135,
+      "people": 3
+    }
+  },
   "published": {
     "at": "2026-10-24T11:28:10Z"
   },
   "createdAt": "2026-10-24T19:14:28+08:00",
-  "updatedAt": "2026-10-24T19:16:25+08:00"
+  "updatedAt": "2026-10-24T22:41:58+08:00"
 }
