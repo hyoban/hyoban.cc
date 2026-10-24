@@ -70,6 +70,19 @@ const TELETYPE_SITE_VERIFICATION = 'g7j8/rPFXfhyrq5q0QQV7EsYWv4='
     <title>{title}</title>
     <meta name="description" content={description} />
     <ClientRouter />
+    <!-- The router keeps scroll restoration manual for its own navigations, and on a reload
+         scrolls back only once it runs, after the whole page is read: a long page, the car
+         page's 800 squares, showed its top first. Left to the browser, a reload comes back
+         where it was as it draws; the router, given where the page was as it went, then
+         scrolls to where it already is, even when it hadn't caught up with the last scroll. -->
+    <script is:inline>
+      addEventListener('pagehide', () => {
+        if (history.state) {
+          history.replaceState({ ...history.state, scrollX, scrollY }, '')
+        }
+        history.scrollRestoration = 'auto'
+      })
+    </script>
     <link rel="canonical" href={canonicalUrl} />
     <meta property="og:type" content={article ? 'article' : 'website'} />
     <meta property="og:title" content={shareTitle} />
