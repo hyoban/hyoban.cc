@@ -118,7 +118,7 @@ zeabur 也是一个很酷的公司，团队里的人都很厉害。
 [招聘帖]: https://www.v2ex.com/t/865194
 [大家好，我开始了一项公开创业计划，目标是九个月获得五千万元投资]: https://www.v2ex.com/t/864079
 [李书]: https://github.com/lsby
-[volar]: https://volarjs.github.io
+[volar]: https://volarjs.dev
 [radix-ui]: https://www.radix-ui.com
 [framer-motion]: https://www.framer.com/motion
 [zeabur]: https://zeabur.com/zh-CN

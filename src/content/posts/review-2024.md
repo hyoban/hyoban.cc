@@ -131,7 +131,7 @@ pubDate: '2025-01-01T03:12:15.412Z'
 借着在 Follow 工作，和团队成员一起录了一期 [web worker](https://www.xiaoyuzhoufm.com/episode/67489d8c0ed328720a0ed3ca)。
 因为是自己一直喜欢听的节目，所以自己有机会能登上这个节目感觉到兴奋。
 
-尽管还没有变成一个很主动、外向的人，但是今年也和一些之前在网上有交流的朋友线下见了面，逐渐克服了无法在陌生环境生存的问题，很感谢愿意和我互动玩耍的朋友们（[situ](https://x.com/situ200l) [cosine](https://x.com/_cosine_x) [雪谋](https://x.com/YukiHakarigoto) [Hakadao](https://x.com/Hakadaooo) [qiuqiu](https://x.com/0xqiuqiuu)）。
+尽管还没有变成一个很主动、外向的人，但是今年也和一些之前在网上有交流的朋友线下见了面，逐渐克服了无法在陌生环境生存的问题，很感谢愿意和我互动玩耍的朋友们（[situ](https://x.com/situ2oo1) [cosine](https://x.com/_cosine_x) [雪谋](https://x.com/YukiHakarigoto) [Hakadao](https://x.com/Hakadaooo) [qiuqiu](https://x.com/0xqiuqiuu)）。
 也欢迎新的朋友来和我交流，我很乐意于认识新的朋友，有机会我们一起约饭玩耍。
 
 今年逐渐开始买一些之前没买过的数码装备
