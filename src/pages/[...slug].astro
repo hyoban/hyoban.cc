@@ -9,14 +9,28 @@ import { render } from 'astro:content'
 export async function getStaticPaths() {
   // The use page has its own route, which renders its devices around the markdown.
   const entries = (await getMarkdownEntries()).filter((entry) => entry.data.link !== 'use')
-  return entries.map((entry) => ({
-    params: { slug: entry.data.link },
-    props: { entry },
-  }))
+  // A post links on to the ones published just before and after it, newest first.
+  const posts = entries.filter((entry) => entry.collection === 'posts')
+  const getNeighbor = (index: number) => {
+    const neighbor = posts[index]
+    return neighbor && { link: neighbor.data.link, title: neighbor.data.title }
+  }
+  return entries.map((entry) => {
+    const index = posts.findIndex((post) => post === entry)
+    return {
+      params: { slug: entry.data.link },
+      props: index === -1 ? { entry } : { entry, newer: getNeighbor(index - 1), older: getNeighbor(index + 1) },
+    }
+  })
 }
 
-type Props = { entry: Awaited<ReturnType<typeof getMarkdownEntries>>[number] }
-const { entry } = Astro.props as Props
+type Neighbor = { link: string; title: string }
+type Props = {
+  entry: Awaited<ReturnType<typeof getMarkdownEntries>>[number]
+  newer?: Neighbor | undefined
+  older?: Neighbor | undefined
+}
+const { entry, newer, older } = Astro.props as Props
 const post = entry.collection === 'posts' ? (entry as PostEntry) : null
 const article = post
   ? {
@@ -55,6 +69,22 @@ const { Content } = await render(entry)
             <article class="prose">
               <Content />
             </article>
+            {(newer || older) && (
+              <nav class="post__neighbors" aria-label="更多文章">
+                {newer && (
+                  <a href={`/${newer.link}/`} rel="prev" class="post__neighbor">
+                    <span class="post__neighbor-label"><span class="i-lucide-chevron-left" aria-hidden="true" />新一篇</span>
+                    <span class="link-text">{newer.title}</span>
+                  </a>
+                )}
+                {older && (
+                  <a href={`/${older.link}/`} rel="next" class="post__neighbor post__neighbor--older">
+                    <span class="post__neighbor-label">旧一篇<span class="i-lucide-chevron-right" aria-hidden="true" /></span>
+                    <span class="link-text">{older.title}</span>
+                  </a>
+                )}
+              </nav>
+            )}
           </main>
         )
       : (
@@ -98,6 +128,47 @@ const { Content } = await render(entry)
       right: 100%;
       margin: 0 4rem 0 0;
     }
+
+    & span {
+      width: 0.875rem;
+      height: 0.875rem;
+    }
+  }
+
+  /* The newer post on the left, the older on the right, side by side once there's room. */
+  .post__neighbors {
+    display: grid;
+    gap: 1.5rem;
+    margin-top: 4rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--color-border);
+
+    @media (width >= 40rem) {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .post__neighbor {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    text-decoration: none;
+  }
+
+  .post__neighbor--older {
+    @media (width >= 40rem) {
+      grid-column: 2;
+      align-items: flex-end;
+      text-align: right;
+    }
+  }
+
+  .post__neighbor-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    color: var(--color-tx-2);
+    font-size: 0.875rem;
 
     & span {
       width: 0.875rem;

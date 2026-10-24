@@ -433,7 +433,7 @@ const highlights = [
           <ul class="year-trips">
             {trips.map(({ trip, glyph, covers }, index) => (
               <li style={`--index: ${index}`}>
-                <a href={`/trip/${trip.id.slice(0, 4)}/${trip.id.slice(5)}/`} title={trip.title}>
+                <a href={`/trip/${trip.id}/`} title={trip.title}>
                   {covers[0] && (
                     <img
                       src={covers[0].thumbnail}
