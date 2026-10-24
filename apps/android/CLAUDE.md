@@ -33,6 +33,9 @@ say stay out.
 - A problem met along the way, a link that doesn't open or a row out of line, is fixed
   then and there rather than worked around or left for the user: find why, fix it, and
   check the fix on the phone.
+- When a spec change drops or renames a field the app requires (as `published.id` went
+  when Moments came to be named by uid alone), install the new app on the phone before
+  pushing: a push deploys the API, and the app on the phone would stop syncing.
 - Before committing run what CI runs (`.github/workflows/verify.yml`):
   `./gradlew :app:testDebugUnitTest :app:assembleDebug`.
 
