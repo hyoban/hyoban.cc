@@ -1360,6 +1360,18 @@
       "district": "芝罘区"
     }
   },
+  "ye-tan-shao-kao": {
+    "name": "野摊烧烤",
+    "latitude": 31.30615805555555,
+    "longitude": 117.9689407222222,
+    "division": {
+      "code": "340281",
+      "province": "安徽省",
+      "city": "芜湖市",
+      "district": "无为市"
+    },
+    "createdAt": "2026-10-24T19:14:28+08:00"
+  },
   "yucun-visitor-center": {
     "name": "安吉余村游客中心",
     "latitude": 30.51977,
