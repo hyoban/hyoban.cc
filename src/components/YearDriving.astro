@@ -157,11 +157,14 @@ const spendingTiles = [
   </div>
   <div class="year-driving__grid">
     {
-      weeks.flatMap((week) =>
+      weeks.flatMap((week, index) =>
         week.map((cell) => {
-          if (!cell) return <span class="year-driving__cell" data-outside />
+          const style = `--week: ${index}`
+          if (!cell) return <span class="year-driving__cell" data-outside style={style} />
           if (cell.distanceMeters === undefined) {
-            return <span class="year-driving__cell" data-empty title={`${formatDay(cell.date)} · 没有记录`} />
+            return (
+              <span class="year-driving__cell" data-empty title={`${formatDay(cell.date)} · 没有记录`} style={style} />
+            )
           }
           const title = `${formatDay(cell.date)} · ${cell.distanceMeters ? formatKilometers(cell.distanceMeters) : '没开'}`
           const outing = outingByDate.get(cell.date)
@@ -170,12 +173,18 @@ const spendingTiles = [
             <a
               class="year-driving__cell"
               data-level={getDistanceLevel(cell.distanceMeters)}
+              style={style}
               href={href}
               title={outing.trip ? `${title} · ${outing.trip.title}` : title}
               aria-label={outing.trip ? `${title}，${outing.trip.title}` : title}
             />
           ) : (
-            <span class="year-driving__cell" data-level={getDistanceLevel(cell.distanceMeters)} title={title} />
+            <span
+              class="year-driving__cell"
+              data-level={getDistanceLevel(cell.distanceMeters)}
+              title={title}
+              style={style}
+            />
           )
         }),
       )
@@ -208,6 +217,7 @@ const spendingTiles = [
           <span
             class:list={['year-driving__hour', { 'is-top': hour.total === busiestHour.total && hour.total > 0 }]}
             title={`${hour.hour} 点 · 快充 ${hour.dc} 次 · 慢充 ${hour.ac} 次`}
+            style={`--hour: ${hour.hour}`}
           >
             <span class="year-driving__hour-ac" style={`height: ${(hour.ac / hourMax) * 100}%`} />
             <span class="year-driving__hour-dc" style={`height: ${(hour.dc / hourMax) * 100}%`} />
@@ -311,7 +321,9 @@ const spendingTiles = [
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
     gap: 1px;
-    overflow: hidden;
+    /* Clipped to its rounded corners without becoming a scroller, so the figures follow the
+       page's scroll in their own (below). */
+    overflow: clip;
     margin: 2rem 0 0.75rem;
     border: 1px solid var(--color-border);
     border-radius: 0.75rem;
@@ -570,6 +582,78 @@ const spendingTiles = [
 
     span:last-child {
       margin-left: 0.25rem;
+    }
+  }
+
+  /* Scrolled, where animations can follow it (the year's page): the figures rise as they
+     come up, the days fill in week after week, the hours' columns grow in turn, and the
+     year's spending wipes in from the left. */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      :global(.year-scroll) {
+        & .year-driving__tiles > div {
+          animation: year-driving-rise linear both;
+          animation-timeline: view();
+          animation-range: entry 0% entry 100%;
+        }
+
+        & .year-driving__grid {
+          view-timeline: --days;
+        }
+
+        & .year-driving__grid .year-driving__cell {
+          animation: year-driving-pop linear both;
+          animation-timeline: --days;
+          animation-range: entry calc(20% + var(--week) * 1.5%) cover calc(30% + var(--week) * 0.6%);
+        }
+
+        & .year-driving__hours {
+          view-timeline: --hours;
+        }
+
+        & .year-driving__hour {
+          transform-origin: bottom;
+          animation: year-driving-grow linear both;
+          animation-timeline: --hours;
+          animation-range: entry calc(40% + var(--hour) * 2%) cover calc(30% + var(--hour) * 0.8%);
+        }
+
+        & .year-driving__bar {
+          animation: year-driving-wipe linear both;
+          animation-timeline: view();
+          animation-range: entry 100% cover 40%;
+        }
+      }
+    }
+  }
+
+  @keyframes year-driving-rise {
+    from {
+      opacity: 0;
+      translate: 0 1.25rem;
+    }
+  }
+
+  @keyframes year-driving-pop {
+    from {
+      opacity: 0;
+      scale: 0.3;
+    }
+  }
+
+  @keyframes year-driving-grow {
+    from {
+      scale: 1 0;
+    }
+  }
+
+  /* Both ends spelled out: an inset() can't ease into none, it would snap halfway. */
+  @keyframes year-driving-wipe {
+    from {
+      clip-path: inset(0 100% 0 0);
+    }
+    to {
+      clip-path: inset(0 0 0 0);
     }
   }
 </style>

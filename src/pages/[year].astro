@@ -1898,12 +1898,35 @@ const highlights = [
 
         & .year-trips li,
         & .year-highlights li,
-        & .year-places li,
         & .year-menu li,
+        & .year-devices li,
         & .year-first__city {
           animation: year-rise linear both;
           animation-timeline: view();
           animation-range: entry 0% entry 100%;
+        }
+
+        /* A row of places sits in its own scroller, so its cards follow the row as it comes
+           up, one after the other, rather than the scroller they're always in. */
+        & .year-places {
+          view-timeline: --places;
+        }
+
+        & .year-places li {
+          animation: year-rise linear both;
+          animation-timeline: --places;
+          animation-range: entry calc(min(var(--order), 6) * 8%) entry calc(60% + min(var(--order), 6) * 8%);
+        }
+
+        /* A section's figures rise one after the other, the parts' own leads too. */
+        & :global(.year-lead > span) {
+          animation: year-rise linear both;
+          animation-timeline: view();
+          animation-range: entry 0% entry 100%;
+        }
+
+        & :global(.year-lead > span + span) {
+          animation-range: entry 40% cover 25%;
         }
 
         & .year-cities__bar {
