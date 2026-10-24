@@ -163,6 +163,13 @@ const { Content } = await render(entry)
     }
   }
 
+  /* Chinese breaks only at its spaces and punctuation, into lines of even length. */
+  .post__neighbor .link-text {
+    overflow-wrap: anywhere;
+    text-wrap: balance;
+    word-break: keep-all;
+  }
+
   .post__neighbor-label {
     display: inline-flex;
     align-items: center;
