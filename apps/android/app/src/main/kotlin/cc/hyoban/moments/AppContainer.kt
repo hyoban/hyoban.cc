@@ -21,6 +21,7 @@ import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.store.DataStore
 import cc.hyoban.moments.data.store.MomentsRepository
 import cc.hyoban.moments.data.store.PublishProgress
+import cc.hyoban.moments.publish.PublishWorker
 import cc.hyoban.moments.data.trips.TripRoutes
 import cc.hyoban.moments.ui.format.failureReason
 import cc.hyoban.moments.ui.viewer.MotionCache
@@ -206,24 +207,37 @@ class AppContainer(context: Context) {
     val publishing: StateFlow<PublishProgress?> = _publishing.asStateFlow()
 
     /**
-     * Publishes every change kept on the phone, past the page that asked, and says how it
-     * went; the only way the app changes the site.
+     * Publishes every change kept on the phone, as [PublishWorker] does it, past the page
+     * that asked and the app being left; the only way the app changes the site.
      */
     fun publishPending() {
         if (_publishing.value != null) return
         _publishing.value = PublishProgress(0, repository.pending.value.size)
-        scope.launch {
-            try {
-                repository.publishPending { _publishing.value = it }
-                say(appContext.getString(R.string.message_published))
-            } catch (error: Exception) {
-                Log.w("Moments", "Publishing failed", error)
-                say(appContext.getString(R.string.error_publish, failureReason(appContext, error)))
-            } finally {
-                _publishing.value = null
-                Widgets.update(appContext)
+        PublishWorker.enqueue(appContext)
+    }
+
+    /** Publishing itself, for [PublishWorker]: the changes once the phone's copy is read, [onProgress] hearing how far it has got. */
+    suspend fun runPublish(onProgress: (PublishProgress) -> Unit) {
+        repository.loaded.first { it }
+        _publishing.value = PublishProgress(0, repository.pending.value.size)
+        try {
+            repository.publishPending {
+                _publishing.value = it
+                onProgress(it)
             }
+        } finally {
+            _publishing.value = null
+            Widgets.update(appContext)
         }
+    }
+
+    /** Says publishing went through, on the page open when the app is next on screen. */
+    fun reportPublished() = say(appContext.getString(R.string.message_published))
+
+    /** Says publishing stopped, and why. */
+    fun reportPublishFailed(error: Exception) {
+        Log.w("Moments", "Publishing failed", error)
+        say(appContext.getString(R.string.error_publish, failureReason(appContext, error)))
     }
 
     /**

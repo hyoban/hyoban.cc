@@ -336,6 +336,11 @@
     <string name="action_revert">Discard change</string>
     <string name="message_uploading_progress">Uploading %1$s of %2$s MB</string>
     <string name="message_publishing">Publishing</string>
+    <string name="notification_channel_publishing">Publishing to the site</string>
+    <string name="notification_publishing">Publishing to the site</string>
+    <string name="notification_published">Published to the site</string>
+    <string name="notification_publish_waiting">Connection lost; publishing goes on once you’re back online</string>
+    <string name="notification_publish_failed">Couldn’t publish to the site</string>
     <string name="note_publish_all">Publishing makes everything here public. New Moments and their photos are uploaded, edited ones are updated, and deleted ones are taken off the site. If publishing stops partway, anything not sent stays here.</string>
     <string name="note_publish_needs_token">Add an API token in settings to publish</string>
     <string name="change_text">text</string>

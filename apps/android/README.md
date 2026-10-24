@@ -91,7 +91,11 @@ reaches the site as it is saved: the phone's new Moments, the site's changed (ma
 改动未发布) and those deleted wait on the phone, past a restart, until they are
 published together. The ☁ in the Moments tab's header, with how many there are,
 opens 发布更改, which lists them, the changed with what changed, and takes back a change
-or a deletion; its 全部发布到网站 uploads the originals of the new photos, a live photo's still and video each, a few at a time,
+or a deletion; its 全部发布到网站 runs as WorkManager work in a foreground service, on
+past the app being left or stopped, with how far it has got in a notification as on the
+page, and over a link that drops it waits for the network and goes on (asked once, on
+Android 13 and later, whether it may show that notification). It uploads the originals of
+the new photos, a live photo's still and video each, a few at a time,
 then sends all the rest as one `POST /v1/changes`, which the API takes whole or not at
 all: the places only the phone knows, named by the API from their pinyin, the Moments,
 each published, and the deletions. What is published leaves the phone's store for the

@@ -619,7 +619,23 @@ private const val RETRY_WAIT_MS = 2_000L
  * How far publishing has got: [done] of its [total] steps, an upload for each original and
  * the write after them, and [sent] of the originals' [size] bytes.
  */
-data class PublishProgress(val done: Int, val total: Int, val sent: Long = 0, val size: Long = 0)
+data class PublishProgress(val done: Int, val total: Int, val sent: Long = 0, val size: Long = 0) {
+    /**
+     * How much of it is done, by the originals' bytes while they upload, which is most of the
+     * time it takes, and the write after them the last bit.
+     */
+    val fraction: Float
+        get() = when {
+            size > 0 -> sent.toFloat() / size * UPLOADED_SHARE + if (done == total) 1 - UPLOADED_SHARE else 0f
+            total == 0 -> 0f
+            else -> done.toFloat() / total
+        }
+
+    private companion object {
+        /** How much of it the uploads are; the write after them is the rest. */
+        const val UPLOADED_SHARE = 0.95f
+    }
+}
 
 /** What publishing would change on the site: the Moments written on the phone, those changed, those deleted. */
 data class PendingChanges(
