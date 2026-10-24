@@ -8,6 +8,12 @@ import { dataRoot, listJsonFiles, readJson } from './store.ts'
 
 export const VEHICLE_ID = 'zeekr-007gt'
 
+/**
+ * The day the car was handed over, as its first-anniversary Moment tells it; the records
+ * start two days later, on its first drive.
+ */
+export const DELIVERED_ON = '2025-08-16'
+
 /** A day of at least this many metres counts towards an outing. */
 export const LONG_DAY_METERS = 150_000
 /** And an outing is at least this many metres all told; shorter ones are errands. */

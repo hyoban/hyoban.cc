@@ -1,6 +1,14 @@
 ---
 import { formatKilometers, getCarSummary } from '@/car'
-import { getDistanceLevel, getYearWeeks, type Outing } from '@/data/vehicle'
+import { DELIVERED_ON, getDistanceLevel, getYearWeeks, type Outing } from '@/data/vehicle'
+import {
+  CATEGORY_LABELS,
+  RUNNING_CATEGORIES,
+  formatRate,
+  formatYuan,
+  getChargePrice,
+  getCostBreakdown,
+} from '@/data/vehicle-costs'
 import { getActiveDateKeys, getMomentPath, getMoments } from '@/moments'
 
 // The year as the car drove it, from data/zeekr: its totals, and a contribution graph of
@@ -8,7 +16,9 @@ import { getActiveDateKeys, getMomentPath, getMoments } from '@/moments'
 // trip, or to its day in the calendar when it has Moments; one the records don't cover,
 // before the car or after the latest capture, is left hollow. Then what it charged, when
 // the records have it: how often and how much, and the hours the charges started, fast
-// ones on the road over slow ones at home.
+// ones on the road over slow ones at home, with what a kWh cost. Then the ledger: what
+// the year spent on the car besides buying it, by kind, and a kilometre's running cost;
+// and what owning it has cost from the first payment to the year's end.
 
 interface Props {
   year: number
@@ -33,6 +43,48 @@ const hours = Array.from({ length: 24 }, (_, hour) => {
 })
 const busiestHour = hours.reduce((best, hour) => (hour.total > best.total ? hour : best))
 const hourMax = Math.max(1, busiestHour.total)
+
+const formatNumber = (value: number) => value.toLocaleString('zh-CN', { maximumFractionDigits: 0 })
+const expenses = car.expenses.filter((expense) => inYear(expense.at))
+const spending = getCostBreakdown(expenses.filter((expense) => expense.category !== 'purchase'))
+const running = getCostBreakdown(expenses, RUNNING_CATEGORIES)
+// Paired over the whole ledger, so a session late on Dec 31 keeps its payment after midnight.
+const fastPrice = getChargePrice(car.chargePayments.filter(({ charge }) => inYear(charge.startedAt)))
+const homeCharging = getCostBreakdown(
+  expenses.filter((expense) => expense.subcategory === 'home-charging'),
+).total
+// The biggest kinds each get a band of the bar, and two or more left over one band
+// together; a single one left keeps its name.
+const BANDS = 5
+const named = spending.categories.length > BANDS + 1 ? spending.categories.slice(0, BANDS) : spending.categories
+const rest = spending.categories.slice(named.length)
+const bands = [
+  ...named.map(({ category, fen }) => ({ fen, label: CATEGORY_LABELS[category] })),
+  ...(rest.length > 0
+    ? [{ fen: rest.reduce((total, { fen }) => total + fen, 0), label: '其他' }]
+    : []),
+]
+
+// Owning it so far: everything paid up to the year's end, or the latest capture this year,
+// less what had come back by then, counted from the day it was handed over.
+const ownedUntil = car.span.end < `${year}-12-31` ? car.span.end : `${year}-12-31`
+const owned =
+  DELIVERED_ON <= ownedUntil
+    ? car.expenses.filter((expense) => expense.at.slice(0, 10) <= ownedUntil)
+    : []
+const ownedCost = getCostBreakdown(owned, undefined, ownedUntil)
+const purchaseFen = ownedCost.categories.find(({ category }) => category === 'purchase')?.fen ?? 0
+const ownedDays = Math.round((Date.parse(ownedUntil) - Date.parse(DELIVERED_ON)) / 86_400_000) + 1
+const ownedMeters = [...car.days]
+  .filter(([date]) => date <= ownedUntil)
+  .reduce((total, [, meters]) => total + meters, 0)
+const ownership = ownedCost.total > 0 && [
+  `提车 ${formatNumber(ownedDays)} 天`,
+  `累计花费 ${formatYuan(ownedCost.total)}（购车 ${formatYuan(purchaseFen)}）`,
+  `每天 ${formatYuan(ownedCost.total / ownedDays)}`,
+  ...(ownedMeters > 0 ? [`每公里 ${formatRate(ownedCost.total / 100 / (ownedMeters / 1000))}`] : []),
+]
+
 const longest = days.reduce<[string, number] | undefined>(
   (best, day) => (!best || day[1] > best[1] ? day : best),
   undefined,
@@ -52,7 +104,6 @@ const getOutingHref = (outing: Outing, date: string) =>
       : undefined
 
 const formatDay = (date: string) => `${Number(date.slice(5, 7))} 月 ${Number(date.slice(8))} 日`
-const formatNumber = (value: number) => value.toLocaleString('zh-CN', { maximumFractionDigits: 0 })
 const weekdayLabels = ['一', '', '三', '', '五', '', '日']
 const monthLabels = weeks.map((week) => {
   const first = week.find((cell) => cell?.date.endsWith('-01'))
@@ -145,9 +196,60 @@ const totals = [
         <span>慢充</span>
         <span>· 最多在 {busiestHour.hour} 点</span>
       </div>
+      {(fastPrice.count > 0 || homeCharging > 0) && (
+        <p class="year-driving__totals year-driving__note">
+          {[
+            fastPrice.yuanPerKwh !== undefined &&
+              `快充 ${fastPrice.count} 次付了 ${formatYuan(fastPrice.fen)}，合 ${formatRate(fastPrice.yuanPerKwh)}/kWh`,
+            homeCharging > 0 && `家充充值 ${formatYuan(homeCharging)}`,
+          ]
+            .filter(Boolean)
+            .join(' · ')}
+        </p>
+      )}
     </>
   )
 }
+{
+  spending.total > 0 && (
+    <>
+      <p class="year-driving__totals year-driving__spending">
+        {[
+          `用车花费 ${formatYuan(spending.total)}`,
+          distance > 0 &&
+            running.total > 0 &&
+            `开一公里 ${formatRate(running.total / 100 / (distance / 1000))}`,
+        ]
+          .filter(Boolean)
+          .join(' · ')}
+      </p>
+      <div
+        class="year-driving__bar"
+        role="img"
+        aria-label={`花费构成：${bands.map((band) => `${band.label} ${formatYuan(band.fen)}`).join('，')}`}
+      >
+        {bands.map((band, index) => (
+          <span
+            class="year-driving__band"
+            data-band={index}
+            style={`flex-grow: ${band.fen}`}
+            title={`${band.label} ${formatYuan(band.fen)}`}
+          />
+        ))}
+      </div>
+      <ul class="year-driving__bands">
+        {bands.map((band, index) => (
+          <li>
+            <span class="year-driving__band year-driving__swatch" data-band={index} />
+            {band.label}
+            <span class="year-driving__amount">{formatYuan(band.fen)}</span>
+          </li>
+        ))}
+      </ul>
+    </>
+  )
+}
+{ownership && <p class="year-driving__totals year-driving__note">{ownership.join(' · ')}</p>}
 
 <style>
   .year-driving__totals {
@@ -236,8 +338,79 @@ const totals = [
     }
   }
 
-  .year-driving__charging {
+  .year-driving__charging,
+  .year-driving__spending {
     margin-top: 1.5rem;
+  }
+
+  .year-driving__note {
+    margin-top: 0.75rem;
+    margin-bottom: 0;
+  }
+
+  /* What the year spent, a band a kind, the biggest darkest. */
+  .year-driving__bar {
+    display: flex;
+    gap: 2px;
+    height: 0.75rem;
+  }
+
+  .year-driving__bar .year-driving__band {
+    flex-basis: 0;
+    min-width: 2px;
+    border-radius: 1px;
+  }
+
+  .year-driving__band {
+    &[data-band='0'] {
+      background: var(--color-tx);
+    }
+
+    &[data-band='1'] {
+      background: color-mix(in srgb, var(--color-tx) 75%, var(--color-hover));
+    }
+
+    &[data-band='2'] {
+      background: color-mix(in srgb, var(--color-tx) 55%, var(--color-hover));
+    }
+
+    &[data-band='3'] {
+      background: color-mix(in srgb, var(--color-tx) 38%, var(--color-hover));
+    }
+
+    &[data-band='4'] {
+      background: color-mix(in srgb, var(--color-tx) 22%, var(--color-hover));
+    }
+
+    &[data-band='5'] {
+      background: color-mix(in srgb, var(--color-tx) 10%, var(--color-hover));
+    }
+  }
+
+  .year-driving__bands {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.875rem;
+    margin: 0.75rem 0 0;
+    padding: 0;
+    list-style: none;
+    color: var(--color-tx-2);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+
+    li {
+      display: flex;
+      gap: 0.375rem;
+      align-items: center;
+    }
+
+    .year-driving__swatch {
+      display: block;
+    }
+  }
+
+  .year-driving__amount {
+    color: var(--color-tx-3);
   }
 
   /* When the charges started, an hour a column, slow ones at the bottom and fast on top. */

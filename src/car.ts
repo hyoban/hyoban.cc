@@ -6,19 +6,24 @@ import {
   readVehicleMonths,
   type Outing,
 } from '@/data/vehicle'
+import { pairChargePayments, readVehicleExpenses, type ChargePayment } from '@/data/vehicle-costs'
 import { readPlaces, readTripRecords } from '@/data/store'
 import { getMoments } from '@/moments'
-import type { Place, VehicleCharge } from '@hyoban/data-spec'
+import type { Place, VehicleCharge, VehicleExpense } from '@hyoban/data-spec'
 
 // What the car recorded, for the year review's driving and the trip list's outings: the
 // days driven, from the records in data/zeekr, and the outings found in them against the
-// trips and the shown Moments.
+// trips and the shown Moments; and the ledger of what it cost.
 
 export interface CarSummary {
   days: Map<string, number>
   span: { start: string; end: string }
   /** Every charge, oldest first. */
   charges: VehicleCharge[]
+  /** The ledger from the car's first payment on, oldest first. */
+  expenses: VehicleExpense[]
+  /** Each fast charge paired with its payment over the whole ledger, oldest first. */
+  chargePayments: ChargePayment[]
   outings: Outing[]
 }
 
@@ -40,9 +45,13 @@ async function loadCarSummary(): Promise<CarSummary> {
     locations: moment.locations.map((location) => toOutingLocation(places[location.id]!)),
   }))
 
+  const expenses = readVehicleExpenses()
+
   return {
+    chargePayments: pairChargePayments(charges, expenses),
     charges,
     days: new Map(days.map((day) => [day.date, day.distanceMeters])),
+    expenses,
     outings: findOutings(days, charges, trips, moments),
     span: getVehicleSpan(months, days),
   }

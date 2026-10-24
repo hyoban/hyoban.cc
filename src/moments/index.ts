@@ -27,6 +27,12 @@ import {
   getVehicleSpan,
   readVehicleMonths,
 } from '@/data/vehicle'
+import {
+  TRIP_CATEGORIES,
+  getCostBreakdown,
+  getExpensesBetween,
+  readVehicleExpenses,
+} from '@/data/vehicle-costs'
 
 const calendarDateFormatter = new Intl.DateTimeFormat('en-CA', {
   day: '2-digit',
@@ -165,6 +171,7 @@ const vehicleMonths = readVehicleMonths()
 const vehicleDays = getVehicleDays(vehicleMonths)
 const vehicleCharges = getVehicleCharges(vehicleMonths)
 const vehicleSpan = getVehicleSpan(vehicleMonths, vehicleDays)
+const vehicleExpenses = readVehicleExpenses()
 
 /**
  * A trip's days as the car recorded them, when the car drove all of it (getTripOdometer):
@@ -173,6 +180,22 @@ const vehicleSpan = getVehicleSpan(vehicleMonths, vehicleDays)
  */
 export function getMomentTripOdometer(trip: Parameters<typeof getTripOdometer>[0]) {
   return getTripOdometer(trip, vehicleDays, vehicleSpan, vehicleCharges)
+}
+
+/**
+ * What a trip spent on the road, tolls, charging and parking, given its odometer: only a
+ * trip the car drove all of has one, since on a trip by plane or train the ledger's days
+ * are the car's at home, not the trip's.
+ */
+export function getMomentTripCosts(
+  trip: { start: string; end: string },
+  odometer: NonNullable<ReturnType<typeof getMomentTripOdometer>>,
+) {
+  const costs = getCostBreakdown(
+    getExpensesBetween(vehicleExpenses, trip.start, trip.end),
+    TRIP_CATEGORIES,
+  )
+  return costs.total > 0 ? { ...costs, distanceMeters: odometer.distanceMeters } : undefined
 }
 
 export function getTrips(moments: Moment[]) {

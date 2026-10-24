@@ -31,6 +31,7 @@ data/zeekr/
 ├─ captures/<sha256>.json          source references and capture times
 ├─ months/zeekr-007gt/YYYY-MM.json  monthly records
 ├─ assisted-driving/zeekr-007gt/    cumulative observations
+├─ expenses/zeekr-007gt.json       expense ledger exported from iCost
 └─ model-validation.json           check counts, differences and missing coverage
 ```
 
@@ -80,6 +81,21 @@ on charge counts in January, February, April, May and June 2026.
 
 November 6, 2025 uses legacy `ecy` for 24.8 kWh while other days use dynamic/static
 fields. The total is preserved without inventing a split.
+
+## Expenses
+
+`expenses/zeekr-007gt.json` is the car's spending from the iCost bookkeeping
+app: 339 payments from the car's deposit on August 5, 2025 to October 9, 2026, converted once from
+its October 24 export. Each has its time (`+08:00`), `amount` in yuan, an
+English `category` and optional `subcategory`, and a note of what was bought
+or serviced. `refunds` lists what later came back of it, a refund, subsidy or
+cashback, each with its time, so the refund lines themselves are not kept. Neither are the
+workbook, income, how the car was financed (its down payment and loan are one
+购车款 line, its repayments are left out), accounts, tags, discounts, or one
+unexplained USD payment. Like the app's records, the ledger leaves out where
+the car was: parking, toll and charging lines have no note, and no note names
+a shop's city, so payment times stay the only trace. The zeekr conversion does
+not touch this file; edit it by hand.
 
 ## Prepare, convert and verify
 
