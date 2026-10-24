@@ -8,7 +8,7 @@ import {
 } from '@/data/vehicle'
 import { readPlaces, readTripRecords } from '@/data/store'
 import { getMoments } from '@/moments'
-import type { Place } from '@hyoban/data-spec'
+import type { Place, VehicleCharge } from '@hyoban/data-spec'
 
 // What the car recorded, for the year review's driving and the trip list's outings: the
 // days driven, from the records in data/zeekr, and the outings found in them against the
@@ -17,8 +17,8 @@ import type { Place } from '@hyoban/data-spec'
 export interface CarSummary {
   days: Map<string, number>
   span: { start: string; end: string }
-  /** The day each charge started, oldest first. */
-  chargeDates: string[]
+  /** Every charge, oldest first. */
+  charges: VehicleCharge[]
   outings: Outing[]
 }
 
@@ -41,7 +41,7 @@ async function loadCarSummary(): Promise<CarSummary> {
   }))
 
   return {
-    chargeDates: charges.map((charge) => charge.startedAt.slice(0, 10)),
+    charges,
     days: new Map(days.map((day) => [day.date, day.distanceMeters])),
     outings: findOutings(days, charges, trips, moments),
     span: getVehicleSpan(months, days),

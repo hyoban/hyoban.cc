@@ -6,7 +6,9 @@ import { getActiveDateKeys, getMomentPath, getMoments } from '@/moments'
 // The year as the car drove it, from data/zeekr: its totals, and a contribution graph of
 // every day, darker the farther it went, Monday first. A day of an outing links to its
 // trip, or to its day in the calendar when it has Moments; one the records don't cover,
-// before the car or after the latest capture, is left hollow.
+// before the car or after the latest capture, is left hollow. Then what it charged, when
+// the records have it: how often and how much, and the hours the charges started, fast
+// ones on the road over slow ones at home.
 
 interface Props {
   year: number
@@ -20,7 +22,17 @@ const inYear = (date: string) => date.startsWith(`${year}-`)
 const days = [...car.days].filter(([date]) => inYear(date))
 const distance = days.reduce((total, [, meters]) => total + meters, 0)
 const drivenDays = days.filter(([, meters]) => meters > 0).length
-const charges = car.chargeDates.filter(inYear).length
+const charges = car.charges.filter((charge) => inYear(charge.startedAt))
+const fast = charges.filter((charge) => charge.type === 'DC').length
+const chargedKwh = charges.reduce((total, charge) => total + charge.energyWh, 0) / 1000
+// How many charges started in each hour, fast and slow.
+const hours = Array.from({ length: 24 }, (_, hour) => {
+  const inHour = charges.filter((charge) => Number(charge.startedAt.slice(11, 13)) === hour)
+  const dc = inHour.filter((charge) => charge.type === 'DC').length
+  return { ac: inHour.length - dc, dc, hour, total: inHour.length }
+})
+const busiestHour = hours.reduce((best, hour) => (hour.total > best.total ? hour : best))
+const hourMax = Math.max(1, busiestHour.total)
 const longest = days.reduce<[string, number] | undefined>(
   (best, day) => (!best || day[1] > best[1] ? day : best),
   undefined,
@@ -40,6 +52,7 @@ const getOutingHref = (outing: Outing, date: string) =>
       : undefined
 
 const formatDay = (date: string) => `${Number(date.slice(5, 7))} 月 ${Number(date.slice(8))} 日`
+const formatNumber = (value: number) => value.toLocaleString('zh-CN', { maximumFractionDigits: 0 })
 const weekdayLabels = ['一', '', '三', '', '五', '', '日']
 const monthLabels = weeks.map((week) => {
   const first = week.find((cell) => cell?.date.endsWith('-01'))
@@ -48,7 +61,6 @@ const monthLabels = weeks.map((week) => {
 const totals = [
   formatKilometers(distance),
   `开车 ${drivenDays} 天`,
-  charges > 0 && `充电 ${charges} 次`,
   longest && longest[1] > 0 && `最远一天 ${formatKilometers(longest[1])}（${formatDay(longest[0])}）`,
 ].filter(Boolean)
 ---
@@ -100,6 +112,42 @@ const totals = [
   {[0, 1, 2, 3, 4].map((level) => <span class="year-driving__cell" data-level={level} />)}
   <span>300 km+</span>
 </div>
+{
+  charges.length > 0 && (
+    <>
+      <p class="year-driving__totals year-driving__charging">
+        充电 {charges.length} 次 · {formatNumber(chargedKwh)} kWh · 快充 {fast} 次 · 慢充 {charges.length - fast} 次
+      </p>
+      <div
+        class="year-driving__hours"
+        role="img"
+        aria-label={`每个小时开始的充电：${hours.filter((hour) => hour.total > 0).map((hour) => `${hour.hour} 点 ${hour.total} 次`).join('，')}`}
+      >
+        {hours.map((hour) => (
+          <span
+            class:list={['year-driving__hour', { 'is-top': hour.total === busiestHour.total && hour.total > 0 }]}
+            title={`${hour.hour} 点 · 快充 ${hour.dc} 次 · 慢充 ${hour.ac} 次`}
+          >
+            <span class="year-driving__hour-ac" style={`height: ${(hour.ac / hourMax) * 100}%`} />
+            <span class="year-driving__hour-dc" style={`height: ${(hour.dc / hourMax) * 100}%`} />
+          </span>
+        ))}
+        {[0, 6, 12, 18].map((hour) => (
+          <span class="year-driving__hour-label" style={`grid-column: ${hour + 1}`} aria-hidden="true">
+            {hour}
+          </span>
+        ))}
+      </div>
+      <div class="year-driving__legend" aria-hidden="true">
+        <span class="year-driving__swatch is-dc" />
+        <span>快充</span>
+        <span class="year-driving__swatch is-ac" />
+        <span>慢充</span>
+        <span>· 最多在 {busiestHour.hour} 点</span>
+      </div>
+    </>
+  )
+}
 
 <style>
   .year-driving__totals {
@@ -186,6 +234,53 @@ const totals = [
     &[data-level='4'] {
       background: var(--color-tx);
     }
+  }
+
+  .year-driving__charging {
+    margin-top: 1.5rem;
+  }
+
+  /* When the charges started, an hour a column, slow ones at the bottom and fast on top. */
+  .year-driving__hours {
+    display: grid;
+    grid-template-columns: repeat(24, minmax(0, 1fr));
+    grid-template-rows: 4rem auto;
+    column-gap: 2px;
+    color: var(--color-tx-3);
+    font-size: 0.625rem;
+    line-height: 1;
+  }
+
+  .year-driving__hour {
+    display: flex;
+    flex-direction: column-reverse;
+    grid-row: 1;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .year-driving__hour-ac,
+  .year-driving__swatch.is-ac {
+    background: color-mix(in srgb, var(--color-tx) 30%, var(--color-hover));
+  }
+
+  .year-driving__hour-dc,
+  .year-driving__swatch.is-dc {
+    background: var(--color-tx-2);
+  }
+
+  .year-driving__hour.is-top .year-driving__hour-ac {
+    background: var(--color-tx);
+  }
+
+  .year-driving__hour-label {
+    grid-row: 2;
+    padding-top: 0.25rem;
+  }
+
+  .year-driving__swatch {
+    width: 0.625rem;
+    height: 0.625rem;
+    border-radius: 1px;
   }
 
   a.year-driving__cell:hover {
