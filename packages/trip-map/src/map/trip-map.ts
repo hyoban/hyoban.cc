@@ -11,6 +11,7 @@ import { createTripPlayer } from '../player/player.ts'
 import { readMapSettingsPreference, writeMapSettingsPreference } from '../player/preferences.ts'
 import type { MapStats, PlaceMarker, TripData, TripSummary } from '../player/types.ts'
 import { readTheme } from '../dom-theme.ts'
+import { TRIP_FRAME_MAX_ZOOM } from '../static-map.ts'
 import {
   getBasemapScheme,
   getBasemapStyle,
@@ -710,9 +711,11 @@ export function createTripMap(options: TripMapOptions): TripMap {
     return id && tripsById.has(id) ? id : undefined
   }
 
-  /** Flies to a trip's route beside the trip list. */
-  /** Flies to a trip's route beside what's on the map's side: the trip list, or its sidebar. */
-  function frameTripBeside(sideElement: HTMLElement, id: string) {
+  /**
+   * Flies to a trip's route beside what's on the map's side: the trip list, or its sidebar.
+   * `lean` flies there even if it's in view, to lean back over a route opened on flat.
+   */
+  function frameTripBeside(sideElement: HTMLElement, id: string, options: { lean?: boolean } = {}) {
     if (!map || !mapLoaded) {
       return
     }
@@ -722,12 +725,16 @@ export function createTripMap(options: TripMapOptions): TripMap {
     // Wider than for a place, for the route's name above it and the legend below.
     const side = getSidePadding(sideElement)
 
-    tripOverview.frame(id, {
-      bottom: side.bottom + 64,
-      left: side.left + 48,
-      right: side.right + 48,
-      top: side.top + 32,
-    })
+    tripOverview.frame(
+      id,
+      {
+        bottom: side.bottom + 64,
+        left: side.left + 48,
+        right: side.right + 48,
+        top: side.top + 32,
+      },
+      options,
+    )
   }
 
   /** Opens a trip's sidebar, its route lifted and framed: not playing yet. */
@@ -1462,6 +1469,24 @@ export function createTripMap(options: TripMapOptions): TripMap {
     canvas.removeAttribute('aria-hidden')
   }
 
+  /**
+   * The view the map opens on: a trip's page on the trip's route, as its trip framing
+   * would have it flat (a page may draw the route over the picture standing in for the
+   * map, framed by getAllPlacesCamera and projectOnCamera alike), and every place shown
+   * otherwise.
+   */
+  function getOpeningView() {
+    const id = getUrlPickedTripId()
+    const line = id ? tripsById.get(id)!.segments.flatMap((segment) => segment.line) : []
+
+    if (line.length > 0) {
+      const points = line.map(([longitude, latitude]) => ({ latitude, longitude }))
+      return getAllPlacesView(points, isNarrow(), getFramingInset(), TRIP_FRAME_MAX_ZOOM)
+    }
+
+    return getAllPlacesView(getFramedPlaces(), isNarrow(), getFramingInset())
+  }
+
   /** The places the map frames: those of the period picked, or every one if it has none. */
   function getFramedPlaces() {
     const shown = markers.getShownPlaces()
@@ -1966,15 +1991,16 @@ export function createTripMap(options: TripMapOptions): TripMap {
   } else {
     try {
       mapboxgl.accessToken = token
-      const view = getAllPlacesView(getFramedPlaces(), isNarrow(), getFramingInset())
+      const view = getOpeningView()
       const style = getMapStyle()
 
       mapStyle = getMapStyleKey()
       mapUrl = style.url
       mapDark = isMapDark()
 
-      // Opens already framed on the places, rather than on the globe and then flying in.
-      // It opens flat, as the picture standing in for it is, and leans back once loaded.
+      // Opens already framed on the places, or a trip's page on its route, rather than
+      // on the globe and then flying in. It opens flat, as the picture standing in for it
+      // is, and leans back once loaded.
       map = new mapboxgl.Map({
         // Beside the trip list, on its page.
         bounds: view.bounds,
@@ -2142,8 +2168,8 @@ export function createTripMap(options: TripMapOptions): TripMap {
         if (getUrlTripId()) {
           syncTripFromUrl()
         } else if (pickedTripId) {
-          // Picked before the map could fly to it.
-          frameTripBeside(elements.tripDetails!, pickedTripId)
+          // Opened on flat, leaning back now.
+          frameTripBeside(elements.tripDetails!, pickedTripId, { lean: true })
         } else if (urlPlaceId && urlPlace) {
           drawer.open(urlPlace, { focus: false, trigger: markers.getButton(urlPlaceId) })
         } else {

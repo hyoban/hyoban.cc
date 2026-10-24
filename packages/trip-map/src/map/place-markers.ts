@@ -809,14 +809,15 @@ export function createPlaceMarkers({
 
 /**
  * The view framing every place, as close as their spread allows (a single place as
- * close as it goes), leaving room for the
+ * close as it goes, or `maxZoom`), leaving room for the
  * toolbar and the legend, and `inset` besides (a panel over the map). `inset.legend` is
  * how far up from the map's foot the legend reaches, when it's over the map.
  */
 export function getAllPlacesView(
-  places: readonly PlaceMarker[],
+  places: readonly Readonly<{ latitude: number; longitude: number }>[],
   narrow: boolean,
   inset: FramingInset = {},
+  maxZoom = ALL_PLACES_MAX_ZOOM,
 ) {
   const bounds = new mapboxgl.LngLatBounds()
 
@@ -827,7 +828,7 @@ export function getAllPlacesView(
   return {
     bounds,
     fitBoundsOptions: {
-      maxZoom: ALL_PLACES_MAX_ZOOM,
+      maxZoom,
       padding: getAllPlacesPadding(narrow, inset),
     },
   }
