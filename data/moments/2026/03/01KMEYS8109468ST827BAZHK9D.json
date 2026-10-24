@@ -14,6 +14,7 @@
       "type": "image",
       "width": 945,
       "height": 2048,
+      "utility": true,
       "published": {
         "key": "moments/01kmeys8109468st827bazhk9d/01kmeys81159g0by99rfeprbvk.jpg",
         "contentType": "image/jpeg",
@@ -113,5 +114,5 @@
     "at": "2026-07-30T08:12:13+08:00"
   },
   "createdAt": "2026-03-24T11:39:00+08:00",
-  "updatedAt": "2026-10-24T04:40:01+08:00"
+  "updatedAt": "2026-10-24T00:51:43Z"
 }
