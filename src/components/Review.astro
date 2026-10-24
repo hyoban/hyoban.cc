@@ -1019,10 +1019,16 @@ const highlights = [
     }
   }
 
-  /* Going to the trip's page, the card opens into its photos (src/trip-transition.ts),
-     the date and the totals left out of it rather than growing with them. */
+  /* Going to the trip's page and back, the card opens into its photos and closes again
+     (src/trip-transition.ts), the date and the totals left out rather than growing and
+     shrinking with it: gone at once, and back in a moment once it's closed. */
+  .year-trips :is(.year-trips__date, .year-trips__meta) {
+    transition: opacity 240ms var(--ease-out);
+  }
+
   .year-trips a[data-trip-transition] :is(.year-trips__date, .year-trips__meta) {
-    visibility: hidden;
+    opacity: 0;
+    transition: none;
   }
 
   @keyframes year-trip-draw {

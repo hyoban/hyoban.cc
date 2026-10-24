@@ -1345,6 +1345,16 @@ export function createTripMap(options: TripMapOptions): TripMap {
     return period && places.some((place) => place.years.includes(period.year)) ? period : undefined
   }
 
+  /** Whether a pathname is one of the map's: the map's own, the trip list's, or a trip's. */
+  function isOwnPath(pathname: string) {
+    return (
+      urls.isMapPath(pathname) ||
+      urls.isTripListPath(pathname) ||
+      Boolean(urls.getTripId(pathname)) ||
+      Boolean(urls.getPickedTripId(pathname))
+    )
+  }
+
   function isMapUrl() {
     const period = urls.getPeriod(window.location.pathname)
 
@@ -1808,6 +1818,12 @@ export function createTripMap(options: TripMapOptions): TripMap {
   window.addEventListener(
     'popstate',
     () => {
+      // Back to another page altogether, which takes the map's place: what's open stays
+      // as it is, for that page to come in over, rather than closing on the way out.
+      if (!isOwnPath(window.location.pathname)) {
+        return
+      }
+
       // Back to an address the map was moved from, and not moved by hand since: the map
       // goes back to where it was there, rather than framing what's open anew.
       const view = getHistoryState()[VIEW_STATE_KEY]
