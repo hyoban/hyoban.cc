@@ -1,0 +1,10 @@
+---
+import Review from '@/components/Review.astro'
+import { getMoments } from '@/moments'
+import { getReviewYears } from '@/year-review'
+
+// Every year's review at once (src/components/Review.astro), each year linked from it.
+const years = getReviewYears(await getMoments())
+---
+
+<Review years={years} />

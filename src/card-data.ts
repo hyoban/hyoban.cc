@@ -90,3 +90,19 @@ export function getYearCollage(year: number, moments: Moment[]) {
   const photos = getYearPanel(year, moments).months.flatMap(({ photo }) => (photo ? [photo] : []))
   return photos.length >= 4 ? { photos, columns: Math.ceil(photos.length / 2) } : undefined
 }
+
+/**
+ * The photos the whole life's title shows, drawn by /life/collage.webp: each year's months
+ * taken in turn, spread evenly to at most 24, in two rows.
+ */
+export function getLifeCollage(years: readonly number[], moments: Moment[]) {
+  const all = years.flatMap((year) =>
+    getYearPanel(year, moments).months.flatMap(({ photo }) => (photo ? [photo] : [])),
+  )
+  const count = Math.min(all.length, 24)
+  const photos = Array.from(
+    { length: count },
+    (_, index) => all[Math.floor((index * all.length) / count)]!,
+  )
+  return photos.length >= 4 ? { photos, columns: Math.ceil(photos.length / 2) } : undefined
+}

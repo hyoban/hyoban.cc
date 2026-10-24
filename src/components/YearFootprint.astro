@@ -16,13 +16,15 @@ const { map, label } = Astro.props
 <figure class="year-footprint">
   <svg viewBox={`0 0 ${map.width} ${map.height}`} role="img" aria-label={label}>
     <path class="year-footprint__outline" d={map.outline} />
-    {
-      map.lit.map((city) => (
-        <path class="year-footprint__city" d={city.d} data-city={city.id} style={`--weight: ${city.weight.toFixed(2)}`}>
-          <title>{city.name}</title>
-        </path>
-      ))
-    }
+    <g class="year-footprint__cities">
+      {
+        map.lit.map((city) => (
+          <path class="year-footprint__city" d={city.d} data-city={city.id} style={`--weight: ${city.weight.toFixed(2)}`}>
+            <title>{city.name}</title>
+          </path>
+        ))
+      }
+    </g>
     {
       map.routes.map((route, index) =>
         route.legs.map((leg) => (
@@ -35,7 +37,9 @@ const { map, label } = Astro.props
         )),
       )
     }
-    {map.dots.map((dot) => <circle class="year-footprint__dot" cx={dot.x} cy={dot.y} r="3" />)}
+    <g class="year-footprint__dots">
+      {map.dots.map((dot) => <circle class="year-footprint__dot" cx={dot.x} cy={dot.y} r="3" />)}
+    </g>
   </svg>
   {Astro.slots.has('default') && <figcaption><slot /></figcaption>}
 </figure>
@@ -121,7 +125,7 @@ const { map, label } = Astro.props
 
         /* The cities light up first, then the routes draw between them and the places
            pop up along them. */
-        & .year-footprint__city {
+        & .year-footprint__cities {
           animation-name: year-footprint-fade;
           animation-timing-function: linear;
           animation-fill-mode: both;
@@ -137,10 +141,8 @@ const { map, label } = Astro.props
           animation-range: cover calc(10% + min(var(--trip), 6) * 3%) cover calc(40% + min(var(--trip), 6) * 3%);
         }
 
-        & .year-footprint__dot {
-          transform-box: fill-box;
-          transform-origin: center;
-          animation-name: year-footprint-pop;
+        & .year-footprint__dots {
+          animation-name: year-footprint-fade;
           animation-timing-function: linear;
           animation-fill-mode: both;
           animation-timeline: --map;
@@ -153,13 +155,6 @@ const { map, label } = Astro.props
   @keyframes year-footprint-fade {
     from {
       opacity: 0;
-    }
-  }
-
-  @keyframes year-footprint-pop {
-    from {
-      opacity: 0;
-      scale: 0;
     }
   }
 
