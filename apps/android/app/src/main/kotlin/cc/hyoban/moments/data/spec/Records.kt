@@ -218,6 +218,43 @@ data class MomentMedia(
     object Serializer : PassthroughSerializer<MomentMedia>(generatedSerializer(), { v, e -> v.copy(extra = e) }, { it.extra })
 }
 
+/** How something eaten turned out, as the spec names it. */
+enum class FoodVerdict(val value: String) {
+    GOOD("good"),
+    OK("ok"),
+    BAD("bad");
+
+    companion object {
+        fun of(value: String?): FoodVerdict? = entries.firstOrNull { it.value == value }
+    }
+}
+
+/** What a meal cost all told, in yuan, and how many it fed. */
+@OptIn(ExperimentalSerializationApi::class)
+@Serializable(with = FoodBill.Serializer::class)
+@KeepGeneratedSerializer
+data class FoodBill(
+    val amount: Double,
+    val people: Int? = null,
+    @Transient val extra: JsonObject = NoExtra,
+) {
+    object Serializer : PassthroughSerializer<FoodBill>(generatedSerializer(), { v, e -> v.copy(extra = e) }, { it.extra })
+}
+
+/** What was eaten or drunk in a Moment: the dishes as the words name them, how it was, what it cost. */
+@OptIn(ExperimentalSerializationApi::class)
+@Serializable(with = MomentFood.Serializer::class)
+@KeepGeneratedSerializer
+data class MomentFood(
+    val dishes: List<String> = emptyList(),
+    /** A [FoodVerdict]'s value, kept as text so one a newer spec adds still reads. */
+    val verdict: String? = null,
+    val bill: FoodBill? = null,
+    @Transient val extra: JsonObject = NoExtra,
+) {
+    object Serializer : PassthroughSerializer<MomentFood>(generatedSerializer(), { v, e -> v.copy(extra = e) }, { it.extra })
+}
+
 @OptIn(ExperimentalSerializationApi::class)
 @Serializable(with = PublishedMoment.Serializer::class)
 @KeepGeneratedSerializer
@@ -243,6 +280,8 @@ data class MomentRecord(
     /** What it is about, like `travel`; a `tech` one is never shown, as if hidden. */
     val topic: String? = null,
     val media: List<MomentMedia> = emptyList(),
+    /** What was eaten or drunk, whatever its topic. */
+    val food: MomentFood? = null,
     val trip: String? = null,
     /** Where it sits among its day's Moments when their times don't say, lower first. */
     val order: Int? = null,

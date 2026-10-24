@@ -65,7 +65,8 @@ then goes all at once. Writes need a token.
 | `POST /v1/build`                             | calls the site's deploy hook; `{ started }`, for a write past the Worker (`data:push`)      |
 
 A change set names the places only the app knows, by id, the Moments it wrote or changed,
-and the uids of those it deleted. A place within 200 m of a known one, or with its name,
+and the uids of those it deleted. A known place sent under its own id takes the kind it is
+sent with, and keeps the rest as it is. A place within 200 m of a known one, or with its name,
 is that one; any other is added, and one the app made, under the provisional id
 `p-<ulid>`, gets an id spelled from its name's pinyin. A place added without a division
 has the province, city and district its point is in looked up from DataV's GeoAtlas

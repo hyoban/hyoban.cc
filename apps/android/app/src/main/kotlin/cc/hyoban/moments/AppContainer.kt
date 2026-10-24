@@ -274,6 +274,11 @@ class AppContainer(context: Context) {
         }
     }
 
+    /** Takes back a site's place's changed kind, not yet published. */
+    fun revertPlace(id: String) {
+        scope.launch { repository.revertPlace(id) }
+    }
+
     /** What the widgets were last drawn from, and on which day, so a refresh that brought nothing new leaves them be. */
     private var widgetsDrawn: Triple<Any, Any, LocalDate>? = null
 

@@ -183,6 +183,10 @@
     <string name="language_system">System</string>
     <string name="action_system_language">Change in system settings</string>
     <string name="settings_language_note">The Moments’ own text stays as written</string>
+    <plurals name="count_food_people">
+        <item quantity="one">%1$d person</item>
+        <item quantity="other">%1$d people</item>
+    </plurals>
     <plurals name="count_moments">
         <item quantity="one">%1$d Moment</item>
         <item quantity="other">%1$d Moments</item>
@@ -247,6 +251,15 @@
     <string name="action_move_earlier">Move earlier</string>
     <string name="action_move_later">Move later</string>
     <string name="section_when_where">When and where</string>
+    <string name="section_food">Food</string>
+    <string name="hint_food_dishes">What you had</string>
+    <string name="note_food">Separate dishes with commas. Tap a rating again to clear it</string>
+    <string name="food_good">Good</string>
+    <string name="food_ok">OK</string>
+    <string name="food_bad">Bad</string>
+    <string name="label_food_amount">Cost</string>
+    <string name="label_food_people">People</string>
+    <string name="unit_food_people">people</string>
     <string name="source_photo">From the photo</string>
     <string name="source_now">Now</string>
     <string name="source_location">Where you are</string>
@@ -318,6 +331,7 @@
     <string name="empty_changes">Nothing to publish. New Moments, and edits or deletions of the site’s Moments, wait here first.</string>
     <string name="section_added">New</string>
     <string name="section_changed">Edited</string>
+    <string name="section_changed_places">Edited places</string>
     <string name="section_removed">To delete</string>
     <string name="action_revert">Discard change</string>
     <string name="message_publishing_progress">Publishing %1$d of %2$d</string>
@@ -330,6 +344,10 @@
     <string name="change_cover_on">Used as covers again</string>
     <string name="change_time">time</string>
     <string name="change_place">place</string>
+    <string name="food_each">¥%1$d each</string>
+    <string name="food_none">None</string>
+    <string name="change_place_kind">kind</string>
+    <string name="change_food">food</string>
     <string name="note_change_recreates">The site no longer has this Moment. Publishing puts it back as shown below.</string>
     <string name="note_change_nothing">Same as on the site</string>
     <string name="label_photo_added">Photo added</string>

@@ -26,6 +26,12 @@ page, and a day's page its trip; a Moment's menu, on its cards and in the playba
 its place, its trip and its day, as does the viewer's date; and the settings' 发布 group
 leads to the changes waiting to be published. `moments://search` opens the search.
 
+What a Moment says it ate shows as the site has it: a line under its words on its card
+(the dishes, 好吃, 一般 or 踩雷, and the bill), and on its page a row heading its place, trip
+and day, with what the meal cost, how many it fed and each one's share, and the verdict as
+a badge on its own colour. A place's kind, 餐饮 or 景点, comes before its division on its page
+and under its name in a Moment's place row.
+
 The toggle beside the map's legend, 迷雾地图, lays a light fog over the map, as the site's
 map does, thinner over a city the more Moments were written in it and gone over one with
 about twenty: the prefecture-level cities of the site's
@@ -41,7 +47,9 @@ opens the phone's camera app, whose photos go to the gallery to be picked from t
 where, worked out as it is written. A photo tapped there can be marked 不用作封面, one kept
 for the record (a screenshot, a flat tyre): it stays in its Moment, but neither the app's
 trip covers, calendar days and widget nor the site's covers, collages and share cards
-pick it. The time is the earliest photo's, from its EXIF and
+pick it. Under 美食 it can say what was eaten, as the site shows it under the Moment: the
+dishes, split at commas, 好吃, 一般 or 踩雷, and what the meal cost and how many it fed;
+the review before publishing shows a change to it in a line. The time is the earliest photo's, from its EXIF and
 the offset the camera wrote, else, for photos whose EXIF has none (saved from WeChat), the
 earliest their files were made, else now; the place is where the first photo was taken,
 when the app may see that (the photo picker takes it out, the documents picker doesn't),
@@ -54,7 +62,8 @@ around the pin, through Photon (`BuildConfig.PLACE_SEARCH_URL`), else its street
 others around it are offered as names to take instead; where Photon can't be reached, the
 system's geocoder names it. Its kind (城市, 景点, 餐饮 and the rest of the spec's) follows
 what OpenStreetMap calls the place it is named after, and a row of chips under the name
-changes it; the API adds the province, city and district it is in when it is sent, and a
+changes it, for a known place too: the kind of one of the site's is then a change of its own,
+listed under 改过的地点 until it is published, when the API takes it for that place; the API adds the province, city and district it is in when it is sent, and a
 place's page shows them above its Moments' count. A place found in Amap comes in by sharing it: its share
 sheet's 更多 offers 这里 (作为时刻的地点), which opens a new Moment with the place, or
 gives it to the one being written; 保存为地点 beside it only keeps the place, as one of

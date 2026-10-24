@@ -30,6 +30,11 @@ class DataStore(val root: File) {
 
     fun writePlaces(places: Map<String, Place>) = write("places.json", placesSerializer, places.toSortedMap())
 
+    /** The site's places with a kind changed on the phone and not yet on the site, as they will be: the app's own note. */
+    fun readChangedPlaces(): Map<String, Place> = read("changed-places.json", placesSerializer) ?: emptyMap()
+
+    fun writeChangedPlaces(places: Map<String, Place>) = write("changed-places.json", placesSerializer, places.toSortedMap())
+
     @Serializable
     private data class KeptPlaces(val ids: List<String>)
 

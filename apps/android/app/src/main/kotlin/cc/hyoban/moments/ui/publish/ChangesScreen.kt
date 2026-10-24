@@ -40,7 +40,9 @@ import androidx.compose.material.icons.rounded.CloudUpload
 import androidx.compose.material.icons.rounded.HideImage
 import androidx.compose.material.icons.rounded.Image
 import androidx.compose.material.icons.rounded.Place
+import androidx.compose.material.icons.rounded.Category
 import androidx.compose.material.icons.rounded.Remove
+import androidx.compose.material.icons.rounded.Restaurant
 import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingActionButtonDefaults
@@ -87,7 +89,11 @@ import cc.hyoban.moments.data.media.MediaUrls
 import cc.hyoban.moments.data.spec.MomentMedia
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
+import cc.hyoban.moments.data.spec.PlaceKind
+import cc.hyoban.moments.data.store.PlaceChange
+import cc.hyoban.moments.ui.compose.label
 import cc.hyoban.moments.data.spec.showcase
+import cc.hyoban.moments.ui.format.foodLine
 import cc.hyoban.moments.data.store.Change
 import cc.hyoban.moments.ui.LocalSnackbarLift
 import cc.hyoban.moments.ui.components.AppColors
@@ -161,6 +167,10 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
                             ChangedFields(change, places, urls)
                         }
                     }
+                }
+                section(R.string.section_changed_places, pending.places, key = { "place-${it.id}" }) { change ->
+                    val revert = { container.revertPlace(change.id) }.takeUnless { busy }
+                    SwipeToRevert(revert) { PlaceChangeCard(change, revert) }
                 }
                 section(R.string.section_removed, pending.removed, key = { it.uid }) { moment ->
                     val revert = { container.revert(moment.uid) }.takeUnless { busy }
@@ -409,6 +419,31 @@ private fun ChangeCard(
     }
 }
 
+/** One of the site's places with its kind changed: its name, and the kind from what it was. */
+@Composable
+private fun PlaceChangeCard(change: PlaceChange, onRevert: (() -> Unit)?) {
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(start = Space.l, end = Space.s, top = Space.s, bottom = Space.l)
+            .testTag("place_change_${change.id}"),
+        verticalArrangement = Arrangement.spacedBy(Space.s),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(change.after.name, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+            if (onRevert != null) {
+                TextButton(onClick = onRevert, modifier = Modifier.testTag("revert_place_${change.id}")) {
+                    Icon(Icons.AutoMirrored.Rounded.Undo, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.size(Space.xs))
+                    Text(stringResource(R.string.action_revert))
+                }
+            }
+        }
+        val kindOf = @Composable { place: Place -> PlaceKind.of(place.kind)?.let { stringResource(it.label) } ?: place.kind ?: stringResource(R.string.food_none) }
+        Field(R.string.change_place_kind) { FromTo(kindOf(change.before), kindOf(change.after), Icons.Rounded.Category) }
+    }
+}
+
 /** A Moment named for the eye: its first photo small, its first words, and when and where under them. */
 @Composable
 private fun MomentIdentity(identity: Identity, modifier: Modifier = Modifier) {
@@ -510,6 +545,11 @@ private fun ChangedFields(change: Change, places: Map<String, Place>, urls: Medi
         val none = stringResource(R.string.place_none)
         val names = { ids: List<String> -> ids.joinToString(separator) { places[it]?.name ?: it }.ifEmpty { none } }
         Field(R.string.change_place) { FromTo(names(before.places), names(after.places), Icons.Rounded.Place) }
+    }
+    if (before.food != after.food) {
+        any = true
+        val none = stringResource(R.string.food_none)
+        Field(R.string.change_food) { FromTo(foodLine(before.food) ?: none, foodLine(after.food) ?: none, Icons.Rounded.Restaurant) }
     }
     if (!any) {
         Text(stringResource(R.string.note_change_nothing), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
