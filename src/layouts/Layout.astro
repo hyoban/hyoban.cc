@@ -70,6 +70,19 @@ const TELETYPE_SITE_VERIFICATION = 'g7j8/rPFXfhyrq5q0QQV7EsYWv4='
     <title>{title}</title>
     <meta name="description" content={description} />
     <ClientRouter />
+    <!-- A page going back to where it was (the script at the end of the body) isn't drawn
+         until it's read and back there, the last frame of the page before held meanwhile:
+         Chrome draws a long page's top while the rest is still being read. -->
+    <script is:inline>
+      if (history.state?.scrollY > 0) {
+        const expect = Object.assign(document.createElement('link'), {
+          rel: 'expect',
+          href: '#page-read',
+          blocking: 'render',
+        })
+        document.head.append(expect)
+      }
+    </script>
     <link rel="canonical" href={canonicalUrl} />
     <meta property="og:type" content={article ? 'article' : 'website'} />
     <meta property="og:title" content={shareTitle} />
@@ -100,17 +113,21 @@ const TELETYPE_SITE_VERIFICATION = 'g7j8/rPFXfhyrq5q0QQV7EsYWv4='
   <body>
     <slot />
     <!-- Where the page was, on a reload or a return to it. The router keeps it in the history
-         entry (history.state), restoring it itself only after the whole page has loaded, and
-         the browser, its restoring left manual by the router, not at all: so the page goes
-         back as soon as it's read, before it's first drawn, else it shows its top and jumps.
-         The router writes it once a scroll ends; leaving writes it too, in case one hadn't.
-         A page the router swaps in has its scroll seen to by the router. -->
-    <script is:inline>
-      if (document.readyState !== 'complete') {
-        if (history.state?.scrollY > 0) scrollTo(history.state.scrollX ?? 0, history.state.scrollY)
-        addEventListener('pagehide', () => {
-          if (history.state) history.replaceState({ ...history.state, scrollX, scrollY }, '')
-        })
+         entry (history.state) as each scroll ends, and restores it itself only once the whole
+         page has loaded, the browser's own restoring left off: so the page goes back as soon
+         as it's read, before it's first drawn (the script in the head), else it shows its top
+         and jumps. Its pictures there, lazy ones it took for out of sight while it was read
+         from its top, load now and are drawn with it rather than empty then filled in. A page
+         the router swaps in has its scroll seen to by the router. -->
+    <script is:inline id="page-read">
+      if (document.readyState !== 'complete' && history.state?.scrollY > 0) {
+        scrollTo(history.state.scrollX ?? 0, history.state.scrollY)
+        for (const image of document.images) {
+          const box = image.getBoundingClientRect()
+          if (box.width > 0 && box.bottom > 0 && box.top < innerHeight) {
+            Object.assign(image, { loading: 'eager', decoding: 'sync' })
+          }
+        }
       }
     </script>
   </body>
