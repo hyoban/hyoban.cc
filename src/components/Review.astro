@@ -1437,6 +1437,14 @@ const highlights = [
         border-top-color: var(--color-border);
       }
     }
+
+    /* On a phone, only the months that reached somewhere new, so a column isn't spent on
+       each that didn't. */
+    @media (width < 40rem) {
+      & li.is-empty {
+        display: none;
+      }
+    }
   }
 
   /* A life's, under the year: a row each, its cities running on across it. */
@@ -1714,7 +1722,7 @@ const highlights = [
      there's room. */
   .year-menu {
     --menu-serif: 'Songti SC', 'Noto Serif SC', 'Source Han Serif SC', serif;
-    padding: 2.25rem 1.25rem 1.75rem;
+    padding: 2rem 1rem 1.5rem;
     border: 1px solid var(--color-border);
     border-radius: 0.75rem;
     background: var(--color-inline);
@@ -1723,7 +1731,7 @@ const highlights = [
       inset 0 0 0 calc(0.375rem + 1px) var(--color-border);
 
     @media (width >= 40rem) {
-      padding-inline: 2.25rem;
+      padding: 2.25rem 2.25rem 1.75rem;
     }
   }
 
@@ -1800,8 +1808,12 @@ const highlights = [
       display: flex;
       align-items: center;
       gap: 0.75rem;
-      padding-block: 0.5rem;
+      padding-block: 0.375rem;
       text-decoration: none;
+
+      @media (width >= 40rem) {
+        padding-block: 0.5rem;
+      }
 
       @media (hover: hover) {
         &:hover .year-menu__plate {
@@ -1838,9 +1850,15 @@ const highlights = [
     display: grid;
     flex-shrink: 0;
     place-items: center;
-    width: 2.75rem;
-    height: 2.75rem;
+    width: 2.5rem;
+    height: 2.5rem;
     padding: 3px;
+
+    @media (width >= 40rem) {
+      width: 2.75rem;
+      height: 2.75rem;
+    }
+
     border: 1px solid var(--color-border);
     border-radius: 9999px;
     background: var(--color-bg);
