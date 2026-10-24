@@ -1,6 +1,5 @@
 package cc.hyoban.moments.ui
 
-import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
@@ -433,8 +432,9 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
     val inPictureInPicture = rememberInPictureInPicture()
 
     // A link opened while the app is already open, `adb shell am start -d moments://…` among
-    // them, goes to its page over the one shown; the viewer, if open, closes first. Its task
-    // flags are dropped, as they would have the navigation start the whole task again.
+    // them, goes to its page over the one shown, so back leads to that one; the viewer, if
+    // open, closes first. Not through the navigation's own deep links, which leave the page
+    // alone on the back stack, with nothing for its back button to go to.
     val activity = LocalActivity.current as? MainActivity
     LaunchedEffect(activity, navController) {
         activity?.newIntents?.receiveAsFlow()?.collect { intent ->
@@ -445,9 +445,16 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                     shown.destination.hasRoute(NewMoment::class) || (shown.destination.hasRoute(EditorDialog::class) && shown.toRoute<EditorDialog>().uid == null)
                 } == true
                 if (!writing) openEditor(null)
-            } else if (intent.data != null) {
+            } else {
+                val route = intent.data?.let(::routeOf) ?: return@collect
                 viewer = null
-                navController.handleDeepLink(Intent(intent).setFlags(0))
+                val tab = Tab.entries.indexOfFirst { it.route == route }
+                when {
+                    tab >= 0 -> selectTab(tab)
+                    route == NewMoment -> openEditor(null)
+                    route is EditMoment -> openEditor(route.uid)
+                    else -> navController.goTo(route)
+                }
             }
         }
     }
