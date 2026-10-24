@@ -716,7 +716,7 @@ export function createPlaceMarkers({
       clearClusterMarkers()
     },
     /** Focuses a place's dot without popping its name up, as the drawer closes. */
-    focusQuietly(button: HTMLButtonElement) {
+    focusQuietly(button: HTMLElement) {
       quietFocus = true
 
       try {

@@ -929,7 +929,7 @@
 }
 
 /* With a year picked, the other years in the legend step back. */
-.trip-map-legend[data-trip-map-year-picked] [data-trip-map-year]:not([aria-pressed='true']) {
+.trip-map-legend[data-trip-map-year-picked] [data-trip-map-year]:not([aria-current]) {
   opacity: 0.4;
 }
 

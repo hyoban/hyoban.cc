@@ -44,7 +44,7 @@ export function createPlaceDrawer({
   /** A year in the drawer's line of totals was pressed, to narrow the map to it. */
   onPickYear: (year: number) => void
   /** Puts focus back on what opened the drawer. */
-  onRestoreFocus: (trigger: HTMLButtonElement) => void
+  onRestoreFocus: (trigger: HTMLElement) => void
   /** The sheet the drawer opens over, which steps back behind it. */
   parent: () => Sheet | undefined
   signal: AbortSignal
@@ -65,7 +65,7 @@ export function createPlaceDrawer({
   const requests = new Map<string, Promise<void>>()
   const lightboxMedia = lightbox && createLightboxMedia?.(lightbox, signal)
   let activeId: string | undefined
-  let activeTrigger: HTMLButtonElement | undefined
+  let activeTrigger: HTMLElement | undefined
   let shown = !drawer.hidden
   // Swiped away, it closes as its close button does; gone, it lets go of its content.
   const sheet = createSheet(drawer, {
@@ -189,7 +189,7 @@ export function createPlaceDrawer({
 
   function open(
     place: PlaceMarker,
-    options: { focus?: boolean; moveMap?: boolean; trigger?: HTMLButtonElement | undefined } = {},
+    options: { focus?: boolean; moveMap?: boolean; trigger?: HTMLElement | undefined } = {},
   ) {
     closeLightbox()
 
@@ -344,7 +344,7 @@ export function createPlaceDrawer({
     /** The drawer it is, for one to open over it. */
     sheet,
     /** Remembers what to put focus back on; set before a place opens from the URL. */
-    set trigger(button: HTMLButtonElement | undefined) {
+    set trigger(button: HTMLElement | undefined) {
       activeTrigger = button ?? activeTrigger
     },
   }

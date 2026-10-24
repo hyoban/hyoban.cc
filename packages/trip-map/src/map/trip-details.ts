@@ -1,6 +1,7 @@
 import { formatDateRange } from '../format.ts'
 import type { Messages } from '../messages.ts'
 import type { TripSummary } from '../player/types.ts'
+import { isPlainClick } from './link-click.ts'
 import { createSheet } from './sheet.ts'
 
 // A trip's sidebar, opened from its row in the trip list or its route on the map while
@@ -182,6 +183,10 @@ export function createTripDetails({
   content.addEventListener(
     'click',
     (event) => {
+      if (!isPlainClick(event)) {
+        return
+      }
+
       const target = event.target instanceof Element ? event.target : null
       const place = target?.closest<HTMLElement>('[data-trip-map-place-link]')
 

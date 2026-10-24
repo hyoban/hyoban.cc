@@ -70,7 +70,7 @@ export function collectMapElements(page: HTMLElement) {
     drawerDetail: page.querySelector<HTMLElement>('[data-trip-map-drawer-detail]'),
     fogArea: page.querySelector<HTMLElement>('[data-trip-map-fog-area]'),
     fogButton: page.querySelector<HTMLButtonElement | HTMLInputElement>('[data-trip-map-fog]'),
-    fallbackPlaces: [...page.querySelectorAll<HTMLButtonElement>('[data-trip-map-place]')],
+    fallbackPlaces: [...page.querySelectorAll<HTMLAnchorElement>('[data-trip-map-place]')],
     legend: page.querySelector<HTMLElement>('[data-trip-map-legend]'),
     lightbox: page.querySelector<HTMLDialogElement>('[data-trip-map-lightbox]'),
     moments: page.querySelector<HTMLElement>('[data-trip-map-moments]'),
@@ -96,7 +96,7 @@ export function collectMapElements(page: HTMLElement) {
     tripListOpeners: [...page.querySelectorAll<HTMLElement>('[data-trip-map-trip-list-open]')],
     tripYearGroups: [...page.querySelectorAll<HTMLElement>('[data-trip-map-trip-year]')],
     yearClear: page.querySelector<HTMLButtonElement>('[data-trip-map-year-clear]'),
-    yearButtons: [...page.querySelectorAll<HTMLButtonElement>('[data-trip-map-year]')],
+    yearLinks: [...page.querySelectorAll<HTMLAnchorElement>('[data-trip-map-year]')],
   }
 }
 
