@@ -842,7 +842,7 @@ const highlights = [
     const schedule = () => {
       frame ||= requestAnimationFrame(check)
       clearTimeout(settle)
-      settle = setTimeout(check, 150)
+      settle = window.setTimeout(check, 150)
     }
     document.addEventListener('scroll', schedule, { capture: true, passive: true, signal: controller.signal })
     document.addEventListener('astro:before-swap', () => controller.abort(), { once: true, signal: controller.signal })
