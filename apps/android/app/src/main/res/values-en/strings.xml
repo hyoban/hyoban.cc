@@ -254,6 +254,16 @@
     <string name="action_move_earlier">Move earlier</string>
     <string name="action_move_later">Move later</string>
     <string name="section_when_where">When and where</string>
+    <string name="section_topic">Topic</string>
+    <string name="note_topic">Tech Moments don’t appear on the site. Tap a topic again to clear it</string>
+    <string name="topic_tech">Tech</string>
+    <string name="topic_travel">Travel</string>
+    <string name="topic_food">Food</string>
+    <string name="topic_car">Car</string>
+    <string name="topic_photo">Photography</string>
+    <string name="topic_life">Life</string>
+    <string name="topic_none">None</string>
+    <string name="change_topic">Topic</string>
     <string name="section_food">Food</string>
     <string name="hint_food_dishes">What you had</string>
     <string name="note_food">Separate dishes with commas. Tap a rating again to clear it</string>

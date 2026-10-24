@@ -108,6 +108,9 @@ import cc.hyoban.moments.ui.components.PageWidth
 import cc.hyoban.moments.ui.components.SubPage
 import cc.hyoban.moments.ui.components.Thumbnail
 import cc.hyoban.moments.ui.compose.label
+import androidx.compose.material.icons.rounded.Category
+import cc.hyoban.moments.data.spec.MomentTopic
+import cc.hyoban.moments.ui.format.topicLabel
 import cc.hyoban.moments.ui.format.foodLine
 import cc.hyoban.moments.ui.format.formatDate
 import cc.hyoban.moments.ui.format.formatTime
@@ -575,6 +578,13 @@ private fun ChangedFields(change: Change, places: Map<String, Place>, urls: Medi
             val after = foodLine(after.food)
             if (after == null) FromTo(foodLine(before.food), none, Icons.Rounded.Restaurant) else FromTo(foodLine(before.food), after, Icons.Rounded.Restaurant)
         }
+    }
+    if (before.topic != after.topic) {
+        any = true
+        val none = stringResource(R.string.topic_none)
+        val from = MomentTopic.of(before.topic)?.let { stringResource(topicLabel(it)) } ?: none
+        val to = MomentTopic.of(after.topic)?.let { stringResource(topicLabel(it)) } ?: none
+        Field(R.string.change_topic) { FromTo(from, to, Icons.Rounded.Category) }
     }
     if (!any) {
         Text(stringResource(R.string.note_change_nothing), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)

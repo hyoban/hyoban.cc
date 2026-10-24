@@ -135,6 +135,12 @@ import cc.hyoban.moments.data.local.parseStamp
 import cc.hyoban.moments.data.local.stamp
 import cc.hyoban.moments.data.spec.FoodBill
 import cc.hyoban.moments.data.spec.FoodVerdict
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.ui.semantics.contentDescription
+import cc.hyoban.moments.data.spec.MomentTopic
+import cc.hyoban.moments.ui.format.topicLabel
 import cc.hyoban.moments.data.spec.LocalMedia
 import cc.hyoban.moments.data.spec.MediaType
 import cc.hyoban.moments.data.spec.MomentMedia
@@ -213,6 +219,7 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
     var amount by rememberSaveable { mutableStateOf(originalFood?.bill?.amount?.let(::formatAmount).orEmpty()) }
     var people by rememberSaveable { mutableStateOf(originalFood?.bill?.people?.toString().orEmpty()) }
     val food = foodOf(dishes, verdict, amount, people, originalFood)
+    var topic by rememberSaveable { mutableStateOf(original?.topic) }
     val openedAt = remember { OffsetDateTime.now() }
     var chosenTime by remember { mutableStateOf(originalTime) }
     var chosenPlace by remember { mutableStateOf(originalPlace) }
@@ -328,9 +335,10 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
     val newKind = (chosenPlace as? PlaceChoice.Known)?.kind
     val momentChanged = original == null ||
         text != original.text || photos != originalMedia.keys.toList() || utility.intersect(photos.toSet()) != originalUtility ||
-        chosenTime != originalTime || ((chosenPlace as? PlaceChoice.Known)?.copy(kind = null) ?: chosenPlace) != originalPlace || food != originalFood
+        chosenTime != originalTime || ((chosenPlace as? PlaceChoice.Known)?.copy(kind = null) ?: chosenPlace) != originalPlace || food != originalFood ||
+        topic != original.topic
     // What leaving would lose: anything written, or, for a Moment being changed, any change.
-    val changed = if (original == null) written || food != null else momentChanged || newKind != null
+    val changed = if (original == null) written || food != null || topic != null else momentChanged || newKind != null
     val leave = { if (changed) confirmingDiscard = true else onBack() }
     BackHandler(enabled = changed && !saving) { confirmingDiscard = true }
 
@@ -342,7 +350,7 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
         scope.launch {
             try {
                 withContext(NonCancellable) {
-                    val (moment, newPlace) = buildMoment(context, container, text, photos, utility, infos, time, place, food, original, originalMedia)
+                    val (moment, newPlace) = buildMoment(context, container, text, photos, utility, infos, time, place, food, topic, original, originalMedia)
                     when {
                         original == null -> container.addLocal(moment, newPlace)
                         momentChanged -> container.updateLocal(moment, newPlace)
@@ -489,6 +497,7 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
                         }
                     }
                     SegmentedGroup(stringResource(R.string.section_when_where), stringResource(note), listOf(whenRow, whereRow))
+                    TopicGroup(topic) { topic = it }
                     FoodGroup(
                         dishes = dishes,
                         onDishes = { dishes = it },
@@ -748,6 +757,34 @@ private fun PhotoStrip(
     }
 }
 
+/** What the Moment is mostly about, one of Material 3's filter chips; the chosen one tapped again leaves it unset. */
+@Composable
+private fun TopicGroup(topic: String?, onTopic: (String?) -> Unit) {
+    val label = stringResource(R.string.section_topic)
+    val chips = boxed {
+        FlowRow(
+            Modifier.fillMaxWidth().padding(Space.l).semantics { contentDescription = label },
+            horizontalArrangement = Arrangement.spacedBy(Space.s),
+        ) {
+            MomentTopic.entries.forEach { entry ->
+                val selected = entry.value == topic
+                FilterChip(
+                    selected = selected,
+                    onClick = { onTopic(if (selected) null else entry.value) },
+                    label = { Text(stringResource(topicLabel(entry))) },
+                    leadingIcon = if (selected) {
+                        { Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize)) }
+                    } else {
+                        null
+                    },
+                    modifier = Modifier.testTag("topic_${entry.value}"),
+                )
+            }
+        }
+    }
+    SegmentedGroup(label, stringResource(R.string.note_topic), listOf(chips))
+}
+
 /**
  * What was eaten: the dishes, how they were, one of three in a connected button group that
  * a second tap clears, and what the meal cost and how many it fed.
@@ -935,6 +972,7 @@ private suspend fun buildMoment(
     time: OffsetDateTime,
     place: PlaceChoice,
     food: MomentFood?,
+    topic: String?,
     original: MomentRecord? = null,
     originalMedia: Map<Uri, MomentMedia> = emptyMap(),
 ): Pair<MomentRecord, Pair<String, Place>?> {
@@ -969,7 +1007,7 @@ private suspend fun buildMoment(
         is PlaceChoice.New -> listOfNotNull(newPlace?.first)
         PlaceChoice.None -> emptyList()
     }
-    val moment = original?.copy(occurredAt = stamp(time), places = placeIds, text = text.trim(), media = media, food = food, updatedAt = now)
+    val moment = original?.copy(occurredAt = stamp(time), places = placeIds, text = text.trim(), media = media, food = food, topic = topic, updatedAt = now)
         ?: MomentRecord(
             uid = Ulid.next(),
             occurredAt = stamp(time),
@@ -977,6 +1015,7 @@ private suspend fun buildMoment(
             text = text.trim(),
             media = media,
             food = food,
+            topic = topic,
             createdAt = now,
             updatedAt = now,
         )
