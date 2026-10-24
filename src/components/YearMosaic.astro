@@ -337,7 +337,9 @@ const months = Array.from({ length: 12 }, (_, index) => {
         & > a,
         & > span,
         &.is-trip::before {
-          animation: year-mosaic-pop linear both;
+          animation-name: year-mosaic-pop;
+          animation-timing-function: linear;
+          animation-fill-mode: both;
           animation-timeline: view();
           animation-range: entry calc(var(--day) * 2%) cover calc(12% + var(--day) * 0.4%);
         }

@@ -149,7 +149,9 @@ const label = `每周各天记下的条数：${days.map((day) => `周${day.name}
 
         & .year-weekdays__bar {
           transform-origin: bottom;
-          animation: year-weekdays-grow linear both;
+          animation-name: year-weekdays-grow;
+          animation-timing-function: linear;
+          animation-fill-mode: both;
           animation-timeline: --week;
           animation-range: entry calc(40% + var(--day) * 4%) cover calc(30% + var(--day) * 2%);
         }
