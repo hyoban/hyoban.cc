@@ -10,6 +10,7 @@ import {
   getMomentPagePath,
   getMomentPath,
   getMoments,
+  getMomentTripOdometer,
   getTrips,
   type Moment,
 } from '@/moments'
@@ -104,6 +105,8 @@ const trips = review.trips.map((trip) => ({
   trip,
   glyph: buildRouteGlyph(getTripLine(trip.legs)),
   covers: getTripCollage(trip, review.moments, PICKS),
+  // How often the car charged on its days, when it drove all of it and the records have it.
+  chargeCount: getMomentTripOdometer(trip)?.charges.length ?? 0,
 }))
 const topCities = review.cities.lit.slice(0, 6)
 const firstVisits = Map.groupBy(review.firstVisits, (visit) => Number(visit.dateKey.slice(5, 7)))
@@ -339,7 +342,7 @@ const highlights = [
         <section class="year-section" aria-labelledby="year-trips">
           <h2 id="year-trips">出行</h2>
           <ul class="year-trips">
-            {trips.map(({ trip, glyph, covers }, index) => (
+            {trips.map(({ trip, glyph, covers, chargeCount }, index) => (
               <li style={`--index: ${index}`}>
                 <a href={`/trip/${trip.id.slice(0, 4)}/${trip.id.slice(5)}/`}>
                   <span class="year-trips__art">
@@ -360,6 +363,7 @@ const highlights = [
                   <span class="year-trips__meta">
                     {formatDay(trip.start)} · {trip.dayCount} 天
                     {trip.drivingKm > 0 && ` · ${formatNumber(trip.drivingKm)} 公里`}
+                    {chargeCount > 0 && ` · 充电 ${chargeCount} 次`}
                   </span>
                 </a>
               </li>
