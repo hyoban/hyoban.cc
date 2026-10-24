@@ -115,7 +115,7 @@ const trips = review.trips.map((trip) => ({
   covers: getTripCollage(trip, review.moments, PICKS),
 }))
 const tripDays = review.trips.reduce((total, trip) => total + trip.dayCount, 0)
-/** The most trips shown as covers; past it, the longest are, the rest listed under them. */
+/** The most trips shown as covers; past it, the longest are, the rest longer than a day listed under them. */
 const FEATURED_TRIPS = 6
 const featuredIds = new Set(
   trips.length <= FEATURED_TRIPS
@@ -131,7 +131,8 @@ const featuredIds = new Set(
         .map(({ trip }) => trip.id),
 )
 const featuredTrips = trips.filter(({ trip }) => featuredIds.has(trip.id))
-const otherTrips = trips.filter(({ trip }) => !featuredIds.has(trip.id))
+// With more than the covers, a day's trip isn't listed under them.
+const otherTrips = trips.filter(({ trip }) => !featuredIds.has(trip.id) && trip.dayCount > 1)
 /** When a trip set out, with its year on a life's page. */
 const tripDate = (trip: { start: string }) =>
   `${life ? `${trip.start.slice(0, 4)}.` : ''}${Number(trip.start.slice(5, 7))}.${Number(trip.start.slice(8, 10))}`
