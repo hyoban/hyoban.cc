@@ -433,7 +433,7 @@ const highlights = [
           <ul class="year-trips">
             {trips.map(({ trip, glyph, covers }, index) => (
               <li style={`--index: ${index}`}>
-                <a href={`/trip/${trip.id}/`} title={trip.title}>
+                <a href={`/trip/${trip.id}/`} title={trip.title} data-trip-card={trip.id}>
                   {covers[0] && (
                     <img
                       src={covers[0].thumbnail}
@@ -443,14 +443,14 @@ const highlights = [
                       data-pick={pickFrom(covers.map((cover) => cover.thumbnail))}
                     />
                   )}
-                  <svg viewBox={`0 0 ${glyph.width} ${glyph.width}`} aria-hidden="true">
+                  <svg viewBox={`0 0 ${glyph.width} ${glyph.width}`} aria-hidden="true" data-trip-card-route>
                     <path d={glyph.d} transform={`translate(0 ${(glyph.width - glyph.height) / 2})`} pathLength="1" />
                   </svg>
                   <span class="year-trips__date">
                     {`${life ? `${trip.start.slice(0, 4)}.` : ''}${Number(trip.start.slice(5, 7))}.${Number(trip.start.slice(8, 10))}`}
                   </span>
                   <span class="year-trips__words">
-                    <span class="year-trips__title">{trip.title}</span>
+                    <span class="year-trips__title" data-trip-card-title>{trip.title}</span>
                     <span class="year-trips__meta">
                       {trip.dayCount} 天{trip.drivingKm > 0 && `\u2003${formatNumber(trip.drivingKm)} km`}
                     </span>
@@ -1017,6 +1017,12 @@ const highlights = [
         filter: brightness(0.45) saturate(1.1);
       }
     }
+  }
+
+  /* Going to the trip's page, the card opens into its photos (src/trip-transition.ts),
+     the date and the totals left out of it rather than growing with them. */
+  .year-trips a[data-trip-transition] :is(.year-trips__date, .year-trips__meta) {
+    visibility: hidden;
   }
 
   @keyframes year-trip-draw {

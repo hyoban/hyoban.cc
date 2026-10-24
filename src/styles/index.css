@@ -277,6 +277,30 @@ html[data-calendar-mode-transition] .calendar-mode-switch a[data-mode='map'] {
     z-index: 2;
   }
 
+  /* A trip's card and its page as one (src/trip-transition.ts): the card's cover opens
+     into the page's photos, its name rises into the title, and its route grows out over
+     the map, the small picture of it giving way at once to the large one so it stays sharp. */
+  ::view-transition-group(trip-cover),
+  ::view-transition-group(trip-title),
+  ::view-transition-group(trip-route) {
+    animation-duration: 480ms;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  ::view-transition-old(trip-cover),
+  ::view-transition-new(trip-cover) {
+    height: 100%;
+    object-fit: cover;
+  }
+
+  ::view-transition-old(trip-route) {
+    animation-duration: 120ms;
+  }
+
+  ::view-transition-new(trip-route) {
+    animation-duration: 160ms;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     ::view-transition-group(*),
     ::view-transition-old(*),

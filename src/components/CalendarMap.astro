@@ -10,7 +10,7 @@ import MomentLightboxMedia from '@/components/MomentLightboxMedia.astro'
 import Layout from '@/layouts/Layout.astro'
 import { getActiveDateKeys, getMapYears, getMappedLocationGroups, getMomentPath, getMoments, getMonthPath, getTrips } from '@/moments'
 import { formatKilometers, getCarSummary } from '@/car'
-import { getTripData, getTripSummaries } from '@/moments/trip-data'
+import { getTripData, getTripSummaries, getTripSummary } from '@/moments/trip-data'
 import { getTripCollage } from '@/moments/trip-images'
 import {
   createYearPalette,
@@ -131,6 +131,9 @@ const activeTrip = trips.find(trip => trip.id === tripId)
 const pickedTrip = trips.find(trip => trip.id === pickedTripId)
 // The trip the page is about, playing or open in its sidebar: its title, words and image.
 const pageTrip = activeTrip ?? pickedTrip
+// A picked trip's route, as the map draws it, standing in over the picture for the map's
+// own until the map has loaded (src/trip-route-glyph.ts).
+const pickedSegments = pickedTrip && getTripSummary(pickedTrip).segments
 // A trip's page by its year and the rest, /trip/2026/yunnan/, is the one by its id.
 const canonicalPath = pageTrip && `/trip/${pageTrip.id}/${activeTrip ? 'play/' : ''}`
 // The totals a screenshot of the map puts in its header.
@@ -185,6 +188,11 @@ const image = pageTrip ? `/trip/${pageTrip.id}/og.jpg` : await getPageCardPath(A
           <source media="(prefers-color-scheme: dark)" srcset={getMapPlaceholderPath(placeholderView.picture, 'dark')} />
           <img src={getMapPlaceholderPath(placeholderView.picture, 'light')} alt="" fetchpriority="high" />
         </picture>
+      )
+    }
+    {
+      placeholderView && pickedSegments && (
+        <svg class="trip-map-route-glyph" aria-hidden="true" data-trip-map-route-glyph={JSON.stringify(pickedSegments)} />
       )
     }
     <script is:inline>
@@ -785,6 +793,46 @@ const image = pageTrip ? `/trip/${pageTrip.id}/og.jpg` : await getPageCardPath(A
   @media (scripting: enabled) {
     .trip-map-placeholder:not([data-trip-map-placed]) img {
       visibility: hidden;
+    }
+  }
+
+  /* The picked trip's route over the picture, drawn where the map opens on it flat and
+     as the map draws it (src/trip-route-glyph.ts): in the ink, ferries and flights
+     dashed. Unseen until drawn, and going with the picture once the map has loaded. */
+  .trip-map-route-glyph {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    pointer-events: none;
+    transition:
+      opacity 0.4s ease,
+      visibility 0s 0.4s;
+
+    &:not([data-trip-map-route-glyph-placed]) {
+      visibility: hidden;
+    }
+
+    & :global(path) {
+      fill: none;
+      stroke: var(--color-tx);
+      stroke-width: 2.5px;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    & :global(path[data-straight]) {
+      stroke-dasharray: 5px 5px;
+    }
+
+    [data-trip-map-loaded] ~ & {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
     }
   }
 

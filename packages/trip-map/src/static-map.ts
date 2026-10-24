@@ -11,6 +11,8 @@ export const CLUSTER_MAX_ZOOM = 9
 // Framing every place, or a period's, the map comes as close as their spread allows, but
 // no closer than one city's places standing apart, out of their clusters.
 export const ALL_PLACES_MAX_ZOOM = CLUSTER_MAX_ZOOM + 1
+// A trip's route framed beside the trip list or its sidebar: no closer than a city's streets.
+export const TRIP_FRAME_MAX_ZOOM = 9
 // Between the legend and the lowest place framed: a cluster's radius and some.
 const LEGEND_GAP = 28
 // Mapbox's tiles are this many pixels wide at zoom 0.
@@ -88,6 +90,23 @@ export function getAllPlacesCamera(
   const y = (minY + maxY) / 2 + (padding.bottom - padding.top) / 2 / world
 
   return { latitude: toLatitude(y), longitude: toLongitude(x), x, y, zoom }
+}
+
+/**
+ * Where a place falls in a view `width` by `height` pixels on `camera`, as framed by
+ * getAllPlacesCamera: in pixels from the view's top left.
+ */
+export function projectOnCamera(
+  camera: Readonly<{ x: number; y: number; zoom: number }>,
+  size: Readonly<{ height: number; width: number }>,
+  place: Place,
+) {
+  const world = TILE_SIZE * 2 ** camera.zoom
+
+  return {
+    x: size.width / 2 + (toX(place.longitude) - camera.x) * world,
+    y: size.height / 2 + (toY(place.latitude) - camera.y) * world,
+  }
 }
 
 export type StaticMapCamera = Readonly<{ latitude: number; longitude: number; zoom: number }>

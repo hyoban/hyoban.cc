@@ -1339,6 +1339,10 @@ export function createDrawer(options: DrawerOptions): Drawer {
       applyRestingProgress()
     },
     getVisibleSize() {
+      // Measured now: its height may have changed since the last resize was observed, as
+      // when the snap points just set have it stand as tall as the screen.
+      measureHeight()
+
       const size = getSwipeSize(popup, swipeDirection)
       const offset = hasSnapPoints() ? (getActiveSnapPointOffset() ?? 0) : 0
 

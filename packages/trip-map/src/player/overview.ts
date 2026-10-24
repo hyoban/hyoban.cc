@@ -4,6 +4,7 @@ import { overlapsPeriod, type Period } from '../map/period.ts'
 import { getFramingPitch, getUnderLabels } from '../map/basemap.ts'
 import { bringIntoClearArea, needsFraming, planOnMap } from '../map/clear-area.ts'
 import type { Messages } from '../messages.ts'
+import { TRIP_FRAME_MAX_ZOOM } from '../static-map.ts'
 import { createPopupContent, MAP_POPUP_CLASS } from './dom.ts'
 import type { TripSummary } from './types.ts'
 
@@ -32,8 +33,6 @@ const ALL_SIDES = {
   right: REVEAL_PADDING,
   top: REVEAL_PADDING,
 }
-// A route flown to beside the trip list or its sidebar: no closer than a city's streets.
-const FRAME_MAX_ZOOM = 9
 const FRAME_DURATION = 800
 const BASE = { opacity: 0.5, width: 1.5 }
 const DIMMED = { opacity: 0.15, width: 1.5 }
@@ -381,9 +380,14 @@ export function createTripOverview({
   /**
    * Shows a trip's route in what `padding` leaves of the map: left as it is if it's in
    * view there and not too small, brought in as little as it takes if part of it is,
-   * and flown to, filling it, if none is or it's too small to make out.
+   * and flown to, filling it, if none is or it's too small to make out. `lean` flies to
+   * it all the same, to lean back over a route the map opened on flat.
    */
-  function frame(id: string, padding: Required<mapboxgl.PaddingOptions>) {
+  function frame(
+    id: string,
+    padding: Required<mapboxgl.PaddingOptions>,
+    { lean = false }: { lean?: boolean } = {},
+  ) {
     const map = getMap()
     const line = lines.get(id) ?? []
 
@@ -394,7 +398,10 @@ export function createTripOverview({
     const plan = planOnMap(map, line, padding)
 
     // Too small to make out, but already as close as framing would go: left as it is too.
-    if (!needsFraming(plan) || (plan.kind !== 'away' && map.getZoom() >= FRAME_MAX_ZOOM)) {
+    if (
+      !lean &&
+      (!needsFraming(plan) || (plan.kind !== 'away' && map.getZoom() >= TRIP_FRAME_MAX_ZOOM))
+    ) {
       bringIntoClearArea(map, line, padding, plan, getDuration(500))
       return
     }
@@ -407,9 +414,9 @@ export function createTripOverview({
 
     map.fitBounds(bounds, {
       duration: getDuration(FRAME_DURATION),
-      maxZoom: FRAME_MAX_ZOOM,
+      maxZoom: TRIP_FRAME_MAX_ZOOM,
       padding,
-      pitch: getFramingPitch(map, bounds, { maxZoom: FRAME_MAX_ZOOM, padding }),
+      pitch: getFramingPitch(map, bounds, { maxZoom: TRIP_FRAME_MAX_ZOOM, padding }),
     })
   }
 

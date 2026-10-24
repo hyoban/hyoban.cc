@@ -36,6 +36,8 @@ export {
   getAllPlacesPadding,
   getPlacesExtent,
   getStaticMapUrl,
+  projectOnCamera,
+  TRIP_FRAME_MAX_ZOOM,
   type StaticMapCamera,
   type StaticMapOptions,
 } from './static-map.ts'
