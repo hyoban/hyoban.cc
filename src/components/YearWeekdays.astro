@@ -159,10 +159,11 @@ const label = `每周各天记下的条数：${days.map((day) => `周${day.name}
     }
   }
 
+  /* Scale alone: opacity is left to the hover, whose transition an animation of it would
+     stop from playing. */
   @keyframes year-weekdays-grow {
     from {
-      opacity: 0;
-      scale: 1 0.2;
+      scale: 1 0;
     }
   }
 </style>

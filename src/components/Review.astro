@@ -2152,15 +2152,16 @@ const highlights = [
     }
   }
 
-  /* From below the card's edge, upright, up past its place and tilted, then settling. */
+  /* From below the card's edge, upright, up past its place and tilted, then settling.
+     Through transform, over the picture's own tilt (undone first, so it moves straight up
+     and turns to these angles): translate is left to its hover, whose transition an
+     animation of the same property, kept on once it's done, would stop from playing. */
   @keyframes year-device-peek {
     from {
-      translate: 0 5rem;
-      rotate: -8deg;
+      transform: rotate(-12deg) translateY(5rem) rotate(-8deg);
     }
     70% {
-      translate: 0 -0.5rem;
-      rotate: 16deg;
+      transform: rotate(-12deg) translateY(-0.5rem) rotate(16deg);
     }
   }
 
