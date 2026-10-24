@@ -90,8 +90,7 @@ const ownedMeters = [...car.days]
   .filter(([date]) => date <= ownedUntil)
   .reduce((total, [, meters]) => total + meters, 0)
 const ownership = ownedCost.total > 0 && [
-  { value: formatNumber(ownedDays), label: '提车天数' },
-  { value: formatYuan(ownedCost.total), label: '提车以来花费' },
+  { value: formatYuan(ownedCost.total), label: `${formatNumber(ownedDays)} 天花费` },
   { value: formatYuan(ownedCost.total / ownedDays), label: '每天' },
   ...(ownedMeters > 0
     ? [{ value: formatRate(ownedCost.total / 100 / (ownedMeters / 1000)), label: '每公里' }]
@@ -137,7 +136,6 @@ const chargingTiles = [
   { value: formatNumber(charges.length), label: `次充电\u2003快充 ${fast}` },
   { value: formatNumber(chargedKwh), label: 'kWh' },
   ...(averageKwhYuan !== undefined ? [{ value: formatRate(averageKwhYuan), label: '平均每 kWh' }] : []),
-  ...(homeKwh > 0 ? [{ value: formatYuan(homeYuan * 100), label: '家充电费' }] : []),
 ]
 const spendingTiles = [
   { value: formatYuan(spending.total), label: '用车花费' },
@@ -223,7 +221,8 @@ const spendingTiles = [
 {
   charges.length > 0 && (
     <>
-      <dl class="year-driving__tiles year-driving__charging">
+      <h3 class="year-driving__part">充电</h3>
+      <dl class="year-driving__tiles">
         {chargingTiles.map((tile) => (
           <div>
             <dt>{tile.label}</dt>
@@ -267,7 +266,8 @@ const spendingTiles = [
 {
   spending.total > 0 && (
     <>
-      <dl class="year-driving__tiles year-driving__spending">
+      <h3 class="year-driving__part">花费</h3>
+      <dl class="year-driving__tiles">
         {spendingTiles.map((tile) => (
           <div>
             <dt>{tile.label}</dt>
@@ -303,14 +303,17 @@ const spendingTiles = [
 }
 {
   ownership && (
-    <dl class="year-driving__tiles year-driving__owned">
-      {ownership.map((tile) => (
-        <div>
-          <dt>{tile.label}</dt>
-          <dd>{tile.value}</dd>
-        </div>
-      ))}
-    </dl>
+    <>
+      <h3 class="year-driving__part">提车以来</h3>
+      <dl class="year-driving__tiles">
+        {ownership.map((tile) => (
+          <div>
+            <dt>{tile.label}</dt>
+            <dd>{tile.value}</dd>
+          </div>
+        ))}
+      </dl>
+    </>
   )
 }
 
@@ -343,26 +346,28 @@ const spendingTiles = [
 </script>
 
 <style>
+  /* Charging, spending and owning it, each a part of its own well apart from the last. */
+  .year-driving__part {
+    margin: 3rem 0 0.75rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-border);
+    color: var(--color-tx-2);
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+
   /* A row of figures, each over what it counts. */
   .year-driving__tiles {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
-    gap: 1px;
-    /* Clipped to its rounded corners without becoming a scroller, so the figures follow the
-       page's scroll in their own (below). */
-    overflow: clip;
-    margin: 2rem 0 0.75rem;
-    border: 1px solid var(--color-border);
-    border-radius: 0.75rem;
-    background: var(--color-border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem 2.5rem;
+    margin: 0 0 1.5rem;
     font-variant-numeric: tabular-nums;
 
     & div {
       display: flex;
       flex-direction: column-reverse;
       gap: 0.125rem;
-      padding: 0.75rem 0.875rem;
-      background: var(--color-bg);
     }
 
     & dt {
@@ -371,16 +376,12 @@ const spendingTiles = [
     }
 
     & dd {
-      font-size: 1.375rem;
+      font-size: 1.5rem;
       font-weight: 700;
-      line-height: 1.75rem;
+      line-height: 2rem;
       letter-spacing: -0.03em;
       white-space: nowrap;
     }
-  }
-
-  .year-driving__owned {
-    margin-top: 1rem;
   }
 
   /* What the chart's pointer is on, in the legend's empty start. */
@@ -558,7 +559,7 @@ const spendingTiles = [
   .year-driving__hours {
     display: grid;
     grid-template-columns: repeat(24, minmax(0, 1fr));
-    grid-template-rows: 4rem auto;
+    grid-template-rows: 5rem auto;
     column-gap: 2px;
     color: var(--color-tx-3);
     font-size: 0.625rem;
