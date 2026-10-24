@@ -721,15 +721,19 @@ const highlights = [
       return
     }
     countUp([...document.querySelectorAll<HTMLElement>('.year-stats__value [data-value]')])
+    // A section rises in once a good part of it is in sight, of it or of the screen, which
+    // ever is less: one only peeking in from the bottom would draw its pictures out of sight.
+    const SEEN = 0.3
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
-          if (!entry.isIntersecting) continue
+          const sight = Math.min(entry.boundingClientRect.height, entry.rootBounds?.height ?? innerHeight)
+          if (entry.intersectionRect.height < sight * SEEN) continue
           entry.target.classList.add('is-revealed')
           observer.unobserve(entry.target)
         }
       },
-      { rootMargin: '0px 0px -12% 0px' },
+      { threshold: Array.from({ length: 21 }, (_, step) => step / 20) },
     )
     for (const section of sections) observer.observe(section)
   }
