@@ -134,7 +134,12 @@ const spendingTiles = [
 ---
 
 <p class="year-lead">
-  {formatNumber(distance / 1000)}<small>km</small>{drivenDays}<small>天开了车</small>
+  <span>
+    {formatNumber(distance / 1000)}<small>km</small>
+  </span>
+  <span>
+    {drivenDays}<small>天开了车</small>
+  </span>
 </p>
 <div class="year-driving" style={`--weeks: ${weeks.length}`}>
   <div class="year-driving__months" aria-hidden="true">
