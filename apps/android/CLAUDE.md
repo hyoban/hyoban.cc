@@ -116,7 +116,12 @@ say stay out.
 - Nothing reaches the site until 全部发布到网站, after the changes waiting have been
   reviewed: one change set, like a commit. Don't add writes that bypass it.
 - Sharing hands off to the other app and leaves posting to the user. Never post, pick a
-  recipient or drive another app automatically, and never use an accessibility service.
+  recipient or drive another app automatically. The one exception is the opt-in share
+  assistant (Telegram, Threads): an accessibility service that only fills the composer
+  and stops before sending. While debugging it, read its state with
+  `adb shell dumpsys activity service cc.hyoban.moments/.share.TelegramShareService`,
+  not `uiautomator dump`, which interrupts the service. Threads shows a single photo
+  outside any `IgLazyRow`, and repeated shares stack photos into an open composer.
 - No keys in the app: OpenFreeMap tiles drawn by MapLibre, Photon for place names.
   APK size matters, so the release is arm64 only; weigh what a new dependency costs.
 - Prefer mature, maintained libraries over hand-rolled code. Pin a newer version only

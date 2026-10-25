@@ -12,14 +12,13 @@ class ThreadsAssistFlowTest {
     private val text = "中文正文 🐈\n第二行 @someone #旅行"
     private fun session(body: String = text, photos: Int = 2) = AssistSession(ThreadsShareAdapter.request(body, photos), 0)
     private fun AssistSession.next(nodes: List<AssistNode>, now: Long = 0) = next(ThreadsShareAdapter.packageName, nodes, now)
-    private fun composer(body: String = "", photos: Int = 2) = listOf(
+    private fun composer(body: String = "", photos: Int = 2, row: Boolean = photos > 1) = listOf(
         AssistNode(1, viewId = "navigation_bar_title"),
         AssistNode(2, text = "新建串文"),
         AssistNode(3, text = body, editable = true, viewId = "new_thread_screen_composer"),
         AssistNode(4, viewId = "new_thread_screen_post_button"),
         AssistNode(5, text = "发布"),
-        AssistNode(6, viewId = "IgLazyRow"),
-    ) + (0 until photos).map { AssistNode(10 + it, description = "移除附件") }
+    ) + listOfNotNull(AssistNode(6, viewId = "IgLazyRow").takeIf { row }) + (0 until photos).map { AssistNode(10 + it, description = "移除附件") }
 
     @Test fun `fills the verified composer and reads text back twice without ever clicking Post`() {
         val session = session()
@@ -61,6 +60,13 @@ class ThreadsAssistFlowTest {
         assertEquals(AssistAction.Wait, session.next(composer(text, photos = 0)))
         assertEquals(AssistAction.Wait, session.next(composer(text)))
         assertEquals(AssistAction.Ready, session.next(composer(text)))
+    }
+
+    @Test fun `a single photo shown without a photo row is filled`() {
+        val session = session(photos = 1)
+        assertEquals(AssistAction.SetText(3, text), session.next(composer(photos = 1)))
+        assertEquals(AssistAction.Wait, session.next(composer(text, photos = 1)))
+        assertEquals(AssistAction.Ready, session.next(composer(text, photos = 1)))
     }
 
     @Test fun `single photos and already imported or empty text need no replacement`() {
