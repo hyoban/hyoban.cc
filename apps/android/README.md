@@ -82,7 +82,8 @@ Such a Moment stays on the phone, under the app's `local/`
 directory in the spec's layout, its photos copied in whole so it keeps them whatever
 becomes of the gallery's (a motion photo, its clip appended to the JPEG as the camera
 writes it, is split there into a live photo's still and video, which its page plays from
-the phone until it is published), and its new places with ids of their own (`p-<ulid>`); no sync
+the phone until it is published; picked, the app asks whether motion photos go in as
+photos, their stills alone, which each one's options can change until it is saved), and its new places with ids of their own (`p-<ulid>`); no sync
 or change of API touches it. It is shown among the site's, marked 仅本机 (on this phone),
 and can be changed or deleted from its page.
 

@@ -1,7 +1,12 @@
 package cc.hyoban.moments.data.local
 
+import android.content.Context
+import android.net.Uri
 import java.io.File
+import java.io.FileInputStream
 import java.io.RandomAccessFile
+import java.nio.ByteBuffer
+import java.nio.channels.FileChannel
 
 /**
  * Motion photos, as Pixel, OPPO, Xiaomi and others take them: a JPEG with its clip, an MP4,
@@ -11,17 +16,29 @@ import java.io.RandomAccessFile
  */
 object MotionPhotos {
     /** Where the clip starts in [file], or null when it is a plain photo. */
-    fun videoStart(file: File): Long? {
-        val size = file.length()
-        val head = ByteArray(minOf(size, XMP_READ).toInt())
-        RandomAccessFile(file, "r").use { it.readFully(head) }
+    fun videoStart(file: File): Long? = RandomAccessFile(file, "r").use { videoStart(it.channel) }
+
+    /** Whether the photo at [uri] is a motion photo; one that can't be read through is taken for a plain one. */
+    fun isMotion(context: Context, uri: Uri): Boolean = runCatching {
+        context.contentResolver.openFileDescriptor(uri, "r")?.use { descriptor ->
+            FileInputStream(descriptor.fileDescriptor).channel.use { videoStart(it) != null }
+        } ?: false
+    }.getOrDefault(false)
+
+    private fun videoStart(channel: FileChannel): Long? {
+        val size = channel.size()
+        val head = read(channel, 0, minOf(size, XMP_READ).toInt())
         val length = videoLength(String(head, Charsets.ISO_8859_1)) ?: return null
         val start = size - length
         if (start <= 0) return null
         // The clip is an MP4 only if its first box is `ftyp`; anything else, the XMP is wrong.
-        val box = ByteArray(4)
-        RandomAccessFile(file, "r").use { it.seek(start + 4); it.readFully(box) }
-        return start.takeIf { String(box, Charsets.ISO_8859_1) == "ftyp" }
+        return start.takeIf { String(read(channel, start + 4, 4), Charsets.ISO_8859_1) == "ftyp" }
+    }
+
+    private fun read(channel: FileChannel, at: Long, count: Int): ByteArray {
+        val buffer = ByteBuffer.allocate(count)
+        while (buffer.hasRemaining() && channel.read(buffer, at + buffer.position()) >= 0) Unit
+        return buffer.array()
     }
 
     /** The clip's length in bytes as the XMP in [head] gives it. */

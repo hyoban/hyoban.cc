@@ -18,9 +18,17 @@ import java.time.ZoneId
 
 /**
  * What a photo says of itself: its size upright, when it was taken and where; and, for one
- * whose EXIF has no time, as a photo saved from WeChat or a chat, when its file was made.
+ * whose EXIF has no time, as a photo saved from WeChat or a chat, when its file was made;
+ * and whether it is a motion photo, with a clip after its still.
  */
-data class PhotoInfo(val width: Int?, val height: Int?, val takenAt: OffsetDateTime?, val fix: Fix?, val savedAt: OffsetDateTime? = null)
+data class PhotoInfo(
+    val width: Int?,
+    val height: Int?,
+    val takenAt: OffsetDateTime?,
+    val fix: Fix?,
+    val savedAt: OffsetDateTime? = null,
+    val motion: Boolean = false,
+)
 
 /** A photo copied into the app's own store, the SHA-256 of its bytes, and a motion photo's clip. */
 data class CopiedPhoto(val file: File, val sha256: String, val video: File? = null)
@@ -51,6 +59,7 @@ object Photos {
             },
             fix = exif?.latLong?.let { (latitude, longitude) -> Fix(latitude, longitude) }?.takeIf { it.latitude != 0.0 || it.longitude != 0.0 },
             savedAt = runCatching { fileTime(context, uri) }.getOrNull(),
+            motion = MotionPhotos.isMotion(context, uri),
         )
     }
 

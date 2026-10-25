@@ -251,6 +251,7 @@
     <string name="action_remove_photo">Remove photo</string>
     <string name="action_photo_options">Photo options</string>
     <string name="action_photo_utility">Don\'t use as a cover</string>
+    <string name="action_photo_still">Use the still only</string>
     <string name="action_move_earlier">Move earlier</string>
     <string name="action_move_later">Move later</string>
     <string name="section_when_where">When and where</string>
@@ -287,6 +288,13 @@
     <string name="note_local_only">New Moments stay on this phone and aren’t sent to the site</string>
     <string name="confirm_discard">Discard this Moment?</string>
     <string name="action_discard">Discard</string>
+    <string name="confirm_motion">Add as photos?</string>
+    <plurals name="confirm_motion_note">
+        <item quantity="one">%1$d is a Live Photo. Added as a photo, only its still is kept, and its video isn’t saved or published. You can change this later in the photo’s options.</item>
+        <item quantity="other">%1$d are Live Photos. Added as photos, only their stills are kept, and their videos aren’t saved or published. You can change this later in the photo’s options.</item>
+    </plurals>
+    <string name="action_add_as_photos">Add as photos</string>
+    <string name="action_keep_live">Keep Live</string>
     <string name="error_save">Couldn’t save: %1$s</string>
     <string name="error_no_camera">No camera app to take a photo with</string>
     <string name="label_on_phone">On this phone</string>
