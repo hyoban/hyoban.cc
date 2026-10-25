@@ -32,9 +32,10 @@ internal class ThreadsAssistFlow(private val text: String, private val photoCoun
         if (editor == null) return stop()
         // Threads virtualizes the horizontal photo row: neither the visible thumbnails nor
         // its collection item count proves the total number of photos. Only fill the body;
-        // never alter attachments or claim their complete count has been checked.
+        // never alter attachments or claim their complete count has been checked. A single
+        // photo is shown on its own, outside any IgLazyRow, so only its remove button counts.
         val visiblePhotos = visible.count { it.description in REMOVE_ATTACHMENT }
-        if (visible.none { it.viewId == "IgLazyRow" } || visiblePhotos == 0) {
+        if (visiblePhotos == 0) {
             verifiedOnce = false
             return AssistAction.Wait
         }
