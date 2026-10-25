@@ -57,6 +57,7 @@ import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.DeleteOutline
 import androidx.compose.material.icons.rounded.Error
 import androidx.compose.material.icons.rounded.HideImage
+import androidx.compose.material.icons.rounded.MotionPhotosOff
 import androidx.compose.material.icons.rounded.PhotoCamera
 import androidx.compose.material.icons.rounded.Restaurant
 import androidx.compose.material.icons.rounded.Place
@@ -105,6 +106,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.onClick
@@ -149,6 +151,7 @@ import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.spec.PlaceKind
 import cc.hyoban.moments.data.spec.showcase
+import cc.hyoban.moments.ui.components.LiveBadge
 import cc.hyoban.moments.ui.components.isCompactHeight
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.PageWidth
@@ -212,6 +215,9 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
     val originalUtility = remember(originalMedia) { originalMedia.filterValues { !it.showcase }.keys }
     var utility by remember { mutableStateOf(originalUtility) }
     val infos = remember { mutableStateMapOf<Uri, PhotoInfo>() }
+    // The motion photos added as photos alone, their clips left out, and those already asked about.
+    var stills by remember { mutableStateOf(emptySet<Uri>()) }
+    var askedMotion by remember { mutableStateOf(emptySet<Uri>()) }
     // What was eaten, as typed: the dishes in one field, the bill's yuan and people in two.
     val originalFood = original?.food
     var dishes by rememberSaveable { mutableStateOf(originalFood?.dishes.orEmpty().joinToString("、")) }
@@ -242,6 +248,8 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
     LaunchedEffect(photos) {
         photos.filter { it !in infos && it !in originalMedia }.forEach { infos[it] = Photos.read(context, it) }
     }
+    // Motion photos just added, to be asked whether they go in as photos.
+    val unaskedMotion = photos.filter { infos[it]?.motion == true && it !in askedMotion }
 
     // When: the earliest photo's time, else, when none says, the earliest a photo's file was
     // made, else when the page was opened.
@@ -350,7 +358,7 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
         scope.launch {
             try {
                 withContext(NonCancellable) {
-                    val (moment, newPlace) = buildMoment(context, container, text, photos, utility, infos, time, place, food, topic, original, originalMedia)
+                    val (moment, newPlace) = buildMoment(context, container, text, photos, utility, stills, infos, time, place, food, topic, original, originalMedia)
                     when {
                         original == null -> container.addLocal(moment, newPlace)
                         momentChanged -> container.updateLocal(moment, newPlace)
@@ -438,6 +446,9 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
                             onOpenCamera = openCamera,
                             utility = utility,
                             onToggleUtility = { uri -> utility = if (uri in utility) utility - uri else utility + uri },
+                            motion = photos.filter { infos[it]?.motion == true }.toSet(),
+                            stills = stills,
+                            onToggleStill = { uri -> stills = if (uri in stills) stills - uri else stills + uri },
                             onRemove = { removed -> photos = photos - removed },
                             onMove = { from, to -> photos = photos.toMutableList().apply { add(to, removeAt(from)) } },
                         )
@@ -562,6 +573,27 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
             confirmButton = { TextButton(onClick = { saveError = null }) { Text(stringResource(R.string.action_confirm)) } },
         )
     }
+    if (unaskedMotion.isNotEmpty()) {
+        val answer: (Boolean) -> Unit = { asPhotos ->
+            if (asPhotos) stills = stills + unaskedMotion
+            askedMotion = askedMotion + unaskedMotion
+        }
+        AlertDialog(
+            onDismissRequest = { answer(false) },
+            title = { Text(stringResource(R.string.confirm_motion)) },
+            text = { Text(pluralStringResource(R.plurals.confirm_motion_note, unaskedMotion.size, unaskedMotion.size)) },
+            confirmButton = {
+                TextButton(onClick = { answer(true) }, modifier = Modifier.testTag("motion_as_photos")) {
+                    Text(stringResource(R.string.action_add_as_photos))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { answer(false) }, modifier = Modifier.testTag("motion_keep_live")) {
+                    Text(stringResource(R.string.action_keep_live))
+                }
+            },
+        )
+    }
     if (confirmingDiscard) {
         AlertDialog(
             onDismissRequest = { confirmingDiscard = false },
@@ -588,8 +620,9 @@ private fun sharedChoice(place: SharedPlace, places: Map<String, Place>): PlaceC
 }
 
 /**
- * The photos picked, in a row, each with a button to take it out, and tiles to pick more
- * or open the camera app to take one.
+ * The photos picked, in a row, each with a button to take it out, a motion photo marked
+ * as live unless it goes in as a photo, and tiles to pick more or open the camera app to
+ * take one.
  * The first is the Moment's cover, so they are put in order as Material 3 has content
  * reordered: held and then dragged, the one held lifted under the finger and the others
  * stepping aside; a screen reader moves one earlier or later instead.
@@ -601,6 +634,9 @@ private fun PhotoStrip(
     onOpenCamera: () -> Unit,
     utility: Set<Uri>,
     onToggleUtility: (Uri) -> Unit,
+    motion: Set<Uri>,
+    stills: Set<Uri>,
+    onToggleStill: (Uri) -> Unit,
     onRemove: (Uri) -> Unit,
     onMove: (Int, Int) -> Unit,
 ) {
@@ -701,6 +737,7 @@ private fun PhotoStrip(
                 // The site's photos by their URL, the phone's by their Uri.
                 AsyncImage(model = if (uri.scheme == "https" || uri.scheme == "http") uri.toString() else uri, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
                 if (lift > 0f) Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.onSurface.copy(alpha = DRAGGED_LAYER * lift)))
+                if (uri in motion && uri !in stills) LiveBadge(Modifier.align(Alignment.TopStart).padding(Space.s))
                 if (uri in utility) {
                     Box(
                         Modifier.align(Alignment.BottomStart).padding(Space.s).size(UTILITY_DOT).clip(CircleShape).background(MediaOverlay.control),
@@ -724,6 +761,22 @@ private fun PhotoStrip(
                         },
                         modifier = Modifier.semantics { toggleableState = ToggleableState(uri in utility) }.testTag("photo_utility_$index"),
                     )
+                    if (uri in motion) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.action_photo_still)) },
+                            leadingIcon = { Icon(Icons.Rounded.MotionPhotosOff, contentDescription = null) },
+                            trailingIcon = if (uri in stills) {
+                                { Icon(Icons.Rounded.Check, contentDescription = null) }
+                            } else {
+                                null
+                            },
+                            onClick = {
+                                menuFor = null
+                                onToggleStill(uri)
+                            },
+                            modifier = Modifier.semantics { toggleableState = ToggleableState(uri in stills) }.testTag("photo_still_$index"),
+                        )
+                    }
                 }
                 // A small dot to see, in a corner of the 48dp Material 3 has anything tapped take.
                 Box(
@@ -958,7 +1011,8 @@ private fun TimeDialog(time: OffsetDateTime, onDismiss: () -> Unit, onPick: (Off
 
 /**
  * The Moment as a record, its photos copied into the app's store first so it keeps them
- * whatever becomes of the gallery's, and the place it makes, if it makes one. Changing
+ * whatever becomes of the gallery's, a motion photo split into its still and clip unless
+ * it is one of [stills], and the place it makes, if it makes one. Changing
  * [original], it keeps its id, when it was made and the photos it already had as they
  * were. Its place is the one chosen, as a Moment is at one place at most.
  */
@@ -968,6 +1022,7 @@ private suspend fun buildMoment(
     text: String,
     photos: List<Uri>,
     utility: Set<Uri>,
+    stills: Set<Uri>,
     infos: Map<Uri, PhotoInfo>,
     time: OffsetDateTime,
     place: PlaceChoice,
@@ -983,7 +1038,13 @@ private suspend fun buildMoment(
         originalMedia[uri]?.let { return@map it.copy(utility = kept) }
         val uid = Ulid.next()
         val info = infos[uri] ?: Photos.read(context, uri)
+        // Split either way, so a photo alone is its still without the clip trailing after it.
         val copied = Photos.copy(context, uri, directory, uid, splitMotion = true)
+            .let { photo ->
+                if (uri !in stills) return@let photo
+                photo.video?.delete()
+                photo.copy(video = null)
+            }
         MomentMedia(
             uid = uid,
             type = if (copied.video != null) MediaType.LIVE_PHOTO else MediaType.IMAGE,

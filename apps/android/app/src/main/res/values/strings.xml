@@ -237,6 +237,7 @@
     <string name="action_remove_photo">移除照片</string>
     <string name="action_photo_options">照片选项</string>
     <string name="action_photo_utility">不用作封面</string>
+    <string name="action_photo_still">只用静态画面</string>
     <string name="action_move_earlier">往前移</string>
     <string name="action_move_later">往后移</string>
     <string name="section_when_where">时间和地点</string>
@@ -273,6 +274,12 @@
     <string name="note_local_only">新时刻只存在这台手机上，不会同步到网站</string>
     <string name="confirm_discard">放弃这个时刻？</string>
     <string name="action_discard">放弃</string>
+    <string name="confirm_motion">按照片添加？</string>
+    <plurals name="confirm_motion_note">
+        <item quantity="other">有 %1$d 张是实况照片。按照片添加只保留静态画面，视频不会保存和发布。之后也可以在照片选项里改。</item>
+    </plurals>
+    <string name="action_add_as_photos">按照片添加</string>
+    <string name="action_keep_live">保留实况</string>
     <string name="error_save">没能保存：%1$s</string>
     <string name="error_no_camera">没有可以拍照的相机应用</string>
     <string name="label_on_phone">仅本机</string>
