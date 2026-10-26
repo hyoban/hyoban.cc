@@ -349,8 +349,13 @@ the day and trip views.
 
 `footprints/FootprintStore` owns an indexed SQLite database at
 `noBackupFilesDir/footprints.sqlite`, outside API sync, publishing and Android backup.
-There are no API changes. Export before uninstalling; GPX exports include original
-WGS84 coordinates, timestamps and altitude where available. The existing online
+There are no API changes. Export before uninstalling; ordinary GPX exports use the same
+refined track as the map and distance totals, with original WGS84 coordinates, timestamps
+and altitude where available. 导出当前原始采样 GPX also includes uncertain and stationary
+observations excluded from that track, each as an isolated point with accuracy (metres),
+speed and speed uncertainty (metres/second), and its original recording segment in
+`https://hyoban.cc/ns/footprints/1` extensions. It is for reanalysis, not a connected route.
+The existing online
 MapLibre basemap is reused, while collecting samples works without a connection.
 
 The opt-in location foreground service needs precise location and shows an ongoing
@@ -376,10 +381,25 @@ and a 90-second age window, and written in one database transaction. Motion deci
 sample times and examine the entire batch before resting. A mode change or manual pause
 invalidates pending samples from the previous segment. Request replacement after acquisition
 does not introduce a new track segment.
-Fixes over 100 m uncertainty, stale fixes, stationary jitter and implausible jumps are
-filtered. Restarts, pauses and mode changes break the route; gaps over five minutes
-also break it and do not count toward distance or connected track time. Long tracks
-are thinned for display only; export retains stored samples.
+Fresh, valid observations are stored before track-quality filtering, including those over
+100 m uncertainty and stationary jitter. Malformed, stale, out-of-order and obsolete-segment
+callbacks are never stored. Schema version 2 adds nullable speed and speed-uncertainty
+columns without changing old coordinates or recording state; samples discarded by version 1
+cannot be recovered. No original is overwritten by refinement.
+
+`TrackRefiner` derives the map and ordinary GPX deterministically from the stored samples.
+It keeps a bounded window of candidates (30 seconds, at most 32 points), uses accumulated
+displacement and path consistency to retain small walking steps and corners, and waits for
+a following fix before committing a candidate. Stationary clouds are compressed to their
+anchor. Uncertain spikes are checked against subsequent fixes and speed uncertainty;
+a sustained relocation begins a new segment. Fixes over 50 m uncertainty break the displayed
+route, as do restarts, pauses, mode changes, gaps over 45 seconds and movement inconsistent
+with available speed evidence. Those breaks do not count toward distance or connected track
+time. The unconfirmed tail stays in raw storage, so the displayed endpoint can lag behind
+collection. These are conservative initial thresholds, not guarantees that a GPS position
+is correct. Sparse old tracks may become disconnected rather than implying a shortcut.
+Long tracks are thinned for display only; ordinary GPX retains all confirmed points and
+raw GPX retains all stored samples. Sampling intervals and the daily rest policy are unchanged.
 
 Daily recording confirms a stop with multiple spaced fixes over at least three minutes
 without movement beyond the accuracy-aware anchor. Reliable speed also keeps recording
@@ -412,6 +432,28 @@ request durations and callback/stored-point counts, per-fix accuracy/age/speed a
 decisions, timer delays, and sensor/passive wake-up events. Fix timestamps can be matched
 to the local track database. Coordinates, altitude, Wi-Fi/Bluetooth names, tokens and exception
 messages are not logged. There are no diagnostic uploads, extra location polls or wake-up timers.
+With `track_filter=window-v1`, `raw_delivery.stored_samples`, `fix.raw_stored` and the request's
+`stored_fixes` count describe original observations, not confirmed display points. Refinement
+runs when reading tracks and does not write live logs. With `track_diagnostics=1`, existing
+location deliveries also carry a `recording_environment` snapshot at most once per minute
+(battery, interactive/idle and power-save state), plus each fix's monotonic sample time and
+the OS build on service start. These snapshots are opportunistic: no fixes means no extra
+timer or wake-up, and battery percentages cannot attribute power use to this app alone.
+
+Exporting diagnostics appends a streaming replay of the latest recorded day, even when
+that day is older than the live log. The `track_replay_start` record names the day, scope,
+filter version and principal thresholds. `track_decision` records explain pending windows,
+confirmed points, quality rejection, expired candidates, spikes, relocation and unconfirmed
+tails using fix timestamps, accuracy, speed, displacement and thresholds. `track_link_break`
+uses the same connection rule as the map/GPX; `track_replay_summary` gives raw/display counts,
+segments and connected distance/time. Reason counts are event counts, not mutually exclusive
+sample totals. These rows have `mode=replay`: `time_ms` is export time, `fix_time_ms` identifies
+the original sample, and `decided_at_fix_ms` identifies the confirming observation. They
+describe the current filter's reconstruction, not what an older app drew at recording time.
+The replay contains no coordinates or altitude and never changes stored samples. Only the
+latest recorded day is included to bound the work; its rows are written directly to the
+chosen export, so that file may exceed the rotating live log's 2 MiB cap. Deleting the
+samples also removes the evidence needed for this replay.
 
 The recorder's status-bar notification icon follows its live state: footprints for
 valid fixes, a crosshair while waiting for a fix, and a warning triangle when system

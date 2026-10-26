@@ -171,7 +171,10 @@ private fun DiagnosticsSettings(container: AppContainer) {
             try {
                 withContext(Dispatchers.IO) {
                     val output = context.contentResolver.openOutputStream(uri, "wt") ?: error("Cannot open document")
-                    output.bufferedWriter(Charsets.UTF_8).use { container.footprintDiagnostics.export(it) }
+                    output.bufferedWriter(Charsets.UTF_8).use {
+                        container.footprintDiagnostics.export(it)
+                        container.footprints.exportReplayDiagnostics(it)
+                    }
                 }
             } catch (e: CancellationException) { throw e } catch (_: Exception) { failed = true } finally { busy = false }
         }
