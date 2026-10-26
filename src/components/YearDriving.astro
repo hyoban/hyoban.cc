@@ -1,4 +1,5 @@
 ---
+import CarModel from '@/components/CarModel.astro'
 import { formatKilometers, getCarSummary } from '@/car'
 import { DELIVERED_ON, getDistanceLevel, getYearWeeks, type Outing } from '@/data/vehicle'
 import {
@@ -187,6 +188,7 @@ const spendingTiles: Tile[] = [
 ]
 ---
 
+<CarModel />
 <p class="year-lead">
   <span>
     {formatNumber(distance / 1000)}<small>km</small>

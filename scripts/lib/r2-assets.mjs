@@ -9,6 +9,7 @@ const execFile = promisify(execFileCallback)
 const contentTypes = new Map([
   ['.avif', 'image/avif'],
   ['.gif', 'image/gif'],
+  ['.glb', 'model/gltf-binary'],
   ['.jpeg', 'image/jpeg'],
   ['.jpg', 'image/jpeg'],
   ['.mov', 'video/quicktime'],

@@ -24,6 +24,13 @@ Use these object key prefixes:
 - `posts/<post-slug>/<semantic-file>` for article media
 - `site/<file>` for global site assets
 
+The car on the year review's driving section is `site/zeekr-007gt-5.glb` (a
+meshopt-compressed glTF, generated from photos of a 007GT in its colour and
+cleaned up) with its still `site/zeekr-007gt-5.webp`. The originals, inputs and
+clean-up scripts are kept out of the repository under `.private/3d/zeekr-007gt`;
+a changed model and its still are uploaded under the next number, since objects
+are immutable.
+
 Upload a new article or site asset without adding it to the repository:
 
 ```sh
