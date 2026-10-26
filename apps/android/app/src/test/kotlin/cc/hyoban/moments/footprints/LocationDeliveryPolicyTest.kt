@@ -25,8 +25,51 @@ class LocationDeliveryPolicyTest {
         assertTrue(accepts(85_000, previous = 70_000))
     }
     @Test fun batchingHealthAllowsNormalDeliveryButDetectsASilentProvider() {
-        assertFalse(LocationDeliveryPolicy.batchStalled(60_000, 0))
-        assertFalse(LocationDeliveryPolicy.batchStalled(90_000, 45_000))
-        assertTrue(LocationDeliveryPolicy.batchStalled(90_000, 0))
+        val health = BatchDeliveryHealth()
+        health.started(0)
+        assertFalse(health.stalled(60_000))
+        assertTrue(health.stalled(90_000))
+        health.freshDelivery(45_000)
+        assertFalse(health.stalled(90_000))
+    }
+
+    @Test fun weakButFreshFixesDoNotDisableBatchingOrPreventNoFixRest() {
+        val health = BatchDeliveryHealth()
+        val daily = DailyRecordingPolicy(0)
+        health.started(0)
+        // Both deliveries fail accuracy filtering, so neither is passed to daily.fix().
+        health.freshDelivery(60_000)
+        health.freshDelivery(120_000)
+        assertFalse(health.staleOnly(120_000))
+        assertFalse(health.stalled(120_000))
+        assertTrue(health.canBatch(120_000))
+        daily.tick(120_000)
+        assertEquals(DailyRecordingPolicy.RestReason.NO_FIX, daily.restReason)
+    }
+
+    @Test fun staleCallbacksMustNotOverrideARecentFreshDelivery() {
+        val health = BatchDeliveryHealth()
+        health.started(0)
+        assertTrue(health.staleOnly(60_000))
+        health.freshDelivery(60_000)
+        assertFalse(health.staleOnly(75_000))
+        assertTrue(health.staleOnly(120_000))
+    }
+
+    @Test fun failuresBackOffButNeverPermanentlyDisableBatching() {
+        val health = BatchDeliveryHealth()
+        var now = 0L
+        for (delay in listOf(600_000L, 1_200_000L, 2_400_000L, 3_600_000L, 3_600_000L)) {
+            health.backOff(now)
+            assertEquals(now + delay, health.retryAt)
+            assertFalse(health.canBatch(health.retryAt - 1))
+            assertTrue(health.canBatch(health.retryAt))
+            now = health.retryAt
+        }
+        health.started(now)
+        for (offset in listOf(60_000L, 120_000L, 180_000L)) health.freshDelivery(now + offset)
+        now += 180_000
+        health.backOff(now)
+        assertEquals(now + BatchDeliveryHealth.RETRY_MS, health.retryAt)
     }
 }

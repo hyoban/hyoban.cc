@@ -19,6 +19,7 @@ android {
         targetSdk = 37
         versionCode = 1
         versionName = "0.1.0"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         // Where the records come from, the origin their photos and videos are served from, and
         // the map's styles in light and dark: what the app reads until its settings say otherwise.
         buildConfigField("String", "API_URL", "\"https://hyoban-cc-api.hyoban.workers.dev\"")
@@ -117,5 +118,7 @@ dependencies {
     implementation(libs.gson)
     debugImplementation(libs.androidx.compose.ui.tooling)
     testImplementation(libs.junit)
+    androidTestImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.test.runner)
     testImplementation(libs.kotlin.test.junit)
 }

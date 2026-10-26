@@ -292,11 +292,16 @@ hints, not guaranteed rates. On Android 12+, initial acquisition and stationary 
 use a system-enforced two-minute request duration, independent of the app timer. After
 acquiring a usable fix, daily recording allows up to 60 seconds of delivery batching;
 manual trips and acquisition are not batched. Providers may still deliver individual fixes.
-A stale-only batch after a full delivery window, or 90 seconds without fresh samples, disables
-batching for the current OS build and immediately retries ordinary delivery without a segment
-break. An OS update permits trying batching again. This guards devices/emulators whose GNSS
-batch implementation stops delivering fixes; enabling batching is not assumed to save power
-or work correctly merely because the API accepts it.
+Fresh delivery is measured before accuracy filtering, so weak but current fixes do not count
+as a batching failure. Stale-only delivery for a full window, or 90 seconds without fresh
+delivery, falls back to bounded ordinary acquisition without breaking the segment. Batching
+retries after 10 minutes, with repeated failures backing off to 20, 40, then at most 60 minutes.
+Only a good fix during active recording can trigger that retry; rest is never interrupted to
+test batching. Three minutes of healthy batched delivery resets the backoff. The cooldown
+lasts for the recording service's lifetime; older persistent OS-build blacklists are removed.
+This guards devices/emulators whose GNSS batch implementation stops delivering fixes without
+permanently penalizing a temporary signal outage. Enabling batching is not assumed to save
+power or work correctly merely because the API accepts it.
 A batch is ordered by monotonic sample time, checked against the current recording segment
 and a 90-second age window, and written in one database transaction. Motion decisions use
 sample times and examine the entire batch before resting. A mode change or manual pause
@@ -386,7 +391,12 @@ permission on Android 10+, and operates only during daily recording. Entering mo
 wake a resting recorder; stillness is advisory and cannot pause a manual trip. Missing Play
 services, denied permissions or registration failures leave native motion/passive detection
 available. Activity events never opt the user into recording or resume a manually paused
-recorder. The app does not send tracks to its API or Google’s fused-location client.
+recorder. Its PendingIntent remains registered while the saved daily selection is active,
+even if the recording service is lost. A fresh movement event can restart that service with
+precise and background location access; service delivery rechecks the saved state and
+permissions so a later pause or manual trip wins. A queued movement followed by stillness
+does not start GPS. Android/vendor background-start restrictions still apply, and force-stop
+requires reopening the app. The app does not send tracks to its API or Google’s fused-location client.
 
 ### Connection automation
 
@@ -441,6 +451,22 @@ in `local.properties` (`sdk.dir=…`) and a JDK 17 or newer:
 ```sh
 ./gradlew :app:testDebugUnitTest :app:assembleDebug
 ```
+
+`RecordingRecoveryTest` under `src/androidTest` checks service recovery, pause races and fresh
+but inaccurate batch delivery on an emulator. It skips physical devices and takes about a
+minute. Build with `:app:assembleDebugAndroidTest`, then install both APKs on the emulator
+and run it explicitly (replace the serial if needed):
+
+```sh
+adb -s emulator-5554 install -r app/build/outputs/apk/debug/app-debug.apk
+adb -s emulator-5554 install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+adb -s emulator-5554 shell am instrument -w -e class cc.hyoban.moments.footprints.RecordingRecoveryTest cc.hyoban.moments.test/androidx.test.runner.AndroidJUnitRunner
+```
+
+These tests grant recording permissions and temporarily mock GPS, restoring recording settings
+and removing the mock provider afterward. They simulate the background-start exemption for
+the service recovery test; physical Activity Recognition events and OEM restrictions still
+need device testing.
 
 The maps are OpenFreeMap's vector tiles drawn by MapLibre, which need no key.
 
