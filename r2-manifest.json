@@ -3,10 +3,10 @@
   "accountId": "e68c7dce80df20ff5802b9ac36f1eab6",
   "bucket": "blog-images",
   "origin": "https://image.hyoban.cc",
-  "createdAt": "2026-10-26T07:34:18.169Z",
-  "inventorySha256": "335a76fb342fff3ebe8f4dd87cec624d317e15dec962bbc58a1eb05fbc8490b7",
-  "objectCount": 5371,
-  "totalBytes": 1515716277,
+  "createdAt": "2026-10-26T16:06:56.070Z",
+  "inventorySha256": "3cfa8caf93deab60676bf7dd93c6b86e59688db7fcf86965a4bf5d8d0bcbf561",
+  "objectCount": 5379,
+  "totalBytes": 1528098301,
   "objects": [
     {
       "key": "devices/airpods-4.webp",
@@ -42598,6 +42598,70 @@
       "contentType": "image/png",
       "etag": "c23feb8ee9f4bbb7fa1a936fe99a9504",
       "lastModified": "2026-07-29T15:04:20.689Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "site/zeekr-007gt-2.glb",
+      "bytes": 2466420,
+      "contentType": "model/gltf-binary",
+      "etag": "e668c6f7eb02c609e9df04d872eb236b",
+      "lastModified": "2026-10-26T15:49:35.613Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "site/zeekr-007gt-3.glb",
+      "bytes": 2461748,
+      "contentType": "model/gltf-binary",
+      "etag": "17ff1b5fd6db04ecb429829d934e512b",
+      "lastModified": "2026-10-26T15:53:58.257Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "site/zeekr-007gt-3x1.webp",
+      "bytes": 26690,
+      "contentType": "image/webp",
+      "etag": "d03981c7612c1f63284d258903e18789",
+      "lastModified": "2026-10-26T15:28:29.957Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "site/zeekr-007gt-4.glb",
+      "bytes": 2462124,
+      "contentType": "model/gltf-binary",
+      "etag": "5664c9382c5777b3efb89aad8469edf8",
+      "lastModified": "2026-10-26T15:57:57.639Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "site/zeekr-007gt-5.glb",
+      "bytes": 2460900,
+      "contentType": "model/gltf-binary",
+      "etag": "756811a7eaf7e4b79931235c6eb12568",
+      "lastModified": "2026-10-26T16:02:34.395Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "site/zeekr-007gt-5.webp",
+      "bytes": 26506,
+      "contentType": "image/webp",
+      "etag": "5a43655bc16a8d9450167b16f9f33852",
+      "lastModified": "2026-10-26T16:03:19.152Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "site/zeekr-007gt.glb",
+      "bytes": 2432356,
+      "contentType": "model/gltf-binary",
+      "etag": "9123ebcadc86da775a22de42ce87c40c",
+      "lastModified": "2026-10-26T15:14:40.078Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "site/zeekr-007gt.webp",
+      "bytes": 45280,
+      "contentType": "image/webp",
+      "etag": "70efe75ce8e16c3465b4d9881db6f058",
+      "lastModified": "2026-10-26T15:19:37.828Z",
       "storageClass": "Standard"
     },
     {
