@@ -19,6 +19,7 @@ materialIconsExtended = "1.7.8"
 material3 = "1.5.0-beta01"
 materialKolor = "5.0.1"
 junit = "4.13.2"
+testRunner = "1.7.0"
 maplibre = "13.7.1"
 media3 = "1.11.1"
 # The OkHttp Coil and Media3 are built against; the app shares one client with them.
@@ -67,6 +68,7 @@ glance-material3 = { group = "androidx.glance", name = "glance-material3", versi
 exifinterface = { group = "androidx.exifinterface", name = "exifinterface", version.ref = "exifinterface" }
 work-runtime = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "work" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
+androidx-test-runner = { group = "androidx.test", name = "runner", version.ref = "testRunner" }
 kotlin-test-junit = { group = "org.jetbrains.kotlin", name = "kotlin-test-junit", version.ref = "kotlin" }
 
 [plugins]

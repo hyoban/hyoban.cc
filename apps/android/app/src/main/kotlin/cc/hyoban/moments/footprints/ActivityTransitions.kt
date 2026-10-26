@@ -18,6 +18,8 @@ import com.google.android.gms.location.ActivityTransitionResult
 import com.google.android.gms.location.DetectedActivity
 import com.google.android.gms.tasks.Task
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -46,7 +48,8 @@ internal object ActivityTransitions {
         PendingIntent.FLAG_UPDATE_CURRENT or if (Build.VERSION.SDK_INT >= 31) PendingIntent.FLAG_MUTABLE else 0)
 
     suspend fun sync(context: Context) = lock.withLock {
-        val diagnostics = (context.applicationContext as MomentsApplication).container.footprintDiagnostics
+        val container = (context.applicationContext as MomentsApplication).container
+        val diagnostics = container.footprintDiagnostics
         if (!available(context)) {
             _status.value = R.string.footprints_activity_unavailable
             diagnostics.record("activity_recognition", mapOf("state" to "unavailable"))
@@ -54,7 +57,9 @@ internal object ActivityTransitions {
         }
         val client = ActivityRecognition.getClient(context)
         try {
-            if (!enabled(context) || !RecordingService.dailyRecordingActive() || !permitted(context)) {
+            // Keep the PendingIntent registered across service/process loss while daily recording is wanted.
+            val state = withContext(Dispatchers.IO) { container.footprints.state() }
+            if (!enabled(context) || !ActivityWakePolicy.dailyRequested(state) || !permitted(context)) {
                 client.removeActivityTransitionUpdates(pending(context)).awaitResult()
                 _status.value = when {
                     !enabled(context) -> R.string.footprints_activity_off
@@ -93,12 +98,14 @@ class ActivityTransitionReceiver : BroadcastReceiver() {
             try {
                 // Keep the broadcast alive until the recorder has processed the wake-up, within its deadline.
                 withTimeoutOrNull(8_000) {
-                    result.transitionEvents.sortedBy { it.elapsedRealTimeNanos }.forEach { event ->
-                        if (SystemClock.elapsedRealtimeNanos() - event.elapsedRealTimeNanos !in 0..120_000_000_000L) return@forEach
-                        val moving = event.activityType != DetectedActivity.STILL && event.transitionType == ActivityTransition.ACTIVITY_TRANSITION_ENTER ||
-                            event.activityType == DetectedActivity.STILL && event.transitionType == ActivityTransition.ACTIVITY_TRANSITION_EXIT
-                        RecordingService.activityTransition(event.elapsedRealTimeNanos, moving, event.activityType)
-                    }
+                    // A queued movement followed by STILL must not cold-start GPS after the user has stopped.
+                    val motion = ActivityWakePolicy.latest(result.transitionEvents.mapNotNull { event ->
+                        val entering = event.transitionType == ActivityTransition.ACTIVITY_TRANSITION_ENTER
+                        if (!entering && event.activityType != DetectedActivity.STILL) return@mapNotNull null
+                        ActivityMotion(event.elapsedRealTimeNanos,
+                            if (event.activityType == DetectedActivity.STILL) !entering else true, event.activityType)
+                    }, SystemClock.elapsedRealtimeNanos())
+                    if (motion != null) RecordingService.activityTransition(context.applicationContext, motion)
                 }
             } finally { pending.finish() }
         }
