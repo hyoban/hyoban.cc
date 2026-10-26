@@ -1,0 +1,96 @@
+---
+import { getAssetUrl } from '@/asset-url'
+
+// The car in 3D at the head of the driving section: a model made from photos of a 007GT in
+// its colour, in site/ on the image origin, drawn by src/car-model-client.ts once the
+// section nears the screen, where it drives in with the scroll the first time it's seen.
+// Until then, and without the script or WebGL, a still of it.
+---
+
+<figure
+  class="car-model"
+  data-src={getAssetUrl('site/zeekr-007gt-5.glb')}
+  role="img"
+  aria-label="极氪 007GT 的 3D 模型，左右拖动可以转动"
+>
+  <img src={getAssetUrl('site/zeekr-007gt-5.webp')} alt="" width="1280" height="426" loading="lazy" decoding="async" />
+</figure>
+
+<script>
+  let disposers: (() => void)[] = []
+
+  // Three.js only loads for a car about to come into sight, and each is let go when the
+  // router swaps the page out.
+  function initializeCarModels() {
+    const frames = document.querySelectorAll<HTMLElement>('.car-model:not(.is-mounted)')
+    if (!frames.length) return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue
+          const frame = entry.target as HTMLElement
+          observer.unobserve(frame)
+          frame.classList.add('is-mounted')
+          import('@/car-model-client')
+            .then(({ mountCarModel }) => mountCarModel(frame, frame.dataset.src!))
+            .then((dispose) => disposers.push(dispose))
+            .catch(() => frame.classList.remove('is-mounted'))
+        }
+      },
+      { rootMargin: '50% 0px' },
+    )
+    for (const frame of frames) observer.observe(frame)
+  }
+
+  document.addEventListener('astro:page-load', initializeCarModels)
+  document.addEventListener('astro:before-swap', () => {
+    for (const dispose of disposers) dispose()
+    disposers = []
+  })
+</script>
+
+<style>
+  .car-model {
+    position: relative;
+    aspect-ratio: 3;
+    /* Up beside the section's heading, its roof level with it. */
+    margin: -2.75rem 0 1rem;
+
+    & img,
+    & :global(canvas) {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    & img {
+      object-fit: contain;
+    }
+
+    /* The model takes over from its still once it has drawn. */
+    & :global(canvas) {
+      opacity: 0;
+      cursor: grab;
+
+      &:active {
+        cursor: grabbing;
+      }
+    }
+
+    &.is-ready :global(canvas) {
+      opacity: 1;
+    }
+
+    &.is-ready img {
+      opacity: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .car-model img,
+    .car-model :global(canvas) {
+      transition: opacity 200ms var(--ease-out);
+    }
+  }
+</style>
