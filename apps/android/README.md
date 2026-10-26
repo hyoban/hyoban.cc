@@ -426,7 +426,17 @@ Wi-Fi names or Bluetooth addresses. Old confirmation notifications are cleared o
 
 An opt-in `specialUse` foreground service watches system connection callbacks and
 Bluetooth broadcasts, without requesting GPS fixes or actively scanning. Its separate
-ongoing notification keeps it available when recording is paused. Automatic recording
+ongoing notification keeps it available when recording is paused.
+On Android 12+, its permanent network callback excludes location-sensitive information.
+A new Wi-Fi connection opens a short SSID lookup, removed as soon as identities are known
+or after ten seconds. Known connections retain their names until disconnection; signal
+strength and validation changes do not trigger more location access. Unknown identities
+remain unknown until reconnection or watcher reconfiguration, without polling or treating
+them as departures. Bluetooth rules continue while identity is pending, and manual choices
+still win. Earlier Android releases retain the legacy network callback. SSID lookups can
+appear in the system's location access history even though they request no GPS fixes.
+
+Automatic recording
 requires precise and background location permission and system location enabled, including
 Bluetooth-only rules, so a background start can access location;
 paired Bluetooth access requires Nearby devices on Android 12+. Notifications must be

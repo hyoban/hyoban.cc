@@ -38,6 +38,10 @@ class ConnectionReminderService : Service() {
     private var transitions = ConnectionTransitions(rules)
     private var epoch = 0
     private var callback: ConnectivityManager.NetworkCallback? = null
+    private var identityCallback: ConnectivityManager.NetworkCallback? = null
+    private var identityTimeout: Job? = null
+    private val unresolvedNetworks = mutableSetOf<Network>()
+    private var identitySeed = true
     private var receiver: BroadcastReceiver? = null
     private val profiles = mutableListOf<Pair<Int, BluetoothProfile>>()
     private val networks = mutableMapOf<Network, String?>()
@@ -72,7 +76,7 @@ class ConnectionReminderService : Service() {
                         // Manual changes take precedence over any unsettled connection event.
                         debounce?.cancel()
                         changeVersion++
-                        transitions.settle(state)
+                        transitions.settle(state, manual = true)
                     }
                     recording = state
                 }
@@ -167,13 +171,27 @@ class ConnectionReminderService : Service() {
             val lost: (Network) -> Unit = { network ->
                 post(generation) {
                     val known = networks.containsKey(network)
+                    val pending = unresolvedNetworks.remove(network)
                     networks.remove(network)
                     initialNetworks.remove(network)
-                    if (known) updateWifi(seed = false)
+                    if (known || pending) {
+                        identitySeed = false
+                        transitions.resolvingWifi(unresolvedNetworks.isNotEmpty())
+                        if (unresolvedNetworks.isEmpty()) stopIdentityLookup("disconnected")
+                        updateWifi(seed = false)
+                    }
                 }
             }
-            callback = if (Build.VERSION.SDK_INT >= 31) object : ConnectivityManager.NetworkCallback(FLAG_INCLUDE_LOCATION_INFO) {
-                override fun onCapabilitiesChanged(network: Network, capabilities: NetworkCapabilities) = caps(network, capabilities)
+            callback = if (Build.VERSION.SDK_INT >= 31) object : ConnectivityManager.NetworkCallback() {
+                // Persistent callbacks deliberately omit location info: RSSI/validation changes
+                // must not keep accessing location after an SSID has already been identified.
+                override fun onAvailable(network: Network) = post(generation) {
+                    if (network in networks || !unresolvedNetworks.add(network)) return@post
+                    if (identityCallback == null) identitySeed = network in initialNetworks
+                    else if (network !in initialNetworks) identitySeed = false
+                    transitions.resolvingWifi(true)
+                    startIdentityLookup(generation)
+                }
                 override fun onLost(network: Network) = lost(network)
             } else object : ConnectivityManager.NetworkCallback() {
                 override fun onCapabilitiesChanged(network: Network, capabilities: NetworkCapabilities) = caps(network, capabilities)
@@ -185,10 +203,68 @@ class ConnectionReminderService : Service() {
     }
 
     private fun updateWifi(seed: Boolean) {
+        if (unresolvedNetworks.isNotEmpty()) return
         val known = networks.values.none { it == null }
         transitions.wifi(if (known) networks.values.filterNotNull().toSet() else null, seed)
         updateStatus(if (known) R.string.connection_automation_watching else R.string.connection_automation_wifi_unknown)
         changed()
+    }
+
+    @androidx.annotation.RequiresApi(31)
+    private fun startIdentityLookup(generation: Int) {
+        if (identityCallback != null) return
+        val lookup = object : ConnectivityManager.NetworkCallback(FLAG_INCLUDE_LOCATION_INFO) {
+            override fun onCapabilitiesChanged(network: Network, capabilities: NetworkCapabilities) {
+                post(generation) {
+                    if (identityCallback !== this || network !in unresolvedNetworks) return@post
+                    if (!wifiAllowed(background = true)) { configure(rules); return@post }
+                    // Never substitute the primary Wi-Fi's SSID for a secondary network.
+                    val ssid = capabilities.wifiSsid() ?: return@post
+                    networks[network] = ssid
+                    unresolvedNetworks.remove(network)
+                    initialNetworks.remove(network)
+                    if (unresolvedNetworks.isEmpty()) {
+                        transitions.resolvingWifi(false)
+                        stopIdentityLookup("resolved")
+                        updateWifi(identitySeed)
+                    }
+                }
+            }
+        }
+        identityCallback = lookup
+        // Bound access even when the system redacts identity. No polling of stable connections.
+        identityTimeout = scope.launch {
+            delay(IDENTITY_TIMEOUT_MS)
+            post(generation) {
+                if (identityCallback !== lookup) return@post
+                unresolvedNetworks.forEach { networks[it] = null }
+                unresolvedNetworks.clear()
+                transitions.resolvingWifi(false)
+                stopIdentityLookup("timeout")
+                updateWifi(identitySeed)
+            }
+        }
+        try {
+            connectivity.registerNetworkCallback(NetworkRequest.Builder().addTransportType(NetworkCapabilities.TRANSPORT_WIFI).build(), lookup)
+            diagnostic("wifi_identity_lookup", "state" to "started")
+        } catch (e: Exception) {
+            unresolvedNetworks.forEach { networks[it] = null }
+            unresolvedNetworks.clear()
+            transitions.resolvingWifi(false)
+            stopIdentityLookup("registration_failed")
+            updateWifi(identitySeed)
+            throw e
+        }
+    }
+
+    private fun stopIdentityLookup(reason: String) {
+        identityTimeout?.cancel()
+        identityTimeout = null
+        identityCallback?.let {
+            runCatching { connectivity.unregisterNetworkCallback(it) }
+            diagnostic("wifi_identity_lookup", "state" to "stopped", "reason" to reason)
+        }
+        identityCallback = null
     }
 
     private fun seedBluetooth(generation: Int) {
@@ -248,7 +324,7 @@ class ConnectionReminderService : Service() {
                 if (config != rules || !config.enabled) return@post
                 if (recording != null && recording != state) {
                     // A manual change may reach the database before its revision observer runs.
-                    transitions.settle(state)
+                    transitions.settle(state, manual = true)
                     recording = state
                     diagnostic("connection_action_skipped", "reason" to "recording_changed")
                     return@post
@@ -288,6 +364,8 @@ class ConnectionReminderService : Service() {
         changeVersion++
         callback?.let { runCatching { connectivity.unregisterNetworkCallback(it) } }
         callback = null
+        stopIdentityLookup("released")
+        unresolvedNetworks.clear()
         receiver?.let { runCatching { unregisterReceiver(it) } }
         receiver = null
         profiles.forEach { (type, proxy) -> runCatching { bluetooth?.closeProfileProxy(type, proxy) } }
@@ -306,6 +384,7 @@ class ConnectionReminderService : Service() {
 
     companion object {
         private const val SETTLE_DELAY_MS = 5_000L
+        private const val IDENTITY_TIMEOUT_MS = 10_000L
         private const val WATCH_CHANNEL = "connection-watch"
         private const val WATCH_ID = 2301
         private var live: ConnectionReminderService? = null
