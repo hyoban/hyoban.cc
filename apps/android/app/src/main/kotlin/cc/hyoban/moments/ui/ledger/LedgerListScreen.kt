@@ -39,6 +39,7 @@ import cc.hyoban.moments.ui.theme.Space
 fun filterBills(ledger: Ledger, filter: LedgerFilter, query: String, moments: Map<String, MomentRecord>, trips: List<TripRecord>): List<Txn> {
     val words = query.trim().lowercase().split(Regex("\\s+")).filter { it.isNotEmpty() }
     val categories = filter.category?.let { id -> setOf(id) + ledger.categories.filter { it.parent == id }.map { it.id } }
+        ?: filter.categoryName?.let { name -> ledger.categories.filter { ledger.topCategoryName(it.id) == name }.map { it.id }.toSet() }
     return ledger.txns.filter { txn ->
         (filter.book == null || txn.book == filter.book) &&
             (filter.account == null || txn.payers.any { it.account == filter.account } || txn.toAccount == filter.account) &&

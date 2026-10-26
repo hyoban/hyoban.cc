@@ -88,7 +88,8 @@ class LedgerStore(private val context: Context) : SQLiteOpenHelper(
             Rates(out)
         }
         val current = db.rawQuery("SELECT value FROM meta WHERE key='book'", null).use { if (it.moveToFirst()) it.getString(0) else null }
-        return Ledger(books, accounts, categories, txns, rates, current)
+        val all = db.rawQuery("SELECT value FROM meta WHERE key='all'", null).use { it.moveToFirst() && it.getString(0) == "1" }
+        return Ledger(books, accounts, categories, txns, rates, current, all)
     }
 
     private suspend fun write(block: (SQLiteDatabase) -> Unit) = withContext(Dispatchers.IO) {
@@ -130,7 +131,13 @@ class LedgerStore(private val context: Context) : SQLiteOpenHelper(
         db.delete("books", "id=?", arrayOf(id))
     }
 
-    suspend fun setCurrentBook(id: String) = write { it.replace("meta", ContentValues().apply { put("key", "book"); put("value", id) }) }
+    suspend fun setCurrentBook(id: String) = write {
+        it.replace("meta", ContentValues().apply { put("key", "book"); put("value", id) })
+        it.replace("meta", ContentValues().apply { put("key", "all"); put("value", "0") })
+    }
+
+    /** Shows every book at once, a new bill still going to the one chosen last. */
+    suspend fun showAllBooks() = write { it.replace("meta", ContentValues().apply { put("key", "all"); put("value", "1") }) }
 
     suspend fun saveCategory(category: Category) = write { it.replace("categories", category.values()) }
 

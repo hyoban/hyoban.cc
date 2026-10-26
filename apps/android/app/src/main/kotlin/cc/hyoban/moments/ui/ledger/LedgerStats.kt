@@ -86,7 +86,7 @@ fun categoryName(ledger: Ledger, id: String?): String = when (id) {
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun StatsView(ledger: Ledger, book: Book, nav: LedgerNav) {
+fun StatsView(ledger: Ledger, books: Set<String>, currency: String, nav: LedgerNav, byName: Boolean = false) {
     var span by rememberSaveable { mutableIntStateOf(0) }
     var anchorDay by rememberSaveable { mutableLongStateOf(LocalDate.now().withDayOfMonth(1).toEpochDay()) }
     var income by rememberSaveable { androidx.compose.runtime.mutableStateOf(false) }
@@ -97,8 +97,11 @@ fun StatsView(ledger: Ledger, book: Book, nav: LedgerNav) {
         Span.YEAR -> anchor.withDayOfYear(1) to anchor.withDayOfYear(1).plusYears(1)
         Span.ALL -> null to null
     }
-    val entries = remember(ledger, book) { ledger.entries.filter { it.txn.book == book.id } }
-    val summary = remember(entries, start, end, book.currency) { summarize(entries, ledger.rates, book.currency, start, end, ledger::topCategory) }
+    val entries = remember(ledger, books) { ledger.entries.filter { it.txn.book in books } }
+    // Across books, a category is summed with those of the same name in the others.
+    val topOf: (String?) -> String? = if (byName) ledger::topCategoryName else ledger::topCategory
+    val summary = remember(entries, start, end, currency, byName) { summarize(entries, ledger.rates, currency, start, end, topOf) }
+    val book = books.singleOrNull()
     val period = when (mode) {
         Span.MONTH -> anchor.toString().take(7)
         Span.YEAR -> anchor.year.toString()
@@ -138,13 +141,13 @@ fun StatsView(ledger: Ledger, book: Book, nav: LedgerNav) {
                     }
                 }
             }
-            Totals(summary, book.currency)
+            Totals(summary, currency)
             Row(Modifier.padding(horizontal = Space.gutter, vertical = Space.s), horizontalArrangement = Arrangement.spacedBy(Space.s)) {
                 FilterChip(selected = !income, onClick = { income = false }, label = { Text(stringResource(R.string.ledger_kind_expense)) })
                 FilterChip(selected = income, onClick = { income = true }, label = { Text(stringResource(R.string.ledger_kind_income)) })
             }
             if (mode != Span.ALL) {
-                Bars(summary, income, mode == Span.MONTH, start!!, end!!, book.currency)
+                Bars(summary, income, mode == Span.MONTH, start!!, end!!, currency)
             }
             val byCategory = if (income) summary.incomeByCategory else summary.expenseByCategory
             val total = byCategory.sumOf { it.second }.coerceAtLeast(1)
@@ -158,18 +161,23 @@ fun StatsView(ledger: Ledger, book: Book, nav: LedgerNav) {
                             val name = categoryName(ledger, category)
                             SegmentedListItem(
                                 onClick = {
-                                    if (category?.startsWith("@") != true) nav.list(LedgerFilter(title = name, book = book.id, category = category, period = period))
+                                    if (category?.startsWith("@") != true) {
+                                        nav.list(
+                                            if (byName) LedgerFilter(title = name, categoryName = category, period = period)
+                                            else LedgerFilter(title = name, book = book, category = category, period = period),
+                                        )
+                                    }
                                 },
                                 shapes = shapes,
                                 colors = segmentColors(),
-                                leadingContent = { LeadingIcon(categoryIcon(category?.let { if (it.startsWith("@")) it else ledger.categoriesById[it]?.name })) },
+                                leadingContent = { LeadingIcon(categoryIcon(category?.let { if (it.startsWith("@")) it else ledger.categoriesById[it]?.name ?: it })) },
                                 supportingContent = {
                                     Column(verticalArrangement = Arrangement.spacedBy(Space.xs)) {
                                         Text("${(share * 1000).roundToInt() / 10.0}%")
                                         LinearProgressIndicator(progress = { share }, modifier = Modifier.fillMaxWidth(), drawStopIndicator = {})
                                     }
                                 },
-                                trailingContent = { Text(formatMoney(cents, book.currency), style = MaterialTheme.typography.titleSmall) },
+                                trailingContent = { Text(formatMoney(cents, currency), style = MaterialTheme.typography.titleSmall) },
                             ) { Text(name, maxLines = 1) }
                         }
                     },
