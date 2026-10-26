@@ -562,6 +562,7 @@
     <string name="ledger_balance">Net</string>
     <string name="ledger_balance_label">Balance</string>
     <string name="ledger_switch_book">Switch book</string>
+    <string name="ledger_all_books">All books</string>
     <string name="ledger_manage_books">Manage books</string>
     <string name="ledger_settings_title">Ledger settings</string>
     <string name="ledger_empty_title">No bills yet</string>

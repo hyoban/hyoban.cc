@@ -292,6 +292,7 @@ data class LedgerList(
     val book: String? = null,
     val account: String? = null,
     val category: String? = null,
+    val categoryName: String? = null,
     val tag: String? = null,
     val trip: String? = null,
     val place: String? = null,
@@ -410,7 +411,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
             },
             account = { navController.goTo(LedgerAccount(it)) },
             editAccount = { navController.navigate(LedgerAccountEdit(it)) },
-            list = { f -> navController.navigate(LedgerList(f.title, f.book, f.account, f.category, f.tag, f.trip, f.place, f.day, f.period, f.search)) },
+            list = { f -> navController.navigate(LedgerList(f.title, f.book, f.account, f.category, f.categoryName, f.tag, f.trip, f.place, f.day, f.period, f.search)) },
             settings = { navController.navigate(LedgerSettings()) },
             categories = { navController.navigate(LedgerCategories(it)) },
             rates = { navController.navigate(LedgerRates) },
@@ -749,7 +750,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                 val route = entry.toRoute<LedgerList>()
                                 LedgerListScreen(
                                     container,
-                                    LedgerFilter(route.title, route.book, route.account, route.category, route.tag, route.trip, route.place, route.day, route.period, route.search),
+                                    LedgerFilter(route.title, route.book, route.account, route.category, route.categoryName, route.tag, route.trip, route.place, route.day, route.period, route.search),
                                     ledgerNav,
                                 )
                             }

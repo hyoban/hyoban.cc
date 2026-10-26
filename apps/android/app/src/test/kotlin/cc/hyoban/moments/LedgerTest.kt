@@ -173,6 +173,18 @@ class LedgerTest {
         assertEquals(0, read(expense, repay, stray, existing = merged).txns.size)
     }
 
+    @Test fun everyBookSumsCategoriesOfTheSameNameTogether() {
+        val result = read(
+            row("2025/01/02 12:00", "支出", "-10", "三餐", "沙县小吃", "中国银行 储蓄卡4049"),
+            row("2025/01/03 12:00", "支出", "-20", "三餐", "", "中国银行 储蓄卡4049", book = "旅游账本"),
+            row("2025/01/04 12:00", "支出", "-5", "饮料", "", "中国银行 储蓄卡4049", book = "旅游账本"),
+        )
+        val ledger = ledgerOf(result).copy(allBooks = true)
+        assertEquals(2, ledger.shownBooks.size)
+        val summary = summarize(ledger.entries, ledger.rates, "CNY", null, null, ledger::topCategoryName)
+        assertEquals(listOf("三餐" to 3000L, "饮料" to 500L), summary.expenseByCategory)
+    }
+
     /** The whole of a real export, when `ICOST_EXPORT` names one; it stays out of the repository. */
     @Test fun readsARealExport() {
         val path = System.getenv("ICOST_EXPORT")

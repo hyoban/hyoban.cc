@@ -112,25 +112,32 @@ fun LedgerScreen(container: AppContainer, nav: LedgerNav, onImport: () -> Unit) 
         onDispose { if (accessory.value === newBill) accessory.value = null }
     }
 
-    val bills = remember(ledger, book) { ledger.txns.filter { it.book == book?.id } }
-    val month = remember(ledger, book) {
+    // The chosen book's bills, or every book's, summed in the chosen book's currency.
+    val shown = ledger.shownBooks
+    val currency = book?.currency ?: "CNY"
+    val bills = remember(ledger) { ledger.txns.filter { it.book in shown } }
+    val month = remember(ledger) {
         val today = java.time.LocalDate.now().withDayOfMonth(1)
-        book?.let { b -> summarize(ledger.entries.filter { it.txn.book == b.id }, ledger.rates, b.currency, today, today.plusMonths(1)) }
+        book?.let { summarize(ledger.entries.filter { it.txn.book in shown }, ledger.rates, currency, today, today.plusMonths(1)) }
     }
-    val subtitle = if (book != null && month != null) {
-        stringResource(R.string.ledger_this_month, formatMoney(month.expense, book.currency), formatMoney(month.income, book.currency))
+    val subtitle = if (month != null) {
+        stringResource(R.string.ledger_this_month, formatMoney(month.expense, currency), formatMoney(month.income, currency))
     } else {
         null
     }
 
     TabPage(
-        book?.name ?: stringResource(R.string.tab_ledger),
+        when {
+            book == null -> stringResource(R.string.tab_ledger)
+            ledger.allBooks -> stringResource(R.string.ledger_all_books)
+            else -> book.name
+        },
         tab = LedgerHome,
         subtitle = subtitle,
         actions = {
             BookMenu(container, ledger, nav)
             Tooltip(stringResource(R.string.action_search), below = true) {
-                IconButton(onClick = { nav.list(LedgerFilter(book = book?.id, search = true)) }, modifier = Modifier.testTag("ledger_search")) {
+                IconButton(onClick = { nav.list(LedgerFilter(book = book?.id.takeIf { !ledger.allBooks }, search = true)) }, modifier = Modifier.testTag("ledger_search")) {
                     Icon(Icons.Rounded.Search, contentDescription = stringResource(R.string.action_search))
                 }
             }
@@ -156,10 +163,10 @@ fun LedgerScreen(container: AppContainer, nav: LedgerNav, onImport: () -> Unit) 
             }
             when {
                 !loaded -> Unit
-                LedgerTab.entries[tab] == LedgerTab.ASSETS -> AssetsView(ledger, book?.currency ?: "CNY", nav)
+                LedgerTab.entries[tab] == LedgerTab.ASSETS -> AssetsView(ledger, currency, nav)
                 book == null || bills.isEmpty() -> EmptyLedger(onImport = onImport, onNew = { nav.entry(LedgerEntryArgs()) })
-                LedgerTab.entries[tab] == LedgerTab.BILLS -> BillsView(ledger, bills, book.currency, nav)
-                else -> StatsView(ledger, book, nav)
+                LedgerTab.entries[tab] == LedgerTab.BILLS -> BillsView(ledger, bills, currency, nav)
+                else -> StatsView(ledger, shown, currency, nav, byName = ledger.allBooks)
             }
         }
     }
@@ -202,10 +209,20 @@ private fun BookMenu(container: AppContainer, ledger: Ledger, nav: LedgerNav) {
             }
         }
         DropdownMenu(open, onDismissRequest = { open = false }) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.ledger_all_books)) },
+                trailingIcon = if (ledger.allBooks) { { Icon(Icons.Rounded.Check, contentDescription = null) } } else null,
+                onClick = {
+                    open = false
+                    scope.launch { container.ledger.showAllBooks() }
+                },
+                modifier = Modifier.testTag("all_books"),
+            )
+            HorizontalDivider()
             books.forEach { book ->
                 DropdownMenuItem(
                     text = { Text(book.name) },
-                    trailingIcon = if (book.id == ledger.book?.id) { { Icon(Icons.Rounded.Check, contentDescription = null) } } else null,
+                    trailingIcon = if (!ledger.allBooks && book.id == ledger.book?.id) { { Icon(Icons.Rounded.Check, contentDescription = null) } } else null,
                     onClick = {
                         open = false
                         scope.launch { container.ledger.setCurrentBook(book.id) }
@@ -293,6 +310,8 @@ fun BillList(
     header: (@Composable () -> Unit)? = null,
 ) {
     val lines = remember(ledger, bills, currency) { linesOf(ledger, bills, currency) }
+    // Bills of more than one book say which each is in.
+    val showBook = remember(bills) { bills.distinctBy { it.book }.size > 1 }
     PageWidth(maxColumns = 1) { columns ->
         LazyColumn(
             Modifier.fillMaxSize(),
@@ -304,7 +323,7 @@ fun BillList(
                 when (line) {
                     is BillLine.Month -> MonthTotals(line.month, line.expense, line.income, currency)
                     is BillLine.Day -> DayTotals(line.date, line.expense, line.income, currency)
-                    is BillLine.Bill -> TxnRow(line.txn, ledger, onClick = { nav.bill(line.txn.id) }, modifier = Modifier.padding(horizontal = Space.xs))
+                    is BillLine.Bill -> TxnRow(line.txn, ledger, onClick = { nav.bill(line.txn.id) }, modifier = Modifier.padding(horizontal = Space.xs), showBook = showBook)
                 }
             }
         }

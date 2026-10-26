@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -123,6 +124,8 @@ data class LedgerFilter(
     val book: String? = null,
     val account: String? = null,
     val category: String? = null,
+    /** A first-level category by name, in whichever book. */
+    val categoryName: String? = null,
     val tag: String? = null,
     val trip: String? = null,
     val place: String? = null,
@@ -302,17 +305,25 @@ fun txnSupporting(txn: Txn, ledger: Ledger, showDate: Boolean = false): String {
  * what sets it apart, and its amount, signed, at the end.
  */
 @Composable
-fun TxnRow(txn: Txn, ledger: Ledger, onClick: () -> Unit, modifier: Modifier = Modifier, showDate: Boolean = false) {
+fun TxnRow(txn: Txn, ledger: Ledger, onClick: () -> Unit, modifier: Modifier = Modifier, showDate: Boolean = false, showBook: Boolean = false) {
     ListItem(
         headlineContent = { Text(txnTitle(txn, ledger), maxLines = 1, overflow = TextOverflow.Ellipsis) },
         supportingContent = { Text(txnSupporting(txn, ledger, showDate), maxLines = 2, overflow = TextOverflow.Ellipsis) },
         leadingContent = { LeadingIcon(txnIcon(txn, ledger)) },
+        // The amount, and under it, where bills of several books are listed, the bill's book.
         trailingContent = {
-            Text(
-                if (txn.kind == TxnKind.TRANSFER) formatMoney(txn.amount, txn.currency) else signedMoney(txn.amount, txn.currency, txn.incoming),
-                style = MaterialTheme.typography.titleMedium,
-                color = amountColor(txn),
-            )
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    if (txn.kind == TxnKind.TRANSFER) formatMoney(txn.amount, txn.currency) else signedMoney(txn.amount, txn.currency, txn.incoming),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = amountColor(txn),
+                )
+                if (showBook) {
+                    ledger.books.firstOrNull { it.id == txn.book }?.let { book ->
+                        Text(book.name, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+                    }
+                }
+            }
         },
         colors = ListItemDefaults.colors(containerColor = Color.Transparent),
         modifier = modifier.clickableRow(onClick).testTag("bill_${txn.id}"),

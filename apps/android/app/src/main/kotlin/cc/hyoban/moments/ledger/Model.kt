@@ -188,11 +188,20 @@ data class Ledger(
     val txns: List<Txn> = emptyList(),
     val rates: Rates = Rates.EMPTY,
     val currentBook: String? = null,
+    /** Every book shown at once, the tab's bills and sums across them all. */
+    val allBooks: Boolean = false,
 ) {
     val accountsById: Map<String, Account> by lazy { accounts.associateBy { it.id } }
     val categoriesById: Map<String, Category> by lazy { categories.associateBy { it.id } }
     val txnsById: Map<String, Txn> by lazy { txns.associateBy { it.id } }
+    /** The book chosen, where a new bill goes, even while every book is shown. */
     val book: Book? get() = books.firstOrNull { it.id == currentBook } ?: books.firstOrNull { !it.archived } ?: books.firstOrNull()
+
+    /** The books whose bills the tab shows: the chosen one, or all but the archived. */
+    val shownBooks: Set<String> get() = if (allBooks) books.filter { !it.archived }.map { it.id }.toSet() else setOfNotNull(book?.id)
+
+    /** A first-level category's name, by which every book's categories are summed together. */
+    fun topCategoryName(id: String?): String? = categoriesById[topCategory(id)]?.name ?: id
 
     /** The refunds and reimbursements of each expense, by its id. */
     val returns: Map<String, List<Txn>> by lazy {

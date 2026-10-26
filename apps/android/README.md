@@ -272,7 +272,9 @@ they spent and earned; 统计, the month, the year or all of it, stepped through
 spending and earning by day or month as bars and by category with each one's share, each
 leading to its bills; and 资产, the net assets, what is held and what is owed, and the
 accounts by kind (cash, debit cards, credit, online wallets, stored value, investments,
-loans, people lent to or borrowed from), each with its balance. The bar switches books,
+loans, people lent to or borrowed from), each with its balance. The bar switches books, or
+shows 全部账本, every book but the archived at once, summed in the chosen book's currency,
+its categories summed by name across books and each bill marked with its book; it also
 searches bills (note, tags, category, account, amount) and opens 记账设置.
 
 A bill is an expense, an income or a transfer, the last also a repayment, a loan given or
