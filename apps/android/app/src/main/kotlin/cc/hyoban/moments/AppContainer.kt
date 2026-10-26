@@ -41,6 +41,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /** What the app shares: built once by the Application, handed to the screens. */
 class AppContainer(context: Context) {
@@ -54,6 +55,8 @@ class AppContainer(context: Context) {
         File(context.noBackupFilesDir, "footprint-diagnostics"), scope,
     )
     val connectionRules = cc.hyoban.moments.footprints.ConnectionRulesStore(context)
+    /** The ledger stays on this phone, outside API sync, publishing and Android's backup. */
+    val ledger = cc.hyoban.moments.ledger.LedgerStore(context)
 
     // Directories of their own: `api/` the copy of what the API serves, `local/` the
     // Moments written on this phone, their photos and places, which no sync touches. `data/`
@@ -76,6 +79,7 @@ class AppContainer(context: Context) {
         sharedDirectory.listFiles()?.filter { System.currentTimeMillis() - it.lastModified() > DAY_MS }?.forEach(File::delete)
         // Routes were once kept per trip from the site's trip pages, under routes/.
         File(context.filesDir, "routes").takeIf { it.isDirectory }?.deleteRecursively()
+        scope.launch { ledger.load() }
         scope.launch {
             repository.load()
             routes.load()
@@ -186,6 +190,26 @@ class AppContainer(context: Context) {
         if (copies.size < uris.size) say(appContext.getString(R.string.error_shared_photos))
         _sharedPhotos.value = _sharedPhotos.value + copies
     }
+
+    private val _sharedExport = MutableStateFlow<Uri?>(null)
+
+    /** An iCost export shared into the app, as the app's own copy, until the ledger's import takes it. */
+    val sharedExport: StateFlow<Uri?> = _sharedExport.asStateFlow()
+
+    /** Copies a spreadsheet shared from another app while the sharing still lets it be read; says so when it can't. */
+    suspend fun receiveSharedExport(uri: Uri) {
+        val copy = withContext(Dispatchers.IO) {
+            runCatching {
+                val file = File(sharedDirectory, "${Ulid.next()}.xlsx").also { it.parentFile?.mkdirs() }
+                appContext.contentResolver.openInputStream(uri)!!.use { input -> file.outputStream().use { input.copyTo(it) } }
+                Uri.fromFile(file)
+            }.getOrNull()
+        }
+        if (copy == null) say(appContext.getString(R.string.ledger_error_import)) else _sharedExport.value = copy
+    }
+
+    /** The iCost export shared into the app, taken so it is imported once. */
+    fun takeSharedExport(): Uri? = _sharedExport.getAndUpdate { null }
 
     /** The photos shared into the app, taken so they are used once. */
     fun takeSharedPhotos(): List<Uri> = _sharedPhotos.getAndUpdate { emptyList() }

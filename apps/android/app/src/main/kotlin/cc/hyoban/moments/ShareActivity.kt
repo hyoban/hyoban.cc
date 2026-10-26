@@ -12,7 +12,8 @@ import kotlinx.coroutines.launch
  * Where what other apps share arrives, drawing nothing and leaving their task as it was.
  * A place shared from a map is handed to the app to find, and photos shared from the
  * gallery are copied in while this activity may still read them; either way the app comes
- * forward on a new Moment, or on the one being written, which takes them. Shared to
+ * forward on a new Moment, or on the one being written, which takes them. A spreadsheet,
+ * iCost's bill export, is copied in and the app comes forward on the ledger's import. Shared to
  * 保存为地点 ([SAVE_ALIAS]), a place is only kept, and the map stays in front.
  */
 class ShareActivity : ComponentActivity() {
@@ -20,8 +21,18 @@ class ShareActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val container = (application as MomentsApplication).container
         val photos = sharedStreams()
+        val sheet = sharedSheet()
         val text = intent.getStringExtra(Intent.EXTRA_TEXT) ?: intent.getStringExtra(Intent.EXTRA_SUBJECT)
         when {
+            sheet != null -> lifecycleScope.launch {
+                // Copied now, while the share lets it be read, and imported from the ledger's settings.
+                container.receiveSharedExport(sheet)
+                startActivity(
+                    Intent(this@ShareActivity, MainActivity::class.java).setAction(MainActivity.ACTION_LEDGER_IMPORT)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP),
+                )
+                finish()
+            }
             photos.isNotEmpty() -> lifecycleScope.launch {
                 // Read now: the permission to read them goes with this activity.
                 container.receiveSharedPhotos(photos)
@@ -38,6 +49,18 @@ class ShareActivity : ComponentActivity() {
                 finish()
             }
             else -> finish()
+        }
+    }
+
+    /** A spreadsheet shared or opened with the app: iCost's bill export, for the ledger. */
+    private fun sharedSheet(): Uri? {
+        if (intent.type?.startsWith("image/") == true || intent.type == "text/plain") return null
+        if (intent.action == Intent.ACTION_VIEW) return intent.data
+        @Suppress("DEPRECATION")
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            intent.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
+        } else {
+            intent.getParcelableExtra(Intent.EXTRA_STREAM)
         }
     }
 

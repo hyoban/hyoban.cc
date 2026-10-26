@@ -122,6 +122,14 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="image/*" />
             </intent-filter>
+            <!-- A spreadsheet, iCost's bill export, shared or opened with the app, for the ledger. -->
+            <intent-filter android:label="@string/share_to_ledger">
+                <action android:name="android.intent.action.SEND" />
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" />
+                <data android:mimeType="application/vnd.ms-excel" />
+            </intent-filter>
         </activity>
 
         <!-- Stable component identity preserves existing grants; implementation is shared by adapters. -->

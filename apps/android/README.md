@@ -263,6 +263,68 @@ where ColorOS doesn't offer it in its settings, and keeps it in the app before: 
 counts in each language's plurals, and the dates as each language writes them. The
 Moments' own words stay as they were written.
 
+## Ledger
+
+The fourth tab, 记账, is a ledger kept on this phone alone, in place of iCost: books of
+bills over accounts in their own currencies, summed per book in its currency. Its three
+primary tabs are 账单, every bill of the book shown under its months and days with what
+they spent and earned; 统计, the month, the year or all of it, stepped through with arrows,
+spending and earning by day or month as bars and by category with each one's share, each
+leading to its bills; and 资产, the net assets, what is held and what is owed, and the
+accounts by kind (cash, debit cards, credit, online wallets, stored value, investments,
+loans, people lent to or borrowed from), each with its balance. The bar switches books,
+searches bills (note, tags, category, account, amount) and opens 记账设置.
+
+A bill is an expense, an income or a transfer, the last also a repayment, a loan given or
+taken, or one collected; or a refund or reimbursement of an expense, written from that
+expense's page. 记一笔, the tab's button, writes one as a full-screen dialog: its amount
+(sums like `12+3.4` add up) in any currency, its category and second-level category,
+the account, or several accounts each with its share, its time and book, an expense's
+discount (on record only), a transfer's fee (an expense) and discount (an income) and,
+between currencies, what arrived (the day's rate suggests it), a note and tags, whether
+it is to be reimbursed (left out of the sums until it is) or left out of the sums
+altogether, and the Moment, place and trip it belongs to: the trip under way that day
+unless another is picked. A refund takes from its expense's category up to what was
+spent, anything beyond it earned; a reimbursed expense counts only what wasn't paid back.
+A bill's page shows all of this, its refunds and reimbursements, and where it leads: its
+Moment, place, trip and day. An account's page has its bills and 校准余额, which sets the
+balance to what it really is by moving its opening balance, adding no bill.
+
+It meets the Moments where it should: a Moment's page lists its bills, and a meal's
+Moment with a bill but none in the ledger offers 记一笔 with the amount, time, place and
+the book's usual food category; a trip's page shows what it cost, with what all books
+spent over its days beside it, and a day's and a place's page what was spent there,
+each leading to those bills. 关联时刻和旅程 links a meal's Moment to the expense of its
+day of the same amount, and a travel book's bills (one whose name says 旅) to the trip
+under way.
+
+记账设置 manages the books (each with its own categories, renamed, nested, merged or,
+unused, deleted), the exchange rates, and the data. 从 iCost 导入 reads the .xlsx of
+iCost's 账单导出 (the platform's zip and SAX, no spreadsheet library), picked here or
+shared to 这里 (导入到记账) from iCost, WeChat or the file manager, or opened with the
+app, which copies it in and comes forward here with what it found: every row type it
+writes, the books, the accounts with their currencies and a kind guessed from their names,
+split payments (`红包[-23.89]/中国银行[-0.01]`), tags, discounts, fees and loans. The rows
+iCost derives (a transfer's discount as 转账优惠/还款优惠, a refund's excess as 退款收入)
+are folded back into their bill, and each refund and reimbursement is matched to its
+expense by book, category, amount and time, the export naming none by id. An amount the
+export has in another currency than its account's is converted at that day's rate. What
+it found is shown before it is written, beside the ledger's bills (one already there is
+skipped, a refund or reimbursement new to a later export still finding its expense from
+an earlier one) or in their place, so importing each newer export brings the ledger up to
+date; a bill changed or deleted in iCost isn't. The export has no balances, nor anything
+before the range it was made for, so each account is calibrated after. The rates are the European Central Bank's, bundled (`assets/ledger-rates.json`)
+and brought up to date from Frankfurter only when asked, the one request the ledger
+makes, with no bill in it; a rate of one's own can be set. 备份到文件 writes the whole
+ledger as JSON, which 从备份恢复 reads back; 导出 CSV writes the bills with iCost's columns.
+
+`ledger/LedgerStore` keeps it in `noBackupFilesDir/ledger.sqlite`, outside the API's sync,
+publishing and Android's backup, read whole after each change; `ledger/ICostImport`,
+`ledger/Accounting` (balances, sums, refunds) and `ledger/Links` are plain Kotlin with tests
+in `LedgerTest`, which also reads a real export when `ICOST_EXPORT` names one. Not carried
+over from iCost: recurring bills, installments, savings plans, templates and photos on
+bills, none of which the export holds.
+
 ## Local footprints
 
 The map tab shows local GPS footprints alongside its places and published trip routes,

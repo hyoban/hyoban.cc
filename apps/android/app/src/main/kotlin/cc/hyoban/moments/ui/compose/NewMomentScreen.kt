@@ -963,7 +963,7 @@ private fun AddTile(icon: ImageVector, label: String, onClick: () -> Unit, modif
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun TimeDialog(time: OffsetDateTime, onDismiss: () -> Unit, onPick: (OffsetDateTime) -> Unit) {
+internal fun TimeDialog(time: OffsetDateTime, onDismiss: () -> Unit, onPick: (OffsetDateTime) -> Unit) {
     // The date picker counts days as midnights in UTC.
     val dates = rememberDatePickerState(
         initialSelectedDateMillis = time.toLocalDate().atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli(),
