@@ -12,6 +12,12 @@ import cc.hyoban.moments.ui.MomentsApp
 import cc.hyoban.moments.ui.theme.MomentsTheme
 import cc.hyoban.moments.ui.viewer.PictureInPicture
 import kotlinx.coroutines.channels.Channel
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.repeatOnLifecycle
+import kotlinx.coroutines.launch
+import cc.hyoban.moments.footprints.RecordingService
+import cc.hyoban.moments.footprints.ConnectionReminderService
 
 open class MainActivity : ComponentActivity() {
     /**
@@ -21,7 +27,6 @@ open class MainActivity : ComponentActivity() {
      * delivered straight after it is made, before Compose is listening.
      */
     val newIntents = Channel<Intent>(Channel.UNLIMITED)
-
     // Before Android 13 the app keeps its own language and speaks it here; later the system does.
     override fun attachBaseContext(newBase: Context) {
         super.attachBaseContext(AppLanguage.wrap(newBase))
@@ -33,6 +38,18 @@ open class MainActivity : ComponentActivity() {
         if (handOff(savedInstanceState)) return
         addOnNewIntentListener { newIntents.trySend(it) }
         val container = (application as MomentsApplication).container
+        lifecycleScope.launch {
+            lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                try {
+                    RecordingService.control(this@MainActivity)
+                    ConnectionReminderService.sync(this@MainActivity)
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    android.util.Log.w("Footprints", "Could not resume local recording", e)
+                }
+            }
+        }
         val start = startRoute()
         setContent {
             MomentsTheme(container.settings) {

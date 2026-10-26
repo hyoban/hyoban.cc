@@ -88,7 +88,7 @@ import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 /** Where the app reads from: the API, the photos' origin and the map's styles, each back to the build's own on a tap. */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun SettingsScreen(container: AppContainer, onBack: () -> Unit, onChanges: () -> Unit = {}) {
+fun SettingsScreen(container: AppContainer, onBack: () -> Unit, onChanges: () -> Unit = {}, onFootprints: () -> Unit = {}) {
     val settings = container.settings
     // The setting whose dialog is open, by its place in the list, so it stays open across a rotation.
     var editing by rememberSaveable { mutableStateOf<Int?>(null) }
@@ -112,6 +112,9 @@ fun SettingsScreen(container: AppContainer, onBack: () -> Unit, onChanges: () ->
             ) {
                 ThemeSettings(settings)
                 LanguageSettings()
+                TextButton(onClick = onFootprints, modifier = Modifier.testTag("footprints")) {
+                    Text(stringResource(R.string.footprints_title))
+                }
                 SegmentedGroup(
                     stringResource(R.string.section_moments),
                     stringResource(R.string.settings_show_tech_note),

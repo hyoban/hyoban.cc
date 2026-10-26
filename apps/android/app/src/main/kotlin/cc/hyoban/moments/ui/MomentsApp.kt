@@ -516,7 +516,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                     onEdit = { openEditor(it) },
                                 )
                             }
-                            screen<Atlas>(link = "map") {
+                            screen<Atlas>(link = "map", aliases = listOf("footprints")) {
                                 MapScreen(
                                     container,
                                     onMoment = openMoment,
@@ -571,7 +571,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                 )
                             }
                             screen<Preferences>(link = "settings") {
-                                SettingsScreen(container, onBack = back, onChanges = { navController.navigate(Changes) })
+                                SettingsScreen(container, onBack = back, onChanges = { navController.navigate(Changes) }, onFootprints = { showOnMap(MapFocus.Footprints) })
                             }
                             screen<NewMoment>(link = "new") {
                                 NewMomentScreen(container, onBack = back, onSaved = back)
@@ -947,6 +947,7 @@ fun routeOf(link: Uri): Any? {
         "map" -> Atlas
         "trips" -> Trips
         "settings" -> Preferences
+        "footprints" -> Atlas
         "new" -> NewMoment
         "edit" -> id?.let(::EditMoment)
         "changes" -> Changes
@@ -985,9 +986,10 @@ fun openedFrom(route: Any): Boolean {
 
 private inline fun <reified T : Any> NavGraphBuilder.screen(
     link: String? = null,
+    aliases: List<String> = emptyList(),
     noinline content: @Composable (NavBackStackEntry) -> Unit,
 ) {
-    composable<T>(deepLinks = listOfNotNull(link?.let { navDeepLink { uriPattern = "$DEEP_LINK_SCHEME://$it" } })) { entry ->
+    composable<T>(deepLinks = (listOfNotNull(link) + aliases).map { navDeepLink { uriPattern = "$DEEP_LINK_SCHEME://$it" } }) { entry ->
         val tab = Tab.entries.any { entry.destination.hasRoute(it.type) }
         val room = LocalTabClearance.current
         CompositionLocalProvider(

@@ -163,6 +163,8 @@ private const val DOT_BLOCK_SIZE = 32
 /** How much of [DOT_BLOCK]'s square covers a dot of [radius] and its ring. */
 private fun dotBlock(radius: Float) = (radius + 2f) * 2 / DOT_BLOCK_SIZE
 private const val ROUTE = "route"
+private const val FOOTPRINT_LINES = "footprint-lines"
+private const val FOOTPRINT_DOTS = "footprint-dots"
 private const val ROUTES_DASHED = "routes-dashed"
 private const val STOPS = "stops"
 private const val FOG = "fog"
@@ -462,12 +464,12 @@ private fun MapLibreMap.glide(update: CameraUpdate, ms: Int, instant: Boolean) {
     if (instant) moveCamera(update) else animateCamera(update, ms)
 }
 
-private fun MapLibreMap.flyToFrame(points: List<LatLng>, padding: IntArray, instant: Boolean = false) {
+private fun MapLibreMap.flyToFrame(points: List<LatLng>, padding: IntArray, instant: Boolean = false, closest: Double = CLOSEST) {
     val camera = if (points.size == 1) {
-        CameraPosition.Builder().target(points.single()).zoom(CLOSEST).bearing(0.0).build()
+        CameraPosition.Builder().target(points.single()).zoom(closest).bearing(0.0).build()
     } else {
         val fitted = getCameraForLatLngBounds(LatLngBounds.Builder().includes(points).build(), padding, 0.0, 0.0) ?: return
-        CameraPosition.Builder(fitted).zoom(minOf(fitted.zoom, CLOSEST)).build()
+        CameraPosition.Builder(fitted).zoom(minOf(fitted.zoom, closest)).build()
     }
     glide(CameraUpdateFactory.newCameraPosition(camera), 600, instant)
 }
@@ -767,6 +769,11 @@ fun PlacesMap(
     fogSweep: Int = 0,
     /** The regions the fog is drawn over, for how far each is from the cities been to. */
     fogRegions: List<FogRegion> = emptyList(),
+    /** The selected local GPS track, over the same map as places and published trip routes. */
+    footprints: List<List<cc.hyoban.moments.footprints.TrackPoint>> = emptyList(),
+    frameFootprints: Boolean = false,
+    onFootprintsFramed: () -> Unit = {},
+    onFootprint: () -> Unit = {},
 ) {
     val reduced = LocalReducedMotion.current
     val tapPlace by rememberUpdatedState(onPlace)
@@ -778,6 +785,9 @@ fun PlacesMap(
     val openTrip by rememberUpdatedState(onTrip)
     val lifted by rememberUpdatedState(highlighted)
     val fogRegionsNow by rememberUpdatedState(fogRegions)
+    val tapFootprint by rememberUpdatedState(onFootprint)
+    val footprintLocations = remember(footprints) { footprints.flatten().map { LatLng(it.latitude, it.longitude) } }
+    val allLocations = remember(places, footprintLocations) { places.map { it.place.latLng } + footprintLocations }
     var map by remember { mutableStateOf<Pair<MapLibreMap, Style>?>(null) }
     var framed by remember { mutableStateOf(false) }
     val ink = MaterialTheme.colorScheme.onSurface.toArgb()
@@ -929,6 +939,12 @@ fun PlacesMap(
                 }
                 return@OnMapClickListener true
             }
+            if (style.getLayer(FOOTPRINT_LINES) != null &&
+                ready.queryRenderedFeatures(around(routeReach), FOOTPRINT_LINES, FOOTPRINT_DOTS).isNotEmpty()
+            ) {
+                tapFootprint()
+                return@OnMapClickListener true
+            }
             val trip = ready.queryRenderedFeatures(around(routeReach), ROUTE, ROUTES_DASHED).firstOrNull()?.getStringProperty("trip")
             when {
                 trip != null && trip == lifted -> openTrip(trip)
@@ -952,11 +968,11 @@ fun PlacesMap(
 
     OnTabReselect(tab) {
         val (ready, _) = map ?: return@OnTabReselect
-        if (places.isNotEmpty()) ready.flyToFrame(places.map { it.place.latLng }, frame, reduced)
+        if (allLocations.isNotEmpty()) ready.flyToFrame(allLocations, frame, reduced)
     }
 
     val shape = landscape to (rail.left > 0.dp)
-    LaunchedEffect(map, places, shape) {
+    LaunchedEffect(map, places, shape, allLocations) {
         val (ready, style) = map?.live ?: return@LaunchedEffect
         val features = places.map { place ->
             Feature.fromGeometry(place.place.latLng.point).apply {
@@ -969,14 +985,46 @@ fun PlacesMap(
         style.getSourceAs<GeoJsonSource>(PLACES)?.setGeoJson(FeatureCollection.fromFeatures(features))
         // Opens on every place once there are places, and stays where it's moved after
         // that, until the phone turns: then every place again, to fill the screen's new shape.
-        if ((!framed || MainMap.framedFor != shape) && places.isNotEmpty()) {
+        if ((!framed || MainMap.framedFor != shape) && allLocations.isNotEmpty()) {
             MainMap.framedFor = shape
             // Once the map has been laid out at the screen's new shape; only then framed, so a
             // place or a trip to fly to waits for it rather than being framed over.
             withFrameNanos { }
-            ready.frame(places.map { it.place.latLng }, frame)
+            ready.frame(allLocations, frame)
             framed = true
         }
+    }
+
+    // A dedicated pair of sources on the retained main map. Empty data hides the layer;
+    // updates preserve the camera, the place markers and the existing route interactions.
+    LaunchedEffect(map, footprints, me, ring) {
+        val (_, style) = map?.live ?: return@LaunchedEffect
+        if (style.getSource(FOOTPRINT_LINES) == null) {
+            style.addSource(GeoJsonSource(FOOTPRINT_LINES))
+            style.addSource(GeoJsonSource(FOOTPRINT_DOTS))
+            style.addLayerBelow(LineLayer(FOOTPRINT_LINES, FOOTPRINT_LINES).withProperties(
+                lineWidth(3f), lineCap(Property.LINE_CAP_ROUND), lineJoin(Property.LINE_JOIN_ROUND),
+            ), PLACES_SHADOW)
+            style.addLayerBelow(CircleLayer(FOOTPRINT_DOTS, FOOTPRINT_DOTS).withProperties(
+                circleRadius(4f), circleStrokeWidth(1.5f),
+            ), PLACES_SHADOW)
+        }
+        val lines = footprints.filter { it.size > 1 }.map { segment ->
+            Feature.fromGeometry(LineString.fromLngLats(segment.map { Point.fromLngLat(it.longitude, it.latitude) }))
+        }
+        val dots = footprints.flatMap { listOf(it.first(), it.last()).distinct() }
+            .map { Feature.fromGeometry(Point.fromLngLat(it.longitude, it.latitude)) }
+        style.getSourceAs<GeoJsonSource>(FOOTPRINT_LINES)?.setGeoJson(FeatureCollection.fromFeatures(lines))
+        style.getSourceAs<GeoJsonSource>(FOOTPRINT_DOTS)?.setGeoJson(FeatureCollection.fromFeatures(dots))
+        style.getLayerAs<LineLayer>(FOOTPRINT_LINES)?.setProperties(lineColor(me))
+        style.getLayerAs<CircleLayer>(FOOTPRINT_DOTS)?.setProperties(circleColor(me), circleStrokeColor(ring))
+    }
+
+    LaunchedEffect(map, frameFootprints, framed, footprintLocations) {
+        if (!frameFootprints || !framed || footprintLocations.isEmpty()) return@LaunchedEffect
+        val (ready, _) = map?.live ?: return@LaunchedEffect
+        ready.flyToFrame(footprintLocations, frame, reduced, closest = 17.0)
+        onFootprintsFramed()
     }
 
     // The site's fog, in the ink: turned on, it closes in from the screen's edges to its middle;
@@ -1041,6 +1089,7 @@ fun PlacesMap(
                 val points = route.segments.flatMap { segment -> segment.line.map { (longitude, latitude) -> LatLng(latitude, longitude) } }
                 if (points.isNotEmpty()) ready.flyToFrame(points, frame.copyOf().also { it[3] += cardRoom }, reduced)
             }
+            MapFocus.Footprints -> Unit // MapScreen opens the controls without moving the camera.
         }
         focused()
     }

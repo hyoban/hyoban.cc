@@ -102,6 +102,8 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import cc.hyoban.moments.footprints.FootprintsOnMap
+import cc.hyoban.moments.footprints.FootprintsMapState
 import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.R
 import cc.hyoban.moments.data.media.MediaUrls
@@ -140,6 +142,8 @@ sealed interface MapFocus {
     data class Place(val id: String) : MapFocus
 
     data class Trip(val id: String) : MapFocus
+
+    data object Footprints : MapFocus
 }
 
 /**
@@ -157,6 +161,22 @@ fun MapScreen(
     onTrip: (String) -> Unit,
     focus: MapFocus? = null,
     onFocused: () -> Unit = {},
+) {
+    FootprintsOnMap(container) { footprints ->
+        MapContent(container, onMoment, onPlace, onTrip, focus, onFocused, footprints)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun MapContent(
+    container: AppContainer,
+    onMoment: (String) -> Unit,
+    onPlace: (String) -> Unit,
+    onTrip: (String) -> Unit,
+    focus: MapFocus?,
+    onFocused: () -> Unit,
+    footprints: FootprintsMapState,
 ) {
     val moments by container.repository.moments.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
@@ -211,6 +231,12 @@ fun MapScreen(
             is MapFocus.Trip -> {
                 selected = null
                 highlighted = focus.id
+            }
+            MapFocus.Footprints -> {
+                selected = null
+                highlighted = null
+                footprints.open()
+                onFocused()
             }
             null -> Unit
         }
@@ -276,8 +302,12 @@ fun MapScreen(
             locate = locate,
             north = north,
             onBearing = { bearing = it },
+            footprints = footprints.segments,
+            frameFootprints = footprints.frameRequested,
+            onFootprintsFramed = footprints.onFramed,
+            onFootprint = { selected = null; highlighted = null; footprints.open() },
             tab = Atlas,
-            focus = focus,
+            focus = focus.takeUnless { it == MapFocus.Footprints },
             onFocused = onFocused,
             fog = fog.takeIf { settings.mapFog },
             fogSweep = fogSweep,
@@ -308,6 +338,9 @@ fun MapScreen(
                     fogSweep++
                     settings.changeMapFog(!settings.mapFog)
                 }
+            }
+            FilledTonalButton(onClick = { selected = null; highlighted = null; footprints.open() }, modifier = Modifier.testTag("footprints")) {
+                Text(stringResource(R.string.footprints_title))
             }
             val shownFog = fog.takeIf { settings.mapFog }
             AnimatedVisibility(
