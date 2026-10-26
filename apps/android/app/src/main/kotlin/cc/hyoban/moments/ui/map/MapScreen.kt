@@ -161,8 +161,9 @@ fun MapScreen(
     onTrip: (String) -> Unit,
     focus: MapFocus? = null,
     onFocused: () -> Unit = {},
+    onFootprintSettings: () -> Unit = {},
 ) {
-    FootprintsOnMap(container) { footprints ->
+    FootprintsOnMap(container, onFootprintSettings) { footprints ->
         MapContent(container, onMoment, onPlace, onTrip, focus, onFocused, footprints)
     }
 }

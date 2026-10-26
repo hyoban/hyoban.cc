@@ -27,6 +27,8 @@ import androidx.compose.material.icons.rounded.Key
 import androidx.compose.material.icons.rounded.LightMode
 import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.material.icons.rounded.Refresh
+import androidx.compose.material.icons.rounded.Route
+import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.AlertDialog
@@ -88,7 +90,13 @@ import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 /** Where the app reads from: the API, the photos' origin and the map's styles, each back to the build's own on a tap. */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun SettingsScreen(container: AppContainer, onBack: () -> Unit, onChanges: () -> Unit = {}, onFootprints: () -> Unit = {}) {
+fun SettingsScreen(
+    container: AppContainer,
+    onBack: () -> Unit,
+    onChanges: () -> Unit = {},
+    onFootprints: () -> Unit = {},
+    onFootprintSettings: () -> Unit = {},
+) {
     val settings = container.settings
     // The setting whose dialog is open, by its place in the list, so it stays open across a rotation.
     var editing by rememberSaveable { mutableStateOf<Int?>(null) }
@@ -112,9 +120,6 @@ fun SettingsScreen(container: AppContainer, onBack: () -> Unit, onChanges: () ->
             ) {
                 ThemeSettings(settings)
                 LanguageSettings()
-                TextButton(onClick = onFootprints, modifier = Modifier.testTag("footprints")) {
-                    Text(stringResource(R.string.footprints_title))
-                }
                 SegmentedGroup(
                     stringResource(R.string.section_moments),
                     stringResource(R.string.settings_show_tech_note),
@@ -172,6 +177,32 @@ fun SettingsScreen(container: AppContainer, onBack: () -> Unit, onChanges: () ->
                     if (pending.size == 0) listOf(token) else listOf(token, changes),
                 )
                 Section(stringResource(R.string.section_map), rows.subList(2, 4), 2, stringResource(R.string.settings_map_note)) { editing = it }
+                // Footprints are looked at on the map, and how they are recorded set on a page of their own.
+                SegmentedGroup(
+                    stringResource(R.string.footprints_title),
+                    stringResource(R.string.footprints_local_note),
+                    listOf(
+                        { shapes ->
+                            SegmentedListItem(
+                                onClick = onFootprints,
+                                shapes = shapes,
+                                colors = segmentColors(),
+                                leadingContent = { Icon(Icons.Rounded.Route, contentDescription = null) },
+                                modifier = Modifier.testTag("footprints"),
+                            ) { Text(stringResource(R.string.footprints_view_on_map)) }
+                        },
+                        { shapes ->
+                            SegmentedListItem(
+                                onClick = onFootprintSettings,
+                                shapes = shapes,
+                                colors = segmentColors(),
+                                leadingContent = { Icon(Icons.Rounded.Tune, contentDescription = null) },
+                                trailingContent = { Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null) },
+                                modifier = Modifier.testTag("footprint_settings"),
+                            ) { Text(stringResource(R.string.footprint_settings_title)) }
+                        },
+                    ),
+                )
                 Credits()
             }
         }

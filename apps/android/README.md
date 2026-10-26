@@ -267,10 +267,15 @@ Moments' own words stay as they were written.
 
 The map tab shows local GPS footprints alongside its places and published trip routes,
 using the same MapLibre map. 地图 → 足迹 opens a bottom panel for recording, choosing a
-day or recorded trip, and exporting/deleting tracks; closing it keeps the selected
-track visible. 显示完整轨迹 closes the panel and fits that track on the main map. The
-layer can be hidden without stopping recording. Settings opens the same map panel;
-notifications open the map, and the older `moments://footprints` link also opens it. 日常自动记录 stays on until turned off; 开始单次行程 marks a separate
+day or recorded trip, and exporting/deleting tracks, laid out as Material 3 segmented
+lists: a 记录 group of switches (日常自动记录, 单次行程, 在地图显示足迹) with pause or
+resume between them, then a 轨迹 group under the day and trip filter chips. Closing it
+keeps the selected track visible; tapping the selected track's row closes the panel and
+fits that track on the main map. The layer can be hidden without stopping recording.
+How recording behaves is set on its own page, 足迹设置 (`moments://footprint-settings`),
+opened from the panel's settings button, which returns to the panel, and from Settings →
+足迹, which also opens the map panel. Notifications open the map, and the older
+`moments://footprints` link also opens it. 日常自动记录 stays on until turned off; 单次行程 marks a separate
 trip, whose end leaves daily recording running if enabled. Both share the same samples.
 暂停所有记录 pauses both without ending the trip. The panel shows days and recorded
 trips, their distance, sample count and connected track time, and exports the selection
@@ -336,7 +341,7 @@ the target device; fewer stored points alone do not demonstrate lower GPS power 
 The recorder also keeps bounded local diagnostics in `noBackupFilesDir/footprint-diagnostics/`:
 two rotating JSONL files of at most 1 MiB each, outside sync and backup. A bounded queue and
 one IO worker keep disk writes out of location callbacks; dropped events and storage failures
-are counted, and logging failures never stop recording. 足迹 → 导出诊断日志 exports the
+are counted, and logging failures never stop recording. 足迹设置 → 诊断 → 导出诊断日志 exports the
 retained events in order after draining queued writes. Records include wall-clock and elapsed
 time, service run/request identifiers, app/OS version, permissions, battery/power-save state,
 request durations and callback/stored-point counts, per-fix accuracy/age/speed and filter
@@ -354,7 +359,7 @@ removes the recorder notification. Connection automation uses a separate chain-l
 so their background watcher cannot be mistaken for active recording. Notification/icon
 visibility still follows the user's system notification settings. Active notification channels
 use normal importance without sound, vibration or badges. Existing channels retain their
-settings; 足迹 → 状态栏显示 opens the recorder's notification settings if an older
+settings; 足迹设置 → 状态栏显示 → 通知设置 opens the recorder's notification settings if an older
 silent channel's icon is hidden. No global notification preference is changed.
 On Android 16+, the same notification also requests a Live Update with short state text:
 记录中, 定位中, or 定位关闭. GPS-free rest removes the Live Update, leaving its status in
@@ -362,8 +367,8 @@ the ordinary notification and footprint panel; resuming GPS requests promotion a
 This uses the platform promotion permission and
 BigTextStyle, with no synthetic progress or periodic display refreshes. ColorOS replaces
 ordinary small icons with the launcher icon, but its Fluid Cloud can show this live state
-and the original state icon. Enable 流体云显示实时活动 through 足迹 → 状态栏显示 →
-实时活动设置; if the system has no promotion settings activity, the link opens app details.
+and the original state icon. Enable 流体云显示实时活动 through 足迹设置 → 状态栏显示 →
+实时活动; if the system has no promotion settings activity, the link opens app details.
 On the PMX110 running ColorOS 17, enabling this per-app setting was necessary: notification
 channel visibility alone did not enable Fluid Cloud.
 The separate rest channel was also verified on this device: the system raised the
@@ -400,7 +405,7 @@ requires reopening the app. The app does not send tracks to its API or Google’
 
 ### Connection automation
 
-地图 → 足迹 → 连接自动控制 lets the user select Wi-Fi names from the current connection,
+足迹设置 → 连接自动控制 lets the user select Wi-Fi names from the current connection,
 cached system results and saved choices, and Bluetooth devices from the paired list.
 Nothing is selected or enabled by default. Joining selected Wi-Fi automatically pauses;
 leaving all selected Wi-Fi starts recording. Connecting selected Bluetooth starts recording;

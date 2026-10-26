@@ -427,15 +427,11 @@
     <string name="footprints_local_note">Tracks stay on this phone and are never published to the API. The basemap uses the network; recording works offline.</string>
     <string name="footprints_daily">Daily recording</string>
     <string name="footprints_daily_note">Record while moving and rest while still. Tracks may appear about a minute later; the beginning of movement may be missed.</string>
-    <string name="footprints_start_trip">Start a trip</string>
-    <string name="footprints_end_trip">End trip</string>
     <string name="footprints_trip_note">Trips share samples with daily recording. Ending a trip leaves daily recording on.</string>
-    <string name="footprints_loading">Loading local tracks…</string>
-    <string name="footprints_off">Recording is off</string>
     <string name="footprints_paused">All recording is paused</string>
     <string name="footprints_pause">Pause all recording</string>
     <string name="footprints_resume">Resume recording</string>
-    <string name="footprints_recording">Recording · On this phone</string>
+    <string name="footprints_recording">Recording On this phone</string>
     <string name="footprints_waiting">Recorder is on, waiting for an accurate fix</string>
     <string name="footprints_interrupted">Recording was interrupted. Tap Resume.</string>
     <string name="footprints_location_off">Location is off. Recording resumes when it is enabled.</string>
@@ -444,10 +440,8 @@
     <string name="footprints_background_note">Background recording uses a persistent notification. Allow location all the time to resume after a reboot. If your phone restricts background activity, allow it in battery settings. Reopen the app after force stopping it.</string>
     <string name="footprints_settings">Open app settings</string>
     <string name="footprints_background_permission">Allow recording after reboot</string>
-    <string name="footprints_days">Days</string>
-    <string name="footprints_trips">Recorded trips</string>
     <string name="footprints_active_trip">In progress</string>
-    <string name="footprints_stats">%1$.2f km · %2$s · %3$d min of connected track</string>
+    <string name="footprints_stats">%1$.2f km %2$s %3$d min of connected track</string>
     <string name="footprints_last_fix">Last sample: %1$s</string>
     <string name="footprints_empty">No track for this period yet. Enable recording; accurate fixes collected as you move will appear here.</string>
     <string name="footprints_export">Export this track as GPX</string>
@@ -456,10 +450,27 @@
     <string name="footprints_delete_note">Turn off daily recording and end the active trip before deleting. Export a backup first; uninstalling the app removes local tracks.</string>
     <string name="footprints_delete_confirm">This cannot be undone. Days and trips share samples; deleting also removes those samples from the other views.</string>
     <string name="footprints_cancel">Cancel</string>
-    <string name="footprints_background_options">Background recording settings</string>
+    <string name="footprints_background_options">Background recording</string>
     <plurals name="footprints_points"><item quantity="one">%d point</item><item quantity="other">%d points</item></plurals>
     <string name="footprints_frame">Fit track</string>
     <string name="footprints_show">Show footprints on the map</string>
+    <string name="footprint_settings_title">Footprint settings</string>
+    <string name="footprints_section_recording">Recording</string>
+    <string name="footprints_section_tracks">Tracks</string>
+    <string name="footprints_trip">Trip</string>
+    <string name="footprints_trip_off_note">Records until you end it</string>
+    <string name="footprints_view_on_map">View on the map</string>
+    <string name="connection_automation_switch">Start and pause by connection</string>
+    <string name="connection_automation_off">Off</string>
+    <string name="connection_automation_none">None chosen</string>
+    <string name="connection_automation_wifi_row">Wi-Fi</string>
+    <string name="connection_automation_bluetooth_row">Bluetooth devices</string>
+    <string name="connection_automation_how">How it works</string>
+    <string name="connection_automation_permission_title">Permissions needed</string>
+    <string name="footprints_companion_title">Bluetooth wake-up</string>
+    <string name="footprints_activity_section">Motion detection</string>
+    <string name="footprints_status_icons_help">What the icons mean</string>
+    <string name="footprints_diagnostics_section">Diagnostics</string>
 
     <!-- Local connection automation. -->
     <string name="connection_automation_auto_failed">The recorder could not start. Open footprints to check permissions and resume recording.</string>
@@ -468,10 +479,8 @@
     <string name="connection_automation_error">Connection automation is unavailable. Turn it off and on to retry.</string>
     <string name="connection_automation_permissions">Automation paused. Check notification, background location and Bluetooth permissions.</string>
     <string name="connection_automation_wifi_unknown">Wi-Fi name unavailable. Check location permissions and the system location switch.</string>
-    <string name="connection_automation_choose_first">Open connection automation to choose Wi-Fi networks or Bluetooth devices first.</string>
+    <string name="connection_automation_choose_first">Choose Wi-Fi networks or Bluetooth devices below first</string>
     <string name="connection_automation_rules">Wi-Fi: automatically pause on joining a selected network and start on leaving all selected networks.\nBluetooth: automatically start when any selected device connects and pause when all disconnect.\nBluetooth takes priority: a selected Bluetooth connection prevents Wi-Fi from pausing recording; simultaneous disconnections follow the Bluetooth pause rule.\nStarting resumes a paused trip or daily recorder, or enables daily recording if neither is on.</string>
-    <string name="connection_automation_choose_wifi">Choose Wi-Fi (%1$d)</string>
-    <string name="connection_automation_choose_bluetooth">Choose Bluetooth devices (%1$d)</string>
     <string name="connection_automation_monitor_note">Changes apply automatically after settling for 5 seconds. Initial snapshots do not change recording. Manual changes cancel pending actions until the next connection change.\nAn ongoing notification keeps the watcher running without requesting location fixes or scanning devices. Settings and execution logs stay on this phone.</string>
     <string name="connection_automation_permission_help">Automatic recording needs precise location, Allow all the time, system location enabled, and notifications. Bluetooth rules also need Nearby devices access. After granting access, turn connection automation on again.</string>
     <string name="connection_automation_location_settings">System location settings</string>
@@ -484,12 +493,12 @@
     <string name="footprints_resting">Daily recording is resting. GPS is off until movement or the next check.</string>
     <string name="footprints_status_icons">Status bar display</string>
     <string name="footprints_live_status_note">Allow Live Updates to show the current state in the status bar:\nTrack: receiving valid locations.\nGPS…: waiting for a valid location.\nGPS off: system location unavailable.\nRest hides the live activity; its status remains in the notification drawer and footprint panel. The live activity returns when location resumes. Pausing or stopping removes the live status. On ColorOS, enable live activities in Fluid Cloud. Other systems may use different names and displays.</string>
-    <string name="footprints_live_status_settings">Live activity settings</string>
+    <string name="footprints_live_status_settings">Live updates</string>
     <string name="footprints_status_icons_note">Footprints: receiving valid locations.\nCrosshair: waiting for a valid location.\nWarning triangle: system location unavailable.\nRest hides the status bar icon; its status remains in the notification drawer and footprint panel. Pausing or stopping removes the recording notification. The chain icon only indicates connection automation.\nVisibility follows system notification settings. Some systems replace ordinary notification icons with the app icon.</string>
     <string name="footprints_rest_channel">Footprint power-saving wait</string>
     <string name="footprints_export_diagnostics">Export diagnostics</string>
     <string name="footprints_diagnostics_note">Helps investigate missing tracks and battery use. Includes accuracy, filtering reasons and service state, without coordinates. Stored only on this device, up to about 2 MB; older logs are automatically replaced.</string>
-    <string name="footprints_notification_settings">Footprint notification settings</string>
+    <string name="footprints_notification_settings">Notification settings</string>
     <string name="footprints_chip_recording">Track</string>
     <string name="footprints_chip_waiting">GPS…</string>
     <string name="footprints_chip_blocked">GPS off</string>
@@ -502,9 +511,7 @@
     <string name="footprints_activity_active">Helping detect walking, cycling and travel in a vehicle.</string>
     <string name="footprints_activity_failed">Activity recognition unavailable. Standard motion detection continues.</string>
     <string name="footprints_activity_note">Optional. Requires Google Play services and physical activity access to help daily recording resume sooner. Stillness is advisory and does not pause a trip. Tracks stay on this device.</string>
-    <string name="footprints_companion_note">Optionally associate selected Bluetooth devices with this app so Android can wake the monitor on connection changes. Proximity alone never controls recording. Existing rules also work without association.</string>
-    <string name="footprints_companion_add">Enhance background monitoring</string>
-    <string name="footprints_companion_remove">Remove association</string>
+    <string name="footprints_companion_note">Once the system confirms the link, a chosen Bluetooth device connecting or disconnecting can wake the monitor; coming near does not. Without a link the rules work as before.</string>
     <string name="footprints_companion_failed">System association was not completed. Standard monitoring remains available.</string>
     <string name="footprints_promotion_unsupported">This Android version uses standard notification icons.</string>
     <string name="footprints_promotion_notifications_off">App notifications are disabled; status cannot appear in the status bar.</string>
@@ -514,5 +521,4 @@
     <string name="footprints_promotion_active">The system has promoted the recording notification to a Live Update.</string>
     <string name="footprints_promotion_not_promoted">Live Updates are allowed, but this notification is not promoted. Check its channel or manufacturer settings.</string>
     <string name="footprints_promotion_unknown">Unable to read system notification state.</string>
-    <string name="footprints_promotion_refresh">Check status bar display</string>
 </resources>

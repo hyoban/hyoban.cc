@@ -7,6 +7,14 @@ import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Bluetooth
+import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.rounded.Link
+import androidx.compose.material.icons.rounded.LocationOn
+import androidx.compose.material.icons.rounded.RestartAlt
+import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material.icons.rounded.Wifi
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.toggleable
@@ -27,11 +35,14 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.R
+import cc.hyoban.moments.ui.settings.SegmentedGroup
+import cc.hyoban.moments.ui.settings.SwitchRow
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-/** Configuration lives in the map's footprint sheet; all identifiers stay on this phone. */
+/** Starting and pausing by Wi-Fi and Bluetooth, on the footprint settings page; all identifiers stay on this phone. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ConnectionAutomationSettings(container: AppContainer) {
     val context = LocalContext.current
@@ -44,6 +55,7 @@ fun ConnectionAutomationSettings(container: AppContainer) {
     var busy by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<Int?>(null) }
     var permissionHelp by rememberSaveable { mutableStateOf(false) }
+    var explaining by rememberSaveable { mutableStateOf(false) }
     var picker by rememberSaveable { mutableStateOf<String?>(null) }
     var pending by rememberSaveable { mutableStateOf<String?>(null) }
     var choices by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
@@ -119,48 +131,71 @@ fun ConnectionAutomationSettings(container: AppContainer) {
             catch (_: Exception) { error = R.string.connection_automation_error }
         }
     }
-    ElevatedCard(Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                TextButton(onClick = { expanded = !expanded }, modifier = Modifier.weight(1f).testTag("connection_automation_settings")) {
-                    Text(stringResource(R.string.connection_automation_title))
+    val names = { set: Collection<String> -> set.sorted().joinToString("、") }
+    val none = stringResource(R.string.connection_automation_none)
+    SegmentedGroup(
+        stringResource(R.string.connection_automation_title),
+        error?.let { stringResource(it) },
+        listOf(
+            { shapes ->
+                SwitchRow(
+                    rules.enabled,
+                    Icons.Rounded.Link,
+                    stringResource(R.string.connection_automation_switch),
+                    "connection_automation_enabled",
+                    shapes,
+                    supporting = stringResource(when {
+                        !rules.hasTargets -> R.string.connection_automation_choose_first
+                        rules.enabled -> status ?: R.string.connection_automation_watching
+                        else -> R.string.connection_automation_off
+                    }),
+                    enabled = loaded && !busy && rules.hasTargets,
+                ) { if (!rules.enabled) request("enable") else save(rules.copy(enabled = false)) }
+            },
+            { shapes ->
+                ActionRow(Icons.Rounded.Wifi, stringResource(R.string.connection_automation_wifi_row), shapes,
+                    supporting = rules.wifi.takeIf { it.isNotEmpty() }?.let(names) ?: none, tag = "connection_automation_wifi", enabled = !busy) { request("wifi") }
+            },
+            { shapes ->
+                ActionRow(Icons.Rounded.Bluetooth, stringResource(R.string.connection_automation_bluetooth_row), shapes,
+                    supporting = rules.bluetooth.values.takeIf { it.isNotEmpty() }?.let(names) ?: none, tag = "connection_automation_bluetooth", enabled = !busy) { request("bluetooth") }
+            },
+            { shapes ->
+                ActionRow(Icons.Rounded.Info, stringResource(R.string.connection_automation_how), shapes, tag = "connection_automation_settings") {
+                    explaining = true
                 }
-                Switch(rules.enabled, onCheckedChange = { if (it) request("enable") else save(rules.copy(enabled = false)) },
-                    enabled = loaded && !busy && rules.hasTargets, modifier = Modifier.testTag("connection_automation_enabled"))
-            }
-            if (rules.enabled) Text(stringResource(status ?: R.string.connection_automation_watching), style = MaterialTheme.typography.bodySmall)
-            if (!rules.hasTargets) Text(stringResource(R.string.connection_automation_choose_first), style = MaterialTheme.typography.bodySmall)
-            if (expanded) {
-                Text(stringResource(R.string.connection_automation_rules), style = MaterialTheme.typography.bodyMedium)
-                OutlinedButton(onClick = { request("wifi") }, enabled = !busy, modifier = Modifier.testTag("connection_automation_wifi")) {
-                    Text(stringResource(R.string.connection_automation_choose_wifi, rules.wifi.size))
-                }
-                if (rules.wifi.isNotEmpty()) Text(rules.wifi.sorted().joinToString("、"), style = MaterialTheme.typography.bodySmall)
-                OutlinedButton(onClick = { request("bluetooth") }, enabled = !busy, modifier = Modifier.testTag("connection_automation_bluetooth")) {
-                    Text(stringResource(R.string.connection_automation_choose_bluetooth, rules.bluetooth.size))
-                }
-                if (rules.bluetooth.isNotEmpty()) Text(rules.bluetooth.values.sorted().joinToString("、"), style = MaterialTheme.typography.bodySmall)
-                CompanionConnectionSettings(rules)
-                Text(stringResource(R.string.connection_automation_monitor_note), style = MaterialTheme.typography.bodySmall)
-            }
-            if (permissionHelp || (rules.enabled && status == R.string.connection_automation_permissions)) {
-                Text(stringResource(R.string.connection_automation_permission_help), style = MaterialTheme.typography.bodySmall)
-                TextButton(onClick = { context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, "package:${context.packageName}".toUri())) }) {
-                    Text(stringResource(R.string.footprints_settings))
-                }
-                TextButton(onClick = { context.startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)) }) {
-                    Text(stringResource(R.string.connection_automation_location_settings))
-                }
-                if (Build.VERSION.SDK_INT == 29) {
-                    val background = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
-                    TextButton(onClick = { background.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION) }) {
-                        Text(stringResource(R.string.footprints_background_permission))
+            },
+        ),
+    )
+    CompanionConnectionSettings(rules)
+    if (permissionHelp || (rules.enabled && status == R.string.connection_automation_permissions)) {
+        val background = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
+        SegmentedGroup(
+            stringResource(R.string.connection_automation_permission_title),
+            stringResource(R.string.connection_automation_permission_help),
+            listOfNotNull(
+                { shapes ->
+                    ActionRow(Icons.Rounded.Settings, stringResource(R.string.footprints_settings), shapes, external = true) {
+                        context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, "package:${context.packageName}".toUri()))
                     }
-                }
-            }
-            error?.let { Text(stringResource(it), color = MaterialTheme.colorScheme.error) }
-        }
+                },
+                { shapes ->
+                    ActionRow(Icons.Rounded.LocationOn, stringResource(R.string.connection_automation_location_settings), shapes, external = true) {
+                        context.startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+                    }
+                },
+                if (Build.VERSION.SDK_INT == 29) { shapes ->
+                    ActionRow(Icons.Rounded.RestartAlt, stringResource(R.string.footprints_background_permission), shapes) {
+                        background.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+                    }
+                } else null,
+            ),
+        )
     }
+    if (explaining) InfoDialog(
+        stringResource(R.string.connection_automation_how),
+        listOf(stringResource(R.string.connection_automation_rules), stringResource(R.string.connection_automation_monitor_note)),
+    ) { explaining = false }
     picker?.let { kind ->
         AlertDialog(
             modifier = Modifier.semantics { testTagsAsResourceId = true },
