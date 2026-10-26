@@ -91,7 +91,7 @@ say stay out.
   does, and the page shrinks back into it.
 - Shared elements must not fight predictive back, drag-to-dismiss or paging in the
   viewer; check entering and leaving, and the in-between frames, on the phone.
-- System back works everywhere a close button does, and back from any of the three
+- System back works everywhere a close button does, and back from any of the four
   tabs leaves the app.
 - Pages lead to each other wherever they can, and a link to a page already under the
   current one goes back to it rather than opening it again.
@@ -118,6 +118,12 @@ say stay out.
   once and works offline. Moments can be written on the phone, local first.
 - Nothing reaches the site until 全部发布到网站, after the changes waiting have been
   reviewed: one change set, like a commit. Don't add writes that bypass it.
+- The ledger (记账 tab) is the phone's alone, like the footprints: nothing of it goes to the
+  API, the site or Android's backup, and the only request it makes is for public exchange
+  rates, when asked. It replaces iCost, so what iCost's export holds must keep importing:
+  check a change to the importer against a real export with
+  `ICOST_EXPORT=<xlsx> ./gradlew :app:testDebugUnitTest --tests '*LedgerTest*'`, and never
+  commit an export.
 - Sharing hands off to the other app and leaves posting to the user. Never post, pick a
   recipient or drive another app automatically. The one exception is the opt-in share
   assistant (Telegram, Threads): an accessibility service that only fills the composer

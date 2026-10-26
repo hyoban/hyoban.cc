@@ -143,6 +143,20 @@ import cc.hyoban.moments.ui.moment.MomentScreen
 import cc.hyoban.moments.ui.publish.ChangesScreen
 import cc.hyoban.moments.ui.settings.SettingsScreen
 import cc.hyoban.moments.footprints.FootprintSettingsScreen
+import cc.hyoban.moments.ledger.TxnKind
+import cc.hyoban.moments.ui.ledger.AccountEditScreen
+import cc.hyoban.moments.ui.ledger.AccountScreen
+import cc.hyoban.moments.ui.ledger.BillScreen
+import cc.hyoban.moments.ui.ledger.CategoriesScreen
+import cc.hyoban.moments.ui.ledger.EntryScreen
+import cc.hyoban.moments.ui.ledger.LedgerEntryArgs
+import cc.hyoban.moments.ui.ledger.LedgerFilter
+import cc.hyoban.moments.ui.ledger.LedgerListScreen
+import cc.hyoban.moments.ui.ledger.LedgerNav
+import cc.hyoban.moments.ui.ledger.LedgerScreen
+import cc.hyoban.moments.ui.ledger.LedgerSettingsScreen
+import cc.hyoban.moments.ui.ledger.LocalLedgerNav
+import cc.hyoban.moments.ui.ledger.RatesScreen
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.SurfaceLevel
 import cc.hyoban.moments.ui.theme.TransitionMotion
@@ -231,6 +245,61 @@ object Changes
 @Serializable
 object Search
 
+/** The ledger tab: the book shown, its bills, its sums and the accounts. */
+@Serializable
+object LedgerHome
+
+/** A bill to write, or one of [edit] to change; what a new one starts with, as [LedgerEntryArgs] has it. */
+@Serializable
+data class LedgerEntry(
+    val edit: String? = null,
+    val kind: String? = null,
+    val related: String? = null,
+    val moment: String? = null,
+    val date: String? = null,
+    val account: String? = null,
+    val trip: String? = null,
+)
+
+/** One bill of the ledger. */
+@Serializable
+data class LedgerBill(val id: String)
+
+/** One account of the ledger and its bills. */
+@Serializable
+data class LedgerAccount(val id: String)
+
+/** An account to add, or one of [id] to change. */
+@Serializable
+data class LedgerAccountEdit(val id: String? = null)
+
+/** The ledger's settings; with [import], its iCost import's file picker opened at once. */
+@Serializable
+data class LedgerSettings(val import: Boolean = false)
+
+/** A book's categories. */
+@Serializable
+data class LedgerCategories(val book: String)
+
+/** The exchange rates. */
+@Serializable
+object LedgerRates
+
+/** Bills picked as [LedgerFilter] has it. */
+@Serializable
+data class LedgerList(
+    val title: String? = null,
+    val book: String? = null,
+    val account: String? = null,
+    val category: String? = null,
+    val tag: String? = null,
+    val trip: String? = null,
+    val place: String? = null,
+    val day: String? = null,
+    val period: String? = null,
+    val search: Boolean = false,
+)
+
 /**
  * A tab's icon, filled once chosen; the Moments' with a badge of how many changes wait to be
  * published while another tab is shown, as Material 3 badges a navigation item with a count
@@ -262,11 +331,12 @@ private fun TabLabel(tab: Tab, selected: Boolean) {
     Text(stringResource(tab.label), style = if (selected) MaterialTheme.typography.labelMediumEmphasized else LocalTextStyle.current)
 }
 
-/** The three tabs at the bottom; everything else opens over them. */
+/** The tabs at the bottom; everything else opens over them. */
 private enum class Tab(val route: Any, val type: KClass<*>, val label: Int, val icon: ImageVector, val selectedIcon: ImageVector) {
     MOMENTS(Feed, Feed::class, R.string.tab_moments, Symbols.PhotoLibraryOutlined, Symbols.PhotoLibraryFilled),
     MAP(Atlas, Atlas::class, R.string.tab_map, Symbols.MapOutlined, Symbols.MapFilled),
     TRIPS(Trips, Trips::class, R.string.tab_trips, Symbols.LuggageOutlined, Symbols.LuggageFilled),
+    LEDGER(LedgerHome, LedgerHome::class, R.string.tab_ledger, Symbols.WalletOutlined, Symbols.WalletFilled),
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalSharedTransitionApi::class)
@@ -330,6 +400,27 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
     // A day out of its calendar day or its pill, or out of a Moment's row for it.
     val openDay: (String) -> Unit = { navController.goTo(Day(it, dayCardKey(it))) }
     val openDayRow: (String) -> Unit = { navController.goTo(Day(it, dayRowKey(it))) }
+
+    // Where the ledger's pages lead, to each other and to the Moments' own.
+    val ledgerNav = remember(navController) {
+        LedgerNav(
+            bill = { navController.goTo(LedgerBill(it)) },
+            entry = { args ->
+                navController.navigate(LedgerEntry(args.edit, args.kind?.value, args.related, args.moment, args.date, args.account, args.trip))
+            },
+            account = { navController.goTo(LedgerAccount(it)) },
+            editAccount = { navController.navigate(LedgerAccountEdit(it)) },
+            list = { f -> navController.navigate(LedgerList(f.title, f.book, f.account, f.category, f.tag, f.trip, f.place, f.day, f.period, f.search)) },
+            settings = { navController.navigate(LedgerSettings()) },
+            categories = { navController.navigate(LedgerCategories(it)) },
+            rates = { navController.navigate(LedgerRates) },
+            moment = { navController.goTo(Moment(it)) },
+            place = { navController.goTo(PlaceMoments(it)) },
+            trip = { navController.goTo(Trip(it)) },
+            day = { navController.goTo(Day(it)) },
+            back = { navController.popBackStack() },
+        )
+    }
 
     // A place or a trip shown on the map tab from its page, until the map has flown to it.
     var mapFocus by remember { mutableStateOf<MapFocus?>(null) }
@@ -450,6 +541,10 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                     shown.destination.hasRoute(NewMoment::class) || (shown.destination.hasRoute(EditorDialog::class) && shown.toRoute<EditorDialog>().uid == null)
                 } == true
                 if (!writing) openEditor(null)
+            } else if (intent.action == MainActivity.ACTION_LEDGER_IMPORT) {
+                // An iCost export shared in, imported from the ledger's settings, which take it from the container.
+                viewer = null
+                if (navController.currentBackStackEntry?.destination?.hasRoute(LedgerSettings::class) != true) navController.navigate(LedgerSettings())
             } else {
                 val route = intent.data?.let(::routeOf) ?: return@collect
                 viewer = null
@@ -491,6 +586,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                         LocalInPictureInPicture provides inPictureInPicture,
                         LocalMomentActions provides momentActions,
                         LocalNavController provides navController,
+                        LocalLedgerNav provides ledgerNav,
                     ) {
                         NavHost(
                             navController = navController,
@@ -619,6 +715,43 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                             }
                             screen<Changes>(link = "changes") {
                                 ChangesScreen(container, onMoment = openMoment, onBack = back)
+                            }
+                            screen<LedgerHome>(link = "ledger") {
+                                LedgerScreen(container, ledgerNav, onImport = { navController.navigate(LedgerSettings(import = true)) })
+                            }
+                            screen<LedgerEntry>(link = "new-bill") { entry ->
+                                val route = entry.toRoute<LedgerEntry>()
+                                EntryScreen(
+                                    container,
+                                    LedgerEntryArgs(route.edit, route.kind?.let(TxnKind::of), route.related, route.moment, route.date, route.account, route.trip),
+                                    ledgerNav,
+                                )
+                            }
+                            screen<LedgerBill>(link = "bill/{id}") { entry ->
+                                BillScreen(container, entry.toRoute<LedgerBill>().id, ledgerNav)
+                            }
+                            screen<LedgerAccount>(link = "account/{id}") { entry ->
+                                AccountScreen(container, entry.toRoute<LedgerAccount>().id, ledgerNav)
+                            }
+                            screen<LedgerAccountEdit> { entry ->
+                                AccountEditScreen(container, entry.toRoute<LedgerAccountEdit>().id, ledgerNav)
+                            }
+                            screen<LedgerSettings>(link = "ledger-settings") { entry ->
+                                LedgerSettingsScreen(container, ledgerNav, startImport = entry.toRoute<LedgerSettings>().import)
+                            }
+                            screen<LedgerCategories> { entry ->
+                                CategoriesScreen(container, entry.toRoute<LedgerCategories>().book, ledgerNav)
+                            }
+                            screen<LedgerRates> {
+                                RatesScreen(container, ledgerNav)
+                            }
+                            screen<LedgerList> { entry ->
+                                val route = entry.toRoute<LedgerList>()
+                                LedgerListScreen(
+                                    container,
+                                    LedgerFilter(route.title, route.book, route.account, route.category, route.tag, route.trip, route.place, route.day, route.period, route.search),
+                                    ledgerNav,
+                                )
                             }
                         }
                         // Kept while it leaves, so the photo has somewhere to fly back from.
@@ -963,6 +1096,11 @@ fun routeOf(link: Uri): Any? {
         "edit" -> id?.let(::EditMoment)
         "changes" -> Changes
         "search" -> Search
+        "ledger" -> LedgerHome
+        "new-bill" -> LedgerEntry()
+        "bill" -> id?.let(::LedgerBill)
+        "account" -> id?.let(::LedgerAccount)
+        "ledger-settings" -> LedgerSettings()
         "moment" -> id?.let(::Moment)
         "trip" -> id?.let(::Trip)
         "play" -> id?.let(::TripPlay)

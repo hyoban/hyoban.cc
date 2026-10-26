@@ -102,6 +102,9 @@ import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.R
 import cc.hyoban.moments.data.media.MediaUrls
 import cc.hyoban.moments.data.spec.FoodVerdict
+import cc.hyoban.moments.ui.ledger.LedgerEntryArgs
+import cc.hyoban.moments.ui.ledger.LocalLedgerNav
+import cc.hyoban.moments.ui.ledger.momentBillRows
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.spec.PlaceKind
@@ -168,7 +171,11 @@ fun MomentScreen(
     onDay: (String) -> Unit = {},
     pane: Boolean = false,
     onChanges: (() -> Unit)? = null,
+    /** Opens one of its bills in the ledger, and writes one from its meal's bill. */
+    onBill: (String) -> Unit = LocalLedgerNav.current?.bill ?: {},
+    onNewBill: (String) -> Unit = LocalLedgerNav.current?.let { nav -> { uid -> nav.entry(LedgerEntryArgs(moment = uid)) } } ?: {},
 ) {
+    val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
     val moments by container.repository.moments.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
     val trips by container.repository.trips.collectAsStateWithLifecycle()
@@ -204,6 +211,7 @@ fun MomentScreen(
             MomentDetails(
                 moment, places, trip, moments, trips, urls, pager, onPlace, onTrip, onDay,
                 changed = container.repository.isChanged(moment.uid),
+                bills = momentBillRows(ledger, moment, onBill, onNewBill),
                 // The way to publish, only when the app can.
                 onChanges = onChanges.takeIf { container.canPublish },
             )
@@ -372,6 +380,8 @@ private fun MomentDetails(
     onDay: (String) -> Unit,
     changed: Boolean = false,
     onChanges: (() -> Unit)? = null,
+    /** Its bills in the ledger, kept on the phone, as rows after what was eaten. */
+    bills: List<@Composable (ListItemShapes) -> Unit> = emptyList(),
 ) {
     val sameDay = remember(moments, moment.dateKey) { moments.count { it.dateKey == moment.dateKey } }
     Column(Modifier.padding(top = Space.xl, bottom = Space.xxl)) {
@@ -428,6 +438,7 @@ private fun MomentDetails(
                     )
                 }
             }
+            addAll(bills)
             moment.places.forEach { id ->
                 val place = places[id]
                 add { shapes ->

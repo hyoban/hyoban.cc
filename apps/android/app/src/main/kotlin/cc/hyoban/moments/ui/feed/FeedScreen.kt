@@ -105,6 +105,10 @@ import cc.hyoban.moments.ui.components.isExpandedWidth
 import cc.hyoban.moments.ui.components.isMediumWidth
 import cc.hyoban.moments.ui.components.sharedCard
 import cc.hyoban.moments.ui.format.formatDay
+import cc.hyoban.moments.ui.ledger.LedgerFilter
+import cc.hyoban.moments.ui.ledger.LocalLedgerNav
+import cc.hyoban.moments.ui.ledger.SpendingCard
+import cc.hyoban.moments.ui.ledger.SpendingOf
 import cc.hyoban.moments.ui.map.navigateTo
 import cc.hyoban.moments.ui.moment.MomentScreen
 import cc.hyoban.moments.ui.publish.PendingChangesRow
@@ -527,7 +531,13 @@ fun DayScreen(
         // The day is the page's title and its trip in the bar, so its cards say neither again:
         // no pill heads them, and the trip goes unsaid when all of them were on it.
         val oneTrip = trip != null && moments.all { tripOf(it, trips)?.id == trip.id }
-        MomentFeed(moments, places, trips, container.mediaUrls, onMoment, months = false, showTrip = !oneTrip, dayPills = false)
+        val ledgerNav = LocalLedgerNav.current
+        MomentFeed(moments, places, trips, container.mediaUrls, onMoment, months = false, showTrip = !oneTrip, dayPills = false) {
+            // What the day cost, from the ledger kept on the phone.
+            item("spending") {
+                SpendingCard(container, SpendingOf.Day(date), onOpen = { ledgerNav?.list(LedgerFilter(day = date)) }, Modifier.padding(top = Space.s, bottom = Space.s))
+            }
+        }
     }
 }
 
@@ -573,6 +583,12 @@ fun PlaceScreen(
         },
     ) {
         // The place is the page's title, so its cards name only the other places they were at.
-        MomentFeed(moments, places, trips, container.mediaUrls, onMoment, onDay = onDay, hidePlace = id)
+        val ledgerNav = LocalLedgerNav.current
+        MomentFeed(moments, places, trips, container.mediaUrls, onMoment, onDay = onDay, hidePlace = id) {
+            // What was spent there, from the ledger kept on the phone.
+            item("spending") {
+                SpendingCard(container, SpendingOf.Place(id), onOpen = { ledgerNav?.list(LedgerFilter(place = id)) }, Modifier.padding(top = Space.s, bottom = Space.s))
+            }
+        }
     }
 }

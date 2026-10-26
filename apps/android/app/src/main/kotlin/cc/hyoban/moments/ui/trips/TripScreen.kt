@@ -65,6 +65,10 @@ import cc.hyoban.moments.ui.components.sharedCard
 import cc.hyoban.moments.ui.components.sideInsetsPadding
 import cc.hyoban.moments.ui.components.tripCardKey
 import cc.hyoban.moments.ui.feed.MomentFeed
+import cc.hyoban.moments.ui.ledger.LedgerFilter
+import cc.hyoban.moments.ui.ledger.LocalLedgerNav
+import cc.hyoban.moments.ui.ledger.SpendingCard
+import cc.hyoban.moments.ui.ledger.SpendingOf
 import cc.hyoban.moments.ui.format.daysBetween
 import cc.hyoban.moments.ui.format.formatDay
 import cc.hyoban.moments.ui.map.TripMap
@@ -102,6 +106,11 @@ fun TripScreen(
         Box(Modifier.padding(start = Space.gutter, end = Space.gutter, top = Space.xs, bottom = Space.l)) {
             TripSubhead(trip, moments.size, places = stops.distinctBy { it.placeId }.size)
         }
+    }
+    // What it cost, from the ledger kept on the phone, leading to its bills.
+    val ledgerNav = LocalLedgerNav.current
+    val spending: @Composable () -> Unit = {
+        SpendingCard(container, SpendingOf.Trip(trip.id), onOpen = { ledgerNav?.list(LedgerFilter(trip = trip.id)) }, Modifier.padding(bottom = Space.l))
     }
     // The trip's photos as Material 3's multi-browse carousel, a large one, a medium and a
     // small, snapping as they're swiped; each opens its Moment. Headed with an arrow pointing
@@ -224,6 +233,7 @@ fun TripScreen(
                         onDay = onDay,
                     ) {
                         item(key = "summary") { summary() }
+                        item(key = "spending") { spending() }
                         if (photos.isNotEmpty()) item(key = "photos") { photoCarousel(2) }
                     }
                 }
@@ -241,6 +251,7 @@ fun TripScreen(
                     onDay = onDay,
                 ) {
                     item(key = "summary") { summary() }
+                    item(key = "spending") { spending() }
                     if (photos.isNotEmpty()) item(key = "photos") { photoCarousel(4) }
                     item(key = "map") { routeCard(Modifier, Modifier.height(240.dp)) }
                     item(key = "gap") { Spacer(Modifier.height(Space.s)) }
