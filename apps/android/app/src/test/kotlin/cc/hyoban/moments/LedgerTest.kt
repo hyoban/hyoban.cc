@@ -12,7 +12,11 @@ import cc.hyoban.moments.ledger.Xlsx
 import cc.hyoban.moments.ledger.formatCents
 import cc.hyoban.moments.ledger.formatMoney
 import cc.hyoban.moments.ledger.parseCents
+import cc.hyoban.moments.ledger.netAssetsByMonth
+import cc.hyoban.moments.ledger.runningTotals
 import cc.hyoban.moments.ledger.summarize
+import cc.hyoban.moments.ledger.weekdayAverages
+import java.time.YearMonth
 import java.io.File
 import java.time.LocalDate
 import java.time.ZoneId
@@ -183,6 +187,32 @@ class LedgerTest {
         assertEquals(2, ledger.shownBooks.size)
         val summary = summarize(ledger.entries, ledger.rates, "CNY", null, null, ledger::topCategoryName)
         assertEquals(listOf("三餐" to 3000L, "饮料" to 500L), summary.expenseByCategory)
+    }
+
+    @Test fun runningTotalsStopAtToday() {
+        val start = LocalDate.of(2025, 1, 1)
+        val days = mapOf(start to 100L, start.plusDays(2) to 50L, start.plusDays(5) to 7L)
+        assertEquals(listOf(100L, 100L, 150L), runningTotals(days, start, start.plusMonths(1), until = start.plusDays(2)))
+        assertEquals(31, runningTotals(days, start, start.plusMonths(1)).size)
+    }
+
+    @Test fun weekdayAveragesCountDaysWithNothingSpent() {
+        // 2025-01-06 and 13 are Mondays; nothing on the 13th.
+        val days = mapOf(LocalDate.of(2025, 1, 6) to 100L, LocalDate.of(2025, 1, 7) to 30L)
+        val averages = weekdayAverages(days, LocalDate.of(2025, 1, 6), LocalDate.of(2025, 1, 20))
+        assertEquals(listOf(50L, 15L, 0L, 0L, 0L, 0L, 0L), averages)
+    }
+
+    @Test fun netAssetsAreTakenBackMonthByMonth() {
+        val result = read(
+            row("2025/01/10 12:00", "收入", "1000", "工资", "", "中国银行 储蓄卡4049"),
+            row("2025/02/10 12:00", "支出", "-300", "三餐", "", "中国银行 储蓄卡4049"),
+            row("2025/03/10 12:00", "支出", "-200", "三餐", "", "中国银行 储蓄卡4049"),
+        )
+        val ledger = ledgerOf(result)
+        val months = netAssetsByMonth(ledger, "CNY", 4, today = LocalDate.of(2025, 3, 20))
+        assertEquals(listOf(YearMonth.of(2024, 12), YearMonth.of(2025, 1), YearMonth.of(2025, 2), YearMonth.of(2025, 3)), months.map { it.first })
+        assertEquals(listOf(0L, 100000L, 70000L, 50000L), months.map { it.second })
     }
 
     /** The whole of a real export, when `ICOST_EXPORT` names one; it stays out of the repository. */

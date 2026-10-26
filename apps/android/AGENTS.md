@@ -88,6 +88,10 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   (`ui/map/Years.kt`, from `packages/trip-map/src/theme.ts`), in both modes and with white
   numbers on the dots, not harmonized with the primary or set at custom-colour tones.
   Change them on both sides together.
+- The ledger's charts are drawn on a Compose `Canvas` (`ui/ledger/Charts.kt`), not with
+  a chart library. One series takes the primary; categories take the data-viz palette's
+  six colour-blind-safe hues in fixed order, the period's biggest first, and the rest are
+  grey 其他. This is another exception to M3, which has no colour role for a fourth series.
 
 ## Motion and navigation
 
