@@ -82,24 +82,44 @@ class FootprintStore(context: Context) : SQLiteOpenHelper(
         return true
     }
 
-    @Synchronized fun append(point: TrackPoint, now: Long = System.currentTimeMillis()): FixDecision {
+    @Synchronized fun breakSegment(): String {
+        command("break")
+        return readableDatabase.rawQuery("SELECT segment FROM recording WHERE id=1", null).use { it.moveToFirst(); it.getString(0) }
+    }
+
+    @Synchronized fun append(point: TrackPoint, now: Long = System.currentTimeMillis()): FixDecision =
+        appendBatch(listOf(point), now).single()
+
+    /** One transaction and one UI invalidation per delivery, including hardware-batched fixes. */
+    @Synchronized fun appendBatch(points: List<TrackPoint>, now: Long = System.currentTimeMillis(), expectedSegment: String? = null): List<FixDecision> {
+        if (points.isEmpty()) return emptyList()
         val state = state()
-        if (!state.recording) return FixDecision.NOT_RECORDING
+        if (!state.recording) return points.map { FixDecision.NOT_RECORDING }
         val db = writableDatabase
-        val segment = db.rawQuery("SELECT segment FROM recording WHERE id=1", null).use { it.moveToFirst(); it.getString(0) }
-        val previous = db.rawQuery("SELECT time,lat,lon,accuracy,altitude,segment FROM points ORDER BY id DESC LIMIT 1", null).use {
-            if (it.moveToFirst()) it.point() else null
-        }
-        if (previous != null && point.time <= previous.time) return FixDecision.OUT_OF_ORDER
-        val decision = evaluateFix(point, previous?.takeIf { it.segment == segment }, now)
-        if (decision != FixDecision.ACCEPT) return decision
-        val day = Instant.ofEpochMilli(point.time).atZone(ZoneId.systemDefault()).toLocalDate().toString()
-        db.insertOrThrow("points", null, ContentValues().apply {
-            put("time", point.time); put("day", day); put("lat", point.latitude); put("lon", point.longitude)
-            put("accuracy", point.accuracy); put("altitude", point.altitude); put("segment", segment); put("session", state.session)
-        })
-        _revision.value++
-        return FixDecision.ACCEPT
+        val decisions = mutableListOf<FixDecision>()
+        db.beginTransaction()
+        try {
+            val segment = db.rawQuery("SELECT segment FROM recording WHERE id=1", null).use { it.moveToFirst(); it.getString(0) }
+            if (expectedSegment != null && expectedSegment != segment) return points.map { FixDecision.NOT_RECORDING }
+            var previous = db.rawQuery("SELECT time,lat,lon,accuracy,altitude,segment FROM points ORDER BY id DESC LIMIT 1", null).use {
+                if (it.moveToFirst()) it.point() else null
+            }
+            for (point in points) {
+                val decision = if (previous != null && point.time <= previous.time) FixDecision.OUT_OF_ORDER
+                    else evaluateFix(point, previous?.takeIf { it.segment == segment }, now)
+                decisions += decision
+                if (decision != FixDecision.ACCEPT) continue
+                val day = Instant.ofEpochMilli(point.time).atZone(ZoneId.systemDefault()).toLocalDate().toString()
+                db.insertOrThrow("points", null, ContentValues().apply {
+                    put("time", point.time); put("day", day); put("lat", point.latitude); put("lon", point.longitude)
+                    put("accuracy", point.accuracy); put("altitude", point.altitude); put("segment", segment); put("session", state.session)
+                })
+                previous = point.copy(segment = segment)
+            }
+            db.setTransactionSuccessful()
+        } finally { db.endTransaction() }
+        if (FixDecision.ACCEPT in decisions) _revision.value++
+        return decisions
     }
 
     @Synchronized fun history(): FootprintHistory {

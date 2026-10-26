@@ -140,6 +140,7 @@ fun ConnectionAutomationSettings(container: AppContainer) {
                     Text(stringResource(R.string.connection_automation_choose_bluetooth, rules.bluetooth.size))
                 }
                 if (rules.bluetooth.isNotEmpty()) Text(rules.bluetooth.values.sorted().joinToString("、"), style = MaterialTheme.typography.bodySmall)
+                CompanionConnectionSettings(rules)
                 Text(stringResource(R.string.connection_automation_monitor_note), style = MaterialTheme.typography.bodySmall)
             }
             if (permissionHelp || (rules.enabled && status == R.string.connection_automation_permissions)) {

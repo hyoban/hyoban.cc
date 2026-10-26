@@ -163,4 +163,29 @@ class ConnectionRulesTest {
         e.settle(off) // Manual pause consumes this pending arrival.
         assertNull(e.settle(on)) // A later manual resume stays resumed.
     }
+    @Test fun companionInitialSnapshotAndRepeatedConnectedEventPreserveManualChoice() {
+        val e = engine()
+        assertFalse(e.restoreBluetoothTransition("A", null, true))
+        assertNull(e.settle(off))
+        assertFalse(e.restoreBluetoothTransition("A", true, true))
+        assertNull(e.settle(off))
+    }
+
+    @Test fun companionCanRestoreARealTransitionAfterProcessRecreation() {
+        val e = engine()
+        e.wifi(setOf("Home"), seed = true)
+        e.bluetooth("A", true, seed = true) // Connection is already visible in a fresh snapshot.
+        assertTrue(e.restoreBluetoothTransition("A", false, true))
+        assertEquals("daily_on", requireNotNull(e.settle(off)).command(off))
+        assertTrue(e.restoreBluetoothTransition("A", true, false))
+        assertEquals("pause", requireNotNull(e.settle(on)).command(on))
+    }
+
+    @Test fun restoredDisconnectionCannotPauseAnotherConnectedDevice() {
+        val e = engine()
+        e.bluetooth("B", true, seed = true)
+        e.restoreBluetoothTransition("A", true, false)
+        assertNull(e.settle(on))
+        assertFalse(e.restoreBluetoothTransition("Other", false, true))
+    }
 }

@@ -14,8 +14,9 @@ import cc.hyoban.moments.R
 
 /** Notification channels and ColorOS live-update presentation, independent of recording policy. */
 internal object RecordingNotifications {
+    const val ID = 2201
     const val CHANNEL = "footprint-recording"
-    private const val REST_CHANNEL = "footprint-recording-rest"
+    const val REST_CHANNEL = "footprint-recording-rest"
     const val PAUSE = "cc.hyoban.moments.footprints.PAUSE"
 
     fun createChannels(context: Context) {

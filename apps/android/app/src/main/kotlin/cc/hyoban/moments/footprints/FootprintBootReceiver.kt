@@ -11,6 +11,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /** Boot resumes only an explicitly enabled recorder, and only with background location access. */
 class FootprintBootReceiver : BroadcastReceiver() {
@@ -19,6 +20,7 @@ class FootprintBootReceiver : BroadcastReceiver() {
         val pending = goAsync()
         CoroutineScope(Dispatchers.Main + SupervisorJob()).launch {
             try {
+                withContext(Dispatchers.IO) { CompanionConnections.resetBaselines(context) }
                 ConnectionReminderService.sync(context)
                 if (Build.VERSION.SDK_INT < 29 || ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                     RecordingService.control(context)

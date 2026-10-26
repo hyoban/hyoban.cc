@@ -126,4 +126,44 @@ class DailyRecordingPolicyTest {
         assertEquals(DailyRecordingPolicy.Phase.ACTIVE, p.phase)
         assertEquals(220_000L, p.nextCheck)
     }
+    @Test fun batchTailMovementPreventsPrematureRestFromItsEarlierStationarySamples() {
+        val p = DailyRecordingPolicy(0)
+        for (time in 0L..150_000L step 15_000L) p.fix(point(), time)
+        p.fix(point(), 165_000, allowRest = false)
+        p.fix(point(), 180_000, allowRest = false)
+        p.fix(point(100.0), 195_000)
+        assertEquals(DailyRecordingPolicy.Phase.ACTIVE, p.phase)
+        assertEquals(315_000L, p.nextCheck)
+    }
+
+    @Test fun aStationaryBatchUsesSampleTimesRatherThanDeliveryTime() {
+        val p = DailyRecordingPolicy(0)
+        for (time in 0L..180_000L step 15_000L) p.fix(point(), time, allowRest = time == 180_000L)
+        assertEquals(DailyRecordingPolicy.Phase.REST, p.phase)
+        assertEquals(300_000L, p.nextCheck)
+    }
+
+    @Test fun lowPowerFallbackNeedsSignificantDisplacementAndReasonableAccuracy() {
+        val p = restingPolicy()
+        assertFalse(p.fallbackFix(point(100.0, 100.0), 190_000))
+        assertFalse(p.fallbackFix(point(1_000.0, 500.0), 195_000))
+        assertTrue(p.fallbackFix(point(300.0, 100.0), 200_000))
+        assertEquals(DailyRecordingPolicy.Phase.ACTIVE, p.phase)
+        assertFalse(p.fallbackFix(point(600.0), 210_000))
+    }
+
+    @Test fun fallbackWithoutAnAnchorCannotInventMovement() {
+        val p = DailyRecordingPolicy(0)
+        p.tick(120_000)
+        assertFalse(p.fallbackFix(point(100.0), 125_000))
+        assertEquals(DailyRecordingPolicy.Phase.REST, p.phase)
+    }
+    @Test fun abandoningBrokenBatchingGrantsFreshAcquisitionTime() {
+        val p = DailyRecordingPolicy(0)
+        p.fix(point(), 0)
+        p.restartAcquisition(90_000)
+        p.tick(120_000)
+        assertEquals(DailyRecordingPolicy.Phase.ACTIVE, p.phase)
+        assertEquals(210_000L, p.nextCheck)
+    }
 }
