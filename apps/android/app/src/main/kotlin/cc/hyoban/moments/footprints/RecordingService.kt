@@ -7,12 +7,14 @@ import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.location.Location
 import android.location.LocationListener
+import android.location.LocationRequest
 import android.location.LocationManager
 import android.hardware.Sensor
 import android.hardware.SensorManager
 import android.hardware.TriggerEvent
 import android.hardware.TriggerEventListener
 import android.os.*
+import androidx.core.location.LocationManagerCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
 import cc.hyoban.moments.BuildConfig
@@ -29,12 +31,21 @@ class RecordingService : Service() {
     private val events = Channel<suspend () -> Unit>(Channel.UNLIMITED)
     private val store get() = (application as MomentsApplication).container.footprints
     private val diagnostics get() = (application as MomentsApplication).container.footprintDiagnostics
+    private var lastActivityNanos = SystemClock.elapsedRealtimeNanos()
     private val runId = java.util.UUID.randomUUID().toString()
     private val manager get() = getSystemService(LocationManager::class.java)
     private val sensors get() = getSystemService(SensorManager::class.java)
     private var subscribed = false
     private var listener: LocationListener? = null
     private var generation = 0
+    private var acquiring = false
+    private var batching = false
+    private val batchingPreferences get() = getSharedPreferences("footprint-location", MODE_PRIVATE)
+    private var segmentId: String? = null
+    private var segmentStartNanos = 0L
+    private var lastSampleNanos = 0L
+    private var fallback: CancellationSignal? = null
+    private var fallbackPolicy: DailyRecordingPolicy? = null
     private var daily: DailyRecordingPolicy? = null
     private var policyTimer: Job? = null
     private var tripWatchdog: Job? = null
@@ -55,11 +66,13 @@ class RecordingService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        live = this
         diagnostic("service_start", "app_version" to BuildConfig.VERSION_NAME, "app_version_code" to BuildConfig.VERSION_CODE,
-            "policy" to "daily-v2", "sdk" to Build.VERSION.SDK_INT, "os" to Build.VERSION.RELEASE,
+            "policy" to "daily-v3", "sdk" to Build.VERSION.SDK_INT, "os" to Build.VERSION.RELEASE,
             "manufacturer" to Build.MANUFACTURER, "model" to Build.MODEL,
             "fix_timeout_ms" to DailyRecordingPolicy.FIX_TIMEOUT, "still_timeout_ms" to DailyRecordingPolicy.STILL_TIMEOUT,
             "rest_interval_ms" to DailyRecordingPolicy.REST_INTERVAL, "max_retry_ms" to DailyRecordingPolicy.MAX_RETRY)
+        if (Build.VERSION.SDK_INT >= 34) diagnostic("gnss_capabilities", "scheduling" to manager.gnssCapabilities.hasScheduling())
         RecordingNotifications.createChannels(this)
         ContextCompat.registerReceiver(this, providers, IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION), ContextCompat.RECEIVER_NOT_EXPORTED)
         scope.launch {
@@ -86,10 +99,10 @@ class RecordingService : Service() {
             return START_NOT_STICKY
         }
         try {
-            ServiceCompat.startForeground(this, NOTIFICATION, RecordingNotifications.build(this, R.string.footprints_waiting),
+            ServiceCompat.startForeground(this, RecordingNotifications.ID, RecordingNotifications.build(this, R.string.footprints_waiting),
                 if (Build.VERSION.SDK_INT >= 29) ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION else 0)
-        } catch (_: Exception) {
-            fail(R.string.footprints_permission_needed)
+        } catch (e: Exception) {
+            startFailed(e)
             return START_NOT_STICKY
         }
         events.trySend { configure(if (intent == null) "system_restart" else "start_command") }
@@ -101,12 +114,17 @@ class RecordingService : Service() {
         diagnostic("configure", "source" to source, "daily" to state.daily, "trip" to (state.session != null),
             "paused" to state.paused, *environment())
         stopUpdates()
+        stopFallback()
         stopMotion()
         stopPassive()
         policyTimer?.cancel()
         tripWatchdog?.cancel()
         daily = null
         reportedPhase = null
+        (application as MomentsApplication).container.scope.launch {
+            yield()
+            ActivityTransitions.sync(this@RecordingService)
+        }
         if (!state.recording) { stopSelfResult(latestStartId); return }
         if (!hasPreciseLocation(this)) { fail(R.string.footprints_permission_needed); return }
         if (!manager.isLocationEnabled) {
@@ -127,23 +145,29 @@ class RecordingService : Service() {
         }
     }
 
-    private suspend fun startUpdates(trip: Boolean) {
+    private suspend fun startUpdates(trip: Boolean, newSegment: Boolean = true, batch: Boolean = false) {
         val available = manager.getProviders(true)
-        // Prefer GNSS: a balanced fused provider may never start GPS when offline.
         val provider = listOf(LocationManager.GPS_PROVIDER, "fused", LocationManager.NETWORK_PROVIDER).firstOrNull { it in available }
         if (provider == null) { updateStatus(R.string.footprints_location_off); return }
-        // Daily fixes need to arrive while stationary too, so the policy can stop GPS.
-        // The store still filters stationary points rather than writing every callback.
-        val interval = if (trip) 5_000L else 15_000L
+        if (newSegment) {
+            segmentId = withContext(Dispatchers.IO) { store.breakSegment() }
+            segmentStartNanos = SystemClock.elapsedRealtimeNanos()
+            lastSampleNanos = 0
+        }
+        val interval = if (trip) 5_000L else LocationDeliveryPolicy.DAILY_INTERVAL_MS
         val distance = if (trip) 5f else 0f
-        withContext(Dispatchers.IO) { store.command("break") }
+        val batched = !trip && batch && Build.VERSION.SDK_INT >= 31 &&
+            batchingPreferences.getString("disabled_build", null) != Build.FINGERPRINT
+        batching = batched
+        acquiring = !trip && !batch
         val version = ++generation
         requestStarted = SystemClock.elapsedRealtime()
         callbacks = 0
         usableFixes = 0
         storedFixes = 0
         val updates = object : LocationListener {
-            override fun onLocationChanged(location: Location) = received(location, version)
+            override fun onLocationChanged(location: Location) = received(listOf(location), version)
+            override fun onLocationChanged(locations: MutableList<Location>) = received(locations, version)
             override fun onProviderEnabled(provider: String) = Unit
             override fun onProviderDisabled(provider: String) = Unit
             @Deprecated("Legacy LocationListener callback")
@@ -151,38 +175,94 @@ class RecordingService : Service() {
         }
         try {
             listener = updates
-            manager.requestLocationUpdates(provider, interval, distance, updates, Looper.getMainLooper())
+            if (Build.VERSION.SDK_INT >= 31) {
+                val request = LocationRequest.Builder(interval)
+                    .setQuality(LocationRequest.QUALITY_HIGH_ACCURACY)
+                    .setMinUpdateIntervalMillis(interval)
+                    .setMinUpdateDistanceMeters(distance)
+                    .setMaxUpdateDelayMillis(if (batched) LocationDeliveryPolicy.BATCH_DELAY_MS else 0)
+                    // First fix / stationary probes stop at the system even if our process sleeps.
+                    .setDurationMillis(if (acquiring) DailyRecordingPolicy.FIX_TIMEOUT else Long.MAX_VALUE)
+                    .build()
+                manager.requestLocationUpdates(provider, request, mainExecutor, updates)
+            } else manager.requestLocationUpdates(provider, interval, distance, updates, Looper.getMainLooper())
             subscribed = true
             diagnostic("location_request_start", "provider" to provider, "interval_ms" to interval,
-                "distance_m" to distance, "trip" to trip, "segment_break" to true)
-            lastFix = SystemClock.elapsedRealtime()
-            updateStatus(R.string.footprints_waiting)
-        } catch (_: SecurityException) { fail(R.string.footprints_permission_needed) }
+                "distance_m" to distance, "trip" to trip, "segment_break" to newSegment,
+                "batch_delay_ms" to if (batched) LocationDeliveryPolicy.BATCH_DELAY_MS else 0,
+                "system_timeout_ms" to if (acquiring && Build.VERSION.SDK_INT >= 31) DailyRecordingPolicy.FIX_TIMEOUT else null)
+            if (newSegment) {
+                lastFix = SystemClock.elapsedRealtime()
+                updateStatus(R.string.footprints_waiting)
+            }
+        } catch (e: SecurityException) { startFailed(e) }
     }
 
-    private fun received(location: Location, version: Int) {
-        val copy = Location(location)
+    private fun received(locations: List<Location>, version: Int) {
+        val copies = locations.map(::Location).sortedBy { it.elapsedRealtimeNanos }
         events.trySend {
             if (version != generation || !subscribed) {
                 diagnostic("fix_rejected", "reason" to "old_request", "callback_generation" to version)
                 return@trySend
             }
-            callbacks++
-            val point = usablePoint(copy, if (daily != null) 30_000_000_000L else 120_000_000_000L, "active") ?: return@trySend
-            usableFixes++
-            val decision = withContext(Dispatchers.IO) { store.append(point) }
-            if (decision == FixDecision.ACCEPT) storedFixes++
-            diagnostic("fix", "stored" to (decision == FixDecision.ACCEPT), "decision" to decision.name, *sampleFields(copy))
-            lastFix = SystemClock.elapsedRealtime()
-            updateStatus(R.string.footprints_recording)
-            daily?.let {
-                // Accurate Doppler speed can distinguish slow walking from noisy coordinates.
+            callbacks += copies.size
+            val maxAge = if (daily != null) LocationDeliveryPolicy.DAILY_MAX_AGE_MS else 120_000L
+            val samples = copies.mapNotNull { copy ->
+                if (!LocationDeliveryPolicy.acceptsTime(copy.elapsedRealtimeNanos, SystemClock.elapsedRealtimeNanos(),
+                        segmentStartNanos, lastSampleNanos, maxAge)) {
+                    diagnostic("fix_rejected", "reason" to "sample_time", *sampleFields(copy))
+                    return@mapNotNull null
+                }
+                val point = usablePoint(copy, maxAge * 1_000_000, "active") ?: return@mapNotNull null
+                lastSampleNanos = copy.elapsedRealtimeNanos
+                copy to point
+            }
+            if (samples.isEmpty()) {
+                if (batching && SystemClock.elapsedRealtime() - requestStarted >= LocationDeliveryPolicy.BATCH_DELAY_MS) {
+                    disableBatching("empty_or_stale_batch")
+                    applyDailyPolicy()
+                }
+                return@trySend
+            }
+            usableFixes += samples.size
+            val decisions = withContext(Dispatchers.IO) { store.appendBatch(samples.map { it.second }, expectedSegment = segmentId) }
+            for ((index, sample) in samples.withIndex()) {
+                val (copy, point) = sample
+                val decision = decisions[index]
+                if (decision == FixDecision.ACCEPT) storedFixes++
+                diagnostic("fix", "stored" to (decision == FixDecision.ACCEPT), "decision" to decision.name, *sampleFields(copy))
+                if (decision == FixDecision.NOT_RECORDING) continue
+                lastFix = copy.elapsedRealtimeNanos / 1_000_000
                 val moving = copy.hasSpeed() && copy.hasSpeedAccuracy() &&
                     copy.speedAccuracyMetersPerSecond <= 0.5f && copy.speed - copy.speedAccuracyMetersPerSecond >= 0.5f
-                it.fix(point, lastFix, moving)
-                applyDailyPolicy()
+                // Observe the complete batch before deciding to sleep: its final points may be moving.
+                daily?.fix(point, lastFix, moving, allowRest = index == samples.lastIndex)
             }
+            if (decisions.all { it == FixDecision.NOT_RECORDING }) return@trySend
+            diagnostic("location_delivery", "samples" to samples.size, "oldest_age_ms" to
+                (SystemClock.elapsedRealtimeNanos() - samples.first().first.elapsedRealtimeNanos) / 1_000_000)
+            updateStatus(R.string.footprints_recording)
+            if (acquiring && daily?.phase == DailyRecordingPolicy.Phase.ACTIVE) {
+                // Acquisition has no batching. Switch after a usable fix without creating a track gap.
+                stopUpdates()
+                startUpdates(trip = false, newSegment = false, batch = true)
+            } else if (acquiring && daily?.phase == DailyRecordingPolicy.Phase.PROBE &&
+                SystemClock.elapsedRealtime() - requestStarted >= DailyRecordingPolicy.FIX_TIMEOUT - 45_000) {
+                // A late first fix still needs enough bounded time for independent stop observations.
+                stopUpdates()
+                startUpdates(trip = false, newSegment = false)
+            }
+            if (daily != null) applyDailyPolicy()
         }
+    }
+
+    private suspend fun disableBatching(reason: String) {
+        batchingPreferences.edit().putString("disabled_build", Build.FINGERPRINT).apply()
+        diagnostic("batching_disabled", "reason" to reason)
+        stopUpdates()
+        lastFix = SystemClock.elapsedRealtime()
+        daily?.restartAcquisition(lastFix)
+        startUpdates(trip = false, newSegment = false, batch = true)
     }
 
     private fun stopUpdates() {
@@ -192,6 +272,7 @@ class RecordingService : Service() {
         listener?.let { manager.removeUpdates(it) }
         listener = null
         subscribed = false
+        batching = false
     }
 
     private suspend fun applyDailyPolicy() {
@@ -209,7 +290,9 @@ class RecordingService : Service() {
             armMotion()
             startPassive()
             updateStatus(R.string.footprints_resting)
+            if (policy.restReason == DailyRecordingPolicy.RestReason.NO_FIX) startFallback(policy)
         } else {
+            stopFallback()
             stopMotion()
             stopPassive()
             if (!subscribed) startUpdates(trip = false)
@@ -217,16 +300,67 @@ class RecordingService : Service() {
         // Handler-backed delay does not wake the CPU from deep sleep. The significant-motion
         // sensor is the wake-up path; this fallback may run later under Doze, without exact alarms.
         policyTimer = scope.launch {
-            val due = policy.nextCheck
+            val due = minOf(policy.nextCheck,
+                if (batching) lastFix + LocationDeliveryPolicy.BATCH_STALL_MS else Long.MAX_VALUE)
             delay((due - SystemClock.elapsedRealtime()).coerceAtLeast(1))
             events.trySend {
                 if (daily === policy) {
                     diagnostic("timer", "late_ms" to (SystemClock.elapsedRealtime() - due).coerceAtLeast(0))
-                    policy.tick(SystemClock.elapsedRealtime())
+                    if (batching && LocationDeliveryPolicy.batchStalled(SystemClock.elapsedRealtime(), lastFix))
+                        disableBatching("delivery_timeout")
+                    else policy.tick(SystemClock.elapsedRealtime())
                     applyDailyPolicy()
                 }
             }
         }
+    }
+
+    private fun startFallback(policy: DailyRecordingPolicy) {
+        if (fallbackPolicy === policy || fallback != null) return
+        fallbackPolicy = policy
+        val available = manager.getProviders(true)
+        val provider = listOf(LocationManager.NETWORK_PROVIDER, "fused").firstOrNull { it in available } ?: return
+        val cancellation = CancellationSignal()
+        fallback = cancellation
+        diagnostic("fallback_start", "provider" to provider)
+        val accept: (Location?) -> Unit = { location ->
+            val copy = location?.let(::Location)
+            events.trySend {
+                if (fallback !== cancellation || daily !== policy) return@trySend
+                fallback = null
+                val age = copy?.let { SystemClock.elapsedRealtimeNanos() - it.elapsedRealtimeNanos }
+                val point = copy?.takeIf { it.hasAccuracy() && age != null && age in 0..30_000_000_000L }
+                    ?.let { TrackPoint(it.time, it.latitude, it.longitude, it.accuracy.toDouble()) }
+                    ?.takeIf { it.latitude.isFinite() && it.latitude in -90.0..90.0 && it.longitude.isFinite() && it.longitude in -180.0..180.0 }
+                val woke = point != null && policy.fallbackFix(point, SystemClock.elapsedRealtime())
+                diagnostic("fallback_result", "available" to (point != null), "woke" to woke,
+                    "accuracy_m" to point?.accuracy)
+                if (woke) applyDailyPolicy()
+            }
+        }
+        try {
+            if (Build.VERSION.SDK_INT >= 31) {
+                manager.getCurrentLocation(provider, LocationRequest.Builder(0)
+                    .setQuality(LocationRequest.QUALITY_LOW_POWER)
+                    .setDurationMillis(LocationDeliveryPolicy.FALLBACK_DURATION_MS).build(),
+                    cancellation, mainExecutor, accept)
+            } else {
+                LocationManagerCompat.getCurrentLocation(manager, provider, cancellation,
+                    ContextCompat.getMainExecutor(this), accept)
+            }
+        } catch (e: SecurityException) {
+            fallback = null
+            diagnostic("fallback_failed", "exception" to e.javaClass.simpleName, "reason" to "permission_denied")
+        } catch (e: Exception) {
+            fallback = null
+            diagnostic("fallback_failed", "exception" to e.javaClass.simpleName)
+        }
+    }
+
+    private fun stopFallback() {
+        fallback?.cancel()
+        fallback = null
+        fallbackPolicy = null
     }
 
     private fun armMotion() {
@@ -340,6 +474,12 @@ class RecordingService : Service() {
         )
     }
 
+    private fun startFailed(error: Exception) {
+        diagnostic("recording_start_failed", "exception" to error.javaClass.simpleName,
+            "reason" to RecordingFailure.reason(error))
+        fail(RecordingFailure.message(error))
+    }
+
     private fun fail(message: Int) {
         diagnostic("service_failure", "reason" to resources.getResourceEntryName(message), *environment())
         _status.value = message
@@ -349,12 +489,15 @@ class RecordingService : Service() {
     private fun updateStatus(message: Int) {
         if (_status.value == message) return
         _status.value = message
-        getSystemService(NotificationManager::class.java).notify(NOTIFICATION, RecordingNotifications.build(this, message))
+        getSystemService(NotificationManager::class.java).notify(RecordingNotifications.ID, RecordingNotifications.build(this, message))
     }
 
     override fun onDestroy() {
         diagnostic("service_destroy")
+        if (live === this) live = null
+        (application as MomentsApplication).container.scope.launch { yield(); ActivityTransitions.sync(this@RecordingService) }
         stopUpdates()
+        stopFallback()
         stopMotion()
         stopPassive()
         unregisterReceiver(providers)
@@ -365,7 +508,35 @@ class RecordingService : Service() {
     }
 
     companion object {
-        private const val NOTIFICATION = 2201
+        private var live: RecordingService? = null
+
+        internal fun dailyRecordingActive() = live?.daily != null
+
+        internal fun refreshActivityRecognition(context: Context) {
+            val app = context.applicationContext as MomentsApplication
+            app.container.scope.launch { ActivityTransitions.sync(app) }
+        }
+
+        internal suspend fun activityTransition(elapsedNanos: Long, moving: Boolean, activity: Int) {
+            val service = live ?: return
+            val done = CompletableDeferred<Unit>()
+            if (service.events.trySend {
+                try {
+                    val policy = service.daily ?: return@trySend
+                    if (!ActivityTransitions.enabled(service) || elapsedNanos <= service.lastActivityNanos) return@trySend
+                    val state = withContext(Dispatchers.IO) { service.store.state() }
+                    if (!state.recording || state.session != null) return@trySend
+                    service.lastActivityNanos = elapsedNanos
+                    service.diagnostic("activity_transition", "moving" to moving, "activity" to activity)
+                    // STILL is advisory: only locations confirm a stop, so a traffic light cannot pause a trip.
+                    if (moving) {
+                        policy.motion(SystemClock.elapsedRealtime())
+                        service.applyDailyPolicy()
+                    }
+                } finally { done.complete(Unit) }
+            }.isSuccess) done.await()
+        }
+
         private val _status = MutableStateFlow<Int?>(null)
         val status = _status.asStateFlow()
 
@@ -390,13 +561,13 @@ class RecordingService : Service() {
             if (!state.recording) {
                 app.stopService(Intent(app, RecordingService::class.java))
                 _status.value = null
-            } else if (action != null || _status.value == null) {
+            } else if (action != null || _status.value == null || RecordingFailure.isFailure(_status.value)) {
                 try {
                     ContextCompat.startForegroundService(app, Intent(app, RecordingService::class.java))
                 } catch (e: Exception) {
-                    _status.value = R.string.footprints_permission_needed
+                    _status.value = RecordingFailure.message(e)
                     container.footprintDiagnostics.record("recording_start_failed",
-                        mapOf("exception" to e.javaClass.simpleName, "automatic" to (expectedState != null)))
+                        mapOf("exception" to e.javaClass.simpleName, "reason" to RecordingFailure.reason(e), "automatic" to (expectedState != null)))
                     return false
                 }
             }

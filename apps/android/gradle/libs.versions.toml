@@ -1,4 +1,5 @@
 [versions]
+playLocation = "21.4.0"
 agp = "9.4.1"
 # Newer than the Kotlin the Android Gradle plugin bundles, so the root build file pins it;
 # the compiler plugins and kotlin-test must match it.
@@ -33,6 +34,7 @@ exifinterface = "1.4.2"
 gson = "2.10.1"
 
 [libraries]
+play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playLocation" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }

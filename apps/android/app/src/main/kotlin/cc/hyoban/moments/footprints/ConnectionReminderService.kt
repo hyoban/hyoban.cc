@@ -33,6 +33,7 @@ class ConnectionReminderService : Service() {
     private val connectivity get() = getSystemService(ConnectivityManager::class.java)
     private val bluetooth get() = getSystemService(BluetoothManager::class.java)?.adapter
     private val notifications get() = getSystemService(NotificationManager::class.java)
+    private var configured = false
     private var rules = ConnectionRules()
     private var transitions = ConnectionTransitions(rules)
     private var epoch = 0
@@ -59,7 +60,7 @@ class ConnectionReminderService : Service() {
         scope.launch {
             try {
                 withContext(Dispatchers.IO) { container.connectionRules.load() }
-                container.connectionRules.rules.collect { value -> post { configure(value) } }
+                container.connectionRules.rules.collect { value -> post { if (!configured || value != rules) configure(value) } }
             } catch (e: CancellationException) { throw e }
             catch (_: Exception) { updateStatus(R.string.connection_automation_error) }
         }
@@ -79,8 +80,8 @@ class ConnectionReminderService : Service() {
         }
         scope.launch {
             RecordingService.status.collect { status ->
-                if (status == R.string.footprints_permission_needed || status == R.string.footprints_error) post {
-                    if (rules.enabled) updateStatus(R.string.connection_automation_auto_failed)
+                if (RecordingFailure.isFailure(status)) post {
+                    if (rules.enabled) updateStatus(status ?: R.string.connection_automation_auto_failed)
                 }
             }
         }
@@ -97,6 +98,11 @@ class ConnectionReminderService : Service() {
             stopSelf()
             return START_NOT_STICKY
         }
+        intent?.getStringExtra("companion_address")?.let { address ->
+            val signal = ConnectionSignal(ConnectionKind.BLUETOOTH, address, intent.getBooleanExtra("companion_connected", false))
+            val previous = if (intent.hasExtra("companion_previous")) intent.getBooleanExtra("companion_previous", false) else null
+            companionSignal(signal, previous, cold = true)
+        }
         return START_STICKY
     }
 
@@ -107,6 +113,7 @@ class ConnectionReminderService : Service() {
     private suspend fun configure(value: ConnectionRules) {
         releaseListeners()
         rules = value
+        configured = true
         diagnostic("connection_configure", "enabled" to value.enabled, "wifi_targets" to value.wifi.size,
             "bluetooth_targets" to value.bluetooth.size)
         transitions = ConnectionTransitions(value)
@@ -185,6 +192,14 @@ class ConnectionReminderService : Service() {
     }
 
     private fun seedBluetooth(generation: Int) {
+        if (Build.VERSION.SDK_INT >= 36 && Build.VERSION.SDK_INT_FULL >= Build.VERSION_CODES_FULL.BAKLAVA_1) {
+            rules.bluetooth.keys.forEach { address ->
+                val device = bluetooth?.getRemoteDevice(address) ?: return@forEach
+                transitions.bluetooth(address, device.isConnected(BluetoothDevice.TRANSPORT_BREDR) ||
+                    device.isConnected(BluetoothDevice.TRANSPORT_LE), seed = true)
+            }
+            return
+        }
         val manager = getSystemService(BluetoothManager::class.java) ?: return
         for (profile in listOf(BluetoothProfile.GATT, BluetoothProfile.GATT_SERVER)) {
             runCatching { manager.getConnectedDevices(profile) }.getOrDefault(emptyList()).forEach {
@@ -206,6 +221,16 @@ class ConnectionReminderService : Service() {
                 override fun onServiceDisconnected(type: Int) = Unit
             }, profile)
         }
+    }
+
+    private fun companionSignal(signal: ConnectionSignal, previous: Boolean?, cold: Boolean) = post {
+        val current = withContext(Dispatchers.IO) { container.connectionRules.load() }
+        if (!current.enabled || signal.id !in current.bluetooth) return@post
+        if (!configured || current != rules) configure(current)
+        if (!permissionState) return@post
+        val hasChanged = if (cold) transitions.restoreBluetoothTransition(signal.id, previous, signal.connected)
+            else transitions.bluetooth(signal.id, signal.connected, seed = previous == null)
+        if (hasChanged) changed()
     }
 
     private fun changed() {
@@ -234,8 +259,8 @@ class ConnectionReminderService : Service() {
                 diagnostic("connection_action", "kind" to signal.kind.name, "connected" to signal.connected,
                     "action" to action, "accepted" to applied)
                 recording = withContext(Dispatchers.IO) { container.footprints.state() }
-                val failed = RecordingService.status.value in listOf(R.string.footprints_permission_needed, R.string.footprints_error)
-                updateStatus(if (failed) R.string.connection_automation_auto_failed else R.string.connection_automation_watching)
+                val failed = RecordingFailure.isFailure(RecordingService.status.value)
+                updateStatus(if (failed) RecordingService.status.value ?: R.string.connection_automation_auto_failed else R.string.connection_automation_watching)
             }
         }
     }
@@ -287,9 +312,27 @@ class ConnectionReminderService : Service() {
         private val _status = MutableStateFlow<Int?>(null)
         val status = _status.asStateFlow()
 
+        internal fun companionEvent(context: Context, signal: ConnectionSignal, previous: Boolean?) {
+            val service = live
+            if (service != null) {
+                service.companionSignal(signal, previous, cold = false)
+                return
+            }
+            val intent = Intent(context, ConnectionReminderService::class.java)
+                .putExtra("companion_address", signal.id).putExtra("companion_connected", signal.connected)
+            if (previous != null) intent.putExtra("companion_previous", previous)
+            try { ContextCompat.startForegroundService(context, intent) }
+            catch (e: Exception) {
+                _status.value = RecordingFailure.message(e)
+                (context.applicationContext as MomentsApplication).container.footprintDiagnostics.record(
+                    "companion_start_failed", mapOf("reason" to RecordingFailure.reason(e), "exception" to e.javaClass.simpleName))
+            }
+        }
+
         suspend fun sync(context: Context) {
             val app = context.applicationContext
             val rules = withContext(Dispatchers.IO) { (app as MomentsApplication).container.connectionRules.load() }
+            CompanionConnections.sync(app, rules)
             if (!rules.enabled || !rules.hasTargets) {
                 app.stopService(Intent(app, ConnectionReminderService::class.java))
             } else {

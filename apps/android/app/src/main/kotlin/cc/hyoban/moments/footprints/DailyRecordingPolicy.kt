@@ -25,7 +25,7 @@ internal class DailyRecordingPolicy(now: Long) {
     val nextCheck: Long
         get() = if (phase == Phase.REST) retryAt else lastFix + FIX_TIMEOUT
 
-    fun fix(point: TrackPoint, now: Long, moving: Boolean = false) {
+    fun fix(point: TrackPoint, now: Long, moving: Boolean = false, allowRest: Boolean = true) {
         if (phase == Phase.REST) return
         lastFix = now
         misses = 0
@@ -45,7 +45,7 @@ internal class DailyRecordingPolicy(now: Long) {
             val observedStop = now - lastMovement >= STILL_TIMEOUT && stationarySamples >= 3
             // A probe must observe the location over time, not go back to sleep on its first fix.
             val confirmedProbe = phase == Phase.PROBE && stationarySamples >= 3 && now - probeStarted >= PROBE_OBSERVATION
-            if (observedStop || confirmedProbe) rest(now, RestReason.STILL)
+            if (allowRest && (observedStop || confirmedProbe)) rest(now, RestReason.STILL)
         }
     }
 
@@ -53,6 +53,15 @@ internal class DailyRecordingPolicy(now: Long) {
     fun passiveFix(point: TrackPoint, now: Long): Boolean {
         if (phase != Phase.REST || point.accuracy > 50 || !movedFromAnchor(point)) return false
         anchor = point
+        motion(now)
+        return true
+    }
+
+    fun fallbackFix(point: TrackPoint, now: Long): Boolean {
+        val previous = anchor ?: return false
+        if (phase != Phase.REST || point.accuracy !in 0.0..200.0) return false
+        val threshold = max(50.0, 2 * sqrt(previous.accuracy * previous.accuracy + point.accuracy * point.accuracy))
+        if (distanceMetres(previous, point) <= threshold) return false
         motion(now)
         return true
     }
@@ -78,6 +87,14 @@ internal class DailyRecordingPolicy(now: Long) {
             }
             Phase.ACTIVE, Phase.PROBE -> rest(now, RestReason.NO_FIX)
         }
+    }
+
+    fun restartAcquisition(now: Long) {
+        phase = Phase.ACTIVE
+        restReason = null
+        lastFix = now
+        stationarySamples = 0
+        lastSample = Long.MIN_VALUE
     }
 
     fun motion(now: Long) {

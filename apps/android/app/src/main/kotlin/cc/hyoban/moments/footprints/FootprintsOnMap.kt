@@ -204,11 +204,13 @@ fun FootprintsOnMap(container: AppContainer, content: @Composable (FootprintsMap
                 }
             }
             item { ConnectionAutomationSettings(container) }
+            item { ActivityRecognitionSettings() }
             item {
                 TextButton(onClick = { statusBarOptions = !statusBarOptions }, modifier = Modifier.testTag("footprints_status_icons")) {
                     Text(stringResource(R.string.footprints_status_icons))
                 }
                 if (statusBarOptions) {
+                    RecordingNotificationStatus(status)
                     if (Build.VERSION.SDK_INT >= 36) {
                         Text(stringResource(R.string.footprints_live_status_note), style = MaterialTheme.typography.bodySmall)
                         TextButton(onClick = {

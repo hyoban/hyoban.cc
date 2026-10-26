@@ -410,7 +410,7 @@
     <string name="footprints_title">足迹</string>
     <string name="footprints_local_note">轨迹仅保存在本机，不会上传到 API。地图需要网络；离线也能记录。</string>
     <string name="footprints_daily">日常自动记录</string>
-    <string name="footprints_daily_note">移动时记录，静止后省电等待；起步可能有少量遗漏</string>
+    <string name="footprints_daily_note">移动时记录，静止后省电等待；轨迹可能延后约一分钟显示，起步可能有少量遗漏</string>
     <string name="footprints_start_trip">开始单次行程</string>
     <string name="footprints_end_trip">结束单次行程</string>
     <string name="footprints_trip_note">单次行程与日常记录共用轨迹点；结束行程不会关闭日常记录。</string>
@@ -477,4 +477,26 @@
     <string name="footprints_chip_recording">记录中</string>
     <string name="footprints_chip_waiting">定位中</string>
     <string name="footprints_chip_blocked">定位关闭</string>
+    <string name="footprints_background_start_denied">系统限制了后台自动启动，请打开足迹面板恢复记录</string>
+    <string name="footprints_activity_title">活动识别增强</string>
+    <string name="footprints_activity_off">未开启，继续使用手机移动传感器</string>
+    <string name="footprints_activity_unavailable">Google Play 服务不可用，继续使用原有移动检测</string>
+    <string name="footprints_activity_permission">请允许身体活动权限，或关闭此增强项</string>
+    <string name="footprints_activity_ready">已开启，将在日常记录时使用</string>
+    <string name="footprints_activity_active">正在辅助识别步行、骑行和乘车</string>
+    <string name="footprints_activity_failed">活动识别暂不可用，原有移动检测继续工作</string>
+    <string name="footprints_activity_note">可选功能，需要 Google Play 服务和身体活动权限，帮助日常记录更及时地恢复定位。静止识别仅作参考，不会直接暂停行程。轨迹仍只保存在本机。</string>
+    <string name="footprints_companion_note">可为已选蓝牙设备增强后台监听：经系统确认关联后，连接变化可由系统唤起监听。仅连接与断开影响记录，设备靠近不会触发。无需关联也可使用原有规则。</string>
+    <string name="footprints_companion_add">增强后台监听</string>
+    <string name="footprints_companion_remove">取消系统关联</string>
+    <string name="footprints_companion_failed">系统关联暂未完成，原有连接监听仍可使用</string>
+    <string name="footprints_promotion_unsupported">此系统版本使用普通通知图标</string>
+    <string name="footprints_promotion_notifications_off">应用通知被关闭，无法显示状态栏提示</string>
+    <string name="footprints_promotion_disabled">实时活动未获允许，请在系统设置中开启</string>
+    <string name="footprints_promotion_inactive">当前没有记录通知</string>
+    <string name="footprints_promotion_resting">省电等待中，按设置不显示实时活动</string>
+    <string name="footprints_promotion_active">系统已将记录通知显示为实时活动</string>
+    <string name="footprints_promotion_not_promoted">已允许实时活动，但当前通知未获系统提升，请检查通知频道或厂商设置</string>
+    <string name="footprints_promotion_unknown">暂时无法读取系统通知状态</string>
+    <string name="footprints_promotion_refresh">重新检查状态栏显示</string>
 </resources>

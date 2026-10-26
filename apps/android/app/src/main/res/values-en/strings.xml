@@ -426,7 +426,7 @@
     <string name="footprints_title">Footprints</string>
     <string name="footprints_local_note">Tracks stay on this phone and are never published to the API. The basemap uses the network; recording works offline.</string>
     <string name="footprints_daily">Daily recording</string>
-    <string name="footprints_daily_note">Record while moving and rest while still. The beginning of movement may be missed.</string>
+    <string name="footprints_daily_note">Record while moving and rest while still. Tracks may appear about a minute later; the beginning of movement may be missed.</string>
     <string name="footprints_start_trip">Start a trip</string>
     <string name="footprints_end_trip">End trip</string>
     <string name="footprints_trip_note">Trips share samples with daily recording. Ending a trip leaves daily recording on.</string>
@@ -493,4 +493,26 @@
     <string name="footprints_chip_recording">Track</string>
     <string name="footprints_chip_waiting">GPS…</string>
     <string name="footprints_chip_blocked">GPS off</string>
+    <string name="footprints_background_start_denied">Android blocked the background start. Open footprints to resume recording.</string>
+    <string name="footprints_activity_title">Activity recognition</string>
+    <string name="footprints_activity_off">Off. The phone’s motion sensor remains in use.</string>
+    <string name="footprints_activity_unavailable">Google Play services unavailable. Standard motion detection remains active.</string>
+    <string name="footprints_activity_permission">Allow physical activity access or turn this enhancement off.</string>
+    <string name="footprints_activity_ready">Enabled; used during daily recording.</string>
+    <string name="footprints_activity_active">Helping detect walking, cycling and travel in a vehicle.</string>
+    <string name="footprints_activity_failed">Activity recognition unavailable. Standard motion detection continues.</string>
+    <string name="footprints_activity_note">Optional. Requires Google Play services and physical activity access to help daily recording resume sooner. Stillness is advisory and does not pause a trip. Tracks stay on this device.</string>
+    <string name="footprints_companion_note">Optionally associate selected Bluetooth devices with this app so Android can wake the monitor on connection changes. Proximity alone never controls recording. Existing rules also work without association.</string>
+    <string name="footprints_companion_add">Enhance background monitoring</string>
+    <string name="footprints_companion_remove">Remove association</string>
+    <string name="footprints_companion_failed">System association was not completed. Standard monitoring remains available.</string>
+    <string name="footprints_promotion_unsupported">This Android version uses standard notification icons.</string>
+    <string name="footprints_promotion_notifications_off">App notifications are disabled; status cannot appear in the status bar.</string>
+    <string name="footprints_promotion_disabled">Live Updates are not allowed. Enable them in system settings.</string>
+    <string name="footprints_promotion_inactive">No recording notification is currently posted.</string>
+    <string name="footprints_promotion_resting">Waiting to save power; Live Updates are intentionally hidden.</string>
+    <string name="footprints_promotion_active">The system has promoted the recording notification to a Live Update.</string>
+    <string name="footprints_promotion_not_promoted">Live Updates are allowed, but this notification is not promoted. Check its channel or manufacturer settings.</string>
+    <string name="footprints_promotion_unknown">Unable to read system notification state.</string>
+    <string name="footprints_promotion_refresh">Check status bar display</string>
 </resources>

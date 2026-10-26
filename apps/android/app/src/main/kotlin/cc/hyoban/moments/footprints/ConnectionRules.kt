@@ -52,6 +52,14 @@ class ConnectionTransitions(private val rules: ConnectionRules) {
         return changed && !seed
     }
 
+    /** Restore an actual system-delivered transition when its listener process had to be recreated. */
+    fun restoreBluetoothTransition(address: String, previous: Boolean?, connected: Boolean): Boolean {
+        if (address !in rules.bluetooth) return false
+        bluetoothBefore[address] = previous ?: connected
+        bluetoothNow[address] = connected
+        return previous != null && previous != connected
+    }
+
     fun bluetoothOff() {
         bluetoothNow.keys.toList().forEach { bluetoothNow[it] = false }
     }
