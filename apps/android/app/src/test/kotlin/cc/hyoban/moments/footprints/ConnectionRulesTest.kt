@@ -73,6 +73,56 @@ class ConnectionRulesTest {
         assertNull(e.settle(off))
     }
 
+    @Test fun resolvingNewWifiDefersActionsWithoutLosingTheArrival() {
+        val e = engine()
+        e.wifi(emptySet(), seed = true)
+        e.resolvingWifi(true)
+        assertNull(e.settle(on))
+        e.resolvingWifi(false)
+        e.wifi(setOf("Home"))
+        assertEquals("pause", requireNotNull(e.settle(on)).command(on))
+    }
+
+    @Test fun switchingWifiWaitsForIdentityAndStillDetectsDeparture() {
+        val e = engine()
+        e.wifi(setOf("Home"), seed = true)
+        e.resolvingWifi(true)
+        assertFalse(e.current(ConnectionSignal(ConnectionKind.WIFI, "Home", true)))
+        assertNull(e.settle(off))
+        e.resolvingWifi(false)
+        e.wifi(setOf("Cafe"))
+        assertEquals("daily_on", requireNotNull(e.settle(off)).command(off))
+    }
+
+    @Test fun bluetoothDoesNotWaitForWifiIdentity() {
+        val e = engine()
+        e.wifi(setOf("Home"), seed = true)
+        e.resolvingWifi(true)
+        e.bluetooth("A", true)
+        assertEquals(ConnectionKind.BLUETOOTH, requireNotNull(e.settle(off)).kind)
+    }
+
+    @Test fun manualRecordingChoiceWinsOverPendingWifiArrival() {
+        val e = engine()
+        e.wifi(emptySet(), seed = true)
+        e.resolvingWifi(true)
+        e.settle(on, manual = true)
+        e.resolvingWifi(false)
+        e.wifi(setOf("Home"))
+        assertNull(e.settle(on))
+        e.wifi(emptySet())
+        assertEquals("daily_on", requireNotNull(e.settle(off)).command(off))
+    }
+
+    @Test fun failedWifiLookupDoesNotInventADeparture() {
+        val e = engine()
+        e.wifi(setOf("Home"), seed = true)
+        e.resolvingWifi(true)
+        e.resolvingWifi(false)
+        e.wifi(null)
+        assertNull(e.settle(off))
+    }
+
     @Test fun onlyLastSelectedBluetoothDisconnectionPauses() {
         val e = engine()
         e.bluetooth("A", true, seed = true)

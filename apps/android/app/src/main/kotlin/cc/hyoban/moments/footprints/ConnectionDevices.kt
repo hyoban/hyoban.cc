@@ -27,6 +27,9 @@ internal fun Context.connectionAutomationAllowed(rules: ConnectionRules) = Notif
 private fun ssid(info: WifiInfo?): String? = info?.ssid?.takeUnless { it == WifiManager.UNKNOWN_SSID }
     ?.removeSurrounding("\"")?.takeIf { it.isNotBlank() }
 
+@androidx.annotation.RequiresApi(29)
+internal fun NetworkCapabilities.wifiSsid(): String? = ssid(transportInfo as? WifiInfo)
+
 @Suppress("DEPRECATION")
 @SuppressLint("MissingPermission")
 internal fun Context.connectedSsid(capabilities: NetworkCapabilities? = null): String? =

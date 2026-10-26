@@ -34,6 +34,7 @@ fun ConnectionSignal.command(state: RecordingState): String? = when {
 class ConnectionTransitions(private val rules: ConnectionRules) {
     private var wifiBefore: Set<String>? = null
     private var wifiNow: Set<String>? = null
+    private var wifiResolving = false
     private val bluetoothBefore = mutableMapOf<String, Boolean>()
     private val bluetoothNow = mutableMapOf<String, Boolean>()
 
@@ -41,6 +42,9 @@ class ConnectionTransitions(private val rules: ConnectionRules) {
         wifiNow = ssids?.intersect(rules.wifi)
         if (seed || ssids == null || wifiBefore == null) wifiBefore = wifiNow
     }
+
+    /** Keep the last settled identity while a new connection's short lookup is in flight. */
+    fun resolvingWifi(resolving: Boolean) { wifiResolving = resolving }
 
     fun bluetooth(address: String, connected: Boolean, seed: Boolean = false): Boolean {
         if (address !in rules.bluetooth) return false
@@ -65,20 +69,21 @@ class ConnectionTransitions(private val rules: ConnectionRules) {
     }
 
     fun current(signal: ConnectionSignal): Boolean = when (signal.kind) {
-        ConnectionKind.WIFI -> wifiNow?.let { if (signal.connected) signal.id in it else it.isEmpty() } ?: false
+        ConnectionKind.WIFI -> !wifiResolving && (wifiNow?.let { if (signal.connected) signal.id in it else it.isEmpty() } ?: false)
         ConnectionKind.BLUETOOTH -> if (signal.connected) bluetoothNow[signal.id] == true
             else bluetoothNow[signal.id] == false && bluetoothNow.values.none { it }
     }
 
     /** Consume the settled changes and return at most one action, with Bluetooth taking priority. */
-    fun settle(state: RecordingState): ConnectionSignal? {
+    fun settle(state: RecordingState, manual: Boolean = false): ConnectionSignal? {
         val changes = mutableListOf<ConnectionSignal>()
         val before = wifiBefore
         val now = wifiNow
-        if (before != null && now != null && before.isEmpty() != now.isEmpty()) {
+        if (!wifiResolving && before != null && now != null && before.isEmpty() != now.isEmpty()) {
             changes += ConnectionSignal(ConnectionKind.WIFI, (if (now.isEmpty()) before else now).sorted().first(), now.isNotEmpty())
         }
-        wifiBefore = now
+        if (!wifiResolving) wifiBefore = now
+        else if (manual) wifiBefore = null // A late identity must not undo a manual choice.
         val previouslyConnected = bluetoothBefore.values.any { it }
         val connected = bluetoothNow.values.any { it }
         if (connected && !previouslyConnected) {
