@@ -88,6 +88,7 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
     var deleting by remember { mutableStateOf<TrackSelection?>(null) }
     var exportDay by rememberSaveable { mutableStateOf<String?>(null) }
     var exportSession by rememberSaveable { mutableStateOf<String?>(null) }
+    var exportRaw by rememberSaveable { mutableStateOf(false) }
     var pendingAction by rememberSaveable { mutableStateOf<String?>(null) }
 
     fun work(block: suspend () -> Unit) {
@@ -131,7 +132,7 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
         if (uri != null) work {
             withContext(Dispatchers.IO) {
                 val output = context.contentResolver.openOutputStream(uri, "wt") ?: error("Cannot open document")
-                output.bufferedWriter(Charsets.UTF_8).use { store.export(TrackSelection(exportDay, exportSession), it) }
+                output.bufferedWriter(Charsets.UTF_8).use { store.export(TrackSelection(exportDay, exportSession), it, raw = exportRaw) }
             }
         }
     }
@@ -199,7 +200,7 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
                 val selectedTrip = view.history.sessions.firstOrNull { it.id == session }
                 SegmentedGroup(
                     stringResource(R.string.footprints_section_tracks),
-                    null,
+                    stringResource(R.string.footprints_quality_note),
                     listOf(
                         { shapes ->
                             // What is chosen, and a tap shows the whole of it on the map.
@@ -228,6 +229,7 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
                                 enabled = loaded && !busy && view.points.isNotEmpty()) {
                                 exportDay = selection.day
                                 exportSession = selection.session
+                                exportRaw = false
                                 export.launch("footprints-${session ?: day}.gpx")
                             }
                         },
@@ -236,13 +238,24 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
                                 enabled = loaded && !busy && view.history.days.isNotEmpty()) {
                                 exportDay = null
                                 exportSession = null
+                                exportRaw = false
                                 export.launch("footprints-all.gpx")
+                            }
+                        },
+                        { shapes ->
+                            ActionRow(Icons.Rounded.FileDownload, stringResource(R.string.footprints_export_raw), shapes,
+                                supporting = stringResource(R.string.footprints_export_raw_note),
+                                enabled = loaded && !busy && (selection.day in view.history.days || session != null)) {
+                                exportDay = selection.day
+                                exportSession = selection.session
+                                exportRaw = true
+                                export.launch("footprints-raw-${session ?: day}.gpx")
                             }
                         },
                         { shapes ->
                             ActionRow(Icons.Rounded.Delete, stringResource(R.string.footprints_delete), shapes,
                                 supporting = stringResource(R.string.footprints_delete_note),
-                                enabled = loaded && !busy && !state.requested && (view.points.isNotEmpty() || session != null)) {
+                                enabled = loaded && !busy && !state.requested && (selection.day in view.history.days || session != null)) {
                                 deleting = selection
                             }
                         },

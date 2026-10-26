@@ -12,9 +12,12 @@ data class TrackPoint(
     val accuracy: Double,
     val altitude: Double? = null,
     val segment: String = "",
+    val speed: Double? = null,
+    val speedAccuracy: Double? = null,
 )
 
-const val TRACK_GAP_MS = 5 * 60 * 1000L
+const val TRACK_GAP_MS = 45_000L
+const val MAX_TRACK_ACCURACY = 50.0
 
 fun distanceMetres(a: TrackPoint, b: TrackPoint): Double {
     val lat = Math.toRadians(b.latitude - a.latitude)
@@ -23,36 +26,59 @@ fun distanceMetres(a: TrackPoint, b: TrackPoint): Double {
     return 6_371_000 * 2 * asin(sqrt(h.coerceIn(0.0, 1.0)))
 }
 
-/** Reject stale, imprecise and implausible fixes before they reach storage. */
-fun acceptsFix(point: TrackPoint, previous: TrackPoint?, now: Long): Boolean =
-    evaluateFix(point, previous, now) == FixDecision.ACCEPT
-
 enum class FixDecision {
     ACCEPT, NOT_RECORDING, INVALID_COORDINATES, INACCURATE, STALE, FUTURE,
-    INVALID_ALTITUDE, OUT_OF_ORDER, IMPLAUSIBLE_JUMP, STATIONARY_JITTER,
+    INVALID_ALTITUDE, OUT_OF_ORDER,
 }
 
-fun evaluateFix(point: TrackPoint, previous: TrackPoint?, now: Long): FixDecision {
+/** The rest/wake policy may observe a coarse fix even when it is unsuitable for a route. */
+fun evaluatePolicyFix(point: TrackPoint, now: Long): FixDecision {
+    val validity = evaluateRawFix(point, now)
+    if (validity != FixDecision.ACCEPT) return validity
+    return if (point.accuracy > 100.0) FixDecision.INACCURATE else FixDecision.ACCEPT
+}
+
+/** Raw storage rejects malformed/expired observations, not uncertain or stationary positions. */
+fun evaluateRawFix(point: TrackPoint, now: Long): FixDecision {
     if (!point.latitude.isFinite() || point.latitude !in -90.0..90.0 ||
         !point.longitude.isFinite() || point.longitude !in -180.0..180.0
     ) return FixDecision.INVALID_COORDINATES
-    if (!point.accuracy.isFinite() || point.accuracy !in 0.0..100.0) return FixDecision.INACCURATE
+    if (!point.accuracy.isFinite() || point.accuracy < 0) return FixDecision.INACCURATE
     if (point.time < now - 120_000) return FixDecision.STALE
     if (point.time > now + 10_000) return FixDecision.FUTURE
     if (point.altitude?.isFinite() == false) return FixDecision.INVALID_ALTITUDE
-    if (previous == null) return FixDecision.ACCEPT
-    val dt = point.time - previous.time
-    if (dt <= 0) return FixDecision.OUT_OF_ORDER
-    if (dt > TRACK_GAP_MS) return FixDecision.ACCEPT
-    val distance = distanceMetres(previous, point)
-    // Permit air travel, but not a fix jumping across the country in seconds.
-    if (distance > dt / 1000.0 * 400 + previous.accuracy + point.accuracy) return FixDecision.IMPLAUSIBLE_JUMP
-    // Stationary jitter contributes neither distance nor thousands of identical points.
-    return if (distance >= max(5.0, (previous.accuracy + point.accuracy) / 2)) FixDecision.ACCEPT else FixDecision.STATIONARY_JITTER
+    return FixDecision.ACCEPT
 }
 
-fun connected(a: TrackPoint, b: TrackPoint): Boolean =
-    a.segment == b.segment && b.time > a.time && b.time - a.time <= TRACK_GAP_MS
+fun connected(a: TrackPoint, b: TrackPoint): Boolean = trackBreakReason(a, b) == null
+
+/** Shared by rendering, totals, GPX and the on-demand diagnostic replay. */
+internal fun trackBreakReason(a: TrackPoint, b: TrackPoint): String? = when {
+    a.segment != b.segment -> "segment_change"
+    b.time <= a.time -> "out_of_order"
+    b.time - a.time > TRACK_GAP_MS -> "time_gap"
+    a.accuracy > MAX_TRACK_ACCURACY || b.accuracy > MAX_TRACK_ACCURACY -> "poor_accuracy"
+    !plausibleMovement(a, b) -> "speed_conflict"
+    else -> null
+}
+
+/** Speed uncertainty is evidence, not an exact speed limit. Missing speed permits ordinary transport. */
+internal fun plausibleMovement(a: TrackPoint, b: TrackPoint): Boolean {
+    if (b.time <= a.time) return false
+    return distanceMetres(a, b) <= movementAllowanceMetres(a, b)
+}
+
+internal fun movementAllowanceMetres(a: TrackPoint, b: TrackPoint): Double {
+    val seconds = (b.time - a.time) / 1000.0
+    val speeds = listOf(a, b).mapNotNull { point ->
+        val speed = point.speed
+        val error = point.speedAccuracy
+        if (speed != null && speed.isFinite() && speed >= 0 && error != null && error.isFinite() && error in 0.0..2.5)
+            speed + 3 * error else null
+    }
+    val ceiling = max(3.0, speeds.maxOrNull() ?: 55.0)
+    return ceiling * seconds + a.accuracy + b.accuracy
+}
 
 data class TrackStats(val metres: Double, val recordedMillis: Long)
 
@@ -82,17 +108,22 @@ fun trackSegments(points: List<TrackPoint>, budget: Int = 8000): List<List<Track
 }
 
 /** Streaming export: does not load a lifetime of samples into memory. */
-fun writeGpx(writer: Writer, points: Sequence<TrackPoint>) {
-    writer.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<gpx version=\"1.1\" creator=\"Moments\" xmlns=\"http://www.topografix.com/GPX/1/1\"><trk>\n")
+fun writeGpx(writer: Writer, points: Sequence<TrackPoint>, raw: Boolean = false) {
+    writer.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<gpx version=\"1.1\" creator=\"Moments\" xmlns=\"http://www.topografix.com/GPX/1/1\" xmlns:m=\"https://hyoban.cc/ns/footprints/1\"><trk>\n")
     var previous: TrackPoint? = null
     points.forEach { point ->
-        if (previous == null || !connected(previous, point)) {
+        // Raw observations are isolated waypoints: an export must not imply rejected fixes are a route.
+        if (previous == null || raw || !connected(previous, point)) {
             if (previous != null) writer.write("</trkseg>\n")
             writer.write("<trkseg>\n")
         }
         writer.write("<trkpt lat=\"${point.latitude}\" lon=\"${point.longitude}\">")
         point.altitude?.let { writer.write("<ele>$it</ele>") }
-        writer.write("<time>${Instant.ofEpochMilli(point.time)}</time></trkpt>\n")
+        writer.write("<time>${Instant.ofEpochMilli(point.time)}</time><extensions><m:accuracy>${point.accuracy}</m:accuracy>")
+        if (raw) writer.write("<m:segment>${point.segment.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")}</m:segment>")
+        point.speed?.let { writer.write("<m:speed>$it</m:speed>") }
+        point.speedAccuracy?.let { writer.write("<m:speedAccuracy>$it</m:speedAccuracy>") }
+        writer.write("</extensions></trkpt>\n")
         previous = point
     }
     if (previous != null) writer.write("</trkseg>\n")

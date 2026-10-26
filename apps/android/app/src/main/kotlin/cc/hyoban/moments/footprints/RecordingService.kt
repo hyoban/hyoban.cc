@@ -59,6 +59,7 @@ class RecordingService : Service() {
     private var callbacks = 0
     private var usableFixes = 0
     private var storedFixes = 0
+    private var lastEnvironmentLog = 0L
     private val providers = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             events.trySend { configure("providers_changed") }
@@ -69,7 +70,8 @@ class RecordingService : Service() {
         super.onCreate()
         live = this
         diagnostic("service_start", "app_version" to BuildConfig.VERSION_NAME, "app_version_code" to BuildConfig.VERSION_CODE,
-            "policy" to "daily-v4", "sdk" to Build.VERSION.SDK_INT, "os" to Build.VERSION.RELEASE,
+            "policy" to "daily-v4", "track_filter" to TrackRefiner.VERSION, "track_diagnostics" to 1,
+            "sdk" to Build.VERSION.SDK_INT, "os" to Build.VERSION.RELEASE, "os_build" to Build.DISPLAY,
             "manufacturer" to Build.MANUFACTURER, "model" to Build.MODEL,
             "fix_timeout_ms" to DailyRecordingPolicy.FIX_TIMEOUT, "still_timeout_ms" to DailyRecordingPolicy.STILL_TIMEOUT,
             "rest_interval_ms" to DailyRecordingPolicy.REST_INTERVAL, "max_retry_ms" to DailyRecordingPolicy.MAX_RETRY)
@@ -231,8 +233,15 @@ class RecordingService : Service() {
                 return@trySend
             }
             callbacks += copies.size
+            val callbackTime = SystemClock.elapsedRealtime()
+            if (callbackTime - lastEnvironmentLog >= 60_000) {
+                lastEnvironmentLog = callbackTime
+                // Reuse deliveries; no timer, additional fix, or wake-up just to collect diagnostics.
+                diagnostic("recording_environment", *environment())
+            }
             val maxAge = if (daily != null) LocationDeliveryPolicy.DAILY_MAX_AGE_MS else 120_000L
             var freshSamples = 0
+            val observations = mutableListOf<TrackPoint>()
             val samples = copies.mapNotNull { copy ->
                 if (!LocationDeliveryPolicy.acceptsTime(copy.elapsedRealtimeNanos, SystemClock.elapsedRealtimeNanos(),
                         segmentStartNanos, lastDeliveredNanos, maxAge)) {
@@ -242,9 +251,16 @@ class RecordingService : Service() {
                 // Fresh but inaccurate locations are a quality problem, not a broken batch delivery.
                 lastDeliveredNanos = copy.elapsedRealtimeNanos
                 freshSamples++
+                val raw = rawPoint(copy)
+                if (copy.hasAccuracy() && evaluateRawFix(raw, System.currentTimeMillis()) == FixDecision.ACCEPT) observations += raw
                 val point = usablePoint(copy, maxAge * 1_000_000, "active") ?: return@mapNotNull null
                 copy to point
             }
+            val decisions = withContext(Dispatchers.IO) { store.appendBatch(observations, expectedSegment = segmentId) }
+            storedFixes += decisions.count { it == FixDecision.ACCEPT }
+            diagnostic("raw_delivery", "samples" to observations.size, "stored_samples" to decisions.count { it == FixDecision.ACCEPT })
+            if (decisions.isNotEmpty() && decisions.all { it == FixDecision.NOT_RECORDING }) return@trySend
+            val storedByTime = observations.zip(decisions).associate { (point, decision) -> point.time to decision }
             val deliveryTime = SystemClock.elapsedRealtime()
             if (batching && freshSamples > 0) batchHealth.freshDelivery(deliveryTime)
             if (samples.isEmpty()) {
@@ -255,12 +271,10 @@ class RecordingService : Service() {
                 return@trySend
             }
             usableFixes += samples.size
-            val decisions = withContext(Dispatchers.IO) { store.appendBatch(samples.map { it.second }, expectedSegment = segmentId) }
             for ((index, sample) in samples.withIndex()) {
                 val (copy, point) = sample
-                val decision = decisions[index]
-                if (decision == FixDecision.ACCEPT) storedFixes++
-                diagnostic("fix", "stored" to (decision == FixDecision.ACCEPT), "decision" to decision.name, *sampleFields(copy))
+                val decision = storedByTime[point.time] ?: FixDecision.NOT_RECORDING
+                diagnostic("fix", "raw_stored" to (decision == FixDecision.ACCEPT), "decision" to decision.name, *sampleFields(copy))
                 if (decision == FixDecision.NOT_RECORDING) continue
                 lastFix = copy.elapsedRealtimeNanos / 1_000_000
                 val moving = copy.hasSpeed() && copy.hasSpeedAccuracy() &&
@@ -429,6 +443,13 @@ class RecordingService : Service() {
         motionListener = null
     }
 
+    private fun rawPoint(location: Location) = TrackPoint(
+        location.time, location.latitude, location.longitude, location.accuracy.toDouble(),
+        if (location.hasAltitude()) location.altitude else null,
+        speed = location.speed.toDouble().takeIf { location.hasSpeed() && it.isFinite() && it >= 0 },
+        speedAccuracy = location.speedAccuracyMetersPerSecond.toDouble().takeIf { location.hasSpeedAccuracy() && it.isFinite() && it >= 0 },
+    )
+
     private fun usablePoint(location: Location, maxAge: Long, source: String): TrackPoint? {
         val age = SystemClock.elapsedRealtimeNanos() - location.elapsedRealtimeNanos
         if (age !in 0..maxAge || !location.hasAccuracy()) {
@@ -436,9 +457,8 @@ class RecordingService : Service() {
                 "reason" to if (!location.hasAccuracy()) "missing_accuracy" else "elapsed_age", *sampleFields(location))
             return null
         }
-        val point = TrackPoint(location.time, location.latitude, location.longitude, location.accuracy.toDouble(),
-            if (location.hasAltitude()) location.altitude else null)
-        val decision = evaluateFix(point, null, System.currentTimeMillis())
+        val point = rawPoint(location)
+        val decision = evaluatePolicyFix(point, System.currentTimeMillis())
         if (decision != FixDecision.ACCEPT) diagnostic("fix_rejected", "source" to source,
             "reason" to decision.name, *sampleFields(location))
         return point.takeIf { decision == FixDecision.ACCEPT }
@@ -493,6 +513,7 @@ class RecordingService : Service() {
     private fun sampleFields(location: Location): Array<Pair<String, Any?>> = arrayOf(
         "fix_time_ms" to location.time, "provider" to location.provider,
         "age_ms" to (SystemClock.elapsedRealtimeNanos() - location.elapsedRealtimeNanos) / 1_000_000,
+        "fix_elapsed_ms" to location.elapsedRealtimeNanos / 1_000_000,
         "accuracy_m" to location.accuracy.takeIf { location.hasAccuracy() },
         "speed_mps" to location.speed.takeIf { location.hasSpeed() },
         "speed_accuracy_mps" to location.speedAccuracyMetersPerSecond.takeIf { location.hasSpeedAccuracy() },

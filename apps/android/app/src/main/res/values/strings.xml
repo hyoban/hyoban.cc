@@ -431,6 +431,9 @@
     <string name="footprints_empty">这段时间还没有轨迹。开启记录后，移动时获取到的有效定位会显示在这里。</string>
     <string name="footprints_export">导出当前轨迹 GPX</string>
     <string name="footprints_export_all">导出全部轨迹 GPX</string>
+    <string name="footprints_export_raw">导出当前原始采样 GPX</string>
+    <string name="footprints_quality_note">只连接可信的连续定位，信号差或漏记处会留空。轨迹末端需等待后续定位确认。</string>
+    <string name="footprints_export_raw_note">包含未用于轨迹的定位及精度信息，便于重新分析；旧版本丢弃的采样无法恢复。</string>
     <string name="footprints_delete">删除当前轨迹</string>
     <string name="footprints_delete_note">关闭日常记录并结束单次行程后可删除。建议先导出备份；卸载应用会丢失本机轨迹。</string>
     <string name="footprints_delete_confirm">删除后无法恢复。轨迹点由日期和单次行程共用，删除也会移除其他视图中的相同轨迹点。</string>
@@ -482,7 +485,7 @@
     <string name="footprints_status_icons_note">脚印：收到有效定位，正在记录。\n准星：等待有效定位。\n警告三角：系统定位不可用。\n省电等待时不显示状态栏图标，状态保留在通知栏和足迹面板。暂停或关闭后，记录通知消失；链条图标只代表连接自动控制。\n显示方式受系统通知设置影响。部分系统会将普通通知图标替换为应用图标。</string>
     <string name="footprints_rest_channel">足迹省电等待</string>
     <string name="footprints_export_diagnostics">导出诊断日志</string>
-    <string name="footprints_diagnostics_note">用于排查漏记和耗电，记录定位精度、过滤原因及服务状态，不含经纬度。仅保存在本机，最多约 2 MB，较旧日志会自动覆盖。</string>
+    <string name="footprints_diagnostics_note">用于排查漏记和耗电，不含经纬度。运行日志仅保存在本机，最多约 2 MB。导出时附加最近记录日的轨迹判定、断线原因和统计，文件可能更大。</string>
     <string name="footprints_notification_settings">通知设置</string>
     <string name="footprints_chip_recording">记录中</string>
     <string name="footprints_chip_waiting">定位中</string>

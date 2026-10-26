@@ -447,6 +447,9 @@
     <string name="footprints_empty">No track for this period yet. Enable recording; accurate fixes collected as you move will appear here.</string>
     <string name="footprints_export">Export this track as GPX</string>
     <string name="footprints_export_all">Export all tracks as GPX</string>
+    <string name="footprints_export_raw">Export current raw samples as GPX</string>
+    <string name="footprints_quality_note">Only reliable, continuous fixes are connected. Poor signal or missing samples leave gaps; the endpoint waits for confirmation.</string>
+    <string name="footprints_export_raw_note">Includes unused fixes and accuracy for reanalysis. Samples discarded by older versions cannot be recovered.</string>
     <string name="footprints_delete">Delete this track</string>
     <string name="footprints_delete_note">Turn off daily recording and end the active trip before deleting. Export a backup first; uninstalling the app removes local tracks.</string>
     <string name="footprints_delete_confirm">This cannot be undone. Days and trips share samples; deleting also removes those samples from the other views.</string>
@@ -498,7 +501,7 @@
     <string name="footprints_status_icons_note">Footprints: receiving valid locations.\nCrosshair: waiting for a valid location.\nWarning triangle: system location unavailable.\nRest hides the status bar icon; its status remains in the notification drawer and footprint panel. Pausing or stopping removes the recording notification. The chain icon only indicates connection automation.\nVisibility follows system notification settings. Some systems replace ordinary notification icons with the app icon.</string>
     <string name="footprints_rest_channel">Footprint power-saving wait</string>
     <string name="footprints_export_diagnostics">Export diagnostics</string>
-    <string name="footprints_diagnostics_note">Helps investigate missing tracks and battery use. Includes accuracy, filtering reasons and service state, without coordinates. Stored only on this device, up to about 2 MB; older logs are automatically replaced.</string>
+    <string name="footprints_diagnostics_note">Investigates missing tracks and battery use without coordinates. Live logs stay on this device, up to about 2 MB. Exports add track decisions, break reasons and totals for the latest recorded day, so the file may be larger.</string>
     <string name="footprints_notification_settings">Notification settings</string>
     <string name="footprints_chip_recording">Track</string>
     <string name="footprints_chip_waiting">GPS…</string>

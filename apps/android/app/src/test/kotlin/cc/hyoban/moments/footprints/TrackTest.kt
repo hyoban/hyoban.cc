@@ -12,40 +12,24 @@ class TrackTest {
     private fun point(time: Long = now, lat: Double = 31.0, lon: Double = 121.0, accuracy: Double = 5.0, segment: String = "a") =
         TrackPoint(time, lat, lon, accuracy, segment = segment)
 
-    @Test fun rejectsInvalidStaleAndImpreciseFixes() {
-        assertFalse(acceptsFix(point(lat = Double.NaN), null, now))
-        assertFalse(acceptsFix(point(lon = 181.0), null, now))
-        assertFalse(acceptsFix(point(accuracy = 101.0), null, now))
-        assertFalse(acceptsFix(point(accuracy = -1.0), null, now))
-        assertFalse(acceptsFix(point(time = now - 120_001), null, now))
-        assertFalse(acceptsFix(point(time = now + 10_001), null, now))
-        assertFalse(acceptsFix(point().copy(altitude = Double.NaN), null, now))
-        assertTrue(acceptsFix(point(), null, now))
+    @Test fun rejectsMalformedAndExpiredObservationsButPreservesPoorAccuracy() {
+        assertEquals(FixDecision.INVALID_COORDINATES, evaluateRawFix(point(lat = Double.NaN), now))
+        assertEquals(FixDecision.INVALID_COORDINATES, evaluateRawFix(point(lon = 181.0), now))
+        assertEquals(FixDecision.INACCURATE, evaluateRawFix(point(accuracy = -1.0), now))
+        assertEquals(FixDecision.STALE, evaluateRawFix(point(time = now - 120_001), now))
+        assertEquals(FixDecision.FUTURE, evaluateRawFix(point(time = now + 10_001), now))
+        assertEquals(FixDecision.INVALID_ALTITUDE, evaluateRawFix(point().copy(altitude = Double.NaN), now))
+        assertEquals(FixDecision.ACCEPT, evaluateRawFix(point(accuracy = 250.0), now))
+        assertEquals(FixDecision.INACCURATE, evaluatePolicyFix(point(accuracy = 250.0), now))
+        assertEquals(FixDecision.ACCEPT, evaluatePolicyFix(point(accuracy = 80.0), now))
     }
 
-    @Test fun filtersStationaryNoiseAndOutOfOrderUpdates() {
-        val previous = point(time = now - 5_000)
-        assertFalse(acceptsFix(point(lat = 31.00001), previous, now))
-        assertFalse(acceptsFix(previous, previous, now))
-        assertFalse(acceptsFix(point(time = now - 6_000), previous, now))
-        assertTrue(acceptsFix(point(lat = 31.0002), previous, now))
-    }
-
-    @Test fun rejectionReasonsDistinguishQualityTimeJitterAndImplausibleMovement() {
-        val previous = point(time = now - 5_000)
-        assertEquals(FixDecision.INACCURATE, evaluateFix(point(accuracy = 120.0), null, now))
-        assertEquals(FixDecision.STALE, evaluateFix(point(time = now - 120_001), null, now))
-        assertEquals(FixDecision.FUTURE, evaluateFix(point(time = now + 10_001), null, now))
-        assertEquals(FixDecision.OUT_OF_ORDER, evaluateFix(previous, previous, now))
-        assertEquals(FixDecision.STATIONARY_JITTER, evaluateFix(point(lat = 31.00001), previous, now))
-        assertEquals(FixDecision.IMPLAUSIBLE_JUMP, evaluateFix(point(lat = 35.0), previous, now))
-        assertEquals(FixDecision.ACCEPT, evaluateFix(point(lat = 31.0002), previous, now))
-    }
-
-    @Test fun rejectsTeleportsButPermitsFlightAndRecoveryAfterAnOutage() {
-        assertFalse(acceptsFix(point(lat = 35.0), point(time = now - 5_000), now))
-        assertTrue(acceptsFix(point(lat = 31.01), point(time = now - 5_000), now))
-        assertTrue(acceptsFix(point(lat = 35.0), point(time = now - TRACK_GAP_MS - 1), now))
+    @Test fun connectionsRejectTeleportsButPermitMeasuredFlight() {
+        assertFalse(connected(point(time = now - 5_000), point(lat = 35.0)))
+        assertTrue(connected(point(time = now - 5_000).copy(speed = 230.0, speedAccuracy = 1.0),
+            point(lat = 31.01).copy(speed = 230.0, speedAccuracy = 1.0)))
+        assertFalse(connected(point(time = now - TRACK_GAP_MS - 1), point(lat = 35.0)))
+        assertFalse(connected(point(), point()))
     }
 
     @Test fun calculatesDistanceAcrossTheDateLine() {
@@ -67,7 +51,7 @@ class TrackTest {
     }
 
     @Test fun decimationKeepsBreaksAndEndpoints() {
-        val points = (0..100).map { point(time = now + it * 1_000, lat = 31 + it * 0.001, segment = if (it < 50) "a" else "b") }
+        val points = (0..100).map { point(time = now + it * 1_000, lat = 31 + it * 0.00001, segment = if (it < 50) "a" else "b") }
         val segments = trackSegments(points, budget = 10)
         assertEquals(2, segments.size)
         assertEquals(points[0], segments[0].first())

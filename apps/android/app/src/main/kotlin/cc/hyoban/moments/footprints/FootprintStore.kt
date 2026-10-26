@@ -22,9 +22,12 @@ data class TrackSession(val id: String, val started: Long, val ended: Long?)
 data class TrackSelection(val day: String? = null, val session: String? = null)
 data class FootprintHistory(val days: List<String>, val sessions: List<TrackSession>)
 
-/** All calls are made on IO. One lock serializes service writes, UI edits and streaming export. */
+/**
+ * All calls are made on IO. One lock serializes service writes, UI edits and streaming export.
+ * The points table is the original sample ledger; the displayed route is a bounded streaming view.
+ */
 class FootprintStore(context: Context) : SQLiteOpenHelper(
-    context, File(context.noBackupFilesDir, "footprints.sqlite").absolutePath, null, 1,
+    context, File(context.noBackupFilesDir, "footprints.sqlite").absolutePath, null, 2,
 ) {
     private val _revision = MutableStateFlow(0L)
     val revision = _revision.asStateFlow()
@@ -33,13 +36,19 @@ class FootprintStore(context: Context) : SQLiteOpenHelper(
         db.execSQL("CREATE TABLE recording (id INTEGER PRIMARY KEY CHECK(id=1), daily INTEGER NOT NULL, session TEXT, paused INTEGER NOT NULL, segment TEXT NOT NULL)")
         db.execSQL("INSERT INTO recording VALUES (1, 0, NULL, 0, '')")
         db.execSQL("CREATE TABLE sessions (id TEXT PRIMARY KEY, started INTEGER NOT NULL, ended INTEGER)")
-        db.execSQL("CREATE TABLE points (id INTEGER PRIMARY KEY, time INTEGER NOT NULL, day TEXT NOT NULL, lat REAL NOT NULL, lon REAL NOT NULL, accuracy REAL NOT NULL, altitude REAL, segment TEXT NOT NULL, session TEXT)")
+        db.execSQL("CREATE TABLE points (id INTEGER PRIMARY KEY, time INTEGER NOT NULL, day TEXT NOT NULL, lat REAL NOT NULL, lon REAL NOT NULL, accuracy REAL NOT NULL, altitude REAL, segment TEXT NOT NULL, session TEXT, speed REAL, speed_accuracy REAL)")
         db.execSQL("CREATE INDEX points_day ON points(day, time)")
         db.execSQL("CREATE INDEX points_session ON points(session, time)")
         db.execSQL("CREATE INDEX points_time ON points(time)")
     }
 
-    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) = Unit
+    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+        if (oldVersion < 2) {
+            // Version 1 retained only accepted points. Preserve those originals; missing fixes cannot be recovered.
+            db.execSQL("ALTER TABLE points ADD COLUMN speed REAL")
+            db.execSQL("ALTER TABLE points ADD COLUMN speed_accuracy REAL")
+        }
+    }
 
     @Synchronized fun state(): RecordingState = readableDatabase.rawQuery("SELECT daily, session, paused FROM recording WHERE id=1", null).use {
         it.moveToFirst()
@@ -101,18 +110,20 @@ class FootprintStore(context: Context) : SQLiteOpenHelper(
         try {
             val segment = db.rawQuery("SELECT segment FROM recording WHERE id=1", null).use { it.moveToFirst(); it.getString(0) }
             if (expectedSegment != null && expectedSegment != segment) return points.map { FixDecision.NOT_RECORDING }
-            var previous = db.rawQuery("SELECT time,lat,lon,accuracy,altitude,segment FROM points ORDER BY id DESC LIMIT 1", null).use {
+            var previous = db.rawQuery("SELECT time,lat,lon,accuracy,altitude,segment,speed,speed_accuracy FROM points ORDER BY id DESC LIMIT 1", null).use {
                 if (it.moveToFirst()) it.point() else null
             }
             for (point in points) {
                 val decision = if (previous != null && point.time <= previous.time) FixDecision.OUT_OF_ORDER
-                    else evaluateFix(point, previous?.takeIf { it.segment == segment }, now)
+                    else evaluateRawFix(point, now)
                 decisions += decision
                 if (decision != FixDecision.ACCEPT) continue
                 val day = Instant.ofEpochMilli(point.time).atZone(ZoneId.systemDefault()).toLocalDate().toString()
                 db.insertOrThrow("points", null, ContentValues().apply {
                     put("time", point.time); put("day", day); put("lat", point.latitude); put("lon", point.longitude)
                     put("accuracy", point.accuracy); put("altitude", point.altitude); put("segment", segment); put("session", state.session)
+                    put("speed", point.speed?.takeIf { it.isFinite() && it >= 0 })
+                    put("speed_accuracy", point.speedAccuracy?.takeIf { it.isFinite() && it >= 0 })
                 })
                 previous = point.copy(segment = segment)
             }
@@ -140,15 +151,28 @@ class FootprintStore(context: Context) : SQLiteOpenHelper(
 
     private fun cursor(selection: TrackSelection): Cursor {
         val (where, args) = where(selection)
-        return readableDatabase.rawQuery("SELECT time,lat,lon,accuracy,altitude,segment FROM points WHERE $where ORDER BY time,id", args)
+        return readableDatabase.rawQuery("SELECT time,lat,lon,accuracy,altitude,segment,speed,speed_accuracy FROM points WHERE $where ORDER BY time,id", args)
     }
 
     @Synchronized fun points(selection: TrackSelection): List<TrackPoint> = cursor(selection).use { c ->
-        buildList { while (c.moveToNext()) add(c.point()) }
+        refinedTrack(sequence { while (c.moveToNext()) yield(c.point()) }).toList()
     }
 
-    @Synchronized fun export(selection: TrackSelection, writer: Writer) = cursor(selection).use { c ->
-        writeGpx(writer, sequence { while (c.moveToNext()) yield(c.point()) })
+    @Synchronized fun export(selection: TrackSelection, writer: Writer, raw: Boolean = false) = cursor(selection).use { c ->
+        val samples = sequence { while (c.moveToNext()) yield(c.point()) }
+        writeGpx(writer, if (raw) samples else refinedTrack(samples), raw = raw)
+    }
+
+    /** A stable latest-day snapshot, even when recording continues during the export. */
+    @Synchronized fun exportReplayDiagnostics(writer: Writer) {
+        val day = readableDatabase.rawQuery("SELECT day FROM points ORDER BY time DESC LIMIT 1", null).use {
+            if (it.moveToFirst()) it.getString(0) else null
+        }
+        if (day == null) {
+            writeTrackReplayDiagnostics(writer, emptySequence(), null)
+        } else cursor(TrackSelection(day = day)).use { c ->
+            writeTrackReplayDiagnostics(writer, sequence { while (c.moveToNext()) yield(c.point()) }, day)
+        }
     }
 
     /** Samples are shared: deletion of a day or trip also removes those samples from other views. */
@@ -167,4 +191,4 @@ class FootprintStore(context: Context) : SQLiteOpenHelper(
     }
 }
 
-private fun Cursor.point() = TrackPoint(getLong(0), getDouble(1), getDouble(2), getDouble(3), if (isNull(4)) null else getDouble(4), getString(5))
+private fun Cursor.point() = TrackPoint(getLong(0), getDouble(1), getDouble(2), getDouble(3), if (isNull(4)) null else getDouble(4), getString(5), if (isNull(6)) null else getDouble(6), if (isNull(7)) null else getDouble(7))
