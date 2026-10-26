@@ -268,9 +268,16 @@ Moments' own words stay as they were written.
 The fourth tab, 记账, is a ledger kept on this phone alone, in place of iCost: books of
 bills over accounts in their own currencies, summed per book in its currency. Its three
 primary tabs are 账单, every bill of the book shown under its months and days with what
-they spent and earned; 统计, the month, the year or all of it, stepped through with arrows,
-spending and earning by day or month as bars and by category with each one's share, each
-leading to its bills; and 资产, the net assets, what is held and what is owed, and the
+they spent and earned; 统计, the month, the year or all of it, stepped through with arrows:
+what was spent, earned and left, the day's average and how it compares with the last
+stretch's same days, then charts of spending or earning, drawn on a canvas, each mark read
+out on a tap with its bills a button away: by day, month or year as bars; the running total
+over the last month's or year's; a calendar of the month's days, or the year's as a grid,
+deeper for more spent; the weekdays' averages; the categories as a ring over the list of
+each one's share, the stretch's six biggest in colour-blind-safe hues and the rest as 其他;
+and over a year or all of it, earning against spending and the categories stacked by month
+or year; and 资产, the net assets, what is held and what is owed, their line at the end of
+each of the last twelve months (balances taken back through the bills after it), and the
 accounts by kind (cash, debit cards, credit, online wallets, stored value, investments,
 loans, people lent to or borrowed from), each with its balance. The bar switches books, or
 shows 全部账本, every book but the archived at once, summed in the chosen book's currency,

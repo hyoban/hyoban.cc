@@ -65,6 +65,7 @@ import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.R
 import cc.hyoban.moments.ledger.AccountKind
 import cc.hyoban.moments.ledger.Ledger
+import cc.hyoban.moments.ledger.netAssetsByMonth
 import cc.hyoban.moments.ledger.Txn
 import cc.hyoban.moments.ledger.assetsOf
 import cc.hyoban.moments.ledger.formatMoney
@@ -380,6 +381,7 @@ private fun AssetsView(ledger: Ledger, currency: String, nav: LedgerNav) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
+            NetAssetsTrend(ledger, currency)
             val open = ledger.accounts.filter { !it.archived }
             AccountKind.entries.forEach { kind ->
                 val accounts = open.filter { it.kind == kind }
@@ -430,5 +432,36 @@ private fun AssetsView(ledger: Ledger, currency: String, nav: LedgerNav) {
                 Text(stringResource(R.string.ledger_add_account))
             }
         }
+    }
+}
+
+/** The net assets at the end of each of the last twelve months, a tap reading one out. */
+@Composable
+private fun NetAssetsTrend(ledger: Ledger, currency: String) {
+    val months = remember(ledger, currency) { netAssetsByMonth(ledger, currency, 12) }
+    if (ledger.txns.isEmpty()) return
+    var picked by remember(months) { mutableStateOf<Int?>(null) }
+    val name = { i: Int -> formatMonth(months[i].first.atDay(1).toString()).first }
+    val change = months.last().second - months.first().second
+    val readout = picked?.let { stringResource(R.string.ledger_month_end, name(it), formatMoney(months[it].second, currency)) }
+        ?: stringResource(
+            R.string.ledger_net_assets_change,
+            // A year ago, so with its year.
+            formatMonth(months[0].first.atDay(1).toString()).let { (month, year) -> if (month.endsWith("月")) "${year}年$month" else "$month $year" },
+            (if (change >= 0) "+" else "") + formatMoney(change, currency),
+        )
+    Spacer(Modifier.height(Space.l))
+    ChartCard(stringResource(R.string.ledger_chart_net_assets), readout, modifier = Modifier.testTag("chart_net_assets")) {
+        LineChart(
+            listOf(months.map { it.second }),
+            listOf(MaterialTheme.colorScheme.primary),
+            months.size,
+            listOf(name(0), name(months.lastIndex)),
+            picked,
+            { picked = it },
+            readout,
+            area = true,
+            zeroBased = false,
+        )
     }
 }
