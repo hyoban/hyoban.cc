@@ -48,6 +48,12 @@ class AppContainer(context: Context) {
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     val settings = Settings(context)
+    /** GPS tracks stay on this phone, outside API sync and publishing. */
+    val footprints = cc.hyoban.moments.footprints.FootprintStore(context)
+    val footprintDiagnostics = cc.hyoban.moments.footprints.FootprintDiagnostics(
+        File(context.noBackupFilesDir, "footprint-diagnostics"), scope,
+    )
+    val connectionRules = cc.hyoban.moments.footprints.ConnectionRulesStore(context)
 
     // Directories of their own: `api/` the copy of what the API serves, `local/` the
     // Moments written on this phone, their photos and places, which no sync touches. `data/`

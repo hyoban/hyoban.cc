@@ -4,9 +4,17 @@
 
     <!-- The Moments, places and trips come from the API; the photos from the image origin. -->
     <uses-permission android:name="android.permission.INTERNET" />
-    <!-- Asked for only when the map is asked to find where the phone is, or a new Moment where it is. -->
+    <!-- The map, new Moments, and the explicitly enabled local footprint recorder. -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <!-- Where a photo picked for a new Moment was taken, which the gallery hides without it. -->
     <uses-permission android:name="android.permission.ACCESS_MEDIA_LOCATION" />
     <!-- Only Android 9 needs this to save photos to a shared album. -->
@@ -16,6 +24,8 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- The user-started footprint session can show its live state in the status-bar chip. -->
+    <uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS" />
 
     <queries>
         <package android:name="com.twitter.android" />
@@ -37,6 +47,14 @@
         android:enableOnBackInvokedCallback="true"
         android:supportsRtl="true"
         android:theme="@style/Theme.Moments">
+        <service android:name=".footprints.RecordingService" android:foregroundServiceType="location" android:exported="false" />
+        <service android:name=".footprints.ConnectionReminderService" android:foregroundServiceType="specialUse" android:exported="false">
+            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="User-enabled monitoring of selected Wi-Fi and paired Bluetooth connections to automatically start or pause local footprint recording. This watcher requests no location fixes; a separate location foreground service records only when enabled by the user or their selected connection rules." />
+        </service>
+        <receiver android:name=".footprints.FootprintBootReceiver" android:exported="false">
+            <intent-filter><action android:name="android.intent.action.BOOT_COMPLETED" /></intent-filter>
+        </receiver>
         <!-- Compose lays the app out again on its own when the phone turns, so the
              activity stays: the map, a playing video and the open page carry on as they were.
              A playing video goes on in a picture-in-picture window when the app is left. -->
