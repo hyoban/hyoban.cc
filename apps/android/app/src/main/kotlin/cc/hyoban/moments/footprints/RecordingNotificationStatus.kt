@@ -4,14 +4,9 @@ import android.app.Notification
 import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
-import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import cc.hyoban.moments.MomentsApplication
@@ -30,8 +25,9 @@ internal fun notificationPromotionStatus(context: Context): Int {
     return R.string.footprints_promotion_not_promoted
 }
 
+/** What the system shows of the recording notification now, read again on every return to the page. */
 @Composable
-internal fun RecordingNotificationStatus(recordingStatus: Int?) {
+internal fun rememberNotificationPromotion(recordingStatus: Int?): Int? {
     val context = LocalContext.current
     val resources = LocalResources.current
     var message by remember { mutableStateOf<Int?>(null) }
@@ -42,8 +38,5 @@ internal fun RecordingNotificationStatus(recordingStatus: Int?) {
     }
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { refresh() }
     LaunchedEffect(recordingStatus) { refresh() }
-    message?.let { Text(stringResource(it), style = MaterialTheme.typography.bodySmall) }
-    TextButton(onClick = ::refresh, modifier = Modifier.testTag("footprints_refresh_promotion")) {
-        Text(stringResource(R.string.footprints_promotion_refresh))
-    }
+    return message
 }

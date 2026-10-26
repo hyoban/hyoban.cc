@@ -115,21 +115,33 @@ fun ThemeSettings(settings: Settings) {
     )
 }
 
-/** A row that is a switch, read as one with its name and state. */
+/** A row that is a switch, read as one with its name and state, and what it is doing under its name. */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun SwitchRow(checked: Boolean, icon: ImageVector, title: String, tag: String, shapes: ListItemShapes, onClick: () -> Unit) {
+fun SwitchRow(
+    checked: Boolean,
+    icon: ImageVector,
+    title: String,
+    tag: String,
+    shapes: ListItemShapes,
+    supporting: String? = null,
+    enabled: Boolean = true,
+    onClick: () -> Unit,
+) {
     SegmentedListItem(
         onClick = onClick,
         shapes = shapes,
+        enabled = enabled,
         colors = segmentColors(),
         leadingContent = { Icon(icon, contentDescription = null) },
+        supportingContent = supporting?.let { { Text(it) } },
         // Its handle ticked or crossed, as Material 3 lets a switch's icon say which it is as
         // well as its colour.
         trailingContent = {
             Switch(
                 checked = checked,
                 onCheckedChange = null,
+                enabled = enabled,
                 thumbContent = {
                     Icon(
                         if (checked) Icons.Rounded.Check else Icons.Rounded.Close,
@@ -491,8 +503,11 @@ fun SegmentedGroup(
     segments: List<Segment>,
     modifier: Modifier = Modifier,
     action: (@Composable () -> Unit)? = null,
+    header: (@Composable () -> Unit)? = null,
 ) {
     if (title != null) Caption(title, action) else Spacer(Modifier.height(Space.xl))
+    // What chooses what the rows show, filter chips say, between the caption and the rows, edge to edge.
+    header?.invoke()
     Column(Modifier.padding(horizontal = Space.gutter)) {
         Column(modifier, verticalArrangement = Arrangement.spacedBy(ListItemDefaults.SegmentedGap)) {
             segments.forEachIndexed { index, segment -> segment(ListItemDefaults.segmentedShapes(index, segments.size)) }

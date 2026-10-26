@@ -66,6 +66,9 @@ say stay out.
 - M3 is the only reference now. FlClash shaped the early pages and is still thanked in
   the README and on the settings page, but where it and M3 differ, M3 wins.
 - Keep the smooth (continuous) corners; that has been decided twice.
+- Settings, on a page or in a sheet, are M3 segmented lists (`SegmentedGroup` with
+  `SwitchRow` and `ActionRow`), switches trailing, supporting text at most three lines;
+  a longer explanation goes behind an info row's dialog, not on the page.
 - Words are Chinese first, with English beside them in `values-en`, both following M3's
   content design, with TalkBack descriptions for what is shown. The Moments' own words
   are never changed.

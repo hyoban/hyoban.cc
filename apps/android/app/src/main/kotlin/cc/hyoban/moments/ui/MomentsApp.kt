@@ -142,6 +142,7 @@ import cc.hyoban.moments.ui.map.MapScreen
 import cc.hyoban.moments.ui.moment.MomentScreen
 import cc.hyoban.moments.ui.publish.ChangesScreen
 import cc.hyoban.moments.ui.settings.SettingsScreen
+import cc.hyoban.moments.footprints.FootprintSettingsScreen
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.SurfaceLevel
 import cc.hyoban.moments.ui.theme.TransitionMotion
@@ -201,6 +202,10 @@ data class PlaceMoments(val id: String)
 
 @Serializable
 object Preferences
+
+/** How footprints are recorded, from the settings page or the map's footprint sheet. */
+@Serializable
+object FootprintSettings
 
 /** A Moment to write, kept on the phone. */
 @Serializable
@@ -524,6 +529,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                     onTrip = openTrip,
                                     focus = mapFocus,
                                     onFocused = { mapFocus = null },
+                                    onFootprintSettings = { navController.navigate(FootprintSettings) },
                                 )
                             }
                             screen<Trips>(link = "trips") {
@@ -571,7 +577,11 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                 )
                             }
                             screen<Preferences>(link = "settings") {
-                                SettingsScreen(container, onBack = back, onChanges = { navController.navigate(Changes) }, onFootprints = { showOnMap(MapFocus.Footprints) })
+                                SettingsScreen(container, onBack = back, onChanges = { navController.navigate(Changes) }, onFootprints = { showOnMap(MapFocus.Footprints) },
+                                    onFootprintSettings = { navController.navigate(FootprintSettings) })
+                            }
+                            screen<FootprintSettings>(link = "footprint-settings") {
+                                FootprintSettingsScreen(container, onBack = back)
                             }
                             screen<NewMoment>(link = "new") {
                                 NewMomentScreen(container, onBack = back, onSaved = back)
@@ -948,6 +958,7 @@ fun routeOf(link: Uri): Any? {
         "trips" -> Trips
         "settings" -> Preferences
         "footprints" -> Atlas
+        "footprint-settings" -> FootprintSettings
         "new" -> NewMoment
         "edit" -> id?.let(::EditMoment)
         "changes" -> Changes
