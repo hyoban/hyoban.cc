@@ -49,6 +49,12 @@ SDK configured in `local.properties` (`sdk.dir=…`).
 - Before committing run what CI runs (`.github/workflows/verify.yml`):
   `./gradlew :app:testDebugUnitTest :app:assembleDebug --no-daemon`.
   Documentation-only changes use the shared guide's documentation checks.
+- After builds and tests finish, close any emulator started for this task and clean up
+  Gradle/Kotlin background processes used by this task once they are confirmed idle.
+  Inspect `./gradlew --status` and the relevant processes first; use orderly shutdown
+  (`adb -s <serial> emu kill`, and `./gradlew --stop` only when all affected daemons are
+  idle and within this task's scope), then verify that the processes exited.
+  Do not close the user's IDE, stop unrelated processes or interrupt another build.
 
 ## Design
 
