@@ -248,6 +248,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
         }),
     getMap: () => (mapLoaded ? map : undefined),
     getMapTheme,
+    isMapDark,
     // The card playing is in the path, `/trip/<id>/play/<stop>/`.
     getStop: () => urls.getTripStop(window.location.pathname),
     inlineTrip,

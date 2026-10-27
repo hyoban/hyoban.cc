@@ -1,6 +1,7 @@
 import type { Map as MapboxMap } from 'mapbox-gl'
 import { cancelFrame, requestFrame } from '../frames.ts'
 import type { Coordinates } from '../geo.ts'
+import { getLightAtHour } from '../map/map-settings.ts'
 import type { Theme } from '../theme.ts'
 import type { Flyover } from './car-model.ts'
 import { createRouteLayers } from './route-layers.ts'
@@ -160,7 +161,10 @@ export function createRouteDrawer({
 
   function renderClock(options: { animate: boolean }) {
     if (plan && plan.points.length > 0) {
-      onClock(getTipClock(), options)
+      const clock = getTipClock()
+
+      onClock(clock, options)
+      flyover?.car?.setNight(isNight(clock))
     }
   }
 
@@ -359,4 +363,15 @@ export function createRouteDrawer({
     setRoute,
     updateStops,
   }
+}
+
+/** Whether the tip's clock is at dusk or by night, by when the map lit by the clock goes dark. */
+function isNight({ time }: ClockMoment) {
+  if (time === undefined) {
+    return false
+  }
+
+  const light = getLightAtHour(Number.parseInt(time, 10))
+
+  return light === 'dusk' || light === 'night'
 }
