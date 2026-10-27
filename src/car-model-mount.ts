@@ -1,5 +1,5 @@
 // Three.js only loads for a car (src/car-model.ts) about to come into sight, and each is let
-// go when the router swaps the page out.
+// go when the router swaps the page out. One that can't be drawn shows its still instead.
 
 let disposers: (() => void)[] = []
 
@@ -18,7 +18,10 @@ function initializeCarModels() {
             mountCarModel(frame, frame.dataset.src!, frame.dataset.fullSrc),
           )
           .then((dispose) => disposers.push(dispose))
-          .catch(() => frame.classList.remove('is-mounted'))
+          .catch(() => {
+            frame.classList.remove('is-mounted')
+            frame.classList.add('is-failed')
+          })
       }
     },
     { rootMargin: '50% 0px' },
