@@ -1,7 +1,7 @@
 import mapboxgl, { type GeoJSONSource, type Map as MapboxMap } from 'mapbox-gl'
 import { getHeading, type Coordinates } from '../geo.ts'
 import type { IconName } from '../icons.ts'
-import { CAR_PIXELS, type Flyover } from './car-model.ts'
+import { getCarPixels, type Flyover } from './car-model.ts'
 import { createElement, createIcon, setIcon } from './dom.ts'
 import { lineFeature, type TravelMode } from './route.ts'
 
@@ -180,6 +180,7 @@ export function createRouteLayers(
 
       // The car in 3D is there instead of the icon's badge, once its model has loaded.
       element.toggleAttribute('data-trip-map-head-car', flyover?.car?.isShowing() ?? false)
+      element.style.setProperty('--trip-map-car-size', `${getCarPixels(map.getZoom())}px`)
 
       if (coordinates) {
         const { x, y } = map.project([coordinates[0], coordinates[1]])
@@ -189,7 +190,6 @@ export function createRouteLayers(
 
     element.setAttribute('aria-hidden', 'true')
     element.hidden = true
-    element.style.setProperty('--trip-map-car-size', `${CAR_PIXELS}px`)
     element.append(createIcon(TRAVEL_ICONS.car), ...(headLabel ? [headLabel] : []))
     map.getContainer().append(element)
     // Sub-pixel transforms set as the map draws keep it on the route as the map glides.

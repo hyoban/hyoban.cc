@@ -3,8 +3,9 @@ import { getTurn, type Coordinates } from '../geo.ts'
 
 // A car in 3D at the route's tip while flying over, in place of the car's icon: a glTF
 // model, drawn into the map's own WebGL context by three.js, standing on the terrain and
-// facing the way the route goes. It's drawn far larger than life, a constant size on the
-// screen as an icon is, or at the zooms the camera flies at it would be a speck.
+// facing the way the route goes. It's drawn far larger than life, or at the zooms the
+// camera flies at it would be a speck, growing and shrinking with the zoom at half the
+// map's pace, within bounds.
 //
 // The model is placed by a matrix every frame rather than as a feature of a source, so
 // moving it costs the map nothing (see route-layers.ts). three.js and the model are
@@ -12,8 +13,17 @@ import { getTurn, type Coordinates } from '../geo.ts'
 // doesn't download them.
 
 const LAYER_ID = 'trip-map-car'
-/** How long the car is on the screen, in pixels. */
-export const CAR_PIXELS = 56
+/** How long the car is on the screen at `CAR_ZOOM`, in pixels, and its bounds at others. */
+const CAR_PIXELS = 56
+const CAR_ZOOM = 9
+const CAR_MIN_PIXELS = 40
+const CAR_MAX_PIXELS = 160
+
+/** How long the car is on the screen at `zoom`, in pixels. */
+export function getCarPixels(zoom: number) {
+  const pixels = CAR_PIXELS * 2 ** ((zoom - CAR_ZOOM) / 2)
+  return Math.min(Math.max(pixels, CAR_MIN_PIXELS), CAR_MAX_PIXELS)
+}
 /** Seconds for the car to swing round to a new heading, so a twisting road doesn't shake it. */
 const TURN_SETTLE = 0.4
 
@@ -29,7 +39,12 @@ type Loaded = {
   RoomEnvironment: typeof import('three/examples/jsm/environments/RoomEnvironment.js').RoomEnvironment
   scene: import('three').Scene
   // Reused every frame rather than made anew.
-  scratch: { place: import('three').Matrix4; scale: import('three').Vector3 }
+  scratch: {
+    eye: import('three').Vector4
+    place: import('three').Matrix4
+    scale: import('three').Vector3
+    unproject: import('three').Matrix4
+  }
   /** Stands the model, lying along the map, up off it. */
   standUp: import('three').Matrix4
   three: Three
@@ -63,6 +78,23 @@ export function createCarModel(url: string) {
         ])
       const gltf = await new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).parseAsync(data, '')
       const model = gltf.scene
+
+      // Glass that lets the inside show through takes a pass of its own, which can't be
+      // made in the map's context; at this size, tinted glass that reflects reads the same.
+      model.traverse((object) => {
+        if (!(object instanceof three.Mesh)) {
+          return
+        }
+
+        for (const material of [object.material].flat()) {
+          if (material instanceof three.MeshPhysicalMaterial && material.transmission > 0) {
+            material.transmission = 0
+            material.color.set(0x14171a)
+            material.transparent = true
+            material.opacity = 0.82
+          }
+        }
+      })
       const box = new three.Box3().setFromObject(model)
       const center = box.getCenter(new three.Vector3())
 
@@ -79,7 +111,12 @@ export function createCarModel(url: string) {
         model: turntable,
         RoomEnvironment,
         scene,
-        scratch: { place: new three.Matrix4(), scale: new three.Vector3() },
+        scratch: {
+          eye: new three.Vector4(),
+          place: new three.Matrix4(),
+          scale: new three.Vector3(),
+          unproject: new three.Matrix4(),
+        },
         standUp: new three.Matrix4().makeRotationX(Math.PI / 2),
         three,
       }
@@ -147,17 +184,29 @@ export function createCarModel(url: string) {
       const [longitude, latitude] = tip.coordinates
       const ground = map.queryTerrainElevation([longitude, latitude]) ?? 0
       const at = mapboxgl.MercatorCoordinate.fromLngLat([longitude, latitude], ground)
-      // A constant size on the screen: so many pixels, whatever the zoom.
-      const scale = CAR_PIXELS / (512 * 2 ** map.getZoom() * length)
+      const zoom = map.getZoom()
+      const scale = getCarPixels(zoom) / (512 * 2 ** zoom * length)
 
       // Its nose, +z, turned from south (where the flip of y below points it) to the heading.
       model.rotation.y = Math.PI - (heading * Math.PI) / 180
-      camera.projectionMatrix.fromArray(matrix).multiply(
+      const projection = camera.projectionMatrix.fromArray(matrix).multiply(
         scratch.place
           .makeTranslation(at.x, at.y, at.z ?? 0)
           .scale(scratch.scale.set(scale, -scale, scale))
           .multiply(standUp),
       )
+      // The map's eye, in the model's own space: the point the projection sends to w = 0.
+      // three.js shades from the camera's place, so it's set there, and the projection takes
+      // that step back out; left at the model's middle, its paint would catch the light as
+      // if seen from inside it.
+      const eye = scratch.eye
+        .set(0, 0, 1, 0)
+        .applyMatrix4(scratch.unproject.copy(projection).invert())
+      camera.position.set(eye.x / eye.w, eye.y / eye.w, eye.z / eye.w)
+      camera.updateMatrixWorld()
+      camera.matrixWorldInverse.copy(camera.matrixWorld).invert()
+      projection.multiply(camera.matrixWorld)
+      camera.projectionMatrixInverse.copy(projection).invert()
       renderer.resetState()
       // The canvas as it is now: three.js only measured it when it was set up, before any
       // resize.
