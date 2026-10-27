@@ -9,16 +9,17 @@ import {
   Vector3,
   type WebGLRenderer,
 } from 'three'
-import type { CarYear } from './car-model.ts'
+import { formatCarDate, formatCarSum, getCarDate, sumCarDays, type CarYear } from './car-model.ts'
 
 // A year review's car stands on its year (src/car-model.ts): the legs it drove on the year's
 // trips drawn faintly on the ground round it, in the page's ink as the footprint's routes are,
 // the north behind it, fading out towards the edges, and drawing in as it drives in. The map
 // holds still as the car is swung round on it. By dark they all but go out, but for where its
 // lamps fall: warm in the beams ahead, which sweep across them as it's swung round, and red
-// in the glow behind. Speeding off, they turn pale over the dark, and the year's distance
-// counts up under it, slowing as it nears the whole, held where it got to when let go and
-// gone once the car is back.
+// in the glow behind. Speeding off, they turn pale over the dark, and under it the car drives
+// through the year a day at a time: the date, what it had driven, charged and spent by then,
+// and the year's driving graph lighting up to it, held where it got to when let go and gone
+// once the car is back.
 
 /** The ground drawn on, as a share of the car's diagonal, and its texture's size. */
 const SPREAD = 3.6
@@ -36,8 +37,8 @@ const DIM = 0.3
 const BOOST = 4
 /** The ink at speed, over the dark: the dark page's own. */
 const PALE = '#eeeeec'
-/** Seconds held at full speed to count up the whole year. */
-const COUNT = 3
+/** Seconds held at full speed to drive through the whole year. */
+const COUNT = 6
 
 /** The year a car's frame stands on, if it's in a year review. */
 export function readCarYear(frame: HTMLElement) {
@@ -50,6 +51,8 @@ export function readCarYear(frame: HTMLElement) {
  * where it started, the way the camera has gone round it. */
 type RouteState = {
   shown: number
+  /** How far the ground has slid back under the car as it drives through the year. */
+  slid: number
   speed: number
   lit: number
   dark: boolean
@@ -152,7 +155,7 @@ export function createRoutes(floor: CarYear['floor'], size: Vector3, renderer: W
   return {
     ground,
     /** In the page's ink, or pale at speed, and by dark only where the lamps fall. */
-    set({ shown, speed, lit, dark, z, turn }: RouteState) {
+    set({ shown, slid, speed, lit, dark, z, turn }: RouteState) {
       renderer.getDrawingBufferSize(drawn)
       // Not while the canvas covers the screen.
       edges.value.set(speed > 0 ? 0 : drawn.y * ROOM, drawn.x)
@@ -161,43 +164,79 @@ export function createRoutes(floor: CarYear['floor'], size: Vector3, renderer: W
       car.value.set(size.x / 2, size.z, z)
       lamps.value.set(lit, dark ? 1 - speed : 0)
       ground.rotation.y = turn
+      // Back along the car's way, whichever way the ground is turned.
+      mesh.position.x = slid * Math.sin(turn)
+      mesh.position.z = -slid * Math.cos(turn)
     },
     /** Read the page's ink again once it turns dark or light. */
     retheme: readInk,
   }
 }
 
-const kilometers = new Intl.NumberFormat('zh-CN', { maximumFractionDigits: 0 })
-
-/** The year's distance, counted up over the screen while the car speeds. */
+/** The year driven through over the screen while the car speeds: the day it has got to, and
+ * how far it had driven, how much it had charged and spent by then, with the year's driving
+ * graph lighting up behind it; the year's caption over the totals once it's through. */
 export function createOdometer(year: CarYear) {
   const element = document.createElement('div')
   element.className = 'car-model-odometer'
   element.ariaHidden = 'true'
   const caption = document.createElement('span')
-  caption.textContent = year.caption
   const figure = document.createElement('strong')
   const value = document.createTextNode('')
   const unit = document.createElement('small')
   unit.textContent = 'km'
   figure.append(value, unit)
-  element.append(caption, figure)
+  const more = document.createElement('span')
+  more.className = 'car-model-odometer__more'
+  const charged = document.createElement('span')
+  const spent = document.createElement('span')
+  more.append(charged, spent)
+  // The graph as the page draws it, a column a week, Monday at the top.
+  const graph = document.createElement('span')
+  graph.className = 'car-model-odometer__days'
+  const offset = (new Date(`${year.start}T00:00Z`).getUTCDay() + 6) % 7
+  graph.style.setProperty('--weeks', String(Math.ceil((offset + year.days.length) / 7)))
+  graph.style.setProperty('--offset', String(offset + 1))
+  const cells = year.levels.split('').map((level) => {
+    const cell = document.createElement('span')
+    if (level === '.') cell.dataset.empty = ''
+    else cell.dataset.level = level
+    graph.append(cell)
+    return cell
+  })
+  element.append(caption, figure, more, graph)
+
+  const sums = sumCarDays(year.days)
   let counted = 0
-  let shown = ''
+  let lit = 0
+  let shown: number | undefined
 
   return {
-    /** Counted on by `speed` over `delta` seconds; put away and started over once it's 0. */
+    /** Driven on by `speed` over `delta` seconds; put away and started over once it's 0. */
     advance(speed: number, delta: number) {
       if (speed === 0) {
-        counted = 0
+        if (!element.isConnected) return
         element.remove()
+        for (const cell of cells) delete cell.dataset.lit
+        counted = lit = 0
+        shown = undefined
         return
       }
       if (!element.isConnected) document.body.append(element)
       counted = Math.min(counted + (speed * delta) / COUNT, 1)
-      // Rolling up fast at first and slowing into the whole.
-      const text = kilometers.format((year.meters / 1000) * (1 - (1 - counted) ** 3))
-      if (text !== shown) value.data = shown = text
+      // A day at a time and evenly through the calendar, the totals jumping with the trips.
+      const at = Math.min(Math.floor(counted * year.days.length), year.days.length - 1)
+      for (; lit <= at; lit++) cells[lit]!.dataset.lit = ''
+      // Once it's through, the year's caption over its totals.
+      const step = counted === 1 ? -1 : at
+      if (step !== shown) {
+        shown = step
+        const figures = formatCarSum(sums[at]!)
+        caption.textContent = step === -1 ? year.caption : formatCarDate(getCarDate(year.start, at))
+        value.data = figures.km
+        charged.textContent = figures.charged
+        spent.textContent = figures.spent
+      }
       element.style.opacity = String(Math.min(speed * 2, 1))
     },
     dispose() {

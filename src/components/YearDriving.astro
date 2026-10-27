@@ -1,6 +1,6 @@
 ---
 import CarModel from '@/components/CarModel.astro'
-import type { CarYear } from '@/car-model'
+import { formatCarDate, getCarDays, type CarYear } from '@/car-model'
 import { formatKilometers, getCarSummary } from '@/car'
 import { DELIVERED_ON, getDistanceLevel, getYearWeeks, type Outing } from '@/data/vehicle'
 import {
@@ -11,6 +11,7 @@ import {
   formatYuan,
   getChargePrice,
   getCostBreakdown,
+  getExpenseFen,
 } from '@/data/vehicle-costs'
 import { getActiveDateKeys, getMomentPath, getMoments } from '@/moments'
 
@@ -56,7 +57,8 @@ const hourMax = Math.max(1, busiestHour.total)
 
 const formatNumber = (value: number) => value.toLocaleString('zh-CN', { maximumFractionDigits: 0 })
 const expenses = car.expenses.filter((expense) => inYear(expense.at))
-const spending = getCostBreakdown(expenses.filter((expense) => expense.category !== 'purchase'))
+const nonPurchase = expenses.filter((expense) => expense.category !== 'purchase')
+const spending = getCostBreakdown(nonPurchase)
 const running = getCostBreakdown(expenses, RUNNING_CATEGORIES)
 // Paired over the whole ledger, so a session late on Dec 31 keeps its payment after midnight.
 const fastPrice = getChargePrice(car.chargePayments.filter(({ charge }) => inYear(charge.startedAt)))
@@ -131,8 +133,7 @@ const getOutingHref = (outing: Outing, date: string) =>
       ? getMomentPath(date)
       : undefined
 
-const formatDay = (date: string) =>
-  `${year === undefined ? `${date.slice(0, 4)} 年 ` : ''}${Number(date.slice(5, 7))} 月 ${Number(date.slice(8))} 日`
+const formatDay = (date: string) => formatCarDate(date, year === undefined)
 const weekdayLabels = ['一', '', '三', '', '五', '', '日']
 const heatmaps = heatYears.map((at) => {
   const weeks = getYearWeeks(at, car.days, car.span)
@@ -156,6 +157,18 @@ const heatmaps = heatYears.map((at) => {
   }))
   return { year: at, weeks, halves }
 })
+// The year the car drives through as it's scrolled or held: each day what it drove, charged
+// and spent, so it adds up to the figures, the graph's days as the graph has them.
+const carDays = getCarDays(
+  [
+    ...heatmaps.flatMap(({ weeks }) =>
+      weeks.flat().flatMap((cell) => (cell?.distanceMeters === undefined ? [] : [{ date: cell.date, meters: cell.distanceMeters }])),
+    ),
+    ...charges.map((charge) => ({ date: charge.startedAt.slice(0, 10), wh: charge.energyWh })),
+    ...nonPurchase.map((expense) => ({ date: expense.at.slice(0, 10), fen: getExpenseFen(expense) })),
+  ],
+  getDistanceLevel,
+)
 // What the graph's readout says while no day is pointed at.
 const farthest =
   longest && longest[1] > 0 ? `最远一天 ${formatKilometers(longest[1])}\u2003${formatDay(longest[0])}` : ''
@@ -191,86 +204,110 @@ const spendingTiles: Tile[] = [
 ]
 ---
 
-<CarModel year={{ floor, meters: distance, caption: year === undefined ? '至今' : `${year} 年` }} />
-<p class="year-lead">
-  <span>
-    {formatNumber(distance / 1000)}<small>km</small>
-  </span>
-  <span>
-    {drivenDays}<small>天开了车</small>
-  </span>
-</p>
-<div class="year-driving__years">
-  {
-    heatmaps.map(({ year: at, weeks, halves }) => (
-      <>
-        {heatmaps.length > 1 && <h3 class="year-driving__year">{at}</h3>}
-        <div
-          class="year-driving"
-          style={`--weeks: ${weeks.length}; --half-weeks: ${Math.max(...halves.map((half) => half.weeks.length))}`}
-        >
-          {halves.map((half, index) => (
+<div class="year-driving__stage">
+  <div class="year-driving__pin">
+    {
+      carDays && (
+        <CarModel year={{ floor, caption: year === undefined ? '至今' : `${year} 年`, ...carDays }} />
+      )
+    }
+    <p class="year-lead">
+      <span>
+        <span data-play="km">{formatNumber(distance / 1000)}</span><small>km</small>
+      </span>
+      <span>
+        <span data-play="driven">{drivenDays}</span><small>天开了车</small>
+      </span>
+    </p>
+    <p class="year-driving__day" aria-hidden="true" hidden>
+      <span data-play="day"></span>
+      <span data-play="charged"></span>
+      <span data-play="spent"></span>
+    </p>
+    <div class="year-driving__years">
+      {
+        heatmaps.map(({ year: at, weeks, halves }) => (
+          <>
+            {heatmaps.length > 1 && (
+              <h3 class="year-driving__year" data-graph-year={at}>
+                {at}
+              </h3>
+            )}
             <div
-              class:list={['year-driving__half', { 'is-blank': half.blank }]}
-              data-half={index}
-              style={`--weeks: ${half.weeks.length}`}
+              class="year-driving"
+              data-graph-year={at}
+              style={`--weeks: ${weeks.length}; --half-weeks: ${Math.max(...halves.map((half) => half.weeks.length))}`}
             >
-              <div class="year-driving__months" aria-hidden="true">
-                {half.months.map((month) => (
-                  <span>
-                    {month}
-                    {month && <span class="year-driving__month-unit"> 月</span>}
-                  </span>
-                ))}
-              </div>
-              <div class="year-driving__weekdays" aria-hidden="true">
-                {weekdayLabels.map((label) => (
-                  <span>{label}</span>
-                ))}
-              </div>
-              <div class="year-driving__grid">
-                {half.weeks.flatMap((week) =>
-                  week.map((cell) => {
-                    if (!cell) return <span class="year-driving__cell" data-outside />
-                    if (cell.distanceMeters === undefined) {
-                      return (
-                        <span class="year-driving__cell" data-empty title={`${formatDay(cell.date)}\u2003没有记录`} />
-                      )
-                    }
-                    const title = `${formatDay(cell.date)}\u2003${cell.distanceMeters ? formatKilometers(cell.distanceMeters) : '没开'}`
-                    const outing = outingByDate.get(cell.date)
-                    const href = outing && getOutingHref(outing, cell.date)
-                    const tabbed = href !== undefined && tabbedHrefs.has(href)
-                    if (href) tabbedHrefs.add(href)
-                    return href ? (
-                      <a
-                        class="year-driving__cell"
-                        data-level={getDistanceLevel(cell.distanceMeters)}
-                        href={href}
-                        tabindex={tabbed ? -1 : undefined}
-                        title={outing.trip ? `${title}\u2003${outing.trip.title}` : title}
-                        aria-label={outing.trip ? `${title}，${outing.trip.title}` : title}
-                      />
-                    ) : (
-                      <span class="year-driving__cell" data-level={getDistanceLevel(cell.distanceMeters)} title={title} />
-                    )
-                  }),
-                )}
-              </div>
+              {halves.map((half, index) => (
+                <div
+                  class:list={['year-driving__half', { 'is-blank': half.blank }]}
+                  data-half={index}
+                  style={`--weeks: ${half.weeks.length}`}
+                >
+                  <div class="year-driving__months" aria-hidden="true">
+                    {half.months.map((month) => (
+                      <span>
+                        {month}
+                        {month && <span class="year-driving__month-unit"> 月</span>}
+                      </span>
+                    ))}
+                  </div>
+                  <div class="year-driving__weekdays" aria-hidden="true">
+                    {weekdayLabels.map((label) => (
+                      <span>{label}</span>
+                    ))}
+                  </div>
+                  <div class="year-driving__grid">
+                    {half.weeks.flatMap((week) =>
+                      week.map((cell) => {
+                        if (!cell) return <span class="year-driving__cell" data-outside />
+                        if (cell.distanceMeters === undefined) {
+                          return (
+                            <span class="year-driving__cell" data-empty title={`${formatDay(cell.date)}\u2003没有记录`} />
+                          )
+                        }
+                        const title = `${formatDay(cell.date)}\u2003${cell.distanceMeters ? formatKilometers(cell.distanceMeters) : '没开'}`
+                        const outing = outingByDate.get(cell.date)
+                        const href = outing && getOutingHref(outing, cell.date)
+                        const tabbed = href !== undefined && tabbedHrefs.has(href)
+                        if (href) tabbedHrefs.add(href)
+                        return href ? (
+                          <a
+                            class="year-driving__cell"
+                            data-level={getDistanceLevel(cell.distanceMeters)}
+                            data-date={cell.date}
+                            href={href}
+                            tabindex={tabbed ? -1 : undefined}
+                            title={outing.trip ? `${title}\u2003${outing.trip.title}` : title}
+                            aria-label={outing.trip ? `${title}，${outing.trip.title}` : title}
+                          />
+                        ) : (
+                          <span
+                            class="year-driving__cell"
+                            data-level={getDistanceLevel(cell.distanceMeters)}
+                            data-date={cell.date}
+                            title={title}
+                          />
+                        )
+                      }),
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      </>
-    ))
-  }
-</div>
-<div class="year-driving__legend" aria-hidden="true">
-  <span class="year-driving__readout" data-readout={farthest}>{farthest}</span>
-  <span class="year-driving__key">
-    <span>没开</span>
-    {[0, 1, 2, 3, 4].map((level) => <span class="year-driving__cell" data-level={level} />)}
-    <span>300 km+</span>
-  </span>
+          </>
+        ))
+      }
+    </div>
+    <div class="year-driving__legend" aria-hidden="true">
+      <span class="year-driving__readout" data-readout={farthest}>{farthest}</span>
+      <span class="year-driving__key">
+        <span>没开</span>
+        {[0, 1, 2, 3, 4].map((level) => <span class="year-driving__cell" data-level={level} />)}
+        <span>300 km+</span>
+      </span>
+    </div>
+  </div>
 </div>
 {
   charges.length > 0 && (
@@ -386,6 +423,8 @@ const spendingTiles: Tile[] = [
 }
 
 <script>
+  import { formatCarDate, formatCarSum, getCarDate, sumCarDays, type CarYear } from '@/car-model'
+
   // The legend's readout says what the day or hour pointed at was, and goes back to its
   // own words when the pointer leaves.
   function initializeReadouts() {
@@ -411,9 +450,169 @@ const spendingTiles: Tile[] = [
   }
 
   document.addEventListener('astro:page-load', initializeReadouts)
+
+  // Where it fits on the screen and motion is welcome, the car, the year's figures and its
+  // graph hold still while the page scrolls on by a screen and a half, the year driven
+  // through a day at a time as it does: the date, what had been driven, charged and spent by
+  // then, and the graph's days lit up to it, the rest left faint, the car driving on as it
+  // goes. Scrolled back, the year goes back with it. Otherwise it all stays as the year ended.
+
+  function initializePlay() {
+    const stage = document.querySelector<HTMLElement>('.year-driving__stage')
+    const pin = stage?.querySelector<HTMLElement>('.year-driving__pin')
+    const car = stage?.querySelector<HTMLElement>('.car-model[data-year]')
+    const line = stage?.querySelector<HTMLElement>('.year-driving__day')
+    const data = car?.dataset.year
+    if (!stage || !pin || !car || !line || !data) return
+    const year = JSON.parse(data) as CarYear
+    const sums = sumCarDays(year.days)
+    const dates = year.days.map((_, index) => getCarDate(year.start, index))
+    const indexes = new Map(dates.map((date, index) => [date, index]))
+    const cells = [...stage.querySelectorAll<HTMLElement>('[data-date]')].map((cell) => ({
+      cell,
+      index: indexes.get(cell.dataset.date!) ?? -1,
+    }))
+    const field = (name: string) => stage.querySelector<HTMLElement>(`[data-play="${name}"]`)!
+    const km = field('km')
+    const driven = field('driven')
+    const day = field('day')
+    const charged = field('charged')
+    const spent = field('spent')
+    // Every year's graph, one under the other, would not fit: just the one it has got to, the
+    // date then given with its year.
+    const graphs = [...stage.querySelectorAll<HTMLElement>('[data-graph-year]')]
+    const graphYears = [...new Set(graphs.map((graph) => graph.dataset.graphYear))]
+    const several = graphYears.length > 1
+    let graphShown: string | undefined
+    const showGraph = (year?: string) => {
+      if (year === graphShown) return
+      graphShown = year
+      for (const graph of graphs) graph.hidden = year !== undefined && graph.dataset.graphYear !== year
+    }
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)')
+    const controller = new AbortController()
+    let height = 0
+    let top = 0
+    let run = 0
+    let shown: number | undefined
+    let frame = 0
+
+    // At `at` days in, or the year as it ended at -1.
+    const show = (at: number) => {
+      if (at === shown) return
+      shown = at
+      const done = at === -1 || at === year.days.length - 1
+      const sum = sums.at(at)!
+      const figures = formatCarSum(sum)
+      km.textContent = figures.km
+      driven.textContent = String(sum.driven)
+      day.textContent = done ? year.caption : formatCarDate(dates[at]!, several)
+      charged.textContent = figures.charged
+      spent.textContent = figures.spent
+      for (const { cell, index } of cells) cell.toggleAttribute('data-ahead', at !== -1 && index > at)
+      if (several) showGraph(at === -1 ? undefined : dates[at]!.slice(0, 4))
+    }
+    const update = () => {
+      frame = 0
+      if (!stage.classList.contains('is-playing')) return
+      const played = Math.min(Math.max((top - stage.getBoundingClientRect().top) / run, 0), 1)
+      // For the car to drive on as the year does (src/car-model-client.ts).
+      car.dataset.played = String(played)
+      show(Math.round(played * (year.days.length - 1)))
+    }
+    // Held in the middle of the small viewport, so the address bar coming and going on a
+    // phone moves nothing; and only where it fits there, but for up to half the room kept
+    // over the car for it to be turned in, which a short window leaves off the top.
+    const measure = () => {
+      line.hidden = reduced.matches
+      // As tall as the tallest year's graph makes it.
+      height = Math.max(
+        ...graphYears.map((graphYear) => {
+          if (several) showGraph(graphYear)
+          return pin.offsetHeight
+        }),
+      )
+      const room = Number.parseFloat(getComputedStyle(car).marginTop) / 2
+      shown = undefined
+      stage.style.setProperty('--pin', `${height}px`)
+      stage.classList.toggle('is-playing', !reduced.matches)
+      top = Number.parseFloat(getComputedStyle(pin).top)
+      run = stage.offsetHeight - height
+      if (reduced.matches || !(top >= -room)) {
+        stage.classList.remove('is-playing')
+        delete car.dataset.played
+        line.hidden = true
+        show(-1)
+      } else update()
+    }
+    addEventListener(
+      'scroll',
+      () => {
+        frame ||= requestAnimationFrame(update)
+      },
+      { passive: true, signal: controller.signal },
+    )
+    // Measured as it's first seen, then again as the car's frame takes a new size from the
+    // width and the figures theirs from the fonts; not on the pin, which the graphs it switches
+    // between would set off again, nor as the window's height changes with a phone's address
+    // bar.
+    const resized = new ResizeObserver(measure)
+    resized.observe(car)
+    void document.fonts.ready.then(() => {
+      if (!controller.signal.aborted) measure()
+    })
+    reduced.addEventListener('change', measure, { signal: controller.signal })
+    document.addEventListener(
+      'astro:before-swap',
+      () => {
+        controller.abort()
+        resized.disconnect()
+      },
+      { once: true, signal: controller.signal },
+    )
+  }
+
+  document.addEventListener('astro:page-load', initializePlay)
 </script>
 
 <style>
+  /* Playing, the car, the figures and the graph held in the middle of the screen for a screen
+     and a half of scrolling, or at its foot where they're taller than it; its own box, so the
+     car's margins are held with it. */
+  .year-driving__stage.is-playing {
+    height: calc(var(--pin) + 150svh);
+
+    & > .year-driving__pin {
+      position: sticky;
+      top: min((100svh - var(--pin)) / 2, 100svh - var(--pin));
+    }
+  }
+
+  .year-driving__pin {
+    display: flow-root;
+  }
+
+  /* The day it has got to, and what had been charged and spent by then. */
+  .year-driving__day {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 1em;
+    margin: -0.75rem 0 1rem;
+    color: var(--color-tx-2);
+    font-size: 0.875rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Playing, every year's graph but the one it has got to put away. */
+  [data-graph-year][hidden] {
+    display: none;
+  }
+
+  /* Days yet to come, faint, whatever they will have driven. */
+  .year-driving__grid > .year-driving__cell[data-ahead] {
+    background: var(--color-hover);
+  }
+
   /* Charging, spending and owning it, each a part of its own well apart from the last. */
   .year-driving__part {
     margin: 3rem 0 0.75rem;
@@ -767,7 +966,7 @@ const spendingTiles: Tile[] = [
 
         /* A year's days uncovered week after week as its graph comes up: one animation for
            the graph, not one a day, which would put hundreds on layers of their own. */
-        & .year-driving__grid {
+        & .year-driving__stage:not(.is-playing) .year-driving__grid {
           animation-name: year-driving-wipe;
           animation-timing-function: linear;
           animation-fill-mode: both;
@@ -778,11 +977,11 @@ const spendingTiles: Tile[] = [
         /* Side by side, the halves come up together: the first is uncovered in the first
            half of the way and the second after it, one sweep across the year. */
         @media (width >= 40rem) {
-          & [data-half='0'] .year-driving__grid {
+          & .year-driving__stage:not(.is-playing) [data-half='0'] .year-driving__grid {
             animation-name: year-driving-wipe-first;
           }
 
-          & [data-half='1'] .year-driving__grid {
+          & .year-driving__stage:not(.is-playing) [data-half='1'] .year-driving__grid {
             animation-name: year-driving-wipe-second;
           }
         }
