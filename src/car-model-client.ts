@@ -64,8 +64,9 @@ import { createOdometer, createRoutes, readCarYear } from './car-model-year.ts'
 // A button at its corner turns its sound on, and its music with it, off until then. They're in
 // src/car-model-sound.ts.
 //
-// In a year review it stands on the year's driving, and counts up the year's distance as it
-// speeds off. They're in src/car-model-year.ts.
+// In a year review it stands on the year's driving, and drives through the year a day at a
+// time as it speeds off. As the page scrolls through the year (src/components/YearDriving.astro)
+// it drives on with it, its wheels rolling and its ground sliding back under it. They're in src/car-model-year.ts.
 
 /** How far above the car the camera looks down, from the horizon. */
 const ELEVATION = (14 * Math.PI) / 180
@@ -92,6 +93,12 @@ const HOLD_MS = 150
 const HOLD_SLOP = 6
 const ENGAGE = 0.5
 const ROLL = 3
+/** In a year review, how many radians its wheels turn driving through the whole year, the
+ * fastest they turn as it does, in radians a second, and how far its ground slides back
+ * under it meanwhile, in its lengths. */
+const YEAR_ROLL = 60
+const CRUISE_ROLL = 8
+const YEAR_SLIDE = 0.8
 /** How much nearer the camera comes for as long as the car's pressed, drawing back once it's
  * let go, as the SU7's does, so that even a click is felt. */
 const PUSH_IN = 0.12
@@ -385,6 +392,7 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
     // as it's swung round.
     routes?.set({
       shown: 1 + body.position.z / run,
+      slid: (cruised - 0.5) * YEAR_SLIDE * size.z,
       speed,
       lit,
       dark: dark.matches,
@@ -393,7 +401,7 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
     })
     // Its wheels turned as far as it has rolled, without slipping, and spun up at speed.
     for (const axle of current.wheels.axles) {
-      axle.rotation.x = (body.position.z + run) / current.wheels.radius + spin
+      axle.rotation.x = (body.position.z + run) / current.wheels.radius + spin + cruised * YEAR_ROLL
     }
   }
 
@@ -438,6 +446,12 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
   let speed = 0
   let roll = 0
   let rush = 0
+  // How far through the year the page has scrolled (src/components/YearDriving.astro), or the
+  // middle of its ground where it isn't played; how far the car has driven through it, and how
+  // fast it's going there, out of its fastest.
+  const played = () => Number(frame.dataset.played ?? 0.5)
+  let cruised = played()
+  let cruising = 0
   let spin = 0
   const letGo = () => {
     held = false
@@ -619,8 +633,14 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
     odometer?.advance(speed, delta)
     floor.mesh.visible = speeding
     floor.opacity = speed
-    // A shiver through the body at speed.
-    body.position.y = speed * size.y * 0.003 * Math.sin(time / 23)
+    // Driven on through the year as it's scrolled, coasting after it no faster than the rims
+    // can roll without strobing; in the middle of its ground where the year isn't played.
+    const year = played()
+    const step = Math.min(Math.abs(year - cruised), (CRUISE_ROLL * delta) / YEAR_ROLL)
+    cruising = delta > 0 ? step / delta / (CRUISE_ROLL / YEAR_ROLL) : 0
+    cruised += Math.sign(year - cruised) * step
+    // A shiver through the body at speed, and a little as it cruises.
+    body.position.y = Math.max(speed, cruising * 0.4) * size.y * 0.003 * Math.sin(time / 23)
     // On in the dark and off by day, the other way round once switched by a click, and on as
     // the page goes dark round it at speed.
     const wanted = Math.max(dark.matches !== switched ? 1 : 0, speed)
@@ -653,7 +673,13 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
     const turned = controls.getAzimuthalAngle()
     const swing = Math.abs(((turned - azimuth + 3 * Math.PI) % (2 * Math.PI)) - Math.PI)
     azimuth = turned
-    sound.update({ speed, rush, roll, turn: delta > 0 ? swing / delta : 0, azimuth: turned })
+    sound.update({
+      speed,
+      rush,
+      roll: Math.max(roll, cruising),
+      turn: delta > 0 ? swing / delta : 0,
+      azimuth: turned,
+    })
     if (speeding) {
       frameSpeed(time)
       tunnel.follow(camera.position)
