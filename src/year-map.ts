@@ -2,7 +2,8 @@ import type { FogRegion, FogRegions, TravelMode, TripLeg } from '@hyoban/trip-ma
 
 // The year review's drawings, as SVG path data worked out at build time: the cities under
 // the year's footprint, those it lit, and each trip's route, in one flat projection fitted
-// to what the year reached; and each trip on its own as a small glyph.
+// to what the year reached; each trip on its own as a small glyph; and the year's driving
+// as the 3D car's floor.
 
 type Point = readonly [number, number]
 type Ring = readonly (readonly number[])[]
@@ -104,6 +105,27 @@ export function buildRouteGlyph(lines: readonly TripLine[], size = 100) {
     width: size,
     height: project.height,
   }
+}
+
+/**
+ * The legs driven, fitted to a `size` square, for the 3D car to stand on: its floor drawn
+ * from them (src/car-model-client.ts). None when nothing was driven.
+ */
+export function buildCarFloor(lines: readonly TripLine[], size = 1000) {
+  const driven = lines.filter((line) => line.by === 'car').map((line) => line.points)
+  if (driven.length === 0) return undefined
+  const project = fit(driven.flat(), size, 0.04, size)
+  // A leg too short to see at this scale would only leave a dot.
+  const d = driven
+    .filter((line) => {
+      const points = line.map(project.point)
+      const xs = points.map(([x]) => x)
+      const ys = points.map(([, y]) => y)
+      return Math.max(...xs) - Math.min(...xs) + Math.max(...ys) - Math.min(...ys) >= size / 200
+    })
+    .map((line) => toLinePath(line, project.point, 1))
+    .join('')
+  return d ? { d, width: size, height: project.height } : undefined
 }
 
 /**

@@ -17,7 +17,7 @@ import { getLifeCollage, getYearCollage } from '@/card-data'
 import { getShowcaseMedia } from '@/moments/showcase'
 import { getTripCollage } from '@/moments/trip-images'
 import { getPageCardPath, getPageTitle } from '@/page-cards'
-import { buildRouteGlyph, buildYearMap, getTripLine } from '@/year-map'
+import { buildCarFloor, buildRouteGlyph, buildYearMap, getTripLine } from '@/year-map'
 import {
   buildYearReview,
   formatChange,
@@ -102,6 +102,8 @@ const map = buildYearMap(
     moment.locations.map(({ latitude, longitude }) => [longitude, latitude] as const),
   ),
 )
+// What the car stands on in the driving section: the legs it drove on the trips.
+const carFloor = buildCarFloor(review.trips.flatMap((trip) => getTripLine(trip.legs)))
 /** The most photos a picture chooses among each visit (src/year-random.ts). */
 const PICKS = 6
 /** What a picture with others to choose from names for src/year-random.ts. */
@@ -504,7 +506,7 @@ const highlights = [
       drove && (
         <section class="year-section" aria-labelledby="year-driving">
           <h2 id="year-driving">开车</h2>
-          <YearDriving {...(life ? {} : { year })} />
+          <YearDriving {...(life ? {} : { year })} floor={carFloor} />
         </section>
       )
     }

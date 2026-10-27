@@ -1,5 +1,6 @@
 ---
 import CarModel from '@/components/CarModel.astro'
+import type { CarYear } from '@/car-model'
 import { formatKilometers, getCarSummary } from '@/car'
 import { DELIVERED_ON, getDistanceLevel, getYearWeeks, type Outing } from '@/data/vehicle'
 import {
@@ -25,9 +26,11 @@ import { getActiveDateKeys, getMomentPath, getMoments } from '@/moments'
 interface Props {
   /** The year, or none for every year the car's records reach into. */
   year?: number
+  /** The legs it drove on the year's trips, for the 3D car to stand on (src/year-map.ts). */
+  floor?: CarYear['floor']
 }
 
-const { year } = Astro.props
+const { year, floor } = Astro.props
 const car = await getCarSummary()
 const activeDates = new Set(getActiveDateKeys(await getMoments()))
 const inYear = (date: string) => year === undefined || date.startsWith(`${year}-`)
@@ -188,7 +191,7 @@ const spendingTiles: Tile[] = [
 ]
 ---
 
-<CarModel />
+<CarModel year={{ floor, meters: distance, caption: year === undefined ? '至今' : `${year} 年` }} />
 <p class="year-lead">
   <span>
     {formatNumber(distance / 1000)}<small>km</small>
