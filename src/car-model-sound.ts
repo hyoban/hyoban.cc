@@ -13,7 +13,7 @@
 // from the side its nose points to as it's swung round.
 //
 // It's off until the button by the car turns it on, and stays as it was left from page to page
-// until the visit ends. A car out of sight, or a page in the background, is quiet, and once
+// until the visit ends. Turned on, it plays as a video would, even on an iPhone set to silent. A car out of sight, or a page in the background, is quiet, and once
 // nothing's heard the sound stops altogether rather than going on silently.
 
 /** Whether the sound is on, the same for every car. */
@@ -25,9 +25,15 @@ const followers = new Set<() => void>()
 const heard = new Set<object>()
 let resting = 0
 
+/** Safari's say, from 17, in how the page's sound sits with the phone's: as `playback` it's
+ * played as media, not muted by the silent switch as a game's sounds are. */
+type AudioSession = { type: 'auto' | 'playback' }
+
 /** Turned on, which must be from a press for the browser to let it play. */
 function setSound(next: boolean) {
   on = next
+  const session = (navigator as Navigator & { audioSession?: AudioSession }).audioSession
+  if (session) session.type = on ? 'playback' : 'auto'
   if (on) context ??= new AudioContext()
   for (const follow of followers) follow()
   rest()
