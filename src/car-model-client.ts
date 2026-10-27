@@ -26,7 +26,7 @@ import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment
 // page. It draws nothing while out of sight.
 //
 // The first time it comes into view it drives in with the scroll: it rolls forward as the
-// page moves on and back as it moves back, coming to a stop once its frame is just past
+// page moves on and back as it moves back, its wheels rolling as it goes, coming to a stop once its frame is just past
 // the middle of the screen. There its nose dips as it brakes and settles back, and only then
 // does it begin to turn, gathering speed; after that the scroll leaves it be. Under reduced
 // motion, or when it's already in view by the time it has loaded, it's simply there,
@@ -87,13 +87,33 @@ async function forgetModelsBut(sources: string[]) {
   }
 }
 
-/** A car model, stood on the ground with its middle over the origin, and its size. */
+/** The model's nodes holding each axle's pair of wheels. */
+const WHEELS = ['front-wheels', 'rear-wheels']
+
+/**
+ * A car model, stood on the ground with its middle over the origin, and its size; and its
+ * wheels, each axle's pair on a group turning about it on the model's x axis, with the
+ * wheels' radius.
+ */
 async function loadCar(loader: GLTFLoader, src: string) {
   const car = (await loader.parseAsync(await fetchModel(src), '')).scene
   const box = new Box3().setFromObject(car)
   const center = box.getCenter(new Vector3())
   car.position.sub(new Vector3(center.x, box.min.y, center.z))
-  return { car, size: box.getSize(new Vector3()) }
+  car.updateMatrixWorld(true)
+  let radius = 1
+  const axles = WHEELS.flatMap((name) => {
+    const wheels = car.getObjectByName(name)
+    if (!wheels) return []
+    const bounds = new Box3().setFromObject(wheels)
+    radius = (bounds.max.y - bounds.min.y) / 2
+    const axle = new Group()
+    car.add(axle)
+    axle.position.copy(car.worldToLocal(bounds.getCenter(new Vector3())))
+    axle.attach(wheels)
+    return [axle]
+  })
+  return { car, size: box.getSize(new Vector3()), wheels: { axles, radius } }
 }
 
 /** Let go of everything a part of the scene holds on the GPU. */
@@ -149,7 +169,7 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
   const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder)
   void forgetModelsBut([src, fullSrc].filter((source) => source !== undefined))
   const fullKept = fullSrc !== undefined && (await isModelKept(fullSrc))
-  const { car, size } = await loadCar(loader, fullKept ? fullSrc : src)
+  const { car, size, wheels } = await loadCar(loader, fullKept ? fullSrc : src)
   // The body pitches about the ground under its middle; the shadow only follows along.
   const body = new Group().add(car)
   const shadow = createShadow(size.x, size.z)
@@ -249,21 +269,25 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
       controls.autoRotate = false
     }
     shadow.position.z = body.position.z
+    // Its wheels turned as far as it has rolled, without slipping.
+    for (const axle of current.wheels.axles) {
+      axle.rotation.x = (body.position.z + run) / current.wheels.radius
+    }
   }
 
   // Once it's settled, the full model takes the light one's place, the swap between two
   // frames, the car keeping its place and its turn.
-  let current = car
+  let current = { car, wheels }
   let upgrading = fullKept || !fullSrc || !wantsFullModel()
   let released = false
   const upgrade = () => {
     upgrading = true
     loadCar(loader, fullSrc!)
-      .then(({ car: full }) => {
-        if (released) return release(full)
-        body.remove(current)
-        release(current)
-        body.add(full)
+      .then((full) => {
+        if (released) return release(full.car)
+        body.remove(current.car)
+        release(current.car)
+        body.add(full.car)
         current = full
       })
       .catch(() => {})
