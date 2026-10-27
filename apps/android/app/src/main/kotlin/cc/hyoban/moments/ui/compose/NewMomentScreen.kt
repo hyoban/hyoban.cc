@@ -59,6 +59,7 @@ import androidx.compose.material.icons.rounded.Error
 import androidx.compose.material.icons.rounded.HideImage
 import androidx.compose.material.icons.rounded.MotionPhotosOff
 import androidx.compose.material.icons.rounded.PhotoCamera
+import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Restaurant
 import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material.icons.rounded.Schedule
@@ -125,6 +126,7 @@ import cc.hyoban.moments.data.local.Around
 import cc.hyoban.moments.data.local.Fix
 import cc.hyoban.moments.data.local.PhotoInfo
 import cc.hyoban.moments.data.local.Photos
+import cc.hyoban.moments.data.local.Refusal
 import cc.hyoban.moments.data.local.SAME_PLACE_METRES
 import cc.hyoban.moments.data.local.SharedPlace
 import cc.hyoban.moments.data.local.Ulid
@@ -247,6 +249,13 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
 
     LaunchedEffect(photos) {
         photos.filter { it !in infos && it !in originalMedia }.forEach { infos[it] = Photos.read(context, it) }
+        // What the site can't take, a video too big or of a type it doesn't keep, is left out
+        // as soon as it is read, saying why.
+        val refused = photos.mapNotNull { uri -> infos[uri]?.let(Photos::refusal)?.let { uri to it } }
+        if (refused.isNotEmpty()) {
+            photos = photos - refused.map { it.first }.toSet()
+            saveError = refused.map { it.second }.distinct().joinToString("\n") { context.getString(refusalText(it)) }
+        }
     }
     // Motion photos just added, to be asked whether they go in as photos.
     val unaskedMotion = photos.filter { infos[it]?.motion == true && it !in askedMotion }
@@ -313,11 +322,11 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
     }
 
     // The documents picker rather than the photo picker: only what it hands over keeps where
-    // the photo was taken.
+    // the photo or video was taken.
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { picked ->
         photos = (photos + picked).distinct().take(MAX_PHOTOS)
     }
-    val pickPhotos = { picker.launch(arrayOf("image/*")) }
+    val pickPhotos = { picker.launch(arrayOf("image/*", "video/*")) }
     // Where a photo was taken is kept from the app until it may see it: asked for once, before
     // the first pick ever; declined, the photos still give their time and the phone its place.
     val mediaLocation = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { pickPhotos() }
@@ -439,7 +448,7 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
                             modifier = Modifier.fillMaxWidth().focusRequester(focus).testTag("moment_text"),
                         )
                     }
-                    Group(stringResource(R.string.section_photo), null) {
+                    Group(stringResource(R.string.section_media), null) {
                         PhotoStrip(
                             photos,
                             onAdd = addPhotos,
@@ -447,6 +456,7 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
                             utility = utility,
                             onToggleUtility = { uri -> utility = if (uri in utility) utility - uri else utility + uri },
                             motion = photos.filter { infos[it]?.motion == true }.toSet(),
+                            videos = photos.filter { infos[it]?.video == true || originalMedia[it]?.type == MediaType.VIDEO }.toSet(),
                             stills = stills,
                             onToggleStill = { uri -> stills = if (uri in stills) stills - uri else stills + uri },
                             onRemove = { removed -> photos = photos - removed },
@@ -635,6 +645,7 @@ private fun PhotoStrip(
     utility: Set<Uri>,
     onToggleUtility: (Uri) -> Unit,
     motion: Set<Uri>,
+    videos: Set<Uri>,
     stills: Set<Uri>,
     onToggleStill: (Uri) -> Unit,
     onRemove: (Uri) -> Unit,
@@ -738,6 +749,14 @@ private fun PhotoStrip(
                 AsyncImage(model = if (uri.scheme == "https" || uri.scheme == "http") uri.toString() else uri, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
                 if (lift > 0f) Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.onSurface.copy(alpha = DRAGGED_LAYER * lift)))
                 if (uri in motion && uri !in stills) LiveBadge(Modifier.align(Alignment.TopStart).padding(Space.s))
+                if (uri in videos) {
+                    Box(
+                        Modifier.align(Alignment.TopStart).padding(Space.s).size(UTILITY_DOT).clip(CircleShape).background(MediaOverlay.control),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(Icons.Rounded.PlayArrow, contentDescription = stringResource(R.string.media_video), tint = MediaOverlay.content, modifier = Modifier.size(18.dp))
+                    }
+                }
                 if (uri in utility) {
                     Box(
                         Modifier.align(Alignment.BottomStart).padding(Space.s).size(UTILITY_DOT).clip(CircleShape).background(MediaOverlay.control),
@@ -785,7 +804,7 @@ private fun PhotoStrip(
                             interactionSource = null,
                             indication = ripple(bounded = false, radius = REMOVE_TARGET / 2),
                             role = Role.Button,
-                            onClickLabel = stringResource(R.string.action_remove_photo),
+                            onClickLabel = stringResource(if (uri in videos) R.string.action_remove_video else R.string.action_remove_photo),
                         ) { onRemove(uri) }
                         .testTag("remove_photo_$index"),
                     contentAlignment = Alignment.Center,
@@ -794,7 +813,7 @@ private fun PhotoStrip(
                         Modifier.size(REMOVE_DOT).clip(CircleShape).background(MediaOverlay.control),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.action_remove_photo), tint = MediaOverlay.content, modifier = Modifier.size(18.dp))
+                        Icon(Icons.Rounded.Close, contentDescription = stringResource(if (uri in videos) R.string.action_remove_video else R.string.action_remove_photo), tint = MediaOverlay.content, modifier = Modifier.size(18.dp))
                     }
                 }
             }
@@ -1010,9 +1029,9 @@ internal fun TimeDialog(time: OffsetDateTime, onDismiss: () -> Unit, onPick: (Of
 }
 
 /**
- * The Moment as a record, its photos copied into the app's store first so it keeps them
- * whatever becomes of the gallery's, a motion photo split into its still and clip unless
- * it is one of [stills], and the place it makes, if it makes one. Changing
+ * The Moment as a record, its photos and videos copied into the app's store first so it
+ * keeps them whatever becomes of the gallery's, a motion photo split into its still and clip
+ * unless it is one of [stills], and the place it makes, if it makes one. Changing
  * [original], it keeps its id, when it was made and the photos it already had as they
  * were. Its place is the one chosen, as a Moment is at one place at most.
  */
@@ -1038,16 +1057,21 @@ private suspend fun buildMoment(
         originalMedia[uri]?.let { return@map it.copy(utility = kept) }
         val uid = Ulid.next()
         val info = infos[uri] ?: Photos.read(context, uri)
-        // Split either way, so a photo alone is its still without the clip trailing after it.
-        val copied = Photos.copy(context, uri, directory, uid, splitMotion = true)
+        // A motion photo is split either way, so a photo alone is its still without the clip
+        // trailing after it; a video gets a frame of itself as its still.
+        val copied = Photos.copy(context, uri, directory, uid, splitMotion = !info.video, poster = info.video)
             .let { photo ->
-                if (uri !in stills) return@let photo
+                if (info.video || uri !in stills) return@let photo
                 photo.video?.delete()
                 photo.copy(video = null)
             }
         MomentMedia(
             uid = uid,
-            type = if (copied.video != null) MediaType.LIVE_PHOTO else MediaType.IMAGE,
+            type = when {
+                info.video -> MediaType.VIDEO
+                copied.video != null -> MediaType.LIVE_PHOTO
+                else -> MediaType.IMAGE
+            },
             width = info.width,
             height = info.height,
             takenAt = info.takenAt?.let(::stamp),
@@ -1081,6 +1105,13 @@ private suspend fun buildMoment(
             updatedAt = now,
         )
     return moment to newPlace
+}
+
+/** What says why a picked file was left out. */
+private fun refusalText(refusal: Refusal): Int = when (refusal) {
+    Refusal.NOT_MEDIA -> R.string.error_not_media
+    Refusal.VIDEO_TYPE -> R.string.error_video_type
+    Refusal.VIDEO_TOO_BIG -> R.string.error_video_too_big
 }
 
 private const val MAX_PHOTOS = 9

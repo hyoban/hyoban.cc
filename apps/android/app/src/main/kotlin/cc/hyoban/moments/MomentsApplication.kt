@@ -8,6 +8,7 @@ import coil3.ImageLoader
 import coil3.PlatformContext
 import coil3.SingletonImageLoader
 import coil3.network.okhttp.OkHttpNetworkFetcherFactory
+import coil3.video.VideoFrameDecoder
 import kotlinx.coroutines.launch
 
 class MomentsApplication : Application(), SingletonImageLoader.Factory {
@@ -32,9 +33,15 @@ class MomentsApplication : Application(), SingletonImageLoader.Factory {
 
     private var lastLocales: String? = null
 
-    /** Coil fetches the photos through the app's one HTTP client, beside the records and the videos. */
+    /**
+     * Coil fetches the photos through the app's one HTTP client, beside the records and the
+     * videos, and draws a frame of a video picked for a Moment, before it is saved with a poster.
+     */
     override fun newImageLoader(context: PlatformContext): ImageLoader =
         ImageLoader.Builder(context)
-            .components { add(OkHttpNetworkFetcherFactory(callFactory = { Http.client })) }
+            .components {
+                add(OkHttpNetworkFetcherFactory(callFactory = { Http.client }))
+                add(VideoFrameDecoder.Factory())
+            }
             .build()
 }
