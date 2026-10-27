@@ -7,7 +7,13 @@ import { getAssetUrl } from './asset-url.ts'
 // still of it, which is also what a feed shows.
 //
 // The year review draws it at the head of its driving section (src/components/CarModel.astro),
-// and an article where a paragraph is nothing but the still, `![label](still)`.
+// and an article where a paragraph is nothing but the still, `![label](still)`. Held down it
+// speeds off after GameMCU's Xiaomi SU7 showroom, which an article credits under the car.
+
+const SU7_SHOWROOM = 'https://gamemcu.com/su7/'
+
+/** The line crediting the showroom the speeding car is after. */
+export const CAR_CREDIT = `<p class="car-model-credit">致谢 <a href="${SU7_SHOWROOM}" target="_blank" rel="noopener noreferrer">GameMCU 的 Xiaomi SU7 展厅</a></p>`
 
 /** The lighter cut, also driving a trip's route while its playback flies over. */
 export const CAR_MODEL = getAssetUrl('site/zeekr-007gt-9.glb')
@@ -44,7 +50,7 @@ function replaceStills(node: MdNode) {
     if (only?.type === 'image' && only.url === CAR_STILL.src && rest.length === 0) {
       node.children[index] = {
         type: 'html',
-        value: renderCarModel((only as { alt?: string | null }).alt ?? ''),
+        value: renderCarModel((only as { alt?: string | null }).alt ?? '') + CAR_CREDIT,
       }
       continue
     }

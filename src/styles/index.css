@@ -569,6 +569,12 @@ html[data-calendar-mode-transition] .calendar-mode-switch a[data-mode='map'] {
   }
 }
 
+/* Who the speeding car is after (src/car-model.ts), a line under it in articles. */
+.car-model-credit {
+  color: var(--color-tx-3);
+  text-align: center;
+}
+
 /* Held down, the car's canvas leaves its frame to cover the screen while it speeds off. */
 canvas.car-model-speeding {
   position: fixed;
