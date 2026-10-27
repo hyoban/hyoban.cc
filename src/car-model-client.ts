@@ -1,11 +1,14 @@
 import {
   Box3,
+  BufferAttribute,
+  BufferGeometry,
   CanvasTexture,
   Color,
   CubeCamera,
   Group,
   HalfFloatType,
   LinearMipmapLinearFilter,
+  MathUtils,
   Mesh,
   Object3D,
   MeshBasicMaterial,
@@ -30,16 +33,24 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 import { createGlow, createLightLayer, findLamps, setLamps } from './car-model-lamps.ts'
 import { createCarSound, mountSoundToggle } from './car-model-sound.ts'
-import { createFloor, createTunnel, reflectStreaks, smoothstep } from './car-model-speed.ts'
+import {
+  createFloor,
+  createSpeedometer,
+  createTunnel,
+  reflectStreaks,
+  smoothstep,
+} from './car-model-speed.ts'
+import { createDrift } from './car-model-drift.ts'
 import { createOdometer, createRoutes, readCarYear } from './car-model-year.ts'
 
 // The car standing on its own shadow, under a studio's light, never turning on its own. It
 // can be swung round by dragging sideways, a drag coasting to rest, but not zoomed or tipped over, and a vertical drag still scrolls the
 // page. It draws nothing while out of sight.
 //
-// The first time it comes into view it drives in with the scroll: it rolls forward as the
-// page moves on and back as it moves back, its wheels rolling as it goes, coming to a stop
-// once its frame is just past the middle of the screen. There its nose dips as it brakes and
+// The first time it comes into view it drifts in with the scroll: it rolls forward as the
+// page moves on and back as it moves back, its wheels rolling as it goes, sliding in with its
+// tail out, smoking and marking the ground, and caught straight to come to a stop once its
+// frame is just past the middle of the screen, its front wheels left turned. There its nose dips as it brakes and
 // settles back; after that the scroll leaves it be. Under reduced motion, or when it's
 // already in view by the time it has loaded, it's simply there.
 //
@@ -53,8 +64,12 @@ import { createOdometer, createRoutes, readCarYear } from './car-model-year.ts'
 // off its paint and the floor. Let go, the streaks fall away first and the rest eases back
 // after them. A press the page takes back to scroll ends it at once. The canvas covers the
 // screen for as long as that lasts, the car gliding to its middle and back to its place as
-// it goes. Not under reduced motion. The streaks and the floor are in
-// src/car-model-speed.ts.
+// it goes, its speed and how far it's drifting shown at the top of the screen. Dragged across
+// slowly once it's going, the view swings round it; fast, it drifts instead, the view held
+// still, its tail out, its body leaning and its front wheels turned back against the slide,
+// its rear tyres smoking and marking the floor, springing back straight once the drag slows.
+// Not under reduced motion. The streaks, the floor and the speed are in src/car-model-speed.ts,
+// the smoke and the marks in src/car-model-drift.ts.
 //
 // Its lamps are off by day and on in the dark: when the page is dark, and as it goes dark
 // around the car speeding off. A click, let go before the car could speed off and without
@@ -81,6 +96,18 @@ const DRIVE_IN = 0.8
  * middle is when it stops: just past the screen's middle. */
 const START_AT = 0.9
 const STOP_AT = 0.42
+/** Driving in, how far its tail is out, sliding in, and how far along the run in it starts to
+ * be caught straight again. */
+const ENTRY_YAW = (32 * Math.PI) / 180
+const ENTRY_CATCH = 0.45
+/** How fast, in its lengths a second, it has to be carried in to slide its furthest, and the
+ * seconds that's smoothed over, since the scroll moves it in steps. */
+const ENTRY_SLIDE_SPEED = 0.4
+const ROLLED_FOLLOW = 0.15
+/** How far its front wheels are left turned against the slide once it has stopped, and the
+ * seconds they take to straighten once it drives on. */
+const PARK_STEER = (22 * Math.PI) / 180
+const PARK_STEER_FOLLOW = 0.3
 /** How far the nose dips at the stop, and how the springs settle after it. */
 const DIP = (1.6 * Math.PI) / 180
 const SETTLE_DECAY_MS = 180
@@ -99,6 +126,25 @@ const ROLL = 3
 const YEAR_ROLL = 60
 const CRUISE_ROLL = 8
 const YEAR_SLIDE = 0.8
+/** At speed, how fast a drag across has to be, in radians a second as it would swing the view
+ * round, for the car to start drifting rather than the view turning, and to drift its
+ * furthest; how far its tail swings out then; how far its body leans out with it and its
+ * front wheels turn back against it, past the way it's going so it's plain to see, as shares
+ * of that; how long the drag's speed is smoothed over, in seconds; how stiff and damped the
+ * spring is that brings it back straight, a little past and back; and how near straight, in
+ * radians, it's taken to be back, the view let turn again. */
+const DRIFT_FROM = 5
+const DRIFT_FULL = 12
+const DRIFT_YAW = (30 * Math.PI) / 180
+const DRIFT_LEAN = 0.12
+const COUNTER_STEER = 1.3
+const SLIP_FOLLOW = 0.08
+const DRIFT_STIFFNESS = 60
+const DRIFT_DAMPING = 9
+const DRIFT_SETTLED = 0.01
+/** The longest step, in seconds, the springs take at once, so a stalled frame doesn't fling
+ * them. */
+const MAX_STEP = 0.05
 /** How much nearer the camera comes for as long as the car's pressed, drawing back once it's
  * let go, as the SU7's does, so that even a click is felt. */
 const PUSH_IN = 0.12
@@ -177,11 +223,14 @@ async function forgetModelsBut(sources: string[]) {
 
 /** The model's nodes holding each axle's pair of wheels. */
 const WHEELS = ['front-wheels', 'rear-wheels']
+/** How far in from a wheel's outer edge its tyre meets the ground, as a share of its radius. */
+const TREAD_IN = 0.3
 
 /**
  * A car model, stood on the ground with its middle over the origin, and its size; its
- * wheels, each axle's pair on a group turning about it on the model's x axis, with the
- * wheels' radius; and its lamps, with its headlamps' bounds.
+ * wheels, each turning about its axle on the model's x axis, the rear pair together and each
+ * front one on its own, steering about its middle, with the wheels' radius and where the rear
+ * tyres meet the ground; and its lamps, with its headlamps' bounds.
  */
 async function loadCar(loader: GLTFLoader, src: string) {
   const car = (await loader.parseAsync(await fetchModel(src), '')).scene
@@ -190,19 +239,101 @@ async function loadCar(loader: GLTFLoader, src: string) {
   car.position.sub(new Vector3(center.x, box.min.y, center.z))
   car.updateMatrixWorld(true)
   let radius = 1
-  const axles = WHEELS.flatMap((name) => {
+  const axles: Group[] = []
+  const steers: Group[] = []
+  const tyres: { x: number; z: number }[] = []
+  const turnAbout = (wheels: Object3D, middle: Vector3, parent: Object3D) => {
+    const axle = new Group()
+    parent.add(axle)
+    parent.updateWorldMatrix(true, false)
+    axle.position.copy(parent.worldToLocal(middle.clone()))
+    axle.attach(wheels)
+    axles.push(axle)
+  }
+  for (const name of WHEELS) {
     const wheels = car.getObjectByName(name)
-    if (!wheels) return []
+    if (!wheels) continue
     const bounds = new Box3().setFromObject(wheels)
     radius = (bounds.max.y - bounds.min.y) / 2
-    const axle = new Group()
-    car.add(axle)
-    axle.position.copy(car.worldToLocal(bounds.getCenter(new Vector3())))
-    axle.attach(wheels)
-    return [axle]
-  })
+    const middle = bounds.getCenter(new Vector3())
+    if (name === 'rear-wheels') {
+      turnAbout(wheels, middle, car)
+      const across = bounds.max.x - radius * TREAD_IN
+      tyres.push({ x: across, z: middle.z }, { x: -across, z: middle.z })
+      continue
+    }
+    // Each front wheel cut out of the pair onto a steering knuckle of its own; the pair's
+    // vertices stay with the halves.
+    for (const { cut, bounds: half } of splitBySide(wheels)) {
+      const hub = half.getCenter(new Vector3())
+      const steer = new Group()
+      car.add(steer)
+      steer.position.copy(car.worldToLocal(hub.clone()))
+      steers.push(steer)
+      turnAbout(cut, hub, steer)
+    }
+    wheels.removeFromParent()
+  }
   const size = box.getSize(new Vector3())
-  return { car, size, wheels: { axles, radius }, ...findLamps(car, size) }
+  return { car, size, wheels: { axles, steers, radius, tyres }, ...findLamps(car, size) }
+}
+
+/**
+ * Two copies of `root`, beside it, each of its meshes cut down to the triangles on one side
+ * of the car's middle, right then left, with the bounds of what's left on each. The copies
+ * share the meshes' vertices, each with an index of its own, so the wheels take no more room
+ * than before; each vertex is placed once.
+ */
+function splitBySide(root: Object3D) {
+  root.updateMatrixWorld(true)
+  const sides = [1, -1].map(() => {
+    const cut = root.clone()
+    root.parent!.add(cut)
+    const meshes: Mesh[] = []
+    cut.traverse((object) => {
+      if (object instanceof Mesh) meshes.push(object)
+    })
+    return { cut, meshes, bounds: new Box3() }
+  })
+  const point = new Vector3()
+  let at = 0
+  root.traverse((object) => {
+    if (!(object instanceof Mesh)) return
+    const geometry = object.geometry as BufferGeometry
+    const position = geometry.getAttribute('position')
+    const placed = new Float32Array(position.count * 3)
+    for (let vertex = 0; vertex < position.count; vertex++) {
+      point
+        .fromBufferAttribute(position, vertex)
+        .applyMatrix4(object.matrixWorld)
+        .toArray(placed, vertex * 3)
+    }
+    const index =
+      geometry.index?.array ?? Uint32Array.from({ length: position.count }, (_, vertex) => vertex)
+    const kept = sides.map(() => ({ index: new Uint32Array(index.length), length: 0 }))
+    for (let first = 0; first < index.length; first += 3) {
+      const across =
+        placed[index[first]! * 3]! + placed[index[first + 1]! * 3]! + placed[index[first + 2]! * 3]!
+      const side = across > 0 ? 0 : 1
+      const { bounds } = sides[side]!
+      const into = kept[side]!
+      for (let corner = first; corner < first + 3; corner++) {
+        const vertex = index[corner]!
+        into.index[into.length++] = vertex
+        bounds.expandByPoint(point.fromArray(placed, vertex * 3))
+      }
+    }
+    for (const [side, { meshes }] of sides.entries()) {
+      const cut = new BufferGeometry()
+      for (const [name, attribute] of Object.entries(geometry.attributes)) {
+        cut.setAttribute(name, attribute)
+      }
+      cut.setIndex(new BufferAttribute(kept[side]!.index.subarray(0, kept[side]!.length), 1))
+      meshes[at]!.geometry = cut
+    }
+    at++
+  })
+  return sides
 }
 
 /** A glass material's own colour, how see-through it is and how much it mirrors. */
@@ -353,6 +484,12 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
       ? 'parked'
       : 'scrolling'
   let stageStart = 0
+  // How much of its slide is left as it drives in, 1 tail out to 0 caught straight.
+  let entering = 0
+  // How far its front wheels are left turned once it has stopped, as a driver leaves them after
+  // a slide, as a share of the most; straightened once it drives on, speeding off or through
+  // the year.
+  let parked = stage === 'scrolling' ? 0 : 1
   const run = size.z * DRIVE_IN
 
   /** How far along the run in the scroll has it. */
@@ -364,9 +501,13 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
   }
 
   const pose = (now: number) => {
+    entering = 0
     if (stage === 'scrolling') {
       const progress = scrolled()
       body.position.z = -run * (1 - easeOut(progress))
+      // Sliding in tail out, and caught straight again before the stop.
+      entering = 1 - smoothstep(ENTRY_CATCH, 1, progress)
+      parked = 1 - entering
       // The nose goes down as it brakes into the stop.
       body.rotation.x = DIP * easeInOut(progress)
       if (progress === 1) {
@@ -436,12 +577,18 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
   const streakScene = new Scene().add(tunnel.reflection)
   const floor = createFloor(floorSize)
   scene.add(tunnel.streaks, floor.mesh)
+  const drift = createDrift(size, wheels.tyres)
+  scene.add(drift.group)
+  const speedometer = createSpeedometer()
 
   const sound = createCarSound()
   const unmountToggle = mountSoundToggle(frame)
 
   let held = false
   let pressedAt = { x: 0, y: 0, time: 0 }
+  // At speed, how far across the press has been dragged since the last frame, and from where.
+  let dragged = 0
+  let draggedFrom = 0
   let turning = false
   let speed = 0
   let roll = 0
@@ -459,6 +606,7 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
   const press = (event: PointerEvent) => {
     if (!event.isPrimary || event.button !== 0) return
     pressedAt = { x: event.clientX, y: event.clientY, time: performance.now() }
+    draggedFrom = event.clientX
     if (reduced.matches) return
     held = true
     sound.press()
@@ -467,6 +615,8 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
   // A press that soon moves is a drag to turn the car, and leaves it in its place; once it's
   // well under way, a drag only swings it round as it goes.
   const wander = (event: PointerEvent) => {
+    if (held && speed >= ENGAGE) dragged += event.clientX - draggedFrom
+    draggedFrom = event.clientX
     if (!held || turning || speed >= ENGAGE) return
     const moved = Math.hypot(event.clientX - pressedAt.x, event.clientY - pressedAt.y)
     if (moved > HOLD_SLOP) turning = true
@@ -661,6 +811,70 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
   let visible = true
   let frameId = 0
   let azimuth = controls.getAzimuthalAngle()
+  // Dragged across fast at speed, it drifts: its tail swings out, its body leans out and its
+  // front wheels turn back against the slide, its rear tyres smoking and marking the floor,
+  // the view held still the while, springing back straight once the drag slows. How fast it's
+  // dragged, smoothed; how far its tail is out, and how fast it's going there; whether the view
+  // is held; and how fast it's rolling in as it drives in.
+  let slip = 0
+  let yaw = 0
+  let yawSpeed = 0
+  let viewHeld = false
+  let entryZ = body.position.z
+  let rolled = 0
+  const skid = (delta: number) => {
+    const step = Math.min(delta, MAX_STEP)
+    const perSecond = delta > 0 ? 1 / delta : 0
+    slip = MathUtils.damp(
+      slip,
+      ((2 * Math.PI * dragged) / frame.clientHeight) * perSecond,
+      1 / SLIP_FOLLOW,
+      step,
+    )
+    dragged = 0
+    const swung = speed >= ENGAGE ? smoothstep(DRIFT_FROM, DRIFT_FULL, Math.abs(slip)) * speed : 0
+    yawSpeed +=
+      ((Math.sign(slip) * DRIFT_YAW * swung - yaw) * DRIFT_STIFFNESS - yawSpeed * DRIFT_DAMPING) *
+      step
+    yaw += yawSpeed * step
+    const drifting = swung > 0 || Math.abs(yaw) > DRIFT_SETTLED
+    if (drifting !== viewHeld) {
+      viewHeld = drifting
+      const azimuth = controls.getAzimuthalAngle()
+      controls.minAzimuthAngle = drifting ? azimuth : -Infinity
+      controls.maxAzimuthAngle = drifting ? azimuth : Infinity
+    }
+    // Driving in, it slides as far as its tail is out and as fast as the scroll carries it.
+    rolled = MathUtils.damp(
+      rolled,
+      Math.abs(body.position.z - entryZ) * perSecond,
+      1 / ROLLED_FOLLOW,
+      step,
+    )
+    entryZ = body.position.z
+    const sliding = entering * smoothstep(0, size.z * ENTRY_SLIDE_SPEED, rolled)
+    const turned = yaw + ENTRY_YAW * entering
+    body.rotation.y = glow.tail.rotation.y = glow.ahead.rotation.y = turned
+    shadow.rotation.z = turned
+    body.rotation.z = DRIFT_LEAN * turned
+    if (speed > 0 || cruising > 0) parked = MathUtils.damp(parked, 0, 1 / PARK_STEER_FOLLOW, step)
+    for (const steer of current.wheels.steers) {
+      steer.rotation.y = -COUNTER_STEER * turned - PARK_STEER * parked
+    }
+    const slide = Math.max(swung, sliding)
+    drift.update({
+      slide,
+      yaw: turned,
+      z: body.position.z,
+      speed,
+      pale: darkness > 0.5,
+      framed: !speeding,
+      delta,
+      eye: camera.position,
+    })
+    speedometer.update(speed, turned)
+    return slide
+  }
   const timer = new Timer()
   const tick = (time: number) => {
     timer.update(time)
@@ -671,14 +885,16 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
     controls.update(delta)
     // How fast it's swung round, the long way round from one side to the other taken short.
     const turned = controls.getAzimuthalAngle()
-    const swing = Math.abs(((turned - azimuth + 3 * Math.PI) % (2 * Math.PI)) - Math.PI)
+    const swept = ((turned - azimuth + 3 * Math.PI) % (2 * Math.PI)) - Math.PI
     azimuth = turned
+    const slide = skid(delta)
     sound.update({
       speed,
       rush,
       roll: Math.max(roll, cruising),
-      turn: delta > 0 ? swing / delta : 0,
+      turn: delta > 0 ? Math.abs(swept) / delta : 0,
       azimuth: turned,
+      drift: slide,
     })
     if (speeding) {
       frameSpeed(time)
@@ -748,6 +964,8 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
     removeEventListener('blur', letGo)
     sound.dispose()
     odometer?.dispose()
+    drift.dispose()
+    speedometer.dispose()
     unmountToggle()
     controls.dispose()
     released = true
