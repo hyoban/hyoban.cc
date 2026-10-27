@@ -26,9 +26,10 @@ Use these object key prefixes:
 
 The car on the year review's driving section is the "Zeekr 7GT 2026" model by
 Zifir3d, bought on Superhive (royalty free), repainted in the car's colour and
-exported as glTF with its glass made transmissive. It comes in two cuts:
-`site/zeekr-007gt-7.glb`, simplified with 512px WebP textures, loads first and also
-drives a trip's route while its playback flies over; `site/zeekr-007gt-7-full.glb`,
+exported as glTF with its glass made transmissive and each axle's pair of wheels kept
+as its own node, `front-wheels` and `rear-wheels`, for the page to roll. It comes in two
+cuts: `site/zeekr-007gt-9.glb`, simplified with 512px WebP textures, loads first and also
+drives a trip's route while its playback flies over; `site/zeekr-007gt-9-full.glb`,
 only meshopt-quantized, takes its place once the car has settled where the
 connection allows. The page keeps both in its Cache Storage once fetched, since the
 full one is more than some browsers' HTTP caches hold, and draws a kept full one straight

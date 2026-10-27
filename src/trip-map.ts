@@ -16,7 +16,7 @@ export const tripMapBrand = { image: getAssetUrl('site/avatar-80.webp'), name: S
 
 /** The 007GT of the year review (src/components/CarModel.astro), in its lighter cut, small
  * enough on the map, driving trips flown over. */
-export const tripMapCarModel = getAssetUrl('site/zeekr-007gt-7.glb')
+export const tripMapCarModel = getAssetUrl('site/zeekr-007gt-9.glb')
 
 export const tripMapMusic = tripVideoMusic.map(({ src, title }) => ({ src, title }))
 
