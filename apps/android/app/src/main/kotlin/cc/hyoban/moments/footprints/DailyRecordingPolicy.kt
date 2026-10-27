@@ -14,12 +14,19 @@ internal class DailyRecordingPolicy(now: Long) {
         private set
     private var anchor: TrackPoint? = null
     private var lastMovement = now
+    val lastMovementAt get() = lastMovement
+    /** The unmoving wait that confirmed the latest STILL rest, for diagnostics. */
+    var stopTimeout: Long? = null
+        private set
     private var lastFix = now
     private var retryAt = now
     private var misses = 0
     private var stationarySamples = 0
     private var lastSample = Long.MIN_VALUE
     private var probeStarted = now
+    /** Activity recognition's latest word: moving until it reports entering STILL. */
+    var activityMoving = false
+        private set
 
     // Missing fixes are not evidence of being stationary. Only fix() can confirm a stop.
     val nextCheck: Long
@@ -42,10 +49,16 @@ internal class DailyRecordingPolicy(now: Long) {
                 stationarySamples++
                 lastSample = now
             }
-            val observedStop = now - lastMovement >= STILL_TIMEOUT && stationarySamples >= 3
+            // Duty-cycled GNSS can hold one position for minutes while walking, so trust the
+            // fixes over a moving activity only after a much longer, battery-bounding wait.
+            val stillFor = if (activityMoving) ACTIVITY_MOVING_STILL_TIMEOUT else STILL_TIMEOUT
+            val observedStop = now - lastMovement >= stillFor && stationarySamples >= 3
             // A probe must observe the location over time, not go back to sleep on its first fix.
             val confirmedProbe = phase == Phase.PROBE && stationarySamples >= 3 && now - probeStarted >= PROBE_OBSERVATION
-            if (allowRest && (observedStop || confirmedProbe)) rest(now, RestReason.STILL)
+            if (allowRest && (observedStop || confirmedProbe)) {
+                stopTimeout = if (observedStop) stillFor else PROBE_OBSERVATION
+                rest(now, RestReason.STILL)
+            }
         }
     }
 
@@ -97,6 +110,12 @@ internal class DailyRecordingPolicy(now: Long) {
         lastSample = Long.MIN_VALUE
     }
 
+    /** Activity transitions: movement wakes the recorder at once, STILL only lifts the longer wait. */
+    fun activity(moving: Boolean, now: Long) {
+        activityMoving = moving
+        if (moving) motion(now)
+    }
+
     fun motion(now: Long) {
         phase = Phase.ACTIVE
         restReason = null
@@ -110,6 +129,8 @@ internal class DailyRecordingPolicy(now: Long) {
     private fun rest(now: Long, reason: RestReason) {
         phase = Phase.REST
         restReason = reason
+        // A rest the long wait forced must not keep requesting walking-rate fixes on the next probe.
+        activityMoving = false
         misses = if (reason == RestReason.NO_FIX) min(misses + 1, 4) else 0
         retryAt = now + min(MAX_RETRY, REST_INTERVAL * (1L shl max(0, misses - 1)))
     }
@@ -117,6 +138,7 @@ internal class DailyRecordingPolicy(now: Long) {
     companion object {
         const val FIX_TIMEOUT = 120_000L
         const val STILL_TIMEOUT = 180_000L
+        const val ACTIVITY_MOVING_STILL_TIMEOUT = 600_000L
         const val REST_INTERVAL = 120_000L
         const val MAX_RETRY = 600_000L
         private const val SAMPLE_SPACING = 15_000L

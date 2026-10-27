@@ -166,4 +166,27 @@ class DailyRecordingPolicyTest {
         assertEquals(DailyRecordingPolicy.Phase.ACTIVE, p.phase)
         assertEquals(210_000L, p.nextCheck)
     }
+
+    @Test fun stuckFixesDoNotStopGpsWhileActivitySaysMoving() {
+        val p = DailyRecordingPolicy(0)
+        p.activity(true, 0)
+        for (time in 0L..585_000L step 15_000L) p.fix(point(), time)
+        assertEquals(DailyRecordingPolicy.Phase.ACTIVE, p.phase)
+        // The long wait still bounds battery use if STILL never arrives.
+        p.fix(point(), 600_000)
+        assertEquals(DailyRecordingPolicy.RestReason.STILL, p.restReason)
+        assertEquals(DailyRecordingPolicy.ACTIVITY_MOVING_STILL_TIMEOUT, p.stopTimeout)
+        assertFalse(p.activityMoving)
+    }
+
+    @Test fun enteringStillRestoresTheThreeMinuteStop() {
+        val p = DailyRecordingPolicy(0)
+        p.activity(true, 0)
+        for (time in 0L..240_000L step 15_000L) p.fix(point(), time)
+        assertEquals(DailyRecordingPolicy.Phase.ACTIVE, p.phase)
+        p.activity(false, 250_000)
+        p.fix(point(), 255_000)
+        assertEquals(DailyRecordingPolicy.Phase.REST, p.phase)
+        assertEquals(DailyRecordingPolicy.STILL_TIMEOUT, p.stopTimeout)
+    }
 }

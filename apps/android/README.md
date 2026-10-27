@@ -372,7 +372,10 @@ MapLibre basemap is reused, while collecting samples works without a connection.
 The opt-in location foreground service needs precise location and shows an ongoing
 notification with a pause action. Daily recording requests fixes at 15 seconds with no
 provider distance filter, so stationary fixes can be used to stop GPS; the store still
-filters stationary samples. An active trip requests 5 seconds / 5 m. These are provider
+filters stationary samples. While activity recognition reports movement, daily recording
+requests fixes every 5 seconds instead, in the same track segment: at 15 seconds the
+phone's MediaTek GNSS stayed in place for minutes and jumped about 120 m while walking,
+with speeds near zero. An active trip requests 5 seconds / 5 m. These are provider
 hints, not guaranteed rates. On Android 12+, initial acquisition and stationary probes
 use a system-enforced two-minute request duration, independent of the app timer. After
 acquiring a usable fix, daily recording allows up to 60 seconds of delivery batching;
@@ -440,7 +443,12 @@ are counted, and logging failures never stop recording. 足迹设置 → 诊断 
 retained events in order after draining queued writes. Records include wall-clock and elapsed
 time, service run/request identifiers, app/OS version, permissions, battery/power-save state,
 request durations and callback/stored-point counts, per-fix accuracy/age/speed and filter
-decisions, timer delays, and sensor/passive wake-up events. Fix timestamps can be matched
+decisions, timer delays, and sensor/passive wake-up events. While GPS runs, each fix also
+carries the satellites used and visible, the mean C/N0 of the four strongest used, how many
+used are on L5, and the status callbacks since the previous fix with their longest gap, which
+shows whether the receiver tracks continuously or duty-cycles; the status callback starts no
+fix itself. A rest's phase event records whether activity said moving, the time since the
+last movement and which unmoving wait confirmed it (`stop_timeout_ms`). Fix timestamps can be matched
 to the local track database. Coordinates, altitude, Wi-Fi/Bluetooth names, tokens and exception
 messages are not logged. There are no diagnostic uploads, extra location polls or wake-up timers.
 With `track_filter=window-v1`, `raw_delivery.stored_samples`, `fix.raw_stored` and the request's
@@ -510,7 +518,9 @@ tracks are not supported.
 An optional 活动识别增强 control uses Google Play services activity transitions for walking,
 running, cycling, vehicle travel and stillness. It starts disabled, requests physical activity
 permission on Android 10+, and operates only during daily recording. Entering movement can
-wake a resting recorder; stillness is advisory and cannot pause a manual trip. Missing Play
+wake a resting recorder. Until it reports stillness again, unmoving fixes need 10 minutes
+rather than three to rest GPS, so stuck fixes cannot stop a walk, and the 5-second rate above
+applies. Stillness is advisory and cannot pause a manual trip. Missing Play
 services, denied permissions or registration failures leave native motion/passive detection
 available. Activity events never opt the user into recording or resume a manually paused
 recorder. Its PendingIntent remains registered while the saved daily selection is active,
