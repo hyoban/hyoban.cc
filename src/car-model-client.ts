@@ -101,14 +101,21 @@ const TILT_LOW = 0
 const TILT_HIGH = (20 * Math.PI) / 180
 /** How far the camera shakes at full speed, in pixels. */
 const SHAKE = 2.5
-/** How dark the page goes, and how much of the studio's light the car loses: most, but its
- * paint's colour still plainly seen. */
+/** How dark the page goes at full speed, and how much of the studio's light the car loses
+ * by dark, the page's or at speed: most, so it's its lamps that shine, but its paint's colour
+ * still plainly seen. */
 const NIGHT = 0.92
 const VEIL = 0.8
 /** How brightly the paint and glass mirror the streaks at full speed. */
 const GLINT = 2
-/** How much of what's seen through the glass it holds back at full speed. */
-const TINT = 0.92
+/** How much darker the glass is by day, tinted as a car's is, so what's behind it doesn't
+ * show through as white. */
+const DAY_TINT = 0.6
+/** How much darker the glass is by dark, no longer seen through. */
+const DARK_TINT = 0.92
+/** How much less of the studio's light the glass mirrors by dark than the rest of the car
+ * does, near mirror as it is. */
+const GLASS_GLARE = 0.8
 /** How rough the paint is at full speed, polished from its satin. */
 const POLISH = 0.08
 /** Seconds the lamps take to come on, or go off. */
@@ -180,6 +187,31 @@ async function loadCar(loader: GLTFLoader, src: string) {
   return { car, size, wheels: { axles, radius }, ...findLamps(car, size) }
 }
 
+/** A glass material's own colour, how see-through it is and how much it mirrors. */
+type Glass = { color: Color; transmission: number; mirror: number }
+
+/**
+ * The see-through glass in `root`. It's lent the scene's `environment` as its own, or how
+ * much it mirrors would be the scene's, whatever it's set to.
+ */
+function findGlass(root: Object3D, environment: Texture) {
+  const glass = new Map<MeshPhysicalMaterial, Glass>()
+  root.traverse((object) => {
+    if (!(object instanceof Mesh)) return
+    for (const material of [object.material].flat()) {
+      if (material instanceof MeshPhysicalMaterial && material.transmission > 0) {
+        material.envMap = environment
+        glass.set(material, {
+          color: material.color.clone(),
+          transmission: material.transmission,
+          mirror: material.envMapIntensity,
+        })
+      }
+    }
+  })
+  return glass
+}
+
 /** Let go of everything a part of the scene holds on the GPU. */
 function release(root: Object3D) {
   root.traverse((object) => {
@@ -189,7 +221,8 @@ function release(root: Object3D) {
     object.geometry.dispose()
     for (const material of [object.material].flat()) {
       for (const value of Object.values(material)) {
-        if (value instanceof Texture) value.dispose()
+        // The glass's environment is the scene's, lent to it, not its own to let go.
+        if (value instanceof Texture && value !== material.envMap) value.dispose()
       }
       material.dispose()
     }
@@ -353,6 +386,8 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
         release(current.car)
         reflectStreaks(full.car, reflections.texture, glint)
         setLamps(full.lamps, lit)
+        glass = findGlass(full.car, environment)
+        darkness = -1
         body.add(full.car)
         current = full
       })
@@ -426,9 +461,22 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
   let tilt = SPEED_ELEVATION
   let setPolar = 0
 
-  // Glass that's seen through shows what's behind it over half-white wherever the canvas is
-  // see-through, so at night it's tinted dark, as a car's glass is, its reflections kept.
-  const glass = new Map<MeshPhysicalMaterial, Color>()
+  // By dark, the page's or round the car at speed, the studio's light falls away and the car
+  // is lit by its lamps. Its glass, which on a see-through canvas shows what's behind it over
+  // half-white, is tinted by day, and by dark turns darker still and stops being seen through.
+  let glass = findGlass(car, environment)
+  let darkness = -1
+  const darken = (level: number) => {
+    if (level === darkness) return
+    darkness = level
+    scene.environmentIntensity = 1 - VEIL * level
+    const tint = DAY_TINT + (DARK_TINT - DAY_TINT) * level
+    for (const [material, { color, transmission, mirror }] of glass) {
+      material.color.copy(color).multiplyScalar(1 - tint)
+      material.transmission = transmission * (1 - level)
+      material.envMapIntensity = mirror * (1 - VEIL * level) * (1 - GLASS_GLARE * level)
+    }
+  }
   // The paint, pale and satin, is polished up so the streaks show in it sharply.
   const paint = new Map<MeshPhysicalMaterial, number>()
 
@@ -445,10 +493,9 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
       body.traverse((object) => {
         if (!(object instanceof Mesh)) return
         for (const material of [object.material].flat()) {
-          if (!(material instanceof MeshPhysicalMaterial)) continue
-          if (material.transmission > 0) {
-            glass.set(material, material.color.clone())
-          } else if (
+          if (
+            material instanceof MeshPhysicalMaterial &&
+            !glass.has(material) &&
             material.metalness < 0.5 &&
             material.roughness > 0.2 &&
             material.roughness < 0.45 &&
@@ -459,16 +506,13 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
         }
       })
     } else {
-      for (const [material, color] of glass) material.color.copy(color)
       for (const [material, roughness] of paint) material.roughness = roughness
-      glass.clear()
       paint.clear()
       frame.append(canvas)
       controls.minPolarAngle = controls.maxPolarAngle = Math.PI / 2 - ELEVATION
       tilt = SPEED_ELEVATION
       camera.fov = FOV
       renderer.setClearColor(0x000000, 0)
-      scene.environmentIntensity = 1
       glint.value = 0
       place()
     }
@@ -551,15 +595,12 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
       const eased = lit + (wanted - lit) * (1 - Math.exp(-delta / LAMPS_FADE))
       light(reduced.matches || Math.abs(wanted - eased) < 0.002 ? wanted : eased)
     }
+    darken(Math.max(dark.matches ? 1 : 0, speed))
     if (!speeding) return
     renderer.setClearColor(0x000000, NIGHT * speed)
-    for (const [material, color] of glass) {
-      material.color.copy(color).multiplyScalar(1 - TINT * speed)
-    }
     for (const [material, roughness] of paint) {
       material.roughness = roughness + (POLISH - roughness) * speed
     }
-    scene.environmentIntensity = 1 - VEIL * speed
     glint.value = GLINT * speed
     cubeCamera.update(renderer, streakScene)
   }
@@ -617,6 +658,7 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
   reduced.addEventListener('change', followMotion)
 
   light(lit)
+  darken(dark.matches ? 1 : 0)
   pose(performance.now())
   controls.update()
   renderer.render(scene, camera)
