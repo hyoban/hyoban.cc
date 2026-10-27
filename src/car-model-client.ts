@@ -1,11 +1,11 @@
 import {
-  BackSide,
   Box3,
   CanvasTexture,
   Color,
   CubeCamera,
   Group,
   HalfFloatType,
+  LinearMipmapLinearFilter,
   Mesh,
   Object3D,
   MeshBasicMaterial,
@@ -16,7 +16,6 @@ import {
   PlaneGeometry,
   SRGBColorSpace,
   Scene,
-  SphereGeometry,
   Texture,
   Timer,
   Vector2,
@@ -28,7 +27,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
-import { createFloor, createTunnel, smoothstep } from './car-model-speed.ts'
+import { createFloor, createTunnel, reflectStreaks, smoothstep } from './car-model-speed.ts'
 
 // The car turning slowly on its own shadow, under a studio's light. It can be swung round
 // by dragging sideways, but not zoomed or tipped over, and a vertical drag still scrolls the
@@ -99,14 +98,16 @@ const TILT_LOW = 0
 const TILT_HIGH = (20 * Math.PI) / 180
 /** How far the camera shakes at full speed, in pixels. */
 const SHAKE = 2.5
-/** How dark the page goes, and how much of the studio's light the car loses: most, keeping
- * about a tenth as the SU7's does, so it's still plainly seen. */
+/** How dark the page goes, and how much of the studio's light the car loses: most, but its
+ * paint's colour still plainly seen. */
 const NIGHT = 0.92
-const VEIL = 0.9
+const VEIL = 0.8
+/** How brightly the paint and glass mirror the streaks at full speed. */
+const GLINT = 2
 /** How much of what's seen through the glass it holds back at full speed. */
 const TINT = 0.92
 /** How rough the paint is at full speed, polished from its satin. */
-const POLISH = 0.18
+const POLISH = 0.08
 
 /** easeOutCubic: the scroll's distance laid out so the car slows as it nears its stop. */
 const easeOut = cubicBezier(0.33, 1, 0.68, 1)
@@ -205,11 +206,20 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
   const environment = pmrem.fromScene(room, 0.04).texture
   scene.environment = environment
   pmrem.dispose()
+  room.dispose()
+  // The streaks as they're seen from the car's middle, for it to mirror at speed.
+  const reflections = new WebGLCubeRenderTarget(256, {
+    type: HalfFloatType,
+    generateMipmaps: true,
+    minFilter: LinearMipmapLinearFilter,
+  })
+  const glint = { value: 0 }
 
   const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder)
   void forgetModelsBut([src, fullSrc].filter((source) => source !== undefined))
   const fullKept = fullSrc !== undefined && (await isModelKept(fullSrc))
   const { car, size, wheels } = await loadCar(loader, fullKept ? fullSrc : src)
+  reflectStreaks(car, reflections.texture, glint)
   // The body pitches about the ground under its middle; the shadow only follows along.
   const body = new Group().add(car)
   const shadow = createShadow(size.x, size.z)
@@ -335,33 +345,20 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
         if (released) return release(full.car)
         body.remove(current.car)
         release(current.car)
+        reflectStreaks(full.car, reflections.texture, glint)
         body.add(full.car)
         current = full
       })
       .catch(() => {})
   }
 
-  // At speed the paint takes its light from the studio as a cube camera sees it, darkened
-  // behind a veil and crossed by the tunnel's streaks, instead of from the studio alone.
+  // At speed the studio's light falls to a tenth, and the car mirrors the streaks besides,
+  // as a cube camera in its middle sees them.
   const floorSize = reach * 14
   const tunnel = createTunnel(camera.position.distanceTo(target), size, floorSize / 2)
-  const reflections = new WebGLCubeRenderTarget(128, { type: HalfFloatType })
   const cubeCamera = new CubeCamera(0.05, 400, reflections)
-  const veil = new Mesh(
-    new SphereGeometry(0.3),
-    new MeshBasicMaterial({
-      color: 0x000000,
-      side: BackSide,
-      transparent: true,
-      depthTest: false,
-      depthWrite: false,
-    }),
-  )
-  // The studio is lowered beneath its camera, at the origin; the veil wraps the camera, and
-  // the streaks run round it as round the car.
-  veil.position.y = -room.position.y
-  tunnel.reflection.position.y = -room.position.y - size.y * 0.4
-  room.add(veil, tunnel.reflection)
+  cubeCamera.position.y = size.y * 0.4
+  const streakScene = new Scene().add(tunnel.reflection)
   const floor = createFloor(floorSize)
   scene.add(tunnel.streaks, floor.mesh)
 
@@ -453,7 +450,8 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
       tilt = SPEED_ELEVATION
       camera.fov = FOV
       renderer.setClearColor(0x000000, 0)
-      scene.environment = environment
+      scene.environmentIntensity = 1
+      glint.value = 0
       place()
     }
   }
@@ -535,9 +533,9 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
     for (const [material, roughness] of paint) {
       material.roughness = roughness + (POLISH - roughness) * speed
     }
-    veil.material.opacity = VEIL * speed
-    cubeCamera.update(renderer, room)
-    scene.environment = reflections.texture
+    scene.environmentIntensity = 1 - VEIL * speed
+    glint.value = GLINT * speed
+    cubeCamera.update(renderer, streakScene)
   }
 
   let visible = true
@@ -604,8 +602,7 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
     released = true
     floor.mesh.dispose()
     release(scene)
-    release(room)
-    room.dispose()
+    release(streakScene)
     reflections.dispose()
     environment.dispose()
     renderer.dispose()
