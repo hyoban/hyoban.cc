@@ -3,10 +3,10 @@
   "accountId": "e68c7dce80df20ff5802b9ac36f1eab6",
   "bucket": "blog-images",
   "origin": "https://image.hyoban.cc",
-  "createdAt": "2026-10-26T16:06:56.070Z",
-  "inventorySha256": "3cfa8caf93deab60676bf7dd93c6b86e59688db7fcf86965a4bf5d8d0bcbf561",
-  "objectCount": 5379,
-  "totalBytes": 1528098301,
+  "createdAt": "2026-10-27T02:50:39.102Z",
+  "inventorySha256": "ab7079dcaed222601670a2da2dcb1e23d73076c03c2e8828d4399f17a70b3597",
+  "objectCount": 5383,
+  "totalBytes": 1547585533,
   "objects": [
     {
       "key": "devices/airpods-4.webp",
@@ -42646,6 +42646,38 @@
       "contentType": "image/webp",
       "etag": "5a43655bc16a8d9450167b16f9f33852",
       "lastModified": "2026-10-26T16:03:19.152Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "site/zeekr-007gt-6.glb",
+      "bytes": 2572632,
+      "contentType": "model/gltf-binary",
+      "etag": "f9221b373f001a489668831588f6507e",
+      "lastModified": "2026-10-27T01:52:26.518Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "site/zeekr-007gt-7-full.glb",
+      "bytes": 14334392,
+      "contentType": "model/gltf-binary",
+      "etag": "8115d566ebc35ff8b7d6f5d92d1400fa",
+      "lastModified": "2026-10-27T02:42:53.028Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "site/zeekr-007gt-7.glb",
+      "bytes": 2523632,
+      "contentType": "model/gltf-binary",
+      "etag": "21b6e60784f39c8accbf3b1971b295b1",
+      "lastModified": "2026-10-27T02:42:41.151Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "site/zeekr-007gt-7.webp",
+      "bytes": 56576,
+      "contentType": "image/webp",
+      "etag": "d27a7f0aa5de37f4df053de944e02d5c",
+      "lastModified": "2026-10-27T02:42:57.817Z",
       "storageClass": "Standard"
     },
     {
