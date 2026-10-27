@@ -26,6 +26,8 @@ even when starting from the repository root.
   changes on the phone, including navigation, light/dark mode and affected layouts
   or motion. Fix problems introduced or exposed by the change; report any checks
   blocked by the environment instead of claiming they passed.
+- Preview new or changed site media from a local server; upload it to R2 only once
+  the user has approved it there, since objects are immutable.
 - Preserve the user's Moment text exactly. UI copy and accessibility labels are
   Chinese first; Android also keeps English strings in `values-en`.
 

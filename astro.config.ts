@@ -27,6 +27,17 @@ export default defineConfig({
   ],
   vite: {
     plugins: [devRewrites()],
+    // The car loads three.js on demand; bundling its pieces up front saves the dev server
+    // finding them mid-page and throwing the page's modules away to rebundle.
+    optimizeDeps: {
+      include: [
+        'three',
+        'three/examples/jsm/loaders/GLTFLoader.js',
+        'three/examples/jsm/libs/meshopt_decoder.module.js',
+        'three/examples/jsm/controls/OrbitControls.js',
+        'three/examples/jsm/environments/RoomEnvironment.js',
+      ],
+    },
   },
   markdown: {
     processor: unified({

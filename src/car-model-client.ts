@@ -3,6 +3,7 @@ import {
   CanvasTexture,
   Group,
   Mesh,
+  Object3D,
   MeshBasicMaterial,
   NeutralToneMapping,
   PMREMGenerator,
@@ -54,7 +55,52 @@ const RAMP_MS = 2000
 const easeOut = cubicBezier(0.33, 1, 0.68, 1)
 const easeInOut = cubicBezier(0.77, 0, 0.175, 1)
 
-export async function mountCarModel(frame: HTMLElement, src: string) {
+/** A car model, stood on the ground with its middle over the origin, and its size. */
+async function loadCar(loader: GLTFLoader, src: string) {
+  const car = (await loader.loadAsync(src)).scene
+  const box = new Box3().setFromObject(car)
+  const center = box.getCenter(new Vector3())
+  car.position.sub(new Vector3(center.x, box.min.y, center.z))
+  return { car, size: box.getSize(new Vector3()) }
+}
+
+/** Let go of everything a part of the scene holds on the GPU. */
+function release(root: Object3D) {
+  root.traverse((object) => {
+    if (!(object instanceof Mesh)) return
+    object.geometry.dispose()
+    for (const material of [object.material].flat()) {
+      for (const value of Object.values(material)) {
+        if (value instanceof Texture) value.dispose()
+      }
+      material.dispose()
+    }
+  })
+}
+
+/**
+ * Whether to fetch the full model after the light one: not when the reader asks to save
+ * data or is on a mobile network, nor on a touch screen, whose browser may not say.
+ */
+function wantsFullModel() {
+  const connection = (
+    navigator as Navigator & {
+      connection?: { saveData?: boolean; type?: string; effectiveType?: string }
+    }
+  ).connection
+  if (connection) {
+    return (
+      !connection.saveData && connection.type !== 'cellular' && connection.effectiveType === '4g'
+    )
+  }
+  return !matchMedia('(pointer: coarse)').matches
+}
+
+/**
+ * Draw the car in the frame from the light model at `src`, and once it has settled, swap in
+ * the full one at `fullSrc` where the connection allows.
+ */
+export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: string) {
   const canvas = document.createElement('canvas')
   const renderer = new WebGLRenderer({ canvas, alpha: true, antialias: true })
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2))
@@ -68,41 +114,45 @@ export async function mountCarModel(frame: HTMLElement, src: string) {
   pmrem.dispose()
 
   const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder)
-  const gltf = await loader.loadAsync(src)
-  const car = gltf.scene
-  const box = new Box3().setFromObject(car)
-  const size = box.getSize(new Vector3())
-  const center = box.getCenter(new Vector3())
-  car.position.sub(new Vector3(center.x, box.min.y, center.z))
+  const { car, size } = await loadCar(loader, src)
   // The body pitches about the ground under its middle; the shadow only follows along.
   const body = new Group().add(car)
   const shadow = createShadow(size.x, size.z)
   scene.add(body, shadow)
 
-  // Far enough that the car fits whichever way it's turned.
+  // Close enough that side on the car spans its frame, and far enough that it still fits
+  // its canvas however it's turned.
   const camera = new PerspectiveCamera(FOV, 2, 0.01, 100)
   const reach = Math.hypot(size.x, size.z) / 2
-  // Aimed low, so the car sits high in its frame with room below for its shadow.
-  const target = new Vector3(0, size.y * 0.28, 0)
-  const controls = new OrbitControls(camera, canvas)
+  // Aimed below its middle, lifting it in the canvas, so that nose on, its bumper nearer and
+  // lower in perspective, it still clears the figures under the frame.
+  const target = new Vector3(0, size.y * 0.32, 0)
+  // The canvas spills over the text around the frame, but only the frame takes a drag, so
+  // what's under the overflow can still be read, selected and clicked.
+  const controls = new OrbitControls(camera, frame)
   controls.target.copy(target)
   controls.enableZoom = false
   controls.enablePan = false
   controls.enableDamping = true
   controls.minPolarAngle = controls.maxPolarAngle = Math.PI / 2 - ELEVATION
   controls.autoRotateSpeed = 60 / TURN_SECONDS
-  canvas.style.touchAction = 'pan-y'
+  frame.style.touchAction = 'pan-y'
   const reduced = matchMedia('(prefers-reduced-motion: reduce)')
+  frame.append(canvas)
 
   const place = () => {
-    const width = frame.clientWidth
-    const height = frame.clientHeight
+    const width = canvas.clientWidth
+    const height = canvas.clientHeight
     renderer.setSize(width, height, false)
     camera.aspect = width / height
     const halfVertical = (FOV * Math.PI) / 360
     const halfHorizontal = Math.atan(Math.tan(halfVertical) * camera.aspect)
-    const distance =
-      Math.max(reach / Math.tan(halfHorizontal), (size.y * 0.9) / Math.tan(halfVertical)) * 1.08
+    // Side on, its length across the frame's width; turned, its diagonal across the canvas,
+    // the nearer end looming larger in perspective; and its height within the canvas.
+    const sideOn = (((size.z / 2) * (width / frame.clientWidth)) / Math.tan(halfHorizontal)) * 1.06
+    const turned = (reach * 1.15) / Math.tan(halfHorizontal)
+    const upright = (size.y * 0.78) / Math.tan(halfVertical)
+    const distance = Math.max(sideOn, turned, upright)
     // Start from the front three-quarter view, the way the car is usually photographed.
     const azimuth = controls.getAzimuthalAngle() || Math.PI / 5
     camera.position.setFromSphericalCoords(distance, Math.PI / 2 - ELEVATION, azimuth).add(target)
@@ -112,6 +162,7 @@ export async function mountCarModel(frame: HTMLElement, src: string) {
   place()
   const resizeObserver = new ResizeObserver(place)
   resizeObserver.observe(frame)
+  resizeObserver.observe(canvas)
 
   // Driving in with the scroll only makes sense while it hasn't begun to.
   const rect = frame.getBoundingClientRect()
@@ -165,12 +216,31 @@ export async function mountCarModel(frame: HTMLElement, src: string) {
     shadow.position.z = body.position.z
   }
 
+  // Once it's settled, the full model takes the light one's place, the swap between two
+  // frames, the car keeping its place and its turn.
+  let current = car
+  let upgrading = !fullSrc || !wantsFullModel()
+  let released = false
+  const upgrade = () => {
+    upgrading = true
+    loadCar(loader, fullSrc!)
+      .then(({ car: full }) => {
+        if (released) return release(full)
+        body.remove(current)
+        release(current)
+        body.add(full)
+        current = full
+      })
+      .catch(() => {})
+  }
+
   let visible = true
   let frameId = 0
   const timer = new Timer()
   const tick = (time: number) => {
     timer.update(time)
     pose(time)
+    if (!upgrading && (stage === 'turning' || stage === 'still')) upgrade()
     controls.update(timer.getDelta())
     renderer.render(scene, camera)
     frameId = visible && !document.hidden ? requestAnimationFrame(tick) : 0
@@ -201,7 +271,6 @@ export async function mountCarModel(frame: HTMLElement, src: string) {
   pose(performance.now())
   controls.update()
   renderer.render(scene, camera)
-  frame.append(canvas)
   frame.classList.add('is-ready')
   frameId = requestAnimationFrame(tick)
 
@@ -212,30 +281,24 @@ export async function mountCarModel(frame: HTMLElement, src: string) {
     document.removeEventListener('visibilitychange', resume)
     reduced.removeEventListener('change', followMotion)
     controls.dispose()
-    scene.traverse((object) => {
-      if (!(object instanceof Mesh)) return
-      object.geometry.dispose()
-      for (const material of [object.material].flat()) {
-        for (const value of Object.values(material)) {
-          if (value instanceof Texture) value.dispose()
-        }
-        material.dispose()
-      }
-    })
+    released = true
+    release(scene)
     environment.dispose()
     renderer.dispose()
     canvas.remove()
+    frame.style.touchAction = ''
   }
 }
 
-/** A soft dark oval under the car, for it to stand on. */
+/** A soft dark oval under the car, for it to stand on, no bigger than its footprint, so that
+ * nose on it doesn't spread out over the text below. */
 function createShadow(width: number, length: number) {
   const canvas = document.createElement('canvas')
   canvas.width = canvas.height = 128
   const context = canvas.getContext('2d')!
   const gradient = context.createRadialGradient(64, 64, 0, 64, 64, 64)
   gradient.addColorStop(0, 'rgb(0 0 0 / 0.42)')
-  gradient.addColorStop(0.55, 'rgb(0 0 0 / 0.22)')
+  gradient.addColorStop(0.6, 'rgb(0 0 0 / 0.26)')
   gradient.addColorStop(1, 'rgb(0 0 0 / 0)')
   context.fillStyle = gradient
   context.fillRect(0, 0, 128, 128)
@@ -244,7 +307,7 @@ function createShadow(width: number, length: number) {
     transparent: true,
     depthWrite: false,
   })
-  const shadow = new Mesh(new PlaneGeometry(width * 1.3, length * 1.1), material)
+  const shadow = new Mesh(new PlaneGeometry(width * 1.1, length * 1.02), material)
   shadow.rotation.x = -Math.PI / 2
   shadow.position.y = 0.001
   return shadow
