@@ -505,3 +505,66 @@ html[data-calendar-mode-transition] .calendar-mode-switch a[data-mode='map'] {
     background: var(--color-inline);
   }
 }
+
+/* The car in 3D (src/car-model.ts), in the year review and in articles. */
+.car-model {
+  position: relative;
+  /* Above the figures after it, which rise in on a transform of their own. */
+  z-index: 1;
+  aspect-ratio: 3;
+  margin: 0 0 1rem;
+  cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  /* The car is drawn bigger than the frame it takes up in the page, spilling up over what's
+     above, down over what's below, and out to the sides as far as the screen has room, for
+     its corners as it turns; only the frame itself takes a drag. */
+  --spill: max(0px, min(15%, (100vw - 100%) / 2 - 1rem));
+
+  & .car-model__still,
+  & canvas {
+    position: absolute;
+    top: -55%;
+    left: calc(-1 * var(--spill));
+    z-index: 1;
+    width: calc(100% + 2 * var(--spill));
+    max-width: none;
+    height: 175%;
+    margin: 0;
+    border-radius: 0;
+    pointer-events: none;
+  }
+
+  /* Out past the frame like the canvas, not held inside it as images are elsewhere. */
+  & .car-model__still {
+    object-fit: contain;
+  }
+
+  /* The model takes over from its still once it has drawn. */
+  & canvas {
+    opacity: 0;
+  }
+
+  &.is-ready canvas {
+    opacity: 1;
+  }
+
+  &.is-ready .car-model__still {
+    opacity: 0;
+  }
+
+  /* In an article it makes room above and below for all it's drawn over, so as not to cover
+     the text: 55% and 20% of its height, a third of its width, which a margin's share is of. */
+  .prose & {
+    margin: calc(100% / 3 * 0.55 + 0.5em) 0 calc(100% / 3 * 0.2 + 0.5em);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .car-model :is(.car-model__still, canvas) {
+    transition: opacity 200ms var(--ease-out);
+  }
+}

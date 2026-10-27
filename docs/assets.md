@@ -24,7 +24,8 @@ Use these object key prefixes:
 - `posts/<post-slug>/<semantic-file>` for article media
 - `site/<file>` for global site assets
 
-The car on the year review's driving section is the "Zeekr 7GT 2026" model by
+The car on the year review's driving section, also drawn in an article by a paragraph
+that is only its still, is the "Zeekr 7GT 2026" model by
 Zifir3d, bought on Superhive (royalty free), repainted in the car's colour and
 exported as glTF with its glass made transmissive and each axle's pair of wheels kept
 as its own node, `front-wheels` and `rear-wheels`, for the page to roll. It comes in two
