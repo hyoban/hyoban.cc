@@ -208,8 +208,9 @@ It's remembered in the browser, and off by default, and a trip played along as i
 is read flies over the same way. With a `carModel`, that car drives the
 road stretches in 3D in place of the car's icon, standing on the terrain and turned the way
 the road goes, about 56 pixels long at zoom 9, growing and shrinking at half the map's
-pace as it zooms, between 40 and 160 pixels; three.js and the model are loaded
-only when the car first drives. The map and the player draw at most 60 frames a second,
+pace as it zooms, between 40 and 160 pixels. Its lamps, the materials that glow, are on
+while the map is lit dark or the clock beside it reads dusk or night (from 18 to 5), and
+off otherwise. three.js and the model are loaded only when the car first drives. The map and the player draw at most 60 frames a second,
 except right after the map is resized, so it doesn't flicker.
 
 ## Words and dates

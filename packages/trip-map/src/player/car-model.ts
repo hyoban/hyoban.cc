@@ -11,6 +11,9 @@ import { getTurn, type Coordinates } from '../geo.ts'
 // moving it costs the map nothing (see route-layers.ts). three.js and the model are
 // fetched only once the car is first asked to show: a page that never flies over
 // doesn't download them.
+//
+// Its lamps, the strips across its nose and its tail, are on when the map round it is dark,
+// and when the trip's clock beside it is at dusk or by night; off by day.
 
 const LAYER_ID = 'trip-map-car'
 /** How long the car is on the screen at `CAR_ZOOM`, in pixels, and its bounds at others. */
@@ -33,6 +36,8 @@ export type Flyover = { car?: CarModel | undefined; isOn: () => boolean }
 type Three = typeof import('three')
 type Loaded = {
   camera: import('three').Camera
+  /** The materials that glow, with how brightly they glow when lit. */
+  lamps: Map<import('three').MeshStandardMaterial, number>
   /** The model's length, front to back, in its own units. */
   length: number
   model: import('three').Object3D
@@ -54,9 +59,9 @@ export type CarModel = ReturnType<typeof createCarModel>
 
 /**
  * `url` is a glTF model of a car, standing on y = 0, its nose to +z; Meshopt compression is
- * understood.
+ * understood. `isDark` tells whether the map is lit dark.
  */
-export function createCarModel(url: string) {
+export function createCarModel(url: string, isDark: () => boolean) {
   let loading: Promise<Loaded | undefined> | undefined
   let loaded: Loaded | undefined
   let renderer: import('three').WebGLRenderer | undefined
@@ -65,6 +70,8 @@ export function createCarModel(url: string) {
   // Where the car is pointing now, easing toward the tip's heading.
   let heading: number | undefined
   let lastTime: number | undefined
+  // The trip's clock at the tip is at dusk or by night.
+  let night = false
 
   function load() {
     loading ??= (async () => {
@@ -79,6 +86,8 @@ export function createCarModel(url: string) {
       const gltf = await new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).parseAsync(data, '')
       const model = gltf.scene
 
+      const lamps = new Map<import('three').MeshStandardMaterial, number>()
+
       // Glass that lets the inside show through takes a pass of its own, which can't be
       // made in the map's context; at this size, tinted glass that reflects reads the same.
       model.traverse((object) => {
@@ -92,6 +101,11 @@ export function createCarModel(url: string) {
             material.color.set(0x14171a)
             material.transparent = true
             material.opacity = 0.82
+          } else if (
+            material instanceof three.MeshStandardMaterial &&
+            material.emissive.getHex() !== 0
+          ) {
+            lamps.set(material, material.emissiveIntensity)
           }
         }
       })
@@ -107,6 +121,7 @@ export function createCarModel(url: string) {
       scene.add(turntable)
       loaded = {
         camera: new three.Camera(),
+        lamps,
         length: box.getSize(new three.Vector3()).z,
         model: turntable,
         RoomEnvironment,
@@ -180,7 +195,13 @@ export function createCarModel(url: string) {
           ? tip.heading
           : heading + getTurn(heading, tip.heading) * (1 - Math.exp(-seconds / TURN_SETTLE))
 
-      const { camera, length, model, scene, scratch, standUp } = loaded
+      const { camera, lamps, length, model, scene, scratch, standUp } = loaded
+      const lit = night || isDark()
+
+      for (const [material, intensity] of lamps) {
+        material.emissiveIntensity = lit ? intensity : 0
+      }
+
       const [longitude, latitude] = tip.coordinates
       const ground = map.queryTerrainElevation([longitude, latitude]) ?? 0
       const at = mapboxgl.MercatorCoordinate.fromLngLat([longitude, latitude], ground)
@@ -262,10 +283,21 @@ export function createCarModel(url: string) {
     }
   }
 
+  /** Lights its lamps, or not, by whether the trip's clock at the tip is at dusk or by night. */
+  function setNight(next: boolean) {
+    if (next !== night) {
+      night = next
+
+      if (tip && loaded && renderer) {
+        added?.map.triggerRepaint()
+      }
+    }
+  }
+
   /** Whether the car is on the map now. */
   function isShowing() {
     return Boolean(tip && loaded && renderer)
   }
 
-  return { add, isShowing, remove, set }
+  return { add, isShowing, remove, set, setNight }
 }

@@ -76,6 +76,8 @@ export type TripPlayerOptions = {
   getStop?: (() => string | undefined) | undefined
   /** A car to drive the route while flying over: see `TripMapOptions.carModel`. */
   carModel?: string | undefined
+  /** Whether the map is lit dark, which the car's lamps go by; the page's scheme by default. */
+  isMapDark?: (() => boolean) | undefined
   /** The trip whose data the page already carries, to play without a fetch. */
   inlineTrip?: TripData | undefined
   messages: Messages
@@ -280,7 +282,12 @@ export function createTripPlayer(options: TripPlayerOptions) {
   headClock.append(headClockDate, headClockTime)
 
   const flyoverMode: Flyover = {
-    car: options.carModel ? createCarModel(options.carModel) : undefined,
+    car: options.carModel
+      ? createCarModel(
+          options.carModel,
+          options.isMapDark ?? (() => matchMedia('(prefers-color-scheme: dark)').matches),
+        )
+      : undefined,
     isOn: () => flyover,
   }
   const drawer = createRouteDrawer({

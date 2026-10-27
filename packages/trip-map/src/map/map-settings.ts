@@ -59,8 +59,11 @@ const LIGHT_HOURS: readonly (readonly [hour: number, light: MapLightPreset])[] =
 
 /** The time of day `date` falls in on its own clock. */
 export function getLightAtTime(date: Date): MapLightPreset {
-  const hour = date.getHours()
+  return getLightAtHour(date.getHours())
+}
 
+/** The time of day the hour `hour` (0 to 23) falls in. */
+export function getLightAtHour(hour: number): MapLightPreset {
   return LIGHT_HOURS.findLast(([start]) => hour >= start)?.[1] ?? LIGHT_HOURS.at(-1)![1]
 }
 
