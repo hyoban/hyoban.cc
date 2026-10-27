@@ -506,13 +506,19 @@ html[data-calendar-mode-transition] .calendar-mode-switch a[data-mode='map'] {
   }
 }
 
-/* The car in 3D (src/car-model.ts), in the year review and in articles. */
+/* The car in 3D (src/car-model.ts), in the year review and in articles, the same in both:
+   out of the column to the year review's widest, as far as the screen has room, with room
+   made above and below for all it's drawn over, so as not to cover the text: 55% and 20% of
+   its height, a third of its width. */
 .car-model {
+  --width: min(56rem, 100vw - 2rem);
   position: relative;
   /* Above the figures after it, which rise in on a transform of their own. */
   z-index: 1;
+  width: var(--width);
   aspect-ratio: 3;
-  margin: 0 0 1rem;
+  margin: calc(var(--width) / 3 * 0.55 + 0.5em) calc((100% - var(--width)) / 2)
+    calc(var(--width) / 3 * 0.2 + 0.5em);
   cursor: grab;
   user-select: none;
   -webkit-touch-callout: none;
@@ -565,16 +571,6 @@ html[data-calendar-mode-transition] .calendar-mode-switch a[data-mode='map'] {
     &:not(.is-failed) .car-model__still {
       opacity: 0;
     }
-  }
-
-  /* In an article it breaks out of the column to the year review's width, as far as the
-     screen has room, and makes room above and below for all it's drawn over, so as not to
-     cover the text: 55% and 20% of its height, a third of its width. */
-  .prose & {
-    --width: min(56rem, 100vw - 2rem);
-    width: var(--width);
-    margin: calc(var(--width) / 3 * 0.55 + 0.5em) calc((100% - var(--width)) / 2)
-      calc(var(--width) / 3 * 0.2 + 0.5em);
   }
 }
 
