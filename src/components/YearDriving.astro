@@ -772,6 +772,18 @@ const spendingTiles: Tile[] = [
           animation-range: entry 50% cover 45%;
         }
 
+        /* Side by side, the halves come up together: the first is uncovered in the first
+           half of the way and the second after it, one sweep across the year. */
+        @media (width >= 40rem) {
+          & [data-half='0'] .year-driving__grid {
+            animation-name: year-driving-wipe-first;
+          }
+
+          & [data-half='1'] .year-driving__grid {
+            animation-name: year-driving-wipe-second;
+          }
+        }
+
         & .year-driving__hours {
           view-timeline: --hours;
         }
@@ -812,6 +824,26 @@ const spendingTiles: Tile[] = [
   /* Both ends spelled out: an inset() can't ease into none, it would snap halfway. */
   @keyframes year-driving-wipe {
     from {
+      clip-path: inset(0 100% 0 0);
+    }
+    to {
+      clip-path: inset(0 0 0 0);
+    }
+  }
+
+  @keyframes year-driving-wipe-first {
+    from {
+      clip-path: inset(0 100% 0 0);
+    }
+    50%,
+    to {
+      clip-path: inset(0 0 0 0);
+    }
+  }
+
+  @keyframes year-driving-wipe-second {
+    from,
+    50% {
       clip-path: inset(0 100% 0 0);
     }
     to {
