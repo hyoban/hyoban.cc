@@ -132,19 +132,15 @@ function release(root: Object3D) {
 
 /**
  * Whether to fetch the full model after the light one: not when the reader asks to save
- * data or is on a mobile network, nor on a touch screen, whose browser may not say.
+ * data or is on a mobile network, nor on a touch screen, whose browser may not say. The
+ * browser's guess at the connection's speed is no guide: it goes by the round trip, long
+ * from China to the image origin however fast the line.
  */
 function wantsFullModel() {
   const connection = (
-    navigator as Navigator & {
-      connection?: { saveData?: boolean; type?: string; effectiveType?: string }
-    }
+    navigator as Navigator & { connection?: { saveData?: boolean; type?: string } }
   ).connection
-  if (connection) {
-    return (
-      !connection.saveData && connection.type !== 'cellular' && connection.effectiveType === '4g'
-    )
-  }
+  if (connection) return !connection.saveData && connection.type !== 'cellular'
   return !matchMedia('(pointer: coarse)').matches
 }
 
