@@ -39,17 +39,18 @@ import { createFloor, createTunnel, reflectStreaks, smoothstep } from './car-mod
 // settles back; after that the scroll leaves it be. Under reduced motion, or when it's
 // already in view by the time it has loaded, it's simply there.
 //
-// Any press sets its wheels rolling. A drag begun straight away only turns it in its place;
-// held a moment first, it speeds off, after Xiaomi SU7's showroom at gamemcu.com/su7, and
-// from then on a drag swings it round as it goes: the page goes dark around it and the car
-// stands on a glossy black floor, its wheels spin up, the camera closes in as the view
-// widens so the car keeps about its size while the perspective stretches, and it shakes a
-// little; dragged up or down, the view tilts with it; once it's going, light streaks rush
-// past through a tunnel, glancing off its paint and the floor. Let go, the streaks fall away
-// first and the rest eases back after them. A press the page takes back to scroll ends it
-// at once. The canvas covers the screen for as long as that lasts, the car gliding to its
-// middle and back to its place as it goes. Not under reduced motion. The streaks and the floor
-// are in src/car-model-speed.ts.
+// Any press sets its wheels rolling and draws the camera in, letting it back out once it's
+// let go. A drag begun straight away only turns it in its place; held a moment first, it
+// speeds off, after Xiaomi SU7's showroom at gamemcu.com/su7, and from then on a drag swings
+// it round as it goes: the page goes dark around it and the car stands on a glossy black
+// floor, its wheels spin up, the camera closes in as the view widens so the car keeps about
+// its size while the perspective stretches, and it shakes a little; dragged up or down, the
+// view tilts with it; once it's going, light streaks rush past through a tunnel, glancing
+// off its paint and the floor. Let go, the streaks fall away first and the rest eases back
+// after them. A press the page takes back to scroll ends it at once. The canvas covers the
+// screen for as long as that lasts, the car gliding to its middle and back to its place as
+// it goes. Not under reduced motion. The streaks and the floor are in
+// src/car-model-speed.ts.
 
 /** How far above the car the camera looks down, from the horizon. */
 const ELEVATION = (14 * Math.PI) / 180
@@ -73,6 +74,9 @@ const HOLD_MS = 150
 const HOLD_SLOP = 6
 const ENGAGE = 0.5
 const ROLL = 3
+/** How much nearer the camera comes for as long as the car's pressed, drawing back once it's
+ * let go, as the SU7's does, so that even a click is felt. */
+const PUSH_IN = 0.12
 /** Seconds the speed takes to come up, and to fall away once it's let go. */
 const SPEED_UP = 0.7
 const SLOW_DOWN = 0.45
@@ -458,7 +462,7 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
     setPolar = Math.PI / 2 - elevation
     camera.position
       .setFromSphericalCoords(
-        distance * kept * (1 + HOLD_BACK * eased),
+        distance * kept * (1 + HOLD_BACK * eased) * (1 - PUSH_IN * roll),
         Math.PI / 2 - elevation,
         controls.getAzimuthalAngle(),
       )
@@ -490,7 +494,8 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
     const going = held && !turning && performance.now() - pressedAt.time > HOLD_MS
     speed += ((going ? 1 : 0) - speed) * (1 - Math.exp(-delta / (going ? SPEED_UP : SLOW_DOWN)))
     if (!going && speed < 0.002) speed = 0
-    // Any press sets the wheels rolling, a drag that only turns the car as well.
+    // Any press sets the wheels rolling and draws the camera in, a drag that only turns the
+    // car as well.
     roll += ((held ? 1 : 0) - roll) * (1 - Math.exp(-delta / (held ? SPEED_UP : SLOW_DOWN)))
     rush += (speed - rush) * (1 - Math.exp(-delta * (speed > rush ? RUSH_UP : RUSH_DOWN)))
     if (speed > 0 && !speeding) setSpeeding(true)
@@ -530,6 +535,11 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
     if (speeding) {
       frameSpeed(time)
       tunnel.follow(camera.position)
+    } else {
+      camera.position
+        .sub(target)
+        .setLength(distance * (1 - PUSH_IN * roll))
+        .add(target)
     }
     renderer.render(scene, camera)
     frameId = visible && !document.hidden ? requestAnimationFrame(tick) : 0
