@@ -1,36 +1,58 @@
 import {
+  BackSide,
   Box3,
   CanvasTexture,
+  Color,
+  CubeCamera,
   Group,
+  HalfFloatType,
   Mesh,
   Object3D,
   MeshBasicMaterial,
+  MeshPhysicalMaterial,
   NeutralToneMapping,
   PMREMGenerator,
   PerspectiveCamera,
   PlaneGeometry,
   SRGBColorSpace,
   Scene,
+  SphereGeometry,
   Texture,
   Timer,
+  Vector2,
   Vector3,
+  WebGLCubeRenderTarget,
   WebGLRenderer,
 } from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
+import { createFloor, createTunnel, smoothstep } from './car-model-speed.ts'
 
 // The car turning slowly on its own shadow, under a studio's light. It can be swung round
 // by dragging sideways, but not zoomed or tipped over, and a vertical drag still scrolls the
 // page. It draws nothing while out of sight.
 //
 // The first time it comes into view it drives in with the scroll: it rolls forward as the
-// page moves on and back as it moves back, its wheels rolling as it goes, coming to a stop once its frame is just past
-// the middle of the screen. There its nose dips as it brakes and settles back, and only then
-// does it begin to turn, gathering speed; after that the scroll leaves it be. Under reduced
-// motion, or when it's already in view by the time it has loaded, it's simply there,
-// standing still under reduced motion.
+// page moves on and back as it moves back, its wheels rolling as it goes, coming to a stop
+// once its frame is just past the middle of the screen. There its nose dips as it brakes and
+// settles back, and only then does it begin to turn, gathering speed; after that the scroll
+// leaves it be. Once it's touched, the turn eases to a stop and the car stays as it's left, a
+// drag coasting to rest. Under reduced motion, or when it's already in view by the time it
+// has loaded, it's simply there, standing still under reduced motion.
+//
+// Any press sets its wheels rolling. A drag begun straight away only turns it in its place;
+// held a moment first, it speeds off, after Xiaomi SU7's showroom at gamemcu.com/su7, and
+// from then on a drag swings it round as it goes: the page goes dark around it and the car
+// stands on a glossy black floor, its wheels spin up, the camera closes in as the view
+// widens so the car keeps about its size while the perspective stretches, and it shakes a
+// little; dragged up or down, the view tilts with it; once it's going, light streaks rush
+// past through a tunnel, glancing off its paint and the floor. Let go, the streaks fall away
+// first and the rest eases back after them. A press the page takes back to scroll ends it
+// at once. The canvas covers the screen for as long as that lasts, the car gliding to its
+// middle and back to its place as it goes. Not under reduced motion. The streaks and the floor
+// are in src/car-model-speed.ts.
 
 /** Seconds for a whole turn on its own. */
 const TURN_SECONDS = 40
@@ -50,6 +72,41 @@ const SETTLE_DECAY_MS = 180
 const SETTLE_PERIOD_MS = 560
 /** How long the turn takes to come up to speed once it's settled. */
 const RAMP_MS = 2000
+/** How long the turn takes to come to a stop once the car's been touched. */
+const STOP_MS = 1500
+
+/** How long a press must stay put before the car speeds off, how far it may wander in that
+ * time and until the speed has come up this far, before it's taken as a drag that only
+ * turns the car instead, and how fast the wheels roll for any press. */
+const HOLD_MS = 150
+const HOLD_SLOP = 6
+const ENGAGE = 0.5
+const ROLL = 3
+/** Seconds the speed takes to come up, and to fall away once it's let go. */
+const SPEED_UP = 0.7
+const SLOW_DOWN = 0.45
+/** How fast the streaks follow the speed up, and how much faster they fall away. */
+const RUSH_UP = 2
+const RUSH_DOWN = 6
+/** How many degrees the view widens at full speed, and how much farther back the camera
+ * stays than would keep the car its size, so its nearer side doesn't loom out of the frame. */
+const SPEED_FOV = 12
+const HOLD_BACK = 0.04
+/** How far above the car the camera looks down at full speed, and how low and high a
+ * vertical drag may then tilt it. */
+const SPEED_ELEVATION = (3 * Math.PI) / 180
+const TILT_LOW = 0
+const TILT_HIGH = (20 * Math.PI) / 180
+/** How far the camera shakes at full speed, in pixels. */
+const SHAKE = 2.5
+/** How dark the page goes, and how much of the studio's light the car loses: most, keeping
+ * about a tenth as the SU7's does, so it's still plainly seen. */
+const NIGHT = 0.92
+const VEIL = 0.9
+/** How much of what's seen through the glass it holds back at full speed. */
+const TINT = 0.92
+/** How rough the paint is at full speed, polished from its satin. */
+const POLISH = 0.18
 
 /** easeOutCubic: the scroll's distance laid out so the car slows as it nears its stop. */
 const easeOut = cubicBezier(0.33, 1, 0.68, 1)
@@ -144,7 +201,8 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
 
   const scene = new Scene()
   const pmrem = new PMREMGenerator(renderer)
-  const environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture
+  const room = new RoomEnvironment()
+  const environment = pmrem.fromScene(room, 0.04).texture
   scene.environment = environment
   pmrem.dispose()
 
@@ -159,7 +217,7 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
 
   // Close enough that side on the car spans its frame, and far enough that it still fits
   // its canvas however it's turned.
-  const camera = new PerspectiveCamera(FOV, 2, 0.01, 100)
+  const camera = new PerspectiveCamera(FOV, 2, 0.01, 400)
   const reach = Math.hypot(size.x, size.z) / 2
   // Aimed below its middle, lifting it in the canvas, so that nose on, its bumper nearer and
   // lower in perspective, it still clears the figures under the frame.
@@ -176,11 +234,16 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
   frame.style.touchAction = 'pan-y'
   const reduced = matchMedia('(prefers-reduced-motion: reduce)')
   frame.append(canvas)
+  // The still keeps the canvas's place in the page while the canvas is out covering the
+  // screen, so the car is laid out from it.
+  const home = frame.querySelector<HTMLElement>('.car-model__still') ?? canvas
+  let speeding = false
+  let distance = 0
 
   const place = () => {
-    const width = canvas.clientWidth
-    const height = canvas.clientHeight
-    renderer.setSize(width, height, false)
+    const width = home.clientWidth
+    const height = home.clientHeight
+    if (!speeding) renderer.setSize(width, height, false)
     camera.aspect = width / height
     const halfVertical = (FOV * Math.PI) / 360
     const halfHorizontal = Math.atan(Math.tan(halfVertical) * camera.aspect)
@@ -189,7 +252,7 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
     const sideOn = (((size.z / 2) * (width / frame.clientWidth)) / Math.tan(halfHorizontal)) * 1.06
     const turned = (reach * 1.15) / Math.tan(halfHorizontal)
     const upright = (size.y * 0.78) / Math.tan(halfVertical)
-    const distance = Math.max(sideOn, turned, upright)
+    distance = Math.max(sideOn, turned, upright)
     // Start from the front three-quarter view, the way the car is usually photographed.
     const azimuth = controls.getAzimuthalAngle() || Math.PI / 5
     camera.position.setFromSphericalCoords(distance, Math.PI / 2 - ELEVATION, azimuth).add(target)
@@ -199,7 +262,7 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
   place()
   const resizeObserver = new ResizeObserver(place)
   resizeObserver.observe(frame)
-  resizeObserver.observe(canvas)
+  resizeObserver.observe(home)
 
   // Driving in with the scroll only makes sense while it hasn't begun to.
   const rect = frame.getBoundingClientRect()
@@ -209,6 +272,8 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
       ? 'turning'
       : 'scrolling'
   let stageStart = 0
+  // When it was first touched, after which its turn eases to a stop and it's left as it's put.
+  let touchedAt = 0
   const run = size.z * DRIVE_IN
 
   /** How far along the run in the scroll has it. */
@@ -244,16 +309,17 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
       }
     }
     if (stage === 'turning') {
-      controls.autoRotate = true
       const ramp = stageStart ? Math.min((now - stageStart) / RAMP_MS, 1) : 1
-      controls.autoRotateSpeed = (60 / TURN_SECONDS) * easeInOut(ramp)
+      const stopping = touchedAt ? Math.min((now - touchedAt) / STOP_MS, 1) : 0
+      controls.autoRotate = stopping < 1
+      controls.autoRotateSpeed = (60 / TURN_SECONDS) * easeInOut(ramp) * (1 - easeInOut(stopping))
     } else {
       controls.autoRotate = false
     }
     shadow.position.z = body.position.z
-    // Its wheels turned as far as it has rolled, without slipping.
+    // Its wheels turned as far as it has rolled, without slipping, and spun up at speed.
     for (const axle of current.wheels.axles) {
-      axle.rotation.x = (body.position.z + run) / current.wheels.radius
+      axle.rotation.x = (body.position.z + run) / current.wheels.radius + spin
     }
   }
 
@@ -275,14 +341,219 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
       .catch(() => {})
   }
 
+  // At speed the paint takes its light from the studio as a cube camera sees it, darkened
+  // behind a veil and crossed by the tunnel's streaks, instead of from the studio alone.
+  const floorSize = reach * 14
+  const tunnel = createTunnel(camera.position.distanceTo(target), size, floorSize / 2)
+  const reflections = new WebGLCubeRenderTarget(128, { type: HalfFloatType })
+  const cubeCamera = new CubeCamera(0.05, 400, reflections)
+  const veil = new Mesh(
+    new SphereGeometry(0.3),
+    new MeshBasicMaterial({
+      color: 0x000000,
+      side: BackSide,
+      transparent: true,
+      depthTest: false,
+      depthWrite: false,
+    }),
+  )
+  // The studio is lowered beneath its camera, at the origin; the veil wraps the camera, and
+  // the streaks run round it as round the car.
+  veil.position.y = -room.position.y
+  tunnel.reflection.position.y = -room.position.y - size.y * 0.4
+  room.add(veil, tunnel.reflection)
+  const floor = createFloor(floorSize)
+  scene.add(tunnel.streaks, floor.mesh)
+
+  let held = false
+  let pressedAt = { x: 0, y: 0, time: 0 }
+  let turning = false
+  let speed = 0
+  let roll = 0
+  let rush = 0
+  let spin = 0
+  const letGo = () => {
+    held = false
+  }
+  const press = (event: PointerEvent) => {
+    touchedAt ||= performance.now()
+    if (reduced.matches || !event.isPrimary || event.button !== 0) return
+    held = true
+    turning = false
+    pressedAt = { x: event.clientX, y: event.clientY, time: performance.now() }
+  }
+  // A press that soon moves is a drag to turn the car, and leaves it in its place; once it's
+  // well under way, a drag only swings it round as it goes.
+  const wander = (event: PointerEvent) => {
+    if (!held || turning || speed >= ENGAGE) return
+    const moved = Math.hypot(event.clientX - pressedAt.x, event.clientY - pressedAt.y)
+    if (moved > HOLD_SLOP) turning = true
+  }
+  // A swipe up or down the car is the page's to scroll, which it takes back from the car;
+  // the car stops at once rather than flashing past.
+  const takenBack = () => {
+    held = false
+    speed = rush = 0
+  }
+  // A long press on a phone would otherwise bring up its menu.
+  const holdMenu = (event: Event) => {
+    if (held) event.preventDefault()
+  }
+  frame.addEventListener('pointerdown', press)
+  frame.addEventListener('pointermove', wander)
+  frame.addEventListener('pointerup', letGo)
+  frame.addEventListener('pointercancel', takenBack)
+  frame.addEventListener('contextmenu', holdMenu)
+  addEventListener('blur', letGo)
+
+  // How far above the car the camera looks at speed, and the angle it was last set to, from
+  // which a drag's tilt is told.
+  let tilt = SPEED_ELEVATION
+  let setPolar = 0
+
+  // Glass that's seen through shows what's behind it over half-white wherever the canvas is
+  // see-through, so at night it's tinted dark, as a car's glass is, its reflections kept.
+  const glass = new Map<MeshPhysicalMaterial, Color>()
+  // The paint, pale and satin, is polished up so the streaks show in it sharply.
+  const paint = new Map<MeshPhysicalMaterial, number>()
+
+  /** Out over the whole screen, or back in its place in the page. */
+  const setSpeeding = (on: boolean) => {
+    speeding = on
+    canvas.classList.toggle('car-model-speeding', on)
+    if (on) {
+      document.body.append(canvas)
+      // Up and down, too, while it speeds.
+      controls.minPolarAngle = Math.PI / 2 - TILT_HIGH
+      controls.maxPolarAngle = Math.PI / 2 - TILT_LOW
+      setPolar = controls.getPolarAngle()
+      body.traverse((object) => {
+        if (!(object instanceof Mesh)) return
+        for (const material of [object.material].flat()) {
+          if (!(material instanceof MeshPhysicalMaterial)) continue
+          if (material.transmission > 0) {
+            glass.set(material, material.color.clone())
+          } else if (
+            material.metalness < 0.5 &&
+            material.roughness > 0.2 &&
+            material.roughness < 0.45 &&
+            material.color.getHSL({ h: 0, s: 0, l: 0 }).l > 0.5
+          ) {
+            paint.set(material, material.roughness)
+          }
+        }
+      })
+    } else {
+      for (const [material, color] of glass) material.color.copy(color)
+      for (const [material, roughness] of paint) material.roughness = roughness
+      glass.clear()
+      paint.clear()
+      frame.append(canvas)
+      controls.minPolarAngle = controls.maxPolarAngle = Math.PI / 2 - ELEVATION
+      tilt = SPEED_ELEVATION
+      camera.fov = FOV
+      renderer.setClearColor(0x000000, 0)
+      scene.environment = environment
+      place()
+    }
+  }
+
+  /** The view at speed: widened with the camera drawn in to match, drawn across the screen
+   * with the car gliding from where it stood in the page to the middle of it, room all
+   * round it for the streaks, and shaken. */
+  const drawn = new Vector2()
+  const frameSpeed = (time: number) => {
+    const width = canvas.clientWidth
+    const height = canvas.clientHeight
+    renderer.getSize(drawn)
+    if (drawn.x !== width || drawn.y !== height) {
+      renderer.setSize(width, height, false)
+      floor.fit(renderer.getDrawingBufferSize(drawn))
+    }
+    const eased = easeInOut(speed)
+    camera.fov = FOV + SPEED_FOV * eased
+    const halfTan = Math.tan((camera.fov * Math.PI) / 360)
+    const kept = Math.tan((FOV * Math.PI) / 360) / halfTan
+    // Lowered nearly level, as the SU7's is, so the streaks rush in from all round rather than
+    // all from above, and raised or lowered from there by as much as it's been dragged since.
+    tilt = Math.min(Math.max(tilt + setPolar - controls.getPolarAngle(), TILT_LOW), TILT_HIGH)
+    const elevation = ELEVATION + (tilt - ELEVATION) * eased
+    setPolar = Math.PI / 2 - elevation
+    camera.position
+      .setFromSphericalCoords(
+        distance * kept * (1 + HOLD_BACK * eased),
+        Math.PI / 2 - elevation,
+        controls.getAzimuthalAngle(),
+      )
+      .add(target)
+    const stood = home.getBoundingClientRect()
+    const left = stood.left + ((width - stood.width) / 2 - stood.left) * eased
+    // Aimed low on the car, the view is set lower still while it's near level, so the car's
+    // body sits in the middle; looking down on it, its roof does that itself.
+    const level = 1 - Math.max(tilt - SPEED_ELEVATION, 0) / (TILT_HIGH - SPEED_ELEVATION)
+    const lower = stood.height * 0.15 * level
+    const top = stood.top + ((height - stood.height) / 2 + lower - stood.top) * eased
+    const halfHeight = camera.near * halfTan
+    const perPixel = (2 * halfHeight) / stood.height
+    const shake = SHAKE * speed * perPixel
+    const x = -halfHeight * camera.aspect - left * perPixel + wave(time) * shake
+    const y = halfHeight + top * perPixel + wave(time + 5000) * shake
+    camera.projectionMatrix.makePerspective(
+      x,
+      x + width * perPixel,
+      y,
+      y - height * perPixel,
+      camera.near,
+      camera.far,
+    )
+    camera.projectionMatrixInverse.copy(camera.projectionMatrix).invert()
+  }
+
+  const drive = (time: number, delta: number) => {
+    const going = held && !turning && performance.now() - pressedAt.time > HOLD_MS
+    speed += ((going ? 1 : 0) - speed) * (1 - Math.exp(-delta / (going ? SPEED_UP : SLOW_DOWN)))
+    if (!going && speed < 0.002) speed = 0
+    // Any press sets the wheels rolling, a drag that only turns the car as well.
+    roll += ((held ? 1 : 0) - roll) * (1 - Math.exp(-delta / (held ? SPEED_UP : SLOW_DOWN)))
+    rush += (speed - rush) * (1 - Math.exp(-delta * (speed > rush ? RUSH_UP : RUSH_DOWN)))
+    if (speed > 0 && !speeding) setSpeeding(true)
+    if (speed === 0 && speeding) setSpeeding(false)
+    // Turned only a few degrees a frame, well short of the gap between spokes, so the rims
+    // roll rather than strobe.
+    spin += Math.max(roll * ROLL, speed * 5) * delta
+    // The streaks only come once it's going.
+    tunnel.advance(speed, smoothstep(0.15, 0.8, rush), delta)
+    floor.mesh.visible = speeding
+    floor.opacity = speed
+    // A shiver through the body at speed.
+    body.position.y = speed * size.y * 0.003 * Math.sin(time / 23)
+    if (!speeding) return
+    renderer.setClearColor(0x000000, NIGHT * speed)
+    for (const [material, color] of glass) {
+      material.color.copy(color).multiplyScalar(1 - TINT * speed)
+    }
+    for (const [material, roughness] of paint) {
+      material.roughness = roughness + (POLISH - roughness) * speed
+    }
+    veil.material.opacity = VEIL * speed
+    cubeCamera.update(renderer, room)
+    scene.environment = reflections.texture
+  }
+
   let visible = true
   let frameId = 0
   const timer = new Timer()
   const tick = (time: number) => {
     timer.update(time)
+    const delta = timer.getDelta()
+    drive(time, delta)
     pose(time)
     if (!upgrading && (stage === 'turning' || stage === 'still')) upgrade()
-    controls.update(timer.getDelta())
+    controls.update(delta)
+    if (speeding) {
+      frameSpeed(time)
+      tunnel.follow(camera.position)
+    }
     renderer.render(scene, camera)
     frameId = visible && !document.hidden ? requestAnimationFrame(tick) : 0
   }
@@ -298,6 +569,7 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
   document.addEventListener('visibilitychange', resume)
   const followMotion = () => {
     if (reduced.matches) {
+      letGo()
       stage = 'still'
       body.position.z = 0
       body.rotation.x = 0
@@ -321,14 +593,30 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
     sightObserver.disconnect()
     document.removeEventListener('visibilitychange', resume)
     reduced.removeEventListener('change', followMotion)
+    letGo()
+    frame.removeEventListener('pointerdown', press)
+    frame.removeEventListener('pointermove', wander)
+    frame.removeEventListener('pointerup', letGo)
+    frame.removeEventListener('pointercancel', takenBack)
+    frame.removeEventListener('contextmenu', holdMenu)
+    removeEventListener('blur', letGo)
     controls.dispose()
     released = true
+    floor.mesh.dispose()
     release(scene)
+    release(room)
+    room.dispose()
+    reflections.dispose()
     environment.dispose()
     renderer.dispose()
     canvas.remove()
     frame.style.touchAction = ''
   }
+}
+
+/** A sum of out-of-step waves, wandering without repeating, for the camera to shake by. */
+function wave(at: number) {
+  return Math.sin(at * 0.013) + 0.5 * Math.sin(at * 0.029 + 1.3) + 0.25 * Math.sin(at * 0.061 + 2.1)
 }
 
 /** A soft dark oval under the car, for it to stand on, no bigger than its footprint, so that
