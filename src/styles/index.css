@@ -514,6 +514,8 @@ html[data-calendar-mode-transition] .calendar-mode-switch a[data-mode='map'] {
   aspect-ratio: 3;
   margin: 0 0 1rem;
   cursor: grab;
+  user-select: none;
+  -webkit-touch-callout: none;
 
   &:active {
     cursor: grabbing;
@@ -556,11 +558,25 @@ html[data-calendar-mode-transition] .calendar-mode-switch a[data-mode='map'] {
     opacity: 0;
   }
 
-  /* In an article it makes room above and below for all it's drawn over, so as not to cover
-     the text: 55% and 20% of its height, a third of its width, which a margin's share is of. */
+  /* In an article it breaks out of the column to the year review's width, as far as the
+     screen has room, and makes room above and below for all it's drawn over, so as not to
+     cover the text: 55% and 20% of its height, a third of its width. */
   .prose & {
-    margin: calc(100% / 3 * 0.55 + 0.5em) 0 calc(100% / 3 * 0.2 + 0.5em);
+    --width: min(56rem, 100vw - 2rem);
+    width: var(--width);
+    margin: calc(var(--width) / 3 * 0.55 + 0.5em) calc((100% - var(--width)) / 2)
+      calc(var(--width) / 3 * 0.2 + 0.5em);
   }
+}
+
+/* Held down, the car's canvas leaves its frame to cover the screen while it speeds off. */
+canvas.car-model-speeding {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
 }
 
 @media (prefers-reduced-motion: no-preference) {
