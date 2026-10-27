@@ -1,5 +1,5 @@
 import mapboxgl, { type Map as MapboxMap, type PaddingOptions } from 'mapbox-gl'
-import type { Coordinates } from '../geo.ts'
+import { getHeading, getTurn, type Coordinates } from '../geo.ts'
 import { getFramingPitch, getMapPitch } from '../map/basemap.ts'
 
 // One calm camera for the whole playback. While the route is drawn, the camera keeps
@@ -11,24 +11,48 @@ import { getFramingPitch, getMapPitch } from '../map/basemap.ts'
 // The camera leans back as far as the map does at the zoom it's headed for, at the
 // zoom's pace: the closer, the further.
 //
+// Flying over, the camera following the tip comes lower and leans further back, turned
+// the way the drive goes, so the mountains stand up ahead of it; it stays out as far as
+// Standard's terrain still rises (it flattens past zoom 12). It faces from where each
+// drive sets off to where it ends, once for the drive, and turns slowly: following
+// every bend of the road would swing the whole map about, which makes people dizzy.
+// The views of the whole trip stay as they are, facing north.
+//
 // All run on critically damped springs: motion starts from rest, never overshoots,
 // and a new target mid-move bends the motion instead of jolting it.
 
 type Mercator = { x: number; y: number }
 
-// Seconds to settle at 1× playback. The centre keeps up closely; the zoom drifts.
+// Seconds to settle at 1× playback. The centre keeps up closely; the zoom drifts; the
+// heading swings round slower still, at the same pace whatever the playback speed.
 const CENTER_SETTLE = 0.8
 const ZOOM_SETTLE = 2.6
+const BEARING_SETTLE = 5
 // A tip moving further than this in one frame jumped (a skip), rather than drove.
 const JUMP_PIXELS = 160
+// Flying over: this much closer than the drive would be framed, no closer than
+// `FLYOVER_MAX_ZOOM`, leaning back this far, the zoom drifting slower still between
+// drives. Coming closer makes the land rush past faster, and leaning further shows
+// ever more of the map up to the horizon: both are harder to watch and have the map
+// fetch and draw more tiles every second.
+const FLYOVER_ZOOM_IN = 0.5
+const FLYOVER_MAX_ZOOM = 12
+const FLYOVER_PITCH = 54
+const FLYOVER_ZOOM_SETTLE = 4
+// A drive that doesn't get this far, as a share of the screen at its zoom, leaves the
+// camera facing as it was.
+const HEADING_SPAN = 0.15
 
 export function createCamera({
+  getFlyover = () => false,
   getFocus,
   getMap,
   getPadding,
   getSpeed,
   reducedMotion,
 }: {
+  /** Whether to fly over the route while following it. */
+  getFlyover?: (() => boolean) | undefined
   /** Where the camera should centre while following: the route's tip. */
   getFocus: () => Coordinates | undefined
   getMap: () => MapboxMap | undefined
@@ -48,6 +72,11 @@ export function createCamera({
   let zoomVelocity = 0
   let pitch: number | undefined
   let pitchVelocity = 0
+  // Only while the camera has turned the map: left alone otherwise, as the viewer set it.
+  let bearing: number | undefined
+  let bearingVelocity = 0
+  // Which way the drive being followed goes, in degrees from north.
+  let heading: number | undefined
   let focusVelocity: Mercator = { x: 0, y: 0 }
   let lastFocus: Mercator | undefined
   let snap = false
@@ -104,9 +133,27 @@ export function createCamera({
    */
   function follow(stretch: readonly Coordinates[], maxZoom: number) {
     setShot({ coordinates: stretch, maxZoom, mode: 'follow' })
+
+    const start = stretch[0]
+    const end = stretch.at(-1)
+    const map = getMap()
+
+    if (start && end && map && target) {
+      const from = toMercator(mapboxgl.LngLat.convert([...start]))
+      const to = toMercator(mapboxgl.LngLat.convert([...end]))
+      const span = Math.hypot(to.x - from.x, to.y - from.y) * 512 * 2 ** target.zoom
+      const { clientHeight, clientWidth } = map.getCanvas()
+
+      if (span > HEADING_SPAN * Math.min(clientWidth, clientHeight)) {
+        heading = getHeading(start, end)
+      }
+    }
   }
 
-  /** Steps the camera. Call once per animation frame. */
+  /**
+   * Steps the camera. Call once per animation frame. Whether it moved the map: false
+   * once it has settled.
+   */
   function update(now: number) {
     const map = getMap()
     const seconds = lastTime === undefined ? 0 : Math.min((now - lastTime) / 1000, 0.1)
@@ -114,47 +161,71 @@ export function createCamera({
     lastTime = now
 
     if (!map || !shot || released) {
-      return
+      return false
     }
 
     watch(map)
 
     const speed = Math.max(getSpeed(), 1)
     const centerOmega = (4 / CENTER_SETTLE) * speed
-    const zoomOmega = (4 / ZOOM_SETTLE) * speed
+    const bearingOmega = 4 / BEARING_SETTLE
     const padding = getPadding()
     const goal = getTarget(map, shot, padding)
     const focus = trackFocus(seconds, map.getZoom())
     const goalCenter = goal?.center ?? lead(focus)
 
     if (!goal || !goalCenter) {
-      return
+      return false
     }
 
-    // Leaning as the map does at the zoom it's headed for.
-    const goalPitch = getMapPitch(map, goal.zoom)
+    const flyover = shot.mode === 'follow' && getFlyover()
+    const zoomOmega = (4 / (flyover ? FLYOVER_ZOOM_SETTLE : ZOOM_SETTLE)) * speed
+    const goalZoom = flyover
+      ? Math.max(goal.zoom, Math.min(goal.zoom + FLYOVER_ZOOM_IN, FLYOVER_MAX_ZOOM))
+      : goal.zoom
+    // Leaning as the map does at the zoom it's headed for, or far back flying over.
+    const goalPitch = flyover ? FLYOVER_PITCH : getMapPitch(map, goalZoom)
+    // Turned back north once flying over ends, then left alone.
+    const turning = flyover || bearing !== undefined
+    const goalBearing = flyover ? (heading ?? bearing ?? map.getBearing()) : 0
 
     if (!center || zoom === undefined || pitch === undefined || snap) {
       const current = snap ? goalCenter : toMercator(map.getCenter())
 
       center = { ...current }
-      zoom = snap ? goal.zoom : map.getZoom()
+      zoom = snap ? goalZoom : map.getZoom()
       pitch = snap ? goalPitch : map.getPitch()
       centerVelocity = { x: 0, y: 0 }
       zoomVelocity = 0
       pitchVelocity = 0
     }
 
+    if (turning && (bearing === undefined || snap)) {
+      bearing = snap ? goalBearing : map.getBearing()
+      bearingVelocity = 0
+    }
+
     if (snap) {
       snap = false
-      apply(map, center, zoom, pitch, padding)
-      return
+      apply(map, center, zoom, pitch, padding, bearing)
+      return true
     }
 
     const x = spring(center.x, centerVelocity.x, goalCenter.x, centerOmega, seconds)
     const y = spring(center.y, centerVelocity.y, goalCenter.y, centerOmega, seconds)
-    const z = spring(zoom, zoomVelocity, goal.zoom, zoomOmega, seconds)
+    const z = spring(zoom, zoomVelocity, goalZoom, zoomOmega, seconds)
     const p = spring(pitch, pitchVelocity, goalPitch, zoomOmega, seconds)
+    // The short way round.
+    const b =
+      bearing === undefined
+        ? undefined
+        : spring(
+            bearing,
+            bearingVelocity,
+            bearing + getTurn(bearing, goalBearing),
+            bearingOmega,
+            seconds,
+          )
     const pixel = 0.25 / (512 * 2 ** z.value)
 
     center = { x: x.value, y: y.value }
@@ -164,29 +235,49 @@ export function createCamera({
     pitch = p.value
     pitchVelocity = p.velocity
 
+    if (b) {
+      bearing = b.value
+      bearingVelocity = b.velocity
+    }
+
+    const bearingSettled =
+      !b ||
+      (Math.abs(getTurn(b.value, goalBearing)) < 0.05 && Math.abs(b.velocity) * seconds < 0.05)
+
     // Settled to within a fraction of a pixel: leave the map be so it can go idle.
     if (
       Math.abs(x.value - goalCenter.x) < pixel &&
       Math.abs(y.value - goalCenter.y) < pixel &&
-      Math.abs(z.value - goal.zoom) < 0.002 &&
+      Math.abs(z.value - goalZoom) < 0.002 &&
       Math.hypot(x.velocity, y.velocity) * seconds < pixel &&
       Math.abs(z.velocity) * seconds < 0.002 &&
       Math.abs(p.value - goalPitch) < 0.05 &&
-      Math.abs(p.velocity) * seconds < 0.05
+      Math.abs(p.velocity) * seconds < 0.05 &&
+      bearingSettled
     ) {
       if (
-        Math.abs(map.getZoom() - goal.zoom) < 0.002 &&
-        Math.abs(map.getPitch() - goalPitch) < 0.05
+        Math.abs(map.getZoom() - goalZoom) < 0.002 &&
+        Math.abs(map.getPitch() - goalPitch) < 0.05 &&
+        (bearing === undefined || Math.abs(getTurn(map.getBearing(), goalBearing)) < 0.05)
       ) {
-        return
+        if (!flyover) {
+          bearing = undefined
+        }
+
+        return false
       }
 
       center = { ...goalCenter }
-      zoom = goal.zoom
+      zoom = goalZoom
       pitch = goalPitch
+
+      if (bearing !== undefined) {
+        bearing = goalBearing
+      }
     }
 
-    apply(map, center, zoom, pitch, padding)
+    apply(map, center, zoom, pitch, padding, bearing)
+    return true
 
     /**
      * Aims ahead of the tip by the distance the spring would trail it at its current
@@ -225,6 +316,7 @@ export function createCamera({
       y: focusVelocity.y + (velocity.y - focusVelocity.y) * smoothing,
     }
     lastFocus = focus
+
     return focus
   }
 
@@ -285,6 +377,8 @@ export function createCamera({
     center = undefined
     zoom = undefined
     pitch = undefined
+    bearing = undefined
+    heading = undefined
     lastFocus = undefined
     lastTime = undefined
 
@@ -323,6 +417,13 @@ function apply(
   zoom: number,
   pitch: number,
   padding: PaddingOptions,
+  bearing: number | undefined,
 ) {
-  map.jumpTo({ center: new mapboxgl.MercatorCoordinate(x, y).toLngLat(), padding, pitch, zoom })
+  map.jumpTo({
+    center: new mapboxgl.MercatorCoordinate(x, y).toLngLat(),
+    padding,
+    pitch,
+    zoom,
+    ...(bearing !== undefined && { bearing }),
+  })
 }

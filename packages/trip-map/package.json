@@ -74,15 +74,21 @@
   "devDependencies": {
     "@hyoban/drawer": "workspace:*",
     "@types/supercluster": "^7.1.3",
+    "@types/three": "0.183.1",
     "happy-dom": "^21.0.1",
     "sharp": "^0.35.5",
+    "three": "0.183.2",
     "vite-plus": "catalog:"
   },
   "peerDependencies": {
-    "sharp": "^0.35.0"
+    "sharp": "^0.35.0",
+    "three": ">=0.160.0"
   },
   "peerDependenciesMeta": {
     "sharp": {
+      "optional": true
+    },
+    "three": {
       "optional": true
     }
   },

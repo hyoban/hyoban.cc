@@ -1,6 +1,7 @@
 import mapboxgl, { type GeoJSONSource, type Map as MapboxMap } from 'mapbox-gl'
-import type { Coordinates } from '../geo.ts'
+import { getHeading, type Coordinates } from '../geo.ts'
 import type { IconName } from '../icons.ts'
+import { CAR_PIXELS, type Flyover } from './car-model.ts'
 import { createElement, createIcon, setIcon } from './dom.ts'
 import { lineFeature, type TravelMode } from './route.ts'
 
@@ -10,7 +11,8 @@ import { lineFeature, type TravelMode } from './route.ts'
 // Nothing here sends the map new data every frame: each update goes through the map's
 // worker and makes it lay out its labels again, which on a slow device costs a third
 // of the frame rate. The piece being drawn is sent once and revealed by trimming it,
-// and the head is an element over the map, moved in the frame the map draws.
+// and the head is an element over the map, moved in the frame the map draws. Flying over,
+// a car in 3D can take the car icon's place (car-model.ts); the day and time stay beside it.
 
 const PLANNED_ID = 'trip-map-planned'
 const ROUTE_ID = 'trip-map-route'
@@ -50,6 +52,7 @@ export function createRouteLayers(
   getMap: () => MapboxMap | undefined,
   getColors: () => Colors,
   headLabel?: HTMLElement,
+  flyover?: Flyover,
 ) {
   // What the sources hold now, so frames that don't change them skip the update.
   let shown: {
@@ -160,6 +163,7 @@ export function createRouteLayers(
     shown = { pointCount: -1 }
     measured = undefined
     addHead(map)
+    flyover?.car?.add(map)
     return true
   }
 
@@ -174,6 +178,9 @@ export function createRouteLayers(
     const place = () => {
       const coordinates = head?.coordinates
 
+      // The car in 3D is there instead of the icon's badge, once its model has loaded.
+      element.toggleAttribute('data-trip-map-head-car', flyover?.car?.isShowing() ?? false)
+
       if (coordinates) {
         const { x, y } = map.project([coordinates[0], coordinates[1]])
         element.style.transform = `translate3d(${x}px, ${y}px, 0)`
@@ -182,6 +189,7 @@ export function createRouteLayers(
 
     element.setAttribute('aria-hidden', 'true')
     element.hidden = true
+    element.style.setProperty('--trip-map-car-size', `${CAR_PIXELS}px`)
     element.append(createIcon(TRAVEL_ICONS.car), ...(headLabel ? [headLabel] : []))
     map.getContainer().append(element)
     // Sub-pixel transforms set as the map draws keep it on the route as the map glides.
@@ -201,6 +209,7 @@ export function createRouteLayers(
     const map = getMap()
 
     removeHead()
+    flyover?.car?.remove(map)
 
     for (const id of map ? LAYER_IDS : []) {
       if (map!.getLayer(id)) {
@@ -242,7 +251,7 @@ export function createRouteLayers(
       getMap()?.setPaintProperty(ACTIVE_ROUTE_ID, 'line-trim-offset', [trimStart(piece), 1])
     }
 
-    setHead(piece && tipOf(piece), piece?.mode ?? 'car')
+    setHead(piece)
   }
 
   /** How far along the piece its tip is, as a share of the line the map measures. */
@@ -270,12 +279,20 @@ export function createRouteLayers(
     return total > 0 ? Math.min((start + (end - start) * ratio) / total, 1) : 1
   }
 
-  function setHead(coordinates: Coordinates | undefined, mode: TravelMode) {
+  function setHead(piece: RoutePiece | undefined) {
     if (!head) {
       return
     }
 
+    const coordinates = piece && tipOf(piece)
+    const mode = piece?.mode ?? 'car'
     const icon = head.element.firstElementChild
+
+    flyover?.car?.set(
+      coordinates && mode === 'car' && flyover.isOn()
+        ? { coordinates, heading: headingOf(piece) }
+        : undefined,
+    )
 
     if (icon instanceof SVGSVGElement) {
       setIcon(icon, TRAVEL_ICONS[mode])
@@ -298,6 +315,24 @@ export function createRouteLayers(
   }
 
   return { add, remove, setRoute, setStops }
+}
+
+/** Which way the piece heads at its tip, in degrees from north, as the map lays it out. */
+function headingOf({ line, segment }: RoutePiece) {
+  const start = line[segment]!
+  let end = start
+
+  // A segment that goes nowhere takes the next one's way.
+  for (let index = segment + 1; index < line.length; index++) {
+    const point = line[index]!
+
+    if (point[0] !== start[0] || point[1] !== start[1]) {
+      end = point
+      break
+    }
+  }
+
+  return getHeading(start, end)
 }
 
 function tipOf({ line, ratio, segment }: RoutePiece): Coordinates {

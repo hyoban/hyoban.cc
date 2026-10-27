@@ -29,3 +29,20 @@ export function getDistanceKm(from: LngLatLike, to: LngLatLike) {
 
   return 2 * EARTH_RADIUS_KM * Math.asin(Math.sqrt(a))
 }
+
+/** Which way `to` lies from `from` as a flat map lays them out, in degrees from north. */
+export function getHeading(from: Coordinates, to: Coordinates) {
+  const mercatorY = ([, latitude]: Coordinates) =>
+    Math.log(Math.tan(Math.PI / 4 + (latitude * Math.PI) / 360))
+
+  // Mercator's y grows northwards here, as latitude does.
+  return (
+    (Math.atan2(((to[0] - from[0]) * Math.PI) / 180, mercatorY(to) - mercatorY(from)) * 180) /
+    Math.PI
+  )
+}
+
+/** The turn from `from` to `to` the short way round, in degrees between -180 and 180. */
+export function getTurn(from: number, to: number) {
+  return ((((to - from) % 360) + 540) % 360) - 180
+}

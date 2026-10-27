@@ -6,17 +6,34 @@ import type { AnimationFrameProvider } from 'mapbox-gl'
 // where they are now: the two slip a frame apart as the camera moves. Here the map draws
 // last, after the work asked for with `requestFrame`, so what that work moved is drawn
 // in the same frame.
+//
+// It runs at most 60 times a second: on a 120 Hz screen the map would otherwise draw
+// twice as often, its tiles and terrain costing the main thread most of a core while a
+// trip plays, for motion that looks the same. Every motion is timed by the clock, not
+// counted in frames, so it keeps its pace. Not after the map's resized, though
+// (`drawNextFrame`): that clears its canvas, and a frame skipped then shows it blank,
+// flickering as the window's dragged.
 
 type Callback = (now: number) => void
+
+// A little under 60 a second's interval, so a 60 Hz screen's slightly early frame isn't
+// skipped.
+const MIN_INTERVAL = 1000 / 60 - 4
 
 const work = new Map<number, Callback>()
 const draws = new Map<number, Callback>()
 let nextHandle = 1
 let scheduled = false
+let lastRun = -Infinity
 
 /** Runs `callback` in the next frame, before the map draws. */
 export function requestFrame(callback: Callback) {
   return enqueue(work, callback)
+}
+
+/** Runs the next frame however soon it comes, as after the map's canvas is cleared. */
+export function drawNextFrame() {
+  lastRun = -Infinity
 }
 
 export function cancelFrame(handle: number) {
@@ -44,6 +61,12 @@ function enqueue(queue: Map<number, Callback>, callback: Callback) {
 }
 
 function run(now: number) {
+  if (now - lastRun < MIN_INTERVAL) {
+    requestAnimationFrame(run)
+    return
+  }
+
+  lastRun = now
   scheduled = false
   // Work asked for while the frame runs is the next frame's; a draw asked for by this
   // frame's work is this frame's.

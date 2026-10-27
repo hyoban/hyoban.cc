@@ -861,6 +861,20 @@
   display: none;
 }
 
+/* Flying over, the car in 3D drives under it instead; the clock keeps clear of it. */
+.trip-map-head[data-trip-map-head-car] {
+  background: none;
+  border-color: transparent;
+}
+
+.trip-map-head[data-trip-map-head-car] > svg {
+  visibility: hidden;
+}
+
+.trip-map-head[data-trip-map-head-car] .trip-map-head__clock {
+  left: calc(50% + var(--trip-map-car-size) / 2 + 1rem);
+}
+
 /* The day and time the route's tip has reached, beside it; on the map only. */
 .trip-map-head__clock {
   position: absolute;

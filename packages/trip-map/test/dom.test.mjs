@@ -73,7 +73,7 @@ test('the stage and the shortcut panel render their parts', () => {
   )
   assert.ok(stage.querySelector('[data-trip-map-stage-center]'))
   assert.equal(shortcuts.querySelectorAll('section').length, 3)
-  assert.equal(shortcuts.querySelectorAll('kbd').length, 17)
+  assert.equal(shortcuts.querySelectorAll('kbd').length, 18)
 })
 
 test('a page missing parts is told which, all at once', () => {

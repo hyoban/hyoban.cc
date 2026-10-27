@@ -590,6 +590,7 @@ const image = pageTrip ? `/trip/${pageTrip.id}/og.jpg` : await getPageCardPath(A
     getTripListHeading,
     getTripTitle,
     tripMapBrand,
+    tripMapCarModel,
     tripMapMessages,
     tripMapMusic,
     tripMapSiteLine,
@@ -686,6 +687,7 @@ const image = pageTrip ? `/trip/${pageTrip.id}/og.jpg` : await getPageCardPath(A
           map?.destroy()
           map = client.createTripMap({
             brand: tripMapBrand,
+            carModel: tripMapCarModel,
             createLightboxMedia: initializeLightboxMedia,
             documentTitle: getDocumentTitle(getMapHeading()),
             getDocumentTitle: (trip) => getTripTitle(trip.title, trip.playing),

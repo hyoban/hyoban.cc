@@ -189,6 +189,7 @@ Everything is found by attribute on the root `[data-trip-map]`:
 | `mapLanguage`                                                          | from `locale`                       | The basemap's language, or `false` to leave it.                                                                                                                                                                                                                                                                                |
 | `music`                                                                | none                                | `{ src, title }[]` a video may be set to.                                                                                                                                                                                                                                                                                      |
 | `brand`                                                                | none                                | `{ name, image }` on the presentation's corner.                                                                                                                                                                                                                                                                                |
+| `carModel`                                                             | none                                | A glTF car (standing on y = 0, nose to +z, Meshopt allowed) to drive the road stretches while flying over. Needs `three` installed.                                                                                                                                                                                            |
 | `siteLine`, `screenshotTitle`                                          | the host, the document title        | On a video's summary card; over a saved screenshot.                                                                                                                                                                                                                                                                            |
 | `onPeriodChange`                                                       | none                                | `(period) => {}` as the map is narrowed to a year or a month, or to none: for links of the site's to follow.                                                                                                                                                                                                                   |
 | `documentTitle`, `getDocumentTitle`, `tripListTitle`, `getPeriodTitle` | left alone                          | The document's title with and without a trip playing or picked (`getDocumentTitle` is told which), with the trip list open (`tripListTitle` can be a function of its period), and with the map narrowed to a period.                                                                                                           |
@@ -198,6 +199,17 @@ Everything is found by attribute on the root `[data-trip-map]`:
 
 It returns `{ page, activeTripId, destroy() }`. One map per page: the player's shortcuts
 listen on the window.
+
+The player's ⛰ button (or V) flies over the route while it plays: the camera following the
+car comes lower and leans further back, out as far as Standard's terrain still rises (zoom
+12), facing from where each drive sets off to where it ends and turning slowly between
+drives rather than with every bend, and turns back north for the views of the whole trip.
+It's remembered in the browser, and off by default, and a trip played along as its sidebar
+is read flies over the same way. With a `carModel`, that car drives the
+road stretches in 3D in place of the car's icon, standing on the terrain and turned the way
+the road goes, about 56 pixels long whatever the zoom; three.js and the model are loaded
+only when the car first drives. The map and the player draw at most 60 frames a second,
+except right after the map is resized, so it doesn't flicker.
 
 ## Words and dates
 
@@ -268,6 +280,7 @@ formatted. Dates travel as `YYYY-MM-DD` keys and are formatted where they are sh
 | `closePlayback`          | 退出旅程回放                                 |
 | `exitPresentation`       | 退出放映                                     |
 | `exportVideo`            | 导出视频                                     |
+| `flyover`                | 飞越视角                                     |
 | `landscape`              | 横屏 16:9                                    |
 | `landscapeFile`          | 横屏                                         |
 | `music`                  | 背景音乐                                     |
@@ -295,6 +308,7 @@ formatted. Dates travel as `YYYY-MM-DD` keys and are formatted where they are sh
 | `shortcutEnds`           | 回到开头 / 跳到回顾                          |
 | `shortcutEscape`         | 退出放映 / 关闭回放                          |
 | `shortcutExport`         | 导出视频                                     |
+| `shortcutFlyover`        | 飞越视角                                     |
 | `shortcutFullscreen`     | 全屏放映                                     |
 | `shortcutHelp`           | 显示快捷键                                   |
 | `shortcutMusic`          | 背景音乐                                     |

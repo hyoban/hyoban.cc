@@ -63,6 +63,10 @@ export function renderTripPanel({
     `<div class="trip-map-panel__actions" data-trip-map-actions>` +
     `<button class="trip-map-panel__button trip-map-panel__speed" type="button" data-trip-map-speed aria-label="${escape(t(messages, 'playbackSpeed', { speed: 1 }))}" aria-keyshortcuts="- =">1×</button>` +
     button(
+      `data-trip-map-flyover aria-label="${escape(messages.flyover)}" aria-pressed="false" aria-keyshortcuts="V" title="${escape(t(messages, 'withKey', { action: messages.flyover, key: 'V' }))}"`,
+      'mountain',
+    ) +
+    button(
       `data-trip-map-music aria-label="${escape(messages.music)}" aria-pressed="false" aria-keyshortcuts="M" title="${escape(t(messages, 'withKey', { action: messages.music, key: 'M' }))}"`,
       'volume-x',
     ) +
@@ -144,6 +148,7 @@ export function renderShortcuts(messages: Messages) {
         [[messages.keyShift, '←', '→'], messages.shortcutDays],
         [[messages.keyHome, messages.keyEnd], messages.shortcutEnds],
         [['↑', '↓'], messages.shortcutPhotos],
+        [['V'], messages.shortcutFlyover],
       ],
     ],
     [
