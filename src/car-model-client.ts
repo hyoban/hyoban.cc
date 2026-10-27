@@ -55,9 +55,41 @@ const RAMP_MS = 2000
 const easeOut = cubicBezier(0.33, 1, 0.68, 1)
 const easeInOut = cubicBezier(0.77, 0, 0.175, 1)
 
+// The models are kept in the page's own cache once fetched: the full one is more than some
+// browsers' HTTP caches will hold, so would come down again on every visit. A changed model
+// gets a new name, so what's kept never goes stale, and what the page no longer names is let
+// go. Without the cache (outside a secure context), they're just fetched.
+const MODEL_CACHE = 'car-models'
+
+async function openModelCache() {
+  return 'caches' in globalThis ? caches.open(MODEL_CACHE).catch(() => undefined) : undefined
+}
+
+async function fetchModel(src: string) {
+  const cache = await openModelCache()
+  const kept = await cache?.match(src)
+  if (kept) return kept.arrayBuffer()
+  const response = await fetch(src)
+  if (!response.ok) throw new Error(`${src}: ${response.status}`)
+  await cache?.put(src, response.clone()).catch(() => {})
+  return response.arrayBuffer()
+}
+
+/** Whether the model at `src` is kept already, so it can be drawn without fetching it. */
+async function isModelKept(src: string) {
+  return Boolean(await (await openModelCache())?.match(src))
+}
+
+async function forgetModelsBut(sources: string[]) {
+  const cache = await openModelCache()
+  for (const request of (await cache?.keys()) ?? []) {
+    if (!sources.includes(request.url)) void cache?.delete(request)
+  }
+}
+
 /** A car model, stood on the ground with its middle over the origin, and its size. */
 async function loadCar(loader: GLTFLoader, src: string) {
-  const car = (await loader.loadAsync(src)).scene
+  const car = (await loader.parseAsync(await fetchModel(src), '')).scene
   const box = new Box3().setFromObject(car)
   const center = box.getCenter(new Vector3())
   car.position.sub(new Vector3(center.x, box.min.y, center.z))
@@ -98,7 +130,8 @@ function wantsFullModel() {
 
 /**
  * Draw the car in the frame from the light model at `src`, and once it has settled, swap in
- * the full one at `fullSrc` where the connection allows.
+ * the full one at `fullSrc` where the connection allows. One that was kept from an earlier
+ * visit is drawn straight away instead, with no light one first.
  */
 export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: string) {
   const canvas = document.createElement('canvas')
@@ -114,7 +147,9 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
   pmrem.dispose()
 
   const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder)
-  const { car, size } = await loadCar(loader, src)
+  void forgetModelsBut([src, fullSrc].filter((source) => source !== undefined))
+  const fullKept = fullSrc !== undefined && (await isModelKept(fullSrc))
+  const { car, size } = await loadCar(loader, fullKept ? fullSrc : src)
   // The body pitches about the ground under its middle; the shadow only follows along.
   const body = new Group().add(car)
   const shadow = createShadow(size.x, size.z)
@@ -219,7 +254,7 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
   // Once it's settled, the full model takes the light one's place, the swap between two
   // frames, the car keeping its place and its turn.
   let current = car
-  let upgrading = !fullSrc || !wantsFullModel()
+  let upgrading = fullKept || !fullSrc || !wantsFullModel()
   let released = false
   const upgrade = () => {
     upgrading = true
