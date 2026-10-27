@@ -5,8 +5,11 @@ import {
   InstancedBufferAttribute,
   InstancedBufferGeometry,
   Mesh,
+  MeshStandardMaterial,
+  Object3D,
   PlaneGeometry,
   ShaderMaterial,
+  Texture,
   Vector2,
   Vector3,
 } from 'three'
@@ -74,9 +77,6 @@ export function createTunnel(distance: number, size: Vector3, floorRadius: numbe
       span: { value: span },
       axis: { value: new Vector2(0, size.y * 0.4) },
       breadth: { value: 1 },
-      brightness: { value: 1 },
-      pace: { value: 1 },
-      lengthen: { value: 1 },
       floorRadius: { value: floorRadius },
       floorCover: { value: 0 },
     },
@@ -88,16 +88,14 @@ export function createTunnel(distance: number, size: Vector3, floorRadius: numbe
       uniform float span;
       uniform vec2 axis;
       uniform float breadth;
-      uniform float pace;
-      uniform float lengthen;
       varying vec3 vTint;
       varying float vFade;
       varying float vAlong;
       varying float vAcross;
       varying vec3 vSpot;
       void main() {
-        float z = mod(streak.z * span - travel * pace, span) - span * 0.5;
-        float stretch = streak.w * (0.3 + speed) * lengthen;
+        float z = mod(streak.z * span - travel, span) - span * 0.5;
+        float stretch = streak.w * (0.3 + speed);
         float thickness = streak.y * 0.012 * breadth;
         // Flattened to about the view's own shape, so from the side as many fall above the
         // car, within the view's height, as below it.
@@ -114,7 +112,6 @@ export function createTunnel(distance: number, size: Vector3, floorRadius: numbe
     `,
     fragmentShader: /* glsl */ `
       uniform float glow;
-      uniform float brightness;
       uniform float floorRadius;
       uniform float floorCover;
       varying vec3 vTint;
@@ -135,7 +132,7 @@ export function createTunnel(distance: number, size: Vector3, floorRadius: numbe
         float profile = exp(-across * 40.0) + 0.35 * exp(-across * 5.0) * (1.0 - across);
         float lengthwise = pow(max(sin(3.14159 * vAlong), 0.0), 1.5) * (0.5 + 0.5 * vAlong);
         gl_FragColor = vec4(
-          vTint * profile * lengthwise * vFade * glow * brightness * (1.0 - covered),
+          vTint * profile * lengthwise * vFade * glow * (1.0 - covered),
           1.0
         );
         #include <tonemapping_fragment>
@@ -148,17 +145,14 @@ export function createTunnel(distance: number, size: Vector3, floorRadius: numbe
     // Seen from either side of the car, so from either side of its ribbons.
     side: DoubleSide,
   })
-  // Those the paint reflects are broad, dimmer, three times as long and a quarter as fast,
-  // so their light flows calmly over its polish rather than flashing across it.
+  // The car mirrors the streaks round itself, from among them, with no floor in the way,
+  // a little broader so they still show where its paint blurs them, but few and thin enough
+  // that between them its paint shows through.
   const reflected = material.clone()
-  // The paint sees the streaks round itself, from among them, with no floor in the way.
   reflected.uniforms = {
     ...material.uniforms,
     axis: { value: new Vector2(0, size.y * 0.4) },
-    breadth: { value: 12 },
-    brightness: { value: 1.2 },
-    pace: { value: 0.25 },
-    lengthen: { value: 3 },
+    breadth: { value: 1.2 },
     floorRadius: { value: 0 },
   }
   const drawn = new Mesh(geometry, material)
@@ -184,6 +178,46 @@ export function createTunnel(distance: number, size: Vector3, floorRadius: numbe
       drawn.visible = reflection.visible = glow > 0
     },
   }
+}
+
+/**
+ * Lets the car's materials under `root` mirror the streaks in `map`, a cube as seen from the
+ * car's middle, sharply where they're polished and softer where they're not, by as much as
+ * `strength` holds, and most where its surface turns away from the eye, as lacquer
+ * reflects, so face on its colour still shows. As the SU7's does, this is laid over their
+ * light rather than blurred into it, so the streaks stay crisp and keep moving across it.
+ */
+export function reflectStreaks(root: Object3D, map: Texture, strength: { value: number }) {
+  root.traverse((object) => {
+    if (!(object instanceof Mesh)) return
+    for (const material of [object.material].flat()) {
+      if (!(material instanceof MeshStandardMaterial)) continue
+      material.onBeforeCompile = (shader) => {
+        shader.uniforms.streakMap = { value: map }
+        shader.uniforms.streakStrength = strength
+        shader.fragmentShader = shader.fragmentShader
+          .replace(
+            '#include <common>',
+            '#include <common>\nuniform samplerCube streakMap;\nuniform float streakStrength;',
+          )
+          .replace(
+            '#include <opaque_fragment>',
+            /* glsl */ `
+              vec3 streakDirection = inverseTransformDirection(
+                reflect(-geometryViewDir, normal),
+                viewMatrix
+              );
+              float streakBlur = material.roughness * (1.7 - 0.7 * material.roughness) * 6.0;
+              float streakGrazing = pow(1.0 - saturate(dot(normal, geometryViewDir)), 3.0);
+              outgoingLight += textureLod(streakMap, streakDirection, streakBlur).rgb
+                * streakStrength * mix(0.2, 1.0, streakGrazing);
+              #include <opaque_fragment>
+            `,
+          )
+      }
+      material.customProgramCacheKey = () => 'streaks'
+    }
+  })
 }
 
 /** A glossy black floor reaching out `size` across, mirroring the car and the streaks dimly
