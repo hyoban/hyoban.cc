@@ -115,6 +115,7 @@ export function collectPanelElements(panel: HTMLElement) {
         controls: '[data-trip-map-controls]',
         exportButton: '[data-trip-map-export]',
         eyebrow: '[data-trip-map-eyebrow]',
+        flyover: '[data-trip-map-flyover]',
         header: '[data-trip-map-header]',
         music: '[data-trip-map-music]',
         next: '[data-trip-map-next]',
@@ -141,6 +142,7 @@ export function collectPanelElements(panel: HTMLElement) {
       controls: HTMLElement
       exportButton: HTMLButtonElement
       eyebrow: HTMLElement
+      flyover: HTMLButtonElement
       header: HTMLElement
       music: HTMLButtonElement
       next: HTMLButtonElement

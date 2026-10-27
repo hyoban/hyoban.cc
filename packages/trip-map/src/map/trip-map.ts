@@ -1,7 +1,7 @@
 import MapboxLanguage from '@mapbox/mapbox-gl-language'
 import mapboxgl, { type PaddingOptions } from 'mapbox-gl'
 import { collectMapElements } from '../elements.ts'
-import { mapFrames } from '../frames.ts'
+import { drawNextFrame, mapFrames } from '../frames.ts'
 import type { Brand, MusicTrack } from '../markup.ts'
 import { resolveMessages, t, type Messages } from '../messages.ts'
 import { parseJson } from '../player/dom.ts'
@@ -71,6 +71,12 @@ export type TripMap = {
 export type TripMapOptions = {
   /** Who made a video, on the presentation stage's corner. */
   brand?: Brand | undefined
+  /**
+   * A glTF model of a car (standing on y = 0, its nose to +z, Meshopt compression allowed)
+   * that drives the route while playback flies over, in place of the car's icon. Needs
+   * three.js installed; it's only loaded when the car first drives.
+   */
+  carModel?: string | undefined
   /**
    * Makes the lightbox's media controller for the `[data-trip-map-lightbox]` dialog;
    * without one, the drawer's images don't open in it.
@@ -218,6 +224,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
 
   const tripPlayer = createTripPlayer({
     brand: options.brand,
+    carModel: options.carModel,
     fetchTrip: (id) =>
       fetch(urls.getTripDataUrl(id), { signal })
         .then((response) => {
@@ -388,6 +395,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
     elements.tripDetailsContent &&
     createTripScroll({
       content: elements.tripDetailsContent,
+      flyover: tripPlayer.flyover,
       getBlocked: () =>
         [elements.tripDetails, page.querySelector('[data-trip-map-toolbar]')]
           .filter((element) => element && element.getClientRects().length > 0)
@@ -2067,6 +2075,9 @@ export function createTripMap(options: TripMapOptions): TripMap {
       }
 
       syncLanguage(map, !style.config)
+
+      // Resizing clears the canvas: drawn again in the very next frame, or it flickers.
+      map.on('resize', drawNextFrame)
 
       map.on('style.load', () => {
         syncBasemapRoads(map!, true)

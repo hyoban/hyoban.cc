@@ -6,23 +6,25 @@ const MUSIC_PREFERENCE_KEY = 'trip-map-music'
 const SPEED_PREFERENCE_KEY = 'trip-map-speed'
 const SAFE_AREA_PREFERENCE_KEY = 'trip-map-safe-area'
 const RATIO_PREFERENCE_KEY = 'trip-map-ratio'
+const FLYOVER_PREFERENCE_KEY = 'trip-map-flyover'
 
 export const SPEEDS = [1, 1.5, 2] as const
 
 export function readMusicPreference() {
-  try {
-    return localStorage.getItem(MUSIC_PREFERENCE_KEY) === 'on'
-  } catch {
-    return false
-  }
+  return readSwitch(MUSIC_PREFERENCE_KEY, false)
 }
 
 export function writeMusicPreference(on: boolean) {
-  try {
-    localStorage.setItem(MUSIC_PREFERENCE_KEY, on ? 'on' : 'off')
-  } catch {
-    // The choice just won't be remembered.
-  }
+  writeSwitch(MUSIC_PREFERENCE_KEY, on)
+}
+
+/** Whether playback flies over the route, low and turned the way it heads; off by default. */
+export function readFlyoverPreference() {
+  return readSwitch(FLYOVER_PREFERENCE_KEY, false)
+}
+
+export function writeFlyoverPreference(on: boolean) {
+  writeSwitch(FLYOVER_PREFERENCE_KEY, on)
 }
 
 export function readSpeedPreference(): number {
@@ -50,19 +52,11 @@ export function getNextSpeed(speed: number) {
 
 /** Whether a portrait video leaves room for a short-video app's own overlays; on by default. */
 export function readSafeAreaPreference() {
-  try {
-    return localStorage.getItem(SAFE_AREA_PREFERENCE_KEY) !== 'off'
-  } catch {
-    return true
-  }
+  return readSwitch(SAFE_AREA_PREFERENCE_KEY, true)
 }
 
 export function writeSafeAreaPreference(on: boolean) {
-  try {
-    localStorage.setItem(SAFE_AREA_PREFERENCE_KEY, on ? 'on' : 'off')
-  } catch {
-    // The choice just won't be remembered.
-  }
+  writeSwitch(SAFE_AREA_PREFERENCE_KEY, on)
 }
 
 /** The last layout chosen for presenting or recording; portrait suits phones best. */
@@ -86,19 +80,11 @@ const FOG_PREFERENCE_KEY = 'trip-map-fog'
 
 /** Whether the map is under its fog of war; off by default. */
 export function readFogPreference() {
-  try {
-    return localStorage.getItem(FOG_PREFERENCE_KEY) === 'on'
-  } catch {
-    return false
-  }
+  return readSwitch(FOG_PREFERENCE_KEY, false)
 }
 
 export function writeFogPreference(on: boolean) {
-  try {
-    localStorage.setItem(FOG_PREFERENCE_KEY, on ? 'on' : 'off')
-  } catch {
-    // The choice just won't be remembered.
-  }
+  writeSwitch(FOG_PREFERENCE_KEY, on)
 }
 
 const MAP_SETTINGS_PREFERENCE_KEY = 'trip-map-settings'
@@ -116,6 +102,23 @@ export function readMapSettingsPreference(): MapSettings | undefined {
 export function writeMapSettingsPreference(settings: MapSettings) {
   try {
     localStorage.setItem(MAP_SETTINGS_PREFERENCE_KEY, JSON.stringify(settings))
+  } catch {
+    // The choice just won't be remembered.
+  }
+}
+
+function readSwitch(key: string, fallback: boolean) {
+  try {
+    // Only the other choice, stored, changes it.
+    return localStorage.getItem(key) === (fallback ? 'off' : 'on') ? !fallback : fallback
+  } catch {
+    return fallback
+  }
+}
+
+function writeSwitch(key: string, on: boolean) {
+  try {
+    localStorage.setItem(key, on ? 'on' : 'off')
   } catch {
     // The choice just won't be remembered.
   }

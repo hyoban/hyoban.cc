@@ -26,7 +26,8 @@ Use these object key prefixes:
 
 The car on the year review's driving section is `site/zeekr-007gt-5.glb` (a
 meshopt-compressed glTF, generated from photos of a 007GT in its colour and
-cleaned up) with its still `site/zeekr-007gt-5.webp`. The originals, inputs and
+cleaned up) with its still `site/zeekr-007gt-5.webp`; the same model drives a trip's
+route while its playback flies over. The originals, inputs and
 clean-up scripts are kept out of the repository under `.private/3d/zeekr-007gt`;
 a changed model and its still are uploaded under the next number, since objects
 are immutable.

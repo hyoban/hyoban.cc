@@ -3,6 +3,7 @@ import type { Coordinates } from '../geo.ts'
 import type { Messages } from '../messages.ts'
 import type { Theme } from '../theme.ts'
 import { createCamera } from '../player/camera.ts'
+import type { Flyover } from '../player/car-model.ts'
 import { createDayHeading } from '../player/day-heading.ts'
 import { createElement } from '../player/dom.ts'
 import { getShortPlaceName } from '../player/labels.ts'
@@ -21,7 +22,8 @@ import type { TripData } from '../player/types.ts'
 // stop (`[data-trip-map-stop-entry="<anchor>"]`), and the line a little above the
 // sidebar's middle stands for where the reader is: reaching a Moment arrives at its
 // stop, and reading on drives on to the next one, back again scrolling up. After the
-// last Moment the route drives on to its end.
+// last Moment the route drives on to its end. With the player's flying over on, it flies
+// over here too, its car in 3D driving the roads.
 
 // How far down the sidebar the reader is taken to be reading, as a share of its height.
 const READING_LINE = 0.4
@@ -79,6 +81,7 @@ export function getReadingOffset({
 
 export function createTripScroll({
   content,
+  flyover,
   getBlocked,
   getMap,
   getPadding,
@@ -91,6 +94,8 @@ export function createTripScroll({
 }: {
   /** The trip sidebar's scrolling part. */
   content: HTMLElement
+  /** The player's flying over, followed here too. */
+  flyover?: Flyover | undefined
   /** What's over the map that labels keep out from under: the sidebar, the toolbar. */
   getBlocked: () => DOMRect[]
   getMap: () => MapboxMap | undefined
@@ -125,7 +130,7 @@ export function createTripScroll({
 
   headClock.append(headClockDate, headClockTime)
 
-  const layers = createRouteLayers(getMap, getTheme, headClock)
+  const layers = createRouteLayers(getMap, getTheme, headClock, flyover)
   const mapLabels = createMapLabels({
     getLayout: () => ({
       avoid: headClock.getClientRects().length > 0 ? [headClock.getBoundingClientRect()] : [],
@@ -142,6 +147,7 @@ export function createTripScroll({
     ],
   })
   const camera = createCamera({
+    getFlyover: flyover?.isOn,
     getFocus: () => tip ?? (leg && plan?.points[leg.from]?.coordinates),
     getMap,
     getPadding,

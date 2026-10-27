@@ -14,6 +14,7 @@ import type { Theme } from '../theme.ts'
 import { cancelFrame, requestFrame } from '../frames.ts'
 import { createAmbientMusic } from './ambient-music.ts'
 import { createCamera } from './camera.ts'
+import { createCarModel, type Flyover } from './car-model.ts'
 import { createDayHeading } from './day-heading.ts'
 import { createElement, perFrame, preloadImage, preloadThumbnail, setButtonIcon } from './dom.ts'
 import { getIntroCovers } from './intro.ts'
@@ -23,9 +24,11 @@ import { getReducedMotionQuery } from './motion.ts'
 import { setMusicAudible } from './music.ts'
 import {
   getNextSpeed,
+  readFlyoverPreference,
   readMusicPreference,
   readSpeedPreference,
   SPEEDS,
+  writeFlyoverPreference,
   writeMusicPreference,
   writeSpeedPreference,
 } from './preferences.ts'
@@ -71,6 +74,8 @@ export type TripPlayerOptions = {
   getMapTheme?: (() => Theme) | undefined
   /** The card the address names, a stop's anchor; without it, the address's hash. */
   getStop?: (() => string | undefined) | undefined
+  /** A car to drive the route while flying over: see `TripMapOptions.carModel`. */
+  carModel?: string | undefined
   /** The trip whose data the page already carries, to play without a fetch. */
   inlineTrip?: TripData | undefined
   messages: Messages
@@ -166,6 +171,9 @@ export function createTripPlayer(options: TripPlayerOptions) {
   let motionTime = 0
   let speed: number = readSpeedPreference()
   let musicOn = readMusicPreference()
+  let flyover = readFlyoverPreference()
+  // Flying over was turned on or off while paused: the camera moves to it anyway.
+  let reframing = false
   let frame: number | undefined
   let lastFrameTime: number | undefined
   // Bumped on every slide change so an unfinished trip between waypoints stops.
@@ -252,6 +260,7 @@ export function createTripPlayer(options: TripPlayerOptions) {
   }
 
   const camera = createCamera({
+    getFlyover: () => flyover,
     // The tip while the route is drawn, else the last place it reached.
     getFocus: () =>
       drawer.routeTip ?? points()[Math.max(drawer.drawnPointCount - 1, 0)]?.coordinates,
@@ -270,7 +279,12 @@ export function createTripPlayer(options: TripPlayerOptions) {
 
   headClock.append(headClockDate, headClockTime)
 
+  const flyoverMode: Flyover = {
+    car: options.carModel ? createCarModel(options.carModel) : undefined,
+    isOn: () => flyover,
+  }
   const drawer = createRouteDrawer({
+    flyover: flyoverMode,
     getDistanceKm,
     getMap,
     getMotionTime: () => motionTime,
@@ -612,6 +626,17 @@ export function createTripPlayer(options: TripPlayerOptions) {
     }
   }
 
+  function renderFlyoverButton() {
+    panel.flyover.setAttribute('aria-pressed', String(flyover))
+  }
+
+  function toggleFlyover() {
+    flyover = !flyover
+    reframing = true
+    writeFlyoverPreference(flyover)
+    renderFlyoverButton()
+  }
+
   function toggleMusic() {
     musicOn = !musicOn
     writeMusicPreference(musicOn)
@@ -891,6 +916,7 @@ export function createTripPlayer(options: TripPlayerOptions) {
       ArrowUp: () => stepPhoto(-1),
       End: () => goTo(slides.length - 1),
       Home: () => goTo(0),
+      v: toggleFlyover,
       f: () => {
         if (!stage.staging) {
           void stage.start(innerWidth >= innerHeight ? 'landscape' : 'portrait', 'present')
@@ -920,9 +946,12 @@ export function createTripPlayer(options: TripPlayerOptions) {
 
     lastFrameTime = now
 
-    if (held) {
+    if (held && reframing) {
+      reframing = camera.update(now)
+    } else if (held) {
       camera.hold(now)
     } else {
+      reframing = false
       motionTime += delta
       camera.update(now)
     }
@@ -1050,6 +1079,8 @@ export function createTripPlayer(options: TripPlayerOptions) {
   signal.addEventListener('abort', () => panelSize.disconnect())
   renderSpeedButton()
   panel.speed.addEventListener('click', () => setSpeed(getNextSpeed(speed)), { signal })
+  renderFlyoverButton()
+  panel.flyover.addEventListener('click', toggleFlyover, { signal })
   renderMusicButton()
   panel.music.addEventListener('click', toggleMusic, { signal })
   stageElements.music.addEventListener('click', toggleMusic, { signal })
@@ -1086,6 +1117,8 @@ export function createTripPlayer(options: TripPlayerOptions) {
     get activeId() {
       return trip?.id ?? requestedId
     },
+    /** Whether playback flies over the route, as last set, for the trip's page to follow. */
+    flyover: flyoverMode,
     getTitle: (id: string) => loader.getTitle(id),
     has: (id: string) => loader.has(id),
     /** A trip's playback data, fetched once. */

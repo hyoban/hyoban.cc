@@ -2,6 +2,7 @@ import type { Map as MapboxMap } from 'mapbox-gl'
 import { cancelFrame, requestFrame } from '../frames.ts'
 import type { Coordinates } from '../geo.ts'
 import type { Theme } from '../theme.ts'
+import type { Flyover } from './car-model.ts'
 import { createRouteLayers } from './route-layers.ts'
 import type { RoutePlan } from './route-plan.ts'
 import { easeInOut, measureLine, walkLine, type MeasuredLine } from './route.ts'
@@ -33,6 +34,7 @@ type Slide = TripSlide<TripDataStop>
 export type RouteDrawer = ReturnType<typeof createRouteDrawer>
 
 export function createRouteDrawer({
+  flyover,
   getDistanceKm,
   getMap,
   getMotionTime,
@@ -43,6 +45,8 @@ export function createRouteDrawer({
   onClock,
   reducedMotion,
 }: {
+  /** Whether to fly over, with a car in 3D at the tip. */
+  flyover?: Flyover | undefined
   getDistanceKm: (from: Coordinates, to: Coordinates) => number
   getMap: () => MapboxMap | undefined
   /** Milliseconds of motion so far; it stands still while playback is held. */
@@ -63,6 +67,7 @@ export function createRouteDrawer({
       return { ink: theme.ink, paper: theme.paper }
     },
     headClock,
+    flyover,
   )
   let plan: RoutePlan | undefined
   let drawnPointCount = 0
