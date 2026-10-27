@@ -127,6 +127,7 @@
     <string name="action_unmute">打开声音</string>
     <string name="section_places">地点</string>
     <string name="section_photo">照片</string>
+    <string name="section_media">照片和视频</string>
     <string name="section_route">路线</string>
     <string name="title_settings">设置</string>
     <string name="section_sources">数据来源</string>
@@ -232,9 +233,10 @@
     <string name="action_new_moment">写一个时刻</string>
     <string name="action_save">保存</string>
     <string name="hint_moment_text">这一刻…</string>
-    <string name="action_add_photos">添加照片</string>
+    <string name="action_add_photos">添加照片或视频</string>
     <string name="action_open_camera">打开相机</string>
     <string name="action_remove_photo">移除照片</string>
+    <string name="action_remove_video">移除视频</string>
     <string name="action_photo_options">照片选项</string>
     <string name="action_photo_utility">不用作封面</string>
     <string name="action_photo_still">只用静态画面</string>
@@ -316,7 +318,10 @@
     <string name="source_saved">保存时的</string>
     <string name="share_as_moment">写一个时刻</string>
     <string name="share_to_ledger">导入到记账</string>
-    <string name="error_shared_photos">有的照片没能读取</string>
+    <string name="error_shared_photos">有的照片或视频没能读取</string>
+    <string name="error_not_media">只能添加照片和视频</string>
+    <string name="error_video_type">网站只收 MP4、MOV 和 WebM 视频</string>
+    <string name="error_video_too_big">视频超过 100 MB，网站收不下</string>
     <string name="section_publishing">发布</string>
     <string name="setting_api_token">API 令牌</string>
     <string name="token_set">已设置</string>
@@ -347,7 +352,7 @@
     <string name="notification_published">已发布到网站</string>
     <string name="notification_publish_waiting">网络断开了，联网后接着发布</string>
     <string name="notification_publish_failed">没能发布到网站</string>
-    <string name="note_publish_all">发布后所有人都能看到：新写的时刻和照片会上传，改过的会更新，要删除的会从网站上删掉。中途失败的话，没发出去的会留在这里。</string>
+    <string name="note_publish_all">发布后所有人都能看到：新写的时刻和照片、视频会上传，改过的会更新，要删除的会从网站上删掉。中途失败的话，没发出去的会留在这里。</string>
     <string name="note_publish_needs_token">在设置里填上 API 令牌后才能发布</string>
     <string name="change_text">文字</string>
     <string name="change_photos">照片</string>

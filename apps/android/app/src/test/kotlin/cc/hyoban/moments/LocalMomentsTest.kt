@@ -9,6 +9,8 @@ import cc.hyoban.moments.data.local.newPlaceId
 import cc.hyoban.moments.data.local.parseStamp
 import cc.hyoban.moments.data.local.nearestPlaces
 import cc.hyoban.moments.data.local.stamp
+import cc.hyoban.moments.data.local.videoFix
+import cc.hyoban.moments.data.local.videoTime
 import cc.hyoban.moments.data.spec.Place
 import java.time.OffsetDateTime
 import java.time.ZoneId
@@ -47,6 +49,26 @@ class LocalMomentsTest {
         assertEquals(OffsetDateTime.parse("2026-07-14T21:05:22+02:00"), exifTime("2026:07:14 21:05:22", "  ", ZoneId.of("Europe/Paris")))
         assertNull(exifTime("0000:00:00 00:00:00", null))
         assertNull(exifTime(null, "+08:00"))
+    }
+
+    @Test
+    fun `a video's time is its UTC creation time in the phone's zone then`() {
+        val shanghai = ZoneId.of("Asia/Shanghai")
+        assertEquals(OffsetDateTime.parse("2026-10-27T12:28:01+08:00"), videoTime("20261027T042801.000Z", shanghai))
+        assertEquals(OffsetDateTime.parse("2026-10-27T12:28:01+08:00"), videoTime("20261027T042801", shanghai))
+        assertNull(videoTime("19040101T000000.000Z"))
+        assertNull(videoTime("19700101T000000.000Z"))
+        assertNull(videoTime(""))
+        assertNull(videoTime(null))
+    }
+
+    @Test
+    fun `a video's place is its ISO 6709 location`() {
+        assertEquals(Fix(31.2304, 121.4737), videoFix("+31.2304+121.4737/"))
+        assertEquals(Fix(-33.8688, -151.2093), videoFix("-33.8688-151.2093+012.345/"))
+        assertNull(videoFix("+00.0000+000.0000/"))
+        assertNull(videoFix("unknown"))
+        assertNull(videoFix(null))
     }
 
     @Test

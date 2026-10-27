@@ -513,6 +513,31 @@ class MomentsRepositoryTest {
     }
 
     @Test
+    fun `a video sends only itself, its poster staying on the phone until it goes`() = runBlocking {
+        val writer = FakeWriter()
+        val repository = MomentsRepository(DataStore(directory), api, Dispatchers.Unconfined, local = DataStore(localDirectory), writer = writer)
+        repository.load()
+        val poster = File(localDirectory, "media/W-poster.jpg").apply { parentFile.mkdirs(); writeText("poster") }
+        val video = File(localDirectory, "media/W.mov").apply { writeText("video") }
+        repository.addLocal(
+            moment("M", "2026-10-03", published = false).copy(
+                media = listOf(
+                    MomentMedia(
+                        "W", MediaType.VIDEO, width = 1080, height = 1920,
+                        local = LocalMedia(poster.toURI().toString(), videoUri = video.toURI().toString(), copied = true),
+                    ),
+                ),
+            ),
+        )
+
+        repository.publishPending()
+
+        assertEquals(listOf("upload W/video video/quicktime"), writer.calls.filter { it.startsWith("upload") })
+        assertEquals("video", writer.uploads["W/video"])
+        assertTrue(!poster.exists() && !video.exists(), "the copies go with the Moment")
+    }
+
+    @Test
     fun `a deletion the API no longer has the Moment for is done already`() = runBlocking {
         val writer = FakeWriter()
         val repository = MomentsRepository(DataStore(directory), api, Dispatchers.Unconfined, local = DataStore(localDirectory), writer = writer)

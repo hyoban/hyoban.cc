@@ -176,11 +176,11 @@ class AppContainer(context: Context) {
 
     private val _sharedPhotos = MutableStateFlow<List<Uri>>(emptyList())
 
-    /** Photos shared into the app from the gallery, as the app's own copies, until a new Moment takes them. */
+    /** Photos and videos shared into the app from the gallery, as the app's own copies, until a new Moment takes them. */
     val sharedPhotos: StateFlow<List<Uri>> = _sharedPhotos.asStateFlow()
 
     /**
-     * Copies photos shared from another app into the app's cache, as they are, EXIF and
+     * Copies photos and videos shared from another app into the app's cache, as they are, EXIF and
      * all, while the sharing still lets them be read; those that can't be read are left out.
      */
     suspend fun receiveSharedPhotos(uris: List<Uri>) {

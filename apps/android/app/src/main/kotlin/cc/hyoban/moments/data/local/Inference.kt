@@ -63,6 +63,30 @@ fun exifTime(dateTime: String?, offset: String?, zone: ZoneId = ZoneId.systemDef
 
 private val EXIF_TIME = DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss")
 
+/**
+ * When a video was recorded, from its container's creation time as `MediaMetadataRetriever`
+ * gives it (`yyyyMMdd'T'HHmmss`, then perhaps millis and a `Z`), always UTC, in the phone's
+ * zone at that time; null for none, or the 1904 or 1970 an unset time reads as.
+ */
+fun videoTime(date: String?, zone: ZoneId = ZoneId.systemDefault()): OffsetDateTime? {
+    val match = date?.trim()?.let(VIDEO_TIME::find) ?: return null
+    val utc = runCatching { LocalDateTime.parse(match.groupValues[1] + match.groupValues[2], VIDEO_TIME_FORMAT) }.getOrNull() ?: return null
+    if (utc.year <= 1970) return null
+    return utc.atOffset(ZoneOffset.UTC).atZoneSameInstant(zone).toOffsetDateTime()
+}
+
+private val VIDEO_TIME = Regex("""^(\d{8})T(\d{6})""")
+private val VIDEO_TIME_FORMAT = DateTimeFormatter.ofPattern("yyyyMMddHHmmss")
+
+/** Where a video was recorded, from its ISO 6709 location (`+31.2304+121.4737/`); null for none or 0, 0. */
+fun videoFix(location: String?): Fix? {
+    val match = location?.trim()?.let(VIDEO_FIX::find) ?: return null
+    val fix = Fix(match.groupValues[1].toDouble(), match.groupValues[2].toDouble())
+    return fix.takeIf { (it.latitude != 0.0 || it.longitude != 0.0) && it.latitude in -90.0..90.0 && it.longitude in -180.0..180.0 }
+}
+
+private val VIDEO_FIX = Regex("""^([+-]\d+(?:\.\d+)?)([+-]\d+(?:\.\d+)?)""")
+
 /** A place's id while it is the phone's own, until publishing gives it one spelled from its name. */
 fun newPlaceId(): String = "p-" + Ulid.next().lowercase()
 

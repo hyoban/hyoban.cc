@@ -42,17 +42,20 @@ Moments light theirs too. The fog is the page's text colour, so on the dark map 
 
 A new Moment can be written on the phone, from the ✎ in the Moments tab's header or
 `moments://new`, on a page of its own, or, on a window from Material 3's medium breakpoint
-on, in a dialog over the page it was opened from: its words, up to nine photos from the system's documents picker (a tile beside it
+on, in a dialog over the page it was opened from: its words, up to nine photos and videos from the system's documents picker (a tile beside it
 opens the phone's camera app, whose photos go to the gallery to be picked from there), and when and
-where, worked out as it is written. A photo tapped there can be marked 不用作封面, one kept
+where, worked out as it is written. A video goes up as it is, so one over 100 MB, more than
+the API's Worker and the site's poster take, or other than MP4, MOV or WebM, is left out
+as it is picked, with a dialog saying why. A photo tapped there can be marked 不用作封面, one kept
 for the record (a screenshot, a flat tyre): it stays in its Moment, but neither the app's
 trip covers, calendar days and widget nor the site's covers, collages and share cards
 pick it. Under 类型 it can say what it is mostly about, one of 技术, 旅行, 美食, 用车,
 摄影 and 生活, a second tap leaving it unset; a 技术 one the site doesn't show. Under 美食 it can say what was eaten, as the site shows it under the Moment: the
 dishes, split at commas, 好吃, 一般 or 踩雷, and what the meal cost and how many it fed;
 the review before publishing shows a change to it in a line. The time is the earliest photo's, from its EXIF and
-the offset the camera wrote, else, for photos whose EXIF has none (saved from WeChat), the
-earliest their files were made, else now; the place is where the first photo was taken,
+the offset the camera wrote, or a video's creation time in the phone's zone, else, for
+photos whose EXIF has none (saved from WeChat), the
+earliest their files were made, else now; the place is where the first photo or video was taken,
 when the app may see that (the photo picker takes it out, the documents picker doesn't),
 else where the phone is, and the known place within 2 km of
 it, else a new place named after what is there (see below), or its coordinates.
@@ -72,7 +75,7 @@ the phone's own, and leaves Amap in front (one of the same name within 300 m isn
 twice). Amap's short link is followed to the point it
 redirects to, in GCJ-02, which is shifted back to WGS 84.
 
-Photos come in by sharing too: the gallery's share sheet (under 更多 on ColorOS, which can
+Photos and videos come in by sharing too: the gallery's share sheet (under 更多 on ColorOS, which can
 pin it) offers 这里 (写一个时刻) for one or several, which opens a new Moment with them,
 or adds them to the one being written. They are copied in at once, as they are, while the
 sharing still lets them be read; ColorOS's gallery leaves where a photo was taken in
@@ -83,7 +86,8 @@ directory in the spec's layout, its photos copied in whole so it keeps them what
 becomes of the gallery's (a motion photo, its clip appended to the JPEG as the camera
 writes it, is split there into a live photo's still and video, which its page plays from
 the phone until it is published; picked, the app asks whether motion photos go in as
-photos, their stills alone, which each one's options can change until it is saved), and its new places with ids of their own (`p-<ulid>`); no sync
+photos, their stills alone, which each one's options can change until it is saved; a video
+is copied whole, with its first frame beside it as its still), and its new places with ids of their own (`p-<ulid>`); no sync
 or change of API touches it. It is shown among the site's, marked 仅本机 (on this phone),
 and can be changed or deleted from its page.
 
@@ -97,7 +101,7 @@ or a deletion; its 全部发布到网站 runs as WorkManager work in a foregroun
 past the app being left or stopped, with how far it has got in a notification as on the
 page, and over a link that drops it waits for the network and goes on (asked once, on
 Android 13 and later, whether it may show that notification). It uploads the originals of
-the new photos, a live photo's still and video each, a few at a time,
+the new photos and videos, a live photo's still and video each, a few at a time,
 then sends all the rest as one `POST /v1/changes`, which the API takes whole or not at
 all: the places only the phone knows, named by the API from their pinyin, the Moments,
 each published, and the deletions. What is published leaves the phone's store for the

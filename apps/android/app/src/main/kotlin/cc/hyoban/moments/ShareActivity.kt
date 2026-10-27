@@ -10,8 +10,8 @@ import kotlinx.coroutines.launch
 
 /**
  * Where what other apps share arrives, drawing nothing and leaving their task as it was.
- * A place shared from a map is handed to the app to find, and photos shared from the
- * gallery are copied in while this activity may still read them; either way the app comes
+ * A place shared from a map is handed to the app to find, and photos and videos shared from
+ * the gallery are copied in while this activity may still read them; either way the app comes
  * forward on a new Moment, or on the one being written, which takes them. A spreadsheet,
  * iCost's bill export, is copied in and the app comes forward on the ledger's import. Shared to
  * 保存为地点 ([SAVE_ALIAS]), a place is only kept, and the map stays in front.
@@ -52,9 +52,22 @@ class ShareActivity : ComponentActivity() {
         }
     }
 
+    /**
+     * Whether what is shared is photos or videos; both at once come as any type, and are
+     * known by what the first of them holds.
+     */
+    private val sharedMedia: Boolean
+        get() {
+            val type = intent.type ?: return false
+            if (type.startsWith("image/") || type.startsWith("video/")) return true
+            if (type != "*/*") return false
+            val first = streams().firstOrNull() ?: return false
+            return contentResolver.getType(first).let { it != null && (it.startsWith("image/") || it.startsWith("video/")) }
+        }
+
     /** A spreadsheet shared or opened with the app: iCost's bill export, for the ledger. */
     private fun sharedSheet(): Uri? {
-        if (intent.type?.startsWith("image/") == true || intent.type == "text/plain") return null
+        if (sharedMedia || intent.type == "text/plain") return null
         if (intent.action == Intent.ACTION_VIEW) return intent.data
         @Suppress("DEPRECATION")
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -64,9 +77,10 @@ class ShareActivity : ComponentActivity() {
         }
     }
 
-    /** The photos shared, one or several. */
-    private fun sharedStreams(): List<Uri> {
-        if (intent.type?.startsWith("image/") != true) return emptyList()
+    /** The photos and videos shared, one or several. */
+    private fun sharedStreams(): List<Uri> = if (sharedMedia) streams() else emptyList()
+
+    private fun streams(): List<Uri> {
         @Suppress("DEPRECATION")
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             when (intent.action) {

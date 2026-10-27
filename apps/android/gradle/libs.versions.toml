@@ -52,6 +52,7 @@ androidx-navigation-compose = { group = "androidx.navigation", name = "navigatio
 material-kolor = { group = "com.materialkolor", name = "material-kolor", version.ref = "materialKolor" }
 coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil" }
 coil-network-okhttp = { group = "io.coil-kt.coil3", name = "coil-network-okhttp", version.ref = "coil" }
+coil-video = { group = "io.coil-kt.coil3", name = "coil-video", version.ref = "coil" }
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "serialization" }
 gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }

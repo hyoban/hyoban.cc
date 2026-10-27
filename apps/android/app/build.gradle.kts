@@ -101,6 +101,7 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.material.kolor)
     implementation(libs.coil.network.okhttp)
+    implementation(libs.coil.video)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.maplibre)
     implementation(libs.okhttp)

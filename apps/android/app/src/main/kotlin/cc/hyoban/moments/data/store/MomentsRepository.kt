@@ -418,12 +418,13 @@ class MomentsRepository(
         // The site's places with a changed kind go under their own ids, which the API takes the kind of.
         val places = moments.flatMap { it.places }.distinct().filter { it !in known }
             .associateWith { id -> own[id] ?: error("Unknown place $id") } + kinds
-        // A live photo sends its still and its motion, each an upload of its own.
+        // A live photo sends its still and its motion, each an upload of its own; a video only
+        // itself, its still on the phone left for the site to take from it.
         val originals = moments.flatMap { moment ->
             moment.media.filter { it.published == null }.flatMap { media ->
                 listOfNotNull(
-                    Triple(moment.uid, media, UploadPart.IMAGE),
-                    Triple(moment.uid, media, UploadPart.VIDEO).takeIf { media.type == MediaType.LIVE_PHOTO },
+                    Triple(moment.uid, media, UploadPart.IMAGE).takeIf { media.type != MediaType.VIDEO },
+                    Triple(moment.uid, media, UploadPart.VIDEO).takeIf { media.type != MediaType.IMAGE },
                 )
             }
         }
@@ -609,6 +610,8 @@ class MomentsRepository(
         "avif" -> "image/avif"
         "gif" -> "image/gif"
         "mp4" -> "video/mp4"
+        "mov" -> "video/quicktime"
+        "webm" -> "video/webm"
         else -> error("The API doesn't take .${file.extension} files")
     }
 

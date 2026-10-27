@@ -115,12 +115,14 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="text/plain" />
             </intent-filter>
-            <!-- Photos from the gallery, one or several, for a new Moment. -->
+            <!-- Photos and videos from the gallery, one or several, for a new Moment; both at
+                 once come as */*, which any filter with a type matches. -->
             <intent-filter android:label="@string/share_as_moment">
                 <action android:name="android.intent.action.SEND" />
                 <action android:name="android.intent.action.SEND_MULTIPLE" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="image/*" />
+                <data android:mimeType="video/*" />
             </intent-filter>
             <!-- A spreadsheet, iCost's bill export, shared or opened with the app, for the ledger. -->
             <intent-filter android:label="@string/share_to_ledger">
