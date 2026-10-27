@@ -14,8 +14,9 @@ export const tripMapMessages = resolveMessages({
 
 export const tripMapBrand = { image: getAssetUrl('site/avatar-80.webp'), name: SITE_TITLE }
 
-/** The 007GT of the year review (src/components/CarModel.astro), driving trips flown over. */
-export const tripMapCarModel = getAssetUrl('site/zeekr-007gt-5.glb')
+/** The 007GT of the year review (src/components/CarModel.astro), in its lighter cut, small
+ * enough on the map, driving trips flown over. */
+export const tripMapCarModel = getAssetUrl('site/zeekr-007gt-7.glb')
 
 export const tripMapMusic = tripVideoMusic.map(({ src, title }) => ({ src, title }))
 
