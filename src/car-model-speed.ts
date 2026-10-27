@@ -17,7 +17,10 @@ import { Reflector } from 'three/examples/jsm/objects/Reflector.js'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 
 // The streaks and the floor the 3D car (src/car-model-client.ts) speeds off over when it's
-// held down.
+// held down, after GameMCU's Xiaomi SU7 showroom (https://gamemcu.com/su7/): its tunnel of
+// streaks that only come once the car is going, its reflections laid crisp over the paint
+// rather than blurred into its light, its glossy floor, and its camera closing in as the view
+// widens, lowered level, shaking and tilted by a drag.
 
 /** Long light streaks, mostly pale white, lilac and blue, on a tunnel along the length of a
  * car of `size`, round whoever's watching, `follow`ing the camera so they spread evenly all
@@ -131,15 +134,15 @@ export function createTunnel(distance: number, size: Vector3, floorRadius: numbe
         float across = vAcross * vAcross;
         float profile = exp(-across * 40.0) + 0.35 * exp(-across * 5.0) * (1.0 - across);
         float lengthwise = pow(max(sin(3.14159 * vAlong), 0.0), 1.5) * (0.5 + 0.5 * vAlong);
-        gl_FragColor = vec4(
-          vTint * profile * lengthwise * vFade * glow * (1.0 - covered),
-          1.0
-        );
+        // Light added to what's behind, leaving how see-through the canvas is alone, so
+        // that while the page is still light, faint streaks don't cross it as dark lines.
+        gl_FragColor = vec4(vTint * profile * lengthwise * vFade * glow * (1.0 - covered), 0.0);
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
       }
     `,
     blending: AdditiveBlending,
+    premultipliedAlpha: true,
     transparent: true,
     depthWrite: false,
     // Seen from either side of the car, so from either side of its ribbons.

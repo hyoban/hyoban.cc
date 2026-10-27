@@ -134,3 +134,10 @@ write.
 
 Not deployed anywhere: build the release APK with `./gradlew` in `apps/android` and
 install it on the phone. Its API token is set on its settings page.
+
+## Thanks
+
+The 3D car's speed mode, held down in the year review and the 20,000 km post, where a line credits it
+(`src/car-model-speed.ts`), follows [GameMCU](https://gamemcu.com)'s
+[Xiaomi SU7 showroom](https://gamemcu.com/su7/): its tunnel of streaks, its reflections
+laid crisp over the paint, its glossy floor and its camera.
