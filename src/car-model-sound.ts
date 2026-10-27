@@ -12,12 +12,15 @@
 // it rings in a showroom's air, and the car's own sounds in a tunnel's once it's going, heard
 // from the side its nose points to as it's swung round.
 //
-// It's off until the button by the car turns it on, and stays as it was left from page to page
-// until the visit ends. Turned on, it plays as a video would, even on an iPhone set to silent. A car out of sight, or a page in the background, is quiet, and once
+// It's off until the button by the car turns it on, and this browser remembers it as it was
+// left. Remembered on, it starts with the first press or key on the page, which the browser
+// waits for before it lets a page play. Turned on, it plays as a video would, even on an
+// iPhone set to silent. A car out of sight, or a page in the background, is quiet, and once
 // nothing's heard the sound stops altogether rather than going on silently.
 
-/** Whether the sound is on, the same for every car. */
-let on = false
+/** Whether the sound is on, the same for every car, as this browser last left it. */
+const REMEMBERED = 'car-model-sound'
+let on = readSound()
 let context: AudioContext | undefined
 /** What follows the sound being turned on or off: each car, and each button. */
 const followers = new Set<() => void>()
@@ -29,15 +32,43 @@ let resting = 0
  * played as media, not muted by the silent switch as a game's sounds are. */
 type AudioSession = { type: 'auto' | 'playback' }
 
-/** Turned on, which must be from a press for the browser to let it play. */
 function setSound(next: boolean) {
   on = next
+  try {
+    localStorage.setItem(REMEMBERED, on ? 'on' : 'off')
+  } catch {
+    // The choice just won't be remembered.
+  }
+  start()
+}
+
+function readSound() {
+  try {
+    return localStorage.getItem(REMEMBERED) === 'on'
+  } catch {
+    return false
+  }
+}
+
+/** Under way as it's turned on or off, from a press, which the browser needs before it lets
+ * the page play. */
+function start() {
   const session = (navigator as Navigator & { audioSession?: AudioSession }).audioSession
   if (session) session.type = on ? 'playback' : 'auto'
   if (on) context ??= new AudioContext()
   for (const follow of followers) follow()
   rest()
 }
+
+// Remembered on, it starts with the page's first press or key.
+const wake = () => {
+  if (on && !context) start()
+  if (!context) return
+  removeEventListener('pointerup', wake, true)
+  removeEventListener('keydown', wake, true)
+}
+addEventListener('pointerup', wake, true)
+addEventListener('keydown', wake, true)
 
 /** Running while a car is heard, and stopped once the last one has faded. */
 function rest() {
@@ -172,7 +203,7 @@ export function createCarSound() {
   const follow = () => {
     if (isHeard()) heard.add(self)
     else heard.delete(self)
-    if (on) graph ??= build(context!)
+    if (on && context) graph ??= build(context)
     if (!graph) return
     graph.out.gain.setTargetAtTime(isHeard() ? VOLUME : 0, context!.currentTime, FADE / 3)
     graph.music.play(isHeard())
