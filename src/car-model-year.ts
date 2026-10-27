@@ -2,6 +2,7 @@ import {
   CanvasTexture,
   Color,
   Group,
+  MathUtils,
   Mesh,
   MeshBasicMaterial,
   PlaneGeometry,
@@ -13,13 +14,14 @@ import { formatCarDate, formatCarSum, getCarDate, sumCarDays, type CarYear } fro
 
 // A year review's car stands on its year (src/car-model.ts): the legs it drove on the year's
 // trips drawn faintly on the ground round it, in the page's ink as the footprint's routes are,
-// the north behind it, fading out towards the edges, and drawing in as it drives in. The map
+// the north behind it, fading out round the car, and drawing in as it drives in. The map
 // holds still as the car is swung round on it. By dark they all but go out, but for where its
 // lamps fall: warm in the beams ahead, which sweep across them as it's swung round, and red
 // in the glow behind. Speeding off, they turn pale over the dark, and under it the car drives
 // through the year a day at a time: the date, what it had driven, charged and spent by then,
 // and the year's driving graph lighting up to it, held where it got to when let go and gone
-// once the car is back.
+// once the car is back. As it goes, the map turns and slides under it so that it drives along
+// the year's legs in the order they were driven, the way it's going ahead.
 
 /** The ground drawn on, as a share of the car's diagonal, and its texture's size. */
 const SPREAD = 3.6
@@ -38,7 +40,7 @@ const BOOST = 4
 /** The ink at speed, over the dark: the dark page's own. */
 const PALE = '#eeeeec'
 /** Seconds held at full speed to drive through the whole year. */
-const COUNT = 6
+const COUNT = 12
 
 /** The year a car's frame stands on, if it's in a year review. */
 export function readCarYear(frame: HTMLElement) {
@@ -58,6 +60,62 @@ type RouteState = {
   dark: boolean
   z: number
   turn: number
+  /** At speed, where the car is on the ground and which way it's going, the ground turned
+   * and slid to it as far as it's going. */
+  follow?: Pick<Trace, 'x' | 'z' | 'angle'> | undefined
+}
+
+/** Where on the ground the car is along its path, how far the ground turns for the way it's
+ * going to lie straight ahead, and which of the path's legs it's on. */
+type Trace = { x: number; z: number; angle: number; leg: number }
+
+/** The angle `angle` brought within half a turn of nought. */
+export function wrapAngle(angle: number) {
+  return MathUtils.euclideanModulo(angle + Math.PI, 2 * Math.PI) - Math.PI
+}
+
+/** The legs of `lines`, each flat x, y pairs, put on the ground by `place`, one after the
+ * other, to be found along by the share of their whole length; the gaps between legs are
+ * jumped. */
+function createPath(lines: readonly number[][], place: (x: number, y: number) => [number, number]) {
+  const segments: {
+    x: number
+    z: number
+    dx: number
+    dz: number
+    angle: number
+    from: number
+    length: number
+    leg: number
+  }[] = []
+  let total = 0
+  for (const [leg, line] of lines.entries()) {
+    for (let at = 0; at + 3 < line.length; at += 2) {
+      const [x, z] = place(line[at]!, line[at + 1]!)
+      const [nextX, nextZ] = place(line[at + 2]!, line[at + 3]!)
+      const [dx, dz] = [nextX - x, nextZ - z]
+      const length = Math.hypot(dx, dz)
+      if (length === 0) continue
+      // Turned so that the way it's going lies straight ahead, along +z.
+      segments.push({ x, z, dx, dz, angle: Math.atan2(-dx, dz), from: total, length, leg })
+      total += length
+    }
+  }
+  return (share: number): Trace | undefined => {
+    if (segments.length === 0) return undefined
+    const along = MathUtils.clamp(share, 0, 1) * total
+    // The last segment starting at or before it.
+    let low = 0
+    let high = segments.length - 1
+    while (low < high) {
+      const middle = Math.ceil((low + high) / 2)
+      if (segments[middle]!.from <= along) low = middle
+      else high = middle - 1
+    }
+    const { x, z, dx, dz, angle, from, length, leg } = segments[low]!
+    const t = Math.min((along - from) / length, 1)
+    return { x: x + dx * t, z: z + dz * t, angle, leg }
+  }
 }
 
 /** The year's routes on the ground round a car of `size`; none without any. */
@@ -73,15 +131,6 @@ export function createRoutes(floor: CarYear['floor'], size: Vector3, renderer: W
   context.lineWidth = LINE / scale
   context.lineCap = context.lineJoin = 'round'
   context.stroke(new Path2D(floor.d))
-  context.setTransform(1, 0, 0, 1, 0, 0)
-  // Faded out from the middle, so the ground has no edge.
-  const half = TEXTURE / 2
-  const fade = context.createRadialGradient(half, half, 0, half, half, half)
-  fade.addColorStop(0.5, '#000')
-  fade.addColorStop(1, 'transparent')
-  context.globalCompositeOperation = 'destination-in'
-  context.fillStyle = fade
-  context.fillRect(0, 0, TEXTURE, TEXTURE)
 
   const texture = new CanvasTexture(canvas)
   texture.anisotropy = renderer.capabilities.getMaxAnisotropy()
@@ -91,14 +140,16 @@ export function createRoutes(floor: CarYear['floor'], size: Vector3, renderer: W
     depthWrite: false,
     toneMapped: false,
   })
-  // Faded out towards the canvas's edges, too, in the page, which the ground would run past.
+  // Faded out round the car, so the ground has no edge wherever on it the car is, and towards
+  // the canvas's edges, too, in the page, which the ground would run past.
+  const spread = { value: 0 }
   const edges = { value: new Vector2() }
   // The car's half width, its length and where its body is along its way; and how lit its
   // lamps are, and how far the routes are shown only by them.
   const car = { value: new Vector3() }
   const lamps = { value: new Vector2() }
   material.onBeforeCompile = (shader) => {
-    Object.assign(shader.uniforms, { edges, car, lamps })
+    Object.assign(shader.uniforms, { spread, edges, car, lamps })
     shader.vertexShader = shader.vertexShader
       .replace('void main() {', 'varying vec2 vGround;\nvoid main() {')
       .replace(
@@ -108,11 +159,14 @@ export function createRoutes(floor: CarYear['floor'], size: Vector3, renderer: W
     shader.fragmentShader = shader.fragmentShader
       .replace(
         'void main() {',
-        'uniform vec2 edges;\nuniform vec3 car;\nuniform vec2 lamps;\nvarying vec2 vGround;\nvoid main() {',
+        'uniform float spread;\nuniform vec2 edges;\nuniform vec3 car;\nuniform vec2 lamps;\nvarying vec2 vGround;\nvoid main() {',
       )
       .replace(
         '#include <opaque_fragment>',
-        `if (edges.x > 0.0) {
+        `diffuseColor.a *= 1.0 - smoothstep(0.5 * spread, spread, length(vGround));
+        vec2 border = min(vMapUv, 1.0 - vMapUv);
+        diffuseColor.a *= smoothstep(0.0, 0.04, min(border.x, border.y));
+        if (edges.x > 0.0) {
           diffuseColor.a *= smoothstep(0.0, edges.x, gl_FragCoord.y)
             * smoothstep(0.0, edges.x, gl_FragCoord.x)
             * smoothstep(0.0, edges.x, edges.y - gl_FragCoord.x);
@@ -139,6 +193,7 @@ export function createRoutes(floor: CarYear['floor'], size: Vector3, renderer: W
   }
   const drawn = new Vector2()
   const side = Math.hypot(size.x, size.z) * SPREAD
+  spread.value = side / 2
   const mesh = new Mesh(new PlaneGeometry(side, side), material)
   mesh.rotation.x = -Math.PI / 2
   mesh.position.y = 0.0005
@@ -155,7 +210,7 @@ export function createRoutes(floor: CarYear['floor'], size: Vector3, renderer: W
   return {
     ground,
     /** In the page's ink, or pale at speed, and by dark only where the lamps fall. */
-    set({ shown, slid, speed, lit, dark, z, turn }: RouteState) {
+    set({ shown, slid, speed, lit, dark, z, turn, follow }: RouteState) {
       renderer.getDrawingBufferSize(drawn)
       // Not while the canvas covers the screen.
       edges.value.set(speed > 0 ? 0 : drawn.y * ROOM, drawn.x)
@@ -163,11 +218,26 @@ export function createRoutes(floor: CarYear['floor'], size: Vector3, renderer: W
       material.opacity = shown * (INK + (SPEED_INK - INK) * speed)
       car.value.set(size.x / 2, size.z, z)
       lamps.value.set(lit, dark ? 1 - speed : 0)
-      ground.rotation.y = turn
-      // Back along the car's way, whichever way the ground is turned.
-      mesh.position.x = slid * Math.sin(turn)
-      mesh.position.z = -slid * Math.cos(turn)
+      // Back along the car's way, whichever way the ground is turned; or at speed, where it
+      // has got to on its way through the year under it, the way it's going ahead.
+      const back = { x: slid * Math.sin(turn), z: -slid * Math.cos(turn) }
+      if (follow) {
+        ground.rotation.y = turn + speed * wrapAngle(follow.angle - turn)
+        mesh.position.x = MathUtils.lerp(back.x, -follow.x, speed)
+        mesh.position.z = MathUtils.lerp(back.z, -follow.z, speed)
+      } else {
+        ground.rotation.y = turn
+        mesh.position.x = back.x
+        mesh.position.z = back.z
+      }
     },
+    /** Where on the ground, and which way along it, the car is `share` (0 to 1) of the way
+     * along its path through the year, the floor's units put on the ground squared up as the
+     * canvas is drawn. */
+    trace: createPath(floor.path, (x, y) => [
+      (x / floor.width - 0.5) * side,
+      ((y + (floor.width - floor.height) / 2) / floor.width - 0.5) * side,
+    ]),
     /** Read the page's ink again once it turns dark or light. */
     retheme: readInk,
   }
@@ -212,15 +282,16 @@ export function createOdometer(year: CarYear) {
   let shown: number | undefined
 
   return {
-    /** Driven on by `speed` over `delta` seconds; put away and started over once it's 0. */
+    /** Driven on by `speed` over `delta` seconds, and how far through the year it has got;
+     * put away and started over once it's 0. */
     advance(speed: number, delta: number) {
       if (speed === 0) {
-        if (!element.isConnected) return
+        if (!element.isConnected) return 0
         element.remove()
         for (const cell of cells) delete cell.dataset.lit
         counted = lit = 0
         shown = undefined
-        return
+        return 0
       }
       if (!element.isConnected) document.body.append(element)
       counted = Math.min(counted + (speed * delta) / COUNT, 1)
@@ -238,6 +309,7 @@ export function createOdometer(year: CarYear) {
         spent.textContent = figures.spent
       }
       element.style.opacity = String(Math.min(speed * 2, 1))
+      return counted
     },
     dispose() {
       element.remove()

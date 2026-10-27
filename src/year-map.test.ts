@@ -1,6 +1,12 @@
 import { describe, expect, test } from 'vite-plus/test'
 import type { FogRegions } from '@hyoban/trip-map'
-import { buildRouteGlyph, buildYearMap, getTripLine, type TripLine } from './year-map.ts'
+import {
+  buildCarFloor,
+  buildRouteGlyph,
+  buildYearMap,
+  getTripLine,
+  type TripLine,
+} from './year-map.ts'
 
 const square = (id: string, x: number, y: number): FogRegions['features'][number] => ({
   geometry: {
@@ -163,5 +169,54 @@ describe('buildRouteGlyph', () => {
     const numbers = glyph.d.match(/[\d.]+/g)!.map(Number)
     expect(Math.max(...numbers)).toBeLessThanOrEqual(100)
     expect(glyph.height).toBeLessThanOrEqual(100)
+  })
+})
+
+describe('buildCarFloor', () => {
+  test('keeps the legs driven in order as its path, without the turns too small to feel', () => {
+    const floor = buildCarFloor([
+      {
+        by: 'car',
+        points: [
+          [120, 30],
+          [120.5, 30.0001],
+          [121, 30],
+        ],
+      },
+      {
+        by: 'plane',
+        points: [
+          [121, 30],
+          [125, 35],
+        ],
+      },
+      {
+        by: 'car',
+        points: [
+          [121, 30],
+          [121, 31],
+        ],
+      },
+    ])
+    expect(floor?.path).toHaveLength(2)
+    expect(floor?.path[0]).toHaveLength(4)
+    // The second leg goes north, up the floor, from where the first ended.
+    const [first, second] = floor!.path
+    expect(second!.slice(0, 2)).toEqual(first!.slice(2))
+    expect(second![3]!).toBeLessThan(second![1]!)
+  })
+
+  test('has nothing to stand on without driving', () => {
+    expect(
+      buildCarFloor([
+        {
+          by: 'plane',
+          points: [
+            [120, 30],
+            [121, 31],
+          ],
+        },
+      ]),
+    ).toBeUndefined()
   })
 })
