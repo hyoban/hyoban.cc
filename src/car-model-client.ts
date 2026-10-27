@@ -29,17 +29,15 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 import { createFloor, createTunnel, reflectStreaks, smoothstep } from './car-model-speed.ts'
 
-// The car turning slowly on its own shadow, under a studio's light. It can be swung round
-// by dragging sideways, but not zoomed or tipped over, and a vertical drag still scrolls the
+// The car standing on its own shadow, under a studio's light, never turning on its own. It
+// can be swung round by dragging sideways, a drag coasting to rest, but not zoomed or tipped over, and a vertical drag still scrolls the
 // page. It draws nothing while out of sight.
 //
 // The first time it comes into view it drives in with the scroll: it rolls forward as the
 // page moves on and back as it moves back, its wheels rolling as it goes, coming to a stop
 // once its frame is just past the middle of the screen. There its nose dips as it brakes and
-// settles back, and only then does it begin to turn, gathering speed; after that the scroll
-// leaves it be. Once it's touched, the turn eases to a stop and the car stays as it's left, a
-// drag coasting to rest. Under reduced motion, or when it's already in view by the time it
-// has loaded, it's simply there, standing still under reduced motion.
+// settles back; after that the scroll leaves it be. Under reduced motion, or when it's
+// already in view by the time it has loaded, it's simply there.
 //
 // Any press sets its wheels rolling. A drag begun straight away only turns it in its place;
 // held a moment first, it speeds off, after Xiaomi SU7's showroom at gamemcu.com/su7, and
@@ -53,8 +51,6 @@ import { createFloor, createTunnel, reflectStreaks, smoothstep } from './car-mod
 // middle and back to its place as it goes. Not under reduced motion. The streaks and the floor
 // are in src/car-model-speed.ts.
 
-/** Seconds for a whole turn on its own. */
-const TURN_SECONDS = 40
 /** How far above the car the camera looks down, from the horizon. */
 const ELEVATION = (14 * Math.PI) / 180
 const FOV = 26
@@ -69,10 +65,6 @@ const STOP_AT = 0.42
 const DIP = (1.6 * Math.PI) / 180
 const SETTLE_DECAY_MS = 180
 const SETTLE_PERIOD_MS = 560
-/** How long the turn takes to come up to speed once it's settled. */
-const RAMP_MS = 2000
-/** How long the turn takes to come to a stop once the car's been touched. */
-const STOP_MS = 1500
 
 /** How long a press must stay put before the car speeds off, how far it may wander in that
  * time and until the speed has come up this far, before it's taken as a drag that only
@@ -240,7 +232,6 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
   controls.enablePan = false
   controls.enableDamping = true
   controls.minPolarAngle = controls.maxPolarAngle = Math.PI / 2 - ELEVATION
-  controls.autoRotateSpeed = 60 / TURN_SECONDS
   frame.style.touchAction = 'pan-y'
   const reduced = matchMedia('(prefers-reduced-motion: reduce)')
   frame.append(canvas)
@@ -276,14 +267,12 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
 
   // Driving in with the scroll only makes sense while it hasn't begun to.
   const rect = frame.getBoundingClientRect()
-  let stage: 'scrolling' | 'settling' | 'turning' | 'still' = reduced.matches
+  let stage: 'scrolling' | 'settling' | 'parked' | 'still' = reduced.matches
     ? 'still'
     : rect.bottom > 0 && rect.top < innerHeight * START_AT
-      ? 'turning'
+      ? 'parked'
       : 'scrolling'
   let stageStart = 0
-  // When it was first touched, after which its turn eases to a stop and it's left as it's put.
-  let touchedAt = 0
   const run = size.z * DRIVE_IN
 
   /** How far along the run in the scroll has it. */
@@ -314,17 +303,8 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
         Math.cos((elapsed / SETTLE_PERIOD_MS) * 2 * Math.PI)
       if (elapsed > SETTLE_DECAY_MS * 6) {
         body.rotation.x = 0
-        stage = 'turning'
-        stageStart = now
+        stage = 'parked'
       }
-    }
-    if (stage === 'turning') {
-      const ramp = stageStart ? Math.min((now - stageStart) / RAMP_MS, 1) : 1
-      const stopping = touchedAt ? Math.min((now - touchedAt) / STOP_MS, 1) : 0
-      controls.autoRotate = stopping < 1
-      controls.autoRotateSpeed = (60 / TURN_SECONDS) * easeInOut(ramp) * (1 - easeInOut(stopping))
-    } else {
-      controls.autoRotate = false
     }
     shadow.position.z = body.position.z
     // Its wheels turned as far as it has rolled, without slipping, and spun up at speed.
@@ -373,7 +353,6 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
     held = false
   }
   const press = (event: PointerEvent) => {
-    touchedAt ||= performance.now()
     if (reduced.matches || !event.isPrimary || event.button !== 0) return
     held = true
     turning = false
@@ -546,7 +525,7 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
     const delta = timer.getDelta()
     drive(time, delta)
     pose(time)
-    if (!upgrading && (stage === 'turning' || stage === 'still')) upgrade()
+    if (!upgrading && (stage === 'parked' || stage === 'still')) upgrade()
     controls.update(delta)
     if (speeding) {
       frameSpeed(time)
@@ -572,8 +551,7 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
       body.position.z = 0
       body.rotation.x = 0
     } else if (stage === 'still') {
-      stage = 'turning'
-      stageStart = performance.now()
+      stage = 'parked'
     }
     pose(performance.now())
   }
