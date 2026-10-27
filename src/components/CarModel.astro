@@ -1,8 +1,15 @@
 ---
-import { renderCarModel } from '@/car-model'
+import { renderCarModel, type CarYear } from '@/car-model'
 
-// The car in 3D at the head of the driving section (see src/car-model.ts). Its styles are in
+// The car in 3D at the head of the driving section (see src/car-model.ts), standing on the
+// year's driving and counting up its distance at speed. Its styles are in
 // src/styles/index.css and its script in src/car-model-mount.ts, shared with articles.
+
+interface Props {
+  year: CarYear
+}
+
+const { year } = Astro.props
 ---
 
-<Fragment set:html={renderCarModel('极氪 007GT 的 3D 模型，左右拖动可以转动，按住不放会加速')} />
+<Fragment set:html={renderCarModel('极氪 007GT 的 3D 模型，左右拖动可以转动，按住不放会加速', year)} />

@@ -31,6 +31,7 @@ import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment
 import { createGlow, createLightLayer, findLamps, setLamps } from './car-model-lamps.ts'
 import { createCarSound, mountSoundToggle } from './car-model-sound.ts'
 import { createFloor, createTunnel, reflectStreaks, smoothstep } from './car-model-speed.ts'
+import { createOdometer, createRoutes, readCarYear } from './car-model-year.ts'
 
 // The car standing on its own shadow, under a studio's light, never turning on its own. It
 // can be swung round by dragging sideways, a drag coasting to rest, but not zoomed or tipped over, and a vertical drag still scrolls the
@@ -62,10 +63,16 @@ import { createFloor, createTunnel, reflectStreaks, smoothstep } from './car-mod
 //
 // A button at its corner turns its sound on, and its music with it, off until then. They're in
 // src/car-model-sound.ts.
+//
+// In a year review it stands on the year's driving, and counts up the year's distance as it
+// speeds off. They're in src/car-model-year.ts.
 
 /** How far above the car the camera looks down, from the horizon. */
 const ELEVATION = (14 * Math.PI) / 180
 const FOV = 26
+/** Where the camera starts round the car: the front three-quarter view, the way the car is
+ * usually photographed. */
+const START_AZIMUTH = Math.PI / 5
 
 /** The run in, as a share of the car's length. */
 const DRIVE_IN = 0.8
@@ -273,6 +280,10 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
   scene.add(body, shadow, glow.tail, glow.ahead)
   const lightLayer = createLightLayer(glow.ahead, scene, renderer.getPixelRatio())
   const dark = matchMedia('(prefers-color-scheme: dark)')
+  const year = readCarYear(frame)
+  const routes = createRoutes(year?.floor, size, renderer)
+  if (routes) scene.add(routes.ground)
+  const odometer = year && createOdometer(year)
   let lit = dark.matches ? 1 : 0
   const light = (level: number) => {
     lit = level
@@ -317,8 +328,7 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
     const turned = (reach * 1.15) / Math.tan(halfHorizontal)
     const upright = (size.y * 0.78) / Math.tan(halfVertical)
     distance = Math.max(sideOn, turned, upright)
-    // Start from the front three-quarter view, the way the car is usually photographed.
-    const azimuth = controls.getAzimuthalAngle() || Math.PI / 5
+    const azimuth = controls.getAzimuthalAngle() || START_AZIMUTH
     camera.position.setFromSphericalCoords(distance, Math.PI / 2 - ELEVATION, azimuth).add(target)
     camera.updateProjectionMatrix()
     controls.update()
@@ -371,6 +381,16 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
       }
     }
     shadow.position.z = glow.tail.position.z = glow.ahead.position.z = body.position.z
+    // The ground stays put, drawing in as the car drives onto it, and holds still on the screen
+    // as it's swung round.
+    routes?.set({
+      shown: 1 + body.position.z / run,
+      speed,
+      lit,
+      dark: dark.matches,
+      z: body.position.z,
+      turn: controls.getAzimuthalAngle() - START_AZIMUTH,
+    })
     // Its wheels turned as far as it has rolled, without slipping, and spun up at speed.
     for (const axle of current.wheels.axles) {
       axle.rotation.x = (body.position.z + run) / current.wheels.radius + spin
@@ -457,6 +477,7 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
   }
   const unswitch = () => {
     switched = false
+    routes?.retheme()
   }
   frame.addEventListener('pointerdown', press)
   frame.addEventListener('click', flip)
@@ -595,6 +616,7 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
     spin += Math.max(roll * ROLL, speed * 5) * delta
     // The streaks only come once it's going.
     tunnel.advance(speed, smoothstep(0.15, 0.8, rush), delta)
+    odometer?.advance(speed, delta)
     floor.mesh.visible = speeding
     floor.opacity = speed
     // A shiver through the body at speed.
@@ -699,6 +721,7 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
     dark.removeEventListener('change', unswitch)
     removeEventListener('blur', letGo)
     sound.dispose()
+    odometer?.dispose()
     unmountToggle()
     controls.dispose()
     released = true

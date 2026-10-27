@@ -28,10 +28,20 @@ const HTML_ESCAPES: Record<string, string> = {
   '>': '&gt;',
 }
 
-/** The car's figure, read out as `label`. */
-export function renderCarModel(label: string) {
+/** What a year review's car stands on, and how far the year drove it, counted up at speed. */
+export interface CarYear {
+  /** The legs driven, as path data in a box `width` by `height` (src/year-map.ts). */
+  floor?: { d: string; width: number; height: number } | undefined
+  meters: number
+  /** What the distance is of, over it: `2026 年`. */
+  caption: string
+}
+
+/** The car's figure, read out as `label`; in a year review, standing on its `year`. */
+export function renderCarModel(label: string, year?: CarYear) {
   const text = escapeHtml(label)
-  return `<figure class="car-model" data-src="${CAR_MODEL}" data-full-src="${CAR_MODEL_FULL}" role="img" aria-label="${text}"><img class="car-model__still" src="${CAR_STILL.src}" alt="${text}" width="${CAR_STILL.width}" height="${CAR_STILL.height}" loading="lazy" decoding="async"></figure>`
+  const data = year ? ` data-year="${escapeHtml(JSON.stringify(year))}"` : ''
+  return `<figure class="car-model" data-src="${CAR_MODEL}" data-full-src="${CAR_MODEL_FULL}"${data} role="img" aria-label="${text}"><img class="car-model__still" src="${CAR_STILL.src}" alt="${text}" width="${CAR_STILL.width}" height="${CAR_STILL.height}" loading="lazy" decoding="async"></figure>`
 }
 
 type MdNode = { type: string; children?: MdNode[]; url?: string; value?: string }
