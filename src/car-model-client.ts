@@ -131,23 +131,9 @@ function release(root: Object3D) {
 }
 
 /**
- * Whether to fetch the full model after the light one: not when the reader asks to save
- * data or is on a mobile network, nor on a touch screen, whose browser may not say. The
- * browser's guess at the connection's speed is no guide: it goes by the round trip, long
- * from China to the image origin however fast the line.
- */
-function wantsFullModel() {
-  const connection = (
-    navigator as Navigator & { connection?: { saveData?: boolean; type?: string } }
-  ).connection
-  if (connection) return !connection.saveData && connection.type !== 'cellular'
-  return !matchMedia('(pointer: coarse)').matches
-}
-
-/**
  * Draw the car in the frame from the light model at `src`, and once it has settled, swap in
- * the full one at `fullSrc` where the connection allows. One that was kept from an earlier
- * visit is drawn straight away instead, with no light one first.
+ * the full one at `fullSrc`. One that was kept from an earlier visit is drawn straight away
+ * instead, with no light one first.
  */
 export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: string) {
   const canvas = document.createElement('canvas')
@@ -274,7 +260,7 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
   // Once it's settled, the full model takes the light one's place, the swap between two
   // frames, the car keeping its place and its turn.
   let current = { car, wheels }
-  let upgrading = fullKept || !fullSrc || !wantsFullModel()
+  let upgrading = fullKept || !fullSrc
   let released = false
   const upgrade = () => {
     upgrading = true

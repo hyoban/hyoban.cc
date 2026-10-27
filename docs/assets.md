@@ -30,8 +30,8 @@ exported as glTF with its glass made transmissive and each axle's pair of wheels
 as its own node, `front-wheels` and `rear-wheels`, for the page to roll. It comes in two
 cuts: `site/zeekr-007gt-9.glb`, simplified with 512px WebP textures, loads first and also
 drives a trip's route while its playback flies over; `site/zeekr-007gt-9-full.glb`,
-only meshopt-quantized, takes its place once the car has settled where the
-connection allows. The page keeps both in its Cache Storage once fetched, since the
+only meshopt-quantized, takes its place once the car has settled. The page keeps both
+in its Cache Storage once fetched, since the
 full one is more than some browsers' HTTP caches hold, and draws a kept full one straight
 away, with no light one first. Its still is
 `site/zeekr-007gt-7.webp`. The purchase, the
