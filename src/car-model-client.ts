@@ -29,6 +29,7 @@ import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.j
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 import { createGlow, createLightLayer, findLamps, setLamps } from './car-model-lamps.ts'
+import { createCarSound, mountSoundToggle } from './car-model-sound.ts'
 import { createFloor, createTunnel, reflectStreaks, smoothstep } from './car-model-speed.ts'
 
 // The car standing on its own shadow, under a studio's light, never turning on its own. It
@@ -58,6 +59,9 @@ import { createFloor, createTunnel, reflectStreaks, smoothstep } from './car-mod
 // around the car speeding off. A click, let go before the car could speed off and without
 // moving, switches them off, or on by day, until the page turns dark or light. They're in
 // src/car-model-lamps.ts.
+//
+// A button at its corner turns its sound on, and its music with it, off until then. They're in
+// src/car-model-sound.ts.
 
 /** How far above the car the camera looks down, from the horizon. */
 const ELEVATION = (14 * Math.PI) / 180
@@ -351,6 +355,7 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
       if (progress === 1) {
         stage = 'settling'
         stageStart = now
+        sound.brake()
       }
     } else if (stage === 'settling') {
       // Stopped, it springs back up.
@@ -404,6 +409,9 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
   const floor = createFloor(floorSize)
   scene.add(tunnel.streaks, floor.mesh)
 
+  const sound = createCarSound()
+  const unmountToggle = mountSoundToggle(frame)
+
   let held = false
   let pressedAt = { x: 0, y: 0, time: 0 }
   let turning = false
@@ -419,6 +427,7 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
     pressedAt = { x: event.clientX, y: event.clientY, time: performance.now() }
     if (reduced.matches) return
     held = true
+    sound.press()
     turning = false
   }
   // A press that soon moves is a drag to turn the car, and leaves it in its place; once it's
@@ -442,7 +451,9 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
   let switched = false
   const flip = (event: MouseEvent) => {
     const moved = Math.hypot(event.clientX - pressedAt.x, event.clientY - pressedAt.y)
-    if (performance.now() - pressedAt.time < HOLD_MS && moved <= HOLD_SLOP) switched = !switched
+    if (performance.now() - pressedAt.time >= HOLD_MS || moved > HOLD_SLOP) return
+    switched = !switched
+    sound.lamps(dark.matches !== switched)
   }
   const unswitch = () => {
     switched = false
@@ -607,6 +618,7 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
 
   let visible = true
   let frameId = 0
+  let azimuth = controls.getAzimuthalAngle()
   const timer = new Timer()
   const tick = (time: number) => {
     timer.update(time)
@@ -615,6 +627,11 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
     pose(time)
     if (!upgrading && (stage === 'parked' || stage === 'still')) upgrade()
     controls.update(delta)
+    // How fast it's swung round, the long way round from one side to the other taken short.
+    const turned = controls.getAzimuthalAngle()
+    const swing = Math.abs(((turned - azimuth + 3 * Math.PI) % (2 * Math.PI)) - Math.PI)
+    azimuth = turned
+    sound.update({ speed, rush, roll, turn: delta > 0 ? swing / delta : 0, azimuth: turned })
     if (speeding) {
       frameSpeed(time)
       tunnel.follow(camera.position)
@@ -634,6 +651,7 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
     frameId = visible && !document.hidden ? requestAnimationFrame(tick) : 0
   }
   const resume = () => {
+    sound.setAudible(visible && !document.hidden)
     if (!frameId && visible && !document.hidden) frameId = requestAnimationFrame(tick)
   }
   // A callback can carry more than one change for the frame; the last is how it is now.
@@ -680,6 +698,8 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
     frame.removeEventListener('click', flip)
     dark.removeEventListener('change', unswitch)
     removeEventListener('blur', letGo)
+    sound.dispose()
+    unmountToggle()
     controls.dispose()
     released = true
     floor.mesh.dispose()
