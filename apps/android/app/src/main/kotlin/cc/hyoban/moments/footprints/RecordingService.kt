@@ -40,6 +40,9 @@ class RecordingService : Service() {
     private var generation = 0
     private var acquiring = false
     private var batching = false
+    private var requestedInterval = 0L
+    private val gnss = GnssStatusDiagnostics()
+    private var gnssRegistered = false
     private val batchHealth = BatchDeliveryHealth()
     private var configured = false
     private var segmentId: String? = null
@@ -70,10 +73,11 @@ class RecordingService : Service() {
         super.onCreate()
         live = this
         diagnostic("service_start", "app_version" to BuildConfig.VERSION_NAME, "app_version_code" to BuildConfig.VERSION_CODE,
-            "policy" to "daily-v4", "track_filter" to TrackRefiner.VERSION, "track_diagnostics" to 1,
+            "policy" to "daily-v5", "track_filter" to TrackRefiner.VERSION, "track_diagnostics" to 1,
             "sdk" to Build.VERSION.SDK_INT, "os" to Build.VERSION.RELEASE, "os_build" to Build.DISPLAY,
             "manufacturer" to Build.MANUFACTURER, "model" to Build.MODEL,
             "fix_timeout_ms" to DailyRecordingPolicy.FIX_TIMEOUT, "still_timeout_ms" to DailyRecordingPolicy.STILL_TIMEOUT,
+            "moving_still_timeout_ms" to DailyRecordingPolicy.ACTIVITY_MOVING_STILL_TIMEOUT,
             "rest_interval_ms" to DailyRecordingPolicy.REST_INTERVAL, "max_retry_ms" to DailyRecordingPolicy.MAX_RETRY)
         if (Build.VERSION.SDK_INT >= 34) diagnostic("gnss_capabilities", "scheduling" to manager.gnssCapabilities.hasScheduling())
         // Older builds permanently disabled batching after one failure. The new cooldown is reversible.
@@ -131,7 +135,7 @@ class RecordingService : Service() {
             if (configured) {
                 if (motionWake > lastActivityNanos) {
                     lastActivityNanos = motionWake
-                    daily?.motion(SystemClock.elapsedRealtime())
+                    daily?.activity(true, SystemClock.elapsedRealtime())
                     applyDailyPolicy()
                 }
                 return
@@ -159,7 +163,10 @@ class RecordingService : Service() {
             return // Keep the service alive to recover when location is switched back on.
         }
         if (state.session == null) {
-            daily = DailyRecordingPolicy(SystemClock.elapsedRealtime())
+            daily = DailyRecordingPolicy(SystemClock.elapsedRealtime()).also { policy ->
+                // The movement that restarted the service keeps the walking rate from its first request.
+                if (motionWake != null) policy.activity(true, SystemClock.elapsedRealtime())
+            }
             applyDailyPolicy()
         } else {
             startUpdates(trip = true)
@@ -181,11 +188,12 @@ class RecordingService : Service() {
             segmentStartNanos = SystemClock.elapsedRealtimeNanos()
             lastDeliveredNanos = 0
         }
-        val interval = if (trip) 5_000L else LocationDeliveryPolicy.DAILY_INTERVAL_MS
+        val interval = if (trip) 5_000L else LocationDeliveryPolicy.dailyInterval(daily?.activityMoving == true)
         val distance = if (trip) 5f else 0f
         val batched = !trip && batch && Build.VERSION.SDK_INT >= 31 && batchHealth.canBatch(SystemClock.elapsedRealtime())
         batching = batched
         acquiring = !trip && !batch
+        requestedInterval = interval
         val version = ++generation
         requestStarted = SystemClock.elapsedRealtime()
         if (batched) batchHealth.started(requestStarted)
@@ -214,8 +222,13 @@ class RecordingService : Service() {
                 manager.requestLocationUpdates(provider, request, mainExecutor, updates)
             } else manager.requestLocationUpdates(provider, interval, distance, updates, Looper.getMainLooper())
             subscribed = true
+            if (provider == LocationManager.GPS_PROVIDER && !gnssRegistered) {
+                gnss.reset()
+                // Status arrives only while GPS already runs for this request; it never starts a fix.
+                gnssRegistered = manager.registerGnssStatusCallback(mainExecutor, gnss.callback)
+            }
             diagnostic("location_request_start", "provider" to provider, "interval_ms" to interval,
-                "distance_m" to distance, "trip" to trip, "segment_break" to newSegment,
+                "distance_m" to distance, "trip" to trip, "activity_moving" to daily?.activityMoving, "segment_break" to newSegment,
                 "batch_delay_ms" to if (batched) LocationDeliveryPolicy.BATCH_DELAY_MS else 0,
                 "system_timeout_ms" to if (acquiring && Build.VERSION.SDK_INT >= 31) DailyRecordingPolicy.FIX_TIMEOUT else null)
             if (newSegment) {
@@ -274,7 +287,8 @@ class RecordingService : Service() {
             for ((index, sample) in samples.withIndex()) {
                 val (copy, point) = sample
                 val decision = storedByTime[point.time] ?: FixDecision.NOT_RECORDING
-                diagnostic("fix", "raw_stored" to (decision == FixDecision.ACCEPT), "decision" to decision.name, *sampleFields(copy))
+                diagnostic("fix", "raw_stored" to (decision == FixDecision.ACCEPT), "decision" to decision.name, *sampleFields(copy),
+                    *gnss.take(SystemClock.elapsedRealtime()))
                 if (decision == FixDecision.NOT_RECORDING) continue
                 lastFix = copy.elapsedRealtimeNanos / 1_000_000
                 val moving = copy.hasSpeed() && copy.hasSpeedAccuracy() &&
@@ -322,6 +336,8 @@ class RecordingService : Service() {
         generation++ // Callbacks queued by an older request must not restart a sleeping recorder.
         listener?.let { manager.removeUpdates(it) }
         listener = null
+        if (gnssRegistered) manager.unregisterGnssStatusCallback(gnss.callback)
+        gnssRegistered = false
         subscribed = false
         batching = false
     }
@@ -333,6 +349,8 @@ class RecordingService : Service() {
             android.util.Log.i("Footprints", "Daily ${reportedPhase ?: "start"} -> ${policy.phase}; reason=${policy.restReason}")
             diagnostic("phase", "from" to reportedPhase?.name, "to" to policy.phase.name,
                 "reason" to policy.restReason?.name, "next_check_in_ms" to (policy.nextCheck - SystemClock.elapsedRealtime()),
+                "activity_moving" to policy.activityMoving, "since_movement_ms" to (SystemClock.elapsedRealtime() - policy.lastMovementAt),
+                "stop_timeout_ms" to policy.stopTimeout.takeIf { policy.restReason == DailyRecordingPolicy.RestReason.STILL },
                 "last_fix_age_ms" to lastFix.takeIf { it > 0 }?.let { SystemClock.elapsedRealtime() - it }, *environment())
             reportedPhase = policy.phase
         }
@@ -347,6 +365,12 @@ class RecordingService : Service() {
             stopMotion()
             stopPassive()
             if (!subscribed) startUpdates(trip = false)
+            else if (requestedInterval != LocationDeliveryPolicy.dailyInterval(policy.activityMoving)) {
+                // Keep the segment: only the sampling rate changes with the activity.
+                val batch = !acquiring
+                stopUpdates()
+                startUpdates(trip = false, newSegment = false, batch = batch)
+            }
         }
         // Handler-backed delay does not wake the CPU from deep sleep. The significant-motion
         // sensor is the wake-up path; this fallback may run later under Doze, without exact alarms.
@@ -611,10 +635,8 @@ class RecordingService : Service() {
                     service.lastActivityNanos = elapsedNanos
                     service.diagnostic("activity_transition", "moving" to moving, "activity" to activity)
                     // STILL is advisory: only locations confirm a stop, so a traffic light cannot pause a trip.
-                    if (moving) {
-                        policy.motion(SystemClock.elapsedRealtime())
-                        service.applyDailyPolicy()
-                    }
+                    policy.activity(moving, SystemClock.elapsedRealtime())
+                    service.applyDailyPolicy()
                 } finally { done.complete(Unit) }
             }.isSuccess) done.await()
         }
