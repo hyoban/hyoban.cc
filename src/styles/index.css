@@ -569,6 +569,37 @@ html[data-calendar-mode-transition] .calendar-mode-switch a[data-mode='map'] {
   }
 }
 
+/* The car's sound switch (src/car-model-client.ts), at the frame's corner over the car. */
+.car-model-sound {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 1px solid var(--color-glass-border);
+  border-radius: 9999px;
+  background: var(--color-glass);
+  -webkit-backdrop-filter: blur(1rem);
+  backdrop-filter: blur(1rem);
+  color: var(--color-tx-3);
+  font-size: 0.875rem;
+  cursor: pointer;
+
+  &[aria-pressed='true'] {
+    color: var(--color-tx);
+  }
+
+  @media (hover: hover) {
+    &:hover {
+      color: var(--color-tx);
+    }
+  }
+}
+
 /* Who the speeding car is after (src/car-model.ts), a line under it in articles. */
 .car-model-credit {
   color: var(--color-tx-3);
