@@ -3,8 +3,9 @@ import { getAssetUrl } from './asset-url.ts'
 // The car in 3D: a bought model of the 007GT painted in its colour, in site/ on the image
 // origin, drawn by src/car-model-client.ts once it nears the screen, where it drives in
 // with the scroll the first time it's seen. It comes first in a lighter cut, and the full
-// one takes its place once it has settled. Until then, and without the script or WebGL, a
-// still of it, which is also what a feed shows.
+// one takes its place once it has settled. With the script its place stays empty until the
+// model has drawn; without it, or when the model can't be drawn, a still of it stands in,
+// which is also what a feed shows.
 //
 // The year review draws it at the head of its driving section (src/components/CarModel.astro),
 // and an article where a paragraph is nothing but the still, `![label](still)`. Held down it

@@ -558,6 +558,15 @@ html[data-calendar-mode-transition] .calendar-mode-switch a[data-mode='map'] {
     opacity: 0;
   }
 
+  /* With the script the frame waits empty for the model rather than showing the still, parked
+     where the model would drive in from behind; the still only comes back if the model can't
+     be drawn. */
+  @media (scripting: enabled) {
+    &:not(.is-failed) .car-model__still {
+      opacity: 0;
+    }
+  }
+
   /* In an article it breaks out of the column to the year review's width, as far as the
      screen has room, and makes room above and below for all it's drawn over, so as not to
      cover the text: 55% and 20% of its height, a third of its width. */
