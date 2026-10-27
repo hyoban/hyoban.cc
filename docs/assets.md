@@ -28,7 +28,9 @@ The car on the year review's driving section, also drawn in an article by a para
 that is only its still, is the "Zeekr 7GT 2026" model by
 Zifir3d, bought on Superhive (royalty free), repainted in the car's colour and
 exported as glTF with its glass made transmissive and each axle's pair of wheels kept
-as its own node, `front-wheels` and `rear-wheels`, for the page to roll. It comes in two
+as its own node, `front-wheels` and `rear-wheels`, for the page to roll. Its lamps are the
+materials that glow, the strip across its nose and the one across its tail, which the
+page and the trip's flyover switch off by day. It comes in two
 cuts: `site/zeekr-007gt-9.glb`, simplified with 512px WebP textures, loads first and also
 drives a trip's route while its playback flies over; `site/zeekr-007gt-9-full.glb`,
 only meshopt-quantized, takes its place once the car has settled. The page keeps both

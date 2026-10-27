@@ -16,6 +16,7 @@ import {
   PlaneGeometry,
   SRGBColorSpace,
   Scene,
+  Sprite,
   Texture,
   Timer,
   Vector2,
@@ -27,6 +28,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
+import { createGlow, createLightLayer, findLamps, setLamps } from './car-model-lamps.ts'
 import { createFloor, createTunnel, reflectStreaks, smoothstep } from './car-model-speed.ts'
 
 // The car standing on its own shadow, under a studio's light, never turning on its own. It
@@ -51,6 +53,11 @@ import { createFloor, createTunnel, reflectStreaks, smoothstep } from './car-mod
 // screen for as long as that lasts, the car gliding to its middle and back to its place as
 // it goes. Not under reduced motion. The streaks and the floor are in
 // src/car-model-speed.ts.
+//
+// Its lamps are off by day and on in the dark: when the page is dark, and as it goes dark
+// around the car speeding off. A click, let go before the car could speed off and without
+// moving, switches them off, or on by day, until the page turns dark or light. They're in
+// src/car-model-lamps.ts.
 
 /** How far above the car the camera looks down, from the horizon. */
 const ELEVATION = (14 * Math.PI) / 180
@@ -104,6 +111,8 @@ const GLINT = 2
 const TINT = 0.92
 /** How rough the paint is at full speed, polished from its satin. */
 const POLISH = 0.08
+/** Seconds the lamps take to come on, or go off. */
+const LAMPS_FADE = 0.12
 
 /** easeOutCubic: the scroll's distance laid out so the car slows as it nears its stop. */
 const easeOut = cubicBezier(0.33, 1, 0.68, 1)
@@ -145,9 +154,9 @@ async function forgetModelsBut(sources: string[]) {
 const WHEELS = ['front-wheels', 'rear-wheels']
 
 /**
- * A car model, stood on the ground with its middle over the origin, and its size; and its
+ * A car model, stood on the ground with its middle over the origin, and its size; its
  * wheels, each axle's pair on a group turning about it on the model's x axis, with the
- * wheels' radius.
+ * wheels' radius; and its lamps, with its headlamps' bounds.
  */
 async function loadCar(loader: GLTFLoader, src: string) {
   const car = (await loader.parseAsync(await fetchModel(src), '')).scene
@@ -167,12 +176,15 @@ async function loadCar(loader: GLTFLoader, src: string) {
     axle.attach(wheels)
     return [axle]
   })
-  return { car, size: box.getSize(new Vector3()), wheels: { axles, radius } }
+  const size = box.getSize(new Vector3())
+  return { car, size, wheels: { axles, radius }, ...findLamps(car, size) }
 }
 
 /** Let go of everything a part of the scene holds on the GPU. */
 function release(root: Object3D) {
   root.traverse((object) => {
+    // Every halo shares one glow, kept for the next model.
+    if (object instanceof Sprite) return object.material.dispose()
     if (!(object instanceof Mesh)) return
     object.geometry.dispose()
     for (const material of [object.material].flat()) {
@@ -214,12 +226,22 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
   const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder)
   void forgetModelsBut([src, fullSrc].filter((source) => source !== undefined))
   const fullKept = fullSrc !== undefined && (await isModelKept(fullSrc))
-  const { car, size, wheels } = await loadCar(loader, fullKept ? fullSrc : src)
+  const { car, size, wheels, lamps, headlamps } = await loadCar(loader, fullKept ? fullSrc : src)
   reflectStreaks(car, reflections.texture, glint)
-  // The body pitches about the ground under its middle; the shadow only follows along.
+  // The body pitches about the ground under its middle; the shadow and the lamps' light on
+  // the ground only follow along.
   const body = new Group().add(car)
   const shadow = createShadow(size.x, size.z)
-  scene.add(body, shadow)
+  const glow = createGlow(size, headlamps)
+  scene.add(body, shadow, glow.tail, glow.ahead)
+  const lightLayer = createLightLayer(glow.ahead, scene, renderer.getPixelRatio())
+  const dark = matchMedia('(prefers-color-scheme: dark)')
+  let lit = dark.matches ? 1 : 0
+  const light = (level: number) => {
+    lit = level
+    setLamps(current.lamps, level)
+    glow.set(level)
+  }
 
   // Close enough that side on the car spans its frame, and far enough that it still fits
   // its canvas however it's turned.
@@ -310,7 +332,7 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
         stage = 'parked'
       }
     }
-    shadow.position.z = body.position.z
+    shadow.position.z = glow.tail.position.z = glow.ahead.position.z = body.position.z
     // Its wheels turned as far as it has rolled, without slipping, and spun up at speed.
     for (const axle of current.wheels.axles) {
       axle.rotation.x = (body.position.z + run) / current.wheels.radius + spin
@@ -319,7 +341,7 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
 
   // Once it's settled, the full model takes the light one's place, the swap between two
   // frames, the car keeping its place and its turn.
-  let current = { car, wheels }
+  let current = { car, wheels, lamps }
   let upgrading = fullKept || !fullSrc
   let released = false
   const upgrade = () => {
@@ -330,6 +352,7 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
         body.remove(current.car)
         release(current.car)
         reflectStreaks(full.car, reflections.texture, glint)
+        setLamps(full.lamps, lit)
         body.add(full.car)
         current = full
       })
@@ -357,10 +380,11 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
     held = false
   }
   const press = (event: PointerEvent) => {
-    if (reduced.matches || !event.isPrimary || event.button !== 0) return
+    if (!event.isPrimary || event.button !== 0) return
+    pressedAt = { x: event.clientX, y: event.clientY, time: performance.now() }
+    if (reduced.matches) return
     held = true
     turning = false
-    pressedAt = { x: event.clientX, y: event.clientY, time: performance.now() }
   }
   // A press that soon moves is a drag to turn the car, and leaves it in its place; once it's
   // well under way, a drag only swings it round as it goes.
@@ -379,7 +403,18 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
   const holdMenu = (event: Event) => {
     if (held) event.preventDefault()
   }
+  // The lamps switched against the page's light by a click, until it turns dark or light.
+  let switched = false
+  const flip = (event: MouseEvent) => {
+    const moved = Math.hypot(event.clientX - pressedAt.x, event.clientY - pressedAt.y)
+    if (performance.now() - pressedAt.time < HOLD_MS && moved <= HOLD_SLOP) switched = !switched
+  }
+  const unswitch = () => {
+    switched = false
+  }
   frame.addEventListener('pointerdown', press)
+  frame.addEventListener('click', flip)
+  dark.addEventListener('change', unswitch)
   frame.addEventListener('pointermove', wander)
   frame.addEventListener('pointerup', letGo)
   frame.addEventListener('pointercancel', takenBack)
@@ -509,6 +544,13 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
     floor.opacity = speed
     // A shiver through the body at speed.
     body.position.y = speed * size.y * 0.003 * Math.sin(time / 23)
+    // On in the dark and off by day, the other way round once switched by a click, and on as
+    // the page goes dark round it at speed.
+    const wanted = Math.max(dark.matches !== switched ? 1 : 0, speed)
+    if (wanted !== lit) {
+      const eased = lit + (wanted - lit) * (1 - Math.exp(-delta / LAMPS_FADE))
+      light(reduced.matches || Math.abs(wanted - eased) < 0.002 ? wanted : eased)
+    }
     if (!speeding) return
     renderer.setClearColor(0x000000, NIGHT * speed)
     for (const [material, color] of glass) {
@@ -541,6 +583,12 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
         .setLength(distance * (1 - PUSH_IN * roll))
         .add(target)
     }
+    // Only by dark, and not while the car's canvas covers the screen.
+    if (dark.matches && !speeding && lit > 0) {
+      lightLayer.cast(camera, canvas.getBoundingClientRect())
+    } else {
+      lightLayer.withdraw()
+    }
     renderer.render(scene, camera)
     frameId = visible && !document.hidden ? requestAnimationFrame(tick) : 0
   }
@@ -550,6 +598,7 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
   // A callback can carry more than one change for the frame; the last is how it is now.
   const sightObserver = new IntersectionObserver((entries) => {
     visible = entries.at(-1)!.isIntersecting
+    if (!visible) lightLayer.withdraw()
     resume()
   })
   sightObserver.observe(frame)
@@ -567,6 +616,7 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
   }
   reduced.addEventListener('change', followMotion)
 
+  light(lit)
   pose(performance.now())
   controls.update()
   renderer.render(scene, camera)
@@ -585,10 +635,13 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
     frame.removeEventListener('pointerup', letGo)
     frame.removeEventListener('pointercancel', takenBack)
     frame.removeEventListener('contextmenu', holdMenu)
+    frame.removeEventListener('click', flip)
+    dark.removeEventListener('change', unswitch)
     removeEventListener('blur', letGo)
     controls.dispose()
     released = true
     floor.mesh.dispose()
+    lightLayer.dispose()
     release(scene)
     release(streakScene)
     reflections.dispose()
