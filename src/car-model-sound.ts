@@ -132,6 +132,15 @@ const REGEN_ORDER = 6.6
 const REGEN = 0.035
 /** How far to one side the car is heard with its nose pointing that way. */
 const PAN = 0.6
+/** The tyres' squeal as it drifts: its pitch; its tones, as multiples of it; how narrow its
+ * band is; how far its tones waver, in hertz; and how loud it and its hiss are at the
+ * furthest drift. */
+const SQUEAL = 1100
+const SQUEAL_ORDERS = [1, 1.012, 1.5]
+const SQUEAL_Q = 3
+const SQUEAL_WAVER = 18
+const SQUEAL_LEVEL = 0.05
+const SQUEAL_HISS = 0.02
 /** The motor's tones, as multiples of how fast it turns, and how loud each is: a hum low
  * under a gearbox's whine and its overtone, the higher ones coming in as it speeds up. A
  * few cents apart where two would otherwise sound as one. */
@@ -192,6 +201,8 @@ export type CarState = {
   turn: number
   /** Where the camera is round it, in radians, 0 straight ahead of its nose. */
   azimuth: number
+  /** 0 to 1 as it drifts. */
+  drift: number
 }
 
 export function createCarSound() {
@@ -327,18 +338,38 @@ function build(context: AudioContext) {
   const wind = filtered(context, pink, 'bandpass', 400, 0.5, car)
   const road = filtered(context, brown, 'lowpass', 140, 0.7, car)
   const tyres = filtered(context, brown, 'bandpass', 500, 1.4, car)
-  sources.push(pink, brown)
+  // Drifting, the tyres squeal: a few close high tones beating against each other and
+  // wavering with the motor's flutter, in a band, over a hiss in the same band, louder the
+  // further it slides.
+  const squealMix = context.createGain()
+  const waver = context.createGain()
+  waver.gain.value = SQUEAL_WAVER
+  flutter.connect(waver)
+  const squealTones = SQUEAL_ORDERS.map((order) => {
+    const tone = oscillator(context, 'sawtooth', 0)
+    tone.frequency.value = SQUEAL * order
+    waver.connect(tone.frequency)
+    tone.connect(squealMix)
+    sources.push(tone)
+    return { tone, order }
+  })
+  const squeal = filtered(context, squealMix, 'bandpass', SQUEAL, SQUEAL_Q, car)
+  const scrub = loop(context, white)
+  const hiss = filtered(context, scrub, 'bandpass', SQUEAL * 2, 2, car)
+  sources.push(pink, brown, scrub)
   for (const source of sources) source.start()
 
   const music = createMusic(context, out, room)
 
   // How hard it's pulling or slowing, from how fast the speed comes up or falls away; whether
-  // it has chimed since it last stood still; and when a phone last buzzed.
+  // its tyres were squealing; whether it has chimed since it last stood still; and when a
+  // phone last buzzed.
   let last = { speed: 0, time: context.currentTime }
+  let squealing = false
   let chimed = false
   let buzzed = 0
 
-  const update = ({ speed, rush, roll, turn, azimuth }: CarState) => {
+  const update = ({ speed, rush, roll, turn, azimuth, drift }: CarState) => {
     const time = context.currentTime
     const rate = time > last.time ? (speed - last.speed) / (time - last.time) : 0
     last = { speed, time }
@@ -374,6 +405,16 @@ function build(context: AudioContext) {
     const swung = Math.min(turn / 3, 1) * (1 - speed)
     at(tyres.filter.frequency, 380 + 500 * swung)
     at(tyres.gain.gain, 0.05 * swung)
+    // Left be while it isn't drifting, rather than set to the same nothing every frame.
+    if (drift > 0 || squealing) {
+      squealing = drift > 0
+      for (const { tone, order } of squealTones) {
+        at(tone.frequency, SQUEAL * order * (0.9 + 0.2 * drift))
+      }
+      at(squeal.filter.frequency, SQUEAL * (0.9 + 0.3 * drift))
+      at(squeal.gain.gain, SQUEAL_LEVEL * drift ** 1.5)
+      at(hiss.gain.gain, SQUEAL_HISS * drift ** 2.5)
+    }
     music.open(speed)
   }
 

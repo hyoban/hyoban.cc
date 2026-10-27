@@ -295,6 +295,48 @@ export function createFloor(size: number) {
   }
 }
 
+/** How fast the car's going at full speed, in km/h: the 007GT's top speed. */
+const TOP_SPEED = 210
+/** How far its tail must be out, in degrees, for the drift's angle to show. */
+const DRIFT_SHOWN = 4
+
+/** How fast the car's going, over the screen while it speeds, and how far it's drifting. */
+export function createSpeedometer() {
+  const element = document.createElement('div')
+  element.className = 'car-model-speedometer'
+  element.ariaHidden = 'true'
+  const figure = document.createElement('strong')
+  const value = document.createTextNode('')
+  const unit = document.createElement('small')
+  unit.textContent = 'km/h'
+  figure.append(value, unit)
+  const angle = document.createElement('span')
+  element.append(figure, angle)
+  let shown = ''
+  return {
+    /** At `speed` (0 to 1), its tail out by `yaw` radians; put away once it's stopped. */
+    update(speed: number, yaw: number) {
+      if (speed === 0) {
+        element.remove()
+        return
+      }
+      if (!element.isConnected) document.body.append(element)
+      const degrees = Math.round(Math.abs((yaw * 180) / Math.PI))
+      const text = `${Math.round(TOP_SPEED * speed)} ${degrees}`
+      if (text !== shown) {
+        shown = text
+        value.data = String(Math.round(TOP_SPEED * speed))
+        angle.textContent = `漂移 ${degrees}°`
+        angle.style.visibility = degrees >= DRIFT_SHOWN ? '' : 'hidden'
+      }
+      element.style.opacity = String(Math.min(speed * 2, 1))
+    },
+    dispose() {
+      element.remove()
+    },
+  }
+}
+
 export function smoothstep(from: number, to: number, value: number) {
   const t = Math.min(Math.max((value - from) / (to - from), 0), 1)
   return t * t * (3 - 2 * t)
