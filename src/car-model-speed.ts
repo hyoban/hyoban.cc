@@ -22,6 +22,11 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 // rather than blurred into its light, its glossy floor, and its camera closing in as the view
 // widens, lowered level, shaking and tilted by a drag.
 
+/** How many pieces each streak is cut into along its length to bend, and how far ahead, as a
+ * share of the tunnel's length, a turn has bent the streaks round by its whole angle. */
+const BENDS = 8
+const BEND_AHEAD = 0.25
+
 /** Long light streaks, mostly pale white, lilac and blue, on a tunnel along the length of a
  * car of `size`, round whoever's watching, `follow`ing the camera so they spread evenly all
  * round the view, from beyond the car however the camera (`distance` from it) stands, out
@@ -36,7 +41,8 @@ export function createTunnel(distance: number, size: Vector3, floorRadius: numbe
   const span = distance * 16
   // Each streak a pair of crossed ribbons along its length, so that it shows its width from
   // any side, soft across it so it glows.
-  const ribbon = new PlaneGeometry(1, 1).rotateX(-Math.PI / 2)
+  // Cut along its length, so it can bend with the way ahead.
+  const ribbon = new PlaneGeometry(1, 1, 1, BENDS).rotateX(-Math.PI / 2)
   const crossed = mergeGeometries([ribbon, ribbon.clone().rotateZ(Math.PI / 2)])!
   const geometry = new InstancedBufferGeometry()
   geometry.index = crossed.index
@@ -82,6 +88,7 @@ export function createTunnel(distance: number, size: Vector3, floorRadius: numbe
       breadth: { value: 1 },
       floorRadius: { value: floorRadius },
       floorCover: { value: 0 },
+      curve: { value: 0 },
     },
     vertexShader: /* glsl */ `
       attribute vec4 streak;
@@ -91,6 +98,7 @@ export function createTunnel(distance: number, size: Vector3, floorRadius: numbe
       uniform float span;
       uniform vec2 axis;
       uniform float breadth;
+      uniform float curve;
       varying vec3 vTint;
       varying float vFade;
       varying float vAlong;
@@ -107,10 +115,14 @@ export function createTunnel(distance: number, size: Vector3, floorRadius: numbe
         vTint = tint;
         vAcross = uv.x * 2.0 - 1.0;
         vAlong = position.z + 0.5;
-        vSpot = at + local;
+        vec3 spot = at + local;
+        // Bent round the way ahead turns, and behind it the way it came, as round a bend: an
+        // arc of that curvature, which strays curve × z² / 2 from straight.
+        spot.x += 0.5 * curve * spot.z * spot.z;
+        vSpot = spot;
         // Gone at the tunnel's ends.
         vFade = 1.0 - smoothstep(0.3, 0.5, abs(z) / span);
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(at + local, 1.0);
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(spot, 1.0);
       }
     `,
     fragmentShader: /* glsl */ `
@@ -170,6 +182,10 @@ export function createTunnel(distance: number, size: Vector3, floorRadius: numbe
     /** Keep the tunnel round the camera as it moves. */
     follow(camera: Vector3) {
       material.uniforms.axis!.value.set(camera.x, camera.y)
+    },
+    /** Bend the tunnel round a turn of `angle` radians, signed, a little way ahead. */
+    bend(angle: number) {
+      material.uniforms.curve!.value = angle / (span * BEND_AHEAD)
     },
     /** How fast the car goes, which is also how much the floor's there, and how brightly the
      * streaks show. */

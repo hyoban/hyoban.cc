@@ -107,25 +107,34 @@ export function buildRouteGlyph(lines: readonly TripLine[], size = 100) {
   }
 }
 
+/** How far, in a floor's thousandth, a path may stray from a leg it leaves a turn out of. */
+const PATH_TOLERANCE = 3
+
 /**
  * The legs driven, fitted to a `size` square, for the 3D car to stand on: its floor drawn
- * from them (src/car-model-client.ts). None when nothing was driven.
+ * from them (src/car-model-client.ts), and its `path`, the same legs in the order they were
+ * driven, each as flat x, y pairs, with the turns too small to feel at speed left out, for it
+ * to drive along. None when nothing was driven.
  */
 export function buildCarFloor(lines: readonly TripLine[], size = 1000) {
   const driven = lines.filter((line) => line.by === 'car').map((line) => line.points)
   if (driven.length === 0) return undefined
   const project = fit(driven.flat(), size, 0.04, size)
   // A leg too short to see at this scale would only leave a dot.
-  const d = driven
-    .filter((line) => {
-      const points = line.map(project.point)
-      const xs = points.map(([x]) => x)
-      const ys = points.map(([, y]) => y)
-      return Math.max(...xs) - Math.min(...xs) + Math.max(...ys) - Math.min(...ys) >= size / 200
-    })
-    .map((line) => toLinePath(line, project.point, 1))
-    .join('')
-  return d ? { d, width: size, height: project.height } : undefined
+  const seen = driven.filter((line) => {
+    const points = line.map(project.point)
+    const xs = points.map(([x]) => x)
+    const ys = points.map(([, y]) => y)
+    return Math.max(...xs) - Math.min(...xs) + Math.max(...ys) - Math.min(...ys) >= size / 200
+  })
+  const d = seen.map((line) => toLinePath(line, project.point, 1)).join('')
+  const path = seen.map((line) =>
+    simplify(line.map(project.point), PATH_TOLERANCE).flatMap(([x, y]) => [
+      round(x, 10),
+      round(y, 10),
+    ]),
+  )
+  return d ? { d, width: size, height: project.height, path } : undefined
 }
 
 /**
