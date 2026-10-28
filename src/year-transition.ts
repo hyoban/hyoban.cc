@@ -63,6 +63,20 @@ document.addEventListener('astro:before-preparation', (event) => {
   const to = event.to.pathname
   const source = event.sourceElement
 
+  if (REVIEW_PATH.test(from) && DAY_PATH.test(to)) {
+    // Into a day from its tile on the wall, before the year shrinking back out: the year is
+    // on screen above the wall too.
+    const tile = getWallDay(document, to)
+    if (isInSight(tile)) {
+      named = name([{ name: 'year-day', element: tile }])
+      pending = (root) => {
+        const day = getCalendarDay(root)
+        return day ? [{ name: 'year-day', element: day }] : []
+      }
+      return
+    }
+  }
+
   const toYear = to.match(YEAR_PATH)?.[1]
   const fromYear = from.match(YEAR_PATH)?.[1]
   if (toYear && toYear !== fromYear && source instanceof HTMLAnchorElement) {
@@ -91,17 +105,7 @@ document.addEventListener('astro:before-preparation', (event) => {
   }
   if (pending) return
 
-  if (REVIEW_PATH.test(from) && DAY_PATH.test(to)) {
-    // Into a day from its tile on the wall.
-    const tile = getWallDay(document, to)
-    if (isInSight(tile)) {
-      named = name([{ name: 'year-day', element: tile }])
-      pending = (root) => {
-        const day = getCalendarDay(root)
-        return day ? [{ name: 'year-day', element: day }] : []
-      }
-    }
-  } else if (DAY_PATH.test(from) && REVIEW_PATH.test(to)) {
+  if (DAY_PATH.test(from) && REVIEW_PATH.test(to)) {
     // Back out of the day onto its tile.
     const day = getCalendarDay(document)
     if (isInSight(day)) {
