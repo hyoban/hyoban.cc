@@ -578,10 +578,12 @@ function getThumbnailImage(media?: ResolvedMomentMedia) {
     calendarController?.abort()
     cameFrom = event.from.pathname
 
-    // A day opening over the month starts with the month as it was and the day out of
-    // sight, so the page swapping in shows no jump (see index.css).
+    // A day opening over its month starts with the month as it was and the day out of
+    // sight, so the page swapping in shows no jump (see index.css). Come from anywhere else,
+    // like a tile on a year's wall flying into it, the day is simply there.
     if (
       wide.matches &&
+      document.querySelector('.calendar-page') &&
       !document.querySelector('[data-calendar-drawer]') &&
       event.newDocument.querySelector('[data-calendar-drawer]')
     ) {
