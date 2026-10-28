@@ -11,7 +11,7 @@ hyoban.cc is a quiet, text-first personal site built with Astro and plain CSS: e
 
 ## Year review
 
-`/<year>/` ([[year].astro](src/pages/[year].astro), [Review.astro](src/components/Review.astro); numbers from [year-review.ts](src/year-review.ts), drawings from [year-map.ts](src/year-map.ts)) and `/life/` for all years together. It breaks out to `56rem` and lets drawings, not sentences, carry the year.
+`/<year>/` ([[year].astro](src/pages/[year].astro), [Review.astro](src/components/Review.astro); numbers from [year-review.ts](src/year-review.ts), drawings from [year-map.ts](src/year-map.ts)) and `/life/` for all years together. It breaks out to `56rem` and lets drawings, not sentences, carry the year. `/life/` keeps only what adds up across the years: the counts, a row per year linking to its review, the footprint, the menu and the driving.
 
 - **Opening.** The year set huge, its numerals cut out of a collage of the year's photos, over a row of counts.
 - **Order: time, place, car.** The wall of every day (a tile per day, a photo where there is one, trip days joined by a band; turned on its side on a phone), and a few days worth going back to; then the footprint map with the cities written in most, the trips as cards of their cover photo under their route, and the food menu; then the driving, and last the devices bought that year.
