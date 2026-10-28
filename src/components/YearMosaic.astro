@@ -86,12 +86,28 @@ const months = Array.from({ length: 12 }, (_, index) => {
   const MONTH = 70
   const DAY = 14
 
+  // Where the page's motion follows the scroll, the wall is wiped in as one once it's come
+  // a little way up the screen, as the page opens if it's there already: tied to the scroll
+  // itself, a wall part way up the screen as the page opens would sit half drawn.
+  function wipeWalls() {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue
+          entry.target.classList.add('is-wiped')
+          observer.unobserve(entry.target)
+        }
+      },
+      { rootMargin: '0px 0px -10% 0px' },
+    )
+    for (const mosaic of document.querySelectorAll('.year-mosaic')) observer.observe(mosaic)
+  }
+
   function popDays() {
-    // Where the tiles follow the scroll instead (below), or keep still, there's none to pop.
-    if (
-      matchMedia('(prefers-reduced-motion: reduce)').matches ||
-      CSS.supports('animation-timeline: view()')
-    ) {
+    // Keeping still, there's none to pop.
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    if (CSS.supports('animation-timeline: view()')) {
+      wipeWalls()
       return
     }
     for (const mosaic of document.querySelectorAll<HTMLElement>('.year-mosaic')) {
@@ -329,19 +345,24 @@ const months = Array.from({ length: 12 }, (_, index) => {
     }
   }
 
-  /* Scrolled, where animations can follow it: the wall is uncovered day by day as it comes
-     up through the screen, the year running left to right, down a phone's columns. One
-     animation for the wall, not one a tile: hundreds of tiles moving each on its own layer
-     cost a scroll more than a frame. Its edges reach past the wall, so a tile lifted over its
-     neighbours isn't cut off. */
+  /* Where the rest of the page follows the scroll, the wall is uncovered day by day once
+     it's in sight (the script above), the year running left to right, down a phone's
+     columns: on a clock, not the scroll, so a wall already on screen as the page opens
+     doesn't wait half drawn. One animation for the wall, not one a tile: hundreds of tiles
+     moving each on its own layer cost more than a frame. Its edges reach past the wall, so
+     a tile lifted over its neighbours isn't cut off. */
   @supports (animation-timeline: view()) {
     @media (prefers-reduced-motion: no-preference) {
-      :global(.year-scroll) .year-mosaic {
-        animation-name: year-mosaic-wipe;
-        animation-timing-function: linear;
-        animation-fill-mode: both;
-        animation-timeline: view();
-        animation-range: entry 30% cover 45%;
+      :global(.year-scroll:not(.is-sharing)) .year-mosaic:not(.is-wiped) {
+        clip-path: inset(-6rem 100% -6rem -6rem);
+
+        @media (width < 40rem) {
+          clip-path: inset(-6rem -6rem 100% -6rem);
+        }
+      }
+
+      .year-mosaic.is-wiped {
+        animation: year-mosaic-wipe 1400ms var(--ease-out);
 
         @media (width < 40rem) {
           animation-name: year-mosaic-wipe-down;
