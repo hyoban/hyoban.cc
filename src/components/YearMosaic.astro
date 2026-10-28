@@ -24,20 +24,17 @@ const months = Array.from({ length: 12 }, (_, index) => {
   const days = Array.from({ length }, (_, dayIndex) => {
     const dateKey = `${year}-${String(month).padStart(2, '0')}-${String(dayIndex + 1).padStart(2, '0')}`
     const dayMoments = byDay.get(dateKey) ?? []
-    const media = dayMoments.flatMap((moment) => getShowcaseMedia(moment.media))
-    // The day's stills, one of them shown each visit (src/year-random.ts), cropped square
-    // like their tiles.
-    const photos = media
+    // The day's first still, cropped square like its tile: the same the calendar shows for
+    // the day, which the tile opens into (src/year-transition.ts).
+    const still = dayMoments
+      .flatMap((moment) => getShowcaseMedia(moment.media))
       .map((item) => (item.type === 'video' ? item.poster : item.src))
-      .filter((image) => image !== undefined)
-      .slice(0, 6)
-      .map((still) => getCoverThumbnailUrl(still, 160, 1))
+      .find((image) => image !== undefined)
     return {
       dateKey,
       day: dayIndex + 1,
       count: dayMoments.length,
-      photo: photos[0],
-      picks: photos.length > 1 ? JSON.stringify(photos) : undefined,
+      photo: still && getCoverThumbnailUrl(still, 160, 1),
       trip: tripOn(dateKey)?.title,
     }
   })
@@ -64,7 +61,7 @@ const months = Array.from({ length: 12 }, (_, index) => {
               >
                 {day.count > 0 ? (
                   <a href={getMomentPath(day.dateKey)} aria-label={label} title={label}>
-                    {day.photo && <img src={day.photo} alt="" loading="lazy" decoding="async" data-pick={day.picks} />}
+                    {day.photo && <img src={day.photo} alt="" loading="lazy" decoding="async" />}
                   </a>
                 ) : (
                   <span title={label} />

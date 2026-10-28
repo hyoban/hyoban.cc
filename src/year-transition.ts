@@ -32,12 +32,35 @@ function getWallDay(root: ParentNode, path: string) {
   return root.querySelector<HTMLElement>(`.year-mosaic__day a[href="${path}"] img`) ?? undefined
 }
 
+/** The file a picture shows, whatever width or crop it's served at. */
+function getStill(url: string | null | undefined) {
+  return url
+    ?.split('/')
+    .pop()
+    ?.replace(/(?:-\d+w)?\.\w+$/, '')
+}
+
+/**
+ * The day's picture in the calendar: its first photo, in the month's grid on a wide screen;
+ * on a phone, the same photo among the day's, a video's poster too, the utility shots that
+ * may come before it passed over.
+ */
 function getCalendarDay(root: ParentNode) {
+  const cover = root.querySelector<HTMLElement>(
+    '.calendar-day--selected .calendar-day__picture img',
+  )
+  if (matchMedia(CALENDAR_DESKTOP_MEDIA).matches) return cover ?? undefined
+  const still = getStill(cover?.getAttribute('src'))
+  const media = [
+    ...root.querySelectorAll<HTMLElement>(
+      '[data-calendar-drawer] .day-drawer__content :is(img, video[poster])',
+    ),
+  ]
   return (
-    (matchMedia(CALENDAR_DESKTOP_MEDIA).matches
-      ? root.querySelector<HTMLElement>('.calendar-day--selected .calendar-day__picture img')
-      : root.querySelector<HTMLElement>('[data-calendar-drawer] .day-drawer__content img')) ??
-    undefined
+    media.find(
+      (element) =>
+        getStill(element.getAttribute('src') ?? element.getAttribute('poster')) === still,
+    ) ?? media.find((element) => element instanceof HTMLImageElement)
   )
 }
 
