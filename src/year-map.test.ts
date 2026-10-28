@@ -173,7 +173,7 @@ describe('buildRouteGlyph', () => {
 })
 
 describe('buildCarFloor', () => {
-  test('keeps the legs driven in order as its path, without the turns too small to feel', () => {
+  test('draws only the legs driven by car, fitted to its box', () => {
     const floor = buildCarFloor([
       {
         by: 'car',
@@ -198,12 +198,10 @@ describe('buildCarFloor', () => {
         ],
       },
     ])
-    expect(floor?.path).toHaveLength(2)
-    expect(floor?.path[0]).toHaveLength(4)
-    // The second leg goes north, up the floor, from where the first ended.
-    const [first, second] = floor!.path
-    expect(second!.slice(0, 2)).toEqual(first!.slice(2))
-    expect(second![3]!).toBeLessThan(second![1]!)
+    // Two legs by car, each its own subpath; the flight left out.
+    expect(floor?.d.match(/M/g)).toHaveLength(2)
+    expect(floor?.width).toBe(1000)
+    expect(floor?.height).toBeLessThanOrEqual(1000)
   })
 
   test('has nothing to stand on without driving', () => {

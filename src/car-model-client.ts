@@ -41,7 +41,7 @@ import {
   smoothstep,
 } from './car-model-speed.ts'
 import { createDrift } from './car-model-drift.ts'
-import { createOdometer, createRoutes, readCarYear, wrapAngle } from './car-model-year.ts'
+import { createRoutes, readCarYear, wrapAngle } from './car-model-year.ts'
 
 // The car standing on its own shadow, under a studio's light, never turning on its own. It
 // can be swung round by dragging sideways, a drag coasting to rest, but not zoomed or tipped over, and a vertical drag still scrolls the
@@ -80,10 +80,9 @@ import { createOdometer, createRoutes, readCarYear, wrapAngle } from './car-mode
 // A button at its corner turns its sound on, and its music with it, off until then. They're in
 // src/car-model-sound.ts.
 //
-// In a year review it stands on the year's driving, and drives through the year a day at a
-// time as it speeds off, along the year's routes in the order they were driven, the streaks
-// bending as they turn and a sharp turn drifting it. As the page scrolls through the year (src/components/YearDriving.astro)
-// it drives on with it, its wheels rolling and its ground sliding back under it. They're in src/car-model-year.ts.
+// In a year review it stands on the year's driving. As the page scrolls through the year
+// (src/components/YearDriving.astro) it drives on with it, its wheels rolling and its ground
+// sliding back under it. They're in src/car-model-year.ts.
 
 /** How far above the car the camera looks down, from the horizon. */
 const ELEVATION = (14 * Math.PI) / 180
@@ -149,17 +148,6 @@ const DRIFT_SETTLED = 0.01
 const AT_REST = 1e-3
 /** How far past its furthest, as a share of it, its tail may swing at most. */
 const DRIFT_OVER = 1.15
-/** In a year review at speed, the seconds which way it goes along the year's path, how fast
- * that turns and how far it turns ahead are each followed over. */
-const ROAD_FOLLOW = 0.25
-/** How far ahead along the year, as a share of it, the streaks bend round the turn coming,
- * and how far they bend at most. */
-const ROAD_AHEAD = 0.03
-const BEND_MOST = (70 * Math.PI) / 180
-/** How fast, in radians a second, a turn on the path has to be for it to start drifting, and
- * to drift its furthest. */
-const TURN_FROM = 2.8
-const TURN_FULL = 4.5
 /** The longest step, in seconds, the springs take at once, so a stalled frame doesn't fling
  * them. */
 const MAX_STEP = 0.05
@@ -439,7 +427,6 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
   const year = readCarYear(frame)
   const routes = createRoutes(year?.floor, size, renderer)
   if (routes) scene.add(routes.ground)
-  const odometer = year && createOdometer(year)
   let lit = dark.matches ? 1 : 0
   const light = (level: number) => {
     lit = level
@@ -560,7 +547,6 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
       dark: dark.matches,
       z: body.position.z,
       turn: controls.getAzimuthalAngle() - START_AZIMUTH,
-      follow: following,
     })
     // Its wheels turned as far as it has rolled, without slipping, and spun up at speed.
     for (const axle of current.wheels.axles) {
@@ -794,43 +780,6 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
     camera.projectionMatrixInverse.copy(camera.projectionMatrix).invert()
   }
 
-  // In a year review, at speed it drives on along the year's path as the year goes by: the
-  // ground turned and slid under it to keep it on the way it went, which way that is followed
-  // a moment late; the streaks bent round how far the way turns a little ahead; and a sharp
-  // enough turn drifting it. Where it is, which way it's going and on which leg; how fast that
-  // turns, in radians a second; and how far the way turns ahead.
-  let following: { x: number; z: number; angle: number; leg: number } | undefined
-  let turnRate = 0
-  let curving = 0
-  const road = (share: number, delta: number) => {
-    const trace = routes?.trace
-    const traced = share > 0 ? trace?.(share) : undefined
-    if (!trace || !traced) {
-      following = undefined
-      turnRate = curving = 0
-      tunnel.bend(0)
-      return
-    }
-    const step = Math.min(delta, MAX_STEP)
-    // Onto the next leg, it's there at once, facing the way it goes.
-    if (!following || following.leg !== traced.leg) {
-      following = traced
-      turnRate = 0
-    } else {
-      const turned = MathUtils.damp(
-        0,
-        wrapAngle(traced.angle - following.angle),
-        1 / ROAD_FOLLOW,
-        step,
-      )
-      turnRate = MathUtils.damp(turnRate, step > 0 ? turned / step : 0, 1 / ROAD_FOLLOW, step)
-      following = { ...traced, angle: following.angle + turned }
-    }
-    const ahead = trace(Math.min(share + ROAD_AHEAD, 1))!
-    curving = MathUtils.damp(curving, wrapAngle(ahead.angle - traced.angle), 1 / ROAD_FOLLOW, step)
-    // The ground turns the other way to the car: turning left, toward +x, it turns by less.
-    tunnel.bend(-MathUtils.clamp(curving, -BEND_MOST, BEND_MOST) * speed)
-  }
   // On in the dark and off by day, the other way round once switched by a click, and on as
   // the page goes dark round it at speed.
   const lampsWanted = () => Math.max(dark.matches !== switched ? 1 : 0, speed)
@@ -849,7 +798,6 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
     spin += Math.max(roll * ROLL, speed * 5) * delta
     // The streaks only come once it's going.
     tunnel.advance(speed, smoothstep(0.15, 0.8, rush), delta)
-    road(odometer?.advance(speed, delta) ?? 0, delta)
     floor.mesh.visible = speeding
     floor.opacity = speed
     // Driven on through the year as it's scrolled, coasting after it no faster than the rims
@@ -901,16 +849,7 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
     dragged = 0
     const dragging =
       speed >= ENGAGE ? smoothstep(DRIFT_FROM, DRIFT_FULL, Math.abs(slip)) * speed : 0
-    // A sharp turn on the year's path drifts it too, its nose into the turn and its tail out.
-    const cornering =
-      speed >= ENGAGE ? smoothstep(TURN_FROM, TURN_FULL, Math.abs(turnRate)) * speed : 0
-    const swung = Math.max(dragging, cornering)
-    // Both pull its tail out together, each its own way, to no further than either alone.
-    const wanted = MathUtils.clamp(
-      Math.sign(slip) * dragging - Math.sign(turnRate) * cornering,
-      -1,
-      1,
-    )
+    const wanted = Math.sign(slip) * dragging
     yawSpeed += ((DRIFT_YAW * wanted - yaw) * DRIFT_STIFFNESS - yawSpeed * DRIFT_DAMPING) * step
     yaw += yawSpeed * step
     // Thrown from a bend one way straight into one the other, the spring would swing it past
@@ -919,7 +858,7 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
       yaw = Math.sign(yaw) * DRIFT_YAW * DRIFT_OVER
       yawSpeed = 0
     }
-    // The view held only while a drag drifts it, not as the path does.
+    // The view held only while a drag drifts it.
     const drifting = dragging > 0 || (viewHeld && Math.abs(yaw) > DRIFT_SETTLED)
     if (drifting !== viewHeld) {
       viewHeld = drifting
@@ -944,7 +883,7 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
     for (const steer of current.wheels.steers) {
       steer.rotation.y = -COUNTER_STEER * turned - PARK_STEER * parked
     }
-    const slide = Math.max(swung, sliding)
+    const slide = Math.max(dragging, sliding)
     drift.update({
       slide,
       yaw: turned,
@@ -1073,7 +1012,6 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
     dark.removeEventListener('change', unswitch)
     removeEventListener('blur', letGo)
     sound.dispose()
-    odometer?.dispose()
     drift.dispose()
     speedometer.dispose()
     unmountToggle()

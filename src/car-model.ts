@@ -28,12 +28,11 @@ const HTML_ESCAPES: Record<string, string> = {
   '>': '&gt;',
 }
 
-/** What a year review's car stands on, and the year it drives through day by day at speed. */
+/** What a year review's car stands on, and the year the page plays through day by day as it
+ * scrolls (src/components/YearDriving.astro). */
 export interface CarYear {
-  /** The legs driven, as path data in a box `width` by `height`, and in the order they were
-   * driven, each as flat x, y pairs in the same box, for it to drive along at speed
-   * (src/year-map.ts). */
-  floor?: { d: string; width: number; height: number; path: number[][] } | undefined
+  /** The legs driven, as path data in a box `width` by `height` (src/year-map.ts). */
+  floor?: { d: string; width: number; height: number } | undefined
   /** What the totals are of, over them once the year's driven through: `2026 年`. */
   caption: string
   /** Its first day, `YYYY-MM-DD`; the days follow it one by one. */
