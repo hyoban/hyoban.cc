@@ -8,7 +8,7 @@
   "media": [
     {
       "uid": "01KE8P3361VB897CW78WAAT4M6",
-      "alt": "",
+      "alt": "代码 diff，把 Description 组件的服务端翻译改成 useTranslation",
       "type": "image",
       "width": 1540,
       "height": 1090,

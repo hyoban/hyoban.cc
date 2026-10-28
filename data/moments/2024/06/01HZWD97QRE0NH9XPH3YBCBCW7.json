@@ -8,7 +8,7 @@
   "media": [
     {
       "uid": "01HZWD97QSEACYSF6WXYVPNQAV",
-      "alt": "",
+      "alt": "编辑器里一串相对路径导入，保存后被 ESLint 插件改写",
       "type": "video",
       "width": 800,
       "height": 258,

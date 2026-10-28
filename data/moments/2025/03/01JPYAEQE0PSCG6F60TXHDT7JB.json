@@ -8,7 +8,7 @@
   "media": [
     {
       "uid": "01JPYAEQE1BEBXYJVEW6C273V1",
-      "alt": "",
+      "alt": "GitHub Actions 里构建 iOS IPA 用了 28 分钟",
       "type": "image",
       "width": 1468,
       "height": 1116,
@@ -41,7 +41,7 @@
     },
     {
       "uid": "01JPYAEQE2QETDSPM78X9AH9N8",
-      "alt": "",
+      "alt": "换成 Mac mini 自托管 runner 后，构建 iOS IPA 只用 7 分钟",
       "type": "image",
       "width": 1462,
       "height": 1126,

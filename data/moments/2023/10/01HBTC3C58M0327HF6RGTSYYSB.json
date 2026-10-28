@@ -8,7 +8,7 @@
   "media": [
     {
       "uid": "01HBTC3C59N8ZQSZ09TR2CRNHR",
-      "alt": "",
+      "alt": "callerPath 函数，用 Error 的调用栈和正则拿到调用文件路径",
       "type": "image",
       "width": 1840,
       "height": 1524,

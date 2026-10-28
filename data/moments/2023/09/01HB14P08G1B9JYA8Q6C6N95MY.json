@@ -8,7 +8,7 @@
   "media": [
     {
       "uid": "01HB14P08H86CPGWEQ0K58JYF6",
-      "alt": "",
+      "alt": "nginx 启动脚本，用 sed 把监听端口替换成 PORT 变量",
       "type": "image",
       "width": 1840,
       "height": 450,

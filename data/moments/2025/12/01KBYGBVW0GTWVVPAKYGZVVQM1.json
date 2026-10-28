@@ -8,7 +8,7 @@
   "media": [
     {
       "uid": "01KBYGBVW1XCV5S6N19YY7VM5Y",
-      "alt": "",
+      "alt": "vercel.json 里给函数配置 includeFiles",
       "type": "image",
       "width": 2644,
       "height": 2216,

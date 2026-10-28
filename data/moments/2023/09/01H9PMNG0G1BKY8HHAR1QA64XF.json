@@ -8,7 +8,7 @@
   "media": [
     {
       "uid": "01H9PMNG0HB847YX6P6YHBMYZF",
-      "alt": "",
+      "alt": "浏览器查看源代码，服务端渲染的 HTML 里已经带着数据",
       "type": "image",
       "width": 1626,
       "height": 856,
@@ -41,7 +41,7 @@
     },
     {
       "uid": "01H9PMNG0J50NYR1HA4JV2E368",
-      "alt": "",
+      "alt": "浏览器页面显示客户端拿到的 JSON 数据",
       "type": "image",
       "width": 636,
       "height": 214,
@@ -66,7 +66,7 @@
     },
     {
       "uid": "01H9PMNG0K1SBKRKH5M3J8C6GC",
-      "alt": "",
+      "alt": "用 useSWR 和 getStaticProps 在服务端预取数据的示例代码",
       "type": "image",
       "width": 956,
       "height": 776,

@@ -8,7 +8,7 @@
   "media": [
     {
       "uid": "01JNXM8JN107Z3721096C74RS4",
-      "alt": "",
+      "alt": "nativewind 的 tailwind 入口代码，按环境变量选择 native 或 web",
       "type": "image",
       "width": 3296,
       "height": 1968,

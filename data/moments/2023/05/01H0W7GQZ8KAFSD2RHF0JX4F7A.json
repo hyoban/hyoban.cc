@@ -8,7 +8,7 @@
   "media": [
     {
       "uid": "01H0W7GQZ9ZVPFYDMZ8AWK8NQZ",
-      "alt": "",
+      "alt": "Raycast 电池提醒脚本，电量低于 30% 或高于 80% 时弹通知",
       "type": "image",
       "width": 600,
       "height": 832,

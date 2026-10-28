@@ -8,7 +8,7 @@
   "media": [
     {
       "uid": "01HQB3AAK9YNTKNVEPZB4RBKGF",
-      "alt": "",
+      "alt": "VS Code 设置 eslint.codeActionsOnSave.rules，保存时不自动删未使用的导入",
       "type": "image",
       "width": 1048,
       "height": 758,

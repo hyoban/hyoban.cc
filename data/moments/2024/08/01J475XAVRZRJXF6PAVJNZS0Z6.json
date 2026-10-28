@@ -8,7 +8,7 @@
   "media": [
     {
       "uid": "01J475XAVSDKBVGEJMP5JCYC6Z",
-      "alt": "",
+      "alt": "手机 app 的文章视图，列出博客和论坛订阅",
       "type": "image",
       "width": 1179,
       "height": 2556,
@@ -41,7 +41,7 @@
     },
     {
       "uid": "01J475XAVTWEWQBMNDS788TAA3",
-      "alt": "",
+      "alt": "手机 app 的社交媒体视图，显示推文订阅",
       "type": "image",
       "width": 1179,
       "height": 2556,
@@ -74,7 +74,7 @@
     },
     {
       "uid": "01J475XAVVA3EREHW16Q822E2S",
-      "alt": "",
+      "alt": "手机 app 的音频视图，列出播客节目",
       "type": "image",
       "width": 1179,
       "height": 2556,
@@ -107,7 +107,7 @@
     },
     {
       "uid": "01J475XAVWVN9WWCAZ6C8VB6P8",
-      "alt": "",
+      "alt": "手机 app 的通知视图，列出 GitHub 动态",
       "type": "image",
       "width": 1179,
       "height": 2556,

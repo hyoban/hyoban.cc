@@ -8,7 +8,7 @@
   "media": [
     {
       "uid": "01GYEH7ZMHWMXJ958N7J7X2ADN",
-      "alt": "",
+      "alt": "编辑器里 Header 组件的代码，悬浮提示报错 CommandMenuInServer 不能作为 JSX 组件",
       "type": "image",
       "width": 2894,
       "height": 2112,
@@ -49,7 +49,7 @@
     },
     {
       "uid": "01GYEH7ZMJ3KT0XCJVXN8C8K91",
-      "alt": "",
+      "alt": "编辑器里改写后的 Header 组件代码",
       "type": "image",
       "width": 2894,
       "height": 2112,

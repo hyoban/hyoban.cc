@@ -8,7 +8,7 @@
   "media": [
     {
       "uid": "01H738JSV9KH9QNGNQ5G5PN7XH",
-      "alt": "",
+      "alt": "开启 exactOptionalPropertyTypes 后，传入 option: undefined 报类型错误",
       "type": "image",
       "width": 680,
       "height": 592,
@@ -33,7 +33,7 @@
     },
     {
       "uid": "01H738JSVAAYAJ72W7GZJAPAT9",
-      "alt": "",
+      "alt": "把 option 的类型改成 boolean | undefined 来修复报错",
       "type": "image",
       "width": 500,
       "height": 412,

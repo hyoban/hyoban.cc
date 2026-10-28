@@ -8,7 +8,7 @@
   "media": [
     {
       "uid": "01H738Q7EHBS29MCM8GZF6WB9S",
-      "alt": "",
+      "alt": "未开启时，取数组第一项的类型是 string",
       "type": "image",
       "width": 492,
       "height": 212,
@@ -33,7 +33,7 @@
     },
     {
       "uid": "01H738Q7EJK1JDQ2Q79DGRJ3CY",
-      "alt": "",
+      "alt": "开启后，取数组第一项的类型变成 string | undefined",
       "type": "image",
       "width": 668,
       "height": 218,
