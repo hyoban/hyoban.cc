@@ -1,17 +1,24 @@
 ---
-// When the year was written, as a clock face of 24 hours: midnight at the top, noon at
-// the bottom, a petal for each hour as long as how much was written in it, the night
-// hours shaded behind, the busiest hour dark and named in the middle.
+// When the year was written, or when the car was charged, as a clock face of 24 hours:
+// midnight at the top, noon at the bottom, a petal for each hour as long as how much went
+// on in it, the night hours shaded behind, the busiest hour dark and named in the middle.
+// A petal can be two parts, the `inner` share of it lighter, as the charges at home are
+// under the fast ones.
 
 interface Props {
   hours: number[]
   favorite: { hour: number; count: number }
+  /** What's counted, `条` by default. */
+  unit?: string
+  label?: string
+  inner?: number[]
 }
 
-const { hours, favorite } = Astro.props
+const { hours, favorite, unit = '条', inner } = Astro.props
+const label = Astro.props.label ?? `每小时记下的条数，最常在 ${favorite.hour} 点，共 ${favorite.count} ${unit}`
 const size = 240
 const center = size / 2
-const inner = 30
+const base = 30
 const outer = 104
 const max = Math.max(1, ...hours)
 
@@ -23,30 +30,33 @@ const point = (radius: number, angle: number) => {
 const sector = (from: number, to: number, start: number, end: number) =>
   `M${point(from, start)}L${point(to, start)}A${to} ${to} 0 ${end - start > 180 ? 1 : 0} 1 ${point(to, end)}L${point(from, end)}A${from} ${from} 0 ${end - start > 180 ? 1 : 0} 0 ${point(from, start)}Z`
 
+const reach = (count: number) => base + (outer - base) * Math.max(count / max, 0.04)
 const petals = hours.map((count, hour) => ({
   count,
   hour,
-  d: sector(inner, inner + (outer - inner) * Math.max(count / max, 0.04), hour * 15 + 1.5, hour * 15 + 13.5),
+  d: sector(base, reach(count), hour * 15 + 1.5, hour * 15 + 13.5),
+  inner: inner?.[hour] ? sector(base, reach(inner[hour]), hour * 15 + 1.5, hour * 15 + 13.5) : undefined,
 }))
 // From 18:00 to 6:00, the half of the face above the middle.
-const night = sector(inner - 4, outer + 6, 270, 450)
+const night = sector(base - 4, outer + 6, 270, 450)
 const labels = [0, 6, 12, 18].map((hour) => ({ hour, at: point(outer + 14, hour * 15).split(' ') }))
 ---
 
 <figure class="year-clock">
-  <svg viewBox={`0 0 ${size} ${size}`} role="img" aria-label={`每小时记下的条数，最常在 ${favorite.hour} 点，共 ${favorite.count} 条`}>
+  <svg viewBox={`0 0 ${size} ${size}`} role="img" aria-label={label} data-unit={unit}>
     <path class="year-clock__night" d={night} />
     {
       petals.map((petal) => (
-        <path
+        <g
           class:list={['year-clock__petal', { 'is-top': petal.hour === favorite.hour }]}
-          d={petal.d}
           data-hour={petal.hour}
           data-count={petal.count}
           style={`--hour: ${petal.hour}`}
         >
-          <title>{`${petal.hour} 点\u2003${petal.count} 条`}</title>
-        </path>
+          <title>{`${petal.hour} 点\u2003${petal.count} ${unit}`}</title>
+          <path d={petal.d} />
+          {petal.inner && <path class="year-clock__inner" d={petal.inner} />}
+        </g>
       ))
     }
     {
@@ -71,7 +81,7 @@ const labels = [0, 6, 12, 18].map((hour) => ({ hour, at: point(outer + 14, hour 
       const unit = svg.querySelector<SVGTextElement>('.year-clock__unit')!
       const show = (petal?: SVGElement | null) => {
         hour.textContent = petal?.dataset.hour ?? hour.dataset.default ?? ''
-        unit.textContent = petal ? `点\u2003${petal.dataset.count} 条` : (unit.dataset.default ?? '')
+        unit.textContent = petal ? `点\u2003${petal.dataset.count} ${svg.dataset.unit}` : (unit.dataset.default ?? '')
         for (const other of svg.querySelectorAll('.year-clock__petal'))
           other.classList.toggle('is-pointed', other === petal)
       }
@@ -128,6 +138,12 @@ const labels = [0, 6, 12, 18].map((hour) => ({ hour, at: point(outer + 14, hour 
       fill: var(--color-tx);
       fill-opacity: 1;
     }
+  }
+
+  /* The share drawn lighter, over the rest of its petal. */
+  .year-clock__inner {
+    fill: var(--color-bg);
+    fill-opacity: 0.55;
   }
 
   .year-clock__label,

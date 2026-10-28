@@ -17,7 +17,7 @@ import { getLifeCollage, getYearCollage } from '@/card-data'
 import { getShowcaseMedia } from '@/moments/showcase'
 import { getTripCollage } from '@/moments/trip-images'
 import { getPageCardPath, getPageTitle } from '@/page-cards'
-import { buildCarFloor, buildRouteGlyph, buildYearMap, getTripLine } from '@/year-map'
+import { buildRouteGlyph, buildYearMap, getTripLine } from '@/year-map'
 import {
   buildYearReview,
   formatChange,
@@ -102,8 +102,6 @@ const map = buildYearMap(
     moment.locations.map(({ latitude, longitude }) => [longitude, latitude] as const),
   ),
 )
-// What the car stands on in the driving section: the legs it drove on the trips.
-const carFloor = buildCarFloor(review.trips.flatMap((trip) => getTripLine(trip.legs)))
 /** The most photos a picture chooses among each visit (src/year-random.ts). */
 const PICKS = 6
 /** What a picture with others to choose from names for src/year-random.ts. */
@@ -143,6 +141,9 @@ const tripMeta = (trip: { dayCount: number; drivingKm: number }) =>
   `${trip.dayCount} 天${trip.drivingKm > 0 ? `\u2003${formatNumber(trip.drivingKm)} km` : ''}`
 const topCities = review.cities.lit.slice(0, 6)
 // The cities first reached, under the month they were, or a life's under the year.
+// The cities first reached, under the map with the rest, where there's a year before to be
+// new against.
+const showFirstVisits = (life || before) && review.firstVisits.length > 0
 const firstVisitColumns = life
   ? years.map((at) => ({ key: at, label: String(at) }))
   : Array.from({ length: 12 }, (_, index) => ({ key: index + 1, label: `${index + 1}月` }))
@@ -421,6 +422,56 @@ const highlights = [
       )
     }
 
+    <section class="year-section year-wide" aria-labelledby="year-days">
+      <h2 id="year-days">每一天</h2>
+      {mosaics.map((mosaic) => (
+        <>
+          {life && <h3 class="year-days__year">{mosaic.year}</h3>}
+          <YearMosaic year={mosaic.year!} moments={mosaic.moments} trips={mosaic.trips} />
+        </>
+      ))}
+    </section>
+
+    <section class="year-section" aria-labelledby="year-moments">
+      <h2 id="year-moments">一些瞬间</h2>
+      <ul class="year-highlights">
+        {
+          highlights.map((highlight, index) => (
+            <li style={`--index: ${index}`}>
+              <a href={highlight.href}>
+                <span
+                  class:list={['year-highlights__art', `is-${highlight.layout}`]}
+                  style={`--count: ${highlight.pictures.length}`}
+                  data-pick-set={highlight.set}
+                >
+                  {highlight.pictures.map((picture) => (
+                    <img src={picture.src} alt="" loading="lazy" decoding="async" data-pick={picture.pick} />
+                  ))}
+                </span>
+                <span class="year-highlights__kicker">{highlight.kicker}</span>
+                <span class="year-highlights__title">{highlight.title}</span>
+                <span class="year-highlights__date">{highlight.date}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    {
+      review.favoriteHour && (
+        <section class="year-section" aria-labelledby="year-hours">
+          <h2 id="year-hours">节奏</h2>
+          <YearClock hours={review.hours} favorite={review.favoriteHour}>
+            <YearWeekdays weekdays={review.weekdays} />
+          </YearClock>
+          {review.topics.length > 0 && (
+            <YearTopics topics={topics} {...(before ? { compared: `比 ${previous} 年` } : {})} />
+          )}
+        </section>
+      )
+    }
+
     {
       review.cities.lit.length > 0 && (
         <section class="year-section year-wide" aria-labelledby="year-footprint">
@@ -429,6 +480,11 @@ const highlights = [
             <span>
               {review.cities.provinces}<small>个省</small>
             </span>
+            {showFirstVisits && (
+              <span>
+                {review.firstVisits.length}<small>座新城市</small>
+              </span>
+            )}
           </p>
           <YearFootprint map={map} label={`${name}去过的 ${review.cities.lit.length} 个城市和走过的路线`} />
           <ol class="year-cities" aria-label="记下最多的城市">
@@ -440,6 +496,20 @@ const highlights = [
               </li>
             ))}
           </ol>
+          {showFirstVisits && (
+            <ol class:list={['year-first', { 'is-years': life }]} aria-label="第一次去的城市">
+              {firstVisitColumns.map((column, index) => (
+                <li class:list={{ 'is-empty': !firstVisits.has(column.key) }} style={`--month: ${index}`}>
+                  <span class="year-first__month">{column.label}</span>
+                  {(firstVisits.get(column.key) ?? []).map((visit, order) => (
+                    <span class="year-first__city" title={formatDay(visit.dateKey)} style={`--index: ${order}`}>
+                      {visit.name}
+                    </span>
+                  ))}
+                </li>
+              ))}
+            </ol>
+          )}
         </section>
       )
     }
@@ -498,40 +568,6 @@ const highlights = [
               ))}
             </ul>
           )}
-        </section>
-      )
-    }
-
-    {
-      drove && (
-        <section class="year-section" aria-labelledby="year-driving">
-          <h2 id="year-driving">开车</h2>
-          <YearDriving {...(life ? {} : { year })} floor={carFloor} />
-        </section>
-      )
-    }
-
-    {
-      (life || before) && review.firstVisits.length > 0 && (
-        <section class="year-section" aria-labelledby="year-first">
-          <h2 id="year-first">第一次去</h2>
-          <p class="year-lead">
-            <span>
-              {review.firstVisits.length}<small>座新城市</small>
-            </span>
-          </p>
-          <ol class:list={['year-first', { 'is-years': life }]}>
-            {firstVisitColumns.map((column, index) => (
-              <li class:list={{ 'is-empty': !firstVisits.has(column.key) }} style={`--month: ${index}`}>
-                <span class="year-first__month">{column.label}</span>
-                {(firstVisits.get(column.key) ?? []).map((visit, order) => (
-                  <span class="year-first__city" title={formatDay(visit.dateKey)} style={`--index: ${order}`}>
-                    {visit.name}
-                  </span>
-                ))}
-              </li>
-            ))}
-          </ol>
         </section>
       )
     }
@@ -655,52 +691,11 @@ const highlights = [
       )
     }
 
-    <section class="year-section year-wide" aria-labelledby="year-days">
-      <h2 id="year-days">每一天</h2>
-      {mosaics.map((mosaic) => (
-        <>
-          {life && <h3 class="year-days__year">{mosaic.year}</h3>}
-          <YearMosaic year={mosaic.year!} moments={mosaic.moments} trips={mosaic.trips} />
-        </>
-      ))}
-    </section>
-
-    <section class="year-section" aria-labelledby="year-moments">
-      <h2 id="year-moments">一些瞬间</h2>
-      <ul class="year-highlights">
-        {
-          highlights.map((highlight, index) => (
-            <li style={`--index: ${index}`}>
-              <a href={highlight.href}>
-                <span
-                  class:list={['year-highlights__art', `is-${highlight.layout}`]}
-                  style={`--count: ${highlight.pictures.length}`}
-                  data-pick-set={highlight.set}
-                >
-                  {highlight.pictures.map((picture) => (
-                    <img src={picture.src} alt="" loading="lazy" decoding="async" data-pick={picture.pick} />
-                  ))}
-                </span>
-                <span class="year-highlights__kicker">{highlight.kicker}</span>
-                <span class="year-highlights__title">{highlight.title}</span>
-                <span class="year-highlights__date">{highlight.date}</span>
-              </a>
-            </li>
-          ))
-        }
-      </ul>
-    </section>
-
     {
-      review.favoriteHour && (
-        <section class="year-section" aria-labelledby="year-hours">
-          <h2 id="year-hours">节奏</h2>
-          <YearClock hours={review.hours} favorite={review.favoriteHour}>
-            <YearWeekdays weekdays={review.weekdays} />
-          </YearClock>
-          {review.topics.length > 0 && (
-            <YearTopics topics={topics} {...(before ? { compared: `比 ${previous} 年` } : {})} />
-          )}
+      drove && (
+        <section class="year-section" aria-labelledby="year-driving">
+          <h2 id="year-driving">开车</h2>
+          <YearDriving {...(life ? {} : { year })} />
         </section>
       )
     }
@@ -1418,9 +1413,11 @@ const highlights = [
     }
   }
 
-  /* The cities first reached, under the month they were reached in. */
+  /* The cities first reached, under the month they were reached in, below the bars. */
   .year-first {
     display: grid;
+    max-width: 40rem;
+    margin: 2.5rem auto 0;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 1rem 0.75rem;
 

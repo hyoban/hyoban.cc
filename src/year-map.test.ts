@@ -1,12 +1,6 @@
 import { describe, expect, test } from 'vite-plus/test'
 import type { FogRegions } from '@hyoban/trip-map'
-import {
-  buildCarFloor,
-  buildRouteGlyph,
-  buildYearMap,
-  getTripLine,
-  type TripLine,
-} from './year-map.ts'
+import { buildRouteGlyph, buildYearMap, getTripLine, type TripLine } from './year-map.ts'
 
 const square = (id: string, x: number, y: number): FogRegions['features'][number] => ({
   geometry: {
@@ -169,52 +163,5 @@ describe('buildRouteGlyph', () => {
     const numbers = glyph.d.match(/[\d.]+/g)!.map(Number)
     expect(Math.max(...numbers)).toBeLessThanOrEqual(100)
     expect(glyph.height).toBeLessThanOrEqual(100)
-  })
-})
-
-describe('buildCarFloor', () => {
-  test('draws only the legs driven by car, fitted to its box', () => {
-    const floor = buildCarFloor([
-      {
-        by: 'car',
-        points: [
-          [120, 30],
-          [120.5, 30.0001],
-          [121, 30],
-        ],
-      },
-      {
-        by: 'plane',
-        points: [
-          [121, 30],
-          [125, 35],
-        ],
-      },
-      {
-        by: 'car',
-        points: [
-          [121, 30],
-          [121, 31],
-        ],
-      },
-    ])
-    // Two legs by car, each its own subpath; the flight left out.
-    expect(floor?.d.match(/M/g)).toHaveLength(2)
-    expect(floor?.width).toBe(1000)
-    expect(floor?.height).toBeLessThanOrEqual(1000)
-  })
-
-  test('has nothing to stand on without driving', () => {
-    expect(
-      buildCarFloor([
-        {
-          by: 'plane',
-          points: [
-            [120, 30],
-            [121, 31],
-          ],
-        },
-      ]),
-    ).toBeUndefined()
   })
 })

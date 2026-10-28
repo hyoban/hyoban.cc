@@ -108,25 +108,6 @@ export function buildRouteGlyph(lines: readonly TripLine[], size = 100) {
 }
 
 /**
- * The legs driven, fitted to a `size` square, for the 3D car to stand on: its floor drawn
- * from them (src/car-model-client.ts). None when nothing was driven.
- */
-export function buildCarFloor(lines: readonly TripLine[], size = 1000) {
-  const driven = lines.filter((line) => line.by === 'car').map((line) => line.points)
-  if (driven.length === 0) return undefined
-  const project = fit(driven.flat(), size, 0.04, size)
-  // A leg too short to see at this scale would only leave a dot.
-  const seen = driven.filter((line) => {
-    const points = line.map(project.point)
-    const xs = points.map(([x]) => x)
-    const ys = points.map(([, y]) => y)
-    return Math.max(...xs) - Math.min(...xs) + Math.max(...ys) - Math.min(...ys) >= size / 200
-  })
-  const d = seen.map((line) => toLinePath(line, project.point, 1)).join('')
-  return d ? { d, width: size, height: project.height } : undefined
-}
-
-/**
  * An equirectangular projection, its x squeezed by the latitude's cosine at the middle,
  * that fits `points` into `width` with `padding` of it around them; no taller than `maxHeight`.
  */

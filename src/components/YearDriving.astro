@@ -1,6 +1,7 @@
 ---
 import CarModel from '@/components/CarModel.astro'
-import { formatCarDate, getCarDays, type CarYear } from '@/car-model'
+import YearClock from '@/components/YearClock.astro'
+import { formatCarDate, getCarDays } from '@/car-model'
 import { formatKilometers, getCarSummary } from '@/car'
 import { DELIVERED_ON, getDistanceLevel, getYearWeeks, type Outing } from '@/data/vehicle'
 import {
@@ -15,23 +16,22 @@ import {
 } from '@/data/vehicle-costs'
 import { getActiveDateKeys, getMomentPath, getMoments } from '@/moments'
 
-// The year as the car drove it, or every year it did, from data/zeekr: its totals, and a
-// contribution graph of every day, a year's each, darker the farther it went, Monday first. A day of an outing links to its
-// trip, or to its day in the calendar when it has Moments; one the records don't cover,
-// before the car or after the latest capture, is left hollow. Then what it charged, when
-// the records have it: how often and how much, and the hours the charges started, fast
-// ones on the road over slow ones at home, with what a kWh cost. Then the ledger: what
+// The year as the car drove it, or every year it did, from data/zeekr: its totals, and every
+// day as the wall of days lays it out, a row a month, darker the farther it went. A day of
+// an outing links to its trip, or to its day in the calendar when it has Moments; one the
+// records don't cover, before the car or after the latest capture, is left hollow. Then
+// what it charged, when the records have it: how often and how much, with what a kWh cost,
+// and the hours the charges started on the clock face the review's rhythm is drawn on
+// (src/components/YearClock.astro), fast ones over those at home. Then the ledger: what
 // the year spent on the car besides buying it, by kind, and a kilometre's running cost;
 // and on a life's page, what owning it has cost from the first payment on.
 
 interface Props {
   /** The year, or none for every year the car's records reach into. */
   year?: number
-  /** The legs it drove on the year's trips, for the 3D car to stand on (src/year-map.ts). */
-  floor?: CarYear['floor']
 }
 
-const { year, floor } = Astro.props
+const { year } = Astro.props
 const car = await getCarSummary()
 const activeDates = new Set(getActiveDateKeys(await getMoments()))
 const inYear = (date: string) => year === undefined || date.startsWith(`${year}-`)
@@ -53,7 +53,6 @@ const hours = Array.from({ length: 24 }, (_, hour) => {
   return { ac: inHour.length - dc, dc, hour, total: inHour.length }
 })
 const busiestHour = hours.reduce((best, hour) => (hour.total > best.total ? hour : best))
-const hourMax = Math.max(1, busiestHour.total)
 
 const formatNumber = (value: number) => value.toLocaleString('zh-CN', { maximumFractionDigits: 0 })
 const expenses = car.expenses.filter((expense) => inYear(expense.at))
@@ -134,35 +133,32 @@ const getOutingHref = (outing: Outing, date: string) =>
       : undefined
 
 const formatDay = (date: string) => formatCarDate(date, year === undefined)
-const weekdayLabels = ['一', '', '三', '', '五', '', '日']
+// Each year as the wall of days draws it (src/components/YearMosaic.astro): a row a month, a
+// tile a day.
 const heatmaps = heatYears.map((at) => {
-  const weeks = getYearWeeks(at, car.days, car.span)
-  const months = weeks.map((week) => {
-    const first = week.find((cell) => cell?.date.endsWith('-01'))
-    return first ? Number(first.date.slice(5, 7)) : undefined
+  const cells = new Map(
+    getYearWeeks(at, car.days, car.span)
+      .flat()
+      .filter((cell) => cell !== null)
+      .map((cell) => [cell.date, cell]),
+  )
+  const months = Array.from({ length: 12 }, (_, index) => {
+    const length = new Date(Date.UTC(at, index + 1, 0)).getUTCDate()
+    return {
+      month: index + 1,
+      days: Array.from({ length }, (_, day) => cells.get(`${at}-${String(index + 1).padStart(2, '0')}-${String(day + 1).padStart(2, '0')}`)!),
+    }
   })
-  // The year in two halves from the week July starts in, side by side as one row where
-  // there's room and one over the other on a phone, where a whole year's days would be
-  // too small to see.
-  const july = months.indexOf(7)
-  const split = july > 0 ? july : Math.ceil(weeks.length / 2)
-  // A half the records don't reach into at all, before the car, is left out on a phone;
-  // in a row it keeps the year whole.
-  const halves = [
-    { weeks: weeks.slice(0, split), months: months.slice(0, split) },
-    { weeks: weeks.slice(split), months: months.slice(split) },
-  ].map((half) => ({
-    ...half,
-    blank: !half.weeks.some((week) => week.some((cell) => cell?.distanceMeters !== undefined)),
-  }))
-  return { year: at, weeks, halves }
+  return { year: at, months }
 })
-// The year the car drives through as it's scrolled or held: each day what it drove, charged
-// and spent, so it adds up to the figures, the graph's days as the graph has them.
+// The year the car drives through as it's scrolled: each day what it drove, charged and
+// spent, so it adds up to the figures, the graph's days as the graph has them.
 const carDays = getCarDays(
   [
-    ...heatmaps.flatMap(({ weeks }) =>
-      weeks.flat().flatMap((cell) => (cell?.distanceMeters === undefined ? [] : [{ date: cell.date, meters: cell.distanceMeters }])),
+    ...heatmaps.flatMap(({ months }) =>
+      months.flatMap(({ days }) =>
+        days.flatMap((cell) => (cell.distanceMeters === undefined ? [] : [{ date: cell.date, meters: cell.distanceMeters }])),
+      ),
     ),
     ...charges.map((charge) => ({ date: charge.startedAt.slice(0, 10), wh: charge.energyWh })),
     ...nonPurchase.map((expense) => ({ date: expense.at.slice(0, 10), fen: getExpenseFen(expense) })),
@@ -208,7 +204,7 @@ const spendingTiles: Tile[] = [
   <div class="year-driving__pin">
     {
       carDays && (
-        <CarModel year={{ floor, caption: year === undefined ? '至今' : `${year} 年`, ...carDays }} />
+        <CarModel year={{ caption: year === undefined ? '至今' : `${year} 年`, ...carDays }} />
       )
     }
     <p class="year-lead">
@@ -226,74 +222,59 @@ const spendingTiles: Tile[] = [
     </p>
     <div class="year-driving__years">
       {
-        heatmaps.map(({ year: at, weeks, halves }) => (
+        heatmaps.map(({ year: at, months }) => (
           <>
             {heatmaps.length > 1 && (
               <h3 class="year-driving__year" data-graph-year={at}>
                 {at}
               </h3>
             )}
-            <div
-              class="year-driving"
-              data-graph-year={at}
-              style={`--weeks: ${weeks.length}; --half-weeks: ${Math.max(...halves.map((half) => half.weeks.length))}`}
-            >
-              {halves.map((half, index) => (
-                <div
-                  class:list={['year-driving__half', { 'is-blank': half.blank }]}
-                  data-half={index}
-                  style={`--weeks: ${half.weeks.length}`}
-                >
-                  <div class="year-driving__months" aria-hidden="true">
-                    {half.months.map((month) => (
-                      <span>
+            <div class="year-driving" data-graph-year={at}>
+              <div class="year-driving__grid">
+                {months.map(({ month, days: monthDays }) => (
+                  <>
+                    {month % 2 === 1 && (
+                      <span class="year-driving__month" style={`--month: ${month}`} aria-hidden="true">
                         {month}
-                        {month && <span class="year-driving__month-unit"> 月</span>}
+                        <span class="year-driving__month-unit">月</span>
                       </span>
-                    ))}
-                  </div>
-                  <div class="year-driving__weekdays" aria-hidden="true">
-                    {weekdayLabels.map((label) => (
-                      <span>{label}</span>
-                    ))}
-                  </div>
-                  <div class="year-driving__grid">
-                    {half.weeks.flatMap((week) =>
-                      week.map((cell) => {
-                        if (!cell) return <span class="year-driving__cell" data-outside />
-                        if (cell.distanceMeters === undefined) {
-                          return (
-                            <span class="year-driving__cell" data-empty title={`${formatDay(cell.date)}\u2003没有记录`} />
-                          )
-                        }
-                        const title = `${formatDay(cell.date)}\u2003${cell.distanceMeters ? formatKilometers(cell.distanceMeters) : '没开'}`
-                        const outing = outingByDate.get(cell.date)
-                        const href = outing && getOutingHref(outing, cell.date)
-                        const tabbed = href !== undefined && tabbedHrefs.has(href)
-                        if (href) tabbedHrefs.add(href)
-                        return href ? (
-                          <a
-                            class="year-driving__cell"
-                            data-level={getDistanceLevel(cell.distanceMeters)}
-                            data-date={cell.date}
-                            href={href}
-                            tabindex={tabbed ? -1 : undefined}
-                            title={outing.trip ? `${title}\u2003${outing.trip.title}` : title}
-                            aria-label={outing.trip ? `${title}，${outing.trip.title}` : title}
-                          />
-                        ) : (
-                          <span
-                            class="year-driving__cell"
-                            data-level={getDistanceLevel(cell.distanceMeters)}
-                            data-date={cell.date}
-                            title={title}
-                          />
-                        )
-                      }),
                     )}
-                  </div>
-                </div>
-              ))}
+                    {monthDays.map((cell, index) => {
+                      const style = `--month: ${month}; --day: ${index + 1}`
+                      if (cell.distanceMeters === undefined) {
+                        return (
+                          <span class="year-driving__cell" data-empty style={style} title={`${formatDay(cell.date)}\u2003没有记录`} />
+                        )
+                      }
+                      const title = `${formatDay(cell.date)}\u2003${cell.distanceMeters ? formatKilometers(cell.distanceMeters) : '没开'}`
+                      const outing = outingByDate.get(cell.date)
+                      const href = outing && getOutingHref(outing, cell.date)
+                      const tabbed = href !== undefined && tabbedHrefs.has(href)
+                      if (href) tabbedHrefs.add(href)
+                      return href ? (
+                        <a
+                          class="year-driving__cell"
+                          data-level={getDistanceLevel(cell.distanceMeters)}
+                          data-date={cell.date}
+                          style={style}
+                          href={href}
+                          tabindex={tabbed ? -1 : undefined}
+                          title={outing.trip ? `${title}\u2003${outing.trip.title}` : title}
+                          aria-label={outing.trip ? `${title}，${outing.trip.title}` : title}
+                        />
+                      ) : (
+                        <span
+                          class="year-driving__cell"
+                          data-level={getDistanceLevel(cell.distanceMeters)}
+                          data-date={cell.date}
+                          style={style}
+                          title={title}
+                        />
+                      )
+                    })}
+                  </>
+                ))}
+              </div>
             </div>
           </>
         ))
@@ -313,50 +294,32 @@ const spendingTiles: Tile[] = [
   charges.length > 0 && (
     <>
       <h3 class="year-driving__part">充电</h3>
-      <dl class="year-driving__tiles">
-        {chargingTiles.map((tile) => (
-          <div>
-            <dt>{tile.label}</dt>
-            <dd>
-              {tile.value}
-              {tile.unit && <small>{tile.unit}</small>}
-            </dd>
-            {tile.note && <dd class="year-driving__note">{tile.note}</dd>}
-          </div>
-        ))}
-      </dl>
-      <div
-        class="year-driving__hours"
-        role="img"
-        aria-label={`每个小时开始的充电：${hours.filter((hour) => hour.total > 0).map((hour) => `${hour.hour} 点 ${hour.total} 次`).join('，')}`}
+      <YearClock
+        hours={hours.map((hour) => hour.total)}
+        inner={hours.map((hour) => hour.ac)}
+        favorite={{ hour: busiestHour.hour, count: busiestHour.total }}
+        unit="次"
+        label={`每个小时开始的充电，最常在 ${busiestHour.hour} 点，共 ${busiestHour.total} 次`}
       >
-        {hours.map((hour) => (
-          <span
-            class:list={['year-driving__hour', { 'is-top': hour.total === busiestHour.total && hour.total > 0 }]}
-            title={`${hour.hour} 点\u2003快充 ${hour.dc} 次\u2003家充 ${hour.ac} 次`}
-            style={`--hour: ${hour.hour}`}
-          >
-            <span class="year-driving__hour-ac" style={`height: ${(hour.ac / hourMax) * 100}%`} />
-            <span class="year-driving__hour-dc" style={`height: ${(hour.dc / hourMax) * 100}%`} />
-          </span>
-        ))}
-        {[0, 6, 12, 18].map((hour) => (
-          <span class="year-driving__hour-label" style={`grid-column: ${hour + 1}`} aria-hidden="true">
-            {hour}
-          </span>
-        ))}
-      </div>
-      <div class="year-driving__legend" aria-hidden="true">
-        <span class="year-driving__readout" data-readout={`最多在 ${busiestHour.hour} 点`}>
-          最多在 {busiestHour.hour} 点
-        </span>
-        <span class="year-driving__key">
+        <dl class="year-driving__tiles">
+          {chargingTiles.map((tile) => (
+            <div>
+              <dt>{tile.label}</dt>
+              <dd>
+                {tile.value}
+                {tile.unit && <small>{tile.unit}</small>}
+              </dd>
+              {tile.note && <dd class="year-driving__note">{tile.note}</dd>}
+            </div>
+          ))}
+        </dl>
+        <span class="year-driving__key" aria-hidden="true">
           <span class="year-driving__swatch is-dc" />
           <span>快充</span>
           <span class="year-driving__swatch is-ac" />
           <span>家充</span>
         </span>
-      </div>
+      </YearClock>
     </>
   )
 }
@@ -692,79 +655,43 @@ const spendingTiles: Tile[] = [
     }
   }
 
-  /* A year's graph: a column for the weekdays' names, then a column a week, which each
-     half takes its share of. On a phone the halves are one over the other, as wide as the
-     longer; where there's room, side by side, the second without the names again. */
-  .year-driving {
+  /* A year's graph as the wall of days lays a year out: a row a month, each day placed by
+     its month and day, every other month named at its row's start, the rows too low for
+     every name. */
+  .year-driving__grid {
     --gap: 2px;
     display: grid;
-    grid-template-columns: auto repeat(var(--half-weeks), minmax(0, 1fr));
-    column-gap: var(--gap);
-    row-gap: 0.875rem;
+    grid-template-columns: auto repeat(31, minmax(0, 1fr));
+    gap: var(--gap);
     color: var(--color-tx-3);
     font-size: 0.625rem;
     line-height: 1;
-
-    @media (width >= 40rem) {
-      grid-template-columns: auto repeat(var(--weeks), minmax(0, 1fr));
-    }
   }
 
-  .year-driving__half {
-    display: grid;
-    grid-template-columns: subgrid;
-    grid-column: 1 / -1;
-    row-gap: 0.25rem;
+  /* Across its own row and the next, so a name taller than a row doesn't stretch it. */
+  .year-driving__month {
+    grid-area: var(--month) / 1 / span 2;
+    align-self: center;
+    padding-right: 0.375rem;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
 
     @media (width < 40rem) {
-      &.is-blank {
+      & .year-driving__month-unit {
         display: none;
       }
     }
+  }
+
+  /* Twice as wide as tall where there's room, so twelve rows of them leave the car, the
+     figures and the graph room to be held on the screen together while the year plays; on a
+     phone, narrow and tall, square. */
+  .year-driving__grid > .year-driving__cell {
+    grid-area: var(--month) / calc(var(--day) + 1);
 
     @media (width >= 40rem) {
-      &[data-half='0'] {
-        grid-column: 1 / span calc(var(--weeks) + 1);
-      }
-
-      &[data-half='1'] {
-        grid-row: 1;
-        grid-column: span var(--weeks) / -1;
-
-        & .year-driving__weekdays {
-          display: none;
-        }
-
-        & :is(.year-driving__months, .year-driving__grid) {
-          grid-column: 1 / -1;
-        }
-      }
+      aspect-ratio: 2;
     }
-  }
-
-  .year-driving__months,
-  .year-driving__grid {
-    display: grid;
-    grid-template-columns: subgrid;
-    grid-column: 2 / span var(--weeks);
-  }
-
-  .year-driving__months span {
-    white-space: nowrap;
-  }
-
-  .year-driving__weekdays {
-    display: grid;
-    grid-template-rows: repeat(7, 1fr);
-    row-gap: var(--gap);
-    grid-row: 2;
-    padding-right: 0.25rem;
-  }
-
-  .year-driving__grid {
-    grid-template-rows: repeat(7, auto);
-    grid-auto-flow: column;
-    row-gap: var(--gap);
   }
 
   .year-driving__cell {
@@ -865,41 +792,13 @@ const spendingTiles: Tile[] = [
     color: var(--color-tx-3);
   }
 
-  /* When the charges started, an hour a column, slow ones at the bottom and fast on top. */
-  .year-driving__hours {
-    display: grid;
-    grid-template-columns: repeat(24, minmax(0, 1fr));
-    grid-template-rows: 5rem auto;
-    column-gap: 2px;
-    color: var(--color-tx-3);
-    font-size: 0.625rem;
-    line-height: 1;
-  }
-
-  .year-driving__hour {
-    display: flex;
-    flex-direction: column-reverse;
-    grid-row: 1;
-    border-bottom: 1px solid var(--color-border);
-  }
-
-  .year-driving__hour-ac,
+  /* The clock's two parts: fast charges dark, at home light. */
   .year-driving__swatch.is-ac {
-    background: color-mix(in srgb, var(--color-tx) 30%, var(--color-hover));
+    background: color-mix(in srgb, var(--color-tx-3) 20%, var(--color-bg));
   }
 
-  .year-driving__hour-dc,
   .year-driving__swatch.is-dc {
-    background: var(--color-tx-2);
-  }
-
-  .year-driving__hour.is-top .year-driving__hour-ac {
-    background: var(--color-tx);
-  }
-
-  .year-driving__hour-label {
-    grid-row: 2;
-    padding-top: 0.25rem;
+    background: color-mix(in srgb, var(--color-tx-3) 45%, var(--color-bg));
   }
 
   .year-driving__swatch {
@@ -929,6 +828,11 @@ const spendingTiles: Tile[] = [
 
     .year-driving__cell {
       width: 0.625rem;
+
+      @media (width >= 40rem) {
+        width: 0.75rem;
+        aspect-ratio: 2;
+      }
     }
   }
 
@@ -950,9 +854,15 @@ const spendingTiles: Tile[] = [
     }
   }
 
+  /* Beside the charging clock, under its figures, as small as the legends. */
+  :global(.year-clock) .year-driving__key {
+    color: var(--color-tx-3);
+    font-size: 0.75rem;
+  }
+
   /* Scrolled, where animations can follow it (the year's page): the figures rise as they
-     come up, the days are uncovered week after week, the hours' columns grow in turn, and
-     the year's spending wipes in from the left. */
+     come up, the days are uncovered left to right, and the year's spending wipes in from
+     the left. */
   @supports (animation-timeline: view()) {
     @media (prefers-reduced-motion: no-preference) {
       :global(.year-scroll) {
@@ -964,39 +874,15 @@ const spendingTiles: Tile[] = [
           animation-range: entry 0% entry 100%;
         }
 
-        /* A year's days uncovered week after week as its graph comes up: one animation for
-           the graph, not one a day, which would put hundreds on layers of their own. */
+        /* A year's days uncovered left to right as its graph comes up, as the wall's are: one
+           animation for the graph, not one a day, which would put hundreds on layers of their
+           own. */
         & .year-driving__stage:not(.is-playing) .year-driving__grid {
           animation-name: year-driving-wipe;
           animation-timing-function: linear;
           animation-fill-mode: both;
           animation-timeline: view();
           animation-range: entry 50% cover 45%;
-        }
-
-        /* Side by side, the halves come up together: the first is uncovered in the first
-           half of the way and the second after it, one sweep across the year. */
-        @media (width >= 40rem) {
-          & .year-driving__stage:not(.is-playing) [data-half='0'] .year-driving__grid {
-            animation-name: year-driving-wipe-first;
-          }
-
-          & .year-driving__stage:not(.is-playing) [data-half='1'] .year-driving__grid {
-            animation-name: year-driving-wipe-second;
-          }
-        }
-
-        & .year-driving__hours {
-          view-timeline: --hours;
-        }
-
-        & .year-driving__hour {
-          transform-origin: bottom;
-          animation-name: year-driving-grow;
-          animation-timing-function: linear;
-          animation-fill-mode: both;
-          animation-timeline: --hours;
-          animation-range: entry calc(40% + var(--hour) * 2%) cover calc(30% + var(--hour) * 0.8%);
         }
 
         & .year-driving__bar {
@@ -1017,12 +903,6 @@ const spendingTiles: Tile[] = [
     }
   }
 
-  @keyframes year-driving-grow {
-    from {
-      scale: 1 0;
-    }
-  }
-
   /* Both ends spelled out: an inset() can't ease into none, it would snap halfway. */
   @keyframes year-driving-wipe {
     from {
@@ -1033,23 +913,4 @@ const spendingTiles: Tile[] = [
     }
   }
 
-  @keyframes year-driving-wipe-first {
-    from {
-      clip-path: inset(0 100% 0 0);
-    }
-    50%,
-    to {
-      clip-path: inset(0 0 0 0);
-    }
-  }
-
-  @keyframes year-driving-wipe-second {
-    from,
-    50% {
-      clip-path: inset(0 100% 0 0);
-    }
-    to {
-      clip-path: inset(0 0 0 0);
-    }
-  }
 </style>
