@@ -27,7 +27,7 @@ hyoban.cc is a quiet, text-first personal site built with Astro and plain CSS: e
 
 - **Small icons inline with text.** Lucide and Simple Icons, as CSS masks in [icons.css](src/styles/icons.css), sit before link text at `0.85em`, rather than as separate buttons.
 - **Light framing on code, tables and images.** They get a 1px border, a `0.625rem` radius and the `inline` background color. A horizontal rule is drawn as `· · ·`.
-- **Small, quick motion.** Page changes fade over 200ms, colors change over 140ms, and thumbnails scale up 2.5% on hover. All of it, including view transitions, respects reduced-motion.
+- **Small, quick motion.** Page changes fade over 200ms, colors change over 140ms, and thumbnails scale up 2.5% on hover. What a page change carries along moves rather than fades: a year's label grows into its review's huge year and shrinks back into it ([year-transition.ts](src/year-transition.ts)), a day's tile on the review's wall opens into that day in the calendar and back, and a calendar month slides in the way time goes, a later one from the right ([calendar-month-transition.ts](src/calendar-month-transition.ts)). All of it, including view transitions, respects reduced-motion.
 - **Chinese-first.** Copy, ARIA labels and date formats are written for Chinese readers.
 
 ## Summary
