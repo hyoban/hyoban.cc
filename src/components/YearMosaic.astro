@@ -100,8 +100,19 @@ const months = Array.from({ length: 12 }, (_, index) => {
       },
       { rootMargin: '0px 0px -10% 0px' },
     )
-    for (const mosaic of document.querySelectorAll('.year-mosaic')) observer.observe(mosaic)
+    for (const mosaic of document.querySelectorAll('.year-mosaic:not(.is-shown)')) observer.observe(mosaic)
   }
+
+  // A wall the router brings back, part way down where it was or with a day flying back into
+  // its tile (src/year-transition.ts), is simply there: the transition shows it as the page
+  // is swapped in, before any wipe could start.
+  document.addEventListener('astro:after-swap', () => {
+    for (const mosaic of document.querySelectorAll<HTMLElement>('.year-mosaic')) {
+      if (history.state?.scrollY > 0 || mosaic.querySelector('[style*="view-transition-name"]')) {
+        mosaic.classList.add('is-shown')
+      }
+    }
+  })
 
   function popDays() {
     // Keeping still, there's none to pop.
@@ -353,7 +364,7 @@ const months = Array.from({ length: 12 }, (_, index) => {
      a tile lifted over its neighbours isn't cut off. */
   @supports (animation-timeline: view()) {
     @media (prefers-reduced-motion: no-preference) {
-      :global(.year-scroll:not(.is-sharing)) .year-mosaic:not(.is-wiped) {
+      :global(.year-scroll:not(.is-sharing)) .year-mosaic:not(.is-wiped, .is-shown) {
         clip-path: inset(-6rem 100% -6rem -6rem);
 
         @media (width < 40rem) {
