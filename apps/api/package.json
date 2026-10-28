@@ -10,7 +10,8 @@
   },
   "dependencies": {
     "@hyoban/data-spec": "workspace:*",
-    "@hyoban/trip-map": "workspace:*"
+    "@hyoban/trip-map": "workspace:*",
+    "p-limit": "^7.3.3"
   },
   "devDependencies": {
     "wrangler": "^4.149.0"

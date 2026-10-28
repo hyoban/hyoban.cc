@@ -1,5 +1,5 @@
 import { getAssetUrl, getFrameSources, getResizedSources } from './asset-url.ts'
-import { getTextLang } from '@hyoban/trip-map'
+import { escapeHtml, getTextLang } from '@hyoban/trip-map'
 import type { MomentRecord, TripRecord } from '@hyoban/data-spec'
 import { readMomentRecords, readTripRecords } from './data/store.ts'
 
@@ -11,13 +11,6 @@ import { readMomentRecords, readTripRecords } from './data/store.ts'
 const TRIP_PATH = /^\/trip\/([\w-]+)\/?$/
 // Three columns in the 40rem article column, inside the body's 1rem side padding.
 const COVER_SIZES = '(min-width: 42rem) 13rem, calc((100vw - 2rem) / 3)'
-const HTML_ESCAPES: Record<string, string> = {
-  '&': '&amp;',
-  '"': '&quot;',
-  '<': '&lt;',
-  '>': '&gt;',
-}
-
 type MdNode = { type: string; children?: MdNode[]; url?: string; value?: string }
 
 export function remarkTripCovers() {
@@ -131,8 +124,4 @@ function renderCovers(
 
 function getText(node: MdNode): string {
   return node.value ?? (node.children ?? []).map(getText).join('')
-}
-
-function escapeHtml(value: string) {
-  return value.replace(/[&"<>]/g, (char) => HTML_ESCAPES[char]!)
 }

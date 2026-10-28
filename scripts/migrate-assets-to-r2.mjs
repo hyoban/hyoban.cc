@@ -3,6 +3,7 @@ import { readFile, readdir, rm, writeFile } from 'node:fs/promises'
 import { basename, dirname, join, relative, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import pLimit from 'p-limit'
 import sharp from 'sharp'
 
 import { getContentType, uploadR2Object } from './lib/r2-assets.mjs'
@@ -70,7 +71,7 @@ if (!shouldUpload) {
 const stats = { reused: 0, uploaded: 0 }
 const completed = new Set()
 
-await runConcurrent(assets, 6, async (asset, index) => {
+await pLimit(6).map(assets, async (asset, index) => {
   const result = await uploadR2Object({
     bucket: config.bucket,
     file: asset.file,
@@ -162,20 +163,6 @@ function assertUniqueKeys(items) {
 
     keys.add(item.key)
   }
-}
-
-async function runConcurrent(items, concurrency, operation) {
-  let nextIndex = 0
-
-  await Promise.all(
-    Array.from({ length: concurrency }, async () => {
-      while (nextIndex < items.length) {
-        const index = nextIndex
-        nextIndex += 1
-        await operation(items[index], index)
-      }
-    }),
-  )
 }
 
 async function writeMomentAssetMetadata(items) {

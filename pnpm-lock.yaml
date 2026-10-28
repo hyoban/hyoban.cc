@@ -63,6 +63,9 @@ importers:
       ffmpeg-static:
         specifier: ^5.3.0
         version: 5.3.0(supports-color@10.2.2)
+      p-limit:
+        specifier: ^7.3.3
+        version: 7.3.3
       satori:
         specifier: ^0.62.0
         version: 0.62.0
@@ -90,6 +93,9 @@ importers:
       '@hyoban/trip-map':
         specifier: workspace:*
         version: link:../../packages/trip-map
+      p-limit:
+        specifier: ^7.3.3
+        version: 7.3.3
     devDependencies:
       wrangler:
         specifier: ^4.149.0
