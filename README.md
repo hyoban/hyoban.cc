@@ -1,8 +1,8 @@
 # hyoban.cc
 
 The source of [hyoban.cc](https://hyoban.cc): a personal site built with Astro and
-plain CSS, with posts, a calendar and map of Moments and trips, and the pieces
-around it that record and serve them.
+plain CSS, with posts, a calendar and map of Moments and trips, a search over both,
+and the pieces around it that record and serve them.
 
 ```
 .

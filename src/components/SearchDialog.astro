@@ -1,0 +1,493 @@
+---
+import { getHotWords } from '@/search-index'
+
+// Search, over any page: ⌘K or Ctrl+K, `/`, or the header's 搜索 link opens it, the arrow
+// keys move through the results and Enter opens one. The query is the page's `?q=`, so an
+// address with one opens it searching, and going back from a result finds it again.
+// It searches /search.json (src/pages/search.json.ts).
+const hotWords = await getHotWords()
+---
+
+<dialog class="search-dialog" aria-label="搜索" data-search-dialog>
+  <div class="search-dialog__panel">
+    <div class="search-dialog__field">
+      <span class="i-lucide-search search-dialog__icon" aria-hidden="true"></span>
+      <input
+        class="search-dialog__input"
+        type="search"
+        placeholder="搜 Moment、照片和文章"
+        autocomplete="off"
+        enterkeyhint="go"
+        role="combobox"
+        aria-label="搜索内容"
+        aria-autocomplete="list"
+        aria-expanded="false"
+        aria-controls="search-dialog-list"
+        data-search-dialog-input
+      />
+      <kbd class="search-dialog__key">Esc</kbd>
+    </div>
+    <nav class="search-dialog__hot" aria-label="热词" data-search-dialog-hot>
+      {
+        hotWords.map(({ word, count }) => (
+          <a href={`?q=${encodeURIComponent(word)}`} data-search-word={word}>
+            {word}
+            <span class="search-dialog__count">{count}</span>
+          </a>
+        ))
+      }
+    </nav>
+    <ul class="search-dialog__list" id="search-dialog-list" role="listbox" aria-label="搜索结果" data-search-dialog-list></ul>
+    <p class="search-dialog__status" aria-live="polite" data-search-dialog-status></p>
+  </div>
+</dialog>
+
+<script>
+  import {
+    appendMarked,
+    createSearchImage,
+    element,
+    formatSearchDate,
+    getSearchPlace,
+    getSearchWords,
+    loadSearchEntries,
+  } from '@/search-client'
+  import { searchEntries, type SearchResult } from '@/search'
+
+  const MAX_RESULTS = 50
+
+  function renderOption(result: SearchResult, index: number) {
+    const { entry, terms, photos } = result
+    const option = element('li', 'search-dialog__option')
+    option.id = `search-dialog-option-${index}`
+    option.setAttribute('role', 'option')
+    option.setAttribute('aria-selected', 'false')
+
+    const link = element('a', 'search-dialog__link')
+    link.href = entry.url
+    link.tabIndex = -1
+
+    // A photo the query found, else the Moment's first; a post has none.
+    const photo = photos[0] ?? entry.photos?.[0]
+    const thumb = element('span', 'search-dialog__thumb')
+    if (photo) thumb.append(createSearchImage({ ...photo, alt: '' }))
+    else thumb.append(Object.assign(element('span', entry.kind === 'post' ? 'i-lucide-file-text' : 'i-lucide-text'), { ariaHidden: 'true' }))
+
+    const body = element('span', 'search-dialog__body')
+    const text = element('span', 'search-dialog__text')
+    appendMarked(text, entry.title ?? getSearchWords(result, 60), terms)
+    const meta = element('span', 'search-dialog__meta')
+    meta.textContent = formatSearchDate(entry.date)
+    const where = getSearchPlace(result)
+    if (where) {
+      meta.append(' ')
+      appendMarked(meta, where, terms)
+    }
+    body.append(text, meta)
+    link.append(thumb, body)
+    option.append(link)
+    return option
+  }
+
+  function initializeSearchDialog() {
+    const dialog = document.querySelector<HTMLDialogElement>('[data-search-dialog]')
+    const input = dialog?.querySelector<HTMLInputElement>('[data-search-dialog-input]')
+    const hot = dialog?.querySelector<HTMLElement>('[data-search-dialog-hot]')
+    const list = dialog?.querySelector<HTMLElement>('[data-search-dialog-list]')
+    const status = dialog?.querySelector<HTMLElement>('[data-search-dialog-status]')
+    if (!dialog || !input || !hot || !list || !status) return
+
+    let active = -1
+    let run = 0
+    // Set when a result is opened: its query stays in the page's address, for going back.
+    let leaving = false
+    const options = () => Array.from(list.querySelectorAll<HTMLElement>('[role="option"]'))
+
+    function setActive(index: number) {
+      const all = options()
+      active = all.length === 0 ? -1 : (index + all.length) % all.length
+      all.forEach((option, at) => option.setAttribute('aria-selected', String(at === active)))
+      const current = all[active]
+      if (current) {
+        input!.setAttribute('aria-activedescendant', current.id)
+        current.scrollIntoView({ block: 'nearest' })
+      } else {
+        input!.removeAttribute('aria-activedescendant')
+      }
+    }
+
+    async function update() {
+      const query = input!.value.trim()
+      setQueryInUrl(query)
+      hot!.hidden = Boolean(query)
+      const current = ++run
+      if (!query) {
+        list!.replaceChildren()
+        status!.textContent = ''
+        input!.setAttribute('aria-expanded', 'false')
+        setActive(-1)
+        return
+      }
+      let found: SearchResult[]
+      try {
+        found = searchEntries(await loadSearchEntries(), query)
+      } catch {
+        if (current === run) status!.textContent = '没能加载搜索内容，稍后再试。'
+        return
+      }
+      if (current !== run) return
+      list!.replaceChildren(...found.slice(0, MAX_RESULTS).map(renderOption))
+      input!.setAttribute('aria-expanded', String(found.length > 0))
+      status!.textContent =
+        found.length === 0
+          ? `没有找到“${query}”。`
+          : found.length > MAX_RESULTS
+            ? `找到 ${found.length} 条，这里是最近的 ${MAX_RESULTS} 条。`
+            : ''
+      setActive(found.length > 0 ? 0 : -1)
+    }
+
+    input.addEventListener('input', update)
+    input.addEventListener('keydown', (event) => {
+      if (event.isComposing) return
+      if (event.key === 'Escape') {
+        // Closes it, rather than clearing the field as a search field otherwise would.
+        event.preventDefault()
+        dialog.close()
+      } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+        event.preventDefault()
+        setActive(active + (event.key === 'ArrowDown' ? 1 : -1))
+      } else if (event.key === 'Enter') {
+        const link = options()[active]?.querySelector('a')
+        if (!link) return
+        event.preventDefault()
+        leaving = true
+        dialog.close()
+        link.click()
+      }
+    })
+    list.addEventListener('pointermove', (event) => {
+      const option = (event.target as Element).closest<HTMLElement>('[role="option"]')
+      if (option) setActive(options().indexOf(option))
+    })
+    // A result or the link to the page leaves through the router, the overlay closed first.
+    dialog.addEventListener('click', (event) => {
+      const target = event.target as Element
+      const word = target.closest<HTMLElement>('[data-search-word]')
+      if (word) {
+        event.preventDefault()
+        input.value = word.dataset.searchWord!
+        input.focus()
+        void update()
+      } else if (target.closest('a')) {
+        leaving = true
+        dialog.close()
+      } else if (target === dialog) {
+        // The backdrop, outside the panel.
+        dialog.close()
+      }
+    })
+    dialog.addEventListener('close', () => {
+      if (!leaving) setQueryInUrl(undefined)
+      leaving = false
+    })
+
+    const query = new URL(window.location.href).searchParams.get('q')
+    if (query !== null) {
+      input.value = query
+      openSearch()
+      void update()
+    }
+  }
+
+  /** The query as the page's `?q=`; none takes it away. */
+  function setQueryInUrl(query: string | undefined) {
+    const url = new URL(window.location.href)
+    if (query === undefined) url.searchParams.delete('q')
+    else url.searchParams.set('q', query)
+    if (url.href === window.location.href) return
+    // Keeping the router's state, where the page was among the rest.
+    window.history.replaceState(history.state, '', url)
+  }
+
+  function openSearch() {
+    const dialog = document.querySelector<HTMLDialogElement>('[data-search-dialog]')
+    const input = dialog?.querySelector<HTMLInputElement>('[data-search-dialog-input]')
+    if (!dialog || !input) return false
+    if (!dialog.open) {
+      dialog.showModal()
+      setQueryInUrl(input.value.trim())
+    }
+    input.focus()
+    input.select()
+    void loadSearchEntries().catch(() => {})
+    return true
+  }
+
+  const isTyping = (target: EventTarget | null) =>
+    target instanceof HTMLElement &&
+    (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName))
+
+  document.addEventListener('keydown', (event) => {
+    if (event.defaultPrevented || event.isComposing) return
+    const dialog = document.querySelector<HTMLDialogElement>('[data-search-dialog]')
+    if ((event.metaKey || event.ctrlKey) && !event.altKey && event.key.toLowerCase() === 'k') {
+      event.preventDefault()
+      if (dialog?.open) dialog.close()
+      else openSearch()
+    } else if (event.key === '/' && !event.metaKey && !event.ctrlKey && !event.altKey && !isTyping(event.target)) {
+      if (openSearch()) event.preventDefault()
+    }
+  })
+  // The header's 搜索 link opens it over this page; in a new tab, over the home page. Seen
+  // while the click comes down, before the router takes the link to go there.
+  document.addEventListener(
+    'click',
+    (event) => {
+      const link = (event.target as Element).closest('[data-search-open]')
+      if (!link || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return
+      if (openSearch()) event.preventDefault()
+    },
+    { capture: true },
+  )
+  document.addEventListener('astro:page-load', initializeSearchDialog)
+</script>
+
+<style>
+  /* Kept from scrolling under the overlay. */
+  :global(html:has(.search-dialog[open])) {
+    overflow: hidden;
+  }
+
+  .search-dialog {
+    width: min(36rem, calc(100% - 2rem));
+    max-width: none;
+    max-height: min(32rem, calc(100dvh - 2rem));
+    margin: max(12vh, calc(1rem + env(safe-area-inset-top))) auto auto;
+    padding: 0;
+    border: 1px solid var(--color-border);
+    border-radius: 0.875rem;
+    background: var(--color-bg);
+    color: var(--color-tx);
+    box-shadow: 0 1.5rem 3rem -1rem rgb(0 0 0 / 0.25);
+
+    &[open] {
+      display: flex;
+      animation: search-dialog-in 160ms var(--ease-out);
+    }
+
+    &::backdrop {
+      background: rgb(0 0 0 / 0.2);
+      animation: search-backdrop-in 160ms var(--ease-out);
+    }
+
+    /* A dark page needs a deeper shade and a lighter panel to set it apart. */
+    @media (prefers-color-scheme: dark) {
+      background: var(--color-inline);
+
+      &::backdrop {
+        background: rgb(0 0 0 / 0.5);
+      }
+    }
+  }
+
+  .search-dialog__panel {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-height: 0;
+  }
+
+  .search-dialog__field {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 0.625rem;
+    padding-inline: 1rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .search-dialog__icon {
+    flex-shrink: 0;
+    color: var(--color-tx-3);
+  }
+
+  .search-dialog__input {
+    flex: 1;
+    min-width: 0;
+    min-height: 3.25rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    /* 16px, so a phone doesn't zoom in on it. */
+    font: inherit;
+    font-size: max(1rem, 16px);
+    outline: none;
+
+    &::placeholder {
+      color: var(--color-tx-3);
+    }
+
+    &::-webkit-search-cancel-button {
+      appearance: none;
+    }
+  }
+
+  .search-dialog__key {
+    flex-shrink: 0;
+    padding: 0 0.375rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.375rem;
+    color: var(--color-tx-3);
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    line-height: 1.5rem;
+
+    @media (hover: none) {
+      display: none;
+    }
+  }
+
+  .search-dialog__hot {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 1rem;
+    padding: 0.75rem 1rem;
+
+    &[hidden] {
+      display: none;
+    }
+
+    & a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      min-height: 2.25rem;
+      color: var(--color-tx-2);
+      text-decoration: none;
+      transition: color 140ms var(--ease);
+
+      @media (hover: hover) {
+        &:hover {
+          color: var(--color-tx);
+        }
+      }
+    }
+  }
+
+  .search-dialog__count {
+    color: var(--color-tx-3);
+    font-size: 0.875rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .search-dialog__list {
+    flex: 1;
+    min-height: 0;
+    margin: 0;
+    padding: 0.375rem;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    list-style: none;
+
+    &:empty {
+      display: none;
+    }
+  }
+
+  .search-dialog__list :global(.search-dialog__option) {
+    border-radius: 0.625rem;
+
+    &[aria-selected='true'] {
+      background: var(--color-hover);
+    }
+  }
+
+  .search-dialog__list :global(.search-dialog__link) {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.625rem;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .search-dialog__list :global(.search-dialog__thumb) {
+    display: grid;
+    flex-shrink: 0;
+    place-items: center;
+    overflow: hidden;
+    width: 2.75rem;
+    aspect-ratio: 1;
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem;
+    background: var(--color-inline);
+    color: var(--color-tx-3);
+
+    & :global(img) {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  .search-dialog__list :global(.search-dialog__body) {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .search-dialog__list :global(.search-dialog__text) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .search-dialog__list :global(.search-dialog__meta) {
+    overflow: hidden;
+    color: var(--color-tx-3);
+    font-size: 0.875rem;
+    font-variant-numeric: tabular-nums;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .search-dialog__list :global(mark) {
+    border-radius: 0.25rem;
+    background: var(--color-border);
+    color: var(--color-tx);
+    box-shadow: 0 0 0 0.125rem var(--color-border);
+  }
+
+  .search-dialog__status {
+    margin: 0;
+    padding: 1rem;
+    color: var(--color-tx-2);
+
+    &:empty {
+      display: none;
+    }
+  }
+
+  @keyframes search-dialog-in {
+    from {
+      opacity: 0;
+      scale: 0.98;
+      translate: 0 -0.25rem;
+    }
+  }
+
+  @keyframes search-backdrop-in {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .search-dialog[open],
+    .search-dialog::backdrop {
+      animation: none;
+    }
+  }
+</style>

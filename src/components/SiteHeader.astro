@@ -12,6 +12,8 @@ const nav = [
   // Every year's review, and each year's own under it.
   ...(reviewed ? [{ href: '/life/', label: '回顾', match: /^\/(?:\d{4}|life)\/$/ }] : []),
   { href: '/use/', label: 'Use' },
+  // The search overlay (SearchDialog.astro) over this page, or over home in a new tab.
+  { href: '/?q=', label: '搜索' },
 ]
 const pathname = Astro.url.pathname
 const isCurrent = (item: { href: string; match?: RegExp }) =>
@@ -35,7 +37,11 @@ const isCurrent = (item: { href: string; match?: RegExp }) =>
   <nav aria-label="主导航" class="site-header__nav">
     {
       nav.map((item) => (
-        <a href={item.href} aria-current={isCurrent(item) ? 'page' : undefined}>
+        <a
+          href={item.href}
+          aria-current={isCurrent(item) ? 'page' : undefined}
+          data-search-open={item.href === '/?q=' ? '' : undefined}
+        >
           {item.label}
         </a>
       ))
