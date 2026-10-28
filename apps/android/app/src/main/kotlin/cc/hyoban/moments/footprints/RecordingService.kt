@@ -40,7 +40,6 @@ class RecordingService : Service() {
     private var generation = 0
     private var acquiring = false
     private var batching = false
-    private var requestedInterval = 0L
     private val gnss = GnssStatusDiagnostics()
     private var gnssRegistered = false
     private val batchHealth = BatchDeliveryHealth()
@@ -164,7 +163,7 @@ class RecordingService : Service() {
         }
         if (state.session == null) {
             daily = DailyRecordingPolicy(SystemClock.elapsedRealtime()).also { policy ->
-                // The movement that restarted the service keeps the walking rate from its first request.
+                // The movement that restarted the service gets the longer stop wait from the start.
                 if (motionWake != null) policy.activity(true, SystemClock.elapsedRealtime())
             }
             applyDailyPolicy()
@@ -188,12 +187,11 @@ class RecordingService : Service() {
             segmentStartNanos = SystemClock.elapsedRealtimeNanos()
             lastDeliveredNanos = 0
         }
-        val interval = if (trip) 5_000L else LocationDeliveryPolicy.dailyInterval(daily?.activityMoving == true)
+        val interval = if (trip) 5_000L else LocationDeliveryPolicy.DAILY_INTERVAL_MS
         val distance = if (trip) 5f else 0f
         val batched = !trip && batch && Build.VERSION.SDK_INT >= 31 && batchHealth.canBatch(SystemClock.elapsedRealtime())
         batching = batched
         acquiring = !trip && !batch
-        requestedInterval = interval
         val version = ++generation
         requestStarted = SystemClock.elapsedRealtime()
         if (batched) batchHealth.started(requestStarted)
@@ -365,12 +363,6 @@ class RecordingService : Service() {
             stopMotion()
             stopPassive()
             if (!subscribed) startUpdates(trip = false)
-            else if (requestedInterval != LocationDeliveryPolicy.dailyInterval(policy.activityMoving)) {
-                // Keep the segment: only the sampling rate changes with the activity.
-                val batch = !acquiring
-                stopUpdates()
-                startUpdates(trip = false, newSegment = false, batch = batch)
-            }
         }
         // Handler-backed delay does not wake the CPU from deep sleep. The significant-motion
         // sensor is the wake-up path; this fallback may run later under Doze, without exact alarms.

@@ -2,15 +2,13 @@ package cc.hyoban.moments.footprints
 
 /** Sampling and delivery clocks are separate: a valid batch contains intentionally older fixes. */
 internal object LocationDeliveryPolicy {
-    const val DAILY_INTERVAL_MS = 15_000L
-    // At 15 s the GNSS chip may duty-cycle between fixes, losing speed and sticking in place while walking.
-    const val MOVING_INTERVAL_MS = 5_000L
+    // At 15 s the GNSS chip powered down between fixes: few satellites, no speed, positions stuck
+    // or jumping while walking. 5 s keeps it tracking; rest still turns GPS off when stationary.
+    const val DAILY_INTERVAL_MS = 5_000L
     const val BATCH_DELAY_MS = 60_000L
     const val DAILY_MAX_AGE_MS = BATCH_DELAY_MS + 30_000L
     const val BATCH_STALL_MS = 90_000L
     const val FALLBACK_DURATION_MS = 20_000L
-
-    fun dailyInterval(activityMoving: Boolean) = if (activityMoving) MOVING_INTERVAL_MS else DAILY_INTERVAL_MS
 
     fun acceptsTime(sampleNanos: Long, nowNanos: Long, segmentStartNanos: Long, previousNanos: Long, maxAgeMs: Long): Boolean =
         sampleNanos >= segmentStartNanos && sampleNanos > previousNanos &&
