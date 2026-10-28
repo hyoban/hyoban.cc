@@ -47,12 +47,13 @@ import { createDrift } from './car-model-drift.ts'
 // page. It draws nothing while out of sight, nor while nothing on it moves, until the page
 // scrolls, it's pressed, or its size or the page's light changes.
 //
-// The first time it comes into view it drifts in with the scroll: it rolls forward as the
-// page moves on and back as it moves back, its wheels rolling as it goes, sliding in with its
-// tail out, smoking and marking the ground, and caught straight to come to a stop once its
-// frame is just past the middle of the screen, its front wheels left turned. There its nose dips as it brakes and
-// settles back; after that the scroll leaves it be. Under reduced motion, or when it's
-// already in view by the time it has loaded, it's simply there.
+// The first time it comes into view it stands back, and once its frame is well into sight,
+// where the eye reading down soon gets to, it drifts in at its own pace, whatever the scroll
+// does then: it sets off, its tail swings out, smoking and marking the ground, and it's
+// caught straight, a little past and back, to come to a stop, its front wheels left turned.
+// There its nose dips as it brakes and settles back, and its lamps flash twice, as a car's
+// do as it's locked; after that the scroll leaves it be. Under reduced motion, or when it's
+// already past that point by the time it has loaded, it's simply there.
 //
 // Any press sets its wheels rolling and draws the camera in, letting it back out once it's
 // let go. A drag begun straight away only turns it in its place; held a moment first, it
@@ -91,16 +92,21 @@ const START_AZIMUTH = Math.PI / 5
 
 /** The run in, as a share of the car's length. */
 const DRIVE_IN = 0.8
-/** Where on the screen, from the top, the frame's top is when the car sets off, and its
- * middle is when it stops: just past the screen's middle. */
-const START_AT = 0.9
-const STOP_AT = 0.42
-/** Driving in, how far its tail is out, sliding in, and how far along the run in it starts to
- * be caught straight again. */
+/** Where on the screen, from the top, the frame's middle has to come up to for the car to
+ * set off, and how long it takes to drift in and stop, in milliseconds. */
+const START_AT = 0.62
+const DRIVE_MS = 1500
+/** Driving in, how far its tail is out, sliding in; how far along the run in its tail has
+ * swung out, starts to be caught straight again and is straight; and how far it swings back
+ * past straight, as a share of how far it was out, from how far along to the stop. */
 const ENTRY_YAW = (32 * Math.PI) / 180
-const ENTRY_CATCH = 0.45
-/** How fast, in its lengths a second, it has to be carried in to slide its furthest, and the
- * seconds that's smoothed over, since the scroll moves it in steps. */
+const ENTRY_KICK = 0.25
+const ENTRY_CATCH = 0.5
+const ENTRY_CAUGHT = 0.9
+const ENTRY_OVER = 0.12
+const ENTRY_BACK = 0.75
+/** How fast, in its lengths a second, it has to be going in to slide its furthest, and the
+ * seconds that's smoothed over. */
 const ENTRY_SLIDE_SPEED = 0.4
 const ROLLED_FOLLOW = 0.15
 /** How far its front wheels are left turned against the slide once it has stopped, and the
@@ -111,6 +117,12 @@ const PARK_STEER_FOLLOW = 0.3
 const DIP = (1.6 * Math.PI) / 180
 const SETTLE_DECAY_MS = 180
 const SETTLE_PERIOD_MS = 560
+/** Once it has stopped, how long till its lamps flash, when each flash comes after that and
+ * how long it lasts, and how long it takes to come on or go off, in milliseconds. */
+const FLASH_AFTER = 450
+const FLASHES = [0, 260] as const
+const FLASH_MS = 150
+const FLASH_EDGE = 30
 
 /** How long a press must stay put before the car speeds off, how far it may wander in that
  * time and until the speed has come up this far, before it's taken as a drag that only
@@ -187,8 +199,9 @@ const POLISH = 0.08
 /** Seconds the lamps take to come on, or go off. */
 const LAMPS_FADE = 0.12
 
-/** easeOutCubic: the scroll's distance laid out so the car slows as it nears its stop. */
-const easeOut = cubicBezier(0.33, 1, 0.68, 1)
+/** The run in laid out over its time: setting off from standing, up to speed and slowing to
+ * its stop, still on the move as it's caught straight. */
+const driveIn = cubicBezier(0.35, 0, 0.25, 1)
 const easeInOut = cubicBezier(0.77, 0, 0.175, 1)
 
 // The models are kept in the page's own cache once fetched: the full one is more than some
@@ -201,7 +214,26 @@ async function openModelCache() {
   return 'caches' in globalThis ? caches.open(MODEL_CACHE).catch(() => undefined) : undefined
 }
 
+/** The models being fetched ahead to keep (`keepModel`), which drawing one waits for rather
+ * than fetching it twice. */
+const keeping = new Map<string, Promise<unknown>>()
+
+/** Fetch the model at `src` ahead of its car being drawn, and keep it. */
+export function keepModel(src: string) {
+  let kept = keeping.get(src)
+  if (!kept) {
+    kept = downloadModel(src)
+    keeping.set(src, kept)
+  }
+  return kept
+}
+
 async function fetchModel(src: string) {
+  await keeping.get(src)?.catch(() => {})
+  return downloadModel(src)
+}
+
+async function downloadModel(src: string) {
   const cache = await openModelCache()
   const kept = await cache?.match(src)
   if (kept) return kept.arrayBuffer()
@@ -421,10 +453,13 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
   const lightLayer = createLightLayer(glow.ahead, scene, renderer.getPixelRatio())
   const dark = matchMedia('(prefers-color-scheme: dark)')
   let lit = dark.matches ? 1 : 0
+  // How far through a flash the lamps are, the other way round from how they're lit.
+  let flash = 0
   const light = (level: number) => {
     lit = level
-    setLamps(current.lamps, level)
-    glow.set(level)
+    const shown = lit + ((lit > 0.5 ? 0 : 1) - lit) * flash
+    setLamps(current.lamps, shown)
+    glow.set(shown)
   }
 
   // Close enough that side on the car spans its frame, and far enough that it still fits
@@ -477,43 +512,54 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
   resizeObserver.observe(frame)
   resizeObserver.observe(home)
 
-  // Driving in with the scroll only makes sense while it hasn't begun to.
-  const rect = frame.getBoundingClientRect()
-  let stage: 'scrolling' | 'settling' | 'parked' | 'still' = reduced.matches
+  /** Whether the frame's middle has come up far enough for the car to set off. */
+  const arrived = () => {
+    const { top, height } = frame.getBoundingClientRect()
+    return top + height / 2 <= innerHeight * START_AT
+  }
+  // Driving in only makes sense while it's still to come.
+  let stage: 'waiting' | 'driving' | 'settling' | 'parked' | 'still' = reduced.matches
     ? 'still'
-    : rect.bottom > 0 && rect.top < innerHeight * START_AT
+    : arrived()
       ? 'parked'
-      : 'scrolling'
+      : 'waiting'
   let stageStart = 0
-  // How much of its slide is left as it drives in, 1 tail out to 0 caught straight.
+  // When its lamps flash, once it has stopped, or 0.
+  let flashFrom = 0
+  // How much of its slide is left as it drives in, 1 tail out to 0 caught straight, a little
+  // under as it swings back past.
   let entering = 0
   // How far its front wheels are left turned once it has stopped, as a driver leaves them after
   // a slide, as a share of the most; straightened once it drives on, speeding off or through
   // the year.
-  let parked = stage === 'scrolling' ? 0 : 1
+  let parked = stage === 'waiting' ? 0 : 1
   const run = size.z * DRIVE_IN
-
-  /** How far along the run in the scroll has it. */
-  const scrolled = () => {
-    const { top, height } = frame.getBoundingClientRect()
-    const start = innerHeight * START_AT
-    const stop = innerHeight * STOP_AT - height / 2
-    return Math.min(Math.max((start - top) / (start - stop), 0), 1)
-  }
 
   const pose = (now: number) => {
     entering = 0
-    if (stage === 'scrolling') {
-      const progress = scrolled()
-      body.position.z = -run * (1 - easeOut(progress))
-      // Sliding in tail out, and caught straight again before the stop.
-      entering = 1 - smoothstep(ENTRY_CATCH, 1, progress)
-      parked = 1 - entering
+    if (stage === 'waiting') {
+      body.position.z = -run
+      body.rotation.x = 0
+      if (!visible || !arrived()) return
+      stage = 'driving'
+      stageStart = now
+    }
+    if (stage === 'driving') {
+      const progress = Math.min((now - stageStart) / DRIVE_MS, 1)
+      body.position.z = -run * (1 - driveIn(progress))
+      // Its tail swung out as it gets going, and caught straight again before the stop, a
+      // little past and back.
+      entering =
+        smoothstep(0, ENTRY_KICK, progress) *
+          (1 - smoothstep(ENTRY_CATCH, ENTRY_CAUGHT, progress)) -
+        ENTRY_OVER * Math.sin(Math.PI * smoothstep(ENTRY_BACK, 1, progress))
+      parked = smoothstep(ENTRY_CATCH, ENTRY_CAUGHT, progress)
       // The nose goes down as it brakes into the stop.
       body.rotation.x = DIP * easeInOut(progress)
       if (progress === 1) {
         stage = 'settling'
         stageStart = now
+        flashFrom = now + FLASH_AFTER
         sound.brake()
       }
     } else if (stage === 'settling') {
@@ -790,7 +836,10 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
     // A shiver through the body at speed, and a little as it cruises.
     body.position.y = Math.max(speed, cruising * 0.4) * size.y * 0.003 * Math.sin(time / 23)
     const wanted = lampsWanted()
-    if (wanted !== lit) {
+    const flashed = flashFrom ? flashing(time - flashFrom) : 0
+    if (flashFrom && time - flashFrom > FLASHES.at(-1)! + FLASH_MS) flashFrom = 0
+    if (wanted !== lit || flashed !== flash) {
+      flash = flashed
       const eased = lit + (wanted - lit) * (1 - Math.exp(-delta / LAMPS_FADE))
       light(reduced.matches || Math.abs(wanted - eased) < 0.002 ? wanted : eased)
     }
@@ -855,7 +904,7 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
       step,
     )
     entryZ = body.position.z
-    const sliding = entering * smoothstep(0, size.z * ENTRY_SLIDE_SPEED, rolled)
+    const sliding = Math.max(entering, 0) * smoothstep(0, size.z * ENTRY_SLIDE_SPEED, rolled)
     const turned = yaw + ENTRY_YAW * entering
     body.rotation.y = glow.tail.rotation.y = glow.ahead.rotation.y = turned
     shadow.rotation.z = turned
@@ -924,7 +973,9 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
     const resting =
       !held &&
       !swinging &&
+      stage !== 'driving' &&
       stage !== 'settling' &&
+      flashFrom === 0 &&
       rolled < AT_REST &&
       speed === 0 &&
       roll < AT_REST &&
@@ -1041,6 +1092,16 @@ function createShadow(width: number, length: number) {
   shadow.rotation.x = -Math.PI / 2
   shadow.position.y = 0.001
   return shadow
+}
+
+/** How far on the lamps are flashed, `elapsed` milliseconds after they start to flash. */
+function flashing(elapsed: number) {
+  let level = 0
+  for (const start of FLASHES) {
+    const into = elapsed - start
+    level = Math.max(level, Math.min(into / FLASH_EDGE, (FLASH_MS - into) / FLASH_EDGE, 1))
+  }
+  return level
 }
 
 /** A CSS cubic-bézier timing function, solved for its progress at a share of the time. */

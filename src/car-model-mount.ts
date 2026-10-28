@@ -1,5 +1,8 @@
 // Three.js only loads for a car (src/car-model.ts) about to come into sight, and each is let
 // go when the router swaps the page out. One that can't be drawn shows its still instead.
+// Ahead of that, once the page is idle, its script and its light model are fetched and kept,
+// so that even the first time, it's ready to drive in by the time it's scrolled to; not
+// when the reader is saving data.
 
 let disposers: (() => void)[] = []
 
@@ -24,9 +27,16 @@ function initializeCarModels() {
           })
       }
     },
-    { rootMargin: '50% 0px' },
+    { rootMargin: '100% 0px' },
   )
   for (const frame of frames) observer.observe(frame)
+  if ((navigator as { connection?: { saveData?: boolean } }).connection?.saveData) return
+  const idle = globalThis.requestIdleCallback ?? ((run: () => void) => setTimeout(run, 1000))
+  idle(() => {
+    import('@/car-model-client')
+      .then(({ keepModel }) => keepModel(frames[0]!.dataset.src!))
+      .catch(() => {})
+  })
 }
 
 document.addEventListener('astro:page-load', initializeCarModels)
