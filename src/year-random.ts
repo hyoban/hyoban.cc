@@ -1,7 +1,6 @@
 // A year review shows a different hand of its photos each visit: a picture that has others
 // to choose from names them in data-pick, and a set of pictures shares one list in
-// data-pick-set, dealt without repeats; a list whose order says nothing, data-shuffle,
-// comes in a new order. A visit is a place in the history, not a load: a reload or a return
+// data-pick-set, dealt without repeats. A visit is a place in the history, not a load: a reload or a return
 // deals the same hand again, from the seed kept in the entry's state, so what was on screen
 // is still there. The share pictures draw the page again in a frame
 // (./year-share-pictures.ts), which takes this visit's seed so it deals the same hand.
@@ -15,10 +14,10 @@ export const SEED_STATE_KEY = 'yearSeed'
  * Deals the page's hand. The page begins it inline (`'start'`) before its first picture is
  * read, each picture then picked as the page reads it, so it loads the photo it shows from
  * the start, as early as one with nothing to pick; and ends it inline (`'finish'`) once
- * the page is read, before it's first drawn, dealing the sets and the lists. Called with
+ * the page is read, before it's first drawn, dealing the sets. Called with
  * neither as the page loads, it deals all at once a page the router swapped in, its inline
  * scripts not run, and leaves one dealt already alone. Either way the pictures are picked
- * in the page's order, then the sets and the lists, so a seed deals one hand. The seed is
+ * in the page's order, then the sets, so a seed deals one hand. The seed is
  * the frame's, else the visit's, else a new one, kept on the element marked
  * data-year-deal, which goes with the page. Self-contained, constants and all, as the
  * page writes it out from its source.
@@ -102,22 +101,6 @@ export function dealYear(stage?: 'start' | 'finish') {
       const photo = photos[index]
       if (photo && photo !== image.getAttribute('src')) image.src = photo
     })
-  }
-
-  for (const list of document.querySelectorAll<HTMLElement>('[data-shuffle]')) {
-    const items = shuffle([...list.children] as HTMLElement[])
-    items.forEach((item, index) => {
-      item.style.setProperty('--order', String(index))
-      const link = item.querySelector('[aria-label]')
-      const label = link?.getAttribute('aria-label')
-      if (link && label) {
-        link.setAttribute('aria-label', label.replace(/第 \d+ 个/, `第 ${index + 1} 个`))
-      }
-    })
-    list.append(...items)
-    // A row that snaps as it scrolls follows the item it had snapped to into its new place;
-    // dealt anew, it starts from its first again.
-    list.scrollLeft = 0
   }
 
   const dealt = marker()
