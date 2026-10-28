@@ -26,11 +26,12 @@ import { getSortedPosts } from '@/utils'
 import type { FogRegions } from '@hyoban/trip-map'
 import { dealYear } from '@/year-random'
 
-// A year at a glance (src/year-review.ts), or a whole life's, every year at once (/life/):
-// its counts; a life's years, each linking to its own; every day of it as a tile and a few
+// A year at a glance (src/year-review.ts): its counts; every day of it as a tile and a few
 // days worth going back to; then where it went, from its footprint on a map drawn at build
 // time (src/year-map.ts) and its trips by the shapes of their routes, down to what it ate;
-// then how the car drove it; and last the devices bought.
+// then how the car drove it; and last the devices bought. A whole life's (/life/) keeps to
+// what only adds up across the years: its counts, each year linking to its own, the
+// footprint, the menu and the car, leaving the days, trips and devices to the years.
 //
 // Everything here stays inside the page's column at the narrowest wide layout (a 672px
 // screen): the share pictures (src/year-share.ts) draw the column alone at that width and
@@ -107,9 +108,9 @@ const featuredIds = new Set(
 const featuredTrips = trips.filter(({ trip }) => featuredIds.has(trip.id))
 // With more than the covers, a day's trip isn't listed under them.
 const otherTrips = trips.filter(({ trip }) => !featuredIds.has(trip.id) && trip.dayCount > 1)
-/** When a trip set out, with its year on a life's page. */
+/** When a trip set out. */
 const tripDate = (trip: { start: string }) =>
-  `${life ? `${trip.start.slice(0, 4)}.` : ''}${Number(trip.start.slice(5, 7))}.${Number(trip.start.slice(8, 10))}`
+  `${Number(trip.start.slice(5, 7))}.${Number(trip.start.slice(8, 10))}`
 /** How long a trip was, and how far the car drove on it. */
 const tripMeta = (trip: { dayCount: number; drivingKm: number }) =>
   `${trip.dayCount} 天${trip.drivingKm > 0 ? `\u2003${formatNumber(trip.drivingKm)} km` : ''}`
@@ -152,7 +153,7 @@ const menuRows = [
   .filter((row) => row.meals.length > 0)
 const postLinks = new Set((await getSortedPosts()).map((post) => post.data.link))
 const devices = Object.entries(readDevices())
-  .filter(([, device]) => life || device.bought.on.startsWith(String(year)))
+  .filter(([, device]) => !life && device.bought.on.startsWith(String(year)))
   .sort(([, first], [, second]) => first.bought.on.localeCompare(second.bought.on))
   .map(([id, device]) => ({
     ...device,
@@ -189,12 +190,6 @@ const yearRows = life
       }
     })
   : []
-// A life's days, a year's wall of them each.
-const mosaics = (life ? years : [year]).map((at) => ({
-  year: at,
-  moments: review.moments.filter((moment) => moment.dateKey.startsWith(`${at}-`)),
-  trips: review.trips.filter((trip) => trip.start.startsWith(`${at}-`)),
-}))
 const [firstMoment] = review.moments
 const lastMoment = review.moments.at(-1)
 const statsOf = (of: typeof review) => [
@@ -326,41 +321,44 @@ const highlights = [
       )
     }
 
-    <section class="year-section year-wide" aria-labelledby="year-days">
-      <h2 id="year-days">每一天</h2>
-      {mosaics.map((mosaic) => (
-        <>
-          {life && <h3 class="year-days__year">{mosaic.year}</h3>}
-          <YearMosaic year={mosaic.year!} moments={mosaic.moments} trips={mosaic.trips} />
-        </>
-      ))}
-    </section>
+    {
+      year !== undefined && (
+        <section class="year-section year-wide" aria-labelledby="year-days">
+          <h2 id="year-days">每一天</h2>
+          <YearMosaic year={year} moments={review.moments} trips={review.trips} />
+        </section>
+      )
+    }
 
-    <section class="year-section" aria-labelledby="year-moments">
-      <h2 id="year-moments">一些瞬间</h2>
-      <ul class="year-highlights">
-        {
-          highlights.map((highlight, index) => (
-            <li style={`--index: ${index}`}>
-              <a href={highlight.href}>
-                <span
-                  class:list={['year-highlights__art', `is-${highlight.layout}`]}
-                  style={`--count: ${highlight.pictures.length}`}
-                  data-pick-set={highlight.set}
-                >
-                  {highlight.pictures.map((picture) => (
-                    <img src={picture.src} alt="" loading="lazy" decoding="async" data-pick={picture.pick} />
-                  ))}
-                </span>
-                <span class="year-highlights__kicker">{highlight.kicker}</span>
-                <span class="year-highlights__title">{highlight.title}</span>
-                <span class="year-highlights__date">{highlight.date}</span>
-              </a>
-            </li>
-          ))
-        }
-      </ul>
-    </section>
+    {
+      !life && (
+        <section class="year-section" aria-labelledby="year-moments">
+          <h2 id="year-moments">一些瞬间</h2>
+          <ul class="year-highlights">
+            {
+              highlights.map((highlight, index) => (
+                <li style={`--index: ${index}`}>
+                  <a href={highlight.href}>
+                    <span
+                      class:list={['year-highlights__art', `is-${highlight.layout}`]}
+                      style={`--count: ${highlight.pictures.length}`}
+                      data-pick-set={highlight.set}
+                    >
+                      {highlight.pictures.map((picture) => (
+                        <img src={picture.src} alt="" loading="lazy" decoding="async" data-pick={picture.pick} />
+                      ))}
+                    </span>
+                    <span class="year-highlights__kicker">{highlight.kicker}</span>
+                    <span class="year-highlights__title">{highlight.title}</span>
+                    <span class="year-highlights__date">{highlight.date}</span>
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </section>
+      )
+    }
 
     {
       review.cities.lit.length > 0 && (
@@ -391,7 +389,7 @@ const highlights = [
     }
 
     {
-      trips.length > 0 && (
+      !life && trips.length > 0 && (
         <section class="year-section" aria-labelledby="year-trips">
           <h2 id="year-trips">出行</h2>
           <p class="year-lead">
@@ -1186,20 +1184,6 @@ const highlights = [
     color: var(--color-tx-2);
     font-size: 0.875rem;
     font-variant-numeric: tabular-nums;
-  }
-
-  /* A life's days, a year's wall each, under its year. */
-  .year-days__year {
-    max-width: 40rem;
-    margin: 2rem auto 0.5rem;
-    color: var(--color-tx-2);
-    font-size: 0.875rem;
-    font-weight: 500;
-    font-variant-numeric: tabular-nums;
-
-    h2 + & {
-      margin-top: 0;
-    }
   }
 
   /* The meals as a menu card: a framed page with its year and title set like a
