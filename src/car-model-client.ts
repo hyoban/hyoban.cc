@@ -41,7 +41,6 @@ import {
   smoothstep,
 } from './car-model-speed.ts'
 import { createDrift } from './car-model-drift.ts'
-import { createRoutes, readCarYear, wrapAngle } from './car-model-year.ts'
 
 // The car standing on its own shadow, under a studio's light, never turning on its own. It
 // can be swung round by dragging sideways, a drag coasting to rest, but not zoomed or tipped over, and a vertical drag still scrolls the
@@ -80,9 +79,8 @@ import { createRoutes, readCarYear, wrapAngle } from './car-model-year.ts'
 // A button at its corner turns its sound on, and its music with it, off until then. They're in
 // src/car-model-sound.ts.
 //
-// In a year review it stands on the year's driving. As the page scrolls through the year
-// (src/components/YearDriving.astro) it drives on with it, its wheels rolling and its ground
-// sliding back under it. They're in src/car-model-year.ts.
+// In a year review, as the page scrolls through the year (src/components/YearDriving.astro),
+// it drives on with it, its wheels rolling.
 
 /** How far above the car the camera looks down, from the horizon. */
 const ELEVATION = (14 * Math.PI) / 180
@@ -121,12 +119,10 @@ const HOLD_MS = 150
 const HOLD_SLOP = 6
 const ENGAGE = 0.5
 const ROLL = 3
-/** In a year review, how many radians its wheels turn driving through the whole year, the
- * fastest they turn as it does, in radians a second, and how far its ground slides back
- * under it meanwhile, in its lengths. */
+/** In a year review, how many radians its wheels turn driving through the whole year, and
+ * the fastest they turn as it does, in radians a second. */
 const YEAR_ROLL = 60
 const CRUISE_ROLL = 8
-const YEAR_SLIDE = 0.8
 /** At speed, how fast a drag across has to be, in radians a second as it would swing the view
  * round, for the car to start drifting rather than the view turning, and to drift its
  * furthest; how far its tail swings out then; how far its body leans out with it and its
@@ -424,9 +420,6 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
   scene.add(body, shadow, glow.tail, glow.ahead)
   const lightLayer = createLightLayer(glow.ahead, scene, renderer.getPixelRatio())
   const dark = matchMedia('(prefers-color-scheme: dark)')
-  const year = readCarYear(frame)
-  const routes = createRoutes(year?.floor, size, renderer)
-  if (routes) scene.add(routes.ground)
   let lit = dark.matches ? 1 : 0
   const light = (level: number) => {
     lit = level
@@ -537,17 +530,6 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
       }
     }
     shadow.position.z = glow.tail.position.z = glow.ahead.position.z = body.position.z
-    // The ground stays put, drawing in as the car drives onto it, and holds still on the screen
-    // as it's swung round.
-    routes?.set({
-      shown: 1 + body.position.z / run,
-      slid: (cruised - 0.5) * YEAR_SLIDE * size.z,
-      speed,
-      lit,
-      dark: dark.matches,
-      z: body.position.z,
-      turn: controls.getAzimuthalAngle() - START_AZIMUTH,
-    })
     // Its wheels turned as far as it has rolled, without slipping, and spun up at speed.
     for (const axle of current.wheels.axles) {
       axle.rotation.x = (body.position.z + run) / current.wheels.radius + spin + cruised * YEAR_ROLL
@@ -602,9 +584,9 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
   let speed = 0
   let roll = 0
   let rush = 0
-  // How far through the year the page has scrolled (src/components/YearDriving.astro), or the
-  // middle of its ground where it isn't played; how far the car has driven through it, and how
-  // fast it's going there, out of its fastest.
+  // How far through the year the page has scrolled (src/components/YearDriving.astro), or
+  // halfway where it isn't played; how far the car has driven through it, and how fast it's
+  // going there, out of its fastest.
   const played = () => Number(frame.dataset.played ?? 0.5)
   let cruised = played()
   let cruising = 0
@@ -655,7 +637,6 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
   }
   const unswitch = () => {
     switched = false
-    routes?.retheme()
     wake()
   }
   frame.addEventListener('pointerdown', press)
@@ -801,7 +782,7 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
     floor.mesh.visible = speeding
     floor.opacity = speed
     // Driven on through the year as it's scrolled, coasting after it no faster than the rims
-    // can roll without strobing; in the middle of its ground where the year isn't played.
+    // can roll without strobing; halfway where the year isn't played.
     const year = played()
     const step = Math.min(Math.abs(year - cruised), (CRUISE_ROLL * delta) / YEAR_ROLL)
     cruising = delta > 0 ? step / delta / (CRUISE_ROLL / YEAR_ROLL) : 0
@@ -1027,6 +1008,11 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
     canvas.remove()
     frame.style.touchAction = ''
   }
+}
+
+/** The angle `angle` brought within half a turn of nought. */
+function wrapAngle(angle: number) {
+  return MathUtils.euclideanModulo(angle + Math.PI, 2 * Math.PI) - Math.PI
 }
 
 /** A sum of out-of-step waves, wandering without repeating, for the camera to shake by. */
