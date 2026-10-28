@@ -301,6 +301,72 @@ html[data-calendar-mode-transition] .calendar-mode-switch a[data-mode='map'] {
     animation-duration: 160ms;
   }
 
+  /* A year's label and its review's huge year as one, and a day's tile on the review's wall
+     and the day in the calendar (src/year-transition.ts): moved and grown in place, the
+     small one giving way to the large one early so it never shows blown up. */
+  ::view-transition-group(year-numeral),
+  ::view-transition-group(year-day) {
+    animation-duration: 480ms;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  ::view-transition-old(year-numeral),
+  ::view-transition-new(year-numeral) {
+    height: 100%;
+  }
+
+  ::view-transition-old(year-numeral),
+  ::view-transition-old(year-day) {
+    animation-duration: 160ms;
+  }
+
+  ::view-transition-new(year-numeral),
+  ::view-transition-new(year-day) {
+    animation-duration: 240ms;
+  }
+
+  ::view-transition-old(year-day),
+  ::view-transition-new(year-day) {
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* A month's days sliding the way time goes (src/calendar-month-transition.ts). */
+  html[data-calendar-month-step] :is(.calendar-grid, .calendar-agenda) {
+    view-transition-name: calendar-month;
+  }
+
+  ::view-transition-group(calendar-month) {
+    animation-duration: 280ms;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  ::view-transition-old(calendar-month) {
+    animation: calendar-month-out 200ms var(--ease) both;
+  }
+
+  ::view-transition-new(calendar-month) {
+    animation: calendar-month-in 280ms var(--ease-out) both;
+  }
+
+  html[data-calendar-month-step='earlier'] {
+    --calendar-month-shift: -1.5rem;
+  }
+
+  @keyframes calendar-month-out {
+    to {
+      opacity: 0;
+      translate: calc(var(--calendar-month-shift, 1.5rem) * -1) 0;
+    }
+  }
+
+  @keyframes calendar-month-in {
+    from {
+      opacity: 0;
+      translate: var(--calendar-month-shift, 1.5rem) 0;
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     ::view-transition-group(*),
     ::view-transition-old(*),
