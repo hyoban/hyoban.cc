@@ -39,7 +39,7 @@ file and uid. To resume an interrupted run, rerun it with `--uid <uid>` from
 the record it wrote.
 
 5. Inspect each source media item and replace every empty `alt` in the record
-   with concise English alt text. Visible new Moments must never use an empty alt.
+   with concise Chinese alt text. Visible new Moments must never use an empty alt.
 6. Set `text` in the record with `apply_patch`. Leave the other fields as the
    command wrote them; never edit `uid`, `published` or a media item's
    `published` by hand.

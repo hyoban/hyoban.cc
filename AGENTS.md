@@ -29,8 +29,9 @@ even when starting from the repository root.
 - Preview new or changed site media from a local server; upload it to R2 only once
   the user has approved it there, since objects are immutable. Never request its R2
   URL before uploading: the image origin caches a 404 for a month.
-- Preserve the user's Moment text exactly. UI copy and accessibility labels are
-  Chinese first; Android also keeps English strings in `values-en`.
+- Preserve the user's Moment text exactly. Write media alt text in Chinese. UI copy
+  and accessibility labels are Chinese first; Android also keeps English strings in
+  `values-en`.
 
 ## Commits and reviews
 
