@@ -1,4 +1,4 @@
-import type { FoodVerdict, Place, PlaceKind, Places } from '@hyoban/data-spec'
+import type { FoodVerdict } from '@hyoban/data-spec'
 import { buildFogOfWar, getShortPlaceName, type FogRegions } from '@hyoban/trip-map'
 import type { Moment, MomentTrip } from './moments/index.ts'
 
@@ -17,13 +17,6 @@ type ReviewTrip = Pick<
 
 export type YearPlace = { id: string; name: string; count: number }
 
-/** The topics a year review shows, in the order it lists them; tech is never shown. */
-export const REVIEW_TOPICS = ['travel', 'food', 'car', 'photo', 'life'] as const
-export type ReviewTopic = (typeof REVIEW_TOPICS)[number]
-
-/** How many of the year's Moments are about a topic. */
-export type YearTopic = { topic: ReviewTopic; count: number }
-
 export type YearReview<M, T> = {
   /** The year, or none for every year. */
   year?: number
@@ -36,14 +29,6 @@ export type YearReview<M, T> = {
   streak: { start: string; end: string; days: number }
   /** The day with the most Moments, the first such when tied. */
   busiestDay: { dateKey: string; count: number }
-  /** The hour Moments were most often written in, of those with a time; the first when tied. */
-  favoriteHour?: { hour: number; count: number }
-  /** How many Moments with a time were written in each hour of the day, 0 to 23. */
-  hours: number[]
-  /** How many Moments were written on each day of the week, Monday first. */
-  weekdays: number[]
-  /** The topics written about this year, in REVIEW_TOPICS' order. */
-  topics: YearTopic[]
   trips: T[]
   tripDays: number
   drivingKm: number
@@ -79,17 +64,6 @@ export function buildYearReview<M extends ReviewMoment, T extends ReviewTrip>(
   const media = yearMoments.flatMap((moment) => moment.media)
   const days = countBy(yearMoments, (moment) => moment.dateKey)
   const dayKeys = [...days.keys()].sort()
-  const timed = countBy(
-    yearMoments.filter((moment) => moment.occurredLabel),
-    (moment) => Number.parseInt(moment.occurredLabel!.slice(0, 2), 10),
-  )
-  const hours = Array.from({ length: 24 }, (_, hour) => timed.get(hour) ?? 0)
-  const favoriteHour = Math.max(...hours)
-  const weekdays = countWeekdays(yearMoments)
-  const topics = REVIEW_TOPICS.map((topic) => ({
-    topic,
-    count: yearMoments.filter((moment) => getReviewTopic(moment) === topic).length,
-  })).filter((topic) => topic.count > 0)
 
   const fog = litCities(cities, yearMoments)
   const litBefore = new Set(
@@ -126,12 +100,6 @@ export function buildYearReview<M extends ReviewMoment, T extends ReviewTrip>(
       const [dateKey, count] = maxBy([...days], ([, count]) => count) ?? ['', 0]
       return { dateKey, count }
     })(),
-    ...(favoriteHour > 0
-      ? { favoriteHour: { hour: hours.indexOf(favoriteHour), count: favoriteHour } }
-      : {}),
-    hours,
-    weekdays,
-    topics,
     trips: yearTrips,
     tripDays: yearTrips.reduce((total, trip) => total + trip.dayCount, 0),
     drivingKm: yearTrips.reduce((total, trip) => total + trip.drivingKm, 0),
@@ -142,46 +110,6 @@ export function buildYearReview<M extends ReviewMoment, T extends ReviewTrip>(
     },
     firstVisits: [...firstVisits.values()],
   }
-}
-
-/** A place the year's Moments were at: how many, and the day of its first. */
-export type YearPlaceVisit = {
-  id: string
-  name: string
-  kind?: PlaceKind
-  division?: Place['division']
-  count: number
-  dateKey: string
-}
-
-/** The places the Moments name, in the order the year first reached them, kinds and divisions from `places`. */
-export function getYearPlaces(
-  moments: readonly Pick<Moment, 'dateKey' | 'locations'>[],
-  places: Places,
-): YearPlaceVisit[] {
-  const visits = new Map<string, YearPlaceVisit>()
-
-  for (const moment of moments) {
-    for (const { id, name } of moment.locations) {
-      const visit = visits.get(id)
-
-      if (visit) {
-        visit.count += 1
-      } else {
-        const { kind, division } = places[id] ?? {}
-        visits.set(id, {
-          id,
-          name,
-          ...(kind && { kind }),
-          ...(division && { division }),
-          count: 1,
-          dateKey: moment.dateKey,
-        })
-      }
-    }
-  }
-
-  return [...visits.values()]
 }
 
 /** A meal the year's Moments tell of: what was eaten, or else where, and how it was. */
@@ -242,32 +170,6 @@ export function getCityName(name: string) {
     .replace(new RegExp(`(?:(?:${PEOPLES})族)+自治州$`), '')
     .replace(/(?:市|地区)$/, '')
   return short.length > 1 ? short : name
-}
-
-/**
- * A change from the year before, in percent: `+36%`, `−12%` or `持平`, and `×16.5` once
- * it runs to four digits, where a percentage stops reading at a glance.
- */
-export function formatChange(change: number) {
-  if (change >= 1000) {
-    return `×${Number((1 + change / 100).toFixed(1))}`
-  }
-
-  return change > 0 ? `+${change}%` : change < 0 ? `−${-change}%` : '持平'
-}
-
-/** A Moment's topic as the review counts it: one without, or a tech one, goes with life. */
-function getReviewTopic(moment: Pick<ReviewMoment, 'topic'>): ReviewTopic {
-  return moment.topic && moment.topic !== 'tech' ? moment.topic : 'life'
-}
-
-/** How many of these Moments fall on each day of the week, Monday first. */
-function countWeekdays(moments: readonly Pick<ReviewMoment, 'dateKey'>[]) {
-  const byWeekday = countBy(moments, (moment) => {
-    const [year, month, day] = moment.dateKey.split('-').map(Number) as [number, number, number]
-    return (new Date(Date.UTC(year, month - 1, day)).getUTCDay() + 6) % 7
-  })
-  return Array.from({ length: 7 }, (_, weekday) => byWeekday.get(weekday) ?? 0)
 }
 
 function countBy<T, K>(items: readonly T[], key: (item: T) => K) {

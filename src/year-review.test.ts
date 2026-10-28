@@ -2,12 +2,10 @@ import { describe, expect, test } from 'vite-plus/test'
 import type { FogRegions } from '@hyoban/trip-map'
 import {
   buildYearReview,
-  formatChange,
   getCityName,
   getLongestStreak,
   getReviewYears,
   getYearMeals,
-  getYearPlaces,
 } from './year-review.ts'
 
 const square = (id: string, name: string, x: number): FogRegions['features'][number] => ({
@@ -70,14 +68,6 @@ test('getReviewYears lists the years with a Moment', () => {
   ])
 })
 
-test('formatChange gives a percentage, and a multiple once it runs to four digits', () => {
-  expect(formatChange(36)).toBe('+36%')
-  expect(formatChange(-12)).toBe('−12%')
-  expect(formatChange(0)).toBe('持平')
-  expect(formatChange(999)).toBe('+999%')
-  expect(formatChange(1550)).toBe('×16.5')
-})
-
 describe('buildYearReview', () => {
   const moments = [
     moment('2025-06-01', [suzhou]),
@@ -115,25 +105,6 @@ describe('buildYearReview', () => {
     expect(review.dayCount).toBe(3)
     expect(review.streak).toEqual({ start: '2026-01-01', end: '2026-01-02', days: 2 })
     expect(review.busiestDay).toEqual({ dateKey: '2026-01-02', count: 2 })
-    expect(review.favoriteHour).toEqual({ hour: 22, count: 2 })
-  })
-
-  test('counts the Moments with a time by hour', () => {
-    expect(review.hours).toHaveLength(24)
-    expect(review.hours[22]).toBe(2)
-    expect(review.hours[9]).toBe(1)
-  })
-
-  test('counts the Moments by day of the week, Monday first', () => {
-    expect(review.weekdays).toEqual([0, 1, 0, 1, 2, 0, 0])
-  })
-
-  test('counts the topics, a Moment without one as life', () => {
-    expect(review.topics).toEqual([
-      { topic: 'travel', count: 1 },
-      { topic: 'food', count: 1 },
-      { topic: 'life', count: 2 },
-    ])
   })
 
   test('keeps the trips started in the year', () => {
@@ -149,40 +120,6 @@ describe('buildYearReview', () => {
     expect(review.cities.newNames).toEqual(['合肥'])
     expect(review.firstVisits).toEqual([{ name: '合肥', dateKey: '2026-01-02' }])
   })
-})
-
-test('getYearPlaces counts each place once per Moment, in the order first reached, with its kind and division', () => {
-  const lake = { id: 'lake', name: '湖', latitude: 0.5, longitude: 0.6 }
-  const places = {
-    suzhou: {
-      ...suzhou,
-      kind: 'city' as const,
-      division: { code: '320500', province: '江苏省', city: '苏州市' },
-    },
-    lake: { ...lake, kind: 'scenic' as const },
-  }
-
-  expect(
-    getYearPlaces(
-      [
-        moment('2026-03-01', [suzhou]),
-        moment('2026-03-02', [lake, suzhou]),
-        moment('2026-03-05', [hefei]),
-      ],
-      places,
-    ),
-  ).toEqual([
-    {
-      id: 'suzhou',
-      name: '苏州',
-      kind: 'city',
-      division: { code: '320500', province: '江苏省', city: '苏州市' },
-      count: 2,
-      dateKey: '2026-03-01',
-    },
-    { id: 'lake', name: '湖', kind: 'scenic', count: 1, dateKey: '2026-03-02' },
-    { id: 'hefei', name: '合肥', count: 1, dateKey: '2026-03-05' },
-  ])
 })
 
 test('getYearMeals names each meal by its dishes, or by its place when it has only a verdict', () => {
