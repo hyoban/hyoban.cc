@@ -72,9 +72,4 @@ class LocationDeliveryPolicyTest {
         health.backOff(now)
         assertEquals(now + BatchDeliveryHealth.RETRY_MS, health.retryAt)
     }
-
-    @Test fun movingActivityRequestsWalkingRateFixes() {
-        assertEquals(5_000L, LocationDeliveryPolicy.dailyInterval(activityMoving = true))
-        assertEquals(15_000L, LocationDeliveryPolicy.dailyInterval(activityMoving = false))
-    }
 }

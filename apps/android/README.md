@@ -370,12 +370,12 @@ The existing online
 MapLibre basemap is reused, while collecting samples works without a connection.
 
 The opt-in location foreground service needs precise location and shows an ongoing
-notification with a pause action. Daily recording requests fixes at 15 seconds with no
+notification with a pause action. Daily recording requests fixes every 5 seconds with no
 provider distance filter, so stationary fixes can be used to stop GPS; the store still
-filters stationary samples. While activity recognition reports movement, daily recording
-requests fixes every 5 seconds instead, in the same track segment: at 15 seconds the
-phone's MediaTek GNSS stayed in place for minutes and jumped about 120 m while walking,
-with speeds near zero. An active trip requests 5 seconds / 5 m. These are provider
+filters stationary samples. At 15 seconds the phone's MediaTek GNSS powered down between
+fixes (one satellite-status callback per fix, often under ten satellites used) and stayed in
+place for minutes or jumped 100–250 m while walking, with speeds near zero; while it tracks
+continuously it used 40–50 satellites at about 12 m. An active trip requests 5 seconds / 5 m. These are provider
 hints, not guaranteed rates. On Android 12+, initial acquisition and stationary probes
 use a system-enforced two-minute request duration, independent of the app timer. After
 acquiring a usable fix, daily recording allows up to 60 seconds of delivery batching;
@@ -519,8 +519,8 @@ An optional 活动识别增强 control uses Google Play services activity transi
 running, cycling, vehicle travel and stillness. It starts disabled, requests physical activity
 permission on Android 10+, and operates only during daily recording. Entering movement can
 wake a resting recorder. Until it reports stillness again, unmoving fixes need 10 minutes
-rather than three to rest GPS, so stuck fixes cannot stop a walk, and the 5-second rate above
-applies. Stillness is advisory and cannot pause a manual trip. Missing Play
+rather than three to rest GPS. On the target phone it reported nothing during walks that
+began when leaving home Wi‑Fi, so neither the sampling rate nor resting depends on it. Stillness is advisory and cannot pause a manual trip. Missing Play
 services, denied permissions or registration failures leave native motion/passive detection
 available. Activity events never opt the user into recording or resume a manually paused
 recorder. Its PendingIntent remains registered while the saved daily selection is active,
