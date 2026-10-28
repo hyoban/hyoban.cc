@@ -16,6 +16,7 @@ import {
 } from './database.ts'
 import { error, HttpError, json, jsonText, readBody } from './http.ts'
 import { createRouteFetcher, fillRoutes, readTripRoutes } from './routes.ts'
+import { createTelegram, syncChannel } from './telegram.ts'
 import {
   applyChanges,
   readUpload,
@@ -28,7 +29,9 @@ import {
 // export; writes are the owner's. Records come back exactly as stored, in the shape
 // @hyoban/data-spec defines. A write the site shows first brings the trips' routes up to
 // date, when MAPBOX_TOKEN is set and the write changed what the trips are built from,
-// then calls DEPLOY_HOOK_URL, when there is one, so the site builds again with them.
+// then calls DEPLOY_HOOK_URL, when there is one, so the site builds again with them, and
+// posts what changed to the Telegram channel, also every quarter of an hour on the
+// Worker's schedule, which picks up what a run left.
 
 export interface Env {
   DB: Database
@@ -39,6 +42,10 @@ export interface Env {
   MAPBOX_TOKEN?: string
   /** Where new places' divisions are looked up, DataV's GeoAtlas; none without it. */
   DIVISIONS_URL?: string
+  /** The bot that posts to the channel; nothing is posted without it. */
+  TELEGRAM_BOT_TOKEN?: string
+  /** The channel, as `@name`. */
+  TELEGRAM_CHAT_ID?: string
 }
 
 interface ExecutionContext {
@@ -52,6 +59,9 @@ const ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 
 export default {
   fetch: handle,
+  scheduled(_controller: unknown, env: Env, executionContext: ExecutionContext) {
+    executionContext.waitUntil(postToChannel(env))
+  },
 }
 
 export async function handle(
@@ -112,6 +122,7 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
 
     if (result.changesSite) {
       executionContext?.waitUntil(afterSiteChange(env, result.changesRoutes ?? true))
+      executionContext?.waitUntil(postToChannel(env))
     }
 
     return result.status === 204
@@ -226,10 +237,15 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
       }
 
       // For a write that went past the Worker, `pnpm data:push` or an import: it calls
-      // no deploy hook of its own, so the site would wait for the next change to build.
-      return method === 'POST'
-        ? json({ started: await callDeployHook(env) }, 202)
-        : notAllowed('POST')
+      // no deploy hook of its own, so the site would wait for the next change to build,
+      // and nothing posted to the channel until the schedule's next run.
+      if (method !== 'POST') {
+        return notAllowed('POST')
+      }
+
+      executionContext?.waitUntil(postToChannel(env))
+
+      return json({ started: await callDeployHook(env) }, 202)
     }
     case 'changes': {
       if (key !== undefined) {
@@ -326,6 +342,29 @@ async function callDeployHook(env: Env) {
   } catch (caught) {
     console.error('The deploy hook failed', caught)
     return false
+  }
+}
+
+/** Posts what changed to the Telegram channel, when there is a bot; a failure is logged, and the next run tries again. */
+export async function postToChannel(env: Env) {
+  if (!env.TELEGRAM_BOT_TOKEN || !env.TELEGRAM_CHAT_ID) {
+    return
+  }
+
+  try {
+    const result = await syncChannel({
+      db: env.DB,
+      bucket: env.BUCKET,
+      telegram: createTelegram(env.TELEGRAM_BOT_TOKEN),
+      chat: env.TELEGRAM_CHAT_ID,
+      now: timestamp(),
+    })
+
+    if (result && (result.posted || result.edited || result.deleted)) {
+      console.log('Telegram', result)
+    }
+  } catch (caught) {
+    console.error('Posting to the Telegram channel failed', caught)
   }
 }
 

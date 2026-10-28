@@ -104,14 +104,16 @@ Builds:
   `packages/trip-map/` or `pnpm-lock.yaml`;
 - secrets, set with `wrangler secret put <name> --config apps/api/wrangler.jsonc`:
 
-  | Secret            | What                                                     |
-  | ----------------- | -------------------------------------------------------- |
-  | `API_TOKENS`      | comma-separated bearer tokens for writes, drafts, export |
-  | `DEPLOY_HOOK_URL` | the site's deploy hook, called after a write it shows    |
-  | `MAPBOX_TOKEN`    | Mapbox Directions, for the trips' drive routes           |
+  | Secret               | What                                                     |
+  | -------------------- | -------------------------------------------------------- |
+  | `API_TOKENS`         | comma-separated bearer tokens for writes, drafts, export |
+  | `DEPLOY_HOOK_URL`    | the site's deploy hook, called after a write it shows    |
+  | `MAPBOX_TOKEN`       | Mapbox Directions, for the trips' drive routes           |
+  | `TELEGRAM_BOT_TOKEN` | the bot that posts new Moments to the Telegram channel   |
 
 - bindings in `apps/api/wrangler.jsonc`: D1 `DB` (`hyoban-cc`, APAC) and R2 `BUCKET`
-  (`blog-images`).
+  (`blog-images`), with the channel `TELEGRAM_CHAT_ID` and a cron trigger every 15
+  minutes; the bot must be an admin of the channel allowed to post and delete.
 
 Setting it up from nothing: `wrangler d1 create hyoban-cc --location apac`, put the new
 id in `apps/api/wrangler.jsonc`, set the secrets, deploy, then restore the records with
