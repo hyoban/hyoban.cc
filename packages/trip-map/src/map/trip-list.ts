@@ -1,4 +1,6 @@
+import type { TripSummary } from '../player/types.ts'
 import { isPlainClick } from './link-click.ts'
+import { overlapsPeriod, type Period } from './period.ts'
 import { createSheet } from './sheet.ts'
 // The list of every trip, beside the map where a place's drawer sits, while the address
 // is the list's own (`/trip/`): its openers and its close button ask for the address to
@@ -260,5 +262,46 @@ export function createTripList({
     /** The drawer it is, for one to open over it. */
     sheet,
     show,
+  }
+}
+
+/**
+ * Hides the list's rows of trips not under way in the period, or shows every one again:
+ * the trips' own rows, those of something else under way between two days
+ * (`data-trip-map-dates`, `<start>/<end>`), and a group of either with its last one.
+ */
+export function showPeriodRows(
+  list: HTMLElement,
+  yearGroups: readonly HTMLElement[],
+  tripsById: ReadonlyMap<string, Pick<TripSummary, 'end' | 'start'>>,
+  period: Period | undefined,
+) {
+  for (const link of list.querySelectorAll<HTMLElement>('[data-trip-map-trip-link]')) {
+    const trip = tripsById.get(link.dataset.tripMapTripLink!)
+    const row = link.closest('li') ?? link
+
+    row.hidden = Boolean(period && trip && !overlapsPeriod(trip.start, trip.end, period))
+  }
+
+  for (const row of list.querySelectorAll<HTMLElement>('[data-trip-map-dates]')) {
+    const [start = '', end = start] = row.dataset.tripMapDates!.split('/')
+
+    row.hidden = Boolean(period && !overlapsPeriod(start, end, period))
+  }
+
+  for (const group of list.querySelectorAll<HTMLElement>('[data-trip-map-dates-group]')) {
+    group.hidden = [...group.querySelectorAll<HTMLElement>('[data-trip-map-dates]')].every(
+      (row) => row.hidden,
+    )
+  }
+
+  // A year's group of trips goes with its last one, and its last dated row.
+  for (const group of yearGroups) {
+    group.hidden = [
+      ...[...group.querySelectorAll<HTMLElement>('[data-trip-map-trip-link]')].map(
+        (link) => link.closest('li') ?? link,
+      ),
+      ...group.querySelectorAll<HTMLElement>('[data-trip-map-dates]'),
+    ].every((row) => row.hidden)
   }
 }
