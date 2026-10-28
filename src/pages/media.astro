@@ -4,6 +4,7 @@ import SitePage from '@/components/SitePage.astro'
 import generatedMedia from '@/data/media.generated.json'
 import mediaRecommendations from '@/data/media-recommendations.json'
 import Layout from '@/layouts/Layout.astro'
+import { compareMediaItems, getMediaItemKey } from '@/media'
 import { getPageCardPath, getPageTitle, MEDIA_TEXT } from '@/page-cards'
 
 const pageTitle = getPageTitle(MEDIA_TEXT)
@@ -71,19 +72,19 @@ type GeneratedMediaItem = {
 
 const generatedByKey = new Map(
   (generatedMedia.items as GeneratedMediaItem[]).map(item => [
-    getMediaKey(item),
+    getMediaItemKey(item),
     item,
   ]),
 )
 
-const sortedRecommendations = [...mediaRecommendations as MediaRecommendation[]].sort(compareMedia)
+const sortedRecommendations = [...mediaRecommendations as MediaRecommendation[]].sort(compareMediaItems)
 
 const mediaWorks = sortedRecommendations.map((recommendation) => {
-  const generated = generatedByKey.get(getMediaKey(recommendation))
+  const generated = generatedByKey.get(getMediaItemKey(recommendation))
 
   if (!generated) {
     throw new Error(
-      `Missing generated TMDB data for ${getMediaKey(recommendation)}. Run "pnpm media:generate".`,
+      `Missing generated TMDB data for ${getMediaItemKey(recommendation)}. Run "pnpm media:generate".`,
     )
   }
 
@@ -139,23 +140,12 @@ function isTvbMedia(data: TmdbDetails) {
     .some(company => company.name && (/(^|\s)TVB($|\s)/i.test(company.name) || company.name.includes('香港电视广播')))
 }
 
-function getMediaKey(media: Pick<MediaRecommendation, 'type' | 'tmdbId'>) {
-  return `${media.type}:${media.tmdbId}`
-}
-
 function getDoubanUrl(doubanId: number) {
   return `https://movie.douban.com/subject/${doubanId}/`
 }
 
 function getTmdbUrl(type: GeneratedMediaItem['type'], tmdbId: number) {
   return `https://www.themoviedb.org/${type}/${tmdbId}`
-}
-
-function compareMedia(
-  first: Pick<MediaRecommendation, 'type' | 'tmdbId'>,
-  second: Pick<MediaRecommendation, 'type' | 'tmdbId'>,
-) {
-  return first.tmdbId - second.tmdbId || first.type.localeCompare(second.type)
 }
 
 function getTitle(type: GeneratedMediaItem['type'], data: TmdbDetails) {

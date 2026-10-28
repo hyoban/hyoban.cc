@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os'
 import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
 
+import pLimit from 'p-limit'
 import sharp from 'sharp'
 
 import { readMomentRecords, writeMomentRecord } from './lib/moment-assets.mjs'
@@ -29,7 +30,7 @@ const generated = []
 try {
   let completed = 0
 
-  await runConcurrent(tasks, 6, async ({ media, record }) => {
+  await pLimit(6).map(tasks, async ({ media, record }) => {
     const metadata = record.assets[media.file]
     const widths = [480, 960, 1920].filter((width) => width < metadata.width)
 
@@ -90,7 +91,7 @@ try {
   const missing = []
   let reused = 0
 
-  await runConcurrent(generated, 12, async (variant) => {
+  await pLimit(12).map(generated, async (variant) => {
     const remote = await inspectRemote(variant)
 
     if (remote === 'missing') {
@@ -104,7 +105,7 @@ try {
 
   let verified = 0
 
-  await runConcurrent(generated, 12, async (variant) => {
+  await pLimit(12).map(generated, async (variant) => {
     const remote = await inspectRemote(variant)
 
     if (remote !== 'verified') {
@@ -190,7 +191,7 @@ async function uploadMissingWithRetries(initialMissing) {
 
     const stillMissing = []
 
-    await runConcurrent(pending, 12, async (variant) => {
+    await pLimit(12).map(pending, async (variant) => {
       if ((await inspectRemote(variant)) === 'missing') {
         stillMissing.push(variant)
       }
@@ -264,18 +265,4 @@ async function fetchWithRetries(url, options) {
   }
 
   throw new Error(`Failed to fetch ${url} after 5 attempts.`, { cause: lastError })
-}
-
-async function runConcurrent(items, concurrency, operation) {
-  let nextIndex = 0
-
-  await Promise.all(
-    Array.from({ length: concurrency }, async () => {
-      while (nextIndex < items.length) {
-        const index = nextIndex
-        nextIndex += 1
-        await operation(items[index], index)
-      }
-    }),
-  )
 }

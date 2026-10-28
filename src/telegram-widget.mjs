@@ -1,15 +1,10 @@
+import { escapeHtml } from '@hyoban/trip-map'
+
 const TELEGRAM_POST_URL = /^https:\/\/telegram\.me\/([A-Za-z0-9_]+\/\d+)\/?(?:[?#].*)?$/
 const TELEGRAM_LEFT_ALIGN_STYLE =
   '<style>body.widget_frame_base { margin-left: 0 !important; margin-right: auto !important; }</style>'
 const TELEGRAM_IFRAME_STYLE =
   'display: block; overflow: hidden; background-color: transparent; border: none; min-width: 320px; width: 100%;'
-const HTML_ATTRIBUTE_ESCAPES = {
-  '&': '&amp;',
-  '"': '&quot;',
-  '<': '&lt;',
-  '>': '&gt;',
-}
-
 export function remarkTelegramWidgets() {
   return async (tree) => {
     await replaceTelegramLinks(tree)
@@ -85,9 +80,5 @@ async function renderTelegramPost(postPath) {
       : `${TELEGRAM_LEFT_ALIGN_STYLE}${cleanHtml}`
   ).trim()
 
-  return `<iframe class="telegram-widget-rendered" data-telegram-post="${postPath}" title="Telegram post ${postPath}" srcdoc="${escapeHtmlAttribute(srcdoc)}" width="100%" frameborder="0" scrolling="no" loading="lazy" onload="this.style.height=this.contentDocument.documentElement.scrollHeight+'px'" style="${TELEGRAM_IFRAME_STYLE}"></iframe>`
-}
-
-function escapeHtmlAttribute(value) {
-  return value.replace(/[&"<>]/g, (char) => HTML_ATTRIBUTE_ESCAPES[char])
+  return `<iframe class="telegram-widget-rendered" data-telegram-post="${postPath}" title="Telegram post ${postPath}" srcdoc="${escapeHtml(srcdoc)}" width="100%" frameborder="0" scrolling="no" loading="lazy" onload="this.style.height=this.contentDocument.documentElement.scrollHeight+'px'" style="${TELEGRAM_IFRAME_STYLE}"></iframe>`
 }

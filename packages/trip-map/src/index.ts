@@ -23,6 +23,7 @@ export { getDistanceKm, toCoordinates, type Coordinates, type LngLatLike } from 
 export { renderIcon, type IconName, type WeatherIcon } from './icons.ts'
 export * from './locations.ts'
 export {
+  escapeHtml,
   renderShortcuts,
   renderTripPanel,
   renderTripStage,

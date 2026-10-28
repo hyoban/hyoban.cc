@@ -5,6 +5,8 @@ import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
 
+import pLimit from 'p-limit'
+
 import { listR2Objects } from './lib/cloudflare-r2-api.mjs'
 import { getReferencedR2Objects, readMomentRecords } from './lib/moment-assets.mjs'
 
@@ -126,7 +128,7 @@ async function applyManifest() {
 
   let completed = 0
 
-  await runConcurrent(candidates, 8, async (candidate) => {
+  await pLimit(8).map(candidates, async (candidate) => {
     await execFile(
       wrangler,
       ['r2', 'object', 'delete', `${config.bucket}/${candidate.key}`, '--remote', '--force'],
@@ -144,20 +146,6 @@ async function applyManifest() {
   })
 
   console.log(`R2 GC applied: ${candidates.length} object(s) deleted from ${config.bucket}.`)
-}
-
-async function runConcurrent(items, concurrency, operation) {
-  let nextIndex = 0
-
-  await Promise.all(
-    Array.from({ length: concurrency }, async () => {
-      while (nextIndex < items.length) {
-        const index = nextIndex
-        nextIndex += 1
-        await operation(items[index], index)
-      }
-    }),
-  )
 }
 
 function digestCandidates(candidates) {

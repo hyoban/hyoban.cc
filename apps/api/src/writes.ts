@@ -9,6 +9,7 @@ import {
   type Places,
 } from '@hyoban/data-spec'
 import type { Division } from '@hyoban/data-spec/division'
+import pLimit, { type LimitFunction } from 'p-limit'
 import { getUploadKey, type Bucket, type UploadPart } from './bucket.ts'
 import {
   carryTripRoutes,
@@ -187,7 +188,7 @@ export async function applyChanges(
   let revision: number | undefined
 
   // Every copy holds two connections, its read and its write, and a Worker has six.
-  const copying = limiter(COPIES_AT_ONCE)
+  const copying = pLimit(COPIES_AT_ONCE)
 
   try {
     uploads = (
@@ -402,7 +403,7 @@ async function publishMedia(
   record: MomentRecord,
   copied: string[],
   missing: string[],
-  copying: Limiter,
+  copying: LimitFunction,
 ) {
   const uploads: string[] = []
   const copy = (item: MomentMedia, part: UploadPart) => copying(() => copyOne(item, part))
@@ -554,10 +555,6 @@ export async function commit({ db, now }: WriteContext, statements: Statement[])
 }
 
 /**
- * Every promise's result, as `Promise.all`, but only once all of them have settled: a
- * copy that fails then leaves none still going that its cleanup would miss.
- */
-/**
  * How many originals a write copies at once. A Worker keeps six connections open at a time
  * and holds back the rest; a copy waiting on its write while its read stays open loses the
  * read, so eight copies at once, a Moment of four live photos, fail with "Network
@@ -565,29 +562,10 @@ export async function commit({ db, now }: WriteContext, statements: Statement[])
  */
 const COPIES_AT_ONCE = 2
 
-type Limiter = <T>(task: () => Promise<T>) => Promise<T>
-
-/** Runs the tasks given it, at most `count` of them at once, the rest in the order given. */
-function limiter(count: number): Limiter {
-  let running = 0
-  const waiting: (() => void)[] = []
-
-  return async (task) => {
-    while (running >= count) {
-      await new Promise<void>((resolve) => waiting.push(resolve))
-    }
-
-    running++
-
-    try {
-      return await task()
-    } finally {
-      running--
-      waiting.shift()?.()
-    }
-  }
-}
-
+/**
+ * Every promise's result, as `Promise.all`, but only once all of them have settled: a
+ * copy that fails then leaves none still going that its cleanup would miss.
+ */
 async function settle<const T extends readonly Promise<unknown>[]>(
   promises: T,
 ): Promise<{ -readonly [K in keyof T]: Awaited<T[K]> }> {

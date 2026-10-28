@@ -19,6 +19,7 @@ import {
   type TripLocation,
   type TripRoute,
 } from '@hyoban/trip-map'
+import pLimit from 'p-limit'
 import {
   placesQuery,
   readAll,
@@ -176,9 +177,8 @@ export async function fillRoutes(context: WriteContext, fetchRoute: RouteFetcher
   const missing = [...needed].filter(([key]) => !(key in existing) && !inputs.noRoute.has(key))
   const noRoute = new Set([...inputs.noRoute].filter((key) => needed.has(key)))
   let failed = 0
-  const answers = await mapConcurrently(
+  const answers = await pLimit(FETCHES_AT_ONCE).map(
     missing.slice(0, FETCHES_PER_RUN),
-    FETCHES_AT_ONCE,
     async ([key, leg]) => {
       try {
         const route = await fetchRoute(leg)
@@ -328,28 +328,6 @@ function keepTripRoutes(db: Database, { trips, etag }: KeptRoutes, revision: num
 
 function sameKeys(first: ReadonlySet<string>, second: ReadonlySet<string>) {
   return first.size === second.size && [...first].every((key) => second.has(key))
-}
-
-/** `run` over every item, at most `limit` at a time, the results in the items' order. */
-async function mapConcurrently<T, R>(
-  items: readonly T[],
-  limit: number,
-  run: (item: T) => Promise<R>,
-) {
-  const results: R[] = []
-  let next = 0
-
-  await Promise.all(
-    Array.from({ length: Math.min(limit, items.length) }, async () => {
-      while (next < items.length) {
-        const index = next++
-
-        results[index] = await run(items[index]!)
-      }
-    }),
-  )
-
-  return results
 }
 
 /** Fetches legs from Mapbox's Directions with `token`, and train legs from OpenRailRouting. */

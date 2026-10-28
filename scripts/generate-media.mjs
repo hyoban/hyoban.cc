@@ -1,6 +1,8 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { readFile, writeFile } from 'node:fs/promises'
 
+import { compareMediaItems, getMediaItemKey } from '../src/media.ts'
+
 const TMDB_API_BASE_URL = 'https://api.themoviedb.org/3'
 const LANGUAGE = 'zh-CN'
 
@@ -24,7 +26,7 @@ const stats = {
   fetched: 0,
   reused: 0,
 }
-const sortedRecommendations = [...recommendations].sort(compareMedia)
+const sortedRecommendations = [...recommendations].sort(compareMediaItems)
 const items = await Promise.all(sortedRecommendations.map(resolveRecommendation))
 
 await writeFile(
@@ -47,7 +49,7 @@ console.log(
 
 async function resolveRecommendation(recommendation) {
   validateRecommendation(recommendation)
-  const key = getMediaKey(recommendation)
+  const key = getMediaItemKey(recommendation)
   const cachedItem = cachedItemsByKey.get(key)
 
   if (cachedItem) {
@@ -91,7 +93,9 @@ async function readCachedItemsByKey() {
     return new Map()
   }
 
-  return new Map(generated.items.filter(isGeneratedItem).map((item) => [getMediaKey(item), item]))
+  return new Map(
+    generated.items.filter(isGeneratedItem).map((item) => [getMediaItemKey(item), item]),
+  )
 }
 
 function isGeneratedItem(item) {
@@ -103,14 +107,6 @@ function isGeneratedItem(item) {
     item.data &&
     typeof item.data === 'object'
   )
-}
-
-function getMediaKey(media) {
-  return `${media.type}:${media.tmdbId}`
-}
-
-function compareMedia(first, second) {
-  return first.tmdbId - second.tmdbId || first.type.localeCompare(second.type)
 }
 
 function validateRecommendation(recommendation) {

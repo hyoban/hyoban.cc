@@ -1,3 +1,4 @@
+import { escapeHtml } from '@hyoban/trip-map'
 import { getAssetUrl } from './asset-url.ts'
 
 // The car in 3D: a bought model of the 007GT painted in its colour, in site/ on the image
@@ -20,13 +21,6 @@ export const CAR_CREDIT = `<p class="car-model-credit">致谢 <a href="${SU7_SHO
 export const CAR_MODEL = getAssetUrl('site/zeekr-007gt-9.glb')
 export const CAR_MODEL_FULL = getAssetUrl('site/zeekr-007gt-9-full.glb')
 export const CAR_STILL = { src: getAssetUrl('site/zeekr-007gt-7.webp'), width: 1664, height: 746 }
-
-const HTML_ESCAPES: Record<string, string> = {
-  '&': '&amp;',
-  '"': '&quot;',
-  '<': '&lt;',
-  '>': '&gt;',
-}
 
 /** The year a year review plays through day by day as it scrolls past the car
  * (src/components/YearDriving.astro). */
@@ -153,8 +147,4 @@ function replaceStills(node: MdNode) {
 
     replaceStills(child)
   }
-}
-
-function escapeHtml(value: string) {
-  return value.replace(/[&"<>]/g, (character) => HTML_ESCAPES[character] ?? character)
 }
