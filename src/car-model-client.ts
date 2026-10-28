@@ -45,7 +45,8 @@ import { createOdometer, createRoutes, readCarYear, wrapAngle } from './car-mode
 
 // The car standing on its own shadow, under a studio's light, never turning on its own. It
 // can be swung round by dragging sideways, a drag coasting to rest, but not zoomed or tipped over, and a vertical drag still scrolls the
-// page. It draws nothing while out of sight.
+// page. It draws nothing while out of sight, nor while nothing on it moves, until the page
+// scrolls, it's pressed, or its size or the page's light changes.
 //
 // The first time it comes into view it drifts in with the scroll: it rolls forward as the
 // page moves on and back as it moves back, its wheels rolling as it goes, sliding in with its
@@ -143,6 +144,9 @@ const SLIP_FOLLOW = 0.08
 const DRIFT_STIFFNESS = 60
 const DRIFT_DAMPING = 9
 const DRIFT_SETTLED = 0.01
+/** How near its rest everything easing toward one has to be for the car to stop being drawn
+ * till something moves it again. */
+const AT_REST = 1e-3
 /** How far past its furthest, as a share of it, its tail may swing at most. */
 const DRIFT_OVER = 1.15
 /** In a year review at speed, the seconds which way it goes along the year's path, how fast
@@ -486,7 +490,10 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
     controls.update()
   }
   place()
-  const resizeObserver = new ResizeObserver(place)
+  const resizeObserver = new ResizeObserver(() => {
+    place()
+    wake()
+  })
   resizeObserver.observe(frame)
   resizeObserver.observe(home)
 
@@ -579,6 +586,7 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
         darkness = -1
         body.add(full.car)
         current = full
+        wake()
       })
       .catch(() => {})
   }
@@ -619,6 +627,8 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
     held = false
   }
   const press = (event: PointerEvent) => {
+    // Turned by a drag even under reduced motion.
+    wake()
     if (!event.isPrimary || event.button !== 0) return
     pressedAt = { x: event.clientX, y: event.clientY, time: performance.now() }
     draggedFrom = event.clientX
@@ -630,6 +640,8 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
   // A press that soon moves is a drag to turn the car, and leaves it in its place; once it's
   // well under way, a drag only swings it round as it goes.
   const wander = (event: PointerEvent) => {
+    // A drag can rest a while and then move on.
+    wake()
     if (held && speed >= ENGAGE) dragged += event.clientX - draggedFrom
     draggedFrom = event.clientX
     if (!held || turning || speed >= ENGAGE) return
@@ -653,10 +665,12 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
     if (performance.now() - pressedAt.time >= HOLD_MS || moved > HOLD_SLOP) return
     switched = !switched
     sound.lamps(dark.matches !== switched)
+    wake()
   }
   const unswitch = () => {
     switched = false
     routes?.retheme()
+    wake()
   }
   frame.addEventListener('pointerdown', press)
   frame.addEventListener('click', flip)
@@ -817,6 +831,9 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
     // The ground turns the other way to the car: turning left, toward +x, it turns by less.
     tunnel.bend(-MathUtils.clamp(curving, -BEND_MOST, BEND_MOST) * speed)
   }
+  // On in the dark and off by day, the other way round once switched by a click, and on as
+  // the page goes dark round it at speed.
+  const lampsWanted = () => Math.max(dark.matches !== switched ? 1 : 0, speed)
   const drive = (time: number, delta: number) => {
     const going = held && !turning && performance.now() - pressedAt.time > HOLD_MS
     speed += ((going ? 1 : 0) - speed) * (1 - Math.exp(-delta / (going ? SPEED_UP : SLOW_DOWN)))
@@ -843,9 +860,7 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
     cruised += Math.sign(year - cruised) * step
     // A shiver through the body at speed, and a little as it cruises.
     body.position.y = Math.max(speed, cruising * 0.4) * size.y * 0.003 * Math.sin(time / 23)
-    // On in the dark and off by day, the other way round once switched by a click, and on as
-    // the page goes dark round it at speed.
-    const wanted = Math.max(dark.matches !== switched ? 1 : 0, speed)
+    const wanted = lampsWanted()
     if (wanted !== lit) {
       const eased = lit + (wanted - lit) * (1 - Math.exp(-delta / LAMPS_FADE))
       light(reduced.matches || Math.abs(wanted - eased) < 0.002 ? wanted : eased)
@@ -944,13 +959,17 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
     return slide
   }
   const timer = new Timer()
+  // The first frame after a rest or out of sight takes no time, rather than the whole while
+  // in one step.
+  let waking = false
   const tick = (time: number) => {
     timer.update(time)
-    const delta = timer.getDelta()
+    const delta = waking ? 0 : timer.getDelta()
+    waking = false
     drive(time, delta)
     pose(time)
     if (!upgrading && (stage === 'parked' || stage === 'still')) upgrade()
-    controls.update(delta)
+    const swinging = controls.update(delta)
     // How fast it's swung round, the long way round from one side to the other taken short.
     const turned = controls.getAzimuthalAngle()
     const swept = wrapAngle(turned - azimuth)
@@ -980,12 +999,33 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
       lightLayer.withdraw()
     }
     renderer.render(scene, camera)
-    frameId = visible && !document.hidden ? requestAnimationFrame(tick) : 0
+    // With nothing easing, swung or smoking, and not settling from its stop, it's drawn as it
+    // is; the next frame waits for something to move it, driving in the scroll.
+    const resting =
+      !held &&
+      !swinging &&
+      stage !== 'settling' &&
+      rolled < AT_REST &&
+      speed === 0 &&
+      roll < AT_REST &&
+      rush < AT_REST &&
+      Math.abs(yaw) < AT_REST &&
+      Math.abs(yawSpeed) < AT_REST &&
+      cruised === played() &&
+      lit === lampsWanted() &&
+      !drift.smoking
+    frameId = visible && !document.hidden && !resting ? requestAnimationFrame(tick) : 0
+  }
+  const wake = () => {
+    if (frameId || !visible || document.hidden) return
+    waking = true
+    frameId = requestAnimationFrame(tick)
   }
   const resume = () => {
     sound.setAudible(visible && !document.hidden)
-    if (!frameId && visible && !document.hidden) frameId = requestAnimationFrame(tick)
+    wake()
   }
+  addEventListener('scroll', wake, { passive: true })
   // A callback can carry more than one change for the frame; the last is how it is now.
   const sightObserver = new IntersectionObserver((entries) => {
     visible = entries.at(-1)!.isIntersecting
@@ -1004,6 +1044,7 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
       stage = 'parked'
     }
     pose(performance.now())
+    wake()
   }
   reduced.addEventListener('change', followMotion)
 
@@ -1020,6 +1061,7 @@ export async function mountCarModel(frame: HTMLElement, src: string, fullSrc?: s
     resizeObserver.disconnect()
     sightObserver.disconnect()
     document.removeEventListener('visibilitychange', resume)
+    removeEventListener('scroll', wake)
     reduced.removeEventListener('change', followMotion)
     letGo()
     frame.removeEventListener('pointerdown', press)
