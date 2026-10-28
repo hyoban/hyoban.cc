@@ -16,9 +16,16 @@
   ],
   // The bucket image.hyoban.cc serves; uploads wait under uploads/ until they publish.
   "r2_buckets": [{ "binding": "BUCKET", "bucket_name": "blog-images" }],
-  // Where a new place's province, city and district are looked up.
-  "vars": { "DIVISIONS_URL": "https://geo.datav.aliyun.com/areas_v3/bound" },
+  // Where a new place's province, city and district are looked up,
+  // and the Telegram channel the Moments are posted to.
+  "vars": {
+    "DIVISIONS_URL": "https://geo.datav.aliyun.com/areas_v3/bound",
+    "TELEGRAM_CHAT_ID": "@hyoban_travel",
+  },
+  // Posts to the channel what an earlier run left, as a write's run past its 30 seconds.
+  "triggers": { "crons": ["*/15 * * * *"] },
   // Secrets, set with `wrangler secret put` and in `.dev.vars` locally: API_TOKENS, a
   // comma-separated list of bearer tokens, DEPLOY_HOOK_URL, which a write the site
-  // shows calls so the site builds again, and MAPBOX_TOKEN, for the trips' routes.
+  // shows calls so the site builds again, MAPBOX_TOKEN, for the trips' routes, and
+  // TELEGRAM_BOT_TOKEN, the bot that posts to the channel.
 }

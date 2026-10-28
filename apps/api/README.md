@@ -62,7 +62,7 @@ then goes all at once. Writes need a token.
 | `PUT /v1/moments/:uid/media/:mediaUid/:part` | keeps an original, `image` or `video` (a live photo sends both), until its Moment publishes |
 | `HEAD` on the same path                      | 200 with the original's MD5 as its `ETag` when it is uploaded, else 404                     |
 | `POST /v1/changes`                           | applies `{ places, moments, deleted }` as one write                                         |
-| `POST /v1/build`                             | calls the site's deploy hook; `{ started }`, for a write past the Worker (`data:push`)      |
+| `POST /v1/build`                             | calls the site's deploy hook and posts to the channel; `{ started }`, for `data:push`       |
 
 A change set names the places only the app knows, by id, the Moments it wrote or changed,
 and the uids of those it deleted. A known place sent under its own id takes the kind it is
@@ -100,6 +100,32 @@ A write the site shows first brings the trips' routes up to date, when it change
 the trips are built from (a Moment's day, places or order, or whether it is shown),
 then calls the `DEPLOY_HOOK_URL` secret, when it is set, so the site builds again with
 them.
+
+## The Telegram channel
+
+With the `TELEGRAM_BOT_TOKEN` secret, the Worker posts the Moments the site shows to the
+channel `TELEGRAM_CHAT_ID` names, `@hyoban_travel`, through a bot that is an admin of it
+allowed to post and delete. A Moment goes as its words exactly, then 📍 and its place,
+then a link to its page (`https://hyoban.cc/m/<uid>/`), as the caption of its photos and
+videos in albums of ten, or as a message after them when the words are longer than a
+caption's 1024 characters. Photos go as JPEGs Cloudflare Images makes from the kept
+originals, a live photo as its still; a video is uploaded from the bucket, or as its
+first frame when it is over the 50 MB a bot may send.
+
+Changed words edit the post; changed media delete it and post the Moment again; a
+Moment the site stops showing, hidden, a tech one or deleted, has its post deleted. A
+message Telegram won't delete, as one deleted by hand, is logged and left. The
+`telegram_posts` table keeps each Moment's post and messages. Only Moments published
+since the channel was first synced (`telegram_since` in `meta`, when the migration ran)
+are posted, so a restore never posts the old ones, and nothing posted before then is
+touched.
+
+It runs after a write the site shows, after `POST /v1/build`, and every 15 minutes on
+the Worker's cron trigger, each looking only at the Moments changed since the revision
+the last whole run reached (`telegram_revision`). A run holds a lease in `meta`, so two
+at once never post a Moment twice; one that fails stops and the next starts again from
+the same revision, leaving alone what is posted as it is. A Moment is posted as soon as
+it publishes, so its link works once the site has built.
 
 ## Routes
 
@@ -146,7 +172,8 @@ database in APAC. Workers Builds deploys it on every push to `main` that touches
 applies any new D1 migration before it deploys the code that needs it. The build's API
 token has D1 Edit for that; a migration that fails stops the deploy.
 
-The secrets are `API_TOKENS`, `DEPLOY_HOOK_URL` and `MAPBOX_TOKEN`, set with
+The secrets are `API_TOKENS`, `DEPLOY_HOOK_URL`, `MAPBOX_TOKEN` and
+`TELEGRAM_BOT_TOKEN`, set with
 `wrangler secret put <name> --config apps/api/wrangler.jsonc`. The site's build token
 is `MOMENTS_API_TOKEN` in the root `.env`. To write records from `data/` into the
 deployed database use `pnpm data:push`; `pnpm data:import --remote` restores the whole
@@ -160,6 +187,8 @@ backup over it.
 - `src/index.ts` routes requests; `src/database.ts` holds the reads and `src/writes.ts`
   the writes, against the few D1 and R2 calls they need (`Database`, `Bucket`), which
   the tests fill in with an in-memory `node:sqlite` and a map.
+- `src/telegram.ts` posts the Moments to the channel, against a `Telegram` the tests
+  fill in with a bot that keeps its calls.
 - `src/rows.ts` is how a record becomes a row, shared by the writes and the import.
 - `src/import.ts` builds the SQL `pnpm data:import` runs: new and changed records are
   written, missing ones marked deleted, and unchanged rows keep their revision, so a
