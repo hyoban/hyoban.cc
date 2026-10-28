@@ -210,6 +210,10 @@ export function createDrift(size: Vector3, tyres: readonly Tyre[]) {
         mesh.visible = marked
       }
     },
+    /** Whether any puff is still rising, which moves on its own. */
+    get smoking() {
+      return puffing
+    },
     /** Let go of the puffs' texture; the rest goes with the scene. */
     dispose() {
       puffMap.dispose()
