@@ -74,6 +74,8 @@ function isInSight(element: HTMLElement | undefined): element is HTMLElement {
 /** How to find, in the page coming, the parts named in the page going. */
 let pending: ((root: Document) => Part[]) | undefined
 let named: Part[] = []
+/** The day last opened from its tile on the wall, which going back returns it to. */
+let wallDay: string | undefined
 
 function name(parts: Part[]) {
   for (const { name, element } of parts) element.style.viewTransitionName = name
@@ -88,8 +90,10 @@ document.addEventListener('astro:before-preparation', (event) => {
 
   if (REVIEW_PATH.test(from) && DAY_PATH.test(to)) {
     // Into a day from its tile on the wall, before the year shrinking back out: the year is
-    // on screen above the wall too.
-    const tile = getWallDay(document, to)
+    // on screen above the wall too. Only from the tile itself: a card for the same day
+    // elsewhere on the page opens it without the wall.
+    const tile = source?.closest('.year-mosaic') ? getWallDay(document, to) : undefined
+    wallDay = tile && to
     if (isInSight(tile)) {
       named = name([{ name: 'year-day', element: tile }])
       pending = (root) => {
@@ -129,8 +133,10 @@ document.addEventListener('astro:before-preparation', (event) => {
   if (pending) return
 
   if (DAY_PATH.test(from) && REVIEW_PATH.test(to)) {
-    // Back out of the day onto its tile.
-    const day = getCalendarDay(document)
+    // Back out of the day onto its tile, if that's where it was opened from.
+    const fromWall = wallDay === from
+    wallDay = undefined
+    const day = fromWall ? getCalendarDay(document) : undefined
     if (isInSight(day)) {
       named = name([{ name: 'year-day', element: day }])
       pending = (root) => {
