@@ -73,7 +73,7 @@ const localMediaSchema = z.looseObject({
 
 const mediaBase = {
   uid: ulid,
-  /** English alt text; empty until someone writes it. */
+  /** Alt text; empty until someone writes it. */
   alt: z.string().default(''),
   takenAt: timestamp.optional(),
   /**

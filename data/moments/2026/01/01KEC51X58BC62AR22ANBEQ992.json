@@ -10,7 +10,7 @@
   "media": [
     {
       "uid": "01KEC51X59FPYR15F9R8HKHQMZ",
-      "alt": "A delivery robot lid with a sign saying it delivers one order per trip.",
+      "alt": "配送机器人的盖子上贴着“一趟只送一单”的提示",
       "type": "image",
       "width": 1536,
       "height": 2048,
@@ -43,7 +43,7 @@
     },
     {
       "uid": "01KEC51X5ABWJ3VF4H2D4R88TY",
-      "alt": "A white delivery robot waiting on a tiled apartment floor.",
+      "alt": "白色配送机器人停在公寓的瓷砖地面上等着",
       "type": "image",
       "width": 1536,
       "height": 2048,

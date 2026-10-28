@@ -10,7 +10,7 @@
   "media": [
     {
       "uid": "01K96FSVQ1N7KEMXB5JF7HYW3Z",
-      "alt": "A road-sign themed hall at the Tianquan service area with G318 signs and traffic lights.",
+      "alt": "天全服务区里以路牌为主题的大厅，挂着 G318 路牌和红绿灯",
       "type": "image",
       "width": 1080,
       "height": 1439,
@@ -43,7 +43,7 @@
     },
     {
       "uid": "01K96FSVQ2PBKH2X3XCVDTJ8V0",
-      "alt": "The G318 Tianquan self-driving base tower in front of the service area.",
+      "alt": "服务区前的 G318 天全自驾基地塔楼",
       "type": "image",
       "width": 1440,
       "height": 1080,
