@@ -5,9 +5,10 @@ hyoban.cc is a quiet, text-first personal site built with Astro and plain CSS: e
 ## Layout
 
 - **One column for everything.** Home, posts, `/media` and `/use` all sit in a centered `40rem` column with a `1.75rem` line height. The shared wrapper is [SitePage.astro](src/components/SitePage.astro).
-- **A quiet header.** [SiteHeader.astro](src/components/SiteHeader.astro) shows the avatar, name and tagline, linking home, beside a row of small text links (日历, 旅程, 影视, 回顾, Use); the current one sits on a soft pill. The footer is a row of social icons.
+- **A quiet header.** [SiteHeader.astro](src/components/SiteHeader.astro) shows the avatar, name and tagline, linking home, beside a row of small text links (日历, 旅程, 影视, 回顾, Use, 搜索); the current one sits on a soft pill. The footer is a row of social icons.
 - **Posts are stripped back.** A post shows only the title, the date and the prose. On screens 64rem and wider, the "返回" (back) link moves into the left margin, `4rem` from the text ([[...slug].astro](src/pages/[...slug].astro)).
 - **Posts are grouped by year.** On the home page, each year label sits in a narrow `3.5rem` column that stays pinned while its posts scroll, and leads to that year's review when there is one. Each row is title plus date.
+- **Search floats over the page.** ⌘K, `/` or the header's 搜索 opens it ([SearchDialog.astro](src/components/SearchDialog.astro)), a panel near the top over a dimmed page, like a command palette: a field, then a list where the arrow keys move and Enter opens. It matches the Moments' words, places and photo alt text and the posts in the browser, from `/search.json`. Before a query it offers a hand-picked row of hot words ([search-index.ts](src/search-index.ts)), each with how many it finds, set like `/media`'s filters. A result is a row: a photo it found (or the Moment's first, or an icon), the words around the match, and its date and place; a match is marked with the `border` gray, not a color. The query is the page's `?q=`, so an address with one opens it, and Back from a result reopens it.
 
 ## Year review
 

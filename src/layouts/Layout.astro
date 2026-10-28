@@ -1,6 +1,7 @@
 ---
 import '@/styles/index.css'
 
+import SearchDialog from '@/components/SearchDialog.astro'
 import { getAssetUrl } from '@/asset-url'
 import { SITE_TITLE, SITE_URL } from '@/consts'
 import { OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from '@/og-layout'
@@ -112,6 +113,7 @@ const TELETYPE_SITE_VERIFICATION = 'g7j8/rPFXfhyrq5q0QQV7EsYWv4='
   </head>
   <body>
     <slot />
+    <SearchDialog />
     <!-- Where the page was, on a reload or a return to it. The router keeps it in the history
          entry (history.state) as each scroll ends, and restores it itself only once the whole
          page has loaded, the browser's own restoring left off: so the page goes back as soon
