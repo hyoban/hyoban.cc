@@ -245,9 +245,12 @@ fun txnTitle(txn: Txn, ledger: Ledger): String = when (txn.kind) {
 
 private val TIME = DateTimeFormatter.ofPattern("HH:mm")
 
-/** What is said under a bill's name: its note, its account and its time, what sets it apart. */
+/**
+ * What is said under a bill's name: its note, its account and its time, what sets it apart;
+ * without the time when [withTime] is false, as a row that shows it beside the amount.
+ */
 @Composable
-fun txnSupporting(txn: Txn, ledger: Ledger, showDate: Boolean = false): String {
+fun txnSupporting(txn: Txn, ledger: Ledger, showDate: Boolean = false, withTime: Boolean = true): String {
     val account = when {
         txn.kind == TxnKind.TRANSFER -> transferLabel(txn.transfer).takeIf { txn.transfer != TransferType.TRANSFER }
         txn.splits.isNotEmpty() -> txn.splits.mapNotNull { ledger.accountsById[it.account]?.name }.joinToString(" + ")
@@ -266,16 +269,17 @@ fun txnSupporting(txn: Txn, ledger: Ledger, showDate: Boolean = false): String {
 }
 
 /**
- * A bill in a list, Material 3's three-line list item at most: its category's icon, its name,
- * what sets it apart, and its amount, signed, at the end.
+ * A bill in a list, two lines: its category's icon, its name and what sets it apart in one line
+ * under it; at the end its amount, signed, and under that its time (and its book, where bills
+ * of several books are listed), so every row stands as tall as the next.
  */
 @Composable
 fun TxnRow(txn: Txn, ledger: Ledger, onClick: () -> Unit, modifier: Modifier = Modifier, showDate: Boolean = false, showBook: Boolean = false) {
     ListItem(
         headlineContent = { Text(txnTitle(txn, ledger), maxLines = 1, overflow = TextOverflow.Ellipsis) },
-        supportingContent = { Text(txnSupporting(txn, ledger, showDate), maxLines = 2, overflow = TextOverflow.Ellipsis) },
+        supportingContent = { Text(txnSupporting(txn, ledger, showDate, withTime = false), maxLines = 1, overflow = TextOverflow.Ellipsis) },
         leadingContent = { LeadingIcon(txnIcon(txn, ledger)) },
-        // The amount, and under it, where bills of several books are listed, the bill's book.
+        // The amount, and under it the time, after the bill's book where bills of several books are listed.
         trailingContent = {
             Column(horizontalAlignment = Alignment.End) {
                 Text(
@@ -283,11 +287,13 @@ fun TxnRow(txn: Txn, ledger: Ledger, onClick: () -> Unit, modifier: Modifier = M
                     style = AppTheme.typography.titleMedium,
                     color = amountColor(txn),
                 )
-                if (showBook) {
-                    ledger.books.firstOrNull { it.id == txn.book }?.let { book ->
-                        Text(book.name, style = AppTheme.typography.labelSmall, color = AppTheme.colorScheme.onSurfaceVariant, maxLines = 1)
-                    }
-                }
+                val book = if (showBook) ledger.books.firstOrNull { it.id == txn.book }?.name else null
+                Text(
+                    listOfNotNull(book, txn.local.format(TIME)).joinToString("\u2003"),
+                    style = AppTheme.typography.labelMedium,
+                    color = AppTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                )
             }
         },
         colors = ListItemDefaults.colors(containerColor = Color.Transparent),

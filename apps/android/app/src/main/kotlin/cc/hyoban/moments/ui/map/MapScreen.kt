@@ -10,8 +10,6 @@ import androidx.compose.foundation.lazy.items
 import cc.hyoban.moments.data.trips.countOf
 import cc.hyoban.moments.data.trips.coversOf
 import cc.hyoban.moments.ui.trips.TripCard
-import cc.hyoban.moments.ui.components.restingElevation
-import cc.hyoban.moments.ui.components.floatingElevation
 import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.BackHandler
@@ -41,6 +39,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -60,7 +59,6 @@ import cc.hyoban.moments.ui.design.ButtonDefaults
 import cc.hyoban.moments.ui.design.Card
 import cc.hyoban.moments.ui.design.CardDefaults
 import cc.hyoban.moments.ui.design.FilledTonalButton
-import cc.hyoban.moments.ui.design.FloatingActionButton
 import cc.hyoban.moments.ui.design.Icon
 import cc.hyoban.moments.ui.design.ListItemDefaults
 import cc.hyoban.moments.ui.design.LocalContentColor
@@ -313,22 +311,28 @@ private fun MapContent(
                 },
             )
                 .statusBarsPadding().sideInsetsPadding()
-                .padding(top = Space.m, start = if (railed) Space.gutter else 0.dp, end = if (railed) Space.gutter else 0.dp),
+                .padding(top = Space.m, start = Space.gutter, end = Space.gutter),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(Space.s),
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
+            // The two round buttons at the page's gutters and the footprints between them; the
+            // legend under them on a line of its own, as wide as it needs whatever the phone.
+            Row(
+                (if (railed) Modifier else Modifier.fillMaxWidth()),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Space.s),
+            ) {
                 // Locating among the controls at the top, clear of the sheet of trips at the foot.
-                LocateButton(locating, onClick = requestLocate, inRail = true)
-                if (colors.isNotEmpty()) Legend(colors, trips = mapRoutes.isNotEmpty())
+                LocateButton(locating, onClick = requestLocate)
+                Box(if (railed) Modifier else Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                    FootprintsButton(onClick = { selected = null; highlighted = null; footprints.open() })
+                }
                 FogButton(settings.mapFog) {
                     fogSweep++
                     settings.changeMapFog(!settings.mapFog)
                 }
             }
-            FilledTonalButton(onClick = { selected = null; highlighted = null; footprints.open() }, modifier = Modifier.testTag("footprints")) {
-                Text(stringResource(R.string.footprints_title))
-            }
+            if (colors.isNotEmpty()) Legend(colors, trips = mapRoutes.isNotEmpty())
             val shownFog = fog.takeIf { settings.mapFog }
             AnimatedVisibility(
                 shownFog != null,
@@ -575,27 +579,50 @@ private fun CompassButton(turned: Boolean, bearing: Double, onClick: () -> Unit)
 
 /** Brings the map to where the phone is; a loading indicator while it finds out. */
 @Composable
-private fun LocateButton(locating: Boolean, onClick: () -> Unit, inRail: Boolean = false) {
-    // A round button in the floating surface, as the map's other controls are; level with the
-    // rail at its top. Named on the button, so it keeps its name while the indicator stands in
-    // for the icon.
+private fun LocateButton(locating: Boolean, onClick: () -> Unit) {
+    // A round button in the floating surface, the size of the fog's beside it. Named on the
+    // button, so it keeps its name while the indicator stands in for the icon.
     val label = stringResource(R.string.action_locate)
     Tooltip(label) {
-        FloatingActionButton(
+        Surface(
             onClick = { if (!locating) onClick() },
-            elevation = if (inRail) restingElevation() else floatingElevation(),
             shape = Corners.full,
-            containerColor = SurfaceLevel.Floating.fill(),
+            color = SurfaceLevel.Floating.fill(),
             contentColor = AppTheme.colorScheme.onSurface,
-            modifier = Modifier.semantics { contentDescription = label }.testTag("locate"),
+            shadowElevation = Elevation.level2,
+            modifier = Modifier.size(48.dp).semantics { contentDescription = label }.testTag("locate"),
         ) {
             Crossfade(locating, animationSpec = AppTheme.motionScheme.fastEffectsSpec(), label = "locating") { busy ->
-                if (busy) {
-                    Spinner(Modifier.size(32.dp), color = LocalContentColor.current)
-                } else {
-                    Icon(AppIcons.Locate, contentDescription = null)
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    if (busy) {
+                        Spinner(Modifier.size(24.dp), color = LocalContentColor.current)
+                    } else {
+                        Icon(AppIcons.Locate, contentDescription = null)
+                    }
                 }
             }
+        }
+    }
+}
+
+/** Opens the phone's own footprints: a floating pill between the round buttons, as the map's controls float. */
+@Composable
+private fun FootprintsButton(onClick: () -> Unit) {
+    Surface(
+        onClick = onClick,
+        shape = Corners.full,
+        color = SurfaceLevel.Floating.fill(),
+        contentColor = AppTheme.colorScheme.onSurface,
+        shadowElevation = Elevation.level2,
+        modifier = Modifier.heightIn(min = 48.dp).testTag("footprints"),
+    ) {
+        Row(
+            Modifier.padding(horizontal = Space.l),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Space.s),
+        ) {
+            Icon(AppIcons.Route, contentDescription = null, modifier = Modifier.size(20.dp))
+            Text(stringResource(R.string.footprints_title), style = AppTheme.typography.labelLarge)
         }
     }
 }
@@ -618,7 +645,7 @@ private fun FogButton(on: Boolean, onClick: () -> Unit) {
             shadowElevation = Elevation.level2,
             modifier = Modifier.size(48.dp).semantics { contentDescription = label }.testTag("fog"),
         ) {
-            Box(contentAlignment = Alignment.Center) { Icon(AppIcons.Compass, contentDescription = null) }
+            Box(contentAlignment = Alignment.Center) { Icon(AppIcons.Cloud, contentDescription = null) }
         }
     }
 }
@@ -661,14 +688,14 @@ private fun Legend(colors: Map<Int, Color>, trips: Boolean) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.xs)) {
                     // A dot as the map draws one, ringed in the surface.
                     Box(Modifier.size(10.dp).border(1.5.dp, AppTheme.colorScheme.surface, CircleShape).padding(1.dp).background(color, CircleShape))
-                    Text("$year", style = AppTheme.typography.labelMedium, color = AppTheme.colorScheme.onSurfaceVariant)
+                    Text("$year", style = AppTheme.typography.labelMedium, color = AppTheme.colorScheme.onSurfaceVariant, maxLines = 1, softWrap = false)
                 }
             }
             if (trips) {
                 VerticalDivider(Modifier.height(14.dp), color = dividerColor())
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.xs)) {
                     Box(Modifier.width(14.dp).height(2.dp).background(AppTheme.colorScheme.onSurface.copy(alpha = ROUTE_OPACITY), CircleShape))
-                    Text(stringResource(R.string.legend_trips), style = AppTheme.typography.labelMedium, color = AppTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.legend_trips), style = AppTheme.typography.labelMedium, color = AppTheme.colorScheme.onSurfaceVariant, maxLines = 1, softWrap = false)
                 }
             }
         }

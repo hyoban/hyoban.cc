@@ -3,6 +3,16 @@ package cc.hyoban.moments.ui.ledger
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.theme.cardBorder
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
+import cc.hyoban.moments.ui.design.DropdownMenu
+import cc.hyoban.moments.ui.design.DropdownMenuItem
+import cc.hyoban.moments.ui.theme.Corners
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,9 +27,7 @@ import cc.hyoban.moments.ui.design.Icon
 import cc.hyoban.moments.ui.design.IconButton
 import cc.hyoban.moments.ui.design.LinearProgressIndicator
 import cc.hyoban.moments.ui.design.AppTheme
-import cc.hyoban.moments.ui.design.SegmentedButton
 import cc.hyoban.moments.ui.design.SegmentedListItem
-import cc.hyoban.moments.ui.design.SingleChoiceSegmentedButtonRow
 import cc.hyoban.moments.ui.design.Surface
 import cc.hyoban.moments.ui.design.Text
 import androidx.compose.runtime.Composable
@@ -148,28 +156,15 @@ fun StatsView(ledger: Ledger, books: Set<String>, currency: String, nav: LedgerN
             Modifier.fillMaxSize().verticalScroll(rememberScrollState())
                 .padding(start = columns.margin, end = columns.margin, bottom = LocalBottomClearance.current + LocalFabClearance.current + Space.xl),
         ) {
-            SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(horizontal = Space.gutter, vertical = Space.l)) {
-                Span.entries.forEachIndexed { index, entry ->
-                    SegmentedButton(
-                        selected = span == index,
-                        onClick = { span = index },
-                        modifier = Modifier.testTag("span_${entry.name.lowercase()}"),
-                    ) { Text(stringResource(entry.label)) }
-                }
-            }
-            Row(Modifier.fillMaxWidth().padding(horizontal = Space.s), verticalAlignment = Alignment.CenterVertically) {
-                if (mode != Span.ALL) {
-                    IconButton(onClick = { anchorDay = (if (mode == Span.MONTH) anchor.minusMonths(1) else anchor.minusYears(1)).toEpochDay() }) {
-                        Icon(AppIcons.ChevronLeft, contentDescription = stringResource(R.string.ledger_previous_period))
-                    }
-                }
-                Text(periodLabel, style = AppTheme.typography.titleMedium, modifier = Modifier.weight(1f).padding(horizontal = Space.s))
-                if (mode != Span.ALL) {
-                    IconButton(onClick = { anchorDay = (if (mode == Span.MONTH) anchor.plusMonths(1) else anchor.plusYears(1)).toEpochDay() }) {
-                        Icon(AppIcons.ChevronRight, contentDescription = stringResource(R.string.ledger_next_period))
-                    }
-                }
-            }
+            // One row for the stretch: the period between its arrows, and tapped, a menu of month,
+            // year and all, rather than a segmented control over another row of the same.
+            PeriodRow(
+                label = periodLabel,
+                mode = mode,
+                onMode = { span = it.ordinal },
+                onPrevious = { anchorDay = (if (mode == Span.MONTH) anchor.minusMonths(1) else anchor.minusYears(1)).toEpochDay() },
+                onNext = { anchorDay = (if (mode == Span.MONTH) anchor.plusMonths(1) else anchor.plusYears(1)).toEpochDay() },
+            )
             // Against the stretch before over as many days, so a month under way meets the last one's same days.
             val compared = previous?.let { before ->
                 val until = previousStart!!.plusDays(elapsed.toLong())
@@ -262,6 +257,43 @@ fun StatsView(ledger: Ledger, books: Set<String>, currency: String, nav: LedgerN
     }
 }
 
+/** The stretch the sums are over: its arrows step it, its name a menu of month, year and all. */
+@Composable
+private fun PeriodRow(label: String, mode: Span, onMode: (Span) -> Unit, onPrevious: () -> Unit, onNext: () -> Unit) {
+    var open by remember { mutableStateOf(false) }
+    Row(Modifier.fillMaxWidth().padding(horizontal = Space.s, vertical = Space.s), verticalAlignment = Alignment.CenterVertically) {
+        // Kept in place for all time, unseen, so the period stays in the middle.
+        val stepping = mode != Span.ALL
+        IconButton(onClick = onPrevious, enabled = stepping, modifier = Modifier.alpha(if (stepping) 1f else 0f)) {
+            Icon(AppIcons.ChevronLeft, contentDescription = stringResource(R.string.ledger_previous_period))
+        }
+        Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+            Row(
+                Modifier.clip(Corners.full).clickable(role = Role.DropdownList) { open = true }
+                    .heightIn(min = 48.dp).padding(horizontal = Space.m).testTag("span"),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Space.xs),
+            ) {
+                Text(label, style = AppTheme.typography.titleMedium)
+                Icon(AppIcons.CaretDown, contentDescription = null, modifier = Modifier.size(20.dp), tint = AppTheme.colorScheme.onSurfaceVariant)
+            }
+            DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+                Span.entries.forEach { entry ->
+                    DropdownMenuItem(
+                        text = { Text(stringResource(entry.label)) },
+                        onClick = { onMode(entry); open = false },
+                        trailingIcon = if (entry == mode) ({ Icon(AppIcons.Check, contentDescription = null, tint = AppTheme.colorScheme.primary) }) else null,
+                        modifier = Modifier.testTag("span_${entry.name.lowercase()}"),
+                    )
+                }
+            }
+        }
+        IconButton(onClick = onNext, enabled = stepping, modifier = Modifier.alpha(if (stepping) 1f else 0f)) {
+            Icon(AppIcons.ChevronRight, contentDescription = stringResource(R.string.ledger_next_period))
+        }
+    }
+}
+
 /** What was spent, earned and left, side by side on a card, over a day's average and how it compares. */
 @Composable
 private fun Totals(summary: Summary, currency: String, average: Long?, compared: Long?, yearly: Boolean) {
@@ -290,7 +322,8 @@ private fun Totals(summary: Summary, currency: String, average: Long?, compared:
                     }
                 }
             }
-            val change = compared?.takeIf { it > 0 && summary.expense != it }?.let { before ->
+            // Only between two spends: refunds outweighing a stretch's spending would read as more than all of it less.
+    val change = compared?.takeIf { it > 0 && summary.expense >= 0 && summary.expense != it }?.let { before ->
                 val share = percent(abs(summary.expense - before).toDouble() / before)
                 stringResource(
                     when {
