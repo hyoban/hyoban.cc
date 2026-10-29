@@ -13,7 +13,7 @@ and the pieces around it that record and serve them.
 ├─ packages/data-spec/  the Zod schemas every side shares (@hyoban/data-spec)
 ├─ packages/trip-map/   the map page and trip player (@hyoban/trip-map)
 ├─ scripts/             data, asset and media scripts, run as `vp run <name>`
-└─ docs/                data.md and assets.md
+└─ docs/                data.md, assets.md and deploy.md
 ```
 
 ## How it fits together
@@ -67,75 +67,10 @@ To run the API locally, see [apps/api](apps/api/README.md); for the app,
 
 ## Deployment
 
-Everything runs on Cloudflare, under one account, and deploys from `main`.
-
-### The site
-
-A Worker with static assets (`wrangler.jsonc`: `hyoban-cc`, serving `./dist`),
-deployed by **Workers Builds** from the repository root:
-
-- build command `pnpm build`, deploy command `npx wrangler deploy`;
-- build variables: `MOMENTS_API_TOKEN`, so the build reads the API rather than
-  `data/`, `VITE_MAPBOX_TOKEN`, and `MAPBOX_STATIC_TOKEN`, a token without URL
-  restrictions that draws the map pages' placeholders (without it they're left out);
-  Workers Builds sets `CI`, which turns on the Moments' share cards;
-- share cards are cached between builds under `node_modules/.astro/share-cards`, which
-  Cloudflare's build cache keeps, and redrawn only when what they show or
-  `src/og-image.ts` changes.
-
-It builds on every push to `main`, and again whenever the API takes a write the site
-shows: the API calls the build's **deploy hook**, kept in the API's `DEPLOY_HOOK_URL`
-secret. A token that can't fetch the export fails the build rather than falling back
-to `data/`.
-
-The custom domain `hyoban.cc` and the image origin `image.hyoban.cc` (the R2 bucket)
-are on the same zone, which needs **Images transformations** enabled: the site asks it
-for resized photos and video posters (docs/assets.md).
-
-### The API
-
-`apps/api`, at https://hyoban-cc-api.hyoban.workers.dev, also deployed by Workers
-Builds:
-
-- root directory `apps/api`, installing from the repository root, deploy command
-  `pnpm run deploy`, which applies new D1 migrations (`migrations/`) and then deploys;
-  the build's API token needs D1 Edit, and a failing migration stops the deploy;
-- it builds only for pushes to `main` touching `apps/api/`, `packages/data-spec/`,
-  `packages/trip-map/` or `pnpm-lock.yaml`;
-- secrets, set with `wrangler secret put <name> --config apps/api/wrangler.jsonc`:
-
-  | Secret               | What                                                     |
-  | -------------------- | -------------------------------------------------------- |
-  | `API_TOKENS`         | comma-separated bearer tokens for writes, drafts, export |
-  | `DEPLOY_HOOK_URL`    | the site's deploy hook, called after a write it shows    |
-  | `MAPBOX_TOKEN`       | Mapbox Directions, for the trips' drive routes           |
-  | `TELEGRAM_BOT_TOKEN` | the bot that posts new Moments to the Telegram channel   |
-
-- bindings in `apps/api/wrangler.jsonc`: D1 `DB` (`hyoban-cc`, APAC) and R2 `BUCKET`
-  (`blog-images`), with the channel `TELEGRAM_CHAT_ID` and a cron trigger every 15
-  minutes; the bot must be an admin of the channel allowed to post and delete.
-
-Setting it up from nothing: `wrangler d1 create hyoban-cc --location apac`, put the new
-id in `apps/api/wrangler.jsonc`, set the secrets, deploy, then restore the records with
-`vp run data:import --remote`.
-
-### GitHub Actions
-
-| Workflow          | When                        | Does                                                                                                 |
-| ----------------- | --------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `verify.yml`      | push to `main`, PRs, weekly | `pnpm test`, `pnpm check`, Moment audits, `pnpm build`; the Android app's unit tests and debug build |
-| `data-backup.yml` | every six hours, by hand    | the API's export into `data/`, committed to `main` when it changed                                   |
-| `r2-backup.yml`   | push to `main`, by hand     | a snapshot of the R2 bucket, in Git LFS on the `r2-backup` branch                                    |
-
-Repository secrets: `MOMENTS_API_TOKEN` (one of the API's `API_TOKENS`) for the data
-backup, and `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` for the R2 backup. Those, D1's
-30 days of Time Travel and `vp run data:import --remote` are the way back from a bad
-write.
-
-### The Android app
-
-Not deployed anywhere: build the release APK with `./gradlew` in `apps/android` and
-install it on the phone. Its API token is set on its settings page.
+Everything runs on Cloudflare and deploys from `main`: Workers Builds builds the site on
+every push and whenever the API takes a write it shows, and deploys the API when its
+inputs change; GitHub Actions back up the data and the R2 bucket. The settings, secrets
+and recovery steps are in [docs/deploy.md](docs/deploy.md).
 
 ## Thanks
 
