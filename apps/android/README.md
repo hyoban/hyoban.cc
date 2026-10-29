@@ -333,7 +333,9 @@ are folded back into their bill, and each refund and reimbursement is matched to
 expense by book, category, amount and time, the export naming none by id. An amount the
 export has in another currency than its account's is converted at that day's rate. What
 it found is shown before it is written, beside the ledger's bills (one already there is
-skipped, a refund or reimbursement new to a later export still finding its expense from
+skipped: the same row of an earlier export, or a bill written here, by hand or from 自动记账,
+of its book, kind, amount and currency within ten minutes of it, whatever its note and account;
+a refund or reimbursement new to a later export still finding its expense from
 an earlier one) or in their place, so importing each newer export brings the ledger up to
 date; a bill changed or deleted in iCost isn't. The export has no balances, nor anything
 before the range it was made for, so each account is calibrated after. The rates are the European Central Bank's, bundled (`assets/ledger-rates.json`)
