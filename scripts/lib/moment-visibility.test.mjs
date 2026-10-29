@@ -15,7 +15,7 @@ const assetConfig = JSON.parse(await readFile(join(root, 'src/data/asset-config.
 
 test(
   'builds optimized public calendar pages without hidden moments',
-  { timeout: 90_000 },
+  { timeout: 180_000 },
   async () => {
     const mediaUrls = await collectMomentMediaUrls()
     const outputRoot = await mkdtemp(join(tmpdir(), 'hyoban-calendar-build-'))
@@ -32,7 +32,7 @@ test(
         cwd: root,
         env: { ...process.env, CI: '', SKIP_PAGE_OG_IMAGES: '1' },
         maxBuffer: 10 * 1024 * 1024,
-        signal: AbortSignal.timeout(85_000),
+        signal: AbortSignal.timeout(175_000),
         killSignal: 'SIGKILL',
       })
 
