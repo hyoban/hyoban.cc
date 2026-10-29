@@ -165,7 +165,6 @@
     <string name="section_credits">Thanks</string>
     <string name="credit_mantou">Mantou</string>
     <string name="credit_mantou_note">The cat the app’s icon is drawn from</string>
-    <string name="credit_flclash_note">This app’s design draws on FlClash</string>
     <string name="action_view">View</string>
     <string name="media_position">%1$s, %2$d of %3$d</string>
     <string name="label_today">Today</string>

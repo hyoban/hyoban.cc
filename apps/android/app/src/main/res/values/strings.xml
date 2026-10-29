@@ -164,7 +164,6 @@
     <string name="section_credits">致谢</string>
     <string name="credit_mantou">馒头</string>
     <string name="credit_mantou_note">App 的图标画的就是这只猫</string>
-    <string name="credit_flclash_note">这个 App 的界面设计参考了 FlClash</string>
     <string name="action_view">查看</string>
     <string name="media_position">%1$s，第 %2$d 个，共 %3$d 个</string>
     <string name="label_today">今天</string>
