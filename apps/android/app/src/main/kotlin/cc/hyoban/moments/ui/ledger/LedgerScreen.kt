@@ -218,10 +218,10 @@ private fun EmptyLedger(onImport: () -> Unit, onNew: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(Space.l),
     ) {
-        Text(stringResource(R.string.ledger_empty_title), style = AppTheme.typography.titleLarge, textAlign = TextAlign.Center)
+        Text(stringResource(R.string.ledger_empty_title), style = AppTheme.typography.title, textAlign = TextAlign.Center)
         Text(
             stringResource(R.string.ledger_empty_body),
-            style = AppTheme.typography.bodyMedium,
+            style = AppTheme.typography.body,
             color = AppTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
@@ -317,8 +317,8 @@ private fun MonthTotals(month: String, expense: Long, income: Long, currency: St
     val (name, year) = formatMonth("$month-01")
     Column(Modifier.fillMaxWidth().padding(start = Space.l + Space.xs, end = Space.l + Space.xs, top = Space.xl).semantics(mergeDescendants = true) { heading() }) {
         Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
-            Text(name, style = AppTheme.typography.headlineSmall)
-            Text(year, style = AppTheme.typography.titleMedium, color = AppTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = Space.xxs))
+            Text(name, style = AppTheme.typography.titlePage)
+            Text(year, style = AppTheme.typography.titleSmall, color = AppTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = Space.xxs))
         }
         Text(
             listOf(
@@ -326,7 +326,7 @@ private fun MonthTotals(month: String, expense: Long, income: Long, currency: St
                 stringResource(R.string.ledger_income_short, money(income, currency)),
                 stringResource(R.string.ledger_balance_short, money(income - expense, currency)),
             ).joinToString(" "),
-            style = AppTheme.typography.bodyMedium,
+            style = AppTheme.typography.body,
             color = AppTheme.colorScheme.onSurfaceVariant,
         )
     }
@@ -345,11 +345,11 @@ private fun AssetsView(ledger: Ledger, currency: String, nav: LedgerNav) {
                 .padding(start = columns.margin, end = columns.margin, bottom = LocalBottomClearance.current + LocalFabClearance.current + Space.xl),
         ) {
             Column(Modifier.padding(start = Space.gutter + Space.l, end = Space.gutter, top = Space.xl).semantics(mergeDescendants = true) {}) {
-                Text(stringResource(R.string.ledger_net_assets), style = AppTheme.typography.labelLarge, color = AppTheme.colorScheme.onSurfaceVariant)
-                Text(money(assets.net, currency), style = AppTheme.typography.displaySmall, modifier = Modifier.testTag("net_assets"))
+                Text(stringResource(R.string.ledger_net_assets), style = AppTheme.typography.label, color = AppTheme.colorScheme.onSurfaceVariant)
+                Text(money(assets.net, currency), style = AppTheme.typography.numDisplay, modifier = Modifier.testTag("net_assets"))
                 Text(
                     stringResource(R.string.ledger_assets_line, money(assets.held, currency), money(assets.owed, currency)),
-                    style = AppTheme.typography.bodyMedium,
+                    style = AppTheme.typography.body,
                     color = AppTheme.colorScheme.onSurfaceVariant,
                 )
             }

@@ -1,5 +1,7 @@
 package cc.hyoban.moments.ui.trips
 
+import cc.hyoban.moments.ui.design.emphasized
+
 import cc.hyoban.moments.ui.design.AppIcons
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -437,7 +439,7 @@ private fun PlayerCard(
                     )
                     Text(
                         "${index + 1} / $count",
-                        style = AppTheme.typography.labelMedium.copy(fontFeatureSettings = "tnum"),
+                        style = AppTheme.typography.caption.copy(fontFeatureSettings = "tnum"),
                         color = AppTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.clearAndSetSemantics { },
                     )
@@ -454,7 +456,7 @@ private fun PlayerCard(
 private fun IntroCard(trip: TripRecord, playback: TripPlayback, covers: List<MomentMedia>, urls: MediaUrls, photoHeight: Dp, expanded: Boolean) {
     Column(verticalArrangement = Arrangement.spacedBy(Space.m)) {
         Column(Modifier.padding(horizontal = Space.xs)) {
-            Text(trip.title, style = AppTheme.typography.headlineSmallEmphasized, modifier = Modifier.semantics { heading() })
+            Text(trip.title, style = AppTheme.typography.titlePage, modifier = Modifier.semantics { heading() })
             TripSubhead(trip, playback.stops.size)
         }
         // A mosaic of the covers, the first larger, as the site's intro has.
@@ -476,10 +478,10 @@ private fun IntroCard(trip: TripRecord, playback: TripPlayback, covers: List<Mom
 @Composable
 private fun DayCard(slide: PlaybackSlide.Day) {
     Column(Modifier.padding(horizontal = Space.xs, vertical = Space.xs)) {
-        Text(stringResource(R.string.trip_day, slide.day), style = AppTheme.typography.labelLarge, color = AppTheme.colorScheme.primary)
-        Text(formatDay(slide.dateKey), style = AppTheme.typography.headlineSmallEmphasized, modifier = Modifier.semantics { heading() })
+        Text(stringResource(R.string.trip_day, slide.day), style = AppTheme.typography.label, color = AppTheme.colorScheme.primary)
+        Text(formatDay(slide.dateKey), style = AppTheme.typography.titlePage, modifier = Modifier.semantics { heading() })
         if (slide.places.isNotEmpty()) {
-            Text(slide.places.joinToString(" → "), style = AppTheme.typography.bodyMedium, color = AppTheme.colorScheme.onSurfaceVariant)
+            Text(slide.places.joinToString(" → "), style = AppTheme.typography.body, color = AppTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -555,7 +557,7 @@ private fun StopCard(slide: PlaybackSlide.Stop, controller: PlaybackController, 
             Box {
                 Text(
                     moment.text,
-                    style = AppTheme.typography.bodyMedium,
+                    style = AppTheme.typography.body,
                     maxLines = if (expanded) 4 else 2,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.fillMaxWidth().clip(AppTheme.shapes.medium)
@@ -596,8 +598,8 @@ private val PEEK = 56.dp
 private fun SummaryCard(trip: TripRecord, playback: TripPlayback, covers: List<MomentMedia>, urls: MediaUrls, expanded: Boolean) {
     Column(Modifier.padding(horizontal = Space.xs), verticalArrangement = Arrangement.spacedBy(Space.m)) {
         Column {
-            Text(stringResource(R.string.playback_look_back), style = AppTheme.typography.labelLarge, color = AppTheme.colorScheme.primary)
-            Text(trip.title, style = AppTheme.typography.headlineSmallEmphasized, modifier = Modifier.semantics { heading() })
+            Text(stringResource(R.string.playback_look_back), style = AppTheme.typography.label, color = AppTheme.colorScheme.primary)
+            Text(trip.title, style = AppTheme.typography.titlePage, modifier = Modifier.semantics { heading() })
         }
         val days = cc.hyoban.moments.ui.format.daysBetween(trip.start, trip.end)
         val km = remember(playback) { playback.route.drivenKm() }.roundToInt()
@@ -633,9 +635,9 @@ private fun Tile(value: Int, unit: String) {
     Column(Modifier.clearAndSetSemantics { contentDescription = "$value $unit" }) {
         Text(
             shown.value.roundToInt().toString(),
-            style = AppTheme.typography.displaySmallEmphasized.copy(fontFeatureSettings = "tnum"),
+            style = AppTheme.typography.numDisplay.emphasized.copy(fontFeatureSettings = "tnum"),
         )
-        Text(unit, style = AppTheme.typography.labelMedium, color = AppTheme.colorScheme.onSurfaceVariant)
+        Text(unit, style = AppTheme.typography.caption, color = AppTheme.colorScheme.onSurfaceVariant)
     }
 }
 

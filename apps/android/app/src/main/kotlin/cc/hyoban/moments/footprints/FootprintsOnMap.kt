@@ -148,7 +148,7 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
             // Its name, and the way to how it records, as the place sheet has its name and the way there.
             item {
                 Row(Modifier.fillMaxWidth().padding(start = Space.gutter + Space.l, end = Space.gutter), verticalAlignment = Alignment.CenterVertically) {
-                    Text(stringResource(R.string.footprints_title), Modifier.weight(1f).semantics { heading() }, style = AppTheme.typography.titleLarge)
+                    Text(stringResource(R.string.footprints_title), Modifier.weight(1f).semantics { heading() }, style = AppTheme.typography.title)
                     IconButton(onClick = { expanded = false; reopen = true; onSettings() }, modifier = Modifier.testTag("footprint_settings")) {
                         Icon(AppIcons.Settings, contentDescription = stringResource(R.string.footprint_settings_title))
                     }

@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto'
 import { readdirSync, readFileSync } from 'node:fs'
 import { DatabaseSync } from 'node:sqlite'
 
-import { listJsonFiles, readJson } from '../../../src/data/store.ts'
+import { readJson, readMomentRecords, readTripRecords } from '../../../src/data/store.ts'
 import { buildImportSql } from '../src/import.ts'
 import { handle } from '../src/index.ts'
 
@@ -13,12 +13,12 @@ const migrations = new URL('../migrations/', import.meta.url)
 
 export const token = 'test-token'
 
-/** The repository's data/, as the import takes it. */
+/** The repository's data/, in the first shape whichever layout it is in, as the import takes it. */
 export const snapshot = {
   manifest: readJson('manifest.json'),
   places: readJson('places.json'),
-  trips: listJsonFiles('trips').map((file) => readJson(file)),
-  moments: listJsonFiles('moments').map((file) => readJson(file)),
+  trips: readTripRecords(),
+  moments: readMomentRecords().map(({ record }) => record),
   routes: readJson('routes.json'),
 }
 

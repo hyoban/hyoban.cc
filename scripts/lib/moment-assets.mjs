@@ -1,5 +1,7 @@
-import { writeFile } from 'node:fs/promises'
+import { readFile, writeFile } from 'node:fs/promises'
 import { basename, join } from 'node:path'
+
+import { momentToEntry } from '@hyoban/data-spec/entry'
 
 import { dataRoot, readMomentRecords as readRecords } from '../../src/data/store.ts'
 
@@ -83,9 +85,35 @@ export async function readMomentRecords() {
   })
 }
 
-/** Writes a Moment record back where it was read from, as the app would. */
+/**
+ * Writes a Moment record back where it was read from, as the app would: as it is in the first
+ * layout, or into its entry, its media taking the Moment's and the rest of the entry kept.
+ */
 export async function writeMomentRecord(record, path) {
-  await writeFile(path, `${JSON.stringify(record, null, 2)}\n`)
+  if (!path.includes('/entries/')) {
+    await writeFile(path, `${JSON.stringify(record, null, 2)}\n`)
+    return
+  }
+
+  const entry = JSON.parse(await readFile(path, 'utf8'))
+  const { media } = momentToEntry(record).parts
+  const parts = { ...entry.parts }
+
+  if (media) {
+    // Each photo keeps the point the entry had for it.
+    const points = new Map((entry.parts.media?.items ?? []).map((item) => [item.uid, item.point]))
+    const items = media.items.map((item) =>
+      points.get(item.uid) ? { ...item, point: points.get(item.uid) } : item,
+    )
+    parts.media = { ...entry.parts.media, items }
+  } else {
+    delete parts.media
+  }
+
+  await writeFile(
+    path,
+    `${JSON.stringify({ ...entry, parts, updatedAt: record.updatedAt }, null, 2)}\n`,
+  )
 }
 
 export function getReferencedAssetFiles(record) {

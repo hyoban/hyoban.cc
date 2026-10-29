@@ -318,15 +318,15 @@ private fun ChoiceCard(
         ) {
             when (pick) {
                 is PlaceChoice.Known -> {
-                    Text(stringResource(R.string.label_known_place), style = AppTheme.typography.labelLarge, color = AppTheme.colorScheme.onSurfaceVariant)
-                    Text(places[pick.id]?.name ?: pick.id, style = AppTheme.typography.headlineSmall, modifier = Modifier.testTag("chosen_place"))
+                    Text(stringResource(R.string.label_known_place), style = AppTheme.typography.label, color = AppTheme.colorScheme.onSurfaceVariant)
+                    Text(places[pick.id]?.name ?: pick.id, style = AppTheme.typography.titlePage, modifier = Modifier.testTag("chosen_place"))
                     places[pick.id]?.let { known ->
                         KindChips(pick.kind ?: PlaceKind.of(known.kind), onKind)
                         NearbyChips(known.fix(), pick.id, places, landmarks, onKnown, onLandmark)
                     }
                 }
                 is PlaceChoice.New -> {
-                    Text(stringResource(R.string.place_new_here), style = AppTheme.typography.labelLarge, color = AppTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.place_new_here), style = AppTheme.typography.label, color = AppTheme.colorScheme.onSurfaceVariant)
                     OutlinedTextField(
                         value = name,
                         onValueChange = onName,
@@ -342,7 +342,7 @@ private fun ChoiceCard(
                     NearbyChips(pick.fix, null, places, landmarks, onKnown, onLandmark)
                 }
                 PlaceChoice.None -> {
-                    Text(stringResource(R.string.place_drag_hint), style = AppTheme.typography.bodyLarge, color = AppTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.place_drag_hint), style = AppTheme.typography.bodyReading, color = AppTheme.colorScheme.onSurfaceVariant)
                 }
             }
             Row(verticalAlignment = Alignment.CenterVertically) {

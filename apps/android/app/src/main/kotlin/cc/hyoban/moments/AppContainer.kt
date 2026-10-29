@@ -49,13 +49,13 @@ class AppContainer(context: Context) {
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     val settings = Settings(context)
-    /** GPS tracks stay on this phone, outside API sync and publishing. */
+    /** GPS tracks stay on this phone, private; only the spans made public publish, simplified. */
     val footprints = cc.hyoban.moments.footprints.FootprintStore(context)
     val footprintDiagnostics = cc.hyoban.moments.footprints.FootprintDiagnostics(
         File(context.noBackupFilesDir, "footprint-diagnostics"), scope,
     )
     val connectionRules = cc.hyoban.moments.footprints.ConnectionRulesStore(context)
-    /** The ledger stays on this phone, outside API sync, publishing and Android's backup. */
+    /** The ledger stays on this phone, outside API sync and Android's backup; only its public bills publish. */
     val ledger = cc.hyoban.moments.ledger.LedgerStore(context)
 
     // Directories of their own: `api/` the copy of what the API serves, `local/` the
@@ -64,7 +64,9 @@ class AppContainer(context: Context) {
     // that is left as it was.
     val localStore = DataStore(File(context.filesDir, "local"))
     private val api = MomentsApi(baseUrl = { settings.apiUrl.value }, token = { settings.apiToken.value })
-    val repository = MomentsRepository(DataStore(File(context.filesDir, "api")), api, local = localStore, writer = api, showTech = settings.showTech)
+    val repository = MomentsRepository(DataStore(File(context.filesDir, "api")), api, local = localStore, writer = api, showTech = settings.showTech,
+        outside = cc.hyoban.moments.data.store.PhoneOutside(ledger, footprints),
+    )
     val mediaUrls = MediaUrls { settings.assetOrigin.value }
     /** Places by name and around a point, for a new Moment's place. */
     val placeSearch = PlaceSearch(BuildConfig.PLACE_SEARCH_URL)
@@ -80,6 +82,12 @@ class AppContainer(context: Context) {
         // Routes were once kept per trip from the site's trip pages, under routes/.
         File(context.filesDir, "routes").takeIf { it.isDirectory }?.deleteRecursively()
         scope.launch { ledger.load() }
+        // A bill or a span going public, or private again, is a change to publish too.
+        scope.launch {
+            kotlinx.coroutines.flow.combine(ledger.ledger, footprints.revision) { _, _ -> }.collect {
+                withContext(Dispatchers.IO) { repository.noteOutside() }
+            }
+        }
         scope.launch {
             repository.load()
             routes.load()

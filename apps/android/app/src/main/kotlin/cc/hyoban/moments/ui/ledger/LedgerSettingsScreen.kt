@@ -275,7 +275,7 @@ private fun BookDialog(book: Book, canDelete: Boolean, onDismiss: () -> Unit, on
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(Space.s)) {
                 OutlinedTextField(name, { name = it }, label = { Text(stringResource(R.string.ledger_book_name)) }, singleLine = true)
-                Text(stringResource(R.string.ledger_book_currency), style = AppTheme.typography.labelLarge)
+                Text(stringResource(R.string.ledger_book_currency), style = AppTheme.typography.label)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.s)) {
                     (COMMON_CURRENCIES.take(8) + book.currency).distinct().forEach { code ->
                         FilterChip(selected = currency == code, onClick = { currency = code }, label = { Text(code) })

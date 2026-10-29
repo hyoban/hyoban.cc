@@ -1,5 +1,5 @@
 {
-  "$id": "https://hyoban.cc/data/schema/v2/moment.schema.json",
+  "$id": "https://hyoban.cc/data/schema/v3/moment.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "properties": {

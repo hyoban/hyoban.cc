@@ -6,7 +6,8 @@ import { pushData } from './lib/data-sync.mjs'
 // pnpm data:push [--local] [--dry-run] [--place <id>]... <record>...
 //
 // Writes records from data/ into the API's database without removing anything: each
-// Moment or trip file given (data/moments/…/<uid>.json, data/trips/<id>.json), the
+// Moment, trip, entry or collection file given (data/moments/…/<uid>.json,
+// data/trips/<id>.json, data/entries/…/<uid>.json, data/collections/<key>.json), the
 // places they name, and any --place. For what was written outside the API, like a Moment
 // from the create-moment skill. The deployed database by default; --local writes the
 // one `wrangler dev` uses, and --dry-run only writes the SQL under .artifacts/import.
@@ -34,7 +35,15 @@ if (pushed.built !== undefined) {
 }
 
 function parseArguments(argv) {
-  const options = { moments: [], trips: [], places: [], local: false, dryRun: false }
+  const options = {
+    moments: [],
+    trips: [],
+    entries: [],
+    collections: [],
+    places: [],
+    local: false,
+    dryRun: false,
+  }
 
   for (let index = 0; index < argv.length; index += 1) {
     const argument = argv[index]
@@ -53,15 +62,26 @@ function parseArguments(argv) {
         options.moments.push(file)
       } else if (/^trips\/[a-z0-9-]+\.json$/.test(file)) {
         options.trips.push(file)
+      } else if (/^entries\/\d{4}\/\d{2}\/[0-9A-HJKMNP-TV-Z]{26}\.json$/.test(file)) {
+        options.entries.push(file)
+      } else if (/^collections\/[a-z0-9-]+\.json$/.test(file)) {
+        options.collections.push(file)
       } else {
-        throw new Error(`Not a Moment or trip under data/: ${argument}`)
+        throw new Error(`Not a Moment, trip, entry or collection under data/: ${argument}`)
       }
     }
   }
 
-  if (options.moments.length + options.trips.length + options.places.length === 0) {
+  if (
+    options.moments.length +
+      options.trips.length +
+      options.entries.length +
+      options.collections.length +
+      options.places.length ===
+    0
+  ) {
     throw new Error(
-      'Usage: pnpm data:push [--local] [--dry-run] [--place <id>]... <data/moments/…/<uid>.json | data/trips/<id>.json>...',
+      'Usage: pnpm data:push [--local] [--dry-run] [--place <id>]... <data/moments/…/<uid>.json | data/trips/<id>.json | data/entries/…/<uid>.json | data/collections/<key>.json>...',
     )
   }
 

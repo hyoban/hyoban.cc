@@ -1,5 +1,7 @@
 package cc.hyoban.moments.ui.feed
 
+import cc.hyoban.moments.ui.design.emphasized
+
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.theme.Corners
 import cc.hyoban.moments.ui.theme.tokens
@@ -152,7 +154,7 @@ private fun OptionChip(tag: String, option: Int?, selected: Int?, label: @Compos
     FilterChip(
         selected = option == selected,
         onClick = { onSelect(option) },
-        label = { Text(label(option), style = if (option == selected) AppTheme.typography.labelLargeEmphasized else AppTheme.typography.labelLarge) },
+        label = { Text(label(option), style = if (option == selected) AppTheme.typography.label.emphasized else AppTheme.typography.label) },
         // The chosen one checked, as Material 3 has a selected filter chip.
         leadingIcon = if (option == selected) {
             { Icon(AppIcons.Check, contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize)) }

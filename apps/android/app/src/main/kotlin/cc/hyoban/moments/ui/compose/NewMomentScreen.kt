@@ -224,6 +224,8 @@ fun NewMomentScreen(
     var people by rememberSaveable { mutableStateOf(originalFood?.bill?.people?.toString().orEmpty()) }
     val food = foodOf(dishes, verdict, amount, people, originalFood)
     var topic by rememberSaveable { mutableStateOf(original?.topic) }
+    /** Private: kept on the phone and in the API for its owner, never on the site. */
+    var private by rememberSaveable { mutableStateOf(original?.hidden ?: false) }
     val openedAt = remember { OffsetDateTime.now() }
     var chosenTime by remember { mutableStateOf(originalTime) }
     var chosenPlace by remember { mutableStateOf(originalPlace) }
@@ -372,7 +374,7 @@ fun NewMomentScreen(
     val momentChanged = original == null ||
         text != original.text || photos != originalMedia.keys.toList() || utility.intersect(photos.toSet()) != originalUtility ||
         chosenTime != originalTime || ((chosenPlace as? PlaceChoice.Known)?.copy(kind = null) ?: chosenPlace) != originalPlace || food != originalFood ||
-        topic != original.topic
+        topic != original.topic || private != original.hidden
     // What leaving would lose: anything written, or, for a Moment being changed, any change.
     val changed = if (original == null) (withMoment && (written || food != null || topic != null)) || billWritten else momentChanged || newKind != null
     val leave = { if (changed) confirmingDiscard = true else onBack() }
@@ -390,7 +392,7 @@ fun NewMomentScreen(
             try {
                 withContext(NonCancellable) {
                     val moment = if (withMoment) {
-                        val (moment, newPlace) = buildMoment(context, container, text, photos, utility, stills, infos, time, place, food, topic, original, originalMedia)
+                        val (moment, newPlace) = buildMoment(context, container, text, photos, utility, stills, infos, time, place, food, topic, private, original, originalMedia)
                         when {
                             original == null -> container.addLocal(moment, newPlace)
                             momentChanged -> container.updateLocal(moment, newPlace)
@@ -475,7 +477,7 @@ fun NewMomentScreen(
                             value = text,
                             onValueChange = { text = it },
                             placeholder = { Text(stringResource(R.string.hint_moment_text)) },
-                            textStyle = AppTheme.typography.bodyLarge,
+                            textStyle = AppTheme.typography.bodyReading,
                             minLines = 5,
                             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Default),
                             isError = emptyError,
@@ -564,6 +566,13 @@ fun NewMomentScreen(
                     }
                     SegmentedGroup(stringResource(R.string.section_when_where), stringResource(note), listOf(whenRow, whereRow))
                     TopicGroup(topic) { topic = it }
+                    SegmentedGroup(
+                        null,
+                        stringResource(R.string.moment_private_note),
+                        listOf { shapes ->
+                            cc.hyoban.moments.ui.settings.SwitchRow(private, AppIcons.EyeOff, stringResource(R.string.visibility_private), "moment_private", shapes) { private = !private }
+                        },
+                    )
                     FoodGroup(
                         dishes = dishes,
                         onDishes = { dishes = it },
@@ -1026,6 +1035,7 @@ private suspend fun buildMoment(
     place: PlaceChoice,
     food: MomentFood?,
     topic: String?,
+    private: Boolean,
     original: MomentRecord? = null,
     originalMedia: Map<Uri, MomentMedia> = emptyMap(),
 ): Pair<MomentRecord, Pair<String, Place>?> {
@@ -1071,7 +1081,7 @@ private suspend fun buildMoment(
         is PlaceChoice.New -> listOfNotNull(newPlace?.first)
         PlaceChoice.None -> emptyList()
     }
-    val moment = original?.copy(occurredAt = stamp(time), places = placeIds, text = text.trim(), media = media, food = food, topic = topic, updatedAt = now)
+    val moment = original?.copy(occurredAt = stamp(time), places = placeIds, text = text.trim(), media = media, food = food, topic = topic, hidden = private, updatedAt = now)
         ?: MomentRecord(
             uid = Ulid.next(),
             occurredAt = stamp(time),
@@ -1079,6 +1089,7 @@ private suspend fun buildMoment(
             text = text.trim(),
             media = media,
             food = food,
+            hidden = private,
             topic = topic,
             createdAt = now,
             updatedAt = now,

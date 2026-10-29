@@ -261,3 +261,44 @@ test('measures great-circle distance in kilometres', () => {
   assert.ok(distance > 140 && distance < 160, `unexpected distance ${distance}`)
   assert.equal(getDistanceKm(hefei, hefei), 0)
 })
+
+test('a leg a public track covers takes what was recorded over the route', () => {
+  const leave = '2026-05-01T09:00:00+08:00'
+  const arrive = '2026-05-01T12:00:00+08:00'
+  const seconds = (at) => Date.parse(at) / 1000
+  const recorded = [
+    [117.3, 31.85, seconds(leave) + 60],
+    [118, 31.95, seconds(leave) + 3600],
+    [118.7, 32.05, seconds(arrive) - 60],
+  ]
+  const moments = [
+    { dateKey: '2026-05-01', id: 'leave', locations: [hefei], occurredAt: leave },
+    { dateKey: '2026-05-01', id: 'arrive', locations: [nanjing], occurredAt: arrive },
+    { dateKey: '2026-05-02', id: 'untimed', locations: [rizhao], occurredAt: '2026-05-02' },
+  ]
+  const route = {
+    coordinates: [
+      [117.2, 31.8],
+      [118.8, 32.1],
+    ],
+    distance: 170_000,
+  }
+  const trip = buildTrip(
+    { end: '2026-05-02', id: 'trip', start: '2026-05-01', title: 'Trip' },
+    moments,
+    {
+      resolveLocation: resolve,
+      routes: { [getLegKey(hefei, nanjing)]: route },
+      tracks: [{ segments: [{ coordinates: [[0, 0, 0], ...recorded.toReversed()] }] }],
+    },
+  )
+
+  assert.equal(trip.legs[0].tracked, true)
+  assert.deepEqual(
+    trip.legs[0].route.coordinates,
+    recorded.map(([longitude, latitude]) => [longitude, latitude]),
+  )
+  assert.equal(trip.legs[0].route.duration, 3 * 3600)
+  // A day alone can't be placed on the track, so that leg keeps what it had.
+  assert.equal(trip.legs[1].tracked, undefined)
+})

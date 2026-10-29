@@ -26,8 +26,12 @@ const sql = buildImportSql(
   {
     manifest: readJson('manifest.json', dataRoot),
     places: /** @type {Record<string, unknown>} */ (readJson('places.json', dataRoot)),
+    // Either layout, or both while a script still writes the first: each record in its own shape.
     trips: listJsonFiles('trips', dataRoot).map((file) => readJson(file, dataRoot)),
     moments: listJsonFiles('moments', dataRoot).map((file) => readJson(file, dataRoot)),
+    entries: listJsonFiles('entries', dataRoot).map((file) => readJson(file, dataRoot)),
+    collections: listJsonFiles('collections', dataRoot).map((file) => readJson(file, dataRoot)),
+    tracks: listJsonFiles('tracks', dataRoot).map((file) => readJson(file, dataRoot)),
     routes: /** @type {Record<string, unknown>} */ (readJson('routes.json', dataRoot)),
   },
   new Date().toISOString().replace(/\.\d{3}Z$/, 'Z'),

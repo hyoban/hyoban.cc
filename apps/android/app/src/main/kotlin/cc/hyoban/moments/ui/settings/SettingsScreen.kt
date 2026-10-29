@@ -171,7 +171,7 @@ fun SettingsScreen(
                                     onClick = onFootprints,
                                     shapes = shapes,
                                     colors = segmentColors(),
-                                    leadingContent = { Icon(AppIcons.Route, contentDescription = null) },
+                                    leadingContent = { Icon(AppIcons.Footprints, contentDescription = null) },
                                     modifier = Modifier.testTag("footprints"),
                                 ) { Text(stringResource(R.string.footprints_view_on_map)) }
                             },
@@ -231,7 +231,7 @@ private fun SettingRow(row: Row, shapes: ListItemShapes, onClick: () -> Unit) {
         },
         leadingContent = { Icon(row.icon, contentDescription = null) },
         trailingContent = if (setting.isDefault) {
-            { Text(stringResource(R.string.setting_is_default), style = AppTheme.typography.labelMedium) }
+            { Text(stringResource(R.string.setting_is_default), style = AppTheme.typography.caption) }
         } else {
             null
         },

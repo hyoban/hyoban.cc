@@ -300,7 +300,7 @@ fun MediaViewer(
                     }
                 }
                 if (media.size > 1) {
-                    Text("${pager.currentPage + 1} / ${media.size}", color = MediaOverlay.content, style = AppTheme.typography.titleMedium)
+                    Text("${pager.currentPage + 1} / ${media.size}", color = MediaOverlay.content, style = AppTheme.typography.titleSmall)
                 }
                 Spacer(Modifier.weight(1f))
                 // The one shown, fetched first when it's the site's, the spinner in its place meanwhile.
@@ -494,8 +494,8 @@ private fun InfoTile(text: String, label: String? = null) {
         Modifier.fillMaxWidth().clip(AppTheme.shapes.extraSmall).background(LocalSurfaceLevel.current.raised.fill()).padding(Space.m),
         verticalArrangement = Arrangement.spacedBy(Space.xxs),
     ) {
-        label?.let { Text(it, style = AppTheme.typography.labelMedium, color = AppTheme.colorScheme.onSurfaceVariant) }
-        Text(text, style = AppTheme.typography.bodyMedium)
+        label?.let { Text(it, style = AppTheme.typography.caption, color = AppTheme.colorScheme.onSurfaceVariant) }
+        Text(text, style = AppTheme.typography.body)
     }
 }
 
@@ -522,7 +522,7 @@ private fun ViewerLiveBadge(state: LiveMotionState, modifier: Modifier = Modifie
         } else {
             Spinner(Modifier.size(16.dp), color = MediaOverlay.content)
         }
-        Text(stringResource(R.string.label_live), color = MediaOverlay.content, style = AppTheme.typography.labelMedium)
+        Text(stringResource(R.string.label_live), color = MediaOverlay.content, style = AppTheme.typography.caption)
     }
 }
 
@@ -646,9 +646,9 @@ private fun InfoContent(
                 .padding(horizontal = Space.xs).testTag("info_day"),
             verticalArrangement = Arrangement.spacedBy(Space.xxs),
         ) {
-            Text(formatDay(moment.occurredAt), style = AppTheme.typography.headlineSmall)
+            Text(formatDay(moment.occurredAt), style = AppTheme.typography.titlePage)
             formatTime(moment.occurredAt)?.let {
-                Text(it, style = AppTheme.typography.titleMedium, color = AppTheme.colorScheme.onSurfaceVariant)
+                Text(it, style = AppTheme.typography.titleSmall, color = AppTheme.colorScheme.onSurfaceVariant)
             }
         }
         if (moment.places.isNotEmpty()) {
@@ -662,7 +662,7 @@ private fun InfoContent(
             }
         }
         if (moment.text.isNotBlank()) {
-            Text(moment.text, style = AppTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = Space.xs))
+            Text(moment.text, style = AppTheme.typography.bodyReading, modifier = Modifier.padding(horizontal = Space.xs))
         }
         if (media.alt.isNotBlank() || (media.width != null && media.height != null)) {
             InfoCard(AppIcons.Image, stringResource(R.string.section_photo)) {

@@ -201,7 +201,7 @@ fun VideoControls(state: VideoState, visible: Boolean, modifier: Modifier = Modi
             }
             Text(
                 formatClock(if (dragging) (dragged * duration).toLong() else progress.currentPositionMs),
-                style = AppTheme.typography.labelMedium,
+                style = AppTheme.typography.caption,
                 color = MediaOverlay.content,
             )
             Scrubber(
@@ -218,7 +218,7 @@ fun VideoControls(state: VideoState, visible: Boolean, modifier: Modifier = Modi
                 trackColor = MediaOverlay.contentDisabled,
                 modifier = Modifier.weight(1f).onSizeChanged { if (it.width > 0) bar.updateTotalTickCount(it.width) },
             )
-            Text(formatClock(progress.durationMs.coerceAtLeast(0L)), style = AppTheme.typography.labelMedium, color = MediaOverlay.contentVariant)
+            Text(formatClock(progress.durationMs.coerceAtLeast(0L)), style = AppTheme.typography.caption, color = MediaOverlay.contentVariant)
             Tooltip(stringResource(if (mute.showMuted) R.string.action_unmute else R.string.action_mute)) {
                 IconButton(onClick = mute::onClick, enabled = mute.isEnabled) {
                     Icon(

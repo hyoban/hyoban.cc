@@ -185,7 +185,7 @@ fun StatsView(ledger: Ledger, books: Set<String>, currency: String, nav: LedgerN
             if (byDay.values.none { it > 0 }) {
                 Text(
                     stringResource(if (income) R.string.ledger_no_income else R.string.ledger_no_expense),
-                    style = AppTheme.typography.bodyMedium,
+                    style = AppTheme.typography.body,
                     color = AppTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth().padding(Space.xl),
@@ -274,7 +274,7 @@ private fun PeriodRow(label: String, mode: Span, onMode: (Span) -> Unit, onPrevi
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(Space.xs),
             ) {
-                Text(label, style = AppTheme.typography.titleMedium)
+                Text(label, style = AppTheme.typography.titleSmall)
                 Icon(AppIcons.CaretDown, contentDescription = null, modifier = Modifier.size(20.dp), tint = AppTheme.colorScheme.onSurfaceVariant)
             }
             DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
@@ -311,13 +311,13 @@ private fun Totals(summary: Summary, currency: String, average: Long?, compared:
                     R.string.ledger_balance to summary.balance,
                 ).forEach { (label, cents) ->
                     Column(Modifier.weight(1f).semantics(mergeDescendants = true) {}) {
-                        Text(stringResource(label), style = AppTheme.typography.labelMedium, color = AppTheme.colorScheme.onSurfaceVariant)
+                        Text(stringResource(label), style = AppTheme.typography.caption, color = AppTheme.colorScheme.onSurfaceVariant)
                         // A six-figure sum shrinks to fit its third rather than losing its cents.
                         Text(
                             money(cents, currency),
-                            style = AppTheme.typography.titleMedium,
+                            style = AppTheme.typography.titleSmall,
                             maxLines = 1,
-                            autoSize = TextAutoSize.StepBased(minFontSize = 11.sp, maxFontSize = AppTheme.typography.titleMedium.fontSize),
+                            autoSize = TextAutoSize.StepBased(minFontSize = 11.sp, maxFontSize = AppTheme.typography.titleSmall.fontSize),
                         )
                     }
                 }
@@ -337,7 +337,7 @@ private fun Totals(summary: Summary, currency: String, average: Long?, compared:
             }
             val average = average?.takeIf { summary.expense > 0 }?.let { stringResource(R.string.ledger_daily_average, money(it, currency)) }
             if (average != null || change != null) {
-                Text(line(average, change), style = AppTheme.typography.bodyMedium, color = AppTheme.colorScheme.onSurfaceVariant)
+                Text(line(average, change), style = AppTheme.typography.body, color = AppTheme.colorScheme.onSurfaceVariant)
             }
         }
     }
@@ -549,11 +549,11 @@ private fun Categories(
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     picked?.let { names[it] } ?: stringResource(if (income) R.string.ledger_kind_income else R.string.ledger_kind_expense),
-                    style = AppTheme.typography.labelMedium,
+                    style = AppTheme.typography.caption,
                     color = AppTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                 )
-                Text(money(picked?.let { slices[it].first } ?: sum, currency), style = AppTheme.typography.titleMedium, maxLines = 1)
+                Text(money(picked?.let { slices[it].first } ?: sum, currency), style = AppTheme.typography.titleSmall, maxLines = 1)
             }
         }
     }

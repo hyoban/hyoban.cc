@@ -20,7 +20,7 @@ Moment at the foot of its card, the rest in groups between the Moments of their 
 day's spending beside its date), and a banner where each trip begins. 地图 is the map, the
 trips listed in the sheet at its foot. 我 holds the changes waiting to be published, the
 ledger's month with the way into its bills, sums and accounts, and the settings, a page for
-each of their sections. The look follows the app's design system (the 「hyoban 应用设计系统」
+each of their sections. The look follows the app's design system (the 「这里 App 设计系统」
 artifact, mirrored in `ui/theme`): the site's warm greys, one blue for state, hairlines
 rather than shadows. It reads
 the API's public endpoints (`apps/api`) and keeps a copy under the app's `api/`
@@ -100,8 +100,10 @@ writes it, is split there into a live photo's still and video, which its page pl
 the phone until it is published; picked, the app asks whether motion photos go in as
 photos, their stills alone, which each one's options can change until it is saved; a video
 is copied whole, with its first frame beside it as its still), and its new places with ids of their own (`p-<ulid>`); no sync
-or change of API touches it. It is shown among the site's, marked 仅本机 (on this phone),
-and can be changed or deleted from its page.
+or change of API touches it. It is shown among the site's, marked 未发布 (unpublished),
+and can be changed or deleted from its page. A Moment can be made 私有 (private) where it is
+written: it is published for its owner's copy but never shown on the site, and the app shows
+it, a private one or one about tech saying 私有 in its faint line.
 
 With the API's token, set under 我 in 时刻与数据 (kept in a file of the app's that backups
 leave out), the site's Moments can be changed and deleted from their pages too. Nothing
@@ -356,8 +358,13 @@ and brought up to date from Frankfurter only when asked, the one request the led
 makes, with no bill in it; a rate of one's own can be set. 备份到文件 writes the whole
 ledger as JSON, which 从备份恢复 reads back; 导出 CSV writes the bills with iCost's columns.
 
-`ledger/LedgerStore` keeps it in `noBackupFilesDir/ledger.sqlite`, outside the API's sync,
-publishing and Android's backup, read whole after each change; `ledger/ICostImport`,
+`ledger/LedgerStore` keeps it in `noBackupFilesDir/ledger.sqlite`, outside the API's sync
+and Android's backup, read whole after each change. Bills are private: 我 → 记录项与公开
+(`moments://items`) makes a book's new bills public, and 记一笔's 公开 chip says so for one
+bill. A public expense or income publishes with 全部发布到网站 as what is public of it alone,
+its amount, kind, category and note (`data/store/Outside.kt`): a bill of a Moment as a part of
+that Moment, any other as an entry of its own; one made private again is taken off the site.
+发布更改 lists them under 账单; `ledger/ICostImport`,
 `ledger/Accounting` (balances, sums, refunds) and `ledger/Links` are plain Kotlin with tests
 in `LedgerTest`, which also reads a real export when `ICOST_EXPORT` names one. Not carried
 over from iCost: recurring bills, installments, savings plans, templates and photos on
@@ -380,6 +387,11 @@ page kept or sent. `ledger/Payments` reads the page's words, with fixtures in `P
 taken from `uiautomator dump`; `ledger/AutoBill` keeps the switch and posts the notification.
 
 ## Local footprints
+
+The footprints are private. A trip's page has 公开这段旅程的轨迹: on, a span following the
+trip's days is kept (`track_shares` in `footprints.sqlite`) and, at the next 全部发布到网站, its
+line goes out simplified to 30 m, a segment for each unbroken stretch, and the site draws the
+trip's legs from it; off, it is taken off the site. 记录项与公开 counts the public spans.
 
 The map tab shows local GPS footprints alongside its places and published trip routes,
 using the same MapLibre map. 地图 → 足迹 opens a bottom panel for recording, choosing a

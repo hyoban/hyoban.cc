@@ -322,7 +322,7 @@ fun FeedScreen(
                             Modifier.fillMaxSize().background(LocalSurfaceLevel.current.raised.fill()).testTag("detail_placeholder"),
                             contentAlignment = Alignment.Center,
                         ) {
-                            Text(stringResource(R.string.label_pick_moment), color = AppTheme.colorScheme.onSurfaceVariant, style = AppTheme.typography.bodyLarge)
+                            Text(stringResource(R.string.label_pick_moment), color = AppTheme.colorScheme.onSurfaceVariant, style = AppTheme.typography.bodyReading)
                         }
                     }
                 }

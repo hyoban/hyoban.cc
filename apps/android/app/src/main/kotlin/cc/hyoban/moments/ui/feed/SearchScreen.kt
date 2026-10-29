@@ -1,5 +1,7 @@
 package cc.hyoban.moments.ui.feed
 
+import cc.hyoban.moments.ui.design.emphasized
+
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.design.SearchField
 import cc.hyoban.moments.ui.theme.cardBorder
@@ -133,7 +135,7 @@ fun SearchScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: ()
         }
         Text(
             status,
-            style = AppTheme.typography.labelLarge,
+            style = AppTheme.typography.label,
             color = AppTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(horizontal = Space.gutter + Space.l, vertical = Space.s).semantics { liveRegion = LiveRegionMode.Polite }.testTag("search_status"),
         )
@@ -177,7 +179,7 @@ private fun SearchResult(
     shapes: ListItemShapes,
     onClick: () -> Unit,
 ) {
-    val mark = SpanStyle(color = AppTheme.colorScheme.primary, fontWeight = AppTheme.typography.bodyLargeEmphasized.fontWeight)
+    val mark = SpanStyle(color = AppTheme.colorScheme.primary, fontWeight = AppTheme.typography.bodyReading.emphasized.fontWeight)
     val words = remember(moment.text) { moment.text.replace(Regex("\\s+"), " ").trim() }
     val inWords = words.contains(text, ignoreCase = true)
     // Why it was found when its words don't say: the first place, else the trip, that matches.

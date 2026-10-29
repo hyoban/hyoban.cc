@@ -79,6 +79,6 @@ fun VerdictBadge(verdict: FoodVerdict, modifier: Modifier = Modifier) {
         horizontalArrangement = Arrangement.spacedBy(Space.xs),
     ) {
         Icon(icon, contentDescription = null, tint = content, modifier = Modifier.size(18.dp))
-        Text(stringResource(verdictLabel(verdict)), style = AppTheme.typography.labelLarge, color = content, maxLines = 1)
+        Text(stringResource(verdictLabel(verdict)), style = AppTheme.typography.label, color = content, maxLines = 1)
     }
 }

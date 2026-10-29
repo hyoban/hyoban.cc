@@ -1,4 +1,15 @@
 import type { MomentRecord, TripRecord } from '@hyoban/data-spec'
+import {
+  entryToMoment,
+  getCollectionKey,
+  getPublicEntry,
+  isMarkEntry,
+  isMomentEntry,
+  mergeMomentIntoEntry,
+  type Collection,
+  type Entry,
+  type PublicTrack,
+} from '@hyoban/data-spec/entry'
 
 // How a record becomes a row: the columns each table looks things up by, beside the
 // record as written, and the SQL that writes it. Shared by the import, which writes SQL
@@ -11,24 +22,78 @@ export const REVISION = `(SELECT CAST(value AS INTEGER) FROM meta WHERE key = 'r
 export const BUMP_REVISION = `UPDATE meta SET value = CAST(value AS INTEGER) + 1 WHERE key = 'revision'`
 
 export type Value = string | number | null
-export type Table = 'moments' | 'places' | 'trips' | 'routes'
+export type Table = 'moments' | 'places' | 'trips' | 'routes' | 'tracks'
 
 export const KEYS: Record<Table, string> = {
   moments: 'uid',
   places: 'id',
   trips: 'id',
   routes: 'key',
+  tracks: 'uid',
 }
 
-export function momentRow(moment: MomentRecord, record: unknown = moment): Record<string, Value> {
+/** What sort of entry a row holds: a Moment the first shape has, a mark, or the rest. */
+export type EntryKind = 'moment' | 'mark' | 'entry'
+
+export function getEntryKind(entry: Entry): EntryKind {
+  return isMomentEntry(entry) ? 'moment' : isMarkEntry(entry) ? 'mark' : 'entry'
+}
+
+/**
+ * An entry's row, in both shapes: `record` is the Moment the first shape reads (as written,
+ * when it came as one), or the entry itself for one the first shape has none for; `shown`
+ * what the public sees.
+ */
+export function entryRow(
+  entry: Entry,
+  { record, trip }: { record?: unknown; trip?: string | undefined } = {},
+): Record<string, Value> {
+  const kind = getEntryKind(entry)
+  const shown = getPublicEntry(entry)
+
   return {
-    uid: moment.uid,
-    occurred_at: moment.occurredAt,
-    day: moment.occurredAt.slice(0, 10),
-    published: moment.published ? 1 : 0,
-    trip: moment.trip ?? null,
-    hidden: moment.hidden ? 1 : 0,
+    uid: entry.uid,
+    occurred_at: entry.at,
+    day: entry.at.slice(0, 10),
+    published: entry.published ? 1 : 0,
+    trip: trip ?? null,
+    hidden: entry.visibility === 'private' ? 1 : 0,
+    kind,
+    record: JSON.stringify(kind === 'moment' ? (record ?? entryToMoment(entry, trip)) : entry),
+    entry: JSON.stringify(entry),
+    shown: shown ? JSON.stringify(shown) : null,
+  }
+}
+
+/** A Moment's row, as the first shape writes one, over the entry it was. */
+export function momentRow(
+  moment: MomentRecord,
+  record: unknown = moment,
+  prior?: Entry,
+): Record<string, Value> {
+  return entryRow(mergeMomentIntoEntry(prior, moment), { record, trip: moment.trip })
+}
+
+/** A collection's row, with the trip the first shape reads; not shown when private. */
+export function collectionRow(collection: Collection, trip: TripRecord, record: unknown = trip) {
+  return {
+    id: getCollectionKey(collection),
+    start_date: collection.span.start.slice(0, 10),
+    end_date: collection.span.end.slice(0, 10),
+    uid: collection.uid,
     record: JSON.stringify(record),
+    collection: JSON.stringify(collection),
+    shown: collection.visibility === 'private' ? null : JSON.stringify(collection),
+  } satisfies Record<string, Value>
+}
+
+export function trackRow(track: PublicTrack): Record<string, Value> {
+  return {
+    uid: track.uid,
+    start_at: track.start,
+    end_at: track.end,
+    collection: track.collection ?? null,
+    record: JSON.stringify(track),
   }
 }
 
@@ -38,10 +103,6 @@ export function placeRow(id: string, record: unknown): Record<string, Value> {
 
 export function routeRow(key: string, record: unknown): Record<string, Value> {
   return { key, record: JSON.stringify(record) }
-}
-
-export function tripRow(trip: TripRecord, record: unknown = trip): Record<string, Value> {
-  return { id: trip.id, start_date: trip.start, end_date: trip.end, record: JSON.stringify(record) }
 }
 
 /**
@@ -54,10 +115,12 @@ export function upsertSql(table: Table, values: Record<string, string>) {
   const updates = Object.keys(columns)
     .filter((column) => column !== key)
     .map((column) => `${column} = excluded.${column}`)
+  // Either shape changing is a change.
+  const compared = ['record', 'entry', 'collection'].filter((column) => column in values)
 
   return `INSERT INTO ${table} (${Object.keys(columns).join(', ')}) VALUES (${Object.values(columns).join(', ')})
   ON CONFLICT (${key}) DO UPDATE SET ${updates.join(', ')}
-  WHERE ${table}.record IS NOT excluded.record OR ${table}.deleted_at IS NOT NULL`
+  WHERE ${compared.map((column) => `${table}.${column} IS NOT excluded.${column}`).join(' OR ')} OR ${table}.deleted_at IS NOT NULL`
 }
 
 /** The placeholders `?1`, `?2`… for a row's values, in order, for `upsertSql`. */

@@ -63,6 +63,7 @@ fun MeScreen(
     onLedger: (Int) -> Unit,
     onSection: (SettingsSection) -> Unit,
     onLedgerSettings: () -> Unit,
+    onItems: () -> Unit,
 ) {
     val pending by container.repository.pending.collectAsStateWithLifecycle()
     TabPage(stringResource(R.string.tab_me), tab = Preferences) {
@@ -84,6 +85,7 @@ fun MeScreen(
                         { shapes -> SectionRow(AppIcons.CloudSync, stringResource(R.string.settings_moments_data), "settings_moments", shapes) { onSection(SettingsSection.MOMENTS) } },
                         { shapes -> SectionRow(AppIcons.Map, stringResource(R.string.settings_map_footprints), "settings_map", shapes) { onSection(SettingsSection.MAP) } },
                         { shapes -> SectionRow(AppIcons.Receipt, stringResource(R.string.tab_ledger), "settings_ledger", shapes, onClick = onLedgerSettings) },
+                        { shapes -> SectionRow(AppIcons.Eye, stringResource(R.string.me_items), "settings_items", shapes, onClick = onItems) },
                         { shapes -> SectionRow(AppIcons.Info, stringResource(R.string.settings_about), "settings_about", shapes) { onSection(SettingsSection.ABOUT) } },
                     ),
                 )
@@ -114,12 +116,12 @@ private fun PublishCard(count: Int, onChanges: () -> Unit) {
     ) {
         Text(
             if (count > 0) pluralStringResource(R.plurals.count_changes, count, count) else stringResource(R.string.me_pending_none),
-            style = AppTheme.typography.titleMedium,
+            style = AppTheme.typography.titleSmall,
             modifier = Modifier.semantics { heading() },
         )
         Text(
             stringResource(if (count > 0) R.string.me_pending_note else R.string.me_synced_note),
-            style = AppTheme.typography.bodyMedium,
+            style = AppTheme.typography.body,
             color = AppTheme.colorScheme.onSurfaceVariant,
         )
         if (count > 0) {
@@ -155,7 +157,7 @@ private fun LedgerGroup(container: AppContainer, onLedger: (Int) -> Unit) {
                     verticalArrangement = Arrangement.spacedBy(Space.xs),
                 ) {
                     Text(stringResource(R.string.me_month_expense), style = AppTheme.typography.bodySmall, color = AppTheme.colorScheme.onSurfaceVariant)
-                    Text(money(month.expense, currency), style = AppTheme.typography.displayMedium)
+                    Text(money(month.expense, currency), style = AppTheme.typography.numDisplay)
                     Row(horizontalArrangement = Arrangement.spacedBy(Space.l)) {
                         Text(stringResource(R.string.ledger_income_short, money(month.income, currency)), style = AppTheme.typography.bodySmall, color = AppTheme.colorScheme.onSurfaceVariant)
                     }

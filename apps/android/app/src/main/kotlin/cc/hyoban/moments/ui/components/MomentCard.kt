@@ -107,13 +107,13 @@ fun MomentCard(
         ) {
             MomentSubhead(moment, places, trip, showDate, hidePlace)
             if (moment.text.isNotBlank()) {
-                Text(moment.text, style = AppTheme.typography.bodyLarge, maxLines = 8, overflow = TextOverflow.Ellipsis)
+                Text(moment.text, style = AppTheme.typography.bodyReading, maxLines = 8, overflow = TextOverflow.Ellipsis)
             }
             // What was eaten, under the words as the site has it: one line of secondary text.
             foodLine(moment.food)?.let { line ->
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
                     Icon(AppIcons.Food, contentDescription = null, tint = AppTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
-                    Text(line, style = AppTheme.typography.bodyMedium, color = AppTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(line, style = AppTheme.typography.body, color = AppTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
         }
@@ -131,10 +131,12 @@ fun MomentCard(
 fun MomentSubhead(moment: MomentRecord, places: Map<String, Place>, trip: TripRecord?, showDate: Boolean = false, hidePlace: String? = null) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
         val time = listOfNotNull(if (showDate) formatDate(moment.occurredAt) else null, formatTime(moment.occurredAt)).joinToString(" ")
-        val parts = listOfNotNull(time.ifEmpty { null }) + moment.places.filter { it != hidePlace }.map { places[it]?.name ?: it } + listOfNotNull(trip?.title)
+        // Private (hidden, or about tech) is said in the faint line itself, as the design has it.
+        val private = (moment.hidden || moment.topic == "tech").takeIf { it }?.let { stringResource(R.string.visibility_private) }
+        val parts = listOfNotNull(time.ifEmpty { null }) + moment.places.filter { it != hidePlace }.map { places[it]?.name ?: it } + listOfNotNull(trip?.title, private)
         Text(
             parts.joinToString("\u2003"),
-            style = AppTheme.typography.bodyMedium,
+            style = AppTheme.typography.body,
             color = AppTheme.colorScheme.onSurfaceVariant,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,

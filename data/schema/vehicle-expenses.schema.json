@@ -1,5 +1,5 @@
 {
-  "$id": "https://hyoban.cc/data/schema/v2/vehicle-expenses.schema.json",
+  "$id": "https://hyoban.cc/data/schema/v3/vehicle-expenses.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "properties": {

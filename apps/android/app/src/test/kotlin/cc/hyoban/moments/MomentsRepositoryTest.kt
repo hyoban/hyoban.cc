@@ -124,7 +124,8 @@ class MomentsRepositoryTest {
         api.put(moment("G", "2026-10-10", published = false))
         repository.refresh()
 
-        assertEquals(listOf("C", "E", "D", "A"), repository.moments.value.map { it.uid })
+        // F is private: the phone's to see, marked so.
+        assertEquals(listOf("C", "F", "E", "D", "A"), repository.moments.value.map { it.uid })
         assertEquals("moved to another month", repository.moment("C")?.text)
         assertEquals(2, api.calls, "four changes come in two pages")
         assertEquals(
@@ -135,27 +136,28 @@ class MomentsRepositoryTest {
 
         val restarted = repository()
         restarted.load()
-        assertEquals(listOf("C", "E", "D", "A"), restarted.moments.value.map { it.uid })
+        assertEquals(listOf("C", "F", "E", "D", "A"), restarted.moments.value.map { it.uid })
         assertEquals("南京", restarted.places.value["nanjing"]?.name)
     }
 
     @Test
-    fun `the Moments about tech are left out unless asked for, hidden ones always`() = runBlocking {
+    fun `the Moments about tech are left out unless asked for, private ones shown to the phone`() = runBlocking {
         api.put(moment("A", "2026-10-01"))
         api.put(moment("B", "2026-10-02", topic = "tech"))
         api.put(moment("C", "2026-10-03", topic = "tech", hidden = true))
+        api.put(moment("D", "2026-10-04", hidden = true))
         val repository = repository()
         repository.load()
         repository.refresh()
-        assertEquals(listOf("A"), repository.moments.value.map { it.uid })
+        assertEquals(listOf("D", "A"), repository.moments.value.map { it.uid })
         assertEquals(null, repository.moment("B"))
 
         repository.changeShowTech(true)
-        assertEquals(listOf("B", "A"), repository.moments.value.map { it.uid })
+        assertEquals(listOf("D", "C", "B", "A"), repository.moments.value.map { it.uid })
         assertEquals("B", repository.moment("B")?.uid)
 
         repository.changeShowTech(false)
-        assertEquals(listOf("A"), repository.moments.value.map { it.uid })
+        assertEquals(listOf("D", "A"), repository.moments.value.map { it.uid })
     }
 
     @Test

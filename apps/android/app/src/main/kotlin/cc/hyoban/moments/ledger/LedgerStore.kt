@@ -15,13 +15,15 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
 
 /**
- * The ledger on this phone alone: an SQLite database in `noBackupFilesDir`, outside the API's
- * sync, publishing and Android's backup, as the footprints are. What it holds is read whole
+ * The ledger on this phone: an SQLite database in `noBackupFilesDir`, outside the API's sync and
+ * Android's backup, as the footprints are. A bill is private unless its book says new bills are
+ * public or it says so itself; only then does what is public of it (its amount, kind, category
+ * and note) go out with 全部发布到网站, and [Txn.published] keeps what last went. What it holds is read whole
  * into [ledger] after each change, a few thousand bills being quick to read. Its own JSON
  * backup is the way to keep a copy elsewhere.
  */
 class LedgerStore(private val context: Context) : SQLiteOpenHelper(
-    context, File(context.noBackupFilesDir, "ledger.sqlite").absolutePath, null, 2,
+    context, File(context.noBackupFilesDir, "ledger.sqlite").absolutePath, null, 3,
 ) {
     private val _ledger = MutableStateFlow(Ledger())
     val ledger: StateFlow<Ledger> = _ledger.asStateFlow()
@@ -31,7 +33,7 @@ class LedgerStore(private val context: Context) : SQLiteOpenHelper(
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL("CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT)")
-        db.execSQL("CREATE TABLE books (id TEXT PRIMARY KEY, name TEXT NOT NULL, currency TEXT NOT NULL, position INTEGER NOT NULL, archived INTEGER NOT NULL)")
+        db.execSQL("CREATE TABLE books (id TEXT PRIMARY KEY, name TEXT NOT NULL, currency TEXT NOT NULL, position INTEGER NOT NULL, archived INTEGER NOT NULL, visibility TEXT NOT NULL DEFAULT 'private')")
         db.execSQL(
             "CREATE TABLE accounts (id TEXT PRIMARY KEY, name TEXT NOT NULL, kind TEXT NOT NULL, currency TEXT NOT NULL, opening INTEGER NOT NULL, " +
                 "counted INTEGER NOT NULL, archived INTEGER NOT NULL, note TEXT NOT NULL, position INTEGER NOT NULL)",
@@ -41,7 +43,8 @@ class LedgerStore(private val context: Context) : SQLiteOpenHelper(
             "CREATE TABLE txns (id TEXT PRIMARY KEY, book TEXT NOT NULL, kind TEXT NOT NULL, transfer TEXT NOT NULL, time INTEGER NOT NULL, offset INTEGER NOT NULL, " +
                 "amount INTEGER NOT NULL, currency TEXT NOT NULL, category TEXT, account TEXT, account_amount INTEGER, splits TEXT, to_account TEXT, to_amount INTEGER, " +
                 "fee INTEGER NOT NULL, fee_account TEXT, discount INTEGER NOT NULL, discount_account TEXT, note TEXT NOT NULL, tags TEXT NOT NULL, related TEXT, " +
-                "reimburse TEXT NOT NULL, excluded INTEGER NOT NULL, moment TEXT, place TEXT, trip TEXT, created INTEGER NOT NULL, updated INTEGER NOT NULL)",
+                "reimburse TEXT NOT NULL, excluded INTEGER NOT NULL, moment TEXT, place TEXT, trip TEXT, created INTEGER NOT NULL, updated INTEGER NOT NULL, " +
+                "visibility TEXT, published TEXT)",
         )
         db.execSQL("CREATE INDEX txns_time ON txns(time)")
         db.execSQL("CREATE TABLE rates (currency TEXT NOT NULL, day TEXT NOT NULL, per_cny REAL NOT NULL, PRIMARY KEY (currency, day))")
@@ -56,6 +59,12 @@ class LedgerStore(private val context: Context) : SQLiteOpenHelper(
                     db.update("txns", ContentValues().apply { put("note", note); put("tags", "") }, "id = ?", arrayOf(rows.getString(0)))
                 }
             }
+        }
+        // Books and bills became public or private, every one private until said otherwise.
+        if (oldVersion < 3) {
+            db.execSQL("ALTER TABLE books ADD COLUMN visibility TEXT NOT NULL DEFAULT 'private'")
+            db.execSQL("ALTER TABLE txns ADD COLUMN visibility TEXT")
+            db.execSQL("ALTER TABLE txns ADD COLUMN published TEXT")
         }
     }
 
@@ -78,8 +87,8 @@ class LedgerStore(private val context: Context) : SQLiteOpenHelper(
 
     private fun read(): Ledger {
         val db = readableDatabase
-        val books = db.rawQuery("SELECT id, name, currency, position, archived FROM books ORDER BY position, rowid", null).use { c ->
-            buildList { while (c.moveToNext()) add(Book(c.getString(0), c.getString(1), c.getString(2), c.getInt(3), c.getInt(4) != 0)) }
+        val books = db.rawQuery("SELECT id, name, currency, position, archived, visibility FROM books ORDER BY position, rowid", null).use { c ->
+            buildList { while (c.moveToNext()) add(Book(c.getString(0), c.getString(1), c.getString(2), c.getInt(3), c.getInt(4) != 0, c.getString(5))) }
         }
         val accounts = db.rawQuery("SELECT id, name, kind, currency, opening, counted, archived, note, position FROM accounts ORDER BY position, rowid", null).use { c ->
             buildList {
@@ -201,6 +210,11 @@ class LedgerStore(private val context: Context) : SQLiteOpenHelper(
     /** Sets several bills' links to Moments, places and trips at once. */
     suspend fun saveTxns(txns: List<Txn>) = write { db -> txns.forEach { db.replace("txns", it.values()) } }
 
+    /** Notes what of each bill the site now has, by id: its public part as JSON, or null when it has none. */
+    suspend fun markPublished(parts: Map<String, String?>) = write { db ->
+        parts.forEach { (id, part) -> db.update("txns", ContentValues().apply { put("published", part) }, "id = ?", arrayOf(id)) }
+    }
+
     private fun SQLiteDatabase.replace(table: String, values: ContentValues) {
         replaceOrThrow(table, null, values)
     }
@@ -244,6 +258,8 @@ private fun Cursor.txn(): Txn {
         trip = s("trip"),
         createdAt = l("created")!!,
         updatedAt = l("updated")!!,
+        visibility = s("visibility"),
+        published = s("published"),
     )
 }
 
@@ -263,6 +279,7 @@ private fun Txn.values() = ContentValues().apply {
     put("discount", discount); put("discount_account", discountAccount); put("note", note); put("tags", "")
     put("related", related); put("reimburse", reimburse.value); put("excluded", if (excluded) 1 else 0)
     put("moment", moment); put("place", place); put("trip", trip); put("created", createdAt); put("updated", updatedAt)
+    put("visibility", visibility); put("published", published)
 }
 
 private fun Account.values() = ContentValues().apply {
@@ -272,6 +289,7 @@ private fun Account.values() = ContentValues().apply {
 
 private fun Book.values() = ContentValues().apply {
     put("id", id); put("name", name); put("currency", currency); put("position", position); put("archived", if (archived) 1 else 0)
+    put("visibility", visibility)
 }
 
 private fun Category.values() = ContentValues().apply {

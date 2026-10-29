@@ -1,5 +1,11 @@
 package cc.hyoban.moments.ui.feed
 
+import cc.hyoban.moments.ui.format.formatDay
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.heading
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.width
+import cc.hyoban.moments.ui.theme.Rail
 import cc.hyoban.moments.ui.theme.tokens
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExitTransition
@@ -239,22 +245,56 @@ fun MomentFeed(
                             TripBanner(trip, count, onClick = { onTrip(trip.id) }, modifier = Modifier.animateItem().padding(horizontal = Space.gutter, vertical = Space.s))
                         }
                     }
-                    if (dayPills) stickyHeader(key = "day-$day", contentType = "day") {
-                        // Over the cards it is held above, which come after it.
-                        Box(Modifier.zIndex(1f).belowListTop(state, "day-$day")) {
-                            DayPill(dayPillText(dayLabel(day), dayMoments.size, daySpent(bills, day)), day, onDay?.let { { it(day) } })
-                        }
-                    }
+                    // The day in the rail down the left, beside its first item; the rest of the
+                    // day to the right of the rail, days set apart by space alone.
+                    val first = dayItems.firstOrNull()?.key
                     items(dayItems, key = { it.key }, contentType = { it::class }) { item ->
-                        val itemModifier = Modifier.animateItem().padding(horizontal = Space.gutter, vertical = Space.m)
-                        when (item) {
-                            is DayItem.Moment -> card(item.moment, itemModifier, false)
-                            is DayItem.Bills -> BillGroup(item.txns, bills.ledger, onBill, itemModifier)
+                        val itemModifier = Modifier.padding(
+                            start = if (dayPills) 0.dp else Space.gutter,
+                            end = Space.gutter,
+                            top = if (dayPills && item.key == first) Space.xl else Space.s,
+                            bottom = Space.s,
+                        )
+                        val content: @Composable (Modifier) -> Unit = { modifier ->
+                            when (item) {
+                                is DayItem.Moment -> card(item.moment, modifier, false)
+                                is DayItem.Bills -> BillGroup(item.txns, bills.ledger, onBill, modifier)
+                            }
+                        }
+                        if (dayPills) {
+                            Row(Modifier.animateItem()) {
+                                Box(Modifier.padding(start = Space.gutter).width(Rail)) {
+                                    if (item.key == first) DayRail(day, dayMoments.size, onDay?.let { { it(day) } }, Modifier.padding(top = Space.xl))
+                                }
+                                content(itemModifier.weight(1f))
+                            }
+                        } else {
+                            content(Modifier.animateItem().then(itemModifier))
                         }
                     }
                 }
             }
         }
+    }
+}
+
+/**
+ * A day in the rail down a timeline's left: the day of the month in figures, its weekday under
+ * it, tapped for the whole day. No line or dot joins one day to the next.
+ */
+@Composable
+private fun DayRail(day: String, count: Int, onClick: (() -> Unit)?, modifier: Modifier = Modifier) {
+    val date = java.time.LocalDate.parse(day)
+    val weekday = date.dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.getDefault())
+    val description = pluralStringResource(R.plurals.count_moments, count, count)
+    Column(
+        modifier
+            .then(if (onClick != null) Modifier.clickable(onClickLabel = stringResource(R.string.label_whole_day), onClick = onClick) else Modifier)
+            .semantics(mergeDescendants = true) { heading(); contentDescription = "${formatDay(day)}\u2003$weekday\u2003$description" }
+            .testTag("day_rail_$day"),
+    ) {
+        Text(date.dayOfMonth.toString(), style = AppTheme.typography.numTitle)
+        Text(weekday, style = AppTheme.typography.caption, color = AppTheme.colorScheme.onSurfaceVariant)
     }
 }
 
@@ -339,7 +379,7 @@ fun EmptyState(loading: Boolean, message: Int) {
                 Text(
                     stringResource(message),
                     color = AppTheme.colorScheme.onSurfaceVariant,
-                    style = AppTheme.typography.bodyLarge,
+                    style = AppTheme.typography.bodyReading,
                 )
             }
         }

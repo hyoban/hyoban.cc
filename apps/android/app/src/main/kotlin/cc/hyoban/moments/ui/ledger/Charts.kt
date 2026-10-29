@@ -128,7 +128,7 @@ fun ChartCard(
                     Text(title, style = AppTheme.typography.titleSmall)
                     Text(
                         readout,
-                        style = AppTheme.typography.bodyMedium,
+                        style = AppTheme.typography.body,
                         color = AppTheme.colorScheme.onSurfaceVariant,
                         maxLines = 2,
                         modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
@@ -154,7 +154,7 @@ private fun LegendKey(label: String, color: Color) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Box(Modifier.size(8.dp).clip(CircleShape).background(color))
         Spacer(Modifier.width(Space.xs))
-        Text(label, style = AppTheme.typography.labelMedium, color = AppTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+        Text(label, style = AppTheme.typography.caption, color = AppTheme.colorScheme.onSurfaceVariant, maxLines = 1)
     }
 }
 
@@ -165,7 +165,7 @@ private fun Axis(labels: List<String>, count: Int) {
         labels.forEach {
             Text(
                 it,
-                style = AppTheme.typography.labelSmall,
+                style = AppTheme.typography.micro,
                 color = AppTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
                 maxLines = 1,
@@ -426,7 +426,7 @@ fun MonthHeatmap(month: LocalDate, byDay: Map<LocalDate, Long>, currency: String
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             weekdayLetters().forEach {
-                Text(it, style = AppTheme.typography.labelSmall, color = AppTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center, modifier = Modifier.weight(1f))
+                Text(it, style = AppTheme.typography.micro, color = AppTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center, modifier = Modifier.weight(1f))
             }
         }
         for (week in 0 until weeks) {
@@ -457,7 +457,7 @@ fun MonthHeatmap(month: LocalDate, byDay: Map<LocalDate, Long>, currency: String
                             ) {
                                 Text(
                                     "$day",
-                                    style = AppTheme.typography.labelMedium,
+                                    style = AppTheme.typography.caption,
                                     color = when {
                                         step >= 3 -> AppTheme.colorScheme.onPrimary
                                         step > 0 -> AppTheme.colorScheme.onSurface
@@ -487,7 +487,7 @@ fun YearHeatmap(year: Int, byDay: Map<LocalDate, Long>, selected: LocalDate?, on
     val ink = AppTheme.colorScheme.onSurface
     val labelColor = AppTheme.colorScheme.onSurfaceVariant
     val measurer = rememberTextMeasurer()
-    val labelStyle = AppTheme.typography.labelSmall
+    val labelStyle = AppTheme.typography.micro
     val level = remember(byDay) { levelsOf(byDay.filterKeys { it.year == year }.values) }
     val select by rememberUpdatedState(onSelect)
     val picked by rememberUpdatedState(selected)

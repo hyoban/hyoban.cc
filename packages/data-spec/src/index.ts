@@ -9,7 +9,9 @@ export * from './vehicle.ts'
 // stored record already keeps (a Moment at one place at most); any other change bumps
 // SCHEMA_VERSION.
 
-export const SCHEMA_VERSION = 2
+// 3: Moments became entries with parts, trips collections (`./entry.ts`); a manifest of 2 is the
+// first shape, still read while the data moves over.
+export const SCHEMA_VERSION = 3
 
 /** A kebab-case id: a place, a trip, a music track or a Moment's slug. */
 export const ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
@@ -317,7 +319,7 @@ export const deviceSchema = z
 export const devicesSchema = z.record(id, deviceSchema)
 
 export const manifestSchema = z.looseObject({
-  schemaVersion: z.literal(SCHEMA_VERSION),
+  schemaVersion: z.union([z.literal(2), z.literal(SCHEMA_VERSION)]),
   generator: z.string().min(1),
   updatedAt: timestamp,
 })

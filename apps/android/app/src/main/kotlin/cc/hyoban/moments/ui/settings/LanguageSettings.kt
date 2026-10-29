@@ -1,5 +1,7 @@
 package cc.hyoban.moments.ui.settings
 
+import cc.hyoban.moments.ui.design.emphasized
+
 import cc.hyoban.moments.ui.design.AppIcons
 import android.app.Activity
 import android.content.Intent
@@ -80,7 +82,7 @@ private fun LanguageRow(activity: Activity, language: AppLanguage, selected: Boo
                 AppLanguage.ENGLISH -> "English"
             },
             // The chosen one emphasized, as Material 3 sets a selected list item.
-            style = if (selected) AppTheme.typography.bodyLargeEmphasized else AppTheme.typography.bodyLarge,
+            style = if (selected) AppTheme.typography.bodyReading.emphasized else AppTheme.typography.bodyReading,
         )
     }
 }

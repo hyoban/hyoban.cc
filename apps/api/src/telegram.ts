@@ -156,7 +156,7 @@ async function postChanges(context: ChannelContext) {
     db
       .prepare(
         `SELECT uid, deleted_at, record FROM moments
-         WHERE rev > ?1 AND rev <= ?2 ORDER BY occurred_at, uid`,
+         WHERE rev > ?1 AND rev <= ?2 AND kind = 'moment' ORDER BY occurred_at, uid`,
       )
       .bind(done, revision),
     db

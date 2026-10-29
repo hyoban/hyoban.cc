@@ -14,8 +14,11 @@ const root = fileURLToPath(new URL('../', import.meta.url))
 const { changed, snapshot } = await refreshData(root)
 
 console.log(
-  `Exported revision ${snapshot.revision}: ${snapshot.moments.length} Moments, ` +
-    `${Object.keys(snapshot.places).length} places, ${snapshot.trips.length} trips; ` +
+  `Exported revision ${snapshot.revision}: ` +
+    (snapshot.entries
+      ? `${snapshot.entries.length} entries, ${snapshot.collections?.length ?? 0} collections, ${snapshot.tracks?.length ?? 0} tracks, `
+      : `${snapshot.moments?.length ?? 0} Moments, ${snapshot.trips?.length ?? 0} trips, `) +
+    `${Object.keys(snapshot.places).length} places; ` +
     `${changed.length === 0 ? 'data/ is up to date' : `${changed.length} files changed`}`,
 )
 

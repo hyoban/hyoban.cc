@@ -245,8 +245,11 @@ internal class BillDraft(
     place: String?,
     tripChosen: Boolean,
     trip: String?,
+    visibility: String? = null,
 ) {
     var kind by mutableStateOf(kind)
+    /** Public or private by this bill's own say; null follows its book. */
+    var visibility by mutableStateOf(visibility)
     var transfer by mutableStateOf(transfer)
     var book by mutableStateOf(book)
     var amount by mutableStateOf(amount)
@@ -344,6 +347,8 @@ internal class BillDraft(
             trip = tripOn(at, trips),
             createdAt = original?.createdAt ?: now,
             updatedAt = now,
+            visibility = visibility,
+            published = original?.published,
         )
     }
 
@@ -409,6 +414,7 @@ internal fun rememberBillDraft(ledger: Ledger, original: Txn?, related: Txn?, mo
             place = original?.place ?: moment?.places?.firstOrNull(),
             tripChosen = original != null || args.trip != null,
             trip = original?.trip ?: args.trip,
+            visibility = original?.visibility,
         )
     }
 
@@ -500,7 +506,7 @@ internal fun BillFields(
             },
             supportingText = cents?.takeIf { draft.amount.any { it == '+' || it == '-' } }?.let { { Text("= " + formatMoney(it, shownCurrency)) } },
             isError = draft.amount.isNotEmpty() && cents == null,
-            textStyle = AppTheme.typography.headlineSmall,
+            textStyle = AppTheme.typography.titlePage,
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done),
             modifier = Modifier.fillMaxWidth().testTag("amount"),
@@ -765,7 +771,7 @@ private fun RowScope.CategoryTile(name: String, icon: androidx.compose.ui.graphi
         }
         Text(
             name,
-            style = AppTheme.typography.labelMedium,
+            style = AppTheme.typography.caption,
             color = if (selected) colors.primary else colors.onSurfaceVariant,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -823,6 +829,13 @@ private fun BillOptions(container: AppContainer, ledger: Ledger, draft: BillDraf
             ) { draft.reimburse = if (draft.reimburse == Reimburse.NONE) Reimburse.PENDING else Reimburse.NONE }
         }
         ToggleChip(draft.excluded, stringResource(R.string.ledger_excluded), "excluded") { draft.excluded = !draft.excluded }
+        // Public follows the book's say for new bills until this one says otherwise; only its
+        // amount, category and note would publish.
+        if (kind == TxnKind.EXPENSE || kind == TxnKind.INCOME) {
+            val bookPublic = ledger.books.firstOrNull { it.id == (draft.book ?: ledger.book?.id) }?.visibility == "public"
+            val public = (draft.visibility ?: if (bookPublic) "public" else "private") == "public"
+            ToggleChip(public, stringResource(R.string.visibility_public), "public") { draft.visibility = if (public) "private" else "public" }
+        }
         // What it belongs to among the Moments, kept on the phone with the bill alone.
         if (!withMoment) {
             LinkChip(
@@ -934,12 +947,12 @@ internal fun BillKeypad(container: AppContainer, ledger: Ledger, draft: BillDraf
                 }
                 // A sum being added up shows what it comes to beside it.
                 if (cents != null && draft.amount.drop(1).any { it == '+' || it == '-' }) {
-                    Text("= " + formatMoney(cents, currency), style = AppTheme.typography.bodyMedium, color = colors.onSurfaceVariant, maxLines = 1)
+                    Text("= " + formatMoney(cents, currency), style = AppTheme.typography.body, color = colors.onSurfaceVariant, maxLines = 1)
                 }
                 val shown = draft.amount.ifEmpty { "0" }.replace("+", " + ").replace("-", " − ")
                 Text(
                     currencySymbol(currency).trim() + " " + shown,
-                    style = AppTheme.typography.headlineMedium,
+                    style = AppTheme.typography.titlePage,
                     color = if (draft.amount.isNotEmpty() && cents == null) colors.error else if (draft.amount.isEmpty()) colors.onSurfaceVariant else colors.onSurface,
                     textAlign = TextAlign.End,
                     maxLines = 1,
@@ -982,7 +995,7 @@ internal fun BillKeypad(container: AppContainer, ledger: Ledger, draft: BillDraf
                 Button(
                     onClick = onSave,
                     modifier = Modifier.weight(2f).height(KeyHeight).testTag("keypad_save"),
-                ) { Text(stringResource(R.string.action_save), style = AppTheme.typography.titleMedium) }
+                ) { Text(stringResource(R.string.action_save), style = AppTheme.typography.titleSmall) }
             }
         }
     }
@@ -1005,8 +1018,8 @@ private fun Key(key: Char, modifier: Modifier, onClick: () -> Unit) {
     ) {
         when (key) {
             BACKSPACE -> Icon(AppIcons.Backspace, contentDescription = stringResource(R.string.action_backspace))
-            '-' -> Text("−", style = AppTheme.typography.titleLarge)
-            else -> Text(key.toString(), style = AppTheme.typography.titleLarge)
+            '-' -> Text("−", style = AppTheme.typography.title)
+            else -> Text(key.toString(), style = AppTheme.typography.title)
         }
     }
 }
@@ -1084,7 +1097,7 @@ fun AccountSheet(ledger: Ledger, onDismiss: () -> Unit, onCreate: (Account) -> U
             item {
                 Text(
                     stringResource(R.string.ledger_account),
-                    style = AppTheme.typography.titleLarge,
+                    style = AppTheme.typography.title,
                     modifier = Modifier.padding(horizontal = Space.xl, vertical = Space.s).semantics { heading() },
                 )
             }

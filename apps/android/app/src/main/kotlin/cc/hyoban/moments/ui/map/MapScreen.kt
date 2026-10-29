@@ -452,10 +452,10 @@ private fun PlaceSheet(
         Row(Modifier.fillMaxWidth().padding(horizontal = Space.gutter), verticalAlignment = Alignment.CenterVertically) {
             Icon(AppIcons.Pin, contentDescription = null, tint = colors[years.minOrNull()] ?: AppTheme.colorScheme.primary)
             Column(Modifier.weight(1f).padding(horizontal = Space.m)) {
-                Text(place.name, style = AppTheme.typography.titleLarge, modifier = Modifier.semantics { heading() })
+                Text(place.name, style = AppTheme.typography.title, modifier = Modifier.semantics { heading() })
                 Text(
                     (listOf(pluralStringResource(R.plurals.count_moments, here.size, here.size)) + years.joinToString(context.getString(R.string.separator_list)) { context.getString(R.string.year_item, it) }).joinToString("\u2003"),
-                    style = AppTheme.typography.bodyMedium,
+                    style = AppTheme.typography.body,
                     color = AppTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -522,7 +522,7 @@ private fun TripsSheet(trips: List<TripRecord>, moments: List<MomentRecord>, url
     val days = remember(trips) { trips.sumOf { daysBetween(it.start, it.end) } }
     Column(Modifier.fillMaxHeight()) {
         Row(Modifier.fillMaxWidth().padding(horizontal = Space.gutter).padding(bottom = Space.s), verticalAlignment = Alignment.CenterVertically) {
-            Text(stringResource(R.string.title_trips), style = AppTheme.typography.titleLarge, modifier = Modifier.weight(1f).semantics { heading() })
+            Text(stringResource(R.string.title_trips), style = AppTheme.typography.title, modifier = Modifier.weight(1f).semantics { heading() })
             Text(
                 pluralStringResource(R.plurals.count_trips, trips.size, trips.size) + "\u2003" + pluralStringResource(R.plurals.count_days_total, days, days),
                 style = AppTheme.typography.bodySmall,
@@ -621,8 +621,8 @@ private fun FootprintsButton(onClick: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Space.s),
         ) {
-            Icon(AppIcons.Route, contentDescription = null, modifier = Modifier.size(20.dp))
-            Text(stringResource(R.string.footprints_title), style = AppTheme.typography.labelLarge)
+            Icon(AppIcons.Footprints, contentDescription = null, modifier = Modifier.size(20.dp))
+            Text(stringResource(R.string.footprints_title), style = AppTheme.typography.label)
         }
     }
 }
@@ -645,7 +645,7 @@ private fun FogButton(on: Boolean, onClick: () -> Unit) {
             shadowElevation = Elevation.level2,
             modifier = Modifier.size(48.dp).semantics { contentDescription = label }.testTag("fog"),
         ) {
-            Box(contentAlignment = Alignment.Center) { Icon(AppIcons.Cloud, contentDescription = null) }
+            Box(contentAlignment = Alignment.Center) { Icon(AppIcons.Fog, contentDescription = null) }
         }
     }
 }
@@ -656,7 +656,7 @@ private fun FogCount(fog: FogOfWar) {
     FloatingPill {
         Text(
             stringResource(R.string.fog_lit, fog.cities, fog.provinces),
-            style = AppTheme.typography.labelMedium,
+            style = AppTheme.typography.caption,
             color = AppTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.height(32.dp).padding(horizontal = Space.l).wrapContentHeight(),
         )
@@ -688,14 +688,14 @@ private fun Legend(colors: Map<Int, Color>, trips: Boolean) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.xs)) {
                     // A dot as the map draws one, ringed in the surface.
                     Box(Modifier.size(10.dp).border(1.5.dp, AppTheme.colorScheme.surface, CircleShape).padding(1.dp).background(color, CircleShape))
-                    Text("$year", style = AppTheme.typography.labelMedium, color = AppTheme.colorScheme.onSurfaceVariant, maxLines = 1, softWrap = false)
+                    Text("$year", style = AppTheme.typography.caption, color = AppTheme.colorScheme.onSurfaceVariant, maxLines = 1, softWrap = false)
                 }
             }
             if (trips) {
                 VerticalDivider(Modifier.height(14.dp), color = dividerColor())
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.xs)) {
                     Box(Modifier.width(14.dp).height(2.dp).background(AppTheme.colorScheme.onSurface.copy(alpha = ROUTE_OPACITY), CircleShape))
-                    Text(stringResource(R.string.legend_trips), style = AppTheme.typography.labelMedium, color = AppTheme.colorScheme.onSurfaceVariant, maxLines = 1, softWrap = false)
+                    Text(stringResource(R.string.legend_trips), style = AppTheme.typography.caption, color = AppTheme.colorScheme.onSurfaceVariant, maxLines = 1, softWrap = false)
                 }
             }
         }
@@ -715,7 +715,7 @@ private fun RouteCard(trip: TripRecord, onOpen: () -> Unit) {
         Row(Modifier.padding(start = Space.l, end = Space.s, top = Space.m, bottom = Space.m), verticalAlignment = Alignment.CenterVertically) {
             Icon(AppIcons.Luggage, contentDescription = null, tint = AppTheme.colorScheme.onSurfaceVariant)
             Column(Modifier.weight(1f).padding(horizontal = Space.m), verticalArrangement = Arrangement.spacedBy(Space.xxs)) {
-                Text(trip.title, style = AppTheme.typography.titleMedium)
+                Text(trip.title, style = AppTheme.typography.titleSmall)
                 Text(
                     tripSummary(trip),
                     style = AppTheme.typography.bodySmall,

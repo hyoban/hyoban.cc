@@ -4,6 +4,7 @@ import cc.hyoban.moments.ui.design.Typography
 import cc.hyoban.moments.ui.design.Shapes
 import cc.hyoban.moments.ui.design.MotionScheme
 import cc.hyoban.moments.ui.design.AppTheme
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
@@ -80,6 +81,9 @@ object Elevation {
     val level4 = 8.dp
 }
 
+/** The date rail down the left of a timeline, a ledger and a trip's days: the day sits in it, the rest to its right. */
+val Rail = 56.dp
+
 // The corner sizes as continuous curves rather than arcs, so a corner eases into its sides.
 private val AppShapes = Shapes(
     extraSmall = ContinuousRoundedRectangle(Radius.extraSmall),
@@ -89,53 +93,31 @@ private val AppShapes = Shapes(
     extraLarge = ContinuousRoundedRectangle(Radius.extraLarge),
 )
 
-private fun style(size: Int, line: Int, weight: FontWeight, numbers: Boolean = false) = TextStyle(
+private fun style(size: Int, line: Int, weight: FontWeight, mono: Boolean = false) = TextStyle(
     fontSize = size.sp,
     lineHeight = line.sp,
     fontWeight = weight,
     letterSpacing = 0.em,
-    fontFeatureSettings = if (numbers) "tnum" else null,
+    fontFamily = if (mono) FontFamily.Monospace else null,
 )
 
-// The design system's type scale on its slots: display for amounts, headline for a
-// tab's large title, title for bars, cards and groups, body for a Moment's words (large) and
-// lists, label for buttons, chips and the small print. No letter spacing, which spreads
-// Chinese out; digits in columns wherever figures stand. The emphasized styles are the same
-// a weight heavier.
-private val AppTypography = run {
-    val displayLarge = style(40, 44, FontWeight.Medium, numbers = true)
-    val displayMedium = style(36, 40, FontWeight.Medium, numbers = true)
-    val displaySmall = style(32, 40, FontWeight.SemiBold, numbers = true)
-    val headlineSmall = style(22, 30, FontWeight.SemiBold)
-    val titleLarge = style(18, 26, FontWeight.SemiBold)
-    val bodyLarge = style(17, 30, FontWeight.Normal)
-    val labelLarge = style(14, 20, FontWeight.Medium, numbers = true)
-    val labelMedium = style(12, 16, FontWeight.Medium, numbers = true)
-    fun TextStyle.heavier() = copy(fontWeight = FontWeight((fontWeight ?: FontWeight.Normal).weight + 100))
-    Typography(
-        displayLarge = displayLarge,
-        displayMedium = displayMedium,
-        displaySmall = displaySmall,
-        headlineLarge = style(32, 40, FontWeight.SemiBold),
-        headlineMedium = style(28, 36, FontWeight.SemiBold),
-        headlineSmall = headlineSmall,
-        titleLarge = titleLarge,
-        titleMedium = style(16, 24, FontWeight.SemiBold),
-        titleSmall = style(14, 20, FontWeight.SemiBold),
-        bodyLarge = bodyLarge,
-        bodyMedium = style(15, 24, FontWeight.Normal),
-        bodySmall = style(12, 18, FontWeight.Normal),
-        labelLarge = labelLarge,
-        labelMedium = labelMedium,
-        labelSmall = style(11, 16, FontWeight.Medium, numbers = true),
-        displaySmallEmphasized = displaySmall.heavier(),
-        headlineSmallEmphasized = headlineSmall.heavier(),
-        titleLargeEmphasized = titleLarge.heavier(),
-        bodyLargeEmphasized = bodyLarge.copy(fontWeight = FontWeight.Medium),
-        labelLargeEmphasized = labelLarge.copy(fontWeight = FontWeight.SemiBold),
-        labelMediumEmphasized = labelMedium.copy(fontWeight = FontWeight.SemiBold),
-    )
-}
+// The design system's type scale: the system's sans for words, its monospace for figures. No
+// letter spacing, which spreads Chinese out.
+private val AppTypography = Typography(
+    titlePage = style(26, 34, FontWeight.SemiBold),
+    title = style(18, 26, FontWeight.SemiBold),
+    titleSmall = style(15, 22, FontWeight.SemiBold),
+    bodyReading = style(17, 30, FontWeight.Normal),
+    body = style(15, 24, FontWeight.Normal),
+    bodySmall = style(13, 20, FontWeight.Normal),
+    label = style(14, 20, FontWeight.Medium),
+    caption = style(12, 18, FontWeight.Normal),
+    micro = style(11, 14, FontWeight.Medium),
+    numDisplay = style(34, 40, FontWeight.Medium, mono = true),
+    numTitle = style(22, 28, FontWeight.Medium, mono = true),
+    numBody = style(15, 24, FontWeight.Normal, mono = true),
+    numCaption = style(12, 16, FontWeight.Normal, mono = true),
+)
 
 /** The springs everything moves on, which don't overshoot, for the components and for pages alike. */
 val TransitionMotion: MotionScheme = MotionScheme.standard()
