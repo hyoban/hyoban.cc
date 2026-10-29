@@ -1,5 +1,10 @@
 package cc.hyoban.moments.ui.feed
 
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.foundation.layout.add
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.layout.height
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.components.restingElevation
@@ -188,19 +193,20 @@ fun FeedScreen(
     val ledgerNav = LocalLedgerNav.current
     val feedState = rememberLazyListState()
     val gridState = rememberLazyStaggeredGridState()
+    // The header over the views folds away as they scroll and opens again at their top; back
+    // open with a new filter or the tab tapped again, as either goes back to its top. How far it
+    // is folded is kept, so a page made again (the theme switched) doesn't open it mid-list.
+    val headerScroll = rememberSaveable(saver = HeaderScroll.Saver) { HeaderScroll() }
     // A new filter starts both views from the top; coming back to the tab doesn't.
     var lastFilter by rememberSaveable(stateSaver = TimeFilterSaver) { mutableStateOf(filter) }
     LaunchedEffect(filter) {
         if (filter != lastFilter) {
             lastFilter = filter
+            headerScroll.offset = 0f
             feedState.scrollToItem(0)
             gridState.scrollToItem(0)
         }
     }
-    // The header over the views folds away as they scroll and opens again at their top; back
-    // open with a new filter or the tab tapped again, as either goes back to its top.
-    val headerScroll = remember { HeaderScroll() }
-    LaunchedEffect(filter) { headerScroll.offset = 0f }
     // Opening out with the list as it goes back to its top, on the same spring.
     val headerSpec = AppTheme.motionScheme.defaultSpatialSpec<Float>()
     OnTabReselect(Feed) { animate(headerScroll.offset, 0f, animationSpec = headerSpec) { value, _ -> headerScroll.offset = value } }
@@ -210,6 +216,23 @@ fun FeedScreen(
     val rowIn = expandVertically(rowMotion.defaultSpatialSpec()) + fadeIn(rowMotion.defaultEffectsSpec())
     val rowOut = shrinkVertically(rowMotion.defaultSpatialSpec()) + fadeOut(rowMotion.defaultEffectsSpec())
     val header: FeedLeading.() -> Unit = {
+        item(key = "title") {
+            Row(
+                Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.statusBars).padding(start = Space.gutter, end = Space.xs, top = Space.xl, bottom = Space.s),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.title_moments), style = AppTheme.typography.titlePage, modifier = Modifier.semantics { heading() })
+                    subtitle?.let { Text(it, style = AppTheme.typography.body, color = AppTheme.colorScheme.onSurfaceVariant, maxLines = 1) }
+                }
+                // Searching the timeline; the settings are under 我.
+                Tooltip(stringResource(R.string.action_search), below = true) {
+                    IconButton(onClick = onSearch, modifier = Modifier.testTag("search")) {
+                        Icon(AppIcons.Search, contentDescription = stringResource(R.string.action_search))
+                    }
+                }
+            }
+        }
         item(key = "changes") {
             AnimatedVisibility(publishable, enter = rowIn, exit = rowOut) {
                 PendingChangesRow(container, onClick = onChanges, modifier = Modifier.padding(horizontal = Space.gutter, vertical = Space.s))
@@ -237,20 +260,10 @@ fun FeedScreen(
         }
         Box(listPane) {
             CompositionLocalProvider(LocalRailSpace provides if (twoPane) RailSpace(0.dp, 0.dp, clearOfInsets = true) else rail) {
-                TabPage(
-                    stringResource(R.string.title_moments),
-                    tab = Feed,
-                    refresh = pull.onRefresh,
-                    subtitle = subtitle,
-                    actions = {
-                        // The bar's one action: searching the timeline. The settings are under 我.
-                        Tooltip(stringResource(R.string.action_search), below = true) {
-                            IconButton(onClick = onSearch, modifier = Modifier.testTag("search")) {
-                                Icon(AppIcons.Search, contentDescription = stringResource(R.string.action_search))
-                            }
-                        }
-                    },
-                ) {
+                // No bar: the title, its counts and search head the timeline and scroll away with
+                // it, the page running up under the status bar, which a short fade of the page
+                // keeps the system's icons clear on.
+                Box(Modifier.fillMaxSize().background(AppColors.page)) {
                     TabRefreshBox(pull) {
                         LoadedContent(moments.isEmpty(), loading = !loaded || syncing, message = R.string.empty_moments) {
                             // The rows over the Moments, the changes, list or calendar and the
@@ -284,6 +297,7 @@ fun FeedScreen(
                             }
                         }
                     }
+                    StatusBarFade()
                 }
             }
         }
@@ -367,6 +381,10 @@ class HeaderScroll {
         offset = next
         return taken
     }
+
+    companion object {
+        val Saver = androidx.compose.runtime.saveable.Saver<HeaderScroll, Float>(save = { it.offset }, restore = { HeaderScroll().apply { offset = it } })
+    }
 }
 
 /** [content] laid out at its own height, less as much as [scroll] has folded it away. */
@@ -380,6 +398,21 @@ private fun CollapsingHeader(scroll: HeaderScroll, content: @Composable () -> Un
             layout(placeable.width, shown) { placeable.place(0, shown - placeable.height) }
         },
     ) { content() }
+}
+
+/**
+ * The page's colour fading out under the status bar, so what scrolls up beneath the system's
+ * icons doesn't fight them.
+ */
+@Composable
+private fun StatusBarFade() {
+    val page = AppColors.page
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .windowInsetsTopHeight(WindowInsets.statusBars.add(WindowInsets(top = Space.m)))
+            .background(Brush.verticalGradient(0f to page, 0.7f to page.copy(alpha = 0.85f), 1f to page.copy(alpha = 0f))),
+    )
 }
 
 // Material's fade-through timings, as switching tabs has.

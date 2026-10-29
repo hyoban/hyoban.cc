@@ -92,6 +92,9 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   is nested.
 - The tabs float: a capsule of icons alone (named for TalkBack) at the page's foot, the tab's
   ink button beside it.
+- The timeline is immersive, with no top bar to fold: its title, counts and search head the
+  list and scroll away with it, the page running up under the status bar behind a short fade
+  of the page's colour.
 - Three tabs: 时间线, 地图, 我. Everything that happened goes on the timeline (Moments, the
   ledger's bills, a banner where a trip begins); the map lists the trips in its sheet; 我
   holds the changes to publish, the ledger's month and pages, and the settings, a page per
