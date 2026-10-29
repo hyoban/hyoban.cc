@@ -1,5 +1,8 @@
 package cc.hyoban.moments.ui.compose
 
+import cc.hyoban.moments.ui.design.AppIcons
+import cc.hyoban.moments.ui.design.PressIndication
+import cc.hyoban.moments.ui.design.DateTimeDialog
 import android.Manifest
 import android.content.Context
 import android.content.Intent
@@ -50,45 +53,17 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.AddPhotoAlternate
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.DeleteOutline
-import androidx.compose.material.icons.rounded.Error
-import androidx.compose.material.icons.rounded.HideImage
-import androidx.compose.material.icons.rounded.MotionPhotosOff
-import androidx.compose.material.icons.rounded.PhotoCamera
-import androidx.compose.material.icons.rounded.PlayArrow
-import androidx.compose.material.icons.rounded.Restaurant
-import androidx.compose.material.icons.rounded.Place
-import androidx.compose.material.icons.rounded.Schedule
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ButtonGroupDefaults
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.Icon
-import androidx.compose.material3.SegmentedListItem
-import androidx.compose.material3.ListItemDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.TimeInput
-import androidx.compose.material3.TimePicker
-import androidx.compose.material3.TimePickerDialog
-import androidx.compose.material3.TimePickerDialogDefaults
-import androidx.compose.material3.TimePickerDisplayMode
-import androidx.compose.material3.ToggleButton
-import androidx.compose.material3.rememberDatePickerState
-import androidx.compose.material3.rememberTimePickerState
-import androidx.compose.material3.ripple
+import cc.hyoban.moments.ui.design.AlertDialog
+import cc.hyoban.moments.ui.design.ButtonDefaults
+import cc.hyoban.moments.ui.design.DropdownMenu
+import cc.hyoban.moments.ui.design.DropdownMenuItem
+import cc.hyoban.moments.ui.design.Icon
+import cc.hyoban.moments.ui.design.SegmentedListItem
+import cc.hyoban.moments.ui.design.ListItemDefaults
+import cc.hyoban.moments.ui.design.AppTheme
+import cc.hyoban.moments.ui.design.Text
+import cc.hyoban.moments.ui.design.TextButton
+import cc.hyoban.moments.ui.design.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -141,8 +116,8 @@ import cc.hyoban.moments.data.local.stamp
 import cc.hyoban.moments.data.spec.FoodBill
 import cc.hyoban.moments.data.spec.FoodVerdict
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
+import cc.hyoban.moments.ui.design.FilterChip
+import cc.hyoban.moments.ui.design.FilterChipDefaults
 import androidx.compose.ui.semantics.contentDescription
 import cc.hyoban.moments.data.spec.MomentTopic
 import cc.hyoban.moments.ui.format.topicLabel
@@ -163,9 +138,8 @@ import cc.hyoban.moments.ui.ledger.LedgerEntryArgs
 import cc.hyoban.moments.ui.ledger.mealCategory
 import cc.hyoban.moments.ui.ledger.rememberBillDraft
 import cc.hyoban.moments.ledger.TxnKind
-import androidx.compose.material3.MultiChoiceSegmentedButtonRow
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
+import cc.hyoban.moments.ui.design.MultiChoiceSegmentedButtonRow
+import cc.hyoban.moments.ui.design.SegmentedButton
 import cc.hyoban.moments.ui.components.isCompactHeight
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.PageWidth
@@ -207,7 +181,6 @@ import kotlinx.coroutines.withContext
  * A new one can have a bill written with it, kept in the ledger at the Moment's time and place
  * and linked to it, or the bill alone, as the ledger's 记一笔 opens it ([startWithBill]).
  */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun NewMomentScreen(
     container: AppContainer,
@@ -457,7 +430,6 @@ fun NewMomentScreen(
             small = keypad,
             actions = {
                 TextButton(
-                    shapes = ButtonDefaults.shapes(),
                     onClick = {
                         when {
                             withMoment && !written -> emptyError = true
@@ -487,13 +459,11 @@ fun NewMomentScreen(
                             SegmentedButton(
                                 checked = withMoment,
                                 onCheckedChange = { if (withBill) withMoment = it },
-                                shape = SegmentedButtonDefaults.itemShape(0, 2),
                                 modifier = Modifier.testTag("write_moment"),
                             ) { Text(stringResource(R.string.write_moment)) }
                             SegmentedButton(
                                 checked = withBill,
                                 onCheckedChange = { if (withMoment) withBill = it },
-                                shape = SegmentedButtonDefaults.itemShape(1, 2),
                                 modifier = Modifier.testTag("write_bill"),
                             ) { Text(stringResource(R.string.write_bill)) }
                         }
@@ -504,19 +474,13 @@ fun NewMomentScreen(
                             value = text,
                             onValueChange = { text = it },
                             placeholder = { Text(stringResource(R.string.hint_moment_text)) },
-                            textStyle = MaterialTheme.typography.bodyLarge,
+                            textStyle = AppTheme.typography.bodyLarge,
                             minLines = 5,
                             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Default),
-                            colors = TextFieldDefaults.colors(
-                                focusedContainerColor = Color.Transparent,
-                                unfocusedContainerColor = Color.Transparent,
-                                focusedIndicatorColor = Color.Transparent,
-                                unfocusedIndicatorColor = Color.Transparent,
-                            ),
                             isError = emptyError,
                             // The error marked by an icon as well as the colour, as Material 3 asks of a field in error.
                             trailingIcon = if (emptyError) {
-                                { Icon(Icons.Rounded.Error, contentDescription = null, tint = MaterialTheme.colorScheme.error) }
+                                { Icon(AppIcons.Alert, contentDescription = null, tint = AppTheme.colorScheme.error) }
                             } else {
                                 null
                             },
@@ -554,7 +518,7 @@ fun NewMomentScreen(
                             shapes = shapes,
                             colors = segmentColors(),
                             supportingContent = { Text(stringResource(timeSource)) },
-                            leadingContent = { Icon(Icons.Rounded.Schedule, contentDescription = null) },
+                            leadingContent = { Icon(AppIcons.Clock, contentDescription = null) },
                             modifier = Modifier.testTag("moment_time"),
                         ) { Text(listOfNotNull(formatDay(stamp(time)), formatTime(stamp(time))).joinToString(" ")) }
                     }
@@ -585,7 +549,7 @@ fun NewMomentScreen(
                                     )).joinToString("\u2003"),
                                 )
                             },
-                            leadingContent = { Icon(Icons.Rounded.Place, contentDescription = null) },
+                            leadingContent = { Icon(AppIcons.Pin, contentDescription = null) },
                             modifier = Modifier.testTag("moment_place"),
                         ) {
                             Text(
@@ -629,10 +593,10 @@ fun NewMomentScreen(
                                     enabled = !saving,
                                     colors = ListItemDefaults.segmentedColors(
                                         containerColor = LocalSurfaceLevel.current.raised.fill(),
-                                        contentColor = MaterialTheme.colorScheme.error,
-                                        leadingContentColor = MaterialTheme.colorScheme.error,
+                                        contentColor = AppTheme.colorScheme.error,
+                                        leadingContentColor = AppTheme.colorScheme.error,
                                     ),
-                                    leadingContent = { Icon(Icons.Rounded.DeleteOutline, contentDescription = null) },
+                                    leadingContent = { Icon(AppIcons.Trash, contentDescription = null) },
                                     modifier = Modifier.testTag("delete"),
                                 ) { Text(stringResource(R.string.action_delete_moment)) }
                             },
@@ -651,7 +615,7 @@ fun NewMomentScreen(
             }
         }
         // Over the whole page, back closing it before it leaves the page.
-        val motion = MaterialTheme.motionScheme
+        val motion = AppTheme.motionScheme
         AnimatedVisibility(
             editingPlace,
             enter = slideInVertically(motion.defaultSpatialSpec()) { it / 4 } + fadeIn(motion.defaultEffectsSpec()),
@@ -667,7 +631,7 @@ fun NewMomentScreen(
         AlertDialog(
             onDismissRequest = { saveError = null },
             text = { Text(message) },
-            confirmButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { saveError = null }) { Text(stringResource(R.string.action_confirm)) } },
+            confirmButton = { TextButton(onClick = { saveError = null }) { Text(stringResource(R.string.action_confirm)) } },
         )
     }
     if (unaskedMotion.isNotEmpty()) {
@@ -680,12 +644,12 @@ fun NewMomentScreen(
             title = { Text(stringResource(R.string.confirm_motion)) },
             text = { Text(pluralStringResource(R.plurals.confirm_motion_note, unaskedMotion.size, unaskedMotion.size)) },
             confirmButton = {
-                TextButton(shapes = ButtonDefaults.shapes(), onClick = { answer(true) }, modifier = Modifier.testTag("motion_as_photos")) {
+                TextButton(onClick = { answer(true) }, modifier = Modifier.testTag("motion_as_photos")) {
                     Text(stringResource(R.string.action_add_as_photos))
                 }
             },
             dismissButton = {
-                TextButton(shapes = ButtonDefaults.shapes(), onClick = { answer(false) }, modifier = Modifier.testTag("motion_keep_live")) {
+                TextButton(onClick = { answer(false) }, modifier = Modifier.testTag("motion_keep_live")) {
                     Text(stringResource(R.string.action_keep_live))
                 }
             },
@@ -697,11 +661,11 @@ fun NewMomentScreen(
             title = { Text(stringResource(R.string.confirm_discard)) },
             text = { Text(stringResource(R.string.confirm_discard_note)) },
             confirmButton = {
-                TextButton(shapes = ButtonDefaults.shapes(), onClick = { confirmingDiscard = false; onBack() }, modifier = Modifier.testTag("discard")) {
+                TextButton(onClick = { confirmingDiscard = false; onBack() }, modifier = Modifier.testTag("discard")) {
                     Text(stringResource(R.string.action_discard))
                 }
             },
-            dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { confirmingDiscard = false }) { Text(stringResource(R.string.action_cancel)) } },
+            dismissButton = { TextButton(onClick = { confirmingDiscard = false }) { Text(stringResource(R.string.action_cancel)) } },
         )
     }
 }
@@ -748,8 +712,8 @@ private fun PhotoStrip(
     var settling by remember { mutableStateOf<Uri?>(null) }
     val scope = rememberCoroutineScope()
     var settle by remember { mutableStateOf<Job?>(null) }
-    val settleSpec = MaterialTheme.motionScheme.defaultSpatialSpec<Float>()
-    val liftSpec = MaterialTheme.motionScheme.fastSpatialSpec<Float>()
+    val settleSpec = AppTheme.motionScheme.defaultSpatialSpec<Float>()
+    val liftSpec = AppTheme.motionScheme.fastSpatialSpec<Float>()
     val letGo: () -> Unit = {
         val dropped = held
         held = null
@@ -775,7 +739,7 @@ private fun PhotoStrip(
         // Held where it was in the same layout, rather than following the item it was anchored to.
         list.requestScrollToItem(first.first, first.second)
     }
-    val photoShape = MaterialTheme.shapes.medium
+    val photoShape = AppTheme.shapes.medium
     val earlier = stringResource(R.string.action_move_earlier)
     val later = stringResource(R.string.action_move_later)
     val options = stringResource(R.string.action_photo_options)
@@ -834,14 +798,14 @@ private fun PhotoStrip(
             ) {
                 // The site's photos by their URL, the phone's by their Uri.
                 AsyncImage(model = if (uri.scheme == "https" || uri.scheme == "http") uri.toString() else uri, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
-                if (lift > 0f) Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.onSurface.copy(alpha = DRAGGED_LAYER * lift)))
+                if (lift > 0f) Box(Modifier.fillMaxSize().background(AppTheme.colorScheme.onSurface.copy(alpha = DRAGGED_LAYER * lift)))
                 if (uri in motion && uri !in stills) LiveBadge(Modifier.align(Alignment.TopStart).padding(Space.s))
                 if (uri in videos) {
                     Box(
                         Modifier.align(Alignment.TopStart).padding(Space.s).size(UTILITY_DOT).clip(CircleShape).background(MediaOverlay.control),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Icon(Icons.Rounded.PlayArrow, contentDescription = stringResource(R.string.media_video), tint = MediaOverlay.content, modifier = Modifier.size(18.dp))
+                        Icon(AppIcons.Play, contentDescription = stringResource(R.string.media_video), tint = MediaOverlay.content, modifier = Modifier.size(18.dp))
                     }
                 }
                 if (uri in utility) {
@@ -849,15 +813,15 @@ private fun PhotoStrip(
                         Modifier.align(Alignment.BottomStart).padding(Space.s).size(UTILITY_DOT).clip(CircleShape).background(MediaOverlay.control),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Icon(Icons.Rounded.HideImage, contentDescription = stringResource(R.string.label_photo_utility), tint = MediaOverlay.content, modifier = Modifier.size(16.dp))
+                        Icon(AppIcons.PhotoOff, contentDescription = stringResource(R.string.label_photo_utility), tint = MediaOverlay.content, modifier = Modifier.size(16.dp))
                     }
                 }
                 DropdownMenu(menuFor == uri, onDismissRequest = { menuFor = null }) {
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.action_photo_utility)) },
-                        leadingIcon = { Icon(Icons.Rounded.HideImage, contentDescription = null) },
+                        leadingIcon = { Icon(AppIcons.PhotoOff, contentDescription = null) },
                         trailingIcon = if (uri in utility) {
-                            { Icon(Icons.Rounded.Check, contentDescription = null) }
+                            { Icon(AppIcons.Check, contentDescription = null) }
                         } else {
                             null
                         },
@@ -870,9 +834,9 @@ private fun PhotoStrip(
                     if (uri in motion) {
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.action_photo_still)) },
-                            leadingIcon = { Icon(Icons.Rounded.MotionPhotosOff, contentDescription = null) },
+                            leadingIcon = { Icon(AppIcons.LiveOff, contentDescription = null) },
                             trailingIcon = if (uri in stills) {
-                                { Icon(Icons.Rounded.Check, contentDescription = null) }
+                                { Icon(AppIcons.Check, contentDescription = null) }
                             } else {
                                 null
                             },
@@ -889,7 +853,7 @@ private fun PhotoStrip(
                     Modifier.align(Alignment.TopEnd).size(REMOVE_TARGET)
                         .clickable(
                             interactionSource = null,
-                            indication = ripple(bounded = false, radius = REMOVE_TARGET / 2),
+                            indication = PressIndication,
                             role = Role.Button,
                             onClickLabel = stringResource(if (uri in videos) R.string.action_remove_video else R.string.action_remove_photo),
                         ) { onRemove(uri) }
@@ -900,17 +864,17 @@ private fun PhotoStrip(
                         Modifier.size(REMOVE_DOT).clip(CircleShape).background(MediaOverlay.control),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Icon(Icons.Rounded.Close, contentDescription = stringResource(if (uri in videos) R.string.action_remove_video else R.string.action_remove_photo), tint = MediaOverlay.content, modifier = Modifier.size(18.dp))
+                        Icon(AppIcons.Close, contentDescription = stringResource(if (uri in videos) R.string.action_remove_video else R.string.action_remove_photo), tint = MediaOverlay.content, modifier = Modifier.size(18.dp))
                     }
                 }
             }
         }
         if (photos.size < MAX_PHOTOS) {
             item(key = ADD_KEY) {
-                AddTile(Icons.Rounded.AddPhotoAlternate, stringResource(R.string.action_add_photos), onAdd, Modifier.animateItem().testTag("add_photos"))
+                AddTile(AppIcons.PhotoAdd, stringResource(R.string.action_add_photos), onAdd, Modifier.animateItem().testTag("add_photos"))
             }
             item(key = CAMERA_KEY) {
-                AddTile(Icons.Rounded.PhotoCamera, stringResource(R.string.action_open_camera), onOpenCamera, Modifier.animateItem().testTag("open_camera"))
+                AddTile(AppIcons.Camera, stringResource(R.string.action_open_camera), onOpenCamera, Modifier.animateItem().testTag("open_camera"))
             }
         }
     }
@@ -932,7 +896,7 @@ private fun TopicGroup(topic: String?, onTopic: (String?) -> Unit) {
                     onClick = { onTopic(if (selected) null else entry.value) },
                     label = { Text(stringResource(topicLabel(entry))) },
                     leadingIcon = if (selected) {
-                        { Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize)) }
+                        { Icon(AppIcons.Check, contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize)) }
                     } else {
                         null
                     },
@@ -945,10 +909,9 @@ private fun TopicGroup(topic: String?, onTopic: (String?) -> Unit) {
 }
 
 /**
- * What was eaten: the dishes, how they were, one of three in a connected button group that
- * a second tap clears, and what the meal cost and how many it fed.
+ * What was eaten: the dishes, how they were, one of three in a segmented control that a second
+ * tap clears, and what the meal cost and how many it fed.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun FoodGroup(
     dishes: String,
@@ -960,49 +923,25 @@ private fun FoodGroup(
     people: String,
     onPeople: (String) -> Unit,
 ) {
-    val plain = TextFieldDefaults.colors(
-        focusedContainerColor = Color.Transparent,
-        unfocusedContainerColor = Color.Transparent,
-        focusedIndicatorColor = Color.Transparent,
-        unfocusedIndicatorColor = Color.Transparent,
-    )
     val dishesField = boxed {
         TextField(
             value = dishes,
             onValueChange = onDishes,
             placeholder = { Text(stringResource(R.string.hint_food_dishes)) },
-            leadingIcon = { Icon(Icons.Rounded.Restaurant, contentDescription = null) },
+            leadingIcon = { Icon(AppIcons.Food, contentDescription = null) },
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-            colors = plain,
             modifier = Modifier.fillMaxWidth().testTag("food_dishes"),
         )
     }
     val verdicts = boxed {
-        Row(
-            Modifier.fillMaxWidth().padding(Space.l),
-            horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
-        ) {
-            val choices = FoodVerdict.entries
-            choices.forEachIndexed { index, choice ->
-                val checked = choice.value == verdict
-                ToggleButton(
-                    checked = checked,
+        // One verdict or none: a second tap on the chosen one takes it back.
+        MultiChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(Space.l)) {
+            FoodVerdict.entries.forEach { choice ->
+                SegmentedButton(
+                    checked = choice.value == verdict,
                     onCheckedChange = { onVerdict(if (it) choice.value else null) },
-                    shapes = when (index) {
-                        0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                        choices.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                        else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
-                    },
-                    // Those not chosen outlined, so each stands apart from the card at the 3:1 a group needs.
-                    border = if (checked) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-                    modifier = Modifier.weight(1f).semantics { role = Role.RadioButton }.testTag("food_${choice.value}"),
-                ) {
-                    Text(
-                        stringResource(verdictLabel(choice)),
-                        maxLines = 1,
-                        style = if (checked) MaterialTheme.typography.labelLargeEmphasized else MaterialTheme.typography.labelLarge,
-                    )
-                }
+                    modifier = Modifier.testTag("food_${choice.value}"),
+                ) { Text(stringResource(verdictLabel(choice)), maxLines = 1) }
             }
         }
     }
@@ -1015,7 +954,6 @@ private fun FoodGroup(
                 prefix = { Text("¥") },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Next),
-                colors = plain,
                 modifier = Modifier.weight(1f).testTag("food_amount"),
             )
             TextField(
@@ -1025,7 +963,6 @@ private fun FoodGroup(
                 suffix = { Text(stringResource(R.string.unit_food_people)) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
-                colors = plain,
                 modifier = Modifier.weight(1f).testTag("food_people"),
             )
         }
@@ -1053,67 +990,21 @@ private val DISH_SEPARATORS = Regex("[,，、;；\\n]")
 @Composable
 private fun AddTile(icon: ImageVector, label: String, onClick: () -> Unit, modifier: Modifier) {
     Box(
-        modifier.size(PHOTO_SIZE).clip(MaterialTheme.shapes.medium)
-            .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+        modifier.size(PHOTO_SIZE).clip(AppTheme.shapes.medium)
+            .background(AppTheme.colorScheme.surfaceContainerHighest)
             .clickable(role = Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(icon, contentDescription = label, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        Icon(icon, contentDescription = label, tint = AppTheme.colorScheme.onSurfaceVariant)
     }
 }
 
-/**
- * The day, then the time of day on it, keeping the offset [time] has: the date picker
- * leads on to Material 3's time picker dialog, titled with the day chosen, which can go
- * back to it, and turns from the dial to typing the time and back, as its toggle does.
- */
-@OptIn(ExperimentalMaterial3Api::class)
+/** The day and the time of day on it, in one dialog, keeping the offset [time] has. */
 @Composable
-internal fun TimeDialog(time: OffsetDateTime, onDismiss: () -> Unit, onPick: (OffsetDateTime) -> Unit) {
-    // The date picker counts days as midnights in UTC.
-    val dates = rememberDatePickerState(
-        initialSelectedDateMillis = time.toLocalDate().atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli(),
-    )
-    val clock = rememberTimePickerState(time.hour, time.minute, is24Hour = true)
-    var onClock by remember { mutableStateOf(false) }
-    // Typing the time where the window is too short for the dial, a phone on its side, as
-    // Material 3 has a time picker fall back to its input rather than scroll.
-    val short = isCompactHeight()
-    var mode by remember { mutableStateOf(if (short) TimePickerDisplayMode.Input else TimePickerDisplayMode.Picker) }
-    val day = dates.selectedDateMillis?.let { Instant.ofEpochMilli(it).atOffset(ZoneOffset.UTC).toLocalDate() } ?: time.toLocalDate()
-
-    if (!onClock) {
-        DatePickerDialog(
-            onDismissRequest = onDismiss,
-            confirmButton = {
-                TextButton(shapes = ButtonDefaults.shapes(), onClick = { onClock = true }, modifier = Modifier.testTag("time_next")) { Text(stringResource(R.string.action_next)) }
-            },
-            dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
-        ) { DatePicker(dates) }
-    } else {
-        TimePickerDialog(
-            onDismissRequest = onDismiss,
-            title = { Text(formatDay(day.toString())) },
-            confirmButton = {
-                TextButton(shapes = ButtonDefaults.shapes(), onClick = {
-                    onPick(OffsetDateTime.of(day, java.time.LocalTime.of(clock.hour, clock.minute), time.offset))
-                }) { Text(stringResource(R.string.action_confirm)) }
-            },
-            dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { onClock = false }) { Text(stringResource(R.string.action_previous)) } },
-            modeToggleButton = {
-                TimePickerDialogDefaults.DisplayModeToggle(
-                    onDisplayModeChange = {
-                        mode = if (mode == TimePickerDisplayMode.Picker) TimePickerDisplayMode.Input else TimePickerDisplayMode.Picker
-                    },
-                    displayMode = mode,
-                    modifier = Modifier.testTag("time_mode"),
-                )
-            },
-        ) {
-            if (mode == TimePickerDisplayMode.Picker) TimePicker(clock) else TimeInput(clock)
-        }
+internal fun TimeDialog(time: OffsetDateTime, onDismiss: () -> Unit, onPick: (OffsetDateTime) -> Unit) =
+    DateTimeDialog(time.toLocalDate(), time.hour, time.minute, onDismiss) { day, hour, minute ->
+        onPick(OffsetDateTime.of(day, java.time.LocalTime.of(hour, minute), time.offset))
     }
-}
 
 /**
  * The Moment as a record, its photos and videos copied into the app's store first so it

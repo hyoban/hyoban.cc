@@ -12,7 +12,17 @@ a Moment's photos first, its photos a carousel whose next one peeks and is picke
 tap, folded to its words by a swipe down or its handle to leave the map more room, opens
 its Moment from its words or the photo showing, its menu when they are held or right
 clicked; from a keyboard or a remote, Space and the media keys play and pause, left and
-right step through the cards and up and down through the photos. The route is the stretches `GET /v1/routes` serves. It reads
+right step through the cards and up and down through the photos. The route is the stretches `GET /v1/routes` serves.
+
+It has three tabs, floating at the foot of the screen as icons, 记录 beside them. 时间线 is one timeline of everything that happened, newest first: the
+Moments under their months and days, the ledger's bills among them (those written with a
+Moment at the foot of its card, the rest in groups between the Moments of their day, each
+day's spending beside its date), and a banner where each trip begins. 地图 is the map, the
+trips listed in the sheet at its foot. 我 holds the changes waiting to be published, the
+ledger's month with the way into its bills, sums and accounts, and the settings, a page for
+each of their sections. The look follows the app's design system (the 「hyoban 应用设计系统」
+artifact, mirrored in `ui/theme`): the site's warm greys, one blue for state, hairlines
+rather than shadows. It reads
 the API's public endpoints (`apps/api`) and keeps a copy under the app's `api/`
 directory in the layout `packages/data-spec` defines, so it opens straight away and
 works offline; each start, each pull down on a list, and 刷新 on the settings page (the
@@ -23,8 +33,8 @@ The pages lead to each other wherever they can: a place's page and a trip's show
 map tab, the place with its panel up and the trip's route lifted with its card, which the
 trip's page shrinks into; a day's pill over its Moments opens the day, growing into its
 page, and a day's page its trip; a Moment's menu, on its cards and in the playback, goes to
-its place, its trip and its day, as does the viewer's date; and the settings' 发布 group
-leads to the changes waiting to be published. `moments://search` opens the search.
+its place, its trip and its day, as does the viewer's date; and 我 leads to the changes
+waiting to be published. `moments://search` opens the search.
 
 What a Moment says it ate shows as the site has it: a line under its words on its card
 (the dishes, 好吃, 一般 or 踩雷, and the bill), and on its page a row heading its place, trip
@@ -40,9 +50,8 @@ shipped in the APK as an asset, with the rest of the world never lit; the sea, l
 coast the boundaries were simplified past, lights the nearest within 10 km; the phone's own
 Moments light theirs too. The fog is the page's text colour, so on the dark map it's a light haze. Turned on, it closes in from the screen's edges to its middle; turned off, it clears from the middle outwards. A tap while it sweeps turns it around from where it is. Left on, it sweeps in the same way the first time the map opens after the app starts. Under the toggle, how many cities and provinces are lit.
 
-A new Moment can be written on the phone, from the ✎ in the Moments tab's header or
-`moments://new`, on a page of its own, or, on a window from Material 3's medium breakpoint
-on, in a dialog over the page it was opened from. Its 时刻 and 记账 at the top choose what it
+A new Moment can be written on the phone, from 记录 at the foot of the timeline or
+`moments://new`, on a page of its own, or, on a wider window, in a dialog over the page it was opened from. Its 时刻 and 记账 at the top choose what it
 writes: the Moment, a bill, or both, a bill written with the Moment taking its time and place
 and linked to it, and a meal's amount and food category until the bill's own are given. The
 Moment: its words, up to nine photos and videos from the system's documents picker (a tile beside it
@@ -51,7 +60,7 @@ where, worked out as it is written. A video goes up as it is, so one over 100 MB
 the API's Worker and the site's poster take, or other than MP4, MOV or WebM, is left out
 as it is picked, with a dialog saying why. A photo tapped there can be marked 不用作封面, one kept
 for the record (a screenshot, a flat tyre): it stays in its Moment, but neither the app's
-trip covers, calendar days and widget nor the site's covers, collages and share cards
+trip covers and widget nor the site's covers, collages and share cards
 pick it. Under 类型 it can say what it is mostly about, one of 技术, 旅行, 美食, 用车,
 摄影 and 生活, a second tap leaving it unset; a 技术 one the site doesn't show. Under 美食 it can say what was eaten, as the site shows it under the Moment: the
 dishes, split at commas, 好吃, 一般 or 踩雷, and what the meal cost and how many it fed;
@@ -94,12 +103,12 @@ is copied whole, with its first frame beside it as its still), and its new place
 or change of API touches it. It is shown among the site's, marked 仅本机 (on this phone),
 and can be changed or deleted from its page.
 
-With the API's token, set on the settings page (kept in a file of the app's that backups
+With the API's token, set under 我 in 时刻与数据 (kept in a file of the app's that backups
 leave out), the site's Moments can be changed and deleted from their pages too. Nothing
 reaches the site as it is saved: the phone's new Moments, the site's changed (marked
 改动未发布) and those deleted wait on the phone, past a restart, until they are
-published together. The ☁ in the Moments tab's header, with how many there are,
-opens 发布更改, which lists them, the changed with what changed, and takes back a change
+published together. The card at the top of 我, with how many there are (and a dot on 我's
+tab while there are any), opens 发布更改, which lists them, the changed with what changed, and takes back a change
 or a deletion; its 全部发布到网站 runs as WorkManager work in a foreground service, on
 past the app being left or stopped, with how far it has got in a notification as on the
 page, and over a link that drops it waits for the network and goes on (asked once, on
@@ -272,9 +281,9 @@ Moments' own words stay as they were written.
 
 ## Ledger
 
-The fourth tab, 记账, is a ledger kept on this phone alone, in place of iCost: books of
-bills over accounts in their own currencies, summed per book in its currency. Its three
-primary tabs are 账单, every bill of the book shown under its months and days with what
+记账 is a ledger kept on this phone alone, in place of iCost: books of bills over accounts in
+their own currencies, summed per book in its currency. Its bills are on the timeline; its
+page, opened from 我 (or `moments://ledger`, on its sums), has three tabs: 账单, every bill of the book shown under its months and days with what
 they spent and earned; 统计, the month, the year or all of it, stepped through with arrows:
 what was spent, earned and left, the day's average and how it compares with the last
 stretch's same days, then charts of spending or earning, drawn on a canvas, each mark read
@@ -291,11 +300,11 @@ shows 全部账本, every book but the archived at once, summed in the chosen bo
 its categories summed by name across books and each bill marked with its book. The eye
 beside the month's sums hides every amount as `¥****` (隐藏金额, kept until shown again,
 here and on the Moments', trips' and places' pages), and the bar searches bills (note,
-category, account, amount) and opens 记账设置.
+category, account, amount). 记账设置 is under 我.
 
 A bill is an expense, an income or a transfer, the last also a repayment, a loan given or
 taken, or one collected; or a refund or reimbursement of an expense, written from that
-expense's page. 记一笔, the tab's button (or `moments://new-bill`), opens the new Moment's page
+expense's page. `moments://new-bill`, or 记录 with 记账 chosen, opens the new Moment's page
 with only 记账 chosen, where a Moment can be written with the bill; changing a bill, or writing
 one from a Moment, an account or a day, is a full-screen dialog of its own. Either has its amount
 (sums like `12+3.4` add up) in any currency, its category and second-level category,
@@ -374,7 +383,7 @@ taken from `uiautomator dump`; `ledger/AutoBill` keeps the switch and posts the 
 
 The map tab shows local GPS footprints alongside its places and published trip routes,
 using the same MapLibre map. 地图 → 足迹 opens a bottom panel for recording, choosing a
-day or recorded trip, and exporting/deleting tracks, laid out as Material 3 segmented
+day or recorded trip, and exporting/deleting tracks, laid out as grouped
 lists: a 记录 group of switches (日常自动记录, 单次行程, 在地图显示足迹) with pause or
 resume between them, then a 轨迹 group under the day and trip filter chips. Closing it
 keeps the selected track visible; tapping the selected track's row closes the panel and
@@ -645,11 +654,9 @@ need device testing.
 The maps are OpenFreeMap's vector tiles drawn by MapLibre, which need no key.
 
 The API, the origin the photos and videos come from and the map's light and dark styles
-are the build's (`BuildConfig`) until changed on the settings page, opened from the
-Moments tab's header; a new API drops the copy on the phone and reads everything again.
-The same page sets the look as FlClash's theme page does: light, dark or the system's,
-the seed colour (the system's accent, Apple's system colours or one's own by hex), how
-much of it the scheme carries, and dark in pure black.
+are the build's (`BuildConfig`) until changed under 我 (时刻与数据 and 地图与足迹); a new API
+drops the copy on the phone and reads everything again. 外观 there chooses light, dark or
+the system's; the colours themselves are the design system's, the same for everyone.
 
 The unit tests round-trip every record under the repository's `data/` through the
 app's models, so the app and the site
@@ -673,7 +680,7 @@ scripts/ui.py tap tab_map
 ```
 
 The same names serve TalkBack: a photo is read as what it is, where it is among its
-Moment's and its description; a calendar day as its date and how many Moments it has;
+Moment's and its description;
 the months and days heading a list as headings; the theme's choices as a group with the
 one chosen.
 

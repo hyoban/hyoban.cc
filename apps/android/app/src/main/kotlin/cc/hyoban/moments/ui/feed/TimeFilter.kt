@@ -1,5 +1,8 @@
 package cc.hyoban.moments.ui.feed
 
+import cc.hyoban.moments.ui.design.AppIcons
+import cc.hyoban.moments.ui.theme.Corners
+import cc.hyoban.moments.ui.theme.tokens
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -16,16 +19,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.UnfoldLess
-import androidx.compose.material.icons.rounded.UnfoldMore
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import cc.hyoban.moments.ui.design.FilterChip
+import cc.hyoban.moments.ui.design.FilterChipDefaults
+import cc.hyoban.moments.ui.design.Icon
+import cc.hyoban.moments.ui.design.AppTheme
+import cc.hyoban.moments.ui.design.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
@@ -90,8 +88,8 @@ fun TimeFilterRows(filter: TimeFilter, years: List<Int>, months: List<Int>, onCh
         )
         AnimatedVisibility(
             filter.year != null && months.size > 1,
-            enter = fadeIn(MaterialTheme.motionScheme.defaultEffectsSpec()) + expandVertically(MaterialTheme.motionScheme.defaultSpatialSpec()),
-            exit = fadeOut(MaterialTheme.motionScheme.defaultEffectsSpec()) + shrinkVertically(MaterialTheme.motionScheme.defaultSpatialSpec()),
+            enter = fadeIn(AppTheme.motionScheme.defaultEffectsSpec()) + expandVertically(AppTheme.motionScheme.defaultSpatialSpec()),
+            exit = fadeOut(AppTheme.motionScheme.defaultEffectsSpec()) + shrinkVertically(AppTheme.motionScheme.defaultSpatialSpec()),
         ) {
             ChipRow(
                 "month_",
@@ -109,7 +107,7 @@ fun TimeFilterRows(filter: TimeFilter, years: List<Int>, months: List<Int>, onCh
  * When they don't fit, a leading chip shows them all, wrapped onto as many rows as they
  * need, as Material 3 has a set of chips reflow rather than only scroll; it shows less again.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ChipRow(tag: String, options: List<Int?>, selected: Int?, label: @Composable (Int?) -> String, onSelect: (Int?) -> Unit) {
     var all by rememberSaveable(tag) { mutableStateOf(false) }
@@ -123,11 +121,9 @@ private fun ChipRow(tag: String, options: List<Int?>, selected: Int?, label: @Co
             onClick = { all = !all },
             label = { Text(stringResource(if (all) R.string.action_show_less else R.string.action_show_all)) },
             leadingIcon = {
-                Icon(if (all) Icons.Rounded.UnfoldLess else Icons.Rounded.UnfoldMore, contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize))
+                Icon(if (all) AppIcons.Collapse else AppIcons.Expand, contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize))
             },
             modifier = Modifier.testTag("${tag}toggle"),
-            border = FilterChipDefaults.filterChipBorder(enabled = true, selected = all, borderColor = MaterialTheme.colorScheme.outline, selectedBorderColor = Color.Transparent),
-            colors = chipColors(),
         )
     }
     if (all) {
@@ -150,41 +146,19 @@ private fun ChipRow(tag: String, options: List<Int?>, selected: Int?, label: @Co
     }
 }
 
-/** One year or month, checked in the secondary container when chosen. */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+/** One year or month, checked on the accent's soft tint when chosen. */
 @Composable
 private fun OptionChip(tag: String, option: Int?, selected: Int?, label: @Composable (Int?) -> String, onSelect: (Int?) -> Unit) {
     FilterChip(
         selected = option == selected,
         onClick = { onSelect(option) },
-        label = { Text(label(option), style = if (option == selected) MaterialTheme.typography.labelLargeEmphasized else MaterialTheme.typography.labelLarge) },
+        label = { Text(label(option), style = if (option == selected) AppTheme.typography.labelLargeEmphasized else AppTheme.typography.labelLarge) },
         // The chosen one checked, as Material 3 has a selected filter chip.
         leadingIcon = if (option == selected) {
-            { Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize)) }
+            { Icon(AppIcons.Check, contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize)) }
         } else {
             null
         },
         modifier = Modifier.testTag("$tag${option ?: "all"}"),
-        // Material 3's chip, its 8dp corners; the chosen one in the secondary container, as
-        // Material 3 colours a filter chip; the rest a level above the page, outlined in the
-        // outline rather than its variant, as Material 3 shows a set of chips can be tapped
-        // at 3:1.
-        border = FilterChipDefaults.filterChipBorder(
-            enabled = true,
-            selected = option == selected,
-            borderColor = MaterialTheme.colorScheme.outline,
-            selectedBorderColor = Color.Transparent,
-        ),
-        colors = chipColors(),
     )
 }
-
-@Composable
-private fun chipColors() = FilterChipDefaults.filterChipColors(
-    containerColor = LocalSurfaceLevel.current.raised.fill(),
-    labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-    iconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-    selectedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-    selectedLabelColor = MaterialTheme.colorScheme.onSecondaryContainer,
-    selectedLeadingIconColor = MaterialTheme.colorScheme.onSecondaryContainer,
-)

@@ -1,11 +1,16 @@
 package cc.hyoban.moments.ui.components
 
+import cc.hyoban.moments.ui.design.AppIcons
+import cc.hyoban.moments.ui.design.TopBarWindowInsets
+import cc.hyoban.moments.ui.design.rememberTopBarScroll
+import cc.hyoban.moments.ui.design.TopBar
+import cc.hyoban.moments.ui.theme.dividerColor
+import cc.hyoban.moments.ui.design.HorizontalDivider
 import androidx.compose.animation.core.animate
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
-import androidx.compose.material.icons.rounded.ArrowDropDown
-import androidx.compose.material3.DropdownMenu
+import cc.hyoban.moments.ui.design.DropdownMenu
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -20,22 +25,13 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.add
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LargeFlexibleTopAppBar
-import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MediumFlexibleTopAppBar
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import cc.hyoban.moments.ui.design.IconButtonDefaults
+import cc.hyoban.moments.ui.design.ButtonDefaults
+import cc.hyoban.moments.ui.design.Icon
+import cc.hyoban.moments.ui.design.IconButton
+import cc.hyoban.moments.ui.design.LocalTextStyle
+import cc.hyoban.moments.ui.design.AppTheme
+import cc.hyoban.moments.ui.design.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -54,13 +50,12 @@ import cc.hyoban.moments.ui.theme.SurfaceLevel
 import cc.hyoban.moments.ui.theme.fill
 
 /**
- * A pushed page as Material 3 lays one out: a medium flexible top app bar over [content],
+ * A pushed page: the top bar over [content],
  * its title large under the back button while the page is at its top, folding into the
- * bar as the content scrolls up, the bar taking the scrolled-under container colour. A
+ * bar as the content scrolls up, a hairline under the bar once it has. A
  * page that is a full-screen dialog, done by its action or left without saving, [close]s
  * with an X rather than going back.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SubPage(
     title: String,
@@ -70,16 +65,17 @@ fun SubPage(
     actions: @Composable RowScope.() -> Unit = {},
     close: Boolean = false,
     small: Boolean = false,
+    titleMenu: TitleMenu? = null,
+    subtitleAction: (@Composable () -> Unit)? = null,
     content: @Composable BoxScope.() -> Unit,
-) = BarPage(title, subtitle, onBack, large = false, modifier, actions, content, close = close, small = small)
+) = BarPage(title, subtitle, onBack, large = false, modifier, actions, content, close = close, small = small, titleMenu = titleMenu, subtitleAction = subtitleAction)
 
 /**
- * A tab's page as Material 3 lays one out: a large flexible top app bar with no back
+ * A tab's page: the top bar, its title large, with no back
  * button over [content], folding into the bar the same way. Its [tab] tapped again, the
  * bar opens out again as the page goes back to its top. A page pulled down to [refresh]
  * has its title offer the same to a screen reader, which can't pull.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun TabPage(
     title: String,
@@ -96,11 +92,10 @@ fun TabPage(
 /**
  * A menu the page's title opens, named [label], as a page that is one of several (a ledger's
  * book) is switched from its headline, a dropdown arrow after it, rather than by another
- * action in the bar, which Material 3 keeps to one or two.
+ * action in the bar, which keeps to one or two.
  */
 class TitleMenu(val label: String, val items: @Composable ColumnScope.(close: () -> Unit) -> Unit)
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun BarPage(
     title: String,
@@ -118,18 +113,16 @@ private fun BarPage(
     subtitleAction: (@Composable () -> Unit)? = null,
 ) {
     // A dialog's bar, on a window too short to open it out, stays put rather than scrolling away,
-    // so its X and its confirming action are always there, as Material 3 keeps a dialog's.
-    val folding = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-    val pinned = TopAppBarDefaults.pinnedScrollBehavior()
-    val scroll = if (close && (isCompactHeight() || small)) pinned else folding
+    // so its X and its confirming action are always there.
+    val scroll = rememberTopBarScroll(pinned = close && (isCompactHeight() || small))
     OnTabReselect(tab) {
         animate(scroll.state.heightOffset, 0f) { value, _ -> scroll.state.heightOffset = value }
     }
     val refreshLabel = stringResource(R.string.action_refresh)
-    val smallTitle = MaterialTheme.typography.titleLarge.fontSize
+    val smallTitle = AppTheme.typography.titleLarge.fontSize
     val titleText: @Composable () -> Unit = {
         // Opened out, a long title wraps to a second line rather than being cut, the bar growing
-        // to hold it, as Material 3 has a flexible app bar's headline; folded into the small bar,
+        // to hold it; folded into the small bar,
         // drawn at its title size, it stays on one line.
         val expanded = LocalTextStyle.current.fontSize > smallTitle
         val text: @Composable (Modifier) -> Unit = { textModifier ->
@@ -150,13 +143,13 @@ private fun BarPage(
             var open by remember { mutableStateOf(false) }
             Box {
                 Row(
-                    Modifier.clip(MaterialTheme.shapes.small)
+                    Modifier.clip(AppTheme.shapes.small)
                         .clickable(onClickLabel = titleMenu.label, role = Role.DropdownList) { open = true }
                         .testTag("title_menu"),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     text(Modifier.weight(1f, fill = false))
-                    Icon(Icons.Rounded.ArrowDropDown, contentDescription = null)
+                    Icon(AppIcons.CaretDown, contentDescription = null)
                 }
                 DropdownMenu(open, onDismissRequest = { open = false }) { titleMenu.items(this) { open = false } }
             }
@@ -164,7 +157,7 @@ private fun BarPage(
     }
     // What the subtitle is about acted on beside it while the bar is open, its summary's
     // amounts hidden, say; folded into the small bar, the subtitle stands alone.
-    val subtitleSize = MaterialTheme.typography.labelLarge.fontSize
+    val subtitleSize = AppTheme.typography.labelLarge.fontSize
     val subtitleText: (@Composable () -> Unit)? = subtitle?.let {
         {
             if (subtitleAction != null && LocalTextStyle.current.fontSize > subtitleSize) {
@@ -180,46 +173,43 @@ private fun BarPage(
     val back: @Composable () -> Unit = {
         if (onBack != null) {
             Tooltip(stringResource(if (close) R.string.action_close else R.string.action_back), below = true) {
-                IconButton(shapes = IconButtonDefaults.shapes(), onClick = onBack, modifier = Modifier.testTag("back")) {
+                IconButton(onClick = onBack, modifier = Modifier.testTag("back")) {
                     if (close) {
-                        Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.action_close))
+                        Icon(AppIcons.Close, contentDescription = stringResource(R.string.action_close))
                     } else {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.action_back))
+                        Icon(AppIcons.ArrowLeft, contentDescription = stringResource(R.string.action_back))
                     }
                 }
             }
         }
     }
-    val colors = TopAppBarDefaults.topAppBarColors(
-        containerColor = AppColors.page,
-        // Scrolled, a level above the page, as Material 3 has the bar a container step above it.
-        scrolledContainerColor = SurfaceLevel.Page.raised.fill(),
-    )
     // Clear of the tabs down the side on a phone on its side, as the page's list is, and its
-    // title on the page's margin, wider than the bar's own from Material 3's medium breakpoint.
+    // title on the page's margin, wider than the bar's own from the medium breakpoint.
     val rail = LocalRailSpace.current
     val margin = Space.gutter - BAR_TITLE_INSET
-    val insets = TopAppBarDefaults.windowInsets.add(WindowInsets(left = rail.left + margin, right = rail.right + margin))
+    val insets = TopBarWindowInsets.add(WindowInsets(left = rail.left + margin, right = rail.right + margin))
     Column(modifier.fillMaxSize().nestedScroll(scroll.nestedScrollConnection)) {
-        if (isCompactHeight() || small) {
-            // Its subtitle too small to act on beside, what it would there joins the bar's actions.
-            val actions: @Composable RowScope.() -> Unit = { subtitleAction?.invoke(); actions() }
-            // On a window too short for it, a phone on its side, the bar starts small, its title
-            // beside the back button, rather than taking half the screen until scrolled away; so
-            // does a page whose own bottom half is taken, the bill's keypad.
-            if (subtitleText != null) {
-                TopAppBar(titleText, subtitleText, navigationIcon = back, actions = actions, colors = colors, windowInsets = insets, scrollBehavior = scroll)
-            } else {
-                TopAppBar(titleText, navigationIcon = back, actions = actions, colors = colors, windowInsets = insets, scrollBehavior = scroll)
-            }
-        } else if (large) {
-            LargeFlexibleTopAppBar(titleText, subtitle = subtitleText, navigationIcon = back, actions = actions, colors = colors, windowInsets = insets, scrollBehavior = scroll)
-        } else {
-            MediumFlexibleTopAppBar(titleText, subtitle = subtitleText, navigationIcon = back, actions = actions, colors = colors, windowInsets = insets, scrollBehavior = scroll)
-        }
+        // On a window too short for it, a phone on its side, the bar starts small, its title
+        // beside the back button, rather than taking half the screen until scrolled away; so
+        // does a page whose own bottom half is taken, the bill's keypad. Its subtitle too small
+        // to act on beside, what it would there joins the bar's actions.
+        val startsSmall = isCompactHeight() || small
+        TopBar(
+            titleText,
+            scroll,
+            subtitle = subtitleText,
+            navigationIcon = back,
+            actions = if (startsSmall) { { subtitleAction?.invoke(); actions() } } else actions,
+            windowInsets = insets,
+            large = large,
+            small = startsSmall,
+        )
+        // The bar's hairline, once something has scrolled under it.
+        val scrolled = scroll.state.overlappedFraction > 0.01f || scroll.state.collapsedFraction > 0.99f
+        HorizontalDivider(color = if (scrolled) dividerColor() else AppColors.page)
         Box(Modifier.weight(1f)) { content() }
     }
 }
 
-/** How far in from its edge Material 3's top app bar sets its title, the compact window's margin. */
+/** How far in from its edge the top bar sets its title, the compact window's margin. */
 private val BAR_TITLE_INSET = 16.dp

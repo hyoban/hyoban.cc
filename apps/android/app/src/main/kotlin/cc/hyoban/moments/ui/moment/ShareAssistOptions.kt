@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.moment
 
+import cc.hyoban.moments.ui.design.AppSwitch
 import android.content.Intent
 import android.provider.Settings
 import androidx.annotation.StringRes
@@ -7,10 +8,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.Switch
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import cc.hyoban.moments.ui.design.ButtonDefaults
+import cc.hyoban.moments.ui.design.Text
+import cc.hyoban.moments.ui.design.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -47,7 +47,7 @@ internal fun ShareAssistOptions(
             horizontalArrangement = Arrangement.spacedBy(Space.m),
         ) {
             Text(stringResource(label), Modifier.weight(1f))
-            Switch(
+            AppSwitch(
                 checked = enabled,
                 onCheckedChange = onEnabled,
                 enabled = !busy,
@@ -58,7 +58,6 @@ internal fun ShareAssistOptions(
             content()
             if (!connected) {
                 TextButton(
-                    shapes = ButtonDefaults.shapes(),
                     onClick = { context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) },
                     modifier = Modifier.testTag("${tag}_assist_settings"),
                 ) {
@@ -70,7 +69,6 @@ internal fun ShareAssistOptions(
                 AssistStatus.Running -> {
                     Text(stringResource(running))
                     TextButton(
-                        shapes = ButtonDefaults.shapes(),
                         onClick = { ShareAccessibilityService.cancel(adapter.id) },
                         modifier = Modifier.testTag("${tag}_assist_cancel"),
                     ) {

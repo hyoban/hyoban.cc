@@ -4,7 +4,7 @@ import androidx.activity.BackEventCompat
 import androidx.activity.compose.PredictiveBackHandler
 import androidx.compose.animation.core.animate
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
+import cc.hyoban.moments.ui.design.AppTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -36,7 +36,7 @@ fun rememberPredictiveBack(enabled: Boolean = true, onBack: () -> Unit): Predict
     val state = remember { PredictiveBack() }
     val back by rememberUpdatedState(onBack)
     val scope = rememberCoroutineScope()
-    val settle = MaterialTheme.motionScheme.fastSpatialSpec<Float>()
+    val settle = AppTheme.motionScheme.fastSpatialSpec<Float>()
     // Open again, it starts from rest rather than where the last gesture left it.
     LaunchedEffect(enabled) { if (enabled) state.progress = 0f }
     PredictiveBackHandler(enabled) { events ->

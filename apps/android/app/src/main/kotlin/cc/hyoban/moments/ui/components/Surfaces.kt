@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.components
 
+import cc.hyoban.moments.ui.theme.cardBorder
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -18,15 +19,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.ripple
+import cc.hyoban.moments.ui.design.AssistChip
+import cc.hyoban.moments.ui.design.AssistChipDefaults
+import cc.hyoban.moments.ui.design.Card
+import cc.hyoban.moments.ui.design.CardDefaults
+import cc.hyoban.moments.ui.design.Icon
+import cc.hyoban.moments.ui.design.AppTheme
+import cc.hyoban.moments.ui.design.PressIndication
+import cc.hyoban.moments.ui.design.Surface
+import cc.hyoban.moments.ui.design.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -62,7 +63,7 @@ import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.SurfaceLevel
 import cc.hyoban.moments.ui.theme.fill
 
-/** The page every screen is laid on: Material 3's surface. */
+/** The page every screen is laid on. */
 object AppColors {
     val page: Color
         @Composable get() = SurfaceLevel.Page.fill()
@@ -70,16 +71,15 @@ object AppColors {
     /** What is in a sheet over the page sits as on a card: a level up from it, in light and dark alike. */
     val sheetLevel: SurfaceLevel = SurfaceLevel.Card
 
-    /** A sheet's own fill, bottom or side: Material 3's surface container low. */
+    /** A sheet's own fill, bottom or side: the surface. */
     val sheet: Color
-        @Composable get() = MaterialTheme.colorScheme.surfaceContainerLow
+        @Composable get() = AppTheme.colorScheme.surfaceContainerLow
 }
 
 /**
- * A card one level above what it sits on, Material 3's card corners, 12dp, set apart by its
- * fill rather than a border or a
- * shadow; what is inside it is a level above it in turn. Pressed anywhere, its photos too,
- * it shows Material 3's pressed state layer, a ripple, without moving. With [onLongClick], a
+ * A card one level above what it sits on, in the large corners, set apart by its hairline and
+ * its fill, never a shadow; what is inside it is a level above it in turn. Pressed anywhere,
+ * its photos too, it shows a ripple, without moving. With [onLongClick], a
  * long press, or a mouse's right click, opens what more it offers, named [onLongClickLabel];
  * [onLongClick] is told where, from the card's bottom start, as a menu over it is offset.
  */
@@ -90,17 +90,20 @@ fun PressableCard(
     modifier: Modifier = Modifier,
     onLongClick: ((Offset) -> Unit)? = null,
     onLongClickLabel: String? = null,
+    /** On the page itself, no fill or hairline of its own: an item of a list rather than a card. */
+    flat: Boolean = false,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val interaction = remember { MutableInteractionSource() }
-    val level = LocalSurfaceLevel.current.raised
+    val level = if (flat) LocalSurfaceLevel.current else LocalSurfaceLevel.current.raised
     // Where the finger or the pointer last went down, for what a long press opens.
     val down = remember { floatArrayOf(0f, 0f) }
     val currentLongClick by rememberUpdatedState(onLongClick)
 
     Card(
-        shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(containerColor = level.fill(), contentColor = MaterialTheme.colorScheme.onSurface),
+        shape = AppTheme.shapes.large,
+        colors = CardDefaults.cardColors(containerColor = if (flat) Color.Transparent else level.fill(), contentColor = AppTheme.colorScheme.onSurface),
+        border = if (flat) null else cardBorder(),
         modifier = modifier,
     ) {
         // Tapped inside the card's shape, so the ripple is clipped to it and lies over its photos.
@@ -121,7 +124,7 @@ fun PressableCard(
                 }
                 .combinedClickable(
                     interactionSource = interaction,
-                    indication = ripple(),
+                    indication = PressIndication,
                     onClick = onClick,
                     onLongClick = onLongClick?.let { open -> { open(Offset(down[0], down[1])) } },
                     onLongClickLabel = onLongClickLabel,
@@ -144,15 +147,14 @@ fun Pill(text: String, modifier: Modifier = Modifier, icon: ImageVector? = null)
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Space.s),
     ) {
-        icon?.let { Icon(it, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp)) }
-        Text(text, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+        icon?.let { Icon(it, contentDescription = null, tint = AppTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp)) }
+        Text(text, style = AppTheme.typography.labelLarge, color = AppTheme.colorScheme.onSurfaceVariant, maxLines = 1)
     }
 }
 
 /**
  * A chip tapped on its own, an [AssistChip] filled a level above what it sits on and
- * without a border: a place to open. Material 3's chip shape, 8dp corners, and 48dp to
- * tap, as every Material chip is.
+ * without a border: a place to open. A capsule, 48dp to tap.
  */
 @Composable
 fun NeutralChip(label: String, icon: ImageVector, onClick: () -> Unit, modifier: Modifier = Modifier) {
@@ -160,12 +162,6 @@ fun NeutralChip(label: String, icon: ImageVector, onClick: () -> Unit, modifier:
         onClick = onClick,
         label = { Text(label) },
         leadingIcon = { Icon(icon, contentDescription = null, modifier = Modifier.size(AssistChipDefaults.IconSize)) },
-        border = null,
-        colors = AssistChipDefaults.assistChipColors(
-            containerColor = LocalSurfaceLevel.current.raised.fill(),
-            labelColor = MaterialTheme.colorScheme.onSurface,
-            leadingIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-        ),
         modifier = modifier,
     )
 }
@@ -174,13 +170,13 @@ fun NeutralChip(label: String, icon: ImageVector, onClick: () -> Unit, modifier:
 @Composable
 fun SectionHeader(icon: ImageVector, title: String, modifier: Modifier = Modifier, action: (@Composable () -> Unit)? = null) {
     Row(modifier.fillMaxWidth().heightIn(min = 24.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
-        Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
-        Text(title, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f).semantics { heading() })
+        Icon(icon, contentDescription = null, tint = AppTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
+        Text(title, style = AppTheme.typography.titleSmall, color = AppTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f).semantics { heading() })
         action?.invoke()
     }
 }
 
-/** A month's start in a long list: the month large, its year beside it. */
+/** A month's start in a long list: the month as a title, its year small beside it. */
 @Composable
 fun MonthHeader(month: String, year: String?) {
     Row(
@@ -189,15 +185,16 @@ fun MonthHeader(month: String, year: String?) {
         verticalAlignment = Alignment.Bottom,
         horizontalArrangement = Arrangement.spacedBy(Space.s),
     ) {
-        Text(month, style = MaterialTheme.typography.headlineSmall)
+        Text(month, style = AppTheme.typography.titleLarge)
         year?.let {
-            Text(it, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = Space.xxs))
+            Text(it, style = AppTheme.typography.bodySmall, color = AppTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = Space.xxs))
         }
     }
 }
 
 /**
- * A day over its Moments, floating over them as they scroll: the floating level, with a shadow.
+ * A day over its Moments, floating over them as they scroll: the surface with its hairline and a
+ * shadow.
  * With [onClick], tapped it opens the day, growing into its page from [date]'s card.
  */
 @Composable
@@ -212,13 +209,14 @@ fun DayPill(text: String, date: String? = null, onClick: (() -> Unit)? = null) {
         Surface(
             shape = PillShape,
             color = SurfaceLevel.Floating.fill(),
-            contentColor = MaterialTheme.colorScheme.onSurface,
-            shadowElevation = Elevation.level2,
+            contentColor = AppTheme.colorScheme.onSurface,
+            border = cardBorder(),
+            shadowElevation = Elevation.level1,
             modifier = open,
         ) {
             Text(
                 text,
-                style = MaterialTheme.typography.labelLarge,
+                style = AppTheme.typography.labelLarge,
                 // One line, so springing past its width as it shrinks back from the day's page
                 // doesn't wrap its last word away for a moment.
                 softWrap = false,

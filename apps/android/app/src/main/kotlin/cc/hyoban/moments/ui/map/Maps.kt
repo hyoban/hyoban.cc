@@ -13,7 +13,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.union
-import androidx.compose.material3.MaterialTheme
+import cc.hyoban.moments.ui.design.AppTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -780,7 +780,7 @@ fun PlacesMap(
     val located by rememberUpdatedState(onLocated)
     val tapEmpty by rememberUpdatedState(onEmptyTap)
     val context = LocalContext.current
-    val me = MaterialTheme.colorScheme.primary.toArgb()
+    val me = AppTheme.colorScheme.primary.toArgb()
     val tapRoute by rememberUpdatedState(onRoute)
     val openTrip by rememberUpdatedState(onTrip)
     val lifted by rememberUpdatedState(highlighted)
@@ -790,13 +790,13 @@ fun PlacesMap(
     val allLocations = remember(places, footprintLocations) { places.map { it.place.latLng } + footprintLocations }
     var map by remember { mutableStateOf<Pair<MapLibreMap, Style>?>(null) }
     var framed by remember { mutableStateOf(false) }
-    val ink = MaterialTheme.colorScheme.onSurface.toArgb()
+    val ink = AppTheme.colorScheme.onSurface.toArgb()
     // The ring round every dot but the one chosen, the page's surface; the number on a dot white, as
     // on the site's map, its year colours being the site's rather than Material 3's (MapScreen).
-    val ring = MaterialTheme.colorScheme.surface.toArgb()
+    val ring = AppTheme.colorScheme.surface.toArgb()
     val onDot = Color.White.toArgb()
-    val shade = MaterialTheme.colorScheme.scrim.toArgb()
-    val unknown = MaterialTheme.colorScheme.outline.toArgb()
+    val shade = AppTheme.colorScheme.scrim.toArgb()
+    val unknown = AppTheme.colorScheme.outline.toArgb()
     val density = LocalDensity.current
     // Far enough round a place that the dot takes the 48dp Material 3 has anything tapped take.
     val reach = with(density) { TAP_REACH.toPx() }
@@ -1059,7 +1059,7 @@ fun PlacesMap(
     // The dot chosen grows and the one let go shrinks back, and a lifted route stands out as the
     // rest fall back, on the motion scheme's fast spatial spring a frame at a time: the map's own
     // transitions don't reach a property that differs from dot to dot.
-    val change = MaterialTheme.motionScheme.fastSpatialSpec<Float>()
+    val change = AppTheme.motionScheme.fastSpatialSpec<Float>()
     val before = remember { arrayOfNulls<String>(2) }
     // Where the place's sheet leaves the map in sight: under the legend and above the sheet's half.
     val clearTop = with(density) { (bars[1] + 72.dp).toPx() }
@@ -1222,8 +1222,8 @@ fun PlacesStill(places: List<Place>, modifier: Modifier = Modifier) {
 
 @Composable
 private fun PointsMap(points: List<LatLng>, lines: List<RouteSegment>, dot: Float, padding: Dp, modifier: Modifier, interactive: Boolean) {
-    val line = MaterialTheme.colorScheme.primary.toArgb()
-    val ring = MaterialTheme.colorScheme.surface.toArgb()
+    val line = AppTheme.colorScheme.primary.toArgb()
+    val ring = AppTheme.colorScheme.surface.toArgb()
     val inset = edges(padding, padding, padding, padding)
 
     MapLibreView(modifier, interactive) { map, style, _ ->
@@ -1298,10 +1298,10 @@ fun PickerMap(
     val tapPlace by rememberUpdatedState(onPlace)
     val centered by rememberUpdatedState(onCenter)
     var map by remember { mutableStateOf<Pair<MapLibreMap, Style>?>(null) }
-    val primary = MaterialTheme.colorScheme.primary.toArgb()
-    val dot = MaterialTheme.colorScheme.onSurfaceVariant.toArgb()
-    val ink = MaterialTheme.colorScheme.onSurface.toArgb()
-    val halo = MaterialTheme.colorScheme.surface.toArgb()
+    val primary = AppTheme.colorScheme.primary.toArgb()
+    val dot = AppTheme.colorScheme.onSurfaceVariant.toArgb()
+    val ink = AppTheme.colorScheme.onSurface.toArgb()
+    val halo = AppTheme.colorScheme.surface.toArgb()
     val reach = with(LocalDensity.current) { TAP_REACH.toPx() }
     val first = remember { target }
 

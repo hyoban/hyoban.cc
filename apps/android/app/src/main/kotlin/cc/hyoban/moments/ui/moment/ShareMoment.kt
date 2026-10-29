@@ -1,5 +1,7 @@
 package cc.hyoban.moments.ui.moment
 
+import cc.hyoban.moments.ui.design.AppIcons
+import cc.hyoban.moments.ui.design.Spinner
 import android.Manifest
 import android.content.ActivityNotFoundException
 import android.content.ClipData
@@ -23,24 +25,18 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.Send
-import androidx.compose.material.icons.rounded.PhotoLibrary
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
-import androidx.compose.material3.LoadingIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import cc.hyoban.moments.ui.design.AlertDialog
+import cc.hyoban.moments.ui.design.ButtonDefaults
+import cc.hyoban.moments.ui.design.HorizontalDivider
+import cc.hyoban.moments.ui.design.Icon
+import cc.hyoban.moments.ui.design.ListItem
+import cc.hyoban.moments.ui.design.ListItemDefaults
+import cc.hyoban.moments.ui.design.AppTheme
+import cc.hyoban.moments.ui.design.ModalBottomSheet
+import cc.hyoban.moments.ui.design.OutlinedTextField
+import cc.hyoban.moments.ui.design.Surface
+import cc.hyoban.moments.ui.design.Text
+import cc.hyoban.moments.ui.design.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -109,7 +105,6 @@ enum class ShareTarget(val tag: String, @param:StringRes val title: Int, val lim
  * actions on a phone: the apps it is sent to straight away, then those it is made ready
  * for by hand, one tap choosing; the scrim or a swipe down closes it.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShareMenu(onSelect: (ShareTarget) -> Unit, onDismiss: () -> Unit) {
     // A choice made ready by hand says so under its name, rather than in brackets after it.
@@ -122,7 +117,7 @@ fun ShareMenu(onSelect: (ShareTarget) -> Unit, onDismiss: () -> Unit) {
                 null
             },
             leadingContent = { AppIcon(app, icon) },
-            colors = ListItemDefaults.colors(containerColor = Color.Transparent, leadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant),
+            colors = ListItemDefaults.colors(containerColor = Color.Transparent, leadingIconColor = AppTheme.colorScheme.onSurfaceVariant),
             modifier = Modifier.clickable { onSelect(target) }.testTag("share_$tag"),
         )
     }
@@ -135,15 +130,15 @@ fun ShareMenu(onSelect: (ShareTarget) -> Unit, onDismiss: () -> Unit) {
         Column(Modifier.verticalScroll(rememberScrollState()).padding(bottom = Space.l)) {
             Text(
                 stringResource(R.string.action_share),
-                style = MaterialTheme.typography.titleLarge,
+                style = AppTheme.typography.titleLarge,
                 modifier = Modifier.padding(horizontal = Space.xl, vertical = Space.s).semantics { heading() },
             )
             ShareTarget.entries.filter { it != ShareTarget.PREPARE }.forEach { target ->
-                choice(stringResource(target.title), target.tag, target.app, Icons.AutoMirrored.Rounded.Send, target)
+                choice(stringResource(target.title), target.tag, target.app, AppIcons.Send, target)
             }
-            HorizontalDivider(Modifier.padding(vertical = Space.s), color = MaterialTheme.colorScheme.outlineVariant)
-            choice(stringResource(R.string.action_share_feishu_manual), "feishu", FEISHU, Icons.Rounded.PhotoLibrary, ShareTarget.PREPARE)
-            choice(stringResource(ShareTarget.PREPARE.title), "prepare", null, Icons.Rounded.PhotoLibrary, ShareTarget.PREPARE)
+            HorizontalDivider(Modifier.padding(vertical = Space.s), color = AppTheme.colorScheme.outlineVariant)
+            choice(stringResource(R.string.action_share_feishu_manual), "feishu", FEISHU, AppIcons.Photos, ShareTarget.PREPARE)
+            choice(stringResource(ShareTarget.PREPARE.title), "prepare", null, AppIcons.Photos, ShareTarget.PREPARE)
         }
     }
 }
@@ -178,7 +173,7 @@ private fun AppIcon(app: String?, fallback: ImageVector) {
 private val APP_ICON = 40.dp
 
 /** A separate copy for another platform; the original Moment stays as written. */
-@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarget, onDismiss: () -> Unit) {
     val context = LocalContext.current
@@ -237,11 +232,11 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                 Column(verticalArrangement = Arrangement.spacedBy(Space.m)) {
                     album?.let { Text(stringResource(R.string.share_album_saved, it.count, it.name)) }
                     if (text.isNotBlank()) Text(stringResource(R.string.share_text_copied))
-                    Text(stringResource(R.string.share_manual_steps), style = MaterialTheme.typography.bodySmall)
+                    Text(stringResource(R.string.share_manual_steps), style = AppTheme.typography.bodySmall)
                 }
             },
             confirmButton = {
-                TextButton(shapes = ButtonDefaults.shapes(), onClick = onDismiss, modifier = Modifier.testTag("share_prepared_done")) {
+                TextButton(onClick = onDismiss, modifier = Modifier.testTag("share_prepared_done")) {
                     Text(stringResource(R.string.share_done))
                 }
             },
@@ -256,7 +251,6 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
         actions = {
             // Disable only while preparing or assisting; validation errors stay in the preview.
             TextButton(
-                shapes = ButtonDefaults.shapes(),
                 enabled = !busy && !assistRunning,
                 modifier = Modifier.testTag("share_${target.tag}_open"),
                 onClick = {
@@ -348,11 +342,11 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                     }
                 },
             ) {
-                // Busy, Material 3 Expressive's loading indicator in the label's place, saying
+                // Busy, a spinner in the label's place, saying
                 // what it waits for, as a button that has started something shows it.
                 if (busy) {
                     val preparing = stringResource(R.string.share_preparing)
-                    LoadingIndicator(Modifier.size(24.dp).semantics { contentDescription = preparing }.testTag("share_busy"))
+                    Spinner(Modifier.size(24.dp).semantics { contentDescription = preparing }.testTag("share_busy"))
                 } else Text(stringResource(when {
                     target == ShareTarget.X -> R.string.share_x_open
                     useAssist -> if (target == ShareTarget.TELEGRAM) R.string.telegram_assist_open else R.string.threads_assist_open
@@ -373,7 +367,7 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
             Modifier.verticalScroll(rememberScrollState()).padding(start = Space.xl, end = Space.xl, bottom = Space.xl),
             verticalArrangement = Arrangement.spacedBy(Space.m),
         ) {
-            Text(stringResource(target.title), style = MaterialTheme.typography.headlineSmall)
+            Text(stringResource(target.title), style = AppTheme.typography.headlineSmall)
             Text(stringResource(when (target) {
                 ShareTarget.X -> R.string.share_x_hint
                 ShareTarget.TELEGRAM -> if (useAssist) R.string.telegram_assist_note else if (copyTextOnOpen) R.string.share_telegram_multiple_hint else R.string.share_telegram_hint
@@ -387,7 +381,7 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                 ShareTarget.WECHAT -> if (prepareByHand) R.string.share_wechat_multiple_hint else R.string.share_wechat_hint
                 ShareTarget.BILIBILI -> R.string.share_bilibili_hint
                 ShareTarget.PREPARE -> R.string.share_prepare_hint
-            }), style = MaterialTheme.typography.bodySmall)
+            }), style = AppTheme.typography.bodySmall)
             if (target == ShareTarget.TELEGRAM) {
                 TelegramAssistOptions(
                     enabled = telegramAssist,
@@ -420,7 +414,7 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                     },
                     busy = busy || assistRunning,
                 ) {
-                    if (chosen.isEmpty()) Text(stringResource(R.string.share_assist_photos_only), style = MaterialTheme.typography.bodySmall)
+                    if (chosen.isEmpty()) Text(stringResource(R.string.share_assist_photos_only), style = AppTheme.typography.bodySmall)
                 }
             }
             OutlinedTextField(
@@ -440,7 +434,7 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                     if (target == ShareTarget.X) stringResource(R.string.share_photos, chosen.size, target.limit)
                     else if (!prepareByHand) stringResource(R.string.share_selected_photos, chosen.size)
                     else stringResource(R.string.share_prepare_photos, chosen.size),
-                    style = MaterialTheme.typography.labelLarge,
+                    style = AppTheme.typography.labelLarge,
                 )
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.s), verticalArrangement = Arrangement.spacedBy(Space.s)) {
                     photos.forEachIndexed { index, photo ->
@@ -451,8 +445,8 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                         Box(
                             Modifier
                                 // The ripple kept to the ring's rounded shape.
-                                .clip(MaterialTheme.shapes.large)
-                                .border(2.dp, if (checked) MaterialTheme.colorScheme.primary else Color.Transparent, MaterialTheme.shapes.large)
+                                .clip(AppTheme.shapes.large)
+                                .border(2.dp, if (checked) AppTheme.colorScheme.primary else Color.Transparent, AppTheme.shapes.large)
                                 .toggleable(
                                     value = checked,
                                     enabled = choosable,
@@ -470,11 +464,11 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                             Thumbnail(photo, urls, size = 72, modifier = Modifier.alpha(if (choosable) 1f else DISABLED_ALPHA))
                             if (checked) {
                                 Surface(
-                                    color = MaterialTheme.colorScheme.primary,
-                                    shape = MaterialTheme.shapes.small,
+                                    color = AppTheme.colorScheme.primary,
+                                    shape = AppTheme.shapes.small,
                                     modifier = Modifier.align(Alignment.BottomEnd),
                                 ) {
-                                    Text("${chosen.indexOf(photo) + 1}", Modifier.padding(horizontal = Space.xs), style = MaterialTheme.typography.labelSmall)
+                                    Text("${chosen.indexOf(photo) + 1}", Modifier.padding(horizontal = Space.xs), style = AppTheme.typography.labelSmall)
                                 }
                             }
                         }
@@ -482,14 +476,13 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                 }
             }
             if (moment.media.any { it.type == MediaType.VIDEO || it.type == MediaType.LIVE_PHOTO }) {
-                Text(stringResource(R.string.share_stills_only), style = MaterialTheme.typography.bodySmall)
+                Text(stringResource(R.string.share_stills_only), style = AppTheme.typography.bodySmall)
             }
             error?.let {
-                Text(stringResource(it), color = MaterialTheme.colorScheme.error)
+                Text(stringResource(it), color = AppTheme.colorScheme.error)
             }
             if (target != ShareTarget.PREPARE && (error != null || needsPhoto || target == ShareTarget.WECHAT || target == ShareTarget.BILIBILI)) {
                 TextButton(
-                    shapes = ButtonDefaults.shapes(),
                     enabled = !busy && !assistRunning,
                     onClick = { target = ShareTarget.PREPARE; error = null },
                     modifier = Modifier.testTag("share_fallback"),

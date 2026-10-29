@@ -12,9 +12,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import cc.hyoban.moments.ui.design.AppTheme
+import cc.hyoban.moments.ui.design.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -35,7 +34,6 @@ import cc.hyoban.moments.data.trips.coversOf
 import cc.hyoban.moments.data.trips.countOf
 import cc.hyoban.moments.ui.LocalBottomClearance
 import cc.hyoban.moments.ui.OnTabReselect
-import cc.hyoban.moments.ui.Trips
 import cc.hyoban.moments.ui.components.MediaStill
 import cc.hyoban.moments.ui.components.PageWidth
 import cc.hyoban.moments.ui.components.PressableCard
@@ -52,64 +50,13 @@ import cc.hyoban.moments.ui.format.formatRange
 import cc.hyoban.moments.ui.theme.Space
 
 /** The trips tab: every trip, newest first, each a card led by its photos. */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TripsScreen(container: AppContainer, onTrip: (String) -> Unit) {
-    val trips by container.repository.trips.collectAsStateWithLifecycle()
-    val moments by container.repository.moments.collectAsStateWithLifecycle()
-    val loaded by container.repository.loaded.collectAsStateWithLifecycle()
-    val syncing by container.repository.syncing.collectAsStateWithLifecycle()
-    val pull = rememberPulledRefresh(container)
-    ShowRefreshErrors(container)
-    val days = remember(trips) { trips.sumOf { daysBetween(it.start, it.end) } }
-
-    val list = rememberLazyListState()
-
-    TabPage(
-        stringResource(R.string.title_trips),
-        tab = Trips,
-        refresh = pull.onRefresh,
-        subtitle = pluralStringResource(R.plurals.count_trips, trips.size, trips.size) + "\u2003" + pluralStringResource(R.plurals.count_days_total, days, days),
-    ) {
-        TabRefreshBox(pull) {
-            LoadedContent(trips.isEmpty(), loading = !loaded || syncing, message = R.string.empty_trips) {
-                PageWidth { columns ->
-                    OnTabReselect(Trips) { list.animateScrollToItem(0) }
-                    LazyColumn(
-                        Modifier.fillMaxSize(),
-                        state = list,
-                        contentPadding = PaddingValues(start = columns.margin, end = columns.margin, bottom = LocalBottomClearance.current + Space.xl),
-                        verticalArrangement = Arrangement.spacedBy(Space.s),
-                    ) {
-                        // Two to a row where the width allows.
-                        items(trips.chunked(columns.count), key = { it.first().id }) { row ->
-                            CardRow(row, columns.count, Modifier.animateItem().padding(horizontal = Space.gutter)) { trip ->
-                                val covers = remember(trip, moments) { coversOf(trip, moments, trips) }
-                                val count = remember(trip, moments) { countOf(trip, moments, trips) }
-                                TripCard(
-                                    trip,
-                                    covers,
-                                    count,
-                                    container.mediaUrls,
-                                    onClick = { onTrip(trip.id) },
-                                    modifier = Modifier.weight(1f),
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun TripCard(trip: TripRecord, covers: List<MomentMedia>, count: Int, urls: MediaUrls, onClick: () -> Unit, modifier: Modifier) {
+fun TripCard(trip: TripRecord, covers: List<MomentMedia>, count: Int, urls: MediaUrls, onClick: () -> Unit, modifier: Modifier) {
     // It grows into the trip's page when opened.
     PressableCard(onClick = onClick, modifier = modifier.fillMaxWidth().sharedCard(tripCardKey(trip.id)).testTag("trip_${trip.id}")) {
         CoverCollage(covers, urls, Modifier)
         Column(Modifier.padding(start = Space.l, end = Space.l, top = Space.s, bottom = Space.l), verticalArrangement = Arrangement.spacedBy(Space.m)) {
-            Text(trip.title, style = MaterialTheme.typography.titleLarge)
+            Text(trip.title, style = AppTheme.typography.titleLarge)
             TripSubhead(trip, count)
         }
     }
@@ -120,8 +67,8 @@ private fun TripCard(trip: TripRecord, covers: List<MomentMedia>, count: Int, ur
 fun TripSubhead(trip: TripRecord, count: Int, places: Int? = null) {
     Text(
         (listOf(tripSummary(trip, count)) + listOfNotNull(places?.let { pluralStringResource(R.plurals.count_places, it, it) })).joinToString("\u2003"),
-        style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        style = AppTheme.typography.bodyMedium,
+        color = AppTheme.colorScheme.onSurfaceVariant,
     )
 }
 

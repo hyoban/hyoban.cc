@@ -1,164 +1,137 @@
 package cc.hyoban.moments.ui.theme
 
-import androidx.compose.material3.ColorScheme
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.lightColorScheme
+import cc.hyoban.moments.ui.design.ColorScheme
+import cc.hyoban.moments.ui.design.AppTheme
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
-import com.materialkolor.dynamiccolor.DynamicColor
-import com.materialkolor.dynamiccolor.MaterialDynamicColors
-import com.materialkolor.hct.Hct
-import com.materialkolor.palettes.TonalPalette
-import com.materialkolor.scheme.DynamicScheme
-import com.materialkolor.scheme.SchemeContent
-import com.materialkolor.scheme.SchemeMonochrome
-import com.materialkolor.scheme.SchemeTonalSpot
+import androidx.compose.ui.unit.dp
 import kotlin.math.min
 
-// The app's colours, after FlClash's surfaces (github.com/chen08209/FlClash,
-// .agents/surfaces.md): structure is drawn with fills a step apart in lightness, never
-// with borders, and colour is kept for state: what is chosen, what is on, what fails.
-//
-// The scheme is Material's content scheme for the seed with three changes. Surfaces stay
-// near grey, their chroma capped, so the seed doesn't wash every page blue. The seed
-// itself is primary, as an accent colour is, its tone held where the text on it keeps
-// 4.5:1. And primaryContainer is primary's own hue at tone 90 and 30, so it reads as the
-// primary's light version rather than whatever tone the seed happens to have. The last
-// two only at standard contrast: with more asked for, Material's roles are kept.
+// The app's colours, the design system's tokens as they are (the site's warm greys, one blue
+// for state): a page, one surface above it and a hairline between them, text in three greys,
+// and colour kept for what is chosen, on or in progress. The components read the colour roles,
+// each set to the token that plays its part.
 
-private const val SURFACE_CHROMA = 3.0
-private const val PAPER_CHROMA = 1.5
-private const val OUTLINE_VARIANT_CHROMA = 4.0
-private const val PRIMARY_CONTAINER_CHROMA = 48.0
-private const val TINT_DIVISOR = 6.0
-private const val MAX_TINT_CHROMA = 10.0
+/** The design system's tokens, in light or dark; [scheme] maps them onto the colour roles. */
+@Immutable
+class Tokens(
+    /** The page. */
+    val bg: Color,
+    /** Cards, fields and sheets: the one surface above the page. */
+    val surface: Color,
+    /** What is pressed, and a chip not chosen. */
+    val pressed: Color,
+    /** A step under [pressed], for a mark inside one. */
+    val sunken: Color,
+    /** The 1px line between things. */
+    val border: Color,
+    /** A control's edge, at 3:1 on the page. */
+    val borderStrong: Color,
+    val tx: Color,
+    val tx2: Color,
+    /** The faintest text and icons: hints, what isn't chosen. Never on [pressed]. */
+    val tx3: Color,
+    /** The fill of the page's one main button. */
+    val ink: Color,
+    val onInk: Color,
+    /** The one colour for state: chosen, on, in progress, a link. */
+    val accent: Color,
+    val onAccent: Color,
+    /** Under what is chosen, its text staying [tx]. */
+    val accentSoft: Color,
+    val danger: Color,
+    val onDanger: Color,
+    val dangerSoft: Color,
+    /** Money coming in. */
+    val income: Color,
+)
 
-/** How much of the seed the scheme carries, as FlClash's colour styles. */
-enum class ColorStyle {
-    /** The seed itself as primary, the surfaces near grey: the scheme described above. */
-    VIVID,
+val LightTokens = Tokens(
+    bg = Color(0xFFFDFDFC),
+    surface = Color(0xFFF9F9F8),
+    pressed = Color(0xFFF3F2F0),
+    sunken = Color(0xFFEBEAE7),
+    border = Color(0xFFE9E9E7),
+    borderStrong = Color(0xFF8F8E88),
+    tx = Color(0xFF21201C),
+    tx2 = Color(0xFF63635E),
+    tx3 = Color(0xFF73736C),
+    ink = Color(0xFF21201C),
+    onInk = Color(0xFFFDFDFC),
+    accent = Color(0xFF3F63A6),
+    onAccent = Color(0xFFFFFFFF),
+    accentSoft = Color(0xFFEDF1F8),
+    danger = Color(0xFFB3361F),
+    onDanger = Color(0xFFFFFFFF),
+    dangerSoft = Color(0xFFFBECE8),
+    income = Color(0xFF2F6F8F),
+)
 
-    /** As vivid, with the surfaces tinted towards the seed, a little more the more colourful it is. */
-    TINTED,
+val DarkTokens = Tokens(
+    bg = Color(0xFF111110),
+    surface = Color(0xFF191918),
+    pressed = Color(0xFF1D1D1B),
+    sunken = Color(0xFF252523),
+    border = Color(0xFF2A2A28),
+    borderStrong = Color(0xFF6E6D67),
+    tx = Color(0xFFEEEEEC),
+    tx2 = Color(0xFFB5B3AD),
+    tx3 = Color(0xFF85837C),
+    ink = Color(0xFFEEEEEC),
+    onInk = Color(0xFF111110),
+    accent = Color(0xFF9DB6E6),
+    onAccent = Color(0xFF10213F),
+    accentSoft = Color(0xFF1B2232),
+    danger = Color(0xFFF0927C),
+    onDanger = Color(0xFF2A0D06),
+    dangerSoft = Color(0xFF33201B),
+    income = Color(0xFF86C3DF),
+)
 
-    /** Material's tonal spot: a quieter primary from the seed's hue. */
-    SOFT,
+/** The tokens in light or [dark]. */
+fun appTokens(dark: Boolean): Tokens = if (dark) DarkTokens else LightTokens
 
-    /** Greys throughout. */
-    MONOCHROME,
-}
+/** The colour roles, each the token that plays its part. */
+fun Tokens.scheme(): ColorScheme = ColorScheme(
+    primary = accent,
+    onPrimary = onAccent,
+    primaryContainer = accentSoft,
+    onPrimaryContainer = tx,
+    secondaryContainer = accentSoft,
+    onSecondaryContainer = tx,
+    tertiary = income,
+    background = bg,
+    surface = bg,
+    onSurface = tx,
+    onSurfaceVariant = tx2,
+    surfaceContainerLow = surface,
+    surfaceContainer = surface,
+    surfaceContainerHigh = pressed,
+    surfaceContainerHighest = sunken,
+    outline = borderStrong,
+    outlineVariant = border,
+    scrim = Color.Black,
+    error = danger,
+    onError = onDanger,
+    errorContainer = dangerSoft,
+    onErrorContainer = tx,
+)
 
-/**
- * The scheme for [seed] in light or [dark], in [style]; [pureBlack] takes dark's page down to
- * black. [contrast] is Material's contrast level, 0 standard, 0.5 medium, 1 high, as the
- * phone's own setting asks for.
- */
-fun seededColorScheme(seed: Color, dark: Boolean, style: ColorStyle = ColorStyle.VIVID, pureBlack: Boolean = false, contrast: Double = 0.0): ColorScheme {
-    val source = Hct.fromInt(seed.toArgb())
-    val scheme: DynamicScheme = when (style) {
-        ColorStyle.VIVID, ColorStyle.TINTED -> SchemeContent(source, dark, contrast)
-        ColorStyle.SOFT -> SchemeTonalSpot(source, dark, contrast)
-        ColorStyle.MONOCHROME -> SchemeMonochrome(source, dark, contrast)
-    }
-    val accent = style == ColorStyle.VIVID || style == ColorStyle.TINTED
-    val tint = if (style == ColorStyle.TINTED) min(source.chroma / TINT_DIVISOR, MAX_TINT_CHROMA) else null
-    val roles = MaterialDynamicColors()
-    val primaryPalette = scheme.primaryPalette
-    val container = TonalPalette.fromHueAndChroma(primaryPalette.hue, min(primaryPalette.chroma, PRIMARY_CONTAINER_CHROMA))
+/** The current tokens. */
+val LocalTokens = staticCompositionLocalOf { LightTokens }
 
-    fun role(color: DynamicColor) = Color(color.getArgb(scheme))
-    fun neutral(color: DynamicColor, maxChroma: Double): Color {
-        val palette = color.palette(scheme)
-        return Color(Hct.from(palette.hue, tint ?: min(palette.chroma, maxChroma), color.getTone(scheme)).toInt())
-    }
+/** The design system's tokens, as the theme was built. */
+val tokens: Tokens
+    @Composable @ReadOnlyComposable get() = LocalTokens.current
 
-    // The seed as primary while the phone asks for standard contrast: in light at its own
-    // tone between 35 and 48, so white text on it keeps 4.5:1; in dark lifted three tones,
-    // between 60 and 80, under text at tone 10, which keeps as much. With more contrast asked
-    // for, Material's own primary roles, which follow it.
-    val exact = accent && contrast <= 0.0
-    val tone = if (dark) (source.tone + 3).coerceIn(60.0, 80.0) else source.tone.coerceIn(35.0, 48.0)
-    val primary = when {
-        !exact -> role(roles.primary())
-        tone == source.tone -> seed
-        else -> Color(Hct.from(source.hue, source.chroma, tone).toInt())
-    }
-    val onPrimary = when {
-        !exact -> role(roles.onPrimary())
-        dark -> Color(TonalPalette.fromHueAndChroma(source.hue, source.chroma).tone(10))
-        else -> Color.White
-    }
-    val paper = if (dark) SURFACE_CHROMA else PAPER_CHROMA
-
-    val base = if (dark) darkColorScheme() else lightColorScheme()
-    val colors = base.copy(
-        primary = primary,
-        onPrimary = onPrimary,
-        surfaceTint = primary,
-        primaryContainer = if (exact) Color(container.tone(if (dark) 30 else 90)) else role(roles.primaryContainer()),
-        onPrimaryContainer = if (exact) Color(container.tone(if (dark) 90 else 30)) else role(roles.onPrimaryContainer()),
-        // The primary's own hue on the inverse surface, as Material has it: tone 80 in light, 40 in dark.
-        inversePrimary = if (exact) Color(Hct.from(source.hue, source.chroma, if (dark) 40.0 else 80.0).toInt()) else role(roles.inversePrimary()),
-        secondary = role(roles.secondary()),
-        onSecondary = role(roles.onSecondary()),
-        secondaryContainer = role(roles.secondaryContainer()),
-        onSecondaryContainer = role(roles.onSecondaryContainer()),
-        tertiary = role(roles.tertiary()),
-        onTertiary = role(roles.onTertiary()),
-        tertiaryContainer = role(roles.tertiaryContainer()),
-        onTertiaryContainer = role(roles.onTertiaryContainer()),
-        error = role(roles.error()),
-        onError = role(roles.onError()),
-        errorContainer = role(roles.errorContainer()),
-        onErrorContainer = role(roles.onErrorContainer()),
-        background = neutral(roles.surface(), paper),
-        onBackground = role(roles.onSurface()),
-        surface = neutral(roles.surface(), paper),
-        onSurface = role(roles.onSurface()),
-        surfaceVariant = neutral(roles.surfaceVariant(), SURFACE_CHROMA),
-        onSurfaceVariant = role(roles.onSurfaceVariant()),
-        inverseSurface = role(roles.inverseSurface()),
-        inverseOnSurface = role(roles.inverseOnSurface()),
-        outline = role(roles.outline()),
-        outlineVariant = neutral(roles.outlineVariant(), OUTLINE_VARIANT_CHROMA),
-        scrim = role(roles.scrim()),
-        surfaceBright = neutral(roles.surfaceBright(), paper),
-        surfaceDim = neutral(roles.surfaceDim(), SURFACE_CHROMA),
-        surfaceContainerLowest = neutral(roles.surfaceContainerLowest(), SURFACE_CHROMA),
-        surfaceContainerLow = neutral(roles.surfaceContainerLow(), SURFACE_CHROMA),
-        surfaceContainer = neutral(roles.surfaceContainer(), SURFACE_CHROMA),
-        surfaceContainerHigh = neutral(roles.surfaceContainerHigh(), SURFACE_CHROMA),
-        surfaceContainerHighest = neutral(roles.surfaceContainerHighest(), SURFACE_CHROMA),
-    )
-    return if (pureBlack && dark) colors.toPureBlack() else colors
-}
-
-/**
- * Dark with the page black, as FlClash's pure black: the deepest surfaces black and every
- * one above taken down by as much, so the steps between the levels stay as they were.
- */
-private fun ColorScheme.toPureBlack(): ColorScheme {
-    val shift = Hct.fromInt(surface.toArgb()).tone
-    fun lower(color: Color): Color {
-        val hct = Hct.fromInt(color.toArgb())
-        return Color(Hct.from(hct.hue, hct.chroma, (hct.tone - shift).coerceAtLeast(0.0)).toInt())
-    }
-    return copy(
-        background = Color.Black,
-        surface = Color.Black,
-        surfaceDim = Color.Black,
-        surfaceContainerLowest = Color.Black,
-        surfaceContainerLow = lower(surfaceContainerLow),
-        surfaceContainer = lower(surfaceContainer),
-        surfaceContainerHigh = lower(surfaceContainerHigh),
-        surfaceContainerHighest = lower(surfaceContainerHighest),
-        surfaceBright = lower(surfaceBright),
-    )
-}
+/** A card's edge: the 1px border, which sets the surface apart from the page. */
+@Composable
+@ReadOnlyComposable
+fun cardBorder(): BorderStroke = BorderStroke(1.dp, tokens.border)
 
 /** Whether the app is drawn dark, as the theme was built. */
 val LocalDarkTheme = staticCompositionLocalOf { false }
@@ -166,9 +139,8 @@ val LocalDarkTheme = staticCompositionLocalOf { false }
 /**
  * How deep a surface sits. Each surface takes the level one deeper than the one it sits
  * on: a card on the page, a block (a label, a tile) in a card, an inset (a small mark)
- * in a block. Each is a Material 3 surface role, the same in light and dark as Material 3
- * maps them, the roles themselves adapting to either and to more contrast: the page
- * surface, then the surface containers up to the highest.
+ * in a block: the page, the surface, pressed and sunken. A card carries a hairline too
+ * ([cardBorder]), as the page and the surface are close.
  */
 enum class SurfaceLevel {
     Page, Card, Block, Inset;
@@ -185,11 +157,10 @@ enum class SurfaceLevel {
 
     companion object {
         /**
-         * What floats over content, a date over its Moments, the map's bars and buttons: a
-         * block, a role apart from the cards it passes over, as Material 3 has overlapping
-         * surfaces.
+         * What floats over content, a date over its Moments, the map's bars and buttons: the
+         * surface, set apart from what it passes over by its hairline and shadow.
          */
-        val Floating: SurfaceLevel = Block
+        val Floating: SurfaceLevel = Card
     }
 }
 
@@ -199,14 +170,14 @@ val LocalSurfaceLevel = staticCompositionLocalOf { SurfaceLevel.Page }
 /** The fill of [level] in the current scheme. */
 @Composable
 @ReadOnlyComposable
-fun SurfaceLevel.fill(): Color = color(MaterialTheme.colorScheme)
+fun SurfaceLevel.fill(): Color = color(AppTheme.colorScheme)
 
-/** A divider: Material 3's, outline variant. */
+/** A divider: the 1px border. */
 @Composable
 @ReadOnlyComposable
-fun dividerColor(): Color = MaterialTheme.colorScheme.outlineVariant
+fun dividerColor(): Color = AppTheme.colorScheme.outlineVariant
 
-/** How faint Material 3 draws what is disabled. */
+/** How faint what is disabled is drawn. */
 const val DISABLED_ALPHA = 0.38f
 
 /**
@@ -216,11 +187,11 @@ const val DISABLED_ALPHA = 0.38f
 object MediaOverlay {
     /** Under a bar across the media, and over media set back. */
     val bar: Color
-        @Composable @ReadOnlyComposable get() = MaterialTheme.colorScheme.scrim.copy(alpha = 0.32f)
+        @Composable @ReadOnlyComposable get() = AppTheme.colorScheme.scrim.copy(alpha = 0.32f)
 
     /** Under a control or a label on the media, and over media dimmed behind one chosen. */
     val control: Color
-        @Composable @ReadOnlyComposable get() = MaterialTheme.colorScheme.scrim.copy(alpha = CONTROL_ALPHA)
+        @Composable @ReadOnlyComposable get() = AppTheme.colorScheme.scrim.copy(alpha = CONTROL_ALPHA)
 
     const val CONTROL_ALPHA = 0.45f
 

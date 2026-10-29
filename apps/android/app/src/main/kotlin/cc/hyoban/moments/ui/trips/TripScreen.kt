@@ -1,5 +1,9 @@
 package cc.hyoban.moments.ui.trips
 
+import cc.hyoban.moments.ui.design.AppIcons
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -18,21 +22,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ArrowDownward
-import androidx.compose.material.icons.rounded.PlayArrow
-import androidx.compose.material.icons.rounded.Route
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.carousel.CarouselItemScope
-import androidx.compose.material3.carousel.HorizontalMultiBrowseCarousel
-import androidx.compose.material3.carousel.HorizontalUncontainedCarousel
-import androidx.compose.material3.carousel.rememberCarouselState
+import cc.hyoban.moments.ui.design.Icon
+import cc.hyoban.moments.ui.design.IconButtonDefaults
+import cc.hyoban.moments.ui.design.ButtonDefaults
+import cc.hyoban.moments.ui.design.IconButton
+import cc.hyoban.moments.ui.design.AppTheme
+import cc.hyoban.moments.ui.design.Surface
+import cc.hyoban.moments.ui.design.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -59,7 +55,6 @@ import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.MediaStill
 import cc.hyoban.moments.ui.components.SectionHeader
 import cc.hyoban.moments.ui.components.SubPage
-import cc.hyoban.moments.ui.components.Symbols
 import cc.hyoban.moments.ui.components.Tooltip
 import cc.hyoban.moments.ui.components.kindLabel
 import cc.hyoban.moments.ui.components.landscape
@@ -114,8 +109,8 @@ fun TripScreen(
     val spending: @Composable () -> Unit = {
         SpendingCard(container, SpendingOf.Trip(trip.id), onOpen = { ledgerNav?.list(LedgerFilter(trip = trip.id)) }, Modifier.padding(bottom = Space.l))
     }
-    // The trip's photos as Material 3's multi-browse carousel, a large one, a medium and a
-    // small, snapping as they're swiped; each opens its Moment. Headed with an arrow pointing
+    // The trip's photos in a row, each the same size in rounded corners, snapping to its start
+    // as they're swiped; each opens its Moment. Headed with an arrow pointing
     // down to the Moments, which it scrolls to on this page, so all of them can be seen without swiping sideways, as a carousel on a
     // page that scrolls needs.
     val feedState = rememberLazyListState()
@@ -126,48 +121,35 @@ fun TripScreen(
             Row(Modifier.padding(start = Space.gutter, end = Space.xs), verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     stringResource(R.string.section_photo) + "\u2003" + photos.size,
-                    style = MaterialTheme.typography.titleMedium,
+                    style = AppTheme.typography.titleMedium,
                     modifier = Modifier.weight(1f).semantics { heading() },
                 )
                 val see = stringResource(R.string.action_see_moments)
                 Tooltip(see) {
-                    IconButton(shapes = IconButtonDefaults.shapes(), onClick = { scope.launch { feedState.animateScrollToItem(momentsFrom) } }, modifier = Modifier.testTag("see_moments")) {
-                        Icon(Icons.Rounded.ArrowDownward, contentDescription = see)
+                    IconButton(onClick = { scope.launch { feedState.animateScrollToItem(momentsFrom) } }, modifier = Modifier.testTag("see_moments")) {
+                        Icon(AppIcons.ArrowDown, contentDescription = see)
                     }
                 }
             }
-            // With the phone's animations removed, every photo the one size, none growing as it
-            // comes into view, as Material 3 has a carousel under reduced motion.
-            val item: @Composable CarouselItemScope.(Int) -> Unit = { index ->
-                val (moment, media) = photos[index]
-                val label = stringResource(R.string.media_position, stringResource(media.kindLabel()), index + 1, photos.size)
-                MediaStill(
-                    media,
-                    container.mediaUrls,
-                    Modifier.fillMaxSize().maskClip(MaterialTheme.shapes.extraLarge)
-                        .clickable(onClickLabel = stringResource(R.string.action_open_moment)) { onMoment(moment.uid) }
-                        .semantics { contentDescription = label },
-                )
-            }
-            val carousel = Modifier.fillMaxWidth().height(208.dp).testTag("trip_photos")
-            if (LocalReducedMotion.current) {
-                HorizontalUncontainedCarousel(
-                    state = rememberCarouselState { photos.size },
-                    itemWidth = 188.dp,
-                    itemSpacing = Space.s,
-                    contentPadding = PaddingValues(horizontal = Space.gutter),
-                    modifier = carousel,
-                    content = item,
-                )
-            } else {
-                HorizontalMultiBrowseCarousel(
-                    state = rememberCarouselState { photos.size },
-                    preferredItemWidth = 188.dp,
-                    itemSpacing = Space.s,
-                    contentPadding = PaddingValues(horizontal = Space.gutter),
-                    modifier = carousel,
-                    content = item,
-                )
+            val list = rememberLazyListState()
+            LazyRow(
+                Modifier.fillMaxWidth().height(208.dp).testTag("trip_photos"),
+                state = list,
+                contentPadding = PaddingValues(horizontal = Space.gutter),
+                horizontalArrangement = Arrangement.spacedBy(Space.s),
+                flingBehavior = rememberSnapFlingBehavior(list),
+            ) {
+                items(photos.size) { index ->
+                    val (moment, media) = photos[index]
+                    val label = stringResource(R.string.media_position, stringResource(media.kindLabel()), index + 1, photos.size)
+                    MediaStill(
+                        media,
+                        container.mediaUrls,
+                        Modifier.width(188.dp).fillMaxHeight().clip(AppTheme.shapes.large)
+                            .clickable(onClickLabel = stringResource(R.string.action_open_moment)) { onMoment(moment.uid) }
+                            .semantics { contentDescription = label },
+                    )
+                }
             }
         }
     }
@@ -178,15 +160,15 @@ fun TripScreen(
         val level = LocalSurfaceLevel.current.raised
         Surface(
             onClick = { onMap(trip.id) },
-            shape = MaterialTheme.shapes.medium,
+            shape = AppTheme.shapes.medium,
             color = level.fill(),
             modifier = modifier.padding(horizontal = Space.gutter).fillMaxWidth()
                 .semantics { onClick(label = showOnMap) { onMap(trip.id); true } }.testTag("trip_route"),
         ) {
             Column(Modifier.padding(Space.s), verticalArrangement = Arrangement.spacedBy(Space.s)) {
-                SectionHeader(Icons.Rounded.Route, stringResource(R.string.section_route))
+                SectionHeader(AppIcons.Route, stringResource(R.string.section_route))
                 // The map's corners the card's less its padding, so the two look as round.
-                TripMap(stops, routes[trip.id].orEmpty(), mapModifier.fillMaxWidth().clip(MaterialTheme.shapes.extraSmall))
+                TripMap(stops, routes[trip.id].orEmpty(), mapModifier.fillMaxWidth().clip(AppTheme.shapes.extraSmall))
             }
         }
     }
@@ -195,15 +177,15 @@ fun TripScreen(
     // Played back along its route from the bar, once it has Moments to show.
     val actions: @Composable RowScope.() -> Unit = {
         Tooltip(showOnMap, below = true) {
-            IconButton(shapes = IconButtonDefaults.shapes(), onClick = { onMap(trip.id) }, modifier = Modifier.testTag("show_on_map")) {
-                Icon(Symbols.MapFilled, contentDescription = showOnMap)
+            IconButton(onClick = { onMap(trip.id) }, modifier = Modifier.testTag("show_on_map")) {
+                Icon(AppIcons.MapFill, contentDescription = showOnMap)
             }
         }
         if (moments.isNotEmpty()) {
             val play = stringResource(R.string.action_play_trip)
             Tooltip(play, below = true) {
-                IconButton(shapes = IconButtonDefaults.shapes(), onClick = { onPlay(trip.id) }, modifier = Modifier.testTag("play_trip")) {
-                    Icon(Icons.Rounded.PlayArrow, contentDescription = play)
+                IconButton(onClick = { onPlay(trip.id) }, modifier = Modifier.testTag("play_trip")) {
+                    Icon(AppIcons.Play, contentDescription = play)
                 }
             }
         }

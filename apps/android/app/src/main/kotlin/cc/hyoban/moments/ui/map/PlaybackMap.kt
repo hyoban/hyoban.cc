@@ -1,5 +1,7 @@
 package cc.hyoban.moments.ui.map
 
+import cc.hyoban.moments.ui.design.AppIcons
+import cc.hyoban.moments.ui.design.ContainedSpinner
 import android.graphics.Bitmap
 import android.util.DisplayMetrics
 import androidx.compose.animation.AnimatedVisibility
@@ -10,16 +12,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.DirectionsBoat
-import androidx.compose.material.icons.rounded.DirectionsCar
-import androidx.compose.material.icons.rounded.Flight
-import androidx.compose.material.icons.rounded.Train
-import androidx.compose.material3.ContainedLoadingIndicator
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import cc.hyoban.moments.ui.design.AppTheme
+import cc.hyoban.moments.ui.design.Surface
+import cc.hyoban.moments.ui.design.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -144,19 +139,18 @@ private fun lineOf(line: List<Pair<Double, Double>>) =
  * [controller]'s trip on the map, stepped a frame at a time from here, kept clear of [clear],
  * the screen's own controls over the map, as start, top, end and bottom.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun PlaybackMap(controller: PlaybackController, clear: List<Dp>, modifier: Modifier = Modifier) {
     var ready by remember { mutableStateOf<Pair<MapLibreMap, Style>?>(null) }
-    val ink = MaterialTheme.colorScheme.onSurface
-    val paper = MaterialTheme.colorScheme.surface
+    val ink = AppTheme.colorScheme.onSurface
+    val paper = AppTheme.colorScheme.surface
     val density = LocalDensity.current
     val padding = edges(clear[0], clear[1], clear[2], clear[3])
     val heads = mapOf(
-        Travel.CAR to rememberVectorPainter(Icons.Rounded.DirectionsCar),
-        Travel.FERRY to rememberVectorPainter(Icons.Rounded.DirectionsBoat),
-        Travel.PLANE to rememberVectorPainter(Icons.Rounded.Flight),
-        Travel.TRAIN to rememberVectorPainter(Icons.Rounded.Train),
+        Travel.CAR to rememberVectorPainter(AppIcons.Car),
+        Travel.FERRY to rememberVectorPainter(AppIcons.Boat),
+        Travel.PLANE to rememberVectorPainter(AppIcons.Plane),
+        Travel.TRAIN to rememberVectorPainter(AppIcons.Train),
     )
     // Where the tip is on the screen, for the clock beside it; read as it is placed.
     var tipOnScreen by remember { mutableStateOf<Offset?>(null) }
@@ -215,7 +209,7 @@ fun PlaybackMap(controller: PlaybackController, clear: List<Dp>, modifier: Modif
         // Beside the head while it drives, fading in and out with it on the effects spring.
         var kept by remember { mutableStateOf(clock) }
         if (clock != null) kept = clock
-        val motion = MaterialTheme.motionScheme
+        val motion = AppTheme.motionScheme
         AnimatedVisibility(clock != null && shown, enter = fadeIn(motion.fastEffectsSpec()), exit = fadeOut(motion.fastEffectsSpec())) {
             // Beside the head, its middle level with it.
             val beside = with(density) { (HEAD_SIZE / 2 + 8.dp).roundToPx() }
@@ -231,13 +225,13 @@ fun PlaybackMap(controller: PlaybackController, clear: List<Dp>, modifier: Modif
             )
         }
 
-        // Until the map is ready, a short wait: Material 3's loading indicator, in its container
+        // Until the map is ready, a short wait: a spinner on a small round surface
         // over the map's blank, in the room the card leaves.
         AnimatedVisibility(ready == null, enter = fadeIn(), exit = fadeOut(motion.fastEffectsSpec())) {
             Box(Modifier.fillMaxSize().padding(top = clear[1], bottom = clear[3]), contentAlignment = Alignment.Center) {
                 // Named by what it waits for, as a progress bar is.
                 val loading = stringResource(R.string.playback_loading_map)
-                ContainedLoadingIndicator(Modifier.semantics { contentDescription = loading })
+                ContainedSpinner(Modifier.semantics { contentDescription = loading })
             }
         }
     }
@@ -347,16 +341,16 @@ private fun Color.toHex() = "#%06X".format(toArgb() and 0xFFFFFF)
 private fun HeadClock(clock: PlaybackClock, modifier: Modifier) {
     // Floating over the map in its container colour, solid so its words keep their contrast over any map.
     Surface(
-        shape = MaterialTheme.shapes.small,
+        shape = AppTheme.shapes.small,
         color = SurfaceLevel.Floating.fill(),
         shadowElevation = Elevation.level2,
         modifier = modifier,
     ) {
         Column(Modifier.padding(horizontal = Space.s + Space.xxs, vertical = Space.xs)) {
-            Text(formatDay(clock.dateKey), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(formatDay(clock.dateKey), style = AppTheme.typography.labelSmall, color = AppTheme.colorScheme.onSurfaceVariant)
             Text(
                 listOfNotNull(stringResource(R.string.trip_day, clock.day), clock.time).joinToString("\u2003"),
-                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Medium, fontFeatureSettings = "tnum", fontSize = 13.sp),
+                style = AppTheme.typography.labelLarge.copy(fontWeight = FontWeight.Medium, fontFeatureSettings = "tnum", fontSize = 13.sp),
                 textAlign = TextAlign.Start,
             )
         }

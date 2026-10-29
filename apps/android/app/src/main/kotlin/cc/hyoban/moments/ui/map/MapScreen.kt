@@ -1,5 +1,17 @@
 package cc.hyoban.moments.ui.map
 
+import cc.hyoban.moments.ui.design.AppIcons
+import cc.hyoban.moments.ui.theme.tokens
+import cc.hyoban.moments.ui.design.groupedShapes
+import cc.hyoban.moments.ui.design.groupedRow
+import cc.hyoban.moments.ui.design.Spinner
+import cc.hyoban.moments.ui.format.daysBetween
+import androidx.compose.foundation.lazy.items
+import cc.hyoban.moments.data.trips.countOf
+import cc.hyoban.moments.data.trips.coversOf
+import cc.hyoban.moments.ui.trips.TripCard
+import cc.hyoban.moments.ui.components.restingElevation
+import cc.hyoban.moments.ui.components.floatingElevation
 import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.BackHandler
@@ -39,39 +51,27 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Dispatchers
 import cc.hyoban.moments.ui.LocalSettings
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.material.icons.rounded.Explore
-import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
-import androidx.compose.material.icons.rounded.Directions
-import androidx.compose.material.icons.rounded.Luggage
-import androidx.compose.material.icons.rounded.MyLocation
-import androidx.compose.material.icons.rounded.Navigation
-import androidx.compose.material.icons.rounded.Place
-import androidx.compose.material3.BottomSheetScaffold
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.FloatingActionButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItemDefaults
-import androidx.compose.material3.LoadingIndicator
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SegmentedListItem
-import androidx.compose.material3.SheetValue
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.VerticalDivider
-import androidx.compose.material3.rememberBottomSheetScaffoldState
-import androidx.compose.material3.rememberStandardBottomSheetState
+import cc.hyoban.moments.ui.design.BottomSheetScaffold
+import cc.hyoban.moments.ui.design.ButtonDefaults
+import cc.hyoban.moments.ui.design.Card
+import cc.hyoban.moments.ui.design.CardDefaults
+import cc.hyoban.moments.ui.design.FilledTonalButton
+import cc.hyoban.moments.ui.design.FloatingActionButton
+import cc.hyoban.moments.ui.design.Icon
+import cc.hyoban.moments.ui.design.ListItemDefaults
+import cc.hyoban.moments.ui.design.LocalContentColor
+import cc.hyoban.moments.ui.design.AppTheme
+import cc.hyoban.moments.ui.design.SegmentedListItem
+import cc.hyoban.moments.ui.design.SheetValue
+import cc.hyoban.moments.ui.design.Surface
+import cc.hyoban.moments.ui.design.Text
+import cc.hyoban.moments.ui.design.VerticalDivider
+import cc.hyoban.moments.ui.design.rememberBottomSheetScaffoldState
+import cc.hyoban.moments.ui.design.rememberStandardBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -152,7 +152,6 @@ sealed interface MapFocus {
  * route to lift it, and its card or the route again to open the trip. A place or a trip
  * shown on it from its page, [focus], is chosen and flown to, then let go with [onFocused].
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MapScreen(
     container: AppContainer,
@@ -168,7 +167,6 @@ fun MapScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MapContent(
     container: AppContainer,
@@ -270,22 +268,8 @@ private fun MapContent(
         }
     }
 
-    // Locating is the map's floating action button, which the app places above the
-    // navigation bar or at the top of the rail.
-    val accessory = LocalNavAccessory.current
-    val currentLocate by rememberUpdatedState(requestLocate)
-    val currentLocating by rememberUpdatedState(locating)
-    val locateBeside = remember<@Composable () -> Unit> {
-        { LocateButton(currentLocating, onClick = { currentLocate() }, inRail = isMediumWidth()) }
-    }
-    // Whether the tabs stand down a rail, as from Material 3's medium breakpoint.
+    // Whether the tabs stand down a rail, as from the medium breakpoint.
     val railed = isMediumWidth()
-    // It steps aside while a place's sheet is up, the sheet covering what it would locate.
-    val placeOpen = selected != null
-    DisposableEffect(accessory, placeOpen) {
-        if (!placeOpen) accessory.value = locateBeside
-        onDispose { if (accessory.value === locateBeside) accessory.value = null }
-    }
 
     Box(Modifier.fillMaxSize()) {
         PlacesMap(
@@ -334,20 +318,22 @@ private fun MapContent(
             verticalArrangement = Arrangement.spacedBy(Space.s),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
+                // Locating among the controls at the top, clear of the sheet of trips at the foot.
+                LocateButton(locating, onClick = requestLocate, inRail = true)
                 if (colors.isNotEmpty()) Legend(colors, trips = mapRoutes.isNotEmpty())
                 FogButton(settings.mapFog) {
                     fogSweep++
                     settings.changeMapFog(!settings.mapFog)
                 }
             }
-            FilledTonalButton(shapes = ButtonDefaults.shapes(), onClick = { selected = null; highlighted = null; footprints.open() }, modifier = Modifier.testTag("footprints")) {
+            FilledTonalButton(onClick = { selected = null; highlighted = null; footprints.open() }, modifier = Modifier.testTag("footprints")) {
                 Text(stringResource(R.string.footprints_title))
             }
             val shownFog = fog.takeIf { settings.mapFog }
             AnimatedVisibility(
                 shownFog != null,
-                enter = expandVertically(MaterialTheme.motionScheme.fastSpatialSpec()) + fadeIn(MaterialTheme.motionScheme.fastEffectsSpec()),
-                exit = shrinkVertically(MaterialTheme.motionScheme.fastSpatialSpec()) + fadeOut(MaterialTheme.motionScheme.fastEffectsSpec()),
+                enter = expandVertically(AppTheme.motionScheme.fastSpatialSpec()) + fadeIn(AppTheme.motionScheme.fastEffectsSpec()),
+                exit = shrinkVertically(AppTheme.motionScheme.fastSpatialSpec()) + fadeOut(AppTheme.motionScheme.fastEffectsSpec()),
             ) {
                 var counted by remember { mutableStateOf(shownFog) }
                 if (shownFog != null) counted = shownFog
@@ -361,14 +347,14 @@ private fun MapContent(
         // While the map is turned, the compass: upright above the floating action button, and
         // above the trip's card while it shows; on a phone on its side, at the bottom by the rail.
         // Read as it is placed, so the map's screen isn't composed again every frame it rises.
-        val lift = animateDpAsState(if (trip != null && !railed) 96.dp else 0.dp, MaterialTheme.motionScheme.defaultSpatialSpec(), label = "compass")
+        val lift = animateDpAsState(if (trip != null && !railed) 96.dp else 0.dp, AppTheme.motionScheme.defaultSpatialSpec(), label = "compass")
         Box(
             if (railed) {
                 Modifier.align(Alignment.BottomStart).navigationBarsPadding()
                     .absolutePadding(left = rail.left + Space.gutter, bottom = Space.gutter)
             } else {
                 Modifier.align(Alignment.BottomEnd)
-                    .padding(end = Space.gutter, bottom = LocalBottomClearance.current + LocalFabClearance.current)
+                    .padding(end = Space.gutter, bottom = LocalBottomClearance.current + TRIPS_PEEK + Space.m)
                     .offset { IntOffset(0, -lift.value.roundToPx()) }
             },
         ) {
@@ -377,13 +363,13 @@ private fun MapContent(
         // Kept while the card leaves, after the route is let go.
         var shown by remember { mutableStateOf(trip) }
         if (trip != null) shown = trip
-        val motion = MaterialTheme.motionScheme
+        val motion = AppTheme.motionScheme
         AnimatedVisibility(
             trip != null,
             enter = fadeIn(motion.defaultEffectsSpec()) + slideInVertically(motion.defaultSpatialSpec()) { it / 2 },
             exit = fadeOut(motion.defaultEffectsSpec()) + slideOutVertically(motion.defaultSpatialSpec()) { it / 2 },
             modifier = Modifier.align(Alignment.BottomCenter).sideInsetsPadding()
-                .padding(start = Space.gutter, end = Space.gutter, bottom = LocalBottomClearance.current + LocalFabClearance.current)
+                .padding(start = Space.gutter, end = Space.gutter, bottom = LocalBottomClearance.current + TRIPS_PEEK + Space.m)
                 .widthIn(max = READABLE_WIDTH),
         ) {
             // One route's card giving way to another's as another is lifted.
@@ -391,19 +377,22 @@ private fun MapContent(
         }
     }
 
-    // A place's Moments in Material 3's standard bottom sheet, the one it has for what a map
-    // shows about a place: half the screen when a place is chosen, dragged up to all of it or
-    // down and away, its handle the sheet's own, tapped or focused as well as dragged. In the
-    // app's own window, so a Moment opened from it grows out of its row as from a card.
-    var shownPlace by remember { mutableStateOf(selected) }
-    if (selected != null) shownPlace = selected
+    // The sheet at the map's foot: the trips, peeking as a line of how many and dragged up to
+    // their list; a place chosen, its Moments in it instead, half the screen, dragged up to all
+    // of it or down and away, back to the trips. Its handle is the sheet's own, tapped or
+    // focused as well as dragged. In the app's own window, so a trip or a Moment opened from
+    // it grows out of its card or row.
     BackHandler(enabled = selected != null) { selected = null }
-    val sheetState = rememberStandardBottomSheetState(initialValue = SheetValue.Hidden, skipHiddenState = false)
+    val sheetState = rememberStandardBottomSheetState(initialValue = SheetValue.PartiallyExpanded, skipHiddenState = false)
     val scaffold = rememberBottomSheetScaffoldState(bottomSheetState = sheetState)
-    LaunchedEffect(selected) { if (selected != null) sheetState.partialExpand() else sheetState.hide() }
-    // Swiped away, the place is let go.
+    LaunchedEffect(selected) { sheetState.partialExpand() }
+    // Swiped away, a place is let go and the trips come back; the trips themselves stay peeking.
     LaunchedEffect(sheetState) {
-        snapshotFlow { sheetState.currentValue }.drop(1).collect { if (it == SheetValue.Hidden) selected = null }
+        snapshotFlow { sheetState.currentValue }.drop(1).collect {
+            if (it == SheetValue.Hidden) {
+                if (selected != null) selected = null else sheetState.partialExpand()
+            }
+        }
     }
     val clearance = LocalBottomClearance.current
     BoxWithConstraints(Modifier.fillMaxSize()) {
@@ -411,13 +400,15 @@ private fun MapContent(
             scaffoldState = scaffold,
             // Drawn up to the status bar at most, so the whole sheet's top stays clear of it.
             modifier = Modifier.statusBarsPadding(),
-            sheetPeekHeight = maxHeight * PLACE_SHEET_SHARE,
+            sheetPeekHeight = if (selected != null) maxHeight * PLACE_SHEET_SHARE else TRIPS_PEEK + clearance,
             sheetContainerColor = AppColors.sheet,
             containerColor = Color.Transparent,
             sheetContent = {
-                val id = shownPlace
+                val id = selected
                 val place = id?.let { places[it] }
-                if (id != null && place != null) {
+                if (id == null || place == null) {
+                    TripsSheet(trips, moments, container.mediaUrls, bottom = clearance, onTrip = onTrip)
+                } else {
                     val here = byPlace[id].orEmpty()
                     val years = remember(here) { here.map { yearOf(it.occurredAt) }.distinct().sortedDescending() }
                     PlaceSheet(
@@ -435,10 +426,9 @@ private fun MapContent(
 
 /**
  * A place in the map's sheet: its name, how many Moments and in which years, the way there
- * and all of it; then its Moments as a segmented list, each row its first photo, when and
+ * and all of it; then its Moments as a grouped list, each row its first photo, when and
  * its words, kept clear of the navigation bar by [bottom].
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun PlaceSheet(
     place: Place,
@@ -456,13 +446,13 @@ private fun PlaceSheet(
     val context = LocalContext.current
     Column(Modifier.fillMaxHeight()) {
         Row(Modifier.fillMaxWidth().padding(horizontal = Space.gutter), verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Rounded.Place, contentDescription = null, tint = colors[years.minOrNull()] ?: MaterialTheme.colorScheme.primary)
+            Icon(AppIcons.Pin, contentDescription = null, tint = colors[years.minOrNull()] ?: AppTheme.colorScheme.primary)
             Column(Modifier.weight(1f).padding(horizontal = Space.m)) {
-                Text(place.name, style = MaterialTheme.typography.titleLarge, modifier = Modifier.semantics { heading() })
+                Text(place.name, style = AppTheme.typography.titleLarge, modifier = Modifier.semantics { heading() })
                 Text(
                     (listOf(pluralStringResource(R.plurals.count_moments, here.size, here.size)) + years.joinToString(context.getString(R.string.separator_list)) { context.getString(R.string.year_item, it) }).joinToString("\u2003"),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = AppTheme.typography.bodyMedium,
+                    color = AppTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -470,32 +460,30 @@ private fun PlaceSheet(
             // The way there beside the name, named as well as drawn, as Material 3 keeps an
             // icon alone for what everyone knows; all of the place waits at the list's foot.
             FilledTonalButton(
-                shapes = ButtonDefaults.shapes(),
                 onClick = onNavigate,
                 contentPadding = ButtonDefaults.ButtonWithIconContentPadding,
                 modifier = Modifier.testTag("navigate"),
             ) {
-                Icon(Icons.Rounded.Directions, contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
+                Icon(AppIcons.Directions, contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
                 Spacer(Modifier.size(ButtonDefaults.IconSpacing))
                 Text(stringResource(R.string.action_navigate_short))
             }
         }
         LazyColumn(
             Modifier.weight(1f),
-            contentPadding = PaddingValues(start = Space.l, end = Space.l, top = Space.l, bottom = Space.l + bottom),
-            verticalArrangement = Arrangement.spacedBy(ListItemDefaults.SegmentedGap),
+            contentPadding = PaddingValues(start = Space.gutter, end = Space.gutter, top = Space.l, bottom = Space.l + bottom),
         ) {
             itemsIndexed(here, key = { _, moment -> moment.uid }) { index, moment ->
                 // It grows into the Moment's page when opened, as a card on a list does.
                 SegmentedListItem(
                     onClick = { onMoment(moment.uid) },
-                    shapes = ListItemDefaults.segmentedShapes(index, here.size + 1),
-                    colors = ListItemDefaults.segmentedColors(containerColor = LocalSurfaceLevel.current.raised.fill()),
+                    shapes = groupedShapes(index, here.size + 1),
+                    colors = ListItemDefaults.segmentedColors(containerColor = Color.Transparent),
                     leadingContent = moment.media.firstOrNull()?.let { media -> { Thumbnail(media, urls, size = 56) } },
                     // When over it as the overline and its words the headline, as the search's
                     // results have it, each in the role Material 3 gives a list item's text.
                     overlineContent = { Text(listOfNotNull(formatDate(moment.occurredAt), formatTime(moment.occurredAt)).joinToString(" ")) },
-                    modifier = Modifier.sharedCard(moment.uid).testTag("moment_${moment.uid}"),
+                    modifier = Modifier.sharedCard(moment.uid).groupedRow(index, here.size + 1, inset = 88f).testTag("moment_${moment.uid}"),
                 ) {
                     Text(
                         moment.text.ifBlank { moment.places.joinToString(stringResource(R.string.separator_list)) { places[it]?.name ?: it } },
@@ -508,11 +496,44 @@ private fun PlaceSheet(
             item(key = "all") {
                 SegmentedListItem(
                     onClick = onAll,
-                    shapes = ListItemDefaults.segmentedShapes(here.size, here.size + 1),
-                    colors = ListItemDefaults.segmentedColors(containerColor = LocalSurfaceLevel.current.raised.fill()),
-                    trailingContent = { Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null) },
-                    modifier = Modifier.testTag("place_$id"),
-                ) { Text(stringResource(R.string.action_see_moments), color = MaterialTheme.colorScheme.primary) }
+                    shapes = groupedShapes(here.size, here.size + 1),
+                    colors = ListItemDefaults.segmentedColors(containerColor = Color.Transparent),
+                    trailingContent = { Icon(AppIcons.ChevronRight, contentDescription = null, tint = tokens.tx3) },
+                    modifier = Modifier.groupedRow(here.size, here.size + 1).testTag("place_$id"),
+                ) { Text(stringResource(R.string.action_see_moments)) }
+            }
+        }
+    }
+}
+
+/** How much of the sheet of trips shows while it peeks: its title and count. */
+private val TRIPS_PEEK = 96.dp
+
+/**
+ * The trips in the map's sheet: a line of how many and how many days, which is all that shows
+ * while it peeks, then each trip's card, newest first, growing into its page when tapped.
+ */
+@Composable
+private fun TripsSheet(trips: List<TripRecord>, moments: List<MomentRecord>, urls: MediaUrls, bottom: Dp, onTrip: (String) -> Unit) {
+    val days = remember(trips) { trips.sumOf { daysBetween(it.start, it.end) } }
+    Column(Modifier.fillMaxHeight()) {
+        Row(Modifier.fillMaxWidth().padding(horizontal = Space.gutter).padding(bottom = Space.s), verticalAlignment = Alignment.CenterVertically) {
+            Text(stringResource(R.string.title_trips), style = AppTheme.typography.titleLarge, modifier = Modifier.weight(1f).semantics { heading() })
+            Text(
+                pluralStringResource(R.plurals.count_trips, trips.size, trips.size) + "\u2003" + pluralStringResource(R.plurals.count_days_total, days, days),
+                style = AppTheme.typography.bodySmall,
+                color = AppTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        LazyColumn(
+            Modifier.weight(1f),
+            contentPadding = PaddingValues(start = Space.gutter, end = Space.gutter, top = Space.s, bottom = Space.l + bottom),
+            verticalArrangement = Arrangement.spacedBy(Space.s),
+        ) {
+            items(trips.sortedByDescending { it.start }, key = { it.id }) { trip ->
+                val covers = remember(trip, moments) { coversOf(trip, moments, trips) }
+                val count = remember(trip, moments) { countOf(trip, moments, trips) }
+                TripCard(trip, covers, count, urls, onClick = { onTrip(trip.id) }, modifier = Modifier.fillMaxWidth())
             }
         }
     }
@@ -524,7 +545,7 @@ private val LOCATION_PERMISSIONS = arrayOf(Manifest.permission.ACCESS_FINE_LOCAT
 @Composable
 private fun CompassButton(turned: Boolean, bearing: Double, onClick: () -> Unit) {
     // Growing along one axis rather than scaling, as Material 3 has a component enter on Android.
-    val motion = MaterialTheme.motionScheme
+    val motion = AppTheme.motionScheme
     AnimatedVisibility(
         turned,
         enter = expandVertically(motion.fastSpatialSpec(), expandFrom = Alignment.Bottom) + fadeIn(motion.fastEffectsSpec()),
@@ -536,13 +557,13 @@ private fun CompassButton(turned: Boolean, bearing: Double, onClick: () -> Unit)
                 onClick = onClick,
                 shape = Corners.full,
                 color = SurfaceLevel.Floating.fill(),
-                contentColor = MaterialTheme.colorScheme.primary,
+                contentColor = AppTheme.colorScheme.primary,
                 shadowElevation = Elevation.level2,
                 modifier = Modifier.padding(bottom = Space.m).size(48.dp).testTag("north"),
             ) {
                 Box(contentAlignment = Alignment.Center) {
                 Icon(
-                    Icons.Rounded.Navigation,
+                    AppIcons.Navigation,
                     contentDescription = stringResource(R.string.action_north),
                     modifier = Modifier.rotate(-bearing.toFloat()),
                 )
@@ -553,24 +574,26 @@ private fun CompassButton(turned: Boolean, bearing: Double, onClick: () -> Unit)
 }
 
 /** Brings the map to where the phone is; a loading indicator while it finds out. */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun LocateButton(locating: Boolean, onClick: () -> Unit, inRail: Boolean = false) {
-    // The map's one floating action button, in Material 3's own colours; level with the rail
-    // at its top. Named on the button, so it keeps its name while the indicator stands in
+    // A round button in the floating surface, as the map's other controls are; level with the
+    // rail at its top. Named on the button, so it keeps its name while the indicator stands in
     // for the icon.
     val label = stringResource(R.string.action_locate)
     Tooltip(label) {
         FloatingActionButton(
             onClick = { if (!locating) onClick() },
-            elevation = if (inRail) FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp) else FloatingActionButtonDefaults.elevation(),
+            elevation = if (inRail) restingElevation() else floatingElevation(),
+            shape = Corners.full,
+            containerColor = SurfaceLevel.Floating.fill(),
+            contentColor = AppTheme.colorScheme.onSurface,
             modifier = Modifier.semantics { contentDescription = label }.testTag("locate"),
         ) {
-            Crossfade(locating, animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(), label = "locating") { busy ->
+            Crossfade(locating, animationSpec = AppTheme.motionScheme.fastEffectsSpec(), label = "locating") { busy ->
                 if (busy) {
-                    LoadingIndicator(Modifier.size(32.dp), color = LocalContentColor.current)
+                    Spinner(Modifier.size(32.dp), color = LocalContentColor.current)
                 } else {
-                    Icon(Icons.Rounded.MyLocation, contentDescription = null)
+                    Icon(AppIcons.Locate, contentDescription = null)
                 }
             }
         }
@@ -582,9 +605,9 @@ private fun LocateButton(locating: Boolean, onClick: () -> Unit, inRail: Boolean
 private fun FogButton(on: Boolean, onClick: () -> Unit) {
     val label = stringResource(R.string.action_fog)
     // Filling and emptying as the fog comes and goes, on the motion scheme's effects spring.
-    val spec = MaterialTheme.motionScheme.defaultEffectsSpec<Color>()
-    val container by animateColorAsState(if (on) MaterialTheme.colorScheme.primary else SurfaceLevel.Floating.fill(), spec, label = "fog button")
-    val content by animateColorAsState(if (on) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary, spec, label = "fog icon")
+    val spec = AppTheme.motionScheme.defaultEffectsSpec<Color>()
+    val container by animateColorAsState(if (on) AppTheme.colorScheme.primary else SurfaceLevel.Floating.fill(), spec, label = "fog button")
+    val content by animateColorAsState(if (on) AppTheme.colorScheme.onPrimary else AppTheme.colorScheme.onSurface, spec, label = "fog icon")
     Tooltip(label) {
         Surface(
             checked = on,
@@ -595,7 +618,7 @@ private fun FogButton(on: Boolean, onClick: () -> Unit) {
             shadowElevation = Elevation.level2,
             modifier = Modifier.size(48.dp).semantics { contentDescription = label }.testTag("fog"),
         ) {
-            Box(contentAlignment = Alignment.Center) { Icon(Icons.Rounded.Explore, contentDescription = null) }
+            Box(contentAlignment = Alignment.Center) { Icon(AppIcons.Compass, contentDescription = null) }
         }
     }
 }
@@ -606,8 +629,8 @@ private fun FogCount(fog: FogOfWar) {
     FloatingPill {
         Text(
             stringResource(R.string.fog_lit, fog.cities, fog.provinces),
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = AppTheme.typography.labelMedium,
+            color = AppTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.height(32.dp).padding(horizontal = Space.l).wrapContentHeight(),
         )
     }
@@ -619,7 +642,7 @@ private fun FloatingPill(content: @Composable () -> Unit) {
     Surface(
         shape = Corners.full,
         color = SurfaceLevel.Floating.fill(),
-        contentColor = MaterialTheme.colorScheme.onSurface,
+        contentColor = AppTheme.colorScheme.onSurface,
         shadowElevation = Elevation.level2,
         content = content,
     )
@@ -637,15 +660,15 @@ private fun Legend(colors: Map<Int, Color>, trips: Boolean) {
             colors.forEach { (year, color) ->
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.xs)) {
                     // A dot as the map draws one, ringed in the surface.
-                    Box(Modifier.size(10.dp).border(1.5.dp, MaterialTheme.colorScheme.surface, CircleShape).padding(1.dp).background(color, CircleShape))
-                    Text("$year", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Box(Modifier.size(10.dp).border(1.5.dp, AppTheme.colorScheme.surface, CircleShape).padding(1.dp).background(color, CircleShape))
+                    Text("$year", style = AppTheme.typography.labelMedium, color = AppTheme.colorScheme.onSurfaceVariant)
                 }
             }
             if (trips) {
                 VerticalDivider(Modifier.height(14.dp), color = dividerColor())
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.xs)) {
-                    Box(Modifier.width(14.dp).height(2.dp).background(MaterialTheme.colorScheme.onSurface.copy(alpha = ROUTE_OPACITY), CircleShape))
-                    Text(stringResource(R.string.legend_trips), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Box(Modifier.width(14.dp).height(2.dp).background(AppTheme.colorScheme.onSurface.copy(alpha = ROUTE_OPACITY), CircleShape))
+                    Text(stringResource(R.string.legend_trips), style = AppTheme.typography.labelMedium, color = AppTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }
@@ -657,22 +680,22 @@ private fun Legend(colors: Map<Int, Color>, trips: Boolean) {
 private fun RouteCard(trip: TripRecord, onOpen: () -> Unit) {
     Card(
         onClick = onOpen,
-        shape = MaterialTheme.shapes.medium,
+        shape = AppTheme.shapes.medium,
         colors = CardDefaults.cardColors(containerColor = SurfaceLevel.Floating.fill()),
         elevation = CardDefaults.cardElevation(defaultElevation = Elevation.level2),
         modifier = Modifier.fillMaxWidth().padding(bottom = Space.s).sharedCard(tripCardKey(trip.id)).testTag("trip_${trip.id}"),
     ) {
         Row(Modifier.padding(start = Space.l, end = Space.s, top = Space.m, bottom = Space.m), verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Rounded.Luggage, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            Icon(AppIcons.Luggage, contentDescription = null, tint = AppTheme.colorScheme.onSurfaceVariant)
             Column(Modifier.weight(1f).padding(horizontal = Space.m), verticalArrangement = Arrangement.spacedBy(Space.xxs)) {
-                Text(trip.title, style = MaterialTheme.typography.titleMedium)
+                Text(trip.title, style = AppTheme.typography.titleMedium)
                 Text(
                     tripSummary(trip),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = AppTheme.typography.bodySmall,
+                    color = AppTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            Icon(AppIcons.ChevronRight, contentDescription = null, tint = AppTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.components
 
+import cc.hyoban.moments.ui.design.AppIcons
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -13,12 +14,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.MotionPhotosOn
-import androidx.compose.material.icons.rounded.PlayArrow
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import cc.hyoban.moments.ui.design.Icon
+import cc.hyoban.moments.ui.design.AppTheme
+import cc.hyoban.moments.ui.design.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
@@ -86,7 +84,7 @@ fun MediaStill(
     urls: MediaUrls,
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Crop,
-    placeholder: Color = MaterialTheme.colorScheme.surfaceContainerHighest,
+    placeholder: Color = AppTheme.colorScheme.surfaceContainerHighest,
     placeholderUrl: String? = null,
     /** How many times wider than it is laid out to fetch it: more than 1 while zoomed in. */
     detail: Float = 1f,
@@ -143,7 +141,7 @@ fun MediaStill(
 fun MediaEdges(media: MomentMedia, urls: MediaUrls, modifier: Modifier = Modifier) {
     val context = LocalPlatformContext.current
     var edges by remember(media.uid) { mutableStateOf<Pair<ImageBitmap, ImageBitmap>?>(null) }
-    val shown by animateFloatAsState(if (edges != null) 1f else 0f, MaterialTheme.motionScheme.defaultEffectsSpec(), label = "edges")
+    val shown by animateFloatAsState(if (edges != null) 1f else 0f, AppTheme.motionScheme.defaultEffectsSpec(), label = "edges")
     BoxWithConstraints(modifier) {
         // The file the still is drawn from, already on disk, read again small: each edge is
         // the band along it averaged into a few colours, blended into one another across the
@@ -253,7 +251,7 @@ fun MediaTile(
 @Composable
 fun PlayBadge(modifier: Modifier = Modifier) {
     Icon(
-        Icons.Rounded.PlayArrow,
+        AppIcons.Play,
         contentDescription = stringResource(R.string.action_play),
         tint = MediaOverlay.content,
         modifier = modifier.size(44.dp).clip(CircleShape).background(MediaOverlay.control).padding(Space.s),
@@ -267,8 +265,8 @@ fun LiveBadge(modifier: Modifier = Modifier) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Space.xs),
     ) {
-        Icon(Icons.Rounded.MotionPhotosOn, contentDescription = null, tint = MediaOverlay.content, modifier = Modifier.size(14.dp))
-        Text(stringResource(R.string.label_live), color = MediaOverlay.content, style = MaterialTheme.typography.labelSmall)
+        Icon(AppIcons.Live, contentDescription = null, tint = MediaOverlay.content, modifier = Modifier.size(14.dp))
+        Text(stringResource(R.string.label_live), color = MediaOverlay.content, style = AppTheme.typography.labelSmall)
     }
 }
 
@@ -330,7 +328,7 @@ fun MediaMosaic(
                                         .semantics { contentDescription = more },
                                     contentAlignment = Alignment.Center,
                                 ) {
-                                    Text("+${media.size - 4}", color = MediaOverlay.content, style = MaterialTheme.typography.headlineSmall)
+                                    Text("+${media.size - 4}", color = MediaOverlay.content, style = AppTheme.typography.headlineSmall)
                                 }
                             }
                         }
@@ -354,5 +352,5 @@ fun shapeOf(media: MomentMedia): Float = (media.width ?: 4).toFloat() / (media.h
 /** A small rounded still, for rows and covers. */
 @Composable
 fun Thumbnail(media: MomentMedia, urls: MediaUrls, size: Int, modifier: Modifier = Modifier) {
-    MediaStill(media, urls, modifier.size(size.dp).clip(MaterialTheme.shapes.medium))
+    MediaStill(media, urls, modifier.size(size.dp).clip(AppTheme.shapes.medium))
 }

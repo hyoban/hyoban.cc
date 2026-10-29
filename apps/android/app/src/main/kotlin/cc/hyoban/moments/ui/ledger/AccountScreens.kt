@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.ledger
 
+import cc.hyoban.moments.ui.design.AppIcons
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,26 +15,20 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.Archive
-import androidx.compose.material.icons.rounded.Edit
-import androidx.compose.material.icons.rounded.Tune
-import androidx.compose.material.icons.rounded.Visibility
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import cc.hyoban.moments.ui.design.AlertDialog
+import cc.hyoban.moments.ui.design.IconButtonDefaults
+import cc.hyoban.moments.ui.design.ButtonDefaults
+import cc.hyoban.moments.ui.design.DropdownMenu
+import cc.hyoban.moments.ui.design.DropdownMenuItem
+import cc.hyoban.moments.ui.design.FilledTonalButton
+import cc.hyoban.moments.ui.design.FilterChip
+import cc.hyoban.moments.ui.design.Icon
+import cc.hyoban.moments.ui.design.IconButton
+import cc.hyoban.moments.ui.design.AppTheme
+import cc.hyoban.moments.ui.design.OutlinedButton
+import cc.hyoban.moments.ui.design.OutlinedTextField
+import cc.hyoban.moments.ui.design.Text
+import cc.hyoban.moments.ui.design.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -85,23 +80,23 @@ fun AccountScreen(container: AppContainer, id: String, nav: LedgerNav) {
         subtitle = accountKindLabel(account.kind) + " " + account.currency,
         actions = {
             Tooltip(stringResource(R.string.action_edit), below = true) {
-                IconButton(shapes = IconButtonDefaults.shapes(), onClick = { nav.editAccount(id) }, modifier = Modifier.testTag("edit_account")) {
-                    Icon(Icons.Rounded.Edit, contentDescription = stringResource(R.string.action_edit))
+                IconButton(onClick = { nav.editAccount(id) }, modifier = Modifier.testTag("edit_account")) {
+                    Icon(AppIcons.Pen, contentDescription = stringResource(R.string.action_edit))
                 }
             }
         },
     ) {
         BillList(ledger, bills, account.currency, nav, header = {
             Column(Modifier.padding(start = Space.gutter + Space.l, end = Space.gutter, top = Space.s, bottom = Space.s)) {
-                Text(stringResource(R.string.ledger_balance_label), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text(money(balance, account.currency), style = MaterialTheme.typography.displaySmall, modifier = Modifier.testTag("account_balance"))
+                Text(stringResource(R.string.ledger_balance_label), style = AppTheme.typography.labelLarge, color = AppTheme.colorScheme.onSurfaceVariant)
+                Text(money(balance, account.currency), style = AppTheme.typography.displaySmall, modifier = Modifier.testTag("account_balance"))
                 Row(Modifier.padding(top = Space.m), horizontalArrangement = Arrangement.spacedBy(Space.s)) {
-                    FilledTonalButton(shapes = ButtonDefaults.shapes(), onClick = { nav.entry(LedgerEntryArgs(account = id)) }) {
-                        Icon(Icons.Rounded.Add, contentDescription = null)
+                    FilledTonalButton(onClick = { nav.entry(LedgerEntryArgs(account = id)) }) {
+                        Icon(AppIcons.Plus, contentDescription = null)
                         Text(stringResource(R.string.ledger_new_bill), modifier = Modifier.padding(start = Space.s))
                     }
-                    OutlinedButton(shapes = ButtonDefaults.shapes(), onClick = { calibrating = true }, modifier = Modifier.testTag("calibrate")) {
-                        Icon(Icons.Rounded.Tune, contentDescription = null)
+                    OutlinedButton(onClick = { calibrating = true }, modifier = Modifier.testTag("calibrate")) {
+                        Icon(AppIcons.Sliders, contentDescription = null)
                         Text(stringResource(R.string.ledger_calibrate), modifier = Modifier.padding(start = Space.s))
                     }
                 }
@@ -116,7 +111,7 @@ fun AccountScreen(container: AppContainer, id: String, nav: LedgerNav) {
             title = { Text(stringResource(R.string.ledger_calibrate)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(Space.s)) {
-                    Text(stringResource(R.string.ledger_calibrate_note), style = MaterialTheme.typography.bodyMedium)
+                    Text(stringResource(R.string.ledger_calibrate_note), style = AppTheme.typography.bodyMedium)
                     OutlinedTextField(
                         value, { value = it },
                         prefix = { Text(currencySymbol(account.currency)) },
@@ -128,13 +123,13 @@ fun AccountScreen(container: AppContainer, id: String, nav: LedgerNav) {
                 }
             },
             confirmButton = {
-                TextButton(shapes = ButtonDefaults.shapes(), onClick = {
+                TextButton(onClick = {
                     val target = parseSigned(value) ?: return@TextButton
                     calibrating = false
                     scope.launch { container.ledger.saveAccount(account.copy(opening = account.opening + target - balance)) }
                 }) { Text(stringResource(R.string.action_save)) }
             },
-            dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { calibrating = false }) { Text(stringResource(R.string.action_cancel)) } },
+            dismissButton = { TextButton(onClick = { calibrating = false }) { Text(stringResource(R.string.action_cancel)) } },
         )
     }
 }
@@ -183,7 +178,7 @@ fun AccountEditScreen(container: AppContainer, id: String?, nav: LedgerNav) {
         stringResource(if (original == null) R.string.ledger_add_account else R.string.ledger_edit_account),
         nav.back,
         close = true,
-        actions = { TextButton(shapes = ButtonDefaults.shapes(), onClick = ::save, enabled = name.isNotBlank(), modifier = Modifier.testTag("save_account")) { Text(stringResource(R.string.action_save)) } },
+        actions = { TextButton(onClick = ::save, enabled = name.isNotBlank(), modifier = Modifier.testTag("save_account")) { Text(stringResource(R.string.action_save)) } },
     ) {
         PageWidth(maxColumns = 1) { columns ->
             Column(
@@ -192,7 +187,7 @@ fun AccountEditScreen(container: AppContainer, id: String?, nav: LedgerNav) {
             ) {
                 Column(Modifier.padding(horizontal = Space.gutter, vertical = Space.s), verticalArrangement = Arrangement.spacedBy(Space.m)) {
                     OutlinedTextField(name, { name = it }, label = { Text(stringResource(R.string.ledger_account_name)) }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("account_name"))
-                    Text(stringResource(R.string.ledger_account_kind), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.ledger_account_kind), style = AppTheme.typography.labelLarge, color = AppTheme.colorScheme.onSurfaceVariant)
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.s)) {
                         AccountKind.entries.forEach { entry ->
                             FilterChip(
@@ -205,7 +200,7 @@ fun AccountEditScreen(container: AppContainer, id: String?, nav: LedgerNav) {
                     }
                     Box {
                         var open by remember { mutableStateOf(false) }
-                        OutlinedButton(shapes = ButtonDefaults.shapes(), onClick = { open = true }, modifier = Modifier.testTag("account_currency")) {
+                        OutlinedButton(onClick = { open = true }, modifier = Modifier.testTag("account_currency")) {
                             Text(stringResource(R.string.ledger_currency) + " " + currency)
                         }
                         DropdownMenu(open, onDismissRequest = { open = false }) {
@@ -230,17 +225,16 @@ fun AccountEditScreen(container: AppContainer, id: String?, nav: LedgerNav) {
                     null,
                     null,
                     listOf(
-                        { shapes -> SwitchRow(counted, Icons.Rounded.Visibility, stringResource(R.string.ledger_counted), "counted", shapes, supporting = stringResource(R.string.ledger_counted_note)) { counted = !counted } },
-                        { shapes -> SwitchRow(archived, Icons.Rounded.Archive, stringResource(R.string.ledger_archive), "archived", shapes, supporting = stringResource(R.string.ledger_archive_note)) { archived = !archived } },
+                        { shapes -> SwitchRow(counted, AppIcons.Eye, stringResource(R.string.ledger_counted), "counted", shapes, supporting = stringResource(R.string.ledger_counted_note)) { counted = !counted } },
+                        { shapes -> SwitchRow(archived, AppIcons.Archive, stringResource(R.string.ledger_archive), "archived", shapes, supporting = stringResource(R.string.ledger_archive_note)) { archived = !archived } },
                     ),
                 )
                 if (original != null) {
                     TextButton(
-                        shapes = ButtonDefaults.shapes(),
                         onClick = { deleting = true },
                         enabled = !used,
                         modifier = Modifier.padding(horizontal = Space.gutter, vertical = Space.l),
-                    ) { Text(stringResource(if (used) R.string.ledger_account_in_use else R.string.ledger_delete_account), color = if (used) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.error) }
+                    ) { Text(stringResource(if (used) R.string.ledger_account_in_use else R.string.ledger_delete_account), color = if (used) AppTheme.colorScheme.onSurfaceVariant else AppTheme.colorScheme.error) }
                 }
             }
         }
@@ -251,7 +245,7 @@ fun AccountEditScreen(container: AppContainer, id: String?, nav: LedgerNav) {
             title = { Text(stringResource(R.string.ledger_delete_account)) },
             text = { Text(original.name) },
             confirmButton = {
-                TextButton(shapes = ButtonDefaults.shapes(), onClick = {
+                TextButton(onClick = {
                     deleting = false
                     scope.launch {
                         container.ledger.deleteAccount(original.id)
@@ -260,7 +254,7 @@ fun AccountEditScreen(container: AppContainer, id: String?, nav: LedgerNav) {
                     }
                 }) { Text(stringResource(R.string.action_delete)) }
             },
-            dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { deleting = false }) { Text(stringResource(R.string.action_cancel)) } },
+            dismissButton = { TextButton(onClick = { deleting = false }) { Text(stringResource(R.string.action_cancel)) } },
         )
     }
 }

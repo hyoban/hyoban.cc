@@ -1,5 +1,7 @@
 package cc.hyoban.moments.ui.settings
 
+import cc.hyoban.moments.ui.design.AppIcons
+import cc.hyoban.moments.ui.design.Spinner
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -14,37 +16,18 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextObfuscationMode
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.OpenInNew
-import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
-import androidx.compose.material.icons.rounded.Cloud
-import androidx.compose.material.icons.rounded.Code
-import androidx.compose.material.icons.rounded.CloudUpload
-import androidx.compose.material.icons.rounded.DarkMode
-import androidx.compose.material.icons.rounded.Error
-import androidx.compose.material.icons.rounded.Image
-import androidx.compose.material.icons.rounded.Key
-import androidx.compose.material.icons.rounded.LightMode
-import androidx.compose.material.icons.rounded.Palette
-import androidx.compose.material.icons.rounded.Refresh
-import androidx.compose.material.icons.rounded.Route
-import androidx.compose.material.icons.rounded.Tune
-import androidx.compose.material.icons.rounded.Visibility
-import androidx.compose.material.icons.rounded.VisibilityOff
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.ListItemShapes
-import androidx.compose.material3.LoadingIndicator
-import androidx.compose.material3.SegmentedListItem
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedSecureTextField
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import cc.hyoban.moments.ui.design.AlertDialog
+import cc.hyoban.moments.ui.design.IconButtonDefaults
+import cc.hyoban.moments.ui.design.ButtonDefaults
+import cc.hyoban.moments.ui.design.Icon
+import cc.hyoban.moments.ui.design.IconButton
+import cc.hyoban.moments.ui.design.ListItemShapes
+import cc.hyoban.moments.ui.design.SegmentedListItem
+import cc.hyoban.moments.ui.design.AppTheme
+import cc.hyoban.moments.ui.design.OutlinedSecureTextField
+import cc.hyoban.moments.ui.design.OutlinedTextField
+import cc.hyoban.moments.ui.design.Text
+import cc.hyoban.moments.ui.design.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -69,7 +52,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.ListItem
+import cc.hyoban.moments.ui.design.ListItem
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.layout.layout
@@ -85,16 +68,23 @@ import cc.hyoban.moments.ui.components.Tooltip
 import cc.hyoban.moments.ui.theme.Space
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 
-// Laid out as FlClash lays out its settings: rows grouped into a card under a small
-// caption, a note under the group, and a tap on a row opening a dialog to change it.
+// Each section of the settings a page of its own, opened from 我: rows grouped on one surface
+// under a small caption, a note under the group, and a tap on a row opening a dialog to change it.
 
-/** Where the app reads from: the API, the photos' origin and the map's styles, each back to the build's own on a tap. */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+/** The settings' sections, each a page under 我. */
+enum class SettingsSection(val title: Int) {
+    APPEARANCE(R.string.section_theme_mode),
+    MOMENTS(R.string.settings_moments_data),
+    MAP(R.string.settings_map_footprints),
+    ABOUT(R.string.settings_about),
+}
+
+/** One [section] of the settings: the look and language; the Moments and where they're read from; the map and footprints; the credits. */
 @Composable
 fun SettingsScreen(
     container: AppContainer,
+    section: SettingsSection,
     onBack: () -> Unit,
-    onChanges: () -> Unit = {},
     onFootprints: () -> Unit = {},
     onFootprintSettings: () -> Unit = {},
 ) {
@@ -103,13 +93,13 @@ fun SettingsScreen(
     var editing by rememberSaveable { mutableStateOf<Int?>(null) }
     var editingToken by rememberSaveable { mutableStateOf(false) }
     val rows = listOf(
-        Row(settings.apiUrl, R.string.setting_api_url, Icons.Rounded.Cloud) { container.changeApi(it) },
-        Row(settings.assetOrigin, R.string.setting_asset_origin, Icons.Rounded.Image) { settings.assetOrigin.set(it) },
-        Row(settings.mapStyleLight, R.string.setting_map_style_light, Icons.Rounded.LightMode) { settings.mapStyleLight.set(it) },
-        Row(settings.mapStyleDark, R.string.setting_map_style_dark, Icons.Rounded.DarkMode) { settings.mapStyleDark.set(it) },
+        Row(settings.apiUrl, R.string.setting_api_url, AppIcons.Cloud) { container.changeApi(it) },
+        Row(settings.assetOrigin, R.string.setting_asset_origin, AppIcons.Image) { settings.assetOrigin.set(it) },
+        Row(settings.mapStyleLight, R.string.setting_map_style_light, AppIcons.Sun) { settings.mapStyleLight.set(it) },
+        Row(settings.mapStyleDark, R.string.setting_map_style_dark, AppIcons.Moon) { settings.mapStyleDark.set(it) },
     )
 
-    SubPage(stringResource(R.string.title_settings), onBack, Modifier.background(AppColors.page)) {
+    SubPage(stringResource(section.title), onBack, Modifier.background(AppColors.page)) {
         PageWidth(maxColumns = 1) { columns ->
             Column(
                 Modifier
@@ -119,92 +109,86 @@ fun SettingsScreen(
                     .padding(horizontal = columns.margin)
                     .padding(bottom = Space.xl),
             ) {
-                ThemeSettings(settings)
-                LanguageSettings()
-                SegmentedGroup(
-                    stringResource(R.string.section_moments),
-                    stringResource(R.string.settings_show_tech_note),
-                    listOf { shapes ->
-                        SwitchRow(settings.showTech, Icons.Rounded.Code, stringResource(R.string.setting_show_tech), "show_tech", shapes) {
-                            container.changeShowTech(!settings.showTech)
-                        }
-                    },
-                )
-                // Where the app reads from, and reading from it again with a tap, as Material 3 asks a
-                // refresh pulled for on the tabs be had without the gesture too.
-                val syncing by container.repository.syncing.collectAsStateWithLifecycle()
-                val refresh: Segment = { shapes ->
-                    SegmentedListItem(
-                        onClick = { if (!syncing) container.refresh() },
-                        shapes = shapes,
-                        colors = segmentColors(),
-                        leadingContent = { Icon(Icons.Rounded.Refresh, contentDescription = null) },
-                        supportingContent = { Text(stringResource(if (syncing) R.string.refreshing else R.string.refresh_note)) },
-                        trailingContent = if (syncing) {
-                            { LoadingIndicator(Modifier.size(24.dp)) }
-                        } else {
-                            null
-                        },
-                        modifier = Modifier.testTag("refresh"),
-                    ) { Text(stringResource(R.string.action_refresh)) }
+                if (section == SettingsSection.APPEARANCE) {
+                    ThemeSettings(settings)
+                    LanguageSettings()
                 }
-                Section(stringResource(R.string.section_sources), rows.subList(0, 2), 0, stringResource(R.string.settings_api_note), extra = listOf(refresh)) { editing = it }
-                // The token, and while changes wait on the phone, the way to them, as from the Moments' header.
-                val pending by container.repository.pending.collectAsStateWithLifecycle()
-                val token: Segment = { shapes ->
-                    SegmentedListItem(
-                        onClick = { editingToken = true },
-                        shapes = shapes,
-                        colors = segmentColors(),
-                        leadingContent = { Icon(Icons.Rounded.Key, contentDescription = null) },
-                        supportingContent = { Text(stringResource(if (settings.apiToken.isSet) R.string.token_set else R.string.token_unset)) },
-                        modifier = Modifier.testTag("api_token"),
-                    ) { Text(stringResource(R.string.setting_api_token)) }
-                }
-                val changes: Segment = { shapes ->
-                    SegmentedListItem(
-                        onClick = onChanges,
-                        shapes = shapes,
-                        colors = segmentColors(),
-                        leadingContent = { Icon(Icons.Rounded.CloudUpload, contentDescription = null) },
-                        supportingContent = { Text(pluralStringResource(R.plurals.count_changes, pending.size, pending.size)) },
-                        trailingContent = { Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null) },
-                        modifier = Modifier.testTag("settings_changes"),
-                    ) { Text(stringResource(R.string.title_changes)) }
-                }
-                SegmentedGroup(
-                    stringResource(R.string.section_publishing),
-                    stringResource(R.string.settings_token_note),
-                    if (pending.size == 0) listOf(token) else listOf(token, changes),
-                )
-                Section(stringResource(R.string.section_map), rows.subList(2, 4), 2, stringResource(R.string.settings_map_note)) { editing = it }
-                // Footprints are looked at on the map, and how they are recorded set on a page of their own.
-                SegmentedGroup(
-                    stringResource(R.string.footprints_title),
-                    stringResource(R.string.footprints_local_note),
-                    listOf(
-                        { shapes ->
-                            SegmentedListItem(
-                                onClick = onFootprints,
-                                shapes = shapes,
-                                colors = segmentColors(),
-                                leadingContent = { Icon(Icons.Rounded.Route, contentDescription = null) },
-                                modifier = Modifier.testTag("footprints"),
-                            ) { Text(stringResource(R.string.footprints_view_on_map)) }
+                if (section == SettingsSection.MOMENTS) {
+                    SegmentedGroup(
+                        stringResource(R.string.section_moments),
+                        stringResource(R.string.settings_show_tech_note),
+                        listOf { shapes ->
+                            SwitchRow(settings.showTech, AppIcons.Code, stringResource(R.string.setting_show_tech), "show_tech", shapes) {
+                                container.changeShowTech(!settings.showTech)
+                            }
                         },
-                        { shapes ->
-                            SegmentedListItem(
-                                onClick = onFootprintSettings,
-                                shapes = shapes,
-                                colors = segmentColors(),
-                                leadingContent = { Icon(Icons.Rounded.Tune, contentDescription = null) },
-                                trailingContent = { Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null) },
-                                modifier = Modifier.testTag("footprint_settings"),
-                            ) { Text(stringResource(R.string.footprint_settings_title)) }
-                        },
-                    ),
-                )
-                Credits()
+                    )
+                    // Where the app reads from, and reading from it again with a tap, as Material 3 asks a
+                    // refresh pulled for on the tabs be had without the gesture too.
+                    val syncing by container.repository.syncing.collectAsStateWithLifecycle()
+                    val refresh: Segment = { shapes ->
+                        SegmentedListItem(
+                            onClick = { if (!syncing) container.refresh() },
+                            shapes = shapes,
+                            colors = segmentColors(),
+                            leadingContent = { Icon(AppIcons.Refresh, contentDescription = null) },
+                            supportingContent = { Text(stringResource(if (syncing) R.string.refreshing else R.string.refresh_note)) },
+                            trailingContent = if (syncing) {
+                                { Spinner(Modifier.size(24.dp)) }
+                            } else {
+                                null
+                            },
+                            modifier = Modifier.testTag("refresh"),
+                        ) { Text(stringResource(R.string.action_refresh)) }
+                    }
+                    Section(stringResource(R.string.section_sources), rows.subList(0, 2), 0, stringResource(R.string.settings_api_note), extra = listOf(refresh)) { editing = it }
+                    // The token publishing takes; the changes themselves wait at the top of 我.
+                    val token: Segment = { shapes ->
+                        SegmentedListItem(
+                            onClick = { editingToken = true },
+                            shapes = shapes,
+                            colors = segmentColors(),
+                            leadingContent = { Icon(AppIcons.Key, contentDescription = null) },
+                            supportingContent = { Text(stringResource(if (settings.apiToken.isSet) R.string.token_set else R.string.token_unset)) },
+                            modifier = Modifier.testTag("api_token"),
+                        ) { Text(stringResource(R.string.setting_api_token)) }
+                    }
+                    SegmentedGroup(
+                        stringResource(R.string.section_publishing),
+                        stringResource(R.string.settings_token_note),
+                        listOf(token),
+                    )
+                }
+                if (section == SettingsSection.MAP) {
+                    Section(stringResource(R.string.section_map), rows.subList(2, 4), 2, stringResource(R.string.settings_map_note)) { editing = it }
+                    // Footprints are looked at on the map, and how they are recorded set on a page of their own.
+                    SegmentedGroup(
+                        stringResource(R.string.footprints_title),
+                        stringResource(R.string.footprints_local_note),
+                        listOf(
+                            { shapes ->
+                                SegmentedListItem(
+                                    onClick = onFootprints,
+                                    shapes = shapes,
+                                    colors = segmentColors(),
+                                    leadingContent = { Icon(AppIcons.Route, contentDescription = null) },
+                                    modifier = Modifier.testTag("footprints"),
+                                ) { Text(stringResource(R.string.footprints_view_on_map)) }
+                            },
+                            { shapes ->
+                                SegmentedListItem(
+                                    onClick = onFootprintSettings,
+                                    shapes = shapes,
+                                    colors = segmentColors(),
+                                    leadingContent = { Icon(AppIcons.Sliders, contentDescription = null) },
+                                    trailingContent = { Icon(AppIcons.ChevronRight, contentDescription = null) },
+                                    modifier = Modifier.testTag("footprint_settings"),
+                                ) { Text(stringResource(R.string.footprint_settings_title)) }
+                            },
+                        ),
+                    )
+                }
+                if (section == SettingsSection.ABOUT) Credits()
             }
         }
     }
@@ -234,7 +218,6 @@ private fun Section(title: String, rows: List<Row>, first: Int, note: String?, e
     SegmentedGroup(title, note, rows.mapIndexed<Row, Segment> { index, row -> { shapes -> SettingRow(row, shapes) { onEdit(first + index) } } } + extra)
 }
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun SettingRow(row: Row, shapes: ListItemShapes, onClick: () -> Unit) {
     val setting = row.setting
@@ -248,15 +231,14 @@ private fun SettingRow(row: Row, shapes: ListItemShapes, onClick: () -> Unit) {
         },
         leadingContent = { Icon(row.icon, contentDescription = null) },
         trailingContent = if (setting.isDefault) {
-            { Text(stringResource(R.string.setting_is_default), style = MaterialTheme.typography.labelMedium) }
+            { Text(stringResource(R.string.setting_is_default), style = AppTheme.typography.labelMedium) }
         } else {
             null
         },
     ) { Text(stringResource(row.title)) }
 }
 
-/** 馒头, the cat the icon is drawn from, in a photo of its face; then FlClash, whose design the app's is after, opening its repository on a tap. */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+/** 馒头, the cat the icon is drawn from, in a photo of its face; then FlClash, which shaped the app's early pages, opening its repository on a tap. */
 @Composable
 private fun Credits() {
     val uri = LocalUriHandler.current
@@ -288,8 +270,8 @@ private fun Credits() {
             shapes = shapes,
             colors = segmentColors(),
             supportingContent = { Text(stringResource(R.string.credit_flclash_note)) },
-            leadingContent = { Icon(Icons.Rounded.Palette, contentDescription = null) },
-            trailingContent = { Icon(Icons.AutoMirrored.Rounded.OpenInNew, contentDescription = null) },
+            leadingContent = { Icon(AppIcons.Palette, contentDescription = null) },
+            trailingContent = { Icon(AppIcons.External, contentDescription = null) },
         ) { Text("FlClash") }
     }
     SegmentedGroup(stringResource(R.string.section_credits), null, listOf(mantou, flclash))
@@ -324,7 +306,7 @@ private fun AddressDialog(setting: Setting, title: String, onDismiss: () -> Unit
                     isError = !ok,
                     // The error marked by an icon as well as the colour, as Material 3 asks of a field in error.
                     trailingIcon = if (ok) null else {
-                        { Icon(Icons.Rounded.Error, contentDescription = null) }
+                        { Icon(AppIcons.Alert, contentDescription = null) }
                     },
                     supportingText = {
                         Text(if (ok) stringResource(R.string.setting_default, setting.default) else stringResource(R.string.error_address))
@@ -335,16 +317,16 @@ private fun AddressDialog(setting: Setting, title: String, onDismiss: () -> Unit
                     modifier = Modifier.fillMaxWidth().focusRequester(focus),
                 )
                 if (Setting.normalize(field.text) != setting.default) {
-                    TextButton(shapes = ButtonDefaults.shapes(), onClick = { onSave(setting.default) }, modifier = Modifier.testTag("restore_default")) {
+                    TextButton(onClick = { onSave(setting.default) }, modifier = Modifier.testTag("restore_default")) {
                         Text(stringResource(R.string.action_restore_default))
                     }
                 }
             }
         },
         confirmButton = {
-            TextButton(shapes = ButtonDefaults.shapes(), onClick = { onSave(field.text) }, enabled = ok) { Text(stringResource(R.string.action_confirm)) }
+            TextButton(onClick = { onSave(field.text) }, enabled = ok) { Text(stringResource(R.string.action_confirm)) }
         },
-        dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
     )
 }
 
@@ -372,8 +354,8 @@ private fun TokenDialog(token: Token, onDismiss: () -> Unit, onSave: (String) ->
                     trailingIcon = {
                         val label = stringResource(if (hidden) R.string.action_show_token else R.string.action_hide_token)
                         Tooltip(label) {
-                            IconButton(shapes = IconButtonDefaults.shapes(), onClick = { hidden = !hidden }, modifier = Modifier.testTag("api_token_reveal")) {
-                                Icon(if (hidden) Icons.Rounded.Visibility else Icons.Rounded.VisibilityOff, contentDescription = label)
+                            IconButton(onClick = { hidden = !hidden }, modifier = Modifier.testTag("api_token_reveal")) {
+                                Icon(if (hidden) AppIcons.Eye else AppIcons.EyeOff, contentDescription = label)
                             }
                         }
                     },
@@ -383,9 +365,8 @@ private fun TokenDialog(token: Token, onDismiss: () -> Unit, onSave: (String) ->
                 )
                 if (token.isSet) {
                     TextButton(
-                        shapes = ButtonDefaults.shapes(),
                         onClick = { onSave("") },
-                        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                        colors = ButtonDefaults.textButtonColors(contentColor = AppTheme.colorScheme.error),
                         modifier = Modifier.testTag("api_token_forget"),
                     ) { Text(stringResource(R.string.action_forget_token)) }
                 }
@@ -393,10 +374,10 @@ private fun TokenDialog(token: Token, onDismiss: () -> Unit, onSave: (String) ->
         },
         confirmButton = {
             val text = field.text.toString()
-            TextButton(shapes = ButtonDefaults.shapes(), onClick = { onSave(text) }, enabled = text.isNotBlank(), modifier = Modifier.testTag("api_token_save")) {
+            TextButton(onClick = { onSave(text) }, enabled = text.isNotBlank(), modifier = Modifier.testTag("api_token_save")) {
                 Text(stringResource(R.string.action_confirm))
             }
         },
-        dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
     )
 }

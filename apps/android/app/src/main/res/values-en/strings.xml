@@ -1,7 +1,7 @@
 <resources>
     <!-- The app in English, for a phone or the app set to it; the Moments' own words stay as written. -->
     <string name="app_name">Here</string>
-    <string name="tab_moments">Moments</string>
+    <string name="tab_moments">Timeline</string>
     <string name="tab_map">Map</string>
     <string name="tab_trips">Trips</string>
     <string name="action_back">Back</string>
@@ -74,7 +74,7 @@
     <string name="media_photo">Photo</string>
     <string name="media_live">Live Photo</string>
     <string name="media_video">Video</string>
-    <string name="title_moments">Moments</string>
+    <string name="title_moments">Timeline</string>
     <string name="title_trips">Trips</string>
     <string name="label_live">Live</string>
     <string name="empty_moments">No Moments yet</string>
@@ -104,7 +104,7 @@
     <string name="error_location_permission">Location permission is needed to show where you are</string>
     <string name="label_view_list">List</string>
     <string name="label_view_calendar">Calendar</string>
-    <string name="label_write_moment">Write</string>
+    <string name="label_write_moment">Record</string>
     <string name="label_publish_all">Publish all</string>
     <string name="action_search">Search</string>
     <string name="action_clear">Clear</string>
@@ -249,7 +249,7 @@
     <string name="write_moment">Moment</string>
     <string name="write_bill">Bill</string>
     <string name="section_bill">Bill</string>
-    <string name="action_new_moment">Write a Moment</string>
+    <string name="action_new_moment">Record a Moment or a bill</string>
     <string name="action_save">Save</string>
     <string name="hint_moment_text">What’s happening…</string>
     <string name="action_add_photos">Add photos or videos</string>
@@ -764,4 +764,19 @@
     <string name="auto_bill_title">Add %1$s</string>
     <string name="auto_bill_wechat">WeChat Pay</string>
     <string name="auto_bill_alipay">Alipay</string>
+    <string name="tab_me">Me</string>
+    <string name="me_pending_none">Nothing waiting to publish</string>
+    <string name="me_pending_note">Look over the changes, then publish them to the site together.</string>
+    <string name="me_synced_note">New Moments and edits stay on the phone first.</string>
+    <string name="action_review_publish">Review and publish</string>
+    <string name="settings_moments_data">Moments and data</string>
+    <string name="settings_map_footprints">Map and footprints</string>
+    <string name="settings_about">About</string>
+    <string name="me_month_expense">Spent this month</string>
+    <string name="me_assets">Assets and accounts</string>
+    <string name="me_start_ledger">Start a ledger</string>
+    <string name="me_start_ledger_note">Write a bill, or import from iCost.</string>
+    <string name="label_time">Time</string>
+    <string name="action_previous_month">Previous month</string>
+    <string name="action_next_month">Next month</string>
 </resources>

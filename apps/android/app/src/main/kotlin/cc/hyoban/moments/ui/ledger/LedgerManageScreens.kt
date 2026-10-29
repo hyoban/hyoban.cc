@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.ledger
 
+import cc.hyoban.moments.ui.design.AppIcons
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,25 +10,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.Refresh
-import androidx.compose.material.icons.rounded.SubdirectoryArrowRight
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SegmentedListItem
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import cc.hyoban.moments.ui.design.AlertDialog
+import cc.hyoban.moments.ui.design.IconButtonDefaults
+import cc.hyoban.moments.ui.design.ButtonDefaults
+import cc.hyoban.moments.ui.design.Icon
+import cc.hyoban.moments.ui.design.IconButton
+import cc.hyoban.moments.ui.design.AppTheme
+import cc.hyoban.moments.ui.design.OutlinedButton
+import cc.hyoban.moments.ui.design.OutlinedTextField
+import cc.hyoban.moments.ui.design.SegmentedButton
+import cc.hyoban.moments.ui.design.SegmentedListItem
+import cc.hyoban.moments.ui.design.SingleChoiceSegmentedButtonRow
+import cc.hyoban.moments.ui.design.Text
+import cc.hyoban.moments.ui.design.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -64,7 +59,6 @@ import kotlinx.coroutines.launch
  * as a segmented list; tapped, one is renamed, given a second level, merged into another or,
  * unused, deleted.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun CategoriesScreen(container: AppContainer, book: String, nav: LedgerNav) {
     val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
@@ -84,7 +78,7 @@ fun CategoriesScreen(container: AppContainer, book: String, nav: LedgerNav) {
             ) {
                 SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(horizontal = Space.gutter, vertical = Space.s)) {
                     listOf(false to R.string.ledger_kind_expense, true to R.string.ledger_kind_income).forEachIndexed { index, (value, label) ->
-                        SegmentedButton(selected = income == value, onClick = { income = value }, shape = SegmentedButtonDefaults.itemShape(index, 2)) { Text(stringResource(label)) }
+                        SegmentedButton(selected = income == value, onClick = { income = value }) { Text(stringResource(label)) }
                     }
                 }
                 categories.filter { it.parent == null }.forEach { top ->
@@ -101,7 +95,7 @@ fun CategoriesScreen(container: AppContainer, book: String, nav: LedgerNav) {
                                     colors = segmentColors(),
                                     leadingContent = {
                                         if (category.parent == null) LeadingIcon(categoryIcon(category.name))
-                                        else Icon(Icons.Rounded.SubdirectoryArrowRight, contentDescription = null)
+                                        else Icon(AppIcons.SubArrow, contentDescription = null)
                                     },
                                     supportingContent = { Text(pluralStringResource(R.plurals.ledger_count_bills, count, count)) },
                                     modifier = Modifier.testTag("category_row_${category.name}"),
@@ -110,8 +104,8 @@ fun CategoriesScreen(container: AppContainer, book: String, nav: LedgerNav) {
                         },
                     )
                 }
-                OutlinedButton(shapes = ButtonDefaults.shapes(), onClick = { adding = "" }, modifier = Modifier.padding(horizontal = Space.gutter, vertical = Space.l).fillMaxWidth()) {
-                    Icon(Icons.Rounded.Add, contentDescription = null)
+                OutlinedButton(onClick = { adding = "" }, modifier = Modifier.padding(horizontal = Space.gutter, vertical = Space.l).fillMaxWidth()) {
+                    Icon(AppIcons.Plus, contentDescription = null)
                     Text(stringResource(R.string.ledger_add_category), modifier = Modifier.padding(start = Space.s))
                 }
             }
@@ -158,18 +152,18 @@ private fun CategoryDialog(
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(Space.xs)) {
                 OutlinedTextField(name, { name = it }, label = { Text(stringResource(R.string.ledger_category_name)) }, singleLine = true)
-                if (category.parent == null) TextButton(shapes = ButtonDefaults.shapes(), onClick = onAddChild) { Text(stringResource(R.string.ledger_add_subcategory)) }
-                if (others.isNotEmpty()) TextButton(shapes = ButtonDefaults.shapes(), onClick = { merging = true }) { Text(stringResource(R.string.ledger_merge_category)) }
-                TextButton(shapes = ButtonDefaults.shapes(), onClick = onDelete, enabled = used == 0) {
+                if (category.parent == null) TextButton(onClick = onAddChild) { Text(stringResource(R.string.ledger_add_subcategory)) }
+                if (others.isNotEmpty()) TextButton(onClick = { merging = true }) { Text(stringResource(R.string.ledger_merge_category)) }
+                TextButton(onClick = onDelete, enabled = used == 0) {
                     Text(
                         if (used == 0) stringResource(R.string.action_delete) else pluralStringResource(R.plurals.ledger_category_in_use, used, used),
-                        color = if (used == 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = if (used == 0) AppTheme.colorScheme.error else AppTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
         },
-        confirmButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { onRename(name.trim()) }, enabled = name.isNotBlank()) { Text(stringResource(R.string.action_save)) } },
-        dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
+        confirmButton = { TextButton(onClick = { onRename(name.trim()) }, enabled = name.isNotBlank()) { Text(stringResource(R.string.action_save)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
     )
     if (merging) {
         ChoiceSheet(
@@ -193,7 +187,6 @@ private val ECB = setOf(
  * of one's own set for one, and the European Central Bank's brought up to date from the bar,
  * the one time the ledger goes online, and only when asked.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun RatesScreen(container: AppContainer, nav: LedgerNav) {
     val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
@@ -211,7 +204,6 @@ fun RatesScreen(container: AppContainer, nav: LedgerNav) {
         actions = {
             Tooltip(stringResource(R.string.ledger_rates_refresh), below = true) {
                 IconButton(
-                    shapes = IconButtonDefaults.shapes(),
                     enabled = !refreshing,
                     onClick = {
                         refreshing = true
@@ -231,7 +223,7 @@ fun RatesScreen(container: AppContainer, nav: LedgerNav) {
                         }
                     },
                     modifier = Modifier.testTag("refresh_rates"),
-                ) { Icon(Icons.Rounded.Refresh, contentDescription = stringResource(R.string.ledger_rates_refresh)) }
+                ) { Icon(AppIcons.Refresh, contentDescription = stringResource(R.string.ledger_rates_refresh)) }
             }
         },
     ) {
@@ -251,7 +243,7 @@ fun RatesScreen(container: AppContainer, nav: LedgerNav) {
                                 shapes = shapes,
                                 colors = segmentColors(),
                                 supportingContent = { Text(latest?.first?.toString() ?: stringResource(R.string.ledger_rate_missing)) },
-                                trailingContent = latest?.let { { Text("%.4f".format(1 / it.second) + " CNY", style = MaterialTheme.typography.titleSmall) } },
+                                trailingContent = latest?.let { { Text("%.4f".format(1 / it.second) + " CNY", style = AppTheme.typography.titleSmall) } },
                                 modifier = Modifier.testTag("rate_$code"),
                             ) { Text("1 $code") }
                         }
@@ -277,13 +269,13 @@ fun RatesScreen(container: AppContainer, nav: LedgerNav) {
                 )
             },
             confirmButton = {
-                TextButton(shapes = ButtonDefaults.shapes(), onClick = {
+                TextButton(onClick = {
                     val yuan = value.toDoubleOrNull()?.takeIf { it > 0 } ?: return@TextButton
                     editing = null
                     scope.launch { container.ledger.putRates(mapOf(code to mapOf(LocalDate.now() to 1 / yuan))) }
                 }) { Text(stringResource(R.string.action_save)) }
             },
-            dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { editing = null }) { Text(stringResource(R.string.action_cancel)) } },
+            dismissButton = { TextButton(onClick = { editing = null }) { Text(stringResource(R.string.action_cancel)) } },
         )
     }
 }

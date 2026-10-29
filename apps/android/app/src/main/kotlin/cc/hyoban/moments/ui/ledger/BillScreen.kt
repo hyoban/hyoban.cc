@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.ledger
 
+import cc.hyoban.moments.ui.design.AppIcons
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -10,38 +11,23 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
-import androidx.compose.material.icons.automirrored.rounded.Notes
-import androidx.compose.material.icons.automirrored.rounded.Undo
-import androidx.compose.material.icons.rounded.Block
-import androidx.compose.material.icons.rounded.CalendarToday
-import androidx.compose.material.icons.rounded.Delete
-import androidx.compose.material.icons.rounded.Discount
-import androidx.compose.material.icons.rounded.Edit
-import androidx.compose.material.icons.rounded.Event
-import androidx.compose.material.icons.rounded.Luggage
-import androidx.compose.material.icons.rounded.PhotoLibrary
-import androidx.compose.material.icons.rounded.Place
-import androidx.compose.material.icons.rounded.RequestQuote
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
-import androidx.compose.material3.ListItemShapes
+import cc.hyoban.moments.ui.design.AlertDialog
+import cc.hyoban.moments.ui.design.IconButtonDefaults
+import cc.hyoban.moments.ui.design.ButtonDefaults
+import cc.hyoban.moments.ui.design.AssistChip
+import cc.hyoban.moments.ui.design.FilledTonalButton
+import cc.hyoban.moments.ui.design.Icon
+import cc.hyoban.moments.ui.design.IconButton
+import cc.hyoban.moments.ui.design.ListItem
+import cc.hyoban.moments.ui.design.ListItemDefaults
+import cc.hyoban.moments.ui.design.ListItemShapes
 import androidx.compose.ui.draw.clip
 import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
 import cc.hyoban.moments.ui.theme.fill
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SegmentedListItem
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import cc.hyoban.moments.ui.design.AppTheme
+import cc.hyoban.moments.ui.design.SegmentedListItem
+import cc.hyoban.moments.ui.design.Text
+import cc.hyoban.moments.ui.design.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -76,7 +62,7 @@ import kotlinx.coroutines.launch
  * its note, the Moment, place, trip and day it belongs to, and its refunds and
  * reimbursements, with ways to add them, change it and delete it.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun BillScreen(container: AppContainer, id: String, nav: LedgerNav) {
     val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
@@ -97,13 +83,13 @@ fun BillScreen(container: AppContainer, id: String, nav: LedgerNav) {
         subtitle = ledger.books.firstOrNull { it.id == txn.book }?.name,
         actions = {
             Tooltip(stringResource(R.string.action_edit), below = true) {
-                IconButton(shapes = IconButtonDefaults.shapes(), onClick = { nav.entry(LedgerEntryArgs(edit = txn.id)) }, modifier = Modifier.testTag("edit_bill")) {
-                    Icon(Icons.Rounded.Edit, contentDescription = stringResource(R.string.action_edit))
+                IconButton(onClick = { nav.entry(LedgerEntryArgs(edit = txn.id)) }, modifier = Modifier.testTag("edit_bill")) {
+                    Icon(AppIcons.Pen, contentDescription = stringResource(R.string.action_edit))
                 }
             }
             Tooltip(stringResource(R.string.action_delete), below = true) {
-                IconButton(shapes = IconButtonDefaults.shapes(), onClick = { deleting = true }, modifier = Modifier.testTag("delete_bill")) {
-                    Icon(Icons.Rounded.Delete, contentDescription = stringResource(R.string.action_delete))
+                IconButton(onClick = { deleting = true }, modifier = Modifier.testTag("delete_bill")) {
+                    Icon(AppIcons.Trash, contentDescription = stringResource(R.string.action_delete))
                 }
             }
         },
@@ -116,26 +102,26 @@ fun BillScreen(container: AppContainer, id: String, nav: LedgerNav) {
                 Column(Modifier.padding(start = Space.gutter + Space.l, end = Space.gutter, top = Space.s).semantics(mergeDescendants = true) {}) {
                     Text(
                         if (txn.kind == TxnKind.TRANSFER) transferLabel(txn.transfer) else kindLabel(txn.kind),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = AppTheme.typography.labelLarge,
+                        color = AppTheme.colorScheme.onSurfaceVariant,
                     )
                     Text(
                         if (txn.kind == TxnKind.TRANSFER) money(txn.amount, txn.currency) else signedMoney(txn.amount, txn.currency, txn.incoming),
-                        style = MaterialTheme.typography.displaySmall,
+                        style = AppTheme.typography.displaySmall,
                         color = amountColor(txn),
                         modifier = Modifier.testTag("bill_amount"),
                     )
                     if (txn.discount > 0 && txn.kind == TxnKind.EXPENSE) {
                         Text(
                             stringResource(R.string.ledger_saved, money(txn.discount, txn.currency), money(txn.amount + txn.discount, txn.currency)),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = AppTheme.typography.bodyMedium,
+                            color = AppTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }
 
                 val details = buildList<@Composable (ListItemShapes) -> Unit> {
-                    add { shapes -> InfoRow(shapes, Icons.Rounded.Event, stringResource(R.string.ledger_time), formatDay(txn.dateKey) + " " + txn.local.format(DateTimeFormatter.ofPattern("HH:mm"))) }
+                    add { shapes -> InfoRow(shapes, AppIcons.Calendar, stringResource(R.string.ledger_time), formatDay(txn.dateKey) + " " + txn.local.format(DateTimeFormatter.ofPattern("HH:mm"))) }
                     if (txn.kind == TxnKind.TRANSFER) {
                         txn.account?.let(ledger.accountsById::get)?.let { from ->
                             add { shapes ->
@@ -149,8 +135,8 @@ fun BillScreen(container: AppContainer, id: String, nav: LedgerNav) {
                                     trailing = txn.toAmount?.let { money(it, to.currency) }) { nav.account(to.id) }
                             }
                         }
-                        if (txn.fee > 0) add { shapes -> InfoRow(shapes, Icons.Rounded.RequestQuote, stringResource(R.string.ledger_fee), money(txn.fee, txn.currency)) }
-                        if (txn.discount > 0) add { shapes -> InfoRow(shapes, Icons.Rounded.Discount, stringResource(R.string.ledger_discount), money(txn.discount, txn.currency)) }
+                        if (txn.fee > 0) add { shapes -> InfoRow(shapes, AppIcons.Bill, stringResource(R.string.ledger_fee), money(txn.fee, txn.currency)) }
+                        if (txn.discount > 0) add { shapes -> InfoRow(shapes, AppIcons.Discount, stringResource(R.string.ledger_discount), money(txn.discount, txn.currency)) }
                     } else {
                         txn.payers.forEach { split ->
                             val account = ledger.accountsById[split.account] ?: return@forEach
@@ -161,13 +147,13 @@ fun BillScreen(container: AppContainer, id: String, nav: LedgerNav) {
                             }
                         }
                     }
-                    if (txn.note.isNotBlank()) add { shapes -> InfoRow(shapes, Icons.AutoMirrored.Rounded.Notes, stringResource(R.string.ledger_note), txn.note, lines = 6) }
+                    if (txn.note.isNotBlank()) add { shapes -> InfoRow(shapes, AppIcons.Notes, stringResource(R.string.ledger_note), txn.note, lines = 6) }
                     when (txn.reimburse) {
-                        Reimburse.PENDING -> add { shapes -> InfoRow(shapes, Icons.Rounded.RequestQuote, stringResource(R.string.ledger_reimbursable), stringResource(R.string.ledger_reimburse_pending)) }
-                        Reimburse.DONE -> add { shapes -> InfoRow(shapes, Icons.Rounded.RequestQuote, stringResource(R.string.ledger_reimbursable), stringResource(R.string.ledger_reimburse_done)) }
+                        Reimburse.PENDING -> add { shapes -> InfoRow(shapes, AppIcons.Bill, stringResource(R.string.ledger_reimbursable), stringResource(R.string.ledger_reimburse_pending)) }
+                        Reimburse.DONE -> add { shapes -> InfoRow(shapes, AppIcons.Bill, stringResource(R.string.ledger_reimbursable), stringResource(R.string.ledger_reimburse_done)) }
                         Reimburse.NONE -> Unit
                     }
-                    if (txn.excluded) add { shapes -> InfoRow(shapes, Icons.Rounded.Block, stringResource(R.string.ledger_excluded), stringResource(R.string.ledger_excluded_note)) }
+                    if (txn.excluded) add { shapes -> InfoRow(shapes, AppIcons.Block, stringResource(R.string.ledger_excluded), stringResource(R.string.ledger_excluded_note)) }
                 }
                 SegmentedGroup(null, null, details)
 
@@ -175,18 +161,18 @@ fun BillScreen(container: AppContainer, id: String, nav: LedgerNav) {
                 val links = buildList<@Composable (ListItemShapes) -> Unit> {
                     if (moment != null) {
                         add { shapes ->
-                            InfoRow(shapes, Icons.Rounded.PhotoLibrary, stringResource(R.string.ledger_link_moment), moment.text.lines().firstOrNull()?.ifBlank { null } ?: formatDay(moment.dateKey)) { nav.moment(moment.uid) }
+                            InfoRow(shapes, AppIcons.Photos, stringResource(R.string.ledger_link_moment), moment.text.lines().firstOrNull()?.ifBlank { null } ?: formatDay(moment.dateKey)) { nav.moment(moment.uid) }
                         }
                     }
                     placeId?.let { place ->
-                        add { shapes -> InfoRow(shapes, Icons.Rounded.Place, stringResource(R.string.ledger_link_place), places[place]?.name ?: place) { nav.place(place) } }
+                        add { shapes -> InfoRow(shapes, AppIcons.Pin, stringResource(R.string.ledger_link_place), places[place]?.name ?: place) { nav.place(place) } }
                     }
                     tripId?.let { trip ->
                         trips.firstOrNull { it.id == trip }?.let { record ->
-                            add { shapes -> InfoRow(shapes, Icons.Rounded.Luggage, stringResource(R.string.ledger_link_trip), record.title) { nav.trip(record.id) } }
+                            add { shapes -> InfoRow(shapes, AppIcons.Luggage, stringResource(R.string.ledger_link_trip), record.title) { nav.trip(record.id) } }
                         }
                     }
-                    add { shapes -> InfoRow(shapes, Icons.Rounded.CalendarToday, stringResource(R.string.label_whole_day), formatDay(txn.dateKey)) { nav.day(txn.dateKey) } }
+                    add { shapes -> InfoRow(shapes, AppIcons.Calendar, stringResource(R.string.label_whole_day), formatDay(txn.dateKey)) { nav.day(txn.dateKey) } }
                 }
                 SegmentedGroup(stringResource(R.string.ledger_links), null, links)
 
@@ -210,13 +196,13 @@ fun BillScreen(container: AppContainer, id: String, nav: LedgerNav) {
                         )
                     }
                     Row(Modifier.padding(horizontal = Space.gutter, vertical = Space.l), horizontalArrangement = Arrangement.spacedBy(Space.s)) {
-                        FilledTonalButton(shapes = ButtonDefaults.shapes(), onClick = { nav.entry(LedgerEntryArgs(kind = TxnKind.REFUND, related = txn.id)) }, modifier = Modifier.testTag("refund")) {
-                            Icon(Icons.AutoMirrored.Rounded.Undo, contentDescription = null)
+                        FilledTonalButton(onClick = { nav.entry(LedgerEntryArgs(kind = TxnKind.REFUND, related = txn.id)) }, modifier = Modifier.testTag("refund")) {
+                            Icon(AppIcons.Undo, contentDescription = null)
                             Text(stringResource(R.string.ledger_action_refund), modifier = Modifier.padding(start = Space.s))
                         }
                         if (txn.reimburse != Reimburse.NONE) {
-                            FilledTonalButton(shapes = ButtonDefaults.shapes(), onClick = { nav.entry(LedgerEntryArgs(kind = TxnKind.REIMBURSEMENT, related = txn.id)) }, modifier = Modifier.testTag("reimburse")) {
-                                Icon(Icons.Rounded.RequestQuote, contentDescription = null)
+                            FilledTonalButton(onClick = { nav.entry(LedgerEntryArgs(kind = TxnKind.REIMBURSEMENT, related = txn.id)) }, modifier = Modifier.testTag("reimburse")) {
+                                Icon(AppIcons.Bill, contentDescription = null)
                                 Text(stringResource(R.string.ledger_record_reimbursement), modifier = Modifier.padding(start = Space.s))
                             }
                         }
@@ -233,7 +219,7 @@ fun BillScreen(container: AppContainer, id: String, nav: LedgerNav) {
             title = { Text(stringResource(R.string.ledger_delete_bill)) },
             text = { if (dependents > 0) Text(pluralStringResource(R.plurals.ledger_delete_with_returns, dependents, dependents)) },
             confirmButton = {
-                TextButton(shapes = ButtonDefaults.shapes(), onClick = {
+                TextButton(onClick = {
                     deleting = false
                     scope.launch {
                         container.ledger.deleteTxns(listOf(txn.id))
@@ -241,13 +227,12 @@ fun BillScreen(container: AppContainer, id: String, nav: LedgerNav) {
                     }
                 }, modifier = Modifier.testTag("confirm_delete")) { Text(stringResource(R.string.action_delete)) }
             },
-            dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { deleting = false }) { Text(stringResource(R.string.action_cancel)) } },
+            dismissButton = { TextButton(onClick = { deleting = false }) { Text(stringResource(R.string.action_cancel)) } },
         )
     }
 }
 
 /** A detail of a bill or an account as a row of a segmented list: what it is above, its value, and where it leads. */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun InfoRow(
     shapes: ListItemShapes,
@@ -259,8 +244,8 @@ fun InfoRow(
     onClick: (() -> Unit)? = null,
 ) {
     val trailingContent: (@Composable () -> Unit)? = when {
-        trailing != null -> { { Text(trailing, style = MaterialTheme.typography.titleSmall) } }
-        onClick != null -> { { Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null) } }
+        trailing != null -> { { Text(trailing, style = AppTheme.typography.titleSmall) } }
+        onClick != null -> { { Icon(AppIcons.ChevronRight, contentDescription = null) } }
         else -> null
     }
     if (onClick == null) {
@@ -270,7 +255,7 @@ fun InfoRow(
             overlineContent = { Text(label) },
             leadingContent = { Icon(icon, contentDescription = null) },
             trailingContent = trailingContent,
-            colors = ListItemDefaults.colors(containerColor = LocalSurfaceLevel.current.raised.fill(), leadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant),
+            colors = ListItemDefaults.colors(containerColor = LocalSurfaceLevel.current.raised.fill(), leadingIconColor = AppTheme.colorScheme.onSurfaceVariant),
             modifier = Modifier.clip(shapes.shape),
         )
         return
