@@ -118,8 +118,6 @@
     <string name="search_none">No Moments found</string>
     <string name="explain_on_phone">This Moment is only on this phone. Publish your changes to add it to the site.</string>
     <string name="explain_unpublished_change">This Moment was edited on this phone. Publish your changes to update the site.</string>
-    <string name="action_show_all">Show all</string>
-    <string name="action_show_less">Show less</string>
     <string name="label_pick_moment">Pick a Moment to see it here</string>
     <string name="filter_all">All</string>
     <string name="filter_year">%1$d</string>

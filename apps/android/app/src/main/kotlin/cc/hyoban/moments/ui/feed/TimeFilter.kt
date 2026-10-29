@@ -12,15 +12,10 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 import cc.hyoban.moments.ui.design.FilterChip
 import cc.hyoban.moments.ui.design.FilterChipDefaults
 import cc.hyoban.moments.ui.design.Icon
@@ -28,12 +23,7 @@ import cc.hyoban.moments.ui.design.AppTheme
 import cc.hyoban.moments.ui.design.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.listSaver
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
@@ -104,47 +94,14 @@ fun TimeFilterRows(filter: TimeFilter, years: List<Int>, months: List<Int>, onCh
     }
 }
 
-/**
- * Each chip tagged [tag] and its year or month, or `all`, in a row that scrolls sideways.
- * When they don't fit, a leading chip shows them all, wrapped onto as many rows as they
- * need, as Material 3 has a set of chips reflow rather than only scroll; it shows less again.
- */
-@OptIn(ExperimentalLayoutApi::class)
+/** Each chip tagged [tag] and its year or month, or `all`, in a row that scrolls sideways. */
 @Composable
 private fun ChipRow(tag: String, options: List<Int?>, selected: Int?, label: @Composable (Int?) -> String, onSelect: (Int?) -> Unit) {
-    var all by rememberSaveable(tag) { mutableStateOf(false) }
-    val row = rememberLazyListState()
-    val overflows = all || row.canScrollForward || row.canScrollBackward
-    // The leading chip appears ahead of the row once it overflows; the row starts from it.
-    LaunchedEffect(overflows) { if (overflows) row.scrollToItem(0) }
-    val toggle: @Composable () -> Unit = {
-        FilterChip(
-            selected = all,
-            onClick = { all = !all },
-            label = { Text(stringResource(if (all) R.string.action_show_less else R.string.action_show_all)) },
-            leadingIcon = {
-                Icon(if (all) AppIcons.Collapse else AppIcons.Expand, contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize))
-            },
-            modifier = Modifier.testTag("${tag}toggle"),
-        )
-    }
-    if (all) {
-        FlowRow(
-            Modifier.fillMaxWidth().padding(horizontal = Space.gutter),
-            horizontalArrangement = Arrangement.spacedBy(Space.s),
-        ) {
-            toggle()
-            options.forEach { option -> OptionChip(tag, option, selected, label, onSelect) }
-        }
-    } else {
-        LazyRow(
-            state = row,
-            contentPadding = PaddingValues(horizontal = Space.gutter),
-            horizontalArrangement = Arrangement.spacedBy(Space.s),
-        ) {
-            if (overflows) item(key = "toggle") { toggle() }
-            items(options, key = { it ?: -1 }) { option -> OptionChip(tag, option, selected, label, onSelect) }
-        }
+    LazyRow(
+        contentPadding = PaddingValues(horizontal = Space.gutter),
+        horizontalArrangement = Arrangement.spacedBy(Space.s),
+    ) {
+        items(options, key = { it ?: -1 }) { option -> OptionChip(tag, option, selected, label, onSelect) }
     }
 }
 
