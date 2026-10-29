@@ -792,7 +792,7 @@ private fun SplitEditor(ledger: Ledger, splits: List<Pair<String, String>>, curr
 }
 
 /**
- * The accounts to pay from or into, by kind, as a modal bottom sheet, with none among them when
+ * The accounts to pay from or into, the most used first, as a modal bottom sheet, with none among them when
  * [allowNone], and a new one made there and then.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -808,7 +808,7 @@ fun AccountSheet(ledger: Ledger, onDismiss: () -> Unit, onCreate: (Account) -> U
                     modifier = Modifier.padding(horizontal = Space.xl, vertical = Space.s).semantics { heading() },
                 )
             }
-            items(ledger.accounts.filter { !it.archived }, key = { it.id }) { account ->
+            items(ledger.accountsByUse, key = { it.id }) { account ->
                 ListItem(
                     headlineContent = { Text(account.name) },
                     supportingContent = { Text(accountKindLabel(account.kind) + " " + money(ledger.balances[account.id] ?: 0, account.currency)) },
