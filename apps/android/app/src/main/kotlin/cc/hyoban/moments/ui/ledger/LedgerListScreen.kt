@@ -27,7 +27,6 @@ import cc.hyoban.moments.data.spec.TripRecord
 import cc.hyoban.moments.ledger.Ledger
 import cc.hyoban.moments.ledger.Txn
 import cc.hyoban.moments.ledger.TxnKind
-import cc.hyoban.moments.ledger.formatMoney
 import cc.hyoban.moments.ledger.placeOfTxn
 import cc.hyoban.moments.ledger.spendingOf
 import cc.hyoban.moments.ledger.tripOfTxn
@@ -96,8 +95,8 @@ fun LedgerListScreen(container: AppContainer, filter: LedgerFilter, nav: LedgerN
                 }
                 Text(
                     listOf(
-                        stringResource(R.string.ledger_expense_short, formatMoney(sums.expense, currency)),
-                        stringResource(R.string.ledger_income_short, formatMoney(sums.income, currency)),
+                        stringResource(R.string.ledger_expense_short, money(sums.expense, currency)),
+                        stringResource(R.string.ledger_income_short, money(sums.income, currency)),
                     ).joinToString(" "),
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(start = Space.l, top = Space.s),

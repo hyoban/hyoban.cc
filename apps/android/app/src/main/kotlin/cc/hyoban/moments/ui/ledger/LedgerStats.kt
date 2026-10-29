@@ -49,7 +49,6 @@ import cc.hyoban.moments.ledger.Summary
 import cc.hyoban.moments.ledger.byMonth
 import cc.hyoban.moments.ledger.byYear
 import cc.hyoban.moments.ledger.daysOf
-import cc.hyoban.moments.ledger.formatMoney
 import cc.hyoban.moments.ledger.runningTotals
 import cc.hyoban.moments.ledger.summarize
 import cc.hyoban.moments.ledger.weekdayAverages
@@ -254,7 +253,7 @@ fun StatsView(ledger: Ledger, books: Set<String>, currency: String, nav: LedgerN
                                     )
                                 }
                             },
-                            trailingContent = { Text(formatMoney(cents, currency), style = MaterialTheme.typography.titleSmall) },
+                            trailingContent = { Text(money(cents, currency), style = MaterialTheme.typography.titleSmall) },
                         ) { Text(name, maxLines = 1) }
                     }
                 },
@@ -285,7 +284,7 @@ private fun Totals(summary: Summary, currency: String, average: Long?, compared:
                         Text(stringResource(label), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         // A six-figure sum shrinks to fit its third rather than losing its cents.
                         Text(
-                            formatMoney(cents, currency),
+                            money(cents, currency),
                             style = MaterialTheme.typography.titleMedium,
                             maxLines = 1,
                             autoSize = TextAutoSize.StepBased(minFontSize = 11.sp, maxFontSize = MaterialTheme.typography.titleMedium.fontSize),
@@ -305,7 +304,7 @@ private fun Totals(summary: Summary, currency: String, average: Long?, compared:
                     share,
                 )
             }
-            val average = average?.takeIf { summary.expense > 0 }?.let { stringResource(R.string.ledger_daily_average, formatMoney(it, currency)) }
+            val average = average?.takeIf { summary.expense > 0 }?.let { stringResource(R.string.ledger_daily_average, money(it, currency)) }
             if (average != null || change != null) {
                 Text(line(average, change), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
@@ -326,9 +325,9 @@ private fun IncomeAgainstExpense(summary: Summary, yearly: Boolean, year: Int, f
     val expenseLabel = stringResource(R.string.ledger_kind_expense)
     val incomeLabel = stringResource(R.string.ledger_kind_income)
     val readout = picked?.let { i ->
-        line(slotLabel(yearly, first, i), stringResource(R.string.ledger_expense_short, formatMoney(expense[i], currency)), stringResource(R.string.ledger_income_short, formatMoney(income[i], currency)))
-    } ?: if (summary.income > 0) stringResource(R.string.ledger_savings_rate, percent(summary.balance.toDouble() / summary.income)) else stringResource(R.string.ledger_expense_short, formatMoney(summary.expense, currency))
-    val description = stringResource(R.string.ledger_income_expense_description, formatMoney(summary.expense, currency), formatMoney(summary.income, currency))
+        line(slotLabel(yearly, first, i), stringResource(R.string.ledger_expense_short, money(expense[i], currency)), stringResource(R.string.ledger_income_short, money(income[i], currency)))
+    } ?: if (summary.income > 0) stringResource(R.string.ledger_savings_rate, percent(summary.balance.toDouble() / summary.income)) else stringResource(R.string.ledger_expense_short, money(summary.expense, currency))
+    val description = stringResource(R.string.ledger_income_expense_description, money(summary.expense, currency), money(summary.income, currency))
     ChartCard(
         stringResource(R.string.ledger_chart_income_expense),
         readout,
@@ -373,8 +372,8 @@ private fun Trend(
         }
     }
     val peak = values.indices.maxBy { values[it] }
-    val readout = picked?.let { line(label(it), formatMoney(values[it], currency)) }
-        ?: stringResource(R.string.ledger_peak, label(peak), formatMoney(values[peak], currency))
+    val readout = picked?.let { line(label(it), money(values[it], currency)) }
+        ?: stringResource(R.string.ledger_peak, label(peak), money(values[peak], currency))
     val axis = when (mode) {
         Span.MONTH -> listOf("1", "${values.size / 2 + 1}", "${values.size}")
         Span.YEAR -> listOf(formatMonthOnly(1), formatMonthOnly(6), formatMonthOnly(12))
@@ -406,7 +405,7 @@ private fun Trend(
             axis,
             picked,
             { picked = it },
-            stringResource(R.string.ledger_chart_description, formatMoney(values[peak], currency)),
+            stringResource(R.string.ledger_chart_description, money(values[peak], currency)),
         )
     }
 }
@@ -437,8 +436,8 @@ private fun RunningTotal(
     val dayName = if (monthly) stringResource(R.string.ledger_day_of_month, at + 1) else formatDate(start.plusDays(at.toLong()).toString(), today = start)
     val readout = line(
         dayName,
-        current.getOrNull(at)?.let { "$thisName ${formatMoney(it, currency)}" },
-        last.getOrNull(at)?.let { "$lastName ${formatMoney(it, currency)}" },
+        current.getOrNull(at)?.let { "$thisName ${money(it, currency)}" },
+        last.getOrNull(at)?.let { "$lastName ${money(it, currency)}" },
     )
     val colors = listOf(MaterialTheme.colorScheme.primary, otherColor())
     ChartCard(
@@ -453,7 +452,7 @@ private fun RunningTotal(
             if (monthly) listOf("1", "$length") else listOf(formatMonthOnly(1), formatMonthOnly(12)),
             picked,
             { picked = it },
-            stringResource(R.string.ledger_running_total_description, thisName, formatMoney(current.lastOrNull() ?: 0, currency), lastName, formatMoney(last.lastOrNull() ?: 0, currency)),
+            stringResource(R.string.ledger_running_total_description, thisName, money(current.lastOrNull() ?: 0, currency), lastName, money(last.lastOrNull() ?: 0, currency)),
         )
     }
 }
@@ -463,7 +462,7 @@ private fun RunningTotal(
 private fun YearCalendar(year: Int, byDay: Map<LocalDate, Long>, income: Boolean, currency: String, key: Any, onDay: (LocalDate) -> Unit) {
     var picked by remember(key) { mutableStateOf<LocalDate?>(null) }
     val count = byDay.count { it.key.year == year && it.value > 0 }
-    val readout = picked?.let { line(formatDate(it.toString(), today = it), formatMoney(byDay[it] ?: 0, currency)) }
+    val readout = picked?.let { line(formatDate(it.toString(), today = it), money(byDay[it] ?: 0, currency)) }
         ?: stringResource(if (income) R.string.ledger_days_with_income else R.string.ledger_days_with_expense, count)
     ChartCard(
         stringResource(R.string.ledger_chart_calendar),
@@ -482,7 +481,7 @@ private fun Weekdays(byDay: Map<LocalDate, Long>, start: LocalDate, end: LocalDa
     val locale = Locale.getDefault()
     val weekday = { i: Int -> java.time.DayOfWeek.of(i + 1).getDisplayName(TextStyle.FULL, if (locale.language == "zh") Locale.CHINESE else Locale.ENGLISH) }
     val at = picked ?: values.indices.maxBy { values[it] }
-    val readout = stringResource(R.string.ledger_weekday_average, weekday(at), formatMoney(values[at], currency))
+    val readout = stringResource(R.string.ledger_weekday_average, weekday(at), money(values[at], currency))
     ChartCard(stringResource(R.string.ledger_chart_weekdays), readout) {
         BarChart(listOf(values), listOf(MaterialTheme.colorScheme.primary), weekdayLetters(), picked, { picked = it }, readout, height = 88.dp)
     }
@@ -523,7 +522,7 @@ private fun Categories(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                 )
-                Text(formatMoney(picked?.let { slices[it].first } ?: sum, currency), style = MaterialTheme.typography.titleMedium, maxLines = 1)
+                Text(money(picked?.let { slices[it].first } ?: sum, currency), style = MaterialTheme.typography.titleMedium, maxLines = 1)
             }
         }
     }
@@ -568,8 +567,8 @@ private fun CategoriesOverTime(
     val at = picked ?: totals.indices.maxBy { totals[it] }
     val readout = picked?.let { i ->
         val top = shown.maxBy { series[it][i] }
-        line(slotLabel(yearly, first, i), formatMoney(totals[i], currency), names[top].takeIf { totals[i] > 0 }?.let { "$it ${formatMoney(series[top][i], currency)}" })
-    } ?: stringResource(R.string.ledger_peak, slotLabel(yearly, first, at), formatMoney(totals[at], currency))
+        line(slotLabel(yearly, first, i), money(totals[i], currency), names[top].takeIf { totals[i] > 0 }?.let { "$it ${money(series[top][i], currency)}" })
+    } ?: stringResource(R.string.ledger_peak, slotLabel(yearly, first, at), money(totals[at], currency))
     ChartCard(
         stringResource(R.string.ledger_chart_categories_over_time),
         readout,

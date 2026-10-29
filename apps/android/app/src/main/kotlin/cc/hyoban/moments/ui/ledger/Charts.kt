@@ -61,7 +61,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import cc.hyoban.moments.R
-import cc.hyoban.moments.ledger.formatMoney
 import cc.hyoban.moments.ui.format.formatDate
 import cc.hyoban.moments.ui.format.weekdayLetters
 import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
@@ -436,7 +435,7 @@ fun MonthHeatmap(month: LocalDate, byDay: Map<LocalDate, Long>, currency: String
                             val date = month.withDayOfMonth(day)
                             val cents = byDay[date] ?: 0
                             val step = level(cents)
-                            val description = listOfNotNull(formatDate(date.toString(), today = date), formatMoneyOrNull(cents, currency)).joinToString(" ")
+                            val description = listOfNotNull(formatDate(date.toString(), today = date), moneyOrNull(cents, currency)).joinToString(" ")
                             val cell = Modifier.fillMaxSize().clip(MaterialTheme.shapes.small)
                             Box(
                                 if (step == 0) {
@@ -471,7 +470,8 @@ fun MonthHeatmap(month: LocalDate, byDay: Map<LocalDate, Long>, currency: String
     }
 }
 
-private fun formatMoneyOrNull(cents: Long, currency: String) = if (cents == 0L) null else formatMoney(cents, currency)
+@Composable
+private fun moneyOrNull(cents: Long, currency: String) = if (cents == 0L) null else money(cents, currency)
 
 /**
  * A year's days, its months down and their days across, each as deep a step of the primary as

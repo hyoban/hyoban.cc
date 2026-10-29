@@ -286,7 +286,9 @@ accounts by kind (cash, debit cards, credit, online wallets, stored value, inves
 loans, people lent to or borrowed from), each with its balance. The bar switches books, or
 shows 全部账本, every book but the archived at once, summed in the chosen book's currency,
 its categories summed by name across books and each bill marked with its book; it also
-searches bills (note, tags, category, account, amount) and opens 记账设置.
+searches bills (note, tags, category, account, amount), hides every amount as `¥****`
+(隐藏金额, kept until shown again, here and on the Moments', trips' and places' pages)
+and opens 记账设置.
 
 A bill is an expense, an income or a transfer, the last also a repayment, a loan given or
 taken, or one collected; or a refund or reimbursement of an expense, written from that

@@ -572,6 +572,8 @@
     <string name="ledger_switch_book">Switch book</string>
     <string name="ledger_all_books">All books</string>
     <string name="ledger_manage_books">Manage books</string>
+    <string name="ledger_hide_amounts">Hide amounts</string>
+    <string name="ledger_show_amounts">Show amounts</string>
     <string name="ledger_settings_title">Ledger settings</string>
     <string name="ledger_empty_title">No bills yet</string>
     <string name="ledger_empty_body">Bills stay on this phone and are never synced or published. Import an iCost export, or add a bill.</string>
