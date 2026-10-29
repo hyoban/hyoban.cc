@@ -221,9 +221,9 @@ object Preferences
 @Serializable
 object FootprintSettings
 
-/** A Moment to write, kept on the phone. */
+/** A Moment to write, kept on the phone, with a bill or the [bill] alone. */
 @Serializable
-object NewMoment
+data class NewMoment(val bill: Boolean = false)
 
 /** One of the phone's Moments, to change. */
 @Serializable
@@ -235,7 +235,7 @@ data class EditMoment(val uid: String)
  * windows, where [NewMoment] and [EditMoment] are pages of their own.
  */
 @Serializable
-data class EditorDialog(val uid: String? = null)
+data class EditorDialog(val uid: String? = null, val bill: Boolean = false)
 
 /** The changes kept on the phone, to look over and publish. */
 @Serializable
@@ -351,12 +351,12 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
     val current = Tab.entries.firstOrNull { tab -> entry?.destination?.hasRoute(tab.type) == true }
     // Writing or changing a Moment: a page on a compact window, a dialog from the medium breakpoint on.
     val wide by rememberUpdatedState(isMediumWidth())
-    val openEditor: (String?) -> Unit = { uid ->
+    val openEditor: (String?, Boolean) -> Unit = { uid, bill ->
         navController.navigate(
             when {
-                wide -> EditorDialog(uid)
+                wide -> EditorDialog(uid, bill)
                 uid != null -> EditMoment(uid)
-                else -> NewMoment
+                else -> NewMoment(bill)
             },
         )
     }
@@ -388,7 +388,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
     val momentActions = remember(container, navController) {
         MomentActions(
             canEdit = { uid -> container.publishing.value == null && (container.repository.isLocal(uid) || container.canPublish) },
-            onEdit = { openEditor(it) },
+            onEdit = { openEditor(it, false) },
             places = { container.repository.places.value },
             tripOf = { tripOf(it, container.repository.trips.value) },
             onPlace = { navController.goTo(PlaceMoments(it)) },
@@ -407,7 +407,8 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
         LedgerNav(
             bill = { navController.goTo(LedgerBill(it)) },
             entry = { args ->
-                navController.navigate(LedgerEntry(args.edit, args.kind?.value, args.related, args.moment, args.date, args.account, args.trip))
+                // A bill of its own is written where a Moment can be written with it.
+                if (args == LedgerEntryArgs()) openEditor(null, true) else navController.navigate(LedgerEntry(args.edit, args.kind?.value, args.related, args.moment, args.date, args.account, args.trip))
             },
             account = { navController.goTo(LedgerAccount(it)) },
             editAccount = { navController.navigate(LedgerAccountEdit(it)) },
@@ -541,7 +542,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                 val writing = navController.currentBackStackEntry?.let { shown ->
                     shown.destination.hasRoute(NewMoment::class) || (shown.destination.hasRoute(EditorDialog::class) && shown.toRoute<EditorDialog>().uid == null)
                 } == true
-                if (!writing) openEditor(null)
+                if (!writing) openEditor(null, false)
             } else if (intent.action == MainActivity.ACTION_LEDGER_IMPORT) {
                 // An iCost export shared in, imported from the ledger's settings, which take it from the container.
                 viewer = null
@@ -552,8 +553,8 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                 val tab = Tab.entries.indexOfFirst { it.route == route }
                 when {
                     tab >= 0 -> selectTab(tab)
-                    route == NewMoment -> openEditor(null)
-                    route is EditMoment -> openEditor(route.uid)
+                    route is NewMoment -> openEditor(null, route.bill)
+                    route is EditMoment -> openEditor(route.uid, false)
                     else -> navController.goTo(route)
                 }
             }
@@ -609,13 +610,13 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                     onDay = openDay,
                                     onDayRow = openDayRow,
                                     onSettings = { navController.navigate(Preferences) },
-                                    onNew = { openEditor(null) },
+                                    onNew = { openEditor(null, false) },
                                     onChanges = { navController.navigate(Changes) },
                                     onSearch = { navController.navigate(Search) },
                                     onMedia = openMedia,
                                     onPlace = openPlace,
                                     onTrip = openTrip,
-                                    onEdit = { openEditor(it) },
+                                    onEdit = { openEditor(it, false) },
                                 )
                             }
                             screen<Atlas>(link = "map", aliases = listOf("footprints")) {
@@ -640,7 +641,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                     onPlace = openPlace,
                                     onTrip = openTrip,
                                     onBack = back,
-                                    onEdit = { openEditor(it) },
+                                    onEdit = { openEditor(it, false) },
                                     onDay = openDayRow,
                                     onChanges = { navController.navigate(Changes) },
                                 )
@@ -680,8 +681,8 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                             screen<FootprintSettings>(link = "footprint-settings") {
                                 FootprintSettingsScreen(container, onBack = back)
                             }
-                            screen<NewMoment>(link = "new") {
-                                NewMomentScreen(container, onBack = back, onSaved = back)
+                            screen<NewMoment>(link = "new") { entry ->
+                                NewMomentScreen(container, onBack = back, onSaved = back, startWithBill = entry.toRoute<NewMoment>().bill)
                             }
                             screen<EditMoment>(link = "edit/{uid}") { entry ->
                                 NewMomentScreen(
@@ -698,7 +699,8 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                 // what is written, which only its X or back, with their question, do.
                                 dialogProperties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false, dismissOnClickOutside = false),
                             ) { entry ->
-                                val edit = entry.toRoute<EditorDialog>().uid
+                                val route = entry.toRoute<EditorDialog>()
+                                val edit = route.uid
                                 CompositionLocalProvider(LocalRailSpace provides RailSpace(0.dp, 0.dp, clearOfInsets = isMediumWidth())) {
                                     DialogPane {
                                         NewMomentScreen(
@@ -707,6 +709,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                             onSaved = back,
                                             edit = edit,
                                             onDeleted = { if (!navController.popBackStack<Moment>(inclusive = true)) back() },
+                                            startWithBill = route.bill,
                                         )
                                     }
                                 }
@@ -722,6 +725,11 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                             }
                             screen<LedgerEntry>(link = "new-bill") { entry ->
                                 val route = entry.toRoute<LedgerEntry>()
+                                // The link opening the app: a bill of its own, written where a Moment can be too.
+                                if (route == LedgerEntry()) {
+                                    NewMomentScreen(container, onBack = back, onSaved = back, startWithBill = true)
+                                    return@screen
+                                }
                                 EntryScreen(
                                     container,
                                     LedgerEntryArgs(route.edit, route.kind?.let(TxnKind::of), route.related, route.moment, route.date, route.account, route.trip),
@@ -1094,12 +1102,12 @@ fun routeOf(link: Uri): Any? {
         "settings" -> Preferences
         "footprints" -> Atlas
         "footprint-settings" -> FootprintSettings
-        "new" -> NewMoment
+        "new" -> NewMoment()
         "edit" -> id?.let(::EditMoment)
         "changes" -> Changes
         "search" -> Search
         "ledger" -> LedgerHome
-        "new-bill" -> LedgerEntry()
+        "new-bill" -> NewMoment(bill = true)
         "bill" -> id?.let(::LedgerBill)
         "account" -> id?.let(::LedgerAccount)
         "ledger-settings" -> LedgerSettings()

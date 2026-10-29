@@ -155,6 +155,15 @@ import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.spec.PlaceKind
 import cc.hyoban.moments.data.spec.showcase
 import cc.hyoban.moments.ui.components.LiveBadge
+import cc.hyoban.moments.ui.ledger.BillFields
+import cc.hyoban.moments.ui.ledger.EnsureBook
+import cc.hyoban.moments.ui.ledger.LedgerEntryArgs
+import cc.hyoban.moments.ui.ledger.mealCategory
+import cc.hyoban.moments.ui.ledger.rememberBillDraft
+import cc.hyoban.moments.ledger.TxnKind
+import androidx.compose.material3.MultiChoiceSegmentedButtonRow
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
 import cc.hyoban.moments.ui.components.isCompactHeight
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.PageWidth
@@ -164,6 +173,7 @@ import cc.hyoban.moments.ui.format.formatAmount
 import cc.hyoban.moments.ui.format.formatDay
 import cc.hyoban.moments.ui.format.formatTime
 import cc.hyoban.moments.ui.format.verdictLabel
+import cc.hyoban.moments.ui.settings.Caption
 import cc.hyoban.moments.ui.settings.Group
 import cc.hyoban.moments.ui.settings.boxed
 import cc.hyoban.moments.ui.settings.SegmentedGroup
@@ -191,10 +201,20 @@ import kotlinx.coroutines.withContext
  * published. Given a Moment to [edit], it starts from that one as it was saved: one of the
  * phone's is kept as changed, as is one of the site's, with the token, until it is published.
  * One being changed can be deleted here too, at the foot of the page, and then [onDeleted].
+ *
+ * A new one can have a bill written with it, kept in the ledger at the Moment's time and place
+ * and linked to it, or the bill alone, as the ledger's 记一笔 opens it ([startWithBill]).
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> Unit, edit: String? = null, onDeleted: () -> Unit = onBack) {
+fun NewMomentScreen(
+    container: AppContainer,
+    onBack: () -> Unit,
+    onSaved: () -> Unit,
+    edit: String? = null,
+    onDeleted: () -> Unit = onBack,
+    startWithBill: Boolean = false,
+) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val places by container.repository.places.collectAsStateWithLifecycle()
@@ -247,6 +267,14 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
     var emptyError by remember { mutableStateOf(false) }
     var saveError by remember { mutableStateOf<String?>(null) }
     val publishing by container.publishing.collectAsStateWithLifecycle()
+
+    // What a new one writes: the Moment, a bill, or both, never neither.
+    var withMoment by rememberSaveable { mutableStateOf(original != null || !startWithBill) }
+    var withBill by rememberSaveable { mutableStateOf(original == null && startWithBill) }
+    val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
+    val trips by container.repository.trips.collectAsStateWithLifecycle()
+    val bill = rememberBillDraft(ledger, null, null, null, LedgerEntryArgs())
+    EnsureBook(container, enabled = withBill)
 
     LaunchedEffect(photos) {
         photos.filter { it !in infos && it !in originalMedia }.forEach { infos[it] = Photos.read(context, it) }
@@ -312,9 +340,10 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
     val locationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { granted ->
         if (granted.values.any { it }) locate() else locationDenied = true
     }
-    LaunchedEffect(Unit) {
-        // A Moment being changed has its place; the map finds the phone when asked.
-        if (original != null) return@LaunchedEffect
+    LaunchedEffect(withMoment) {
+        // A Moment being changed has its place; the map finds the phone when asked. A bill
+        // alone leaves it until the Moment is to be written too.
+        if (original != null || !withMoment || deviceFix != null || locating) return@LaunchedEffect
         if (LOCATION_PERMISSIONS.any { ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED }) {
             locate()
         } else {
@@ -349,6 +378,20 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
     }
 
     val written = text.isNotBlank() || photos.isNotEmpty()
+    val billWritten = withBill && (bill.amount.isNotBlank() || bill.note.isNotBlank() || bill.tags.isNotBlank())
+    // The bill's time is the Moment's, while there is one.
+    val billAt = if (withMoment) time else OffsetDateTime.parse(bill.time)
+    // A meal's amount and category go to its bill, until the bill's own are chosen.
+    var mirroredAmount by rememberSaveable { mutableStateOf("") }
+    LaunchedEffect(amount) {
+        if (bill.amount == mirroredAmount) {
+            bill.amount = amount.trim()
+            mirroredAmount = bill.amount
+        }
+    }
+    LaunchedEffect(food != null, withBill, ledger) {
+        if (food != null && withBill && bill.kind == TxnKind.EXPENSE && bill.category == null) bill.category = mealCategory(ledger)
+    }
     // A known place's kind is the place's to change, not the Moment's.
     val newKind = (chosenPlace as? PlaceChoice.Known)?.kind
     val momentChanged = original == null ||
@@ -356,25 +399,32 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
         chosenTime != originalTime || ((chosenPlace as? PlaceChoice.Known)?.copy(kind = null) ?: chosenPlace) != originalPlace || food != originalFood ||
         topic != original.topic
     // What leaving would lose: anything written, or, for a Moment being changed, any change.
-    val changed = if (original == null) written || food != null || topic != null else momentChanged || newKind != null
+    val changed = if (original == null) (withMoment && (written || food != null || topic != null)) || billWritten else momentChanged || newKind != null
     val leave = { if (changed) confirmingDiscard = true else onBack() }
     BackHandler(enabled = changed && !saving) { confirmingDiscard = true }
 
     // Kept on the phone, one of the site's as changed too; none of it goes to the API until
     // the changes are published.
+    // The bill is only the phone's, saved straight to the ledger, linked to the Moment written with it.
     val save: () -> Unit = save@{
         if (saving) return@save
+        // The bill is checked first, so that nothing is kept while it can't be.
+        val txn = if (withBill) bill.toTxn(ledger, billAt, trips, null, null, null) { saveError = context.getString(it) } ?: return@save else null
         saving = true
         scope.launch {
             try {
                 withContext(NonCancellable) {
-                    val (moment, newPlace) = buildMoment(context, container, text, photos, utility, stills, infos, time, place, food, topic, original, originalMedia)
-                    when {
-                        original == null -> container.addLocal(moment, newPlace)
-                        momentChanged -> container.updateLocal(moment, newPlace)
-                    }
-                    // A known place's kind changed in the picker, kept as a change of its own.
-                    (place as? PlaceChoice.Known)?.kind?.let { container.repository.setPlaceKind(place.id, it.value) }
+                    val moment = if (withMoment) {
+                        val (moment, newPlace) = buildMoment(context, container, text, photos, utility, stills, infos, time, place, food, topic, original, originalMedia)
+                        when {
+                            original == null -> container.addLocal(moment, newPlace)
+                            momentChanged -> container.updateLocal(moment, newPlace)
+                        }
+                        // A known place's kind changed in the picker, kept as a change of its own.
+                        (place as? PlaceChoice.Known)?.kind?.let { container.repository.setPlaceKind(place.id, it.value) }
+                        moment
+                    } else null
+                    txn?.let { container.ledger.saveTxn(if (moment != null) it.copy(moment = moment.uid, place = moment.places.firstOrNull()) else it) }
                 }
                 onSaved()
             } catch (error: Exception) {
@@ -389,7 +439,14 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
     // Save, never greyed out, telling what is missing rather than refusing to be tapped.
     Box(Modifier.fillMaxSize()) {
         SubPage(
-            stringResource(if (original == null) R.string.title_new_moment else R.string.title_edit_moment),
+            stringResource(
+                when {
+                    original != null -> R.string.title_edit_moment
+                    !withMoment -> R.string.ledger_new_bill
+                    withBill -> R.string.title_new_moment_and_bill
+                    else -> R.string.title_new_moment
+                },
+            ),
             onBack = leave,
             modifier = Modifier.background(AppColors.page),
             close = true,
@@ -398,8 +455,8 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
                     shapes = ButtonDefaults.shapes(),
                     onClick = {
                         when {
-                            !written -> emptyError = true
-                            !changed -> onBack()
+                            withMoment && !written -> emptyError = true
+                            original != null && !changed -> onBack()
                             else -> save()
                         }
                     },
@@ -420,7 +477,25 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
                 ) {
                     val focus = remember { FocusRequester() }
                     // A new Moment starts at its words; one being changed waits to be told what to change.
-                    LaunchedEffect(Unit) { if (original == null) focus.requestFocus() }
+                    LaunchedEffect(Unit) { if (original == null && withMoment) focus.requestFocus() }
+                    if (original == null) {
+                        // What is written: the Moment, a bill, or both.
+                        MultiChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(horizontal = Space.gutter, vertical = Space.s)) {
+                            SegmentedButton(
+                                checked = withMoment,
+                                onCheckedChange = { if (withBill) withMoment = it },
+                                shape = SegmentedButtonDefaults.itemShape(0, 2),
+                                modifier = Modifier.testTag("write_moment"),
+                            ) { Text(stringResource(R.string.write_moment)) }
+                            SegmentedButton(
+                                checked = withBill,
+                                onCheckedChange = { if (withMoment) withBill = it },
+                                shape = SegmentedButtonDefaults.itemShape(1, 2),
+                                modifier = Modifier.testTag("write_bill"),
+                            ) { Text(stringResource(R.string.write_bill)) }
+                        }
+                    }
+                    if (withMoment) {
                     Group(null, null) {
                         TextField(
                             value = text,
@@ -531,6 +606,11 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
                         people = people,
                         onPeople = { people = it },
                     )
+                    }
+                    if (withBill) {
+                        if (withMoment) Caption(stringResource(R.string.section_bill))
+                        BillFields(container, ledger, bill, billAt, null, null, withMoment = withMoment)
+                    }
                     // Deleting is rare, so it waits down here rather than over the Moment; its snackbar can undo it.
                     if (original != null && publishing == null) {
                         SegmentedGroup(

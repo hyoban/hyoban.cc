@@ -67,7 +67,7 @@ open class MainActivity : ComponentActivity() {
 
     /** The page the app opens on: the Moments tab, from the launcher or a link; a new Moment, for a place shared into it. */
     protected open fun startRoute(): Any = when (intent.action) {
-        ACTION_NEW_MOMENT -> NewMoment
+        ACTION_NEW_MOMENT -> NewMoment()
         ACTION_LEDGER_IMPORT -> LedgerSettings()
         else -> Feed
     }

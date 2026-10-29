@@ -230,6 +230,10 @@
     <string name="action_system_language">在系统设置中更改</string>
     <string name="settings_language_note">时刻里的文字保持原样</string>
     <string name="title_new_moment">新时刻</string>
+    <string name="title_new_moment_and_bill">新时刻和账单</string>
+    <string name="write_moment">时刻</string>
+    <string name="write_bill">记账</string>
+    <string name="section_bill">账单</string>
     <string name="action_new_moment">写一个时刻</string>
     <string name="action_save">保存</string>
     <string name="hint_moment_text">这一刻…</string>

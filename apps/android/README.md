@@ -42,7 +42,10 @@ Moments light theirs too. The fog is the page's text colour, so on the dark map 
 
 A new Moment can be written on the phone, from the ✎ in the Moments tab's header or
 `moments://new`, on a page of its own, or, on a window from Material 3's medium breakpoint
-on, in a dialog over the page it was opened from: its words, up to nine photos and videos from the system's documents picker (a tile beside it
+on, in a dialog over the page it was opened from. Its 时刻 and 记账 at the top choose what it
+writes: the Moment, a bill, or both, a bill written with the Moment taking its time and place
+and linked to it, and a meal's amount and food category until the bill's own are given. The
+Moment: its words, up to nine photos and videos from the system's documents picker (a tile beside it
 opens the phone's camera app, whose photos go to the gallery to be picked from there), and when and
 where, worked out as it is written. A video goes up as it is, so one over 100 MB, more than
 the API's Worker and the site's poster take, or other than MP4, MOV or WebM, is left out
@@ -292,7 +295,9 @@ and opens 记账设置.
 
 A bill is an expense, an income or a transfer, the last also a repayment, a loan given or
 taken, or one collected; or a refund or reimbursement of an expense, written from that
-expense's page. 记一笔, the tab's button, writes one as a full-screen dialog: its amount
+expense's page. 记一笔, the tab's button (or `moments://new-bill`), opens the new Moment's page
+with only 记账 chosen, where a Moment can be written with the bill; changing a bill, or writing
+one from a Moment, an account or a day, is a full-screen dialog of its own. Either has its amount
 (sums like `12+3.4` add up) in any currency, its category and second-level category,
 the account, or several accounts each with its share, its time and book, an expense's
 discount (on record only), a transfer's fee (an expense) and discount (an income) and,
