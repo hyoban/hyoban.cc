@@ -3,7 +3,7 @@
 A Cloudflare Worker that serves the Moments, places and trips from D1, for the site's
 build and the recording app. Records come back exactly as stored, in the shape
 `@hyoban/data-spec` defines. The recording app writes through it, one change set at a
-time; how it is deployed is in the root README.
+time; how it is deployed is in [docs/deploy.md](../../docs/deploy.md).
 
 ## Reading
 
@@ -165,19 +165,10 @@ pnpm --filter @hyoban/api dev
 
 Put `API_TOKENS=<token>` in `apps/api/.dev.vars` to try the token-only reads locally.
 
-It is deployed at https://hyoban-cc-api.hyoban.workers.dev, over the `hyoban-cc`
-database in APAC. Workers Builds deploys it on every push to `main` that touches
-`apps/api/`, `packages/data-spec/`, `packages/trip-map/` or `pnpm-lock.yaml`: its root directory is
-`apps/api`, it installs from the repository root and runs `pnpm run deploy`, which
-applies any new D1 migration before it deploys the code that needs it. The build's API
-token has D1 Edit for that; a migration that fails stops the deploy.
-
-The secrets are `API_TOKENS`, `DEPLOY_HOOK_URL`, `MAPBOX_TOKEN` and
-`TELEGRAM_BOT_TOKEN`, set with
-`wrangler secret put <name> --config apps/api/wrangler.jsonc`. The site's build token
-is `MOMENTS_API_TOKEN` in the root `.env`. To write records from `data/` into the
-deployed database use `pnpm data:push`; `pnpm data:import --remote` restores the whole
-backup over it.
+The site's build token is `MOMENTS_API_TOKEN` in the root `.env`. To write records
+from `data/` into the deployed database use `pnpm data:push`; `pnpm data:import
+--remote` restores the whole backup over it. Its deployment, secrets and bindings are
+in [docs/deploy.md](../../docs/deploy.md).
 
 ## Layout
 
