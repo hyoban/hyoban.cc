@@ -826,4 +826,9 @@
     <string name="trip_edit_public_note">A public trip shows on the site.</string>
     <string name="action_edit_trip">Edit trip</string>
     <string name="section_changed_trips">Changed trips</string>
+    <string name="filter_moments">Moments</string>
+    <string name="part_private">%1$s private</string>
+    <string name="trip_edit_members">What it holds</string>
+    <string name="trip_edit_members_note">Its days’ records are in unless left out; those of two days either side can be taken in.</string>
+    <string name="trip_edit_covers">Covers</string>
 </resources>

@@ -1213,6 +1213,7 @@ fun routeOf(link: Uri): Any? {
         "moment" -> id?.let(::Moment)
         "trip" -> id?.let(::Trip)
         "play" -> id?.let(::TripPlay)
+        "trip-edit" -> id?.let(::TripEdit)
         "day" -> id?.let(::Day)
         "place" -> id?.let(::PlaceMoments)
         else -> null

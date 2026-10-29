@@ -174,13 +174,17 @@ fun FeedScreen(
     var year by rememberSaveable { mutableStateOf<Int?>(null) }
     var month by rememberSaveable { mutableStateOf<Int?>(null) }
     val filter = TimeFilter(year, month)
+    /** Which plugin's records the timeline shows, from its filter row. */
+    var kind by rememberSaveable { mutableStateOf(FeedKind.ALL) }
     val years = remember(moments) { yearsOf(moments) }
     val months = remember(moments, year) { year?.let { monthsOf(moments, it) }.orEmpty() }
-    val shown = remember(moments, filter) { moments.filtered(filter) }
+    val shown = remember(moments, filter, kind) {
+        if (kind == FeedKind.BILLS || kind == FeedKind.CHARGES) emptyList() else moments.filtered(filter)
+    }
     val placeCount = remember(shown) { shown.flatMap { it.places }.toSet().size }
     val subtitle = if (shown.isEmpty()) null else
         pluralStringResource(R.plurals.count_moments, shown.size, shown.size) + "\u2003" + pluralStringResource(R.plurals.count_places, placeCount, placeCount)
-    val bills = rememberTimelineBills(container, shown, filter)
+    val bills = rememberTimelineBills(container, shown, filter, kind)
     val ledgerNav = LocalLedgerNav.current
     val feedState = rememberLazyListState()
     val gridState = rememberLazyStaggeredGridState()
@@ -211,6 +215,7 @@ fun FeedScreen(
                 PendingChangesRow(container, onClick = onChanges, modifier = Modifier.padding(horizontal = Space.gutter, vertical = Space.s))
             }
         }
+        item(key = "kind") { KindFilterRow(kind) { kind = it } }
         item(key = "filter") {
             AnimatedVisibility(years.size > 1, enter = rowIn, exit = rowOut) {
                 TimeFilterRows(filter, years, months) { next ->
@@ -398,6 +403,40 @@ private fun NewMomentButton(onClick: () -> Unit, inRail: Boolean = false) {
             modifier = Modifier.testTag("new_moment"),
         ) {
             Icon(AppIcons.Pen, contentDescription = label)
+        }
+    }
+}
+
+/**
+ * The timeline's filter row: everything, or the records of one plugin, the Moments, the
+ * ledger's bills or the car's charges, as its plugins come.
+ */
+@Composable
+private fun KindFilterRow(kind: FeedKind, onKind: (FeedKind) -> Unit) {
+    androidx.compose.foundation.lazy.LazyRow(
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = Space.gutter),
+        horizontalArrangement = Arrangement.spacedBy(Space.s),
+        modifier = Modifier.padding(vertical = Space.xs),
+    ) {
+        items(FeedKind.entries.size) { index ->
+            val option = FeedKind.entries[index]
+            cc.hyoban.moments.ui.design.FilterChip(
+                selected = option == kind,
+                onClick = { onKind(option) },
+                label = {
+                    Text(
+                        stringResource(
+                            when (option) {
+                                FeedKind.ALL -> R.string.filter_all
+                                FeedKind.MOMENTS -> R.string.filter_moments
+                                FeedKind.BILLS -> R.string.section_bill
+                                FeedKind.CHARGES -> R.string.part_charge
+                            },
+                        ),
+                    )
+                },
+                modifier = Modifier.testTag("kind_${option.name.lowercase()}"),
+            )
         }
     }
 }

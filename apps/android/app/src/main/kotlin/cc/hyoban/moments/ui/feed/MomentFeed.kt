@@ -161,7 +161,9 @@ fun MomentFeed(
     // The single column's days: those with Moments and those with bills alone, newest first.
     val timeline = remember(days, bills) {
         val byDay = days.toMap()
-        (byDay.keys + bills.loose.keys).sortedDescending().map { day -> Triple(day, byDay[day].orEmpty(), dayItems(byDay[day].orEmpty(), bills.loose[day].orEmpty())) }
+        (byDay.keys + bills.loose.keys + bills.charges.keys).sortedDescending().map { day ->
+            Triple(day, byDay[day].orEmpty(), dayItems(byDay[day].orEmpty(), bills.loose[day].orEmpty(), bills.charges[day].orEmpty()))
+        }
     }
     val bottom = LocalBottomClearance.current + LocalFabClearance.current + Space.xl
     val card: @Composable (MomentRecord, Modifier, Boolean) -> Unit = { moment, cardModifier, showDate ->
@@ -269,6 +271,7 @@ fun MomentFeed(
                             when (item) {
                                 is DayItem.Moment -> card(item.moment, modifier, false)
                                 is DayItem.Bills -> BillGroup(item.txns, bills.ledger, onBill, modifier)
+                                is DayItem.ChargeItem -> ChargeRow(item.charge, modifier)
                             }
                         }
                         if (dayPills) {

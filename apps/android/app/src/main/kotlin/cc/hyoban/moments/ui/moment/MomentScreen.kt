@@ -210,6 +210,14 @@ fun MomentScreen(
                 changed = container.repository.isChanged(moment.uid),
                 bills = momentBillRows(ledger, moment, onBill, onNewBill),
                 parts = second.entries[moment.uid]?.get("parts") as? kotlinx.serialization.json.JsonObject,
+                onPartPrivate = { plugin: String, private: Boolean ->
+                    val own = (moment.extra[cc.hyoban.moments.data.spec.Entries.PART_VISIBILITY] as? kotlinx.serialization.json.JsonObject).orEmpty()
+                    val next = if (private) own + (plugin to kotlinx.serialization.json.JsonPrimitive("private")) else own - plugin
+                    val extra = if (next.isEmpty()) kotlinx.serialization.json.JsonObject(moment.extra - cc.hyoban.moments.data.spec.Entries.PART_VISIBILITY)
+                    else kotlinx.serialization.json.JsonObject(moment.extra + (cc.hyoban.moments.data.spec.Entries.PART_VISIBILITY to kotlinx.serialization.json.JsonObject(next)))
+                    container.scope.launch { container.updateLocal(moment.copy(extra = extra), null) }
+                    Unit
+                }.takeIf { container.canPublish },
                 billPublic = ledger.txns.any { it.moment == moment.uid && ledger.isPublic(it) },
                 // The way to publish, only when the app can.
                 onChanges = onChanges.takeIf { container.canPublish },
@@ -385,6 +393,8 @@ private fun MomentDetails(
     parts: kotlinx.serialization.json.JsonObject? = null,
     /** Whether a bill of it would publish. */
     billPublic: Boolean = false,
+    /** Makes one of its parts private, or public again; null where it can't be changed here. */
+    onPartPrivate: ((String, Boolean) -> Unit)? = null,
 ) {
     val sameDay = remember(moments, moment.dateKey) { moments.count { it.dateKey == moment.dateKey } }
     Column(Modifier.padding(top = Space.xl, bottom = Space.xxl)) {
@@ -511,6 +521,25 @@ private fun MomentDetails(
                     colors = ListItemDefaults.colors(containerColor = LocalSurfaceLevel.current.raised.fill()),
                     modifier = Modifier.clip(shapes.shape).testTag("visibility"),
                 )
+            }
+            // Each part said private on its own, while the record itself is public.
+            val own = moment.extra[cc.hyoban.moments.data.spec.Entries.PART_VISIBILITY] as? kotlinx.serialization.json.JsonObject
+            if (onPartPrivate != null && !(moment.hidden || moment.topic == "tech")) {
+                listOfNotNull(
+                    ("food" to R.string.section_food).takeIf { moment.food != null },
+                    ("media" to R.string.part_photos).takeIf { moment.media.isNotEmpty() },
+                ).forEach { (plugin, label) ->
+                    val private = (own?.get(plugin) as? kotlinx.serialization.json.JsonPrimitive)?.content == "private"
+                    add { shapes ->
+                        cc.hyoban.moments.ui.settings.SwitchRow(
+                            private,
+                            AppIcons.EyeOff,
+                            stringResource(R.string.part_private, stringResource(label)),
+                            "private_$plugin",
+                            shapes,
+                        ) { onPartPrivate(plugin, !private) }
+                    }
+                }
             }
             // Only when the day has more than this one, the row grows into the day's page.
             if (sameDay > 1) {
