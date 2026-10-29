@@ -27,6 +27,8 @@ import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -81,7 +83,7 @@ fun FullScreenDialog(onDismiss: () -> Unit, actions: @Composable RowScope.() -> 
                         Row(Modifier.fillMaxWidth().height(64.dp).padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                             val label = stringResource(R.string.action_close)
                             Tooltip(label, below = true) {
-                                IconButton(onClick = close, modifier = Modifier.testTag("dialog_close")) {
+                                IconButton(shapes = IconButtonDefaults.shapes(), onClick = close, modifier = Modifier.testTag("dialog_close")) {
                                     Icon(Icons.Rounded.Close, contentDescription = label)
                                 }
                             }

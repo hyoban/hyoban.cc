@@ -25,6 +25,8 @@ import androidx.compose.material.icons.rounded.PhotoLibrary
 import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material.icons.rounded.RequestQuote
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
@@ -95,12 +97,12 @@ fun BillScreen(container: AppContainer, id: String, nav: LedgerNav) {
         subtitle = ledger.books.firstOrNull { it.id == txn.book }?.name,
         actions = {
             Tooltip(stringResource(R.string.action_edit), below = true) {
-                IconButton(onClick = { nav.entry(LedgerEntryArgs(edit = txn.id)) }, modifier = Modifier.testTag("edit_bill")) {
+                IconButton(shapes = IconButtonDefaults.shapes(), onClick = { nav.entry(LedgerEntryArgs(edit = txn.id)) }, modifier = Modifier.testTag("edit_bill")) {
                     Icon(Icons.Rounded.Edit, contentDescription = stringResource(R.string.action_edit))
                 }
             }
             Tooltip(stringResource(R.string.action_delete), below = true) {
-                IconButton(onClick = { deleting = true }, modifier = Modifier.testTag("delete_bill")) {
+                IconButton(shapes = IconButtonDefaults.shapes(), onClick = { deleting = true }, modifier = Modifier.testTag("delete_bill")) {
                     Icon(Icons.Rounded.Delete, contentDescription = stringResource(R.string.action_delete))
                 }
             }
@@ -216,12 +218,12 @@ fun BillScreen(container: AppContainer, id: String, nav: LedgerNav) {
                         )
                     }
                     Row(Modifier.padding(horizontal = Space.gutter, vertical = Space.l), horizontalArrangement = Arrangement.spacedBy(Space.s)) {
-                        FilledTonalButton(onClick = { nav.entry(LedgerEntryArgs(kind = TxnKind.REFUND, related = txn.id)) }, modifier = Modifier.testTag("refund")) {
+                        FilledTonalButton(shapes = ButtonDefaults.shapes(), onClick = { nav.entry(LedgerEntryArgs(kind = TxnKind.REFUND, related = txn.id)) }, modifier = Modifier.testTag("refund")) {
                             Icon(Icons.AutoMirrored.Rounded.Undo, contentDescription = null)
                             Text(stringResource(R.string.ledger_action_refund), modifier = Modifier.padding(start = Space.s))
                         }
                         if (txn.reimburse != Reimburse.NONE) {
-                            FilledTonalButton(onClick = { nav.entry(LedgerEntryArgs(kind = TxnKind.REIMBURSEMENT, related = txn.id)) }, modifier = Modifier.testTag("reimburse")) {
+                            FilledTonalButton(shapes = ButtonDefaults.shapes(), onClick = { nav.entry(LedgerEntryArgs(kind = TxnKind.REIMBURSEMENT, related = txn.id)) }, modifier = Modifier.testTag("reimburse")) {
                                 Icon(Icons.Rounded.RequestQuote, contentDescription = null)
                                 Text(stringResource(R.string.ledger_record_reimbursement), modifier = Modifier.padding(start = Space.s))
                             }
@@ -239,7 +241,7 @@ fun BillScreen(container: AppContainer, id: String, nav: LedgerNav) {
             title = { Text(stringResource(R.string.ledger_delete_bill)) },
             text = { if (dependents > 0) Text(pluralStringResource(R.plurals.ledger_delete_with_returns, dependents, dependents)) },
             confirmButton = {
-                TextButton(onClick = {
+                TextButton(shapes = ButtonDefaults.shapes(), onClick = {
                     deleting = false
                     scope.launch {
                         container.ledger.deleteTxns(listOf(txn.id))
@@ -247,7 +249,7 @@ fun BillScreen(container: AppContainer, id: String, nav: LedgerNav) {
                     }
                 }, modifier = Modifier.testTag("confirm_delete")) { Text(stringResource(R.string.action_delete)) }
             },
-            dismissButton = { TextButton(onClick = { deleting = false }) { Text(stringResource(R.string.action_cancel)) } },
+            dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { deleting = false }) { Text(stringResource(R.string.action_cancel)) } },
         )
     }
 }

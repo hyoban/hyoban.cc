@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -131,7 +132,7 @@ fun ChartCard(
                         modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
                     )
                 }
-                if (onOpen != null) TextButton(onClick = onOpen) { Text(stringResource(R.string.ledger_open_bills)) }
+                if (onOpen != null) TextButton(shapes = ButtonDefaults.shapes(), onClick = onOpen) { Text(stringResource(R.string.ledger_open_bills)) }
             }
             Column(Modifier.padding(end = Space.s)) {
                 if (legend.isNotEmpty()) {

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Switch
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -57,6 +58,7 @@ internal fun ShareAssistOptions(
             content()
             if (!connected) {
                 TextButton(
+                    shapes = ButtonDefaults.shapes(),
                     onClick = { context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) },
                     modifier = Modifier.testTag("${tag}_assist_settings"),
                 ) {
@@ -68,6 +70,7 @@ internal fun ShareAssistOptions(
                 AssistStatus.Running -> {
                     Text(stringResource(running))
                     TextButton(
+                        shapes = ButtonDefaults.shapes(),
                         onClick = { ShareAccessibilityService.cancel(adapter.id) },
                         modifier = Modifier.testTag("${tag}_assist_cancel"),
                     ) {

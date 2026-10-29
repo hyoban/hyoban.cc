@@ -57,6 +57,8 @@ import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material.icons.rounded.Restaurant
 import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FloatingToolbarDefaults
 import androidx.compose.material3.FloatingToolbarExitDirection
 import androidx.compose.material3.HorizontalFloatingToolbar
@@ -512,7 +514,7 @@ private val TOOLBAR_CLEARANCE = 88.dp
 @Composable
 private fun ToolbarButton(icon: ImageVector, label: String, tag: String, onClick: () -> Unit) {
     Tooltip(label) {
-        IconButton(onClick = onClick, modifier = Modifier.testTag(tag)) {
+        IconButton(shapes = IconButtonDefaults.shapes(), onClick = onClick, modifier = Modifier.testTag(tag)) {
             Icon(icon, contentDescription = label)
         }
     }
@@ -601,7 +603,7 @@ private fun StateNotice(icon: ImageVector, label: String, explanation: String, o
                 Text(label, style = MaterialTheme.typography.titleSmall)
                 Text(explanation, style = MaterialTheme.typography.bodyMedium)
                 if (onChanges != null) {
-                    TextButton(onClick = onChanges, modifier = Modifier.offset(x = -Space.m).testTag("state_changes")) {
+                    TextButton(shapes = ButtonDefaults.shapes(), onClick = onChanges, modifier = Modifier.offset(x = -Space.m).testTag("state_changes")) {
                         Text(stringResource(R.string.title_changes))
                     }
                 }

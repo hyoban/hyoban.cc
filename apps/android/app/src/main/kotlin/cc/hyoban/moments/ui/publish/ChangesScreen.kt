@@ -50,6 +50,7 @@ import androidx.compose.material.icons.rounded.Remove
 import androidx.compose.material.icons.rounded.Restaurant
 import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -427,7 +428,7 @@ private fun ChangeCard(
         }
         Column(verticalArrangement = Arrangement.spacedBy(Space.m)) { content() }
         CardActions(
-            onOpen?.let { open -> { TextButton(onClick = open, modifier = Modifier.testTag("open_${moment.uid}")) { Text(stringResource(R.string.action_view)) } } },
+            onOpen?.let { open -> { TextButton(shapes = ButtonDefaults.shapes(), onClick = open, modifier = Modifier.testTag("open_${moment.uid}")) { Text(stringResource(R.string.action_view)) } } },
             onRevert?.let { revert -> { RevertButton(revert, Modifier.testTag("revert_${moment.uid}")) } },
         )
     }
@@ -444,7 +445,7 @@ private fun CardActions(vararg actions: (@Composable () -> Unit)?) {
 /** Takes back a change, its undo icon beside the words. */
 @Composable
 private fun RevertButton(onRevert: () -> Unit, modifier: Modifier = Modifier) {
-    TextButton(onClick = onRevert, modifier = modifier) {
+    TextButton(shapes = ButtonDefaults.shapes(), onClick = onRevert, modifier = modifier) {
         Icon(Icons.AutoMirrored.Rounded.Undo, contentDescription = null, modifier = Modifier.size(18.dp))
         Spacer(Modifier.size(Space.xs))
         Text(stringResource(R.string.action_revert))

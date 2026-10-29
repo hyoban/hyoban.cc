@@ -809,7 +809,8 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                 modifier = navigation.align(if (railLeft) AbsoluteAlignment.CenterLeft else AbsoluteAlignment.CenterRight).fillMaxHeight(),
             ) {
                 // The compact rail, its button at the top and the tabs centred under it, so all of
-                // it fits the little height a phone on its side has.
+                // it fits the little height a phone on its side has: Material 3 Expressive's
+                // collapsed rail, with its taller items and the fixed gap under its header, doesn't.
                 NavigationRail(
                     containerColor = SurfaceLevel.Page.raised.fill(),
                     modifier = Modifier.fillMaxHeight().onSizeChanged { railWidth = with(density) { it.width.toDp() } },

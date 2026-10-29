@@ -22,6 +22,8 @@ import androidx.compose.material.icons.rounded.SaveAlt
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.ZoomOutMap
 import androidx.compose.material3.*
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -157,7 +159,7 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
             item {
                 Row(Modifier.fillMaxWidth().padding(start = Space.gutter + Space.l, end = Space.gutter), verticalAlignment = Alignment.CenterVertically) {
                     Text(stringResource(R.string.footprints_title), Modifier.weight(1f).semantics { heading() }, style = MaterialTheme.typography.titleLarge)
-                    IconButton(onClick = { expanded = false; reopen = true; onSettings() }, modifier = Modifier.testTag("footprint_settings")) {
+                    IconButton(shapes = IconButtonDefaults.shapes(), onClick = { expanded = false; reopen = true; onSettings() }, modifier = Modifier.testTag("footprint_settings")) {
                         Icon(Icons.Rounded.Settings, contentDescription = stringResource(R.string.footprint_settings_title))
                     }
                 }
@@ -291,14 +293,14 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
             onDismissRequest = { deleting = null },
             title = { Text(stringResource(R.string.footprints_delete)) },
             text = { Text(stringResource(R.string.footprints_delete_confirm)) },
-            confirmButton = { TextButton(onClick = {
+            confirmButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = {
                 deleting = null
                 work {
                     withContext(Dispatchers.IO) { store.delete(target) }
                     if (target.session != null) session = null
                 }
             }) { Text(stringResource(R.string.footprints_delete)) } },
-            dismissButton = { TextButton(onClick = { deleting = null }) { Text(stringResource(R.string.footprints_cancel)) } },
+            dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { deleting = null }) { Text(stringResource(R.string.footprints_cancel)) } },
         )
     }
 }

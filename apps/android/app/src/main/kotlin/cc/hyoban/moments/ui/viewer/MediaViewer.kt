@@ -53,6 +53,8 @@ import androidx.compose.material.icons.rounded.MotionPhotosOn
 import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material3.Button
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -305,7 +307,7 @@ fun MediaViewer(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Tooltip(stringResource(R.string.action_back), below = true) {
-                    IconButton(onClick = onBack, modifier = Modifier.testTag("back")) {
+                    IconButton(shapes = IconButtonDefaults.shapes(), onClick = onBack, modifier = Modifier.testTag("back")) {
                         Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.action_back), tint = MediaOverlay.content)
                     }
                 }
@@ -320,6 +322,7 @@ fun MediaViewer(
                 var sharing by remember { mutableStateOf(false) }
                 Tooltip(stringResource(R.string.action_share), below = true) {
                     IconButton(
+                        shapes = IconButtonDefaults.shapes(),
                         onClick = {
                             val shown = media[pager.currentPage]
                             sharing = true
@@ -348,7 +351,7 @@ fun MediaViewer(
                     }
                 }
                 Tooltip(stringResource(R.string.action_info), below = true) {
-                    IconButton(onClick = { info = true }, modifier = Modifier.testTag("info")) {
+                    IconButton(shapes = IconButtonDefaults.shapes(), onClick = { info = true }, modifier = Modifier.testTag("info")) {
                         Icon(Icons.Rounded.Info, contentDescription = stringResource(R.string.action_info), tint = MediaOverlay.content)
                     }
                 }
@@ -705,7 +708,7 @@ private fun InfoContent(
             }
         }
         // The panel's one action, so the one thing in colour.
-        Button(onClick = onMoment, modifier = Modifier.fillMaxWidth().padding(top = Space.xs).testTag("open_moment")) {
+        Button(shapes = ButtonDefaults.shapes(), onClick = onMoment, modifier = Modifier.fillMaxWidth().padding(top = Space.xs).testTag("open_moment")) {
             Text(stringResource(R.string.action_open_moment))
         }
     }

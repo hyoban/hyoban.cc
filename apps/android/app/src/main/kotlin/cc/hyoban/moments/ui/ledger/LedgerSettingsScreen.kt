@@ -24,6 +24,7 @@ import androidx.compose.material.icons.rounded.Link
 import androidx.compose.material.icons.rounded.Restore
 import androidx.compose.material.icons.rounded.TableChart
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -253,7 +254,7 @@ fun LedgerSettingsScreen(container: AppContainer, nav: LedgerNav, startImport: B
             title = { Text(stringResource(R.string.ledger_restore)) },
             text = { Text(stringResource(R.string.ledger_restore_note, found.txns.size, found.books.size)) },
             confirmButton = {
-                TextButton(onClick = {
+                TextButton(shapes = ButtonDefaults.shapes(), onClick = {
                     restoring = null
                     busy = true
                     scope.launch {
@@ -263,7 +264,7 @@ fun LedgerSettingsScreen(container: AppContainer, nav: LedgerNav, startImport: B
                     }
                 }) { Text(stringResource(R.string.ledger_replace)) }
             },
-            dismissButton = { TextButton(onClick = { restoring = null }) { Text(stringResource(R.string.action_cancel)) } },
+            dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { restoring = null }) { Text(stringResource(R.string.action_cancel)) } },
         )
     }
 }
@@ -289,25 +290,25 @@ private fun BookDialog(book: Book, canDelete: Boolean, onDismiss: () -> Unit, on
                     }
                 }
                 FilterChip(selected = archived, onClick = { archived = !archived }, label = { Text(stringResource(R.string.ledger_archive)) })
-                TextButton(onClick = onCategories, modifier = Modifier.testTag("book_categories")) {
+                TextButton(shapes = ButtonDefaults.shapes(), onClick = onCategories, modifier = Modifier.testTag("book_categories")) {
                     Icon(Icons.Rounded.Category, contentDescription = null)
                     Text(stringResource(R.string.ledger_categories), modifier = Modifier.padding(start = Space.s))
                 }
                 if (canDelete) {
-                    TextButton(onClick = { confirming = true }) { Text(stringResource(R.string.ledger_delete_book), color = MaterialTheme.colorScheme.error) }
+                    TextButton(shapes = ButtonDefaults.shapes(), onClick = { confirming = true }) { Text(stringResource(R.string.ledger_delete_book), color = MaterialTheme.colorScheme.error) }
                 }
             }
         },
-        confirmButton = { TextButton(onClick = { onSave(book.copy(name = name.trim(), currency = currency, archived = archived)) }, enabled = name.isNotBlank()) { Text(stringResource(R.string.action_save)) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
+        confirmButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { onSave(book.copy(name = name.trim(), currency = currency, archived = archived)) }, enabled = name.isNotBlank()) { Text(stringResource(R.string.action_save)) } },
+        dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
     )
     if (confirming) {
         AlertDialog(
             onDismissRequest = { confirming = false },
             title = { Text(stringResource(R.string.ledger_delete_book)) },
             text = { Text(stringResource(R.string.ledger_delete_book_note, book.name)) },
-            confirmButton = { TextButton(onClick = { confirming = false; onDelete() }) { Text(stringResource(R.string.action_delete), color = MaterialTheme.colorScheme.error) } },
-            dismissButton = { TextButton(onClick = { confirming = false }) { Text(stringResource(R.string.action_cancel)) } },
+            confirmButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { confirming = false; onDelete() }) { Text(stringResource(R.string.action_delete), color = MaterialTheme.colorScheme.error) } },
+            dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { confirming = false }) { Text(stringResource(R.string.action_cancel)) } },
         )
     }
 }
@@ -417,7 +418,7 @@ private fun ImportDialog(found: Found, hasData: Boolean, onDismiss: () -> Unit, 
                 }
             }
         },
-        confirmButton = { TextButton(onClick = { onImport(replace) }, modifier = Modifier.testTag("confirm_import")) { Text(stringResource(R.string.ledger_import)) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
+        confirmButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { onImport(replace) }, modifier = Modifier.testTag("confirm_import")) { Text(stringResource(R.string.ledger_import)) } },
+        dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
     )
 }

@@ -70,6 +70,14 @@ SDK configured in `local.properties` (`sdk.dir=…`).
 - M3 is the only reference now. FlClash shaped the early pages and is still thanked in
   the README and on the settings page, but where it and M3 differ, M3 wins.
 - Keep the smooth (continuous) corners; that has been decided twice.
+- Material 3 Expressive throughout (the module opts into its API): `MaterialExpressiveTheme`
+  with the expressive motion scheme, and buttons and icon buttons given
+  `ButtonDefaults.shapes()` / `IconButtonDefaults.shapes()`, so they change shape when
+  pressed; motion takes the scheme's springs, tweens only for timed sequences such
+  as a fade-through, which springs can't delay. The one exception is the
+  rail on a phone on its side, which stays the baseline `NavigationRail`: the collapsed
+  `WideNavigationRail`, with its taller items and fixed gap under the header, doesn't fit
+  that height.
 - Settings, on a page or in a sheet, are M3 segmented lists (`SegmentedGroup` with
   `SwitchRow` and `ActionRow`), switches trailing, supporting text at most three lines;
   a longer explanation goes behind an info row's dialog, not on the page.

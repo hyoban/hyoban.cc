@@ -41,6 +41,8 @@ import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.ButtonGroupDefaults
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingActionButton
@@ -264,12 +266,12 @@ fun FeedScreen(
                         // How the Moments are laid out is chosen above them; the bar keeps searching
                         // them, a secondary action as Material 3 has a search icon button, and the settings.
                         Tooltip(stringResource(R.string.action_search), below = true) {
-                            IconButton(onClick = onSearch, modifier = Modifier.testTag("search")) {
+                            IconButton(shapes = IconButtonDefaults.shapes(), onClick = onSearch, modifier = Modifier.testTag("search")) {
                                 Icon(Icons.Rounded.Search, contentDescription = stringResource(R.string.action_search))
                             }
                         }
                         Tooltip(stringResource(R.string.title_settings), below = true) {
-                            IconButton(onClick = onSettings, modifier = Modifier.testTag("settings")) {
+                            IconButton(shapes = IconButtonDefaults.shapes(), onClick = onSettings, modifier = Modifier.testTag("settings")) {
                                 Icon(Icons.Rounded.Settings, contentDescription = stringResource(R.string.title_settings))
                             }
                         }
@@ -521,7 +523,7 @@ fun DayScreen(
             // The trip the day was on, as a Moment's page offers its own.
             if (trip != null) {
                 Tooltip(trip.title, below = true) {
-                    IconButton(onClick = { onTrip(trip.id) }, modifier = Modifier.testTag("day_trip")) {
+                    IconButton(shapes = IconButtonDefaults.shapes(), onClick = { onTrip(trip.id) }, modifier = Modifier.testTag("day_trip")) {
                         Icon(Symbols.LuggageFilled, contentDescription = trip.title)
                     }
                 }
@@ -570,12 +572,12 @@ fun PlaceScreen(
                 val show = rememberShowMessage()
                 val onMapLabel = stringResource(R.string.action_show_on_map)
                 Tooltip(onMapLabel, below = true) {
-                    IconButton(onClick = { onMap(id) }, modifier = Modifier.testTag("show_on_map")) {
+                    IconButton(shapes = IconButtonDefaults.shapes(), onClick = { onMap(id) }, modifier = Modifier.testTag("show_on_map")) {
                         Icon(Symbols.MapFilled, contentDescription = onMapLabel)
                     }
                 }
                 Tooltip(stringResource(R.string.action_navigate), below = true) {
-                    IconButton(onClick = { if (!navigateTo(context, place)) show(context.getString(R.string.no_map_app)) }, modifier = Modifier.testTag("navigate")) {
+                    IconButton(shapes = IconButtonDefaults.shapes(), onClick = { if (!navigateTo(context, place)) show(context.getString(R.string.no_map_app)) }, modifier = Modifier.testTag("navigate")) {
                         Icon(Icons.Rounded.Directions, contentDescription = stringResource(R.string.action_navigate), tint = MaterialTheme.colorScheme.primary)
                     }
                 }

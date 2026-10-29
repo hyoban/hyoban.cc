@@ -32,6 +32,7 @@ import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -334,16 +335,16 @@ private fun AddressDialog(setting: Setting, title: String, onDismiss: () -> Unit
                     modifier = Modifier.fillMaxWidth().focusRequester(focus),
                 )
                 if (Setting.normalize(field.text) != setting.default) {
-                    TextButton(onClick = { onSave(setting.default) }, modifier = Modifier.testTag("restore_default")) {
+                    TextButton(shapes = ButtonDefaults.shapes(), onClick = { onSave(setting.default) }, modifier = Modifier.testTag("restore_default")) {
                         Text(stringResource(R.string.action_restore_default))
                     }
                 }
             }
         },
         confirmButton = {
-            TextButton(onClick = { onSave(field.text) }, enabled = ok) { Text(stringResource(R.string.action_confirm)) }
+            TextButton(shapes = ButtonDefaults.shapes(), onClick = { onSave(field.text) }, enabled = ok) { Text(stringResource(R.string.action_confirm)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
+        dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
     )
 }
 
@@ -371,7 +372,7 @@ private fun TokenDialog(token: Token, onDismiss: () -> Unit, onSave: (String) ->
                     trailingIcon = {
                         val label = stringResource(if (hidden) R.string.action_show_token else R.string.action_hide_token)
                         Tooltip(label) {
-                            IconButton(onClick = { hidden = !hidden }, modifier = Modifier.testTag("api_token_reveal")) {
+                            IconButton(shapes = IconButtonDefaults.shapes(), onClick = { hidden = !hidden }, modifier = Modifier.testTag("api_token_reveal")) {
                                 Icon(if (hidden) Icons.Rounded.Visibility else Icons.Rounded.VisibilityOff, contentDescription = label)
                             }
                         }
@@ -382,6 +383,7 @@ private fun TokenDialog(token: Token, onDismiss: () -> Unit, onSave: (String) ->
                 )
                 if (token.isSet) {
                     TextButton(
+                        shapes = ButtonDefaults.shapes(),
                         onClick = { onSave("") },
                         colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
                         modifier = Modifier.testTag("api_token_forget"),
@@ -391,10 +393,10 @@ private fun TokenDialog(token: Token, onDismiss: () -> Unit, onSave: (String) ->
         },
         confirmButton = {
             val text = field.text.toString()
-            TextButton(onClick = { onSave(text) }, enabled = text.isNotBlank(), modifier = Modifier.testTag("api_token_save")) {
+            TextButton(shapes = ButtonDefaults.shapes(), onClick = { onSave(text) }, enabled = text.isNotBlank(), modifier = Modifier.testTag("api_token_save")) {
                 Text(stringResource(R.string.action_confirm))
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
+        dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
     )
 }
