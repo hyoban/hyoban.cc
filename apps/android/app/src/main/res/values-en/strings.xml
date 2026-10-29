@@ -244,6 +244,10 @@
         <item quantity="other">Leaving in %1$d days</item>
     </plurals>
     <string name="title_new_moment">New Moment</string>
+    <string name="title_new_moment_and_bill">New Moment and bill</string>
+    <string name="write_moment">Moment</string>
+    <string name="write_bill">Bill</string>
+    <string name="section_bill">Bill</string>
     <string name="action_new_moment">Write a Moment</string>
     <string name="action_save">Save</string>
     <string name="hint_moment_text">What’s happening…</string>
