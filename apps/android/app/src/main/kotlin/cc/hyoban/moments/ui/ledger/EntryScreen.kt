@@ -33,6 +33,8 @@ import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material.icons.rounded.Block
 import androidx.compose.material.icons.rounded.RequestQuote
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -291,7 +293,7 @@ fun EntryScreen(container: AppContainer, args: LedgerEntryArgs, nav: LedgerNav) 
         title,
         nav.back,
         close = true,
-        actions = { TextButton(onClick = ::save, modifier = Modifier.testTag("save_bill")) { Text(stringResource(R.string.action_save)) } },
+        actions = { TextButton(shapes = ButtonDefaults.shapes(), onClick = ::save, modifier = Modifier.testTag("save_bill")) { Text(stringResource(R.string.action_save)) } },
     ) {
         PageWidth(maxColumns = 1) { columns ->
             Column(
@@ -340,7 +342,7 @@ fun EntryScreen(container: AppContainer, args: LedgerEntryArgs, nav: LedgerNav) 
                         label = { Text(stringResource(R.string.ledger_amount)) },
                         prefix = { Text(currencySymbol(shownCurrency)) },
                         trailingIcon = {
-                            TextButton(onClick = { currencies = true }, modifier = Modifier.testTag("currency")) { Text(shownCurrency) }
+                            TextButton(shapes = ButtonDefaults.shapes(), onClick = { currencies = true }, modifier = Modifier.testTag("currency")) { Text(shownCurrency) }
                         },
                         supportingText = cents?.takeIf { amount.any { it == '+' || it == '-' } }?.let { { Text("= " + formatMoney(it, shownCurrency)) } },
                         isError = amount.isNotEmpty() && cents == null,
@@ -563,7 +565,7 @@ private fun PickRow(
         overlineContent = { Text(label) },
         trailingContent = onClear?.let {
             {
-                IconButton(onClick = it) { Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.action_clear)) }
+                IconButton(shapes = IconButtonDefaults.shapes(), onClick = it) { Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.action_clear)) }
             }
         },
         modifier = Modifier.testTag(tag),
@@ -642,13 +644,13 @@ private fun SplitEditor(ledger: Ledger, splits: List<Pair<String, String>>, curr
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier.weight(1f),
                 )
-                IconButton(onClick = { onChange(splits.filterIndexed { i, _ -> i != index }) }) {
+                IconButton(shapes = IconButtonDefaults.shapes(), onClick = { onChange(splits.filterIndexed { i, _ -> i != index }) }) {
                     Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.action_remove))
                 }
             }
         }
         Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-            TextButton(onClick = onAdd) {
+            TextButton(shapes = ButtonDefaults.shapes(), onClick = onAdd) {
                 Icon(Icons.Rounded.Add, contentDescription = null)
                 Text(stringResource(R.string.ledger_add_payer))
             }
@@ -680,7 +682,7 @@ private fun TagEditor(ledger: Ledger, tags: List<String>, onChange: (List<String
         singleLine = true,
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
         keyboardActions = KeyboardActions(onDone = { add() }),
-        trailingIcon = if (typing.isNotBlank()) { { IconButton(onClick = ::add) { Icon(Icons.Rounded.Add, contentDescription = stringResource(R.string.action_add)) } } } else null,
+        trailingIcon = if (typing.isNotBlank()) { { IconButton(shapes = IconButtonDefaults.shapes(), onClick = ::add) { Icon(Icons.Rounded.Add, contentDescription = stringResource(R.string.action_add)) } } } else null,
         modifier = Modifier.fillMaxWidth().testTag("tags"),
     )
     FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.s)) {
@@ -771,11 +773,11 @@ private fun QuickAccountDialog(onDismiss: () -> Unit, onDone: (Account) -> Unit)
             }
         },
         confirmButton = {
-            TextButton(onClick = { onDone(Account(Ulid.next(), name.trim(), kind, currency, position = Int.MAX_VALUE / 2)) }, enabled = name.isNotBlank()) {
+            TextButton(shapes = ButtonDefaults.shapes(), onClick = { onDone(Account(Ulid.next(), name.trim(), kind, currency, position = Int.MAX_VALUE / 2)) }, enabled = name.isNotBlank()) {
                 Text(stringResource(R.string.action_add))
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
+        dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
     )
 }
 
@@ -834,7 +836,7 @@ fun NameDialog(title: String, initial: String, onDismiss: () -> Unit, onDone: (S
         onDismissRequest = onDismiss,
         title = { Text(title) },
         text = { OutlinedTextField(name, { name = it }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("name_field")) },
-        confirmButton = { TextButton(onClick = { onDone(name.trim()) }, enabled = name.isNotBlank()) { Text(stringResource(R.string.action_confirm)) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
+        confirmButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { onDone(name.trim()) }, enabled = name.isNotBlank()) { Text(stringResource(R.string.action_confirm)) } },
+        dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
     )
 }

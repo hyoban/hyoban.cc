@@ -12,6 +12,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -118,7 +120,7 @@ private fun BarPage(
     val back: @Composable () -> Unit = {
         if (onBack != null) {
             Tooltip(stringResource(if (close) R.string.action_close else R.string.action_back), below = true) {
-                IconButton(onClick = onBack, modifier = Modifier.testTag("back")) {
+                IconButton(shapes = IconButtonDefaults.shapes(), onClick = onBack, modifier = Modifier.testTag("back")) {
                     if (close) {
                         Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.action_close))
                     } else {

@@ -23,6 +23,8 @@ import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Luggage
 import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -107,7 +109,7 @@ fun SearchScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: ()
                 placeholder = { Text(stringResource(R.string.hint_search_moments)) },
                 leadingIcon = {
                     Tooltip(stringResource(R.string.action_back), below = true) {
-                        IconButton(onClick = onBack, modifier = Modifier.testTag("back")) {
+                        IconButton(shapes = IconButtonDefaults.shapes(), onClick = onBack, modifier = Modifier.testTag("back")) {
                             Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.action_back))
                         }
                     }
@@ -115,7 +117,7 @@ fun SearchScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: ()
                 trailingIcon = if (text.isNotEmpty()) {
                     {
                         Tooltip(stringResource(R.string.action_clear), below = true) {
-                            IconButton(onClick = { query.clearText() }, modifier = Modifier.testTag("search_clear")) {
+                            IconButton(shapes = IconButtonDefaults.shapes(), onClick = { query.clearText() }, modifier = Modifier.testTag("search_clear")) {
                                 Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.action_clear))
                             }
                         }

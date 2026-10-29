@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.ui.semantics.contentDescription
@@ -347,9 +348,10 @@ private fun ChoiceCard(
                 }
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
-                TextButton(onClick = onNone, modifier = Modifier.testTag("place_none")) { Text(stringResource(R.string.place_none)) }
+                TextButton(shapes = ButtonDefaults.shapes(), onClick = onNone, modifier = Modifier.testTag("place_none")) { Text(stringResource(R.string.place_none)) }
                 Spacer(Modifier.weight(1f))
                 Button(
+                    shapes = ButtonDefaults.shapes(),
                     onClick = onConfirm,
                     enabled = when (pick) {
                         is PlaceChoice.New -> pick.name.isNotBlank()

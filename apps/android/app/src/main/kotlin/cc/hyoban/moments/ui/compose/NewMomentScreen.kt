@@ -64,6 +64,7 @@ import androidx.compose.material.icons.rounded.Restaurant
 import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
@@ -394,6 +395,7 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
             close = true,
             actions = {
                 TextButton(
+                    shapes = ButtonDefaults.shapes(),
                     onClick = {
                         when {
                             !written -> emptyError = true
@@ -580,7 +582,7 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
         AlertDialog(
             onDismissRequest = { saveError = null },
             text = { Text(message) },
-            confirmButton = { TextButton(onClick = { saveError = null }) { Text(stringResource(R.string.action_confirm)) } },
+            confirmButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { saveError = null }) { Text(stringResource(R.string.action_confirm)) } },
         )
     }
     if (unaskedMotion.isNotEmpty()) {
@@ -593,12 +595,12 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
             title = { Text(stringResource(R.string.confirm_motion)) },
             text = { Text(pluralStringResource(R.plurals.confirm_motion_note, unaskedMotion.size, unaskedMotion.size)) },
             confirmButton = {
-                TextButton(onClick = { answer(true) }, modifier = Modifier.testTag("motion_as_photos")) {
+                TextButton(shapes = ButtonDefaults.shapes(), onClick = { answer(true) }, modifier = Modifier.testTag("motion_as_photos")) {
                     Text(stringResource(R.string.action_add_as_photos))
                 }
             },
             dismissButton = {
-                TextButton(onClick = { answer(false) }, modifier = Modifier.testTag("motion_keep_live")) {
+                TextButton(shapes = ButtonDefaults.shapes(), onClick = { answer(false) }, modifier = Modifier.testTag("motion_keep_live")) {
                     Text(stringResource(R.string.action_keep_live))
                 }
             },
@@ -610,11 +612,11 @@ fun NewMomentScreen(container: AppContainer, onBack: () -> Unit, onSaved: () -> 
             title = { Text(stringResource(R.string.confirm_discard)) },
             text = { Text(stringResource(R.string.confirm_discard_note)) },
             confirmButton = {
-                TextButton(onClick = { confirmingDiscard = false; onBack() }, modifier = Modifier.testTag("discard")) {
+                TextButton(shapes = ButtonDefaults.shapes(), onClick = { confirmingDiscard = false; onBack() }, modifier = Modifier.testTag("discard")) {
                     Text(stringResource(R.string.action_discard))
                 }
             },
-            dismissButton = { TextButton(onClick = { confirmingDiscard = false }) { Text(stringResource(R.string.action_cancel)) } },
+            dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { confirmingDiscard = false }) { Text(stringResource(R.string.action_cancel)) } },
         )
     }
 }
@@ -999,20 +1001,20 @@ internal fun TimeDialog(time: OffsetDateTime, onDismiss: () -> Unit, onPick: (Of
         DatePickerDialog(
             onDismissRequest = onDismiss,
             confirmButton = {
-                TextButton(onClick = { onClock = true }, modifier = Modifier.testTag("time_next")) { Text(stringResource(R.string.action_next)) }
+                TextButton(shapes = ButtonDefaults.shapes(), onClick = { onClock = true }, modifier = Modifier.testTag("time_next")) { Text(stringResource(R.string.action_next)) }
             },
-            dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
+            dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
         ) { DatePicker(dates) }
     } else {
         TimePickerDialog(
             onDismissRequest = onDismiss,
             title = { Text(formatDay(day.toString())) },
             confirmButton = {
-                TextButton(onClick = {
+                TextButton(shapes = ButtonDefaults.shapes(), onClick = {
                     onPick(OffsetDateTime.of(day, java.time.LocalTime.of(clock.hour, clock.minute), time.offset))
                 }) { Text(stringResource(R.string.action_confirm)) }
             },
-            dismissButton = { TextButton(onClick = { onClock = false }) { Text(stringResource(R.string.action_previous)) } },
+            dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { onClock = false }) { Text(stringResource(R.string.action_previous)) } },
             modeToggleButton = {
                 TimePickerDialogDefaults.DisplayModeToggle(
                     onDisplayModeChange = {

@@ -5,6 +5,7 @@ import android.app.UiModeManager
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MotionScheme
@@ -181,8 +182,9 @@ fun MomentsTheme(settings: Settings, content: @Composable () -> Unit) {
     val colorScheme = animatedColorScheme(remember(seed, dark, style, pureBlack, contrast) { seededColorScheme(seed, dark, style, pureBlack, contrast) })
 
     CompositionLocalProvider(LocalDarkTheme provides dark) {
-        // Material 3 Expressive's springs, which overshoot a little, for every component and the app's own motion.
-        MaterialTheme(colorScheme = colorScheme, typography = AppTypography, shapes = AppShapes, motionScheme = MotionScheme.expressive(), content = content)
+        // Material 3 Expressive: its springs, which overshoot a little, for every component and the
+        // app's own motion, and its components' defaults.
+        MaterialExpressiveTheme(colorScheme = colorScheme, typography = AppTypography, shapes = AppShapes, motionScheme = MotionScheme.expressive(), content = content)
     }
 }
 

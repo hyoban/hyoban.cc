@@ -20,6 +20,8 @@ import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Replay
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LoadingIndicator
@@ -192,7 +194,7 @@ fun VideoControls(state: VideoState, visible: Boolean, modifier: Modifier = Modi
             horizontalArrangement = Arrangement.spacedBy(Space.xs),
         ) {
             Tooltip(stringResource(if (playPause.showPlay) R.string.action_play else R.string.action_pause)) {
-                IconButton(onClick = playPause::onClick, enabled = playPause.isEnabled) {
+                IconButton(shapes = IconButtonDefaults.shapes(), onClick = playPause::onClick, enabled = playPause.isEnabled) {
                     Icon(
                         when {
                             ended -> Icons.Rounded.Replay
@@ -229,7 +231,7 @@ fun VideoControls(state: VideoState, visible: Boolean, modifier: Modifier = Modi
             )
             Text(formatClock(progress.durationMs.coerceAtLeast(0L)), style = MaterialTheme.typography.labelMedium, color = MediaOverlay.contentVariant)
             Tooltip(stringResource(if (mute.showMuted) R.string.action_unmute else R.string.action_mute)) {
-                IconButton(onClick = mute::onClick, enabled = mute.isEnabled) {
+                IconButton(shapes = IconButtonDefaults.shapes(), onClick = mute::onClick, enabled = mute.isEnabled) {
                     Icon(
                         if (mute.showMuted) Icons.AutoMirrored.Rounded.VolumeOff else Icons.AutoMirrored.Rounded.VolumeUp,
                         contentDescription = stringResource(if (mute.showMuted) R.string.action_unmute else R.string.action_mute),

@@ -14,6 +14,8 @@ import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.SubdirectoryArrowRight
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -108,7 +110,7 @@ fun CategoriesScreen(container: AppContainer, book: String, nav: LedgerNav) {
                         },
                     )
                 }
-                OutlinedButton(onClick = { adding = "" }, modifier = Modifier.padding(horizontal = Space.gutter, vertical = Space.l).fillMaxWidth()) {
+                OutlinedButton(shapes = ButtonDefaults.shapes(), onClick = { adding = "" }, modifier = Modifier.padding(horizontal = Space.gutter, vertical = Space.l).fillMaxWidth()) {
                     Icon(Icons.Rounded.Add, contentDescription = null)
                     Text(stringResource(R.string.ledger_add_category), modifier = Modifier.padding(start = Space.s))
                 }
@@ -156,9 +158,9 @@ private fun CategoryDialog(
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(Space.xs)) {
                 OutlinedTextField(name, { name = it }, label = { Text(stringResource(R.string.ledger_category_name)) }, singleLine = true)
-                if (category.parent == null) TextButton(onClick = onAddChild) { Text(stringResource(R.string.ledger_add_subcategory)) }
-                if (others.isNotEmpty()) TextButton(onClick = { merging = true }) { Text(stringResource(R.string.ledger_merge_category)) }
-                TextButton(onClick = onDelete, enabled = used == 0) {
+                if (category.parent == null) TextButton(shapes = ButtonDefaults.shapes(), onClick = onAddChild) { Text(stringResource(R.string.ledger_add_subcategory)) }
+                if (others.isNotEmpty()) TextButton(shapes = ButtonDefaults.shapes(), onClick = { merging = true }) { Text(stringResource(R.string.ledger_merge_category)) }
+                TextButton(shapes = ButtonDefaults.shapes(), onClick = onDelete, enabled = used == 0) {
                     Text(
                         if (used == 0) stringResource(R.string.action_delete) else pluralStringResource(R.plurals.ledger_category_in_use, used, used),
                         color = if (used == 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
@@ -166,8 +168,8 @@ private fun CategoryDialog(
                 }
             }
         },
-        confirmButton = { TextButton(onClick = { onRename(name.trim()) }, enabled = name.isNotBlank()) { Text(stringResource(R.string.action_save)) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
+        confirmButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { onRename(name.trim()) }, enabled = name.isNotBlank()) { Text(stringResource(R.string.action_save)) } },
+        dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
     )
     if (merging) {
         ChoiceSheet(
@@ -209,6 +211,7 @@ fun RatesScreen(container: AppContainer, nav: LedgerNav) {
         actions = {
             Tooltip(stringResource(R.string.ledger_rates_refresh), below = true) {
                 IconButton(
+                    shapes = IconButtonDefaults.shapes(),
                     enabled = !refreshing,
                     onClick = {
                         refreshing = true
@@ -274,13 +277,13 @@ fun RatesScreen(container: AppContainer, nav: LedgerNav) {
                 )
             },
             confirmButton = {
-                TextButton(onClick = {
+                TextButton(shapes = ButtonDefaults.shapes(), onClick = {
                     val yuan = value.toDoubleOrNull()?.takeIf { it > 0 } ?: return@TextButton
                     editing = null
                     scope.launch { container.ledger.putRates(mapOf(code to mapOf(LocalDate.now() to 1 / yuan))) }
                 }) { Text(stringResource(R.string.action_save)) }
             },
-            dismissButton = { TextButton(onClick = { editing = null }) { Text(stringResource(R.string.action_cancel)) } },
+            dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { editing = null }) { Text(stringResource(R.string.action_cancel)) } },
         )
     }
 }

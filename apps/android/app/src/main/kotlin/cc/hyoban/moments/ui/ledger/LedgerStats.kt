@@ -12,6 +12,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -162,13 +164,13 @@ fun StatsView(ledger: Ledger, books: Set<String>, currency: String, nav: LedgerN
             }
             Row(Modifier.fillMaxWidth().padding(horizontal = Space.s), verticalAlignment = Alignment.CenterVertically) {
                 if (mode != Span.ALL) {
-                    IconButton(onClick = { anchorDay = (if (mode == Span.MONTH) anchor.minusMonths(1) else anchor.minusYears(1)).toEpochDay() }) {
+                    IconButton(shapes = IconButtonDefaults.shapes(), onClick = { anchorDay = (if (mode == Span.MONTH) anchor.minusMonths(1) else anchor.minusYears(1)).toEpochDay() }) {
                         Icon(Icons.AutoMirrored.Rounded.KeyboardArrowLeft, contentDescription = stringResource(R.string.ledger_previous_period))
                     }
                 }
                 Text(periodLabel, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f).padding(horizontal = Space.s))
                 if (mode != Span.ALL) {
-                    IconButton(onClick = { anchorDay = (if (mode == Span.MONTH) anchor.plusMonths(1) else anchor.plusYears(1)).toEpochDay() }) {
+                    IconButton(shapes = IconButtonDefaults.shapes(), onClick = { anchorDay = (if (mode == Span.MONTH) anchor.plusMonths(1) else anchor.plusYears(1)).toEpochDay() }) {
                         Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = stringResource(R.string.ledger_next_period))
                     }
                 }

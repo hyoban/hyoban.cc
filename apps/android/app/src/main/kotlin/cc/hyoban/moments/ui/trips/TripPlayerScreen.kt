@@ -11,6 +11,7 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.material3.ButtonGroup
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.key.Key
@@ -708,7 +709,7 @@ private fun PlayerToolbar(
                                 .size(IconButtonDefaults.smallContainerSize(IconButtonDefaults.IconButtonWidthOption.Wide))
                                 .focusRequester(playFocus).testTag("player_play"),
                         ) {
-                            Crossfade(if (atEnd && !playing) Icons.Rounded.Replay else if (playing) Icons.Rounded.Pause else Icons.Rounded.PlayArrow, label = "play icon") {
+                            Crossfade(if (atEnd && !playing) Icons.Rounded.Replay else if (playing) Icons.Rounded.Pause else Icons.Rounded.PlayArrow, animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(), label = "play icon") {
                                 Icon(it, contentDescription = play)
                             }
                         }

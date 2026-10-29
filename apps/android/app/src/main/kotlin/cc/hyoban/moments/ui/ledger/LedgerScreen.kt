@@ -28,6 +28,8 @@ import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
@@ -140,19 +142,19 @@ fun LedgerScreen(container: AppContainer, nav: LedgerNav, onImport: () -> Unit) 
         actions = {
             BookMenu(container, ledger, nav)
             Tooltip(stringResource(R.string.action_search), below = true) {
-                IconButton(onClick = { nav.list(LedgerFilter(book = book?.id.takeIf { !ledger.allBooks }, search = true)) }, modifier = Modifier.testTag("ledger_search")) {
+                IconButton(shapes = IconButtonDefaults.shapes(), onClick = { nav.list(LedgerFilter(book = book?.id.takeIf { !ledger.allBooks }, search = true)) }, modifier = Modifier.testTag("ledger_search")) {
                     Icon(Icons.Rounded.Search, contentDescription = stringResource(R.string.action_search))
                 }
             }
             val settings = LocalSettings.current
             val hideLabel = stringResource(if (settings.ledgerHidden) R.string.ledger_show_amounts else R.string.ledger_hide_amounts)
             Tooltip(hideLabel, below = true) {
-                IconButton(onClick = { settings.changeLedgerHidden(!settings.ledgerHidden) }, modifier = Modifier.testTag("ledger_hide")) {
+                IconButton(shapes = IconButtonDefaults.shapes(), onClick = { settings.changeLedgerHidden(!settings.ledgerHidden) }, modifier = Modifier.testTag("ledger_hide")) {
                     Icon(if (settings.ledgerHidden) Icons.Rounded.VisibilityOff else Icons.Rounded.Visibility, contentDescription = hideLabel)
                 }
             }
             Tooltip(stringResource(R.string.ledger_settings_title), below = true) {
-                IconButton(onClick = nav.settings, modifier = Modifier.testTag("ledger_settings")) {
+                IconButton(shapes = IconButtonDefaults.shapes(), onClick = nav.settings, modifier = Modifier.testTag("ledger_settings")) {
                     Icon(Icons.Rounded.Settings, contentDescription = stringResource(R.string.ledger_settings_title))
                 }
             }
@@ -214,7 +216,7 @@ private fun BookMenu(container: AppContainer, ledger: Ledger, nav: LedgerNav) {
     val scope = rememberCoroutineScope()
     Box {
         Tooltip(stringResource(R.string.ledger_switch_book), below = true) {
-            IconButton(onClick = { open = true }, modifier = Modifier.testTag("ledger_books")) {
+            IconButton(shapes = IconButtonDefaults.shapes(), onClick = { open = true }, modifier = Modifier.testTag("ledger_books")) {
                 Icon(Icons.AutoMirrored.Rounded.MenuBook, contentDescription = stringResource(R.string.ledger_switch_book))
             }
         }
@@ -260,7 +262,7 @@ private fun EmptyLedger(onImport: () -> Unit, onNew: () -> Unit) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
-        FilledTonalButton(onClick = onImport, modifier = Modifier.testTag("ledger_import_empty")) {
+        FilledTonalButton(shapes = ButtonDefaults.shapes(), onClick = onImport, modifier = Modifier.testTag("ledger_import_empty")) {
             Icon(Icons.Rounded.FileOpen, contentDescription = null, modifier = Modifier.size(18.dp))
             Spacer(Modifier.size(Space.s))
             Text(stringResource(R.string.ledger_import_icost))
@@ -435,7 +437,7 @@ private fun AssetsView(ledger: Ledger, currency: String, nav: LedgerNav) {
                 )
             }
             Spacer(Modifier.height(Space.l))
-            OutlinedButton(onClick = { nav.editAccount(null) }, modifier = Modifier.padding(horizontal = Space.gutter).fillMaxWidth().testTag("add_account")) {
+            OutlinedButton(shapes = ButtonDefaults.shapes(), onClick = { nav.editAccount(null) }, modifier = Modifier.padding(horizontal = Space.gutter).fillMaxWidth().testTag("add_account")) {
                 Icon(Icons.Rounded.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.size(Space.s))
                 Text(stringResource(R.string.ledger_add_account))

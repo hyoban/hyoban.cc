@@ -21,6 +21,8 @@ import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilledTonalButton
@@ -83,7 +85,7 @@ fun AccountScreen(container: AppContainer, id: String, nav: LedgerNav) {
         subtitle = accountKindLabel(account.kind) + " " + account.currency,
         actions = {
             Tooltip(stringResource(R.string.action_edit), below = true) {
-                IconButton(onClick = { nav.editAccount(id) }, modifier = Modifier.testTag("edit_account")) {
+                IconButton(shapes = IconButtonDefaults.shapes(), onClick = { nav.editAccount(id) }, modifier = Modifier.testTag("edit_account")) {
                     Icon(Icons.Rounded.Edit, contentDescription = stringResource(R.string.action_edit))
                 }
             }
@@ -94,11 +96,11 @@ fun AccountScreen(container: AppContainer, id: String, nav: LedgerNav) {
                 Text(stringResource(R.string.ledger_balance_label), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(money(balance, account.currency), style = MaterialTheme.typography.displaySmall, modifier = Modifier.testTag("account_balance"))
                 Row(Modifier.padding(top = Space.m), horizontalArrangement = Arrangement.spacedBy(Space.s)) {
-                    FilledTonalButton(onClick = { nav.entry(LedgerEntryArgs(account = id)) }) {
+                    FilledTonalButton(shapes = ButtonDefaults.shapes(), onClick = { nav.entry(LedgerEntryArgs(account = id)) }) {
                         Icon(Icons.Rounded.Add, contentDescription = null)
                         Text(stringResource(R.string.ledger_new_bill), modifier = Modifier.padding(start = Space.s))
                     }
-                    OutlinedButton(onClick = { calibrating = true }, modifier = Modifier.testTag("calibrate")) {
+                    OutlinedButton(shapes = ButtonDefaults.shapes(), onClick = { calibrating = true }, modifier = Modifier.testTag("calibrate")) {
                         Icon(Icons.Rounded.Tune, contentDescription = null)
                         Text(stringResource(R.string.ledger_calibrate), modifier = Modifier.padding(start = Space.s))
                     }
@@ -126,13 +128,13 @@ fun AccountScreen(container: AppContainer, id: String, nav: LedgerNav) {
                 }
             },
             confirmButton = {
-                TextButton(onClick = {
+                TextButton(shapes = ButtonDefaults.shapes(), onClick = {
                     val target = parseSigned(value) ?: return@TextButton
                     calibrating = false
                     scope.launch { container.ledger.saveAccount(account.copy(opening = account.opening + target - balance)) }
                 }) { Text(stringResource(R.string.action_save)) }
             },
-            dismissButton = { TextButton(onClick = { calibrating = false }) { Text(stringResource(R.string.action_cancel)) } },
+            dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { calibrating = false }) { Text(stringResource(R.string.action_cancel)) } },
         )
     }
 }
@@ -181,7 +183,7 @@ fun AccountEditScreen(container: AppContainer, id: String?, nav: LedgerNav) {
         stringResource(if (original == null) R.string.ledger_add_account else R.string.ledger_edit_account),
         nav.back,
         close = true,
-        actions = { TextButton(onClick = ::save, enabled = name.isNotBlank(), modifier = Modifier.testTag("save_account")) { Text(stringResource(R.string.action_save)) } },
+        actions = { TextButton(shapes = ButtonDefaults.shapes(), onClick = ::save, enabled = name.isNotBlank(), modifier = Modifier.testTag("save_account")) { Text(stringResource(R.string.action_save)) } },
     ) {
         PageWidth(maxColumns = 1) { columns ->
             Column(
@@ -203,7 +205,7 @@ fun AccountEditScreen(container: AppContainer, id: String?, nav: LedgerNav) {
                     }
                     Box {
                         var open by remember { mutableStateOf(false) }
-                        OutlinedButton(onClick = { open = true }, modifier = Modifier.testTag("account_currency")) {
+                        OutlinedButton(shapes = ButtonDefaults.shapes(), onClick = { open = true }, modifier = Modifier.testTag("account_currency")) {
                             Text(stringResource(R.string.ledger_currency) + " " + currency)
                         }
                         DropdownMenu(open, onDismissRequest = { open = false }) {
@@ -234,6 +236,7 @@ fun AccountEditScreen(container: AppContainer, id: String?, nav: LedgerNav) {
                 )
                 if (original != null) {
                     TextButton(
+                        shapes = ButtonDefaults.shapes(),
                         onClick = { deleting = true },
                         enabled = !used,
                         modifier = Modifier.padding(horizontal = Space.gutter, vertical = Space.l),
@@ -248,7 +251,7 @@ fun AccountEditScreen(container: AppContainer, id: String?, nav: LedgerNav) {
             title = { Text(stringResource(R.string.ledger_delete_account)) },
             text = { Text(original.name) },
             confirmButton = {
-                TextButton(onClick = {
+                TextButton(shapes = ButtonDefaults.shapes(), onClick = {
                     deleting = false
                     scope.launch {
                         container.ledger.deleteAccount(original.id)
@@ -257,7 +260,7 @@ fun AccountEditScreen(container: AppContainer, id: String?, nav: LedgerNav) {
                     }
                 }) { Text(stringResource(R.string.action_delete)) }
             },
-            dismissButton = { TextButton(onClick = { deleting = false }) { Text(stringResource(R.string.action_cancel)) } },
+            dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { deleting = false }) { Text(stringResource(R.string.action_cancel)) } },
         )
     }
 }

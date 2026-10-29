@@ -84,6 +84,13 @@ android {
     }
 }
 
+// Material 3 Expressive throughout, its components still marked experimental.
+kotlin {
+    compilerOptions {
+        optIn.add("androidx.compose.material3.ExperimentalMaterial3ExpressiveApi")
+    }
+}
+
 dependencies {
     implementation(libs.play.services.location)
     implementation(platform(libs.androidx.compose.bom))

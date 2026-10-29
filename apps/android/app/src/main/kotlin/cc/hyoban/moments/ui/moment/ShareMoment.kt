@@ -27,6 +27,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Send
 import androidx.compose.material.icons.rounded.PhotoLibrary
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
@@ -240,7 +241,7 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                 }
             },
             confirmButton = {
-                TextButton(onClick = onDismiss, modifier = Modifier.testTag("share_prepared_done")) {
+                TextButton(shapes = ButtonDefaults.shapes(), onClick = onDismiss, modifier = Modifier.testTag("share_prepared_done")) {
                     Text(stringResource(R.string.share_done))
                 }
             },
@@ -255,6 +256,7 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
         actions = {
             // Disable only while preparing or assisting; validation errors stay in the preview.
             TextButton(
+                shapes = ButtonDefaults.shapes(),
                 enabled = !busy && !assistRunning,
                 modifier = Modifier.testTag("share_${target.tag}_open"),
                 onClick = {
@@ -487,6 +489,7 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
             }
             if (target != ShareTarget.PREPARE && (error != null || needsPhoto || target == ShareTarget.WECHAT || target == ShareTarget.BILIBILI)) {
                 TextButton(
+                    shapes = ButtonDefaults.shapes(),
                     enabled = !busy && !assistRunning,
                     onClick = { target = ShareTarget.PREPARE; error = null },
                     modifier = Modifier.testTag("share_fallback"),

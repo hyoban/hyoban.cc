@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.*
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -220,14 +221,14 @@ fun ConnectionAutomationSettings(container: AppContainer) {
                     }
                 }
             },
-            confirmButton = { TextButton(onClick = {
+            confirmButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = {
                 val next = if (kind == "wifi") rules.copy(wifi = selected) else rules.copy(bluetooth = choices.filterKeys { it in selected })
                 // A newly added target may need another permission; do not silently keep a broken monitor enabled.
                 save(next.copy(enabled = next.enabled && context.connectionAutomationAllowed(next)))
                 permissionHelp = next.enabled && !context.connectionAutomationAllowed(next)
                 picker = null
             }, modifier = Modifier.testTag("connection_automation_save")) { Text(stringResource(R.string.connection_automation_save)) } },
-            dismissButton = { TextButton(onClick = { picker = null }) { Text(stringResource(android.R.string.cancel)) } },
+            dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { picker = null }) { Text(stringResource(android.R.string.cancel)) } },
         )
     }
 }

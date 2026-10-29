@@ -34,6 +34,7 @@ import androidx.compose.material.icons.rounded.Contrast
 import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.DropdownMenu
@@ -318,11 +319,11 @@ private fun ThemeColorGroup(settings: Settings) {
             {
                 Row {
                     if (custom != null) {
-                        TextButton(onClick = { settings.removeCustomColor(custom) }, modifier = Modifier.testTag("delete_color")) {
+                        TextButton(shapes = ButtonDefaults.shapes(), onClick = { settings.removeCustomColor(custom) }, modifier = Modifier.testTag("delete_color")) {
                             Text(stringResource(R.string.action_delete_color))
                         }
                     }
-                    TextButton(onClick = settings::resetTheme) { Text(stringResource(R.string.action_restore_default)) }
+                    TextButton(shapes = ButtonDefaults.shapes(), onClick = settings::resetTheme) { Text(stringResource(R.string.action_restore_default)) }
                 }
             }
         },
@@ -453,9 +454,9 @@ private fun HexColorDialog(onDismiss: () -> Unit, onAdd: (Int) -> Unit) {
             }
         },
         confirmButton = {
-            TextButton(onClick = { color?.let(onAdd) }, enabled = color != null) { Text(stringResource(R.string.action_confirm)) }
+            TextButton(shapes = ButtonDefaults.shapes(), onClick = { color?.let(onAdd) }, enabled = color != null) { Text(stringResource(R.string.action_confirm)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
+        dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
     )
 }
 

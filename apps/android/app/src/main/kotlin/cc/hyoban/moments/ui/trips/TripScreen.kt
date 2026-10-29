@@ -23,6 +23,8 @@ import androidx.compose.material.icons.rounded.ArrowDownward
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Route
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -129,7 +131,7 @@ fun TripScreen(
                 )
                 val see = stringResource(R.string.action_see_moments)
                 Tooltip(see) {
-                    IconButton(onClick = { scope.launch { feedState.animateScrollToItem(momentsFrom) } }, modifier = Modifier.testTag("see_moments")) {
+                    IconButton(shapes = IconButtonDefaults.shapes(), onClick = { scope.launch { feedState.animateScrollToItem(momentsFrom) } }, modifier = Modifier.testTag("see_moments")) {
                         Icon(Icons.Rounded.ArrowDownward, contentDescription = see)
                     }
                 }
@@ -193,14 +195,14 @@ fun TripScreen(
     // Played back along its route from the bar, once it has Moments to show.
     val actions: @Composable RowScope.() -> Unit = {
         Tooltip(showOnMap, below = true) {
-            IconButton(onClick = { onMap(trip.id) }, modifier = Modifier.testTag("show_on_map")) {
+            IconButton(shapes = IconButtonDefaults.shapes(), onClick = { onMap(trip.id) }, modifier = Modifier.testTag("show_on_map")) {
                 Icon(Symbols.MapFilled, contentDescription = showOnMap)
             }
         }
         if (moments.isNotEmpty()) {
             val play = stringResource(R.string.action_play_trip)
             Tooltip(play, below = true) {
-                IconButton(onClick = { onPlay(trip.id) }, modifier = Modifier.testTag("play_trip")) {
+                IconButton(shapes = IconButtonDefaults.shapes(), onClick = { onPlay(trip.id) }, modifier = Modifier.testTag("play_trip")) {
                     Icon(Icons.Rounded.PlayArrow, contentDescription = play)
                 }
             }

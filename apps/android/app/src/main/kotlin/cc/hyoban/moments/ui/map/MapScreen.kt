@@ -340,7 +340,7 @@ private fun MapContent(
                     settings.changeMapFog(!settings.mapFog)
                 }
             }
-            FilledTonalButton(onClick = { selected = null; highlighted = null; footprints.open() }, modifier = Modifier.testTag("footprints")) {
+            FilledTonalButton(shapes = ButtonDefaults.shapes(), onClick = { selected = null; highlighted = null; footprints.open() }, modifier = Modifier.testTag("footprints")) {
                 Text(stringResource(R.string.footprints_title))
             }
             val shownFog = fog.takeIf { settings.mapFog }
@@ -470,6 +470,7 @@ private fun PlaceSheet(
             // The way there beside the name, named as well as drawn, as Material 3 keeps an
             // icon alone for what everyone knows; all of the place waits at the list's foot.
             FilledTonalButton(
+                shapes = ButtonDefaults.shapes(),
                 onClick = onNavigate,
                 contentPadding = ButtonDefaults.ButtonWithIconContentPadding,
                 modifier = Modifier.testTag("navigate"),
