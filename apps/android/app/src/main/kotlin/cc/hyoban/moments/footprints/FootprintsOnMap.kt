@@ -128,7 +128,9 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
         if (Build.VERSION.SDK_INT >= 33) requested += Manifest.permission.POST_NOTIFICATIONS
         permissions.launch(requested.toTypedArray())
     }
-    val export = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/gpx+xml")) { uri ->
+    // ColorOS's file manager names the file from the type: application/gpx+xml became ".gpx+xml"
+    // and octet-stream ".bin". Only a wildcard keeps the ".gpx" name as given.
+    val export = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("*/*")) { uri ->
         if (uri != null) work {
             withContext(Dispatchers.IO) {
                 val output = context.contentResolver.openOutputStream(uri, "wt") ?: error("Cannot open document")
