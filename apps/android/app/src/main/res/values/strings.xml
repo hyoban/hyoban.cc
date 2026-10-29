@@ -117,8 +117,6 @@
     <string name="search_none">没有找到相关的时刻</string>
     <string name="explain_on_phone">这个时刻目前只在这台手机上。发布更改后，网站上才会出现。</string>
     <string name="explain_unpublished_change">这个时刻在手机上改过。发布更改后，网站上的才会更新。</string>
-    <string name="action_show_all">展开</string>
-    <string name="action_show_less">收起</string>
     <string name="label_pick_moment">选一个时刻，在这里看它</string>
     <string name="filter_all">全部</string>
     <string name="filter_year">%1$d 年</string>
