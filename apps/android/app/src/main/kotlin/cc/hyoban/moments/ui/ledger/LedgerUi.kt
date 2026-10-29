@@ -1,5 +1,7 @@
 package cc.hyoban.moments.ui.ledger
 
+import cc.hyoban.moments.ui.design.AppIcons
+import cc.hyoban.moments.ui.theme.tokens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -10,60 +12,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.DirectionsBike
-import androidx.compose.material.icons.automirrored.rounded.ReceiptLong
-import androidx.compose.material.icons.automirrored.rounded.TrendingUp
-import androidx.compose.material.icons.automirrored.rounded.Undo
-import androidx.compose.material.icons.rounded.AccountBalance
-import androidx.compose.material.icons.rounded.AccountBalanceWallet
-import androidx.compose.material.icons.rounded.Cabin
-import androidx.compose.material.icons.rounded.CardGiftcard
-import androidx.compose.material.icons.rounded.Category
-import androidx.compose.material.icons.rounded.Celebration
-import androidx.compose.material.icons.rounded.Checkroom
-import androidx.compose.material.icons.rounded.Cloud
-import androidx.compose.material.icons.rounded.Computer
-import androidx.compose.material.icons.rounded.ConfirmationNumber
-import androidx.compose.material.icons.rounded.ContentCut
-import androidx.compose.material.icons.rounded.CreditCard
-import androidx.compose.material.icons.rounded.DirectionsBus
-import androidx.compose.material.icons.rounded.DirectionsCar
-import androidx.compose.material.icons.rounded.Discount
-import androidx.compose.material.icons.rounded.EvStation
-import androidx.compose.material.icons.rounded.Flight
-import androidx.compose.material.icons.rounded.Handshake
-import androidx.compose.material.icons.rounded.Home
-import androidx.compose.material.icons.rounded.Hotel
-import androidx.compose.material.icons.rounded.LocalAtm
-import androidx.compose.material.icons.rounded.LocalCafe
-import androidx.compose.material.icons.rounded.LocalCarWash
-import androidx.compose.material.icons.rounded.LocalGasStation
-import androidx.compose.material.icons.rounded.LocalHospital
-import androidx.compose.material.icons.rounded.LocalParking
-import androidx.compose.material.icons.rounded.LocalShipping
-import androidx.compose.material.icons.rounded.LocalTaxi
-import androidx.compose.material.icons.rounded.Payments
-import androidx.compose.material.icons.rounded.Person
-import androidx.compose.material.icons.rounded.PhoneAndroid
-import androidx.compose.material.icons.rounded.PhotoCamera
-import androidx.compose.material.icons.rounded.Redeem
-import androidx.compose.material.icons.rounded.Restaurant
-import androidx.compose.material.icons.rounded.Savings
-import androidx.compose.material.icons.rounded.Sell
-import androidx.compose.material.icons.rounded.ShoppingBag
-import androidx.compose.material.icons.rounded.ShoppingBasket
-import androidx.compose.material.icons.rounded.SportsEsports
-import androidx.compose.material.icons.rounded.Subscriptions
-import androidx.compose.material.icons.rounded.SwapHoriz
-import androidx.compose.material.icons.rounded.Toll
-import androidx.compose.material.icons.rounded.Train
-import androidx.compose.material.icons.rounded.Wifi
-import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import cc.hyoban.moments.ui.design.Icon
+import cc.hyoban.moments.ui.design.ListItem
+import cc.hyoban.moments.ui.design.ListItemDefaults
+import cc.hyoban.moments.ui.design.AppTheme
+import cc.hyoban.moments.ui.design.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
@@ -156,12 +109,12 @@ fun signedMoney(cents: Long, currency: String, incoming: Boolean): String =
 /** Whether a bill brings money in, as its amount is coloured and signed. */
 val Txn.incoming: Boolean get() = kind == TxnKind.INCOME || kind == TxnKind.REFUND || kind == TxnKind.REIMBURSEMENT
 
-/** The colour of a bill's amount: income in the primary, as state takes colour, the rest plain. */
+/** The colour of a bill's amount: income in its own colour, a transfer in the secondary text's, the rest plain. */
 @Composable
 fun amountColor(txn: Txn): Color = when {
-    txn.kind == TxnKind.TRANSFER -> MaterialTheme.colorScheme.onSurfaceVariant
-    txn.incoming -> MaterialTheme.colorScheme.primary
-    else -> MaterialTheme.colorScheme.onSurface
+    txn.kind == TxnKind.TRANSFER -> AppTheme.colorScheme.onSurfaceVariant
+    txn.incoming -> tokens.income
+    else -> AppTheme.colorScheme.onSurface
 }
 
 @Composable
@@ -202,15 +155,15 @@ fun accountKindLabel(kind: AccountKind): String = stringResource(
 )
 
 fun accountKindIcon(kind: AccountKind): ImageVector = when (kind) {
-    AccountKind.CASH -> Icons.Rounded.LocalAtm
-    AccountKind.DEBIT -> Icons.Rounded.AccountBalance
-    AccountKind.CREDIT -> Icons.Rounded.CreditCard
-    AccountKind.WALLET -> Icons.Rounded.AccountBalanceWallet
-    AccountKind.STORED -> Icons.Rounded.Redeem
-    AccountKind.INVESTMENT -> Icons.AutoMirrored.Rounded.TrendingUp
-    AccountKind.LOAN -> Icons.Rounded.Payments
-    AccountKind.PERSON -> Icons.Rounded.Person
-    AccountKind.OTHER -> Icons.Rounded.Savings
+    AccountKind.CASH -> AppIcons.Atm
+    AccountKind.DEBIT -> AppIcons.Bank
+    AccountKind.CREDIT -> AppIcons.Card
+    AccountKind.WALLET -> AppIcons.Wallet
+    AccountKind.STORED -> AppIcons.GiftCard
+    AccountKind.INVESTMENT -> AppIcons.TrendUp
+    AccountKind.LOAN -> AppIcons.Cash
+    AccountKind.PERSON -> AppIcons.Me
+    AccountKind.OTHER -> AppIcons.Savings
 }
 
 /** A category's icon, guessed from its name, the categories being the user's own words. */
@@ -218,64 +171,64 @@ fun categoryIcon(name: String?): ImageVector {
     val text = name.orEmpty()
     fun has(vararg words: String) = words.any { text.contains(it, ignoreCase = true) }
     return when {
-        text == FEE_CATEGORY -> Icons.AutoMirrored.Rounded.ReceiptLong
-        text == DISCOUNT_CATEGORY -> Icons.Rounded.Discount
-        has("饮料", "奶茶", "咖啡", "茶", "瑞幸", "星巴克", "drink", "coffee") -> Icons.Rounded.LocalCafe
-        has("餐", "饭", "食", "菜", "外卖", "零食", "水果", "food", "meal") -> Icons.Rounded.Restaurant
-        has("充电") -> Icons.Rounded.EvStation
-        has("加油") -> Icons.Rounded.LocalGasStation
-        has("停车") -> Icons.Rounded.LocalParking
-        has("过路", "高速") -> Icons.Rounded.Toll
-        has("洗车") -> Icons.Rounded.LocalCarWash
-        has("打车", "顺风车", "taxi") -> Icons.Rounded.LocalTaxi
-        has("火车", "高铁", "地铁", "train") -> Icons.Rounded.Train
-        has("飞机", "机票", "机场", "flight") -> Icons.Rounded.Flight
-        has("骑行", "单车", "bike") -> Icons.AutoMirrored.Rounded.DirectionsBike
-        has("车", "保养", "修车", "罚单", "car") -> Icons.Rounded.DirectionsCar
-        has("交通", "公交", "bus") -> Icons.Rounded.DirectionsBus
-        has("住宿", "酒店", "民宿", "hotel") -> Icons.Rounded.Hotel
-        has("住房", "房租", "水费", "电费", "home", "rent") -> Icons.Rounded.Home
-        has("话费", "手机", "phone") -> Icons.Rounded.PhoneAndroid
-        has("网络", "宽带") -> Icons.Rounded.Wifi
-        has("云", "存储") -> Icons.Rounded.Cloud
-        has("相机", "摄影") -> Icons.Rounded.PhotoCamera
-        has("数码", "电脑", "computer") -> Icons.Rounded.Computer
-        has("游戏", "game") -> Icons.Rounded.SportsEsports
-        has("订阅", "会员", "买断", "subscription") -> Icons.Rounded.Subscriptions
-        has("医", "药", "health") -> Icons.Rounded.LocalHospital
-        has("礼", "红包", "人情", "赞助", "gift") -> Icons.Rounded.CardGiftcard
-        has("服饰", "衣", "clothes") -> Icons.Rounded.Checkroom
-        has("购物", "超市", "shopping") -> Icons.Rounded.ShoppingBag
-        has("日常", "日用") -> Icons.Rounded.ShoppingBasket
-        has("快递") -> Icons.Rounded.LocalShipping
-        has("理发") -> Icons.Rounded.ContentCut
-        has("门票", "演唱会", "电影", "ticket") -> Icons.Rounded.ConfirmationNumber
-        has("娱乐", "唱歌", "fun") -> Icons.Rounded.Celebration
-        has("露营") -> Icons.Rounded.Cabin
-        has("纪念品", "二手", "sell") -> Icons.Rounded.Sell
-        has("工资", "奖金", "年终", "salary") -> Icons.Rounded.Payments
-        has("利息", "投资", "理财", "interest") -> Icons.AutoMirrored.Rounded.TrendingUp
-        has("公积金", "退税", "医保") -> Icons.Rounded.AccountBalance
-        has("AA", "借") -> Icons.Rounded.Handshake
-        else -> Icons.Rounded.Category
+        text == FEE_CATEGORY -> AppIcons.Receipt
+        text == DISCOUNT_CATEGORY -> AppIcons.Discount
+        has("饮料", "奶茶", "咖啡", "茶", "瑞幸", "星巴克", "drink", "coffee") -> AppIcons.Cafe
+        has("餐", "饭", "食", "菜", "外卖", "零食", "水果", "food", "meal") -> AppIcons.Food
+        has("充电") -> AppIcons.Ev
+        has("加油") -> AppIcons.Fuel
+        has("停车") -> AppIcons.Parking
+        has("过路", "高速") -> AppIcons.Coins
+        has("洗车") -> AppIcons.CarWash
+        has("打车", "顺风车", "taxi") -> AppIcons.Taxi
+        has("火车", "高铁", "地铁", "train") -> AppIcons.Train
+        has("飞机", "机票", "机场", "flight") -> AppIcons.Plane
+        has("骑行", "单车", "bike") -> AppIcons.Bike
+        has("车", "保养", "修车", "罚单", "car") -> AppIcons.Car
+        has("交通", "公交", "bus") -> AppIcons.Bus
+        has("住宿", "酒店", "民宿", "hotel") -> AppIcons.Bed
+        has("住房", "房租", "水费", "电费", "home", "rent") -> AppIcons.Home
+        has("话费", "手机", "phone") -> AppIcons.Phone
+        has("网络", "宽带") -> AppIcons.Wifi
+        has("云", "存储") -> AppIcons.Cloud
+        has("相机", "摄影") -> AppIcons.Camera
+        has("数码", "电脑", "computer") -> AppIcons.Laptop
+        has("游戏", "game") -> AppIcons.Game
+        has("订阅", "会员", "买断", "subscription") -> AppIcons.Subscription
+        has("医", "药", "health") -> AppIcons.Hospital
+        has("礼", "红包", "人情", "赞助", "gift") -> AppIcons.Gift
+        has("服饰", "衣", "clothes") -> AppIcons.Clothes
+        has("购物", "超市", "shopping") -> AppIcons.Bag
+        has("日常", "日用") -> AppIcons.Basket
+        has("快递") -> AppIcons.Truck
+        has("理发") -> AppIcons.Cut
+        has("门票", "演唱会", "电影", "ticket") -> AppIcons.Ticket
+        has("娱乐", "唱歌", "fun") -> AppIcons.Party
+        has("露营") -> AppIcons.Cabin
+        has("纪念品", "二手", "sell") -> AppIcons.Tag
+        has("工资", "奖金", "年终", "salary") -> AppIcons.Cash
+        has("利息", "投资", "理财", "interest") -> AppIcons.TrendUp
+        has("公积金", "退税", "医保") -> AppIcons.Bank
+        has("AA", "借") -> AppIcons.People
+        else -> AppIcons.Category
     }
 }
 
 /** A bill's icon: its category's, or what it is when it has none. */
 fun txnIcon(txn: Txn, ledger: Ledger): ImageVector = when {
-    txn.kind == TxnKind.TRANSFER -> if (txn.transfer == TransferType.TRANSFER) Icons.Rounded.SwapHoriz else Icons.Rounded.Handshake
-    txn.kind == TxnKind.REFUND -> Icons.AutoMirrored.Rounded.Undo
+    txn.kind == TxnKind.TRANSFER -> if (txn.transfer == TransferType.TRANSFER) AppIcons.Swap else AppIcons.People
+    txn.kind == TxnKind.REFUND -> AppIcons.Undo
     else -> categoryIcon(ledger.categoriesById[ledger.topCategory(txn.category)]?.name ?: ledger.categoriesById[txn.category]?.name)
 }
 
-/** An icon in a tonal circle, as a list item's leading avatar. */
+/** An icon in a circle of the pressed grey, as a list item's leading avatar. */
 @Composable
 fun LeadingIcon(icon: ImageVector, modifier: Modifier = Modifier, tonal: Boolean = true) {
     Box(
-        modifier.size(40.dp).background(if (tonal) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent, CircleShape),
+        modifier.size(40.dp).background(if (tonal) tokens.pressed else Color.Transparent, CircleShape),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSecondaryContainer, modifier = Modifier.size(22.dp))
+        Icon(icon, contentDescription = null, tint = tokens.tx2, modifier = Modifier.size(22.dp))
     }
 }
 
@@ -327,12 +280,12 @@ fun TxnRow(txn: Txn, ledger: Ledger, onClick: () -> Unit, modifier: Modifier = M
             Column(horizontalAlignment = Alignment.End) {
                 Text(
                     if (txn.kind == TxnKind.TRANSFER) money(txn.amount, txn.currency) else signedMoney(txn.amount, txn.currency, txn.incoming),
-                    style = MaterialTheme.typography.titleMedium,
+                    style = AppTheme.typography.titleMedium,
                     color = amountColor(txn),
                 )
                 if (showBook) {
                     ledger.books.firstOrNull { it.id == txn.book }?.let { book ->
-                        Text(book.name, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+                        Text(book.name, style = AppTheme.typography.labelSmall, color = AppTheme.colorScheme.onSurfaceVariant, maxLines = 1)
                     }
                 }
             }
@@ -350,14 +303,14 @@ fun DayTotals(dateKey: String, expense: Long, income: Long, currency: String, mo
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Space.m),
     ) {
-        Text(formatDay(dateKey), style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+        Text(formatDay(dateKey), style = AppTheme.typography.titleSmall, modifier = Modifier.weight(1f))
         Text(
             listOfNotNull(
                 if (expense != 0L) stringResource(R.string.ledger_expense_short, money(expense, currency)) else null,
                 if (income != 0L) stringResource(R.string.ledger_income_short, money(income, currency)) else null,
             ).joinToString(" "),
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = AppTheme.typography.labelMedium,
+            color = AppTheme.colorScheme.onSurfaceVariant,
         )
     }
 }

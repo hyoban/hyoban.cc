@@ -1,5 +1,14 @@
 package cc.hyoban.moments.ui.settings
 
+import cc.hyoban.moments.ui.design.AppSwitch
+import cc.hyoban.moments.ui.theme.scheme
+import cc.hyoban.moments.ui.theme.appTokens
+import cc.hyoban.moments.ui.theme.dividerColor
+import cc.hyoban.moments.ui.theme.cardBorder
+import cc.hyoban.moments.ui.theme.tokens
+import androidx.compose.ui.graphics.RectangleShape
+import cc.hyoban.moments.ui.design.HorizontalDivider
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -26,33 +35,20 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.Colorize
-import androidx.compose.material.icons.rounded.Contrast
-import androidx.compose.material.icons.rounded.DarkMode
-import androidx.compose.material.icons.rounded.Palette
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ButtonGroupDefaults
-import androidx.compose.material3.ColorScheme
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.ToggleButton
-import androidx.compose.material3.SegmentedListItem
-import androidx.compose.material3.SwitchDefaults
-import androidx.compose.material3.ListItemShapes
-import androidx.compose.material.icons.rounded.Close
+import cc.hyoban.moments.ui.design.AlertDialog
+import cc.hyoban.moments.ui.design.ButtonDefaults
+import cc.hyoban.moments.ui.design.ColorScheme
+import cc.hyoban.moments.ui.design.DropdownMenu
+import cc.hyoban.moments.ui.design.DropdownMenuItem
+import cc.hyoban.moments.ui.design.Icon
+import cc.hyoban.moments.ui.design.ListItem
+import cc.hyoban.moments.ui.design.ListItemDefaults
+import cc.hyoban.moments.ui.design.AppTheme
+import cc.hyoban.moments.ui.design.OutlinedTextField
+import cc.hyoban.moments.ui.design.Text
+import cc.hyoban.moments.ui.design.TextButton
+import cc.hyoban.moments.ui.design.SegmentedListItem
+import cc.hyoban.moments.ui.design.ListItemShapes
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.ui.semantics.toggleableState
 import androidx.compose.ui.state.ToggleableState
@@ -85,39 +81,21 @@ import androidx.compose.ui.unit.dp
 import cc.hyoban.moments.R
 import cc.hyoban.moments.Settings
 import cc.hyoban.moments.ThemeMode
-import cc.hyoban.moments.ui.theme.ColorStyle
 import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.SurfaceLevel
 import cc.hyoban.moments.ui.theme.fill
-import cc.hyoban.moments.ui.theme.seededColorScheme
-import cc.hyoban.moments.ui.theme.systemAccent
 
-// The look, as FlClash's theme page offers it: light, dark or the system's, each shown as
-// a small screen in its colours; a seed from a row of swatches, the system's accent among
-// them, with colours of one's own added by their hex; how much of the seed the scheme
-// carries; and dark's page in pure black.
+// The look: light, dark or the system's, each shown as a small screen in its colours. The
+// colours themselves are the design system's, the same for everyone.
 
-/** The appearance groups at the top of the settings page. */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+/** The appearance group of the appearance page. */
 @Composable
 fun ThemeSettings(settings: Settings) {
-    val seed = Color(settings.themeColor ?: systemAccent() ?: Settings.DEFAULT_THEME_COLOR)
-    ThemeModeGroup(settings, seed)
-    ThemeColorGroup(settings)
-    SegmentedGroup(
-        null,
-        stringResource(R.string.settings_pure_black_note),
-        listOf { shapes ->
-            SwitchRow(settings.pureBlack, Icons.Rounded.DarkMode, stringResource(R.string.setting_pure_black), "pure_black", shapes) {
-                settings.changePureBlack(!settings.pureBlack)
-            }
-        },
-    )
+    ThemeModeGroup(settings)
 }
 
 /** A row that is a switch, read as one with its name and state, and what it is doing under its name. */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SwitchRow(
     checked: Boolean,
@@ -136,22 +114,7 @@ fun SwitchRow(
         colors = segmentColors(),
         leadingContent = { Icon(icon, contentDescription = null) },
         supportingContent = supporting?.let { { Text(it) } },
-        // Its handle ticked or crossed, as Material 3 lets a switch's icon say which it is as
-        // well as its colour.
-        trailingContent = {
-            Switch(
-                checked = checked,
-                onCheckedChange = null,
-                enabled = enabled,
-                thumbContent = {
-                    Icon(
-                        if (checked) Icons.Rounded.Check else Icons.Rounded.Close,
-                        contentDescription = null,
-                        modifier = Modifier.size(SwitchDefaults.IconSize),
-                    )
-                },
-            )
-        },
+        trailingContent = { AppSwitch(checked, enabled) },
         modifier = Modifier.semantics {
             role = Role.Switch
             toggleableState = ToggleableState(checked)
@@ -160,10 +123,9 @@ fun SwitchRow(
 }
 
 @Composable
-private fun ThemeModeGroup(settings: Settings, seed: Color) {
-    val style = settings.colorStyle
-    val light = remember(seed, style) { seededColorScheme(seed, false, style) }
-    val dark = remember(seed, style, settings.pureBlack) { seededColorScheme(seed, true, style, settings.pureBlack) }
+private fun ThemeModeGroup(settings: Settings) {
+    val light = remember { appTokens(false).scheme() }
+    val dark = remember { appTokens(true).scheme() }
 
     Caption(stringResource(R.string.section_theme_mode))
     Row(Modifier.padding(horizontal = Space.gutter).selectableGroup(), horizontalArrangement = Arrangement.spacedBy(Space.m)) {
@@ -176,8 +138,9 @@ private fun ThemeModeGroup(settings: Settings, seed: Color) {
             Column(
                 Modifier
                     .weight(1f)
-                    .clip(MaterialTheme.shapes.large)
-                    .background(LocalSurfaceLevel.current.raised.fill())
+                    .clip(AppTheme.shapes.large)
+                    .background(SurfaceLevel.Card.fill())
+                    .border(cardBorder(), AppTheme.shapes.large)
                     .selectable(selected, role = Role.RadioButton) { settings.changeThemeMode(mode) }
                     .testTag("theme_mode_${mode.name.lowercase()}")
                     .padding(Space.m),
@@ -189,8 +152,8 @@ private fun ThemeModeGroup(settings: Settings, seed: Color) {
                 val frame = Modifier
                     .fillMaxWidth()
                     .aspectRatio(0.75f)
-                    .clip(MaterialTheme.shapes.medium)
-                    .border(if (selected) 2.5.dp else 1.dp, if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.medium)
+                    .clip(AppTheme.shapes.medium)
+                    .border(if (selected) 2.5.dp else 1.dp, if (selected) AppTheme.colorScheme.primary else AppTheme.colorScheme.outlineVariant, AppTheme.shapes.medium)
                 when (mode) {
                     ThemeMode.SYSTEM -> Row(frame) {
                         MiniScreen(light, Modifier.weight(1f))
@@ -201,8 +164,8 @@ private fun ThemeModeGroup(settings: Settings, seed: Color) {
                 }
                 Text(
                     stringResource(label),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = AppTheme.typography.labelLarge,
+                    color = if (selected) AppTheme.colorScheme.primary else AppTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
@@ -220,7 +183,7 @@ private fun MiniScreen(scheme: ColorScheme, modifier: Modifier) {
         Box(Modifier.padding(top = 4.dp).width(28.dp).height(5.dp).clip(CircleShape).background(scheme.onSurface.copy(alpha = 0.6f)))
         repeat(2) {
             Column(
-                Modifier.fillMaxWidth().clip(MaterialTheme.shapes.extraSmall).background(card).padding(5.dp),
+                Modifier.fillMaxWidth().clip(AppTheme.shapes.extraSmall).background(card).padding(5.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Box(Modifier.fillMaxWidth().height(3.dp).clip(CircleShape).background(line))
@@ -240,226 +203,6 @@ private fun MiniScreen(scheme: ColorScheme, modifier: Modifier) {
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3ExpressiveApi::class)
-@Composable
-private fun ThemeColorGroup(settings: Settings) {
-    var adding by rememberSaveable { mutableStateOf(false) }
-    val accent = systemAccent()
-
-    val swatches = boxed {
-        // As many to a row as fit with at least a little between them, spread across the
-        // card's width so each row's ends line up with the rows' text.
-        BoxWithConstraints(Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 10.dp)) {
-            val columns = ((maxWidth + MIN_GAP) / (SWATCH + MIN_GAP)).toInt().coerceAtLeast(1)
-            // Whole pixels, rounded down, so rounding doesn't push a row's last swatch onto the next.
-            val gap = with(LocalDensity.current) {
-                if (columns > 1) ((constraints.maxWidth - SWATCH.roundToPx() * columns) / (columns - 1)).toDp() else 0.dp
-            }
-            FlowRow(
-                Modifier.fillMaxWidth().selectableGroup(),
-                horizontalArrangement = Arrangement.spacedBy(gap),
-                verticalArrangement = Arrangement.spacedBy(gap.coerceAtMost(Space.s)),
-            ) {
-                if (accent != null) {
-                    Swatch(Color(accent), settings.themeColor == null, system = true, onClick = { settings.changeThemeColor(null) })
-                }
-                Settings.THEME_COLORS.forEach { color ->
-                    Swatch(Color(color), settings.themeColor == color, onClick = { settings.changeThemeColor(color) })
-                }
-                settings.customColors.forEach { color ->
-                    Swatch(Color(color), settings.themeColor == color, onClick = { settings.changeThemeColor(color) }, onDelete = { settings.removeCustomColor(color) })
-                }
-                AddSwatch { adding = true }
-            }
-        }
-    }
-    val colorStyle = boxed {
-        ListItem(
-            headlineContent = { Text(stringResource(R.string.setting_color_style)) },
-            leadingContent = { Icon(Icons.Rounded.Palette, contentDescription = null) },
-            colors = rowColors(),
-        )
-        // Every style in sight, one chosen, as Material 3's connected button group.
-        Row(
-            Modifier.fillMaxWidth().padding(start = Space.l, end = Space.l, bottom = Space.l),
-            horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
-        ) {
-            val styles = ColorStyle.entries
-            styles.forEachIndexed { index, style ->
-                ToggleButton(
-                    checked = style == settings.colorStyle,
-                    onCheckedChange = { settings.changeColorStyle(style) },
-                    shapes = when (index) {
-                        0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                        styles.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                        else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
-                    },
-                    // Those not chosen outlined, so each stands apart from the card at the 3:1 a group needs.
-                    border = if (style == settings.colorStyle) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-                    modifier = Modifier.weight(1f).semantics { role = Role.RadioButton },
-                ) {
-                    Text(
-                        stringResource(styleLabel(style)),
-                        maxLines = 1,
-                        style = if (style == settings.colorStyle) MaterialTheme.typography.labelLargeEmphasized else MaterialTheme.typography.labelLarge,
-                    )
-                }
-            }
-        }
-    }
-    // The colours, and the style they are worked out in, each a segment of the group. A
-    // colour of one's own, chosen, can be deleted from a button by the caption as well as
-    // from its long press, as Material 3 keeps no action behind a long press alone.
-    val custom = settings.themeColor?.takeIf { it in settings.customColors }
-    SegmentedGroup(
-        stringResource(R.string.section_theme_color),
-        null,
-        listOf(swatches, colorStyle),
-        action = if (settings.themeIsDefault) null else {
-            {
-                Row {
-                    if (custom != null) {
-                        TextButton(shapes = ButtonDefaults.shapes(), onClick = { settings.removeCustomColor(custom) }, modifier = Modifier.testTag("delete_color")) {
-                            Text(stringResource(R.string.action_delete_color))
-                        }
-                    }
-                    TextButton(shapes = ButtonDefaults.shapes(), onClick = settings::resetTheme) { Text(stringResource(R.string.action_restore_default)) }
-                }
-            }
-        },
-    )
-
-    if (adding) {
-        HexColorDialog(onDismiss = { adding = false }) {
-            settings.addCustomColor(it)
-            adding = false
-        }
-    }
-}
-
-private fun styleLabel(style: ColorStyle) = when (style) {
-    ColorStyle.VIVID -> R.string.color_style_vivid
-    ColorStyle.TINTED -> R.string.color_style_tinted
-    ColorStyle.SOFT -> R.string.color_style_soft
-    ColorStyle.MONOCHROME -> R.string.color_style_monochrome
-}
-
-private val SWATCH = 44.dp
-private val DOT = 32.dp
-private val MIN_GAP = 6.dp
-
-/**
- * A colour to pick: a dot, ringed in its own colour and checked when it's the one. The
- * system's accent has an eyedropper at its corner; a colour of one's own is removed from
- * a long press.
- */
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-private fun Swatch(color: Color, selected: Boolean, system: Boolean = false, onClick: () -> Unit, onDelete: (() -> Unit)? = null) {
-    var menu by remember { mutableStateOf(false) }
-    val check by animateFloatAsState(if (selected) 1f else 0f, MaterialTheme.motionScheme.fastSpatialSpec(), label = "check")
-    // Named by its hex, the system's accent by the eyedropper's own label; one of a group, chosen or not.
-    val hex = "#%06X".format(color.toArgb() and 0xFFFFFF)
-    Box(
-        Modifier
-            .size(SWATCH)
-            .clip(CircleShape)
-            .combinedClickable(
-                onClick = onClick,
-                onLongClick = onDelete?.let { { menu = true } },
-                onLongClickLabel = onDelete?.let { stringResource(R.string.action_delete) },
-                role = Role.RadioButton,
-            )
-            .semantics {
-                this.selected = selected
-                if (!system) contentDescription = hex
-            }
-            .testTag(if (system) "swatch_system" else "swatch_${hex.drop(1)}")
-            // The ring comes and goes with the check, rather than in one frame.
-            .border(2.5.dp, color.copy(alpha = color.alpha * check.coerceIn(0f, 1f)), CircleShape),
-        contentAlignment = Alignment.Center,
-    ) {
-        Box(Modifier.size(DOT).clip(CircleShape).background(color))
-        Icon(
-            Icons.Rounded.Check,
-            contentDescription = null,
-            tint = if (color.luminance() > 0.5f) Color.Black else Color.White,
-            modifier = Modifier.size(18.dp).scale(check),
-        )
-        if (system) {
-            Box(
-                Modifier.align(Alignment.BottomEnd).size(20.dp).clip(CircleShape).background(LocalSurfaceLevel.current.raised.fill()).padding(2.dp)
-                    .clip(CircleShape).background(MaterialTheme.colorScheme.surfaceContainerHighest),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(Icons.Rounded.Colorize, contentDescription = stringResource(R.string.theme_color_system), modifier = Modifier.size(12.dp))
-            }
-        }
-        DropdownMenu(menu, onDismissRequest = { menu = false }) {
-            DropdownMenuItem(
-                text = { Text(stringResource(R.string.action_delete), color = MaterialTheme.colorScheme.error) },
-                onClick = {
-                    menu = false
-                    onDelete?.invoke()
-                },
-            )
-        }
-    }
-}
-
-@Composable
-private fun AddSwatch(onClick: () -> Unit) {
-    Box(Modifier.size(SWATCH).clip(CircleShape).clickable(onClick = onClick).testTag("swatch_add"), contentAlignment = Alignment.Center) {
-        Box(
-            Modifier.size(DOT).border(1.5.dp, MaterialTheme.colorScheme.outline, CircleShape),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(Icons.Rounded.Add, contentDescription = stringResource(R.string.action_add_color), tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
-        }
-    }
-}
-
-/** `RRGGBB`, with or without its `#`, as ARGB; null when it isn't one. */
-private fun parseHex(text: String): Int? {
-    val hex = text.trim().removePrefix("#")
-    if (hex.length != 6) return null
-    return hex.toLongOrNull(16)?.let { (0xFF000000L or it).toInt() }
-}
-
-/** A colour of one's own, by its hex, shown beside the field as it is typed. */
-@Composable
-private fun HexColorDialog(onDismiss: () -> Unit, onAdd: (Int) -> Unit) {
-    var text by rememberSaveable { mutableStateOf("") }
-    val color = parseHex(text)
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        icon = { Icon(Icons.Rounded.Contrast, contentDescription = null) },
-        title = { Text(stringResource(R.string.action_add_color)) },
-        text = {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.m)) {
-                OutlinedTextField(
-                    value = text,
-                    onValueChange = { text = it.take(7) },
-                    placeholder = { Text("#1F7A5C") },
-                    singleLine = true,
-                    isError = text.isNotBlank() && color == null,
-                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Done),
-                    modifier = Modifier.weight(1f),
-                )
-                Box(
-                    Modifier.size(DOT).clip(CircleShape)
-                        .background(color?.let(::Color) ?: Color.Transparent)
-                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape),
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(shapes = ButtonDefaults.shapes(), onClick = { color?.let(onAdd) }, enabled = color != null) { Text(stringResource(R.string.action_confirm)) }
-        },
-        dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
-    )
-}
-
 /** A group's small caption, lined up with the rows' text. */
 @Composable
 fun Caption(title: String, action: (@Composable () -> Unit)? = null) {
@@ -469,8 +212,8 @@ fun Caption(title: String, action: (@Composable () -> Unit)? = null) {
     ) {
         Text(
             title,
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = AppTheme.typography.labelMedium,
+            color = AppTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.weight(1f).semantics { heading() },
         )
         action?.invoke()
@@ -480,23 +223,22 @@ fun Caption(title: String, action: (@Composable () -> Unit)? = null) {
 /** One segment of a group, drawn in the [ListItemShapes] its place in the group gives it. */
 typealias Segment = @Composable (ListItemShapes) -> Unit
 
-/** What isn't a row, the swatches, a field, as a segment: on the group's fill, in its shape. */
-fun boxed(content: @Composable ColumnScope.() -> Unit): Segment = { shapes ->
-    Column(Modifier.fillMaxWidth().clip(shapes.shape).background(LocalSurfaceLevel.current.raised.fill()), content = content)
+/** What isn't a row, a field, a picker, as a segment: on the group's surface. */
+fun boxed(content: @Composable ColumnScope.() -> Unit): Segment = { _ ->
+    Column(Modifier.fillMaxWidth(), content = content)
 }
 
-/** What is grouped in one card under a caption, with a note under them, as FlClash groups its settings. */
+/** What is grouped in one card under a caption, with a note under them. */
 @Composable
 fun Group(title: String?, note: String?, action: (@Composable () -> Unit)? = null, content: @Composable ColumnScope.() -> Unit) =
     SegmentedGroup(title, note, listOf(boxed(content)), action = action)
 
 /**
- * Rows grouped under a caption as Material 3's segmented list, a contained list being set
- * apart by gaps rather than lines: each of [segments] filled on its own a level up, a small
- * gap between, the group's outer corners round and its inner ones tight; a note under them.
- * A row is a [SegmentedListItem] in [segmentColors], its corners rounding under the finger.
+ * Rows grouped under a caption: one surface with a hairline round it and between its rows, as
+ * the design system's grouped list, and a note under it. A row is a [SegmentedListItem] in
+ * [segmentColors], given square shapes here, the group's own corners clipping the first and
+ * the last.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SegmentedGroup(
     title: String?,
@@ -510,35 +252,49 @@ fun SegmentedGroup(
     // What chooses what the rows show, filter chips say, between the caption and the rows, edge to edge.
     header?.invoke()
     Column(Modifier.padding(horizontal = Space.gutter)) {
-        Column(modifier, verticalArrangement = Arrangement.spacedBy(ListItemDefaults.SegmentedGap)) {
-            segments.forEachIndexed { index, segment -> segment(ListItemDefaults.segmentedShapes(index, segments.size)) }
+        val shape = AppTheme.shapes.medium
+        Column(
+            modifier
+                .fillMaxWidth()
+                .clip(shape)
+                .background(SurfaceLevel.Card.fill())
+                .border(cardBorder(), shape),
+        ) {
+            CompositionLocalProvider(LocalSurfaceLevel provides SurfaceLevel.Card) {
+                segments.forEachIndexed { index, segment ->
+                    if (index > 0) HorizontalDivider(Modifier.padding(start = Space.l), color = dividerColor())
+                    segment(SquareRow)
+                }
+            }
         }
         note?.let {
             Text(
                 it,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = AppTheme.typography.bodySmall,
+                color = AppTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(start = Space.l, end = Space.l, top = Space.s),
             )
         }
     }
 }
 
-/** A row of a group: filled a level above the page, its icons and secondary text in the secondary colour. */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+/** A row's shapes in a group, square in every state: the group's corners round its ends. */
+private val SquareRow = ListItemShapes(RectangleShape, RectangleShape, RectangleShape, RectangleShape, RectangleShape, RectangleShape)
+
+/** A row of a group: no fill of its own, on the group's surface; its icons and secondary text in the secondary colour. */
 @Composable
 fun segmentColors() = ListItemDefaults.segmentedColors(
-    containerColor = LocalSurfaceLevel.current.raised.fill(),
-    leadingContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-    trailingContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-    supportingContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+    containerColor = Color.Transparent,
+    leadingContentColor = AppTheme.colorScheme.onSurfaceVariant,
+    trailingContentColor = AppTheme.colorScheme.onSurfaceVariant,
+    supportingContentColor = AppTheme.colorScheme.onSurfaceVariant,
 )
 
 /** A row on a group's card: no fill of its own, its icon and secondary text in the secondary colour. */
 @Composable
 fun rowColors() = ListItemDefaults.colors(
     containerColor = Color.Transparent,
-    leadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-    supportingColor = MaterialTheme.colorScheme.onSurfaceVariant,
-    trailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+    leadingIconColor = AppTheme.colorScheme.onSurfaceVariant,
+    supportingColor = AppTheme.colorScheme.onSurfaceVariant,
+    trailingIconColor = AppTheme.colorScheme.onSurfaceVariant,
 )

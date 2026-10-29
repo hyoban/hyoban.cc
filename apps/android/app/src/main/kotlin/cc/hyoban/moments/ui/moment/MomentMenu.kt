@@ -1,25 +1,20 @@
 package cc.hyoban.moments.ui.moment
 
+import cc.hyoban.moments.ui.design.AppIcons
+import cc.hyoban.moments.ui.design.anchoredMenu
+import cc.hyoban.moments.ui.design.MenuPopup
+import androidx.compose.foundation.layout.padding
+import cc.hyoban.moments.ui.theme.Space
+import cc.hyoban.moments.ui.theme.tokens
+import cc.hyoban.moments.ui.theme.dividerColor
+import cc.hyoban.moments.ui.design.HorizontalDivider
 import android.content.ClipData
 import android.content.ClipboardManager
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.CalendarToday
-import androidx.compose.material.icons.rounded.ContentCopy
-import androidx.compose.material.icons.rounded.Edit
-import androidx.compose.material.icons.rounded.Luggage
-import androidx.compose.material.icons.rounded.Place
-import androidx.compose.material.icons.rounded.Share
-import androidx.collection.intListOf
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
-import androidx.compose.material3.DropdownMenuGroup
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.DropdownMenuPopup
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MenuAnchorPosition
-import androidx.compose.material3.MenuDefaults
-import androidx.compose.material3.Text
+import cc.hyoban.moments.ui.design.DropdownMenuItem
+import cc.hyoban.moments.ui.design.Icon
+import cc.hyoban.moments.ui.design.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -45,13 +40,12 @@ import cc.hyoban.moments.ui.rememberShowMessage
 private class MenuChoice(val text: String, val icon: ImageVector, val tag: String, val onClick: () -> Unit)
 
 /**
- * What a Moment's card offers beyond opening it, from a long press or a right click, as
- * Material 3 has a menu open where it was pressed, at [at] from the card's bottom start.
- * Material 3 Expressive's vertical menu, its choices in two groups a gap apart: what can be
+ * What a Moment's card offers beyond opening it, from a long press or a right click, opened
+ * where it was pressed, at [at] from the card's bottom start. A menu on the surface, its
+ * choices in two groups a hairline apart: what can be
  * done with it, sharing it, copying its words and editing it when it can be, as its page's
  * toolbar does; then where it leads, its places, its trip and its day, as its page's rows do.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun MomentMenu(moment: MomentRecord, urls: MediaUrls, at: DpOffset?, onDismiss: () -> Unit) {
     val actions = LocalMomentActions.current
@@ -69,27 +63,27 @@ fun MomentMenu(moment: MomentRecord, urls: MediaUrls, at: DpOffset?, onDismiss: 
     val edit = stringResource(R.string.action_edit_moment)
     val wholeDay = stringResource(R.string.label_whole_day)
     val doing = buildList {
-        add(MenuChoice(share, Icons.Rounded.Share, "menu_share") { sharing = true })
+        add(MenuChoice(share, AppIcons.Share, "menu_share") { sharing = true })
         if (moment.text.isNotBlank()) {
             add(
-                MenuChoice(copy, Icons.Rounded.ContentCopy, "menu_copy_text") {
+                MenuChoice(copy, AppIcons.Copy, "menu_copy_text") {
                     context.getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("", moment.text))
                     show(copied)
                 },
             )
         }
-        if (actions != null && actions.canEdit(moment.uid)) add(MenuChoice(edit, Icons.Rounded.Edit, "menu_edit") { actions.onEdit(moment.uid) })
+        if (actions != null && actions.canEdit(moment.uid)) add(MenuChoice(edit, AppIcons.Pen, "menu_edit") { actions.onEdit(moment.uid) })
     }
     // Where it leads, but for the page it is on, a place's, a trip's or a day's, which it would only lead back to.
     val leading = if (actions == null) emptyList() else buildList {
         val places = remember(actions, moment) { actions.places() }
         moment.places.filterNot { actions.isHere(PlaceMoments(it)) }.forEach { id ->
-            add(MenuChoice(places[id]?.name ?: id, Icons.Rounded.Place, "menu_place_$id") { actions.onPlace(id) })
+            add(MenuChoice(places[id]?.name ?: id, AppIcons.Pin, "menu_place_$id") { actions.onPlace(id) })
         }
         remember(actions, moment) { actions.tripOf(moment) }?.takeUnless { actions.isHere(Trip(it.id)) }?.let { trip ->
-            add(MenuChoice(trip.title, Icons.Rounded.Luggage, "menu_trip") { actions.onTrip(trip.id) })
+            add(MenuChoice(trip.title, AppIcons.Luggage, "menu_trip") { actions.onTrip(trip.id) })
         }
-        if (!actions.isHere(Day(moment.dateKey))) add(MenuChoice(wholeDay, Icons.Rounded.CalendarToday, "menu_day") { actions.onDay(moment.dateKey) })
+        if (!actions.isHere(Day(moment.dateKey))) add(MenuChoice(wholeDay, AppIcons.Calendar, "menu_day") { actions.onDay(moment.dateKey) })
     }
     val groups = listOf(doing, leading).filter { it.isNotEmpty() }
 
@@ -98,28 +92,23 @@ fun MomentMenu(moment: MomentRecord, urls: MediaUrls, at: DpOffset?, onDismiss: 
     val position = remember(shownAt, density) {
         val x = with(density) { shownAt.x.roundToPx() }
         val y = with(density) { shownAt.y.roundToPx() }
-        MenuAnchorPosition.Custom(
-            xCandidates = { intListOf(anchorBounds.left + x, anchorBounds.left + x - menuSize.width) },
-            yCandidates = { intListOf(anchorBounds.bottom + y, anchorBounds.bottom + y - menuSize.height) },
+        anchoredMenu(
+            { anchor, menu -> listOf(anchor.left + x, anchor.left + x - menu.width) },
+            { anchor, menu -> listOf(anchor.bottom + y, anchor.bottom + y - menu.height) },
         )
     }
-    DropdownMenuPopup(
-        expanded = at != null,
-        onDismissRequest = onDismiss,
-        popupPositionProvider = MenuDefaults.rememberDropdownMenuPopupPositionProvider(position),
-    ) {
-        groups.forEachIndexed { index, choices ->
-            if (index > 0) Spacer(Modifier.height(MenuDefaults.GroupSpacing))
-            DropdownMenuGroup(shapes = MenuDefaults.groupShape(index, groups.size)) {
-                choices.forEachIndexed { i, choice ->
+    MenuPopup(expanded = at != null, onDismissRequest = onDismiss, positionProvider = position) {
+        run {
+            groups.forEachIndexed { index, choices ->
+                if (index > 0) HorizontalDivider(Modifier.padding(vertical = Space.xs), color = dividerColor())
+                choices.forEach { choice ->
                     DropdownMenuItem(
                         onClick = {
                             onDismiss()
                             choice.onClick()
                         },
                         text = { Text(choice.text) },
-                        shape = MenuDefaults.itemShape(i, choices.size).shape,
-                        leadingIcon = { Icon(choice.icon, contentDescription = null) },
+                        leadingIcon = { Icon(choice.icon, contentDescription = null, tint = tokens.tx2) },
                         modifier = Modifier.testTag(choice.tag),
                     )
                 }

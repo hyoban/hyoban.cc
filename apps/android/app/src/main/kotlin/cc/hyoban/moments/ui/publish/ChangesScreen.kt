@@ -1,5 +1,15 @@
 package cc.hyoban.moments.ui.publish
 
+import cc.hyoban.moments.ui.design.AppIcons
+import cc.hyoban.moments.ui.theme.SurfaceLevel
+import cc.hyoban.moments.ui.theme.cardBorder
+import androidx.compose.ui.graphics.StrokeCap
+import cc.hyoban.moments.ui.design.LinearProgressIndicator
+import cc.hyoban.moments.ui.components.restingElevation
+import cc.hyoban.moments.ui.components.floatingElevation
+import cc.hyoban.moments.ui.theme.Corners
+import cc.hyoban.moments.ui.theme.tokens
+import cc.hyoban.moments.ui.design.ExtendedFloatingActionButton
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
@@ -36,36 +46,17 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowForward
-import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
-import androidx.compose.material.icons.automirrored.rounded.Undo
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.Category
-import androidx.compose.material.icons.rounded.CloudUpload
-import androidx.compose.material.icons.rounded.HideImage
-import androidx.compose.material.icons.rounded.Image
-import androidx.compose.material.icons.rounded.Place
-import androidx.compose.material.icons.rounded.Remove
-import androidx.compose.material.icons.rounded.Restaurant
-import androidx.compose.material.icons.rounded.Schedule
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.FloatingActionButtonDefaults
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearWavyProgressIndicator
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MediumExtendedFloatingActionButton
-import androidx.compose.material3.ProgressIndicatorDefaults
-import androidx.compose.material3.Surface
-import androidx.compose.material3.SwipeToDismissBox
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.WavyProgressIndicatorDefaults
-import androidx.compose.material3.rememberSwipeToDismissBoxState
+import cc.hyoban.moments.ui.design.ButtonDefaults
+import cc.hyoban.moments.ui.design.HorizontalDivider
+import cc.hyoban.moments.ui.design.Icon
+import cc.hyoban.moments.ui.design.ListItem
+import cc.hyoban.moments.ui.design.ListItemDefaults
+import cc.hyoban.moments.ui.design.AppTheme
+import cc.hyoban.moments.ui.design.ProgressIndicatorDefaults
+import cc.hyoban.moments.ui.design.Surface
+import cc.hyoban.moments.ui.design.SwipeToDismissBox
+import cc.hyoban.moments.ui.design.Text
+import cc.hyoban.moments.ui.design.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -109,7 +100,6 @@ import cc.hyoban.moments.ui.components.PageWidth
 import cc.hyoban.moments.ui.components.SubPage
 import cc.hyoban.moments.ui.components.Thumbnail
 import cc.hyoban.moments.ui.compose.label
-import androidx.compose.material.icons.rounded.Category
 import cc.hyoban.moments.data.spec.MomentTopic
 import cc.hyoban.moments.ui.format.topicLabel
 import cc.hyoban.moments.ui.format.foodLine
@@ -132,7 +122,6 @@ import cc.hyoban.moments.ui.theme.fill
  * through. A change or a deletion can be taken back; the button at the foot publishes all
  * of it, the only way the app writes to the site.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: () -> Unit) {
     val pending by container.repository.pending.collectAsStateWithLifecycle()
@@ -206,8 +195,8 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
                             PublishingIndicator(publishing, Modifier.fillMaxWidth().padding(vertical = Space.xs).testTag("publish_progress"))
                             Text(
                                 stringResource(if (container.canPublish) R.string.note_publish_all else R.string.note_publish_needs_token),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = AppTheme.typography.bodySmall,
+                                color = AppTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(horizontal = Space.l),
                             )
                         }
@@ -215,9 +204,8 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
                 }
             }
         }
-        // Publishing, the page's one action, as Material 3's extended FAB keeps a long list's
-        // main action in reach: a medium one, as Expressive has replaced the baseline, at the
-        // bottom end, saying how far it has got while it runs.
+        // Publishing, the page's one action, an ink capsule floating at the bottom end to keep it
+        // in reach over a long list, saying how far it has got while it runs.
         // Shown only when the app can publish, as a FAB isn't greyed out but goes.
         val publishShown = container.canPublish && pending.size > 0
         // Snackbars stand above the button while it shows.
@@ -227,7 +215,7 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
             onDispose { lift.value = 0.dp }
         }
         // It grows in from its middle as a FAB enters, and its label's width follows what it says.
-        val motion = MaterialTheme.motionScheme
+        val motion = AppTheme.motionScheme
         var shownProgress by remember { mutableStateOf(publishing) }
         if (publishShown) shownProgress = publishing
         AnimatedVisibility(
@@ -237,7 +225,7 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
             modifier = Modifier.align(Alignment.BottomEnd).navigationBarsPadding().padding(Space.gutter),
         ) {
             val progress = shownProgress
-            MediumExtendedFloatingActionButton(
+            ExtendedFloatingActionButton(
                 onClick = {
                     if (progress == null) {
                         // The notification that keeps publishing going in the background asks
@@ -251,8 +239,11 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
                         }
                     }
                 },
-                shape = MaterialTheme.shapes.largeIncreased,
-                icon = { Icon(Icons.Rounded.CloudUpload, contentDescription = null, modifier = Modifier.size(FloatingActionButtonDefaults.MediumIconSize)) },
+                shape = Corners.full,
+                containerColor = tokens.ink,
+                contentColor = tokens.onInk,
+                elevation = floatingElevation(),
+                icon = { Icon(AppIcons.CloudUpload, contentDescription = null) },
                 text = {
                     Text(
                         if (progress != null) {
@@ -273,15 +264,14 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
  * A group of the changes under [title], each of [items] a card of its own that folds away
  * when taken back and opens out when brought back; the caption goes with the last of them.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 private fun <T> LazyListScope.section(title: Int, items: List<T>, key: (T) -> Any, card: @Composable (T) -> Unit) {
     if (items.isEmpty()) return
     item(key = "caption-$title") { Box(Modifier.animateItem()) { Caption(stringResource(title)) } }
     itemsIndexed(items, key = { _, it -> key(it) }) { index, item ->
         // Apart from the one above by the groups' gap; the first under its caption, as a group's card is.
-        val gap by animateDpAsState(if (index == 0) 0.dp else Space.xl, MaterialTheme.motionScheme.defaultSpatialSpec(), label = "gap")
+        val gap by animateDpAsState(if (index == 0) 0.dp else Space.xl, AppTheme.motionScheme.defaultSpatialSpec(), label = "gap")
         Column(Modifier.animateItem().padding(top = gap)) {
-            Column(Modifier.padding(horizontal = Space.gutter).fillMaxWidth().clip(ListItemDefaults.segmentedShapes(0, 1).shape).background(LocalSurfaceLevel.current.raised.fill())) {
+            Column(Modifier.padding(horizontal = Space.gutter).fillMaxWidth().clip(AppTheme.shapes.large).background(LocalSurfaceLevel.current.raised.fill()).border(cardBorder(), AppTheme.shapes.large)) {
                 card(item)
             }
         }
@@ -289,10 +279,9 @@ private fun <T> LazyListScope.section(title: Int, items: List<T>, key: (T) -> An
 }
 
 /** How far publishing has got, growing in under what it says while it runs and moving smoothly on as each change goes. */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun PublishingIndicator(progress: PublishProgress?, modifier: Modifier = Modifier, color: Color = WavyProgressIndicatorDefaults.indicatorColor) {
-    val motion = MaterialTheme.motionScheme
+private fun PublishingIndicator(progress: PublishProgress?, modifier: Modifier = Modifier, color: Color = tokens.accent) {
+    val motion = AppTheme.motionScheme
     var shown by remember { mutableStateOf(progress) }
     if (progress != null) shown = progress
     val fraction by animateFloatAsState(shown?.fraction ?: 0f, ProgressIndicatorDefaults.ProgressAnimationSpec, label = "published")
@@ -301,24 +290,24 @@ private fun PublishingIndicator(progress: PublishProgress?, modifier: Modifier =
         enter = expandVertically(motion.fastSpatialSpec()) + fadeIn(motion.fastEffectsSpec()),
         exit = shrinkVertically(motion.fastSpatialSpec()) + fadeOut(motion.fastEffectsSpec()),
     ) {
-        LinearWavyProgressIndicator(progress = { fraction }, modifier = modifier, color = color)
+        LinearProgressIndicator(progress = { fraction }, modifier = modifier, color = color, trackColor = tokens.pressed, strokeCap = StrokeCap.Round, gapSize = 0.dp, drawStopIndicator = {})
     }
 }
 
 /**
- * The changes kept on the phone, at the head of the Moments while there are any: a tonal
- * row saying how many, how far publishing has got while it runs, opening them to look over.
+ * The changes kept on the phone, at the head of the timeline while there are any: a card
+ * saying how many, how far publishing has got while it runs, opening them to look over.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun PendingChangesRow(container: AppContainer, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val pending by container.repository.pending.collectAsStateWithLifecycle()
     val publishing by container.publishing.collectAsStateWithLifecycle()
     Surface(
         onClick = onClick,
-        shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.secondaryContainer,
-        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+        shape = AppTheme.shapes.large,
+        color = SurfaceLevel.Card.fill(),
+        contentColor = AppTheme.colorScheme.onSurface,
+        border = cardBorder(),
         modifier = modifier.fillMaxWidth().testTag("changes"),
     ) {
         ListItem(
@@ -335,21 +324,21 @@ fun PendingChangesRow(container: AppContainer, onClick: () -> Unit, modifier: Mo
                     )
                     // The same linear indicator as the changes' page, as Material 3 has one
                     // process shown one way throughout.
-                    PublishingIndicator(progress, Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.onSecondaryContainer)
+                    PublishingIndicator(progress, Modifier.fillMaxWidth(), color = AppTheme.colorScheme.onSecondaryContainer)
                 }
             },
             leadingContent = {
                 Box(Modifier.size(40.dp), contentAlignment = Alignment.Center) {
-                    Icon(Icons.Rounded.CloudUpload, contentDescription = null)
+                    Icon(AppIcons.CloudUpload, contentDescription = null)
                 }
             },
-            trailingContent = { Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null) },
+            trailingContent = { Icon(AppIcons.ChevronRight, contentDescription = null) },
             colors = ListItemDefaults.colors(
                 containerColor = Color.Transparent,
-                headlineColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                supportingColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                leadingIconColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                trailingIconColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                headlineColor = AppTheme.colorScheme.onSecondaryContainer,
+                supportingColor = AppTheme.colorScheme.onSecondaryContainer,
+                leadingIconColor = AppTheme.colorScheme.onSecondaryContainer,
+                trailingIconColor = AppTheme.colorScheme.onSecondaryContainer,
             ),
         )
     }
@@ -357,27 +346,24 @@ fun PendingChangesRow(container: AppContainer, onClick: () -> Unit, modifier: Mo
 
 /**
  * A change swiped from the end to take it back, as Material 3 has a list's item swiped for
- * its action: the undo icon on the secondary container shows from under it as it goes, and
+ * its action: the undo icon on the accent's soft tint shows from under it as it goes, and
  * the card's own button does the same for whoever doesn't swipe. Its snackbar can undo it.
  */
 @Composable
 private fun SwipeToRevert(onRevert: (() -> Unit)?, content: @Composable () -> Unit) {
     if (onRevert == null) return content()
-    val state = rememberSwipeToDismissBoxState()
     // Under a card as filled as the group it is in, so what is beneath shows only as it moves.
     val fill = LocalSurfaceLevel.current.raised.fill()
     SwipeToDismissBox(
-        state,
-        enableDismissFromStartToEnd = false,
         onDismiss = { onRevert() },
         backgroundContent = {
             Row(
-                Modifier.fillMaxSize().background(MaterialTheme.colorScheme.secondaryContainer).padding(horizontal = Space.xl),
+                Modifier.fillMaxSize().background(AppTheme.colorScheme.secondaryContainer).padding(horizontal = Space.xl),
                 horizontalArrangement = Arrangement.spacedBy(Space.s, Alignment.End),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(stringResource(R.string.action_revert), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSecondaryContainer)
-                Icon(Icons.AutoMirrored.Rounded.Undo, contentDescription = null, tint = MaterialTheme.colorScheme.onSecondaryContainer)
+                Text(stringResource(R.string.action_revert), style = AppTheme.typography.labelLarge, color = AppTheme.colorScheme.onSecondaryContainer)
+                Icon(AppIcons.Undo, contentDescription = null, tint = AppTheme.colorScheme.onSecondaryContainer)
             }
         },
     ) {
@@ -422,13 +408,13 @@ private fun ChangeCard(
         } else {
             Text(
                 listOfNotNull(formatDate(moment.occurredAt), formatTime(moment.occurredAt)).joinToString(" "),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = AppTheme.typography.labelLarge,
+                color = AppTheme.colorScheme.onSurfaceVariant,
             )
         }
         Column(verticalArrangement = Arrangement.spacedBy(Space.m)) { content() }
         CardActions(
-            onOpen?.let { open -> { TextButton(shapes = ButtonDefaults.shapes(), onClick = open, modifier = Modifier.testTag("open_${moment.uid}")) { Text(stringResource(R.string.action_view)) } } },
+            onOpen?.let { open -> { TextButton(onClick = open, modifier = Modifier.testTag("open_${moment.uid}")) { Text(stringResource(R.string.action_view)) } } },
             onRevert?.let { revert -> { RevertButton(revert, Modifier.testTag("revert_${moment.uid}")) } },
         )
     }
@@ -445,8 +431,8 @@ private fun CardActions(vararg actions: (@Composable () -> Unit)?) {
 /** Takes back a change, its undo icon beside the words. */
 @Composable
 private fun RevertButton(onRevert: () -> Unit, modifier: Modifier = Modifier) {
-    TextButton(shapes = ButtonDefaults.shapes(), onClick = onRevert, modifier = modifier) {
-        Icon(Icons.AutoMirrored.Rounded.Undo, contentDescription = null, modifier = Modifier.size(18.dp))
+    TextButton(onClick = onRevert, modifier = modifier) {
+        Icon(AppIcons.Undo, contentDescription = null, modifier = Modifier.size(18.dp))
         Spacer(Modifier.size(Space.xs))
         Text(stringResource(R.string.action_revert))
     }
@@ -462,10 +448,10 @@ private fun PlaceChangeCard(change: PlaceChange, onRevert: (() -> Unit)?) {
             .testTag("place_change_${change.id}"),
         verticalArrangement = Arrangement.spacedBy(Space.m),
     ) {
-        Text(change.after.name, style = MaterialTheme.typography.titleSmall)
+        Text(change.after.name, style = AppTheme.typography.titleSmall)
         HorizontalDivider(color = dividerColor())
         val kindOf = @Composable { place: Place -> PlaceKind.of(place.kind)?.let { stringResource(it.label) } ?: place.kind }
-        Field(R.string.change_place_kind) { FromTo(kindOf(change.before), kindOf(change.after).orEmpty(), Icons.Rounded.Category) }
+        Field(R.string.change_place_kind) { FromTo(kindOf(change.before), kindOf(change.after).orEmpty(), AppIcons.Category) }
         CardActions(onRevert?.let { revert -> { RevertButton(revert, Modifier.testTag("revert_place_${change.id}")) } })
     }
 }
@@ -480,15 +466,15 @@ private fun MomentIdentity(identity: Identity, modifier: Modifier = Modifier) {
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.xxs)) {
             Text(
                 moment.text.lineSequence().firstOrNull { it.isNotBlank() } ?: where.ifEmpty { stringResource(R.string.label_no_words) },
-                style = MaterialTheme.typography.titleSmall,
+                style = AppTheme.typography.titleSmall,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
                 listOfNotNull(formatDate(moment.occurredAt), formatTime(moment.occurredAt), where.takeIf { moment.text.isNotBlank() && it.isNotEmpty() })
                     .joinToString("\u2003"),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = AppTheme.typography.bodySmall,
+                color = AppTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -504,7 +490,7 @@ private fun MomentWhole(moment: MomentRecord, places: Map<String, Place>, urls: 
         if (moment.text.isNotBlank()) {
             Text(
                 moment.text,
-                style = MaterialTheme.typography.bodyLarge,
+                style = AppTheme.typography.bodyLarge,
                 textDecoration = if (removed) TextDecoration.LineThrough else null,
                 maxLines = 6,
                 overflow = TextOverflow.Ellipsis,
@@ -517,8 +503,8 @@ private fun MomentWhole(moment: MomentRecord, places: Map<String, Place>, urls: 
             // Where, as a subhead rather than labels, none of them tapped on its own.
             Text(
                 moment.places.joinToString("\u2003") { places[it]?.name ?: it },
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = AppTheme.typography.bodyMedium,
+                color = AppTheme.colorScheme.onSurfaceVariant,
             )
         }
     }
@@ -530,7 +516,7 @@ private fun ChangedFields(change: Change, places: Map<String, Place>, urls: Medi
     val after = change.after
     val before = change.before
     if (before == null) {
-        Text(stringResource(R.string.note_change_recreates), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(stringResource(R.string.note_change_recreates), style = AppTheme.typography.bodySmall, color = AppTheme.colorScheme.onSurfaceVariant)
         MomentWhole(after, places, urls)
         return
     }
@@ -555,29 +541,29 @@ private fun ChangedFields(change: Change, places: Map<String, Place>, urls: Medi
         any = true
         Field(R.string.change_cover) {
             Column(verticalArrangement = Arrangement.spacedBy(Space.s)) {
-                if (marked.isNotEmpty()) CoverChange(Icons.Rounded.HideImage, R.string.change_cover_off, marked, urls)
-                if (unmarked.isNotEmpty()) CoverChange(Icons.Rounded.Image, R.string.change_cover_on, unmarked, urls)
+                if (marked.isNotEmpty()) CoverChange(AppIcons.PhotoOff, R.string.change_cover_off, marked, urls)
+                if (unmarked.isNotEmpty()) CoverChange(AppIcons.Image, R.string.change_cover_on, unmarked, urls)
             }
         }
     }
     if (before.occurredAt != after.occurredAt) {
         any = true
         val whenOf = { moment: MomentRecord -> listOfNotNull(formatDate(moment.occurredAt), formatTime(moment.occurredAt)).joinToString(" ") }
-        Field(R.string.change_time) { FromTo(whenOf(before), whenOf(after), Icons.Rounded.Schedule) }
+        Field(R.string.change_time) { FromTo(whenOf(before), whenOf(after), AppIcons.Clock) }
     }
     if (before.places != after.places) {
         any = true
         val separator = stringResource(R.string.separator_list)
         val none = stringResource(R.string.place_none)
         val names = { ids: List<String> -> ids.joinToString(separator) { places[it]?.name ?: it }.ifEmpty { none } }
-        Field(R.string.change_place) { FromTo(names(before.places), names(after.places), Icons.Rounded.Place) }
+        Field(R.string.change_place) { FromTo(names(before.places), names(after.places), AppIcons.Pin) }
     }
     if (before.food != after.food) {
         any = true
         val none = stringResource(R.string.food_none)
         Field(R.string.change_food) {
             val after = foodLine(after.food)
-            if (after == null) FromTo(foodLine(before.food), none, Icons.Rounded.Restaurant) else FromTo(foodLine(before.food), after, Icons.Rounded.Restaurant)
+            if (after == null) FromTo(foodLine(before.food), none, AppIcons.Food) else FromTo(foodLine(before.food), after, AppIcons.Food)
         }
     }
     if (before.topic != after.topic) {
@@ -585,10 +571,10 @@ private fun ChangedFields(change: Change, places: Map<String, Place>, urls: Medi
         val none = stringResource(R.string.topic_none)
         val from = MomentTopic.of(before.topic)?.let { stringResource(topicLabel(it)) } ?: none
         val to = MomentTopic.of(after.topic)?.let { stringResource(topicLabel(it)) } ?: none
-        Field(R.string.change_topic) { FromTo(from, to, Icons.Rounded.Category) }
+        Field(R.string.change_topic) { FromTo(from, to, AppIcons.Category) }
     }
     if (!any) {
-        Text(stringResource(R.string.note_change_nothing), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(stringResource(R.string.note_change_nothing), style = AppTheme.typography.bodyMedium, color = AppTheme.colorScheme.onSurfaceVariant)
     }
 }
 
@@ -597,8 +583,8 @@ private fun ChangedFields(change: Change, places: Map<String, Place>, urls: Medi
 private fun CoverChange(icon: androidx.compose.ui.graphics.vector.ImageVector, label: Int, photos: List<MomentMedia>, urls: MediaUrls) {
     Column(verticalArrangement = Arrangement.spacedBy(Space.xs)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
-            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
-            Text(stringResource(label), style = MaterialTheme.typography.bodyMedium)
+            Icon(icon, contentDescription = null, tint = AppTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
+            Text(stringResource(label), style = AppTheme.typography.bodyMedium)
         }
         PhotoRow(photos.map { it to null }, urls, badges = false)
     }
@@ -608,7 +594,7 @@ private fun CoverChange(icon: androidx.compose.ui.graphics.vector.ImageVector, l
 @Composable
 private fun Field(name: Int, content: @Composable () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(Space.xs)) {
-        Text(stringResource(name), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(stringResource(name), style = AppTheme.typography.labelMedium, color = AppTheme.colorScheme.onSurfaceVariant)
         content()
     }
 }
@@ -617,11 +603,11 @@ private fun Field(name: Int, content: @Composable () -> Unit) {
 @Composable
 private fun TextChange(before: String, after: String) {
     val removed = SpanStyle(
-        color = MaterialTheme.colorScheme.onErrorContainer,
-        background = MaterialTheme.colorScheme.errorContainer,
+        color = AppTheme.colorScheme.onErrorContainer,
+        background = AppTheme.colorScheme.errorContainer,
         textDecoration = TextDecoration.LineThrough,
     )
-    val added = SpanStyle(color = MaterialTheme.colorScheme.onPrimaryContainer, background = MaterialTheme.colorScheme.primaryContainer)
+    val added = SpanStyle(color = AppTheme.colorScheme.onPrimaryContainer, background = AppTheme.colorScheme.primaryContainer)
     val parts = remember(before, after) { diffText(before, after) }
     Text(
         buildAnnotatedString {
@@ -633,7 +619,7 @@ private fun TextChange(before: String, after: String) {
                 }
             }
         },
-        style = MaterialTheme.typography.bodyLarge,
+        style = AppTheme.typography.bodyLarge,
     )
 }
 
@@ -641,19 +627,19 @@ private fun TextChange(before: String, after: String) {
 @Composable
 private fun FromTo(from: String?, to: String, icon: androidx.compose.ui.graphics.vector.ImageVector) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
-        Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
+        Icon(icon, contentDescription = null, tint = AppTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
         // Something that wasn't said before is just what it is now, rather than from nothing.
         if (from != null) {
             Text(
                 from,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = AppTheme.typography.bodyMedium,
+                color = AppTheme.colorScheme.onSurfaceVariant,
                 textDecoration = TextDecoration.LineThrough,
                 modifier = Modifier.weight(1f, fill = false),
             )
-            Icon(Icons.AutoMirrored.Rounded.ArrowForward, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
+            Icon(AppIcons.ArrowRight, contentDescription = null, tint = AppTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
         }
-        Text(to, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f, fill = false))
+        Text(to, style = AppTheme.typography.bodyMedium, modifier = Modifier.weight(1f, fill = false))
     }
 }
 
@@ -667,8 +653,8 @@ private fun PhotoRow(photos: List<Pair<MomentMedia, Boolean?>>, urls: MediaUrls,
     Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(Space.s)) {
         for ((media, added) in photos) {
             val ring = when (added) {
-                true -> MaterialTheme.colorScheme.primary
-                false -> MaterialTheme.colorScheme.error
+                true -> AppTheme.colorScheme.primary
+                false -> AppTheme.colorScheme.error
                 null -> Color.Transparent
             }
             Box(Modifier.testTag("change_photo_${media.uid}")) {
@@ -678,11 +664,11 @@ private fun PhotoRow(photos: List<Pair<MomentMedia, Boolean?>>, urls: MediaUrls,
                     size = PHOTO_SIZE,
                     modifier = Modifier
                         .alpha(if (added == false) DISABLED_ALPHA else 1f)
-                        .border(2.dp, ring, MaterialTheme.shapes.medium),
+                        .border(2.dp, ring, AppTheme.shapes.medium),
                 )
                 if (badges && !media.showcase) {
                     Icon(
-                        Icons.Rounded.HideImage,
+                        AppIcons.PhotoOff,
                         contentDescription = stringResource(R.string.label_photo_utility),
                         tint = MediaOverlay.content,
                         modifier = Modifier.align(Alignment.BottomStart).padding(Space.xs).size(20.dp).clip(CircleShape)
@@ -691,9 +677,9 @@ private fun PhotoRow(photos: List<Pair<MomentMedia, Boolean?>>, urls: MediaUrls,
                 }
                 if (added != null) {
                     Icon(
-                        if (added) Icons.Rounded.Add else Icons.Rounded.Remove,
+                        if (added) AppIcons.Plus else AppIcons.Minus,
                         contentDescription = stringResource(if (added) R.string.label_photo_added else R.string.label_photo_removed),
-                        tint = if (added) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onError,
+                        tint = if (added) AppTheme.colorScheme.onPrimary else AppTheme.colorScheme.onError,
                         modifier = Modifier.align(Alignment.TopEnd).padding(Space.xs).size(20.dp).clip(CircleShape).background(ring).padding(Space.xxs),
                     )
                 }

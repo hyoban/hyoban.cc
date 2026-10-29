@@ -1,14 +1,13 @@
 package cc.hyoban.moments.ui.ledger
 
+import cc.hyoban.moments.ui.design.AppIcons
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Search
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
+import cc.hyoban.moments.ui.design.Icon
+import cc.hyoban.moments.ui.design.AppTheme
+import cc.hyoban.moments.ui.design.OutlinedTextField
+import cc.hyoban.moments.ui.design.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -86,7 +85,7 @@ fun LedgerListScreen(container: AppContainer, filter: LedgerFilter, nav: LedgerN
                         query,
                         { query = it },
                         placeholder = { Text(stringResource(R.string.ledger_search_hint)) },
-                        leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null) },
+                        leadingIcon = { Icon(AppIcons.Search, contentDescription = null) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth().testTag("ledger_query"),
                     )
@@ -96,7 +95,7 @@ fun LedgerListScreen(container: AppContainer, filter: LedgerFilter, nav: LedgerN
                         stringResource(R.string.ledger_expense_short, money(sums.expense, currency)),
                         stringResource(R.string.ledger_income_short, money(sums.income, currency)),
                     ).joinToString(" "),
-                    style = MaterialTheme.typography.titleMedium,
+                    style = AppTheme.typography.titleMedium,
                     modifier = Modifier.padding(start = Space.l, top = Space.s),
                 )
             }

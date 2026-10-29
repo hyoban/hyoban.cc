@@ -1,5 +1,8 @@
 package cc.hyoban.moments.ui.ledger
 
+import cc.hyoban.moments.ui.design.AppIcons
+import cc.hyoban.moments.ui.design.OutlinedTextField
+import cc.hyoban.moments.ui.design.ListItemShapes
 import android.content.Context
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -13,26 +16,15 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.MenuBook
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.Backup
-import androidx.compose.material.icons.rounded.Category
-import androidx.compose.material.icons.rounded.CurrencyExchange
-import androidx.compose.material.icons.rounded.FileOpen
-import androidx.compose.material.icons.rounded.Link
-import androidx.compose.material.icons.rounded.Restore
-import androidx.compose.material.icons.rounded.TableChart
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.SegmentedListItem
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import cc.hyoban.moments.ui.design.AlertDialog
+import cc.hyoban.moments.ui.design.ButtonDefaults
+import cc.hyoban.moments.ui.design.FilterChip
+import cc.hyoban.moments.ui.design.Icon
+import cc.hyoban.moments.ui.design.AppTheme
+import cc.hyoban.moments.ui.design.RadioButton
+import cc.hyoban.moments.ui.design.SegmentedListItem
+import cc.hyoban.moments.ui.design.Text
+import cc.hyoban.moments.ui.design.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -87,7 +79,6 @@ import kotlinx.coroutines.withContext
  * rates, and its data, brought in from iCost, kept in a backup of one's own, written out as
  * CSV, and linked to the Moments and trips. [startImport] opens the import's file picker at once.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun LedgerSettingsScreen(container: AppContainer, nav: LedgerNav, startImport: Boolean = false) {
     val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
@@ -146,7 +137,7 @@ fun LedgerSettingsScreen(container: AppContainer, nav: LedgerNav, startImport: B
                                 onClick = { editingBook = book },
                                 shapes = shapes,
                                 colors = segmentColors(),
-                                leadingContent = { Icon(Icons.AutoMirrored.Rounded.MenuBook, contentDescription = null) },
+                                leadingContent = { Icon(AppIcons.Book, contentDescription = null) },
                                 supportingContent = {
                                     Text(listOfNotNull(book.currency, pluralStringResource(R.plurals.ledger_count_bills, count, count), stringResource(R.string.ledger_archived).takeIf { book.archived }).joinToString(" "))
                                 },
@@ -158,7 +149,7 @@ fun LedgerSettingsScreen(container: AppContainer, nav: LedgerNav, startImport: B
                             onClick = { addingBook = true },
                             shapes = shapes,
                             colors = segmentColors(),
-                            leadingContent = { Icon(Icons.Rounded.Add, contentDescription = null) },
+                            leadingContent = { Icon(AppIcons.Plus, contentDescription = null) },
                             modifier = Modifier.testTag("add_book"),
                         ) { Text(stringResource(R.string.ledger_add_book)) }
                     },
@@ -172,7 +163,7 @@ fun LedgerSettingsScreen(container: AppContainer, nav: LedgerNav, startImport: B
                             onClick = nav.rates,
                             shapes = shapes,
                             colors = segmentColors(),
-                            leadingContent = { Icon(Icons.Rounded.CurrencyExchange, contentDescription = null) },
+                            leadingContent = { Icon(AppIcons.Exchange, contentDescription = null) },
                             supportingContent = latest?.let { { Text(stringResource(R.string.ledger_rates_until, it.toString())) } },
                             modifier = Modifier.testTag("ledger_rates"),
                         ) { Text(stringResource(R.string.ledger_rates)) }
@@ -186,7 +177,7 @@ fun LedgerSettingsScreen(container: AppContainer, nav: LedgerNav, startImport: B
                         { shapes ->
                             SegmentedListItem(
                                 onClick = { importer.pick() }, shapes = shapes, colors = segmentColors(), enabled = !busy,
-                                leadingContent = { Icon(Icons.Rounded.FileOpen, contentDescription = null) },
+                                leadingContent = { Icon(AppIcons.FileOpen, contentDescription = null) },
                                 supportingContent = { Text(stringResource(R.string.ledger_import_icost_note)) },
                                 modifier = Modifier.testTag("import_icost"),
                             ) { Text(stringResource(R.string.ledger_import_icost)) }
@@ -201,7 +192,7 @@ fun LedgerSettingsScreen(container: AppContainer, nav: LedgerNav, startImport: B
                                     }
                                 },
                                 shapes = shapes, colors = segmentColors(),
-                                leadingContent = { Icon(Icons.Rounded.Link, contentDescription = null) },
+                                leadingContent = { Icon(AppIcons.Link, contentDescription = null) },
                                 supportingContent = { Text(stringResource(R.string.ledger_link_all_note)) },
                                 modifier = Modifier.testTag("link_all"),
                             ) { Text(stringResource(R.string.ledger_link_all)) }
@@ -209,19 +200,19 @@ fun LedgerSettingsScreen(container: AppContainer, nav: LedgerNav, startImport: B
                         { shapes ->
                             SegmentedListItem(
                                 onClick = { backup.launch("ledger-${LocalDate.now()}.json") }, shapes = shapes, colors = segmentColors(),
-                                leadingContent = { Icon(Icons.Rounded.Backup, contentDescription = null) },
+                                leadingContent = { Icon(AppIcons.CloudUpload, contentDescription = null) },
                             ) { Text(stringResource(R.string.ledger_backup)) }
                         },
                         { shapes ->
                             SegmentedListItem(
                                 onClick = { restore.launch(arrayOf("application/json", "application/octet-stream", "text/plain")) }, shapes = shapes, colors = segmentColors(),
-                                leadingContent = { Icon(Icons.Rounded.Restore, contentDescription = null) },
+                                leadingContent = { Icon(AppIcons.Refresh, contentDescription = null) },
                             ) { Text(stringResource(R.string.ledger_restore)) }
                         },
                         { shapes ->
                             SegmentedListItem(
                                 onClick = { csv.launch("ledger-${LocalDate.now()}.csv") }, shapes = shapes, colors = segmentColors(),
-                                leadingContent = { Icon(Icons.Rounded.TableChart, contentDescription = null) },
+                                leadingContent = { Icon(AppIcons.Table, contentDescription = null) },
                             ) { Text(stringResource(R.string.ledger_export_csv)) }
                         },
                     ),
@@ -255,7 +246,7 @@ fun LedgerSettingsScreen(container: AppContainer, nav: LedgerNav, startImport: B
             title = { Text(stringResource(R.string.ledger_restore)) },
             text = { Text(stringResource(R.string.ledger_restore_note, found.txns.size, found.books.size)) },
             confirmButton = {
-                TextButton(shapes = ButtonDefaults.shapes(), onClick = {
+                TextButton(onClick = {
                     restoring = null
                     busy = true
                     scope.launch {
@@ -265,7 +256,7 @@ fun LedgerSettingsScreen(container: AppContainer, nav: LedgerNav, startImport: B
                     }
                 }) { Text(stringResource(R.string.ledger_replace)) }
             },
-            dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { restoring = null }) { Text(stringResource(R.string.action_cancel)) } },
+            dismissButton = { TextButton(onClick = { restoring = null }) { Text(stringResource(R.string.action_cancel)) } },
         )
     }
 }
@@ -283,33 +274,33 @@ private fun BookDialog(book: Book, canDelete: Boolean, onDismiss: () -> Unit, on
         title = { Text(stringResource(R.string.ledger_book)) },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(Space.s)) {
-                androidx.compose.material3.OutlinedTextField(name, { name = it }, label = { Text(stringResource(R.string.ledger_book_name)) }, singleLine = true)
-                Text(stringResource(R.string.ledger_book_currency), style = MaterialTheme.typography.labelLarge)
+                OutlinedTextField(name, { name = it }, label = { Text(stringResource(R.string.ledger_book_name)) }, singleLine = true)
+                Text(stringResource(R.string.ledger_book_currency), style = AppTheme.typography.labelLarge)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.s)) {
                     (COMMON_CURRENCIES.take(8) + book.currency).distinct().forEach { code ->
                         FilterChip(selected = currency == code, onClick = { currency = code }, label = { Text(code) })
                     }
                 }
                 FilterChip(selected = archived, onClick = { archived = !archived }, label = { Text(stringResource(R.string.ledger_archive)) })
-                TextButton(shapes = ButtonDefaults.shapes(), onClick = onCategories, modifier = Modifier.testTag("book_categories")) {
-                    Icon(Icons.Rounded.Category, contentDescription = null)
+                TextButton(onClick = onCategories, modifier = Modifier.testTag("book_categories")) {
+                    Icon(AppIcons.Category, contentDescription = null)
                     Text(stringResource(R.string.ledger_categories), modifier = Modifier.padding(start = Space.s))
                 }
                 if (canDelete) {
-                    TextButton(shapes = ButtonDefaults.shapes(), onClick = { confirming = true }) { Text(stringResource(R.string.ledger_delete_book), color = MaterialTheme.colorScheme.error) }
+                    TextButton(onClick = { confirming = true }) { Text(stringResource(R.string.ledger_delete_book), color = AppTheme.colorScheme.error) }
                 }
             }
         },
-        confirmButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { onSave(book.copy(name = name.trim(), currency = currency, archived = archived)) }, enabled = name.isNotBlank()) { Text(stringResource(R.string.action_save)) } },
-        dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
+        confirmButton = { TextButton(onClick = { onSave(book.copy(name = name.trim(), currency = currency, archived = archived)) }, enabled = name.isNotBlank()) { Text(stringResource(R.string.action_save)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
     )
     if (confirming) {
         AlertDialog(
             onDismissRequest = { confirming = false },
             title = { Text(stringResource(R.string.ledger_delete_book)) },
             text = { Text(stringResource(R.string.ledger_delete_book_note, book.name)) },
-            confirmButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { confirming = false; onDelete() }) { Text(stringResource(R.string.action_delete), color = MaterialTheme.colorScheme.error) } },
-            dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { confirming = false }) { Text(stringResource(R.string.action_cancel)) } },
+            confirmButton = { TextButton(onClick = { confirming = false; onDelete() }) { Text(stringResource(R.string.action_delete), color = AppTheme.colorScheme.error) } },
+            dismissButton = { TextButton(onClick = { confirming = false }) { Text(stringResource(R.string.action_cancel)) } },
         )
     }
 }
@@ -403,9 +394,9 @@ private fun ImportDialog(found: Found, hasData: Boolean, onDismiss: () -> Unit, 
                 if (report.converted > 0) Text(stringResource(R.string.ledger_import_converted, report.converted))
                 if (report.duplicates > 0) Text(stringResource(R.string.ledger_import_duplicates, report.duplicates))
                 if (report.skipped.isNotEmpty()) {
-                    Text(stringResource(R.string.ledger_import_skipped, report.skipped.size, report.skipped.take(5).joinToString { "#${it.first} ${it.second}" }), color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.ledger_import_skipped, report.skipped.size, report.skipped.take(5).joinToString { "#${it.first} ${it.second}" }), color = AppTheme.colorScheme.error)
                 }
-                Text(stringResource(R.string.ledger_import_accounts_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.ledger_import_accounts_note), style = AppTheme.typography.bodySmall, color = AppTheme.colorScheme.onSurfaceVariant)
                 if (hasData) {
                     listOf(false to R.string.ledger_merge, true to R.string.ledger_replace).forEach { (value, label) ->
                         Row(
@@ -419,7 +410,7 @@ private fun ImportDialog(found: Found, hasData: Boolean, onDismiss: () -> Unit, 
                 }
             }
         },
-        confirmButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { onImport(replace) }, modifier = Modifier.testTag("confirm_import")) { Text(stringResource(R.string.ledger_import)) } },
-        dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
+        confirmButton = { TextButton(onClick = { onImport(replace) }, modifier = Modifier.testTag("confirm_import")) { Text(stringResource(R.string.ledger_import)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
     )
 }

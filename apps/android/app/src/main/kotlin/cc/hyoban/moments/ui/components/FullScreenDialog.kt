@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.components
 
+import cc.hyoban.moments.ui.design.AppIcons
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.fadeIn
@@ -24,14 +25,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+import cc.hyoban.moments.ui.design.Icon
+import cc.hyoban.moments.ui.design.IconButtonDefaults
+import cc.hyoban.moments.ui.design.ButtonDefaults
+import cc.hyoban.moments.ui.design.IconButton
+import cc.hyoban.moments.ui.design.AppTheme
+import cc.hyoban.moments.ui.design.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -71,7 +70,7 @@ fun FullScreenDialog(onDismiss: () -> Unit, actions: @Composable RowScope.() -> 
     }
     // Edge to edge, its own colour under the status and navigation bars, as the pages are.
     Dialog(onDismissRequest = close, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
-        val motion = MaterialTheme.motionScheme
+        val motion = AppTheme.motionScheme
         AnimatedVisibility(
             shown,
             enter = slideInVertically(motion.defaultSpatialSpec()) { it / 4 } + fadeIn(motion.defaultEffectsSpec()),
@@ -83,8 +82,8 @@ fun FullScreenDialog(onDismiss: () -> Unit, actions: @Composable RowScope.() -> 
                         Row(Modifier.fillMaxWidth().height(64.dp).padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                             val label = stringResource(R.string.action_close)
                             Tooltip(label, below = true) {
-                                IconButton(shapes = IconButtonDefaults.shapes(), onClick = close, modifier = Modifier.testTag("dialog_close")) {
-                                    Icon(Icons.Rounded.Close, contentDescription = label)
+                                IconButton(onClick = close, modifier = Modifier.testTag("dialog_close")) {
+                                    Icon(AppIcons.Close, contentDescription = label)
                                 }
                             }
                             Spacer(Modifier.weight(1f))
@@ -117,7 +116,7 @@ fun DialogPane(content: @Composable () -> Unit) {
         contentAlignment = Alignment.Center,
     ) {
         Surface(
-            shape = MaterialTheme.shapes.extraLarge,
+            shape = AppTheme.shapes.extraLarge,
             color = AppColors.page,
             shadowElevation = Elevation.level3,
             modifier = Modifier.widthIn(max = DIALOG_MAX_WIDTH).fillMaxWidth().fillMaxHeight()

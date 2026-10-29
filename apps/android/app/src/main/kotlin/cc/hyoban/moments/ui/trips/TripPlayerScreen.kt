@@ -1,5 +1,14 @@
 package cc.hyoban.moments.ui.trips
 
+import cc.hyoban.moments.ui.design.AppIcons
+import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.LazyRow
+import cc.hyoban.moments.ui.design.FloatingBar
+import cc.hyoban.moments.ui.theme.Corners
+import cc.hyoban.moments.ui.theme.tokens
+import androidx.compose.ui.graphics.StrokeCap
+import cc.hyoban.moments.ui.design.LinearProgressIndicator
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -10,8 +19,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.material3.ButtonGroup
-import androidx.compose.material3.ButtonDefaults
+import cc.hyoban.moments.ui.design.ButtonDefaults
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.key.Key
@@ -28,11 +36,6 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.carousel.CarouselItemScope
-import androidx.compose.material3.carousel.HorizontalMultiBrowseCarousel
-import androidx.compose.material3.carousel.HorizontalUncontainedCarousel
-import androidx.compose.material3.carousel.rememberCarouselState
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.snapshotFlow
@@ -40,8 +43,6 @@ import androidx.compose.ui.semantics.Role
 import cc.hyoban.moments.ui.LocalSnackbarLift
 import cc.hyoban.moments.ui.components.kindLabel
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.material3.MaterialShapes
-import androidx.compose.material3.toShape
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.drawOutline
@@ -86,23 +87,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Pause
-import androidx.compose.material.icons.rounded.PlayArrow
-import androidx.compose.material.icons.rounded.Replay
-import androidx.compose.material.icons.rounded.SkipNext
-import androidx.compose.material.icons.rounded.SkipPrevious
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FilledIconButton
-import androidx.compose.material3.HorizontalFloatingToolbar
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.LinearWavyProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.minimumInteractiveComponentSize
+import cc.hyoban.moments.ui.design.FilledIconButton
+import cc.hyoban.moments.ui.design.Icon
+import cc.hyoban.moments.ui.design.IconButton
+import cc.hyoban.moments.ui.design.IconButtonDefaults
+import cc.hyoban.moments.ui.design.AppTheme
+import cc.hyoban.moments.ui.design.Surface
+import cc.hyoban.moments.ui.design.Text
+import cc.hyoban.moments.ui.design.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -315,7 +307,6 @@ private fun PlaybackControls(controller: PlaybackController, playFocus: FocusReq
  * The card over the map, what is playing with the playback's progress at its foot, and the
  * floating toolbar of its controls under it.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun PlayerCard(
     playFocus: FocusRequester,
@@ -350,12 +341,12 @@ private fun PlayerCard(
         val reduced = LocalReducedMotion.current
         val drag = remember { Animatable(Offset.Zero, Offset.VectorConverter) }
         var dragging by remember { mutableStateOf(false) }
-        val settle = MaterialTheme.motionScheme.fastSpatialSpec<Offset>()
-        val lift by animateDpAsState(if (dragging) Elevation.level4 else Elevation.level2, MaterialTheme.motionScheme.fastSpatialSpec(), label = "lift")
+        val settle = AppTheme.motionScheme.fastSpatialSpec<Offset>()
+        val lift by animateDpAsState(if (dragging) Elevation.level4 else Elevation.level2, AppTheme.motionScheme.fastSpatialSpec(), label = "lift")
         // Dragged, Material 3's low-emphasis state layer over it too, the content's colour at 16%.
-        val layer by animateFloatAsState(if (dragging) DRAGGED_LAYER else 0f, MaterialTheme.motionScheme.fastEffectsSpec(), label = "dragged")
-        val layerColor = MaterialTheme.colorScheme.onSurface
-        val cardShape = MaterialTheme.shapes.extraLarge
+        val layer by animateFloatAsState(if (dragging) DRAGGED_LAYER else 0f, AppTheme.motionScheme.fastEffectsSpec(), label = "dragged")
+        val layerColor = AppTheme.colorScheme.onSurface
+        val cardShape = AppTheme.shapes.extraLarge
         val letGo = {
             dragging = false
             scope.launch { if (reduced) drag.snapTo(Offset.Zero) else drag.animateTo(Offset.Zero, settle) }
@@ -403,7 +394,7 @@ private fun PlayerCard(
                 }
                 .testTag("trip_player"),
         ) {
-            val motion = MaterialTheme.motionScheme
+            val motion = AppTheme.motionScheme
             Column(Modifier.animateContentSize(motion.defaultSpatialSpec())) {
             // The handle across the card's top 48dp, as a sheet's.
             DragHandle(expanded, onExpanded)
@@ -425,17 +416,20 @@ private fun PlayerCard(
                         PlaybackSlide.Summary -> SummaryCard(trip, controller.playback, covers, urls, expanded)
                     }
                 }
-                // The whole playback's progress along the card's foot, wavy while it plays, as
-                // Material 3 has a long process feel under way, and flat once paused; left to right
+                // The whole playback's progress along the card's foot, a thin line in the text
+                // colour on the pressed grey; left to right
                 // whichever way the words run, as a media player's timeline is.
                 CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) { Row(Modifier.padding(horizontal = Space.xs), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.m)) {
-                    val wave by animateFloatAsState(if (playing) 1f else 0f, motion.defaultEffectsSpec(), label = "wave")
                     // Named, with which card it is on, as the count beside it says to the eye.
                     val label = stringResource(R.string.playback_progress, trip.title)
                     val position = stringResource(R.string.playback_card_of, index + 1, count)
-                    LinearWavyProgressIndicator(
+                    LinearProgressIndicator(
                         progress = progress,
-                        amplitude = { wave },
+                        color = tokens.tx,
+                        trackColor = tokens.pressed,
+                        strokeCap = StrokeCap.Round,
+                        gapSize = 0.dp,
+                        drawStopIndicator = {},
                         modifier = Modifier.weight(1f).semantics {
                             contentDescription = label
                             stateDescription = position
@@ -443,8 +437,8 @@ private fun PlayerCard(
                     )
                     Text(
                         "${index + 1} / $count",
-                        style = MaterialTheme.typography.labelMedium.copy(fontFeatureSettings = "tnum"),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = AppTheme.typography.labelMedium.copy(fontFeatureSettings = "tnum"),
+                        color = AppTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.clearAndSetSemantics { },
                     )
                 } }
@@ -460,13 +454,13 @@ private fun PlayerCard(
 private fun IntroCard(trip: TripRecord, playback: TripPlayback, covers: List<MomentMedia>, urls: MediaUrls, photoHeight: Dp, expanded: Boolean) {
     Column(verticalArrangement = Arrangement.spacedBy(Space.m)) {
         Column(Modifier.padding(horizontal = Space.xs)) {
-            Text(trip.title, style = MaterialTheme.typography.headlineSmallEmphasized, modifier = Modifier.semantics { heading() })
+            Text(trip.title, style = AppTheme.typography.headlineSmallEmphasized, modifier = Modifier.semantics { heading() })
             TripSubhead(trip, playback.stops.size)
         }
         // A mosaic of the covers, the first larger, as the site's intro has.
         if (covers.isNotEmpty() && expanded) {
             // Decorative: the same photos show, described, on their Moments' cards.
-            Row(Modifier.fillMaxWidth().height(photoHeight).clip(MaterialTheme.shapes.large).clearAndSetSemantics { }, horizontalArrangement = Arrangement.spacedBy(Space.xxs)) {
+            Row(Modifier.fillMaxWidth().height(photoHeight).clip(AppTheme.shapes.large).clearAndSetSemantics { }, horizontalArrangement = Arrangement.spacedBy(Space.xxs)) {
                 MediaStill(covers[0], urls, Modifier.weight(2f).fillMaxHeight())
                 if (covers.size > 1) {
                     Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(Space.xxs)) {
@@ -482,22 +476,22 @@ private fun IntroCard(trip: TripRecord, playback: TripPlayback, covers: List<Mom
 @Composable
 private fun DayCard(slide: PlaybackSlide.Day) {
     Column(Modifier.padding(horizontal = Space.xs, vertical = Space.xs)) {
-        Text(stringResource(R.string.trip_day, slide.day), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-        Text(formatDay(slide.dateKey), style = MaterialTheme.typography.headlineSmallEmphasized, modifier = Modifier.semantics { heading() })
+        Text(stringResource(R.string.trip_day, slide.day), style = AppTheme.typography.labelLarge, color = AppTheme.colorScheme.primary)
+        Text(formatDay(slide.dateKey), style = AppTheme.typography.headlineSmallEmphasized, modifier = Modifier.semantics { heading() })
         if (slide.places.isNotEmpty()) {
-            Text(slide.places.joinToString(" → "), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(slide.places.joinToString(" → "), style = AppTheme.typography.bodyMedium, color = AppTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
 
 /**
- * A Moment as the route reaches it: its photos as Material 3's carousel, the one showing
- * large and the next peeking, moving on as it plays; one scrolled to or tapped becomes the
+ * A Moment as the route reaches it: its photos in a row, the one showing large and the next
+ * peeking at its side, moving on as it plays; one scrolled to or tapped becomes the
  * one showing, the single tap standing in for the swipe, and the one showing, tapped, opens
  * the Moment, as its words do. As on the site, its day and time ride beside the route's head
  * and its places are named on the map, so the card is only read out a heading of them.
  */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun StopCard(slide: PlaybackSlide.Stop, controller: PlaybackController, urls: MediaUrls, photoHeight: Dp, expanded: Boolean, onMoment: (String) -> Unit) {
     val stop = slide.stop
@@ -519,45 +513,37 @@ private fun StopCard(slide: PlaybackSlide.Stop, controller: PlaybackController, 
     ) {
         if (photos.isNotEmpty() && expanded) {
             val reduced = LocalReducedMotion.current
-            val state = rememberCarouselState(initialItem = photo) { photos.size }
-            val spec = MaterialTheme.motionScheme.defaultSpatialSpec<Float>()
+            val state = rememberLazyListState(initialFirstVisibleItemIndex = photo)
             // Following the playback's photo...
             LaunchedEffect(state, photo) {
-                if (state.currentItem != photo) if (reduced) state.scrollToItem(photo) else state.animateScrollToItem(photo, spec)
+                if (state.firstVisibleItemIndex != photo) if (reduced) state.scrollToItem(photo) else state.animateScrollToItem(photo)
             }
             // ...and making the one scrolled to by hand the playback's.
             LaunchedEffect(state) {
                 snapshotFlow { state.isScrollInProgress }.collect { scrolling ->
-                    if (!scrolling && state.currentItem != controller.photo()) controller.selectPhoto(state.currentItem)
+                    if (!scrolling && state.firstVisibleItemIndex != controller.photo()) controller.selectPhoto(state.firstVisibleItemIndex)
                 }
             }
             val view = stringResource(R.string.action_view_photo)
             val clause = stringResource(R.string.separator_clause)
-            val item: @Composable CarouselItemScope.(Int) -> Unit = { n ->
-                val label = stringResource(R.string.media_position, stringResource(photos[n].kindLabel()), n + 1, photos.size)
-                MediaStill(
-                    photos[n],
-                    urls,
-                    Modifier.fillMaxSize().maskClip(MaterialTheme.shapes.large)
-                        .clickable(onClickLabel = if (n == photo) open else view) { if (n == photo) onMoment(moment.uid) else controller.selectPhoto(n) }
-                        .semantics { contentDescription = listOf(label, photos[n].alt).filter { it.isNotBlank() }.joinToString(clause) },
-                )
-            }
             BoxWithConstraints(Modifier.fillMaxWidth().height(photoHeight)) {
-                if (reduced || photos.size == 1) {
-                    // With animations removed, all of a size, none growing as it comes into view.
-                    HorizontalUncontainedCarousel(state, itemWidth = if (photos.size == 1) maxWidth else maxWidth - PEEK - Space.s, itemSpacing = Space.s, modifier = Modifier.fillMaxSize(), content = item)
-                } else {
-                    // One large, the next peeking as a small one, as a hero carousel spotlights.
-                    HorizontalMultiBrowseCarousel(
-                        state,
-                        preferredItemWidth = maxWidth - PEEK - Space.s,
-                        itemSpacing = Space.s,
-                        minSmallItemWidth = 40.dp,
-                        maxSmallItemWidth = PEEK,
-                        modifier = Modifier.fillMaxSize(),
-                        content = item,
-                    )
+                val width = if (photos.size == 1) maxWidth else maxWidth - PEEK - Space.s
+                LazyRow(
+                    Modifier.fillMaxSize(),
+                    state = state,
+                    horizontalArrangement = Arrangement.spacedBy(Space.s),
+                    flingBehavior = rememberSnapFlingBehavior(state),
+                ) {
+                    items(photos.size) { n ->
+                        val label = stringResource(R.string.media_position, stringResource(photos[n].kindLabel()), n + 1, photos.size)
+                        MediaStill(
+                            photos[n],
+                            urls,
+                            Modifier.width(width).fillMaxHeight().clip(AppTheme.shapes.large)
+                                .clickable(onClickLabel = if (n == photo) open else view) { if (n == photo) onMoment(moment.uid) else controller.selectPhoto(n) }
+                                .semantics { contentDescription = listOf(label, photos[n].alt).filter { it.isNotBlank() }.joinToString(clause) },
+                        )
+                    }
                 }
             }
         }
@@ -569,10 +555,10 @@ private fun StopCard(slide: PlaybackSlide.Stop, controller: PlaybackController, 
             Box {
                 Text(
                     moment.text,
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = AppTheme.typography.bodyMedium,
                     maxLines = if (expanded) 4 else 2,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.fillMaxWidth().clip(MaterialTheme.shapes.medium)
+                    modifier = Modifier.fillMaxWidth().clip(AppTheme.shapes.medium)
                         .pointerInput(Unit) {
                             awaitEachGesture {
                                 val event = awaitPointerEvent(PointerEventPass.Initial)
@@ -597,7 +583,7 @@ private fun StopCard(slide: PlaybackSlide.Stop, controller: PlaybackController, 
     }
 }
 
-/** How wide the next photo peeks, the widest a carousel's small item is. */
+/** How much of the next photo peeks at the side. */
 private val PEEK = 56.dp
 
 /**
@@ -606,13 +592,12 @@ private val PEEK = 56.dp
  * nothing as the card shows, and, while the card is open, its covers cut to Material 3's
  * shapes, the trip's last aesthetic moment.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun SummaryCard(trip: TripRecord, playback: TripPlayback, covers: List<MomentMedia>, urls: MediaUrls, expanded: Boolean) {
     Column(Modifier.padding(horizontal = Space.xs), verticalArrangement = Arrangement.spacedBy(Space.m)) {
         Column {
-            Text(stringResource(R.string.playback_look_back), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-            Text(trip.title, style = MaterialTheme.typography.headlineSmallEmphasized, modifier = Modifier.semantics { heading() })
+            Text(stringResource(R.string.playback_look_back), style = AppTheme.typography.labelLarge, color = AppTheme.colorScheme.primary)
+            Text(trip.title, style = AppTheme.typography.headlineSmallEmphasized, modifier = Modifier.semantics { heading() })
         }
         val days = cc.hyoban.moments.ui.format.daysBetween(trip.start, trip.end)
         val km = remember(playback) { playback.route.drivenKm() }.roundToInt()
@@ -628,10 +613,10 @@ private fun SummaryCard(trip: TripRecord, playback: TripPlayback, covers: List<M
             stats.forEach { (value, unit) -> Tile(value, pluralStringResource(unit, value)) }
         }
         if (expanded && covers.isNotEmpty()) {
-            val shapes = listOf(MaterialShapes.Cookie9Sided, MaterialShapes.Clover4Leaf, MaterialShapes.Sunny)
+            val shapes = List(3) { AppTheme.shapes.large }
             Row(Modifier.clearAndSetSemantics { }, horizontalArrangement = Arrangement.spacedBy(Space.m)) {
                 covers.take(shapes.size).forEachIndexed { n, cover ->
-                    MediaStill(cover, urls, Modifier.weight(1f).aspectRatio(1f).clip(shapes[n].toShape()))
+                    MediaStill(cover, urls, Modifier.weight(1f).aspectRatio(1f).clip(shapes[n]))
                 }
             }
         }
@@ -643,23 +628,21 @@ private fun SummaryCard(trip: TripRecord, playback: TripPlayback, covers: List<M
 private fun Tile(value: Int, unit: String) {
     val reduced = LocalReducedMotion.current
     val shown = remember { Animatable(if (reduced) value.toFloat() else 0f) }
-    val spec = MaterialTheme.motionScheme.slowEffectsSpec<Float>()
+    val spec = AppTheme.motionScheme.slowEffectsSpec<Float>()
     LaunchedEffect(value) { if (reduced) shown.snapTo(value.toFloat()) else shown.animateTo(value.toFloat(), spec) }
     Column(Modifier.clearAndSetSemantics { contentDescription = "$value $unit" }) {
         Text(
             shown.value.roundToInt().toString(),
-            style = MaterialTheme.typography.displaySmallEmphasized.copy(fontFeatureSettings = "tnum"),
+            style = AppTheme.typography.displaySmallEmphasized.copy(fontFeatureSettings = "tnum"),
         )
-        Text(unit, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(unit, style = AppTheme.typography.labelMedium, color = AppTheme.colorScheme.onSurfaceVariant)
     }
 }
 
 /**
- * The playback's controls as Material 3's floating toolbar, the page's own actions over its
- * content: a step back and on as standard icon buttons, and playing or pausing, the one
- * action emphasised, as a wide filled one between them.
+ * The playback's controls, floating on the surface over the map: a step back and on as icon
+ * buttons, and playing or pausing, the one main action, a wide ink capsule between them.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun PlayerToolbar(
     playing: Boolean,
@@ -672,69 +655,39 @@ private fun PlayerToolbar(
     playFocus: FocusRequester,
     modifier: Modifier = Modifier,
 ) {
-    HorizontalFloatingToolbar(expanded = true, modifier = modifier) {
-        // A standard button group: the one pressed widens and morphs, its neighbours making way.
-        ButtonGroup(overflowIndicator = {}) {
-            customItem(
-                buttonGroupContent = {
-                    val previous = stringResource(R.string.action_previous_stop)
-                    val pressed = remember { MutableInteractionSource() }
-                    Tooltip(previous) {
-                        IconButton(
-                            onClick = onPrevious,
-                            enabled = !first,
-                            shapes = IconButtonDefaults.shapes(),
-                            interactionSource = pressed,
-                            modifier = Modifier.animateWidth(pressed).testTag("player_previous"),
-                        ) {
-                            Icon(Icons.Rounded.SkipPrevious, contentDescription = previous)
-                        }
+    FloatingBar(modifier) {
+        // Back, play and on, side by side; play the ink, the one main action.
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.xs)) {
+            val previous = stringResource(R.string.action_previous_stop)
+            Tooltip(previous) {
+                IconButton(onClick = onPrevious, enabled = !first, modifier = Modifier.testTag("player_previous")) {
+                    Icon(AppIcons.SkipBack, contentDescription = previous)
+                }
+            }
+            // At the look back, where playback ends, it plays the trip again.
+            val play = stringResource(if (atEnd && !playing) R.string.action_replay else if (playing) R.string.action_pause else R.string.action_play)
+            Tooltip(play) {
+                FilledIconButton(
+                    onClick = onPlay,
+                    shape = Corners.full,
+                    colors = IconButtonDefaults.filledIconButtonColors(containerColor = tokens.ink, contentColor = tokens.onInk),
+                    // Its 48dp target kept round the wide container, so the button sits on the toolbar's
+                    // middle rather than its target overflowing the container upward.
+                    modifier = Modifier.minimumInteractiveComponentSize()
+                        .size(IconButtonDefaults.smallContainerSize(IconButtonDefaults.IconButtonWidthOption.Wide))
+                        .focusRequester(playFocus).testTag("player_play"),
+                ) {
+                    Crossfade(if (atEnd && !playing) AppIcons.Replay else if (playing) AppIcons.Pause else AppIcons.Play, animationSpec = AppTheme.motionScheme.fastEffectsSpec(), label = "play icon") {
+                        Icon(it, contentDescription = play)
                     }
-                },
-                menuContent = {},
-            )
-            customItem(
-                buttonGroupContent = {
-                    // At the look back, where playback ends, it plays the trip again.
-                    val play = stringResource(if (atEnd && !playing) R.string.action_replay else if (playing) R.string.action_pause else R.string.action_play)
-                    val pressed = remember { MutableInteractionSource() }
-                    Tooltip(play) {
-                        FilledIconButton(
-                            onClick = onPlay,
-                            shapes = IconButtonDefaults.shapes(),
-                            interactionSource = pressed,
-                            // Its 48dp target kept round the wide container, so the button sits on the toolbar's
-                            // middle rather than its target overflowing the container upward.
-                            modifier = Modifier.animateWidth(pressed).minimumInteractiveComponentSize()
-                                .size(IconButtonDefaults.smallContainerSize(IconButtonDefaults.IconButtonWidthOption.Wide))
-                                .focusRequester(playFocus).testTag("player_play"),
-                        ) {
-                            Crossfade(if (atEnd && !playing) Icons.Rounded.Replay else if (playing) Icons.Rounded.Pause else Icons.Rounded.PlayArrow, animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(), label = "play icon") {
-                                Icon(it, contentDescription = play)
-                            }
-                        }
-                    }
-                },
-                menuContent = {},
-            )
-            customItem(
-                buttonGroupContent = {
-                    val next = stringResource(R.string.action_next_stop)
-                    val pressed = remember { MutableInteractionSource() }
-                    Tooltip(next) {
-                        IconButton(
-                            onClick = onNext,
-                            enabled = !last,
-                            shapes = IconButtonDefaults.shapes(),
-                            interactionSource = pressed,
-                            modifier = Modifier.animateWidth(pressed).testTag("player_next"),
-                        ) {
-                            Icon(Icons.Rounded.SkipNext, contentDescription = next)
-                        }
-                    }
-                },
-                menuContent = {},
-            )
+                }
+            }
+            val next = stringResource(R.string.action_next_stop)
+            Tooltip(next) {
+                IconButton(onClick = onNext, enabled = !last, modifier = Modifier.testTag("player_next")) {
+                    Icon(AppIcons.SkipNext, contentDescription = next)
+                }
+            }
         }
     }
 }
@@ -754,7 +707,7 @@ private fun DragHandle(expanded: Boolean, onExpanded: (Boolean) -> Unit) {
             .testTag("player_handle"),
         contentAlignment = Alignment.Center,
     ) {
-        Surface(shape = CircleShape, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f), modifier = Modifier.size(32.dp, 4.dp)) {}
+        Surface(shape = CircleShape, color = AppTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f), modifier = Modifier.size(32.dp, 4.dp)) {}
     }
 }
 
@@ -780,8 +733,8 @@ private val SWIPE_TO_STEP = 56.dp
  */
 @Composable
 private fun <T> lateral(order: (T) -> Int = { it as Int }): AnimatedContentTransitionScope<T>.() -> ContentTransform {
-    val spec = MaterialTheme.motionScheme.defaultSpatialSpec<IntOffset>()
-    val size = MaterialTheme.motionScheme.defaultSpatialSpec<IntSize>()
+    val spec = AppTheme.motionScheme.defaultSpatialSpec<IntOffset>()
+    val size = AppTheme.motionScheme.defaultSpatialSpec<IntSize>()
     val reduced = LocalReducedMotion.current
     return {
         if (reduced) {

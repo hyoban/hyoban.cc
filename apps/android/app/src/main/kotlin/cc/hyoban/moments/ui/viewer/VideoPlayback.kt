@@ -1,5 +1,8 @@
 package cc.hyoban.moments.ui.viewer
 
+import cc.hyoban.moments.ui.design.AppIcons
+import cc.hyoban.moments.ui.design.Scrubber
+import cc.hyoban.moments.ui.design.Spinner
 import androidx.annotation.OptIn
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -13,22 +16,12 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.VolumeOff
-import androidx.compose.material.icons.automirrored.rounded.VolumeUp
-import androidx.compose.material.icons.rounded.Pause
-import androidx.compose.material.icons.rounded.PlayArrow
-import androidx.compose.material.icons.rounded.Replay
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LoadingIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
-import androidx.compose.material3.Text
+import cc.hyoban.moments.ui.design.IconButtonDefaults
+import cc.hyoban.moments.ui.design.ButtonDefaults
+import cc.hyoban.moments.ui.design.Icon
+import cc.hyoban.moments.ui.design.IconButton
+import cc.hyoban.moments.ui.design.AppTheme
+import cc.hyoban.moments.ui.design.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -154,13 +147,12 @@ fun VideoPlayback(url: String, active: Boolean, state: VideoState, modifier: Mod
 private val VIDEO_AUDIO = AudioAttributes.Builder().setUsage(C.USAGE_MEDIA).setContentType(C.AUDIO_CONTENT_TYPE_MOVIE).build()
 
 /** A loading indicator in the middle while the video waits for more of itself. */
-@kotlin.OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun VideoWaiting(state: VideoState, modifier: Modifier = Modifier) {
-    val motion = MaterialTheme.motionScheme
+    val motion = AppTheme.motionScheme
     AnimatedVisibility(state.waiting && state.player != null, modifier = modifier, enter = fadeIn(motion.defaultEffectsSpec()), exit = fadeOut(motion.defaultEffectsSpec())) {
         Box(Modifier.size(56.dp).background(MediaOverlay.control, CircleShape), contentAlignment = Alignment.Center) {
-            LoadingIndicator(Modifier.size(44.dp), color = MediaOverlay.content)
+            Spinner(Modifier.size(44.dp), color = MediaOverlay.content)
         }
     }
 }
@@ -183,7 +175,7 @@ fun VideoControls(state: VideoState, visible: Boolean, modifier: Modifier = Modi
     val duration = progress.durationMs.coerceAtLeast(1L)
     val ended = playPause.showPlay && progress.durationMs > 0 && progress.currentPositionMs >= progress.durationMs - 100
 
-    val motion = MaterialTheme.motionScheme
+    val motion = AppTheme.motionScheme
     AnimatedVisibility(visible && player != null, modifier = modifier, enter = fadeIn(motion.fastEffectsSpec()), exit = fadeOut(motion.fastEffectsSpec())) {
         Row(
             Modifier.fillMaxWidth()
@@ -194,12 +186,12 @@ fun VideoControls(state: VideoState, visible: Boolean, modifier: Modifier = Modi
             horizontalArrangement = Arrangement.spacedBy(Space.xs),
         ) {
             Tooltip(stringResource(if (playPause.showPlay) R.string.action_play else R.string.action_pause)) {
-                IconButton(shapes = IconButtonDefaults.shapes(), onClick = playPause::onClick, enabled = playPause.isEnabled) {
+                IconButton(onClick = playPause::onClick, enabled = playPause.isEnabled) {
                     Icon(
                         when {
-                            ended -> Icons.Rounded.Replay
-                            playPause.showPlay -> Icons.Rounded.PlayArrow
-                            else -> Icons.Rounded.Pause
+                            ended -> AppIcons.Replay
+                            playPause.showPlay -> AppIcons.Play
+                            else -> AppIcons.Pause
                         },
                         contentDescription = stringResource(if (playPause.showPlay) R.string.action_play else R.string.action_pause),
                         // Faded while the player can't take it yet, as a disabled button is.
@@ -209,10 +201,10 @@ fun VideoControls(state: VideoState, visible: Boolean, modifier: Modifier = Modi
             }
             Text(
                 formatClock(if (dragging) (dragged * duration).toLong() else progress.currentPositionMs),
-                style = MaterialTheme.typography.labelMedium,
+                style = AppTheme.typography.labelMedium,
                 color = MediaOverlay.content,
             )
-            Slider(
+            Scrubber(
                 value = if (dragging) dragged else bar.currentPositionProgress.coerceIn(0f, 1f),
                 onValueChange = {
                     dragging = true
@@ -222,18 +214,15 @@ fun VideoControls(state: VideoState, visible: Boolean, modifier: Modifier = Modi
                     player?.seekTo((dragged * duration).toLong())
                     dragging = false
                 },
-                colors = SliderDefaults.colors(
-                    thumbColor = MediaOverlay.content,
-                    activeTrackColor = MediaOverlay.content,
-                    inactiveTrackColor = MediaOverlay.contentDisabled,
-                ),
+                color = MediaOverlay.content,
+                trackColor = MediaOverlay.contentDisabled,
                 modifier = Modifier.weight(1f).onSizeChanged { if (it.width > 0) bar.updateTotalTickCount(it.width) },
             )
-            Text(formatClock(progress.durationMs.coerceAtLeast(0L)), style = MaterialTheme.typography.labelMedium, color = MediaOverlay.contentVariant)
+            Text(formatClock(progress.durationMs.coerceAtLeast(0L)), style = AppTheme.typography.labelMedium, color = MediaOverlay.contentVariant)
             Tooltip(stringResource(if (mute.showMuted) R.string.action_unmute else R.string.action_mute)) {
-                IconButton(shapes = IconButtonDefaults.shapes(), onClick = mute::onClick, enabled = mute.isEnabled) {
+                IconButton(onClick = mute::onClick, enabled = mute.isEnabled) {
                     Icon(
-                        if (mute.showMuted) Icons.AutoMirrored.Rounded.VolumeOff else Icons.AutoMirrored.Rounded.VolumeUp,
+                        if (mute.showMuted) AppIcons.VolumeOff else AppIcons.Volume,
                         contentDescription = stringResource(if (mute.showMuted) R.string.action_unmute else R.string.action_mute),
                         tint = if (mute.isEnabled) MediaOverlay.content else MediaOverlay.contentDisabled,
                     )

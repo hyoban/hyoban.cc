@@ -1,20 +1,17 @@
 package cc.hyoban.moments.ui.ledger
 
+import cc.hyoban.moments.ui.design.AppIcons
+import cc.hyoban.moments.ui.theme.cardBorder
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
-import androidx.compose.material.icons.automirrored.rounded.ReceiptLong
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
-import androidx.compose.material3.ListItemShapes
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SegmentedListItem
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import cc.hyoban.moments.ui.design.Icon
+import cc.hyoban.moments.ui.design.ListItem
+import cc.hyoban.moments.ui.design.ListItemDefaults
+import cc.hyoban.moments.ui.design.ListItemShapes
+import cc.hyoban.moments.ui.design.AppTheme
+import cc.hyoban.moments.ui.design.SegmentedListItem
+import cc.hyoban.moments.ui.design.Surface
+import cc.hyoban.moments.ui.design.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -76,8 +73,9 @@ fun SpendingCard(container: AppContainer, of: SpendingOf, onOpen: () -> Unit, mo
     }
     Surface(
         onClick = onOpen,
-        shape = MaterialTheme.shapes.medium,
+        shape = AppTheme.shapes.large,
         color = LocalSurfaceLevel.current.raised.fill(),
+        border = cardBorder(),
         modifier = modifier.padding(horizontal = Space.gutter).fillMaxWidth().testTag("spending"),
     ) {
         ListItem(
@@ -92,8 +90,8 @@ fun SpendingCard(container: AppContainer, of: SpendingOf, onOpen: () -> Unit, mo
                     ).joinToString(" "),
                 )
             },
-            leadingContent = { LeadingIcon(Icons.AutoMirrored.Rounded.ReceiptLong) },
-            trailingContent = { Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null) },
+            leadingContent = { LeadingIcon(AppIcons.Receipt) },
+            trailingContent = { Icon(AppIcons.ChevronRight, contentDescription = null) },
             colors = ListItemDefaults.colors(containerColor = Color.Transparent),
         )
     }
@@ -103,7 +101,6 @@ fun SpendingCard(container: AppContainer, of: SpendingOf, onOpen: () -> Unit, mo
  * A Moment's bills as rows of its page's segmented list, each leading to its bill; with none
  * and a meal's bill written in the Moment, a row that writes the bill from it.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 fun momentBillRows(
     ledger: Ledger,
     moment: MomentRecord,
@@ -123,7 +120,7 @@ fun momentBillRows(
                     trailingContent = {
                         Text(
                             if (txn.kind == TxnKind.TRANSFER) money(txn.amount, txn.currency) else signedMoney(txn.amount, txn.currency, txn.incoming),
-                            style = MaterialTheme.typography.titleSmall,
+                            style = AppTheme.typography.titleSmall,
                         )
                     },
                     modifier = Modifier.testTag("moment_bill_${txn.id}"),
@@ -137,7 +134,7 @@ fun momentBillRows(
             onClick = { onNewBill(moment.uid) },
             shapes = shapes,
             colors = segmentColors(),
-            leadingContent = { LeadingIcon(Icons.Rounded.Add, tonal = false) },
+            leadingContent = { LeadingIcon(AppIcons.Plus, tonal = false) },
             supportingContent = { Text(stringResource(R.string.ledger_from_moment_note)) },
             modifier = Modifier.testTag("moment_new_bill"),
         ) { Text(stringResource(R.string.ledger_from_moment, money(Math.round(bill.amount * 100), "CNY"))) }

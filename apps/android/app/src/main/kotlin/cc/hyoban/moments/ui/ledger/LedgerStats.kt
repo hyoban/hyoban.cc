@@ -1,5 +1,7 @@
 package cc.hyoban.moments.ui.ledger
 
+import cc.hyoban.moments.ui.design.AppIcons
+import cc.hyoban.moments.ui.theme.cardBorder
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,23 +10,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowLeft
-import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SegmentedListItem
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import cc.hyoban.moments.ui.design.IconButtonDefaults
+import cc.hyoban.moments.ui.design.ButtonDefaults
+import cc.hyoban.moments.ui.design.FilterChip
+import cc.hyoban.moments.ui.design.Icon
+import cc.hyoban.moments.ui.design.IconButton
+import cc.hyoban.moments.ui.design.LinearProgressIndicator
+import cc.hyoban.moments.ui.design.AppTheme
+import cc.hyoban.moments.ui.design.SegmentedButton
+import cc.hyoban.moments.ui.design.SegmentedListItem
+import cc.hyoban.moments.ui.design.SingleChoiceSegmentedButtonRow
+import cc.hyoban.moments.ui.design.Surface
+import cc.hyoban.moments.ui.design.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -103,7 +100,6 @@ private fun line(vararg pieces: String?) = pieces.filterNotNull().joinToString("
  * a list, and over a year or more, earning against spending and the categories by month.
  * A mark tapped reads out its value, and its bills are a button away.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun StatsView(ledger: Ledger, books: Set<String>, currency: String, nav: LedgerNav, byName: Boolean = false) {
     var span by rememberSaveable { mutableIntStateOf(0) }
@@ -157,21 +153,20 @@ fun StatsView(ledger: Ledger, books: Set<String>, currency: String, nav: LedgerN
                     SegmentedButton(
                         selected = span == index,
                         onClick = { span = index },
-                        shape = SegmentedButtonDefaults.itemShape(index, Span.entries.size),
                         modifier = Modifier.testTag("span_${entry.name.lowercase()}"),
                     ) { Text(stringResource(entry.label)) }
                 }
             }
             Row(Modifier.fillMaxWidth().padding(horizontal = Space.s), verticalAlignment = Alignment.CenterVertically) {
                 if (mode != Span.ALL) {
-                    IconButton(shapes = IconButtonDefaults.shapes(), onClick = { anchorDay = (if (mode == Span.MONTH) anchor.minusMonths(1) else anchor.minusYears(1)).toEpochDay() }) {
-                        Icon(Icons.AutoMirrored.Rounded.KeyboardArrowLeft, contentDescription = stringResource(R.string.ledger_previous_period))
+                    IconButton(onClick = { anchorDay = (if (mode == Span.MONTH) anchor.minusMonths(1) else anchor.minusYears(1)).toEpochDay() }) {
+                        Icon(AppIcons.ChevronLeft, contentDescription = stringResource(R.string.ledger_previous_period))
                     }
                 }
-                Text(periodLabel, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f).padding(horizontal = Space.s))
+                Text(periodLabel, style = AppTheme.typography.titleMedium, modifier = Modifier.weight(1f).padding(horizontal = Space.s))
                 if (mode != Span.ALL) {
-                    IconButton(shapes = IconButtonDefaults.shapes(), onClick = { anchorDay = (if (mode == Span.MONTH) anchor.plusMonths(1) else anchor.plusYears(1)).toEpochDay() }) {
-                        Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = stringResource(R.string.ledger_next_period))
+                    IconButton(onClick = { anchorDay = (if (mode == Span.MONTH) anchor.plusMonths(1) else anchor.plusYears(1)).toEpochDay() }) {
+                        Icon(AppIcons.ChevronRight, contentDescription = stringResource(R.string.ledger_next_period))
                     }
                 }
             }
@@ -195,8 +190,8 @@ fun StatsView(ledger: Ledger, books: Set<String>, currency: String, nav: LedgerN
             if (byDay.values.none { it > 0 }) {
                 Text(
                     stringResource(if (income) R.string.ledger_no_income else R.string.ledger_no_expense),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = AppTheme.typography.bodyMedium,
+                    color = AppTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth().padding(Space.xl),
                 )
@@ -255,7 +250,7 @@ fun StatsView(ledger: Ledger, books: Set<String>, currency: String, nav: LedgerN
                                     )
                                 }
                             },
-                            trailingContent = { Text(money(cents, currency), style = MaterialTheme.typography.titleSmall) },
+                            trailingContent = { Text(money(cents, currency), style = AppTheme.typography.titleSmall) },
                         ) { Text(name, maxLines = 1) }
                     }
                 },
@@ -271,8 +266,9 @@ fun StatsView(ledger: Ledger, books: Set<String>, currency: String, nav: LedgerN
 @Composable
 private fun Totals(summary: Summary, currency: String, average: Long?, compared: Long?, yearly: Boolean) {
     Surface(
-        shape = MaterialTheme.shapes.medium,
+        shape = AppTheme.shapes.large,
         color = LocalSurfaceLevel.current.raised.fill(),
+        border = cardBorder(),
         modifier = Modifier.fillMaxWidth().padding(horizontal = Space.gutter, vertical = Space.s),
     ) {
         Column(Modifier.padding(Space.l), verticalArrangement = Arrangement.spacedBy(Space.m)) {
@@ -283,13 +279,13 @@ private fun Totals(summary: Summary, currency: String, average: Long?, compared:
                     R.string.ledger_balance to summary.balance,
                 ).forEach { (label, cents) ->
                     Column(Modifier.weight(1f).semantics(mergeDescendants = true) {}) {
-                        Text(stringResource(label), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(stringResource(label), style = AppTheme.typography.labelMedium, color = AppTheme.colorScheme.onSurfaceVariant)
                         // A six-figure sum shrinks to fit its third rather than losing its cents.
                         Text(
                             money(cents, currency),
-                            style = MaterialTheme.typography.titleMedium,
+                            style = AppTheme.typography.titleMedium,
                             maxLines = 1,
-                            autoSize = TextAutoSize.StepBased(minFontSize = 11.sp, maxFontSize = MaterialTheme.typography.titleMedium.fontSize),
+                            autoSize = TextAutoSize.StepBased(minFontSize = 11.sp, maxFontSize = AppTheme.typography.titleMedium.fontSize),
                         )
                     }
                 }
@@ -308,7 +304,7 @@ private fun Totals(summary: Summary, currency: String, average: Long?, compared:
             }
             val average = average?.takeIf { summary.expense > 0 }?.let { stringResource(R.string.ledger_daily_average, money(it, currency)) }
             if (average != null || change != null) {
-                Text(line(average, change), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(line(average, change), style = AppTheme.typography.bodyMedium, color = AppTheme.colorScheme.onSurfaceVariant)
             }
         }
     }
@@ -323,7 +319,7 @@ private fun IncomeAgainstExpense(summary: Summary, yearly: Boolean, year: Int, f
     var picked by remember(yearly, year, summary) { mutableStateOf<Int?>(null) }
     val expense = if (yearly) byMonth(summary.expenseByDay, year) else byYear(summary.expenseByDay, first, last)
     val income = if (yearly) byMonth(summary.incomeByDay, year) else byYear(summary.incomeByDay, first, last)
-    val colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
+    val colors = listOf(AppTheme.colorScheme.primary, AppTheme.colorScheme.tertiary)
     val expenseLabel = stringResource(R.string.ledger_kind_expense)
     val incomeLabel = stringResource(R.string.ledger_kind_income)
     val readout = picked?.let { i ->
@@ -403,7 +399,7 @@ private fun Trend(
     ) {
         BarChart(
             listOf(values),
-            listOf(MaterialTheme.colorScheme.primary),
+            listOf(AppTheme.colorScheme.primary),
             axis,
             picked,
             { picked = it },
@@ -441,7 +437,7 @@ private fun RunningTotal(
         current.getOrNull(at)?.let { "$thisName ${money(it, currency)}" },
         last.getOrNull(at)?.let { "$lastName ${money(it, currency)}" },
     )
-    val colors = listOf(MaterialTheme.colorScheme.primary, otherColor())
+    val colors = listOf(AppTheme.colorScheme.primary, otherColor())
     ChartCard(
         stringResource(R.string.ledger_chart_running_total),
         readout,
@@ -485,7 +481,7 @@ private fun Weekdays(byDay: Map<LocalDate, Long>, start: LocalDate, end: LocalDa
     val at = picked ?: values.indices.maxBy { values[it] }
     val readout = stringResource(R.string.ledger_weekday_average, weekday(at), money(values[at], currency))
     ChartCard(stringResource(R.string.ledger_chart_weekdays), readout) {
-        BarChart(listOf(values), listOf(MaterialTheme.colorScheme.primary), weekdayLetters(), picked, { picked = it }, readout, height = 88.dp)
+        BarChart(listOf(values), listOf(AppTheme.colorScheme.primary), weekdayLetters(), picked, { picked = it }, readout, height = 88.dp)
     }
 }
 
@@ -520,11 +516,11 @@ private fun Categories(
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     picked?.let { names[it] } ?: stringResource(if (income) R.string.ledger_kind_income else R.string.ledger_kind_expense),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = AppTheme.typography.labelMedium,
+                    color = AppTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                 )
-                Text(money(picked?.let { slices[it].first } ?: sum, currency), style = MaterialTheme.typography.titleMedium, maxLines = 1)
+                Text(money(picked?.let { slices[it].first } ?: sum, currency), style = AppTheme.typography.titleMedium, maxLines = 1)
             }
         }
     }

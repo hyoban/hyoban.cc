@@ -1,5 +1,16 @@
 package cc.hyoban.moments.ui.moment
 
+import cc.hyoban.moments.ui.design.AppIcons
+import cc.hyoban.moments.ui.components.floatingElevation
+import cc.hyoban.moments.ui.design.FloatingActionButton
+import cc.hyoban.moments.ui.design.FloatingBar
+import androidx.compose.ui.graphics.Color
+import cc.hyoban.moments.ui.design.groupedShapes
+import cc.hyoban.moments.ui.design.groupedRow
+import cc.hyoban.moments.ui.theme.SurfaceLevel
+import cc.hyoban.moments.ui.theme.cardBorder
+import cc.hyoban.moments.ui.theme.Corners
+import cc.hyoban.moments.ui.theme.tokens
 import android.content.ClipData
 import android.content.ClipboardManager
 import androidx.compose.animation.AnimatedContent
@@ -45,33 +56,18 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
-import androidx.compose.material.icons.rounded.CalendarToday
-import androidx.compose.material.icons.rounded.ContentCopy
-import androidx.compose.material.icons.rounded.Edit
-import androidx.compose.material.icons.rounded.Fullscreen
-import androidx.compose.material.icons.rounded.Luggage
-import androidx.compose.material.icons.rounded.PhoneAndroid
-import androidx.compose.material.icons.rounded.Place
-import androidx.compose.material.icons.rounded.Restaurant
-import androidx.compose.material.icons.rounded.Share
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.FloatingToolbarDefaults
-import androidx.compose.material3.FloatingToolbarExitDirection
-import androidx.compose.material3.HorizontalFloatingToolbar
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
-import androidx.compose.material3.ListItemShapes
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SegmentedListItem
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import cc.hyoban.moments.ui.design.IconButtonDefaults
+import cc.hyoban.moments.ui.design.ButtonDefaults
+import cc.hyoban.moments.ui.design.Icon
+import cc.hyoban.moments.ui.design.IconButton
+import cc.hyoban.moments.ui.design.ListItem
+import cc.hyoban.moments.ui.design.ListItemDefaults
+import cc.hyoban.moments.ui.design.ListItemShapes
+import cc.hyoban.moments.ui.design.AppTheme
+import cc.hyoban.moments.ui.design.SegmentedListItem
+import cc.hyoban.moments.ui.design.Surface
+import cc.hyoban.moments.ui.design.Text
+import cc.hyoban.moments.ui.design.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -160,7 +156,6 @@ private val RISE = 32.dp
  * words first, a strip of its photos when there are several, and then where it was, the
  * trip it was on and the rest of its day, as one list of rows to open.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun MomentScreen(
     container: AppContainer,
@@ -197,15 +192,11 @@ fun MomentScreen(
     // The photos swiped above and the strip under them are one place in the Moment's media.
     val pager = rememberPagerState { moment.media.size }
 
-    // The toolbar at the foot goes down out of the way as the page is read on, and comes back
-    // as it is scrolled back, as Material 3 has a floating toolbar exit on scroll; it stays while
-    // a screen reader is on, which would otherwise lose it.
-    val toolbarScroll = FloatingToolbarDefaults.exitAlwaysScrollBehavior(exitDirection = FloatingToolbarExitDirection.Bottom)
     val screenReader = rememberScreenReader()
 
     // The whole page is the card it was opened from, grown to the screen.
     // As a pane beside the Moments, it neither grows out of a card nor flies its photos, the card still in sight.
-    BoxWithConstraints(Modifier.fillMaxSize().then(if (pane) Modifier else Modifier.sharedCard(uid, page = true)).background(AppColors.page).then(if (screenReader) Modifier else Modifier.nestedScroll(toolbarScroll))) {
+    BoxWithConstraints(Modifier.fillMaxSize().then(if (pane) Modifier else Modifier.sharedCard(uid, page = true)).background(AppColors.page)) {
         val screenWidth = maxWidth
         val screenHeight = maxHeight
         val scroll = rememberScrollState()
@@ -278,15 +269,15 @@ fun MomentScreen(
         val show = rememberShowMessage()
         val copied = stringResource(R.string.message_text_copied)
         val tools: @Composable RowScope.() -> Unit = {
-            ToolbarButton(Icons.Rounded.Share, stringResource(R.string.action_share), "share") { sharing = true }
+            ToolbarButton(AppIcons.Share, stringResource(R.string.action_share), "share") { sharing = true }
             if (moment.text.isNotBlank()) {
-                ToolbarButton(Icons.Rounded.ContentCopy, stringResource(R.string.action_copy_text), "copy_text") {
+                ToolbarButton(AppIcons.Copy, stringResource(R.string.action_copy_text), "copy_text") {
                     context.getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("", moment.text))
                     show(copied)
                 }
             }
             if (moment.media.isNotEmpty()) {
-                ToolbarButton(Icons.Rounded.Fullscreen, stringResource(R.string.action_view_photo), "view_photo") { onMedia(uid, pager.currentPage) }
+                ToolbarButton(AppIcons.Fullscreen, stringResource(R.string.action_view_photo), "view_photo") { onMedia(uid, pager.currentPage) }
             }
         }
         // Under the words it acts on: in the middle of the page, or of their half beside the photos.
@@ -300,7 +291,7 @@ fun MomentScreen(
         }
         Box(toolbarArea.navigationBarsPadding().padding(bottom = Space.gutter), contentAlignment = Alignment.BottomCenter) {
             // The edit button goes and comes back with publishing, the toolbar easing to its new width.
-            val motion = MaterialTheme.motionScheme
+            val motion = AppTheme.motionScheme
             AnimatedContent(
                 editable && publishing == null,
                 transitionSpec = {
@@ -309,23 +300,24 @@ fun MomentScreen(
                 contentAlignment = Alignment.BottomCenter,
                 label = "toolbar",
             ) { canEdit ->
-                if (canEdit) {
-                    HorizontalFloatingToolbar(
-                        expanded = true,
-                        scrollBehavior = toolbarScroll.takeUnless { screenReader },
-                        floatingActionButton = {
-                            val edit = stringResource(R.string.action_edit_moment)
-                            Tooltip(edit) {
-                                FloatingToolbarDefaults.StandardFloatingActionButton(onClick = { onEdit(uid) }, modifier = Modifier.testTag("edit")) {
-                                    Icon(Icons.Rounded.Edit, contentDescription = edit)
-                                }
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
+                    FloatingBar(toolbar, content = tools)
+                    // Editing, the page's one main action, an ink button beside the bar.
+                    if (canEdit) {
+                        val edit = stringResource(R.string.action_edit_moment)
+                        Tooltip(edit) {
+                            FloatingActionButton(
+                                onClick = { onEdit(uid) },
+                                shape = Corners.full,
+                                containerColor = tokens.ink,
+                                contentColor = tokens.onInk,
+                                elevation = floatingElevation(),
+                                modifier = Modifier.testTag("edit"),
+                            ) {
+                                Icon(AppIcons.Pen, contentDescription = edit)
                             }
-                        },
-                        modifier = toolbar,
-                        content = tools,
-                    )
-                } else {
-                    HorizontalFloatingToolbar(expanded = true, modifier = toolbar, scrollBehavior = toolbarScroll.takeUnless { screenReader }, content = tools)
+                        }
+                    }
                 }
             }
         }
@@ -367,7 +359,6 @@ private fun MomentPhotos(moment: MomentRecord, urls: MediaUrls, pager: PagerStat
  * When, the Moment's words, its photos small, and then the rows that lead on from it: its
  * places, its trip and the rest of its day.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun MomentDetails(
     moment: MomentRecord,
@@ -393,30 +384,29 @@ private fun MomentDetails(
                 buildAnnotatedString {
                     append(formatDay(moment.occurredAt))
                     formatTime(moment.occurredAt)?.let {
-                        withStyle(SpanStyle(color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = MaterialTheme.typography.titleLarge.fontWeight)) { append("  $it") }
+                        withStyle(SpanStyle(color = AppTheme.colorScheme.onSurfaceVariant, fontWeight = AppTheme.typography.titleLarge.fontWeight)) { append("  $it") }
                     }
                 },
-                style = MaterialTheme.typography.titleLargeEmphasized,
+                style = AppTheme.typography.titleLargeEmphasized,
                 modifier = Modifier.semantics { heading() },
             )
             if (moment.published == null) {
-                StateNotice(Icons.Rounded.PhoneAndroid, stringResource(R.string.label_on_phone), stringResource(R.string.explain_on_phone), onChanges)
+                StateNotice(AppIcons.Phone, stringResource(R.string.label_on_phone), stringResource(R.string.explain_on_phone), onChanges)
             } else if (changed) {
-                StateNotice(Icons.Rounded.Edit, stringResource(R.string.label_unpublished_change), stringResource(R.string.explain_unpublished_change), onChanges)
+                StateNotice(AppIcons.Pen, stringResource(R.string.label_unpublished_change), stringResource(R.string.explain_unpublished_change), onChanges)
             }
         }
         if (moment.text.isNotBlank()) {
             SelectionContainer(Modifier.padding(start = Space.gutter + Space.l, end = Space.gutter + Space.l, top = Space.l)) {
-                Text(moment.text, style = MaterialTheme.typography.bodyLarge)
+                Text(moment.text, style = AppTheme.typography.bodyLarge)
             }
         }
         if (moment.media.size > 1) {
             Filmstrip(moment, urls, pager, Modifier.padding(top = Space.xl))
         }
 
-        // Where it was, its trip and its day as one expressive segmented list: each row filled on
-        // its own, a small gap between, the group's outer corners round and its inner ones
-        // tight, each row's corners rounding further under the finger.
+        // Where it was, its trip and its day as one grouped list: one surface, a hairline round it
+        // and between the rows.
         val rows = buildList<@Composable (ListItemShapes) -> Unit> {
             // What was eaten heads them, as it is of the Moment itself: the dishes, what the
             // meal cost and each one's share, and how it went as a badge at the end. Not a
@@ -433,7 +423,7 @@ private fun MomentDetails(
                             )
                         },
                         supportingContent = food.bill?.let { bill -> { Text(billLine(bill)) } },
-                        leadingContent = { RowIcon(Icons.Rounded.Restaurant) },
+                        leadingContent = { RowIcon(AppIcons.Food) },
                         trailingContent = verdict?.let { { VerdictBadge(it) } },
                         colors = ListItemDefaults.colors(containerColor = LocalSurfaceLevel.current.raised.fill()),
                         modifier = Modifier.clip(shapes.shape).testTag("food"),
@@ -448,8 +438,8 @@ private fun MomentDetails(
                         onClick = { onPlace(id) },
                         shapes = shapes,
                         colors = segmentColors(),
-                        leadingContent = { RowIcon(Icons.Rounded.Place) },
-                        trailingContent = { Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null) },
+                        leadingContent = { RowIcon(AppIcons.Pin) },
+                        trailingContent = { Icon(AppIcons.ChevronRight, contentDescription = null) },
                         // Its kind, then a note if it has one.
                         supportingContent = listOfNotNull(
                             PlaceKind.of(place?.kind)?.let { stringResource(it.label) },
@@ -468,9 +458,9 @@ private fun MomentDetails(
                         shapes = shapes,
                         colors = segmentColors(),
                         leadingContent = {
-                            if (cover != null) Thumbnail(cover, urls, size = ROW_LEAD) else RowIcon(Icons.Rounded.Luggage)
+                            if (cover != null) Thumbnail(cover, urls, size = ROW_LEAD) else RowIcon(AppIcons.Luggage)
                         },
-                        trailingContent = { Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null) },
+                        trailingContent = { Icon(AppIcons.ChevronRight, contentDescription = null) },
                         supportingContent = { Text(tripSummary(trip, count), maxLines = 2) },
                         // Not shared with the trip's page when it is the page under this one,
                         // which this one shrinks back into rather than the trip growing out of the row.
@@ -485,8 +475,8 @@ private fun MomentDetails(
                         onClick = { onDay(moment.dateKey) },
                         shapes = shapes,
                         colors = segmentColors(),
-                        leadingContent = { RowIcon(Icons.Rounded.CalendarToday) },
-                        trailingContent = { Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null) },
+                        leadingContent = { RowIcon(AppIcons.Calendar) },
+                        trailingContent = { Icon(AppIcons.ChevronRight, contentDescription = null) },
                         supportingContent = { Text(pluralStringResource(R.plurals.count_moments, sameDay, sameDay)) },
                         modifier = (if (openedFrom(Day(moment.dateKey))) Modifier else Modifier.sharedCard(dayRowKey(moment.dateKey))).testTag("day_${moment.dateKey}"),
                     ) { Text(stringResource(R.string.label_whole_day)) }
@@ -494,11 +484,8 @@ private fun MomentDetails(
             }
         }
         if (rows.isNotEmpty()) {
-            Column(
-                Modifier.padding(start = Space.gutter, end = Space.gutter, top = Space.xl),
-                verticalArrangement = Arrangement.spacedBy(ListItemDefaults.SegmentedGap),
-            ) {
-                rows.forEachIndexed { index, row -> row(ListItemDefaults.segmentedShapes(index, rows.size)) }
+            Column(Modifier.padding(start = Space.gutter, end = Space.gutter, top = Space.xl)) {
+                rows.forEachIndexed { index, row -> Box(Modifier.groupedRow(index, rows.size)) { row(groupedShapes(index, rows.size)) } }
             }
         }
         // Clear of the floating toolbar at the foot.
@@ -514,7 +501,7 @@ private val TOOLBAR_CLEARANCE = 88.dp
 @Composable
 private fun ToolbarButton(icon: ImageVector, label: String, tag: String, onClick: () -> Unit) {
     Tooltip(label) {
-        IconButton(shapes = IconButtonDefaults.shapes(), onClick = onClick, modifier = Modifier.testTag(tag)) {
+        IconButton(onClick = onClick, modifier = Modifier.testTag(tag)) {
             Icon(icon, contentDescription = label)
         }
     }
@@ -525,7 +512,6 @@ private fun ToolbarButton(icon: ImageVector, label: String, tag: String, onClick
  * and the rest dimmed; a tap turns the photos above to it, and a swipe above keeps the one
  * shown in sight here.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun Filmstrip(moment: MomentRecord, urls: MediaUrls, pager: PagerState, modifier: Modifier = Modifier) {
     val scope = rememberCoroutineScope()
@@ -547,11 +533,11 @@ private fun Filmstrip(moment: MomentRecord, urls: MediaUrls, pager: PagerState, 
         itemsIndexed(moment.media, key = { _, media -> media.uid }) { index, media ->
             val selected = index == current
             val label = stringResource(R.string.media_position, stringResource(media.kindLabel()), index + 1, moment.media.size)
-            // The one shown breaks from the others' shape, morphing on the motion scheme's
-            // spatial spring; the others under a scrim rather than faded, so they don't turn the
+            // The one shown rounder than the others, easing there on the motion scheme's spatial
+            // spring; the others under a scrim rather than faded, so they don't turn the
             // page's grey.
-            val corner by animateDpAsState(if (selected) Radius.extraLarge else Radius.medium, MaterialTheme.motionScheme.fastSpatialSpec(), label = "thumb shape")
-            val dim by animateFloatAsState(if (selected) 0f else MediaOverlay.CONTROL_ALPHA, MaterialTheme.motionScheme.fastEffectsSpec(), label = "thumb dim")
+            val corner by animateDpAsState(if (selected) Radius.extraLarge else Radius.medium, AppTheme.motionScheme.fastSpatialSpec(), label = "thumb shape")
+            val dim by animateFloatAsState(if (selected) 0f else MediaOverlay.CONTROL_ALPHA, AppTheme.motionScheme.fastEffectsSpec(), label = "thumb dim")
             Box(
                 Modifier.size(56.dp).clip(ContinuousRoundedRectangle(corner))
                     .clickable { scope.launch { pager.animateScrollToPage(index) } }
@@ -563,16 +549,15 @@ private fun Filmstrip(moment: MomentRecord, urls: MediaUrls, pager: PagerState, 
                     .testTag("thumb_$index"),
             ) {
                 Thumbnail(media, urls, size = 56)
-                Box(Modifier.matchParentSize().graphicsLayer { alpha = dim }.background(MaterialTheme.colorScheme.scrim))
+                Box(Modifier.matchParentSize().graphicsLayer { alpha = dim }.background(AppTheme.colorScheme.scrim))
             }
         }
     }
 }
 
-/** A row of the segmented list, filled a level above the sheet as the app's cards are. */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+/** A row of the grouped list: no fill of its own, on the group's surface. */
 @Composable
-private fun segmentColors() = ListItemDefaults.segmentedColors(containerColor = LocalSurfaceLevel.current.raised.fill())
+private fun segmentColors() = ListItemDefaults.segmentedColors(containerColor = Color.Transparent)
 
 /** How wide what leads a row is, a trip's cover or an icon centred in the same room, so the rows' words line up. */
 private const val ROW_LEAD = 40
@@ -592,18 +577,19 @@ private fun RowIcon(icon: ImageVector) {
 @Composable
 private fun StateNotice(icon: ImageVector, label: String, explanation: String, onChanges: (() -> Unit)?) {
     Surface(
-        shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.secondaryContainer,
-        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+        shape = AppTheme.shapes.large,
+        color = SurfaceLevel.Card.fill(),
+        contentColor = AppTheme.colorScheme.onSurface,
+        border = cardBorder(),
         modifier = Modifier.fillMaxWidth().padding(top = Space.xs).testTag("state_notice"),
     ) {
         Row(Modifier.padding(start = Space.l, end = Space.s, top = Space.m, bottom = if (onChanges != null) Space.xs else Space.m)) {
             Icon(icon, contentDescription = null, modifier = Modifier.padding(top = Space.xxs).size(20.dp))
             Column(Modifier.weight(1f).padding(start = Space.m, end = Space.s)) {
-                Text(label, style = MaterialTheme.typography.titleSmall)
-                Text(explanation, style = MaterialTheme.typography.bodyMedium)
+                Text(label, style = AppTheme.typography.titleSmall)
+                Text(explanation, style = AppTheme.typography.bodyMedium)
                 if (onChanges != null) {
-                    TextButton(shapes = ButtonDefaults.shapes(), onClick = onChanges, modifier = Modifier.offset(x = -Space.m).testTag("state_changes")) {
+                    TextButton(onClick = onChanges, modifier = Modifier.offset(x = -Space.m).testTag("state_changes")) {
                         Text(stringResource(R.string.title_changes))
                     }
                 }

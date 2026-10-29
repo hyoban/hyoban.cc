@@ -58,36 +58,47 @@ SDK configured in `local.properties` (`sdk.dir=…`).
 
 ## Design
 
-- Material 3, with Expressive where it fits, as an Android app, not a copy of the
-  website's look. Before reworking a page, read the matching pages of m3.material.io
-  (layout, tokens, interaction, styles, content design, the components in use) and
-  follow them: M3 components and tokens over hand-made ones, color roles in their
-  pairs, 48dp touch targets, scrims over media.
-- m3.material.io is a script-built site: read it in the built-in browser, where its pages
-  load whole in a same-origin iframe, the Guidelines, Specs and Accessibility tabs of each
-  component as well as its overview. Spec values there (card 12dp corners and 8dp gaps,
-  chips 8dp, sheets in surface container low) win over what the app had before.
-- M3 is the only reference now. FlClash shaped the early pages and is still thanked in
-  the README and on the settings page, but where it and M3 differ, M3 wins.
+- The app follows its own design system, the 「hyoban 应用设计系统」 artifact, not Material 3:
+  the site's restraint on a phone. Its tokens live in `ui/theme` (`Colors.kt`'s `Tokens`, the
+  type scale and corners in `Theme.kt`); change the artifact and the code together. The app
+  doesn't depend on Material 3 (`androidx.compose.material3`, `glance-material3`): its
+  components are its own, in `ui/design`, on Compose foundation, and it has no Material
+  dependency at all. Don't add Material components or icon packs back.
+- Icons are the design system's own set (`AppIcons`, 24 grid, 1.75 stroke, round ends),
+  generated into `ui/design/AppIcons.kt` by `python3 scripts/icons/kotlin.py` from
+  `scripts/icons/icons.py`. A new icon is drawn there first, in the same hand, then
+  generated; never edit `AppIcons.kt` by hand or reach for another icon library.
+- `ui/design` holds the theme (`AppTheme`: colour roles, type, shapes, springs, the press
+  wash in place of a ripple) and every component: text and icons, surfaces, buttons, chips, the
+  segmented control, fields, list rows, menus, dialogs, sheets, the top bar, messages,
+  pull-to-refresh and swipe-to-revert. Some keep Material's names so call sites read as before.
+  A list laid out row by row (a lazy list) draws its group with `groupedRow`.
+- A page and one surface above it, set apart by a 1px hairline (`cardBorder`, `dividerColor`),
+  never by stacked greys. Shadows are few and faint (`Elevation`): none where a hairline does,
+  a soft one only on what floats over the page or the map (the tab bar, the floating
+  buttons), deeper only while something is dragged. Text in three greys; the one accent
+  (`tokens.accent`) only for state: chosen, on, in progress, a link. The page's one main
+  action is in the ink (`tokens.ink`), at most one a page.
+- Few cards: the timeline's Moments, bills and trip banners sit on the page itself, spaced
+  apart, a Moment's photos in rounded corners of their own; surfaces with hairlines are for
+  groups of settings, sheets, dialogs and what floats.
+- The tabs float: a capsule of icons alone (named for TalkBack) at the page's foot, the tab's
+  ink button beside it.
+- Three tabs: 时间线, 地图, 我. Everything that happened goes on the timeline (Moments, the
+  ledger's bills, a banner where a trip begins); the map lists the trips in its sheet; 我
+  holds the changes to publish, the ledger's month and pages, and the settings, a page per
+  section with no switches on 我 itself. The calendar view is gone; a tab never has tabs of
+  its own, except the ledger's page under 我.
 - Keep the smooth (continuous) corners; that has been decided twice.
-- A top app bar has one or two actions, as M3 asks, and no overflow menu: switching
-  between what the page is one of (the ledger's books) is the title's dropdown
-  (`TitleMenu`), and a control over the subtitle's figures sits beside it
-  (`subtitleAction`), joining the actions only where the bar starts small.
-- Material 3 Expressive throughout (the module opts into its API): `MaterialExpressiveTheme`
-  with the expressive motion scheme, and buttons and icon buttons given
-  `ButtonDefaults.shapes()` / `IconButtonDefaults.shapes()`, so they change shape when
-  pressed; motion takes the scheme's springs, tweens only for timed sequences such
-  as a fade-through, which springs can't delay. The one exception is the
-  rail on a phone on its side, which stays the baseline `NavigationRail`: the collapsed
-  `WideNavigationRail`, with its taller items and fixed gap under the header, doesn't fit
-  that height.
-- Settings, on a page or in a sheet, are M3 segmented lists (`SegmentedGroup` with
-  `SwitchRow` and `ActionRow`), switches trailing, supporting text at most three lines;
-  a longer explanation goes behind an info row's dialog, not on the page.
-- Words are Chinese first, with English beside them in `values-en`, both following M3's
-  content design, with TalkBack descriptions for what is shown. The Moments' own words
-  are never changed.
+- A top bar has at most two actions and no overflow menu: switching between what the page
+  is one of (the ledger's books) is the title's dropdown (`TitleMenu`), and a control over
+  the subtitle's figures sits beside it (`subtitleAction`).
+- Settings are grouped lists (`SegmentedGroup` with `SwitchRow` and `ActionRow`): one surface
+  with hairlines between rows, switches trailing (`AppSwitch`), supporting text at most three
+  lines; a longer explanation goes behind an info row's dialog, not on the page.
+- Touch targets are at least 48dp; scrims over media, with white on them.
+- Words are Chinese first, with English beside them in `values-en`, plain and short, with
+  TalkBack descriptions for what is shown. The Moments' own words are never changed.
 - Pieces of a line (counts, a date and a place) are set apart by an em space, ` `,
   never by " · ": the site does the same.
 - Share targets are named by what happens at the other end: 发布到 for one that ends in
@@ -96,14 +107,14 @@ SDK configured in `local.properties` (`sdk.dir=…`).
 - Follow what the app should be rather than the web version, except where it is asked
   to match: the map's features and the trip playback follow the site's player in
   `packages/trip-map/src/player`, with the route always moving while it plays.
-- An exception to M3, asked for: the map's year colours are the site's palette as it is
+- An exception to the palette, asked for: the map's year colours are the site's palette as it is
   (`ui/map/Years.kt`, from `packages/trip-map/src/theme.ts`), in both modes and with white
-  numbers on the dots, not harmonized with the primary or set at custom-colour tones.
+  numbers on the dots, not harmonized with the accent.
   Change them on both sides together.
 - The ledger's charts are drawn on a Compose `Canvas` (`ui/ledger/Charts.kt`), not with
   a chart library. One series takes the primary; categories take the data-viz palette's
   six colour-blind-safe hues in fixed order, the period's biggest first, and the rest are
-  grey 其他. This is another exception to M3, which has no colour role for a fourth series.
+  grey 其他, another exception to the palette.
 
 ## Motion and navigation
 
@@ -111,7 +122,7 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   does, and the page shrinks back into it.
 - Shared elements must not fight predictive back, drag-to-dismiss or paging in the
   viewer; check entering and leaving, and the in-between frames, on the phone.
-- System back works everywhere a close button does, and back from any of the four
+- System back works everywhere a close button does, and back from any of the three
   tabs leaves the app.
 - Pages lead to each other wherever they can, and a link to a page already under the
   current one goes back to it rather than opening it again.
@@ -138,8 +149,8 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   once and works offline. Moments can be written on the phone, local first.
 - Nothing reaches the site until 全部发布到网站, after the changes waiting have been
   reviewed: one change set, like a commit. Don't add writes that bypass it.
-- The ledger (记账 tab) is the phone's alone, like the footprints: nothing of it goes to the
-  API, the site or Android's backup, and the only request it makes is for public exchange
+- The ledger (its bills on the timeline, its pages under 我) is the phone's alone, like the
+  footprints: nothing of it goes to the API, the site or Android's backup, and the only request it makes is for public exchange
   rates, when asked. It replaces iCost, so what iCost's export holds must keep importing:
   check a change to the importer against a real export with
   `ICOST_EXPORT=<xlsx> ./gradlew :app:testDebugUnitTest --tests '*LedgerTest*'`, and never

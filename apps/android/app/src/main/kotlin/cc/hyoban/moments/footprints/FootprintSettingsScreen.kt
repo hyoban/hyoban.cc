@@ -1,5 +1,6 @@
 package cc.hyoban.moments.footprints
 
+import cc.hyoban.moments.ui.design.AppIcons
 import android.Manifest
 import android.content.ActivityNotFoundException
 import android.content.Intent
@@ -14,23 +15,14 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.OpenInNew
-import androidx.compose.material.icons.rounded.BatteryChargingFull
-import androidx.compose.material.icons.rounded.Download
-import androidx.compose.material.icons.rounded.Info
-import androidx.compose.material.icons.rounded.Notifications
-import androidx.compose.material.icons.rounded.RestartAlt
-import androidx.compose.material.icons.rounded.Stream
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItemShapes
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SegmentedListItem
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import cc.hyoban.moments.ui.design.AlertDialog
+import cc.hyoban.moments.ui.design.ButtonDefaults
+import cc.hyoban.moments.ui.design.Icon
+import cc.hyoban.moments.ui.design.ListItemShapes
+import cc.hyoban.moments.ui.design.AppTheme
+import cc.hyoban.moments.ui.design.SegmentedListItem
+import cc.hyoban.moments.ui.design.Text
+import cc.hyoban.moments.ui.design.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -100,7 +92,7 @@ private fun StatusBarSettings() {
         null,
         listOfNotNull(
             if (Build.VERSION.SDK_INT >= 36) { shapes ->
-                ActionRow(Icons.Rounded.Stream, stringResource(R.string.footprints_live_status_settings), shapes,
+                ActionRow(AppIcons.Stream, stringResource(R.string.footprints_live_status_settings), shapes,
                     supporting = promotion?.let { stringResource(it) }, tag = "footprints_live_status_settings", external = true) {
                     try {
                         context.startActivity(Intent(Settings.ACTION_APP_NOTIFICATION_PROMOTION_SETTINGS)
@@ -111,7 +103,7 @@ private fun StatusBarSettings() {
                 }
             } else null,
             { shapes ->
-                ActionRow(Icons.Rounded.Notifications, stringResource(R.string.footprints_notification_settings), shapes,
+                ActionRow(AppIcons.Bell, stringResource(R.string.footprints_notification_settings), shapes,
                     supporting = if (Build.VERSION.SDK_INT < 36) promotion?.let { stringResource(it) } else null,
                     tag = "footprints_notification_settings", external = true) {
                     context.startActivity(Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS)
@@ -120,7 +112,7 @@ private fun StatusBarSettings() {
                 }
             },
             { shapes ->
-                ActionRow(Icons.Rounded.Info, stringResource(R.string.footprints_status_icons_help), shapes, tag = "footprints_status_icons") {
+                ActionRow(AppIcons.Info, stringResource(R.string.footprints_status_icons_help), shapes, tag = "footprints_status_icons") {
                     explaining = true
                 }
             },
@@ -145,12 +137,12 @@ private fun BackgroundSettings() {
         stringResource(R.string.footprints_background_note),
         listOfNotNull(
             { shapes ->
-                ActionRow(Icons.Rounded.BatteryChargingFull, stringResource(R.string.footprints_settings), shapes, external = true) {
+                ActionRow(AppIcons.BatteryCharging, stringResource(R.string.footprints_settings), shapes, external = true) {
                     context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, "package:${context.packageName}".toUri()))
                 }
             },
             if (Build.VERSION.SDK_INT == 29) { shapes ->
-                ActionRow(Icons.Rounded.RestartAlt, stringResource(R.string.footprints_background_permission), shapes) {
+                ActionRow(AppIcons.Refresh, stringResource(R.string.footprints_background_permission), shapes) {
                     background.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
                 }
             } else null,
@@ -184,7 +176,7 @@ private fun DiagnosticsSettings(container: AppContainer) {
         stringResource(R.string.footprints_diagnostics_section),
         stringResource(if (failed) R.string.footprints_error else R.string.footprints_diagnostics_note),
         listOf { shapes ->
-            ActionRow(Icons.Rounded.Download, stringResource(R.string.footprints_export_diagnostics), shapes,
+            ActionRow(AppIcons.Download, stringResource(R.string.footprints_export_diagnostics), shapes,
                 tag = "footprints_export_diagnostics", enabled = !busy) {
                 export.launch("footprint-diagnostics-${LocalDate.now()}.jsonl")
             }
@@ -193,7 +185,6 @@ private fun DiagnosticsSettings(container: AppContainer) {
 }
 
 /** A row that does something on a tap, with what it is set to under its name; [external] ones open the system's settings. */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun ActionRow(
     icon: ImageVector,
@@ -213,7 +204,7 @@ internal fun ActionRow(
         leadingContent = { Icon(icon, contentDescription = null) },
         supportingContent = supporting?.let { { Text(it) } },
         trailingContent = if (external) {
-            { Icon(Icons.AutoMirrored.Rounded.OpenInNew, contentDescription = null) }
+            { Icon(AppIcons.External, contentDescription = null) }
         } else {
             null
         },
@@ -230,10 +221,10 @@ internal fun InfoDialog(title: String, paragraphs: List<String>, onDismiss: () -
         text = {
             Column(Modifier.verticalScroll(rememberScrollState())) {
                 paragraphs.forEachIndexed { index, text ->
-                    Text(text, style = MaterialTheme.typography.bodyMedium, modifier = if (index > 0) Modifier.padding(top = Space.m) else Modifier)
+                    Text(text, style = AppTheme.typography.bodyMedium, modifier = if (index > 0) Modifier.padding(top = Space.m) else Modifier)
                 }
             }
         },
-        confirmButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = onDismiss) { Text(stringResource(R.string.action_confirm)) } },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_confirm)) } },
     )
 }

@@ -1,5 +1,6 @@
 package cc.hyoban.moments.footprints
 
+import cc.hyoban.moments.ui.design.AppIcons
 import android.companion.AssociationInfo
 import android.companion.AssociationRequest
 import android.companion.BluetoothDeviceFilter
@@ -8,8 +9,6 @@ import android.content.IntentSender
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.BluetoothConnected
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -46,7 +45,7 @@ internal fun CompanionConnectionSettings(rules: ConnectionRules) {
         stringResource(if (error) R.string.footprints_companion_failed else R.string.footprints_companion_note),
         rules.bluetooth.map<String, String, Segment> { (address, name) ->
             { shapes ->
-                SwitchRow(address in associations, Icons.Rounded.BluetoothConnected, name, "footprints_companion_associate", shapes,
+                SwitchRow(address in associations, AppIcons.BluetoothOn, name, "footprints_companion_associate", shapes,
                     enabled = !busy && context.bluetoothAllowed()) {
                     error = false
                     val id = associations[address]

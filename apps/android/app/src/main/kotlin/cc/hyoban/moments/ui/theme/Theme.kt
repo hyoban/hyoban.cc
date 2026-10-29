@@ -1,27 +1,18 @@
 package cc.hyoban.moments.ui.theme
 
-import androidx.compose.animation.animateColorAsState
-import android.app.UiModeManager
-import android.os.Build
+import cc.hyoban.moments.ui.design.Typography
+import cc.hyoban.moments.ui.design.Shapes
+import cc.hyoban.moments.ui.design.MotionScheme
+import cc.hyoban.moments.ui.design.AppTheme
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.MaterialExpressiveTheme
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ColorScheme
-import androidx.compose.material3.MotionScheme
-import androidx.compose.material3.Shapes
-import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -33,10 +24,10 @@ import cc.hyoban.moments.ui.components.isMediumWidth
 import com.kyant.capsule.ContinuousCapsule
 import com.kyant.capsule.ContinuousRoundedRectangle
 
-// The app's look, Material 3 adapted the way FlClash adapts it: Material's type scale
-// and shape scale, with continuous corners, and every colour role made from one seed, a
-// the icon's green unless the settings pick another or the system's accent (Colors.kt says how
-// the scheme leaves Material's).
+// The app's look, as its design system has it: the site's restraint on a phone. One column of
+// text, a page and one surface with a hairline between them, greys for text and one blue for
+// state (Colors.kt), a short type scale set apart by weight more than size, and continuous
+// corners. The components are the app's own (`ui/design`), drawn with these.
 
 /** The 4dp grid every gap and padding is a step of. */
 object Space {
@@ -49,125 +40,106 @@ object Space {
     val xl = 24.dp
     val xxl = 32.dp
 
-    /** A screen's side margin, as Material 3 has it at the window's breakpoint: 16dp on a compact window, 24dp from medium on. */
+    /** A screen's side margin: 20dp on a phone, 32dp on a wider window. */
     val gutter: Dp
-        @Composable @ReadOnlyComposable get() = if (isMediumWidth()) 24.dp else 16.dp
+        @Composable @ReadOnlyComposable get() = if (isMediumWidth()) 32.dp else 20.dp
 }
 
-/** Material 3's corner sizes, for a shape that animates between them; anything else takes [MaterialTheme.shapes]. */
+/**
+ * The corner sizes, for a shape that animates between them; anything else takes
+ * [AppTheme.shapes]. Three in all: small (8dp) for thumbnails and small marks, medium
+ * (12dp) for fields and grouped lists, large (18dp) for cards and sheets; the larger
+ * names, kept for their callers, are large too.
+ */
 object Radius {
-    val extraSmall = 4.dp
+    val extraSmall = 8.dp
     val small = 8.dp
     val medium = 12.dp
-    val large = 16.dp
-    val largeIncreased = 20.dp
-    val extraLarge = 28.dp
-    val extraLargeIncreased = 32.dp
-    val extraExtraLarge = 48.dp
+    val large = 18.dp
+    val largeIncreased = 18.dp
+    val extraLarge = 18.dp
+    val extraLargeIncreased = 18.dp
+    val extraExtraLarge = 18.dp
 }
 
-/** The fully rounded shape: what floats, chips, labels. A capsule with continuous ends. */
+/** The fully rounded shape: buttons, chips, labels and what floats. A capsule with continuous ends. */
 object Corners {
     val full: Shape = ContinuousCapsule
 }
 
 /**
- * Material 3's elevation levels, for the shadows of what floats over content: 1 to 3 at rest,
- * 4 only while something is interacted with, as a photo held and dragged.
+ * The shadows, kept few and faint: none where a hairline sets a thing apart (level 1: a day's
+ * label, a menu, a message, a sheet), a soft one only for what floats over a photo, a map or
+ * the scrolling page (level 2: the tab bar, the floating buttons), deeper only while something
+ * is held or dragged (3 and 4).
  */
 object Elevation {
-    val level1 = 1.dp
-    val level2 = 3.dp
-    val level3 = 6.dp
+    val level1 = 0.dp
+    val level2 = 2.dp
+    val level3 = 4.dp
     val level4 = 8.dp
 }
 
-// Material 3's shape scale, its corner sizes as they are, Expressive's three newer steps
-// among them, drawn as continuous curves rather than arcs, so a corner eases into its sides
-// as Apple's and FlClash's do.
+// The corner sizes as continuous curves rather than arcs, so a corner eases into its sides.
 private val AppShapes = Shapes(
     extraSmall = ContinuousRoundedRectangle(Radius.extraSmall),
     small = ContinuousRoundedRectangle(Radius.small),
     medium = ContinuousRoundedRectangle(Radius.medium),
     large = ContinuousRoundedRectangle(Radius.large),
     extraLarge = ContinuousRoundedRectangle(Radius.extraLarge),
-    largeIncreased = ContinuousRoundedRectangle(Radius.largeIncreased),
-    extraLargeIncreased = ContinuousRoundedRectangle(Radius.extraLargeIncreased),
-    extraExtraLarge = ContinuousRoundedRectangle(Radius.extraExtraLarge),
 )
 
-// Material 3's type scale, its sizes and weights as they are, with two changes for
-// Chinese: no letter spacing, which spreads it out, and body text a few points more
-// between lines. Labels set their digits in columns, so times and counts line up. The
-// emphasized styles, Material 3 Expressive's, the same with a heavier weight.
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
-private val AppTypography = Typography().run {
-    fun TextStyle.forChinese(lineHeight: Int? = null, numbers: Boolean = false) = copy(
-        letterSpacing = 0.em,
-        lineHeight = lineHeight?.sp ?: this.lineHeight,
-        fontFeatureSettings = if (numbers) "tnum" else null,
-    )
+private fun style(size: Int, line: Int, weight: FontWeight, numbers: Boolean = false) = TextStyle(
+    fontSize = size.sp,
+    lineHeight = line.sp,
+    fontWeight = weight,
+    letterSpacing = 0.em,
+    fontFeatureSettings = if (numbers) "tnum" else null,
+)
+
+// The design system's type scale on its slots: display for amounts, headline for a
+// tab's large title, title for bars, cards and groups, body for a Moment's words (large) and
+// lists, label for buttons, chips and the small print. No letter spacing, which spreads
+// Chinese out; digits in columns wherever figures stand. The emphasized styles are the same
+// a weight heavier.
+private val AppTypography = run {
+    val displayLarge = style(40, 44, FontWeight.Medium, numbers = true)
+    val displayMedium = style(36, 40, FontWeight.Medium, numbers = true)
+    val displaySmall = style(32, 40, FontWeight.SemiBold, numbers = true)
+    val headlineSmall = style(22, 30, FontWeight.SemiBold)
+    val titleLarge = style(18, 26, FontWeight.SemiBold)
+    val bodyLarge = style(17, 30, FontWeight.Normal)
+    val labelLarge = style(14, 20, FontWeight.Medium, numbers = true)
+    val labelMedium = style(12, 16, FontWeight.Medium, numbers = true)
+    fun TextStyle.heavier() = copy(fontWeight = FontWeight((fontWeight ?: FontWeight.Normal).weight + 100))
     Typography(
-        displayLarge = displayLarge.forChinese(),
-        displayMedium = displayMedium.forChinese(),
-        displaySmall = displaySmall.forChinese(numbers = true),
-        headlineLarge = headlineLarge.forChinese(),
-        headlineMedium = headlineMedium.forChinese(),
-        headlineSmall = headlineSmall.forChinese(),
-        titleLarge = titleLarge.forChinese(),
-        titleMedium = titleMedium.forChinese(),
-        titleSmall = titleSmall.forChinese(),
-        bodyLarge = bodyLarge.forChinese(lineHeight = 26),
-        bodyMedium = bodyMedium.forChinese(lineHeight = 22),
-        bodySmall = bodySmall.forChinese(lineHeight = 18),
-        labelLarge = labelLarge.forChinese(numbers = true),
-        labelMedium = labelMedium.forChinese(numbers = true),
-        labelSmall = labelSmall.forChinese(numbers = true),
-        displayLargeEmphasized = displayLargeEmphasized.forChinese(),
-        displayMediumEmphasized = displayMediumEmphasized.forChinese(),
-        displaySmallEmphasized = displaySmallEmphasized.forChinese(numbers = true),
-        headlineLargeEmphasized = headlineLargeEmphasized.forChinese(),
-        headlineMediumEmphasized = headlineMediumEmphasized.forChinese(),
-        headlineSmallEmphasized = headlineSmallEmphasized.forChinese(),
-        titleLargeEmphasized = titleLargeEmphasized.forChinese(),
-        titleMediumEmphasized = titleMediumEmphasized.forChinese(),
-        titleSmallEmphasized = titleSmallEmphasized.forChinese(),
-        bodyLargeEmphasized = bodyLargeEmphasized.forChinese(lineHeight = 26),
-        bodyMediumEmphasized = bodyMediumEmphasized.forChinese(lineHeight = 22),
-        bodySmallEmphasized = bodySmallEmphasized.forChinese(lineHeight = 18),
-        labelLargeEmphasized = labelLargeEmphasized.forChinese(numbers = true),
-        labelMediumEmphasized = labelMediumEmphasized.forChinese(numbers = true),
-        labelSmallEmphasized = labelSmallEmphasized.forChinese(numbers = true),
+        displayLarge = displayLarge,
+        displayMedium = displayMedium,
+        displaySmall = displaySmall,
+        headlineLarge = style(32, 40, FontWeight.SemiBold),
+        headlineMedium = style(28, 36, FontWeight.SemiBold),
+        headlineSmall = headlineSmall,
+        titleLarge = titleLarge,
+        titleMedium = style(16, 24, FontWeight.SemiBold),
+        titleSmall = style(14, 20, FontWeight.SemiBold),
+        bodyLarge = bodyLarge,
+        bodyMedium = style(15, 24, FontWeight.Normal),
+        bodySmall = style(12, 18, FontWeight.Normal),
+        labelLarge = labelLarge,
+        labelMedium = labelMedium,
+        labelSmall = style(11, 16, FontWeight.Medium, numbers = true),
+        displaySmallEmphasized = displaySmall.heavier(),
+        headlineSmallEmphasized = headlineSmall.heavier(),
+        titleLargeEmphasized = titleLarge.heavier(),
+        bodyLargeEmphasized = bodyLarge.copy(fontWeight = FontWeight.Medium),
+        labelLargeEmphasized = labelLarge.copy(fontWeight = FontWeight.SemiBold),
+        labelMediumEmphasized = labelMedium.copy(fontWeight = FontWeight.SemiBold),
     )
 }
 
-/**
- * The springs a page changes on, Material 3's standard ones, which don't overshoot: a common
- * transition, as Material 3 has it, isn't bouncy, while the components keep the theme's
- * expressive ones.
- */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+/** The springs everything moves on, which don't overshoot, for the components and for pages alike. */
 val TransitionMotion: MotionScheme = MotionScheme.standard()
 
-/**
- * The contrast the phone asks for, from Android 14's setting: 0 standard, up to 1 for high,
- * followed as it changes; standard before Android 14, which has no such setting.
- */
-@Composable
-private fun rememberSystemContrast(): Double {
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) return 0.0
-    val context = LocalContext.current
-    val modes = remember(context) { context.getSystemService(UiModeManager::class.java) }
-    var contrast by remember(modes) { mutableFloatStateOf(modes.contrast) }
-    DisposableEffect(modes) {
-        val listener = UiModeManager.ContrastChangeListener { contrast = it }
-        modes.addContrastChangeListener(context.mainExecutor, listener)
-        onDispose { modes.removeContrastChangeListener(listener) }
-    }
-    return contrast.toDouble()
-}
-
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun MomentsTheme(settings: Settings, content: @Composable () -> Unit) {
     val dark = when (settings.themeMode) {
@@ -175,112 +147,10 @@ fun MomentsTheme(settings: Settings, content: @Composable () -> Unit) {
         ThemeMode.LIGHT -> false
         ThemeMode.DARK -> true
     }
-    val seed = Color(settings.themeColor ?: systemAccent() ?: Settings.DEFAULT_THEME_COLOR)
-    val style = settings.colorStyle
-    val pureBlack = settings.pureBlack
-    val contrast = rememberSystemContrast()
-    val colorScheme = animatedColorScheme(remember(seed, dark, style, pureBlack, contrast) { seededColorScheme(seed, dark, style, pureBlack, contrast) })
+    val shown = appTokens(dark)
+    val colorScheme = remember(dark) { shown.scheme() }
 
-    CompositionLocalProvider(LocalDarkTheme provides dark) {
-        // Material 3 Expressive: its springs, which overshoot a little, for every component and the
-        // app's own motion, and its components' defaults.
-        MaterialExpressiveTheme(colorScheme = colorScheme, typography = AppTypography, shapes = AppShapes, motionScheme = MotionScheme.expressive(), content = content)
+    CompositionLocalProvider(LocalDarkTheme provides dark, LocalTokens provides shown) {
+        AppTheme(colorScheme = colorScheme, typography = AppTypography, shapes = AppShapes, motionScheme = TransitionMotion, content = content)
     }
-}
-
-/** The system's accent from the wallpaper, on Android 12 and later; null before. */
-@Composable
-fun systemAccent(): Int? {
-    val context = LocalContext.current
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) context.getColor(android.R.color.system_accent1_500) else null
-}
-
-/**
- * [target], each of its roles easing over to a new colour as the theme changes, a new seed,
- * light to dark or another style, rather than the whole app changing in one frame.
- */
-@Composable
-private fun animatedColorScheme(target: ColorScheme): ColorScheme {
-    val spec = MotionScheme.standard().defaultEffectsSpec<Color>()
-    @Composable
-    fun animate(color: Color): Color = animateColorAsState(color, spec, label = "theme").value
-    val colors = listOf(
-        animate(target.primary),
-        animate(target.onPrimary),
-        animate(target.primaryContainer),
-        animate(target.onPrimaryContainer),
-        animate(target.inversePrimary),
-        animate(target.secondary),
-        animate(target.onSecondary),
-        animate(target.secondaryContainer),
-        animate(target.onSecondaryContainer),
-        animate(target.tertiary),
-        animate(target.onTertiary),
-        animate(target.tertiaryContainer),
-        animate(target.onTertiaryContainer),
-        animate(target.background),
-        animate(target.onBackground),
-        animate(target.surface),
-        animate(target.onSurface),
-        animate(target.surfaceVariant),
-        animate(target.onSurfaceVariant),
-        animate(target.surfaceTint),
-        animate(target.inverseSurface),
-        animate(target.inverseOnSurface),
-        animate(target.error),
-        animate(target.onError),
-        animate(target.errorContainer),
-        animate(target.onErrorContainer),
-        animate(target.outline),
-        animate(target.outlineVariant),
-        animate(target.scrim),
-        animate(target.surfaceBright),
-        animate(target.surfaceContainer),
-        animate(target.surfaceContainerHigh),
-        animate(target.surfaceContainerHighest),
-        animate(target.surfaceContainerLow),
-        animate(target.surfaceContainerLowest),
-        animate(target.surfaceDim),
-    )
-    // At rest the scheme itself, so what reads it isn't drawn again for a copy of the same colours.
-    val targets = listOf(target.primary, target.onPrimary, target.primaryContainer, target.onPrimaryContainer, target.inversePrimary, target.secondary, target.onSecondary, target.secondaryContainer, target.onSecondaryContainer, target.tertiary, target.onTertiary, target.tertiaryContainer, target.onTertiaryContainer, target.background, target.onBackground, target.surface, target.onSurface, target.surfaceVariant, target.onSurfaceVariant, target.surfaceTint, target.inverseSurface, target.inverseOnSurface, target.error, target.onError, target.errorContainer, target.onErrorContainer, target.outline, target.outlineVariant, target.scrim, target.surfaceBright, target.surfaceContainer, target.surfaceContainerHigh, target.surfaceContainerHighest, target.surfaceContainerLow, target.surfaceContainerLowest, target.surfaceDim)
-    if (colors == targets) return target
-    return target.copy(
-        primary = colors[0],
-        onPrimary = colors[1],
-        primaryContainer = colors[2],
-        onPrimaryContainer = colors[3],
-        inversePrimary = colors[4],
-        secondary = colors[5],
-        onSecondary = colors[6],
-        secondaryContainer = colors[7],
-        onSecondaryContainer = colors[8],
-        tertiary = colors[9],
-        onTertiary = colors[10],
-        tertiaryContainer = colors[11],
-        onTertiaryContainer = colors[12],
-        background = colors[13],
-        onBackground = colors[14],
-        surface = colors[15],
-        onSurface = colors[16],
-        surfaceVariant = colors[17],
-        onSurfaceVariant = colors[18],
-        surfaceTint = colors[19],
-        inverseSurface = colors[20],
-        inverseOnSurface = colors[21],
-        error = colors[22],
-        onError = colors[23],
-        errorContainer = colors[24],
-        onErrorContainer = colors[25],
-        outline = colors[26],
-        outlineVariant = colors[27],
-        scrim = colors[28],
-        surfaceBright = colors[29],
-        surfaceContainer = colors[30],
-        surfaceContainerHigh = colors[31],
-        surfaceContainerHighest = colors[32],
-        surfaceContainerLow = colors[33],
-        surfaceContainerLowest = colors[34],
-        surfaceDim = colors[35],
-    )
 }

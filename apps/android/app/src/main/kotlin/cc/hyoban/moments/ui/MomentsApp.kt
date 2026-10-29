@@ -1,5 +1,36 @@
 package cc.hyoban.moments.ui
 
+import cc.hyoban.moments.ui.design.AppIcons
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.layout.size
+import cc.hyoban.moments.ui.theme.Corners
+import cc.hyoban.moments.ui.design.FloatingBar
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.width
+import cc.hyoban.moments.ui.design.AppSnackbar
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import cc.hyoban.moments.ui.theme.dividerColor
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.animation.animateColorAsState
+import cc.hyoban.moments.ui.design.ProvideTextStyle
+import cc.hyoban.moments.ui.design.LocalContentColor
+import cc.hyoban.moments.ui.design.HorizontalDivider
+import androidx.compose.ui.semantics.Role
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.background
+import cc.hyoban.moments.ui.theme.tokens
+import cc.hyoban.moments.ui.settings.SettingsSection
+import cc.hyoban.moments.ui.settings.MeScreen
 import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
@@ -37,25 +68,18 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.outlined.Map
-import androidx.compose.material.icons.rounded.Map
-import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MotionScheme
-import androidx.compose.material3.NavigationRail
-import androidx.compose.material3.NavigationRailItem
-import androidx.compose.material3.ShortNavigationBar
-import androidx.compose.material3.ShortNavigationBarItem
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import cc.hyoban.moments.ui.design.Badge
+import cc.hyoban.moments.ui.design.BadgedBox
+import cc.hyoban.moments.ui.design.Icon
+import cc.hyoban.moments.ui.design.LocalTextStyle
+import cc.hyoban.moments.ui.design.AppTheme
+import cc.hyoban.moments.ui.design.MotionScheme
+import cc.hyoban.moments.ui.design.SnackbarDuration
+import cc.hyoban.moments.ui.design.SnackbarHost
+import cc.hyoban.moments.ui.design.SnackbarHostState
+import cc.hyoban.moments.ui.design.SnackbarResult
+import cc.hyoban.moments.ui.design.Surface
+import cc.hyoban.moments.ui.design.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
@@ -126,7 +150,6 @@ import cc.hyoban.moments.ui.components.LocalReducedMotion
 import cc.hyoban.moments.ui.components.LocalSharedTransitionScope
 import cc.hyoban.moments.ui.components.LocalViewerShowing
 import cc.hyoban.moments.ui.components.LocalViewerShownKey
-import cc.hyoban.moments.ui.components.Symbols
 import cc.hyoban.moments.ui.components.dayCardKey
 import cc.hyoban.moments.ui.components.dayRowKey
 import cc.hyoban.moments.ui.components.isLandscape
@@ -163,7 +186,6 @@ import cc.hyoban.moments.ui.theme.TransitionMotion
 import cc.hyoban.moments.ui.theme.fill
 import cc.hyoban.moments.ui.trips.TripPlayerScreen
 import cc.hyoban.moments.ui.trips.TripScreen
-import cc.hyoban.moments.ui.trips.TripsScreen
 import cc.hyoban.moments.ui.viewer.LocalInPictureInPicture
 import cc.hyoban.moments.ui.viewer.MediaViewer
 import cc.hyoban.moments.ui.viewer.rememberInPictureInPicture
@@ -182,8 +204,6 @@ object Feed
 @Serializable
 object Atlas
 
-@Serializable
-object Trips
 
 @Serializable
 data class Moment(val uid: String)
@@ -214,8 +234,13 @@ data class Day(val date: String, val card: String? = null)
 @Serializable
 data class PlaceMoments(val id: String)
 
+/** The 我 tab: the changes waiting to be published, the ledger's month and the settings. */
 @Serializable
 object Preferences
+
+/** One section of the settings, by its [SettingsSection]'s name. */
+@Serializable
+data class SettingsPage(val section: String)
 
 /** How footprints are recorded, from the settings page or the map's footprint sheet. */
 @Serializable
@@ -245,9 +270,9 @@ object Changes
 @Serializable
 object Search
 
-/** The ledger tab: the book shown, its bills, its sums and the accounts. */
+/** The ledger, opened from 我 on its [tab]: 0 the bills, 1 the sums, 2 the accounts. */
 @Serializable
-object LedgerHome
+data class LedgerHome(val tab: Int = 0)
 
 /** A bill to write, or one of [edit] to change; what a new one starts with, as [LedgerEntryArgs] has it. */
 @Serializable
@@ -306,17 +331,16 @@ data class LedgerList(
 )
 
 /**
- * A tab's icon, filled once chosen; the Moments' with a badge of how many changes wait to be
- * published while another tab is shown, as Material 3 badges a navigation item with a count
- * and hides it once its destination is open.
+ * A tab's icon, filled once chosen; 我's with a dot in the accent while changes wait to be
+ * published and another tab is shown, read out as how many.
  */
 @Composable
 private fun TabIcon(tab: Tab, selected: Boolean, pending: Int) {
     val icon = if (selected) tab.selectedIcon else tab.icon
-    if (tab == Tab.MOMENTS && !selected && pending > 0) {
+    if (tab == Tab.ME && !selected && pending > 0) {
         val waiting = pluralStringResource(R.plurals.count_changes, pending, pending)
         BadgedBox(
-            badge = { Badge { Text(if (pending > 999) "999+" else pending.toString()) } },
+            badge = { Badge(containerColor = tokens.accent) },
             modifier = Modifier.semantics { contentDescription = waiting },
         ) {
             Icon(icon, contentDescription = null)
@@ -327,24 +351,45 @@ private fun TabIcon(tab: Tab, selected: Boolean, pending: Int) {
 }
 
 /**
- * A tab's name, emphasized once chosen, as Material 3 marks the chosen destination with a
- * bold label beside its filled icon.
+ * The tabs, floating over the page at its foot: a capsule on the surface with its hairline and
+ * a soft shadow, each tab its icon alone, named for a screen reader, the chosen one filled and
+ * in the text colour, the rest outlined in the faintest.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun TabLabel(tab: Tab, selected: Boolean) {
-    Text(stringResource(tab.label), style = if (selected) MaterialTheme.typography.labelMediumEmphasized else LocalTextStyle.current)
+private fun TabBar(selected: Int, pending: Int, onTab: (Int) -> Unit, modifier: Modifier = Modifier) {
+    FloatingBar(modifier.selectableGroup()) {
+        Tab.entries.forEachIndexed { index, tab -> TabItem(tab, index == selected, pending, Modifier.size(64.dp, 48.dp)) { onTab(index) } }
+    }
 }
+
+/** One tab, on the bar or the rail: its icon alone, named, filled and in the text colour once chosen, outlined in the faintest otherwise. */
+@Composable
+private fun TabItem(tab: Tab, chosen: Boolean, pending: Int, modifier: Modifier, onClick: () -> Unit) {
+    val color by animateColorAsState(if (chosen) tokens.tx else tokens.tx3, AppTheme.motionScheme.fastEffectsSpec(), label = "tab")
+    val name = stringResource(tab.label)
+    Box(
+        modifier
+            .clip(Corners.full)
+            .selectable(chosen, role = Role.Tab, onClick = onClick)
+            .semantics { contentDescription = name }
+            .testTag("tab_${tab.name.lowercase()}"),
+        contentAlignment = Alignment.Center,
+    ) {
+        CompositionLocalProvider(LocalContentColor provides color) { TabIcon(tab, selected = chosen, pending = pending) }
+    }
+}
+
+/** How wide the rail is, down the side of a wide window. */
+private val RAIL_WIDTH = 80.dp
 
 /** The tabs at the bottom; everything else opens over them. */
 private enum class Tab(val route: Any, val type: KClass<*>, val label: Int, val icon: ImageVector, val selectedIcon: ImageVector) {
-    MOMENTS(Feed, Feed::class, R.string.tab_moments, Symbols.PhotoLibraryOutlined, Symbols.PhotoLibraryFilled),
-    MAP(Atlas, Atlas::class, R.string.tab_map, Symbols.MapOutlined, Symbols.MapFilled),
-    TRIPS(Trips, Trips::class, R.string.tab_trips, Symbols.LuggageOutlined, Symbols.LuggageFilled),
-    LEDGER(LedgerHome, LedgerHome::class, R.string.tab_ledger, Symbols.WalletOutlined, Symbols.WalletFilled),
+    MOMENTS(Feed, Feed::class, R.string.tab_moments, AppIcons.Timeline, AppIcons.TimelineFill),
+    MAP(Atlas, Atlas::class, R.string.tab_map, AppIcons.Map, AppIcons.MapFill),
+    ME(Preferences, Preferences::class, R.string.tab_me, AppIcons.Me, AppIcons.MeFill),
 }
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalSharedTransitionApi::class)
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun MomentsApp(container: AppContainer, start: Any = Feed) {
     val navController = rememberNavController()
@@ -489,7 +534,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
     // How much a page's own controls at its foot, a floating toolbar, lift the snackbar above them.
     val snackbarLift = remember { mutableStateOf(0.dp) }
     // The theme's springs for what moves on a page; the pages themselves change on the standard ones.
-    val motion = MaterialTheme.motionScheme
+    val motion = AppTheme.motionScheme
     val transitions = TransitionMotion
     LaunchedEffect(container, messages) {
         // Each new one takes the place of the one shown. One with an action stays, with a way to
@@ -613,7 +658,6 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                     onMoment = openMoment,
                                     onDay = openDay,
                                     onDayRow = openDayRow,
-                                    onSettings = { navController.navigate(Preferences) },
                                     onNew = { openEditor(null, false) },
                                     onChanges = { navController.navigate(Changes) },
                                     onSearch = { navController.navigate(Search) },
@@ -633,9 +677,6 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                     onFocused = { mapFocus = null },
                                     onFootprintSettings = { navController.navigate(FootprintSettings) },
                                 )
-                            }
-                            screen<Trips>(link = "trips") {
-                                TripsScreen(container, onTrip = openTrip)
                             }
                             screen<Moment>(link = "moment/{uid}") { entry ->
                                 MomentScreen(
@@ -679,8 +720,23 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                 )
                             }
                             screen<Preferences>(link = "settings") {
-                                SettingsScreen(container, onBack = back, onChanges = { navController.navigate(Changes) }, onFootprints = { showOnMap(MapFocus.Footprints) },
-                                    onFootprintSettings = { navController.navigate(FootprintSettings) })
+                                MeScreen(
+                                    container,
+                                    onChanges = { navController.navigate(Changes) },
+                                    onLedger = { navController.goTo(LedgerHome(it)) },
+                                    onSection = { navController.navigate(SettingsPage(it.name)) },
+                                    onLedgerSettings = { navController.navigate(LedgerSettings()) },
+                                )
+                            }
+                            screen<SettingsPage>(link = "settings/{section}") { entry ->
+                                val name = entry.toRoute<SettingsPage>().section.uppercase()
+                                SettingsScreen(
+                                    container,
+                                    SettingsSection.entries.firstOrNull { it.name == name } ?: SettingsSection.APPEARANCE,
+                                    onBack = back,
+                                    onFootprints = { showOnMap(MapFocus.Footprints) },
+                                    onFootprintSettings = { navController.navigate(FootprintSettings) },
+                                )
                             }
                             screen<FootprintSettings>(link = "footprint-settings") {
                                 FootprintSettingsScreen(container, onBack = back)
@@ -724,8 +780,8 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                             screen<Changes>(link = "changes") {
                                 ChangesScreen(container, onMoment = openMoment, onBack = back)
                             }
-                            screen<LedgerHome>(link = "ledger") {
-                                LedgerScreen(container, ledgerNav, onImport = { navController.navigate(LedgerSettings(import = true)) })
+                            screen<LedgerHome>(link = "ledger") { entry ->
+                                LedgerScreen(container, ledgerNav, onImport = { navController.navigate(LedgerSettings(import = true)) }, startTab = entry.toRoute<LedgerHome>().tab)
                             }
                             // A payment's from 自动记账's notification opening the app, with what it read.
                             screen<LedgerEntry>(link = "new-bill", aliases = listOf(PAYMENT_LINK)) { entry ->
@@ -814,6 +870,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                 (scaleIn(motion.fastSpatialSpec()) + fadeIn(motion.fastEffectsSpec())) togetherWith
                     (scaleOut(motion.fastSpatialSpec()) + fadeOut(motion.fastEffectsSpec())) using SizeTransform(clip = false)
             }
+            val railLine = dividerColor()
             val navigation = Modifier.semantics {
                 isTraversalGroup = true
                 traversalIndex = -1f
@@ -825,24 +882,23 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                 modifier = navigation.align(if (railLeft) AbsoluteAlignment.CenterLeft else AbsoluteAlignment.CenterRight).fillMaxHeight(),
             ) {
                 // The compact rail, its button at the top and the tabs centred under it, so all of
-                // it fits the little height a phone on its side has: Material 3 Expressive's
-                // collapsed rail, with its taller items and the fixed gap under its header, doesn't.
-                NavigationRail(
-                    containerColor = SurfaceLevel.Page.raised.fill(),
-                    modifier = Modifier.fillMaxHeight().onSizeChanged { railWidth = with(density) { it.width.toDp() } },
-                    header = {
-                        AnimatedContent(accessorySlot.value, transitionSpec = fabTransition, label = "rail button") { button -> button?.invoke() }
-                    },
+                // it fits the little height a phone on its side has; on the page, a hairline along
+                // its inner edge.
+                Column(
+                    Modifier.fillMaxHeight().width(RAIL_WIDTH).background(AppColors.page)
+                        .onSizeChanged { railWidth = with(density) { it.width.toDp() } }
+                        .drawBehind {
+                            val x = if (railLeft) size.width - 0.5.dp.toPx() else 0.5.dp.toPx()
+                            drawLine(railLine, Offset(x, 0f), Offset(x, size.height), strokeWidth = 1.dp.toPx())
+                        }
+                        .windowInsetsPadding(WindowInsets.systemBars.union(WindowInsets.displayCutout).only(WindowInsetsSides.Vertical + WindowInsetsSides.Start))
+                        .padding(top = Space.m),
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
+                    AnimatedContent(accessorySlot.value, transitionSpec = fabTransition, label = "rail button") { button -> button?.invoke() }
                     Spacer(Modifier.weight(1f))
-                    Tab.entries.forEachIndexed { index, tab ->
-                        NavigationRailItem(
-                            selected = index == selectedTab,
-                            onClick = { onTab(index) },
-                            icon = { TabIcon(tab, selected = index == selectedTab, pending = pending.size) },
-                            label = { TabLabel(tab, selected = index == selectedTab) },
-                            modifier = Modifier.testTag("tab_${tab.name.lowercase()}"),
-                        )
+                    Column(Modifier.selectableGroup()) {
+                        Tab.entries.forEachIndexed { index, tab -> TabItem(tab, index == selectedTab, pending.size, Modifier.width(RAIL_WIDTH).height(56.dp)) { onTab(index) } }
                     }
                     Spacer(Modifier.weight(1f))
                 }
@@ -853,30 +909,16 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                 exit = slideOutVertically(transitions.defaultSpatialSpec()) { it },
                 modifier = navigation.align(Alignment.BottomCenter).fillMaxWidth(),
             ) {
-                Column(horizontalAlignment = Alignment.End) {
-                    AnimatedContent(accessorySlot.value, transitionSpec = fabTransition, contentAlignment = Alignment.BottomEnd, label = "tab button") { button ->
-                        if (button != null) {
-                            val gutter = Space.gutter
-                            Box(
-                                Modifier.padding(end = gutter, bottom = gutter)
-                                    .onSizeChanged { fabHeight = with(density) { it.height.toDp() } + gutter },
-                            ) { button() }
-                        }
-                    }
-                    // A level above the page, as Material 3 has the bar a container step above it.
-                    ShortNavigationBar(
-                        containerColor = SurfaceLevel.Page.raised.fill(),
-                        modifier = Modifier.onSizeChanged { barHeight = with(density) { it.height.toDp() } },
-                    ) {
-                        Tab.entries.forEachIndexed { index, tab ->
-                            ShortNavigationBarItem(
-                                selected = index == selectedTab,
-                                onClick = { onTab(index) },
-                                icon = { TabIcon(tab, selected = index == selectedTab, pending = pending.size) },
-                                label = { TabLabel(tab, selected = index == selectedTab) },
-                                modifier = Modifier.testTag("tab_${tab.name.lowercase()}"),
-                            )
-                        }
+                // The tabs floating over the page in the middle, the tab's button beside them at the end.
+                Box(
+                    Modifier.fillMaxWidth()
+                        .onSizeChanged { barHeight = with(density) { it.height.toDp() } }
+                        .navigationBarsPadding()
+                        .padding(start = Space.gutter, end = Space.gutter, bottom = Space.m, top = Space.s),
+                ) {
+                    TabBar(selectedTab, pending.size, onTab, Modifier.align(Alignment.Center))
+                    AnimatedContent(accessorySlot.value, transitionSpec = fabTransition, contentAlignment = Alignment.CenterEnd, label = "tab button", modifier = Modifier.align(Alignment.CenterEnd)) { button ->
+                        button?.invoke()
                     }
                 }
             }
@@ -889,14 +931,14 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                 transitions.defaultSpatialSpec(),
                 label = "snackbar",
             )
-            SnackbarHost(messages, Modifier.align(Alignment.BottomCenter).imePadding().offset { IntOffset(0, -snackbarBottom.value.roundToPx()) })
+            SnackbarHost(messages, Modifier.align(Alignment.BottomCenter).imePadding().offset { IntOffset(0, -snackbarBottom.value.roundToPx()) }) { AppSnackbar(it) }
         }
     }
 }
 
 // A page pushed on, a Moment, a trip, a place, a day, comes in from the side it goes
 // towards and fades in as the one under it moves off a little and fades out, Android
-// 14's forward motion as FlClash plays it, on the transitions' springs: the default spatial
+// 14's forward motion, on the transitions' springs: the default spatial
 // one for the slide, as a page is the larger thing moving, and the effects ones for the
 // fades. Going back plays it the other way. The viewer still fades, as its photo flies to
 // and from its tile; between pages only cards move, so a page without one slides.
@@ -941,12 +983,12 @@ private fun AnimatedContentTransitionScope<NavBackStackEntry>.holdsForCard(forwa
 /**
  * Where a page grows out of a card, by the page and the pages that hold its card: a
  * Moment's from a list of Moments, the calendar, the map's place panel or a trip's playback; a trip's from
- * the trips, a Moment's trip card or the map's route card. A day's grows out of the card its
+ * the timeline's trip banner, the map's sheet of trips, a Moment's trip card or the map's route card. A day's grows out of the card its
  * route names, wherever that is: a calendar day, a day's pill or a Moment's row for it.
  */
 private val CARD_OPENINGS: Map<KClass<*>, List<KClass<*>>> = mapOf(
     Moment::class to listOf(Feed::class, Day::class, PlaceMoments::class, Trip::class, TripPlay::class, Atlas::class, Search::class),
-    Trip::class to listOf(Trips::class, Moment::class, Atlas::class),
+    Trip::class to listOf(Feed::class, Moment::class, Atlas::class),
 )
 
 private fun opens(page: NavBackStackEntry, from: NavBackStackEntry): Boolean =
@@ -1005,7 +1047,7 @@ class MomentActions(
 /** The app's [MomentActions], for the cards of any list; none where the app doesn't give them. */
 val LocalMomentActions = staticCompositionLocalOf<MomentActions?> { null }
 
-/** The tabs tapped again while chosen, each as its route: [Feed], [Atlas] or [Trips]. */
+/** The tabs tapped again while chosen, each as its route: [Feed], [Atlas] or [Preferences]. */
 val LocalTabReselects = staticCompositionLocalOf<SharedFlow<Any>> { MutableSharedFlow() }
 
 /** Runs [action] each time the tab of [route] is tapped again while its page is shown; nothing without a [route]. */
@@ -1114,15 +1156,17 @@ fun routeOf(link: Uri): Any? {
     return when (link.host) {
         "moments" -> Feed
         "map" -> Atlas
-        "trips" -> Trips
-        "settings" -> Preferences
+        // The trips are listed in the map's sheet.
+        "trips" -> Atlas
+        "settings" -> id?.let(::SettingsPage) ?: Preferences
         "footprints" -> Atlas
         "footprint-settings" -> FootprintSettings
         "new" -> NewMoment()
         "edit" -> id?.let(::EditMoment)
         "changes" -> Changes
         "search" -> Search
-        "ledger" -> LedgerHome
+        // The ledger's sums, as 我 opens them.
+        "ledger" -> LedgerHome(1)
         "new-bill" -> NewMoment(bill = true)
         "payment" -> LedgerEntry(
             account = link.getQueryParameter("account"),

@@ -1,5 +1,7 @@
 package cc.hyoban.moments.ui.viewer
 
+import cc.hyoban.moments.ui.design.AppIcons
+import cc.hyoban.moments.ui.design.Spinner
 import android.app.Activity
 import androidx.activity.compose.PredictiveBackHandler
 import androidx.compose.animation.AnimatedVisibility
@@ -42,31 +44,18 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.ZeroCornerSize
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
-import androidx.compose.material.icons.outlined.Image
-import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.rounded.Image
-import androidx.compose.material.icons.rounded.Info
-import androidx.compose.material.icons.rounded.MotionPhotosOn
-import androidx.compose.material.icons.rounded.Place
-import androidx.compose.material.icons.rounded.Share
-import androidx.compose.material3.Button
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
-import androidx.compose.material3.LoadingIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.minimumInteractiveComponentSize
+import cc.hyoban.moments.ui.design.Button
+import cc.hyoban.moments.ui.design.IconButtonDefaults
+import cc.hyoban.moments.ui.design.ButtonDefaults
+import cc.hyoban.moments.ui.design.Icon
+import cc.hyoban.moments.ui.design.IconButton
+import cc.hyoban.moments.ui.design.ListItem
+import cc.hyoban.moments.ui.design.ListItemDefaults
+import cc.hyoban.moments.ui.design.AppTheme
+import cc.hyoban.moments.ui.design.ModalBottomSheet
+import cc.hyoban.moments.ui.design.Surface
+import cc.hyoban.moments.ui.design.Text
+import cc.hyoban.moments.ui.design.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
@@ -166,7 +155,6 @@ import me.saket.telephoto.zoomable.zoomable
  * work alongside touch: the arrows go from one to the next, Space plays and pauses, and
  * Escape closes the details, then the viewer.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun MediaViewer(
     container: AppContainer,
@@ -239,7 +227,7 @@ fun MediaViewer(
         fun progress() = (drag / fadeOver).coerceIn(0f, 1f)
         // The system's back gesture previews closing as a drag down does, the photo following
         // the finger; let go, the photo flies back to its tile from there, and called off it settles.
-        val settleSpec = MaterialTheme.motionScheme.fastSpatialSpec<Float>()
+        val settleSpec = AppTheme.motionScheme.fastSpatialSpec<Float>()
         PredictiveBackHandler(enabled = !(info && landscape)) { events ->
             try {
                 events.collect { drag = it.progress * fadeOver }
@@ -250,7 +238,7 @@ fun MediaViewer(
             }
         }
 
-        val backdrop = MaterialTheme.colorScheme.scrim
+        val backdrop = AppTheme.colorScheme.scrim
         Box(Modifier.fillMaxSize().drawBehind { drawRect(backdrop.copy(alpha = 1f - progress())) })
         HorizontalPager(
             pager,
@@ -300,19 +288,19 @@ fun MediaViewer(
             )
         }
 
-        val motion = MaterialTheme.motionScheme
+        val motion = AppTheme.motionScheme
         AnimatedVisibility(chrome && !dragging && !inPip, enter = fadeIn(motion.fastEffectsSpec()), exit = fadeOut(motion.fastEffectsSpec())) {
             Row(
                 Modifier.fillMaxWidth().background(MediaOverlay.bar).statusBarsPadding().sideInsetsPadding().padding(Space.xs),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Tooltip(stringResource(R.string.action_back), below = true) {
-                    IconButton(shapes = IconButtonDefaults.shapes(), onClick = onBack, modifier = Modifier.testTag("back")) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.action_back), tint = MediaOverlay.content)
+                    IconButton(onClick = onBack, modifier = Modifier.testTag("back")) {
+                        Icon(AppIcons.ArrowLeft, contentDescription = stringResource(R.string.action_back), tint = MediaOverlay.content)
                     }
                 }
                 if (media.size > 1) {
-                    Text("${pager.currentPage + 1} / ${media.size}", color = MediaOverlay.content, style = MaterialTheme.typography.titleMedium)
+                    Text("${pager.currentPage + 1} / ${media.size}", color = MediaOverlay.content, style = AppTheme.typography.titleMedium)
                 }
                 Spacer(Modifier.weight(1f))
                 // The one shown, fetched first when it's the site's, the spinner in its place meanwhile.
@@ -322,7 +310,6 @@ fun MediaViewer(
                 var sharing by remember { mutableStateOf(false) }
                 Tooltip(stringResource(R.string.action_share), below = true) {
                     IconButton(
-                        shapes = IconButtonDefaults.shapes(),
                         onClick = {
                             val shown = media[pager.currentPage]
                             sharing = true
@@ -343,16 +330,16 @@ fun MediaViewer(
                     ) {
                         Crossfade(sharing, animationSpec = motion.fastEffectsSpec(), label = "sharing") { busy ->
                             if (busy) {
-                                LoadingIndicator(Modifier.size(24.dp), color = MediaOverlay.content)
+                                Spinner(Modifier.size(24.dp), color = MediaOverlay.content)
                             } else {
-                                Icon(Icons.Rounded.Share, contentDescription = stringResource(R.string.action_share), tint = MediaOverlay.content)
+                                Icon(AppIcons.Share, contentDescription = stringResource(R.string.action_share), tint = MediaOverlay.content)
                             }
                         }
                     }
                 }
                 Tooltip(stringResource(R.string.action_info), below = true) {
-                    IconButton(shapes = IconButtonDefaults.shapes(), onClick = { info = true }, modifier = Modifier.testTag("info")) {
-                        Icon(Icons.Rounded.Info, contentDescription = stringResource(R.string.action_info), tint = MediaOverlay.content)
+                    IconButton(onClick = { info = true }, modifier = Modifier.testTag("info")) {
+                        Icon(AppIcons.Info, contentDescription = stringResource(R.string.action_info), tint = MediaOverlay.content)
                     }
                 }
             }
@@ -391,10 +378,10 @@ fun MediaViewer(
         ) {
             val level = AppColors.sheetLevel
             Surface(
-                shape = MaterialTheme.shapes.extraLarge.copy(topEnd = ZeroCornerSize, bottomEnd = ZeroCornerSize),
+                shape = AppTheme.shapes.extraLarge.copy(topEnd = ZeroCornerSize, bottomEnd = ZeroCornerSize),
                 // A modal side sheet's fill, as Material 3 colours one.
                 color = AppColors.sheet,
-                contentColor = MaterialTheme.colorScheme.onSurface,
+                contentColor = AppTheme.colorScheme.onSurface,
                 // Below the status bar, whose icons are white over the viewer's black.
                 modifier = Modifier.statusBarsPadding().fillMaxHeight().width(INFO_PANEL_WIDTH)
                     .graphicsLayer { translationX = panelBack.progress * size.width * PANEL_BACK_SHIFT * if (rtl) -1f else 1f },
@@ -487,7 +474,7 @@ private fun ViewerPage(
 @Composable
 private fun InfoCard(icon: ImageVector, title: String, content: @Composable ColumnScope.() -> Unit) {
     val level = LocalSurfaceLevel.current.raised
-    Surface(shape = MaterialTheme.shapes.large, color = level.fill(), modifier = Modifier.fillMaxWidth()) {
+    Surface(shape = AppTheme.shapes.large, color = level.fill(), modifier = Modifier.fillMaxWidth()) {
         CompositionLocalProvider(LocalSurfaceLevel provides level) {
             Column(Modifier.padding(Space.m), verticalArrangement = Arrangement.spacedBy(Space.m)) {
                 SectionHeader(icon, title)
@@ -504,16 +491,15 @@ private fun InfoCard(icon: ImageVector, title: String, content: @Composable Colu
 @Composable
 private fun InfoTile(text: String, label: String? = null) {
     Column(
-        Modifier.fillMaxWidth().clip(MaterialTheme.shapes.extraSmall).background(LocalSurfaceLevel.current.raised.fill()).padding(Space.m),
+        Modifier.fillMaxWidth().clip(AppTheme.shapes.extraSmall).background(LocalSurfaceLevel.current.raised.fill()).padding(Space.m),
         verticalArrangement = Arrangement.spacedBy(Space.xxs),
     ) {
-        label?.let { Text(it, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-        Text(text, style = MaterialTheme.typography.bodyMedium)
+        label?.let { Text(it, style = AppTheme.typography.labelMedium, color = AppTheme.colorScheme.onSurfaceVariant) }
+        Text(text, style = AppTheme.typography.bodyMedium)
     }
 }
 
 /** The LIVE badge under a live photo: a ring while its motion loads, then a tap plays it again. */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun ViewerLiveBadge(state: LiveMotionState, modifier: Modifier = Modifier) {
     Row(
@@ -532,11 +518,11 @@ private fun ViewerLiveBadge(state: LiveMotionState, modifier: Modifier = Modifie
         horizontalArrangement = Arrangement.spacedBy(Space.s),
     ) {
         if (state.ready) {
-            Icon(Icons.Rounded.MotionPhotosOn, contentDescription = null, tint = MediaOverlay.content, modifier = Modifier.size(16.dp))
+            Icon(AppIcons.Live, contentDescription = null, tint = MediaOverlay.content, modifier = Modifier.size(16.dp))
         } else {
-            LoadingIndicator(Modifier.size(16.dp), color = MediaOverlay.content)
+            Spinner(Modifier.size(16.dp), color = MediaOverlay.content)
         }
-        Text(stringResource(R.string.label_live), color = MediaOverlay.content, style = MaterialTheme.typography.labelMedium)
+        Text(stringResource(R.string.label_live), color = MediaOverlay.content, style = AppTheme.typography.labelMedium)
     }
 }
 
@@ -631,7 +617,7 @@ private const val MAX_ZOOM = 6f
 private const val DOUBLE_TAP_ZOOM = 2.5f
 
 /** What there is to know about the photo: when, where on a small map, the Moment's words, what it shows, the trip. */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun InfoContent(
     container: AppContainer,
@@ -655,31 +641,31 @@ private fun InfoContent(
     ) {
         // When it was, tapped for the rest of its day.
         Column(
-            Modifier.clip(MaterialTheme.shapes.medium)
+            Modifier.clip(AppTheme.shapes.medium)
                 .clickable(onClickLabel = stringResource(R.string.label_whole_day)) { onDay(moment.dateKey) }
                 .padding(horizontal = Space.xs).testTag("info_day"),
             verticalArrangement = Arrangement.spacedBy(Space.xxs),
         ) {
-            Text(formatDay(moment.occurredAt), style = MaterialTheme.typography.headlineSmall)
+            Text(formatDay(moment.occurredAt), style = AppTheme.typography.headlineSmall)
             formatTime(moment.occurredAt)?.let {
-                Text(it, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(it, style = AppTheme.typography.titleMedium, color = AppTheme.colorScheme.onSurfaceVariant)
             }
         }
         if (moment.places.isNotEmpty()) {
-            InfoCard(Icons.Rounded.Place, stringResource(R.string.section_places)) {
+            InfoCard(AppIcons.Pin, stringResource(R.string.section_places)) {
                 if (located.isNotEmpty()) {
-                    PlacesStill(located, Modifier.fillMaxWidth().aspectRatio(2f).clip(MaterialTheme.shapes.extraSmall))
+                    PlacesStill(located, Modifier.fillMaxWidth().aspectRatio(2f).clip(AppTheme.shapes.extraSmall))
                 }
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.s)) {
-                    moment.places.forEach { id -> NeutralChip(places[id]?.name ?: id, Icons.Rounded.Place, onClick = { onPlace(id) }, modifier = Modifier.testTag("place_$id")) }
+                    moment.places.forEach { id -> NeutralChip(places[id]?.name ?: id, AppIcons.Pin, onClick = { onPlace(id) }, modifier = Modifier.testTag("place_$id")) }
                 }
             }
         }
         if (moment.text.isNotBlank()) {
-            Text(moment.text, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = Space.xs))
+            Text(moment.text, style = AppTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = Space.xs))
         }
         if (media.alt.isNotBlank() || (media.width != null && media.height != null)) {
-            InfoCard(Icons.Rounded.Image, stringResource(R.string.section_photo)) {
+            InfoCard(AppIcons.Image, stringResource(R.string.section_photo)) {
                 // What the photo is and its description, each a tile a level into the card.
                 if (media.width != null && media.height != null) {
                     InfoTile(
@@ -702,20 +688,19 @@ private fun InfoContent(
                     headlineContent = { Text(trip.title) },
                     supportingContent = { Text(tripSummary(trip, count)) },
                     leadingContent = cover?.let { { Thumbnail(it, container.mediaUrls, size = 48) } },
-                    trailingContent = { Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null) },
+                    trailingContent = { Icon(AppIcons.ChevronRight, contentDescription = null) },
                     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                 )
             }
         }
         // The panel's one action, so the one thing in colour.
-        Button(shapes = ButtonDefaults.shapes(), onClick = onMoment, modifier = Modifier.fillMaxWidth().padding(top = Space.xs).testTag("open_moment")) {
+        Button(onClick = onMoment, modifier = Modifier.fillMaxWidth().padding(top = Space.xs).testTag("open_moment")) {
             Text(stringResource(R.string.action_open_moment))
         }
     }
 }
 
 /** The details in a sheet risen from the bottom. */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun InfoSheet(onDismiss: () -> Unit, content: @Composable () -> Unit) {
     val level = AppColors.sheetLevel

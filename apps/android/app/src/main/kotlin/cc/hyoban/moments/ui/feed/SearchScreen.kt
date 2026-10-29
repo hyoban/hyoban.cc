@@ -1,5 +1,13 @@
 package cc.hyoban.moments.ui.feed
 
+import cc.hyoban.moments.ui.design.AppIcons
+import cc.hyoban.moments.ui.design.SearchField
+import cc.hyoban.moments.ui.theme.cardBorder
+import cc.hyoban.moments.ui.theme.SurfaceLevel
+import cc.hyoban.moments.ui.components.AppColors
+import androidx.compose.ui.graphics.Color
+import cc.hyoban.moments.ui.design.groupedShapes
+import cc.hyoban.moments.ui.design.groupedRow
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,24 +25,16 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.Luggage
-import androidx.compose.material.icons.rounded.Place
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItemDefaults
-import androidx.compose.material3.ListItemShapes
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SearchBarDefaults
-import androidx.compose.material3.SegmentedListItem
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import cc.hyoban.moments.ui.design.IconButtonDefaults
+import cc.hyoban.moments.ui.design.ButtonDefaults
+import cc.hyoban.moments.ui.design.Icon
+import cc.hyoban.moments.ui.design.IconButton
+import cc.hyoban.moments.ui.design.ListItemDefaults
+import cc.hyoban.moments.ui.design.ListItemShapes
+import cc.hyoban.moments.ui.design.AppTheme
+import cc.hyoban.moments.ui.design.SegmentedListItem
+import cc.hyoban.moments.ui.design.Surface
+import cc.hyoban.moments.ui.design.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -74,12 +74,11 @@ import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.fill
 
 /**
- * Searching the Moments, as Material 3's full-screen focused search on a phone: a destination of
- * its own, the field at the top in the surface container high, focused and ready to type, back leaving
+ * Searching the Moments, full screen on a phone: a destination of its own, the field at the
+ * top on the surface, focused and ready to type, back leaving
  * it; what matches below as a list, said how many, newest first. A Moment matches by its
  * words, the names of its places or its trip's title.
  */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SearchScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: () -> Unit) {
     val moments by container.repository.moments.collectAsStateWithLifecycle()
@@ -92,33 +91,31 @@ fun SearchScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: ()
     val keyboard = LocalSoftwareKeyboardController.current
     LaunchedEffect(Unit) { focus.requestFocus() }
 
-    // Material 3's full-screen contained search: the view in the surface container low, the bar
-    // in the high, 12dp from the sides as a focused bar is.
-    Column(Modifier.fillMaxSize().background(SearchBarDefaults.fullScreenContainedSearchBarColor).imePadding()) {
+    // The page, the field on the surface with its hairline at the top, 12dp from the sides.
+    Column(Modifier.fillMaxSize().background(AppColors.page).imePadding()) {
         Surface(
             shape = Corners.full,
-            color = SearchBarDefaults.collapsedContainedSearchBarColor,
+            color = SurfaceLevel.Card.fill(),
+            border = cardBorder(),
             modifier = Modifier.statusBarsPadding().padding(horizontal = Space.m, vertical = Space.s).fillMaxWidth(),
         ) {
-            SearchBarDefaults.InputField(
+            SearchField(
                 state = query,
                 // Searched, the keyboard goes, so what was found has the screen.
                 onSearch = { keyboard?.hide() },
-                expanded = true,
-                onExpandedChange = { if (!it) onBack() },
                 placeholder = { Text(stringResource(R.string.hint_search_moments)) },
                 leadingIcon = {
                     Tooltip(stringResource(R.string.action_back), below = true) {
-                        IconButton(shapes = IconButtonDefaults.shapes(), onClick = onBack, modifier = Modifier.testTag("back")) {
-                            Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.action_back))
+                        IconButton(onClick = onBack, modifier = Modifier.testTag("back")) {
+                            Icon(AppIcons.ArrowLeft, contentDescription = stringResource(R.string.action_back))
                         }
                     }
                 },
                 trailingIcon = if (text.isNotEmpty()) {
                     {
                         Tooltip(stringResource(R.string.action_clear), below = true) {
-                            IconButton(shapes = IconButtonDefaults.shapes(), onClick = { query.clearText() }, modifier = Modifier.testTag("search_clear")) {
-                                Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.action_clear))
+                            IconButton(onClick = { query.clearText() }, modifier = Modifier.testTag("search_clear")) {
+                                Icon(AppIcons.Close, contentDescription = stringResource(R.string.action_clear))
                             }
                         }
                     }
@@ -136,8 +133,8 @@ fun SearchScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: ()
         }
         Text(
             status,
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = AppTheme.typography.labelLarge,
+            color = AppTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(horizontal = Space.gutter + Space.l, vertical = Space.s).semantics { liveRegion = LiveRegionMode.Polite }.testTag("search_status"),
         )
         // The results as a list, as Material 3 has search show them: one segmented group, each
@@ -146,10 +143,11 @@ fun SearchScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: ()
             LazyColumn(
                 Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(start = Space.gutter, end = Space.gutter, bottom = Space.xl),
-                verticalArrangement = Arrangement.spacedBy(ListItemDefaults.SegmentedGap),
             ) {
                 itemsIndexed(found, key = { _, moment -> moment.uid }) { index, moment ->
-                    SearchResult(moment, text, places, trips, container.mediaUrls, ListItemDefaults.segmentedShapes(index, found.size)) { onMoment(moment.uid) }
+                    Box(Modifier.groupedRow(index, found.size, inset = 88f)) {
+                        SearchResult(moment, text, places, trips, container.mediaUrls, groupedShapes(index, found.size)) { onMoment(moment.uid) }
+                    }
                 }
                 item { Box(Modifier.navigationBarsPadding()) }
             }
@@ -169,7 +167,6 @@ private fun MomentRecord.matches(text: String, places: Map<String, Place>, trips
  * marked. Found by a place or its trip rather than its words, that place or trip says why,
  * marked too. It grows into the Moment's page when opened, as a card on a list does.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun SearchResult(
     moment: MomentRecord,
@@ -180,19 +177,19 @@ private fun SearchResult(
     shapes: ListItemShapes,
     onClick: () -> Unit,
 ) {
-    val mark = SpanStyle(color = MaterialTheme.colorScheme.primary, fontWeight = MaterialTheme.typography.bodyLargeEmphasized.fontWeight)
+    val mark = SpanStyle(color = AppTheme.colorScheme.primary, fontWeight = AppTheme.typography.bodyLargeEmphasized.fontWeight)
     val words = remember(moment.text) { moment.text.replace(Regex("\\s+"), " ").trim() }
     val inWords = words.contains(text, ignoreCase = true)
     // Why it was found when its words don't say: the first place, else the trip, that matches.
     val reason = remember(moment, text, places, trips) {
         if (inWords) null
-        else moment.places.firstNotNullOfOrNull { id -> places[id]?.name?.takeIf { it.contains(text, ignoreCase = true) }?.let { Icons.Rounded.Place to it } }
-            ?: tripOf(moment, trips)?.title?.takeIf { it.contains(text, ignoreCase = true) }?.let { Icons.Rounded.Luggage to it }
+        else moment.places.firstNotNullOfOrNull { id -> places[id]?.name?.takeIf { it.contains(text, ignoreCase = true) }?.let { AppIcons.Pin to it } }
+            ?: tripOf(moment, trips)?.title?.takeIf { it.contains(text, ignoreCase = true) }?.let { AppIcons.Luggage to it }
     }
     SegmentedListItem(
         onClick = onClick,
         shapes = shapes,
-        colors = ListItemDefaults.segmentedColors(containerColor = LocalSurfaceLevel.current.raised.fill()),
+        colors = ListItemDefaults.segmentedColors(containerColor = Color.Transparent),
         leadingContent = moment.media.firstOrNull()?.let { media -> { Thumbnail(media, urls, size = 56) } },
         overlineContent = { Text(listOfNotNull(formatDate(moment.occurredAt), formatTime(moment.occurredAt)).joinToString(" ")) },
         supportingContent = reason?.let { (icon, name) ->

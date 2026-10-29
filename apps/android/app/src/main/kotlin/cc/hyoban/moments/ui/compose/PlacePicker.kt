@@ -1,13 +1,16 @@
 package cc.hyoban.moments.ui.compose
 
+import cc.hyoban.moments.ui.design.AppIcons
+import cc.hyoban.moments.ui.design.Spinner
+import cc.hyoban.moments.ui.theme.Corners
+import cc.hyoban.moments.ui.theme.fill
+import cc.hyoban.moments.ui.theme.SurfaceLevel
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.LoadingIndicator
-import androidx.compose.material3.LocalContentColor
+import cc.hyoban.moments.ui.design.ButtonDefaults
+import cc.hyoban.moments.ui.design.LocalContentColor
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
@@ -27,20 +30,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.MyLocation
-import androidx.compose.material.icons.rounded.Place
-import androidx.compose.material3.BottomSheetScaffold
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.SuggestionChip
+import cc.hyoban.moments.ui.design.BottomSheetScaffold
+import cc.hyoban.moments.ui.design.Button
+import cc.hyoban.moments.ui.design.FilterChip
+import cc.hyoban.moments.ui.design.FilterChipDefaults
+import cc.hyoban.moments.ui.design.FloatingActionButton
+import cc.hyoban.moments.ui.design.Icon
+import cc.hyoban.moments.ui.design.AppTheme
+import cc.hyoban.moments.ui.design.OutlinedTextField
+import cc.hyoban.moments.ui.design.SuggestionChip
 import androidx.compose.animation.AnimatedVisibility
 import cc.hyoban.moments.ui.components.predictiveBackScale
 import cc.hyoban.moments.ui.components.rememberPredictiveBack
@@ -50,12 +48,12 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.material3.SuggestionChipDefaults
+import cc.hyoban.moments.ui.design.SuggestionChipDefaults
 import androidx.compose.ui.graphics.TransformOrigin
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberBottomSheetScaffoldState
-import androidx.compose.material3.rememberStandardBottomSheetState
+import cc.hyoban.moments.ui.design.Text
+import cc.hyoban.moments.ui.design.TextButton
+import cc.hyoban.moments.ui.design.rememberBottomSheetScaffoldState
+import cc.hyoban.moments.ui.design.rememberStandardBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -113,7 +111,6 @@ internal sealed interface PlaceChoice {
  * typed; a known place's dot tapped chooses it. A place found in a map app comes in by
  * sharing it to the app instead.
  */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun PlacePicker(
     current: PlaceChoice,
@@ -239,14 +236,14 @@ internal fun PlacePicker(
                 modifier = Modifier.fillMaxSize().testTag("place_map"),
             )
             // The pin's point at the map's middle; a known place chosen shows as its own dot instead.
-            val motion = MaterialTheme.motionScheme
+            val motion = AppTheme.motionScheme
             AnimatedVisibility(
                 pick !is PlaceChoice.Known,
                 enter = scaleIn(motion.fastSpatialSpec(), transformOrigin = TransformOrigin(0.5f, 1f)) + fadeIn(motion.fastEffectsSpec()),
                 exit = scaleOut(motion.fastSpatialSpec(), transformOrigin = TransformOrigin(0.5f, 1f)) + fadeOut(motion.fastEffectsSpec()),
                 modifier = Modifier.align(Alignment.Center).offset(y = -(PIN_SIZE / 2)),
             ) {
-                Icon(Icons.Rounded.Place, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(PIN_SIZE))
+                Icon(AppIcons.Pin, contentDescription = null, tint = AppTheme.colorScheme.primary, modifier = Modifier.size(PIN_SIZE))
             }
             FloatingBack(onDismiss, Modifier.align(Alignment.TopStart))
             val granted = LOCATION_PERMISSIONS.any { ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED }
@@ -274,19 +271,20 @@ internal fun PlacePicker(
                                     }
                                 }
                             },
-                            // Material 3's secondary container FAB, as surface FABs are no longer
-                            // recommended, less emphasized than the sheet's one action in colour.
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                            // Round on the floating surface, as the map's own controls are, quieter
+                            // than the sheet's one action.
+                            containerColor = SurfaceLevel.Floating.fill(),
+                            contentColor = AppTheme.colorScheme.onSurface,
+                            shape = Corners.full,
                             // Named on the button, so it keeps its name while the indicator stands in for the icon.
                             modifier = Modifier.semantics { contentDescription = locateLabel }.testTag("locate"),
                         ) {
                             // A loading indicator while it finds where the phone is, as the map tab's button has.
-                            Crossfade(locating, animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(), label = "locating") { busy ->
+                            Crossfade(locating, animationSpec = AppTheme.motionScheme.fastEffectsSpec(), label = "locating") { busy ->
                                 if (busy) {
-                                    LoadingIndicator(Modifier.size(32.dp), color = LocalContentColor.current)
+                                    Spinner(Modifier.size(32.dp), color = LocalContentColor.current)
                                 } else {
-                                    Icon(Icons.Rounded.MyLocation, contentDescription = null)
+                                    Icon(AppIcons.Locate, contentDescription = null)
                                 }
                             }
                         }
@@ -315,20 +313,20 @@ private fun ChoiceCard(
     // Growing or shrinking from one kind of choice to another, rather than jumping, the map above following.
     Box(modifier.fillMaxWidth()) {
         Column(
-            Modifier.navigationBarsPadding().imePadding().animateContentSize(MaterialTheme.motionScheme.defaultSpatialSpec()).padding(start = Space.xl, end = Space.xl, top = Space.l, bottom = Space.m),
+            Modifier.navigationBarsPadding().imePadding().animateContentSize(AppTheme.motionScheme.defaultSpatialSpec()).padding(start = Space.xl, end = Space.xl, top = Space.l, bottom = Space.m),
             verticalArrangement = Arrangement.spacedBy(Space.s),
         ) {
             when (pick) {
                 is PlaceChoice.Known -> {
-                    Text(stringResource(R.string.label_known_place), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text(places[pick.id]?.name ?: pick.id, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.testTag("chosen_place"))
+                    Text(stringResource(R.string.label_known_place), style = AppTheme.typography.labelLarge, color = AppTheme.colorScheme.onSurfaceVariant)
+                    Text(places[pick.id]?.name ?: pick.id, style = AppTheme.typography.headlineSmall, modifier = Modifier.testTag("chosen_place"))
                     places[pick.id]?.let { known ->
                         KindChips(pick.kind ?: PlaceKind.of(known.kind), onKind)
                         NearbyChips(known.fix(), pick.id, places, landmarks, onKnown, onLandmark)
                     }
                 }
                 is PlaceChoice.New -> {
-                    Text(stringResource(R.string.place_new_here), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.place_new_here), style = AppTheme.typography.labelLarge, color = AppTheme.colorScheme.onSurfaceVariant)
                     OutlinedTextField(
                         value = name,
                         onValueChange = onName,
@@ -344,14 +342,13 @@ private fun ChoiceCard(
                     NearbyChips(pick.fix, null, places, landmarks, onKnown, onLandmark)
                 }
                 PlaceChoice.None -> {
-                    Text(stringResource(R.string.place_drag_hint), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.place_drag_hint), style = AppTheme.typography.bodyLarge, color = AppTheme.colorScheme.onSurfaceVariant)
                 }
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
-                TextButton(shapes = ButtonDefaults.shapes(), onClick = onNone, modifier = Modifier.testTag("place_none")) { Text(stringResource(R.string.place_none)) }
+                TextButton(onClick = onNone, modifier = Modifier.testTag("place_none")) { Text(stringResource(R.string.place_none)) }
                 Spacer(Modifier.weight(1f))
                 Button(
-                    shapes = ButtonDefaults.shapes(),
                     onClick = onConfirm,
                     enabled = when (pick) {
                         is PlaceChoice.New -> pick.name.isNotBlank()
@@ -387,7 +384,7 @@ private fun NearbyChips(
                 SuggestionChip(
                     onClick = { onKnown(id) },
                     label = { Text("${places.getValue(id).name}\u2003${formatDistance(metres)}", maxLines = 1) },
-                    icon = { Icon(Icons.Rounded.Place, contentDescription = null, modifier = Modifier.size(18.dp)) },
+                    icon = { Icon(AppIcons.Pin, contentDescription = null, modifier = Modifier.size(18.dp)) },
                     modifier = Modifier.animateItem().testTag("nearby_$id"),
                 )
             }
@@ -421,7 +418,7 @@ private fun KindChips(kind: PlaceKind?, onKind: (PlaceKind?) -> Unit) {
                 onClick = { onKind(if (selected) null else entry) },
                 label = { Text(stringResource(entry.label)) },
                 leadingIcon = if (selected) {
-                    { Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize)) }
+                    { Icon(AppIcons.Check, contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize)) }
                 } else {
                     null
                 },

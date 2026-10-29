@@ -1,6 +1,8 @@
 package cc.hyoban.moments.widget
 
-import android.app.UiModeManager
+import cc.hyoban.moments.ui.theme.Tokens
+import androidx.glance.color.colorProviders
+import androidx.glance.color.ColorProvider
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
@@ -39,7 +41,6 @@ import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.padding
 import androidx.glance.layout.width
-import androidx.glance.material3.ColorProviders
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
@@ -48,7 +49,6 @@ import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.LinkActivity
 import cc.hyoban.moments.MomentsApplication
 import cc.hyoban.moments.R
-import cc.hyoban.moments.Settings
 import cc.hyoban.moments.ThemeMode
 import cc.hyoban.moments.data.spec.MomentMedia
 import cc.hyoban.moments.data.trips.countOf
@@ -60,7 +60,7 @@ import cc.hyoban.moments.ui.format.formatRange
 import cc.hyoban.moments.ui.theme.MediaOverlay
 import cc.hyoban.moments.ui.theme.Radius
 import cc.hyoban.moments.ui.theme.Space
-import cc.hyoban.moments.ui.theme.seededColorScheme
+import cc.hyoban.moments.ui.theme.appTokens
 import coil3.SingletonImageLoader
 import coil3.request.ImageRequest
 import coil3.request.SuccessResult
@@ -299,21 +299,48 @@ private fun Words(
     }
 }
 
-/** The app's own colours, from the seed and style its theme page sets, light or dark as it is set to follow. */
+/** The app's own colours, light or dark as it is set to follow: each role the token that plays its part, by day and by night. */
 @Composable
 private fun WidgetTheme(context: Context, content: @Composable () -> Unit) {
     val settings = (context.applicationContext as MomentsApplication).container.settings
-    val accent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) context.getColor(android.R.color.system_accent1_500) else null
-    val seed = Color(settings.themeColor ?: accent ?: Settings.DEFAULT_THEME_COLOR)
-    // At the contrast the phone asks for, as the app is; drawn again whenever the widgets are.
-    val contrast = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) context.getSystemService(UiModeManager::class.java).contrast.toDouble() else 0.0
-    val light = seededColorScheme(seed, dark = false, settings.colorStyle, contrast = contrast)
-    val dark = seededColorScheme(seed, dark = true, settings.colorStyle, settings.pureBlack, contrast)
-    val colors = when (settings.themeMode) {
-        ThemeMode.SYSTEM -> ColorProviders(light = light, dark = dark)
-        ThemeMode.LIGHT -> ColorProviders(light = light, dark = light)
-        ThemeMode.DARK -> ColorProviders(light = dark, dark = dark)
+    val day = when (settings.themeMode) {
+        ThemeMode.DARK -> appTokens(true)
+        else -> appTokens(false)
     }
+    val night = when (settings.themeMode) {
+        ThemeMode.LIGHT -> appTokens(false)
+        else -> appTokens(true)
+    }
+    fun role(pick: (Tokens) -> Color) = ColorProvider(day = pick(day), night = pick(night))
+    val colors = colorProviders(
+        primary = role { it.accent },
+        onPrimary = role { it.onAccent },
+        primaryContainer = role { it.accentSoft },
+        onPrimaryContainer = role { it.tx },
+        secondary = role { it.ink },
+        onSecondary = role { it.onInk },
+        secondaryContainer = role { it.pressed },
+        onSecondaryContainer = role { it.tx },
+        tertiary = role { it.income },
+        onTertiary = role { it.bg },
+        tertiaryContainer = role { it.pressed },
+        onTertiaryContainer = role { it.tx },
+        error = role { it.danger },
+        errorContainer = role { it.dangerSoft },
+        onError = role { it.onDanger },
+        onErrorContainer = role { it.tx },
+        background = role { it.bg },
+        onBackground = role { it.tx },
+        surface = role { it.surface },
+        onSurface = role { it.tx },
+        surfaceVariant = role { it.pressed },
+        onSurfaceVariant = role { it.tx2 },
+        outline = role { it.borderStrong },
+        inverseOnSurface = role { it.bg },
+        inverseSurface = role { it.tx },
+        inversePrimary = role { it.accent },
+        widgetBackground = role { it.bg },
+    )
     GlanceTheme(colors = colors, content = content)
 }
 

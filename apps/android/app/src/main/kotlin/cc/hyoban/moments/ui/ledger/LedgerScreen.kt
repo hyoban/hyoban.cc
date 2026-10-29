@@ -1,5 +1,13 @@
 package cc.hyoban.moments.ui.ledger
 
+import cc.hyoban.moments.ui.design.AppIcons
+import cc.hyoban.moments.ui.design.SegmentedButton
+import cc.hyoban.moments.ui.design.SingleChoiceSegmentedButtonRow
+import cc.hyoban.moments.ui.components.AppColors
+import cc.hyoban.moments.ui.theme.dividerColor
+import cc.hyoban.moments.ui.theme.tokens
+import androidx.compose.ui.unit.Dp
+import cc.hyoban.moments.ui.components.SubPage
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,33 +26,19 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.FileOpen
-import androidx.compose.material.icons.rounded.Search
-import androidx.compose.material.icons.rounded.Settings
-import androidx.compose.material.icons.rounded.Visibility
-import androidx.compose.material.icons.rounded.VisibilityOff
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.FloatingActionButtonDefaults
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MediumExtendedFloatingActionButton
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.PrimaryTabRow
-import androidx.compose.material3.SegmentedListItem
-import androidx.compose.material3.Tab
-import androidx.compose.material3.Text
+import cc.hyoban.moments.ui.design.DropdownMenu
+import cc.hyoban.moments.ui.design.IconButtonDefaults
+import cc.hyoban.moments.ui.design.ButtonDefaults
+import cc.hyoban.moments.ui.design.DropdownMenuItem
+import cc.hyoban.moments.ui.design.FilledTonalButton
+import cc.hyoban.moments.ui.design.FloatingActionButton
+import cc.hyoban.moments.ui.design.HorizontalDivider
+import cc.hyoban.moments.ui.design.Icon
+import cc.hyoban.moments.ui.design.IconButton
+import cc.hyoban.moments.ui.design.AppTheme
+import cc.hyoban.moments.ui.design.OutlinedButton
+import cc.hyoban.moments.ui.design.SegmentedListItem
+import cc.hyoban.moments.ui.design.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -73,7 +67,6 @@ import cc.hyoban.moments.ledger.netAssetsByMonth
 import cc.hyoban.moments.ledger.Txn
 import cc.hyoban.moments.ledger.assetsOf
 import cc.hyoban.moments.ledger.summarize
-import cc.hyoban.moments.ui.LedgerHome
 import cc.hyoban.moments.ui.LocalBottomClearance
 import cc.hyoban.moments.ui.LocalFabClearance
 import cc.hyoban.moments.ui.LocalNavAccessory
@@ -100,24 +93,16 @@ private enum class LedgerTab(val label: Int, val tag: String) {
 }
 
 /**
- * The ledger tab: the book shown, its bills by month and day, its sums by category, and the
- * accounts with what they hold, as Material 3's primary tabs under the tab's large app bar.
- * Its button writes a bill.
+ * The ledger, opened from 我: the book shown, its bills by month and day, its sums by category,
+ * and the accounts with what they hold, as tabs under the page's bar, [startTab] chosen first.
+ * Bills are written from the timeline's 记录, where they show too.
  */
 @Composable
-fun LedgerScreen(container: AppContainer, nav: LedgerNav, onImport: () -> Unit) {
+fun LedgerScreen(container: AppContainer, nav: LedgerNav, onImport: () -> Unit, startTab: Int = 0) {
     val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
     val loaded by container.ledger.loaded.collectAsStateWithLifecycle()
     val book = ledger.book
-    var tab by rememberSaveable { mutableIntStateOf(0) }
-
-    val accessory = LocalNavAccessory.current
-    val currentNav by rememberUpdatedState(nav)
-    val newBill = remember<@Composable () -> Unit> { { NewBillButton(onClick = { currentNav.entry(LedgerEntryArgs()) }, inRail = isMediumWidth()) } }
-    DisposableEffect(accessory) {
-        accessory.value = newBill
-        onDispose { if (accessory.value === newBill) accessory.value = null }
-    }
+    var tab by rememberSaveable { mutableIntStateOf(startTab.coerceIn(0, LedgerTab.entries.lastIndex)) }
 
     // The chosen book's bills, or every book's, summed in the chosen book's currency.
     val shown = ledger.shownBooks
@@ -133,16 +118,16 @@ fun LedgerScreen(container: AppContainer, nav: LedgerNav, onImport: () -> Unit) 
         null
     }
 
-    TabPage(
+    SubPage(
         when {
             book == null -> stringResource(R.string.tab_ledger)
             ledger.allBooks -> stringResource(R.string.ledger_all_books)
             else -> book.name
         },
-        tab = LedgerHome,
+        onBack = nav.back,
         subtitle = subtitle,
         // Switched from its name, when there are books to switch between, so the bar keeps
-        // to Material 3's two actions.
+        // to its one action.
         titleMenu = if (ledger.books.count { !it.archived } >= 2) {
             TitleMenu(stringResource(R.string.ledger_switch_book)) { close -> BookMenuItems(container, ledger, nav, close) }
         } else {
@@ -152,29 +137,21 @@ fun LedgerScreen(container: AppContainer, nav: LedgerNav, onImport: () -> Unit) 
         subtitleAction = { HideAmountsButton() },
         actions = {
             Tooltip(stringResource(R.string.action_search), below = true) {
-                IconButton(shapes = IconButtonDefaults.shapes(), onClick = { nav.list(LedgerFilter(book = book?.id.takeIf { !ledger.allBooks }, search = true)) }, modifier = Modifier.testTag("ledger_search")) {
-                    Icon(Icons.Rounded.Search, contentDescription = stringResource(R.string.action_search))
-                }
-            }
-            Tooltip(stringResource(R.string.ledger_settings_title), below = true) {
-                IconButton(shapes = IconButtonDefaults.shapes(), onClick = nav.settings, modifier = Modifier.testTag("ledger_settings")) {
-                    Icon(Icons.Rounded.Settings, contentDescription = stringResource(R.string.ledger_settings_title))
+                IconButton(onClick = { nav.list(LedgerFilter(book = book?.id.takeIf { !ledger.allBooks }, search = true)) }, modifier = Modifier.testTag("ledger_search")) {
+                    Icon(AppIcons.Search, contentDescription = stringResource(R.string.action_search))
                 }
             }
         },
     ) {
         Column(Modifier.fillMaxSize()) {
             // Clear of the tabs down the side on a phone on its side, as the lists under it are.
-            PrimaryTabRow(selectedTabIndex = tab, containerColor = LocalSurfaceLevel.current.fill(), modifier = Modifier.railPadding()) {
+            // Its bills, sums and accounts, one of three in a segmented control under the bar,
+            // clear of the tabs down the side on a phone on its side as the lists under it are.
+            SingleChoiceSegmentedButtonRow(Modifier.railPadding().fillMaxWidth().padding(horizontal = Space.gutter, vertical = Space.s)) {
                 LedgerTab.entries.forEachIndexed { index, entry ->
-                    Tab(
-                        selected = tab == index,
-                        onClick = { tab = index },
-                        text = { Text(stringResource(entry.label)) },
-                        selectedContentColor = MaterialTheme.colorScheme.primary,
-                        unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.testTag(entry.tag),
-                    )
+                    SegmentedButton(selected = tab == index, onClick = { tab = index }, modifier = Modifier.testTag(entry.tag)) {
+                        Text(stringResource(entry.label))
+                    }
                 }
             }
             when {
@@ -188,36 +165,13 @@ fun LedgerScreen(container: AppContainer, nav: LedgerNav, onImport: () -> Unit) 
     }
 }
 
-/** The tab's button: writing a bill, with its label beside the bar, an icon alone in the rail. */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
-@Composable
-private fun NewBillButton(onClick: () -> Unit, inRail: Boolean) {
-    val label = stringResource(R.string.ledger_new_bill)
-    Tooltip(label, enabled = inRail) {
-        if (inRail) {
-            FloatingActionButton(onClick = onClick, elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp), modifier = Modifier.testTag("new_bill")) {
-                Icon(Icons.Rounded.Add, contentDescription = label)
-            }
-        } else {
-            MediumExtendedFloatingActionButton(
-                onClick = onClick,
-                expanded = true,
-                shape = MaterialTheme.shapes.largeIncreased,
-                icon = { Icon(Icons.Rounded.Add, contentDescription = null, modifier = Modifier.size(FloatingActionButtonDefaults.MediumIconSize)) },
-                text = { Text(label) },
-                modifier = Modifier.semantics { contentDescription = label }.testTag("new_bill"),
-            )
-        }
-    }
-}
-
 /** The books to switch between, from the title, and the way to manage them. */
 @Composable
 private fun ColumnScope.BookMenuItems(container: AppContainer, ledger: Ledger, nav: LedgerNav, close: () -> Unit) {
     val scope = rememberCoroutineScope()
     DropdownMenuItem(
         text = { Text(stringResource(R.string.ledger_all_books)) },
-        trailingIcon = if (ledger.allBooks) { { Icon(Icons.Rounded.Check, contentDescription = null) } } else null,
+        trailingIcon = if (ledger.allBooks) { { Icon(AppIcons.Check, contentDescription = null) } } else null,
         onClick = {
             close()
             scope.launch { container.ledger.showAllBooks() }
@@ -228,7 +182,7 @@ private fun ColumnScope.BookMenuItems(container: AppContainer, ledger: Ledger, n
     ledger.books.filter { !it.archived }.forEach { book ->
         DropdownMenuItem(
             text = { Text(book.name) },
-            trailingIcon = if (!ledger.allBooks && book.id == ledger.book?.id) { { Icon(Icons.Rounded.Check, contentDescription = null) } } else null,
+            trailingIcon = if (!ledger.allBooks && book.id == ledger.book?.id) { { Icon(AppIcons.Check, contentDescription = null) } } else null,
             onClick = {
                 close()
                 scope.launch { container.ledger.setCurrentBook(book.id) }
@@ -240,17 +194,16 @@ private fun ColumnScope.BookMenuItems(container: AppContainer, ledger: Ledger, n
 }
 
 /** Hides the ledger's amounts, or shows them again: an eye beside the month's sums. */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun HideAmountsButton() {
     val settings = LocalSettings.current
     val label = stringResource(if (settings.ledgerHidden) R.string.ledger_show_amounts else R.string.ledger_hide_amounts)
     Tooltip(label, below = true) {
-        IconButton(shapes = IconButtonDefaults.shapes(), onClick = { settings.changeLedgerHidden(!settings.ledgerHidden) }, modifier = Modifier.testTag("ledger_hide")) {
+        IconButton(onClick = { settings.changeLedgerHidden(!settings.ledgerHidden) }, modifier = Modifier.testTag("ledger_hide")) {
             Icon(
-                if (settings.ledgerHidden) Icons.Rounded.VisibilityOff else Icons.Rounded.Visibility,
+                if (settings.ledgerHidden) AppIcons.EyeOff else AppIcons.Eye,
                 contentDescription = label,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                tint = AppTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(20.dp),
             )
         }
@@ -265,15 +218,15 @@ private fun EmptyLedger(onImport: () -> Unit, onNew: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(Space.l),
     ) {
-        Text(stringResource(R.string.ledger_empty_title), style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
+        Text(stringResource(R.string.ledger_empty_title), style = AppTheme.typography.titleLarge, textAlign = TextAlign.Center)
         Text(
             stringResource(R.string.ledger_empty_body),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = AppTheme.typography.bodyMedium,
+            color = AppTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
-        FilledTonalButton(shapes = ButtonDefaults.shapes(), onClick = onImport, modifier = Modifier.testTag("ledger_import_empty")) {
-            Icon(Icons.Rounded.FileOpen, contentDescription = null, modifier = Modifier.size(18.dp))
+        FilledTonalButton(onClick = onImport, modifier = Modifier.testTag("ledger_import_empty")) {
+            Icon(AppIcons.FileOpen, contentDescription = null, modifier = Modifier.size(18.dp))
             Spacer(Modifier.size(Space.s))
             Text(stringResource(R.string.ledger_import_icost))
         }
@@ -355,7 +308,6 @@ fun BillList(
 @Composable
 private fun BillsView(ledger: Ledger, bills: List<Txn>, currency: String, nav: LedgerNav) {
     val state = rememberLazyListState()
-    OnTabReselect(LedgerHome) { state.animateScrollToItem(0) }
     BillList(ledger, bills, currency, nav, state)
 }
 
@@ -365,8 +317,8 @@ private fun MonthTotals(month: String, expense: Long, income: Long, currency: St
     val (name, year) = formatMonth("$month-01")
     Column(Modifier.fillMaxWidth().padding(start = Space.l + Space.xs, end = Space.l + Space.xs, top = Space.xl).semantics(mergeDescendants = true) { heading() }) {
         Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
-            Text(name, style = MaterialTheme.typography.headlineSmall)
-            Text(year, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = Space.xxs))
+            Text(name, style = AppTheme.typography.headlineSmall)
+            Text(year, style = AppTheme.typography.titleMedium, color = AppTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = Space.xxs))
         }
         Text(
             listOf(
@@ -374,8 +326,8 @@ private fun MonthTotals(month: String, expense: Long, income: Long, currency: St
                 stringResource(R.string.ledger_income_short, money(income, currency)),
                 stringResource(R.string.ledger_balance_short, money(income - expense, currency)),
             ).joinToString(" "),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = AppTheme.typography.bodyMedium,
+            color = AppTheme.colorScheme.onSurfaceVariant,
         )
     }
 }
@@ -384,7 +336,6 @@ private fun MonthTotals(month: String, expense: Long, income: Long, currency: St
  * The accounts: the net assets over what is held and what is owed, in [currency], then the
  * accounts by kind as segmented lists, each with its balance in its own currency.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun AssetsView(ledger: Ledger, currency: String, nav: LedgerNav) {
     val assets = remember(ledger, currency) { assetsOf(ledger, currency) }
@@ -394,12 +345,12 @@ private fun AssetsView(ledger: Ledger, currency: String, nav: LedgerNav) {
                 .padding(start = columns.margin, end = columns.margin, bottom = LocalBottomClearance.current + LocalFabClearance.current + Space.xl),
         ) {
             Column(Modifier.padding(start = Space.gutter + Space.l, end = Space.gutter, top = Space.xl).semantics(mergeDescendants = true) {}) {
-                Text(stringResource(R.string.ledger_net_assets), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text(money(assets.net, currency), style = MaterialTheme.typography.displaySmall, modifier = Modifier.testTag("net_assets"))
+                Text(stringResource(R.string.ledger_net_assets), style = AppTheme.typography.labelLarge, color = AppTheme.colorScheme.onSurfaceVariant)
+                Text(money(assets.net, currency), style = AppTheme.typography.displaySmall, modifier = Modifier.testTag("net_assets"))
                 Text(
                     stringResource(R.string.ledger_assets_line, money(assets.held, currency), money(assets.owed, currency)),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = AppTheme.typography.bodyMedium,
+                    color = AppTheme.colorScheme.onSurfaceVariant,
                 )
             }
             NetAssetsTrend(ledger, currency)
@@ -421,7 +372,7 @@ private fun AssetsView(ledger: Ledger, currency: String, nav: LedgerNav) {
                                 supportingContent = if (!account.counted || account.note.isNotBlank()) {
                                     { Text(listOfNotNull(stringResource(R.string.ledger_not_counted).takeIf { !account.counted }, account.note.takeIf { it.isNotBlank() }).joinToString(" "), maxLines = 2) }
                                 } else null,
-                                trailingContent = { Text(money(balance, account.currency), style = MaterialTheme.typography.titleSmall) },
+                                trailingContent = { Text(money(balance, account.currency), style = AppTheme.typography.titleSmall) },
                                 modifier = Modifier.testTag("account_${account.id}"),
                             ) { Text(account.name, maxLines = 1) }
                         }
@@ -440,15 +391,15 @@ private fun AssetsView(ledger: Ledger, currency: String, nav: LedgerNav) {
                                 shapes = shapes,
                                 colors = segmentColors(),
                                 leadingContent = { Icon(accountKindIcon(account.kind), contentDescription = null) },
-                                trailingContent = { Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null) },
+                                trailingContent = { Icon(AppIcons.ChevronRight, contentDescription = null) },
                             ) { Text(account.name, maxLines = 1) }
                         }
                     },
                 )
             }
             Spacer(Modifier.height(Space.l))
-            OutlinedButton(shapes = ButtonDefaults.shapes(), onClick = { nav.editAccount(null) }, modifier = Modifier.padding(horizontal = Space.gutter).fillMaxWidth().testTag("add_account")) {
-                Icon(Icons.Rounded.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+            OutlinedButton(onClick = { nav.editAccount(null) }, modifier = Modifier.padding(horizontal = Space.gutter).fillMaxWidth().testTag("add_account")) {
+                Icon(AppIcons.Plus, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.size(Space.s))
                 Text(stringResource(R.string.ledger_add_account))
             }
@@ -475,7 +426,7 @@ private fun NetAssetsTrend(ledger: Ledger, currency: String) {
     ChartCard(stringResource(R.string.ledger_chart_net_assets), readout, modifier = Modifier.testTag("chart_net_assets")) {
         LineChart(
             listOf(months.map { it.second }),
-            listOf(MaterialTheme.colorScheme.primary),
+            listOf(AppTheme.colorScheme.primary),
             months.size,
             listOf(name(0), name(months.lastIndex)),
             picked,

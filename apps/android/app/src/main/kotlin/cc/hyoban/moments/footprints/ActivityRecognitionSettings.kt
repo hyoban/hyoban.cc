@@ -1,11 +1,10 @@
 package cc.hyoban.moments.footprints
 
+import cc.hyoban.moments.ui.design.AppIcons
 import android.Manifest
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.DirectionsWalk
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -39,7 +38,7 @@ internal fun ActivityRecognitionSettings() {
         listOf { shapes ->
             SwitchRow(
                 enabled,
-                Icons.AutoMirrored.Rounded.DirectionsWalk,
+                AppIcons.Walk,
                 stringResource(R.string.footprints_activity_title),
                 "footprints_activity_enabled",
                 shapes,

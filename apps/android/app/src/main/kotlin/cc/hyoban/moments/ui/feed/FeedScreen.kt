@@ -1,5 +1,11 @@
 package cc.hyoban.moments.ui.feed
 
+import cc.hyoban.moments.ui.design.AppIcons
+import cc.hyoban.moments.ui.components.restingElevation
+import cc.hyoban.moments.ui.components.floatingElevation
+import cc.hyoban.moments.ui.theme.Corners
+import cc.hyoban.moments.ui.theme.tokens
+import cc.hyoban.moments.ui.design.ExtendedFloatingActionButton
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.ReportDrawnWhen
 import androidx.compose.animation.AnimatedContent
@@ -34,26 +40,13 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.rounded.Directions
-import androidx.compose.material.icons.rounded.Edit
-import androidx.compose.material.icons.rounded.Search
-import androidx.compose.material.icons.rounded.Settings
-import androidx.compose.material3.ButtonGroupDefaults
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.FloatingActionButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MediumExtendedFloatingActionButton
-import androidx.compose.material3.Text
-import androidx.compose.material3.ToggleButton
-import androidx.compose.material3.ToggleButtonDefaults
+import cc.hyoban.moments.ui.design.IconButtonDefaults
+import cc.hyoban.moments.ui.design.ButtonDefaults
+import cc.hyoban.moments.ui.design.FloatingActionButton
+import cc.hyoban.moments.ui.design.Icon
+import cc.hyoban.moments.ui.design.IconButton
+import cc.hyoban.moments.ui.design.AppTheme
+import cc.hyoban.moments.ui.design.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
@@ -96,11 +89,9 @@ import cc.hyoban.moments.ui.LocalNavAccessory
 import cc.hyoban.moments.ui.LocalRailSpace
 import cc.hyoban.moments.ui.OnTabReselect
 import cc.hyoban.moments.ui.RailSpace
-import cc.hyoban.moments.ui.calendar.CalendarView
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.SubPage
 import cc.hyoban.moments.ui.components.PageWidth
-import cc.hyoban.moments.ui.components.Symbols
 import cc.hyoban.moments.ui.components.TabPage
 import cc.hyoban.moments.ui.components.Tooltip
 import cc.hyoban.moments.ui.components.isExpandedWidth
@@ -121,17 +112,15 @@ import cc.hyoban.moments.ui.theme.fill
 import kotlin.math.roundToInt
 
 /**
- * The Moments tab: every Moment the site shows and those written on the phone, newest
- * first, month by month, or as a calendar of the months they're in, switched from the
- * header, where a new one is written too. Pull down to bring them up to date.
+ * The timeline tab: every Moment the site shows and those written on the phone, newest first,
+ * month by month, with the ledger's bills among them and a banner where each trip begins; its
+ * button records a Moment or a bill. Pull down to bring them up to date.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FeedScreen(
     container: AppContainer,
     onMoment: (String) -> Unit,
     onDay: (String) -> Unit,
-    onSettings: () -> Unit,
     onNew: () -> Unit,
     onChanges: () -> Unit,
     onSearch: () -> Unit = {},
@@ -159,23 +148,12 @@ fun FeedScreen(
     val pending by container.repository.pending.collectAsStateWithLifecycle()
     // The changes kept on the phone, to look over and publish, head the Moments while there are any.
     val publishable = container.canPublish && pending.size > 0
-    // Writing a Moment is the tab's one floating action button: upright an extended one above
-    // the navigation bar, its label folding away while the list is scrolled down to read on and
-    // back on a scroll up, as Material 3 has an extended FAB over a long list; down the side, a
-    // plain one at the top of the rail.
-    var fabExpanded by remember { mutableStateOf(true) }
-    val fabScroll = remember {
-        object : NestedScrollConnection {
-            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-                if (available.y < -FAB_SCROLL_SLOP) fabExpanded = false else if (available.y > FAB_SCROLL_SLOP) fabExpanded = true
-                return Offset.Zero
-            }
-        }
-    }
+    // Recording is the tab's one main action: a round ink button beside the floating tabs, or at
+    // the top of the rail down the side.
     val accessory = LocalNavAccessory.current
     val currentOnNew by rememberUpdatedState(onNew)
     val newBeside = remember<@Composable () -> Unit> {
-        { NewMomentButton(onClick = { currentOnNew() }, inRail = isMediumWidth(), expanded = fabExpanded) }
+        { NewMomentButton(onClick = { currentOnNew() }, inRail = isMediumWidth()) }
     }
     DisposableEffect(accessory) {
         accessory.value = newBeside
@@ -201,11 +179,10 @@ fun FeedScreen(
     val placeCount = remember(shown) { shown.flatMap { it.places }.toSet().size }
     val subtitle = if (shown.isEmpty()) null else
         pluralStringResource(R.plurals.count_moments, shown.size, shown.size) + "\u2003" + pluralStringResource(R.plurals.count_places, placeCount, placeCount)
-    var calendar by rememberSaveable { mutableStateOf(false) }
-    // Each view keeps where it was scrolled to while the other shows.
+    val bills = rememberTimelineBills(container, shown, filter)
+    val ledgerNav = LocalLedgerNav.current
     val feedState = rememberLazyListState()
     val gridState = rememberLazyStaggeredGridState()
-    val calendarState = rememberLazyListState()
     // A new filter starts both views from the top; coming back to the tab doesn't.
     var lastFilter by rememberSaveable(stateSaver = TimeFilterSaver) { mutableStateOf(filter) }
     LaunchedEffect(filter) {
@@ -213,7 +190,6 @@ fun FeedScreen(
             lastFilter = filter
             feedState.scrollToItem(0)
             gridState.scrollToItem(0)
-            calendarState.scrollToItem(0)
         }
     }
     // The header over the views folds away as they scroll and opens again at their top; back
@@ -221,11 +197,11 @@ fun FeedScreen(
     val headerScroll = remember { HeaderScroll() }
     LaunchedEffect(filter) { headerScroll.offset = 0f }
     // Opening out with the list as it goes back to its top, on the same spring.
-    val headerSpec = MaterialTheme.motionScheme.defaultSpatialSpec<Float>()
+    val headerSpec = AppTheme.motionScheme.defaultSpatialSpec<Float>()
     OnTabReselect(Feed) { animate(headerScroll.offset, 0f, animationSpec = headerSpec) { value, _ -> headerScroll.offset = value } }
     // The rows open out as they come and fold away as they go, the Moments under them moving
     // with them, rather than the whole list jumping.
-    val rowMotion = MaterialTheme.motionScheme
+    val rowMotion = AppTheme.motionScheme
     val rowIn = expandVertically(rowMotion.defaultSpatialSpec()) + fadeIn(rowMotion.defaultEffectsSpec())
     val rowOut = shrinkVertically(rowMotion.defaultSpatialSpec()) + fadeOut(rowMotion.defaultEffectsSpec())
     val header: FeedLeading.() -> Unit = {
@@ -234,7 +210,6 @@ fun FeedScreen(
                 PendingChangesRow(container, onClick = onChanges, modifier = Modifier.padding(horizontal = Space.gutter, vertical = Space.s))
             }
         }
-        item(key = "view") { ViewSwitch(calendar, onChange = { calendar = it }) }
         item(key = "filter") {
             AnimatedVisibility(years.size > 1, enter = rowIn, exit = rowOut) {
                 TimeFilterRows(filter, years, months) { next ->
@@ -259,20 +234,13 @@ fun FeedScreen(
                 TabPage(
                     stringResource(R.string.title_moments),
                     tab = Feed,
-                    modifier = Modifier.nestedScroll(fabScroll),
                     refresh = pull.onRefresh,
                     subtitle = subtitle,
                     actions = {
-                        // How the Moments are laid out is chosen above them; the bar keeps searching
-                        // them, a secondary action as Material 3 has a search icon button, and the settings.
+                        // The bar's one action: searching the timeline. The settings are under 我.
                         Tooltip(stringResource(R.string.action_search), below = true) {
-                            IconButton(shapes = IconButtonDefaults.shapes(), onClick = onSearch, modifier = Modifier.testTag("search")) {
-                                Icon(Icons.Rounded.Search, contentDescription = stringResource(R.string.action_search))
-                            }
-                        }
-                        Tooltip(stringResource(R.string.title_settings), below = true) {
-                            IconButton(shapes = IconButtonDefaults.shapes(), onClick = onSettings, modifier = Modifier.testTag("settings")) {
-                                Icon(Icons.Rounded.Settings, contentDescription = stringResource(R.string.title_settings))
+                            IconButton(onClick = onSearch, modifier = Modifier.testTag("search")) {
+                                Icon(AppIcons.Search, contentDescription = stringResource(R.string.action_search))
                             }
                         }
                     },
@@ -291,30 +259,22 @@ fun FeedScreen(
                                         Column(Modifier.padding(horizontal = columns.margin)) { FeedLeading().apply(header).rows.forEach { (_, row) -> row() } }
                                     }
                                 }
-                                // A fade through, the one going fully out before the other comes in,
-                                // as Material 3 keeps a fade clean of half-shown frames of both.
-                                AnimatedContent(
-                                    calendar,
+                                MomentFeed(
+                                    shown,
+                                    places,
+                                    trips,
+                                    container.mediaUrls,
+                                    open,
                                     Modifier.weight(1f),
-                                    transitionSpec = {
-                                        fadeIn(tween(VIEW_FADE_IN_MS, delayMillis = VIEW_FADE_OUT_MS, easing = LinearOutSlowInEasing)) togetherWith
-                                            fadeOut(tween(VIEW_FADE_OUT_MS, easing = FastOutLinearInEasing))
-                                    },
-                                    label = "feed or calendar",
-                                ) { showCalendar ->
-                                    if (showCalendar) {
-                                        CalendarView(
-                                            shown,
-                                            container.mediaUrls,
-                                            // One Moment opens on its own; more open as the day's list.
-                                            onDay = { date, here -> if (here.size == 1) open(here.single().uid) else onDay(date) },
-                                            state = calendarState,
-                                            tab = Feed,
-                                        )
-                                    } else {
-                                        MomentFeed(shown, places, trips, container.mediaUrls, open, state = feedState, gridState = gridState, tab = Feed, selected = chosen.takeIf { twoPane }, onDay = onDay)
-                                    }
-                                }
+                                    state = feedState,
+                                    gridState = gridState,
+                                    tab = Feed,
+                                    selected = chosen.takeIf { twoPane },
+                                    onDay = onDay,
+                                    bills = bills,
+                                    onBill = { ledgerNav?.bill?.invoke(it) },
+                                    onTrip = onTrip,
+                                )
                             }
                         }
                     }
@@ -327,7 +287,7 @@ fun FeedScreen(
                 Modifier.weight(1f).fillMaxHeight()
                     .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.End + WindowInsetsSides.Bottom))
                     .padding(top = Space.s, end = Space.gutter, bottom = Space.s)
-                    .clip(MaterialTheme.shapes.extraLarge),
+                    .clip(AppTheme.shapes.extraLarge),
             ) {
                 // One Moment giving way to another, or to the placeholder, as a fade through: the
                 // pane's content changes while the pane itself stays.
@@ -362,7 +322,7 @@ fun FeedScreen(
                             Modifier.fillMaxSize().background(LocalSurfaceLevel.current.raised.fill()).testTag("detail_placeholder"),
                             contentAlignment = Alignment.Center,
                         ) {
-                            Text(stringResource(R.string.label_pick_moment), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyLarge)
+                            Text(stringResource(R.string.label_pick_moment), color = AppTheme.colorScheme.onSurfaceVariant, style = AppTheme.typography.bodyLarge)
                         }
                     }
                 }
@@ -420,78 +380,23 @@ private fun CollapsingHeader(scroll: HeaderScroll, content: @Composable () -> Un
 private const val VIEW_FADE_OUT_MS = 90
 private const val VIEW_FADE_IN_MS = 210
 
-/** How far a scroll must go, in pixels a frame, to fold the FAB's label away or bring it back. */
-private const val FAB_SCROLL_SLOP = 6f
-
 /**
- * The Moments as a list or as a calendar, one chosen, as Material 3's connected button group
- * switches between views: across the page, each its icon and name.
+ * Records a Moment or a bill: a round ink button, named by a tooltip and for a screen reader;
+ * beside the floating tabs it has their soft shadow, [inRail] none, level with the rail.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun ViewSwitch(calendar: Boolean, onChange: (Boolean) -> Unit) {
-    Row(
-        Modifier.fillMaxWidth().padding(horizontal = Space.gutter, vertical = Space.xs).selectableGroup(),
-        horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
-    ) {
-        listOf(false to R.string.label_view_list, true to R.string.label_view_calendar).forEachIndexed { index, (isCalendar, label) ->
-            ToggleButton(
-                checked = calendar == isCalendar,
-                onCheckedChange = { onChange(isCalendar) },
-                shapes = if (index == 0) ButtonGroupDefaults.connectedLeadingButtonShapes() else ButtonGroupDefaults.connectedTrailingButtonShapes(),
-                // The one not chosen outlined, so each stands apart from the page at the 3:1 a group needs.
-                border = if (calendar == isCalendar) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-                modifier = Modifier.weight(1f).semantics { role = Role.RadioButton }.testTag(if (isCalendar) "view_calendar" else "view_list"),
-            ) {
-                // Filled once chosen, outlined while not, as Material 3 marks a toggle's state twice.
-                val checked = calendar == isCalendar
-                Icon(
-                    when {
-                        isCalendar && checked -> Symbols.CalendarMonthFilled
-                        isCalendar -> Symbols.CalendarMonthOutlined
-                        checked -> Symbols.ViewAgendaFilled
-                        else -> Symbols.ViewAgendaOutlined
-                    },
-                    contentDescription = null,
-                    modifier = Modifier.size(ToggleButtonDefaults.IconSize),
-                )
-                Spacer(Modifier.size(ToggleButtonDefaults.IconSpacing))
-                Text(stringResource(label), maxLines = 1, style = if (checked) MaterialTheme.typography.labelLargeEmphasized else MaterialTheme.typography.labelLarge)
-            }
-        }
-    }
-}
-
-/**
- * Starts a new Moment: the tab's floating action button, its container the primary one, as
- * Material 3 has a create. A medium extended FAB above the navigation bar, its label shown
- * while [expanded]; [inRail], a FAB at the rail's top, level with it, as one nested in a
- * rail rests.
- */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
-@Composable
-private fun NewMomentButton(onClick: () -> Unit, inRail: Boolean = false, expanded: Boolean = true) {
+private fun NewMomentButton(onClick: () -> Unit, inRail: Boolean = false) {
     val label = stringResource(R.string.action_new_moment)
-    // Named by a tooltip only while it is an icon alone: its label out, it says what it does.
-    Tooltip(label, enabled = inRail || !expanded) {
-        if (inRail) {
-            FloatingActionButton(
-                onClick = onClick,
-                elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp),
-                modifier = Modifier.testTag("new_moment"),
-            ) {
-                Icon(Icons.Rounded.Edit, contentDescription = label)
-            }
-        } else {
-            MediumExtendedFloatingActionButton(
-                onClick = onClick,
-                expanded = expanded,
-                // Material 3's medium FAB corner, continuous as the theme draws every other.
-                shape = MaterialTheme.shapes.largeIncreased,
-                icon = { Icon(Icons.Rounded.Edit, contentDescription = null, modifier = Modifier.size(FloatingActionButtonDefaults.MediumIconSize)) },
-                text = { Text(stringResource(R.string.label_write_moment)) },
-                modifier = Modifier.semantics { contentDescription = label }.testTag("new_moment"),
-            )
+    Tooltip(label) {
+        FloatingActionButton(
+            onClick = onClick,
+            elevation = if (inRail) restingElevation() else floatingElevation(),
+            shape = Corners.full,
+            containerColor = tokens.ink,
+            contentColor = tokens.onInk,
+            modifier = Modifier.testTag("new_moment"),
+        ) {
+            Icon(AppIcons.Pen, contentDescription = label)
         }
     }
 }
@@ -523,8 +428,8 @@ fun DayScreen(
             // The trip the day was on, as a Moment's page offers its own.
             if (trip != null) {
                 Tooltip(trip.title, below = true) {
-                    IconButton(shapes = IconButtonDefaults.shapes(), onClick = { onTrip(trip.id) }, modifier = Modifier.testTag("day_trip")) {
-                        Icon(Symbols.LuggageFilled, contentDescription = trip.title)
+                    IconButton(onClick = { onTrip(trip.id) }, modifier = Modifier.testTag("day_trip")) {
+                        Icon(AppIcons.Luggage, contentDescription = trip.title)
                     }
                 }
             }
@@ -572,13 +477,13 @@ fun PlaceScreen(
                 val show = rememberShowMessage()
                 val onMapLabel = stringResource(R.string.action_show_on_map)
                 Tooltip(onMapLabel, below = true) {
-                    IconButton(shapes = IconButtonDefaults.shapes(), onClick = { onMap(id) }, modifier = Modifier.testTag("show_on_map")) {
-                        Icon(Symbols.MapFilled, contentDescription = onMapLabel)
+                    IconButton(onClick = { onMap(id) }, modifier = Modifier.testTag("show_on_map")) {
+                        Icon(AppIcons.MapFill, contentDescription = onMapLabel)
                     }
                 }
                 Tooltip(stringResource(R.string.action_navigate), below = true) {
-                    IconButton(shapes = IconButtonDefaults.shapes(), onClick = { if (!navigateTo(context, place)) show(context.getString(R.string.no_map_app)) }, modifier = Modifier.testTag("navigate")) {
-                        Icon(Icons.Rounded.Directions, contentDescription = stringResource(R.string.action_navigate), tint = MaterialTheme.colorScheme.primary)
+                    IconButton(onClick = { if (!navigateTo(context, place)) show(context.getString(R.string.no_map_app)) }, modifier = Modifier.testTag("navigate")) {
+                        Icon(AppIcons.Directions, contentDescription = stringResource(R.string.action_navigate), tint = AppTheme.colorScheme.primary)
                     }
                 }
             }

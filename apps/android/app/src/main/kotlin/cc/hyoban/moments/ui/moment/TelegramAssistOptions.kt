@@ -1,9 +1,9 @@
 package cc.hyoban.moments.ui.moment
 
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
+import cc.hyoban.moments.ui.design.AppTheme
+import cc.hyoban.moments.ui.design.OutlinedTextField
+import cc.hyoban.moments.ui.design.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -37,6 +37,6 @@ internal fun TelegramAssistOptions(
             label = { Text(stringResource(R.string.telegram_assist_target)) },
             modifier = Modifier.fillMaxWidth().testTag("telegram_assist_target"),
         )
-        if (!hasPhotos) Text(stringResource(R.string.share_assist_photos_only), style = MaterialTheme.typography.bodySmall)
+        if (!hasPhotos) Text(stringResource(R.string.share_assist_photos_only), style = AppTheme.typography.bodySmall)
     }
 }

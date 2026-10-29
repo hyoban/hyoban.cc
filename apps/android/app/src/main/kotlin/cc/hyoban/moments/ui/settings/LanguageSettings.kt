@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.settings
 
+import cc.hyoban.moments.ui.design.AppIcons
 import android.app.Activity
 import android.content.Intent
 import android.net.Uri
@@ -7,16 +8,12 @@ import android.os.Build
 import android.provider.Settings
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.OpenInNew
-import androidx.compose.material.icons.rounded.Settings
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItemShapes
-import androidx.compose.material3.SegmentedListItem
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Text
+import cc.hyoban.moments.ui.design.Icon
+import cc.hyoban.moments.ui.design.ListItemShapes
+import cc.hyoban.moments.ui.design.SegmentedListItem
+import cc.hyoban.moments.ui.design.AppTheme
+import cc.hyoban.moments.ui.design.RadioButton
+import cc.hyoban.moments.ui.design.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -29,7 +26,6 @@ import cc.hyoban.moments.R
  * The app's language, the phone's or one of its own, as rows in a card with the chosen
  * one ticked. Each language is named in itself, so it can be found whatever the app speaks.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun LanguageSettings() {
     val activity = LocalActivity.current ?: return
@@ -48,8 +44,8 @@ fun LanguageSettings() {
                     onClick = { activity.startActivity(intent) },
                     shapes = shapes,
                     colors = segmentColors(),
-                    leadingContent = { Icon(Icons.Rounded.Settings, contentDescription = null) },
-                    trailingContent = { Icon(Icons.AutoMirrored.Rounded.OpenInNew, contentDescription = null) },
+                    leadingContent = { Icon(AppIcons.Settings, contentDescription = null) },
+                    trailingContent = { Icon(AppIcons.External, contentDescription = null) },
                     modifier = Modifier.testTag("language_system_settings"),
                 ) { Text(stringResource(R.string.action_system_language)) }
             }
@@ -65,7 +61,6 @@ private fun systemLanguageSettings(activity: Activity): Intent? {
     return intent.takeIf { it.resolveActivity(activity.packageManager) != null }
 }
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun LanguageRow(activity: Activity, language: AppLanguage, selected: Boolean, shapes: ListItemShapes) {
     // One of them chosen, as Material 3 has a list choose one: a radio button at each row's
@@ -85,7 +80,7 @@ private fun LanguageRow(activity: Activity, language: AppLanguage, selected: Boo
                 AppLanguage.ENGLISH -> "English"
             },
             // The chosen one emphasized, as Material 3 sets a selected list item.
-            style = if (selected) MaterialTheme.typography.bodyLargeEmphasized else MaterialTheme.typography.bodyLarge,
+            style = if (selected) AppTheme.typography.bodyLargeEmphasized else AppTheme.typography.bodyLarge,
         )
     }
 }

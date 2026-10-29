@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.feed
 
+import cc.hyoban.moments.ui.theme.tokens
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.LinearEasing
@@ -36,14 +37,9 @@ import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.LoadingIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+import cc.hyoban.moments.ui.design.AppTheme
+import cc.hyoban.moments.ui.design.Text
+import cc.hyoban.moments.ui.design.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
@@ -146,9 +142,20 @@ fun MomentFeed(
     dayPills: Boolean = true,
     /** The place the page is of, which its cards needn't name. */
     hidePlace: String? = null,
+    /** The ledger's bills on these days, in the Moments' cards and between them, and each day's spending. */
+    bills: TimelineBills = TimelineBills.EMPTY,
+    /** Opens a bill's page. */
+    onBill: (String) -> Unit = {},
+    /** Opens a trip's page from the banner where it begins; without it, no banners. */
+    onTrip: ((String) -> Unit)? = null,
     leading: FeedLeading.() -> Unit = {},
 ) {
     val days = remember(moments) { moments.groupBy { it.dateKey }.toList() }
+    // The single column's days: those with Moments and those with bills alone, newest first.
+    val timeline = remember(days, bills) {
+        val byDay = days.toMap()
+        (byDay.keys + bills.loose.keys).sortedDescending().map { day -> Triple(day, byDay[day].orEmpty(), dayItems(byDay[day].orEmpty(), bills.loose[day].orEmpty())) }
+    }
     val bottom = LocalBottomClearance.current + LocalFabClearance.current + Space.xl
     val card: @Composable (MomentRecord, Modifier, Boolean) -> Unit = { moment, cardModifier, showDate ->
         MomentCard(
@@ -161,6 +168,9 @@ fun MomentFeed(
             showDate = showDate,
             selected = moment.uid == selected,
             hidePlace = hidePlace,
+            bills = bills.linked[moment.uid].orEmpty(),
+            ledger = bills.ledger,
+            onBill = onBill,
         )
     }
 
@@ -213,20 +223,34 @@ fun MomentFeed(
             ) {
                 leadingRows(leading)
                 var month: String? = null
-                days.forEach { (day, dayMoments) ->
+                val bannered = mutableSetOf<String>()
+                timeline.forEach { (day, dayMoments, dayItems) ->
                     if (months && day.take(7) != month) {
                         month = day.take(7)
                         val (name, year) = formatMonth(day)
                         item(key = "month-${day.take(7)}", contentType = "month") { Box(Modifier.animateItem()) { MonthHeader(name, year) } }
                     }
+                    // Where a trip begins, reading down: above its last day on the timeline.
+                    val trip = if (onTrip != null) trips.firstOrNull { day >= it.start && day <= it.end && it.id !in bannered } else null
+                    if (trip != null && onTrip != null) {
+                        bannered += trip.id
+                        item(key = "trip-${trip.id}", contentType = "trip") {
+                            val count = remember(trip, moments) { moments.count { it.dateKey >= trip.start && it.dateKey <= trip.end } }
+                            TripBanner(trip, count, onClick = { onTrip(trip.id) }, modifier = Modifier.animateItem().padding(horizontal = Space.gutter, vertical = Space.s))
+                        }
+                    }
                     if (dayPills) stickyHeader(key = "day-$day", contentType = "day") {
                         // Over the cards it is held above, which come after it.
                         Box(Modifier.zIndex(1f).belowListTop(state, "day-$day")) {
-                            DayPill(dayPillText(dayLabel(day), dayMoments.size), day, onDay?.let { { it(day) } })
+                            DayPill(dayPillText(dayLabel(day), dayMoments.size, daySpent(bills, day)), day, onDay?.let { { it(day) } })
                         }
                     }
-                    items(dayMoments, key = { it.uid }, contentType = { "moment" }) { moment ->
-                        card(moment, Modifier.animateItem().padding(horizontal = Space.gutter, vertical = Space.s / 2), false)
+                    items(dayItems, key = { it.key }, contentType = { it::class }) { item ->
+                        val itemModifier = Modifier.animateItem().padding(horizontal = Space.gutter, vertical = Space.m)
+                        when (item) {
+                            is DayItem.Moment -> card(item.moment, itemModifier, false)
+                            is DayItem.Bills -> BillGroup(item.txns, bills.ledger, onBill, itemModifier)
+                        }
                     }
                 }
             }
@@ -234,10 +258,10 @@ fun MomentFeed(
     }
 }
 
-/** A day's pill: its label, and how many Moments it has when more than one. */
+/** A day's pill: its label, how many Moments it has when more than one, and what it spent. */
 @Composable
-private fun dayPillText(label: String, count: Int): String =
-    if (count > 1) "$label\u2003${pluralStringResource(R.plurals.count_moments, count, count)}" else label
+private fun dayPillText(label: String, count: Int, spent: String? = null): String =
+    listOfNotNull(label, if (count > 1) pluralStringResource(R.plurals.count_moments, count, count) else null, spent).joinToString("\u2003")
 
 /**
  * A sticky header held below the list's top padding while it is stuck, rather than at the
@@ -282,7 +306,7 @@ fun <T> CardRow(cards: List<T>, columns: Int, modifier: Modifier = Modifier, car
  */
 @Composable
 fun LoadedContent(empty: Boolean, loading: Boolean, message: Int, content: @Composable () -> Unit) {
-    val fade = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
+    val fade = AppTheme.motionScheme.fastEffectsSpec<Float>()
     AnimatedContent(
         empty,
         // Emptied, the list fades out before the message fades in, rather than the two showing at once.
@@ -298,7 +322,6 @@ fun LoadedContent(empty: Boolean, loading: Boolean, message: Int, content: @Comp
     }
 }
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 /**
  * A tab with nothing to show yet: while it loads, cards drawn as their shapes, pulsing
  * softly, as Material 3 keeps a layout steady with skeleton loaders rather than letting the
@@ -315,8 +338,8 @@ fun EmptyState(loading: Boolean, message: Int) {
             Box(Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) {
                 Text(
                     stringResource(message),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodyLarge,
+                    color = AppTheme.colorScheme.onSurfaceVariant,
+                    style = AppTheme.typography.bodyLarge,
                 )
             }
         }
@@ -342,7 +365,7 @@ private fun SkeletonCards() {
         )
     }
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
-    val bone = MaterialTheme.colorScheme.surfaceContainerHighest
+    val bone = AppTheme.colorScheme.surfaceContainerHighest
     val loading = stringResource(R.string.empty_loading)
     PageWidth { columns ->
         Column(
@@ -354,7 +377,7 @@ private fun SkeletonCards() {
         ) {
             repeat(3) {
                 Column(
-                    Modifier.fillMaxWidth().clip(MaterialTheme.shapes.medium).background(LocalSurfaceLevel.current.raised.fill()).padding(bottom = Space.l),
+                    Modifier.fillMaxWidth().clip(AppTheme.shapes.medium).background(LocalSurfaceLevel.current.raised.fill()).padding(bottom = Space.l),
                     verticalArrangement = Arrangement.spacedBy(Space.m),
                 ) {
                     Box(Modifier.fillMaxWidth().aspectRatio(4f / 3f).background(bone))
@@ -413,20 +436,9 @@ fun ShowRefreshErrors(container: AppContainer) {
 class PulledRefresh(val refreshing: Boolean, val onRefresh: () -> Unit)
 
 /** A tab's list under its top app bar, pulled down to refresh, the indicator coming down from the bar. */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun TabRefreshBox(pull: PulledRefresh, content: @Composable BoxScope.() -> Unit) {
-    val state = rememberPullToRefreshState()
-    PullToRefreshBox(
-        isRefreshing = pull.refreshing,
-        onRefresh = pull.onRefresh,
-        modifier = Modifier.fillMaxSize(),
-        state = state,
-        indicator = {
-            PullToRefreshDefaults.LoadingIndicator(state = state, isRefreshing = pull.refreshing, modifier = Modifier.align(Alignment.TopCenter))
-        },
-        content = content,
-    )
+    PullToRefreshBox(isRefreshing = pull.refreshing, onRefresh = pull.onRefresh, modifier = Modifier.fillMaxSize(), content = content)
 }
 
 @Composable

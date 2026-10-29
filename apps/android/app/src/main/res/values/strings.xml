@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">这里</string>
-    <string name="tab_moments">时刻</string>
+    <string name="tab_moments">时间线</string>
     <string name="tab_map">地图</string>
     <string name="tab_trips">旅程</string>
     <string name="action_back">返回</string>
@@ -73,7 +73,7 @@
     <string name="media_photo">照片</string>
     <string name="media_live">实况照片</string>
     <string name="media_video">视频</string>
-    <string name="title_moments">时刻</string>
+    <string name="title_moments">时间线</string>
     <string name="title_trips">旅程</string>
     <string name="label_live">实况</string>
     <string name="empty_moments">还没有时刻</string>
@@ -103,7 +103,7 @@
     <string name="error_location_permission">需要定位权限才能显示所在位置</string>
     <string name="label_view_list">列表</string>
     <string name="label_view_calendar">日历</string>
-    <string name="label_write_moment">写时刻</string>
+    <string name="label_write_moment">记录</string>
     <string name="label_publish_all">全部发布</string>
     <string name="action_search">搜索</string>
     <string name="action_clear">清除</string>
@@ -235,7 +235,7 @@
     <string name="write_moment">时刻</string>
     <string name="write_bill">记账</string>
     <string name="section_bill">账单</string>
-    <string name="action_new_moment">写一个时刻</string>
+    <string name="action_new_moment">记录时刻或账单</string>
     <string name="action_save">保存</string>
     <string name="hint_moment_text">这一刻…</string>
     <string name="action_add_photos">添加照片或视频</string>
@@ -744,4 +744,19 @@
     <string name="auto_bill_title">记一笔 %1$s</string>
     <string name="auto_bill_wechat">微信支付</string>
     <string name="auto_bill_alipay">支付宝</string>
+    <string name="tab_me">我</string>
+    <string name="me_pending_none">没有待发布的更改</string>
+    <string name="me_pending_note">发布前先看一遍改动，再一起发到网站。</string>
+    <string name="me_synced_note">新写的时刻和改动会先留在手机上。</string>
+    <string name="action_review_publish">查看并发布</string>
+    <string name="settings_moments_data">时刻与数据</string>
+    <string name="settings_map_footprints">地图与足迹</string>
+    <string name="settings_about">关于</string>
+    <string name="me_month_expense">本月支出</string>
+    <string name="me_assets">资产与账户</string>
+    <string name="me_start_ledger">开始记账</string>
+    <string name="me_start_ledger_note">记一笔，或从 iCost 导入。</string>
+    <string name="label_time">时间</string>
+    <string name="action_previous_month">上个月</string>
+    <string name="action_next_month">下个月</string>
 </resources>

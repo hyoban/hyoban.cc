@@ -1,5 +1,8 @@
 package cc.hyoban.moments.footprints
 
+import cc.hyoban.moments.ui.design.Checkbox
+import cc.hyoban.moments.ui.design.AlertDialog
+import cc.hyoban.moments.ui.design.TextButton
 import android.Manifest
 import android.content.Intent
 import android.os.Build
@@ -7,19 +10,11 @@ import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Bluetooth
-import androidx.compose.material.icons.rounded.Info
-import androidx.compose.material.icons.rounded.Link
-import androidx.compose.material.icons.rounded.LocationOn
-import androidx.compose.material.icons.rounded.RestartAlt
-import androidx.compose.material.icons.rounded.Settings
-import androidx.compose.material.icons.rounded.Wifi
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.toggleable
-import androidx.compose.material3.*
-import androidx.compose.material3.ButtonDefaults
+import cc.hyoban.moments.ui.design.*
+import cc.hyoban.moments.ui.design.ButtonDefaults
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -43,7 +38,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /** Starting and pausing by Wi-Fi and Bluetooth, on the footprint settings page; all identifiers stay on this phone. */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ConnectionAutomationSettings(container: AppContainer) {
     val context = LocalContext.current
@@ -141,7 +135,7 @@ fun ConnectionAutomationSettings(container: AppContainer) {
             { shapes ->
                 SwitchRow(
                     rules.enabled,
-                    Icons.Rounded.Link,
+                    AppIcons.Link,
                     stringResource(R.string.connection_automation_switch),
                     "connection_automation_enabled",
                     shapes,
@@ -154,15 +148,15 @@ fun ConnectionAutomationSettings(container: AppContainer) {
                 ) { if (!rules.enabled) request("enable") else save(rules.copy(enabled = false)) }
             },
             { shapes ->
-                ActionRow(Icons.Rounded.Wifi, stringResource(R.string.connection_automation_wifi_row), shapes,
+                ActionRow(AppIcons.Wifi, stringResource(R.string.connection_automation_wifi_row), shapes,
                     supporting = rules.wifi.takeIf { it.isNotEmpty() }?.let(names) ?: none, tag = "connection_automation_wifi", enabled = !busy) { request("wifi") }
             },
             { shapes ->
-                ActionRow(Icons.Rounded.Bluetooth, stringResource(R.string.connection_automation_bluetooth_row), shapes,
+                ActionRow(AppIcons.Bluetooth, stringResource(R.string.connection_automation_bluetooth_row), shapes,
                     supporting = rules.bluetooth.values.takeIf { it.isNotEmpty() }?.let(names) ?: none, tag = "connection_automation_bluetooth", enabled = !busy) { request("bluetooth") }
             },
             { shapes ->
-                ActionRow(Icons.Rounded.Info, stringResource(R.string.connection_automation_how), shapes, tag = "connection_automation_settings") {
+                ActionRow(AppIcons.Info, stringResource(R.string.connection_automation_how), shapes, tag = "connection_automation_settings") {
                     explaining = true
                 }
             },
@@ -176,17 +170,17 @@ fun ConnectionAutomationSettings(container: AppContainer) {
             stringResource(R.string.connection_automation_permission_help),
             listOfNotNull(
                 { shapes ->
-                    ActionRow(Icons.Rounded.Settings, stringResource(R.string.footprints_settings), shapes, external = true) {
+                    ActionRow(AppIcons.Settings, stringResource(R.string.footprints_settings), shapes, external = true) {
                         context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, "package:${context.packageName}".toUri()))
                     }
                 },
                 { shapes ->
-                    ActionRow(Icons.Rounded.LocationOn, stringResource(R.string.connection_automation_location_settings), shapes, external = true) {
+                    ActionRow(AppIcons.Pin, stringResource(R.string.connection_automation_location_settings), shapes, external = true) {
                         context.startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
                     }
                 },
                 if (Build.VERSION.SDK_INT == 29) { shapes ->
-                    ActionRow(Icons.Rounded.RestartAlt, stringResource(R.string.footprints_background_permission), shapes) {
+                    ActionRow(AppIcons.Refresh, stringResource(R.string.footprints_background_permission), shapes) {
                         background.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
                     }
                 } else null,
@@ -214,21 +208,21 @@ fun ConnectionAutomationSettings(container: AppContainer) {
                                 Checkbox(id in selected, onCheckedChange = null)
                                 Column(Modifier.padding(start = 8.dp)) {
                                     Text(name)
-                                    if (kind == "bluetooth" && name != id) Text(id, style = MaterialTheme.typography.bodySmall)
+                                    if (kind == "bluetooth" && name != id) Text(id, style = AppTheme.typography.bodySmall)
                                 }
                             }
                         }
                     }
                 }
             },
-            confirmButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = {
+            confirmButton = { TextButton(onClick = {
                 val next = if (kind == "wifi") rules.copy(wifi = selected) else rules.copy(bluetooth = choices.filterKeys { it in selected })
                 // A newly added target may need another permission; do not silently keep a broken monitor enabled.
                 save(next.copy(enabled = next.enabled && context.connectionAutomationAllowed(next)))
                 permissionHelp = next.enabled && !context.connectionAutomationAllowed(next)
                 picker = null
             }, modifier = Modifier.testTag("connection_automation_save")) { Text(stringResource(R.string.connection_automation_save)) } },
-            dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { picker = null }) { Text(stringResource(android.R.string.cancel)) } },
+            dismissButton = { TextButton(onClick = { picker = null }) { Text(stringResource(android.R.string.cancel)) } },
         )
     }
 }

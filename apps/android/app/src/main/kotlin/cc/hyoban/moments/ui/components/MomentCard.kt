@@ -1,5 +1,13 @@
 package cc.hyoban.moments.ui.components
 
+import cc.hyoban.moments.ui.design.AppIcons
+import androidx.compose.ui.draw.clip
+import cc.hyoban.moments.ui.theme.tokens
+import cc.hyoban.moments.ui.theme.cardBorder
+import cc.hyoban.moments.ui.design.Spinner
+import cc.hyoban.moments.ui.feed.LinkedBills
+import cc.hyoban.moments.ledger.Txn
+import cc.hyoban.moments.ledger.Ledger
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -12,18 +20,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.ZeroCornerSize
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.rounded.PhoneAndroid
-import androidx.compose.material.icons.rounded.Place
-import androidx.compose.material.icons.rounded.Restaurant
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.Icon
-import androidx.compose.material3.LoadingIndicator
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import cc.hyoban.moments.ui.design.Icon
+import cc.hyoban.moments.ui.design.LocalContentColor
+import cc.hyoban.moments.ui.design.AppTheme
+import cc.hyoban.moments.ui.design.Surface
+import cc.hyoban.moments.ui.design.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -59,8 +60,8 @@ import cc.hyoban.moments.ui.theme.SurfaceLevel
 import cc.hyoban.moments.ui.theme.fill
 
 /**
- * A Moment in a list: its media inset at the top of a white card, then a subhead of when,
- * where and the trip, then its words. Tapping anywhere, its photos too, opens the Moment;
+ * A Moment in a list, on the page itself rather than in a card: its photos in rounded corners,
+ * then a subhead of when, where and the trip, then its words, then the bills written with it. Tapping anywhere, its photos too, opens the Moment;
  * holding it offers sharing it, copying its words and editing it.
  */
 @OptIn(ExperimentalLayoutApi::class)
@@ -76,12 +77,15 @@ fun MomentCard(
     selected: Boolean = false,
     /** A place the page is already of, left out of the subhead. */
     hidePlace: String? = null,
+    /** The bills written with it, listed at its foot, each opening its bill. */
+    bills: List<Txn> = emptyList(),
+    ledger: Ledger? = null,
+    onBill: (String) -> Unit = {},
 ) {
     // The card grows into the Moment's page when opened; shown in the detail pane beside the
-    // list, it is [selected], outlined in the primary colour, as Material 3 marks the item a
-    // two-pane layout's detail is of.
-    val ring by animateColorAsState(if (selected) MaterialTheme.colorScheme.primary else Color.Transparent, MaterialTheme.motionScheme.fastEffectsSpec(), label = "selected")
-    val outline = Modifier.border(2.dp, ring, MaterialTheme.shapes.medium)
+    // list, it is [selected], outlined in the accent, the one colour for state.
+    val ring by animateColorAsState(if (selected) AppTheme.colorScheme.primary else Color.Transparent, AppTheme.motionScheme.fastEffectsSpec(), label = "selected")
+    val outline = Modifier.border(2.dp, ring, AppTheme.shapes.large)
     // Held, or right clicked, its menu opens where it was pressed.
     var menu by remember { mutableStateOf<DpOffset?>(null) }
     val density = LocalDensity.current
@@ -91,27 +95,29 @@ fun MomentCard(
         onLongClickLabel = stringResource(R.string.action_more),
         modifier = modifier.fillMaxWidth().sharedCard(moment.uid).then(outline)
             .semantics { this.selected = selected }.testTag("moment_${moment.uid}"),
+        flat = true,
     ) {
         if (moment.media.isNotEmpty()) {
-            // To the card's edges, its top corners rounding them; tapped as the rest of the card is.
-            MediaMosaic(moment.uid, moment.media, urls, onOpen = null)
+            // Its photos in the large corners of their own; tapped as the rest of it is.
+            MediaMosaic(moment.uid, moment.media, urls, onOpen = null, modifier = Modifier.clip(AppTheme.shapes.large))
         }
         Column(
-            Modifier.padding(start = Space.l, end = Space.l, top = if (moment.media.isEmpty()) Space.l else Space.s, bottom = Space.l),
+            Modifier.padding(top = if (moment.media.isEmpty()) Space.xs else Space.m, bottom = Space.xs),
             verticalArrangement = Arrangement.spacedBy(Space.m),
         ) {
             MomentSubhead(moment, places, trip, showDate, hidePlace)
             if (moment.text.isNotBlank()) {
-                Text(moment.text, style = MaterialTheme.typography.bodyLarge, maxLines = 8, overflow = TextOverflow.Ellipsis)
+                Text(moment.text, style = AppTheme.typography.bodyLarge, maxLines = 8, overflow = TextOverflow.Ellipsis)
             }
             // What was eaten, under the words as the site has it: one line of secondary text.
             foodLine(moment.food)?.let { line ->
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
-                    Icon(Icons.Rounded.Restaurant, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
-                    Text(line, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Icon(AppIcons.Food, contentDescription = null, tint = AppTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
+                    Text(line, style = AppTheme.typography.bodyMedium, color = AppTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
         }
+        if (bills.isNotEmpty() && ledger != null) LinkedBills(bills, ledger, onBill)
         MomentMenu(moment, urls, menu, onDismiss = { menu = null })
     }
 }
@@ -128,13 +134,13 @@ fun MomentSubhead(moment: MomentRecord, places: Map<String, Place>, trip: TripRe
         val parts = listOfNotNull(time.ifEmpty { null }) + moment.places.filter { it != hidePlace }.map { places[it]?.name ?: it } + listOfNotNull(trip?.title)
         Text(
             parts.joinToString("\u2003"),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = AppTheme.typography.bodyMedium,
+            color = AppTheme.colorScheme.onSurfaceVariant,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f, fill = false),
         )
-        if (moment.published == null) Pill(stringResource(R.string.label_on_phone), icon = Icons.Rounded.PhoneAndroid)
+        if (moment.published == null) Pill(stringResource(R.string.label_on_phone), icon = AppIcons.Phone)
     }
 }
 
@@ -144,7 +150,7 @@ fun MomentSubhead(moment: MomentRecord, places: Map<String, Place>, trip: TripRe
  */
 @Composable
 fun FloatingBack(onBack: () -> Unit, modifier: Modifier = Modifier) =
-    FloatingButton(Icons.AutoMirrored.Rounded.ArrowBack, stringResource(R.string.action_back), onBack, modifier, tag = "back", width = FloatingWidth.Narrow)
+    FloatingButton(AppIcons.ArrowLeft, stringResource(R.string.action_back), onBack, modifier, tag = "back", width = FloatingWidth.Narrow)
 
 /**
  * How wide a floating button is, as Material 3's small icon button comes: narrow for back,
@@ -154,10 +160,9 @@ enum class FloatingWidth(val width: Dp) { Narrow(32.dp), Standard(40.dp), Wide(5
 
 /**
  * A button that floats over a photo or a map, legible on either, as the back button does.
- * The page's one main action may be [tonal], in the secondary container's colours, and
- * [width] wide; the others stay the floating level.
+ * The page's one main action may be [tonal], the ink, and [width] wide; the others stay on the
+ * floating surface with its hairline.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun FloatingButton(
     icon: ImageVector,
@@ -176,15 +181,16 @@ fun FloatingButton(
             onClick = onClick,
             enabled = !busy,
             shape = Corners.full,
-            color = if (tonal) MaterialTheme.colorScheme.secondaryContainer else SurfaceLevel.Floating.fill(),
-            contentColor = if (tonal) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurface,
+            color = if (tonal) tokens.ink else SurfaceLevel.Floating.fill(),
+            contentColor = if (tonal) tokens.onInk else AppTheme.colorScheme.onSurface,
+            border = if (tonal) null else cardBorder(),
             shadowElevation = Elevation.level2,
             modifier = Modifier.statusBarsPadding().sideInsetsPadding().padding(horizontal = Space.m, vertical = Space.s)
                 .size(width.width, FLOATING_HEIGHT).semantics { contentDescription = label }.testTag(tag),
         ) {
-            // Busy, a short wait, it turns Material 3 Expressive's loading indicator and takes no taps until what it started is done.
+            // Busy, a short wait, it turns a spinner and takes no taps until what it started is done.
             Box(contentAlignment = Alignment.Center) {
-                if (busy) LoadingIndicator(Modifier.size(24.dp), color = LocalContentColor.current) else Icon(icon, contentDescription = null)
+                if (busy) Spinner(Modifier.size(24.dp), color = LocalContentColor.current) else Icon(icon, contentDescription = null)
             }
         }
     }
@@ -199,7 +205,7 @@ val FLOATING_BAR = FLOATING_HEIGHT + Space.s * 2
 @Composable
 fun RisingSheet(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     Surface(
-        shape = MaterialTheme.shapes.extraLarge.copy(bottomStart = ZeroCornerSize, bottomEnd = ZeroCornerSize),
+        shape = AppTheme.shapes.extraLarge.copy(bottomStart = ZeroCornerSize, bottomEnd = ZeroCornerSize),
         color = AppColors.page,
         modifier = modifier.fillMaxWidth(),
         content = content,

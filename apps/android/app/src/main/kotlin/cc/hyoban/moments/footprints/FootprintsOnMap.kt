@@ -1,5 +1,9 @@
 package cc.hyoban.moments.footprints
 
+import cc.hyoban.moments.ui.design.ModalBottomSheet
+import cc.hyoban.moments.ui.design.AlertDialog
+import cc.hyoban.moments.ui.design.FilterChip
+import cc.hyoban.moments.ui.design.TextButton
 import android.Manifest
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -8,22 +12,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Autorenew
-import androidx.compose.material.icons.rounded.CalendarToday
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.Delete
-import androidx.compose.material.icons.rounded.FileDownload
-import androidx.compose.material.icons.rounded.Flag
-import androidx.compose.material.icons.rounded.Layers
-import androidx.compose.material.icons.rounded.Pause
-import androidx.compose.material.icons.rounded.PlayArrow
-import androidx.compose.material.icons.rounded.SaveAlt
-import androidx.compose.material.icons.rounded.Settings
-import androidx.compose.material.icons.rounded.ZoomOutMap
-import androidx.compose.material3.*
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.ButtonDefaults
+import cc.hyoban.moments.ui.design.*
+import cc.hyoban.moments.ui.design.IconButtonDefaults
+import cc.hyoban.moments.ui.design.ButtonDefaults
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -66,7 +57,6 @@ data class FootprintsMapState(
     val open: () -> Unit,
 )
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @Composable (FootprintsMapState) -> Unit) {
     var expanded by rememberSaveable { mutableStateOf(false) }
@@ -158,9 +148,9 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
             // Its name, and the way to how it records, as the place sheet has its name and the way there.
             item {
                 Row(Modifier.fillMaxWidth().padding(start = Space.gutter + Space.l, end = Space.gutter), verticalAlignment = Alignment.CenterVertically) {
-                    Text(stringResource(R.string.footprints_title), Modifier.weight(1f).semantics { heading() }, style = MaterialTheme.typography.titleLarge)
-                    IconButton(shapes = IconButtonDefaults.shapes(), onClick = { expanded = false; reopen = true; onSettings() }, modifier = Modifier.testTag("footprint_settings")) {
-                        Icon(Icons.Rounded.Settings, contentDescription = stringResource(R.string.footprint_settings_title))
+                    Text(stringResource(R.string.footprints_title), Modifier.weight(1f).semantics { heading() }, style = AppTheme.typography.titleLarge)
+                    IconButton(onClick = { expanded = false; reopen = true; onSettings() }, modifier = Modifier.testTag("footprint_settings")) {
+                        Icon(AppIcons.Settings, contentDescription = stringResource(R.string.footprint_settings_title))
                     }
                 }
             }
@@ -170,13 +160,13 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
                     error?.let { stringResource(it) } ?: stringResource(R.string.footprints_local_note),
                     listOfNotNull(
                         { shapes ->
-                            SwitchRow(state.daily, Icons.Rounded.Autorenew, stringResource(R.string.footprints_daily), "footprints_daily", shapes,
+                            SwitchRow(state.daily, AppIcons.Refresh, stringResource(R.string.footprints_daily), "footprints_daily", shapes,
                                 supporting = stringResource(R.string.footprints_daily_note), enabled = loaded && !busy) {
                                 if (!state.daily) enable("daily_on") else control("daily_off")
                             }
                         },
                         { shapes ->
-                            SwitchRow(state.session != null, Icons.Rounded.Flag, stringResource(R.string.footprints_trip), "footprints_trip", shapes,
+                            SwitchRow(state.session != null, AppIcons.Flag, stringResource(R.string.footprints_trip), "footprints_trip", shapes,
                                 supporting = stringResource(if (state.session != null) R.string.footprints_trip_note else R.string.footprints_trip_off_note),
                                 enabled = loaded && !busy) {
                                 if (state.session == null) enable("start_trip") else control("end_trip")
@@ -184,7 +174,7 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
                         },
                         if (state.requested) { shapes ->
                             ActionRow(
-                                if (resumable) Icons.Rounded.PlayArrow else Icons.Rounded.Pause,
+                                if (resumable) AppIcons.Play else AppIcons.Pause,
                                 stringResource(if (resumable) R.string.footprints_resume else R.string.footprints_pause),
                                 shapes,
                                 supporting = stringResource(if (state.paused) R.string.footprints_paused else status ?: R.string.footprints_interrupted),
@@ -193,7 +183,7 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
                             ) { if (resumable) enable("resume") else control("pause") }
                         } else null,
                         { shapes ->
-                            SwitchRow(showTracks, Icons.Rounded.Layers, stringResource(R.string.footprints_show), "footprints_layer", shapes) {
+                            SwitchRow(showTracks, AppIcons.Layers, stringResource(R.string.footprints_show), "footprints_layer", shapes) {
                                 showTracks = !showTracks
                             }
                         },
@@ -213,7 +203,7 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
                                 shapes = shapes,
                                 enabled = view.points.isNotEmpty(),
                                 colors = segmentColors(),
-                                leadingContent = { Icon(if (selectedTrip == null) Icons.Rounded.CalendarToday else Icons.Rounded.Flag, contentDescription = null) },
+                                leadingContent = { Icon(if (selectedTrip == null) AppIcons.Calendar else AppIcons.Flag, contentDescription = null) },
                                 supportingContent = {
                                     Text(if (view.points.isEmpty()) stringResource(R.string.footprints_empty) else listOfNotNull(
                                         stringResource(R.string.footprints_stats, view.stats.metres / 1000, pluralStringResource(R.plurals.footprints_points, view.points.size, view.points.size), view.stats.recordedMillis / 60_000),
@@ -221,7 +211,7 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
                                     ).joinToString("\n"))
                                 },
                                 trailingContent = if (view.points.isNotEmpty()) {
-                                    { Icon(Icons.Rounded.ZoomOutMap, contentDescription = stringResource(R.string.footprints_frame)) }
+                                    { Icon(AppIcons.Fit, contentDescription = stringResource(R.string.footprints_frame)) }
                                 } else null,
                                 modifier = Modifier.testTag("footprints_frame"),
                             ) {
@@ -229,7 +219,7 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
                             }
                         },
                         { shapes ->
-                            ActionRow(Icons.Rounded.FileDownload, stringResource(R.string.footprints_export), shapes,
+                            ActionRow(AppIcons.Download, stringResource(R.string.footprints_export), shapes,
                                 enabled = loaded && !busy && view.points.isNotEmpty()) {
                                 exportDay = selection.day
                                 exportSession = selection.session
@@ -238,7 +228,7 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
                             }
                         },
                         { shapes ->
-                            ActionRow(Icons.Rounded.SaveAlt, stringResource(R.string.footprints_export_all), shapes,
+                            ActionRow(AppIcons.Download, stringResource(R.string.footprints_export_all), shapes,
                                 enabled = loaded && !busy && view.history.days.isNotEmpty()) {
                                 exportDay = null
                                 exportSession = null
@@ -247,7 +237,7 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
                             }
                         },
                         { shapes ->
-                            ActionRow(Icons.Rounded.FileDownload, stringResource(R.string.footprints_export_raw), shapes,
+                            ActionRow(AppIcons.Download, stringResource(R.string.footprints_export_raw), shapes,
                                 supporting = stringResource(R.string.footprints_export_raw_note),
                                 enabled = loaded && !busy && (selection.day in view.history.days || session != null)) {
                                 exportDay = selection.day
@@ -257,7 +247,7 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
                             }
                         },
                         { shapes ->
-                            ActionRow(Icons.Rounded.Delete, stringResource(R.string.footprints_delete), shapes,
+                            ActionRow(AppIcons.Trash, stringResource(R.string.footprints_delete), shapes,
                                 supporting = stringResource(R.string.footprints_delete_note),
                                 enabled = loaded && !busy && !state.requested && (selection.day in view.history.days || session != null)) {
                                 deleting = selection
@@ -271,14 +261,14 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
                                 items((listOf(LocalDate.now().toString(), day) + view.history.days).distinct().sortedDescending()) { date ->
                                     FilterChip(selected = session == null && day == date, onClick = { day = date; session = null }, label = { Text(date) },
                                         leadingIcon = if (session == null && day == date) {
-                                            { Icon(Icons.Rounded.Check, contentDescription = null, Modifier.size(FilterChipDefaults.IconSize)) }
+                                            { Icon(AppIcons.Check, contentDescription = null, Modifier.size(FilterChipDefaults.IconSize)) }
                                         } else null)
                                 }
                             }
                             if (view.history.sessions.isNotEmpty()) LazyRow(contentPadding = PaddingValues(horizontal = Space.gutter), horizontalArrangement = Arrangement.spacedBy(Space.s)) {
                                 items(view.history.sessions, key = { it.id }) { trip ->
                                     FilterChip(selected = session == trip.id, onClick = { session = trip.id },
-                                        leadingIcon = { Icon(if (session == trip.id) Icons.Rounded.Check else Icons.Rounded.Flag, contentDescription = null, Modifier.size(FilterChipDefaults.IconSize)) },
+                                        leadingIcon = { Icon(if (session == trip.id) AppIcons.Check else AppIcons.Flag, contentDescription = null, Modifier.size(FilterChipDefaults.IconSize)) },
                                         label = { Text(stamp(trip.started) + if (trip.ended == null) "\u2003" + stringResource(R.string.footprints_active_trip) else "") })
                                 }
                             }
@@ -293,14 +283,14 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
             onDismissRequest = { deleting = null },
             title = { Text(stringResource(R.string.footprints_delete)) },
             text = { Text(stringResource(R.string.footprints_delete_confirm)) },
-            confirmButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = {
+            confirmButton = { TextButton(onClick = {
                 deleting = null
                 work {
                     withContext(Dispatchers.IO) { store.delete(target) }
                     if (target.session != null) session = null
                 }
             }) { Text(stringResource(R.string.footprints_delete)) } },
-            dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { deleting = null }) { Text(stringResource(R.string.footprints_cancel)) } },
+            dismissButton = { TextButton(onClick = { deleting = null }) { Text(stringResource(R.string.footprints_cancel)) } },
         )
     }
 }

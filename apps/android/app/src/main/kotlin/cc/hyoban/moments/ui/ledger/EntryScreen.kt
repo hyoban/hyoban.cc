@@ -1,5 +1,10 @@
 package cc.hyoban.moments.ui.ledger
 
+import cc.hyoban.moments.ui.design.AppIcons
+import cc.hyoban.moments.ui.design.ListItemShapes
+import androidx.compose.foundation.border
+import cc.hyoban.moments.ui.theme.cardBorder
+import cc.hyoban.moments.ui.theme.tokens
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
@@ -15,16 +20,12 @@ import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.automirrored.rounded.Backspace
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.Schedule
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
-import androidx.compose.material3.Button
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.InputChipDefaults
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
+import cc.hyoban.moments.ui.design.AssistChip
+import cc.hyoban.moments.ui.design.AssistChipDefaults
+import cc.hyoban.moments.ui.design.Button
+import cc.hyoban.moments.ui.design.FilledTonalButton
+import cc.hyoban.moments.ui.design.InputChipDefaults
+import cc.hyoban.moments.ui.design.TextField
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
@@ -49,41 +50,26 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.Label
-import androidx.compose.material.icons.automirrored.rounded.MenuBook
-import androidx.compose.material.icons.automirrored.rounded.Notes
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.Event
-import androidx.compose.material.icons.rounded.Luggage
-import androidx.compose.material.icons.rounded.PhotoLibrary
-import androidx.compose.material.icons.rounded.Place
-import androidx.compose.material.icons.rounded.Block
-import androidx.compose.material.icons.rounded.Sell
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.InputChip
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SegmentedListItem
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import cc.hyoban.moments.ui.design.AlertDialog
+import cc.hyoban.moments.ui.design.IconButtonDefaults
+import cc.hyoban.moments.ui.design.ButtonDefaults
+import cc.hyoban.moments.ui.design.DropdownMenu
+import cc.hyoban.moments.ui.design.DropdownMenuItem
+import cc.hyoban.moments.ui.design.FilterChip
+import cc.hyoban.moments.ui.design.FilterChipDefaults
+import cc.hyoban.moments.ui.design.Icon
+import cc.hyoban.moments.ui.design.IconButton
+import cc.hyoban.moments.ui.design.InputChip
+import cc.hyoban.moments.ui.design.ListItem
+import cc.hyoban.moments.ui.design.ListItemDefaults
+import cc.hyoban.moments.ui.design.AppTheme
+import cc.hyoban.moments.ui.design.ModalBottomSheet
+import cc.hyoban.moments.ui.design.OutlinedTextField
+import cc.hyoban.moments.ui.design.SegmentedButton
+import cc.hyoban.moments.ui.design.SegmentedListItem
+import cc.hyoban.moments.ui.design.SingleChoiceSegmentedButtonRow
+import cc.hyoban.moments.ui.design.Text
+import cc.hyoban.moments.ui.design.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
@@ -166,7 +152,6 @@ internal fun fieldOf(cents: Long?): String = cents?.let { formatCents(it).replac
  * page instead, beside a Moment or alone; this one changes a bill, refunds or reimburses one,
  * or starts from a Moment, an account or a day.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun EntryScreen(container: AppContainer, args: LedgerEntryArgs, nav: LedgerNav) {
     val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
@@ -211,7 +196,7 @@ fun EntryScreen(container: AppContainer, args: LedgerEntryArgs, nav: LedgerNav) 
         nav.back,
         close = true,
         small = keypad,
-        actions = { TextButton(shapes = ButtonDefaults.shapes(), onClick = ::save, modifier = Modifier.testTag("save_bill")) { Text(stringResource(R.string.action_save)) } },
+        actions = { TextButton(onClick = ::save, modifier = Modifier.testTag("save_bill")) { Text(stringResource(R.string.action_save)) } },
     ) {
         PageWidth(maxColumns = 1) { columns ->
             Column(
@@ -440,7 +425,7 @@ internal fun mealCategory(ledger: Ledger): String? = ledger.txns.asSequence()
  * ([withMoment]), whose time, place and self the bill takes, leaving out their chips. With
  * [keypad] the amount, time and note are left to [BillKeypad], pinned under them.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun BillFields(
     container: AppContainer,
@@ -481,7 +466,6 @@ internal fun BillFields(
                         if (kind != entry) draft.category = null
                         draft.kind = entry
                     },
-                    shape = SegmentedButtonDefaults.itemShape(index, kinds.size),
                     modifier = Modifier.testTag("kind_${entry.value}"),
                 ) { Text(kindLabel(entry)) }
             }
@@ -512,11 +496,11 @@ internal fun BillFields(
             label = { Text(stringResource(R.string.ledger_amount)) },
             prefix = { Text(currencySymbol(shownCurrency)) },
             trailingIcon = {
-                TextButton(shapes = ButtonDefaults.shapes(), onClick = { currencies = true }, modifier = Modifier.testTag("currency")) { Text(shownCurrency) }
+                TextButton(onClick = { currencies = true }, modifier = Modifier.testTag("currency")) { Text(shownCurrency) }
             },
             supportingText = cents?.takeIf { draft.amount.any { it == '+' || it == '-' } }?.let { { Text("= " + formatMoney(it, shownCurrency)) } },
             isError = draft.amount.isNotEmpty() && cents == null,
-            textStyle = MaterialTheme.typography.headlineSmall,
+            textStyle = AppTheme.typography.headlineSmall,
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done),
             modifier = Modifier.fillMaxWidth().testTag("amount"),
@@ -539,7 +523,7 @@ internal fun BillFields(
     }
 
     if (kind == TxnKind.TRANSFER) {
-        val rows = listOf<@Composable (androidx.compose.material3.ListItemShapes) -> Unit>(
+        val rows = listOf<@Composable (ListItemShapes) -> Unit>(
             { shapes -> PickRow(shapes, accountKindIconOf(ledger, account), stringResource(R.string.ledger_from_account), accountName(ledger, account), "from_account") { sheet = Sheet.From } },
             { shapes -> PickRow(shapes, accountKindIconOf(ledger, draft.toAccount), stringResource(R.string.ledger_to_account), accountName(ledger, draft.toAccount), "to_account") { sheet = Sheet.To } },
         )
@@ -566,7 +550,7 @@ internal fun BillFields(
                 value = draft.note,
                 onValueChange = { draft.note = it },
                 label = { Text(stringResource(R.string.ledger_note)) },
-                leadingIcon = { Icon(Icons.AutoMirrored.Rounded.Notes, contentDescription = null) },
+                leadingIcon = { Icon(AppIcons.Notes, contentDescription = null) },
                 modifier = Modifier.fillMaxWidth().testTag("note"),
             )
         }
@@ -579,11 +563,11 @@ internal fun BillFields(
             title = { Text(stringResource(R.string.ledger_discount)) },
             text = { AmountField(value, { value = it }, stringResource(R.string.ledger_discount), shownCurrency, stringResource(R.string.ledger_expense_discount_note), "discount_field") },
             confirmButton = {
-                TextButton(shapes = ButtonDefaults.shapes(), onClick = { draft.discount = value.trim(); discountOpen = false }, enabled = value.isBlank() || parseAmount(value) != null) {
+                TextButton(onClick = { draft.discount = value.trim(); discountOpen = false }, enabled = value.isBlank() || parseAmount(value) != null) {
                     Text(stringResource(R.string.action_confirm))
                 }
             },
-            dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { discountOpen = false }) { Text(stringResource(R.string.action_cancel)) } },
+            dismissButton = { TextButton(onClick = { discountOpen = false }) { Text(stringResource(R.string.action_cancel)) } },
         )
     }
     if (timeOpen) {
@@ -661,10 +645,9 @@ private fun accountName(ledger: Ledger, id: String?): String? = id?.let { ledger
 private fun accountKindIconOf(ledger: Ledger, id: String?) = accountKindIcon(id?.let(ledger.accountsById::get)?.kind ?: AccountKind.OTHER)
 
 /** A row of the form that opens a choice: what it is, and what is chosen or that nothing is. */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun PickRow(
-    shapes: androidx.compose.material3.ListItemShapes,
+    shapes: ListItemShapes,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String,
     value: String?,
@@ -680,7 +663,7 @@ private fun PickRow(
         overlineContent = { Text(label) },
         trailingContent = onClear?.let {
             {
-                IconButton(shapes = IconButtonDefaults.shapes(), onClick = it) { Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.action_clear)) }
+                IconButton(onClick = it) { Icon(AppIcons.Close, contentDescription = stringResource(R.string.action_clear)) }
             }
         },
         modifier = Modifier.testTag(tag),
@@ -724,7 +707,7 @@ private fun CategoryGrid(ledger: Ledger, book: String?, type: CategoryType, sele
                 Row(Modifier.fillMaxWidth()) {
                     row.forEach { category ->
                         if (category == null) {
-                            CategoryTile(stringResource(R.string.ledger_add_category), Icons.Rounded.Add, selected = false, hasSubs = false, tag = "add_category") { onAdd(null) }
+                            CategoryTile(stringResource(R.string.ledger_add_category), AppIcons.Plus, selected = false, hasSubs = false, tag = "add_category") { onAdd(null) }
                         } else {
                             CategoryTile(
                                 category.name,
@@ -748,7 +731,7 @@ private fun CategoryGrid(ledger: Ledger, book: String?, type: CategoryType, sele
                         categories.filter { it.parent == top }.forEach { category ->
                             FilterChip(selected = category.id == selected, onClick = { onPick(if (category.id == selected) top else category.id) }, label = { Text(category.name) })
                         }
-                        FilterChip(selected = false, onClick = { onAdd(top) }, label = { Text(stringResource(R.string.ledger_add_subcategory)) }, leadingIcon = { Icon(Icons.Rounded.Add, contentDescription = null) })
+                        FilterChip(selected = false, onClick = { onAdd(top) }, label = { Text(stringResource(R.string.ledger_add_subcategory)) }, leadingIcon = { Icon(AppIcons.Plus, contentDescription = null) })
                     }
                 }
             }
@@ -759,10 +742,10 @@ private fun CategoryGrid(ledger: Ledger, book: String?, type: CategoryType, sele
 /** One category in the grid: its icon in a circle, filled with the primary when chosen, a dot beside it when it has second-level ones, and its name. */
 @Composable
 private fun RowScope.CategoryTile(name: String, icon: androidx.compose.ui.graphics.vector.ImageVector, selected: Boolean, hasSubs: Boolean, tag: String, onClick: () -> Unit) {
-    val colors = MaterialTheme.colorScheme
+    val colors = AppTheme.colorScheme
     Column(
         Modifier.weight(1f)
-            .clip(MaterialTheme.shapes.medium)
+            .clip(AppTheme.shapes.medium)
             .selectable(selected = selected, role = Role.RadioButton, onClick = onClick)
             .padding(vertical = Space.xs)
             .testTag(tag),
@@ -782,7 +765,7 @@ private fun RowScope.CategoryTile(name: String, icon: androidx.compose.ui.graphi
         }
         Text(
             name,
-            style = MaterialTheme.typography.labelMedium,
+            style = AppTheme.typography.labelMedium,
             color = if (selected) colors.primary else colors.onSurfaceVariant,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -814,15 +797,15 @@ private fun BillOptions(container: AppContainer, ledger: Ledger, draft: BillDraf
             OptionChip(accountName(ledger, account) ?: stringResource(R.string.ledger_choose_account), accountKindIconOf(ledger, account), "account") { draft.sheet = Sheet.Account }
         }
         if (!withMoment && !keypad) {
-            OptionChip(formatDay(at.toLocalDate().toString()) + " " + at.format(DateTimeFormatter.ofPattern("HH:mm")), Icons.Rounded.Event, "time") { draft.timeOpen = true }
+            OptionChip(formatDay(at.toLocalDate().toString()) + " " + at.format(DateTimeFormatter.ofPattern("HH:mm")), AppIcons.Calendar, "time") { draft.timeOpen = true }
         }
         if (ledger.books.size > 1 && fixedKind == null) {
-            OptionChip(bookRecord?.name.orEmpty(), Icons.AutoMirrored.Rounded.MenuBook, "book") { draft.sheet = Sheet.Book }
+            OptionChip(bookRecord?.name.orEmpty(), AppIcons.Book, "book") { draft.sheet = Sheet.Book }
         }
         if (kind == TxnKind.EXPENSE) {
             LinkChip(
                 discount?.let { stringResource(R.string.ledger_discount) + " " + formatMoney(it, shownCurrency) },
-                stringResource(R.string.ledger_discount), Icons.Rounded.Sell, "discount",
+                stringResource(R.string.ledger_discount), AppIcons.Tag, "discount",
                 onClear = { draft.discount = "" },
             ) { draft.discountOpen = true }
         }
@@ -844,18 +827,18 @@ private fun BillOptions(container: AppContainer, ledger: Ledger, draft: BillDraf
         if (!withMoment) {
             LinkChip(
                 momentRecord?.let { it.text.lines().firstOrNull()?.take(20)?.ifBlank { null } ?: formatDay(it.dateKey) },
-                stringResource(R.string.ledger_link_moment), Icons.Rounded.PhotoLibrary, "link_moment",
+                stringResource(R.string.ledger_link_moment), AppIcons.Photos, "link_moment",
                 onClear = { draft.moment = null },
             ) { draft.sheet = Sheet.Moment }
             LinkChip(
                 draft.place?.let { places[it]?.name ?: it },
-                stringResource(R.string.ledger_link_place), Icons.Rounded.Place, "link_place",
+                stringResource(R.string.ledger_link_place), AppIcons.Pin, "link_place",
                 onClear = { draft.place = null },
             ) { draft.sheet = Sheet.Place }
         }
         LinkChip(
             trip?.let { id -> trips.firstOrNull { it.id == id }?.title ?: id },
-            stringResource(R.string.ledger_link_trip), Icons.Rounded.Luggage, "link_trip",
+            stringResource(R.string.ledger_link_trip), AppIcons.Luggage, "link_trip",
             onClear = { draft.tripChosen = true; draft.trip = null },
         ) { draft.sheet = Sheet.Trip }
     }
@@ -892,7 +875,7 @@ private fun ToggleChip(selected: Boolean, label: String, tag: String, onClick: (
         onClick = onClick,
         label = { Text(label) },
         leadingIcon = if (selected) {
-            { Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize)) }
+            { Icon(AppIcons.Check, contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize)) }
         } else null,
         modifier = Modifier.testTag(tag),
     )
@@ -912,7 +895,7 @@ private fun LinkChip(value: String?, label: String, icon: androidx.compose.ui.gr
         leadingIcon = { Icon(icon, contentDescription = null, modifier = Modifier.size(InputChipDefaults.IconSize)) },
         trailingIcon = {
             Icon(
-                Icons.Rounded.Close,
+                AppIcons.Close,
                 contentDescription = stringResource(R.string.action_clear),
                 modifier = Modifier.size(InputChipDefaults.IconSize).clickable(role = Role.Button, onClick = onClear),
             )
@@ -930,19 +913,19 @@ internal fun keypadFits(): Boolean = LocalConfiguration.current.screenHeightDp >
  * iCost has them: digits, a point, plus and minus to add up a bill as it goes, and [onSave]. The
  * keys step aside while the note is typed on the phone's keyboard.
  */
-@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun BillKeypad(container: AppContainer, ledger: Ledger, draft: BillDraft, at: OffsetDateTime, fixedKind: TxnKind?, onSave: () -> Unit, modifier: Modifier = Modifier) {
     val currency = draft.shownCurrency(ledger)
     val cents = parseAmount(draft.amount)
     var currencies by remember { mutableStateOf(false) }
-    val colors = MaterialTheme.colorScheme
+    val colors = AppTheme.colorScheme
     BillOptions(container, ledger, draft, at, fixedKind, withMoment = false, keypad = true)
     Column(modifier.padding(horizontal = Space.gutter).padding(top = Space.s, bottom = Space.s), verticalArrangement = Arrangement.spacedBy(Space.s)) {
-        Column(Modifier.fillMaxWidth().clip(MaterialTheme.shapes.large).background(colors.surfaceContainer)) {
+        Column(Modifier.fillMaxWidth().clip(AppTheme.shapes.large).background(colors.surfaceContainer).border(cardBorder(), AppTheme.shapes.large)) {
             Row(Modifier.fillMaxWidth().padding(start = Space.xs, end = Space.l, top = Space.xs), verticalAlignment = Alignment.CenterVertically) {
                 Box {
-                    TextButton(shapes = ButtonDefaults.shapes(), onClick = { currencies = true }, modifier = Modifier.testTag("currency")) { Text(currency) }
+                    TextButton(onClick = { currencies = true }, modifier = Modifier.testTag("currency")) { Text(currency) }
                     DropdownMenu(currencies, onDismissRequest = { currencies = false }) {
                         ledger.currenciesByUse.forEach { code ->
                             DropdownMenuItem(text = { Text("$code  ${currencySymbol(code).trim()}") }, onClick = { draft.currency = code; currencies = false })
@@ -951,12 +934,12 @@ internal fun BillKeypad(container: AppContainer, ledger: Ledger, draft: BillDraf
                 }
                 // A sum being added up shows what it comes to beside it.
                 if (cents != null && draft.amount.drop(1).any { it == '+' || it == '-' }) {
-                    Text("= " + formatMoney(cents, currency), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, maxLines = 1)
+                    Text("= " + formatMoney(cents, currency), style = AppTheme.typography.bodyMedium, color = colors.onSurfaceVariant, maxLines = 1)
                 }
                 val shown = draft.amount.ifEmpty { "0" }.replace("+", " + ").replace("-", " − ")
                 Text(
                     currencySymbol(currency).trim() + " " + shown,
-                    style = MaterialTheme.typography.headlineMedium,
+                    style = AppTheme.typography.headlineMedium,
                     color = if (draft.amount.isNotEmpty() && cents == null) colors.error else if (draft.amount.isEmpty()) colors.onSurfaceVariant else colors.onSurface,
                     textAlign = TextAlign.End,
                     maxLines = 1,
@@ -968,7 +951,7 @@ internal fun BillKeypad(container: AppContainer, ledger: Ledger, draft: BillDraf
                 AssistChip(
                     onClick = { draft.timeOpen = true },
                     label = { Text(formatDay(at.toLocalDate().toString()) + " " + at.format(DateTimeFormatter.ofPattern("HH:mm"))) },
-                    leadingIcon = { Icon(Icons.Rounded.Schedule, contentDescription = null, modifier = Modifier.size(AssistChipDefaults.IconSize)) },
+                    leadingIcon = { Icon(AppIcons.Clock, contentDescription = null, modifier = Modifier.size(AssistChipDefaults.IconSize)) },
                     modifier = Modifier.testTag("time"),
                 )
                 TextField(
@@ -977,12 +960,6 @@ internal fun BillKeypad(container: AppContainer, ledger: Ledger, draft: BillDraf
                     placeholder = { Text(stringResource(R.string.ledger_note_hint)) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent,
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                    ),
                     modifier = Modifier.weight(1f).testTag("note"),
                 )
             }
@@ -1004,9 +981,8 @@ internal fun BillKeypad(container: AppContainer, ledger: Ledger, draft: BillDraf
                 Key('0', Modifier.weight(1f)) { type('0') }
                 Button(
                     onClick = onSave,
-                    shapes = ButtonDefaults.shapes(),
                     modifier = Modifier.weight(2f).height(KeyHeight).testTag("keypad_save"),
-                ) { Text(stringResource(R.string.action_save), style = MaterialTheme.typography.titleMedium) }
+                ) { Text(stringResource(R.string.action_save), style = AppTheme.typography.titleMedium) }
             }
         }
     }
@@ -1015,25 +991,22 @@ internal fun BillKeypad(container: AppContainer, ledger: Ledger, draft: BillDraf
 private const val BACKSPACE = '\b'
 private val KeyHeight = 48.dp
 
-/** A key of the keypad: a digit or the point in the surface's highest container, the rest tonal. */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+/** A key of the keypad: a digit or the point on the pressed grey, the rest a step deeper. */
 @Composable
 private fun Key(key: Char, modifier: Modifier, onClick: () -> Unit) {
     val digit = key.isDigit() || key == '.'
-    val colors = if (digit) {
-        ButtonDefaults.filledTonalButtonColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest, contentColor = MaterialTheme.colorScheme.onSurface)
-    } else ButtonDefaults.filledTonalButtonColors()
+    val colors = ButtonDefaults.filledTonalButtonColors(containerColor = if (digit) tokens.pressed else tokens.sunken, contentColor = tokens.tx)
     FilledTonalButton(
         onClick = onClick,
-        shapes = ButtonDefaults.shapes(),
+        shape = AppTheme.shapes.medium,
         colors = colors,
         contentPadding = PaddingValues(0.dp),
         modifier = modifier.height(KeyHeight).testTag("key_${if (key == BACKSPACE) "back" else key.toString()}"),
     ) {
         when (key) {
-            BACKSPACE -> Icon(Icons.AutoMirrored.Rounded.Backspace, contentDescription = stringResource(R.string.action_backspace))
-            '-' -> Text("−", style = MaterialTheme.typography.titleLarge)
-            else -> Text(key.toString(), style = MaterialTheme.typography.titleLarge)
+            BACKSPACE -> Icon(AppIcons.Backspace, contentDescription = stringResource(R.string.action_backspace))
+            '-' -> Text("−", style = AppTheme.typography.titleLarge)
+            else -> Text(key.toString(), style = AppTheme.typography.titleLarge)
         }
     }
 }
@@ -1080,20 +1053,20 @@ private fun SplitEditor(ledger: Ledger, splits: List<Pair<String, String>>, curr
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier.weight(1f),
                 )
-                IconButton(shapes = IconButtonDefaults.shapes(), onClick = { onChange(splits.filterIndexed { i, _ -> i != index }) }) {
-                    Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.action_remove))
+                IconButton(onClick = { onChange(splits.filterIndexed { i, _ -> i != index }) }) {
+                    Icon(AppIcons.Close, contentDescription = stringResource(R.string.action_remove))
                 }
             }
         }
         Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-            TextButton(shapes = ButtonDefaults.shapes(), onClick = onAdd) {
-                Icon(Icons.Rounded.Add, contentDescription = null)
+            TextButton(onClick = onAdd) {
+                Icon(AppIcons.Plus, contentDescription = null)
                 Text(stringResource(R.string.ledger_add_payer))
             }
             Text(
                 stringResource(R.string.ledger_split_sum, formatMoney(sum, currency), formatMoney(total ?: 0, currency)),
-                style = MaterialTheme.typography.bodySmall,
-                color = if (total != null && sum != total) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                style = AppTheme.typography.bodySmall,
+                color = if (total != null && sum != total) AppTheme.colorScheme.error else AppTheme.colorScheme.onSurfaceVariant,
             )
         }
     }
@@ -1103,7 +1076,6 @@ private fun SplitEditor(ledger: Ledger, splits: List<Pair<String, String>>, curr
  * The accounts to pay from or into, the most used first, as a modal bottom sheet, with none among them when
  * [allowNone], and a new one made there and then.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AccountSheet(ledger: Ledger, onDismiss: () -> Unit, onCreate: (Account) -> Unit, allowNone: Boolean = true, onPick: (String?) -> Unit) {
     var creating by remember { mutableStateOf(false) }
@@ -1112,7 +1084,7 @@ fun AccountSheet(ledger: Ledger, onDismiss: () -> Unit, onCreate: (Account) -> U
             item {
                 Text(
                     stringResource(R.string.ledger_account),
-                    style = MaterialTheme.typography.titleLarge,
+                    style = AppTheme.typography.titleLarge,
                     modifier = Modifier.padding(horizontal = Space.xl, vertical = Space.s).semantics { heading() },
                 )
             }
@@ -1129,14 +1101,14 @@ fun AccountSheet(ledger: Ledger, onDismiss: () -> Unit, onCreate: (Account) -> U
                 if (allowNone) {
                     ListItem(
                         headlineContent = { Text(stringResource(R.string.ledger_no_account)) },
-                        leadingContent = { Icon(Icons.Rounded.Block, contentDescription = null) },
+                        leadingContent = { Icon(AppIcons.Block, contentDescription = null) },
                         colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                         modifier = Modifier.clickable { onPick(null) },
                     )
                 }
                 ListItem(
                     headlineContent = { Text(stringResource(R.string.ledger_add_account)) },
-                    leadingContent = { Icon(Icons.Rounded.Add, contentDescription = null) },
+                    leadingContent = { Icon(AppIcons.Plus, contentDescription = null) },
                     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                     modifier = Modifier.clickable { creating = true }.testTag("sheet_add_account"),
                 )
@@ -1174,22 +1146,21 @@ private fun QuickAccountDialog(onDismiss: () -> Unit, onDone: (Account) -> Unit)
             }
         },
         confirmButton = {
-            TextButton(shapes = ButtonDefaults.shapes(), onClick = { onDone(Account(Ulid.next(), name.trim(), kind, currency, position = Int.MAX_VALUE / 2)) }, enabled = name.isNotBlank()) {
+            TextButton(onClick = { onDone(Account(Ulid.next(), name.trim(), kind, currency, position = Int.MAX_VALUE / 2)) }, enabled = name.isNotBlank()) {
                 Text(stringResource(R.string.action_add))
             }
         },
-        dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
     )
 }
 
 /** A choice of one of [options], by id and what it is called, as a modal bottom sheet. */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChoiceSheet(options: List<Pair<String, String>>, onDismiss: () -> Unit, empty: String? = null, onPick: (String) -> Unit) {
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = AppColors.sheet) {
         LazyColumn(Modifier.padding(bottom = Space.l)) {
             if (options.isEmpty() && empty != null) {
-                item { Text(empty, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = Space.xl, vertical = Space.l)) }
+                item { Text(empty, color = AppTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = Space.xl, vertical = Space.l)) }
             }
             items(options, key = { it.first }) { (id, label) ->
                 ListItem(
@@ -1203,7 +1174,6 @@ fun ChoiceSheet(options: List<Pair<String, String>>, onDismiss: () -> Unit, empt
 }
 
 /** The places, those the latest bills were at most first, then by name, searched as typed, as a modal bottom sheet. */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun PlaceSheet(places: Map<String, String>, uses: Map<String, Int>, onDismiss: () -> Unit, onPick: (String) -> Unit) {
     var query by remember { mutableStateOf("") }
@@ -1220,7 +1190,7 @@ private fun PlaceSheet(places: Map<String, String>, uses: Map<String, Int>, onDi
             items(shown, key = { it.key }) { (id, name) ->
                 ListItem(
                     headlineContent = { Text(name) },
-                    leadingContent = { Icon(Icons.Rounded.Place, contentDescription = null) },
+                    leadingContent = { Icon(AppIcons.Pin, contentDescription = null) },
                     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                     modifier = Modifier.clickable { onPick(id) },
                 )
@@ -1237,7 +1207,7 @@ fun NameDialog(title: String, initial: String, onDismiss: () -> Unit, onDone: (S
         onDismissRequest = onDismiss,
         title = { Text(title) },
         text = { OutlinedTextField(name, { name = it }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("name_field")) },
-        confirmButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { onDone(name.trim()) }, enabled = name.isNotBlank()) { Text(stringResource(R.string.action_confirm)) } },
-        dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
+        confirmButton = { TextButton(onClick = { onDone(name.trim()) }, enabled = name.isNotBlank()) { Text(stringResource(R.string.action_confirm)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
     )
 }

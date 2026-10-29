@@ -1,18 +1,16 @@
 package cc.hyoban.moments.ui.format
 
+import cc.hyoban.moments.ui.design.AppIcons
+import cc.hyoban.moments.ui.theme.tokens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.SentimentDissatisfied
-import androidx.compose.material.icons.rounded.SentimentNeutral
-import androidx.compose.material.icons.rounded.SentimentSatisfied
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import cc.hyoban.moments.ui.design.Icon
+import cc.hyoban.moments.ui.design.AppTheme
+import cc.hyoban.moments.ui.design.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -60,21 +58,20 @@ fun foodLine(food: MomentFood?): String? {
 }
 
 /**
- * A verdict as a small badge, its face and word on the container colour that says how it
- * went: the tertiary's for good, the error's for bad, a raised surface's for passable.
+ * A verdict as a small badge, its face and word on a tint that says how it went: the accent's
+ * soft one for good, the danger's for bad, the pressed grey for passable.
  */
 @Composable
 fun VerdictBadge(verdict: FoodVerdict, modifier: Modifier = Modifier) {
-    val scheme = MaterialTheme.colorScheme
     val (container: Color, content: Color) = when (verdict) {
-        FoodVerdict.GOOD -> scheme.tertiaryContainer to scheme.onTertiaryContainer
-        FoodVerdict.OK -> scheme.surfaceContainerHighest to scheme.onSurfaceVariant
-        FoodVerdict.BAD -> scheme.errorContainer to scheme.onErrorContainer
+        FoodVerdict.GOOD -> tokens.accentSoft to tokens.tx
+        FoodVerdict.OK -> tokens.pressed to tokens.tx2
+        FoodVerdict.BAD -> tokens.dangerSoft to tokens.danger
     }
     val icon = when (verdict) {
-        FoodVerdict.GOOD -> Icons.Rounded.SentimentSatisfied
-        FoodVerdict.OK -> Icons.Rounded.SentimentNeutral
-        FoodVerdict.BAD -> Icons.Rounded.SentimentDissatisfied
+        FoodVerdict.GOOD -> AppIcons.FaceGood
+        FoodVerdict.OK -> AppIcons.FaceOk
+        FoodVerdict.BAD -> AppIcons.FaceBad
     }
     Row(
         modifier.clip(Corners.full).background(container).heightIn(min = 28.dp).padding(start = Space.s, end = Space.m, top = Space.xs, bottom = Space.xs),
@@ -82,6 +79,6 @@ fun VerdictBadge(verdict: FoodVerdict, modifier: Modifier = Modifier) {
         horizontalArrangement = Arrangement.spacedBy(Space.xs),
     ) {
         Icon(icon, contentDescription = null, tint = content, modifier = Modifier.size(18.dp))
-        Text(stringResource(verdictLabel(verdict)), style = MaterialTheme.typography.labelLarge, color = content, maxLines = 1)
+        Text(stringResource(verdictLabel(verdict)), style = AppTheme.typography.labelLarge, color = content, maxLines = 1)
     }
 }
