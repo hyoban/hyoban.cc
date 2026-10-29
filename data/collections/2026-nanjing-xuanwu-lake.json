@@ -1,0 +1,32 @@
+{
+  "uid": "01M5N5TZ2G77QCBMM4V19QN48W",
+  "slug": "2026-nanjing-xuanwu-lake",
+  "kind": "trip",
+  "title": "南京玄武湖床车",
+  "span": {
+    "start": "2026-04-11",
+    "end": "2026-04-12"
+  },
+  "include": [],
+  "exclude": [],
+  "covers": [
+    {
+      "entry": "01KP22KQXGMCRJDM0C0DZZR5ZZ",
+      "media": "01KP22KQXHQ7FBRENXXC357BB5"
+    },
+    {
+      "entry": "01KP22KQXGMCRJDM0C0DZZR5ZZ",
+      "media": "01KP22KQXJ40KHJ2M9NT7962E2"
+    },
+    {
+      "entry": "01KP22KQXGMCRJDM0C0DZZR5ZZ",
+      "media": "01KP22KQXKGJYF6BNWHYGG0669"
+    },
+    {
+      "entry": "01KP22KQXGMCRJDM0C0DZZR5ZZ",
+      "media": "01KP22KQXMG7HHS8NGA6KXSWCB"
+    }
+  ],
+  "createdAt": "2026-10-24T04:04:34+08:00",
+  "updatedAt": "2026-10-24T04:40:01+08:00"
+}

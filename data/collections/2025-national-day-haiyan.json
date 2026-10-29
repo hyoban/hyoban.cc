@@ -1,0 +1,28 @@
+{
+  "uid": "01M5N5TZ2GJFKB3Y1FGMBQC10T",
+  "slug": "2025-national-day-haiyan",
+  "kind": "trip",
+  "title": "国庆去海盐看风车",
+  "span": {
+    "start": "2025-09-30",
+    "end": "2025-10-01"
+  },
+  "include": [],
+  "exclude": [],
+  "covers": [
+    {
+      "entry": "01K6DNM900J4Q05YSQJ8TJBCV7",
+      "media": "01K6DNM901R1A5VZ93QT8F5YZ1"
+    },
+    {
+      "entry": "01K6DNM900J4Q05YSQJ8TJBCV7",
+      "media": "01K6DNM902AQ8M08JM8K4XJ072"
+    },
+    {
+      "entry": "01K6DNM900J4Q05YSQJ8TJBCV7",
+      "media": "01K6DNM903P3B3NR3JGN7327TB"
+    }
+  ],
+  "createdAt": "2026-10-24T04:04:34+08:00",
+  "updatedAt": "2026-10-24T04:04:34+08:00"
+}

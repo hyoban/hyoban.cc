@@ -1,0 +1,25 @@
+{
+  "uid": "01M5NNF7VR2GQ9NQFDZRZK823R",
+  "slug": "2026-qiandao-lake",
+  "kind": "trip",
+  "title": "千岛湖看猴子",
+  "span": {
+    "start": "2026-03-21",
+    "end": "2026-03-22"
+  },
+  "include": [],
+  "exclude": [],
+  "covers": [
+    {
+      "entry": "01KMEYS8109468ST827BAZHK9D",
+      "media": "01KMEYS81309B9HEGAPFRDPH3R"
+    },
+    {
+      "entry": "01KMEYS8109468ST827BAZHK9D",
+      "media": "01KMEYS812G9QSE15TV6JR8VCZ"
+    }
+  ],
+  "note": "Got the first speeding ticket on the way, in Xuancheng: 76 where the limit was 60.",
+  "createdAt": "2026-10-24T00:37:47Z",
+  "updatedAt": "2026-10-24T00:51:43Z"
+}

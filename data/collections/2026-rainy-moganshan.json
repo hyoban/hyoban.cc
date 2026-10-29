@@ -1,0 +1,52 @@
+{
+  "uid": "01M5N5TZ2GF17VW9W411361XW0",
+  "slug": "2026-rainy-moganshan",
+  "kind": "trip",
+  "title": "雨中莫干山",
+  "span": {
+    "start": "2026-06-13",
+    "end": "2026-06-14"
+  },
+  "include": [],
+  "exclude": [],
+  "covers": [
+    {
+      "entry": "01KTZJ5XG0NH1K8TSXZVXCNTNN",
+      "media": "01KV4T0181SC1FMNXY42MCW40K"
+    },
+    {
+      "entry": "01KTZJ5XG0NH1K8TSXZVXCNTNN",
+      "media": "01KV4T0182BPEP155AY9YBDR39"
+    },
+    {
+      "entry": "01KTZJ5XG0NH1K8TSXZVXCNTNN",
+      "media": "01KV4T0183FZ432XHFTV233NEC"
+    },
+    {
+      "entry": "01KTZJ5XG0NH1K8TSXZVXCNTNN",
+      "media": "01KV4T0184XNJBMHEVHJQ6M8VD"
+    },
+    {
+      "entry": "01KTZJ5XG0NH1K8TSXZVXCNTNN",
+      "media": "01KV4T0185JMCF4MB91E25GMQK"
+    },
+    {
+      "entry": "01KV4T018041ERNV873V547NKZ",
+      "media": "01KV4T0186DP8DHKCZJRKFWRXT"
+    },
+    {
+      "entry": "01KV4T018041ERNV873V547NKZ",
+      "media": "01KV4T01876PQM7FFHV54WBBWC"
+    },
+    {
+      "entry": "01KTZJ5XG0NH1K8TSXZVXCNTNN",
+      "media": "01KV4T0188P7F5ET2G677D5H8S"
+    },
+    {
+      "entry": "01KV4T018041ERNV873V547NKZ",
+      "media": "01KV4T0189P1FTC7X22V3RBSN5"
+    }
+  ],
+  "createdAt": "2026-10-24T04:04:34+08:00",
+  "updatedAt": "2026-10-24T04:40:01+08:00"
+}

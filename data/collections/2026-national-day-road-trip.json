@@ -1,0 +1,67 @@
+{
+  "uid": "01M3PY9X00NBY69F8Q6FBC7VF5",
+  "slug": "2026-national-day-road-trip",
+  "kind": "trip",
+  "title": "国庆东北自驾",
+  "span": {
+    "start": "2026-09-30",
+    "end": "2026-10-06"
+  },
+  "include": [],
+  "exclude": [],
+  "covers": [
+    {
+      "entry": "01M3VDBHC0PTZ3BXQQAH9SZESW",
+      "media": "01M3VDBHC6GPPAT2JME9QGKJ4R"
+    },
+    {
+      "entry": "01M3X7AXE8WHK4NGBGCVFRXTTE",
+      "media": "01M3X7AXEEPDE3J4KK13MMBJ4C"
+    },
+    {
+      "entry": "01M3ZTEBZG9Q5ZMV91RJZX9C5F",
+      "media": "01M3ZTEBZKN2STE2QQD8HXXGH3"
+    },
+    {
+      "entry": "01M42XJFSG6C4QRRFAJNJ2N6BR",
+      "media": "01M42XJFSP5MG7HNC3KGVHR537"
+    },
+    {
+      "entry": "01M3XAJRP0S6ZCNQ3HYBB6G3X5",
+      "media": "01M3XAJRP3W8J44AQ5FZZ0AN71"
+    },
+    {
+      "entry": "01M3V1176RB1ZR10TYFBAK5WNK",
+      "media": "01M3V1176VXSYHCJXPDJZS332P"
+    },
+    {
+      "entry": "01M5MC78453PRG29WMTSNVRQXN",
+      "media": "01M3XAJRP5PPDXC3Z51330JD3F"
+    },
+    {
+      "entry": "01M3ZV0G20RHVY2BDJZD3FJBTV",
+      "media": "01M3ZV0G21MW3XZMAX27KTV1ZX"
+    },
+    {
+      "entry": "01M44QFAT0CWB12PPACY4HJ07N",
+      "media": "01M44QFAT63EM51G22HEFJ3CTJ"
+    }
+  ],
+  "route": {
+    "straightLegs": [
+      {
+        "from": "yantai-port-passenger-terminal",
+        "to": "bohai-sea",
+        "by": "ferry"
+      },
+      {
+        "from": "bohai-sea",
+        "to": "dalian-huozhang-niaogengzuo",
+        "by": "ferry"
+      }
+    ],
+    "sameWayBack": []
+  },
+  "createdAt": "2026-09-30T00:00:00+08:00",
+  "updatedAt": "2026-10-23T12:41:01Z"
+}

@@ -1,0 +1,33 @@
+{
+  "uid": "01M5N5TZ2GSWG2GQ2ESC9E723N",
+  "slug": "2026-xiangyang-sanhe",
+  "kind": "trip",
+  "title": "襄阳回家路过三河",
+  "span": {
+    "start": "2026-05-10",
+    "end": "2026-05-10"
+  },
+  "include": [],
+  "exclude": [],
+  "covers": [
+    {
+      "entry": "01KR92CWGGWFB1J3Q1V7MMQ05C",
+      "media": "01KR92CWGH50XDQK90YC7A4S6P"
+    },
+    {
+      "entry": "01KR92CWGGWFB1J3Q1V7MMQ05C",
+      "media": "01KR92CWGJW9D6BWZ6A0Q1KZ40"
+    },
+    {
+      "entry": "01KR92CWGGWFB1J3Q1V7MMQ05C",
+      "media": "01KR92CWGK12YDVJ00KHFAP05N"
+    },
+    {
+      "entry": "01KR92CWGGWFB1J3Q1V7MMQ05C",
+      "media": "01KR92CWGMBX8M2A1WXHRK9N4N"
+    }
+  ],
+  "note": "Home from Xiangyang, where the May Day trip ended; turned off the expressway for Sanhe on the way.",
+  "createdAt": "2026-10-24T04:04:34+08:00",
+  "updatedAt": "2026-10-24T04:04:34+08:00"
+}

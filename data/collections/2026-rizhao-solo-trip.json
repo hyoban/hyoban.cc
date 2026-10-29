@@ -1,0 +1,52 @@
+{
+  "uid": "01KYWEES008S9TC3H0ZXHSEG7T",
+  "slug": "2026-rizhao-solo-trip",
+  "kind": "trip",
+  "title": "单人自驾去日照",
+  "span": {
+    "start": "2026-08-01",
+    "end": "2026-08-08"
+  },
+  "include": [],
+  "exclude": [],
+  "covers": [
+    {
+      "entry": "01KZ29TEAGY68GRSRXE2WDY1AV",
+      "media": "01KZ29TEAJT9BXV1CB0NFV379K"
+    },
+    {
+      "entry": "01KYYDZ820CCCGVBVJY08D2QV8",
+      "media": "01KYYDZ827566QXMGGAPEDTBXG"
+    },
+    {
+      "entry": "01KZ06KZW0DDAXC9BSDD4EHBD1",
+      "media": "01KZ06KZW30W88JSGMKDS01ZZV"
+    },
+    {
+      "entry": "01KZ29TEAGY68GRSRXE2WDY1AV",
+      "media": "01KZ29TEAMYNAC4SB96SQ87ZQF"
+    },
+    {
+      "entry": "01KYYDZ820CCCGVBVJY08D2QV8",
+      "media": "01KYYDZ828A7YM0589ZKJDZDKD"
+    },
+    {
+      "entry": "01KZ13STP0CWB3CSX56DK8S3EV",
+      "media": "01KZ13STP34X2BFANR3J0ZEWCS"
+    },
+    {
+      "entry": "01KZ06KZW0DDAXC9BSDD4EHBD1",
+      "media": "01KZ06KZW91J4GZB8TDBHC96WT"
+    },
+    {
+      "entry": "01KYYDZ820CCCGVBVJY08D2QV8",
+      "media": "01KYYDZ824007B5K09B1XVB4EV"
+    },
+    {
+      "entry": "01KZ06KZW0DDAXC9BSDD4EHBD1",
+      "media": "01KZ06KZW13N6EYE41DYVMDH4Y"
+    }
+  ],
+  "createdAt": "2026-08-01T00:00:00+08:00",
+  "updatedAt": "2026-10-24T12:20:11+08:00"
+}

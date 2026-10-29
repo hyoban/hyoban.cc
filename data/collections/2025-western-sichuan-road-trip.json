@@ -1,0 +1,53 @@
+{
+  "uid": "01K7SECG00SYJX786EHY7QV7Z2",
+  "slug": "2025-western-sichuan-road-trip",
+  "kind": "trip",
+  "title": "床车自驾川西",
+  "span": {
+    "start": "2025-10-18",
+    "end": "2025-11-09"
+  },
+  "include": [],
+  "exclude": [],
+  "covers": [
+    {
+      "entry": "01K9A88V30WXXEMHF5ED5ESWJV",
+      "media": "01K9A88V38NS5R47QX7T9R85BX"
+    },
+    {
+      "entry": "01K9A88V30WXXEMHF5ED5ESWJV",
+      "media": "01K9A88V34NBE35H7K9B8YZKQX"
+    },
+    {
+      "entry": "01M5MC7845WC83ZPBM3JFTKNA3",
+      "media": "01K96FSVQ7Z4HYJX4ZXFXCMPSF"
+    },
+    {
+      "entry": "01K9A88V30WXXEMHF5ED5ESWJV",
+      "media": "01K9A88V316RQA50H1084C8MEM"
+    },
+    {
+      "entry": "01K9A88V30WXXEMHF5ED5ESWJV",
+      "media": "01K9A88V35SSN5JDE418AR6KAH"
+    },
+    {
+      "entry": "01M5MC7844NDJ1FTH35SQ6JRM8",
+      "media": "01K96FSVQ462XXB24SZ9QPT9MY"
+    },
+    {
+      "entry": "01K96FSVQ06JWB91TA7ZH2K1ZS",
+      "media": "01K96FSVQ2PBKH2X3XCVDTJ8V0"
+    },
+    {
+      "entry": "01K8FQRXRG0XT9N2RQACJ71SFB",
+      "media": "01K8FQRXRH5TV2EHB4QBD1H9YE"
+    },
+    {
+      "entry": "01K9A88V30WXXEMHF5ED5ESWJV",
+      "media": "01K9A88V39C2ZXSW37GF540E6R"
+    }
+  ],
+  "note": "Set out from Wuhu, resting a week in Xiangyang on the way.",
+  "createdAt": "2025-10-18T00:00:00+08:00",
+  "updatedAt": "2026-10-24T04:04:34+08:00"
+}

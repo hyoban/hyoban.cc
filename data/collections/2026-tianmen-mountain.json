@@ -1,0 +1,32 @@
+{
+  "uid": "01M5P26F3RZSXA7GYG99PCD248",
+  "slug": "2026-tianmen-mountain",
+  "kind": "trip",
+  "title": "天门山踩点",
+  "span": {
+    "start": "2026-04-19",
+    "end": "2026-04-19"
+  },
+  "include": [],
+  "exclude": [],
+  "covers": [
+    {
+      "entry": "01KPJ1F90GG03F1H16E1Y4R5XS",
+      "media": "01KPJ1F90H720P9EWJ8PWCHDEY"
+    },
+    {
+      "entry": "01KPJFJX588ETE6VZ114P5J22Q",
+      "media": "01KPJFJX5958KYGP5XWH9V492E"
+    },
+    {
+      "entry": "01KPJ1F90GG03F1H16E1Y4R5XS",
+      "media": "01KPJ1F90J13C84T6SDMEH4A2K"
+    },
+    {
+      "entry": "01KPJFJX588ETE6VZ114P5J22Q",
+      "media": "01KPJFJX5AGKSX209JHG6N4V0Z"
+    }
+  ],
+  "createdAt": "2026-10-24T12:20:11+08:00",
+  "updatedAt": "2026-10-24T12:20:11+08:00"
+}

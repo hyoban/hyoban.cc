@@ -1,0 +1,52 @@
+{
+  "uid": "01KNA15800MAG48KBK14K423FM",
+  "slug": "2026-qingming-anji",
+  "kind": "trip",
+  "title": "清明安吉床车",
+  "span": {
+    "start": "2026-04-04",
+    "end": "2026-04-06"
+  },
+  "include": [],
+  "exclude": [],
+  "covers": [
+    {
+      "entry": "01KNBXHA5G9M7TD02DRWPBZ1Y2",
+      "media": "01KNBXHA5HDGFBB5VEFC93JYCZ"
+    },
+    {
+      "entry": "01KNBXHA5G9M7TD02DRWPBZ1Y2",
+      "media": "01KNBXHA5JPF10FE1BFH83K1WH"
+    },
+    {
+      "entry": "01KNBXHA5G9M7TD02DRWPBZ1Y2",
+      "media": "01KNBXHA5KY5WJSWXXG8RJCDC7"
+    },
+    {
+      "entry": "01KNDT1H509R68AK4VS2X30PBM",
+      "media": "01KNDT1H5405VWGKC9YT7HJ1S5"
+    },
+    {
+      "entry": "01KNDT1H509R68AK4VS2X30PBM",
+      "media": "01KNDT1H51CTMGG74MY6H6VDYE"
+    },
+    {
+      "entry": "01KNBXHA5G9M7TD02DRWPBZ1Y2",
+      "media": "01KNBXHA5MN0N6B99A1RNQTQZX"
+    },
+    {
+      "entry": "01KNDT1H509R68AK4VS2X30PBM",
+      "media": "01KNDT1H530NTX0CM6SVDKDSXP"
+    },
+    {
+      "entry": "01KNDT1H509R68AK4VS2X30PBM",
+      "media": "01KNDT1H52VG7C2KCDYHYDH1SE"
+    },
+    {
+      "entry": "01KNA158005SSN291BW446N88E",
+      "media": "01KNA15801BDS5JG27Y4G2W8HV"
+    }
+  ],
+  "createdAt": "2026-04-04T00:00:00+08:00",
+  "updatedAt": "2026-10-24T04:04:34+08:00"
+}

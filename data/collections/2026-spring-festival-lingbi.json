@@ -1,0 +1,24 @@
+{
+  "uid": "01M5N5TZ2G17V9ZR8WW227VT4H",
+  "slug": "2026-spring-festival-lingbi",
+  "kind": "trip",
+  "title": "春节去灵璧",
+  "span": {
+    "start": "2026-02-19",
+    "end": "2026-02-22"
+  },
+  "include": [],
+  "exclude": [],
+  "covers": [
+    {
+      "entry": "01KHX8ZPQG9W6XDTY0A445DKKP",
+      "media": "01KHX8ZPQHD1BNYJNYHW5BJAA3"
+    },
+    {
+      "entry": "01KHX8ZPQG9W6XDTY0A445DKKP",
+      "media": "01KHX8ZPQJV1ZJ8X5HB1P4432T"
+    }
+  ],
+  "createdAt": "2026-10-24T04:04:34+08:00",
+  "updatedAt": "2026-10-24T04:04:34+08:00"
+}

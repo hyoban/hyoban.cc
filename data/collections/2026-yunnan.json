@@ -1,0 +1,69 @@
+{
+  "uid": "01M28K4Z00TDJXDKBSA9CS0ZRG",
+  "slug": "2026-yunnan",
+  "kind": "trip",
+  "title": "云南之旅",
+  "span": {
+    "start": "2026-09-12",
+    "end": "2026-09-16"
+  },
+  "include": [],
+  "exclude": [],
+  "covers": [
+    {
+      "entry": "01M2F80FR033Q1GR4Z4VS2Z8QG",
+      "media": "01M2F80FR2BDTX4RBW75AJKN97"
+    },
+    {
+      "entry": "01M2M2GAW0PKXHXTMAP166NC9A",
+      "media": "01M2M2GAW3JKVTGTR8NYJ83FPQ"
+    },
+    {
+      "entry": "01M2M2GAW0PKXHXTMAP166NC9A",
+      "media": "01M2M2GAW1QNH95JG0RVSZYBJA"
+    },
+    {
+      "entry": "01M2F80FR033Q1GR4Z4VS2Z8QG",
+      "media": "01M2F80FR4H8K44RJBRKDWRZ7X"
+    },
+    {
+      "entry": "01M5MC78452YJQHW41Y9C9VF1Y",
+      "media": "01M2M2GAW5KCC2Q6BCM1SYBS9S"
+    },
+    {
+      "entry": "01M2M2GAW0PKXHXTMAP166NC9A",
+      "media": "01M2M2GAW4DK7JH4CP3KA7Q104"
+    },
+    {
+      "entry": "01M5MC78452YJQHW41Y9C9VF1Y",
+      "media": "01M2M2GAW6N8WAC68TRYB2GZRC"
+    },
+    {
+      "entry": "01M2F80FR033Q1GR4Z4VS2Z8QG",
+      "media": "01M2F80FR1Y12MK8DQWWEHHPCV"
+    },
+    {
+      "entry": "01M2DK8K1R8J98FGE23FTRQEG8",
+      "media": "01M2DK8K1SY1YM5W74FGX960VP"
+    }
+  ],
+  "route": {
+    "straightLegs": [
+      {
+        "from": "nanjing-lukou-airport",
+        "to": "lijiang-sanyi-airport",
+        "by": "plane"
+      }
+    ],
+    "sameWayBack": [
+      {
+        "from": "lijiang",
+        "to": "lugu-lake"
+      }
+    ]
+  },
+  "music": "apple-cider",
+  "note": "The morning's flight from Hefei broke down, so the trip flew from Nanjing instead. Lugu Lake was a day out from Lijiang and back the same way.",
+  "createdAt": "2026-09-12T00:00:00+08:00",
+  "updatedAt": "2026-10-23T12:41:01Z"
+}

@@ -1,0 +1,28 @@
+{
+  "uid": "01M5P26F3RNGMRCT6CZBZZ3963",
+  "slug": "2026-zhenjiang-weekend",
+  "kind": "trip",
+  "title": "去镇江",
+  "span": {
+    "start": "2026-01-10",
+    "end": "2026-01-11"
+  },
+  "include": [],
+  "exclude": [],
+  "covers": [
+    {
+      "entry": "01KEKV619G0MHABX4T68TH60ES",
+      "media": "01KEKV619HZCYC6TNB1VV45062"
+    },
+    {
+      "entry": "01KEKV619G0MHABX4T68TH60ES",
+      "media": "01KEKV619JND418DAHV3ZDBEJC"
+    },
+    {
+      "entry": "01KEKV619G0MHABX4T68TH60ES",
+      "media": "01KEKV619KYEYJSAHRH8DKK8JE"
+    }
+  ],
+  "createdAt": "2026-10-24T12:20:11+08:00",
+  "updatedAt": "2026-10-24T12:20:11+08:00"
+}

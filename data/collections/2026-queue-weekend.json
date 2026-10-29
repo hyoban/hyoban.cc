@@ -1,0 +1,41 @@
+{
+  "uid": "01M5N5TZ2G2FK1SQ52GW7C40VK",
+  "slug": "2026-queue-weekend",
+  "kind": "trip",
+  "title": "排队凑热闹的周末",
+  "span": {
+    "start": "2026-09-05",
+    "end": "2026-09-06"
+  },
+  "include": [],
+  "exclude": [],
+  "covers": [
+    {
+      "entry": "01M5MC7845BYK1528PMVD76BMY",
+      "media": "01M1VJKYNSWERGG688A3JMAGEZ"
+    },
+    {
+      "entry": "01M1VJKYNRSRVN94FDQVRSC13Y",
+      "media": "01M1VJKYNVR19Z36HVFKPCSAJH"
+    },
+    {
+      "entry": "01M5MC7845BYK1528PMVD76BMY",
+      "media": "01M1VJKYNT9JA6PRBRKMEYMPTF"
+    },
+    {
+      "entry": "01M1VJKYNRSRVN94FDQVRSC13Y",
+      "media": "01M1VJKYNW4SBHXSRS5Q809435"
+    },
+    {
+      "entry": "01M1VJKYNRSRVN94FDQVRSC13Y",
+      "media": "01M1VJKYNXXPF0H11CSSZ88WNA"
+    },
+    {
+      "entry": "01M1VJKYNRSRVN94FDQVRSC13Y",
+      "media": "01M1VJKYNY2XBAG2D3E7F567A9"
+    }
+  ],
+  "note": "Queueing for food: a buffet in Wuhu on Saturday, Kinglomo in Nanjing on Sunday.",
+  "createdAt": "2026-10-24T04:04:34+08:00",
+  "updatedAt": "2026-10-24T04:04:34+08:00"
+}
