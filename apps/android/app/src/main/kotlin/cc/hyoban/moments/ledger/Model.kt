@@ -12,6 +12,9 @@ import kotlinx.serialization.Serializable
 // Amounts are whole cents (a hundredth of the currency's unit, whatever its minor unit), always
 // positive; what a bill does to its accounts and to the books' sums follows from its kind.
 
+/** How many of the latest bills say which accounts are picked most. */
+private const val RECENT_FOR_USE = 200
+
 /** A ledger book, its bills and categories its own, summed in its [currency]. */
 @Serializable
 data class Book(
@@ -210,6 +213,18 @@ data class Ledger(
 
     /** What each bill adds to or takes from the books' sums, oldest first. */
     val entries: List<Entry> by lazy { entriesOf(this) }
+
+    /**
+     * The accounts open to pick, the ones the latest bills used most first; the rest, and ties,
+     * keep their own order.
+     */
+    val accountsByUse: List<Account> by lazy {
+        val uses = HashMap<String, Int>()
+        txns.asSequence().take(RECENT_FOR_USE).forEach { txn ->
+            (listOfNotNull(txn.account, txn.toAccount) + txn.splits.map { it.account }).toSet().forEach { uses.merge(it, 1, Int::plus) }
+        }
+        accounts.filter { !it.archived }.sortedByDescending { uses[it.id] ?: 0 }
+    }
 
     /** Each account's balance in its own currency. */
     val balances: Map<String, Long> by lazy { balancesOf(this) }

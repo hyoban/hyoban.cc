@@ -1,5 +1,6 @@
 package cc.hyoban.moments
 
+import cc.hyoban.moments.ledger.Account
 import cc.hyoban.moments.ledger.AccountKind
 import cc.hyoban.moments.ledger.Flow
 import cc.hyoban.moments.ledger.ICostImport
@@ -8,6 +9,7 @@ import cc.hyoban.moments.ledger.Ledger
 import cc.hyoban.moments.ledger.Rates
 import cc.hyoban.moments.ledger.Reimburse
 import cc.hyoban.moments.ledger.TransferType
+import cc.hyoban.moments.ledger.Split
 import cc.hyoban.moments.ledger.Txn
 import cc.hyoban.moments.ledger.TxnKind
 import cc.hyoban.moments.ledger.Xlsx
@@ -242,6 +244,17 @@ class LedgerTest {
     }
 
     /** The whole of a real export, when `ICOST_EXPORT` names one; it stays out of the repository. */
+    @Test fun picksTheMostUsedAccountsFirst() {
+        val accounts = listOf(Account("a", "现金", position = 0), Account("b", "储蓄卡", position = 1), Account("c", "信用卡", position = 2), Account("d", "旧卡", archived = true))
+        val txns = listOf(
+            Txn("1", "book", TxnKind.EXPENSE, 3, 480, 100, "CNY", account = "c"),
+            Txn("2", "book", TxnKind.TRANSFER, 2, 480, 100, "CNY", account = "b", toAccount = "c"),
+            Txn("3", "book", TxnKind.EXPENSE, 1, 480, 100, "CNY", splits = listOf(Split("b", 50), Split("d", 50))),
+            Txn("4", "book", TxnKind.EXPENSE, 0, 480, 100, "CNY", account = "c"),
+        )
+        assertEquals(listOf("c", "b", "a"), Ledger(accounts = accounts, txns = txns).accountsByUse.map { it.id })
+    }
+
     @Test fun readsARealExport() {
         val path = System.getenv("ICOST_EXPORT")
         assumeTrue(path != null && File(path).exists())
