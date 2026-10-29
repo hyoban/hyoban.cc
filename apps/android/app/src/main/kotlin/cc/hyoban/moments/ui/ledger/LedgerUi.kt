@@ -128,7 +128,6 @@ data class LedgerFilter(
     val category: String? = null,
     /** A first-level category by name, in whichever book. */
     val categoryName: String? = null,
-    val tag: String? = null,
     val trip: String? = null,
     val place: String? = null,
     val day: String? = null,

@@ -645,7 +645,6 @@
     <string name="ledger_transfer_discount_note">Returned to the source account, counted as income</string>
     <string name="ledger_expense_discount_note">What you saved, for the record only</string>
     <string name="ledger_note">Note</string>
-    <string name="ledger_tags">Tags</string>
     <string name="ledger_links">Links</string>
     <string name="ledger_link_moment">Moment</string>
     <string name="ledger_link_place">Place</string>
@@ -684,7 +683,7 @@
     <string name="ledger_returns">Refunds and reimbursements</string>
     <string name="ledger_action_refund">Refund</string>
     <string name="ledger_delete_bill">Delete this bill?</string>
-    <string name="ledger_search_hint">Note, tag, category, account or amount</string>
+    <string name="ledger_search_hint">Note, category, account or amount</string>
     <string name="ledger_spent">Spent %1$s</string>
     <string name="ledger_trip_days_spent">All books those days %1$s</string>
     <string name="ledger_some_unconverted">Some not converted</string>

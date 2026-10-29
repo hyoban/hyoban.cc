@@ -133,7 +133,7 @@ internal fun fieldOf(cents: Long?): String = cents?.let { formatCents(it).replac
 /**
  * Writing a bill or changing one, a full-screen dialog as Material 3 has a form that is saved
  * as a whole: what it is, how much in which currency, its category, the account or accounts
- * paid from, its time and book, what it saved or cost besides, its note and tags, and the
+ * paid from, its time and book, what it saved or cost besides, its note, and the
  * Moment, place and trip it belongs to. A new bill of its own is written on the new Moment's
  * page instead, beside a Moment or alone; this one changes a bill, refunds or reimburses one,
  * or starts from a Moment, an account or a day.
@@ -221,7 +221,6 @@ internal class BillDraft(
     discount: String,
     time: String,
     note: String,
-    tags: String,
     reimburse: Reimburse,
     excluded: Boolean,
     moment: String?,
@@ -245,7 +244,6 @@ internal class BillDraft(
     var discount by mutableStateOf(discount)
     var time by mutableStateOf(time)
     var note by mutableStateOf(note)
-    var tags by mutableStateOf(tags)
     var reimburse by mutableStateOf(reimburse)
     var excluded by mutableStateOf(excluded)
     var moment by mutableStateOf(moment)
@@ -312,7 +310,6 @@ internal class BillDraft(
             discount = if (kind == TxnKind.EXPENSE || kind == TxnKind.TRANSFER) parseAmount(discount) ?: 0 else 0,
             discountAccount = original?.discountAccount,
             note = note.trim(),
-            tags = tags.lines().map { it.trim().removePrefix("#") }.filter { it.isNotEmpty() }.distinct(),
             related = related?.id,
             reimburse = if (kind == TxnKind.EXPENSE) reimburse else Reimburse.NONE,
             excluded = excluded,
@@ -332,7 +329,7 @@ internal class BillDraft(
             save = {
                 listOf(
                     it.kind.name, it.transfer.name, it.book, it.amount, it.currency, it.category, it.account, it.splitting, it.splits,
-                    it.toAccount, it.toAmount, it.fee, it.discount, it.time, it.note, it.tags, it.reimburse.name, it.excluded,
+                    it.toAccount, it.toAmount, it.fee, it.discount, it.time, it.note, it.reimburse.name, it.excluded,
                     it.moment, it.place, it.tripChosen, it.trip,
                 )
             },
@@ -340,8 +337,8 @@ internal class BillDraft(
                 BillDraft(
                     TxnKind.valueOf(it[0] as String), TransferType.valueOf(it[1] as String), it[2] as String?, it[3] as String, it[4] as String?,
                     it[5] as String?, it[6] as String?, it[7] as Boolean, it[8] as String, it[9] as String?, it[10] as String, it[11] as String,
-                    it[12] as String, it[13] as String, it[14] as String, it[15] as String, Reimburse.valueOf(it[16] as String), it[17] as Boolean,
-                    it[18] as String?, it[19] as String?, it[20] as Boolean, it[21] as String?,
+                    it[12] as String, it[13] as String, it[14] as String, Reimburse.valueOf(it[15] as String), it[16] as Boolean,
+                    it[17] as String?, it[18] as String?, it[19] as Boolean, it[20] as String?,
                 )
             },
         )
@@ -379,7 +376,6 @@ internal fun rememberBillDraft(ledger: Ledger, original: Txn?, related: Txn?, mo
                 ?: args.date?.let { java.time.LocalDate.parse(it).atTime(java.time.LocalTime.now()).atZone(zone).toOffsetDateTime() }?.toString()
                 ?: OffsetDateTime.now().withSecond(0).withNano(0).toString(),
             note = original?.note.orEmpty(),
-            tags = original?.tags?.joinToString("\n").orEmpty(),
             reimburse = original?.reimburse ?: Reimburse.NONE,
             excluded = original?.excluded ?: false,
             moment = original?.moment ?: args.moment,
@@ -543,7 +539,6 @@ internal fun BillFields(
             leadingIcon = { Icon(Icons.AutoMirrored.Rounded.Notes, contentDescription = null) },
             modifier = Modifier.fillMaxWidth().testTag("note"),
         )
-        TagEditor(ledger, draft.tags.lines().filter { it.isNotBlank() }, onChange = { draft.tags = it.joinToString("\n") })
     }
 
     // What it belongs to among the Moments, kept on the phone with the bill alone.
@@ -786,43 +781,6 @@ private fun SplitEditor(ledger: Ledger, splits: List<Pair<String, String>>, curr
                 style = MaterialTheme.typography.bodySmall,
                 color = if (total != null && sum != total) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
             )
-        }
-    }
-}
-
-/** The bill's tags as input chips, a field to add one, and the most used others to tap. */
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun TagEditor(ledger: Ledger, tags: List<String>, onChange: (List<String>) -> Unit) {
-    var typing by remember { mutableStateOf("") }
-    val common = remember(ledger) { ledger.txns.flatMap { it.tags }.groupingBy { it }.eachCount().entries.sortedByDescending { it.value }.map { it.key }.take(12) }
-    fun add() {
-        val tag = typing.trim().removePrefix("#")
-        if (tag.isNotEmpty() && tag !in tags) onChange(tags + tag)
-        typing = ""
-    }
-    OutlinedTextField(
-        value = typing,
-        onValueChange = { typing = it },
-        label = { Text(stringResource(R.string.ledger_tags)) },
-        leadingIcon = { Icon(Icons.AutoMirrored.Rounded.Label, contentDescription = null) },
-        singleLine = true,
-        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-        keyboardActions = KeyboardActions(onDone = { add() }),
-        trailingIcon = if (typing.isNotBlank()) { { IconButton(shapes = IconButtonDefaults.shapes(), onClick = ::add) { Icon(Icons.Rounded.Add, contentDescription = stringResource(R.string.action_add)) } } } else null,
-        modifier = Modifier.fillMaxWidth().testTag("tags"),
-    )
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.s)) {
-        tags.forEach { tag ->
-            InputChip(
-                selected = true,
-                onClick = { onChange(tags - tag) },
-                label = { Text("#$tag") },
-                trailingIcon = { Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.action_remove)) },
-            )
-        }
-        common.filter { it !in tags }.forEach { tag ->
-            FilterChip(selected = false, onClick = { onChange(tags + tag) }, label = { Text("#$tag") })
         }
     }
 }

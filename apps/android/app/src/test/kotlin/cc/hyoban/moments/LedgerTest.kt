@@ -3,6 +3,7 @@ package cc.hyoban.moments
 import cc.hyoban.moments.ledger.AccountKind
 import cc.hyoban.moments.ledger.Flow
 import cc.hyoban.moments.ledger.ICostImport
+import cc.hyoban.moments.ledger.noteWithTags
 import cc.hyoban.moments.ledger.Ledger
 import cc.hyoban.moments.ledger.Rates
 import cc.hyoban.moments.ledger.Reimburse
@@ -55,6 +56,9 @@ class LedgerTest {
         assertEquals(listOf("红包" to 2389L, "中国银行 储蓄卡4049" to 1L), ICostImport.parseSplits("红包[-23.89]/中国银行 储蓄卡4049[-0.01]"))
         assertEquals(listOf("京东", "已卖出"), ICostImport.parseTags("#京东 #已卖出"))
         assertEquals(listOf("a", "b"), ICostImport.parseTags("#a#b"))
+        assertEquals("午饭 #京东 #已卖出", noteWithTags(" 午饭 ", listOf("京东", "#已卖出", "京东")))
+        assertEquals("#京东", noteWithTags("", listOf("京东")))
+        assertEquals("买了 #京东", noteWithTags("买了 #京东", listOf("京东")))
         assertEquals(2, Xlsx.columnOf("C12"))
         assertEquals(26, Xlsx.columnOf("AA3"))
     }

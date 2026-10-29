@@ -289,7 +289,7 @@ accounts by kind (cash, debit cards, credit, online wallets, stored value, inves
 loans, people lent to or borrowed from), each with its balance. The bar switches books, or
 shows 全部账本, every book but the archived at once, summed in the chosen book's currency,
 its categories summed by name across books and each bill marked with its book; it also
-searches bills (note, tags, category, account, amount), hides every amount as `¥****`
+searches bills (note, category, account, amount), hides every amount as `¥****`
 (隐藏金额, kept until shown again, here and on the Moments', trips' and places' pages)
 and opens 记账设置.
 
@@ -301,7 +301,7 @@ one from a Moment, an account or a day, is a full-screen dialog of its own. Eith
 (sums like `12+3.4` add up) in any currency, its category and second-level category,
 the account, or several accounts each with its share, its time and book, an expense's
 discount (on record only), a transfer's fee (an expense) and discount (an income) and,
-between currencies, what arrived (the day's rate suggests it), a note and tags, whether
+between currencies, what arrived (the day's rate suggests it), a note, whether
 it is to be reimbursed (left out of the sums until it is) or left out of the sums
 altogether, and the Moment, place and trip it belongs to: the trip under way that day
 unless another is picked. A refund takes from its expense's category up to what was
@@ -324,7 +324,9 @@ iCost's 账单导出 (the platform's zip and SAX, no spreadsheet library), picke
 shared to 这里 (导入到记账) from iCost, WeChat or the file manager, or opened with the
 app, which copies it in and comes forward here with what it found: every row type it
 writes, the books, the accounts with their currencies and a kind guessed from their names,
-split payments (`红包[-23.89]/中国银行[-0.01]`), tags, discounts, fees and loans. The rows
+split payments (`红包[-23.89]/中国银行[-0.01]`), discounts, fees and loans. The ledger
+has no tags: an export's are put at the end of the note as `#tag`, as are an older backup's and
+those of the bills already kept when tags went. The rows
 iCost derives (a transfer's discount as 转账优惠/还款优惠, a refund's excess as 退款收入)
 are folded back into their bill, and each refund and reimbursement is matched to its
 expense by book, category, amount and time, the export naming none by id. An amount the

@@ -4,6 +4,11 @@ import java.io.Writer
 import java.time.format.DateTimeFormatter
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 /** The whole ledger as a file of the user's own: what restoring it, here or on another phone, reads back. */
 @Serializable
@@ -24,8 +29,23 @@ data class LedgerBackup(
 
         fun encode(backup: LedgerBackup): String = json.encodeToString(serializer(), backup)
 
-        fun decode(text: String): LedgerBackup = json.decodeFromString(serializer(), text).also {
+        fun decode(text: String): LedgerBackup = json.decodeFromJsonElement(serializer(), withTagsInNotes(json.parseToJsonElement(text).jsonObject)).also {
             require(it.format == FORMAT) { "Not a ledger backup" }
+        }
+
+        /** An older backup's bills with their tags put at the end of their notes. */
+        private fun withTagsInNotes(backup: JsonObject): JsonObject {
+            val txns = backup["txns"] as? JsonArray ?: return backup
+            return JsonObject(
+                backup + ("txns" to JsonArray(
+                    txns.map { element ->
+                        val txn = element as? JsonObject ?: return@map element
+                        val tags = (txn["tags"] as? JsonArray)?.map { it.jsonPrimitive.content }.orEmpty()
+                        if (tags.isEmpty()) txn
+                        else JsonObject(txn - "tags" + ("note" to JsonPrimitive(noteWithTags((txn["note"] as? JsonPrimitive)?.content.orEmpty(), tags))))
+                    },
+                )),
+            )
         }
     }
 }
@@ -65,7 +85,7 @@ fun writeCsv(ledger: Ledger, writer: Writer) {
             listOf(
                 txn.local.format(time), type, signed,
                 parent?.name ?: category?.name.orEmpty(), if (parent != null) category?.name.orEmpty() else "",
-                payer, name(txn.toAccount), txn.note, txn.currency, txn.tags.joinToString(" ") { "#$it" }, books[txn.book].orEmpty(),
+                payer, name(txn.toAccount), txn.note, txn.currency, "", books[txn.book].orEmpty(),
                 if (refunded > 0) amount(refunded) else "", if (txn.discount > 0) amount(txn.discount) else "", if (txn.fee > 0) amount(txn.fee) else "",
             ).joinToString(",", transform = ::cell) + "\r\n",
         )
