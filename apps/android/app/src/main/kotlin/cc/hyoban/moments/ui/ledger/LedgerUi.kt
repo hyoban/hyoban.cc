@@ -30,6 +30,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import cc.hyoban.moments.R
+import cc.hyoban.moments.footprints.footprintPlace
 import cc.hyoban.moments.ledger.AccountKind
 import cc.hyoban.moments.ledger.DISCOUNT_CATEGORY
 import cc.hyoban.moments.ledger.FEE_CATEGORY
@@ -250,7 +251,7 @@ private val TIME = DateTimeFormatter.ofPattern("HH:mm")
  * without the time when [withTime] is false, as a row that shows it beside the amount.
  */
 @Composable
-fun txnSupporting(txn: Txn, ledger: Ledger, showDate: Boolean = false, withTime: Boolean = true): String {
+fun txnSupporting(txn: Txn, ledger: Ledger, showDate: Boolean = false, withTime: Boolean = true, place: String? = null): String {
     val account = when {
         txn.kind == TxnKind.TRANSFER -> transferLabel(txn.transfer).takeIf { txn.transfer != TransferType.TRANSFER }
         txn.splits.isNotEmpty() -> txn.splits.mapNotNull { ledger.accountsById[it.account]?.name }.joinToString(" + ")
@@ -272,14 +273,14 @@ fun txnSupporting(txn: Txn, ledger: Ledger, showDate: Boolean = false, withTime:
 
 /**
  * A bill in a list, two lines: its category's icon, its name and what sets it apart in one line
- * under it; at the end its amount, signed, and under that its time (and its book, where bills
+ * under it (where the footprints put it among that, when it has no place of its own); at the end its amount, signed, and under that its time (and its book, where bills
  * of several books are listed), so every row stands as tall as the next.
  */
 @Composable
 fun TxnRow(txn: Txn, ledger: Ledger, onClick: () -> Unit, modifier: Modifier = Modifier, showDate: Boolean = false, showBook: Boolean = false) {
     ListItem(
         headlineContent = { Text(txnTitle(txn, ledger), maxLines = 1, overflow = TextOverflow.Ellipsis) },
-        supportingContent = { Text(txnSupporting(txn, ledger, showDate, withTime = false), maxLines = 1, overflow = TextOverflow.Ellipsis) },
+        supportingContent = { Text(txnSupporting(txn, ledger, showDate, withTime = false, place = footprintPlace(txn)), maxLines = 1, overflow = TextOverflow.Ellipsis) },
         leadingContent = { LeadingIcon(txnIcon(txn, ledger)) },
         // The amount, and under it the time, after the bill's book where bills of several books are listed.
         trailingContent = {

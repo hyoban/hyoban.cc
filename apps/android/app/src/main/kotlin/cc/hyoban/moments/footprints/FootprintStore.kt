@@ -42,7 +42,7 @@ data class FootprintHistory(val days: List<String>, val sessions: List<TrackSess
  * The points table is the original sample ledger; the displayed route is a bounded streaming view.
  */
 class FootprintStore(context: Context) : SQLiteOpenHelper(
-    context, File(context.noBackupFilesDir, "footprints.sqlite").absolutePath, null, 3,
+    context, File(context.noBackupFilesDir, "footprints.sqlite").absolutePath, null, 4,
 ) {
     private val _revision = MutableStateFlow(0L)
     val revision = _revision.asStateFlow()
@@ -56,6 +56,7 @@ class FootprintStore(context: Context) : SQLiteOpenHelper(
         db.execSQL("CREATE INDEX points_session ON points(session, time)")
         db.execSQL("CREATE INDEX points_time ON points(time)")
         createShares(db)
+        createPlaceNames(db)
     }
 
     private fun createShares(db: SQLiteDatabase) {
@@ -70,7 +71,26 @@ class FootprintStore(context: Context) : SQLiteOpenHelper(
         }
         // The footprints stay private, but spans of them can be made public.
         if (oldVersion < 3) createShares(db)
+        if (oldVersion < 4) createPlaceNames(db)
     }
+
+    /** What Photon calls the spots bills were paid at (`BillPlaces`), by a cell of about ten metres; empty where nothing is named. */
+    private fun createPlaceNames(db: SQLiteDatabase) {
+        db.execSQL("CREATE TABLE place_names (cell TEXT PRIMARY KEY, name TEXT NOT NULL)")
+    }
+
+    @Synchronized fun placeName(cell: String): String? =
+        readableDatabase.rawQuery("SELECT name FROM place_names WHERE cell=?", arrayOf(cell)).use { if (it.moveToFirst()) it.getString(0) else null }
+
+    @Synchronized fun savePlaceName(cell: String, name: String) {
+        writableDatabase.insertWithOnConflict("place_names", null, ContentValues().apply { put("cell", cell); put("name", name) }, SQLiteDatabase.CONFLICT_REPLACE)
+    }
+
+    /** The sample nearest [time], no more than [within] ms either side of it, of those good to [accuracy] metres. */
+    @Synchronized fun pointNear(time: Long, within: Long, accuracy: Double): TrackPoint? = readableDatabase.rawQuery(
+        "SELECT time,lat,lon,accuracy,altitude,segment,speed,speed_accuracy FROM points WHERE time BETWEEN ? AND ? AND accuracy<=? ORDER BY abs(time-?) LIMIT 1",
+        arrayOf((time - within).toString(), (time + within).toString(), accuracy.toString(), time.toString()),
+    ).use { if (it.moveToFirst()) it.point() else null }
 
     @Synchronized fun state(): RecordingState = readableDatabase.rawQuery("SELECT daily, session, paused FROM recording WHERE id=1", null).use {
         it.moveToFirst()

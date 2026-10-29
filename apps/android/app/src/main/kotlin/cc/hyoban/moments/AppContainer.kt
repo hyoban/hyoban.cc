@@ -71,6 +71,8 @@ class AppContainer(context: Context) {
     val mediaUrls = MediaUrls { settings.assetOrigin.value }
     /** Places by name and around a point, for a new Moment's place. */
     val placeSearch = PlaceSearch(BuildConfig.PLACE_SEARCH_URL)
+    /** Where each bill was paid, by the footprints. */
+    val billPlaces = cc.hyoban.moments.footprints.BillPlaces(footprints, placeSearch)
     /** The trips' routes along the roads, from the API. */
     val routes = TripRoutes({ settings.apiUrl.value }, File(context.filesDir, "routes.json"))
 

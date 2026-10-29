@@ -323,7 +323,11 @@ own (not under a Moment), on a window tall enough, is typed on a keypad pinned a
 plus and minus and 保存, under its amount, time and note. A refund takes from its expense's category up to what was
 spent, anything beyond it earned; a reimbursed expense counts only what wasn't paid back.
 A bill's page shows all of this, its refunds and reimbursements, and where it leads: its
-Moment, place, trip and day. An account's page has its bills and 校准余额, which sets the
+Moment, place, trip and day. A bill with no place of its own nor its Moment's is placed by the
+footprints: the sample nearest its time, within a quarter of an hour and good to 100 m, named
+by Photon as a new Moment's place is (the point alone goes out, nothing of the bill, and each
+spot's name is kept in `footprints.sqlite` so it is asked once). Its page shows it as 足迹位置,
+leading to its day, and its row in any list of bills after its note. An account's page has its bills and 校准余额, which sets the
 balance to what it really is by moving its opening balance, adding no bill.
 
 It meets the Moments where it should: a Moment's page lists its bills, and a meal's

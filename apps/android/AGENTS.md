@@ -166,7 +166,8 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   or itself says public, as its amount, kind, category and note, never its account or
   balance; a span of the footprints only when made public, as its simplified line. Both go
   with 全部发布到网站 like everything else (`data/store/Outside.kt`); the ledger's only other
-  request is for public exchange rates, when asked. Private and unpublished are two things,
+  request is for public exchange rates, when asked, besides naming where the footprints put a
+  bill with no place (`footprints/BillPlaces`), which sends Photon the point alone. Private and unpublished are two things,
   said 私有 and 未发布, never 仅本机. It replaces iCost, so what iCost's export holds must keep importing:
   check a change to the importer against a real export with
   `ICOST_EXPORT=<xlsx> ./gradlew :app:testDebugUnitTest --tests '*LedgerTest*'`, and never
