@@ -646,6 +646,7 @@
     <string name="ledger_links">Links</string>
     <string name="ledger_link_moment">Moment</string>
     <string name="ledger_link_place">Place</string>
+    <string name="ledger_footprint_place">Where, by footprints</string>
     <string name="ledger_link_trip">Trip</string>
     <string name="ledger_none">None</string>
     <string name="ledger_choose">Choose</string>

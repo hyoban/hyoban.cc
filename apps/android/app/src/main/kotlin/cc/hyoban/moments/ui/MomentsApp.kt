@@ -648,6 +648,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                         LocalBackSwipe provides backSwipe,
                         LocalViewerShowing provides viewerShowing,
                         LocalSettings provides container.settings,
+                        cc.hyoban.moments.footprints.LocalBillPlaces provides container.billPlaces,
                         LocalTabReselects provides tabReselects,
                         LocalInPictureInPicture provides inPictureInPicture,
                         LocalMomentActions provides momentActions,

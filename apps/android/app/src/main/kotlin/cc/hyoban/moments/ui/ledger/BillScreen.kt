@@ -60,7 +60,7 @@ import kotlinx.coroutines.launch
 
 /**
  * One bill: its amount, what it is and where it moved money, what it saved or cost besides,
- * its note, the Moment, place, trip and day it belongs to, and its refunds and
+ * its note, where the footprints put it, the Moment, place, trip and day it belongs to, and its refunds and
  * reimbursements, with ways to add them, change it and delete it.
  */
 @OptIn(ExperimentalLayoutApi::class)
@@ -77,6 +77,7 @@ fun BillScreen(container: AppContainer, id: String, nav: LedgerNav) {
     val moment = txn.moment?.let { uid -> moments.firstOrNull { it.uid == uid } }
     val placeId = txn.place ?: moment?.places?.firstOrNull()
     val tripId = txn.trip ?: moment?.let { tripOf(it, trips)?.id }
+    val footprintPlace = cc.hyoban.moments.footprints.footprintPlace(txn)
 
     SubPage(
         txnTitle(txn, ledger),
@@ -123,6 +124,10 @@ fun BillScreen(container: AppContainer, id: String, nav: LedgerNav) {
 
                 val details = buildList<@Composable (ListItemShapes) -> Unit> {
                     add { shapes -> InfoRow(shapes, AppIcons.Calendar, stringResource(R.string.ledger_time), formatDay(txn.dateKey) + " " + txn.local.format(DateTimeFormatter.ofPattern("HH:mm"))) }
+                    // Where the footprints were then, for a bill with no place of its own; its day's page shows them.
+                    footprintPlace?.let { name ->
+                        add { shapes -> InfoRow(shapes, AppIcons.Pin, stringResource(R.string.ledger_footprint_place), name) { nav.day(txn.dateKey) } }
+                    }
                     if (txn.kind == TxnKind.TRANSFER) {
                         txn.account?.let(ledger.accountsById::get)?.let { from ->
                             add { shapes ->
