@@ -18,8 +18,8 @@ onlyBuiltDependencies:
   - sharp
   - workerd
 catalog:
-  vite: npm:@voidzero-dev/vite-plus-core@1.1.0
-  vite-plus: 1.1.0
+  vite: npm:@voidzero-dev/vite-plus-core@1.4.0
+  vite-plus: 1.4.0
 overrides:
   vite@*: 'catalog:'
 peerDependencyRules:

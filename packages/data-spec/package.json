@@ -12,6 +12,6 @@
   },
   "dependencies": {
     "pinyin-pro": "^3.29.5",
-    "zod": "^4.6.6"
+    "zod": "^4.6.7"
   }
 }

@@ -1,5 +1,5 @@
 import mapboxgl from 'mapbox-gl'
-import Supercluster from 'supercluster'
+import Supercluster, { type PointFeature } from 'supercluster'
 import { t, type Messages } from '../messages.ts'
 import { createPopupContent, MAP_POPUP_CLASS } from '../player/dom.ts'
 import type { PlaceMarker } from '../player/types.ts'
@@ -540,7 +540,7 @@ export function createPlaceMarkers({
 
   /** A cluster's places, busiest first. */
   function getClusterMembers(id: number) {
-    let leaves: Supercluster.PointFeature<PlaceProperties>[]
+    let leaves: PointFeature<PlaceProperties>[]
 
     try {
       leaves = index.getLeaves(id, Infinity)
