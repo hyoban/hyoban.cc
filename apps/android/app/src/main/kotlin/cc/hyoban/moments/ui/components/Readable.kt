@@ -97,6 +97,16 @@ class PageColumns(val count: Int, val margin: Dp)
  */
 @Composable
 fun PageWidth(modifier: Modifier = Modifier, maxColumns: Int = 2, content: @Composable (PageColumns) -> Unit) {
+    BoxWithConstraints(modifier.fillMaxSize().railPadding()) {
+        val count = if (maxWidth >= TWO_COLUMNS_FROM) maxColumns else 1
+        val widest = if (count == 2) WIDE_WIDTH else READABLE_WIDTH
+        content(PageColumns(count, ((maxWidth - widest) / 2).coerceAtLeast(0.dp)))
+    }
+}
+
+/** Clear of the bars and the cutout down the sides and of the tabs beside the page, as [PageWidth] keeps a list. */
+@Composable
+fun Modifier.railPadding(): Modifier {
     val rail = LocalRailSpace.current
     val safe = WindowInsets.safeDrawing
     val (left, right) = with(LocalDensity.current) {
@@ -106,11 +116,7 @@ fun PageWidth(modifier: Modifier = Modifier, maxColumns: Int = 2, content: @Comp
             safe.getLeft(this, LayoutDirection.Ltr).toDp() + rail.left to safe.getRight(this, LayoutDirection.Ltr).toDp() + rail.right
         }
     }
-    BoxWithConstraints(modifier.fillMaxSize().absolutePadding(left = left, right = right)) {
-        val count = if (maxWidth >= TWO_COLUMNS_FROM) maxColumns else 1
-        val widest = if (count == 2) WIDE_WIDTH else READABLE_WIDTH
-        content(PageColumns(count, ((maxWidth - widest) / 2).coerceAtLeast(0.dp)))
-    }
+    return absolutePadding(left = left, right = right)
 }
 
 /** The tallest a Moment's photos stand in a card: on a phone on its side, no taller than most of the screen. */

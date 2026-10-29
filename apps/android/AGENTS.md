@@ -70,6 +70,10 @@ SDK configured in `local.properties` (`sdk.dir=…`).
 - M3 is the only reference now. FlClash shaped the early pages and is still thanked in
   the README and on the settings page, but where it and M3 differ, M3 wins.
 - Keep the smooth (continuous) corners; that has been decided twice.
+- A top app bar has one or two actions, as M3 asks, and no overflow menu: switching
+  between what the page is one of (the ledger's books) is the title's dropdown
+  (`TitleMenu`), and a control over the subtitle's figures sits beside it
+  (`subtitleAction`), joining the actions only where the bar starts small.
 - Material 3 Expressive throughout (the module opts into its API): `MaterialExpressiveTheme`
   with the expressive motion scheme, and buttons and icon buttons given
   `ButtonDefaults.shapes()` / `IconButtonDefaults.shapes()`, so they change shape when
