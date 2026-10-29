@@ -175,38 +175,19 @@ fun FeedScreen(
     val syncing by container.repository.syncing.collectAsStateWithLifecycle()
     val pull = rememberPulledRefresh(container)
     ShowRefreshErrors(container)
-    // The year and month the timeline is narrowed to, kept as two numbers to survive a rotation.
-    var year by rememberSaveable { mutableStateOf<Int?>(null) }
-    var month by rememberSaveable { mutableStateOf<Int?>(null) }
-    val filter = TimeFilter(year, month)
-    /** Which plugin's records the timeline shows, from its filter row. */
-    var kind by rememberSaveable { mutableStateOf(FeedKind.ALL) }
-    val years = remember(moments) { yearsOf(moments) }
-    val months = remember(moments, year) { year?.let { monthsOf(moments, it) }.orEmpty() }
-    val shown = remember(moments, filter, kind) {
-        if (kind == FeedKind.BILLS || kind == FeedKind.CHARGES) emptyList() else moments.filtered(filter)
-    }
+    // Everything, unfiltered: narrowing by kind and time is the search page's.
+    val shown = moments
     val placeCount = remember(shown) { shown.flatMap { it.places }.toSet().size }
     val subtitle = if (shown.isEmpty()) null else
         pluralStringResource(R.plurals.count_moments, shown.size, shown.size) + "\u2003" + pluralStringResource(R.plurals.count_places, placeCount, placeCount)
-    val bills = rememberTimelineBills(container, shown, filter, kind)
+    val bills = rememberTimelineBills(container, shown, TimeFilter())
     val ledgerNav = LocalLedgerNav.current
     val feedState = rememberLazyListState()
     val gridState = rememberLazyStaggeredGridState()
-    // The header over the views folds away as they scroll and opens again at their top; back
-    // open with a new filter or the tab tapped again, as either goes back to its top. How far it
-    // is folded is kept, so a page made again (the theme switched) doesn't open it mid-list.
+    // The header over the views folds away as they scroll and opens again at their top, as the
+    // tab tapped again goes back to it. How far it is folded is kept, so a page made again (the
+    // theme switched) doesn't open it mid-list.
     val headerScroll = rememberSaveable(saver = HeaderScroll.Saver) { HeaderScroll() }
-    // A new filter starts both views from the top; coming back to the tab doesn't.
-    var lastFilter by rememberSaveable(stateSaver = TimeFilterSaver) { mutableStateOf(filter) }
-    LaunchedEffect(filter) {
-        if (filter != lastFilter) {
-            lastFilter = filter
-            headerScroll.offset = 0f
-            feedState.scrollToItem(0)
-            gridState.scrollToItem(0)
-        }
-    }
     // Opening out with the list as it goes back to its top, on the same spring.
     val headerSpec = AppTheme.motionScheme.defaultSpatialSpec<Float>()
     OnTabReselect(Feed) { animate(headerScroll.offset, 0f, animationSpec = headerSpec) { value, _ -> headerScroll.offset = value } }
@@ -236,15 +217,6 @@ fun FeedScreen(
         item(key = "changes") {
             AnimatedVisibility(publishable, enter = rowIn, exit = rowOut) {
                 PendingChangesRow(container, onClick = onChanges, modifier = Modifier.padding(horizontal = Space.gutter, vertical = Space.s))
-            }
-        }
-        item(key = "kind") { KindFilterRow(kind) { kind = it } }
-        item(key = "filter") {
-            AnimatedVisibility(years.size > 1, enter = rowIn, exit = rowOut) {
-                TimeFilterRows(filter, years, months) { next ->
-                    year = next.year
-                    month = next.month
-                }
             }
         }
     }
@@ -436,40 +408,6 @@ private fun NewMomentButton(onClick: () -> Unit, inRail: Boolean = false) {
             modifier = Modifier.testTag("new_moment"),
         ) {
             Icon(AppIcons.Pen, contentDescription = label)
-        }
-    }
-}
-
-/**
- * The timeline's filter row: everything, or the records of one plugin, the Moments, the
- * ledger's bills or the car's charges, as its plugins come.
- */
-@Composable
-private fun KindFilterRow(kind: FeedKind, onKind: (FeedKind) -> Unit) {
-    androidx.compose.foundation.lazy.LazyRow(
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = Space.gutter),
-        horizontalArrangement = Arrangement.spacedBy(Space.s),
-        modifier = Modifier.padding(vertical = Space.xs),
-    ) {
-        items(FeedKind.entries.size) { index ->
-            val option = FeedKind.entries[index]
-            cc.hyoban.moments.ui.design.FilterChip(
-                selected = option == kind,
-                onClick = { onKind(option) },
-                label = {
-                    Text(
-                        stringResource(
-                            when (option) {
-                                FeedKind.ALL -> R.string.filter_all
-                                FeedKind.MOMENTS -> R.string.filter_moments
-                                FeedKind.BILLS -> R.string.section_bill
-                                FeedKind.CHARGES -> R.string.part_charge
-                            },
-                        ),
-                    )
-                },
-                modifier = Modifier.testTag("kind_${option.name.lowercase()}"),
-            )
         }
     }
 }

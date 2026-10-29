@@ -404,8 +404,11 @@ along it. The app reads the Moments and trips from `/v1` and, beside them, what 
 shape has from `/v2/changes` (charges, public bills and marks, collections, public tracks).
 The tabs stand down a rail on a window 840dp wide or more and on a phone on its side; on a wide
 window the map's trips stand in a column at its start and a bottom panel opens as a dialog in
-the middle. The timeline's filter row shows everything, or only Moments, bills or the car's
-charges (the charges coming from `/v2`, each a row on its day). A Moment's page can make its
+the middle. The timeline has no bar: its title, counts and search scroll away with it, the page under the
+status bar behind a short fade, and the car's charges (from `/v2`) are rows on their days. The
+filters are the search page's: what kind (everything, Moments, bills or charges, each with how
+many) and when (a year, then a month); with nothing typed, a filter lists all it lets through, a
+bill matching by its category and note. A Moment's page can make its
 meal or its photos private on their own (`partVisibility`, written onto the entry's parts as
 it publishes). 编辑旅程 also lists the Moments of its days and of two days either side, each
 taken in or left out by a switch, and its photos to pick covers from in order.

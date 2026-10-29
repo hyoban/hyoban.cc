@@ -112,7 +112,7 @@
     <string name="message_text_copied">已复制文字</string>
     <string name="action_view_photo">看大图</string>
     <string name="action_see_moments">查看全部时刻</string>
-    <string name="hint_search_moments">搜索时刻</string>
+    <string name="hint_search_moments">搜索</string>
     <string name="search_prompt">按文字、地点或旅程找时刻</string>
     <string name="search_none">没有找到相关的时刻</string>
     <string name="explain_on_phone">这个时刻目前只在这台手机上。发布更改后，网站上才会出现。</string>
@@ -809,4 +809,8 @@
     <string name="trip_edit_members">包含的记录</string>
     <string name="trip_edit_members_note">这几天的记录自动算进来，可以排除；前后两天的可以加进来。</string>
     <string name="trip_edit_covers">封面</string>
+    <plurals name="count_results">
+        <item quantity="one">%d 条</item>
+        <item quantity="other">%d 条</item>
+    </plurals>
 </resources>

@@ -264,8 +264,10 @@ fun txnSupporting(txn: Txn, ledger: Ledger, showDate: Boolean = false, withTime:
         ledger.returns[txn.id].orEmpty().any { it.kind == TxnKind.REFUND } -> stringResource(R.string.ledger_refunded)
         else -> null
     }
-    val time = if (showDate) formatDay(txn.dateKey) + " " + txn.local.format(TIME) else txn.local.format(TIME)
-    return listOfNotNull(txn.note.takeIf { it.isNotBlank() }, state, account, time).joinToString(" ")
+    // The day first, so a long note doesn't cut it off; the time only where the row's end lacks it.
+    val day = if (showDate) formatDay(txn.dateKey) else null
+    val time = if (withTime) txn.local.format(TIME) else null
+    return listOfNotNull(day, txn.note.takeIf { it.isNotBlank() }, state, account, time).joinToString(" ")
 }
 
 /**
