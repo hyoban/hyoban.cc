@@ -2,6 +2,8 @@ package cc.hyoban.moments
 
 import cc.hyoban.moments.ledger.Account
 import cc.hyoban.moments.ledger.AccountKind
+import cc.hyoban.moments.ledger.Category
+import cc.hyoban.moments.ledger.CategoryType
 import cc.hyoban.moments.ledger.Flow
 import cc.hyoban.moments.ledger.ICostImport
 import cc.hyoban.moments.ledger.noteWithTags
@@ -253,6 +255,19 @@ class LedgerTest {
             Txn("4", "book", TxnKind.EXPENSE, 0, 480, 100, "CNY", account = "c"),
         )
         assertEquals(listOf("c", "b", "a"), Ledger(accounts = accounts, txns = txns).accountsByUse.map { it.id })
+    }
+
+    @Test fun picksTheMostUsedCategoriesPlacesAndCurrenciesFirst() {
+        val categories = listOf(Category("food", "book", CategoryType.EXPENSE, "餐饮"), Category("snack", "book", CategoryType.EXPENSE, "零食", parent = "food"))
+        val txns = listOf(
+            Txn("1", "book", TxnKind.EXPENSE, 2, 480, 100, "JPY", category = "snack", place = "p1"),
+            Txn("2", "book", TxnKind.EXPENSE, 1, 480, 100, "JPY", category = "food", place = "p1"),
+            Txn("3", "book", TxnKind.EXPENSE, 0, 480, 100, "ISK", place = "p2"),
+        )
+        val ledger = Ledger(categories = categories, txns = txns)
+        assertEquals(mapOf("food" to 2, "snack" to 1), ledger.categoryUses)
+        assertEquals(mapOf("p1" to 2, "p2" to 1), ledger.placeUses)
+        assertEquals(listOf("JPY", "ISK", "CNY", "USD"), ledger.currenciesByUse.take(4))
     }
 
     @Test fun readsARealExport() {

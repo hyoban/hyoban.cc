@@ -214,16 +214,32 @@ data class Ledger(
     /** What each bill adds to or takes from the books' sums, oldest first. */
     val entries: List<Entry> by lazy { entriesOf(this) }
 
+    /** How many of the latest bills each of [keys]' values is in, for what's picked most to come first. */
+    private fun usesOf(keys: (Txn) -> Iterable<String?>): Map<String, Int> {
+        val uses = HashMap<String, Int>()
+        txns.asSequence().take(RECENT_FOR_USE).forEach { txn -> keys(txn).filterNotNull().toSet().forEach { uses.merge(it, 1, Int::plus) } }
+        return uses
+    }
+
     /**
      * The accounts open to pick, the ones the latest bills used most first; the rest, and ties,
      * keep their own order.
      */
     val accountsByUse: List<Account> by lazy {
-        val uses = HashMap<String, Int>()
-        txns.asSequence().take(RECENT_FOR_USE).forEach { txn ->
-            (listOfNotNull(txn.account, txn.toAccount) + txn.splits.map { it.account }).toSet().forEach { uses.merge(it, 1, Int::plus) }
-        }
+        val uses = usesOf { listOf(it.account, it.toAccount) + it.splits.map(Split::account) }
         accounts.filter { !it.archived }.sortedByDescending { uses[it.id] ?: 0 }
+    }
+
+    /** How many of the latest bills each category is in, a first-level one with its second-level ones'. */
+    val categoryUses: Map<String, Int> by lazy { usesOf { listOf(it.category, topCategory(it.category)) } }
+
+    /** How many of the latest bills each place is in. */
+    val placeUses: Map<String, Int> by lazy { usesOf { listOf(it.place) } }
+
+    /** The currencies a bill can be in, the latest bills' most used first, then the common ones and the rest. */
+    val currenciesByUse: List<String> by lazy {
+        val uses = usesOf { listOf(it.currency) }
+        (uses.keys.sorted() + COMMON_CURRENCIES + rates.currencies.sorted()).distinct().sortedByDescending { uses[it] ?: 0 }
     }
 
     /** Each account's balance in its own currency. */
