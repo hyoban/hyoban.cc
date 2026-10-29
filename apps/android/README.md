@@ -743,13 +743,5 @@ it was.
 
 ## Thanks
 
-The way this app looks is learned from [FlClash](https://github.com/chen08209/FlClash).
-Its pages showed how calm and clear an Android app can feel: rows gathered into soft
-cards under small captions, a quiet note beneath each group, a theme page where every
-choice is shown rather than named. This app grew up copying those habits, one page
-after another, and is much better for it. Thank you to chen08209 and everyone who works
-on FlClash for making something so carefully, and for making it open for others to learn
-from. The settings page carries the same thanks, with a link back to it.
-
 The cat on the icon is 馒头 (Mantou), drawn from a photo of the real one. The settings
-page says so too, above FlClash, with a photo of its face.
+page says so too, with a photo of its face.

@@ -39,7 +39,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -238,18 +237,17 @@ private fun SettingRow(row: Row, shapes: ListItemShapes, onClick: () -> Unit) {
     ) { Text(stringResource(row.title)) }
 }
 
-/** 馒头, the cat the icon is drawn from, in a photo of its face; then FlClash, which shaped the app's early pages, opening its repository on a tap. */
+/** 馒头, the cat the icon is drawn from, in a photo of its face. */
 @Composable
 private fun Credits() {
-    val uri = LocalUriHandler.current
     val mantou = boxed {
         ListItem(
             headlineContent = { Text(stringResource(R.string.credit_mantou)) },
             supportingContent = { Text(stringResource(R.string.credit_mantou_note)) },
             leadingContent = {
-                // Drawn at 32dp centred where FlClash's icon is, but taking an icon's 24dp less the
+                // Drawn at 32dp centred where a row's icon is, but taking an icon's 24dp less the
                 // 4dp more a plain list item leaves after it than a segmented one, so the words
-                // line up with FlClash's under them.
+                // line up with the settings' rows.
                 Image(
                     painterResource(R.drawable.mantou),
                     contentDescription = null,
@@ -264,20 +262,8 @@ private fun Credits() {
             colors = rowColors(),
         )
     }
-    val flclash: Segment = { shapes ->
-        SegmentedListItem(
-            onClick = { uri.openUri(FLCLASH) },
-            shapes = shapes,
-            colors = segmentColors(),
-            supportingContent = { Text(stringResource(R.string.credit_flclash_note)) },
-            leadingContent = { Icon(AppIcons.Palette, contentDescription = null) },
-            trailingContent = { Icon(AppIcons.External, contentDescription = null) },
-        ) { Text("FlClash") }
-    }
-    SegmentedGroup(stringResource(R.string.section_credits), null, listOf(mantou, flclash))
+    SegmentedGroup(stringResource(R.string.section_credits), null, listOf(mantou))
 }
-
-private const val FLCLASH = "https://github.com/chen08209/FlClash"
 
 /** Blank is the build's own; anything else an http or https address. */
 private fun valid(text: String) = text.isBlank() || Setting.normalize(text).toHttpUrlOrNull() != null
