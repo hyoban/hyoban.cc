@@ -90,9 +90,9 @@ object ICostImport {
         val account: String,
         val account2: String,
         val splits: List<Pair<String, Long>>,
+        /** With the row's tags at its end. */
         val note: String,
         val currency: String,
-        val tags: List<String>,
         val book: String,
         val refund: Long,
         val discount: Long,
@@ -164,7 +164,7 @@ object ICostImport {
                 number, time, cells.at("date"), cells.at("type"), amount,
                 cells.at("category"), cells.at("subcategory"),
                 if (splits.isEmpty()) account else "", cells.at("account2"), splits,
-                cells.at("note"), cells.at("currency").uppercase().ifEmpty { "CNY" }, parseTags(cells.at("tags")),
+                noteWithTags(cells.at("note"), parseTags(cells.at("tags"))), cells.at("currency").uppercase().ifEmpty { "CNY" },
                 cells.at("book").ifEmpty { "默认账本" },
                 parseCents(cells.at("refund")) ?: 0, parseCents(cells.at("discount")) ?: 0, parseCents(cells.at("fee")) ?: 0,
             )
@@ -252,7 +252,6 @@ object ICostImport {
             amount = row.amount,
             currency = row.currency,
             note = row.note,
-            tags = row.tags,
         )
 
         for (row in rows) {

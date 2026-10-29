@@ -73,7 +73,7 @@ import kotlinx.coroutines.launch
 
 /**
  * One bill: its amount, what it is and where it moved money, what it saved or cost besides,
- * its note and tags, the Moment, place, trip and day it belongs to, and its refunds and
+ * its note, the Moment, place, trip and day it belongs to, and its refunds and
  * reimbursements, with ways to add them, change it and delete it.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalLayoutApi::class)
@@ -170,14 +170,6 @@ fun BillScreen(container: AppContainer, id: String, nav: LedgerNav) {
                     if (txn.excluded) add { shapes -> InfoRow(shapes, Icons.Rounded.Block, stringResource(R.string.ledger_excluded), stringResource(R.string.ledger_excluded_note)) }
                 }
                 SegmentedGroup(null, null, details)
-
-                if (txn.tags.isNotEmpty()) {
-                    FlowRow(Modifier.padding(horizontal = Space.gutter, vertical = Space.s), horizontalArrangement = Arrangement.spacedBy(Space.s)) {
-                        txn.tags.forEach { tag ->
-                            AssistChip(onClick = { nav.list(LedgerFilter(title = "#$tag", tag = tag)) }, label = { Text("#$tag") })
-                        }
-                    }
-                }
 
                 // Where it leads among the Moments' pages.
                 val links = buildList<@Composable (ListItemShapes) -> Unit> {

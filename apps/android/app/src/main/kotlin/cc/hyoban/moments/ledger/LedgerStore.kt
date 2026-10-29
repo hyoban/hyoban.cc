@@ -21,7 +21,7 @@ import kotlinx.coroutines.withContext
  * backup is the way to keep a copy elsewhere.
  */
 class LedgerStore(private val context: Context) : SQLiteOpenHelper(
-    context, File(context.noBackupFilesDir, "ledger.sqlite").absolutePath, null, 1,
+    context, File(context.noBackupFilesDir, "ledger.sqlite").absolutePath, null, 2,
 ) {
     private val _ledger = MutableStateFlow(Ledger())
     val ledger: StateFlow<Ledger> = _ledger.asStateFlow()
@@ -47,7 +47,17 @@ class LedgerStore(private val context: Context) : SQLiteOpenHelper(
         db.execSQL("CREATE TABLE rates (currency TEXT NOT NULL, day TEXT NOT NULL, per_cny REAL NOT NULL, PRIMARY KEY (currency, day))")
     }
 
-    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) = Unit
+    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+        // Tags went into the notes; the column stays, empty.
+        if (oldVersion < 2) {
+            db.rawQuery("SELECT id, note, tags FROM txns WHERE tags != ''", null).use { rows ->
+                while (rows.moveToNext()) {
+                    val note = noteWithTags(rows.getString(1).orEmpty(), rows.getString(2).orEmpty().split('\n').filter { it.isNotBlank() })
+                    db.update("txns", ContentValues().apply { put("note", note); put("tags", "") }, "id = ?", arrayOf(rows.getString(0)))
+                }
+            }
+        }
+    }
 
     /** Reads the ledger, the bundled rates going in first the first time. */
     suspend fun load() = withContext(Dispatchers.IO) {
@@ -226,7 +236,6 @@ private fun Cursor.txn(): Txn {
         discount = l("discount") ?: 0,
         discountAccount = s("discount_account"),
         note = s("note").orEmpty(),
-        tags = s("tags").orEmpty().split('\n').filter { it.isNotBlank() },
         related = s("related"),
         reimburse = Reimburse.of(s("reimburse")),
         excluded = l("excluded") == 1L,
@@ -251,7 +260,7 @@ private fun Txn.values() = ContentValues().apply {
     put("time", time); put("offset", offsetMinutes); put("amount", amount); put("currency", currency)
     put("category", category); put("account", account); put("account_amount", accountAmount); put("splits", encodeSplits(splits))
     put("to_account", toAccount); put("to_amount", toAmount); put("fee", fee); put("fee_account", feeAccount)
-    put("discount", discount); put("discount_account", discountAccount); put("note", note); put("tags", tags.joinToString("\n"))
+    put("discount", discount); put("discount_account", discountAccount); put("note", note); put("tags", "")
     put("related", related); put("reimburse", reimburse.value); put("excluded", if (excluded) 1 else 0)
     put("moment", moment); put("place", place); put("trip", trip); put("created", createdAt); put("updated", updatedAt)
 }

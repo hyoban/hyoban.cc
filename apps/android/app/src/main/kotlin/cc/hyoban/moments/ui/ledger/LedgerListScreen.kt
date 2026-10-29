@@ -34,7 +34,7 @@ import cc.hyoban.moments.ui.components.SubPage
 import cc.hyoban.moments.ui.format.formatDay
 import cc.hyoban.moments.ui.theme.Space
 
-/** The bills [filter] picks, and those matching [query] in their note, tags, category or accounts. */
+/** The bills [filter] picks, and those matching [query] in their note, category or accounts. */
 fun filterBills(ledger: Ledger, filter: LedgerFilter, query: String, moments: Map<String, MomentRecord>, trips: List<TripRecord>): List<Txn> {
     val words = query.trim().lowercase().split(Regex("\\s+")).filter { it.isNotEmpty() }
     val categories = filter.category?.let { id -> setOf(id) + ledger.categories.filter { it.parent == id }.map { it.id } }
@@ -43,14 +43,12 @@ fun filterBills(ledger: Ledger, filter: LedgerFilter, query: String, moments: Ma
         (filter.book == null || txn.book == filter.book) &&
             (filter.account == null || txn.payers.any { it.account == filter.account } || txn.toAccount == filter.account) &&
             (categories == null || txn.category in categories) &&
-            (filter.tag == null || filter.tag in txn.tags) &&
             (filter.trip == null || (txn.kind != TxnKind.TRANSFER && tripOfTxn(txn, moments, trips) == filter.trip)) &&
             (filter.place == null || (txn.kind != TxnKind.TRANSFER && placeOfTxn(txn, moments) == filter.place)) &&
             (filter.day == null || txn.dateKey == filter.day) &&
             (filter.period == null || txn.dateKey.startsWith(filter.period)) &&
             (words.isEmpty() || words.all { word ->
                 txn.note.lowercase().contains(word) ||
-                    txn.tags.any { it.lowercase().contains(word) } ||
                     ledger.categoryPath(txn.category)?.lowercase()?.contains(word) == true ||
                     txn.payers.any { ledger.accountsById[it.account]?.name?.lowercase()?.contains(word) == true } ||
                     ledger.accountsById[txn.toAccount]?.name?.lowercase()?.contains(word) == true ||
@@ -60,7 +58,7 @@ fun filterBills(ledger: Ledger, filter: LedgerFilter, query: String, moments: Ma
 }
 
 /**
- * Bills picked by [filter]: a trip's, a place's, a day's, a category's, a tag's, or those found
+ * Bills picked by [filter]: a trip's, a place's, a day's, a category's, or those found
  * by a search; what they came to over them, and the bills by day.
  */
 @Composable

@@ -629,7 +629,6 @@
     <string name="ledger_transfer_discount_note">返还到转出账户，计入收入</string>
     <string name="ledger_expense_discount_note">省下的钱，只作记录，不影响余额</string>
     <string name="ledger_note">备注</string>
-    <string name="ledger_tags">标签</string>
     <string name="ledger_links">关联</string>
     <string name="ledger_link_moment">时刻</string>
     <string name="ledger_link_place">地点</string>
@@ -668,7 +667,7 @@
     <string name="ledger_returns">退款和报销</string>
     <string name="ledger_action_refund">退款</string>
     <string name="ledger_delete_bill">删除这笔账单？</string>
-    <string name="ledger_search_hint">备注、标签、分类、账户或金额</string>
+    <string name="ledger_search_hint">备注、分类、账户或金额</string>
     <string name="ledger_spent">花费 %1$s</string>
     <string name="ledger_trip_days_spent">这几天所有账本共 %1$s</string>
     <string name="ledger_some_unconverted">部分未换算</string>

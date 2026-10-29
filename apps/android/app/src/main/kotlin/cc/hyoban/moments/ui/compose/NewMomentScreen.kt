@@ -378,7 +378,7 @@ fun NewMomentScreen(
     }
 
     val written = text.isNotBlank() || photos.isNotEmpty()
-    val billWritten = withBill && (bill.amount.isNotBlank() || bill.note.isNotBlank() || bill.tags.isNotBlank())
+    val billWritten = withBill && (bill.amount.isNotBlank() || bill.note.isNotBlank())
     // The bill's time is the Moment's, while there is one.
     val billAt = if (withMoment) time else OffsetDateTime.parse(bill.time)
     // A meal's amount and category go to its bill, until the bill's own are chosen.

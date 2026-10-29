@@ -156,8 +156,8 @@ data class Txn(
     /** An expense's discount is what it saved, on record only; a transfer's comes back as income. */
     val discount: Long = 0,
     val discountAccount: String? = null,
+    /** Tags, which the ledger doesn't keep apart, are at its end as `#tag`. */
     val note: String = "",
-    val tags: List<String> = emptyList(),
     /** The expense a refund or a reimbursement is for. */
     val related: String? = null,
     val reimburse: Reimburse = Reimburse.NONE,
@@ -271,3 +271,10 @@ fun formatMoney(cents: Long, currency: String): String {
 val COMMON_CURRENCIES = listOf(
     "CNY", "USD", "HKD", "SGD", "JPY", "EUR", "GBP", "KRW", "TWD", "MOP", "AUD", "CAD", "NZD", "THB", "MYR", "CHF",
 )
+
+/** [note] with [tags] after it as `#tag`, apart by spaces, leaving out those it already has. */
+fun noteWithTags(note: String, tags: List<String>): String {
+    val words = note.trim().split(Regex("\\s+")).toSet()
+    return (listOf(note.trim()) + tags.map { "#" + it.trim().removePrefix("#") }.filter { it.length > 1 && it !in words }.distinct())
+        .filter { it.isNotEmpty() }.joinToString(" ")
+}
