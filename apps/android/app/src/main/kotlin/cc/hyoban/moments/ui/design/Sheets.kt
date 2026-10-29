@@ -84,13 +84,15 @@ fun ModalBottomSheet(
             onDismissRequest()
         }
     }
+    // On a window 840 wide or more the panel is a dialog in the middle, rounded all round (L01).
+    val wide = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp >= 840
     Dialog(onDismissRequest = leave, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
-        Box(Modifier.fillMaxSize().clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = leave), contentAlignment = Alignment.BottomCenter) {
-            val shape = AppTheme.shapes.large.copy(bottomStart = ZeroCornerSize, bottomEnd = ZeroCornerSize)
+        Box(Modifier.fillMaxSize().clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = leave), contentAlignment = if (wide) Alignment.Center else Alignment.BottomCenter) {
+            val shape = if (wide) AppTheme.shapes.large else AppTheme.shapes.large.copy(bottomStart = ZeroCornerSize, bottomEnd = ZeroCornerSize)
             Column(
                 modifier
                     .statusBarsPadding()
-                    .widthIn(max = 640.dp)
+                    .widthIn(max = if (wide) 560.dp else 640.dp)
                     .fillMaxWidth()
                     .onSizeChanged {
                         val first = height == 0f

@@ -294,31 +294,29 @@ private fun PeriodRow(label: String, mode: Span, onMode: (Span) -> Unit, onPrevi
     }
 }
 
-/** What was spent, earned and left, side by side on a card, over a day's average and how it compares. */
+/**
+ * What was spent, earned and left, three figures straight on the page, each in figures over
+ * its caption, then a day's average and how it compares: no box round them.
+ */
 @Composable
 private fun Totals(summary: Summary, currency: String, average: Long?, compared: Long?, yearly: Boolean) {
-    Surface(
-        shape = AppTheme.shapes.large,
-        color = LocalSurfaceLevel.current.raised.fill(),
-        border = cardBorder(),
-        modifier = Modifier.fillMaxWidth().padding(horizontal = Space.gutter, vertical = Space.s),
-    ) {
-        Column(Modifier.padding(Space.l), verticalArrangement = Arrangement.spacedBy(Space.m)) {
+    run {
+        Column(Modifier.fillMaxWidth().padding(horizontal = Space.gutter + Space.xs, vertical = Space.m), verticalArrangement = Arrangement.spacedBy(Space.m)) {
             Row(horizontalArrangement = Arrangement.spacedBy(Space.l)) {
                 listOf(
                     R.string.ledger_kind_expense to summary.expense,
                     R.string.ledger_kind_income to summary.income,
                     R.string.ledger_balance to summary.balance,
                 ).forEach { (label, cents) ->
-                    Column(Modifier.weight(1f).semantics(mergeDescendants = true) {}) {
-                        Text(stringResource(label), style = AppTheme.typography.caption, color = AppTheme.colorScheme.onSurfaceVariant)
+                    Column(Modifier.weight(1f).semantics(mergeDescendants = true) {}, verticalArrangement = Arrangement.spacedBy(Space.xxs)) {
                         // A six-figure sum shrinks to fit its third rather than losing its cents.
                         Text(
                             money(cents, currency),
-                            style = AppTheme.typography.titleSmall,
+                            style = AppTheme.typography.numTitle,
                             maxLines = 1,
-                            autoSize = TextAutoSize.StepBased(minFontSize = 11.sp, maxFontSize = AppTheme.typography.titleSmall.fontSize),
+                            autoSize = TextAutoSize.StepBased(minFontSize = 11.sp, maxFontSize = AppTheme.typography.numTitle.fontSize),
                         )
+                        Text(stringResource(label), style = AppTheme.typography.caption, color = AppTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }

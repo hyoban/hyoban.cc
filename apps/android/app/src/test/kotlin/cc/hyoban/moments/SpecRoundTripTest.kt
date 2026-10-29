@@ -65,6 +65,19 @@ class SpecRoundTripTest {
     }
 
     @Test
+    fun `a part private by its own say goes onto the entry's part and comes back`() {
+        val moment = Spec.json.decodeFromString(
+            MomentRecord.serializer(),
+            """{"uid":"01M3VDBHC042D43KWZWE67YP1T","occurredAt":"2026-10-01","text":"面","food":{"dishes":["面"]},"partVisibility":{"food":"private"},"createdAt":"2026-10-01T17:41:00+08:00","updatedAt":"2026-10-01T17:41:00+08:00"}""",
+        )
+        val entry = Entries.fromMoment(moment)
+        val food = (entry["parts"] as JsonObject)["food"] as JsonObject
+        assertEquals(JsonPrimitive("private"), food["visibility"])
+        assertTrue(Entries.PART_VISIBILITY !in entry)
+        assertEquals(moment, Entries.toMoment(entry))
+    }
+
+    @Test
     fun `stable ULIDs are the spec's`() {
         // The same as packages/data-spec's getStableUlid gives.
         assertEquals("01M5N5TZ2GDW69JGJRAH18Q5JS", Entries.stableUlid("2026-10-24T04:04:34+08:00", "trip:2025-first-road-trip"))

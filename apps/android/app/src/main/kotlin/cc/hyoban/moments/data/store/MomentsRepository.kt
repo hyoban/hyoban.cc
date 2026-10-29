@@ -688,6 +688,7 @@ class MomentsRepository(
             val changed = changedTrips[trip.id] ?: return@map trip
             val span = changed["span"] as? kotlinx.serialization.json.JsonObject
             trip.copy(
+                covers = Entries.coversOf(changed).map { (entry, media) -> cc.hyoban.moments.data.spec.Cover(entry, media) },
                 title = (changed["title"] as? kotlinx.serialization.json.JsonPrimitive)?.content ?: trip.title,
                 start = (span?.get("start") as? kotlinx.serialization.json.JsonPrimitive)?.content?.take(10) ?: trip.start,
                 end = (span?.get("end") as? kotlinx.serialization.json.JsonPrimitive)?.content?.take(10) ?: trip.end,
@@ -699,15 +700,33 @@ class MomentsRepository(
     fun isTripPrivate(id: String): Boolean =
         (changedTrips[id] ?: _second.value.collections[id])?.let(Entries::isPrivate) == true
 
+    /** A trip as its collection, with the phone's change to it. */
+    fun tripCollection(id: String): kotlinx.serialization.json.JsonObject? =
+        changedTrips[id] ?: apiTrips.firstOrNull { it.id == id }?.let { Entries.collectionOf(it, _second.value.collections[id]) }
+
     /** Keeps a change to a trip on the phone, its name, its days and who sees it, until it is published. */
-    suspend fun editTrip(id: String, title: String, start: String, end: String, visibility: cc.hyoban.moments.data.spec.Visibility) = lock.withLock {
+    suspend fun editTrip(
+        id: String,
+        title: String,
+        start: String,
+        end: String,
+        visibility: cc.hyoban.moments.data.spec.Visibility,
+        include: List<String>? = null,
+        exclude: List<String>? = null,
+        covers: List<Pair<String, String>>? = null,
+    ) = lock.withLock {
         val local = checkNotNull(local) { "No store for the phone's changes" }
         withContext(io) {
             val trip = apiTrips.firstOrNull { it.id == id } ?: error("Unknown trip $id")
             val base = Entries.collectionOf(trip, _second.value.collections[id])
             val now = java.time.OffsetDateTime.now(java.time.ZoneOffset.UTC).withNano(0).toString()
-            val edited = Entries.editCollection(base, title, start, end, visibility, now)
-            val same = trip.title == title && trip.start == start && trip.end == end && Entries.isPrivate(base) == (visibility == cc.hyoban.moments.data.spec.Visibility.PRIVATE)
+            val edited = Entries.editCollection(
+                base, title, start, end, visibility, now,
+                include = include ?: Entries.strings(base, "include"),
+                exclude = exclude ?: Entries.strings(base, "exclude"),
+                covers = covers ?: Entries.coversOf(base),
+            )
+            val same = JsonObjectsEqualApartFrom(base, edited, "updatedAt")
             changedTrips = if (same) changedTrips - id else changedTrips + (id to edited)
             local.writeChangedTrips(changedTrips)
             showTrips()
@@ -813,6 +832,10 @@ data class PlaceChange(val id: String, val before: Place, val after: Place)
 
 /** One of the site's Moments as the site has it, [before] (null when the copy no longer has it), and as changed. */
 data class Change(val before: MomentRecord?, val after: MomentRecord)
+
+/** Whether two records are the same but for [key]. */
+private fun JsonObjectsEqualApartFrom(a: kotlinx.serialization.json.JsonObject, b: kotlinx.serialization.json.JsonObject, key: String) =
+    (a - key) == (b - key)
 
 /** The parts a Moment of the first shape holds. */
 private val FIRST_SHAPE_PARTS = setOf("text", "media", "food")

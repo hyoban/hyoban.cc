@@ -31,8 +31,14 @@ enum class Visibility(val value: String) {
 object Entries {
     private val momentKeys = setOf(
         "uid", "occurredAt", "places", "text", "hidden", "topic", "media", "food", "trip", "order",
-        "published", "createdAt", "updatedAt",
+        "published", "createdAt", "updatedAt", PART_VISIBILITY,
     )
+
+    /**
+     * Where a Moment kept on the phone notes who sees each of its parts, by plugin, when one says
+     * otherwise than the Moment: the app's own field, written onto the parts as the entry goes.
+     */
+    const val PART_VISIBILITY = "partVisibility"
     private val entryKeys = setOf(
         "uid", "at", "end", "point", "place", "parts", "links", "visibility", "topic", "order",
         "published", "createdAt", "updatedAt",
@@ -45,7 +51,8 @@ object Entries {
      */
     fun fromMoment(moment: MomentRecord, parts: Map<String, JsonObject> = emptyMap()): JsonObject {
         val record = Spec.json.encodeToJsonElement(MomentRecord.serializer(), moment).jsonObject
-        return buildJsonObject {
+        val own = (record[PART_VISIBILITY] as? JsonObject).orEmpty()
+        val entry = buildJsonObject {
             record.filterKeys { it !in momentKeys }.forEach { (key, value) -> put(key, value) }
             put("uid", moment.uid)
             put("at", moment.occurredAt)
@@ -80,6 +87,11 @@ object Entries {
             put("createdAt", moment.createdAt)
             put("updatedAt", moment.updatedAt)
         }
+        if (own.isEmpty()) return entry
+        val withSay = entry.getValue("parts").jsonObject.mapValues { (plugin, part) ->
+            own[plugin]?.let { JsonObject(part.jsonObject + ("visibility" to it)) } ?: part
+        }
+        return JsonObject(entry + ("parts" to JsonObject(withSay)))
     }
 
     /**
@@ -89,14 +101,19 @@ object Entries {
     fun toMoment(entry: JsonObject): MomentRecord? {
         val parts = entry["parts"]?.jsonObject ?: return null
         val text = parts["text"]?.jsonObject ?: return null
-        val food = parts["food"]?.jsonObject?.takeUnless { it.visibility() == Visibility.PRIVATE }
-        val media = parts["media"]?.jsonObject?.takeUnless { it.visibility() == Visibility.PRIVATE }
+        // A part private by its own say stays with the phone's Moment, noted as such.
+        val food = parts["food"]?.jsonObject
+        val media = parts["media"]?.jsonObject
+        val own = listOf("text", "media", "food").mapNotNull { plugin ->
+            (parts[plugin] as? JsonObject)?.get("visibility")?.let { plugin to it }
+        }.toMap()
         val record = buildJsonObject {
             entry.filterKeys { it !in entryKeys }.forEach { (key, value) -> put(key, value) }
             put("uid", entry.string("uid"))
             put("occurredAt", entry.string("at"))
             put("places", JsonArray(listOfNotNull(entry["place"])))
             put("text", text["text"] ?: JsonPrimitive(""))
+            // "visibility" on parts is noted below rather than lost.
             put("hidden", entry.visibility() == Visibility.PRIVATE)
             entry["topic"]?.let { put("topic", it) }
             put("media", JsonArray(media?.get("items")?.jsonArray?.map { item -> JsonObject(item.jsonObject - "point") }.orEmpty()))
@@ -115,6 +132,7 @@ object Entries {
             entry["published"]?.let { put("published", it) }
             put("createdAt", entry.string("createdAt"))
             put("updatedAt", entry.string("updatedAt"))
+            if (own.isNotEmpty()) put(PART_VISIBILITY, JsonObject(own))
         }
         return Spec.json.decodeFromJsonElement(MomentRecord.serializer(), record)
     }
@@ -169,15 +187,45 @@ object Entries {
         put("updatedAt", trip.updatedAt)
     }
 
-    /** A collection with its name, its days and who sees it changed, stamped [now]. */
-    fun editCollection(collection: JsonObject, title: String, start: String, end: String, visibility: Visibility, now: String): JsonObject =
+    /**
+     * A collection with its name, its days, who sees it, the entries taken in from outside its
+     * days or left out of them, and its covers (entry uid to media uid, best first) changed,
+     * stamped [now].
+     */
+    fun editCollection(
+        collection: JsonObject,
+        title: String,
+        start: String,
+        end: String,
+        visibility: Visibility,
+        now: String,
+        include: List<String> = strings(collection, "include"),
+        exclude: List<String> = strings(collection, "exclude"),
+        covers: List<Pair<String, String>> = coversOf(collection),
+    ): JsonObject =
         JsonObject(
             collection + mapOf(
                 "title" to JsonPrimitive(title),
                 "span" to buildJsonObject { put("start", start); put("end", end) },
+                "include" to JsonArray(include.map(::JsonPrimitive)),
+                "exclude" to JsonArray(exclude.map(::JsonPrimitive)),
+                "covers" to JsonArray(covers.map { (entry, media) -> buildJsonObject { put("entry", entry); put("media", media) } }),
                 "updatedAt" to JsonPrimitive(now),
             ) - "visibility" + (if (visibility == Visibility.PRIVATE) mapOf("visibility" to JsonPrimitive("private")) else emptyMap()),
         )
+
+    /** A collection's list of uids under [key]. */
+    fun strings(collection: JsonObject, key: String): List<String> =
+        (collection[key] as? JsonArray).orEmpty().mapNotNull { (it as? JsonPrimitive)?.contentOrNull }
+
+    /** A collection's covers, entry uid to media uid, best first. */
+    fun coversOf(collection: JsonObject): List<Pair<String, String>> =
+        (collection["covers"] as? JsonArray).orEmpty().mapNotNull { cover ->
+            val item = cover as? JsonObject ?: return@mapNotNull null
+            val entry = (item["entry"] as? JsonPrimitive)?.contentOrNull ?: return@mapNotNull null
+            val media = (item["media"] as? JsonPrimitive)?.contentOrNull ?: return@mapNotNull null
+            entry to media
+        }
 
     /** Whether a collection is private by its own say. */
     fun isPrivate(collection: JsonObject): Boolean = collection.visibility() == Visibility.PRIVATE

@@ -58,18 +58,46 @@ class TimelineBills(
     /** What each day spent, `YYYY-MM-DD` to cents, in [currency]. */
     val spent: Map<String, Long>,
     val currency: String,
+    /** The car's charges, from the API's second shape, by day. */
+    val charges: Map<String, List<Charge>> = emptyMap(),
 ) {
     companion object {
         val EMPTY = TimelineBills(Ledger(), emptyMap(), emptyMap(), emptyMap(), "CNY")
     }
 }
 
+/** A charge on the timeline: when it started, AC or DC, how much went in and for how long. */
+data class Charge(val uid: String, val at: String, val dc: Boolean, val kwh: Double?, val minutes: Int?)
+
+/** What the timeline shows, as its filter row chooses: everything, or one plugin's records. */
+enum class FeedKind { ALL, MOMENTS, BILLS, CHARGES }
+
 /** The bills to show beside [moments], of the books the ledger shows, on the days [filter] keeps. */
 @Composable
-fun rememberTimelineBills(container: AppContainer, moments: List<MomentRecord>, filter: TimeFilter): TimelineBills {
+fun rememberTimelineBills(container: AppContainer, moments: List<MomentRecord>, filter: TimeFilter, kind: FeedKind = FeedKind.ALL): TimelineBills {
     val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
-    return remember(ledger, moments, filter) {
-        val book = ledger.book ?: return@remember TimelineBills.EMPTY
+    val second by container.repository.second.collectAsStateWithLifecycle()
+    return remember(ledger, second, moments, filter, kind) {
+        val charges = if (kind != FeedKind.ALL && kind != FeedKind.CHARGES) emptyMap() else second.entries.values.mapNotNull { entry ->
+            val charge = (entry["parts"] as? kotlinx.serialization.json.JsonObject)?.get("charge") as? kotlinx.serialization.json.JsonObject
+                ?: return@mapNotNull null
+            val at = (entry["at"] as? kotlinx.serialization.json.JsonPrimitive)?.content ?: return@mapNotNull null
+            val text = { key: String -> (charge[key] as? kotlinx.serialization.json.JsonPrimitive)?.content }
+            Charge(
+                (entry["uid"] as kotlinx.serialization.json.JsonPrimitive).content,
+                at,
+                text("type") == "DC",
+                text("energyWh")?.toDoubleOrNull()?.div(1000),
+                text("durationMin")?.toDoubleOrNull()?.toInt(),
+            )
+        }.filter { charge ->
+            (filter.year == null || charge.at.take(4).toInt() == filter.year) &&
+                (filter.month == null || charge.at.substring(5, 7).toInt() == filter.month)
+        }.groupBy { it.at.take(10) }
+        val book = ledger.book
+        if (book == null || (kind != FeedKind.ALL && kind != FeedKind.BILLS)) {
+            return@remember TimelineBills(ledger, emptyMap(), emptyMap(), emptyMap(), book?.currency ?: "CNY", charges)
+        }
         val shown = ledger.shownBooks
         val uids = moments.mapTo(HashSet()) { it.uid }
         val bills = ledger.txns.filter { txn ->
@@ -86,6 +114,7 @@ fun rememberTimelineBills(container: AppContainer, moments: List<MomentRecord>, 
             loose = without.groupBy { it.dateKey },
             spent = sums.expenseByDay.mapKeys { it.key.toString() },
             currency = book.currency,
+            charges = charges,
         )
     }
 }
@@ -108,13 +137,40 @@ sealed interface DayItem {
     data class Bills(val txns: List<Txn>) : DayItem {
         override val key get() = "bills-${txns.first().id}"
     }
+
+    data class ChargeItem(val charge: Charge) : DayItem {
+        override val key get() = "charge-${charge.uid}"
+    }
 }
 
-/** [moments] and [bills] of one day merged by the time of day, newest first, bills next to each other in one group. */
-fun dayItems(moments: List<MomentRecord>, bills: List<Txn>): List<DayItem> {
-    if (bills.isEmpty()) return moments.map(DayItem::Moment)
+/** A charge as a row on the page: its icon, AC or DC and how much, and when and how long in figures. */
+@Composable
+fun ChargeRow(charge: Charge, modifier: Modifier = Modifier) {
+    Row(modifier.fillMaxWidth().testTag("charge_${charge.uid}"), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.m)) {
+        Icon(AppIcons.Ev, contentDescription = null, tint = AppTheme.colorScheme.onSurfaceVariant)
+        Column(Modifier.weight(1f)) {
+            Text(
+                listOfNotNull(
+                    androidx.compose.ui.res.stringResource(if (charge.dc) cc.hyoban.moments.R.string.charge_dc else cc.hyoban.moments.R.string.charge_ac),
+                    charge.kwh?.let { "%.1f kWh".format(it) },
+                ).joinToString("\u2003"),
+                style = AppTheme.typography.body,
+            )
+            Text(
+                listOfNotNull(charge.at.drop(11).take(5).ifEmpty { null }, charge.minutes?.let { "$it min" }).joinToString("\u2003"),
+                style = AppTheme.typography.numCaption,
+                color = AppTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+/** [moments], [bills] and [charges] of one day merged by the time of day, newest first, bills next to each other in one group. */
+fun dayItems(moments: List<MomentRecord>, bills: List<Txn>, charges: List<Charge> = emptyList()): List<DayItem> {
+    if (bills.isEmpty() && charges.isEmpty()) return moments.map(DayItem::Moment)
     val timed = moments.map { it.occurredAt.drop(11).take(8) to DayItem.Moment(it) as Any } +
-        bills.map { it.local.toLocalTime().toString().take(8) to it as Any }
+        bills.map { it.local.toLocalTime().toString().take(8) to it as Any } +
+        charges.map { it.at.drop(11).take(8) to DayItem.ChargeItem(it) as Any }
     val out = mutableListOf<DayItem>()
     var group = mutableListOf<Txn>()
     for ((_, item) in timed.sortedByDescending { it.first }) {

@@ -399,6 +399,37 @@ private fun MapContent(
         }
     }
     val clearance = LocalBottomClearance.current
+    // On a wide window the sheet is a column standing at the start instead, the map beside it (L01).
+    val sheetContent: @Composable () -> Unit = {
+        val id = selected
+        val place = id?.let { places[it] }
+        if (id == null || place == null) {
+            TripsSheet(trips, moments, container.mediaUrls, bottom = clearance, onTrip = onTrip)
+        } else {
+            val here = byPlace[id].orEmpty()
+            val years = remember(here) { here.map { yearOf(it.occurredAt) }.distinct().sortedDescending() }
+            PlaceSheet(
+                place, id, here, years, colors, places, container.mediaUrls,
+                bottom = clearance,
+                onNavigate = { if (!navigateTo(context, place)) show(context.getString(R.string.no_map_app)) },
+                onAll = { selected = null; onPlace(id) },
+                onMoment = onMoment,
+            )
+        }
+    }
+    if (cc.hyoban.moments.ui.components.isExpandedWidth()) {
+        val rail = cc.hyoban.moments.ui.LocalRailSpace.current
+        androidx.compose.foundation.layout.Box(
+            Modifier
+                .fillMaxHeight()
+                .padding(start = rail.left)
+                .width(WIDE_PANEL)
+                .background(AppColors.sheet)
+                .statusBarsPadding()
+                .testTag("map_panel"),
+        ) { sheetContent() }
+        return
+    }
     BoxWithConstraints(Modifier.fillMaxSize()) {
         BottomSheetScaffold(
             scaffoldState = scaffold,
@@ -407,23 +438,7 @@ private fun MapContent(
             sheetPeekHeight = if (selected != null) maxHeight * PLACE_SHEET_SHARE else TRIPS_PEEK + clearance,
             sheetContainerColor = AppColors.sheet,
             containerColor = Color.Transparent,
-            sheetContent = {
-                val id = selected
-                val place = id?.let { places[it] }
-                if (id == null || place == null) {
-                    TripsSheet(trips, moments, container.mediaUrls, bottom = clearance, onTrip = onTrip)
-                } else {
-                    val here = byPlace[id].orEmpty()
-                    val years = remember(here) { here.map { yearOf(it.occurredAt) }.distinct().sortedDescending() }
-                    PlaceSheet(
-                        place, id, here, years, colors, places, container.mediaUrls,
-                        bottom = clearance,
-                        onNavigate = { if (!navigateTo(context, place)) show(context.getString(R.string.no_map_app)) },
-                        onAll = { selected = null; onPlace(id) },
-                        onMoment = onMoment,
-                    )
-                }
-            },
+            sheetContent = { sheetContent() },
         ) { }
     }
 }
@@ -509,6 +524,9 @@ private fun PlaceSheet(
         }
     }
 }
+
+/** How wide the trips' column is on a wide window. */
+private val WIDE_PANEL = 360.dp
 
 /** How much of the sheet of trips shows while it peeks: its title and count. */
 private val TRIPS_PEEK = 96.dp
