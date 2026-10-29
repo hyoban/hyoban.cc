@@ -164,7 +164,7 @@ private fun ThemeModeGroup(settings: Settings) {
                 }
                 Text(
                     stringResource(label),
-                    style = AppTheme.typography.labelLarge,
+                    style = AppTheme.typography.label,
                     color = if (selected) AppTheme.colorScheme.primary else AppTheme.colorScheme.onSurfaceVariant,
                 )
             }
@@ -212,7 +212,7 @@ fun Caption(title: String, action: (@Composable () -> Unit)? = null) {
     ) {
         Text(
             title,
-            style = AppTheme.typography.labelMedium,
+            style = AppTheme.typography.caption,
             color = AppTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.weight(1f).semantics { heading() },
         )

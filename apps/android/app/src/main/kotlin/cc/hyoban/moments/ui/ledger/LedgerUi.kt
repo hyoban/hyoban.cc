@@ -284,13 +284,13 @@ fun TxnRow(txn: Txn, ledger: Ledger, onClick: () -> Unit, modifier: Modifier = M
             Column(horizontalAlignment = Alignment.End) {
                 Text(
                     if (txn.kind == TxnKind.TRANSFER) money(txn.amount, txn.currency) else signedMoney(txn.amount, txn.currency, txn.incoming),
-                    style = AppTheme.typography.titleMedium,
+                    style = AppTheme.typography.titleSmall,
                     color = amountColor(txn),
                 )
                 val book = if (showBook) ledger.books.firstOrNull { it.id == txn.book }?.name else null
                 Text(
                     listOfNotNull(book, txn.local.format(TIME)).joinToString("\u2003"),
-                    style = AppTheme.typography.labelMedium,
+                    style = AppTheme.typography.caption,
                     color = AppTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                 )
@@ -315,7 +315,7 @@ fun DayTotals(dateKey: String, expense: Long, income: Long, currency: String, mo
                 if (expense != 0L) stringResource(R.string.ledger_expense_short, money(expense, currency)) else null,
                 if (income != 0L) stringResource(R.string.ledger_income_short, money(income, currency)) else null,
             ).joinToString(" "),
-            style = AppTheme.typography.labelMedium,
+            style = AppTheme.typography.caption,
             color = AppTheme.colorScheme.onSurfaceVariant,
         )
     }

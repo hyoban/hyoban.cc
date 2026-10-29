@@ -246,6 +246,10 @@ data class SettingsPage(val section: String)
 @Serializable
 object FootprintSettings
 
+/** Who sees what by default: the books' new bills and the public spans of the footprints. */
+@Serializable
+object Items
+
 /** A Moment to write, kept on the phone, with a bill or the [bill] alone. */
 @Serializable
 data class NewMoment(val bill: Boolean = false)
@@ -726,6 +730,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                     onLedger = { navController.goTo(LedgerHome(it)) },
                                     onSection = { navController.navigate(SettingsPage(it.name)) },
                                     onLedgerSettings = { navController.navigate(LedgerSettings()) },
+                                    onItems = { navController.navigate(Items) },
                                 )
                             }
                             screen<SettingsPage>(link = "settings/{section}") { entry ->
@@ -737,6 +742,9 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                     onFootprints = { showOnMap(MapFocus.Footprints) },
                                     onFootprintSettings = { navController.navigate(FootprintSettings) },
                                 )
+                            }
+                            screen<Items>(link = "items") {
+                                cc.hyoban.moments.ui.settings.ItemsScreen(container, onBack = back, onFootprints = { showOnMap(MapFocus.Footprints) })
                             }
                             screen<FootprintSettings>(link = "footprint-settings") {
                                 FootprintSettingsScreen(container, onBack = back)
@@ -1161,6 +1169,7 @@ fun routeOf(link: Uri): Any? {
         "settings" -> id?.let(::SettingsPage) ?: Preferences
         "footprints" -> Atlas
         "footprint-settings" -> FootprintSettings
+        "items" -> Items
         "new" -> NewMoment()
         "edit" -> id?.let(::EditMoment)
         "changes" -> Changes

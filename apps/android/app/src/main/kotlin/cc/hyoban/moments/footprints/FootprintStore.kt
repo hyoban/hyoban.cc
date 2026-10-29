@@ -19,7 +19,22 @@ data class RecordingState(val daily: Boolean = false, val session: String? = nul
 }
 
 data class TrackSession(val id: String, val started: Long, val ended: Long?)
-data class TrackSelection(val day: String? = null, val session: String? = null)
+data class TrackSelection(val day: String? = null, val session: String? = null, val from: Long? = null, val to: Long? = null)
+
+/**
+ * A span of the footprints made public: its line, simplified to [simplify] metres, goes out with
+ * 全部发布到网站; one following a trip ([collection], its uid) moves with the trip's days.
+ * [removed] keeps one taken back until the site lets it go; [published] is what last went.
+ */
+data class TrackShare(
+    val uid: String,
+    val start: Long,
+    val end: Long,
+    val collection: String? = null,
+    val simplify: Double = 30.0,
+    val removed: Boolean = false,
+    val published: String? = null,
+)
 data class FootprintHistory(val days: List<String>, val sessions: List<TrackSession>)
 
 /**
@@ -27,7 +42,7 @@ data class FootprintHistory(val days: List<String>, val sessions: List<TrackSess
  * The points table is the original sample ledger; the displayed route is a bounded streaming view.
  */
 class FootprintStore(context: Context) : SQLiteOpenHelper(
-    context, File(context.noBackupFilesDir, "footprints.sqlite").absolutePath, null, 2,
+    context, File(context.noBackupFilesDir, "footprints.sqlite").absolutePath, null, 3,
 ) {
     private val _revision = MutableStateFlow(0L)
     val revision = _revision.asStateFlow()
@@ -40,6 +55,11 @@ class FootprintStore(context: Context) : SQLiteOpenHelper(
         db.execSQL("CREATE INDEX points_day ON points(day, time)")
         db.execSQL("CREATE INDEX points_session ON points(session, time)")
         db.execSQL("CREATE INDEX points_time ON points(time)")
+        createShares(db)
+    }
+
+    private fun createShares(db: SQLiteDatabase) {
+        db.execSQL("CREATE TABLE track_shares (uid TEXT PRIMARY KEY, start INTEGER NOT NULL, end INTEGER NOT NULL, collection TEXT, simplify REAL NOT NULL, removed INTEGER NOT NULL, published TEXT)")
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
@@ -48,6 +68,8 @@ class FootprintStore(context: Context) : SQLiteOpenHelper(
             db.execSQL("ALTER TABLE points ADD COLUMN speed REAL")
             db.execSQL("ALTER TABLE points ADD COLUMN speed_accuracy REAL")
         }
+        // The footprints stay private, but spans of them can be made public.
+        if (oldVersion < 3) createShares(db)
     }
 
     @Synchronized fun state(): RecordingState = readableDatabase.rawQuery("SELECT daily, session, paused FROM recording WHERE id=1", null).use {
@@ -146,7 +168,41 @@ class FootprintStore(context: Context) : SQLiteOpenHelper(
     private fun where(selection: TrackSelection): Pair<String, Array<String>> = when {
         selection.session != null -> "session=?" to arrayOf(selection.session)
         selection.day != null -> "day=?" to arrayOf(selection.day)
+        selection.from != null && selection.to != null -> "time BETWEEN ? AND ?" to arrayOf(selection.from.toString(), selection.to.toString())
         else -> "1=1" to emptyArray()
+    }
+
+    /** Every public span, those taken back and not yet let go by the site among them. */
+    @Synchronized fun shares(): List<TrackShare> = readableDatabase.rawQuery(
+        "SELECT uid, start, end, collection, simplify, removed, published FROM track_shares ORDER BY start", null,
+    ).use { c ->
+        buildList {
+            while (c.moveToNext()) add(TrackShare(c.getString(0), c.getLong(1), c.getLong(2), if (c.isNull(3)) null else c.getString(3), c.getDouble(4), c.getInt(5) != 0, if (c.isNull(6)) null else c.getString(6)))
+        }
+    }
+
+    @Synchronized fun saveShare(share: TrackShare) {
+        writableDatabase.insertWithOnConflict("track_shares", null, ContentValues().apply {
+            put("uid", share.uid); put("start", share.start); put("end", share.end); put("collection", share.collection)
+            put("simplify", share.simplify); put("removed", if (share.removed) 1 else 0); put("published", share.published)
+        }, SQLiteDatabase.CONFLICT_REPLACE)
+        _revision.value++
+    }
+
+    /** Takes a span back: gone at once if the site never had it, else kept as removed until it is published. */
+    @Synchronized fun removeShare(uid: String) {
+        val share = shares().firstOrNull { it.uid == uid } ?: return
+        if (share.published == null) writableDatabase.delete("track_shares", "uid=?", arrayOf(uid)) else saveShare(share.copy(removed = true))
+        _revision.value++
+    }
+
+    /** Notes what the site now has of each span, by uid: its line as JSON, or null when it let it go. */
+    @Synchronized fun markSharesPublished(published: Map<String, String?>) {
+        published.forEach { (uid, line) ->
+            if (line == null) writableDatabase.delete("track_shares", "uid=? AND removed=1", arrayOf(uid))
+            else writableDatabase.update("track_shares", ContentValues().apply { put("published", line) }, "uid=?", arrayOf(uid))
+        }
+        _revision.value++
     }
 
     private fun cursor(selection: TrackSelection): Cursor {

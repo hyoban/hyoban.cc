@@ -23,6 +23,33 @@ Without a token everything but drafts and the export is public. A request with a
 `Authorization: Bearer <token>` header must carry one of the tokens in the
 `API_TOKENS` secret, comma-separated, and then sees drafts too; any other token is a 401.
 
+### The second shape, `/v2`
+
+The records are entries, collections and public tracks (`@hyoban/data-spec/entry`), and
+`/v2` serves them; `/v1` keeps serving Moments and trips, as the app installed before reads
+them. Each row holds both shapes (`migrations/0006_entries.sql`): a Moment's `record` as
+written, and `entry`; a trip's, and `collection`; `shown`, what of it the public sees. An entry
+with no words, a bill alone or a mark (a place passed, a trip's waypoint), has no Moment: `/v1`
+leaves it out, and a trip's waypoints are worked out from its collection's marks. Rows from
+before an import in the second shape are read in it all the same, worked out from `record`.
+
+| Path                                          | Returns or does                                                                           |
+| --------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `GET /v2/changes?since=&limit=`               | as `/v1/changes`: `entries`, `deleted`, `places`, `collections`, `tracks` and theirs gone |
+| `GET /v2/entries/:uid`                        | one entry                                                                                 |
+| `GET /v2/collections`, `/v2/collections/:key` | `{ revision, collections }` by start date, or one by its slug (else its uid, lowercase)   |
+| `GET /v2/tracks`                              | `{ revision, tracks }`: the spans of footprints made public                               |
+| `GET /v2/export`                              | `{ revision, manifest, places, entries, collections, tracks, routes }`; needs a token     |
+| `POST /v2/changes`                            | `{ places, entries, deleted, collections, deletedCollections, tracks, deletedTracks }`    |
+| `PUT`/`HEAD /v2/entries/:uid/media/…`         | as a Moment's                                                                             |
+
+Without a token the reads see only what is public, as `getPublicEntry` trims it: no private
+entry or part, a bill by its kind, amount, currency, category and note alone, and an entry made
+private comes back in `deleted`. A write in the second shape is checked and committed as one,
+as `/v1`'s; a private part of a plugin that keeps to the phone (a bill) is dropped even when
+sent, and a Moment written through `/v1` keeps the parts it knows nothing of. A write that
+changes a collection or a mark works the trips the first shape reads out again.
+
 ### The change feed
 
 Every write bumps the database's revision, and each row keeps the revision it last

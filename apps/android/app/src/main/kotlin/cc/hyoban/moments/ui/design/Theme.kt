@@ -28,6 +28,7 @@ import androidx.compose.ui.node.DrawModifierNode
 import androidx.compose.ui.node.currentValueOf
 import androidx.compose.ui.node.invalidateDraw
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import kotlinx.coroutines.launch
 
 // The design system's theme: the colour roles, the type scale, the corners and the springs the
@@ -68,31 +69,44 @@ class ColorScheme(
     val onErrorContainer: Color,
 )
 
-/** The type scale's slots, and each a weight heavier for emphasis. */
+/**
+ * The design system's 13 text styles, as it names them: hierarchy by weight and colour more
+ * than size. Figures (amounts, times, numeric dates) take the `num` styles, in the system's
+ * monospace; [emphasized] is any style a weight heavier, never a size larger.
+ */
 @Immutable
 class Typography(
-    val displayLarge: TextStyle,
-    val displayMedium: TextStyle,
-    val displaySmall: TextStyle,
-    val headlineLarge: TextStyle,
-    val headlineMedium: TextStyle,
-    val headlineSmall: TextStyle,
-    val titleLarge: TextStyle,
-    val titleMedium: TextStyle,
+    /** A page's large title, a tab's and a sub-page's alike. */
+    val titlePage: TextStyle,
+    /** A collapsed bar's title, a sheet's and a dialog's. */
+    val title: TextStyle,
+    /** A group's or a section's heading. */
     val titleSmall: TextStyle,
-    val bodyLarge: TextStyle,
-    val bodyMedium: TextStyle,
+    /** A Moment's words, and the default. */
+    val bodyReading: TextStyle,
+    /** The interface's words: rows, fields, menus, dialogs. */
+    val body: TextStyle,
+    /** Supporting lines and notes. */
     val bodySmall: TextStyle,
-    val labelLarge: TextStyle,
-    val labelMedium: TextStyle,
-    val labelSmall: TextStyle,
-    val displaySmallEmphasized: TextStyle,
-    val headlineSmallEmphasized: TextStyle,
-    val titleLargeEmphasized: TextStyle,
-    val bodyLargeEmphasized: TextStyle,
-    val labelLargeEmphasized: TextStyle,
-    val labelMediumEmphasized: TextStyle,
+    /** Buttons, chips, the segmented control. */
+    val label: TextStyle,
+    /** What tells about something: a place, a weekday, a field's name. */
+    val caption: TextStyle,
+    /** Badges and legends. */
+    val micro: TextStyle,
+    /** Amounts and big figures. */
+    val numDisplay: TextStyle,
+    /** A day in the date rail, a figure in a stat. */
+    val numTitle: TextStyle,
+    /** An amount at a row's end. */
+    val numBody: TextStyle,
+    /** Times, counts and numeric dates. */
+    val numCaption: TextStyle,
 )
+
+/** The same style a weight heavier, for emphasis. */
+val TextStyle.emphasized: TextStyle
+    get() = copy(fontWeight = FontWeight((fontWeight ?: FontWeight.Normal).weight + 100))
 
 /** The corner sizes: small for marks, medium for fields and groups, large for photos, cards and sheets. */
 @Immutable
@@ -161,7 +175,7 @@ fun AppTheme(colorScheme: ColorScheme, typography: Typography, shapes: Shapes, m
         LocalShapes provides shapes,
         LocalMotionScheme provides motionScheme,
         LocalContentColor provides colorScheme.onSurface,
-        LocalTextStyle provides typography.bodyLarge,
+        LocalTextStyle provides typography.bodyReading,
         LocalIndication provides PressIndication,
         content = content,
     )

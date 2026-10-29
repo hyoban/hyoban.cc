@@ -96,18 +96,18 @@ private fun RowContent(
         if (leadingContent != null) CompositionLocalProvider(LocalContentColor provides colors.leadingColor) { leadingContent() }
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             if (overlineContent != null) {
-                CompositionLocalProvider(LocalContentColor provides colors.overlineColor) { ProvideTextStyle(typography.labelMedium) { overlineContent() } }
+                CompositionLocalProvider(LocalContentColor provides colors.overlineColor) { ProvideTextStyle(typography.caption) { overlineContent() } }
             }
-            CompositionLocalProvider(LocalContentColor provides colors.headlineColor) { ProvideTextStyle(typography.bodyMedium) { headlineContent() } }
+            CompositionLocalProvider(LocalContentColor provides colors.headlineColor) { ProvideTextStyle(typography.body) { headlineContent() } }
             if (supportingContent != null) {
                 CompositionLocalProvider(LocalContentColor provides colors.supportingColor) {
-                    ProvideTextStyle(typography.bodyMedium.copy(fontSize = 13.sp, lineHeight = 20.sp)) { supportingContent() }
+                    ProvideTextStyle(typography.body.copy(fontSize = 13.sp, lineHeight = 20.sp)) { supportingContent() }
                 }
             }
         }
         if (trailingContent != null) {
             CompositionLocalProvider(LocalContentColor provides colors.trailingColor) {
-                ProvideTextStyle(typography.labelMedium) { Box(contentAlignment = Alignment.CenterEnd) { trailingContent() } }
+                ProvideTextStyle(typography.caption) { Box(contentAlignment = Alignment.CenterEnd) { trailingContent() } }
             }
         }
     }

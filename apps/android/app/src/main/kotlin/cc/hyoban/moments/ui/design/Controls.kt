@@ -131,7 +131,7 @@ private fun ButtonBase(
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        CompositionLocalProvider(LocalContentColor provides ink) { ProvideTextStyle(AppTheme.typography.labelLarge) { content() } }
+        CompositionLocalProvider(LocalContentColor provides ink) { ProvideTextStyle(AppTheme.typography.label) { content() } }
     }
 }
 
@@ -228,7 +228,7 @@ fun ExtendedFloatingActionButton(
             AnimatedVisibility(expanded, enter = fadeIn() + expandHorizontally(), exit = fadeOut() + shrinkHorizontally()) {
                 Row {
                     Spacer(Modifier.width(12.dp))
-                    ProvideTextStyle(AppTheme.typography.labelLarge) { text() }
+                    ProvideTextStyle(AppTheme.typography.label) { text() }
                     Spacer(Modifier.width(4.dp))
                 }
             }
@@ -270,7 +270,7 @@ private fun Chip(
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         if (leadingIcon != null) CompositionLocalProvider(LocalContentColor provides iconColor) { leadingIcon() }
-        CompositionLocalProvider(LocalContentColor provides content) { ProvideTextStyle(AppTheme.typography.labelLarge) { label() } }
+        CompositionLocalProvider(LocalContentColor provides content) { ProvideTextStyle(AppTheme.typography.label) { label() } }
         if (trailingIcon != null) CompositionLocalProvider(LocalContentColor provides tokens.tx2) { trailingIcon() }
     }
 }
@@ -379,7 +379,7 @@ private fun RowScope.Segment(on: Boolean, modifier: Modifier, label: @Composable
         contentAlignment = Alignment.Center,
     ) {
         CompositionLocalProvider(LocalContentColor provides if (on) tokens.tx else tokens.tx2) {
-            ProvideTextStyle(AppTheme.typography.labelLarge) { label() }
+            ProvideTextStyle(AppTheme.typography.label) { label() }
         }
     }
 }
@@ -432,11 +432,11 @@ fun AlertDialog(
                     CompositionLocalProvider(LocalContentColor provides tokens.tx2) { Box(Modifier.align(Alignment.CenterHorizontally).padding(bottom = 16.dp)) { icon() } }
                 }
                 if (title != null) {
-                    ProvideTextStyle(AppTheme.typography.titleLarge) { Box(Modifier.padding(bottom = 16.dp)) { title() } }
+                    ProvideTextStyle(AppTheme.typography.title) { Box(Modifier.padding(bottom = 16.dp)) { title() } }
                 }
                 if (text != null) {
                     CompositionLocalProvider(LocalContentColor provides tokens.tx2) {
-                        ProvideTextStyle(AppTheme.typography.bodyMedium) { Box(Modifier.weight(1f, fill = false).padding(bottom = 16.dp)) { text() } }
+                        ProvideTextStyle(AppTheme.typography.body) { Box(Modifier.weight(1f, fill = false).padding(bottom = 16.dp)) { text() } }
                     }
                 }
                 FlowRow(Modifier.align(Alignment.End), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
@@ -521,7 +521,7 @@ fun DropdownMenuItem(
     ) {
         if (leadingIcon != null) CompositionLocalProvider(LocalContentColor provides tokens.tx2) { leadingIcon() }
         Box(Modifier.weight(1f)) {
-            CompositionLocalProvider(LocalContentColor provides if (enabled) tokens.tx else tokens.tx3) { ProvideTextStyle(AppTheme.typography.bodyMedium) { text() } }
+            CompositionLocalProvider(LocalContentColor provides if (enabled) tokens.tx else tokens.tx3) { ProvideTextStyle(AppTheme.typography.body) { text() } }
         }
         if (trailingIcon != null) CompositionLocalProvider(LocalContentColor provides tokens.tx2) { trailingIcon() }
     }

@@ -88,8 +88,8 @@ fun AccountScreen(container: AppContainer, id: String, nav: LedgerNav) {
     ) {
         BillList(ledger, bills, account.currency, nav, header = {
             Column(Modifier.padding(start = Space.gutter + Space.l, end = Space.gutter, top = Space.s, bottom = Space.s)) {
-                Text(stringResource(R.string.ledger_balance_label), style = AppTheme.typography.labelLarge, color = AppTheme.colorScheme.onSurfaceVariant)
-                Text(money(balance, account.currency), style = AppTheme.typography.displaySmall, modifier = Modifier.testTag("account_balance"))
+                Text(stringResource(R.string.ledger_balance_label), style = AppTheme.typography.label, color = AppTheme.colorScheme.onSurfaceVariant)
+                Text(money(balance, account.currency), style = AppTheme.typography.numDisplay, modifier = Modifier.testTag("account_balance"))
                 Row(Modifier.padding(top = Space.m), horizontalArrangement = Arrangement.spacedBy(Space.s)) {
                     FilledTonalButton(onClick = { nav.entry(LedgerEntryArgs(account = id)) }) {
                         Icon(AppIcons.Plus, contentDescription = null)
@@ -111,7 +111,7 @@ fun AccountScreen(container: AppContainer, id: String, nav: LedgerNav) {
             title = { Text(stringResource(R.string.ledger_calibrate)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(Space.s)) {
-                    Text(stringResource(R.string.ledger_calibrate_note), style = AppTheme.typography.bodyMedium)
+                    Text(stringResource(R.string.ledger_calibrate_note), style = AppTheme.typography.body)
                     OutlinedTextField(
                         value, { value = it },
                         prefix = { Text(currencySymbol(account.currency)) },
@@ -187,7 +187,7 @@ fun AccountEditScreen(container: AppContainer, id: String?, nav: LedgerNav) {
             ) {
                 Column(Modifier.padding(horizontal = Space.gutter, vertical = Space.s), verticalArrangement = Arrangement.spacedBy(Space.m)) {
                     OutlinedTextField(name, { name = it }, label = { Text(stringResource(R.string.ledger_account_name)) }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("account_name"))
-                    Text(stringResource(R.string.ledger_account_kind), style = AppTheme.typography.labelLarge, color = AppTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.ledger_account_kind), style = AppTheme.typography.label, color = AppTheme.colorScheme.onSurfaceVariant)
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.s)) {
                         AccountKind.entries.forEach { entry ->
                             FilterChip(

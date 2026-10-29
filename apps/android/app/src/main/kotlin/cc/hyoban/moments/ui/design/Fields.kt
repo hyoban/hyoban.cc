@@ -122,7 +122,7 @@ private fun Decoration(
 @Composable
 private fun Caption(label: @Composable () -> Unit) {
     CompositionLocalProvider(LocalContentColor provides tokens.tx2) {
-        ProvideTextStyle(AppTheme.typography.labelMedium) { Box(Modifier.padding(start = 4.dp)) { label() } }
+        ProvideTextStyle(AppTheme.typography.caption) { Box(Modifier.padding(start = 4.dp)) { label() } }
     }
 }
 
@@ -211,7 +211,7 @@ fun TextField(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     readOnly: Boolean = false,
-    textStyle: TextStyle = AppTheme.typography.bodyMedium,
+    textStyle: TextStyle = AppTheme.typography.body,
     label: (@Composable () -> Unit)? = null,
     placeholder: (@Composable () -> Unit)? = null,
     leadingIcon: (@Composable () -> Unit)? = null,
@@ -236,7 +236,7 @@ fun OutlinedTextField(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     readOnly: Boolean = false,
-    textStyle: TextStyle = AppTheme.typography.bodyMedium,
+    textStyle: TextStyle = AppTheme.typography.body,
     label: (@Composable () -> Unit)? = null,
     placeholder: (@Composable () -> Unit)? = null,
     leadingIcon: (@Composable () -> Unit)? = null,
@@ -260,7 +260,7 @@ fun OutlinedTextField(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     readOnly: Boolean = false,
-    textStyle: TextStyle = AppTheme.typography.bodyMedium,
+    textStyle: TextStyle = AppTheme.typography.body,
     label: (@Composable () -> Unit)? = null,
     placeholder: (@Composable () -> Unit)? = null,
     leadingIcon: (@Composable () -> Unit)? = null,
@@ -290,7 +290,7 @@ fun OutlinedSecureTextField(
 ) {
     val interaction = remember { MutableInteractionSource() }
     val focused by interaction.collectIsFocusedAsState()
-    val style = typed(AppTheme.typography.bodyMedium, true)
+    val style = typed(AppTheme.typography.body, true)
     BasicSecureTextField(
         state,
         modifier,
@@ -316,7 +316,7 @@ fun SearchField(
     leadingIcon: (@Composable () -> Unit)? = null,
     trailingIcon: (@Composable () -> Unit)? = null,
 ) {
-    val style = typed(AppTheme.typography.bodyLarge.copy(lineHeight = AppTheme.typography.bodyMedium.lineHeight), true)
+    val style = typed(AppTheme.typography.bodyReading.copy(lineHeight = AppTheme.typography.body.lineHeight), true)
     BasicTextField(
         state,
         modifier,

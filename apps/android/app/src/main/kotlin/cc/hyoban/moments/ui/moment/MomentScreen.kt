@@ -1,5 +1,7 @@
 package cc.hyoban.moments.ui.moment
 
+import cc.hyoban.moments.ui.design.emphasized
+
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.components.floatingElevation
 import cc.hyoban.moments.ui.design.FloatingActionButton
@@ -384,10 +386,10 @@ private fun MomentDetails(
                 buildAnnotatedString {
                     append(formatDay(moment.occurredAt))
                     formatTime(moment.occurredAt)?.let {
-                        withStyle(SpanStyle(color = AppTheme.colorScheme.onSurfaceVariant, fontWeight = AppTheme.typography.titleLarge.fontWeight)) { append("  $it") }
+                        withStyle(SpanStyle(color = AppTheme.colorScheme.onSurfaceVariant, fontWeight = AppTheme.typography.title.fontWeight)) { append("  $it") }
                     }
                 },
-                style = AppTheme.typography.titleLargeEmphasized,
+                style = AppTheme.typography.title.emphasized,
                 modifier = Modifier.semantics { heading() },
             )
             if (moment.published == null) {
@@ -398,7 +400,7 @@ private fun MomentDetails(
         }
         if (moment.text.isNotBlank()) {
             SelectionContainer(Modifier.padding(start = Space.gutter + Space.l, end = Space.gutter + Space.l, top = Space.l)) {
-                Text(moment.text, style = AppTheme.typography.bodyLarge)
+                Text(moment.text, style = AppTheme.typography.bodyReading)
             }
         }
         if (moment.media.size > 1) {
@@ -587,7 +589,7 @@ private fun StateNotice(icon: ImageVector, label: String, explanation: String, o
             Icon(icon, contentDescription = null, modifier = Modifier.padding(top = Space.xxs).size(20.dp))
             Column(Modifier.weight(1f).padding(start = Space.m, end = Space.s)) {
                 Text(label, style = AppTheme.typography.titleSmall)
-                Text(explanation, style = AppTheme.typography.bodyMedium)
+                Text(explanation, style = AppTheme.typography.body)
                 if (onChanges != null) {
                     TextButton(onClick = onChanges, modifier = Modifier.offset(x = -Space.m).testTag("state_changes")) {
                         Text(stringResource(R.string.title_changes))

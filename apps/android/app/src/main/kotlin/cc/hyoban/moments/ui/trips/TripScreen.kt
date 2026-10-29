@@ -73,6 +73,8 @@ import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.fill
 import kotlinx.coroutines.launch
+import cc.hyoban.moments.ui.design.AppSwitch
+import androidx.compose.foundation.selection.toggleable
 
 /**
  * One trip, a pushed page under its top app bar: what it covered, its route on a map
@@ -121,7 +123,7 @@ fun TripScreen(
             Row(Modifier.padding(start = Space.gutter, end = Space.xs), verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     stringResource(R.string.section_photo) + "\u2003" + photos.size,
-                    style = AppTheme.typography.titleMedium,
+                    style = AppTheme.typography.titleSmall,
                     modifier = Modifier.weight(1f).semantics { heading() },
                 )
                 val see = stringResource(R.string.action_see_moments)
@@ -218,7 +220,8 @@ fun TripScreen(
                     ) {
                         item(key = "summary") { summary() }
                         item(key = "spending") { spending() }
-                        if (photos.isNotEmpty()) item(key = "photos") { photoCarousel(2) }
+                        item(key = "track") { TrackShareRow(container, trip) }
+                        if (photos.isNotEmpty()) item(key = "photos") { photoCarousel(3) }
                     }
                 }
             } else {
@@ -236,11 +239,62 @@ fun TripScreen(
                 ) {
                     item(key = "summary") { summary() }
                     item(key = "spending") { spending() }
-                    if (photos.isNotEmpty()) item(key = "photos") { photoCarousel(4) }
+                    item(key = "track") { TrackShareRow(container, trip) }
+                    if (photos.isNotEmpty()) item(key = "photos") { photoCarousel(5) }
                     item(key = "map") { routeCard(Modifier, Modifier.height(240.dp)) }
                     item(key = "gap") { Spacer(Modifier.height(Space.s)) }
                 }
             }
         }
+    }
+}
+
+/**
+ * Whether the trip's footprints are public: on, a span following the trip goes out with the
+ * next publish, simplified, and the site draws the trip's route from it; off, it is taken back.
+ */
+@Composable
+private fun TrackShareRow(container: AppContainer, trip: cc.hyoban.moments.data.spec.TripRecord) {
+    val revision by container.footprints.revision.collectAsStateWithLifecycle()
+    val collection = remember(trip) { cc.hyoban.moments.data.spec.Entries.collectionUid(trip) }
+    val share by androidx.compose.runtime.produceState<cc.hyoban.moments.footprints.TrackShare?>(null, revision, collection) {
+        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            container.footprints.shares().firstOrNull { it.collection == collection && !it.removed }
+        }
+    }
+    val scope = rememberCoroutineScope()
+    val toggle = { on: Boolean ->
+        scope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            val current = share
+            if (on) {
+                val zone = java.time.ZoneId.systemDefault()
+                container.footprints.saveShare(
+                    cc.hyoban.moments.footprints.TrackShare(
+                        uid = current?.uid ?: cc.hyoban.moments.data.local.Ulid.next(),
+                        start = java.time.LocalDate.parse(trip.start).atStartOfDay(zone).toInstant().toEpochMilli(),
+                        end = java.time.LocalDate.parse(trip.end).plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli() - 1,
+                        collection = collection,
+                    ),
+                )
+            } else if (current != null) {
+                container.footprints.removeShare(current.uid)
+            }
+        }
+        Unit
+    }
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .toggleable(share != null, role = androidx.compose.ui.semantics.Role.Switch, onValueChange = toggle)
+            .padding(horizontal = Space.gutter, vertical = Space.m)
+            .testTag("trip_track_public"),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.xxs)) {
+            Text(stringResource(R.string.trip_track_public), style = AppTheme.typography.body)
+            Text(stringResource(R.string.trip_track_public_note), style = AppTheme.typography.bodySmall, color = AppTheme.colorScheme.onSurfaceVariant)
+        }
+        Spacer(Modifier.width(Space.m))
+        AppSwitch(share != null)
     }
 }

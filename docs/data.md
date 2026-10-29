@@ -23,15 +23,29 @@ Daily statistics and precise charging times are published with the owner's
 authorization. Vehicle state stays only in private originals; the model stores
 usage, charging and assistance. These records continue to live only in the repository.
 
+Since schema version 3 the records are in a second shape (`packages/data-spec/src/entry.ts`):
+an entry is a moment and an optional point, its words, photos, meal, bill or charge parts
+by plugin; a trip is a collection taking the entries in its span (with `include` and
+`exclude`), its old id kept as its `slug`, its waypoints marks of their own (entries with a
+place and no parts); a public track is a span of the footprints made public, simplified.
+Each is public or private: its own `visibility`, else its container's (a bill's book, on the
+phone), else its plugin's default (a bill is private), else the entry's (private for tech).
+`vp run data:migrate` shows what moving `data/` to it would do, `--write` moves it, checking
+that every record comes back exactly, and `--rollback --write` moves it back, byte for byte.
+The store reads either layout, and both at once while a script still writes Moments.
+
 ```
 data/
 ├─ manifest.json           schemaVersion, generator, updatedAt
+├─ entries/YYYY/MM/<ulid>.json   an entry (the second shape)
+├─ collections/<slug>.json       a collection, a trip (the second shape)
+├─ tracks/<ulid>.json            a public span of the footprints (the second shape)
 ├─ places.json             places by id: name, WGS-84 coordinates, a kind, the province,
 │                          city and district it is in (pnpm places:locate), an optional
 │                          note, and for a train's end the station it leaves from
 ├─ routes.json             each trip leg's route by its key, as the API fetched it
-├─ trips/<id>.json         a trip: dates, waypoints, straight legs, covers by uid
-├─ moments/YYYY/MM/<ulid>.json
+├─ trips/<id>.json         a trip: dates, waypoints, straight legs, covers by uid (the first shape)
+├─ moments/YYYY/MM/<ulid>.json   a Moment (the first shape)
 └─ schema/*.schema.json    generated from the spec by `pnpm data:schema`
 ```
 
@@ -49,7 +63,8 @@ different photo is a new media item with a new key.
 ## Building from the API
 
 With `MOMENTS_API_TOKEN` set, in the environment or `.env`, the site is built from the
-API instead of `data/`: `src/data/api-data.ts` fetches `/v1/export` once before
+API instead of `data/`: `src/data/api-data.ts` fetches `/v2/export` (`/v1/export` from an
+API without it) once before
 anything reads a record, writes it under `.artifacts/api-data/` in this layout, and
 points the store and the Moments collection there. `MOMENTS_API_URL` overrides the
 deployed address. Without a token the build reads `data/`, and a token that fails to

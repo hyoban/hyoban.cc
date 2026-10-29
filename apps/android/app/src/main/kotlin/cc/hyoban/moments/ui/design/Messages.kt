@@ -141,7 +141,7 @@ fun AppSnackbar(data: SnackbarData, modifier: Modifier = Modifier) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        Text(data.visuals.message, Modifier.weight(1f).padding(vertical = 12.dp), color = tokens.tx, style = AppTheme.typography.bodyMedium)
+        Text(data.visuals.message, Modifier.weight(1f).padding(vertical = 12.dp), color = tokens.tx, style = AppTheme.typography.body)
         data.visuals.actionLabel?.let { label ->
             TextButton(onClick = data::performAction, colors = ButtonDefaults.textButtonColors(contentColor = tokens.accent)) { Text(label) }
         }

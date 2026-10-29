@@ -130,7 +130,7 @@ fun ShareMenu(onSelect: (ShareTarget) -> Unit, onDismiss: () -> Unit) {
         Column(Modifier.verticalScroll(rememberScrollState()).padding(bottom = Space.l)) {
             Text(
                 stringResource(R.string.action_share),
-                style = AppTheme.typography.titleLarge,
+                style = AppTheme.typography.title,
                 modifier = Modifier.padding(horizontal = Space.xl, vertical = Space.s).semantics { heading() },
             )
             ShareTarget.entries.filter { it != ShareTarget.PREPARE }.forEach { target ->
@@ -367,7 +367,7 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
             Modifier.verticalScroll(rememberScrollState()).padding(start = Space.xl, end = Space.xl, bottom = Space.xl),
             verticalArrangement = Arrangement.spacedBy(Space.m),
         ) {
-            Text(stringResource(target.title), style = AppTheme.typography.headlineSmall)
+            Text(stringResource(target.title), style = AppTheme.typography.titlePage)
             Text(stringResource(when (target) {
                 ShareTarget.X -> R.string.share_x_hint
                 ShareTarget.TELEGRAM -> if (useAssist) R.string.telegram_assist_note else if (copyTextOnOpen) R.string.share_telegram_multiple_hint else R.string.share_telegram_hint
@@ -434,7 +434,7 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                     if (target == ShareTarget.X) stringResource(R.string.share_photos, chosen.size, target.limit)
                     else if (!prepareByHand) stringResource(R.string.share_selected_photos, chosen.size)
                     else stringResource(R.string.share_prepare_photos, chosen.size),
-                    style = AppTheme.typography.labelLarge,
+                    style = AppTheme.typography.label,
                 )
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.s), verticalArrangement = Arrangement.spacedBy(Space.s)) {
                     photos.forEachIndexed { index, photo ->
@@ -468,7 +468,7 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                                     shape = AppTheme.shapes.small,
                                     modifier = Modifier.align(Alignment.BottomEnd),
                                 ) {
-                                    Text("${chosen.indexOf(photo) + 1}", Modifier.padding(horizontal = Space.xs), style = AppTheme.typography.labelSmall)
+                                    Text("${chosen.indexOf(photo) + 1}", Modifier.padding(horizontal = Space.xs), style = AppTheme.typography.micro)
                                 }
                             }
                         }

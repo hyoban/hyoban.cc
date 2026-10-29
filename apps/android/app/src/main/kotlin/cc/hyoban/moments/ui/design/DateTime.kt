@@ -67,9 +67,9 @@ fun DateTimeDialog(day: LocalDate, hour: Int, minute: Int, onDismiss: () -> Unit
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 MonthGrid(YearMonth.parse(month), LocalDate.ofEpochDay(chosen), onMonth = { month = it.toString() }, onDay = { chosen = it.toEpochDay() })
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(stringResource(R.string.label_time), style = AppTheme.typography.bodyMedium, color = tokens.tx2, modifier = Modifier.weight(1f))
+                    Text(stringResource(R.string.label_time), style = AppTheme.typography.body, color = tokens.tx2, modifier = Modifier.weight(1f))
                     TimePart(hours, { hours = it }, "time_hour")
-                    Text(":", style = AppTheme.typography.titleLarge)
+                    Text(":", style = AppTheme.typography.title)
                     TimePart(minutes, { minutes = it }, "time_minute")
                 }
             }
@@ -84,7 +84,7 @@ private fun TimePart(value: String, onChange: (String) -> Unit, tag: String) {
         value,
         { typed -> onChange(typed.filter(Char::isDigit).take(2)) },
         singleLine = true,
-        textStyle = AppTheme.typography.titleLarge.copy(color = tokens.tx, textAlign = TextAlign.Center),
+        textStyle = AppTheme.typography.title.copy(color = tokens.tx, textAlign = TextAlign.Center),
         cursorBrush = SolidColor(tokens.tx),
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         modifier = Modifier.width(64.dp).clip(Corners.full).background(tokens.pressed).padding(vertical = 8.dp).testTag(tag),
@@ -99,7 +99,7 @@ private fun MonthGrid(month: YearMonth, chosen: LocalDate, onMonth: (YearMonth) 
     val title = month.format(DateTimeFormatter.ofPattern(if (locale.language == "zh") "yyyy年M月" else "MMMM yyyy", locale))
     Column {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(title, style = AppTheme.typography.titleMedium, modifier = Modifier.weight(1f).padding(start = 4.dp))
+            Text(title, style = AppTheme.typography.titleSmall, modifier = Modifier.weight(1f).padding(start = 4.dp))
             IconButton(onClick = { onMonth(month.minusMonths(1)) }) {
                 Icon(AppIcons.ChevronLeft, contentDescription = stringResource(R.string.action_previous_month), tint = tokens.tx2)
             }
@@ -111,7 +111,7 @@ private fun MonthGrid(month: YearMonth, chosen: LocalDate, onMonth: (YearMonth) 
             DayOfWeek.entries.forEach { weekday ->
                 Text(
                     weekday.getDisplayName(TextStyle.NARROW, locale),
-                    style = AppTheme.typography.labelMedium,
+                    style = AppTheme.typography.caption,
                     color = tokens.tx3,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.weight(1f).padding(vertical = 6.dp),
@@ -137,7 +137,7 @@ private fun MonthGrid(month: YearMonth, chosen: LocalDate, onMonth: (YearMonth) 
                             ) {
                                 Text(
                                     date.dayOfMonth.toString(),
-                                    style = AppTheme.typography.labelLarge,
+                                    style = AppTheme.typography.label,
                                     color = when {
                                         on -> tokens.onInk
                                         date == today -> tokens.accent

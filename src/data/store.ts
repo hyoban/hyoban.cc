@@ -1,6 +1,20 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import {
+  collectionSchema,
+  collectionToTrip,
+  entrySchema,
+  entryToMoment,
+  isInCollection,
+  isMomentEntry,
+  momentToEntry,
+  publicTrackSchema,
+  tripToCollection,
+  type Collection,
+  type Entry,
+  type PublicTrack,
+} from '@hyoban/data-spec/entry'
+import {
   devicesSchema,
   manifestSchema,
   momentRecordSchema,
@@ -18,6 +32,11 @@ import {
 // Reads the recording app's records for the site's build and for the scripts, from the
 // repository's `data/` directory or, when the build fetched one, the API's snapshot in
 // the same layout (see api-data.ts). Everything is validated on the way in.
+//
+// The records are entries, collections and public tracks (`entries/`, `collections/`,
+// `tracks/`); Moments and trips in the first layout (`moments/`, `trips/`), from before the
+// migration or written since by a script that still writes them, are read as entries too.
+// What still works on Moments and trips reads them back in that shape.
 
 /** The repository's `data/`, the committed copy. */
 export const dataRoot = resolve(process.cwd(), 'data')
@@ -52,16 +71,95 @@ export function readDevices(root = dataRoot): Devices {
   return devicesSchema.parse(readJson('devices.json', root))
 }
 
-export function readTripRecords(root = getDataRoot()): TripRecord[] {
-  return listJsonFiles('trips', root).map((file) => tripRecordSchema.parse(readJson(file, root)))
+/** Every entry, with the file it came from: those under `entries/`, and the first layout's as entries. */
+export function readEntries(root = getDataRoot()): { file: string; record: Entry }[] {
+  const entries = listJsonFiles('entries', root).map((file) => ({
+    file,
+    record: entrySchema.parse(readJson(file, root)),
+  }))
+  const seen = new Set(entries.map(({ record }) => record.uid))
+  const moments = readFirstMoments(root)
+
+  for (const { file, record } of moments) {
+    if (!seen.has(record.uid)) {
+      entries.push({ file, record: entrySchema.parse(momentToEntry(record)) })
+    }
+  }
+
+  for (const trip of readFirstTrips(root)) {
+    for (const mark of tripToCollection(
+      trip,
+      moments.map(({ record }) => record),
+    ).marks) {
+      entries.push({ file: `trips/${trip.id}.json`, record: entrySchema.parse(mark) })
+    }
+  }
+
+  return entries
 }
 
-/** Every Moment with the file it came from, relative to `data/`. */
+/** Every collection: those under `collections/`, and the first layout's trips as collections. */
+export function readCollections(root = getDataRoot()): Collection[] {
+  const collections = listJsonFiles('collections', root).map((file) =>
+    collectionSchema.parse(readJson(file, root)),
+  )
+  const slugs = new Set(collections.map((collection) => collection.slug))
+  const moments = readFirstMoments(root).map(({ record }) => record)
+
+  for (const trip of readFirstTrips(root)) {
+    if (!slugs.has(trip.id)) {
+      collections.push(collectionSchema.parse(tripToCollection(trip, moments).collection))
+    }
+  }
+
+  return collections
+}
+
+/** The spans of footprints made public, each with its line. */
+export function readPublicTracks(root = getDataRoot()): PublicTrack[] {
+  return listJsonFiles('tracks', root).map((file) => publicTrackSchema.parse(readJson(file, root)))
+}
+
+/** The trips as the first shape has them, from the collections and their marks. */
+export function readTripRecords(root = getDataRoot()): TripRecord[] {
+  const entries = readEntries(root).map(({ record }) => record)
+
+  return readCollections(root).map((collection) =>
+    tripRecordSchema.parse(collectionToTrip(collection, entries)),
+  )
+}
+
+/**
+ * Every Moment with the file it came from, relative to `data/`: the entries with words, as
+ * the first shape has them, each naming the trip that includes it from outside its span.
+ */
 export function readMomentRecords(root = getDataRoot()): { file: string; record: MomentRecord }[] {
+  const collections = readCollections(root)
+
+  return readEntries(root)
+    .filter(({ record }) => isMomentEntry(record))
+    .map(({ file, record }) => {
+      const trip = collections.find(
+        (collection) =>
+          collection.include.includes(record.uid) && isInCollection(collection, record),
+      )
+
+      return {
+        file,
+        record: momentRecordSchema.parse(entryToMoment(record, trip?.slug)),
+      }
+    })
+}
+
+function readFirstMoments(root: string) {
   return listJsonFiles('moments', root).map((file) => ({
     file,
     record: momentRecordSchema.parse(readJson(file, root)),
   }))
+}
+
+function readFirstTrips(root: string) {
+  return listJsonFiles('trips', root).map((file) => tripRecordSchema.parse(readJson(file, root)))
 }
 
 export function readJson(file: string, root = dataRoot): unknown {

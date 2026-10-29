@@ -148,7 +148,7 @@ fun Pill(text: String, modifier: Modifier = Modifier, icon: ImageVector? = null)
         horizontalArrangement = Arrangement.spacedBy(Space.s),
     ) {
         icon?.let { Icon(it, contentDescription = null, tint = AppTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp)) }
-        Text(text, style = AppTheme.typography.labelLarge, color = AppTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+        Text(text, style = AppTheme.typography.label, color = AppTheme.colorScheme.onSurfaceVariant, maxLines = 1)
     }
 }
 
@@ -185,7 +185,7 @@ fun MonthHeader(month: String, year: String?) {
         verticalAlignment = Alignment.Bottom,
         horizontalArrangement = Arrangement.spacedBy(Space.s),
     ) {
-        Text(month, style = AppTheme.typography.titleLarge)
+        Text(month, style = AppTheme.typography.title)
         year?.let {
             Text(it, style = AppTheme.typography.bodySmall, color = AppTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = Space.xxs))
         }
@@ -216,7 +216,7 @@ fun DayPill(text: String, date: String? = null, onClick: (() -> Unit)? = null) {
         ) {
             Text(
                 text,
-                style = AppTheme.typography.labelLarge,
+                style = AppTheme.typography.label,
                 // One line, so springing past its width as it shrinks back from the day's page
                 // doesn't wrap its last word away for a moment.
                 softWrap = false,

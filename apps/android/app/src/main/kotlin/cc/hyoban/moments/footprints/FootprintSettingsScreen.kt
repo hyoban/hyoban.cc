@@ -221,7 +221,7 @@ internal fun InfoDialog(title: String, paragraphs: List<String>, onDismiss: () -
         text = {
             Column(Modifier.verticalScroll(rememberScrollState())) {
                 paragraphs.forEachIndexed { index, text ->
-                    Text(text, style = AppTheme.typography.bodyMedium, modifier = if (index > 0) Modifier.padding(top = Space.m) else Modifier)
+                    Text(text, style = AppTheme.typography.body, modifier = if (index > 0) Modifier.padding(top = Space.m) else Modifier)
                 }
             }
         },

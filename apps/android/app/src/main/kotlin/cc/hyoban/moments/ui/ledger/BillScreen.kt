@@ -102,19 +102,19 @@ fun BillScreen(container: AppContainer, id: String, nav: LedgerNav) {
                 Column(Modifier.padding(start = Space.gutter + Space.l, end = Space.gutter, top = Space.s).semantics(mergeDescendants = true) {}) {
                     Text(
                         if (txn.kind == TxnKind.TRANSFER) transferLabel(txn.transfer) else kindLabel(txn.kind),
-                        style = AppTheme.typography.labelLarge,
+                        style = AppTheme.typography.label,
                         color = AppTheme.colorScheme.onSurfaceVariant,
                     )
                     Text(
                         if (txn.kind == TxnKind.TRANSFER) money(txn.amount, txn.currency) else signedMoney(txn.amount, txn.currency, txn.incoming),
-                        style = AppTheme.typography.displaySmall,
+                        style = AppTheme.typography.numDisplay,
                         color = amountColor(txn),
                         modifier = Modifier.testTag("bill_amount"),
                     )
                     if (txn.discount > 0 && txn.kind == TxnKind.EXPENSE) {
                         Text(
                             stringResource(R.string.ledger_saved, money(txn.discount, txn.currency), money(txn.amount + txn.discount, txn.currency)),
-                            style = AppTheme.typography.bodyMedium,
+                            style = AppTheme.typography.body,
                             color = AppTheme.colorScheme.onSurfaceVariant,
                         )
                     }

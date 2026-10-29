@@ -115,9 +115,9 @@ fun TopBar(
                 Modifier.weight(1f).padding(horizontal = 12.dp).graphicsLayer { alpha = ((folded - 0.5f) * 2f).coerceIn(0f, 1f) },
                 verticalArrangement = Arrangement.Center,
             ) {
-                CompositionLocalProvider(LocalContentColor provides tokens.tx) { ProvideTextStyle(typography.titleLarge) { title() } }
+                CompositionLocalProvider(LocalContentColor provides tokens.tx) { ProvideTextStyle(typography.title) { title() } }
                 if (subtitle != null) {
-                    CompositionLocalProvider(LocalContentColor provides tokens.tx2) { ProvideTextStyle(typography.labelMedium) { subtitle() } }
+                    CompositionLocalProvider(LocalContentColor provides tokens.tx2) { ProvideTextStyle(typography.caption) { subtitle() } }
                 }
             }
             CompositionLocalProvider(LocalContentColor provides tokens.tx2) {
@@ -133,10 +133,10 @@ fun TopBar(
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
                         CompositionLocalProvider(LocalContentColor provides tokens.tx) {
-                            ProvideTextStyle(if (large) typography.headlineLarge else typography.headlineMedium) { title() }
+                            ProvideTextStyle(if (large) typography.titlePage else typography.titlePage) { title() }
                         }
                         if (subtitle != null) {
-                            CompositionLocalProvider(LocalContentColor provides tokens.tx2) { ProvideTextStyle(typography.bodyMedium) { subtitle() } }
+                            CompositionLocalProvider(LocalContentColor provides tokens.tx2) { ProvideTextStyle(typography.body) { subtitle() } }
                         }
                     }
                 },

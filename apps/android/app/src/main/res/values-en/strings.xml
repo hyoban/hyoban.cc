@@ -304,7 +304,7 @@
     <string name="action_keep_live">Keep Live</string>
     <string name="error_save">Couldn’t save: %1$s</string>
     <string name="error_no_camera">No camera app to take a photo with</string>
-    <string name="label_on_phone">On this phone</string>
+    <string name="label_on_phone">Unpublished</string>
     <string name="action_delete_moment">Delete this Moment</string>
     <string name="label_known_place">A known place</string>
     <string name="place_new_here">A new place, at the pin</string>
@@ -442,7 +442,7 @@
     <string name="footprints_paused">All recording is paused</string>
     <string name="footprints_pause">Pause all recording</string>
     <string name="footprints_resume">Resume recording</string>
-    <string name="footprints_recording">Recording On this phone</string>
+    <string name="footprints_recording">Recording, private</string>
     <string name="footprints_waiting">Recorder is on, waiting for an accurate fix</string>
     <string name="footprints_interrupted">Recording was interrupted. Tap Resume.</string>
     <string name="footprints_location_off">Location is off. Recording resumes when it is enabled.</string>
@@ -779,4 +779,23 @@
     <string name="label_time">Time</string>
     <string name="action_previous_month">Previous month</string>
     <string name="action_next_month">Next month</string>
+    <string name="visibility_public">Public</string>
+    <string name="visibility_private">Private</string>
+    <string name="changes_bills">Bills</string>
+    <string name="changes_bill_public_note">Only the amount, category and note</string>
+    <string name="changes_bill_private">Made private: taken off the site</string>
+    <string name="changes_tracks">Tracks</string>
+    <string name="changes_track_removed">No longer public: taken off the site</string>
+    <string name="changes_track_public">Public %1$s</string>
+    <string name="trip_track_public">Make this trip’s track public</string>
+    <string name="trip_track_public_note">The site draws its route from the recorded track, simplified</string>
+    <string name="items_title">Items and visibility</string>
+    <string name="items_books">Books</string>
+    <string name="items_book_public">New bills are public</string>
+    <string name="items_book_note">A public bill publishes its amount, category and note alone; accounts and balances stay private. Each bill can still say otherwise.</string>
+    <string name="items_tracks">Tracks</string>
+    <string name="items_tracks_note">Tracks are private; a trip’s page can make its span public.</string>
+    <string name="items_track_shares">%1$d public</string>
+    <string name="moment_private_note">Private ones aren’t published</string>
+    <string name="me_items">Items and visibility</string>
 </resources>

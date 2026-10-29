@@ -1,5 +1,7 @@
 package cc.hyoban.moments.ui.publish
 
+import kotlinx.coroutines.launch
+
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.theme.SurfaceLevel
 import cc.hyoban.moments.ui.theme.cardBorder
@@ -175,6 +177,28 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
                 section(R.string.section_changed_places, pending.places, key = { "place-${it.id}" }) { change ->
                     val revert = { container.revertPlace(change.id) }.takeUnless { busy }
                     SwipeToRevert(revert) { PlaceChangeCard(change, revert) }
+                }
+                section(R.string.changes_bills, pending.outside.bills, key = { "bill-${it.uid}" }) { change ->
+                    // Taken back by saying again what the site has: private for a bill going
+                    // public, public for one going private; a public bill that changed has no undo.
+                    val revert = when {
+                        change.part == null -> "public"
+                        change.txn.published == null -> "private"
+                        else -> null
+                    }?.let { visibility ->
+                        { container.scope.launch { container.ledger.saveTxn(change.txn.copy(visibility = visibility)) }; Unit }
+                    }?.takeUnless { busy }
+                    SwipeToRevert(revert) { OutsideCard(change.label, formatDate(change.txn.dateKey), billAmount(change), stringResource(if (change.part == null) R.string.changes_bill_private else R.string.changes_bill_public_note), revert) }
+                }
+                section(R.string.changes_tracks, pending.outside.tracks, key = { "track-${it.share.uid}" }) { change ->
+                    val span = listOf(change.share.start, change.share.end).map { formatDate(java.time.Instant.ofEpochMilli(it).atZone(java.time.ZoneId.systemDefault()).toLocalDate().toString()) }.distinct().joinToString(" – ")
+                    OutsideCard(
+                        stringResource(R.string.changes_track_public, span),
+                        null,
+                        null,
+                        if (change.line == null) stringResource(R.string.changes_track_removed) else stringResource(R.string.trip_track_public_note),
+                        null,
+                    )
                 }
                 section(R.string.section_removed, pending.removed, key = { it.uid }) { moment ->
                     val revert = { container.revert(moment.uid) }.takeUnless { busy }
@@ -362,7 +386,7 @@ private fun SwipeToRevert(onRevert: (() -> Unit)?, content: @Composable () -> Un
                 horizontalArrangement = Arrangement.spacedBy(Space.s, Alignment.End),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(stringResource(R.string.action_revert), style = AppTheme.typography.labelLarge, color = AppTheme.colorScheme.onSecondaryContainer)
+                Text(stringResource(R.string.action_revert), style = AppTheme.typography.label, color = AppTheme.colorScheme.onSecondaryContainer)
                 Icon(AppIcons.Undo, contentDescription = null, tint = AppTheme.colorScheme.onSecondaryContainer)
             }
         },
@@ -408,7 +432,7 @@ private fun ChangeCard(
         } else {
             Text(
                 listOfNotNull(formatDate(moment.occurredAt), formatTime(moment.occurredAt)).joinToString(" "),
-                style = AppTheme.typography.labelLarge,
+                style = AppTheme.typography.label,
                 color = AppTheme.colorScheme.onSurfaceVariant,
             )
         }
@@ -435,6 +459,34 @@ private fun RevertButton(onRevert: () -> Unit, modifier: Modifier = Modifier) {
         Icon(AppIcons.Undo, contentDescription = null, modifier = Modifier.size(18.dp))
         Spacer(Modifier.size(Space.xs))
         Text(stringResource(R.string.action_revert))
+    }
+}
+
+/** A bill's amount as it would publish, an income with its plus. */
+private fun billAmount(change: cc.hyoban.moments.data.store.BillChange): String {
+    val sign = if (change.txn.kind == cc.hyoban.moments.ledger.TxnKind.INCOME) "+" else ""
+    return "$sign${change.txn.currency} ${"%.2f".format(change.txn.amount / 100.0)}"
+}
+
+/** A bill or a span of footprints going public or private: what it is, when, its figure, and what will happen. */
+@Composable
+private fun OutsideCard(title: String, date: String?, figure: String?, note: String, onRevert: (() -> Unit)?) {
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(start = Space.l, end = Space.l, top = Space.l, bottom = if (onRevert != null) Space.s else Space.l),
+        verticalArrangement = Arrangement.spacedBy(Space.xs),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(title, style = AppTheme.typography.body, modifier = Modifier.weight(1f))
+            figure?.let { Text(it, style = AppTheme.typography.numBody) }
+        }
+        Text(
+            listOfNotNull(date, note).joinToString("\u2003"),
+            style = AppTheme.typography.bodySmall,
+            color = AppTheme.colorScheme.onSurfaceVariant,
+        )
+        CardActions(onRevert?.let { revert -> { RevertButton(revert) } })
     }
 }
 
@@ -490,7 +542,7 @@ private fun MomentWhole(moment: MomentRecord, places: Map<String, Place>, urls: 
         if (moment.text.isNotBlank()) {
             Text(
                 moment.text,
-                style = AppTheme.typography.bodyLarge,
+                style = AppTheme.typography.bodyReading,
                 textDecoration = if (removed) TextDecoration.LineThrough else null,
                 maxLines = 6,
                 overflow = TextOverflow.Ellipsis,
@@ -503,7 +555,7 @@ private fun MomentWhole(moment: MomentRecord, places: Map<String, Place>, urls: 
             // Where, as a subhead rather than labels, none of them tapped on its own.
             Text(
                 moment.places.joinToString("\u2003") { places[it]?.name ?: it },
-                style = AppTheme.typography.bodyMedium,
+                style = AppTheme.typography.body,
                 color = AppTheme.colorScheme.onSurfaceVariant,
             )
         }
@@ -574,7 +626,7 @@ private fun ChangedFields(change: Change, places: Map<String, Place>, urls: Medi
         Field(R.string.change_topic) { FromTo(from, to, AppIcons.Category) }
     }
     if (!any) {
-        Text(stringResource(R.string.note_change_nothing), style = AppTheme.typography.bodyMedium, color = AppTheme.colorScheme.onSurfaceVariant)
+        Text(stringResource(R.string.note_change_nothing), style = AppTheme.typography.body, color = AppTheme.colorScheme.onSurfaceVariant)
     }
 }
 
@@ -584,7 +636,7 @@ private fun CoverChange(icon: androidx.compose.ui.graphics.vector.ImageVector, l
     Column(verticalArrangement = Arrangement.spacedBy(Space.xs)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
             Icon(icon, contentDescription = null, tint = AppTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
-            Text(stringResource(label), style = AppTheme.typography.bodyMedium)
+            Text(stringResource(label), style = AppTheme.typography.body)
         }
         PhotoRow(photos.map { it to null }, urls, badges = false)
     }
@@ -594,7 +646,7 @@ private fun CoverChange(icon: androidx.compose.ui.graphics.vector.ImageVector, l
 @Composable
 private fun Field(name: Int, content: @Composable () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(Space.xs)) {
-        Text(stringResource(name), style = AppTheme.typography.labelMedium, color = AppTheme.colorScheme.onSurfaceVariant)
+        Text(stringResource(name), style = AppTheme.typography.caption, color = AppTheme.colorScheme.onSurfaceVariant)
         content()
     }
 }
@@ -619,7 +671,7 @@ private fun TextChange(before: String, after: String) {
                 }
             }
         },
-        style = AppTheme.typography.bodyLarge,
+        style = AppTheme.typography.bodyReading,
     )
 }
 
@@ -632,14 +684,14 @@ private fun FromTo(from: String?, to: String, icon: androidx.compose.ui.graphics
         if (from != null) {
             Text(
                 from,
-                style = AppTheme.typography.bodyMedium,
+                style = AppTheme.typography.body,
                 color = AppTheme.colorScheme.onSurfaceVariant,
                 textDecoration = TextDecoration.LineThrough,
                 modifier = Modifier.weight(1f, fill = false),
             )
             Icon(AppIcons.ArrowRight, contentDescription = null, tint = AppTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
         }
-        Text(to, style = AppTheme.typography.bodyMedium, modifier = Modifier.weight(1f, fill = false))
+        Text(to, style = AppTheme.typography.body, modifier = Modifier.weight(1f, fill = false))
     }
 }
 

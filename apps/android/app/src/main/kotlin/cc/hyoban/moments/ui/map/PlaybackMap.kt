@@ -347,10 +347,10 @@ private fun HeadClock(clock: PlaybackClock, modifier: Modifier) {
         modifier = modifier,
     ) {
         Column(Modifier.padding(horizontal = Space.s + Space.xxs, vertical = Space.xs)) {
-            Text(formatDay(clock.dateKey), style = AppTheme.typography.labelSmall, color = AppTheme.colorScheme.onSurfaceVariant)
+            Text(formatDay(clock.dateKey), style = AppTheme.typography.micro, color = AppTheme.colorScheme.onSurfaceVariant)
             Text(
                 listOfNotNull(stringResource(R.string.trip_day, clock.day), clock.time).joinToString("\u2003"),
-                style = AppTheme.typography.labelLarge.copy(fontWeight = FontWeight.Medium, fontFeatureSettings = "tnum", fontSize = 13.sp),
+                style = AppTheme.typography.label.copy(fontWeight = FontWeight.Medium, fontFeatureSettings = "tnum", fontSize = 13.sp),
                 textAlign = TextAlign.Start,
             )
         }

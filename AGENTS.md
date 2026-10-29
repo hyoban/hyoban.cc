@@ -64,11 +64,18 @@ even when starting from the repository root.
 
 ## Data shared by Web and App
 
-- D1 holds Moments, places, trips and routes. `data/` is their canonical JSON backup,
+- Records are entries, collections and public tracks (`@hyoban/data-spec/entry`): every
+  record a moment and an optional point with parts by plugin, a trip a collection, each
+  thing public or private by its own say, its container's, its plugin's, else private.
+  D1 keeps each row in both shapes while an app that reads Moments and trips is installed:
+  `/v1` serves the first, `/v2` the second, trimmed to what is public for anyone without a
+  token. `vp run data:migrate` moves `data/` between the layouts (dry run by default,
+  `--rollback` back); `vp run data:import` then moves D1. Ask before either touches live data.
+- D1 holds entries, places, collections, public tracks and routes. `data/` is their canonical JSON backup,
   refreshed by the data-backup workflow and `vp run data:export`. Devices and redacted
   Zeekr statistics live only in the repository. The formatter leaves `data/` alone.
 - Android keeps edits locally until the user reviews and publishes one change set
-  through `POST /v1/changes`. Upload originals first; do not bypass this publishing
+  through `POST /v2/changes` (`/v1` on an API without it). Upload originals first; do not bypass this publishing
   boundary with individual writes. The API fetches missing trip routes after writes.
 - Scripts that write backup records first export the latest data, then push the
   changed records with `vp run data:push`. `vp run data:import` restores an entire
@@ -78,8 +85,11 @@ even when starting from the repository root.
 - Keep API/schema changes compatible with the installed app. If a required field
   must be removed or renamed, update and install the app before pushing the API
   change: pushes to `main` deploy it.
-- Android's ledger and GPS footprints stay on the phone, out of the API, website
-  and Android backup. Raw Zeekr captures and report links stay under `.private/`;
+- Android's ledger and GPS footprints are private by default and stay on the phone, out of
+  Android's backup. A book can make its new bills public and each bill can say otherwise; a
+  public bill publishes its amount, kind, category and note alone, never its account or
+  balance. Spans of the footprints can be made public (a trip's page has a switch), and
+  only their line, simplified, is published; the raw samples never leave the phone. Raw Zeekr captures and report links stay under `.private/`;
   only the approved statistical projection belongs in `data/zeekr/`.
 - Map year colors and fog behavior match across Web and App; change both together.
   The app's trip playback follows `packages/trip-map/src/player`, including a route
@@ -89,8 +99,9 @@ even when starting from the repository root.
 
 Read `DESIGN.md` before changing UI. Use Astro components, scoped plain CSS and the
 existing tokens in `src/styles/index.css`; preserve the site's text-first design,
-system dark mode and reduced-motion behavior. Android follows its own Material 3
-rules in its guide. Shared working agreements apply equally to both platforms.
+system dark mode and reduced-motion behavior. The app 「这里」 follows its own
+platform-neutral design system instead (see its guide). Shared working agreements apply
+equally to both platforms.
 
 Use `vp run dev` for the Astro site and `vp run build` for its production build.
 The `dev`, `build` and `check` scripts differ from Vite+'s built-in commands.

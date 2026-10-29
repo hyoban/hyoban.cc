@@ -289,7 +289,7 @@
     <string name="action_keep_live">保留实况</string>
     <string name="error_save">没能保存：%1$s</string>
     <string name="error_no_camera">没有可以拍照的相机应用</string>
-    <string name="label_on_phone">仅本机</string>
+    <string name="label_on_phone">未发布</string>
     <string name="action_delete_moment">删除这个时刻</string>
     <string name="label_known_place">已有地点</string>
     <string name="place_new_here">新地点，在图钉处</string>
@@ -426,7 +426,7 @@
     <string name="footprints_paused">已暂停所有记录</string>
     <string name="footprints_pause">暂停所有记录</string>
     <string name="footprints_resume">恢复记录</string>
-    <string name="footprints_recording">正在记录 仅本机</string>
+    <string name="footprints_recording">正在记录 私有</string>
     <string name="footprints_waiting">记录服务已开启，等待有效定位</string>
     <string name="footprints_interrupted">记录已中断，点击恢复</string>
     <string name="footprints_location_off">系统定位已关闭，开启后继续记录</string>
@@ -759,4 +759,23 @@
     <string name="label_time">时间</string>
     <string name="action_previous_month">上个月</string>
     <string name="action_next_month">下个月</string>
+    <string name="visibility_public">公开</string>
+    <string name="visibility_private">私有</string>
+    <string name="changes_bills">账单</string>
+    <string name="changes_bill_public_note">只发布金额、分类和备注</string>
+    <string name="changes_bill_private">改为私有，会从网站删除</string>
+    <string name="changes_tracks">轨迹</string>
+    <string name="changes_track_removed">不再公开，会从网站删除</string>
+    <string name="changes_track_public">公开 %1$s</string>
+    <string name="trip_track_public">公开这段旅程的轨迹</string>
+    <string name="trip_track_public_note">网站上的路线换成精简过的真实轨迹</string>
+    <string name="items_title">记录项与公开</string>
+    <string name="items_books">账本</string>
+    <string name="items_book_public">新账单默认公开</string>
+    <string name="items_book_note">公开的账单只发布金额、分类和备注，账户和余额永远私有。每一笔还能单独改。</string>
+    <string name="items_tracks">轨迹</string>
+    <string name="items_tracks_note">轨迹默认私有，可以在旅程页公开某一段。</string>
+    <string name="items_track_shares">%1$d 段公开</string>
+    <string name="moment_private_note">私有的不会发布</string>
+    <string name="me_items">记录项与公开</string>
 </resources>

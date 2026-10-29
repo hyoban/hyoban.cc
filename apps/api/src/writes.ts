@@ -9,6 +9,7 @@ import {
   type Places,
 } from '@hyoban/data-spec'
 import type { Division } from '@hyoban/data-spec/division'
+import { entrySchema, momentToEntry, type Entry } from '@hyoban/data-spec/entry'
 import pLimit, { type LimitFunction } from 'p-limit'
 import { getUploadKey, type Bucket, type UploadPart } from './bucket.ts'
 import {
@@ -128,33 +129,7 @@ export async function applyChanges(
     ...deletedUids,
   ])
   const statements: Statement[] = []
-  const placeIds: Record<string, string> = {}
-
-  for (const [given, value] of Object.entries(givenPlaces)) {
-    const provisional = PROVISIONAL_PLACE_PATTERN.test(given)
-
-    if (!provisional && !PLACE_ID.test(given)) {
-      throw new HttpError(422, `${given} isn't a place id.`)
-    }
-
-    const place = validate(placeSchema, value)
-    const match = matchPlace(provisional ? getPlaceId(place.name, places) : given, place, places)
-
-    placeIds[given] = match.id
-
-    if (match.status === 'new') {
-      const located = await withDivision(context, place)
-
-      places[match.id] = located
-      statements.push(upsert(context.db, 'places', placeRow(match.id, located)))
-    } else if (match.status === 'known' && place.kind && place.kind !== places[match.id]?.kind) {
-      // A known place sent under its own id takes the kind it is sent with, and nothing else.
-      const kinded = withKind(places[match.id]!, place.kind)
-
-      places[match.id] = kinded
-      statements.push(upsert(context.db, 'places', placeRow(match.id, kinded)))
-    }
-  }
+  const placeIds = await namePlaces(context, givenPlaces, places, statements)
 
   const records = inputs.map((input) => {
     const named = { ...input, places: input.places.map((id) => placeIds[id] ?? id) }
@@ -210,7 +185,7 @@ export async function applyChanges(
       const prior = stored.get(record.uid)
 
       if (!prior || prior.deleted || prior.text !== JSON.stringify(record)) {
-        statements.push(upsert(context.db, 'moments', momentRow(record)))
+        statements.push(upsert(context.db, 'moments', momentRow(record, record, prior?.entry)))
         changesRoutes ||= tripView(live(prior)) !== tripView(record)
       }
     }
@@ -239,6 +214,48 @@ export async function applyChanges(
   }
 }
 
+/**
+ * The places a change set sends, each by the id it is known by: a known id stays, one near or
+ * named as a known place takes that one's, and any other is added, the app's provisional
+ * `p-<ulid>` spelled from its name. A known place sent under its own id takes the kind it is
+ * sent with, and nothing else. What it writes goes in `statements`; `places` takes the new.
+ */
+export async function namePlaces(
+  context: WriteContext,
+  givenPlaces: Record<string, unknown>,
+  places: Places,
+  statements: Statement[],
+) {
+  const placeIds: Record<string, string> = {}
+
+  for (const [given, value] of Object.entries(givenPlaces)) {
+    const provisional = PROVISIONAL_PLACE_PATTERN.test(given)
+
+    if (!provisional && !PLACE_ID.test(given)) {
+      throw new HttpError(422, `${given} isn't a place id.`)
+    }
+
+    const place = validate(placeSchema, value)
+    const match = matchPlace(provisional ? getPlaceId(place.name, places) : given, place, places)
+
+    placeIds[given] = match.id
+
+    if (match.status === 'new') {
+      const located = await withDivision(context, place)
+
+      places[match.id] = located
+      statements.push(upsert(context.db, 'places', placeRow(match.id, located)))
+    } else if (match.status === 'known' && place.kind && place.kind !== places[match.id]?.kind) {
+      const kinded = withKind(places[match.id]!, place.kind)
+
+      places[match.id] = kinded
+      statements.push(upsert(context.db, 'places', placeRow(match.id, kinded)))
+    }
+  }
+
+  return placeIds
+}
+
 /** A Moment as stored, unless it is marked deleted. */
 function live(stored: ReturnType<typeof toStored> | undefined) {
   return stored && !stored.deleted ? stored.record : undefined
@@ -248,7 +265,7 @@ function live(stored: ReturnType<typeof toStored> | undefined) {
  * What of a Moment the trips are built from, as text to compare, or null when they don't
  * take it: its day and time and its places, while it is published and shown.
  */
-function tripView(record: MomentRecord | undefined) {
+export function tripView(record: MomentRecord | undefined) {
   return record?.published && isMomentShown(record)
     ? JSON.stringify([record.occurredAt, record.places])
     : null
@@ -307,7 +324,7 @@ async function readWriteState(db: Database, uids: string[]) {
     db.prepare(`SELECT id, record FROM places WHERE deleted_at IS NULL`),
     db
       .prepare(
-        `SELECT uid, record, deleted_at FROM moments
+        `SELECT uid, kind, record, entry, deleted_at FROM moments
          WHERE uid IN (SELECT value FROM json_each(?1))`,
       )
       .bind(JSON.stringify(uids)),
@@ -360,11 +377,11 @@ export async function uploadMedia(
   }
 
   const row = await context.db
-    .prepare(`SELECT uid, record, deleted_at FROM moments WHERE uid = ?1`)
+    .prepare(`SELECT uid, kind, record, entry, deleted_at FROM moments WHERE uid = ?1`)
     .bind(momentUid)
     .first<MomentRow>()
 
-  if (row && toStored(row).record.media.find((item) => item.uid === mediaUid)?.published) {
+  if (row && toEntry(row).parts.media?.items.find((item) => item.uid === mediaUid)?.published) {
     throw new HttpError(409, 'That media item is already published.')
   }
 
@@ -398,9 +415,9 @@ export function readUpload(
  * original not uploaded goes in `missing`, so the write can name all of them. The copies
  * go through `copying`, which keeps how many run at once within the Worker's connections.
  */
-async function publishMedia(
+export async function publishMedia(
   bucket: Bucket,
-  record: MomentRecord,
+  record: { uid: string; media: MomentMedia[] },
   copied: string[],
   missing: string[],
   copying: LimitFunction,
@@ -519,12 +536,12 @@ function withoutServerFields(body: unknown): unknown {
     : moment
 }
 
-function isObject(value: unknown): value is Record<string, unknown> {
+export function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
 /** The uploads a publish copied, gone; R2 turns down a delete of no keys, as for a Moment with no media. */
-async function deleteUploads(bucket: Bucket, uploads: string[]) {
+export async function deleteUploads(bucket: Bucket, uploads: string[]) {
   if (uploads.length > 0) {
     await bucket.delete(uploads)
   }
@@ -560,13 +577,13 @@ export async function commit({ db, now }: WriteContext, statements: Statement[])
  * read, so eight copies at once, a Moment of four live photos, fail with "Network
  * connection lost".
  */
-const COPIES_AT_ONCE = 2
+export const COPIES_AT_ONCE = 2
 
 /**
  * Every promise's result, as `Promise.all`, but only once all of them have settled: a
  * copy that fails then leaves none still going that its cleanup would miss.
  */
-async function settle<const T extends readonly Promise<unknown>[]>(
+export async function settle<const T extends readonly Promise<unknown>[]>(
   promises: T,
 ): Promise<{ -readonly [K in keyof T]: Awaited<T[K]> }> {
   const results = await Promise.allSettled(promises)
@@ -585,17 +602,36 @@ export function upsert(db: Database, table: Table, row: Record<string, Value>) {
   return db.prepare(upsertSql(table, placeholders(row))).bind(...Object.values(row))
 }
 
-interface MomentRow {
+export interface MomentRow {
   uid: string
+  kind: string
   record: string
+  entry: string | null
   deleted_at: string | null
 }
 
-/** A Moment as stored, removed or not, and the text it is stored as. */
+/**
+ * A Moment as stored, removed or not, the text it is stored as, and the entry it is; an
+ * entry the first shape has no Moment for is, to a Moment's write, one not there.
+ */
 function toStored(row: MomentRow) {
-  return {
-    record: momentRecordSchema.parse(JSON.parse(row.record)),
-    text: row.record,
-    deleted: row.deleted_at !== null,
-  }
+  const entry = toEntry(row)
+
+  return row.kind === 'moment'
+    ? {
+        record: momentRecordSchema.parse(JSON.parse(row.record)),
+        text: row.record,
+        deleted: row.deleted_at !== null,
+        entry,
+      }
+    : { record: undefined, text: '', deleted: true, entry }
+}
+
+/** A row's entry: as stored, or from its Moment when written before the data moved over. */
+export function toEntry(row: Pick<MomentRow, 'record' | 'entry'>): Entry {
+  return entrySchema.parse(
+    row.entry
+      ? JSON.parse(row.entry)
+      : momentToEntry(momentRecordSchema.parse(JSON.parse(row.record))),
+  )
 }

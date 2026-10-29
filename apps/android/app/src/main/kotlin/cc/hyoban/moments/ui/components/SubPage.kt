@@ -119,7 +119,7 @@ private fun BarPage(
         animate(scroll.state.heightOffset, 0f) { value, _ -> scroll.state.heightOffset = value }
     }
     val refreshLabel = stringResource(R.string.action_refresh)
-    val smallTitle = AppTheme.typography.titleLarge.fontSize
+    val smallTitle = AppTheme.typography.title.fontSize
     val titleText: @Composable () -> Unit = {
         // Opened out, a long title wraps to a second line rather than being cut, the bar growing
         // to hold it; folded into the small bar,
@@ -157,7 +157,7 @@ private fun BarPage(
     }
     // What the subtitle is about acted on beside it while the bar is open, its summary's
     // amounts hidden, say; folded into the small bar, the subtitle stands alone.
-    val subtitleSize = AppTheme.typography.labelLarge.fontSize
+    val subtitleSize = AppTheme.typography.label.fontSize
     val subtitleText: (@Composable () -> Unit)? = subtitle?.let {
         {
             if (subtitleAction != null && LocalTextStyle.current.fontSize > subtitleSize) {

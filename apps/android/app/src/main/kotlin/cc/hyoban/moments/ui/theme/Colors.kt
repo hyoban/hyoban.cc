@@ -48,7 +48,13 @@ class Tokens(
     val dangerSoft: Color,
     /** Money coming in. */
     val income: Color,
-)
+) {
+    /** A recorded track's line. */
+    val track: Color get() = tx
+
+    /** Where the track broke off (no signal, not recorded): drawn dotted, never guessed. */
+    val trackGap: Color get() = tx3
+}
 
 val LightTokens = Tokens(
     bg = Color(0xFFFDFDFC),

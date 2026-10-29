@@ -2,6 +2,7 @@ package cc.hyoban.moments.data.api
 
 import cc.hyoban.moments.data.Http
 import cc.hyoban.moments.data.HttpException
+import cc.hyoban.moments.data.spec.Entries
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.spec.Spec
@@ -11,6 +12,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import okhttp3.MediaType.Companion.toMediaType
@@ -47,9 +49,43 @@ data class Changes(
     val next: String? = null,
 )
 
-/** Everything the phone changed, for `POST /v1/changes`: the places only it knows, the Moments to publish, the uids to delete. */
+/**
+ * Everything the phone changed: the places only it knows, the Moments to publish, the uids to
+ * delete; and what only the second shape holds (`POST /v2/changes`): the entries beside the
+ * Moments (a public bill alone), parts a Moment carries there (a public bill of its meal) by
+ * its uid, and the public spans of the footprints, with those taken back.
+ */
 @Serializable
-data class ChangeSet(val places: Map<String, Place>, val moments: List<MomentRecord>, val deleted: List<String>)
+data class ChangeSet(
+    val places: Map<String, Place>,
+    val moments: List<MomentRecord>,
+    val deleted: List<String>,
+    val entries: List<JsonObject> = emptyList(),
+    val parts: Map<String, Map<String, JsonObject>> = emptyMap(),
+    val tracks: List<JsonObject> = emptyList(),
+    val deletedTracks: List<String> = emptyList(),
+) {
+    /** Whether it holds anything the first shape can't send. */
+    val needsSecondShape: Boolean get() = entries.isNotEmpty() || parts.isNotEmpty() || tracks.isNotEmpty() || deletedTracks.isNotEmpty()
+}
+
+/** A [ChangeSet] as `POST /v2/changes` takes it. */
+@Serializable
+private data class EntryChangeSet(
+    val places: Map<String, Place>,
+    val entries: List<JsonObject>,
+    val deleted: List<String>,
+    val tracks: List<JsonObject>,
+    val deletedTracks: List<String>,
+)
+
+@Serializable
+private data class AppliedEntryChanges(
+    val places: Map<String, String>,
+    val entries: List<JsonObject>,
+    val deleted: List<String>,
+    val revision: Long? = null,
+)
 
 /**
  * What the API did with a [ChangeSet]: the id each place sent is known by, the Moments as
@@ -133,8 +169,28 @@ class MomentsApi(
     /** The client for the change set, whose answer waits on the API copying every original into place. */
     private val publishing by lazy { client.newBuilder().readTimeout(PUBLISH_TIMEOUT).build() }
 
-    override suspend fun applyChanges(changes: ChangeSet): AppliedChanges =
-        decode(write("POST", "/v1/changes", encode(ChangeSet.serializer(), changes), publishing), AppliedChanges.serializer())
+    /**
+     * Sends the change set in the second shape, the Moments as entries; an API from before it
+     * (a 404) takes the first, unless the set holds what only the second can carry.
+     */
+    override suspend fun applyChanges(changes: ChangeSet): AppliedChanges {
+        val second = EntryChangeSet(
+            places = changes.places,
+            entries = changes.moments.map { Entries.fromMoment(it, changes.parts[it.uid].orEmpty()) } + changes.entries,
+            deleted = changes.deleted,
+            tracks = changes.tracks,
+            deletedTracks = changes.deletedTracks,
+        )
+        val text = try {
+            write("POST", "/v2/changes", encode(EntryChangeSet.serializer(), second), publishing)
+        } catch (error: ApiException) {
+            if (error.code != 404 || changes.needsSecondShape) throw error
+            val first = ChangeSet(changes.places, changes.moments, changes.deleted)
+            return decode(write("POST", "/v1/changes", encode(ChangeSet.serializer(), first), publishing), AppliedChanges.serializer())
+        }
+        val applied = decode(text, AppliedEntryChanges.serializer())
+        return AppliedChanges(applied.places, applied.entries.mapNotNull(Entries::toMoment), applied.deleted, applied.revision)
+    }
 
     private suspend fun <T> get(path: String, serializer: KSerializer<T>): T =
         decode(Http.getText(baseUrl() + path, client, io), serializer)

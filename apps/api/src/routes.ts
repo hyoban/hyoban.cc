@@ -79,7 +79,7 @@ export async function readTripInputs(db: Database) {
     tripsQuery(db),
     db.prepare(
       `SELECT record FROM moments
-       WHERE deleted_at IS NULL AND published = 1 AND hidden = 0`,
+       WHERE deleted_at IS NULL AND published = 1 AND hidden = 0 AND kind = 'moment'`,
     ),
     routesQuery(db),
     db.prepare(`SELECT value FROM meta WHERE key = ?1`).bind(NO_ROUTE),

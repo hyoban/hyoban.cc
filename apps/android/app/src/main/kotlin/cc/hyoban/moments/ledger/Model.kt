@@ -23,6 +23,8 @@ data class Book(
     val currency: String = "CNY",
     val position: Int = 0,
     val archived: Boolean = false,
+    /** Whether its new bills are public: a [cc.hyoban.moments.data.spec.Visibility]'s value, private unless set. */
+    val visibility: String = "private",
 )
 
 /** What sort of account: how the assets page groups it and whether its balance is owed. */
@@ -172,6 +174,10 @@ data class Txn(
     val trip: String? = null,
     val createdAt: Long = time,
     val updatedAt: Long = time,
+    /** Public or private by its own say, over its book's: a [cc.hyoban.moments.data.spec.Visibility]'s value. */
+    val visibility: String? = null,
+    /** What of it was last published, its public part as JSON; null while the site has none of it. */
+    val published: String? = null,
 ) {
     val local: LocalDateTime get() = LocalDateTime.ofInstant(Instant.ofEpochMilli(time), ZoneOffset.ofTotalSeconds(offsetMinutes * 60))
     val date: LocalDate get() = local.toLocalDate()

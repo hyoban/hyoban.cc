@@ -58,13 +58,17 @@ SDK configured in `local.properties` (`sdk.dir=…`).
 
 ## Design
 
-- The app follows its own design system, the 「hyoban 应用设计系统」 artifact, not Material 3:
-  the site's restraint on a phone. Its tokens live in `ui/theme` (`Colors.kt`'s `Tokens`, the
-  type scale and corners in `Theme.kt`); change the artifact and the code together. The app
+- The app follows its own design system, the 「这里 App 设计系统」 artifact, not Material 3:
+  the site's restraint on a phone. The design is platform-neutral, one design for the iOS,
+  Android and web versions to come: keep Android-only conventions out of it (name things by
+  what they are, not by Compose or Material), and record only where Android implements it. Its tokens live in `ui/theme` (`Colors.kt`'s `Tokens`, the
+  type scale and corners in `Theme.kt`); change the artifact and the code together. Text takes
+  the design's 13 styles by their names (`titlePage` … `numCaption`), figures in the `num`
+  ones, which are the system monospace; a day on a timeline sits in the left rail (`Rail`). The app
   doesn't depend on Material 3 (`androidx.compose.material3`, `glance-material3`): its
   components are its own, in `ui/design`, on Compose foundation, and it has no Material
   dependency at all. Don't add Material components or icon packs back.
-- Icons are the design system's own set (`AppIcons`, 24 grid, 1.75 stroke, round ends),
+- Icons are the design system's own set (`AppIcons`, 24 grid, 2 stroke, round ends and softened corners),
   generated into `ui/design/AppIcons.kt` by `python3 scripts/icons/kotlin.py` from
   `scripts/icons/icons.py`. A new icon is drawn there first, in the same hand, then
   generated; never edit `AppIcons.kt` by hand or reach for another icon library.
@@ -82,6 +86,10 @@ SDK configured in `local.properties` (`sdk.dir=…`).
 - Few cards: the timeline's Moments, bills and trip banners sit on the page itself, spaced
   apart, a Moment's photos in rounded corners of their own; surfaces with hairlines are for
   groups of settings, sheets, dialogs and what floats.
+- Don't crowd a page: a screen carries what the page is for, and space rather than lines sets
+  things apart. No guide lines (a rail or axis drawn down a list, dividers between rows on the
+  page) and no boxes round figures; rows sit on the page, and inside a sheet or dialog no card
+  is nested.
 - The tabs float: a capsule of icons alone (named for TalkBack) at the page's foot, the tab's
   ink button beside it.
 - Three tabs: 时间线, 地图, 我. Everything that happened goes on the timeline (Moments, the
@@ -148,10 +156,15 @@ SDK configured in `local.properties` (`sdk.dir=…`).
 - A viewer of the site's Moments, places and trips, kept on the phone so it opens at
   once and works offline. Moments can be written on the phone, local first.
 - Nothing reaches the site until 全部发布到网站, after the changes waiting have been
-  reviewed: one change set, like a commit. Don't add writes that bypass it.
-- The ledger (its bills on the timeline, its pages under 我) is the phone's alone, like the
-  footprints: nothing of it goes to the API, the site or Android's backup, and the only request it makes is for public exchange
-  rates, when asked. It replaces iCost, so what iCost's export holds must keep importing:
+  reviewed: one change set, like a commit, sent as entries to `POST /v2/changes` (the first
+  shape to `/v1` on an API without it). Don't add writes that bypass it.
+- The ledger (its bills on the timeline, its pages under 我) and the footprints are the
+  phone's, out of Android's backup, and private by default: a bill goes out only when its book
+  or itself says public, as its amount, kind, category and note, never its account or
+  balance; a span of the footprints only when made public, as its simplified line. Both go
+  with 全部发布到网站 like everything else (`data/store/Outside.kt`); the ledger's only other
+  request is for public exchange rates, when asked. Private and unpublished are two things,
+  said 私有 and 未发布, never 仅本机. It replaces iCost, so what iCost's export holds must keep importing:
   check a change to the importer against a real export with
   `ICOST_EXPORT=<xlsx> ./gradlew :app:testDebugUnitTest --tests '*LedgerTest*'`, and never
   commit an export.

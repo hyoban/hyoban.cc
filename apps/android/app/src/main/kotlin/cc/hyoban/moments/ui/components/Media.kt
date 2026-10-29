@@ -266,7 +266,7 @@ fun LiveBadge(modifier: Modifier = Modifier) {
         horizontalArrangement = Arrangement.spacedBy(Space.xs),
     ) {
         Icon(AppIcons.Live, contentDescription = null, tint = MediaOverlay.content, modifier = Modifier.size(14.dp))
-        Text(stringResource(R.string.label_live), color = MediaOverlay.content, style = AppTheme.typography.labelSmall)
+        Text(stringResource(R.string.label_live), color = MediaOverlay.content, style = AppTheme.typography.micro)
     }
 }
 
@@ -328,7 +328,7 @@ fun MediaMosaic(
                                         .semantics { contentDescription = more },
                                     contentAlignment = Alignment.Center,
                                 ) {
-                                    Text("+${media.size - 4}", color = MediaOverlay.content, style = AppTheme.typography.headlineSmall)
+                                    Text("+${media.size - 4}", color = MediaOverlay.content, style = AppTheme.typography.titlePage)
                                 }
                             }
                         }

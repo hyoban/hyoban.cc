@@ -14,6 +14,15 @@ import {
   readTrips,
   type Database,
 } from './database.ts'
+import {
+  applyEntryChanges,
+  readCollection,
+  readCollections,
+  readEntry,
+  readEntryChanges,
+  readEntrySnapshot,
+  readTracks,
+} from './entries.ts'
 import { error, HttpError, json, jsonText, readBody } from './http.ts'
 import { createRouteFetcher, fillRoutes, readTripRoutes } from './routes.ts'
 import { createTelegram, syncChannel } from './telegram.ts'
@@ -26,7 +35,8 @@ import {
 } from './writes.ts'
 
 // The API. Reads are public except drafts, which only the owner sees, and the full
-// export; writes are the owner's. Records come back exactly as stored, in the shape
+// export; writes are the owner's. `/v1` serves Moments and trips, `/v2` entries,
+// collections and public tracks (entries.ts), the public seeing only what is public. Records come back exactly as stored, in the shape
 // @hyoban/data-spec defines. A write the site shows first brings the trips' routes up to
 // date, when MAPBOX_TOKEN is set and the write changed what the trips are built from,
 // then calls DEPLOY_HOOK_URL, when there is one, so the site builds again with them, and
@@ -102,7 +112,7 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
       : notAllowed('GET')
   }
 
-  if (version !== 'v1') {
+  if (version !== 'v1' && version !== 'v2') {
     return notFound()
   }
 
@@ -130,7 +140,83 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
       : json(result.body, result.status)
   }
 
-  switch (collection) {
+  if (version === 'v2') {
+    switch (collection) {
+      case 'entries': {
+        if (key === undefined || !ULID.test(key)) {
+          return notFound()
+        }
+
+        if (rest.length === 0) {
+          return method === 'GET' ? found(await readEntry(db, key, owner)) : notAllowed('GET')
+        }
+
+        // An entry's media uploads as a Moment's does, under the same keys.
+        break
+      }
+      case 'collections': {
+        if (rest.length > 0) {
+          return notFound()
+        }
+
+        if (key === undefined) {
+          return method === 'GET' ? jsonText(await readCollections(db, owner)) : notAllowed('GET')
+        }
+
+        return method === 'GET' ? found(await readCollection(db, key, owner)) : notAllowed('GET')
+      }
+      case 'tracks': {
+        if (key !== undefined) {
+          return notFound()
+        }
+
+        return method === 'GET' ? jsonText(await readTracks(db)) : notAllowed('GET')
+      }
+      case 'changes': {
+        if (key !== undefined) {
+          return notFound()
+        }
+
+        switch (method) {
+          case 'GET': {
+            const query = readFeedQuery(url.searchParams)
+
+            return 'error' in query
+              ? error(400, query.error)
+              : jsonText(await readEntryChanges(db, { ...query, owner }))
+          }
+          case 'POST': {
+            const body = await readBody(request)
+
+            return write((context) => applyEntryChanges(context, body))
+          }
+          default:
+            return notAllowed('GET, POST')
+        }
+      }
+      case 'export': {
+        if (key !== undefined) {
+          return notFound()
+        }
+
+        if (method !== 'GET') {
+          return notAllowed('GET')
+        }
+
+        return owner
+          ? jsonText(await readEntrySnapshot(db))
+          : error(401, 'The export needs a token.', { 'WWW-Authenticate': 'Bearer' })
+      }
+      case 'places':
+      case 'routes':
+      case 'build':
+        break
+      default:
+        return notFound()
+    }
+  }
+
+  switch (version === 'v2' && collection === 'entries' ? 'moments' : collection) {
     case 'moments': {
       if (key === undefined || !ULID.test(key)) {
         return notFound()

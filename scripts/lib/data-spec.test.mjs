@@ -5,6 +5,7 @@ import { test } from 'vite-plus/test'
 
 import { tripVideoMusic } from '../../src/data/music.ts'
 import { getMediaKey, getMomentFile, momentRecordSchema, tripRecordSchema } from '@hyoban/data-spec'
+import { getEntryFile } from '@hyoban/data-spec/entry'
 import {
   dataRoot,
   readDevices,
@@ -25,14 +26,20 @@ const moments = readMomentRecords()
 const devices = readDevices()
 
 test('every record under data/ fits the spec and sits where its name says', () => {
-  assert.equal(manifest.schemaVersion, 2)
+  assert.ok([2, 3].includes(manifest.schemaVersion))
   assert.ok(Object.keys(places).length > 0)
   assert.ok(trips.length > 0)
   assert.ok(moments.length > 0)
   assert.ok(Object.keys(devices).length > 0)
 
   for (const { file, record } of moments) {
-    assert.equal(file, getMomentFile(record), `Moment ${record.uid} is in the wrong file`)
+    assert.equal(
+      file,
+      file.startsWith('entries/')
+        ? getEntryFile({ at: record.occurredAt, uid: record.uid })
+        : getMomentFile(record),
+      `Moment ${record.uid} is in the wrong file`,
+    )
     assert.ok(
       record.createdAt <= record.updatedAt,
       `Moment ${record.uid} was updated before it was created`,

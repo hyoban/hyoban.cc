@@ -32,12 +32,12 @@ import java.security.MessageDigest
 
 /**
  * The records the screens show: read from the [DataStore] first, then brought up to
- * date from the API. Only what the site shows is offered: hidden Moments stay in the
- * copy but not in [moments], and those about tech too unless [showTech] says otherwise. Beside them, the Moments written on this phone and the
+ * date from the API. Every published Moment is offered, a private one marked so by the screens,
+ * those about tech only when [showTech] says so. Beside them, the Moments written on this phone and the
  * places they made, kept in [local], a store of their own that no sync or change of
  * API touches, with the site's Moments changed or deleted on the phone. None of it
  * reaches the API until [publishPending] sends it all through [writer], as [pending]
- * lists it for a look first.
+ * lists it for a look first, with what of the ledger and the footprints [outside] makes public.
  */
 class MomentsRepository(
     private val store: DataStore,
@@ -46,6 +46,8 @@ class MomentsRepository(
     private val local: DataStore? = null,
     private val writer: MomentsWriter? = null,
     private var showTech: Boolean = false,
+    /** The ledger's public bills and the footprints' public spans, which publish with the Moments. */
+    private val outside: OutsideChanges? = null,
 ) {
     private val lock = Mutex()
     private var all: Map<String, MomentRecord> = emptyMap()
@@ -410,11 +412,23 @@ class MomentsRepository(
      */
     suspend fun publishPending(onProgress: (PublishProgress) -> Unit = {}) {
         val writer = checkNotNull(writer) { "No API to write to" }
-        val (moments, known, own, deletions, kinds) = lock.withLock {
+        val (written, known, own, deletions, kinds) = lock.withLock {
             // A change being taken back isn't published, whatever becomes of it.
             Snapshot(phone.values.filter { it.uid !in holding }.sortedWith(oldestFirst), apiPlaces, phonePlaces, (removed - holding).toList(), changedPlaces)
         }
-        if (moments.isEmpty() && deletions.isEmpty() && kinds.isEmpty()) return
+        val extra = outside?.pending() ?: Outside()
+        if (written.isEmpty() && deletions.isEmpty() && kinds.isEmpty() && extra.size == 0) return
+        // A bill of a Moment goes as a part of it, the Moment sent again with it (or without it,
+        // taken off) when it isn't among the changes already; a bill alone is an entry of its own.
+        val (ofMoments, alone) = lock.withLock {
+            extra.bills.partition { bill -> bill.txn.moment?.let { phone[it] ?: all[it] } != null }
+        }
+        val carriers = lock.withLock {
+            ofMoments.mapNotNull { bill -> bill.txn.moment?.takeIf { uid -> written.none { it.uid == uid } }?.let { phone[it] ?: all[it] } }
+        }.distinctBy { it.uid }
+        val moments = written + carriers
+        val parts = ofMoments.filter { it.part != null }.groupBy { it.txn.moment!! }
+            .mapValues { (_, bills) -> mapOf("bill" to bills.first().part!!) }
         // The site's places with a changed kind go under their own ids, which the API takes the kind of.
         val places = moments.flatMap { it.places }.distinct().filter { it !in known }
             .associateWith { id -> own[id] ?: error("Unknown place $id") } + kinds
@@ -478,8 +492,19 @@ class MomentsRepository(
                     }
                 }.awaitAll()
             }
-            writer.applyChanges(ChangeSet(places, moments, deletions))
+            writer.applyChanges(
+                ChangeSet(
+                    places,
+                    moments,
+                    deletions + alone.filter { it.part == null }.map { it.uid },
+                    entries = alone.filter { it.part != null }.map { it.entry() },
+                    parts = parts,
+                    tracks = extra.tracks.mapNotNull { it.line },
+                    deletedTracks = extra.tracks.filter { it.line == null }.map { it.share.uid },
+                ),
+            )
         }
+        outside?.published(extra)
         lock.withLock {
             withContext(io) {
                 apiPlaces = apiPlaces + applied.places.filterValues { it !in apiPlaces }.entries.associate { (given, id) -> id to places.getValue(given) } +
@@ -577,6 +602,7 @@ class MomentsRepository(
             changed.map { Change(all[it.uid], it) },
             removed.mapNotNull { all[it] }.sortedWith(oldestFirst),
             changedPlaces.mapNotNull { (id, place) -> apiPlaces[id]?.let { PlaceChange(id, it, place) } }.sortedBy { it.after.name },
+            outside?.pending() ?: Outside(),
         )
     }
 
@@ -584,7 +610,13 @@ class MomentsRepository(
         _places.value = phonePlaces + apiPlaces + changedPlaces
     }
 
-    private fun isShown(moment: MomentRecord) = moment.published != null && !moment.hidden && (showTech || moment.topic != "tech")
+    // A private one is the phone's to see, marked so; one about tech only when asked for.
+    private fun isShown(moment: MomentRecord) = moment.published != null && (showTech || moment.topic != "tech")
+
+    /** Notes again what waits beside the Moments, the ledger or the footprints having changed. */
+    fun noteOutside() {
+        _pending.value = _pending.value.copy(outside = outside?.pending() ?: Outside())
+    }
 
     /** The type the API takes a photo as, from the extension it was copied in with. */
     /** The file's MD5, as R2 gives an object put in one piece for its ETag. */
@@ -653,8 +685,10 @@ data class PendingChanges(
     val changed: List<Change> = emptyList(),
     val removed: List<MomentRecord> = emptyList(),
     val places: List<PlaceChange> = emptyList(),
+    /** The bills and footprints going public, or private again. */
+    val outside: Outside = Outside(),
 ) {
-    val size get() = added.size + changed.size + removed.size + places.size
+    val size get() = added.size + changed.size + removed.size + places.size + outside.size
 }
 
 /** One of the site's places as the site has it, [before], and with the kind changed on the phone. */

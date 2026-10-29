@@ -1,5 +1,6 @@
 package cc.hyoban.moments
 
+import cc.hyoban.moments.data.spec.Entries
 import cc.hyoban.moments.data.spec.Manifest
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
@@ -30,7 +31,44 @@ class SpecRoundTripTest {
     @Test
     fun `every Moment in the repository round-trips`() {
         val files = roundTripAll(File(repository, "data/moments"), MomentRecord.serializer())
-        assertTrue(files > 400, "expected the site's Moments, saw $files")
+        assertTrue(files > 400 || File(repository, "data/entries").isDirectory, "expected the site's Moments, saw $files")
+    }
+
+    /** Once data/ is in the second shape: every entry with words is a Moment and the same entry again. */
+    @Test
+    fun `every entry in the repository round-trips through a Moment`() {
+        val data = System.getenv("HYOBAN_DATA_ROOT")?.let(::File) ?: File(repository, "data")
+        val files = File(data, "entries").walkTopDown().filter { it.isFile && it.extension == "json" }.toList()
+        var moments = 0
+        for (file in files) {
+            val entry = Spec.json.parseToJsonElement(file.readText()) as JsonObject
+            val moment = Entries.toMoment(entry) ?: continue
+            assertEquivalent(entry, Entries.fromMoment(moment), file.path)
+            moments++
+        }
+        assertTrue(files.isEmpty() || moments > 400, "expected the site's Moments, saw $moments")
+    }
+
+    @Test
+    fun `a Moment becomes the entry the spec makes of it`() {
+        // As packages/data-spec's momentToEntry: words, photos and meal as parts, hidden as private.
+        val moment = Spec.json.decodeFromString(
+            MomentRecord.serializer(),
+            """{"uid":"01M3VDBHC042D43KWZWE67YP1T","occurredAt":"2026-10-01T12:00:00+08:00","places":["nanjing"],"text":"面","hidden":true,"food":{"dishes":["面"],"verdict":"good","bill":{"amount":32,"people":2}},"createdAt":"2026-10-01T17:41:00+08:00","updatedAt":"2026-10-01T17:41:00+08:00"}""",
+        )
+        val entry = Entries.fromMoment(moment, mapOf("bill" to Entries.billPart("expense", 32.0, "CNY", "餐饮", null)))
+        val expected = Spec.json.parseToJsonElement(
+            """{"uid":"01M3VDBHC042D43KWZWE67YP1T","at":"2026-10-01T12:00:00+08:00","place":"nanjing","parts":{"text":{"v":1,"text":"面"},"food":{"v":1,"dishes":["面"],"verdict":"good","cost":32,"people":2},"bill":{"v":1,"visibility":"public","kind":"expense","amount":32.0,"currency":"CNY","category":"餐饮"}},"visibility":"private","createdAt":"2026-10-01T17:41:00+08:00","updatedAt":"2026-10-01T17:41:00+08:00"}""",
+        )
+        assertEquivalent(expected, entry, "entry")
+        assertEquals(moment, Entries.toMoment(entry))
+    }
+
+    @Test
+    fun `stable ULIDs are the spec's`() {
+        // The same as packages/data-spec's getStableUlid gives.
+        assertEquals("01M5N5TZ2GDW69JGJRAH18Q5JS", Entries.stableUlid("2026-10-24T04:04:34+08:00", "trip:2025-first-road-trip"))
+        assertEquals("01M62F9N00NPJ5VGYWT8JNZWX0", Entries.stableUlid("2026-10-29", "x"))
     }
 
     @Test

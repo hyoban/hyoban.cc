@@ -355,7 +355,7 @@ fun Badge(modifier: Modifier = Modifier, containerColor: Color = tokens.accent, 
         Box(modifier.size(8.dp).clip(CircleShape).background(containerColor))
     } else {
         Box(modifier.sizeIn(minWidth = 16.dp, minHeight = 16.dp).clip(CircleShape).background(containerColor), contentAlignment = Alignment.Center) {
-            CompositionLocalProvider(LocalContentColor provides contentColor) { ProvideTextStyle(AppTheme.typography.labelSmall) { content() } }
+            CompositionLocalProvider(LocalContentColor provides contentColor) { ProvideTextStyle(AppTheme.typography.micro) { content() } }
         }
     }
 }

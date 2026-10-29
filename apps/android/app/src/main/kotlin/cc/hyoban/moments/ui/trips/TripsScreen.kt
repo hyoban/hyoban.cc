@@ -56,7 +56,7 @@ fun TripCard(trip: TripRecord, covers: List<MomentMedia>, count: Int, urls: Medi
     PressableCard(onClick = onClick, modifier = modifier.fillMaxWidth().sharedCard(tripCardKey(trip.id)).testTag("trip_${trip.id}")) {
         CoverCollage(covers, urls, Modifier)
         Column(Modifier.padding(start = Space.l, end = Space.l, top = Space.s, bottom = Space.l), verticalArrangement = Arrangement.spacedBy(Space.m)) {
-            Text(trip.title, style = AppTheme.typography.titleLarge)
+            Text(trip.title, style = AppTheme.typography.title)
             TripSubhead(trip, count)
         }
     }
@@ -67,7 +67,7 @@ fun TripCard(trip: TripRecord, covers: List<MomentMedia>, count: Int, urls: Medi
 fun TripSubhead(trip: TripRecord, count: Int, places: Int? = null) {
     Text(
         (listOf(tripSummary(trip, count)) + listOfNotNull(places?.let { pluralStringResource(R.plurals.count_places, it, it) })).joinToString("\u2003"),
-        style = AppTheme.typography.bodyMedium,
+        style = AppTheme.typography.body,
         color = AppTheme.colorScheme.onSurfaceVariant,
     )
 }
