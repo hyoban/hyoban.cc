@@ -49,18 +49,13 @@ Builds:
   | `TELEGRAM_BOT_TOKEN` | the bot that posts new Moments to the Telegram channel   |
 
 - bindings in `apps/api/wrangler.jsonc`: D1 `DB` (`hyoban-cc`, APAC) and R2 `BUCKET`
-  (`blog-images`), with the channel `TELEGRAM_CHAT_ID` and a cron trigger every 15
-  minutes; the bot must be an admin of the channel allowed to post and delete.
+  (`blog-images`), and a cron trigger every 15 minutes;
+- vars there too: `TELEGRAM_CHAT_ID`, the channel, whose bot must be an admin allowed
+  to post and delete, and `DIVISIONS_URL`, DataV's GeoAtlas, where a new place's
+  province, city and district are looked up.
 
-Its logs stream with `npx wrangler tail hyoban-cc-api`.
-
-### Setting it up from nothing
-
-1. `wrangler d1 create hyoban-cc --location apac`, and put the new id in
-   `apps/api/wrangler.jsonc`.
-2. Set the secrets above.
-3. Connect `apps/api` to Workers Builds as above and push to `main`.
-4. Restore the records with `vp run data:import --remote` ([data.md](data.md)).
+The Worker is minified and has observability on, so its logs are kept in the
+dashboard; they stream with `npx wrangler tail hyoban-cc-api`.
 
 ## GitHub Actions
 
@@ -70,6 +65,14 @@ Its logs stream with `npx wrangler tail hyoban-cc-api`.
 | `data-backup.yml` | every six hours, by hand    | the API's export into `data/`, committed to `main` when it changed                                   |
 | `r2-backup.yml`   | push to `main`, by hand     | a snapshot of the R2 bucket, in Git LFS on the `r2-backup` branch                                    |
 
+`verify.yml` audits every Moment on a push, only the changed Moments' alt text on a
+PR, and on its weekly run also checks every referenced R2 object (`moments:audit
+--remote`). The workflows run Node 24; the repository pins no Node version, so Workers
+Builds uses its own default.
+
+`r2-backup.yml` checks out the existing `r2-backup` branch and commits to it, so that
+branch has to exist, and the snapshot counts against the repository's Git LFS storage.
+
 Repository secrets: `MOMENTS_API_TOKEN` (one of the API's `API_TOKENS`) for the data
 backup, and `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` for the R2 backup.
 
@@ -78,6 +81,25 @@ backup, and `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` for the R2 backup.
 The data backup in `data/`, the R2 snapshot on the `r2-backup` branch and D1's 30 days
 of Time Travel are the way back. `vp run data:import --remote` restores `data/` over
 the deployed database ([data.md](data.md)).
+
+## Setting it up from nothing
+
+The API comes first: the site's build reads it, and the API needs the site's deploy
+hook, which exists only once the site's build does.
+
+1. In the account `src/data/asset-config.json` names, create the R2 bucket
+   `blog-images` and connect `image.hyoban.cc` to it.
+2. `wrangler d1 create hyoban-cc --location apac`, and put the new id in
+   `apps/api/wrangler.jsonc`.
+3. Create the Telegram bot and make it an admin of the channel.
+4. Set the API's secrets, all but `DEPLOY_HOOK_URL`, connect `apps/api` to Workers
+   Builds as above and push to `main`.
+5. Restore the records with `vp run data:import --remote` ([data.md](data.md)).
+6. Connect the repository root to Workers Builds as the `hyoban-cc` Worker, with
+   `MOMENTS_API_TOKEN` set to one of the API's tokens and the Mapbox variables, add
+   the custom domain `hyoban.cc`, and enable Images transformations on its zone.
+7. Create the site build's deploy hook and set it as the API's `DEPLOY_HOOK_URL`.
+8. In GitHub, set the repository secrets above and create the `r2-backup` branch.
 
 ## The Android app
 
