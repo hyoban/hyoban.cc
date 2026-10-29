@@ -178,7 +178,7 @@ fun TripScreen(
     val actions: @Composable RowScope.() -> Unit = {
         Tooltip(showOnMap, below = true) {
             IconButton(onClick = { onMap(trip.id) }, modifier = Modifier.testTag("show_on_map")) {
-                Icon(AppIcons.MapFill, contentDescription = showOnMap)
+                Icon(AppIcons.Map, contentDescription = showOnMap)
             }
         }
         if (moments.isNotEmpty()) {

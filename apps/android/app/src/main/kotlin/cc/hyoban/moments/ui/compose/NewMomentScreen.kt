@@ -428,8 +428,9 @@ fun NewMomentScreen(
             modifier = Modifier.background(AppColors.page),
             close = true,
             small = keypad,
+            // A bill on the keypad has its 保存 at the keypad's foot, the page's one main action: none up here.
             actions = {
-                TextButton(
+                if (!keypad) TextButton(
                     onClick = {
                         when {
                             withMoment && !written -> emptyError = true

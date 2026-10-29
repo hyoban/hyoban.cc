@@ -42,7 +42,7 @@ and day, with what the meal cost, how many it fed and each one's share, and the 
 a badge on its own colour. A place's kind, 餐饮 or 景点, comes before its division on its page
 and under its name in a Moment's place row.
 
-The toggle beside the map's legend, 迷雾地图, lays a light fog over the map, as the site's
+The round button at the map's top right, 迷雾地图, lays a light fog over the map, as the site's
 map does, thinner over a city the more Moments were written in it and gone over one with
 about twenty: the prefecture-level cities of the site's
 `src/data/boundaries/cities.json` (Aliyun DataV's, simplified; `vp run map:cities` makes it),
@@ -284,7 +284,7 @@ Moments' own words stay as they were written.
 记账 is a ledger kept on this phone alone, in place of iCost: books of bills over accounts in
 their own currencies, summed per book in its currency. Its bills are on the timeline; its
 page, opened from 我 (or `moments://ledger`, on its sums), has three tabs: 账单, every bill of the book shown under its months and days with what
-they spent and earned; 统计, the month, the year or all of it, stepped through with arrows:
+they spent and earned; 统计, the month, the year or all of it, picked from a menu on the period's name and stepped through with the arrows beside it:
 what was spent, earned and left, the day's average and how it compares with the last
 stretch's same days, then charts of spending or earning, drawn on a canvas, each mark read
 out on a tap with its bills a button away: by day, month or year as bars; the running total

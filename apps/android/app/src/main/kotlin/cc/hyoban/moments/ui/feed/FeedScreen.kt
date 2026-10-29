@@ -423,7 +423,7 @@ fun DayScreen(
         formatDay(date),
         onBack,
         (if (card != null) Modifier.sharedCard(card, page = true) else Modifier).background(AppColors.page),
-        subtitle = pluralStringResource(R.plurals.count_moments, moments.size, moments.size),
+        subtitle = moments.size.takeIf { it > 0 }?.let { pluralStringResource(R.plurals.count_moments, it, it) },
         actions = {
             // The trip the day was on, as a Moment's page offers its own.
             if (trip != null) {
@@ -478,12 +478,12 @@ fun PlaceScreen(
                 val onMapLabel = stringResource(R.string.action_show_on_map)
                 Tooltip(onMapLabel, below = true) {
                     IconButton(onClick = { onMap(id) }, modifier = Modifier.testTag("show_on_map")) {
-                        Icon(AppIcons.MapFill, contentDescription = onMapLabel)
+                        Icon(AppIcons.Map, contentDescription = onMapLabel)
                     }
                 }
                 Tooltip(stringResource(R.string.action_navigate), below = true) {
                     IconButton(onClick = { if (!navigateTo(context, place)) show(context.getString(R.string.no_map_app)) }, modifier = Modifier.testTag("navigate")) {
-                        Icon(AppIcons.Directions, contentDescription = stringResource(R.string.action_navigate), tint = AppTheme.colorScheme.primary)
+                        Icon(AppIcons.Directions, contentDescription = stringResource(R.string.action_navigate))
                     }
                 }
             }
