@@ -259,6 +259,11 @@ data class LedgerEntry(
     val date: String? = null,
     val account: String? = null,
     val trip: String? = null,
+    /** A payment's, read by 自动记账: its cents, epoch milliseconds, note and category. */
+    val amount: String? = null,
+    val time: String? = null,
+    val note: String? = null,
+    val category: String? = null,
 )
 
 /** One bill of the ledger. */
@@ -407,7 +412,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
             bill = { navController.goTo(LedgerBill(it)) },
             entry = { args ->
                 // A bill of its own is written where a Moment can be written with it.
-                if (args == LedgerEntryArgs()) openEditor(null, true) else navController.navigate(LedgerEntry(args.edit, args.kind?.value, args.related, args.moment, args.date, args.account, args.trip))
+                if (args == LedgerEntryArgs()) openEditor(null, true) else navController.navigate(args.route())
             },
             account = { navController.goTo(LedgerAccount(it)) },
             editAccount = { navController.navigate(LedgerAccountEdit(it)) },
@@ -722,7 +727,8 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                             screen<LedgerHome>(link = "ledger") {
                                 LedgerScreen(container, ledgerNav, onImport = { navController.navigate(LedgerSettings(import = true)) })
                             }
-                            screen<LedgerEntry>(link = "new-bill") { entry ->
+                            // A payment's from 自动记账's notification opening the app, with what it read.
+                            screen<LedgerEntry>(link = "new-bill", aliases = listOf(PAYMENT_LINK)) { entry ->
                                 val route = entry.toRoute<LedgerEntry>()
                                 // The link opening the app: a bill of its own, written where a Moment can be too.
                                 if (route == LedgerEntry()) {
@@ -731,7 +737,10 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                 }
                                 EntryScreen(
                                     container,
-                                    LedgerEntryArgs(route.edit, route.kind?.let(TxnKind::of), route.related, route.moment, route.date, route.account, route.trip),
+                                    LedgerEntryArgs(
+                                        route.edit, route.kind?.let(TxnKind::of), route.related, route.moment, route.date, route.account, route.trip,
+                                        route.amount?.toLongOrNull(), route.time?.toLongOrNull(), route.note, route.category,
+                                    ),
                                     ledgerNav,
                                 )
                             }
@@ -1090,6 +1099,14 @@ private const val DIALOG_NAVIGATOR = "dialog"
  */
 const val DEEP_LINK_SCHEME = "moments"
 
+/** 自动记账's link to a payment's bill, what it read in its query, as `ledger/AutoBill` writes it. */
+private const val PAYMENT_LINK = "payment?amount={amount}&time={time}&note={note}&account={account}&category={category}"
+
+/** A bill's form for [this], as a route. */
+private fun LedgerEntryArgs.route() = LedgerEntry(
+    edit, kind?.value, related, moment, date, account, trip, amount?.toString(), time?.toString(), note, category,
+)
+
 /** The page a link opens, `moments://moment/{uid}` and the rest; null for one the app has no page for. */
 fun routeOf(link: Uri): Any? {
     if (link.scheme != DEEP_LINK_SCHEME) return null
@@ -1107,6 +1124,13 @@ fun routeOf(link: Uri): Any? {
         "search" -> Search
         "ledger" -> LedgerHome
         "new-bill" -> NewMoment(bill = true)
+        "payment" -> LedgerEntry(
+            account = link.getQueryParameter("account"),
+            amount = link.getQueryParameter("amount"),
+            time = link.getQueryParameter("time"),
+            note = link.getQueryParameter("note"),
+            category = link.getQueryParameter("category"),
+        )
         "bill" -> id?.let(::LedgerBill)
         "account" -> id?.let(::LedgerAccount)
         "ledger-settings" -> LedgerSettings()

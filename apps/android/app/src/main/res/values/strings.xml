@@ -395,12 +395,12 @@
     <string name="reason_unreadable">读不懂网站返回的内容</string>
     <string name="reason_unknown">发生了意外错误</string>
 
-    <string name="share_assist_enable_service">开启分享助手无障碍服务</string>
-    <string name="share_assist_service_description">只在你从「这里」发起辅助分享时，读取此次目标应用的分享界面并执行适配步骤。完成填写后停在发送前，不保存聊天内容。目前支持 Telegram 和 Threads 照片分享，40 秒内未完成就停止。</string>
+    <string name="share_assist_enable_service">开启分享与记账助手无障碍服务</string>
+    <string name="share_assist_service_description">分享：只在你从「这里」发起辅助分享时，读取此次目标应用的分享界面并执行适配步骤。完成填写后停在发送前，不保存聊天内容。目前支持 Telegram 和 Threads 照片分享，40 秒内未完成就停止。\n\n自动记账：在记账设置中打开后，读取微信和支付宝显示的支付成功页和账单详情，用通知提醒你记一笔。只读取，不点击、不输入，页面内容不保存，也不会离开手机。</string>
     <string name="share_assist_photos_only">此次没有选择照片，将使用普通文字分享。</string>
     <string name="share_assist_cancel">停止自动填写</string>
     <string name="share_assist_service_required">请先开启无障碍服务，或关闭分享助手以手动分享</string>
-    <string name="share_assist_service_label">分享助手（试用）</string>
+    <string name="share_assist_service_label">分享与记账助手（试用）</string>
     <string name="telegram_assist_label">Telegram 分享助手（试用）</string>
     <string name="telegram_assist_note">自动搜索并选择下方用户名，核对目标和照片数量后填写说明，停在发送前。仅在你打开此次分享后运行；也可以关闭此选项，继续手动分享。</string>
     <string name="telegram_assist_target">目标 @用户名或 t.me 链接</string>
@@ -731,4 +731,14 @@
     <plurals name="ledger_category_in_use">
         <item quantity="other">有 %1$d 笔账单，不能删除</item>
     </plurals>
+    <string name="auto_bill_title_group">自动记账</string>
+    <string name="auto_bill_label">自动记账（试用）</string>
+    <string name="auto_bill_note">读取微信支付和支付宝的支付成功页，用通知提醒你记一笔，确认后才保存</string>
+    <string name="auto_bill_service_note">在系统无障碍设置中打开「分享与记账助手（试用）」</string>
+    <string name="auto_bill_notifications">允许通知</string>
+    <string name="auto_bill_notifications_note">付款会用通知提醒你记一笔，通知现在已关闭</string>
+    <string name="auto_bill_channel">自动记账</string>
+    <string name="auto_bill_title">记一笔 %1$s</string>
+    <string name="auto_bill_wechat">微信支付</string>
+    <string name="auto_bill_alipay">支付宝</string>
 </resources>

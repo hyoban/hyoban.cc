@@ -363,11 +363,11 @@ internal fun rememberBillDraft(ledger: Ledger, original: Txn?, related: Txn?, mo
             kind = kind,
             transfer = original?.transfer ?: TransferType.TRANSFER,
             book = original?.book ?: related?.book,
-            amount = fieldOf(original?.amount ?: left?.coerceAtLeast(0) ?: moment?.food?.bill?.amount?.let { Math.round(it * 100) }),
+            amount = fieldOf(original?.amount ?: left?.coerceAtLeast(0) ?: args.amount ?: moment?.food?.bill?.amount?.let { Math.round(it * 100) }),
             currency = original?.currency ?: related?.currency,
             // A meal's bill starts in the book's most used food category.
-            category = original?.category ?: related?.category ?: if (moment?.food != null) mealCategory(ledger) else null,
-            account = original?.account ?: args.account ?: related?.account ?: lastAccount,
+            category = original?.category ?: related?.category ?: args.category?.takeIf { it in ledger.categoriesById } ?: if (moment?.food != null) mealCategory(ledger) else null,
+            account = original?.account ?: args.account?.takeIf { it in ledger.accountsById } ?: related?.account ?: lastAccount,
             splitting = original?.splits?.isNotEmpty() == true,
             splits = original?.splits?.joinToString("\n") { "${it.account}\t${fieldOf(it.amount)}" }.orEmpty(),
             toAccount = original?.toAccount,
@@ -376,9 +376,10 @@ internal fun rememberBillDraft(ledger: Ledger, original: Txn?, related: Txn?, mo
             discount = fieldOf(original?.discount?.takeIf { it > 0 }),
             time = original?.let { OffsetDateTime.ofInstant(Instant.ofEpochMilli(it.time), ZoneOffset.ofTotalSeconds(it.offsetMinutes * 60)) }?.toString()
                 ?: moment?.let { runCatching { OffsetDateTime.ofInstant(Instant.ofEpochMilli(epochOf(it.occurredAt)), zone) }.getOrNull() }?.toString()
+                ?: args.time?.let { OffsetDateTime.ofInstant(Instant.ofEpochMilli(it), zone).withNano(0) }?.toString()
                 ?: args.date?.let { java.time.LocalDate.parse(it).atTime(java.time.LocalTime.now()).atZone(zone).toOffsetDateTime() }?.toString()
                 ?: OffsetDateTime.now().withSecond(0).withNano(0).toString(),
-            note = original?.note.orEmpty(),
+            note = original?.note ?: args.note.orEmpty(),
             reimburse = original?.reimburse ?: Reimburse.NONE,
             excluded = original?.excluded ?: false,
             moment = original?.moment ?: args.moment,

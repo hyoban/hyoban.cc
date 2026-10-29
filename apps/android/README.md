@@ -156,9 +156,9 @@ and result messages; each explicit share creates an `AssistRequest` with a fresh
 `AssistFlow`. `share/TelegramShareAdapter` / `TelegramAssistFlow` and
 `ThreadsShareAdapter` / `ThreadsAssistFlow` implement the two destinations.
 The service has no app-specific page rules. Its event filter follows
-only the current request's package and returns to this app when idle, with no
-third-party tree reads while idle. Status, cancellation, and reset are scoped to
-the adapter ID so another adapter cannot consume or cancel Telegram's task.
+only the current request's package and returns to this app when idle; the one
+third-party reading while idle is the ledger's 自动记账, when it is turned on. Status,
+cancellation, and reset are scoped to the adapter ID so another adapter cannot consume or cancel Telegram's task.
 
 To add an app, implement its adapter and flow, validate the version at its share
 entry, and call `ShareAccessibilityService.start(request)` immediately before
@@ -347,6 +347,22 @@ publishing and Android's backup, read whole after each change; `ledger/ICostImpo
 in `LedgerTest`, which also reads a real export when `ICOST_EXPORT` names one. Not carried
 over from iCost: recurring bills, installments, savings plans, templates and photos on
 bills, none of which the export holds.
+
+自动记账（试用）, switched on in 记账设置, has the share assistant's accessibility service
+(named 分享与记账助手（试用）) read WeChat Pay's and Alipay's pages while no share is running,
+the whole page, scrolled out of view or not. On one that says a payment went through
+(支付成功, 交易成功), with an amount and nothing of money coming in or back, it pops up
+记一笔 ¥9.90 with the note and the account it read. Each app's rows are taken as they are:
+支付时间 is the time; Alipay's 付款方式 and WeChat's 支付方式 the account, matched by a card's
+last four digits or bank, 零钱, 余额, 余额宝 or 花呗; Alipay's 商品说明 and the name over
+WeChat's amount the note. Tapping it opens `moments://payment?amount=…&time=…&note=…`, the
+bill's form with those and a category guessed from the note when it can be (the last bill with
+the same shop in its note, else the book's category its words point to: 奶茶 饮料, 外卖 三餐,
+滴滴 交通). Nothing is written until it is saved. A payment of the same amount within ten
+minutes of a bill already kept isn't offered, nor one whose notification is still up; cleared,
+it is offered when its page is next opened. It only reads: no tap, no text, nothing of the
+page kept or sent. `ledger/Payments` reads the page's words, with fixtures in `PaymentsTest`
+taken from `uiautomator dump`; `ledger/AutoBill` keeps the switch and posts the notification.
 
 ## Local footprints
 

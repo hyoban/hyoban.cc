@@ -143,7 +143,11 @@ SDK configured in `local.properties` (`sdk.dir=…`).
 - Sharing hands off to the other app and leaves posting to the user. Never post, pick a
   recipient or drive another app automatically. The one exception is the opt-in share
   assistant (Telegram, Threads): an accessibility service that only fills the composer
-  and stops before sending. While debugging it, read its state with
+  and stops before sending. The same service, while 自动记账 is on, only reads WeChat Pay's and
+  Alipay's payment pages for a payment to offer as a bill: it never taps, types or keeps the
+  page; `adb logcat -s AutoBill:I` says whether a page read was offered or already in the
+  ledger. Its amounts are what the page reads out (Alipay's bill: 支出12.5元 for -12.50), not what it
+  draws, so take fixtures from `uiautomator dump`. While debugging it, read its state with
   `adb shell dumpsys activity service cc.hyoban.moments/.share.TelegramShareService`,
   not `uiautomator dump`, which interrupts the service. Threads shows a single photo
   outside any `IgLazyRow`, and repeated shares stack photos into an open composer.

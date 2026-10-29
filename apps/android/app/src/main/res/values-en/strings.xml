@@ -411,12 +411,12 @@
     <string name="reason_unreadable">the site’s answer couldn’t be read</string>
     <string name="reason_unknown">something unexpected went wrong</string>
 
-    <string name="share_assist_enable_service">Enable share assistant accessibility service</string>
-    <string name="share_assist_service_description">Only during an assisted share started in Here, reads the target app and runs its adapted steps. Stops before sending and does not store chat content. Currently supports Telegram and Threads photo shares, stopping after 40 seconds if unfinished.</string>
+    <string name="share_assist_enable_service">Turn on the share and ledger assistant</string>
+    <string name="share_assist_service_description">Sharing: only during an assisted share started in Here, reads the target app and runs its adapted steps. Stops before sending and does not store chat content. Currently supports Telegram and Threads photo shares, stopping after 40 seconds if unfinished.\n\nAuto bills: once turned on in the ledger settings, reads the payment and bill pages WeChat and Alipay show, and reminds you in a notification to add the bill. It only reads, never taps or types, keeps nothing of the page and sends nothing off the phone.</string>
     <string name="share_assist_photos_only">No photos selected. This will use ordinary text sharing.</string>
     <string name="share_assist_cancel">Stop assistant</string>
     <string name="share_assist_service_required">Enable the accessibility service first, or turn off the assistant to share manually.</string>
-    <string name="share_assist_service_label">Share assistant (experimental)</string>
+    <string name="share_assist_service_label">Share and ledger assistant (experimental)</string>
     <string name="telegram_assist_label">Telegram share assistant (experimental)</string>
     <string name="telegram_assist_note">Search for the username below, select it, check the recipient and photo count, and fill the caption. Stops before sending. Runs only when you open this share; turn it off to share manually.</string>
     <string name="telegram_assist_target">Target @username or t.me link</string>
@@ -751,4 +751,14 @@
         <item quantity="one">%1$d bill uses it; can\'t delete</item>
         <item quantity="other">%1$d bills use it; can\'t delete</item>
     </plurals>
+    <string name="auto_bill_title_group">Auto bills</string>
+    <string name="auto_bill_label">Auto bills (experimental)</string>
+    <string name="auto_bill_note">Reads WeChat Pay and Alipay payment pages and reminds you to add the bill, saved only once you confirm</string>
+    <string name="auto_bill_service_note">Turn on “Share and ledger assistant (experimental)” in the system’s accessibility settings</string>
+    <string name="auto_bill_notifications">Allow notifications</string>
+    <string name="auto_bill_notifications_note">Payments are offered in a notification, and notifications are off</string>
+    <string name="auto_bill_channel">Auto bills</string>
+    <string name="auto_bill_title">Add %1$s</string>
+    <string name="auto_bill_wechat">WeChat Pay</string>
+    <string name="auto_bill_alipay">Alipay</string>
 </resources>
