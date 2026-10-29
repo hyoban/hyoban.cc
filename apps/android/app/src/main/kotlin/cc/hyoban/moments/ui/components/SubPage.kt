@@ -1,6 +1,18 @@
 package cc.hyoban.moments.ui.components
 
 import androidx.compose.animation.core.animate
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.material.icons.rounded.ArrowDropDown
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
@@ -76,8 +88,17 @@ fun TabPage(
     subtitle: String? = null,
     actions: @Composable RowScope.() -> Unit = {},
     refresh: (() -> Unit)? = null,
+    titleMenu: TitleMenu? = null,
+    subtitleAction: (@Composable () -> Unit)? = null,
     content: @Composable BoxScope.() -> Unit,
-) = BarPage(title, subtitle, onBack = null, large = true, modifier, actions, content, tab, refresh = refresh)
+) = BarPage(title, subtitle, onBack = null, large = true, modifier, actions, content, tab, refresh = refresh, titleMenu = titleMenu, subtitleAction = subtitleAction)
+
+/**
+ * A menu the page's title opens, named [label], as a page that is one of several (a ledger's
+ * book) is switched from its headline, a dropdown arrow after it, rather than by another
+ * action in the bar, which Material 3 keeps to one or two.
+ */
+class TitleMenu(val label: String, val items: @Composable ColumnScope.(close: () -> Unit) -> Unit)
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -93,6 +114,8 @@ private fun BarPage(
     close: Boolean = false,
     refresh: (() -> Unit)? = null,
     small: Boolean = false,
+    titleMenu: TitleMenu? = null,
+    subtitleAction: (@Composable () -> Unit)? = null,
 ) {
     // A dialog's bar, on a window too short to open it out, stays put rather than scrolling away,
     // so its X and its confirming action are always there, as Material 3 keeps a dialog's.
@@ -109,16 +132,51 @@ private fun BarPage(
         // to hold it, as Material 3 has a flexible app bar's headline; folded into the small bar,
         // drawn at its title size, it stays on one line.
         val expanded = LocalTextStyle.current.fontSize > smallTitle
-        Text(
-            title,
-            maxLines = if (expanded) 2 else 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = if (refresh == null) Modifier else Modifier.semantics {
-                customActions = listOf(CustomAccessibilityAction(refreshLabel) { refresh(); true })
-            },
-        )
+        val text: @Composable (Modifier) -> Unit = { textModifier ->
+            Text(
+                title,
+                maxLines = if (expanded) 2 else 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = textModifier.then(
+                    if (refresh == null) Modifier else Modifier.semantics {
+                        customActions = listOf(CustomAccessibilityAction(refreshLabel) { refresh(); true })
+                    },
+                ),
+            )
+        }
+        if (titleMenu == null) {
+            text(Modifier)
+        } else {
+            var open by remember { mutableStateOf(false) }
+            Box {
+                Row(
+                    Modifier.clip(MaterialTheme.shapes.small)
+                        .clickable(onClickLabel = titleMenu.label, role = Role.DropdownList) { open = true }
+                        .testTag("title_menu"),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    text(Modifier.weight(1f, fill = false))
+                    Icon(Icons.Rounded.ArrowDropDown, contentDescription = null)
+                }
+                DropdownMenu(open, onDismissRequest = { open = false }) { titleMenu.items(this) { open = false } }
+            }
+        }
     }
-    val subtitleText: (@Composable () -> Unit)? = subtitle?.let { { Text(it, maxLines = 1) } }
+    // What the subtitle is about acted on beside it while the bar is open, its summary's
+    // amounts hidden, say; folded into the small bar, the subtitle stands alone.
+    val subtitleSize = MaterialTheme.typography.labelLarge.fontSize
+    val subtitleText: (@Composable () -> Unit)? = subtitle?.let {
+        {
+            if (subtitleAction != null && LocalTextStyle.current.fontSize > subtitleSize) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(it, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+                    subtitleAction()
+                }
+            } else {
+                Text(it, maxLines = 1)
+            }
+        }
+    }
     val back: @Composable () -> Unit = {
         if (onBack != null) {
             Tooltip(stringResource(if (close) R.string.action_close else R.string.action_back), below = true) {
@@ -144,6 +202,8 @@ private fun BarPage(
     val insets = TopAppBarDefaults.windowInsets.add(WindowInsets(left = rail.left + margin, right = rail.right + margin))
     Column(modifier.fillMaxSize().nestedScroll(scroll.nestedScrollConnection)) {
         if (isCompactHeight() || small) {
+            // Its subtitle too small to act on beside, what it would there joins the bar's actions.
+            val actions: @Composable RowScope.() -> Unit = { subtitleAction?.invoke(); actions() }
             // On a window too short for it, a phone on its side, the bar starts small, its title
             // beside the back button, rather than taking half the screen until scrolled away; so
             // does a page whose own bottom half is taken, the bill's keypad.

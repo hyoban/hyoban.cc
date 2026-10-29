@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -22,7 +23,6 @@ import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.FileOpen
-import androidx.compose.material.icons.automirrored.rounded.MenuBook
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Visibility
@@ -80,6 +80,8 @@ import cc.hyoban.moments.ui.LocalNavAccessory
 import cc.hyoban.moments.ui.OnTabReselect
 import cc.hyoban.moments.ui.components.PageWidth
 import cc.hyoban.moments.ui.components.TabPage
+import cc.hyoban.moments.ui.components.railPadding
+import cc.hyoban.moments.ui.components.TitleMenu
 import cc.hyoban.moments.ui.components.Tooltip
 import cc.hyoban.moments.ui.components.isMediumWidth
 import cc.hyoban.moments.ui.format.formatMonth
@@ -139,18 +141,19 @@ fun LedgerScreen(container: AppContainer, nav: LedgerNav, onImport: () -> Unit) 
         },
         tab = LedgerHome,
         subtitle = subtitle,
+        // Switched from its name, when there are books to switch between, so the bar keeps
+        // to Material 3's two actions.
+        titleMenu = if (ledger.books.count { !it.archived } >= 2) {
+            TitleMenu(stringResource(R.string.ledger_switch_book)) { close -> BookMenuItems(container, ledger, nav, close) }
+        } else {
+            null
+        },
+        // The month's amounts hidden or shown beside them.
+        subtitleAction = { HideAmountsButton() },
         actions = {
-            BookMenu(container, ledger, nav)
             Tooltip(stringResource(R.string.action_search), below = true) {
                 IconButton(shapes = IconButtonDefaults.shapes(), onClick = { nav.list(LedgerFilter(book = book?.id.takeIf { !ledger.allBooks }, search = true)) }, modifier = Modifier.testTag("ledger_search")) {
                     Icon(Icons.Rounded.Search, contentDescription = stringResource(R.string.action_search))
-                }
-            }
-            val settings = LocalSettings.current
-            val hideLabel = stringResource(if (settings.ledgerHidden) R.string.ledger_show_amounts else R.string.ledger_hide_amounts)
-            Tooltip(hideLabel, below = true) {
-                IconButton(shapes = IconButtonDefaults.shapes(), onClick = { settings.changeLedgerHidden(!settings.ledgerHidden) }, modifier = Modifier.testTag("ledger_hide")) {
-                    Icon(if (settings.ledgerHidden) Icons.Rounded.VisibilityOff else Icons.Rounded.Visibility, contentDescription = hideLabel)
                 }
             }
             Tooltip(stringResource(R.string.ledger_settings_title), below = true) {
@@ -161,7 +164,8 @@ fun LedgerScreen(container: AppContainer, nav: LedgerNav, onImport: () -> Unit) 
         },
     ) {
         Column(Modifier.fillMaxSize()) {
-            PrimaryTabRow(selectedTabIndex = tab, containerColor = LocalSurfaceLevel.current.fill()) {
+            // Clear of the tabs down the side on a phone on its side, as the lists under it are.
+            PrimaryTabRow(selectedTabIndex = tab, containerColor = LocalSurfaceLevel.current.fill(), modifier = Modifier.railPadding()) {
                 LedgerTab.entries.forEachIndexed { index, entry ->
                     Tab(
                         selected = tab == index,
@@ -207,42 +211,48 @@ private fun NewBillButton(onClick: () -> Unit, inRail: Boolean) {
     }
 }
 
-/** The books to switch between, from the bar, and the way to manage them. */
+/** The books to switch between, from the title, and the way to manage them. */
 @Composable
-private fun BookMenu(container: AppContainer, ledger: Ledger, nav: LedgerNav) {
-    val books = ledger.books.filter { !it.archived }
-    if (books.size < 2) return
-    var open by remember { mutableStateOf(false) }
+private fun ColumnScope.BookMenuItems(container: AppContainer, ledger: Ledger, nav: LedgerNav, close: () -> Unit) {
     val scope = rememberCoroutineScope()
-    Box {
-        Tooltip(stringResource(R.string.ledger_switch_book), below = true) {
-            IconButton(shapes = IconButtonDefaults.shapes(), onClick = { open = true }, modifier = Modifier.testTag("ledger_books")) {
-                Icon(Icons.AutoMirrored.Rounded.MenuBook, contentDescription = stringResource(R.string.ledger_switch_book))
-            }
-        }
-        DropdownMenu(open, onDismissRequest = { open = false }) {
-            DropdownMenuItem(
-                text = { Text(stringResource(R.string.ledger_all_books)) },
-                trailingIcon = if (ledger.allBooks) { { Icon(Icons.Rounded.Check, contentDescription = null) } } else null,
-                onClick = {
-                    open = false
-                    scope.launch { container.ledger.showAllBooks() }
-                },
-                modifier = Modifier.testTag("all_books"),
+    DropdownMenuItem(
+        text = { Text(stringResource(R.string.ledger_all_books)) },
+        trailingIcon = if (ledger.allBooks) { { Icon(Icons.Rounded.Check, contentDescription = null) } } else null,
+        onClick = {
+            close()
+            scope.launch { container.ledger.showAllBooks() }
+        },
+        modifier = Modifier.testTag("all_books"),
+    )
+    HorizontalDivider()
+    ledger.books.filter { !it.archived }.forEach { book ->
+        DropdownMenuItem(
+            text = { Text(book.name) },
+            trailingIcon = if (!ledger.allBooks && book.id == ledger.book?.id) { { Icon(Icons.Rounded.Check, contentDescription = null) } } else null,
+            onClick = {
+                close()
+                scope.launch { container.ledger.setCurrentBook(book.id) }
+            },
+        )
+    }
+    HorizontalDivider()
+    DropdownMenuItem(text = { Text(stringResource(R.string.ledger_manage_books)) }, onClick = { close(); nav.settings() })
+}
+
+/** Hides the ledger's amounts, or shows them again: an eye beside the month's sums. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun HideAmountsButton() {
+    val settings = LocalSettings.current
+    val label = stringResource(if (settings.ledgerHidden) R.string.ledger_show_amounts else R.string.ledger_hide_amounts)
+    Tooltip(label, below = true) {
+        IconButton(shapes = IconButtonDefaults.shapes(), onClick = { settings.changeLedgerHidden(!settings.ledgerHidden) }, modifier = Modifier.testTag("ledger_hide")) {
+            Icon(
+                if (settings.ledgerHidden) Icons.Rounded.VisibilityOff else Icons.Rounded.Visibility,
+                contentDescription = label,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(20.dp),
             )
-            HorizontalDivider()
-            books.forEach { book ->
-                DropdownMenuItem(
-                    text = { Text(book.name) },
-                    trailingIcon = if (!ledger.allBooks && book.id == ledger.book?.id) { { Icon(Icons.Rounded.Check, contentDescription = null) } } else null,
-                    onClick = {
-                        open = false
-                        scope.launch { container.ledger.setCurrentBook(book.id) }
-                    },
-                )
-            }
-            HorizontalDivider()
-            DropdownMenuItem(text = { Text(stringResource(R.string.ledger_manage_books)) }, onClick = { open = false; nav.settings() })
         }
     }
 }

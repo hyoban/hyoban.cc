@@ -286,12 +286,12 @@ and over a year or all of it, earning against spending and the categories stacke
 or year; and 资产, the net assets, what is held and what is owed, their line at the end of
 each of the last twelve months (balances taken back through the bills after it), and the
 accounts by kind (cash, debit cards, credit, online wallets, stored value, investments,
-loans, people lent to or borrowed from), each with its balance. The bar switches books, or
+loans, people lent to or borrowed from), each with its balance. The book's name, tapped, switches books, or
 shows 全部账本, every book but the archived at once, summed in the chosen book's currency,
-its categories summed by name across books and each bill marked with its book; it also
-searches bills (note, category, account, amount), hides every amount as `¥****`
-(隐藏金额, kept until shown again, here and on the Moments', trips' and places' pages)
-and opens 记账设置.
+its categories summed by name across books and each bill marked with its book. The eye
+beside the month's sums hides every amount as `¥****` (隐藏金额, kept until shown again,
+here and on the Moments', trips' and places' pages), and the bar searches bills (note,
+category, account, amount) and opens 记账设置.
 
 A bill is an expense, an income or a transfer, the last also a repayment, a loan given or
 taken, or one collected; or a refund or reimbursement of an expense, written from that
