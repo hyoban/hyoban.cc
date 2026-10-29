@@ -89,6 +89,15 @@ class Settings(context: Context) {
         prefs.edit { putBoolean("show_tech", on) }
     }
 
+    /** Whether the ledger's amounts are hidden, for opening it with others looking on. */
+    var ledgerHidden: Boolean by mutableStateOf(prefs.getBoolean("ledger_hidden", false))
+        private set
+
+    fun changeLedgerHidden(on: Boolean) {
+        ledgerHidden = on
+        prefs.edit { putBoolean("ledger_hidden", on) }
+    }
+
     /** Light, dark, or as the system is. */
     var themeMode: ThemeMode by mutableStateOf(enumOf(prefs.getString("theme_mode", null), ThemeMode.SYSTEM))
         private set

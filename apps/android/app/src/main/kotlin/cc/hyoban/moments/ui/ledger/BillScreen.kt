@@ -59,7 +59,6 @@ import cc.hyoban.moments.R
 import cc.hyoban.moments.data.trips.tripOf
 import cc.hyoban.moments.ledger.Reimburse
 import cc.hyoban.moments.ledger.TxnKind
-import cc.hyoban.moments.ledger.formatMoney
 import cc.hyoban.moments.ui.components.PageWidth
 import cc.hyoban.moments.ui.components.SubPage
 import cc.hyoban.moments.ui.components.Tooltip
@@ -119,14 +118,14 @@ fun BillScreen(container: AppContainer, id: String, nav: LedgerNav) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Text(
-                        if (txn.kind == TxnKind.TRANSFER) formatMoney(txn.amount, txn.currency) else signedMoney(txn.amount, txn.currency, txn.incoming),
+                        if (txn.kind == TxnKind.TRANSFER) money(txn.amount, txn.currency) else signedMoney(txn.amount, txn.currency, txn.incoming),
                         style = MaterialTheme.typography.displaySmall,
                         color = amountColor(txn),
                         modifier = Modifier.testTag("bill_amount"),
                     )
                     if (txn.discount > 0 && txn.kind == TxnKind.EXPENSE) {
                         Text(
-                            stringResource(R.string.ledger_saved, formatMoney(txn.discount, txn.currency), formatMoney(txn.amount + txn.discount, txn.currency)),
+                            stringResource(R.string.ledger_saved, money(txn.discount, txn.currency), money(txn.amount + txn.discount, txn.currency)),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -139,24 +138,24 @@ fun BillScreen(container: AppContainer, id: String, nav: LedgerNav) {
                         txn.account?.let(ledger.accountsById::get)?.let { from ->
                             add { shapes ->
                                 InfoRow(shapes, accountKindIcon(from.kind), stringResource(R.string.ledger_from_account), from.name,
-                                    trailing = txn.accountAmount?.let { formatMoney(it, from.currency) }) { nav.account(from.id) }
+                                    trailing = txn.accountAmount?.let { money(it, from.currency) }) { nav.account(from.id) }
                             }
                         }
                         txn.toAccount?.let(ledger.accountsById::get)?.let { to ->
                             add { shapes ->
                                 InfoRow(shapes, accountKindIcon(to.kind), stringResource(R.string.ledger_to_account), to.name,
-                                    trailing = txn.toAmount?.let { formatMoney(it, to.currency) }) { nav.account(to.id) }
+                                    trailing = txn.toAmount?.let { money(it, to.currency) }) { nav.account(to.id) }
                             }
                         }
-                        if (txn.fee > 0) add { shapes -> InfoRow(shapes, Icons.Rounded.RequestQuote, stringResource(R.string.ledger_fee), formatMoney(txn.fee, txn.currency)) }
-                        if (txn.discount > 0) add { shapes -> InfoRow(shapes, Icons.Rounded.Discount, stringResource(R.string.ledger_discount), formatMoney(txn.discount, txn.currency)) }
+                        if (txn.fee > 0) add { shapes -> InfoRow(shapes, Icons.Rounded.RequestQuote, stringResource(R.string.ledger_fee), money(txn.fee, txn.currency)) }
+                        if (txn.discount > 0) add { shapes -> InfoRow(shapes, Icons.Rounded.Discount, stringResource(R.string.ledger_discount), money(txn.discount, txn.currency)) }
                     } else {
                         txn.payers.forEach { split ->
                             val account = ledger.accountsById[split.account] ?: return@forEach
                             add { shapes ->
                                 InfoRow(shapes, accountKindIcon(account.kind), stringResource(R.string.ledger_account), account.name,
-                                    trailing = if (txn.splits.isNotEmpty()) formatMoney(split.amount, txn.currency)
-                                    else txn.accountAmount?.let { formatMoney(it, account.currency) }) { nav.account(account.id) }
+                                    trailing = if (txn.splits.isNotEmpty()) money(split.amount, txn.currency)
+                                    else txn.accountAmount?.let { money(it, account.currency) }) { nav.account(account.id) }
                             }
                         }
                     }
@@ -200,7 +199,7 @@ fun BillScreen(container: AppContainer, id: String, nav: LedgerNav) {
                 // The expense it pays back, or what has paid this one back.
                 txn.related?.let(ledger.txnsById::get)?.let { expense ->
                     SegmentedGroup(stringResource(R.string.ledger_original_bill), null, listOf { shapes ->
-                        InfoRow(shapes, txnIcon(expense, ledger), txnTitle(expense, ledger), formatDay(expense.dateKey), trailing = formatMoney(expense.amount, expense.currency)) { nav.bill(expense.id) }
+                        InfoRow(shapes, txnIcon(expense, ledger), txnTitle(expense, ledger), formatDay(expense.dateKey), trailing = money(expense.amount, expense.currency)) { nav.bill(expense.id) }
                     })
                 }
                 if (txn.kind == TxnKind.EXPENSE) {

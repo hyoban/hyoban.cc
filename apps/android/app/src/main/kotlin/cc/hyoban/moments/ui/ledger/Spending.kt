@@ -32,7 +32,6 @@ import cc.hyoban.moments.data.spec.TripRecord
 import cc.hyoban.moments.ledger.Ledger
 import cc.hyoban.moments.ledger.Txn
 import cc.hyoban.moments.ledger.TxnKind
-import cc.hyoban.moments.ledger.formatMoney
 import cc.hyoban.moments.ledger.spendingOf
 import cc.hyoban.moments.ledger.txnsOfDay
 import cc.hyoban.moments.ledger.txnsOfMoment
@@ -82,13 +81,13 @@ fun SpendingCard(container: AppContainer, of: SpendingOf, onOpen: () -> Unit, mo
         modifier = modifier.padding(horizontal = Space.gutter).fillMaxWidth().testTag("spending"),
     ) {
         ListItem(
-            headlineContent = { Text(stringResource(R.string.ledger_spent, formatMoney(sums.expense, currency))) },
+            headlineContent = { Text(stringResource(R.string.ledger_spent, money(sums.expense, currency))) },
             supportingContent = {
                 Text(
                     listOfNotNull(
                         pluralStringResource(R.plurals.ledger_count_bills, bills.size, bills.size),
-                        if (sums.income > 0) stringResource(R.string.ledger_income_short, formatMoney(sums.income, currency)) else null,
-                        whole?.takeIf { it.expense != sums.expense }?.let { stringResource(R.string.ledger_trip_days_spent, formatMoney(it.expense, currency)) },
+                        if (sums.income > 0) stringResource(R.string.ledger_income_short, money(sums.income, currency)) else null,
+                        whole?.takeIf { it.expense != sums.expense }?.let { stringResource(R.string.ledger_trip_days_spent, money(it.expense, currency)) },
                         if (sums.unconverted > 0) stringResource(R.string.ledger_some_unconverted) else null,
                     ).joinToString(" "),
                 )
@@ -123,7 +122,7 @@ fun momentBillRows(
                     supportingContent = { Text(txnSupporting(txn, ledger), maxLines = 1, overflow = TextOverflow.Ellipsis) },
                     trailingContent = {
                         Text(
-                            if (txn.kind == TxnKind.TRANSFER) formatMoney(txn.amount, txn.currency) else signedMoney(txn.amount, txn.currency, txn.incoming),
+                            if (txn.kind == TxnKind.TRANSFER) money(txn.amount, txn.currency) else signedMoney(txn.amount, txn.currency, txn.incoming),
                             style = MaterialTheme.typography.titleSmall,
                         )
                     },
@@ -141,6 +140,6 @@ fun momentBillRows(
             leadingContent = { LeadingIcon(Icons.Rounded.Add, tonal = false) },
             supportingContent = { Text(stringResource(R.string.ledger_from_moment_note)) },
             modifier = Modifier.testTag("moment_new_bill"),
-        ) { Text(stringResource(R.string.ledger_from_moment, formatMoney(Math.round(bill.amount * 100), "CNY"))) }
+        ) { Text(stringResource(R.string.ledger_from_moment, money(Math.round(bill.amount * 100), "CNY"))) }
     }
 }

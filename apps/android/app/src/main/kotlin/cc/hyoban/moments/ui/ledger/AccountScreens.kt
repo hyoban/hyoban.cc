@@ -51,7 +51,6 @@ import cc.hyoban.moments.ledger.Account
 import cc.hyoban.moments.ledger.AccountKind
 import cc.hyoban.moments.ledger.COMMON_CURRENCIES
 import cc.hyoban.moments.ledger.currencySymbol
-import cc.hyoban.moments.ledger.formatMoney
 import cc.hyoban.moments.ledger.uses
 import cc.hyoban.moments.ui.components.PageWidth
 import cc.hyoban.moments.ui.components.SubPage
@@ -93,7 +92,7 @@ fun AccountScreen(container: AppContainer, id: String, nav: LedgerNav) {
         BillList(ledger, bills, account.currency, nav, header = {
             Column(Modifier.padding(start = Space.gutter + Space.l, end = Space.gutter, top = Space.s, bottom = Space.s)) {
                 Text(stringResource(R.string.ledger_balance_label), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text(formatMoney(balance, account.currency), style = MaterialTheme.typography.displaySmall, modifier = Modifier.testTag("account_balance"))
+                Text(money(balance, account.currency), style = MaterialTheme.typography.displaySmall, modifier = Modifier.testTag("account_balance"))
                 Row(Modifier.padding(top = Space.m), horizontalArrangement = Arrangement.spacedBy(Space.s)) {
                     FilledTonalButton(onClick = { nav.entry(LedgerEntryArgs(account = id)) }) {
                         Icon(Icons.Rounded.Add, contentDescription = null)

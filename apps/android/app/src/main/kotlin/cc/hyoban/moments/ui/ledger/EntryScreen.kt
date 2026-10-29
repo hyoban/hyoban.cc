@@ -320,7 +320,7 @@ fun EntryScreen(container: AppContainer, args: LedgerEntryArgs, nav: LedgerNav) 
                         headlineContent = { Text(txnTitle(related, ledger), maxLines = 1, overflow = TextOverflow.Ellipsis) },
                         supportingContent = { Text(txnSupporting(related, ledger, showDate = true), maxLines = 2) },
                         leadingContent = { LeadingIcon(txnIcon(related, ledger)) },
-                        trailingContent = { Text(formatMoney(related.amount, related.currency)) },
+                        trailingContent = { Text(money(related.amount, related.currency)) },
                         colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                     )
                 }
@@ -718,7 +718,7 @@ fun AccountSheet(ledger: Ledger, onDismiss: () -> Unit, onCreate: (Account) -> U
             items(ledger.accounts.filter { !it.archived }, key = { it.id }) { account ->
                 ListItem(
                     headlineContent = { Text(account.name) },
-                    supportingContent = { Text(accountKindLabel(account.kind) + " " + formatMoney(ledger.balances[account.id] ?: 0, account.currency)) },
+                    supportingContent = { Text(accountKindLabel(account.kind) + " " + money(ledger.balances[account.id] ?: 0, account.currency)) },
                     leadingContent = { Icon(accountKindIcon(account.kind), contentDescription = null) },
                     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                     modifier = Modifier.clickable { onPick(account.id) }.testTag("pick_account_${account.name}"),

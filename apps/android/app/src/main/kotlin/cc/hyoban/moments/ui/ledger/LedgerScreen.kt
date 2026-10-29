@@ -25,6 +25,8 @@ import androidx.compose.material.icons.rounded.FileOpen
 import androidx.compose.material.icons.automirrored.rounded.MenuBook
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material.icons.rounded.Visibility
+import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -68,7 +70,6 @@ import cc.hyoban.moments.ledger.Ledger
 import cc.hyoban.moments.ledger.netAssetsByMonth
 import cc.hyoban.moments.ledger.Txn
 import cc.hyoban.moments.ledger.assetsOf
-import cc.hyoban.moments.ledger.formatMoney
 import cc.hyoban.moments.ledger.summarize
 import cc.hyoban.moments.ui.LedgerHome
 import cc.hyoban.moments.ui.LocalBottomClearance
@@ -80,6 +81,7 @@ import cc.hyoban.moments.ui.components.TabPage
 import cc.hyoban.moments.ui.components.Tooltip
 import cc.hyoban.moments.ui.components.isMediumWidth
 import cc.hyoban.moments.ui.format.formatMonth
+import cc.hyoban.moments.ui.LocalSettings
 import cc.hyoban.moments.ui.settings.SegmentedGroup
 import cc.hyoban.moments.ui.settings.segmentColors
 import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
@@ -122,7 +124,7 @@ fun LedgerScreen(container: AppContainer, nav: LedgerNav, onImport: () -> Unit) 
         book?.let { summarize(ledger.entries.filter { it.txn.book in shown }, ledger.rates, currency, today, today.plusMonths(1)) }
     }
     val subtitle = if (month != null) {
-        stringResource(R.string.ledger_this_month, formatMoney(month.expense, currency), formatMoney(month.income, currency))
+        stringResource(R.string.ledger_this_month, money(month.expense, currency), money(month.income, currency))
     } else {
         null
     }
@@ -140,6 +142,13 @@ fun LedgerScreen(container: AppContainer, nav: LedgerNav, onImport: () -> Unit) 
             Tooltip(stringResource(R.string.action_search), below = true) {
                 IconButton(onClick = { nav.list(LedgerFilter(book = book?.id.takeIf { !ledger.allBooks }, search = true)) }, modifier = Modifier.testTag("ledger_search")) {
                     Icon(Icons.Rounded.Search, contentDescription = stringResource(R.string.action_search))
+                }
+            }
+            val settings = LocalSettings.current
+            val hideLabel = stringResource(if (settings.ledgerHidden) R.string.ledger_show_amounts else R.string.ledger_hide_amounts)
+            Tooltip(hideLabel, below = true) {
+                IconButton(onClick = { settings.changeLedgerHidden(!settings.ledgerHidden) }, modifier = Modifier.testTag("ledger_hide")) {
+                    Icon(if (settings.ledgerHidden) Icons.Rounded.VisibilityOff else Icons.Rounded.Visibility, contentDescription = hideLabel)
                 }
             }
             Tooltip(stringResource(R.string.ledger_settings_title), below = true) {
@@ -349,9 +358,9 @@ private fun MonthTotals(month: String, expense: Long, income: Long, currency: St
         }
         Text(
             listOf(
-                stringResource(R.string.ledger_expense_short, formatMoney(expense, currency)),
-                stringResource(R.string.ledger_income_short, formatMoney(income, currency)),
-                stringResource(R.string.ledger_balance_short, formatMoney(income - expense, currency)),
+                stringResource(R.string.ledger_expense_short, money(expense, currency)),
+                stringResource(R.string.ledger_income_short, money(income, currency)),
+                stringResource(R.string.ledger_balance_short, money(income - expense, currency)),
             ).joinToString(" "),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -374,9 +383,9 @@ private fun AssetsView(ledger: Ledger, currency: String, nav: LedgerNav) {
         ) {
             Column(Modifier.padding(start = Space.gutter + Space.l, end = Space.gutter, top = Space.xl).semantics(mergeDescendants = true) {}) {
                 Text(stringResource(R.string.ledger_net_assets), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text(formatMoney(assets.net, currency), style = MaterialTheme.typography.displaySmall, modifier = Modifier.testTag("net_assets"))
+                Text(money(assets.net, currency), style = MaterialTheme.typography.displaySmall, modifier = Modifier.testTag("net_assets"))
                 Text(
-                    stringResource(R.string.ledger_assets_line, formatMoney(assets.held, currency), formatMoney(assets.owed, currency)),
+                    stringResource(R.string.ledger_assets_line, money(assets.held, currency), money(assets.owed, currency)),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -400,7 +409,7 @@ private fun AssetsView(ledger: Ledger, currency: String, nav: LedgerNav) {
                                 supportingContent = if (!account.counted || account.note.isNotBlank()) {
                                     { Text(listOfNotNull(stringResource(R.string.ledger_not_counted).takeIf { !account.counted }, account.note.takeIf { it.isNotBlank() }).joinToString(" "), maxLines = 2) }
                                 } else null,
-                                trailingContent = { Text(formatMoney(balance, account.currency), style = MaterialTheme.typography.titleSmall) },
+                                trailingContent = { Text(money(balance, account.currency), style = MaterialTheme.typography.titleSmall) },
                                 modifier = Modifier.testTag("account_${account.id}"),
                             ) { Text(account.name, maxLines = 1) }
                         }
@@ -443,12 +452,12 @@ private fun NetAssetsTrend(ledger: Ledger, currency: String) {
     var picked by remember(months) { mutableStateOf<Int?>(null) }
     val name = { i: Int -> formatMonth(months[i].first.atDay(1).toString()).first }
     val change = months.last().second - months.first().second
-    val readout = picked?.let { stringResource(R.string.ledger_month_end, name(it), formatMoney(months[it].second, currency)) }
+    val readout = picked?.let { stringResource(R.string.ledger_month_end, name(it), money(months[it].second, currency)) }
         ?: stringResource(
             R.string.ledger_net_assets_change,
             // A year ago, so with its year.
             formatMonth(months[0].first.atDay(1).toString()).let { (month, year) -> if (month.endsWith("月")) "${year}年$month" else "$month $year" },
-            (if (change >= 0) "+" else "") + formatMoney(change, currency),
+            (if (change >= 0) "+" else "") + money(change, currency),
         )
     Spacer(Modifier.height(Space.l))
     ChartCard(stringResource(R.string.ledger_chart_net_assets), readout, modifier = Modifier.testTag("chart_net_assets")) {

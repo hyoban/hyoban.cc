@@ -85,7 +85,9 @@ import cc.hyoban.moments.ledger.Reimburse
 import cc.hyoban.moments.ledger.TransferType
 import cc.hyoban.moments.ledger.Txn
 import cc.hyoban.moments.ledger.TxnKind
+import cc.hyoban.moments.ledger.currencySymbol
 import cc.hyoban.moments.ledger.formatMoney
+import cc.hyoban.moments.ui.LocalSettings
 import cc.hyoban.moments.ui.format.formatDay
 import cc.hyoban.moments.ui.theme.Space
 import java.time.format.DateTimeFormatter
@@ -137,9 +139,15 @@ data class LedgerFilter(
 
 val LocalLedgerNav = staticCompositionLocalOf<LedgerNav?> { null }
 
+/** An amount as [formatMoney] writes it, or only its sign and currency while the ledger's amounts are hidden. */
+@Composable
+fun money(cents: Long, currency: String): String =
+    if (LocalSettings.current.ledgerHidden) (if (cents < 0) "-" else "") + currencySymbol(currency) + "****" else formatMoney(cents, currency)
+
 /** An amount as a bill shows it: what was spent plain, what came in marked with a plus. */
+@Composable
 fun signedMoney(cents: Long, currency: String, incoming: Boolean): String =
-    (if (incoming) "+" else "-") + formatMoney(cents, currency)
+    (if (incoming) "+" else "-") + money(cents, currency)
 
 /** Whether a bill brings money in, as its amount is coloured and signed. */
 val Txn.incoming: Boolean get() = kind == TxnKind.INCOME || kind == TxnKind.REFUND || kind == TxnKind.REIMBURSEMENT
@@ -314,7 +322,7 @@ fun TxnRow(txn: Txn, ledger: Ledger, onClick: () -> Unit, modifier: Modifier = M
         trailingContent = {
             Column(horizontalAlignment = Alignment.End) {
                 Text(
-                    if (txn.kind == TxnKind.TRANSFER) formatMoney(txn.amount, txn.currency) else signedMoney(txn.amount, txn.currency, txn.incoming),
+                    if (txn.kind == TxnKind.TRANSFER) money(txn.amount, txn.currency) else signedMoney(txn.amount, txn.currency, txn.incoming),
                     style = MaterialTheme.typography.titleMedium,
                     color = amountColor(txn),
                 )
@@ -341,8 +349,8 @@ fun DayTotals(dateKey: String, expense: Long, income: Long, currency: String, mo
         Text(formatDay(dateKey), style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
         Text(
             listOfNotNull(
-                if (expense != 0L) stringResource(R.string.ledger_expense_short, formatMoney(expense, currency)) else null,
-                if (income != 0L) stringResource(R.string.ledger_income_short, formatMoney(income, currency)) else null,
+                if (expense != 0L) stringResource(R.string.ledger_expense_short, money(expense, currency)) else null,
+                if (income != 0L) stringResource(R.string.ledger_income_short, money(income, currency)) else null,
             ).joinToString(" "),
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,

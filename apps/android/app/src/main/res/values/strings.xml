@@ -556,6 +556,8 @@
     <string name="ledger_switch_book">切换账本</string>
     <string name="ledger_all_books">全部账本</string>
     <string name="ledger_manage_books">管理账本</string>
+    <string name="ledger_hide_amounts">隐藏金额</string>
+    <string name="ledger_show_amounts">显示金额</string>
     <string name="ledger_settings_title">记账设置</string>
     <string name="ledger_empty_title">还没有账单</string>
     <string name="ledger_empty_body">账单只存在这台手机上，不会同步或发布。可以从 iCost 导出的表格导入，也可以直接记一笔。</string>
