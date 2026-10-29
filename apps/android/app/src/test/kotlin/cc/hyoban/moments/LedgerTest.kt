@@ -8,6 +8,7 @@ import cc.hyoban.moments.ledger.Ledger
 import cc.hyoban.moments.ledger.Rates
 import cc.hyoban.moments.ledger.Reimburse
 import cc.hyoban.moments.ledger.TransferType
+import cc.hyoban.moments.ledger.Txn
 import cc.hyoban.moments.ledger.TxnKind
 import cc.hyoban.moments.ledger.Xlsx
 import cc.hyoban.moments.ledger.formatCents
@@ -24,6 +25,7 @@ import java.time.ZoneId
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
 import org.junit.Test
 
@@ -153,6 +155,26 @@ class LedgerTest {
         assertEquals(0, again.accounts.size)
         assertEquals(0, again.categories.size)
         assertEquals(first.categories.single().id, again.txns.single().category)
+    }
+
+    @Test fun leavesOutABillWrittenHereOfTheSamePayment() {
+        val first = read(row("2025/01/02 08:00", "支出", "-1", "饮料", "", "中国银行 储蓄卡4049"))
+        val ledger = ledgerOf(first)
+        val book = ledger.books.single().id
+        // Written from 自动记账 at the payment's second, with its own note and another account.
+        val at = java.time.LocalDateTime.of(2025, 1, 2, 18, 10, 41).atZone(zone).toInstant().toEpochMilli()
+        val here = Txn("here", book, TxnKind.EXPENSE, at, 480, 428, "CNY", note = "某某茶饮(某某店)外卖订单")
+        val again = read(
+            row("2025/01/02 18:10", "支出", "-4.28", "饮料", "", "中国银行 储蓄卡4049", note = "山楂莓莓"),
+            // Another of the same amount within the ten minutes, with only one bill here for both.
+            row("2025/01/02 18:15", "支出", "-4.28", "饮料", "", "中国银行 储蓄卡4049"),
+            row("2025/01/02 18:40", "支出", "-4.28", "饮料", "", "中国银行 储蓄卡4049"),
+            row("2025/01/02 18:10", "支出", "-4.29", "饮料", "", "中国银行 储蓄卡4049"),
+            existing = ledger.copy(txns = listOf(here) + ledger.txns),
+        )
+        assertEquals(1, again.report.duplicates)
+        assertEquals(3, again.txns.size)
+        assertTrue(again.txns.none { it.id == "here" })
     }
 
     @Test fun aLaterExportAddsOnlyWhatIsNewAndKeepsItsLinks() {

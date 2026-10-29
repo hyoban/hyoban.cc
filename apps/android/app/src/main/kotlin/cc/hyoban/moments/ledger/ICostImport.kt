@@ -376,6 +376,19 @@ object ICostImport {
         val have = existing.txns.groupBy { txn -> key(txn) { id -> existing.accountsById[id]?.name } }.mapValues { it.value.map(Txn::id).toMutableList() }
         val existingId = mutableMapOf<String, String>()
         for (txn in txns) have[key(txn, names::get)]?.removeFirstOrNull()?.let { existingId[txn.id] = it }
+        // Else one written here, by hand or from 自动记账, is the same bill when its book, kind,
+        // amount and currency are and it is within ten minutes of it, whatever its note and
+        // account: the nearest, each taken once.
+        val unclaimed = existing.txns.filter { it.id !in existingId.values }.toMutableList()
+        for (txn in txns.sortedBy { it.time }) {
+            if (txn.id in existingId) continue
+            val same = unclaimed.filter {
+                it.book == txn.book && it.kind == txn.kind && it.amount == txn.amount && it.currency == txn.currency &&
+                    abs(it.time - txn.time) <= SAME_BILL_MS
+            }.minByOrNull { abs(it.time - txn.time) } ?: continue
+            unclaimed.remove(same)
+            existingId[txn.id] = same.id
+        }
         fun idOf(txn: Txn) = existingId[txn.id] ?: txn.id
         val relatedOf = related.entries.mapNotNull { (child, parent) ->
             val txn = ofRow[child] ?: return@mapNotNull null
@@ -413,6 +426,9 @@ object ICostImport {
             ),
         )
     }
+
+    /** How far apart an exported bill and one written here can be and still be the same. */
+    private const val SAME_BILL_MS = 10 * 60_000L
 
     private fun categoryKey(book: String, type: CategoryType, parent: String?, name: String) = "$book\u0000${type.value}\u0000${parent.orEmpty()}\u0000$name"
 }
