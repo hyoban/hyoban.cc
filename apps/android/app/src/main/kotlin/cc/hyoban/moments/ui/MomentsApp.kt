@@ -805,7 +805,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                 }
                             }
                             screen<Search>(link = "search") {
-                                SearchScreen(container, onMoment = openMoment, onBack = back)
+                                SearchScreen(container, onMoment = openMoment, onBack = back, onBill = { ledgerNav.bill(it) })
                             }
                             screen<Changes>(link = "changes") {
                                 ChangesScreen(container, onMoment = openMoment, onBack = back)

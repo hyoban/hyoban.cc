@@ -1,5 +1,9 @@
 package cc.hyoban.moments.ui.feed
 
+import cc.hyoban.moments.data.store.categoryLabel
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import cc.hyoban.moments.ui.design.emphasized
 
 import cc.hyoban.moments.ui.design.AppIcons
@@ -76,19 +80,53 @@ import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.fill
 
 /**
- * Searching the Moments, full screen on a phone: a destination of its own, the field at the
- * top on the surface, focused and ready to type, back leaving
- * it; what matches below as a list, said how many, newest first. A Moment matches by its
- * words, the names of its places or its trip's title.
+ * Searching everything recorded, full screen on a phone: a destination of its own, the field
+ * at the top on the surface, focused and ready to type, back leaving it; under it the filters
+ * the timeline gave up, what kind (Moments, bills, charges, each with how many) and when (a
+ * year, then a month); what matches below as a list, said how many, newest first. A Moment
+ * matches by its words, the names of its places or its trip's title, a bill by its category
+ * and note; with nothing typed, a filter chosen lists all it lets through.
  */
 @Composable
-fun SearchScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: () -> Unit) {
+fun SearchScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: () -> Unit, onBill: (String) -> Unit = {}) {
     val moments by container.repository.moments.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
     val trips by container.repository.trips.collectAsStateWithLifecycle()
     val query = rememberTextFieldState()
     val text = query.text.toString().trim()
-    val found = remember(moments, places, trips, text) { if (text.isEmpty()) emptyList() else moments.filter { it.matches(text, places, trips) } }
+    var kind by rememberSaveable { mutableStateOf(FeedKind.ALL) }
+    var year by rememberSaveable { mutableStateOf<Int?>(null) }
+    var month by rememberSaveable { mutableStateOf<Int?>(null) }
+    val filter = TimeFilter(year, month)
+    val years = remember(moments) { yearsOf(moments) }
+    val months = remember(moments, year) { year?.let { monthsOf(moments, it) }.orEmpty() }
+    val filtering = kind != FeedKind.ALL || filter != TimeFilter()
+    val searching = text.isNotEmpty() || filtering
+    val inTime = remember(moments, filter) { moments.filtered(filter) }
+    val records = rememberTimelineBills(container, moments, filter)
+    val ledger = records.ledger
+    // Each kind's matches, for its chip's count and, chosen, the list.
+    val matchedMoments = remember(inTime, places, trips, text) { if (text.isEmpty()) inTime else inTime.filter { it.matches(text, places, trips) } }
+    val matchedBills = remember(records, text) {
+        (records.linked.values.flatten() + records.loose.values.flatten()).filter { txn ->
+            text.isEmpty() || txn.note.contains(text, ignoreCase = true) ||
+                ledger.categoryLabel(txn)?.contains(text, ignoreCase = true) == true
+        }
+    }
+    val matchedCharges = remember(records, text) { if (text.isEmpty()) records.charges.values.flatten() else emptyList() }
+    val found = remember(kind, matchedMoments, matchedBills, matchedCharges, searching) {
+        if (!searching) emptyList() else buildList<Found> {
+            if (kind == FeedKind.ALL || kind == FeedKind.MOMENTS) matchedMoments.forEach { add(Found.Moment(it)) }
+            if (kind == FeedKind.ALL || kind == FeedKind.BILLS) matchedBills.forEach { add(Found.Bill(it)) }
+            if (kind == FeedKind.ALL || kind == FeedKind.CHARGES) matchedCharges.forEach { add(Found.ChargeFound(it)) }
+        }.sortedByDescending { it.at }
+    }
+    val counts = mapOf(
+        FeedKind.ALL to matchedMoments.size + matchedBills.size + matchedCharges.size,
+        FeedKind.MOMENTS to matchedMoments.size,
+        FeedKind.BILLS to matchedBills.size,
+        FeedKind.CHARGES to matchedCharges.size,
+    )
     val focus = remember { FocusRequester() }
     val keyboard = LocalSoftwareKeyboardController.current
     LaunchedEffect(Unit) { focus.requestFocus() }
@@ -127,11 +165,45 @@ fun SearchScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: ()
                 modifier = Modifier.focusRequester(focus).testTag("search_field"),
             )
         }
+        // What kind and when: everything until one is chosen.
+        androidx.compose.foundation.lazy.LazyRow(
+            contentPadding = PaddingValues(horizontal = Space.gutter),
+            horizontalArrangement = Arrangement.spacedBy(Space.s),
+            modifier = Modifier.padding(vertical = Space.xs),
+        ) {
+            items(FeedKind.entries.size) { index ->
+                val option = FeedKind.entries[index]
+                val count = counts.getValue(option)
+                cc.hyoban.moments.ui.design.FilterChip(
+                    selected = option == kind,
+                    onClick = { kind = option },
+                    label = {
+                        Text(
+                            stringResource(
+                                when (option) {
+                                    FeedKind.ALL -> R.string.filter_all
+                                    FeedKind.MOMENTS -> R.string.filter_moments
+                                    FeedKind.BILLS -> R.string.section_bill
+                                    FeedKind.CHARGES -> R.string.part_charge
+                                },
+                            ) + if (searching) "\u2003$count" else "",
+                        )
+                    },
+                    modifier = Modifier.testTag("kind_${option.name.lowercase()}"),
+                )
+            }
+        }
+        if (years.size > 1) {
+            TimeFilterRows(filter, years, months) { next ->
+                year = next.year
+                month = next.month
+            }
+        }
         // What the search found, said as it changes, so a screen reader hears it too.
         val status = when {
-            text.isEmpty() -> stringResource(R.string.search_prompt)
+            !searching -> stringResource(R.string.search_prompt)
             found.isEmpty() -> stringResource(R.string.search_none)
-            else -> pluralStringResource(R.plurals.count_moments, found.size, found.size)
+            else -> pluralStringResource(R.plurals.count_results, found.size, found.size)
         }
         Text(
             status,
@@ -146,14 +218,39 @@ fun SearchScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: ()
                 Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(start = Space.gutter, end = Space.gutter, bottom = Space.xl),
             ) {
-                itemsIndexed(found, key = { _, moment -> moment.uid }) { index, moment ->
+                itemsIndexed(found, key = { _, item -> item.key }) { index, item ->
                     Box(Modifier.groupedRow(index, found.size, inset = 88f)) {
-                        SearchResult(moment, text, places, trips, container.mediaUrls, groupedShapes(index, found.size)) { onMoment(moment.uid) }
+                        when (item) {
+                            is Found.Moment -> SearchResult(item.moment, text, places, trips, container.mediaUrls, groupedShapes(index, found.size)) { onMoment(item.moment.uid) }
+                            is Found.Bill -> cc.hyoban.moments.ui.ledger.TxnRow(item.txn, ledger, onClick = { onBill(item.txn.id) }, modifier = Modifier.padding(horizontal = Space.xs), showDate = true)
+                            is Found.ChargeFound -> ChargeRow(item.charge, Modifier.padding(horizontal = Space.l, vertical = Space.m))
+                        }
                     }
                 }
                 item { Box(Modifier.navigationBarsPadding()) }
             }
         }
+    }
+}
+
+/** One thing the search found: a Moment, a bill or a charge, newest first by [at]. */
+private sealed interface Found {
+    val key: String
+    val at: String
+
+    data class Moment(val moment: MomentRecord) : Found {
+        override val key get() = moment.uid
+        override val at get() = moment.occurredAt
+    }
+
+    data class Bill(val txn: cc.hyoban.moments.ledger.Txn) : Found {
+        override val key get() = "bill-${txn.id}"
+        override val at get() = txn.local.toString()
+    }
+
+    data class ChargeFound(val charge: Charge) : Found {
+        override val key get() = "charge-${charge.uid}"
+        override val at get() = charge.at
     }
 }
 

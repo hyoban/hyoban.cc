@@ -113,7 +113,7 @@
     <string name="message_text_copied">Text copied</string>
     <string name="action_view_photo">View photo</string>
     <string name="action_see_moments">See all Moments</string>
-    <string name="hint_search_moments">Search Moments</string>
+    <string name="hint_search_moments">Search</string>
     <string name="search_prompt">Find Moments by text, place, or trip</string>
     <string name="search_none">No Moments found</string>
     <string name="explain_on_phone">This Moment is only on this phone. Publish your changes to add it to the site.</string>
@@ -829,4 +829,8 @@
     <string name="trip_edit_members">What it holds</string>
     <string name="trip_edit_members_note">Its days’ records are in unless left out; those of two days either side can be taken in.</string>
     <string name="trip_edit_covers">Covers</string>
+    <plurals name="count_results">
+        <item quantity="one">%d result</item>
+        <item quantity="other">%d results</item>
+    </plurals>
 </resources>
