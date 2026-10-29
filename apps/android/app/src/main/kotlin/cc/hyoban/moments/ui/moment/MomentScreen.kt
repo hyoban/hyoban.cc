@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.moment
 
+import cc.hyoban.moments.data.store.isPublic
 import cc.hyoban.moments.ui.design.emphasized
 
 import cc.hyoban.moments.ui.design.AppIcons
@@ -202,11 +203,14 @@ fun MomentScreen(
         val screenWidth = maxWidth
         val screenHeight = maxHeight
         val scroll = rememberScrollState()
+        val second by container.repository.second.collectAsStateWithLifecycle()
         val details: @Composable () -> Unit = {
             MomentDetails(
                 moment, places, trip, moments, trips, urls, pager, onPlace, onTrip, onDay,
                 changed = container.repository.isChanged(moment.uid),
                 bills = momentBillRows(ledger, moment, onBill, onNewBill),
+                parts = second.entries[moment.uid]?.get("parts") as? kotlinx.serialization.json.JsonObject,
+                billPublic = ledger.txns.any { it.moment == moment.uid && ledger.isPublic(it) },
                 // The way to publish, only when the app can.
                 onChanges = onChanges.takeIf { container.canPublish },
             )
@@ -377,6 +381,10 @@ private fun MomentDetails(
     onChanges: (() -> Unit)? = null,
     /** Its bills in the ledger, kept on the phone, as rows after what was eaten. */
     bills: List<@Composable (ListItemShapes) -> Unit> = emptyList(),
+    /** Its parts the first shape doesn't hold, as the API has them: a charge. */
+    parts: kotlinx.serialization.json.JsonObject? = null,
+    /** Whether a bill of it would publish. */
+    billPublic: Boolean = false,
 ) {
     val sameDay = remember(moments, moment.dateKey) { moments.count { it.dateKey == moment.dateKey } }
     Column(Modifier.padding(top = Space.xl, bottom = Space.xxl)) {
@@ -433,6 +441,17 @@ private fun MomentDetails(
                 }
             }
             addAll(bills)
+            (parts?.get("charge") as? kotlinx.serialization.json.JsonObject)?.let { charge ->
+                add { shapes ->
+                    ListItem(
+                        headlineContent = { Text(chargeTitle(charge)) },
+                        supportingContent = chargeLine(charge)?.let { line -> { Text(line, style = AppTheme.typography.numCaption) } },
+                        leadingContent = { RowIcon(AppIcons.Ev) },
+                        colors = ListItemDefaults.colors(containerColor = LocalSurfaceLevel.current.raised.fill()),
+                        modifier = Modifier.clip(shapes.shape).testTag("charge"),
+                    )
+                }
+            }
             moment.places.forEach { id ->
                 val place = places[id]
                 add { shapes ->
@@ -470,6 +489,29 @@ private fun MomentDetails(
                     ) { Text(trip.title, maxLines = 1, overflow = TextOverflow.Ellipsis) }
                 }
             }
+            // Last, who sees it: private, or public with the parts that would publish.
+            add { shapes ->
+                val private = moment.hidden || moment.topic == "tech"
+                val published = listOfNotNull(
+                    stringResource(R.string.part_text).takeIf { moment.text.isNotBlank() },
+                    stringResource(R.string.part_photos).takeIf { moment.media.isNotEmpty() },
+                    stringResource(R.string.section_food).takeIf { moment.food != null },
+                    stringResource(R.string.part_bill).takeIf { billPublic },
+                    stringResource(R.string.part_charge).takeIf { parts?.containsKey("charge") == true },
+                )
+                ListItem(
+                    headlineContent = { Text(stringResource(if (private) R.string.visibility_private else R.string.visibility_public)) },
+                    supportingContent = {
+                        Text(
+                            if (private) stringResource(R.string.moment_private_note)
+                            else stringResource(R.string.moment_publishes, published.joinToString(stringResource(R.string.separator_list))),
+                        )
+                    },
+                    leadingContent = { RowIcon(if (private) AppIcons.EyeOff else AppIcons.Eye) },
+                    colors = ListItemDefaults.colors(containerColor = LocalSurfaceLevel.current.raised.fill()),
+                    modifier = Modifier.clip(shapes.shape).testTag("visibility"),
+                )
+            }
             // Only when the day has more than this one, the row grows into the day's page.
             if (sameDay > 1) {
                 add { shapes ->
@@ -494,6 +536,24 @@ private fun MomentDetails(
         Spacer(Modifier.windowInsetsBottomHeight(WindowInsets.navigationBars))
         Spacer(Modifier.height(TOOLBAR_CLEARANCE))
     }
+}
+
+/** A charge as its row heads it: AC or DC, and how much went in. */
+@Composable
+private fun chargeTitle(charge: kotlinx.serialization.json.JsonObject): String {
+    val type = (charge["type"] as? kotlinx.serialization.json.JsonPrimitive)?.content
+    val kwh = (charge["energyWh"] as? kotlinx.serialization.json.JsonPrimitive)?.content?.toDoubleOrNull()?.div(1000)
+    return listOfNotNull(
+        stringResource(if (type == "DC") R.string.charge_dc else R.string.charge_ac),
+        kwh?.let { "%.1f kWh".format(it) },
+    ).joinToString("\u2003")
+}
+
+/** How long it charged and what it cost, in figures. */
+private fun chargeLine(charge: kotlinx.serialization.json.JsonObject): String? {
+    val minutes = (charge["durationMin"] as? kotlinx.serialization.json.JsonPrimitive)?.content?.toDoubleOrNull()
+    val cost = (charge["cost"] as? kotlinx.serialization.json.JsonPrimitive)?.content?.toDoubleOrNull()
+    return listOfNotNull(minutes?.let { "${it.toInt()} min" }, cost?.let { "¥%.2f".format(it) }).joinToString("\u2003").ifEmpty { null }
 }
 
 /** Room under the page's words for the floating toolbar over them: its height and margin. */

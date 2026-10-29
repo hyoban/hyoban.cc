@@ -186,11 +186,19 @@ async function auditRemoteObjects(items) {
   )
 }
 
-/** The Moment files added or changed since a ref, relative to data/. */
+/** The Moment and entry files added or changed since a ref, relative to data/. */
 async function getChangedMomentFiles(ref) {
   const { stdout } = await execFile(
     'git',
-    ['diff', '--name-only', '--diff-filter=AM', `${ref}...HEAD`, '--', 'data/moments/**/*.json'],
+    [
+      'diff',
+      '--name-only',
+      '--diff-filter=AM',
+      `${ref}...HEAD`,
+      '--',
+      'data/moments/**/*.json',
+      'data/entries/**/*.json',
+    ],
     { cwd: root },
   )
 

@@ -14,8 +14,9 @@ const snapshot = {
   revision: 1,
   manifest: readJson('manifest.json'),
   places: readJson('places.json'),
-  trips: listJsonFiles('trips').map((file) => readJson(file)),
-  moments: listJsonFiles('moments').map((file) => readJson(file)),
+  entries: listJsonFiles('entries').map((file) => readJson(file)),
+  collections: listJsonFiles('collections').map((file) => readJson(file)),
+  tracks: listJsonFiles('tracks').map((file) => readJson(file)),
   routes: readJson('routes.json'),
 }
 
@@ -33,24 +34,35 @@ test('writing data/ back over itself changes nothing', async () => {
 
 test('what the API no longer has is removed, and devices.json is left alone', async () => {
   const root = await copyOfData()
-  const [gone, edited, ...rest] = snapshot.moments
-  const changed = { ...edited, text: `${edited.text}!` }
+  const moments = snapshot.entries.filter((entry) => entry.parts.text)
+  const [gone, edited] = moments
+  const changed = {
+    ...edited,
+    parts: { ...edited.parts, text: { ...edited.parts.text, text: `${edited.parts.text.text}!` } },
+  }
   const devices = await readFile(join(root, 'devices.json'), 'utf8')
-  const goneFile = listJsonFiles('moments', root).find((file) => file.endsWith(`${gone.uid}.json`))
-  const editedFile = listJsonFiles('moments', root).find((file) =>
-    file.endsWith(`${edited.uid}.json`),
-  )
+  const fileOf = (uid) =>
+    listJsonFiles('entries', root).find((file) => file.endsWith(`${uid}.json`))
+  const goneFile = fileOf(gone.uid)
+  const editedFile = fileOf(edited.uid)
+  const [firstCollection, ...collections] = snapshot.collections
 
   await writeFile(join(root, 'stray.txt'), 'not a record')
 
   const written = await writeSnapshot(
-    { ...snapshot, moments: [changed, ...rest], trips: snapshot.trips.slice(1) },
+    {
+      ...snapshot,
+      entries: snapshot.entries
+        .filter((entry) => entry.uid !== gone.uid)
+        .map((entry) => (entry.uid === edited.uid ? changed : entry)),
+      collections,
+    },
     root,
   )
 
   assert.deepEqual(
     written.sort((first, second) => first.localeCompare(second)),
-    [editedFile, goneFile, `trips/${snapshot.trips[0].id}.json`].sort((first, second) =>
+    [editedFile, goneFile, `collections/${firstCollection.slug}.json`].sort((first, second) =>
       first.localeCompare(second),
     ),
   )

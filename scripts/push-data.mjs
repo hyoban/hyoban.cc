@@ -21,7 +21,7 @@ const pushed = await pushData(root, options, {
 })
 
 console.log(
-  `${options.dryRun ? 'Would push' : 'Pushed'} ${pushed.moments} Moment(s), ${pushed.trips} trip(s) and ${pushed.places} place(s) ${options.local ? 'locally' : 'to the API'}.`,
+  `${options.dryRun ? 'Would push' : 'Pushed'} ${pushed.moments} record(s), ${pushed.trips} trip(s) and ${pushed.places} place(s) ${options.local ? 'locally' : 'to the API'}.`,
 )
 
 if (pushed.routes) {

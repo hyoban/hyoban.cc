@@ -1,5 +1,8 @@
 package cc.hyoban.moments.ui.ledger
 
+import cc.hyoban.moments.ui.format.formatDay
+import androidx.compose.foundation.layout.width
+import cc.hyoban.moments.ui.theme.Rail
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.design.SegmentedButton
 import cc.hyoban.moments.ui.design.SingleChoiceSegmentedButtonRow
@@ -245,7 +248,8 @@ private sealed interface BillLine {
         override val key get() = "d$date"
     }
 
-    data class Bill(val txn: Txn) : BillLine {
+    /** A bill, [first] of its day's beside the day in the rail. */
+    data class Bill(val txn: Txn, val first: Boolean = false, val dayExpense: Long = 0) : BillLine {
         override val key get() = txn.id
     }
 }
@@ -264,12 +268,13 @@ private fun linesOf(ledger: Ledger, bills: List<Txn>, currency: String): List<Bi
             val days = { map: Map<java.time.LocalDate, Long> -> map.filterKeys { it.toString().startsWith(month!!) }.values.sum() }
             out += BillLine.Month(month!!, days(sums.expenseByDay), days(sums.incomeByDay))
         }
-        if (key != day) {
+        val first = key != day
+        if (first) {
             day = key
             val date = txn.date
             out += BillLine.Day(key, sums.expenseByDay[date] ?: 0, sums.incomeByDay[date] ?: 0)
         }
-        out += BillLine.Bill(txn)
+        out += BillLine.Bill(txn, first, sums.expenseByDay[txn.date] ?: 0)
     }
     return out
 }
@@ -297,8 +302,22 @@ fun BillList(
             items(lines, key = { it.key }, contentType = { it::class }) { line ->
                 when (line) {
                     is BillLine.Month -> MonthTotals(line.month, line.expense, line.income, currency)
-                    is BillLine.Day -> DayTotals(line.date, line.expense, line.income, currency)
-                    is BillLine.Bill -> TxnRow(line.txn, ledger, onClick = { nav.bill(line.txn.id) }, modifier = Modifier.padding(horizontal = Space.xs), showBook = showBook)
+                    // Days set apart by space alone, each in the rail beside its first bill.
+                    is BillLine.Day -> Spacer(Modifier.height(Space.l))
+                    is BillLine.Bill -> Row {
+                        Box(Modifier.padding(start = Space.gutter).width(Rail)) {
+                            if (line.first) {
+                                cc.hyoban.moments.ui.feed.DayRail(
+                                    line.txn.dateKey,
+                                    formatDay(line.txn.dateKey),
+                                    onClick = { nav.day(line.txn.dateKey) },
+                                    modifier = Modifier.padding(top = Space.s),
+                                    note = line.dayExpense.takeIf { it > 0 }?.let { money(it, currency) },
+                                )
+                            }
+                        }
+                        TxnRow(line.txn, ledger, onClick = { nav.bill(line.txn.id) }, modifier = Modifier.weight(1f).padding(end = Space.xs), showBook = showBook)
+                    }
                 }
             }
         }

@@ -169,7 +169,7 @@ fun TripPlayerScreen(container: AppContainer, id: String, onMoment: (String) -> 
     val trips by container.repository.trips.collectAsStateWithLifecycle()
     val all by container.repository.moments.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
-    val routes by container.routes.routes.collectAsStateWithLifecycle()
+    val routes by container.tripRoutes.collectAsStateWithLifecycle()
     val trip = remember(trips, id) { trips.firstOrNull { it.id == id } } ?: return
     val moments = remember(trip, all) { momentsOf(trip, all, trips) }
     val segments = routes[trip.id].orEmpty()

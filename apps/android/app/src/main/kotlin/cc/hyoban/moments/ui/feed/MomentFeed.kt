@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.feed
 
+import cc.hyoban.moments.ui.ledger.money
 import cc.hyoban.moments.ui.format.formatDay
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.heading
@@ -234,7 +235,16 @@ fun MomentFeed(
                     if (months && day.take(7) != month) {
                         month = day.take(7)
                         val (name, year) = formatMonth(day)
-                        item(key = "month-${day.take(7)}", contentType = "month") { Box(Modifier.animateItem()) { MonthHeader(name, year) } }
+                        val monthKey = day.take(7)
+                        item(key = "month-$monthKey", contentType = "month") {
+                            val count = remember(moments, monthKey) { moments.count { it.dateKey.startsWith(monthKey) } }
+                            val spent = remember(bills, monthKey) { bills.spent.filterKeys { it.startsWith(monthKey) }.values.sum() }
+                            val detail = listOfNotNull(
+                                pluralStringResource(R.plurals.count_moments, count, count).takeIf { count > 0 },
+                                money(spent, bills.currency).takeIf { spent > 0 },
+                            ).joinToString("\u2003").ifEmpty { null }
+                            Box(Modifier.animateItem()) { MonthHeader(name, year, detail) }
+                        }
                     }
                     // Where a trip begins, reading down: above its last day on the timeline.
                     val trip = if (onTrip != null) trips.firstOrNull { day >= it.start && day <= it.end && it.id !in bannered } else null
@@ -264,7 +274,7 @@ fun MomentFeed(
                         if (dayPills) {
                             Row(Modifier.animateItem()) {
                                 Box(Modifier.padding(start = Space.gutter).width(Rail)) {
-                                    if (item.key == first) DayRail(day, dayMoments.size, onDay?.let { { it(day) } }, Modifier.padding(top = Space.xl))
+                                    if (item.key == first) DayRail(day, pluralStringResource(R.plurals.count_moments, dayMoments.size, dayMoments.size), onDay?.let { { it(day) } }, Modifier.padding(top = Space.xl))
                                 }
                                 content(itemModifier.weight(1f))
                             }
@@ -283,10 +293,9 @@ fun MomentFeed(
  * it, tapped for the whole day. No line or dot joins one day to the next.
  */
 @Composable
-private fun DayRail(day: String, count: Int, onClick: (() -> Unit)?, modifier: Modifier = Modifier) {
+fun DayRail(day: String, description: String, onClick: (() -> Unit)?, modifier: Modifier = Modifier, note: String? = null) {
     val date = java.time.LocalDate.parse(day)
     val weekday = date.dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.getDefault())
-    val description = pluralStringResource(R.plurals.count_moments, count, count)
     Column(
         modifier
             .then(if (onClick != null) Modifier.clickable(onClickLabel = stringResource(R.string.label_whole_day), onClick = onClick) else Modifier)
@@ -295,6 +304,7 @@ private fun DayRail(day: String, count: Int, onClick: (() -> Unit)?, modifier: M
     ) {
         Text(date.dayOfMonth.toString(), style = AppTheme.typography.numTitle)
         Text(weekday, style = AppTheme.typography.caption, color = AppTheme.colorScheme.onSurfaceVariant)
+        note?.let { Text(it, style = AppTheme.typography.numCaption, color = AppTheme.colorScheme.onSurfaceVariant, maxLines = 1, softWrap = false) }
     }
 }
 

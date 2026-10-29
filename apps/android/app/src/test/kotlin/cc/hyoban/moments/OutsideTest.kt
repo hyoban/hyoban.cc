@@ -80,4 +80,18 @@ class OutsideTest {
         assertEquals((time / 1000).toString(), segment.first().jsonArray[2].jsonPrimitive.content)
         assertNull(publicLine(share, emptyList()))
     }
+
+    @Test
+    fun `a backup keeps who sees each book and bill, and what of each was published`() {
+        val backup = cc.hyoban.moments.ledger.LedgerBackup(
+            books = listOf(book.copy(visibility = "public")),
+            accounts = emptyList(),
+            categories = listOf(food, snack),
+            txns = listOf(txn.copy(visibility = "private", published = "{}")),
+        )
+        val back = cc.hyoban.moments.ledger.LedgerBackup.decode(cc.hyoban.moments.ledger.LedgerBackup.encode(backup))
+        assertEquals("public", back.books.single().visibility)
+        assertEquals("private", back.txns.single().visibility)
+        assertEquals("{}", back.txns.single().published)
+    }
 }

@@ -64,7 +64,6 @@ import cc.hyoban.moments.ui.components.tripCardKey
 import cc.hyoban.moments.ui.feed.MomentFeed
 import cc.hyoban.moments.ui.ledger.LedgerFilter
 import cc.hyoban.moments.ui.ledger.LocalLedgerNav
-import cc.hyoban.moments.ui.ledger.SpendingCard
 import cc.hyoban.moments.ui.ledger.SpendingOf
 import cc.hyoban.moments.ui.format.daysBetween
 import cc.hyoban.moments.ui.format.formatDay
@@ -73,6 +72,8 @@ import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.fill
 import kotlinx.coroutines.launch
+import androidx.compose.foundation.layout.size
+import kotlin.math.roundToInt
 import cc.hyoban.moments.ui.design.AppSwitch
 import androidx.compose.foundation.selection.toggleable
 
@@ -89,11 +90,12 @@ fun TripScreen(
     onBack: () -> Unit,
     onDay: (String) -> Unit = {},
     onMap: (String) -> Unit = {},
+    onEdit: (String) -> Unit = {},
 ) {
     val trips by container.repository.trips.collectAsStateWithLifecycle()
     val all by container.repository.moments.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
-    val routes by container.routes.routes.collectAsStateWithLifecycle()
+    val routes by container.tripRoutes.collectAsStateWithLifecycle()
     val trip = remember(trips, id) { trips.firstOrNull { it.id == id } } ?: return
     val moments = remember(trip, all) { momentsOf(trip, all, trips) }
     val stops = remember(trip, all, places) { stopsOf(trip, all, trips, places) }
@@ -102,14 +104,21 @@ fun TripScreen(
     val dayLabel = { day: String -> context.getString(R.string.trip_day, daysBetween(trip.start, day)) + "\u2003" + formatDay(day) }
     // The title is the bar's; under it, what the trip covered.
     val summary: @Composable () -> Unit = {
-        Box(Modifier.padding(start = Space.gutter, end = Space.gutter, top = Space.xs, bottom = Space.l)) {
+        Column(Modifier.padding(start = Space.gutter, end = Space.gutter, top = Space.xs, bottom = Space.l), verticalArrangement = Arrangement.spacedBy(Space.m)) {
             TripSubhead(trip, moments.size, places = stops.distinctBy { it.placeId }.size)
+            if (moments.isNotEmpty()) {
+                cc.hyoban.moments.ui.design.Button(onClick = { onPlay(trip.id) }, modifier = Modifier.testTag("play_trip")) {
+                    Icon(AppIcons.Play, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(Space.xs))
+                    Text(stringResource(R.string.action_play_trip))
+                }
+            }
         }
     }
     // What it cost, from the ledger kept on the phone, leading to its bills.
     val ledgerNav = LocalLedgerNav.current
     val spending: @Composable () -> Unit = {
-        SpendingCard(container, SpendingOf.Trip(trip.id), onOpen = { ledgerNav?.list(LedgerFilter(trip = trip.id)) }, Modifier.padding(bottom = Space.l))
+        TripFacets(container, trip, routes[trip.id].orEmpty(), onBills = { ledgerNav?.list(LedgerFilter(trip = trip.id)) })
     }
     // The trip's photos in a row, each the same size in rounded corners, snapping to its start
     // as they're swiped; each opens its Moment. Headed with an arrow pointing
@@ -177,18 +186,17 @@ fun TripScreen(
 
     // The page is the trip's card grown to the screen.
     // Played back along its route from the bar, once it has Moments to show.
+    // The bar holds the map and editing; playing back is the page's one ink button, under the name.
     val actions: @Composable RowScope.() -> Unit = {
         Tooltip(showOnMap, below = true) {
             IconButton(onClick = { onMap(trip.id) }, modifier = Modifier.testTag("show_on_map")) {
                 Icon(AppIcons.Map, contentDescription = showOnMap)
             }
         }
-        if (moments.isNotEmpty()) {
-            val play = stringResource(R.string.action_play_trip)
-            Tooltip(play, below = true) {
-                IconButton(onClick = { onPlay(trip.id) }, modifier = Modifier.testTag("play_trip")) {
-                    Icon(AppIcons.Play, contentDescription = play)
-                }
+        val edit = stringResource(R.string.action_edit_trip)
+        Tooltip(edit, below = true) {
+            IconButton(onClick = { onEdit(trip.id) }, modifier = Modifier.testTag("edit_trip")) {
+                Icon(AppIcons.Pen, contentDescription = edit)
             }
         }
     }
@@ -297,4 +305,70 @@ private fun TrackShareRow(container: AppContainer, trip: cc.hyoban.moments.data.
         Spacer(Modifier.width(Space.m))
         AppSwitch(share != null)
     }
+}
+
+/**
+ * What the trip came to, at most three figures in a row straight on the page, each in figures
+ * over its caption: how far its route went, its charging, and what it cost, which leads to its
+ * bills. A figure it has none of is left out.
+ */
+@Composable
+private fun TripFacets(
+    container: AppContainer,
+    trip: cc.hyoban.moments.data.spec.TripRecord,
+    route: List<cc.hyoban.moments.data.trips.RouteSegment>,
+    onBills: () -> Unit,
+) {
+    val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
+    val moments by container.repository.moments.collectAsStateWithLifecycle()
+    val trips by container.repository.trips.collectAsStateWithLifecycle()
+    val second by container.repository.second.collectAsStateWithLifecycle()
+    val km = remember(route) {
+        route.sumOf { segment ->
+            segment.line.zipWithNext { (lng1, lat1), (lng2, lat2) -> haversineKm(lat1, lng1, lat2, lng2) }.sum()
+        }
+    }
+    val charges = remember(second, trip) {
+        second.entries.values.mapNotNull { entry ->
+            val at = (entry["at"] as? kotlinx.serialization.json.JsonPrimitive)?.content ?: return@mapNotNull null
+            val charge = (entry["parts"] as? kotlinx.serialization.json.JsonObject)?.get("charge") as? kotlinx.serialization.json.JsonObject
+            if (charge == null || at.take(10) < trip.start || at.take(10) > trip.end) null
+            else (charge["energyWh"] as? kotlinx.serialization.json.JsonPrimitive)?.content?.toDoubleOrNull() ?: 0.0
+        }
+    }
+    val currency = ledger.book?.currency ?: "CNY"
+    val spent = remember(ledger, moments, trips, trip) {
+        val bills = cc.hyoban.moments.ui.ledger.billsOf(SpendingOf.Trip(trip.id), ledger, moments.associateBy { it.uid }, trips)
+        if (bills.isEmpty()) null else cc.hyoban.moments.ledger.spendingOf(ledger, bills, currency).expense
+    }
+    val figures = listOfNotNull(
+        (km.takeIf { it >= 1 }?.let { "%,d".format(it.roundToInt()) to stringResource(R.string.facet_km) })?.let { it to null },
+        (charges.takeIf { it.isNotEmpty() }?.let { "%.0f".format(it.sum() / 1000) to stringResource(R.string.facet_charging, it.size) })?.let { it to null },
+        (spent?.let { cc.hyoban.moments.ui.ledger.money(it, currency) to stringResource(R.string.facet_spent) })?.let { it to onBills },
+    )
+    if (figures.isEmpty()) return
+    Row(
+        Modifier.fillMaxWidth().padding(horizontal = Space.gutter).padding(bottom = Space.l).testTag("trip_facets"),
+        horizontalArrangement = Arrangement.spacedBy(Space.l),
+    ) {
+        figures.forEach { (figure, onClick) ->
+            Column(
+                Modifier.weight(1f).then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+                    .semantics(mergeDescendants = true) {},
+                verticalArrangement = Arrangement.spacedBy(Space.xxs),
+            ) {
+                Text(figure.first, style = AppTheme.typography.numTitle, maxLines = 1)
+                Text(figure.second, style = AppTheme.typography.caption, color = AppTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+    }
+}
+
+/** The great-circle distance between two points, in kilometres. */
+private fun haversineKm(lat1: Double, lng1: Double, lat2: Double, lng2: Double): Double {
+    val dLat = Math.toRadians(lat2 - lat1)
+    val dLng = Math.toRadians(lng2 - lng1)
+    val a = kotlin.math.sin(dLat / 2).let { it * it } +
+        kotlin.math.cos(Math.toRadians(lat1)) * kotlin.math.cos(Math.toRadians(lat2)) * kotlin.math.sin(dLng / 2).let { it * it }
+    return 2 * 6371 * kotlin.math.asin(kotlin.math.sqrt(a))
 }

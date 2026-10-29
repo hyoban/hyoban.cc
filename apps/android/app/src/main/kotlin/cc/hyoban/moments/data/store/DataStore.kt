@@ -8,7 +8,16 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.json.JsonObject
 import java.io.File
+
+/** The second shape's records the copy keeps: entries by uid, collections by their key (slug, else uid in lowercase), public tracks by uid. */
+data class SecondShape(
+    val revision: Long = 0,
+    val entries: Map<String, JsonObject> = emptyMap(),
+    val collections: Map<String, JsonObject> = emptyMap(),
+    val tracks: Map<String, JsonObject> = emptyMap(),
+)
 
 /**
  * The app's copy of what the API serves, as files in the spec's layout under one
@@ -34,6 +43,11 @@ class DataStore(val root: File) {
     fun readChangedPlaces(): Map<String, Place> = read("changed-places.json", placesSerializer) ?: emptyMap()
 
     fun writeChangedPlaces(places: Map<String, Place>) = write("changed-places.json", placesSerializer, places.toSortedMap())
+
+    /** The trips changed on the phone, as collections, by trip id, until published: the app's own note. */
+    fun readChangedTrips(): Map<String, JsonObject> = read("changed-trips.json", MapSerializer(String.serializer(), JsonObject.serializer())) ?: emptyMap()
+
+    fun writeChangedTrips(trips: Map<String, JsonObject>) = write("changed-trips.json", MapSerializer(String.serializer(), JsonObject.serializer()), trips.toSortedMap())
 
     @Serializable
     private data class KeptPlaces(val ids: List<String>)
@@ -64,6 +78,21 @@ class DataStore(val root: File) {
 
     fun writeHeld(deleting: Set<String>, reverting: Set<String>) =
         write("held.json", Held.serializer(), Held(deleting.sorted(), reverting.sorted()))
+
+    @Serializable
+    private data class Second(
+        val revision: Long = 0,
+        /** The entries with no Moment in the first shape (a bill, a charge, a mark), and the parts a Moment has beyond it, by uid. */
+        val entries: Map<String, JsonObject> = emptyMap(),
+        val collections: Map<String, JsonObject> = emptyMap(),
+        val tracks: Map<String, JsonObject> = emptyMap(),
+    )
+
+    /** What of the second shape the copy keeps beside the Moments and trips, and its revision. */
+    fun readSecond(): SecondShape = read("second.json", Second.serializer())?.let { SecondShape(it.revision, it.entries, it.collections, it.tracks) } ?: SecondShape()
+
+    fun writeSecond(second: SecondShape) =
+        write("second.json", Second.serializer(), Second(second.revision, second.entries.toSortedMap(), second.collections.toSortedMap(), second.tracks.toSortedMap()))
 
     fun readTrips(): List<TripRecord> = list("trips").map { file -> decode(file, TripRecord.serializer()) }
 

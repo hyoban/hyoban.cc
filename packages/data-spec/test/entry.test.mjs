@@ -1,7 +1,4 @@
 import assert from 'node:assert/strict'
-import { readdirSync, readFileSync } from 'node:fs'
-import { join } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { test } from 'vite-plus/test'
 
 import {
@@ -21,21 +18,11 @@ import {
   tripToCollection,
 } from '../src/entry.ts'
 import { momentRecordSchema, tripRecordSchema } from '../src/index.ts'
+import { readMomentRecords, readTripRecords } from '../../../src/data/store.ts'
 
-const data = fileURLToPath(new URL('../../../data/', import.meta.url))
-
-function readTree(directory) {
-  return readdirSync(directory, { withFileTypes: true }).flatMap((item) =>
-    item.isDirectory()
-      ? readTree(join(directory, item.name))
-      : item.name.endsWith('.json')
-        ? [JSON.parse(readFileSync(join(directory, item.name), 'utf8'))]
-        : [],
-  )
-}
-
-const moments = readTree(join(data, 'moments')).map((moment) => momentRecordSchema.parse(moment))
-const trips = readTree(join(data, 'trips')).map((trip) => tripRecordSchema.parse(trip))
+// The repository's data/ in the first shape, whichever layout it is in.
+const moments = readMomentRecords().map(({ record }) => record)
+const trips = readTripRecords()
 
 const at = '2026-10-29T12:00:00+08:00'
 const base = { uid: getStableUlid(at, 'base'), at, createdAt: at, updatedAt: at }

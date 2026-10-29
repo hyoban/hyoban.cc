@@ -64,9 +64,11 @@ data class ChangeSet(
     val parts: Map<String, Map<String, JsonObject>> = emptyMap(),
     val tracks: List<JsonObject> = emptyList(),
     val deletedTracks: List<String> = emptyList(),
+    /** Trips changed on the phone, as collections. */
+    val collections: List<JsonObject> = emptyList(),
 ) {
     /** Whether it holds anything the first shape can't send. */
-    val needsSecondShape: Boolean get() = entries.isNotEmpty() || parts.isNotEmpty() || tracks.isNotEmpty() || deletedTracks.isNotEmpty()
+    val needsSecondShape: Boolean get() = entries.isNotEmpty() || parts.isNotEmpty() || tracks.isNotEmpty() || deletedTracks.isNotEmpty() || collections.isNotEmpty()
 }
 
 /** A [ChangeSet] as `POST /v2/changes` takes it. */
@@ -77,6 +79,7 @@ private data class EntryChangeSet(
     val deleted: List<String>,
     val tracks: List<JsonObject>,
     val deletedTracks: List<String>,
+    val collections: List<JsonObject>,
 )
 
 @Serializable
@@ -126,10 +129,29 @@ class ApiException(code: Int, message: String) : HttpException(code, message)
 /** There was no token to write with. */
 class NoTokenException : IOException("No API token")
 
+/**
+ * A page of the second shape's feed (`GET /v2/changes`): the entries, collections and public
+ * tracks that changed after a revision, the collections and tracks on the first page only.
+ */
+@Serializable
+data class EntryChanges(
+    val revision: Long,
+    val entries: List<JsonObject>,
+    val deleted: List<String>,
+    val collections: List<JsonObject> = emptyList(),
+    val deletedCollections: List<String> = emptyList(),
+    val tracks: List<JsonObject> = emptyList(),
+    val deletedTracks: List<String> = emptyList(),
+    val next: String? = null,
+)
+
 /** What the app reads the records from; the tests stand in for the API with their own. */
 interface MomentsSource {
     /** What changed after revision [since], or from [cursor] when it continues a feed. */
     suspend fun changes(since: Long, cursor: String?): Changes
+
+    /** The second shape's feed, or null from an API without it. */
+    suspend fun entryChanges(since: Long, cursor: String?): EntryChanges? = null
 }
 
 /**
@@ -144,6 +166,21 @@ class MomentsApi(
 ) : MomentsSource, MomentsWriter {
     override suspend fun changes(since: Long, cursor: String?): Changes =
         get(if (cursor != null) "/v1/changes?cursor=$cursor&limit=500" else "/v1/changes?since=$since&limit=500", Changes.serializer())
+
+    /** With the token when there is one, so the owner's copy has what is private too. */
+    override suspend fun entryChanges(since: Long, cursor: String?): EntryChanges? = withContext(io) {
+        val path = if (cursor != null) "/v2/changes?cursor=$cursor&limit=500" else "/v2/changes?since=$since&limit=500"
+        val request = Request.Builder().url(baseUrl() + path).apply {
+            token()?.takeIf { it.isNotBlank() }?.let { header("Authorization", "Bearer $it") }
+        }.build()
+        client.newCall(request).execute().use { response ->
+            when {
+                response.code == 404 -> null
+                !response.isSuccessful -> throw ApiException(response.code, "GET $path answered ${response.code}")
+                else -> decode(response.body!!.string(), EntryChanges.serializer())
+            }
+        }
+    }
 
     override suspend fun uploaded(momentUid: String, mediaUid: String, part: UploadPart): String? = withContext(io) {
         val path = "/v1/moments/$momentUid/media/$mediaUid/${part.path}"
@@ -180,6 +217,7 @@ class MomentsApi(
             deleted = changes.deleted,
             tracks = changes.tracks,
             deletedTracks = changes.deletedTracks,
+            collections = changes.collections,
         )
         val text = try {
             write("POST", "/v2/changes", encode(EntryChangeSet.serializer(), second), publishing)

@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.ledger
 
+import cc.hyoban.moments.data.store.isPublic
 import cc.hyoban.moments.ui.design.AppIcons
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -156,6 +157,20 @@ fun BillScreen(container: AppContainer, id: String, nav: LedgerNav) {
                     if (txn.excluded) add { shapes -> InfoRow(shapes, AppIcons.Block, stringResource(R.string.ledger_excluded), stringResource(R.string.ledger_excluded_note)) }
                 }
                 SegmentedGroup(null, null, details)
+
+                // Who sees it: its book's say for new bills, until it says otherwise itself.
+                if (txn.kind == cc.hyoban.moments.ledger.TxnKind.EXPENSE || txn.kind == cc.hyoban.moments.ledger.TxnKind.INCOME) {
+                    val public = ledger.isPublic(txn)
+                    SegmentedGroup(
+                        null,
+                        stringResource(if (public) R.string.changes_bill_public_note else R.string.moment_private_note),
+                        listOf { shapes ->
+                            cc.hyoban.moments.ui.settings.SwitchRow(public, AppIcons.Eye, stringResource(R.string.visibility_public), "bill_public", shapes) {
+                                scope.launch { container.ledger.saveTxn(txn.copy(visibility = if (public) "private" else "public")) }
+                            }
+                        },
+                    )
+                }
 
                 // Where it leads among the Moments' pages.
                 val links = buildList<@Composable (ListItemShapes) -> Unit> {

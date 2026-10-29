@@ -2,7 +2,7 @@ import { defineTrips, type TripDefinition } from '@hyoban/trip-map'
 import type { TripRecord } from '@hyoban/data-spec'
 import { readTripRecords } from './store.ts'
 
-// Each trip in data/trips plays back every located Moment between `start` and `end`
+// Each trip (a collection in data/collections, or data/trips in the first layout) plays back every located Moment between `start` and `end`
 // (inclusive) at /trip/<id>/. `waypoints` add places the route passed through without a
 // Moment. The API fetches each leg's route after a write, so the route follows roads.
 

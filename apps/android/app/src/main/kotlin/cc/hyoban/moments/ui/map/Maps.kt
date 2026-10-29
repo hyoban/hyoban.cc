@@ -1221,8 +1221,19 @@ fun PlacesStill(places: List<Place>, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun PointsMap(points: List<LatLng>, lines: List<RouteSegment>, dot: Float, padding: Dp, modifier: Modifier, interactive: Boolean) {
-    val line = AppTheme.colorScheme.primary.toArgb()
+private fun PointsMap(
+    points: List<LatLng>,
+    lines: List<RouteSegment>,
+    dot: Float,
+    padding: Dp,
+    modifier: Modifier,
+    interactive: Boolean,
+    color: androidx.compose.ui.graphics.Color = AppTheme.colorScheme.primary,
+    gapColor: androidx.compose.ui.graphics.Color = color,
+    width: Float = 3f,
+) {
+    val line = color.toArgb()
+    val gap = gapColor.toArgb()
     val ring = AppTheme.colorScheme.surface.toArgb()
     val inset = edges(padding, padding, padding, padding)
 
@@ -1239,7 +1250,7 @@ private fun PointsMap(points: List<LatLng>, lines: List<RouteSegment>, dot: Floa
             style.addLayer(
                 LineLayer(ROUTE, ROUTE).withFilter(not(get("straight"))).withProperties(
                     lineColor(line),
-                    lineWidth(3f),
+                    lineWidth(width),
                     lineOpacity(0.8f),
                     lineCap(Property.LINE_CAP_ROUND),
                     lineJoin(Property.LINE_JOIN_ROUND),
@@ -1247,7 +1258,7 @@ private fun PointsMap(points: List<LatLng>, lines: List<RouteSegment>, dot: Floa
             )
             style.addLayer(
                 LineLayer(ROUTES_DASHED, ROUTE).withFilter(get("straight")).withProperties(
-                    lineColor(line),
+                    lineColor(gap),
                     lineWidth(2.5f),
                     lineOpacity(0.8f),
                     lineDasharray(arrayOf(2f, 2f)),
@@ -1266,6 +1277,19 @@ private fun PointsMap(points: List<LatLng>, lines: List<RouteSegment>, dot: Floa
         val framed = points + lines.flatMap { segment -> segment.line.map { (longitude, latitude) -> LatLng(latitude, longitude) } }
         if (framed.isNotEmpty()) map.frame(framed, inset)
     }
+}
+
+/**
+ * A day's recorded track: each unbroken stretch a solid line in the track's colour, the gaps
+ * between them (no signal, not recorded) dotted, never guessed; [points] the day's Moments.
+ */
+@Composable
+fun DayTrackMap(stretches: List<List<Pair<Double, Double>>>, points: List<LatLng>, modifier: Modifier = Modifier) {
+    val lines = remember(stretches) {
+        stretches.map { RouteSegment(it, straight = false) } +
+            stretches.zipWithNext { a, b -> RouteSegment(listOf(a.last(), b.first()), straight = true) }
+    }
+    PointsMap(points, lines, dot = 4f, padding = 32.dp, modifier = modifier, interactive = false, color = cc.hyoban.moments.ui.theme.tokens.track, gapColor = cc.hyoban.moments.ui.theme.tokens.trackGap, width = 4f)
 }
 
 private const val PICK_PLACES = "pick-places"

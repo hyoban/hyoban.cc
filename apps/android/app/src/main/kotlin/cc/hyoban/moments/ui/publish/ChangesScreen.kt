@@ -155,6 +155,15 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
             ) {
                 if (pending.size == 0) {
                     item(key = "empty") { Column(Modifier.animateItem()) { Group(null, stringResource(R.string.empty_changes)) {} } }
+                } else {
+                    item(key = "private-note") {
+                        Text(
+                            stringResource(R.string.changes_private_note),
+                            style = AppTheme.typography.bodySmall,
+                            color = AppTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.animateItem().padding(horizontal = Space.gutter, vertical = Space.xs),
+                        )
+                    }
                 }
                 section(R.string.section_added, pending.added, key = { it.uid }) { moment ->
                     ChangeCard(moment, onOpen = { onMoment(moment.uid) }.takeUnless { busy }) {
@@ -178,7 +187,25 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
                     val revert = { container.revertPlace(change.id) }.takeUnless { busy }
                     SwipeToRevert(revert) { PlaceChangeCard(change, revert) }
                 }
-                section(R.string.changes_bills, pending.outside.bills, key = { "bill-${it.uid}" }) { change ->
+                section(R.string.section_changed_trips, pending.trips, key = { "trip-${it.before.id}" }) { change ->
+                    val revert = { container.scope.launch { container.repository.revertTrip(change.before.id) }; Unit }.takeUnless { busy }
+                    val after = change.after
+                    val title = (after["title"] as? kotlinx.serialization.json.JsonPrimitive)?.content ?: change.before.title
+                    val span = after["span"] as? kotlinx.serialization.json.JsonObject
+                    val start = (span?.get("start") as? kotlinx.serialization.json.JsonPrimitive)?.content?.take(10) ?: change.before.start
+                    val end = (span?.get("end") as? kotlinx.serialization.json.JsonPrimitive)?.content?.take(10) ?: change.before.end
+                    val private = cc.hyoban.moments.data.spec.Entries.isPrivate(after)
+                    SwipeToRevert(revert) {
+                        OutsideCard(
+                            title,
+                            formatDate(start) + " – " + formatDate(end),
+                            null,
+                            stringResource(if (private) R.string.visibility_private else R.string.visibility_public),
+                            revert,
+                        )
+                    }
+                }
+                section(R.string.section_visibility, pending.outside.bills, key = { "bill-${it.uid}" }) { change ->
                     // Taken back by saying again what the site has: private for a bill going
                     // public, public for one going private; a public bill that changed has no undo.
                     val revert = when {
@@ -624,6 +651,15 @@ private fun ChangedFields(change: Change, places: Map<String, Place>, urls: Medi
         val from = MomentTopic.of(before.topic)?.let { stringResource(topicLabel(it)) } ?: none
         val to = MomentTopic.of(after.topic)?.let { stringResource(topicLabel(it)) } ?: none
         Field(R.string.change_topic) { FromTo(from, to, AppIcons.Category) }
+    }
+    // Public or private, a change of its own: one made private leaves the site.
+    if (before.hidden != after.hidden) {
+        any = true
+        val public = stringResource(R.string.visibility_public)
+        val private = stringResource(R.string.visibility_private)
+        Field(R.string.section_visibility) {
+            FromTo(if (before.hidden) private else public, if (after.hidden) private else public, if (after.hidden) AppIcons.EyeOff else AppIcons.Eye)
+        }
     }
     if (!any) {
         Text(stringResource(R.string.note_change_nothing), style = AppTheme.typography.body, color = AppTheme.colorScheme.onSurfaceVariant)

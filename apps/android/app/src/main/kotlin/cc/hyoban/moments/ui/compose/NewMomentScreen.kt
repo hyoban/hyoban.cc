@@ -222,6 +222,8 @@ fun NewMomentScreen(
     var verdict by rememberSaveable { mutableStateOf(originalFood?.verdict) }
     var amount by rememberSaveable { mutableStateOf(originalFood?.bill?.amount?.let(::formatAmount).orEmpty()) }
     var people by rememberSaveable { mutableStateOf(originalFood?.bill?.people?.toString().orEmpty()) }
+    /** Whether 美食 was added from the 加一项 row: open for a Moment that has a meal. */
+    var withFood by rememberSaveable { mutableStateOf(originalFood != null) }
     val food = foodOf(dishes, verdict, amount, people, originalFood)
     var topic by rememberSaveable { mutableStateOf(original?.topic) }
     /** Private: kept on the phone and in the API for its owner, never on the site. */
@@ -573,7 +575,33 @@ fun NewMomentScreen(
                             cc.hyoban.moments.ui.settings.SwitchRow(private, AppIcons.EyeOff, stringResource(R.string.visibility_private), "moment_private", shapes) { private = !private }
                         },
                     )
-                    FoodGroup(
+                    // 加一项: the plugins in a row, each opening its fields when chosen.
+                    Caption(stringResource(R.string.section_add_item))
+                    androidx.compose.foundation.layout.FlowRow(
+                        Modifier.fillMaxWidth().padding(horizontal = Space.gutter),
+                        horizontalArrangement = Arrangement.spacedBy(Space.s),
+                    ) {
+                        FilterChip(
+                            selected = withFood,
+                            onClick = {
+                                withFood = !withFood
+                                if (!withFood) {
+                                    dishes = ""; verdict = null; amount = ""; people = ""
+                                }
+                            },
+                            label = { Text(stringResource(R.string.section_food)) },
+                            leadingIcon = { Icon(AppIcons.Food, contentDescription = null, Modifier.size(FilterChipDefaults.IconSize)) },
+                            modifier = Modifier.testTag("add_food"),
+                        )
+                        FilterChip(
+                            selected = withBill,
+                            onClick = { withBill = !withBill },
+                            label = { Text(stringResource(R.string.section_bill)) },
+                            leadingIcon = { Icon(AppIcons.Receipt, contentDescription = null, Modifier.size(FilterChipDefaults.IconSize)) },
+                            modifier = Modifier.testTag("add_bill"),
+                        )
+                    }
+                    if (withFood) FoodGroup(
                         dishes = dishes,
                         onDishes = { dishes = it },
                         verdict = verdict,

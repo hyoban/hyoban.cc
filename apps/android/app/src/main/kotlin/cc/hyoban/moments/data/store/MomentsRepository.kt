@@ -9,7 +9,9 @@ import cc.hyoban.moments.data.api.UploadPart
 import cc.hyoban.moments.data.spec.MediaType
 import cc.hyoban.moments.data.spec.MomentMedia
 import cc.hyoban.moments.data.spec.MomentRecord
+import cc.hyoban.moments.data.spec.Entries
 import cc.hyoban.moments.data.spec.Place
+import cc.hyoban.moments.data.spec.entryUid
 import cc.hyoban.moments.data.spec.TripRecord
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -60,6 +62,10 @@ class MomentsRepository(
     private var changedPlaces: Map<String, Place> = emptyMap()
     /** The site's Moments deleted on the phone, by uid, until the deletions are published. */
     private var removed: Set<String> = emptySet()
+    /** The trips changed on the phone, as collections, by trip id, until published. */
+    private var changedTrips: Map<String, kotlinx.serialization.json.JsonObject> = emptyMap()
+    /** The trips as the API has them, before the phone's changes. */
+    private var apiTrips: List<TripRecord> = emptyList()
 
     /** Moments set aside while their deletion can still be undone: out of sight, not yet deleted. */
     private var setAside: Set<String> = emptySet()
@@ -86,6 +92,14 @@ class MomentsRepository(
     /** What publishing would change on the site. */
     val pending: StateFlow<PendingChanges> = _pending.asStateFlow()
 
+    private val _second = MutableStateFlow(SecondShape())
+    /**
+     * The second shape's records beside the Moments and trips: the entries with no Moment (a
+     * charge, a public bill, a mark) and the Moments with parts the first shape doesn't hold,
+     * the collections and the public spans of the footprints.
+     */
+    val second: StateFlow<SecondShape> = _second.asStateFlow()
+
     /** Reads the copy on the phone. */
     suspend fun load() = lock.withLock {
         withContext(io) {
@@ -97,6 +111,7 @@ class MomentsRepository(
                 keptPlaces = local.readKeptPlaces()
                 changedPlaces = local.readChangedPlaces()
                 removed = local.readRemoved()
+                changedTrips = local.readChangedTrips()
                 // What a snackbar was still offering to undo when the app was last closed: done
                 // now, as the snackbar going without its undo would have done it.
                 val (deleting, reverting) = local.readHeld()
@@ -105,7 +120,9 @@ class MomentsRepository(
                 if (deleting.isNotEmpty() || reverting.isNotEmpty()) local.writeHeld(emptySet(), emptySet())
             }
             publishPlaces()
-            _trips.value = store.readTrips().sortedByDescending { it.start }
+            apiTrips = store.readTrips()
+            _second.value = store.readSecond()
+            showTrips()
             publish()
             _loaded.value = true
         }
@@ -155,15 +172,17 @@ class MomentsRepository(
                     val fresh = since == 0L
                     val gone = first.deletedTrips.toSet() + first.trips.map { it.id }
                     val places = (if (fresh) emptyMap() else apiPlaces - first.deletedPlaces.toSet()) + first.places
-                    val trips = (if (fresh) emptyList() else _trips.value.filter { it.id !in gone }) + first.trips
+                    val trips = (if (fresh) emptyList() else apiTrips.filter { it.id !in gone }) + first.trips
 
                     if (fresh || first.places.isNotEmpty() || first.deletedPlaces.isNotEmpty()) store.writePlaces(places)
                     if (fresh || first.trips.isNotEmpty() || first.deletedTrips.isNotEmpty()) store.replaceTrips(trips)
                     store.writeRevision(revision)
                     apiPlaces = places
-                    _trips.value = trips.sortedByDescending { it.start }
+                    apiTrips = trips
                 }
 
+                syncSecond()
+                showTrips()
                 all = moments
                 // A deletion of a Moment the site no longer has is done already.
                 if (removed.any { it !in moments }) {
@@ -182,6 +201,44 @@ class MomentsRepository(
         } finally {
             _syncing.value = false
         }
+    }
+
+    /**
+     * Brings the second shape's copy up to the API's `/v2` feed, keeping of the entries only what
+     * the first shape's Moments don't hold; nothing from an API without it.
+     */
+    private suspend fun syncSecond() {
+        var current = store.readSecond()
+        var page = source.entryChanges(current.revision, cursor = null) ?: return
+        if (page.revision < current.revision) {
+            current = SecondShape()
+            page = source.entryChanges(0, cursor = null) ?: return
+        }
+        if (page.revision == current.revision) return
+        val since = current.revision
+        val entries = current.entries.toMutableMap()
+        val first = page
+        while (true) {
+            page.deleted.forEach(entries::remove)
+            for (entry in page.entries) {
+                val uid = entry.entryUid
+                if (beyondFirstShape(entry)) entries[uid] = entry else entries.remove(uid)
+            }
+            page = source.entryChanges(since, page.next ?: break) ?: break
+        }
+        val fresh = since == 0L
+        val collections = (if (fresh) emptyMap() else current.collections - first.deletedCollections.toSet()) +
+            first.collections.associateBy { Entries.collectionKey(it) }
+        val tracks = (if (fresh) emptyMap() else current.tracks - first.deletedTracks.toSet()) + first.tracks.associateBy { it.entryUid }
+        val next = SecondShape(first.revision, entries, collections, tracks)
+        store.writeSecond(next)
+        _second.value = next
+    }
+
+    /** Whether an entry holds what the first shape's Moment of it doesn't: it is none, or has other parts. */
+    private fun beyondFirstShape(entry: kotlinx.serialization.json.JsonObject): Boolean {
+        val parts = entry["parts"] as? kotlinx.serialization.json.JsonObject ?: return true
+        return !Entries.isMoment(entry) || parts.keys.any { it !in FIRST_SHAPE_PARTS }
     }
 
     /** Shows the Moments about tech beside what the site shows, or leaves them out again. */
@@ -204,7 +261,9 @@ class MomentsRepository(
             all = emptyMap()
             apiPlaces = emptyMap()
             publishPlaces()
-            _trips.value = emptyList()
+            apiTrips = emptyList()
+            _second.value = SecondShape()
+            showTrips()
             _error.value = null
             publish()
         }
@@ -417,7 +476,8 @@ class MomentsRepository(
             Snapshot(phone.values.filter { it.uid !in holding }.sortedWith(oldestFirst), apiPlaces, phonePlaces, (removed - holding).toList(), changedPlaces)
         }
         val extra = outside?.pending() ?: Outside()
-        if (written.isEmpty() && deletions.isEmpty() && kinds.isEmpty() && extra.size == 0) return
+        val trips = lock.withLock { changedTrips }
+        if (written.isEmpty() && deletions.isEmpty() && kinds.isEmpty() && extra.size == 0 && trips.isEmpty()) return
         // A bill of a Moment goes as a part of it, the Moment sent again with it (or without it,
         // taken off) when it isn't among the changes already; a bill alone is an entry of its own.
         val (ofMoments, alone) = lock.withLock {
@@ -501,10 +561,18 @@ class MomentsRepository(
                     parts = parts,
                     tracks = extra.tracks.mapNotNull { it.line },
                     deletedTracks = extra.tracks.filter { it.line == null }.map { it.share.uid },
+                    collections = trips.values.toList(),
                 ),
             )
         }
         outside?.published(extra)
+        lock.withLock {
+            withContext(io) {
+                // A trip changed again while this was sent stays to be published.
+                changedTrips = changedTrips.filter { (id, collection) -> trips[id] != collection }
+                local?.writeChangedTrips(changedTrips)
+            }
+        }
         lock.withLock {
             withContext(io) {
                 apiPlaces = apiPlaces + applied.places.filterValues { it !in apiPlaces }.entries.associate { (given, id) -> id to places.getValue(given) } +
@@ -603,6 +671,7 @@ class MomentsRepository(
             removed.mapNotNull { all[it] }.sortedWith(oldestFirst),
             changedPlaces.mapNotNull { (id, place) -> apiPlaces[id]?.let { PlaceChange(id, it, place) } }.sortedBy { it.after.name },
             outside?.pending() ?: Outside(),
+            changedTrips.mapNotNull { (id, collection) -> apiTrips.firstOrNull { it.id == id }?.let { TripChange(it, collection) } },
         )
     }
 
@@ -612,6 +681,49 @@ class MomentsRepository(
 
     // A private one is the phone's to see, marked so; one about tech only when asked for.
     private fun isShown(moment: MomentRecord) = moment.published != null && (showTech || moment.topic != "tech")
+
+    /** The trips the screens show: the API's, with the phone's changes to their names and days. */
+    private fun showTrips() {
+        _trips.value = apiTrips.map { trip ->
+            val changed = changedTrips[trip.id] ?: return@map trip
+            val span = changed["span"] as? kotlinx.serialization.json.JsonObject
+            trip.copy(
+                title = (changed["title"] as? kotlinx.serialization.json.JsonPrimitive)?.content ?: trip.title,
+                start = (span?.get("start") as? kotlinx.serialization.json.JsonPrimitive)?.content?.take(10) ?: trip.start,
+                end = (span?.get("end") as? kotlinx.serialization.json.JsonPrimitive)?.content?.take(10) ?: trip.end,
+            )
+        }.sortedByDescending { it.start }
+    }
+
+    /** Whether a trip is private: by the phone's change to it, else as the API has it. */
+    fun isTripPrivate(id: String): Boolean =
+        (changedTrips[id] ?: _second.value.collections[id])?.let(Entries::isPrivate) == true
+
+    /** Keeps a change to a trip on the phone, its name, its days and who sees it, until it is published. */
+    suspend fun editTrip(id: String, title: String, start: String, end: String, visibility: cc.hyoban.moments.data.spec.Visibility) = lock.withLock {
+        val local = checkNotNull(local) { "No store for the phone's changes" }
+        withContext(io) {
+            val trip = apiTrips.firstOrNull { it.id == id } ?: error("Unknown trip $id")
+            val base = Entries.collectionOf(trip, _second.value.collections[id])
+            val now = java.time.OffsetDateTime.now(java.time.ZoneOffset.UTC).withNano(0).toString()
+            val edited = Entries.editCollection(base, title, start, end, visibility, now)
+            val same = trip.title == title && trip.start == start && trip.end == end && Entries.isPrivate(base) == (visibility == cc.hyoban.moments.data.spec.Visibility.PRIVATE)
+            changedTrips = if (same) changedTrips - id else changedTrips + (id to edited)
+            local.writeChangedTrips(changedTrips)
+            showTrips()
+            publish()
+        }
+    }
+
+    /** Takes back the phone's change to a trip. */
+    suspend fun revertTrip(id: String) = lock.withLock {
+        withContext(io) {
+            changedTrips = changedTrips - id
+            local?.writeChangedTrips(changedTrips)
+            showTrips()
+            publish()
+        }
+    }
 
     /** Notes again what waits beside the Moments, the ledger or the footprints having changed. */
     fun noteOutside() {
@@ -687,12 +799,20 @@ data class PendingChanges(
     val places: List<PlaceChange> = emptyList(),
     /** The bills and footprints going public, or private again. */
     val outside: Outside = Outside(),
+    /** The trips changed on the phone. */
+    val trips: List<TripChange> = emptyList(),
 ) {
-    val size get() = added.size + changed.size + removed.size + places.size + outside.size
+    val size get() = added.size + changed.size + removed.size + places.size + outside.size + trips.size
 }
+
+/** A trip as the site has it, [before], and the collection it is changed to. */
+data class TripChange(val before: TripRecord, val after: kotlinx.serialization.json.JsonObject)
 
 /** One of the site's places as the site has it, [before], and with the kind changed on the phone. */
 data class PlaceChange(val id: String, val before: Place, val after: Place)
 
 /** One of the site's Moments as the site has it, [before] (null when the copy no longer has it), and as changed. */
 data class Change(val before: MomentRecord?, val after: MomentRecord)
+
+/** The parts a Moment of the first shape holds. */
+private val FIRST_SHAPE_PARTS = setOf("text", "media", "food")
