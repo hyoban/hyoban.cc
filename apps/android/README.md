@@ -299,7 +299,8 @@ expense's page. 记一笔, the tab's button (or `moments://new-bill`), opens the
 with only 记账 chosen, where a Moment can be written with the bill; changing a bill, or writing
 one from a Moment, an account or a day, is a full-screen dialog of its own. Either has its amount
 (sums like `12+3.4` add up) in any currency, its category and second-level category,
-the account, or several accounts each with its share, its time and book, an expense's
+the account, or several accounts each with its share (one is needed to save it, and a
+transfer needs one of its two sides, though an imported bill may have none), its time and book, an expense's
 discount (on record only), a transfer's fee (an expense) and discount (an income) and,
 between currencies, what arrived (the day's rate suggests it), a note, whether
 it is to be reimbursed (left out of the sums until it is) or left out of the sums

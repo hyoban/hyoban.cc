@@ -278,6 +278,9 @@ internal class BillDraft(
             splitList.mapNotNull { (id, text) -> parseAmount(text)?.let { Split(id, it) } }.filter { it.amount > 0 }
         } else emptyList()
         if (parsedSplits.isNotEmpty() && parsedSplits.sumOf { it.amount } != value) return null.also { onError(R.string.ledger_error_splits) }
+        // Written here, a bill other than a transfer is paid from or into an account; an imported
+        // one may have none.
+        if (kind != TxnKind.TRANSFER && parsedSplits.isEmpty() && account == null) return null.also { onError(R.string.ledger_error_account) }
         val now = System.currentTimeMillis()
         val currency = shownCurrency(ledger)
         val payer = if (parsedSplits.isNotEmpty()) null else account
@@ -622,6 +625,8 @@ internal fun BillFields(
             ledger,
             onDismiss = { sheet = null },
             onCreate = { created -> scope.launch { container.ledger.saveAccount(created) } },
+            // Only a transfer's one side may be left without.
+            allowNone = open == Sheet.From || open == Sheet.To,
         ) { picked ->
             when (open) {
                 Sheet.Account -> draft.account = picked
@@ -786,12 +791,12 @@ private fun SplitEditor(ledger: Ledger, splits: List<Pair<String, String>>, curr
 }
 
 /**
- * The accounts to pay from or into, by kind, as a modal bottom sheet, with none among them and
- * a new one made there and then.
+ * The accounts to pay from or into, by kind, as a modal bottom sheet, with none among them when
+ * [allowNone], and a new one made there and then.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AccountSheet(ledger: Ledger, onDismiss: () -> Unit, onCreate: (Account) -> Unit, onPick: (String?) -> Unit) {
+fun AccountSheet(ledger: Ledger, onDismiss: () -> Unit, onCreate: (Account) -> Unit, allowNone: Boolean = true, onPick: (String?) -> Unit) {
     var creating by remember { mutableStateOf(false) }
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = AppColors.sheet, modifier = Modifier.semantics { testTagsAsResourceId = true }) {
         LazyColumn(Modifier.padding(bottom = Space.l)) {
@@ -812,12 +817,14 @@ fun AccountSheet(ledger: Ledger, onDismiss: () -> Unit, onCreate: (Account) -> U
                 )
             }
             item {
-                ListItem(
-                    headlineContent = { Text(stringResource(R.string.ledger_no_account)) },
-                    leadingContent = { Icon(Icons.Rounded.Block, contentDescription = null) },
-                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                    modifier = Modifier.clickable { onPick(null) },
-                )
+                if (allowNone) {
+                    ListItem(
+                        headlineContent = { Text(stringResource(R.string.ledger_no_account)) },
+                        leadingContent = { Icon(Icons.Rounded.Block, contentDescription = null) },
+                        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                        modifier = Modifier.clickable { onPick(null) },
+                    )
+                }
                 ListItem(
                     headlineContent = { Text(stringResource(R.string.ledger_add_account)) },
                     leadingContent = { Icon(Icons.Rounded.Add, contentDescription = null) },

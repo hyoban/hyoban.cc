@@ -645,6 +645,7 @@
     <string name="ledger_record_reimbursement">记报销入账</string>
     <string name="ledger_error_amount">请输入金额</string>
     <string name="ledger_error_transfer">请选择转出或转入账户</string>
+    <string name="ledger_error_account">请选择账户</string>
     <string name="ledger_error_same_account">转出和转入账户不能相同</string>
     <string name="ledger_error_splits">各账户金额合计要等于总金额</string>
     <string name="ledger_no_moments_near">前后一天没有时刻</string>

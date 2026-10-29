@@ -661,6 +661,7 @@
     <string name="ledger_record_reimbursement">Record reimbursement</string>
     <string name="ledger_error_amount">Enter an amount</string>
     <string name="ledger_error_transfer">Choose an account to transfer from or to</string>
+    <string name="ledger_error_account">Choose an account</string>
     <string name="ledger_error_same_account">The two accounts can\'t be the same</string>
     <string name="ledger_error_splits">The accounts\' amounts must add up to the total</string>
     <string name="ledger_no_moments_near">No Moments within a day</string>
