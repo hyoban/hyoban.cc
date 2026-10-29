@@ -481,7 +481,7 @@ internal fun BillFields(
             modifier = Modifier.fillMaxWidth().testTag("amount"),
         )
         DropdownMenu(currencies, onDismissRequest = { currencies = false }) {
-            (COMMON_CURRENCIES + ledger.rates.currencies.sorted()).distinct().forEach { code ->
+            ledger.currenciesByUse.forEach { code ->
                 DropdownMenuItem(text = { Text("$code  ${currencySymbol(code).trim()}") }, onClick = { draft.currency = code; currencies = false })
             }
         }
@@ -655,7 +655,7 @@ internal fun BillFields(
                 sheet = null
             }
         }
-        Sheet.Place -> PlaceSheet(places.mapValues { it.value.name }, onDismiss = { sheet = null }) { id ->
+        Sheet.Place -> PlaceSheet(places.mapValues { it.value.name }, ledger.placeUses, onDismiss = { sheet = null }) { id ->
             draft.place = id
             sheet = null
         }
@@ -717,13 +717,13 @@ private fun AmountField(value: String, onChange: (String) -> Unit, label: String
 }
 
 /**
- * The book's categories of the bill's kind as filter chips, the chosen one's second-level ones
- * under them, each row ending in a chip that adds one.
+ * The book's categories of the bill's kind as filter chips, the latest bills' most used first, the
+ * chosen one's second-level ones under them, each row ending in a chip that adds one.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun CategoryChips(ledger: Ledger, book: String?, type: CategoryType, selected: String?, onPick: (String?) -> Unit, onAdd: (String?) -> Unit) {
-    val categories = ledger.categories.filter { it.book == book && it.type == type }
+    val categories = ledger.categories.filter { it.book == book && it.type == type }.sortedByDescending { ledger.categoryUses[it.id] ?: 0 }
     val tops = categories.filter { it.parent == null }
     val chosen = selected?.let(ledger.categoriesById::get)
     val top = chosen?.parent ?: chosen?.id
@@ -894,12 +894,12 @@ fun ChoiceSheet(options: List<Pair<String, String>>, onDismiss: () -> Unit, empt
     }
 }
 
-/** The places by name, searched as typed, as a modal bottom sheet. */
+/** The places, those the latest bills were at most first, then by name, searched as typed, as a modal bottom sheet. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun PlaceSheet(places: Map<String, String>, onDismiss: () -> Unit, onPick: (String) -> Unit) {
+private fun PlaceSheet(places: Map<String, String>, uses: Map<String, Int>, onDismiss: () -> Unit, onPick: (String) -> Unit) {
     var query by remember { mutableStateOf("") }
-    val shown = remember(places, query) { places.entries.filter { query.isBlank() || it.value.contains(query.trim(), ignoreCase = true) }.sortedBy { it.value }.take(200) }
+    val shown = remember(places, query) { places.entries.filter { query.isBlank() || it.value.contains(query.trim(), ignoreCase = true) }.sortedWith(compareByDescending<Map.Entry<String, String>> { uses[it.key] ?: 0 }.thenBy { it.value }).take(200) }
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = AppColors.sheet) {
         OutlinedTextField(
             query,
