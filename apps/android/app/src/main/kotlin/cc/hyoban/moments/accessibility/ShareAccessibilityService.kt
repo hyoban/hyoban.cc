@@ -11,29 +11,42 @@ import android.os.SystemClock
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.Toast
+import cc.hyoban.moments.ledger.AutoBill
+import cc.hyoban.moments.ledger.PaymentApp
+import cc.hyoban.moments.ledger.PaymentPage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-/** One service executes one explicitly requested adapter flow at a time. */
+/**
+ * One service executes one explicitly requested adapter flow at a time. While none is running and
+ * 自动记账 is on, it also reads WeChat Pay's and Alipay's pages, only reading, for a payment made.
+ */
 open class ShareAccessibilityService : AccessibilityService() {
     private val handler = Handler(Looper.getMainLooper())
     private var session: AssistSession? = null
     private var nextActionAt = 0L
     private val tick = Runnable { inspect() }
+    private val payment = Runnable { readPayment() }
 
     override fun dump(fd: java.io.FileDescriptor, writer: java.io.PrintWriter, args: Array<out String>) {
         // State only: no destination, caption, or third-party screen contents in diagnostics.
-        writer.println("assist=${assistState.value}, stage=${session?.request?.flow?.stage ?: "idle"}")
+        writer.println("assist=${assistState.value}, stage=${session?.request?.flow?.stage ?: "idle"}, autoBill=${AutoBill.enabled(this)}")
     }
 
     override fun onServiceConnected() {
         instance = this
-        listenTo(packageName)
+        listenIdle()
         connectedState.value = true
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         if (session != null && !handler.hasCallbacks(tick)) handler.postDelayed(tick, POLL_MS)
+        // A payment app's page read a moment after it changes, at most once in that time: its
+        // pages never stop changing for long, with their animations, for a read waiting on quiet.
+        if (session == null && PaymentApp.of(event?.packageName?.toString()) != null && AutoBill.enabled(this) &&
+            !handler.hasCallbacks(payment)) {
+            handler.postDelayed(payment, PAYMENT_SETTLE_MS)
+        }
     }
 
     override fun onInterrupt() = stop(AssistStop.CANCELLED)
@@ -47,13 +60,41 @@ open class ShareAccessibilityService : AccessibilityService() {
         super.onDestroy()
     }
 
-    private fun listenTo(targetPackage: String) {
-        serviceInfo = serviceInfo.apply { packageNames = arrayOf(targetPackage) }
+    private fun listenTo(vararg targetPackages: String) {
+        serviceInfo = serviceInfo.apply { packageNames = arrayOf(*targetPackages) }
+    }
+
+    /** This app alone while idle, and the payment apps besides while 自动记账 is on. */
+    private fun listenIdle() {
+        handler.removeCallbacks(payment)
+        if (AutoBill.enabled(this)) listenTo(packageName, *PaymentApp.entries.map { it.packageName }.toTypedArray()) else listenTo(packageName)
+    }
+
+    /** The payment on the payment app's page in front, offered as a bill; nothing of the page is kept. */
+    private fun readPayment() {
+        if (session != null || !AutoBill.enabled(this)) return
+        var root: AccessibilityNodeInfo? = null
+        val raw = mutableListOf<AccessibilityNodeInfo>()
+        try {
+            root = rootInActiveWindow ?: return
+            val app = PaymentApp.of(root.packageName?.toString()) ?: return
+            val nodes = mutableListOf<AssistNode>().also { collect(root, app.packageName, false, raw, it, hidden = true) }
+            val found = PaymentPage.read(app, nodes.map { it.text.ifEmpty { it.description } })
+            if (found != null) AutoBill.offer(this, found, System.currentTimeMillis())
+        } catch (_: Exception) {
+            // A page gone while it was read is read again at its next change.
+        } finally {
+            @Suppress("DEPRECATION")
+            raw.filter { it !== root }.forEach { it.recycle() }
+            @Suppress("DEPRECATION")
+            root?.recycle()
+        }
     }
 
     private fun begin(request: AssistRequest) {
         check(session == null) { "Another accessibility task is already running" }
         handler.removeCallbacks(tick)
+        handler.removeCallbacks(payment)
         val now = SystemClock.elapsedRealtime()
         listenTo(request.adapter.packageName)
         session = AssistSession(request, now)
@@ -127,7 +168,11 @@ open class ShareAccessibilityService : AccessibilityService() {
             putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, text)
         })
 
-    private fun collect(node: AccessibilityNodeInfo, targetPackage: String, inList: Boolean, raw: MutableList<AccessibilityNodeInfo>, result: MutableList<AssistNode>) {
+    /**
+     * The window's nodes in reading order; with [hidden], those scrolled out of view too, so a
+     * payment page reads the same however far down it is.
+     */
+    private fun collect(node: AccessibilityNodeInfo, targetPackage: String, inList: Boolean, raw: MutableList<AccessibilityNodeInfo>, result: MutableList<AssistNode>, hidden: Boolean = false) {
         // Bound traversal even if a third-party view exposes a malformed/very large tree.
         if (raw.size >= 500) {
             @Suppress("DEPRECATION")
@@ -138,7 +183,7 @@ open class ShareAccessibilityService : AccessibilityService() {
         raw.add(node)
         val children = (0 until node.childCount.coerceAtMost(100)).mapNotNull(node::getChild)
         val inRecycler = inList || node.className?.toString()?.contains("RecyclerView") == true
-        if (node.isVisibleToUser && node.packageName?.toString() == targetPackage) {
+        if ((hidden || node.isVisibleToUser) && node.packageName?.toString() == targetPackage) {
             result.add(AssistNode(
                 id = id,
                 text = node.text?.toString().orEmpty(),
@@ -152,7 +197,7 @@ open class ShareAccessibilityService : AccessibilityService() {
                 viewId = node.viewIdResourceName.orEmpty(),
             ))
         }
-        children.forEach { collect(it, targetPackage, inRecycler, raw, result) }
+        children.forEach { collect(it, targetPackage, inRecycler, raw, result, hidden) }
     }
 
     private fun stop(reason: AssistStop) {
@@ -166,13 +211,14 @@ open class ShareAccessibilityService : AccessibilityService() {
         handler.removeCallbacks(tick)
         val adapter = current.request.adapter
         assistState.value = AssistState(adapter.id, current.status)
-        listenTo(packageName)
+        listenIdle()
         val message = if (current.status == AssistStatus.Ready) adapter.readyMessage else adapter.stoppedMessage
         Toast.makeText(this, message, Toast.LENGTH_LONG).show()
     }
 
     companion object {
         private const val POLL_MS = 350L
+        private const val PAYMENT_SETTLE_MS = 600L
         private var instance: ShareAccessibilityService? = null
         private val connectedState = MutableStateFlow(false)
         val connected = connectedState.asStateFlow()
@@ -183,6 +229,11 @@ open class ShareAccessibilityService : AccessibilityService() {
         internal fun start(request: AssistRequest) {
             val service = checkNotNull(instance) { "Share accessibility service is not connected" }
             service.begin(request)
+        }
+
+        /** Follows 自动记账 turned on or off, unless a share is running, which comes back to it after. */
+        fun listenIdle() {
+            instance?.takeIf { it.session == null }?.listenIdle()
         }
 
         internal fun cancel(adapterId: String) {

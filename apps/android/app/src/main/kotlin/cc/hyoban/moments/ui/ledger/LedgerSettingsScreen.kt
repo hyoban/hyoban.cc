@@ -178,6 +178,7 @@ fun LedgerSettingsScreen(container: AppContainer, nav: LedgerNav, startImport: B
                         ) { Text(stringResource(R.string.ledger_rates)) }
                     },
                 )
+                AutoBillGroup()
                 SegmentedGroup(
                     stringResource(R.string.ledger_data),
                     stringResource(R.string.ledger_data_note),
