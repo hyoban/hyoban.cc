@@ -32,6 +32,8 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
 import org.junit.Test
+import cc.hyoban.moments.ui.ledger.parseAmount
+import cc.hyoban.moments.ui.ledger.typeKey
 
 class LedgerTest {
     private val zone = ZoneId.of("Asia/Shanghai")
@@ -285,5 +287,19 @@ class LedgerTest {
         }
         assertEquals(0, result.report.skipped.size)
         assertNotNull(result.txns.firstOrNull())
+    }
+
+    @Test
+    fun keypadTypesAmounts() {
+        fun typed(keys: String) = keys.fold("") { text, key -> typeKey(text, key) }
+        assertEquals("12.5", typed("12.5"))
+        assertEquals("0.5", typed(".5"))
+        assertEquals("12.34", typed("12.345"))
+        assertEquals("1.2", typed("1..2"))
+        assertEquals("5", typed("05"))
+        assertEquals("", typed("+"))
+        assertEquals("12-3", typed("12+-3"))
+        assertEquals("12+0.5", typed("12+.5"))
+        assertEquals(1150L, parseAmount(typed("12-0.5")))
     }
 }

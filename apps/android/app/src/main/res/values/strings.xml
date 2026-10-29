@@ -107,6 +107,7 @@
     <string name="label_publish_all">全部发布</string>
     <string name="action_search">搜索</string>
     <string name="action_clear">清除</string>
+    <string name="action_backspace">退格</string>
     <string name="action_copy_text">复制文字</string>
     <string name="message_text_copied">已复制文字</string>
     <string name="action_view_photo">看大图</string>
@@ -635,6 +636,8 @@
     <string name="ledger_link_trip">旅程</string>
     <string name="ledger_none">无</string>
     <string name="ledger_choose">选择</string>
+    <string name="ledger_choose_account">选择账户</string>
+    <string name="ledger_note_hint">添加备注</string>
     <string name="ledger_split">多个账户支付</string>
     <string name="ledger_add_payer">添加账户</string>
     <string name="ledger_split_sum">合计 %1$s，应为 %2$s</string>
